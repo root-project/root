@@ -22,7 +22,7 @@ protected:
    std::vector<TString>  fNewEventCommands;
 
 public:
-   TEveEventManager(const Text_t* n="TEveEventManager", const Text_t* t="");
+   TEveEventManager(const char* n="TEveEventManager", const char* t="");
    virtual ~TEveEventManager() {}
 
    std::vector<TString>& GetNewEventCommands() { return fNewEventCommands; }

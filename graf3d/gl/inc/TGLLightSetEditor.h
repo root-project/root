@@ -35,7 +35,7 @@ protected:
 
    TGButton         *fSpecularLight;
 
-   TGButton* MakeLampButton(const Text_t* name, Int_t wid, TGCompositeFrame* parent);
+   TGButton* MakeLampButton(const char* name, Int_t wid, TGCompositeFrame* parent);
 
 public:
    TGLLightSetSubEditor(const TGWindow* p);

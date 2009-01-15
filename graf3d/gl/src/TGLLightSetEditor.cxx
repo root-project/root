@@ -66,7 +66,7 @@ TGLLightSetSubEditor::TGLLightSetSubEditor(const TGWindow *p) :
 }
 
 //______________________________________________________________________________
-TGButton* TGLLightSetSubEditor::MakeLampButton(const Text_t* name, Int_t wid,
+TGButton* TGLLightSetSubEditor::MakeLampButton(const char* name, Int_t wid,
                                                TGCompositeFrame* parent)
 {
    // Create a button for given lamp and set it up.

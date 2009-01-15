@@ -133,7 +133,7 @@ void ChompTail(TString& s, char c='.')
 }
 
 //______________________________________________________________________________
-Bool_t TEveUtil::CheckMacro(const Text_t* mac)
+Bool_t TEveUtil::CheckMacro(const char* mac)
 {
    // Checks if macro 'mac' is loaded.
 
@@ -158,7 +158,7 @@ Bool_t TEveUtil::CheckMacro(const Text_t* mac)
 }
 
 //______________________________________________________________________________
-void TEveUtil::AssertMacro(const Text_t* mac)
+void TEveUtil::AssertMacro(const char* mac)
 {
    // Load and execute macro 'mac' if it has not been loaded yet.
 
@@ -168,7 +168,7 @@ void TEveUtil::AssertMacro(const Text_t* mac)
 }
 
 //______________________________________________________________________________
-void TEveUtil::Macro(const Text_t* mac)
+void TEveUtil::Macro(const char* mac)
 {
    // Execute macro 'mac'. Do not reload the macro.
 
@@ -180,7 +180,7 @@ void TEveUtil::Macro(const Text_t* mac)
 }
 
 //______________________________________________________________________________
-void TEveUtil::LoadMacro(const Text_t* mac)
+void TEveUtil::LoadMacro(const char* mac)
 {
    // Makes sure that macro 'mac' is loaded, but do not reload it.
 
@@ -255,7 +255,7 @@ void TEveUtil::ColorFromIdx(Float_t f1, Color_t c1, Float_t f2, Color_t c2,
 }
 
 //______________________________________________________________________________
-Color_t* TEveUtil::FindColorVar(TObject* obj, const Text_t* varname)
+Color_t* TEveUtil::FindColorVar(TObject* obj, const char* varname)
 {
    // Find address of Color_t data-member with name varname in object
    // obj.

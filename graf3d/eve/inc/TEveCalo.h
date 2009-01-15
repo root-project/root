@@ -67,7 +67,7 @@ protected:
    virtual void BuildCellIdCache() = 0;
 
 public:
-   TEveCaloViz(TEveCaloData* data=0, const Text_t* n="TEveCaloViz", const Text_t* t="");
+   TEveCaloViz(TEveCaloData* data=0, const char* n="TEveCaloViz", const char* t="");
 
    virtual ~TEveCaloViz();
 
@@ -157,7 +157,7 @@ protected:
    virtual void BuildCellIdCache();
 
 public:
-   TEveCalo3D(TEveCaloData* d=0, const Text_t* n="TEveCalo3D", const Text_t* t="xx");
+   TEveCalo3D(TEveCaloData* d=0, const char* n="TEveCalo3D", const char* t="xx");
    virtual ~TEveCalo3D() {}
    virtual void ComputeBBox();
 
@@ -190,7 +190,7 @@ protected:
    virtual void BuildCellIdCache();
 
 public:
-   TEveCalo2D(const Text_t* n="TEveCalo2D", const Text_t* t="");
+   TEveCalo2D(const char* n="TEveCalo2D", const char* t="");
    virtual ~TEveCalo2D(){}
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
@@ -246,7 +246,7 @@ protected:
    virtual void BuildCellIdCache();
 
 public:
-   TEveCaloLego(TEveCaloData* data=0, const Text_t* n="TEveCaloLego", const Text_t* t="");
+   TEveCaloLego(TEveCaloData* data=0, const char* n="TEveCaloLego", const char* t="");
 
    virtual ~TEveCaloLego(){}
 

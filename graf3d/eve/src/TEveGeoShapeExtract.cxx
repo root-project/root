@@ -31,7 +31,7 @@
 ClassImp(TEveGeoShapeExtract);
 
 //______________________________________________________________________________
-TEveGeoShapeExtract::TEveGeoShapeExtract(const Text_t* n, const Text_t* t) :
+TEveGeoShapeExtract::TEveGeoShapeExtract(const char* n, const char* t) :
    TNamed       (n,t),
 
    fRnrSelf     (kTRUE),

@@ -28,7 +28,7 @@
 ClassImp(TEveWindowManager);
 
 //______________________________________________________________________________
-TEveWindowManager::TEveWindowManager(const Text_t* n, const Text_t* t) :
+TEveWindowManager::TEveWindowManager(const char* n, const char* t) :
    TEveElementList(n, t),
    TQObject       (),
    fCurrentWindow    (0),

@@ -34,7 +34,7 @@
 ClassImp(TEveParamList);
 
 //______________________________________________________________________________
-TEveParamList::TEveParamList(const Text_t* n, const Text_t* t, Bool_t doColor) :
+TEveParamList::TEveParamList(const char* n, const char* t, Bool_t doColor) :
    TNamed(n, t),
    fColor(0)
 {

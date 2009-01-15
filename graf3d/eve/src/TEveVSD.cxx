@@ -24,7 +24,7 @@
 ClassImp(TEveVSD);
 
 //______________________________________________________________________________
-TEveVSD::TEveVSD(const Text_t* , const Text_t* ) :
+TEveVSD::TEveVSD(const char* , const char* ) :
    TObject(),
 
    fBuffSize  (128*1024),
@@ -214,7 +214,7 @@ void TEveVSD::LoadTrees()
 }
 
 //______________________________________________________________________________
-void TEveVSD::LoadVSD(const Text_t* vsd_file_name, const Text_t* dir_name)
+void TEveVSD::LoadVSD(const char* vsd_file_name, const char* dir_name)
 {
    // Load VSD data from given file and directory.
 

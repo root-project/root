@@ -154,11 +154,11 @@ public:
    TGWindow*    GetMainWindow() const;
    TEveViewer*  GetDefaultViewer() const;
    TGLViewer*   GetDefaultGLViewer() const;
-   TEveViewer*  SpawnNewViewer(const Text_t* name, const Text_t* title="", Bool_t embed=kTRUE);
-   TEveScene*   SpawnNewScene(const Text_t* name, const Text_t* title="");
+   TEveViewer*  SpawnNewViewer(const char* name, const char* title="", Bool_t embed=kTRUE);
+   TEveScene*   SpawnNewScene(const char* name, const char* title="");
 
    TFolder*     GetMacroFolder() const { return fMacroFolder; }
-   TMacro*      GetMacro(const Text_t* name) const;
+   TMacro*      GetMacro(const char* name) const;
 
    void EditElement(TEveElement* element);
 

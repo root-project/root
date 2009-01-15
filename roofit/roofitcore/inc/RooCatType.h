@@ -42,11 +42,11 @@ public:
   } ;
   virtual TObject* Clone(const char*) const { return new RooCatType(*this); }
 
-  virtual const Text_t* GetName() const { 
+  virtual const char* GetName() const { 
     // Return state name
     return _label ; 
   }
-  virtual void SetName(const Text_t* name) ;
+  virtual void SetName(const char* name) ;
 
   inline RooCatType& operator=(const RooCatType& other) { 
     // Assignment operator from other RooCatType

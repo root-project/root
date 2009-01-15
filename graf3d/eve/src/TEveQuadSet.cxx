@@ -41,7 +41,7 @@
 ClassImp(TEveQuadSet);
 
 //______________________________________________________________________________
-TEveQuadSet::TEveQuadSet(const Text_t* n, const Text_t* t) :
+TEveQuadSet::TEveQuadSet(const char* n, const char* t) :
    TEveDigitSet   (n, t),
 
    fQuadType  (kQT_Undef),
@@ -55,7 +55,7 @@ TEveQuadSet::TEveQuadSet(const Text_t* n, const Text_t* t) :
 
 //______________________________________________________________________________
 TEveQuadSet::TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
-                         const Text_t* n, const Text_t* t) :
+                         const char* n, const char* t) :
    TEveDigitSet   (n, t),
 
    fQuadType  (kQT_Undef),

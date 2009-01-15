@@ -53,7 +53,7 @@ public:
   HitNames() : fSize(0), fNames(0) {};
   HitNames(Int_t s) : fSize(s), fNames(0) { InitNames(); };
   virtual ~HitNames()                     { DeleteNames(); };
-  const Text_t *operator[](Int_t i)       { return fNames[i]; };
+  const char *operator[](Int_t i)       { return fNames[i]; };
 };
 
 void HitNames::InitNames() {        // Create and fill names
@@ -100,7 +100,7 @@ public:
   void        CleanUp()    { fColl->Delete(); }
   void        Dump() const { fColl->Dump(); }
 
-  virtual const Text_t* GetName() const
+  virtual const char* GetName() const
   { return fColl->ClassName(); }
 
   Tester() :

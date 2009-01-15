@@ -160,7 +160,7 @@ const Float_t       TEveTrackPropagator::fgkB2C        = 0.299792458e-2;
 TEveTrackPropagator TEveTrackPropagator::fgDefStyle;
 
 //______________________________________________________________________________
-TEveTrackPropagator::TEveTrackPropagator(const Text_t* n, const Text_t* t,
+TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
                                          TEveMagField *field) :
    TEveElementList(n, t),
    TEveRefBackPtr(),

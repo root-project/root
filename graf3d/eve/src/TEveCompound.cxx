@@ -24,7 +24,7 @@
 ClassImp(TEveCompound);
 
 //______________________________________________________________________________
-TEveCompound::TEveCompound(const Text_t* n, const Text_t* t, Bool_t doColor) :
+TEveCompound::TEveCompound(const char* n, const char* t, Bool_t doColor) :
    TEveElementList (n, t, doColor),
    TEveProjectable (),
    fCompoundOpen   (0)

@@ -39,7 +39,7 @@ ClassImp(RooCatType)
 
 
 //_____________________________________________________________________________
-void RooCatType::SetName(const Text_t* name) 
+void RooCatType::SetName(const char* name) 
 { 
   // Constructor with name argument
   if (strlen(name)>255) {

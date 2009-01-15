@@ -127,7 +127,7 @@ public:
    // Cardan angle interface
 
    void SetRotByAngles(Float_t a1, Float_t a2, Float_t a3);
-   void SetRotByAnyAngles(Float_t a1, Float_t a2, Float_t a3, const Text_t* pat);
+   void SetRotByAnyAngles(Float_t a1, Float_t a2, Float_t a3, const char* pat);
    void GetRotAngles(Float_t* x) const;
 
    // Scaling

@@ -234,7 +234,7 @@ Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const
 
 
 //_____________________________________________________________________________
-void RooAbsArg::setAttribute(const Text_t* name, Bool_t value)
+void RooAbsArg::setAttribute(const char* name, Bool_t value)
 {
   // Set (default) or clear a named boolean attribute of this object.
 
@@ -255,7 +255,7 @@ void RooAbsArg::setAttribute(const Text_t* name, Bool_t value)
 
 
 //_____________________________________________________________________________
-Bool_t RooAbsArg::getAttribute(const Text_t* name) const
+Bool_t RooAbsArg::getAttribute(const char* name) const
 {
   // Check if a named attribute is set. By default, all attributes are unset.
 
@@ -264,7 +264,7 @@ Bool_t RooAbsArg::getAttribute(const Text_t* name) const
 
 
 //_____________________________________________________________________________
-void RooAbsArg::setStringAttribute(const Text_t* key, const Text_t* value)
+void RooAbsArg::setStringAttribute(const char* key, const char* value)
 {
   // Associate string 'value' to this object under key 'key'
 
@@ -278,7 +278,7 @@ void RooAbsArg::setStringAttribute(const Text_t* key, const Text_t* value)
 }
 
 //_____________________________________________________________________________
-const Text_t* RooAbsArg::getStringAttribute(const Text_t* key) const
+const char* RooAbsArg::getStringAttribute(const char* key) const
 {
   // Get string attribute mapped under key 'key'. Returns null pointer
   // if no attribute exists under that key
@@ -293,7 +293,7 @@ const Text_t* RooAbsArg::getStringAttribute(const Text_t* key) const
 
 
 //_____________________________________________________________________________
-void RooAbsArg::setTransientAttribute(const Text_t* name, Bool_t value)
+void RooAbsArg::setTransientAttribute(const char* name, Bool_t value)
 {
   // Set (default) or clear a named boolean attribute of this object.
 
@@ -314,7 +314,7 @@ void RooAbsArg::setTransientAttribute(const Text_t* name, Bool_t value)
 
 
 //_____________________________________________________________________________
-Bool_t RooAbsArg::getTransientAttribute(const Text_t* name) const
+Bool_t RooAbsArg::getTransientAttribute(const char* name) const
 {
   // Check if a named attribute is set. By default, all attributes
   // are unset.

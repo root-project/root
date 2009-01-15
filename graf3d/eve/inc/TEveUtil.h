@@ -44,10 +44,10 @@ public:
    static void   SetupEnvironment();
    static void   SetupGUI();
 
-   static Bool_t CheckMacro(const Text_t* mac);
-   static void   AssertMacro(const Text_t* mac);
-   static void   Macro(const Text_t* mac);
-   static void   LoadMacro(const Text_t* mac);
+   static Bool_t CheckMacro(const char* mac);
+   static void   AssertMacro(const char* mac);
+   static void   Macro(const char* mac);
+   static void   LoadMacro(const char* mac);
 
    // Color management
 
@@ -55,7 +55,7 @@ public:
    static void     ColorFromIdx(Color_t ci, UChar_t col[4], UChar_t transparency);
    static void     ColorFromIdx(Float_t f1, Color_t c1, Float_t f2, Color_t c2,
                                 UChar_t col[4], Bool_t alpha=kTRUE);
-   static Color_t* FindColorVar(TObject* obj, const Text_t* varname);
+   static Color_t* FindColorVar(TObject* obj, const char* varname);
 
    static void     SetColorBrightness(Float_t value, Bool_t full_redraw=kFALSE);
 

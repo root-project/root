@@ -3115,7 +3115,7 @@ void TBufferFile::WriteBuf(const void *buf, Int_t max)
 }
 
 //______________________________________________________________________________
-Text_t *TBufferFile::ReadString(Text_t *s, Int_t max)
+char *TBufferFile::ReadString(char *s, Int_t max)
 {
    // Read string from I/O buffer. String is read till 0 character is
    // found or till max-1 characters are read (i.e. string s has max
@@ -3144,12 +3144,12 @@ Text_t *TBufferFile::ReadString(Text_t *s, Int_t max)
 }
 
 //______________________________________________________________________________
-void TBufferFile::WriteString(const Text_t *s)
+void TBufferFile::WriteString(const char *s)
 {
    // Write string to I/O buffer. Writes string upto and including the
    // terminating 0.
 
-   WriteBuf(s, (strlen(s)+1)*sizeof(Text_t));
+   WriteBuf(s, (strlen(s)+1)*sizeof(char));
 }
 
 //______________________________________________________________________________

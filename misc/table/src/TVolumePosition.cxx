@@ -49,7 +49,7 @@ ClassImp(TVolumePosition)
 
 
 //______________________________________________________________________________
-TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const Text_t *matrixname)
+TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const char *matrixname)
 : fMatrix(0),fNode(node),fId(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*Node normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -221,7 +221,7 @@ const Char_t *TVolumePosition::GetName() const
 }
 
 //______________________________________________________________________________
-Text_t *TVolumePosition::GetObjectInfo(Int_t, Int_t) const
+char *TVolumePosition::GetObjectInfo(Int_t, Int_t) const
 {
    //to be documented
    if (!gPad) return 0;
@@ -486,7 +486,7 @@ void TVolumePosition::SavePrimitive(ostream &, Option_t * /*= ""*/)
    Double_t y = GetY();
    Double_t z = GetZ();
    TRotMatrix *matrix =
-   myPosition =  new TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const Text_t *matrixname)
+   myPosition =  new TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const char *matrixname)
    : fNode(node),fX(x),fY(y),fZ(z),fMatrix(0)
 {
 /

@@ -31,7 +31,7 @@ protected:
    Short_t  fCompoundOpen; // If more than zero, tag new children as compound members.
 
 public:
-   TEveCompound(const Text_t* n="TEveCompound", const Text_t* t="",
+   TEveCompound(const char* n="TEveCompound", const char* t="",
                 Bool_t doColor=kTRUE);
    virtual ~TEveCompound() {}
 

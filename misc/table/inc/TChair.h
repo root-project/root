@@ -55,7 +55,7 @@ public:
    virtual     TH1       *Draw(TCut varexp, TCut selection, Option_t *option="",
                           Int_t nentries=1000000000, Int_t firstentry=0)
                           {return GetThisTable()->Draw(varexp,selection,option,nentries,firstentry);}
-   virtual     TH1       *Draw(const Text_t *varexp, const Text_t *selection, Option_t *option="",
+   virtual     TH1       *Draw(const char *varexp, const char *selection, Option_t *option="",
                                Int_t nentries=1000000000, Int_t firstentry=0) {
                            return GetThisTable()->Draw(varexp,selection,option,nentries,firstentry);}
    virtual     Char_t    *GetArray() const    {return (Char_t *)GetThisTable()->GetArray();}
@@ -66,7 +66,7 @@ public:
                const TTable  *Table() const {return fTable; }
    virtual     TTableDescriptor *GetRowDescriptors()   const {return GetThisTable()->GetRowDescriptors();}
    virtual     const Char_t       *GetType()             const {return GetThisTable()->GetType();}
-   virtual     void       Fit(const Text_t *formula ,const Text_t *varexp, const Text_t *selection="",Option_t *option="",Option_t *goption="",
+   virtual     void       Fit(const char *formula ,const char *varexp, const char *selection="",Option_t *option="",Option_t *goption="",
                               Int_t nentries=1000000000, Int_t firstentry=0) {
                            GetThisTable()->Fit(formula,varexp,selection,option,goption,nentries,firstentry);}
    virtual     Long_t     HasData() const  { return GetThisTable()->HasData();}

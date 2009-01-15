@@ -121,9 +121,9 @@ public:
    //virtual void  WriteEuclid(const char*, const char*, Int_t, Int_t);
 
    // get methods
-   virtual Int_t VolId(const Text_t* volName) const;
+   virtual Int_t VolId(const char* volName) const;
    virtual const char* VolName(Int_t id) const;
-   virtual Int_t MediumId(const Text_t* mediumName) const;
+   virtual Int_t MediumId(const char* mediumName) const;
    virtual Int_t NofVolumes() const;
    virtual Int_t NofVolDaughters(const char* volName) const;
    virtual const char*  VolDaughterName(const char* volName, Int_t i) const;

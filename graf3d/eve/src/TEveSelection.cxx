@@ -24,7 +24,7 @@
 ClassImp(TEveSelection);
 
 //______________________________________________________________________________
-TEveSelection::TEveSelection(const Text_t* n, const Text_t* t) :
+TEveSelection::TEveSelection(const char* n, const char* t) :
    TEveElementList(n, t),
    fPickToSelect  (kPS_Projectable),
    fActive        (kTRUE),

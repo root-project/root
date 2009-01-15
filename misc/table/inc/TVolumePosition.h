@@ -40,7 +40,7 @@ public:
        kIsOwn      = BIT(23)   // if the TVolumePoistion doesn't own the TRotMatrix object
    };   
    TVolumePosition(TVolume *node=0,Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0);
-   TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const Text_t *matrixname);
+   TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const char *matrixname);
    TVolumePosition(const TVolumePosition* oldPosition, const TVolumePosition* curPosition);
    TVolumePosition(const TVolumePosition&pos);
    virtual ~TVolumePosition();
@@ -61,7 +61,7 @@ public:
    virtual void        Draw(Option_t *depth="3"); // *MENU*
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TVolume     *GetNode() const {return fNode;}
-   virtual Text_t      *GetObjectInfo(Int_t px, Int_t py) const;
+   virtual char      *GetObjectInfo(Int_t px, Int_t py) const;
    const   Option_t    *GetOption() const { return GetNode()?GetNode()->GetOption():0;}
    virtual const Char_t *GetName() const;
    const TRotMatrix    *GetMatrix() const;

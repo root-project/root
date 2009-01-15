@@ -33,7 +33,7 @@
 ClassImp(TEveScene);
 
 //______________________________________________________________________________
-TEveScene::TEveScene(const Text_t* n, const Text_t* t) :
+TEveScene::TEveScene(const char* n, const char* t) :
    TEveElementList(n, t),
    fPad    (0),
    fGLScene(0),
@@ -110,7 +110,7 @@ void TEveScene::Repaint(Bool_t dropLogicals)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveScene::SetName(const Text_t* n)
+void TEveScene::SetName(const char* n)
 {
    // Set scene's name.
 
@@ -177,7 +177,7 @@ const TGPicture* TEveScene::GetListTreeIcon(Bool_t)
 ClassImp(TEveSceneList);
 
 //______________________________________________________________________________
-TEveSceneList::TEveSceneList(const Text_t* n, const Text_t* t) :
+TEveSceneList::TEveSceneList(const char* n, const char* t) :
    TEveElementList(n, t)
 {
    // Constructor.

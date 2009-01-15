@@ -26,7 +26,7 @@
 ClassImp(TEveScalableStraightLineSet);
 
 //______________________________________________________________________________
-TEveScalableStraightLineSet::TEveScalableStraightLineSet(const Text_t* n, const Text_t* t):
+TEveScalableStraightLineSet::TEveScalableStraightLineSet(const char* n, const char* t):
    TEveStraightLineSet (n, t),
    fCurrentScale(1.0)
 {

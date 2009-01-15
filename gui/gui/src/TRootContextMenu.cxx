@@ -422,11 +422,11 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
    while ((argument = (TMethodArg *) next())) {
       // Do not input argument for self object
       if (selfobjpos != argpos) {
-         Text_t       *argname    = fContextMenu->CreateArgumentTitle(argument);
-         const Text_t *type       = argument->GetTypeName();
+         char       *argname    = fContextMenu->CreateArgumentTitle(argument);
+         const char *type       = argument->GetTypeName();
          TDataType    *datatype   = gROOT->GetType(type);
-         const Text_t *charstar   = "char*";
-         Text_t        basictype[32];
+         const char *charstar   = "char*";
+         char        basictype[32];
 
          if (datatype) {
             strcpy(basictype, datatype->GetTypeName());
@@ -448,10 +448,10 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 
             // Get the current value and form it as a text:
 
-            Text_t val[256];
+            char val[256];
 
             if (!strncmp(basictype, "char*", 5)) {
-               Text_t *tdefval;
+               char *tdefval;
                m->GetterMethod()->Execute(object, "", &tdefval);
                strncpy(val, tdefval, 255);
             } else if (!strncmp(basictype, "float", 5) ||
@@ -479,11 +479,11 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
                TIter nextopt(opt);
                TOptionListItem *it = 0;
                while ((it = (TOptionListItem*) nextopt())) {
-                  Text_t *name  = it->fOptName;
-                  Text_t *label = it->fOptLabel;
+                  char *name  = it->fOptName;
+                  char *label = it->fOptLabel;
                   Long_t value  = it->fValue;
                   if (value != -9999) {
-                     Text_t val[256];
+                     char val[256];
                      sprintf(val, "%li", value);
                      o->AddItem(name, val);
                   }else

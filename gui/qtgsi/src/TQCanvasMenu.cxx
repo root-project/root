@@ -185,11 +185,11 @@ void TQCanvasMenu::Dialog(TObject* object, TMethod* method)
    TMethodArg *argument = 0;
    TIter next(method->GetListOfMethodArgs());
    while ((argument = (TMethodArg *) next())) {
-      Text_t       *argname    = CreateArgumentTitle(argument);
-      const Text_t *type       = argument->GetTypeName();
+      char       *argname    = CreateArgumentTitle(argument);
+      const char *type       = argument->GetTypeName();
       TDataType    *datatype   = gROOT->GetType(type);
-      const Text_t *charstar   = "char*";
-      Text_t        basictype [32];
+      const char *charstar   = "char*";
+      char        basictype [32];
 
       if (datatype) {
          strncpy(basictype, datatype->GetTypeName(),31);
@@ -207,13 +207,13 @@ void TQCanvasMenu::Dialog(TObject* object, TMethod* method)
 
       TDataMember *m = argument->GetDataMember();
       if (m && m->GetterMethod()) {
-         Text_t gettername[256] = "";
+         char gettername[256] = "";
          strncpy(gettername, m->GetterMethod()->GetMethodName(),255);
          m->GetterMethod()->Init(object->IsA(), gettername, "");
          // Get the current value and form it as a text:
-         Text_t val[256];
+         char val[256];
          if (!strncmp(basictype, "char*", 5)) {
-            Text_t *tdefval;
+            char *tdefval;
             m->GetterMethod()->Execute(object, "", &tdefval);
             strncpy(val, tdefval, 255);
          }

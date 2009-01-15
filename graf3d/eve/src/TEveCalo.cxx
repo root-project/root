@@ -42,7 +42,7 @@
 ClassImp(TEveCaloViz);
 
 //______________________________________________________________________________
-TEveCaloViz::TEveCaloViz(TEveCaloData* data, const Text_t* n, const Text_t* t) :
+TEveCaloViz::TEveCaloViz(TEveCaloData* data, const char* n, const char* t) :
    TEveElement(),
    TNamed(n, t),
    TEveProjectable(),
@@ -374,7 +374,7 @@ void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t& outH) co
 ClassImp(TEveCalo3D);
 
 
-TEveCalo3D::TEveCalo3D(TEveCaloData* d, const Text_t* n, const Text_t* t): 
+TEveCalo3D::TEveCalo3D(TEveCaloData* d, const char* n, const char* t): 
    TEveCaloViz(d, n, t),
    fRnrEndCapFrame(kTRUE),
    fRnrBarrelFrame(kTRUE)
@@ -429,7 +429,7 @@ void TEveCalo3D::ComputeBBox()
 ClassImp(TEveCalo2D);
 
 //______________________________________________________________________________
-TEveCalo2D::TEveCalo2D(const Text_t* n, const Text_t* t):
+TEveCalo2D::TEveCalo2D(const char* n, const char* t):
    TEveCaloViz(0, n, t),
    TEveProjected(),
    fOldProjectionType(TEveProjection::kPT_Unknown)
@@ -574,7 +574,7 @@ void TEveCalo2D::ComputeBBox()
 ClassImp(TEveCaloLego);
 
 //______________________________________________________________________________
-TEveCaloLego::TEveCaloLego(TEveCaloData* d, const Text_t* n, const Text_t* t):
+TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    TEveCaloViz(d, n, t),
 
    fTopViewUseMaxColor(kTRUE),

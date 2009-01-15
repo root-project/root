@@ -58,7 +58,7 @@ TEveGeoNode::TEveGeoNode(TGeoNode* node) :
 }
 
 //______________________________________________________________________________
-const Text_t* TEveGeoNode::GetName()  const
+const char* TEveGeoNode::GetName()  const
 {
    // Return name, taken from geo-node. Used via TObject.
 
@@ -66,7 +66,7 @@ const Text_t* TEveGeoNode::GetName()  const
 }
 
 //______________________________________________________________________________
-const Text_t* TEveGeoNode::GetTitle() const
+const char* TEveGeoNode::GetTitle() const
 {
    // Return title, taken from geo-node. Used via TObject.
 
@@ -74,7 +74,7 @@ const Text_t* TEveGeoNode::GetTitle() const
 }
 
 //______________________________________________________________________________
-const Text_t* TEveGeoNode::GetElementName()  const
+const char* TEveGeoNode::GetElementName()  const
 {
    // Return name, taken from geo-node. Used via TEveElement.
 
@@ -82,7 +82,7 @@ const Text_t* TEveGeoNode::GetElementName()  const
 }
 
 //______________________________________________________________________________
-const Text_t* TEveGeoNode::GetElementTitle() const
+const char* TEveGeoNode::GetElementTitle() const
 {
    // Return title, taken from geo-node. Used via TEveElement.
 
@@ -505,7 +505,7 @@ TGeoManager* TEveGeoShape::GetGeoMangeur()
 }
 
 //______________________________________________________________________________
-TEveGeoShape::TEveGeoShape(const Text_t* name, const Text_t* title) :
+TEveGeoShape::TEveGeoShape(const char* name, const char* title) :
    TEveElement   (fColor),
    TNamed        (name, title),
    fColor        (0),

@@ -41,10 +41,10 @@ protected:
 public:
    TEveGeoNode(TGeoNode* node);
 
-   virtual const Text_t* GetName()  const;
-   virtual const Text_t* GetTitle() const;
-   virtual const Text_t* GetElementName()  const;
-   virtual const Text_t* GetElementTitle() const;
+   virtual const char* GetName()  const;
+   virtual const char* GetTitle() const;
+   virtual const char* GetElementName()  const;
+   virtual const char* GetElementTitle() const;
 
    TGeoNode* GetNode() const { return fNode; }
 
@@ -138,7 +138,7 @@ protected:
    TEveGeoShapeExtract* DumpShapeTree(TEveGeoShape* geon, TEveGeoShapeExtract* parent = 0);
 
 public:
-   TEveGeoShape(const Text_t* name="TEveGeoShape", const Text_t* title=0);
+   TEveGeoShape(const char* name="TEveGeoShape", const char* title=0);
    virtual ~TEveGeoShape();
 
    virtual Bool_t  CanEditMainColor()        const { return kTRUE; }

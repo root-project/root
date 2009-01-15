@@ -39,7 +39,7 @@ TEveLine::TEveLine(Int_t n_points, ETreeVarType_e tv_type) :
 }
 
 //______________________________________________________________________________
-TEveLine::TEveLine(const Text_t* name, Int_t n_points, ETreeVarType_e tv_type) :
+TEveLine::TEveLine(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
    TEvePointSet(name, n_points, tv_type),
    fRnrLine   (kTRUE),
    fRnrPoints (kFALSE),

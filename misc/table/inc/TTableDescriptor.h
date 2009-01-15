@@ -80,9 +80,9 @@ protected:
 public:                                           
    typedef tableDescriptor_st* iterator;                   
    TTableDescriptor() : TTable("TTableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}      
-   TTableDescriptor(const Text_t *name) : TTable(name,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}     
+   TTableDescriptor(const char *name) : TTable(name,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}     
    TTableDescriptor(Int_t n) : TTable("TTableDescriptor",n,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
-   TTableDescriptor(const Text_t *name,Int_t n) : TTable(name,n,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
+   TTableDescriptor(const char *name,Int_t n) : TTable(name,n,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
    tableDescriptor_st *GetTable(Int_t i=0) const { return ((tableDescriptor_st *)GetArray())+i;}                       
    tableDescriptor_st &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }             
    const tableDescriptor_st &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const tableDescriptor_st *)(GetTable(i))); } 

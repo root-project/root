@@ -81,7 +81,7 @@ TVolume::TVolume()
 }
 
 //______________________________________________________________________________
-TVolume::TVolume(const Text_t *name, const Text_t *title, const Text_t *shapename, Option_t *option)
+TVolume::TVolume(const char *name, const char *title, const char *shapename, Option_t *option)
        :TObjectSet(name),TAttLine(), TAttFill(),fShape(0),fListOfShapes(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*Volume normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -113,7 +113,7 @@ TVolume::TVolume(const Text_t *name, const Text_t *title, const Text_t *shapenam
 
 
 //______________________________________________________________________________
-TVolume::TVolume(const Text_t *name, const Text_t *title, TShape *shape, Option_t *option)
+TVolume::TVolume(const char *name, const char *title, TShape *shape, Option_t *option)
                 :TObjectSet(name),TAttLine(),TAttFill(),fShape(0),fListOfShapes(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*Volume normal constructor*-*-*-*-*-*-*-*-*-*-*
@@ -300,7 +300,7 @@ TVolumePosition *TVolume::Add(TVolume *volume, Double_t x, Double_t y, Double_t 
 
 //______________________________________________________________________________
 TVolumePosition *TVolume::Add(TVolume *volume, Double_t x, Double_t y, Double_t z,
-                              const Text_t *matrixname,  UInt_t id, Option_t *)
+                              const char *matrixname,  UInt_t id, Option_t *)
 {
 //*-*
 //*-*    volume      the pointer to the volume to be placed
@@ -527,7 +527,7 @@ TRotMatrix *TVolume::GetIdentity()
 }
 
 //______________________________________________________________________________
-Text_t *TVolume::GetObjectInfo(Int_t px, Int_t py) const
+char *TVolume::GetObjectInfo(Int_t px, Int_t py) const
 {
    //to be documented
    if (!gPad) return 0;

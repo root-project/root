@@ -72,7 +72,7 @@ protected:
    Int_t      SetfN(Long_t len);
    void       SetTablePointer(void *table);
    void       SetUsedRows(Int_t n);
-   virtual void SetType(const Text_t *const type);
+   virtual void SetType(const char *const type);
    void       StreamerHeader(TBuffer &b,Version_t version=3);
    void       StreamerTable(TBuffer &b,Version_t version=3);
    virtual TTableDescriptor *GetDescriptorPointer() const;
@@ -91,10 +91,10 @@ public:
                                  // As result of the Update() method for example
    };
    static const char *fgTypeName[kEndColumnType];
-   TTable(const Text_t *name=0, Int_t size=0);
-   TTable(const Text_t *name, Int_t n,Int_t size);
-   TTable(const Text_t *name, Int_t n, Char_t *array,Int_t size);
-   TTable(const Text_t *name, const Text_t *type, Int_t n, Char_t *array, Int_t size);
+   TTable(const char *name=0, Int_t size=0);
+   TTable(const char *name, Int_t n,Int_t size);
+   TTable(const char *name, Int_t n, Char_t *array,Int_t size);
+   TTable(const char *name, const char *type, Int_t n, Char_t *array, Int_t size);
    TTable(const TTable &table);
    TTable    &operator=(const TTable &rhs);
    virtual    ~TTable();
@@ -113,7 +113,7 @@ public:
    virtual     void       Draw(Option_t *opt);
    virtual     TH1       *Draw(TCut varexp, TCut selection, Option_t *option=""
                          ,Int_t nentries=1000000000, Int_t firstentry=0);
-   virtual     TH1       *Draw(const Text_t *varexp, const Text_t *selection, Option_t *option=""
+   virtual     TH1       *Draw(const char *varexp, const char *selection, Option_t *option=""
                               ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
                void      *GetArray()     const ;
    virtual     TClass    *GetRowClass()  const ;
@@ -124,7 +124,7 @@ public:
    virtual     TTableDescriptor *GetTableDescriptors() const;
    virtual     TTableDescriptor *GetRowDescriptors()   const;
    virtual     const Char_t *GetType()   const;
-   virtual     void       Fit(const Text_t *formula ,const Text_t *varexp, const Text_t *selection="",Option_t *option="" ,Option_t *goption=""
+   virtual     void       Fit(const char *formula ,const char *varexp, const char *selection="",Option_t *option="" ,Option_t *goption=""
                               ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
    virtual     Long_t     HasData() const { return 1; }
@@ -139,7 +139,7 @@ public:
                                 const Char_t *colfirst="", const Char_t *collast="") const; // *MENU*
    virtual     void       PrintContents(Option_t *opt="") const;
    virtual  const Char_t *PrintHeader() const; // *MENU*
-   virtual     void       Project(const Text_t *hname, const Text_t *varexp, const Text_t *selection="", Option_t *option=""
+   virtual     void       Project(const char *hname, const char *varexp, const char *selection="", Option_t *option=""
                                  ,Int_t nentries=1000000000, Int_t firstentry=0);
 
    virtual    Int_t       Purge(Option_t *opt="");

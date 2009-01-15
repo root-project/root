@@ -47,7 +47,7 @@ private:
 
 public:
    // Constructor & destructor
-   GTitleFrame(const TGWindow *p, const Text_t *mainText, const Text_t *subText,
+   GTitleFrame(const TGWindow *p, const char *mainText, const char *subText,
                UInt_t w, UInt_t h, UInt_t options = kHorizontalFrame | kRaisedFrame);
    void ChangeRightLogo(Int_t frame);
    virtual ~GTitleFrame();

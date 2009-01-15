@@ -175,7 +175,7 @@ void TEveTextEditor::SetModel(TObject* obj)
 }
 
 //______________________________________________________________________________
-void TEveTextEditor::DoText(const Text_t* /*txt*/)
+void TEveTextEditor::DoText(const char* /*txt*/)
 {
    // Slot for setting text.
 

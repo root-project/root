@@ -194,7 +194,7 @@ public:
 
     TGQt();
     TGQt(const TGQt &vx): TVirtualX(vx) { MayNotUse("TGQt(const TGQt &)"); }   // without dict does not compile? (rdm)
-    TGQt(const Text_t *name, const Text_t *title);
+    TGQt(const char *name, const char *title);
     virtual ~TGQt();
 // Include the base TVirtualX class interface
 #include "TVirtualX.interface.h"

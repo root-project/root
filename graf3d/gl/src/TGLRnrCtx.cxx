@@ -312,7 +312,7 @@ void TGLRnrCtx::RegisterFont(Int_t size, Int_t file, Int_t mode, TGLFont& out)
 }
 
 //______________________________________________________________________
-void TGLRnrCtx::RegisterFont(Int_t size, const Text_t* name, Int_t mode, TGLFont& out)
+void TGLRnrCtx::RegisterFont(Int_t size, const char* name, Int_t mode, TGLFont& out)
 {
    // Get font in the GL rendering context.
 

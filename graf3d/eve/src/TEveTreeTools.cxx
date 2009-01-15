@@ -31,7 +31,7 @@
 ClassImp(TEveSelectorToEventList)
 
 //______________________________________________________________________________
-TEveSelectorToEventList::TEveSelectorToEventList(TEventList* evl, const Text_t* sel) :
+TEveSelectorToEventList::TEveSelectorToEventList(TEventList* evl, const char* sel) :
    TSelectorDraw(), fEvList(evl)
 {
    // Constructor.
@@ -67,7 +67,7 @@ ClassImp(TEvePointSelectorConsumer)
 //______________________________________________________________________________
 TEvePointSelector::TEvePointSelector(TTree* t,
                                      TEvePointSelectorConsumer* c,
-                                     const Text_t* vexp, const Text_t* sel) :
+                                     const char* vexp, const char* sel) :
    TSelectorDraw(),
 
    fTree      (t),
@@ -83,7 +83,7 @@ TEvePointSelector::TEvePointSelector(TTree* t,
 }
 
 //______________________________________________________________________________
-Long64_t TEvePointSelector::Select(const Text_t* selection)
+Long64_t TEvePointSelector::Select(const char* selection)
 {
    // Process the tree, select points matching 'selection'.
 
@@ -116,7 +116,7 @@ Long64_t TEvePointSelector::Select(const Text_t* selection)
 }
 
 //______________________________________________________________________________
-Long64_t TEvePointSelector::Select(TTree* t, const Text_t* selection)
+Long64_t TEvePointSelector::Select(TTree* t, const char* selection)
 {
    // Process tree 't', select points matching 'selection'.
 

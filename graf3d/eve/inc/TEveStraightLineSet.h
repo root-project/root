@@ -80,7 +80,7 @@ protected:
    Line_t*           fLastLine; //!
 
 public:
-   TEveStraightLineSet(const Text_t* n="StraightLineSet", const Text_t* t="");
+   TEveStraightLineSet(const char* n="StraightLineSet", const char* t="");
    virtual ~TEveStraightLineSet() {}
 
    virtual void SetLineColor(Color_t col) { SetMainColor(col); }

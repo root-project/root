@@ -153,7 +153,7 @@
 //End_Html
 //
 // One can sepcify values as Integers or Enums - when data field is an
-// Integer, Float or Enum type; as texts - for Text_t (more precisely:
+// Integer, Float or Enum type; as texts - for char (more precisely:
 // Option_t).
 //
 // As mentioned above - this information are mainly used by contextmenu,

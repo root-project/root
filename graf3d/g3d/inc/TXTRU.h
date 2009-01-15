@@ -24,7 +24,7 @@
 class TXTRU : public TShape {
 public:
    TXTRU();
-   TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
+   TXTRU(const char *name, const char *title, const char *material,
          Int_t nyx, Int_t nz);
    TXTRU(const TXTRU &xtru);
    virtual ~TXTRU();

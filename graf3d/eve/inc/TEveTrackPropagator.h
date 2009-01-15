@@ -204,7 +204,7 @@ protected:
    Bool_t PointOverVertex(const TEveVector4& v0, const TEveVector4& v);
 
 public:
-   TEveTrackPropagator(const Text_t* n="TEveTrackPropagator", const Text_t* t="",
+   TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="",
                        TEveMagField* field=0);
    virtual ~TEveTrackPropagator();
 

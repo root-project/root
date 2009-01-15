@@ -71,7 +71,7 @@ public:
   Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
 
   // Group operations on AbsArgs
-  void setAttribAll(const Text_t* name, Bool_t value=kTRUE) ;
+  void setAttribAll(const char* name, Bool_t value=kTRUE) ;
 
   // List search methods
   RooAbsArg *find(const char *name) const ;

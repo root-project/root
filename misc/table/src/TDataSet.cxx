@@ -848,7 +848,7 @@ void TDataSet::Sort()
 }
 
 //______________________________________________________________________________
-Int_t TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize)
+Int_t TDataSet::Write(const char *name, Int_t option, Int_t bufsize)
 {
  //
  // To Write object first we should temporary break the
@@ -863,7 +863,7 @@ Int_t TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize)
 }
 
 //______________________________________________________________________________
-Int_t TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize) const
+Int_t TDataSet::Write(const char *name, Int_t option, Int_t bufsize) const
 {
  //
  // To Write object first we should temporary break the

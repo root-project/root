@@ -105,7 +105,7 @@
 
 // Create TGenericTable by TTableDescriptor pointer
 //______________________________________________________________________________
-TGenericTable::TGenericTable(const TTableDescriptor &dsc, const Text_t *name) : TTable(name,dsc.Sizeof()),fColDescriptors(0)
+TGenericTable::TGenericTable(const TTableDescriptor &dsc, const char *name) : TTable(name,dsc.Sizeof()),fColDescriptors(0)
 {
   ///////////////////////////////////////////////////////////
   //
@@ -139,7 +139,7 @@ TGenericTable::TGenericTable(const TTableDescriptor &dsc, Int_t n) : TTable("TGe
 }
 
 //______________________________________________________________________________
-TGenericTable::TGenericTable(const TTableDescriptor &dsc,const Text_t *name,Int_t n) : TTable(name,n,dsc.Sizeof()),fColDescriptors(0)
+TGenericTable::TGenericTable(const TTableDescriptor &dsc,const char *name,Int_t n) : TTable(name,n,dsc.Sizeof()),fColDescriptors(0)
 {
   ///////////////////////////////////////////////////////////
   //
@@ -158,7 +158,7 @@ TGenericTable::TGenericTable(const TTableDescriptor &dsc,const Text_t *name,Int_
 
 // Create TGenericTable by C structure name provided
 //______________________________________________________________________________
-TGenericTable::TGenericTable(const char *structName, const Text_t *name) : TTable(name,-1),fColDescriptors(0)
+TGenericTable::TGenericTable(const char *structName, const char *name) : TTable(name,-1),fColDescriptors(0)
 {
   ///////////////////////////////////////////////////////////
   //
@@ -200,7 +200,7 @@ TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGeneric
    SetGenericType();
 }
 //______________________________________________________________________________
-TGenericTable::TGenericTable(const char *structName, const Text_t *name,Int_t n) : TTable(name,-1),fColDescriptors(0)
+TGenericTable::TGenericTable(const char *structName, const char *name,Int_t n) : TTable(name,-1),fColDescriptors(0)
 {
   ///////////////////////////////////////////////////////////
   //

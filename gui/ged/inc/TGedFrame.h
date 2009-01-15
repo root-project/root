@@ -81,7 +81,7 @@ public:
    TList*            GetExtraTabs()               { return fExtraTabs;   }
    TGedEditor*       GetGedEditor()               { return fGedEditor;   }
    virtual void      AddExtraTab(TGedSubFrame* sf);
-   virtual TGVerticalFrame* CreateEditorTabSubFrame(const Text_t* name);
+   virtual TGVerticalFrame* CreateEditorTabSubFrame(const char* name);
 
    virtual void      Refresh(TObject *model);
    virtual void      SetDrawOption(Option_t *option="");

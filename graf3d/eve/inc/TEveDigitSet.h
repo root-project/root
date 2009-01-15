@@ -71,7 +71,7 @@ protected:
    void       ReleaseIds();
 
 public:
-   TEveDigitSet(const Text_t* n="TEveDigitSet", const Text_t* t="");
+   TEveDigitSet(const char* n="TEveDigitSet", const char* t="");
    virtual ~TEveDigitSet();
 
    virtual Bool_t CanEditMainColor() const { return kTRUE; }

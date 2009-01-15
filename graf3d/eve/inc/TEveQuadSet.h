@@ -86,9 +86,9 @@ protected:
    static Int_t SizeofAtom(EQuadType_e qt);
 
 public:
-   TEveQuadSet(const Text_t* n="TEveQuadSet", const Text_t* t="");
+   TEveQuadSet(const char* n="TEveQuadSet", const char* t="");
    TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
-               const Text_t* n="TEveQuadSet", const Text_t* t="");
+               const char* n="TEveQuadSet", const char* t="");
    virtual ~TEveQuadSet() {}
 
    void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);

@@ -534,7 +534,7 @@ void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,
 }
 
 //_____________________________________________________________________________
-Int_t TGeoMCGeometry::VolId(const Text_t *name) const
+Int_t TGeoMCGeometry::VolId(const char *name) const
 {
   //
   // Return the unique numeric identifier for volume name
@@ -549,7 +549,7 @@ Int_t TGeoMCGeometry::VolId(const Text_t *name) const
 }
 
 //_____________________________________________________________________________
-Int_t TGeoMCGeometry::MediumId(const Text_t *name) const
+Int_t TGeoMCGeometry::MediumId(const char *name) const
 {
   //
   // Return the unique numeric identifier for medium name

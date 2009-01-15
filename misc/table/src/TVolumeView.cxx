@@ -353,7 +353,7 @@ TVolumeView::TVolumeView(Double_t *translate, Double_t *rotate, UInt_t positionI
       thisPosition = new TVolumePosition(thisNode,thisX, thisY, thisZ);
    else if (rotate) {
       const Char_t *title = "rotation";
-      thisRotMatrix = new TRotMatrix((Text_t *)matrixName,(Text_t *)title,rotate);
+      thisRotMatrix = new TRotMatrix((char *)matrixName,(char *)title,rotate);
       thisPosition  = new TVolumePosition(thisNode,thisX, thisY, thisZ, thisRotMatrix);
    } else
       Error("TVolumeView"," No rotation matrix is defined");
@@ -618,7 +618,7 @@ void TVolumeView::GetLocalRange(Float_t *min, Float_t *max)
 }
 
 //______________________________________________________________________________
-Text_t *TVolumeView::GetObjectInfo(Int_t px, Int_t py) const
+char *TVolumeView::GetObjectInfo(Int_t px, Int_t py) const
 {
    //to be documented
    if (!gPad) return 0;

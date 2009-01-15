@@ -663,7 +663,7 @@ void TetrisBoard::PieceDropped(TetrisPiece* piece, int height)
    fIsDropped = kFALSE;
 }
 
-void TetrisBoard::Print(const Text_t *) const
+void TetrisBoard::Print(const char *) const
 {
    // Used for testing
 

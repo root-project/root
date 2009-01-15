@@ -49,7 +49,7 @@ protected:
 
 public:
    TEvePointSet(Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
-   TEvePointSet(const Text_t* name, Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
+   TEvePointSet(const char* name, Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
    TEvePointSet(const TEvePointSet& e);
    virtual ~TEvePointSet();
 
@@ -60,13 +60,13 @@ public:
    void  Reset(Int_t n_points=0, Int_t n_int_ids=0);
    Int_t GrowFor(Int_t n_points);
 
-   virtual const Text_t* GetTitle()         const { return fTitle; }
-   virtual const Text_t* GetElementName()   const { return TPointSet3D::GetName(); }
-   virtual const Text_t* GetElementTitle()  const { return fTitle; }
-   virtual void  SetElementName (const Text_t* n) { fName  = n; NameTitleChanged(); }
-   virtual void  SetTitle(const Text_t* t)        { fTitle = t; NameTitleChanged(); }
-   virtual void  SetElementTitle(const Text_t* t) { fTitle = t; NameTitleChanged(); }
-   virtual void  SetElementNameTitle(const Text_t* n, const Text_t* t)
+   virtual const char* GetTitle()         const { return fTitle; }
+   virtual const char* GetElementName()   const { return TPointSet3D::GetName(); }
+   virtual const char* GetElementTitle()  const { return fTitle; }
+   virtual void  SetElementName (const char* n) { fName  = n; NameTitleChanged(); }
+   virtual void  SetTitle(const char* t)        { fTitle = t; NameTitleChanged(); }
+   virtual void  SetElementTitle(const char* t) { fTitle = t; NameTitleChanged(); }
+   virtual void  SetElementNameTitle(const char* n, const char* t)
    { fName = n; fTitle = t; NameTitleChanged(); }
 
    Int_t  GetIntIdsPerPoint() const { return fIntIdsPerPoint; }
@@ -121,7 +121,7 @@ protected:
    TString      fQuantName;            //  Name of the separating quantity.
 
 public:
-   TEvePointSetArray(const Text_t* name="TEvePointSetArray", const Text_t* title="");
+   TEvePointSetArray(const char* name="TEvePointSetArray", const char* title="");
    virtual ~TEvePointSetArray();
 
    virtual void RemoveElementLocal(TEveElement* el);
@@ -135,7 +135,7 @@ public:
 
    virtual Int_t Size(Bool_t under=kFALSE, Bool_t over=kFALSE) const;
 
-   void   InitBins(const Text_t* quant_name, Int_t nbins, Double_t min, Double_t max);
+   void   InitBins(const char* quant_name, Int_t nbins, Double_t min, Double_t max);
    Bool_t Fill(Double_t x, Double_t y, Double_t z, Double_t quant);
    void   SetPointId(TObject* id);
    void   CloseBins();

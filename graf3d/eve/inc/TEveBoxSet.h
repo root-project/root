@@ -62,7 +62,7 @@ protected:
    static Int_t SizeofAtom(EBoxType_e bt);
 
 public:
-   TEveBoxSet(const Text_t* n="TEveBoxSet", const Text_t* t="");
+   TEveBoxSet(const char* n="TEveBoxSet", const char* t="");
    virtual ~TEveBoxSet() {}
 
    void Reset(EBoxType_e boxType, Bool_t valIsCol, Int_t chunkSize);

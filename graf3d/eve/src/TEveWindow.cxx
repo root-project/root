@@ -662,7 +662,7 @@ Pixel_t     TEveWindow::fgCurrentBackgroundColor = 0x80A0C0;
 Pixel_t     TEveWindow::fgMiniBarBackgroundColor = 0x80C0A0;
 
 //______________________________________________________________________________
-TEveWindow::TEveWindow(const Text_t* n, const Text_t* t) :
+TEveWindow::TEveWindow(const char* n, const char* t) :
    TEveElementList(n, t),
 
    fEveFrame     (0),
@@ -1081,7 +1081,7 @@ void TEveWindow::SwapWindows(TEveWindow* w1, TEveWindow* w2)
 ClassImp(TEveWindowSlot);
 
 //______________________________________________________________________________
-TEveWindowSlot::TEveWindowSlot(const Text_t* n, const Text_t* t) :
+TEveWindowSlot::TEveWindowSlot(const char* n, const char* t) :
    TEveWindow (n, t),
    fEmptyButt   (0),
    fEmbedBuffer (0)
@@ -1189,7 +1189,7 @@ TGCompositeFrame* TEveWindowSlot::StartEmbedding()
 }
 
 //______________________________________________________________________________
-TEveWindowFrame* TEveWindowSlot::StopEmbedding(const Text_t* name)
+TEveWindowFrame* TEveWindowSlot::StopEmbedding(const char* name)
 {
    // An embedded window is created in place of this window-slot.
    // This window-slot will auto-destruct.
@@ -1251,7 +1251,7 @@ TEveWindowFrame* TEveWindowSlot::StopEmbedding(const Text_t* name)
 ClassImp(TEveWindowFrame);
 
 //______________________________________________________________________________
-TEveWindowFrame::TEveWindowFrame(TGFrame* frame, const Text_t* n, const Text_t* t) :
+TEveWindowFrame::TEveWindowFrame(TGFrame* frame, const char* n, const char* t) :
    TEveWindow (n, t),
    fGUIFrame  (frame)
 {
@@ -1302,7 +1302,7 @@ TGCompositeFrame* TEveWindowFrame::GetGUICompositeFrame()
 ClassImp(TEveWindowPack);
 
 //______________________________________________________________________________
-TEveWindowPack::TEveWindowPack(TGPack* p, const Text_t* n, const Text_t* t) :
+TEveWindowPack::TEveWindowPack(TGPack* p, const char* n, const char* t) :
    TEveWindow   (n, t),
    fPack        (p ? p : new TGPack())
 {
@@ -1381,7 +1381,7 @@ void TEveWindowPack::EqualizeFrames()
 ClassImp(TEveWindowTab);
 
 //______________________________________________________________________________
-TEveWindowTab::TEveWindowTab(TGTab* tab, const Text_t* n, const Text_t* t) :
+TEveWindowTab::TEveWindowTab(TGTab* tab, const char* n, const char* t) :
    TEveWindow(n, t),
    fTab (tab ? tab : new TGTab())
 {

@@ -47,7 +47,7 @@
 ClassImp(TEveBoxSet);
 
 //______________________________________________________________________________
-TEveBoxSet::TEveBoxSet(const Text_t* n, const Text_t* t) :
+TEveBoxSet::TEveBoxSet(const char* n, const char* t) :
    TEveDigitSet  (n, t),
 
    fBoxType      (kBT_Undef),

@@ -936,7 +936,7 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
     } else {
       TString format2(errName);
       format2.Append("/D");
-      t.Branch(errName, &_error, (const Text_t*)format2, bufSize);
+      t.Branch(errName, &_error, (const char*)format2, bufSize);
     }
   }
 
@@ -950,7 +950,7 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
     } else {
       TString format2(loName);
       format2.Append("/D");
-      t.Branch(loName, &_asymErrLo, (const Text_t*)format2, bufSize);
+      t.Branch(loName, &_asymErrLo, (const char*)format2, bufSize);
     }
 
     TString hiName(GetName()) ;
@@ -961,7 +961,7 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
     } else {
       TString format2(hiName);
       format2.Append("/D");
-      t.Branch(hiName, &_asymErrHi, (const Text_t*)format2, bufSize);
+      t.Branch(hiName, &_asymErrHi, (const char*)format2, bufSize);
     }
   }
 }

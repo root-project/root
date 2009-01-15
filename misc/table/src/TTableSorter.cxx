@@ -769,21 +769,21 @@ Int_t TTableSorter::FindFirstKey(const void *key) const
 }
 
 //_____________________________________________________________________________
-const Text_t * TTableSorter::GetTableName() const
+const char * TTableSorter::GetTableName() const
 {
    //to be documented
    return fParentTable ? fParentTable->GetName():"";
 }
 
 //_____________________________________________________________________________
-const Text_t * TTableSorter::GetTableTitle() const
+const char * TTableSorter::GetTableTitle() const
 {
    //to be documented
    return fParentTable ? fParentTable->GetTitle():"";
 }
 
  //_____________________________________________________________________________
-const Text_t * TTableSorter::GetTableType() const
+const char * TTableSorter::GetTableType() const
 {
    //to be documented
    return fParentTable ? fParentTable->GetType():"";

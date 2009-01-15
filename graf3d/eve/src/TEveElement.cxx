@@ -232,7 +232,7 @@ void TEveElement::CloneChildrenRecurse(TEveElement* dest, Int_t level) const
 /******************************************************************************/
 
 //______________________________________________________________________________
-const Text_t* TEveElement::GetElementName() const
+const char* TEveElement::GetElementName() const
 {
    // Virtual function for retrieveing name of the element.
    // Here we attempt to cast the assigned object into TNamed and call
@@ -245,7 +245,7 @@ const Text_t* TEveElement::GetElementName() const
 }
 
 //______________________________________________________________________________
-const Text_t*  TEveElement::GetElementTitle() const
+const char*  TEveElement::GetElementTitle() const
 {
    // Virtual function for retrieveing title of the render-element.
    // Here we attempt to cast the assigned object into TNamed and call
@@ -258,7 +258,7 @@ const Text_t*  TEveElement::GetElementTitle() const
 }
 
 //______________________________________________________________________________
-void TEveElement::SetElementName(const Text_t* name)
+void TEveElement::SetElementName(const char* name)
 {
    // Virtual function for setting of name of an element.
    // Here we attempt to cast the assigned object into TNamed and call
@@ -275,7 +275,7 @@ void TEveElement::SetElementName(const Text_t* name)
 }
 
 //______________________________________________________________________________
-void TEveElement::SetElementTitle(const Text_t* title)
+void TEveElement::SetElementTitle(const char* title)
 {
    // Virtual function for setting of title of an element.
    // Here we attempt to cast the assigned object into TNamed and call
@@ -292,7 +292,7 @@ void TEveElement::SetElementTitle(const Text_t* title)
 }
 
 //______________________________________________________________________________
-void TEveElement::SetElementNameTitle(const Text_t* name, const Text_t* title)
+void TEveElement::SetElementNameTitle(const char* name, const char* title)
 {
    // Virtual function for setting of name and title of render element.
    // Here we attempt to cast the assigned object into TNamed and call
@@ -899,7 +899,7 @@ void TEveElement::SpawnEditor()
 }
 
 //______________________________________________________________________________
-void TEveElement::ExportToCINT(Text_t* var_name)
+void TEveElement::ExportToCINT(char* var_name)
 {
    // Export render-element to CINT with variable name var_name.
 
@@ -1691,7 +1691,7 @@ TObject* TEveElementObjectPtr::GetObject(const TEveException& eh) const
 }
 
 //______________________________________________________________________________
-void TEveElementObjectPtr::ExportToCINT(Text_t* var_name)
+void TEveElementObjectPtr::ExportToCINT(char* var_name)
 {
    // Export external object to CINT with variable name var_name.
    // Virtual from TEveElement.
@@ -1732,7 +1732,7 @@ TEveElementObjectPtr::~TEveElementObjectPtr()
 ClassImp(TEveElementList);
 
 //______________________________________________________________________________
-TEveElementList::TEveElementList(const Text_t* n, const Text_t* t, Bool_t doColor) :
+TEveElementList::TEveElementList(const char* n, const char* t, Bool_t doColor) :
    TEveElement(),
    TNamed(n, t),
    fColor(0),

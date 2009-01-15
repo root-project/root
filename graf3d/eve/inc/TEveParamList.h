@@ -79,7 +79,7 @@ protected:
    BoolConfigVec_t      fBoolParameters;
 
 public:
-   TEveParamList(const Text_t* n="TEveParamList", const Text_t* t="", Bool_t doColor=kFALSE);
+   TEveParamList(const char* n="TEveParamList", const char* t="", Bool_t doColor=kFALSE);
    virtual ~TEveParamList() {}
 
    void AddParameter(const FloatConfig_t& parameter) { fFloatParameters.push_back(parameter); }

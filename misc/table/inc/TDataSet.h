@@ -142,8 +142,8 @@ public:
    virtual TDataSet    *Prev() const;
    virtual void         Update();                            // Update dataset
    virtual void         Update(TDataSet *set,UInt_t opt=0);// Update this dataset with the new one
-   virtual Int_t        Write(const Text_t *name=0, Int_t option=0, Int_t bufsize=0);
-   virtual Int_t        Write(const Text_t *name=0, Int_t option=0, Int_t bufsize=0) const;
+   virtual Int_t        Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
+   virtual Int_t        Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
    ClassDef(TDataSet,1) // The base class to create the hierarchical data structures
 };
 

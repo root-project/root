@@ -309,7 +309,7 @@ void TGLFontManager::RegisterFont(Int_t size, Int_t fileID, TGLFont::EMode mode,
 }
 
 //______________________________________________________________________________
-void TGLFontManager::RegisterFont(Int_t size, const Text_t* name, TGLFont::EMode mode, TGLFont &out)
+void TGLFontManager::RegisterFont(Int_t size, const char* name, TGLFont::EMode mode, TGLFont &out)
 {
    // Get mapping from ttf id to font names. Table taken from TTF.cxx.
 

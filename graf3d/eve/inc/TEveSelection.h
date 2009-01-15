@@ -54,7 +54,7 @@ protected:
    void DoElementUnselect(SelMap_i entry);
 
 public:
-   TEveSelection(const Text_t* n="TEveSelection", const Text_t* t="");
+   TEveSelection(const char* n="TEveSelection", const char* t="");
    virtual ~TEveSelection() {}
 
    void SetHighlightMode();

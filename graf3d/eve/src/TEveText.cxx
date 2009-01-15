@@ -36,7 +36,7 @@
 ClassImp(TEveText);
 
 //______________________________________________________________________________
-TEveText::TEveText(const Text_t* txt) :
+TEveText::TEveText(const char* txt) :
    TEveElement(fTextColor),
    TNamed("TEveText", ""),
    TAtt3D(),

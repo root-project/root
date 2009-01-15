@@ -47,14 +47,14 @@ public:
    TGenericTable() : TTable("TGenericTable",-1), fColDescriptors(0) {SetType("generic");}      
 
    // Create TGenericTable by C structure name provided
-   TGenericTable(const char *structName, const Text_t *name);
+   TGenericTable(const char *structName, const char *name);
    TGenericTable(const char *structName, Int_t n);
-   TGenericTable(const char *structName, const Text_t *name,Int_t n);
+   TGenericTable(const char *structName, const char *name,Int_t n);
 
    // Create TGenericTable by TTableDescriptor pointer
-   TGenericTable(const TTableDescriptor &dsc, const Text_t *name);
+   TGenericTable(const TTableDescriptor &dsc, const char *name);
    TGenericTable(const TTableDescriptor &dsc, Int_t n);
-   TGenericTable(const TTableDescriptor &dsc,const Text_t *name,Int_t n);
+   TGenericTable(const TTableDescriptor &dsc,const char *name,Int_t n);
 
    virtual ~TGenericTable();
 

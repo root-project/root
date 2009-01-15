@@ -96,7 +96,7 @@ public:
    void SetLimits(Float_t min, Float_t max, Int_t npos,
                   TGNumberFormat::EStyle nef=TGNumberFormat::kNESRealTwo);
 
-   void SetToolTip(const Text_t* tip);
+   void SetToolTip(const char* tip);
    void SetEnabled(Bool_t state);
 
    ClassDef(TEveGValuator, 0); // Composite GUI element for single value selection (supports label, number-entry and slider).

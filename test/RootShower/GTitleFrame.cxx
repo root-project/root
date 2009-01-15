@@ -22,8 +22,8 @@
 //______________________________________________________________________________
 
 //______________________________________________________________________________
-GTitleFrame::GTitleFrame(const TGWindow *p, const Text_t *mainText, 
-                         const Text_t *subText, UInt_t w, UInt_t h,
+GTitleFrame::GTitleFrame(const TGWindow *p, const char *mainText, 
+                         const char *subText, UInt_t w, UInt_t h,
                          UInt_t options) : TGCompositeFrame(p, w, h, options)
 {
    // Create GTitleFrame object, with TGWindow parent 'p', text 'mainText'

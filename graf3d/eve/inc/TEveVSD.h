@@ -47,7 +47,7 @@ public:
    TEveMCRecCrossRef  fGI, *fpGI;   //!
 
 public:
-   TEveVSD(const Text_t* name="TEveVSD", const Text_t* title="");
+   TEveVSD(const char* name="TEveVSD", const char* title="");
 
    virtual void SetDirectory(TDirectory* dir);
 
@@ -60,8 +60,8 @@ public:
    virtual void WriteTrees();
    virtual void LoadTrees();
 
-   virtual void LoadVSD(const Text_t* vsd_file_name,
-                        const Text_t* dir_name="Event0");
+   virtual void LoadVSD(const char* vsd_file_name,
+                        const char* dir_name="Event0");
 
    static void DisableTObjectStreamersForVSDStruct();
 

@@ -60,7 +60,7 @@ public:
   }
   Bool_t operator==(Double_t value) const ;
   virtual Bool_t operator==(const RooAbsArg& other) ;
-  inline const Text_t *getUnit() const { 
+  inline const char *getUnit() const { 
     // Return string with unit description
     return _unit.Data(); 
   }

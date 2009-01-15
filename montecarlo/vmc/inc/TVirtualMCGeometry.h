@@ -266,13 +266,13 @@ public:
 
 
    // Return the unique numeric identifier for volume name volName
-   virtual Int_t VolId(const Text_t* volName) const = 0;
+   virtual Int_t VolId(const char* volName) const = 0;
 
    // Return the volume name for a given volume identifier id
    virtual const char* VolName(Int_t id) const = 0;
 
    // Return the unique numeric identifier for medium name mediumName
-   virtual Int_t MediumId(const Text_t* mediumName) const = 0;
+   virtual Int_t MediumId(const char* mediumName) const = 0;
 
    // Return total number of volumes in the geometry
    virtual Int_t NofVolumes() const = 0;

@@ -22,7 +22,7 @@
 ClassImp(TEveEventManager)
 
 //______________________________________________________________________________
-TEveEventManager::TEveEventManager(const Text_t* n, const Text_t* t) :
+TEveEventManager::TEveEventManager(const char* n, const char* t) :
    TEveElementList(n, t),
    fNewEventCommands()
 {

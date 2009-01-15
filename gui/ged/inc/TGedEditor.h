@@ -88,8 +88,8 @@ public:
 
    TGCanvas*                 GetTGCanvas() const { return fCan; }
    TGTab*                    GetTab()      const { return fTab; }
-   virtual TGCompositeFrame* GetEditorTab(const Text_t* name);
-   virtual TGedTabInfo*      GetEditorTabInfo(const Text_t* name);
+   virtual TGCompositeFrame* GetEditorTab(const char* name);
+   virtual TGedTabInfo*      GetEditorTabInfo(const char* name);
 
    virtual TCanvas*          GetCanvas() const { return fCanvas; }
    virtual TVirtualPad*      GetPad()    const { return fPad; }

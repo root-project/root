@@ -224,7 +224,7 @@ void TEveGValuator::SetValue(Float_t val, Bool_t emit)
 }
 
 //______________________________________________________________________________
-void TEveGValuator::SetToolTip(const Text_t* tip)
+void TEveGValuator::SetToolTip(const char* tip)
 {
    // Set the tooltip of the number-entry.
 

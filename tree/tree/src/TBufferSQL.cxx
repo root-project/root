@@ -746,8 +746,8 @@ void TBufferSQL::ResetOffset()
 
 #if 0
 //________________________________________________________________________
-void TBufferSQL::insert_test(const Text_t* dsn, const Text_t* usr, 
-                             const Text_t* pwd, const TString& tblname) 
+void TBufferSQL::insert_test(const char* dsn, const char* usr, 
+                             const char* pwd, const TString& tblname) 
 {
    TString str;
    TString select = "select * from ";

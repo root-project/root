@@ -54,7 +54,7 @@ public:
    virtual Int_t    GetGlobalRange(const TVolumeView *rootNode,Float_t *min, Float_t *max);
    virtual TList   *GetListOfShapes() const;
    virtual void     GetLocalRange(Float_t *min, Float_t *max);
-   virtual Text_t  *GetObjectInfo(Int_t px, Int_t py) const;
+   virtual char  *GetObjectInfo(Int_t px, Int_t py) const;
    virtual TShape  *GetShape()  const;
    virtual Int_t    GetVisibility() const;
    virtual Bool_t   IsMarked() const;

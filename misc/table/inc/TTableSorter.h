@@ -164,13 +164,13 @@ public:
    Int_t BinarySearch(Char_t   value ) const;
    Int_t BinarySearch(Bool_t   value ) const;
 
-   virtual const Text_t   *GetColumnName() const { return fColName.Data();}
+   virtual const char   *GetColumnName() const { return fColName.Data();}
    Int_t     GetIndex(UInt_t sortedIndex) const;
    virtual const void     *GetKeyAddress(Int_t indx) { return (fSortIndex && indx >= 0) ?fSortIndex[indx]:(void *)(-1);}
    virtual       Int_t     GetLastFound()  const { return fLastFound; }
-   virtual const Text_t   *GetTableName()  const;
-   virtual const Text_t   *GetTableTitle() const;
-   virtual const Text_t   *GetTableType()  const;
+   virtual const char   *GetTableName()  const;
+   virtual const char   *GetTableTitle() const;
+   virtual const char   *GetTableType()  const;
    virtual       TTable   *GetTable()      const;
    virtual       Int_t     GetNRows()      const { return fNumberOfRows;}
    virtual       Int_t     GetFirstRow()   const { return fFirstRow;}

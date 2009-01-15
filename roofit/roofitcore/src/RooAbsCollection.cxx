@@ -584,7 +584,7 @@ void RooAbsCollection::removeAll()
 
 
 //_____________________________________________________________________________
-void RooAbsCollection::setAttribAll(const Text_t* name, Bool_t value) 
+void RooAbsCollection::setAttribAll(const char* name, Bool_t value) 
 {
   // Set given attribute in each element of the collection by
   // calling each elements setAttribute() function.

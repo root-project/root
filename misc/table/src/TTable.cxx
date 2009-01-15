@@ -86,9 +86,9 @@
 //    public:
 //      typedef structName* iterator;
 //      className() : TTable(_QUOTE_(className),sizeof(structName))    {SetType(_QUOTE_(structName));}
-//      className(const Text_t *name) : TTable(name,sizeof(structName)) {SetType(_QUOTE_(structName));}
+//      className(const char *name) : TTable(name,sizeof(structName)) {SetType(_QUOTE_(structName));}
 //      className(Int_t n) : TTable(_QUOTE_(className),n,sizeof(structName)) {SetType(_QUOTE_(structName));}
-//      className(const Text_t *name,Int_t n) : TTable(name,n,sizeof(structName)) {SetType(_QUOTE_(structName));}
+//      className(const char *name,Int_t n) : TTable(name,n,sizeof(structName)) {SetType(_QUOTE_(structName));}
 //      structName *GetTable(Int_t i=0) const { return ((structName *)GetArray())+i;}
 //      structName &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }
 //      const structName &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const structName *)(GetTable(i))); }
@@ -371,7 +371,7 @@ TH1  *TTable::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries
 }
 
 //______________________________________________________________________________
-TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+TH1 *TTable::Draw(const char *varexp00, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
@@ -470,14 +470,14 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 
    if (GetNRows() == 0 || varexp00 == 0 || varexp00[0]==0) return 0;
    TString  opt;
-//   Text_t *hdefault = (char *)"htemp";
+//   char *hdefault = (char *)"htemp";
    const char *hdefault = "htemp";
    Int_t i,j,action;
    Int_t hkeep = 0;
    opt = option;
    opt.ToLower();
-   Text_t *varexp0 = StrDup(varexp00);
-   Text_t *hname = strstr(varexp0,">>");
+   char *varexp0 = StrDup(varexp00);
+   char *hname = strstr(varexp0,">>");
    TH1 *oldh1 = 0;
    TEventList *elist = 0;
    Bool_t profile = kFALSE;
@@ -1022,7 +1022,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
 }
 
 //______________________________________________________________________________
-TTable::TTable(const Text_t *name, Int_t size) : TDataSet(name),
+TTable::TTable(const char *name, Int_t size) : TDataSet(name),
          fSize(size),fN(0), fTable(0),fMaxIndex(0)
 {
    // Default TTable ctor.
@@ -1030,7 +1030,7 @@ TTable::TTable(const Text_t *name, Int_t size) : TDataSet(name),
 }
 
 //______________________________________________________________________________
-TTable::TTable(const Text_t *name, Int_t n,Int_t size) : TDataSet(name),
+TTable::TTable(const char *name, Int_t n,Int_t size) : TDataSet(name),
         fSize(size),fN(0),fTable(0),fMaxIndex(0)
 {
    // Create TTable object and set array size to n longs.
@@ -1038,7 +1038,7 @@ TTable::TTable(const Text_t *name, Int_t n,Int_t size) : TDataSet(name),
 }
 
 //______________________________________________________________________________
-TTable::TTable(const Text_t *name, Int_t n, Char_t *table,Int_t size) : TDataSet(name),
+TTable::TTable(const char *name, Int_t n, Char_t *table,Int_t size) : TDataSet(name),
          fSize(size),fN(0),fTable(0),fMaxIndex(0)
 {
    // Create TTable object and initialize it with values of array.
@@ -1047,7 +1047,7 @@ TTable::TTable(const Text_t *name, Int_t n, Char_t *table,Int_t size) : TDataSet
 }
 
 //______________________________________________________________________________
-TTable::TTable(const Text_t *name, const Text_t *type, Int_t n, Char_t *array, Int_t size)
+TTable::TTable(const char *name, const char *type, Int_t n, Char_t *array, Int_t size)
          : TDataSet(name),fSize(size),fTable(0),fMaxIndex(0)
 {
    // Create TTable object and initialize it with values of array.
@@ -1386,7 +1386,7 @@ Long_t TTable::GetTableSize() const {
 }
 
 //______________________________________________________________________________
-void TTable::Fit(const Text_t *formula ,const Text_t *varexp, const Text_t *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
+void TTable::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Fit a projected item(s) from a TTable*-*-*-*-*-*-*-*-*-*
 //*-*              =======================================
@@ -1766,7 +1766,7 @@ void TTable::PrintContents(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TTable::Project(const Text_t *hname, const Text_t *varexp, const Text_t *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+void TTable::Project(const char *hname, const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Make a projection of a TTable using selections*-*-*-*-*-*-*
 //*-*              =============================================
@@ -1959,7 +1959,7 @@ void TTable::SetTablePointer(void *table)
 }
 
 //______________________________________________________________________________
-void TTable::SetType(const Text_t *const type)
+void TTable::SetType(const char *const type)
 {
    //to be documented
    SetTitle(type);

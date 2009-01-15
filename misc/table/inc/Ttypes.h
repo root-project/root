@@ -71,9 +71,9 @@ virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = 
   public:                                           \
     typedef structName* iterator;                   \
     className() : TTable(_QUOTE_(className),sizeof(structName))    {SetType(_QUOTE_(structName));}      \
-    className(const Text_t *name) : TTable(name,sizeof(structName)) {SetType(_QUOTE_(structName));}     \
+    className(const char *name) : TTable(name,sizeof(structName)) {SetType(_QUOTE_(structName));}     \
     className(Int_t n) : TTable(_QUOTE_(className),n,sizeof(structName)) {SetType(_QUOTE_(structName));}\
-    className(const Text_t *name,Int_t n) : TTable(name,n,sizeof(structName)) {SetType(_QUOTE_(structName));}\
+    className(const char *name,Int_t n) : TTable(name,n,sizeof(structName)) {SetType(_QUOTE_(structName));}\
     structName *GetTable(Int_t i=0) const { return ((structName *)GetArray())+i;}                       \
     structName &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }             \
     const structName &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const structName *)(GetTable(i))); } \

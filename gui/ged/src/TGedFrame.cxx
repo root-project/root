@@ -132,7 +132,7 @@ void TGedFrame::AddExtraTab(TGedSubFrame* sf)
 }
 
 //______________________________________________________________________________
-TGVerticalFrame* TGedFrame::CreateEditorTabSubFrame(const Text_t* name)
+TGVerticalFrame* TGedFrame::CreateEditorTabSubFrame(const char* name)
 {
    // Create a vertical frame to be used by 'owner' in extra tab 'name'.
    // The new frame is registered into the sub-frame list.

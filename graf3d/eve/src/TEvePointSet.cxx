@@ -69,7 +69,7 @@ TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
 }
 
 //______________________________________________________________________________
-TEvePointSet::TEvePointSet(const Text_t* name, Int_t n_points, ETreeVarType_e tv_type) :
+TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
    TEveElement(fMarkerColor),
    TPointSet3D(n_points),
    TEvePointSelectorConsumer(tv_type),
@@ -408,8 +408,8 @@ void TEvePointSet::PointSelected(Int_t id)
 ClassImp(TEvePointSetArray);
 
 //______________________________________________________________________________
-TEvePointSetArray::TEvePointSetArray(const Text_t* name,
-                                     const Text_t* title) :
+TEvePointSetArray::TEvePointSetArray(const char* name,
+                                     const char* title) :
    TEveElement(fMarkerColor),
    TNamed(name, title),
 
@@ -562,7 +562,7 @@ Int_t TEvePointSetArray::Size(Bool_t under, Bool_t over) const
 }
 
 //______________________________________________________________________________
-void TEvePointSetArray::InitBins(const Text_t* quant_name,
+void TEvePointSetArray::InitBins(const char* quant_name,
                                  Int_t nbins, Double_t min, Double_t max)
 {
    // Initialize internal point-sets with given binning parameters.

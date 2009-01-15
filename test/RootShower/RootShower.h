@@ -119,7 +119,7 @@ private:
    // Selection frame
    TGCompositeFrame    *fSelectionFrame;    // Frame containing list tree and button frame
    GButtonFrame        *fButtonFrame;       // Frame containing control buttons
-   TGListTreeItem      *AddToTree(const Text_t *name = 0);
+   TGListTreeItem      *AddToTree(const char *name = 0);
    void                 BuildEventTree();
    TGCanvas            *fTreeView;          // Canvas containing event selection list tree
    TGListTree          *fEventListTree;     // Event selection TGListTree

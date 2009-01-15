@@ -111,11 +111,11 @@ public:
    virtual TEveElement* CloneElementRecurse(Int_t level=0) const;
    virtual void         CloneChildrenRecurse(TEveElement* dest, Int_t level=0) const;
 
-   virtual const Text_t* GetElementName()  const;
-   virtual const Text_t* GetElementTitle() const;
-   virtual void SetElementName (const Text_t* name);
-   virtual void SetElementTitle(const Text_t* title);
-   virtual void SetElementNameTitle(const Text_t* name, const Text_t* title);
+   virtual const char* GetElementName()  const;
+   virtual const char* GetElementTitle() const;
+   virtual void SetElementName (const char* name);
+   virtual void SetElementTitle(const char* title);
+   virtual void SetElementNameTitle(const char* name, const char* title);
    virtual void NameTitleChanged();
 
    const TString& GetVizTag() const             { return fVizTag; }
@@ -212,7 +212,7 @@ public:
    virtual Int_t GetNItems() const { return fItems.size(); }
 
    void         SpawnEditor();                  // *MENU*
-   virtual void ExportToCINT(Text_t* var_name); // *MENU*
+   virtual void ExportToCINT(char* var_name); // *MENU*
 
    virtual Bool_t AcceptElement(TEveElement* el);
 
@@ -377,7 +377,7 @@ public:
    virtual TEveElementObjectPtr* CloneElement() const { return new TEveElementObjectPtr(*this); }
 
    virtual TObject* GetObject(const TEveException& eh="TEveElementObjectPtr::GetObject ") const;
-   virtual void     ExportToCINT(Text_t* var_name);
+   virtual void     ExportToCINT(char* var_name);
 
    Bool_t GetOwnObject() const   { return fOwnObject; }
    void   SetOwnObject(Bool_t o) { fOwnObject = o; }
@@ -402,23 +402,23 @@ protected:
    TClass   *fChildClass;  // Class of acceptable children, others are rejected.
 
 public:
-   TEveElementList(const Text_t* n="TEveElementList", const Text_t* t="",
+   TEveElementList(const char* n="TEveElementList", const char* t="",
                    Bool_t doColor=kFALSE);
    TEveElementList(const TEveElementList& e);
    virtual ~TEveElementList() {}
 
    virtual TEveElementList* CloneElement() const { return new TEveElementList(*this); }
 
-   virtual const Text_t* GetElementName()  const { return GetName();  }
-   virtual const Text_t* GetElementTitle() const { return GetTitle(); }
+   virtual const char* GetElementName()  const { return GetName();  }
+   virtual const char* GetElementTitle() const { return GetTitle(); }
 
-   virtual void SetElementName (const Text_t* name)
+   virtual void SetElementName (const char* name)
    { TNamed::SetName(name); NameTitleChanged(); }
 
-   virtual void SetElementTitle(const Text_t* title)
+   virtual void SetElementTitle(const char* title)
    { TNamed::SetTitle(title); NameTitleChanged(); }
 
-   virtual void SetElementNameTitle(const Text_t* name, const Text_t* title)
+   virtual void SetElementNameTitle(const char* name, const char* title)
    { TNamed::SetNameTitle(name, title); NameTitleChanged(); }
 
    virtual Bool_t CanEditMainColor() const { return fDoColor; }

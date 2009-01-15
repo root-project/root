@@ -2471,7 +2471,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 
     TString format(cleanName);
     format.Append("/D");
-    branch = t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
+    branch = t.Branch(cleanName, &_value, (const char*)format, bufSize);
     branch->SetCompressionLevel(1) ;
     //      cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree " << (void*)&t << endl ;
   }

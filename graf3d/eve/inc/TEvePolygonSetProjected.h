@@ -85,7 +85,7 @@ protected:
    Float_t      fLineWidth; // outline width of polygons
 
 public:
-   TEvePolygonSetProjected(const Text_t* n="TEvePolygonSetProjected", const Text_t* t="");
+   TEvePolygonSetProjected(const char* n="TEvePolygonSetProjected", const char* t="");
    virtual ~TEvePolygonSetProjected();
 
    virtual void    SetProjection(TEveProjectionManager* mng, TEveProjectable* model);

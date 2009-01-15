@@ -28,7 +28,7 @@ protected:
    TEventList* fEvList;
    TList       fInput;
 public:
-   TEveSelectorToEventList(TEventList* evl, const Text_t* sel);
+   TEveSelectorToEventList(TEventList* evl, const char* sel);
 
    virtual Int_t  Version() const { return 1; }
    virtual Bool_t Process(Long64_t entry);
@@ -82,11 +82,11 @@ protected:
 
 public:
    TEvePointSelector(TTree* t=0, TEvePointSelectorConsumer* c=0,
-                     const Text_t* vexp="", const Text_t* sel="");
+                     const char* vexp="", const char* sel="");
    virtual ~TEvePointSelector() {}
 
-   virtual Long64_t Select(const Text_t* selection=0);
-   virtual Long64_t Select(TTree* t, const Text_t* selection=0);
+   virtual Long64_t Select(const char* selection=0);
+   virtual Long64_t Select(TTree* t, const char* selection=0);
    virtual void  TakeAction();
 
 
@@ -96,14 +96,14 @@ public:
    TEvePointSelectorConsumer* GetConsumer() const { return fConsumer; }
    void SetConsumer(TEvePointSelectorConsumer* c) { fConsumer = c; }
 
-   const Text_t* GetVarexp() const { return fVarexp; }
-   void SetVarexp(const Text_t* v) { fVarexp = v; }
+   const char* GetVarexp() const { return fVarexp; }
+   void SetVarexp(const char* v) { fVarexp = v; }
 
-   const Text_t* GetSelection() const { return fSelection; }
-   void SetSelection(const Text_t* s) { fSelection = s; }
+   const char* GetSelection() const { return fSelection; }
+   void SetSelection(const char* s) { fSelection = s; }
 
-   const Text_t* GetSubIdExp() const { return fSubIdExp; }
-   void SetSubIdExp(const Text_t* s) { fSubIdExp = s; }
+   const char* GetSubIdExp() const { return fSubIdExp; }
+   void SetSubIdExp(const char* s) { fSubIdExp = s; }
 
    Int_t GetSubIdNum() const { return fSubIdNum; }
 

@@ -40,7 +40,7 @@ protected:
 
 public:
    TEveLine(Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
-   TEveLine(const Text_t* name, Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
+   TEveLine(const char* name, Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
    virtual ~TEveLine() {}
 
    virtual void SetLineColor(Color_t col)   { SetMainColor(col); }

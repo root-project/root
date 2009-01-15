@@ -37,7 +37,7 @@ protected:
    TGFrame   *fGLViewerFrame;
 
 public:
-   TEveViewer(const Text_t* n="TEveViewer", const Text_t* t="");
+   TEveViewer(const char* n="TEveViewer", const char* t="");
    virtual ~TEveViewer();
 
    virtual void PreUndock();
@@ -78,7 +78,7 @@ protected:
    Bool_t       fShowTooltip;
 
 public:
-   TEveViewerList(const Text_t* n="TEveViewerList", const Text_t* t="");
+   TEveViewerList(const char* n="TEveViewerList", const char* t="");
    virtual ~TEveViewerList() {}
 
    virtual void AddElement(TEveElement* el);

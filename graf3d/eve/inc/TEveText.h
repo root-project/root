@@ -42,7 +42,7 @@ protected:
 
 
 public:
-   TEveText(const Text_t* txt="");
+   TEveText(const char* txt="");
    virtual ~TEveText() {}
 
    Int_t   GetFontSize() const { return fFontSize; }
@@ -53,8 +53,8 @@ public:
    void    SetFontFile(const char* name);
    void    SetFontMode(Int_t mode);
 
-   const   Text_t* GetText() const  { return fText.Data(); }
-   void    SetText(const Text_t* t) { fText = t; }
+   const   char* GetText() const  { return fText.Data(); }
+   void    SetText(const char* t) { fText = t; }
 
    Bool_t  GetLighting() const      { return fLighting; }
    void    SetLighting(Bool_t isOn) { fLighting = isOn; }

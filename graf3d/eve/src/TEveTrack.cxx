@@ -664,7 +664,7 @@ TEveTrackList::TEveTrackList(TEveTrackPropagator* rs) :
 }
 
 //______________________________________________________________________________
-TEveTrackList::TEveTrackList(const Text_t* name, TEveTrackPropagator* rs) :
+TEveTrackList::TEveTrackList(const char* name, TEveTrackPropagator* rs) :
    TEveElementList(name),
    TAttMarker(1, 20, 1),
    TAttLine(1,1,1),

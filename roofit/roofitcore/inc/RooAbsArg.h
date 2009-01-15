@@ -203,23 +203,23 @@ public:
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
 
   // Accessors to attributes
-  void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
-  Bool_t getAttribute(const Text_t* name) const ;
+  void setAttribute(const char* name, Bool_t value=kTRUE) ;
+  Bool_t getAttribute(const char* name) const ;
   inline const std::set<std::string>& attributes() const { 
     // Returns set of names of boolean attributes defined
     return _boolAttrib ; 
   }
 
-  void setStringAttribute(const Text_t* key, const Text_t* value) ;
-  const Text_t* getStringAttribute(const Text_t* key) const ;
+  void setStringAttribute(const char* key, const char* value) ;
+  const char* getStringAttribute(const char* key) const ;
   inline const std::map<std::string,std::string>& stringAttributes() const { 
     // Returns map<string,string> with all string attributes defined
     return _stringAttrib ; 
   }
 
   // Accessors to transient attributes
-  void setTransientAttribute(const Text_t* name, Bool_t value=kTRUE) ;
-  Bool_t getTransientAttribute(const Text_t* name) const ;
+  void setTransientAttribute(const char* name, Bool_t value=kTRUE) ;
+  Bool_t getTransientAttribute(const char* name) const ;
   inline const std::set<std::string>& transientAttributes() const { 
     // Return set of transient boolean attributes 
     return _boolAttribTransient ; 

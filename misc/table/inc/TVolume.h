@@ -63,12 +63,12 @@ protected:
    friend class TPolyLineShape;
 public:
    TVolume();
-   TVolume(const Text_t *name, const Text_t *title, const Text_t *shapename, Option_t *option="");
-   TVolume(const Text_t *name, const Text_t *title, TShape *shape, Option_t *option="");
+   TVolume(const char *name, const char *title, const char *shapename, Option_t *option="");
+   TVolume(const char *name, const char *title, TShape *shape, Option_t *option="");
    TVolume(TNode &node);
    virtual ~TVolume();
    virtual TVolumePosition *Add(TVolume *node, Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0, UInt_t id=0, Option_t *option="");
-   virtual TVolumePosition *Add(TVolume *node, Double_t x, Double_t y, Double_t z,  const Text_t *matrixname,  UInt_t id=0, Option_t *option="");
+   virtual TVolumePosition *Add(TVolume *node, Double_t x, Double_t y, Double_t z,  const char *matrixname,  UInt_t id=0, Option_t *option="");
    static  Int_t       MapStNode2GEANTVis(ENodeSEEN  vis);
    static  Int_t       MapGEANT2StNodeVis(Int_t vis);
    virtual void        Add(TShape *shape, Bool_t IsMaster=kFALSE);
@@ -80,7 +80,7 @@ public:
    virtual void        DrawOnly(Option_t *option="");
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
    static  TRotMatrix *GetIdentity();
-   virtual Text_t     *GetObjectInfo(Int_t px, Int_t py) const;
+   virtual char     *GetObjectInfo(Int_t px, Int_t py) const;
    const   Option_t   *GetOption() const { return fOption.Data();}
    TShape     *GetShape()  const {return fShape;}
    TList      *GetListOfShapes()  const {return fListOfShapes;}

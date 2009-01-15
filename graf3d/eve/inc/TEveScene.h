@@ -36,7 +36,7 @@ protected:
    Bool_t       fSmartRefresh;
 
 public:
-   TEveScene(const Text_t* n="TEveScene", const Text_t* t="");
+   TEveScene(const char* n="TEveScene", const char* t="");
    virtual ~TEveScene();
 
    virtual void CollectSceneParents(List_t& scenes);
@@ -48,7 +48,7 @@ public:
    TGLScenePad* GetGLScene() const { return fGLScene; }
    void SetGLScene(TGLScenePad* s) { fGLScene = s; }
 
-   virtual void SetName(const Text_t* n);
+   virtual void SetName(const char* n);
    virtual void Paint(Option_t* option = "");
 
    void DestroyElementRenderers(TEveElement* element);
@@ -73,7 +73,7 @@ private:
 protected:
 
 public:
-   TEveSceneList(const Text_t* n="TEveSceneList", const Text_t* t="");
+   TEveSceneList(const char* n="TEveSceneList", const char* t="");
    virtual ~TEveSceneList() {}
 
    void DestroyScenes();

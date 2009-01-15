@@ -47,7 +47,7 @@
 ClassImp(TEveDigitSet);
 
 //______________________________________________________________________________
-TEveDigitSet::TEveDigitSet(const Text_t* n, const Text_t* t) :
+TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    TEveElement     (),
    TNamed          (n, t),
 

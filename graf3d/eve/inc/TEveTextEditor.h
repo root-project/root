@@ -48,7 +48,7 @@ public:
 
    virtual void SetModel(TObject* obj);
 
-   void DoText(const Text_t*);
+   void DoText(const char*);
 
    void DoFontSize();
    void DoFontFile();

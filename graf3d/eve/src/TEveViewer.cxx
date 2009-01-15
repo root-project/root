@@ -43,7 +43,7 @@
 ClassImp(TEveViewer);
 
 //______________________________________________________________________________
-TEveViewer::TEveViewer(const Text_t* n, const Text_t* t) :
+TEveViewer::TEveViewer(const char* n, const char* t) :
    TEveWindowFrame(0, n, t),
    fGLViewer      (0),
    fGLViewerFrame (0)
@@ -247,7 +247,7 @@ Bool_t TEveViewer::HandleElementPaste(TEveElement* el)
 ClassImp(TEveViewerList);
 
 //______________________________________________________________________________
-TEveViewerList::TEveViewerList(const Text_t* n, const Text_t* t) :
+TEveViewerList::TEveViewerList(const char* n, const char* t) :
    TEveElementList(n, t),
    fShowTooltip   (kTRUE)
 {

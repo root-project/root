@@ -164,7 +164,7 @@ protected:
 
 public:
    TEveTrackList(TEveTrackPropagator* rs=0);
-   TEveTrackList(const Text_t* name, TEveTrackPropagator* rs=0);
+   TEveTrackList(const char* name, TEveTrackPropagator* rs=0);
    virtual ~TEveTrackList();
 
    void  MakeTracks(Bool_t recurse=kTRUE);

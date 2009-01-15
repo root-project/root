@@ -25,7 +25,7 @@ protected:
    Float_t       fScaleCenter[3];
 
 public:
-   TEveScalableStraightLineSet(const Text_t* n="ScalableStraightLineSet", const Text_t* t="");
+   TEveScalableStraightLineSet(const char* n="ScalableStraightLineSet", const char* t="");
    virtual ~TEveScalableStraightLineSet() {}
 
    void SetScaleCenter(Float_t x, Float_t y, Float_t z);

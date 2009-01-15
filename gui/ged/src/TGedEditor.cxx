@@ -183,7 +183,7 @@ void TGedEditor::Update(TGedFrame* /*frame*/)
 }
 
 //______________________________________________________________________________
-TGCompositeFrame* TGedEditor::GetEditorTab(const Text_t* name)
+TGCompositeFrame* TGedEditor::GetEditorTab(const char* name)
 {
    // Find or create tab with name.
 
@@ -191,7 +191,7 @@ TGCompositeFrame* TGedEditor::GetEditorTab(const Text_t* name)
 }
 
 //______________________________________________________________________________
-TGedTabInfo* TGedEditor::GetEditorTabInfo(const Text_t* name)
+TGedTabInfo* TGedEditor::GetEditorTabInfo(const char* name)
 {
    // Find or create tab with name.
 

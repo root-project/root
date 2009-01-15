@@ -510,7 +510,7 @@ void TEveTrans::SetRotByAngles(Float_t a1, Float_t a2, Float_t a3)
 
 //______________________________________________________________________________
 void TEveTrans::SetRotByAnyAngles(Float_t a1, Float_t a2, Float_t a3,
-                                  const Text_t* pat)
+                                  const char* pat)
 {
    // Sets Rotation part as given by angles a1, a1, a3 and pattern pat.
    // Pattern consists of "XxYyZz" characters.

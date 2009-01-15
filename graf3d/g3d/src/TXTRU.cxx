@@ -78,7 +78,7 @@ TXTRU::TXTRU()
 
 
 //______________________________________________________________________________
-TXTRU::TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
+TXTRU::TXTRU(const char *name, const char *title, const char *material,
              Int_t nxy, Int_t nz)
    : TShape (name,title,material)
 {
