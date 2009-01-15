@@ -2190,7 +2190,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
       // first try a typedef, so we don't trigger autoloading here:
       Reflex::Type envtypenum = G__find_typedef(atom_tagname);
       if (envtypenum) {
-         envtagnum = env_typenum.FinalType();
+         envtagnum = envtypenum.FinalType();
       } else {
          envtagnum = G__Dict::GetDict().GetScope(G__defined_tagname(atom_tagname, 1)); // Note: atom_tagname can be modified during this call.
       }      
