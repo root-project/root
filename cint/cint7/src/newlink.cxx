@@ -4379,7 +4379,7 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
    if (k) {
       fprintf(fp, ", ");
    }
-   if (param_name.size()) {
+   if (!param_name.empty()) {
       const char* p = strchr(param_name.c_str(), '[');
       if (p) {
          fprintf(fp, "G__Ap%d->a", k);
@@ -6459,8 +6459,8 @@ extern "C" int G__tagtable_setup(int tagnum, int size, int cpplink, int isabstra
          && 'n' != G__struct.type[tagnum]
       ) return(0);
 
-   if (0 != G__struct.size[tagnum]
-         && 'n' != G__struct.type[tagnum]
+   if ( ('n' != G__struct.type[tagnum] && 0 != G__struct.size[tagnum] ) // Class already setup
+       || ('n' == G__struct.type[tagnum] && 0 != G__struct.iscpplink[tagnum]) // Namespace already setup
       ) {
 #ifndef G__OLDIMPLEMENTATION1656
      char found = G__incsetup_exist(G__struct.incsetup_memvar[tagnum],setup_memvar);
@@ -6538,8 +6538,6 @@ if (
          found = G__incsetup_exist(G__struct.incsetup_memfunc[tagnum], setup_memfunc);
          if (setup_memfunc&&!found)
             G__struct.incsetup_memfunc[tagnum]->push_back(setup_memfunc);
-         else
-            G__struct.incsetup_memfunc[tagnum]->clear();
       }
 
    /* add template names */

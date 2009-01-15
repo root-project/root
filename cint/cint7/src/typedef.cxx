@@ -966,7 +966,7 @@ next_name:
             G__struct.type[prop->tagnum] = 0;
             free(old);            
          }
-         fprintf(stderr, "G__define_type: The typdef '%s' already existed as autoload!\n", type_name);
+         // fprintf(stderr, "G__define_type: The typdef '%s' already existed as autoload!\n", type_name);
       } else {
          // fprintf(stderr, "G__define_type: The typdef '%s' already existed!\n", type_name);      
          if(';'!=c) G__fignorestream(";");
