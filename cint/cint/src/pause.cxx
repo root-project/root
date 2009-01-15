@@ -2158,6 +2158,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       G__update_stdio();
    }
    else if (strncmp("X", com, 1) == 0) {
+      bool keepIfLoaded = com[1] == 'k';
       /*******************************************************
        * Execute C/C++ source file. Filename minus extension
        * must match a function in the source file. This function
@@ -2189,7 +2190,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       temp2 = G__prerun;
       G__prerun = 1;  /* suppress warning message if file already loaded */
       temp1 = G__loadfile(string + temp);
-      if (temp1 == 1) {
+      if (!keepIfLoaded && temp1 == 1) {
          G__prerun = 0;
          G__unloadfile(string + temp);
          G__storerewindposition();
@@ -2263,9 +2264,13 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       G__RESET_TEMPENV;
    }
    else if (
-      (G__do_smart_unload && strncmp("L", com, 1) == 0) ||
+      (G__do_smart_unload &&
+       strncmp("L", com, 1) == 0 &&
+       strncmp("Lk", com, 2) != 0
+      ) ||
       strncmp("Lall", com, 2) == 0
    ) {
+      bool keepIfLoaded = com[1] == 'k';
       temp = 0;
       while (isspace(string[temp])) temp++;
       G__UnlockCriticalSection();
@@ -2275,10 +2280,11 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       *err |= G__security_recover(G__serr);
       return(ignore);
    }
-   else if (strncmp("L", com, 1) == 0 || strncmp("Load", com, 4) == 0) {
+   else if (strncmp("L", com, 1) == 0) {
       /*******************************************************
        * Load(Re-Load) a C/C++ source file.
        *******************************************************/
+      bool keepIfLoaded = com[1] == 'k';
       temp = 0;
       while (isspace(string[temp])) temp++;
       if (string[temp] == '\0') {
@@ -2294,7 +2300,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       temp2 = G__prerun;
       G__prerun = 1;  /* suppress warning message if file already loaded */
       temp1 = G__loadfile(string + temp);
-      if (temp1 == 1) {
+      if (!keepIfLoaded && temp1 == 1) {
          G__unloadfile(string + temp);
          G__storerewindposition();
          if (G__loadfile(string + temp)) {
@@ -2450,11 +2456,14 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
 #ifndef G__ROOT
       G__more(G__sout, "             x [file]  : load [file] and evaluate {statements} in the file\n");
 #else
-      G__more(G__sout, "             x [file]  : load [file] and execute function [file](wo extension)\n");
+      G__more(G__sout, "             x [file]  : load [file] and execute function [file](w/o extension)\n");
+      G__more(G__sout, "             xk [file] : keep [file] if already loaded else load it, and execute function [file](w/o extension)\n");
 #endif
-      G__more(G__sout, "             X [file]  : load [file] and execute function [file](wo extension)\n");
+      G__more(G__sout, "             X [file]  : load [file] and execute function [file](w/o extension)\n");
+      G__more(G__sout, "             Xk [file] : keep [file] it already loaded else load it. and execute function [file](w/o extension)\n");
       G__more(G__sout, "             E <[file]>: open editor and evaluate {statements} in the file\n");
       G__more(G__sout, "Load/Unload: L [file]  : load [file]\n");
+      G__more(G__sout, "             Lk [file] : keep [file] if already loaded, else load it\n");
       G__more(G__sout, "             La [file] : reload all files loaded after [file]\n");
       G__more(G__sout, "             U [file]  : unload [file]\n");
       G__more(G__sout, "             C [1|0]   : copy source to $TMPDIR (on/off)\n");
