@@ -631,6 +631,9 @@ void TGLSAViewer::ToggleOrthoRotate()
    fOrthoXOYCamera.SetEnableRotate(state);
    fOrthoXOZCamera.SetEnableRotate(state);
    fOrthoZOYCamera.SetEnableRotate(state);
+   fOrthoXnOYCamera.SetEnableRotate(state);
+   fOrthoXnOZCamera.SetEnableRotate(state);
+   fOrthoZnOYCamera.SetEnableRotate(state);
 }
 
 //______________________________________________________________________________
