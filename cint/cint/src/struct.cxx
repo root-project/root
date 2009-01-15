@@ -1605,7 +1605,12 @@ int G__defined_tagname(const char* tagname, int noerror)
       }
 #endif // G__STD_NAMESPACE
       else {
-         env_tagnum = G__defined_tagname(temp, noerror);
+         // first try a typedef, so we don't trigger autoloading here:
+         long env_typenum = G__defined_typename(temp);
+         if (env_typenum != -1 && G__newtype.type[env_typenum] == 'u')
+            env_tagnum = G__newtype.tagnum[env_typenum];
+         else
+            env_tagnum = G__defined_tagname(temp, noerror);
          if (env_tagnum == -1) {
             return -1;
          }
@@ -1769,7 +1774,12 @@ int G__search_tagname(const char* tagname, int type)
       strcpy(atom_tagname, tagname);
       p = (char*)G__strrstr(atom_tagname, "::");
       *p = 0;
-      envtagnum = G__defined_tagname(atom_tagname, 1);
+      // first try a typedef, so we don't trigger autoloading here:
+      long envtypenum = G__defined_typename(atom_tagname);
+      if (envtypenum != -1 && G__newtype.type[envtypenum] == 'u')
+	envtagnum = G__newtype.tagnum[envtypenum];
+      else
+	envtagnum = G__defined_tagname(atom_tagname, 1);
    }
    else {
       envtagnum = G__get_envtagnum();
