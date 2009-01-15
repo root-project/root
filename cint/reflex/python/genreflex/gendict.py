@@ -54,6 +54,7 @@ class genDictionary(object) :
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
     self.xref['_0'] = {'elem':'Unknown', 'attrs':{'id':'_0','name':''}, 'subelems':[]}
+    self.TObject_id = ''
 #----------------------------------------------------------------------------------
   def addTemplateToName(self, attrs):
     if attrs['name'].find('>') == -1 and 'demangled' in attrs :
@@ -106,6 +107,8 @@ class genDictionary(object) :
     elif name in ('Class','Struct') :
       self.patchTemplateName(attrs, name)
       self.classes.append(attrs)
+      if 'name' in attrs and attrs['name'] == 'TObject' :
+        self.TObject_id = attrs['id']
     elif name in ('Function',) :
       self.addTemplateToName(attrs)
       self.patchTemplateName(attrs, name)
@@ -2383,81 +2386,137 @@ def ClassDefImplementation(selclasses, self) :
       break
   if haveRtypes == 0: return ''
   
-  returnValue  = '#include "TClass.h"\n'
+  returnValue  = '#ifndef G__DICTIONARY\n' # for RtypesImp.h
+  returnValue += '# define G__DICTIONARY\n'
+  returnValue += '#endif\n'
+  returnValue += '#include "TClass.h"\n'
   returnValue += '#include "TMemberInspector.h"\n'
+  returnValue += '#include "RtypesImp.h"\n' # for GenericShowMembers etc
   haveClassDef = 0
 
   for attrs in selclasses :
     members = attrs.get('members','')
     membersList = members.split()
 
-    listOfMembers = ""
+    listOfMembers = []
     for ml in membersList:
       if ml[1].isdigit() :
-        listOfMembers += self.xref[ml]['attrs']['name']
+        listOfMembers.append(self.xref[ml]['attrs']['name'])
 
-    if  "fgIsA" in listOfMembers \
-      and "Class" in listOfMembers \
-      and "Class_Name" in listOfMembers  \
-      and "Class_Version" in listOfMembers  \
-      and "Dictionary" in listOfMembers  \
-      and "IsA" in listOfMembers  \
-      and "ShowMembers" in listOfMembers  \
-      and "Streamer" in listOfMembers  \
-      and "StreamerNVirtual" in listOfMembers \
-      and "DeclFileName" in listOfMembers \
-      and "ImplFileLine" in listOfMembers \
-      and "ImplFileName" in listOfMembers :
+    allbases = []
+    self.getAllBases(attrs['id'], allbases)
 
-         haveClassDef = 1
+    # If the class inherits from TObject it MUST use ClassDef; check that:
+    derivesFromTObject = 0
+    if len(self.TObject_id) :
+      if len( filter( lambda b: b[0] == self.TObject_id, allbases ) ) :
+        derivesFromTObject = 1
 
-         clname = '::' + attrs['fullname']
-         returnValue += 'TClass* ' + clname + '::fgIsA = 0;\n'
-         returnValue += 'TClass* ' + clname + '::Class() {\n'
-         returnValue += '   if (!fgIsA)\n'
-         returnValue += '      fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
-         returnValue += '   return fgIsA;\n'
-         returnValue += '}\n'
-         returnValue += 'const char * ' + clname + '::Class_Name() {return "' + clname[2:]  + '";}\n'
-         returnValue += 'void ' + clname + '::Dictionary() {}\n'
-         returnValue += 'const char *' + clname  + '::ImplFileName() {return "";}\n'
+    if "fgIsA" in listOfMembers \
+           and "Class" in listOfMembers \
+           and "Class_Name" in listOfMembers  \
+           and "Class_Version" in listOfMembers  \
+           and "Dictionary" in listOfMembers  \
+           and "IsA" in listOfMembers  \
+           and "ShowMembers" in listOfMembers  \
+           and "Streamer" in listOfMembers  \
+           and "StreamerNVirtual" in listOfMembers \
+           and "DeclFileName" in listOfMembers \
+           and "ImplFileLine" in listOfMembers \
+           and "ImplFileName" in listOfMembers :
 
-         returnValue += 'int ' + clname + '::ImplFileLine() {return 0;}\n'
+      haveClassDef = 1
 
-         returnValue += 'void '+ clname  +'::ShowMembers(TMemberInspector &R__insp, char *R__parent) {\n'
-         returnValue += '   TClass *R__cl = ' + clname  + '::IsA();\n'
-         returnValue += '   Int_t R__ncp = strlen(R__parent);\n'
-         returnValue += '   if (R__ncp || R__cl || R__insp.IsA()) { }\n'
+      clname = '::' + attrs['fullname']
+      returnValue += 'TClass* ' + clname + '::fgIsA = 0;\n'
+      returnValue += 'TClass* ' + clname + '::Class() {\n'
+      returnValue += '   if (!fgIsA)\n'
+      returnValue += '      fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
+      returnValue += '   return fgIsA;\n'
+      returnValue += '}\n'
+      returnValue += 'const char * ' + clname + '::Class_Name() {return "' + clname[2:]  + '";}\n'
+      returnValue += 'void ' + clname + '::Dictionary() {}\n'
+      returnValue += 'const char *' + clname  + '::ImplFileName() {return "";}\n'
 
-         for ml in membersList:
-           if ml[1].isdigit() :
-             if self.xref[ml]['elem'] == 'Field' :
-               mattrs = self.xref[ml]['attrs']
-               varname  = mattrs['name']
-               tt = self.xref[mattrs['type']]
-               te = tt['elem']
-               if te == 'PointerType' :
-                 varname1 = '*' + varname
-               elif te == 'ArrayType' :
-                 t = self.genTypeName(mattrs['type'],colon=True,const=True)
-                 arraytype = t[t.find('['):]
-                 varname1 = varname + arraytype
-               else :
-                 varname1 = varname
-               returnValue += '   R__insp.Inspect(R__cl, R__parent, "' + varname1 + '", &' + varname + ');\n'
+      returnValue += 'int ' + clname + '::ImplFileLine() {return 0;}\n'
 
-         if 'bases' in attrs :
-           for b in attrs['bases'].split() :
-             returnValue +=  '   ' + self.xref[b]['attrs']['name'] + '::ShowMembers(R__insp,R__parent);\n'
+      returnValue += 'void '+ clname  +'::ShowMembers(TMemberInspector &R__insp, char *R__parent) {\n'
+      returnValue += '   TClass *R__cl = ' + clname  + '::IsA();\n'
+      returnValue += '   Int_t R__ncp = strlen(R__parent);\n'
+      returnValue += '   if (R__ncp || R__cl || R__insp.IsA()) { }\n'
 
-         returnValue += '}\n'
+      for ml in membersList:
+        if ml[1].isdigit() :
+          if self.xref[ml]['elem'] == 'Field' :
+            mattrs = self.xref[ml]['attrs']
+            varname  = mattrs['name']
+            tt = self.xref[mattrs['type']]
+            te = tt['elem']
+            if te == 'PointerType' :
+              varname1 = '*' + varname
+            elif te == 'ArrayType' :
+              t = self.genTypeName(mattrs['type'],colon=True,const=True)
+              arraytype = t[t.find('['):]
+              varname1 = varname + arraytype
+            else :
+              varname1 = varname
+            # rootcint adds a cast to void* here for the address of the member, as in:
+            # returnValue += '   R__insp.Inspect(R__cl, R__parent, "' + varname1 + '", (void*)&' + varname + ');\n'
+            # but only for struct-type members. CVS log from 2001:
+            #  "add explicit cast to (void*) in call to Inspect() only for object data"
+            #  "members not having a ShowMembers() method. Needed on ALPHA to be able to"
+            #  "compile G__Thread.cxx."
+            returnValue += '   R__insp.Inspect(R__cl, R__parent, "' + varname1 + '", &' + varname + ');\n'
+            # if struct: recurse!
+            if te in ('Class','Struct') :
+              memtypeid = mattrs['type']
+              memDerivesFromTObject = (memtypeid == self.TObject_id)
+              if not memDerivesFromTObject :
+                allmembases = []
+                self.getAllBases(memtypeid, allmembases)
+                if len( filter( lambda b: b[0] == self.TObject_id, allmembases ) ) :
+                  memDerivesFromTObject = 1
+              if memDerivesFromTObject :
+                returnValue +=  '   %s.ShowMembers(R__insp, strcat(R__parent,"%s.")); R__parent[R__ncp] = 0;\n' % (varname, varname)
+              else :
+                # TODO: the "false" parameter signals that it's a non-transient (i.e. a persistent) member.
+                # We have the knowledge to properly pass true or false, and we should do that at some point...
+                returnValue +=  '   ::ROOT::GenericShowMembers("%s", (void*)&%s, R__insp, strcat(R__parent,"%s."), %s);\n' \
+                               % (self.genTypeName(memtypeid), varname, varname, "false")
+                # tt['attrs']['fullname']
+                returnValue +=  '   R__parent[R__ncp] = 0;\n'
 
-         returnValue += 'void '+ clname  +'::Streamer(TBuffer &b) {\n   if (b.IsReading()) {\n'
-         returnValue += '      b.ReadClassBuffer(' + clname + '::Class(),this);\n'
-         returnValue += '   } else {\n'
-         returnValue += '      b.WriteClassBuffer(' + clname  + '::Class(),this);\n'
-         returnValue += '   }\n'
-         returnValue += '}\n'
+      if 'bases' in attrs :
+        for b in attrs['bases'].split() :
+          poscol = b.find(':')
+          if poscol == -1 : baseid = b
+          else            : baseid = b[poscol + 1:]
+          baseDerivesFromTObject = (baseid == self.TObject_id)
+          # a base cannot possibly derive from TObject if we don't derive from TObject:
+          if not baseDerivesFromTObject and derivesFromTObject :
+            allbasebases = []
+            self.getAllBases(baseid, allbasebases)
+            if len( filter( lambda b: b[0] == self.TObject_id, allbasebases ) ) :
+              baseDerivesFromTObject = 1
+          # basename = self.xref[baseid]['attrs']['fullname']
+          basename = self.genTypeName(baseid)
+          if baseDerivesFromTObject :
+            returnValue +=  '   %s::ShowMembers(R__insp,R__parent);\n' % basename
+          else :
+            returnValue +=  '   ::ROOT::GenericShowMembers("%s", ( ::%s *)(this), R__insp, R__parent, false);\n' % (basename, basename)
+
+      returnValue += '}\n'
+
+      returnValue += 'void '+ clname  +'::Streamer(TBuffer &b) {\n   if (b.IsReading()) {\n'
+      returnValue += '      b.ReadClassBuffer(' + clname + '::Class(),this);\n'
+      returnValue += '   } else {\n'
+      returnValue += '      b.WriteClassBuffer(' + clname  + '::Class(),this);\n'
+      returnValue += '   }\n'
+      returnValue += '}\n'
+    elif derivesFromTObject :
+      # no fgIsA etc members but derives from TObject!
+      print '--->> genreflex: ERROR: class %s derives from TObject but does not use ClassDef!' % attrs['fullname']
+      print '--->>                   You MUST put ClassDef(%s, 1); into the class definition.' % attrs['fullname']
 
   if haveClassDef == 1 :
     return "} // unnamed namespace\n\n" + returnValue + "\nnamespace {\n"
