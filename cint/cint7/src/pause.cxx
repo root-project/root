@@ -633,7 +633,7 @@ static void G__display_keyword(FILE* fout, char* keyword,
 }
 
 //______________________________________________________________________________
-extern "C" int G__reloadfile(char* filename)
+extern "C" int G__reloadfile(char* filename, bool keep)
 {
    int i, j = 0;
    char *storefname[G__MAXFILE];
@@ -651,31 +651,34 @@ extern "C" int G__reloadfile(char* filename)
       if (!flag &&
             G__matchfilename(i, filename)
          ) {
-         if (G__srcfile[i].hasonlyfunc && G__do_smart_unload) {
+         if (!keep && G__srcfile[i].hasonlyfunc && G__do_smart_unload) {
             G__smart_unload(i);
             flag = 0;
          }
          else flag = 1;
-         j = i;
-         while (-1 != G__srcfile[j].included_from
-                /* do not take the tempfile in consideration! */
-                && (G__srcfile[j].included_from <= G__gettempfilenum())
-               ) {
-            if (G__srcfile[G__srcfile[j].included_from].filename == 0) {
-               /* It is possibly a closed temporary file let's ignore
-                  it to */
-               break;
+         if (!keep) {
+            j = i;
+            while (-1 != G__srcfile[j].included_from
+                   /* do not take the tempfile in consideration! */
+                   && (G__srcfile[j].included_from <= G__gettempfilenum())
+                   ) {
+               if (G__srcfile[G__srcfile[j].included_from].filename == 0) {
+                  /* It is possibly a closed temporary file let's ignore
+                     it to */
+                  break;
+               }
+               // sanity check; this can only happen if something went wrong during loadfile
+               if (j != G__srcfile[j].included_from)
+                  j = G__srcfile[j].included_from;
+               else break;
             }
-            // sanity check; this can only happen if something went wrong during loadfile
-            if (j != G__srcfile[j].included_from)
-               j = G__srcfile[j].included_from;
-            else break;
          }
          break;
       }
    }
 
    if (flag) {
+      if (keep) return 1;
       for (i = j;i < G__nfile;i++) {
          if (G__srcfile[i].filename[0]) {
             if (G__srcfile[i].prepname) storecpp[storen] = 1;
@@ -2312,10 +2315,11 @@ extern "C" int G__process_cmd(char* line, char* prompt, int* more, int* err, G__
       (G__do_smart_unload && strncmp("L", com, 1) == 0) ||
       strncmp("Lall", com, 2) == 0
    ) {
+      bool keepIfLoaded = com[1] == 'k';
       temp = 0;
       while (isspace(string[temp])) temp++;
       G__UnlockCriticalSection();
-      G__reloadfile(string + temp);
+      G__reloadfile(string + temp, keepIfLoaded);
       G__unredirectoutput(&store_stdout, &store_stderr, &store_stdin
                           , keyword, pipefile);
       *err |= G__security_recover(G__serr);
