@@ -161,7 +161,7 @@ extern "C" int G__call_setup_funcs()
          G__input_file store_ifile = G__ifile;
          int fileno = G__setup_func_list[i]->filenum;
          G__ifile.filenum = fileno;
-         G__ifile.line_number = -1;
+         G__ifile.line_number = 1;
          G__ifile.str = 0;
          G__ifile.pos = 0;
          G__ifile.vindex = 0;

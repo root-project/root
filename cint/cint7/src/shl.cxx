@@ -1962,9 +1962,9 @@ int Cint::Internal::G__RegisterLibrary(void (*func)())
          --cutat;
          sbLibName[cutat + 1] = 0;
       }
-      G__register_sharedlib( sbLibName );
+      return G__register_sharedlib( sbLibName );
    }
-   return 0;
+   return -1;
 }   
 
 // G__UnregisterLibrary

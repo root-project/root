@@ -8495,7 +8495,7 @@ void Cint::Internal::G__incsetup_memfunc(int tagnum)
 
       if (fileno != -1) {
          G__ifile.fp = G__srcfile[fileno].fp;
-         strcpy(G__ifile.name, G__srcfile[fileno].filename);
+         if (G__srcfile[fileno].filename) strcpy(G__ifile.name, G__srcfile[fileno].filename);
       }
 #ifdef G__OLDIMPLEMENTATION1125_YET /* G__PHILIPPE26 */
       if (0 == G__struct.memfunc[tagnum]->allifunc
