@@ -337,22 +337,20 @@ void stressProof(const char *url, Int_t nwrks,
    // Set verbosity
    gverbose = verbose;
 
-   // Check url
-   TUrl uu(url), udef(urldef);
-   if (strcmp(uu.GetHost(), udef.GetHost()) || (uu.GetPort() != udef.GetPort())) {
-      if (gDynamicStartup) {
+   // Notify/warn about the dynamic startup option, if any
+   if (gDynamicStartup) {
+      // Check url
+      TUrl uu(url), udef(urldef);
+      if (strcmp(uu.GetHost(), udef.GetHost()) || (uu.GetPort() != udef.GetPort())) {
          printf("*   WARNING: request to run a test with per-job scheduling on    *\n");
          printf("*            an external cluster: %s .\n", url);
          printf("*            Make sure the dynamic option is set.                *\n");
          printf("******************************************************************\n");
          gDynamicStartup = kFALSE;
+      } else {
+         printf("*  Runnning in dynamic mode (per-job scheduling)                 *\n");
+         printf("******************************************************************\n");
       }
-   }
-   // Notify dynamic startup ption, if any
-   if (gDynamicStartup) {
-      printf("*  Runnning in dynamic mode (per-job scheduling)                 *\n");
-      printf("******************************************************************\n");
-      gDynamicStartup = kFALSE;
    }
 
    // Dataset option
