@@ -15,7 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 constTest.log: constTest_C.$(DllSuf)
-	$(CMDECHO) root -q -b -l constTest.C+ > constTest.log 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l constTest.C+ > constTest.log 
 
 constTest: constTest.log
 	$(CMDECHO) diff -b constTest.log constTest.ref
