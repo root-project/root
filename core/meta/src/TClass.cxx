@@ -3996,7 +3996,8 @@ Long_t TClass::Property() const
          kl->fStreamerType  = kForeign;
 
       } else if ( kl->fStreamerType == kNone ) {
-         if (strcmp( gCint->ClassInfo_FileName(fClassInfo),"{CINTEX dictionary translator}")==0) {
+         if ( gCint->ClassInfo_FileName(fClassInfo) 
+             && strcmp( gCint->ClassInfo_FileName(fClassInfo),"{CINTEX dictionary translator}")==0) {
             kl->SetBit(kIsForeign);
          }
          kl->fStreamerType  = kInstrumented;
