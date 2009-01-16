@@ -43,7 +43,7 @@ private:
    TTimer  *fTimer;  //timer for delayed Condor COD suspend
 
 protected:
-   Bool_t   StartSlaves(Bool_t parallel, Bool_t);
+   Bool_t   StartSlaves(Bool_t);
    TString  GetJobAd();
 
 public:

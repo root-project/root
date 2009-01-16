@@ -39,7 +39,7 @@ class TProofSuperMaster : public TProof {
 friend class TProofPlayerSuperMaster;
 
 protected:
-   Bool_t    StartSlaves(Bool_t, Bool_t);
+   Bool_t    StartSlaves(Bool_t);
    void      ValidateDSet(TDSet *dset);
    virtual   TVirtualProofPlayer *MakePlayer(const char *player = 0, TSocket *s = 0);
 

@@ -152,56 +152,6 @@ R__EXTERN TVirtualMutex *gProofMutex;
 
 typedef void (*PrintProgress_t)(Long64_t tot, Long64_t proc, Float_t proctime);
 
-// Helper classes used for parallel startup
-class TProofThreadArg {
-public:
-   TUrl         *fUrl;
-   TString       fOrd;
-   Int_t         fPerf;
-   TString       fImage;
-   TString       fWorkdir;
-   TString       fMsd;
-   TList        *fSlaves;
-   TProof       *fProof;
-   TCondorSlave *fCslave;
-   TList        *fClaims;
-   Int_t         fType;
-
-   TProofThreadArg(const char *h, Int_t po, const char *o, Int_t pe,
-                   const char *i, const char *w,
-                   TList *s, TProof *prf);
-
-   TProofThreadArg(TCondorSlave *csl, TList *clist,
-                   TList *s, TProof *prf);
-
-   TProofThreadArg(const char *h, Int_t po, const char *o,
-                   const char *i, const char *w, const char *m,
-                   TList *s, TProof *prf);
-
-   virtual ~TProofThreadArg() { if (fUrl) delete fUrl; }
-
-private:
-
-   TProofThreadArg(const TProofThreadArg&); // Not implemented
-   TProofThreadArg& operator=(const TProofThreadArg&); // Not implemented
-
-};
-
-// PROOF Thread class for parallel startup
-class TProofThread {
-public:
-   TThread         *fThread;
-   TProofThreadArg *fArgs;
-
-   TProofThread(TThread *t, TProofThreadArg *a): fThread(t), fArgs(a) {}
-   virtual ~TProofThread() { SafeDelete(fThread); SafeDelete(fArgs); }
-private:
-
-   TProofThread(const TProofThread&); // Not implemented
-   TProofThread& operator=(const TProofThread&); // Not implemented
-
-};
-
 // PROOF Interrupt signal handler
 class TProofInterruptHandler : public TSignalHandler {
 private:
@@ -585,7 +535,7 @@ protected:
    Int_t           Init(const char *masterurl, const char *conffile,
                         const char *confdir, Int_t loglevel,
                         const char *alias = 0);
-   virtual Bool_t  StartSlaves(Bool_t parallel, Bool_t attach = kFALSE);
+   virtual Bool_t  StartSlaves(Bool_t attach = kFALSE);
    Int_t AddWorkers(TList *wrks);
    Int_t RemoveWorkers(TList *wrks);
 

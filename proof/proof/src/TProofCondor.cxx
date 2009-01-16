@@ -73,9 +73,9 @@ TProofCondor::~TProofCondor()
 }
 
 //______________________________________________________________________________
-Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
+Bool_t TProofCondor::StartSlaves(Bool_t)
 {
-   // non static config
+   // Setup Condor workers using dynamic information
 
    fCondor = new TCondor;
    TString jobad = GetJobAd();
@@ -134,7 +134,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
             claims.Add(csl);
             ord++;
          }
-                 
+
          // Notify claim creation
          nSlavesDone++;
          TMessage m(kPROOF_SERVERSTARTED);
@@ -154,222 +154,99 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
    Int_t trial = 1;
    Int_t idx = 0;
 
-   // Init stuff for parallel start-up, if required
-   std::vector<TProofThread *> thrHandlers;
-   TIter *nextsl = 0, *nextclaim = 0;
-   TList *startedsl = 0;
-   UInt_t nSlaves = 0;
-   TTimer *ptimer = 0;
-   if (parallel) {
-      nSlaves = claims.GetSize();
-      thrHandlers.reserve(nSlaves);
-      if (thrHandlers.max_size() >= nSlaves) {
-         startedsl = new TList();
-         nextsl = new TIter(startedsl);
-         nextclaim = new TIter(&claims);
-      } else {
-         PDB(kGlobal,1)
-            Info("StartSlaves","cannot reserve enough space thread"
-                 " handlers - switch to serial startup");
-         parallel = kFALSE;
-      }
-   }
-
    int nClaims = claims.GetSize();
    int nClaimsDone = 0;
    while (claims.GetSize() > 0) {
       TCondorSlave* c = 0;
 
-      if (parallel) {
-         // Parallel startup in separate threads
-         startedsl->RemoveAll();
-         nextclaim->Reset();
+      // Get Condor Slave
+      if (trial == 1) {
+         c = dynamic_cast<TCondorSlave*>(claims.At(idx));
+      } else {
+         TPair *p = dynamic_cast<TPair*>(claims.At(idx));
+         TTimer *t = dynamic_cast<TTimer*>(p->Value());
+         // wait remaining time
+         Long_t wait = (Long_t) (t->GetAbsTime()-gSystem->Now());
+         if (wait>0) gSystem->Sleep(wait);
+         c = dynamic_cast<TCondorSlave*>(p->Key());
+      }
 
-         while ((c = (TCondorSlave *)(*nextclaim)())) {
-            // Prepare arguments
-            TProofThreadArg *ta = new TProofThreadArg(c, &claims, startedsl, this);
-            if (ta) {
-               // The type of the thread func makes it a detached thread
-               TThread *th = new TThread(SlaveStartupThread,ta);
-               if (!th) {
-                  Info("StartSlaves","can't create startup thread:"
-                       " out of system resources");
-                  SafeDelete(ta);
-               } else {
-                  // Add to the vector
-                  thrHandlers.push_back(new TProofThread(th, ta));
-                  // Run the thread
-                  th->Run();
-               }
-            } else {
-               Info("StartSlaves","can't create thread arguments object:"
-                    " out of system resources");
-            }
-         }
+      // create slave
+      TSlave *slave = CreateSlave(Form("%s:d",c->fHostname.Data(), c->fPort), c->fOrdinal,
+                                    c->fPerfIdx, c->fImage, c->fWorkDir);
 
-         // Start or reset timer
-         if (trial == 1) {
-            ptimer = new TTimer(delay);
-         } else {
-            ptimer->Reset();
-         }
-
-         // Wait completion of startup operations
-         std::vector<TProofThread *>::iterator i;
-         for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
-            TProofThread *pt = *i;
-            // Wait on this condition
-            if (pt && pt->fThread->GetState() == TThread::kRunningState) {
-               Info("Init",
-                    "parallel startup: waiting for slave %s (%s:%d)",
-                    pt->fArgs->fOrd.Data(), pt->fArgs->fUrl->GetHost(),
-                    pt->fArgs->fUrl->GetPort());
-               pt->fThread->Join();
-            }
-         }
-
-         // Add the good slaves to the lists
-         nextsl->Reset();
-         TSlave *sl = 0;
-         while ((sl = (TSlave *)(*nextsl)())) {
-            if (sl->IsValid()) {
-               fSlaves->Add(sl);
-               fAllMonitor->Add(sl->GetSocket());
-               startedsl->Remove(sl);
-            }
-         }
-
-         // In case of failures, and if we still have some bonus trial,
-         // try again when a 'delay' interval is elapsed;
-         // otherwise flag the bad guys and go on
-         if (claims.GetSize() > 0) {
-            if (trial < ntries) {
-               // Delete bad slaves
-               nextsl->Reset();
-               while ((sl = (TSlave *)(*nextsl)())) {
-                  SafeDelete(sl);
-               }
-            } else {
-               // Flag bad slaves
-               nextsl->Reset();
-               while ((sl = (TSlave *)(*nextsl)())) {
-                  fBadSlaves->Add(sl);
-               }
-               // Empty the list of claims
-               claims.RemoveAll();
-            }
-         }
-
-         // Count trial
-         trial++;
-
-         // Thread vector cleanup
-         while (!thrHandlers.empty()) {
-            std::vector<TProofThread *>::iterator ii = thrHandlers.end()-1;
-            if (*ii) {
-               SafeDelete(*ii);
-               thrHandlers.erase(ii);
-            }
-         }
-      } else { // Serial startup
-         // Get Condor Slave
-         if (trial == 1) {
-            c = dynamic_cast<TCondorSlave*>(claims.At(idx));
-         } else {
-            TPair *p = dynamic_cast<TPair*>(claims.At(idx));
-            TTimer *t = dynamic_cast<TTimer*>(p->Value());
-            // wait remaining time
-            Long_t wait = (Long_t) (t->GetAbsTime()-gSystem->Now());
-            if (wait>0) gSystem->Sleep(wait);
-            c = dynamic_cast<TCondorSlave*>(p->Key());
-         }
-
-         // create slave
-         TSlave *slave = CreateSlave(Form("%s:d",c->fHostname.Data(), c->fPort), c->fOrdinal,
-                                     c->fPerfIdx, c->fImage, c->fWorkDir);
-
-         // add slave to appropriate list
-         if (trial<ntries) {
-            if (slave->IsValid()) {
-               fSlaves->Add(slave);
-               if (trial == 1) {
-                  claims.Remove(c);
-               } else {
-                  TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
-                  delete dynamic_cast<TTimer*>(p->Value());
-                  delete p;
-               }
-               nClaimsDone++;
-               TMessage m(kPROOF_SERVERSTARTED);
-               m << TString("Opening connections to workers") << nClaims
-                 << nClaimsDone << kTRUE;
-               gProofServ->GetSocket()->Send(m);
-            } else {
-               if (trial == 1) {
-                  TTimer* timer = new TTimer(delay);
-                  TPair *p = new TPair(c, timer);
-                  claims.RemoveAt(idx);
-                  claims.AddAt(p, idx);
-               } else {
-                  TPair *p = dynamic_cast<TPair*>(claims.At(idx));
-                  dynamic_cast<TTimer*>(p->Value())->Reset();
-               }
-               delete slave;
-               idx++;
-            }
-         } else {
+      // add slave to appropriate list
+      if (trial < ntries) {
+         if (slave->IsValid()) {
             fSlaves->Add(slave);
-            TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
-            delete dynamic_cast<TTimer*>(p->Value());
-            delete p;
-            
+            if (trial == 1) {
+               claims.Remove(c);
+            } else {
+               TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
+               delete dynamic_cast<TTimer*>(p->Value());
+               delete p;
+            }
             nClaimsDone++;
             TMessage m(kPROOF_SERVERSTARTED);
             m << TString("Opening connections to workers") << nClaims
-              << nClaimsDone << slave->IsValid();
+               << nClaimsDone << kTRUE;
             gProofServ->GetSocket()->Send(m);
-         }
-
-         if (idx>=claims.GetSize()) {
-            trial++;
-            idx = 0;
-         }
-      }
-   }
-
-   if (!parallel) {
-      // Here we finalize the server startup: in this way the bulk
-      // of remote operations are almost parallelized
-      TIter nxsl(fSlaves);
-      TSlave *sl = 0;
-      int nSlavesDone = 0, nSlavesTotal = fSlaves->GetSize();
-      while ((sl = (TSlave *) nxsl())) {
-
-         // Finalize setup of the server
-         if (sl->IsValid()) {
-            sl->SetupServ(TSlave::kSlave, 0);
-         }
-         
-         if (sl->IsValid()) {
-            fAllMonitor->Add(sl->GetSocket());
          } else {
-            fBadSlaves->Add(sl);
+            if (trial == 1) {
+               TTimer* timer = new TTimer(delay);
+               TPair *p = new TPair(c, timer);
+               claims.RemoveAt(idx);
+               claims.AddAt(p, idx);
+            } else {
+               TPair *p = dynamic_cast<TPair*>(claims.At(idx));
+               dynamic_cast<TTimer*>(p->Value())->Reset();
+            }
+            delete slave;
+            idx++;
          }
+      } else {
+         fSlaves->Add(slave);
+         TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
+         delete dynamic_cast<TTimer*>(p->Value());
+         delete p;
 
-         // Notify end of startup operations
-         nSlavesDone++;
+         nClaimsDone++;
          TMessage m(kPROOF_SERVERSTARTED);
-         m << TString("Setting up worker servers") << nSlavesTotal
-           << nSlavesDone << sl->IsValid();
+         m << TString("Opening connections to workers") << nClaims
+            << nClaimsDone << slave->IsValid();
          gProofServ->GetSocket()->Send(m);
       }
+
+      if (idx>=claims.GetSize()) {
+         trial++;
+         idx = 0;
+      }
    }
-   
-   
-   if (parallel) {
-      SafeDelete(startedsl);
-      SafeDelete(nextsl);
-      SafeDelete(nextclaim);
+
+   // Here we finalize the server startup: in this way the bulk
+   // of remote operations are almost parallelized
+   TIter nxsl(fSlaves);
+   TSlave *sl = 0;
+   int nSlavesDone = 0, nSlavesTotal = fSlaves->GetSize();
+   while ((sl = (TSlave *) nxsl())) {
+
+      // Finalize setup of the server
+      if (sl->IsValid()) {
+         sl->SetupServ(TSlave::kSlave, 0);
+      }
+
+      if (sl->IsValid()) {
+         fAllMonitor->Add(sl->GetSocket());
+      } else {
+         fBadSlaves->Add(sl);
+      }
+
+      // Notify end of startup operations
+      nSlavesDone++;
+      TMessage m(kPROOF_SERVERSTARTED);
+      m << TString("Setting up worker servers") << nSlavesTotal
+         << nSlavesDone << sl->IsValid();
+      gProofServ->GetSocket()->Send(m);
    }
 
    return kTRUE;
