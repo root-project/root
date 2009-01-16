@@ -90,6 +90,19 @@ void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log)
    Double_t ty = gPad->GetAbsYlowNDC() * how + lh;
    TGLVector3 transVec(0, ty, tx); // For viewer convention (starts looking along -x).
 
+   // XXXX plots no longer centered at 0. Or they never were?
+   // Impossible to translate and scale them as they should be, it
+   // seems. This requers further investigation, eventually.
+   //
+   // bb.Dump();
+   // printf("lm=%f, size=%f, scale=%f, tx=%f, ty=%f\n",
+   //        lm, size, scale, tx, ty);
+   //
+   // TGLVector3 c(bb.Center().Arr());
+   // c.Negate();
+   // c.Dump();
+   // mat.Translate(c);
+
    TGLMatrix mat;
    mat.Scale(scaleVec);
    mat.Translate(transVec);
@@ -100,6 +113,9 @@ void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log)
    TGLPhysicalShape* phys = new TGLPhysicalShape
       (fNextInternalPID++, *log, mat, false, rgba);
    AdoptPhysical(*phys);
+
+   // Part of XXXX above.
+   // phys->BoundingBox().Dump();
 }
 
 //______________________________________________________________________________

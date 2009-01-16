@@ -758,6 +758,8 @@ public:
 
    void Translate(const TGLVector3 & vect);
    void MoveLF(Int_t ai, Double_t amount);
+   void Move3LF(Double_t x, Double_t y, Double_t z);
+
    void Scale(const TGLVector3 & scale);
    void Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle);
    void RotateLF(Int_t i1, Int_t i2, Double_t amount);

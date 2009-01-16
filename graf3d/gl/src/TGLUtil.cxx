@@ -603,8 +603,8 @@ void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const T
 void TGLMatrix::Set(const Double_t vals[16])
 {
    // Set matrix using the 16 Double_t 'vals' passed,
-   // ordering is maintained - i.e. should be column major
-   // as we are
+   // ordering is maintained - i.e. should be column major.
+
    for (UInt_t i=0; i < 16; i++) {
       fVals[i] = vals[i];
    }
@@ -613,12 +613,8 @@ void TGLMatrix::Set(const Double_t vals[16])
 //______________________________________________________________________________
 void TGLMatrix::SetIdentity()
 {
-   // Set matrix to identity:
-   //
-   // 1 0 0 0
-   // 0 1 0 0
-   // 0 0 1 0
-   // 0 0 0 1
+   // Set matrix to identity.
+
    fVals[0] = 1.0; fVals[4] = 0.0; fVals[8 ] = 0.0; fVals[12] = 0.0;
    fVals[1] = 0.0; fVals[5] = 1.0; fVals[9 ] = 0.0; fVals[13] = 0.0;
    fVals[2] = 0.0; fVals[6] = 0.0; fVals[10] = 1.0; fVals[14] = 0.0;
@@ -628,28 +624,16 @@ void TGLMatrix::SetIdentity()
 //______________________________________________________________________________
 void TGLMatrix::SetTranslation(Double_t x, Double_t y, Double_t z)
 {
-   // Set matrix translation components x,y,z:
-   //
-   // . . . x
-   // . . . y
-   // . . . z
-   // . . . .
-   //
-   // The other components are NOT modified
+   // Set matrix translation components x,y,z.
+
    SetTranslation(TGLVertex3(x,y,z));
 }
 
 //______________________________________________________________________________
 void TGLMatrix::SetTranslation(const TGLVertex3 & translation)
 {
-   // Set matrix translation components x,y,z:
-   //
-   // . . . translation.X()
-   // . . . translation.Y()
-   // . . . translation.Z()
-   // . . . .
-   //
-   // . = Exisiting component value - NOT modified
+   // Set matrix translation components x,y,z.
+
    fVals[12] = translation[0];
    fVals[13] = translation[1];
    fVals[14] = translation[2];
@@ -658,12 +642,7 @@ void TGLMatrix::SetTranslation(const TGLVertex3 & translation)
 //______________________________________________________________________________
 TGLVector3 TGLMatrix::GetTranslation() const
 {
-   // Return the translation component of matrix
-   //
-   // . . . X()
-   // . . . Y()
-   // . . . Z()
-   // . . . .
+   // Return the translation component of matrix.
 
    return TGLVector3(fVals[12], fVals[13], fVals[14]);
 }
@@ -671,14 +650,8 @@ TGLVector3 TGLMatrix::GetTranslation() const
 //______________________________________________________________________________
 void TGLMatrix::Translate(const TGLVector3 & vect)
 {
-   // Offset (shift) matrix translation components by 'vect'
-   //
-   // . . . . + vect.X()
-   // . . . . + vect.Y()
-   // . . . . + vect.Z()
-   // . . . .
-   //
-   // . = Exisiting component value - NOT modified
+   // Shift matrix translation components by 'vect' in parent frame.
+
    fVals[12] += vect[0];
    fVals[13] += vect[1];
    fVals[14] += vect[2];
@@ -692,6 +665,16 @@ void TGLMatrix::MoveLF(Int_t ai, Double_t amount)
 
    const Double_t *C = fVals + 4*--ai;
    fVals[12] += amount*C[0]; fVals[13] += amount*C[1]; fVals[14] += amount*C[2];
+}
+
+//______________________________________________________________________________
+void TGLMatrix::Move3LF(Double_t x, Double_t y, Double_t z)
+{
+   // Translate in local frame along all base vectors simultaneously.
+
+   fVals[12] += x*fVals[0] + y*fVals[4] + z*fVals[8];
+   fVals[13] += x*fVals[1] + y*fVals[5] + z*fVals[9];
+   fVals[14] += x*fVals[2] + y*fVals[6] + z*fVals[10];
 }
 
 //______________________________________________________________________________

@@ -98,8 +98,12 @@ void TF2GL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    // Render the object.
 
    fPlotPainter->RefBackBox().FindFrontPoint();
+
    glPushAttrib(GL_ENABLE_BIT | GL_LIGHTING_BIT);
+
    glEnable(GL_NORMALIZE);
+   glDisable(GL_COLOR_MATERIAL);
+
    fPlotPainter->InitGL();
    fPlotPainter->DrawPlot();
 
