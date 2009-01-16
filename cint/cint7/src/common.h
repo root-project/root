@@ -893,18 +893,11 @@ struct G__view {
 * comment information
 *
 **************************************************************************/
+namespace Cint { namespace Internal { extern int G__nfile; } } 
 struct G__comment_info {
    G__comment_info()  {
-      if (-2 <= filenum && filenum <= G__MAXFILE) {
-         // If the filenum is already in a valid range, let's assume that
-         // this G__comment_info has already been initialized by hand.
-         // This happens because some dictionary are loaded before the
-         // actual initialization of G__struct (part of global1.o).
-         
-      } else {
-         filenum = -1;
-         p.com = 0;
-      }
+      filenum = -1;
+      p.com = 0;
    }
    union {
       char  *com;
@@ -1178,7 +1171,12 @@ struct G__var_array {
 
 #ifdef __cplusplus
 
+namespace Cint { namespace Internal { extern int G__global1_init; } }
+
 struct G__tagtable {
+  static int inited;
+  G__tagtable(); // Implemented in global1.cxx for now.
+
   /* tag entry information */
   char type[G__MAXSTRUCT]; /* struct,union,enum,class */
 

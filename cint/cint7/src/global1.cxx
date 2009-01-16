@@ -34,8 +34,20 @@ void (*G__atpause)();
 
 }
 
+// Keep track of whether the constructor for G__struct was run.       
+int G__tagtable::inited  = false;
+
+G__tagtable::G__tagtable() 
+{
+   // Construtor for the 'singleton' G__struct.
+   // Keep track of whether the constructor for G__struct was run.       
+
+   G__tagtable::inited = true;
+}
+
 namespace Cint {
    namespace Internal {
+
 
 /***********************************************************************
 * EH_env and err_env are only variable name which isn't escaped by 'G__' 

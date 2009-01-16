@@ -904,6 +904,12 @@ void Cint::Internal::G__getcommenttypedef(char *buf,G__comment_info *pcomment,
       else {
         fgetpos(fp,&store_pos);
       }
+      if (fp==0) {
+         G__fprinterr(G__serr,"G__getcommenttypedef: Could not open the file #%d (%s) to retrieve te comment!",filenum,G__srcfile[filenum].filename);
+         G__genericerror((char*)NULL);
+         fprintf(stderr,"G__getcommenttypedef %p %d %d %p %p %s\n",pcomment,filenum,G__nfile,pcomment->p.com,fp,G__srcfile[filenum].filename);
+         return;
+      }
       fsetpos(fp,&pos);
       fgets(buf,G__ONELINE-1,fp);
       p = strchr(buf,'\n');

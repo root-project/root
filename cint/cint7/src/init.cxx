@@ -130,9 +130,15 @@ extern "C" void G__remove_setup_func(const char* libname)
       }
 }
 
+
 //______________________________________________________________________________
 extern "C" int G__call_setup_funcs()
 {
+   if ( ! G__tagtable::inited ) { 
+      // Don't do anything until G__struct (at least) is initialized
+      return 0;
+   }
+
    int init_counter = 0; // Number of initializers run.
    ::Reflex::Scope store_p_local = G__p_local; // changed by setupfuncs
    G__LockCriticalSection();
@@ -159,6 +165,7 @@ extern "C" int G__call_setup_funcs()
 #endif // G__DEBUG
          // Temporarily set G__ifile to the shared library.
          G__input_file store_ifile = G__ifile;
+         // int fileno = -1; // ignore the actual value for now.
          int fileno = G__setup_func_list[i]->filenum;
          G__ifile.filenum = fileno;
          G__ifile.line_number = 1;
