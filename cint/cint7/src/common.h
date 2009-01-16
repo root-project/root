@@ -894,7 +894,18 @@ struct G__view {
 *
 **************************************************************************/
 struct G__comment_info {
-   G__comment_info() : filenum(-1) { p.com = 0; }
+   G__comment_info()  {
+      if (-2 <= filenum && filenum <= G__MAXFILE) {
+         // If the filenum is already in a valid range, let's assume that
+         // this G__comment_info has already been initialized by hand.
+         // This happens because some dictionary are loaded before the
+         // actual initialization of G__struct (part of global1.o).
+         
+      } else {
+         filenum = -1;
+         p.com = 0;
+      }
+   }
    union {
       char  *com;
       fpos_t pos;
