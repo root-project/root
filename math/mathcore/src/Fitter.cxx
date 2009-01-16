@@ -370,6 +370,7 @@ bool Fitter::DoMinimization(const ObjFunc & objFunc, unsigned int dataSize, cons
    fResult = std::auto_ptr<FitResult> ( new FitResult(*fMinimizer,fConfig, fFunc, ret, dataSize, fBinFit, chi2func, fConfig.MinosErrors(), ncalls ) );
 
    if (fConfig.NormalizeErrors() && fitType == ROOT::Math::FitMethodFunction::kLeastSquare ) fResult->NormalizeErrors(); 
+
    return ret; 
 }
 

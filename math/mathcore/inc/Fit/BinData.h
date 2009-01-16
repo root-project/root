@@ -64,6 +64,7 @@ public :
    enum ErrorType { kNoError, kValueError, kCoordError, kAsymError };
 
    static unsigned int GetPointSize(ErrorType err, unsigned int dim) { 
+      if (dim == 0 || dim > MaxSize() ) return 0;
       if (err == kNoError) return dim + 1;   // no errors
       if (err == kValueError) return dim + 2;  // error only on the value
       if (err == kCoordError) return 2 * dim + 2 ;  // error on value and coordinate
@@ -132,8 +133,11 @@ public :
    virtual ~BinData(); 
 
    /**
-      preallocate a data set given size and dimension
-      need to be initialized with the with the right dimension before
+      preallocate a data set with given size ,  dimension and error type (to get the full point size)
+      If the data set already exists and it is having the compatible point size space for the new points 
+      is created in the data sets, while if not compatible the old data are erased and new space of 
+      new size is allocated. 
+      (i.e if exists initialize is equivalent to a resize( NPoints() + maxpoints) 
     */
    void Initialize(unsigned int maxpoints, unsigned int dim = 1, ErrorType err = kValueError ); 
 
@@ -421,12 +425,10 @@ public :
 #endif
 
    /**
-      resize the vector to the given npoints 
+      resize the vector to the new given npoints
+      if vector does not exists is created using existing point size
     */
-   void Resize (unsigned int npoints) { 
-      fNPoints = npoints; 
-      (fDataVector->Data()).resize(PointSize() *npoints);
-   }
+   void Resize (unsigned int npoints);  
 
    /**
       return number of fit points

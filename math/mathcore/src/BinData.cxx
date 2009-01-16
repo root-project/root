@@ -33,7 +33,11 @@ BinData::BinData(unsigned int maxpoints , unsigned int dim , ErrorType err ) :
    fDataVector(0),
    fDataWrapper(0)
 { 
-   if (maxpoints > 0) fDataVector = new DataVector(fPointSize*maxpoints);
+   unsigned int n = fPointSize*maxpoints; 
+   if ( n > MaxSize() ) 
+      MATH_ERROR_MSGVAL("BinData","Invalid data size n - no allocation done", n )
+   else if (n > 0) 
+      fDataVector = new DataVector(n);
 } 
 
 BinData::BinData (const DataOptions & opt, unsigned int maxpoints, unsigned int dim, ErrorType err ) : 
@@ -46,7 +50,11 @@ BinData::BinData (const DataOptions & opt, unsigned int maxpoints, unsigned int 
    fDataVector(0),
    fDataWrapper(0)
 { 
-   if (maxpoints > 0) fDataVector = new DataVector(fPointSize*maxpoints);
+   unsigned int n = fPointSize*maxpoints; 
+   if ( n > MaxSize() ) 
+      MATH_ERROR_MSGVAL("BinData","Invalid data size n - no allocation done", n )
+   else if (n > 0) 
+      fDataVector = new DataVector(n);
 } 
       
    /**
@@ -63,7 +71,11 @@ BinData::BinData (const DataOptions & opt, const DataRange & range, unsigned int
    fDataVector(0),
    fDataWrapper(0)
 { 
-   if (maxpoints > 0) fDataVector = new DataVector(fPointSize*maxpoints);
+   unsigned int n = fPointSize*maxpoints; 
+   if ( n > MaxSize() ) 
+      MATH_ERROR_MSGVAL("BinData","Invalid data size n - no allocation done", n )
+   else if (n > 0) 
+      fDataVector = new DataVector(n);
 } 
       
 /** constructurs using external data */
@@ -168,16 +180,46 @@ void BinData::Initialize(unsigned int maxpoints, unsigned int dim , ErrorType er
 //       need to be initialized with the with the right dimension before
    if (fDataWrapper) delete fDataWrapper;
    fDataWrapper = 0; 
-   fDim = dim; 
-   fPointSize = GetPointSize(err,dim);  
+   unsigned int pointSize = GetPointSize(err,dim);  
+   if ( pointSize != fPointSize && fDataVector) { 
+//       MATH_INFO_MSGVAL("BinData::Initialize"," Reset amd re-initialize with a new fit point size of ",
+//                        pointSize);
+      delete fDataVector; 
+      fDataVector = 0; 
+   }
+   fPointSize = pointSize; 
+   fDim = dim;
+   unsigned int n = fPointSize*maxpoints; 
+   if ( n > MaxSize() ) { 
+      MATH_ERROR_MSGVAL("BinData::Initialize"," Invalid data size  ", n );
+      return; 
+   }
    if (fDataVector) { 
       // resize vector by adding the extra points on top of the previously existing ones 
-      (fDataVector->Data()).resize( fDataVector->Size() + maxpoints * fPointSize );
+      (fDataVector->Data()).resize( fDataVector->Size() + n);
    }
-   else 
-      fDataVector = new DataVector(fPointSize*maxpoints);
+   else {
+      fDataVector = new DataVector(n);
+   }
 }
 
+void BinData::Resize(unsigned int npoints) { 
+   // resize vector to new points 
+   if (fPointSize == 0) return; 
+   if ( npoints > MaxSize() ) { 
+      MATH_ERROR_MSGVAL("BinData::Resize"," Invalid data size  ", npoints );
+      return; 
+   }
+   int nextraPoints = npoints - DataSize()/ fPointSize;  
+   if (nextraPoints == 0) return; 
+   else if (nextraPoints < 0) {
+      // delete extra points
+      if (!fDataVector) return; 
+      (fDataVector->Data()).resize( npoints * fPointSize);
+   } 
+   else 
+      Initialize(nextraPoints, fDim, GetErrorType() ); 
+}
    /**
    */
 void BinData::Add(double x, double y ) { 

@@ -84,6 +84,13 @@ public:
     */
    const DataRange & Range() const { return fRange; }
 
+   /** 
+       define a max size to avoid allocating too large arrays 
+   */
+   static unsigned int MaxSize()  { 
+      return (unsigned int) (-1) / sizeof (double);
+   }
+
 
 private: 
 
@@ -113,10 +120,11 @@ public:
    /** 
       default constructor for a vector of N -data
    */ 
-   explicit DataVector (unsigned int n ) : 
+   explicit DataVector (size_t n ) : 
       fData(std::vector<double>(n))
+
    {
-      //if (n!=0) fData.reserve(n); 
+      //if (n!=0) fData.reserve(n);
    } 
 
 
@@ -165,7 +173,7 @@ public:
    /**
       full size of data vector (npoints * point size) 
     */
-   unsigned int Size() const { return fData.size(); } 
+   size_t Size() const { return fData.size(); } 
 
 
 private: 
@@ -277,7 +285,8 @@ public:
       constructor for multi-dim data with errors and values (if errors are not present a null pointer should be passed) 
     */
    template<class Iterator> 
-   DataWrapper(unsigned int dim, Iterator coordItr, const double * val, const double * eval, Iterator errItr ) :  
+   DataWrapper(size_t dim, Iterator coordItr, const double * val, const double * eval, Iterator errItr ) :  
+      // use size_t for dim to avoid allocating huge vector on 64 bits when dim=-1
       fDim(dim),
       fValues(val), 
       fErrors(eval),

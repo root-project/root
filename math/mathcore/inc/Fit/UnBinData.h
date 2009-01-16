@@ -48,78 +48,32 @@ public :
       constructor from dimension of point  and max number of points (to pre-allocate vector)
     */
 
-   explicit UnBinData(unsigned int maxpoints = 0, unsigned int dim = 1 ) : 
-//      DataVector( dim*maxpoints ), 
-      FitData(),
-      fDim(dim),
-      fNPoints(0),
-      fDataVector(0), 
-      fDataWrapper(0)
-   { 
-      if (maxpoints > 0) fDataVector = new DataVector( dim * maxpoints);
-   } 
+   explicit UnBinData(unsigned int maxpoints = 0, unsigned int dim = 1 );
 
    /**
       constructor from option and default range
     */
-   explicit UnBinData (const DataOptions & opt,  unsigned int maxpoints = 0, unsigned int dim = 1) : 
-      FitData( opt), 
-      fDim(dim),
-      fNPoints(0), 
-      fDataVector(0), 
-      fDataWrapper(0)
-   {
-      if (maxpoints > 0) fDataVector = new DataVector( dim * maxpoints);
-   } 
+   explicit UnBinData (const DataOptions & opt,  unsigned int maxpoints = 0, unsigned int dim = 1);
 
    /**
       constructor from options and range
     */
-   UnBinData (const DataOptions & opt, const DataRange & range,  unsigned int maxpoints = 0, unsigned int dim = 1 ) : 
-      FitData( opt, range), 
-      fDim(dim),
-      fNPoints(0),
-      fDataVector(0), 
-      fDataWrapper(0)
-   {
-      if (maxpoints > 0) fDataVector = new DataVector( dim * maxpoints);
-   } 
+   UnBinData (const DataOptions & opt, const DataRange & range,  unsigned int maxpoints = 0, unsigned int dim = 1 );
 
    /**
       constructor for 1D external data
     */
-   UnBinData(unsigned int n, const double * dataX ) : 
-      FitData( ), 
-      fDim(1), 
-      fNPoints(n),
-      fDataVector(0)
-   { 
-      fDataWrapper = new DataWrapper(dataX);
-   } 
+   UnBinData(unsigned int n, const double * dataX );
 
    /**
       constructor for 2D external data
     */
-   UnBinData(unsigned int n, const double * dataX, const double * dataY ) : 
-      FitData( ), 
-      fDim(2), 
-      fNPoints(n),
-      fDataVector(0)
-   { 
-      fDataWrapper = new DataWrapper(dataX, dataY, 0, 0, 0, 0);
-   } 
+   UnBinData(unsigned int n, const double * dataX, const double * dataY );
 
    /**
       constructor for 3D external data
     */
-   UnBinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ ) : 
-      FitData( ), 
-      fDim(3), 
-      fNPoints(n),
-      fDataVector(0)
-   { 
-      fDataWrapper = new DataWrapper(dataX, dataY, dataZ, 0, 0, 0, 0, 0);
-   } 
+   UnBinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ );
 
    /**
       constructor for multi-dim external data
@@ -170,15 +124,10 @@ public:
 
    /**
       preallocate a data set given size and dimension
+      if a vector already exists with correct fimension (point size) extend the existing one 
+      keep the previous one
     */
-   void Initialize(unsigned int maxpoints, unsigned int dim = 1) { 
-      fDim = dim; 
-      assert(maxpoints > 0); 
-      if (fDataVector) 
-         (fDataVector->Data()).resize( maxpoints * PointSize() );
-      else 
-         fDataVector = new DataVector( dim * maxpoints);
-   }
+   void Initialize(unsigned int maxpoints, unsigned int dim = 1);
 
    
    /**
@@ -239,12 +188,7 @@ public:
    /**
       resize the vector to the given npoints 
     */
-   void Resize (unsigned int npoints) { 
-      if (fDataVector) {  
-         fNPoints = npoints; 
-         (fDataVector->Data()).resize(PointSize() *npoints);
-      }
-   }
+   void Resize (unsigned int npoints); 
 
 
    /**
