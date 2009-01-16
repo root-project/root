@@ -465,10 +465,17 @@ int Cint::Internal::G__class_autoloading(int* ptagnum)
          ::Reflex::Scope store_tagdefining = G__tagdefining;
          G__def_tagnum = Reflex::Scope();
          G__tagdefining = Reflex::Scope();
-         int res = (*G__p_class_autoloading)(G__fulltagname(tagnum, 1), copyLibname);
+         std::string fulltagname( G__fulltagname(tagnum, 1) );
+         int res = (*G__p_class_autoloading)((char*)fulltagname.c_str(), copyLibname);
          G__def_tagnum = store_def_tagnum;
          G__tagdefining = store_tagdefining;
-         if (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) {
+         if (G__struct.type[tagnum] == 0 && G__struct.name[tagnum] && G__struct.name[tagnum][0]=='@') {
+            // This record was already 'killed' during the autoloading.
+            // Let's find the new real one!
+            //FIXME: remove the char* cast
+            tagnum = G__defined_tagname((char*)fulltagname.c_str(), 3);
+            
+         } else if (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) {
             // if (strstr(G__struct.name[tagnum], "<") != 0) 
             {
                // Kill this entry.
@@ -1718,6 +1725,14 @@ extern "C" void G__set_class_autoloading_table(char* classname, char* libname)
    // First check whether this is already defined as typedef.
    Reflex::Type typedf( G__find_typedef(classname) );
    if (typedf) {
+      // The autoloading might actually be 'targeted' to the FinalType per se.
+      // For example in the case of the STL, the autoload classname would be
+      // vector<int> but this would be declared as a typedef to vector<int, allocator<int> >
+      ::Reflex::Type final( typedf.FinalType() );
+      if (final && final.SizeOf()==0) {
+         //FIXME: please remove the char* cast!
+         G__set_class_autoloading_table( (char*)final.Name(::Reflex::SCOPED).c_str(), libname );
+      }
       // Let's do nothing in this case for now
       G__enable_autoloading = store_enable_autoloading;
       return;
