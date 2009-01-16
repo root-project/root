@@ -113,6 +113,8 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
       G__dump_tracecoverage(G__dumpfile);
    }
 #endif // // G__DUMPFILE
+   std::string fullname;
+   Reflex::Type cl;
    int nfile = pos->nfile;
    while (G__nfile > nfile) {
       --G__nfile;
@@ -120,6 +122,9 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
       for (int itag = 0; itag < pos->tagnum; ++itag) {
          if (G__struct.filenum[itag] == G__nfile) {
             // -- Keep name, libname and parent_tagnum; reset everything else.
+
+            fullname = G__fulltagname( itag, 0 );
+            
             char* name = G__struct.name[itag];
             int hash = G__struct.hash[itag];
             char* libname = G__struct.libname[itag];
@@ -131,6 +136,20 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
             G__free_struct_upto(itag);
             G__struct.alltag = alltag;
             --G__struct.nactives;
+            
+            // Since we are keeping the class in G__struct we also need to keep it (more exactly put it back) in Reflex
+            ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
+            cl =  b->ToType();
+            G__RflxProperties* prop = 0;
+             if (prop) {
+                prop->builder.Set(b);
+                prop->typenum = -1;
+                prop->tagnum = itag;
+                prop->globalcomp = G__default_link ? G__globalcomp : G__NOLINK;
+                prop->autoload = true;
+            }
+            G__Dict::GetDict().RegisterScope(itag,cl);
+            
             G__struct.name[itag] = name;
             G__struct.libname[itag] = libname;
             G__struct.type[itag] = 'a';

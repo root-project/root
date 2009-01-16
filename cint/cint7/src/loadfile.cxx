@@ -3008,7 +3008,8 @@ extern "C" G__input_file* G__get_ifile()
 int Cint::Internal::G__register_sharedlib(const char *libname)
 {
    // Register (if not already registered) in G__srcfile a library that
-   // is indirectly loaded (via a hard link) and has a CINT dictionary.
+   // is indirectly loaded (via a hard link) and has a CINT dictionary
+   // and return the filenum (index in G__srcfile).
    
    int null_entry = -1;
    int i1 = 0;
@@ -3055,34 +3056,12 @@ int Cint::Internal::G__register_sharedlib(const char *libname)
       if(G__matchfilename(i1,libname)
          &&G__get_tagnum(G__get_envtagnum())==G__srcfile[i1].parent_tagnum
          ){
-         if(G__prerun==0 || G__debugtrace)
-            if(G__dispmsg>=G__DISPNOTE) {
-               static const char *excludelist [] = {
-                  "stdfunc.dll","stdcxxfunc.dll","posix.dll","ipc.dll","posix.dll"
-                  "string.dll","vector.dll","vectorbool.dll","list.dll","deque.dll",
-                  "map.dll", "map2.dll","set.dll","multimap.dll","multimap2.dll",
-                  "multiset.dll","stack.dll","queue.dll","valarray.dll",
-               "exception.dll","stdexcept.dll","complex.dll","climits.dll" };
-               static const unsigned int excludelistsize = sizeof(excludelist)/sizeof(excludelist[0]);
-               static int excludelen[excludelistsize] = {-1};
-               if (excludelen[0] == -1) {
-                  for (unsigned int i = 0; i < excludelistsize; ++i)
-                     excludelen[i] = strlen(excludelist[i]);
-               }
-               bool cintdlls = false;
-               int len = strlen(libname);
-               for (unsigned int i = 0; !cintdlls && i < excludelistsize; ++i) {
-                  if (len>=excludelen[i]) {
-                     cintdlls = (!strncmp(libname+len-excludelen[i], excludelist[i], excludelen[i]));
-                  }
-               }
-            }
          /******************************************************
           * restore input file information to G__ifile
           * and reset G__eof to 0.
           ******************************************************/
          G__UnlockCriticalSection();
-         return(G__LOADFILE_DUPLICATE);
+         return i1;
       }
       else {
          ++i1;

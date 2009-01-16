@@ -1938,9 +1938,11 @@ static const char *G__dladdr(void (*func)())
 }
 
 // G__RegisterLibrary
-void *Cint::Internal::G__RegisterLibrary(void (*func)()) {
+int Cint::Internal::G__RegisterLibrary(void (*func)()) 
+{
    // This function makes sure that the library that contains 'func' is
-   // known to have been loaded by the CINT system.
+   // known to have been loaded by the CINT system and return 
+   // the filenum (i.e. index in G__srcfile).
    
    const char *libname = G__dladdr( func );
    if (libname && libname[0]) {
@@ -1965,14 +1967,14 @@ void *Cint::Internal::G__RegisterLibrary(void (*func)()) {
    return 0;
 }   
 
-// G__RegisterLibrary
-void *Cint::Internal::G__UnregisterLibrary(void (*func)()) {
+// G__UnregisterLibrary
+int Cint::Internal::G__UnregisterLibrary(void (*func)()) {
    // This function makes sure that the library that contains 'func' is
    // known to have been laoded by the CINT system.
    
    const char *libname = G__dladdr( func );
    if (libname) {
-      G__unregister_sharedlib( libname );
+      return G__unregister_sharedlib( libname );
    }
    return 0;
 }   
