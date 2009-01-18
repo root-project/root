@@ -165,7 +165,6 @@ extern "C" int G__call_setup_funcs()
 #endif // G__DEBUG
          // Temporarily set G__ifile to the shared library.
          G__input_file store_ifile = G__ifile;
-         // int fileno = -1; // ignore the actual value for now.
          int fileno = G__setup_func_list[i]->filenum;
          G__ifile.filenum = fileno;
          G__ifile.line_number = 1;
