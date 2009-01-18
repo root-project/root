@@ -1,12 +1,14 @@
 #!/bin/sh
 
 Setup=yes
+configname=""
 while test "x$1" != "x"; do
    case $1 in 
       "-v" ) verbose=x; shift ;;
       "-h" ) help=x; shift;;
       "-cintdlls") cintdlls=x; shift;;
       "-mail") mail=x; shift; mailto=$1; shift;;
+      "--config") shift; configname=-$1; shift;;
       *) help=x; shift;;
    esac
 done
@@ -16,6 +18,7 @@ if test "x$help" != "x"; then
     echo "Option:"
     echo "  -v : verbose"
     echo "  -cintdlls : also built the cintdlls"
+    echo "  -config configname"
     exit
 fi
 
@@ -45,11 +48,11 @@ export CVSROOT=:pserver:cvs@root.cern.ch:/user/cvs
 # and the method to acquire the `load`
 host=`hostname -s`
 dir=`dirname $0`
-. $dir/run_roottest.$host.config
+. $dir/run_roottest.$host$configname.config
 
 export ROOTBUILD=opt
 
-echo "Running the nightly test on $host from $ROOTLOC"
+echo "Running the nightly test on $host$configname from $ROOTLOC"
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:.
 export PATH
 
@@ -61,13 +64,13 @@ error_handling() {
     write_summary
     upload_log summary.log
 
-    echo "Found an error on \"$host\" ("`uname`") in $ROOTLOC"
+    echo "Found an error on \"$host$configname\" ("`uname`") in $ROOTLOC"
     echo "Error: $2"
     echo "See full log file at http://www-root.fnal.gov/roottest/summary.shtml"
 
     if [ "x$mail" = "xx" ] ; then
 	mail -s "root $OSNAME test" $mailto <<EOF
-Failure while building root and roottest on $host ("`uname`") in $ROOTLOC
+Failure while building root and roottest on $host$configname ("`uname`") in $ROOTLOC
 Error: $2
 See full log file at http://www-root.fnal.gov/roottest/summary.shtml
 EOF
@@ -76,12 +79,12 @@ EOF
 }
 
 upload_log() {    
-    target_name=$2$1.$host
+    target_name=$2$1.$host$configname
     scp $1 $UPLOAD_LOCATION/$target_name > scp.log 2>&1 
 }
 
 upload_datafile() {
-    target_name=$host.`basename $1`
+    target_name=$host$configname.`basename $1`
     scp $1 $UPLOAD_LOCATION/$target_name > scp.log 2>&1 
 }
 
@@ -107,14 +110,14 @@ one_line() {
 write_summary() {
    lline="<td style=\"width: 100px; text-align: center;\" >"
    rline="</td>"
-         osline="$lline $OSNAME $rline"
-        cvsline=`one_line cvsupdate.log.$host $cvsstatus`
-      gmakeline=`one_line gmake.log.$host $mainstatus`
-       testline=`one_line test_gmake.log.$host $teststatus`
-     stressline=`one_line speedresult.log.$host  $teststatus`
-   roottestline=`one_line roottest_gmake.log.$host $rootteststatus`
- roottimingline=`one_line $host.roottesttiming.root $rootteststatus`
- logsbundleline=`one_line $host.logs.tar.gz $rootteststatus`
+         osline="$lline $OSNAME$configname $rline"
+        cvsline=`one_line cvsupdate.log.$host$configname $cvsstatus`
+      gmakeline=`one_line gmake.log.$host$configname $mainstatus`
+       testline=`one_line test_gmake.log.$host$configname $teststatus`
+     stressline=`one_line speedresult.log.$host$configname  $teststatus`
+   roottestline=`one_line roottest_gmake.log.$host$configname $rootteststatus`
+ roottimingline=`one_line $host$configname.roottesttiming.root $rootteststatus`
+ logsbundleline=`one_line $host$configname.logs.tar.gz $rootteststatus`
 
    date=`date +"%b %d %Y"`
    dateline="$lline $date $rline"
