@@ -9,6 +9,7 @@ def printme(o):
 gROOT.ProcessLine(".L t.h+")
 sortedMethods = [ item for item in t.__dict__.keys() if item[0:2] != '__' ]
 sortedMethods.sort()
+print "# just a comment"
 print sortedMethods
 stdout.flush() 
 o = t()
