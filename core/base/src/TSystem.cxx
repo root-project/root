@@ -2930,6 +2930,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString mapfilein = mapfile + ".in";
    TString mapfileout = mapfile + ".out";
 
+   Bool_t needLoadMap = kFALSE;
+   if (gInterpreter->GetSharedLibDeps(libname) !=0 ) {
+       gInterpreter->UnloadLibraryMap(libname);
+       needLoadMap = kTRUE;
+   }
+
    ofstream mapfileStream( mapfilein, ios::out );
    {
       TString name = ".rootmap";
@@ -3256,9 +3262,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       // by the library are present.
       gInterpreter->SetRTLD_NOW();
 #endif
-      if (gInterpreter->GetSharedLibDeps(libname) !=0 ) {
-         gInterpreter->UnloadLibraryMap(libmapfilename);
-         gInterpreter->LoadLibraryMap(libmapfilename);
+      if (needLoadMap) {
+          gInterpreter->LoadLibraryMap(libmapfilename);
       }
       if (gDebug>3)  ::Info("ACLiC","loading the shared library");
       if (loadLib) result = !gSystem->Load(library);
