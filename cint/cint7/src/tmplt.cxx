@@ -332,7 +332,7 @@ static int G__generate_template_dict(const char* template_id, G__Definedtemplate
    //
    //  Now lookup the passed template-id.
    //
-   int tagnum = G__defined_tagname(template_id_str.c_str(), 3); // FIXME: This is illegal, G__defined_tagname alters the string!
+   int tagnum = G__defined_tagname(template_id_str.c_str(), 3); 
    //
    //  If dictionary generation succeeded, remember what
    //  header files we used in the comment string for

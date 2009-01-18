@@ -473,7 +473,7 @@ int Cint::Internal::G__class_autoloading(int* ptagnum)
             // This record was already 'killed' during the autoloading.
             // Let's find the new real one!
             //FIXME: remove the char* cast
-            tagnum = G__defined_tagname((char*)fulltagname.c_str(), 3);
+            tagnum = G__defined_tagname(fulltagname.c_str(), 3);
             
          } else if (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) {
             // if (strstr(G__struct.name[tagnum], "<") != 0) 
@@ -1805,15 +1805,6 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    // 
    //         = 3   like 2, and no autoloading
    // 
-   // CAUTION:
-   // 
-   //   If template class with constant argument is given to this function,
-   //   tagname argument may be modified like below.
-   // 
-   //        A<int,5*2> => A<int,10>
-   // 
-   //   This may cause unexpected side-effect.
-   //
    static ::Reflex::NamespaceBuilder stdnp("std");
    int i;
    // Allow for 10 occurrences of T<S<U>> - the only case where tagname can grow
@@ -1954,23 +1945,18 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          env_tagnum = ::Reflex::Scope::GlobalScope();
          tagname += 5;
          normalized_tagname += 5;
-         if (!*tagname) {
-            // "std::"
-         }
       }
 #endif // G__STD_NAMESPACE
       else {
          // A qualified name, find the specified containing scope.
          // Recursively locate the containing scopes, from right to left.
-         // Note: use a temporary here, G__defined_tagname can alter its argument.
-         strcpy(temp, given_scopename);
          int tag = -1;
          // first try a typedef, so we don't trigger autoloading here:
-         Reflex::Type env_typenum = G__find_typedef(temp);
+         Reflex::Type env_typenum = G__find_typedef(given_scopename);
          if (env_typenum) {
             tag = G__get_tagnum(env_typenum.FinalType());
          } else {
-            tag = G__defined_tagname(temp,noerror);
+            tag = G__defined_tagname(given_scopename,noerror);
          }
          if (tag == -1) {
             // Should never happen.
@@ -2096,7 +2082,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          G__exit(-1);
          return -1;
       }
-      // CAUTION: tagname may be modified in following function.
+
       char store_var_type = G__var_type;
       i = G__instantiate_templateclass(normalized_tagname, noerror);
       G__var_type = store_var_type;
@@ -2190,7 +2176,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
    }
    type = tolower(type);
    // Search for tagname, autoload class if not ref or ptr.
-   i = G__defined_tagname(tagname, isPointer ? 3 : 2); // Note: The tagname can be changed in this call.
+   i = G__defined_tagname(tagname, isPointer ? 3 : 2); 
 #ifndef G__OLDIMPLEMENTATION1823
    if (strlen(tagname) > ((G__BUFLEN * 2) - 10)) {
       temp = (char*) malloc(strlen(tagname) + 10);
