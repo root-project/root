@@ -1516,6 +1516,9 @@ Bool_t TClass::CanSplit() const
 //______________________________________________________________________________
 TObject *TClass::Clone(const char *new_name) const
 {
+   // Duplicate this TClass object under a different.  This can be used to 
+   // provide 'hard' alias to classname.
+
    if (new_name == 0 || new_name[0]=='\0' || fName == new_name) {
       Error("Clone","The name of the class must be changed when cloning a TClass object.");
       return 0;
