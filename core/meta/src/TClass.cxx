@@ -3909,7 +3909,7 @@ void TClass::PostLoadCheck()
    {
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
       // Here we need to check whether this TVirtualStreamerInfo (which presumably has been
-      // loaded from a file) is consisten with the definition in the library we just loaded.
+      // loaded from a file) is consistent with the definition in the library we just loaded.
       // BuildCheck is not appropriate here since it check a streamerinfo against the
       // 'current streamerinfo' which, at time point, would be the same as 'info'!
       if (info && GetListOfDataMembers() && !GetCollectionProxy()
@@ -3947,6 +3947,7 @@ void TClass::PostLoadCheck()
    the files will not be readable.\n"
                        , fClassVersion, GetName(), GetName(), fStreamerInfo->GetLast()+1);
             }
+            info->CompareContent(this,0,kTRUE,kTRUE);
             SetBit(kWarned);
          }
       }

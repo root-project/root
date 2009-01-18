@@ -573,6 +573,9 @@ void TStreamerInfo::BuildCheck()
                   // (We could be more specific (see test for the same case below)
                   match = kTRUE;
                }
+               if (!match && CompareContent(0,info,kFALSE,kFALSE)) {
+                  match = kTRUE;
+               }
             } else {
                // The on-file TStreamerInfo's checksum differs from the checksum of a TStreamerInfo on another file.
                
@@ -596,6 +599,9 @@ void TStreamerInfo::BuildCheck()
                if (fOldVersion <= 2) {
                   // Names of STL base classes was modified in vers==3. Allocators removed
                   // (We could be more specific (see test for the same case below)
+                  match = kTRUE;
+               }
+               if (!match && CompareContent(0,info,kFALSE,kFALSE)) {
                   match = kTRUE;
                }
             }
@@ -654,13 +660,14 @@ void TStreamerInfo::BuildCheck()
                           gDirectory->GetFile()->GetName(), GetName(), fClassVersion,gDirectory->GetFile()->GetName(),GetName(), GetName(), fClassVersion);
                }
             }
+            CompareContent(0,info,kTRUE,kTRUE);
             fClass->SetBit(TClass::kWarned);
          }
          if (done) {
             return;
          }
       }
-      // The slot was free, however it might still be reversed for the current 
+      // The slot was free, however it might still be reserved for the current 
       // loaded version of the class
       if (fClass->IsLoaded() 
           && fClass->GetListOfDataMembers() 
@@ -1437,6 +1444,207 @@ void TStreamerInfo::Clear(Option_t *option)
       fNdata = 0;
       fSize = 0;
    }
+}
+
+namespace {
+   struct MemberInfo {
+      TString fName;
+      TString fClassName;
+      TString fComment;
+      void SetName(const char *name) {
+         fName = name;
+      }
+      void SetClassName(const char *name) {
+         fClassName = TClassEdit::ShortType( name, TClassEdit::kDropStlDefault );
+      }
+      void SetComment(const char *title) {
+         const char *left = strstr(title,"[");
+         if (left) {
+            const char *right = strstr(left,"]");
+            if (right) {
+               ++left;
+               fComment.Append(left,right-left);
+            }
+         }
+      }
+      void Clear() {
+         fName.Clear();
+         fClassName.Clear();
+         fComment.Clear();
+      }
+      Bool_t operator==(const MemberInfo &other) {
+         return fName==other.fName
+            && fClassName == other.fClassName
+            && fComment == other.fComment;
+      }
+      Bool_t operator!=(const MemberInfo &other) {
+         return fName!=other.fName
+            || fClassName != other.fClassName
+            || fComment != other.fComment;
+      }
+   };
+}
+
+//______________________________________________________________________________
+Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete)
+{
+   Bool_t result = kTRUE;
+   R__ASSERT( (cl==0 || info==0) && (cl!=0 || info!=0) /* must compare to only one thhing! */);
+
+   TString name;
+   TString type;
+   TStreamerElement *el;
+   TStreamerElement *infoel;
+
+   TIter next(GetElements());
+   TIter infonext((TList*)0);
+   TIter basenext((TList*)0);
+   TIter membernext((TList*)0);
+   if (info) {
+      infonext = info->GetElements();
+   }
+   if (cl) {
+      TList *tlb = cl->GetListOfBases();
+      if (tlb) {   // Loop over bases
+         basenext = tlb;
+      }
+      tlb = cl->GetListOfDataMembers();
+      if (tlb) {
+         membernext = tlb;
+      }
+   }
+
+   // First let's compare base classes
+   Bool_t done = kFALSE;
+   TString localClass;
+   TString otherClass;
+   while(!done) {
+      localClass.Clear();
+      otherClass.Clear();
+      el = (TStreamerElement*)next();
+      if (el && el->IsBase()) {
+         localClass = el->GetName();
+      } else {
+         el = 0;
+      }
+      if (cl) {
+         TBaseClass *tbc = (TBaseClass*)basenext();
+         if (tbc) {
+            otherClass = tbc->GetName();
+         } else if (el==0) {
+            done = kTRUE;
+            break;
+         }
+      } else {
+         infoel = (TStreamerElement*)infonext();
+         if (infoel && infoel->IsBase()) {
+            otherClass = infoel->GetName();
+         } else if (el==0) {
+            done = kTRUE;
+            break;
+         }
+      }
+      // Need to normalized the name
+      if (localClass != otherClass) {
+         if (warn) {
+            if (el==0) {
+               Warning("CompareContent",
+                       "The in-memory layout version %d for class '%s' has a base class (%s) that the on-file layout version %d does not have.",
+                       GetClassVersion(), GetName(), otherClass.Data(), GetClassVersion());
+            } else if (otherClass.Length()==0) {
+               Warning("CompareContent",
+                       "The on-file layout version %d for class '%s'  has a base class (%s) that the in-memory layout version %d does not have",
+                       GetClassVersion(), GetName(), localClass.Data(), GetClassVersion());
+            } else {
+               Warning("CompareContent",
+                       "One base class of the on-file layout version %d and of the in memory layout version %d for '%s' is different: '%s' vs '%s'",
+                       GetClassVersion(), GetClassVersion(), GetName(), localClass.Data(), otherClass.Data());
+            }
+         }
+         if (!complete) return kFALSE;
+         result = result && kFALSE;
+      }
+   }
+   if (!result && !complete) {
+      return result;
+   }
+   // Next the datamembers
+   done = kFALSE;
+   next.Reset();
+   infonext.Reset();
+
+   MemberInfo local;
+   MemberInfo other;
+   UInt_t idx = 0;
+   while(!done) {
+      local.Clear();
+      other.Clear();
+      el = (TStreamerElement*)next();
+      while (el && (el->IsBase() || el->IsA() == TStreamerArtificial::Class())) {
+         el = (TStreamerElement*)next();
+         ++idx;
+      }
+      if (el) {
+         local.SetName( el->GetName() );
+         local.SetClassName( el->GetTypeName() );
+         local.SetComment( el->GetTitle() );
+      }
+      if (cl) {
+         TDataMember *tdm = (TDataMember*)membernext();
+         while(tdm && ( tdm->IsPersistent() ) ) {
+            tdm = (TDataMember*)membernext();
+         }
+         if (tdm) {
+            other.SetName( tdm->GetName() );
+            other.SetClassName( tdm->GetFullTypeName() );
+            other.SetComment( tdm->GetTitle() );
+         } else if (el==0) {
+            done = kTRUE;
+            break;
+         }
+      } else {
+         infoel = (TStreamerElement*)infonext();
+         while (infoel && (infoel->IsBase() || infoel->IsA() == TStreamerArtificial::Class())) {
+            infoel = (TStreamerElement*)infonext();
+         }
+         if (infoel) {
+            other.SetName( infoel->GetName() );
+            other.SetClassName( infoel->GetTypeName() );
+            other.SetComment( infoel->GetTitle() );
+         } else if (el==0) {
+            done = kTRUE;
+            break;
+         }
+      }
+      if (local!=other) {
+         if (warn) {
+            if (!el) {
+               Warning("CompareContent","The following data member of the on-file layout version %d of class '%s' is missing from the in-memory layout version %d:\n"
+                       "   %s %s; //%s",
+                       GetClassVersion(), GetName(), GetClassVersion(),
+                       other.fClassName.Data(),other.fName.Data(),other.fComment.Data());
+
+            } else if (other.fName.Length()==0) {
+               Warning("CompareContent","The following data member of the in-memory layout version %d of class '%s' is missing from the on-file layout version %d:\n"
+                       "   %s %s; //%s",
+                       GetClassVersion(), GetName(), GetClassVersion(),
+                       local.fClassName.Data(),local.fName.Data(),local.fComment.Data());
+            } else {
+               Warning("CompareContent","The following data member of the on-file layout version %d of class '%s' differs from the in-memory layout version %d:\n"
+                       "   %s %s; //%s\n"
+                       "vs\n"
+                       "   %s %s; //%s",
+                       GetClassVersion(), GetName(), GetClassVersion(),
+                       local.fClassName.Data(),local.fName.Data(),local.fComment.Data(),
+                       other.fClassName.Data(),other.fName.Data(),other.fComment.Data());
+            }
+         }
+         result = result && kFALSE;
+         if (!complete) return result;
+      }
+      ++idx;
+   }
+   return result;
 }
 
 //______________________________________________________________________________

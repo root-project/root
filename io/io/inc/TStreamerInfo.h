@@ -175,6 +175,7 @@ public:
    void                BuildOld();
    virtual Bool_t      BuildFor( const TClass *cl );
    void                Clear(Option_t *);
+   Bool_t              CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete);
    void                Compile();
    void                ComputeSize();
    void                ForceWriteInfo(TFile *file, Bool_t force=kFALSE);
