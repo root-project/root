@@ -9,6 +9,8 @@ Warning in <TClass::PostLoadCheck>:
    Do not try to write objects with the current class definition,
    the files will not be readable.
 
+Warning in <TStreamerInfo::CompareContent>: The following data member of the in-memory layout version 1 of class 'Tdata' is missing from the on-file layout version 1:
+   int myvar_one; //
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
@@ -28,6 +30,8 @@ Warning in <TClass::PostLoadCheck>:
    Do not try to write objects with the current class definition,
    the files will not be readable.
 
+Warning in <TStreamerInfo::CompareContent>: The following data member of the in-memory layout version 1 of class 'Tdata' is missing from the on-file layout version 1:
+   int myvar_one; //
 
 Processing checkWarn.C(2)...
 Warning in <TStreamerInfo::BuildCheck>: 
@@ -54,6 +58,10 @@ Warning in <TStreamerInfo::BuildCheck>:
    (and potentially other files) might not work correctly.
    Most likely the version number of the class was not properly
    updated [See ClassDef(Tdata,1)].
+Warning in <TStreamerInfo::CompareContent>: The following data member of the on-file layout version 1 of class 'Tdata' differs from the in-memory layout version 1:
+   int myvar_one; //
+vs
+   double mydouble_two; //
 
 Processing checkWarn.C(4)...
 No warning is expected from the 1st 4 files opening since we
@@ -68,6 +76,14 @@ Warning in <TStreamerInfo::BuildCheck>:
    the class layout version 2, in particular from the file:
    data5.root.
    To work around this issue, load fewer 'old' files in the same ROOT session.
+Warning in <TStreamerInfo::CompareContent>: The following data member of the on-file layout version 2 of class 'Tdata' differs from the in-memory layout version 2:
+   double mydouble; //
+vs
+   double mydouble_two; //
+Warning in <TStreamerInfo::CompareContent>: The following data member of the in-memory layout version 2 of class 'Tdata' is missing from the on-file layout version 2:
+   int more; //
+Warning in <TStreamerInfo::CompareContent>: The following data member of the in-memory layout version 2 of class 'Tdata' is missing from the on-file layout version 2:
+   int three; //
 
 Processing checkWarn.C(10)...
 Warning in <TClass::TClass>: no dictionary for class data is available
@@ -79,6 +95,8 @@ Warning in <TClass::PostLoadCheck>:
    Do not try to write objects with the current class definition,
    the files will not be readable.
 
+Warning in <TStreamerInfo::CompareContent>: The following data member of the in-memory layout version 1 of class 'Tdata' is missing from the on-file layout version 1:
+   int myvar_one; //
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
@@ -98,6 +116,8 @@ Warning in <TClass::PostLoadCheck>:
    Do not try to write objects with the current class definition,
    the files will not be readable.
 
+Warning in <TStreamerInfo::CompareContent>: The following data member of the in-memory layout version 1 of class 'Tdata' is missing from the on-file layout version 1:
+   int myvar_one; //
 
 Processing checkWarn.C(12)...
 Warning in <TClass::TClass>: no dictionary for class data is available
@@ -109,6 +129,8 @@ Warning in <TClass::PostLoadCheck>:
    Do not try to write objects with the current class definition,
    the files will not be readable.
 
+Warning in <TStreamerInfo::CompareContent>: The following data member of the in-memory layout version 1 of class 'Tdata' is missing from the on-file layout version 1:
+   int myvar_one; //
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
@@ -128,6 +150,8 @@ Warning in <TClass::PostLoadCheck>:
    Do not try to write objects with the current class definition,
    the files will not be readable.
 
+Warning in <TStreamerInfo::CompareContent>: The following data member of the in-memory layout version 1 of class 'Tdata' is missing from the on-file layout version 1:
+   int myvar_one; //
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
@@ -158,6 +182,10 @@ Warning in <TStreamerInfo::BuildCheck>:
    (and potentially other files) might not work correctly.
    Most likely the version number of the class was not properly
    updated [See ClassDef(Tdata,1)].
+Warning in <TStreamerInfo::CompareContent>: The following data member of the on-file layout version 1 of class 'Tdata' differs from the in-memory layout version 1:
+   int myvar_one; //
+vs
+   double mydouble_two; //
 
 Processing checkWarn.C(16)...
 Warning in <TStreamerInfo::BuildCheck>: 
@@ -188,6 +216,10 @@ Warning in <TStreamerInfo::BuildCheck>:
    (and potentially other files) might not work correctly.
    Most likely the version number of the class was not properly
    updated [See ClassDef(Tdata,1)].
+Warning in <TStreamerInfo::CompareContent>: The following data member of the on-file layout version 1 of class 'Tdata' differs from the in-memory layout version 1:
+   int myvar_one; //
+vs
+   double mydouble_two; //
 
 StreamerInfo for class: Tdata, version=1, checksum=0x30d1fe9d
   double         mydouble_two    offset= n/a type= 8                     
