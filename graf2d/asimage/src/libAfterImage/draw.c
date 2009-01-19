@@ -397,11 +397,21 @@ fill_hline_notile_colored(ASDrawContext *ctx, int x_from, int y, int x_to, CARD3
 		if( x2 >= cw ) 
 			x2 = cw - 1 ; 
 
-		while( x1 <= x2 ) 
+		if (get_flags(ctx->flags, ASDrawCTX_UsingScratch))
 		{
-			alpha_blend_point_argb32( dst+x1, value, ratio);
-			++x1 ;
-		}
+			while( x1 <= x2 ) 
+			{
+				CARD32 value = (ARGB32_ALPHA8(ctx->tool->matrix[0])*ratio)/255 ;
+				if( dst[x1] < value ) 
+					dst[x1] = value ;
+				++x1 ;
+			}
+		}else
+			while( x1 <= x2 ) 
+			{
+				alpha_blend_point_argb32( dst+x1, value, ratio);
+				++x1 ;
+			}
 	}
 }
 
@@ -477,6 +487,7 @@ ctx_draw_line_solid( ASDrawContext *ctx, int from_x, int from_y, int to_x, int t
 static void
 ctx_draw_line_solid_aa( ASDrawContext *ctx, int from_x, int from_y, int to_x, int to_y )
 {
+#define RATIO_t	int
 	int x, y, end, dir = 1;
 	int dx = to_x - from_x ; 
 	int dy = to_y - from_y ; 
@@ -493,7 +504,7 @@ ctx_draw_line_solid_aa( ASDrawContext *ctx, int from_x, int from_y, int to_x, in
 	
 	if( dx >= dy ) 
 	{	
-		int ratio2 = 0x007FFFFF/dx ; 
+		RATIO_t ratio2 = 0x007FFFFF/dx ; 
 		CARD32 value = 0x003FFFFF; 
 		CARD32 value_incr = ratio2*dy ; 
 		int value_decr = (dx - dy)*ratio2 ;
@@ -521,7 +532,7 @@ ctx_draw_line_solid_aa( ASDrawContext *ctx, int from_x, int from_y, int to_x, in
 				value += value_incr ; 
 
 			{
-				register int above = (value&0x00FF0000)>>16;
+				RATIO_t above = (value&0x00FF0000)>>16;
 				/* LOCAL_DEBUG_OUT( "x = %d, y = %d, value = %d, above = %d",  x, y, value, above ); */
 				switch( (above>>5)&0x03 )
 				{
@@ -532,7 +543,7 @@ ctx_draw_line_solid_aa( ASDrawContext *ctx, int from_x, int from_y, int to_x, in
 						break ;	  
 					case 1 :  /* 32 - 64 */ 
 						{
-							int a1 = (above - 32) ;
+							RATIO_t a1 = (above - 32) ;
 							CTX_PUT_PIXEL( ctx, x, y+1, a1 ) ;
 							above = (~above)&0x7f ;
 							CTX_PUT_PIXEL( ctx, x, y-1, above - a1 ) ;
@@ -541,7 +552,7 @@ ctx_draw_line_solid_aa( ASDrawContext *ctx, int from_x, int from_y, int to_x, in
 						break ;
 					case 2 :  /* 64 - 96 */  
 						{
-							int a1 = (96 - above) ;	  
+							RATIO_t a1 = (96 - above) ;	  
 							CTX_PUT_PIXEL( ctx, x, y-1, a1 ) ;
 							CTX_PUT_PIXEL( ctx, x, y, 255 ) ; 
 							CTX_PUT_PIXEL( ctx, x, y+1, above - a1 ) ;
@@ -559,7 +570,7 @@ ctx_draw_line_solid_aa( ASDrawContext *ctx, int from_x, int from_y, int to_x, in
       	}
 	}else
 	{
-		int ratio2 = 0x007FFFFF/dy ; 
+		RATIO_t ratio2 = 0x007FFFFF/dy ; 
 		CARD32 value = 0x003FFFFF; 
 		CARD32 value_incr = ratio2*dx ; 
 		int value_decr = (dy - dx)*ratio2 ;
@@ -587,7 +598,7 @@ ctx_draw_line_solid_aa( ASDrawContext *ctx, int from_x, int from_y, int to_x, in
 				value += value_incr ; 
 
 			{
-				register int above = (value&0x00FF0000)>>16;
+				RATIO_t above = (value&0x00FF0000)>>16;
 				/* LOCAL_DEBUG_OUT( "x = %d, y = %d, value = %d, above = %d",  x, y, value, above ); */
 				switch( (above>>5)&0x03 )
 				{
@@ -598,7 +609,7 @@ ctx_draw_line_solid_aa( ASDrawContext *ctx, int from_x, int from_y, int to_x, in
 						break ;	  
 					case 1 :  /* 32 - 64 */ 
 						{
-							int a1 = (above - 32) ;
+							RATIO_t a1 = (above - 32) ;
 							CTX_PUT_PIXEL( ctx, x+1, y, a1 ) ;
 							above = (~above)&0x7f ;
 							CTX_PUT_PIXEL( ctx, x-1, y, above - a1 ) ;
@@ -607,7 +618,7 @@ ctx_draw_line_solid_aa( ASDrawContext *ctx, int from_x, int from_y, int to_x, in
 						break ;
 					case 2 :  /* 64 - 96 */  
 						{
-							int a1 = (96 - above) ;	  
+							RATIO_t a1 = (96 - above) ;	  
 							CTX_PUT_PIXEL( ctx, x-1, y, a1 ) ;
 							CTX_PUT_PIXEL( ctx, x, y, 255 ) ; 
 							CTX_PUT_PIXEL( ctx, x+1, y, above - a1 ) ;
@@ -2006,7 +2017,7 @@ int main(int argc, char **argv )
 
 #if 1
 	{
-		ASImage *overlayed_im = TASImage_DrawCircle(asv, merged_im, 84, 299, 3, "blue", 5);
+		ASImage *overlayed_im = TASImage_DrawCircle(asv, merged_im, 84, 299, 80, "blue", -1);
 		ASImage2file( overlayed_im, NULL, "test_asdraw.overlayed.png", ASIT_Png, NULL );
 		destroy_asimage( &overlayed_im );
 	}
