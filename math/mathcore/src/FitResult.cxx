@@ -115,9 +115,6 @@ FitResult::FitResult() :
       
       assert (fCovMatrix.size() == r ); 
 
-      // normalize errors if requested in configuration
-      if (fconfig.NormalizeErrors() ) NormalizeErrors();
-
       // minos errors 
       if (minosErr) { 
          fMinosErrors.reserve(n);

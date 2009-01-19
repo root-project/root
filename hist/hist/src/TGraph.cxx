@@ -621,8 +621,7 @@ Bool_t TGraph::CtorAllocate()
    fMaximum = -1111;
    fMinimum = -1111;
    SetBit(kClipFrame);
-   fFunctions = 0;
-   if (fNpoints >= 0) fFunctions = new TList;
+   fFunctions = new TList;
    if (fNpoints <= 0) {
       fNpoints = 0;
       fMaxSize   = 0;

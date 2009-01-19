@@ -67,6 +67,30 @@ bool AdjustError(const DataOptions & option, double & error) {
    return true; 
 }
 
+void ExamineRange(TAxis * axis, std::pair<double,double> range,int &hxfirst,int &hxlast) {
+   // examine the range given with the pair on the given histogram axis
+   // correct in case the bin values hxfirst hxlast
+   double xlow   = range.first; 
+   double xhigh  = range.second; 
+#ifdef DEBUG
+   std::cout << "xlow " << xlow << " xhigh = " << xhigh << std::endl;
+#endif
+   // ignore ranges specified outside histogram range
+   int ilow = axis->FindBin(xlow);
+   int ihigh = axis->FindBin(xhigh);
+   if (ilow > hxlast || ihigh < hxfirst) { 
+      Warning("ROOT::Fit::FillData","fit range is outside histogram range, no fit data for %s",axis->GetName()); 
+   } 
+   // consider only range defined with-in histogram not oustide. Always exclude underflow/overflow
+   hxfirst =  std::min( std::max( ilow, hxfirst), hxlast+1) ;
+   hxlast  =  std::max( std::min( ihigh, hxlast), hxfirst-1) ;
+   // exclude bins where range coverage is less than half bin width
+   if (hxfirst < hxlast) { 
+      if ( axis->GetBinCenter(hxfirst) < xlow)  hxfirst++;
+      if ( axis->GetBinCenter(hxlast)  > xhigh) hxlast--;
+   }
+}
+
 
 } // end namespace HFitInterface
 
@@ -103,40 +127,20 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    // to check if inclusion/exclusion at end/point
    const DataRange & range = dv.Range(); 
    if (range.Size(0) != 0) { 
-      double xlow   = range(0).first; 
-      double xhigh  = range(0).second; 
-#ifdef DEBUG
-      std::cout << "xlow " << xlow << " xhigh = " << xhigh << std::endl;
-#endif
-      // consider only range defined with-in histogram not oustide. Always exclude underflow/overflow
-      hxfirst =  std::max( hfit->GetXaxis()->FindBin(xlow), hxfirst);
-      hxlast  =  std::min( hfit->GetXaxis()->FindBin(xhigh), hxlast);
-      // exclude bins where range coverage is almsler than half bin width
-      if ( hfit->GetXaxis()->GetBinCenter(hxfirst) < xlow)  hxfirst++;
-      if ( hfit->GetXaxis()->GetBinCenter(hxlast)  > xhigh) hxlast--;
+      HFitInterface::ExamineRange( hfit->GetXaxis(), range(0), hxfirst, hxlast); 
       if (range.Size(0) > 1  ) { 
          Warning("ROOT::Fit::FillData","support only one range interval for X coordinate"); 
       }
    }
-
+         
    if (hfit->GetDimension() > 1 && range.Size(1) != 0) { 
-      double ylow   = range(1).first; 
-      double yhigh  = range(1).second; 
-      hyfirst =  std::max( hfit->GetYaxis()->FindBin(ylow), hyfirst);
-      hylast  =  std::min( hfit->GetYaxis()->FindBin(yhigh), hylast);
-      if ( hfit->GetYaxis()->GetBinCenter(hyfirst) < ylow)  hyfirst++;
-      if ( hfit->GetYaxis()->GetBinCenter(hylast)  > yhigh) hylast--;
+      HFitInterface::ExamineRange( hfit->GetYaxis(), range(1), hyfirst, hylast); 
       if (range.Size(1) > 1  ) 
          Warning("ROOT::Fit::FillData","support only one range interval for Y coordinate"); 
    }
 
    if (hfit->GetDimension() > 2 && range.Size(2) != 0) { 
-      double zlow   = range(2).first; 
-      double zhigh  = range(2).second; 
-      hzfirst =  std::max( hfit->GetZaxis()->FindBin(zlow), hzfirst);
-      hzlast  =  std::min( hfit->GetZaxis()->FindBin(zhigh), hzlast);
-      if ( hfit->GetZaxis()->GetBinCenter(hzfirst) < zlow)  hzfirst++;
-      if ( hfit->GetZaxis()->GetBinCenter(hzlast)  > zhigh) hzlast--;
+      HFitInterface::ExamineRange( hfit->GetZaxis(), range(2), hzfirst, hzlast); 
       if (range.Size(2) > 1  ) 
          Warning("ROOT::Fit::FillData","support only one range interval for Z coordinate"); 
    }
@@ -147,7 +151,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    
 #ifdef DEBUG
    std::cout << "THFitInterface: ifirst = " << hxfirst << " ilast =  " << hxlast 
-             << " total bins  " << hxlast-hxfirst+1  
+             << " total bins  " << n  
              << std::endl; 
 #endif
    

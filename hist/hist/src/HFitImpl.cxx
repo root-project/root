@@ -168,6 +168,10 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
    // fill data  
    std::auto_ptr<ROOT::Fit::BinData> fitdata(new ROOT::Fit::BinData(opt,range) );
    ROOT::Fit::FillData(*fitdata, h1, f1); 
+   if (fitdata->Size() == 0 ) { 
+      Warning("Fit","Fit data is empty ");
+      return -1;
+   }
 
 #ifdef DEBUG
    printf("HFit:: data size is %d \n",fitdata->Size());
@@ -534,9 +538,13 @@ int ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t
 #ifdef DEBUG
    printf("tree data size is %d \n",fitdata->Size());
    for (unsigned int i = 0; i < fitdata->Size(); ++i) { 
-      if (fitdata->NDim() == 1) printf(" x[%d] = %f - value = %f \n", i,*(fitdata->Coords(i) ); 
+      if (fitdata->NDim() == 1) printf(" x[%d] = %f \n", i,*(fitdata->Coords(i) ) ); 
    }
 #endif   
+   if (fitdata->Size() == 0 ) { 
+      Warning("Fit","Fit data is empty ");
+      return -1;
+   }
       
    // create the fitter
    std::auto_ptr<ROOT::Fit::Fitter> fitter(new ROOT::Fit::Fitter() );
