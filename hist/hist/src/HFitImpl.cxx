@@ -424,7 +424,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, const TF1 * f1, const ROOT::F
 
    TList * funcList = h1->GetListOfFunctions();
    if (funcList == 0){
-      Error("StoreAndDrawFitFunction","Empty funciton list- cannot store fitted function");
+      Error("StoreAndDrawFitFunction","Function list has not been created - cannot store the fitted function");
       return;
    } 
 
