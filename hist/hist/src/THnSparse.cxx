@@ -463,12 +463,26 @@ TH1* THnSparse::CreateHist(const char* name, const char* title,
    TAxis* hax[3] = {hist->GetXaxis(), hist->GetYaxis(), hist->GetZaxis()};
    for (Int_t d = 0; d < ndim; ++d) {
       TAxis* reqaxis = (TAxis*)(*axes)[d];
-      if (reqaxis->GetXbins()->GetSize())
-         // non-uniform bins:
-         hax[d]->Set(reqaxis->GetNbins(), reqaxis->GetXbins()->GetArray());
-      else
-         // uniform bins:
-         hax[d]->Set(reqaxis->GetNbins(), reqaxis->GetXmin(), reqaxis->GetXmax());
+      if (reqaxis->TestBit(TAxis::kAxisRange)) {
+         Int_t binFirst = reqaxis->GetFirst();
+         Int_t binLast = reqaxis->GetLast();
+         Int_t nBins = binLast - binFirst + 1;
+         if (reqaxis->GetXbins()->GetSize()) {
+            // non-uniform bins:
+            hax[d]->Set(nBins, reqaxis->GetXbins()->GetArray() + binFirst);
+         } else {
+            // uniform bins:
+            hax[d]->Set(nBins, reqaxis->GetBinLowEdge(binFirst), reqaxis->GetBinUpEdge(binLast));
+         }
+      } else {
+         if (reqaxis->GetXbins()->GetSize()) {
+            // non-uniform bins:
+            hax[d]->Set(reqaxis->GetNbins(), reqaxis->GetXbins()->GetArray());
+         } else {
+            // uniform bins:
+            hax[d]->Set(reqaxis->GetNbins(), reqaxis->GetXmin(), reqaxis->GetXmax());
+         }
+      }
    }
 
    hist->Rebuild();
@@ -751,6 +765,7 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
    // Project all bins into a 1-dimensional histogram,
    // keeping only axis "xDim".
    // If "option" contains "E" errors will be calculated.
+   //                      "A" ranges of the taget axes will be ignored.
 
    return (TH1D*) ProjectionAny(1, &xDim, false, option);
 }
@@ -774,6 +789,7 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
    // Project all bins into a 3-dimensional histogram,
    // keeping only axes "xDim", "yDim", and "zDim".
    // If "option" contains "E" errors will be calculated.
+   //                      "A" ranges of the taget axes will be ignored.
 
    const Int_t dim[3] = {xDim, yDim, zDim};
    return (TH3D*) ProjectionAny(3, dim, false, option);
@@ -786,6 +802,7 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
    // Project all bins into a ndim-dimensional histogram,
    // keeping only axes "dim".
    // If "option" contains "E" errors will be calculated.
+   //                      "A" ranges of the taget axes will be ignored.
 
    return (THnSparse*) ProjectionAny(ndim, dim, true, option);
 }
@@ -798,6 +815,7 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
    // Project all bins into a 3-dimensional histogram,
    // keeping only axes "xDim", "yDim", and "zDim".
    // If "option" contains "E" errors will be calculated.
+   //                      "A" ranges of the taget axes will be ignored.
 
    TString name(GetName());
    name += "_";
@@ -828,17 +846,21 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
    TH1* hist = 0;
    TObject* ret = 0;
 
+   Bool_t* hadRange = 0;
+   Bool_t ignoreTargetRange = (option && (strchr(option, 'A') || strchr(option, 'a')));
+   if (ignoreTargetRange) {
+      hadRange = new Bool_t[ndim];
+      for (Int_t d = 0; d < ndim; ++d){
+         TAxis *axis = GetAxis(dim[d]);
+         hadRange[d] = axis->TestBit(TAxis::kAxisRange);
+         axis->SetBit(TAxis::kAxisRange, kFALSE);
+      }
+   }
+
    if (wantSparse)
       ret = sparse = CloneEmpty(name, title, &newaxes, fChunkSize);
    else
       ret = hist = CreateHist(name, title, &newaxes); 
-
-   Bool_t* hadRange  = new Bool_t[ndim];
-   for (Int_t d = 0; d < ndim; ++d){
-      TAxis *axis = GetAxis(dim[d]);
-      hadRange[d] = axis->TestBit(TAxis::kAxisRange);
-      axis->SetBit(TAxis::kAxisRange, kFALSE);
-   }
 
    Bool_t haveErrors = GetCalculateErrors();
    Bool_t wantErrors = (option && (strchr(option, 'E') || strchr(option, 'e'))) || haveErrors;
@@ -895,11 +917,13 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
    else
       hist->SetEntries(fEntries);
 
-   // reset kAxisRange bit:
-   for (Int_t d = 0; d < ndim; ++d)
-      GetAxis(dim[d])->SetBit(TAxis::kAxisRange, hadRange[d]);
+   if (hadRange) {
+      // reset kAxisRange bit:
+      for (Int_t d = 0; d < ndim; ++d)
+         GetAxis(dim[d])->SetBit(TAxis::kAxisRange, hadRange[d]);
 
-   delete [] hadRange;
+      delete [] hadRange;
+   }
 
    return ret;
 }
