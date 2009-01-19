@@ -32,7 +32,8 @@
 #include "XrdProofdTrace.h"
 
 //__________________________________________________________________________
-XrdROOT::XrdROOT(const char *dir, const char *tag)
+XrdROOT::XrdROOT(const char *dir, const char *tag, const char *bindir,
+                 const char *incdir, const char *libdir, const char *datadir)
 {
    // Constructor: validates 'dir', gets the version and defines the tag.
    XPDLOC(SMGR, "XrdROOT")
@@ -48,33 +49,54 @@ XrdROOT::XrdROOT(const char *dir, const char *tag)
       fExport += " "; fExport += dir;
    } else
       fExport += dir;
-
-   // The path should exist and be statable
-   struct stat st;
-   if (stat(dir, &st) == -1) {
-      TRACE(XERR, "unable to stat path "<<dir);
-      return;
-   }
-   // ... and be a directory
-   if (!S_ISDIR(st.st_mode)) {
-      TRACE(XERR, "path "<<dir<<" is not a directory");
-      return;
-   }
+   // ... and exist
+   if (CheckDir(dir) != 0) return;
    fDir = dir;
+
+   // Include dir
+   fIncDir = incdir;
+   if (!incdir || strlen(incdir) <= 0) {
+      fIncDir = fDir;
+      fIncDir += "/include";
+   }
+   if (CheckDir(fIncDir.c_str()) != 0) return;
 
    // Get the version
    XrdOucString version;
-   if (GetROOTVersion(dir, version) == -1) {
-      TRACE(XERR, "unable to extract ROOT version from path "<<dir);
+   if (GetROOTVersion(version) == -1) {
+      TRACE(XERR, "unable to extract ROOT version from path "<<fIncDir);
       return;
    }
 
    // Default tag is the version
    fTag = (!tag || strlen(tag) <= 0) ? version : tag;
 
+   // Lib dir
+   fLibDir = libdir;
+   if (!libdir || strlen(libdir) <= 0) {
+      fLibDir = fDir;
+      fLibDir += "/lib";
+   }
+   if (CheckDir(fLibDir.c_str()) != 0) return;
+
+   // Bin dir
+   fBinDir = bindir;
+   if (!bindir || strlen(bindir) <= 0) {
+      fBinDir = fDir;
+      fBinDir += "/bin";
+   }
+   if (CheckDir(fBinDir.c_str()) != 0) return;
+
+   // Data dir
+   fDataDir = datadir;
+   if (!datadir || strlen(datadir) <= 0) {
+      fDataDir = fDir;
+   }
+   if (CheckDir(fDataDir.c_str()) != 0) return;
+
    // The application to be run
-   fPrgmSrv = dir;
-   fPrgmSrv += "/bin/proofserv";
+   fPrgmSrv = fBinDir;
+   fPrgmSrv += "/proofserv";
 
    // Export string
    fExport = fTag;
@@ -83,6 +105,32 @@ XrdROOT::XrdROOT(const char *dir, const char *tag)
 
    // First step OK
    fStatus = 0;
+}
+
+//__________________________________________________________________________
+int XrdROOT::CheckDir(const char *dir)
+{
+   // Check if 'dir' exists
+   // Return 0 on succes, -1 on failure
+   XPDLOC(SMGR, "CheckDir")
+
+   if (dir && strlen(dir) > 0) {
+      // The path should exist and be statable
+      struct stat st;
+      if (stat(dir, &st) == -1) {
+         TRACE(XERR, "unable to stat path "<<dir);
+         return -1;
+      }
+      // ... and be a directory
+      if (!S_ISDIR(st.st_mode)) {
+         TRACE(XERR, "path "<<dir<<" is not a directory");
+         return -1;
+      }
+      // Ok
+      return 0;
+   }
+   TRACE(XERR, "path is undefined");
+   return -1;
 }
 
 //__________________________________________________________________________
@@ -108,15 +156,15 @@ void XrdROOT::SetValid(kXR_int16 vers)
 }
 
 //__________________________________________________________________________
-int XrdROOT::GetROOTVersion(const char *dir, XrdOucString &version)
+int XrdROOT::GetROOTVersion(XrdOucString &version)
 {
    // Get ROOT version associated with 'dir'.
    XPDLOC(SMGR, "GetROOTVersion")
 
    int rc = -1;
 
-   XrdOucString versfile = dir;
-   versfile += "/include/RVersion.h";
+   XrdOucString versfile = fIncDir;
+   versfile += "/RVersion.h";
 
    // Open file
    FILE *fv = fopen(versfile.c_str(), "r");
@@ -199,9 +247,16 @@ int XrdROOTMgr::Config(bool rcf)
    } else {
       // Check the ROOT dirs
       if (fROOT.size() <= 0) {
+#ifdef R__HAVE_CONFIG
+         XrdOucString dir(ROOTPREFIX), bd(ROOTBINDIR), ld(ROOTLIBDIR),
+                      id(ROOTINCDIR), dd(ROOTDATADIR);
+#else
+         XrdOucString dir(getenv("ROOTSYS")), bd, ld, id, dd;
+#endif
          // None defined: use ROOTSYS as default, if any; otherwise we fail
-         if (getenv("ROOTSYS")) {
-            XrdROOT *rootc = new XrdROOT(getenv("ROOTSYS"), "");
+         if (dir.length() > 0) {
+            XrdROOT *rootc = new XrdROOT(dir.c_str(), "",
+                                         bd.c_str(), id.c_str(), ld.c_str(), dd.c_str());
             msg.form("ROOT dist: '%s'", rootc->Export());
             if (Validate(rootc, fSched) == 0) {
                msg += " validated";
@@ -211,7 +266,7 @@ int XrdROOTMgr::Config(bool rcf)
                msg += " could not be validated";
                TRACE(XERR, msg);
             }
-        }
+         }
          if (fROOT.size() <= 0) {
             TRACE(XERR, "no ROOT dir defined; ROOTSYS location missing - unloading");
             return -1;
@@ -271,7 +326,12 @@ int XrdROOTMgr::DoDirectiveRootSys(char *val, XrdOucStream *cfg, bool)
       ok = (XrdProofdAux::CheckIf(cfg, fMgr->Host()) > 0) ? 1 : 0;
    }
    if (ok) {
-      XrdROOT *rootc = new XrdROOT(dir.c_str(), tag.c_str());
+      // Check for additional info in the form: bindir incdir libdir datadir
+      XrdOucString a[4];
+      int i = 0;
+      while ((val = cfg->GetToken())) { a[i++] = val; }
+      XrdROOT *rootc = new XrdROOT(dir.c_str(), tag.c_str(), a[0].c_str(),
+                                   a[1].c_str(), a[2].c_str(), a[3].c_str());
       // Check if already validated
       std::list<XrdROOT *>::iterator ori;
       for (ori = fROOT.begin(); ori != fROOT.end(); ori++) {

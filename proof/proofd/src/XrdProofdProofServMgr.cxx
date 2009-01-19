@@ -2438,26 +2438,32 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdManager *mgr, XrdROOT *r)
    TRACE(REQ,  "ROOT dir: "<< (r ? r->Dir() : "*** undef ***"));
 
    if (r) {
-      char *rootsys = (char *) r->Dir();
-#ifndef ROOTLIBDIR
+      char *libdir = (char *) r->LibDir();
       char *ldpath = 0;
       if (mgr->BareLibPath() && strlen(mgr->BareLibPath()) > 0) {
-         ldpath = new char[32 + strlen(rootsys) + strlen(mgr->BareLibPath())];
-         sprintf(ldpath, "%s=%s/lib:%s", XPD_LIBPATH, rootsys, mgr->BareLibPath());
+         ldpath = new char[32 + strlen(libdir) + strlen(mgr->BareLibPath())];
+         sprintf(ldpath, "%s=%s:%s", XPD_LIBPATH, libdir, mgr->BareLibPath());
       } else {
-         ldpath = new char[32 + strlen(rootsys)];
-         sprintf(ldpath, "%s=%s/lib", XPD_LIBPATH, rootsys);
+         ldpath = new char[32 + strlen(libdir)];
+         sprintf(ldpath, "%s=%s", XPD_LIBPATH, libdir);
       }
       putenv(ldpath);
-#endif
       // Set ROOTSYS
+      char *rootsys = (char *) r->Dir();
       ev = new char[15 + strlen(rootsys)];
       sprintf(ev, "ROOTSYS=%s", rootsys);
       putenv(ev);
 
+      // Set bin directory
+      char *bindir = (char *) r->BinDir();
+      ev = new char[15 + strlen(bindir)];
+      sprintf(ev, "ROOTBINDIR=%s", bindir);
+      putenv(ev);
+
       // Set conf dir
-      ev = new char[20 + strlen(rootsys)];
-      sprintf(ev, "ROOTCONFDIR=%s", rootsys);
+      char *confdir = (char *) r->DataDir();
+      ev = new char[20 + strlen(confdir)];
+      sprintf(ev, "ROOTCONFDIR=%s", confdir);
       putenv(ev);
 
       // Set TMPDIR

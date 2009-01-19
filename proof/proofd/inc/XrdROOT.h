@@ -37,18 +37,28 @@ friend class XrdROOTMgr;
 private:
    int          fStatus;
    XrdOucString fDir;
+   XrdOucString fBinDir;
+   XrdOucString fDataDir;
+   XrdOucString fIncDir;
+   XrdOucString fLibDir;
    XrdOucString fTag;
    XrdOucString fExport;
    XrdOucString fPrgmSrv;
    kXR_int16    fSrvProtVers;
 
-   int          GetROOTVersion(const char *dir, XrdOucString &version);
+   int          CheckDir(const char *dir);
+   int          GetROOTVersion(XrdOucString &version);
 
 public:
-   XrdROOT(const char *dir, const char *tag);
+   XrdROOT(const char *dir, const char *tag, const char *bindir = 0,
+           const char *incdir = 0, const char *libdir = 0, const char *datadir = 0);
    ~XrdROOT() { }
 
    const char *Dir() const { return fDir.c_str(); }
+   const char *BinDir() const { return fBinDir.c_str(); }
+   const char *DataDir() const { return fDataDir.c_str(); }
+   const char *IncDir() const { return fIncDir.c_str(); }
+   const char *LibDir() const { return fLibDir.c_str(); }
    const char *Export() const { return fExport.c_str(); }
    bool        IsParked() const { return ((fStatus == 2) ? 1: 0); }
    bool        IsValid() const { return ((fStatus == 1) ? 1: 0); }
