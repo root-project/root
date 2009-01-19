@@ -124,6 +124,11 @@ class THnSparse: public TNamed {
    THnSparse& operator=(const THnSparse&); // Not implemented
 
  protected:
+
+   THnSparse();
+   THnSparse(const char* name, const char* title, Int_t dim,
+             const Int_t* nbins, const Double_t* xmin, const Double_t* xmax,
+             Int_t chunksize);
    Int_t GetChunkSize() const { return fChunkSize; }
    THnSparseCompactBinCoord* GetCompactCoord() const;
    THnSparseArrayChunk* GetChunk(Int_t idx) const {
@@ -156,10 +161,6 @@ class THnSparse: public TNamed {
                           Bool_t wantSparse, Option_t* option = "") const;
 
  public:
-   THnSparse(const char* name, const char* title, Int_t dim,
-             const Int_t* nbins, const Double_t* xmin, const Double_t* xmax,
-             Int_t chunksize);
-   THnSparse();
    virtual ~THnSparse();
 
    Int_t  GetNChunks() const { return fBinContent.GetEntriesFast(); }
