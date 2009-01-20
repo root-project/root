@@ -114,11 +114,15 @@ endif
 
 LIBDIR_SED=$(subst /,\\/,$(LIBDIR))
 LIBDIR_SED2=$(subst /,\\/,$(LPWD)/./)
+ROOTSYS_SED=$(subst /,\\/,$(subst \,\\\\,$(ROOTSYS)))
+#ROOTSYS_SED=$(subst \\,\\\\,$(subst /,\\/,$(ROOTSYS)))
+#ROOTLOC_SED=$(subst /,\\/,$(ROOT_LOC))
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
 ifneq ($(MAKECMDGOALS),clean)
 $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
-	@cat $< | sed -e s/$(LIBDIR_SED2)// | sed -e s/$*.o/$(LIBDIR_SED)$*_C.$(DllSuf)/ > $@
+	@cat $< | sed -e s/$(LIBDIR_SED2)// -e s/$*.o/$(LIBDIR_SED)$*_C.$(DllSuf)/ \
+	   -e s,$(ROOTSYS_SED)\\\\include\\\\cintdictversion.h,$(ROOT_LOC)/include/cintdictversion.h, > $@
 endif
 
 $(HELPER_DLL) : TestHelpers.C 
