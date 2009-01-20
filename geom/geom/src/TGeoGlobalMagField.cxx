@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id:$
+// @(#)root/geom:$Id$
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -36,6 +36,7 @@ TGeoGlobalMagField::TGeoGlobalMagField()
 {
 // Global field default constructor.
    fField = NULL;
+   fLock = kFALSE;
    if (fgInstance) {
       TVirtualMagField *field = fgInstance->GetField();
       if (field)
@@ -67,16 +68,22 @@ TGeoGlobalMagField::~TGeoGlobalMagField()
 //______________________________________________________________________________
 void TGeoGlobalMagField::SetField(TVirtualMagField *field)
 {
-// Field setter. Deletes previous field if any.
-   if (field)
-      Info("SetField", "Global magnetic field set to <%s>", field->GetName());
+// Field setter. Deletes previous field if any. Acts only if fLock=kFALSE.
+   if (field==fField) return;
+   // Check if we are allowed to change the old field.
    if (fField) {
-      Info("SetField", "Previous magnetic field <%s> deleted", fField->GetName());
+      if (fLock) {
+         Error("SetField", "Global field is already set to <%s> and locked", fField->GetName());
+         return;
+      }
+      // We delete the old global field and notify user.   
+      Info("SetField", "Previous magnetic field <%s> will be deleted", fField->GetName());
       TVirtualMagField *oldfield = fField;
       fField = NULL;
       delete oldfield;
    }   
    fField = field;
+   if (fField) Info("SetField", "Global magnetic field set to <%s>", fField->GetName());
 }
 
 //______________________________________________________________________________
@@ -86,3 +93,15 @@ TGeoGlobalMagField *TGeoGlobalMagField::Instance()
    if (fgInstance) return fgInstance;
    return new TGeoGlobalMagField();
 }
+
+//______________________________________________________________________________
+void TGeoGlobalMagField::Lock()
+{
+// Locks the global magnetic field if this is set. Cannot be unlocked.
+   if (!fField) {
+      Warning("Lock", "Cannot lock global magnetic field since this was not set yet");
+      return;
+   }
+   fLock = kTRUE;
+   Info("Lock", "Global magnetic field <%s> is now locked", fField->GetName());
+}   
