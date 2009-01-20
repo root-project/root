@@ -473,6 +473,9 @@ void TEveGeoTopNode::NodeVisChanged(TGeoNode* node)
 // attributes allowing display of extracted TGeoShape's (without an
 // active TGeoManager) and simplified geometries (needed for NLT
 // projections).
+//
+// TGeoCompositeShapes are currently NOT supported. This is planned
+// for ROOT-5.24.
 
 namespace
 {
