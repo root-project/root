@@ -122,7 +122,7 @@ void TEveTrackPropagator::Helix_t::UpdateRK(const TEveVector& p, const TEveVecto
 {
    // Update helix for stepper RungeKutta.
 
-   if (TMath::Abs(b.Mag()) > kBMin && fCharge)
+   if (fCharge)
    {
       fValid = kTRUE;
 
