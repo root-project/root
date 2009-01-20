@@ -191,7 +191,7 @@ inline TSplinePoly5::TSplinePoly5(TSplinePoly5 const &other)
 //______________________________________________________________________________
 class TSpline3 : public TSpline
 {
-private:
+protected:
    TSplinePoly3  *fPoly;       //[fNp] Array of polynomial terms
    Double_t       fValBeg;     // Initial value of first or second derivative
    Double_t       fValEnd;     // End value of first or second derivative
@@ -247,7 +247,7 @@ public:
 //______________________________________________________________________________
 class TSpline5 : public TSpline
 {
-private:
+protected:
    TSplinePoly5  *fPoly;     //[fNp] Array of polynomial terms
 
    void BuildCoeff();
