@@ -211,9 +211,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    // Merge all objects in a directory
    // NB. This function is a copy of the hadd function MergeROOTFile
 
-   //cout << "Target path: " << target->GetPath() << endl;
-   TString path( (char*)strstr( target->GetPath(), ":" ) );
-   path.Remove( 0, 2 );
+   // Get the dir name
+   TString path(target->GetPath());
+   path.Remove(0, path.Last(':') + 2);
 
    //gain time, do not add the objects in the list in memory
    Bool_t addDirStat = TH1::AddDirectoryStatus();
