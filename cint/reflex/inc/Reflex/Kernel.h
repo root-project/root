@@ -116,6 +116,7 @@
 
 // Include files
 #include <string>
+#include <cstring>
 #include <vector>
 #include <utility>
 #include <exception>
