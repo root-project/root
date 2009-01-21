@@ -83,7 +83,7 @@ TEveCaloViz::~TEveCaloViz()
    // Destructor.
 
    if (fPalette) fPalette->DecRefCount();
-   if (fData) fData->DecRefCount();
+   if (fData) fData->DecRefCount(this);
 }
 
 //______________________________________________________________________________
