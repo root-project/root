@@ -87,7 +87,7 @@ ClassImp(TProofDraw)
 
 //______________________________________________________________________________
 TProofDraw::TProofDraw()
-   : fStatus(0), fManager(0)
+   : fStatus(0), fManager(0), fTree(0)
 {
    // Constructor.
 
@@ -623,59 +623,63 @@ void TProofDrawHist::SlaveBegin(TTree *tree)
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
    fDimension = fTreeDrawArgsParser.GetDimension();
    TString exp = fTreeDrawArgsParser.GetExp();
-   if (fTreeDrawArgsParser.GetOriginal()) {
-      fHistogram = dynamic_cast<TH1*> (fTreeDrawArgsParser.GetOriginal());
-      if (fHistogram) {
-         fOutput->Add(fHistogram);
+   const char *objname = fTreeDrawArgsParser.GetObjectName();
+   if (objname && strlen(objname) > 0) {
+      TH1 *hist = dynamic_cast<TH1*> (fInput->FindObject(objname));
+      if (hist) {
+         fHistogram = (TH1 *) hist->Clone();
          PDB(kDraw,1) Info("SlaveBegin","Original histogram found");
-         return;
+      } else {
+         Error("SlaveBegin",
+               "Original object '%s' not found or it is not a histogram", objname);
       }
-      else
-         Error("SlaveBegin","Original object found but it is not a histogram");
    }
 
-   Int_t countx = 100; double minx = 0, maxx = 0;
-   Int_t county = 100; double miny = 0, maxy = 0;
-   Int_t countz = 100; double minz = 0, maxz = 0;
-   if (fTreeDrawArgsParser.GetNoParameters() != 0) {
-      countx = (Int_t) fTreeDrawArgsParser.GetIfSpecified(0, countx);
-      county = (Int_t) fTreeDrawArgsParser.GetIfSpecified(3, county);
-      countz = (Int_t) fTreeDrawArgsParser.GetIfSpecified(6, countz);
-      minx =  fTreeDrawArgsParser.GetIfSpecified(1, minx);
-      maxx =  fTreeDrawArgsParser.GetIfSpecified(2, maxx);
-      miny =  fTreeDrawArgsParser.GetIfSpecified(4, miny);
-      maxy =  fTreeDrawArgsParser.GetIfSpecified(5, maxy);
-      minz =  fTreeDrawArgsParser.GetIfSpecified(7, minz);
-      maxz =  fTreeDrawArgsParser.GetIfSpecified(8, maxz);
-   }
-   if (fTreeDrawArgsParser.GetNoParameters() != 3*fDimension)
-      Error("SlaveBegin", "Impossible - Wrong number of parameters");
+   // Create the histogram if not found in the input list
+   if (!fHistogram) {
+      Int_t countx = 100; double minx = 0, maxx = 0;
+      Int_t county = 100; double miny = 0, maxy = 0;
+      Int_t countz = 100; double minz = 0, maxz = 0;
+      if (fTreeDrawArgsParser.GetNoParameters() != 0) {
+         countx = (Int_t) fTreeDrawArgsParser.GetIfSpecified(0, countx);
+         county = (Int_t) fTreeDrawArgsParser.GetIfSpecified(3, county);
+         countz = (Int_t) fTreeDrawArgsParser.GetIfSpecified(6, countz);
+         minx =  fTreeDrawArgsParser.GetIfSpecified(1, minx);
+         maxx =  fTreeDrawArgsParser.GetIfSpecified(2, maxx);
+         miny =  fTreeDrawArgsParser.GetIfSpecified(4, miny);
+         maxy =  fTreeDrawArgsParser.GetIfSpecified(5, maxy);
+         minz =  fTreeDrawArgsParser.GetIfSpecified(7, minz);
+         maxz =  fTreeDrawArgsParser.GetIfSpecified(8, maxz);
+      }
+      if (fTreeDrawArgsParser.GetNoParameters() != 3*fDimension)
+         Error("SlaveBegin", "Impossible - Wrong number of parameters");
 
-   if (fDimension == 1)
-      fHistogram = new TH1F(fTreeDrawArgsParser.GetObjectName(),
-                            fTreeDrawArgsParser.GetObjectTitle(),
-                            countx, minx, maxx);
-   else if (fDimension == 2){
-      fHistogram = new TH2F(fTreeDrawArgsParser.GetObjectName(),
-                            fTreeDrawArgsParser.GetObjectTitle(),
-                            countx, minx, maxx,
-                            county, miny, maxy);
-   }
-   else if (fDimension == 3) {
-      fHistogram = new TH3F(fTreeDrawArgsParser.GetObjectName(),
-                            fTreeDrawArgsParser.GetObjectTitle(),
-                            countx, minx, maxx,
-                            county, miny, maxy,
-                            countz, minz, maxz);
-   } else {
-      Info("Begin", "Wrong dimension");
-      return;        // FIXME: end the session
-   }
-   if (minx >= maxx)
-      fHistogram->SetBuffer(TH1::GetDefaultBufferSize());
-   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
-      if (strstr(opt->GetTitle(), "rebin"))
-         fHistogram->SetBit(TH1::kCanRebin);
+      if (fDimension == 1)
+         fHistogram = new TH1F(fTreeDrawArgsParser.GetObjectName(),
+                              fTreeDrawArgsParser.GetObjectTitle(),
+                              countx, minx, maxx);
+      else if (fDimension == 2){
+         fHistogram = new TH2F(fTreeDrawArgsParser.GetObjectName(),
+                              fTreeDrawArgsParser.GetObjectTitle(),
+                              countx, minx, maxx,
+                              county, miny, maxy);
+      }
+      else if (fDimension == 3) {
+         fHistogram = new TH3F(fTreeDrawArgsParser.GetObjectName(),
+                              fTreeDrawArgsParser.GetObjectTitle(),
+                              countx, minx, maxx,
+                              county, miny, maxy,
+                              countz, minz, maxz);
+      } else {
+         Info("Begin", "Wrong dimension");
+         return;        // FIXME: end the session
+      }
+      if (minx >= maxx)
+         fHistogram->SetBuffer(TH1::GetDefaultBufferSize());
+      if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
+         if (strstr(opt->GetTitle(), "rebin"))
+            fHistogram->SetBit(TH1::kCanRebin);
+      }
    }
    fHistogram->SetDirectory(0);   // take ownership
    fOutput->Add(fHistogram);      // release ownership

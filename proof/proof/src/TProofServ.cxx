@@ -3114,6 +3114,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                                     gPerfStats?gPerfStats->GetBytesRead():0);
          if (status)
             m << status << abort;
+         SafeDelete(status);
       } else {
          m << fPlayer->GetEventsProcessed() << abort;
       }

@@ -2854,6 +2854,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                   fPlayer->AddEventsProcessed(events);
                }
             }
+            SafeDelete(status);
             if (!TestBit(TProof::kIsMaster))
                Emit("StopProcess(Bool_t)", abort);
             break;

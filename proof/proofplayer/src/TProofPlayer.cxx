@@ -1396,6 +1396,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    else
       fOutput->Clear();
 
+   SafeDelete(fFeedbackLists);
+
    if (fProof->IsMaster()){
       TPerfStats::Start(fInput, fOutput);
    } else {
@@ -2356,6 +2358,9 @@ TList *TProofPlayerRemote::MergeFeedback()
    TMap *map;
    while ( (map = (TMap*) next()) ) {
 
+      PDB(kFeedback,2)
+         Info("MergeFeedback", "map %s size: %d", map->GetName(), map->GetSize());
+
       // turn map into list ...
 
       TList *list = new TList;
@@ -2451,27 +2456,31 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
    TIter next(out);
    out->SetOwner(kFALSE);  // take ownership of the contents
 
+   const char *ord = ((TSlave*) slave)->GetOrdinal();
+
    TObject *obj;
    while( (obj = next()) ) {
       PDB(kFeedback,2)
-         Info("StoreFeedback","Find '%s'", obj->GetName() );
+         Info("StoreFeedback","%s: Find '%s'", ord, obj->GetName() );
 
       TMap *map = (TMap*) fFeedbackLists->FindObject(obj->GetName());
       if ( map == 0 ) {
          PDB(kFeedback,2)
-            Info("StoreFeedback","Map not Found (creating)", obj->GetName() );
-         // map must not be owner (ownership is with regards to the keys (only))
+            Info("StoreFeedback","%s: Map not Found (creating)", ord, obj->GetName() );
+         // Map must not be owner (ownership is with regards to the keys (only))
          map = new TMap;
          map->SetName(obj->GetName());
          fFeedbackLists->Add(map);
       } else {
          PDB(kFeedback,2)
-            Info("StoreFeedback","removing previous value");
+            Info("StoreFeedback","%s: removing previous value", ord);
          if (map->GetValue(slave))
             delete map->GetValue(slave);
          map->Remove(slave);
       }
       map->Add(slave, obj);
+      PDB(kFeedback,2)
+         Info("StoreFeedback","%s: %s, size: %d", ord, obj->GetName(), map->GetSize());
    }
 
    delete out;
@@ -2531,13 +2540,24 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
    TIter next(fFeedback);
    while( TObjString *name = (TObjString*) next() ) {
       TObject *o = fOutput->FindObject(name->GetName());
-      if (o != 0) fb->Add(o->Clone());
+      if (o != 0) {
+         fb->Add(o->Clone());
+         // remove the corresponding entry from the feedback list
+         TMap *m = 0;
+         if (fFeedbackLists &&
+            (m = (TMap *) fFeedbackLists->FindObject(name->GetName()))) {
+            fFeedbackLists->Remove(m);
+            m->DeleteValues();
+            delete m;
+         }
+      }
    }
 
-   if (fb->GetSize() > 0)
+   if (fb->GetSize() > 0) {
       StoreFeedback(this, fb); // adopts fb
-   else
+   } else {
       delete fb;
+   }
 
    if (fFeedbackLists == 0) {
       fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);   // maybe next time
