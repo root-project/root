@@ -1719,8 +1719,7 @@ void Cint::Internal::G__set_G__tagnum(const G__value& result)
    }
    // etc...
    varscope.RemoveDataMember(member);
-   varscope.AddDataMember(name.c_str(), newType, offset, modifiers);
-   member = varscope.DataMemberByName(name);
+   varscope.AddDataMember(member, name.c_str(), newType, offset, modifiers);
    *G__get_properties(member) = prop;
    return member;
 }
