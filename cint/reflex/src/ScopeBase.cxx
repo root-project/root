@@ -242,12 +242,16 @@ Reflex::ScopeBase::FunctionMemberByNameAndSignature( const std::string & name,
                                                unsigned int modifiers_mask) const {
 //-------------------------------------------------------------------------------
    // Return function member by name and signature.
-   for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
-      if (it->ToMemberBase()->MemberBase::Name() == name) {
-         if (signature) {
+   if (signature) {
+      for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
+         if (it->ToMemberBase()->MemberBase::Name_c_str() == name) {
             if (signature.IsSignatureEquivalentTo(it->TypeOf(),modifiers_mask)) return (*it);
          }
-         else {
+      }
+   }
+   else {
+      for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
+         if (it->ToMemberBase()->MemberBase::Name_c_str() == name) {
             return (*it);
          }
       }
@@ -630,14 +634,25 @@ void Reflex::ScopeBase::AddDataMember( const Member & dm ) const {
 
 //-------------------------------------------------------------------------------
 void Reflex::ScopeBase::AddDataMember( const char * name,
-                                             const Type & type,
-                                             size_t offset,
-                                             unsigned int modifiers ) const {
+                                      const Type & type,
+                                      size_t offset,
+                                      unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
    // Add data member to this scope.
-   AddDataMember(Member(new DataMember(name, type, offset, modifiers)));
+   AddDataMember( new DataMember(name, type, offset, modifiers) );
 }
 
+//-------------------------------------------------------------------------------
+void Reflex::ScopeBase::AddDataMember( Member &output,
+                                      const char * name,
+                                      const Type & type,
+                                      size_t offset,
+                                      unsigned int modifiers ) const {
+   //-------------------------------------------------------------------------------
+   // Add data member to this scope.
+   output = new DataMember(name, type, offset, modifiers);
+   AddDataMember( output );
+}
 
 //-------------------------------------------------------------------------------
 void Reflex::ScopeBase::RemoveDataMember( const Member & dm ) const {

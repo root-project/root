@@ -388,11 +388,25 @@ void Reflex::Scope::AddDataMember( const char * name,
 //-------------------------------------------------------------------------------
 // Add data member to this scope.
    if ( * this ) fScopeName->fScopeBase->AddDataMember( name, 
-                                                        type, 
-                                                        offset, 
-                                                        modifiers );
+                                                       type, 
+                                                       offset, 
+                                                       modifiers );
 }
 
+
+//-------------------------------------------------------------------------------
+void Reflex::Scope::AddDataMember(  Member &output,
+                                    const char * name,
+                                    const Type & type,
+                                    size_t offset,
+                                    unsigned int modifiers ) const {
+   //-------------------------------------------------------------------------------
+   // Add data member to this scope.
+   if ( * this ) fScopeName->fScopeBase->AddDataMember(output, name, 
+                                                       type, 
+                                                       offset, 
+                                                       modifiers );
+}
 
 //-------------------------------------------------------------------------------
 void Reflex::Scope::RemoveDataMember( const Member & dm ) const {

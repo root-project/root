@@ -382,7 +382,12 @@ namespace Reflex {
       */
       std::string Name( unsigned int mod = 0 ) const;
 
-
+      /**
+       * Name_c_str returns a char* pointer to the unqualified member name
+       * @return c string to unqualified member name
+       */
+      const char * Name_c_str() const;
+      
       /** 
       * Offset returns the offset of the data member relative to the start of the scope
       * @return offset of member as int
@@ -545,7 +550,7 @@ inline bool Reflex::Member::operator < ( const Member & rh ) const {
 inline bool Reflex::Member::operator == ( const Member & rh ) const {
 //-------------------------------------------------------------------------------
    if ( (*this) && rh ) 
-      return ( TypeOf() == rh.TypeOf() && Name() == rh.Name() );
+      return ( TypeOf() == rh.TypeOf() && 0==strcmp(Name_c_str(),rh.Name_c_str()) );
    // both invalid is equal, too
    return (!(*this)) && (!rh);
 }
@@ -839,6 +844,12 @@ inline std::string Reflex::Member::Name( unsigned int mod ) const {
    return "";
 }
 
+//-------------------------------------------------------------------------------
+inline const char * Reflex::Member::Name_c_str ( ) const {
+   //-------------------------------------------------------------------------------
+   if ( *this ) return fMemberBase->Name_c_str( );
+   return "";
+}
 
 //-------------------------------------------------------------------------------
 inline size_t Reflex::Member::Offset() const {

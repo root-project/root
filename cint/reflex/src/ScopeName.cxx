@@ -77,9 +77,13 @@ Reflex::ScopeName::~ScopeName() {
 Reflex::Scope Reflex::ScopeName::ByName( const std::string & name ) {
 //-------------------------------------------------------------------------------
 // Lookup a scope by fully qualified name.
-   size_t pos =  name.substr(0,2) == "::" ?  2 : 0;
-   const std::string & k = name.substr(pos);
-   Name2Scope_t::iterator it = sScopes().find(&k);
+   Name2Scope_t::iterator it;
+   if (name.size()>2 && name[0]==':' && name[1]==':') {
+      const std::string & k = name.substr(2);
+      it = sScopes().find(&k);
+   } else {
+      it = sScopes().find(&name);
+   }
    if (it != sScopes().end() ) return it->second;
    else {
       // HERE STARTS AN UGLY HACK WHICH HAS TO BE UNDONE ASAP

@@ -200,7 +200,13 @@ namespace Reflex {
       /** return the name of the member */
       virtual std::string Name( unsigned int mod = 0 ) const;
 
-
+      /**
+       * Name_c_str returns a char* pointer to the unqualified Name
+       * @ return c string to unqualified Name
+       */
+      const char * Name_c_str() const;
+      
+      
       /** return the offset of the member */
       virtual size_t Offset() const;
 
@@ -598,6 +604,11 @@ inline std::string Reflex::MemberBase::Name( unsigned int mod ) const {
    return fName;
 }
 
+//-------------------------------------------------------------------------------
+inline const char * Reflex::MemberBase::Name_c_str() const {
+//-------------------------------------------------------------------------------
+   return fName.c_str();
+}
 
 //-------------------------------------------------------------------------------
 inline size_t Reflex::MemberBase::Offset() const {

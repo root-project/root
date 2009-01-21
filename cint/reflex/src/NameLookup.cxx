@@ -179,7 +179,7 @@ template<class T> T Reflex::NameLookup::LookupInScope()
 
    // global scope can use hashed containers:
    if (fCurrentScope == Scope::GlobalScope()) {
-      Type freeType = Type::ByName(fLookupName.c_str() + fPosNamePart);
+      Type freeType( Type::ByName(fLookupName.c_str() + fPosNamePart) );
       if (freeType.Id()) {
          //fprintf(stderr, "Reflex::NameLookup::LookupInScope<T>: lookup up '%s', partial success with subscope '%s' ...\n", fLookupName.c_str(), name.c_str());
          fPartialSuccess = true;
@@ -197,7 +197,7 @@ template<class T> T Reflex::NameLookup::LookupInScope()
          return LookupInScope< T >();
       }
 
-      Scope freeScope = Scope::ByName(fLookupName.c_str() + fPosNamePart);
+      Scope freeScope( Scope::ByName(fLookupName.c_str() + fPosNamePart) );
       // only take namespaces into account - classes were checked as part of SubType
       if (freeScope.Id() && freeScope.IsNamespace()) {
          fPartialSuccess = true;

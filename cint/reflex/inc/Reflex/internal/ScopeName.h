@@ -80,7 +80,7 @@ namespace Reflex {
 
 
       /**
-      * Name_c_str returns a char* pointer to the unqualified Scope Name
+      * Name_c_str returns a char* pointer to the qualified Scope Name
       * @return c string to unqualified Scope Name
       */
       const char * Name_c_str() const;

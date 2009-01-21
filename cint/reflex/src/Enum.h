@@ -65,7 +65,12 @@ namespace Reflex {
          const Type & typ,
          size_t offs,
          unsigned int modifiers = 0 ) const;
-
+      virtual void AddDataMember( Member &output,
+                                 const char * nam,
+                                 const Type & typ,
+                                 size_t offs,
+                                 unsigned int modifiers = 0 ) const;
+      
 
       /**
       * DataMemberAt will return the nth data MemberAt of the At
@@ -283,6 +288,16 @@ inline void Reflex::Enum::AddDataMember( const char * nam,
                                                unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
    ScopeBase::AddDataMember(nam, typ, offs, modifiers);
+}
+
+//-------------------------------------------------------------------------------
+inline void Reflex::Enum::AddDataMember( Member &output,
+                                        const char * nam,
+                                        const Type & typ,
+                                        size_t offs,
+                                        unsigned int modifiers ) const {
+   //-------------------------------------------------------------------------------
+   ScopeBase::AddDataMember(output, nam, typ, offs, modifiers);
 }
 
 

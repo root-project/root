@@ -461,6 +461,19 @@ void Reflex::Class::AddDataMember(const char * nam,
 
 
 //-------------------------------------------------------------------------------
+void Reflex::Class::AddDataMember(Member &output,
+                                  const char * nam,
+                                  const Type & typ,
+                                  size_t offs,
+                                  unsigned int modifiers) const
+{
+   //-------------------------------------------------------------------------------
+   // Add data member to this class
+   ScopeBase::AddDataMember(output, nam, typ, offs, modifiers);
+}
+
+
+//-------------------------------------------------------------------------------
 void Reflex::Class::RemoveDataMember(const Member & dm) const
 {
 //-------------------------------------------------------------------------------

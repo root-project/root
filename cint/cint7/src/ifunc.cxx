@@ -6509,15 +6509,17 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member func1, cons
    //
    // Returns function member if found, invalid member otherwise.
    //
+   const char *func_now_name = ifunc_now.Name_c_str();
    for (::Reflex::Member_Iterator mbr_iter = ifunc.FunctionMember_Begin(); mbr_iter != ifunc.FunctionMember_End(); ++mbr_iter) {
+      const char *mbr_iter_name = mbr_iter->Name_c_str();
       if ( // destructor matches with ~
-         (ifunc_now.Name()[0] == '~') &&
-         (mbr_iter->Name()[0] == '~')
+         (func_now_name[0] == '~') &&
+         (mbr_iter_name[0] == '~')
       ) { // destructor matches with ~
          return *mbr_iter;
       }
       if (
-         (ifunc_now.Name() != mbr_iter->Name()) ||
+         (0!=strcmp(func_now_name, mbr_iter_name)) ||
          (ifunc_now.FunctionParameterSize() != mbr_iter->FunctionParameterSize()) ||
          (ifunc_now.IsConst() != mbr_iter->IsConst()) ||
          (
@@ -6561,17 +6563,19 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member func1, cons
 
 //______________________________________________________________________________
 ::Reflex::Member Cint::Internal::G__ifunc_ambiguous(const ::Reflex::Member &ifunc_now, const ::Reflex::Scope &ifunc, const ::Reflex::Type &derivedtagnum)
-{
+{  
    int j, paran;
+   const char *func_now_name = ifunc_now.Name_c_str();
    for (::Reflex::Member_Iterator i = ifunc.FunctionMember_Begin();
          i != ifunc.FunctionMember_End();
          ++i) {
-      if ('~' == ifunc_now.Name().c_str()[0] &&
-            '~' == i->Name().c_str()[0]) { /* destructor matches with ~ */
+      const char *i_name = i->Name_c_str();
+      if ('~' == func_now_name[0] &&
+            '~' == i_name[0]) { /* destructor matches with ~ */
          return(*i);
       }
       if (/* ifunc_now->hash[allifunc]!=ifunc->hash[i] || */
-         ifunc_now.Name() == i->Name()
+         (0==strcmp(func_now_name, i_name))
       ) continue; /* unmatch */
       if (ifunc_now.FunctionParameterSize() < i->FunctionParameterSize())
          paran = ifunc_now.FunctionParameterSize();

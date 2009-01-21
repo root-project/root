@@ -295,6 +295,13 @@ void Reflex::Union::AddDataMember(const char* nam, const Type& typ, size_t offs,
 }
 
 //______________________________________________________________________________
+void Reflex::Union::AddDataMember(Member &output, const char* nam, const Type& typ, size_t offs, unsigned int modifiers /*= 0*/) const
+{
+   // Add a data memebr to the union.
+   ScopeBase::AddDataMember(output, nam, typ, offs, modifiers);
+}
+
+//______________________________________________________________________________
 void Reflex::Union::AddFunctionMember(const Member & fm) const
 {
 // Add function member fm to this union

@@ -559,7 +559,12 @@ namespace Reflex {
          const Type & type,
          size_t offset,
          unsigned int modifiers = 0 ) const;
-
+      virtual void AddDataMember( Member &output,
+                                 const char * name,
+                                 const Type & type,
+                                 size_t offset,
+                                 unsigned int modifiers = 0 ) const;
+      
 
       /**
       * AddFunctionMember will add the information about a function MemberAt

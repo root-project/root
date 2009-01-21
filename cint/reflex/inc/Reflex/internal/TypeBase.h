@@ -648,7 +648,13 @@ namespace Reflex {
          const Type & typ,
          size_t offs,
          unsigned int modifiers = 0 ) const;
-
+      virtual void AddDataMember(Member &output,
+                                   const char * nam,
+                                   const Type & typ,
+                                   size_t offs,
+                                   unsigned int modifiers = 0 ) const;
+      
+      
 
       /**
       * AddFunctionMember will add the information about a function MemberAt
@@ -1333,6 +1339,16 @@ inline void Reflex::TypeBase::AddDataMember( const char * /* nam */,
    throw RuntimeError("Function AddDataMember  not callable on this object");
 }
 
+
+//-------------------------------------------------------------------------------
+inline void Reflex::TypeBase::AddDataMember(Member & /* output */,
+                                            const char * /* nam */,
+                                            const Type & /* typ */,
+                                            size_t /* offs */,
+                                            unsigned int /* modifiers */ ) const {
+   //-------------------------------------------------------------------------------
+   throw RuntimeError("Function AddDataMember  not callable on this object");
+}
 
 //-------------------------------------------------------------------------------
 inline void Reflex::TypeBase::AddFunctionMember( const Member & /* fm */ ) const {

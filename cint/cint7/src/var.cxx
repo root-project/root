@@ -7430,8 +7430,11 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
       do {
          next_base:
          ig15 = 0;
-         for (::Reflex::Member_Iterator iter = var.DataMember_Begin(); iter != var.DataMember_End(); ++iter, ++ig15) {
-            if (*iter && !strcmp(iter->Name().c_str(), varname.c_str())) { // Names match
+         const ::Reflex::Member_Iterator end( var.DataMember_End() );
+         for (::Reflex::Member_Iterator iter = var.DataMember_Begin(); iter != end; ++iter, ++ig15) {
+            assert( *iter );
+            const char *mname = iter->Name_c_str();
+            if (mname[0]==varname[0] && 0==strcmp(mname, varname.c_str())) { // Names match
                if (
                   //iter->TypeOf() != ZType && // This is to exclude the 'Z' type coming from a SpecialObject lookup
                   (

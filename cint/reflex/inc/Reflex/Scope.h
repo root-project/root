@@ -521,11 +521,10 @@ namespace Reflex {
 
 
       /**
-      * Name_c_str returns a char* pointer to the unqualified type name
+      * Name_c_str returns a char* pointer to the qualified type name
       * @return c string to unqualified type name
       */
       const char * Name_c_str() const;
-
 
       /**
       * Properties will return a PropertyList attached to this item
@@ -852,6 +851,19 @@ namespace Reflex {
          size_t offset,
          unsigned int modifiers = 0 ) const;
 
+      /**
+       * AddDataMember will add the information about a data member
+       * @param output a placeholder for 'Member' pointing to the data member
+       * @param nam the name of the data member
+       * @param typ the type of the data member
+       * @param offs the offset of the data member relative to the beginning of the scope
+       * @param modifiers of the data member
+       */
+      void AddDataMember(Member &output,
+                         const char * name,
+                         const Type & type,
+                         size_t offset,
+                         unsigned int modifiers = 0 ) const;
 
       /**
       * AddFunctionMember will add the information about a function member

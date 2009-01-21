@@ -329,24 +329,24 @@ int Cint::Internal::G__get_type(const ::Reflex::Type in)
    if (raw.IsFundamental()) {
       if (in.TypeType() == Reflex::TYPEDEF) {
          // they are all typedefs to (pointer to) fundamental types:
-         const std::string name(in.Name());
+         const char *name = in.Name_c_str();
          const char name0 = name[0];
          if (name0 == 'm') {
-            if (name == "macro$") return 'j';
-            if (name == "macroInt$")    return 'p';
-            if (name == "macroDouble$") return 'P';
-            if (name == "macroChar*$") return 'T';
+            if (0==strcmp(name , "macro$")) return 'j';
+            if (0==strcmp(name , "macroInt$"))    return 'p';
+            if (0==strcmp(name , "macroDouble$")) return 'P';
+            if (0==strcmp(name , "macroChar*$")) return 'T';
          } else if (name0 == 'a') {
-            if (name == "autoInt$")     return 'o';
-            if (name == "autoDouble$")  return 'O';
+            if (0==strcmp(name , "autoInt$"))     return 'o';
+            if (0==strcmp(name , "autoDouble$"))  return 'O';
          } else if (name0 == 's') {
-            if (name == "switchStart$")  return 'a';
-            if (name == "switchDefault$")  return 'z';
+            if (0==strcmp(name , "switchStart$"))  return 'a';
+            if (0==strcmp(name , "switchDefault$"))  return 'z';
          } else if (name0 == 'c') {
-            if (name == "codeBreak$")  return 'Z';
-            if (name == "codeBreak$*")  return 'Z'; // This is actually a 'slot' for a not yet found special object
+            if (0==strcmp(name , "codeBreak$"))  return 'Z';
+            if (0==strcmp(name , "codeBreak$*"))  return 'Z'; // This is actually a 'slot' for a not yet found special object
          } else if (name0 == 'd')
-            if (name == "defaultFunccall$") return G__DEFAULT_FUNCCALL;
+            if (0==strcmp(name , "defaultFunccall$")) return G__DEFAULT_FUNCCALL;
       }
 
       ::Reflex::EFUNDAMENTALTYPE fundamental = ::Reflex::Tools::FundamentalType(raw);
@@ -383,7 +383,7 @@ int Cint::Internal::G__get_type(const ::Reflex::Type in)
             } else
                if (final.TypeType()==Reflex::FUNCTION
                    || final.TypeType()==Reflex::FUNCTIONMEMBER
-                   || strstr(in.Name().c_str(),"(")) {
+                   || strstr(in.Name_c_str(),"(")) {
                return '1';
             } else {
                return 'y';
@@ -406,7 +406,7 @@ int Cint::Internal::G__get_type(const ::Reflex::Type in)
    static Reflex::Type stFile;
    if (!stFile.Id()) stFile = Reflex::Type::ByName("FILE");
    if ((stFile.Id() && raw.Id() == stFile.Id())
-       || (!stFile.Id() && raw.Name() == "FILE"))
+       || (!stFile.Id() && 0==strcmp(raw.Name_c_str(),"FILE")))
       return ((int) 'e') + pointerThusUppercase;
    if (raw.IsClass()|| raw.IsStruct() ||
        /* raw.IsEnum() || */ raw.IsUnion())
@@ -1506,12 +1506,17 @@ extern "C" void G__dump_reflex_function(const ::Reflex::Scope scope, int level)
 #else
 #pragma message (FIXME("This needs to be in Reflex itself"))
 #endif
+   if (name==0 || name[0]==0) {
+      return cl;
+   }
+   ::Reflex::Type_Iterator end = scope.SubType_End();
    for (
       ::Reflex::Type_Iterator itype = scope.SubType_Begin();
-      itype != scope.SubType_End();
+      itype != end;
       ++itype
    ) {
-      if (itype->Name() == name) {
+      const char *iname = itype->Name_c_str();
+      if ( iname[0]==name[0] && iname[1]==name[1] && 0==strcmp(iname,name) ) {
          cl = *itype;
          break;
       }
@@ -1538,8 +1543,9 @@ bool Cint::Internal::G__test_access(const ::Reflex::Member var, int access)
 //______________________________________________________________________________
 bool Cint::Internal::G__is_cppmacro(const ::Reflex::Member var)
 {
-  const Reflex::Type type = var.TypeOf();
-  return (type.Name()  == "macroInt$") || (type.Name()  == "macroDouble$");
+   const Reflex::Type type = var.TypeOf();
+   const char *type_name = type.Name_c_str();
+   return type_name[0]=='m' && ( 0==strcmp(type_name,"macroInt$") || 0==strcmp(type_name,"macroDouble$") );
 }
 
 //______________________________________________________________________________
@@ -1589,7 +1595,7 @@ Reflex::Type Cint::Internal::G__replace_rawtype(const Reflex::Type target, const
    }
    Reflex::Type out = G__replace_rawtype(target.ToType(), raw); // Recurse to the bottom of the type chain.
    if (target.IsTypedef()) {
-      out = Reflex::TypedefTypeBuilder(target.Name().c_str(), out);
+      out = Reflex::TypedefTypeBuilder(target.Name_c_str(), out);
    }
    else if (target.IsPointer()) {
       out = Reflex::PointerBuilder(out, target.TypeInfo());
@@ -1624,7 +1630,7 @@ Reflex::Type Cint::Internal::G__apply_const_to_typedef(const Reflex::Type target
    }
    Reflex::Type out = G__apply_const_to_typedef(target.ToType()); // Recurse to the bottom of the type chain.
    if (target.IsTypedef()) {
-      out = ::Reflex::Type(Reflex::TypedefTypeBuilder(target.Name().c_str(), out), ::Reflex::CONST, ::Reflex::Type::APPEND);
+      out = ::Reflex::Type(Reflex::TypedefTypeBuilder(target.Name_c_str(), out), ::Reflex::CONST, ::Reflex::Type::APPEND);
    }
    else if (target.IsPointer()) {
       out = Reflex::PointerBuilder(out, target.TypeInfo());
@@ -2131,7 +2137,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
          prop->entry = fProp.entry;
          prop->entry.friendtag = prev_friendtag;
          prop->entry.para_default = prev_para_default;
-         prop->entry.for_tp2f = m.Name();
+         prop->entry.for_tp2f = m.Name_c_str();
          prop->entry.tp2f = (void*) prop->entry.for_tp2f.c_str();
          //for (unsigned int i = 0; i < fParams_name.size(); ++i) {
          //   if (fParams_name[i].second.size()) {
@@ -2281,7 +2287,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
       //fprintf(stderr, "G__BuilderInfo::Build: a->entry.ptradjust: %ld  %s:%d\n", a->entry.ptradjust, __FILE__, __LINE__);
       a->entry.para_default = fDefault_vals;
       if (!a->entry.tp2f) {
-         a->entry.for_tp2f = m.Name();
+         a->entry.for_tp2f = m.Name_c_str();
          a->entry.tp2f = (void*) a->entry.for_tp2f.c_str();
       }
    }
