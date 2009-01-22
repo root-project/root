@@ -469,7 +469,7 @@ TH1* THnSparse::CreateHist(const char* name, const char* title,
          Int_t nBins = binLast - binFirst + 1;
          if (reqaxis->GetXbins()->GetSize()) {
             // non-uniform bins:
-            hax[d]->Set(nBins, reqaxis->GetXbins()->GetArray() + binFirst);
+            hax[d]->Set(nBins, reqaxis->GetXbins()->GetArray() + binFirst - 1);
          } else {
             // uniform bins:
             hax[d]->Set(nBins, reqaxis->GetBinLowEdge(binFirst), reqaxis->GetBinUpEdge(binLast));
@@ -879,8 +879,12 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
 
       if (!IsInRange(coord)) continue;
 
-      for (Int_t d = 0; d < ndim; ++d)
+      for (Int_t d = 0; d < ndim; ++d) {
          bins[d] = coord[dim[d]];
+         if (GetAxis(dim[d])->TestBit(TAxis::kAxisRange)) {
+            bins[d] -= GetAxis(dim[d])->GetFirst() - 1;
+         }
+      }
 
       if (!wantSparse) {
          if (ndim == 1) linbin = bins[0];
