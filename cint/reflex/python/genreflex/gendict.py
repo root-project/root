@@ -545,6 +545,12 @@ class genDictionary(object) :
         f.write( '#include <%s>\n' % (inc,) )
       f.write( '\n' )
 
+  
+    #------------------------------------------------------------------------------
+    # Process ClassDef implementation before writing: sets 'extra' properties
+    #------------------------------------------------------------------------------
+    classDefImpl = ClassDefImplementation(selclasses, self)
+
     f_buffer = ''
     f_shadow =  '\n// Shadow classes to obtain the data member offsets \n'
     f_shadow += 'namespace __shadow__ {\n'
@@ -572,7 +578,7 @@ class genDictionary(object) :
         f_shadow += self.genClassShadow(c)
     f_shadow += '}\n\n'
     f_buffer += self.genFunctionsStubs( selfunctions )
-    f_buffer += ClassDefImplementation(selclasses, self)
+    f_buffer += classDefImpl
     f_buffer += self.genInstantiateDict(selclasses, selfunctions, selenums, selvariables)
     f.write('namespace {\n')
     f.write(self.genNamespaces(selclasses + selfunctions + selenums + selvariables))
@@ -1120,7 +1126,10 @@ class genDictionary(object) :
       for pname, pval in attrs['extra'].items() :
         if pname not in ('name','pattern','n_name','file_name','file_pattern') :
           if pname == 'id' : pname = 'ClassID'
-          sc += '\n  .AddProperty("%s", "%s")' % (pname, pval)
+          if pval[:5] == '!RAW!' :
+            sc += '\n  .AddProperty("%s", %s)' % (pname, pval[5:])
+          else :
+            sc += '\n  .AddProperty("%s", "%s")' % (pname, pval)
 
     if ioReadRules:
       sc += '\n  .AddProperty("ioread", readrules )'
@@ -1270,7 +1279,7 @@ class genDictionary(object) :
         for demangledMethod in allBasesMethods.keys() :
           member = allBasesMethods[demangledMethod]
           if len(member['bases']) > 1:
-            ret = self.genTypeName(member['returns'])
+            ret = self.genTypeName(member['returns'], False, True, True)
             if '(' not in ret:
               # skip functions returning functions; we don't get the prototype right easily:
               cmem = '  virtual %s %s throw();' % (ret, demangledMethod)
@@ -2412,6 +2421,7 @@ def ClassDefImplementation(selclasses, self) :
       if len( filter( lambda b: b[0] == self.TObject_id, allbases ) ) :
         derivesFromTObject = 1
 
+    print 'AXEL: class', attrs['fullname'], 'has members: ', string.join(listOfMembers)
     if "fgIsA" in listOfMembers \
            and "Class" in listOfMembers \
            and "Class_Name" in listOfMembers  \
@@ -2425,7 +2435,11 @@ def ClassDefImplementation(selclasses, self) :
            and "ImplFileLine" in listOfMembers \
            and "ImplFileName" in listOfMembers :
 
+      print 'AXEL: class', attrs['fullname'], 'thus has ClassDef'
       haveClassDef = 1
+      extraval = '!RAW!' + str(derivesFromTObject)
+      if attrs.has_key('extra') : attrs['extra']['ClassDef'] = extraval
+      else                      : attrs['extra'] = {'ClassDef': extraval}
 
       clname = '::' + attrs['fullname']
       returnValue += 'TClass* ' + clname + '::fgIsA = 0;\n'
