@@ -79,7 +79,7 @@ static int G__defined_typename_exact(char* type_name)
 #endif
       else {
          // first try a typedef, so we don't trigger autoloading here:
-         long env_typenum = G__defined_typename(temp2);
+         long env_typenum = G__defined_typename_noerror(temp2, 1);
          if (env_typenum != -1 && G__newtype.type[env_typenum] == 'u')
             env_tagnum = G__newtype.tagnum[env_typenum];
          else
@@ -1224,7 +1224,7 @@ int G__defined_typename_noerror(const char* type_name, int noerror)
 #endif
       else {
          // first try a typedef, so we don't trigger autoloading here:
-         long env_typenum = G__defined_typename(skipconst);
+         long env_typenum = G__defined_typename_noerror(skipconst, 1);
          if (env_typenum != -1 && G__newtype.type[env_typenum] == 'u')
             env_tagnum = G__newtype.tagnum[env_typenum];
          else
