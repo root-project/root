@@ -1,9 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-//  Version 11,  print chi**2 and number of degrees of freedom
+//  Version 12, catch error when defining the input
 //
 //  History:
+//    Version 11,  print chi**2 and number of degrees of freedom
 //    Version 10,  with bug-fix in TUnfold.cxx
 //    Version 9,  with bug-fix in TUnfold.cxx and TUnfold.h
 //    Version 8,  with bug-fix in TUnfold.cxx and TUnfold.h
@@ -246,7 +247,9 @@ int testUnfold1()
 
   // define input and bias scame
   // do not use the bias, because MC peak may be at the wrong place
-  unfold.SetInput(histMdetData);
+  if(unfold.SetInput(histMdetData)>=10000) {
+    std::cout<<"Unfolding result may be wrong\n";
+  }
 
   // the unfolding is done here
   //===========================
@@ -351,9 +354,13 @@ int testUnfold1()
   output.cd(3);
   histMdetFold->SetLineColor(kBlue);
   histMdetFold->Draw();
-  histMdetData->SetLineColor(kRed);
-  histMdetData->Draw("SAME");
   histMdetMC->Draw("SAME HIST");
+  //histMdetData->SetLineColor(kRed);
+  //histMdetData->Draw("SAME");
+  // test the GetInput() method
+  TH1D *histInput=unfold.GetInput("Minput",";mass(det)",xminDet,xmaxDet);
+  histInput->SetLineColor(kRed);
+  histInput->Draw("SAME");
 
   // show correlation coefficients
   //     all bins outside the peak are found to be highly correlated

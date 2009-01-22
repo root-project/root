@@ -1,9 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 13/10/08
 
-//  Version 11, regularisation methods have return values
+//  Version 12, with support for preconditioned matrix inversion
 //
 //  History:
+//    Version 11, regularisation methods have return values
 //    Version 10, with bug-fix in TUnfold.cxx
 //    Version 9, implements method for optimized inversion of sparse matrix
 //    Version 8, replace all TMatrixSparse matrix operations by private code
@@ -89,7 +90,9 @@ class TUnfold:public TObject {
    static TMatrixDSparse *MultiplyMSparseMSparse(TMatrixDSparse const &a,TMatrixDSparse const &b); // multiply sparse and sparse matrix
    static TMatrixDSparse *MultiplyMSparseTranspMSparse(TMatrixDSparse const &a,TMatrixDSparse const &b); // multiply transposed sparse and sparse matrix
    static Double_t MultiplyVecMSparseVec(TMatrixDSparse const &a,TMatrixD const &v); // scalar product of v and Av
-   static TMatrixD *InvertMSparse(TMatrixDSparse const &A); // invert sparse matrix
+   TMatrixD *InvertMSparse(TMatrixDSparse const &A) const; // invert sparse matrix
+   static Bool_t InvertMConditioned(TMatrixD &A); // invert matrix including preconditioning
+   static void AddMSparse(TMatrixDSparse &dest,Double_t const &f,TMatrixDSparse const &src); // replacement for dest += f*src
    inline Int_t GetNx(void) const {
       return fA->GetNcols();
    } // number of non-zero output bins

@@ -1,9 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-//  Version 11,  print chi**2 and number of degrees of freedom
+//  Version 12,  with improvements to TUnfold.cxx
 //
 //  History:
+//    Version 11,  print chi**2 and number of degrees of freedom
 //    Version 10, with bug-fix in TUnfold.cxx
 //    Version 9, with bug-fix in TUnfold.cxx, TUnfold.h
 //    Version 8, with bug-fix in TUnfold.cxx, TUnfold.h
@@ -340,7 +341,9 @@ int testUnfold2()
   //-----------
 
   // set input distribution and bias scale (=0)
-  unfold.SetInput(histMdetData,0.0);
+  if(unfold.SetInput(histMdetData,0.0)>=10000) {
+    std::cout<<"Unfolding result may be wrong\n";
+  }
   // reset user scan and define bin map
   unfold.ResetUser(binMap);
 
