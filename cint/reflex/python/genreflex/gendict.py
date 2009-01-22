@@ -1563,45 +1563,52 @@ class genDictionary(object) :
       if not demangled or not len(demangled):
         demangled = name
       if not self.quiet : print  'function '+ demangled
-      s += 'static void '
       retaddrpar=''
       if returns != 'void': retaddrpar=' retaddr'
       argspar=''
       if len(args) : argspar=' arg'
-      s +=  'function%s( void*%s, void*, const std::vector<void*>&%s, void*)\n{\n' % (id, retaddrpar, argspar)
+      head =  'static void function%s( void*%s, void*, const std::vector<void*>&%s, void*)\n{\n' % (id, retaddrpar, argspar)
       ndarg = self.getDefaultArgs(args)
       narg  = len(args)
       if ndarg : iden = '  '
       else     : iden = ''
+      body = ''
       for n in range(narg-ndarg, narg+1) :
         if ndarg :
-          if n == narg-ndarg :  s += '  if ( arg.size() == %d ) {\n' % n
-          else               :  s += '  else if ( arg.size() == %d ) { \n' % n
+          if n == narg-ndarg :  body += '  if ( arg.size() == %d ) {\n' % n
+          else               :  body += '  else if ( arg.size() == %d ) { \n' % n
         if returns == 'void' :
-          first = iden + '  %s(' % ( name, )
-          s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
+          body += iden + '  %s(' % ( name, )
+          head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+          body += ');\n'
         else :
           if returns[-1] in ('*',')' ) and returns.find('::*') == -1:
-            first = iden + '  if (retaddr) *(void**)retaddr = (void*)%s(' % ( name, )
-            s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-            first = iden + '  else %s(' % ( name, )
-            s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
+            body += iden + '  if (retaddr) *(void**)retaddr = (void*)%s(' % ( name, )
+            head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+            body += ');\n'
+            body += iden + '  else %s(' % ( name, )
+            head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+            body += ');\n'
           elif returns[-1] == '&' :
-            first = iden + '  if (retaddr) *(void**)retaddr = (void*)&%s(' % ( name, )
-            s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-            first = iden + '  else %s(' % ( name, )
-            s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
+            body += iden + '  if (retaddr) *(void**)retaddr = (void*)&%s(' % ( name, )
+            head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+            body += ');\n'
+            body += iden + '  else %s(' % ( name, )
+            head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+            body += ');\n'
           else :
-            first = iden + '  if (retaddr) new (retaddr) (%s)(%s(' % ( returns, name )
-            s += first + self.genMCOArgs(args, n, len(first)) + '));\n'
-            first = iden + '  else %s(' % ( name )
-            s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
+            body += iden + '  if (retaddr) new (retaddr) (%s)(%s(' % ( returns, name )
+            head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+            body += '));\n'
+            body += iden + '  else %s(' % ( name )
+            head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+            body += ');\n'
         if ndarg : 
-          if n != narg : s += '  }\n'
+          if n != narg : body += '  }\n'
           else :
-            if returns == 'void' : s += '  }\n'
-            else :                 s += '  }\n'
-      s += '}\n'
+            if returns == 'void' : body += '  }\n'
+            else :                 body += '  }\n'
+      s += head + body + '}\n'
     return s  
 #----------------------------------------------------------------------------------
   def genFunctions(self, selfunctions) :
@@ -1785,7 +1792,6 @@ class genDictionary(object) :
     if narg : argspar = ' arg'
     retaddrpar = ''
 
-    s = 'static void '
     # If we construct a conversion operator to pointer to function member the name
     # will contain TDF_<attrs['id']>
     tdfname = 'TDF%s'%attrs['id']
@@ -1797,35 +1803,40 @@ class genDictionary(object) :
 
     if returns != 'void': retaddrpar=' retaddr'
                 
-    s +=  '%s%s( void*%s, void* o, const std::vector<void*>&%s, void*)\n{\n' %( type, id, retaddrpar, argspar )
-    s += tdfdecl
+    head =  'static void %s%s( void*%s, void* o, const std::vector<void*>&%s, void*)\n{\n' %( type, id, retaddrpar, argspar )
+    head += tdfdecl
     ndarg = self.getDefaultArgs(args)
     if ndarg : iden = '  '
     else     : iden = ''
     if 'const' in attrs : cl = 'const '+ cl
+    body = ''
     for n in range(narg-ndarg, narg+1) :
       if ndarg :
-        if n == narg-ndarg :  s += '  if ( arg.size() == %d ) {\n' % n
-        else               :  s += '  else if ( arg.size() == %d ) { \n' % n
+        if n == narg-ndarg :  body += '  if ( arg.size() == %d ) {\n' % n
+        else               :  body += '  else if ( arg.size() == %d ) { \n' % n
       if returns != 'void' :
         if returns[-1] in ('*',')') and returns.find('::*') == -1 :
-          first = iden + '  if (retaddr) *(void**)retaddr = (void*)(((%s*)o)->%s)(' % ( cl, name )
-          s += first + self.genMCOArgs(args, n, len(first)) + ');\n' + iden + 'else '
+          body += iden + '  if (retaddr) *(void**)retaddr = (void*)(((%s*)o)->%s)(' % ( cl, name )
+          head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+          body += ');\n' + iden + 'else '
         elif returns[-1] == '&' :
-          first = iden + '  if (retaddr) *(void**)retaddr = (void*)&(((%s*)o)->%s)(' % ( cl, name )
-          s += first + self.genMCOArgs(args, n, len(first)) + ');\n' + iden + 'else '
+          body += iden + '  if (retaddr) *(void**)retaddr = (void*)&(((%s*)o)->%s)(' % ( cl, name )
+          head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+          body += ');\n' + iden + 'else '
         else :
-          first = iden + '  if (retaddr) new (retaddr) (%s)((((%s*)o)->%s)(' % ( returns, cl, name )
-          s += first + self.genMCOArgs(args, n, len(first)) + '));\n' + iden + 'else '
-      first = iden + '  (((%s*)o)->%s)(' % ( cl, name )
-      s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
+          body += iden + '  if (retaddr) new (retaddr) (%s)((((%s*)o)->%s)(' % ( returns, cl, name )
+          head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+          body += '));\n' + iden + 'else '
+      body += iden + '  (((%s*)o)->%s)(' % ( cl, name )
+      head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
+      body += ');\n'
       if ndarg : 
-        if n != narg : s += '  }\n'
+        if n != narg : body += '  }\n'
         else :
-          if returns == 'void' : s += '  }\n'
-          else :                 s += '  }\n'
-    s += '}\n'
-    return s
+          if returns == 'void' : body += '  }\n'
+          else :                 body += '  }\n'
+    body += '}\n'
+    return head + body;
 #----------------------------------------------------------------------------------
   def getDefaultArgs(self, args):
     n = 0
@@ -1833,12 +1844,26 @@ class genDictionary(object) :
       if 'default' in a : n += 1
     return n
 #----------------------------------------------------------------------------------
-  def genMCOArgs(self, args, narg, pad):
+  def genMCOArgs(self, args, narg, pad, head, body):
     s = ''
+    td = ''
     for i in range(narg) :
       a = args[i]
       #arg = self.genArgument(a, 0);
       arg = self.genTypeName(a['type'],colon=True)
+      if arg.find('[') != -1:
+        if arg[-1] == '*' :
+          argnoptr = arg[:-1]
+          argptr = '*'
+        elif len(arg) > 7 and arg[-7:] == '* const':
+          argnoptr = arg[:-7]
+          argptr = '* const'
+        else :
+          argnoptr = arg
+          argptr = ''
+        td += pad*' ' + 'typedef %s RflxDict_arg_td%d%s;\n' % (argnoptr[:argnoptr.index('[')], i, argnoptr[argnoptr.index('['):])
+        arg = 'RflxDict_arg_td%d' % i
+        arg += argptr;
       if arg[-1] == '*' or len(arg) > 7 and arg[-7:] == '* const':
         if arg[-2:] == ':*' or arg[-8:] == ':* const' : # Pointer to data member
           s += '*(%s*)arg[%d]' % (arg, i )
@@ -1857,8 +1882,8 @@ class genDictionary(object) :
         s += '*(%s*)arg[%d]' % (arg[:-1], i )
       else :
         s += '*(%s*)arg[%d]' % (arg, i )
-      if i != narg - 1 : s += ',\n' + pad*' '
-    return s
+      if i != narg - 1 : s += ',\n' + (pad+2)*' '
+    return head + td, body + s
 #----------------------------------------------------------------------------------
   def genMethodDecl(self, attrs, args):
     return self.genMCODecl( 'method', '', attrs, args )
@@ -1883,26 +1908,29 @@ class genDictionary(object) :
     id  = attrs['id']
     paramargs = ''
     if len(args): paramargs = ' arg'
-    s = 'static void constructor%s( void* retaddr, void* mem, const std::vector<void*>&%s, void*) {\n' %( id, paramargs )
+    head = 'static void constructor%s( void* retaddr, void* mem, const std::vector<void*>&%s, void*) {\n' %( id, paramargs )
+    body = ''
     if 'pseudo' in attrs :
-      s += '  if (retaddr) *(void**)retaddr =  ::new(mem) %s( *(__void__*)0 );\n' % ( cl )
-      s += '  else ::new(mem) %s( *(__void__*)0 );\n' % ( cl )
+      head += '  if (retaddr) *(void**)retaddr =  ::new(mem) %s( *(__void__*)0 );\n' % ( cl )
+      head += '  else ::new(mem) %s( *(__void__*)0 );\n' % ( cl )
     else :
       ndarg = self.getDefaultArgs(args)
       narg  = len(args)
       for n in range(narg-ndarg, narg+1) :
         if ndarg :
-          if n == narg-ndarg :  s += '  if ( arg.size() == %d ) {\n  ' % n
-          else               :  s += '  else if ( arg.size() == %d ) { \n  ' % n
-        first = '  if (retaddr) *(void**)retaddr = ::new(mem) %s(' % ( cl )
-        s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-        first = '  else ::new(mem) %s(' % ( cl )
-        s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
+          if n == narg-ndarg :  body += '  if ( arg.size() == %d ) {\n  ' % n
+          else               :  body += '  else if ( arg.size() == %d ) { \n  ' % n
+        body += '  if (retaddr) *(void**)retaddr = ::new(mem) %s(' % ( cl )
+        head, body = self.genMCOArgs(args, n, 4, head, body)
+        body += ');\n'
+        body += '  else ::new(mem) %s(' % ( cl )
+        head, body = self.genMCOArgs(args, n, 4, head, body)
+        body += ');\n'
         if ndarg : 
-          if n != narg : s += '  }\n'
-          else :         s += '  }\n'
-    s += '}\n'
-    return s
+          if n != narg : body += '  }\n'
+          else :         body += '  }\n'
+    body += '}\n'
+    return head + body
 #----------------------------------------------------------------------------------
   def genDestructorDef(self, attrs, childs):
     cl = self.genTypeName(attrs['context'])
