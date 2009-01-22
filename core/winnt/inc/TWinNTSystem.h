@@ -229,7 +229,7 @@ public:
    int               OpenConnection(const char *server, int port, int tcpwindowsize = -1);
    int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
    int               AnnounceUnixService(int port, int backlog);
-   int               AnnounceUnixService(const char *sockpath, int backlog) { return -1; }
+   int               AnnounceUnixService(const char *sockpath, int backlog);
    int               AcceptConnection(int sock);
    void              CloseConnection(int sock, Bool_t force = kFALSE);
    int               RecvRaw(int sock, void *buffer, int length, int flag);
@@ -238,6 +238,9 @@ public:
    int               SendBuf(int sock, const void *buffer, int length);
    int               SetSockOpt(int sock, int opt, int val);
    int               GetSockOpt(int sock, int opt, int *val);
+
+   static int        WinNTUnixConnect(int port);
+   static int        WinNTUnixConnect(const char *path);
 
    //---- System, CPU and Memory info
    Int_t             GetSysInfo(SysInfo_t *info) const;
