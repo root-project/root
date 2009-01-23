@@ -748,21 +748,15 @@ struct G__Definetemplatefunc {
 *
 **************************************************************************/
 
-extern "C" {
-
-struct G__breakcontinue_list {
-   struct G__breakcontinue_list* next; // next entry in list
-   int isbreak; // is it a break or a continue
-   int idx; // index into bytecode array to patch
-};
-
-
 struct G__Charlist {
+   G__Charlist() : string(0), next(0) {}
    char *string;
    struct G__Charlist *next;
 };
 
 struct G__Callfuncmacro{
+   G__Callfuncmacro() : call_fp(0),line(-1),next(0),call_filenum(-1) {}
+   
    FILE *call_fp;
    fpos_t call_pos;
    int line;
@@ -772,16 +766,26 @@ struct G__Callfuncmacro{
 } ;
 
 struct G__Deffuncmacro {
-  char *name;
-  int hash;
-  int line;
-  FILE *def_fp;
-  fpos_t def_pos;
-  struct G__Charlist def_para;
-  struct G__Callfuncmacro callfuncmacro;
-  struct G__Deffuncmacro *next;
-  short def_filenum;
+   G__Deffuncmacro() : name(0), hash(0), line(-1), def_fp(0), next(0), def_filenum(-1) {}
+   
+   char *name;
+   int hash;
+   int line;
+   FILE *def_fp;
+   fpos_t def_pos;
+   G__Charlist def_para;
+   struct G__Callfuncmacro callfuncmacro;
+   struct G__Deffuncmacro *next;
+   short def_filenum;
 } ;
+
+extern "C" {
+
+struct G__breakcontinue_list {
+   struct G__breakcontinue_list* next; // next entry in list
+   int isbreak; // is it a break or a continue
+   int idx; // index into bytecode array to patch
+};
 
 /**************************************************************************
 * preprocessed file keystring list

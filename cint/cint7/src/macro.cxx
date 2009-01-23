@@ -325,15 +325,7 @@ int Cint::Internal::G__createfuncmacro(char *new_name)
 
 
    /* allocate and initialize next list */
-   deffuncmacro->next = (struct G__Deffuncmacro*)malloc(sizeof(struct G__Deffuncmacro));
-   deffuncmacro->next->callfuncmacro.next = (struct G__Callfuncmacro*)NULL;
-   deffuncmacro->next->callfuncmacro.call_fp = (FILE *)NULL;
-   deffuncmacro->next->callfuncmacro.call_filenum = -1;
-   deffuncmacro->next->def_para.string = (char*)NULL;
-   deffuncmacro->next->def_para.next = (struct G__Charlist*)NULL;
-   deffuncmacro->next->next = (struct G__Deffuncmacro*)NULL;
-   deffuncmacro->next->name = (char*)NULL;
-   deffuncmacro->next->hash = 0;
+   deffuncmacro->next = new G__Deffuncmacro;
 
    /* after this, source file is read to end of line */
 
@@ -486,11 +478,8 @@ int Cint::Internal::G__transfuncmacro(char *item,G__Deffuncmacro *deffuncmacro
    callfuncmacro->line = G__ifile.line_number;
 
    /* allocate and initialize next list */
-   callfuncmacro->next = (struct G__Callfuncmacro*)malloc(sizeof(struct G__Callfuncmacro));
-   callfuncmacro->next->next = (struct G__Callfuncmacro*)NULL;
-   callfuncmacro->next->call_fp = (FILE*)NULL;
-   callfuncmacro->next->call_filenum = -1;
-
+   callfuncmacro->next = new G__Callfuncmacro;
+   
    /* get parameter list */
    G__getparameterlist(p+1,&call_para);
 
@@ -538,7 +527,7 @@ int Cint::Internal::G__argsubstitute(char *symbol,G__Charlist *callpara,G__Charl
 /**************************************************************************
 * G__getparameterlist()
 **************************************************************************/
-int Cint::Internal::G__getparameterlist(char *paralist,G__Charlist *charlist)
+int Cint::Internal::G__getparameterlist(char *paralist, G__Charlist *charlist)
 {
    // -- FIXME: Describe this function!
    int isrc;
@@ -557,8 +546,8 @@ int Cint::Internal::G__getparameterlist(char *paralist,G__Charlist *charlist)
 
       if (charlist->string)
          charlist->string = (char*) realloc (charlist->string,
-         strlen (charlist->string) +
-         strlen (string) + 2);
+                                             strlen (charlist->string) +
+                                             strlen (string) + 2);
       else {
          charlist->string = (char*)malloc(strlen(string)+2);
          charlist->string[0] = '\0';
@@ -572,9 +561,7 @@ int Cint::Internal::G__getparameterlist(char *paralist,G__Charlist *charlist)
          int i = strlen (charlist->string);
          while (i > 0 && charlist->string[i-1] == ' ')
             --i;
-         charlist->next = (struct G__Charlist*)malloc(sizeof(struct G__Charlist));
-         charlist->next->next = (struct G__Charlist *)NULL;
-         charlist->next->string = (char *)NULL;
+         charlist->next = new G__Charlist;
          charlist = charlist->next;
       }
    }
@@ -783,7 +770,7 @@ G__value Cint::Internal::G__execfuncmacro(char *item,int *done)
    if(0==found) {
       *done = 0;
 #ifndef G__OLDIMPLEMENTATION1823
-      if(funcmacro!=buf) free((void*)funcmacro);
+      if(funcmacro!=buf) delete funcmacro;
 #endif
       return (G__null);
    }
@@ -851,7 +838,7 @@ G__value Cint::Internal::G__execfuncmacro(char *item,int *done)
 
    *done = 1;
 #ifndef G__OLDIMPLEMENTATION1823
-   if(funcmacro!=buf) free((void*)funcmacro);
+   if(funcmacro!=buf) delete funcmacro;
 #endif
    return(result);
 }
@@ -922,7 +909,7 @@ int Cint::Internal::G__execfuncmacro_noexec (char* macroname)
 
    if(0==found) {
 #ifndef G__OLDIMPLEMENTATION1823
-      if(funcmacro!=buf) free((void*)funcmacro);
+      if(funcmacro!=buf) delete funcmacro;
 #endif
       return 0;
    }
@@ -997,7 +984,7 @@ int Cint::Internal::G__execfuncmacro_noexec (char* macroname)
    */
 
 #ifndef G__OLDIMPLEMENTATION1823
-   if(funcmacro!=buf) free((void*)funcmacro);
+   if(funcmacro!=buf) delete funcmacro;
 #endif
    return 1;
 }
@@ -1057,7 +1044,7 @@ int Cint::Internal::G__freedeffuncmacro(G__Deffuncmacro *deffuncmacro)
       cfmp->call_fp = 0;
       G__Callfuncmacro* next = cfmp->next;
       cfmp->next = 0;
-      free(cfmp);
+      delete cfmp;
       cfmp = next;
    }
    {
@@ -1083,13 +1070,13 @@ int Cint::Internal::G__freedeffuncmacro(G__Deffuncmacro *deffuncmacro)
          cfmp->call_fp = 0;
          G__Callfuncmacro* next = cfmp->next;
          cfmp->next = 0;
-         free(cfmp);
+         delete (cfmp);
          cfmp = next;
       }
       {
          G__Deffuncmacro* next = dfmp->next;
          dfmp->next = 0;
-         free(dfmp);
+         delete (dfmp);
          dfmp = next;
       }
    }
@@ -1117,7 +1104,7 @@ int Cint::Internal::G__freecharlist(G__Charlist *charlist)
       }
       G__Charlist* next = p->next;
       p->next = 0;
-      free(p);
+      delete p;
       p = next;
    }
    return 0;
