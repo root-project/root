@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log  MidadCint* cltest.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += sigbug virtualbase templateKeyword mytest rootcintIntTest constMemberTest cltest
+TEST_TARGETS += sigbug virtualbase templateKeyword mytest rootcintIntTest constMemberTest cltest nestedtemplate
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -61,5 +61,13 @@ cltest:
 	$(WarnFailTest)
 else
 cltest: cltest.log
+	$(TestDiff)
+endif
+
+ifeq ($(FAIL),)
+nestedtemplate:
+	$(WarnFailTest)
+else
+nestedtemplate: nestedtemplate.clog
 	$(TestDiff)
 endif
