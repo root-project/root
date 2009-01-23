@@ -61,7 +61,7 @@ protected:
    Bool_t      IsSetParsMode() const { return fWorkingMode==1; }
    Bool_t      IsResultSetMode() const { return fWorkingMode==2; }
 
-   Bool_t      SetSQLParamType(Int_t npar, int sqltype, bool sig, int sqlsize = 0);
+   Bool_t      SetSQLParamType(Int_t npar, int sqltype, bool sig, unsigned long sqlsize = 0);
 
    long double ConvertToNumeric(Int_t npar);
    const char *ConvertToString(Int_t npar);
@@ -69,11 +69,16 @@ protected:
    void        FreeBuffers();
    void        SetBuffersNumber(Int_t n);
 
-   void       *BeforeSet(const char* method, Int_t npar, Int_t sqltype, Bool_t sig = kTRUE, Int_t size = 0);
+   void       *BeforeSet(const char* method, Int_t npar, Int_t sqltype, Bool_t sig = kTRUE, unsigned long size = 0);
+   
+   static unsigned long fAllocSizeLimit;
 
 public:
    TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout = kTRUE);
    virtual ~TMySQLStatement();
+   
+   static unsigned long GetAllocSizeLimit() { return fAllocSizeLimit; }
+   static void SetAllocSizeLimit(unsigned long sz) { fAllocSizeLimit = sz; }
 
    virtual void        Close(Option_t * = "");
 

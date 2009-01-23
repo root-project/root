@@ -25,6 +25,8 @@
 
 ClassImp(TMySQLStatement)
 
+unsigned long TMySQLStatement::fAllocSizeLimit = 0x8000000; // 128 Mb
+
 #if MYSQL_VERSION_ID >= 40100
 
 //______________________________________________________________________________
@@ -713,7 +715,7 @@ Bool_t TMySQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_
 }
 
 //______________________________________________________________________________
-Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int sqlsize)
+Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, unsigned long sqlsize)
 {
    // Set parameter type to be used as buffer.
    // Used in both setting data to database and retriving data from data base.
@@ -727,7 +729,8 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
    fBuffer[npar].fResNull = false;
    fBuffer[npar].fStrBuffer = 0;
 
-   int allocsize = 0;
+   unsigned long allocsize = 0;
+   
    bool doreset = false;
 
    switch (sqltype) {
@@ -744,14 +747,16 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
       case MYSQL_TYPE_VAR_STRING: allocsize = sqlsize > 256 ? sqlsize : 256; break;
       case MYSQL_TYPE_MEDIUM_BLOB:
       case MYSQL_TYPE_LONG_BLOB:
-      case MYSQL_TYPE_BLOB:     allocsize = sqlsize >= 65525 ? sqlsize + 10 : 65535; break;
-      case MYSQL_TYPE_TINY_BLOB:   allocsize = sqlsize > 255 ? sqlsize + 10 : 255; break;
+      case MYSQL_TYPE_BLOB:     allocsize = sqlsize >= 65525 ? sqlsize : 65535; break;
+      case MYSQL_TYPE_TINY_BLOB:   allocsize = sqlsize > 255 ? sqlsize : 255; break;
       case MYSQL_TYPE_TIME:
       case MYSQL_TYPE_DATE:
       case MYSQL_TYPE_TIMESTAMP:
       case MYSQL_TYPE_DATETIME: allocsize = sizeof(MYSQL_TIME); doreset = true; break;
       default: SetError(-1,"Nonsupported SQL type","SetSQLParamType"); return kFALSE;
    }
+
+   if (allocsize > fAllocSizeLimit) allocsize = fAllocSizeLimit;
 
    fBuffer[npar].fMem = malloc(allocsize);
    fBuffer[npar].fSize = allocsize;
@@ -772,7 +777,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
 }
 
 //______________________________________________________________________________
-void *TMySQLStatement::BeforeSet(const char* method, Int_t npar, Int_t sqltype, Bool_t sig, Int_t size)
+void *TMySQLStatement::BeforeSet(const char* method, Int_t npar, Int_t sqltype, Bool_t sig, unsigned long size)
 {
    // Check boundary condition before setting value of parameter.
    // Return address of parameter buffer.
@@ -1262,7 +1267,7 @@ Bool_t TMySQLStatement::GetTimestamp(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_
 }
 
 //______________________________________________________________________________
-Bool_t TMySQLStatement::SetSQLParamType(Int_t, int, bool, int)
+Bool_t TMySQLStatement::SetSQLParamType(Int_t, int, bool, unsigned long)
 {
    // Set parameter type to be used as buffer.
    // Used in both setting data to database and retriving data from data base.
@@ -1272,7 +1277,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t, int, bool, int)
 }
 
 //______________________________________________________________________________
-void *TMySQLStatement::BeforeSet(const char*, Int_t, Int_t, Bool_t, Int_t)
+void *TMySQLStatement::BeforeSet(const char*, Int_t, Int_t, Bool_t, unsigned long)
 {
    // Check boundary condition before setting value of parameter.
    // Return address of parameter buffer.
