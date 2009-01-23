@@ -158,11 +158,16 @@ Reflex::Type Reflex::TypedefTypeBuilder(const char * nam,
 
 //-------------------------------------------------------------------------------
 Reflex::Type Reflex::FunctionTypeBuilder( const Type & r,
-                                                      const std::vector<Type> & p,
-                                                      const std::type_info & ti ) {
+                                          const std::vector<Type> & p,
+                                          const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
-   return (new Function( r, p, ti))->ThisType();
+   const Type & ret = Type::ByName(Function::BuildTypeName(r,p));
+   if ( ret && ret.TypeInfo() == ti ) {
+      return ret;
+   } else {
+      return (new Function( r, p, ti))->ThisType();
+   }
 }
 
 
