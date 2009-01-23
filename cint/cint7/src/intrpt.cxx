@@ -119,7 +119,9 @@ extern "C" void G__breakkey(int signame)
   else if(G__asm_exec) {
     G__fprinterr(G__serr, "\n!!! Middle of loop compilation run. signal(%d)\n",signame);
   }
+#ifdef G__SIGNAL
   signal(SIGINT,G__breakkey);
+#endif // G__SIGNAL
 }
 
 
@@ -201,7 +203,9 @@ void Cint::Internal::G__timeout(int signame)
 void Cint::Internal::G__floatexception(int signame)
 {
   G__fprinterr(G__serr,"signal(%d) ",signame); 
+#ifdef G__SIGNAL
   signal(SIGFPE,G__floatexception);
+#endif //G__SIGNAL
   G__errorprompt("Error: Floating point exception");
 }
 
@@ -211,7 +215,9 @@ void Cint::Internal::G__floatexception(int signame)
 void Cint::Internal::G__segmentviolation(int signame)
 {
   G__fprinterr(G__serr,"signal(%d) ",signame); 
+#ifdef G__SIGNAL
   signal(SIGSEGV,G__segmentviolation);
+#endif //G__SIGNAL
   G__errorprompt("Error: Segmentation violation");
 }
 
@@ -245,7 +251,9 @@ void Cint::Internal::G__buserror(int signame)
 void Cint::Internal::G__errorexit(int signame)
 {
   G__fprinterr(G__serr,"Error: caught signal(%d)\n",signame); 
+#ifdef G__SIGNAL
   signal(signame,SIG_DFL);
+#endif //G__SIGNAL
   exit(EXIT_FAILURE);
 }
 

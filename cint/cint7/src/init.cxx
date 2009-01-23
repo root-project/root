@@ -1913,6 +1913,7 @@ extern "C" int G__main(int argc, char** argv)
    //  Catch signals if not embedded in ROOT.
    //
 #ifndef G__ROOT
+#ifdef G__SIGNAL
 #ifndef G__DONT_CATCH_SIGINT
    signal(SIGINT, G__breakkey);
 #endif // G__DONT_CATCH_SIGINT
@@ -1938,6 +1939,7 @@ extern "C" int G__main(int argc, char** argv)
 #endif // SIGBUS
       // --
    }
+#endif // G__SIGNAL
 #endif // G__ROOT
    //
    //  Initialize pointer to member function size.

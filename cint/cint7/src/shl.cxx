@@ -97,7 +97,10 @@ typedef void* G__SHLHANDLE;
 
 #endif /* G__SHAREDLIB */
 
+#ifdef G__SHAREDLIB
 short Cint::Internal::G__allsl=0;
+#endif
+
 struct G__CintSlHandle {
     G__CintSlHandle(G__SHLHANDLE h = 0, bool p = false) : handle(h),ispermanent(p) {}
     G__SHLHANDLE handle;
@@ -1907,7 +1910,8 @@ void* Cint::Internal::G__FindSym(const char *filename,const char *funcname)
 
 static const char *G__dladdr(void (*func)())
 {
-   // Wrapper around dladdr (and friends)
+#ifdef G__SHAREDLIB
+	// Wrapper around dladdr (and friends)
 #if defined(__CYGWIN__) && defined(__GNUC__)
    return 0;
 #elif defined(G__WIN32)
@@ -1935,6 +1939,10 @@ static const char *G__dladdr(void (*func)())
       return info.dli_fname;
    }
 #endif 
+
+#else // G__SHAREDLIB
+   return 0;
+#endif //G__SHAREDLIB
 }
 
 // G__RegisterLibrary
