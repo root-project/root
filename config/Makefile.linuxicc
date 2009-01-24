@@ -83,7 +83,7 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 ifeq ($(F77),ifort)
 F77           = ifort
-F77FLAGS      =
+F77FLAGS      = -fPIC
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
 endif
