@@ -406,7 +406,7 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
          return (XrdProofSched *)0;
       }
       // Get the scheduler object
-      if (!(sched = (*ep)(cfn, this, fGroupsMgr, fEDest))) {
+      if (!(sched = (*ep)(cfn, this, fGroupsMgr, cfn, fEDest))) {
          TRACE(XERR, "unable to create scheduler object from " << lib);
          return (XrdProofSched *)0;
       }
@@ -426,7 +426,7 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
 
 //__________________________________________________________________________
 int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
-                                 const char* query)
+                                 const char *query)
 {
    // Get a list of workers from the available resource broker
    XPDLOC(ALL, "Manager::GetWorkers")
@@ -442,33 +442,40 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
 
    // Query the scheduler for the list of workers
    std::list<XrdProofWorker *> wrks;
-   fProofSched->GetWorkers(xps, &wrks, query);
-   TRACE(DBG, "list size: " << wrks.size());
+   if ((rc = fProofSched->GetWorkers(xps, &wrks, query)) < 0) {
+      TRACE(XERR, "error getting list of workers from the scheduler");
+      return -1;
+   }
+   // If we got a new list we save it into the session object
+   if (rc == 0) {
 
-   // The full list
-   XrdOucString ord;
-   int ii = -1;
-   std::list<XrdProofWorker *>::iterator iw;
-   for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
-      XrdProofWorker *w = *iw;
-      // Add separator if not the first
-      if (lw.length() > 0)
-         lw += '&';
-      // Add export version of the info
-      lw += w->Export();
-      // Count (fActive is increased inside here)
-      if (ii == -1) 
-         ord.form("master");
-      else
-         ord.form("%d", ii);
-      ii++;
-      xps->AddWorker(ord.c_str(), w);
-      // add proofserv and increase the counter
-      w->AddProofServ(xps);
+      TRACE(DBG, "list size: " << wrks.size());
+
+      // The full list
+      XrdOucString ord;
+      int ii = -1;
+      std::list<XrdProofWorker *>::iterator iw;
+      for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
+         XrdProofWorker *w = *iw;
+         // Count (fActive is increased inside here)
+         if (ii == -1) 
+            ord.form("master");
+         else
+            ord.form("%d", ii);
+         ii++;
+         xps->AddWorker(ord.c_str(), w);
+         // Add proofserv and increase the counter
+         w->AddProofServ(xps);
+      }
    }
 
-   if (lw.length()) {
-      xps->SetWrksStr(lw.c_str());
+   if (rc != 2) {
+      // Get the list in exported format
+      xps->ExportWorkers(lw);
+      TRACE(DBG, "from ExportWorkers: " << lw);
+   } else {
+      // Signal enqueing
+      lw = XPD_GW_QueryEnqueued;
    }
 
    if (TRACING(REQ)) fNetMgr->Dump();
@@ -725,6 +732,12 @@ int XrdProofdManager::Config(bool rcf)
    // Config the session manager
    if (fSessionMgr && fSessionMgr->Config(rcf) != 0) {
       XPDERR("problems configuring the session manager");
+      return -1;
+   }
+
+   // Config the scheduler
+   if (fProofSched && fProofSched->Config(rcf) != 0) {
+      XPDERR("problems configuring the scheduler");
       return -1;
    }
 

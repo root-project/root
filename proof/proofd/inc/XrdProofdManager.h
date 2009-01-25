@@ -165,6 +165,7 @@ class XrdProofdManager : public XrdProofdConfig {
 typedef struct {
    XrdProofdClientMgr    *fClientMgr;
    XrdProofdProofServMgr *fSessionMgr;
+   XrdProofSched         *fProofSched;
 } XpdManagerCron_t;
 
 #endif

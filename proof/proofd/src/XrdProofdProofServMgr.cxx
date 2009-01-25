@@ -90,6 +90,7 @@ void *XrdProofdProofServCron(void *p)
 
    XpdManagerCron_t *mc = (XpdManagerCron_t *)p;
    XrdProofdProofServMgr *mgr = mc->fSessionMgr;
+   XrdProofSched *sched = mc->fProofSched;
    if (!(mgr)) {
       TRACE(XERR,  "undefined session manager: cannot start");
       return (void *)0;
@@ -138,6 +139,12 @@ void *XrdProofdProofServCron(void *p)
             mgr->DeleteFromSessions(fpid.c_str());
             // Move the entry to the terminated sessions area
             mgr->MvSession(fpid.c_str());
+            // Notify the scheduler too
+            if (sched) {
+               if (sched->Pipe()->Post(XrdProofSched::kReschedule, 0) != 0) {
+                  TRACE(XERR, "kSessionRemoval: problem posting the scheduler pipe");
+               }
+            }
             // Notify action
             TRACE(REQ, "kSessionRemoval: session: "<<fpid<<
                         " has been removed from the active list");
@@ -694,6 +701,7 @@ int XrdProofdProofServMgr::PrepareSessionRecovering()
       // Fill manager pointers structure
       fManagerCron.fClientMgr = fMgr->ClientMgr();
       fManagerCron.fSessionMgr = this;
+      fManagerCron.fProofSched = fMgr->ProofSched();
       if (XrdSysThread::Run(&tid, XrdProofdProofServRecover, (void *)&fManagerCron,
                             0, "ProofServMgr session recover thread") != 0) {
          TRACE(XERR, "could not start session recover thread");

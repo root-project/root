@@ -15,6 +15,8 @@
 #include "XrdProofdAux.h"
 #include "XrdProofdProofServ.h"
 #include "XrdProofWorker.h"
+#include "XrdProofSched.h"
+#include "XrdProofdManager.h"
 
 // Tracing utils
 #include "XrdProofdTrace.h"
@@ -62,7 +64,7 @@ XrdProofdProofServ::XrdProofdProofServ()
    fUserEnvs = "";
    fUNIXSock = 0;
    fUNIXSockPath = "";
-   fWrksStr = "";
+   fQueries.clear();
 }
 
 //__________________________________________________________________________
@@ -137,7 +139,6 @@ void XrdProofdProofServ::ClearWorkers()
    // Decrease workers' counters and remove this from workers
    fWorkers.Apply(DecreaseWorkerCounters, this);
    fWorkers.Purge();
-   fWrksStr = "";
 }
 
 //__________________________________________________________________________
@@ -165,8 +166,7 @@ void XrdProofdProofServ::RemoveWorker(const char *o)
    XrdSysMutexHelper mhp(fMutex);
 
    XrdProofWorker *w = fWorkers.Find(o);
-   if (w)
-      w->RemoveProofServ(this);
+   if (w) w->RemoveProofServ(this);
    fWorkers.Del(o);
    if (TRACING(HDBG)) fWorkers.Apply(DumpWorkerCounters, 0);
 }
@@ -229,7 +229,6 @@ void XrdProofdProofServ::Reset()
    fTag = "";
    fUserEnvs = "";
    DeleteUNIXSock();
-   fWrksStr = "";
 }
 
 //__________________________________________________________________________
@@ -755,7 +754,7 @@ int XrdProofdProofServ::Resume()
    // a getworkers request (the workers are already assigned).
    XPDLOC(SMGR, "ProofServ::Resume")
 
-   TRACE(DBG, "ord: " << fOrdinal<< ", pid: " << fSrvPID);
+   TRACE(REQ, "ord: " << fOrdinal<< ", pid: " << fSrvPID);
 
    int rc = 0;
    XrdOucString msg;
@@ -776,12 +775,82 @@ int XrdProofdProofServ::Resume()
    return rc;
 }
 
-//______________________________________________________________________________
-const char *XrdProofdProofServ::FirstQueryTag()
+//__________________________________________________________________________
+static int ExportWorkerDescription(const char *k, XrdProofWorker *w, void *s)
 {
+   // Decrease active session counters on worker w
+   XPDLOC(PMGR, "ExportWorkerDescription")
 
-   if (!fQueries.empty())
-      return fQueries.front()->GetTag();
-   else
+   XrdOucString *wrks = (XrdOucString *)s;
+   if (w && wrks) {
+      // Master at the beginning
+      if (w->fType == 'M') {
+         if (wrks->length() > 0) wrks->insert('&',0);
+         wrks->insert(w->Export(), 0);
+      } else {
+         // Add separator if not the first
+         if (wrks->length() > 0)
+            (*wrks) += '&';
+         // Add export version of the info
+         (*wrks) += w->Export();
+      }
+      TRACE(ALL, k <<" : "<<w->fHost.c_str()<<":"<<w->fPort <<" act: "<<w->Active());
+      // Check next
       return 0;
+   }
+
+   // Not enough info: stop
+   return 1;
+}
+
+//__________________________________________________________________________
+void XrdProofdProofServ::ExportWorkers(XrdOucString &wrks)
+{
+   // Export the assigned workers in the format understood by proofserv
+
+   XrdSysMutexHelper mhp(fMutex);
+   wrks = "";
+   fWorkers.Apply(ExportWorkerDescription, (void *)&wrks);
+}
+
+//__________________________________________________________________________
+void XrdProofdProofServ::DumpQueries()
+{
+   // Export the assigned workers in the format understood by proofserv
+   XPDLOC(PMGR, "DumpQueries")
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   TRACE(ALL," ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ");
+   TRACE(ALL," +++ client: "<<fClient<<", session: "<< fSrvPID <<
+             ", # of queries: "<< fQueries.size());
+   std::list<XrdProofQuery *>::iterator ii;
+   int i = 0;
+   for (ii = fQueries.begin(); ii != fQueries.end(); ii++) {
+      i++;
+      TRACE(ALL," +++ #"<<i<<" tag:"<< (*ii)->GetTag()<<" dset: "<<
+                (*ii)->GetDSName()<<" size:"<<(*ii)->GetDSSize());
+   }
+   TRACE(ALL," ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ");
+}
+
+//__________________________________________________________________________
+XrdProofQuery *XrdProofdProofServ::GetQuery(const char *tag)
+{
+   // Gte query with tag form the list of queries
+   XrdProofQuery *q = 0;
+   if (!tag || strlen(tag) <= 0) return q;
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   if (fQueries.size() <= 0) return q;
+
+   std::list<XrdProofQuery *>::iterator ii;
+   for (ii = fQueries.begin(); ii != fQueries.end(); ii++) {
+      q = *ii;
+      if (!strcmp(tag, q->GetTag())) break;
+      q = 0;
+   }
+   // Done
+   return q;
 }

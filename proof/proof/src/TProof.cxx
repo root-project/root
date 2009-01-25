@@ -355,6 +355,7 @@ TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
    fNotIdle = 0;
    fSync = kTRUE;
    fRunStatus = kRunning;
+   fIsWaiting = kFALSE;
    fRedirLog = kFALSE;
    fLogFileW = 0;
    fLogFileR = 0;
@@ -573,9 +574,10 @@ Int_t TProof::Init(const char *, const char *conffile,
 
    // Status of cluster
    fNotIdle = 0;
-
    // Query type
    fSync = kTRUE;
+   // Not enqueued
+   fIsWaiting = kFALSE;
 
    // Counters
    fBytesRead = 0;
@@ -900,11 +902,11 @@ Int_t TProof::AddWorkers(TList *workerList)
         << nSlavesDone << slaveOk;
       gProofServ->GetSocket()->Send(m);
    }
-   delete addedWorkers;
 
    // Now set new state on the added workers (on all workers for simplicity)
    // use fEnabledPackages, fLoadedMacros,
    // gSystem->GetDynamicPath() and gSystem->GetIncludePath()
+   // no need to load packages that are only loaded and not enabled (dyn mode)
 
    SetParallel(99999, 0);
 
@@ -914,8 +916,10 @@ Int_t TProof::AddWorkers(TList *workerList)
       TIter nxp(tmpEnabledPackages);
       TObjString *os = 0;
       while ((os = (TObjString *) nxp())) {
+         // Upload and Enable methods are intelligent and avoid
+         // re-uploading or re-enabling of a package to a node that has it.
          UploadPackage(os->GetName());
-         EnablePackage(os->GetName());
+         EnablePackage(os->GetName(), kTRUE);
       }
    }
 
@@ -925,18 +929,21 @@ Int_t TProof::AddWorkers(TList *workerList)
       TObjString *os = 0;
       while ((os = (TObjString *) nxp())) {
          Printf("Loading a macro : %s", os->GetName());
-         Load(os->GetName());
+         Load(os->GetName(), kTRUE, kTRUE, addedWorkers);
       }
    }
 
    TString dyn = gSystem->GetDynamicPath();
    dyn.ReplaceAll(":", " ");
    dyn.ReplaceAll("\"", " ");
-   AddDynamicPath(dyn);
+   AddDynamicPath(dyn, addedWorkers);
    TString inc = gSystem->GetIncludePath();
    inc.ReplaceAll("-I", " ");
    inc.ReplaceAll("\"", " ");
-   AddIncludePath(inc);
+   AddIncludePath(inc, addedWorkers);
+
+   // Cleanup
+   delete addedWorkers;
 
    // Inform the client that the number of workers is changed
    if (fDynamicStartup && gProofServ)
@@ -2670,8 +2677,10 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
 
             // For Proof-Lite this variable is the number of workers and is set
             // by the player
-            if (!IsLite())
+            if (!IsLite()) {
                fNotIdle = 1;
+               fIsWaiting = kFALSE;
+            }
 
             // The signal is used on masters by XrdProofdProtocol to catch
             // the start of processing; on clients it allows to update the
@@ -2724,6 +2733,9 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                }
             } else {
                fNotIdle = 0;
+               // Check if the query has been enqueued
+               if ((mess->BufferSize() > mess->Length()))
+                  (*mess) >> fIsWaiting;
             }
          }
          break;
@@ -2742,6 +2754,11 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                Activate();
                fSync = kFALSE;
             }
+            // Check if the query has been enqueued
+            fIsWaiting = kTRUE;
+            // For Proof-Lite this variable is the number of workers and is set by the player
+            if (!IsLite())
+               fNotIdle = 1;
 
             rc = 1;
          }
@@ -3433,13 +3450,17 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
    // Resolve query mode
    fSync = (GetQueryMode(option) == kSync);
 
-   if (fSync && !IsIdle()) {
-      Info("Process","not idle, cannot submit synchronous query");
-      return -1;
+   TString opt(option);
+   if (fSync && (!IsIdle() || IsWaiting())) {
+      // Already queued or processing queries: switch to asynchronous mode
+      Info("Process", "session is in waiting or processing status: switch to asynchronous mode");
+      fSync = kFALSE;
+      opt.ReplaceAll("SYNC","");
+      opt += "ASYN";
    }
 
    // Cleanup old temporary datasets
-   if (IsIdle() && fRunningDSets && fRunningDSets->GetSize() > 0) {
+   if ((IsIdle() && !IsWaiting()) && fRunningDSets && fRunningDSets->GetSize() > 0) {
       fRunningDSets->SetOwner(kTRUE);
       fRunningDSets->Delete();
    }
@@ -3452,7 +3473,7 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
          sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
    }
 
-   Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first);
+   Long64_t rv = fPlayer->Process(dset, selector, opt.Data(), nentries, first);
 
    if (fSync) {
       // reactivate the default application interrupt handler
@@ -5742,16 +5763,18 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
 }
 
 //______________________________________________________________________________
-Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers)
+Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
+                   TList *wrks)
 {
    // Load the specified macro on master, workers and, if notOnClient is
    // kFALSE, on the client. The macro file is uploaded if new or updated.
    // If existing, the corresponding header basename(macro).h or .hh, is also
    // uploaded. The default is to load the macro also on the client.
    // On masters, if uniqueWorkers is kTRUE, the macro is loaded on unique workers
-   // only, and collection si not done; if uniqueWorkers is kFALSE, collection
+   // only, and collection is not done; if uniqueWorkers is kFALSE, collection
    // from the previous request is done, and broadcasting + collection from the
    // other workers is done.
+   // The wrks arg can be used on the master to limit the set of workers.
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
@@ -5768,6 +5791,10 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers)
    }
 
    if (TestBit(TProof::kIsClient)) {
+      if (wrks) {
+         Error("Load", "the 'wrks' arg can be used only on the master");
+         return -1;
+      }
 
       // Extract the file implementation name first
       TString implname = macro;
@@ -5848,7 +5875,10 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers)
 
       if (uniqueWorkers) {
          mess << Int_t(kLoadMacro) << basemacro;
-         Broadcast(mess, kUnique);
+         if (wrks)
+            Broadcast(mess, wrks);
+         else
+            Broadcast(mess, kUnique);
       } else {
          // Wait for the result of the previous sending
          Collect(kUnique);
@@ -5879,7 +5909,9 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers)
          fLoadedMacros = new TList();
          fLoadedMacros->SetOwner();
       }
-      fLoadedMacros->Add(new TObjString(macro));
+      // if wrks is specified the macro should already be loaded on the master.
+      if (!wrks)
+         fLoadedMacros->Add(new TObjString(macro));
    }
 
    // Done
@@ -5887,7 +5919,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers)
 }
 
 //______________________________________________________________________________
-Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient)
+Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks)
 {
    // Add 'libpath' to the lib path search.
    // Multiple paths can be specified at once separating them with a comma or
@@ -5914,14 +5946,17 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient)
       m << TString("-");
 
    // Forward the request
-   Broadcast(m);
+   if (wrks)
+      Broadcast(m, wrks);
+   else
+      Broadcast(m);
    Collect(kActive, fCollectTimeout);
 
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient)
+Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks)
 {
    // Add 'incpath' to the inc path search.
    // Multiple paths can be specified at once separating them with a comma or
@@ -5948,7 +5983,10 @@ Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient)
       m << TString("-");
 
    // Forward the request
-   Broadcast(m);
+   if (wrks)
+      Broadcast(m, wrks);
+   else
+      Broadcast(m);
    Collect(kActive, fCollectTimeout);
 
    return 0;

@@ -1664,19 +1664,29 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             TList* workerList = new TList();
             Int_t pc = 0;
             EQueryAction retVal = GetWorkers(workerList, pc, kTRUE);
-            if (retVal == TProofServ::kQueryStop) {
-               Error("HandleSocketInput", "error getting list of worker nodes");
-               break;
-            } else if (retVal != TProofServ::kQueryOK) {
-               Error("HandleSocketInput", "unexpected answer");
-               break;
-            } else if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
-               Error("HandleSocketInput", "adding a list of worker nodes returned: %d",
-                     ret);
-               break;
+
+            if (retVal == TProofServ::kQueryOK) {
+               if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
+                  Error("HandleSocketInput", "adding a list of worker nodes returned: %d", ret);
+               } else {
+                  ProcessNext();
+                  // Signal the client that we are idle
+                  TMessage m(kPROOF_SETIDLE);
+                  Bool_t waiting = (fWaitingQueries->GetSize() > 0) ? kTRUE : kFALSE;
+                  m << waiting;
+                  fSocket->Send(m);
+               }
             } else {
-               ProcessNext();
+               if (retVal == TProofServ::kQueryStop) {
+                  Error("HandleSocketInput", "error getting list of worker nodes");
+               } else if (retVal != TProofServ::kQueryEnqueued) {
+                  Warning("HandleSocketInput", "query was re-queued!");
+               } else {
+                  Error("HandleSocketInput", "unexpected answer: %d", retVal);
+                  break;
+               }
             }
+
          }
          break;
 
@@ -3032,7 +3042,7 @@ void TProofServ::HandleProcess(TMessage *mess)
          } else if (retVal == TProofServ::kQueryEnqueued) {
             // change to an asynchronous query
             enqueued = kTRUE;
-            Info("HandleProcess", "The query was enqueued");
+            Info("HandleProcess", "query %d enqueued", pq->GetSeqNum());
          } else if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
             Error("HandleProcess", "Adding a list of worker nodes returned: %d",
                   ret);
@@ -3062,7 +3072,9 @@ void TProofServ::HandleProcess(TMessage *mess)
       // in the static mode, if a session is enqueued it will be processed after current query
       // (there is no way to enqueue if idle).
       // in the dynamic mode we will process here only if the session was idle and got workers!
+      Bool_t doprocess = kFALSE;
       while (fWaitingQueries->GetSize() > 0 && !enqueued) {
+         doprocess = kTRUE;
          //
          ProcessNext();
          // avoid processing async queries send during processing in dyn mode
@@ -3072,7 +3084,12 @@ void TProofServ::HandleProcess(TMessage *mess)
       } // Loop on submitted queries
 
       // Signal the client that we are idle
-      fSocket->Send(kPROOF_SETIDLE);
+      if (doprocess) {
+         m.Reset(kPROOF_SETIDLE);
+         Bool_t waiting = (fWaitingQueries->GetSize() > 0) ? kTRUE : kFALSE;
+         m << waiting;
+         fSocket->Send(m);
+      }
 
    } else {
 

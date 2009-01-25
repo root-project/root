@@ -42,6 +42,7 @@
 #include "XrdProofdProtocol.h"
 #include "XrdProofdResponse.h"
 #include "XrdProofdProofServ.h"
+#include "XrdProofSched.h"
 
 // Tracing utils
 #include "XrdProofdTrace.h"
@@ -785,7 +786,7 @@ int XrdProofdProtocol::SendMsg()
          TRACEP(this, DBG, "EXT: setting proofserv in 'running' state");
          xps->SetStatus(kXPD_running);
          PostSession(1, fPClient->UI().fUser.c_str(),
-                        fPClient->UI().fGroup.c_str(), xps->SrvPID());
+                        fPClient->UI().fGroup.c_str(), xps);
       }
 
       // Send to proofsrv our client ID
@@ -817,8 +818,7 @@ int XrdProofdProtocol::SendMsg()
          TRACEP(this, DBG, "INT: setting proofserv in 'idle' state");
          xps->SetStatus(kXPD_idle);
          PostSession(-1, fPClient->UI().fUser.c_str(),
-                         fPClient->UI().fGroup.c_str(), xps->SrvPID());
-
+                         fPClient->UI().fGroup.c_str(), xps);
       } else if (opt & kXPD_querynum) {
          TRACEP(this, DBG, "INT: got message with query number");
          // Save query num message for later clients
@@ -1100,21 +1100,36 @@ int XrdProofdProtocol::Ping()
 }
 
 //___________________________________________________________________________
-void XrdProofdProtocol::PostSession(int on, const char *u, const char *g, int pid)
+void XrdProofdProtocol::PostSession(int on, const char *u, const char *g,
+                                    XrdProofdProofServ *xps)
 {
    // Post change of session status
    XPDLOC(ALL, "Protocol::PostSession")
 
+   // Tell the priority manager
    if (fgMgr && fgMgr->PriorityMgr()) {
+      int pid = (xps) ? xps->SrvPID() : -1;
+      if (pid < 0) {
+         TRACE(XERR, "undefined session or process id");
+         return;
+      }
       XrdOucString buf;
       buf.form("%d %s %s %d", on, u, g, pid);
 
       if (fgMgr->PriorityMgr()->Pipe()->Post(XrdProofdPriorityMgr::kChangeStatus,
                                              buf.c_str()) != 0) {
-         TRACE(XERR, "problem posting the pipe");
+         TRACE(XERR, "problem posting the prority manager pipe");
       }
    }
-
+   // Tell the scheduler
+   if (fgMgr && fgMgr->ProofSched()) {
+      if (on == -1 && xps && xps->SrvType() == kXPD_TopMaster) {
+         TRACE(DBG, "posting the scheduler pipe");
+         if (fgMgr->ProofSched()->Pipe()->Post(XrdProofSched::kReschedule, 0) != 0) {
+            TRACE(XERR, "problem posting the scheduler pipe");
+         }
+      }
+   }
    // Done
    return;
 }

@@ -113,7 +113,8 @@ enum XProofSessionStatus {
    kXPD_idle            = 0,
    kXPD_running         = 1,
    kXPD_shutdown        = 2,
-   kXPD_unknown         = 3
+   kXPD_enqueued        = 3,
+   kXPD_unknown         = 4
 };
 
 // XPROOFD MESSAGE TYPE
@@ -125,6 +126,10 @@ enum XProofSessionStatus {
 #define kXPD_logmsg       0x20
 #define kXPD_querynum     0x40
 #define kXPD_process      0x80
+
+// Special GetWorkers reply tags
+const char* const XPD_GW_Failed        = "|failed|";
+const char* const XPD_GW_QueryEnqueued = "|enqueued|";
 
 //_______________________________________________
 // PROTOCOL DEFINITION: SERVER'S RESPONSES TYPES

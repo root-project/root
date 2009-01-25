@@ -49,6 +49,8 @@
 #  include "XrdSysToOuc.h"
 #endif
 
+#include "XrdProofdConfig.h"
+
 #define kXPSMXNMLEN 17
 
 class XrdProofdManager;
@@ -58,18 +60,31 @@ class XrdProofWorker;
 class XrdSysError;
 class XrdOucStream;
 
-class XrdProofSched
-{
+class XrdProofSched : public XrdProofdConfig {
+
 public:
    XrdProofSched(const char *name,
                  XrdProofdManager *mgr, XrdProofGroupMgr *grpmgr,
-                 const char *cfn = 0, XrdSysError *e = 0);
+                 const char *cfn, XrdSysError *e = 0);
    virtual ~XrdProofSched() { }
 
-   // Returns list of workers to be used by session 'xps'
+   // Returns list of workers to be used by session 'xps'.
+   // The return code must be one of the following:
+   //  -1     Some failure occured; cannot continue
+   //   0     A new list has been assigned to the session 'xps' and
+   //         returned in 'wrks'
+   //   1     The list currently assigned to the session is the one
+   //         to be used
+   //   2     No worker could be assigned now; session should be queued
    virtual int GetWorkers(XrdProofdProofServ *xps,
                           std::list<XrdProofWorker *> */*wrks*/,
                           const char *);
+
+   // To be called after some nodes become free
+   virtual int Reschedule();
+
+   // Update info about a session
+   virtual int UpdateSession(XrdProofdProofServ *, int = 0, void * = 0) { return 0; }
 
    // Max number of essions we are allowed to start
    virtual int MaxSessions() const { return fMaxSessions; }
@@ -85,6 +100,18 @@ public:
 
    virtual int ProcessDirective(XrdProofdDirective *d,
                                 char *val, XrdOucStream *cfg, bool rcf);
+   virtual int Enqueue(XrdProofdProofServ *xps, XrdProofQuery *query);
+
+   virtual XrdProofdProofServ *FirstSession();
+
+   int         CheckFrequency() const { return fCheckFrequency; }
+   inline XrdProofdPipe *Pipe() { return &fPipe; }
+
+   virtual int       Config(bool rcf = 0);
+   virtual int       DoDirective(XrdProofdDirective *d,
+                                 char *val, XrdOucStream *cfg, bool rcf);
+
+   enum SchedProtocol { kReschedule = 0 };
 
 protected:
    char              fName[kXPSMXNMLEN];   // Name of this protocol
@@ -93,6 +120,7 @@ protected:
    XrdProofGroupMgr *fGrpMgr;  // Groups manager
 
    int               fMaxSessions; // max number of sessions
+   int               fMaxRunning;  // max number of running sessions
    int               fWorkerMax;   // max number or workers per user
    int               fWorkerSel;   // selection option
    int               fNextWrk;     // Reference index for RR sel option
@@ -100,14 +128,21 @@ protected:
    int               fMinForQuery; // Minimal number of workers for a query
    double            fNodesFraction; // the fraction of free units to assign
                                      // to a query.
+   bool              fUseFIFO;    // use FIFO or refuse if overloaded 
+   std::list<XrdProofdProofServ *> fQueue; // the queue with sessions (jobs);
 
    XrdOucHash<XrdProofdDirective> fConfigDirectives; // Config directives
 
+   int               fCheckFrequency;
+   XrdProofdPipe     fPipe;
+
    XrdSysError      *fEDest;      // Error message handler
 
-   virtual int       Config(const char *cfn);
+
+   virtual void      RegisterDirectives();
    virtual int       DoDirectiveSchedParam(char *, XrdOucStream *, bool);
    virtual int       DoDirectiveResource(char *, XrdOucStream *, bool);
+
    virtual int       GetNumWorkers(XrdProofdProofServ *xps);
    virtual void      ResetParameters();
 };
@@ -115,6 +150,7 @@ protected:
 
 // Plugin loader handle
 typedef XrdProofSched *(*XrdProofSchedLoader_t)(const char *, XrdProofdManager *,
-                                                XrdProofGroupMgr *, XrdSysError *);
+                                                XrdProofGroupMgr *, const char *,
+                                                XrdSysError *);
 
 #endif

@@ -173,7 +173,8 @@ public:
    static int                    fgReadWait;
    static XrdProofdManager      *fgMgr;       // Cluster manager
 
-   static void                   PostSession(int on, const char *u, const char *g, int pid);
+   static void                   PostSession(int on, const char *u, const char *g,
+                                             XrdProofdProofServ *xps);
 };
 
 #define XPD_SETRESP(p, x) \
