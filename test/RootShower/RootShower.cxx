@@ -206,7 +206,7 @@ void TGToolButton::DoRedraw()
       pic = fPicD ? fPicD : fPic;
    }
    if (fBgndColor == 0xaaaaff) {
-      x--; y--;
+      //x--; y--;
       gVirtualX->DrawRectangle(fId, TGFrame::GetShadowGC()(), 0, 0, w, h);
    }
    pic->Draw(fId, fNormGC, x, y);
