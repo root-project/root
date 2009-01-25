@@ -113,6 +113,7 @@ class TProofDataSetManager;
 // 18 -> 19: TProofProgressStatus used in kPROOF_PROGRESS, kPROOF_STOPPROCESS
 //           and kPROOF_GETNEXTPACKET messages in Master - worker communication
 // 19 -> 20: Fix the asynchronous mode (required changes in some messages)
+// 20 -> 21: Add support for session queuing
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 20;            // protocol version number

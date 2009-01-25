@@ -67,13 +67,13 @@ XrdProofdSandbox::XrdProofdSandbox(XrdProofUI ui, bool full, bool changeown)
          fDir = ui.fHomeDir;
          if (!fDir.endswith('/'))
             fDir += "/";
-         fDir += "proof";
+         fDir += ".proof";
       } else {
          // ~daemon_owner/proof/<user>
          fDir = fgUI.fHomeDir;
          if (!fDir.endswith('/'))
             fDir += "/";
-         fDir += "proof/";
+         fDir += ".proof/";
          fDir += ui.fUser;
       }
    }

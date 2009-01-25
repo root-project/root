@@ -792,7 +792,7 @@ static int ExportWorkerDescription(const char *k, XrdProofWorker *w, void *s)
          if (wrks->length() > 0)
             (*wrks) += '&';
          // Add export version of the info
-         (*wrks) += w->Export();
+         (*wrks) += w->Export(k);
       }
       TRACE(ALL, k <<" : "<<w->fHost.c_str()<<":"<<w->fPort <<" act: "<<w->Active());
       // Check next

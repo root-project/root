@@ -469,11 +469,12 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
       }
    }
 
-   if (rc != 2) {
+   int proto = (xps->Protocol()) ? xps->Protocol()->ProofProtocol() : -1;
+   if (rc != 2 || (proto < 21 && rc == 0)) {
       // Get the list in exported format
       xps->ExportWorkers(lw);
       TRACE(DBG, "from ExportWorkers: " << lw);
-   } else {
+   } else if (proto >= 21) {
       // Signal enqueing
       lw = XPD_GW_QueryEnqueued;
    }

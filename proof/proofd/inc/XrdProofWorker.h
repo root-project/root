@@ -44,7 +44,7 @@ class XrdProofWorker {
 
    void                    Reset(const char *str); // Set from 'str'
 
-   const char             *Export();
+   const char             *Export(const char *ord = 0);
 
    bool                    Matches(const char *host);
    bool                    Matches(XrdProofWorker *wrk);

@@ -832,7 +832,16 @@ Int_t TProof::AddWorkers(TList *workerList)
          sport = fUrl.GetPort();
 
       // create slave server
+#if 0
       TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
+#else
+      TString fullord;
+      if (worker->GetOrdinal().Length() > 0) {
+         fullord.Form("%s.%s", gProofServ->GetOrdinal(), worker->GetOrdinal().Data());
+      } else {
+         fullord.Form("%s.%d", gProofServ->GetOrdinal(), ord);
+      }
+#endif
 
       // create slave server
       TUrl u(Form("%s:%d",worker->GetNodeName().Data(), sport));
