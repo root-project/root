@@ -76,9 +76,7 @@ CINTCFLAGS   += -wd1572
 USE_PCH       = -pch-use
 CREATE_PCH    = -pch-create
 ICC_GE_9      = 11
-ifneq ($(ICC_MINOR),0)
 ICC_GE_101    = 110
-endif
 endif
 
 # OS version
@@ -121,7 +119,7 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
 # Fortran:
 ifeq ($(F77),ifort)
 F77           = ifort
-F77FLAGS      =
+F77FLAGS      = -fPIC
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
 endif
