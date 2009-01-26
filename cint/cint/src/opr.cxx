@@ -1426,7 +1426,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
             case '/': /* divide */
                if (defined->type == G__null.type) udefined = 1;
                if (uexpression == 0) {
-                  if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
+                  if (G__no_exec_compile) G__letdouble(defined, resultTypeChar, 0);
                   else G__genericerror("Error: operator '/' divided by zero");
                   return;
                }
@@ -1435,7 +1435,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                break;
             case '%': /* modulus */
                if (uexpression == 0) {
-                  if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
+                  if (G__no_exec_compile) G__letdouble(defined, resultTypeChar, 0);
                   else G__genericerror("Error: operator '%%' divided by zero");
                   return;
                }
