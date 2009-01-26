@@ -27,3 +27,4 @@ echo ""
 echo "Reconfigure successful."
 echo "If the build fails, please run ./configure again."
 echo ""
+test -e Makefile && sleep 1 && touch Makefile
