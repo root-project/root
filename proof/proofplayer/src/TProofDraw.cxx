@@ -624,7 +624,7 @@ void TProofDrawHist::SlaveBegin(TTree *tree)
    fDimension = fTreeDrawArgsParser.GetDimension();
    TString exp = fTreeDrawArgsParser.GetExp();
    const char *objname = fTreeDrawArgsParser.GetObjectName();
-   if (objname && strlen(objname) > 0) {
+   if (objname && strlen(objname) > 0 && strcmp(objname, "htemp")) {
       TH1 *hist = dynamic_cast<TH1*> (fInput->FindObject(objname));
       if (hist) {
          fHistogram = (TH1 *) hist->Clone();

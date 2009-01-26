@@ -1642,6 +1642,11 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
    if (fProof->IsMaster()) {
       TPerfStats::Stop();
 
+      PDB(kOutput,1) Info("Finalize","Calling Merge Output");
+      // Some objects (e.g. histos in autobin) may not have been merged yet
+      // do it now
+      MergeOutput();
+
       // Merge the output files created on workers, if any
       MergeOutputFiles();
 
@@ -2228,6 +2233,16 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
       return -1;
    }
 
+   // Special treatment for histograms in autobin mode
+   if (newobj->InheritsFrom("TH1")) {
+      if (!HandleHistogram(newobj)) {
+         PDB(kOutput,1) Info("Incorporate", "histogram object '%s' added to the"
+                             " appropriate list for delayed merging", newobj->GetName());
+         merged = kFALSE;
+         return 0;
+      }
+   }
+
    // Check if an object with the same name exists already
    TObject *obj = outlist->FindObject(newobj->GetName());
 
@@ -2260,6 +2275,88 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
 
    // Done
    return 0;
+}
+
+//______________________________________________________________________________
+TObject *TProofPlayerRemote::HandleHistogram(TObject *obj)
+{
+   // Low statistic histograms need a special treatment when using autobin
+
+   TH1 *h = dynamic_cast<TH1 *>(obj);
+   if (!h) {
+      // Not an histo
+      return obj;
+   }
+
+   // Does is still needs binning ?
+   Bool_t tobebinned = (h->GetBuffer()) ? kTRUE : kFALSE;
+
+   // Number of entries
+   Int_t nent = h->GetBufferLength();
+   PDB(kOutput,2) Info("HandleHistogram", "h:%s ent:%d, buffer size: %d",
+                       h->GetName(), nent, h->GetBufferSize());
+
+   // Attach to the list in the outputlists, if any
+   TList *list = 0;
+   if (!fOutputLists) {
+      PDB(kOutput,2) Info("HandleHistogram", "Create fOutputLists");
+      fOutputLists = new TList;
+      fOutputLists->SetOwner();
+   }
+   list = (TList *) fOutputLists->FindObject(h->GetName());
+
+   TH1 *href = 0;
+   if (tobebinned) {
+
+      // The histogram needs to be projected in a reasonable range: we
+      // do this at the end with all the histos, so we need to create
+      // a list here
+      if (!list) {
+         // Create the list
+         list = new TList;
+         list->SetName(h->GetName());
+         list->SetOwner();
+         fOutputLists->Add(list);
+         // Move in it any previously merged object from the output list
+         if (fOutput && (href = (TH1 *) fOutput->FindObject(h->GetName()))) {
+            fOutput->Remove(href);
+            list->Add(href);
+         }
+      }
+      TIter nxh(list);
+      while ((href = (TH1 *) nxh())) {
+         if (href->GetBuffer() && href->GetBufferLength() < nent) break;
+      }
+      if (href) {
+         list->AddBefore(href, h);
+      } else {
+         list->Add(h);
+      }
+      // Done
+      return (TObject *)0;
+
+   } else {
+
+      if (list) {
+         TIter nxh(list);
+         while ((href = (TH1 *) nxh())) {
+            if (href->GetBuffer() || href->GetEntries() < nent) break;
+         }
+         if (href) {
+            list->AddBefore(href, h);
+         } else {
+            list->Add(h);
+         }
+         // Done
+         return (TObject *)0;
+
+      } else {
+         // Histogram has already been projected and there is no list: just
+         // do normal merging in the output list
+         return obj;
+      }
+   }
+   PDB(kOutput,1) Info("HandleHistogram", "Leaving");
 }
 
 //______________________________________________________________________________
@@ -2371,20 +2468,38 @@ TList *TProofPlayerRemote::MergeFeedback()
       TObject *oref = 0;
 #endif
       while ( TObject *key = keys() ) {
-         list->Add(map->GetValue(key));
+         TObject *o = map->GetValue(key);
+         TH1 *h = dynamic_cast<TH1 *>(o);
 #ifndef R__TH1MERGEFIXED
          // Temporary fix for to cope with the problem in TH1::Merge.
          // We need to use a reference histo the one with the largest number
          // of bins so that the histos from all submasters can be correctly
          // fit in
-         TObject *o = map->GetValue(key);
-         if (o->InheritsFrom("TH1") && !strncmp(o->GetName(),"PROOF_",6)) {
-            if (((TH1 *)o)->GetNbinsX() > nbmx) {
-               nbmx=  ((TH1 *)o)->GetNbinsX();
+         if (h && !strncmp(o->GetName(),"PROOF_",6)) {
+            if (h->GetNbinsX() > nbmx) {
+               nbmx=  h->GetNbinsX();
                oref = o;
             }
          }
 #endif
+         if (h) {
+            TIter nxh(list);
+            TH1 *href= 0;
+            while ((href = (TH1 *)nxh())) {
+               if (h->GetBuffer()) {
+                  if (href->GetBuffer() && href->GetBufferLength() < h->GetBufferLength()) break;
+               } else {
+                  if (href->GetBuffer() || href->GetEntries() < h->GetEntries()) break;
+               }
+            }
+            if (href) {
+               list->AddBefore(href, h);
+            } else {
+               list->Add(h);
+            }
+         } else {
+            list->Add(o);
+         }
       }
 
       // clone first object, remove from list
@@ -2462,7 +2577,6 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
    while( (obj = next()) ) {
       PDB(kFeedback,2)
          Info("StoreFeedback","%s: Find '%s'", ord, obj->GetName() );
-
       TMap *map = (TMap*) fFeedbackLists->FindObject(obj->GetName());
       if ( map == 0 ) {
          PDB(kFeedback,2)
