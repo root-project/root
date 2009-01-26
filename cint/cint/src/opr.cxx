@@ -937,7 +937,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
    }
 
    /****************************************************************
-    * long operator long
+    * long long operator long long
     * 
     ****************************************************************/
    else if ('n' == defined->type     || 'm' == defined->type    ||
@@ -1396,25 +1396,31 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
             unsignedresult = -1;
             break;
       }
+      bool useLong = (defined->type + expressionin.type > 'i' + 'i');
+      if (!defined->type)
+         useLong = expressionin.type > 'i';
+      char resultTypeChar = useLong ? 'l' : 'i';
+      if (unsignedresult) --resultTypeChar;
+
       if (unsignedresult) {
          unsigned long udefined = (unsigned long)G__uint(*defined);
          unsigned long uexpression = (unsigned long)G__uint(expressionin);
          switch (operatortag) {
             case '\0':
                defined->ref = expressionin.ref;
-               G__letint(defined, 'h', udefined + uexpression);
+               G__letint(defined, resultTypeChar, udefined + uexpression);
                break;
             case '+': /* add */
-               G__letint(defined, 'h', udefined + uexpression);
+               G__letint(defined, resultTypeChar, udefined + uexpression);
                defined->ref = 0;
                break;
             case '-': /* subtract */
-               G__letint(defined, 'h', udefined - uexpression);
+               G__letint(defined, resultTypeChar, udefined - uexpression);
                defined->ref = 0;
                break;
             case '*': /* multiply */
                if (defined->type == G__null.type) udefined = 1;
-               G__letint(defined, 'h', udefined*uexpression);
+               G__letint(defined, resultTypeChar, udefined*uexpression);
                defined->ref = 0;
                break;
             case '/': /* divide */
@@ -1424,7 +1430,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   else G__genericerror("Error: operator '/' divided by zero");
                   return;
                }
-               G__letint(defined, 'h', udefined / uexpression);
+               G__letint(defined, resultTypeChar, udefined / uexpression);
                defined->ref = 0;
                break;
             case '%': /* modulus */
@@ -1433,52 +1439,52 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   else G__genericerror("Error: operator '%%' divided by zero");
                   return;
                }
-               G__letint(defined, 'h', udefined % uexpression);
+               G__letint(defined, resultTypeChar, udefined % uexpression);
                defined->ref = 0;
                break;
             case '&': /* binary and */
                if (defined->type == G__null.type) {
-                  G__letint(defined, 'h', uexpression);
+                  G__letint(defined, resultTypeChar, uexpression);
                }
                else {
-                  G__letint(defined, 'h', udefined&uexpression);
+                  G__letint(defined, resultTypeChar, udefined&uexpression);
                }
                defined->ref = 0;
                break;
             case '|': /* binary or */
-               G__letint(defined, 'h', udefined | uexpression);
+               G__letint(defined, resultTypeChar, udefined | uexpression);
                defined->ref = 0;
                break;
             case '^': /* binary exclusive or */
-               G__letint(defined, 'h', udefined ^ uexpression);
+               G__letint(defined, resultTypeChar, udefined ^ uexpression);
                defined->ref = 0;
                break;
             case '~': /* binary inverse */
-               G__letint(defined, 'h', ~uexpression);
+               G__letint(defined, resultTypeChar, ~uexpression);
                defined->ref = 0;
                break;
             case 'A': /* logical and */
-               G__letint(defined, 'h', udefined && uexpression);
+               G__letint(defined, resultTypeChar, udefined && uexpression);
                defined->ref = 0;
                break;
             case 'O': /* logical or */
-               G__letint(defined, 'h', udefined || uexpression);
+               G__letint(defined, resultTypeChar, udefined || uexpression);
                defined->ref = 0;
                break;
             case '>':
                if (defined->type == G__null.type) {
-                  G__letint(defined, 'h', 0);
+                  G__letint(defined, resultTypeChar, 0);
                }
                else
-                  G__letint(defined, 'h', udefined > uexpression);
+                  G__letint(defined, resultTypeChar, udefined > uexpression);
                defined->ref = 0;
                break;
             case '<':
                if (defined->type == G__null.type) {
-                  G__letint(defined, 'h', 0);
+                  G__letint(defined, resultTypeChar, 0);
                }
                else
-                  G__letint(defined, 'h', udefined < uexpression);
+                  G__letint(defined, resultTypeChar, udefined < uexpression);
                defined->ref = 0;
                break;
             case 'R': /* right shift */
@@ -1492,13 +1498,13 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   }
                   break;
                   default:
-                     G__letint(defined, 'h', udefined >> uexpression);
+                     G__letint(defined, resultTypeChar, udefined >> uexpression);
                      break;
                }
                defined->ref = 0;
                break;
             case 'L': /* left shift */
-               G__letint(defined, 'h', udefined << uexpression);
+               G__letint(defined, resultTypeChar, udefined << uexpression);
                defined->ref = 0;
                break;
             case '@': /* power */
@@ -1512,39 +1518,39 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   G__genericerror("Error: integer overflow. Use 'double' for power operator");
                }
                lresult = (long)fdefined;
-               G__letint(defined, 'h', lresult);
+               G__letint(defined, resultTypeChar, lresult);
                defined->ref = 0;
                break;
             case '!':
-               G__letint(defined, 'h', !uexpression);
+               G__letint(defined, resultTypeChar, !uexpression);
                defined->ref = 0;
                break;
             case 'E': /* == */
                if (defined->type == G__null.type)
-                  G__letint(defined, 'h', 0); /* Expression should be false wben the var is not defined */
+                  G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
-                  G__letint(defined, 'h', udefined == uexpression);
+                  G__letint(defined, resultTypeChar, udefined == uexpression);
                defined->ref = 0;
                break;
             case 'N': /* != */
                if (defined->type == G__null.type)
-                  G__letint(defined, 'h', 1); /* Expression should be true wben the var is not defined */
+                  G__letint(defined, resultTypeChar, 1); /* Expression should be true wben the var is not defined */
                else
-                  G__letint(defined, 'h', udefined != uexpression);
+                  G__letint(defined, resultTypeChar, udefined != uexpression);
                defined->ref = 0;
                break;
             case 'G': /* >= */
                if (defined->type == G__null.type)
-                  G__letint(defined, 'h', 0); /* Expression should be false wben the var is not defined */
+                  G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
-                  G__letint(defined, 'h', udefined >= uexpression);
+                  G__letint(defined, resultTypeChar, udefined >= uexpression);
                defined->ref = 0;
                break;
             case 'l': /* <= */
                if (defined->type == G__null.type)
-                  G__letint(defined, 'h', 0); /* Expression should be false wben the var is not defined */
+                  G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
-                  G__letint(defined, 'h', udefined <= uexpression);
+                  G__letint(defined, resultTypeChar, udefined <= uexpression);
                defined->ref = 0;
                break;
             case G__OPR_ADDASSIGN:
@@ -1633,94 +1639,94 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
          switch (operatortag) {
             case '\0':
                defined->ref = expressionin.ref;
-               G__letint(defined, 'i', ldefined + lexpression);
+               G__letint(defined, resultTypeChar, ldefined + lexpression);
                break;
             case '+': /* add */
-               G__letint(defined, 'i', ldefined + lexpression);
+               G__letint(defined, resultTypeChar, ldefined + lexpression);
                defined->ref = 0;
                break;
             case '-': /* subtract */
-               G__letint(defined, 'i', ldefined - lexpression);
+               G__letint(defined, resultTypeChar, ldefined - lexpression);
                defined->ref = 0;
                break;
             case '*': /* multiply */
                if (defined->type == G__null.type) ldefined = 1;
-               G__letint(defined, 'i', ldefined*lexpression);
+               G__letint(defined, resultTypeChar, ldefined*lexpression);
                defined->ref = 0;
                break;
             case '/': /* divide */
                if (defined->type == G__null.type) ldefined = 1;
                if (lexpression == 0) {
-                  if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
+                  if (G__no_exec_compile) G__letdouble(defined, resultTypeChar, 0);
                   else G__genericerror("Error: operator '/' divided by zero");
                   return;
                }
-               G__letint(defined, 'i', ldefined / lexpression);
+               G__letint(defined, resultTypeChar, ldefined / lexpression);
                defined->ref = 0;
                break;
             case '%': /* modulus */
                if (lexpression == 0) {
-                  if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
+                  if (G__no_exec_compile) G__letdouble(defined, resultTypeChar, 0);
                   else G__genericerror("Error: operator '%%' divided by zero");
                   return;
                }
-               G__letint(defined, 'i', ldefined % lexpression);
+               G__letint(defined, resultTypeChar, ldefined % lexpression);
                defined->ref = 0;
                break;
             case '&': /* binary and */
                if (defined->type == G__null.type) {
-                  G__letint(defined, 'i', lexpression);
+                  G__letint(defined, resultTypeChar, lexpression);
                }
                else {
-                  G__letint(defined, 'i', ldefined&lexpression);
+                  G__letint(defined, resultTypeChar, ldefined&lexpression);
                }
                defined->ref = 0;
                break;
             case '|': /* binary or */
-               G__letint(defined, 'i', ldefined | lexpression);
+               G__letint(defined, resultTypeChar, ldefined | lexpression);
                defined->ref = 0;
                break;
             case '^': /* binary exclusive or */
-               G__letint(defined, 'i', ldefined ^ lexpression);
+               G__letint(defined, resultTypeChar, ldefined ^ lexpression);
                defined->ref = 0;
                break;
             case '~': /* binary inverse */
-               G__letint(defined, 'i', ~lexpression);
+               G__letint(defined, resultTypeChar, ~lexpression);
                defined->ref = 0;
                break;
             case 'A': /* logical and */
-               G__letint(defined, 'i', ldefined && lexpression);
+               G__letint(defined, resultTypeChar, ldefined && lexpression);
                defined->ref = 0;
                break;
             case 'O': /* logical or */
-               G__letint(defined, 'i', ldefined || lexpression);
+               G__letint(defined, resultTypeChar, ldefined || lexpression);
                defined->ref = 0;
                break;
             case '>':
                if (defined->type == G__null.type) {
-                  G__letint(defined, 'i', 0);
+                  G__letint(defined, resultTypeChar, 0);
                }
                else
-                  G__letint(defined, 'i', ldefined > lexpression);
+                  G__letint(defined, resultTypeChar, ldefined > lexpression);
                defined->ref = 0;
                break;
             case '<':
                if (defined->type == G__null.type) {
-                  G__letint(defined, 'i', 0);
+                  G__letint(defined, resultTypeChar, 0);
                }
                else
-                  G__letint(defined, 'i', ldefined < lexpression);
+                  G__letint(defined, resultTypeChar, ldefined < lexpression);
                defined->ref = 0;
                break;
             case 'R': /* right shift */
                if (!G__prerun) {
                   unsigned long udefined = (unsigned long)G__uint(*defined);
                   unsigned long uexpression = (unsigned long)G__uint(expressionin);
-                  G__letint(defined, 'h', udefined >> uexpression);
+                  G__letint(defined, resultTypeChar, udefined >> uexpression);
                   defined->obj.ulo = udefined >> uexpression;
                }
                else {
-                  G__letint(defined, 'i', ldefined >> lexpression);
+                  G__letint(defined, resultTypeChar, ldefined >> lexpression);
                }
                defined->ref = 0;
                break;
@@ -1732,7 +1738,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   defined->obj.i = ldefined << uexpression;
                }
                else {
-                  G__letint(defined, 'i', ldefined << lexpression);
+                  G__letint(defined, resultTypeChar, ldefined << lexpression);
                }
                defined->ref = 0;
                break;
@@ -1747,39 +1753,39 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   G__genericerror("Error: integer overflow. Use 'double' for power operator");
                }
                lresult = (long)fdefined;
-               G__letint(defined, 'i', lresult);
+               G__letint(defined, resultTypeChar, lresult);
                defined->ref = 0;
                break;
             case '!':
-               G__letint(defined, 'i', !lexpression);
+               G__letint(defined, resultTypeChar, !lexpression);
                defined->ref = 0;
                break;
             case 'E': /* == */
                if (defined->type == G__null.type)
-                  G__letint(defined, 'i', 0); /* Expression should be false wben the var is not defined */
+                  G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
-                  G__letint(defined, 'i', ldefined == lexpression);
+                  G__letint(defined, resultTypeChar, ldefined == lexpression);
                defined->ref = 0;
                break;
             case 'N': /* != */
                if (defined->type == G__null.type)
-                  G__letint(defined, 'i', 1); /* Expression should be true wben the var is not defined */
+                  G__letint(defined, resultTypeChar, 1); /* Expression should be true wben the var is not defined */
                else
-                  G__letint(defined, 'i', ldefined != lexpression);
+                  G__letint(defined, resultTypeChar, ldefined != lexpression);
                defined->ref = 0;
                break;
             case 'G': /* >= */
                if (defined->type == G__null.type)
-                  G__letint(defined, 'i', 0); /* Expression should be false wben the var is not defined */
+                  G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
-                  G__letint(defined, 'i', ldefined >= lexpression);
+                  G__letint(defined, resultTypeChar, ldefined >= lexpression);
                defined->ref = 0;
                break;
             case 'l': /* <= */
                if (defined->type == G__null.type)
-                  G__letint(defined, 'i', 0); /* Expression should be false wben the var is not defined */
+                  G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
-                  G__letint(defined, 'i', ldefined <= lexpression);
+                  G__letint(defined, resultTypeChar, ldefined <= lexpression);
                defined->ref = 0;
                break;
             case G__OPR_ADDASSIGN:
