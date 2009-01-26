@@ -295,9 +295,13 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
    // If one of the parameter is struct(class) type, call user defined operator function.
    // Assignment operators (=,+=,-=) do not work in this way.
    //
+
+   char defined_type = G__get_type(G__value_typenum(*defined));
+   char expressionin_type = G__get_type(G__value_typenum(expressionin));
+   
    if (
-      (G__get_type(G__value_typenum(*defined)) == 'u') ||
-      (G__get_type(G__value_typenum(expressionin)) == 'u')
+      (defined_type == 'u') ||
+      (expressionin_type == 'u')
    ) {
       G__overloadopr(operatortag, expressionin, defined);
       return;
@@ -305,7 +309,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
 #ifdef G__ASM
    if (G__asm_noverflow) {
       // -- We are generating bytecode.
-      if (G__get_type(G__value_typenum(*defined)) == '\0') {
+      if (defined_type == '\0') {
          /****************************
           * OP1 instruction
           ****************************/
@@ -367,7 +371,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
          defined->obj.i = 0;
       }
    }
-   if ('q' == G__get_type(G__value_typenum(*defined)) || 'q' == G__get_type(G__value_typenum(expressionin))) {
+   if ('q' == defined_type || 'q' == expressionin_type) {
       /****************************************************************
        * long double operator long double
        ****************************************************************/
@@ -387,12 +391,12 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
             defined->ref = 0;
             break;
          case '*': /* multiply */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) lddefined = 1;
+            if (defined_type == G__get_type(G__value_typenum(G__null))) lddefined = 1;
             G__letLongdouble(defined, 'q', lddefined*ldexpression);
             defined->ref = 0;
             break;
          case '/': /* divide */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) lddefined = 1;
+            if (defined_type == G__get_type(G__value_typenum(G__null))) lddefined = 1;
             if (ldexpression == 0) {
                if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
                else G__genericerror("Error: operator '/' divided by zero");
@@ -402,7 +406,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
             defined->ref = 0;
             break;
          case '>':
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+            if (defined_type == G__get_type(G__value_typenum(G__null))) {
                G__letLongdouble(defined, 'i', 0 > ldexpression);
             }
             else
@@ -410,7 +414,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
             defined->ref = 0;
             break;
          case '<':
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+            if (defined_type == G__get_type(G__value_typenum(G__null))) {
                G__letdouble(defined, 'i', 0 < ldexpression);
             }
             else
@@ -423,28 +427,28 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
             defined->ref = 0;
             break;
          case 'E': /* == */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+            if (defined_type == G__get_type(G__value_typenum(G__null)))
                G__letLongdouble(defined, 'q', 0); /* Expression should be false wben the var is not defined */
             else
                G__letint(defined, 'i', lddefined == ldexpression);
             defined->ref = 0;
             break;
          case 'N': /* != */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+            if (defined_type == G__get_type(G__value_typenum(G__null)))
                G__letLongdouble(defined, 'q', 1); /* Expression should be true wben the var is not defined */
             else
                G__letint(defined, 'i', lddefined != ldexpression);
             defined->ref = 0;
             break;
          case 'G': /* >= */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+            if (defined_type == G__get_type(G__value_typenum(G__null)))
                G__letLongdouble(defined, 'q', 0); /* Expression should be false wben the var is not defined */
             else
                G__letint(defined, 'i', lddefined >= ldexpression);
             defined->ref = 0;
             break;
          case 'l': /* <= */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+            if (defined_type == G__get_type(G__value_typenum(G__null)))
                G__letLongdouble(defined, 'q', 0); /* Expression should be false wben the var is not defined */
             else
                G__letint(defined, 'i', lddefined <= ldexpression);
@@ -506,12 +510,12 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
             defined->ref = 0;
             break;
          case '*': /* multiply */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) fdefined = 1.0;
+            if (defined_type == G__get_type(G__value_typenum(G__null))) fdefined = 1.0;
             G__letdouble(defined, 'd', fdefined*fexpression);
             defined->ref = 0;
             break;
          case '/': /* divide */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) fdefined = 1.0;
+            if (defined_type == G__get_type(G__value_typenum(G__null))) fdefined = 1.0;
             if (fexpression == 0.0) {
                if (G__no_exec_compile) G__letdouble(defined, 'd', 0.0);
                else G__genericerror("Error: operator '/' divided by zero");
@@ -533,7 +537,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
 #endif /* G__NONANSIOPR */
          case '&': /* binary and */
             /* Don't know why but this one has a problem if deleted */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+            if (defined_type == G__get_type(G__value_typenum(G__null))) {
                G__letint(defined, 'i', (long)fexpression);
             }
             else {
@@ -565,7 +569,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
             defined->ref = 0;
             break;
          case '>':
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+            if (defined_type == G__get_type(G__value_typenum(G__null))) {
                G__letdouble(defined, 'i', 0 > fexpression);
             }
             else
@@ -573,7 +577,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
             defined->ref = 0;
             break;
          case '<':
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+            if (defined_type == G__get_type(G__value_typenum(G__null))) {
                G__letdouble(defined, 'i', 0 < fexpression);
             }
             else
@@ -622,28 +626,28 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
             defined->ref = 0;
             break;
          case 'E': /* == */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+            if (defined_type == G__get_type(G__value_typenum(G__null)))
                G__letdouble(defined, 'i', 0 == fexpression);
             else
                G__letint(defined, 'i', fdefined == fexpression);
             defined->ref = 0;
             break;
          case 'N': /* != */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+            if (defined_type == G__get_type(G__value_typenum(G__null)))
                G__letdouble(defined, 'i', 0 != fexpression);
             else
                G__letint(defined, 'i', fdefined != fexpression);
             defined->ref = 0;
             break;
          case 'G': /* >= */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+            if (defined_type == G__get_type(G__value_typenum(G__null)))
                G__letdouble(defined, 'i', 0 >= fexpression);
             else
                G__letint(defined, 'i', fdefined >= fexpression);
             defined->ref = 0;
             break;
          case 'l': /* <= */
-            if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+            if (defined_type == G__get_type(G__value_typenum(G__null)))
                G__letdouble(defined, 'i', 0 <= fexpression);
             else
                G__letint(defined, 'i', fdefined <= fexpression);
@@ -712,18 +716,18 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
             break;
       }
    }
-   else if (isupper(G__get_type(G__value_typenum(*defined))) || isupper(G__get_type(G__value_typenum(expressionin)))) {
+   else if (isupper(defined_type) || isupper(expressionin_type)) {
       /****************************************************************
       * pointer operator pointer
       * pointer operator int
       * int     operator pointer
       ****************************************************************/
       G__CHECK(G__SECURE_POINTER_CALC, '+' == operatortag || '-' == operatortag, return);
-      if (isupper(G__get_type(G__value_typenum(*defined)))) {
+      if (isupper(defined_type)) {
          /*
           *  pointer - pointer , integer [==] pointer
           */
-         if (isupper(G__get_type(G__value_typenum(expressionin)))) {
+         if (isupper(expressionin_type)) {
             switch (operatortag) {
                case '\0': /* add */
                   defined->ref = expressionin.ref;
@@ -737,13 +741,13 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                   defined->ref = 0;
                   break;
                case 'E': /* == */
-                  if ('U' == G__get_type(G__value_typenum(*defined)) && 'U' == G__get_type(G__value_typenum(expressionin)))
+                  if ('U' == defined_type && 'U' == expressionin_type)
                      G__publicinheritance(defined, &expressionin);
                   G__letint(defined, 'i', defined->obj.i == expressionin.obj.i);
                   defined->ref = 0;
                   break;
                case 'N': /* != */
-                  if ('U' == G__get_type(G__value_typenum(*defined)) && 'U' == G__get_type(G__value_typenum(expressionin)))
+                  if ('U' == defined_type && 'U' == expressionin_type)
                      G__publicinheritance(defined, &expressionin);
                   G__letint(defined, 'i', defined->obj.i != expressionin.obj.i);
                   defined->ref = 0;
@@ -943,18 +947,18 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
       }
    }
    else if (
-      'n' == G__get_type(G__value_typenum(*defined)) ||
-      'm' == G__get_type(G__value_typenum(*defined)) ||
-      'n' == G__get_type(G__value_typenum(expressionin)) ||
-      'm' == G__get_type(G__value_typenum(expressionin))
+      'n' == defined_type ||
+      'm' == defined_type ||
+      'n' == expressionin_type ||
+      'm' == expressionin_type
    ) {
       /****************************************************************
        * long long operator long long
        ****************************************************************/
       int unsignedresult = 0;
       if (
-         'm' == G__get_type(G__value_typenum(*defined)) ||
-         'm' == G__get_type(G__value_typenum(expressionin))
+         'm' == defined_type ||
+         'm' == expressionin_type
       ) {
          unsignedresult = -1;
       }
@@ -976,12 +980,12 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '*': /* multiply */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) ulldefined = 1;
+               if (defined_type == G__get_type(G__value_typenum(G__null))) ulldefined = 1;
                G__letULonglong(defined, 'm', ulldefined*ullexpression);
                defined->ref = 0;
                break;
             case '/': /* divide */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) ulldefined = 1;
+               if (defined_type == G__get_type(G__value_typenum(G__null))) ulldefined = 1;
                if (ullexpression == 0) {
                   if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
                   else G__genericerror("Error: operator '/' divided by zero");
@@ -1000,7 +1004,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '&': /* binary and */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letULonglong(defined, 'm', ullexpression);
                }
                else {
@@ -1029,7 +1033,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '>':
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letULonglong(defined, 'm', 0);
                }
                else
@@ -1037,7 +1041,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '<':
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letULonglong(defined, 'm', 0);
                }
                else
@@ -1045,7 +1049,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case 'R': /* right shift */
-               switch (G__get_type(G__value_typenum(*defined))) {
+               switch (defined_type) {
                   case 'b':
                   case 'r':
                   case 'h':
@@ -1068,28 +1072,28 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case 'E': /* == */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letULonglong(defined, 'm', 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, 'i', ulldefined == ullexpression);
                defined->ref = 0;
                break;
             case 'N': /* != */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letULonglong(defined, 'm', 1); /* Expression should be true wben the var is not defined */
                else
                   G__letint(defined, 'i', ulldefined != ullexpression);
                defined->ref = 0;
                break;
             case 'G': /* >= */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letULonglong(defined, 'm', 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, 'i', ulldefined >= ullexpression);
                defined->ref = 0;
                break;
             case 'l': /* <= */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letULonglong(defined, 'm', 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, 'i', ulldefined <= ullexpression);
@@ -1192,12 +1196,12 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '*': /* multiply */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) lldefined = 1;
+               if (defined_type == G__get_type(G__value_typenum(G__null))) lldefined = 1;
                G__letLonglong(defined, 'n', lldefined*llexpression);
                defined->ref = 0;
                break;
             case '/': /* divide */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) lldefined = 1;
+               if (defined_type == G__get_type(G__value_typenum(G__null))) lldefined = 1;
                if (llexpression == 0) {
                   if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
                   else G__genericerror("Error: operator '/' divided by zero");
@@ -1216,7 +1220,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '&': /* binary and */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letLonglong(defined, 'n', llexpression);
                }
                else {
@@ -1245,7 +1249,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '>':
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letLonglong(defined, 'n', 0);
                }
                else
@@ -1253,7 +1257,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '<':
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letLonglong(defined, 'n', 0);
                }
                else
@@ -1261,7 +1265,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case 'R': /* right shift */
-               switch (G__get_type(G__value_typenum(*defined))) {
+               switch (defined_type) {
                   case 'b':
                   case 'r':
                   case 'h':
@@ -1284,28 +1288,28 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case 'E': /* == */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letLonglong(defined, 'n', 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, 'i', lldefined == llexpression);
                defined->ref = 0;
                break;
             case 'N': /* != */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letLonglong(defined, 'n', 1); /* Expression should be true wben the var is not defined */
                else
                   G__letint(defined, 'i', lldefined != llexpression);
                defined->ref = 0;
                break;
             case 'G': /* >= */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letLonglong(defined, 'n', 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, 'i', lldefined >= llexpression);
                defined->ref = 0;
                break;
             case 'l': /* <= */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letLonglong(defined, 'n', 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, 'i', lldefined <= llexpression);
@@ -1397,21 +1401,21 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
        * int operator int
        ****************************************************************/
       int unsignedresult = 0;
-      switch (G__get_type(G__value_typenum(*defined))) {
+      switch (defined_type) {
          case 'h':
          case 'k':
             unsignedresult = -1;
             break;
       }
-      switch (G__get_type(G__value_typenum(expressionin))) {
+      switch (expressionin_type) {
          case 'h':
          case 'k':
             unsignedresult = -1;
             break;
       }
-      bool useLong = (defined->type + expressionin.type > 'i' + 'i');
-      if (!defined->type) {
-         useLong = expressionin.type > 'i';
+      bool useLong = (defined_type + expressionin_type > 'i' + 'i');
+      if (!defined_type) {
+         useLong = expressionin_type > 'i';
       }
       char resultTypeChar = useLong ? 'l' : 'i';
       if (unsignedresult) {
@@ -1435,12 +1439,12 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '*': /* multiply */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) udefined = 1;
+               if (defined_type == G__get_type(G__value_typenum(G__null))) udefined = 1;
                G__letint(defined, resultTypeChar, udefined*uexpression);
                defined->ref = 0;
                break;
             case '/': /* divide */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) udefined = 1;
+               if (defined_type == G__get_type(G__value_typenum(G__null))) udefined = 1;
                if (uexpression == 0) {
                   if (G__no_exec_compile) G__letdouble(defined, resultTypeChar, 0);
                   else G__genericerror("Error: operator '/' divided by zero");
@@ -1459,7 +1463,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '&': /* binary and */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letint(defined, resultTypeChar, uexpression);
                }
                else {
@@ -1488,7 +1492,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '>':
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letint(defined, resultTypeChar, 0);
                }
                else
@@ -1496,7 +1500,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '<':
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letint(defined, resultTypeChar, 0);
                }
                else
@@ -1504,7 +1508,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case 'R': /* right shift */
-               switch (G__get_type(G__value_typenum(*defined))) {
+               switch (defined_type) {
                   case 'b':
                   case 'r':
                   case 'h':
@@ -1542,28 +1546,28 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case 'E': /* == */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, resultTypeChar, udefined == uexpression);
                defined->ref = 0;
                break;
             case 'N': /* != */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letint(defined, resultTypeChar, 1); /* Expression should be true wben the var is not defined */
                else
                   G__letint(defined, resultTypeChar, udefined != uexpression);
                defined->ref = 0;
                break;
             case 'G': /* >= */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, resultTypeChar, udefined >= uexpression);
                defined->ref = 0;
                break;
             case 'l': /* <= */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, resultTypeChar, udefined <= uexpression);
@@ -1666,12 +1670,12 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '*': /* multiply */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) ldefined = 1;
+               if (defined_type == G__get_type(G__value_typenum(G__null))) ldefined = 1;
                G__letint(defined, resultTypeChar, ldefined*lexpression);
                defined->ref = 0;
                break;
             case '/': /* divide */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) ldefined = 1;
+               if (defined_type == G__get_type(G__value_typenum(G__null))) ldefined = 1;
                if (lexpression == 0) {
                   if (G__no_exec_compile) G__letdouble(defined, resultTypeChar, 0);
                   else G__genericerror("Error: operator '/' divided by zero");
@@ -1690,7 +1694,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '&': /* binary and */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letint(defined, resultTypeChar, lexpression);
                }
                else {
@@ -1719,7 +1723,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '>':
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letint(defined, resultTypeChar, 0);
                }
                else
@@ -1727,7 +1731,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case '<':
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null))) {
+               if (defined_type == G__get_type(G__value_typenum(G__null))) {
                   G__letint(defined, resultTypeChar, 0);
                }
                else
@@ -1750,7 +1754,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                if (!G__prerun) {
                   long ldefined = G__int(*defined);
                   unsigned long uexpression = (unsigned long) G__uint(expressionin);
-                  G__letint(defined, G__get_type(G__value_typenum(*defined)), ldefined << uexpression);
+                  G__letint(defined, defined_type, ldefined << uexpression);
                   defined->obj.i = ldefined << uexpression;
                }
                else {
@@ -1777,28 +1781,28 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                defined->ref = 0;
                break;
             case 'E': /* == */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, resultTypeChar, ldefined == lexpression);
                defined->ref = 0;
                break;
             case 'N': /* != */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letint(defined, resultTypeChar, 1); /* Expression should be true wben the var is not defined */
                else
                   G__letint(defined, resultTypeChar, ldefined != lexpression);
                defined->ref = 0;
                break;
             case 'G': /* >= */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, resultTypeChar, ldefined >= lexpression);
                defined->ref = 0;
                break;
             case 'l': /* <= */
-               if (G__get_type(G__value_typenum(*defined)) == G__get_type(G__value_typenum(G__null)))
+               if (defined_type == G__get_type(G__value_typenum(G__null)))
                   G__letint(defined, resultTypeChar, 0); /* Expression should be false wben the var is not defined */
                else
                   G__letint(defined, resultTypeChar, ldefined <= lexpression);
@@ -1885,7 +1889,7 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
          }
       }
    }
-   if (G__no_exec_compile && !G__get_type(G__value_typenum(*defined))) {
+   if (G__no_exec_compile && !defined_type) {
       *defined = expressionin;
    }
 }
