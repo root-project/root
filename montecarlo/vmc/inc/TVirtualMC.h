@@ -434,7 +434,7 @@ public:
    virtual const char* VolName(Int_t id) const = 0;
 
    // Return the unique numeric identifier for medium name mediumName
-   virtual Int_t MediumId(const char* mediumName) const;
+   virtual Int_t MediumId(const char* mediumName) const = 0;
 
    // Return total number of volumes in the geometry
    virtual Int_t NofVolumes() const = 0;
@@ -495,7 +495,7 @@ public:
    //   excitation    excitation energy [GeV]
    virtual Bool_t   DefineParticle(Int_t pdg, const char* name,
                         TMCParticleType mcType, 
-                        Double_t mass, Double_t charge, Double_t lifetime);
+                        Double_t mass, Double_t charge, Double_t lifetime) = 0;
                         
    // Set a user defined particle
    // Function is ignored if particle with specified pdg
@@ -532,7 +532,7 @@ public:
                         Bool_t stable, Bool_t shortlived = kFALSE,
                         const TString& subType = "",
                         Int_t antiEncoding = 0, Double_t magMoment = 0.0,
-                        Double_t excitation = 0.0);
+                        Double_t excitation = 0.0) = 0;
 
    // Set a user defined ion.
    //   name          ion name
@@ -550,7 +550,7 @@ public:
    //   bratios       the array with branching ratios (in %)
    //   mode[6][3]    the array with daughters particles PDG codes  for each 
    //                 decay channel
-   virtual Bool_t   SetDecayMode(Int_t pdg, Float_t bratio[6], Int_t mode[6][3]);
+   virtual Bool_t   SetDecayMode(Int_t pdg, Float_t bratio[6], Int_t mode[6][3]) = 0;
 
    // Calculate X-sections
    // (Geant3 only)
@@ -900,42 +900,6 @@ private:
 
    ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
-
-// new functions
-
-inline Int_t TVirtualMC::MediumId(const char* /*mediumName*/) const {
-   Warning("MediumId", "New function - not yet implemented.");
-   return 0;
-}
-
-inline Bool_t TVirtualMC::DefineParticle(Int_t /*pdg*/, const char* /*name*/,
-                            TMCParticleType /*mcType*/, 
-                            Double_t /*mass*/, Double_t /*charge*/, Double_t /*lifetime*/) {   
-   Warning("DefineParticle", 
-           "Deprecated function - a new function with more arguments should be used.");
-   return false;
-}
-
-inline Bool_t TVirtualMC::DefineParticle(Int_t /*pdg*/, const char* /*name*/,
-                            TMCParticleType /*mcType*/, 
-                            Double_t /*mass*/, Double_t /*charge*/, Double_t /*lifetime*/, 
-                            const TString& /*pType*/, Double_t /*width*/, 
-                            Int_t /*iSpin*/, Int_t /*iParity*/, Int_t /*iConjugation*/, 
-                            Int_t /*iIsospin*/, Int_t /*iIsospinZ*/, Int_t /*gParity*/,
-                            Int_t /*lepton*/, Int_t /*baryon*/,
-                            Bool_t /*stable*/, Bool_t /*shortlived*/,
-                            const TString& /*subType*/,
-                            Int_t /*antiEncoding*/, Double_t /*magMoment*/,
-                            Double_t /*excitation*/) {                            
-   Warning("DefineParticle", "New function - not yet implemented.");
-   return false;
-}
-                        
-inline Bool_t TVirtualMC::SetDecayMode(Int_t /*pdg*/, 
-                            Float_t /*bratio*/[6], Int_t /*mode*/[6][3]) {
-   Warning("SetDecayMode", "New function - not yet implemented.");
-   return false;
-}
 
 R__EXTERN TVirtualMC *gMC;
 
