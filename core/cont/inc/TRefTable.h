@@ -49,7 +49,7 @@ protected:
    TObjArray        *fParents;    //array of Parent objects  (eg TTree branch) holding the referenced objects
    TObject          *fOwner;      //Object owning this TRefTable
    std::vector<std::string> fProcessGUIDs; // UUIDs of TProcessIDs used in fParentIDs
-   std::vector<Int_t> fMapPIDtoInternal; //! cache of pid to index in fProcessGUIDs
+   std::vector<Int_t> fMapPIDtoInternal;   //! cache of pid to index in fProcessGUIDs
    static TRefTable *fgRefTable;  //Pointer to current TRefTable
 
    Int_t              AddInternalIdxForPID(TProcessID* procid);
