@@ -189,7 +189,7 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
    fNtrack++;
    fTracks->push_back(Track(random));
 
-   Track *track = &(*(fTracks->end()));
+   Track *track = &(*(fTracks->end()-1));
    //Save reference to last Track in the collection of Tracks
    //fLastTrack = track;
    //Save reference in fHighPt if track is a high Pt track
