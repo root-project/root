@@ -2933,7 +2933,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t needLoadMap = kFALSE;
    if (gInterpreter->GetSharedLibDeps(libname) !=0 ) {
        gInterpreter->UnloadLibraryMap(libname);
-       needLoadMap = kTRUE;
+      needLoadMap = kTRUE;
    }
 
    ofstream mapfileStream( mapfilein, ios::out );
