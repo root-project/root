@@ -1,5 +1,6 @@
 #include <vector>
 #include "TROOT.h"
+#include "TCanvas.h"
 
 typedef std::vector<unsigned int> subUCollection;
 typedef std::vector<subUCollection> Ucollection;
@@ -275,6 +276,8 @@ bool runvectorOfvector() {
 
    bool success = true;
 
+
+   TCanvas *c = new TCanvas("mycanvas");
    TTree *t;
    t = generateTree(10,1);
    success &= testing(t,"vec",10);
@@ -329,6 +332,8 @@ bool runvectorOfvector() {
    success &= testing(t,"vec.fVec1[1][]",6);
    success &= testing(t,"vec.fVecPtr[2][]",1);
 
+   fprintf(stderr,"The end\n");
+   ::fflush(stderr);
    // To be consistent with the makefile we need to return true for failure
    return !success;
 }

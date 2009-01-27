@@ -1,6 +1,5 @@
 
 Processing runvectorOfvector.C+...
-<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
 Total created 10
 Total created 165
 Error in <TTree::Branch>: The pointer specified for vec is not of a class known to ROOT
@@ -22,5 +21,6 @@ Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector
 Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
 Warning in <TTreeFormula::DefinedVariable>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fVec1.
 Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
-(bool)0
 Total created 165
+The end
+(bool)0
