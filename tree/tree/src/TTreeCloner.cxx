@@ -241,14 +241,14 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
       Int_t firstfi = fi;
       while (strcmp(fb->GetName(), tb->GetName())) {
          ++fi;
+         if (fi >= fnb) {
+            // continue at the beginning
+            fi = 0;
+         }
          if (fi==firstfi) {
             // We tried all the branches and there is not match.
             fb = 0;
             break;
-         }
-         if (fi >= fnb) {
-            // continue at the beginning
-            fi = 0;
          }
          fb = (TBranch*) from->UncheckedAt(fi);
       }
