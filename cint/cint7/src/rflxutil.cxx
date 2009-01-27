@@ -26,6 +26,9 @@
 
 using namespace std;
 
+#include "Reflex/internal/MemberBase.h"
+#include "Reflex/internal/TypeBase.h"
+
 //
 // Function Directory
 //
@@ -552,15 +555,16 @@ G__RflxProperties* Cint::Internal::G__get_properties(const ::Reflex::Type in)
       abort();
       //return 0;
    }
-   size_t pid = GetReflexPropertyID();
-   if (!in.Properties().HasProperty(pid)) {
-      G__set_properties(in, G__RflxProperties());
-   }
-   G__RflxProperties* p = ::Reflex::any_cast<G__RflxProperties>(&in.Properties().PropertyValue(pid));
+   static size_t pid = GetReflexPropertyID();
+   G__RflxProperties* p = (G__RflxVarProperties*)(in.ToTypeBase()->Properties().PropertyValue(pid).Address());
    if (!p) {
-      abort();
-   }
-   return p;
+      G__set_properties(in, G__RflxProperties());
+      p  = (G__RflxProperties*)(in.ToTypeBase()->Properties().PropertyValue(pid).Address());
+      if (!p) {
+         abort();
+      }
+    }
+    return p;
 }
 
 //______________________________________________________________________________
@@ -571,13 +575,14 @@ G__RflxProperties* Cint::Internal::G__get_properties(const ::Reflex::Scope in)
       abort();
       //return 0;
    }
-   size_t pid = GetReflexPropertyID();
-   if (!in.Properties().HasProperty(pid)) {
-      G__set_properties(in, G__RflxProperties());
-   }
-   G__RflxProperties* p = ::Reflex::any_cast<G__RflxProperties>(&in.Properties().PropertyValue(pid));
+   static size_t pid = GetReflexPropertyID();
+   G__RflxProperties* p = (G__RflxProperties*)(in.ToScopeBase()->Properties().PropertyValue(pid).Address());
    if (!p) {
-      abort();
+      G__set_properties(in, G__RflxProperties());
+      p  = (G__RflxProperties*)(in.ToScopeBase()->Properties().PropertyValue(pid).Address());
+      if (!p) {
+         abort();
+      }
    }
    return p;
 }
@@ -590,6 +595,7 @@ G__RflxVarProperties* Cint::Internal::G__get_properties(const ::Reflex::Member i
       abort();
       //return 0;
    }
+#if 0
    size_t pid = GetReflexPropertyID();
    if (!in.Properties().HasProperty(pid)) {
       G__set_properties(in, G__RflxVarProperties());
@@ -598,6 +604,17 @@ G__RflxVarProperties* Cint::Internal::G__get_properties(const ::Reflex::Member i
    if (!p) {
       abort();
    }
+#else
+   static size_t pid = GetReflexPropertyID();
+   G__RflxVarProperties* p = (G__RflxVarProperties*)(in.ToMemberBase()->Properties().PropertyValue(pid).Address());
+   if (!p) {
+      G__set_properties(in, G__RflxVarProperties());  
+      p  = (G__RflxVarProperties*)(in.ToMemberBase()->Properties().PropertyValue(pid).Address());
+      if (!p) {
+         abort();
+      }
+   }
+#endif
    return p;
 }
 
@@ -613,13 +630,14 @@ G__RflxFuncProperties* Cint::Internal::G__get_funcproperties(const ::Reflex::Mem
       abort();
       //return 0;
    }
-   size_t pid = GetReflexPropertyID();
-   if (!in.Properties().HasProperty(pid)) {
-      G__set_properties(in, G__RflxFuncProperties());
-   }
-   G__RflxFuncProperties* p = ::Reflex::any_cast<G__RflxFuncProperties>(&in.Properties().PropertyValue(pid));
+   static size_t pid = GetReflexPropertyID();
+   G__RflxFuncProperties* p = (G__RflxFuncProperties*)(in.ToMemberBase()->Properties().PropertyValue(pid).Address());
    if (!p) {
-      abort();
+      G__set_properties(in, G__RflxFuncProperties());
+      p  = (G__RflxFuncProperties*)(in.ToMemberBase()->Properties().PropertyValue(pid).Address());
+      if (!p) {
+        abort();
+      }
    }
    return p;
 }
