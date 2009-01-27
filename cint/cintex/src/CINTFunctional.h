@@ -64,7 +64,6 @@ namespace ROOT {
          int            fRet_plevel;       ///< Pointer/Reference level
          int            fClass_tag;        ///< Class TypeNth tag number
          size_t         fRet_Sizeof;       ///< Sizeof returned by value type
-         ROOT::Reflex::Member fMember;     ///< Reflex FunctionMember 
          ROOT::Reflex::Type   fClass;      ///< Declaring Reflex class
          ROOT::Reflex::Type   fFunction;   ///< Reflex Function TypeNth
          int    fNpar;                     ///< number of function parameters
