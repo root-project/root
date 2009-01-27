@@ -45,25 +45,35 @@ namespace stdext {     // Visual C++
 #endif
 
 namespace Reflex  {
-
 #ifndef __CINT__
-   template <typename T> struct Environ  {
-      typedef T           Iter_t;
-      char                buff[64];
-      size_t              idx;
-      size_t              size;
-      void*               object;
-      void*               start;
-      void*               temp;
-      bool                delete_temp;
-      int                 refSize;
-      size_t              space;
-      T& iter() { return *(T*)buff; }
+   struct EnvironBase {
+      EnvironBase() : fIdx(0), fSize(0), fObject(0), fStart(0), fTemp(0), fDeleteTemp(false), fRefSize(1), fSpace(0)
+      {
+         //   fprintf("Running default constructor on %p\n",this);
+      }
+      virtual ~EnvironBase() {}
+      size_t              fIdx;
+      size_t              fSize;
+      void*               fObject;
+      void*               fStart;
+      void*               fTemp;
+      bool                fDeleteTemp;
+      int                 fRefSize;
+      size_t              fSpace;      
    };
-#else 
+   template <typename T> struct Environ : public EnvironBase {
+      typedef T           Iter_t;
+      Iter_t              fIterator;
+      T& iter() { return fIterator; }
+      static void        *Create() {
+         return new Environ();
+      }
+   };
+#else
+   struct EnvironBase;
    template <typename T> struct Environ;
 #endif
-
+   
    template <typename T> struct Address {
       static void* address(T ref) {
          return (void*)&ref;
@@ -80,18 +90,18 @@ namespace Reflex  {
       typedef T                               Cont_t;
       typedef typename T::iterator            Iter_t;
       typedef typename T::value_type          Value_t;
-      typedef Reflex::Environ<Iter_t>   Env_t;
+      typedef Reflex::Environ<Iter_t>         Env_t;
       typedef Env_t                          *PEnv_t;
       typedef Cont_t                         *PCont_t;
       typedef Value_t                        *PValue_t;
 
       static inline PCont_t object(void* ptr)   {
-         return PCont_t(PEnv_t(ptr)->object);
+         return PCont_t(PEnv_t(ptr)->fObject);
       }
       static void* size(void* env)  {
          PEnv_t  e = PEnv_t(env);
-         e->size   = PCont_t(e->object)->size();
-         return &e->size;
+         e->fSize   = PCont_t(e->fObject)->size();
+         return &e->fSize;
       }
       static void* clear(void* env)  {
          object(env)->clear();
@@ -99,22 +109,22 @@ namespace Reflex  {
       }
       static void* first(void* env)  {
          PEnv_t  e = PEnv_t(env);
-         PCont_t c = PCont_t(e->object);
+         PCont_t c = PCont_t(e->fObject);
          // Assume iterators do not need destruction
          ::new(e->buff) Iter_t(c->begin()); 
-         e->size  = c->size();
-         if ( 0 == e->size ) return e->start = 0;
+         e->fSize  = c->size();
+         if ( 0 == e->size ) return e->fStart = 0;
 #ifdef _KCC  // KAI compiler
          typename T::value_type& ref = *(e->iter());
 #else
          typename T::const_reference ref = *(e->iter());
 #endif
-         return e->start = address(ref);
+         return e->fStart = address(ref);
       }
       static void* next(void* env)  {
          PEnv_t  e = PEnv_t(env);
-         PCont_t c = PCont_t(e->object);
-         for ( ; e->idx > 0 && e->iter() != c->end(); ++(e->iter()), --e->idx ) {}
+         PCont_t c = PCont_t(e->fObject);
+         for ( ; e->fIdx > 0 && e->iter() != c->end(); ++(e->iter()), --e->fIdx ) {}
          // TODO: Need to find something for going backwards....
          if ( e->iter() == c->end() ) return 0;
 #ifdef _KCC  // KAI compiler
@@ -126,23 +136,23 @@ namespace Reflex  {
       }
       static void* construct(void* env)  {
          PEnv_t  e = PEnv_t(env);
-         PValue_t m = PValue_t(e->start);
-         for (size_t i=0; i<e->size; ++i, ++m)  
+         PValue_t m = PValue_t(e->fStart);
+         for (size_t i=0; i<e->fSize; ++i, ++m)  
             ::new(m) Value_t();
          return 0;
       }
       static void* collect(void* env)  {
          PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->object);
-         PValue_t m = PValue_t(e->start);
+         PCont_t  c = PCont_t(e->fObject);
+         PValue_t m = PValue_t(e->fStart);
          for (Iter_t i=c->begin(); i != c->end(); ++i, ++m )
             ::new(m) Value_t(*i);
          return 0;
       }
       static void* destruct(void* env)  {
          PEnv_t   e = PEnv_t(env);
-         PValue_t m = PValue_t(e->start);
-         for (size_t i=0; i < e->size; ++i, ++m )
+         PValue_t m = PValue_t(e->fStart);
+         for (size_t i=0; i < e->fSize; ++i, ++m )
             m->~Value_t();
          return 0;
       }
@@ -167,16 +177,16 @@ namespace Reflex  {
       typedef Value_t               *PValue_t;
       static void* resize(void* env)  {
          PEnv_t  e = PEnv_t(env);
-         PCont_t c = PCont_t(e->object);
-         c->resize(e->size);
-         e->idx = 0;
-         return e->start = address(*c->begin());
+         PCont_t c = PCont_t(e->fObject);
+         c->resize(e->fSize);
+         e->fIdx = 0;
+         return e->fStart = address(*c->begin());
       }
       static void* feed(void* env)  {
          PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->object);
-         PValue_t m = PValue_t(e->start);
-         for (size_t i=0; i<e->size; ++i, ++m)
+         PCont_t  c = PCont_t(e->fObject);
+         PValue_t m = PValue_t(e->fStart);
+         for (size_t i=0; i<e->fSize; ++i, ++m)
             c->push_back(*m);
          return 0;
       }
@@ -204,9 +214,9 @@ namespace Reflex  {
       typedef Value_t               *PValue_t;
       static void* feed(void* env)  {
          PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->object);
-         PValue_t m = PValue_t(e->start);
-         for (size_t i=0; i<e->size; ++i, ++m)
+         PCont_t  c = PCont_t(e->fObject);
+         PValue_t m = PValue_t(e->fStart);
+         for (size_t i=0; i<e->fSize; ++i, ++m)
             c->insert(*m);
          return 0;
       }
@@ -237,9 +247,9 @@ namespace Reflex  {
       typedef Value_t               *PValue_t;
       static void* feed(void* env)  {
          PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->object);
-         PValue_t m = PValue_t(e->start);
-         for (size_t i=0; i<e->size; ++i, ++m)
+         PCont_t  c = PCont_t(e->fObject);
+         PValue_t m = PValue_t(e->fStart);
+         for (size_t i=0; i<e->fSize; ++i, ++m)
             c->insert(*m);
          return 0;
       }
@@ -282,6 +292,7 @@ namespace Reflex  {
       void*  (*destruct_func)(void*);
       void*  (*feed_func)(void*);
       void*  (*collect_func)(void*);
+      void*  (*create_env)();
    };
 
    template <typename T> struct CFTGenerator {
@@ -302,6 +313,7 @@ namespace Reflex  {
          p->construct_func  = T::construct;
          p->destruct_func   = T::destruct;
          p->feed_func       = T::feed;
+         p->create_env      = T::Env_t::Create;
          return p;
       }
    };
@@ -309,6 +321,7 @@ namespace Reflex  {
       static void* Void_func(void*) {
          return 0;
       }
+      static void* Void_func0() { return 0; }
       static  CollFuncTable* Generate()  {
          CollFuncTable*  p  = new CollFuncTable();
          p->iter_size       = 4;
@@ -323,6 +336,7 @@ namespace Reflex  {
          p->construct_func  = Void_func;
          p->destruct_func   = Void_func;
          p->feed_func       = Void_func;
+         p->create_env      = Void_func0;
          return p;
       }
    };

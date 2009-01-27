@@ -202,9 +202,28 @@ public:
       void* invoke(void* obj) const { return (*call)(obj); }
    };
 
+   /** @class TGenCollectionProxy::Method TGenCollectionProxy.h TGenCollectionProxy.h
+    *
+    * Small helper to execute (compiler) generated function for the
+    * access to STL or other containers.
+    *
+    * @author  M.Frank
+    * @version 1.0
+    * @date    10/10/2004
+    */
+   struct Method0  {
+      typedef void* (*Call_t)();
+      Call_t call;
+      Method0() : call(0)                       {      }
+      Method0(Call_t c) : call(c)               {      }
+      Method0(const Method0& m) : call(m.call)   {      }
+      void* invoke() const { return (*call)(); }
+   };
+   
 protected:
    typedef ROOT::TCollectionProxyInfo::Environ<char[64]> Env_t;
-   typedef std::vector<Env_t*>     Proxies_t;
+   typedef ROOT::TCollectionProxyInfo::EnvironBase EnvironBase_t;
+   typedef std::vector<EnvironBase_t*>     Proxies_t;
 
    std::string   fName;      // Name of the class being proxied.
    Bool_t        fPointers;  // Flag to indicate if containee has pointers (key or value)
@@ -217,10 +236,11 @@ protected:
    Method        fDestruct;  // Container accessors: block destruct
    Method        fFeed;      // Container accessors: block feed
    Method        fCollect;   // Method to collect objects from container
+   Method0       fCreateEnv; // Method to allocate an Environment holder.
    Value*        fValue;     // Descriptor of the container value type
    Value*        fVal;       // Descriptor of the Value_type
    Value*        fKey;       // Descriptor of the key_type
-   Env_t*        fEnv;       // Address of the currently proxied object
+   EnvironBase_t*fEnv;       // Address of the currently proxied object
    int           fValOffset; // Offset from key to value (in maps)
    int           fValDiff;   // Offset between two consecutive value_types (memory layout).
    Proxies_t     fProxyList; // Stack of recursive proxies
