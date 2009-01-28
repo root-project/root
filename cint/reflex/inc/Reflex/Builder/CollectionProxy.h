@@ -111,9 +111,9 @@ namespace Reflex  {
          PEnv_t  e = PEnv_t(env);
          PCont_t c = PCont_t(e->fObject);
          // Assume iterators do not need destruction
-         ::new(e->buff) Iter_t(c->begin()); 
+         e->fIterator = c->begin();
          e->fSize  = c->size();
-         if ( 0 == e->size ) return e->fStart = 0;
+         if ( 0 == e->fSize ) return e->fStart = 0;
 #ifdef _KCC  // KAI compiler
          typename T::value_type& ref = *(e->iter());
 #else
