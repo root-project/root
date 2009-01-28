@@ -782,13 +782,6 @@ int XrdProofdProtocol::SendMsg()
                " cid: %d)", len, psid, xps, xps->Status(), fCID);
       TRACEP(this, REQ, msg.c_str());
 
-      if (opt & kXPD_process) {
-         TRACEP(this, DBG, "EXT: setting proofserv in 'running' state");
-         xps->SetStatus(kXPD_running);
-         PostSession(1, fPClient->UI().fUser.c_str(),
-                        fPClient->UI().fGroup.c_str(), xps);
-      }
-
       // Send to proofsrv our client ID
       if (fCID == -1) {
          TRACEP(this, REQ, "EXT: error getting clientSID");
@@ -826,6 +819,8 @@ int XrdProofdProtocol::SendMsg()
       } else if (opt & kXPD_startprocess) {
          TRACEP(this, DBG, "INT: setting proofserv in 'running' state");
          xps->SetStatus(kXPD_running);
+         PostSession(1, fPClient->UI().fUser.c_str(),
+                        fPClient->UI().fGroup.c_str(), xps);
          // Save start processing message for later clients
          xps->DeleteStartMsg();
          saveStartMsg = 1;
