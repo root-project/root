@@ -208,13 +208,11 @@ private:
 //_______________________________________________________________________________
 /** 
    Interface (abstract class) for parametric gradient multi-dimensional functions providing 
-   in addition to function evaluation and gradient with respect the coordinates 
+   in addition to function evaluation with respect to the coordinates 
    also the gradient with respect to the parameters, via the method ParameterGradient. 
 
-   It is a derived class from ROOT::Math::IParametricFunctionMultiDim and 
-   ROOT::Math::IGradientFunctionMultiDim. 
-   Virtual inheritance is used since IBaseFunctionMultiDim is the common base of both 
-   ROOT::Math::IParametricFunctionMultiDim and ROOT::Math::IGradientFunctionMultiDim. 
+   It is a derived class from ROOT::Math::IParametricFunctionMultiDim.
+
    The pure private virtual method DoParameterGradient must be implemented by the derived classes 
    in addition to those inherited by the base abstract classes. 
 
@@ -287,13 +285,11 @@ private:
 //_______________________________________________________________________________
 /** 
    Interface (abstract class) for parametric one-dimensional gradient functions providing 
-   in addition to function evaluation and derivative with respect the coordinates 
+   in addition to function evaluation with respect the coordinates 
    also the gradient with respect to the parameters, via the method ParameterGradient. 
 
-   It is a derived class from ROOT::Math::IParametricFunctionOneDim and 
-   ROOT::Math::IGradientFunctionOneDim. 
-   Virtual inheritance is used since IBaseFunctionOneDim is the common base of both 
-   ROOT::Math::IParametricFunctionOneDim and ROOT::Math::IGradientFunctionOneDim. 
+   It is a derived class from ROOT::Math::IParametricFunctionOneDim.
+   
    The pure private virtual method DoParameterGradient must be implemented by the derived classes 
    in addition to those inherited by the base abstract classes. 
 
