@@ -469,7 +469,7 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
       }
    }
 
-   int proto = (xps->Protocol()) ? xps->Protocol()->ProofProtocol() : -1;
+   int proto = (xps->ROOT()) ? xps->ROOT()->SrvProtVers() : -1;
    if (rc != 2 || (proto < 21 && rc == 0)) {
       // Get the list in exported format
       xps->ExportWorkers(lw);
