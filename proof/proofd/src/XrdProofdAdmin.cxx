@@ -266,8 +266,11 @@ int XrdProofdAdmin::GetWorkers(XrdProofdProtocol *p)
    // We should query the chosen resource provider
    XrdOucString wrks("");
 
-   // Read the maessage associated with the request
-   XrdOucString msg((const char *) p->Argp()->buff, p->Request()->header.dlen);
+   // Read the message associated with the request; needs to do like this because
+   // of a bug in the XrdOucString constructor when length is 0
+   XrdOucString msg;
+   if (p->Request()->header.dlen > 0)
+      msg.assign((const char *) p->Argp()->buff, 0, p->Request()->header.dlen);
    if (fMgr->GetWorkers(wrks, xps, msg.c_str()) < 0 ) {
       // Something wrong
       response->Send(kXR_InvalidRequest, "GetWorkers failed");
