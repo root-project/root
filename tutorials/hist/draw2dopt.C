@@ -78,7 +78,7 @@
    surf.Divide(2,2);
    surf.SetFillColor(cancolor);
    surf.cd(1);
-   h2.Draw("surf1");   pl.DrawPaveLabel(x1,y1,x2,y2,"SURF1","brNDC");
+   h2.Draw("surf1");   pl.DrawPaveLabel(x1,y1,x2,y2,"SURF1","brNDC");
    surf.cd(2);
    h2.Draw("surf2z");  pl.DrawPaveLabel(x1,y1,x2,y2,"SURF2Z","brNDC");
    surf.cd(3);
