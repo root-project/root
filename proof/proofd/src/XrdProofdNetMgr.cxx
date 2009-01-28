@@ -262,17 +262,29 @@ int XrdProofdNetMgr::DoDirectiveWorker(char *val, XrdOucStream *cfg, bool)
          }
          SafeDelete(pw);
       } else {
-         // Build the worker object
-         XrdProofdMultiStr mline(line.c_str());
-         if (mline.IsValid()) {
-            TRACE(DBG, "found multi-line with: "<<mline.N()<<" tokens");
-            for (int i = 0; i < mline.N(); i++) {
-               TRACE(HDBG, "found token: "<<mline.Get(i));
-               fWorkers.push_back(new XrdProofWorker(mline.Get(i).c_str()));
+         // How many lines like this?
+         int nr = 1;
+         int ir = line.find("repeat=");
+         if (ir != STR_NPOS) {
+            XrdOucString r(line, ir + strlen("repeat="));
+            r.erase(r.find(' '));
+            nr = r.atoi();
+            if (nr < 0 || !XPD_LONGOK(nr)) nr = 1;
+            TRACE(DBG, "found repeat = "<<nr);
+         }
+         while (nr--) {
+            // Build the worker object
+            XrdProofdMultiStr mline(line.c_str());
+            if (mline.IsValid()) {
+               TRACE(DBG, "found multi-line with: "<<mline.N()<<" tokens");
+               for (int i = 0; i < mline.N(); i++) {
+                  TRACE(HDBG, "found token: "<<mline.Get(i));
+                  fWorkers.push_back(new XrdProofWorker(mline.Get(i).c_str()));
+               }
+            } else {
+               TRACE(DBG, "found line: "<<line);
+               fWorkers.push_back(new XrdProofWorker(line.c_str()));
             }
-         } else {
-            TRACE(DBG, "Found line: "<<line);
-            fWorkers.push_back(new XrdProofWorker(line.c_str()));
          }
       }
    }

@@ -131,7 +131,7 @@ void XrdProofWorker::Reset(const char *str)
          // Performance index
          tok.replace("perf=","");
          fPerfIdx = strtol(tok.c_str(), (char **)0, 10);
-      } else {
+      } else if (!tok.beginswith("repeat=")){
          // Unknown
          TRACE(XERR, "ignoring unknown option '"<<tok<<"'");
       }
