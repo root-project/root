@@ -101,14 +101,15 @@ public:
    virtual int ProcessDirective(XrdProofdDirective *d,
                                 char *val, XrdOucStream *cfg, bool rcf);
    virtual int Enqueue(XrdProofdProofServ *xps, XrdProofQuery *query);
+   virtual void DumpQueues(const char *prefix = 0);
 
    virtual XrdProofdProofServ *FirstSession();
 
    int         CheckFrequency() const { return fCheckFrequency; }
    inline XrdProofdPipe *Pipe() { return &fPipe; }
 
-   virtual int       Config(bool rcf = 0);
-   virtual int       DoDirective(XrdProofdDirective *d,
+   virtual int Config(bool rcf = 0);
+   virtual int DoDirective(XrdProofdDirective *d,
                                  char *val, XrdOucStream *cfg, bool rcf);
 
    enum SchedProtocol { kReschedule = 0 };

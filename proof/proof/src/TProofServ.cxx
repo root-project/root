@@ -1659,17 +1659,20 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                break;
             }
 
-            // similar to handle process
+            // Similar to handle process
             // get the list of workers and start them
-            TList* workerList = new TList();
+            TList *workerList = (fProof->UseDynamicStartup()) ? new TList : (TList *)0;
             Int_t pc = 0;
             EQueryAction retVal = GetWorkers(workerList, pc, kTRUE);
 
             if (retVal == TProofServ::kQueryOK) {
-               if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
+               Int_t ret = 0;
+               if (workerList && (ret = fProof->AddWorkers(workerList)) < 0) {
                   Error("HandleSocketInput", "adding a list of worker nodes returned: %d", ret);
                } else {
                   ProcessNext();
+                  // Set idle
+                  fIdle = kTRUE;
                   // Signal the client that we are idle
                   TMessage m(kPROOF_SETIDLE);
                   Bool_t waiting = (fWaitingQueries->GetSize() > 0) ? kTRUE : kFALSE;
@@ -3030,11 +3033,11 @@ void TProofServ::HandleProcess(TMessage *mess)
       // send a resume message later.
 
       Bool_t enqueued = kFALSE;
+      Int_t pc = 0;
       // if the session does not have workers and is in the dynamic mode
       if (fProof->UseDynamicStartup()) {
          // get the a list of workers and start them
          TList* workerList = new TList();
-         Int_t pc = 0;
          EQueryAction retVal = GetWorkers(workerList, pc);
          if (retVal == TProofServ::kQueryStop) {
             Error("HandleProcess", "error getting list of worker nodes");
@@ -3048,7 +3051,19 @@ void TProofServ::HandleProcess(TMessage *mess)
                   ret);
             return;
          }
-
+      } else {
+         EQueryAction retVal = GetWorkers(0, pc);
+         if (retVal == TProofServ::kQueryStop) {
+            Error("HandleProcess", "error getting list of worker nodes");
+            return;
+         } else if (retVal == TProofServ::kQueryEnqueued) {
+            // change to an asynchronous query
+            enqueued = kTRUE;
+            Info("HandleProcess", "query %d enqueued", pq->GetSeqNum());
+         } else if (retVal != TProofServ::kQueryOK) {
+            Error("HandleProcess", "unknown return value: %d", retVal);
+            return;
+         }
       }
 
       // If the client submission was asynchronous, signal the submission of
@@ -3082,6 +3097,9 @@ void TProofServ::HandleProcess(TMessage *mess)
             enqueued = kTRUE;
 
       } // Loop on submitted queries
+
+      // Set idle
+      fIdle = kTRUE;
 
       // Signal the client that we are idle
       if (doprocess) {
@@ -4484,12 +4502,6 @@ TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
    // Get list of workers to be used from now on.
    // The list must be provided by the caller.
 
-   // Needs a list where to store the info
-   if (!workers) {
-      Error("GetWorkers", "output list undefined");
-      return kQueryStop;
-   }
-
    // Parse the config file
    TProofResourcesStatic *resources =
       new TProofResourcesStatic(fConfDir, fConfFile);
@@ -4511,20 +4523,22 @@ TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
    }
 
    // Fill submaster or worker list
-   if (resources->GetSubmasters() && resources->GetSubmasters()->GetSize() > 0) {
-      PDB(kAll,1)
-         resources->GetSubmasters()->Print();
-      TProofNodeInfo *ni = 0;
-      TIter nw(resources->GetSubmasters());
-      while ((ni = (TProofNodeInfo *) nw()))
-         workers->Add(new TProofNodeInfo(*ni));
-   } else if (resources->GetWorkers() && resources->GetWorkers()->GetSize() > 0) {
-      PDB(kAll,1)
-         resources->GetWorkers()->Print();
-      TProofNodeInfo *ni = 0;
-      TIter nw(resources->GetWorkers());
-      while ((ni = (TProofNodeInfo *) nw()))
-         workers->Add(new TProofNodeInfo(*ni));
+   if (workers) {
+      if (resources->GetSubmasters() && resources->GetSubmasters()->GetSize() > 0) {
+         PDB(kAll,1)
+            resources->GetSubmasters()->Print();
+         TProofNodeInfo *ni = 0;
+         TIter nw(resources->GetSubmasters());
+         while ((ni = (TProofNodeInfo *) nw()))
+            workers->Add(new TProofNodeInfo(*ni));
+      } else if (resources->GetWorkers() && resources->GetWorkers()->GetSize() > 0) {
+         PDB(kAll,1)
+            resources->GetWorkers()->Print();
+         TProofNodeInfo *ni = 0;
+         TIter nw(resources->GetWorkers());
+         while ((ni = (TProofNodeInfo *) nw()))
+            workers->Add(new TProofNodeInfo(*ni));
+      }
    }
 
    // We are done

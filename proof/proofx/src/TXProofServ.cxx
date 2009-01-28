@@ -701,12 +701,6 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
    // Get list of workers to be used from now on.
    // The list must be provided by the caller.
 
-   // Needs a list where to store the info
-   if (!workers) {
-      Error("GetWorkers", "output list undefined");
-      return kQueryStop;
-   }
-
    TProofServ::EQueryAction rc = kQueryStop;
 
    // If user config files are enabled, check them first
@@ -717,7 +711,8 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
    }
 
    // seqnum of the query for which we call getworkers
-   TString seqnum;
+   Bool_t dynamicStartup = gEnv->GetValue("Proof.DynamicStartup", kFALSE);
+   TString seqnum = (dynamicStartup) ? "" : XPD_GW_Static;
    if (!fWaitingQueries->IsEmpty()) {
       if (resume) {
          seqnum += ((TProofQueryResult *)(fWaitingQueries->First()))->GetSeqNum();
@@ -756,7 +751,8 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
             // Now the workers
             while (fl.Tokenize(tok, from, "&")) {
                if (!tok.IsNull()) {
-                  workers->Add(new TProofNodeInfo(tok));
+                  if (workers)
+                     workers->Add(new TProofNodeInfo(tok));
                   // We have the minimal set of information to start
                   rc = kQueryOK;
                }

@@ -149,10 +149,14 @@ public:
    inline XrdClientID *Parent() const { XrdSysMutexHelper mhp(fMutex); return fParent; }
    inline void         PingSem() const { XrdSysMutexHelper mhp(fMutex); if (fPingSem) fPingSem->Post(); }
    inline XrdProofdProtocol *Protocol() const { XrdSysMutexHelper mhp(fMutex); return fProtocol; }
+   inline std::list<XrdProofQuery *> *Queries() const
+                       { return (std::list<XrdProofQuery *> *)&fQueries; }
    inline XrdSrvBuffer *QueryNum() const { XrdSysMutexHelper mhp(fMutex); return fQueryNum; }
+   void                RemoveQuery(const char *tag);
    void                RemoveWorker(const char *o);
    void                Reset();
    int                 Reset(const char *msg, int type);
+   int                 Resume();
 
    inline XrdROOT     *ROOT() const { XrdSysMutexHelper mhp(fMutex); return fROOT; }
    inline XrdProofdResponse *Response() const { XrdSysMutexHelper mhp(fMutex); return fResponse; }
@@ -195,14 +199,11 @@ public:
    inline XrdOucHash<XrdProofWorker> *Workers() const
                       { XrdSysMutexHelper mhp(fMutex); return (XrdOucHash<XrdProofWorker> *)&fWorkers; }
 
-   int                 Resume();
-
+   // UNIX socket related methods
    int                 CreateUNIXSock(XrdSysError *edest);
    void                DeleteUNIXSock();
    XrdNet             *UNIXSock() const { return fUNIXSock; }
    const char         *UNIXSockPath() const { return fUNIXSockPath.c_str(); }
-   inline std::list<XrdProofQuery *> *GetQueries() const
-                       { return (std::list<XrdProofQuery *> *)&fQueries; }
 
  private:
 

@@ -132,7 +132,7 @@ void *XrdProofSchedCron(void *p)
          // Notify
          TRACE(ALL, "running regular checks");
          // Run regular rescheduling checks
-//         sched->Reschedule();
+         sched->Reschedule();
          // Remember when ...
          lastcheck = time(0);
       }
@@ -277,6 +277,7 @@ int XrdProofSched::Enqueue(XrdProofdProofServ *xps, XrdProofQuery *query)
 {
    // Queue a query in the session; if this is the first querym enqueue also
    // the session
+   XPDLOC(SCHED, "Enqueue")
 
    if (xps->Enqueue(query) == 1) {
       std::list<XrdProofdProofServ *>::iterator ii;
@@ -289,8 +290,29 @@ int XrdProofSched::Enqueue(XrdProofdProofServ *xps, XrdProofQuery *query)
          fQueue.push_back(xps);
       }
    }
+   if (TRACING(DBG)) DumpQueues("Enqueue");
 
    return 0;
+}
+
+//______________________________________________________________________________
+void XrdProofSched::DumpQueues(const char *prefix)
+{
+   // Dump the content of the waiting sessions queue
+
+   XPDLOC(SCHED, "DumpQueues")
+
+   TRACE(ALL," ++++++++++++++++++++ DumpQueues ++++++++++++++++++++++++++++++++ ");
+   if (prefix) TRACE(ALL, " +++ Called from: "<<prefix);
+   TRACE(ALL," +++ # of waiting sessions: "<<fQueue.size()); 
+   std::list<XrdProofdProofServ *>::iterator ii;
+   int i = 0;
+   for (ii = fQueue.begin(); ii != fQueue.end(); ii++) {
+      TRACE(ALL," +++ #"<<++i<<" client:"<< (*ii)->Client()<<" # of queries: "<< (*ii)->Queries()->size());
+   }
+   TRACE(ALL," ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ");
+
+   return;
 }
 
 //______________________________________________________________________________
@@ -298,14 +320,16 @@ XrdProofdProofServ *XrdProofSched::FirstSession()
 {
    // Get first valid session.
    // The dataset information can be used to assign workers.
+   XPDDOM(SCHED)
 
    if (fQueue.empty())
       return 0;
    XrdProofdProofServ *xps = fQueue.front();
    while (xps && !(xps->IsValid())) {
-      fQueue.pop_front();
+      fQueue.remove(xps);
       xps = fQueue.front();
    }
+   if (TRACING(DBG)) DumpQueues("FirstSession");
    // The session will be removed after workers are assigned
    return xps;
 }
@@ -378,6 +402,12 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
 
    TRACE(REQ, "enter: query tag: "<< ((querytag) ? querytag : ""));
 
+   // Static or dynamic
+   bool isDynamic = 1;
+   if (querytag && !strncmp(querytag, XPD_GW_Static, strlen(XPD_GW_Static) - 1)) {
+      isDynamic = 0;
+   }
+
    // Check if the current assigned list of workers is valid
    if (querytag && xps && xps->Workers()->Num() > 0) {
       if (TRACING(REQ)) xps->DumpQueries();
@@ -385,15 +415,12 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
       TRACE(REQ, "current query tag: "<< cqtag );
       if (!strcmp(querytag, cqtag)) {
          // Remove the query to be processed from the queue
-         XrdProofQuery *query = xps->GetQueries()->front();
-         xps->GetQueries()->pop_front();
-         delete query;
+         xps->RemoveQuery(cqtag);
          TRACE(REQ, "current assignment for session "<< xps->SrvPID() << " is valid");
          // Current assignement is valid
          return 1;
       }
    }
-
 
    // The caller must provide a list where to store the result
    if (!wrks)
@@ -402,13 +429,15 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
    // If the session has already assigned workers or there are
    // other queries waiting - just enqueue
    // FIFO is enforced by dynamic mode so it is checked just in case
-   if(fUseFIFO && xps->Workers()->Num() > 0) {
-      if (!xps->GetQuery(querytag))
-         Enqueue(xps, new XrdProofQuery(querytag));
-      if (TRACING(DBG)) xps->DumpQueries();
-      // Signal enqueing
-      TRACE(REQ, "session has already assigned workers: enqueue");
-      return 2;
+   if (isDynamic) {
+      if (fUseFIFO && xps->Workers()->Num() > 0) {
+         if (!xps->GetQuery(querytag))
+            Enqueue(xps, new XrdProofQuery(querytag));
+         if (TRACING(DBG)) xps->DumpQueries();
+         // Signal enqueing
+         TRACE(REQ, "session has already assigned workers: enqueue");
+         return 2;
+      }
    }
 
    // The current, full list
@@ -416,7 +445,6 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
 
    if (!fMgr || !(acws = fMgr->NetMgr()->GetActiveWorkers()))
       return -1;
-
 
    // Point to the master element
    XrdProofWorker *mst = acws->front();
@@ -461,7 +489,6 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
             wrks->push_back(mst);
          }
       }
-
       // Done
       return 0;
    }
@@ -469,25 +496,42 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
    // Check if the check on the max number of sessions is enabled
    // We need at least 1 master and a worker
    std::list<XrdProofWorker *> *acwseff = 0;
-   if (fMaxRunning > 0) {
-      bool ok = 0;
-      acwseff = new std::list<XrdProofWorker *>;
-      std::list<XrdProofWorker *>::iterator xWrk = acws->begin();
-      if ((*xWrk)->Active() < fMaxRunning) {
-         acwseff->push_back(*xWrk);
-         xWrk++;
-         for (; xWrk != acws->end(); xWrk++) {
-            if ((*xWrk)->Active() < fMaxRunning) {
-               acwseff->push_back(*xWrk);
-               ok = 1;
+   int maxnum = (querytag && strcmp(querytag, XPD_GW_Static)) ? fMaxRunning : fMaxSessions;
+   bool ok = 0;
+   if (isDynamic) {
+      if (maxnum > 0) {
+         acwseff = new std::list<XrdProofWorker *>;
+         std::list<XrdProofWorker *>::iterator xWrk = acws->begin();
+         if ((*xWrk)->Active() < maxnum) {
+            acwseff->push_back(*xWrk);
+            xWrk++;
+            for (; xWrk != acws->end(); xWrk++) {
+               if ((*xWrk)->Active() < maxnum) {
+                  acwseff->push_back(*xWrk);
+                  ok = 1;
+               }
             }
+         } else if (!fUseFIFO) {
+            TRACE(REQ, "max number of sessions reached - ("<< maxnum <<")");
          }
-      } else if (!fUseFIFO) {
-         TRACE(REQ, "max number of sessions reached - ("<< fMaxRunning <<")");
+         // Check the result
+         if (!ok) { delete acwseff; acwseff = 0; }
+         acws = acwseff;
       }
-      // Check the result
-      if (!ok) { delete acwseff; acwseff = 0; }
-      acws = acwseff;
+   } else {
+      if (maxnum > 0) {
+         // This is over-conservative for sub-selectiob (random, or round-robin options)
+         // A better solution should be implemented for that.
+         int nactsess = mst->GetNActiveSessions();
+         TRACE(REQ, "act sess ... " << nactsess);
+         if (nactsess < maxnum) {
+            ok = 1;
+         } else if (!fUseFIFO) {
+            TRACE(REQ, "max number of sessions reached - ("<< maxnum <<")");
+         }
+         // Check the result
+         if (!ok) acws = acwseff;
+      }
    }
 
    // Make sure that something has been found
@@ -506,6 +550,12 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
          if (acwseff) { delete acwseff; acwseff = 0; }
          return -1;
       }
+   }
+
+   // If the session has already assigned workers just return
+   if (xps->Workers()->Num() > 0) {
+      // Current assignement is valid
+      return 1;
    }
 
    // The master first (stats are updated in XrdProofdProtocol::GetWorkers)
@@ -646,9 +696,9 @@ int XrdProofSched::Reschedule()
    // resume, assigning it workers and sending a resume message.
    // In this way there is not possibility of interference with other GetWorkers
    // return 0 in case of success and -1 in case of an error
-   XPDLOC(SCHED, "Sched::Reschedule")
+   XPDDOM(SCHED)
 
-   TRACE(REQ, "queue size: "<<fQueue.size());
+   if (fUseFIFO && TRACING(DBG)) DumpQueues("Reschedule");
 
    if (!fQueue.empty()) {
       // Any advanced scheduling algorithms can be done here
@@ -656,15 +706,21 @@ int XrdProofSched::Reschedule()
       XrdProofdProofServ *xps = FirstSession();
       XrdOucString wrks;
       // Call GetWorkers in the manager to mark the assignment.
-      const char *qtag = (xps && xps->CurrentQuery()) ?
-                         xps->CurrentQuery()->GetTag() : 0;
-      if (fMgr->GetWorkers(wrks, xps, qtag) < 0 ) {
+      XrdOucString qtag;
+      if (xps && xps->CurrentQuery()) {
+         qtag = xps->CurrentQuery()->GetTag();
+         if (qtag.beginswith(XPD_GW_Static)) {
+            qtag = XPD_GW_Static;
+            qtag.replace(":","");
+         }
+      }
+      if (fMgr->GetWorkers(wrks, xps, qtag.c_str()) < 0 ) {
          // Something wrong
          return -1;
       } else {
          // Send buffer
          // if workers were assigned remove the session from the queue
-         if (wrks.length() > 0) {
+         if (wrks.length() > 0 && wrks != XPD_GW_QueryEnqueued) {
             // Send the resume message: the workers will be send in response to a
             // GetWorkers message
             xps->Resume();
@@ -672,8 +728,9 @@ int XrdProofSched::Reschedule()
             fQueue.remove(xps);
             // Put the session at the end of the queue
             // > 1 because the query is kept in the queue until 2nd GetWorkers
-            if (xps->GetQueries()->size() > 1)
+            if (xps->Queries()->size() > 1)
                fQueue.push_back(xps);
+            if (TRACING(DBG)) DumpQueues("Reschedule 2");
          } // else add workers to the running sessions (once it's possible)
 
       }
@@ -739,6 +796,7 @@ int XrdProofSched::ProcessDirective(XrdProofdDirective *d,
 int XrdProofSched::DoDirectiveSchedParam(char *val, XrdOucStream *cfg, bool)
 {
    // Process 'schedparam' directive
+   XPDLOC(SCHED, "Sched::DoDirectiveSchedParam")
 
    if (!val || !cfg)
       // undefined inputs
@@ -791,6 +849,12 @@ int XrdProofSched::DoDirectiveSchedParam(char *val, XrdOucStream *cfg, bool)
       // And there is an upper limit on the number of running sessions
       if (fMaxRunning < 0 || fMaxRunning > fMaxSessions)
          fMaxRunning = fMaxSessions;
+   }
+
+   // The FIFO size make sense only in non-load based mode
+   if (fWorkerSel == kSSOLoadBased && fMaxRunning > 0) {
+      TRACE(ALL, "WARNING: in Load-Based mode the max number of sessions"
+                 " to be run is determined dynamically");
    }
 
    return 0;

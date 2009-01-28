@@ -837,7 +837,7 @@ void XrdProofdProofServ::DumpQueries()
 //__________________________________________________________________________
 XrdProofQuery *XrdProofdProofServ::GetQuery(const char *tag)
 {
-   // Gte query with tag form the list of queries
+   // Get query with tag form the list of queries
    XrdProofQuery *q = 0;
    if (!tag || strlen(tag) <= 0) return q;
 
@@ -853,4 +853,31 @@ XrdProofQuery *XrdProofdProofServ::GetQuery(const char *tag)
    }
    // Done
    return q;
+}
+
+//__________________________________________________________________________
+void XrdProofdProofServ::RemoveQuery(const char *tag)
+{
+   // remove query with tag form the list of queries
+   XrdProofQuery *q = 0;
+   if (!tag || strlen(tag) <= 0) return;
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   if (fQueries.size() <= 0) return;
+
+   std::list<XrdProofQuery *>::iterator ii;
+   for (ii = fQueries.begin(); ii != fQueries.end(); ii++) {
+      q = *ii;
+      if (!strcmp(tag, q->GetTag())) break;
+      q = 0;
+   }
+   // remove it
+   if (q) {
+      fQueries.remove(q);
+      delete q;
+   }
+
+   // Done
+   return;
 }

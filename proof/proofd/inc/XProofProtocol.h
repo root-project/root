@@ -130,6 +130,7 @@ enum XProofSessionStatus {
 // Special GetWorkers reply tags
 const char* const XPD_GW_Failed        = "|failed|";
 const char* const XPD_GW_QueryEnqueued = "|enqueued|";
+const char* const XPD_GW_Static        = "static:";
 
 //_______________________________________________
 // PROTOCOL DEFINITION: SERVER'S RESPONSES TYPES
