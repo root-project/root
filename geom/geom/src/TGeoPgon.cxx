@@ -123,14 +123,19 @@ Double_t TGeoPgon::Capacity() const
 void TGeoPgon::ComputeBBox()
 {
 // compute bounding box for a polygone
+   // Check if the sections are in increasing Z order
+   for (Int_t isec=0; isec<fNz-1; isec++) {
+      if (fZ[isec]>fZ[isec+1]) {
+         InspectShape();
+         Fatal("ComputeBBox", "Wrong section order");
+      }   
+   }
    // Check if the last sections are valid
    if (TMath::Abs(fZ[1]-fZ[0]) < TGeoShape::Tolerance() ||
        TMath::Abs(fZ[fNz-1]-fZ[fNz-2]) < TGeoShape::Tolerance()) {
-      Error("ComputeBBox","Shape %s at index %d: Not allowed first and last pgon sections at same Z",
-             GetName(), gGeoManager->GetListOfShapes()->IndexOf(this));
       InspectShape();
-      SetShapeBit(kGeoInvalidShape);       
-      return;
+      Fatal("ComputeBBox","Shape %s at index %d: Not allowed first two or last two sections at same Z",
+             GetName(), gGeoManager->GetListOfShapes()->IndexOf(this));
    }          
    Double_t zmin = TMath::Min(fZ[0], fZ[fNz-1]);
    Double_t zmax = TMath::Max(fZ[0], fZ[fNz-1]);

@@ -689,7 +689,7 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
          }
       }
       if (!matrix) {
-         Error("Node", "rotation %i not found", irot);
+         Fatal("Node", "Node %s/%s_%d rotation %i not found",mother, name, nr ,irot);
          return;
       }
       if (isOnly) amother->AddNode(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
@@ -826,7 +826,7 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
          }
       }
       if (!matrix) {
-         Error("Node", "rotation %i not found", irot);
+         Fatal("Node", "Node %s/%s_%d rotation %i not found",mother, name, nr ,irot);
          return;
       }
       if (isOnly) amother->AddNode(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
