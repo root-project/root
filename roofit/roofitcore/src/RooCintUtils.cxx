@@ -23,10 +23,10 @@
 
 #include "RooCintUtils.h"
 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
-#include "cint/Api.h"
+#ifdef R__BUILDING_CINT7
+# include "cint7/Api.h"
 #else
-#include "Api.h"
+# include "Api.h"
 #endif
 
 #include "RooMsgService.h"

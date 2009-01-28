@@ -25,8 +25,7 @@ CINTDIRT     := $(MODDIRBASE)/tool
 ##### libCint #####
 CINTCONF     := $(CINTDIRI)/configcint.h
 CINTH        := $(wildcard $(CINTDIRI)/*.h)
-CINTHT       := $(sort $(patsubst $(CINTDIRI)/%.h,include/cint/%.h,$(CINTH) $(CINTCONF)))
-CINTBWHT     := $(patsubst include/cint/%,include/%,$(CINTHT))
+CINTHT       := $(sort $(patsubst $(CINTDIRI)/%.h,include/%.h,$(CINTH) $(CINTCONF)))
 CINTS1       := $(wildcard $(MODDIRS)/*.c)
 CINTS2       := $(wildcard $(MODDIRS)/*.cxx) \
                 $(MODDIRSD)/longif.cxx $(MODDIRSD)/Apiif.cxx \
@@ -218,11 +217,6 @@ endif
 # used in the main Makefile
 ALLHDRS     += $(CINTHT)
 
-ifeq ($(BUILDCINT7),)
-ALLHDRS     += $(CINTBWHT)
-endif
-
-
 CINTCXXFLAGS += -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY -I$(CINTDIRI) -I$(CINTDIRS) -I$(CINTDIRSD)
 CINTCFLAGS += -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY -I$(CINTDIRI) -I$(CINTDIRS) -I$(CINTDIRSD)
 
@@ -249,16 +243,8 @@ INCLUDEFILES += $(CINTDEP) $(CINTEXEDEP)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/cint/%.h: $(CINTDIRI)/%.h
-		@(if [ ! -d "include/cint" ]; then    \
-		   mkdir -p include/cint;             \
-		fi)
+include/%.h: $(CINTDIRI)/%.h
 		cp $< $@
-
-ifeq ($(BUILDCINT7),)
-$(CINTBWHT): include/%.h: $(CINTDIRI)/%.h
-		cp $< $@
-endif
 
 $(CINTLIB):     $(CINTO)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
@@ -290,8 +276,7 @@ $(IOSENUMA):    $(CINTTMP)
 all-$(MODNAME): $(CINTLIB) $(CINTTMP) $(IOSENUM)
 
 clean-$(MODNAME):
-		@rm -f $(CINTTMPO) $(CINTALLO) $(CINTEXEO) $(MAKECINTO) \
-		   $(CINTBWHT)
+		@rm -f $(CINTTMPO) $(CINTALLO) $(CINTEXEO) $(MAKECINTO)
 
 clean::         clean-$(MODNAME)
 
@@ -301,7 +286,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(CINTDIRM)/*.lib $(CINTDIRS)/loadfile_tmp.cxx \
 		   $(CINTDIRDLLS)/sys/types.h $(CINTDIRDLLS)/systypes.h \
 		   $(CINTHT) $(CINTCONF)
-		@rm -rf include/cint
 
 distclean::     distclean-$(MODNAME)
 

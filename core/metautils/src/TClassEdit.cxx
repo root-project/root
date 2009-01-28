@@ -10,7 +10,11 @@
 #include "Rstrstream.h"
 
 // CINT's API.
-#include "cint/Api.h"
+#ifndef R__BUILDING_CINT7
+#include "Api.h"
+#else
+#include "cint7/Api.h"
+#endif
 
 namespace std {} using namespace std;
 

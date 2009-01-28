@@ -224,14 +224,16 @@ ALLEXECS     += $(CINT7TMP)
 # include all dependency files
 INCLUDEFILES += $(CINT7DEP) $(CINT7EXEDEP)
 
-CINT7CXXFLAGS = $(patsubst -Icint/cint/%,,$(CINTCXXFLAGS))
-CINT7CFLAGS   = $(patsubst -Icint/cint/%,,$(CINTCFLAGS))
+# Make sure -Iinclude/ is _after_ CINT7 -I
+CINT7CXXFLAGS = $(subst -Iinclude ,-I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIRSD) ,\
+                   $(patsubst -Icint/cint/%,,$(CINTCXXFLAGS))) \
+                -Iinclude
+CINT7CFLAGS   = $(subst -Iinclude ,-I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIRSD) ,\
+                   $(patsubst -Icint/cint/%,,$(CINTCFLAGS))) \
+                -Iinclude
 
 CINT7CXXFLAGS += -DG__CINTBODY -DG__HAVE_CONFIG -DG__NOMAKEINFO
 CINT7CFLAGS   += -DG__CINTBODY -DG__HAVE_CONFIG -DG__NOMAKEINFO
-
-CINT7CXXFLAGS += -I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIRSD)
-CINT7CFLAGS   += -I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIRSD)
 
 ##### used by configcint.mk #####
 G__CFG_CXXFLAGS := $(CINT7CXXFLAGS)

@@ -11,7 +11,11 @@
 
 #include "RConfigure.h"
 #include "RConfig.h"
-#include "cint/Api.h"
+#ifndef R__BUILDING_CINT7
+#include "Api.h"
+#else
+#include "cint7/Api.h"
+#endif
 
 #include "RStl.h"
 #include "TClassEdit.h"

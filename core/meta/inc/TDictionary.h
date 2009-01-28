@@ -45,7 +45,11 @@
 #include "TNamed.h"
 #endif
 
-#include "cint/Property.h"
+#ifndef R__BUILDING_CINT7
+#include "Property.h"
+#else
+#include "cint7/Property.h"
+#endif
 
 typedef void CallFunc_t;
 typedef void ClassInfo_t;

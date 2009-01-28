@@ -2906,8 +2906,6 @@ void G__clink_header(FILE *fp)
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
   fprintf(fp,"#include \"%s/%s/inc/G__ci.h\"\n",G__cintsysdir, G__CFG_COREVERSION);
-#elif defined(G__ROOT)
-  fprintf(fp,"#include \"cint/G__ci.h\"\n");
 #else
   fprintf(fp,"#include \"G__ci.h\"\n");
 #endif
@@ -2999,8 +2997,6 @@ void G__cpplink_header(FILE *fp)
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
   fprintf(fp,"#include \"%s/%s/inc/G__ci.h\"\n",G__cintsysdir, G__CFG_COREVERSION);
-#elif defined(G__ROOT)
-  fprintf(fp,"#include \"cint/G__ci.h\"\n");
 #else
   fprintf(fp,"#include \"G__ci.h\"\n");
 #endif

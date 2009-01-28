@@ -165,8 +165,8 @@
 #include "RConfig.h"
 #include <iostream>
 #ifndef R__BUILDING_CINT7
-#include "cint/Shadow.h"
-#include "cint/cintdictversion.h"
+#include "Shadow.h"
+#include "cintdictversion.h"
 #else
 #include "cint7/Shadow.h"
 #include "cint7/cintdictversion.h"

@@ -14,7 +14,13 @@
 #include <string.h>
 #define G__ANSIHEADER
 #define G__DICTIONARY
-#include "cint/G__ci.h"
+
+#ifndef R__BUILDING_CINT7
+#include "G__ci.h"
+#else
+#include "cint7/G__ci.h"
+#endif
+
 extern "C" {
 extern void G__cpp_setup_tagtableManualBase4();
 extern void G__cpp_setup_inheritanceManualBase4();
