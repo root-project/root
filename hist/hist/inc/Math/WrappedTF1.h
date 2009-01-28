@@ -73,6 +73,7 @@ public:
             ip++;
          }
       }
+      
 
    }
 
@@ -123,7 +124,7 @@ public:
 
    /// get the parameter values (return values cachen inside, those inside TF1 might be different) 
    const double * Parameters() const {
-      return &fParams.front(); 
+      return  (fParams.size() > 0) ? &fParams.front() : 0;
    }
 
    /// set parameter values (only the cached one in this class,leave unchanges those of TF1)
@@ -150,6 +151,7 @@ public:
          // need to set parameter values
          fFunc->SetParameters( par );
          static const double kEps = 0.001;
+         // no need to call InitArgs (it is called in TF1::GradientPar)
          fFunc->GradientPar(&x,grad,kEps);
       }
       else { 
@@ -158,6 +160,8 @@ public:
             grad[i] = DoParameterDerivative(x, par, i);
       }
    }
+
+   static void SetDerivStepSize(double eps) { fgEps = eps; }
 
 
 private: 
@@ -176,24 +180,23 @@ private:
       // no need to call InitArg for interpreted functions (done in ctor)
       // use EvalPar since it is much more efficient than Eval
       fX[0] = x;  
-      return fFunc->EvalPar(fX,&fParams.front()); 
+      const double * p = (fParams.size() > 0) ? &fParams.front() : 0;
+      return fFunc->EvalPar(fX, p ); 
    }
 
    /// return the function derivatives w.r.t. x 
    double DoDerivative( double  x  ) const { 
-      static const double kEps = 0.001;
       // parameter are passed as non-const in Derivative
-      double * p = const_cast<double *>(&fParams.front() );
-      return  fFunc->Derivative(x,p,kEps); 
+      double * p =  (fParams.size() > 0) ? const_cast<double *>( &fParams.front()) : 0;
+      return  fFunc->Derivative(x,p,fgEps); 
    }
 
    /// evaluate the derivative of the function with respect to the parameters
    double  DoParameterDerivative(double x, const double * p, unsigned int ipar ) const { 
       // not very efficient - use ParameterGradient
       if (! fLinear ) {  
-         std::vector<double> grad(NPar());
-         ParameterGradient(x, p, &grad[0] ); 
-         return grad[ipar]; 
+         fFunc->SetParameters( p );
+         return fFunc->GradientPar(ipar, &x,fgEps);
       }
       else if (fPolynomial) { 
          // case of polynomial function (no parameter dependency)  
@@ -216,6 +219,8 @@ private:
    TF1 * fFunc;                  // pointer to ROOT function
    mutable double fX[1];         //! cached vector for x value (needed for TF1::EvalPar signature) 
    std::vector<double> fParams;  //  cached vector with parameter values
+
+   static double fgEps;          // epsilon used in derivative calculation
 }; 
 
    } // end namespace Fit

@@ -41,6 +41,9 @@ Bool_t TF1::fgRejectPoint = kFALSE;
 static TF1 *gHelper = 0;
 static Double_t gErrorTF1 = 0;
 
+double ROOT::Math::WrappedTF1::fgEps = 0.001; 
+
+
 ClassImp(TF1)
 
 class GFunc {
@@ -2124,6 +2127,8 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
    // Method is the same as in Derivative() function
    //
    // If a paramter is fixed, the gradient on this parameter = 0
+
+   if (fNpar == 0) return 0; 
 
    if(eps< 1e-10 || eps > 1) {
       Warning("Derivative","parameter esp=%g out of allowed range[1e-10,1], reset to 0.01",eps);
