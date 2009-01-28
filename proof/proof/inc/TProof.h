@@ -116,7 +116,7 @@ class TProofDataSetManager;
 // 20 -> 21: Add support for session queuing
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 20;            // protocol version number
+const Int_t       kPROOF_Protocol        = 21;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
