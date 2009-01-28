@@ -64,6 +64,7 @@ R__EXTERN XrdOucTrace *XrdProofdTrace;
 //
 // Auxilliary macros
 //
+#define XPDDOM(d) unsigned int xpdtracingdomain = (unsigned int)(TRACE_ ## d & TRACE_ALL);
 #define XPDLOC(d,x) unsigned int xpdtracingdomain = (unsigned int)(TRACE_ ## d & TRACE_ALL); \
                     const char *xpdloc = x;
 
