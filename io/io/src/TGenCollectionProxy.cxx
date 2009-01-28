@@ -501,6 +501,9 @@ TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info,
    fCollect.call   = info.fCollectFunc;
    fCreateEnv.call = info.fCreateEnv;
    
+   if (cl) {
+      fName = cl->GetName();
+   }
    CheckFunctions();
 
    fValue           = 0;
