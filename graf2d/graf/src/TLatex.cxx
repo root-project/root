@@ -49,6 +49,9 @@ It provides several functionalities:
 <li><a href="#L11"> Examples</a></li>
 </ul>
 
+When the font precision (see <tt>TAttText</tt>) is low (ie 0), TLatex is 
+painted as a normal TText, the control characters are not interpreted.
+
 <a name="L1"></a><h3>Subscripts and Superscripts</h3>
 Subscripts and superscripts are made with the <tt>_</tt> and <tt>^</tt> 
 commands. These commands can be combined to make complicated subscript and
