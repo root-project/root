@@ -277,7 +277,7 @@ int XrdProofSched::Enqueue(XrdProofdProofServ *xps, XrdProofQuery *query)
 {
    // Queue a query in the session; if this is the first querym enqueue also
    // the session
-   XPDLOC(SCHED, "Enqueue")
+   XPDDOM(SCHED)
 
    if (xps->Enqueue(query) == 1) {
       std::list<XrdProofdProofServ *>::iterator ii;
