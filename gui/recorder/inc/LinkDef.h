@@ -16,6 +16,7 @@
 
 #pragma link C++ class TRecEvent;
 #pragma link C++ class TRecCmdEvent;
+#pragma link C++ class TRecExtraEvent;
 #pragma link C++ class TRecGuiEvent;
 #pragma link C++ class TRecWinPair;
 #pragma link C++ class TRecorder;

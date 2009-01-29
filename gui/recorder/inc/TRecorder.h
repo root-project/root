@@ -131,6 +131,12 @@
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
+#ifndef ROOT_TCanvas
+#include "TCanvas.h"
+#endif
+#ifndef ROOT_THashList
+#include "THashList.h"
+#endif
 
 #include <time.h>
 
@@ -163,7 +169,8 @@ public:
    //---- Types of events recorded in ROOT.
    enum ERecEventType {
       kCmdEvent,     // Commandline event
-      kGuiEvent      // GUI event
+      kGuiEvent,    // GUI event
+      kExtraEvent
    };
 
    // Replays (executes) the stored event again
@@ -226,7 +233,49 @@ public:
       gApplication->ProcessLine(GetText());
    }
 
-   ClassDef(TRecCmdEvent,1)   // Class stores information about 1 commandline event (= 1 command typed by user in commandline)
+   ClassDef(TRecCmdEvent,1) // Class stores information about 1 commandline event (= 1 command typed by user in commandline)
+};
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//  TRecExtraEvent                                                      //
+//                                                                      //
+//  Class used for storing information about 1 extra event.             //
+//  It means 1 TPaveLabel or 1 TLatex event produced in the Canvas      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+class TRecExtraEvent : public TRecEvent
+{
+private:
+   TString fText;             // Text of stored command
+
+public:
+   TRecExtraEvent() {
+      // Creates new empty  TRecExtraEvent
+   }
+
+   void SetText(TString text) {
+      // Saves text of a command (PaveLabel or Text)
+      fText = text;
+   }
+
+   TString GetText() const {
+      // Returns stored text of the command
+      return fText;
+   }
+
+   virtual ERecEventType GetType() const {
+      // Returns what kind of event it stores (Especial event)
+      return TRecEvent::kExtraEvent;
+   }
+
+   virtual void ReplayEvent(Bool_t) {
+      // Stored event is executed again
+
+      gApplication->ProcessLine(GetText());
+   }
+
+   ClassDef(TRecExtraEvent,1) // Class stores information about extra events
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -245,7 +294,7 @@ protected:
    friend class TRecorderPaused;
    friend class TRecorderRecording;
    friend class TRecorderReplaying;
-   
+
    EGEventType    fType;            // Type of event (see EGEventType)
    Window_t       fWindow;          // Window ID which reported event is relative to
    Time_t         fTime;            // Time event occured in ms
@@ -284,7 +333,7 @@ public:
    virtual void    ReplayEvent(Bool_t showMouseCursor = kTRUE);
    static Event_t *CreateEvent(TRecGuiEvent *ge);
 
-   ClassDef(TRecGuiEvent,1)         // Class stores information about 1 GUI event in ROOT
+   ClassDef(TRecGuiEvent,1) // Class stores information about 1 GUI event in ROOT
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -440,7 +489,10 @@ public:
    // Gets current state of recorder
    virtual TRecorder::ERecorderState GetState() const;
 
-   ClassDef(TRecorder,1)             // Class provides direct recorder/replayer interface for a user.
+   // Saves all the canvases previous to the TRecorder
+   void PrevCanvases(const char *filename, Option_t *option);
+
+   ClassDef(TRecorder,1) // Class provides direct recorder/replayer interface for a user.
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -465,7 +517,7 @@ protected:
    void ChangeState(TRecorder *r, TRecorderState *s, Bool_t deletePreviousState) { r->ChangeState(s, deletePreviousState); }
 
 public:
-   virtual        ~TRecorderState() {}
+   virtual ~TRecorderState() {}
    virtual void   Start(TRecorder *, const char *, Option_t *, Window_t *, Int_t) {}
    virtual void   Stop(TRecorder *, Bool_t ) {}
    virtual Bool_t Replay(TRecorder *, const char *, Bool_t, TRecorder::EReplayModes) { return false; }
@@ -475,6 +527,8 @@ public:
 
    virtual void   ListCmd(const char *) {}
    virtual void   ListGui(const char *) {}
+
+   virtual void   PrevCanvases(const char *, Option_t *) {}
 
    virtual TRecorder::ERecorderState GetState() const = 0;
 
@@ -506,44 +560,54 @@ private:
                            // recorder to INACTIVE state after replaying is finished
 
    TFile      *fFile;      // ROOT file which the recorded events are being read from
+
+
+   TCanvas    *fCanv;      // Used to record the previous canvases
+
+
    TTimer     *fTimer;     // Timer used for replaying
 
    TTree      *fWinTree;   // TTree with recorded windows (=registered during recording)
    TTree      *fGuiTree;   // TTree with recorded GUI events
    TTree      *fCmdTree;   // TTree with recorded commandline events
+   TTree      *fExtraTree; // TTree with recorded extra events (PaveLabels and Texts)
 
-   ULong64_t   fWin;       // Window ID being currenty mapped
-   TRecGuiEvent  *fGuiEvent;  // GUI event being currently replayed
-   TRecCmdEvent  *fCmdEvent;  // Commandline event being currently replayed
+   ULong64_t       fWin;            // Window ID being currenty mapped
+   TRecGuiEvent   *fGuiEvent;       // GUI event being currently replayed
+   TRecCmdEvent   *fCmdEvent;       // Commandline event being currently replayed
+   TRecExtraEvent *fExtraEvent;     // Extra event being currently replayed
 
-   Int_t       fRegWinCounter;   // Counter of registered windows when replaying
-   Int_t       fGuiTreeCounter;  // Counter of GUI events that have been replayed
-   Int_t       fCmdTreeCounter;  // Counter of commandline events that have been replayed
+   Int_t       fRegWinCounter;      // Counter of registered windows when replaying
+   Int_t       fGuiTreeCounter;     // Counter of GUI events that have been replayed
+   Int_t       fCmdTreeCounter;     // Counter of commandline events that have been replayed
+   Int_t       fExtraTreeCounter;   // Counter of extra events that have been replayed
 
-   Int_t       fWinTreeEntries;  // Number of registered windows during _recording_
+   Int_t       fWinTreeEntries;     // Number of registered windows during _recording_
 
    TMutex      *fMutex;
 
-   TList      *fWindowList;      // List of TRecWinPair objects. Mapping of window IDs is stored here.
+   TList      *fWindowList;         // List of TRecWinPair objects. Mapping of window IDs is stored here.
 
-   TRecEvent *fNextEvent;          // The next event that is going to be replayed (GUI event or commandline)
+   TRecEvent  *fNextEvent;          // The next event that is going to be replayed (GUI event or commandline)
 
-   TTime             fPreviousEventTime;  // Execution time of the previously replayed event.
+   TTime       fPreviousEventTime;  // Execution time of the previously replayed event.
                                           // It is used for computing time difference between two events.
 
-   Bool_t            fWaitingForWindow;   // Signalizes that we wait for a window to be registered in order
-                                          // to replay the next event fNextEvent.
-                                          // Registraion of windows can last different time when recording and replaying.
-                                          // If there is an event ready to be replayed but the corresponding windows has not been yet
-                                          // registered, we wait (postopone fNextEvent) until it is registered.
+   Bool_t      fWaitingForWindow;   // Signalizes that we wait for a window to be registered in order
+                                    // to replay the next event fNextEvent.
+                                    // Registraion of windows can last different time when recording and replaying.
+                                    // If there is an event ready to be replayed but the corresponding windows has not been yet
+                                    // registered, we wait (postopone fNextEvent) until it is registered.
 
-   Bool_t            fEventReplayed;      // Signalizes that the last event sent to the replaying has been already replayed.
-                                          // Sometimes an execution of an event can take more time than during recording.
-                                          // This ensures that the next event is sent to replaying AFTER
-                                          // the replaying of the previous one finishes and not earlier.
-                                          // Exceptions: ButtonPress and ButtonRelease events (See TRecorderReplaying::CanBeOverlapped)
+   Bool_t      fEventReplayed;      // Signalizes that the last event sent to the replaying has been already replayed.
+                                    // Sometimes an execution of an event can take more time than during recording.
+                                    // This ensures that the next event is sent to replaying AFTER
+                                    // the replaying of the previous one finishes and not earlier.
+                                    // Exceptions: ButtonPress and ButtonRelease events (See TRecorderReplaying::CanBeOverlapped)
 
-   Bool_t            fShowMouseCursor;    // Specifies if mouse cursor should be also replayed
+   Bool_t      fShowMouseCursor;    // Specifies if mouse cursor should be also replayed
+
+   Bool_t      fFilterStatusBar;    // Special flag to filter status bar element
 
 protected:
    friend class TRecorderInactive;
@@ -555,12 +619,12 @@ protected:
 public:
    virtual TRecorder::ERecorderState GetState() const { return TRecorder::kReplaying; }
 
-   virtual void            Pause(TRecorder *r);
-   virtual void            Continue();
-   virtual void            ReplayStop(TRecorder *r);
+   virtual void   Pause(TRecorder *r);
+   virtual void   Continue();
+   virtual void   ReplayStop(TRecorder *r);
 
-   void        RegisterWindow(Window_t w);   //SLOT
-   void        ReplayRealtime();             //SLOT
+   void           RegisterWindow(Window_t w);   //SLOT
+   void           ReplayRealtime();             //SLOT
 
    ClassDef(TRecorderReplaying, 0) // Represents state of TRecorder when replaying
 };
@@ -591,10 +655,12 @@ private:
    TTree              *fWinTree;          // TTree with registered windows
    TTree              *fGuiTree;          // TTree with recorded GUI events
    TTree              *fCmdTree;          // TTree with recorded commandline events
+   TTree              *fExtraTree;        // TTree with recorded extra events (PaveLabels and Texts)
 
    ULong64_t           fWin;              // The newest registered window to be stored in TTree
    TRecGuiEvent       *fGuiEvent;         // The newest GUI event to be stored in TTree
    TRecCmdEvent       *fCmdEvent;         // The newest commandline event to be stored in TTree
+   TRecExtraEvent     *fExtraEvent;       // The newest extra event to be stored in TTree
 
    Bool_t              fCmdEventPending;  // Indication if there is a still pending commandline event that should be stored.
                                           // Commandline events are stored with 1 event delay to ensure skipping
@@ -621,6 +687,10 @@ public:
    void  RecordCmdEvent(const char* line);         //SLOT
    void  RecordGuiEvent(Event_t* e, Window_t wid); //SLOT
    void  RecordGuiCNEvent(Event_t* e);             //SLOT
+   void  RecordPave(const TObject* obj);           //SLOT
+   void  RecordText(const TObject* obj);           //SLOT
+
+   void  RecordExtraEvent(TString line);
 
    ClassDef(TRecorderRecording, 0) // Represents state of TRecorder when recording events
 };
@@ -637,6 +707,10 @@ public:
 //////////////////////////////////////////////////////////////////////////
 class TRecorderInactive : public TRecorderState
 {
+
+private:
+   TSeqCollection *fCollect;
+
 public:
    virtual        ~TRecorderInactive() {}
    TRecorderInactive(){}
@@ -651,6 +725,8 @@ public:
 
    static void    DumpRootEvent(TRecGuiEvent *e, Int_t n);
    static long    DisplayValid(Long_t n) { return ( n < 0 ? -1 : n); }
+
+   void PrevCanvases(const char *filename, Option_t *option);
 
    ClassDef(TRecorderInactive, 0) // Represents state of TRecorder after its creation
 };
@@ -723,5 +799,5 @@ public:
    void Update();
    void Replay();
 
-   ClassDef(TGRecorder,0)             // GUI class of the event recorder.
+   ClassDef(TGRecorder,0) // GUI class of the event recorder.
 };
