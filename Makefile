@@ -584,7 +584,7 @@ include $(patsubst %,%/Module.mk,$(MODULES))
 -include MyRules.mk            # allow local rules
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \
-      distsrc version install uninstall showbuild \
+      distsrc version showbuild \
       changelog html debian redhat),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(findstring skip,$(MAKECMDGOALS))$(findstring fast,$(MAKECMDGOALS)),)
