@@ -89,6 +89,8 @@ private:
    TList             *fMethod;          //linked list for methods
    TList             *fAllPubData;      //all public data members (including from base classes)
    TList             *fAllPubMethod;    //all public methods (including from base classes)
+   mutable TList     *fClassMenuList;   //list of class menu items
+
    const char        *fDeclFileName;    //name of class declaration file
    const char        *fImplFileName;    //name of class implementation file
    Short_t            fDeclFileLine;    //line of class declaration
@@ -100,9 +102,9 @@ private:
    Version_t          fClassVersion;    //Class version Identifier
    ClassInfo_t       *fClassInfo;       //pointer to CINT class info class
    TString            fContextMenuTitle;//context menu title
-   TList             *fClassMenuList;   //list of class menu items
    const type_info   *fTypeInfo;        //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
+   mutable void      *fInterShowMembers;//Interpreter call setup for ShowMembers
    TClassStreamer    *fStreamer;        //pointer to streamer function
    TString            fSharedLibs;      //shared libraries containing class code
 
@@ -205,9 +207,11 @@ public:
    void               AddRef(TClassRef *ref); 
    void               AdoptSchemaRules( ROOT::TSchemaRuleSet *rules );
    virtual void       Browse(TBrowser *b);
-   void               BuildRealData(void *pointer=0);
+   void               BuildRealData(void *pointer=0, Bool_t isTransient = kFALSE);
    void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
-   void               CalculateStreamerOffset();
+   void               CalculateStreamerOffset() const;
+   Bool_t             CallShowMembers(void* obj, TMemberInspector &insp, char *parent,
+                                      Int_t isATObject = -1) const;
    Bool_t             CanSplit() const;
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    TObject           *Clone(const char *newname="") const;
@@ -256,7 +260,7 @@ public:
    UInt_t             GetInstanceCount() const { return fInstanceCount; }
    UInt_t             GetHeapInstanceCount() const { return fOnHeap; }
    void               GetMenuItems(TList *listitems);
-   TList             *GetMenuList() const { return fClassMenuList; }
+   TList             *GetMenuList() const;
    TMethod           *GetMethod(const char *method, const char *params);
    TMethod           *GetMethodWithPrototype(const char *method, const char *proto);
    TMethod           *GetMethodAny(const char *method);

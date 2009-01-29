@@ -90,6 +90,7 @@ class TDictionary : public TNamed {
 
 public:
    TDictionary() { }
+   TDictionary(const char* name): TNamed(name, "") { }
    virtual ~TDictionary() { }
 
    virtual Long_t      Property() const = 0;
