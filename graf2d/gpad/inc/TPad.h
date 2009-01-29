@@ -371,6 +371,9 @@ public:
    virtual Bool_t            HasViewer3D() const { return (fViewer3D); }
    virtual void              ReleaseViewer3D(Option_t * type = "");
 
+   virtual void      RecordPave(const TObject *obj);   // *SIGNAL*
+   virtual void      RecordLatex(const TObject *obj);  // *SIGNAL*
+
    ClassDef(TPad,10)  //A Graphics pad
 };
 

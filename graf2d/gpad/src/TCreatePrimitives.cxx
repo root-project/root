@@ -355,8 +355,11 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
                break;
             }
          }
-         if (mode == kPaveLabel) pave = new TPaveLabel(xp0,yp0,xp1,yp1,atext);
-         if (mode == kButton)    pave = new TButton(atext,"",
+         if (mode == kPaveLabel) { 
+            pave = new TPaveLabel(xp0,yp0,xp1,yp1,atext);
+            ((TPad *)gPad)->RecordPave(pave);
+         }
+         if (mode == kButton) pave = new TButton(atext,"",
                               (x0-gPad->GetX1())/(gPad->GetX2() - gPad->GetX1()),
                               (y0-gPad->GetY1())/(gPad->GetY2() - gPad->GetY1()),
                               (x1-gPad->GetX1())/(gPad->GetX2() - gPad->GetX1()),
@@ -519,6 +522,8 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
       gPad->GetCanvas()->Selected((TPad*)gPad, newtext, event);
       gROOT->SetEditorMode();
       gPad->Update();
+      TLatex copytext(x, y, atext);
+      ((TPad *)gPad)->RecordLatex(&copytext);
       break;
    }
 }

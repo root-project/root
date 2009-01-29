@@ -5960,3 +5960,20 @@ Int_t TPad::GetGLDevice()
 
    return fGLDevice;
 }
+
+//______________________________________________________________________________
+void TPad::RecordPave(const TObject *obj)
+{
+   // Emit RecordPave() signal.
+
+   Emit("RecordPave(const TObject*)", (Long_t)obj);
+}
+
+//______________________________________________________________________________
+void TPad::RecordLatex(const TObject *obj)
+{
+   // Emit RecordLatex() signal.
+
+   Emit("RecordLatex(const TObject*)", (Long_t)obj);
+}
+
