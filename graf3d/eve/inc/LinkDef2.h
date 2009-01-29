@@ -121,6 +121,10 @@
 // TEveLegoOverlay
 #pragma link C++ class TEveLegoOverlay+;
 
+// TEveJetCone
+#pragma link C++ class TEveJetCone+;
+#pragma link C++ class TEveJetConeEditor+;
+#pragma link C++ class TEveJetConeGL+;
 
 //______________________________________________________________________________
 // Helper classes
