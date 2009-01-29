@@ -14,8 +14,13 @@ METAUTILSDIRI  := $(METAUTILSDIR)/inc
 
 ##### $(METAUTILSO) #####
 METAUTILSH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-METAUTILSS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+METAUTILSS     := $(filter-out %7.cxx,$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 METAUTILSO     := $(METAUTILSS:.cxx=.o)
+
+ifneq ($(BUILDCINT7),)
+METAUTILS7S     := $(patsubst %.cxx,%7.cxx,$(METAUTILSS))
+METAUTILS7O     := $(METAUTILS7S:.cxx=.o)
+endif
 
 METAUTILSL     := $(MODDIRI)/LinkDef.h
 METAUTILSDS    := $(MODDIRS)/G__MetaUtils.cxx
