@@ -3,7 +3,8 @@
 
 // Bindings
 #include "PyROOT.h"
-#include "structmember.h"
+#include "structmember.h"    // from Python
+#include "code.h"            // from Python
 #include "MethodProxy.h"
 #include "ObjectProxy.h"
 #include "TPyException.h"
