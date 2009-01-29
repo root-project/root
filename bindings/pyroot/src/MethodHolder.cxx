@@ -32,6 +32,8 @@
 
 
 //- data and local helpers ---------------------------------------------------
+R__EXTERN PyObject* gRootModule;
+
 namespace {
 
 // CINT temp level guard
@@ -227,13 +229,13 @@ void PyROOT::TMethodHolder< T, M >::CreateSignature_()
 
       fSignature += fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED );
 
-      std::string parname = fMethod.FunctionParameterNameAt( iarg );
+      const std::string& parname = fMethod.FunctionParameterNameAt( iarg );
       if ( ! parname.empty() ) {
          fSignature += " ";
          fSignature += parname;
       }
 
-      std::string defvalue = fMethod.FunctionParameterDefaultAt( iarg );
+      const std::string& defvalue = fMethod.FunctionParameterDefaultAt( iarg );
       if ( ! defvalue.empty() ) {
          fSignature += " = ";
          fSignature += defvalue;
@@ -415,6 +417,61 @@ Int_t TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::GetPriority()
 #endif
 
 } // endif
+
+//____________________________________________________________________________
+template< class T, class M >
+Int_t PyROOT::TMethodHolder< T, M >::GetMaxArgs()
+{
+   return fMethod.FunctionParameterSize();
+}
+
+//____________________________________________________________________________
+template< class T, class M>
+PyObject* PyROOT::TMethodHolder< T, M >::GetArgSpec( Int_t iarg )
+{
+   if ( iarg >= (int)fMethod.FunctionParameterSize() )
+      return 0;
+
+   std::string argrep = fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::Q );
+
+   const std::string& parname = fMethod.FunctionParameterNameAt( iarg );
+   if ( ! parname.empty() ) {
+      argrep += " ";
+      argrep += parname;
+   }
+
+   return PyString_FromString( argrep.c_str() );
+}
+
+//____________________________________________________________________________
+template< class T, class M>
+PyObject* PyROOT::TMethodHolder< T, M >::GetArgDefault( Int_t iarg )
+{
+   if ( iarg >= (int)fMethod.FunctionParameterSize() )
+      return 0;
+
+   const std::string& defvalue = fMethod.FunctionParameterDefaultAt( iarg ).c_str();
+   if ( ! defvalue.empty() ) {
+
+   // attempt to evaluate the string representation (will work for all builtin types)
+      PyObject* pyval = PyRun_String( defvalue.c_str(), Py_eval_input, gRootModule, gRootModule );
+      if ( ! pyval && PyErr_Occurred() ) {
+         PyErr_Clear();
+         return PyString_FromString( defvalue.c_str() );
+      }
+
+      return pyval;
+   }
+
+   return 0;
+}
+
+//____________________________________________________________________________
+template< class T, class M>
+PyObject* PyROOT::TMethodHolder< T, M >::GetScope()
+{
+   return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( fMethod.DeclaringScope().Name() );
+}
 
 //____________________________________________________________________________
 template< class T, class M >

@@ -8,6 +8,7 @@
 #include "ObjectProxy.h"
 #include "TPyException.h"
 #include "Utility.h"
+#include "PyStrings.h"
 
 // Standard
 #include <algorithm>
@@ -56,14 +57,14 @@ namespace {
    }
 
 // helper to factor out return logic of mp_call
-   inline PyObject* HandleReturn( MethodProxy* meth, PyObject* result ) {
+   inline PyObject* HandleReturn( MethodProxy* pymeth, PyObject* result ) {
 
    // special case for python exceptions, propagated through C++ layer
       if ( result == (PyObject*)TPyExceptionMagic )
          return 0;              // exception info was already set
 
    // if this is creates new objects, always take ownership
-      if ( ( meth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) &&
+      if ( ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) &&
            ObjectProxy_Check( result ) )
          ((ObjectProxy*)result)->HoldOn();
 
@@ -72,15 +73,22 @@ namespace {
 
 
 //= PyROOT method proxy object behaviour =====================================
-   PyObject* mp_name( MethodProxy* meth, void* )
+   PyObject* mp_name( MethodProxy* pymeth, void* )
    {
-      return PyString_FromString( meth->GetName().c_str() );
+      return PyString_FromString( pymeth->GetName().c_str() );
    }
 
 //____________________________________________________________________________
-   PyObject* mp_doc( MethodProxy* meth, void* )
+   PyObject* mp_module( MethodProxy* /* pymeth */, void* )
    {
-      MethodProxy::Methods_t& methods = meth->fMethodInfo->fMethods;
+      Py_INCREF( PyStrings::gROOTns );
+      return PyStrings::gROOTns;
+   }
+
+//____________________________________________________________________________
+   PyObject* mp_doc( MethodProxy* pymeth, void* )
+   {
+      MethodProxy::Methods_t& methods = pymeth->fMethodInfo->fMethods;
 
    // collect doc strings
       Int_t nMethods = methods.size();
@@ -102,14 +110,154 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* mp_getcreates( MethodProxy* meth, void* )
+   PyObject* mp_meth_func( MethodProxy* pymeth, void* )
    {
-      return PyInt_FromLong(
-         (Bool_t)(meth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) );
+   // create and a new method proxy to be returned
+      MethodProxy* newPyMeth = (MethodProxy*)MethodProxy_Type.tp_alloc( &MethodProxy_Type, 0 );
+
+   // method info is shared, as it contains the collected overload knowledge
+      *pymeth->fMethodInfo->fRefCount += 1;
+      newPyMeth->fMethodInfo = pymeth->fMethodInfo;
+
+   // new method is unbound, use of 'meth' is for keeping track whether this
+   // proxy is used in the capacity of a method or a function
+      newPyMeth->fSelf = (ObjectProxy*)newPyMeth;
+
+      return (PyObject*)newPyMeth;
    }
 
 //____________________________________________________________________________
-   int mp_setcreates( MethodProxy* meth, PyObject* value, void* )
+   PyObject* mp_meth_self( MethodProxy* pymeth, void* )
+   {
+      if ( pymeth->fSelf != 0 && (void*)pymeth->fSelf != (void*)pymeth ) {
+         Py_INCREF( (PyObject*)pymeth->fSelf );
+         return (PyObject*)pymeth->fSelf;
+      }
+
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
+//____________________________________________________________________________
+   PyObject* mp_meth_class( MethodProxy* pymeth, void* )
+   {
+      if ( (void*)pymeth->fSelf != (void*)pymeth ) {
+         PyObject* pyclass = pymeth->fMethodInfo->fMethods[0]->GetScope();
+         return pyclass;
+      }
+
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
+//____________________________________________________________________________
+   PyObject* mp_func_code( MethodProxy* pymeth, void* )
+   {
+      MethodProxy::Methods_t& methods = pymeth->fMethodInfo->fMethods;
+
+   // collect maximum number of arguments in set of overloads; this is also used
+   // for the number of locals ("stack variables")
+      int co_argcount = 0;
+      MethodProxy::Methods_t::iterator maxargmeth;
+      for ( MethodProxy::Methods_t::iterator imeth = methods.begin(); imeth != methods.end(); ++imeth ) {
+         if ( co_argcount < (*imeth)->GetMaxArgs() ) {
+            co_argcount = (*imeth)->GetMaxArgs();
+            maxargmeth = imeth;
+         }
+      }
+
+   // code object representing the statement 'pass'
+      PyObject* co_code = PyString_FromString( "d\x00\x00S" );
+
+   // tuple with all the const literals used in the function
+      PyObject* co_consts = PyTuple_New( 1 );
+      Py_INCREF( Py_None );
+      PyTuple_SET_ITEM( co_consts, 0, Py_None );
+
+   // names, freevars, and cellvars go unused
+      PyObject* co_unused = PyTuple_New( 0 );
+
+   // variable names are both the argument and local names
+      PyObject* co_varnames = PyTuple_New( co_argcount );
+      for ( int iarg = 0; iarg < co_argcount; ++iarg ) {
+         PyTuple_SET_ITEM( co_varnames, iarg, (*maxargmeth)->GetArgSpec( iarg ) );
+      }
+
+   // filename is made-up
+      PyObject* co_filename = PyString_FromString( "ROOT.py" );
+
+   // name is the function name, also through __name__ on the function itself
+      PyObject* co_name = PyString_FromString( pymeth->GetName().c_str() );
+
+   // firstlineno is the line number of first function code in the containing scope
+
+   // lnotab is a packed table that maps instruction count and line number
+      PyObject* co_lnotab = PyString_FromString( "\x00\x01" );
+
+      PyObject* code = (PyObject*)PyCode_New(
+         co_argcount,                             // argcount
+         co_argcount,                             // nlocals
+         1,                                       // stacksize
+         CO_OPTIMIZED | CO_NEWLOCALS | CO_NOFREE, // flags
+         co_code,                                 // code
+         co_consts,                               // consts
+         co_unused,                               // names
+         co_varnames,                             // varnames
+         co_unused,                               // freevars
+         co_unused,                               // cellvars
+         co_filename,                             // filename
+         co_name,                                 // name
+         1,                                       // firstlineno
+         co_lnotab );                             // lnotab
+
+      Py_DECREF( co_lnotab );
+      Py_DECREF( co_name );
+      Py_DECREF( co_unused );
+      Py_DECREF( co_filename );
+      Py_DECREF( co_varnames );
+      Py_DECREF( co_consts );
+      Py_DECREF( co_code );
+
+      return code;
+   }
+
+//____________________________________________________________________________
+   PyObject* mp_func_defaults( MethodProxy* pymeth, void* )
+   {
+   // create a tuple of default values for the overload with the most arguments
+      MethodProxy::Methods_t& methods = pymeth->fMethodInfo->fMethods;
+
+      int maxarg = 0;
+      MethodProxy::Methods_t::iterator maxargmeth;
+      for ( MethodProxy::Methods_t::iterator imeth = methods.begin(); imeth != methods.end(); ++imeth ) {
+         if ( maxarg < (*imeth)->GetMaxArgs() ) {
+            maxarg = (*imeth)->GetMaxArgs();
+            maxargmeth = imeth;
+         }
+      }
+
+      PyObject* defaults = PyTuple_New( maxarg );
+
+      int itup = 0;
+      for ( int iarg = 0; iarg < maxarg; ++iarg ) {
+         PyObject* defvalue = (*maxargmeth)->GetArgDefault( iarg );
+         if ( defvalue )
+            PyTuple_SET_ITEM( defaults, itup++, defvalue );
+      }
+      _PyTuple_Resize( &defaults, itup );
+
+      return defaults;
+   }
+
+//____________________________________________________________________________
+   PyObject* mp_getcreates( MethodProxy* pymeth, void* )
+   {
+      return PyInt_FromLong(
+         (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) );
+   }
+
+//____________________________________________________________________________
+   int mp_setcreates( MethodProxy* pymeth, PyObject* value, void* )
    {
       Long_t iscreator = PyLong_AsLong( value );
       if ( iscreator == -1 && PyErr_Occurred() ) {
@@ -118,34 +266,53 @@ namespace {
       }
 
       if ( iscreator )
-         meth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsCreator;
+         pymeth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsCreator;
       else
-         meth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
+         pymeth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
 
       return 0;
    }
 
 //____________________________________________________________________________
    PyGetSetDef mp_getset[] = {
-      { (char*)"__name__", (getter)mp_name, NULL, NULL, NULL },
-      { (char*)"__doc__", (getter)mp_doc, NULL, NULL, NULL },
+      { (char*)"__name__",   (getter)mp_name,   NULL, NULL, NULL },
+      { (char*)"__module__", (getter)mp_module, NULL, NULL, NULL },
+      { (char*)"__doc__",    (getter)mp_doc,    NULL, NULL, NULL },
+
+   // to be more python-like, where these are duplicated as well; to actually
+   // derive from the python method or function type is too memory-expensive,
+   // given that most of the members of those types would not be used
+      { (char*)"im_func",  (getter)mp_meth_func,  NULL, NULL, NULL },
+      { (char*)"im_self",  (getter)mp_meth_self,  NULL, NULL, NULL },
+      { (char*)"im_class", (getter)mp_meth_class, NULL, NULL, NULL },
+
+      { (char*)"func_code",     (getter)mp_func_code, NULL, NULL, NULL },
+      { (char*)"func_defaults", (getter)mp_func_defaults, NULL, NULL, NULL },
+      { (char*)"func_doc",      (getter)mp_doc,  NULL, NULL, NULL },
+      { (char*)"func_name",     (getter)mp_name, NULL, NULL, NULL },
+
       { (char*)"_creates", (getter)mp_getcreates, (setter)mp_setcreates,
             (char*)"For ownership rules of result: if true, objects are python-owned", NULL },
       { (char*)NULL, NULL, NULL, NULL, NULL }
    };
 
 //= PyROOT method proxy function behavior ====================================
-   PyObject* mp_call( MethodProxy* meth, PyObject* args, PyObject* kwds )
+   PyObject* mp_call( MethodProxy* pymeth, PyObject* args, PyObject* kwds )
    {
+   // if called through im_func pseudo-representation (this can be gamed if the
+   // user really wants to ... )
+      if ( (void*)pymeth->fSelf == (void*)pymeth )
+         pymeth->fSelf = NULL;
+
    // get local handles to proxy internals
-      MethodProxy::Methods_t&     methods     = meth->fMethodInfo->fMethods;
-      MethodProxy::DispatchMap_t& dispatchMap = meth->fMethodInfo->fDispatchMap;
+      MethodProxy::Methods_t&     methods     = pymeth->fMethodInfo->fMethods;
+      MethodProxy::DispatchMap_t& dispatchMap = pymeth->fMethodInfo->fDispatchMap;
 
       Int_t nMethods = methods.size();
 
    // simple case
       if ( nMethods == 1 )
-         return HandleReturn( meth, (*methods[0])( meth->fSelf, args, kwds ) );
+         return HandleReturn( pymeth, (*methods[0])( pymeth->fSelf, args, kwds ) );
 
    // otherwise, handle overloading
       Long_t sighash = HashSignature( args );
@@ -154,7 +321,7 @@ namespace {
       MethodProxy::DispatchMap_t::iterator m = dispatchMap.find( sighash );
       if ( m != dispatchMap.end() ) {
          Int_t index = m->second;
-         PyObject* result = HandleReturn( meth, (*methods[ index ])( meth->fSelf, args, kwds ) );
+         PyObject* result = HandleReturn( pymeth, (*methods[ index ])( pymeth->fSelf, args, kwds ) );
          if ( result != 0 )
             return result;
 
@@ -163,14 +330,14 @@ namespace {
       }
 
    // ... otherwise loop over all methods and find the one that does not fail
-      if ( ! ( meth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsSorted ) ) {
+      if ( ! ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsSorted ) ) {
          std::stable_sort( methods.begin(), methods.end(), PriorityCmp );
-         meth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsSorted;
+         pymeth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsSorted;
       }
 
       std::vector< PyError_t > errors;
       for ( Int_t i = 0; i < nMethods; ++i ) {
-         PyObject* result = (*methods[i])( meth->fSelf, args, kwds );
+         PyObject* result = (*methods[i])( pymeth->fSelf, args, kwds );
 
          if ( result == (PyObject*)TPyExceptionMagic ) {
             std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
@@ -181,7 +348,7 @@ namespace {
          // success: update the dispatch map for subsequent calls
             dispatchMap[ sighash ] = i;
             std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
-            return HandleReturn( meth, result );
+            return HandleReturn( pymeth, result );
          }
 
       // failure: collect error message/trace (automatically clears exception, too)
@@ -251,7 +418,10 @@ namespace {
    {
       PyObject_GC_UnTrack( pymeth );
 
-      Py_XDECREF( (PyObject*)pymeth->fSelf );
+      if ( (void*)pymeth->fSelf != (void*)pymeth ) {
+         Py_XDECREF( (PyObject*)pymeth->fSelf );
+      }
+
       pymeth->fSelf = NULL;
 
       if ( --(*pymeth->fMethodInfo->fRefCount) <= 0 ) {
@@ -264,7 +434,7 @@ namespace {
 //____________________________________________________________________________
    int mp_traverse( MethodProxy* pymeth, visitproc visit, void* args )
    {
-      if ( pymeth->fSelf )
+      if ( pymeth->fSelf && (void*)pymeth->fSelf != (void*)pymeth )
          return visit( (PyObject*)pymeth->fSelf, args );
 
       return 0;
@@ -280,7 +450,7 @@ namespace {
    }
 
 //= PyROOT method proxy access to internals =================================
-   PyObject* mp_disp( MethodProxy* meth, PyObject* args, PyObject* )
+   PyObject* mp_disp( MethodProxy* pymeth, PyObject* args, PyObject* )
    {
       PyObject* sigarg = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "S:disp" ), &sigarg ) )
@@ -288,7 +458,7 @@ namespace {
 
       PyObject* sig1 = PyString_FromFormat( "(%s)", PyString_AS_STRING( sigarg ) );
 
-      MethodProxy::Methods_t& methods = meth->fMethodInfo->fMethods;
+      MethodProxy::Methods_t& methods = pymeth->fMethodInfo->fMethods;
       for ( Int_t i = 0; i < (Int_t)methods.size(); ++i ) {
          PyObject* sig2 = methods[ i ]->GetSignature();
          if ( PyObject_Compare( sig1, sig2 ) == 0 ) {
@@ -296,7 +466,7 @@ namespace {
 
             MethodProxy* newmeth = mp_new( NULL, NULL, NULL );
             MethodProxy::Methods_t vec; vec.push_back( methods[ i ] );
-            newmeth->Set( meth->fMethodInfo->fName, vec );
+            newmeth->Set( pymeth->fMethodInfo->fName, vec );
 
             Py_DECREF( sig1 );
             return (PyObject*)newmeth;
