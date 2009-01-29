@@ -4,7 +4,11 @@
 // Bindings
 #include "PyROOT.h"
 #include "structmember.h"    // from Python
+#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 5
 #include "code.h"            // from Python
+#else
+#include "compile.h"         // from Python
+#endif
 #include "MethodProxy.h"
 #include "ObjectProxy.h"
 #include "TPyException.h"
