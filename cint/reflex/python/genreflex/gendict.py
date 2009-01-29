@@ -2421,7 +2421,6 @@ def ClassDefImplementation(selclasses, self) :
       if len( filter( lambda b: b[0] == self.TObject_id, allbases ) ) :
         derivesFromTObject = 1
 
-    print 'AXEL: class', attrs['fullname'], 'has members: ', string.join(listOfMembers)
     if "fgIsA" in listOfMembers \
            and "Class" in listOfMembers \
            and "Class_Name" in listOfMembers  \
@@ -2435,7 +2434,6 @@ def ClassDefImplementation(selclasses, self) :
            and "ImplFileLine" in listOfMembers \
            and "ImplFileName" in listOfMembers :
 
-      print 'AXEL: class', attrs['fullname'], 'thus has ClassDef'
       haveClassDef = 1
       extraval = '!RAW!' + str(derivesFromTObject)
       if attrs.has_key('extra') : attrs['extra']['ClassDef'] = extraval
