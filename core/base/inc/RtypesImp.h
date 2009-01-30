@@ -42,8 +42,9 @@ namespace ROOT {
 
       TClass *top = TClass::GetClass(topClassName);
       if (top) {
-         ShowMembersFunc_t show = top->GetShowMembersWrapper();
-         if (show) show(obj, R__insp, R__parent);
+         top->CallShowMembers(obj, R__insp, R__parent);
+      } else {
+         // This might be worth an error message
       }
    }
 
