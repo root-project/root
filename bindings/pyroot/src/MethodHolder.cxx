@@ -454,7 +454,8 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetArgDefault( Int_t iarg )
    if ( ! defvalue.empty() ) {
 
    // attempt to evaluate the string representation (will work for all builtin types)
-      PyObject* pyval = PyRun_String( defvalue.c_str(), Py_eval_input, gRootModule, gRootModule );
+      PyObject* pyval = (PyObject*)PyRun_String(
+          (char*)defvalue.c_str(), Py_eval_input, gRootModule, gRootModule );
       if ( ! pyval && PyErr_Occurred() ) {
          PyErr_Clear();
          return PyString_FromString( defvalue.c_str() );
