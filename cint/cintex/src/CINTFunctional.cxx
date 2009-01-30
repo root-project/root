@@ -41,7 +41,7 @@ namespace ROOT { namespace Cintex {
    };
 
    StubContext_t::StubContext_t(const Member& mem, const Type& cl )
-      :  fMethodCode(0), fMember(mem), fClass(cl), fNewdelfuncs(0), fInitialized(false)
+      :  fMethodCode(0), fClass(cl), fNewdelfuncs(0), fInitialized(false)
    {
       // Push back a context.
       StubContexts::Instance().push_back(this);
@@ -143,7 +143,7 @@ namespace ROOT { namespace Cintex {
 
    void* StubContext_t::GetReturnAddress(G__value* result) const {
       // Extract the memory location of the return value given the return type of fMethod
-      Type ret = fMember.TypeOf().ReturnType().FinalType();
+      Type ret = fFunction.ReturnType().FinalType();
       if (ret.IsPointer())
          return &result->obj.i;
       if (ret.IsReference())
