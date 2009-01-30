@@ -9,6 +9,10 @@
 #else
 #include "compile.h"         // from Python
 #endif
+#ifndef CO_NOFREE
+// python2.2 does not have CO_NOFREE defined
+#define CO_NOFREE       0x0040
+#endif
 #include "MethodProxy.h"
 #include "ObjectProxy.h"
 #include "TPyException.h"
