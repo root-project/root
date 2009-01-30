@@ -1593,7 +1593,7 @@ void TBranchElement::InitInfo()
    // FIXME:  What if the class code was unloaded/reloaded since we were cached?
 
    if (fInfo) {
-      if (!fInfo->GetOffsets()) {
+      if (!fInfo->GetOffsets() || (GetID()>-1 && !TestBit(TVirtualStreamerInfo::kCannotOptimize)) ) {
          // Streamer info has not yet been compiled.
          //
          // Optimizing does not work with splitting.
