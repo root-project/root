@@ -97,9 +97,9 @@ public:
 
    /** @name interface inherited from IParamFunction */     
 
-   /// get the parameter values (return values cachen inside, those inside TF1 might be different) 
+   /// get the parameter values (return values cached inside, those inside TF1 might be different) 
    const double * Parameters() const {
-      return &fParams.front();   
+      return  (fParams.size() > 0) ? &fParams.front() : 0;  
    }
 
    /// set parameter values (only the cached one in this class,leave unchanges those of TF1)
