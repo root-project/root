@@ -25,7 +25,7 @@
 
 ClassImp(TMySQLStatement)
 
-unsigned long TMySQLStatement::fAllocSizeLimit = 0x8000000; // 128 Mb
+ULong64_t TMySQLStatement::fgAllocSizeLimit = 0x8000000; // 128 Mb
 
 #if MYSQL_VERSION_ID >= 40100
 
@@ -729,7 +729,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, unsig
    fBuffer[npar].fResNull = false;
    fBuffer[npar].fStrBuffer = 0;
 
-   unsigned long allocsize = 0;
+   ULong64_t allocsize = 0;
    
    bool doreset = false;
 
@@ -756,7 +756,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, unsig
       default: SetError(-1,"Nonsupported SQL type","SetSQLParamType"); return kFALSE;
    }
 
-   if (allocsize > fAllocSizeLimit) allocsize = fAllocSizeLimit;
+   if (allocsize > fgAllocSizeLimit) allocsize = fgAllocSizeLimit;
 
    fBuffer[npar].fMem = malloc(allocsize);
    fBuffer[npar].fSize = allocsize;

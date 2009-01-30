@@ -71,14 +71,14 @@ protected:
 
    void       *BeforeSet(const char* method, Int_t npar, Int_t sqltype, Bool_t sig = kTRUE, unsigned long size = 0);
    
-   static unsigned long fAllocSizeLimit;
+   static ULong64_t fgAllocSizeLimit;
 
 public:
    TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout = kTRUE);
    virtual ~TMySQLStatement();
    
-   static unsigned long GetAllocSizeLimit() { return fAllocSizeLimit; }
-   static void SetAllocSizeLimit(unsigned long sz) { fAllocSizeLimit = sz; }
+   static unsigned long GetAllocSizeLimit() { return fgAllocSizeLimit; }
+   static void SetAllocSizeLimit(unsigned long sz) { fgAllocSizeLimit = sz; }
 
    virtual void        Close(Option_t * = "");
 
