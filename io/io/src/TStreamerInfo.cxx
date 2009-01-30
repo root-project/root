@@ -1447,7 +1447,7 @@ void TStreamerInfo::Clear(Option_t *option)
 }
 
 namespace {
-   struct MemberInfo {
+   struct TMemberInfo {
       TString fName;
       TString fClassName;
       TString fComment;
@@ -1472,12 +1472,12 @@ namespace {
          fClassName.Clear();
          fComment.Clear();
       }
-      Bool_t operator==(const MemberInfo &other) {
+      Bool_t operator==(const TMemberInfo &other) {
          return fName==other.fName
             && fClassName == other.fClassName
             && fComment == other.fComment;
       }
-      Bool_t operator!=(const MemberInfo &other) {
+      Bool_t operator!=(const TMemberInfo &other) {
          return fName!=other.fName
             || fClassName != other.fClassName
             || fComment != other.fComment;
@@ -1488,6 +1488,12 @@ namespace {
 //______________________________________________________________________________
 Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete)
 {
+   // Return True if the current StreamerInfo in cl or info is equivalent to this TStreamerInfo.
+   // 'Equivalent' means the same number of persistent data member which the same actual C++ type and
+   // the same name.
+   // if 'warn' is true, Warning message are printed to explicit the differences.
+   // if 'complete' is false, stop at the first error, otherwise continue until all members have been checked.
+   
    Bool_t result = kTRUE;
    R__ASSERT( (cl==0 || info==0) && (cl!=0 || info!=0) /* must compare to only one thhing! */);
 
@@ -1573,8 +1579,8 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
    next.Reset();
    infonext.Reset();
 
-   MemberInfo local;
-   MemberInfo other;
+   TMemberInfo local;
+   TMemberInfo other;
    UInt_t idx = 0;
    while(!done) {
       local.Clear();
@@ -1620,23 +1626,23 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          if (warn) {
             if (!el) {
                Warning("CompareContent","The following data member of the on-file layout version %d of class '%s' is missing from the in-memory layout version %d:\n"
-                       "   %s %s; //%s",
-                       GetClassVersion(), GetName(), GetClassVersion(),
-                       other.fClassName.Data(),other.fName.Data(),other.fComment.Data());
+                       "   %s %s; //%s"
+                       ,GetClassVersion(), GetName(), GetClassVersion()
+                       ,other.fClassName.Data(),other.fName.Data(),other.fComment.Data());
 
             } else if (other.fName.Length()==0) {
                Warning("CompareContent","The following data member of the in-memory layout version %d of class '%s' is missing from the on-file layout version %d:\n"
-                       "   %s %s; //%s",
-                       GetClassVersion(), GetName(), GetClassVersion(),
-                       local.fClassName.Data(),local.fName.Data(),local.fComment.Data());
+                       "   %s %s; //%s"
+                       ,GetClassVersion(), GetName(), GetClassVersion()
+                       ,local.fClassName.Data(),local.fName.Data(),local.fComment.Data());
             } else {
                Warning("CompareContent","The following data member of the on-file layout version %d of class '%s' differs from the in-memory layout version %d:\n"
                        "   %s %s; //%s\n"
                        "vs\n"
-                       "   %s %s; //%s",
-                       GetClassVersion(), GetName(), GetClassVersion(),
-                       local.fClassName.Data(),local.fName.Data(),local.fComment.Data(),
-                       other.fClassName.Data(),other.fName.Data(),other.fComment.Data());
+                       "   %s %s; //%s"
+                       ,GetClassVersion(), GetName(), GetClassVersion()
+                       ,local.fClassName.Data(),local.fName.Data(),local.fComment.Data()
+                       ,other.fClassName.Data(),other.fName.Data(),other.fComment.Data());
             }
          }
          result = result && kFALSE;
