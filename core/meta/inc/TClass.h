@@ -210,6 +210,7 @@ public:
    void               CalculateStreamerOffset();
    Bool_t             CanSplit() const;
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
+   TObject           *Clone(const char *newname="") const;
    void               CopyCollectionProxy(const TVirtualCollectionProxy&);
    void               Draw(Option_t *option="");
    void               Dump() const { TDictionary::Dump(); }
