@@ -77,7 +77,14 @@ static int G__defined_typename_exact(char* type_name)
                && G__ignore_stdnamespace
               ) env_tagnum = -1;
 #endif
-      else         env_tagnum = G__defined_tagname(temp2, 0);
+      else {
+         // first try a typedef, so we don't trigger autoloading here:
+         long env_typenum = G__defined_typename_noerror(temp2, 1);
+         if (env_typenum != -1 && G__newtype.type[env_typenum] == 'u')
+            env_tagnum = G__newtype.tagnum[env_typenum];
+         else
+            env_tagnum = G__defined_tagname(temp2, 0);
+      }
    }
    else {
       strcpy(temp, temp2);
@@ -1216,7 +1223,12 @@ int G__defined_typename_noerror(const char* type_name, int noerror)
       }
 #endif
       else {
-         env_tagnum = G__defined_tagname(skipconst, noerror);
+         // first try a typedef, so we don't trigger autoloading here:
+         long env_typenum = G__defined_typename_noerror(skipconst, 1);
+         if (env_typenum != -1 && G__newtype.type[env_typenum] == 'u')
+            env_tagnum = G__newtype.tagnum[env_typenum];
+         else
+            env_tagnum = G__defined_tagname(skipconst, noerror);
       }
    }
    else {

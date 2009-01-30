@@ -1936,7 +1936,14 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          // Recursively locate the containing scopes, from right to left.
          // Note: use a temporary here, G__defined_tagname can alter its argument.
          strcpy(temp, given_scopename);
-         int tag = G__defined_tagname(temp, noerror);
+         int tag = -1;
+         // first try a typedef, so we don't trigger autoloading here:
+         Reflex::Type env_typenum = G__find_typedef(temp);
+         if (env_typenum) {
+            tag = G__get_tagnum(env_typenum.FinalType());
+         } else {
+            tag = G__defined_tagname(temp,noerror);
+         }
          if (tag == -1) {
             // Should never happen.
             // TODO: Give an error message here.
@@ -2165,7 +2172,13 @@ extern "C" int G__search_tagname(const char* tagname, int type)
       strcpy(atom_tagname, tagname);
       p = G__strrstr(atom_tagname, "::");
       *p = 0;
-      envtagnum = G__Dict::GetDict().GetScope(G__defined_tagname(atom_tagname, 1)); // Note: atom_tagname can be modified during this call.
+      // first try a typedef, so we don't trigger autoloading here:
+      Reflex::Type envtypenum = G__find_typedef(atom_tagname);
+      if (envtypenum) {
+         envtagnum = envtypenum.FinalType();
+      } else {
+         envtagnum = G__Dict::GetDict().GetScope(G__defined_tagname(atom_tagname, 1)); // Note: atom_tagname can be modified during this call.
+      }      
    }
    else {
       envtagnum = G__get_envtagnum();
