@@ -1266,7 +1266,7 @@ class genDictionary(object) :
         for demangledMethod in allBasesMethods.keys() :
           member = allBasesMethods[demangledMethod]
           if len(member['bases']) > 1:
-            ret = self.genTypeName(member['returns'])
+            ret = self.genTypeName(member['returns'], False, True, True)
             if '(' not in ret:
               # skip functions returning functions; we don't get the prototype right easily:
               cmem = '  virtual %s %s throw();' % (ret, demangledMethod)
