@@ -47,41 +47,22 @@ TRefTable *TRefTable::fgRefTable = 0;
 
 ClassImp(TRefTable)
 //______________________________________________________________________________
-TRefTable::TRefTable()
+TRefTable::TRefTable() : fNumPIDs(0), fAllocSize(0), fN(0), fParentIDs(0), fParentID(-1),
+                         fDefaultSize(10), fUID(0), fUIDContext(0), fSize(0), fParents(0), fOwner(0)
 {
    // Default constructor for I/O.
 
-   fNumPIDs     = 0;
-   fAllocSize   = 0;
-   fN           = 0;
-   fParentID    = -1;
-   fParentIDs   = 0;
-   fDefaultSize = 10;
-   fParents     = 0;
-   fOwner       = 0;
    fgRefTable   = this;
-   fUID         = 0;
-   fUIDContext  = 0;
 }
 
 //______________________________________________________________________________
-TRefTable::TRefTable(TObject *owner, Int_t size)
+TRefTable::TRefTable(TObject *owner, Int_t size) :
+     fNumPIDs(0), fAllocSize(0), fN(0), fParentIDs(0), fParentID(-1),
+     fDefaultSize(size<10 ? 10 : size), fUID(0), fUIDContext(0), fSize(0), fParents(new TObjArray(1)), fOwner(owner)
 {
    // Create a TRefTable with initial size.
 
-   if (size < 10)
-      size = 10;
-   fNumPIDs     = 0;
-   fAllocSize   = 0;
-   fN           = 0;
-   fParentID    = -1;
-   fParentIDs   = 0;
-   fDefaultSize = size;
-   fParents     = new TObjArray(1);
-   fOwner       = owner;
    fgRefTable   = this;
-   fUID         = 0;
-   fUIDContext  = 0;
 }
 
 //______________________________________________________________________________
@@ -91,8 +72,9 @@ TRefTable::~TRefTable()
 
    delete [] fAllocSize;
    delete [] fN;
-   for (Int_t pid = 0; pid < fNumPIDs; ++pid)
+   for (Int_t pid = 0; pid < fNumPIDs; ++pid) {
       delete [] fParentIDs[pid];
+   }
    delete [] fParentIDs;
    delete fParents;
    if (fgRefTable == this) fgRefTable = 0;
@@ -233,7 +215,7 @@ void TRefTable::ExpandPIDs(Int_t numpids)
    fParentIDs = new Int_t *[fNumPIDs];
    if (temp2) memcpy(fParentIDs, temp2, oldNumPIDs * sizeof(Int_t *));
    memset(&fParentIDs[oldNumPIDs], 0,
-          (fNumPIDs - oldNumPIDs) * sizeof(Int_t));
+          (fNumPIDs - oldNumPIDs) * sizeof(Int_t*));
 }
 
 //______________________________________________________________________________
@@ -411,6 +393,7 @@ void TRefTable::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(TRefTable::Class(),this);
       //make sure that all TProcessIDs referenced in the Tree are put to the buffer
       //this is important in case the buffer is a TMessage to be sent through a TSocket
+#if 0
       TObjArray *pids = TProcessID::GetPIDs();
       Int_t npids = pids->GetEntries();
       Int_t npid2 = fProcessGUIDs.size();
@@ -423,5 +406,6 @@ void TRefTable::Streamer(TBuffer &R__b)
                R__b.WriteProcessID(pid);
          }
       }
+#endif
    }
 }
