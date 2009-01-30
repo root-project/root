@@ -61,8 +61,8 @@ TVirtualCollectionProxy* TEmulatedMapProxy::Generate() const
 void* TEmulatedMapProxy::At(UInt_t idx)
 {
    // Return the address of the value at index 'idx'.
-   if ( fEnv && fEnv->object )   {
-      PCont_t c = PCont_t(fEnv->object);
+   if ( fEnv && fEnv->fObject )   {
+      PCont_t c = PCont_t(fEnv->fObject);
       return idx<(c->size()/fValDiff) ? ((char*)&(*c->begin())) + idx*fValDiff : 0;
    }
    Fatal("TEmulatedMapProxy","At> Logic error - no proxy object set.");
@@ -72,9 +72,9 @@ void* TEmulatedMapProxy::At(UInt_t idx)
 UInt_t TEmulatedMapProxy::Size() const
 {
    // Return the current size of the container.
-   if ( fEnv && fEnv->object )   {
-      PCont_t c = PCont_t(fEnv->object);
-      return fEnv->size = (c->size()/fValDiff);
+   if ( fEnv && fEnv->fObject )   {
+      PCont_t c = PCont_t(fEnv->fObject);
+      return fEnv->fSize = (c->size()/fValDiff);
    }
    Fatal("TEmulatedMapProxy","Size> Logic error - no proxy object set.");
    return 0;
@@ -210,7 +210,7 @@ void TEmulatedMapProxy::Streamer(TBuffer &b)
    if ( b.IsReading() ) {  //Read mode
       int nElements = 0;
       b >> nElements;
-      if ( fEnv->object )  {
+      if ( fEnv->fObject )  {
          Resize(nElements,true);
       }
       if ( nElements > 0 )  {
@@ -218,7 +218,7 @@ void TEmulatedMapProxy::Streamer(TBuffer &b)
       }
    }
    else {     // Write case
-      int nElements = fEnv->object ? Size() : 0;
+      int nElements = fEnv->fObject ? Size() : 0;
       b << nElements;
       if ( nElements > 0 )  {
          WriteMap(nElements, b);

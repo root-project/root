@@ -69,7 +69,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)
    Bool_t   feed = false;
    void*  memory = 0;
    StreamHelper* itm = 0;
-   fEnv->size = nElements;
+   fEnv->fSize = nElements;
    switch (fSTL_type)  {
       case TClassEdit::kVector:
          if (fVal->fKind != EDataType(kBOOL_t))  {
@@ -81,7 +81,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)
          itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
          break;
    }
-   fEnv->start = itm;
+   fEnv->fStart = itm;
    switch (int(fVal->fKind))   {
       case kBool_t:
          b.ReadFastArray(&itm->boolean   , nElements);
@@ -137,7 +137,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)
          Error("TGenCollectionStreamer", "fType %d is not supported yet!\n", fVal->fKind);
    }
    if (feed)  {      // need to feed in data...
-      fEnv->start = fFeed.invoke(fEnv);
+      fEnv->fStart = fFeed.invoke(fEnv);
       if (memory)  {
          ::operator delete(memory);
       }
@@ -155,7 +155,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
    
    TClass* onFileValClass = (fOnFileClass ? fOnFileClass->GetCollectionProxy()->GetValueClass() : 0);
 
-   fEnv->size = nElements;
+   fEnv->fSize = nElements;
    switch (fSTL_type)  {
          // Simple case: contiguous memory. get address of first, then jump.
       case TClassEdit::kVector:
@@ -202,7 +202,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
       case TClassEdit::kMultiSet:
       case TClassEdit::kSet:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
-         fEnv->start = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
+         fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
          fConstruct.invoke(fEnv);
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
@@ -259,7 +259,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
    Value second(inside[2]);
    fValOffset = ((TStreamerElement*)pinfo->GetElements()->At(1))->GetOffset();
 
-   fEnv->size = nElements;
+   fEnv->fSize = nElements;
    switch (fSTL_type)  {
          // Simple case: contiguous memory. get address of first, then jump.
       case TClassEdit::kVector:
@@ -296,7 +296,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
       case TClassEdit::kMultiSet:
       case TClassEdit::kSet:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
-         fEnv->start = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
+         fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
          fConstruct.invoke(fEnv);
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
@@ -413,9 +413,9 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b)
    void* memory = 0;
    StreamHelper* i;
    float f;
-   fEnv->size  = nElements;
-   fEnv->start = (len < sizeof(buffer) ? buffer : memory =::operator new(len));
-   addr = temp = (char*)fEnv->start;
+   fEnv->fSize  = nElements;
+   fEnv->fStart = (len < sizeof(buffer) ? buffer : memory =::operator new(len));
+   addr = temp = (char*)fEnv->fStart;
    fConstruct.invoke(fEnv);
    for (int loop, idx = 0; idx < nElements; ++idx)  {
       addr = temp + fValDiff * idx;
@@ -519,11 +519,11 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)
    switch (fSTL_type)  {
       case TClassEdit::kVector:
          if (fVal->fKind != EDataType(kBOOL_t))  {
-            itm = (StreamHelper*)(fEnv->start = fFirst.invoke(fEnv));
+            itm = (StreamHelper*)(fEnv->fStart = fFirst.invoke(fEnv));
             break;
          }
       default:
-         fEnv->start = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
+         fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
          fCollect.invoke(fEnv);
          break;
    }
@@ -738,7 +738,7 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
    if (b.IsReading()) {    //Read mode
       int nElements = 0;
       b >> nElements;
-      if (fEnv->object)   {
+      if (fEnv->fObject)   {
          TGenCollectionProxy::Clear("force");
       }
       if (nElements > 0)  {
@@ -765,7 +765,7 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
          }
       }
    } else {    // Write case
-      int nElements = fEnv->object ? *(size_t*)fSize.invoke(fEnv) : 0;
+      int nElements = fEnv->fObject ? *(size_t*)fSize.invoke(fEnv) : 0;
       b << nElements;
       if (nElements > 0)  {
          switch (fSTL_type)  {
@@ -799,7 +799,7 @@ void TGenCollectionStreamer::StreamerAsMap(TBuffer &b)
    if (b.IsReading()) {    //Read mode
       int nElements = 0;
       b >> nElements;
-      if (fEnv->object)   {
+      if (fEnv->fObject)   {
          TGenCollectionProxy::Clear("force");
       }
       if (nElements > 0)  {

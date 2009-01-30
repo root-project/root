@@ -436,7 +436,8 @@ namespace ROOT { namespace Cintex {
                                                    m->construct_func,
                                                    m->destruct_func,
                                                    m->feed_func,
-                                                   m->collect_func);
+                                                   m->collect_func,
+                                                   m->create_env);
                root_class->SetCollectionProxy(cpinfo);
 
                root_class->SetBit(TClass::kIsForeign);

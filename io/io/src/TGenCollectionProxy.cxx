@@ -61,14 +61,14 @@ public:
    // Return the address of the value at index 'idx'
    virtual void* At(UInt_t idx)
 {
-      if ( fEnv && fEnv->object ) {
-         fEnv->idx = idx;
+      if ( fEnv && fEnv->fObject ) {
+         fEnv->fIdx = idx;
          switch( idx ) {
          case 0:
-            return fEnv->start = fFirst.invoke(fEnv);
+            return fEnv->fStart = fFirst.invoke(fEnv);
          default:
-            if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
-            return ((char*)fEnv->start) + fValDiff*idx;
+            if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
+            return ((char*)fEnv->fStart) + fValDiff*idx;
          }
       }
       Fatal("TGenVectorProxy","At> Logic error - no proxy object set.");
@@ -111,17 +111,17 @@ public:
       // Return the address of the value at index 'idx'
       
       // However we can 'take' the address of the content of vector<bool>.
-      if ( fEnv && fEnv->object ) {
+      if ( fEnv && fEnv->fObject ) {
          switch( idx ) {
             case 0:
-               fEnv->start = fFirst.invoke(fEnv);
-               fEnv->idx = idx;
+               fEnv->fStart = fFirst.invoke(fEnv);
+               fEnv->fIdx = idx;
                break;
             default:
-               fEnv->idx = idx - fEnv->idx;
-               if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
+               fEnv->fIdx = idx - fEnv->fIdx;
+               if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
                fNext.invoke(fEnv);
-               fEnv->idx = idx;
+               fEnv->fIdx = idx;
                break;
          }
          typedef ROOT::TCollectionProxyInfo::Type<std::vector<bool> >::Env_t EnvType_t;
@@ -166,16 +166,16 @@ public:
    // Return the address of the value at index 'idx'
    void* At(UInt_t idx)
 {
-      if ( fEnv && fEnv->object ) {
+      if ( fEnv && fEnv->fObject ) {
          switch( idx ) {
          case 0:
-            fEnv->idx = idx;
-            return fEnv->start = fFirst.invoke(fEnv);
+            fEnv->fIdx = idx;
+            return fEnv->fStart = fFirst.invoke(fEnv);
          default:  {
-            fEnv->idx = idx - fEnv->idx;
-            if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
+            fEnv->fIdx = idx - fEnv->fIdx;
+            if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
             void* result = fNext.invoke(fEnv);
-            fEnv->idx = idx;
+            fEnv->fIdx = idx;
             return result;
          }
          }
@@ -209,19 +209,19 @@ public:
    // Return the address of the value at index 'idx'
    void* At(UInt_t idx)
 {
-      if ( fEnv && fEnv->object ) {
-         if ( fEnv->use_temp ) {
-            return (((char*)fEnv->temp)+idx*fValDiff);
+      if ( fEnv && fEnv->fObject ) {
+         if ( fEnv->fUseTemp ) {
+            return (((char*)fEnv->fTemp)+idx*fValDiff);
          }
          switch( idx ) {
          case 0:
-            fEnv->idx = idx;
-            return fEnv->start = fFirst.invoke(fEnv);
+            fEnv->fIdx = idx;
+            return fEnv->fStart = fFirst.invoke(fEnv);
          default:  {
-            fEnv->idx = idx - fEnv->idx;
-            if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
+            fEnv->fIdx = idx - fEnv->fIdx;
+            if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
             void* result = fNext.invoke(fEnv);
-            fEnv->idx = idx;
+            fEnv->fIdx = idx;
             return result;
          }
          }
@@ -439,6 +439,7 @@ TGenCollectionProxy::TGenCollectionProxy(const TGenCollectionProxy& copy)
    fConstruct.call = copy.fConstruct.call;
    fFeed.call      = copy.fFeed.call;
    fCollect.call   = copy.fCollect.call;
+   fCreateEnv.call = copy.fCreateEnv.call;
    fValOffset      = copy.fValOffset;
    fValDiff        = copy.fValDiff;
    fValue          = copy.fValue ? new Value(*copy.fValue) : 0;
@@ -461,6 +462,7 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
    fDestruct.call   = 0;
    fConstruct.call  = 0;
    fCollect.call    = 0;
+   fCreateEnv.call  = 0;
    fFeed.call       = 0;
    fValue           = 0;
    fKey             = 0;
@@ -469,13 +471,13 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
    fValDiff         = 0;
    fPointers        = false;
    Env_t e;
-   if ( iter_size > sizeof(e.buff) ) {
+   if ( iter_size > sizeof(e.fIterator) ) {
       Fatal("TGenCollectionProxy",
             "%s %s are too large:%d bytes. Maximum is:%d bytes",
             "Iterators for collection",
             fClass->GetName(),
             iter_size,
-            sizeof(e.buff));
+            sizeof(e.fIterator));
    }
 }
 
@@ -497,6 +499,11 @@ TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info,
    fDestruct.call  = info.fDestructFunc;
    fFeed.call      = info.fFeedFunc;
    fCollect.call   = info.fCollectFunc;
+   fCreateEnv.call = info.fCreateEnv;
+   
+   if (cl) {
+      fName = cl->GetName();
+   }
    CheckFunctions();
 
    fValue           = 0;
@@ -505,26 +512,26 @@ TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info,
    fPointers        = false;
 
    Env_t e;
-   if ( info.fIterSize > sizeof(e.buff) ) {
+   if ( info.fIterSize > sizeof(e.fIterator) ) {
       Fatal("TGenCollectionProxy",
             "%s %s are too large:%d bytes. Maximum is:%d bytes",
             "Iterators for collection",
             fClass->GetName(),
             info.fIterSize,
-            sizeof(e.buff));
+            sizeof(e.fIterator));
    }
 }
 
 namespace {
-   typedef std::vector<ROOT::TCollectionProxyInfo::Environ<char[64]>* > Proxies_t;
+   typedef std::vector<ROOT::TCollectionProxyInfo::EnvironBase* > Proxies_t;
    void clearProxies(Proxies_t& v)
    {
       // Clear out the proxies.
 
       for(Proxies_t::iterator i=v.begin(); i != v.end(); ++i) {
-         ROOT::TCollectionProxyInfo::Environ<char[64]> *e = *i;
+         ROOT::TCollectionProxyInfo::EnvironBase *e = *i;
          if ( e ) {
-            if ( e->temp ) ::free(e->temp);
+            if ( e->fTemp ) ::free(e->fTemp);
             delete e;
          }
       }
@@ -612,6 +619,9 @@ void TGenCollectionProxy::CheckFunctions() const
    }
    if ( 0 == fCollect.call ) {
       Fatal("TGenCollectionProxy","No 'data collect' function for class %s present.",fName.c_str());
+   }
+   if (0 == fCreateEnv.call ) {
+      Fatal("TGenCollectionProxy","No 'environment creation' function for class %s present.",fName.c_str());
    }
 }
 
@@ -747,34 +757,34 @@ EDataType TGenCollectionProxy::GetType()
 void* TGenCollectionProxy::At(UInt_t idx)
 {
    // Return the address of the value at index 'idx'
-   if ( fEnv && fEnv->object ) {
+   if ( fEnv && fEnv->fObject ) {
       switch (fSTL_type) {
       case TClassEdit::kVector:
-         fEnv->idx = idx;
+         fEnv->fIdx = idx;
          switch( idx ) {
          case 0:
-            return fEnv->start = fFirst.invoke(fEnv);
+            return fEnv->fStart = fFirst.invoke(fEnv);
          default:
-            if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
-            return ((char*)fEnv->start) + fValDiff*idx;
+            if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
+            return ((char*)fEnv->fStart) + fValDiff*idx;
          }
       case TClassEdit::kSet:
       case TClassEdit::kMultiSet:
       case TClassEdit::kMap:
       case TClassEdit::kMultiMap:
-         if ( fEnv->use_temp ) {
-            return (((char*)fEnv->temp)+idx*fValDiff);
+         if ( fEnv->fUseTemp ) {
+            return (((char*)fEnv->fTemp)+idx*fValDiff);
          }
       default:
          switch( idx ) {
          case 0:
-            fEnv->idx = idx;
-            return fEnv->start = fFirst.invoke(fEnv);
+            fEnv->fIdx = idx;
+            return fEnv->fStart = fFirst.invoke(fEnv);
          default:  {
-            fEnv->idx = idx - fEnv->idx;
-            if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
+            fEnv->fIdx = idx - fEnv->fIdx;
+            if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
             void* result = fNext.invoke(fEnv);
-            fEnv->idx = idx;
+            fEnv->fIdx = idx;
             return result;
          }
          }
@@ -788,7 +798,7 @@ void* TGenCollectionProxy::At(UInt_t idx)
 void TGenCollectionProxy::Clear(const char* opt)
 {
    // Clear the emulated collection.
-   if ( fEnv && fEnv->object ) {
+   if ( fEnv && fEnv->fObject ) {
       if ( fPointers && opt && *opt=='f' ) {
          size_t i, n = *(size_t*)fSize.invoke(fEnv);
          if ( n > 0 ) {
@@ -804,7 +814,7 @@ void TGenCollectionProxy::Clear(const char* opt)
 UInt_t TGenCollectionProxy::Size() const
 {
    // Return the current size of the container
-   if ( fEnv && fEnv->object ) {
+   if ( fEnv && fEnv->fObject ) {
       return *(size_t*)fSize.invoke(fEnv);
    }
    Fatal("TGenCollectionProxy","Size> Logic error - no proxy object set.");
@@ -815,7 +825,7 @@ UInt_t TGenCollectionProxy::Size() const
 void TGenCollectionProxy::Resize(UInt_t n, Bool_t force)
 {
    // Resize the container
-   if ( fEnv && fEnv->object ) {
+   if ( fEnv && fEnv->fObject ) {
       if ( force && fPointers ) {
          size_t i, nold = *(size_t*)fSize.invoke(fEnv);
          if ( n != nold ) {
@@ -824,7 +834,7 @@ void TGenCollectionProxy::Resize(UInt_t n, Bool_t force)
          }
       }
       MESSAGE(3, "Resize(n)" );
-      fEnv->size = n;
+      fEnv->fSize = n;
       fResize.invoke(fEnv);
       return;
    }
@@ -836,7 +846,7 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
 {
    // Allocate the needed space.
 
-   if ( fEnv && fEnv->object ) {
+   if ( fEnv && fEnv->fObject ) {
       switch ( fSTL_type ) {
       case TClassEdit::kSet:
       case TClassEdit::kMultiSet:
@@ -846,14 +856,14 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
             Clear("force");
          else
             fClear.invoke(fEnv);
-         ++fEnv->refCount;
-         fEnv->size  = n;
-         if ( fEnv->space < fValDiff*n ) {
-            fEnv->temp = fEnv->temp ? ::realloc(fEnv->temp,fValDiff*n) : ::malloc(fValDiff*n);
-            fEnv->space = fValDiff*n;
+         ++fEnv->fRefCount;
+         fEnv->fSize  = n;
+         if ( fEnv->fSpace < fValDiff*n ) {
+            fEnv->fTemp = fEnv->fTemp ? ::realloc(fEnv->fTemp,fValDiff*n) : ::malloc(fValDiff*n);
+            fEnv->fSpace = fValDiff*n;
          }
-         fEnv->use_temp = kTRUE;
-         fEnv->start = fEnv->temp;
+         fEnv->fUseTemp = kTRUE;
+         fEnv->fStart = fEnv->fTemp;
          fConstruct.invoke(fEnv);
          return fEnv;
       case TClassEdit::kVector:
@@ -862,7 +872,7 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
          if( fPointers ) {
             Clear("force");
          }
-         fEnv->size = n;
+         fEnv->fSize = n;
          fResize.invoke(fEnv);
          return fEnv;
       }
@@ -885,14 +895,14 @@ void TGenCollectionProxy::Commit(void* env)
    case TClassEdit::kSet:
    case TClassEdit::kMultiSet:
       if ( env ) {
-         Env_t* e = (Env_t*)env;
-         if ( e->object ) {
-            e->start = e->temp;
+         EnvironBase_t* e = (EnvironBase_t*)env;
+         if ( e->fObject ) {
+            e->fStart = e->fTemp;
             fFeed.invoke(e);
          }
          fDestruct.invoke(e);
-         e->start = 0;
-         --e->refCount;
+         e->fStart = 0;
+         --e->fRefCount;
       }
       return;
    default:
@@ -907,31 +917,31 @@ void TGenCollectionProxy::PushProxy(void *objstart)
 
    if ( !fValue ) Initialize();
    if ( !fProxyList.empty() ) {
-      Env_t* back = fProxyList.back();
-      if ( back->object == objstart ) {
-         back->refCount++;
+      EnvironBase_t* back = fProxyList.back();
+      if ( back->fObject == objstart ) {
+         ++back->fRefCount;
          fProxyList.push_back(back);
          fEnv = back;
          return;
       }
    }
-   Env_t* e    = 0;
+   EnvironBase_t* e    = 0;
    if ( fProxyKept.empty() ) {
-      e = new Env_t();
-      e->space = 0;
-      e->temp  = 0;
-      e->use_temp = kFALSE;
+      e = (EnvironBase_t*)fCreateEnv.invoke();
+      e->fSpace = 0;
+      e->fTemp  = 0;
+      e->fUseTemp = kFALSE;
    }
    else {
       e = fProxyKept.back();
       fProxyKept.pop_back();
    }
-   e->size     = 0;
-   e->refCount = 1;
-   e->object   = objstart;
-   e->start    = 0;
-   e->idx      = 0;
-   ::memset(e->buff,0,sizeof(e->buff));
+   e->fSize     = 0;
+   e->fRefCount = 1;
+   e->fObject   = objstart;
+   e->fStart    = 0;
+   e->fIdx      = 0;
+   // ::memset(e->buff,0,sizeof(e->buff));
    fProxyList.push_back(e);
    fEnv = e;
 }
@@ -942,10 +952,10 @@ void TGenCollectionProxy::PopProxy()
    // Remove the last object.
 
    if ( !fProxyList.empty() ) {
-      Env_t* e = fProxyList.back();
-      if ( --e->refCount <= 0 ) {
+      EnvironBase_t* e = fProxyList.back();
+      if ( --e->fRefCount <= 0 ) {
          fProxyKept.push_back(e);
-         e->use_temp = kFALSE;
+         e->fUseTemp = kFALSE;
       }
       fProxyList.pop_back();
    }
@@ -982,7 +992,7 @@ void TGenCollectionProxy::Streamer(TBuffer &buff)
 {
    // Streamer Function.
    if ( fEnv ) {
-      GetCollectionClass()->Streamer( fEnv->object, buff );
+      GetCollectionClass()->Streamer( fEnv->fObject, buff );
       return;
    }
    Fatal("TGenCollectionProxy","Streamer> Logic error - no proxy object set.");

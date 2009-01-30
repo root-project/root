@@ -54,12 +54,13 @@ TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name)
 
    fName = cl_name;
    this->TEmulatedCollectionProxy::InitializeEx();
+   fCreateEnv = TGenCollectionProxy::Env_t::Create;
 }
 
 TEmulatedCollectionProxy::~TEmulatedCollectionProxy()
 {
    // Standard destructor
-   if ( fEnv && fEnv->object ) {
+   if ( fEnv && fEnv->fObject ) {
       Clear();
    }
 }
@@ -170,8 +171,8 @@ UInt_t TEmulatedCollectionProxy::Size() const
 {
    // Return the current size of the container
 
-   if ( fEnv && fEnv->object )   {
-      return fEnv->size = PCont_t(fEnv->object)->size()/fValDiff;
+   if ( fEnv && fEnv->fObject )   {
+      return fEnv->fSize = PCont_t(fEnv->fObject)->size()/fValDiff;
    }
    Fatal("TEmulatedCollectionProxy","Size> Logic error - no proxy object set.");
    return 0;
@@ -188,14 +189,14 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
    // Shrink the container
 
    typedef std::string  String_t;
-   PCont_t c   = PCont_t(fEnv->object);
-   char* addr  = ((char*)fEnv->start) + fValDiff*left;
+   PCont_t c   = PCont_t(fEnv->fObject);
+   char* addr  = ((char*)fEnv->fStart) + fValDiff*left;
    size_t i;
 
    switch ( fSTL_type )  {
       case TClassEdit::kMap:
       case TClassEdit::kMultiMap:
-         addr = ((char*)fEnv->start) + fValDiff*left;
+         addr = ((char*)fEnv->fStart) + fValDiff*left;
          switch(fKey->fCase)  {
             case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
             case G__BIT_ISENUM:
@@ -237,7 +238,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                }
                break;
          }
-         addr = ((char*)fEnv->start)+fValOffset+fValDiff*left;
+         addr = ((char*)fEnv->fStart)+fValOffset+fValDiff*left;
          // DO NOT break; just continue
 
          // General case for all values
@@ -282,7 +283,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
          }
    }
    c->resize(left*fValDiff,0);
-   fEnv->start = left>0 ? &(*c->begin()) : 0;
+   fEnv->fStart = left>0 ? &(*c->begin()) : 0;
    return;
 }
 
@@ -290,12 +291,12 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
 {
    // Expand the container
    size_t i;
-   PCont_t c   = PCont_t(fEnv->object);
+   PCont_t c   = PCont_t(fEnv->fObject);
    c->resize(left*fValDiff,0);
-   void *oldstart = fEnv->start;
-   fEnv->start = left>0 ? &(*c->begin()) : 0;
+   void *oldstart = fEnv->fStart;
+   fEnv->fStart = left>0 ? &(*c->begin()) : 0;
 
-   char* addr = ((char*)fEnv->start) + fValDiff*nCurr;
+   char* addr = ((char*)fEnv->fStart) + fValDiff*nCurr;
    switch ( fSTL_type )  {
       case TClassEdit::kMap:
       case TClassEdit::kMultiMap:
@@ -304,13 +305,13 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
             case G__BIT_ISENUM:
                break;
             case G__BIT_ISCLASS:
-               if (oldstart && oldstart != fEnv->start) {
+               if (oldstart && oldstart != fEnv->fStart) {
                   Long_t offset = 0;
                   for( i=0; i<=nCurr; ++i, offset += fValDiff ) {
                      // For now 'Move' only register the change of location
                      // so per se this is wrong since the object are copied via memcpy
                      // rather than a copy (or move) constructor.
-                     fKey->fType->Move(((char*)oldstart)+offset,((char*)fEnv->start)+offset);
+                     fKey->fType->Move(((char*)oldstart)+offset,((char*)fEnv->fStart)+offset);
                   }
                }
                for( i=nCurr; i<left; ++i, addr += fValDiff )
@@ -327,7 +328,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
                   *(void**)addr = 0;
                break;
          }
-         addr = ((char*)fEnv->start)+fValOffset+fValDiff*nCurr;
+         addr = ((char*)fEnv->fStart)+fValOffset+fValDiff*nCurr;
          // DO NOT break; just continue
 
          // General case for all values
@@ -337,13 +338,13 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
             case G__BIT_ISENUM:
                break;
             case G__BIT_ISCLASS:
-               if (oldstart && oldstart != fEnv->start) {
+               if (oldstart && oldstart != fEnv->fStart) {
                   Long_t offset = 0;
                   for( i=0; i<=nCurr; ++i, offset += fValDiff ) {
                      // For now 'Move' only register the change of location
                      // so per se this is wrong since the object are copied via memcpy
                      // rather than a copy (or move) constructor.
-                     fVal->fType->Move(((char*)oldstart)+offset,((char*)fEnv->start)+offset);
+                     fVal->fType->Move(((char*)oldstart)+offset,((char*)fEnv->fStart)+offset);
                   }
                }
                for( i=nCurr; i<left; ++i, addr += fValDiff ) {
@@ -369,10 +370,10 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
 {
    // Resize the container
 
-   if ( fEnv && fEnv->object )   {
+   if ( fEnv && fEnv->fObject )   {
       size_t nCurr = Size();
-      PCont_t c = PCont_t(fEnv->object);
-      fEnv->start = nCurr>0 ? &(*c->begin()) : 0;
+      PCont_t c = PCont_t(fEnv->fObject);
+      fEnv->fStart = nCurr>0 ? &(*c->begin()) : 0;
       if ( left == nCurr )  {
          return;
       }
@@ -389,8 +390,8 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
 void* TEmulatedCollectionProxy::At(UInt_t idx)
 {
    // Return the address of the value at index 'idx'
-   if ( fEnv && fEnv->object )   {
-      PCont_t c = PCont_t(fEnv->object);
+   if ( fEnv && fEnv->fObject )   {
+      PCont_t c = PCont_t(fEnv->fObject);
       size_t  s = c->size();
       if ( idx >= (s/fValDiff) )  {
          return 0;
@@ -515,7 +516,7 @@ void TEmulatedCollectionProxy::Streamer(TBuffer &b)
    if ( b.IsReading() ) {  //Read mode
       int nElements = 0;
       b >> nElements;
-      if ( fEnv->object )  {
+      if ( fEnv->fObject )  {
          Resize(nElements,true);
       }
       if ( nElements > 0 )  {
@@ -523,7 +524,7 @@ void TEmulatedCollectionProxy::Streamer(TBuffer &b)
       }
    }
    else {     // Write case
-      int nElements = fEnv->object ? Size() : 0;
+      int nElements = fEnv->fObject ? Size() : 0;
       b << nElements;
       if ( nElements > 0 )  {
          WriteItems(nElements, b);
