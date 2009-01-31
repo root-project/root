@@ -655,7 +655,7 @@ void TH2::DoFitSlices(bool onX,
 
    //Loop on all bins in Y, generate a projection along X
    Int_t bin;
-   Int_t nentries;
+   Long64_t nentries;
    for (bin=firstbin;bin<=lastbin;bin += ngroup) {
       TH1D *hp;
       if (onX)
@@ -663,7 +663,7 @@ void TH2::DoFitSlices(bool onX,
       else
          hp= ProjectionY("_temp",bin,bin+ngroup-1,"e");
       if (hp == 0) continue;
-      nentries = Int_t(hp->GetEntries());
+      nentries = Long64_t(hp->GetEntries());
       if (nentries == 0 || nentries < cut) {delete hp; continue;}
       f1->SetParameters(parsave);
       hp->Fit(f1,opt.Data());
