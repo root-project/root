@@ -251,7 +251,7 @@ void TMVA::VariableGaussDecorr::ApplyTransformation( Types::ESBType type ) const
 void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
 {
    // fill the cumulative distributions
-   UInt_t nvar = GetNVariables();
+   const UInt_t nvar = GetNVariables();
    ResetBranchAddresses( tr );
 
    fElementsPerBin= Int_t( tr->GetEntries()/2000.);
@@ -615,7 +615,7 @@ void TMVA::VariableGaussDecorr::ReadTransformationFromStream( std::istream& istr
 
          sstr  >> type >> ivar >> hname >> nbins >> fElementsPerBin; 
 
-         Float_t Binnings[nbins+1];
+         Float_t *Binnings = new Float_t[nbins+1];
          Float_t val;
          istr >> devnullS; // read the line "BinBoundaries" ..
          for (Int_t ibin=0; ibin<nbins+1; ibin++) {
@@ -627,6 +627,7 @@ void TMVA::VariableGaussDecorr::ReadTransformationFromStream( std::istream& istr
          if ( histToRead !=0 ) delete histToRead;
          // recreate the cumulative histogram to be filled with the values read
          histToRead = new TH1F( hname, hname, nbins, Binnings );
+         delete [] Binnings;
          histToRead->SetDirectory(0);
          fCumulativeDist[ivar][type]=histToRead;
 
