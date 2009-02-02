@@ -229,7 +229,6 @@ void TMVA::VariableGaussDecorr::ApplyTransformation( Types::ESBType type ) const
    }
 
    if (fApplyDecorrTransform ) {
-
       // transformation to decorrelate the variables      
       TMatrixD* m = type==Types::kSignal ? fDecorrMatrix[Types::kSignal] : fDecorrMatrix[Types::kBackground];
       if (m == 0) {
@@ -252,18 +251,22 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
 {
    // fill the cumulative distributions
    const UInt_t nvar = GetNVariables();
+   const UInt_t nClasses = 2;
+
    ResetBranchAddresses( tr );
 
    fElementsPerBin= Int_t( tr->GetEntries()/2000.);
    //   fElementsPerBin= 10;
-   UInt_t Nbins[2];
+   UInt_t Nbins[nClasses];
 
-   std::list< Float_t >  listsForBinning[nvar][2];
-   std::vector< Float_t >   vsForBinning[nvar][2];
-   Nbins[0] = 0;  // Nbins[0] = number of bins for signal distributions. It depends on the number of entries, thus it's the same for all the input variables
-   Nbins[1] = 0;  // Nbins[1] = "", for bkg
-
-   //   UInt_t nHighBins=100000;
+   
+   std::list< Float_t >  **listsForBinning = new std::list<Float_t>* [nClasses];
+   std::vector< Float_t >   **vsForBinning = new std::vector<Float_t>* [nClasses];
+   for (UInt_t i=0; i < nClasses; i++) {
+      listsForBinning[i] = new std::list<Float_t> [nvar];
+      vsForBinning[i]    = new std::vector<Float_t> [nvar];
+      Nbins[i] = 0; // Nbins[0] = number of bins for signal distributions. It depends on the number of entries, thus it's the same for all the input variables
+   }
 
    // if normalisation required, determine min/max
    TVectorF xmin(nvar), xmax(nvar);
@@ -310,7 +313,7 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
 
          if (GetEventRaw().IsSignal() == (type==Types::kSignal) ) {
             for (UInt_t ivar=0; ivar<nvar; ivar++) {
-               listsForBinning[ivar][i].push_back(GetEventRaw().GetVal(ivar));  
+               listsForBinning[i][ivar].push_back(GetEventRaw().GetVal(ivar));  
             }  
          }
       }
@@ -319,20 +322,20 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
 
    for (UInt_t sb=0; sb< 2; sb++){
       for (UInt_t ivar=0; ivar<nvar; ivar++) {
-         listsForBinning[ivar][sb].sort();  
+         listsForBinning[sb][ivar].sort();  
 
          std::list< Float_t >::iterator it;
          UInt_t ievt=0;
          //UInt_t nbins = 0;
-         for (it=listsForBinning[ivar][sb].begin(); it != listsForBinning[ivar][sb].end(); it++){
+         for (it=listsForBinning[sb][ivar].begin(); it != listsForBinning[sb][ivar].end(); it++){
             if (!(ievt%fElementsPerBin)) {
-               vsForBinning[ivar][sb].push_back(*it);
+               vsForBinning[sb][ivar].push_back(*it);
             }
             ievt++;
          }
-         vsForBinning[ivar][sb].push_back(listsForBinning[ivar][sb].back()); 
+         vsForBinning[sb][ivar].push_back(listsForBinning[sb][ivar].back()); 
       }
-      Nbins[sb] = vsForBinning[0][sb].size();
+      Nbins[sb] = vsForBinning[sb][0].size();
    }
 
    // if one exist already.. delete it 
@@ -344,10 +347,10 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
       Float_t* binnings_B = new Float_t[Nbins[1]];
 
       for (UInt_t k =0 ; k < Nbins[0]; k++){
-         binnings_S[k] = vsForBinning[ivar][0][k];
+         binnings_S[k] = vsForBinning[0][ivar][k];
       }
       for (UInt_t k =0 ; k < Nbins[1]; k++){
-         binnings_B[k] = vsForBinning[ivar][1][k];
+         binnings_B[k] = vsForBinning[1][ivar][k];
       }
 
       vector< TH1F* > tmp;
@@ -360,6 +363,7 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
                               Form("tmpCumulator_Var%d_B",ivar),
                               Nbins[1] -1,
                               binnings_B)); // backgr
+
       tmpCumulator.push_back(tmp);
 
       for (UInt_t i=0; i<2; i++) {
@@ -379,6 +383,17 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
       delete [] binnings_S;
       delete [] binnings_B;
    }
+   
+   // Deallocation
+   for( UInt_t i=0; i<nClasses; i++) {
+      delete [] listsForBinning[nClasses-i-1];
+      delete [] vsForBinning[nClasses-i-1];
+   }
+   delete [] listsForBinning;
+   delete [] vsForBinning;
+
+     
+
 
    for (UInt_t i=0; i<2; i++) {
       //what a funny way to make a loop over "signal (=0) and backgr(=1).. but it
