@@ -410,11 +410,11 @@ Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    Double_t snext;
    if (TMath::Abs(dir[2])<TGeoShape::Tolerance()) {
       if (SliceCrossingInZ(point, dir, icrossed, iph, sph, snext, stepmax)) return snext;
-      if (snext>stepmax-TGeoShape::Tolerance()) return TGeoShape::Big();
+      if (snext>TGeoShape::Tolerance()) return TGeoShape::Big();
       return 0.;
    }
    if (SliceCrossingIn(point, dir, ipl, icrossed, iph, sph, snext, stepmax)) return snext;
-   if (snext>stepmax-TGeoShape::Tolerance()) return TGeoShape::Big();   
+   if (snext>TGeoShape::Tolerance()) return TGeoShape::Big();
    return 0.;
 }   
 
