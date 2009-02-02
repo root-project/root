@@ -4120,11 +4120,16 @@ if test ! "x$enable_mathmore" = "xno"; then
 	    gsllibs=$found_lib
 	    gsllibdir=$found_dir
 	    # in case of shared libs (gsllibdir is not empty) need gslcblas
-	    # assume libgslcblas is in same dir as libgsl
+	    # assume libgslcblas is in same dir as libgsl or in ../cblas/
 	    #if test ! "x$gsllibdir" = "x"; then
-		check_library "libgslcblas gslcblasML gslcblas cblas" "$enable_gsl_shared" "$gsllibdir0" \
-		    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
-		    $finkdir/lib
+		if test ! "x$gsllibdir0" = "x"; then
+		    gsllibdir1=$gsllibdir0/../cblas/.libs
+		fi
+		check_library "libgslcblas gslcblasML gslcblas cblas" \
+		    "$enable_gsl_shared" "" \
+		    $gsllibdir0 $gsllibdir1 $GSL $GSL/lib \
+		    $GSL/.libs $GSL/cblas/.libs /usr/local/lib \
+		    /usr/lib /opt/gsl/lib $finkdir/lib
 		if test ! "x$found_lib" = "x"; then
 		    gsllibs="$gsllibs $found_lib"
 		    gsllibdir=$found_dir
