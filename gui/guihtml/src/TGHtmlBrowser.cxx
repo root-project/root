@@ -56,7 +56,7 @@ enum EMyMessageTypes {
 };
 
 static const char *gHtmlFTypes[] = {
-   "HTML files",    "*.html",
+   "HTML files",    "*.htm*",
    "All files",     "*",
     0,               0
 };
@@ -282,8 +282,12 @@ void TGHtmlBrowser::Selected(const char *uri)
    FILE *f;
 
    TString surl(gSystem->UnixPathName(uri));
-   if (!surl.BeginsWith("http://") && !surl.BeginsWith("file://"))
-      surl.Prepend("file://");
+   if (!surl.BeginsWith("http://") && !surl.BeginsWith("file://")) {
+      if (surl.BeginsWith("file:"))
+         surl.ReplaceAll("file:", "file://");
+      else
+         surl.Prepend("file://");
+   }
    if (surl.EndsWith(".root")) {
       gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kWatch));
       gROOT->ProcessLine(Form("TFile::Open(\"%s\");", surl.Data()));
@@ -318,9 +322,12 @@ void TGHtmlBrowser::Selected(const char *uri)
    else {
       f = fopen(url.GetFile(), "r");
       if (f) {
+         TString fpath = url.GetUrl();
+         fpath.ReplaceAll(gSystem->BaseName(fpath.Data()), "");
+         fpath.ReplaceAll("file://", "");
          fHtml->Clear();
          fHtml->Layout();
-         fHtml->SetBaseUri("");
+         fHtml->SetBaseUri(fpath.Data());
          buf = (char *)calloc(4096, sizeof(char));
          while (fgets(buf, 4096, f)) {
             fHtml->ParseText(buf);
