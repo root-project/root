@@ -158,7 +158,7 @@ with the command:
 <pre>
    gEnv->Print();
 </pre>
-if the TTF are is use the following line will appear at the beginning of the
+if the TTF are in use the following line will appear at the beginning of the
 printout given by this command:
 <pre>
    Unix.*.Root.UseTTFonts:   true                           [Global]
