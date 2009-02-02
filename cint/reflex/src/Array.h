@@ -62,6 +62,15 @@ namespace Reflex {
       Type ToType() const;
 
 
+      /**
+      * Calculate the size for types based on other types,
+      * if the other type was not yet available to calculate the
+      * size at construction time.
+      * @return The calculated size, 0 if the underlying size is unknown.
+      */
+      size_t CalculateSize() const;
+
+
       /** static funtion that composes the At Name */
       static std::string BuildTypeName( const Type & typ, 
          size_t len,
@@ -90,6 +99,13 @@ namespace Reflex {
 inline size_t Reflex::Array::ArrayLength() const { 
 //-------------------------------------------------------------------------------
    return fLength; 
+}
+
+
+//-------------------------------------------------------------------------------
+inline size_t Reflex::Array::CalculateSize() const {
+//-------------------------------------------------------------------------------
+   return fLength * fArrayType.SizeOf();
 }
 
 
