@@ -910,6 +910,10 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    else if (fVarTransformString == "PCA" ) {
       fVarTransform = new VariablePCATransform( Data().GetVariableInfos() );
    }
+   else if (fVarTransformString == "GaussDecorr" ) {
+      fVarTransform = new VariableGaussDecorr( Data().GetVariableInfos() );
+   }
+
 
    // Now read variable info
    fin.getline(buf,512);
@@ -1123,18 +1127,20 @@ void TMVA::MethodBase::CreateMVAPdfs()
    fLogger << kINFO << "<CreateMVAPdfs> Using " << fNbinsMVAPdf << " bins and smooth "
            << fNsmoothMVAPdf << " times" << Endl;
 
-   std::vector<Double_t>* sigVec = new std::vector<Double_t>;
-   std::vector<Double_t>* bkgVec = new std::vector<Double_t>;
+   std::vector<Double_t>* sigVec  = new std::vector<Double_t>;
+   std::vector<Double_t>* bkgVec  = new std::vector<Double_t>;
+   std::vector<Double_t>* wSigVec = new std::vector<Double_t>;
+   std::vector<Double_t>* wBkgVec = new std::vector<Double_t>;
 
    Double_t minVal=9999;
    Double_t maxVal=-9999;
    for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
       ReadTrainingEvent(ievt);
-      Double_t theVal = this->GetMvaValue();
+      Double_t theVal = GetMvaValue();
       if (minVal>theVal) minVal = theVal;
       if (maxVal<theVal) maxVal = theVal;
-      if (IsSignalEvent()) sigVec->push_back(theVal);
-      else                 bkgVec->push_back(theVal);
+      if (IsSignalEvent()) { sigVec->push_back(theVal); wSigVec->push_back(GetEventWeight()); }
+      else                 { bkgVec->push_back(theVal); wBkgVec->push_back(GetEventWeight()); }      
    }
 
    // create histograms that serve as basis to create the MVA Pdfs
@@ -1148,12 +1154,14 @@ void TMVA::MethodBase::CreateMVAPdfs()
    histMVAPdfB->Sumw2();
 
    // fill histograms
-   for (Int_t i=0; i<(Int_t)sigVec->size(); i++) histMVAPdfS->Fill( (*sigVec)[i] );
-   for (Int_t i=0; i<(Int_t)bkgVec->size(); i++) histMVAPdfB->Fill( (*bkgVec)[i] );
+   for (Int_t i=0; i<(Int_t)sigVec->size(); i++) histMVAPdfS->Fill( (*sigVec)[i], (*wSigVec)[i] );
+   for (Int_t i=0; i<(Int_t)bkgVec->size(); i++) histMVAPdfB->Fill( (*bkgVec)[i], (*wBkgVec)[i] );
 
    // cleanup
    delete sigVec;
    delete bkgVec;
+   delete wSigVec;
+   delete wBkgVec;
 
    // normalisation
    gTools().NormHist( histMVAPdfS );

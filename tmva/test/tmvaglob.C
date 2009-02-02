@@ -406,6 +406,7 @@ namespace TMVAGlob {
       TKey *mkey;
       TKey *retkey=0;
       Bool_t loop=kTRUE;
+      TString tname("Method_"+name);  // target name
       while (loop) {
          mkey = (TKey*)mnext();
          if (mkey==0) {
@@ -413,14 +414,8 @@ namespace TMVAGlob {
          } else {
             TString clname = mkey->GetClassName();
             TClass *cl = gROOT->GetClass(clname);
-            if (cl->InheritsFrom("TDirectory")) {
-               TString mname = mkey->GetName(); // method name
-               TString tname = "Method_"+name;  // target name
-               if (mname==tname) { // target found!
-                  loop = kFALSE;
-                  retkey = mkey;
-               }
-            }
+            if(cl->InheritsFrom("TDirectory") && tname == mkey->GetName()) // target found!
+               return mkey;
          }
       }
       return retkey;

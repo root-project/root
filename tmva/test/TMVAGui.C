@@ -20,7 +20,7 @@ void ActionButton( TControlBar* cbar,
    if (requiredKey != "") {
       Bool_t found = kFALSE;
       TIter next( TMVAGui_keyContent );
-      TKey* key;
+      TKey* key=0;
       while ((key = (TKey*)next())) {         
          if (TString(key->GetName()).Contains( requiredKey )) { found = kTRUE; break; }
       }

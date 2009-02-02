@@ -120,10 +120,11 @@ namespace TMVA {
       // Reads method name and title from the weightfile
       void GetMethodNameTitle(const TString& weightfile, TString& methodName, TString& methodTitle);
 
-
       void DeclareOptions();
 
       Bool_t fVerbose;    // verbosity
+      Bool_t fSilent;     // overall silent flag
+      Bool_t fColor;      // color output
 
       std::map<TString, IMethod*> fMethodMap; // map of methods
 

@@ -47,7 +47,7 @@ namespace TMVA {
    public:
   
       VariableDecorrTransform( std::vector<TMVA::VariableInfo>& );
-      virtual ~VariableDecorrTransform( void ) {}
+      virtual ~VariableDecorrTransform( void );
 
       void   ApplyTransformation( Types::ESBType type = Types::kMaxSBType ) const;
       Bool_t PrepareTransformation( TTree* inputTree );

@@ -40,7 +40,20 @@ Bool_t Use_RuleFit         = 1;
 Bool_t Use_Plugin          = 0;
 // ---------------------------------------------------------------
 
-#include <vector>
+#include <iostream>
+
+#include "TFile.h"
+#include "TSystem.h"
+#include "TTree.h"
+#include "TCut.h"
+#include "TStopwatch.h"
+#include "TPluginManager.h"
+
+#ifndef __CINT__
+#include "TMVA/Tools.h"
+#include "TMVA/Reader.h"
+#include "TMVA/MethodCuts.h"
+#endif
 
 void TMVApplication( TString myMethodList = "" ) 
 {
@@ -61,7 +74,7 @@ void TMVApplication( TString myMethodList = "" )
          = Use_Plugin
          = 0;
 
-      mlist = TMVA::Tools::ParseFormatLine( myMethodList, " :," );
+      mlist = TMVA::gTools().ParseFormatLine( myMethodList, " :," );
 
       if (mlist->FindObject( "Cuts"          ) != 0) Use_Cuts          = 1; 
       if (mlist->FindObject( "CutsD"         ) != 0) Use_CutsD         = 1; 
@@ -157,11 +170,6 @@ void TMVApplication( TString myMethodList = "" )
    //    TString method = "Fisher method";
    //    reader->BookMVA( method, dir + prefix + name );
 
-
-
-
-
-   
    // example how to use your own method as plugin
    if (Use_Plugin) {
       // the weight file contains a line 
@@ -220,8 +228,8 @@ void TMVApplication( TString myMethodList = "" )
    // book example histogram for probability (the other methods are done similarly)
    TH1F *probHistFi(0), *rarityHistFi(0);
    if (Use_Fisher) {
-           probHistFi   = new TH1F( "PROBA_MVA_Fisher",  "PROBA_MVA_Fisher",  nbin, 0, 1 );
-           rarityHistFi = new TH1F( "RARITY_MVA_Fisher", "RARITY_MVA_Fisher", nbin, 0, 1 );
+      probHistFi   = new TH1F( "PROBA_MVA_Fisher",  "PROBA_MVA_Fisher",  nbin, 0, 1 );
+      rarityHistFi = new TH1F( "RARITY_MVA_Fisher", "RARITY_MVA_Fisher", nbin, 0, 1 );
    }
 
    // Prepare input tree (this must be replaced by your data source)
@@ -323,8 +331,8 @@ void TMVApplication( TString myMethodList = "" )
 
       // retrieve probability instead of MVA output
       if (Use_Fisher       )   {
-	 probHistFi->Fill( reader->GetProba ( "Fisher method" ) );
-	 rarityHistFi->Fill( reader->GetRarity( "Fisher method" ) );
+         probHistFi->Fill( reader->GetProba ( "Fisher method" ) );
+         rarityHistFi->Fill( reader->GetRarity( "Fisher method" ) );
       }
    }
    sw.Stop();
@@ -342,7 +350,7 @@ void TMVApplication( TString myMethodList = "" )
 
       // workaround for CINT (dynamic_cast does not work)
       // mcuts = TMVA::MethodCuts::DynamicCast( reader->FindMVA( "CutsGA method" ) );
-      mcuts = dynamic_cast<TMVA::MethodCuts*>( reader->FindMVA( "CutsGA method" ) );
+      TMVA::MethodCuts* mcuts = dynamic_cast<TMVA::MethodCuts*>( reader->FindMVA( "CutsGA method" ) );
 
       if (mcuts) {      
          std::vector<Double_t> cutsMin;
@@ -354,7 +362,7 @@ void TMVApplication( TString myMethodList = "" )
             cout << "... Cut: " 
                  << cutsMin[ivar] 
                  << " < \"" 
-	         << mcuts->GetInputVar(ivar)
+                 << mcuts->GetInputVar(ivar)
                  << "\" <= " 
                  << cutsMax[ivar] << endl;
          }

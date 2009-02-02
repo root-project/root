@@ -285,7 +285,7 @@ void TMVA::RuleEnsemble::CleanupRules()
       if (fRules[ind]->GetRelImportance()<fImportanceCut) {
          therule = fRules[ind];
 #if _MSC_VER >= 1400
-         fRules.erase( std::vector<Rule *>::iterator(&fRules[ind], &fRules));
+         fRules.erase( std::vector<Rule *>::iterator(&fRules[ind], &fRules) );
 #else
          fRules.erase( std::vector<Rule *>::iterator(&fRules[ind]) );
 #endif

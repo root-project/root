@@ -4,7 +4,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : VariableGaussDecorr                                               *
+ * Class  : VariableGaussDecorr                                                   *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -30,6 +30,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <list>
 #include "Riostream.h"
 #include "TVectorF.h"
 #include "TVectorD.h"
@@ -43,37 +44,34 @@
 
 ClassImp(TMVA::VariableGaussDecorr)
 
-
-
-//_______________________________________________________________________
-TMVA::VariableGaussDecorr::VariableGaussDecorr( std::vector<VariableInfo>& varinfo )
-   : VariableTransformBase( varinfo, Types::kGaussDecorr )
+   //_______________________________________________________________________
+   TMVA::VariableGaussDecorr::VariableGaussDecorr( std::vector<VariableInfo>& varinfo )
+      : VariableTransformBase( varinfo, Types::kGaussDecorr )
 { 
    // constructor
    SetName("GaussDecorr");
+   gROOT->cd();
    for (UInt_t ivar=0; ivar < GetNVariables(); ivar++){
       vector< TH1F* >  tmp;
-      tmp.push_back(0); //signal
-      tmp.push_back(0); //backgr
+      tmp.push_back(0); // signal
+      tmp.push_back(0); // backgr
       fCumulativeDist.push_back(tmp);
    }
    fDecorrMatrix[0] = fDecorrMatrix[1] = 0;
    fFlatNotGaussD   = kFALSE;
 
-// can only be applied one after the other when they are created. But in order to
-// determine the decorrelation transformation, I need to first apply the Gauss transformation
-   fApplyGaussTransform = kFALSE;  
+   // can only be applied one after the other when they are created. But in order to
+   // determine the decorrelation transformation, I need to first apply the Gauss transformation
+   fApplyGaussTransform  = kFALSE;  
    fApplyDecorrTransform = kFALSE; 
-
 }
 
 //_______________________________________________________________________
 TMVA::VariableGaussDecorr::~VariableGaussDecorr( void )
 {
-   
-   const UInt_t nvar = GetNVariables();
+   // destructor
 
-   for (UInt_t ivar=0; ivar<nvar; ivar++) {
+   for (UInt_t ivar=0; ivar<(UInt_t)GetNVariables(); ivar++) {
       for (UInt_t i=0; i<2; i++) {
          if (0 != fCumulativeDist[ivar][i] ) { 
             delete fCumulativeDist[ivar][i]; 
@@ -101,13 +99,13 @@ Bool_t TMVA::VariableGaussDecorr::PrepareTransformation( TTree* inputTree )
       return kFALSE;
    }   
 
-   GetCumulativeDist( inputTree);
-   
+   GetCumulativeDist( inputTree );
+
    fApplyGaussTransform = kTRUE;
 
    if (!fFlatNotGaussD) {
       GetSQRMats( inputTree );
-      
+
       fApplyDecorrTransform = kTRUE;
    }
 
@@ -154,38 +152,95 @@ void TMVA::VariableGaussDecorr::ApplyTransformation( Types::ESBType type ) const
    for (UInt_t ivar=0; ivar<nvar; ivar++) vec(ivar) = GetEventRaw().GetVal(ivar);
 
    if (fApplyGaussTransform) {
-      //decide if you want to transform into a gaussian according to the signal or backgr
-      //transformation 
-      Double_t cumulant;
+      // decide if you want to transform into a gaussian according to the signal or backgr
+      // transformation 
+      Double_t cumulant, supmin,total;
       Int_t    thebin;
+      Double_t xvar, x0, x1, y0, y1;
       UInt_t sb = (type==Types::kSignal) ? 0 : 1;
       for (UInt_t ivar=0; ivar<nvar; ivar++) {
-         if (0 != fCumulativeDist[ivar][ivar] ) { 
+         if (0 != fCumulativeDist[ivar][sb]) { 
             // first make it flat
-            thebin = (fCumulativeDist[ivar][sb])->FindBin(vec(ivar));
-            cumulant     = (fCumulativeDist[ivar][sb])->GetBinContent(thebin);
+            // my old code..
+            //             Int_t    thebin   = (fCumulativeDist[ivar][sb])->FindBin(vec(ivar));
+            //             Double_t cumulant = (fCumulativeDist[ivar][sb])->GetBinContent(thebin);
+            // Diegos interpoloation instead..
+            xvar = vec(ivar);
+            total = fCumulativeDist[ivar][sb]->GetNbinsX()*fElementsPerBin;
+            supmin = 0.5/total;
+            thebin = (fCumulativeDist[ivar][sb])->FindBin(vec(ivar)); // xvar < xmin ==> thebin = 0 . xvar > xmax ==> thebin = NbinsX() + 1
+            //cumulant     = (fCumulativeDist[ivar][sb])->GetBinContent(thebin);
+
+            x0 = fCumulativeDist[ivar][sb]->GetBinLowEdge(TMath::Max(thebin,1)); 
+            x1 = fCumulativeDist[ivar][sb]->GetBinLowEdge(TMath::Min(thebin+1,fCumulativeDist[ivar][sb]->GetNbinsX()+1)); 
+
+            // if (thebin <= 1) { y0 = 1./(fElementsPerBin*fCumulative[ivar][sb]->GetNbinsX()); }   TO DO
+            y0 = fCumulativeDist[ivar][sb]->GetBinContent(TMath::Max(thebin-1,0)); // Y0 = F(x0); Y0 >= 0
+            y1 = fCumulativeDist[ivar][sb]->GetBinContent(TMath::Min(thebin,fCumulativeDist[ivar][sb]->GetNbinsX()+1));  // Y1 = F(x1);  Y1 <= 1
+
+            if (thebin == 0) {
+               y0 = supmin;
+               y1 = supmin;
+            }
+            if (thebin == 1) {
+               y0 = supmin;
+            }
+            if (thebin > fCumulativeDist[ivar][sb]->GetNbinsX()) { 
+               y0 = 1.-supmin;
+               y1 = 1.-supmin; 
+            }
+            if (thebin == fCumulativeDist[ivar][sb]->GetNbinsX()) { 
+               y1 = 1.-supmin; 
+            }
+
+            //if (thebin == fCumulativeDist[ivar][sb]->GetNbinsX()) { y1 = 1- 1./(fElementsPerBin*fCumulative[ivar][sb]->GetNbinsX());} TO DO
+
+            //Special cases:
+            //1 : x < xmin of the training sample
+            //if (xvar < fCumulative[ivar][sb]->GetBinLowEdge(1)){
+
+            //if (xvar==x0){ cumulat = y0; }
+            if (x0 == x1) { cumulant = y1;}
+            else { cumulant = y0 + (y1-y0)*(xvar-x0)/(x1-x0);} // Interpolation
+            // Doesn't exist something like 'elif' in C++ ??
+            if (xvar <= fCumulativeDist[ivar][sb]->GetBinLowEdge(1)){
+               cumulant = supmin;
+            }
+            if (xvar >= fCumulativeDist[ivar][sb]->GetBinLowEdge(fCumulativeDist[ivar][sb]->GetNbinsX()+1)){
+               cumulant = 1-supmin;
+            }
+
+
             // now transfor to a gaussian
             // actually, the "sqrt(2) is not really necessary, who cares if it is totally normalised
             //            vec(ivar) =  TMath::Sqrt(2.)*TMath::ErfInverse(2*sum - 1);
             if (fFlatNotGaussD) vec(ivar) = cumulant; 
-            else vec(ivar) =  1.414213562*TMath::ErfInverse(2.* cumulant - 1.);
-         }
+            else {
+               // sanity correction for out-of-range values
+               Double_t maxErfInvArgRange = 0.99999999;
+               Double_t arg = 2.0*cumulant - 1.0;
+               arg = TMath::Min(+maxErfInvArgRange,arg);
+               arg = TMath::Max(-maxErfInvArgRange,arg);
+
+               vec(ivar) = 1.414213562*TMath::ErfInverse(arg);
+            }
+         }         
       }
-  }
-   
-   if (fApplyDecorrTransform ){
-      
-      // transformation to decorrelate the variables
-      
+   }
+
+   if (fApplyDecorrTransform ) {
+
+      // transformation to decorrelate the variables      
       TMatrixD* m = type==Types::kSignal ? fDecorrMatrix[Types::kSignal] : fDecorrMatrix[Types::kBackground];
-      if (m == 0)
+      if (m == 0) {
          fLogger << kFATAL << "Transformation matrix for " << (Types::kSignal?"signal":"background") 
                  << " is not defined" << Endl;
-      
-      
+      }      
+
       // diagonalise variable vectors
       vec *= *m;
    }  
+
    for (UInt_t ivar=0; ivar<nvar; ivar++) GetEvent().SetVal(ivar,vec(ivar));
    GetEvent().SetType       ( GetEventRaw().Type() );
    GetEvent().SetWeight     ( GetEventRaw().GetWeight() );
@@ -198,14 +253,25 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
    // fill the cumulative distributions
    UInt_t nvar = GetNVariables();
    ResetBranchAddresses( tr );
-   UInt_t nHighBins=100000;
+
+   fElementsPerBin= Int_t( tr->GetEntries()/2000.);
+   //   fElementsPerBin= 10;
+   UInt_t Nbins[2];
+
+   std::list< Float_t >  listsForBinning[nvar][2];
+   std::vector< Float_t >   vsForBinning[nvar][2];
+   //UInt_t NbinsB= 0;
+   Nbins[0] = 0;  // Nbins[0] = number of bins for signal distributions. It depends on the number of entries, thus it's the same for all the input variables
+   Nbins[1] = 0;  // Nbins[1] = "", for bkg
+
+   //   UInt_t nHighBins=100000;
 
    // if normalisation required, determine min/max
    TVectorF xmin(nvar), xmax(nvar);
    for (Int_t iev=0; iev<tr->GetEntries(); iev++) {
       // fill the event
       ReadEvent(tr, iev, Types::kSignal);
-      
+
       for (UInt_t ivar=0; ivar<nvar; ivar++) {
          if (iev == 0) {
             xmin(ivar) = GetEventRaw().GetVal(ivar);
@@ -220,27 +286,98 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
 
    // create histogram for the cumulative distribution.
    std::vector< std::vector< TH1F* > >  tmpCumulator; //! o.k.. what would be the proper name
+
+
+   for (UInt_t i=0; i<2; i++) {
+      //what a funny way to make a loop over "signal (=0) and backgr(=1).. but it
+      //seems to be general habit, and the stuff below is then needed to 
+      //make sure that "signal" and "backgr" are recognized according to their
+      //predefined types...
+      Types::ESBType  type;
+      type = (i==0) ? Types::kSignal : Types::kBackground;
+
+
+
+      // perform event loop
+
+      for (Int_t ievt=0; ievt < tr->GetEntries(); ievt++) {
+
+         // fill the event  (no, it does NOT mean that you want to read a signal
+         // event. A bit irritating again, but the "Types::kSignal" only means, that
+         // "if it were set to "Types::kTrueType", then this variable would be
+         // overwritten in the function call with the type "kSignal" or "kBackgr" 
+         // depending on what event type event ievt is
+         ReadEvent(tr, ievt, Types::kSignal);
+
+         if (GetEventRaw().IsSignal() == (type==Types::kSignal) ) {
+            for (UInt_t ivar=0; ivar<nvar; ivar++) {
+               listsForBinning[ivar][i].push_back(GetEventRaw().GetVal(ivar));  
+            }  
+         }
+      }
+   }
+   //Sorting the lists, getting Nbins ...
+
+   for (UInt_t sb=0; sb< 2; sb++){
+      for (UInt_t ivar=0; ivar<nvar; ivar++) {
+         listsForBinning[ivar][sb].sort();  
+
+         std::list< Float_t >::iterator it;
+         UInt_t ievt=0;
+         //UInt_t nbins = 0;
+         for (it=listsForBinning[ivar][sb].begin(); it != listsForBinning[ivar][sb].end(); it++){
+            if (!(ievt%fElementsPerBin)) {
+               vsForBinning[ivar][sb].push_back(*it);
+            }
+            ievt++;
+         }
+         vsForBinning[ivar][sb].push_back(listsForBinning[ivar][sb].back()); 
+      }
+      Nbins[sb] =vsForBinning[0][sb].size();
+   }
+
+   Float_t Binnings_S[nvar][Nbins[0]];
+   Float_t Binnings_B[nvar][Nbins[1]];
+
+   for (UInt_t ivar=0; ivar<nvar; ivar++) {
+      for (UInt_t k =0 ; k < Nbins[0]; k++){
+         Binnings_S[ivar][k] = vsForBinning[ivar][0][k];
+      }
+      for (UInt_t k =0 ; k < Nbins[1]; k++){
+         Binnings_B[ivar][k] = vsForBinning[ivar][1][k];
+      }
+   }
+
    for (UInt_t ivar=0; ivar < nvar; ivar++){
-      vector< TH1F* >  tmp;
+      vector< TH1F* > tmp;
+
       tmp.push_back( new TH1F(Form("tmpCumulator_Var%d_S",ivar),
-                                             Form("tmpCumulator_Var%d_S",ivar),nHighBins,
-                                             xmin(ivar),xmax(ivar))); //signal
+                              Form("tmpCumulator_Var%d_S",ivar),
+                              Nbins[0] -1,
+                              Binnings_S[ivar]));; // signal
       tmp.push_back( new TH1F(Form("tmpCumulator_Var%d_B",ivar),
-                                             Form("tmpCumulator_Var%d_B",ivar),nHighBins,
-                                             xmin(ivar),xmax(ivar))); //backgr
+                              Form("tmpCumulator_Var%d_B",ivar),
+                              Nbins[1] -1,
+                              Binnings_B[ivar])); // backgr
       tmpCumulator.push_back(tmp);
    }
-   // if one  exist already.. delete it 
+   // if one exist already.. delete it 
    char SB[2]={'S','B'};
    for (UInt_t ivar=0; ivar<nvar; ivar++) {
       for (UInt_t i=0; i<2; i++) {
-         if (0 != fCumulativeDist[ivar][ivar] ) { 
+         if (0 != fCumulativeDist[ivar][i] ) { 
             delete fCumulativeDist[ivar][i]; 
          }
-         fCumulativeDist[ivar][i] = new TH1F(Form("Cumulative_Var%d_%c",ivar,SB[i]),
-                                             Form("Cumulative_Var%d_%c",ivar,SB[i]),10000,
-                                             xmin(ivar),xmax(ivar));
       }
+      fCumulativeDist[ivar][0] = new TH1F(Form("Cumulative_Var%d_%c",ivar,SB[0]),
+                                          Form("Cumulative_Var%d_%c",ivar,SB[0]),
+                                          Nbins[0]-1,
+                                          Binnings_S[ivar]);
+      fCumulativeDist[ivar][1] = new TH1F(Form("Cumulative_Var%d_%c",ivar,SB[1]),
+                                          Form("Cumulative_Var%d_%c",ivar,SB[1]),
+                                          Nbins[1]-1,
+                                          Binnings_B[ivar]);
+
    }
 
    for (UInt_t i=0; i<2; i++) {
@@ -250,51 +387,50 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
       //predefined types...
       Types::ESBType  type;
       type = (i==0) ? Types::kSignal : Types::kBackground;
-      
-      
-      
+
       // perform event loop
       Int_t ic = 0;
       for (Int_t ievt=0; ievt<tr->GetEntries(); ievt++) {
-         
+
          // fill the event  (no, it does NOT mean that you want to read a signal
          // event. A bit irritating again, but the "Types::kSignal" only means, that
          // "if it were set to "Types::kTrueType", then this variable would be
          // overwritten in the function call with the type "kSignal" or "kBackgr" 
          // depending on what event type event ievt is
          ReadEvent(tr, ievt, Types::kSignal);
-         
+
          if (GetEventRaw().IsSignal() == (type==Types::kSignal) ) {
             ic++; // count used events
             for (UInt_t ivar=0; ivar<nvar; ivar++) {
                tmpCumulator[ivar][i]->Fill(GetEventRaw().GetVal(ivar));;               
             }
          }
-         
       }
    }
 
-   //now sum up in order to get the real cumulative distribution   
-   Double_t  sum    = 0, total;
+   // now sum up in order to get the real cumulative distribution   
+   Double_t  sum    = 0, total, cte, supmin;
    for (UInt_t sb=0; sb<2; sb++) {
       for (UInt_t ivar=0; ivar<nvar; ivar++) {
          sum = 0;
          total = (tmpCumulator[ivar][sb])->GetSumOfWeights();
-         for (UInt_t ibin=1; ibin <= nHighBins; ibin++){
+         supmin = 0.5/total;//TODO: Check the exact value of supmin !!!
+         cte = (1.-2*supmin)/(fCumulativeDist[ivar][sb]->GetNbinsX());
+         for (Int_t ibin=1; ibin <=fCumulativeDist[ivar][sb]->GetNbinsX() ; ibin++){
+            //         for (UInt_t ibin=1; ibin <= nHighBins; ibin++){
             sum += (tmpCumulator[ivar][sb])->GetBinContent(ibin);
             Double_t binCenter = (tmpCumulator[ivar][sb])->GetXaxis()->GetBinCenter(ibin);
-            
+
             Int_t currentBin = (fCumulativeDist[ivar][sb])->FindBin(binCenter);
-//             cout<<"bla: bincenter="<<binCenter<<" ibin="<<ibin<<" xmax["<<ivar<<"]="<<xmax[ivar]<<" xmin["<<ivar<<"]="<<xmin[ivar]<<endl;
-//             cout<<"bla: currentBin="<<currentBin<<"  weight = "<<sum/total<<" sum="<<sum<<" total="<<total<<endl;
-            (fCumulativeDist[ivar][sb])->SetBinContent(currentBin,sum/total);
+            //            (fCumulativeDist[ivar][sb])->SetBinContent(currentBin,sum/total);
+            (fCumulativeDist[ivar][sb])->SetBinContent(currentBin,supmin + currentBin*cte);
          }
+         fCumulativeDist[ivar][sb]->SetBinContent(fCumulativeDist[ivar][sb]->GetNbinsX()+1, 1-supmin);
+         fCumulativeDist[ivar][sb]->SetBinContent(0,supmin);
          delete tmpCumulator[ivar][sb];
       }
    }
-   
 }
-
 
 //_______________________________________________________________________
 void TMVA::VariableGaussDecorr::GetSQRMats( TTree* tr )
@@ -313,7 +449,6 @@ void TMVA::VariableGaussDecorr::GetSQRMats( TTree* tr )
          fLogger << kFATAL << "<GetSQRMats> Zero pointer returned for SQR matrix" << Endl;
    }
 }
-
 
 //_______________________________________________________________________
 void TMVA::VariableGaussDecorr::GetCovarianceMatrix( TTree* tr, Bool_t isSignal, TMatrixDBase* mat )
@@ -334,7 +469,7 @@ void TMVA::VariableGaussDecorr::GetCovarianceMatrix( TTree* tr, Bool_t isSignal,
 
    ResetBranchAddresses( tr );
 
-    // if normalisation required, determine min/max
+   // if normalisation required, determine min/max
    TVectorF xmin(nvar), xmax(nvar);
    if (IsNormalised()) {
       for (Int_t i=0; i<tr->GetEntries(); i++) {
@@ -355,25 +490,26 @@ void TMVA::VariableGaussDecorr::GetCovarianceMatrix( TTree* tr, Bool_t isSignal,
    }
 
    // perform event loop
-   Int_t ic = 0;
+   Double_t ic = 0;
    for (Int_t i=0; i<tr->GetEntries(); i++) {
 
       // fill the event
       ReadEvent(tr, i, Types::kSignal);
 
       if (GetEventRaw().IsSignal() == isSignal) {
-         ic++; // count used events
+         Double_t weight = GetEventRaw().GetWeight();
+         ic += weight; // count used events
          for (ivar=0; ivar<nvar; ivar++) {
 
             Double_t xi = ( (IsNormalised()) ? gTools().NormVariable( GetEventRaw().GetVal(ivar), xmin(ivar), xmax(ivar) )
                             : GetEventRaw().GetVal(ivar) );
-            vec(ivar) += xi;
-            mat2(ivar, ivar) += (xi*xi);
+            vec(ivar) += xi*weight;
+            mat2(ivar, ivar) += (xi*xi*weight);
 
             for (jvar=ivar+1; jvar<nvar; jvar++) {
                Double_t xj =  ( (IsNormalised()) ? gTools().NormVariable( GetEventRaw().GetVal(jvar), xmin(ivar), xmax(ivar) )
                                 : GetEventRaw().GetVal(jvar) );
-               mat2(ivar, jvar) += (xi*xj);
+               mat2(ivar, jvar) += (xi*xj*weight);
                mat2(jvar, ivar) = mat2(ivar, jvar); // symmetric matrix
             }
          }
@@ -381,10 +517,9 @@ void TMVA::VariableGaussDecorr::GetCovarianceMatrix( TTree* tr, Bool_t isSignal,
    }
 
    // variance-covariance
-   Double_t n = (Double_t)ic;
    for (ivar=0; ivar<nvar; ivar++) {
       for (jvar=0; jvar<nvar; jvar++) {
-         (*mat)(ivar, jvar) = mat2(ivar, jvar)/n - vec(ivar)*vec(jvar)/(n*n);
+         (*mat)(ivar, jvar) = mat2(ivar, jvar)/ic - vec(ivar)*vec(jvar)/(ic*ic);
       }
    }
 
@@ -398,7 +533,7 @@ void TMVA::VariableGaussDecorr::WriteTransformationToStream( std::ostream& o ) c
    for (UInt_t ivar=0; ivar< GetNVariables(); ivar++){
       if ( fCumulativeDist[ivar][0]==0 || fCumulativeDist[ivar][1]==0 )
          fLogger << kFATAL << "Cumulative histograms for variable " << ivar << " don't exist, can't write it to weight file" << Endl;
-      
+
       for (UInt_t i=0; i<2; i++){
          TH1 * histToWrite = fCumulativeDist[ivar][i];
          const Int_t nBins = histToWrite->GetNbinsX();
@@ -407,10 +542,18 @@ void TMVA::VariableGaussDecorr::WriteTransformationToStream( std::ostream& o ) c
            << "   " << ivar 
            << "   " << histToWrite->GetName() 
            << "   " << nBins                                 // nbins
-           << "   " << setprecision(12) << histToWrite->GetXaxis()->GetXmin()    // x_min
-           << "   " << setprecision(12) << histToWrite->GetXaxis()->GetXmax()    // x_max
+           << "   " << setprecision(12) << fElementsPerBin 
            << endl;
-         
+
+         // write the smoothed hist
+         o << "BinBoundaries" << endl;
+         o << std::setprecision(8);
+         for (Int_t ibin=0; ibin<nBins; ibin++) {
+            o << std::setw(15) << std::left << histToWrite->GetBinLowEdge(ibin+1) << " ";
+            if ((ibin+1)%5==0) o << endl;
+         }
+         o << std::setw(15) << std::left << histToWrite->GetXaxis()->GetXmax() << " ";
+
          // write the smoothed hist
          o << "BinContent" << endl;
          o << std::setprecision(8);
@@ -464,26 +607,32 @@ void TMVA::VariableGaussDecorr::ReadTransformationFromStream( std::istream& istr
       }
       std::stringstream sstr(buf);
       sstr >> strvar;
-      
+
       if (strvar=="CumulativeHistogram") {
          TString devnullS;
          Int_t   nbins;
-         Float_t xmin, xmax;
          TString hname="";
 
-         sstr  >> type >> ivar >> hname >> nbins >> xmin >> xmax; 
+         sstr  >> type >> ivar >> hname >> nbins >> fElementsPerBin; 
+
+         Float_t Binnings[nbins+1];
+         Float_t val;
+         istr >> devnullS; // read the line "BinBoundaries" ..
+         for (Int_t ibin=0; ibin<nbins+1; ibin++) {
+            istr >> val;
+            Binnings[ibin]=val;
+         }
 
          TH1F * histToRead = fCumulativeDist[ivar][type];
          if ( histToRead !=0 ) delete histToRead;
          // recreate the cumulative histogram to be filled with the values read
-         histToRead = new TH1F( hname, hname, nbins, xmin, xmax );
+         histToRead = new TH1F( hname, hname, nbins, Binnings );
          histToRead->SetDirectory(0);
          fCumulativeDist[ivar][type]=histToRead;
-         Float_t val;
+
          istr >> devnullS; // read the line "BinContent" .. 
          for (Int_t ibin=0; ibin<nbins; ibin++) {
             istr >> val;
-            histToRead->SetBinContent(ibin+1,val);
             histToRead->SetBinContent(ibin+1,val);
          }
       } 
@@ -505,7 +654,7 @@ void TMVA::VariableGaussDecorr::ReadTransformationFromStream( std::istream& istr
       istr.getline(buf,512); // reading the next line   
    }
    TH1::AddDirectory(addDirStatus);
-   
+
    fApplyGaussTransform = kTRUE;  
    if (fFlatNotGaussD) fApplyDecorrTransform = kFALSE; 
    else fApplyDecorrTransform = kTRUE; 

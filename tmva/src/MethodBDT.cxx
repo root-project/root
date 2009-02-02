@@ -228,6 +228,7 @@ void TMVA::MethodBDT::DeclareOptions()
    AddPreDefVal(TString("Bagging"));
    DeclareOptionRef(fAdaBoostBeta=1.0, "AdaBoostBeta", "Parameter for AdaBoost algorithm");
    DeclareOptionRef(fRandomisedTrees,"UseRandomisedTrees","Choose at each node splitting a random set of variables");
+   DeclareOptionRef(fSampleSizeFraction=1.0,"SampleSizeFraction","Relative size of bagged event sample to original size of the data sample" );
    DeclareOptionRef(fUseNvars,"UseNvars","Number of variables used if randomised Tree option is chosen");
    DeclareOptionRef(fUseWeightedTrees=kTRUE, "UseWeightedTrees", 
                     "Use weighted trees or simple average in classification from the forest");
@@ -317,6 +318,7 @@ void TMVA::MethodBDT::InitBDT( void )
    fDeltaPruneStrength=0.1;
    fNoNegWeightsInTraining=kFALSE;
    fRandomisedTrees= kFALSE;
+   fSampleSizeFraction = 1.;
    fUseNvars       = GetNvar();
 
    // reference cut value to distingiush signal-like from background-like events   
@@ -683,13 +685,13 @@ Double_t TMVA::MethodBDT::Bagging( vector<TMVA::Event*> eventSample, Int_t iTree
    Double_t newWeight;
    TRandom2 *trandom   = new TRandom2(iTree);
    for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      newWeight = trandom->PoissonD(1);
+      newWeight = trandom->PoissonD(fSampleSizeFraction);
       (*e)->SetBoostWeight(newWeight);
       newSumw+=(*e)->GetBoostWeight();    
    }
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      (*e)->SetBoostWeight( (*e)->GetBoostWeight() * eventSample.size() / newSumw );
-   }
+//   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+//     (*e)->SetBoostWeight( (*e)->GetBoostWeight() * eventSample.size() / newSumw );
+//  }
    return 1.;  //here as there are random weights for each event, just return a constant==1;
 }
 

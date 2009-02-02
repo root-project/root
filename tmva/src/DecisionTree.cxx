@@ -245,6 +245,7 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
    Double_t s=0, b=0;
    Double_t suw=0, buw=0;
    for (UInt_t i=0; i<eventSample.size(); i++){
+      if (eventSample[i]->GetBoostWeight() != 0){
       if (eventSample[i]->IsSignal()){
          s += eventSample[i]->GetWeight();
          suw += 1;
@@ -252,6 +253,7 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
       else {
          b += eventSample[i]->GetWeight();
          buw += 1;
+      }
       }
    }
 
@@ -778,6 +780,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast(vector<TMVA::Event*> & eventSample,
       while ( nSelectedVars < fUseNvars ){
          Double_t bla = fMyTrandom->Rndm()*fNvars;
          useVariable[Int_t (bla)] = kTRUE;
+         nSelectedVars = 0;
          for (int ivar=0; ivar < fNvars; ivar++) {
             if (useVariable[ivar] == kTRUE) nSelectedVars++;
          }
@@ -811,6 +814,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast(vector<TMVA::Event*> & eventSample,
    for (UInt_t iev=0; iev<nevents; iev++){
       Int_t eventType = eventSample[iev]->Type();
       Double_t eventWeight =  eventSample[iev]->GetWeight(); 
+      if (eventSample[iev]->GetBoostWeight() != 0){
       if (eventType==1){
          nTotS+=eventWeight;
          nTotS_unWeighted++;
@@ -839,6 +843,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast(vector<TMVA::Event*> & eventSample,
                }
             }
          }
+      }
       }
    }
 
@@ -921,6 +926,7 @@ Double_t TMVA::DecisionTree::TrainNodeFull(vector<TMVA::Event*> & eventSample,
    // Initialize (un)weighted counters for signal & background
    // Construct a list of event wrappers that point to the original data
    for( vector<TMVA::Event*>::const_iterator it = eventSample.begin(); it != eventSample.end(); ++it ) {
+      if ((*it)->GetBoostWeight() != 0){
       if( (*it)->Type() == 1 ) { // signal or background event
          nTotS += (*it)->GetWeight();
          ++nTotS_unWeighted;
@@ -930,6 +936,7 @@ Double_t TMVA::DecisionTree::TrainNodeFull(vector<TMVA::Event*> & eventSample,
          ++nTotB_unWeighted;
       }
       bdtEventSample.push_back(TMVA::BDTEventWrapper(*it));
+      }
    }
    
    for( Int_t ivar = 0; ivar < fNvars; ivar++ ) { // loop over all discriminating variables

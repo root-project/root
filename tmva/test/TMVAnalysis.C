@@ -29,11 +29,14 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TTree.h"
+#include "TPluginManager.h"
 
 #include "TMVAGui.C"
+
+#ifndef __CINT__
 #include "TMVA/Tools.h"
 #include "TMVA/Factory.h"
-#include "TPluginManager.h"
+#endif
 
 // ---------------------------------------------------------------
 // choose MVA methods to be trained + tested
@@ -46,6 +49,7 @@ Bool_t Use_CutsSA          = 0;
 Bool_t Use_Likelihood      = 1;
 Bool_t Use_LikelihoodD     = 0; // the "D" extension indicates decorrelated input variables (see option strings)
 Bool_t Use_LikelihoodPCA   = 1; // the "PCA" extension indicates PCA-transformed input variables (see option strings)
+Bool_t Use_LikelihoodGSD   = 0; // Gauss transformation and consecutive decorrelation 
 Bool_t Use_LikelihoodKDE   = 0;
 Bool_t Use_LikelihoodMIX   = 0;
 // ---
@@ -106,9 +110,9 @@ void TMVAnalysis( TString myMethodList = "" )
 
    if (myMethodList != "") {
       Use_CutsGA = Use_CutsSA = Use_CutsD = Use_CutsPCA = Use_Cuts
-         = Use_LikelihoodKDE = Use_LikelihoodMIX = Use_LikelihoodPCA = Use_LikelihoodD = Use_Likelihood
+         = Use_LikelihoodKDE = Use_LikelihoodMIX = Use_LikelihoodPCA = Use_LikelihoodD = Use_LikelihoodGSD = Use_Likelihood
          = Use_PDERSPCA = Use_PDERSD = Use_PDERS = Use_PDERSkNN
-	 = Use_PDEFoam
+         = Use_PDEFoam
          = Use_KNN
          = Use_MLP = Use_CFMlpANN = Use_TMlpANN
          = Use_HMatrix = Use_Fisher = Use_BDTD = Use_BDT
@@ -128,6 +132,7 @@ void TMVAnalysis( TString myMethodList = "" )
       if (mlist->FindObject( "Likelihood"    ) != 0) Use_Likelihood    = 1; 
       if (mlist->FindObject( "LikelihoodD"   ) != 0) Use_LikelihoodD   = 1; 
       if (mlist->FindObject( "LikelihoodPCA" ) != 0) Use_LikelihoodPCA = 1; 
+      if (mlist->FindObject( "LikelihoodGSD" ) != 0) Use_LikelihoodGSD = 1; 
       if (mlist->FindObject( "LikelihoodKDE" ) != 0) Use_LikelihoodKDE = 1; 
       if (mlist->FindObject( "LikelihoodMIX" ) != 0) Use_LikelihoodMIX = 1; 
       if (mlist->FindObject( "PDERSPCA"      ) != 0) Use_PDERSPCA      = 1; 
@@ -192,10 +197,10 @@ void TMVAnalysis( TString myMethodList = "" )
    // Define the input variables that shall be used for the MVA training
    // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
    // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
-//    factory->AddVariable( "var1+var2", 'F' );
-//    factory->AddVariable( "var1-var2", 'F' );
-   factory->AddVariable( "var3",      'I' );
-   factory->AddVariable( "var4",      'I' );
+   factory->AddVariable( "var1+var2", 'F' );
+   factory->AddVariable( "var1-var2", 'F' );
+   factory->AddVariable( "var3",      'F' );
+   factory->AddVariable( "var4",      'F' );
 
    // read training and test data
    if (ReadDataFromAsciiIFormat) {
@@ -310,20 +315,20 @@ void TMVAnalysis( TString myMethodList = "" )
 
    // Cut optimisation
    if (Use_Cuts) 
-     factory->BookMethod( TMVA::Types::kCuts, "Cuts", 
-                          "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" );
+      factory->BookMethod( TMVA::Types::kCuts, "Cuts", 
+                           "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" );
 
    if (Use_CutsD) 
-     factory->BookMethod( TMVA::Types::kCuts, "CutsD", 
-                          "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart:VarTransform=Decorrelate" );
+      factory->BookMethod( TMVA::Types::kCuts, "CutsD", 
+                           "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart:VarTransform=Decorrelate" );
 
    if (Use_CutsPCA) 
-     factory->BookMethod( TMVA::Types::kCuts, "CutsPCA", 
-                          "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart:VarTransform=PCA" );
+      factory->BookMethod( TMVA::Types::kCuts, "CutsPCA", 
+                           "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart:VarTransform=PCA" );
 
    if (Use_CutsGA)
-     factory->BookMethod( TMVA::Types::kCuts, "CutsGA",
-                         "H:!V:FitMethod=GA:EffSel:Steps=30:Cycles=3:PopSize=100:SC_steps=10:SC_rate=5:SC_factor=0.95:VarProp=FSmart" );
+      factory->BookMethod( TMVA::Types::kCuts, "CutsGA",
+                           "!H:!V:FitMethod=GA:EffSel:Steps=30:Cycles=3:PopSize=100:SC_steps=10:SC_rate=5:SC_factor=0.95:VarProp[1]=FMax" );
    
    if (Use_CutsSA)
       factory->BookMethod( TMVA::Types::kCuts, "CutsSA",
@@ -342,6 +347,10 @@ void TMVAnalysis( TString myMethodList = "" )
    if (Use_LikelihoodPCA) 
       factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodPCA", 
                            "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=10:NSmoothBkg[0]=10:NSmooth=5:NAvEvtPerBin=50:VarTransform=PCA" ); 
+
+   if (Use_LikelihoodGSD) 
+      factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodGSD", 
+                           "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=10:NSmoothBkg[0]=10:NSmooth=5:NAvEvtPerBin=50:VarTransform=GaussDecorr" ); 
  
    // test the new kernel density estimator
    if (Use_LikelihoodKDE) 
@@ -397,7 +406,7 @@ void TMVAnalysis( TString myMethodList = "" )
    // Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit (or GA or SA)
    if (Use_FDA_MC) 
       factory->BookMethod( TMVA::Types::kFDA, "FDA_MC",
-                          "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=MC:SampleSize=100000:Sigma=0.1" );
+                           "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=MC:SampleSize=100000:Sigma=0.1" );
    
    if (Use_FDA_GA) // can also use Simulated Annealing (SA) algorithm (see Cuts_SA options)
       factory->BookMethod( TMVA::Types::kFDA, "FDA_GA",
@@ -440,10 +449,10 @@ void TMVAnalysis( TString myMethodList = "" )
    // Boosted Decision Trees (second one with decorrelation)
    if (Use_BDT)
       factory->BookMethod( TMVA::Types::kBDT, "BDT", 
-                           "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=1.5" );
+                           "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=2.5" );
    if (Use_BDTD)
       factory->BookMethod( TMVA::Types::kBDT, "BDTD", 
-                           "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=1.5:VarTransform=Decorrelate" );
+                           "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=2.5:VarTransform=Decorrelate" );
 
    // RuleFit -- TMVA implementation of Friedman's method
    if (Use_RuleFit)

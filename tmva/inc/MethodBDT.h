@@ -204,6 +204,7 @@ namespace TMVA {
       Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample 
       Bool_t                           fNoNegWeightsInTraining; // ignore negative event weights in the training  
       Bool_t                           fRandomisedTrees; // choose a random subset of possible cut variables at each node during training
+      Double_t                         fSampleSizeFraction; // relative size of bagged event sample to original sample size 
       Int_t                            fUseNvars;        // the number of variables used in the randomised tree splitting
 
       std::vector<Double_t>           fVariableImportance; // the relative importance of the different variables 

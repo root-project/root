@@ -46,7 +46,7 @@
 Int_t TMVA::Event::fgCount = 0;
 
 //____________________________________________________________
-TMVA::Event::Event(const std::vector<TMVA:: VariableInfo>& varinfo, Bool_t AllowExternalLinks) 
+TMVA::Event::Event(const std::vector<VariableInfo>& varinfo, Bool_t AllowExternalLinks) 
    : fVariables(varinfo),
      fVarPtr(new void*[varinfo.size()]), // array to hold pointers to the integer or float array
      fVarPtrF(0),                        // array to hold all integer variables

@@ -608,8 +608,9 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
          ReadTrainingEvent( ievt, Types::kTrueType ); 
 
          Double_t lk = this->GetMvaValue();
-         if (IsSignalEvent()) rS->Fill( lk );
-         else                 rB->Fill( lk );
+         Double_t w  = this->GetEventWeight();
+         if (IsSignalEvent()) rS->Fill( lk, w );
+         else                 rB->Fill( lk, w );
       }
 
       // compute separation

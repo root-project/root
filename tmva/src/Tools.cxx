@@ -355,10 +355,11 @@ TH1* TMVA::Tools::ProjNormTH1F( TTree* theTree, TString theVarName,
 Double_t TMVA::Tools::NormHist( TH1* theHist, Double_t norm )
 {
    // normalises histogram
+   return 1;
    if (NULL == theHist) Logger() << kFATAL << "<NormHist> null TH1 pointer" << Endl;
 
    TAxis* tx  = theHist->GetXaxis();
-   Double_t w = ((theHist->GetEntries() > 0 ? theHist->GetEntries() : 1)
+   Double_t w = ((theHist->GetSumOfWeights() > 0 ? theHist->GetSumOfWeights() : 1)
                  * (tx->GetXmax() - tx->GetXmin())/tx->GetNbins());
    theHist->Scale( (w > 0) ? norm/w : norm );
    return w;

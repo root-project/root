@@ -34,6 +34,7 @@
 // C/C++
 #include <string>
 #include <stdlib.h>
+#include <iostream>
 
 // ROOT
 #include "TFile.h"
@@ -281,7 +282,10 @@ Double_t TMVA::MethodKNN::GetMvaValue()
    fModule->Find(kNN::Event(vvec, evweight, 3), knn + 1);
 
    const kNN::List &rlist = fModule->GetkNNList();
-   if (rlist.size() != knn + 1) {
+   if (rlist.size() < knn) {
+      std::cout << "rlist.size() = " << rlist.size() << std::endl
+		<< "knn = " << knn << std::endl;
+
       fLogger << kFATAL << "kNN result list is empty" << Endl;
       return -100.0;  
    }
@@ -349,8 +353,15 @@ Double_t TMVA::MethodKNN::GetMvaValue()
       }      
    }
    
-   if (all_count < 1 || all_count != knn) {
-      fLogger << kFATAL << "kNN result list is empty or has wrong size" << Endl;
+   if (all_count < 1)
+   {
+      fModule -> Print();
+      fLogger << kFATAL << "kNN result list is empty" << Endl
+	      << "all_count = " << all_count << endl;
+      return -100.0;
+   }
+   if (all_count != knn) {
+      fLogger << kDEBUG << "kNN result list has wrong size" << Endl;
       return -100.0;
    }
    if (!(all_weight > 0.0)) {

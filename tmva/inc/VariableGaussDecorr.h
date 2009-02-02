@@ -4,7 +4,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : VariableGaussDecorr                                               *
+ * Class  : VariableGaussDecorr                                                   *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -37,6 +37,7 @@
 #include <vector>
 
 #include "TMatrixD.h"
+#include "TROOT.h"
 
 #ifndef ROOT_TMVA_VariableTransformBase
 #include "TMVA/VariableTransformBase.h"
@@ -66,6 +67,8 @@ namespace TMVA {
       virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part );
 
    private:
+      UInt_t  fElementsPerBin;
+
       Bool_t  fApplyGaussTransform;
       Bool_t  fApplyDecorrTransform;
       Bool_t  fFlatNotGaussD;

@@ -110,7 +110,7 @@ namespace TMVA
 
          void Add(const Event &event);
 
-         Bool_t Fill(UShort_t odepth, UInt_t ifrac, const std::string &option = "");
+         Bool_t Fill(const UShort_t odepth, UInt_t ifrac, const std::string &option = "");
 
          Bool_t Find(Event event, UInt_t nfind = 100) const;
          Bool_t Find(UInt_t nfind, const std::string &option) const;

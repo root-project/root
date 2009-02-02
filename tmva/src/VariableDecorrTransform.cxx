@@ -51,6 +51,13 @@ TMVA::VariableDecorrTransform::VariableDecorrTransform( std::vector<VariableInfo
 }
 
 //_______________________________________________________________________
+TMVA::VariableDecorrTransform::~VariableDecorrTransform()
+{
+   // destructor
+   for (UInt_t i=0; i<2; i++) if (0 != fDecorrMatrix[i] ) delete fDecorrMatrix[i]; 
+}
+
+//_______________________________________________________________________
 Bool_t TMVA::VariableDecorrTransform::PrepareTransformation( TTree* inputTree )
 {
    // calculate the decorrelation matrix and the normalization
@@ -91,7 +98,7 @@ std::vector<TString>* TMVA::VariableDecorrTransform::GetTransformationStrings( T
    for (Int_t ivar=0; ivar<nvar; ivar++) {
       TString str( "" );
       for (Int_t jvar=0; jvar<nvar; jvar++) {
-         if (jvar > 0) str += ((*m)(ivar,jvar) > 0) ? " + " : " - ";
+         str += ((*m)(ivar,jvar) > 0) ? " + " : " - ";
          str += Form( "%10.5g*%s", 
                       TMath::Abs((*m)(ivar,jvar)), 
                       (TString("[") + Variable(jvar).GetExpression() + "]").Data() );
@@ -185,25 +192,26 @@ void TMVA::VariableDecorrTransform::GetCovarianceMatrix( TTree* tr, Bool_t isSig
    }
 
    // perform event loop
-   Int_t ic = 0;
+   Double_t ic = 0;
    for (Int_t i=0; i<tr->GetEntries(); i++) {
 
       // fill the event
       ReadEvent(tr, i, Types::kSignal);
 
       if (GetEventRaw().IsSignal() == isSignal) {
-         ic++; // count used events
+         Double_t weight =  GetEventRaw().GetWeight();
+         ic += weight; // count used events
          for (ivar=0; ivar<nvar; ivar++) {
 
             Double_t xi = ( (IsNormalised()) ? gTools().NormVariable( GetEventRaw().GetVal(ivar), xmin(ivar), xmax(ivar) )
                             : GetEventRaw().GetVal(ivar) );
-            vec(ivar) += xi;
-            mat2(ivar, ivar) += (xi*xi);
+            vec(ivar) += xi*weight;
+            mat2(ivar, ivar) += (xi*xi*weight);
 
             for (jvar=ivar+1; jvar<nvar; jvar++) {
                Double_t xj =  ( (IsNormalised()) ? gTools().NormVariable( GetEventRaw().GetVal(jvar), xmin(ivar), xmax(ivar) )
                                 : GetEventRaw().GetVal(jvar) );
-               mat2(ivar, jvar) += (xi*xj);
+               mat2(ivar, jvar) += (xi*xj*weight);
                mat2(jvar, ivar) = mat2(ivar, jvar); // symmetric matrix
             }
          }
@@ -211,10 +219,9 @@ void TMVA::VariableDecorrTransform::GetCovarianceMatrix( TTree* tr, Bool_t isSig
    }
 
    // variance-covariance
-   Double_t n = (Double_t)ic;
    for (ivar=0; ivar<nvar; ivar++) {
       for (jvar=0; jvar<nvar; jvar++) {
-         (*mat)(ivar, jvar) = mat2(ivar, jvar)/n - vec(ivar)*vec(jvar)/(n*n);
+         (*mat)(ivar, jvar) = mat2(ivar, jvar)/ic - vec(ivar)*vec(jvar)/(ic*ic);
       }
    }
 

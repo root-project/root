@@ -331,7 +331,7 @@ def main():
                             "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=1.5" )
     if "BDTD" in mlist:
         factory.BookMethod( TMVA.Types.kBDT, "BDTD", 
-                            "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=1.5:VarTransform=Decorrelate" )
+                            "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=2.5:VarTransform=Decorrelate" )
 
     # RuleFit -- TMVA implementation of Friedman's method
     if "RuleFit" in mlist:

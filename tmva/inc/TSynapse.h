@@ -84,17 +84,21 @@ namespace TMVA {
       void CalculateDelta();
 
       // initialize the error field of the synpase to 0
-      void InitDelta()           { fDelta = 0.0; fCount = 0; }
+      void InitDelta()                         { fDelta = 0.0; fCount = 0; }
+
+		void SetDEDw(Double_t DEDw)              { fDEDw = DEDw;           }
+	   Double_t GetDEDw()                       { return fDEDw;           }	
+		Double_t GetDelta()                      { return fDelta;          }
 
    private:
   
       Double_t fWeight;            // weight of the synapse
       Double_t fLearnRate;         // learning rate parameter
       Double_t fDelta;             // local error field
+		Double_t fDEDw;              // sum of deltas
       Int_t    fCount;             // number of updates contributing to error field
       TNeuron* fPreNeuron;         // pointer to pre-neuron
       TNeuron* fPostNeuron;        // pointer to post-neuron
-      Int_t    fCounter;           // counter for normalization in batch mode
 
       mutable MsgLogger fLogger;   // message logger
 

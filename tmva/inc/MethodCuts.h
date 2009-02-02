@@ -126,8 +126,8 @@ namespace TMVA {
       
       // retrieve cut values for given signal efficiency
       void PrintCuts( Double_t effS ) const;
-      void GetCuts  ( Double_t effS, std::vector<Double_t>& cutMin, std::vector<Double_t>& cutMax ) const;
-      void GetCuts  ( Double_t effS, Double_t* cutMin, Double_t* cutMax ) const;
+      Double_t GetCuts( Double_t effS, std::vector<Double_t>& cutMin, std::vector<Double_t>& cutMax ) const;
+      Double_t GetCuts( Double_t effS, Double_t* cutMin, Double_t* cutMax ) const;
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
