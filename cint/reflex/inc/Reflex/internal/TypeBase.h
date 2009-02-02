@@ -753,6 +753,14 @@ namespace Reflex {
       Type DetermineFinalType(const Type& t) const;
 
       /**
+      * Calculate the size for types based on other types,
+      * if the other type was not yet available to calculate the
+      * size at construction time.
+      * @return The calculated size, 0 if the underlying size is unknown.
+      */
+      virtual size_t CalculateSize() const;
+
+      /**
       * Pointer to the TypeName 
       * @label At Name
       * @ling aggregation
@@ -862,6 +870,13 @@ inline Reflex::Reverse_Base_Iterator Reflex::TypeBase::Base_RBegin() const {
 inline Reflex::Reverse_Base_Iterator Reflex::TypeBase::Base_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::BaseCont().rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline size_t Reflex::TypeBase::CalculateSize() const {
+//-------------------------------------------------------------------------------
+   return fSize;
 }
 
 
@@ -1158,7 +1173,8 @@ inline Reflex::Reverse_Type_Iterator Reflex::TypeBase::FunctionParameter_REnd() 
 //-------------------------------------------------------------------------------
 inline size_t Reflex::TypeBase::SizeOf() const { 
 //-------------------------------------------------------------------------------
-   return fSize; 
+   if (!fSize) fSize = CalculateSize();
+   return fSize;
 }
 
 

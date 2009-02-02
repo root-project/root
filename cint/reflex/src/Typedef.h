@@ -371,6 +371,15 @@ namespace Reflex {
       */
       virtual Type ToType() const;
 
+      /**
+      * Calculate the size for types based on other types,
+      * if the other type was not yet available to calculate the
+      * size at construction time.
+      * @return The calculated size, 0 if the underlying size is unknown.
+      */
+      size_t CalculateSize() const;
+
+
    private:  
 
       bool ForwardStruct() const;
@@ -443,6 +452,13 @@ inline Reflex::Reverse_Base_Iterator Reflex::Typedef::Base_REnd() const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.Base_REnd();
    return Reverse_Base_Iterator();
+}
+
+
+//-------------------------------------------------------------------------------
+inline size_t Reflex::Typedef::CalculateSize() const {
+//-------------------------------------------------------------------------------
+   return fTypedefType.SizeOf();
 }
 
 
