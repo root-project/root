@@ -384,7 +384,12 @@ static void SetRootSys()
    void *addr = (void *)SetRootSys;
    Dl_info info;
    if (dladdr(addr, &info) && info.dli_fname && info.dli_fname[0]) {
-      TString rs = gSystem->DirName(info.dli_fname);
+      char respath[kMAXPATHLEN];
+      if (!realpath(info.dli_fname, respath)) {
+         ::SysError("TUnixSystem::SetRootSys", "error getting realpath of libCore");
+         strcpy(respath, info.dli_fname);
+      }
+      TString rs = gSystem->DirName(respath);
       gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
    }
 #else
