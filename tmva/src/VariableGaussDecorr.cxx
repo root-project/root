@@ -260,7 +260,6 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
 
    std::list< Float_t >  listsForBinning[nvar][2];
    std::vector< Float_t >   vsForBinning[nvar][2];
-   //UInt_t NbinsB= 0;
    Nbins[0] = 0;  // Nbins[0] = number of bins for signal distributions. It depends on the number of entries, thus it's the same for all the input variables
    Nbins[1] = 0;  // Nbins[1] = "", for bkg
 
@@ -316,7 +315,7 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
          }
       }
    }
-   //Sorting the lists, getting Nbins ...
+   // Sorting the lists, getting Nbins ...
 
    for (UInt_t sb=0; sb< 2; sb++){
       for (UInt_t ivar=0; ivar<nvar; ivar++) {
@@ -333,37 +332,36 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
          }
          vsForBinning[ivar][sb].push_back(listsForBinning[ivar][sb].back()); 
       }
-      Nbins[sb] =vsForBinning[0][sb].size();
+      Nbins[sb] = vsForBinning[0][sb].size();
    }
 
-   Float_t Binnings_S[nvar][Nbins[0]];
-   Float_t Binnings_B[nvar][Nbins[1]];
+   // if one exist already.. delete it 
+   char SB[2]={'S','B'};
 
    for (UInt_t ivar=0; ivar<nvar; ivar++) {
+
+      Float_t* binnings_S = new Float_t[Nbins[0]];
+      Float_t* binnings_B = new Float_t[Nbins[1]];
+
       for (UInt_t k =0 ; k < Nbins[0]; k++){
-         Binnings_S[ivar][k] = vsForBinning[ivar][0][k];
+         binnings_S[k] = vsForBinning[ivar][0][k];
       }
       for (UInt_t k =0 ; k < Nbins[1]; k++){
-         Binnings_B[ivar][k] = vsForBinning[ivar][1][k];
+         binnings_B[k] = vsForBinning[ivar][1][k];
       }
-   }
 
-   for (UInt_t ivar=0; ivar < nvar; ivar++){
       vector< TH1F* > tmp;
 
       tmp.push_back( new TH1F(Form("tmpCumulator_Var%d_S",ivar),
                               Form("tmpCumulator_Var%d_S",ivar),
                               Nbins[0] -1,
-                              Binnings_S[ivar]));; // signal
+                              binnings_S));; // signal
       tmp.push_back( new TH1F(Form("tmpCumulator_Var%d_B",ivar),
                               Form("tmpCumulator_Var%d_B",ivar),
                               Nbins[1] -1,
-                              Binnings_B[ivar])); // backgr
+                              binnings_B)); // backgr
       tmpCumulator.push_back(tmp);
-   }
-   // if one exist already.. delete it 
-   char SB[2]={'S','B'};
-   for (UInt_t ivar=0; ivar<nvar; ivar++) {
+
       for (UInt_t i=0; i<2; i++) {
          if (0 != fCumulativeDist[ivar][i] ) { 
             delete fCumulativeDist[ivar][i]; 
@@ -372,12 +370,14 @@ void TMVA::VariableGaussDecorr::GetCumulativeDist( TTree* tr )
       fCumulativeDist[ivar][0] = new TH1F(Form("Cumulative_Var%d_%c",ivar,SB[0]),
                                           Form("Cumulative_Var%d_%c",ivar,SB[0]),
                                           Nbins[0]-1,
-                                          Binnings_S[ivar]);
+                                          binnings_S);
       fCumulativeDist[ivar][1] = new TH1F(Form("Cumulative_Var%d_%c",ivar,SB[1]),
                                           Form("Cumulative_Var%d_%c",ivar,SB[1]),
                                           Nbins[1]-1,
-                                          Binnings_B[ivar]);
+                                          binnings_B);
 
+      delete [] binnings_S;
+      delete [] binnings_B;
    }
 
    for (UInt_t i=0; i<2; i++) {
