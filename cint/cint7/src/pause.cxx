@@ -282,7 +282,8 @@ extern "C" void G__set_autoloading(int (*p2f)(char*))
 //______________________________________________________________________________
 static int G__is_valid_dictpos(G__dictposition* dict)
 {
-   int flag = 0;
+   // Return if the dictpos is valid.
+   
    ::Reflex::Scope var = ::Reflex::Scope::GlobalScope();
    ::Reflex::Scope ifunc = ::Reflex::Scope::GlobalScope();
 
@@ -291,7 +292,7 @@ static int G__is_valid_dictpos(G__dictposition* dict)
    if (ifunc != dict->ifunc) return 0;
 
    if (G__struct.alltag < dict->tagnum) return(0);
-   if (G__Dict::GetDict().GetNumTypes() < dict->typenum) return(0);
+   if ( (int)G__Dict::GetDict().GetNumTypes() < dict->typenum) return(0);
 #ifdef G__SHAREDLIB  /* ???, reported by A.Yu.Isupov, anyway no harm */
    if (G__allsl < dict->allsl) return(0);
 #endif
@@ -373,7 +374,7 @@ static void G__show_undo_position(int index)
    fprintf(G__sout, "\n");
 
    fprintf(G__sout, "Typedef  : ");
-   while (typenum < G__Dict::GetDict().GetNumTypes()) {
+   while (typenum < (int)G__Dict::GetDict().GetNumTypes()) {
       ::Reflex::Type typedf(G__Dict::GetDict().GetTypedef(typenum));
       if (typedf.IsTypedef()) fprintf(G__sout, "%s ", typedf.Name(::Reflex::SCOPED).c_str());
       ++typenum;
@@ -1459,14 +1460,18 @@ static void G__create_input_tmpfile(G__input_file& ftemp)
 }
 
 //______________________________________________________________________________
+#ifdef G__WIN32
 static void G__remove_input_tmpfile(G__input_file& ftemp)
 {
    // --
-#ifdef G__WIN32
    unlink(ftemp.name);
-#endif // G__WIN32
    // --
 }
+#else
+static void G__remove_input_tmpfile(G__input_file&)
+{
+}
+#endif // G__WIN32
 
 //______________________________________________________________________________
 extern "C" int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt)

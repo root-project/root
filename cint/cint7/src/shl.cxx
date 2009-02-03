@@ -1146,24 +1146,6 @@ G__value Cint::Internal::G__pointer2func(G__value *obj_p2f,char *parameter0 ,cha
 }
 
 /******************************************************************
-* G__removetagid()
-******************************************************************/
-static void G__removetagid(std::string &buf)
-{
-   int i;
-   if(strncmp("class ",buf.c_str(),6)==0 || strncmp("union ",buf.c_str(),6)==0) {
-      i=6;
-   }
-   else if(strncmp("struct ",buf.c_str(),7)==0) {
-      i=7;
-   }
-   else if(strncmp("enum ",buf.c_str(),5)==0) {
-      i=5;
-   }
-   buf.replace(0,i,"");
-}
-
-/******************************************************************
 * G__getp2ftype()
 ******************************************************************/
 static ::Reflex::Type G__getp2ftype(const ::Reflex::Member &func)
@@ -1302,7 +1284,7 @@ bool Cint::Internal::G__search_func(char *funcname,G__value *buf)
 
 char *Cint::Internal::G__search_next_member(char *text,int state)
 {
-   static int list_index,len,index_item  /* ,cbp */;
+   static unsigned int list_index,len,index_item  /* ,cbp */;
    static char completionbuf[G__ONELINE];
    std::string name;
    char *result;
@@ -1412,7 +1394,7 @@ char *Cint::Internal::G__search_next_member(char *text,int state)
          switch(index_item) {
          case 0: /* struct member */
             G__ASSERT(varscope);
-            if(list_index<varscope.DataMemberSize()) {
+            if(list_index< varscope.DataMemberSize()) {
                name = varscope.DataMemberAt(list_index).Name();
                break;
             }
@@ -1433,7 +1415,7 @@ char *Cint::Internal::G__search_next_member(char *text,int state)
                funcscope = ::Reflex::Scope();
             }
          case 2: /* class name */
-            if(list_index<G__struct.alltag) {
+            if(list_index<((unsigned int)G__struct.alltag)) {
                if(scope) {
                   name =(char*)NULL;
                   do {
@@ -1441,7 +1423,7 @@ char *Cint::Internal::G__search_next_member(char *text,int state)
                         name = G__struct.name[list_index];
                         break;
                      }
-                  } while(list_index++<G__struct.alltag) ;
+                  } while(list_index++<((unsigned int)G__struct.alltag)) ;
                }
                else {
                   name = G__struct.name[list_index];
@@ -1588,7 +1570,7 @@ char *Cint::Internal::G__search_next_member(char *text,int state)
                /* don't break */
             }
          case 4: /* class name */
-            if(list_index<G__struct.alltag) {
+            if(list_index<((unsigned int)G__struct.alltag)) {
                name = G__struct.name[list_index];
                break;
             }

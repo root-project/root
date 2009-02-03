@@ -1570,7 +1570,7 @@ void Cint::Internal::G__va_arg_copyfunc(FILE *fp,G__ifunc_table *ifunc,int ifn)
 static void G__typeconversion(const ::Reflex::Member &ifunc
                                ,G__param *libp) 
 {
-   for(int i=0;i<libp->paran && i<ifunc.TypeOf().FunctionParameterSize();++i) {
+   for(unsigned int i=0;i<((unsigned int)libp->paran) && i<ifunc.TypeOf().FunctionParameterSize();++i) {
       ::Reflex::Type formal_type( ifunc.TypeOf().FunctionParameterAt(i) );
       ::Reflex::Type param_type( G__value_typenum(libp->para[i]) );
       

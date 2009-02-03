@@ -408,7 +408,7 @@ std::string Cint::G__ShadowMaker::GetNonConstTypeName(G__DataMemberInfo &m, bool
 }
 
 //______________________________________________________________________________
-void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo& cl, int level /*=0*/)
+void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo& cl, int nesting_level /*=0*/)
 {
    // This function writes or make available a class named
    // fNSPrefix::Shadow::ClassName for which all data member
@@ -421,7 +421,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo& cl, int level /*=0*/)
 
    // If nested class let the enclosing class generate the shadow.
    G__ClassInfo encClass = cl.EnclosingClass();
-   if (!level && encClass.IsValid() && fCacheNeedShadow[encClass.Tagnum()]) {
+   if (!nesting_level && encClass.IsValid() && fCacheNeedShadow[encClass.Tagnum()]) {
       return;
    }
 
@@ -430,14 +430,14 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo& cl, int level /*=0*/)
    std::string classname = G__map_cpp_name((char*)cl.Name());
 
    int closing_brackets = 0;
-   if (!level) {
+   if (!nesting_level) {
       closing_brackets = WriteNamespaceHeader(cl);
    }
    if (closing_brackets) {
       fOut << std::endl;
    }
    std::string indent;
-   for (int iIndent = 0; iIndent < level; ++iIndent) {
+   for (int iIndent = 0; iIndent < nesting_level; ++iIndent) {
       indent += "   ";
    }
 
@@ -513,7 +513,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo& cl, int level /*=0*/)
             (clContained.EnclosingClass().Tagnum() == cl.Tagnum()) &&
             strcmp(clContained.Name(), "$")
          ) {
-            WriteShadowClass(clContained, level + 1);
+            WriteShadowClass(clContained, nesting_level + 1);
          }
       }
 
@@ -551,21 +551,21 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo& cl, int level /*=0*/)
 
                size_t posTemplArg = typenameOriginal.find('<');
                while (posTemplArg != std::string::npos) {
-                  int level = 0;
+                  int template_level = 0;
                   size_t posArgEnd = posTemplArg;
                   do {
                      posArgEnd = typenameOriginal.find_first_of("<,>", posArgEnd + 1);
                      if (posArgEnd !=  std::string::npos) {
                         if (typenameOriginal[posArgEnd] == '<') {
-                           ++level;
+                           ++template_level;
                         }
                         if (typenameOriginal[posArgEnd] == '>') {
-                           --level;
-                           if (level == -1) {
+                           --template_level;
+                           if (template_level == -1) {
                               break;
                            }
                         }
-                        if ((typenameOriginal[posArgEnd] == ',') && !level) {
+                        if ((typenameOriginal[posArgEnd] == ',') && !template_level) {
                            break;
                         }
                      }

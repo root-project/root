@@ -1787,10 +1787,10 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
 
             if (0 == *known3) {
                if (-1 != cursor && libp->paran == 1 && -1 != G__get_tagnum(G__value_typenum(libp->para[0]))) {
-                  char* store_struct_offset = G__store_struct_offset;
-                  char* store_memberfunc_struct_offset = G__memberfunc_struct_offset;
-                  ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
-                  int store_exec_memberfunc = G__exec_memberfunc;
+                  char* local_store_struct_offset = G__store_struct_offset;
+                  char* local_store_memberfunc_struct_offset = G__memberfunc_struct_offset;
+                  ::Reflex::Scope local_store_memberfunc_tagnum = G__memberfunc_tagnum;
+                  int local_store_exec_memberfunc = G__exec_memberfunc;
                   store_tagnum = G__tagnum;
                   G__inc_cp_asm(-5, 0); /* cancel ALLOCTEMP, SETTEMP, POPTEMP */
                   G__pop_tempobject();
@@ -1834,11 +1834,11 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
                         break;
                      }
                   }
-                  G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-                  G__memberfunc_tagnum = store_memberfunc_tagnum;
-                  G__exec_memberfunc = store_exec_memberfunc;
+                  G__memberfunc_struct_offset = local_store_memberfunc_struct_offset;
+                  G__memberfunc_tagnum = local_store_memberfunc_tagnum;
+                  G__exec_memberfunc = local_store_exec_memberfunc;
                   G__tagnum = store_tagnum;
-                  G__store_struct_offset = store_struct_offset;
+                  G__store_struct_offset = local_store_struct_offset;
                }
                else if (-1 != cursor && libp->paran == 1) {
                   G__fprinterr(G__serr, "Error: No matching constructor for explicit conversion %s", item);
@@ -3196,10 +3196,10 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                ::Reflex::Type type = G__value_typenum(fpara.para[0]);
                int ret = G__get_tagnum(type);
                if (ret != -1) {
-                  char* store_struct_offset = G__store_struct_offset;
-                  char* store_memberfunc_struct_offset = G__memberfunc_struct_offset;
-                  ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
-                  int store_exec_memberfunc = G__exec_memberfunc;
+                  char* local_store_struct_offset = G__store_struct_offset;
+                  char* local_store_memberfunc_struct_offset = G__memberfunc_struct_offset;
+                  ::Reflex::Scope local_store_memberfunc_tagnum = G__memberfunc_tagnum;
+                  int local_store_exec_memberfunc = G__exec_memberfunc;
                   store_tagnum = G__tagnum;
                   G__inc_cp_asm(-5, 0); // cancel ALLOCTEMP, SETTEMP, POPTEMP
                   G__pop_tempobject();
@@ -3245,11 +3245,11 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                         break;
                      }
                   }
-                  G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-                  G__memberfunc_tagnum = store_memberfunc_tagnum;
-                  G__exec_memberfunc = store_exec_memberfunc;
+                  G__memberfunc_struct_offset = local_store_memberfunc_struct_offset;
+                  G__memberfunc_tagnum = local_store_memberfunc_tagnum;
+                  G__exec_memberfunc = local_store_exec_memberfunc;
                   G__tagnum = store_tagnum;
-                  G__store_struct_offset = store_struct_offset;
+                  G__store_struct_offset = local_store_struct_offset;
                }
             }
             else if ((cursor != -1) && (fpara.paran == 1)) {

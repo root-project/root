@@ -2193,7 +2193,8 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
 #endif // G__OLDIMPLEMENTATION2027
       // --
    ) {
-      int modifiers = 0;
+      // Reset modifier to take in consideration the change above (in particular) fIsvirtual.
+      modifiers = 0;
       if (fIsconst) {
          modifiers |= ::Reflex::CONST;
       }

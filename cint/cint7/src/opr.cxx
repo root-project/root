@@ -1752,10 +1752,10 @@ void Cint::Internal::G__bstore(int operatortag, G__value expressionin, G__value*
                break;
             case 'L': /* left shift */
                if (!G__prerun) {
-                  long ldefined = G__int(*defined);
+                  long local_ldefined = G__int(*defined);
                   unsigned long uexpression = (unsigned long) G__uint(expressionin);
-                  G__letint(defined, defined_type, ldefined << uexpression);
-                  defined->obj.i = ldefined << uexpression;
+                  G__letint(defined, defined_type, local_ldefined << uexpression);
+                  defined->obj.i = local_ldefined << uexpression;
                }
                else {
                   G__letint(defined, resultTypeChar, ldefined << lexpression);

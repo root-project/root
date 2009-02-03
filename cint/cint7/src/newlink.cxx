@@ -302,7 +302,6 @@ void G__gen_cppheader(char *headerfilein);
 static void G__gen_headermessage(FILE *fp, char *fname);
 void G__add_macro(char *macroin);
 int G__isnonpublicnew(int tagnum);
-void  G__if_ary_union_reset(int ifn, struct G__ifunc_table *ifunc);
 static int G__isprotecteddestructoronelevel(int tagnum);
 void  G__if_ary_union(FILE *fp, int ifn, struct G__ifunc_table *ifunc);
 char *G__mark_linked_tagnum(int tagnum);
@@ -314,7 +313,6 @@ static int G__isprivateassignoprifunc(int tagnum);
 static int G__isprivateassignoprvar(int tagnum);
 void G__cppif_gendefault(FILE *fp, FILE *hfp, int tagnum, int ifn, struct G__ifunc_table *ifunc, int isconstructor, int iscopyconstructor, int isdestructor, int isassignmentoperator, int isnonpublicnew);
 static char* G__vbo_funcname(int tagnum, int basetagnum, int basen);
-static int G__hascompiledoriginalbase(int tagnum);
 static void G__declaretruep2f(FILE *fp, struct G__ifunc_table *ifunc, int j);
 static void G__printtruep2f(FILE *fp, struct G__ifunc_table *ifunc, int j);
 int G__tagtable_setup(int tagnum, int size, int cpplink, int isabstract, char *comment, G__incsetup setup_memvar, G__incsetup setup_memfunc);
@@ -1021,7 +1019,7 @@ static void G__cpplink_protected_stub(FILE* fp, FILE* hfp)
    for (i = 0;i < G__struct.alltag;i++) {
       if (G__CPPLINK == G__struct.globalcomp[i] && G__struct.hash[i] &&
             G__struct.protectedaccess[i]) {
-         int ig15, ifn, n;
+         unsigned int n;
          fprintf(hfp, "class %s_PR : public %s {\n"
                  , G__get_link_tagname(i), G__fulltagname(i, 1));
          fprintf(hfp, " public:\n");
@@ -1217,26 +1215,6 @@ int G__get_linked_tagnum_fwd(G__linked_taginfo* p)
    int ret = G__get_linked_tagnum(p);
    p->tagtype = type;
    return ret;
-}
-
-//______________________________________________________________________________
-static int G__get_linked_tagnum_with_param(G__linked_taginfo* p, void* param)
-{
-   // -- Setup and return tagnum; also set user parameter.
-   int tag = G__get_linked_tagnum(p);
-   if (tag != -1) {
-      G__struct.userparam[tag] = param;
-      return tag;
-   }
-   return -1;
-}
-
-//______________________________________________________________________________
-static void* G__get_linked_user_param(int tag_num)
-{
-   // -- Retrieve user parameter.
-   if (tag_num < 0 || tag_num > G__MAXSTRUCT) return 0;
-   return G__struct.userparam[tag_num];
 }
 
 //______________________________________________________________________________
@@ -2040,7 +2018,6 @@ static int G__isnonpublicnew(int tagnum)
    int i;
    int hash;
    char *namenew = "operator new";
-   struct G__ifunc_table *ifunc;
 
    G__hash(namenew, hash, i);
 
@@ -2317,52 +2294,6 @@ static void G__if_ary_union(FILE* fp, const ::Reflex::Member& ifunc)
    }
 }
 
-//______________________________________________________________________________
-static void G__if_ary_union_reset(const ::Reflex::Member& ifunc)
-{
-   int k, m;
-   int type;
-   const char *p;
-
-   m = ifunc.FunctionParameterSize();
-
-   for (k = 0; k < m; ++k) {
-      if (ifunc.FunctionParameterNameAt(k).c_str()[0]) {
-         p = strchr(ifunc.FunctionParameterNameAt(k).c_str(), '[');
-         if (p) {
-            fprintf(stderr, "G__if_ary_union_reset: idx: %d  name: '%s'\n", k, ifunc.FunctionParameterNameAt(k).c_str());
-            assert(0);
-            //int pointlevel = 1;
-            //*p = 0;
-            //while ((p = strchr(p+1, '['))) ++pointlevel;
-            //type = G__get_type(ifunc.TypeOf().FunctionParameterAt(k));
-            //if (isupper(type)) {
-            //   switch (pointlevel) {
-            // case 2:
-            //    ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
-            //    break;
-            // default:
-            //    G__genericerror("Cint internal error ary parameter dimension");
-            //    break;
-            //   }
-            //} else {
-            //   ifunc->para_type[ifn][k] = toupper(type);
-            //   switch (pointlevel) {
-            // case 2:
-            //    ifunc->para_reftype[ifn][k] = G__PARAP2P;
-            //    break;
-            // case 3:
-            //    ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
-            //    break;
-            // default:
-            //    G__genericerror("Cint internal error ary parameter dimension");
-            //    break;
-            //   }
-            //}
-         }
-      }
-   }
-}
 
 #ifdef G__CPPIF_EXTERNC
 //______________________________________________________________________________
@@ -3132,7 +3063,6 @@ void Cint::Internal::G__cppif_genconstructor(FILE* fp, FILE* /*hfp*/, int tagnum
    fprintf(fp,               "   result7->ref = (long) p;\n");
    fprintf(fp,               "   G__set_tagnum(result7,G__get_linked_tagnum(&%s));\n", G__mark_linked_tagnum(tagnum));
 
-   //G__if_ary_union_reset(ifunc);
    G__cppif_dummyfuncname(fp);
 
    fprintf(fp,               "}\n\n");
@@ -4117,7 +4047,6 @@ void Cint::Internal::G__cppif_genfunc(FILE* fp, FILE* /*hfp*/, int tagnum, const
 #endif // __x86_64__ && (__linux || __APPLE__)
       // --
    }
-   //G__if_ary_union_reset(ifunc);
    G__cppif_dummyfuncname(fp);
    fprintf(fp, "}\n\n");
 #ifndef G__OLDIMPLEMENTATION1823
@@ -5087,7 +5016,7 @@ void Cint::Internal::G__cpplink_typetable(FILE* fp, FILE* /*hfp*/)
    //
    size_t max_type = ::Reflex::Type::TypeSize();
    if (G__nestedtypedef) { // We are including nested typedefs in the dictionary.
-      for (int i = 0; i < max_type; ++i) {
+      for (size_t i = 0; i < max_type; ++i) {
          ::Reflex::Type ty = ::Reflex::Type::TypeAt(i);
          if (!ty.IsTypedef()) {
             continue;
@@ -5100,7 +5029,7 @@ void Cint::Internal::G__cpplink_typetable(FILE* fp, FILE* /*hfp*/)
          }
       }
    }
-   for (int i = 0; i < max_type; ++i) {
+   for (size_t i = 0; i < max_type; ++i) {
       ::Reflex::Type ty = ::Reflex::Type::TypeAt(i);
       if (!ty.IsTypedef()) {
          continue;
@@ -5172,24 +5101,6 @@ void Cint::Internal::G__cpplink_typetable(FILE* fp, FILE* /*hfp*/)
       }
    }
    fprintf(fp, "}\n");
-}
-
-//______________________________________________________________________________
-static int G__hascompiledoriginalbase(int tagnum)
-{
-   struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
-   int basen;
-   for (basen = 0;basen < baseclass->basen;basen++) {
-      if (G__CPPLINK != G__struct.iscpplink[baseclass->basetagnum[basen]])
-         continue;
-      ::Reflex::Scope scope = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
-      for (::Reflex::Member_Iterator ifunc = scope.FunctionMember_Begin();
-            ifunc != scope.FunctionMember_End();
-            ++ifunc) {
-         if (ifunc->IsVirtual()) return 1;
-      }
-   }
-   return(0);
 }
 
 //______________________________________________________________________________
@@ -5469,7 +5380,7 @@ void Cint::Internal::G__cpplink_memvar(FILE* fp)
 }
 
 //______________________________________________________________________________
-static int G__isprivatectordtorassgn(int tagnum, const ::Reflex::Member& ifunc)
+static int G__isprivatectordtorassgn(int /* tagnum */, const ::Reflex::Member& ifunc)
 {
    if (ifunc.IsPublic()) return 0;
    if ('~' == ifunc.Name().c_str()[0]) return(1);
@@ -5483,7 +5394,8 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
 {
    // --
 #ifndef G__SMALLOBJECT
-   int i, k;
+   int i;
+   unsigned int k;
    int hash;
    G__StrBuf funcname_sb(G__MAXNAME*6);
    char *funcname = funcname_sb;
@@ -5723,7 +5635,7 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
                   && G__MACROLINK != G__get_funcproperties(*ifunc)->globalcomp
                ) {
 #ifndef G__OLDIMPLEMENTATION1993
-                  int k;
+                  unsigned int k;
                   fprintf(fp, ", (void*) (%s (*)("
                           , G__type2string(G__get_type(ifunc->TypeOf().ReturnType())
                                            , G__get_tagnum(ifunc->TypeOf().ReturnType().RawType())
@@ -6253,7 +6165,7 @@ static void G__printtruep2f(FILE* fp, const ::Reflex::Member& ifunc)
 void Cint::Internal::G__cpplink_func(FILE* fp)
 {
    // -- Making C++ link routine to global function.
-   int k;
+   unsigned int k;
    G__StrBuf buf_sb(G__ONELINE);
    char *buf = buf_sb;
    int divn = 0;
@@ -8550,7 +8462,6 @@ void G__setnewtype_settypenum(::Reflex::Type typenum)
 //______________________________________________________________________________
 extern "C" void G__setnewtype(int globalcomp, const char* comment, int /*nindex*/)
 {
-   bool typenum_isvalid = G__setnewtype_typenum;
    G__RflxProperties* prop = G__get_properties(G__setnewtype_typenum);
    if (prop) {
       prop->iscpplink = globalcomp;

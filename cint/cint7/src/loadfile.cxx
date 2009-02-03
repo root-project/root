@@ -699,7 +699,7 @@ void Cint::Internal::G__smart_unload(int ifn)
    struct G__dictposition* hasonlyfunc = G__srcfile[ifn].hasonlyfunc;
    if (G__nfile == hasonlyfunc->nfile) {
       ::Reflex::Scope var = ::Reflex::Scope::GlobalScope();
-      if ((var == hasonlyfunc->var) && (var.DataMemberSize() == hasonlyfunc->ig15)) {
+      if ((var == hasonlyfunc->var) && ( ((int)var.DataMemberSize()) == hasonlyfunc->ig15)) {
          G__scratch_upto(G__srcfile[ifn].dictpos);
          return;
       }
@@ -945,7 +945,7 @@ static void G__checkIfOnlyFunction(int fentry)
   
    int varflag = 1;
    ::Reflex::Scope var = ::Reflex::Scope::GlobalScope();
-   if (dictpos->var == var && dictpos->ig15 == var.DataMemberSize()) {
+   if (dictpos->var == var && dictpos->ig15 == ((int)var.DataMemberSize())) {
       varflag = 1;
    }
    else {
@@ -1597,10 +1597,10 @@ extern "C" int G__loadfile(const char* filenamein)
                }
             }
             bool cintdlls = false;
-            int len = strlen(filename);
+            int local_len = strlen(filename);
             for (unsigned int i = 0; !cintdlls && (i < excludelistsize); ++i) {
-               if (len >= excludelen[i]) {
-                  cintdlls = !strncmp(filename + len - excludelen[i], excludelist[i], excludelen[i]);
+               if (local_len >= excludelen[i]) {
+                  cintdlls = !strncmp(filename + local_len - excludelen[i], excludelist[i], excludelen[i]);
                }
             }
             if (!cintdlls) {

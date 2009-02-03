@@ -273,7 +273,6 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam* pbaseparamin)
    struct G__inheritance *baseclass;
    ::Reflex::Scope store_tagnum = G__tagnum;
    char *store_struct_offset;
-   int i;
    struct G__baseparam *pbaseparam = pbaseparamin;
    char *tagname;
    int flag;
@@ -311,18 +310,18 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam* pbaseparamin)
    if (!store_tagnum) return(0);
    baseclass = G__struct.baseclass[G__get_tagnum(store_tagnum)];
    if (!baseclass) return(0);
-   for (i = 0;i < baseclass->basen;i++) {
-      if (baseclass->property[i]&G__ISDIRECTINHERIT) {
-         G__tagnum = G__Dict::GetDict().GetScope(baseclass->basetagnum[i]);
+   for (int bi = 0; bi < baseclass->basen; ++bi) {
+      if (baseclass->property[bi]&G__ISDIRECTINHERIT) {
+         G__tagnum = G__Dict::GetDict().GetScope(baseclass->basetagnum[bi]);
 #define G__OLDIMPLEMENTATION1606
 #ifdef G__VIRTUALBASE
-         if (baseclass->property[i]&G__ISVIRTUALBASE) {
+         if (baseclass->property[bi]&G__ISVIRTUALBASE) {
             char *vbaseosaddr;
-            vbaseosaddr = store_struct_offset + (size_t)baseclass->baseoffset[i];
+            vbaseosaddr = store_struct_offset + (size_t)baseclass->baseoffset[bi];
             G__setvbaseaddrlist(G__get_tagnum(G__tagnum), store_struct_offset
-                                , baseclass->baseoffset[i]);
+                                , baseclass->baseoffset[bi]);
             /*
-            if(baseclass->baseoffset[i]+G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
+            if(baseclass->baseoffset[bi]+G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
               G__store_struct_offset=store_struct_offset+(*(long*)vbaseosaddr);
             }
             */
@@ -339,10 +338,10 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam* pbaseparamin)
             }
          }
          else {
-            G__store_struct_offset = store_struct_offset + (size_t)baseclass->baseoffset[i];
+            G__store_struct_offset = store_struct_offset + (size_t)baseclass->baseoffset[bi];
          }
 #else
-         G__store_struct_offset = store_struct_offset + baseclass->baseoffset[i];
+         G__store_struct_offset = store_struct_offset + baseclass->baseoffset[bi];
 #endif
 
          /* search for constructor argument */
@@ -380,10 +379,10 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam* pbaseparamin)
          }
       } /* end of if ISDIRECTINHERIT */
       else { /* !ISDIREDCTINHERIT , bug fix for multiple inheritance */
-         if (0 == (baseclass->property[i]&G__ISVIRTUALBASE)) {
-            G__tagnum = G__Dict::GetDict().GetScope(baseclass->basetagnum[i]);
+         if (0 == (baseclass->property[bi]&G__ISVIRTUALBASE)) {
+            G__tagnum = G__Dict::GetDict().GetScope(baseclass->basetagnum[bi]);
             if (G__PVOID != G__struct.virtual_offset[G__get_tagnum(G__tagnum)]) {
-               G__store_struct_offset = store_struct_offset + (size_t)baseclass->baseoffset[i];
+               G__store_struct_offset = store_struct_offset + (size_t)baseclass->baseoffset[bi];
                *(long*)(G__store_struct_offset + (size_t)G__struct.virtual_offset[G__get_tagnum(G__tagnum)])
                = G__get_tagnum(store_tagnum);
             }
@@ -404,12 +403,12 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam* pbaseparamin)
     ****************************************************************/
    G__incsetup_memvar((store_tagnum));
 
-   for (i = 0;i < store_tagnum.DataMemberSize();i++) {
-      ::Reflex::Member mem = store_tagnum.DataMemberAt(i);
+   for (unsigned int di = 0; di < store_tagnum.DataMemberSize(); ++di) {
+      ::Reflex::Member mem = store_tagnum.DataMemberAt(di);
       if (
          (G__get_type(mem.TypeOf()) == 'u') &&
 #ifndef G__NEWINHERIT
-         !mem->isinherit[i] &&
+         !mem->isinherit[di] &&
 #endif
          !mem.TypeOf().RawType().IsEnum() &&
          (G__get_properties(mem)->statictype != G__LOCALSTATIC)
@@ -600,7 +599,7 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam* pbaseparamin)
          } /* if(flag) */
       } /* else if(!LOCALSTATIC) */
 
-   } /* for(i) */
+   } /* for(di) */
    G__globalvarpointer = store_globalvarpointer;
 #ifdef G__VIRTUALBASE
    G__toplevelinstantiation = store_toplevelinstantiation;

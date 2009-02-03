@@ -67,7 +67,7 @@ static char G__memsetup_init;
 //______________________________________________________________________________
 extern "C" void G__add_setup_func(const char* libname, G__incsetup func)
 {
-   int i, islot = -1;
+   int islot = -1;
 
    if (!G__memsetup_init) {
       for (int i = 0; i < G__MAXSTRUCT; i++) {
@@ -88,19 +88,19 @@ extern "C" void G__add_setup_func(const char* libname, G__incsetup func)
       G__max_libs += 10;
       G__setup_func_list = (G__setup_func_struct**)realloc(G__setup_func_list,
                            G__max_libs * sizeof(G__setup_func_struct*));
-      for (i = G__nlibs; i < G__max_libs; i++)
-         G__setup_func_list[i] = 0;
+      for (int libi = G__nlibs; libi < G__max_libs; libi++)
+         G__setup_func_list[libi] = 0;
    }
 
    /* if already in table: ignore (could also print warning) */
-   for (i = 0; i < G__nlibs; i++)
-      if (G__setup_func_list[i] &&
-            !strcmp(G__setup_func_list[i]->libname, libname)) return;
+   for (int libi = 0; libi < G__nlibs; libi++)
+      if (G__setup_func_list[libi] &&
+            !strcmp(G__setup_func_list[libi]->libname, libname)) return;
 
    /* find empty slot */
-   for (i = 0; i < G__nlibs; i++)
-      if (!G__setup_func_list[i]) {
-         islot = i;
+   for (int libi = 0; libi < G__nlibs; libi++)
+      if (!G__setup_func_list[libi]) {
+         islot = libi;
          break;
       }
    if (islot == -1) islot = G__nlibs++;

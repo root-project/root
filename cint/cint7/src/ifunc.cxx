@@ -280,10 +280,10 @@ int Cint::G__compile_function_bytecode(const ::Reflex::Member& ifunc)
 #endif // G__ASM
       {
          G__StrBuf funcname_sb(G__LONGLINE);
-         char* funcname = funcname_sb;
-         strcpy(funcname, ifunc.Name().c_str());
+         char* local_funcname = funcname_sb;
+         strcpy(local_funcname, ifunc.Name().c_str());
          ::Reflex::Scope scope = ifunc.DeclaringScope();
-         G__interpret_func(&buf, funcname, &para, 0, scope, G__EXACT, funcstatus);
+         G__interpret_func(&buf, local_funcname, &para, 0, scope, G__EXACT, funcstatus);
       }
 #ifdef G__ASM
 #ifdef G__ASM_DBG
@@ -1544,9 +1544,9 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
                   else {
                      type = 'u';
                      if (strchr(buf, '<')) { // Possibly a template id.
-                        ::Reflex::Type ty = G__find_typedef(buf);  // The previous lookup may have created a typedef.
-                        if (ty) {
-                           typenum = G__get_properties(ty)->typenum;
+                        ::Reflex::Type bufty( G__find_typedef(buf) );  // The previous lookup may have created a typedef.
+                        if (bufty) {
+                           typenum = G__get_properties(bufty)->typenum;
                         }
                      }
                   }
@@ -3659,9 +3659,9 @@ static int G__convert_param(G__param* libp, const ::Reflex::Member& func, G__fun
             }
          }
          else if (-1 != G__get_tagnum(G__value_typenum(*param))) {
-            char *store_struct_offset = G__store_struct_offset;
-            ::Reflex::Scope store_tagnum = G__tagnum;
-            int store_isconst = G__isconst;
+            char *local_store_struct_offset = G__store_struct_offset;
+            ::Reflex::Scope local_store_tagnum = G__tagnum;
+            int local_store_isconst = G__isconst;
             int intTagnum = G__get_tagnum(formal_tagnum);
             if (intTagnum == 0) intTagnum = -1;
             sprintf(conv, "operator %s()", G__type2string(formal_type, intTagnum, -1, 0, 0));
@@ -3691,16 +3691,16 @@ static int G__convert_param(G__param* libp, const ::Reflex::Member& func, G__fun
 #endif
             reg = G__getfunction(conv, &match, G__TRYMEMFUNC);
             if (!match && 0 != formal_isconst) {
-               int intTagnum = G__get_tagnum(formal_tagnum);
-               if (intTagnum == 0) intTagnum = -1;
-               sprintf(conv, "operator const %s()", G__type2string(formal_type, intTagnum, -1, 0, 0));
+               int local_intTagnum = G__get_tagnum(formal_tagnum);
+               if (local_intTagnum == 0) local_intTagnum = -1;
+               sprintf(conv, "operator const %s()", G__type2string(formal_type, local_intTagnum, -1, 0, 0));
                G__store_struct_offset = (char*)param->obj.i;
                G__tagnum = G__value_typenum(*param).RawType();
                reg = G__getfunction(conv, &match, G__TRYMEMFUNC);
             }
-            G__isconst = store_isconst;
-            G__tagnum = store_tagnum;
-            G__store_struct_offset = store_struct_offset;
+            G__isconst = local_store_isconst;
+            G__tagnum = local_store_tagnum;
+            G__store_struct_offset = local_store_struct_offset;
 #ifdef G__ASM
             if (G__asm_noverflow) {
                if (rewind_arg) {
@@ -5072,15 +5072,15 @@ int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G_
          virtualtag = G__tagnum;
       }
       if (virtualtag != G__tagnum) {
-         G__inheritance* baseclass = G__struct.baseclass[G__get_tagnum(virtualtag)];
+         G__inheritance* local_baseclass = G__struct.baseclass[G__get_tagnum(virtualtag)];
          int xbase[G__MAXBASE], ybase[G__MAXBASE];
          int nxbase = 0, nybase;
-         int basen;
+         int local_basen;
          G__incsetup_memfunc((virtualtag));
          ::Reflex::Member iexist = G__ifunc_exist(ifn, virtualtag, true);
-         for (basen = 0;!iexist && basen < baseclass->basen;basen++) {
-            virtualtag = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
-            if (0 == (baseclass->property[basen]&G__ISDIRECTINHERIT)) continue;
+         for (local_basen = 0;!iexist && local_basen < local_baseclass->basen;local_basen++) {
+            virtualtag = G__Dict::GetDict().GetScope(local_baseclass->basetagnum[local_basen]);
+            if (0 == (local_baseclass->property[local_basen]&G__ISDIRECTINHERIT)) continue;
             xbase[nxbase++] = G__get_tagnum(virtualtag);
             G__incsetup_memfunc((virtualtag));
             iexist
@@ -5090,10 +5090,10 @@ int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G_
             int xxx;
             nybase = 0;
             for (xxx = 0;!iexist && xxx < nxbase;xxx++) {
-               baseclass = G__struct.baseclass[xbase[xxx]];
-               for (basen = 0;!iexist && basen < baseclass->basen;basen++) {
-                  virtualtag = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
-                  if (0 == (baseclass->property[basen]&G__ISDIRECTINHERIT)) continue;
+               local_baseclass = G__struct.baseclass[xbase[xxx]];
+               for (local_basen = 0;!iexist && local_basen < local_baseclass->basen;local_basen++) {
+                  virtualtag = G__Dict::GetDict().GetScope(local_baseclass->basetagnum[local_basen]);
+                  if (0 == (local_baseclass->property[local_basen]&G__ISDIRECTINHERIT)) continue;
                   ybase[nybase++] = G__get_tagnum(virtualtag);
                   G__incsetup_memfunc((virtualtag));
                   iexist

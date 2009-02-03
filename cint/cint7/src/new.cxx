@@ -480,14 +480,14 @@ G__value Cint::Internal::G__new_operator(char* expression)
          }
 #endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__SET_NEWALLOC;
-         ::Reflex::Type &type = *reinterpret_cast<Reflex::Type*>(&G__asm_inst[G__asm_cp+1]);
+         ::Reflex::Type &refto_type = *reinterpret_cast<Reflex::Type*>(&G__asm_inst[G__asm_cp+1]);
          switch (var_type) {
             case 'u':
             case 'U':
-               type = Reflex::PointerBuilder(G__tagnum);
+               refto_type = Reflex::PointerBuilder(G__tagnum);
                break;
             default:
-               type = G__get_from_type(toupper(var_type), 1);
+               refto_type = G__get_from_type(toupper(var_type), 1);
          }
          G__inc_cp_asm(3, 0);
       }
@@ -666,8 +666,8 @@ G__value Cint::Internal::G__new_operator(char* expression)
                         *ep = ')';
                         *(bp - 1) = '(';
                         // only to display error message
-                        int known = 0;
-                        G__getfunction(construct, &known, G__CALLCONSTRUCTOR);
+                        int dummy_known = 0;
+                        G__getfunction(construct, &dummy_known, G__CALLCONSTRUCTOR);
                         break;
                      }
                   }

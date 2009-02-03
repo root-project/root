@@ -1553,10 +1553,10 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                int store_asm_noverflow = G__asm_noverflow;
                G__asm_noverflow = 0;
                G__StrBuf funcname_sb(G__LONGLINE);
-               char* funcname = funcname_sb;
-               strcpy(funcname, G__asm_index.Name().c_str());
+               char* local_funcname = funcname_sb;
+               strcpy(local_funcname, G__asm_index.Name().c_str());
                ::Reflex::Scope scope = G__asm_index.DeclaringScope();
-               G__interpret_func(&G__asm_stack[sp], funcname, &fpara, G__asm_inst[pc+2], scope, G__asm_inst[pc+5], G__asm_inst[pc+6]);
+               G__interpret_func(&G__asm_stack[sp], local_funcname, &fpara, G__asm_inst[pc+2], scope, G__asm_inst[pc+5], G__asm_inst[pc+6]);
                G__asm_noverflow = store_asm_noverflow;
             }
             G__memberfunc_tagnum = store_memberfunc_tagnum;

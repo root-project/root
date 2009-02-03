@@ -23,7 +23,7 @@ using namespace Cint::Internal;
 
 // Static functions.
 static void G__SlideString(char* str, unsigned int slide);
-static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype, int reftype);
+static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype, int reftype, int isconst);
 
 // External functions.
 namespace Cint {

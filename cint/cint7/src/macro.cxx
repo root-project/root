@@ -1033,19 +1033,19 @@ int Cint::Internal::G__freedeffuncmacro(G__Deffuncmacro *deffuncmacro)
    }
    dfmp->def_fp = 0;
    G__freecharlist(&dfmp->def_para);
-   G__Callfuncmacro* cfmp = &dfmp->callfuncmacro;
-   cfmp->call_fp = 0;
+   G__Callfuncmacro* outer_cfmp = &dfmp->callfuncmacro;
+   outer_cfmp->call_fp = 0;
    {
-      G__Callfuncmacro* next = cfmp->next;
-      cfmp->next = 0;
-      cfmp = next;
+      G__Callfuncmacro* next = outer_cfmp->next;
+      outer_cfmp->next = 0;
+      outer_cfmp = next;
    }
-   while (cfmp) {
-      cfmp->call_fp = 0;
-      G__Callfuncmacro* next = cfmp->next;
-      cfmp->next = 0;
-      delete cfmp;
-      cfmp = next;
+   while (outer_cfmp) {
+      outer_cfmp->call_fp = 0;
+      G__Callfuncmacro* next = outer_cfmp->next;
+      outer_cfmp->next = 0;
+      delete outer_cfmp;
+      outer_cfmp = next;
    }
    {
       G__Deffuncmacro* next = dfmp->next;
@@ -1059,19 +1059,19 @@ int Cint::Internal::G__freedeffuncmacro(G__Deffuncmacro *deffuncmacro)
       }
       dfmp->def_fp = 0;
       G__freecharlist(&dfmp->def_para);
-      G__Callfuncmacro* cfmp = &dfmp->callfuncmacro;
-      cfmp->call_fp = 0;
+      G__Callfuncmacro* inner_cfmp = &dfmp->callfuncmacro;
+      inner_cfmp->call_fp = 0;
       {
-         G__Callfuncmacro* next = cfmp->next;
-         cfmp->next = 0;
-         cfmp = next;
+         G__Callfuncmacro* next = inner_cfmp->next;
+         inner_cfmp->next = 0;
+         inner_cfmp = next;
       }
-      while (cfmp) {
-         cfmp->call_fp = 0;
-         G__Callfuncmacro* next = cfmp->next;
-         cfmp->next = 0;
-         delete (cfmp);
-         cfmp = next;
+      while (inner_cfmp) {
+         inner_cfmp->call_fp = 0;
+         G__Callfuncmacro* next = inner_cfmp->next;
+         inner_cfmp->next = 0;
+         delete (inner_cfmp);
+         inner_cfmp = next;
       }
       {
          G__Deffuncmacro* next = dfmp->next;
@@ -1094,18 +1094,22 @@ int Cint::Internal::G__freecharlist(G__Charlist *charlist)
       free(p->string);
       p->string = 0;
    }
-   G__Charlist* next = p->next;
-   p->next = 0;
-   p = next;
+   {
+      G__Charlist* next = p->next;
+      p->next = 0;
+      p = next;
+   }
    while (p) {
       if (p->string) {
          free(p->string);
          p->string = 0;
       }
-      G__Charlist* next = p->next;
-      p->next = 0;
-      delete p;
-      p = next;
+      {
+         G__Charlist* next = p->next;
+         p->next = 0;
+         delete p;
+         p = next;
+      }
    }
    return 0;
 }

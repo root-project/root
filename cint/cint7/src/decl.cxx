@@ -1357,18 +1357,18 @@ static int G__initary(char* new_name)
                //      int ary[3][3][3] = { { {1, 2, 3} } };
                //
                //printf("\n} ");
-               int stride = strides[current_dimension];
-               //printf("stride: %d\n", stride);
+               int local_stride = strides[current_dimension];
+               //printf("local_stride: %d\n", local_stride);
                //printf("linear_index: %d\n", linear_index);
                int num_given = 0;
                if (initializer_count[current_dimension]) {
                   // -- There were initializers.
                   if (linear_index) {
-                     num_given = linear_index - (((linear_index - 1) / stride) * stride);
+                     num_given = linear_index - (((linear_index - 1) / local_stride) * local_stride);
                   }
                }
                //printf("num_given: %d\n", num_given);
-               int num_omitted = stride - num_given;
+               int num_omitted = local_stride - num_given;
                //printf("num_omitted: %d\n", num_omitted);
                for (int i = 0; i < num_omitted; ++i) {
                   buf.obj.i = ((long) G__get_offset(var)) + (linear_index * size);
@@ -1376,7 +1376,7 @@ static int G__initary(char* new_name)
                   //printf("%d: 0, ", linear_index);
                   ++linear_index;
                }
-               G__ASSERT(!(linear_index % stride));
+               G__ASSERT(!(linear_index % local_stride));
                // Decrease brace nesting level.
                --brace_level;
                // Change to the previous dimension.
@@ -1385,7 +1385,7 @@ static int G__initary(char* new_name)
                //printf("restored dimension: %d\n", current_dimension);
                // Add the recently closed aggregate to the initializer count.
                if (current_dimension != -1) {
-                  initializer_count[current_dimension] += stride;
+                  initializer_count[current_dimension] += local_stride;
                }
             }
             break;
@@ -1933,13 +1933,13 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                G__valuemonitor(reg, tttt);
                sprintf(temp1, "%s(%s)", G__struct.name[tagnum], tttt);
                if (G__struct.parent_tagnum[tagnum] != -1) {
-                  int store_exec_memberfunc = G__exec_memberfunc;
-                  ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
+                  int local_store_exec_memberfunc = G__exec_memberfunc;
+                  ::Reflex::Scope local_store_memberfunc_tagnum = G__memberfunc_tagnum;
                   G__exec_memberfunc = 1;
                   G__memberfunc_tagnum = G__Dict::GetDict().GetScope(G__struct.parent_tagnum[tagnum]);
                   reg = G__getfunction(temp1, &known, G__CALLCONSTRUCTOR);
-                  G__exec_memberfunc = store_exec_memberfunc;
-                  G__memberfunc_tagnum = store_memberfunc_tagnum;
+                  G__exec_memberfunc = local_store_exec_memberfunc;
+                  G__memberfunc_tagnum = local_store_memberfunc_tagnum;
                }
                else {
                   reg = G__getfunction(temp1, &known, G__CALLCONSTRUCTOR);
@@ -2172,8 +2172,8 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                }
                // Perform the initialization.
                G__var_type = var_type;
-               G__value reg = G__null;
-               G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local);
+               G__value temp_reg = G__null;
+               G__letvariable(new_name, temp_reg, ::Reflex::Scope::GlobalScope(), G__p_local);
                // Continue scanning.
                goto readnext;
             }
@@ -2550,11 +2550,11 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
          }
          G__var_type = 'p';
          if (G__reftype == G__PARAREFERENCE) {
-            int store_reftype = G__reftype;
-            int store_prerun = G__prerun;
-            int store_decl = G__decl;
-            int store_constvar = G__constvar;
-            int store_static_alloc = G__static_alloc;
+            int local_store_reftype = G__reftype;
+            int local_store_prerun = G__prerun;
+            int local_store_decl = G__decl;
+            int local_store_constvar = G__constvar;
+            int local_store_static_alloc = G__static_alloc;
             if (G__globalcomp == G__NOLINK) {
                G__prerun = 0;
                G__decl = 0;
@@ -2566,19 +2566,19 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
             }
             --G__templevel;
             G__reftype = G__PARANORMAL;
-            if (store_prerun || !store_static_alloc || G__IsInMacro()) {
+            if (local_store_prerun || !local_store_static_alloc || G__IsInMacro()) {
                reg = G__getexpr(temp);
             }
             else {
                reg = G__null;
             }
             ++G__templevel;
-            G__prerun = store_prerun;
-            G__decl = store_decl;
-            G__constvar = store_constvar;
-            G__static_alloc = store_static_alloc;
+            G__prerun = local_store_prerun;
+            G__decl = local_store_decl;
+            G__constvar = local_store_constvar;
+            G__static_alloc = local_store_static_alloc;
             G__initval_eval = 0;
-            G__reftype = store_reftype;
+            G__reftype = local_store_reftype;
             G__globalvarpointer = (char*) reg.ref;
             reg = G__null;
             if (
@@ -2606,10 +2606,10 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
             }
             else if ((var_type == 'u') && (new_name[0] == '*') && !strncmp(temp, "new ", 4)) {
                // --
-               int store_prerun = G__prerun;
-               int store_decl = G__decl;
-               int store_constvar = G__constvar;
-               int store_static_alloc = G__static_alloc;
+               int local_store_prerun = G__prerun;
+               int local_store_decl = G__decl;
+               int local_store_constvar = G__constvar;
+               int local_store_static_alloc = G__static_alloc;
                if (G__globalcomp == G__NOLINK) {
                   G__prerun = 0;
                   G__decl = 0;
@@ -2619,16 +2619,16 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                   G__constvar = 0;
                   G__static_alloc = 0;
                }
-               if (store_prerun || !store_static_alloc || G__IsInMacro()) {
+               if (local_store_prerun || !local_store_static_alloc || G__IsInMacro()) {
                   reg = G__getexpr(temp);
                }
                else {
                   reg = G__null;
                }
-               G__prerun = store_prerun;
-               G__decl = store_decl;
-               G__constvar = store_constvar;
-               G__static_alloc = store_static_alloc;
+               G__prerun = local_store_prerun;
+               G__decl = local_store_decl;
+               G__constvar = local_store_constvar;
+               G__static_alloc = local_store_static_alloc;
                G__initval_eval = 0;
                if (
                   (G__get_type(G__value_typenum(reg)) != 'U') &&
@@ -2641,10 +2641,10 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
             }
             else {
                // --
-               int store_prerun = G__prerun;
-               int store_decl = G__decl;
-               int store_constvar = G__constvar;
-               int store_static_alloc = G__static_alloc;
+               int local_store_prerun = G__prerun;
+               int local_store_decl = G__decl;
+               int local_store_constvar = G__constvar;
+               int local_store_static_alloc = G__static_alloc;
                if (G__globalcomp == G__NOLINK) {
                   G__prerun = 0;
                   G__decl = 0;
@@ -2654,22 +2654,22 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                   G__constvar = 0;
                   G__static_alloc = 0;
                }
-               if (store_prerun || !store_static_alloc || G__IsInMacro()) {
-                  ::Reflex::Scope store_tagdefiningC = G__tagdefining;
-                  int store_eval_localstatic = G__eval_localstatic;
+               if (local_store_prerun || !local_store_static_alloc || G__IsInMacro()) {
+                  ::Reflex::Scope local_store_tagdefiningC = G__tagdefining;
+                  int local_store_eval_localstatic = G__eval_localstatic;
                   G__eval_localstatic = 1;
                   // Evaluate the initializer expression.
                   reg = G__getexpr(temp);
-                  G__eval_localstatic = store_eval_localstatic;
-                  G__tagdefining = store_tagdefiningC;
+                  G__eval_localstatic = local_store_eval_localstatic;
+                  G__tagdefining = local_store_tagdefiningC;
                }
                else {
                   reg = G__null;
                }
-               G__prerun = store_prerun;
-               G__decl = store_decl;
-               G__constvar = store_constvar;
-               G__static_alloc = store_static_alloc;
+               G__prerun = local_store_prerun;
+               G__decl = local_store_decl;
+               G__constvar = local_store_constvar;
+               G__static_alloc = local_store_static_alloc;
                G__initval_eval = 0;
                if (
                   (var_type == 'u') &&
@@ -3231,13 +3231,13 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                         G__oprovld = 1;
                         G__decl = 0;
                         if (G__struct.parent_tagnum[tagnum] != -1) {
-                           int store_exec_memberfunc = G__exec_memberfunc;
-                           ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
+                           int local_store_exec_memberfunc = G__exec_memberfunc;
+                           ::Reflex::Scope local_store_memberfunc_tagnum = G__memberfunc_tagnum;
                            G__exec_memberfunc = 1;
                            G__memberfunc_tagnum = G__Dict::GetDict().GetScope(G__struct.parent_tagnum[tagnum]);
                            reg = G__getfunction(temp, &known, G__CALLCONSTRUCTOR);
-                           G__exec_memberfunc = store_exec_memberfunc;
-                           G__memberfunc_tagnum = store_memberfunc_tagnum;
+                           G__exec_memberfunc = local_store_exec_memberfunc;
+                           G__memberfunc_tagnum = local_store_memberfunc_tagnum;
                         }
                         else {
                            reg = G__getfunction(temp, &known, G__CALLCONSTRUCTOR);

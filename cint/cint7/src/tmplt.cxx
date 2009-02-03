@@ -118,10 +118,7 @@ G__defined_templatememfunc expr.cxx
 // Static Functions
 static G__IntList* G__IntList_new(long iin, G__IntList* prev);
 static void G__IntList_init(G__IntList* body, long iin, G__IntList* prev);
-static void G__IntList_add(G__IntList* body, long iin); // UNUSED
 static void G__IntList_addunique(G__IntList* body, long iin);
-static void G__IntList_delete(G__IntList* body); // UNUSED
-static G__IntList* G__IntList_find(G__IntList* body, long iin); // UNUSED
 static void G__IntList_free(G__IntList* body);
 
 static int G__generate_template_dict(const char* template_id, G__Definedtemplateclass* class_tmpl, G__Charlist* tmpl_arg_list);
@@ -204,15 +201,6 @@ static void G__IntList_init(G__IntList* body, long iin, G__IntList* prev)
 }
 
 //______________________________________________________________________________
-static void G__IntList_add(G__IntList* body, long iin)
-{
-   while (body->next) {
-      body = body->next;
-   }
-   body->next = G__IntList_new(iin, body);
-}
-
-//______________________________________________________________________________
 static void G__IntList_addunique(G__IntList* body, long iin)
 {
    while (body->next) {
@@ -225,37 +213,6 @@ static void G__IntList_addunique(G__IntList* body, long iin)
       return;
    }
    body->next = G__IntList_new(iin, body);
-}
-
-//______________________________________________________________________________
-static void G__IntList_delete(G__IntList* body)
-{
-   if (body->prev && body->next) {
-      body->prev->next = body->next;
-      body->next->prev = body->prev;
-   }
-   else if (body->next) {
-      body->next->prev = 0;
-   }
-   else if (body->prev) {
-      body->prev->next = 0;
-   }
-   delete body;
-}
-
-//______________________________________________________________________________
-static G__IntList* G__IntList_find(G__IntList* body, long iin)
-{
-   while (body->next) {
-      if (body->i == iin) {
-         return body;
-      }
-      body = body->next;
-   }
-   if (body->i == iin) {
-      return body;
-   }
-   return 0;
 }
 
 //______________________________________________________________________________
