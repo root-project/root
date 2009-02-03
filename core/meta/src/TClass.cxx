@@ -1317,7 +1317,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
          }
          TClass* c = base->GetClassPointer();
          if (c) {
-            c->BuildRealData(((char*) realDataObject) + base->GetDelta());
+            c->BuildRealData(((char*) realDataObject) + base->GetDelta(), isTransient);
          }
       }
    }
