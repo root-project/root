@@ -1073,13 +1073,15 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
    // Note: The return value must be by-reference, because this routine
    //       is commonly used as a lvalue on the left-hand side of
    //       an assignment expresssion.
-   return *((::Reflex::Type*) &gv.buf_typenum);
+   void *type_punning = &gv.buf_typenum;
+   return *((::Reflex::Type*) type_punning);
 }
 
 //______________________________________________________________________________
 const ::Reflex::Type& Cint::Internal::G__value_typenum(const G__value& gv)
 {
-   return *((::Reflex::Type*)&gv.buf_typenum);
+   const void *type_punning = &gv.buf_typenum;
+   return *((::Reflex::Type*) type_punning);
 }
 
 //______________________________________________________________________________
