@@ -118,6 +118,8 @@ TMVA::Reader::Reader( TString theOption, Bool_t verbose )
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
+     fSilent ( kFALSE ),
+     fColor  ( kFALSE ),
      fLogger ( "Reader" )
 {
    // constructor
@@ -133,6 +135,8 @@ TMVA::Reader::Reader( vector<TString>& inputVars, TString theOption, Bool_t verb
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
+     fSilent ( kFALSE ),
+     fColor  ( kFALSE ),
      fLogger ( this )
 {
    // constructor
@@ -142,8 +146,9 @@ TMVA::Reader::Reader( vector<TString>& inputVars, TString theOption, Bool_t verb
 
    // arguments: names of input variables (vector)
    //            verbose flag
-   for (vector<TString>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) 
+   for (vector<TString>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) {
       Data().AddVariable( *ivar );
+   }
       
    Init();
 }
@@ -153,6 +158,8 @@ TMVA::Reader::Reader( vector<string>& inputVars, TString theOption, Bool_t verbo
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
+     fSilent ( kFALSE ),
+     fColor  ( kFALSE ),
      fLogger ( this )
 {
    // constructor
@@ -162,8 +169,9 @@ TMVA::Reader::Reader( vector<string>& inputVars, TString theOption, Bool_t verbo
 
    // arguments: names of input variables (vector)
    //            verbose flag
-   for (vector<string>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) 
+   for (vector<string>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) {
       Data().AddVariable( ivar->c_str() );
+   }
 
    Init();
 }
@@ -173,6 +181,8 @@ TMVA::Reader::Reader( const string varNames, TString theOption, Bool_t verbose )
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
+     fSilent ( kFALSE ),
+     fColor  ( kFALSE ),
      fLogger ( this )
 {
    // constructor
@@ -191,6 +201,8 @@ TMVA::Reader::Reader( const TString varNames, TString theOption, Bool_t verbose 
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
+     fSilent ( kFALSE ),
+     fColor  ( kFALSE ),
      fLogger ( this )
 {
    // constructor
@@ -200,7 +212,7 @@ TMVA::Reader::Reader( const TString varNames, TString theOption, Bool_t verbose 
 
    // arguments: names of input variables given in form: "name1:name2:name3"
    //            verbose flag
-   this->DecodeVarNames(varNames);
+   DecodeVarNames(varNames);
    Init();
 }
 
@@ -208,20 +220,9 @@ TMVA::Reader::Reader( const TString varNames, TString theOption, Bool_t verbose 
 void TMVA::Reader::DeclareOptions() 
 {
    // declaration of configuration options
-   Bool_t silent = kFALSE;
-   Bool_t color  = kTRUE;
-   DeclareOptionRef( fVerbose, "V",      "verbose flag" );
-   DeclareOptionRef( color,    "Color",  "Color flag (default on)" );
-   DeclareOptionRef( silent,   "Silent", "Boolean silent flag (default off)" );
-   
-   ParseOptions(kFALSE);
-   
-   if (Verbose()) fLogger.SetMinType( kVERBOSE );
-   
-   gConfig().SetUseColor( color );
-   gConfig().SetSilent  ( silent );
-
-   if (fDataSet!=0) fDataSet->SetVerbose(Verbose());
+   DeclareOptionRef( fVerbose, "V",      "Verbose flag" );
+   DeclareOptionRef( fColor,   "Color",  "Color flag (default on)" );
+   DeclareOptionRef( fSilent,  "Silent", "Boolean silent flag (default off)" );   
 }
 
 //_______________________________________________________________________
@@ -240,6 +241,12 @@ TMVA::Reader::~Reader()
 void TMVA::Reader::Init( void )
 {
    // default initialisation (no member variables)
+   if (Verbose()) fLogger.SetMinType( kVERBOSE );
+   
+   gConfig().SetUseColor( fColor );
+   gConfig().SetSilent  ( fSilent );
+
+   if (fDataSet!=0) fDataSet->SetVerbose(Verbose());
 }
 
 //_______________________________________________________________________
