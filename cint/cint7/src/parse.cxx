@@ -1635,12 +1635,12 @@ static G__value G__exec_if()
       if (localFALSE || G__asm_wholefunction) {
          // -- We need to run the else clause.
          // Peek ahead one character to see if the else clause is a block.
-         int c = G__fgetspace_peek();
-         int isblock = 0;
-         if (c == '{') {
-            isblock = 1;
+         int peekc = G__fgetspace_peek();
+         int peek_isblock = 0;
+         if (peekc == '{') {
+            peek_isblock = 1;
          }
-         //fprintf(stderr, "G__exec_if: isblock: %d\n", isblock);
+         //fprintf(stderr, "G__exec_if: isblock: %d\n", peek_isblock);
          // Flag that we are going to run the clause.
          // Note: G__no_exec is always zero on entry to exec_if.
          // FIXME: This is probably not necessary?
@@ -1669,7 +1669,7 @@ static G__value G__exec_if()
                //fprintf(stderr, "G__exec_if: break or continue executed from an if statement else clause.\n");
                if (!G__asm_noverflow) {
                   // -- We are *not* generating bytecode, ignore until end then clause.
-                  if (isblock) {
+                  if (peek_isblock) {
                      // -- We are *not* in the if () break; case.
                      // Tell the parser to ignore statements.
                      G__no_exec = 1;
@@ -1682,7 +1682,7 @@ static G__value G__exec_if()
                }
                else {
                   // -- We are generating bytecode, compile to end of then clause.
-                  if (isblock) {
+                  if (peek_isblock) {
                      // -- We are *not* in the if () break; case.
                      // Flag that we are not executing, but we are generating bytecode.
                      int store_no_exec_compile = G__no_exec_compile;

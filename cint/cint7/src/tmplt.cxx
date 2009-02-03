@@ -1439,7 +1439,6 @@ static void G__templatemaptypename(char* string)
          }
          int target_tagnum = G__get_tagnum(typenum);
          if ((target_tagnum != -1) && (G__struct.name[target_tagnum][0] == '$')) {
-            int type = G__get_type(typenum);
             type = tolower(type);
          }
          strcpy(string, G__type2string(type, target_tagnum, -1, ref, 0));
@@ -1580,9 +1579,6 @@ static G__Templatearg* G__read_specializationarg(G__Templatearg* tmpl_params, ch
    G__StrBuf type_sb(G__MAXNAME);
    char* type = type_sb;
    bool done = false;
-   int i;
-   int j;
-   int nest;
    int isrc = 0;
    int len;
    do {
@@ -1610,7 +1606,8 @@ static G__Templatearg* G__read_specializationarg(G__Templatearg* tmpl_params, ch
          isrc += 6;
       }
       len = strlen(source);
-      for (i = isrc, j = 0, nest = 0; i < len; ++i) {
+      unsigned int newlen = 0;
+      for (int i = isrc, nest = 0; i < len; ++i) {
          switch (source[i]) {
             case '<':
                ++nest;
@@ -1631,10 +1628,10 @@ static G__Templatearg* G__read_specializationarg(G__Templatearg* tmpl_params, ch
                }
                break;
          }
-         type[j++] = source[i];
+         type[newlen++] = source[i];
       }
-      type[j] = 0;
-      len = strlen(type);
+      type[newlen] = 0;
+      len = newlen;
       //
       //  Accumulate and remove a possible reference qualifier.
       //
@@ -1806,7 +1803,6 @@ static int G__matchtemplatefunc(G__Definetemplatefunc* deftmpfunc, G__param* lib
    int reftype;
    int ref;
    int fargtmplt;
-   int i;
    G__StrBuf paratype_sb(G__LONGLINE);
    char* paratype = paratype_sb;
    int* fntarg;
@@ -1823,7 +1819,7 @@ static int G__matchtemplatefunc(G__Definetemplatefunc* deftmpfunc, G__param* lib
          return 0;
       }
    }
-   for (i = 0; i < paran; ++i) {
+   for (int i = 0; i < paran; ++i) {
       // get template information for simplicity
       ftype = deftmpfunc->func_para.type[i];
       ftagnum = deftmpfunc->func_para.tagnum[i];
@@ -1982,20 +1978,20 @@ static int G__matchtemplatefunc(G__Definetemplatefunc* deftmpfunc, G__param* lib
             strcpy(paratype, G__type2string(type, tagnum, -1, reftype, 0));
          }
          if (!strncmp(paratype, "class ", 6)) {
-            int i = 6;
-            int j = 0;
+            int subi = 6;
+            int subj = 0;
             do {
-               paratype[j++] = paratype[i];
+               paratype[subj++] = paratype[subi];
             }
-            while (paratype[i++]);
+            while (paratype[subi++]);
          }
          else if (!strncmp(paratype, "struct ", 7)) {
-            int i = 7;
-            int j = 0;
+            int subi = 7;
+            int subj = 0;
             do {
-               paratype[j++] = paratype[i];
+               paratype[subj++] = paratype[subi];
             }
-            while (paratype[i++]);
+            while (paratype[subi++]);
          }
          if (G__checkset_charlist(paratype, pcall_para, fargtmplt, ftype)) {
             // match or newly set template argument
@@ -2929,7 +2925,6 @@ static int G__createtemplatefunc(char* funcname, G__Templatearg* targ, int line_
    int tagnum;
    ::Reflex::Type typenum;
    int narg;
-   int i;
    //
    //  Get to the end of the list.
    //
@@ -2982,7 +2977,7 @@ static int G__createtemplatefunc(char* funcname, G__Templatearg* targ, int line_
    deftmpfunc->next->next = 0;
    deftmpfunc->next->def_para = 0;
    deftmpfunc->next->name = 0;
-   for (i = 0; i < G__MAXFUNCPARA; ++i) {
+   for (int i = 0; i < G__MAXFUNCPARA; ++i) {
       deftmpfunc->next->func_para.ntarg[i] = 0;
       deftmpfunc->next->func_para.nt[i] = 0;
    }
@@ -3086,7 +3081,6 @@ static int G__createtemplatefunc(char* funcname, G__Templatearg* targ, int line_
          char* ntargc[20];
          int ntarg[20];
          int nt = 0;
-         int i;
          // f(T<E,K> a) or f(c<E,K> a) or f(c<E,b> a)
          // f(T<E> a) or f(c<T> a) or f(T<c> a)
          deftmpfunc->func_para.type[tmp] = 'u';
@@ -3136,7 +3130,7 @@ static int G__createtemplatefunc(char* funcname, G__Templatearg* targ, int line_
          deftmpfunc->func_para.nt[tmp] = nt;
          deftmpfunc->func_para.ntarg[tmp] = (int*) malloc(sizeof(int) * nt);
          deftmpfunc->func_para.ntargc[tmp] = (char**) malloc(sizeof(char*) * nt);
-         for (i = 0; i < nt; ++i) {
+         for (int i = 0; i < nt; ++i) {
             deftmpfunc->func_para.ntarg[tmp][i] = ntarg[i];
             deftmpfunc->func_para.ntargc[tmp][i] = 0;
             if (!ntarg[i]) {
@@ -3246,8 +3240,8 @@ static int G__createtemplatefunc(char* funcname, G__Templatearg* targ, int line_
    G__tagdefining = store_tagdefining;
    // Hack by Scott Snyder: try not to gag on forward decl of template memfunc
    {
-      int c = G__fignorestream(";{");
-      if (c != ';') {
+      int ch = G__fignorestream(";{");
+      if (ch != ';') {
          G__fignorestream("}");
       }
    }
@@ -4287,13 +4281,15 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //  FIXME: Member function templates should not be defined unless they are used, they should just be forward declared.
    //
    //  TODO: Why are class template member function template instantiations instantiated in the enclosing namespace scope?
-   ::Reflex::Scope parent_tagnum = G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum);
-   while (parent_tagnum && !parent_tagnum.IsNamespace()) {
-      parent_tagnum = parent_tagnum.DeclaringScope();
-   }
-   G__Definedtemplatememfunc* tmpl_mbrfunc = &class_tmpl->memfunctmplt;
-   for ( ; tmpl_mbrfunc->next; tmpl_mbrfunc = tmpl_mbrfunc->next) {
-      G__replacetemplate(simple_templatename, tagname, tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
+   {
+      ::Reflex::Scope parent_tagnum = G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum);
+      while (parent_tagnum && !parent_tagnum.IsNamespace()) {
+         parent_tagnum = parent_tagnum.DeclaringScope();
+      }
+      G__Definedtemplatememfunc* tmpl_mbrfunc = &class_tmpl->memfunctmplt;
+      for ( ; tmpl_mbrfunc->next; tmpl_mbrfunc = tmpl_mbrfunc->next) {
+         G__replacetemplate(simple_templatename, tagname, tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
+      }
    }
    //
    //  Restore state.
