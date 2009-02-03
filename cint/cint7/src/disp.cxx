@@ -740,7 +740,7 @@ static int G__display_classinheritance(FILE *fout, int tagnum, char *space)
 
    for (i = 0;i < baseclass->basen;i++) {
       if (baseclass->property[i]&G__ISDIRECTINHERIT) {
-         sprintf(msg, "%s0x%-8lx ", space , (size_t)baseclass->baseoffset[i]);
+         sprintf(msg, "%s0x%-8lx ", space , (unsigned long)baseclass->baseoffset[i]);
          if (G__more(fout, msg)) return(1);
          if (baseclass->property[i]&G__ISVIRTUALBASE) {
             sprintf(msg, "virtual ");
@@ -934,7 +934,7 @@ int Cint::Internal::G__display_typedef(FILE *fout, char *name, int startin)
          for (::Reflex::Type arrayType = *iTypedef;
                arrayType.IsArray();
                arrayType = arrayType.ToType()) {
-            sprintf(msg, "[%lu]", arrayType.ArrayLength());
+            sprintf(msg, "[%lu]", (unsigned long)arrayType.ArrayLength());
 
             if (G__more(fout, msg)) return(1);
          }
@@ -1500,7 +1500,7 @@ int Cint::Internal::G__objectmonitor(FILE *fout, char *pobject, const ::Reflex::
 #endif
          }
          else {
-            sprintf(msg, "%s0x%-8lx ", space , (size_t)baseclass->baseoffset[i]);
+            sprintf(msg, "%s0x%-8lx ", space , (unsigned long)baseclass->baseoffset[i]);
             if (G__more(fout, msg)) return(1);
             msg[0] = 0;
             switch (baseclass->baseaccess[i]) {
@@ -1609,7 +1609,7 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
       //
       //  Print out member address.
       //
-      sprintf(msg, "0x%-8lx ", (size_t)addr);
+      sprintf(msg, "0x%-8lx ", (unsigned long)addr);
       if (G__more(fout, msg)) {
          return 1;
       }
@@ -1740,7 +1740,7 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
       //  Print any member bitfield width.
       //
       if (G__get_bitfield_width(mbr)) {
-         sprintf(msg, " : %ld (%ld)", G__get_bitfield_width(mbr), G__get_bitfield_start(mbr));
+         sprintf(msg, " : %ld (%ld)", (long)G__get_bitfield_width(mbr), (long)G__get_bitfield_start(mbr));
          if (G__more(fout, msg)) {
             return 1;
          }
@@ -1788,7 +1788,7 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
                   //
                   //  Print size of member's class.
                   //
-                  sprintf(msg, " , size=%ld", mbr.TypeOf().RawType().SizeOf());
+                  sprintf(msg, " , size=%ld", (long)mbr.TypeOf().RawType().SizeOf());
                   if (G__more(fout, msg)) {
                      return 1;
                   }
@@ -1931,10 +1931,10 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
                   //  Print the member address and the char string.
                   //
                   if (isprint(*(char*)addr)) {
-                     sprintf(msg, "=0x%lx=\"%s\"", (size_t)addr, (char*) addr); // FIXME: This can fail, a char array may not be zero terminated!  And we do not check the whole array for printability.
+                     sprintf(msg, "=0x%lx=\"%s\"", (unsigned long)addr, (char*) addr); // FIXME: This can fail, a char array may not be zero terminated!  And we do not check the whole array for printability.
                   }
                   else {
-                     sprintf(msg, "=0x%lx", (size_t)addr);
+                     sprintf(msg, "=0x%lx", (unsigned long)addr);
                   }
                   if (G__more(fout, msg)) {
                      return 1;
@@ -1945,7 +1945,7 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
                   //
                   //  Print the member address only.
                   //
-                  sprintf(msg, "=0x%lx", (size_t)addr);
+                  sprintf(msg, "=0x%lx", (unsigned long)addr);
                   if (G__more(fout, msg)) {
                      return 1;
                   }
@@ -1978,7 +1978,7 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
             //  Print size of member's class.
             //
             ::Reflex::Type mbr_class = mbr.TypeOf().RawType();
-            sprintf(msg, " , size=%ld", mbr_class.SizeOf());
+            sprintf(msg, " , size=%ld", (unsigned long)mbr_class.SizeOf());
             //sprintf(msg, " , size=%ld  ::%s", mbr_class.SizeOf(), mbr_class.Name(::Reflex::SCOPED).c_str());
             if (G__more(fout, msg)) {
                return 1;
