@@ -92,7 +92,6 @@
 #pragma link C++ class TGLSphere;
 #pragma link C++ class TGLText;
 #pragma link C++ class TGLAxis;
-#pragma link C++ class TGLAxisAttrib;
 #pragma link C++ class TGLAxisPainter;
 
 #pragma link C++ class TGLSelectionBuffer;

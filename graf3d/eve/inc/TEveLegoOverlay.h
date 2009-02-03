@@ -1,5 +1,5 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// Author: Alja Mrak-Tadel 2007
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,6 @@
 
 #include "TGLCameraOverlay.h"
 #include "TEveElement.h"
-#include "TGLAxisPainter.h"
 
 class TEveCaloLego;
 

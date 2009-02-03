@@ -2,12 +2,12 @@
 // Author: Matevz Tadel 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+* Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+* All rights reserved.                                                  *
+*                                                                       *
+* For the licensing terms see $ROOTSYS/LICENSE.                         *
+* For the list of contributors see $ROOTSYS/README/CREDITS.             *
+*************************************************************************/
 
 #include "TEveProjectionAxes.h"
 #include "TEveProjectionManager.h"
@@ -43,11 +43,15 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m) :
 {
    // Constructor.
 
-   fNdivisions = 1006; // primary np = n/100, secondary ns = n -np*100
-   fLabelSize = 0.015;
-
    fCanEditMainTrans = kFALSE;
    fManager->AddDependent(this);
+
+   // Axis attributes.
+   fNdivisions = 1010;
+   fLabelSize = 0.01;
+   fLabelColor = kGray;
+   fTickLength = 0.015;
+   fLabelOffset = 0.003;
 }
 
 //______________________________________________________________________________

@@ -31,7 +31,6 @@ protected:
 
    TGComboBox      *fLabMode;
    TGComboBox      *fAxesMode;
-   TEveGValuator   *fNdivisions;         // tick-mark number widget
 
    TGVerticalFrame *fCenterFrame;  // Parent frame for Center tab.
    TGCheckButton   *fDrawCenter;   // draw center widget
@@ -48,7 +47,6 @@ public:
 
    void DoLabMode(Int_t type);
    void DoAxesMode(Int_t type);
-   void DoNdivisions();
 
    void DoDrawCenter();
    void DoDrawOrigin();

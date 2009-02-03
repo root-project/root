@@ -1,5 +1,5 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// Author: Alja Mrak-Tadel 2007
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -11,14 +11,18 @@
 
 #include "TEveLegoOverlay.h"
 
+#include "TAxis.h"
+
+#include "TGLRnrCtx.h"
+#include "TGLIncludes.h"
+#include "TGLSelectRecord.h"
+#include "TGLUtil.h"
+#include "TGLCamera.h"
+#include "TGLAxisPainter.h"
+
 #include "TEveCalo.h"
 #include "TEveCaloData.h"
 
-#include <TGLRnrCtx.h>
-#include <TGLIncludes.h>
-#include <TGLSelectRecord.h>
-#include <TGLUtil.h>
-#include <TGLCamera.h>
 
 //______________________________________________________________________________
 //
@@ -65,7 +69,7 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
 
    glTranslatef(0, fSliderPosY, 0.5);
 
-   // event handling
+   // event handler
    if (rnrCtx.Selection())
    {
       glLoadName(2);
@@ -78,34 +82,37 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
       glEnd();
    }
 
-   // drawing
+   // render
    if ( fCalo->GetData() && fCalo->GetData()->Empty() == kFALSE)
    {
       // axis
       Double_t maxVal = fCalo->GetMaxVal();
-      TGLRect& wprt = rnrCtx.RefCamera().RefViewport();
-      Float_t fs = wprt.Height()*fSliderH* fAxisAtt.GetLabelSize();
-      fAxisAtt.SetAbsLabelFontSize(TGLFontManager::GetFontSize(fs, 12, 36));
 
-      fAxisAtt.RefDir().Set(0, 1, 0);
-      fAxisAtt.SetTextAlign(TGLFont::kLeft);
-      fAxisAtt.SetRng(0, maxVal);
-      fAxisAtt.RefTMOff(0).X() = -maxVal*0.03;
-      fAxisAtt.SetAbsLabelFontSize(TMath::Nint(fs));
+      fAxisPainter->RefDir().Set(0, 1, 0);
+      fAxisPainter->RefTMOff(0).Set(-1, 0, 0);
+      fAxisPainter->SetLabelAlign(TGLFont::kLeft);
+      fAxisPainter->SetUseRelativeFontSize(kTRUE);
+      fAxis->SetRangeUser(0, maxVal);
+      fAxis->SetLimits(0, maxVal);
+      fAxis->SetNdivisions(710);
+      fAxis->SetTickLength(0.02);
+      fAxis->SetLabelOffset(0.02);
+      fAxis->SetLabelSize(0.03);
+      fAxis->SetAxisColor(fMainColor);
+      fAxis->SetLabelColor(fMainColor);
 
       glPushMatrix();
-      glScalef( fSliderH/maxVal, fSliderH/maxVal, 1.);
-      fAxisAtt.SetAxisColor(fMainColor);
-      fAxisAtt.SetLabelColor(fMainColor);
-      fAxisPainter.Paint(rnrCtx, fAxisAtt);
+      glScalef(1, fSliderH/maxVal, 1.);
+      fAxisPainter->PaintAxis(rnrCtx, fAxis);
       glPopMatrix();
-
+      
       // marker
       TGLUtil::Color((fActiveID == 2) ? fActiveCol : 3);
       glPointSize(8);
       glBegin(GL_POINTS);
       glVertex3f(0, fSliderVal*fSliderH, -0.1);
       glEnd();
+     
    }
 }
 

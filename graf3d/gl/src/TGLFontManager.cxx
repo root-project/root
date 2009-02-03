@@ -397,25 +397,10 @@ Int_t TGLFontManager::GetFontSize(Float_t ds, Int_t min, Int_t max)
 //______________________________________________________________________________
 const char* TGLFontManager::GetFontNameFromId(Int_t id)
 {
-   static const char *fonttable[] = {
-      /* 0 */  "arialbd",
-      /* 1 */  "timesi",
-      /* 2 */  "timesbd",
-      /* 3 */  "timesbi",
-      /* 4 */  "arial",
-      /* 5 */  "ariali",
-      /* 6 */  "arialbd",
-      /* 7 */  "arialbi",
-      /* 8 */  "cour",
-      /* 9 */  "couri",
-      /*10 */  "courbd",
-      /*11 */  "courbi",
-      /*12 */  "symbol",
-      /*13 */  "times",
-      /*14 */  "wingding"
-   };
+   // Get font name from TAttAxis font id.
 
-   return fonttable[id / 10];
+   TObjString* os = (TObjString*)fgFontFileArray[id / 10];
+   return os->GetString().Data();
 }
 
 //______________________________________________________________________________
@@ -423,25 +408,25 @@ void TGLFontManager::InitStatics()
 {
    // Create a list of available font files and allowed font sizes.
 
-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-# ifdef TTFFONTDIR
-                                       TTFFONTDIR);
-# else
-                                       "$(ROOTSYS)/fonts");
-# endif
+   fgFontFileArray.Add(new TObjString("arialbd"));
 
-   void *dir = gSystem->OpenDirectory(ttpath);
-   const char* name = 0;
-   TString s;
-   while ((name = gSystem->GetDirEntry(dir))) {
-      s = name;
-      if (s.EndsWith(".ttf")) {
-         s.Resize(s.Sizeof() -5);
-         fgFontFileArray.Add(new TObjString(s.Data()));
-      }
-   }
-   fgFontFileArray.Sort();
-   gSystem->FreeDirectory(dir);
+   fgFontFileArray.Add(new TObjString("timesi"));
+   fgFontFileArray.Add(new TObjString("timesbd"));
+   fgFontFileArray.Add(new TObjString("timesbi"));
+ 
+   fgFontFileArray.Add(new TObjString("arial")); 
+   fgFontFileArray.Add(new TObjString("ariali"));
+   fgFontFileArray.Add(new TObjString("arialbd"));
+   fgFontFileArray.Add(new TObjString("arialbi"));
+
+   fgFontFileArray.Add(new TObjString("cour"));
+   fgFontFileArray.Add(new TObjString("couri"));
+   fgFontFileArray.Add(new TObjString("courbd"));
+   fgFontFileArray.Add(new TObjString("courbi"));
+
+   fgFontFileArray.Add(new TObjString("symbol"));
+   fgFontFileArray.Add(new TObjString("times"));
+   fgFontFileArray.Add(new TObjString("wingding"));
 
 
    // font sizes

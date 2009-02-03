@@ -257,7 +257,7 @@ void TEveCaloVizEditor::SetModel(TObject* obj)
       fPhi->SetValue(fM->fPhi);
       fPhi->SetToolTip("Center angle in radians");
 
-      fPhiOffset->SetLimits(0, TMath::Pi(), 101, TGNumberFormat::kNESRealTwo);
+      fPhiOffset->SetLimits(1e-3, TMath::Pi(), 101, TGNumberFormat::kNESRealTwo);
       fPhiOffset->SetValue(fM->fPhiOffset);
       fPhiOffset->SetToolTip("Phi range in radians");
 

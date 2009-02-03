@@ -32,7 +32,6 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
 
    fLabMode(0),
    fAxesMode(0),
-   fNdivisions(0),
 
    fCenterFrame(0),
    fDrawCenter(0),
@@ -81,15 +80,6 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
       AddFrame(f);
    }
 
-   fNdivisions = new TEveGValuator(this, "Ndivisions:", 70, 0);
-   fNdivisions->SetLabelWidth(labw);
-   fNdivisions->SetNELength(6);
-   fNdivisions->SetShowSlider(kFALSE);
-   fNdivisions->Build();
-   fNdivisions->SetLimits(100, 10000);
-   fNdivisions->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoNdivisions()");
-   AddFrame(fNdivisions, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
-
    //______________________________________________________________________________
 
    // center tab
@@ -136,7 +126,6 @@ void TEveProjectionAxesEditor::SetModel(TObject* obj)
 
    fLabMode->Select(fM->GetLabMode(), kFALSE);
    fAxesMode->Select(fM->GetAxesMode(), kFALSE);
-   fNdivisions->SetValue(fM->GetNdivisions());
    fDrawCenter->SetState(fM->GetDrawCenter()  ? kButtonDown : kButtonUp);
    fDrawOrigin->SetState(fM->GetDrawOrigin()  ? kButtonDown : kButtonUp);
 
@@ -177,13 +166,5 @@ void TEveProjectionAxesEditor::DoAxesMode(Int_t mode)
 
    TEveProjectionAxes::EAxesMode em = (TEveProjectionAxes::EAxesMode ) mode;
    fM->SetAxesMode(em);
-   Update();
-}
-//______________________________________________________________________________
-void TEveProjectionAxesEditor::DoNdivisions()
-{
-   // Slot for setting step size.
-
-   fM->SetNdivisions((Int_t)fNdivisions->GetValue());
    Update();
 }

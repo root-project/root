@@ -134,10 +134,11 @@ void TEveCaloViz::SetPlotEt(Bool_t isEt)
 {
    // Set E/Et plot.
 
-  fPlotEt=isEt;
-  fPalette->SetLimits(0, TMath::CeilNint(fData->GetMaxVal(fPlotEt)));
+   fPlotEt=isEt;
+   if (fPalette)
+      fPalette->SetLimits(0, TMath::CeilNint(fData->GetMaxVal(fPlotEt)));
 
-  InvalidateCellIdCache();
+   InvalidateCellIdCache();
 }
 
 //______________________________________________________________________________
