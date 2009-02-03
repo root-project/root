@@ -900,62 +900,64 @@ static G__value G__exec_switch()
       //  Skip code while testing case expressions
       //  until we get a match, or reach the end of the block.
       //
-      int store_no_exec_compile = G__no_exec_compile;
-      //fprintf(stderr, "G__exec_switch: before case search: G__asm_noverflow: %d G__no_exec_compile: %d\n", G__asm_noverflow, G__no_exec_compile);
+      { // Delimiter for push/popd of environment.
+         int store_no_exec_compile = G__no_exec_compile;
+         //fprintf(stderr, "G__exec_switch: before case search: G__asm_noverflow: %d G__no_exec_compile: %d\n", G__asm_noverflow, G__no_exec_compile);
 #ifdef G__ASM
-      //
-      //  If we are not generating bytecode, then
-      //  skip code.  Otherwise do not skip code,
-      //  do not execute, just generate bytecode.
-      //
-      if (!G__asm_noverflow) {
-         // -- We are *not* generating bytecode.
+         //
+         //  If we are not generating bytecode, then
+         //  skip code.  Otherwise do not skip code,
+         //  do not execute, just generate bytecode.
+         //
+         if (!G__asm_noverflow) {
+            // -- We are *not* generating bytecode.
+            // Flag we are skipping code.
+            G__no_exec = 1;
+         }
+         else {
+            // -- We are generating bytecode.
+            // Flag we are *not* executing, but we should generate bytecode.
+            G__no_exec_compile = 1;
+         }
+#else // G__ASM
          // Flag we are skipping code.
          G__no_exec = 1;
-      }
-      else {
-         // -- We are generating bytecode.
-         // Flag we are *not* executing, but we should generate bytecode.
-         G__no_exec_compile = 1;
-      }
-#else // G__ASM
-      // Flag we are skipping code.
-      G__no_exec = 1;
 #endif // G__ASM
-      // Tell the parser to evaluate case expressions.
-      int store_G__switch = G__switch;
-      G__switch = 1;
-      // Tell the parser it should return control after evaluating a case expression.
-      int store_G__switch_searching = G__switch_searching;
-      G__switch_searching = 1;
-      // Flag that we have not evaluated a case expression yet.
-      result = G__start;
-      // Flag that we have not matched a case expression yet.
-      int isequal = 0;
-      // FIXME: This does not handle the default case properly!
-      // FIXME: We must find it first, remember where it is, then
-      // FIXME: come back to it if nothing else matches.
-      while (
-         (G__value_typenum(result) != G__value_typenum(G__null)) && // not the end of the switch block, and
-         (G__value_typenum(result) != G__value_typenum(G__default)) && // not the default case, and
-         !isequal // not a case expression match
-      ) {
-         //fprintf(stderr, "G__exec_switch: Parsing next case clause during search.\n");
-         // Tell the parser to stop at the closing curly brace of the switch.
-         int brace_level = 1;
-         // And call the parser to get the next case clause.
-         result = G__exec_statement(&brace_level);
-         //fprintf(stderr, "G__exec_switch: Case clause parse has returned.\n");
-         // Test the case expression against the switch expression.
-         isequal = G__cmp(result, reg);
+         // Tell the parser to evaluate case expressions.
+         int store_G__switch = G__switch;
+         G__switch = 1;
+         // Tell the parser it should return control after evaluating a case expression.
+         int store_G__switch_searching = G__switch_searching;
+         G__switch_searching = 1;
+         // Flag that we have not evaluated a case expression yet.
+         result = G__start;
+         // Flag that we have not matched a case expression yet.
+         int isequal = 0;
+         // FIXME: This does not handle the default case properly!
+         // FIXME: We must find it first, remember where it is, then
+         // FIXME: come back to it if nothing else matches.
+         while (
+                (G__value_typenum(result) != G__value_typenum(G__null)) && // not the end of the switch block, and
+                (G__value_typenum(result) != G__value_typenum(G__default)) && // not the default case, and
+                !isequal // not a case expression match
+                ) {
+            //fprintf(stderr, "G__exec_switch: Parsing next case clause during search.\n");
+            // Tell the parser to stop at the closing curly brace of the switch.
+            int brace_level = 1;
+            // And call the parser to get the next case clause.
+            result = G__exec_statement(&brace_level);
+            //fprintf(stderr, "G__exec_switch: Case clause parse has returned.\n");
+            // Test the case expression against the switch expression.
+            isequal = G__cmp(result, reg);
+         }
+         //fprintf(stderr, "G__exec_switch: Case clause search has finished.\n");
+         // Restore state.
+         G__switch = store_G__switch;
+         G__switch_searching = store_G__switch_searching;
+         G__no_exec = 0;
+         G__no_exec_compile = store_no_exec_compile;
+         //fprintf(stderr, "G__exec_switch: after case search: G__asm_noverflow: %d G__no_exec_compile: %d\n", G__asm_noverflow, G__no_exec_compile);
       }
-      //fprintf(stderr, "G__exec_switch: Case clause search has finished.\n");
-      // Restore state.
-      G__switch = store_G__switch;
-      G__switch_searching = store_G__switch_searching;
-      G__no_exec = 0;
-      G__no_exec_compile = store_no_exec_compile;
-      //fprintf(stderr, "G__exec_switch: after case search: G__asm_noverflow: %d G__no_exec_compile: %d\n", G__asm_noverflow, G__no_exec_compile);
       if (G__value_typenum(result) != G__value_typenum(G__null)) {
          // -- Case is a match or is the default case..
          // FIXME: This is wrong if the default case is not at the end!
@@ -987,17 +989,19 @@ static G__value G__exec_switch()
          //  end of the block.
          //
          // Tell the parser to handle case clauses.
-         int store_G__switch = G__switch;
-         G__switch = 1;
-         // Tell the parser to go until the end of the switch block.
          int brace_level = 1;
-         // Call the parser.
-         //fprintf(stderr, "G__exec_switch: Running the case block.\n");
-         //fprintf(stderr, "G__exec_switch: just before running case block: G__asm_noverflow: %d G__no_exec_compile: %d\n", G__asm_noverflow, G__no_exec_compile);
-         result = G__exec_statement(&brace_level);
-         //fprintf(stderr, "G__exec_switch: Case block parse has returned.\n");
-         // Restore state.
-         G__switch = store_G__switch;
+         { // Delimiter for push/popd of environment.
+            int store_G__switch = G__switch;
+            G__switch = 1;
+            // Tell the parser to go until the end of the switch block.
+            // Call the parser.
+            //fprintf(stderr, "G__exec_switch: Running the case block.\n");
+            //fprintf(stderr, "G__exec_switch: just before running case block: G__asm_noverflow: %d G__no_exec_compile: %d\n", G__asm_noverflow, G__no_exec_compile);
+            result = G__exec_statement(&brace_level);
+            //fprintf(stderr, "G__exec_switch: Case block parse has returned.\n");
+            // Restore state.
+            G__switch = store_G__switch;
+         }
          //
          //  Check if user requested an immediate return.
          //
@@ -1897,8 +1901,8 @@ static G__value G__exec_else_if()
    if (!strcmp(statement, "else")) {
       // The else found. Skip elseclause.
       G__temp_read = 0;
-      int brace_level = 0;
-      result = G__exec_statement(&brace_level);
+      int local_brace_level = 0;
+      result = G__exec_statement(&local_brace_level);
    }
    else {
       // no else  push back.
@@ -2026,9 +2030,9 @@ static G__value G__exec_do()
    //  Run the body once, unconditionally.
    //
    // Tell the parser to execute only one block or statement.
-   int brace_level = 0;
+   int outer_brace_level = 0;
    // Call the parser.
-   G__value result = G__exec_statement(&brace_level);
+   G__value result = G__exec_statement(&outer_brace_level);
    //fprintf(stderr, "G__exec_do: Just finished body.  G__value_typenum(result): %d isbreak: %d\n", G__value_typenum(result), G__value_typenum(result) == G__value_typenum(G__block_break));
    //
    //  Finished, check return code.
@@ -2101,7 +2105,7 @@ static G__value G__exec_do()
                G__no_exec = 1;
                // Note: We must do this because we may expand a macro while skipping.
                //G__fignorestream("}");
-               G__exec_statement(&brace_level);
+               G__exec_statement(&outer_brace_level);
                // Note: This is always zero on entry to exec_do.
                G__no_exec = 0;
                //{
@@ -2150,7 +2154,7 @@ static G__value G__exec_do()
             G__no_exec_compile = 1;
             // Tell parser to go until a right curly brace is seen.
             // Call the parser.
-            G__exec_statement(&brace_level);
+            G__exec_statement(&outer_brace_level);
             G__no_exec_compile = store_no_exec_compile;
          }
       }
@@ -2168,7 +2172,7 @@ static G__value G__exec_do()
                G__no_exec_compile = 1;
                // Tell parser to go until a right curly brace is seen.
                // Call the parser.
-               G__exec_statement(&brace_level);
+               G__exec_statement(&outer_brace_level);
                // Restore state.
                G__no_exec_compile = store_no_exec_compile;
             }
@@ -2188,7 +2192,7 @@ static G__value G__exec_do()
                G__no_exec = 1;
                // Note: We must do this because we may expand a macro while skipping.
                //G__fignorestream("}");
-               G__exec_statement(&brace_level);
+               G__exec_statement(&outer_brace_level);
                // Note: This is always zero on entry to exec_if.
                G__no_exec = 0;
                //{
@@ -3054,12 +3058,12 @@ static G__value G__exec_loop(char *forinit,char *condition,int naction,char **fo
                   if (isblock) {
                      // -- Parse the rest of the body, generating code.
                      //fprintf(stderr, "G__exec_loop: Body did a break, generating code for rest of body block.\n"); 
-                     int store_no_exec_compile = G__no_exec_compile;
+                     int local_store_no_exec_compile = G__no_exec_compile;
                      G__no_exec_compile = 1;
                      // Tell parser to go until a right curly brace is seen.
                      // Call the parser.
                      G__exec_statement(&brace_level);
-                     G__no_exec_compile = store_no_exec_compile;
+                     G__no_exec_compile = local_store_no_exec_compile;
                   }
                   break;
                case G__BLOCK_CONTINUE:
@@ -3073,13 +3077,13 @@ static G__value G__exec_loop(char *forinit,char *condition,int naction,char **fo
                      if (isblock) {
                         // -- Parse the rest of the body, generating code.
                         //fprintf(stderr, "G__exec_loop: Body did a continue, generating code for rest of body block.\n"); 
-                        int store_no_exec_compile = G__no_exec_compile;
+                        int local_store_no_exec_compile = G__no_exec_compile;
                         G__no_exec_compile = 1;
                         // Tell parser to go until a right curly brace is seen.
                         // And call parser.
                         G__exec_statement(&brace_level);
                         // Restore state.
-                        G__no_exec_compile = store_no_exec_compile;
+                        G__no_exec_compile = local_store_no_exec_compile;
                      }
                   }
                   else {
@@ -3113,7 +3117,7 @@ static G__value G__exec_loop(char *forinit,char *condition,int naction,char **fo
 #ifdef G__ASM
          store_asm_cp = G__asm_cp;
 #endif // G__ASM
-         int store_no_exec_compile = G__no_exec_compile;
+         int local_store_no_exec_compile = G__no_exec_compile;
          if (executed_break) {
             G__no_exec_compile = 1;
          }
@@ -3128,7 +3132,7 @@ static G__value G__exec_loop(char *forinit,char *condition,int naction,char **fo
             //fprintf(stderr, "G__exec_loop: end executing loop actions.\n");
          }
          if (executed_break) {
-            G__no_exec_compile = store_no_exec_compile;
+            G__no_exec_compile = local_store_no_exec_compile;
          }
 #ifdef G__ASM
          //
@@ -4333,8 +4337,8 @@ void Cint::Internal::G__display_tempobject(const char* action)
 ***********************************************************************/
 int Cint::Internal::G__defined_macro(char *macro)
 {
-   int hash,iout;
-   G__hash(macro,hash,iout);
+   int hash,hashout;
+   G__hash(macro,hash,hashout);
 
    if(682==hash && strcmp(macro,"__CINT__")==0) return(1);
    if(!G__cpp && 1704==hash && strcmp(macro,"__CINT_INTERNAL_CPP__")==0) return(1);
@@ -5064,10 +5068,10 @@ G__preproc_again:
                            //  then we are done.
                            if (G__switch) {
                               // -- We are in a switch statement, evaluate the case expression.
-                              G__value result = G__exec_switch_case(casepara);
+                              G__value local_result = G__exec_switch_case(casepara);
                               if (G__switch_searching) {
                                  // -- We are searching for a matching case, return value of case expression.
-                                 return result;
+                                 return local_result;
                               }
                            }
                            // Reset the statement buffer.
@@ -5634,9 +5638,9 @@ G__preproc_again:
                               }
                            }
                            // Note: iout == 1, if 'delete[]'
-                           int largestep = 0;
+                           int local_largestep = 0;
                            if (G__breaksignal) {
-                              int ret = G__beforelargestep(statement, &iout, &largestep);
+                              int ret = G__beforelargestep(statement, &iout, &local_largestep);
                               if (ret > 1) {
                                  return G__null;
                               }
@@ -5649,8 +5653,8 @@ G__preproc_again:
                               }
                            }
                            G__delete_operator(statement, iout /* isarray */);
-                           if (largestep) {
-                              G__afterlargestep(&largestep);
+                           if (local_largestep) {
+                              G__afterlargestep(&local_largestep);
                            }
                            if (!*mparen || (G__return > G__RETURN_NORMAL)) {
                               return G__null;
@@ -5804,9 +5808,9 @@ G__preproc_again:
                            // Handle 'delete[] ...'.
                            //                 ^
                            G__fgetstream(statement, ";");
-                           int largestep = 0;
+                           int local_largestep = 0;
                            if (G__breaksignal) {
-                              int ret = G__beforelargestep(statement, &iout, &largestep);
+                              int ret = G__beforelargestep(statement, &iout, &local_largestep);
                               if (ret > 1) {
                                  return G__null;
                               }
@@ -5819,8 +5823,8 @@ G__preproc_again:
                               }
                            }
                            G__delete_operator(statement, 1 /* isarray */);
-                           if (largestep) {
-                              G__afterlargestep(&largestep);
+                           if (local_largestep) {
+                              G__afterlargestep(&local_largestep);
                            }
                            if (!*mparen || (G__return > G__RETURN_NORMAL)) {
                               return G__null;
@@ -6418,10 +6422,10 @@ G__preproc_again:
                         //  then we are done.
                         if (G__switch) {
                            // -- We are in a switch statement, evaluate the case expression.
-                           G__value result = G__exec_switch_case(casepara);
+                           G__value local_result = G__exec_switch_case(casepara);
                            if (G__switch_searching) {
                               // -- We are searching for a matching case, return value of case expression.
-                              return result;
+                              return local_result;
                            }
                         }
                         // Reset the statement buffer.
@@ -6614,10 +6618,10 @@ G__preproc_again:
                //  then we are done.
                if (G__switch) {
                   // -- We are in a switch statement, evaluate the case expression.
-                  G__value result = G__exec_switch_case(casepara);
+                  G__value local_result = G__exec_switch_case(casepara);
                   if (G__switch_searching) {
                      // -- We are searching for a matching case, return value of case expression.
-                     return result;
+                     return local_result;
                   }
                }
                // Reset the statement buffer.

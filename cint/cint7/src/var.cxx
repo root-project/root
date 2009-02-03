@@ -596,7 +596,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
    int store_getarraydim = 0;
    int store_asm_noverflow = 0;
    G__StrBuf tmp_sb(G__ONELINE);
-   char *tmp = tmp_sb;
+   char *itemtmp = tmp_sb;
    G__StrBuf result7_sb(G__ONELINE);
    char *result7 = result7_sb;
    G__StrBuf parameter_sb(G__MAXVARDIM * G__ONELINE);
@@ -674,8 +674,8 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
                   G__reftype = G__PARAP2P + pointlevel - 2;
                   break;
             }
-            strcpy(tmp, item + i - 1);
-            strcpy(item, tmp);
+            strcpy(itemtmp, item + i - 1);
+            strcpy(item, itemtmp);
             if (G__var_type == 'p') {
                G__var_type = 'v';
             }
@@ -706,8 +706,8 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
       case '&':
          // -- Should not happen!
          G__var_type = 'P';
-         strcpy(tmp, item + 1);
-         strcpy(item, tmp);
+         strcpy(itemtmp, item + 1);
+         strcpy(item, itemtmp);
          break;
       case '0':
       case '1':
