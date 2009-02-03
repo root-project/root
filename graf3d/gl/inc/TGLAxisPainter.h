@@ -71,13 +71,13 @@ public:
    virtual ~TGLAxisPainter();
 
    // GetSets.
-   Int_t        GetTMNDim() {  return fTMNDim; } const
+   Int_t        GetTMNDim() const { return fTMNDim; }
    void         SetTMNDim(Int_t x) { fTMNDim = x; }
 
    TGLVector3&  RefDir() { return fDir; }
    TGLVector3&  RefTMOff(Int_t i) { return fTMOff[i]; }
 
-   Bool_t       GetUseRelativeFontSize() { return fUseRelativeFontSize;} const
+   Bool_t       GetUseRelativeFontSize() const { return fUseRelativeFontSize; }
    void         SetUseRelativeFontSize( Bool_t x ) { fUseRelativeFontSize = x; }
 
    void         SetAbsoluteLabelFontSize(Int_t fs) { fAbsoluteLabelFontSize=fs; }
@@ -86,8 +86,8 @@ public:
    void         SetAbsoluteTitleFontSize(Int_t fs) { fAbsoluteTitleFontSize=fs; }
    Int_t        GetAbsoluteTitleFontSize() const { return fAbsoluteTitleFontSize; }
 
-   TGLFont::ETextAlign_e GetLabelAlign() { return fLabelAlign; }
-   const void            SetLabelAlign(TGLFont::ETextAlign_e x) { fLabelAlign = x; }
+   TGLFont::ETextAlign_e GetLabelAlign() const { return fLabelAlign; }
+   void         SetLabelAlign(TGLFont::ETextAlign_e x) { fLabelAlign = x; }
 
    LabVec_t& RefLabVec() { return fLabVec; }
    TMVec_t&  RefTMVec()  { return fTMVec; }
