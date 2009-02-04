@@ -5,11 +5,11 @@ Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoNavigator::BuildCache>: --- Maximum geometry depth set to 100
 Info in <TGeoManager::CloseGeometry>: 8177 nodes/ 226 volume UID's in aleph.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
-Info in <TFile::OpenFromCache>: using local cache copy of http://root.cern.ch/files/alice.root [./files/alice.root]
+Info in <TFile::OpenFromCache>: using local cache copy of http://root.cern.ch/files/aleph.root [./files/aleph.root]
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
-Info in <TGeoManager::SetTopVolume>: Top volume is ALIC. Master volume is ALIC
+Info in <TGeoManager::SetTopVolume>: Top volume is ALEF. Master volume is ALEF
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CloseGeometry>: 2347186 nodes/ 2867 volume UID's in default geometry
+Info in <TGeoManager::CloseGeometry>: 8177 nodes/ 226 volume UID's in aleph.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TFile::OpenFromCache>: using local cache copy of http://root.cern.ch/files/brahms.root [./files/brahms.root]
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
@@ -63,8 +63,8 @@ Info in <TGeoManager::CloseGeometry>: ----------------modeler ready-------------
 * STRESS GEOMETRY
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/aleph.root
 Reference file http://root.cern.ch/files/aleph_ref_2.root found
-Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/alice.root
-Reference file http://root.cern.ch/files/alice_ref_2.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/aleph.root
+Reference file http://root.cern.ch/files/aleph_ref_2.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/brahms.root
 Reference file http://root.cern.ch/files/brahms_ref_2.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/cdf.root
