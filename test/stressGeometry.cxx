@@ -76,7 +76,7 @@ typedef struct {
 p_t p;
   
 const char *exps[10] = {"aleph",      // 0
-                        "alice2",     // 1
+                        "aleph",      // 1  was alice2 waiting for Andrei's fix
                         "brahms",     // 2
                         "cdf",        // 3
                         "cms",        // 4
