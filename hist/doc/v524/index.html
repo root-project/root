@@ -28,3 +28,25 @@
 </li>
 </ul>
 
+<h4>TGraph</h4>
+<ul>
+<li> When adding an object in the list of funtions of a <tt>TGraph</tt>,
+     there was a crash at the <tt>TGraph</tt> drawing time if the
+     fitting option (<tt>gStyle->SetOptFit(1)</tt>) was on. This was
+     reported in: https://savannah.cern.ch/bugs/?46525
+     The following macro reproduces the problem:
+     <pre>
+     {
+        gStyle->SetOptFit(1);
+        TGraph *gr = new TGraph(2);
+        gr->SetPoint(0,1,1);
+        gr->SetPoint(1,2,2);
+        TLatex *l1 = new TLatex(gr->GetX()[0], gr->GetY()[0], "#1");
+        gr->GetListOfFunctions()->Add(l1);
+        gr->Draw("APL");
+     }
+     </pre>
+</li>
+</ul>
+
+
