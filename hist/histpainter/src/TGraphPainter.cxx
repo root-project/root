@@ -832,9 +832,12 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 
    TF1 *fit = 0;
    TList *functions = theGraph->GetListOfFunctions();
-   if (functions) fit = (TF1*)functions->First();
    TObject *f;
    if (functions) {
+      f = (TF1*)functions->First();
+      if (f) {
+         if (f->InheritsFrom(TF1::Class())) fit = (TF1*)f;
+      }
       TIter   next(functions);
       while ((f = (TObject*) next())) {
          if (f->InheritsFrom(TF1::Class())) {
