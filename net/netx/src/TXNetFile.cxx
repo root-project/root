@@ -156,6 +156,7 @@ TXNetFile::~TXNetFile()
    if (IsOpen())
       Close(0);
 
+   SafeDelete(fClient);
    SafeDelete(fInitMtx);
 }
 
@@ -983,7 +984,6 @@ void TXNetFile::Close(const Option_t *opt)
 
    if (IsOpen())
       fClient->Close();
-   SafeDelete(fClient);
 
    fD = -1;  // so TFile::IsOpen() returns false when in TFile::~TFile
 }
@@ -1044,17 +1044,10 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
       return TNetFile::SysStat(fd, id, size, flags, modtime);
    }
 
-   if (!IsOpen()) {
-      if (gDebug > 1)
-         Info("SysStat", "could not stat remote file, file not open");
-      *id = -1;
-      return 1;
-   }
-
    // Return file stat information. The interface and return value is
    // identical to TSystem::GetPathInfo().
    struct XrdClientStatInfo stinfo;
-   if (fClient->Stat(&stinfo)) {
+   if (fClient && fClient->Stat(&stinfo)) {
       *id = (Long_t)(stinfo.id);
       *size = (Long64_t)(stinfo.size);
       *flags = (Long_t)(stinfo.flags);
@@ -1063,8 +1056,14 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
          Info("SysStat", "got stats = %ld %lld %ld %ld",
                          *id, *size, *flags, *modtime);
    } else {
-      if (gDebug > 1)
-         Info("SysStat", "could not stat remote file");
+
+      if (gDebug > 1) {
+         if (!IsOpen()) Info("SysStat", "could not stat remote file. Not opened.");
+         else
+            Info("SysStat", "could not stat remote file");
+      }
+
+
       *id = -1;
       return 1;
    }

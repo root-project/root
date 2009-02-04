@@ -509,11 +509,12 @@ void TAlienFile::Close(Option_t * option)
 
    if (!IsOpen()) return;
 
-   if (fOption == "READ") {
-      // Close file.
-      TXNetFile::Close(option);
+
+   // Close file
+   TXNetFile::Close(option);
+
+   if (fOption == "READ")
       return;
-   }
 
    // set GCLIENT_EXTRA_ARG environment
    gSystem->Setenv("GCLIENT_EXTRA_ARG", fAuthz.Data());
@@ -522,8 +523,9 @@ void TAlienFile::Close(Option_t * option)
    TString command("commit ");
 
    Long64_t siz = GetSize();
-   if (!siz)
-      Error("Close", "the reported size of the written file is 0");
+   if (siz <= 0)
+      Error("Close", "the reported size of the written file is <= 0");
+
    command += siz;
    command += " ";
    command += fLfn;
@@ -562,8 +564,6 @@ void TAlienFile::Close(Option_t * option)
 
    gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
 
-   // Close file.
-   TXNetFile::Close(option);
 }
 
 //______________________________________________________________________________
