@@ -146,7 +146,7 @@ function config_macos {
 
 #    PLATFORMO=macos
 
-    AR="ar -q -cs "
+    AR="ar -r -cs "
     IMPLIBEXT=.dylib
 
     MAKEIMPLIB="ln -sf @so@ @imp@"
