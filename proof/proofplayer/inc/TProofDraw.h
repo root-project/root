@@ -71,6 +71,7 @@ protected:
    Bool_t               fObjEval;        //  true if fVar1 returns an object (or pointer to).
    Int_t                fDimension;      //  Dimension of the current expression
 
+   void     SetCanvas(const char *objname);
    void     SetError(const char *sub, const char *mesg);
 
 protected:

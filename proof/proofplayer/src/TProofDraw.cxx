@@ -44,6 +44,7 @@
 #include "TView.h"
 #include "TStyle.h"
 #include "TDirectory.h"
+#include "TROOT.h"
 
 #include <algorithm>
 using namespace std;
@@ -256,6 +257,27 @@ void TProofDraw::ClearFormula()
    fMultiplicity = 0;
 }
 
+//______________________________________________________________________________
+void TProofDraw::SetCanvas(const char *objname)
+{
+   // Move to a canvas named <name>_canvas; create the canvas if not existing.
+   // Used to avoid screwing up existing plots when non default names are used
+   // for the final objects
+
+   TString name = objname;
+   name += "_canvas";
+   TVirtualPad *p = (gROOT->GetListOfCanvases())
+                  ? (TVirtualPad *) gROOT->GetListOfCanvases()->FindObject(name)
+                  : (TVirtualPad *)0;
+   if (p == 0) {
+      gROOT->MakeDefCanvas();
+      gPad->SetName(name);
+      PDB(kDraw,2) Info("SetCanvas", "created canvas %s", name.Data());
+   } else {
+      p->cd();
+      PDB(kDraw,2) Info("SetCanvas", "used canvas %s", name.Data());
+   }
+}
 
 //______________________________________________________________________________
 void TProofDraw::SetError(const char *sub, const char *mesg)
@@ -717,25 +739,29 @@ void TProofDrawHist::Terminate(void)
    fHistogram = (TH1F *) fOutput->FindObject(fTreeDrawArgsParser.GetObjectName());
    if (fHistogram) {
       SetStatus((Int_t) fHistogram->GetEntries());
-      if (TH1* old = dynamic_cast<TH1*> (fTreeDrawArgsParser.GetOriginal())) {
+      TH1 *h = 0;
+      if ((h = dynamic_cast<TH1*> (fTreeDrawArgsParser.GetOriginal()))) {
          if (!fTreeDrawArgsParser.GetAdd())
-            old->Reset();
+            h->Reset();
          TList l;
          l.Add(fHistogram);
-         old->Merge(&l);
+         h->Merge(&l);
          fOutput->Remove(fHistogram);
          delete fHistogram;
-         if (fTreeDrawArgsParser.GetShouldDraw())
-            old->Draw(fOption.Data());
       } else {
-         if (fTreeDrawArgsParser.GetShouldDraw())
-            fHistogram->Draw(fOption.Data());
+         // Set the title
          fHistogram->SetTitle(fTreeDrawArgsParser.GetObjectTitle());
+         h = fHistogram;
+      }
+      if (fTreeDrawArgsParser.GetShouldDraw()) {
+         // Choose the right canvas
+         SetCanvas(h->GetName());
+         // Draw
+         h->Draw(fOption.Data());
       }
    }
    fHistogram = 0;
 }
-
 
 ClassImp(TProofDrawEventList)
 
@@ -1118,20 +1144,24 @@ void TProofDrawProfile::Terminate(void)
    fProfile = (TProfile *) fOutput->FindObject(fTreeDrawArgsParser.GetObjectName());
    if (fProfile) {
       SetStatus((Int_t) fProfile->GetEntries());
-      if (TProfile* old = dynamic_cast<TProfile*> (fTreeDrawArgsParser.GetOriginal())) {
+      TProfile *pf = 0;
+      if ((pf = dynamic_cast<TProfile*> (fTreeDrawArgsParser.GetOriginal()))) {
          if (!fTreeDrawArgsParser.GetAdd())
-            old->Reset();
+            pf->Reset();
          TList l;
          l.Add(fProfile);
-         old->Merge(&l);
+         pf->Merge(&l);
          fOutput->Remove(fProfile);
          delete fProfile;
-         if (fTreeDrawArgsParser.GetShouldDraw())
-            old->Draw(fOption.Data());
       } else {
-         if (fTreeDrawArgsParser.GetShouldDraw())
-            fProfile->Draw(fOption.Data());
          fProfile->SetTitle(fTreeDrawArgsParser.GetObjectTitle());
+         pf = fProfile;
+      }
+      if (fTreeDrawArgsParser.GetShouldDraw()) {
+         // Choose the right canvas
+         SetCanvas(pf->GetName());
+         // Draw
+         pf->Draw(fOption.Data());
       }
    }
    fProfile = 0;
@@ -1338,20 +1368,24 @@ void TProofDrawProfile2D::Terminate(void)
    fProfile = (TProfile2D *) fOutput->FindObject(fTreeDrawArgsParser.GetObjectName());
    if (fProfile) {
       SetStatus((Int_t) fProfile->GetEntries());
-      if (TProfile2D* old = dynamic_cast<TProfile2D*> (fTreeDrawArgsParser.GetOriginal())) {
+      TProfile2D *pf = 0;
+      if ((pf = dynamic_cast<TProfile2D*> (fTreeDrawArgsParser.GetOriginal()))) {
          if (!fTreeDrawArgsParser.GetAdd())
-            old->Reset();
+            pf->Reset();
          TList l;
          l.Add(fProfile);
-         old->Merge(&l);
+         pf->Merge(&l);
          fOutput->Remove(fProfile);
          delete fProfile;
-         if (fTreeDrawArgsParser.GetShouldDraw())
-            old->Draw(fOption.Data());
       } else {
-         if (fTreeDrawArgsParser.GetShouldDraw())
-            fProfile->Draw(fOption.Data());
          fProfile->SetTitle(fTreeDrawArgsParser.GetObjectTitle());
+         pf = fProfile;
+      }
+      if (fTreeDrawArgsParser.GetShouldDraw()) {
+         // Choose the right canvas
+         SetCanvas(pf->GetName());
+         // Draw
+         pf->Draw(fOption.Data());
       }
    }
    fProfile = 0;
