@@ -308,6 +308,9 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
    static char atext[kTMAX];
    TObject *pave = 0;
 
+   if (mode == kPaveLabel)
+      ((TPad *)gPad)->EventPave();
+
    switch (event) {
 
    case kButton1Down:
