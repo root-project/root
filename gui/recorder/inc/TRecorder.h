@@ -672,6 +672,8 @@ private:
    Int_t               fFilteredIdsCount; // Only when GUI for recorder is used: Count of windows in GUI recorder
    Window_t           *fFilteredIds;      // Only when GUI for recorer is used: IDs of windows that creates that GUI.
                                           // Events for GUI recorder are not recorded.
+   Bool_t              fFilterEventPave;  // Special flag to filter events during the pave recording
+
 protected:
    friend class TRecorderInactive;
    TRecorderRecording(TRecorder *r, const char *filename, Option_t *option, Window_t *w, Int_t winCount);
@@ -689,6 +691,7 @@ public:
    void  RecordGuiCNEvent(Event_t* e);             //SLOT
    void  RecordPave(const TObject* obj);           //SLOT
    void  RecordText(const TObject* obj);           //SLOT
+   void  FilterEventPave();                        //SLOT                      
 
    void  RecordExtraEvent(TString line);
 

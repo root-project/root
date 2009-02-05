@@ -593,7 +593,7 @@ Bool_t TRecorderReplaying::PrepareNextEvent()
       fCmdTree->GetEntry(fCmdTreeCounter);
 
    // Reads the next unreplayed extra event to fExtraEvent
-   if (fExtraTree->GetEntries() > fCmdTreeCounter)
+   if (fExtraTree->GetEntries() > fExtraTreeCounter)
       fExtraTree->GetEntry(fExtraTreeCounter);
 
    // Reads the next unreplayed GUI event to fGuiEvent
@@ -1025,6 +1025,9 @@ TRecorderRecording::TRecorderRecording(TRecorder *r, const char *filename,
    // No unhandled commandline event in the beginning
    fCmdEventPending = kFALSE;
 
+   // Filer pave events (mouse button move)
+   fFilterEventPave = kFALSE;
+   
    // No registered windows in the beginning
    fRegWinCounter = 0;
 
@@ -1085,6 +1088,8 @@ Bool_t TRecorderRecording::StartRecording()
    // When a Text is created, TRecorderRecording::RecordText() is called to record it
    TQObject::Connect("TPad", "RecordLatex(const TObject*)", "TRecorderRecording", this, "RecordText(const TObject*)");
 
+   // When a PaveLabel is created, TRecorderRecording::FilterEventPave() is called to filter mouse clicks events.
+   TQObject::Connect("TPad", "EventPave()", "TRecorderRecording", this, "FilterEventPave()");
 
    // Creates in TTrees appropriate branches to store registered windows, commandline events and GUI events
    fWinTree->Branch(kBranchName, &fWin, "fWin/l");
@@ -1128,6 +1133,7 @@ void TRecorderRecording::Stop(TRecorder *, Bool_t guiCommand)
    TQObject::Disconnect("TGFrame", "ProcessedConfigure(Event_t*)", this, "RecordGuiCNEvent(Event_t*)");
    TQObject::Disconnect("TPad", "RecordPave(const TObject*)", this, "RecordPave(const TObject*)");
    TQObject::Disconnect("TPad", "RecordLatex(const TObject*)", this, "RecordText(const TObject*)");
+   TQObject::Disconnect("TPad", "EventPave()", this, "FilterEventPave()");
    gClient->Disconnect(gClient, "ProcessedEvent(Event_t*, Window_t)", this, "RecordGuiEvent(Event_t*, Window_t)");
    gClient->Disconnect(gClient, "RegisteredWindow(Window_t)", this, "RegisterWindow(Window_t)");
    gApplication->Disconnect(gApplication, "LineProcessed(const char*)", this, "RecordCmdEvent(const char* line)");
@@ -1190,6 +1196,13 @@ void TRecorderRecording::RecordGuiEvent(Event_t* e, Window_t wid)
    // If this event is caused by a recorder itself (GUI recorder), it is not recorded
    if (fFilteredIdsCount && IsFiltered(e->fWindow))
       return;
+
+   // Doesn't record the mouse clicks when a pavelabel is recorded
+   if  (fFilterEventPave && (e->fCode == 1)) {
+      fFilterEventPave = kFALSE;
+      return;
+   }
+   fFilterEventPave = kFALSE;
 
    // Copies all items of e to fGuiEvent
    CopyEvent(e, wid);
@@ -1262,6 +1275,14 @@ void TRecorderRecording::RecordText(const TObject* obj)
    cad += texto->GetTitle();
    cad += "\"); l->ResetAttText(); l->Draw(); gPad->Update();";
    RecordExtraEvent(cad);
+}
+
+//______________________________________________________________________________
+void TRecorderRecording::FilterEventPave()
+{
+   // Change the state of the flag to kTRUE when you are recording a pavelabel.
+   
+   fFilterEventPave = kTRUE;
 }
 
 //______________________________________________________________________________
