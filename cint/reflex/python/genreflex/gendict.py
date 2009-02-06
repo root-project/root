@@ -1279,7 +1279,7 @@ class genDictionary(object) :
         for demangledMethod in allBasesMethods.keys() :
           member = allBasesMethods[demangledMethod]
           if len(member['bases']) > 1:
-            ret = self.genTypeName(member['returns'], False, True, True)
+            ret = self.genTypeName(member['returns'], enum=False, const=False, colon=True)
             if '(' not in ret:
               # skip functions returning functions; we don't get the prototype right easily:
               cmem = '  virtual %s %s throw();' % (ret, demangledMethod)
@@ -1374,6 +1374,7 @@ class genDictionary(object) :
       elif colon  : s = '::'
     return s
 #----------------------------------------------------------------------------------
+# const is CONST VETO!!!
   def genTypeName(self, id, enum=False, const=False, colon=False, alltempl=False, _useCache=True, _cache={}) :
     if _useCache:
       key = (self,id,enum,const,colon,alltempl)
@@ -2434,12 +2435,14 @@ def ClassDefImplementation(selclasses, self) :
            and "ImplFileLine" in listOfMembers \
            and "ImplFileName" in listOfMembers :
 
+      clname = '::' + attrs['fullname']
+
       haveClassDef = 1
       extraval = '!RAW!' + str(derivesFromTObject)
       if attrs.has_key('extra') : attrs['extra']['ClassDef'] = extraval
       else                      : attrs['extra'] = {'ClassDef': extraval}
+      attrs['extra']['DictionaryFunc'] = '!RAW!' + clname + '::Dictionary';
 
-      clname = '::' + attrs['fullname']
       returnValue += 'TClass* ' + clname + '::fgIsA = 0;\n'
       returnValue += 'TClass* ' + clname + '::Class() {\n'
       returnValue += '   if (!fgIsA)\n'
