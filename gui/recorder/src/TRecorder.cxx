@@ -1107,10 +1107,14 @@ Bool_t TRecorderRecording::StartRecording()
       Int_t cnt = 0;
       while ((twin = (TGWindow*) nextwindow())) {
          twin2 = (Window_t) twin->GetId();
-         if (IsFiltered(twin2))
-            cout << "WindowID "<< twin2 << " filtered" << endl;
-         else if (twin != gClient->GetRoot())
+         if (IsFiltered(twin2)) {
+            if (gDebug > 0) {
+               cout << "WindowID "<< twin2 << " filtered" << endl;
+            }
+         }
+         else if (twin != gClient->GetRoot()) {
             RegisterWindow(twin2);
+         }
          cnt++;
       }
       //Info("TRecorderRecording::StartRecording", "Previous Canvases");
