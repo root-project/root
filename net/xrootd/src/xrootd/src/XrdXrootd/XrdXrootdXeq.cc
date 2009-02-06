@@ -449,6 +449,10 @@ int XrdXrootdProtocol::do_Endsess()
    memcpy((void *)&sessID.FD,   &sp->FD,   sizeof(sessID.FD));
    memcpy((void *)&sessID.Inst, &sp->Inst, sizeof(sessID.Inst));
 
+// Trace this request
+//
+   TRACEP(LOGIN, "endsess " <<sessID.Pid <<':' <<sessID.FD <<'.' <<sessID.Inst);
+
 // If this session id does not refer to us, ignore the request
 //
    if (sessID.Pid != myPID) return Response.Send();
@@ -760,7 +764,7 @@ int XrdXrootdProtocol::do_Offload(int pathID, int isWrite)
           pp->Response.Set(streamID);
           pp->streamMutex.UnLock();
           Link->setRef(1);
-          Sched->Schedule((XrdJob *)pp);
+          Sched->Schedule((XrdJob *)(pp->Link));
           isAvail.Wait();
           return 0;
          }
@@ -1057,7 +1061,7 @@ int XrdXrootdProtocol::do_Prepare()
    XrdOucTList *pFirst=0, *pP, *pLast = 0;
    XrdOucTList *oFirst=0, *oP, *oLast = 0;
    XrdOucTListHelper pHelp(&pFirst), oHelp(&oFirst);
-   XrdXrootdPrepArgs pargs(0, 1);
+   XrdXrootdPrepArgs pargs(0, 0);
    XrdSfsPrep fsprep;
 
 // Grab the options
