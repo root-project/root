@@ -191,11 +191,7 @@ Bool_t TGLOrthoCamera::Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod
    xstep = AdjustDelta(xstep, 1.0, mod1, mod2);
    ystep = AdjustDelta(ystep, 1.0, mod1, mod2);
 
-   fCamTrans.MoveLF(2, -xstep);
-   fCamTrans.MoveLF(3, -ystep);
-
-   IncTimeStamp();
-   return kTRUE;
+   return Truck(-xstep, -ystep);
 }
 
 //______________________________________________________________________________

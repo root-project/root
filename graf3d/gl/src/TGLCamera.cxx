@@ -842,7 +842,26 @@ Double_t TGLCamera::GetTheta() const
 }
 
 //______________________________________________________________________________
+Bool_t TGLCamera::Truck(Double_t xDelta, Double_t yDelta)
+{
+   // Truck the camera - 'move camera parallel to film plane'.
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
 
+   if (xDelta != 0 || yDelta != 0)
+   {
+      fCamTrans.MoveLF(2, xDelta);
+      fCamTrans.MoveLF(3, yDelta);
+
+      IncTimeStamp();
+      return kTRUE;
+   }
+   else
+   {
+      return kFALSE;
+   }
+}
+
+//______________________________________________________________________________
 Bool_t TGLCamera::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
 {
    // Rotate the camera round view volume center established in Setup().
