@@ -284,7 +284,7 @@ void TEveCaloLegoGL::MakeDisplayList() const
 }
 
 //______________________________________________________________________________
-void TEveCaloLegoGL::SetAxisTitlePos(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const
+void TEveCaloLegoGL::SetAxis3DTitlePos(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const
 {
    const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
    GLdouble mm[16];
@@ -332,111 +332,116 @@ void TEveCaloLegoGL::SetAxisTitlePos(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, 
       if (projZ[i] > zMin) zMin = projZ[i];
    }
 
-   Float_t locX  = 0, locY  = 0;
-   Float_t titleX = 0, titleY = 0; // title pos
+
    Int_t xyIdx = idxFront;
    if (zMin - zt < 1e-2) xyIdx = 0; // avoid flipping in front view
 
+   
    switch (xyIdx) {
       case 0:
-         locX  = y0;
-         locY  = x0;
-         titleX = x1;
-         titleY = y1;
+         fXAxisTitlePos.fX = x1;
+         fXAxisTitlePos.fY = y0;
+         fYAxisTitlePos.fX = x0;
+         fYAxisTitlePos.fY = y1;
          break;
       case 1:
-         locY  = x1;
-         locX  = y0;
-         titleX = x0;
-         titleY = y1;
+         fXAxisTitlePos.fX = x0;
+         fXAxisTitlePos.fY = y0;
+         fYAxisTitlePos.fX = x1;
+         fYAxisTitlePos.fY = y1;
          break;
       case 2:
-         locY  = x1;
-         locX = y1;
-         titleX = x0;
-         titleY = y0;
+         fXAxisTitlePos.fX = x0;
+         fXAxisTitlePos.fY = y1;
+         fYAxisTitlePos.fX = x1;
+         fYAxisTitlePos.fY = y0;
          break;
       case 3:
-         locY  = x0;
-         locX = y1;
-         titleX = x1;
-         titleY = y0;
+         fXAxisTitlePos.fX = x1;
+         fXAxisTitlePos.fY = y1;
+         fYAxisTitlePos.fX = x0;
+         fYAxisTitlePos.fY = y0;
          break;
    }
-   titleX *= 1.05;
-   titleY *= 1.05;
-   fXAxisTitlePos.Set(titleX, locX, 0);
-   fYAxisTitlePos.Set(locY, titleY, 0);
+
+   // move title 5% over the axis length
+   Float_t off = 0.05;
+   Float_t tOffX = (x1-x0) * off; if (fYAxisTitlePos.fX > x0) tOffX = -tOffX;
+   Float_t tOffY = (y1-y0) * off; if (fXAxisTitlePos.fY > y0) tOffY = -tOffY;
+   fXAxisTitlePos.fX += tOffX;
+   fYAxisTitlePos.fY += tOffY;
+
 
    // frame box
    //
-
-   // get corner closest to eye, excluding left corner
-   Double_t zm = 1.f;
-   Int_t idxDepthT = 0;
-   for (Int_t i = 0; i < 4; ++i)
+   if (fM->fBoxMode)
    {
-      if (projZ[i] < zm && projZ[i] >= zt && i != idxFront )
+      // get corner closest to eye excluding left corner
+      Double_t zm = 1.f;
+      Int_t idxDepthT = 0;
+      for (Int_t i = 0; i < 4; ++i)
       {
-         zm  = projZ[i];
-         idxDepthT = i;
+         if (projZ[i] < zm && projZ[i] >= zt && i != idxFront )
+         {
+            zm  = projZ[i];
+            idxDepthT = i;
+         }
       }
-   }
-   if (idxFront == idxLeft)  idxFront =idxDepthT;
+      if (idxFront == idxLeft)  idxFront =idxDepthT;
 
-   switch (idxFront)
-   {
-      case 0:
-         fBackPlaneXConst[0].Set(x1, y0, 0); fBackPlaneXConst[1].Set(x1, y1, 0);
-         fBackPlaneYConst[0].Set(x0, y1, 0); fBackPlaneYConst[1].Set(x1, y1, 0);
-         break;
-      case 1:
-         fBackPlaneXConst[0].Set(x0, y0, 0); fBackPlaneXConst[1].Set(x0, y1, 0);
-         fBackPlaneYConst[0].Set(x0, y1, 0); fBackPlaneYConst[1].Set(x1, y1, 0);
-         break;
-      case 2:
-         fBackPlaneXConst[0].Set(x0, y0, 0); fBackPlaneXConst[1].Set(x0, y1, 0);
-         fBackPlaneYConst[0].Set(x0, y0, 0); fBackPlaneYConst[1].Set(x1, y0, 0);
-         break;
-      case 3:
-         fBackPlaneXConst[0].Set(x1, y0, 0); fBackPlaneXConst[1].Set(x1, y1, 0);
-         fBackPlaneYConst[0].Set(x0, y0, 0); fBackPlaneYConst[1].Set(x1, y0, 0);
-         break;
+      switch (idxFront)
+      {
+         case 0:
+            fBackPlaneXConst[0].Set(x1, y0, 0); fBackPlaneXConst[1].Set(x1, y1, 0);
+            fBackPlaneYConst[0].Set(x0, y1, 0); fBackPlaneYConst[1].Set(x1, y1, 0);
+            break;
+         case 1:
+            fBackPlaneXConst[0].Set(x0, y0, 0); fBackPlaneXConst[1].Set(x0, y1, 0);
+            fBackPlaneYConst[0].Set(x0, y1, 0); fBackPlaneYConst[1].Set(x1, y1, 0);
+            break;
+         case 2:
+            fBackPlaneXConst[0].Set(x0, y0, 0); fBackPlaneXConst[1].Set(x0, y1, 0);
+            fBackPlaneYConst[0].Set(x0, y0, 0); fBackPlaneYConst[1].Set(x1, y0, 0);
+            break;
+         case 3:
+            fBackPlaneXConst[0].Set(x1, y0, 0); fBackPlaneXConst[1].Set(x1, y1, 0);
+            fBackPlaneYConst[0].Set(x0, y0, 0); fBackPlaneYConst[1].Set(x1, y0, 0);
+            break;
+      }
    }
 }
 
 //______________________________________________________________________________
-void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx) const
+void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
 {
    // Draw z-axis and z-box at the appropriate grid corner-point including
    // tick-marks and labels.
 
    // Z axis
-
-   // get tickmark vector
-   glPushMatrix();
-   glTranslatef(fZAxisTitlePos.fX, fZAxisTitlePos.fY, 0);
-   TGLMatrix modview;
-   glGetDoublev(GL_MODELVIEW_MATRIX, modview.Arr());
-   TGLVertex3 worldRef(fZAxisTitlePos.fX, fZAxisTitlePos.fY, fZAxisTitlePos.fZ);
-   // largest tickmark 10 pixels
-   TGLVector3 delta = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -10, 0, &modview);
-
-   // axis attributes can be changed with editor, this code can be moved to LegoEditor
+   //
    fZAxis->SetAxisColor(fM->fGridColor);
    fZAxis->SetLabelColor(fM->fFontColor);
    fZAxis->SetTitleColor(fM->fFontColor);
    fZAxis->SetNdivisions(fM->fNZSteps*100 + 10);
    fZAxis->SetLimits(0, fDataMax);
+   const char* titleZ = fM->GetPlotEt() ? "Et[GeV]" : "E[GeV]";
 
    fAxisPainter.SetTMNDim(1);
    fAxisPainter.RefDir().Set(0., 0., 1.);
    fAxisPainter.SetUseRelativeFontSize(kTRUE);
    fAxisPainter.SetLabelAlign(TGLFont::kRight);
-   fAxisPainter.RefTMOff(0) =  delta;
+   glPushMatrix();
+   glTranslatef(fZAxisTitlePos.fX, fZAxisTitlePos.fY, 0);
+   {
+      // tickmark vector = 10 pixels left
+      TGLMatrix modview;
+      glGetDoublev(GL_MODELVIEW_MATRIX, modview.Arr());  
+      TGLVertex3 worldRef(0, 0, fZAxisTitlePos.fZ);
+      fAxisPainter.RefTMOff(0) = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -10, 0, &modview);
+   }
    fAxisPainter.PaintAxis(rnrCtx, fZAxis);
-   const char* title = fM->GetPlotEt() ? "Et[GeV]" : "E[GeV]";
-   fAxisPainter.RnrTitle(title, fZAxisTitlePos.fZ, TGLFont::kRight);
+   glTranslated( fAxisPainter.RefTMOff(0).X(),  fAxisPainter.RefTMOff(0).Y(),  fAxisPainter.RefTMOff(0).Z());
+   fAxisPainter.RnrTitle(titleZ, fZAxisTitlePos.fZ, TGLFont::kRight);
    glPopMatrix();
 
    // repaint axis if tower dobule-clicked
@@ -491,41 +496,37 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx) const
       glBegin(GL_LINES);
       Float_t hz  = bw1;
       for (Int_t i = 1; i <= ondiv; ++i, hz += bw1) {
-      glVertex3f(fBackPlaneXConst[0].fX   ,fBackPlaneXConst[0].fY   ,hz);
-      glVertex3f(fBackPlaneXConst[1].fX   ,fBackPlaneXConst[1].fY   ,hz);
-      glVertex3f(fBackPlaneYConst[0].fX   ,fBackPlaneYConst[0].fY   ,hz);
-      glVertex3f(fBackPlaneYConst[1].fX   ,fBackPlaneYConst[1].fY   ,hz);
+         glVertex3f(fBackPlaneXConst[0].fX   ,fBackPlaneXConst[0].fY   ,hz);
+         glVertex3f(fBackPlaneXConst[1].fX   ,fBackPlaneXConst[1].fY   ,hz);
+         glVertex3f(fBackPlaneYConst[0].fX   ,fBackPlaneYConst[0].fY   ,hz);
+         glVertex3f(fBackPlaneYConst[1].fX   ,fBackPlaneYConst[1].fY   ,hz);
       }
       glEnd();
 
       glPopAttrib();
    }
-} // DrawZScales3D
 
-//______________________________________________________________________________
-void TEveCaloLegoGL::DrawXYAxis(TGLRnrCtx & rnrCtx) const
-{
-   // Draw XY axis.
+   // XY Axis
+   //
 
-   Float_t yOff  =  TMath::Sign(fM->GetPhiRng(), fXAxisTitlePos.fY);
-   Float_t xOff  =  TMath::Sign(fM->GetEtaRng(), fYAxisTitlePos.fX);
-   Float_t rxy = (fM->GetPhiRng()) / (fM->GetEtaRng());
-   (rxy > 1) ? yOff /= rxy : xOff *= rxy;
+   Float_t yOff  = fM->GetPhiRng();
+   if (fXAxisTitlePos.fY < fM->GetPhiMax()) yOff = -yOff;
+ 
+   Float_t xOff  = fM->GetEtaRng(); 
+   if (fYAxisTitlePos.fX < fM->GetEtaMax()) xOff = -xOff;
 
    TAxis ax;
    ax.SetAxisColor(fM->fGridColor);
    ax.SetLabelColor(fM->fFontColor);
    ax.SetTitleColor(fM->fFontColor);
    ax.SetTitleFont(fM->GetData()->GetEtaBins()->GetTitleFont());
-   ax.SetLabelSize(0.05);
-   ax.SetTitleSize(0.07);
    ax.SetLabelOffset(0.02);
    ax.SetTickLength(0.05);
 
    fAxisPainter.SetTMNDim(2);
    fAxisPainter.RefTMOff(1).Set(0, 0, -fDataMax);
    fAxisPainter.SetLabelAlign(TGLFont::kCenterUp);
-   fAxisPainter.SetUseRelativeFontSize(!fCells3D);
+   fAxisPainter.SetUseRelativeFontSize(kFALSE);
 
    // eta
    glPushMatrix();
@@ -535,19 +536,76 @@ void TEveCaloLegoGL::DrawXYAxis(TGLRnrCtx & rnrCtx) const
    ax.SetNdivisions(710);
    ax.SetLimits(fM->GetEtaMin(), fM->GetEtaMax());
    fAxisPainter.PaintAxis(rnrCtx, &ax);
+   glTranslatef(0, yOff*1.5*ax.GetTickLength(), -fDataMax*ax.GetTickLength());
    fAxisPainter.RnrTitle(fM->GetData()->GetEtaBins()->GetTitle(), fXAxisTitlePos.fX, TGLFont::kCenterUp);
    glPopMatrix();
 
    // phi
-   glPushMatrix();
    fAxisPainter.RefDir().Set(0, 1, 0);
-   fAxisPainter.SetUseRelativeFontSize(kFALSE);
    fAxisPainter.RefTMOff(0).Set(xOff, 0, 0);
-   glTranslatef(fYAxisTitlePos.fX, 0, 0);
    ax.SetNdivisions(510);
    ax.SetLimits(fM->GetPhiMin(), fM->GetPhiMax());
+   glPushMatrix();
+   glTranslatef(fYAxisTitlePos.fX, 0, 0);
    fAxisPainter.PaintAxis(rnrCtx, &ax);
+   glTranslatef(xOff*1.5*ax.GetTickLength(), 0,  -fDataMax*ax.GetTickLength());
    fAxisPainter.RnrTitle(fM->GetData()->GetPhiBins()->GetTitle(), fYAxisTitlePos.fY, TGLFont::kCenterUp);
+   glPopMatrix();
+
+} // DrawAxis3D
+
+//______________________________________________________________________________
+void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
+{
+   // Draw XY axis.
+
+   TAxis ax;
+   ax.SetAxisColor(fM->fGridColor);
+   ax.SetLabelColor(fM->fFontColor);
+   ax.SetTitleColor(fM->fFontColor);
+   ax.SetTitleFont(fM->GetData()->GetEtaBins()->GetTitleFont());
+   ax.SetLabelSize(0.02);
+   ax.SetTitleSize(0.02);
+   ax.SetLabelOffset(0.01);
+   ax.SetTickLength(0.05);
+
+   // set fonts
+   fAxisPainter.SetAttAxis(&ax);
+   fAxisPainter.SetUseRelativeFontSize(kTRUE);
+   GLint   vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
+   Float_t refLength =  TMath::Sqrt((TMath::Power(vp[2]-vp[0], 2) + TMath::Power(vp[3]-vp[1], 2))*0.5);
+   fAxisPainter.SetLabelFont(rnrCtx, refLength);
+   fAxisPainter.SetTitleFont(rnrCtx, refLength);
+   fAxisPainter.SetUseRelativeFontSize(kFALSE);
+
+
+   // eta
+   ax.SetNdivisions(710);
+   ax.SetLimits(fM->GetEtaMin(), fM->GetEtaMax());
+   fAxisPainter.RefDir().Set(1, 0, 0);
+   fAxisPainter.RefTMOff(0).Set(0,  -fM->GetPhiRng(), 0);
+   fAxisPainter.SetLabelAlign(TGLFont::kCenterUp);
+
+   glPushMatrix();
+   glTranslatef(0, fM->GetPhiMin(), 0);
+   fAxisPainter.PaintAxis(rnrCtx, &ax);
+
+   glTranslatef(0, -fM->GetPhiRng()*(ax.GetTickLength()+ ax.GetLabelOffset()), 0);
+   fAxisPainter.RnrTitle(fM->GetData()->GetEtaBins()->GetTitle(), fM->GetEtaMax(), TGLFont::kCenterUp);
+   glPopMatrix();
+
+   // phi
+   ax.SetNdivisions(510);
+   ax.SetLimits(fM->GetPhiMin(), fM->GetPhiMax());
+   fAxisPainter.RefDir().Set(0, 1, 0);
+   fAxisPainter.RefTMOff(0).Set(-fM->GetEtaRng(), 0, 0);
+   fAxisPainter.SetLabelAlign(TGLFont::kRight);
+
+   glPushMatrix();
+   glTranslatef(fM->GetEtaMin(), 0, 0);
+   fAxisPainter.PaintAxis(rnrCtx, &ax);
+   glTranslatef(-fM->GetEtaRng()*(ax.GetTickLength()+ ax.GetLabelOffset()), 0, 0);
+   fAxisPainter.RnrTitle(fM->GetData()->GetPhiBins()->GetTitle(), fM->GetPhiMax(), TGLFont::kRight);
    glPopMatrix();
 }
 
@@ -676,9 +734,15 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
    //
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
    glLineWidth(2);
-   SetAxisTitlePos(rnrCtx, eta0, eta1, phi0, phi1);
-   if (fCells3D) DrawZScales3D(rnrCtx);
-   DrawXYAxis(rnrCtx);
+   if (fCells3D)
+   {
+      SetAxis3DTitlePos(rnrCtx, eta0, eta1, phi0, phi1);
+      DrawAxis3D(rnrCtx);
+   }
+   else
+   {
+      DrawAxis2D(rnrCtx);
+   }
    glPopAttrib();
 }
 
@@ -915,7 +979,6 @@ void TEveCaloLegoGL::DrawCells2D() const
       glEnd();
    }
 }
-
 //______________________________________________________________________________
 void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
@@ -923,7 +986,6 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    if (! fM->fData || ! fM->fData->GetEtaBins() || ! fM->fData->GetPhiBins())
       return;
-
 
    // projection type
    if (fM->fProjection == TEveCaloLego::kAuto)
@@ -946,6 +1008,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    Float_t sy = (pM - pm) / fM->GetPhiRng();
    glScalef(sx / unit, sy / unit, fM->fData->Empty() ? 1 : fM->GetValToHeight());
    glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
+
 
    // rebin axsis , check limits, fix TwoPi cycling
    Int_t oldBinStep = fBinStep;

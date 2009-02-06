@@ -147,6 +147,9 @@ void TEveProjectionAxesGL::SplitInterval(Float_t p1, Float_t p2, Int_t ax) const
    fAxisPainter.RefTMVec().clear();
 
    // Get list of label position-value pairs.
+
+
+   // Minimum/maximum are defined at the front/back element of list.
    fAxisPainter.RefTMVec().push_back(TGLAxisPainter::TM_t(p1, -1));
 
    if (fM->GetLabMode() == TEveProjectionAxes::kValue)
@@ -162,7 +165,7 @@ void TEveProjectionAxesGL::SplitInterval(Float_t p1, Float_t p2, Int_t ax) const
    FilterOverlappingLabels(0, p2 -p1);
 
    // Minimum/maximum are defined at the front/back element of list.
-   fAxisPainter.RefTMVec().push_back(TGLAxisPainter::TM_t(p1, -1));
+   fAxisPainter.RefTMVec().push_back(TGLAxisPainter::TM_t(p2, -1));
 }
 
 //______________________________________________________________________________
@@ -185,7 +188,6 @@ void TEveProjectionAxesGL::SplitIntervalByPos(Float_t p1, Float_t p2, Int_t ax) 
    TGLAxisPainter::LabVec_t &labVec = fAxisPainter.RefLabVec();
    TGLAxisPainter::TMVec_t  &tmVec =  fAxisPainter.RefTMVec();
 
-
    Float_t p = n1*bw1;
    Float_t pMinor = p;
    for (Int_t l=n1; l<=n2; l++)
@@ -195,7 +197,7 @@ void TEveProjectionAxesGL::SplitIntervalByPos(Float_t p1, Float_t p2, Int_t ax) 
 
       // Tick-marks.
       tmVec.push_back(TGLAxisPainter::TM_t(p, 0));
-      pMinor = p-bw2;
+      pMinor = p+bw2;
       for (Int_t i=1; i<bn2; i++)
       {
          if (pMinor > p2)  break;
@@ -205,7 +207,7 @@ void TEveProjectionAxesGL::SplitIntervalByPos(Float_t p1, Float_t p2, Int_t ax) 
       p += bw1;
    }
 
-   // Complete secon order tick-marks.
+   // Complete second order tick-marks.
    pMinor = n1*bw1 -bw2;
    while ( pMinor > p1)
    {
@@ -245,10 +247,10 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
       tmVec.push_back(TGLAxisPainter::TM_t(pFirst, 0));
 
       // Tickmarks.
-      for (Int_t k=0; k<bn2; k++)
+      for (Int_t k=1; k<bn2; k++)
       {
          pSecond = fProjection->GetScreenVal(ax, v+k*bw2);
-         if (pFirst > p2)  break;
+         if (pSecond > p2)  break;
          tmVec.push_back(TGLAxisPainter::TM_t(pSecond, 1));
       }
       v += bw1;
@@ -266,37 +268,24 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
 }
 
 //______________________________________________________________________________
-Bool_t TEveProjectionAxesGL::GetRange(Int_t ax, Float_t frustMin, Float_t frustMax, Float_t& start, Float_t& end) const
+void TEveProjectionAxesGL::GetRange(Int_t ax, Float_t frustMin, Float_t frustMax, Float_t& min, Float_t& max) const
 {
    // Get range from bounding box of projection manager
 
-   Bool_t rngBBox=kTRUE;
 
-   Float_t bf = 1.2;
-   start = fM->GetManager()->GetBBox()[ax*2]   * bf;
-   end   = fM->GetManager()->GetBBox()[ax*2+1] * bf;
+   // Compare frustum range with bbox and take larger.
 
-   // Compare frustum range with bbox and take smaller.
-   Float_t frustC = 0.5f * (frustMin + frustMax);
-   Float_t frustR = 0.8f * (frustMax - frustMin);
-   frustMin = frustC - 0.5f*frustR;
-   frustMax = frustC + 0.5f*frustR;
-   if (start < frustMin || end > frustMax)
-   {
-      rngBBox=kFALSE;
-      start = frustMin;
-      end = frustMax;
-   }
+   Float_t frng = (frustMax -frustMin)*0.4;
+   Float_t c = 0.5*(frustMax +frustMin);
+   min = c - frng;
+   max = c + frng;
 
    // Check projection  limits.
    // Set limit factor in case of divergence.
    Float_t dLim = fProjection->GetLimit(ax, 0);
    Float_t uLim = fProjection->GetLimit(ax, 1);
-
-   if (start < dLim) start = dLim*0.98;
-   if (end   > uLim) end   = uLim*0.98;
-
-   return rngBBox;
+   if (min < dLim) min = dLim*0.98;
+   if (max > uLim) max   = uLim*0.98;
 }
 
 //______________________________________________________________________________
@@ -320,8 +309,6 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    Float_t b = -camera.FrustumPlane(TGLCamera::kBottom).D();
 
    fProjection = fM->GetManager()->GetProjection();
-   Float_t bboxCentX = (fM->GetManager()->GetBBox()[0] + fM->GetManager()->GetBBox()[1])* 0.5;
-   Float_t bboxCentY = (fM->GetManager()->GetBBox()[2] + fM->GetManager()->GetBBox()[3])* 0.5;
 
    // Projection center and origin marker.
    {
@@ -353,27 +340,27 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    //
    // Axses.
    {
-
+      using namespace TMath;
       GLint   vp[4];
       glGetIntegerv(GL_VIEWPORT, vp);
-      Float_t startX, endX;
-      Float_t startY, endY;
-      Bool_t  rngBBoxX = GetRange(0, l, r, startX, endX);
-      Bool_t  rngBBoxY = GetRange(1, b, t, startY, endY);
+      Float_t refLength =  TMath::Sqrt((TMath::Power(vp[2]-vp[0], 2) + TMath::Power(vp[3]-vp[1], 2))*0.5);
+      Float_t tickLength = TMath::Sqrt((TMath::Power(r-l, 2) + TMath::Power(t-b, 2))*0.5);
+      fAxisPainter.SetLabelFont(rnrCtx, refLength); 
 
+      Float_t min, max;
       // X-axis.
       if (fM->fAxesMode == TEveProjectionAxes::kAll ||
           fM->fAxesMode == TEveProjectionAxes::kHorizontal)
       {
-         SplitInterval(startX, endX, 0);
+         GetRange(0, l, r, min, max);
+         SplitInterval(min, max, 0);
 
          fAxisPainter.RefDir().Set(1, 0, 0);
-         fAxisPainter.SetLabelFont(rnrCtx, vp[2]);
-         fAxisPainter.RefTMOff(0).Set(0, t -b, 0);
+         fAxisPainter.RefTMOff(0).Set(0, tickLength, 0);
 
          // Bottom.
          glPushMatrix();
-         glTranslatef(rngBBoxX ? bboxCentX : 0, b, 0);
+         glTranslatef( 0, b, 0);
          fAxisPainter.SetLabelAlign(TGLFont::kCenterDown);
          fAxisPainter.RnrLabels();
          fAxisPainter.RnrLines();
@@ -381,27 +368,27 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
          // Top.
          glPushMatrix();
-         glTranslatef(rngBBoxX ? bboxCentX : 0, t, 0);
+         glTranslatef( 0, t, 0);
          fAxisPainter.SetLabelAlign(TGLFont::kCenterUp);
          fAxisPainter.RefTMOff(0).Negate();
          fAxisPainter.RnrLabels();
          fAxisPainter.RnrLines();
          glPopMatrix();
       }
-
+     
       // Y-axis.
       if (fM->fAxesMode == TEveProjectionAxes::kAll ||
           fM->fAxesMode == TEveProjectionAxes::kVertical)
       {
-         SplitInterval(startY, endY, 1);
+         GetRange(1, b, t, min, max);
+         SplitInterval(min, max, 1);
 
          fAxisPainter.RefDir().Set(0, 1, 0);
-         fAxisPainter.SetLabelFont(rnrCtx, vp[3]);
-         fAxisPainter.RefTMOff(0).Set(r-l, 0 , 0);
+         fAxisPainter.RefTMOff(0).Set(tickLength, 0 , 0);
 
          // Left.
          glPushMatrix();
-         glTranslatef(l, rngBBoxY ? bboxCentY : 0, 0);
+         glTranslatef(l, 0, 0);
          fAxisPainter.SetLabelAlign(TGLFont::kLeft);
          fAxisPainter.RnrLabels();
          fAxisPainter.RnrLines();
@@ -409,7 +396,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
          // Right.
          glPushMatrix();
-         glTranslatef(r, rngBBoxY ? bboxCentY : 0, 0);
+         glTranslatef(r, 0, 0);
          fAxisPainter.SetLabelAlign(TGLFont::kRight);
          fAxisPainter.RefTMOff(0).Negate();
          fAxisPainter.RnrLabels();

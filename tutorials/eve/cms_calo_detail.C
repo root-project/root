@@ -15,7 +15,7 @@
 #include <TEveManager.h>
 #include <TEveCalo.h>
 #include <TEveCaloData.h>
-#include <TEveLegoOverlay.h>
+#include <TEveCaloLegoOverlay.h>
 #include <TEveLegoEventHandler.h>
 
 #include <TGLViewer.h>
@@ -146,7 +146,7 @@ void cms_calo_detail()
 
   // overlay lego
 
-  TEveLegoOverlay* overlay = new TEveLegoOverlay();
+  TEveCaloLegoOverlay* overlay = new TEveCaloLegoOverlay();
   overlay->SetCaloLego(lego);
   v->AddOverlayElement(overlay);
   gEve->AddElement(overlay);

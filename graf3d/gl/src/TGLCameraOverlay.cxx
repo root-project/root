@@ -29,26 +29,27 @@ ClassImp(TGLCameraOverlay);
 
 //______________________________________________________________________________
 TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp) :
-      TGLOverlayElement(),
+   TGLOverlayElement(),
 
-      fShowOrthographic(showOrtho),
-      fShowPerspective(showPersp),
+   fShowOrthographic(showOrtho),
+   fShowPerspective(showPersp),
 
-      fOrthographicMode(kAxis),
-      fPerspectiveMode(kPlaneIntersect),
+   fOrthographicMode(kAxis),
+   fPerspectiveMode(kPlaneIntersect),
 
-      fAxisPainter(),
-      fAxisExtend(0.8),
+   fAxisPainter(0),
+   fAxis(0),
+   fAxisExtend(0.9),
 
-      fExternalRefPlane(),
-      fUseExternalRefPlane(kFALSE)
+   fExternalRefPlane(),
+   fUseExternalRefPlane(kFALSE)
 {
    // Constructor.
 
    fAxis = new TAxis();
    fAxis->SetNdivisions(710);
    fAxis->SetTickLength(0.012);
-   fAxis->SetLabelOffset(0.01);
+   fAxis->SetLabelOffset(0.02);
    fAxis->SetLabelSize(0.012);
 
    fAxisPainter = new TGLAxisPainter();
@@ -62,6 +63,12 @@ TGLCameraOverlay::~TGLCameraOverlay()
 
    delete  fAxisPainter;
    delete  fAxis;
+}
+
+//______________________________________________________________________________
+TAttAxis* TGLCameraOverlay::GetAttAxis()
+{
+   return (TAttAxis*) fAxis;
 }
 
 //______________________________________________________________________________
@@ -132,49 +139,60 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx)
 {
    // Draw axis on four edges.
 
-   // vertical
-   //
-   fAxisPainter->RefDir().Set(0, 1, 0);
-   fAxisPainter->SetUseRelativeFontSize(kTRUE);
-   Float_t off = (fFrustum[3] - fFrustum[1]) * 0.5 * (1 - fAxisExtend);
-   fAxis->SetLimits(fFrustum[1] + off, fFrustum[3] - off);
-   // left
-   glPushMatrix();
-   glTranslated(fFrustum[0], 0, 0);
-   fAxisPainter->RefTMOff(0).Set(fFrustum[2] - fFrustum[0], 0, 0);
-   fAxisPainter->SetLabelAlign(TGLFont::kLeft);
-   fAxisPainter->PaintAxis(rnrCtx, fAxis);
-   glPopMatrix();
    // All four axis has to have same font.
+   // Size of font calculated relative to viewport diagonal 
    fAxisPainter->SetUseRelativeFontSize(kFALSE);
-   // right
-   glPushMatrix();
-   glTranslatef(fFrustum[2], 0, 0);
-   fAxisPainter->SetLabelAlign(TGLFont::kRight);
-   fAxisPainter->RefTMOff(0).Negate();
-   fAxisPainter->RnrLabels();
-   fAxisPainter->RnrLines();
-   glPopMatrix();
+   GLint   vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
+   Float_t refLength =  TMath::Sqrt((TMath::Power(vp[2]-vp[0], 2) + TMath::Power(vp[3]-vp[1], 2))*0.5);
+   fAxisPainter->SetLabelFont(rnrCtx, refLength);
 
-   // horizontal
+   // horizontal X
    //
-   fAxisPainter->RefDir().Set(1, 0, 0);
-   fAxis->SetLimits(fFrustum[0] + off, fFrustum[2] - off);
-   // bottom
-   glPushMatrix();
-   glTranslatef(0, fFrustum[1], 0);
-   fAxisPainter->SetLabelAlign(TGLFont::kCenterDown);
-   fAxisPainter->RefTMOff(0).Set(0, fFrustum[3] - fFrustum[1],  0);
-   fAxisPainter->PaintAxis(rnrCtx, fAxis);
-   glPopMatrix();
-   // top
-   glPushMatrix();
-   glTranslatef(0, fFrustum[3], 0);
-   fAxisPainter->SetLabelAlign(TGLFont::kCenterUp);
-   fAxisPainter->RefTMOff(0).Negate();
-   fAxisPainter->RnrLabels();
-   fAxisPainter->RnrLines();
-   glPopMatrix();
+   {
+      //
+      fAxisPainter->RefDir().Set(1, 0, 0);
+      Float_t axisXOff = (fFrustum[2] - fFrustum[0]) * (1 - fAxisExtend);
+      fAxis->SetLimits(fFrustum[0] + axisXOff, fFrustum[2] - axisXOff);
+      // bottom
+      glPushMatrix();
+      glTranslatef(0, fFrustum[1], 0);
+      fAxisPainter->SetLabelAlign(TGLFont::kCenterDown);
+      fAxisPainter->RefTMOff(0).Set(0, fFrustum[3] - fFrustum[1],  0);
+      fAxisPainter->PaintAxis(rnrCtx, fAxis);
+      glPopMatrix();
+      // top
+      glPushMatrix();
+      glTranslatef(0, fFrustum[3], 0);
+      fAxisPainter->SetLabelAlign(TGLFont::kCenterUp);
+      fAxisPainter->RefTMOff(0).Negate();
+      fAxisPainter->RnrLabels();
+      fAxisPainter->RnrLines();
+      glPopMatrix();
+   }
+
+   //
+   // vertical Y
+   {
+      fAxisPainter->RefDir().Set(0, 1, 0);
+      Float_t axisYOff = (fFrustum[3] - fFrustum[1]) * (1 - fAxisExtend);
+      fAxis->SetLimits(fFrustum[1] + axisYOff, fFrustum[3] - axisYOff);
+      // left
+
+      glPushMatrix();
+      glTranslated(fFrustum[0], 0, 0);
+      fAxisPainter->RefTMOff(0).Set(fFrustum[2] - fFrustum[0], 0, 0);
+      fAxisPainter->SetLabelAlign(TGLFont::kLeft);
+      fAxisPainter->PaintAxis(rnrCtx, fAxis);
+      glPopMatrix();
+      // right
+      glPushMatrix();
+      glTranslatef(fFrustum[2], 0, 0);
+      fAxisPainter->SetLabelAlign(TGLFont::kRight);
+      fAxisPainter->RefTMOff(0).Negate();
+      fAxisPainter->RnrLabels();
+      fAxisPainter->RnrLines();
+      glPopMatrix();
+   }
 }
 
 //______________________________________________________________________________
@@ -282,3 +300,4 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
       RenderPlaneIntersect(rnrCtx, font);
    }
 }
+

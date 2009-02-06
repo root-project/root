@@ -114,17 +114,14 @@ void MakeCaloLego(TEveCaloData* data)
    Float_t sc = TMath::TwoPi();
    lego->RefMainTrans().SetScale(sc, sc, sc);
    // overlay lego1
-   TEveLegoOverlay* overlay = new TEveLegoOverlay();
+   TEveCaloLegoOverlay* overlay = new TEveCaloLegoOverlay();
    overlay->SetShowPlane(kTRUE);
 
    overlay->SetHeaderTxt(Form("Max Et %3.1f", data->GetMaxVal(kTRUE)));
-   overlay->RefAxisAttrib().SetLabelSize(0.02);
+   overlay->GetAttAxis()->SetLabelSize(0.02);
    v->AddOverlayElement(overlay);
    overlay->SetCaloLego(lego);
    gEve->AddElement(overlay, s2);
-
-
-
 }
 
 //______________________________________________________________________________

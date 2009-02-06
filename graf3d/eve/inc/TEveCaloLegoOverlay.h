@@ -9,20 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveLegoOverlay
-#define ROOT_TEveLegoOverlay
+#ifndef ROOT_TEveCaloLegoOverlay
+#define ROOT_TEveCaloLegoOverlay
 
 #include "TGLCameraOverlay.h"
 #include "TEveElement.h"
 
 class TEveCaloLego;
 
-class TEveLegoOverlay : public TGLCameraOverlay,
+class TEveCaloLegoOverlay : public TGLCameraOverlay,
                         public TEveElementList
 {
 private:
-   TEveLegoOverlay(const TEveLegoOverlay&);            // Not implemented
-   TEveLegoOverlay& operator=(const TEveLegoOverlay&); // Not implemented
+   TEveCaloLegoOverlay(const TEveCaloLegoOverlay&);            // Not implemented
+   TEveCaloLegoOverlay& operator=(const TEveCaloLegoOverlay&); // Not implemented
 
    void DrawSlider(TGLRnrCtx& rnrCtx);
 
@@ -55,8 +55,8 @@ protected:
    virtual  void   RenderHeader(TGLRnrCtx& rnrCtx);
 
 public:
-   TEveLegoOverlay();
-   virtual ~TEveLegoOverlay(){}
+   TEveCaloLegoOverlay();
+   virtual ~TEveCaloLegoOverlay(){}
 
    // event handling
    virtual  Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
@@ -77,7 +77,7 @@ public:
    void  SetHeaderTxt(const char *txt) {fHeaderTxt = txt; }
    const char* GetHeaderTxt() const { return fHeaderTxt; }
 
-   ClassDef(TEveLegoOverlay, 0); // GL-overaly control GUI for TEveCaloLego.
+   ClassDef(TEveCaloLegoOverlay, 0); // GL-overaly control GUI for TEveCaloLego.
 };
 
 #endif

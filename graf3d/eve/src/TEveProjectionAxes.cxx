@@ -50,7 +50,7 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m) :
    fNdivisions = 1010;
    fLabelSize = 0.01;
    fLabelColor = kGray;
-   fTickLength = 0.015;
+   fTickLength = 0.02;
    fLabelOffset = 0.003;
 }
 

@@ -12,14 +12,18 @@
 #ifndef ROOT_TGLCameraOverlay
 #define ROOT_TGLCameraOverlay
 
+#include "TAttAxis.h"
 #include "TGLOverlay.h"
 #include "TGLUtil.h"
 
 class TGLAxisPainter;
-class TAxis;
 class TGLFont;
 
+class TAttAxis;
+class TAxis;
+
 class TGLCameraOverlay : public TGLOverlayElement
+                        
 {
 public:
    enum EMode { kPlaneIntersect, kBar, kAxis };
@@ -55,8 +59,8 @@ public:
    virtual  void   Render(TGLRnrCtx& rnrCtx);
 
    TGLPlane& RefExternalRefPlane() { return fExternalRefPlane; }
-   void    UseExternalRefPlane(Bool_t x) { fUseExternalRefPlane=x; }
-   Bool_t  GetUseExternalRefPlane() const { return fUseExternalRefPlane; }
+   void      UseExternalRefPlane(Bool_t x) { fUseExternalRefPlane=x; }
+   Bool_t    GetUseExternalRefPlane() const { return fUseExternalRefPlane; }
 
    Int_t    GetPerspectiveMode() const { return fPerspectiveMode;}
    void     SetPerspectiveMode(EMode m) {fPerspectiveMode = m;}
@@ -68,6 +72,7 @@ public:
    Bool_t   GetShowPerspective() const { return fShowPerspective; }
    void     SetShowPerspective(Bool_t x) {fShowPerspective =x;}
 
+   TAttAxis* GetAttAxis();
 
    ClassDef(TGLCameraOverlay, 1); // Show coorinates of current camera frustum.
 };

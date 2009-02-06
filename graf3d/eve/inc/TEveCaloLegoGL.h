@@ -51,10 +51,9 @@ protected:
    Int_t   GetGridStep(TGLRnrCtx &rnrCtx) const;
    void    RebinAxis(TAxis *orig, TAxis *curr) const;
 
-
-   void    DrawZScales3D(TGLRnrCtx &rnrCtx) const;
-   void    DrawXYAxis(TGLRnrCtx &rnrCtx) const;
-   void    SetAxisTitlePos(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const;
+   void    SetAxis3DTitlePos(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const;
+   void    DrawAxis3D(TGLRnrCtx &rnrCtx) const;
+   void    DrawAxis2D(TGLRnrCtx &rnrCtx) const;
    void    DrawHistBase(TGLRnrCtx &rnrCtx) const;
 
    void    DrawCells2D() const;

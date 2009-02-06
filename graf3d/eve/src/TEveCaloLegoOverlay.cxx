@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TEveLegoOverlay.h"
+#include "TEveCaloLegoOverlay.h"
 
 #include "TAxis.h"
 
@@ -31,12 +31,12 @@
 //
 //
 
-ClassImp(TEveLegoOverlay);
+ClassImp(TEveCaloLegoOverlay);
 
 //______________________________________________________________________________
-TEveLegoOverlay::TEveLegoOverlay() :
+TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
    TGLCameraOverlay(),
-   TEveElementList("Lego Menu", "TEveLegoOverlay", kTRUE),
+   TEveElementList("Lego Menu", "TEveCaloLegoOverlay", kTRUE),
    fHeaderSelected(kFALSE),
 
    fCalo(0),
@@ -63,7 +63,7 @@ TEveLegoOverlay::TEveLegoOverlay() :
 
 
 /******************************************************************************/
-void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
+void TEveCaloLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
 {
    // Draw slider and calorimeter Z scale on left side of screen.
 
@@ -117,7 +117,7 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
 }
 
 //______________________________________________________________________________
-void TEveLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
+void TEveCaloLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
 {
    // Render menu for plane-value and the plane if marked.
 
@@ -182,7 +182,7 @@ void TEveLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
 }
 
 /******************************************************************************/
-void TEveLegoOverlay::RenderHeader(TGLRnrCtx& rnrCtx)
+void TEveCaloLegoOverlay::RenderHeader(TGLRnrCtx& rnrCtx)
 {
    // Render text on top right corner of the screen.
 
@@ -218,7 +218,7 @@ void TEveLegoOverlay::RenderHeader(TGLRnrCtx& rnrCtx)
 }
 
 /******************************************************************************/
-void TEveLegoOverlay::Render(TGLRnrCtx& rnrCtx)
+void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
 {
    // Render the overlay elements.
 
@@ -284,7 +284,7 @@ void TEveLegoOverlay::Render(TGLRnrCtx& rnrCtx)
 // Virtual event handlers from TGLOverlayElement
 /******************************************************************************/
 
-Bool_t TEveLegoOverlay::SetSliderVal(Event_t* event, TGLRnrCtx &rnrCtx)
+Bool_t TEveCaloLegoOverlay::SetSliderVal(Event_t* event, TGLRnrCtx &rnrCtx)
 {
    // Set height of horizontal plane in the calorimeter.
 
@@ -302,7 +302,7 @@ Bool_t TEveLegoOverlay::SetSliderVal(Event_t* event, TGLRnrCtx &rnrCtx)
 }
 
 //______________________________________________________________________________
-Bool_t TEveLegoOverlay::Handle(TGLRnrCtx          & rnrCtx,
+Bool_t TEveCaloLegoOverlay::Handle(TGLRnrCtx          & rnrCtx,
                                TGLOvlSelectRecord & rec,
                                Event_t            * event)
 {
@@ -351,7 +351,7 @@ Bool_t TEveLegoOverlay::Handle(TGLRnrCtx          & rnrCtx,
 }
 
 //______________________________________________________________________________
-Bool_t TEveLegoOverlay::MouseEnter(TGLOvlSelectRecord& /*rec*/)
+Bool_t TEveCaloLegoOverlay::MouseEnter(TGLOvlSelectRecord& /*rec*/)
 {
    // Mouse has entered overlay area.
 
@@ -359,7 +359,7 @@ Bool_t TEveLegoOverlay::MouseEnter(TGLOvlSelectRecord& /*rec*/)
 }
 
 //______________________________________________________________________________
-void TEveLegoOverlay::MouseLeave()
+void TEveCaloLegoOverlay::MouseLeave()
 {
    // Mouse has left overlay area.
 

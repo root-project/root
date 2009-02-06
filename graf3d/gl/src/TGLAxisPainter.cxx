@@ -318,9 +318,9 @@ void TGLAxisPainter::RnrLines() const
    Float_t tmsOrderSecond = tmsOrderFirst * 0.5;
    TGLVector3 pos;
    TMVec_t::const_iterator it = fTMVec.begin();
-   Int_t nt =  fTMVec.size();
-   for (Int_t t = 1; t < nt; t++) {
-      it++;
+   Int_t nt =  fTMVec.size()-1;
+   it++;
+   for (Int_t t = 1; t < nt; ++t, ++it) {
       pos = fDir * ((*it).first);
       for (Int_t dim = 0; dim < fTMNDim; dim++) {
          glVertex3dv(pos.Arr());
@@ -355,41 +355,36 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
    THLimitsFinder::Optimize(min, max, n1a, bl1, bh1, bn1, bw1);
    THLimitsFinder::Optimize(bl1, bl1 + bw1, n2a, bl2, bh2, bn2, bw2);
 
-
    //______________________________________________________________________________
 
    // Get TM. First and last values are reserved for axis range
    //
    fTMVec.clear();
+   fLabVec.clear();
+
    fTMVec.push_back(TM_t(min, -1));
 
-   Double_t tv1 = bl1;
-   Double_t tv2 = 0;
-   for (Int_t t1 = 0; t1 < bn1; t1++) {
-      fTMVec.push_back(TM_t(tv1, 0));
-      tv2 = tv1 + bw2;
-      for (Int_t t2 = 0; t2 <= bn2; t2++) {
-         fTMVec.push_back(TM_t(tv2, 1));
-         tv2 += bw2;
-      }
-      tv1 += bw1;
-   }
-   // complete last TM
-   fTMVec.push_back(TM_t(tv1, 0));
-   // complete up edges for 1.st order TM
-   Int_t nc = Int_t((max - bh1) / bw2);
-   tv2 = bh1;
-   for (Int_t t2 = 0; t2 <= nc; t2++)
+   Double_t v1 = bl1;
+   Double_t v2 = 0;
+   for (Int_t t1 = 0; t1 <= bn1; t1++)
    {
-      fTMVec.push_back(TM_t(tv2, 1));
-      tv2 += bw2;
+      fTMVec.push_back(TM_t(v1, 0));
+      fLabVec.push_back(Lab_t(v1, v1));
+      v2 = v1 + bw2;
+      for (Int_t t2 = 1; t2 < bn2; t2++)
+      {
+         if (v2 > max) break;
+         fTMVec.push_back(TM_t(v2, 1));
+         v2 += bw2;
+      }
+      v1 += bw1;
    }
+
    // complete low edges for 1.st order TM
-   nc = Int_t((bl1 - min) / bw2);
-   tv2 = bl1;
-   for (Int_t t2 = 0; t2 <= nc; t2++) {
-      fTMVec.push_back(TM_t(tv2, 1));
-      tv2 -= bw2;
+   v2 = bl1 -bw2;
+   while (v2 > min) {
+      fTMVec.push_back(TM_t(v2, 1));
+      v2 -= bw2;
    }
 
    fTMVec.push_back(TM_t(max, -1));

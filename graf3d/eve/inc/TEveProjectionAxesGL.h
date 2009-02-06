@@ -24,7 +24,7 @@ private:
    TEveProjectionAxesGL(const TEveProjectionAxesGL&);            // Not implemented
    TEveProjectionAxesGL& operator=(const TEveProjectionAxesGL&); // Not implemented
 
-   Bool_t               GetRange(Int_t ax, Float_t frustMin, Float_t frustMax, Float_t& start, Float_t& en) const;
+   void                 GetRange(Int_t ax, Float_t frustMin, Float_t frustMax, Float_t& start, Float_t& en) const;
    void                 SplitInterval(Float_t x1, Float_t x2, Int_t axis) const;
    void                 SplitIntervalByPos(Float_t min, Float_t max, Int_t axis)const;
    void                 SplitIntervalByVal(Float_t min, Float_t max, Int_t axis)const;
