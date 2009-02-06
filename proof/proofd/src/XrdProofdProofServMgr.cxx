@@ -1987,7 +1987,7 @@ int XrdProofdProofServMgr::Recover(XpdClientSessions *cl)
    while (nps--) {
 
       { XrdSysMutexHelper mhp(cl->fMutex); xps = cl->fProofServs.front();
-        cl->fProofServs.pop_front(); cl->fProofServs.push_back(xps); }
+        cl->fProofServs.remove(xps); cl->fProofServs.push_back(xps); }
 
       // Short steps of 1 sec
       if (Accept(xps, 1, emsg) != 0) {

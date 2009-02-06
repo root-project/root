@@ -4287,17 +4287,25 @@ bool XrdSecProtocolgsi::ServerCertNameOK(const char *subject, XrdOucString &emsg
    int cnidx = srvsubj.find("CN=");
    if (cnidx != STR_NPOS) srvcn.assign(srvsubj, cnidx + 3);
 
-   // Always check if the server CN is in the standard form "*/<target host name>"
+   // Always check if the server CN is in the standard form "[*/]<target host name>[/*]"
    if (Entity.host) {
-      String defcn("*/");
-      defcn += Entity.host;
-      if (srvcn.matches(defcn.c_str()) > 0) allowed = 1;
+      if (srvcn != (const char *) Entity.host) {
+         int ih = srvcn.find((const char *) Entity.host);
+         if (ih == 0 || (ih > 0 && srvcn[ih-1] == '/')) {
+            ih += strlen(Entity.host);
+            if (ih >= srvcn.length() ||
+                srvcn[ih] == '\0' || srvcn[ih] == '/') allowed = 1;
+         }
+      } else {
+         allowed = 1;
+      }
       // Update the error msg, if the case
       if (!allowed) {
          if (emsg.length() <= 0) {
             emsg = "server certificate CN '"; emsg += srvcn;
             emsg += "' does not match the expected format(s):";
          }
+         String defcn("[*/]"); defcn += Entity.host; defcn += "[/*]";
          emsg += " '"; emsg += defcn; emsg += "' (default)";
       }
    }
