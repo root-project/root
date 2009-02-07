@@ -2764,7 +2764,9 @@ static G__value G__exec_loop(char *forinit,char *condition,int naction,char **fo
    //
    //  Allow a single bytecode error message.
    //
+#ifdef G__ASM_DBG
    int dispstat = 0;
+#endif
    //
    //  Remember old if/switch state, change to dowhile state.
    //
@@ -4908,7 +4910,7 @@ int Cint::Internal::G__skip_comment_peek()
 ***********************************************************************/
 G__value Cint::Internal::G__exec_statement(int *mparen)
 {
-   int c = 0;
+   int current_char = 0;
    char* conststring = 0;
    int iout = 0;
    int spaceflag = 0;
@@ -4937,18 +4939,18 @@ G__value Cint::Internal::G__exec_statement(int *mparen)
       }
       fake_space = 0;
       if (add_fake_space && !double_quote && !single_quote) {
-         c = ' ';
+         current_char = ' ';
          add_fake_space = 0;
          fake_space = 1;
       }
       else {
-         c = G__fgetc();
+         current_char = G__fgetc();
       }
       discard_space = 0;
 read_again:
       statement[iout] = '\0';
     
-      switch( c ) {
+      switch( current_char ) {
 
 #ifdef G__OLDIMPLEMENTATIONxxxx_YET
          case ',' : /* column */
@@ -4977,7 +4979,7 @@ read_again:
             commentflag=0;
             /* ignore these character */
             if(single_quote || double_quote!=0) {
-               statement[iout++] = c ;
+               statement[iout++] = current_char ;
             }
             else {
 after_replacement:
@@ -4992,7 +4994,7 @@ G__preproc_again:
                   if ((statement[0] == '#') && isdigit(statement[1])) {
                      // -- Handle preprocessor directive "#<number> <filename>", a CINT extension to the standard.
                      // -- # [line] <[filename]>
-                     int stat = G__setline(statement, c, &iout);
+                     int stat = G__setline(statement, current_char, &iout);
                      if (stat) {
                         goto G__preproc_again;
                      }
@@ -5005,7 +5007,7 @@ G__preproc_again:
                         // -- Handle preprocessor directive "#<number> <filename>", a CINT extension to the standard.
                         // -- # [line] <[filename]>
                         if (statement[0] == '#') {
-                           int stat = G__setline(statement, c, &iout);
+                           int stat = G__setline(statement, current_char, &iout);
                            if (stat) {
                               goto G__preproc_again;
                            }
@@ -5017,7 +5019,7 @@ G__preproc_again:
                         // -- Handle preprocessor directive "#!", a CINT extension to the standard.
                         // -- comment '#! xxxxxx'
                         if (statement[0] == '#') {
-                           if ((c != '\n') && (c != '\r')) {
+                           if ((current_char != '\n') && (current_char != '\r')) {
                               G__fignoreline();
                            }
                            spaceflag = 0;
@@ -5052,12 +5054,12 @@ G__preproc_again:
                            G__StrBuf casepara_sb(G__ONELINE);
                            char *casepara = casepara_sb;
                            G__fgetstream(casepara, ":");
-                           c = G__fgetc();
-                           while (c == ':') {
+                           current_char = G__fgetc();
+                           while (current_char == ':') {
                               strcat(casepara, "::");
                               int lenxxx = strlen(casepara);
                               G__fgetstream(casepara + lenxxx, ":");
-                              c = G__fgetc();
+                              current_char = G__fgetc();
                            }
                            // Backup one character.
                            fseek(G__ifile.fp, -1, SEEK_CUR);
@@ -5331,8 +5333,8 @@ G__preproc_again:
                            break;
                         }
                         if (!strcmp(statement, "new")) {
-                           c = G__fgetspace();
-                           if (c == '(') {
+                           current_char = G__fgetspace();
+                           if (current_char == '(') {
                               fseek(G__ifile.fp, -1, SEEK_CUR);
                               if (G__dispsource) {
                                  G__disp_mask = 1;
@@ -5344,8 +5346,8 @@ G__preproc_again:
                               statement[iout] = '\0';
                            }
                            else {
-                              statement[0] = c;
-                              c = G__fgetstream_template(statement + 1, ";");
+                              statement[0] = current_char;
+                              current_char = G__fgetstream_template(statement + 1, ";");
                               result = G__new_operator(statement);
                               // Reset the statement buffer.
                               iout = 0;
@@ -5409,8 +5411,8 @@ G__preproc_again:
                         if (!strcmp(statement, "(new")) {
                            // -- Handle a parenthesized new expression.
                            // Check for placement new.
-                           c = G__fgetspace();
-                           if (c == '(') {
+                           current_char = G__fgetspace();
+                           if (current_char == '(') {
                               // -- We have a placement new expression.
                               // Backup one character.
                               // FIXME: The line number, dispmask, and macro expansion state may be wrong now!
@@ -5426,7 +5428,7 @@ G__preproc_again:
                               // Insert a fake space into the statement (right after the 'new').
                               statement[iout++] = ' ';
                               // Then add in the character that terminated the peek ahead.
-                              statement[iout++] = c;
+                              statement[iout++] = current_char;
                               // Skip showing the next character.
                               // FIXME: This is wrong!
                               if (G__dispsource) {
@@ -5434,9 +5436,9 @@ G__preproc_again:
                                  G__disp_mask = 1;
                               }
                               // Scan the reset of the parenthesised new expression.
-                              c = G__fgetstream_template(statement + iout, ")");
+                              current_char = G__fgetstream_template(statement + iout, ")");
                               iout = strlen(statement);
-                              statement[iout++] = c;
+                              statement[iout++] = current_char;
                               // And terminate the statement buffer.
                               statement[iout] = '\0';
                               // Flag that any whitespace should now trigger a semantic action.
@@ -5450,7 +5452,7 @@ G__preproc_again:
                            // Check if current security level allows the use of the goto statement.
                            G__CHECK(G__SECURE_GOTO, 1, return G__null);
                            // Scan in the goto label.
-                           c = G__fgetstream(statement, ";");
+                           current_char = G__fgetstream(statement, ";");
 #ifdef G__ASM
                            if (G__asm_wholefunction == G__ASM_FUNC_COMPILE) {
                               G__add_jump_bytecode(statement);
@@ -5622,19 +5624,19 @@ G__preproc_again:
                         if (!strcmp(statement, "delete")) {
                            // -- Handle 'delete ...'.
                            //                  ^
-                           int c = G__fgetstream(statement , "[;");
+                           int delete_char = G__fgetstream(statement , "[;");
                            iout = 0;
-                           if (c == '[') {
+                           if (delete_char == '[') {
                               if (!statement[0]) {
-                                 c = G__fgetstream(statement, "]");
-                                 c = G__fgetstream(statement, ";");
+                                 delete_char = G__fgetstream(statement, "]");
+                                 delete_char = G__fgetstream(statement, ";");
                                  iout = 1;
                               }
                               else {
                                  strcpy(statement + strlen(statement), "[");
-                                 c = G__fgetstream(statement + strlen(statement), "]");
+                                 delete_char = G__fgetstream(statement + strlen(statement), "]");
                                  strcpy(statement + strlen(statement), "]");
-                                 c = G__fgetstream(statement + strlen(statement), ";");
+                                 delete_char = G__fgetstream(statement + strlen(statement), ";");
                               }
                            }
                            // Note: iout == 1, if 'delete[]'
@@ -5682,12 +5684,12 @@ G__preproc_again:
                            // -- Handle 'extern ...' and 'EXTERN ...'.
                            //                  ^                ^
                            G__var_type = 'p';
-                           int c = G__fgetspace();
-                           if (c != '"') {
+                           int extern_char = G__fgetspace();
+                           if (extern_char != '"') {
                               // -- Handle 'extern var...' and 'EXTERN var...'.
                               // We just ignore it.
                               fseek(G__ifile.fp, -1, SEEK_CUR);
-                              if (c == '\n') {
+                              if (extern_char == '\n') {
                                  --G__ifile.line_number;
                               }
                               if (G__dispsource) {
@@ -5843,7 +5845,7 @@ G__preproc_again:
                               G__StrBuf oprbuf_sb(G__ONELINE);
                               char *oprbuf = oprbuf_sb;
                               iout = strlen(statement);
-                              c = G__fgetname(oprbuf, "(");
+                              current_char = G__fgetname(oprbuf, "(");
                               switch (oprbuf[0]) {
                                  case '*':
                                  case '&':
@@ -5854,7 +5856,7 @@ G__preproc_again:
                                     strcpy(statement + iout + 1, oprbuf);
                               }
                            }
-                           while (c != '(');
+                           while (current_char != '(');
                            iout = strlen(statement);
                            if (statement[iout-1] == ' ') {
                               --iout;
@@ -6030,7 +6032,7 @@ G__preproc_again:
       
          case ';':
             if (single_quote || double_quote) {
-               statement[iout++] = c;
+               statement[iout++] = current_char;
             }
             else {
                // -- We have reached the end of the statement.
@@ -6194,11 +6196,11 @@ G__preproc_again:
             ) {
                // -- Handle an assignment.
                statement[iout] = '=';
-               c = G__fgetstream_new(statement + iout + 1, ";,{}");
-               if ((c == '}') || (c == '{')) {
+               current_char = G__fgetstream_new(statement + iout + 1, ";,{}");
+               if ((current_char == '}') || (current_char == '{')) {
                   G__syntaxerror(statement);
                   --*mparen;
-                  c = ';';
+                  current_char = ';';
                }
                // Reset the statement buffer.
                iout = 0;
@@ -6222,13 +6224,13 @@ G__preproc_again:
                if (largestep) {
                   G__afterlargestep(&largestep);
                }
-               if ((!*mparen && (c == ';')) || (G__return > G__RETURN_NORMAL)) {
+               if ((!*mparen && (current_char == ';')) || (G__return > G__RETURN_NORMAL)) {
                   return result;
                }
             }
             else if (G__prerun && !single_quote && !double_quote) {
-               c = G__fignorestream(";,}");
-               if ((c == '}') && *mparen) {
+               current_char = G__fignorestream(";,}");
+               if ((current_char == '}') && *mparen) {
                   --*mparen;
                }
                // Reset the statement buffer.
@@ -6237,7 +6239,7 @@ G__preproc_again:
                spaceflag = 0;
             }
             else {
-               statement[iout++] = c;
+               statement[iout++] = current_char;
                // Flag that any following whitespace should trigger a semantic action.
                spaceflag |= 1;
             }
@@ -6249,14 +6251,14 @@ G__preproc_again:
                return G__null;
             }
             // FIXME: We should test G__funcheader here as well!
-            statement[iout++] = c;
+            statement[iout++] = current_char;
             // Flag that any following whitespace should trigger a semantic action.
             spaceflag |= 1;
             break;
 
          case '(':
             //fprintf(stderr, "\nG__exec_statement: Enter left parenthesis case.\n");
-            statement[iout++] = c;
+            statement[iout++] = current_char;
             statement[iout] = '\0';
             if (single_quote || double_quote) {
                break;
@@ -6381,7 +6383,7 @@ G__preproc_again:
                         spaceflag = 0;
                      }
                      if (!strcmp(statement, "throw(")) {
-                        c = G__fignorestream(")");
+                        current_char = G__fignorestream(")");
                         // Reset the statement buffer.
                         iout = 0;
                         // Flag that any following whitespace does not trigger any semantic action.
@@ -6398,19 +6400,19 @@ G__preproc_again:
                         casepara[0] = '(';
                         {
                            int lencasepara = 1;
-                           c = G__fgetstream(casepara+lencasepara, ":");
-                           if (c==')') {
+                           current_char = G__fgetstream(casepara+lencasepara, ":");
+                           if (current_char == ')') {
                               lencasepara = strlen(casepara);
                               casepara[lencasepara] = ')';
                               ++lencasepara;
                               G__fgetstream(casepara+lencasepara, ":");
                            }
-                           c = G__fgetc();
-                           while (c == ':') {
+                           current_char = G__fgetc();
+                           while (current_char == ':') {
                               strcat(casepara, "::");
                               lencasepara = strlen(casepara);
                               G__fgetstream(casepara + lencasepara, ":");
-                              c = G__fgetc();
+                              current_char = G__fgetc();
                            }
                         }
                         // Backup one character.
@@ -6526,12 +6528,12 @@ G__preproc_again:
                ) {
                   // Read to 'func(xxxxxx)'
                   //                     ^
-                  c = G__fgetstream_new(statement + iout , ")");
+                  current_char = G__fgetstream_new(statement + iout , ")");
                   iout = strlen(statement);
-                  statement[iout++] = c;
+                  statement[iout++] = current_char;
                   statement[iout] = '\0';
                   // Skip any following whitespace.
-                  c = G__fgetspace();
+                  current_char = G__fgetspace();
                   // if 'func(xxxxxx) \n    nextexpr'   macro
                   // if 'func(xxxxxx) ;'                func call
                   // if 'func(xxxxxx) operator xxxxx'   func call + operator
@@ -6539,8 +6541,8 @@ G__preproc_again:
                   if (!strncmp(statement, "new ", 4) || !strncmp(statement, "new(", 4)) {
                      // -- We have a new expression, either placement or parenthesized typename.
                      // Grab the rest of the line.
-                     statement[iout++] = c;
-                     c = G__fgetstream_template(statement + iout, ";");
+                     statement[iout++] = current_char;
+                     current_char = G__fgetstream_template(statement + iout, ";");
                      // Find the position of the first open parenthesis.
                      char* pnew = strchr(statement, '(');
                      G__ASSERT(pnew);
@@ -6551,12 +6553,12 @@ G__preproc_again:
                   else {
                      // -- Evaluate the expression which contains the function call.
                      //fprintf(stderr, "G__exec_statement: Calling G__exec_function: '%s'\n", statement);
-                     int notcalled = G__exec_function(statement, &c, &iout, &largestep, &result);
+                     int notcalled = G__exec_function(statement, &current_char, &iout, &largestep, &result);
                      if (notcalled) {
                         return G__null;
                      }
                   }
-                  if ((!*mparen && (c == ';')) || (G__return > G__RETURN_NON)) {
+                  if ((!*mparen && (current_char == ';')) || (G__return > G__RETURN_NON)) {
                      return result;
                   }
                   // Reset the statement buffer.
@@ -6566,9 +6568,9 @@ G__preproc_again:
                }
                else if (iout > 3) {
                   // -- Nope, just a parenthesized construct, accumulate it and keep going.
-                  c = G__fgetstream_new(statement + iout, ")");
+                  current_char = G__fgetstream_new(statement + iout, ")");
                   iout = strlen(statement);
-                  statement[iout++] = c;
+                  statement[iout++] = current_char;
                }
             }
             else if (!*mparen && (iout == 3) && !strcmp(statement, "if(")) {
@@ -6594,19 +6596,19 @@ G__preproc_again:
                casepara[0] = '(';
                {
                   int lencasepara = 1;
-                  c = G__fgetstream(casepara+lencasepara, ":");
-                  if (c==')') {
+                  current_char = G__fgetstream(casepara+lencasepara, ":");
+                  if (current_char==')') {
                      lencasepara = strlen(casepara);
                      casepara[lencasepara] = ')';
                      ++lencasepara;
                      G__fgetstream(casepara+lencasepara, ":");
                   }
-                  c = G__fgetc();
-                  while (c == ':') {
+                  current_char = G__fgetc();
+                  while (current_char == ':') {
                      strcat(casepara, "::");
                      lencasepara = strlen(casepara);
                      G__fgetstream(casepara + lencasepara, ":");
-                     c = G__fgetc();
+                     current_char = G__fgetc();
                   }
                }
                // Backup one character.
@@ -6633,8 +6635,8 @@ G__preproc_again:
                // -- We are skipping code.
                //fprintf(stderr, "G__exec_statement: Skipping a parenthesized construct.\n");
                int paren_start_line = G__ifile.line_number;
-               c = G__fignorestream(")");
-               if (c != ')') {
+               current_char = G__fignorestream(")");
+               if (current_char != ')') {
                   char* msg = new char[70];
                   sprintf(msg, "Error: Cannot find matching ')' for '(' on line %d.", paren_start_line);
                   G__genericerror(msg);
@@ -6655,7 +6657,7 @@ G__preproc_again:
                return G__start;
             }
             if (single_quote || double_quote) {
-               statement[iout++] = c;
+               statement[iout++] = current_char;
             }
             else {
                G__constvar = 0;
@@ -6712,7 +6714,7 @@ G__preproc_again:
       
          case '}':
             if (single_quote || double_quote) {
-               statement[iout++] = c;
+               statement[iout++] = current_char;
             }
             else {
                --*mparen;
@@ -6776,7 +6778,7 @@ G__preproc_again:
                G__fignorestream("}");
                return result;
             }
-            statement[iout++] = c;
+            statement[iout++] = current_char;
             // Flag that any following whitespace should trigger a semantic action.
             // FIXME: Why this strange value?
             spaceflag = 5;
@@ -6801,7 +6803,7 @@ G__preproc_again:
             if (!double_quote) {
                single_quote ^= 1;
             }
-            statement[iout++] = c;
+            statement[iout++] = current_char;
             // Flag that any following whitespace should trigger a semantic action.
             // FIXME: Why this strange value?
             spaceflag = 5;
@@ -6818,7 +6820,7 @@ G__preproc_again:
             }
             else {
                commentflag = 1;
-               statement[iout++] = c;
+               statement[iout++] = current_char;
                // Flag that any following whitespace should trigger a semantic action.
                spaceflag |= 1;
             }
@@ -6849,7 +6851,7 @@ G__preproc_again:
                }
             }
             else {
-               statement[iout++] = c;
+               statement[iout++] = current_char;
                // Flag that any following whitespace should trigger a semantic action.
                spaceflag |= 1;
                if (!double_quote && !single_quote) {
@@ -6859,7 +6861,7 @@ G__preproc_again:
             break;
 
          case '&':
-            statement[iout++] = c;
+            statement[iout++] = current_char;
             // Flag that any following whitespace should trigger a semantic action.
             spaceflag |= 1;
             if (!double_quote && !single_quote) {
@@ -6868,7 +6870,7 @@ G__preproc_again:
             break;
       
          case ':':
-            statement[iout++] = c;
+            statement[iout++] = current_char;
             // Flag that any following whitespace should trigger a semantic action.
             spaceflag |= 1;
             if (!double_quote && !single_quote) {
@@ -6935,30 +6937,30 @@ G__preproc_again:
                   //   x  cout<<a;   this is rare.
                   //   O  Vector<Array<T> >  This has to be handled here
                   //
-                  statement[iout++] = c;
-                  c = G__fgetstream_template(statement + iout, ">");
+                  statement[iout++] = current_char;
+                  current_char = G__fgetstream_template(statement + iout, ">");
                   G__ASSERT(c == '>');
                   iout = strlen(statement);
                   if (statement[iout-1] == '>') {
                      statement[iout++] = ' ';
                   }
-                  statement[iout++] = c;
+                  statement[iout++] = current_char;
                   spaceflag = 1;
                   // Try to accept statements with no space between
                   // the closing '>' and the identifier. Ugly, though.
                   {
                      fpos_t xpos;
                      fgetpos(G__ifile.fp, &xpos);
-                     c = G__fgetspace();
+                     current_char = G__fgetspace();
                      fsetpos(G__ifile.fp, &xpos);
-                     if (isalpha(c) || (c == '_')) {
-                        c = ' ';
+                     if (isalpha(current_char) || (current_char == '_')) {
+                        current_char = ' ';
                         goto read_again;
                      }
                   }
                }
                else {
-                  statement[iout++] = c;
+                  statement[iout++] = current_char;
                   // Flag that any following whitespace should trigger a semantic action.
                   spaceflag |= 1;
                }
@@ -7001,29 +7003,29 @@ G__preproc_again:
             return G__null;
 
          case '\\':
-            statement[iout++] = c;
+            statement[iout++] = current_char;
             // Flag that any following whitespace should trigger a semantic action.
             spaceflag |= 1;
-            c = G__fgetc();
+            current_char = G__fgetc();
             // Continue to default case.
 
          default:
             //fprintf(stderr, "G__exec_statement: Enter default case.\n");
             // Make sure that the delimiters that have not been treated
             // in the switch statement do drop the discarded_space.
-            if (discarded_space && (c != '[') && (c != ']') && iout && (statement[iout-1] != ':')) {
+            if (discarded_space && (current_char != '[') && (current_char != ']') && iout && (statement[iout-1] != ':')) {
                // -- Since the character following a discarded space
                // is *not* a separator, we have to keep the space.
                statement[iout++] = ' ';
             }
-            statement[iout++] = c;
+            statement[iout++] = current_char;
             // Flag that any following whitespace should trigger a semantic action.
             spaceflag |= 1;
 #ifdef G__MULTIBYTE
-            if (G__IsDBCSLeadByte(c)) {
-               c = G__fgetc();
-               G__CheckDBCS2ndByte(c);
-               statement[iout++] = c;
+            if (G__IsDBCSLeadByte(current_char)) {
+               current_char = G__fgetc();
+               G__CheckDBCS2ndByte(current_char);
+               statement[iout++] = current_char;
             }
 #endif // G__MULTIBYTE
             break;

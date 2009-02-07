@@ -861,11 +861,11 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
          int single_quote = 0;
          int double_quote = 0;
          while (item_cursor < lenitem) {
-            char c = item[item_cursor];
-            if ((c == ']') && !nest && !single_quote && !double_quote) {
+            char peek = item[item_cursor];
+            if ((peek == ']') && !nest && !single_quote && !double_quote) {
                break;
             }
-            switch (c) {
+            switch (peek) {
                case '"':
                   if (!single_quote) {
                      double_quote ^= 1;
@@ -891,7 +891,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
                   }
                   break;
             }
-            parameter[paran][idx++] = c;
+            parameter[paran][idx++] = peek;
             ++item_cursor;
          }
          // Skip the terminating square bracket.
@@ -1042,12 +1042,12 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
                G__StrBuf protect_temp_sb(G__ONELINE);
                char *protect_temp = protect_temp_sb;
                char* protect_struct_offset = G__store_struct_offset;
-               int done = 0;
+               int local_done = 0;
                G__store_struct_offset = G__globalvarpointer;
                G__globalvarpointer = G__PVOID;
                std::sprintf(protect_temp, "~%s()", G__tagnum.Name().c_str());
                G__fprinterr(G__serr, ". %s called\n", protect_temp);
-               G__getfunction(protect_temp, &done, G__TRYDESTRUCTOR);
+               G__getfunction(protect_temp, &local_done, G__TRYDESTRUCTOR);
                G__store_struct_offset = protect_struct_offset;
             }
             G__genericerror(0);
@@ -1997,13 +1997,13 @@ G__value Cint::Internal::G__letstructmem(int store_var_type, const char* /*varna
    //
    if (!G__value_typenum(result).FinalType().IsPointer() && (objptr == 2)) {
       char buf[30] = "operator->()";
-      int flag = 0;
+      int local_flag = 0;
       ::Reflex::Scope store_tagnum = G__tagnum;
       char* store_struct_offset = G__store_struct_offset;
       G__set_G__tagnum(result);
       G__store_struct_offset = (char*) result.obj.i;
-      result = G__getfunction(buf, &flag, G__TRYMEMFUNC);
-      if (flag) {
+      result = G__getfunction(buf, &local_flag, G__TRYMEMFUNC);
+      if (local_flag) {
          G__set_G__tagnum(result);
          G__store_struct_offset = (char*) result.obj.i;
 #ifdef G__ASM
@@ -4884,7 +4884,11 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
 #undef G__ALLOC_VAR_REF
 
 //______________________________________________________________________________
+#ifdef G__ASM_DBG
 static int Cint::Internal::G__asm_gen_stvar(long arg_G__struct_offset, const ::Reflex::Member& var, int paran, const char* item, long store_struct_offset, int var_type, G__value* /*presult*/)
+#else
+static int Cint::Internal::G__asm_gen_stvar(long arg_G__struct_offset, const ::Reflex::Member& var, int paran, const char* /* item */, long store_struct_offset, int var_type, G__value* /*presult*/)
+#endif
 {
    // -- FIXME: Describe me!
    ::Reflex::Type type(var.TypeOf().FinalType());
@@ -6125,7 +6129,7 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                      char *refopr = refopr_sb;
                      char* store_struct_offsetX = G__store_struct_offset;
                      ::Reflex::Scope store_tagnumX = G__tagnum;
-                     int done = 0;
+                     int local_done = 0;
                      int store_asm_exec = G__asm_exec;
                      int store_asm_noverflow = G__asm_noverflow;
                      G__asm_exec = 0;
@@ -6133,12 +6137,12 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                      G__store_struct_offset = local_G__struct_offset + ((size_t) G__get_offset(variable)) + (linear_index * variable.TypeOf().RawType().SizeOf());
                      G__set_G__tagnum(variable.TypeOf());
                      strcpy(refopr, "operator*()");
-                     result = G__getfunction(refopr, &done, G__TRYMEMFUNC);
+                     result = G__getfunction(refopr, &local_done, G__TRYMEMFUNC);
                      G__asm_exec = store_asm_exec;
                      G__asm_noverflow = store_asm_noverflow;
                      G__tagnum = store_tagnumX;
                      G__store_struct_offset = store_struct_offsetX;
-                     if (!done) {
+                     if (!local_done) {
                         G__reference_error(item);
                      }
                   }
@@ -6416,15 +6420,15 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                   *known = 0;
                }
                else { // We got something, change the result type.
-                  Reflex::Scope varscope = variable.DeclaringScope();
+                  Reflex::Scope local_varscope = variable.DeclaringScope();
                   std::string name = variable.Name();
                   char* offset = G__get_offset(variable);
                   G__RflxVarProperties* prop = G__get_properties(variable);
-                  varscope.RemoveDataMember(variable);
+                  local_varscope.RemoveDataMember(variable);
                   if (G__var_type == 'v') {
                      G__value_typenum(result) = G__deref(G__value_typenum(result));
                   }
-                  variable = G__add_scopemember(varscope, name.c_str(), G__value_typenum(result), 0, (size_t)offset, offset, G__PUBLIC, prop->statictype);
+                  variable = G__add_scopemember(local_varscope, name.c_str(), G__value_typenum(result), 0, (size_t)offset, offset, G__PUBLIC, prop->statictype);
                   *G__get_properties(variable) = *prop; // Overwrite the new properties with the previous ones.
                }
                switch (G__var_type) {
@@ -7851,13 +7855,13 @@ extern "C" int G__deletevariable(const char* varname)
             }
             else {
                int size = G__struct.size[G__get_tagnum(G__tagnum)];
-               int i = G__get_varlabel(var.TypeOf(), 1) /* number of elements */;
-               if (!i) {
-                  i = 1;
+               int nelem = G__get_varlabel(var.TypeOf(), 1) /* number of elements */;
+               if (!nelem) {
+                  nelem = 1;
                }
-               --i;
-               for (; i >= 0; --i) {
-                  G__store_struct_offset = G__get_offset(var) + (i * size);
+               --nelem;
+               for (; nelem >= 0; --nelem) {
+                  G__store_struct_offset = G__get_offset(var) + (nelem * size);
                   if (G__dispsource) {
                      G__fprinterr(G__serr, "\n0x%lx.%s", G__store_struct_offset, temp.c_str());
                   }
