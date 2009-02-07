@@ -54,7 +54,7 @@ extern "C" void G__set_allocunlockfunc(void (*f)())
 }
 
 //______________________________________________________________________________
-G__value Cint::Internal::G__new_operator(char* expression)
+G__value Cint::Internal::G__new_operator(const char* expression)
 {
    // Parsing routine to handle an operator new expression.
    //
@@ -116,7 +116,8 @@ G__value Cint::Internal::G__new_operator(char* expression)
    //  into the expression just after the
    //  new-placement, if any.
    //
-   char* type = 0;
+   G__StrBuf type_sb(strlen(expression));
+   char* type = type_sb;
    char* memarena = 0;
    bool arenaflag = false;
    {
@@ -146,7 +147,7 @@ G__value Cint::Internal::G__new_operator(char* expression)
 #endif // G__ASM
          // --
       }
-      type = expression + p;
+      strcpy(type,expression + p);
    }
    //
    //  Get the position of any initializer expression,
@@ -171,7 +172,7 @@ G__value Cint::Internal::G__new_operator(char* expression)
    if (initializer) {
       *initializer = 0;
    }
-   char* basictype = type; // The unqualified typename.
+   const char* basictype = type; // The unqualified typename.
    {
       unsigned int len = strlen(type);
       unsigned int nest = 0;
@@ -872,7 +873,7 @@ G__value Cint::Internal::G__new_operator(char* expression)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__getarrayindex(char* indexlist)
+int Cint::Internal::G__getarrayindex(const char* indexlist)
 {
    // [x][y][z]     get x*y*z
    G__StrBuf index_sb(G__ONELINE);
@@ -910,7 +911,7 @@ int Cint::Internal::G__getarrayindex(char* indexlist)
 }
 
 //______________________________________________________________________________
-void Cint::Internal::G__delete_operator(char* expression, int isarray)
+void Cint::Internal::G__delete_operator(const char* expression, int isarray)
 {
    // Parsing routine to handle a delete operator expression.
    char *store_struct_offset; /* used to be int */

@@ -6922,7 +6922,7 @@ G__value Cint::Internal::G__getstructmem(int store_var_type, char* varname, char
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__getthis(G__value* result7, char* varname, char* item)
+int Cint::Internal::G__getthis(G__value* result7, const char* varname, const char* item)
 {
    // -- FIXME: Describe me!
    if (G__exec_memberfunc && !strcmp(varname, "this")) {
@@ -7315,7 +7315,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
    varname.reserve(2 * strlen(varname_in));
    varname = (char*) varname_in;
 #ifdef G__ROOT
-   if ((varname[0] == '$') && G__GetSpecialObject && (G__GetSpecialObject != G__getreserved)) {
+   if ((varname[0] == '$') && G__GetSpecialObject && (G__GetSpecialObject != (G__value(*)(char*, void**, void**))G__getreserved)) {
       //varname = ((char*) varname_in) + 1;
       //--
       //--

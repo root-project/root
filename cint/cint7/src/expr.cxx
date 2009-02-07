@@ -38,11 +38,11 @@ static int G__getoperator(int newoperator, int oldoperator);
 //
 
 //______________________________________________________________________________
-static void G__getiparseobject(G__value* result, char* item)
+static void G__getiparseobject(G__value* result, const char* item)
 {
    // --
    // '_$trc_[tagnum]_[addr]'
-   char* xtmp = item + 6;
+   const char* xtmp = item + 6;
    char* xx = strchr(xtmp, '_');
    int type = item[2];
    int reftype = (int) (item[3] - '0');
@@ -64,7 +64,7 @@ static void G__getiparseobject(G__value* result, char* item)
 }
 
 //______________________________________________________________________________
-static G__value G__conditionaloperator(G__value defined, char* expression, int ig1, char* ebuf)
+static G__value G__conditionaloperator(G__value defined, const char* expression, int ig1, char* ebuf)
 {
    // -- Evaluate a?b:c operator.
    int tempop = 0;
@@ -182,7 +182,7 @@ static int G__iscastexpr_body(char* ebuf, int lenbuf)
 
 #ifdef G__PTR2MEMFUNC
 //______________________________________________________________________________
-static int G__getpointer2memberfunc(char* item, G__value* presult)
+static int G__getpointer2memberfunc(const char* item, G__value* presult)
 {
    char* p = strstr(item, "::");
    if (!p) {
@@ -191,7 +191,7 @@ static int G__getpointer2memberfunc(char* item, G__value* presult)
    int hash = 0;
    char* scope_struct_offset = 0;
    int scope_tagnum = -1;
-   G__scopeoperator(item, &hash, &scope_struct_offset, &scope_tagnum);
+   G__scopeoperator(/*FIXME*/(char*)item, &hash, &scope_struct_offset, &scope_tagnum);
    if ((scope_tagnum < 0) || (scope_tagnum >= G__struct.alltag)) {
       return 0;
    }
@@ -843,7 +843,7 @@ static void G__exec_binopr(G__expr_parse_state* parse_state, int oprin, int prec
 }
 
 //______________________________________________________________________________
-G__value Cint::Internal::G__getexpr(char* expression)
+G__value Cint::Internal::G__getexpr(const char* expression)
 {
    // Parse and evaluate an expression.  Spaces must have been removed from the expression.
    //
@@ -1973,7 +1973,7 @@ G__value Cint::Internal::G__getexpr(char* expression)
 #undef G__PREC_COMMA
 
 //______________________________________________________________________________
-G__value Cint::Internal::G__getprod(char* expression1)
+G__value Cint::Internal::G__getprod( char* expression1)
 {
    int length1 = strlen(expression1);
    if (!length1) {
@@ -2096,7 +2096,7 @@ G__value Cint::Internal::G__getprod(char* expression1)
 }
 
 //______________________________________________________________________________
-G__value Cint::Internal::G__getitem(char* item)
+G__value Cint::Internal::G__getitem(const char* item)
 {
    int known;
    G__value result3;
@@ -2190,7 +2190,7 @@ G__value Cint::Internal::G__getitem(char* item)
 #endif // G__ASM
          break;
       case '\'':
-         result3 = G__strip_singlequotation(item);
+         result3 = G__strip_singlequotation(item); 
          G__value_typenum(result3) = G__modify_type(G__value_typenum(result3), 0, 0, G__CONSTVAR, 0, 0);
 #ifdef G__ASM
          if (G__asm_noverflow) { // We are generating bytecode.
@@ -2239,7 +2239,7 @@ G__value Cint::Internal::G__getitem(char* item)
          //  Try a variable.
          //
          //fprintf(stderr, "G__get_item: Lookup up variable '%s' in scope '%s'\n", item, G__p_local.Name(Reflex::SCOPED).c_str());
-         result3 = G__getvariable(item, &known, ::Reflex::Scope::GlobalScope(), G__p_local);
+         result3 = G__getvariable(/*FIXME*/(char*)item, &known, ::Reflex::Scope::GlobalScope(), G__p_local);
          if (known) {
             G__var_typeB = 'p';
             return result3;
@@ -2292,7 +2292,7 @@ G__value Cint::Internal::G__getitem(char* item)
             (G__dispmsg < G__DISPROOTSTRICT) &&
 #endif // G__ROOT
             G__GetSpecialObject &&
-            (G__GetSpecialObject != G__getreserved) &&
+            (G__GetSpecialObject != ((G__value(*)(char*, void**, void**)) G__getreserved)) &&
             !G__gettingspecial &&
             (item[0] != '$')
          ) {

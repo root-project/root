@@ -1629,7 +1629,7 @@ extern "C" int G__loadfile(const char* filenamein)
    //
    // Get actual open file name.
    //
-   int pres = G__preprocessor(prepname, filename, G__cpp, G__macros, G__undeflist, G__ppopt, G__allincludepath);
+   int pres = G__preprocessor(prepname, filename, G__cpp, G__macros, /*FIXME*/(char*)G__undeflist, G__ppopt, G__allincludepath);
    if (pres) {
       G__fprinterr(G__serr, "Error: external preprocessing failed.");
       G__genericerror(0);

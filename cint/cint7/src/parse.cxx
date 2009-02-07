@@ -58,7 +58,7 @@ static G__value G__exec_do();
 static G__value G__exec_for();
 static G__value G__exec_while();
 static G__value G__exec_loop(char* forinit, char* condition, int naction, char** foraction);
-static G__value G__return_value(char* statement);
+static G__value G__return_value(const char* statement);
 static int G__search_gotolabel(char* label, fpos_t* pfpos, int line, int* pmparen);
 static int G__label_access_scope(char* statement, int* piout, int* pspaceflag, int mparen);
 static int G__IsFundamentalDecl();
@@ -325,7 +325,9 @@ static int G__setline(char* statement, int c, int* piout)
                }
             }
             if ((c != '\n') && (c != '\r')) {
-               while (((c = G__fgetc()) != '\n') && (c != '\r'));
+               while (((c = G__fgetc()) != '\n') && (c != '\r')) {
+                  // intentionally empty
+               }
             }
          }
       }
@@ -3327,7 +3329,7 @@ static G__value G__exec_loop(char *forinit,char *condition,int naction,char **fo
 *    G__exec_statement   'return result;'
 *
 ***********************************************************************/
-static G__value G__return_value(char* statement)
+static G__value G__return_value(const char* statement)
 {
    // -- Handle the return statement.
    G__value buf;
@@ -4337,7 +4339,7 @@ void Cint::Internal::G__display_tempobject(const char* action)
 * Search for macro symbol
 *
 ***********************************************************************/
-int Cint::Internal::G__defined_macro(char *macro)
+int Cint::Internal::G__defined_macro(const char *macro)
 {
    int hash,hashout;
    G__hash(macro,hash,hashout);
@@ -4650,7 +4652,7 @@ int Cint::Internal::G__pp_if()
             ++len;
          }
    }
-   while (len > 0 && '\\' == condition[len - 1] || c == ' ');
+   while ( (len > 0 && '\\' == condition[len - 1]) || c == ' ');
    {
       char *p;
       while ((p = strstr(condition, "\\\n")) != 0) {

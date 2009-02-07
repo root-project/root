@@ -1274,12 +1274,12 @@ void Cint::Internal::G__setPROJNAME(char* proj)
 
 //______________________________________________________________________________
 #ifdef G__GENWINDEF
-void Cint::Internal::G__setCINTLIBNAME(char* cintlib)
+void Cint::Internal::G__setCINTLIBNAME(const char* cintlib)
 {
    strcpy(G__CINTLIBNAME, cintlib);
 }
 #else
-void Cint::Internal::G__setCINTLIBNAME(char* /*cintlib*/)
+void Cint::Internal::G__setCINTLIBNAME(const char* /*cintlib*/)
 {}
 #endif
 

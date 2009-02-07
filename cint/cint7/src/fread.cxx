@@ -104,7 +104,7 @@ static int G__isstoragekeyword(char *buf)
 *    ----------------^        return(';');
 *
 ***********************************************************************/
-int Cint::Internal::G__fgetname_template(char *string,char *endmark)
+int Cint::Internal::G__fgetname_template(char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -346,7 +346,7 @@ int Cint::Internal::G__fgetname_template(char *string,char *endmark)
 *   G__exec_statement(&brace_level);
 *
 * char *string       : string until the endmark appears
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *  read source file until specified endmark char appears.
 *
@@ -369,7 +369,7 @@ int Cint::Internal::G__fgetname_template(char *string,char *endmark)
 *     'func(new xxx);'
 *
 ***********************************************************************/
-int Cint::Internal::G__fgetstream_newtemplate(char *string,char *endmark)
+int Cint::Internal::G__fgetstream_newtemplate(char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -557,7 +557,7 @@ int Cint::Internal::G__fgetstream_newtemplate(char *string,char *endmark)
 * G__fgetstream_template(string,endmark)
 *
 * char *string       : string until the endmark appears
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *  read source file until specified endmark char appears.
 *
@@ -577,7 +577,7 @@ int Cint::Internal::G__fgetstream_newtemplate(char *string,char *endmark)
 *      -----^    *string="abc"; return(')');
 *
 ***********************************************************************/
-int Cint::Internal::G__fgetstream_template(char *string,char *endmark)
+int Cint::Internal::G__fgetstream_template(char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -779,14 +779,14 @@ int Cint::Internal::G__fgetstream_template(char *string,char *endmark)
 * char *source;      : source string. If NULL, read from input file
 * int *isrc;         : char position of the *source if source!=NULL
 * char *string       : substring until the endmark appears
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *
 *  Get substring of char *source; until one of endmark char is found.
 * Return string is not used.
 *  Only used in G__getexpr() to handle 'cond?true:faulse' opeartor.
 *
-*   char *endmark=";";
+*   const char *endmark=";";
 *   char *source="abcdefg * hijklmn ;   "
 *                 ------------------^      *string="abcdefg*hijklmn"
 *
@@ -794,7 +794,7 @@ int Cint::Internal::G__fgetstream_template(char *string,char *endmark)
 *                 -----------------^       *string="abcdefg*hijklmn"
 *
 ***********************************************************************/
-int Cint::Internal::G__getstream_template(char *source,int *isrc,char *string,char *endmark)
+int Cint::Internal::G__getstream_template(const char *source,int *isrc,char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -1064,7 +1064,7 @@ int Cint::Internal::G__fgetspace_peek()
 * G__fgetvarname(string,endmark)
 *
 ***********************************************************************/
-int Cint::Internal::G__fgetvarname(char *string,char *endmark)
+int Cint::Internal::G__fgetvarname(char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -1254,7 +1254,7 @@ int Cint::Internal::G__fgetvarname(char *string,char *endmark)
 *
 *
 * char *string       : string until the endmark appears
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *   read one non-space char string upto next space char or endmark
 *  char.
@@ -1274,7 +1274,7 @@ int Cint::Internal::G__fgetvarname(char *string,char *endmark)
 *    ----------------^        return(';');
 *
 ***********************************************************************/
-int Cint::Internal::G__fgetname(char *string,char *endmark)
+int Cint::Internal::G__fgetname(char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -1398,7 +1398,7 @@ int Cint::Internal::G__fgetname(char *string,char *endmark)
 *
 *
 * char *string       : string until the endmark appears
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *   read one non-space char string upto next space char or endmark
 *  char.
@@ -1418,7 +1418,7 @@ int Cint::Internal::G__fgetname(char *string,char *endmark)
 *    ----------------^        return(';');
 *
 ***********************************************************************/
-int Cint::Internal::G__getname(char *source,int *isrc,char *string,char *endmark)
+int Cint::Internal::G__getname(char *source,int *isrc,char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -1561,12 +1561,12 @@ static int G__getfullpath(char *string,char *pbegin,int i)
 /***********************************************************************
 * G__fdumpstream(string,endmark)
 * char *string       : string until the endmark appears
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *  This function is used only for reading pointer to function arguments.
 *    type (*)(....)  type(*p2f)(....)
 ***********************************************************************/
-int Cint::Internal::G__fdumpstream(char *string,char *endmark)
+int Cint::Internal::G__fdumpstream(char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -1742,7 +1742,7 @@ int Cint::Internal::G__fdumpstream(char *string,char *endmark)
 *
 *
 * char *string       : string until the endmark appears
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *
 *  read source file until specified endmark char appears.
@@ -1763,7 +1763,7 @@ int Cint::Internal::G__fdumpstream(char *string,char *endmark)
 *      -----^    *string="abc"; return(')');
 *
 ***********************************************************************/
-int Cint::Internal::G__fgetstream(char *string,char *endmark)
+int Cint::Internal::G__fgetstream(char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -1913,7 +1913,7 @@ int Cint::Internal::G__fgetstream(char *string,char *endmark)
 * G__fignorestream(endmark)
 *
 *
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *  skip source file until specified endmark char appears.
 * This function is identical to G__fgetstream() except it does not
@@ -1983,7 +1983,7 @@ void Cint::Internal::G__fgetstream_peek(char* string, int nchars)
 *   G__exec_statement(&brace_level);
 *
 * char *string       : string until the endmark appears
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *  read source file until specified endmark char appears.
 *
@@ -2006,7 +2006,7 @@ void Cint::Internal::G__fgetstream_peek(char* string, int nchars)
 *     'func(new xxx);'
 *
 ***********************************************************************/
-int Cint::Internal::G__fgetstream_new(char *string,char *endmark)
+int Cint::Internal::G__fgetstream_new(char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -2163,7 +2163,7 @@ int Cint::Internal::G__fgetstream_new(char *string,char *endmark)
 * G__fgetstream_spaces(string,endmark)
 *
 * char *string       : string until the endmark appears
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *  read source file until specified endmark char appears.
 *
@@ -2180,7 +2180,7 @@ int Cint::Internal::G__fgetstream_new(char *string,char *endmark)
 *      -----^    *string="abc"; return(')');
 *
 ***********************************************************************/
-int Cint::Internal::G__fgetstream_spaces(char *string,char *endmark)
+int Cint::Internal::G__fgetstream_spaces(char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -2325,14 +2325,14 @@ int Cint::Internal::G__fgetstream_spaces(char *string,char *endmark)
 * char *source;      : source string. If NULL, read from input file
 * int *isrc;         : char position of the *source if source!=NULL
 * char *string       : substring until the endmark appears
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *
 *  Get substring of char *source; until one of endmark char is found.
 * Return string is not used.
 *  Only used in G__getexpr() to handle 'cond?true:faulse' opeartor.
 *
-*   char *endmark=";";
+*   const char *endmark=";";
 *   char *source="abcdefg * hijklmn ;   "
 *                 ------------------^      *string="abcdefg*hijklmn"
 *
@@ -2340,7 +2340,7 @@ int Cint::Internal::G__fgetstream_spaces(char *string,char *endmark)
 *                 -----------------^       *string="abcdefg*hijklmn"
 *
 ***********************************************************************/
-extern "C" int G__getstream(char *source,int *isrc,char *string,char *endmark)
+extern "C" int G__getstream(const char *source,int *isrc,char *string,const char *endmark)
 {
   short i=0,l;
   int c,prev;
@@ -2456,7 +2456,7 @@ extern "C" int G__getstream(char *source,int *isrc,char *string,char *endmark)
 *     ----------------------------^
 *
 ***********************************************************************/
-int Cint::Internal::G__fignorestream(char *endmark)
+int Cint::Internal::G__fignorestream(const char *endmark)
 {
   short l;
   int c,prev;
@@ -2558,7 +2558,7 @@ int Cint::Internal::G__fignorestream(char *endmark)
 * G__ignorestream(source,isrc,endmark)
 *
 *
-* char *endmark      : specify endmark characters
+* const char *endmark      : specify endmark characters
 *
 *  skip source file until specified endmark char appears.
 * This function is identical to G__fgetstream() except it does not
@@ -2578,7 +2578,7 @@ int Cint::Internal::G__fignorestream(char *endmark)
 *      -----^                   return(')');
 *
 ***********************************************************************/
-int Cint::Internal::G__ignorestream(char *source,int *isrc,char *endmark)
+int Cint::Internal::G__ignorestream(char *source,int *isrc,const char *endmark)
 {
   short l;
   int c,prev;

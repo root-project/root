@@ -120,8 +120,8 @@ extern "C" void G__set_sym_underscore(int x) { G__sym_underscore=x; }
 extern "C" int G__get_sym_underscore() { return(G__sym_underscore); }
 
 #ifndef __CINT__
-extern "C" G__SHLHANDLE G__dlopen(char *path);
-extern "C" void *G__shl_findsym(G__SHLHANDLE *phandle,char *sym,short type);
+extern "C" G__SHLHANDLE G__dlopen(const char *path);
+extern "C" void *G__shl_findsym(G__SHLHANDLE *phandle,const char *sym,short type);
 extern "C" int G__dlclose(G__SHLHANDLE handle);
 #endif
 
@@ -221,7 +221,7 @@ extern "C" void G__Set_RTLD_LAZY() {
 * G__dlopen()
 *
 ***********************************************************************/
-extern "C" G__SHLHANDLE G__dlopen(char *path)
+extern "C" G__SHLHANDLE G__dlopen(const char *path)
 {
   G__SHLHANDLE handle;
 #ifdef G__SHAREDLIB
@@ -310,9 +310,9 @@ TYPE_PROCEDURE);
 *
 ***********************************************************************/
 #if defined(__hpux) || defined(_HIUX_SOURCE)
-extern "C" void *G__shl_findsym(G__SHLHANDLE *phandle,char *sym,short type)
+extern "C" void *G__shl_findsym(G__SHLHANDLE *phandle,const char *sym,short type)
 #else
-extern "C" void *G__shl_findsym(G__SHLHANDLE *phandle,char *sym,short /* type */)
+extern "C" void *G__shl_findsym(G__SHLHANDLE *phandle,const char *sym,short /* type */)
 #endif
 {
   void *func = (void*)NULL;
@@ -609,7 +609,7 @@ extern int G__call_setup_funcs();
 /**************************************************************************
  * G__show_dllrev
  **************************************************************************/
-extern "C" void G__show_dllrev(char *shlfile,int (*sharedlib_func)())
+extern "C" void G__show_dllrev(const char *shlfile,int (*sharedlib_func)())
 {
   G__fprinterr(G__serr,"%s:DLLREV=%d\n",shlfile,(*sharedlib_func)());
   G__fprinterr(G__serr,"  This cint accepts DLLREV=%d~%d and creates %d\n"
@@ -621,7 +621,7 @@ extern "C" void G__show_dllrev(char *shlfile,int (*sharedlib_func)())
 * G__SetCIntApiPointers
 *
 **************************************************************************/
-extern "C" void G__SetCintApiPointers(G__SHLHANDLE *pslhandle,char *fname)
+extern "C" void G__SetCintApiPointers(G__SHLHANDLE *pslhandle,const char *fname)
 {
   typedef void (*G__SetCintApiPointers_t)(void* a[G__NUMBER_OF_API_FUNCTIONS]);
   G__SetCintApiPointers_t SetCintApi = \
@@ -645,6 +645,7 @@ extern "C" void G__SetCintApiPointers(G__SHLHANDLE *pslhandle,char *fname)
 *
 * Comment:
 *  This function can handle both old and new style DLL.
+*  This function will modify the input string.
 **************************************************************************/
 int Cint::Internal::G__shl_load(char *shlfile)
 {

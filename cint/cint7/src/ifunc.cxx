@@ -3359,7 +3359,7 @@ static int G__convert_param(G__param* libp, const ::Reflex::Member& func, G__fun
    char *store_struct_offset; /* used to be int */
    ::Reflex::Scope store_tagnum;
    int store_isconst;
-   int baseoffset;
+   int baseoffset = -1;
    G__value reg;
    int store_oprovld;
    int rewindflag = 0;

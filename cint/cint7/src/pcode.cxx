@@ -1796,7 +1796,7 @@ int Cint::Internal::G__asm_putint(int i)
 #endif // G__ASM
 
 //______________________________________________________________________________
-G__value Cint::Internal::G__getreserved(char* item , void** /* ptr */, void** /* ppdict */)
+G__value Cint::Internal::G__getreserved(const char* item , void** /* ptr */, void** /* ppdict */)
 {
    G__value buf;
    int i;

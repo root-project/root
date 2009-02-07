@@ -667,10 +667,10 @@ int Cint::Internal::G__init_globals()
    G__plastconststring = &G__conststringlist;
 #ifdef G__ROOT
    if (!G__GetSpecialObject) {
-      G__GetSpecialObject = G__getreserved;
+      G__GetSpecialObject = (G__value(*)(char*, void**, void**)) G__getreserved;
    }
 #else // G__ROOT
-   G__GetSpecialObject = G__getreserved;
+   G__GetSpecialObject = (G__value(*)(char*, void**, void**)) G__getreserved;
 #endif // G__ROOT
    G__is_operator_newdelete = G__DUMMYARG_NEWDELETE | G__NOT_USING_2ARG_NEW;
    G__fpundeftype = 0;

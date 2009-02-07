@@ -66,7 +66,7 @@ static const char* G__saveconststring(const char* s)
 * the string type value.
 *
 ******************************************************************/
-G__value Cint::Internal::G__strip_quotation(char *string)
+G__value Cint::Internal::G__strip_quotation(const char *string)
 {
   int itemp,itemp2=0,hash;
   int templen = G__LONGLINE;
@@ -294,11 +294,17 @@ char *Cint::Internal::G__charaddquote(char *string,char c)
 *   G__getitem()
 *
 ******************************************************************/
-G__value Cint::Internal::G__strip_singlequotation(char *string)
+G__value Cint::Internal::G__strip_singlequotation(const char *in_string)
 {
+  static Reflex::Type CharType( ::Reflex::Type::ByName("char") );
   G__value result = G__null;
   int i;
-  G__value_typenum(result) = ::Reflex::Type::ByName("char"); // result.type='c';
+  G__value_typenum(result) = CharType;
+   
+  G__StrBuf string_sb(strlen(in_string));
+  char *string = string_sb;
+  strcpy(string,in_string);
+   
   if(string[0]=='\'') {
     switch(string[1]) {
     case '\\':

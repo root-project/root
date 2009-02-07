@@ -300,7 +300,7 @@ int Cint::Internal::G__more_pause(FILE *fp, int len)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__more(FILE *fp, char *msg)
+int Cint::Internal::G__more(FILE *fp, const char *msg)
 {
    // --
 #ifndef G__OLDIMPLEMENTATION1485
@@ -343,7 +343,7 @@ static int G__display_friend(FILE *fp, const ::Reflex::Member &func)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__listfunc(FILE *fp, int access, char *fname, const ::Reflex::Scope &ifunc)
+int Cint::Internal::G__listfunc(FILE *fp, int access, const char *fname, const ::Reflex::Scope &ifunc)
 {
    return G__listfunc_pretty(fp, access, fname, ifunc, 0);
 }
@@ -667,7 +667,7 @@ struct G__dictposition* Cint::Internal::G__get_dictpos(char *fname)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__display_newtypes(FILE *fout, char *fname)
+int Cint::Internal::G__display_newtypes(FILE *fout, const char *fname)
 {
    struct G__dictposition *dict = (struct G__dictposition*)NULL;
    int i;
@@ -722,7 +722,7 @@ int Cint::Internal::G__display_string(FILE *fout)
 }
 
 //______________________________________________________________________________
-static int G__display_classinheritance(FILE *fout, int tagnum, char *space)
+static int G__display_classinheritance(FILE *fout, int tagnum, const char *space)
 {
    int i;
    struct G__inheritance *baseclass;
@@ -838,7 +838,7 @@ static int G__display_memberfunction(FILE *fout, int tagnum, int access, int bas
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__display_typedef(FILE *fout, char *name, int startin)
+int Cint::Internal::G__display_typedef(FILE *fout, const char *name, int startin)
 {
    int k;
    ::Reflex::Type_Iterator start, stop;
@@ -1147,7 +1147,7 @@ static int G__display_eachtemplatefunc(FILE *fout, G__Definetemplatefunc *deftmp
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__display_template(FILE *fout, char *name)
+int Cint::Internal::G__display_template(FILE *fout, const char *name)
 {
    int i /* ,j */;
    struct G__Definedtemplateclass *deftmplt;
@@ -1196,7 +1196,7 @@ extern "C" int G__display_includepath(FILE *fout)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__display_macro(FILE *fout, char *name)
+int Cint::Internal::G__display_macro(FILE *fout, const char *name)
 {
    struct G__Deffuncmacro *deffuncmacro;
    struct G__Charlist *charlist;
@@ -2398,7 +2398,7 @@ extern "C" int G__FreeConsole()
 #endif /* G__WIN32 */
 
 //______________________________________________________________________________
-extern "C" int G__display_class(FILE *fout, char *name, int base, int start)
+extern "C" int G__display_class(FILE *fout, const char *in_name, int base, int start)
 {
    using namespace ::Cint::Internal;
    int tagnum;
@@ -2413,6 +2413,10 @@ extern "C" int G__display_class(FILE *fout, char *name, int base, int start)
    int store_iscpp;
 
    G__browsing = 1;
+
+   G__StrBuf name_sb(strlen(in_name)+2);
+   char *name = name_sb;
+   strcpy(name,in_name);
 
    i = 0;
    while (isspace(name[i])) i++;

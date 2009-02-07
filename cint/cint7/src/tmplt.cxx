@@ -168,12 +168,12 @@ int G__templatefunc(G__value* result, char* funcname, G__param* libp, int hash, 
 G__funclist* G__add_templatefunc(char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive);
 char* G__gettemplatearg(int n, G__Templatearg* def_para);
 G__Definetemplatefunc* G__defined_templatefunc(const char* name);
-G__Definetemplatefunc* G__defined_templatememfunc(char* name);
+G__Definetemplatefunc* G__defined_templatememfunc(const char* name);
 }
 }
 
 // Functions in the C interface.
-extern "C" G__Definedtemplateclass* G__defined_templateclass(char* name);
+extern "C" G__Definedtemplateclass* G__defined_templateclass(const char* name);
 
 
 static int G__templatearg_enclosedscope = 0; // Used only to determine parent_tagnum parameter to G__settemplatealias.
@@ -5119,7 +5119,7 @@ char* Cint::Internal::G__gettemplatearg(int n, G__Templatearg* def_para)
 }
 
 //______________________________________________________________________________
-extern "C" G__Definedtemplateclass* G__defined_templateclass(char* name)
+extern "C" G__Definedtemplateclass* G__defined_templateclass(const char* name)
 {
    // Check if the template class is declared
    // but maybe in future I might need this to handle case 4,5
@@ -5353,7 +5353,7 @@ G__Definetemplatefunc* Cint::Internal::G__defined_templatefunc(const char* name)
 }
 
 //______________________________________________________________________________
-G__Definetemplatefunc* Cint::Internal::G__defined_templatememfunc(char* name)
+G__Definetemplatefunc* Cint::Internal::G__defined_templatememfunc(const char* name)
 {
    //
    // t.Handle<int>();

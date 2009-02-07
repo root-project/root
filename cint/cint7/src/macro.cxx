@@ -164,7 +164,7 @@ int Cint::Internal::G__handle_as_typedef(char *oldtype,char *newtype)
 /**************************************************************************
 * G__createmacro()
 **************************************************************************/
-void Cint::Internal::G__createmacro(char *new_name,char *initvalue)
+void Cint::Internal::G__createmacro(const char *new_name,char *initvalue)
 {
    // -- Handle #define MYMACRO ...\<EOL>
    //                   ...\<EOL>
@@ -262,7 +262,7 @@ void Cint::Internal::G__createmacro(char *new_name,char *initvalue)
    {
       int save_def_struct_member = G__def_struct_member;
       G__def_struct_member=0;
-      G__letvariable(new_name,evalval,::Reflex::Scope::GlobalScope(),G__p_local);
+      G__letvariable(/*FIXME*/(char*)new_name,evalval,::Reflex::Scope::GlobalScope(),G__p_local);
       G__var_type = 'p';
       G__def_struct_member=save_def_struct_member;
    }
@@ -274,7 +274,7 @@ void Cint::Internal::G__createmacro(char *new_name,char *initvalue)
 * Create deffuncmacro list when prerun
 *
 **************************************************************************/
-int Cint::Internal::G__createfuncmacro(char *new_name)
+int Cint::Internal::G__createfuncmacro(const char *new_name)
 {
    // -- Handle #define MYMACRO(...,...,...) ...
    //
@@ -338,7 +338,7 @@ int Cint::Internal::G__createfuncmacro(char *new_name)
 * Replace function macro parameter at the first execution of func macro
 *
 **************************************************************************/
-int Cint::Internal::G__replacefuncmacro(char *item,G__Callfuncmacro *callfuncmacro
+int Cint::Internal::G__replacefuncmacro(const char *item,G__Callfuncmacro *callfuncmacro
                                         ,G__Charlist *callpara,G__Charlist *defpara
                                         ,FILE *def_fp,fpos_t def_pos
                                         ,int nobraces,int nosemic
@@ -350,7 +350,7 @@ int Cint::Internal::G__replacefuncmacro(char *item,G__Callfuncmacro *callfuncmac
    int semicolumn;
    G__StrBuf symbol_sb(G__ONELINE);
    char *symbol = symbol_sb;
-   char *punctuation=" \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
+   const char *punctuation = " \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
    int double_quote=0,single_quote=0;
    fpos_t backup_pos;
 
@@ -462,7 +462,7 @@ int Cint::Internal::G__replacefuncmacro(char *item,G__Callfuncmacro *callfuncmac
 * translate function macro parameter at the first execution of func macro
 *
 **************************************************************************/
-int Cint::Internal::G__transfuncmacro(char *item,G__Deffuncmacro *deffuncmacro
+int Cint::Internal::G__transfuncmacro(const char *item,G__Deffuncmacro *deffuncmacro
                                       ,G__Callfuncmacro *callfuncmacro,fpos_t call_pos
                                       ,char *p
                                       ,int nobraces,int nosemic
@@ -721,7 +721,7 @@ void Cint::Internal::G__define()
 *  output int *done  :  1 if macro function called, 0 if no macro found
 *
 **************************************************************************/
-G__value Cint::Internal::G__execfuncmacro(char *item,int *done)
+G__value Cint::Internal::G__execfuncmacro(const char *item,int *done)
 {
    G__value result;
    struct G__Deffuncmacro *deffuncmacro;
@@ -852,7 +852,7 @@ G__value Cint::Internal::G__execfuncmacro(char *item,int *done)
 *  returns 1 if macro function called, 0 if no macro found
 *
 **************************************************************************/
-int Cint::Internal::G__execfuncmacro_noexec (char* macroname)
+int Cint::Internal::G__execfuncmacro_noexec (const char* macroname)
 {
    //
    //  Separate macro func name.

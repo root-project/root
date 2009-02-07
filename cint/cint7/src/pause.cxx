@@ -57,9 +57,9 @@ void G__init_undo(void);
 int G__clearfilebusy(int ifn);
 void G__storerewindposition(void);
 #ifndef G__OLDIMPLEMENTATION1917
-static void G__display_keyword(FILE *fout, char *keyword, FILE *keyfile);
+static void G__display_keyword(FILE *fout, const char *keyword, FILE *keyfile);
 #else
-static void G__display_keyword(FILE *fout, char *keyword, char *fname);
+static void G__display_keyword(FILE *fout, const char *keyword, const char *fname);
 #endif
 void G__rewinddictionary(void);
 void G__UnlockCriticalSection(void);
@@ -595,11 +595,11 @@ static void G__display_tempobj(FILE* fout)
 }
 
 //______________________________________________________________________________
-static void G__display_keyword(FILE* fout, char* keyword,
+static void G__display_keyword(FILE* fout, const char* keyword,
 #ifndef G__OLDIMPLEMENTATION1917
                                FILE *keyfile
 #else
-                               char *fname
+                               const char *fname
 #endif
                               )
 {
@@ -717,7 +717,7 @@ extern "C" int G__reloadfile(char* filename, bool keep)
 }
 
 //______________________________________________________________________________
-void Cint::Internal::G__display_classkeyword(FILE* fout, char* classnamein, char* keyword, int base)
+void Cint::Internal::G__display_classkeyword(FILE* fout, const char* classnamein, const char* keyword, int base)
 {
 #ifndef G__OLDIMPLEMENTATION1823
    G__StrBuf buf_sb(G__BUFLEN);

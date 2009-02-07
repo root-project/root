@@ -156,7 +156,7 @@ static void G__input_history(int *state,char *string)
 *
 *  command input frontend
 *************************************************************/
-extern "C" char *G__input(char *prompt)
+extern "C" char *G__input(const char *prompt)
 {
   static char line[G__LONGLINE];
   char *pchar;
@@ -299,7 +299,7 @@ int Cint::Internal::G__init_readline()
 
 
 
-char *Cint::Internal::G__strrstr(char *string1,char *string2)
+char *Cint::Internal::G__strrstr(char *string1,const char *string2)
 {
   char *p=NULL,*s,*result=NULL;
   s=string1;

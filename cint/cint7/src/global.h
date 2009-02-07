@@ -97,7 +97,7 @@ extern int G__asm_noverflow; /* When this is set to 1, compilation starts.
 extern int G__asm_dbg; /* p-code debugging flag, only valid when compiled with
 		   * G__ASM_DBG */
 #ifdef G__ASM_DBG
-extern char *G__LOOPCOMPILEABORT;
+extern const char *G__LOOPCOMPILEABORT;
 extern int G__asm_step; // pcode
 #endif
 extern int G__asm_cp;               /* compile time program counter */
@@ -163,12 +163,12 @@ extern G__Definetemplatefunc G__definedtemplatefunc;
 extern FILE *G__mfp;
 extern fpos_t G__nextmacro;
 extern int G__mline;
-extern char *G__macro;
+extern const char *G__macro;
 extern G__Deffuncmacro G__deffuncmacro;
 extern char G__macros[G__LONGLINE];
 extern char G__ppopt[G__ONELINE];
 extern char *G__allincludepath;
-extern char *G__undeflist;
+extern const char *G__undeflist;
 extern struct G__funcmacro_stackelt* G__funcmacro_stack;
 
 /**************************************************************************

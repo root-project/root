@@ -533,7 +533,7 @@ char* Cint::Internal::G__valuemonitor(G__value buf, char* temp)
 }
 
 //______________________________________________________________________________
-char* Cint::Internal::G__access2string(int caccess)
+const char* Cint::Internal::G__access2string(int caccess)
 {
    switch (caccess) {
       case G__PRIVATE:
@@ -547,7 +547,7 @@ char* Cint::Internal::G__access2string(int caccess)
 }
 
 //______________________________________________________________________________
-char* Cint::Internal::G__tagtype2string(int tagtype)
+const char* Cint::Internal::G__tagtype2string(int tagtype)
 {
    switch (tagtype) {
       case 'c':
@@ -568,7 +568,7 @@ char* Cint::Internal::G__tagtype2string(int tagtype)
 }
 
 //______________________________________________________________________________
-extern "C" char* G__fulltagname(int tagnum, int mask_dollar)
+extern "C" const char* G__fulltagname(int tagnum, int mask_dollar)
 {
    // -- Return full tagname, if mask_dollar=1, $ for the typedef class is omitted.
 #ifndef G__OLDIMPLEMENTATION1823
@@ -1067,7 +1067,7 @@ int Cint::Internal::G__getdigit(unsigned int number)
 }
 
 //______________________________________________________________________________
-G__value Cint::Internal::G__checkBase(char* string, int* known4)
+G__value Cint::Internal::G__checkBase(const char* string, int* known4)
 {
    G__value result4;
    int n = 0, nchar, base = 0;
@@ -1343,7 +1343,7 @@ G__value Cint::Internal::G__checkBase(char* string, int* known4)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__isfloat(char* string, int* type)
+int Cint::Internal::G__isfloat(const char* string, int* type)
 {
    int ig17 = 0;
    int c;
@@ -1550,7 +1550,7 @@ int Cint::Internal::G__isoperator(int c)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__isexponent(char* expression4, int lenexpr)
+int Cint::Internal::G__isexponent(const char* expression4, int lenexpr)
 {
    // -- Identify power and operator.
 
@@ -1585,7 +1585,7 @@ int Cint::Internal::G__isexponent(char* expression4, int lenexpr)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__isvalue(char* temp)
+int Cint::Internal::G__isvalue(const char* temp)
 {
    // -- Identify char pointer and string.
    if ((isdigit(temp[0])) || ((temp[0] == '-') && (isdigit(temp[1])))) {

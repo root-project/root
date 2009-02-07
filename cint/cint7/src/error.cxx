@@ -22,7 +22,7 @@ int Cint::Internal::G__const_noerror = 0;
 // Static functions.
 #ifndef G__OLDIMPELMENTATION1174
 #ifndef G__OLDIMPELMENTATION1186
-static char* G__findrpos(char* s1, char* s2);
+static char* G__findrpos(char* s1, const char* s2);
 #endif // G__OLDIMPELMENTATION1186
 #endif // G__OLDIMPELMENTATION1174
 #ifndef G__OLDIMPELMENTATION1174
@@ -32,25 +32,25 @@ static int G__splitmessage(char* item);
 // Cint internal functions.
 namespace Cint {
 namespace Internal {
-void G__nosupport(char* name);
+void G__nosupport(const char* name);
 void G__malloc_error(const char* varname);
 void G__arrayindexerror(const ::Reflex::Member& var, const char* item, int index);
 #ifdef G__ASM
-int G__asm_execerr(char* message, int num);
+int G__asm_execerr(const char* message, int num);
 #endif // G__ASM
 int G__assign_error(const char* item, G__value* pbuf);
-int G__reference_error(char* item);
-int G__warnundefined(char* item);
-int G__unexpectedEOF(char* message);
-int G__shl_load_error(char* shlname, char* message);
-int G__getvariable_error(char* item);
-int G__referencetypeerror(char* new_name);
-int G__syntaxerror(char* expr);
-int G__parenthesiserror(char* expression, char* funcname);
+int G__reference_error(const char* item);
+int G__warnundefined(const char* item);
+int G__unexpectedEOF(const char* message);
+int G__shl_load_error(const char* shlname, char* message);
+int G__getvariable_error(const char* item);
+int G__referencetypeerror(const char* new_name);
+int G__syntaxerror(const char* expr);
+int G__parenthesiserror(const char* expression, const char* funcname);
 int G__commenterror();
 int G__changeconsterror(const char* item, const char* categ);
 int G__pounderror();
-int G__missingsemicolumn(char* item);
+int G__missingsemicolumn(const char* item);
 } // namespace Internal
 } // namespace Cint
 
@@ -61,12 +61,12 @@ extern "C" int G__const_whatnoerror();
 extern "C" int G__printlinenum();
 extern "C" int G__get_security_error();
 extern "C" int G__genericerror(const char* message);
-extern "C" void G__printerror(char* funcname, int ipara, int paran);
+extern "C" void G__printerror(const char* funcname, int ipara, int paran);
 #ifdef G__SECURITY
-extern "C" int G__check_drange(int p, double low, double up, double d, G__value* result7, char* funcname);
-extern "C" int G__check_lrange(int p, long low, long up, long l, G__value* result7, char* funcname);
-extern "C" int G__check_type(int p, int t1, int t2, G__value* para, G__value* result7, char* funcname);
-extern "C" int G__check_nonull(int p, int t, G__value* para, G__value* result7, char* funcname);
+extern "C" int G__check_drange(int p, double low, double up, double d, G__value* result7, const char* funcname);
+extern "C" int G__check_lrange(int p, long low, long up, long l, G__value* result7, const char* funcname);
+extern "C" int G__check_type(int p, int t1, int t2, G__value* para, G__value* result7, const char* funcname);
+extern "C" int G__check_nonull(int p, int t, G__value* para, G__value* result7, const char* funcname);
 #endif // G__SECURITY
 
 //______________________________________________________________________________
@@ -77,7 +77,7 @@ extern "C" int G__check_nonull(int p, int t, G__value* para, G__value* result7, 
 #ifndef G__OLDIMPELMENTATION1174
 #ifndef G__OLDIMPELMENTATION1186
 //______________________________________________________________________________
-static char* G__findrpos(char* s1, char* s2)
+static char* G__findrpos(char* s1, const char* s2)
 {
    if (!s1 || !s2) {
       return 0;
@@ -168,7 +168,7 @@ static int G__splitmessage(char* item)
 //
 
 //______________________________________________________________________________
-void Cint::Internal::G__nosupport(char* name)
+void Cint::Internal::G__nosupport(const char* name)
 {
    // -- Print out error message for unsupported capability.
    G__fprinterr(G__serr, "Limitation: %s is not supported", name);
@@ -212,7 +212,7 @@ void Cint::Internal::G__arrayindexerror(const ::Reflex::Member& var, const char*
 
 #ifdef G__ASM
 //______________________________________________________________________________
-int Cint::Internal::G__asm_execerr(char* message, int num)
+int Cint::Internal::G__asm_execerr(const char* message, int num)
 {
    G__fprinterr(G__serr, "Loop Compile Internal Error: %s %d ", message, num);
    G__genericerror(0);
@@ -240,7 +240,7 @@ int Cint::Internal::G__assign_error(const char* item, G__value* pbuf)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__reference_error(char* item)
+int Cint::Internal::G__reference_error(const char* item)
 {
    G__fprinterr(G__serr, "Error: Incorrect referencing of %s ", item);
    G__genericerror(0);
@@ -251,7 +251,7 @@ int Cint::Internal::G__reference_error(char* item)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__warnundefined(char* item)
+int Cint::Internal::G__warnundefined(const char* item)
 {
    if (G__prerun && G__static_alloc && G__func_now) {
       return 0;
@@ -267,18 +267,19 @@ int Cint::Internal::G__warnundefined(char* item)
       G__CHECK(G__SECURE_EXIT_AT_ERROR, 1, G__return = G__RETURN_EXIT1);
    }
    else {
+      G__StrBuf tmp_sb(G__ONELINE);
+      char *tmp = tmp_sb;
+      strcpy(tmp, item);
+
       if (
          !G__const_noerror
 #ifndef G__OLDIMPELMENTATION1174
-         && !G__splitmessage(item)
+         && !G__splitmessage(tmp)
 #endif // G__OLDIMPELMENTATION1174
       ) {
-         //PSRXXX//G__dumpreflex();
+
          char *p = strchr(item, '(');
          if (p) {
-            G__StrBuf tmp_sb(G__ONELINE);
-            char *tmp = tmp_sb;
-            strcpy(tmp, item);
             p = G__strrstr(tmp, "::");
             if (p) {
                *p = 0;
@@ -290,10 +291,7 @@ int Cint::Internal::G__warnundefined(char* item)
             }
          }
          else {
-            G__StrBuf tmp_sb(G__ONELINE);
-            char *tmp = tmp_sb;
-            strcpy(tmp, item);
-            if (p) {
+           if (p) {
                *p = 0;
                p += 2;
                G__fprinterr(G__serr, "Error: Symbol %s is not defined in %s ", p, tmp);
@@ -312,7 +310,7 @@ int Cint::Internal::G__warnundefined(char* item)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__unexpectedEOF(char* message)
+int Cint::Internal::G__unexpectedEOF(const char* message)
 {
    G__eof = 2;
    G__fprinterr(G__serr, "Error: Unexpected end of file (%s)", message);
@@ -322,13 +320,15 @@ int Cint::Internal::G__unexpectedEOF(char* message)
    G__security_error = G__RECOVERABLE;
 #endif // G__SECURITY
    if ((G__globalcomp != G__NOLINK) && (G__steptrace || G__stepover)) {
-      while (!G__pause());
+      while (!G__pause()) {
+         ; // Intentionally empty
+      }
    }
    return 0;
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__shl_load_error(char* shlname, char* message)
+int Cint::Internal::G__shl_load_error(const char* shlname, const char* message)
 {
    G__fprinterr(G__serr, "%s: Failed to load Dynamic link library %s\n", message, shlname);
    G__CHECK(G__SECURE_EXIT_AT_ERROR, 1, G__return = G__RETURN_EXIT1);
@@ -339,7 +339,7 @@ int Cint::Internal::G__shl_load_error(char* shlname, char* message)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__getvariable_error(char* item)
+int Cint::Internal::G__getvariable_error(const char* item)
 {
    G__fprinterr(G__serr, "Error: G__getvariable: expression %s", item);
    G__printlinenum();
@@ -351,7 +351,7 @@ int Cint::Internal::G__getvariable_error(char* item)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__referencetypeerror(char* new_name)
+int Cint::Internal::G__referencetypeerror(const char* new_name)
 {
    G__fprinterr(G__serr, "Error: Can't take address for reference type %s", new_name);
    G__printlinenum();
@@ -363,7 +363,7 @@ int Cint::Internal::G__referencetypeerror(char* new_name)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__syntaxerror(char* expr)
+int Cint::Internal::G__syntaxerror(const char* expr)
 {
    G__fprinterr(G__serr, "Syntax Error: %s", expr);
    G__genericerror(0);
@@ -374,7 +374,7 @@ int Cint::Internal::G__syntaxerror(char* expr)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__parenthesiserror(char* expression, char* funcname)
+int Cint::Internal::G__parenthesiserror(const char* expression, const char* funcname)
 {
    G__fprinterr(G__serr, "Syntax error: %s: Parenthesis or quotation unmatch %s", funcname, expression);
    G__printlinenum();
@@ -437,7 +437,7 @@ int Cint::Internal::G__pounderror()
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__missingsemicolumn(char* item)
+int Cint::Internal::G__missingsemicolumn(const char* item)
 {
    G__fprinterr(G__serr, "Syntax Error: %s Maybe missing ';'", item);
    G__genericerror(0);
@@ -445,7 +445,7 @@ int Cint::Internal::G__missingsemicolumn(char* item)
 }
 
 //______________________________________________________________________________
-extern "C" void G__printerror(char* funcname, int ipara, int paran)
+extern "C" void G__printerror(const char* funcname, int ipara, int paran)
 {
    if (G__dispmsg >= G__DISPWARN) {
       G__fprinterr(G__serr, "Warning: %s() expects %d parameters, %d parameters given", funcname, ipara, paran);
@@ -460,7 +460,7 @@ extern "C" void G__printerror(char* funcname, int ipara, int paran)
 
 #ifdef G__SECURITY
 //______________________________________________________________________________
-extern "C" int G__check_drange(int p, double low, double up, double d, G__value* result7, char* funcname)
+extern "C" int G__check_drange(int p, double low, double up, double d, G__value* result7, const char* funcname)
 {
    // -- Check for double.
    if ((d < low) || (d > up)) {
@@ -475,7 +475,7 @@ extern "C" int G__check_drange(int p, double low, double up, double d, G__value*
 
 #ifdef G__SECURITY
 //______________________________________________________________________________
-extern "C" int G__check_lrange(int p, long low, long up, long l, G__value* result7, char* funcname)
+extern "C" int G__check_lrange(int p, long low, long up, long l, G__value* result7, const char* funcname)
 {
    // -- Check for long.
    if ((l < low) || (l > up)) {
@@ -490,7 +490,7 @@ extern "C" int G__check_lrange(int p, long low, long up, long l, G__value* resul
 
 #ifdef G__SECURITY
 //______________________________________________________________________________
-extern "C" int G__check_type(int p, int t1, int t2, G__value* para, G__value* result7, char* funcname)
+extern "C" int G__check_type(int p, int t1, int t2, G__value* para, G__value* result7, const char* funcname)
 {
    // -- Check for ???
    if ((G__get_type(*para) != t1) && (G__get_type(*para) != t2)) {
@@ -505,7 +505,7 @@ extern "C" int G__check_type(int p, int t1, int t2, G__value* para, G__value* re
 
 #ifdef G__SECURITY
 //______________________________________________________________________________
-extern "C" int G__check_nonull(int p, int t, G__value* para, G__value* result7, char* funcname)
+extern "C" int G__check_nonull(int p, int t, G__value* para, G__value* result7, const char* funcname)
 {
    // -- Check for null pointer.
    long l = G__int(*para);
@@ -554,7 +554,7 @@ extern "C" int G__const_whatnoerror()
 //______________________________________________________________________________
 extern "C" int G__printlinenum()
 {
-   char* format = " FILE:%s LINE:%d\n";
+   const char* format = " FILE:%s LINE:%d\n";
 #ifdef G__WIN32
    // make error msg Visual Studio compatible
    format = " %s(%d)\n";

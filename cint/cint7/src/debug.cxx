@@ -119,7 +119,7 @@ int Cint::Internal::G__findfuncposition(char *func,int *pline,int *pfnum)
 /****************************************************************
 * G__display_proto()
 ****************************************************************/
-int Cint::Internal::G__display_proto(FILE *fp,char *func)
+int Cint::Internal::G__display_proto(FILE *fp,const char *func)
 {
    return G__display_proto_pretty(fp,func,0);
 }
@@ -127,7 +127,7 @@ int Cint::Internal::G__display_proto(FILE *fp,char *func)
 /****************************************************************
 * G__display_proto_pretty()
 ****************************************************************/
-int Cint::Internal::G__display_proto_pretty(FILE *fp,char *func, char friendlyStyle)
+int Cint::Internal::G__display_proto_pretty(FILE *fp,const char *func, char friendlyStyle)
 {
    ::Reflex::Scope scope( ::Reflex::Scope::GlobalScope() );
 
@@ -510,10 +510,10 @@ extern "C" char* G__exec_text_str(const char *unnamedmacro,char *result)
 /**************************************************************************
 * G__load_text()
 **************************************************************************/
-extern "C" char* G__load_text(const char *namedmacro)
+extern "C" const char* G__load_text(const char *namedmacro)
 {
   int fentry;
-  char* result = (char*)NULL;
+  const char* result = 0;
   FILE *fp;
   int istmpnam=0;
 #ifndef G__TMPFILE
@@ -690,7 +690,7 @@ void Cint::Internal::G__DISPfgetc(int c)
 /**************************************************************************
 * G__lockedvariable()
 **************************************************************************/
-void Cint::Internal::G__lockedvariable(char *item)
+void Cint::Internal::G__lockedvariable(const char *item)
 {
   if(G__dispmsg>=G__DISPWARN) {
     G__fprinterr(G__serr,"Warning: Assignment to %s locked FILE:%s LINE:%d\n"
@@ -703,7 +703,7 @@ void Cint::Internal::G__lockedvariable(char *item)
 /**************************************************************************
 * G__lock_variable()
 **************************************************************************/
-int Cint::Internal::G__lock_variable(char *varname)
+int Cint::Internal::G__lock_variable(const char *varname)
 {
    int hash,ig15;
    ::Reflex::Member var;
@@ -732,7 +732,7 @@ int Cint::Internal::G__lock_variable(char *varname)
 /**************************************************************************
 * G__unlock_variable()
 **************************************************************************/
-int Cint::Internal::G__unlock_variable(char *varname)
+int Cint::Internal::G__unlock_variable(const char *varname)
 {
    int hash,ig15;
    ::Reflex::Member var;
@@ -843,11 +843,12 @@ G__value Cint::Internal::G__interactivereturn()
 * G__set_tracemode()
 *
 **************************************************************************/
-void Cint::Internal::G__set_tracemode(char *name)
+void Cint::Internal::G__set_tracemode(const char *name)
 {
   int tagnum;
   int i=0;
-  char *p,*s;
+  char *p;
+  const char *s;
   while(name[i]&&isspace(name[i])) i++;
   if('\0'==name[i]) {
     fprintf(G__sout,"trace all source code\n");
@@ -875,11 +876,12 @@ void Cint::Internal::G__set_tracemode(char *name)
 * G__del_tracemode()
 *
 **************************************************************************/
-void Cint::Internal::G__del_tracemode(char *name)
+void Cint::Internal::G__del_tracemode(const char *name)
 {
   int tagnum;
   int i=0;
-  char *p,*s;
+  char *p;
+  const char *s;
   while(name[i]&&isspace(name[i])) i++;
   if('\0'==name[i]) {
     G__istrace = 0;
@@ -907,11 +909,12 @@ void Cint::Internal::G__del_tracemode(char *name)
 * G__set_classbreak()
 *
 **************************************************************************/
-void Cint::Internal::G__set_classbreak(char *name)
+void Cint::Internal::G__set_classbreak(const char *name)
 {
   int tagnum;
   int i=0;
-  char *p,*s;
+  char *p;
+  const char *s;
   while(name[i]&&isspace(name[i])) i++;
   if(name[i]) {
     s = name+i;
@@ -933,11 +936,12 @@ void Cint::Internal::G__set_classbreak(char *name)
 * G__del_classbreak()
 *
 **************************************************************************/
-void Cint::Internal::G__del_classbreak(char *name)
+void Cint::Internal::G__del_classbreak(const char *name)
 {
   int tagnum;
   int i=0;
-  char *p,*s;
+  char *p;
+  const char *s;
   while(name[i]&&isspace(name[i])) i++;
   if(name[i]) {
     s = name+i;

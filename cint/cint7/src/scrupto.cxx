@@ -769,16 +769,18 @@ int Cint::Internal::G__destroy_upto(::Reflex::Scope& scope, int global, int inde
                )
             )
          ) || // or
-         (index >= 0) && // We are *not* handling function local variables, and
+         (
+            (index >= 0) && // We are *not* handling function local variables, and
 #endif // G__ASM_WHOLEFUNC
-         (
-            (G__get_properties(var)->statictype != G__LOCALSTATIC) || // Not a static variable, or
-            (global == G__GLOBAL_VAR) // We are destroying globals,
-         ) && // and,
-         (
-            (G__get_properties(var)->statictype != G__COMPILEDGLOBAL) // Not precompiled
-         ) && // and,
-         !G__get_properties(var)->isFromUsing 
+            (
+               (G__get_properties(var)->statictype != G__LOCALSTATIC) || // Not a static variable, or
+               (global == G__GLOBAL_VAR) // We are destroying globals,
+            ) && // and,
+            (
+               (G__get_properties(var)->statictype != G__COMPILEDGLOBAL) // Not precompiled
+            ) && // and,
+            !G__get_properties(var)->isFromUsing
+         )
       ) {
          //G__fprinterr(G__serr, "\nG__destroy_upto: Destroying variable! scope: '%s' var: '%s' ary: %d  %s:%d\n", scope.Name().c_str(), var.Name().c_str(), G__get_varlabel(var, 1) /* number of elements */, __FILE__, __LINE__);
          // Default to variable is not of a precompiled class type.

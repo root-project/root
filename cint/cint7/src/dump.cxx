@@ -72,7 +72,7 @@ int Cint::Internal::G__dumpinput(char *line)
 *
 *  Read readline string from a dump file.
 ****************************************************************/
-char *Cint::Internal::G__xdumpinput(char *prompt)
+char *Cint::Internal::G__xdumpinput(const char *prompt)
 {
   static char line[G__LONGLINE];
   char *null_fgets;

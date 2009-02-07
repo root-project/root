@@ -23,7 +23,7 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
    char* struct_offset_stack[G__MAXSTRSTACK]; // struct offset stack
    int gvpp = 0; // struct offset stack pointer
    char* store_globalvarpointer[G__MAXSTRSTACK];
-   char* funcname = 0; // function name
+   const char* funcname = 0; // function name
    G__InterfaceMethod pfunc;
    struct G__param fpara; // func,var parameter buf
    int* cntr = 0;
@@ -614,10 +614,10 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                }
 #endif
                if (flag == 1) {
-                  funcname = (char*)G__asm_inst[pc+2];
+                  funcname = (const char*)G__asm_inst[pc+2];
                   hash = G__asm_inst[pc+1] / 10;
                } else if (flag == 3) {
-                  funcname = (char*)G__asm_inst[pc+2]; 
+                  funcname = (const char*)G__asm_inst[pc+2]; 
                } else {
                   funcname = "Cint bytecode compiler G__LD_FUNC";
                }
@@ -671,10 +671,10 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                //
 #ifdef G__EXCEPTIONWRAPPER
                G__asm_exec = 0;
-               dtorfreeoffset = (char*) G__ExceptionWrapper(pfunc, result, funcname, &fpara, hash);
+               dtorfreeoffset = (char*) G__ExceptionWrapper(pfunc, result, (char*)funcname, &fpara, hash);
                G__asm_exec = 1;
 #else // G__EXCEPTIONWRAPPER
-               dtorfreeoffset = (char*) (*pfunc)(result, funcname, &fpara, hash);
+               dtorfreeoffset = (char*) (*pfunc)(result, (char*)funcname, &fpara, hash);
 #endif // G__EXCEPTIONWRAPPER
                //
                //  Function has returned.

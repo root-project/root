@@ -53,8 +53,8 @@ static G__value G__pointer2memberfunction(char* parameter0, char* parameter1, in
 #endif // G__PTR2MEMFUNC
 static G__value G__pointerReference(char* item, G__param* libp, int* known3);
 static int G__additional_parenthesis(G__value* presult, G__param* libp);
-static G__value G__operatorfunction(G__value* presult, char* item, int* known3, char* result7, char* funcname);
-static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag);
+static G__value G__operatorfunction(G__value* presult, const char* item, int* known3, char* result7, char* funcname);
+static G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag);
 static void G__va_start(G__value ap);
 static G__value G__va_arg(G__value ap);
 static void G__va_end(G__value ap);
@@ -88,7 +88,7 @@ void G__p2f_void_void(void* p2f);
 void G__set_atpause(void (*p2f)());
 void G__set_aterror(void (*p2f)());
 void G__set_emergencycallback(void (*p2f)());
-G__value G__getfunction(char* item, int* known3, int memfunc_flag);
+G__value G__getfunction(const char* item, int* known3, int memfunc_flag);
 int G__tracemode(int tracemode);
 int G__stepmode(int stepmode);
 int G__gettracemode();
@@ -937,7 +937,7 @@ bool Cint::Internal::G__rename_templatefunc(std::string& funcname)
 }
 
 //______________________________________________________________________________
-static G__value G__operatorfunction(G__value* presult, char* item, int* known3, char* result7, char* funcname)
+static G__value G__operatorfunction(G__value* presult, const char* item, int* known3, char* result7, char* funcname)
 {
    G__value result3 = G__null;
    struct G__param fpara;
@@ -1145,7 +1145,7 @@ static G__value G__operatorfunction(G__value* presult, char* item, int* known3, 
 }
 
 //______________________________________________________________________________
-static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag)
+static G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag)
 {
    G__value result3 = G__null;
    G__StrBuf result7_sb(G__LONGLINE);
@@ -1985,7 +1985,7 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
 }
 
 //______________________________________________________________________________
-extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
+extern "C" G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
 {
    G__value result3 = G__null;
    G__StrBuf funcname_sb(G__LONGLINE);
