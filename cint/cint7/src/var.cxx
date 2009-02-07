@@ -500,7 +500,7 @@ inline G__value G__assign_var(::Reflex::Member& var, char* local_G__struct_offse
                if (paran > G__get_paran(var)) { \
                   /* -- Pointer to array reimplementation. */ \
                   /* MyType** var[ddd]; *var[xxx][yyy] = result; */ \
-                  address = local_G__struct_offset + ((long) G__get_offset(var)) + (linear_index * G__LONGALLOC); \
+                  char *address = local_G__struct_offset + ((long) G__get_offset(var)) + (linear_index * G__LONGALLOC); \
                   result.ref = *(((long*) (*((long *) address))) + secondary_linear_index); \
                   *((CASTTYPE*) result.ref) = (CASTTYPE) CONVFUNC(result); \
                   G__value_typenum(result) = G__deref(G__strip_array(var.TypeOf())); /* FIXME: We want to remove the top-level pointer node here, but not all the typedef info! */ \
@@ -520,7 +520,7 @@ inline G__value G__assign_var(::Reflex::Member& var, char* local_G__struct_offse
          if (paran > G__get_paran(var)) { \
             /* -- Pointer to array reimplementation. */ \
             /* -- More array dimensions used than variable has, start using up pointer to pointers. */ \
-            address = local_G__struct_offset + ((long) G__get_offset(var)) + (linear_index * G__LONGALLOC); \
+            char *address = local_G__struct_offset + ((long) G__get_offset(var)) + (linear_index * G__LONGALLOC); \
             if (G__get_reftype(var.TypeOf()) == G__PARANORMAL) { \
                result.ref = (long) (((CASTTYPE*) (*((long*) address))) + secondary_linear_index); \
                *((CASTTYPE*) result.ref) = (CASTTYPE) CONVFUNC(result); \
@@ -571,8 +571,6 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
    int paran = 0;
    int ig25 = 0;
    int lenitem = 0;
-   int single_quote = 0;
-   int double_quote = 0;
    int paren = 0;
    int done = 0;
    //--
@@ -584,7 +582,6 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
    char* tagname = 0;
    char* membername = 0;
    int varhash = 0;
-   char* address = 0;
    char* store_struct_offset = 0;
    ::Reflex::Scope store_tagnum;
    int store_exec_memberfunc = 0;
@@ -732,59 +729,63 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
    lenitem = std::strlen(item);
    ig2 = 0;
    flag = 0;
-   while ((ig2 < lenitem) && !flag) {
-      switch (item[ig2]) {
-         case '.':
-            if (!paren && !double_quote && !single_quote) {
-               strcpy(result7, item);
-               result7[ig2++] = '\0';
-               tagname = result7;
-               membername = result7 + ig2;
-               flag = 1;
-            }
-            break;
-         case '-':
-            if (!paren && !double_quote && !single_quote && (item[ig2+1] == '>')) {
-               strcpy(result7, item);
-               result7[ig2++] = '\0';
-               result7[ig2++] = '\0';
-               tagname = result7;
-               membername = result7 + ig2;
-               flag = 2;
-            }
-            break;
-         case '\\':
-            ++ig2;
-            break;
-         case '\'':
-            if (!double_quote) {
-               single_quote ^= 1;
-            }
-            break;
-         case '\"':
-            if (!single_quote) {
-               double_quote ^= 1;
-            }
-            break;
-         case '{':
-         case '[':
-         case '(':
-            if (!single_quote && !double_quote) {
-               ++paren;
-            }
-            break;
-         case '}':
-         case ']':
-         case ')':
-            if (!single_quote && !double_quote) {
-               --paren;
-            }
-            break;
+   {
+      // To keep track of the quote variables
+      int single_quote = 0;
+      int double_quote = 0;
+
+      while ((ig2 < lenitem) && !flag) {
+         switch (item[ig2]) {
+            case '.':
+               if (!paren && !double_quote && !single_quote) {
+                  strcpy(result7, item);
+                  result7[ig2++] = '\0';
+                  tagname = result7;
+                  membername = result7 + ig2;
+                  flag = 1;
+               }
+               break;
+            case '-':
+               if (!paren && !double_quote && !single_quote && (item[ig2+1] == '>')) {
+                  strcpy(result7, item);
+                  result7[ig2++] = '\0';
+                  result7[ig2++] = '\0';
+                  tagname = result7;
+                  membername = result7 + ig2;
+                  flag = 2;
+               }
+               break;
+            case '\\':
+               ++ig2;
+               break;
+            case '\'':
+               if (!double_quote) {
+                  single_quote ^= 1;
+               }
+               break;
+            case '\"':
+               if (!single_quote) {
+                  double_quote ^= 1;
+               }
+               break;
+            case '{':
+            case '[':
+            case '(':
+               if (!single_quote && !double_quote) {
+                  ++paren;
+               }
+               break;
+            case '}':
+            case ']':
+            case ')':
+               if (!single_quote && !double_quote) {
+                  --paren;
+               }
+               break;
+         }
+         ++ig2;
       }
-      ++ig2;
    }
-   single_quote = 0;
-   double_quote = 0;
    paren = 0;
    if (flag) {
       result = G__letstructmem(store_var_type, varname.c_str(), membername, tagname, varglobal, expression, flag);
@@ -1073,23 +1074,23 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
             int known;
             sprintf(temp1, "%s()", G__struct.name[vtagnum]);
             if (G__struct.parent_tagnum[vtagnum] != -1) {
-               int store_exec_memberfunc = G__exec_memberfunc;
+               int local_store_exec_memberfunc = G__exec_memberfunc;
                ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
                G__exec_memberfunc = 1;
                G__memberfunc_tagnum = var.DeclaringScope();
                reg = G__getfunction(temp1, &known, G__CALLCONSTRUCTOR);
-               G__exec_memberfunc = store_exec_memberfunc;
+               G__exec_memberfunc = local_store_exec_memberfunc;
                G__memberfunc_tagnum = store_memberfunc_tagnum;
             }
             else {
-               int store_exec_memberfunc = G__exec_memberfunc;
+               int local_store_exec_memberfunc = G__exec_memberfunc;
                ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
                ::Reflex::Scope store_G__tagnum = G__tagnum;
                G__exec_memberfunc = 0;
                G__memberfunc_tagnum = ::Reflex::Scope();
                G__tagnum = var.TypeOf().RawType();
                reg = G__getfunction(temp1, &known, G__CALLCONSTRUCTOR);
-               G__exec_memberfunc = store_exec_memberfunc;
+               G__exec_memberfunc = local_store_exec_memberfunc;
                G__memberfunc_tagnum = store_memberfunc_tagnum;
                G__tagnum = store_G__tagnum;
             }
@@ -1103,21 +1104,21 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
             // int known;
             sprintf(temp1, "new %s", G__struct.name[vtagnum]);
             
-            int store_exec_memberfunc = G__exec_memberfunc;
+            int local_store_exec_memberfunc = G__exec_memberfunc;
             ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
-            ::Reflex::Scope store_tagnum = G__tagnum;
+            ::Reflex::Scope local_store_tagnum = G__tagnum;
             int store_prerun = G__prerun;
-            int store_vartype = G__var_type;
+            int local_store_vartype = G__var_type;
             G__exec_memberfunc = 0;
             G__memberfunc_tagnum = ::Reflex::Scope();
             G__prerun = 0;
             G__tagnum = var.TypeOf().RawType();
             G__value reg = G__getexpr(temp1);
-            G__exec_memberfunc = store_exec_memberfunc;
+            G__exec_memberfunc = local_store_exec_memberfunc;
             G__memberfunc_tagnum = store_memberfunc_tagnum;
-            G__tagnum = store_tagnum;
+            G__tagnum = local_store_tagnum;
             G__prerun = store_prerun;
-            G__var_type = store_vartype;
+            G__var_type = local_store_vartype;
             
             G__get_offset(var)  = (char*) G__int(reg);
             
@@ -1263,10 +1264,10 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
             (G__get_properties(var)->statictype == G__AUTO) &&
             (G__decl || G__cppconstruct)
          ) {
-            int store_asm_noverflow = G__asm_noverflow;
+            int local_store_asm_noverflow = G__asm_noverflow;
             G__asm_noverflow = 0;
             G__class_2nd_decl(var);
-            G__asm_noverflow = store_asm_noverflow;
+            G__asm_noverflow = local_store_asm_noverflow;
             result.obj.i = (size_t) G__get_offset(var);
             G__value_typenum(result) = var.TypeOf();
 
@@ -1499,7 +1500,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
             ((paran == 1) && (G__get_varlabel(var.TypeOf(), 2) == 1) && !G__get_varlabel(var.TypeOf(), 3))
          )
       ) {
-         address = local_G__struct_offset + ((size_t) G__get_offset(var)) + (linear_index * G__LONGALLOC);
+         char *address = local_G__struct_offset + ((size_t) G__get_offset(var)) + (linear_index * G__LONGALLOC);
          if (address && *((long*) address)) {
             G__del_refcount((void*)(*(long*)address), (void**) address);
          }
@@ -1515,7 +1516,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
          int mask;
          int finalval;
          int original;
-         address = local_G__struct_offset + ((size_t) G__get_offset(var));
+         char *address = local_G__struct_offset + ((size_t) G__get_offset(var));
          original = *((int*) address);
          mask = (1 << G__get_bitfield_width(var)) - 1;
          mask = mask << G__get_bitfield_start(var);
@@ -1738,7 +1739,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
                   //--
                   //--
                   result.ref = 0;
-                  address = local_G__struct_offset + ((size_t) G__get_offset(var)) + (linear_index * G__LONGALLOC);
+                  char *address = local_G__struct_offset + ((size_t) G__get_offset(var)) + (linear_index * G__LONGALLOC);
                   result.ref = ((*(long*)address) + (secondary_linear_index * var.TypeOf().RawType().SizeOf()));
                   G__letpointer(&result, result.ref, var.TypeOf().RawType());
                   G__tryindexopr(&result, para, paran, ig25);
@@ -1998,8 +1999,8 @@ G__value Cint::Internal::G__letstructmem(int store_var_type, const char* /*varna
    if (!G__value_typenum(result).FinalType().IsPointer() && (objptr == 2)) {
       char buf[30] = "operator->()";
       int local_flag = 0;
-      ::Reflex::Scope store_tagnum = G__tagnum;
-      char* store_struct_offset = G__store_struct_offset;
+      ::Reflex::Scope local_store_tagnum = G__tagnum;
+      char* local_store_struct_offset = G__store_struct_offset;
       G__set_G__tagnum(result);
       G__store_struct_offset = (char*) result.obj.i;
       result = G__getfunction(buf, &local_flag, G__TRYMEMFUNC);
@@ -2021,8 +2022,8 @@ G__value Cint::Internal::G__letstructmem(int store_var_type, const char* /*varna
          // --
       }
       else {
-         G__tagnum = store_tagnum;
-         G__store_struct_offset = store_struct_offset;
+         G__tagnum = local_store_tagnum;
+         G__store_struct_offset = local_store_struct_offset;
          if (
             (G__dispmsg >= G__DISPROOTSTRICT) ||
             (G__ifile.filenum <= G__gettempfilenum())
@@ -5215,7 +5216,6 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
    char* local_G__struct_offset = 0;
    char store_var_type = '\0';
    int varhash = 0;
-   char* address = 0;
    struct G__input_file store_ifile;
    int store_vartype = 0;
    char* store_struct_offset = 0;
@@ -5269,13 +5269,13 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
             (item[lenitem-1] == '+') ||
             (item[lenitem-1] == '-')
          ) {
-            int store_var_type = G__var_type;
+            int local_store_var_type = G__var_type;
             G__var_type = 'p';
             *known = 1;
             G__value tmpval = G__getexpr(item + 1);
             G__value v = G__tovalue(tmpval);
-            if (store_var_type != 'p') {
-               v = G__toXvalue(v, store_var_type);
+            if (local_store_var_type != 'p') {
+               v = G__toXvalue(v, local_store_var_type);
             }
             return v;
          }
@@ -5786,13 +5786,13 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
             if (G__get_reftype(variable.TypeOf()) > G__PARAREFERENCE) {
                varparan += (G__get_reftype(variable.TypeOf()) % G__PARAREF) - G__PARAP2P + 1;
             }
-            int ig25 = 0;
-            for (; (ig25 < paran) && (ig25 < varparan); ++ig25) {}
-            while ((ig25 < paran) && G__get_varlabel(variable.TypeOf(), ig25 + 4)) {
-               ++ig25;
+            int nelem = 0;
+            for (; (nelem < paran) && (nelem < varparan); ++nelem) {}
+            while ((nelem < paran) && G__get_varlabel(variable.TypeOf(), nelem + 4)) {
+               ++nelem;
             }
-            if (ig25 < paran) {
-               G__tryindexopr(&result, para, paran, ig25);
+            if (nelem < paran) {
+               G__tryindexopr(&result, para, paran, nelem);
             }
          }
          return result;
@@ -5900,7 +5900,7 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
       G__CHECK(G__SECURE_POINTER_REFERENCE, (isupper(G__get_type(variable.TypeOf()) && (G__get_type(variable.TypeOf()) != 'E')) || (G__get_paran(variable) > paran)), return(G__null));
       // Get bit-field value.
       if (G__get_bitfield_width(variable) && 'p' == G__var_type) {
-         address = local_G__struct_offset + (size_t) G__get_offset(variable);
+         char *address = local_G__struct_offset + (size_t) G__get_offset(variable);
          int original = *((int*) address);
          int mask = (1 << G__get_bitfield_width(variable)) - 1;
          int finalval = (original >> G__get_bitfield_start(variable)) & mask;
@@ -6246,7 +6246,7 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                         // MyType* p;  MyType v = p[x];
                         // MyType* p[a];  MyType v = p[x][y];
                         // MyType** p[a];  MyType* v = p[x][y];
-                        address = local_G__struct_offset + ((size_t) G__get_offset(variable)) + (linear_index * G__LONGALLOC);
+                        char *address = local_G__struct_offset + ((size_t) G__get_offset(variable)) + (linear_index * G__LONGALLOC);
                         if (G__get_reftype(variable.TypeOf()) == G__PARANORMAL) {
                            // MyType* p;  MyType v = p[x];
                            // MyType* p[a];  MyType v = p[x][y];
