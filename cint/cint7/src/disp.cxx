@@ -1453,7 +1453,7 @@ int Cint::Internal::G__dump_tracecoverage(FILE *fout)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__objectmonitor(FILE *fout, char *pobject, const ::Reflex::Type &tagnum, char *addspace)
+int Cint::Internal::G__objectmonitor(FILE *fout, char *pobject, const ::Reflex::Type &tagnum, const char *addspace)
 {
    struct G__inheritance *baseclass;
    G__StrBuf space_sb(G__ONELINE);

@@ -1458,7 +1458,8 @@ void Cint::Internal::G__create_global_namespace()
 #pragma message (FIXME("Remove this once scopes are in reflex!"))
 #endif
    int i = G__struct.alltag;
-   G__struct.name[i] = "";
+   static char clnull[1] = "";
+   G__struct.name[i] = clnull;
    G__struct.parent_tagnum[i] = -1;
    G__struct.userparam[i] = 0;
    G__struct.hash[i] = 0;

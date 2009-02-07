@@ -774,7 +774,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
 #else // G__DEBUG2
       G__access = G__PRIVATE;
 #endif // G__DEBUG2
-      G__letvariable("G__virtualinfo", G__null,::Reflex::Scope::GlobalScope(), G__p_local);
+      G__letvariable(/*FIXME*/(char*)"G__virtualinfo", G__null,::Reflex::Scope::GlobalScope(), G__p_local);
       G__access = store_access;
       G__var_type = store_type;
       G__tagnum = store_tagnum;
@@ -2880,10 +2880,10 @@ static int G__igrd(int formal_type)
 
 //______________________________________________________________________________
 #ifndef __CINT__
-static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, int memfunc_flag, int access, int* pifn, int isrecursive, int doconvert, int* match_error);
+static ::Reflex::Member G__overload_match(const char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, int memfunc_flag, int access, int* pifn, int isrecursive, int doconvert, int* match_error);
 #endif // __CINT__
 
-static void G__display_param(FILE* fp, const ::Reflex::Scope scopetagnum, char* funcname, G__param* libp);
+static void G__display_param(FILE* fp, const ::Reflex::Scope scopetagnum, const char* funcname, G__param* libp);
 static void G__display_func(FILE* fp, const ::Reflex::Member func);
 
 //______________________________________________________________________________
@@ -4026,7 +4026,7 @@ static int G__convert_param(G__param* libp, const ::Reflex::Member& func, G__fun
 }
 
 //______________________________________________________________________________
-static void G__display_param(FILE* fp, const ::Reflex::Scope scopetagnum, char* funcname, G__param* libp)
+static void G__display_param(FILE* fp, const ::Reflex::Scope scopetagnum, const char* funcname, G__param* libp)
 {
    int i;
 #ifndef G__OLDIMPLEMENTATION1485
@@ -4163,7 +4163,7 @@ static void G__display_func(FILE* fp, const ::Reflex::Member func)
 }
 
 //______________________________________________________________________________
-static void G__display_ambiguous(const ::Reflex::Scope& scopetagnum, char* funcname, G__param* libp, G__funclist* funclist, unsigned int bestmatch)
+static void G__display_ambiguous(const ::Reflex::Scope& scopetagnum, const char* funcname, G__param* libp, G__funclist* funclist, unsigned int bestmatch)
 {
    G__fprinterr(G__serr, "Calling : ");
    G__display_param(G__serr, scopetagnum, funcname, libp);
@@ -4177,7 +4177,7 @@ static void G__display_ambiguous(const ::Reflex::Scope& scopetagnum, char* funcn
 }
 
 //______________________________________________________________________________
-static G__funclist* G__rate_binary_operator(const ::Reflex::Scope p_ifunc, G__param* libp, const ::Reflex::Type tagnum, char* funcname, int /*hash*/, G__funclist* funclist, int isrecursive)
+static G__funclist* G__rate_binary_operator(const ::Reflex::Scope p_ifunc, G__param* libp, const ::Reflex::Type tagnum, const char* funcname, int /*hash*/, G__funclist* funclist, int isrecursive)
 {
    // Set first argument to the object.
    G__param fpara;
@@ -4244,7 +4244,7 @@ static int G__identical_function(G__funclist *match, G__funclist *func)
 }
 
 //______________________________________________________________________________
-static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, int memfunc_flag, int access, int* pifn, int isrecursive, int doconvert, int* match_error)
+static ::Reflex::Member G__overload_match(const char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, int memfunc_flag, int access, int* pifn, int isrecursive, int doconvert, int* match_error)
 {
    // Perform function overload matching, and if found and requested, convert arguments guided by the prototype.
    ::Reflex::Scope store_ifunc = p_ifunc;
@@ -4468,7 +4468,7 @@ int Cint::Internal::G__interpret_func(G__value* result7, G__param* libp, int has
 #endif // 0
 
 //______________________________________________________________________________
-int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G__param* libp, int hash, const ::Reflex::Scope input_ifunc, int funcmatch, int memfunc_flag)
+int Cint::Internal::G__interpret_func(G__value* return_value, const char* funcname, G__param* libp, int hash, const ::Reflex::Scope input_ifunc, int funcmatch, int memfunc_flag)
 {
    // -- FIXME: Describe this function!
    //
@@ -5115,8 +5115,8 @@ int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G_
             G__store_struct_offset -= G__find_virtualoffset(G__get_tagnum(virtualtag));
             G__tagnum = virtualtag;
             if ('~' == funcname[0]) {
-               strcpy(funcname + 1, G__struct.name[G__get_tagnum(G__tagnum)]);
-               G__hash(funcname, hash, itemp);
+               G__hash(G__struct.name[G__get_tagnum(G__tagnum)], hash, itemp);
+               hash += '~';
             }
          }
          else if (ifn.IsAbstract()) {
@@ -6614,7 +6614,7 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member func1, cons
 }
 
 //______________________________________________________________________________
-::Reflex::Member G__get_ifunchandle(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, long* pifn, int access, int funcmatch)
+static ::Reflex::Member G__get_ifunchandle(const char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, long* pifn, int access, int funcmatch)
 {
    int ipara = 0;
    int itemp = 0;
@@ -6702,7 +6702,7 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member func1, cons
 }
 
 //______________________________________________________________________________
-::Reflex::Member G__get_ifunchandle_base(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, long* pifn, char** poffset, int access, int funcmatch, int withInheritance)
+static ::Reflex::Member G__get_ifunchandle_base(const char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, long* pifn, char** poffset, int access, int funcmatch, int withInheritance)
 {
    // Search for function.
    *poffset = 0;
@@ -6733,13 +6733,13 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member func1, cons
 }
 
 //______________________________________________________________________________
-void Cint::Internal::G__argtype2param(char *argtype, G__param *libp)
+void Cint::Internal::G__argtype2param(const char *argtype, G__param *libp)
 {
    G__StrBuf typenam_sb(G__MAXNAME*2);
    char *typenam = typenam_sb;
    int p = 0;
    int c;
-   char *endmark = ",);";
+   const char *endmark = ",);";
 
    libp->paran = 0;
    libp->para[0] = G__null;
@@ -6761,7 +6761,7 @@ void Cint::Internal::G__argtype2param(char *argtype, G__param *libp)
 }
 
 //______________________________________________________________________________
-extern "C" G__ifunc_table* G__get_methodhandle(char* funcname, char* argtype, G__ifunc_table* p_ifunc, long* pifn, long* poffset, int withConversion, int withInheritance)
+extern "C" G__ifunc_table* G__get_methodhandle(const char* funcname, const char* argtype, G__ifunc_table* p_ifunc, long* pifn, long* poffset, int withConversion, int withInheritance)
 {
    ::Reflex::Scope ifunc = G__Dict::GetDict().GetScope(p_ifunc);
    G__param para;
@@ -6838,7 +6838,7 @@ extern "C" G__ifunc_table* G__get_methodhandle(char* funcname, char* argtype, G_
 }
 
 //______________________________________________________________________________
-extern "C" G__ifunc_table* G__get_methodhandle2(char* funcname, G__param* libp, G__ifunc_table* p_ifunc, long* pifn, long* poffset, int withConversion, int withInheritance)
+extern "C" G__ifunc_table* G__get_methodhandle2(const char* funcname, G__param* libp, G__ifunc_table* p_ifunc, long* pifn, long* poffset, int withConversion, int withInheritance)
 {
    ::Reflex::Scope ifunc = G__Dict::GetDict().GetScope(p_ifunc);
    //

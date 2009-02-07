@@ -45,7 +45,7 @@ extern "C" int G__EnableAutoDictionary;
 #define G__NUM_STDBOTH 3
 
 //______________________________________________________________________________
-static void G__unredirectoutput(FILE **sout, FILE **serr, FILE **sin, char *keyword, char *pipefile);
+static void G__unredirectoutput(FILE **sout, FILE **serr, FILE **sin, const char *keyword, const char *pipefile);
 
 //______________________________________________________________________________
 #ifdef G__BORLANDCC5
@@ -244,7 +244,7 @@ extern "C" int G__autoloading(char *com)
       classname[j] = 0;
    }
    if (classname[0] && -1 == G__defined_tagname(classname, 2)) {
-      char *dllpost = G__getmakeinfo1("DLLPOST");
+      const char *dllpost = G__getmakeinfo1("DLLPOST");
       G__StrBuf fname_sb(G__MAXFILENAME);
       char *fname = fname_sb;
       G__StrBuf prompt_sb(G__ONELINE);
@@ -1007,7 +1007,7 @@ static void G__redirectoutput(char* com, FILE** psout, FILE** pserr
    char* doublequote;
    char* paren;
    char* blacket;
-   char* openmode;
+   const char* openmode;
    G__StrBuf filename_sb(G__MAXFILENAME);
    char* filename = filename_sb;
    int i = 0;
@@ -1218,7 +1218,7 @@ static void G__redirectoutput(char* com, FILE** psout, FILE** pserr
 }
 
 //______________________________________________________________________________
-static void G__unredirectoutput(FILE** sout, FILE** serr, FILE** sin, char* keyword, char* pipefile)
+static void G__unredirectoutput(FILE** sout, FILE** serr, FILE** sin, const char* keyword, const char* pipefile)
 {
    // --
 #ifdef G__REDIRECTIO
@@ -1373,7 +1373,7 @@ int Cint::Internal::G__ReadInputMode()
 {
    static int inputmodeflag = 0;
    if (inputmodeflag == 0) {
-      char *inputmodebuf;
+      const char *inputmodebuf;
       inputmodeflag = 1;
       inputmodebuf = getenv("INPUTMODE");
       if (inputmodebuf == 0) inputmodebuf = G__getmakeinfo1("INPUTMODE");

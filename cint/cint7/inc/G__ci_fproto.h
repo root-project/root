@@ -28,12 +28,12 @@ G__DECL_API(9, int, G__del_alloctable, (void* allocmem));
 G__DECL_API(10, int, G__add_refcount, (void* allocedmem,void** storedmem));
 G__DECL_API(11, int, G__del_refcount, (void* allocedmem,void** storedmem));
 G__DECL_API(12, int, G__disp_garbagecollection, (FILE* fout));
-G__DECL_API(13, struct G__ifunc_table*, G__get_methodhandle, (char *funcname,char *argtype
+G__DECL_API(13, struct G__ifunc_table*, G__get_methodhandle, (const char *funcname,const char *argtype
                                            ,struct G__ifunc_table *p_ifunc
                                            ,long *pifn,long *poffset
                                            ,int withConversion
                                            ,int withInheritance));
-G__DECL_API(14, struct G__ifunc_table*, G__get_methodhandle2, (char *funcname
+G__DECL_API(14, struct G__ifunc_table*, G__get_methodhandle2, (const char *funcname
                                            ,struct G__param* libp
                                            ,struct G__ifunc_table *p_ifunc
                                            ,long *pifn,long *poffset
@@ -123,7 +123,7 @@ G__DECL_API(51, int, G__fputerr, (int c));
 #endif
 
 G__DECL_API(52, void, G__SetUseCINTSYSDIR, (int UseCINTSYSDIR));
-G__DECL_API(53, void, G__SetCINTSYSDIR, (char* cintsysdir));
+G__DECL_API(53, void, G__SetCINTSYSDIR, (const char* cintsysdir));
 G__DECL_API(54, void, G__set_eolcallback, (void* eolcallback));
 G__DECL_API(55, G__parse_hook_t*, G__set_beforeparse_hook, (G__parse_hook_t* hook));
 G__DECL_API(56, void, G__set_ioctortype_handler, (int (* /*p2f*/) (const char*)));
@@ -276,8 +276,8 @@ G__DECL_API(176, void, G__set_atpause, (void (*p2f)()));
 G__DECL_API(177, void, G__set_aterror, (void (*p2f)()));
 G__DECL_API(178, void, G__p2f_void_void, (void* p2f));
 G__DECL_API(179, void, G__setglobalcomp, (int globalcomp));
-G__DECL_API(180, char, *G__getmakeinfo, (char *item));
-G__DECL_API(181, char, *G__getmakeinfo1, (char *item));
+G__DECL_API(180, const char, *G__getmakeinfo, (const char *item));
+G__DECL_API(181, const char, *G__getmakeinfo1, (const char *item));
 G__DECL_API(182, int, G__get_security_error, (void));
 G__DECL_API(183, char*, G__map_cpp_name, (const char *in));
 G__DECL_API(184, char*, G__Charref, (G__value *buf));
@@ -358,7 +358,7 @@ G__DECL_API(233, G__CONST char, *G__fulltagname, (int tagnum,int mask_dollar));
 G__DECL_API(234, void, G__loadlonglong, (int* ptag,int* ptype,int which));
 G__DECL_API(235, int, G__isanybase, (int basetagnum,int derivedtagnum,long pobject));
 G__DECL_API(236, int, G__pop_tempobject, (void));
-G__DECL_API(237, char*, G__stripfilename, (char* filename));
+G__DECL_API(237, const char*, G__stripfilename, (const char* filename));
 
 /***********************************************************************
  * Native long long support

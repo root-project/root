@@ -299,9 +299,9 @@ int Cint::Internal::G__init_readline()
 
 
 
-char *Cint::Internal::G__strrstr(char *string1,const char *string2)
+const char *Cint::Internal::G__strrstr(const char *string1,const char *string2)
 {
-  char *p=NULL,*s,*result=NULL;
+  const char *p=NULL,*s,*result=NULL;
   s=string1;
   while((p=strstr(s,string2))) {
     result=p;
@@ -309,6 +309,18 @@ char *Cint::Internal::G__strrstr(char *string1,const char *string2)
   }
   return(result);
 }
+
+char *Cint::Internal::G__strrstr(char *string1,const char *string2)
+{
+   char *p=NULL,*s,*result=NULL;
+   s=string1;
+   while((p=strstr(s,string2))) {
+      result=p;
+      s=p+1;
+   }
+   return(result);
+}
+
 
 /*
  * Local Variables:

@@ -732,7 +732,9 @@ static int G__initstruct(char* new_name)
    buf.ref = 0;
    // Get size.
    ::Reflex::Type element_type = member.TypeOf().FinalType();
-   for (; element_type.IsArray(); element_type = element_type.ToType());
+   for (; element_type.IsArray(); element_type = element_type.ToType()) {
+      // Intentionally empty.
+   }
    int size = element_type.SizeOf();
    G__ASSERT((stride > 0) && (size > 0));
    // Get a pointer to the first data member.
@@ -1049,7 +1051,9 @@ static int G__initary(char* new_name)
    //  Get the type of an array element.
    //
    ::Reflex::Type element_type = var.TypeOf().FinalType();
-   for (; element_type.IsArray(); element_type = element_type.ToType());
+   for (; element_type.IsArray(); element_type = element_type.ToType()) {
+      // Intentionally empty
+   }
    //
    //  Get the size of an array element.
    //

@@ -38,8 +38,8 @@ int G__cmp(G__value buf1, G__value buf2);
 int G__getunaryop(char unaryop, char* expression, char* buf, G__value* preg);
 int G__iosrdstate(G__value* pios);
 int G__overloadopr(int operatortag, G__value expressionin, G__value* defined);
-int G__parenthesisovldobj(G__value* result3, G__value* result, char* realname, G__param* libp, int flag);
-int G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int flag);
+int G__parenthesisovldobj(G__value* result3, G__value* result, const char* realname, G__param* libp, int flag);
+int G__parenthesisovld(G__value* result3, const char* funcname, G__param* libp, int flag);
 int G__tryindexopr(G__value* result7, G__value* para, int paran, int ig25);
 long G__op1_operator_detail(int opr, G__value* val);
 long G__op2_operator_detail(int opr, G__value* lval, G__value* rval);
@@ -2705,7 +2705,7 @@ int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__va
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__parenthesisovldobj(G__value* result3, G__value* result, char* realname, G__param* libp, int flag)
+int Cint::Internal::G__parenthesisovldobj(G__value* result3, G__value* result, const char* realname, G__param* libp, int flag)
 {
    // FIXME: Describe this function!
    //
@@ -2789,7 +2789,7 @@ int Cint::Internal::G__parenthesisovldobj(G__value* result3, G__value* result, c
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int flag)
+int Cint::Internal::G__parenthesisovld(G__value* result3, const char* funcname, G__param* libp, int flag)
 {
    // FIXME: Describe this function!
    int known;
@@ -2813,10 +2813,10 @@ int Cint::Internal::G__parenthesisovld(G__value* result3, char* funcname, G__par
    else {
       if (flag == G__CALLMEMFUNC) {
          G__incsetup_memvar(G__tagnum);
-         result = G__getvariable(funcname, &known,::Reflex::Scope(), G__tagnum);
+         result = G__getvariable(/*FIXME*/(char*)funcname, &known,::Reflex::Scope(), G__tagnum);
       }
       else {
-         result = G__getvariable(funcname, &known,::Reflex::Scope::GlobalScope(), G__p_local);
+         result = G__getvariable(/*FIXME*/(char*)funcname, &known,::Reflex::Scope::GlobalScope(), G__p_local);
       }
    }
    // resolve A::staticmethod(1)(2,3)

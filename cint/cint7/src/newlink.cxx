@@ -304,7 +304,7 @@ void G__add_macro(char *macroin);
 int G__isnonpublicnew(int tagnum);
 static int G__isprotecteddestructoronelevel(int tagnum);
 void  G__if_ary_union(FILE *fp, int ifn, struct G__ifunc_table *ifunc);
-char *G__mark_linked_tagnum(int tagnum);
+const char *G__mark_linked_tagnum(int tagnum);
 static int G__isprivateconstructorifunc(int tagnum, int iscopy);
 static int G__isprivateconstructorvar(int tagnum, int iscopy);
 static int G__isprivatedestructorifunc(int tagnum);
@@ -961,7 +961,7 @@ static char *G__map_cpp_funcname(const ::Reflex::Member& ifunc)
 char* Cint::Internal::G__map_cpp_funcname(int tagnum, char* /*funcname*/, long ifn, int page)
 {
    static char mapped_name[G__MAXNAME];
-   char *dllid;
+   const char *dllid;
 
    if (G__DLLID[0]) dllid = G__DLLID;
    else if (G__PROJNAME[0]) dllid = G__PROJNAME;
@@ -1234,7 +1234,7 @@ char* Cint::Internal::G__get_link_tagname(int tagnum)
 }
 
 //______________________________________________________________________________
-static char* G__mark_linked_tagnum(int tagnum)
+static const char* G__mark_linked_tagnum(int tagnum)
 {
    // -- Setup and return tagnum.
    int tagnumorig = tagnum;
@@ -1413,7 +1413,7 @@ static void G__write_windef_header()
 #endif // G__GENWINDEF
 
 //______________________________________________________________________________
-void Cint::Internal::G__set_globalcomp(char* mode, char* linkfilename, char* dllid)
+void Cint::Internal::G__set_globalcomp(const char* mode, const char* linkfilename, const char* dllid)
 {
    FILE *fp;
    G__StrBuf buf_sb(G__LONGLINE);
@@ -2017,7 +2017,7 @@ static int G__isnonpublicnew(int tagnum)
 {
    int i;
    int hash;
-   char *namenew = "operator new";
+   const char *namenew = "operator new";
 
    G__hash(namenew, hash, i);
 
@@ -5545,7 +5545,9 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
 
                if (G__get_cint5_typenum(ifunc->TypeOf().ReturnType()) != -1) {
                   ::Reflex::Type ty = ifunc->TypeOf().ReturnType();
-                  for ( ; !ty.IsTypedef(); ty = ty.ToType());
+                  for ( ; !ty.IsTypedef(); ty = ty.ToType()) {
+                     // Intentionally empty
+                  }
                   fprintf(fp, "G__defined_typename(\"%s\"), ", ty.Name(::Reflex::SCOPED).c_str());
                }
                else {
@@ -6232,7 +6234,9 @@ void Cint::Internal::G__cpplink_func(FILE* fp)
 
          if (G__get_cint5_typenum(ifunc->TypeOf().ReturnType()) != -1) {
             ::Reflex::Type ty = ifunc->TypeOf().ReturnType();
-            for ( ; !ty.IsTypedef(); ty = ty.ToType());
+            for ( ; !ty.IsTypedef(); ty = ty.ToType()) {
+               // Intentionally empty
+            }
             fprintf(fp, "G__defined_typename(\"%s\"), ", ty.Name().c_str());
          }
          else {
@@ -6878,11 +6882,16 @@ int Cint::Internal::G__separate_parameter(const char* original, int* pos, char* 
       int c = original[i];
       switch (c) {
          case '\'':
-            if (!double_quote)
-               if (single_quote) single_quote = 0;
+            if (!double_quote) {
+               if (single_quote) {
+                  single_quote = 0;
             // only turn on single_quote if at the beginning!
-               else if (i == startPos)  single_quote = 1;
-               else if (single_arg_quote) single_arg_quote = 0;
+               } else if (i == startPos)  {
+                  single_quote = 1;
+               } else if (single_arg_quote) {
+                  single_arg_quote = 0;
+               }
+            }
             break;
          case '"':
             if (!single_quote) double_quote ^= 1;

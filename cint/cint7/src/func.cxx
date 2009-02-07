@@ -41,12 +41,12 @@ using namespace std;
 //
 
 // Static Functions
-static char* G__catparam(G__param* libp, int catn, char* connect);
+static char* G__catparam(G__param* libp, int catn, const char* connect);
 static void G__gen_PUSHSTROS_SETSTROS();
 static int G__dispvalue(FILE* fp, G__value* buf);
 static int G__bytecodedebugmode(int mode);
 static int G__getbytecodedebugmode();
-static int G__checkscanfarg(char* fname, G__param* libp, int n);
+static int G__checkscanfarg(const char* fname, G__param* libp, int n);
 static void G__getindexedvalue(G__value* result3, char* cindex);
 #ifdef G__PTR2MEMFUNC
 static G__value G__pointer2memberfunction(char* parameter0, char* parameter1, int* known3);
@@ -116,7 +116,7 @@ typedef struct
 static int G__exitcode = 0;
 
 //______________________________________________________________________________
-static char* G__catparam(G__param* libp, int catn, char* connect)
+static char* G__catparam(G__param* libp, int catn, const char* connect)
 {
    // Concatenate parameter string to libp->parameter[0] and return.
    //
@@ -212,7 +212,7 @@ extern "C" int G__lasterror_linenum()
 }
 
 //______________________________________________________________________________
-static int G__checkscanfarg(char* fname, G__param* libp, int n)
+static int G__checkscanfarg(const char* fname, G__param* libp, int n)
 {
    int result = 0;
    while (n < libp->paran) {
@@ -692,7 +692,7 @@ static G__value G__pointer2memberfunction(char* parameter0, char* parameter1, in
    char *expr = expr_sb;
    char* mem;
    G__value res;
-   char* opx;
+   const char* opx;
 
    strcpy(buf, parameter0);
 

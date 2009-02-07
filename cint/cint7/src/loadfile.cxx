@@ -264,7 +264,7 @@ int Cint::Internal::G__include_file()
 }
 
 //______________________________________________________________________________
-extern "C" char* G__getmakeinfo(char* item)
+extern "C" const char* G__getmakeinfo(const char* item)
 {
    G__StrBuf makeinfo_sb(G__MAXFILENAME);
    char* makeinfo = makeinfo_sb;
@@ -369,21 +369,13 @@ extern "C" char* G__getmakeinfo(char* item)
 }
 
 //______________________________________________________________________________
-extern "C" char* G__getmakeinfo1(char* item)
+extern "C" const char* G__getmakeinfo1(const char* item)
 {
-   char* buf = G__getmakeinfo(item);
-#ifndef G__HAVE_CONFIG
-   char* p = buf;
-   while (*p && !isspace(*p)) {
-      ++p;
-   }
-   *p = 0;
-#endif // G__HAVE_CONFIG
-   return buf;
+   return G__getmakeinfo(item);
 }
 
 //______________________________________________________________________________
-extern "C" void G__SetCINTSYSDIR(char *cintsysdir)
+extern "C" void G__SetCINTSYSDIR(const char *cintsysdir)
 {
    strcpy(G__cintsysdir, cintsysdir);
 }
@@ -400,7 +392,7 @@ extern "C" void G__SetUseCINTSYSDIR(int UseCINTSYSDIR)
 //______________________________________________________________________________
 int Cint::Internal::G__getcintsysdir()
 {
-   char* env = 0;
+   const char* env = 0;
    if (G__cintsysdir[0] != '*') {
       return EXIT_SUCCESS;
    }
@@ -649,14 +641,14 @@ int Cint::Internal::G__matchfilename(int i1, const char* filename)
 }
 
 //______________________________________________________________________________
-extern "C" char* G__stripfilename(char* filename)
+extern "C" const char* G__stripfilename(const char* filename)
 {
    if (!filename) {
       return "";
    }
-   char* filenamebase = G__strrstr(filename, "./");
+   const char* filenamebase = G__strrstr(filename, "./");
    if (filenamebase) {
-      char* parentdir = G__strrstr(filename, "../");
+      const char* parentdir = G__strrstr(filename, "../");
       G__StrBuf buf_sb(G__ONELINE);
       char* buf = buf_sb;
 #ifdef G__WIN32
@@ -1397,7 +1389,7 @@ extern "C" int G__loadfile(const char* filenamein)
    //  9)                                        return 0
    FILE* tmpfp;
    int external_compiler = 0;
-   char* compiler_option = "";
+   const char* compiler_option = "";
    int store_prerun;
    int i1 = 0;
    ::Reflex::Scope store_p_local;
@@ -1422,7 +1414,7 @@ extern "C" int G__loadfile(const char* filenamein)
    int len;
 #ifdef G__SHAREDLIB
    int len1;
-   char* dllpost;
+   const char* dllpost;
 #endif
    short store_iscpp;
    G__UINT32 store_security;

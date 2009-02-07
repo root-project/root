@@ -126,8 +126,8 @@ static int G__getIndex(int index, int tagnum, std::vector<std::string>& headers)
 static bool G__isSource(const char* filename);
 
 static void G__freetemplatearg(G__Templatearg* def_para);
-static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* callpara, FILE* def_fp, int line, int filenum, fpos_t* pdef_pos, G__Templatearg* def_para, int isclasstemplate, int npara, int parent_tagnum);
-static int G__templatesubstitute(char* symbol, G__Charlist* callpara, G__Templatearg* defpara, char* templatename, char* tagname, int c, int npara, int isnew);
+static void G__replacetemplate(char* templatename, const char* tagname, G__Charlist* callpara, FILE* def_fp, int line, int filenum, fpos_t* pdef_pos, G__Templatearg* def_para, int isclasstemplate, int npara, int parent_tagnum);
+static int G__templatesubstitute(char* symbol, G__Charlist* callpara, G__Templatearg* defpara, char* templatename, const char* tagname, int c, int npara, int isnew);
 //858//static int G__gettemplatearglist(char* tmpl_arg_string, G__Charlist* tmpl_arg_list_in, G__Templatearg* tmpl_para_list, int* pnpara, int parent_tagnum, G__Definedtemplateclass* specialization);
 static int G__gettemplatearglist(char* tmpl_arg_string, G__Charlist* tmpl_arg_list_in, G__Templatearg* tmpl_para_list, int* pnpara, int parent_tagnum);
 static void G__templatemaptypename(char* string);
@@ -150,8 +150,8 @@ static void G__cattemplatearg(char* template_id, G__Charlist* tmpl_arg_list, int
 static void G__settemplatealias(const char* scope_name, const char* template_id, int tagnum, G__Charlist* tmpl_arg_list, G__Templatearg* tmpl_param, int create_in_envtagnum);
 static G__Definedtemplateclass* G__resolve_specialization(char* tmpl_args_string, G__Definedtemplateclass* class_tmpl, G__Charlist* expanded_tmpl_arg_list);
 static void G__modify_callpara(G__Templatearg* spec_arg_in, G__Templatearg* given_spec_arg_in, G__Charlist* expanded_tmpl_arg_in);
-static void G__delete_string(char* str, char* del);
-static void G__delete_end_string(char* str, char* del);
+static void G__delete_string(char* str, const char* del);
+static void G__delete_end_string(char* str, const char* del);
 
 static ::Reflex::Type G__getobjecttagnum(char *name);
 
@@ -164,8 +164,8 @@ int G__createtemplateclass(char* new_name, G__Templatearg* targ, int isforwardde
 void G__freedeftemplateclass(G__Definedtemplateclass* deftmpclass);
 void G__freetemplatefunc(G__Definetemplatefunc* deftmpfunc);
 int G__instantiate_templateclass(char* tagnamein, int noerror);
-int G__templatefunc(G__value* result, char* funcname, G__param* libp, int hash, int funcmatch);
-G__funclist* G__add_templatefunc(char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive);
+int G__templatefunc(G__value* result, const char* funcname, G__param* libp, int hash, int funcmatch);
+G__funclist* G__add_templatefunc(const char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive);
 char* G__gettemplatearg(int n, G__Templatearg* def_para);
 G__Definetemplatefunc* G__defined_templatefunc(const char* name);
 G__Definetemplatefunc* G__defined_templatememfunc(const char* name);
@@ -440,7 +440,7 @@ static void G__freetemplatearg(G__Templatearg* def_para)
    fsetpos(G__mfp,&out_pos)
 
 //______________________________________________________________________________
-static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* tmpl_arg_list, FILE* def_fp, int line, int filenum, fpos_t* pdef_pos, G__Templatearg* tmpl_para_list, int isclasstemplate, int npara, int parent_tagnum)
+static void G__replacetemplate(char* templatename, const char* tagname, G__Charlist* tmpl_arg_list, FILE* def_fp, int line, int filenum, fpos_t* pdef_pos, G__Templatearg* tmpl_para_list, int isclasstemplate, int npara, int parent_tagnum)
 {
    // Replace template string and prerun
    //
@@ -555,7 +555,7 @@ static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* t
    //  Read template definition from file and substitute the template arguments.
    //
    int isnew = 0;
-   char* punctuation = "\t\n !\"#$%&'()*+,-./:;<=>?@[\\]^{|}~"; // not alpha, numeric, underscore, CR, FF, VT, backtick
+   const char* punctuation = "\t\n !\"#$%&'()*+,-./:;<=>?@[\\]^{|}~"; // not alpha, numeric, underscore, CR, FF, VT, backtick
    mparen = 0;
    while (1) { // loop over all punctuation and whitespace separated words in definition
       G__disp_mask = 10000;
@@ -1084,7 +1084,7 @@ static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* t
 #undef SET_READINGFILE
 
 //______________________________________________________________________________
-static int G__templatesubstitute(char* symbol, G__Charlist* tmpl_arg_list, G__Templatearg* tmpl_para_list, char* templatename, char* tagname, int c, int npara, int isnew)
+static int G__templatesubstitute(char* symbol, G__Charlist* tmpl_arg_list, G__Templatearg* tmpl_para_list, char* templatename, const char* tagname, int c, int npara, int isnew)
 {
    // If given symbol matches a template parameter, substitute it with the matching given argument.
    static int state = 0; // Controls our result, flags that we are in a template-id and counts params processed.
@@ -1466,7 +1466,7 @@ static void G__templatemaptypename(char* string)
 static char* G__expand_def_template_arg(char* str_in, G__Templatearg* def_para, G__Charlist* charlist)
 {
    // Returns a malloc'd string.
-   char* punctuation = " \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
+   const char* punctuation = " \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
    int siz_out = strlen(str_in) * 2;
    char* str_out;
    char* temp;
@@ -3336,7 +3336,8 @@ static void G__instantiate_templatememfunclater(G__Definedtemplateclass* deftmpc
          ++arg;
       }
       else {
-         arg = "";
+         static char cnull[1] = "";
+         arg = cnull;
       }
       call_para.string = 0;
       call_para.next = 0;
@@ -3904,7 +3905,8 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
       ++tmpl_args_string;
    }
    else {
-      tmpl_args_string = "";
+      static char cnull[1] = "";
+      tmpl_args_string = cnull;
    }
    //
    //  Collect any using directives in our enclosing scope.
@@ -4800,7 +4802,7 @@ static void G__modify_callpara(G__Templatearg* spec_arg_in, G__Templatearg* give
 }
 
 //______________________________________________________________________________
-static void G__delete_string(char* str, char* del)
+static void G__delete_string(char* str, const char* del)
 {
    char* p = strstr(str, del);
    if (p) {
@@ -4813,7 +4815,7 @@ static void G__delete_string(char* str, char* del)
 }
 
 //______________________________________________________________________________
-static void G__delete_end_string(char* str, char* del)
+static void G__delete_end_string(char* str, const char* del)
 {
    // Remove the last occurence of 'del' (if any)
    char* e;
@@ -4832,7 +4834,7 @@ static void G__delete_end_string(char* str, char* del)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__templatefunc(G__value* result, char* funcname, G__param* libp, int hash, int funcmatch)
+int Cint::Internal::G__templatefunc(G__value* result, const char* funcname, G__param* libp, int hash, int funcmatch)
 {
    // Search matching template function, search by name then parameter.
    // If match found, expand template, parse as pre-run and execute it.
@@ -4911,7 +4913,8 @@ int Cint::Internal::G__templatefunc(G__value* result, char* funcname, G__param* 
             G__hash(funcname, hash, tmp);
          }
          else {
-            pexplicitarg = "";
+            static char cnull[1] = "";
+            pexplicitarg = cnull;
          }
          // matches funcname and parameter,
          // then expand the template and parse as prerun
@@ -4950,7 +4953,7 @@ int Cint::Internal::G__templatefunc(G__value* result, char* funcname, G__param* 
 #define G__NOMATCH 0xffffffff
 
 //______________________________________________________________________________
-G__funclist* Cint::Internal::G__add_templatefunc(char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive)
+G__funclist* Cint::Internal::G__add_templatefunc(const char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive)
 {
    // Attempt a function template instantiation by name and argument list, if we succeed, parse as pre-run.
    //

@@ -348,7 +348,7 @@ char* G__optarg;
 #define getopt G__getopt
 
 //______________________________________________________________________________
-extern "C" int G__getopt(int argc, char** argv, char* optlist)
+extern "C" int G__getopt(int argc, char** argv, const char* optlist)
 {
    if (optind >= argc) {
       return EOF;
@@ -357,7 +357,7 @@ extern "C" int G__getopt(int argc, char** argv, char* optlist)
       return EOF;
    }
    int optkey = argv[optind][1];
-   for (char* p = optlist; *p; ++p) {
+   for (const char* p = optlist; *p; ++p) {
       if ((*p) != optkey) {
          continue;
       }
@@ -661,7 +661,8 @@ int Cint::Internal::G__init_globals()
    G__preprocessfilekey.next = 0;
    G__precomp_private = 0;
    // The first entry in the const string is a blank string which is never used.
-   G__conststringlist.string = "";
+   static char clnull[1] = ""; 
+   G__conststringlist.string = clnull;
    G__conststringlist.hash = 0;
    G__conststringlist.prev = 0;
    G__plastconststring = &G__conststringlist;
@@ -1392,9 +1393,9 @@ extern "C" int G__main(int argc, char** argv)
    G__StrBuf dumpfile_sb(G__MAXFILENAME);
    char* dumpfile = dumpfile_sb;
    G__value result = G__null;
-   char* linkfilename = 0;
+   const char* linkfilename = 0;
    int linkflag = 0;
-   char* dllid = 0;
+   const char* dllid = 0;
    G__dictposition stubbegin;
    char* icom = 0;
    //

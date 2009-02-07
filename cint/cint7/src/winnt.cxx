@@ -26,10 +26,10 @@ extern "C" {
 int optind=1;
 char *optarg;
 
-int getopt(int argc, char **argv,char *optlist)
+int getopt(int argc, char **argv,const char *optlist)
 {
   int optkey;
-  char *p;
+  const  char *p;
   if(optind<argc) {
     if('-'==argv[optind][0]) {
       optkey = argv[optind][1] ;

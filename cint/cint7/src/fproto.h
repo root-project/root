@@ -107,7 +107,7 @@ int G__display_string(FILE *fout);
 int G__display_files(FILE *fout);
 int G__pr(FILE *fout,struct G__input_file view);
 int G__dump_tracecoverage(FILE *fout);
-int G__objectmonitor(FILE *fout,char *pobject,const ::Reflex::Type &tagnum,char *addspace);
+int G__objectmonitor(FILE *fout,char *pobject,const ::Reflex::Type &tagnum,const char *addspace);
 int G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const char* mbrname, const char* addspace, long offset);
 int G__pushdumpinput(FILE *fp,int exflag);
 int G__popdumpinput(void);
@@ -177,7 +177,7 @@ char *G__charformatter(int ifmt,struct G__param *libp,char *result);
 int G__istypename(char *temp);
 char* G__savestring(char** pbuf,char* name);
 void G__make_ifunctable(char *funcheader);
-int G__interpret_func(G__value *result7,char *funcname,struct G__param *libp,int hash,const ::Reflex::Scope p_ifunc,int funcmatch,int memfunc_flag);
+int G__interpret_func(G__value *result7,const char *funcname,struct G__param *libp,int hash,const ::Reflex::Scope p_ifunc,int funcmatch,int memfunc_flag);
 int G__interpret_func(G__value *result7,struct G__param *libp,int hash,const ::Reflex::Member func,int funcmatch,int memfunc_flag);
 void G__rate_parameter_match(G__param* libp, const ::Reflex::Member func, G__funclist* funclist, int recursive);
 int G__function_signature_match(const Reflex::Member func1, const Reflex::Member func2, bool check_return_type, int /*matchmode*/,int* nref);
@@ -204,6 +204,7 @@ int G__init_globals(void);
 void G__set_stdio(void);
 int G__cintrevision(FILE *fp);
   /* char *G__input(char *prompt); */
+const char *G__strrstr(const char *string1,const char *string2);
 char *G__strrstr(char *string1,const char *string2);
 
   /* void G__breakkey(int signame); */
@@ -247,7 +248,7 @@ void G__fsigusr1(int);
 void G__fsigusr2(int);
 #endif
 
-int G__errorprompt(char *nameoferror);
+int G__errorprompt(const char *nameoferror);
 int G__call_interruptfunc(char *func);
 
 int G__include_file(void);
@@ -301,7 +302,7 @@ void G__cpplink_linked_taginfo(FILE* fp,FILE* hfp);
 char *G__get_link_tagname(int tagnum);
 /* char *G__map_cpp_name(char *in); */
 char *G__map_cpp_funcname(int tagnum,char *funcname,long ifn,int page);
-void G__set_globalcomp(char *mode,char *linkfilename,char* dllid);
+void G__set_globalcomp(const char *mode,const char *linkfilename,const char* dllid);
 int G__ishidingfunc(struct G__ifunc_table *fentry,struct G__ifunc_table *fthis,int ifn);
 void G__cppif_memfunc(FILE *fp,FILE *hfp);
 void G__cppif_func(FILE *fp,FILE *hfp);
@@ -344,8 +345,8 @@ int G__scopeoperator(char *name,int *phash,char **pstruct_offset,int *ptagnum);
 int G__cmp(G__value buf1,G__value buf2);
 int G__getunaryop(char unaryop,char *expression,char *buf,G__value *preg);
 int G__overloadopr(int operatorin,G__value expressionin,G__value *defined);
-int G__parenthesisovldobj(G__value *result3,G__value *result,char *realname,struct G__param *libp,int flag);
-int G__parenthesisovld(G__value *result3,char *funcname,struct G__param *libp,int flag);
+int G__parenthesisovldobj(G__value *result3,G__value *result,const char *realname,struct G__param *libp,int flag);
+int G__parenthesisovld(G__value *result3,const char *funcname,struct G__param *libp,int flag);
 int G__tryindexopr(G__value *result7,G__value *para,int paran,int ig25);
 int G__skip_comment(void);
 int G__skip_comment_peek(void);
@@ -443,10 +444,10 @@ int G__instantiate_templateclass(char* tagnamein, int noerror);
 void G__freedeftemplateclass(G__Definedtemplateclass* deftmpclass);
 char* G__gettemplatearg(int n, G__Templatearg* def_para);
 void G__freetemplatefunc(G__Definetemplatefunc* deftmpfunc);
-struct G__funclist* G__add_templatefunc(char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive);
+struct G__funclist* G__add_templatefunc(const char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive);
 struct G__funclist* G__funclist_add(struct G__funclist* last, const ::Reflex::Member ifunc, int ifn, int rate);
 void G__funclist_delete(struct G__funclist* body);
-int G__templatefunc(G__value* result, char* funcname, G__param* libp, int hash, int funcmatch);
+int G__templatefunc(G__value* result, const char* funcname, G__param* libp, int hash, int funcmatch);
 void G__define_type(void);
 int G__defined_type(char *typenamein,int len);
 char *G__valuemonitor(G__value buf,char *temp);
@@ -613,7 +614,7 @@ void G__asm_storebytecodefunc(const Reflex::Member& func,const Reflex::Scope& fr
 
 G__value G__alloc_exceptionbuffer(int tagnum);
 
-void G__argtype2param(char *argtype,struct G__param *libp);
+void G__argtype2param(const char *argtype,struct G__param *libp);
 
 long G__bool(G__value buf);
 

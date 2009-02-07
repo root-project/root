@@ -137,7 +137,7 @@ void Cint::Internal::G__killproc(int signame)
 /******************************************************************
 * G__errorprompt()
 ******************************************************************/
-int Cint::Internal::G__errorprompt(char *nameoferror)
+int Cint::Internal::G__errorprompt(const char *nameoferror)
 {
 
 #ifdef G__EH_SIGNAL
