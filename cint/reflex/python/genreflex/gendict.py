@@ -1362,7 +1362,7 @@ class genDictionary(object) :
     return s
 #----------------------------------------------------------------------------------
 # const is CONST VETO!!!
-def genTypeName(self, id, enum=False, const=False, colon=False, alltempl=False, _useCache=True, _cache={}) :
+  def genTypeName(self, id, enum=False, const=False, colon=False, alltempl=False, _useCache=True, _cache={}) :
     if _useCache:
       key = (self,id,enum,const,colon,alltempl)
       if _cache.has_key(key):
