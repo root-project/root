@@ -845,31 +845,33 @@ G__value Cint::Internal::G__interactivereturn()
 **************************************************************************/
 void Cint::Internal::G__set_tracemode(const char *name)
 {
-  int tagnum;
-  int i=0;
-  char *p;
-  const char *s;
-  while(name[i]&&isspace(name[i])) i++;
-  if('\0'==name[i]) {
-    fprintf(G__sout,"trace all source code\n");
-    G__istrace = 1;
-    tagnum = -1;
-  }
-  else {
-    s = name+i;
-    while(s) {
-      p = strchr(s,' ');
-      if(p) *p = '\0';
-      tagnum = G__defined_tagname(s,0);
-      if(-1!=tagnum) { 
-        G__struct.istrace[tagnum] = 1;
-        fprintf(G__sout,"trace %s object on\n",s);
+   int tagnum;
+   int i=0;
+   while(name[i]&&isspace(name[i])) i++;
+   if('\0'==name[i]) {
+      fprintf(G__sout,"trace all source code\n");
+      G__istrace = 1;
+      tagnum = -1;
+   }
+   else {
+      G__StrBuf buffer(strlen(name)+1);
+      char *p;
+      char *s = buffer;
+      strcpy(s,name+i);
+
+      while(s) {
+         p = strchr(s,' ');
+         if(p) *p = '\0';
+         tagnum = G__defined_tagname(s,0);
+         if(-1!=tagnum) { 
+            G__struct.istrace[tagnum] = 1;
+            fprintf(G__sout,"trace %s object on\n",s);
+         }
+         if(p) s = p+1;
+         else  s = p;
       }
-      if(p) s = p+1;
-      else  s = p;
-    }
-  }
-  G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum),0);
+   }
+   G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum),0);
 }
 
 /**************************************************************************
@@ -878,31 +880,33 @@ void Cint::Internal::G__set_tracemode(const char *name)
 **************************************************************************/
 void Cint::Internal::G__del_tracemode(const char *name)
 {
-  int tagnum;
-  int i=0;
-  char *p;
-  const char *s;
-  while(name[i]&&isspace(name[i])) i++;
-  if('\0'==name[i]) {
-    G__istrace = 0;
-    tagnum = -1;
-    fprintf(G__sout,"trace all source code off\n");
-  }
-  else {
-    s = name+i;
-    while(s) {
-      p = strchr(s,' ');
-      if(p) *p = '\0';
-      tagnum = G__defined_tagname(s,0);
-      if(-1!=tagnum) {
-        G__struct.istrace[tagnum] = 0;
-        fprintf(G__sout,"trace %s object off\n",s);
+   int tagnum;
+   int i=0;
+   while(name[i]&&isspace(name[i])) i++;
+   if('\0'==name[i]) {
+      G__istrace = 0;
+      tagnum = -1;
+      fprintf(G__sout,"trace all source code off\n");
+   }
+   else {
+      G__StrBuf buffer(strlen(name)+1);
+      char *p;
+      char *s = buffer;
+      strcpy(s,name+i);
+
+      while(s) {
+         p = strchr(s,' ');
+         if(p) *p = '\0';
+         tagnum = G__defined_tagname(s,0);
+         if(-1!=tagnum) {
+            G__struct.istrace[tagnum] = 0;
+            fprintf(G__sout,"trace %s object off\n",s);
+         }
+         if(p) s = p+1;
+         else  s = p;
       }
-      if(p) s = p+1;
-      else  s = p;
-    }
-  }
-  G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum),0);
+   }
+   G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum),0);
 }
 
 /**************************************************************************
@@ -911,25 +915,27 @@ void Cint::Internal::G__del_tracemode(const char *name)
 **************************************************************************/
 void Cint::Internal::G__set_classbreak(const char *name)
 {
-  int tagnum;
-  int i=0;
-  char *p;
-  const char *s;
-  while(name[i]&&isspace(name[i])) i++;
-  if(name[i]) {
-    s = name+i;
-    while(s) {
-      p = strchr(s,' ');
-      if(p) *p = '\0';
-      tagnum = G__defined_tagname(s,0);
-      if(-1!=tagnum) {
-        G__struct.isbreak[tagnum] = 1;
-        fprintf(G__sout,"set break point at every %s member function\n",s);
+   int tagnum;
+   int i=0;
+   while(name[i]&&isspace(name[i])) i++;
+   if(name[i]) {
+      G__StrBuf buffer(strlen(name)+1);
+      char *p;
+      char *s = buffer;
+      strcpy(s,name+i);
+
+      while(s) {
+         p = strchr(s,' ');
+         if(p) *p = '\0';
+         tagnum = G__defined_tagname(s,0);
+         if(-1!=tagnum) {
+            G__struct.isbreak[tagnum] = 1;
+            fprintf(G__sout,"set break point at every %s member function\n",s);
+         }
+         if(p) s = p+1;
+         else  s = p;
       }
-      if(p) s = p+1;
-      else  s = p;
-    }
-  }
+   }
 }
 
 /**************************************************************************
@@ -938,25 +944,27 @@ void Cint::Internal::G__set_classbreak(const char *name)
 **************************************************************************/
 void Cint::Internal::G__del_classbreak(const char *name)
 {
-  int tagnum;
-  int i=0;
-  char *p;
-  const char *s;
-  while(name[i]&&isspace(name[i])) i++;
-  if(name[i]) {
-    s = name+i;
-    while(s) {
-      p = strchr(s,' ');
-      if(p) *p = '\0';
-      tagnum = G__defined_tagname(s,0);
-      if(-1!=tagnum) {
-        G__struct.isbreak[tagnum] = 0;
-        fprintf(G__sout,"delete break point at every %s member function\n",s);
+   int tagnum;
+   int i=0;
+   while(name[i]&&isspace(name[i])) i++;
+   if(name[i]) {
+      G__StrBuf buffer(strlen(name)+1);
+      char *p;
+      char *s = buffer;
+      strcpy(s,name+i);
+
+      while(s) {
+         p = strchr(s,' ');
+         if(p) *p = '\0';
+         tagnum = G__defined_tagname(s,0);
+         if(-1!=tagnum) {
+            G__struct.isbreak[tagnum] = 0;
+            fprintf(G__sout,"delete break point at every %s member function\n",s);
+         }
+         if(p) s = p+1;
+         else  s = p;
       }
-      if(p) s = p+1;
-      else  s = p;
-    }
-  }
+   }
 }
 
 /**************************************************************************
