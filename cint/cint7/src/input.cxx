@@ -36,8 +36,8 @@ void Cint::Internal::G__set_history_size(int s)
 }
 
 #ifdef G__GNUREADLINE
-extern "C" char *readline(char* prompt);
-extern "C" int add_history(char* str);
+extern "C" char *readline(const char* prompt);
+extern "C" int add_history(const char* str);
 
 /************************************************************
 * G__input_history()
