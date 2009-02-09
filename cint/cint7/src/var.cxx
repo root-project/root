@@ -7329,7 +7329,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
       scope_tagnum = G__tagnum;
    }
    int intScopeTagnum = G__get_tagnum(scope_tagnum);
-   switch (G__scopeoperator((char*) varname.c_str(), &varhash, &scope_struct_offset, &intScopeTagnum)) {
+   switch (G__scopeoperator(/*FIXME*/(char*) varname.c_str(), &varhash, &scope_struct_offset, &intScopeTagnum)) {
       case G__GLOBALSCOPE:
          ilg = G__GLOBAL;
          break;

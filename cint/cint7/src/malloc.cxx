@@ -230,7 +230,7 @@ void* Cint::Internal::G__malloc(int n, int bsize, const char* item)
             if (allocmem && (G__struct.size[G__get_tagnum(G__tagdefining)] % allocmem)) {
                G__struct.size[G__get_tagnum(G__tagdefining)] += allocmem - (G__struct.size[G__get_tagnum(G__tagdefining)] % allocmem);
             }
-            return (void*) (G__struct.size[G__get_tagnum(G__tagdefining)] - size);
+            return (void*) (long) (G__struct.size[G__get_tagnum(G__tagdefining)] - size);
          }
          else if (G__struct.type[G__get_tagnum(G__tagdefining)] == 'u') {
             // -- Adjust size and padding of union for this new member.

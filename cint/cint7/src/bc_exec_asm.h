@@ -671,10 +671,10 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                //
 #ifdef G__EXCEPTIONWRAPPER
                G__asm_exec = 0;
-               dtorfreeoffset = (char*) G__ExceptionWrapper(pfunc, result, (char*)funcname, &fpara, hash);
+               dtorfreeoffset = (char*) (long) G__ExceptionWrapper(pfunc, result, (char*)funcname, &fpara, hash);
                G__asm_exec = 1;
 #else // G__EXCEPTIONWRAPPER
-               dtorfreeoffset = (char*) (*pfunc)(result, (char*)funcname, &fpara, hash);
+               dtorfreeoffset = (char*) (long) (*pfunc)(result, (char*)funcname, &fpara, hash);
 #endif // G__EXCEPTIONWRAPPER
                //
                //  Function has returned.
