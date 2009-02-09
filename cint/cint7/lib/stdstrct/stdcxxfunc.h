@@ -30,9 +30,7 @@
 #else
 #include <cmath>
 #endif
-#ifdef __hpux
 namespace std {} using namespace std;
-#endif
 
 #ifdef __MAKECINT__
 
