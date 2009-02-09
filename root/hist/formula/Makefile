@@ -29,5 +29,5 @@ recurse : recurse.log
 string: string.success
 
 string.success : string.log
-	$(TestDiff) && touch $@
+	$(SuccessTestDiff) && touch $@
 
