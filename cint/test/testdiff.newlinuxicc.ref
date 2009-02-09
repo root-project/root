@@ -259,6 +259,7 @@ t1281.cxx
 t1282.cxx 
 t1283.cxx 
 t1284.cxx 
+t1286.cxx 
 postinc.cxx 
 selfreference.cxx  -Dmakecint
 abstract.cxx 

@@ -978,6 +978,9 @@ int main(int argc, char** argv)
    ret += ci(kLangCXX, "t1282.cxx", difffile);
    ret += ci(kLangCXX, "t1283.cxx", difffile);
    ret += ci(kLangCXX, "t1284.cxx", difffile);
+#if G__CINTVERSION > 70000000
+   ret += ci(kLangCXX, "t1286.cxx", difffile);
+#endif
    ret += ci(kLangCXX, "postinc.cxx", difffile);
    ret += mkci(kLangCXX, "selfreference.cxx", "selfreference.h", difffile);
    ret += ci(kLangCXX, "abstract.cxx", difffile);
