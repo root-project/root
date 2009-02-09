@@ -593,7 +593,6 @@ G__value Cint::Internal::G__letvariable(const char* item, G__value expression, c
    int store_getarraydim = 0;
    int store_asm_noverflow = 0;
    G__StrBuf tmp_sb(G__ONELINE);
-   char *itemtmp = tmp_sb;
    G__StrBuf result7_sb(G__ONELINE);
    char *result7 = result7_sb;
    G__StrBuf parameter_sb(G__MAXVARDIM * G__ONELINE);
