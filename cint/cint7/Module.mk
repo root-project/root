@@ -320,6 +320,9 @@ $(CINT7DIRS)/sunstrm.o:  CINT7CXXFLAGS += -I$(CINT7DIRL)/snstream
 $(CINT7DIRS)/sun5strm.o: CINT7CXXFLAGS += -I$(CINT7DIRL)/snstream
 $(CINT7DIRS)/vcstrm.o:   CINT7CXXFLAGS += -I$(CINT7DIRL)/vcstream
 $(CINT7DIRS)/%strm.o:    CINT7CXXFLAGS += -I$(CINT7DIRL)/$(notdir $(basename $@))
+ifeq ($(GCC_MAJOR),4)
+$(CINTDIRSD)/gcc4strm.o:  CINTCXXFLAGS += -Wno-strict-aliasing
+endif
 
 $(MAKECINT7O) $(CINT7ALLO): $(CINT7CONF)
 
