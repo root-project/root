@@ -18,6 +18,7 @@
 // Class describing a ROOT version                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+#include "RConfigure.h"
 
 #include "XrdProofdPlatform.h"
 
