@@ -57,8 +57,14 @@ void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoo
 
 // methods to create integrators 
 
-   VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size, int rule) { 
+VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size, int rule) { 
    // create the concrete class for one-dimensional integration. Use the plug-in manager if needed 
+
+#ifndef R__HAS_MATHMORE   
+   // default type is GAUSS when Mathmore is not built
+   type = IntegrationOneDim::kGAUSS; 
+#endif
+
 
    if (type == IntegrationOneDim::kGAUSS)
       return new GaussIntegrator();
@@ -80,8 +86,8 @@ void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoo
    //gDebug = 3; 
    if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", "GSLIntegrator"))) {
       if (h->LoadPlugin() == -1) {
-         MATH_ERROR_MSG("IntegratorOneDim::CreateIntegrator","Error loading one dimensional GSL integrator"); 
-         return 0; 
+         MATH_WARN_MSG("IntegratorOneDim::CreateIntegrator","Error loading one dimensional GSL integrator - use Gauss integrator"); 
+         return new GaussIntegrator();
       }
 
       std::string typeName = "ADAPTIVE";
@@ -109,6 +115,11 @@ void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoo
 VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMultiDim::Type type , double absTol, double relTol, unsigned int ncall) { 
    // create concrete class for multidimensional integration 
 
+#ifndef R__HAS_MATHMORE   
+   // default type is Adaptive when Mathmore is not built
+   type = IntegrationMultiDim::kADAPTIVE; 
+#endif
+
    // no need for PM in the adaptive  case using Genz method (class is in MathCore)
    if (type == IntegrationMultiDim::kADAPTIVE)
       return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall);
@@ -128,8 +139,8 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
    //gDebug = 3; 
    if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", "GSLMCIntegrator"))) {
       if (h->LoadPlugin() == -1) {
-         MATH_ERROR_MSG("IntegratorMultiDim::CreateIntegrator","Error loading multidim integrator"); 
-         return 0; 
+         MATH_WARN_MSG("IntegratorMultiDim::CreateIntegrator","Error loading GSL MC multidim integrator - use adaptive method"); 
+         return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall);
       }
 
 
