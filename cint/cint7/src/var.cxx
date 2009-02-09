@@ -4992,7 +4992,7 @@ static int Cint::Internal::G__asm_gen_stvar(long arg_G__struct_offset, const ::R
 
 //--
 template<class CASTTYPE, class CONVFUNC>
-inline void G__get_var(int SIZE, CONVFUNC f, char TYPE, char PTYPE, char* item, ::Reflex::Member& variable, char* local_G__struct_offset, int paran, int linear_index, G__value* result)
+inline void G__get_var(int SIZE, CONVFUNC f, char TYPE, char PTYPE, const char* item, ::Reflex::Member& variable, char* local_G__struct_offset, int paran, int linear_index, G__value* result)
 {
    switch (G__var_type) {
       case 'p':
