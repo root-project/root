@@ -4,7 +4,7 @@
 # test that an output file is generated for valid input
 MACRO (test001)
 
-   MACRO_WRITE_TEST_FILE(X.h "class Y { }\;\n")
+   REFLEX_TEST_FILE(WRITE X.h "class Y { };\n")
 
    REFLEX_ASSERT_GENREFLEX_CLI(ARGS X.h --quiet
                                RESULT EQUAL 0
@@ -20,8 +20,8 @@ REFLEX_ADD_MACRO_TEST(test001)
 # test that an output file is not-generated ONLY for files containing errors
 MACRO (test002)
 
-   MACRO_WRITE_TEST_FILE(X.h "class X {int }\;\n")
-   MACRO_WRITE_TEST_FILE(Y.h "class Y { }\;\n")
+   REFLEX_TEST_FILE(WRITE X.h "class X {int };\n")
+   REFLEX_TEST_FILE(WRITE Y.h "class Y { };\n")
 
    REFLEX_ASSERT_GENREFLEX_CLI(ARGS X.h Y.h --quiet
                                RESULT EQUAL 1
@@ -38,8 +38,8 @@ REFLEX_ADD_MACRO_TEST(test002)
 # test that an output files are generated even if there are warnings
 MACRO (test003)
 
-   MACRO_WRITE_TEST_FILE(X.h "class X {int &y\; }\;\n")
-   MACRO_WRITE_TEST_FILE(Y.h "class Y { }\;\n")
+   REFLEX_TEST_FILE(WRITE X.h "class X {int &y; };\n")
+   REFLEX_TEST_FILE(WRITE Y.h "class Y { };\n")
 
    REFLEX_ASSERT_GENREFLEX_CLI(ARGS X.h Y.h --quiet
                                RESULT EQUAL 0
@@ -56,8 +56,8 @@ REFLEX_ADD_MACRO_TEST(test003)
 # with --fail_on_warnings, test that an output file is not-generated ONLY for files containing warnings
 MACRO (test004)
 
-   MACRO_WRITE_TEST_FILE(X.h "class X {int &y\; }\;\n")
-   MACRO_WRITE_TEST_FILE(Y.h "class Y { }\;\n")
+   REFLEX_TEST_FILE(WRITE X.h "class X {int &y; };\n")
+   REFLEX_TEST_FILE(WRITE Y.h "class Y { };\n")
 
    REFLEX_ASSERT_GENREFLEX_CLI(ARGS X.h Y.h --quiet --fail_on_warnings
                                RESULT EQUAL 1
@@ -75,7 +75,7 @@ REFLEX_ADD_MACRO_TEST(test004)
 # make sure that genreflex doesn't crash if gccxml fails
 MACRO (test005)
 
-   MACRO_WRITE_TEST_FILE(X.h "class X {int \; }\;\n")
+   REFLEX_TEST_FILE(WRITE X.h "class X {int ; };\n")
 
    REFLEX_ASSERT_GENREFLEX_CLI(ARGS X.h
                                RESULT EQUAL 1

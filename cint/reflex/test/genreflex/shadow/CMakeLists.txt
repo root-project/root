@@ -3,7 +3,8 @@
 
 MACRO (FinalOverrider)
 
-   REFLEX_ASSERT_GENREFLEX_CLI(ARGS FinalOverrider.hpp --quiet
+   REFLEX_ASSERT_GENREFLEX_CLI(FILES FinalOverrider.hpp
+                               ARGS FinalOverrider.hpp --quiet
                                RESULT EQUAL 0
                                STDOUT MATCHES ".*"
                                STDERR MATCHES "^$")

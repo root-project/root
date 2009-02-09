@@ -4,10 +4,10 @@ MACRO (test001)
    SET(_src "template<typename T>
              struct integer_traits
              {
-                static const int const_min = 10\;
-             }\;
+                static const int const_min = 10;
+             };
 
-             template< int Category > struct int_least_helper {}\;
+             template< int Category > struct int_least_helper {};
 
              template< long MinValue > // minimum value to require support
              struct int_min_value_t
@@ -15,9 +15,9 @@ MACRO (test001)
                 typedef int_least_helper
                 <
                 (MinValue >= integer_traits<long>::const_min)
-                > least\;
-             }\;")
-   MACRO_WRITE_TEST_FILE(X.h "${_src}")
+                > least;
+             };")
+   REFLEX_TEST_FILE(WRITE X.h "${_src}")
 
    REFLEX_ASSERT_GENREFLEX_CLI(ARGS X.h --quiet
                                RESULT EQUAL 0

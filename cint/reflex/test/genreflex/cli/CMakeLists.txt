@@ -1,8 +1,8 @@
 # CLI Tests
 #   Tests genreflex's command-line interface
 
-MACRO_READ_RESOURCE(_msg_synopsis ${CMAKE_CURRENT_LIST_FILE} Synopsis.txt)
-MACRO_READ_RESOURCE(_msg_help ${CMAKE_CURRENT_LIST_FILE} Help.txt)
+REFLEX_RESOURCE_FILE(READ Synopsis.txt _msg_synopsis)
+REFLEX_RESOURCE_FILE(READ Help.txt _msg_help)
 
 # no input files is an error
 MACRO (test001)

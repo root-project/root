@@ -14,6 +14,7 @@ EXPORTS
    ??1DataMember@Reflex@@UAE@XZ
    ??1Typedef@Reflex@@UAE@XZ
    ?AddBase@Class@Reflex@@UBEXABVType@2@P6AIPAX@ZI@Z
+   ?AddDataMember@Class@Reflex@@UBEXAAVMember@2@PBDABVType@2@II@Z
    ?AddDataMember@Class@Reflex@@UBEXABVMember@2@@Z
    ?AddDataMember@Class@Reflex@@UBEXPBDABVType@2@II@Z
    ?AddFunctionMember@Class@Reflex@@UBEXABVMember@2@@Z

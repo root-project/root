@@ -44,7 +44,22 @@ MACRO (_REFLEX_GET_GENREFLEX_DEFINITIONS _genreflex_definitions)
 ENDMACRO (_REFLEX_GET_GENREFLEX_DEFINITIONS _genreflex_definitions)
 
 
+MACRO (REFLEX_ASSERT_FILE file type)
+
+   IF (NOT EXISTS ${file})
+      MESSAGE(FATAL_ERROR "Cannot find ${type} ${file}")
+   ENDIF (NOT EXISTS ${file})
+
+   IF (IS_DIRECTORY ${file})
+      MESSAGE(FATAL_ERROR "${file} is a not a file")
+   ENDIF (IS_DIRECTORY ${file})
+
+ENDMACRO (REFLEX_ASSERT_FILE file type)
+
+
 MACRO (_REFLEX_ADD_GENREFLEX_COMMAND infile outfile genreflex_includes genreflex_definitions genreflex_selection genreflex_options)
+
+   REFLEX_ASSERT_FILE(${infile} "header file")
 
    GET_FILENAME_COMPONENT(_out_dir ${outfile} PATH)
    FILE(RELATIVE_PATH _out_rel ${CMAKE_BINARY_DIR} ${outfile})
@@ -53,6 +68,7 @@ MACRO (_REFLEX_ADD_GENREFLEX_COMMAND infile outfile genreflex_includes genreflex
    # create the selection option if provided
    IF (NOT "${genreflex_selection}" STREQUAL "")
       GET_FILENAME_COMPONENT(genreflex_selection "${genreflex_selection}" ABSOLUTE)
+      REFLEX_ASSERT_FILE(${genreflex_selection} "selection file")
       LIST(APPEND _genreflex_options -s "${genreflex_selection}")
    ENDIF (NOT "${genreflex_selection}" STREQUAL "")
 
@@ -114,9 +130,9 @@ MACRO (REFLEX_GENERATE_DICTIONARIES outfiles)
    #CONFIGURE_FILE(${REFLEX_TEMPLATE_DIR}/genreflex.files.in ${_genreflex_source}.files)
 
    FOREACH (it ${genreflex_files})
-      GET_FILENAME_COMPONENT(it ${it} ABSOLUTE)
-      MACRO_MAKE_OUTPUT_FILE(${it} "" _rflx cpp outfile)
-      _REFLEX_ADD_GENREFLEX_COMMAND(${it} ${outfile} "${genreflex_includes}" "${genreflex_definitions}" "${genreflex_selection}" "${genreflex_options}")
+      GET_FILENAME_COMPONENT(_abs_file ${it} ABSOLUTE)
+      MACRO_MAKE_OUTPUT_FILE(${_abs_file} "" _rflx cpp outfile)
+      _REFLEX_ADD_GENREFLEX_COMMAND(${_abs_file} ${outfile} "${genreflex_includes}" "${genreflex_definitions}" "${genreflex_selection}" "${genreflex_options}")
       SET(${outfiles} ${${outfiles}} ${outfile})
    ENDFOREACH (it ${genreflex_files})
 

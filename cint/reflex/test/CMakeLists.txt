@@ -27,6 +27,7 @@ ENDIF (NOT REFLEX_BUILD_TESTS)
 
 #####################   sub dirs  ####################
 
+MACRO_ADD_SUBDIRECTORIES(framework)
 MACRO_ADD_SUBDIRECTORIES(genreflex)
 MACRO_ADD_SUBDIRECTORIES(implementation)
 MACRO_ADD_SUBDIRECTORIES(iso-iec)
