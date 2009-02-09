@@ -31,11 +31,11 @@ int Cint::Internal::G__dynconst = 0;
 
 // Static functions.
 static int G__get_newname(char* new_name);
-static int G__setvariablecomment(char* new_name);
+static int G__setvariablecomment(const char* new_name,Reflex::Member &var);
 //--
 static void G__removespacetemplate(char* name);
 static int G__initstruct(char* new_name);
-static int G__initary(char* new_name);
+static int G__initary(char* new_name,Reflex::Member &var);
 static void G__initstructary(char* new_name, int tagnum);
 static int G__readpointer2function(char* new_name, char* pvar_type);
 
@@ -496,55 +496,19 @@ static int G__get_newname(char* new_name)
 }
 
 //______________________________________________________________________________
-static int G__setvariablecomment(char* new_name)
+static int G__setvariablecomment(const char* new_name, Reflex::Member &var)
 {
-   // -- FIXME: Describe this function!
-   if (!new_name[0]) {
-      return 0;
+   // Set the variable comment.
+   
+   if (var) {
+      G__get_properties(var)->comment.filenum = -1;
+      G__get_properties(var)->comment.p.com = 0;
+      G__fsetcomment(&(G__get_properties(var)->comment));
+      return 1;
    }
-   std::string name(new_name);
-   //--
-   std::string::size_type pos = name.find('[');
-   if (pos != std::string::npos) {
-      name.erase(pos, name.length());
-   }
-   // Check to see if we were passed a qualified name or name.
-   int nest = 0;
-   int scope = 0;
-   for (unsigned int j = 0; j < name.length(); ++j) {
-      switch (name[j]) {
-         case '<':
-            ++nest;
-            break;
-         case '>':
-            --nest;
-            break;
-         case ':':
-            if (!nest && (name[j+1] == ':')) {
-               scope = j;
-            }
-            break;
-      }
-   }
-   if (!scope) {
-      // If scope is not null, this means that we are not really inside the
-      // the class declaration.  This might actually be an instantiation inside
-      // a namespace.
-      //--
-      //--
-      //--
-      // Only interpretation, no need to check for cpplink memvar setup.
-      //--
-      ::Reflex::Member var = G__tagdefining.DataMemberByName(name);
-      if (var) {
-         G__get_properties(var)->comment.filenum = -1;
-         G__get_properties(var)->comment.p.com = 0;
-         G__fsetcomment(&(G__get_properties(var)->comment));
-      }
-      else {
-         G__fprinterr(G__serr, "Internal warning: %s comment can not set", new_name);
-         G__printlinenum();
-      }
+   else if (new_name && new_name[0] && 0==strchr(new_name,':')) {
+      G__fprinterr(G__serr, "Internal warning: %s comment can not set", new_name);
+      G__printlinenum();
    }
    return 0;
 }
@@ -860,43 +824,28 @@ static int G__initstruct(char* new_name)
 }
 
 //______________________________________________________________________________
-static int G__initary(char* new_name)
+static int G__initary(char* new_name,Reflex::Member &in_var)
 {
    // -- Parse and execute an array initialization.
    //
    //printf("Begin G__initary for '%s'...\n", new_name);
    static char expr[G__ONELINE];
-   // Separate the array name from the index specification.
-   std::string name(new_name);
-   //--
-   {
-      std::string::size_type p = name.find('[');
-      if (p != std::string::npos) {
-         name.erase(p);
-      }
-   }
+
    // Static array initialization at runtime is special.
    if (G__static_alloc && !G__prerun) {
       // -- A static array initialization at runtime.
-      // Calculate the name hash code.
-      int hash = 0;
-      int i = 0;
-      G__hash(name.c_str(), hash, i)
-      // Do a local and global lookup for the name.
-      //--
-      ::Reflex::Member var = G__getvarentry(name.c_str(), hash, ::Reflex::Scope::GlobalScope(), G__p_local);
+      ::Reflex::Member var = in_var;
+      assert( var == in_var );
       if (var && G__get_varlabel(var, 1) /* number of elements */ == INT_MAX /* unspecified length flag */) {
+
          // -- Variable exists and is an unspecified length array.
          // Look for a corresponding special name, both locally and globally.
          std::string namestatic;
-         G__get_stack_varname(namestatic, name.c_str(), G__func_now, G__get_tagnum(G__memberfunc_tagnum));
-         //--
-         //--
-         //--
-         //--
-         //--
+         G__get_stack_varname(namestatic, var.Name_c_str(), G__func_now, G__get_tagnum(G__memberfunc_tagnum));
+
+         int dummy;
          int hashstatic = 0;
-         G__hash(namestatic.c_str(), hashstatic, i)
+         G__hash(namestatic.c_str(), hashstatic, dummy)
          //--
          ::Reflex::Member varstatic = G__getvarentry(namestatic.c_str(), hashstatic, ::Reflex::Scope::GlobalScope(), G__p_local);
          if (varstatic) {
@@ -920,103 +869,21 @@ static int G__initary(char* new_name)
       c = G__fignorestream(",;");
       return c;
    }
-   // Use a special variable name for a function-local static array.
-   if (G__static_alloc && G__func_now) {
-      // -- Function-local static array initialization, use a special global variable name.
-      std::string temp;
-      G__get_stack_varname(temp, name.c_str(), G__func_now, G__get_tagnum(G__memberfunc_tagnum));
-      //--
-      //--
-      //--
-      //--
-      name = temp;
-   }
+
 #ifdef G__ASM
    G__abortbytecode();
 #endif // G__ASM
+
    //
    //  Lookup the variable.
    //
-   ::Reflex::Member var;
-   //--
-   {
-      std::string::size_type p = name.rfind("::");
-      if ((p != std::string::npos) && G__prerun && !G__func_now) {
-         // -- Qualified name, in prerun, not in a function, do the lookup in the specified context.
-         // Separate the qualifier from the name.
-         std::string varname(name, p + 2);
-         name.erase(p);
-         // Lookup the qualifier.
-         int tagnum = G__defined_tagname(name.c_str(), 0);
-         if (tagnum != -1) {
-            // -- Context exists, do the name lookup using it.
-            // Get the member variable list for the context.
-            ::Reflex::Scope varscope = G__Dict::GetDict().GetScope(tagnum);
-            // Calculate the name hash code.
-            int hash = 0;
-            int i = 0;
-            G__hash(varname.c_str(), hash, i);
-            // Lookup name in the member variable list.
-            var = G__getvarentry(varname.c_str(), hash, varscope, varscope);
-            if (!var) {
-               // -- We need an error message here, qualified name was not found!
-            }
-         }
-         else {
-            // -- We need an error message here, qualifier was not found!
-         }
-      }
-      else {
-         // -- Unqualified name, or not prerun, or in a function, do a local and global lookup using the name.
-         // Calculate the name hash code.
-         int hash = 0;
-         int i = 0;
-         G__hash(name.c_str(), hash, i);
-         // And do a local and global lookup using the name.
-         var = G__getvarentry(name.c_str(), hash, ::Reflex::Scope::GlobalScope(), G__p_local);
-      }
-   }
-   if (!var) {
-      // -- Not found, try again using the special name pattern for a class/enum/namespace/struct/union/func local.
-      // If we were using the special name for a function-local
-      // static array, recover the original name.
-      std::string::size_type p = name.find('\\');
-      if (p != std::string::npos) {
-         name.erase(p);
-      }
-      // Use the special name for a class/enum/namespace/struct/union/func local.
-      std::string temp;
-      G__get_stack_varname(temp, name.c_str(), G__func_now, G__get_tagnum(G__tagdefining));
-      //--
-      //--
-      //--
-      //--
-      //--
-      // Calculate the hash value of the special name.
-      int varhash = 0;
-      int itmpx = 0;
-      G__hash(temp.c_str(), varhash, itmpx);
-      // Do a local and global lookup.
-      var = G__getvarentry(temp.c_str(), varhash, ::Reflex::Scope::GlobalScope(), G__p_local);
-      // If not found, try again using a member variable lookup.
-      if (!var && G__tagdefining) {
-         // -- Not found, use the normal name, but do a member variable lookup.
-         //--
-         G__hash(name.c_str(), varhash, itmpx);
-         var = G__getvarentry(name.c_str(), varhash, G__tagdefining, G__tagdefining);
-      }
-      if (!var) {
-         // -- Not found.
-         // FIXME: This will not properly skip past all the commas a brace-enclosed initializer list!
-         int c = G__fignorestream(",;");
-         G__genericerror("Error: array initialization");
-         return c;
-      }
-   }
+   ::Reflex::Member var = in_var;
+
    //
    //  At this point we have found the variable.
    //
    //--
+   assert( var == in_var );
    // Get number of dimensions.
    const int num_of_dimensions = G__get_paran(var);
    int num_of_elements = G__get_varlabel(var, 1);
@@ -1092,7 +959,7 @@ static int G__initary(char* new_name)
             // -- Semantic error, gone past the end of the array.
             if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                if (!G__const_noerror) {
-                  G__fprinterr(G__serr, "Error: Too many initializers, exceeded length of array for '%s'", name.c_str());
+                  G__fprinterr(G__serr, "Error: Too many initializers, exceeded length of array for '%s'", var.Name(Reflex::SCOPED).c_str());
                }
             }
             G__genericerror(0);
@@ -1111,7 +978,7 @@ static int G__initary(char* new_name)
             // -- Semantic error, too many initializers.
             if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                if (!G__const_noerror) {
-                  G__fprinterr(G__serr, "Error: Too many initializers for '%s'", name.c_str());
+                  G__fprinterr(G__serr, "Error: Too many initializers for '%s'", var.Name(Reflex::SCOPED).c_str());
                }
             }
             G__genericerror(0);
@@ -1192,7 +1059,7 @@ static int G__initary(char* new_name)
                // -- Semantic error, attempt to initialize a char with a string array constant.
                if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                   if (!G__const_noerror) {
-                     G__fprinterr(G__serr, "Error: Attempt to initialize a char with a string constant for '%s'", name.c_str());
+                     G__fprinterr(G__serr, "Error: Attempt to initialize a char with a string constant for '%s'", var.Name(Reflex::SCOPED).c_str());
                   }
                }
                G__genericerror(0);
@@ -1217,7 +1084,7 @@ static int G__initary(char* new_name)
                // -- Semantic error, attempt to initialize a char array with a string array constant of the wrong size.
                if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                   if (!G__const_noerror) {
-                     G__fprinterr(G__serr, "Error: Initializer for a char array is too big while intializing '%s'", name.c_str());
+                     G__fprinterr(G__serr, "Error: Initializer for a char array is too big while intializing '%s'", var.Name(Reflex::SCOPED).c_str());
                   }
                }
                G__genericerror(0);
@@ -1703,6 +1570,8 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
    G__typenum = typenum;
    store_decl = G__decl;
    G__decl = 1;
+   Reflex::Member newMember;
+
    //fprintf(stderr, "\nG__define_var: Begin.\n");
    //
    // We have:
@@ -1921,6 +1790,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
          //
          //  Initialization of formal parameter.
          //
+         Reflex::Member paramvar;
          if (
             // -- Parameter is a struct, not a pointer nor an array.  (FIXME: Should check for reference?)
             (G__var_type == 'u') &&
@@ -1950,26 +1820,27 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                }
                G__globalvarpointer = (char*) G__int(reg);
                G__cppconstruct = 1;
-               G__letvariable(new_name, G__null, ::Reflex::Scope::GlobalScope(), G__p_local);
+               G__letvariable(new_name, G__null, ::Reflex::Scope::GlobalScope(), G__p_local, paramvar);
                G__cppconstruct = 0;
                G__globalvarpointer = G__PVOID;
             }
             else {
                // -- The struct is interpreted.
                // Create object.
-               G__letvariable(new_name, G__null, ::Reflex::Scope::GlobalScope(), G__p_local);
+               G__letvariable(new_name, G__null, ::Reflex::Scope::GlobalScope(), G__p_local, paramvar);
                // And initialize it.
-               G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local);
+               G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local, paramvar);
             }
          }
          else {
             // -- The parameter is of fundamental type.
-            G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local);
+            G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local, paramvar);
          }
          G__ansiheader = 1;
          G__globalvarpointer = G__PVOID;
+ 
 #ifdef G__ASM
-         if (!new_name[0]) {
+         if (!paramvar) { // Case of unnamed paramerter
             // --
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
@@ -2766,7 +2637,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                }
                // Perform the initialization.
                G__var_type = var_type;
-               G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local);
+               G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local, newMember);
                // Continue scanning.
                goto readnext;
             }
@@ -2798,7 +2669,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                // -- Interpreted class, allocate memory now.
                G__var_type = var_type;
                G__decl_obj = 1;
-               G__value val = G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local);
+               G__value val = G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local, newMember);
                G__store_struct_offset = (char*) G__int(val);
                G__decl_obj = 0;
 #ifndef G__OLDIMPLEMENTATION1073
@@ -2867,7 +2738,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                         G__globalvarpointer = (char*) G__int(reg);
                         G__cppconstruct = 1;
                         G__var_type = var_type;
-                        G__letvariable(new_name, G__null,::Reflex::Scope::GlobalScope(), G__p_local);
+                        G__letvariable(new_name, G__null,::Reflex::Scope::GlobalScope(), G__p_local, newMember);
                         G__cppconstruct = 0;
 #ifdef G__ASM
                         if (G__asm_noverflow && (p_inc > 1)) {
@@ -2980,7 +2851,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                            G__xrefflag // we are generating a variable cross-reference
                         ) {
                            // -- Create a variable in the local or global variable chain.
-                           G__letvariable(new_name, G__null,::Reflex::Scope::GlobalScope(), G__p_local);
+                           G__letvariable(new_name, G__null,::Reflex::Scope::GlobalScope(), G__p_local, newMember);
                         }
                         else if (!G__xrefflag) {
                            // -- Could not find the default constructor,
@@ -3137,7 +3008,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                         G__globalvarpointer = (char*) G__int(reg);
                         G__cppconstruct = 1;
                         if (G__globalvarpointer) {
-                           G__letvariable(new_name, G__null, ::Reflex::Scope::GlobalScope(), G__p_local);
+                           G__letvariable(new_name, G__null, ::Reflex::Scope::GlobalScope(), G__p_local, newMember);
                         }
                         G__cppconstruct = 0;
                         G__globalvarpointer = G__PVOID;
@@ -3248,7 +3119,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                         }
                         G__globalvarpointer = (char*) G__int(reg);
                         G__cppconstruct = 1;
-                        G__letvariable(new_name, G__null, ::Reflex::Scope::GlobalScope(), G__p_local);
+                        G__letvariable(new_name, G__null, ::Reflex::Scope::GlobalScope(), G__p_local, newMember);
                         G__cppconstruct = 0;
                         G__globalvarpointer = G__PVOID;
                         G__oprovld = 0;
@@ -3275,7 +3146,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                            G__oprovld = 1;
                         }
 #endif // G__OLDIMPLEMENTATION1073
-                        G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local);
+                        G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local, newMember);
 #ifndef G__OLDIMPLEMENTATION1073
                         if (G__asm_wholefunction) {
                            G__oprovld = 0;
@@ -3363,7 +3234,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
               G__globalvarpointer = G__PINVALID;
             }
             // FIXME: Static data members of class type do not get their constructors run!
-            G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local);
+            G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local, newMember);
             if (G__return > G__RETURN_NORMAL) {
                G__decl = store_decl;
                G__tagnum = store_tagnum;
@@ -3377,7 +3248,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
             }
             // Insert array initialization.
             if (initary) {
-               cin = G__initary(new_name);
+               cin = G__initary(new_name,newMember);
                initary = 0;
                if (cin == EOF) {
                   G__decl = store_decl;
@@ -3409,7 +3280,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
          G__typenum = store_typenum;
          G__reftype = G__PARANORMAL;
          if (G__fons_comment && G__def_struct_member) {
-            G__setvariablecomment(new_name);
+            G__setvariablecomment(new_name,newMember);
          }
 #ifdef G__ASM
          if (G__asm_noverflow) {

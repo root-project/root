@@ -774,7 +774,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
 #else // G__DEBUG2
       G__access = G__PRIVATE;
 #endif // G__DEBUG2
-      G__letvariable(/*FIXME*/(char*)"G__virtualinfo", G__null,::Reflex::Scope::GlobalScope(), G__p_local);
+      G__letvariable("G__virtualinfo", G__null,::Reflex::Scope::GlobalScope(), G__p_local);
       G__access = store_access;
       G__var_type = store_type;
       G__tagnum = store_tagnum;

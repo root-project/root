@@ -471,16 +471,20 @@ G__value G__toXvalue(G__value result,int var_type);
 G__value G__letVvalue(G__value *p,G__value result);
 G__value G__letPvalue(G__value *p,G__value result);
 G__value G__letvalue(G__value *p,G__value result);
-G__value G__letvariable(char *item,G__value expression,const ::Reflex::Scope &varglobal,const ::Reflex::Scope &varlocal);
+G__value G__letvariable(const char *item,G__value expression,const ::Reflex::Scope &varglobal,const ::Reflex::Scope &varlocal,Reflex::Member &output_var);
+inline G__value G__letvariable(const char *item,G__value expression,const ::Reflex::Scope &varglobal,const ::Reflex::Scope &varlocal) {
+   Reflex::Member dummy;
+   return G__letvariable(item,expression,varglobal,varlocal, dummy);
+}
 G__value G__getvariable(char *item,int *known2,const ::Reflex::Scope &varglobal,const ::Reflex::Scope &varlocal);
 G__value G__getstructmem(int store_var_type,char *varname,char *membername,char *tagname,int *known2,const ::Reflex::Scope &varglobal,int objptr);
-G__value G__letstructmem(int store_var_type,const char *varname,char *membername,char *tagname,const ::Reflex::Scope &varglobal,G__value expression,int objptr);
+G__value G__letstructmem(int store_var_type,const char *varname,char *membername,char *tagname,const ::Reflex::Scope &varglobal,G__value expression,int objptr,Reflex::Member &output_var);
 void G__letstruct(G__value *result,int p_inc,const ::Reflex::Member &var,const char *item,int paran,char *G__struct_offset);
-void G__letstructp(G__value result,char *G__struct_offset,int p_inc,const ::Reflex::Member &var,int paran,char *item,G__value *para,int pp_inc);
+void G__letstructp(G__value result,char *G__struct_offset,int p_inc,const ::Reflex::Member &var,int paran,const char *item,G__value *para,int pp_inc);
 void G__returnvartype(G__value* presult,const ::Reflex::Member &var,int paran);
 ::Reflex::Member G__getvarentry(const char *varname,int varhash,const ::Reflex::Scope &varglobal,const ::Reflex::Scope &varlocal);
 int G__getthis(G__value *result7,const char *varname,const char *item);
-void G__letpointer2memfunc(const ::Reflex::Member &var,int paran,char *item,int p_inc,G__value *presult,char *G__struct_offset);
+void G__letpointer2memfunc(const ::Reflex::Member &var,int paran,const char *item,int p_inc,G__value *presult,char *G__struct_offset);
 void G__letautomatic(const ::Reflex::Member &var,char *G__struct_offset,int p_inc,G__value result);
 ::Reflex::Member G__add_scopemember(::Reflex::Scope envvar, const char* varname, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* offset, int access, int statictype);
 void G__display_classkeyword(FILE *fout,const char *classnamein,const char *keyword,int base);

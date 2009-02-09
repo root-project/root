@@ -262,7 +262,7 @@ void Cint::Internal::G__createmacro(const char *new_name,char *initvalue)
    {
       int save_def_struct_member = G__def_struct_member;
       G__def_struct_member=0;
-      G__letvariable(/*FIXME*/(char*)new_name,evalval,::Reflex::Scope::GlobalScope(),G__p_local);
+      G__letvariable(new_name,evalval,::Reflex::Scope::GlobalScope(),G__p_local);
       G__var_type = 'p';
       G__def_struct_member=save_def_struct_member;
    }

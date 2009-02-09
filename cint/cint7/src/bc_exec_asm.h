@@ -1046,7 +1046,7 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                G__fprinterr(G__serr, "       : value: 0x%08lx,%d,%g  %s:%d\n", G__int(G__asm_stack[sp-1]), G__int(G__asm_stack[sp-1]), G__double(G__asm_stack[sp-1]), __FILE__, __LINE__);
             }
 #endif // G__ASM_DBG
-            G__letvariable(/*FIXME*/(char*)"", G__asm_stack[sp-1], G__asm_index.DeclaringScope(), Reflex::Dummy::Scope());
+            G__letvariable("", G__asm_stack[sp-1], G__asm_index.DeclaringScope(), Reflex::Dummy::Scope());
             pc += 5;
 #ifdef G__ASM_DBG
             break;
@@ -1145,7 +1145,7 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                G__fprinterr(G__serr, "       : value: 0x%08lx,%d,%g  %s:%d\n", G__int(G__asm_stack[sp-1]), G__int(G__asm_stack[sp-1]), G__double(G__asm_stack[sp-1]), __FILE__, __LINE__);
             }
 #endif // G__ASM_DBG
-            G__letvariable(/*FIXME*/(char*)"", G__asm_stack[sp-1], G__asm_index.DeclaringScope(), Reflex::Scope::GlobalScope());
+            G__letvariable("", G__asm_stack[sp-1], G__asm_index.DeclaringScope(), Reflex::Scope::GlobalScope());
             pc += 5;
 #ifdef G__ASM_DBG
             break;
@@ -1255,7 +1255,7 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
             store_struct_offset_localmem = G__store_struct_offset;
             // The variable is in the bytecode local memory block.
             G__store_struct_offset = localmem;
-            G__letvariable(/*FIXME*/(char*)"", G__asm_stack[sp-1], G__asm_index.DeclaringScope(), Reflex::Scope::GlobalScope());
+            G__letvariable("", G__asm_stack[sp-1], G__asm_index.DeclaringScope(), Reflex::Scope::GlobalScope());
             // Restore the structure offset.
             G__store_struct_offset = store_struct_offset_localmem;
             pc += 5;
