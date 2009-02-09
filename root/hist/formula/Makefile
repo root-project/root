@@ -1,4 +1,4 @@
-TEST_TARGETS += constargs_test formio_test recurse_test string_test
+TEST_TARGETS += constargs_test formio_test recurse_test string
 
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog temp.root constargs formio recurse string
 
@@ -26,8 +26,8 @@ recurse : recurse.log
 	$(TestDiff) && touch $@
 
 
-string_test : string
+string: string.success
 
-string : string.log
+string.success : string.log
 	$(TestDiff) && touch $@
 
