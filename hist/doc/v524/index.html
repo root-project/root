@@ -49,4 +49,20 @@
 </li>
 </ul>
 
+<h4>THistPainter</h4>
+<ul>
+<li> In case the errors of the fit parameters had large values (>E+07) the
+     errors in the fit box looked weird. The Method GetBestFormat has been
+     changed. The problem was visible with the following macro:
+<pre>
+     {
+        gStyle->SetOptFit(1111);
+        h = new TH1F("h","h", 2,0.,1.);
+        h->SetBinContent(1, 5E8);
+        h->SetBinError(1, 4.9E8);
+        h->Fit("pol0");
+     }
+</pre>
+</li>
+</ul>
 
