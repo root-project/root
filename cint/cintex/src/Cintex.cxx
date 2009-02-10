@@ -84,6 +84,9 @@ namespace {
          sprintf(value,"vector<%s,allocator<%s> >", btypes[i], btypes[i]);
          CINTTypedefBuilder::Set(name, value);
       }
+      // Now that genreflex always translates basic_string<char> to string
+      // we need a "typedef" (the wrong way!) for backward compatibility:
+      CINTTypedefBuilder::Set("basic_string<char>", "string");
       G__set_class_autoloading(autoload);
    }
 }
