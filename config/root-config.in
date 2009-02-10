@@ -15,7 +15,11 @@ else
    # relative path
    fullpath=$runningdir/$progdir
 fi
-fullpath1=`readlink -f $fullpath`
+# work around readlink versions not having -f option
+fullpath1=`readlink $fullpath`
+if [ "$?" -ne "0" ]; then
+   fullpath1=$fullpath
+fi
 ROOTSYS=`dirname $fullpath1`
 
 arch=@architecture@
