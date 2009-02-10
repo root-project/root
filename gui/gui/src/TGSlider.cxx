@@ -179,6 +179,8 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
             // set absolute position
             fPos = ((fVmax - fVmin) * event->fY) / (fHeight-16) + fVmin;
          }
+         if (fPos > fVmax) fPos = fVmax;
+         if (fPos < fVmin) fPos = fVmin;
          SendMessage(fMsgWindow, MK_MSG(kC_VSLIDER, kSL_POS),
                      fWidgetId, fPos);
          fClient->ProcessLine(fCommand, MK_MSG(kC_VSLIDER, kSL_POS),
@@ -325,6 +327,8 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
          } else if (event->fCode == kButton2) {
             fPos = ((fVmax - fVmin) * event->fX) / (fWidth-16) + fVmin;
          }
+         if (fPos > fVmax) fPos = fVmax;
+         if (fPos < fVmin) fPos = fVmin;
          SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_POS),
                      fWidgetId, fPos);
          fClient->ProcessLine(fCommand, MK_MSG(kC_HSLIDER, kSL_POS),
