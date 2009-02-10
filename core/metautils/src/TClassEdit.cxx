@@ -332,6 +332,7 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    // if (mode&4) remove all     allocators from STL containers
    // if (mode&8) return inner class of stl container. list<innerClass>
    // if (mode&16) return deapest class of stl container. vector<list<deapest>>
+   // if (mode&kDropAllDefault) remove default template arguments
    /////////////////////////////////////////////////////////////////////////////
 
    //fprintf(stderr,"calling ShortType with mode %d\n",mode);
@@ -460,10 +461,51 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
 
    if (!arglist[0].empty()) {answ += arglist[0]; answ +="<";}
 
-
+   if (mode & kDropAllDefault) {
+      int nargNonDefault = 0;
+      std::string nonDefName = answ;
+      // "superlong" because tLong might turn typeDesc into an even longer name
+      std::string nameSuperLong = typeDesc;
+      G__TypedefInfo td;
+      // map<a,b,less<a> > is in fact stored as the typedef called
+      // map<a,b,less<a>>. So remove spaces between '>':
+      size_t posSpace = std::string::npos;
+      while ((posSpace = nameSuperLong.find("> >")) != std::string::npos) {
+         nameSuperLong.replace(posSpace,3,">>");
+      }
+      td.Init(nameSuperLong.c_str());
+      if (td.IsValid()) {
+         nameSuperLong = td.TrueName();
+      } else {
+         // But classes are stored as map<a,b,less<a> >
+         // i.e. with spaces between '>'. So revert:
+         nameSuperLong = typeDesc;
+      }
+      while (++nargNonDefault < narg) {
+         // If T<a> is a "typedef" (aka default template params)
+         // to T<a,b> then we can strip the "b".
+         // map<a,b,less<a> > is in fact stored as the typedef called
+         // map<a,b,less<a>>. So remove spaces between '>':
+         size_t posSpace = std::string::npos;
+         while ((posSpace = nonDefName.find("> >")) != std::string::npos) {
+            nonDefName.replace(posSpace,3,">>");
+         }
+         // Simply add '>' even if nonDefName ends in '>';
+         // see above comment on typedef names
+         td.Init((nonDefName + ">").c_str());
+         if (td.IsValid() && nameSuperLong == td.TrueName())
+            break;
+         if (nargNonDefault>1) nonDefName += ",";
+         nonDefName += arglist[nargNonDefault];
+      }
+      if (nargNonDefault < narg)
+         narg = nargNonDefault;
+   }
+   
+   
    { for (int i=1;i<narg-1; i++) { answ += arglist[i]; answ+=",";} }
    if (narg>1) { answ += arglist[narg-1]; }
-
+   
    if (!arglist[0].empty()) {
       if ( answ.at(answ.size()-1) == '>') {
          answ += " >";
@@ -590,7 +632,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
    // Return the name of type 'tname' with all its typedef components replaced
    // by the actual type its points to
    // For example for "typedef MyObj MyObjTypedef;"
-   //    vector<MyObjTypedef> return vector<MyObjTypedef>
+   //    vector<MyObjTypedef> return vector<MyObj>
    //
 
    if ( tname==0 || tname[0]==0) return tname;

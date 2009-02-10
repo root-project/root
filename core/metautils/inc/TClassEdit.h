@@ -38,7 +38,8 @@ namespace TClassEdit {
       kInnerClass       = 1<<3,
       kInnedMostClass   = 1<<4,
       kDropStlDefault   = 1<<5, /* implies kDropDefaultAlloc */
-      kDropComparator   = 1<<6  /* if the class has a comparator, drops BOTH the comparator and the Allocator */
+      kDropComparator   = 1<<6, /* if the class has a comparator, drops BOTH the comparator and the Allocator */
+      kDropAllDefault   = 1<<7  /* Drop default template parameter even in non STL classes */
    };
 
    enum ESTLType {
