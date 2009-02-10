@@ -376,12 +376,20 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
             }
             else if ( prop&G__BIT_ISFUNDAMENTAL ) {
                TDataType *fundType = gROOT->GetType( intype.c_str() );
-               fKind = (EDataType)fundType->GetType();
-               if ( 0 == strcmp("bool",fundType->GetFullTypeName()) ) {
-                  fKind = (EDataType)kBOOL_t;
+               if (fundType==0) {
+                  if (intype != "long double") {
+                     Error("TGenCollectionProxy","Unknown fundamental type %s",intype.c_str());
+                  }
+                  fSize = sizeof(int);
+                  fKind = kInt_t;
+               } else {
+                  fKind = (EDataType)fundType->GetType();
+                  if ( 0 == strcmp("bool",fundType->GetFullTypeName()) ) {
+                     fKind = (EDataType)kBOOL_t;
+                  }
+                  fSize = gCint->TypeInfo_Size(ti);
+                  R__ASSERT((fKind>0 && fKind<0x16) || (fKind==-1&&(prop&G__BIT_ISPOINTER)) );
                }
-               fSize = gCint->TypeInfo_Size(ti);
-               R__ASSERT((fKind>0 && fKind<0x16) || (fKind==-1&&(prop&G__BIT_ISPOINTER)) );
             }
             else if ( prop&G__BIT_ISENUM ) {
                fSize = sizeof(int);
