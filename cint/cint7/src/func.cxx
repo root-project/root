@@ -1163,7 +1163,7 @@ static G__value G__getfunction_libp(const char* item, char* funcname, G__param* 
    ::Reflex::Scope store_def_tagnum = G__def_tagnum;
    ::Reflex::Scope store_tagdefining = G__tagdefining;
    int tempstore;
-   char* pfparam;
+   const char* pfparam;
    int nindex = 0;
    int oprp = 0;
    int store_cp_asm = 0;
@@ -1919,7 +1919,7 @@ static G__value G__getfunction_libp(const char* item, char* funcname, G__param* 
       *known3 = 0;
       pfparam = strchr(item, '(');
       p2ffpara = libp;
-      result3 = G__pointer2func(0, result7, pfparam, known3);
+      result3 = G__pointer2func(0, result7, /*FIXME*/(char*)pfparam, known3);
       p2ffpara = 0;
       if (*known3) {
          G__exec_memberfunc = store_exec_memberfunc;
@@ -2015,7 +2015,7 @@ extern "C" G__value G__getfunction(const char* item, int* known3, int memfunc_fl
    ::Reflex::Scope store_def_tagnum;
    ::Reflex::Scope store_tagdefining;
    int tempstore;
-   char* pfparam = 0;
+   const char* pfparam = 0;
    int nindex = 0;
    int base1 = 0;
    int oprp = 0;
@@ -3336,7 +3336,7 @@ extern "C" G__value G__getfunction(const char* item, int* known3, int memfunc_fl
       *known3 = 0;
       pfparam = strchr(item, '(');
       p2ffpara = &fpara;
-      result3 = G__pointer2func(0, result7, pfparam, known3);
+      result3 = G__pointer2func(0, result7, /*FIXME*/(char*)pfparam, known3);
       p2ffpara = 0;
       if (*known3) {
          G__exec_memberfunc = store_exec_memberfunc;

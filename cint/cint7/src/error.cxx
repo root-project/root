@@ -278,7 +278,7 @@ int Cint::Internal::G__warnundefined(const char* item)
 #endif // G__OLDIMPELMENTATION1174
       ) {
 
-         char *p = strchr(item, '(');
+         char *p = strchr(tmp, '(');
          if (p) {
             p = G__strrstr(tmp, "::");
             if (p) {

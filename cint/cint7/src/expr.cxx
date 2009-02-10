@@ -43,19 +43,25 @@ static void G__getiparseobject(G__value* result, const char* item)
    // --
    // '_$trc_[tagnum]_[addr]'
    const char* xtmp = item + 6;
-   char* xx = strchr(xtmp, '_');
+   const char* xx = strchr(xtmp, '_');
    int type = item[2];
    int reftype = (int) (item[3] - '0');
    int isconst = (int) (item[4] - '0');
    //
-   *xx = 0;
-   int tagnum = atoi(xtmp);
+   char *strtagnum = new char[xx-xtmp+1];
+   strncpy(strtagnum,xtmp,xx-xtmp);
+   strtagnum[xx-xtmp] = '\0';
+
+   int tagnum = atoi(strtagnum);
+
+   delete [] strtagnum;
+
    ::Reflex::Type vtype = G__Dict::GetDict().GetType(tagnum);
    if (!vtype) {
       vtype = G__get_from_type(type, 0);
    }
    G__value_typenum(*result) = G__modify_type(vtype, 0, reftype, isconst, 0, 0);
-   *xx = '_';
+
    result->obj.i = atol(xx + 2);
    if (xx[1] == 'M') {
       result->obj.i = -result->obj.i;
@@ -184,7 +190,7 @@ static int G__iscastexpr_body(char* ebuf, int lenbuf)
 //______________________________________________________________________________
 static int G__getpointer2memberfunc(const char* item, G__value* presult)
 {
-   char* p = strstr(item, "::");
+   const char* p = strstr(item, "::");
    if (!p) {
       return 0;
    }
