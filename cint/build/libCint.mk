@@ -38,7 +38,7 @@ RFLXO      = $(addsuffix $(G__CFG_OBJEXT),$(addprefix $(G__CFG_COREVERSION)/src/
 
 BCO        = $(addsuffix $(G__CFG_OBJEXT),$(addprefix $(G__CFG_COREVERSION)/src/,\
               bc_autoobj bc_cfunc bc_inst bc_item bc_parse \
-              bc_reader bc_type bc_exec bc_vtbl bc_eh bc_debug \
+              bc_reader bc_type bc_exec bc_vtbl bc_debug \
               bc_assign))
 
 STUBSCXX     = $(addprefix $(G__CFG_COREVERSION)/src/,symbols.cxx)
@@ -49,12 +49,15 @@ COREO        = $(filter-out $(CXXAPIO),\
 	      $(filter-out $(G__CFG_COREVERSION)/src/dmy%,\
 	      $(filter-out $(G__CFG_COREVERSION)/src/bc_%,\
 	      $(filter-out $(G__CFG_COREVERSION)/src/stdstrct.cxx,\
+	      $(filter-out $(G__CFG_COREVERSION)/src/sunos.cxx,\
+	      $(filter-out $(G__CFG_COREVERSION)/src/newsos.cxx,\
 	      $(filter-out $(G__CFG_COREVERSION)/src/macos.cxx,\
 	      $(filter-out $(G__CFG_COREVERSION)/src/winnt.cxx,\
-              $(filter-out $(STUBSCXX), \
+	      $(filter-out $(G__CFG_COREVERSION)/src/oldlink.cxx,\
+         $(filter-out $(STUBSCXX), \
 	      $(filter-out $(PRAGMATMPCXX),\
 	      $(filter-out $(LOADFILETMPCXX),\
-	      $(wildcard $(G__CFG_COREVERSION)/src/*.cxx))))))))))))
+	      $(wildcard $(G__CFG_COREVERSION)/src/*.cxx))))))))))))))
 
 STREAMO    = $(G__CFG_COREVERSION)/src/dict/$(G__CFG_STREAMDIR)$(G__CFG_OBJEXT)
 
