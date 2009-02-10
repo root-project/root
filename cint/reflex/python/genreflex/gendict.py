@@ -88,8 +88,8 @@ class genDictionary(object) :
       if postmplt != -1:
         postmplt += 1
         postmpltend -= 1
-        # replace template argument "12u" by "12":
-        rep = re.sub(r"\b([\d]+)u\b", '\\1', name[postmplt:postmpltend])
+        # replace template argument "12u" or "12ul" by "12":
+        rep = re.sub(r"\b([\d]+)ul?\b", '\\1', name[postmplt:postmpltend])
         # replace -0x00000000000000001 by -1
         rep = re.sub(r"-0x0*([1-9A-Fa-f][0-9A-Fa-f]*)\b", '-\\1', rep)
         name = name[:postmplt] + rep + name[postmpltend:]
