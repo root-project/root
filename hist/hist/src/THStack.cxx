@@ -432,6 +432,7 @@ Double_t THStack::GetMaximum(Option_t *option)
    TString opt = option;
    opt.ToLower();
    Double_t them=0, themax = -1e300;
+   if (!fHists) return 0;
    Int_t nhists = fHists->GetSize();
    TH1 *h;
    if (!opt.Contains("nostack")) {
@@ -459,6 +460,7 @@ Double_t THStack::GetMinimum(Option_t *option)
    TString opt = option;
    opt.ToLower();
    Double_t them=0, themin = 1e300;
+   if (!fHists) return 0;
    Int_t nhists = fHists->GetSize();
    TH1 *h;
    if (!opt.Contains("nostack")) {
