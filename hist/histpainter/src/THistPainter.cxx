@@ -7947,7 +7947,7 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
          if (e < 1) {
             sprintf(ef,"%s.1f","%");
          } else {
-            sprintf(ef,"%s.0f","%");
+            sprintf(ef,"%sg","%");
          }
       } else {
          if (ie >= 0) {
@@ -7957,7 +7957,7 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
          }
       }
 
-   // The is not '.' in tv. e will be printed with one decimal digit.
+   // There is not '.' in tv. e will be printed with one decimal digit.
    } else if (id < 0) {
       sprintf(ef,"%s.1f","%");
 
