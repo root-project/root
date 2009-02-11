@@ -1323,34 +1323,30 @@ Int_t TXNetFile::GetBytesToPrefetch() const
    return ((bytes < 0) ? 0 : bytes);
 }
 
-
 //______________________________________________________________________________
 void TXNetFile::Print(Option_t *option) const
 {
    // Print the local statistics.
 
-  Printf("TXNetFile caching information:\n");
+   Printf("TXNetFile caching information:");
 
-  int size;
-  long long bytessubmitted, byteshit, misscount, readreqcnt;
-  float	missrate, bytesusefulness;
+   Int_t size;
+   Long64_t bytessubmitted, byteshit, misscount, readreqcnt;
+   Float_t  missrate, bytesusefulness;
 
-
-  if ( fClient && fClient->GetCacheInfo(size, bytessubmitted,
+   if (fClient && fClient->GetCacheInfo(size, bytessubmitted,
                                         byteshit, misscount,
                                         missrate, readreqcnt,
-                                        bytesusefulness) ) {
-    Printf(" Max size:                  %ld\n", size);
-    Printf(" Bytes submitted:           %lld\n", bytessubmitted);
-    Printf(" Bytes hit (estimation):    %lld\n", byteshit);
-    Printf(" Miss count:                %lld\n", misscount);
-    Printf(" Miss rate:                 %f\n", missrate);
-    Printf(" Read requests count:       %lld\n", readreqcnt);
-    Printf(" Bytes usefulness:          %f\n\n", bytesusefulness);
-  }
-  else
-    Printf(" -- No Xrd client instance allocated --\n\n");
+                                        bytesusefulness)) {
+      Printf(" Max size:                  %ld", size);
+      Printf(" Bytes submitted:           %lld", bytessubmitted);
+      Printf(" Bytes hit (estimation):    %lld", byteshit);
+      Printf(" Miss count:                %lld", misscount);
+      Printf(" Miss rate:                 %f", missrate);
+      Printf(" Read requests count:       %lld", readreqcnt);
+      Printf(" Bytes usefulness:          %f\n", bytesusefulness);
+   } else
+      Printf(" -- No Xrd client instance allocated --\n");
 
-  TFile::Print(option);
-
+   TFile::Print(option);
 }

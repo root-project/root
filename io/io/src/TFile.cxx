@@ -3593,8 +3593,7 @@ copyout:
    if (sfile) sfile->Close();
    if (dfile) dfile->Close();
 
-
-  if (sfile->GetBytesRead() != dfile->GetBytesWritten()) {
+   if (sfile->GetBytesRead() != dfile->GetBytesWritten()) {
       ::Error("TFile::Cp", "read and written bytes differ (%lld != %lld)",
                            sfile->GetBytesRead(), dfile->GetBytesWritten());
       // success = kFALSE;       This should be just a severe warning
@@ -3605,7 +3604,7 @@ copyout:
    if (copybuffer) delete[] copybuffer;
 
    if (rmdestiferror && (success != kTRUE))
-     gSystem->Unlink(dst);
+      gSystem->Unlink(dst);
 
    watch.Stop();
    watch.Reset();
