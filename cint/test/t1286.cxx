@@ -23,3 +23,7 @@ int t1286()
       delete[] arrB; 
    return 0;
 }
+
+int main() {
+   return t1286();
+}
