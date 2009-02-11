@@ -75,14 +75,6 @@ version:                         after manual update of the file
                                  file base/inc/RVersion.h and recompile only
                                  base/src/TROOT.cxx
 
-importcint:                      import a new version of CINT into the cint
-                                 directory. The new CINT tar file must be
-                                 available as $HOME/cint. Any new or removed
-                                 files are listed. Use this information to
-                                 manually update the Subversion repository
-
-cintdlls:                        build all CINT add-on shared libs (dll's)
-
 html:                            generate the complete html documentation of
                                  the full ROOT system. Also hyperizes the
                                  README/ChangeLog file
@@ -141,14 +133,6 @@ Adding a new module
 - add module name to the MODULES macro in the main Makefile
 - if optional module add option to configure script (with test for possible
   third party libraries)
-
-
-
-
-
-
-
-
 
 
 [1] http://www.tip.net.au/~millerp/rmch/recu-make-cons-harm.html
