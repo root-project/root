@@ -434,10 +434,10 @@ void ReflexSimple2Test::fooBarZot() {
     bool inheritsPublic = fooBase.IsPublic();
     CPPUNIT_ASSERT_EQUAL(inheritsPublic, true);
 
-    // get number of members (i.e. 13)
+    // get number of members (i.e. 15)
     fooType.UpdateMembers();
     size_t fooMembers = fooType.MemberSize();
-    CPPUNIT_ASSERT_EQUAL(size_t(13), fooMembers);
+    CPPUNIT_ASSERT_EQUAL(size_t(15), fooMembers);
 
     // get number of data members (i.e. 1)
     size_t fooDataMembers = fooType.DataMemberSize();
@@ -487,7 +487,9 @@ void ReflexSimple2Test::fooBarZot() {
     CPPUNIT_ASSERT_EQUAL(4712, val);
 
     // call function setBar with value 4713
-    fooObj.Invoke("set_bar",Type::ByName("void (int)"), ++val);
+    std::vector<void*> vec;
+    vec.push_back(&(++val));
+    fooObj.Invoke("set_bar",Type::ByName("void (int)"), 0, vec);
     // call operator ++ to increase fBar by one
     fooObj.Invoke("operator++");
     // call bar getter and cast the output to int (i.e. 4714)
@@ -684,7 +686,7 @@ void ReflexSimple2Test::testFunctionMembers() {
   o = t.Construct();
   CPPUNIT_ASSERT(o);
   
-  CPPUNIT_ASSERT_EQUAL(51,int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(61,int(t.FunctionMemberSize()));
   
   m = t.MemberByName("h");
   CPPUNIT_ASSERT(m);
@@ -782,9 +784,9 @@ void ReflexSimple2Test::testFreeFunctions() {
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("function3"),m.Name());
   CPPUNIT_ASSERT_EQUAL(std::string("double* (int, float)"),m.TypeOf().Name());
-  double ret_d = -42;
-  m.Invoke(Object(), ret_d, vec);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, ret_d, 0);
+  double* pret_d = 0; 
+  m.Invoke(Object(), pret_d, vec);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, *pret_d, 0);
                        
   m = s.FunctionMemberByName("function2");
   CPPUNIT_ASSERT(m);
@@ -803,8 +805,8 @@ void ReflexSimple2Test::testFreeFunctions() {
                        
   t = Type::ByName("ClassAAA");
   CPPUNIT_ASSERT(t);
-  CPPUNIT_ASSERT_EQUAL(5,int(t.MemberSize()));
-  CPPUNIT_ASSERT_EQUAL(5,int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(6,int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(6,int(t.FunctionMemberSize()));
   CPPUNIT_ASSERT_EQUAL(0,int(t.DataMemberSize()));
   m = t.MemberByName("function6");
   CPPUNIT_ASSERT(m);
@@ -826,7 +828,7 @@ void ReflexSimple2Test::testFreeFunctions() {
 
   t = Type::ByName("ClassBBB");
   CPPUNIT_ASSERT(t);
-  CPPUNIT_ASSERT_EQUAL(5, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(6, int(t.MemberSize()));
   m = t.MemberByName("meth");
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("ClassBBB::meth"),m.Name(SCOPED));
@@ -1067,8 +1069,14 @@ void ReflexSimple2Test::testTypedef() {
 
 void ReflexSimple2Test::testCppSelection() {
 
-   Type t00 = Type::ByName("ns::TestTemplatedSelectionClass<int,int,float>");
-   CPPUNIT_ASSERT(t00);
+  Type t00 = Type::ByName("ns::TestTemplatedSelectionClass<int,int,float>");
+  CPPUNIT_ASSERT(!t00);
+
+  Type t01 = Type::ByName("ns::TestTemplatedSelectionClass<int,int>");
+  CPPUNIT_ASSERT(t01);
+  
+  Type t02 = Type::ByName("ns::TestTemplatedSelectionClass<int,bool>");
+  CPPUNIT_ASSERT(!t02);
 
   Scope g = Scope::ByName("");
   CPPUNIT_ASSERT(g);
@@ -1535,8 +1543,13 @@ void ReflexSimple2Test::iterateVector() {
       params.clear();
       params.push_back(&i);
       int ret = -42;
-      o.Invoke("at", ret, params);
-      CPPUNIT_ASSERT_EQUAL(v[i], ret);
+      int *pret = &ret;
+      CPPUNIT_ASSERT_EQUAL(ret, *pret);
+      // not very standard since int* != int&, but we have to do
+      // this since 'There shall be no references to references'
+      // —ISO/IEC 14882:1998(E), the ISO C++ standard, in section 8.3.2 [dcl.ref]
+      o.Invoke("at", pret, params);
+      CPPUNIT_ASSERT_EQUAL(v[i], *pret);
    }
 
 }

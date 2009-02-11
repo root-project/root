@@ -269,7 +269,7 @@ class genreflex:
         break
     bcomp = os.path.basename(compiler)
     vopt = ''
-    if   bcomp in ('msvc7','msvc71')  : return s
+    if   bcomp in ('msvc7','msvc71','msvc8')  : return s
     elif bcomp in ('gcc','g++','c++') : vopt = '--version'
     elif bcomp in ('cl.exe','cl')     : vopt = '' # there is no option to print only the version with cl
     else :
