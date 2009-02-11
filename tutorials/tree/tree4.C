@@ -5,6 +5,7 @@
 #include "TRandom.h"
 #include "TClassTable.h"
 #include "TSystem.h"
+#include "TROOT.h"
 #if defined(__CINT__) && !defined(__MAKECINT__) 
 #include "../test/libEvent.so"
 #else 
@@ -159,6 +160,8 @@ void tree4r()
 }   
 
 void tree4() {
+   Event::Reset(); // Allow for re-run this script by cleaning static variables.
    tree4w();
+   Event::Reset(); // Allow for re-run this script by cleaning static variables.
    tree4r();
 }
