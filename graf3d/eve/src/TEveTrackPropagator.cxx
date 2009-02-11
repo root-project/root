@@ -19,7 +19,8 @@
 namespace
 {
    const Float_t kBMin     = 1e-6;
-   const Float_t kPtMinSqr = 1e-5;
+   const Float_t kPtMinSqr = 1e-20;
+   const Float_t kAMin     = 1e-10;
    const Float_t kStepEps  = 1e-3;
 }
 
@@ -59,9 +60,8 @@ void TEveTrackPropagator::Helix_t::UpdateHelix(const TEveVector& p, const TEveVe
    if (fullUpdate)
    {
       using namespace TMath;
-      fValid = kFALSE;
       Float_t a = fgkB2C * b.Mag() * Abs(fCharge);
-      if (a > 1e-10 && fPtMag*fPtMag > kPtMinSqr)
+      if (a > kAMin && fPtMag*fPtMag > kPtMinSqr)
       {
          fValid = kTRUE;
 
@@ -85,6 +85,10 @@ void TEveTrackPropagator::Helix_t::UpdateHelix(const TEveVector& p, const TEveVe
          fLStep = fR*fPhiStep*fLam;
          fSin   = Sin(fPhiStep);
          fCos   = Cos(fPhiStep);
+      }
+      else
+      {
+         fValid = kFALSE;
       }
    }
 }
