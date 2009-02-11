@@ -38,13 +38,107 @@ ClassImp(TGraphPainter);
 /* Begin_Html
 <center><h2>The graph painter class</h2></center>
 
+<ul>
+<li><a href="#GP00">Introduction</li></a>
+<li><a href="#GP01">Graphs' plotting options</li></a>
+<li><a href="#GP02">Exclusion graphs</li></a>
+<li><a href="#GP03">Graphs with error bars</li></a>
+<ul>
+<li><a href="#GP03a">TGraphErrors</li></a>
+<li><a href="#GP03b">TGraphAsymmErrors</li></a>
+<li><a href="#GP03c">TGraphBentErrors</li></a>
+</ul>
+<li><a href="#GP04">TGraphPolar options</li></a>
+</ul>
 
-<tt>TGraphPainter</tt> paints <tt>TGraph</tt>, <tt>TGraphAsymmErrors</tt>,
-<tt>TGraphBentErrors</tt>, <tt>TGraphErrors</tt> and <tt>TGraphPolar</tt>.
+<a name="GP00"></a><h3>Introduction</h3>
+
+Graphs are drawn via the painter <tt>TGraphPainter</tt> class. This class
+implement all the various techniques need to display the various kind of
+graphs ie: <tt>TGraph</tt>, <tt>TGraphAsymmErrors</tt>,
+<tt>TGraphBentErrors</tt> and <tt>TGraphErrors</tt>.
+
+<p>
+To draw a graph "<tt>g</tt>" is enough to do:
+<pre>
+   g->Draw("AL");
+</pre>
 
 
-<h3>TGraph options</h3>
+The option <tt>"AL"</tt> in the <tt>Draw()</tt> method means that the axis
+syetem should be define (option <tt>"A"</tt>) and that the graph should
+be drawn as a simple line (option <tt>"L"</tt>). By default a graph is drawn
+in the current pad in the current coordinates system. To define a suitable
+coordinates system and drawn the axis the option <tt>"A"</tt> must be
+specified.
+<p>
+<tt>TGraphPainter</tt> offers many options to paint the various kind of graphs.
+<p>
+The <tt>TGraphPainter</tt> class specializes in the drawing of graphs. It is
+separated from the graph so that one can have graphs without the
+graphics overhead, for example in a batch program.
+<p>
+When a displayed graph is modified, there is not need to call the
+<tt>Draw()</tt> method again; the image will be refreshed the next time the
+pad will be updated.
+<p>A pad is updated after one of these three actions:
+<ol>
+<li>  a carriage control on the ROOT command line,
+<li>  a click inside the pad,
+<li>  a call to <tt>TPad::Update</tt>.
+</ol>
 
+<a name="GP01"></a><h3>Graphs' plotting options</h3>
+Graphs can be drawn with the following options:
+<p>
+<table border=0>
+
+<tr><th valign=top>"A"</th><td>
+Axis are drawn around the graph
+</td></tr>
+
+<tr><th valign=top>"L"</th><td>
+A simple polyline between every points is drawn
+</td></tr>
+
+<tr><th valign=top>"F"</th><td>
+A fill area is drawn ('CF' draw a smooth fill area)
+</td></tr>
+
+<tr><th valign=top>"C"</th><td>
+A smooth Curve is drawn
+</td></tr>
+
+<tr><th valign=top>"*"</th><td>
+A Star is plotted at each point
+</td></tr>
+
+<tr><th valign=top>"P"</th><td>
+Idem with the current marker
+</td></tr>
+
+<tr><th valign=top>"B"</th><td>
+A Bar chart is drawn at each point
+</td></tr>
+
+<tr><th valign=top>"1"</th><td>
+ylow=rwymin
+</td></tr>
+
+<tr><th valign=top>"X+"</th><td>
+The X-axis is drawn on the top side of the plot.
+</td></tr>
+
+<tr><th valign=top>"Y+"</th><td>
+The Y-axis is drawn on the right side of the plot.
+</td></tr>
+
+</table>
+<p>
+
+Several drawing options can be combined. In the following example the graph
+is drawn as a smooth curve (optiob "C") and with markers (option "P"). The
+option "A" request the definition of the axis.
 
 End_Html
 Begin_Macro(source)
@@ -64,8 +158,9 @@ Begin_Macro(source)
    gr->SetLineColor(2);
    gr->SetLineWidth(4);
    gr->SetMarkerColor(4);
+   gr->SetMarkerSize(1.5);
    gr->SetMarkerStyle(21);
-   gr->SetTitle("A simple graph");
+   gr->SetTitle("Option ACP example");
    gr->GetXaxis()->SetTitle("X title");
    gr->GetYaxis()->SetTitle("Y title");
    gr->Draw("ACP");
@@ -81,8 +176,7 @@ End_Macro
 Begin_Html
 
 
-<h3>Exclusion graphs</h3>
-
+<a name="GP02"></a><h3>Exclusion graphs</h3>
 
 When a graph is painted with the option <tt>"C"</tt> or <tt>"L"</tt> it is
 possible to draw a filled area on one side of the line. This is useful to show
@@ -108,12 +202,93 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
+<a name="GP03"></a><h3>Graphs with error bars</h3>
+Three classes are available to handle graphs with error bars:
+<tt>TGraphErrors</tt>, <tt>TGraphAsymmErrors</tt> and <tt>TGraphBentErrors</tt>.
+In addition to the drawing options previously described, the graphs with error
+bars can be drawn with the following extra options:
+<p>
+<table border=0>
 
-<h3>TGraphErrors options</h3>
+<tr><th valign=top>"Z"</th><td>
+By default horizonthal and vertical small lines are drawn at
+the end of the error bars. If option "z" or "Z" is specified,
+these lines are not drawn.
+</td></tr>
+
+<tr><th valign=top>">"</th><td>
+An arrow is drawn at the end of the error bars.
+The size of the arrow is set to 2/3 of the marker size.
+</td></tr>
+
+<tr><th valign=top>"|>"</th><td>
+A filled arrow is drawn at the end of the error bars.
+The size of the arrow is set to 2/3 of the marker size.
+</td></tr>
+
+<tr><th valign=top>"X"</th><td>
+By default the error bars are drawn. If option "X" is specified,
+the errors are not drawn. The graph with errors in drawn like a normal graph.
+</td></tr>
+
+<tr><th valign=top>"||"</th><td>
+Only the end vertical/horizonthal lines
+of the error bars are drawn. This option is interesting to superimpose
+systematic errors on top of a graph with statistical errors.
+</td></tr>
+
+<tr><th valign=top>"[]"</th><td>
+Does the same as option "||" except that it draws additionnal tick marks at the
+end of the vertical/horizonthal lines. This makes less ambiguous plots
+in case several graphs are drawn on the same picture.
+</td></tr>
+
+<tr><th valign=top>"2"</th><td>
+Error rectangles are drawn.
+</td></tr>
+
+<tr><th valign=top>"3"</th><td>
+A filled area is drawn through the end points of the vertical error bars.
+</td></tr>
+
+<tr><th valign=top>"4"</th><td>
+A smoothed filled area is drawn through the end points of the vertical error
+bars.
+</td></tr>
+</table>
+<p>
+<tt>gStyle->SetErrorX(dx)</tt> controls the size of the error along x.
+<tt>dx = 0</tt> removes the error along x.
+<p>
+<tt>gStyle->SetEndErrorSize(np)</tt> controls the size of the lines
+at the end of the error bars (when option 1 is used).
+By default <tt>np=1</tt>. (np represents the number of pixels).
+
+<a name="GP03a"><h4><u>TGraphErrors</u></h4>
+A <tt>TGraphErrors</tt> is a <tt>TGraph</tt> with error bars. The errors are
+defined along X and Y and are symmetric: The left and right errors are the same
+along X and the bottom and up errors are the same along Y.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c4 = new TCanvas("c4","c4",200,10,600,400);
+   double x[] = {0, 1, 2, 3, 4};
+   double y[] = {0, 2, 4, 1, 3};
+   double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
+   double ey[] = {1, 0.5, 1, 0.5, 1};
+   TGraphErrors* ge = new TGraphErrors(5, x, y, ex, ey);
+   ge->Draw("ap");
+   return c4;
+}
+End_Macro
+Begin_Html
 
 
-<h3>TGraphAsymmErrors options</h3>
-
+<a name="GP03b"><h4><u>TGraphAsymmErrors</u></h4>
+A <tt>TGraphAsymmErrors</tt> is like a <tt>TGraphErrors</tt> but the errors
+defined along X and Y are not symmetric: The left and right errors are
+different along X and the bottom and up errors are different along Y.
 
 End_Html
 Begin_Macro(source)
@@ -136,8 +311,10 @@ End_Macro
 Begin_Html
 
 
-<h3>TGraphBentErrors options</h3>
-
+<a name="GP03c"><h4><u>TGraphBentErrors</u></h4>
+A <tt>TGraphBentErrors</tt> is like a <tt>TGraphAsymmErrors</tt>.
+An extra parameter allows to bent the error bars to better see them
+when several graphs are drawn on the same plot.
 
 End_Html
 Begin_Macro(source)
@@ -165,8 +342,7 @@ End_Macro
 Begin_Html
 
 
-<h3>TGraphPolar options</h3>
-
+<a name="GP04"></a><h3>TGraphPolar options</h3>
 
 The drawing options for the polar graphs are the following values:
 
@@ -627,7 +803,9 @@ char *TGraphPainter::GetObjectInfoHelper(TGraph * /*theGraph*/, Int_t /*px*/, In
 //______________________________________________________________________________
 void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
 {
-   // Paint a any kind of TGraph
+   /* Begin_Html
+   Paint a any kind of TGraph
+   End_Html */
 
    if (theGraph) {
       SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
@@ -653,48 +831,9 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
 //______________________________________________________________________________
 void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
-   // Control function to draw a graph.
-   //
-   //  Draws one dimensional graphs. The aspect of the graph is done
-   //  according to the value of the chopt.
-   //
-   //  Input parameters:
-   //
-   //  npoints : Number of points in X or in Y.
-   //  x[npoints] or x[2] : X coordinates or (XMIN,XMAX) (WC space).
-   //  y[npoints] or y[2] : Y coordinates or (YMIN,YMAX) (WC space).
-   //  chopt : Option.
-   //
-   //  chopt='L' :  A simple polyline between every points is drawn
-   //
-   //  chopt='F' :  A fill area is drawn ('CF' draw a smooth fill area)
-   //
-   //  chopt='A' :  Axis are drawn around the graph
-   //
-   //  chopt='C' :  A smooth Curve is drawn
-   //
-   //  chopt='*' :  A Star is plotted at each point
-   //
-   //  chopt='P' :  Idem with the current marker
-   //
-   //  chopt='B' :  A Bar chart is drawn at each point
-   //
-   //  chopt='1' :  ylow=rwymin
-   //
-   //  chopt='X+' : The X-axis is drawn on the top side of the plot.
-   //
-   //  chopt='Y+' : The Y-axis is drawn on the right side of the plot.
-   //
-   // When a graph is painted with the option "C" or "L" it is possible to draw
-   // a filled area on one side of the line. This is useful to show exclusion
-   // zones. This drawing mode is activated when the absolute value of the
-   // graph line width (set thanks to SetLineWidth) is greater than 99. In that
-   // case the line width number is interpreted as 100*ff+ll = ffll . The two
-   // digits number "ll" represent the normal line width whereas "ff" is the
-   // filled area width. The sign of "ffll" allows to flip the filled area
-   // from one side of the line to the other. The current fill area attributes
-   // are used to draw the hatched zone.
-
+   /* Begin_Html
+   <a href="#GP01">Control function to draw a graph.</a>
+   End_Html */
 
    Int_t optionLine , optionAxis , optionCurve, optionStar , optionMark;
    Int_t optionBar  , optionR    , optionOne  , optionE;
@@ -1081,21 +1220,27 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 
 
 //______________________________________________________________________________
-void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
+void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x,
+                                  const Double_t *y, Option_t *chopt)
 {
-   // Control function to draw a graphistogram.
-   //
-   //   Draws one dimensional graphs. The aspect of the graph is done
-   // according to the value of the chopt.
-   //
-   // Input parameters:
-   //
-   //  npoints : Number of points in X or in Y.
-   //  X(N) or x[1] : X coordinates or (XMIN,XMAX) (WC space).
-   //  Y(N) or y[1] : Y coordinates or (YMIN,YMAX) (WC space).
-   //  chopt : Option.
-   //
-   //  chopt='R' :  Graph is drawn horizontaly, parallel to X axis.
+   /* Begin_Html
+   This method is used by
+   <a href="http://root.cern.ch/root/html/THistPainter.html"><tt>THistPainter</tt></a>
+   to paint 1D histograms.
+   <p>
+   Input parameters:
+   <ul>
+   <li> npoints : Number of points in X or in Y.
+   <li> x[npoints] or x[0] : x coordinates or (xmin,xmax).
+   <li> y[npoints] or y[0] : y coordinates or (ymin,ymax).
+   <li> chopt : Option.
+   </ul>
+   <p>
+   The aspect of the graph is done according to the value of the chopt.
+   <p>
+   <table border=0>
+   <tr><th valign=top>"R"</th><td>
+   Graph is drawn horizontaly, parallel to X axis.
    //               (default is vertically, parallel to Y axis)
    //               If option R is selected the user must give:
    //                 2 values for Y (y[0]=YMIN and y[1]=YMAX)
@@ -1103,50 +1248,81 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
    //               Otherwise the user must give:
    //                 N values for Y, one for each channel.
    //                 2 values for X (x[0]=XMIN and x[1]=XMAX)
-   //
-   //  chopt='L' :  A simple polyline beetwen every points is drawn
-   //
-   //  chopt='H' :  An Histogram with equidistant bins is drawn
-   //               as a polyline.
-   //
-   //  chopt='F' :  An histogram with equidistant bins is drawn
-   //               as a fill area. Contour is not drawn unless
-   //               chopt='H' is also selected..
-   //
-   //  chopt='N' :  Non equidistant bins (default is equidistant)
-   //               If N is the number of channels array X and Y
-   //               must be dimensionned as follow:
-   //               If option R is not selected (default) then
-   //               the user must give:
-   //                 (N+1) values for X (limits of channels).
-   //                  N values for Y, one for each channel.
-   //               Otherwise the user must give:
-   //                 (N+1) values for Y (limits of channels).
-   //                  N values for X, one for each channel.
-   //
-   //  chopt='F1':  Idem as 'F' except that fill area is no more
-   //               reparted arround axis X=0 or Y=0 .
-   //
-   //  chopt='F2':  Draw a Fill area polyline connecting the center of bins
-   //
-   //  chopt='C' :  A smooth Curve is drawn.
-   //
-   //  chopt='*' :  A Star is plotted at the center of each bin.
-   //
-   //  chopt='P' :  Idem with the current marker
-   //  chopt='P0':  Idem with the current marker. Empty bins also drawn
-   //
-   //  chopt='B' :  A Bar chart with equidistant bins is drawn as fill
-   //               areas (Contours are drawn).
-   //
-   //  chopt='9' :  Force graph to be drawn in high resolution mode.
-   //               By default, the graph is drawn in low resolution
-   //               in case the number of points is greater than the number of
-   //               pixels in the current pad.
-   //
-   //  chopt='][' : "Cutoff" style. When this option is selected together with
-   //               H option, the first and last vertical lines of the histogram
-   //               are not drawn.
+   </td></tr>
+
+   <tr><th valign=top>"L"</th><td>
+   A simple polyline beetwen every points is drawn
+   </td></tr>
+
+   <tr><th valign=top>"H"</th><td>
+   An Histogram with equidistant bins is drawn
+   as a polyline.
+   </td></tr>
+
+   <tr><th valign=top>"F"</th><td>
+   An histogram with equidistant bins is drawn
+   as a fill area. Contour is not drawn unless
+   chopt='H' is also selected..
+   </td></tr>
+
+   <tr><th valign=top>"N"</th><td>
+   Non equidistant bins (default is equidistant)
+   If N is the number of channels array X and Y
+   must be dimensionned as follow:
+   If option R is not selected (default) then
+   the user must give:
+     (N+1) values for X (limits of channels).
+      N values for Y, one for each channel.
+   Otherwise the user must give:
+     (N+1) values for Y (limits of channels).
+      N values for X, one for each channel.
+   </td></tr>
+
+   <tr><th valign=top>"F1"</th><td>
+   Idem as 'F' except that fill area is no more
+   reparted arround axis X=0 or Y=0 .
+   </td></tr>
+
+   <tr><th valign=top>"F2"</th><td>
+   Draw a Fill area polyline connecting the center of bins
+   </td></tr>
+
+   <tr><th valign=top>"C"</th><td>
+   A smooth Curve is drawn.
+   </td></tr>
+
+   <tr><th valign=top>"*"</th><td>
+   A Star is plotted at the center of each bin.
+   </td></tr>
+
+   <tr><th valign=top>"P"</th><td>
+   Idem with the current marker
+   </td></tr>
+
+   <tr><th valign=top>"P0"</th><td>
+   Idem with the current marker. Empty bins also drawn
+   </td></tr>
+
+   <tr><th valign=top>"B"</th><td>
+   A Bar chart with equidistant bins is drawn as fill
+   areas (Contours are drawn).
+   </td></tr>
+
+   <tr><th valign=top>"9"</th><td>
+   Force graph to be drawn in high resolution mode.
+   By default, the graph is drawn in low resolution
+   in case the number of points is greater than the number of
+   pixels in the current pad.
+   </td></tr>
+
+   <tr><th valign=top>"]["</th><td>
+   "Cutoff" style. When this option is selected together with
+   H option, the first and last vertical lines of the histogram
+   are not drawn.
+   </td></tr>
+
+   </table>
+   End_Html */
 
    const char *where = "PaintGraphHist";
 
@@ -1944,33 +2120,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
 //______________________________________________________________________________
 void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 {
-   // Paint this TGraphAsymmErrors with its current attributes.
-   //
-   // By default horizonthal and vertical small lines are drawn at
-   // the end of the error bars. if option "z" or "Z" is specified,
-   // these lines are not drawn.
-   //
-   // If option contains ">" an arrow is drawn at the end of the error bars
-   // if option contains "|>" a full arrow is drawn at the end of the error bars
-   // the size of the arrow is set to 2/3 of the marker size.
-   //
-   // By default, error bars are drawn. If option "X" is specified,
-   // the errors are not drawn (TGraph::Paint equivalent).
-   //
-   // If option "||" is specified only the end vertical/horizonthal lines
-   // of the error bars are drawn. This option is interesting to superimpose
-   // systematic errors on top of a graph with statistical errors. The option
-   // "[]" does the same except that it draws additionnal tick marks at the
-   // end of the vertical/horizonthal lines. This makes less ambiguous plots
-   // in case several graphs are drawn on the same picture.
-   //
-   // If option "2" is specified error rectangles are drawn.
-   //
-   // If option "3" is specified a filled area is drawn through the end points
-   // of the vertical error bars.
-   //
-   // If option "4" is specified a smoothed filled area is drawn through the end
-   // points of the vertical error bars.
+   /* Begin_Html
+   <a href="#GP03">Paint this TGraphAsymmErrors with its current attributes.</a>
+   End_Html */
 
    Double_t *xline = 0;
    Double_t *yline = 0;
@@ -2175,31 +2327,9 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 //_____________________________________________________________________________
 void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 {
-   // Paint this TGraphBentErrors with its current attributes.
-   //
-   // By default horizonthal and vertical small lines are drawn at
-   // the end of the error bars. if option "z" or "Z" is specified,
-   // these lines are not drawn.
-   //
-   // If option contains ">" an arrow is drawn at the end of the error bars
-   // if option contains "|>" a full arrow is drawn at the end of the error bars
-   // the size of the arrow is set to 2/3 of the marker size.
-   //
-   // By default, error bars are drawn. If option "X" is specified,
-   // the errors are not drawn (TGraph::Paint equivalent).
-   //
-   // If option "||" is specified only the end vertical/horizonthal lines
-   // of the error bars are drawn. This option is interesting to superimpose
-   // systematic errors on top of a graph with statistical errors. The option
-   // "[]" does the same except that it draws additionnal tick marks at the
-   // end of the vertical/horizonthal lines. This makes less ambiguous plots
-   // in case several graphs are drawn on the same picture.
-   //
-   // If option "3" is specified a filled area is drawn through the end points
-   // of the vertical error bars.
-   //
-   // If option "4" is specified a smoothed filled area is drawn through the end
-   // points of the vertical error bars.
+   /* Begin_Html
+   <a href="#GP03">Paint this TGraphBentErrors with its current attributes.</a>
+   End_Html */
 
    Double_t *xline = 0;
    Double_t *yline = 0;
@@ -2412,40 +2542,9 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 //______________________________________________________________________________
 void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 {
-   // Paint this TGraphErrors with its current attributes.
-   //
-   // By default horizonthal and vertical small lines are drawn at
-   // the end of the error bars. if option "z" or "Z" is specified,
-   // these lines are not drawn.
-   //
-   // If option contains ">" an arrow is drawn at the end of the error bars
-   // if option contains "|>" a full arrow is drawn at the end of the error bars
-   // the size of the arrow is set to 2/3 of the marker size.
-   //
-   // By default, error bars are drawn. If option "X" is specified,
-   // the errors are not drawn (TGraph::Paint equivalent).
-   //
-   // If option "||" is specified only the end vertical/horizonthal lines
-   // of the error bars are drawn. This option is interesting to superimpose
-   // systematic errors on top of a graph with statistical errors. The option
-   // "[]" does the same except that it draws additionnal tick marks at the
-   // end of the vertical/horizonthal lines. This makes less ambiguous plots
-   // in case several graphs are drawn on the same picture.
-   //
-   // If option "2" is specified error rectangles are drawn.
-   //
-   // If option "3" is specified a filled area is drawn through the end points
-   // of the vertical error bars.
-   //
-   // If option "4" is specified a smoothed filled area is drawn through the end
-   // points of the vertical error bars.
-   //
-   // Use gStyle->SetErrorX(dx) to control the size of the error along x.
-   // set dx = 0 to suppress the error along x.
-   //
-   // Use gStyle->SetEndErrorSize(np) to control the size of the lines
-   // at the end of the error bars (when option 1 is used).
-   // By default np=1. (np represents the number of pixels).
+   /* Begin_Html
+   <a href="#GP03">Paint this TGraphErrors with its current attributes.</a>
+   End_Html */
 
    Double_t *xline = 0;
    Double_t *yline = 0;
@@ -2657,15 +2756,9 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 //______________________________________________________________________________
 void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 {
-   // Paint TGraphPolar.
-   //
-   // "options" can have the following values:
-   //    - "O" Polar labels are paint orthogonally to the polargram radius.
-   //    - "P" Polymarker are paint at each point position.
-   //    - "E" Paint error bars.
-   //    - "F" Paint fill area (closed polygon).
-   //    - "A" Force axis redrawing even if a polargram already exists.
-   //    - "N" Disable the display of the polar labels.
+   /* Begin_Html
+   <a href="#GP04">Paint this TGraphPolar with its current attributes.</a>
+   End_Html */
 
    Int_t ipt, i;
    Double_t rwrmin, rwrmax, rwtmin, rwtmax;
@@ -2957,7 +3050,9 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 //______________________________________________________________________________
 void TGraphPainter::PaintGraphQQ(TGraph *theGraph, Option_t *option)
 {
-   // Paint this graphQQ. No options for the time being.
+   /* Begin_Html
+   Paint this graphQQ. No options for the time being.
+   End_Html */
 
    TGraphQQ *theGraphQQ = (TGraphQQ*) theGraph;
 
@@ -3016,7 +3111,9 @@ void TGraphPainter::PaintGraphQQ(TGraph *theGraph, Option_t *option)
 //______________________________________________________________________________
 void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 {
-   // Paint a simple graph, without errors bars.
+   /* Begin_Html
+   Paint a simple graph, without errors bars.
+   End_Html */
 
    if (strstr(option,"H") || strstr(option,"h")) {
       PaintGrapHist(theGraph, theGraph->GetN(), theGraph->GetX(), theGraph->GetY(), option);
@@ -3050,12 +3147,11 @@ void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double_t *x, const Double_t *y)
 {
    /* Begin_Html
-   Paint a polyline with hatches on one side showing an exclusion
-   zone. x and y are the the vectors holding the polyline and n the
-   number of points in the polyline and w the width of the hatches.
-   w can be negative.
-   This method is not meant to be used directly. It is called
-   automatically according to the line style convention.
+   Paint a polyline with hatches on one side showing an exclusion zone. x and y
+   are the the vectors holding the polyline and n the number of points in the
+   polyline and <tt>w</tt> the width of the hatches. <tt>w</tt> can be negative.
+   This method is not meant to be used directly. It is called automatically
+   according to the line style convention.
    End_Html */
 
    Int_t i,j,nf;
@@ -3259,7 +3355,9 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
 //______________________________________________________________________________
 void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
 {
-   //  Paint "stats" box with the fit info.
+   /* Begin_Html
+   Paint the statistics box with the fit info.
+   End_Html */
 
    Int_t dofit;
    TPaveStats *stats  = 0;
@@ -3351,25 +3449,30 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
 //______________________________________________________________________________
 void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
 {
-   // Smooth a curve given by N points.
-   //
-   // Underlaying routine for Draw based on the CERN GD3 routine TVIPTE
-   //
-   //     Author - Marlow etc.   Modified by - P. Ward     Date -  3.10.1973
-   //
-   //   This routine draws a smooth tangentially continuous curve through
-   // the sequence of data points P(I) I=1,N where P(I)=(X(I),Y(I))
-   // the curve is approximated by a polygonal arc of short vectors .
-   // the data points can represent open curves, P(1) != P(N) or closed
-   // curves P(2) == P(N) . If a tangential discontinuity at P(I) is
-   // required , then set P(I)=P(I+1) . loops are also allowed .
-   //
-   // Reference Marlow and Powell,Harwell report No.R.7092.1972
-   // MCCONALOGUE,Computer Journal VOL.13,NO4,NOV1970Pp392 6
-   //
-   //  npoints   : Number of data points.
-   //  x         : Abscissa
-   //  y         : Ordinate
+   /* Begin_Html
+   Smooth a curve given by N points.
+   <p>
+   The original code come from an underlaying routine for Draw based on the
+   CERN GD3 routine TVIPTE:
+   <pre>
+        Author - Marlow etc.   Modified by - P. Ward     Date -  3.10.1973
+   </pre>
+   This method draws a smooth tangentially continuous curve through
+   the sequence of data points P(I) I=1,N where P(I)=(X(I),Y(I))
+   the curve is approximated by a polygonal arc of short vectors .
+   the data points can represent open curves, P(1) != P(N) or closed
+   curves P(2) == P(N) . If a tangential discontinuity at P(I) is
+   required , then set P(I)=P(I+1) . loops are also allowed .
+   <p>
+   Reference Marlow and Powell,Harwell report No.R.7092.1972
+   MCCONALOGUE,Computer Journal VOL.13,NO4,NOV1970Pp392 6
+   <p>
+   <ul>
+   <li>  npoints   : Number of data points.
+   <li>  x         : Abscissa
+   <li>  y         : Ordinate
+   </ul>
+   End_Html */
 
    Int_t i, k, kp, km, npointsMax, banksize, n2, npt;
    Int_t maxiterations, finished;
