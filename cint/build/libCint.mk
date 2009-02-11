@@ -57,7 +57,7 @@ COREO        = $(filter-out $(CXXAPIO),\
          $(filter-out $(STUBSCXX), \
 	      $(filter-out $(PRAGMATMPCXX),\
 	      $(filter-out $(LOADFILETMPCXX),\
-	      $(wildcard $(G__CFG_COREVERSION)/src/*.cxx))))))))))))))
+	      $(wildcard $(G__CFG_COREVERSION)/src/*.cxx)))))))))))))))
 
 STREAMO    = $(G__CFG_COREVERSION)/src/dict/$(G__CFG_STREAMDIR)$(G__CFG_OBJEXT)
 
