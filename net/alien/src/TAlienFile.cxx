@@ -538,6 +538,7 @@ void TAlienFile::Close(Option_t * option)
          delete result;
       }
       Error("Close", "cannot commit envelope for %s", fLfn.Data());
+      gSystem->Unlink(fLfn.Data());
    }
    TIterator *iter = list->MakeIterator();
    TObject *object = 0;
@@ -555,6 +556,7 @@ void TAlienFile::Close(Option_t * option)
          }
 
          Error("Close", "cannot register %s!", fLfn.Data());
+         gSystem->Unlink(fLfn.Data());
          // there is only one result line .... in case it is at all ....
          break;
       }

@@ -3483,10 +3483,10 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
    if (opt != "") opt += "&";
    opt += raw;
    // Netx-related options:
-   //    cachesz = 2*buffersize   -> 2 buffers as peak mem usage
-   //    readaheadsz = buffersize -> Keep buffersize bytes outstanding
-   //    rmpolicy = 1             -> Remove from the cache the blk with the least offset
-   opt += Form("&cachesz=%d&readaheadsz=%d&rmpolicy=1", 2*buffersize, buffersize);
+   //    cachesz = 4*buffersize     -> 4 buffers as peak mem usage
+   //    readaheadsz = 2*buffersize -> Keep at max 4*buffersize bytes outstanding when reading
+   //    rmpolicy = 1               -> Remove from the cache the blk with the least offset
+   opt += Form("&cachesz=%d&readaheadsz=%d&rmpolicy=1", 4*buffersize, 2*buffersize);
    sURL.SetOptions(opt);
 
    // Set optimization options for the destination file
@@ -3589,15 +3589,16 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
 
    success = kTRUE;
 
-   if (sfile->GetBytesRead() != dfile->GetBytesWritten()) {
-      ::Error("TFile::Cp", "read and written bytes differ (%lld != %lld)",
-                           sfile->GetBytesRead(), dfile->GetBytesWritten());
-      success = kFALSE;
-   }
-
 copyout:
    if (sfile) sfile->Close();
    if (dfile) dfile->Close();
+
+
+  if (sfile->GetBytesRead() != dfile->GetBytesWritten()) {
+      ::Error("TFile::Cp", "read and written bytes differ (%lld != %lld)",
+                           sfile->GetBytesRead(), dfile->GetBytesWritten());
+      // success = kFALSE;       This should be just a severe warning
+  }
 
    if (sfile) delete sfile;
    if (dfile) delete dfile;
