@@ -689,8 +689,6 @@ G__value Cint::Internal::G__new_operator(const char* expression)
                      memcpy((void*) G__store_struct_offset, (void*) buf.obj.i, G__value_typenum(buf).RawType().SizeOf());
                   }
                   break;
-               } else {
-                  G__baseconstructor(0,0);
                }
             }
             //
