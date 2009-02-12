@@ -98,7 +98,7 @@ public:
    static void           SetTransform(TGeoMatrix *matrix);
    static Double_t       Tolerance() {return 1.E-10;}
    static Double_t       ComputeEpsMch();
-   static Double_t       EpsMch() {return fgEpsMch;}
+   static Double_t       EpsMch();
    virtual Double_t      Capacity() const                        = 0;
    virtual void          ComputeBBox()                           = 0;
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm) = 0;

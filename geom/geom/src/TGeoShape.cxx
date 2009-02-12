@@ -212,6 +212,14 @@ Double_t TGeoShape::ComputeEpsMch()
 }   
    
 //_____________________________________________________________________________
+Double_t TGeoShape::EpsMch()
+{
+   //static function returning the machine round-off error
+   
+   return fgEpsMch;
+}
+   
+//_____________________________________________________________________________
 const char *TGeoShape::GetName() const
 {
 // Get the shape name.
