@@ -794,7 +794,7 @@ Double_t TGeoSubtraction::DistFromOutside(Double_t *point, Double_t *dir, Int_t 
       
       fRightMat->MasterToLocal(&master[0], &local[0]);
       d1 = fRight->DistFromOutside(&local[0], &rdir[0], iact, step, safe);
-      if (d2<d1) {
+      if (d2<d1-TGeoShape::Tolerance()) {
          snxt += d2+epsil;
          return snxt;
       }   
