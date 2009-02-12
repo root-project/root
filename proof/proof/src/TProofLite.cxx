@@ -106,6 +106,9 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
    // Init the session now
    Init(url, conffile, confdir, loglevel, alias);
 
+   // For final cleanup
+   gROOT->GetListOfProofs()->Add(this);
+
    // Still needed by the packetizers: needs to be changed
    gProof = this;
 }
