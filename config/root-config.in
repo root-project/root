@@ -5,7 +5,12 @@
 #
 # Author: Fons Rademakers, 06/06/99
 
-progdir=`dirname $0`
+# work around readlink versions not having -f option
+fullpath1=`readlink $0`
+if [ "$?" -ne "0" ]; then
+   fullpath1=$0
+fi
+progdir=`dirname $fullpath1`
 runningdir=`pwd`
 if echo $progdir | grep "^/" > /dev/null 2>& 1 || \
    echo $progdir | grep "^~" > /dev/null 2>& 1; then
