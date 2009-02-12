@@ -119,7 +119,7 @@ private:
 
    Int_t          fLocalId;  // ID in the local list
    Int_t          fStatus;   // Session status (see EStatus)
-   TProof *fProof;    // Related instance of TProof
+   TProof        *fProof;    // Related instance of TProof
    Int_t          fRemoteId; // Remote ID assigned by the coordinator to the proofserv
    TString        fUrl;      // Url of the connection
 
@@ -131,7 +131,7 @@ public:
    virtual ~TProofDesc() { }
 
    Int_t          GetLocalId() const { return fLocalId; }
-   TProof *GetProof() const { return fProof; }
+   TProof        *GetProof() const { return fProof; }
    Int_t          GetRemoteId() const { return fRemoteId; }
    Int_t          GetStatus() const { return fStatus; }
    const char    *GetUrl() const { return fUrl; }
