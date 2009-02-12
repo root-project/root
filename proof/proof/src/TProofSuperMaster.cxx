@@ -39,6 +39,7 @@
 #include "TUrl.h"
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
+#include "TROOT.h"
 
 ClassImp(TProofSuperMaster)
 
@@ -61,7 +62,15 @@ TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile
    if (!confdir  || strlen(confdir) == 0)
       confdir = kPROOF_ConfDir;
 
+   // Instance type
+   fMasterServ = kTRUE;
+   ResetBit(TProof::kIsClient);
+   SetBit(TProof::kIsMaster);
+
    Init(masterurl, conffile, confdir, loglevel, alias);
+
+   // For Final cleanup
+   gROOT->GetListOfProofs()->Add(this);
 }
 
 //______________________________________________________________________________

@@ -348,7 +348,6 @@ private:
    Int_t           fCheckFileStatus; //remote return status after kPROOF_CHECKFILE
    TList          *fRecvMessages;    //Messages received during collect not yet processed
    TList          *fSlaveInfo;       //!list returned by kPROOF_GETSLAVEINFO
-   Bool_t          fMasterServ;      //true if we are a master server
    Bool_t          fSendGroupView;   //if true send new group view
    TList          *fActiveSlaves;    //list of active slaves (subset of all slaves)
    TList          *fInactiveSlaves;  //list of inactive slaves (good but not used for processing)
@@ -416,6 +415,7 @@ private:
 protected:
    enum ESlaves { kAll, kActive, kUnique, kAllUnique };
 
+   Bool_t          fMasterServ;     //true if we are a master server
    TUrl            fUrl;            //Url of the master
    TString         fConfFile;       //file containing config information
    TString         fConfDir;        //directory containing cluster config information
