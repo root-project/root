@@ -36,6 +36,7 @@ class TGeoShape : public TNamed
 {
 private:
    static TGeoMatrix     *fgTransform;  // current transformation matrix that applies to shape
+   static Double_t        fgEpsMch;     // Machine round-off error
 public:
 enum EShapeType {
    kBitMask32  = 0xffffffff,
@@ -96,6 +97,8 @@ public:
    static TGeoMatrix    *GetTransform();
    static void           SetTransform(TGeoMatrix *matrix);
    static Double_t       Tolerance() {return 1.E-10;}
+   static Double_t       ComputeEpsMch();
+   static Double_t       EpsMch() {return fgEpsMch;}
    virtual Double_t      Capacity() const                        = 0;
    virtual void          ComputeBBox()                           = 0;
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm) = 0;

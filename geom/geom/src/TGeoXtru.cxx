@@ -467,7 +467,8 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       if (zexit) return snext;
       iz = iznext;
    }
-   return TGeoShape::Big();  // should never happen       
+//   return TGeoShape::Big();  // should never happen       
+   return TGeoShape::Tolerance();
 }
 
 //_____________________________________________________________________________

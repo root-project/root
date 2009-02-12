@@ -80,6 +80,7 @@ private :
    TGeoNode             *fTopNode;          //! top physical node
    TGeoNode             *fLastNode;         //! last searched node
    TGeoNode             *fNextNode;         //! next node that will be crossed
+   TGeoNode             *fForcedNode;       //! current point is supposed to be inside this node
    TGeoCacheState       *fBackupState;      //! backup state
    TGeoHMatrix          *fCurrentMatrix;    //! current stored global matrix
    TGeoHMatrix          *fGlobalMatrix;     //! current pointer to cached global matrix

@@ -240,7 +240,8 @@ void TGeoArb8::ComputeBBox()
 void TGeoArb8::ComputeTwist()
 {
 // Computes tangents of twist angles (angles between projections on XY plane
-// of corresponding -dz +dz edges). Called after last point [7] was set.
+// of corresponding -dz +dz edges). Computes also if the vertices are defined
+// clockwise or anti-clockwise.
    Double_t twist[4];
    Bool_t twisted = kFALSE;
    Double_t dx1, dy1, dx2, dy2;
@@ -265,10 +266,39 @@ void TGeoArb8::ComputeTwist()
       twist[i] = TMath::Sign(1.,twist[i]);
       twisted = kTRUE;
    }
-   if (!twisted) return;
-   if (fTwist) delete [] fTwist;
-   fTwist = new Double_t[4];
-   memcpy(fTwist, &twist[0], 4*sizeof(Double_t));
+   if (twisted) {
+      if (fTwist) delete [] fTwist;
+      fTwist = new Double_t[4];
+      memcpy(fTwist, &twist[0], 4*sizeof(Double_t));
+   }   
+   Double_t sum1 = 0.;
+   Double_t sum2 = 0.;
+   Int_t j;
+   for (Int_t i=0; i<4; i++) {
+      j = (i+1)%4;
+      sum1 += fXY[i][0]*fXY[j][1]-fXY[j][0]*fXY[i][1];
+      sum2 += fXY[i+4][0]*fXY[j+4][1]-fXY[j+4][0]*fXY[i+4][1];
+   }
+   if (sum1*sum2 < -TGeoShape::Tolerance()) {
+      Fatal("ComputeTwist", "Shape %s type Arb8: Lower/upper faces defined with opposite clockwise", GetName());
+      return;
+   }
+   if (sum1>0.) {
+      Error("ComputeTwist", "Shape %s type Arb8: Vertices must be defined clockwise in XY planes. Re-ordering...", GetName());
+      Double_t xtemp, ytemp;
+      xtemp = fXY[1][0];
+      ytemp = fXY[1][1];
+      fXY[1][0] = fXY[3][0];
+      fXY[1][1] = fXY[3][1];
+      fXY[3][0] = xtemp;
+      fXY[3][1] = ytemp;
+      xtemp = fXY[5][0];
+      ytemp = fXY[5][1];
+      fXY[5][0] = fXY[7][0];
+      fXY[5][1] = fXY[7][1];
+      fXY[7][0] = xtemp;
+      fXY[7][1] = ytemp;
+   }   
 }
 
 //_____________________________________________________________________________

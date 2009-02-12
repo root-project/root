@@ -157,7 +157,7 @@
 ClassImp(TGeoShape)
 
 TGeoMatrix *TGeoShape::fgTransform = NULL;
-
+Double_t    TGeoShape::fgEpsMch = 2.220446049250313e-16;
 //_____________________________________________________________________________
 TGeoShape::TGeoShape()
 {
@@ -194,6 +194,23 @@ TGeoShape::~TGeoShape()
    if (gGeoManager) gGeoManager->GetListOfShapes()->Remove(this);
 }
 
+//_____________________________________________________________________________
+Double_t TGeoShape::ComputeEpsMch()
+{
+// Compute machine round-off double precision error as the smallest number that
+// if added to 1.0 is different than 1.0.
+   Double_t temp1 = 1.0; 
+   Double_t temp2 = 1.0 + temp1;
+   Double_t mchEps;
+   while (temp2>1.0) {
+      mchEps = temp1;
+      temp1 /= 2;
+      temp2 = 1.0 + temp1;
+   }
+   fgEpsMch = mchEps;
+   return fgEpsMch;
+}   
+   
 //_____________________________________________________________________________
 const char *TGeoShape::GetName() const
 {

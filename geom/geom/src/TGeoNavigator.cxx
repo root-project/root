@@ -70,6 +70,7 @@ TGeoNavigator::TGeoNavigator()
                fCurrentNode(0),
                fLastNode(0),
                fNextNode(0),
+               fForcedNode(0),
                fBackupState(0),
                fCurrentMatrix(0),
                fGlobalMatrix(0),
@@ -107,6 +108,7 @@ TGeoNavigator::TGeoNavigator(TGeoManager* geom)
                fCurrentNode(0),
                fLastNode(0),
                fNextNode(0),
+               fForcedNode(0),
                fBackupState(0),
                fCurrentMatrix(0),
                fGlobalMatrix(0),
@@ -156,6 +158,7 @@ TGeoNavigator::TGeoNavigator(const TGeoNavigator& gm)
                fCurrentNode(gm.fCurrentNode),
                fLastNode(gm.fLastNode),
                fNextNode(gm.fNextNode),
+               fForcedNode(gm.fForcedNode),
                fBackupState(gm.fBackupState),
                fCurrentMatrix(gm.fCurrentMatrix),
                fGlobalMatrix(gm.fGlobalMatrix),
@@ -204,6 +207,7 @@ TGeoNavigator& TGeoNavigator::operator=(const TGeoNavigator& gm)
       fCurrentNode = gm.fCurrentNode;
       fLastNode = gm.fLastNode;
       fNextNode = gm.fNextNode;
+      fForcedNode = gm.fForcedNode;
       fBackupState = gm.fBackupState;
       fCurrentMatrix = gm.fCurrentMatrix;
       fGlobalMatrix = gm.fGlobalMatrix;
@@ -527,12 +531,15 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
 // Cross next boundary and locate within current node
 // The current point must be on the boundary of fCurrentNode.
 
-// Extrapolate current point with shape tolerance.
-   Double_t extra = 100.*gTolerance;
+// Extrapolate current point with estimated error.
+   Double_t *tr = fGlobalMatrix->GetTranslation();
+   Double_t trmax = 1.+TMath::Abs(tr[0])+TMath::Abs(tr[1])+TMath::Abs(tr[2]);
+   Double_t extra = (trmax+fStep)*gTolerance;
    fPoint[0] += extra*fDirection[0];
    fPoint[1] += extra*fDirection[1];
    fPoint[2] += extra*fDirection[2];
    TGeoNode *current = SearchNode(downwards, skipnode);
+   fForcedNode = 0;
    fPoint[0] -= extra*fDirection[0];
    fPoint[1] -= extra*fDirection[1];
    fPoint[2] -= extra*fDirection[2];
@@ -584,6 +591,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
    fStep = TGeoShape::Big();
    fIsStepEntering = kFALSE;
    fIsStepExiting = kFALSE;
+   fForcedNode = 0;
    Bool_t computeGlobal = kFALSE;
    fIsOnBoundary = frombdr;
    fSafety = 0.;
@@ -1005,6 +1013,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    Int_t iact = 3;
    Int_t nextindex;
    Bool_t is_assembly;
+   fForcedNode = 0;
    fIsStepExiting  = kFALSE;
    TGeoNode *skip;
    fIsStepEntering = kFALSE;
@@ -1050,6 +1059,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
          fPoint[2] += snext*fDirection[2];
          fIsOnBoundary = kTRUE;
          fIsOutside = kFALSE;
+         fForcedNode = fCurrentNode;
          return CrossBoundaryAndLocate(kTRUE, fCurrentNode);
       }
       if (snext<TGeoShape::Big()) {
@@ -1074,6 +1084,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    snext = vol->GetShape()->DistFromInside(point, dir, iact, fStep);
    fNextNode = fCurrentNode;
    if (snext <= gTolerance) {
+      // Current point on the boundary while track exiting
       snext = gTolerance;
       fStep = snext;
       fIsOnBoundary = kTRUE;
@@ -1095,6 +1106,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    }   
 
    if (snext < fStep-gTolerance) {
+      // Currently the minimum step chosen is the exiting one
       icrossed = -1;
       fStep = snext;
       fIsStepEntering = kFALSE;
@@ -1268,6 +1280,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    }
    fIsOnBoundary = kTRUE;
    if (icrossed == -1) {
+      // Exiting current node.
       skip = fCurrentNode;
       is_assembly = fCurrentNode->GetVolume()->IsAssembly();
       if (!fLevel && !is_assembly) {
@@ -1277,12 +1290,6 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
       if (fCurrentNode->IsOffset()) return CrossDivisionCell();   
       if (fLevel) CdUp();
       else        skip = 0;
-//      is_assembly = fCurrentNode->GetVolume()->IsAssembly();
-//      while (fLevel && is_assembly) {
-//         CdUp();
-//         is_assembly = fCurrentNode->GetVolume()->IsAssembly();
-//         skip = fCurrentNode;
-//      }   
       return CrossBoundaryAndLocate(kFALSE, skip);
    }   
    current = fCurrentNode;   
@@ -1293,7 +1300,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
       CdDown(nextindex);
       nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
    }   
-
+   fForcedNode = fCurrentNode;
    return CrossBoundaryAndLocate(kTRUE, current);
 }   
 
@@ -1640,7 +1647,8 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    fGlobalMatrix->MasterToLocal(fPoint, point);
    if (!inside_current && downwards) {
    // we are looking downwards
-      inside_current = vol->Contains(point);
+      if (fCurrentNode == fForcedNode) inside_current = kTRUE;
+      else inside_current = vol->Contains(point);
       if (!inside_current) {
          fIsSameLocation = kFALSE;
          return 0;
@@ -1661,6 +1669,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
 
    Int_t crtindex = vol->GetCurrentNodeIndex();
    while (crtindex>=0 && downwards) {
+      // Make sure we did not end up in an assembly.
       CdDown(crtindex);
       vol = fCurrentNode->GetVolume();
       crtindex = vol->GetCurrentNodeIndex();
@@ -1676,11 +1685,20 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    // point is inside the current node
    // first check if inside a division
    if (finder) {
-      node=finder->FindNode(&point[0]);
+      node=finder->FindNode(point);
+      if (!node && fForcedNode) {
+         // Point *HAS* to be inside a cell
+         Double_t dir[3];
+         fGlobalMatrix->MasterToLocalVect(fDirection, dir);
+         node = finder->FindNode(point,dir);
+         node = finder->CdNext();
+         if (!node) return fCurrentNode;  // inside divided volume but not in a cell
+      }   
       if (node && node!=skipnode) {
          // go inside the division cell and search downwards
          fIsSameLocation = kFALSE;
          CdDown(node->GetIndex());
+         fForcedNode = 0;
          return SearchNode(kTRUE, node);
       }
       // point is not inside the division, but might be in other nodes
@@ -1698,6 +1716,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       // if none in voxel, see if this is the last one
       if (!check_list) {
          if (!fCurrentNode->GetVolume()->IsAssembly()) return fCurrentNode;
+         // Point in assembly - go up
          node = fCurrentNode;
          if (!fLevel) {
             fIsOutside = kTRUE;
@@ -1728,6 +1747,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
             }
          }
          CdDown(check_list[id]);
+         fForcedNode = 0;
          node = SearchNode(kTRUE);
          if (node) {
             fIsSameLocation = kFALSE;
@@ -1750,6 +1770,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       if (node==skipnode) continue;  
       if (fGeometry->IsActivityEnabled() && !node->GetVolume()->IsActive()) continue;
       CdDown(id);
+      fForcedNode = 0;
       node = SearchNode(kTRUE);
       if (node) {
          fIsSameLocation = kFALSE;
