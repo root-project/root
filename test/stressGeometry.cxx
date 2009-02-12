@@ -76,7 +76,7 @@ typedef struct {
 p_t p;
   
 const char *exps[10] = {"aleph",      // 0
-                        "aleph",      // 1  was alice2 waiting for Andrei's fix
+                        "alice2",     // 1
                         "brahms",     // 2
                         "cdf",        // 3
                         "cms",        // 4
@@ -109,7 +109,7 @@ Double_t boxes[10][3] = {{600,600,500},     // aleph
                          {300,300,400},     // babar
                          {1000,1000,1500}   // atlas
 };                     
-// Total and reference times    
+// Total and reference times
 Double_t tpstot = 0;
 Double_t tpsref = 70.90; //time including the generation of the ref files
 Bool_t testfailed = kFALSE;
@@ -152,7 +152,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
          
       sprintf(fname, "%s_ref.root", exps[i]);
       
-      if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_2.root",exps[i]))) {
+      if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_3.root",exps[i]))) {
          if (!gen_ref) printf("File: %s does not exist, generating it\n", fname);
          else               printf("Generating reference file %s\n", fname);
          WriteRef(i);
@@ -188,9 +188,9 @@ void ReadRef(Int_t kexp) {
    TStopwatch sw;
    char fname[100];
    TFile *f = 0;
-   //use ref_2 files from version 5.21/05
+   //use ref_3 files from version 5.23/01
    if (!gen_ref)
-      sprintf(fname, "http://root.cern.ch/files/%s_ref_2.root", exps[kexp]);
+      sprintf(fname, "http://root.cern.ch/files/%s_ref_3.root", exps[kexp]);
    else
       sprintf(fname, "%s_ref.root", exps[kexp]);
    
@@ -336,6 +336,7 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
    rad    = 0.;
    TGeoMedium *med;
    TGeoShape *shape;
+   TGeoNode *lastnode;
    gGeoManager->InitTrack(x,y,z,xp,yp,zp);
    if (verbose) {
       printf("Track: (%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f)\n",
@@ -349,31 +350,43 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
       if (nextnode) med = nextnode->GetVolume()->GetMedium();
       else return;      
       shape = nextnode->GetVolume()->GetShape();
+      lastnode = nextnode;
       nextnode = gGeoManager->FindNextBoundaryAndStep();
       snext  = gGeoManager->GetStep();
       if (snext<1.e-8) {
          ismall++;
-         if (ismall > 3) {
-            printf("ERROR: Small steps in: %s shape=%s\n",gGeoManager->GetPath(), shape->ClassName());
-            return;
-         }   
-         memcpy(pt,gGeoManager->GetCurrentPoint(),3*sizeof(Double_t));
-         const Double_t *dir = gGeoManager->GetCurrentDirection();
-         for (Int_t i=0;i<3;i++) pt[i] += epsil*dir[i];
-         snext = epsil;
-         length += snext;
-         rad += lastrad*snext;
-         gGeoManager->CdTop();
-         nextnode = gGeoManager->FindNode(pt[0],pt[1],pt[2]);
-         if (gGeoManager->IsOutside()) return;
-         TGeoMatrix *mat = gGeoManager->GetCurrentMatrix();
-         mat->MasterToLocal(pt,loc);
-         if (!gGeoManager->GetCurrentVolume()->Contains(loc)) {
+         if ((ismall<3) && (lastnode != nextnode)) {
+            // First try to cross a very thin layer
+            length += snext;
+            nextnode = gGeoManager->FindNextBoundaryAndStep();
+            snext  = gGeoManager->GetStep();
+            if (snext<1.E-8) continue;
+            // We managed to cross the layer
+            ismall = 0;
+         } else {  
+            // Relocate point
+            if (ismall > 3) {
+               printf("ERROR: Small steps in: %s shape=%s\n",gGeoManager->GetPath(), shape->ClassName());
+               return;
+            }   
+            memcpy(pt,gGeoManager->GetCurrentPoint(),3*sizeof(Double_t));
+            const Double_t *dir = gGeoManager->GetCurrentDirection();
+            for (Int_t i=0;i<3;i++) pt[i] += epsil*dir[i];
+            snext = epsil;
+            length += snext;
+            rad += lastrad*snext;
+            gGeoManager->CdTop();
+            nextnode = gGeoManager->FindNode(pt[0],pt[1],pt[2]);
+            if (gGeoManager->IsOutside()) return;
+            TGeoMatrix *mat = gGeoManager->GetCurrentMatrix();
+            mat->MasterToLocal(pt,loc);
+            if (!gGeoManager->GetCurrentVolume()->Contains(loc)) {
 //            printf("Woops - out\n");
-            gGeoManager->CdUp();
-            nextnode = gGeoManager->GetCurrentNode();
+               gGeoManager->CdUp();
+               nextnode = gGeoManager->GetCurrentNode();
+            }   
+            continue;
          }   
-         continue;
       } else {
          ismall = 0;
       }      
