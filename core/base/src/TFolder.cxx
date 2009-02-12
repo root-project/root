@@ -338,31 +338,37 @@ void TFolder::ls(Option_t *option) const
    //   If option contains "dump",  the Dump function of contained objects is called.
    //   If option contains "print", the Print function of contained objects is called.
    //   By default the ls function of contained objects is called.
-   //  Indentation is used to identify the folder tree.
+   // Indentation is used to identify the folder tree.
    //
-   //  The <regexp> will be used to match the name of the objects.
+   // The if option contains a <regexp> it be used to match the name of the objects.
 
    if (!fFolders) return;
    TROOT::IndentLevel();
    cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
    TROOT::IncreaseDirLevel();
 
-   TString opta = option;
-   TString opt  = opta.Strip(TString::kBoth);
-   opt.ToLower();
-   TString reg  = opt;
-   Bool_t dump  = opt.Contains("dump");
-   Bool_t print = opt.Contains("print");
-   TRegexp re(reg, kTRUE);
+   TString opt = option;
+   Ssiz_t dump = opt.Index("dump", 0, TString::kIgnoreCase);
+   if (dump != kNPOS)
+      opt.Remove(dump, 4);
+   Ssiz_t print = opt.Index("print", 0, TString::kIgnoreCase);
+   if (print != kNPOS)
+      opt.Remove(print, 5);
+   opt = opt.Strip(TString::kBoth);
+   if (opt == "")
+      opt = "*";
+   TRegexp re(opt, kTRUE);
 
    TObject *obj;
    TIter nextobj(fFolders);
    while ((obj = (TObject *) nextobj())) {
       TString s = obj->GetName();
       if (s.Index(re) == kNPOS) continue;
-      if (dump)      obj->Dump();
-      else if(print) obj->Print(option);
-      else           obj->ls(option);
+      if (dump != kNPOS)
+         obj->Dump();
+      if (print != kNPOS)
+         obj->Print(option);
+      obj->ls(option);
    }
    TROOT::DecreaseDirLevel();
 }
