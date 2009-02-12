@@ -194,4 +194,6 @@ public:
       return; \
    }
 
+#define XPD_CLNT_VERSION_OK(p,v) (v < 0 || (p && p->ProofProtocol() >= v))
+
 #endif

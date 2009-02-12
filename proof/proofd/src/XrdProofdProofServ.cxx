@@ -424,6 +424,9 @@ void XrdProofdProofServ::Broadcast(const char *msg, int type)
    // Broadcast message 'msg' at 'type' to the attached clients
    XPDLOC(SMGR, "ProofServ::Broadcast")
 
+   // Backward-compatibility check
+   int clproto = (type >= kXPD_wrkmortem) ? 18 : -1;
+
    XrdOucString m;
    int len = 0, nc = 0;
    if (msg && (len = strlen(msg)) > 0) {
@@ -435,7 +438,7 @@ void XrdProofdProofServ::Broadcast(const char *msg, int type)
             p = fClients.at(ic)->P();
             sid = fClients.at(ic)->Sid(); }
          // Send message
-         if (p) {
+         if (p && XPD_CLNT_VERSION_OK(p, clproto)) {
             XrdProofdResponse *response = p->Response(sid);
             if (response) {
                response->Send(kXR_attn, (XProofActionCode)type, (void *)msg, len);
