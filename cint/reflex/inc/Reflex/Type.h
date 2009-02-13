@@ -120,18 +120,20 @@ namespace Reflex {
       */
       operator bool () const;
 
-#ifdef REFLEX_CINT_MERGE
+#if defined(REFLEX_CINT_MERGE) 
       // To prevent any un-authorized use as the old type
       bool operator!() const { return !operator bool(); }
       bool operator&&(bool right) const { return operator bool() && right; }
       bool operator&&(int right) const { return operator bool() && right; }
       bool operator&&(long right) const { return operator bool() && right; }
+      bool operator&&(void *right) const { return operator bool() && right; }
       bool operator&&(const Scope &right) const;
       bool operator&&(const Type &right) const;
       bool operator&&(const Member &right) const;
       bool operator||(bool right) const { return operator bool() || right; }
       bool operator||(int right) const { return operator bool() || right; }
       bool operator||(long right) const { return operator bool() || right; }
+      bool operator||(void *right) const { return operator bool() || right; }
       bool operator||(const Scope &right) const;
       bool operator||(const Type &right) const;
       bool operator||(const Member &right) const;
@@ -2154,6 +2156,18 @@ inline bool operator||(bool b, const Reflex::Type & rh) {
 }
 inline bool operator||(int i, const Reflex::Type & rh) {
    return i || rh.operator bool();
+}
+inline bool operator&&(const char *c, const Reflex::Type & rh) {
+   return c && rh.operator bool();
+}
+inline bool operator||(const char *c, const Reflex::Type & rh) {
+   return c ||rh.operator bool();
+}
+inline bool operator&&(char *c, const Reflex::Type & rh) {
+   return c && rh.operator bool();
+}
+inline bool operator||(char *c, const Reflex::Type & rh) {
+   return c ||rh.operator bool();
 }
 #endif
 #endif // Reflex_Type

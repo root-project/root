@@ -7431,7 +7431,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
          ig15 = 0;
          const ::Reflex::Member_Iterator end( var.DataMember_End() );
          for (::Reflex::Member_Iterator iter = var.DataMember_Begin(); iter != end; ++iter, ++ig15) {
-            assert( *iter );
+            assert( (bool)(*iter) );
             const char *mname = iter->Name_c_str();
             if (mname[0]==varname[0] && 0==strcmp(mname, varname.c_str())) { // Names match
                if (

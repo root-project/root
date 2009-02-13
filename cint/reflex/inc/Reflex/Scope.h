@@ -68,7 +68,7 @@ namespace Reflex {
       */
       operator bool () const;
 
-#ifdef REFLEX_CINT_MERGE
+#if defined(REFLEX_CINT_MERGE)
       // To prevent any un-authorized use as the old type
       bool operator!() const { return !operator bool(); }
       bool operator&&(bool right) const { return operator bool() && right; }
@@ -1646,6 +1646,12 @@ inline bool operator||(bool b, const Reflex::Scope & rh) {
 }
 inline bool operator||(int i, const Reflex::Scope & rh) {
    return i || rh.operator bool();
+}
+inline bool operator&&(char *c, const Reflex::Scope & rh) {
+   return c && rh.operator bool();
+}
+inline bool operator||(char *c, const Reflex::Scope & rh) {
+   return c ||rh.operator bool();
 }
 #endif
 

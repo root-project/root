@@ -1060,6 +1060,12 @@ inline bool operator&&(bool b, const Reflex::Member & rh) {
 inline bool operator&&(int i, const Reflex::Member & rh) {
    return i && rh.operator bool();
 }
+inline bool operator&&(short s, const Reflex::Member & rh) {
+   return s && rh.operator bool();
+}
+inline bool operator||(short s, const Reflex::Member & rh) {
+   return s || rh.operator bool();
+}
 inline bool operator||(bool b, const Reflex::Member & rh) {
    return b || rh.operator bool();
 }
