@@ -200,7 +200,13 @@ G__int64 G__strtoll(const char *nptr,char **endptr, register int base) {
     * Set any if any `digits' consumed; make it negative to indicate
     * overflow.
     */
-   cutoff = neg ? -(G__uint64) LONG_LONG_MIN : LONG_LONG_MAX;
+   if (neg) {
+      // -(-2147483648) is not a valid long long, but -(-2147483648 + 42) is!
+      cutoff = -(LONG_LONG_MIN + 42);
+      cutoff += 42; // fixup offset for unary -
+   } else {
+      cutoff = LONG_LONG_MAX;
+   }
    cutlim = cutoff % (G__uint64) base;
    cutoff /= (G__uint64) base;
    for (acc = 0, any = 0;; c = *s++) {
