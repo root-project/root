@@ -1217,6 +1217,7 @@ void RooDataHist::set(Double_t wgt, Double_t wgtErr)
   _wgt[_curIndex] = wgt ;  
   _errLo[_curIndex] = wgtErr ;  
   _errHi[_curIndex] = wgtErr ;  
+  _sumw2[_curIndex] = wgtErr*wgtErr ;
 }
 
 
