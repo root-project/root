@@ -487,9 +487,9 @@ TGeoNode *TGeoNavigator::CrossDivisionCell()
    if (onbound) {
       // Work along division axis
       // Get the starting point
-      point[0] = newpoint[0] - dir[0]*fStep;
-      point[1] = newpoint[1] - dir[1]*fStep;
-      point[2] = newpoint[2] - dir[2]*fStep;
+      point[0] = newpoint[0] - dir[0]*fStep*(1.-gTolerance);
+      point[1] = newpoint[1] - dir[1]*fStep*(1.-gTolerance);
+      point[2] = newpoint[2] - dir[2]*fStep*(1.-gTolerance);
       // Find which is the next crossed cell.
       finder->FindNode(point, dir);
       Int_t inext = finder->GetNext();
