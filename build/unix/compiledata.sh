@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 # Script to generate the file include/compiledata.h.
 # Called by main Makefile.
