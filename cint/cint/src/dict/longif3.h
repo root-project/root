@@ -156,7 +156,8 @@ typedef unsigned long long G__uint64;
  */
 G__int64 G__strtoll(const char *nptr,char **endptr, register int base) {
    register const char *s = nptr;
-   register G__int64 acc;
+   register G__uint64 acc;
+   G__int64 res;
    register int c;
    register G__uint64 cutoff;
    register int neg = 0, any, cutlim;
@@ -226,14 +227,15 @@ G__int64 G__strtoll(const char *nptr,char **endptr, register int base) {
          acc += c;
       }
    }
+   res = (G__int64) acc;
    if (any < 0) {
-      acc = neg ? LONG_LONG_MIN : LONG_LONG_MAX;
+      res = neg ? LONG_LONG_MIN : LONG_LONG_MAX;
       errno = ERANGE;
    } else if (neg)
-      acc = -acc;
+      res = -res;
    if (endptr != 0)
       *endptr = (char *) (any ? s - 1 : nptr);
-   return (acc);
+   return (res);
 }
 
 /*
