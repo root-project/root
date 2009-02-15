@@ -202,23 +202,23 @@ extern "C" { // std::qsort on solaris wants the sorter to be extern "C"
 namespace {
 
    // std::list::sort(with_stricmp_predicate) doesn't work with Solaris CC...
-   static void sort_strlist_stricmp(std::list<std::string>& l)
+   static void sort_strlist_stricmp(std::vector<std::string>& l)
    {
       // sort strings ignoring case - easier for humans
       struct posList {
          const char* str;
-         std::list<std::string>::const_iterator pos;
+         size_t pos;
       };
       posList* carr = new posList[l.size()];
       size_t idx = 0;
-      for (std::list<std::string>::const_iterator iS = l.begin(); iS != l.end(); ++iS) {
+      for (size_t iS = 0, iSE = l.size(); iS < iSE; ++iS) {
          carr[idx].pos = iS;
-         carr[idx++].str = iS->c_str();
+         carr[idx++].str = l[iS].c_str();
       }
       qsort(&carr[0].str, idx, sizeof(posList), CaseInsensitiveSort);
-      std::list<std::string> lsort;
-      for (idx = 0; idx < l.size(); ++idx) {
-         lsort.push_back(*carr[idx].pos);
+      std::vector<std::string> lsort(l.size());
+      for (size_t iS = 0, iSE = l.size(); iS < iSE; ++iS) {
+         lsort[iS].swap(l[carr[iS].pos]);
       }
       delete [] carr;
       l.swap(lsort);
@@ -1246,18 +1246,20 @@ void TDocOutput::CreateTypeIndex()
    typesList << "<dl><dd>" << endl;
 
    // make loop on data types
-   std::list<std::string> typeNames;
+   std::vector<std::string> typeNames(gROOT->GetListOfTypes()->GetSize());
 
    {
       TDataType *type;
       TIter nextType(gROOT->GetListOfTypes());
+      size_t tnIdx = 0;
 
       while ((type = (TDataType *) nextType()))
          // no templates ('<' and '>'), no idea why the '(' is in here...
          if (*type->GetTitle() && !strchr(type->GetName(), '(')
              && !( strchr(type->GetName(), '<') && strchr(type->GetName(),'>'))
              && type->GetName())
-            typeNames.push_back(type->GetName());
+            typeNames[tnIdx++] = type->GetName();
+      typeNames.resize(tnIdx);
    }
 
    sort_strlist_stricmp(typeNames);
@@ -1280,7 +1282,7 @@ void TDocOutput::CreateTypeIndex()
    int idx = 0;
    UInt_t currentIndexEntry = 0;
 
-   for (std::list<std::string>::iterator iTypeName = typeNames.begin();
+   for (std::vector<std::string>::iterator iTypeName = typeNames.begin();
       iTypeName != typeNames.end(); ++iTypeName) {
       TDataType* type = gROOT->GetType(iTypeName->c_str(), kFALSE);
       typesList << "<li class=\"idxl" << idx%2 << "\">";
