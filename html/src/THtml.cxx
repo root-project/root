@@ -1147,7 +1147,7 @@ THtml::THtml():
    fPathInfo.fInputPath = gEnv->GetValue("Root.Html.SourceDir", "./:src/:include/");
 
    // check for output directory
-   fPathInfo.fOutputDir = gEnv->GetValue("Root.Html.OutputDir", "htmldoc");
+   SetOutputDir(gEnv->GetValue("Root.Html.OutputDir", "htmldoc"));
 
    fLinkInfo.fXwho = gEnv->GetValue("Root.Html.XWho", "http://consult.cern.ch/xwho/people?");
    fLinkInfo.fROOTURL = gEnv->GetValue("Root.Html.Root", "http://root.cern.ch/root/html");
@@ -1495,10 +1495,18 @@ void THtml::CreateListOfClasses(const char* filter)
    TString reg = filter;
    TPMERegexp re(reg);
 
-   for (Int_t i = 0; i < totalNumberOfClasses; i++) {
+   bool skipROOTClasses = false;
+   std::set<std::string> rootLibs;
+   TList classesDeclFileNotFound;
+   TList classesImplFileNotFound;
+
+   // pre-run TObject at i == -1
+   for (Int_t i = -1; i < totalNumberOfClasses; i++) {
 
       // get class name
-      const char *cname = gClassTable->Next();
+      const char *cname = 0;
+      if (i < 0) cname = "TObject";
+      else cname = gClassTable->Next();
       TString s = cname;
 
       // This is a hack for until after Cint and Reflex are one.
@@ -1530,10 +1538,74 @@ void THtml::CreateListOfClasses(const char* filter)
          if (!GetFileDefinition().GetDeclFileName(classPtr, hdr, hdrFS)) {
             // we don't even know where the class is defined;
             // just skip. Silence if it doesn't match the selection anyway
-            if (matchesSelection && (!classPtr->GetDeclFileName() || !strstr(classPtr->GetDeclFileName(),"prec_stl/")))
-               Warning("CreateListOfClasses",
-                       "Cannot determine declaration file name for %s!", cname);            
-            continue;
+            if (i == -1 ) {
+               skipROOTClasses = true;
+               Info("CreateListOfClasses", "Cannot find header file for TObject at %s given the input path %s.",
+                  classPtr->GetDeclFileName(), GetInputPath().Data());
+               Info("CreateListOfClasses", "Assuming documentation is not for ROOT classes, or you need to pass "
+                  "the proper directory to THtml::SetInputPath() so I can find %s.", classPtr->GetDeclFileName());
+               continue;
+            }
+            // ignore STL
+            if (classPtr->GetDeclFileName() && !strncmp(classPtr->GetDeclFileName(), "prec_stl/", 9))
+               continue;
+            if (skipROOTClasses) {
+               if (classPtr->GetSharedLibs() && classPtr->GetSharedLibs()[0]) {
+                  std::string lib(classPtr->GetSharedLibs());
+                  size_t posSpace = lib.find(' ');
+                  if (posSpace != std::string::npos)
+                     lib.erase(posSpace);
+                  if (rootLibs.find(lib) == rootLibs.end()) {
+#ifdef ROOTLIBDIR
+                     TString rootlibdir = ROOTLIBDIR;
+#else
+                     TString rootlibdir = "lib";
+                     gSystem->PrependPathName(gRootDir, rootlibdir);
+#endif
+                     TString sLib(lib);
+                     if (sLib.Index('.') == -1) {
+                        sLib += ".";
+                        sLib += gSystem->GetSoExt();
+                     }
+                     gSystem->PrependPathName(rootlibdir, sLib);
+                     if (gSystem->AccessPathName(sLib))
+                        // the library doesn't exist in $ROOTSYS/lib, so it's not
+                        // a root lib and we need to tell the user.
+                        classesDeclFileNotFound.AddLast(classPtr);
+                     else rootLibs.insert(lib);
+                  } // end "if rootLibs does not contain lib"
+               } else {
+                  // lib name unknown
+                  static const char* rootClassesToIgnore[] =
+                  { "ColorStruct_t", "CpuInfo_t", "Event_t", "FileStat_t", "GCValues_t", "MemInfo_t",
+                     "PictureAttributes_t", "Point_t", "ProcInfo_t", "ROOT", "ROOT::Fit",
+                     "Rectangle_t", "RedirectHandle_t", "Segment_t", "SetWindowAttributes_t",
+                     "SysInfo_t", "TCint", "UserGroup_t", "WindowAttributes_t", "timespec", 0};
+                  static const char* rootClassStemsToIgnore[] =
+                  { "ROOT::Math", "TKDTree", "TMatrixT", "TParameter", "vector", 0 };
+                  static size_t rootClassStemsToIgnoreLen[] = {0, 0, 0, 0, 0};
+                  static std::set<std::string> setRootClassesToIgnore;
+                  if (setRootClassesToIgnore.empty()) {
+                     for (int i = 0; rootClassesToIgnore[i]; ++i)
+                        setRootClassesToIgnore.insert(rootClassesToIgnore[i]);
+                     for (int i = 0; rootClassStemsToIgnore[i]; ++i)
+                        rootClassStemsToIgnoreLen[i] = strlen(rootClassStemsToIgnore[i]);
+                  }
+                  // only complain about this class if it should not be ignored:
+                  if (setRootClassesToIgnore.find(cname) == setRootClassesToIgnore.end()) {
+                     bool matched = false;
+                     for (int i = 0; !matched && rootClassStemsToIgnore[i]; ++i)
+                        matched = !strncmp(cname, rootClassStemsToIgnore[i], rootClassStemsToIgnoreLen[i]);
+                     if (!matched)
+                        classesDeclFileNotFound.AddLast(classPtr);
+                  }
+               } // lib name known
+               continue;
+            } else {
+               if (matchesSelection && (!classPtr->GetDeclFileName() || !strstr(classPtr->GetDeclFileName(),"prec_stl/")))
+                  classesDeclFileNotFound.AddLast(classPtr);
+               continue;
+            }
          }
       }
 
@@ -1541,9 +1613,8 @@ void THtml::CreateListOfClasses(const char* filter)
       if (!haveSource)
          haveSource = GetFileDefinition().GetImplFileName(classPtr, src, srcFS);
 
-      if (!haveSource && gDebug > 3) {
-         Info("CreateListOfClasses",
-            "Cannot determine implementation file name for %s!", cname);
+      if (!haveSource) {
+         classesImplFileNotFound.AddLast(classPtr);
       }
 
       if (!htmlfilename.Length())
@@ -1606,6 +1677,45 @@ void THtml::CreateListOfClasses(const char* filter)
          Info("CreateListOfClasses", "Adding class %s, module %s (%sselected)",
               cdi->GetName(), module ? module->GetName() : "[UNKNOWN]",
               cdi->IsSelected() ? "" : "not ");
+   }
+
+
+
+   bool cannotFind = false;
+   if (!classesDeclFileNotFound.IsEmpty()) {
+      Warning("CreateListOfClasses",
+         "Cannot find the header for the following classes [reason]:");
+      TIter iClassesDeclFileNotFound(&classesDeclFileNotFound);
+      TClass* iClass = 0;
+      while ((iClass = (TClass*)iClassesDeclFileNotFound())) {
+         if (iClass->GetDeclFileName() && iClass->GetDeclFileName()[0]) {
+            Warning("CreateListOfClasses", "   %s [header %s not found]", iClass->GetName(), iClass->GetDeclFileName());
+            cannotFind = true;
+         } else
+            Warning("CreateListOfClasses", "   %s [header file is unknown]", iClass->GetName());
+      }
+   }
+
+   if (!classesImplFileNotFound.IsEmpty() && gDebug > 3) {
+      Warning("CreateListOfClasses",
+         "Cannot find the source file for the following classes [reason]:");
+      TIter iClassesDeclFileNotFound(&classesImplFileNotFound);
+      TClass* iClass = 0;
+      bool cannotFind = false;
+      while ((iClass = (TClass*)iClassesDeclFileNotFound())) {
+         if (iClass->GetDeclFileName() && iClass->GetDeclFileName()[0]) {
+            Info("CreateListOfClasses", "   %s [source %s not found]", iClass->GetName(), iClass->GetImplFileName());
+            cannotFind = true;
+         } else
+            Info("CreateListOfClasses", "   %s [source file is unknown, add \"ClassImpl(%s)\" to source file if it exists]",
+               iClass->GetName(), iClass->GetName());
+      }
+   }
+   if (cannotFind) {
+      Warning("CreateListOfClasses", "THtml cannot find all headers and sources. ");
+      Warning("CreateListOfClasses",
+         "You might need to adjust the input path (currently %s) by calling THtml::SetInputDir()",
+         GetInputPath().Data());
    }
 
    // fill typedefs
@@ -1953,6 +2063,8 @@ const TString& THtml::GetOutputDir(Bool_t createDir /*= kTRUE*/) const
       gSystem->ExpandPathName(const_cast<THtml*>(this)->fPathInfo.fOutputDir);
       Long64_t sSize;
       Long_t sId, sFlags, sModtime;
+      if (fPathInfo.fOutputDir.EndsWith("/") || fPathInfo.fOutputDir.EndsWith("\\"))
+         fPathInfo.fOutputDir.Remove(fPathInfo.fOutputDir.Length() - 1);
       Int_t st = gSystem->GetPathInfo(fPathInfo.fOutputDir, &sId, &sSize, &sFlags, &sModtime);
       if (st || !(sFlags & 2)) {
          if (st == 0)
@@ -2267,6 +2379,17 @@ void THtml::SetInputDir(const char *dir)
    // reset class table
    fDocEntityInfo.fClasses.Clear();
    fDocEntityInfo.fModules.Clear();
+}
+
+//______________________________________________________________________________
+void THtml::SetOutputDir(const char *dir)
+{
+   // Set the directory where the HTML pages shuold be written to.
+   // If the directory does not exist it will be created when needed.
+   fPathInfo.fOutputDir = dir;
+#ifdef R__WIN32
+   fPathInfo.fOutputDir.ReplaceAll("/","\\");
+#endif
 }
 
 //______________________________________________________________________________
