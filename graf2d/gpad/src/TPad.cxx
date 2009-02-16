@@ -1110,8 +1110,8 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
       Double_t yt = GetTopMargin();
       xl /= (1-xl+xr)*nx;
       xr /= (1-xl+xr)*nx;
-      yb /= (1-xl+xr)*ny;
-      yt /= (1-xl+xr)*ny;
+      yb /= (1-yb+yt)*ny;
+      yt /= (1-yb+yt)*ny;
       SetLeftMargin(xl);
       SetRightMargin(xr);
       SetBottomMargin(yb);
