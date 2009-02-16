@@ -6330,7 +6330,7 @@ void TH1::GetStats(Double_t *stats) const
    Int_t bin, binx;
    Double_t w,err;
    Double_t x;
-   if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange)) {
+   if ((fTsumw == 0 && fEntries > 0) || fXaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<4;bin++) stats[bin] = 0;
 
       Int_t firstBinX = fXaxis.GetFirst();

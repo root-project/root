@@ -962,7 +962,7 @@ void TH3::GetStats(Double_t *stats) const
    Int_t bin, binx, biny, binz;
    Double_t w,err;
    Double_t x,y,z;
-   if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange) || fZaxis.TestBit(TAxis::kAxisRange)) {
+   if ((fTsumw == 0 && fEntries > 0) || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange) || fZaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<9;bin++) stats[bin] = 0;
 
       Int_t firstBinX = fXaxis.GetFirst();
