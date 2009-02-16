@@ -444,12 +444,10 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
       }
       return TGeoShape::Big();
    }      
-   b=0.5*b/a;
-   c=c/a;
-   Double_t d=b*b-c;
+   Double_t d=b*b-4*a*c;
    if (d>=0) {
-      Double_t sqd = TMath::Sqrt(d);
-      s=-b-sqd;
+      if (a>0) s=0.5*(-b-TMath::Sqrt(d))/a;
+      else     s=0.5*(-b+TMath::Sqrt(d))/a;
       if (s>0) {
          if (in) return s;
          zi=point[2]+s*dir[2];
@@ -464,7 +462,8 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
             if (zi<=0) return s;
          }      
       }
-      s=-b+sqd;
+      if (a>0) s=0.5*(-b+TMath::Sqrt(d))/a;
+      else     s=0.5*(-b-TMath::Sqrt(d))/a;
       if (s>0) {
          if (in) return s;
          zi=point[2]+s*dir[2];
@@ -547,6 +546,7 @@ Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/
 // ipl=2 : points 2,6,3,7
 // ipl=3 : points 3,7,0,4
    Double_t distmin;
+   Bool_t lateral_cross = kFALSE;
    if (dir[2]<0) {
       distmin=(-fDz-point[2])/dir[2];
    } else {
@@ -585,26 +585,51 @@ Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/
               +tx1*ys2-tx2*ys1)*dir[2];
       Double_t c=dxs*point[1]-dys*point[0]+xs1*ys2-xs2*ys1;
       Double_t s=TGeoShape::Big();
-      if (TMath::Abs(a)<1E-10) {           
-         if (b==0) continue;
+      if (TMath::Abs(a)<1E-8) {           
+         if (TMath::Abs(b)<TGeoShape::Tolerance()) continue;
          s=-c/b;
-         if (s>0 && s < distmin) distmin =s;
+         if (s>0 && s < distmin) {
+            distmin =s;
+            lateral_cross=kTRUE;
+         }   
          continue;
-      }      
-      b=0.5*b/a;
-      c=c/a;
-      Double_t d=b*b-c;
-      if (d>=0) {
-         Double_t sqd = TMath::Sqrt(d);
-         s=-b-sqd;
+      }
+      Double_t d=b*b-4*a*c;
+      if (d>=0.) {
+         if (a>0) s=0.5*(-b-TMath::Sqrt(d))/a;
+         else     s=0.5*(-b+TMath::Sqrt(d))/a;
          if (s>0) {
-            if (s < distmin) distmin = s;
+            if (s < distmin) {
+               distmin = s;
+               lateral_cross = kTRUE;
+            }   
          } else {
-            s=-b+sqd;
-            if (s>0 && s < distmin) distmin =s;
+            if (a>0) s=0.5*(-b+TMath::Sqrt(d))/a;
+            else     s=0.5*(-b-TMath::Sqrt(d))/a;
+            if (s>0 && s < distmin) {
+               distmin =s;
+               lateral_cross = kTRUE;
+            }   
          }
       }
    }
+
+   if (!lateral_cross) {
+      // We have to make sure that track crosses the top or bottom.
+      if (distmin > 1.E10) return TGeoShape::Tolerance();
+      Double_t pt[2];
+      pt[0] = point[0]+distmin*dir[0];
+      pt[1] = point[1]+distmin*dir[1];
+      // Check if propagated point is in the polygon
+      Double_t poly[8];
+      Int_t i = 0;
+      if (dir[2]>0.) i=4;
+      for (Int_t j=0; j<4; j++) {
+         poly[2*j]   = fXY[j+i][0];
+         poly[2*j+1] = fXY[j+i][1];
+      }
+      if (!InsidePolygon(pt[0],pt[1],poly)) return TGeoShape::Tolerance();
+   }   
    return distmin;
 #endif
 }   

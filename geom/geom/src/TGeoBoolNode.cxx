@@ -418,7 +418,7 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
 
-   Double_t local[3], master[3], ldir[3], rdir[3];
+   Double_t local[3], master[3], ldir[3], rdir[3], pushed[3];
    memcpy(master, point, 3*sizeof(Double_t));
    Int_t i;
    TGeoBoolNode *node = (TGeoBoolNode*)this;
@@ -461,30 +461,38 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
          }
       } 
       if (inside1) {
-         snxt += d1;   
+         snxt += d1;
          node->SetSelected(1);
          // propagate to exit of left shape
          inside1 = kFALSE;
-         for (i=0; i<3; i++) master[i] += d1*dir[i];
+         for (i=0; i<3; i++) {
+            master[i] += d1*dir[i];
+            pushed[i] = master[i]+d1*TGeoShape::Tolerance()*dir[i];
+         }   
          // check if propagated point is in right shape        
-         fRightMat->MasterToLocal(master, local);
+         fRightMat->MasterToLocal(pushed, local);
          inside2 = fRight->Contains(local);
          if (!inside2) return snxt;
          d2 = fRight->DistFromInside(local, rdir, 3);
          if (d2 < TGeoShape::Tolerance()) return snxt;
+         d2 += d1*TGeoShape::Tolerance();
       }   
       if (inside2) {
          snxt += d2;
          node->SetSelected(2);
          // propagate to exit of right shape
          inside2 = kFALSE;
-         for (i=0; i<3; i++) master[i] += d2*dir[i];
+         for (i=0; i<3; i++) {
+            master[i] += d2*dir[i];
+            pushed[i] = master[i]+d2*TGeoShape::Tolerance()*dir[i];
+         }   
          // check if propagated point is in left shape        
-         fLeftMat->MasterToLocal(master, local);
+         fLeftMat->MasterToLocal(pushed, local);
          inside1 = fLeft->Contains(local);
          if (!inside1) return snxt;
          d1 = fLeft->DistFromInside(local, ldir, 3);
          if (d1 < TGeoShape::Tolerance()) return snxt;
+         d1 += d2*TGeoShape::Tolerance();
       }
    }      
    return snxt;

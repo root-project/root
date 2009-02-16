@@ -350,7 +350,7 @@ Bool_t TGeoVoxelFinder::IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsa
    for (i=0; i<3; i++) {
       dxyz = TMath::Abs(point[i]-fBoxes[ist+i+3])-fBoxes[ist+i];
       if (dxyz>-1E-6) rsq+=dxyz*dxyz;
-      if (rsq >= minsafe2) return kTRUE;
+      if (rsq > minsafe2*(1.+TGeoShape::Tolerance())) return kTRUE;
    }
    return kFALSE;
 }      
