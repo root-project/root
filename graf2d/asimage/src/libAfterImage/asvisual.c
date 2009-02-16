@@ -1341,10 +1341,10 @@ destroy_xshmimage_image(ASHashableValue value, void *data)
 	}
 }
 
-Bool enable_shmem_images ( )
+Bool enable_shmem_images_for_visual (ASVisual *asv)
 {
 #ifndef DEBUG_ALLOCS
-	if( XShmQueryExtension (dpy) )
+	if( asv && asv->dpy && XShmQueryExtension (asv->dpy) )
 	{
 		_as_use_shm_images = True ;
 		if( xshmimage_segments == NULL )
@@ -1356,6 +1356,12 @@ Bool enable_shmem_images ( )
 		_as_use_shm_images = False ;
 	return _as_use_shm_images;
 }
+
+Bool enable_shmem_images ()
+{
+	return enable_shmem_images_for_visual (get_default_asvisual());
+}
+
 
 void disable_shmem_images()
 {

@@ -255,7 +255,6 @@ int XParseGeometry (  char *string,int *x,int *y,
 extern "C" {
 # endif
 
-extern Display *dpy;
 # if defined(ASIM_AFTERBASE_H_HEADER_INCLUDED)
 
 int asim_get_drawable_size (Drawable d, unsigned int *ret_w, unsigned int *ret_h);

@@ -555,7 +555,7 @@ asimage2drawable_gl(	ASVisual *asv, Drawable d, ASImage *im,
 
 		if( !force_direct ) 
 		{	
-			glxp = glXCreateGLXPixmap( dpy, &(asv->visual_info), d);
+			glxp = glXCreateGLXPixmap( asv->dpy, &(asv->visual_info), d);
 			/* d is either invalid drawable or is a window */
 			if( glxp == None ) 
 				force_direct = True ; 
@@ -563,11 +563,11 @@ asimage2drawable_gl(	ASVisual *asv, Drawable d, ASImage *im,
 		if( glxp == None ) 
 		{
 			if( asv->glx_scratch_gc_direct	!= NULL )
-				glXMakeCurrent (dpy, d, asv->glx_scratch_gc_direct);
+				glXMakeCurrent (asv->dpy, d, asv->glx_scratch_gc_direct);
 			else
-				glXMakeCurrent (dpy, d, asv->glx_scratch_gc_indirect);
+				glXMakeCurrent (asv->dpy, d, asv->glx_scratch_gc_indirect);
 		}else
-			glXMakeCurrent (dpy, glxp, asv->glx_scratch_gc_indirect);
+			glXMakeCurrent (asv->dpy, glxp, asv->glx_scratch_gc_indirect);
 		
 		if( glGetError() != 0 ) 
 			return False;
@@ -635,9 +635,9 @@ asimage2drawable_gl(	ASVisual *asv, Drawable d, ASImage *im,
 		}							
 
 		free( glbuf );
-		glXMakeCurrent (dpy, None, NULL);	  
+		glXMakeCurrent (asv->dpy, None, NULL);	  
 		if( glxp ) 
-			glXDestroyGLXPixmap( dpy, glxp);
+			glXDestroyGLXPixmap( asv->dpy, glxp);
 		glFinish(); 				   
 		return True;
 #endif /* #ifdef HAVE_GLX */
@@ -703,7 +703,7 @@ asimage2alpha_drawable( ASVisual *asv, Drawable d, ASImage *im, GC gc,
 		int dumm; unsigned int udumm; Window root ;
 		Bool res = False ;
 
-		XGetGeometry( dpy, d, &root, &dumm, &dumm, &udumm, &udumm, &udumm, &alpha_depth );
+		XGetGeometry( asv->dpy, d, &root, &dumm, &dumm, &udumm, &udumm, &udumm, &alpha_depth );
 
 		if ( !use_cached || im->alt.mask_ximage == NULL || im->alt.mask_ximage->depth != alpha_depth )
 		{

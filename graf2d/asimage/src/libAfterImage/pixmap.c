@@ -1,4 +1,4 @@
-;/*--------------------------------*-C-*---------------------------------*
+/*--------------------------------*-C-*---------------------------------*
  * File:	pixmap.c
  *----------------------------------------------------------------------*
  * Copyright (c) 1999 Ethan Fischer <allanon@crystaltokyo.com>
@@ -70,7 +70,7 @@
 
 
 /*#define CREATE_TRG_PIXMAP(asv,w,h) XCreatePixmap(dpy, RootWindow(dpy,DefaultScreen(dpy)), (w), (h), DefaultDepth(dpy,DefaultScreen(dpy)))*/
-#define CREATE_TRG_PIXMAP(asv,w,h) create_visual_pixmap(asv,RootWindow(dpy,DefaultScreen(dpy)),(w),(h),0)
+#define CREATE_TRG_PIXMAP(asv,w,h) create_visual_pixmap(asv,RootWindow(asv->dpy,DefaultScreen(asv->dpy)),(w),(h),0)
 
 
 /****************************************************************************
@@ -83,6 +83,7 @@ int
 FillPixmapWithTile (Pixmap pixmap, Pixmap tile, int x, int y, int width, int height, int tile_x, int tile_y)
 {
 #ifndef X_DISPLAY_MISSING
+	Display *dpy = get_default_asvisual()->dpy;
   if (tile != None && pixmap != None)
     {
       GC gc;
@@ -107,6 +108,7 @@ GetRootPixmap (Atom id)
 	Pixmap currentRootPixmap = None;
 #ifndef X_DISPLAY_MISSING
 	static Atom root_pmap_atom = None ; 
+	Display *dpy = get_default_asvisual()->dpy;
 	if (id == None)
 	{
 		if( root_pmap_atom == None ) 	  
@@ -154,6 +156,7 @@ Pixmap
 ValidatePixmap (Pixmap p, int bSetHandler, int bTransparent, unsigned int *pWidth, unsigned int *pHeight)
 {
 #ifndef X_DISPLAY_MISSING
+	Display *dpy = get_default_asvisual()->dpy;
 	int (*oldXErrorHandler) (Display *, XErrorEvent *) = NULL;
     /* we need to check if pixmap is still valid */
 	Window root;
@@ -187,6 +190,7 @@ int
 GetRootDimensions (int *width, int *height)
 {
 #ifndef X_DISPLAY_MISSING
+	Display *dpy = get_default_asvisual()->dpy;
 	if( dpy ) 
 	{	
 		*height = XDisplayHeight(dpy, DefaultScreen(dpy) );
@@ -201,7 +205,7 @@ GetRootDimensions (int *width, int *height)
 int
 GetWinPosition (Window w, int *x, int *y)
 {
-	return get_dpy_window_position( dpy, None, w, NULL, NULL, x, y );
+	return get_dpy_window_position( get_default_asvisual()->dpy, None, w, NULL, NULL, x, y );
 }
 
 ARGB32
@@ -276,6 +280,7 @@ copyshade_drawable_area( ASVisual *asv, Drawable src, Pixmap trg,
 				  		 GC gc, ARGB32 tint) 		
 {
 #ifndef X_DISPLAY_MISSING
+	Display *dpy = get_default_asvisual()->dpy;
 	if( tint == TINT_LEAVE_SAME || asv == NULL )
 	{
 		XCopyArea (dpy, src, trg, gc, x, y, w, h, trg_x, trg_y);
@@ -308,6 +313,7 @@ CopyAndShadeArea ( Drawable src, Pixmap trg,
 				   GC gc, ShadingInfo * shading)
 {
 #ifndef X_DISPLAY_MISSING
+	Display *dpy = get_default_asvisual()->dpy;
 	ARGB32 tint = shading2tint32( shading );
 
     if (x < 0 || y < 0)
@@ -366,6 +372,7 @@ Pixmap
 shade_pixmap (ASVisual *asv, Pixmap src, int x, int y, int width, int height, GC gc, ARGB32 tint)
 {
 #ifndef X_DISPLAY_MISSING
+
     Pixmap trg = CREATE_TRG_PIXMAP (asv, width, height);
   
 	if (trg != None)
@@ -397,6 +404,8 @@ center_pixmap (ASVisual *asv, Pixmap src, int src_w, int src_h, int width, int h
 {
 	Pixmap trg = None;
 #ifndef X_DISPLAY_MISSING
+	Display *dpy = get_default_asvisual()->dpy;
+
     int x, y, w, h, src_x = 0, src_y = 0;
 	/* create target pixmap of the size of the window */
 	trg = CREATE_TRG_PIXMAP (asv,width, height);
@@ -445,6 +454,8 @@ grow_pixmap (ASVisual *asv, Pixmap src, int src_w, int src_h, int width, int hei
 {
 	Pixmap trg = None;
 #ifndef X_DISPLAY_MISSING
+	Display *dpy = get_default_asvisual()->dpy;
+
 	int w, h;
 	/* create target pixmap of the size of the window */
 	trg = CREATE_TRG_PIXMAP (asv,width, height);
@@ -485,6 +496,8 @@ cut_pixmap ( ASVisual *asv, Pixmap src, Pixmap trg,
 	  		 GC gc, ARGB32 tint )
 {
 #ifndef X_DISPLAY_MISSING
+	Display *dpy = get_default_asvisual()->dpy;
+
 	Bool my_pixmap = (trg == None )?True:False ;
 	int screen_w, screen_h ;
 	int w = width, h = height;
@@ -662,7 +675,7 @@ CutWinPixmap (Window win, Drawable src, int src_w, int src_h, int width,
 {
   int x = 0, y = 0;
 
-  if (!get_dpy_window_position( dpy, None, win, NULL, NULL, &x, &y))
+  if (!get_dpy_window_position( get_default_asvisual()->dpy, None, win, NULL, NULL, &x, &y))
 	return None;
 
   return CutPixmap( src, None, x, y, src_w, src_h, width, height, gc, shading );
@@ -675,6 +688,7 @@ fill_with_darkened_background (ASVisual *asv, Pixmap * pixmap, ARGB32 tint, int 
 #ifndef X_DISPLAY_MISSING
 	unsigned int root_w, root_h;
 	Pixmap root_pixmap;
+	Display *dpy = get_default_asvisual()->dpy;
 	int screen = DefaultScreen(dpy);
 
 	/* added by Sasha on 02/24/1999 to use transparency&shading provided by
@@ -725,7 +739,7 @@ fill_with_pixmapped_background (ASVisual *asv, Pixmap * pixmap, ASImage *image, 
 #ifndef X_DISPLAY_MISSING
 	unsigned int root_w, root_h;
 	Pixmap root_pixmap;
-	int screen = DefaultScreen(dpy);
+	int screen = DefaultScreen(asv->dpy);
 
 	root_pixmap = ValidatePixmap (None, 1, 1, &root_w, &root_h);
 	if (root_pixmap != None)
@@ -762,7 +776,7 @@ fill_with_pixmapped_background (ASVisual *asv, Pixmap * pixmap, ASImage *image, 
 		if( merged_im ) 
 		{
   			if (*pixmap == None)
-				*pixmap = create_visual_pixmap (asv, RootWindow (dpy, screen), width, height, 0);
+				*pixmap = create_visual_pixmap (asv, RootWindow (asv->dpy, screen), width, height, 0);
 
 			asimage2drawable( asv, *pixmap, merged_im, NULL,
           					  0, 0, x, y,

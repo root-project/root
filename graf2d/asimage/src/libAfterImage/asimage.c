@@ -75,6 +75,12 @@ ASVisual *_set_default_asvisual( ASVisual *new_v )
 {
 	ASVisual *old_v = __as_default_asvisual ;
 	__as_default_asvisual = new_v?new_v:&__as_dummy_asvisual ;
+/* This should be done in application - we should not meddle with other lib's stuff! 
+#if HAVE_AFTERBASE_FLAG	
+	if (new_v && new_v->dpy && !get_current_X_display (new_v->dpy))
+		set_current_X_display (new_v->dpy);
+#endif
+*/
 	return old_v;
 }
 

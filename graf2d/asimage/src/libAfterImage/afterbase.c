@@ -71,6 +71,7 @@
 #else
 #include "afterbase.h"
 #endif
+#include "asimage.h"
 
 #ifdef X_DISPLAY_MISSING
 #include "colornames.h"
@@ -78,7 +79,6 @@
 
 /*#include <X11/Xlib.h>*/
 
-Display *dpy = NULL ;
 char    *asim_ApplicationName = NULL ;
 
 void
@@ -619,6 +619,7 @@ const char *asim_parse_argb_color( const char *color, CARD32 *pargb )
 		}else if( *color )
 		{
 			/* does not really matter here what screen to use : */
+			Display *dpy = get_default_asvisual()->dpy;
 #ifdef X_DISPLAY_MISSING
 			register const char *ptr = &(color[0]);
             if(!FindColor(color, pargb))
@@ -1091,6 +1092,7 @@ asim_casestring_compare (ASHashableValue value1, ASHashableValue value2)
 int
 asim_get_drawable_size (Drawable d, unsigned int *ret_w, unsigned int *ret_h)
 {
+	Display *dpy = get_default_asvisual()->dpy;
 	*ret_w = 0;
 	*ret_h = 0;
 #ifndef X_DISPLAY_MISSING
@@ -1294,6 +1296,8 @@ asim_asxml_var_init(void)
 {
 	if ( asxml_var == NULL )
 	{
+		Display *dpy = get_default_asvisual()->dpy;
+
     	asxml_var = create_ashash(0, string_hash_value, string_compare, string_destroy_without_data);
     	if (!asxml_var) return;
 #ifndef X_DISPLAY_MISSING

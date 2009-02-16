@@ -403,15 +403,15 @@ Bool save_asimage_to_file(const char *file2bsaved, ASImage *im,
 void show_asimage(ASVisual *asv, ASImage* im, Window w, long delay)
 {
 #ifndef X_DISPLAY_MISSING
-	if ( im && w )
+	if ( im && w && asv)
 	{
 		Pixmap p = asimage2pixmap(asv, w, im, NULL, False);
 		struct timeval value;
 
-		XSetWindowBackgroundPixmap( dpy, w, p );
-		XClearWindow( dpy, w );
-		XFlush( dpy );
-		XFreePixmap( dpy, p );
+		XSetWindowBackgroundPixmap( asv->dpy, w, p );
+		XClearWindow( asv->dpy, w );
+		XFlush( asv->dpy );
+		XFreePixmap( asv->dpy, p );
 		p = None ;
 		value.tv_usec = delay % 10000;
 		value.tv_sec = delay / 10000;

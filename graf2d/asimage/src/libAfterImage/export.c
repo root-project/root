@@ -332,7 +332,8 @@ LOCAL_DEBUG_OUT( "(%d,%d)->%d (row_pointer %d )", x, y, idx, row_pointer[x] );
 		fputc( '\n', outfile );
 	}
 	fprintf( outfile, "};\n" );
-	fclose( outfile );
+	if (outfile != stdout)
+		fclose( outfile );
 
 	SHOW_TIME("image writing",started);
 	destroy_xpm_charmap( &xpm_cmap, True );
@@ -638,7 +639,8 @@ ASImage2png ( ASImage *im, const char *path, register ASImageExportParams *param
 
 	res = ASImage2png_int ( im, outfile, NULL, NULL, params );
 	
-	fclose(outfile);
+	if (outfile != stdout)
+		fclose(outfile);
 	return res;
 }
 
@@ -753,7 +755,8 @@ ASImage2jpeg( ASImage *im, const char *path,  ASImageExportParams *params )
 									  0, 0, im->width, 0, NULL)) == NULL )
 	{
 		LOCAL_DEBUG_OUT( "failed to start image decoding%s", "");
-		fclose(outfile);
+		if (outfile != stdout)
+			fclose(outfile);
 		return False;
 	}
 
@@ -849,7 +852,8 @@ LOCAL_DEBUG_OUT( "done writing image%s","" );
 	free( row_pointer[0] );
 	
 	stop_image_decoding( &imdec );
-	fclose(outfile);
+	if (outfile != stdout)
+		fclose(outfile);
 
 	SHOW_TIME("image export",started);
 	LOCAL_DEBUG_OUT("done writing JPEG image \"%s\"", path);
@@ -991,7 +995,8 @@ ASImage2bmp ( ASImage *im, const char *path,  ASImageExportParams *params )
 	free( bmbits );
 	free( bmi );
 
-	fclose(outfile);
+	if (outfile != stdout)
+		fclose(outfile);
 	SHOW_TIME("image export",started);
 	return False;
 }
@@ -1078,9 +1083,15 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 		{
 			ASIM_PrintGifError();
 			if( gif )
+			{
 				DGifCloseFile(gif);
-			fclose( infile );
-			gif = NULL ;
+				gif = NULL ;
+			}
+			if (infile)
+			{
+				fclose( infile );
+				infile = NULL;
+			}
 		}else
 		{
 			GifFileType gif_src ;
@@ -1090,10 +1101,15 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 			gif->SColorMap = NULL ;
 			gif->Image.ColorMap = NULL ;
 			DGifCloseFile(gif);
-			fclose( infile );
+			gif = NULL;
+			fclose (infile);
+			infile = NULL;
 			outfile = open_writeable_image_file( path );
-			gif = EGifOpenFileHandle(fileno(outfile));
-			if( gif != NULL )
+
+			if (outfile)
+				gif = EGifOpenFileHandle(fileno(outfile));
+				
+			if (gif)
 			{
 				int status;
 				if( ( status = EGifPutScreenDesc(gif, gif_src.SWidth, gif_src.SHeight,
@@ -1104,14 +1120,14 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 				if( status != GIF_OK )
 					ASIM_PrintGifError();
 			}
-			if( gif_src.SColorMap )
+			if (gif_src.SColorMap)
 			{  /* we only want to save private colormap if it is any different from
 			    * screen colormap ( saves us  768 bytes per image ) */
 				if( gif_cmap->ColorCount == gif_src.SColorMap->ColorCount )
 					dont_save_cmap = ( memcmp( gif_cmap->Colors, gif_src.SColorMap->Colors, gif_cmap->ColorCount*sizeof(GifColorType)) == 0 );
 				FreeMapObject(gif_src.SColorMap);
 			}
-			if( gif )
+			if (gif)
 			{
 				EGifPutExtension(gif, GRAPHICS_EXT_FUNC_CODE, GIF_GCE_BYTES, &(gce_bytes[0]));
 				if( get_flags( params->gif.flags, EXPORT_ANIMATION_REPEATS ) )
@@ -1127,18 +1143,23 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 		free_gif_saved_images( images, count );
 	}
 
-	if( gif == NULL )
+	if (gif == NULL)
 	{
-		outfile = open_writeable_image_file( path );
-		if( (gif = EGifOpenFileHandle(fileno(outfile))) == NULL )
-			ASIM_PrintGifError();
+		if (outfile == NULL)
+			outfile = open_writeable_image_file(path);
+			
+		if (outfile)
+			if ((gif = EGifOpenFileHandle(fileno(outfile))) == NULL)
+				ASIM_PrintGifError();
 	}
 
 	if( new_image && gif )
 	{
 		if( EGifPutScreenDesc(gif, im->width, im->height, cmap_size, 0, gif_cmap ) == GIF_ERROR )
 			ASIM_PrintGifError();
+	
 		EGifPutExtension(gif, 0xf9, GIF_GCE_BYTES, &(gce_bytes[0]));
+	
 		if( EGifPutImageDesc(gif, 0, 0, im->width, im->height, FALSE, NULL ) == GIF_ERROR )
 			ASIM_PrintGifError();
 	}
@@ -1165,9 +1186,13 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 		free( row_pointer );
 		if (EGifCloseFile(gif) == GIF_ERROR)
 			ASIM_PrintGifError();
+		gif = NULL;
 	}
 	free( mapped_im );
 	destroy_colormap( &cmap, True );
+	
+	if (outfile && outfile != stdout)
+		fclose (outfile);
 
 	SHOW_TIME("image export",started);
 	return True ;

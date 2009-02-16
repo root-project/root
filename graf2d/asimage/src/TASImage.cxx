@@ -97,8 +97,6 @@ extern "C" {
 #   include <afterimage.h>
 #   include <bmp.h>
 #   include <draw.h>
-
-    extern Display *dpy;    // defined in afterbase.c
 }
 
 // auxilary functions for general polygon filling
@@ -2030,6 +2028,8 @@ Bool_t TASImage::InitVisual()
 {
    // Static function to initialize the ASVisual.
 
+   Display *dpy;
+
    Bool_t inbatch = fgVisual && (fgVisual->dpy == (void*)1); // was in batch
    Bool_t noX = gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32");
 
@@ -2425,7 +2425,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    }
 
    if (!gFontManager) {
-      gFontManager = create_font_manager(dpy, 0, 0);
+      gFontManager = create_font_manager(fgVisual->dpy, 0, 0);
    }
 
    if (!gFontManager) {
