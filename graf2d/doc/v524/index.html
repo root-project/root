@@ -16,4 +16,7 @@
      circular (hollow and solid) markers. Previously the line 
      used to draw hollow circular markers looked very thick and 
      the solid ones did not look circular.
+<li> Remove the global variable named "dpy" in libAfterImage. It produced
+     an error if a user program used that simple variable name. "dpy"
+     was a pointer to a "Display".
 </ul>
