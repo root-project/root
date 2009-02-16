@@ -32,7 +32,9 @@
 #define EISCONN     10056
 #endif
 
-static const char *gUserAgent = "User-Agent: ROOT-TWebFile/1.0";
+static const char *gUserAgent = "User-Agent: ROOT-TWebFile/1.1";
+
+TUrl TWebFile::fgProxy;
 
 
 // Internal class used to manage the socket that may stay open between
@@ -72,9 +74,14 @@ void TWebSocket::ReOpen()
    if (fWebFile->fSocket)
       delete fWebFile->fSocket;
 
+   TUrl connurl;
+   if (fWebFile->fProxy.IsValid())
+      connurl = fWebFile->fProxy;
+   else
+      connurl = fWebFile->fUrl;
+
    for (Int_t i = 0; i < 5; i++) {
-      fWebFile->fSocket = new TSocket(fWebFile->fUrl.GetHost(),
-                                      fWebFile->fUrl.GetPort());
+      fWebFile->fSocket = new TSocket(connurl.GetHost(), connurl.GetPort());
       if (!fWebFile->fSocket->IsValid()) {
          delete fWebFile->fSocket;
          fWebFile->fSocket = 0;
@@ -94,28 +101,48 @@ void TWebSocket::ReOpen()
 ClassImp(TWebFile)
 
 //______________________________________________________________________________
-TWebFile::TWebFile(const char *url) : TFile(url, "WEB")
+TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
 {
    // Create a Web file object. A web file is the same as a read-only
    // TFile except that it is being read via a HTTP server. The url
    // argument must be of the form: http://host.dom.ain/file.root.
+   // The opt can be "NOPROXY", to bypass any set "http_proxy" shell
+   // variable. The proxy can be specified as (in sh, or equivalent csh):
+   //   export http_proxy=http://pcsalo.cern.ch:3128
+   // The proxy can also be specified via the static method TWebFile::SetProxy().
    // If the file specified in the URL does not exist or is not accessible
    // the kZombie bit will be set in the TWebFile object. Use IsZombie()
    // to see if the file is accessible. The preferred interface to this
    // constructor is via TFile::Open().
 
+   TString option = opt;
+   fNoProxy = kFALSE;
+   if (option.Contains("NOPROXY", TString::kIgnoreCase))
+      fNoProxy = kTRUE;
+   CheckProxy();
+
    Init(kFALSE);
 }
 
 //______________________________________________________________________________
-TWebFile::TWebFile(TUrl url) : TFile(url.GetUrl(), "WEB")
+TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB")
 {
    // Create a Web file object. A web file is the same as a read-only
    // TFile except that it is being read via a HTTP server. Make sure url
    // is a valid TUrl object.
+   // The opt can be "NOPROXY", to bypass any set "http_proxy" shell
+   // variable. The proxy can be specified as (in sh, or equivalent csh):
+   //   export http_proxy=http://pcsalo.cern.ch:3128
+   // The proxy can also be specified via the static method TWebFile::SetProxy().
    // If the file specified in the URL does not exist or is not accessible
    // the kZombie bit will be set in the TWebFile object. Use IsZombie()
    // to see if the file is accessible.
+
+   TString option = opt;
+   fNoProxy = kFALSE;
+   if (option.Contains("NOPROXY", TString::kIgnoreCase))
+      fNoProxy = kTRUE;
+   CheckProxy();
 
    Init(kFALSE);
 }
@@ -164,6 +191,31 @@ void TWebFile::Init(Bool_t)
 
    TFile::Init(kFALSE);
    fD = -2;   // so TFile::IsOpen() will return true when in TFile::~TFile
+}
+
+//______________________________________________________________________________
+void TWebFile::CheckProxy()
+{
+   // Check if shell var "http_proxy" has been set and should be used.
+
+   if (fNoProxy)
+      return;
+
+   if (fgProxy.IsValid()) {
+      fProxy = fgProxy;
+      return;
+   }
+
+   TString proxy = gSystem->Getenv("http_proxy");
+   if (proxy != "") {
+      TUrl p(proxy);
+      if (strcmp(p.GetProtocol(), "http")) {
+         Error("CheckProxy", "protocol must be HTTP in proxy URL %s",
+               proxy.Data());
+         return;
+      }
+      fProxy = p;
+   }
 }
 
 //______________________________________________________________________________
@@ -404,7 +456,13 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
 
    if (!len) return 0;
 
-   TSocket s(fUrl.GetHost(), fUrl.GetPort());
+   TUrl connurl;
+   if (fProxy.IsValid())
+      connurl = fProxy;
+   else
+      connurl = fUrl;
+
+   TSocket s(connurl.GetHost(), connurl.GetPort());
    if (!s.IsValid()) {
       Error("GetFromWeb", "cannot connect to remote host %s", fUrl.GetHost());
       return -1;
@@ -622,9 +680,15 @@ Int_t TWebFile::GetHead()
    msg += gUserAgent;
    msg += "\r\n\r\n";
 
+   TUrl connurl;
+   if (fProxy.IsValid())
+      connurl = fProxy;
+   else
+      connurl = fUrl;
+
    TSocket *s = 0;
    for (Int_t i = 0; i < 5; i++) {
-      s = new TSocket(fUrl.GetHost(), fUrl.GetPort());
+      s = new TSocket(connurl.GetHost(), connurl.GetPort());
       if (!s->IsValid()) {
          delete s;
          if (gSystem->GetErrno() == EADDRINUSE || gSystem->GetErrno() == EISCONN) {
@@ -713,4 +777,30 @@ Int_t TWebFile::GetLine(TSocket *s, char *line, Int_t size)
       return -1;
    }
    return n;
+}
+
+//______________________________________________________________________________
+void TWebFile::SetProxy(const char *proxy)
+{
+   // Static method setting global proxy URL.
+
+   if (proxy && *proxy) {
+      TUrl p(proxy);
+      if (strcmp(p.GetProtocol(), "http")) {
+         :: Error("TWebFile::SetProxy", "protocol must be HTTP in proxy URL %s",
+                  proxy);
+         return;
+      }
+      fgProxy = p;
+   }
+}
+
+//______________________________________________________________________________
+const char *TWebFile::GetProxy()
+{
+   // Static method returning the global proxy URL.
+
+   if (fgProxy.IsValid())
+      return fgProxy.GetUrl();
+   return "";
 }

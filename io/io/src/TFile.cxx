@@ -2744,7 +2744,7 @@ TFile *TFile::Open(const char *url, Option_t *option, const char *ftitle,
          if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
             if (h->LoadPlugin() == -1)
                return 0;
-            f = (TFile*) h->ExecPlugin(1, name.Data());
+            f = (TFile*) h->ExecPlugin(2, name.Data(), option);
          }
 
       } else if (type == kFile) {
@@ -3225,7 +3225,7 @@ Bool_t TFile::Matches(const char *url)
    // Return kTRUE if 'url' matches the coordinates of this file.
    // The check is implementation dependent and may need to be overload
    // by each TFile implememtation relying on this check.
-   // The default implementation checks teh file name only.
+   // The default implementation checks the file name only.
 
    // Check the full URL, including port and FQDN.
    TUrl u(url);
@@ -3326,7 +3326,7 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
             // If option "READ" test existence and access
             TString opt = option;
             Bool_t read = (opt.IsNull() ||
-                          !opt.CompareTo("READ",TString::kIgnoreCase)) ? kTRUE : kFALSE;
+                          !opt.CompareTo("READ", TString::kIgnoreCase)) ? kTRUE : kFALSE;
             if (read) {
                char *fn;
                if ((fn = gSystem->ExpandPathName(TUrl(lfname).GetFile()))) {
