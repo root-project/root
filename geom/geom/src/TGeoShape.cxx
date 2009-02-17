@@ -292,6 +292,75 @@ Bool_t TGeoShape::IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t c
    return kTRUE;
 }
 
+//_____________________________________________________________________________  
+Bool_t TGeoShape::IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t y2,Double_t x3, Double_t y3,Double_t x4, Double_t y4)
+{
+// Check if segments (A,B) and (C,D) are crossing,
+// where: A(x1,y1), B(x2,y2), C(x3,y3), D(x4,y4)
+   Double_t eps = TGeoShape::Tolerance();
+   Bool_t stand1 = kFALSE;
+   Double_t dx1 = x2-x1;
+   Bool_t stand2 = kFALSE;
+   Double_t dx2 = x4-x3;
+   Double_t xm = 0.;
+   Double_t ym = 0.;
+   Double_t a1 = 0.;
+   Double_t b1 = 0.;
+   Double_t a2 = 0.;
+   Double_t b2 = 0.;
+   if (TMath::Abs(dx1) < eps) stand1 = kTRUE;
+   if (TMath::Abs(dx2) < eps) stand2 = kTRUE;
+   if (!stand1) {
+      a1 = (x2*y1-x1*y2)/dx1;
+      b1 = (y2-y1)/dx1;
+   }   
+   if (!stand2) {
+      a2 = (x4*y3-x3*y4)/dx2;
+      b2 = (y4-y3)/dx2;
+   }   
+   if (stand1 && stand2) {
+      // Segments parallel and vertical
+      if (TMath::Abs(x1-x3)<eps) {
+         // Check if segments are overlapping
+         if ((y3-y1)*(y3-y2)<-eps || (y4-y1)*(y4-y2)<-eps ||
+             (y1-y3)*(y1-y4)<-eps || (y2-y3)*(y2-y4)<-eps) return kTRUE;
+         return kFALSE;
+      }
+      // Different x values
+      return kFALSE;
+   }
+   
+   if (stand1) {
+      // First segment vertical
+      xm = x1;
+      ym = a2+b2*xm;
+   } else {
+      if (stand2) {
+         // Second segment vertical
+         xm = x3;
+         ym = a1+b1*xm;
+      } else {
+         // Normal crossing
+         if (TMath::Abs(b1-b2)<eps) {
+            // Parallel segments, are they aligned
+            if (TMath::Abs(y3-(a1+b1*x3))>eps) return kFALSE;
+            // Aligned segments, are they overlapping
+            if ((x3-x1)*(x3-x2)<-eps || (x4-x1)*(x4-x2)<-eps ||
+                (x1-x3)*(x1-x4)<-eps || (x2-x3)*(x2-x4)<-eps) return kTRUE;
+            return kFALSE;
+         }
+         xm = (a1-a2)/(b2-b1);
+         ym = (a1*b2-a2*b1)/(b2-b1);
+      }
+   }
+   // Check if crossing point is both between A,B and C,D
+   Double_t check = (xm-x1)*(xm-x2)+(ym-y1)*(ym-y2);
+   if (check > -eps) return kFALSE;
+   check = (xm-x3)*(xm-x4)+(ym-y3)*(ym-y4);
+   if (check > -eps) return kFALSE;
+   return kTRUE;
+}         
+
 //_____________________________________________________________________________
 Double_t TGeoShape::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
                                  Double_t s2, Double_t c2, Double_t sm, Double_t cm, Bool_t in)

@@ -618,6 +618,9 @@ Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *
    fPoly = new TGeoPolygon(nvert);
    fPoly->SetXY(fXc,fYc); // initialize with current coordinates
    fPoly->FinishPolygon();
+   if (fPoly->IsIllegalCheck()) {
+      Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
+   }   
    return kTRUE;
 }
 

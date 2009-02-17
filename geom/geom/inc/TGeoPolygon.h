@@ -66,6 +66,7 @@ public:
    Bool_t              IsClockwise() const {return !TObject::TestBit(kGeoACW);}
    Bool_t              IsConvex() const {return TObject::TestBit(kGeoConvex);}
    Bool_t              IsFinished() const {return TObject::TestBit(kGeoFinishPolygon);}
+   Bool_t              IsIllegalCheck() const;
    Double_t            Safety(Double_t *point, Int_t &isegment) const;
    void                SetConvex(Bool_t flag=kTRUE) {TObject::SetBit(kGeoConvex,flag);}
    void                SetXY(Double_t *x, Double_t *y);   

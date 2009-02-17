@@ -132,6 +132,7 @@ public:
    virtual Bool_t        IsCylType() const = 0;
    static  Bool_t        IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    static  Bool_t        IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy);
+   static  Bool_t        IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t y2,Double_t x3, Double_t y3,Double_t x4, Double_t y4);
    static  Bool_t        IsInPhiRange(Double_t *point, Double_t phi1, Double_t phi2);
    virtual Bool_t        IsReflected() const {return kFALSE;}
    Bool_t                IsRunTimeShape() const {return TestShapeBit(kGeoRunTimeShape);}

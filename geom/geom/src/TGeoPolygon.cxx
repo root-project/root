@@ -44,6 +44,7 @@
 #include "TObjArray.h"
 #include "TGeoPolygon.h"
 #include "TMath.h"
+#include "TGeoShape.h"
 
 ClassImp(TGeoPolygon)
 
@@ -230,6 +231,35 @@ Bool_t TGeoPolygon::IsSegConvex(Int_t i1, Int_t i2) const
    return kTRUE;
 }      
 
+//_____________________________________________________________________________
+Bool_t TGeoPolygon::IsIllegalCheck() const
+{
+// Check for illegal crossings between non-consecutive segments
+   if (fNvert<4) return kFALSE;
+   Bool_t is_illegal = kFALSE;
+   Double_t x1,y1,x2,y2,x3,y3,x4,y4;
+   for (Int_t i=0; i<fNvert-2; i++) {
+      // Check segment i
+      for (Int_t j=i+2; j<fNvert; j++) {
+         // Versus segment j
+         if (i==0 && j==(fNvert-1)) continue;
+         x1 = fX[i];
+         y1 = fY[i];
+         x2 = fX[i+1];
+         y2 = fY[i+1];
+         x3 = fX[j];
+         y3 = fY[j];
+         x4 = fX[(j+1)%fNvert];
+         y4 = fY[(j+1)%fNvert];
+         if (TGeoShape::IsSegCrossing(x1,y1,x2,y2,x3,y3,x4,y4)) {
+            Error("IsIllegalCheck", "Illegal crossing of segment %d vs. segment %d", i,j);
+            is_illegal = kTRUE;
+         }
+      }
+   }
+   return is_illegal;
+}
+   
 //_____________________________________________________________________________
 void TGeoPolygon::OutscribedConvex()
 {

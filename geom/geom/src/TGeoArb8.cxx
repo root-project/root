@@ -298,7 +298,18 @@ void TGeoArb8::ComputeTwist()
       fXY[5][1] = fXY[7][1];
       fXY[7][0] = xtemp;
       fXY[7][1] = ytemp;
-   }   
+   } 
+   // Check for illegal crossings.
+   Bool_t illegal_cross = kFALSE;
+   illegal_cross = TGeoShape::IsSegCrossing(fXY[0][0],fXY[0][1],fXY[1][0],fXY[1][1],
+                                            fXY[2][0],fXY[2][1],fXY[3][0],fXY[3][1]);
+   if (!illegal_cross) 
+   illegal_cross = TGeoShape::IsSegCrossing(fXY[4][0],fXY[4][1],fXY[5][0],fXY[5][1],
+                                            fXY[6][0],fXY[6][1],fXY[7][0],fXY[7][1]);
+   if (illegal_cross) {
+      Error("ComputeTwist", "Shape %s type Arb8: Malformed polygon with crossing opposite segments", GetName());
+      InspectShape();
+   }
 }
 
 //_____________________________________________________________________________
@@ -396,6 +407,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
 // ipl=3 : points 3,7,0,4
    Double_t xa,xb,xc,xd;
    Double_t ya,yb,yc,yd;
+   Double_t eps = 100.*TGeoShape::Tolerance();
    Int_t j = (ipl+1)%4;
    xa=fXY[ipl][0];
    ya=fXY[ipl][1];
@@ -425,10 +437,10 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
    Double_t c=dxs*point[1]-dys*point[0]+xs1*ys2-xs2*ys1;
    Double_t s=TGeoShape::Big();
    Double_t x1,x2,y1,y2,xp,yp,zi;
-   if (TMath::Abs(a)<1E-10) {           
-      if (b==0) return TGeoShape::Big();
+   if (TMath::Abs(a)<eps) {           
+      if (TMath::Abs(b)<eps) return TGeoShape::Big();
       s=-c/b;
-      if (s>0) {
+      if (s>eps) {
          if (in) return s;
          zi=point[2]+s*dir[2];
          if (TMath::Abs(zi)<fDz) {
@@ -448,7 +460,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
    if (d>=0) {
       if (a>0) s=0.5*(-b-TMath::Sqrt(d))/a;
       else     s=0.5*(-b+TMath::Sqrt(d))/a;
-      if (s>0) {
+      if (s>eps) {
          if (in) return s;
          zi=point[2]+s*dir[2];
          if (TMath::Abs(zi)<fDz) {
@@ -464,7 +476,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
       }
       if (a>0) s=0.5*(-b+TMath::Sqrt(d))/a;
       else     s=0.5*(-b-TMath::Sqrt(d))/a;
-      if (s>0) {
+      if (s>eps) {
          if (in) return s;
          zi=point[2]+s*dir[2];
          if (TMath::Abs(zi)<fDz) {
@@ -556,6 +568,7 @@ Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/
    Double_t dz2 =0.5/fDz;
    Double_t xa,xb,xc,xd;
    Double_t ya,yb,yc,yd;
+   Double_t eps = 100.*TGeoShape::Tolerance();
    for (Int_t ipl=0;ipl<4;ipl++) {
       Int_t j = (ipl+1)%4;
       xa=fXY[ipl][0];
@@ -585,10 +598,10 @@ Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/
               +tx1*ys2-tx2*ys1)*dir[2];
       Double_t c=dxs*point[1]-dys*point[0]+xs1*ys2-xs2*ys1;
       Double_t s=TGeoShape::Big();
-      if (TMath::Abs(a)<1E-8) {           
-         if (TMath::Abs(b)<TGeoShape::Tolerance()) continue;
+      if (TMath::Abs(a)<eps) {           
+         if (TMath::Abs(b)<eps) continue;
          s=-c/b;
-         if (s>0 && s < distmin) {
+         if (s>eps && s < distmin) {
             distmin =s;
             lateral_cross=kTRUE;
          }   
@@ -598,7 +611,7 @@ Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/
       if (d>=0.) {
          if (a>0) s=0.5*(-b-TMath::Sqrt(d))/a;
          else     s=0.5*(-b+TMath::Sqrt(d))/a;
-         if (s>0) {
+         if (s>eps) {
             if (s < distmin) {
                distmin = s;
                lateral_cross = kTRUE;
@@ -606,7 +619,7 @@ Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/
          } else {
             if (a>0) s=0.5*(-b+TMath::Sqrt(d))/a;
             else     s=0.5*(-b-TMath::Sqrt(d))/a;
-            if (s>0 && s < distmin) {
+            if (s>eps && s < distmin) {
                distmin =s;
                lateral_cross = kTRUE;
             }   
