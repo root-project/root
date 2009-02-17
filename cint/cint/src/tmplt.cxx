@@ -233,11 +233,16 @@ int G__settemplatealias(const char *tagnamein,char *tagname,int tagnum
   while(charlist->next) {
     if(defpara->default_parameter) {
 	  char oldp = *(p-1);
+	  char oldp2 = *(p-2);
 	  if (oldp == '<') // all template args have defaults
 	    *(p-1) = 0;
 	  else {
-		*(p-1) = '>'; 
-		*p = 0;
+             if (oldp2 == '>') {
+                *(p-1) = ' ';
+                ++p;
+             }
+             *(p-1) = '>';
+             *p = 0;
 	  }
       if(0!=strcmp(tagnamein,tagname) && -1==G__defined_typename(tagname)) {
         int typenum=G__newtype.alltype++;
@@ -259,7 +264,10 @@ int G__settemplatealias(const char *tagnamein,char *tagname,int tagnum
           G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
         }
       }
-      *(p-1)=oldp;
+      if (oldp2 == '>') {
+         --p;
+      }
+      *(p-1) = oldp;
     }
     strcpy(p,charlist->string);
     p+=strlen(charlist->string);
@@ -299,6 +307,10 @@ int G__cattemplatearg(char *tagname,G__Charlist *charlist)
     charlist=charlist->next;
     if(charlist->next) {
       *p=','; ++p;
+    } else {
+       if (*(p-1) == '>') {
+          *p = ' '; ++p;
+       }
     }
   }
   *p='>'; ++p;
