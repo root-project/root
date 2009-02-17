@@ -58,8 +58,8 @@ private:
    Bool_t ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
 
 public:
-   TWebFile(const char *url, Option_t *opt);
-   TWebFile(TUrl url, Option_t *opt);
+   TWebFile(const char *url, Option_t *opt="");
+   TWebFile(TUrl url, Option_t *opt="");
    virtual ~TWebFile();
 
    Long64_t GetSize() const;
