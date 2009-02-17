@@ -860,10 +860,25 @@ void TGLEventHandler::TriggerTooltip(const char* text)
 {
    // Trigger display of tooltip.
 
+   static UInt_t screenW = 0, screenH = 0;
    fTooltipPos   = fLastGlobalPos;
    fTooltipShown = kTRUE;
    fTooltip->SetText(text);
-   fTooltip->SetPosition(fTooltipPos.fX + 16, fTooltipPos.fY - 16);
+   Int_t x = fTooltipPos.fX + 16, y = fTooltipPos.fY + 16;
+   if (screenW == 0 || screenH == 0) {
+      screenW = gClient->GetDisplayWidth();
+      screenH = gClient->GetDisplayHeight();
+   }
+   if (x + 5 + fTooltip->GetWidth() > screenW) {
+      x = screenW - fTooltip->GetWidth() - 5;
+      if (y + 5 + fTooltip->GetHeight() > screenH) {
+         y -= (25 + fTooltip->GetHeight());
+      }
+   }
+   if (y + 5 + fTooltip->GetHeight() > screenH) {
+      y = screenH - fTooltip->GetHeight() - 10;
+   }
+   fTooltip->SetPosition(x, y);
    fTooltip->Reset();
 }
 
