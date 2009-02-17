@@ -285,7 +285,7 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
    fAxisPainter->SetAbsoluteLabelFontSize(fs);
    fAxisPainter->SetTextFormat(vp[0], vp[1], vp[1]*0.1);
    TGLFont font;
-   rnrCtx.RegisterFont(fs, fAxis->GetLabelFont(), TGLFont::kPixmap, font);
+   rnrCtx.RegisterFont(fs, TGLFontManager::GetFontNameFromId(fAxis->GetLabelFont()) , TGLFont::kPixmap, font);
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
 
    if (cam.IsOrthographic())

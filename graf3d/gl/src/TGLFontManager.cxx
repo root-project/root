@@ -408,25 +408,25 @@ void TGLFontManager::InitStatics()
 {
    // Create a list of available font files and allowed font sizes.
 
-   fgFontFileArray.Add(new TObjString("arialbd"));
+   fgFontFileArray.Add(new TObjString("arialbd"));  //   0
 
-   fgFontFileArray.Add(new TObjString("timesi"));
-   fgFontFileArray.Add(new TObjString("timesbd"));
-   fgFontFileArray.Add(new TObjString("timesbi"));
+   fgFontFileArray.Add(new TObjString("timesi"));   //  10
+   fgFontFileArray.Add(new TObjString("timesbd"));  //  20
+   fgFontFileArray.Add(new TObjString("timesbi"));  //  30
  
-   fgFontFileArray.Add(new TObjString("arial")); 
-   fgFontFileArray.Add(new TObjString("ariali"));
-   fgFontFileArray.Add(new TObjString("arialbd"));
-   fgFontFileArray.Add(new TObjString("arialbi"));
+   fgFontFileArray.Add(new TObjString("arial"));    //  40
+   fgFontFileArray.Add(new TObjString("ariali"));   //  50
+   fgFontFileArray.Add(new TObjString("arialbd"));  //  60
+   fgFontFileArray.Add(new TObjString("arialbi"));  //  70
 
-   fgFontFileArray.Add(new TObjString("cour"));
-   fgFontFileArray.Add(new TObjString("couri"));
-   fgFontFileArray.Add(new TObjString("courbd"));
-   fgFontFileArray.Add(new TObjString("courbi"));
+   fgFontFileArray.Add(new TObjString("cour"));     //  80
+   fgFontFileArray.Add(new TObjString("couri"));    //  90
+   fgFontFileArray.Add(new TObjString("courbd"));   // 100
+   fgFontFileArray.Add(new TObjString("courbi"));   // 110
 
-   fgFontFileArray.Add(new TObjString("symbol"));
-   fgFontFileArray.Add(new TObjString("times"));
-   fgFontFileArray.Add(new TObjString("wingding"));
+   fgFontFileArray.Add(new TObjString("symbol"));   // 120
+   fgFontFileArray.Add(new TObjString("times"));    // 130
+   fgFontFileArray.Add(new TObjString("wingding")); // 140
 
 
    // font sizes
