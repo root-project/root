@@ -1586,16 +1586,16 @@ void THtml::CreateListOfClasses(const char* filter)
                   static size_t rootClassStemsToIgnoreLen[] = {0, 0, 0, 0, 0};
                   static std::set<std::string> setRootClassesToIgnore;
                   if (setRootClassesToIgnore.empty()) {
-                     for (int i = 0; rootClassesToIgnore[i]; ++i)
-                        setRootClassesToIgnore.insert(rootClassesToIgnore[i]);
-                     for (int i = 0; rootClassStemsToIgnore[i]; ++i)
-                        rootClassStemsToIgnoreLen[i] = strlen(rootClassStemsToIgnore[i]);
+                     for (int ii = 0; rootClassesToIgnore[ii]; ++ii)
+                        setRootClassesToIgnore.insert(rootClassesToIgnore[ii]);
+                     for (int ii = 0; rootClassStemsToIgnore[ii]; ++ii)
+                        rootClassStemsToIgnoreLen[ii] = strlen(rootClassStemsToIgnore[ii]);
                   }
                   // only complain about this class if it should not be ignored:
                   if (setRootClassesToIgnore.find(cname) == setRootClassesToIgnore.end()) {
                      bool matched = false;
-                     for (int i = 0; !matched && rootClassStemsToIgnore[i]; ++i)
-                        matched = !strncmp(cname, rootClassStemsToIgnore[i], rootClassStemsToIgnoreLen[i]);
+                     for (int ii = 0; !matched && rootClassStemsToIgnore[ii]; ++ii)
+                        matched = !strncmp(cname, rootClassStemsToIgnore[ii], rootClassStemsToIgnoreLen[ii]);
                      if (!matched)
                         classesDeclFileNotFound.AddLast(classPtr);
                   }
@@ -1701,7 +1701,6 @@ void THtml::CreateListOfClasses(const char* filter)
          "Cannot find the source file for the following classes [reason]:");
       TIter iClassesDeclFileNotFound(&classesImplFileNotFound);
       TClass* iClass = 0;
-      bool cannotFind = false;
       while ((iClass = (TClass*)iClassesDeclFileNotFound())) {
          if (iClass->GetDeclFileName() && iClass->GetDeclFileName()[0]) {
             Info("CreateListOfClasses", "   %s [source %s not found]", iClass->GetName(), iClass->GetImplFileName());
