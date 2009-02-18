@@ -309,7 +309,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    Float_t b = -camera.FrustumPlane(TGLCamera::kBottom).D();
 
    fProjection = fM->GetManager()->GetProjection();
-
+   glDisable(GL_LIGHTING);
    // Projection center and origin marker.
    {
       Float_t d = ((r-l) > (b-t)) ? (b-t) : (r-l);

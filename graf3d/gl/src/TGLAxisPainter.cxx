@@ -426,6 +426,7 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
    //______________________________________________________________________________
    // Draw.
 
+   glDisable(GL_LIGHTING);
    RnrLines();
    RnrLabels();
 }
