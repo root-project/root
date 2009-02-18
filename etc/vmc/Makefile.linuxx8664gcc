@@ -24,10 +24,10 @@ AWK	  = awk
 CXXOPTS       = $(OPT) -Wall -W -fPIC -pipe -Woverloaded-virtual -m64
 COPT	      = $(OPT) -m64 -fPIC
 
-ifeq (g95,$(F77))
+ifneq (,$(findstring g95,$(F77)))
 FOPT	      = $(OPT) -fno-second-underscore
 else
-ifeq (gfortran,$(F77))
+ifneq (,$(findstring gfortran,$(F77)))
 FOPT	      = $(OPT) -fno-second-underscore
 else
 FOPT	      = $(OPT) -fno-second-underscore
@@ -49,10 +49,10 @@ CLIBCXXOPTS   = $(CLIBDEFS)
 CLIBCOPT      = $(CLIBDEFS)
 CLIBFOPT      = $(CLIBDEFS)
 
-ifeq (g95,$(F77))
+ifneq (,$(findstring g95,$(F77)))
 CLIBDEFS     += -DCERNLIB_G95
 else
-ifeq (gfortran,$(F77))
+ifneq (,$(findstring gfortran,$(F77)))
 CLIBDEFS     += -DCERNLIB_GFORTRAN
 else
 
@@ -65,10 +65,10 @@ LDFLAGS       = $(OPT)
 SHLD	      = $(LD)
 SOFLAGS       = -Wl,-soname,$(notdir $@) -shared 
 
-ifeq (g95,$(F77))
+ifneq (,$(findstring g95,$(F77)))
 SHLIB += -L$(shell g95 --print-search-dirs | sed -n -e 's/install: //p') -lf95
 else
-ifeq (gfortran,$(F77))
+ifneq (,$(findstring gfortran,$(F77)))
 SHLIB := $(shell gfortran -print-file-name=libgfortran.so)
 SHLIB += $(shell gfortran -print-file-name=libgfortranbegin.a)
 else
