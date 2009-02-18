@@ -326,15 +326,31 @@ public:
 // TEveRecKink
 /******************************************************************************/
 
-class TEveRecKink : public TEveRecTrack
+class TEveRecKink : public TObject
 {
 public:
-   Int_t       fLabelSec;  // Label of the secondary track
-   TEveVector  fVEnd;      // End vertex: last point on the primary track
-   TEveVector  fVKink;     // Kink vertex: reconstructed position of the kink
-   TEveVector  fPSec;      // Momentum of secondary track
 
-   TEveRecKink() : TEveRecTrack(), fLabelSec(0), fVEnd(), fVKink(), fPSec() {}
+   TEveVector  fVKink;          // Kink vertex: reconstructed position of the kink
+   TEveVector  fPMother;        // Momentum of the mother track
+   TEveVector  fVMother;        // Vertex of the mother track
+   TEveVector  fPDaughter;      // Momentum of the daughter track
+   TEveVector  fVDaughter;      // Vertex of the daughter track
+   Double32_t  fKinkAngle[3];   // three angles
+   Int_t       fSign;           // sign of the track
+   Int_t       fStatus;         // Status as exported from reconstruction
+
+   // Data from simulation
+   Int_t       fKinkLabel[2];   // Labels of the mother and daughter tracks
+   Int_t       fKinkIndex[2];   // Indices of the mother and daughter tracks
+   Int_t       fKinkPdg[2];     // PDG code of mother and daughter.
+
+   TEveRecKink() : fVKink(), fPMother(), fVMother(), fPDaughter(), fVDaughter(), fSign(0), fStatus(0)
+   {
+     fKinkAngle[0] = fKinkAngle[1] = fKinkAngle[2] = 0;
+     fKinkLabel[0] = fKinkLabel[1] = 0;
+     fKinkIndex[0] = fKinkIndex[1] = 0;
+     fKinkPdg[0]   = fKinkPdg[1]   = 0;
+   }
    virtual ~TEveRecKink() {}
 
    ClassDef(TEveRecKink, 1); // Reconstructed kink (also used in VSD).
