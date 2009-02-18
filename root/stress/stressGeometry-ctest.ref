@@ -59,3 +59,29 @@ Info in <TGeoManager::SetTopVolume>: Top volume is ATLS. Master volume is ATLS
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 29046966 nodes/ 7143 volume UID's in atlas.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+******************************************************************
+* STRESS GEOMETRY
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/aleph.root
+Reference file http://root.cern.ch/files/aleph_ref_3.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/alice2.root
+Reference file http://root.cern.ch/files/alice2_ref_3.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/brahms.root
+Reference file http://root.cern.ch/files/brahms_ref_3.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/cdf.root
+Reference file http://root.cern.ch/files/cdf_ref_3.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/cms.root
+Reference file http://root.cern.ch/files/cms_ref_3.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/hades2.root
+Reference file http://root.cern.ch/files/hades2_ref_3.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/lhcbfull.root
+Reference file http://root.cern.ch/files/lhcbfull_ref_3.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/star.root
+Reference file http://root.cern.ch/files/star_ref_3.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/babar2.root
+Reference file http://root.cern.ch/files/babar2_ref_3.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/atlas.root
+Reference file http://root.cern.ch/files/atlas_ref_3.root found
+******************************************************************
+*  stressGeometry .................................. OK
+******************************************************************
+******************************************************************
