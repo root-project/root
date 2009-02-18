@@ -105,6 +105,7 @@ protected:
    TString        fCurrentModule;   // current module context of sources being parsed
    TString        fCurrentMethodTag;// name_idx of the currently parsed method
    Int_t          fDirectiveCount;  // index of directive for current method
+   Long_t         fLineNumber;      // source line number
    TString        fCurrentFile;     // current source / header file name
    std::map<std::string /*name*/, Int_t > fMethodCounts;     // current class's method names
    EDocContext    fDocContext;      // current context of parsed sources for documenting
@@ -174,6 +175,7 @@ public:
    TClass*       GetCurrentClass() const { return fCurrentClass; }
    void          GetCurrentModule(TString& out_module) const;
    TDocOutput*   GetDocOutput() const { return fDocOutput; }
+   Long_t        GetLineNumber() const { return fLineNumber; }
    const TList*  GetDataMembers(EAccess access) const { return &fDataMembers[access]; }
    const TList*  GetEnums(EAccess access) const { return &fDataMembers[access+3]; }
    const char*   GetSourceInfo(ESourceInfo type) const { return fSourceInfo[type]; }

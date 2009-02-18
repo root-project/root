@@ -63,9 +63,10 @@ protected:
                                   const char *lastUpdate, const char *author,
                                   const char *copyright, const char* footer);
    virtual void   WriteSearch(std::ostream& out);
+   void           WriteLocation(std::ostream& out, TModuleDocInfo* module, const char* classname = 0);
    void           WriteModuleLinks(std::ostream& out);
    void           WriteModuleLinks(std::ostream& out, TModuleDocInfo* super);
-   void           WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const char* classname = 0);
+   void           WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const char* classname = 0, Bool_t withLocation = kTRUE);
 
 public:
    enum EFileType { kSource, kInclude, kTree, kDoc };

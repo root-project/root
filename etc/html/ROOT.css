@@ -2,13 +2,27 @@
 
 /*** Generic layout ***/
 body {
+   font-family: Arial,Verdana,sans-serif;
    color: inherit;
-   background-color: #fcfcfc;
-   font-family: Arial;
-   font-size: small;
+   background-color: #8596AA;
+   min-width: 750px;
+   margin: 0;
+   padding: 20px 0;
 }
+#body_content {
+   background-color: #FFFFFF;
+   width: 818px;
+   font-size: 82%;
+   line-height: 130%;
+   margin: 0 auto;
+   padding: 3px 16px;
+}
+
 pre {
-   font-size: larger;
+   /*font-size: larger;*/
+}
+
+p {
 }
 
 /* links */
@@ -16,72 +30,59 @@ a {
    text-decoration: none;
 }
 a:link {
-   color: #0000ff;
+   color: #336299;
    background-color: inherit;
    text-decoration: none;
 }
 a:visited {
-   color: #5500cc;
+   color: #336299;
    background-color: inherit;
 }
 a:active {
-   color: #551a8b;
+   color: #336299;
    background-color: inherit;
    border: dotted 1px #0000ff;
 }
 a:hover {
-   color: #0000ff;
-   background-color: #eeeeff;
+   color: #336299;
    text-decoration: underline;
 }
 
 /* headers */
 h1, h2, h3, h4 {
    color: inherit;
-   background-color: White;
-   clear: both;
+   /*clear: both;*/
 }
 h1 {
-   font-size: x-large;
-   padding: 1.5em 2.5em 1.5em 2.5em;
-}
-h2, h3 {
-   border-left: solid 0.5em Gray;
-   border-right: solid 1px Gray;
-   border-bottom: solid 1px Gray;
-   border-top: solid 1px Gray;
+   font-size: 2em;
+   line-height: 1.5em;
+   margin: 0;
 }
 h2 {
-   margin: 3em 1em 1em 0.5em;
-   padding: 1em 0em 1em 2em;
-   font-size: large;
+   font-size: 1.3em;
+   margin: 1.5em 1.5em;
 }
 h3 {
-   margin: 1em 2em 1em 1em;
-   padding: 0.5em 0em 0.5em 1.5em;
-   font-size: medium;
+   font-size: 1em;
+}
+
+#footer {
+  margin-top: 1em;
+  font-size: 75%;
+  line-height: 110%;
+  border: 1px solid #CCCCCC;
+  padding: 0.7em;
+  /*text-align: center;*/
+}
+#footer em {
+  padding: 1em;
+  font-style: normal;
 }
 
 /* box with drop shadow */
 div.dropshadow {
-   float: left;
-   clear: left;
-   background: White url(shadowAlpha.png) no-repeat bottom right !important;
-   background: White url(shadow.gif) no-repeat bottom right;
-   margin: 10px 0 3em 50px !important;
-   margin: 10px 0 3em 45px;
-   padding: 0px;
 }
 div.withshadow {
-   position: relative;
-   bottom: 6px;
-   right: 6px;
-   border: 1px solid #999999;
-   padding: 1em;
-   margin: 0px 0px 0px 0px;
-   text-align: center;
-   color: inherit;
-   background-color: White;
 }
 
 /* tabbed divs */
@@ -95,14 +96,12 @@ a.tab {
    border-left: solid 1px Gray;
    border-right: solid 1px Gray;
    border-bottom: solid 0px Black;
-   color: #777777;
-   background-color: #dddddd;
+   color: #444444;
+   background-color: #eeeeee;
    padding: 1px 0.4em 1px 0.4em;
    margin-bottom: 1px;
    position: relative;
    top: -1px;
-   font-weight: bold;
-   font-style: italic;
 }
 * html a.tab {
    /* IE only, fix pos bug */
@@ -169,51 +168,70 @@ div.clear {
 }
 
 /* links on top of page */
+#root_header {
+   background: #336299 url(http://root.cern.ch/drupal/sites/all/themes/newsflash/images/blue/root-banner.png) no-repeat scroll 0 0;
+   /*padding: 150px 0 2px 0;*/
+  margin:0px -13px;
+}
+#root_header img {
+  margin: 10px;
+}
+
 #toplinks {
-   border: solid 1px #aaaaff;
-   padding: 0.1em 0.1em 0.1em 0.1em;
-   margin-bottom: 2em;
-   color: #333333;
-   background-color: White;
+   font-size: 90%;
+   border-top: 1px solid #FFFFFF;
+   width: 844px;
+   color: #FFFFFF;
+   margin: 1px -13px 3px -13px;
+   background-color: #2E4A6B;
 }
 div.descrhead {
-   margin-top: 0.0em;
-   margin-bottom: 0.0em;
-   margin-left: auto;
-   margin-right: auto;
-   font-family: Arial;
-   font-size: small;
-   font-weight: bold;
+   text-align:right;
+   height: 1.6em;
 }
 span.descrtitle {
-   display: block;
-   width: 9em;
+   display: inline-block;
+   width: 6em;
+   padding: 0 14px;
+   font-weight: bold;
+   white-space: nowrap;
+}
+div.descrheadcontent {
+   display: inline-block;
+   text-align: left;
+   margin: 0 auto 0 0;
+   padding: 0;
    float: left;
-   padding-left: 0.3em;
 }
 a.descrheadentry {
-   color: #0000ff;
-   background-color: inherit;
+   color: #FFFFFF;
    text-decoration: none;
-   margin-left: 0.0em;
-   margin-right: 0.0em;
-   border-left: dotted 1px #000077;
-   border-bottom: none;
-   padding-left: 0.5em;
-   padding-right: 0.5em;
-   font-size: small;
+   margin: 0;
+   font-weight: 95%;
+   border: none;
+   /*border-left: dotted 1px #dddddd;*/
+   border-left: solid 1px #dddddd;
+   padding: 1px 14px;
    white-space: nowrap;
-   font-weight: normal;
+   display: inline-block;
+   width: 100px;
 }
 a.descrheadentry:visited {
-   color: #0000ff;
-   background-color: inherit;
+   color: #dddddd;
    text-decoration: inherit;
 }
 a.descrheadentry:hover {
-   color: #0000ff;
-   background-color: #eeeeff;
-   text-decoration: underline;
+   color: #ffffff;
+   background-color: #336299;
+   text-decoration: none;
+}
+div.location {
+   clear: both;
+   margin-bottom: 0.5em;
+   padding-bottom: 0.5em;
+   padding-left: -16px;
+   padding-top: 3px;
+   font-size: 80%;   
 }
 
 /* convert */
@@ -226,17 +244,17 @@ a.contextheadentry {
    font-weight: normal;
 }
 a.contextheadentry:visited {
-   color: #0000ff;
+   color: #FFFFFF;
    background-color: inherit;
    text-decoration: inherit;
 }
 a.contextheadentry:hover {
-   color: #0000ff;
+   color: #FFFFFF;
    background-color: #eeeeff;
    text-decoration: underline;
 }
 td.contextheadentry {
-   color: #0000ff;
+   color: #FFFFFF;
    background-color: inherit;
    margin-left: 0.0em;
    margin-right: 0.0em;
@@ -254,13 +272,17 @@ a.contextheadarrow {
    padding-left: 0.3em;
    padding-right: 0.3em;
 }
+
 #contexttitle div {
    margin-top: -0.9em;
    margin-bottom: -0.5em;
 }
+#contexttitle a {
+   color: #FFFFFF;
+}
 
 #contextheadentry_next {
-   border-left: dotted 1px #000077;
+   border-left: dotted 1px #FFFFFF;
    text-align: right;
 }
 #contextheadarrow_next {
@@ -270,14 +292,14 @@ a.contextheadarrow {
    margin-top: -0.4em;
 }
 #contextheadarrow_up {
-   border-left: dotted 1px #000077;
+   border-left: dotted 1px #FFFFFF;
 }
 #contextheadentry_up {
    width: 20%;
 }
 #toplinks h1 {
    font-size: x-large;
-   padding: 0em 0em 0em 0em;
+   padding: 0.5em 0em 0em 0em;
    margin: 0.3em 1em 0.1em 1em;
 }
 
@@ -319,54 +341,68 @@ a.linkeddoc {
    list-style: none;
    padding: 0px 0px 0px 0em;
    border: none;
-   padding-left: 13em;
+   padding-left: 17em;
 }
 #indx li.idxl0 {
-   color: inherit;
-   background-color: #e7e7ff;
+   background-color: #EEF4F9;
 }
 #indx span.typename {
    display: inline-block;
    font-weight: bold;
-   margin-left: -13em;
+   margin-left: -17em;
    padding-right: 2em;
 }
 
 #indxShortX, #indxModules {
-   border: 3px solid gray;
-   padding: 8pt;
-   margin-left: 2em;
+   border: 1px solid #CCCCCC;
+   background-color: #F5F5E9;
+   margin: 4px 0;
+   color: #000000;
+   padding: 8px 2em;
 }
 #indxShortX h4, #indxModules h4 {
-   margin-top: 0em;
-   margin-bottom: 0.5em;
+   font-size: 1.2em;
+   line-height: 1.5em;
+   margin: 0;
 }
 #indxShortX a, #indxModules a {
-   margin-right: 0.25em;
-   margin-left: 0.25em;
+   font-weight: bold;
 }
 
 #searchform {
-   margin-left: -0.75em;
-   display: inline;
+   display: inline-block;
 }
+
+#searchform input {
+  display: inline-block;
+  border: 1px solid #336699;
+  vertical-align: middle;
+  width: 12em;
+  font-size: 0.9em;
+}
+
 #searchlink {
-	background-color: ButtonFace;
-	border-style: outset;
-	border-width: 1px;
-	padding: 1px 0.2em 1px 0.2em;
-	text-decoration: none;
-	color: ButtonText;
-	margin-left: 0.5em;
+  font-size: 0.8em;
+  vertical-align: middle;
+  background-color: ButtonFace;
+  border-style: outset;
+  border-width: 1px;
+  padding: 1px 8px 1px 8px;
+  text-decoration: none;
+  color: ButtonText;
+  margin: 0 0 0 0.1em;
 }
 
 /*** Class doc pages ***/
 div.classdescr {
-   text-align: left;
-   margin-left: 0.3em;
-   margin-bottom: 2em;
-   padding-left: 1em;
-   padding-right: 1em;
+   background: #FFFFF6 url(http://root.cern.ch/drupal/sites/all/themes/newsflash/images/info.png) no-repeat scroll 15px 30px;
+   border-bottom: 3px solid #FEC201;
+   border-top: 3px solid #FEC201;
+   padding: 10px 15px 10px 54px;
+}
+div.classdescr pre {
+   margin: 0;
+   padding: 0;
 }
 div.code {
    margin-bottom: 0.5em;
@@ -394,6 +430,7 @@ table.inhtree {
 #datamembers {
    margin-top: 4em;
    margin-left: 0em;
+   margin-bottom: 6em;
    color: inherit;
    background-color: White;
 }
@@ -431,7 +468,7 @@ div.access {
    border-left-color: #ff7777;
 }
 
-table.func /* but not table.data! */ {
+table.func, table.data /* but not table.data! */ {
    width: 100%;
 } 
 tr.func, tr.data {
@@ -454,6 +491,7 @@ td.funcret, td.datatype {
    padding: 0px 0.5em 0px 0.5em;
    margin: 0px 0px 0px 0px;
    white-space: nowrap;
+   width: 10%;
 }
 a.funcname {
    font-weight: bolder;
@@ -465,6 +503,7 @@ td.funcname {
    padding: 0px 0px 0px 2em;
    margin: 0px 0px 0px 0px;
    width: 100%;
+   width: 80%;
 }
 span.funcprop
 {
@@ -477,22 +516,23 @@ span.funcprop
 td.dataname {
    font-weight: bolder;
    vertical-align: top;
-   padding: 0px 0px 0px 0px;
-   margin: 0px 0px 0px 0px;
+   padding: 0px 0.5em 0px 0px;
+   min-width: 10em;
 }
 td.datadesc {
    padding: 0px 0px 0px 0.5em;
-   margin: 0px 0px 0px 0px;
+   border-left: 2px solid #FEC201;
    white-space: normal;
    color: inherit;
-   background-color: #eeeeff;
+   background-color: #FFFFF6;
+   width: 70%;
 }
 
 /* class charts */
 div.classcharts {
    border: solid 2px Black;
    display: table;
-   margin: 0em 2em 0em 2em;
+   margin: 0em 2em 4em 2em;
 }
 div.classchartswidth {
    width: 28em;
@@ -509,10 +549,9 @@ img.classcharts {
 div.funcdoc {
    width: 97%;
    margin-bottom: 3em;
-   margin-left: 0.3em;
+   border-left: 0.3em solid #eeeeff;
    padding: 0.1em 0.3em 0.3em 0.3em;
    color: inherit;
-   background-color: #eeeeff;
 }
 div.funccomm {
    border: solid 1px #cccccc;
@@ -642,8 +681,37 @@ span.string {
    color: Teal;
    background-color: inherit;
 }
+#codeAndLineNumbers {
+   margin-left: -32px;
+}
 pre.code {
-   font-weight: bolder;
-   margin-top: 0px;
-   margin-bottom: 0px;
+   margin: 5px 0px 0px 45px;
+   padding-left: 1.2em;
+   line-height: normal;
+   float: left;
+   height: 0;
+}
+div.linenums {
+   width: 0em;
+   display: block;
+}
+div.ln {
+   font-family: monospace;
+   line-height: normal;
+   width: 50px;
+   text-align: right;
+   color: #CE9201;
+   -moz-user-select: none;
+   -khtml-user-select: none;
+   user-select: none;
+   /*z-index: -10;*/
+   height: 100%;
+   border-right: 1px solid #aaaaaa;
+}
+span.ln {
+   display: inline-block;
+   font-size: 80%;
+   /*border-top: 1px dotted #aaaaaa;*/
+   margin: 0;
+   padding: 0 0.2em 0 0;
 }
