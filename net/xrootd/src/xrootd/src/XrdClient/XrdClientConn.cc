@@ -1417,6 +1417,7 @@ bool XrdClientConn::DoLogin()
     // If we run with root as effective user we need to temporary change
     // effective ID to User
     XrdOucString effUser = User;
+#ifndef WIN32
     if (!getuid()) {
       if (getenv("XrdClientEUSER")) effUser = getenv("XrdClientEUSER");
     }
@@ -1431,6 +1432,7 @@ bool XrdClientConn::DoLogin()
       Error("DoLogin", emsg << ". Exiting.");
       return false;
     }
+#endif
 
     // set the token with the value provided by a previous 
     // redirection (if any)
