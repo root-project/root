@@ -3605,8 +3605,8 @@ if test "x$enable_ssl" = "xyes" ; then
          # libcrypto, in the same dir
          #
          libcrypto="libcrypto"
-         check_library "$libcrypto" "$enable_shared" "$tmpglbslibdir" \
-                      /usr/lib /opt/lib /usr/local/lib $finkdir/lib
+         check_library "$libcrypto" "$enable_shared" "$tmpssllibdir" \
+                      $SSL $SSL/lib /usr/lib /opt/lib /usr/local/lib $finkdir/lib
          if test "x$found_lib" != "x" ; then
              ssllib="$ssllib $found_lib"
              ssllibdir="$found_dir"
