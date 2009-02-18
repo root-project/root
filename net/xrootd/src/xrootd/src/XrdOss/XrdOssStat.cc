@@ -70,7 +70,7 @@ int XrdOssSys::Stat(const char *path, struct stat *buff, int resonly)
        return XrdOssOK;
       }
    if (!IsRemote(path)) return -errno;
-   if (resonly) return -ENOMSG;
+   if (resonly || !MSSgwCmd) return -ENOMSG;
 
 // Generate remote path
 //

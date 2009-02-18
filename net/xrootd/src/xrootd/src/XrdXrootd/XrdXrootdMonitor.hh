@@ -30,7 +30,8 @@
 #define XROOTD_MON_FILE     2
 #define XROOTD_MON_IO       4
 #define XROOTD_MON_INFO     8
-#define XROOTD_MON_USER    16
+#define XROOTD_MON_STAGE   16
+#define XROOTD_MON_USER    32
 #define XROOTD_MON_PATH    (XROOTD_MON_IO   | XROOTD_MON_FILE)
 
 class XrdScheduler;
@@ -82,6 +83,7 @@ static XrdXrootdMonitor *altMon;
 static char              monIO;
 static char              monINFO;
 static char              monFILE;
+static char              monSTAGE;
 static char              monUSER;
 
                          XrdXrootdMonitor();

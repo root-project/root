@@ -177,6 +177,11 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
                }
       }
 
+// Initialize th Evr object if we are an actual server
+//
+   if (!(Options & isManager) 
+   && !evrObject.Init(&Eroute, Balancer)) NoGo = 1;
+
 // Now configure the storage system
 //
    if (!(XrdOfsOss = XrdOssGetSS(Eroute.logger(), ConfigFN, OssLib))) NoGo = 1;
@@ -199,11 +204,6 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
           fwdMV.Reset();    fwdRM.Reset();    fwdRMDIR.Reset();
           fwdTRUNC.Reset();
          }
-
-// Initialize th Evr object if we are an actual server
-//
-   if (!(Options & isManager) 
-   && !evrObject.Init(&Eroute, Balancer)) NoGo = 1;
 
 // If we need to send notifications, initialize the interface
 //

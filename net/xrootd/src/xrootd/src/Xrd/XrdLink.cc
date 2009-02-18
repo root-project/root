@@ -23,11 +23,11 @@ const char *XrdLinkCVSID = "$Id$";
 #ifdef __linux__
 #include <netinet/tcp.h>
 #if !defined(TCP_CORK)
-#undef HAS_SENDFILE
+#undef HAVE_SENDFILE
 #endif
 #endif
 
-#ifdef HAS_SENDFILE
+#ifdef HAVE_SENDFILE
 
 #ifndef __macos__
 #include <sys/sendfile.h>
@@ -87,7 +87,7 @@ extern XrdScheduler    XrdSched;
 extern XrdInet        *XrdNetTCP;
 extern XrdOucTrace     XrdTrace;
 
-#if defined(HAS_SENDFILE)
+#if defined(HAVE_SENDFILE)
        int             XrdLink::sfOK = 1;
 #else
        int             XrdLink::sfOK = 0;
@@ -320,7 +320,7 @@ int XrdLink::Close(int defer)
 //
    opMutex.Lock();
    if (defer)
-      {TRACE(DEBUG, "Closing FD only " <<ID <<" FD=" <<FD);
+      {TRACEI(DEBUG, "Closing FD only");
        if (FD > 1)
           {fd = FD; FD = -FD; csec = Instance; Instance = 0;
            if (!KeepFD)
@@ -339,7 +339,7 @@ int XrdLink::Close(int defer)
 //
    while(InUse > 1)
       {opMutex.UnLock();
-       TRACE(DEBUG, "Close " <<ID <<" defered, use count=" <<InUse);
+       TRACEI(DEBUG, "Close defered, use count=" <<InUse);
        Serialize();
        opMutex.Lock();
       }
@@ -584,7 +584,7 @@ int XrdLink::Recv(char *Buff, int Blen, int timeout)
             {if (retc == 0)
                 {tardyCnt++;
                  if (totlen  && (++stallCnt & 0xff) == 1)
-                    TRACE(DEBUG, ID << " read timed out");
+                    TRACEI(DEBUG, "read timed out");
                  return int(totlen);
                 }
              return (FD >= 0 ? XrdLog.Emsg("Link", -errno, "poll", ID) : -1);
@@ -617,9 +617,27 @@ int XrdLink::Recv(char *Buff, int Blen, int timeout)
 /*                               R e c v A l l                                */
 /******************************************************************************/
   
-int XrdLink::RecvAll(char *Buff, int Blen)
+int XrdLink::RecvAll(char *Buff, int Blen, int timeout)
 {
+   struct pollfd polltab = {FD, POLLIN|POLLRDNORM, 0};
    ssize_t rlen;
+   int     retc;
+
+// Check if timeout specified. Notice that the timeout is the max we will
+// for some data. We will wait forever for all the data. Yeah, it's weird.
+//
+   if (timeout >= 0)
+      {do {retc = poll(&polltab,1,timeout);} while(retc < 0 && errno == EINTR);
+       if (retc != 1)
+          {if (!retc) return -ETIMEDOUT;
+           XrdLog.Emsg("Link",errno,"poll",ID);
+           return -1;
+          }
+       if (!(polltab.revents & (POLLIN|POLLRDNORM)))
+          {XrdLog.Emsg("Link",XrdPoll::Poll2Text(polltab.revents),"polling",ID);
+           return -1;
+          }
+      }
 
 // Note that we will block until we receive all he bytes.
 //
@@ -630,9 +648,9 @@ int XrdLink::RecvAll(char *Buff, int Blen)
    if (LockReads) rdMutex.UnLock();
 
    if (int(rlen) == Blen) return Blen;
-   if (!rlen) {TRACE(DEBUG, "No RecvAll() data from " <<Lname <<" FD=" <<FD);}
-      else if (rlen > 0) XrdLog.Emsg("RecvAll","Premature end from", Lname);
-              else if (FD >= 0) XrdLog.Emsg("Link",errno,"recieve from",Lname);
+   if (!rlen) {TRACEI(DEBUG, "No RecvAll() data; errno=" <<errno);}
+      else if (rlen > 0) XrdLog.Emsg("RecvAll","Premature end from", ID);
+              else if (FD >= 0) XrdLog.Emsg("Link",errno,"recieve from",ID);
    return -1;
 }
 
@@ -720,7 +738,7 @@ int XrdLink::Send(const struct iovec *iov, int iocnt, int bytes)
 /******************************************************************************/
 int XrdLink::Send(const struct sfVec *sfP, int sfN)
 {
-#if !defined(HAS_SENDFILE)
+#if !defined(HAVE_SENDFILE)
    return -1;
 #else
 // Make sure we have valid vector count
@@ -947,7 +965,7 @@ void XrdLink::Serialize()
    if (InUse <= 1) opMutex.UnLock();
       else {doPost++;
             opMutex.UnLock();
-            TRACE(DEBUG, "Waiting for link serialization; use=" <<InUse);
+            TRACEI(DEBUG, "Waiting for link serialization; use=" <<InUse);
             IOSemaphore.Wait();
            }
 }
@@ -975,7 +993,7 @@ XrdProtocol *XrdLink::setProtocol(XrdProtocol *pp)
 void XrdLink::setRef(int use)
 {
    opMutex.Lock();
-   TRACE(DEBUG,"Setting link ref to " <<InUse <<'+' <<use <<" post=" <<doPost);
+   TRACEI(DEBUG,"Setting ref to " <<InUse <<'+' <<use <<" post=" <<doPost);
    InUse += use;
 
          if (!InUse)
@@ -985,7 +1003,7 @@ void XrdLink::setRef(int use)
     else if (InUse == 1 && doPost)
             {doPost--;
              IOSemaphore.Post();
-             TRACE(CONN, "setRef posted link " <<ID);
+             TRACEI(CONN, "setRef posted link");
              opMutex.UnLock();
             }
     else if (InUse < 0)

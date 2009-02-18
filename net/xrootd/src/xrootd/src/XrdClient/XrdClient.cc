@@ -69,7 +69,7 @@ XrdClient::XrdClient(const char *url) {
     if (!ConnectionManager)
 	Info(XrdClientDebug::kNODEBUG,
 	     "Create",
-	     "(C) 2004 SLAC INFN XrdClient $Revision: 1.128 $ - Xrootd version: " << XrdVSTRING);
+	     "(C) 2004 SLAC INFN XrdClient $Revision: 1.132 $ - Xrootd version: " << XrdVSTRING);
 
 #ifndef WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -104,6 +104,8 @@ XrdClient::~XrdClient()
    fOpenProgCnd->Lock();
 
    if (fOpenerTh) {
+      fOpenerTh->Cancel();
+      fOpenerTh->Join();
       delete fOpenerTh;
       fOpenerTh = 0;
    }
@@ -144,6 +146,7 @@ bool XrdClient::IsOpen_wait() {
     if (fOpenPars.inprogress) {
 	fOpenProgCnd->Wait();
 	if (fOpenerTh) {
+            fOpenerTh->Join();
 	    delete fOpenerTh;
 	    fOpenerTh = 0;
 	}
@@ -464,10 +467,9 @@ int XrdClient::Read(void *buf, long long offset, int len) {
 			 " offset=" << offset);
 
 		    // Are we using read ahead?
-		    // We read ahead only if the last byte we got is near (or over) to the last byte read
-		    // in advance. But not too much over.
+		    // We read ahead only if (offs+len) lies in an interval of fReadAheadLast not bigger than the readahead size
 		    if ( (fReadAheadLast - (offset+len) < fReadAheadSize) &&
-			 //(fReadAheadLast - (offset+len) > -10*rasize) &&
+			 (fReadAheadLast - (offset+len) > -fReadAheadSize) &&
 			 (fReadAheadSize > 0) ) {
 
 			kXR_int64 araoffset;
@@ -516,13 +518,13 @@ int XrdClient::Read(void *buf, long long offset, int len) {
 	
 		// Here we forget to have read in advance if the last byte taken is
 		// too much before the first read ahead byte
-		if ( fReadAheadLast - 2*fReadAheadSize > (offset+len) ) fReadAheadLast = offset+len-1;
+		// if ( fReadAheadLast - 2*fReadAheadSize > (offset+len) ) fReadAheadLast = offset+len-1;
 
 		// Are we using read ahead?
-		// We read ahead only if the last byte we got is near (or over) to the last byte read
+		// We read ahead only if (offs+len) lies in an interval of fReadAheadLast not bigger than the readahead size
 		// in advance. But not too much over.
 		if ( (fReadAheadLast - (offset+len) < fReadAheadSize) &&
-		     //(fReadAheadLast - (offset+len) > -10*rasize) &&
+		     (fReadAheadLast - (offset+len) > -fReadAheadSize) &&
 		     (fReadAheadSize > 0) ) {
 
 		    kXR_int64 araoffset;
@@ -531,12 +533,12 @@ int XrdClient::Read(void *buf, long long offset, int len) {
 		    // This is a HIT case. Async readahead will try to put some data
 		    // in advance into the cache. The higher the araoffset will be,
 		    // the best chances we have not to cause overhead
-                    if (!bytesgot && !blkstowait && !cacheholes.GetSize()) {
-		      araoffset = xrdmax(fReadAheadLast, offset);
-                      blkstowait++;
-                    }
-                    else
-                      araoffset = xrdmax(fReadAheadLast, offset + len);
+                    //if (!bytesgot && !blkstowait && !cacheholes.GetSize()) {
+		    //  araoffset = xrdmax(fReadAheadLast, offset);
+                    //  blkstowait++;
+                    //}
+                    //else
+		     araoffset = xrdmax(fReadAheadLast, offset + len);
 
 		    aralen = xrdmin(fReadAheadSize,
 				    offset + len + fReadAheadSize -
@@ -740,6 +742,10 @@ bool XrdClient::Write(const void *buf, long long offset, int len) {
       writeFileRequest.write.offset = offset;
       ret = fConnModule->SendGenCommand(&writeFileRequest, (void *)buf, 0, 0,
 					FALSE, (char *)"Write");
+
+      if (ret && fStatInfo.stated)
+         fStatInfo.size = xrdmax(fStatInfo.size, offset + len);
+
       return ret;
     }
 
@@ -747,6 +753,8 @@ bool XrdClient::Write(const void *buf, long long offset, int len) {
     // An unrecoverable error in an old request gives no sense to continue here.
     // Rather unfortunate but happens. One more weird metaphor of life?!?!?
     if (!fConnModule->DoWriteSoftCheckPoint()) return false;
+
+    fConnModule->RemoveDataFromCache(offset, offset+len+1, true);
 
     XrdClientVector<XrdClientMStream::ReadChunk> rl;
     XrdClientMStream::SplitReadRequest(fConnModule, offset, len, rl);
@@ -846,8 +854,8 @@ bool XrdClient::TryOpen(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
 	    if (!thrst) {
 		// The thread start seems OK. This open will go in parallel
 
-		if (fOpenerTh->Detach())
-		    Error("XrdClient", "Thread detach failed. Low system resources?");
+		//if (fOpenerTh->Detach())
+		//    Error("XrdClient", "Thread detach failed. Low system resources?");
 
 		return true;
 	    }

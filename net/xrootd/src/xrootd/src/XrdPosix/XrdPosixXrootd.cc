@@ -1307,6 +1307,27 @@ int XrdPosixXrootd::mapError(int rc)
 }
 
 /******************************************************************************/
+/*                           Q u e r y O p a q u e                            */
+/******************************************************************************/
+  
+long long XrdPosixXrootd::QueryOpaque(const char *path, char *value, int size)
+{
+  XrdPosixAdminNew admin(path);
+  kXR_int32 vsize = static_cast<kXR_int32>(size);
+
+  if (admin.isOK())
+     {XrdOucString str(path);
+      XrdClientUrlInfo url(str);
+      admin.Admin.GoBackToRedirector();
+      if (admin.Admin.Query(kXR_Qopaquf, (kXR_char *)url.File.c_str(), 
+                                         (kXR_char *)value, vsize))
+         return strlen((char *)value);
+      return admin.Fault();
+     }
+  return admin.Result();
+}
+
+/******************************************************************************/
 /*                              s e t D e b u g                               */
 /******************************************************************************/
 

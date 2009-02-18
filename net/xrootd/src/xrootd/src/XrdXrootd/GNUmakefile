@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.31 2008/09/07 04:40:55 abh Exp $
+#              $Id: GNUmakefile,v 1.32 2008/12/18 02:54:59 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -85,7 +85,7 @@ anything: $(TARGETS)
 
 $(TARGETS): $(OBJECTS) $(OBJDEPS)
 	@echo Creating executable $(TARGETS) 
-	$(ECHO)$(LD) $(LDOP) $(OBJECTS) $(LIBS) $(BINLIBS) -o $(TARGETS)
+	$(ECHO)$(LD) $(LDOP) $(OBJECTS) $(LIBS) $(BINLIBS) $(TYPELIBMT) -o $(TARGETS)
 
 $(OBJDIR)/XrdXrootdAdmin.o: XrdXrootdAdmin.hh      XrdXrootdAdmin.cc \
                             XrdXrootdTrace.hh      XrdXrootdProtocol.hh \

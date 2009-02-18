@@ -143,7 +143,7 @@ int XrdOssSys::Unlink(const char *path)
 
 // If local copy effectively deleted. delete the remote copy if need be
 //
-   if (remotefs && (!retc || retc == -ENOENT))
+   if (remotefs && (!retc || retc == -ENOENT) && MSSgwCmd)
       {if ((retc2 = MSS_Unlink(remote_path)) != -ENOENT) retc = retc2;
        DEBUG("rmt rc=" <<retc2 <<" path=" <<remote_path);
       }

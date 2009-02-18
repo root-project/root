@@ -180,6 +180,7 @@ char     *RemoteRoot;     // -> Path prefix for remote filename
 int       StageRealTime;  //    If 1, Invoke stage command on demand
 int       StageAsync;     //    If 1, return EINPROGRESS to the caller
 int       StageCreate;    //    If 1, use open path to create files
+int       StageFormat;    //    Format for default stagecmd
 char     *StageCmd;       // -> Staging command to use
 char     *StageMsg;       // -> Staging message to be passed
 XrdOucMsubs *StageSnd;    // -> Parsed Message
@@ -263,6 +264,7 @@ void               doScrub();
 int                Find(XrdOssStage_Req *req, void *carg);
 int                getCname(const char *path, struct stat *sbuff, char *cgbuff);
 int                GetFile(XrdOssStage_Req *req);
+int                getID(const char *, XrdOucEnv &, char *, int);
 time_t             HasFile(const char *fn, const char *sfx);
 void               List_Cache(const char *lname, XrdSysError &Eroute);
 int                ReCache(const char *UDir, const char *Qfile);

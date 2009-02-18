@@ -28,7 +28,11 @@ const char *XrdSecProtocolkrb5CVSID = "$Id$";
 
 extern "C" {
 #include "krb5.h"
+#ifdef HAVE_ET_COM_ERR_H
+#include "et/com_err.h"
+#else
 #include "com_err.h"
+#endif
 }
 
 #include "XrdNet/XrdNetDNS.hh"

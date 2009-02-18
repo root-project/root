@@ -150,7 +150,6 @@ XrdCmsNode *XrdCmsCluster::Add(XrdLink *lp, int port, int Status,
            nP->Link      = lp;
            nP->isOffline = 0;
            nP->isConn    = 1;
-           nP->PingPong  = 1;
            nP->Instance++;
            nP->setName(lp, port);  // Just in case it changed
            act = "Re-added ";
@@ -214,10 +213,9 @@ XrdCmsNode *XrdCmsCluster::Add(XrdLink *lp, int port, int Status,
 
 // Document login
 //
-   DEBUG(act <<nP->Ident <<" to cluster; ref=" <<Slot <<'.' <<nP->Instance
-         <<"; num=" <<NodeCnt <<"; min=" <<Config.SUPCount);
-   DEBUG(act <<nP->Ident <<" cluster " <<nP->myCNUM <<" ID=" <<nP->myCID
-         <<'[' <<nP->myNID <<']');
+   DEBUG(act <<nP->Ident <<" to cluster " <<nP->myCNUM <<" slot "
+         <<Slot <<'.' <<nP->Instance <<" (n=" <<NodeCnt <<" m="
+         <<Config.SUPCount <<") ID=" <<nP->myNID);
 
 // Compute new state of all nodes if we are a reporting manager.
 //
@@ -236,9 +234,10 @@ XrdCmsNode *XrdCmsCluster::Add(XrdLink *lp, int port, int Status,
 SMask_t XrdCmsCluster::Broadcast(SMask_t smask, const struct iovec *iod,
                                  int iovcnt, int iotot)
 {
+   EPNAME("Broadcast")
    int i;
    XrdCmsNode *nP;
-   SMask_t bmask;
+   SMask_t bmask, unQueried = 0;
 
 // Obtain a lock on the table and screen out peer nodes
 //
@@ -248,16 +247,19 @@ SMask_t XrdCmsCluster::Broadcast(SMask_t smask, const struct iovec *iod,
 // Run through the table looking for nodes to send messages to
 //
    for (i = 0; i <= STHi; i++)
-       {if ((nP = NodeTab[i]) && nP->isNode(bmask) && !nP->isOffline)
-           nP->Lock();
-           else continue;
-        STMutex.UnLock();
-        if (nP->Send(iod, iovcnt, iotot) >= 0) bmask &= ~nP->Mask();
-        nP->UnLock();
-        STMutex.Lock();
+       {if ((nP = NodeTab[i]) && nP->isNode(bmask))
+           {nP->Lock();
+            STMutex.UnLock();
+            if (nP->Send(iod, iovcnt, iotot) < 0) 
+               {unQueried |= nP->Mask();
+                DEBUG(nP->Ident <<" is unreachable");
+               }
+            nP->UnLock();
+            STMutex.Lock();
+           }
        }
    STMutex.UnLock();
-   return bmask;
+   return unQueried;
 }
 
 /******************************************************************************/
@@ -475,32 +477,18 @@ int XrdCmsCluster::Locate(XrdCmsSelect &Sel)
   
 void *XrdCmsCluster::MonPerf()
 {
-   CmsPingRequest   Ping  = {{0, kYR_ping,  0, 0}};
-   CmsUsageRequest  Usage = {{0, kYR_usage, 0, 0}};
-   CmsRRHdr *Req;
-   XrdCmsNode *nP;
-   int i, doping = 0;
+   CmsUsageRequest Usage = {{0, kYR_usage, 0, 0}};
+   struct iovec ioV[] = {{(char *)&Usage, sizeof(Usage)}};
+   int ioVnum = sizeof(ioV)/sizeof(struct iovec);
+   int ioVtot = sizeof(Usage);
+   SMask_t allNodes = ~static_cast<SMask_t>(0);
+   int uInterval = Config.AskPing*Config.AskPerf;
 
-// Sleep for the indicated amount of time, then maintain load on each server
+// Sleep for the indicated amount of time, then ask for load on each server
 //
-   while(Config.AskPing)
-        {XrdSysTimer::Snooze(Config.AskPing);
-         if (--doping < 0) doping = Config.AskPerf;
-         STMutex.Lock();
-         for (i = 0; i <= STHi; i++)
-             if ((nP = NodeTab[i]) && nP->isBound)
-                {nP->Lock();
-                 STMutex.UnLock();
-                 if (nP->PingPong <= 0) Remove("not responding", nP);
-                    else {Req = (doping || !Config.AskPerf)
-                              ? (CmsRRHdr *)&Ping.Hdr:(CmsRRHdr *)&Usage.Hdr;
-                          nP->Send((char *)Req, sizeof(CmsRRHdr));
-                         }
-                 nP->PingPong--;
-                 nP->UnLock();
-                 STMutex.Lock();
-                }
-         STMutex.UnLock();
+   while(uInterval)
+        {XrdSysTimer::Snooze(uInterval);
+         Broadcast(allNodes, ioV, ioVnum, ioVtot);
         }
    return (void *)0;
 }
@@ -569,21 +557,42 @@ void XrdCmsCluster::Remove(const char *reason, XrdCmsNode *theNode, int immed)
    struct theLocks
           {XrdSysMutex *myMutex;
            XrdCmsNode  *myNode;
+           char        *myIdent;
            int          myImmed;
+           int          myNID;
+           int          myInst;
 
                        theLocks(XrdSysMutex *mtx, XrdCmsNode *node, int immed)
-                               {myImmed = immed; myNode = node; myMutex = mtx;
-                                if (myImmed >= 0) myMutex->Lock();
+                               : myMutex(mtx), myNode(node), myImmed(immed)
+                               {myIdent = strdup(node->Ident);
+                                myNID = node->ID(myInst);
+                                if (myImmed >= 0)
+                                   {myNode->UnLock();
+                                    myMutex->Lock();
+                                    myNode->Lock();
+                                   }
                                }
                       ~theLocks()
                                {if (myImmed >= 0) myMutex->UnLock();
                                 if (myNode) myNode->UnLock();
+                                free(myIdent);
                                }
           } LockHandler(&STMutex, theNode, immed);
 
    int Inst, NodeID = theNode->ID(Inst);
 
-// Handle Locks Obtained a lock on the node table. Mark node as being offline
+// The LockHandler makes sure that the proper locks are obtained in a deadlock
+// free order. However, this may require that the node lock be released and
+// then re-aquired. We check if we are still dealing with same node at entry.
+// If not, issue message and high-tail it out.
+//
+   if (LockHandler.myNID != NodeID || LockHandler.myInst != Inst)
+      {Say.Emsg("Manager", LockHandler.myIdent, "removal aborted.");
+       DEBUG(LockHandler.myIdent <<" node " <<NodeID <<'.' <<Inst <<" != "
+             << LockHandler.myNID <<'.' <<LockHandler.myInst <<" at entry.");
+      }
+
+// Mark node as being offline
 //
    theNode->isOffline = 1;
 
@@ -598,6 +607,7 @@ void XrdCmsCluster::Remove(const char *reason, XrdCmsNode *theNode, int immed)
 //
    if (theNode->isConn)
       {theNode->Disc(reason, 0);
+       theNode->isGone = 1;
        return;
       }
 

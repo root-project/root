@@ -62,6 +62,7 @@ XrdCmsPrepare::XrdCmsPrepare() : XrdJob("File cache scrubber"),
  NumFiles = 0;
  lastemsg = time(0);
  Relay    = new XrdNetMsg(&Say);
+ isFrm = 0;
 }
 
 /******************************************************************************/
@@ -70,7 +71,7 @@ XrdCmsPrepare::XrdCmsPrepare() : XrdJob("File cache scrubber"),
   
 int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
 {
-   char *pdata[XrdOucMsubs::maxElem + 2], prtybuff[8], *pP = prtybuff;
+   char ubuff[256], *pdata[XrdOucMsubs::maxElem+2], prtybuff[8], *pP=prtybuff;
    int rc, pdlen[XrdOucMsubs::maxElem + 2];
 
 // Restart the scheduler if need be
@@ -89,7 +90,9 @@ int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
 // Write out the header line
 //
    if (!prepMsg)
-      {pdata[0] = (char *)"+ ";               pdlen[0] = 2;
+      {if (isFrm)
+      {pdlen[0] = getID(pargs.Ident,ubuff,sizeof(ubuff)); pdata[0] = ubuff;}
+else  {pdata[0] = (char *)"+ ";               pdlen[0] = 2;}
        pdata[1] = pargs.reqid;                pdlen[1] = strlen(pargs.reqid);
        pdata[2] = (char *)" ";                pdlen[2] = 1;
        pdata[3] = pargs.notify;               pdlen[3] = strlen(pargs.notify);
@@ -107,8 +110,8 @@ int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
        int Oflag = (index(pargs.mode, (int)'w') ? O_RDWR : 0);
        mode_t Prty = atoi(pargs.prty);
        XrdOucEnv Env(pargs.opaque);
-       XrdOucMsubsInfo Info(pargs.reqid, &Env,  N2N,   pargs.path,
-                            pargs.notify, Prty, Oflag, pargs.mode);
+       XrdOucMsubsInfo Info(pargs.Ident, &Env,  N2N,   pargs.path,
+                            pargs.notify, Prty, Oflag, pargs.mode, pargs.reqid);
        int k = prepMsg->Subs(Info, pdata, pdlen);
        pdata[k]   = (char *)"\n"; pdlen[k++] = 1;
        pdata[k]   = 0;            pdlen[k]   = 0;
@@ -293,6 +296,7 @@ int XrdCmsPrepare::setParms(char *ifpgm, char *ifmsg)
 {if (ifpgm)
     {if (prepif) free(prepif);
      prepif = strdup(ifpgm);
+     isFrm = !strcmp(ifpgm, "frm_pstga");
     }
  if (ifmsg)
     {if (prepMsg) delete prepMsg;
@@ -306,6 +310,29 @@ int XrdCmsPrepare::setParms(char *ifpgm, char *ifmsg)
 /******************************************************************************/
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
+/******************************************************************************/
+/*                                 g e t I D                                  */
+/******************************************************************************/
+  
+int XrdCmsPrepare::getID(const char *Tid, char *buff, int bsz)
+{
+   char *bP;
+   int n;
+
+// The buffer always starts with a '+'
+//
+   *buff = '+'; bP = buff+1; bsz -= 3;
+
+// Get the trace id
+//
+   if (Tid && (n = strlen(Tid)) <= bsz) {strcpy(bP, Tid); bP += n;}
+
+// Insert space
+//
+   *bP++ = ' '; *bP = '\0';
+   return bP - buff;
+}
+
 /******************************************************************************/
 /*                              i s O n l i n e                               */
 /******************************************************************************/

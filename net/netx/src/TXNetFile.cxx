@@ -1181,6 +1181,11 @@ void TXNetFile::SetEnv()
                                         DFLT_MULTISTREAMCNT);
    EnvPutInt(NAME_MULTISTREAMCNT, parStreamsCnt);
 
+   // Change the TCP window size (0 means 'scaling' on some platforms)
+   Int_t tcpWindowSize = gEnv->GetValue("XNet.DfltTcpWindowSize",
+                                        DFLT_DFLTTCPWINDOWSIZE);
+   EnvPutInt(NAME_DFLTTCPWINDOWSIZE, tcpWindowSize);
+
    // Whether to activate automatic rootd backward-compatibility
    // (We override XrdClient default)
    fgRootdBC = gEnv->GetValue("XNet.RootdFallback", 1);

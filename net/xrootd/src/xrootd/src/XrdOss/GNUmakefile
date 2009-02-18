@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.33 2008/09/07 04:34:43 abh Exp $
+#              $Id: GNUmakefile,v 1.34 2009/01/12 08:45:42 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -170,7 +170,7 @@ $(OBJDIR)/XrdOssStage.o: XrdOssApi.hh   XrdOssStage.hh  XrdOssError.hh \
                          XrdOuca2x.hh   XrdOucHash.hh   XrdOucHash.icc \
                          XrdSysPthread.hh XrdOucMsubs.hh XrdOucName2Name.hh \
                          XrdOucDLlist.hh  XrdOucProg.hh  XrdOucReqID.hh \
-                         XrdOssStage.cc
+                         XrdSysPlatform.hh XrdOssStage.cc
 	@echo Compiling XrdOssStage.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssStage.o XrdOssStage.cc
 

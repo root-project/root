@@ -275,9 +275,12 @@ void XrdOfsEvr::eventStage()
                 } else eMsg = altMsg;
       else eMsg = 0;
 
-// At this point if the file was successfully staged, notify the balancer
+// At this point if we have a balancer, tell it what happened
 //
-   if (rc == 0 && Balancer) Balancer->Added(tp);
+   if (Balancer)
+      {if (rc == 0) Balancer->Added(tp);
+          else      Balancer->Removed(tp);
+      }
 
 // Either people are waiting for this event or it is preposted event.
 //

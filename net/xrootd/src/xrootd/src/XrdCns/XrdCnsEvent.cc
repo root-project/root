@@ -126,8 +126,7 @@ void XrdCnsEvent::Queue()
 // Log this request
 //
    dqMutex.Lock();
-   pwrite(logFD, &Event, EventLen, logOffset);
-   fsync(logFD);
+   if (pwrite(logFD,&Event,EventLen,logOffset) < 0 || fsync(logFD) < 0) return;
    EventOff  = logOffset;
    logOffset = (logOffset + sizeof(Event)) % logOffmax;
 
@@ -154,8 +153,7 @@ void XrdCnsEvent::Recycle()
 // Clear the slot entry by writing a zero there
 //
    dqMutex.Lock();
-   pwrite(logFD, &Zero, sizeof(Zero), EventOff);
-   fsync(logFD);
+   if (pwrite(logFD, &Zero, sizeof(Zero), EventOff) >= 0) fsync(logFD);
    dqMutex.UnLock();
 
 // Put this object on the free queue

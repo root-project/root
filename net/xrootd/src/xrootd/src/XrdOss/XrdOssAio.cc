@@ -237,7 +237,7 @@ int XrdOssFile::Write(XrdSfsAio *aiop)
 
 int   XrdOssSys::AioAllOk = 0;
   
-#if defined(_POSIX_ASYNCHRONOUS_IO) && !defined(HAS_SIGWTI)
+#if defined(_POSIX_ASYNCHRONOUS_IO) && !defined(HAVE_SIGWTI)
 // The folowing is for sigwaitinfo() emulation
 //
 siginfo_t *XrdOssAioInfoR;
@@ -263,7 +263,7 @@ int XrdOssSys::AioInit()
    pthread_t tid;
    int retc;
 
-#ifndef HAS_SIGWTI
+#ifndef HAVE_SIGWTI
 // For those platforms that do not have sigwaitinfo(), we provide the
 // appropriate emulation using a signal handler. We actually provide for
 // two handlers since we separate reads from writes. To emulate synchronous
@@ -342,7 +342,7 @@ void *XrdOssAioWait(void *mySigarg)
    XrdSfsAio *aiop;
    int rc, numsig;
    ssize_t retval;
-#ifndef HAS_SIGWTI
+#ifndef HAVE_SIGWTI
    extern int sigwaitinfo(const sigset_t *set, siginfo_t *info);
    extern siginfo_t *XrdOssAioInfoR;
    extern siginfo_t *XrdOssAioInfoW;
@@ -404,7 +404,7 @@ void *XrdOssAioWait(void *mySigarg)
    return (void *)0;
 }
  
-#if defined( _POSIX_ASYNCHRONOUS_IO) && !defined(HAS_SIGWTI)
+#if defined( _POSIX_ASYNCHRONOUS_IO) && !defined(HAVE_SIGWTI)
 /******************************************************************************/
 /*                           s i g w a i t i n f o                            */
 /******************************************************************************/

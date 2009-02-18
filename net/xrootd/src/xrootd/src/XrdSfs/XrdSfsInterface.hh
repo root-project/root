@@ -33,8 +33,9 @@
 #define SFS_O_RESET   0x04000000         // Reset any cached information
 
 // The following flag may be set in the access mode arg for open() & mkdir()
+// Note that on some systems mode_t is 16-bits so we use a careful value!
 //
-#define SFS_O_MKPTH   0x08000000         // Make directory path if missing
+#define SFS_O_MKPTH   0x00004000         // Make directory path if missing
 
 // The following options are here to provide a uniform clustering interface.
 // They may be passed through open/locate/stat, as applicable.

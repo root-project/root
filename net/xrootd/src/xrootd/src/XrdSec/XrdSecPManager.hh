@@ -38,9 +38,9 @@ XrdSecProtocol *Get(const char     *hname,
                     const char     *pname,
                     XrdOucErrInfo  *erp);
 
-XrdSecProtocol *Get (const char            *hname,
-                     const struct sockaddr &netaddr,
-                     char                  *sect);
+XrdSecProtocol *Get (const char             *hname,
+                     const struct sockaddr  &netaddr,
+                           XrdSecParameters &secparm);
 
 int             Load(XrdOucErrInfo *eMsg,    // In
                      const char     pmode,   // In 'c' | 's'

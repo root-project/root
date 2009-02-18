@@ -70,7 +70,7 @@ extern "C"
 {
 XrdSecProtocol *XrdSecGetProtocol(const char             *hostname,
                                   const struct sockaddr  &netaddr,
-                                  const XrdSecParameters &parms,
+                                        XrdSecParameters &parms,
                                         XrdOucErrInfo    *einfo)
 {
    static int DebugON = ((getenv("XrdSecDEBUG") &&
@@ -79,30 +79,20 @@ XrdSecProtocol *XrdSecGetProtocol(const char             *hostname,
    static XrdSecPManager PManager(DebugON);
    const char *noperr = "XrdSec: No authentication protocols are available.";
 
-   char sectoken[4096];
-   int i;
    XrdSecProtocol *protp;
 
 // Perform any required debugging
 //
    DEBUG("protocol request for host " <<hostname <<" token='"
-         <<(parms.size ? parms.buffer : "") <<"'");
+         <<(parms.size > 0 ? parms.buffer : "") <<"'");
 
 // Check if the server wants no security.
 //
    if (!parms.size || !parms.buffer[0]) return (XrdSecProtocol *)&ProtNone;
 
-// Copy the string into a local buffer so that we can simplify some comparisons
-// and isolate ourselves from server protocol errors.
-//
-   if (parms.size < (int)sizeof(sectoken)) i = parms.size;
-      else i = sizeof(sectoken)-1;
-   strncpy(sectoken, parms.buffer, i);
-   sectoken[i] = '\0';
-
 // Find a supported protocol.
 //
-   if (!(protp = PManager.Get(hostname, netaddr, sectoken)))
+   if (!(protp = PManager.Get(hostname, netaddr, parms)))
       {if (einfo) einfo->setErrInfo(ENOPROTOOPT, noperr);
          else cerr <<noperr <<endl;
       }

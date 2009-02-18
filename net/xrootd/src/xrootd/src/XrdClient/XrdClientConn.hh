@@ -112,9 +112,9 @@ public:
     }
 
     void                       RemoveDataFromCache(long long begin_offs,
-                                                   long long end_offs) {
+                                                   long long end_offs, bool remove_overlapped = false) {
         if (fMainReadCache)
-            fMainReadCache->RemoveItems(begin_offs, end_offs);
+	  fMainReadCache->RemoveItems(begin_offs, end_offs, remove_overlapped);
     }
 
     void                       RemovePlaceholdersFromCache() {

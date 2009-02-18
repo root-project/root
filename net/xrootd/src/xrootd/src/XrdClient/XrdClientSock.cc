@@ -128,7 +128,7 @@ int XrdClientSock::RecvRaw(void* buffer, int length, int substreamid,
                         1000 // 1 second as a step
                         );
 
-         if ((pollRet < 0) && (errno != EINTR))
+         if ((pollRet < 0) && (errno != EINTR) && (errno != EAGAIN) )
             return TXSOCK_ERR;
 
       } while (--timeleft && pollRet <= 0 && !fRDInterrupt);

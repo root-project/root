@@ -395,6 +395,49 @@ int XrdNetSocket::setWindow(int xfd, int Windowsz, XrdSysError *eDest)
 }
 
 /******************************************************************************/
+/*                            s o c k e t A d d r                             */
+/******************************************************************************/
+  
+const char *XrdNetSocket::socketAddr(XrdSysError *Say, const char *dest,
+                                     struct sockaddr **sockAP, int &sockAL)
+{
+   struct sockaddr_in InetAddr;
+   struct sockaddr_un UnixAddr;
+   struct sockaddr *SockAddr;
+   char *errtxt = 0;
+   int port = 0, SockSize;
+
+   if (*dest == '/')
+      {if (strlen(dest) >= sizeof(UnixAddr.sun_path))
+          {if (Say) Say->Emsg("Net", ENAMETOOLONG, "generate addr from", dest);
+           return "socket address path too long";
+          }
+       UnixAddr.sun_family = AF_UNIX;
+       strcpy(UnixAddr.sun_path, dest);
+       SockAddr = (struct sockaddr *)&UnixAddr;
+       SockSize = sizeof(UnixAddr);
+      } else {
+       if (*dest && *dest != ':')
+                     XrdNetDNS::Host2Dest(dest,(sockaddr &)InetAddr,&errtxt);
+          else      {XrdNetDNS::getHostAddr(dest,(sockaddr &)InetAddr,&errtxt);
+                     if (*dest && *dest == ':') port = atoi(dest+1);
+                     XrdNetDNS::setPort((sockaddr &)InetAddr, port);
+                    }
+       if (errtxt)
+          {if (Say) Say->Emsg("Net","Unable to obtain address for",dest,errtxt);
+           return errtxt;
+          }
+       SockAddr = (struct sockaddr *)&InetAddr;
+       SockSize = sizeof(InetAddr);
+      }
+
+    sockAL = SockSize;
+   *sockAP = (struct sockaddr *)malloc(SockSize);
+   memcpy(*sockAP, SockAddr, SockSize);
+   return 0;
+}
+
+/******************************************************************************/
 /*                            s o c k e t P a t h                             */
 /******************************************************************************/
 

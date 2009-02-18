@@ -138,9 +138,10 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
       }
 
 // Now rename the data file in the remote system if the local rename "worked".
+// Do not do this if we really should not use the MSS (but unserialize!).
 //
    if (remotefs)
-      {if (remotefs && (!retc || retc == -ENOENT))
+      {if (remotefs && (!retc || retc == -ENOENT) && MSSgwCmd)
           {if ( (retc2 = MSS_Rename(remote_path_Old, remote_path_New))
               != -ENOENT) retc = retc2;
            DEBUG("rmt rc=" <<retc2 <<" op=" <<remote_path_Old <<" np=" <<remote_path_New);

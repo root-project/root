@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.30 2008/10/12 01:59:35 abh Exp $
+#              $Id: GNUmakefile.in,v 1.31 2009/01/14 03:34:57 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -14,7 +14,7 @@
 XRDSEC  = XrdSys XrdOuc XrdNet @xrdsec@
 
 SERVER  = XrdSfs XrdAcc XrdOdc Xrd \
-          XrdCms XrdOlb XrdOss XrdOfs XrdBwm XrdRootd XrdXrootd
+          XrdCms XrdOlb XrdOss XrdOfs XrdBwm XrdRootd XrdXrootd XrdFrm
 
 XRDCLIENT = XrdClient
 
@@ -121,8 +121,13 @@ XrdCrypto: FORCE
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdNet: FORCE
-	@echo $(XMSG) ouc $(XDBG) component...
+	@echo $(XMSG) net $(XDBG) component...
 	@cd src/XrdNet;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
+XrdFrm: FORCE
+	@echo $(XMSG) frm $(XDBG) component...
+	@cd src/XrdFrm;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdOdc: FORCE

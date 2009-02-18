@@ -1,4 +1,4 @@
-#              $Id: GNUmake.rules.sunCCamd,v 1.5 2008/11/21 04:22:43 abh Exp $
+#              $Id: GNUmake.rules.sunCCamd,v 1.6 2008/12/18 02:52:55 abh Exp $
 
 #------------------------------------------------------------------------------#
 #              R u l e s   f o r   g e n e r i c   s u n C C                   #
@@ -17,6 +17,7 @@ TYPELDSO   = -G -xtarget=opteron -xarch=amd64
 TYPESHLIB  = so
 
 TYPELIBS   = -L/usr/lib/amd64 -L/lib/amd64 \
-             -lmtmalloc -lposix4 -lsocket -lnsl $(PTHREAD) -ldl
+             -lposix4 -lsocket -lnsl $(PTHREAD) -ldl
+TYPELIBMT  = -lmtmalloc
 TYPELIBSF  = -lsendfile
 TYPELIBSM  = -lsunmath

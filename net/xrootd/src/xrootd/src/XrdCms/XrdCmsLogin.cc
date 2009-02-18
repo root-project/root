@@ -87,7 +87,7 @@ int XrdCmsLogin::Emsg(XrdLink *Link, const char *msg, int ecode)
 /* Public:                         L o g i n                                  */
 /******************************************************************************/
   
-int XrdCmsLogin::Login(XrdLink *Link, CmsLoginData &Data)
+int XrdCmsLogin::Login(XrdLink *Link, CmsLoginData &Data, int timeout)
 {
    CmsRRHdr LIHdr;
    char WorkBuff[4096], *hList, *wP = WorkBuff;
@@ -101,7 +101,7 @@ int XrdCmsLogin::Login(XrdLink *Link, CmsLoginData &Data)
 // version 1 as the login message was likely rejected. We can switch
 // to the old protocol but only if this is a redirector login.
 //
-   if (Link->RecvAll((char *)&LIHdr, sizeof(LIHdr)) < 0)
+   if (Link->RecvAll((char *)&LIHdr, sizeof(LIHdr), timeout) < 0)
       {if (Data.Mode & CmsLoginData::kYR_director) return kYR_ENETUNREACH;
           else return Emsg(Link, "login rejected");
       }
@@ -111,7 +111,7 @@ int XrdCmsLogin::Login(XrdLink *Link, CmsLoginData &Data)
    if ((dataLen = static_cast<int>(ntohs(LIHdr.datalen))))
       {if (dataLen > (int)sizeof(WorkBuff)) 
           return Emsg(Link, "login reply too long");
-       if (Link->RecvAll(WorkBuff, dataLen) < 0)
+       if (Link->RecvAll(WorkBuff, dataLen, timeout) < 0)
           return Emsg(Link, "login receive error");
       }
 

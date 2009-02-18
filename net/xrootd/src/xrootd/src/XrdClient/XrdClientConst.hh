@@ -110,7 +110,7 @@
 #define NAME_SOCKS4HOST            (char *)"Socks4Server"
 #define NAME_SOCKS4PORT            (char *)"Socks4Port"
 
-#define DFLT_DFLTTCPWINDOWSIZE     (256*1024)
+#define DFLT_DFLTTCPWINDOWSIZE     (0) // Enable window scaling by default
 #define NAME_DFLTTCPWINDOWSIZE     (char *)"DfltTcpWindowSize"
 
 // A connection towards a data server timeouts quickly

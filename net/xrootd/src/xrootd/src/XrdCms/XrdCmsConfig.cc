@@ -142,8 +142,6 @@ Where:
 /******************************************************************************/
 /*            E x t e r n a l   T h r e a d   I n t e r f a c e s             */
 /******************************************************************************/
-  
-void *XrdCmsStartMonPing(void *carg) { return Manager.MonPing(); }
 
 void *XrdCmsStartMonPerf(void *carg) { return Cluster.MonPerf(); }
 
@@ -349,7 +347,7 @@ int XrdCmsConfig::Configure2()
    if (!NoGo && !(mySID = setupSid()))
       {Say.Emsg("cmsd", "Unable to generate system ID; too many managers.");
        NoGo = 1;
-      } else {DEBUG("Cluster/Node ID = " <<mySID);}
+      } else {DEBUG("Global System Identification: " <<mySID);}
 
 // If we need a name library, load it now
 //
@@ -506,13 +504,22 @@ void XrdCmsConfig::DoIt()
           }
       }
 
-// Start the server subsystem.
+// Start the server subsystem. We check here to make sure we will not be
+// tying to connect to ourselves. This is possible if the manager and meta-
+// manager were defined to be the same and we are a manager. We would have
+// liked to screen this out earlier but port discovery prevents it.
 //
    if (isManager || isServer || isPeer)
       {tp = ManList;
        while(tp)
-            {pP = XrdCmsProtocol::Alloc(myRole, tp->text, tp->val);
-             Sched->Schedule((XrdJob *)pP);
+            {if (strcmp(tp->text, myName) || tp->val != PortTCP)
+                {pP = XrdCmsProtocol::Alloc(myRole, tp->text, tp->val);
+                 Sched->Schedule((XrdJob *)pP);
+                } else {
+                 char buff[512];
+                 sprintf(buff, "%s:%d", tp->text, tp->val);
+                 Say.Emsg("Config", "Circular connection to", buff, "ignored.");
+                }
              tp = tp->next;
             }
       }
@@ -871,7 +878,8 @@ int XrdCmsConfig::PidFile()
 {
     static const char *envPIDFN = "XRDCMSPIDFN=";
     int rc, xfd;
-    char buff[1024], *Space;
+    const char *clID;
+    char buff[1024];
     char pidFN[1200], *ppath=XrdOucUtils::genPath(pidPath,
                               (strcmp("anon",myInsName)?myInsName:0));
     const char *xop = 0;
@@ -882,7 +890,8 @@ int XrdCmsConfig::PidFile()
         return 1;
        }
 
-    if ((Space = index(mySID, ' '))) *Space = '\0';
+    if ((clID = index(mySID, ' '))) clID++;
+       else clID = mySID;
 
          if (isManager && isServer)
             snprintf(pidFN, sizeof(pidFN), "%s/cmsd.super.pid", ppath);
@@ -901,7 +910,7 @@ int XrdCmsConfig::PidFile()
                             write(xfd,(void *)AdminPath,strlen(AdminPath)) < 0
                 )          )
              ||             write(xfd,(void *)"\n&cn=", 5)  < 0
-             ||             write(xfd,(void *)mySID,    strlen(mySID))     < 0
+             ||             write(xfd,(void *)clID,     strlen(clID))      < 0
                 ) xop = "write";
              close(xfd);
             }
@@ -911,7 +920,6 @@ int XrdCmsConfig::PidFile()
               sprintf(benv,"%s=%s", envPIDFN, pidFN); putenv(benv);
              }
 
-     if (Space) *Space = ' ';
      return xop != 0;
 }
 
@@ -974,7 +982,6 @@ int XrdCmsConfig::setupManager()
 int XrdCmsConfig::setupServer()
 {
    XrdOucTList *tp;
-   pthread_t tid;
    int n = 0, rc;
 
 // Make sure we have enough info to be a server
@@ -996,14 +1003,6 @@ int XrdCmsConfig::setupServer()
 //
    if (MaxDelay < 0) MaxDelay = AskPerf*AskPing+30;
    if (DiskWT   < 0) DiskWT   = AskPerf*AskPing+30;
-
-// Create manager monitoring thread
-//
-   if ((rc = XrdSysThread::Run(&tid, XrdCmsStartMonPing, (void *)0,
-                               0, "Ping monitor")))
-      {Say.Emsg("Config", rc, "create ping monitor thread");
-       return 1;
-      }
 
 // Setup notification path
 //
@@ -1068,13 +1067,19 @@ char *XrdCmsConfig::setupSid()
    static const char *envCNAME = "XRDCMSCLUSTERID";
    XrdOucTList *tpF, *tp = (NanList ? NanList : ManList);
    const char *insName = (myInsName ? myInsName : "anon");
-   char sidbuff[8192], *sidend = sidbuff+sizeof(sidbuff)-32, *sp = sidbuff;
+   char sidbuff[8192], *sidend = sidbuff+sizeof(sidbuff)-32, *sp, *cP;
    char *fMan, *fp, *xp, sfx; 
    int n;
 
+// The system ID starts with the semi-unique name of this node
+//
+   if (isManager && isServer) sfx = 'u';
+      else sfx = (isManager ? 'm' : 's');
+   sp = sidbuff + sprintf(sidbuff, "%s-%c ", insName, sfx); cP = sp;
+
 // Develop a unique cluster name for this cluster
 //
-   if (!tp) {strcpy(sidbuff, myInstance); sp += strlen(myInstance);}
+   if (!tp) {strcpy(sp, myInstance); sp += strlen(myInstance);}
       else {tpF = tp;
             fMan = tp->text + strlen(tp->text) - 1;
             while((tp = tp->next))
@@ -1097,15 +1102,11 @@ char *XrdCmsConfig::setupSid()
 // Set envar to hold the cluster name
 //
    *sp = '\0';
-   char *benv = (char *) malloc(strlen(envCNAME) + strlen(sidbuff) + 2);
-   sprintf(benv,"%s=%s", envCNAME, sidbuff); putenv(benv);
+   char *benv = (char *) malloc(strlen(envCNAME) + strlen(cP) + 2);
+   sprintf(benv,"%s=%s", envCNAME, cP); putenv(benv);
 
-// Add semi-unique name for this node in the cluster
+// Return the system ID
 //
-   if (sp+strlen(myInstance) >= sidend) return (char *)0;
-   if (isManager && isServer) sfx = 'u';
-      else sfx = (isManager ? 'm' : 's');
-   sprintf(sp, " %s-%c", insName, sfx);
    return  strdup(sidbuff);
 }
 
@@ -1726,6 +1727,7 @@ int XrdCmsConfig::xmang(XrdSysError *eDest, XrdOucStream &CFile)
     char **val1, **val2;
     };
 
+    static const int sockALen = sizeof(struct sockaddr);
     struct sockaddr InetAddr[8];
     XrdOucTList *tp = 0, *tpp = 0, *tpnew;
     char *val, *bval = 0, *mval = 0;
@@ -1805,12 +1807,14 @@ int XrdCmsConfig::xmang(XrdSysError *eDest, XrdOucStream &CFile)
     if (isManager && !isServer)
        {if ((xMeta && isMeta) || (!xMeta && !isMeta))
            for (j = 0; j < i; j++)
-                if (!memcmp(&InetAddr[j], &myAddr, sizeof(struct sockaddr)))
+                if (!memcmp(&InetAddr[j], &myAddr, sockALen))
                    {PortTCP = port; break;}
         if (isMeta) return (xMeta ? 0: CFile.noEcho());
         if (!xMeta) Prt = 0;
        }
 
+// Now construct the list of [meta] managers
+//
     do {if (multi)
            {free(mval);
             char mvBuff[1024];

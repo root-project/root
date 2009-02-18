@@ -13,8 +13,8 @@ int sysconf(int what)
 
 #if 0 // defined(_MSC_VER) && (_MSC_VER < 1400)
 //
-// Though working fine with MSVC++ 7.1, this definition gives problems
-// with MSVC++ 8; we comment it out and wait for better times
+// Though working fine with MSVC++7.1, this definition gives problems
+// with MSVC++9.0; we comment it out and wait for better times
 int fcntl(int fd, int cmd, long arg)
 {
    u_long argp = 1;
@@ -30,11 +30,32 @@ int fcntl(int, int, long)
 }
 #endif
 
-void gethostbyname_r(const char *inetName, struct hostent *hent, char *buff, 
-                int buffsize, struct hostent **hp, int *rc)
+void gethostbyname_r(const char *inetName, struct hostent *hent, char *buff,
+                     int buffsize, struct hostent **hp, int *rc)
 {
    struct hostent *hentry;
    hentry = gethostbyname(inetName);
+   if (hentry == 0) {
+      int err = WSAGetLastError();
+      switch (err) {
+         case WSAHOST_NOT_FOUND:
+            *rc = 1; //HOST_NOT_FOUND
+            break;
+         case WSATRY_AGAIN:
+            *rc = 2; //TRY_AGAIN
+            break;
+         case WSANO_RECOVERY:
+            *rc = 3; //NO_RECOVERY
+            break;
+         case WSANO_DATA:
+            *rc = 4; //NO_DATA;
+            break;
+         default:
+            *rc = 1;
+            break;
+      }
+      return;
+   }
    hent->h_addr_list = hentry->h_addr_list;
    hent->h_addrtype  = hentry->h_addrtype;
    hent->h_aliases   = hentry->h_aliases;
@@ -47,6 +68,27 @@ void gethostbyaddr_r(char *addr, size_t len, int type, struct hostent *hent, cha
 {
    struct hostent *hentry;
    hentry = gethostbyaddr(addr, (int)len, type);
+   if (hentry == 0) {
+      int err = WSAGetLastError();
+      switch (err) {
+         case WSAHOST_NOT_FOUND:
+            *rc = 1; //HOST_NOT_FOUND
+            break;
+         case WSATRY_AGAIN:
+            *rc = 2; //TRY_AGAIN
+            break;
+         case WSANO_RECOVERY:
+            *rc = 3; //NO_RECOVERY
+            break;
+         case WSANO_DATA:
+            *rc = 4; //NO_DATA;
+            break;
+         default:
+            *rc = 1;
+            break;
+      }
+      return;
+   }
    hent->h_addr_list = hentry->h_addr_list;
    hent->h_addrtype  = hentry->h_addrtype;
    hent->h_aliases   = hentry->h_aliases;
@@ -68,19 +110,19 @@ static const unsigned __int64 epoch = 116444736000000000L;
 
 int gettimeofday(struct timeval * tp, struct timezone * tzp)
 {
-	FILETIME	file_time;
-	SYSTEMTIME	system_time;
-	ULARGE_INTEGER ularge;
+   FILETIME       file_time;
+   SYSTEMTIME     system_time;
+   ULARGE_INTEGER ularge;
 
-	GetSystemTime(&system_time);
-	SystemTimeToFileTime(&system_time, &file_time);
-	ularge.LowPart = file_time.dwLowDateTime;
-	ularge.HighPart = file_time.dwHighDateTime;
+   GetSystemTime(&system_time);
+   SystemTimeToFileTime(&system_time, &file_time);
+   ularge.LowPart = file_time.dwLowDateTime;
+   ularge.HighPart = file_time.dwHighDateTime;
 
-	tp->tv_sec = (long) ((ularge.QuadPart - epoch) / 10000000L);
-	tp->tv_usec = (long) (system_time.wMilliseconds * 1000);
+   tp->tv_sec = (long) ((ularge.QuadPart - epoch) / 10000000L);
+   tp->tv_usec = (long) (system_time.wMilliseconds * 1000);
 
-	return 0;
+   return 0;
 }
 
 void *dlopen(const char *libPath, int opt)
@@ -101,9 +143,9 @@ void *dlsym(void *libHandle, const char *pname)
 char *dlerror()
 {
    LPVOID lpMsgBuf;
-   FormatMessage( 
-      FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-      FORMAT_MESSAGE_FROM_SYSTEM | 
+   FormatMessage(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER |
+      FORMAT_MESSAGE_FROM_SYSTEM |
       FORMAT_MESSAGE_IGNORE_INSERTS,
       NULL, GetLastError(),
       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
@@ -288,7 +330,7 @@ inet_ntop_v6 (const u_char *src, char *dst, size_t size)
 
       /* Is this address an encapsulated IPv4?
        */
-      if (i == 6 && best.base == 0 && (best.len == 6 || 
+      if (i == 6 && best.base == 0 && (best.len == 6 ||
          (best.len == 5 && words[5] == 0xffff))) {
          if (!inet_ntop_v4(src+12, tp, sizeof(tmp) - (tp - tmp))) {
             errno = ENOSPC;
@@ -418,7 +460,7 @@ int writev(int fd, const struct iovec iov[], int nvecs)
 
 char *index(const char *str, int c)
 {
-   return strchr((char *)str, c);   
+   return strchr((char *)str, c);
 }
 
 char *getlogin()
@@ -428,7 +470,7 @@ char *getlogin()
    if (GetUserName(user_name, &length))
       return user_name;
    return NULL;
-} 
+}
 
 char *cuserid(char * s)
 {
@@ -436,7 +478,7 @@ char *cuserid(char * s)
    if (s)
       return strcpy(s, name ? name : "");
    return name;
-} 
+}
 
 int posix_memalign(void **memptr, size_t alignment, size_t size)
 {

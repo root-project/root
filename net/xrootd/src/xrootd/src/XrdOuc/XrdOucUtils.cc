@@ -182,7 +182,8 @@ void XrdOucUtils::makeHome(XrdSysError &eDest, const char *inst)
        return;
       }
 
-   chdir(buff);
+   if (chdir(buff) < 0)
+      eDest.Emsg("Config", errno, "chdir to home directory", buff);
 }
 
 /******************************************************************************/
@@ -223,19 +224,20 @@ char *XrdOucUtils::subLogfn(XrdSysError &eDest, const char *inst, char *logfn)
    char buff[2048], *sp;
    int rc;
 
-   if (!inst || !(sp = rindex(logfn, '/')) || (sp == logfn)) return logfn;
+   if (!inst || !*inst) return logfn;
+   if (!(sp = rindex(logfn, '/'))) strcpy(buff, "./");
+      else {*sp = '\0'; strcpy(buff, logfn); strcat(buff, "/");}
 
-   *sp = '\0';
-   strcpy(buff, logfn); 
-   strcat(buff, "/");
-   if (inst && *inst) {strcat(buff, inst); strcat(buff, "/");}
+   strcat(buff, inst); strcat(buff, "/");
 
    if ((rc = XrdOucUtils::makePath(buff, lfm)))
       {eDest.Emsg("Config", rc, "create log file path", buff);
        return 0;
       }
 
-   *sp = '/'; strcat(buff, sp+1);
+   if (sp) {*sp = '/'; strcat(buff, sp+1);}
+      else strcat(buff, logfn);
+
    free(logfn);
    return strdup(buff);
 }

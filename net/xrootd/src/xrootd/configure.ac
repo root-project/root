@@ -12,8 +12,8 @@
 ## Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: configure.ac,v 1.41 2008/11/19 17:10:58 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: configure.ac,v 1.45 2009/02/17 12:54:08 ganis Exp $
+## Checked in by $Author: ganis $
 #######################################################################
 
 # Note: All macros with the prefix ACX_ are custom macros. Their usage
@@ -685,7 +685,7 @@ AM_CONDITIONAL(ENABLE_DOC, test x"$activate_doc" = xyes -o x"$activate_doc" = xd
 # show up at compile time (well... We do not need to catch everything....)
 AC_CHECK_HEADER([iostream],
                 [],[AC_MSG_WARN([header <iostream> not found. Using old STL header style <iostream.h>])
-                    AC_DEFINE(HAS_OLD_HDRS)]
+                    AC_DEFINE(HAVE_OLD_HDRS)]
                )
 
 #  commented out the following code which implements the header based on a configure switch:
@@ -697,7 +697,7 @@ AC_CHECK_HEADER([iostream],
 #             )
 #ACX_COLLECT_OPTION(oldhdrs,$enable_oldhdrs)
 #if test x"$enable_oldhdrs" = xyes; then
-#   AC_DEFINE(HAS_OLD_HDRS)
+#   AC_DEFINE(HAVE_OLD_HDRS)
 #fi
 
 #################################################################
@@ -754,7 +754,7 @@ AC_CHECK_LIB([rt],[aio_fsync],
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h limits.h malloc.h memory.h netdb.h netinet/in.h shadow.h stdlib.h string.h strings.h sys/file.h sys/mount.h sys/param.h sys/socket.h sys/statfs.h sys/statvfs.h sys/time.h sys/vfs.h unistd.h utime.h])
+AC_CHECK_HEADERS([et/com_err.h arpa/inet.h fcntl.h inttypes.h limits.h malloc.h memory.h netdb.h netinet/in.h shadow.h stdlib.h string.h strings.h sys/file.h sys/mount.h sys/param.h sys/socket.h sys/statfs.h sys/statvfs.h sys/time.h sys/vfs.h unistd.h utime.h])
 
 #################################################################
 # Checks for typedefs, structures, and compiler characteristics.
@@ -793,26 +793,28 @@ AM_PROG_CC_C_O
 #AC_FUNC_VPRINTF
 #AC_CHECK_FUNCS([bzero dup2 endgrent ftruncate getcwd gethostbyaddr gethostbyname gethostname getpagesize getpass getspnam gettimeofday inet_ntoa localtime_r memchr memmove memset mkdir munmap pathconf putenv rmdir socket strcasecmp strchr strcspn strdup strerror strncasecmp strspn strstr strtol utime])
 
-AC_CHECK_FUNC([getnameinfo],[AC_DEFINE(HAS_NAMEINFO)],
+AC_CHECK_FUNC([getnameinfo],[AC_DEFINE(HAVE_NAMEINFO)],
               [AC_CHECK_LIB([socket],[getnameinfo],
                  [
-                 AC_DEFINE(HAS_NAMEINFO)
+                 AC_DEFINE(HAVE_NAMEINFO)
                  AC_SUBST(LIBSOCKET,[-lsocket])
                  ])
               ])
 
-AC_CHECK_FUNC([getprotobyname_r],[AC_DEFINE(HAS_PROTOR)],
+AC_CHECK_FUNC([getprotobyname_r],[AC_DEFINE(HAVE_PROTOR)],
               [AC_CHECK_LIB([socket],[getprotobyname_r],
                   [
-                  AC_DEFINE(HAS_PROTOR)
+                  AC_DEFINE(HAVE_PROTOR)
                   AC_SUBST(LIBSOCKET,[-lsocket])
                   ])
               ])
 
-AC_CHECK_FUNC([strlcpy],[AC_DEFINE(HAS_STRLCPY)])
-AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAS_SENDFILE)])
+AC_CHECK_FUNC([strlcpy],[AC_DEFINE(HAVE_STRLCPY)])
+AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAVE_SENDFILE)])
 
-AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAS_SENDFILE)])
+AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAVE_SENDFILE)])
+
+AC_CHECK_FUNCS([fstatat])
 
 #   note: needed for solaris
 AC_CHECK_LIB([rt],[sem_post],
@@ -825,10 +827,10 @@ AC_CHECK_LIB([nsl],[gethostbyname],
              [AC_SUBST(LIBNSL,[-lnsl])]
             )
 
-AC_CHECK_FUNC(sigwaitinfo,[AC_DEFINE(HAS_SIGWTI)],
+AC_CHECK_FUNC(sigwaitinfo,[AC_DEFINE(HAVE_SIGWTI)],
                 [AC_CHECK_LIB([rt],[sigwaitinfo],
                    [
-                   AC_DEFINE(HAS_SIGWTI)
+                   AC_DEFINE(HAVE_SIGWTI)
                    AC_SUBST(LIBRT,[-lrt])
                    ])
                 ])
@@ -837,7 +839,7 @@ AC_CHECK_FUNC(sigwaitinfo,[AC_DEFINE(HAS_SIGWTI)],
 case "$target_os" in
    linux*)
       AC_CHECK_FUNCS(setresuid,
-                     AC_DEFINE(HAS_SETRESUID)
+                     AC_DEFINE(HAVE_SETRESUID)
                     )
       ;;
 esac
@@ -972,12 +974,12 @@ AC_OUTPUT(Makefile
           src/XrdCms/Makefile
           src/XrdRootd/Makefile
           src/XrdXrootd/Makefile
+          src/XrdFrm/Makefile
           src/XrdClient/Makefile
           src/XrdPosix/Makefile
           src/XrdPss/Makefile
           src/XrdMon/Makefile
           src/XrdCns/Makefile
-          src/XrdCS2/Makefile
           src/XrdTokenAuthzOfs/Makefile
           test/testconfig.sh
           xrootd.spec)

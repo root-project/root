@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.16 2008/11/01 21:34:05 abh Exp $
+#              $Id: GNUmakefile,v 1.17 2008/12/18 02:53:35 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -134,7 +134,7 @@ anything: $(TARGETS)
 
 $(BINARY): $(OBJSRVR) $(OBJBOTH) $(LIBDEPS)
 	@echo Creating executable $(BINARY) 
-	$(ECHO)$(LD) $(LDOP) $(OBJSRVR) $(OBJBOTH) $(BINLIBS) $(LIBS) -o $(BINARY)
+	$(ECHO)$(LD) $(LDOP) $(OBJSRVR) $(OBJBOTH) $(BINLIBS) $(LIBS) $(TYPELIBMT) -o $(BINARY)
 
 
 $(LIBRARY): $(OBJCLNT) $(OBJBOTH)

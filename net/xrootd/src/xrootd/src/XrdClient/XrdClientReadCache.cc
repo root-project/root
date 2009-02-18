@@ -543,14 +543,17 @@ void XrdClientReadCache::UnPinCacheBlk(long long begin_offs, long long end_offs)
 
 
 //________________________________________________________________________
-void XrdClientReadCache::RemoveItems(long long begin_offs, long long end_offs)
+void XrdClientReadCache::RemoveItems(long long begin_offs, long long end_offs, bool remove_overlapped)
 {
     // To remove all the items contained in the given interval
+    // if remove_overlapping, then remove also the ones just overlapping the given interval
 
     int it;
     XrdSysMutexHelper mtx(fMutex);
 
     it = FindInsertionApprox(begin_offs) - 1;
+
+    // To spot the overlapped this is potentially not perfect
     for (; it >= 0; it--)
         if (fItems[it]->EndOffset() < begin_offs) break;
     if (it < 0) it = 0;
@@ -560,17 +563,34 @@ void XrdClientReadCache::RemoveItems(long long begin_offs, long long end_offs)
     while (it < fItems.GetSize()) {
 	if (fItems[it]) {
 
+
+	  if (!remove_overlapped) {
 	    if (fItems[it]->BeginOffset() > end_offs) break;
 
 	    if (!fItems[it]->Pinned && fItems[it]->ContainedInInterval(begin_offs, end_offs)) {
 
-		if (!fItems[it]->IsPlaceholder())
-		    fTotalByteCount -= fItems[it]->Size();
+	      if (!fItems[it]->IsPlaceholder())
+		fTotalByteCount -= fItems[it]->Size();
 	    
-		delete fItems[it];
-		fItems.Erase(it);
+	      delete fItems[it];
+	      fItems.Erase(it);
 	    }
 	    else it++;
+	  }
+	  else {
+	    // Remove a data chunk just if it overlaps
+	    if (fItems[it]->BeginOffset() > end_offs) break;
+	    if (!fItems[it]->Pinned && !fItems[it]->IsPlaceholder() &&
+		fItems[it]->IntersectInterval(begin_offs, end_offs)) {
+
+		fTotalByteCount -= fItems[it]->Size();
+	    
+	      delete fItems[it];
+	      fItems.Erase(it);
+	    }
+	    else it++;
+
+	  }
 
 	}
 	else it++;

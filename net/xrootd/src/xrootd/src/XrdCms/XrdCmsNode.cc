@@ -92,7 +92,6 @@ XrdCmsNode::XrdCmsNode(XrdLink *lnkp, int port,
     isKnown  =  0;
     isPeer   =  0;
     isProxy  =  0;
-    PingPong =  2;
     myCost   =  0;
     myLoad   =  0;
     myMass   =  0;
@@ -114,9 +113,9 @@ XrdCmsNode::XrdCmsNode(XrdLink *lnkp, int port,
     myNlen   =  0;
     Ident    =  0;
     Port     =  0;
-    myCID    = strdup(nid ? nid : "?");
-    if (!(myNID = index(myCID, ' '))) myNID = myCID;
-       else {*myNID = '\0'; myNID++;}
+    myNID    = strdup(nid ? nid : "?");
+    if ((myCID = index(myNID, ' '))) myCID++;
+       else myCID = myNID;
     myLevel  = lvl;
     ConfigID =  0;
 
@@ -141,7 +140,7 @@ XrdCmsNode::~XrdCmsNode()
 // Delete other appendages
 //
    if (Ident) free(Ident);
-   if (myCID) free(myCID);
+   if (myNID) free(myNID);
 }
 
 /******************************************************************************/
@@ -489,8 +488,8 @@ const char *XrdCmsNode::do_Locate(XrdCmsRRData &Arg)
 
 // Grab the refresh option (the only one we support)
 //
-   if (Arg.Opts & CmsLocateRequest::kYR_refresh)
-       Sel.Opts  = XrdCmsSelect::Refresh; *toP++='s';
+   if (Arg.Opts & CmsLocateRequest::kYR_refresh) 
+      {Sel.Opts  = XrdCmsSelect::Refresh; *toP++='s';}
    if (Arg.Opts & CmsLocateRequest::kYR_asap)
       {Sel.Opts |= XrdCmsSelect::Asap;    *toP++='i'; Sel.InfoP = &reqInfo;}
       else                                            Sel.InfoP = 0;
@@ -774,12 +773,6 @@ const char *XrdCmsNode::do_Ping(XrdCmsRRData &Arg)
 // Respond: pong
 //
    Link->Send((char *)&pongIt, sizeof(pongIt));
-
-// Record the fact that we got a ping
-//
-   Lock();
-   PingPong = 2;
-   UnLock();
    return 0;
 }
   
@@ -794,11 +787,6 @@ const char *XrdCmsNode::do_Pong(XrdCmsRRData &Arg)
 // Process: pong
 // Reponds: n/a
 
-// Simply indicate a pong has arrived.
-//
-   Lock();
-   PingPong = 2;
-   UnLock();
    return 0;
 }
   
@@ -1019,11 +1007,7 @@ const char *XrdCmsNode::do_Select(XrdCmsRRData &Arg)
          if (Arg.Opts & CmsSelectRequest::kYR_create)  
            {Sel.Opts |= XrdCmsSelect::Write|XrdCmsSelect::NewFile; *toP++='c';}
         }
-
-// Do some debugging
-//
    *toP = '\0';
-   DEBUGR(theopts <<' ' <<Arg.Path);
 
 // Check if an avoid node present. If so, this is ineligible for fast redirect.
 //
@@ -1031,6 +1015,7 @@ const char *XrdCmsNode::do_Select(XrdCmsRRData &Arg)
    if ((Avoid = Arg.Avoid))
       {unsigned int IPaddr;
        char *Comma;
+       DEBUGR(theopts <<' ' <<Arg.Path <<" avoiding " <<Avoid);
        Sel.InfoP = 0;
        do {if ((Comma = index(Avoid,','))) *Comma = '\0';
            if (*Avoid == '+') Sel.nmask |= Cluster.getMask(Avoid+1);
@@ -1038,7 +1023,7 @@ const char *XrdCmsNode::do_Select(XrdCmsRRData &Arg)
                               Sel.nmask |= Cluster.getMask(IPaddr);
            Avoid = Comma+1;
           } while(Comma && *Avoid);
-      }
+      } else DEBUGR(theopts <<' ' <<Arg.Path);
 
 // Perform selection
 //

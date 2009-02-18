@@ -1,0 +1,397 @@
+#!/usr/bin/env perl
+
+# $Id: frm_xfr.hpss,v 1.2 2009/01/16 02:50:53 abh Exp $
+
+# (C) 2009 by the Board of Trustees of the Leland Stanford, Jr., University
+#                          All Rights Reserved
+# Produced by Andrew Hanushevsky for Stanford University under contract
+#            DE-AC02-76-SFO0515 with the Deprtment of Energy
+
+# This command stages in a file from a remote site. The syntax is:
+
+# frm_xfrHPSS [options] <usr@host>:<sfn> <tfn> | <sfn> <usr@host>:<tfn>
+
+# options:
+
+# [-d] [-f] [-k <keytab>] [-m] [-n] [-p <mode>] [-P <port>] [-r] [-t <tries>]
+
+# [-x <pftpcmd>] [-z]
+
+# -d turn on debugging.
+
+# -k is the location of the keytab which should contain a single password
+#    to be used when logging in <usr> (default is /var/adm/xrootd/pftp/keyfile).
+
+# -f force file retrieval even if the file exists (i.e., replace).
+#    This is the default for zero length files.
+
+# -m exit with non-zero status if the file exists and has a non-zero length.
+
+# -n do not redirect standard error when invoking the copy function
+
+# -P The MSS port number to use (default is 2021).
+
+# -p set the protection mode of the file. Specify 1 to 4 octal digits, the
+#    letter 'r' for 0440, or the letter 'w' for 640.
+
+# -t number of times to retry a failing copy that is retriable (default is 2).
+
+# -x The pftp command to use (default is /opt/xrootd/utils/pftp_client).
+
+# -z do not reset the process group id.
+
+# <user@host> indicates that the file is in the Mass Storage System. The <user>
+#             is used as the login name and <host> is the location of the MSS.
+#             Only one of <srcfn> or <trgfn> may have this designation but
+#             one must have it.
+
+# Upon success, a zero status code is returned. Failure causes a message to
+# be issued to stderr and a non-zero exit status to be returned.
+
+use IPC::Open2;
+
+$isMPS = substr(($0 =~ m|([^/]*)$|)[0],0,4) eq 'mps_' ;
+$Config{isMPS} = $isMPS;
+$SSD = ($isMPS ? 'mps' : 'ooss');
+
+# Global variables:
+#
+$ER_SFX    = '.fail';        # Suffix for fail file when error occurrs
+$OKFile    = 1;              # If file already present, all is good.
+$Replace   = undef;          # Replace existing file, if any
+$Mode      = undef;
+
+$Debug = 0; $ErrLog = ''; 
+$ErrFile = '';     # Absolute name of where error data resides
+$LockFile= '';     # The lock file handle
+$xfrtime = 0;      # Time to transfer the file
+$newPGRP = 1;      # Set new process group
+$DMode   = 0775;   # Directory create mode
+$MaxTries= 2;      # Number of tries.
+$doGet   = 1;      # We assume we will be doing gets
+
+# Transfer specific items (all can be over-ridden via command line)
+#
+$XfrCmd  = '/opt/xrootd/utils/pftp_client';
+$XfrArgs = '-n -v';
+$XfrOut  = '2>&1'; # The redirection of stderr to stdout
+$XfrHost = '';     # MSS host name
+$XfrPort = '2021'; # MSS port number
+$XfrUser = '';     # MSS user name
+$XfrPswd = '';     # MSS user password
+$XfrKey  = '/var/adm/xrootd/pftp/keyfile';
+$XfrGet  = 'open %xfrhost %xfrport;user %xfruser %xfrpswd;binary;' .
+           'setpblocksize 2097152;pget %xfrsfn %xfrtfn;quit;';
+
+$XfrSess = '';    # The transfer session
+$XfrRC   = 0;     # The final return code
+
+# Get the options
+#
+  while (substr($ARGV[0], 0, 1) eq '-') {
+     $op = shift(@ARGV);
+        if ($op eq '-d') {$Debug    = 1;}
+     elsif ($op eq '-k') {$XfrKey =  &GetVal('key file');}
+     elsif ($op eq '-f') {$Replace  = 1;}
+     elsif ($op eq '-m') {$OKFile  =  0;}
+     elsif ($op eq '-n') {$XfrOut = ''}
+     elsif ($op eq '-P') {$XfrPort =  &GetVal('port');
+                          &Emsg("Invalid port '$XfrPort'.") if !isNum($XfrPort);
+                         }
+     elsif ($op eq '-p') {$Mode =  &GetVal('mode');
+                             if ($Mode eq 'r') {$Mode = oct('0440');}
+                          elsif ($Mode eq 'w') {$Mode = oct('0640');}
+                          else {&Emsg("Invalid mode '$Mode'.")
+                                     if !IsOct($Mode) || $Mode > 7777;
+                                $Mode = oct($Mode);
+                                $Mode = undef if $Mode == 0;
+                               }
+                         }
+     elsif ($op eq '-t') {$MaxTries =  &GetVal('tries');
+                          &Emsg("Invalid tries '$MaxTries'.") 
+                               if !isNum($MaxTries) || $MaxTries < 1;
+                         }
+     elsif ($op eq '-x') {$XfrCmd = &GetVal('transfer command');}
+     elsif ($op eq '-z') {$newPGRP = 0;}
+     else {&Emsg("Invalid option '$op'.")}
+     }
+
+# Get the source and target filenames
+#
+  &Emsg('Source file not specified.') if (!($src_fn = $ARGV[0]));
+  &Emsg('Target file not specified.') if (!($trg_fn = $ARGV[1]));
+  &Emsg("Extraneous parameter, $ARGV[2].") if ($ARGV[2]);
+
+# Remove double slashes
+#
+  while ($src_fn =~ s|//|/|g) {}
+  while ($trg_fn =~ s|//|/|g) {}
+
+# See if the source is a remote location
+#
+   ($mss_uhs, $src_fn) = split(':', $src_fn, 2);
+   if (!$src_fn) {$src_fn = $mss_uhs, $mss_uhs = '';}
+      else {$uhLoc = 'source'; $doGet = 1;}
+   ($mss_uht, $trg_fn) = split(':', $trg_fn, 2);
+   if (!$trg_fn) {$trg_fn = $mss_uht, $mss_uht = '';}
+      else {$uhLoc = 'target'; $doGet = 0;}
+
+# Make sure we have something but not too much of it
+#
+   &Emsg("Source and target files may not be both remote files!")
+        if ($mss_uhs ne '' && $mss_uht ne '');
+   &Emsg("Source and target files may not be both local files!")
+        if ($mss_uhs eq '' && $mss_uht eq '');
+
+# Extract out the user and host
+#
+  $mss_uh = ($mss_uhs ? $mss_uhs : $mss_uht);
+  ($XfrUser, $XfrHost) = split('@', $mss_uh);
+  &Emsg("User missing in $uh file specification.") if $XfrUser eq '';
+  &Emsg("Host missing in $uh file specification.") if $XfrHost eq '';
+
+# At the mement we do not support puts. When we do, the remainder would be
+# in a separate subroutine.
+#
+  &Emsg("Put mode is not supported!") if !$doGet;
+
+# Check if the file already exists in the cache. If it doesn't create the
+# directory path to the file.
+#
+  @Svec = stat($trg_fn);
+  if ($Svec[7])
+     {if (!$Replace)
+         {utime(time(), $Svec[9], $trg_fn);
+          &CleanUp(&Emsg("File $trg_fn already exists.", $OKFile));
+         } else {truncate($trg_fn, 0);}
+     } else {($Tdir, $Tfn) = &XDirFn($trg_fn); &MakePath($Tdir);}
+
+# At this point we need to bring the file into this cache. Issue the
+# appropriate command to do this.
+#
+  $ErrFile  = &mush($trg_fn).$ER_SFX;
+  unlink($ErrFile);
+  $resp=Get_File($src_fn, $trg_fn);
+  if ($resp) {
+      my($rc) = ($resp =~ /cannot be opened - HPSS Error: -2/) ? 2 : 4;
+      &Emsg("Unable to transfer file '$src_fn' to '$trg_fn'; $resp.",0,$rc);
+  }
+
+# Set the access mode bits if need be
+#
+  &Emsg("Unable to set mode for '$trg_fn'; $!.", 1)
+       if (defined($Mode) && !chmod($Mode, $trg_fn));
+
+# All done.
+#
+  &CleanUp(0);
+
+sub CleanUp {my($rc) = @_;
+  if ($rc && $ErrLog && $ErrFile && open(ERFD, ">>$ErrFile") )
+     {$XfrSess =~ s/\;/\n/g;
+      print(ERFD $XfrSess,$ErrLog);
+      close(ERFD);
+     }
+  exit($rc);
+}
+
+#******************************************************************************
+#*                              G e t _ F i l e                               *
+#******************************************************************************
+ 
+sub Get_File {my($src, $trg, $cfn) = @_;
+    my($cmd, $resp, $GetTries);
+
+    # Establish a signal handler and create a process group
+    #
+    $SIG{TERM} = 'THandler';
+    setpgrp() if $newPGRP;
+
+    # Construct the command stream
+    #
+    $cmd = $XfrGet;
+    $cmd =~ s/%xfrhost/$XfrHost/;
+    $cmd =~ s/%xfrport/$XfrPort/;
+    $cmd =~ s/%xfruser/$XfrUser/;
+    $cmd =~ s/%xfrsfn/$src/;
+    $cmd =~ s/%xfrtfn/$trg/;
+    $XfrSess = $cmd;
+    &GetPswd($XfrKey);
+    $cmd =~ s/%xfrpswd/$XfrPswd/;
+
+    # Execute the command to get the file (as many times as wanted/needed)
+    #
+    $GetTries = $MaxTries;
+    while($GetTries--) {
+        $resp = &Transfer($cmd, 0);
+
+        if (!$XfrRC) {
+            return '';
+           }
+        if ($resp =~ /Login failed./) {
+           &Emsg("Login failed; retrying. . . .", 1);
+           $GetTries++; sleep 180; next; 	# wait/retry forever as nothing else works
+           }
+        if ($resp =~ /connect: Connection timed out/) {
+           &Emsg("Connection timed out; retrying. . . .", 1);
+           $GetTries++; sleep 180; next; 	# wait/retry forever as nothing else works
+           }
+        if ($resp =~ /connect: Connection refused/) {
+           &Emsg("Connection refused; retrying. . . .", 1);
+           $GetTries++; sleep 180; next; 	# wait/retry forever as nothing else works
+           }
+        # similar error condition to "could not load thread state"
+        if ($resp =~ /cannot be opened - HPSS Error: -50/) {
+           &Emsg("Thread state not loaded; retrying. . . .", 1);
+           sleep 120 if ($GetTries); next; 	# wait/retry
+           }
+        # disk is full
+        if ($resp =~ /NetToFile:file write failure\(5\)/) {
+           $GetTries = 0; # no more retries
+           last;          # exit retry loop
+           }
+        $ErrLog .= "xfr response -------->\n".$resp."<-------- xfr response\n"
+            if !$GetTries;
+        $resp = 'retrieval failed for unknown reasons.'
+               if !($resp = &LastLine($resp));
+       }
+    return $resp;
+}
+  
+#******************************************************************************
+#*                              T r a n s f e r                               *
+#******************************************************************************
+ 
+sub Transfer {my($Cmds, $isWrite) = @_;
+              my($i, $pid, @Resp, $aOK1, $aOK2, $fsz, $xfr);
+              local(*Reader, *Writer);
+
+# execute the command feeding it the input
+#
+  &SayDebug("Executing '$XfrCmd $XfrArgs'");
+  &Emsg("Unable to exec '$XfrCmd'; $!\n")
+    if !($pid = open2(\*Reader, \*Writer, "$XfrCmd $XfrArgs $XfrOut"));
+  $Cmds =~ s/\;/\n/g;
+  print Writer $Cmds;
+  close(Writer);
+
+# Get the command output and clean-up the command
+#
+  @Resp = <Reader>;
+  waitpid($pid,0);
+  $XfrRC = $?;
+
+# Verify that the transfer completed
+#
+  while($XfrRC == 0)
+     {$aOK1 = 0;
+      for $i (0 .. $#Resp)
+          {if ($Resp[$i] =~ m/^150 Transfer starting.*/) {$aOK1 = $i+1; last;} }
+      if (!$aOK1) 
+         {push(@Resp, "!!! '150 Transfer starting' msg not found.\n");
+          $XfrRC = 8;
+          last;
+         }
+
+      $aOK2 = 0;
+      for $i ($aOK1 .. $#Resp)
+          {if (($fsz)=$Resp[$i] =~ m/226 Transfer Complete.\(moved = (\d+)\)/)
+              {$aOK2 = $i+1; last;} }
+      if (!$aOK2)
+         {push(@Resp, "!!! '226 Transfer Complete' msg not found.\n");
+          $XfrRC = 8;
+          last;
+         }
+
+      # Make sure all the bytes were sent/received
+      #
+      if ($isWrite)
+         {($xfr) = $Resp[$aOK2] =~ m/(\d+) bytes sent.+/;}
+         else {($xfr) = $Resp[$aOK2] =~ m/(\d+) bytes received.+/;}
+      if ($fsz != $xfr)
+         {pushd(@Resp, "!!! Transfer bytes do not match ($fsz != $xfr).");
+          $XfrRC = 8;
+         }
+      last;
+     }
+
+# All done
+#
+  return join('', @Resp);
+}
+
+#******************************************************************************
+#*                             u t i l i t i e s                              *
+#******************************************************************************
+  
+sub XDirFn {my($fn) = @_; my($i, $dir);
+    if ( ($i = rindex($fn, '/')) < 0) {return ('./', $fn)}
+       else {$dir = substr($fn, 0, $i+1); $fn = substr($fn, $i+1);}
+    return ( (substr($dir, 0, 1) eq '/' ? $dir : './'.$dir), $fn);
+    }
+
+sub MakePath {my($path) = @_; my(@dirs, $mkpath, $dname);
+    @dirs = split('/', $path);
+    $mkpath = shift(@dirs);  # start with either "" or "."
+    while (($dname = shift(@dirs)) ne "") {
+          $mkpath .= "/$dname";
+          if (!mkdir($mkpath, $DMode) && $! != 17)
+             {&Emsg("cannot create '$dname' in '$path'; $!", 1); return;}
+             else {chmod($DMode, $mkpath)}
+          }
+    }
+
+sub mush {my($fn) = @_; my($path, $fname);
+          return $fn if !$Config{hidden};
+          return '.' if $fn eq '';
+          ($path, $fname) = $fn =~ m:^(.*/)(.*):g;
+          return '.'.$fn if $path eq '';
+          return $path.'.'.$fname;
+}
+
+sub SayDebug {my($msg) = @_;
+    print STDERR $SSD.'_Stage: ', $msg, "\n" if $Debug;
+}
+
+sub LastLine {my($resp) = @_;
+    my(@rr, $i);
+    @rr = split("\n", $resp);
+    $resp = '';
+    for ($i = $#rr; $i >= 0 && !$resp; $i--) {$resp = $rr[$i] if $rr[$i];}
+    return $resp;
+}
+
+sub GetPswd {my($fn) = @_;
+    &Emsg("xfrcmd: Unable to open keyfile '$fn; $!\n") if !open(KTFD, $fn);
+    $XfrPswd = <KTFD>; close(KTFD);
+}
+
+sub GetVal {my($item, $type) = @_; my($v, $q);
+    $v = shift(@ARGV); $q = 0;
+    &Emsg(ucfirst($item).' not specified.') if $v eq '';
+    if ($type eq 'Q') { $q = uc(chop($v));
+                           if ($q eq 'K') {$q = 1024;}
+                        elsif ($q eq 'M') {$q = 1024*1024;}
+                        elsif ($q eq 'G') {$q = 1024*1024*1024;}
+                        else  {$v .= $q; $q = 0;}
+                      }
+    &Emsg("Invalid $item, '$v'.") 
+         if ($type eq 'N' || $type eq 'Q') && !&IsNum($v);
+    $v = $v*$q if $q;
+    return $v;
+    }
+
+sub IsNum  {my($v) = @_; return ($v =~ m/^[0-9]+$/);}
+
+sub IsOct  {my($v) = @_; return ($v =~ m/^[0-7]+$/);}
+
+sub Emsg {my($msg,$ret,$rc) = @_;
+    print STDERR $SSD.'_Stage: ', $msg, "\n";
+    $ErrLog .= $msg."\n";
+    return 0 if $ret;
+    $rc = 4 if $rc eq "";
+    &CleanUp($rc);
+    }
+
+sub THandler {$SIG{TERM} = 'DEFAULT'; kill(-15, getpgrp(0));}
+

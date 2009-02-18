@@ -7,7 +7,7 @@
 ##              DE-AC03-76-SFO0515 with the Department of Energy
 ##
 ##
-## Version info: $Id: Makefile.am,v 1.13 2008/10/12 10:25:32 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.14 2009/01/15 10:39:30 dfeich Exp $
 ## Checked in by $Author: dfeich $
 ################################################################################
 
@@ -87,6 +87,7 @@ SUBDIRS = XrdSys \
           XrdOlb \
           XrdRootd \
           XrdXrootd \
+          XrdFrm \
           XrdClient \
           $(XRDPOSIX) \
           $(XRDPSS) \

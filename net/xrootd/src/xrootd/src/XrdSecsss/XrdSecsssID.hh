@@ -21,12 +21,15 @@
 
 // The XrdSecsssID class allows you to establish a registery to map loginid's
 // to arbitrary entities. By default, the sss security protocol uses the
-// loginid as the authenticated username and, if possible, the corresponding
-// primary group membership of loginid (note that if loginid is a number,
-// it is treated as a uid not as a username). By creating an instance of this
-// class you can over-ride the default and map loginid's to arbitrary entities
-// using the Register() method. You must create one, and only one, such
-// instance prior to making any contact with a sss security enabled server.
+// username as the authenticated username and, if possible, the corresponding
+// primary group membership of username (i.e., static mapping). The server is
+// will ignore the username and/or the groupname unless the key is designated
+// as anyuser, anygroup, respectively. By creating an instance of this class
+// you can over-ride the default and map the loginid (i.e., the id supplied
+// at login time which is normally the first 8-characters of the username or
+// the id specified in the url; i.e., id@host) to arbitrary entities using
+// the Register() method. You must create one, and only one, such instance
+// prior to making any contact with a sss security enabled server.
 
 // In order to include XrdSecsssID methods, you should either link with
 // libXrdSecsss.so (preferable) or include XrdSecsssID.o and link with
@@ -65,13 +68,13 @@ const char *getID(int &idLen);
 //
 enum authType {idLogin   = 0, // 1Sided: loginid used by server as identity
                               //         Ident parameter is ignored.
-                              //         Default if XrdSecsssID not instantiated!
                idMutual  = 1, // Mutual: authentication loginid is the identity
                               //         Ident parameter is ignored.
                idDynamic = 3, // Mutual: Map loginid to registered identity
                               //         Ident is default; if 0 loginid used
                idStatic  = 4, // 1Sided: fixed identity sent to the server
                               //         Ident as specified; if 0 process uid/gid
+                              //         Default if XrdSecsssID not instantiated!
                idStaticM = 5  // Mutual: fixed identity sent to the server
                               //         Ident as specified; if 0 process uid/gid
               };
@@ -82,7 +85,7 @@ enum authType {idLogin   = 0, // 1Sided: loginid used by server as identity
 static
 authType getObj(XrdSecsssID **objP);
 
-       XrdSecsssID(authType aType=idLogin, XrdSecEntity *Ident=0);
+       XrdSecsssID(authType aType=idStatic, XrdSecEntity *Ident=0);
 
       ~XrdSecsssID() {}
 

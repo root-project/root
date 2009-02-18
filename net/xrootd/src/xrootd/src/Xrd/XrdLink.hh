@@ -113,7 +113,7 @@ int           Peek(char *buff, int blen, int timeout=-1);
 int           Recv(char *buff, int blen);
 int           Recv(char *buff, int blen, int timeout);
 
-int           RecvAll(char *buff, int blen);
+int           RecvAll(char *buff, int blen, int timeout=-1);
 
 int           Send(const char *buff, int blen);
 int           Send(const struct iovec *iov, int iocnt, int bytes=0);

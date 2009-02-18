@@ -86,7 +86,7 @@ static int getresuid(uid_t *r, uid_t *e, uid_t *)
     (defined(__CYGWIN__) && defined(__GNUC__))) && !defined(linux)
 #   define linux
 #endif
-#if defined(linux) && !defined(HAS_SETRESUID)
+#if defined(linux) && !defined(HAVE_SETRESUID)
 extern "C" {
    int setresgid(gid_t r, gid_t e, gid_t s);
    int setresuid(uid_t r, uid_t e, uid_t s);

@@ -154,7 +154,8 @@ char *XrdOucMsubs::getVal(XrdOucMsubsInfo &Info, int vNum)
    switch(vNum)
      {case vLFN:  return (char *)Info.lfn;
 
-      case vPFN:  if (!Info.N2N) return (char *)Info.lfn;
+      case vPFN:  if (Info.pfn)  return (char *)Info.pfn;
+                  if (!Info.N2N) return (char *)Info.lfn;
                   if (Info.pfnbuff)    return Info.pfnbuff;
                   if (Info.N2N->lfn2pfn(Info.lfn,buff,sizeof(buff))) break;
                   Info.pfnbuff = strdup(buff);
@@ -171,6 +172,7 @@ char *XrdOucMsubs::getVal(XrdOucMsubsInfo &Info, int vNum)
                   break;
 
       case vPFN2: if (!Info.lfn2) break;
+                  if (Info.pfn2) return (char *)Info.pfn2;
                   if (!Info.N2N) return (char *)Info.lfn2;
                   if (Info.pfn2buff)   return Info.pfn2buff;
                   if (Info.N2N->lfn2pfn(Info.lfn2,buff,sizeof(buff))) break;
@@ -209,7 +211,7 @@ char *XrdOucMsubs::getVal(XrdOucMsubsInfo &Info, int vNum)
       case vUSR:  if ((op = Info.Env->Get(SEC_USER))) return op;
                   break;
 
-      case vRID:
+      case vRID:  if (Info.Rid) return (char *)Info.Rid;
       case vTID:  return (char *)Info.Tid;
 
       case vCGI:  if (!(op = Info.Env->Env(n))) op = (char *)"";

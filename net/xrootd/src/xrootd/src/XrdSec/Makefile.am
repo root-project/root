@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.6 2007/08/02 15:35:17 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.7 2008/12/11 02:48:46 abh Exp $
+## Checked in by $Author: abh $
 #######################################################################
 xrootdsecincdir = $(includedir)/xrootd/XrdSec
 
@@ -21,7 +21,9 @@ libXrdSec_la_SOURCES = \
         XrdSecClient.cc XrdSecInterface.hh XrdSecEntity.hh      \
         XrdSecPManager.cc XrdSecPManager.hh     \
         XrdSecProtocolhost.cc XrdSecProtocolhost.hh \
-        XrdSecServer.cc XrdSecServer.hh XrdSecTrace.hh
+        XrdSecServer.cc XrdSecServer.hh \
+        XrdSecTLayer.cc XrdSecTLayer.hh \
+        XrdSecTrace.hh
 libXrdSec_la_LDFLAGS = -module
 
 # Note: the next option leads to problems at least on Darwin

@@ -55,7 +55,6 @@ int          addClient(XrdXrootdResponse *rp, int opts);
 void         delClient(XrdXrootdResponse *rp);
 XrdOucTList *lstClient(void);
 int          verClient(int dodel=0);
-void         Destruct(int sendresp);
 void         Redrive(void);
 void         sendResult(char *lp, int caned=0);
 
@@ -74,6 +73,7 @@ struct {XrdLink     *Link;
        char              *theResult;  // -> The result
        int                JobNum;     //    Job Number
        char               JobMark;
+       char               doRedrive;
 };
   
 /******************************************************************************/
@@ -109,6 +109,7 @@ XrdXrootdJob2Do::XrdXrootdJob2Do(XrdXrootdJob      *job,
    JobMark    = 0;
    numClients = 0;
    theResult  = 0;
+   doRedrive  = 0;
    Status     = Job_Waiting;
    addClient(resp, opts);
 }
@@ -134,43 +135,53 @@ XrdXrootdJob2Do::~XrdXrootdJob2Do()
   
 void XrdXrootdJob2Do::DoIt()
 {
-   char *lp;
+   XrdXrootdJob2Do *jp = 0;
+   char *lp = 0;
    int i;
 
-// While we were waiting to run we may have been cancelled. Check for this
+// Obtain a lock to prevent status changes
 //
    theJob->myMutex.Lock();
-   if (Status == Job_Cancel) {Destruct(1); return;}
 
-// Preform the actual function and get the result
+// While we were waiting to run we may have been cancelled. If we were not then
+// perform the actual function and get the result and send to any async clients
 //
-   if (theJob->theProg->Run(&jobStream,theArgs[1],theArgs[2],theArgs[3],theArgs[4])) lp=0;
-      else {theJob->myMutex.UnLock();
-            lp = jobStream.GetLine();
-            theJob->myMutex.Lock();
-           }
-
-// While we were waiting, this job may have been cancelled. Check it out
-//
-   if (Status == Job_Cancel) {Destruct(1); return;}
-
-// Jobs is done. Send the result to any async clients waiting for it
-//
-   Status = Job_Done;
-   for (i = 0; i < numClients; i++) 
-       if (!Client[i].isSync) {sendResult(lp); break;}
+   if (Status != Job_Cancel)
+      {if (theJob->theProg->Run(&jobStream, theArgs[1], theArgs[2],
+                                theArgs[3], theArgs[4])) Status = Job_Cancel;
+          else {theJob->myMutex.UnLock();
+                lp = jobStream.GetLine();
+                theJob->myMutex.Lock();
+                if (Status != Job_Cancel)
+                   {Status = Job_Done;
+                    for (i = 0; i < numClients; i++)
+                        if (!Client[i].isSync) {sendResult(lp); break;}
+                   }
+               }
+       }
 
 // If the number of jobs > than the max allowed, then redrive a waiting job
+// if in fact we represent a legitimate job slot (this could a phantom slot
+// due to ourselves being cancelled.
 //
-   if (theJob->numJobs > theJob->maxJobs) Redrive();
-   theJob->numJobs--;
+   if (doRedrive)
+      {if (theJob->numJobs > theJob->maxJobs) Redrive();
+       theJob->numJobs--;
+      }
 
-// If there are no polling clients left, then delete ourselves
+// If there are no polling clients left or we have been cancelled, then we
+// will delete ourselves and, if cancelled, send a notofication to everyone
 //
-   if (numClients) 
-      {theResult = lp;
-       theJob->myMutex.UnLock();
-      } else Destruct(0);
+   if (Status != Job_Cancel && numClients) theResult = lp;
+      else {if (Status == Job_Cancel) sendResult(0, 1);
+            jp = theJob->JobTable.Remove(JobNum);
+           }
+
+// At this point we may need to delete ourselves. If so, jp will not be zero.
+// This must be the last action in this method.
+//
+   theJob->myMutex.UnLock();
+   if (jp) delete jp;
 }
 
 /******************************************************************************/
@@ -273,7 +284,7 @@ XrdOucTList *XrdXrootdJob2Do::lstClient()
 
 // Return the text
 //
-   return new XrdOucTList(buff, bp-buff+4);
+   return new XrdOucTList(buff, bp-buff+7);
 }
 
 /******************************************************************************/
@@ -293,32 +304,15 @@ int XrdXrootdJob2Do::verClient(int dodel)
            numClients--; i--;
           }
 
-// If no more clients, delete ourselves if safe to do so
+// If no more clients, delete ourselves if safe to do so (caller has lock)
 //
    if (!numClients && dodel)
       {XrdXrootdJob2Do *jp = theJob->JobTable.Remove(JobNum);
+       if (jp->Status == XrdXrootdJob2Do::Job_Waiting) theJob->numJobs--;
        delete jp;
        return 0;
       }
    return numClients;
-}
-  
-/******************************************************************************/
-/*                              D e s t r u c t                               */
-/******************************************************************************/
-  
-void XrdXrootdJob2Do::Destruct(int sendresp)
-{
-   XrdXrootdJob2Do *jp;
-
-// Indicate this job was cancelled and delete ourselves. Note that the
-// caller must make immediate return for this to not segv.
-//
-   if (sendresp) sendResult(0, 1);
-   jp = theJob->JobTable.Remove(JobNum);
-   theJob->myMutex.UnLock();
-   delete jp;
-   return;
 }
 
 /******************************************************************************/
@@ -328,17 +322,19 @@ void XrdXrootdJob2Do::Destruct(int sendresp)
 void XrdXrootdJob2Do::Redrive()
 {
    XrdXrootdJob2Do *jp;
+   int Start = 0;
 
 // Find the first waiting job
 //
 
-   while ((jp = theJob->JobTable.Apply(XrdXrootdJobWaiting, (void *)0)))
+   while ((jp = theJob->JobTable.Apply(XrdXrootdJobWaiting, (void *)0, Start)))
          if (jp->verClient(jp->JobMark > 0)) break;
+            else Start = jp->JobNum+1;
 
 // Schedule this job if we really have one here
 //
    if (jp)
-      {jp->Status = Job_Active;
+      {jp->Status = Job_Active; jp->doRedrive = 1;
        theJob->Sched->Schedule((XrdJob *)jp);
       }
 }
@@ -573,6 +569,7 @@ int XrdXrootdJob::Schedule(const char         *jkey,
                     if (numJobs < maxJobs)
                        {Sched->Schedule((XrdJob *)jp);
                         jp->Status = XrdXrootdJob2Do::Job_Active;
+                        jp->doRedrive = 1;
                        }
                     numJobs++; msg = "Job Scheduled";
                    }
@@ -609,6 +606,7 @@ void XrdXrootdJob::CleanUp(XrdXrootdJob2Do *jp)
            Sched->Schedule((XrdJob *)jp);
    else if (theStatus == XrdXrootdJob2Do::Job_Active)
            jp->jobStream.Drain();
+        if (theStatus == XrdXrootdJob2Do::Job_Waiting) numJobs--;
 }
 
 /******************************************************************************/

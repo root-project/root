@@ -25,7 +25,7 @@ public:
 
        int  Admit(XrdLink *Link, XrdCms::CmsLoginData &Data);
 
-static int  Login(XrdLink *Link, XrdCms::CmsLoginData &Data);
+static int  Login(XrdLink *Link, XrdCms::CmsLoginData &Data, int timeout=-1);
 
        XrdCmsLogin(char *Buff = 0, int Blen = 0) {myBuff = Buff; myBlen = Blen;}
 

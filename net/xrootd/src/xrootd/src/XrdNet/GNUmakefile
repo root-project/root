@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.13 2008/09/07 04:31:44 abh Exp $
+#              $Id: GNUmakefile,v 1.14 2009/01/08 00:51:11 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -98,7 +98,10 @@ $(OBJDIR)/XrdNetLink.o: XrdNetLink.cc XrdNetLink.hh          XrdNet.hh \
 	@echo Compiling XrdNetLink.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetLink.cc -o $(OBJDIR)/XrdNetLink.o
 
-$(OBJDIR)/XrdNetMsg.o: XrdNetMsg.cc XrdNetMsg.hh
+$(OBJDIR)/XrdNetMsg.o: XrdNetMsg.cc   XrdNetMsg.hh  \
+                       XrdNet.hh      XrdNetDNS.hh     XrdNetOpts.hh \
+                       XrdNetPeer.hh  XrdNetSocket.hh \
+                       XrdSysError.hh XrdSysPlatform.hh
 	@echo Compiling XrdNetMsg.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetMsg.cc -o $(OBJDIR)/XrdNetMsg.o
 

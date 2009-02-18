@@ -52,8 +52,10 @@ XrdOssCache_FSData::XrdOssCache_FSData(const char *fsp,
 {
 
      path = strdup(fsp);
-     size = (long long)fsbuff.f_blocks*fsbuff.FS_BLKSZ;
-     frsz = (long long)fsbuff.f_bavail*fsbuff.FS_BLKSZ;
+     size = static_cast<long long>(fsbuff.f_blocks)
+          * static_cast<long long>(fsbuff.FS_BLKSZ);
+     frsz = static_cast<long long>(fsbuff.f_bavail)
+          * static_cast<long long>(fsbuff.FS_BLKSZ);
      if (frsz > XrdOssSS->fsFree) XrdOssSS->fsFree = frsz;
      fsid = fsID;
      updt = time(0);
@@ -154,8 +156,10 @@ long long XrdOssCache_FS::freeSpace(long long &Size, const char *path)
 //
    if (path)
       {if (FS_Stat(path, &fsbuff)) return -1;
-       Size = (long long)fsbuff.f_blocks*fsbuff.FS_BLKSZ;
-       return fsbuff.f_bavail*fsbuff.FS_BLKSZ;
+       Size = static_cast<long long>(fsbuff.f_blocks)
+            * static_cast<long long>(fsbuff.FS_BLKSZ);
+       return static_cast<long long>(fsbuff.f_bavail)
+            * static_cast<long long>(fsbuff.FS_BLKSZ);
       }
 
 // Free space for the whole system
@@ -320,6 +324,7 @@ void *XrdOssSys::CacheScan(void *carg)
    XrdOssCache_FSData *fsdp;
    STATFS_t fsbuff;
    const struct timespec naptime = {XrdOssSS->cscanint, 0};
+   long long llT; // A dummy temporary
    int retc;
 
 // Loop scanning the cache
@@ -343,7 +348,7 @@ void *XrdOssSys::CacheScan(void *carg)
                      {if ((retc = FS_Stat(fsdp->path, &fsbuff)))
                          OssEroute.Emsg("XrdOssCacheScan", errno ,
                                     "state file system ",(char *)fsdp->path);
-                         else {fsdp->frsz = fsbuff.f_bavail*fsbuff.FS_BLKSZ;
+                         else {fsdp->frsz=XrdOssCache_FS::freeSpace(llT,fsdp->path);
                                fsdp->stat &= ~(XrdOssFSData_REFRESH |
                                                XrdOssFSData_ADJUSTED);
                                DEBUG("New free=" <<fsdp->frsz <<" path=" <<fsdp->path);

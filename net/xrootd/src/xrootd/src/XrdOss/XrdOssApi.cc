@@ -409,8 +409,10 @@ int XrdOssDir::Opendir(const char *dir_path)
 //
    if (pflags & XRDEXP_NODREAD)
       {struct stat fstat;
-       if (stat(local_path, &fstat)
-       && (retc = XrdOssSS->MSS_Stat(remote_path, &fstat))) return retc;
+       if (stat(local_path, &fstat))
+          {if (!XrdOssSS->MSSgwCmd) return -errno;
+           if ((retc = XrdOssSS->MSS_Stat(remote_path, &fstat))) return retc;
+          }
        if (!(S_ISDIR(fstat.st_mode))) return -ENOTDIR;
        isopen = -1;
        return XrdOssOK;

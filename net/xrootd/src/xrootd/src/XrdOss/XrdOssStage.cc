@@ -33,6 +33,7 @@ const char *XrdOssStageCVSID = "$Id$";
 #include <sys/wait.h>
 
 #include "XrdSys/XrdSysHeaders.hh"
+#include "XrdSys/XrdSysPlatform.hh"
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOss/XrdOssLock.hh"
@@ -142,9 +143,11 @@ int XrdOssSys::Stage_QT(const char *Tid, const char *fn, XrdOucEnv &env,
 // If a stagemsg template was not defined; use our default template
 //
    if (!StageSnd)
-      {char idbuff[64];
+      {char idbuff[64], usrbuff[512];
        ReqID.ID(idbuff, sizeof(idbuff));
-       pdata[0] = (char *)"+ ";  pdlen[0] = 2;
+       if (!StageFormat)
+      {pdata[0] = (char *)"+ ";  pdlen[0] = 2;}
+else  {pdlen[0] = getID(Tid,env,usrbuff,sizeof(usrbuff)); pdata[0] = usrbuff;}
        pdata[1] = idbuff;        pdlen[1] = strlen(idbuff);  // Request ID
        pdata[2] = (char *)" ";   pdlen[2] = 1;
        pdata[3] = StageEvents;   pdlen[3] = StageEvSize;     // notification
@@ -156,7 +159,8 @@ int XrdOssSys::Stage_QT(const char *Tid, const char *fn, XrdOucEnv &env,
        pdata[9] = 0;             pdlen[9] = 0;
        if (StageProg->Feed((const char **)pdata, pdlen)) return -XRDOSS_E8025;
       } else {
-       XrdOucMsubsInfo Info(Tid, &env, lcl_N2N, fn, 0, Mode, Oflag);
+       XrdOucMsubsInfo Info(Tid, &env, lcl_N2N, fn, 0, 
+                            Mode, Oflag, StageAction, "n/a");
        int k = StageSnd->Subs(Info, pdata, pdlen);
        pdata[k]   = (char *)"\n"; pdlen[k++] = 1;
        pdata[k]   = 0;            pdlen[k]   = 0;
@@ -417,6 +421,29 @@ int XrdOssSys::GetFile(XrdOssStage_Req *req)
 // All went well
 //
    return 0;
+}
+
+/******************************************************************************/
+/*                                 g e t I D                                  */
+/******************************************************************************/
+  
+int XrdOssSys::getID(const char *Tid, XrdOucEnv &Env, char *buff, int bsz)
+{
+   char *bP;
+   int n;
+
+// The buffer always starts with a '+'
+//
+   *buff = '+'; bP = buff+1; bsz -= 3;
+
+// Get the trace id
+//
+   if (Tid && (n = strlen(Tid)) <= bsz) {strcpy(bP, Tid); bP += n;}
+
+// Insert space
+//
+   *bP++ = ' '; *bP = '\0';
+   return bP - buff;
 }
 
 /******************************************************************************/

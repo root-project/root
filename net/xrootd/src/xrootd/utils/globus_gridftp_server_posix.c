@@ -120,6 +120,8 @@ globus_l_gfs_posix_start(
 {
     globus_l_gfs_posix_handle_t *       posix_handle;
     globus_gfs_finished_info_t          finished_info;
+    struct passwd *                     pw;
+
     GlobusGFSName(globus_l_gfs_posix_start);
 
     posix_handle = (globus_l_gfs_posix_handle_t *)
@@ -132,7 +134,8 @@ globus_l_gfs_posix_start(
     finished_info.result = GLOBUS_SUCCESS;
     finished_info.info.session.session_arg = posix_handle;
     finished_info.info.session.username = session_info->username;
-    finished_info.info.session.home_dir = "/";
+    pw = getpwuid(getuid());
+    finished_info.info.session.home_dir = pw->pw_dir;
 
     globus_gridftp_server_operation_finished(
         op, GLOBUS_SUCCESS, &finished_info);
@@ -777,6 +780,59 @@ globus_l_gfs_posix_recv(
                                           &posix_handle->block_length);
 
     globus_gridftp_server_begin_transfer(posix_handle->op, 0, posix_handle);
+
+/* 
+   Calculate space usage of a xrootd space token. This is xrootd specific.
+   None xrootd storage can still use it if XROOTD_CNSURL is not defined 
+*/
+    char *cns, *token, *tokenbuf[128], *key, *value, xattrs[1024], *xattrbuf[1024];
+    long long spaceusage, spacequota;
+
+    cns = getenv("XROOTD_CNSURL");
+    if (cns != NULL)
+    {
+        strcpy(xattrs, posix_handle->pathname);
+        token = strtok_r(xattrs, "?", xattrbuf);
+        token = strtok_r(NULL, "=", xattrbuf);
+        token = strtok_r(NULL, "=", xattrbuf);
+        sprintf(err_msg, "open() fail: quota exceeded for space token %s\n", token);
+
+        strcat(cns, "/?oss.cgroup=");
+        if (token == NULL)
+            strcat(cns, "public");
+        else
+            strcat(cns, token);
+
+        if (getxattr(cns, "xroot.space", xattrs, 128) > 0)
+        {
+            spaceusage = 0;
+            spacequota = 0;
+            token = strtok_r(xattrs, "&", xattrbuf);
+            while (token != NULL)
+            {
+                 token = strtok_r(NULL, "&", xattrbuf);
+                 if (token == NULL) break;
+                 key = strtok_r(token, "=", tokenbuf);
+                 value = strtok_r(NULL, "=", tokenbuf);
+                 if (!strcmp(key,"oss.used"))
+                 {
+                     sscanf((const char*)value, "%lld", &spaceusage);
+                 }
+                 else if (!strcmp(key,"oss.quota"))
+                 {
+                     sscanf((const char*)value, "%lld", &spacequota);
+                 }
+            }
+            if (spaceusage > spacequota) 
+            {
+                rc = GlobusGFSErrorGeneric(err_msg);
+                globus_gridftp_server_finished_transfer(op, rc);
+                return;
+            }
+        }
+    }
+/* end of XROOTD specfic code */
+
     if (stat(posix_handle->pathname, &stat_buffer) == 0)
     {
         posix_handle->fd = open(posix_handle->pathname, O_WRONLY); /* |O_TRUNC);  */
@@ -870,7 +926,7 @@ globus_l_gfs_posix_read_from_storage(
             lseek(posix_handle->fd, posix_handle->offset, SEEK_SET);
         }
  */ 
-        /* block_length == -1 indicates transferring data to eof */
+        /* block_length == -1 indicates transferring data to until eof */
         if (posix_handle->block_length < 0 ||   
             posix_handle->block_length > posix_handle->block_size)
         {

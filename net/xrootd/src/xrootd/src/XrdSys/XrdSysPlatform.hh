@@ -188,7 +188,7 @@ extern "C" unsigned long long Swap_n2hll(unsigned long long x);
 #endif
 #endif
 
-#ifndef HAS_STRLCPY
+#ifndef HAVE_STRLCPY
 extern "C"
 {extern size_t strlcpy(char *dst, const char *src, size_t size);}
 #endif

@@ -112,6 +112,8 @@ static int     mapError(int rc);
 static
 inline bool    myFD(int fd) {return fd <= highFD && myFiles && myFiles[fd];}
 
+static long long QueryOpaque(const char*, char*, int);
+
 static void    setDebug(int val);
 
 static void    setEnv(const char *var, const char *val);

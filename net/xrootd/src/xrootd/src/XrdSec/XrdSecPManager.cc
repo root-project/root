@@ -112,15 +112,28 @@ XrdSecProtocol *XrdSecPManager::Get(const char     *hname,
    return 0;
 }
 
-XrdSecProtocol *XrdSecPManager::Get(const char     *hname,
-                                    const sockaddr &netaddr,
-                                    char           *sectoken)
+XrdSecProtocol *XrdSecPManager::Get(const char       *hname,
+                                    const sockaddr   &netaddr,
+                                    XrdSecParameters &secparm)
 {
-   char *nscan, *pname, *pargs, *bp = sectoken;
+   char secbuff[4096], *nscan, *pname, *pargs, *bp = secbuff;
    const char *wantProt = getenv("XrdSecPROTOCOL");
    XrdSecProtList *pl;
    XrdSecProtocol *pp;
    XrdOucErrInfo   erp;
+   int i;
+
+// We only scan the buffer once
+//
+   if (secparm.size <= 0) return (XrdSecProtocol *)0;
+
+// Copy the string into a local buffer so that we can simplify some comparisons
+// and isolate ourselves from server protocol errors.
+//
+   if (secparm.size < (int)sizeof(secbuff)) i = secparm.size;
+      else i = sizeof(secbuff)-1;
+   strncpy(secbuff, secparm.buffer, i);
+   secbuff[i] = '\0';
 
 // Find a protocol marker in the info block and check if acceptable
 //
@@ -141,13 +154,19 @@ XrdSecProtocol *XrdSecPManager::Get(const char     *hname,
             {if ((pl = Lookup(pname)) || (pl = ldPO(&erp, 'c', pname)))
                 {DEBUG("Using " <<pname <<" protocol, args='"
                        <<(pargs ? pargs : "") <<"'");
-                 if ((pp = pl->ep('c', hname, netaddr, pargs, &erp))) return pp;
+                 if ((pp = pl->ep('c', hname, netaddr, pargs, &erp)))
+                    {if (nscan) {i = nscan - secbuff;
+                                 *secparm.buffer += i; secparm.size -= i;
+                                } else secparm.size = -1;
+                     return pp;
+                    }
                 }
              if (erp.getErrInfo() != ENOENT) cerr <<erp.getErrText() <<endl;
             } else {DEBUG("Skipping " <<pname <<" only want " <<wantProt);}
          if (!nscan) break;
          *nscan = '&'; bp = nscan;
          }
+    secparm.size = -1;
     return (XrdSecProtocol *)0;
 }
  

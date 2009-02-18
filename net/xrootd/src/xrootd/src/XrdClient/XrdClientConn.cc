@@ -30,6 +30,8 @@ const char *XrdClientConnCVSID = "$Id$";
 
 #include "XrdClient/XrdClientSid.hh"
 
+#include "XrdSys/XrdSysPriv.hh"
+
 // Dynamic libs
 // Bypass Solaris ELF madness
 //
@@ -1412,6 +1414,24 @@ bool XrdClientConn::DoLogin()
     else
 	strcpy( (char *)reqhdr.login.username, "????" );
 
+    // If we run with root as effective user we need to temporary change
+    // effective ID to User
+    XrdOucString effUser = User;
+    if (!getuid()) {
+      if (getenv("XrdClientEUSER")) effUser = getenv("XrdClientEUSER");
+    }
+    XrdSysPrivGuard guard(effUser.c_str());
+    if (!guard.Valid() && !getuid()) {
+      // Set error, in case of need
+      fOpenError = kXR_NotAuthorized;
+      LastServerError.errnum = fOpenError;
+      XrdOucString emsg("Cannot set effective uid for user: ");
+      emsg += effUser;
+      strcpy(LastServerError.errmsg, emsg.c_str());
+      Error("DoLogin", emsg << ". Exiting.");
+      return false;
+    }
+
     // set the token with the value provided by a previous 
     // redirection (if any)
     reqhdr.header.dlen = fRedirInternalToken.length(); 
@@ -1456,9 +1476,9 @@ bool XrdClientConn::DoLogin()
 	int lenauth = 0; 
 	if ((fServerProto >= 0x240) && (LastServerResp.dlen >= 16)) {
 
-           if (prevsessid && XrdClientDebug::kHIDEBUG <= DebugLevel()) {
+           if (XrdClientDebug::kHIDEBUG <= DebugLevel()) {
 	      char b[20];
-	      for (unsigned int i = 0; i < sizeof(prevsessid->id); i++) {
+	      for (unsigned int i = 0; i < 16; i++) {
 		  snprintf(b, 20, "%.2x", plist[i]);
 		  sessdump += b;
 	      }
@@ -1553,7 +1573,7 @@ bool XrdClientConn::DoLogin()
 			   FALSE, (char *)"XrdClientConn::Endsess");
 
 	    // Now overwrite the previous session info with the new one
-	    for (unsigned int i=0; i < sizeof(prevsessid->id); i++)
+	    for (unsigned int i=0; i < 16; i++)
 		prevsessid->id[i] = plist[i];
 
 
@@ -2020,7 +2040,7 @@ XReqErrorType XrdClientConn::GoToAnotherServer(XrdClientUrlInfo &newdest)
 {
     // Re-directs to another server
    
-   
+    fGettingAccessToSrv = false; 
     if ( (fLogConnID = Connect( newdest, fUnsolMsgHandler)) == -1) {
 	  
 	// Note: if Connect is unable to work then we are in trouble.
