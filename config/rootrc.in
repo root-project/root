@@ -505,10 +505,11 @@ XNet.ReadCacheSize: 10000000
 
 # XNet.FirstConnectMaxCnt
 #                       - Number of connect retries to the first host
+
 # XNet.PrintTAG         - Print a particular string the developers 
 #                         can choose to quickly recognize the
 #                         version at run time [0]
-#
+
 # XNet.ParStreamsPerPhyConn
 #                       - Number of additional TCP streams to use per
 #                         each physical connection
@@ -516,6 +517,13 @@ XNet.ReadCacheSize: 10000000
 #                         1-15=multistream mode
 
 XNet.ParStreamsPerPhyConn: 0
+
+# XNet.DfltTcpWindowSize
+#                       - Default size of the TCP window; set to 0 to use the
+#                         system default, which means automatic scaling under Linux
+#                         and MacOsX (at least). Value in bytes [0]
+# XNet.DfltTcpWindowSize  262144
+
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.
