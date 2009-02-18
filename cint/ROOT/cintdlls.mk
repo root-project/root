@@ -182,8 +182,8 @@ core/metautils/src/stlLoader_%.cc: core/metautils/src/stlLoader.cc
 	cp -f $< $@
 
 core/metautils/src/stlLoader_%.o: core/metautils/src/stlLoader_%.cc
-	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- $(CINTCXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CINTCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
+	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- $(CINTDLLCXXFLAGS) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CINTDLLCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
 
 $(CINTDLLDIRDLLSTL)/G__cpp_%.cxx:
 	$(patsubst %lib/dll_stl/,%,$(dir $@))/main/cint_tmp \
@@ -208,7 +208,7 @@ ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 $(CINTDLLDIRL)/G__c_posix.c: MACOSX_UNIX03 = -D__DARWIN_UNIX03
 endif
 
-$(CINTDLLDIRL)/G__c_%.o: CFLAGS += -I. -DG__SYSTYPES_H
+$(CINTDLLDIRL)/G__c_%.o: CFLAGS := $(filter-out -Iinclude,$(CINTDLLCFLAGS)) -I. -DG__SYSTYPES_H
 
 ##### posix special treatment
 $(CINTDLLDIRL)/posix/exten.o: $(CINTDLLDIRL)/posix/exten.c

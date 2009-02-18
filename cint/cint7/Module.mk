@@ -250,6 +250,8 @@ CINTDLLDIRL      := $(CINT7DIRL)
 CINTDLLIOSENUM   := $(IOSENUM7)
 CINTDLLDICTVER   := $(CINTDIRI)/cintdictversion.h
 CINTDLLCINTTMP   := $(CINT7TMP)
+CINTDLLCFLAGS    := $(CINT7CFLAGS)
+CINTDLLCXXFLAGS  := $(CINT7CXXFLAGS)
 # the ROOT-specific cintdll dictionary part is currently built with
 # CINT5's rootcint because it's protected with a ifeq(BUILDINGCINT,5).
 # Nevertheless, this is what it will look like for CINT7
