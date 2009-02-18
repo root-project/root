@@ -69,62 +69,43 @@ std::string Tools::GetBaseName(const std::string& name, bool startFromLeft /*= f
 }
 
 
-//-------------------------------------------------------------------------------
-EFUNDAMENTALTYPE Tools::FundamentalType( const Type & typ ) {
-//-------------------------------------------------------------------------------
-// Return an enum representing the fundamental type passed in.
-#define RFLX_COMBINE(A,B) A##B
-#define RFLX_COMBINE1(A) A
-#if RFLX_COMBINE(1,0) != 10
-# undef RFLX_COMBINE(A,B) A##B
-# define RFLX_COMBINE(A,B) RFLX_COMBINE1(A)B
-#endif
-
-#define RFLX_DECL_STATIC_TB(NAME, WHAT) \
-   static const TypeBase* RFLX_COMBINE(stb_,NAME) = Type::ByName(#WHAT).ToTypeBase();
-
-   RFLX_DECL_STATIC_TB(Char, char);
-   RFLX_DECL_STATIC_TB(SigChar, signed char);
-   RFLX_DECL_STATIC_TB(ShoInt, short int);
-   RFLX_DECL_STATIC_TB(Int, int);
-   RFLX_DECL_STATIC_TB(LonInt, long int);
-   RFLX_DECL_STATIC_TB(UnsChar, unsigned char);
-   RFLX_DECL_STATIC_TB(UnsShoInt, unsigned short int);
-   RFLX_DECL_STATIC_TB(UnsInt, unsigned int);
-   RFLX_DECL_STATIC_TB(UnsLonInt, unsigned long int);
-   RFLX_DECL_STATIC_TB(Bool, bool);
-   RFLX_DECL_STATIC_TB(Float, float);
-   RFLX_DECL_STATIC_TB(Double, double);
-   RFLX_DECL_STATIC_TB(LonDouble, long double);
-   RFLX_DECL_STATIC_TB(Void, void);
-   RFLX_DECL_STATIC_TB(LonLong, long long);
-   RFLX_DECL_STATIC_TB(UnsLonLong, unsigned long long);
-
-#undef RFLX_DECL_STATIC_TB
-#undef RFLX_COMBINE1
-#undef RFLX_COMBINE
+EFUNDAMENTALTYPE Tools::FundamentalType(const Type& typ) {
+   // Return an enum representing the fundamental type passed in.
+   static const TypeBase* stb_Char = Type::ByName("char").ToTypeBase();
+   static const TypeBase* stb_SigChar = Type::ByName("signed char").ToTypeBase();
+   static const TypeBase* stb_ShoInt = Type::ByName("short int").ToTypeBase();
+   static const TypeBase* stb_Int = Type::ByName("int").ToTypeBase();
+   static const TypeBase* stb_LonInt = Type::ByName("long int").ToTypeBase();
+   static const TypeBase* stb_UnsChar = Type::ByName("unsigned char").ToTypeBase();
+   static const TypeBase* stb_UnsShoInt = Type::ByName("unsigned short int").ToTypeBase();
+   static const TypeBase* stb_UnsInt = Type::ByName("unsigned int").ToTypeBase();
+   static const TypeBase* stb_UnsLonInt = Type::ByName("unsigned long int").ToTypeBase();
+   static const TypeBase* stb_Bool = Type::ByName("bool").ToTypeBase();
+   static const TypeBase* stb_Float = Type::ByName("float").ToTypeBase();
+   static const TypeBase* stb_Double = Type::ByName("double").ToTypeBase();
+   static const TypeBase* stb_LonDouble = Type::ByName("long double").ToTypeBase();
+   static const TypeBase* stb_Void = Type::ByName("void").ToTypeBase();
+   static const TypeBase* stb_LonLong = Type::ByName("long long").ToTypeBase();
+   static const TypeBase* stb_UnsLonLong = Type::ByName("unsigned long long").ToTypeBase();
 
    const TypeBase* tbType = typ.FinalType().ToTypeBase();
-   
+   if ( tbType == stb_Int)          return kINT; 
+   if ( tbType == stb_Float)        return kFLOAT; 
+   if ( tbType == stb_Double)       return kDOUBLE; 
+   if ( tbType == stb_LonInt)       return kLONG_INT; 
    if ( tbType == stb_Char)         return kCHAR;
    if ( tbType == stb_SigChar)      return kSIGNED_CHAR; 
    if ( tbType == stb_ShoInt)       return kSHORT_INT; 
-   if ( tbType == stb_Int)          return kINT; 
-   if ( tbType == stb_LonInt)       return kLONG_INT; 
    if ( tbType == stb_UnsChar)      return kUNSIGNED_CHAR; 
    if ( tbType == stb_UnsShoInt)    return kUNSIGNED_SHORT_INT; 
    if ( tbType == stb_UnsInt)       return kUNSIGNED_INT; 
    if ( tbType == stb_UnsLonInt)    return kUNSIGNED_LONG_INT; 
    if ( tbType == stb_Bool)         return kBOOL; 
-   if ( tbType == stb_Float)        return kFLOAT; 
-   if ( tbType == stb_Double)       return kDOUBLE; 
    if ( tbType == stb_LonDouble)    return kLONG_DOUBLE; 
    if ( tbType == stb_Void)         return kVOID; 
    if ( tbType == stb_LonLong)      return kLONGLONG; 
    if ( tbType == stb_UnsLonLong)   return kULONGLONG; 
-   
    return kNOTFUNDAMENTAL;
-
 }
 
 

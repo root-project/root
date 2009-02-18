@@ -55,7 +55,15 @@ namespace Reflex {
          size_t                 size, 
          TYPE                   typeTyp,
          const std::type_info & ti,
-         const Type &           finalType = Dummy::Type());
+         const Type &           finalType = Dummy::Type(),
+         const char cintType = '\0');
+
+
+      TypeBase( const char *           nam, 
+         size_t                 size, 
+         TYPE                   typeTyp,
+         const std::type_info & ti,
+         const char cintType);
 
 
       /** destructor */
@@ -744,6 +752,8 @@ namespace Reflex {
        */
       virtual void UnhideName() const;
       
+      char CintType() const { return fCintType; }
+
    protected:
 
       /**
@@ -776,6 +786,8 @@ namespace Reflex {
          const std::type_info * fTypeInfo;
 
    private:
+
+      char fCintType;
 
       /**
       * The Scope of the Type

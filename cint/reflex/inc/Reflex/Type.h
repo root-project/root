@@ -1178,6 +1178,8 @@ namespace Reflex {
       /** */
       const TypeBase * ToTypeBase() const;
 
+      char CintType() const;
+
    private:
 
       /** 
@@ -1199,6 +1201,14 @@ namespace Reflex {
 #include "Reflex/internal/TypeName.h"
 #include "Reflex/internal/TypeBase.h"
 #include "Reflex/PropertyList.h"
+
+inline char Reflex::Type::CintType() const
+{
+   if (*this) {
+      return fTypeName->fTypeBase->CintType();
+   }
+   return '\0';
+}
 
 //-------------------------------------------------------------------------------
 inline Reflex::Type & Reflex::Type::operator = ( const Type & rh ) {

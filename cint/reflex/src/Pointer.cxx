@@ -17,11 +17,15 @@
 
 #include "Reflex/internal/OwnedMember.h"
 
+#include <cctype>
+
+using namespace std;
+
 //-------------------------------------------------------------------------------
 Reflex::Pointer::Pointer( const Type & pointerType,
                                 const std::type_info & ti )
 //-------------------------------------------------------------------------------
-   : TypeBase( BuildTypeName(pointerType).c_str(), sizeof(void*), POINTER, ti ), 
+   : TypeBase( BuildTypeName(pointerType).c_str(), sizeof(void*), POINTER, ti, toupper(pointerType.CintType()) ), 
      fPointerType( pointerType ) { 
    // Construct the dictionary info for a pointer type.
 }

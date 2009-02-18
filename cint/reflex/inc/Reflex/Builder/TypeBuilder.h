@@ -58,7 +58,8 @@ namespace Reflex {
       unsigned int modifiers = 0 );
 
    RFLX_API Type TypedefTypeBuilder( const char * Name, 
-      const Type & t );
+      const Type & t,
+      const char cintType = '\0' );
 
 
    RFLX_API Type FunctionTypeBuilder( const Type & r,

@@ -857,8 +857,7 @@ static int G__initary(char* new_name,Reflex::Member &in_var)
             ::Reflex::Scope varscope = var.DeclaringScope();
             std::string varname = var.Name();
             varscope.RemoveDataMember(var);
-            G__add_scopemember(varscope, varname.c_str(), varstatic.TypeOf(), 0, varstatic.Offset(), G__get_offset(var), G__PUBLIC, G__LOCALSTATIC);
-            Reflex::Member newmember = varscope.DataMemberByName(varname);
+            Reflex::Member newmember = G__add_scopemember(varscope, varname.c_str(), varstatic.TypeOf(), 0, varstatic.Offset(), G__get_offset(var), G__PUBLIC, G__LOCALSTATIC);
             *G__get_properties(newmember) = prop;
          }
       }

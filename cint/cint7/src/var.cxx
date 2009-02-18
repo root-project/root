@@ -4065,7 +4065,7 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
       !var_ispointer &&
       (G__var_type != '1') &&
       (G__var_type != 'Q') &&
-      (::Reflex::Tools::FundamentalType(var_type) == ::Reflex::kVOID)
+      (::Reflex::Tools::FundamentalType(var_type.FinalType()) == ::Reflex::kVOID)
    )  {
       // -- Do *not* create void variable!
       G__genericerror("Error: void type variable can not be declared");
@@ -7148,7 +7148,6 @@ void Cint::Internal::G__returnvartype(G__value* presult, const ::Reflex::Member&
          basen = 0;
       }
       // Search for variable name and access rule match. 
-      const Reflex::Type ZType = Reflex::Type::ByName("codeBreak$");
       do {
          next_base:
          ::Reflex::Member var = varscope.DataMemberByName(varname);
@@ -7425,7 +7424,6 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
          }
       }
       // Search for variable name and access rule match.
-      const Reflex::Type ZType = ::Reflex::PointerBuilder(Reflex::Type::ByName("codeBreak$"));
       do {
          next_base:
          ig15 = 0;
@@ -7435,7 +7433,6 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
             const char *mname = iter->Name_c_str();
             if (mname[0]==varname[0] && 0==strcmp(mname, varname.c_str())) { // Names match
                if (
-                  //iter->TypeOf() != ZType && // This is to exclude the 'Z' type coming from a SpecialObject lookup
                   (
                    (G__get_properties(*iter)->statictype < 0) || // Not file scope, or
                     G__filescopeaccess(G__ifile.filenum, G__get_properties(*iter)->filenum) // File scope access match.

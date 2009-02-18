@@ -1427,7 +1427,7 @@ static G__value G__getfunction_libp(const char* item, char* funcname, G__param* 
                }
                if (G__asm_noverflow || !G__no_exec_compile) {
                   if (!G__const_noerror) {
-                     G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope (1)  %s:%d", G__struct.name[G__get_tagnum(G__tagnum)], item, __FILE__, __LINE__);
+                     G__fprinterr(G__serr, "Error: Cannot call %s::%s in current scope (1)  %s:%d", G__struct.name[G__get_tagnum(G__tagnum)], item, __FILE__, __LINE__);
                   }
                   G__genericerror(0);
                }
@@ -1695,63 +1695,62 @@ static G__value G__getfunction_libp(const char* item, char* funcname, G__param* 
 #ifdef G__ASM
                if (G__asm_noverflow) {
                   if (G__throwingexception) {
+                     // --
 #ifdef G__ASM_DBG
                      if (G__asm_dbg) {
-                        G__fprinterr(G__serr, "%3x: ALLOCEXCEPTION %d\n"
-                                     , G__asm_cp, G__get_tagnum(G__tagnum));
+                        G__fprinterr(G__serr, "%3x: ALLOCEXCEPTION %d\n", G__asm_cp, G__get_tagnum(G__tagnum));
                      }
-#endif
+#endif // G__ASM_DBG
                      G__asm_inst[G__asm_cp] = G__ALLOCEXCEPTION;
                      G__asm_inst[G__asm_cp+1] = G__get_tagnum(G__tagnum);
                      G__inc_cp_asm(2, 0);
                   }
                   else {
+                     // --
 #ifdef G__ASM_DBG
                      if (G__asm_dbg) {
-                        G__fprinterr(G__serr, "%3x: ALLOCTEMP %d\n"
-                                     , G__asm_cp, G__get_tagnum(G__tagnum));
+                        G__fprinterr(G__serr, "%3x: ALLOCTEMP %d\n", G__asm_cp, G__get_tagnum(G__tagnum));
                         G__fprinterr(G__serr, "%3x: SETTEMP\n", G__asm_cp);
                      }
-#endif
+#endif // G__ASM_DBG
                      G__asm_inst[G__asm_cp] = G__ALLOCTEMP;
                      G__asm_inst[G__asm_cp+1] = G__get_tagnum(G__tagnum);
                      G__asm_inst[G__asm_cp+2] = G__SETTEMP;
                      G__inc_cp_asm(3, 0);
                   }
                }
-#endif
+#endif // G__ASM
+               // --
             }
             else {
                G__store_struct_offset = G__PVOID;
             }
             G__incsetup_memfunc(G__tagnum);
-            for (funcmatch = G__EXACT;funcmatch <= G__USERCONV;funcmatch++) {
-               *known3 = G__interpret_func(&result3, funcname
-                                           , libp, hash
-                                           , G__tagnum
-                                           , funcmatch
-                                           , G__TRYCONSTRUCTOR);
-               if (*known3) break;
+            for (funcmatch = G__EXACT; funcmatch <= G__USERCONV; ++funcmatch) {
+               *known3 = G__interpret_func(&result3, funcname, libp, hash, G__tagnum, funcmatch, G__TRYCONSTRUCTOR);
+               if (*known3) {
+                  break;
+               }
             }
             if (G__CPPLINK == G__struct.iscpplink[G__get_tagnum(G__tagnum)]
                   && !G__throwingexception
                ) {
-               G__store_tempobject(result3);
                if (G__dispsource) {
-                  G__fprinterr(G__serr,
-                               "!!!Create temp object (%s)0x%lx,%d for %s()\n"
-                               , G__struct.name[G__get_tagnum(G__tagnum)] , G__p_tempbuf->obj.obj.i
-                               , G__templevel , funcname);
+                  G__fprinterr(G__serr, "G__getfunction_libp: Create temp object: level: %d  typename '%s'  addr: 0x%lx,%d for function call '%s()'  %s:%d\n", G__templevel, G__struct.name[G__get_tagnum(G__tagnum)], G__p_tempbuf->obj.obj.i, funcname, __FILE__, __LINE__);
                }
+               G__store_tempobject(result3);
 #ifdef G__ASM
                if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
-                  if (G__asm_dbg) G__fprinterr(G__serr, "%3x: STORETEMP\n", G__asm_cp);
-#endif
+                  if (G__asm_dbg) {
+                     G__fprinterr(G__serr, "%3x,%3x: STORETEMP  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+                  }
+#endif // G__ASM_DBG
                   G__asm_inst[G__asm_cp] = G__STORETEMP;
                   G__inc_cp_asm(1, 0);
                }
-#endif
+#endif // G__ASM
+               // --
             }
             else {
                G__value_typenum(result3) = G__tagnum;
@@ -2825,7 +2824,7 @@ extern "C" G__value G__getfunction(const char* item, int* known3, int memfunc_fl
                }
                if (G__asm_noverflow || !G__no_exec_compile) {
                   if (!G__const_noerror) {
-                     G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope (2)  %s:%d", G__struct.name[G__get_tagnum(G__tagnum)], item, __FILE__, __LINE__);
+                     G__fprinterr(G__serr, "Error: Cannot call %s::%s in current scope (2)  %s:%d", G__struct.name[G__get_tagnum(G__tagnum)], item, __FILE__, __LINE__);
                   }
                   G__genericerror(0);
                }
@@ -3137,10 +3136,10 @@ extern "C" G__value G__getfunction(const char* item, int* known3, int memfunc_fl
             }
          }
          if ((G__struct.iscpplink[G__get_tagnum(G__tagnum)] == G__CPPLINK) && !G__throwingexception) {
-            G__store_tempobject(result3);
             if (G__dispsource) {
-               G__fprinterr(G__serr, "!!!Create temp object (%s)0x%lx,%d for %s()\n", G__struct.name[G__get_tagnum(G__tagnum)], G__p_tempbuf->obj.obj.i, G__templevel, funcname);
+               G__fprinterr(G__serr, "G__getfunction: Create temp object: level: %d  typename: '%s'  addr: 0x%lx for function call '%s()'  %s:%d\n", G__templevel, G__struct.name[G__get_tagnum(G__tagnum)], G__p_tempbuf->obj.obj.i, funcname, __FILE__, __LINE__);
             }
+            G__store_tempobject(result3);
 #ifdef G__ASM
             if (G__asm_noverflow) {
                // --

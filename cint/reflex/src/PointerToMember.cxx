@@ -22,7 +22,7 @@ Reflex::PointerToMember::PointerToMember( const Type & pointerToMemberType,
                                                 const Scope & pointerToMemberScope,
                                                 const std::type_info & ti ) 
 //------------------------------------------------------------------------------- 
-   : TypeBase( BuildTypeName( pointerToMemberType, pointerToMemberScope ).c_str(), sizeof(void*), POINTERTOMEMBER, ti ),
+   : TypeBase( BuildTypeName( pointerToMemberType, pointerToMemberScope ).c_str(), sizeof(void*), POINTERTOMEMBER, ti, 'a' ),
      fPointerToMemberType( pointerToMemberType ),
      fPointerToMemberScope( pointerToMemberScope ) {
    // Construct dictionary info for a pointer to member type.

@@ -206,7 +206,10 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
             }
 #endif // G__ASM_DBG
             G__asm_stack[sp].obj.i = (G__asm_inst[pc+5] & 1) ? *(int*)(G__asm_inst[pc+1] + localmem) : *(int*)G__asm_inst[pc+1];
-            G__value_typenum(G__asm_stack[sp++]) = Reflex::Type::ByName("int");
+            {
+               static Reflex::Type int_type = Reflex::Type::ByName("int");
+               G__value_typenum(G__asm_stack[sp++]) = int_type;
+            }
             p2fldst = (p2fldst_t) G__asm_inst[pc+2];
             (*p2fldst)(G__asm_stack, &sp, (G__asm_inst[pc+5] & 2) ? localmem : 0, G__Dict::GetDict().GetDataMember(G__asm_inst[pc+6]));
             pc += G__asm_inst[pc+4];
@@ -257,7 +260,10 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                       (*(int*)(G__asm_inst[pc+2] + localmem)) : (*(int*)G__asm_inst[pc+2]));
                   break;
             }
-            G__value_typenum(G__asm_stack[sp++]) = Reflex::Type::ByName("int");
+            {
+               static Reflex::Type int_type = Reflex::Type::ByName("int");
+               G__value_typenum(G__asm_stack[sp++]) = int_type;
+            }
             p2fldst = (p2fldst_t) G__asm_inst[pc+4];
             (*p2fldst)(G__asm_stack, &sp, (G__asm_inst[pc+7] & 4) ? localmem : 0, G__Dict::GetDict().GetDataMember(G__asm_inst[pc+8]));
             pc += G__asm_inst[pc+6];
@@ -631,7 +637,7 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                for (int i = 0; i < fpara.paran; ++i) {
                   fpara.para[i] = G__asm_stack[sp-fpara.paran+i];
                   if (!fpara.para[i].ref) {
-                     switch (Reflex::Tools::FundamentalType(G__value_typenum(fpara.para[i]))) {
+                     switch (Reflex::Tools::FundamentalType(G__value_typenum(fpara.para[i]).FinalType())) {
                         case Reflex::kFLOAT:
                         case Reflex::kUNSIGNED_CHAR:
                         case Reflex::kCHAR:

@@ -22,10 +22,11 @@
 Reflex::Typedef::Typedef( const char * typ,
                                 const Type & typedefType,
                                 TYPE typeTyp,
-                                const Type & finalType )
+                                const Type & finalType,
+                                const char cintType )
 //-------------------------------------------------------------------------------
-   : TypeBase(typ, typedefType.SizeOf() , typeTyp, typeid(UnknownType), finalType), //typedefType.TypeInfo()),
-     fTypedefType(typedefType) { 
+      : TypeBase(typ, typedefType.SizeOf(), typeTyp, typeid(UnknownType), finalType, cintType ? cintType : (((typedefType.CintType() == 'y') && typ && strchr(typ, '(')) ? '1' : typedefType.CintType())), fTypedefType(typedefType)
+{ 
    // Construct typedef info.
 
    Type current = typedefType;

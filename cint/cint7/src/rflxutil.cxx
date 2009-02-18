@@ -40,8 +40,6 @@ size_t GetReflexPropertyID();
 void G__get_cint5_type_tuple(const ::Reflex::Type in_type, char* out_type, int* out_tagnum, int* out_typenum, int* out_reftype, int* out_constvar);
 void G__get_cint5_type_tuple_long(const ::Reflex::Type in_type, long* out_type, long* out_tagnum, long* out_typenum, long* out_reftype, long* out_constvar);
 int G__get_cint5_typenum(const ::Reflex::Type in_type);
-int G__get_type(const ::Reflex::Type in);
-int G__get_type(const G__value in);
 int G__get_tagtype(const ::Reflex::Type in);
 int G__get_tagtype(const ::Reflex::Scope in);
 int G__get_reftype(const ::Reflex::Type in);
@@ -58,8 +56,6 @@ int G__get_varlabel(const Reflex::Type passed_var, int idx);
 int G__get_typenum(const ::Reflex::Type in);
 int G__get_tagnum(const ::Reflex::Type in);
 int G__get_tagnum(const ::Reflex::Scope in);
-::Reflex::Type& G__value_typenum(G__value& gv);
-const ::Reflex::Type& G__value_typenum(const G__value& gv);
 ::Reflex::Type G__get_from_type(int type, int createpointer, int isconst /*=0*/);
 int G__get_paran(const Reflex::Member var);
 size_t G__get_bitfield_width(const Reflex::Member var);
@@ -310,133 +306,9 @@ extern "C" int G__value_get_type(G__value *buf)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_type(const ::Reflex::Type in)
-{
-   // -- Get CINT type code for data type.
-   // Note: Structures are all 'u'.
-   if (!in) return 0;
-
-   // FINAL for a typedef only remove the typedef layer!
-
-   ::Reflex::Type final = in.FinalType();
-
-   if (in.IsPointerToMember() || in.ToType().IsPointerToMember() ||  final.IsPointerToMember()) return 'a';
-
-   // The type code for a variable in cint5 ignores any array part.
-   for (; final.IsArray(); final = final.ToType()) {}
-
-   int pointerThusUppercase = final.IsPointer();
-   pointerThusUppercase *= 'A' - 'a';
-   ::Reflex::Type raw = in.RawType();
-
-   if (raw.IsFundamental()) {
-      if (in.TypeType() == Reflex::TYPEDEF) {
-         // they are all typedefs to (pointer to) fundamental types:
-         const char *name = in.Name_c_str();
-         const char name0 = name[0];
-         if (name0 == 'm') {
-            if (0==strcmp(name , "macro$")) return 'j';
-            if (0==strcmp(name , "macroInt$"))    return 'p';
-            if (0==strcmp(name , "macroDouble$")) return 'P';
-            if (0==strcmp(name , "macroChar*$")) return 'T';
-         } else if (name0 == 'a') {
-            if (0==strcmp(name , "autoInt$"))     return 'o';
-            if (0==strcmp(name , "autoDouble$"))  return 'O';
-         } else if (name0 == 's') {
-            if (0==strcmp(name , "switchStart$"))  return 'a';
-            if (0==strcmp(name , "switchDefault$"))  return 'z';
-         } else if (name0 == 'c') {
-            if (0==strcmp(name , "codeBreak$"))  return 'Z';
-            if (0==strcmp(name , "codeBreak$*"))  return 'Z'; // This is actually a 'slot' for a not yet found special object
-         } else if (name0 == 'd')
-            if (0==strcmp(name , "defaultFunccall$")) return G__DEFAULT_FUNCCALL;
-      }
-
-      ::Reflex::EFUNDAMENTALTYPE fundamental = ::Reflex::Tools::FundamentalType(raw);
-      char unsigned_flag = (fundamental == ::Reflex::kUNSIGNED_CHAR
-         || fundamental == ::Reflex::kUNSIGNED_SHORT_INT
-         || fundamental == ::Reflex::kUNSIGNED_INT
-         || fundamental == ::Reflex::kUNSIGNED_LONG_INT
-         || fundamental == ::Reflex::kULONGLONG
-         );
-      switch (fundamental) {
-         // NOTE: "raw unsigned" (type 'h') is gone - it's equivalent to unsigned int.
-         case ::Reflex::kCHAR:
-         case ::Reflex::kSIGNED_CHAR:
-         case ::Reflex::kUNSIGNED_CHAR:
-            return ((int) 'c') - unsigned_flag + pointerThusUppercase;
-         case ::Reflex::kSHORT_INT:
-         case ::Reflex::kUNSIGNED_SHORT_INT:
-            return ((int) 's') - unsigned_flag + pointerThusUppercase;
-         case ::Reflex::kINT:
-         case ::Reflex::kUNSIGNED_INT:
-            return ((int) 'i') - unsigned_flag + pointerThusUppercase;
-         case ::Reflex::kLONG_INT:
-         case ::Reflex::kUNSIGNED_LONG_INT:
-            return ((int) 'l') - unsigned_flag + pointerThusUppercase;
-         case ::Reflex::kLONGLONG:
-         case ::Reflex::kULONGLONG:
-            return ((int) 'n') - unsigned_flag + pointerThusUppercase;
-
-         case ::Reflex::kBOOL:
-            return ((int) 'g') + pointerThusUppercase;
-         case ::Reflex::kVOID: {
-            if (final.IsPointer()) {
-               return 'Y';
-            } else
-               if (final.TypeType()==Reflex::FUNCTION
-                   || final.TypeType()==Reflex::FUNCTIONMEMBER
-                   || strstr(in.Name_c_str(),"(")) {
-               return '1';
-            } else {
-               return 'y';
-            };
-            // return ((int) 'y') + pointerThusUppercase;
-         }
-         case ::Reflex::kFLOAT:
-            return ((int) 'f') + pointerThusUppercase;
-         case ::Reflex::kDOUBLE:
-            return ((int) 'd') + pointerThusUppercase;
-         case ::Reflex::kLONG_DOUBLE:
-            return ((int) 'q') + pointerThusUppercase;
-         default:
-            printf("G__gettype error: fundamental Reflex::Type %s %s is not taken into account!\n",
-               raw.TypeTypeAsString().c_str(), raw.Name_c_str());
-            return 0;
-      } // switch fundamental
-   }
-
-   static Reflex::Type stFile;
-   if (!stFile.Id()) stFile = Reflex::Type::ByName("FILE");
-   if ((stFile.Id() && raw.Id() == stFile.Id())
-       || (!stFile.Id() && 0==strcmp(raw.Name_c_str(),"FILE")))
-      return ((int) 'e') + pointerThusUppercase;
-   if (raw.IsClass()|| raw.IsStruct() ||
-       /* raw.IsEnum() || */ raw.IsUnion())
-       return ((int) 'u') + pointerThusUppercase;
-   if (raw.IsEnum()) return ((int)'i') + pointerThusUppercase;
-   // Handle function and function pointer (both '1'):
-   Reflex::Type fn( in );
-   if (fn.IsPointer()) {
-      fn = fn.ToType();
-   }
-   if (fn.TypeType() == Reflex::FUNCTION || fn.TypeType() == Reflex::FUNCTIONMEMBER) return '1';
-   
-   return 0;
-}
-
-//______________________________________________________________________________
-int Cint::Internal::G__get_type(const G__value in)
-{
-   // -- Get CINT type code for a G__value.
-   int ret = G__get_type(G__value_typenum(in));
-   return ret;
-}
-
-//______________________________________________________________________________
 int Cint::Internal::G__get_tagtype(const ::Reflex::Type in)
 {
-   // -- Get CINT type code for a structure (c,s,e,u).
+   // Get CINT type code for a structure (c,s,e,u).
    switch (in.RawType().TypeType()) {
       case ::Reflex::TYPETEMPLATEINSTANCE: return 'c';
       case ::Reflex::CLASS: return 'c';
@@ -462,8 +334,7 @@ int Cint::Internal::G__get_tagtype(const ::Reflex::Type in)
 //______________________________________________________________________________
 int Cint::Internal::G__get_tagtype(const ::Reflex::Scope in)
 {
-   // -- Get CINT type code for a structure (c,s,e,u).
-   
+   // Get CINT type code for a structure (c,s,e,u).
    switch (in.ScopeType()) {
       case ::Reflex::TYPETEMPLATEINSTANCE: return 'c';
       case ::Reflex::CLASS: return 'c';
@@ -489,7 +360,7 @@ int Cint::Internal::G__get_tagtype(const ::Reflex::Scope in)
 //______________________________________________________________________________
 int Cint::Internal::G__get_reftype(const ::Reflex::Type in)
 {
-   // -- Get CINT reftype for a type (PARANORMAL, PARAREFERENCE, etc.).
+   // Get CINT reftype for a type (PARANORMAL, PARAREFERENCE, etc.).
    //
    // Given this:
    //
@@ -519,7 +390,6 @@ int Cint::Internal::G__get_reftype(const ::Reflex::Type in)
    // Note that cint v5 cannot remember more than one level of typedef deep.
    //
    bool isref = in.IsReference();
-
    ::Reflex::Type current = in; 
    while (!isref && current && current.IsTypedef()) {
       current = current.ToType();
@@ -550,7 +420,7 @@ int Cint::Internal::G__get_reftype(const ::Reflex::Type in)
 //______________________________________________________________________________
 G__RflxProperties* Cint::Internal::G__get_properties(const ::Reflex::Type in)
 {
-   // -- Get REFLEX property list from a data type.
+   // Get REFLEX property list from a data type.
    if (!in) {
       abort();
       //return 0;
@@ -1066,25 +936,6 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
 }
 
 //______________________________________________________________________________
-::Reflex::Type& Cint::Internal::G__value_typenum(G__value& gv)
-{
-   // -- Get access to the buf_typenum field of a G__value.
-   //
-   // Note: The return value must be by-reference, because this routine
-   //       is commonly used as a lvalue on the left-hand side of
-   //       an assignment expresssion.
-   void *type_punning = &gv.buf_typenum;
-   return *((::Reflex::Type*) type_punning);
-}
-
-//______________________________________________________________________________
-const ::Reflex::Type& Cint::Internal::G__value_typenum(const G__value& gv)
-{
-   const void *type_punning = &gv.buf_typenum;
-   return *((::Reflex::Type*) type_punning);
-}
-
-//______________________________________________________________________________
 ::Reflex::Type Cint::Internal::G__get_from_type(int type, int createpointer, int isconst /*=0*/)
 {
    // -- Get a REFLEX Type from a CINT type.
@@ -1112,6 +963,7 @@ const ::Reflex::Type& Cint::Internal::G__value_typenum(const G__value& gv)
    case 'o': return ::Reflex::Type::ByName("autoInt$");
    case 'O': return ::Reflex::Type::ByName("autoDouble$");
    case 'T': return ::Reflex::Type::ByName("macroChar*$");
+   case '\001': return ::Reflex::Type::ByName("blockBreakContinueGoto$");
    case G__DEFAULT_FUNCCALL: return ::Reflex::Type::ByName("defaultFunccall$");
    }
 
@@ -1169,6 +1021,95 @@ const ::Reflex::Type& Cint::Internal::G__value_typenum(const G__value& gv)
       return raw;
    }
 }
+
+#if 0
+//______________________________________________________________________________
+::Reflex::Type Cint::Internal::G__get_from_type(int type, int createpointer, int isconst /*=0*/)
+{
+   // Get a reflex type from a cint type.
+   static ::Reflex::Type void_type(::Reflex::Type::ByTypeInfo(typeid(void)));
+   static ::Reflex::Type bool_type(::Reflex::Type::ByTypeInfo(typeid(bool)));
+   static ::Reflex::Type uchar_type(::Reflex::Type::ByTypeInfo(typeid(unsigned char)));
+   static ::Reflex::Type char_type(::Reflex::Type::ByTypeInfo(typeid(char)));
+   static ::Reflex::Type ushort_type(::Reflex::Type::ByTypeInfo(typeid(unsigned short)));
+   static ::Reflex::Type short_type(::Reflex::Type::ByTypeInfo(typeid(short)));
+   static ::Reflex::Type uint_type(::Reflex::Type::ByTypeInfo(typeid(unsigned int)));
+   static ::Reflex::Type int_type(::Reflex::Type::ByTypeInfo(typeid(int)));
+   static ::Reflex::Type ulong_type(::Reflex::Type::ByTypeInfo(typeid(unsigned long)));
+   static ::Reflex::Type long_type(::Reflex::Type::ByTypeInfo(typeid(long)));
+   static ::Reflex::Type ulonglong_type(::Reflex::Type::ByTypeInfo(typeid(unsigned long long)));
+   static ::Reflex::Type longlong_type(::Reflex::Type::ByTypeInfo(typeid(long long)));
+   static ::Reflex::Type float_type(::Reflex::Type::ByTypeInfo(typeid(float)));
+   static ::Reflex::Type double_type(::Reflex::Type::ByTypeInfo(typeid(double)));
+   static ::Reflex::Type longdouble_type(::Reflex::Type::ByTypeInfo(typeid(long double)));
+   //static ::Reflex::Type switchStart(::Reflex::Type::ByName("switchStart$"));
+   static ::Reflex::Type switchDefault(::Reflex::Type::ByName("switchDefault$"));
+   static ::Reflex::Type rootSpecial(::Reflex::Type::ByName("rootSpecial$"));
+   static ::Reflex::Type blockBreakContinueGoto(::Reflex::Type::ByName("blockBreakContinueGoto$"));
+   static ::Reflex::Type macroInt(::Reflex::Type::ByName("macroInt$"));
+   static ::Reflex::Type macro(::Reflex::Type::ByName("macro$"));
+   static ::Reflex::Type macroDouble(::Reflex::Type::ByName("macroDouble$"));
+   static ::Reflex::Type autoInt(::Reflex::Type::ByName("autoInt$"));
+   static ::Reflex::Type autoDouble(::Reflex::Type::ByName("autoDouble$"));
+   static ::Reflex::Type macroCharStar(::Reflex::Type::ByName("macroChar*$"));
+   static ::Reflex::Type defaultFunccall(::Reflex::Type::ByName("defaultFunccall$"));
+   static ::Reflex::Type ptr_to_mbr_type(::Reflex::PointerToMemberBuilder(::Reflex::Type(), ::Reflex::Scope()));
+   switch (type) {
+      case '\001': return blockBreakContinueGoto;
+      case G__DEFAULT_FUNCCALL: return defaultFunccall;
+      case 'O': return autoDouble;
+      case 'P': return macroDouble;
+      case 'T': return macroCharStar;
+      case 'Z': return rootSpecial;
+      case 'a': return ptr_to_mbr_type;
+      //case 'a': return switchStart;
+      case 'j': return macro;
+      case 'o': return autoInt;
+      case 'p': return macroInt;
+      case 'z': return switchDefault;
+   }
+   ::Reflex::Type raw;
+   switch (tolower(type)) {
+      case '1': raw = void_type; break; // ptr to function
+      //case 'a': // handled above
+      case 'b': raw = uchar_type; break;
+      case 'c': raw = char_type; break;
+      case 'd': raw = double_type; break;
+      //case 'e': // FILE
+      case 'f': raw = float_type; break;
+      case 'g': raw = bool_type; break;
+      case 'h': raw = uint_type; break;
+      case 'i': raw = int_type; break;
+      //case 'j': // handled above
+      case 'k': raw = ulong_type; break;
+      case 'l': raw = long_type; break;
+      case 'm': raw = ulonglong_type; break;
+      case 'n': raw = longlong_type; break;
+      //case 'o': // handled above
+      //case 'p': // handled above
+      case 'q': raw = longdouble_type; break;
+      case 'r': raw = ushort_type; break;
+      case 's': raw = short_type; break;
+      //case 't': // obsolete, see below
+      //case 'u': // class, enum, namespace, struct, union
+      //case 'v': // unused
+      //case 'w': // logic
+      //case 'x': // unused
+      case 'y': raw = void_type; break;
+      //case 'z': // handled above
+   }
+   if (createpointer & !isupper(type)) {
+      createpointer = 0;
+   }
+   if (isconst & G__CONSTVAR) { 
+      raw = ::Reflex::Type(raw, Reflex::CONST, Reflex::Type::APPEND);
+   }
+   if (createpointer) {
+      raw = ::Reflex::PointerBuilder(raw);
+   }
+   return raw;
+}
+#endif // 0
 
 //______________________________________________________________________________
 int Cint::Internal::G__get_paran(const Reflex::Member var)

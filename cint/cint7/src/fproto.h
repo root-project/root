@@ -363,12 +363,6 @@ void G__set_history_size(int s);
 int G__setaccess(char *statement,int iout);
  int G__class_conversion_operator(const ::Reflex::Type &tagnum,G__value *presult);
 int G__fundamental_conversion_operator(int type,int tagnum,::Reflex::Type typenum,int reftype,int constvar,G__value *presult);
-int G__asm_test_E(int *a,int *b);
-int G__asm_test_N(int *a,int *b);
-int G__asm_test_GE(int *a,int *b);
-int G__asm_test_LE(int *a,int *b);
-int G__asm_test_g(int *a,int *b);
-int G__asm_test_l(int *a,int *b);
 long G__asm_gettest(int op,long *inst);
 int G__asm_optimize(int *start);
 int G__asm_optimize3(int *start);
@@ -537,8 +531,14 @@ int G__CodingSystem(int c);
 
 // Note: The return type must be by-reference,
 //       this routine is used as a lvalue.
-::Reflex::Type& G__value_typenum(G__value& gv);
-const ::Reflex::Type& G__value_typenum(const G__value& gv);
+#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif // __GNUC__ && __GNUC__ > 3 && __GNUC_MINOR__ > 1
+inline ::Reflex::Type& G__value_typenum(G__value& gv) { return *(::Reflex::Type*) &gv.buf_typenum; }
+inline const ::Reflex::Type& G__value_typenum(const G__value& gv) { return *(::Reflex::Type*) &gv.buf_typenum; }
+#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif // __GNUC__ && __GNUC__ > 3 && __GNUC_MINOR__ > 1
 
 extern void G__more_col(int len);
 extern int G__more(FILE* fp,const char *msg);
@@ -634,8 +634,8 @@ void G__setcopyflag(int flag);
 void G__get_cint5_type_tuple(const ::Reflex::Type in_type, char* out_type, int* out_tagnum, int* out_typenum, int* out_reftype, int* out_constvar);
 void G__get_cint5_type_tuple_long(const ::Reflex::Type in_type, long* out_type, long* out_tagnum, long* out_typenum, long* out_reftype, long* out_constvar);
 int G__get_cint5_typenum(const ::Reflex::Type in_type);
-int G__get_type(const ::Reflex::Type in);
-int G__get_type(const G__value in);
+inline int G__get_type(const ::Reflex::Type in) { return in.CintType(); }
+inline int G__get_type(const G__value in) { return G__value_typenum(in).CintType(); }
 int G__get_tagtype(const ::Reflex::Type in);
 int G__get_tagtype(const ::Reflex::Scope in);
 int G__get_reftype(const ::Reflex::Type in);

@@ -308,9 +308,9 @@ namespace Reflex {
 * loop compile mode turned on
 *********************************************/
 #define G__ASM
-#ifndef G__ASM_DBG
-#define G__ASM_DBG
-#endif
+//#ifndef G__ASM_DBG
+//#define G__ASM_DBG
+//#endif
 
 /*********************************************
 * Old style compiled function name buffer size

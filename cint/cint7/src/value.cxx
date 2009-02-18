@@ -495,7 +495,7 @@ G__value Cint::Internal::G__letVvalue(G__value *p, G__value result)
        * else convert p to its' pointer type
        */
       if (G__value_typenum(*p).FinalType().IsPointer()) {
-         G__value_typenum(*p) = G__get_from_type('L', 0); // p->type='L';
+         G__value_typenum(*p) = G__get_from_type('L', 0); // p->type='L'; // FIXME: This is impossible!
       }
       else {
          G__value_typenum(*p) = ::Reflex::PointerBuilder(G__value_typenum(*p));  // p->type=toupper(p->type);

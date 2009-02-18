@@ -49,7 +49,7 @@ int Cint::Internal::G__asm_step = 0;
 
 //______________________________________________________________________________
 #define G__intM(buf) \
-   ((Reflex::kFLOAT==G__value_fundamental(*buf)||Reflex::kDOUBLE==G__value_fundamental(*buf)) ? (long)buf->obj.d : buf->obj.i )
+   (((G__get_type(*buf) == 'f') || (G__get_type(*buf) == 'd')) ? ((long) buf->obj.d) : buf->obj.i)
 
 //______________________________________________________________________________
 #define G__longlongM(buf) G__converT<long long>(buf)
@@ -59,11 +59,11 @@ int Cint::Internal::G__asm_step = 0;
 
 //______________________________________________________________________________
 #define G__isdoubleM(buf) \
-   (G__value_fundamental(*buf) == Reflex::kFLOAT || G__value_fundamental(*buf) == Reflex::kDOUBLE)
+   ((G__get_type(*buf) == 'f') || (G__get_type(*buf) == 'd'))
 
 //______________________________________________________________________________
 #define G__isunsignedM(buf) \
-   (G__value_fundamental(*buf) == Reflex::kUNSIGNED_INT || G__value_fundamental(*buf) == Reflex::kUNSIGNED_LONG_INT)
+   ((G__get_type(*buf) == 'h') || (G__get_type(*buf) == 'k'))
 
 //______________________________________________________________________________
 //
@@ -74,41 +74,47 @@ int Cint::Internal::G__asm_step = 0;
 //
 //  G__asm_test_X(),  Optimized comparator
 
+namespace Cint {
+namespace Internal {
+
 //______________________________________________________________________________
-int Cint::Internal::G__asm_test_E(int* a, int* b)
+static int G__asm_test_E(int* a, int* b)
 {
    return *a == *b;
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__asm_test_N(int* a, int* b)
+static int G__asm_test_N(int* a, int* b)
 {
    return *a != *b;
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__asm_test_GE(int* a, int* b)
+static int G__asm_test_GE(int* a, int* b)
 {
    return *a >= *b;
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__asm_test_LE(int* a, int* b)
+static int G__asm_test_LE(int* a, int* b)
 {
    return *a <= *b;
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__asm_test_g(int* a, int* b)
+static int G__asm_test_g(int* a, int* b)
 {
    return *a > *b;
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__asm_test_l(int* a, int* b)
+static int G__asm_test_l(int* a, int* b)
 {
    return *a < *b;
 }
+
+} // namespace Internal
+} // namespace Cint
 
 //______________________________________________________________________________
 //
@@ -119,12 +125,15 @@ int Cint::Internal::G__asm_test_l(int* a, int* b)
 //
 //  G__LD_p0 family of functions.
 //
+//  Note: None of these functions can be inline because we take their address.
+//
 
 //______________________________________________________________________________
-template <typename CASTTYPE> static void G__LD_p0(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
+template<class CASTTYPE> static void G__LD_p0(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(CASTTYPE)));
    G__value* buf = &pbuf[(*psp)++];
-   G__value_typenum(*buf) = Reflex::Type::ByTypeInfo(typeid(CASTTYPE));
+   G__value_typenum(*buf) = ty;
    buf->ref = (long) (G__get_offset(var) + offset);
    G__setvalue(buf, *(CASTTYPE*)buf->ref);
 }
@@ -148,6 +157,11 @@ static void G__LD_p0_struct(G__value* pbuf, int* psp, long offset, const Reflex:
 }
 
 //______________________________________________________________________________
+//
+//  Array bounds checking.
+//
+
+//______________________________________________________________________________
 static void G__nonintarrayindex(const Reflex::Member& var)
 {
    G__fprinterr(G__serr, "Error: %s[] invalud type for array index", var.Name(Reflex::SCOPED).c_str());
@@ -158,7 +172,8 @@ static void G__nonintarrayindex(const Reflex::Member& var)
 //______________________________________________________________________________
 static bool G__check_idx(const G__value& vidx, const Reflex::Member& var)
 {
-   if (Reflex::kDOUBLE == G__value_fundamental(vidx) || Reflex::kFLOAT == G__value_fundamental(vidx)) {
+   char type = G__get_type(vidx);
+   if ((type == 'd') || (type == 'f')) {
       G__nonintarrayindex(var);
    }
    if (vidx.obj.i > G__get_varlabel(var, 1)) {
@@ -173,19 +188,22 @@ static bool G__check_idx(const G__value& vidx, const Reflex::Member& var)
 //
 //  G__LD_p1_xxx
 //
+//  Note: None of these functions can be inline because we take their address.
+//
 
 //______________________________________________________________________________
 template <typename CASTTYPE> static void G__LD_p1(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(CASTTYPE)));
    G__value* buf = &pbuf[*psp-1];
 #ifdef G__TUNEUP_W_SECURITY
-   if (G__check_idx(*buf, var))
+   //if (G__check_idx(*buf, var))
 #endif // G__TUNEUP_W_SECURITY
    {
       buf->ref = (long)(G__get_offset(var) + offset + (G__convertT<long>(buf) * sizeof(CASTTYPE)));
       G__setvalue(buf, *(CASTTYPE*)buf->ref);
    }
-   G__value_typenum(*buf) = Reflex::Type::ByTypeInfo(typeid(CASTTYPE));
+   G__value_typenum(*buf) = ty;
 }
 
 //______________________________________________________________________________
@@ -217,11 +235,16 @@ static void G__LD_p1_struct(G__value* pbuf, int* psp, long offset, const Reflex:
 }
 
 //______________________________________________________________________________
-static int G__get_p_inc(int paran, G__value* buf, const Reflex::Member& var)
+//
+//  Get pointer increment for a given array dimension.
+//
+
+//______________________________________________________________________________
+static inline int G__get_p_inc(int paran, G__value* buf, const Reflex::Member& var)
 {
    int ary = G__get_varlabel(var, 0);
    int p_inc = 0;
-   for (int ig25 = 0;ig25 < paran; ++ig25) {
+   for (int ig25 = 0; ig25 < paran; ++ig25) {
       p_inc += ary * G__int(buf[ig25]);
       ary /= G__get_varlabel(var, ig25 + 2);
    }
@@ -232,16 +255,19 @@ static int G__get_p_inc(int paran, G__value* buf, const Reflex::Member& var)
 //
 //  G__LD_pn_xxx
 //
+//  Note: None of these can be inline because we take their address.
+//
 
 //______________________________________________________________________________
 template <typename CASTTYPE> static void G__LD_pn(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(CASTTYPE)));
    int paran = G__get_paran(var);
    *psp = *psp - paran;
    G__value* buf = &pbuf[*psp];
    ++(*psp);
    int p_inc = G__get_p_inc(paran, buf, var);
-   G__value_typenum(*buf) = Reflex::Type::ByTypeInfo(typeid(CASTTYPE));
+   G__value_typenum(*buf) = ty;
    buf->ref = (long)(G__get_offset(var) + offset + (p_inc * sizeof(CASTTYPE)));
 #ifdef G__TUNEUP_W_SECURITY
    if (p_inc > G__get_varlabel(var, 1)) {
@@ -265,10 +291,10 @@ static void G__LD_pn_pointer(G__value* pbuf, int* psp, long offset, const Reflex
    G__value_typenum(*buf) = var.TypeOf();
    buf->ref = (long)G__get_offset(var) + offset + (p_inc * sizeof(long));
 #ifdef G__TUNEUP_W_SECURITY
-   if (p_inc > G__get_varlabel(var, 1)) {
-      G__arrayindexerror(var, var.Name(Reflex::SCOPED).c_str(), p_inc);
-   }
-   else
+   //if (p_inc > G__get_varlabel(var, 1)) {
+   //   G__arrayindexerror(var, var.Name(Reflex::SCOPED).c_str(), p_inc);
+   //}
+   //else
 #endif // G__TUNEUP_W_SECURITY
    {
       buf->obj.i = *(long*)buf->ref;
@@ -286,10 +312,10 @@ static void G__LD_pn_struct(G__value* pbuf, int* psp, long offset, const Reflex:
    G__value_typenum(*buf) = var.TypeOf();
    buf->ref = (long)G__get_offset(var) + offset + (p_inc * var.TypeOf().RawType().SizeOf());
 #ifdef G__TUNEUP_W_SECURITY
-   if (p_inc > G__get_varlabel(var, 1)) {
-      G__arrayindexerror(var, var.Name(Reflex::SCOPED).c_str(), p_inc);
-   }
-   else
+   //if (p_inc > G__get_varlabel(var, 1)) {
+   //   G__arrayindexerror(var, var.Name(Reflex::SCOPED).c_str(), p_inc);
+   //}
+   //else
 #endif // G__TUNEUP_W_SECURITY
    {
       buf->obj.i = buf->ref;
@@ -299,9 +325,10 @@ static void G__LD_pn_struct(G__value* pbuf, int* psp, long offset, const Reflex:
 //______________________________________________________________________________
 template <typename CASTTYPE> static void G__LD_P10(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(CASTTYPE)));
    G__value* buf= &pbuf[*psp-1];
    buf->ref = *(long*)(G__get_offset(var) + offset) + (G__convertT<long>(buf) * sizeof(CASTTYPE));
-   G__value_typenum(*buf) = Reflex::Type::ByTypeInfo(typeid(CASTTYPE));
+   G__value_typenum(*buf) = ty;
    G__setvalue(buf, *(CASTTYPE*)buf->ref);
 }
 
@@ -327,9 +354,11 @@ static void G__LD_P10_struct(G__value* pbuf, int* psp, long offset, const Reflex
 //
 //  G__ST_p0_xxx
 //
+//  Note: None of these functions can be inline because we take their address.
+//
 
 //______________________________________________________________________________
-template <typename CASTTYPE> static void G__ST_p0(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
+template<class CASTTYPE> static void G__ST_p0(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
 {
    G__value* val = &pbuf[*psp-1];
    *(CASTTYPE*)(G__get_offset(var) + offset) = G__convertT<CASTTYPE>(val);
@@ -362,13 +391,15 @@ static void G__ST_p0_struct(G__value* pbuf, int* psp, long offset, const Reflex:
 //
 //  G__ST_p1_xxx
 //
+//  Note: None of these functions can be inline because we take their address.
+//
 
 //______________________________________________________________________________
 template <typename CASTTYPE> static void G__ST_p1(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
 {
    G__value* val = &pbuf[*psp-1];
 #ifdef G__TUNEUP_W_SECURITY
-   if (G__check_idx(*val, var))
+   //if (G__check_idx(*val, var))
 #endif // G__TUNEUP_W_SECURITY
    {
       *(CASTTYPE*)(G__get_offset(var) + offset + (G__convertT<long>(val) * sizeof(CASTTYPE))) = G__convertT<CASTTYPE>(&pbuf[*psp-2]);
@@ -381,7 +412,7 @@ static void G__ST_p1_pointer(G__value* pbuf, int* psp, long offset, const Reflex
 {
    G__value* val = &pbuf[*psp-1];
 #ifdef G__TUNEUP_W_SECURITY
-   if (G__check_idx(*val, var))
+   //if (G__check_idx(*val, var))
 #endif // G__TUNEUP_W_SECURITY
    {
       long address = (long)(G__get_offset(var) + offset + (G__convertT<long>(val) * sizeof(long)));
@@ -404,7 +435,7 @@ static void G__ST_p1_struct(G__value* pbuf, int* psp, long offset, const Reflex:
 {
    G__value* val = &pbuf[*psp-1];
 #ifdef G__TUNEUP_W_SECURITY
-   if (G__check_idx(*val, var))
+   //if (G__check_idx(*val, var))
 #endif // G__TUNEUP_W_SECURITY
    {
       long struct_sizeof = var.TypeOf().RawType().SizeOf();
@@ -426,10 +457,10 @@ template <typename CASTTYPE> static void G__ST_pn(G__value* pbuf, int* psp, long
    G__value* buf = &pbuf[*psp];
    int p_inc = G__get_p_inc(paran, buf, var);
 #ifdef G__TUNEUP_W_SECURITY
-   if (p_inc > G__get_varlabel(var, 1)) {
-      G__arrayindexerror(var, var.Name(Reflex::SCOPED).c_str(), p_inc);
-   }
-   else
+   //if (p_inc > G__get_varlabel(var, 1)) {
+   //   G__arrayindexerror(var, var.Name(Reflex::SCOPED).c_str(), p_inc);
+   //}
+   //else
 #endif // G__TUNEUP_W_SECURITY
    {
       *(CASTTYPE*)(G__get_offset(var) + offset + (p_inc * sizeof(CASTTYPE))) = G__convertT<CASTTYPE>(&pbuf[*psp-1]);
@@ -443,10 +474,13 @@ static void G__ST_pn_pointer(G__value* pbuf, int* psp, long offset, const Reflex
    *psp = *psp - paran;
    G__value* buf = &pbuf[*psp];
    int p_inc = G__get_p_inc(paran, buf, var);
-   if (p_inc > G__get_varlabel(var, 1)) {
-      G__arrayindexerror(var, var.Name(Reflex::SCOPED).c_str(), p_inc);
-   }
-   else {
+#ifdef G__TUNEUP_W_SECURITY
+   //if (p_inc > G__get_varlabel(var, 1)) {
+   //   G__arrayindexerror(var, var.Name(Reflex::SCOPED).c_str(), p_inc);
+   //}
+   //else
+#endif // G__TUNEUP_W_SECURITY
+   {
       char* address = (G__get_offset(var) + offset + (p_inc * sizeof(long)));
       long newval = G__int(pbuf[*psp-1]);
       if ((G__security & G__SECURE_GARBAGECOLLECTION) && address) {
@@ -469,10 +503,10 @@ static void G__ST_pn_struct(G__value* pbuf, int* psp, long offset, const Reflex:
    G__value* buf = &pbuf[*psp];
    int p_inc = G__get_p_inc(paran, buf, var);
 #ifdef G__TUNEUP_W_SECURITY
-   if (p_inc > G__get_varlabel(var, 1)) {
-      G__arrayindexerror(var, var.Name(Reflex::SCOPED).c_str(), p_inc);
-   }
-   else
+   //if (p_inc > G__get_varlabel(var, 1)) {
+   //   G__arrayindexerror(var, var.Name(Reflex::SCOPED).c_str(), p_inc);
+   //}
+   //else
 #endif // G__TUNEUP_W_SECURITY
    {
       long struct_sizeof = var.TypeOf().RawType().SizeOf();
@@ -483,6 +517,8 @@ static void G__ST_pn_struct(G__value* pbuf, int* psp, long offset, const Reflex:
 //______________________________________________________________________________
 //
 //  G__ST_P10_xxx
+//
+//  Note: None of these functions can be inline because we take their address.
 //
 
 //______________________________________________________________________________
@@ -512,15 +548,18 @@ static void G__ST_P10_struct(G__value* pbuf, int* psp, long offset, const Reflex
 //
 //  G__LD_Rp0_xxx
 //
-//  type &p;
+//  type& p;
 //  p;    optimize this expression
+//
+//  Note: None of these functions can be inline because we take their address.
 //
 
 //______________________________________________________________________________
 template <typename CASTTYPE> static void G__LD_Rp0(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(CASTTYPE)));
    G__value* buf = &pbuf[(*psp)++];
-   G__value_typenum(*buf) = Reflex::Type::ByTypeInfo(typeid(CASTTYPE));
+   G__value_typenum(*buf) = ty;
    buf->ref = *(long*)(G__get_offset(var) + offset);
    G__setvalue(buf, *(CASTTYPE*)buf->ref);
 }
@@ -547,8 +586,10 @@ static void G__LD_Rp0_struct(G__value* pbuf, int* psp, long offset, const Reflex
 //
 //  G__ST_Rp0_xxx
 //
-//  type &p;
-//   p=x;    optimize this expression
+//  type& p;
+//  p = x;    optimize this expression
+//
+//  Note: None of these functions can be inline because we take their address.
 //
 
 //______________________________________________________________________________
@@ -575,17 +616,20 @@ static void G__ST_Rp0_struct(G__value* pbuf, int* psp, long offset, const Reflex
 //
 //  G__LD_RP0_xxx
 //
-//  type &p;
+//  type& p;
 //  &p;    optimize this expression
+//
+//  Note: None of these functions can be inline because we take their address.
 //
 
 //______________________________________________________________________________
 template <typename CASTTYPE> static void G__LD_RP0(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(CASTTYPE)));
    G__value* buf = &pbuf[(*psp)++];
-   G__value_typenum(*buf) = Reflex::Type::ByTypeInfo(typeid(CASTTYPE));
+   G__value_typenum(*buf) = ty;
    buf->ref = (long) (G__get_offset(var) + offset);
-    G__setvalue(buf, *(CASTTYPE*)buf->ref);
+   G__setvalue(buf, *(CASTTYPE*)buf->ref);
 }
 
 //______________________________________________________________________________
@@ -601,62 +645,61 @@ static void G__LD_RP0_pointer(G__value* pbuf, int* psp, long offset, const Refle
 static void G__LD_RP0_struct(G__value* pbuf, int* psp, long offset, const Reflex::Member& var)
 {
    G__value* buf = &pbuf[(*psp)++];
-#ifndef __GNUC__
-#pragma message(FIXME("Did I interpret the caps char types right in that it's a pointer builder?"))
-#endif // __GNUC__
    G__value_typenum(*buf) = Reflex::PointerBuilder(var.TypeOf());
    buf->ref = (long)G__get_offset(var) + offset;
    buf->obj.i = buf->ref;
-   // it really was, not just i=ref:  buf->obj.i = *(long*)buf->ref;
 }
 
 //______________________________________________________________________________
 //
 //  G__OP2_OPTIMIZED_UU
 //
+//  Note: None of these functions can be inline because we take their address.
+//
 
 //______________________________________________________________________________
 template <typename T> static void G__OP2_plus_T(G__value* bufm1, G__value* bufm2)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(T)));
    G__setvalue(bufm2, G__convertT<T>(bufm2) + G__convertT<T>(bufm1));
-   G__value_typenum(*bufm2) = Reflex::Type::ByTypeInfo(typeid(T));
+   G__value_typenum(*bufm2) = ty;
    bufm2->ref = 0;
 }
 
 //______________________________________________________________________________
 template <typename T> static void G__OP2_minus_T(G__value* bufm1, G__value* bufm2)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(T)));
    G__setvalue(bufm2, G__convertT<T>(bufm2) - G__convertT<T>(bufm1));
-   G__value_typenum(*bufm2) = Reflex::Type::ByTypeInfo(typeid(T));
+   G__value_typenum(*bufm2) = ty;
    bufm2->ref = 0;
 }
 
 //______________________________________________________________________________
 template <typename T> static void G__OP2_multiply_T(G__value* bufm1, G__value* bufm2)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(T)));
    G__setvalue(bufm2, G__convertT<T>(bufm2) * G__convertT<T>(bufm1));
-   G__value_typenum(*bufm2) = Reflex::Type::ByTypeInfo(typeid(T));
+   G__value_typenum(*bufm2) = ty;
    bufm2->ref = 0;
 }
 
 //______________________________________________________________________________
 template <typename T> static void G__OP2_divide_T(G__value* bufm1, G__value* bufm2)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(T)));
    T bufm1v = G__convertT<T>(bufm1);
    if (bufm1v == 0) {
       G__genericerror("Error: operator '/' division by zero");
       return;
    }
    G__setvalue(bufm2, G__convertT<T>(bufm2) / bufm1v);
-   G__value_typenum(*bufm2) = Reflex::Type::ByTypeInfo(typeid(T));
+   G__value_typenum(*bufm2) = ty;
    bufm2->ref = 0;
 }
 
 //______________________________________________________________________________
 static void G__OP2_addvoidptr(G__value* bufm1, G__value* bufm2)
-#ifndef __GNUC__
-#pragma message(FIXME("G__OP2_addvoidptr should probably be forwarded to G__OP2_add<long>"))
-#endif // __GNUC__
 {
    bufm2->obj.i += bufm1->obj.i;
 }
@@ -665,40 +708,41 @@ static void G__OP2_addvoidptr(G__value* bufm1, G__value* bufm2)
 //
 //  G__OP2_OPTIMIZED
 //
+//  Note: None of these functions can be inline because we take their address.
+//
 
 //______________________________________________________________________________
-static void G__OP2_plus(G__value *bufm1, G__value *bufm2)
+static void G__OP2_plus(G__value* bufm1, G__value* bufm2)
 {
-   Reflex::EFUNDAMENTALTYPE fundType1 = G__value_fundamental(*bufm1);
-   Reflex::EFUNDAMENTALTYPE fundType2 = G__value_fundamental(*bufm2);
-   if (fundType1 == Reflex::kLONG_DOUBLE || fundType2 == Reflex::kLONG_DOUBLE) {
+   char fundType1 = G__get_type(*bufm1);
+   char fundType2 = G__get_type(*bufm2);
+   if (fundType1 == 'q' || fundType2 == 'q') {
       G__OP2_plus_T<long double>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kDOUBLE || fundType2 == Reflex::kDOUBLE) {
+   else if (fundType1 == 'd' || fundType2 == 'd') {
       G__OP2_plus_T<double>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kFLOAT || fundType2 == Reflex::kFLOAT) {
+   else if (fundType1 == 'f' || fundType2 == 'f') {
       G__OP2_plus_T<float>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kULONGLONG || fundType2 == Reflex::kULONGLONG) {
+   else if (fundType1 == 'm' || fundType2 == 'm') {
       G__OP2_plus_T<G__uint64>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kLONGLONG || fundType2 == Reflex::kLONGLONG) {
+   else if (fundType1 == 'n' || fundType2 == 'n') {
       G__OP2_plus_T<G__int64>(bufm1, bufm2);
    }
-   else if (G__value_typenum(*bufm2).FinalType().IsPointer()) {
+   else if (isupper(fundType2)) {
       bufm2->obj.i = bufm2->obj.i + (bufm1->obj.i * G__sizeof_deref(bufm2));
    }
-   else if (G__value_typenum(*bufm1).FinalType().IsPointer()) {
+   else if (isupper(fundType1)) {
       bufm2->obj.i = (bufm2->obj.i * G__sizeof_deref(bufm1)) + bufm1->obj.i;
-      // bufm2->obj.i=(bufm2->obj.i-bufm1->obj.i)/G__sizeof(bufm2);
       G__value_typenum(*bufm2) = G__value_typenum(*bufm1);
    }
    else if (
-      fundType1 == Reflex::kUNSIGNED_CHAR ||
-      fundType1 == Reflex::kUNSIGNED_SHORT_INT ||
-      fundType1 == Reflex::kUNSIGNED_INT ||
-      fundType1 == Reflex::kUNSIGNED_LONG_INT
+      (fundType1 == 'b') ||
+      (fundType1 == 'r') ||
+      (fundType1 == 'h') ||
+      (fundType1 == 'k')
    ) {
       G__OP2_plus_T<unsigned long>(bufm1, bufm2);
    }
@@ -709,47 +753,45 @@ static void G__OP2_plus(G__value *bufm1, G__value *bufm2)
 }
 
 //______________________________________________________________________________
-static void G__OP2_minus(G__value *bufm1, G__value *bufm2)
+static void G__OP2_minus(G__value* bufm1, G__value* bufm2)
 {
-   Reflex::EFUNDAMENTALTYPE fundType1 = G__value_fundamental(*bufm1);
-   Reflex::EFUNDAMENTALTYPE fundType2 = G__value_fundamental(*bufm2);
-   if (fundType1 == Reflex::kLONG_DOUBLE || fundType2 == Reflex::kLONG_DOUBLE) {
+   static Reflex::Type int_type(Reflex::Type::ByTypeInfo(typeid(int)));
+   char fundType1 = G__get_type(*bufm1);
+   char fundType2 = G__get_type(*bufm2);
+   if (fundType1 == 'q' || fundType2 == 'q') {
       G__OP2_minus_T<long double>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kDOUBLE || fundType2 == Reflex::kDOUBLE) {
+   else if (fundType1 == 'd' || fundType2 == 'd') {
       G__OP2_minus_T<double>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kFLOAT || fundType2 == Reflex::kFLOAT) {
+   else if (fundType1 == 'f' || fundType2 == 'f') {
       G__OP2_minus_T<float>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kULONGLONG || fundType2 == Reflex::kULONGLONG) {
+   else if (fundType1 == 'm' || fundType2 == 'm') {
       G__OP2_minus_T<G__uint64>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kLONGLONG || fundType2 == Reflex::kLONGLONG) {
+   else if (fundType1 == 'n' || fundType2 == 'n') {
       G__OP2_minus_T<G__int64>(bufm1, bufm2);
    }
-   else if (G__value_typenum(*bufm2).FinalType().IsPointer()) {
-#ifndef __GNUC__
-#pragma message (FIXME("We don't have the ptr-ptr case as in G__OP2_plus! And the calculation is completely different!"))
-#endif // __GNUC__
-      if (G__value_typenum(*bufm1).FinalType().IsPointer()) {
+   else if (isupper(fundType2)) {
+      if (isupper(fundType1)) {
          bufm2->obj.i = (bufm2->obj.i - bufm1->obj.i) / G__sizeof_deref(bufm2);
-         G__value_typenum(*bufm2) = Reflex::Type::ByTypeInfo(typeid(int));
+         G__value_typenum(*bufm2) = int_type;
       }
       else {
          bufm2->obj.i -= bufm1->obj.i * G__sizeof_deref(bufm2);
          G__value_typenum(*bufm2) = G__value_typenum(*bufm1);
       }
    }
-   else if (G__value_typenum(*bufm1).FinalType().IsPointer()) {
+   else if (isupper(fundType1)) {
       bufm2->obj.i = (bufm2->obj.i * G__sizeof(bufm2)) - bufm1->obj.i;
       G__value_typenum(*bufm2) = G__value_typenum(*bufm1);
    }
    else if (
-      fundType1 == Reflex::kUNSIGNED_CHAR ||
-      fundType1 == Reflex::kUNSIGNED_SHORT_INT ||
-      fundType1 == Reflex::kUNSIGNED_INT ||
-      fundType1 == Reflex::kUNSIGNED_LONG_INT
+      (fundType1 == 'b') ||
+      (fundType1 == 'r') ||
+      (fundType1 == 'h') ||
+      (fundType1 == 'k')
    ) {
       G__OP2_minus_T<unsigned long>(bufm1, bufm2);
    }
@@ -762,28 +804,28 @@ static void G__OP2_minus(G__value *bufm1, G__value *bufm2)
 //______________________________________________________________________________
 static void G__OP2_multiply(G__value* bufm1, G__value* bufm2)
 {
-   Reflex::EFUNDAMENTALTYPE fundType1 = G__value_fundamental(*bufm1);
-   Reflex::EFUNDAMENTALTYPE fundType2 = G__value_fundamental(*bufm2);
-   if (fundType1 == Reflex::kLONG_DOUBLE || fundType2 == Reflex::kLONG_DOUBLE) {
+   char fundType1 = G__get_type(*bufm1);
+   char fundType2 = G__get_type(*bufm2);
+   if (fundType1 == 'q' || fundType2 == 'q') {
       G__OP2_multiply_T<long double>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kDOUBLE || fundType2 == Reflex::kDOUBLE) {
+   else if (fundType1 == 'd' || fundType2 == 'd') {
       G__OP2_multiply_T<double>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kFLOAT || fundType2 == Reflex::kFLOAT) {
+   else if (fundType1 == 'f' || fundType2 == 'f') {
       G__OP2_multiply_T<float>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kULONGLONG || fundType2 == Reflex::kULONGLONG) {
+   else if (fundType1 == 'm' || fundType2 == 'm') {
       G__OP2_multiply_T<G__uint64>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kLONGLONG || fundType2 == Reflex::kLONGLONG) {
+   else if (fundType1 == 'n' || fundType2 == 'n') {
       G__OP2_multiply_T<G__int64>(bufm1, bufm2);
    }
    else if (
-      fundType1 == Reflex::kUNSIGNED_CHAR ||
-      fundType1 == Reflex::kUNSIGNED_SHORT_INT ||
-      fundType1 == Reflex::kUNSIGNED_INT ||
-      fundType1 == Reflex::kUNSIGNED_LONG_INT
+      (fundType1 == 'b') ||
+      (fundType1 == 'r') ||
+      (fundType1 == 'h') ||
+      (fundType1 == 'k')
    ) {
       G__OP2_multiply_T<unsigned long>(bufm1, bufm2);
    }
@@ -796,6 +838,7 @@ static void G__OP2_multiply(G__value* bufm1, G__value* bufm2)
 //______________________________________________________________________________
 template <typename T> static void G__OP2_modulus_T(G__value* bufm1, G__value* bufm2)
 {
+   static Reflex::Type ty(Reflex::Type::ByTypeInfo(typeid(T)));
    T bufm1v = G__convertT<T>(bufm1);
 #ifdef G__TUNEUP_W_SECURITY
    if (bufm1v == 0) {
@@ -804,30 +847,30 @@ template <typename T> static void G__OP2_modulus_T(G__value* bufm1, G__value* bu
    }
 #endif // G__TUNEUP_W_SECURITY
    G__setvalue<T>(bufm2, G__convertT<T>(bufm2) % bufm1v);
-   G__value_typenum(*bufm2) = Reflex::Type::ByTypeInfo(typeid(T));
+   G__value_typenum(*bufm2) = ty;
 }
 
 //______________________________________________________________________________
 static void G__OP2_modulus(G__value* bufm1, G__value* bufm2)
 {
-   Reflex::EFUNDAMENTALTYPE fundType1 = G__value_fundamental(*bufm1);
-   Reflex::EFUNDAMENTALTYPE fundType2 = G__value_fundamental(*bufm2);
-   if (fundType1 == Reflex::kULONGLONG || fundType2 == Reflex::kULONGLONG) {
+   char fundType1 = G__get_type(*bufm1);
+   char fundType2 = G__get_type(*bufm2);
+   if (fundType1 == 'm' || fundType2 == 'm') {
       G__OP2_modulus_T<G__uint64>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kLONGLONG || fundType2 == Reflex::kLONGLONG) {
+   else if (fundType1 == 'n' || fundType2 == 'n') {
       G__OP2_modulus_T<G__int64>(bufm1, bufm2);
    }
    else if (
-      fundType1 == Reflex::kUNSIGNED_CHAR ||
-      fundType1 == Reflex::kUNSIGNED_SHORT_INT ||
-      fundType1 == Reflex::kUNSIGNED_INT ||
-      fundType1 == Reflex::kUNSIGNED_LONG_INT
+      (fundType1 == 'b') ||
+      (fundType1 == 'r') ||
+      (fundType1 == 'h') ||
+      (fundType1 == 'k')
    ) {
-      G__OP2_modulus_T<unsigned long>(bufm1, bufm2); // it really used to be 'h'!
+      G__OP2_modulus_T<unsigned long>(bufm1, bufm2);
    }
    else {
-      G__OP2_modulus_T<long>(bufm1, bufm2); // it really used to be 'i'!
+      G__OP2_modulus_T<long>(bufm1, bufm2);
    }
    bufm2->ref = 0;
 }
@@ -835,28 +878,28 @@ static void G__OP2_modulus(G__value* bufm1, G__value* bufm2)
 //______________________________________________________________________________
 static void G__OP2_divide(G__value* bufm1, G__value* bufm2)
 {
-   Reflex::EFUNDAMENTALTYPE fundType1 = G__value_fundamental(*bufm1);
-   Reflex::EFUNDAMENTALTYPE fundType2 = G__value_fundamental(*bufm2);
-   if (fundType1 == Reflex::kLONG_DOUBLE || fundType2 == Reflex::kLONG_DOUBLE) {
+   char fundType1 = G__get_type(*bufm1);
+   char fundType2 = G__get_type(*bufm2);
+   if (fundType1 == 'q' || fundType2 == 'q') {
       G__OP2_divide_T<long double>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kDOUBLE || fundType2 == Reflex::kDOUBLE) {
+   else if (fundType1 == 'd' || fundType2 == 'd') {
       G__OP2_divide_T<double>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kFLOAT || fundType2 == Reflex::kFLOAT) {
+   else if (fundType1 == 'f' || fundType2 == 'f') {
       G__OP2_divide_T<float>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kULONGLONG || fundType2 == Reflex::kULONGLONG) {
+   else if (fundType1 == 'm' || fundType2 == 'm') {
       G__OP2_divide_T<G__uint64>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kLONGLONG || fundType2 == Reflex::kLONGLONG) {
+   else if (fundType1 == 'n' || fundType2 == 'n') {
       G__OP2_divide_T<G__int64>(bufm1, bufm2);
    }
    else if (
-      fundType1 == Reflex::kUNSIGNED_CHAR ||
-      fundType1 == Reflex::kUNSIGNED_SHORT_INT ||
-      fundType1 == Reflex::kUNSIGNED_INT ||
-      fundType1 == Reflex::kUNSIGNED_LONG_INT
+      (fundType1 == 'b') ||
+      (fundType1 == 'r') ||
+      (fundType1 == 'h') ||
+      (fundType1 == 'k')
    ) {
       G__OP2_divide_T<unsigned long>(bufm1, bufm2);
    }
@@ -869,27 +912,30 @@ static void G__OP2_divide(G__value* bufm1, G__value* bufm2)
 //______________________________________________________________________________
 static void G__OP2_logicaland(G__value* bufm1, G__value* bufm2)
 {
+   static Reflex::Type bool_type(Reflex::Type::ByTypeInfo(typeid(bool)));
    bool newval = G__convertT<bool>(bufm2) && G__convertT<bool>(bufm1);
    G__setvalue<bool>(bufm2, newval);
-   G__value_typenum(*bufm2) = Reflex::Type::ByTypeInfo(typeid(bool)); // used to be 'i'!
+   G__value_typenum(*bufm2) = bool_type;
    bufm2->ref = 0;
 }
 
 //______________________________________________________________________________
 static void G__OP2_logicalor(G__value* bufm1, G__value* bufm2)
 {
+   static Reflex::Type bool_type(Reflex::Type::ByTypeInfo(typeid(bool)));
    bool newval = G__convertT<bool>(bufm2) || G__convertT<bool>(bufm1);
    G__setvalue<bool>(bufm2, newval);
-   G__value_typenum(*bufm2) = Reflex::Type::ByTypeInfo(typeid(bool));  // used to be 'i'!
+   G__value_typenum(*bufm2) = bool_type;
    bufm2->ref = 0;
 }
 
+//______________________________________________________________________________
 struct OperModAssign 
 {
-   template <typename Common,typename Left> 
-   struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+   template<class Common, class Left> struct Select {
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
+         // --
 #ifdef G__TUNEUP_W_SECURITY
          Common right = G__convertT<Common>(bufm1);
          if (right == 0) {
@@ -897,31 +943,31 @@ struct OperModAssign
             return;
          }
          Left val = (Left) (G__getvalue_raw<Left>(*bufm2) % right);
-#else
-         Left val = G__convertT<Left>(bufm2) % G__convertT<R>(bufm1);
+#else // G__TUNEUP_W_SECURITY
+         Left val = (G__convertT<Left>(bufm2) % G__convertT<R>(bufm1));
 #endif // G__TUNEUP_W_SECURITY
          //return left % right;
          G__setvalue<Left>(bufm2, val); // G__setvalue does not change the type.
          *(Left*)bufm2->ref = val;
       }
    };
-   template <typename Common>
-   struct Select<Common,bool> {
+   template<class Common> struct Select<Common,bool> {
       static void Apply(const G__value*, G__value*)
       {
          // '%' : unsafe use of type 'bool' in operation
-         assert(0);
+         assert(0); // FIXME: Give error message to user, do not crash!
          return;
       }
    };
 };
 
+//______________________________________________________________________________
 struct OperDivAssign
 {
-   template <typename Common, typename Left> 
-   struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+   template<class Common, class Left> struct Select {
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
+         // --
 #ifdef G__TUNEUP_W_SECURITY
          Common right = G__convertT<Common>(bufm1);
          if (right == 0) {
@@ -929,8 +975,8 @@ struct OperDivAssign
             return;
          }
          Left val = (Left) (G__getvalue_raw<Left>(*bufm2) / right);
-#else
-         Left val = G__convertT<Left>(bufm2) / G__convertT<R>(bufm1);
+#else // G__TUNEUP_W_SECURITY
+         Left val = (G__convertT<Left>(bufm2) / G__convertT<R>(bufm1));
 #endif // G__TUNEUP_W_SECURITY
          G__setvalue(bufm2, val);  // G__setvalue does not change the type.
          *(Left*)bufm2->ref = val;
@@ -938,22 +984,22 @@ struct OperDivAssign
          return;
       }
    };
-   template <typename Common> 
-   struct Select<Common,bool> {
+   template<class Common> struct Select<Common,bool> {
       static void Apply(const G__value*, G__value*)
       {
          // '/' : unsafe use of type 'bool' in operation
-         assert(0);
+         assert(0); // FIXME: Give error message to user, do not crash!
          return;
       }
    };
 };
 
+//______________________________________________________________________________
 struct OperMulAssign
 {
-   template <typename Common, typename Left> 
+   template<class Common, class Left> 
    struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
          Left val = (Left) (G__getvalue_raw<Left>(*bufm2) * G__convertT<Common>(bufm1));
          G__setvalue(bufm2, val);  // G__setvalue does not change the type.
@@ -962,11 +1008,11 @@ struct OperMulAssign
    };
 };
 
+//______________________________________________________________________________
 struct OperAddAssign
 {
-   template <typename Common, typename Left> 
-   struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+   template<class Common, class Left> struct Select {
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
          Left val = (Left) (G__getvalue_raw<Left>(*bufm2) + G__convertT<Common>(bufm1));
          G__setvalue(bufm2, val);  // G__setvalue does not change the type.
@@ -975,11 +1021,11 @@ struct OperAddAssign
    };
 };
 
+//______________________________________________________________________________
 struct OperSubAssign
 {
-   template <typename Common, typename Left> 
-   struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+   template<class Common, class Left> struct Select {
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
          Left val = (Left) (G__getvalue_raw<Left>(*bufm2) - G__convertT<Common>(bufm1));
          G__setvalue(bufm2, val);  // G__setvalue does not change the type.
@@ -988,177 +1034,173 @@ struct OperSubAssign
    };
 };
 
+//______________________________________________________________________________
 struct OperLess
 {
-   template <typename Common,typename Left> 
-   struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+   template<class Common, class Left> struct Select {
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
-         static Reflex::Type booltype( Reflex::Type::ByTypeInfo(typeid(bool) ));  // used to be 'i'!
-         bool result = G__convertT<Common>(bufm2) < G__convertT<Common>(bufm1);
+         static Reflex::Type bool_type(Reflex::Type::ByTypeInfo(typeid(bool)));
+         bool result = (G__convertT<Common>(bufm2) < G__convertT<Common>(bufm1));
          G__setvalue<bool>(bufm2, result);
-         G__value_typenum(*bufm2) = booltype;  // used to be 'i'!
+         G__value_typenum(*bufm2) = bool_type;
          bufm2->ref = 0;
          //return (L)(left < right);
       }
    };
 };
 
+//______________________________________________________________________________
 struct OperLessOrEqual
 {
-   template <typename Common,typename Left> 
-   struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+   template<class Common, class Left> struct Select {
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
-         static Reflex::Type booltype( Reflex::Type::ByTypeInfo(typeid(bool) ));  // used to be 'i'!
-         bool result = G__convertT<Common>(bufm2) <= G__convertT<Common>(bufm1);
+         static Reflex::Type bool_type(Reflex::Type::ByTypeInfo(typeid(bool)));
+         bool result = (G__convertT<Common>(bufm2) <= G__convertT<Common>(bufm1));
          G__setvalue<bool>(bufm2, result);
-         G__value_typenum(*bufm2) = booltype;  // used to be 'i'!
+         G__value_typenum(*bufm2) = bool_type;
          bufm2->ref = 0;
          //return (L)(left <= right);
       }
    };
 };
 
+//______________________________________________________________________________
 struct OperGreater
 {
-   template <typename Common,typename Left> 
-   struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+   template<class Common, class Left> struct Select {
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
-         static Reflex::Type booltype( Reflex::Type::ByTypeInfo(typeid(bool) ));  // used to be 'i'!
-         bool result = G__convertT<Common>(bufm2) > G__convertT<Common>(bufm1);
+         static Reflex::Type bool_type(Reflex::Type::ByTypeInfo(typeid(bool)));
+         bool result = (G__convertT<Common>(bufm2) > G__convertT<Common>(bufm1));
          G__setvalue<bool>(bufm2, result);
-         G__value_typenum(*bufm2) = booltype;  // used to be 'i'!
+         G__value_typenum(*bufm2) = bool_type;
          bufm2->ref = 0;
          //return (L)(left < right);
       }
    };
 };
 
+//______________________________________________________________________________
 struct OperGreaterOrEqual
 {
-   template <typename Common,typename Left> 
-   struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+   template<class Common, class Left> struct Select {
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
-         static Reflex::Type booltype( Reflex::Type::ByTypeInfo(typeid(bool) ));  // used to be 'i'!
-         bool result = G__convertT<Common>(bufm2) >= G__convertT<Common>(bufm1);
+         static Reflex::Type bool_type(Reflex::Type::ByTypeInfo(typeid(bool)));
+         bool result = (G__convertT<Common>(bufm2) >= G__convertT<Common>(bufm1));
          G__setvalue<bool>(bufm2, result);
-         G__value_typenum(*bufm2) = booltype;  // used to be 'i'!
+         G__value_typenum(*bufm2) = bool_type;
          bufm2->ref = 0;
          //return (L)(left <= right);
       }
    };
 };
 
+//______________________________________________________________________________
 struct OperEqual
 {
-   template <typename Common,typename Left> 
-   struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+   template<class Common, class Left> struct Select {
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
-         static Reflex::Type booltype( Reflex::Type::ByTypeInfo(typeid(bool) ));  // used to be 'i'!
-         bool result = G__convertT<Common>(bufm2) == G__convertT<Common>(bufm1);
+         static Reflex::Type bool_type(Reflex::Type::ByTypeInfo(typeid(bool)));
+         bool result = (G__convertT<Common>(bufm2) == G__convertT<Common>(bufm1));
          G__setvalue<bool>(bufm2, result);
-         G__value_typenum(*bufm2) = booltype;  // used to be 'i'!
+         G__value_typenum(*bufm2) = bool_type;
          bufm2->ref = 0;
          //return (L)(left < right);
       }
    };
 };
 
+//______________________________________________________________________________
 struct OperNotEqual
 {
-   template <typename Common,typename Left> 
-   struct Select {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+   template<class Common, class Left> struct Select {
+      static void Apply(const G__value* bufm1, G__value* bufm2)
       {
-         static Reflex::Type booltype( Reflex::Type::ByTypeInfo(typeid(bool) ));  // used to be 'i'!
-         bool result = G__convertT<Common>(bufm2) != G__convertT<Common>(bufm1);
+         static Reflex::Type bool_type(Reflex::Type::ByTypeInfo(typeid(bool)));
+         bool result = (G__convertT<Common>(bufm2) != G__convertT<Common>(bufm1));
          G__setvalue<bool>(bufm2, result);
-         G__value_typenum(*bufm2) = Reflex::Type::ByTypeInfo(typeid(bool));  // used to be 'i'!
+         G__value_typenum(*bufm2) = bool_type;
          bufm2->ref = 0;
          //return (L)(left < right);
       }
    };
 };
 
-template <typename Common, typename Left, class Oper>
-static void G__OP2_apply_left_right(G__value* bufm1, G__value* bufm2)
+//______________________________________________________________________________
+template<class Common, class Left, class Oper>
+static inline void G__OP2_apply_left_right(G__value* bufm1, G__value* bufm2)
 {
    Oper::template Select<Common,Left>::Apply(bufm1,bufm2); 
-   //L val = Oper::Apply( G__convertT<L>(bufm2), G__convertT<R>(bufm1) );
+   //L val = Oper::Apply(G__convertT<L>(bufm2), G__convertT<R>(bufm1));
    //G__setvalue<Ret>(bufm2, val);
    //*(L*)bufm2->ref = val;
 }
 
 //______________________________________________________________________________
-template <typename Common, class Oper> static void G__OP2_apply_int_common(G__value* bufm1, G__value* bufm2)
+template<class Common, class Oper> static void G__OP2_apply_int_common(G__value* bufm1, G__value* bufm2)
 {
-   Reflex::EFUNDAMENTALTYPE fundType2 = G__value_fundamental(*bufm2);
+   char fundType2 = G__get_type(*bufm2);
    switch (fundType2) {
-      case Reflex::kCHAR:
+      case 'c':
          G__OP2_apply_left_right<Common, char, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kSIGNED_CHAR:
-         G__OP2_apply_left_right<Common, signed char, Oper>(bufm1, bufm2);
-         break;
-      case Reflex::kSHORT_INT:
+      case 's':
          G__OP2_apply_left_right<Common, short, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kINT:
+      case 'i':
          G__OP2_apply_left_right<Common, int, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kLONG_INT:
+      case 'l':
          G__OP2_apply_left_right<Common, long, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kUNSIGNED_CHAR:
+      case 'b':
          G__OP2_apply_left_right<Common, unsigned char, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kUNSIGNED_SHORT_INT:
+      case 'r':
          G__OP2_apply_left_right<Common, unsigned short, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kUNSIGNED_INT:
+      case 'h':
          G__OP2_apply_left_right<Common, unsigned int, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kUNSIGNED_LONG_INT:
+      case 'k':
          G__OP2_apply_left_right<Common, unsigned long, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kBOOL:
+      case 'g':
          G__OP2_apply_left_right<Common, bool, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kLONGLONG:
+      case 'n':
          G__OP2_apply_left_right<Common, G__int64, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kULONGLONG:
+      case 'm':
          G__OP2_apply_left_right<Common, G__uint64, Oper>(bufm1, bufm2);
          break;
       default:
-         assert(0);
+         assert(0); // FIXME: No crashing allowed in production code!
    }
 }
 
 //______________________________________________________________________________
-template <class Oper>
-static void G__OP2_apply_int(G__value* bufm1, G__value* bufm2)
+template<class Oper> static void G__OP2_apply_int(G__value* bufm1, G__value* bufm2)
 {
-   Reflex::EFUNDAMENTALTYPE fundType1 = G__value_fundamental(*bufm1);
-   Reflex::EFUNDAMENTALTYPE fundType2 = G__value_fundamental(*bufm2);
-
-   if (fundType1 == Reflex::kULONGLONG || fundType2 == Reflex::kULONGLONG) {
+   char fundType1 = G__get_type(*bufm1);
+   char fundType2 = G__get_type(*bufm2);
+   if (fundType1 == 'm' || fundType2 == 'm') {
       G__OP2_apply_int_common<G__uint64, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kLONGLONG || fundType2 == Reflex::kLONGLONG) {
+   else if (fundType1 == 'n' || fundType2 == 'n') {
       G__OP2_apply_int_common<G__int64, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kUNSIGNED_LONG_INT || fundType2 == Reflex::kUNSIGNED_LONG_INT) {
+   else if (fundType1 == 'k' || fundType2 == 'k') {
       G__OP2_apply_int_common<unsigned long, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kLONG_INT || fundType2 == Reflex::kLONG_INT) {
+   else if (fundType1 == 'l' || fundType2 == 'l') {
       G__OP2_apply_int_common<long, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kUNSIGNED_INT || fundType2 == Reflex::kUNSIGNED_INT) {
+   else if (fundType1 == 'h' || fundType2 == 'h') {
       G__OP2_apply_int_common<unsigned int, Oper>(bufm1, bufm2);
    }
    else {
@@ -1167,101 +1209,94 @@ static void G__OP2_apply_int(G__value* bufm1, G__value* bufm2)
 }
 
 //______________________________________________________________________________
-template <typename Common, class Oper> static void G__OP2_apply_common(G__value* bufm1, G__value* bufm2)
+template<class Common, class Oper> static void G__OP2_apply_common(G__value* bufm1, G__value* bufm2)
 {
-   Reflex::EFUNDAMENTALTYPE fundType2 = G__value_fundamental(*bufm2);
+   char fundType2 = G__get_type(*bufm2);
    switch (fundType2) {
-      case Reflex::kCHAR:
+      case 'c':
          G__OP2_apply_left_right<Common, char, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kSIGNED_CHAR:
-         G__OP2_apply_left_right<Common, signed char, Oper>(bufm1, bufm2);
-         break;
-      case Reflex::kSHORT_INT:
+      case 's':
          G__OP2_apply_left_right<Common, short, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kINT:
+      case 'i':
          G__OP2_apply_left_right<Common, int, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kLONG_INT:
+      case 'l':
          G__OP2_apply_left_right<Common, long, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kUNSIGNED_CHAR:
+      case 'b':
          G__OP2_apply_left_right<Common, unsigned char, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kUNSIGNED_SHORT_INT:
+      case 'r':
          G__OP2_apply_left_right<Common, unsigned short, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kUNSIGNED_INT:
+      case 'h':
          G__OP2_apply_left_right<Common, unsigned int, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kUNSIGNED_LONG_INT:
+      case 'k':
          G__OP2_apply_left_right<Common, unsigned long, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kBOOL:
+      case 'g':
          G__OP2_apply_left_right<Common, bool, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kFLOAT:
+      case 'f':
          G__OP2_apply_left_right<Common, float, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kDOUBLE:
+      case 'd':
          G__OP2_apply_left_right<Common, double, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kLONG_DOUBLE:
+      case 'q':
          G__OP2_apply_left_right<Common, long double, Oper>(bufm1, bufm2);
          break;
-      //kVOID:
-      case Reflex::kLONGLONG:
+      //case 'y': // void
+      case 'n':
          G__OP2_apply_left_right<Common, G__int64, Oper>(bufm1, bufm2);
          break;
-      case Reflex::kULONGLONG:
+      case 'm':
          G__OP2_apply_left_right<Common, G__uint64, Oper>(bufm1, bufm2);
          break;
       default:
-         if (G__value_typenum(*bufm2).FinalType().IsPointer()) {
+         if (isupper(fundType2)) {
             G__OP2_apply_left_right<Common, long, Oper>(bufm1, bufm2);
          }
-         else if (G__value_typenum(*bufm2).FinalType().IsEnum()) {
-            G__OP2_apply_left_right<Common, int, Oper>(bufm1, bufm2);
-         }
          else {
-            assert(0);
+            assert(0); // FIXME: No crashing in production code!
          }
    }
 }
 
 //______________________________________________________________________________
-template <class Oper>
-static void G__OP2_apply(G__value* bufm1, G__value* bufm2)
+template<class Oper> static void G__OP2_apply(G__value* bufm1, G__value* bufm2)
 {
-   Reflex::EFUNDAMENTALTYPE fundType1 = G__value_fundamental(*bufm1);
-   Reflex::EFUNDAMENTALTYPE fundType2 = G__value_fundamental(*bufm2);
-   if (fundType1 == Reflex::kLONG_DOUBLE || fundType2 == Reflex::kLONG_DOUBLE) {
+   char fundType1 = G__get_type(*bufm1);
+   char fundType2 = G__get_type(*bufm2);
+   if (fundType1 == 'q' || fundType2 == 'q') {
       G__OP2_apply_common<long double, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kDOUBLE || fundType2 == Reflex::kDOUBLE) {
+   else if (fundType1 == 'd' || fundType2 == 'd') {
       G__OP2_apply_common<double, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kFLOAT || fundType2 == Reflex::kFLOAT) {
+   else if (fundType1 == 'f' || fundType2 == 'f') {
       G__OP2_apply_common<float, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kULONGLONG || fundType2 == Reflex::kULONGLONG) {
+   else if (fundType1 == 'm' || fundType2 == 'm') {
       G__OP2_apply_common<G__uint64, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kLONGLONG || fundType2 == Reflex::kLONGLONG) {
+   else if (fundType1 == 'n' || fundType2 == 'n') {
       G__OP2_apply_common<G__int64, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kUNSIGNED_LONG_INT || fundType2 == Reflex::kUNSIGNED_LONG_INT) {
+   else if (fundType1 == 'k' || fundType2 == 'k') {
       G__OP2_apply_common<unsigned long, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kLONG_INT || fundType2 == Reflex::kLONG_INT) {
+   else if (fundType1 == 'l' || fundType2 == 'l') {
       G__OP2_apply_common<long, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == Reflex::kUNSIGNED_INT || fundType2 == Reflex::kUNSIGNED_INT) {
+   else if (fundType1 == 'h' || fundType2 == 'h') {
       G__OP2_apply_common<unsigned int, Oper>(bufm1, bufm2);
    }
-   else if (fundType1 == ::Reflex::kNOTFUNDAMENTAL || fundType2 == Reflex::kNOTFUNDAMENTAL) {
-      // Assume pointers.
+   else if (isupper(fundType1) && isupper(fundType2)) {
+      // We have pointers.
       G__OP2_apply_common<long, Oper>(bufm1, bufm2);
    }
    else {
@@ -1274,7 +1309,7 @@ void Cint::Internal::G__CMP2_equal(G__value* bufm1, G__value* bufm2)
 {
    // If the value are pointers, we might first need to convert them to a 
    // potential common base class pointer.
-   if(G__value_typenum(*bufm1).FinalType().IsPointer() && G__value_typenum(*bufm2).FinalType().IsPointer()) {
+   if(isupper(G__get_type(*bufm1)) && isupper(G__get_type(*bufm2))) {
       G__publicinheritance(bufm1,bufm2);
       OperEqual::Select<long,long>::Apply(bufm1,bufm2);
    } else {
@@ -1287,7 +1322,7 @@ static void G__CMP2_notequal(G__value* bufm1, G__value* bufm2)
 {
    // If the value are pointers, we might first need to convert them to a 
    // potential common base class pointer.
-   if(G__value_typenum(*bufm1).FinalType().IsPointer() && G__value_typenum(*bufm2).FinalType().IsPointer()) {
+   if(isupper(G__get_type(*bufm1)) && isupper(G__get_type(*bufm2))) {
       G__publicinheritance(bufm1,bufm2);
       OperNotEqual::Select<long,long>::Apply(bufm1,bufm2);
    } else {
@@ -1299,23 +1334,25 @@ static void G__CMP2_notequal(G__value* bufm1, G__value* bufm2)
 //
 //  G__OP1_OPTIMIZED
 //
+//  Note: None of these functions can be inline because we take their address.
+//
 
 //______________________________________________________________________________
-template <typename T> static void G__OP1_postfixinc_T(G__value* pbuf)
+template<class T> static void G__OP1_postfixinc_T(G__value* pbuf)
 {
    *(T*)pbuf->ref = G__getvalue_raw<T>(*pbuf) + 1;
    pbuf->ref = (long)&(G__value_ref<T>(*pbuf));
 }
 
 //______________________________________________________________________________
-template <typename T> static void G__OP1_postfixdec_T(G__value* pbuf)
+template<class T> static void G__OP1_postfixdec_T(G__value* pbuf)
 {
    *(T*)pbuf->ref = G__getvalue_raw<T>(*pbuf) - 1;
    pbuf->ref = (long)&(G__value_ref<T>(*pbuf));
 }
 
 //______________________________________________________________________________
-template <typename T> static void G__OP1_prefixinc_T(G__value* pbuf)
+template<class T> static void G__OP1_prefixinc_T(G__value* pbuf)
 {
    T v = G__getvalue_raw<T>(*pbuf);
    ++v;
@@ -1324,7 +1361,7 @@ template <typename T> static void G__OP1_prefixinc_T(G__value* pbuf)
 }
 
 //______________________________________________________________________________
-template <typename T> static void G__OP1_prefixdec_T(G__value *pbuf)
+template<class T> static void G__OP1_prefixdec_T(G__value *pbuf)
 {
    T v = G__getvalue_raw<T>(*pbuf);
    --v;
@@ -1335,59 +1372,37 @@ template <typename T> static void G__OP1_prefixdec_T(G__value *pbuf)
 //______________________________________________________________________________
 static void G__OP1_postfixinc(G__value* pbuf)
 {
-   if (G__value_typenum(*pbuf).FinalType().IsPointer()) {
+   char type = G__get_type(*pbuf);
+   if (isupper(type)) {
       *(long*)pbuf->ref = G__getvalue_raw<long>(*pbuf) + G__sizeof_deref(pbuf);
       return;
    }
-   Reflex::EFUNDAMENTALTYPE fundType = G__value_fundamental(*pbuf);
-#if 0
-      case kCHAR:
-      case kSIGNED_CHAR:
-      case kSHORT_INT:
-      case kINT:
-      case kLONG_INT:
-      case kUNSIGNED_CHAR:
-      case kUNSIGNED_SHORT_INT:
-      case kUNSIGNED_INT:
-      case kUNSIGNED_LONG_INT:
-      case kBOOL:
-      case kFLOAT:
-      case kDOUBLE:
-      case kLONG_DOUBLE:
-      case kVOID:
-      case kLONGLONG:
-      case kULONGLONG:
-      case kNOTFUNDAMENTAL:
-#endif // 0
-   switch (fundType) {
-      case ::Reflex::kCHAR:
+   switch (type) {
+      case 'c':
          G__OP1_postfixinc_T<char>(pbuf);
          break;
-      case ::Reflex::kSIGNED_CHAR: // cannot happen
-         //G__OP1_postfixinc_T<signed char>(pbuf);
-         break;
-      case ::Reflex::kSHORT_INT:
+      case 's':
          G__OP1_postfixinc_T<short>(pbuf);
          break;
-      case ::Reflex::kINT:
+      case 'i':
          G__OP1_postfixinc_T<int>(pbuf);
          break;
-      case ::Reflex::kLONG_INT:
+      case 'l':
          G__OP1_postfixinc_T<long>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_CHAR:
+      case 'b':
          G__OP1_postfixinc_T<unsigned char>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_SHORT_INT:
+      case 'r':
          G__OP1_postfixinc_T<unsigned short>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_INT:
+      case 'h':
          G__OP1_postfixinc_T<unsigned int>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_LONG_INT:
+      case 'k':
          G__OP1_postfixinc_T<unsigned long>(pbuf);
          break;
-      case ::Reflex::kBOOL:
+      case 'g':
          // --
 #ifdef G__BOOL4BYTE
          G__OP1_postfixinc_T<int>(pbuf);
@@ -1395,24 +1410,24 @@ static void G__OP1_postfixinc(G__value* pbuf)
          G__OP1_postfixinc_T<unsigned char>(pbuf);
 #endif // G__BOOL4BYTE
          break;
-      case ::Reflex::kFLOAT:
+      case 'f':
          G__OP1_postfixinc_T<float>(pbuf);
          break;
-      case ::Reflex::kDOUBLE:
+      case 'd':
          G__OP1_postfixinc_T<double>(pbuf);
          break;
-      case ::Reflex::kLONG_DOUBLE:
+      case 'q':
          G__OP1_postfixinc_T<long double>(pbuf);
          break;
-      case ::Reflex::kVOID: // not possible
+      case 'y': // not possible
          break;
-      case ::Reflex::kLONGLONG:
+      case 'n':
          G__OP1_postfixinc_T<G__int64>(pbuf);
          break;
-      case ::Reflex::kULONGLONG:
+      case 'm':
          G__OP1_postfixinc_T<G__uint64>(pbuf);
          break;
-      case ::Reflex::kNOTFUNDAMENTAL: // not possible
+      default: // not possible
          break;
    }
 }
@@ -1420,40 +1435,37 @@ static void G__OP1_postfixinc(G__value* pbuf)
 //______________________________________________________________________________
 static void G__OP1_postfixdec(G__value* pbuf)
 {
-   if (G__value_typenum(*pbuf).FinalType().IsPointer()) {
+   char type = G__get_type(*pbuf);
+   if (isupper(type)) {
       *(long*)pbuf->ref = G__getvalue_raw<long>(*pbuf) - G__sizeof_deref(pbuf);
       return;
    }
-   Reflex::EFUNDAMENTALTYPE fundType = G__value_fundamental(*pbuf);
-   switch (fundType) {
-      case ::Reflex::kCHAR:
+   switch (type) {
+      case 'c':
          G__OP1_postfixdec_T<char>(pbuf);
          break;
-      case ::Reflex::kSIGNED_CHAR: // not possible
-         //G__OP1_postfixdec_T<signed char>(pbuf);
-         break;
-      case ::Reflex::kSHORT_INT:
+      case 's':
          G__OP1_postfixdec_T<short>(pbuf);
          break;
-      case ::Reflex::kINT:
+      case 'i':
          G__OP1_postfixdec_T<int>(pbuf);
          break;
-      case ::Reflex::kLONG_INT:
+      case 'l':
          G__OP1_postfixdec_T<long>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_CHAR:
+      case 'b':
          G__OP1_postfixdec_T<unsigned char>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_SHORT_INT:
+      case 'r':
          G__OP1_postfixdec_T<unsigned short>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_INT:
+      case 'h':
          G__OP1_postfixdec_T<unsigned int>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_LONG_INT:
+      case 'k':
          G__OP1_postfixdec_T<unsigned long>(pbuf);
          break;
-      case ::Reflex::kBOOL:
+      case 'g':
          // --
 #ifdef G__BOOL4BYTE
          G__OP1_postfixdec_T<int>(pbuf);
@@ -1461,24 +1473,24 @@ static void G__OP1_postfixdec(G__value* pbuf)
          G__OP1_postfixdec_T<unsigned char>(pbuf);
 #endif // G__BOOL4BYTE
          break;
-      case ::Reflex::kFLOAT:
+      case 'f':
          G__OP1_postfixdec_T<float>(pbuf);
          break;
-      case ::Reflex::kDOUBLE:
+      case 'd':
          G__OP1_postfixdec_T<double>(pbuf);
          break;
-      case ::Reflex::kLONG_DOUBLE:
+      case 'q':
          G__OP1_postfixdec_T<long double>(pbuf);
          break;
-      case ::Reflex::kVOID: // not possible
+      case 'y': // not possible
          break;
-      case ::Reflex::kLONGLONG:
+      case 'n':
          G__OP1_postfixdec_T<G__int64>(pbuf);
          break;
-      case ::Reflex::kULONGLONG:
+      case 'm':
          G__OP1_postfixdec_T<G__uint64>(pbuf);
          break;
-      case ::Reflex::kNOTFUNDAMENTAL: // not possible
+      default: // not possible
          break;
    }
 }
@@ -1486,43 +1498,40 @@ static void G__OP1_postfixdec(G__value* pbuf)
 //______________________________________________________________________________
 static void G__OP1_prefixinc(G__value* pbuf)
 {
-   if (G__value_typenum(*pbuf).FinalType().IsPointer()) {
+   char type = G__get_type(*pbuf);
+   if (isupper(type)) {
       size_t v = G__getvalue_raw<long>(*pbuf);
       v += G__sizeof_deref(pbuf);
       G__setvalue<long>(pbuf, v);
       *(long*)pbuf->ref = v;
       return;
    }
-   Reflex::EFUNDAMENTALTYPE fundType = G__value_fundamental(*pbuf);
-   switch (fundType) {
-      case ::Reflex::kCHAR:
+   switch (type) {
+      case 'c':
          G__OP1_prefixinc_T<char>(pbuf);
          break;
-      case ::Reflex::kSIGNED_CHAR: // not possible
-         //G__OP1_prefixinc_T<signed char>(pbuf);
-         break;
-      case ::Reflex::kSHORT_INT:
+      case 's':
          G__OP1_prefixinc_T<short>(pbuf);
          break;
-      case ::Reflex::kINT:
+      case 'i':
          G__OP1_prefixinc_T<int>(pbuf);
          break;
-      case ::Reflex::kLONG_INT:
+      case 'l':
          G__OP1_prefixinc_T<long>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_CHAR:
+      case 'b':
          G__OP1_prefixinc_T<unsigned char>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_SHORT_INT:
+      case 'r':
          G__OP1_prefixinc_T<unsigned short>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_INT:
+      case 'h':
          G__OP1_prefixinc_T<unsigned int>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_LONG_INT:
+      case 'k':
          G__OP1_prefixinc_T<unsigned long>(pbuf);
          break;
-      case ::Reflex::kBOOL:
+      case 'g':
          // --
 #ifdef G__BOOL4BYTE
          G__OP1_prefixinc_T<int>(pbuf);
@@ -1530,24 +1539,24 @@ static void G__OP1_prefixinc(G__value* pbuf)
          G__OP1_prefixinc_T<unsigned char>(pbuf);
 #endif // G__BOOL4BYTE
          break;
-      case ::Reflex::kFLOAT:
+      case 'f':
          G__OP1_prefixinc_T<float>(pbuf);
          break;
-      case ::Reflex::kDOUBLE:
+      case 'd':
          G__OP1_prefixinc_T<double>(pbuf);
          break;
-      case ::Reflex::kLONG_DOUBLE:
+      case 'q':
          G__OP1_prefixinc_T<long double>(pbuf);
          break;
-      case ::Reflex::kVOID: // cannot happen
+      case 'y': // cannot happen
          break;
-      case ::Reflex::kLONGLONG:
+      case 'n':
          G__OP1_prefixinc_T<G__int64>(pbuf);
          break;
-      case ::Reflex::kULONGLONG:
+      case 'm':
          G__OP1_prefixinc_T<G__uint64>(pbuf);
          break;
-      case ::Reflex::kNOTFUNDAMENTAL: // cannot happen
+      default: // cannot happen
          break;
    }
 }
@@ -1555,43 +1564,40 @@ static void G__OP1_prefixinc(G__value* pbuf)
 //______________________________________________________________________________
 static void G__OP1_prefixdec(G__value* pbuf)
 {
-   if (G__value_typenum(*pbuf).FinalType().IsPointer()) {
+   char type = G__get_type(*pbuf);
+   if (isupper(type)) {
       size_t v = G__getvalue_raw<long>(*pbuf);
       v -= G__sizeof_deref(pbuf);
       G__setvalue<long>(pbuf, v);
       *(long*)pbuf->ref = v;
       return;
    }
-   Reflex::EFUNDAMENTALTYPE fundType = G__value_fundamental(*pbuf);
-   switch (fundType) {
-      case ::Reflex::kCHAR:
+   switch (type) {
+      case 'c':
          G__OP1_prefixdec_T<char>(pbuf);
          break;
-      case ::Reflex::kSIGNED_CHAR: // not possible
-         //G__OP1_prefixdec_T<signed char>(pbuf);
-         break;
-      case ::Reflex::kSHORT_INT:
+      case 's':
          G__OP1_prefixdec_T<short>(pbuf);
          break;
-      case ::Reflex::kINT:
+      case 'i':
          G__OP1_prefixdec_T<int>(pbuf);
          break;
-      case ::Reflex::kLONG_INT:
+      case 'l':
          G__OP1_prefixdec_T<long>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_CHAR:
+      case 'b':
          G__OP1_prefixdec_T<unsigned char>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_SHORT_INT:
+      case 'r':
          G__OP1_prefixdec_T<unsigned short>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_INT:
+      case 'h':
          G__OP1_prefixdec_T<unsigned int>(pbuf);
          break;
-      case ::Reflex::kUNSIGNED_LONG_INT:
+      case 'k':
          G__OP1_prefixdec_T<unsigned long>(pbuf);
          break;
-      case ::Reflex::kBOOL:
+      case 'g':
          // --
 #ifdef G__BOOL4BYTE
          G__OP1_prefixdec_T<int>(pbuf);
@@ -1599,30 +1605,29 @@ static void G__OP1_prefixdec(G__value* pbuf)
          G__OP1_prefixdec_T<unsigned char>(pbuf);
 #endif // G__BOOL4BYTE
          break;
-      case ::Reflex::kFLOAT:
+      case 'f':
          G__OP1_prefixdec_T<float>(pbuf);
          break;
-      case ::Reflex::kDOUBLE:
+      case 'd':
          G__OP1_prefixdec_T<double>(pbuf);
          break;
-      case ::Reflex::kLONG_DOUBLE:
+      case 'q':
          G__OP1_prefixdec_T<long double>(pbuf);
          break;
       case ::Reflex::kVOID: // cannot happen
          break;
-      case ::Reflex::kLONGLONG:
+      case 'n':
          G__OP1_prefixdec_T<G__int64>(pbuf);
          break;
-      case ::Reflex::kULONGLONG:
+      case 'm':
          G__OP1_prefixdec_T<G__uint64>(pbuf);
          break;
-      case ::Reflex::kNOTFUNDAMENTAL: // cannot happen
+      default: // cannot happen
          break;
    }
 }
-
 //______________________________________________________________________________
-template <typename T> static void G__OP1_minus_T(G__value* pbuf)
+template<class T> static inline void G__OP1_minus_T(G__value* pbuf)
 {
    G__setvalue(pbuf, -G__getvalue_raw<T>(*pbuf));
    pbuf->ref = 0;
@@ -1631,31 +1636,31 @@ template <typename T> static void G__OP1_minus_T(G__value* pbuf)
 //______________________________________________________________________________
 static void G__OP1_minus(G__value* pbuf)
 {
-   if (G__value_typenum(*pbuf).FinalType().IsPointer()) {
+   char type = G__get_type(*pbuf);
+   if (isupper(type)) {
       G__genericerror("Error: Illegal pointer operation unary -");
       return;
    }
-   Reflex::EFUNDAMENTALTYPE fundType = G__value_fundamental(*pbuf);
-   switch (fundType) {
-      case Reflex::kLONG_DOUBLE:
+   switch (type) {
+      case 'q':
          G__OP1_minus_T<long double>(pbuf);
          break;
-      case Reflex::kDOUBLE:
+      case 'd':
          G__OP1_minus_T<double>(pbuf);
          break;
-      case Reflex::kFLOAT:
+      case 'f':
          G__OP1_minus_T<float>(pbuf);
          break;
-      case Reflex::kULONGLONG:
+      case 'm':
          G__OP1_minus_T<G__uint64>(pbuf);
          break;
-      case Reflex::kLONGLONG:
+      case 'n':
          G__OP1_minus_T<G__int64>(pbuf);
          break;
-      case Reflex::kUNSIGNED_CHAR:
-      case Reflex::kUNSIGNED_SHORT_INT:
-      case Reflex::kUNSIGNED_INT:
-      case Reflex::kUNSIGNED_LONG_INT:
+      case 'b':
+      case 'r':
+      case 'h':
+      case 'k':
          G__OP1_minus_T<unsigned long>(pbuf);
          break;
       default:
@@ -2380,14 +2385,20 @@ int Cint::Internal::G__asm_optimize(int* start)
 //______________________________________________________________________________
 static int G__get_LD_p0_p2f(int type, long* pinst)
 {
-   typedef void(*LD_p0_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
+   typedef void (*LD_p0_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
    int done = 1;
    if (isupper(type)) {
-      if ('Z' == type) done = 0;
+      if (type == 'Z') {
+         done = 0;
+      }
 #ifndef G__OLDIMMPLEMENTATION1341
-      else if ('P' == type || 'O' == type) *pinst = (long)(LD_p0_func_t)G__LD_p0<double>;
+      else if ((type == 'P') || (type == 'O')) {
+         *pinst = (long)(LD_p0_func_t)G__LD_p0<double>;
+      }
 #endif // G__OLDIMMPLEMENTATION1341
-      else *pinst = (long)(LD_p0_func_t)G__LD_p0_pointer;
+      else {
+         *pinst = (long)(LD_p0_func_t)G__LD_p0_pointer;
+      }
    }
    else {
       switch (type) {
@@ -2654,11 +2665,10 @@ static int G__get_LD_P10_p2f(int type, long* pinst, int reftype)
 //______________________________________________________________________________
 static int G__get_ST_p0_p2f(int type, long* pinst)
 {
-   typedef void(*ST_p0_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
-
+   typedef void (*ST_p0_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
    int done = 1;
    if (isupper(type)) {
-      if ('Z' == type) {
+      if (type == 'Z') {
          done = 0;
       }
       else {
@@ -2723,10 +2733,10 @@ static int G__get_ST_p0_p2f(int type, long* pinst)
 //______________________________________________________________________________
 static int G__get_ST_p1_p2f(int type, long* pinst)
 {
-   typedef void(*ST_p1_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
+   typedef void (*ST_p1_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
    int done = 1;
    if (isupper(type)) {
-      if ('Z' == type) {
+      if (type == 'Z') {
          done = 0;
       }
       else {
@@ -2791,10 +2801,10 @@ static int G__get_ST_p1_p2f(int type, long* pinst)
 //______________________________________________________________________________
 static int G__get_ST_pn_p2f(int type, long* pinst)
 {
-   typedef void(*ST_pn_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
+   typedef void (*ST_pn_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
    int done = 1;
    if (isupper(type)) {
-      if ('Z' == type) {
+      if (type == 'Z') {
          done = 0;
       }
       else {
@@ -2859,17 +2869,17 @@ static int G__get_ST_pn_p2f(int type, long* pinst)
 //______________________________________________________________________________
 static int G__get_ST_P10_p2f(int type, long* pinst, int reftype)
 {
-   typedef void(*ST_P10_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
+   typedef void (*ST_P10_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
    int done = 1;
-   if (G__PARAP2P == reftype) {
-      if ('Z' == type) {
+   if (reftype == G__PARAP2P) {
+      if (type == 'Z') {
          done = 0;
       }
       else {
          *pinst = (long)(ST_P10_func_t)G__ST_P10_pointer;
       }
    }
-   else if (G__PARANORMAL == reftype) {
+   else if (reftype == G__PARANORMAL) {
       switch (type) {
          case 'B':
             *pinst = (long)(ST_P10_func_t)G__ST_P10<unsigned char>;
@@ -2930,10 +2940,10 @@ static int G__get_ST_P10_p2f(int type, long* pinst, int reftype)
 //______________________________________________________________________________
 static int G__get_LD_Rp0_p2f(int type, long* pinst)
 {
-   typedef void(*LD_Rp0_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
+   typedef void (*LD_Rp0_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
    int done = 1;
    if (isupper(type)) {
-      if ('Z' == type) {
+      if (type == 'Z') {
          done = 0;
       }
       else {
@@ -2998,10 +3008,10 @@ static int G__get_LD_Rp0_p2f(int type, long* pinst)
 //______________________________________________________________________________
 static int G__get_ST_Rp0_p2f(int type, long* pinst)
 {
-   typedef void(*ST_Rp0_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
+   typedef void (*ST_Rp0_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
    int done = 1;
    if (isupper(type)) {
-      if ('Z' == type) {
+      if (type == 'Z') {
          done = 0;
       }
       else {
@@ -3066,11 +3076,10 @@ static int G__get_ST_Rp0_p2f(int type, long* pinst)
 //______________________________________________________________________________
 static int G__get_LD_RP0_p2f(int type, long* pinst)
 {
-   typedef void(*LD_RP0_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
-
+   typedef void (*LD_RP0_func_t)(G__value *pbuf, int *psp, long offset, const Reflex::Member& var);
    int done = 1;
    if (isupper(type)) {
-      if ('Z' == type) {
+      if (type == 'Z') {
          done = 0;
       }
       else {
@@ -3151,15 +3160,16 @@ static void G__LD_Rp0_optimize(const Reflex::Member& var, int pc, long inst)
             break;
       }
    }
-#endif
+#endif // G__ASM_DBG
    G__asm_inst[pc] = inst;
    G__asm_inst[pc+3] = 0;
-   if (0 == G__get_LD_Rp0_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+   if (!G__get_LD_Rp0_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+      // --
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
          G__fprinterr(G__serr, "Error: LD_VAR,LD_MSTR REF optimize (6) error %s\n", var.Name().c_str());
       }
-#endif
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }
@@ -3184,15 +3194,16 @@ static void G__ST_Rp0_optimize(const Reflex::Member& var, int pc, long inst)
             break;
       }
    }
-#endif
+#endif // G__ASM_DBG
    G__asm_inst[pc] = inst;
    G__asm_inst[pc+3] = 0;
-   if (0 == G__get_ST_Rp0_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+   if (!G__get_ST_Rp0_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+      // --
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
          G__fprinterr(G__serr, "Error: LD_VAR,LD_MSTR REF optimize (6) error %s\n", var.Name().c_str());
       }
-#endif
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }
@@ -3217,15 +3228,16 @@ static void G__LD_RP0_optimize(const Reflex::Member& var, int pc, long inst)
             break;
       }
    }
-#endif
+#endif // G__ASM_DBG
    G__asm_inst[pc] = inst;
    G__asm_inst[pc+3] = 0;
-   if (0 == G__get_LD_RP0_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+   if (!G__get_LD_RP0_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+      // --
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
          G__fprinterr(G__serr, "Error: LD_VAR,LD_MSTR REF optimize (7) error %s\n", var.Name().c_str());
       }
-#endif
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }
@@ -3236,7 +3248,9 @@ static void G__LD_p0_optimize(const Reflex::Member& var, int pc, long inst)
 {
    long originst = G__asm_inst[pc];
    int pointlevel = G__asm_inst[pc+3];
-   if (G__get_properties(var)->bitfield_width) return; // Becomes call to G__get_bitfield_width(var);
+   if (G__get_properties(var)->bitfield_width) {
+      return;
+   }
 #ifdef G__ASM_DBG
    if (G__asm_dbg) {
       switch (inst) {
@@ -3251,15 +3265,16 @@ static void G__LD_p0_optimize(const Reflex::Member& var, int pc, long inst)
             break;
       }
    }
-#endif
+#endif // G__ASM_DBG
    G__asm_inst[pc] = inst;
    G__asm_inst[pc+3] = 0;
-   if (0 == G__get_LD_p0_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+   if (!G__get_LD_p0_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+      // --
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
          G__fprinterr(G__serr, "Error: LD_VAR,LD_MSTR optimize (6) error %s\n", var.Name().c_str());
       }
-#endif
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }
@@ -3287,10 +3302,13 @@ static void G__LD_p1_optimize(const Reflex::Member& var, int pc, long inst)
 #endif
    G__asm_inst[pc] = inst;
    G__asm_inst[pc+3] = 0;
-   if (0 == G__get_LD_p1_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+   if (!G__get_LD_p1_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+      // --
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "Error: LD_VAR optimize (8) error %s\n", var.Name().c_str());
-#endif
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "Error: LD_VAR optimize (8) error %s\n", var.Name().c_str());
+      }
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }
@@ -3315,13 +3333,16 @@ static void G__LD_pn_optimize(const Reflex::Member& var, int pc, long inst)
             break;
       }
    }
-#endif
+#endif // G__ASM_DBG
    G__asm_inst[pc] = inst;
    G__asm_inst[pc+3] = 0;
-   if (0 == G__get_LD_pn_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+   if (!G__get_LD_pn_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+      // --
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "Error: LD_VAR optimize (8) error %s\n", var.Name().c_str());
-#endif
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "Error: LD_VAR optimize (8) error %s\n", var.Name().c_str());
+      }
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }
@@ -3346,14 +3367,15 @@ static void G__LD_P10_optimize(const Reflex::Member& var, int pc, long inst)
             break;
       }
    }
-#endif
+#endif // G__ASM_DBG
    G__asm_inst[pc] = inst;
    G__asm_inst[pc+3] = 0;
-   if (0 == G__get_LD_P10_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2]
-                              , G__get_reftype(var.TypeOf()))) {
+   if (!G__get_LD_P10_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2], G__get_reftype(var.TypeOf()))) {
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "Error: LD_VAR optimize (9) error %s\n", var.Name().c_str());
-#endif
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "Error: LD_VAR optimize (9) error %s\n", var.Name().c_str());
+      }
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }
@@ -3364,7 +3386,9 @@ static void G__ST_p0_optimize(const Reflex::Member& var, int pc, long inst)
 {
    long originst = G__asm_inst[pc];
    int pointlevel = G__asm_inst[pc+3];
-   if (G__get_properties(var)->bitfield_width) return; // Becomes call to G__get_bitfield_width(var);
+   if (G__get_properties(var)->bitfield_width) {
+      return;
+   }
 #ifdef G__ASM_DBG
    if (G__asm_dbg) {
       switch (inst) {
@@ -3379,13 +3403,16 @@ static void G__ST_p0_optimize(const Reflex::Member& var, int pc, long inst)
             break;
       }
    }
-#endif
+#endif // G__ASM_DBG
    G__asm_inst[pc+0] = inst;
    G__asm_inst[pc+3] = 1;
-   if (0 == G__get_ST_p0_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+   if (!G__get_ST_p0_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+      // --
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "Warning: ST_VAR optimize (8) error %s\n", var.Name().c_str());
-#endif
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "Warning: ST_VAR optimize (8) error %s\n", var.Name().c_str());
+      }
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }
@@ -3410,13 +3437,15 @@ static void G__ST_p1_optimize(const Reflex::Member& var, int pc, long inst)
             break;
       }
    }
-#endif
+#endif // G__ASM_DBG
    G__asm_inst[pc+0] = inst;
    G__asm_inst[pc+3] = 1;
-   if (0 == G__get_ST_p1_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+   if (!G__get_ST_p1_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "Warning: ST_VAR optimize error %s\n", var.Name().c_str());
-#endif
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "Warning: ST_VAR optimize error %s\n", var.Name().c_str());
+      }
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }
@@ -3441,13 +3470,15 @@ static void G__ST_pn_optimize(const Reflex::Member& var, int pc, long inst)
             break;
       }
    }
-#endif
+#endif // G__ASM_DBG
    G__asm_inst[pc+0] = inst;
    G__asm_inst[pc+3] = 1;
-   if (0 == G__get_ST_pn_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+   if (!G__get_ST_pn_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "Warning: ST_VAR optimize error %s\n", var.Name().c_str());
-#endif
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "Warning: ST_VAR optimize error %s\n", var.Name().c_str());
+      }
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }
@@ -3472,14 +3503,15 @@ static void G__ST_P10_optimize(const Reflex::Member& var, int pc, long inst)
             break;
       }
    }
-#endif
+#endif // G__ASM_DBG
    G__asm_inst[pc] = inst;
    G__asm_inst[pc+3] = 0;
-   if (0 == G__get_ST_P10_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2]
-                              , G__get_reftype(var.TypeOf()))) {
+   if (!G__get_ST_P10_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2], G__get_reftype(var.TypeOf()))) {
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "Error: ST_VAR optimize (7) error %s\n", var.Name().c_str());
-#endif
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "Error: ST_VAR optimize (7) error %s\n", var.Name().c_str());
+      }
+#endif // G__ASM_DBG
       G__asm_inst[pc] = originst;
       G__asm_inst[pc+3] = pointlevel;
    }

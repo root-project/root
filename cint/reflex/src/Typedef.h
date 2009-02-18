@@ -40,7 +40,8 @@ namespace Reflex {
       Typedef( const char * typ,
          const Type & typedefType,
          TYPE typeTyp = TYPEDEF,
-         const Type & finalType = Dummy::Type()) ;
+         const Type & finalType = Dummy::Type(),
+         const char cintType = '\0') ;
 
 
       /** destructor */

@@ -728,8 +728,8 @@ void Cint::Internal::G__clink_header(FILE* fp)
    G__getcintsysdir();
    fprintf(fp, "#include \"%s/%s/inc/G__ci.h\"\n", G__cintsysdir, G__CFG_COREVERSION);
 #elif defined(G__ROOT)
-   fprintf(fp,"#include \"cint7/G__ci.h\"\n");
-   //fprintf(fp, "#include \"G__ci.h\"\n");
+   //fprintf(fp,"#include \"cint7/G__ci.h\"\n");
+   fprintf(fp, "#include \"G__ci.h\"\n");
 #else
    fprintf(fp, "#include \"G__ci.h\"\n");
 #endif
@@ -784,8 +784,8 @@ void Cint::Internal::G__cpplink_header(FILE* fp)
    G__getcintsysdir();
    fprintf(fp, "#include \"%s/%s/inc/G__ci.h\"\n", G__cintsysdir, G__CFG_COREVERSION);
 #elif defined(G__ROOT)
-   fprintf(fp,"#include \"cint7/G__ci.h\"\n");
-   //fprintf(fp, "#include \"G__ci.h\"\n");
+   //fprintf(fp,"#include \"cint7/G__ci.h\"\n");
+   fprintf(fp, "#include \"G__ci.h\"\n");
 #else
    fprintf(fp, "#include \"G__ci.h\"\n");
 #endif
@@ -1079,7 +1079,7 @@ static void G__cpplink_protected_stub(FILE* fp, FILE* hfp)
                   }
                }
                fprintf(hfp, ") {\n");
-               if (::Reflex::Tools::FundamentalType(memfunc->TypeOf().ReturnType()) !=::Reflex::kVOID) fprintf(hfp, "    return(");
+               if (::Reflex::Tools::FundamentalType(memfunc->TypeOf().ReturnType().FinalType()) !=::Reflex::kVOID) fprintf(hfp, "    return(");
                else                                                                                  fprintf(hfp, "    ");
                fprintf(hfp, "%s(", memfunc->Name().c_str());
                for (n = 0;n < memfunc->FunctionParameterSize();n++) {
@@ -1087,7 +1087,7 @@ static void G__cpplink_protected_stub(FILE* fp, FILE* hfp)
                   fprintf(hfp, "G__%d", n);
                }
                fprintf(hfp, ")");
-               if (::Reflex::Tools::FundamentalType(memfunc->TypeOf().ReturnType()) !=::Reflex::kVOID) fprintf(hfp, ")");
+               if (::Reflex::Tools::FundamentalType(memfunc->TypeOf().ReturnType().FinalType()) !=::Reflex::kVOID) fprintf(hfp, ")");
                fprintf(hfp, ";\n");
                fprintf(hfp, "  }\n");
             }
@@ -8784,12 +8784,12 @@ extern "C" int G__get_no_exec_compile()
 #endif // G__WILDCARD  // FIXME: What do the previous functions have to do with wildcards?
 
 //______________________________________________________________________________
-template <typename T>
-inline T* G__refT(G__value* buf)
+template<class T> inline T* G__refT(G__value* buf)
 {
-   int type = G__get_type(*buf);
-   if (type == G__gettypechar<T>() && buf->ref)
-      return (T*)buf->ref;
+   char type = G__get_type(*buf);
+   if (type == G__gettypechar<T>() && buf->ref) {
+      return (T*) buf->ref;
+   }
    G__setvalue(buf, G__convertT<T>(buf));
    return &G__value_ref<T>(*buf);
 }

@@ -46,14 +46,57 @@ Reflex::TypeBase::TypeBase( const char * nam,
                                   size_t size,
                                   TYPE typeTyp, 
                                   const std::type_info & ti,
-                                  const Type & finalType) 
+                                  const Type & finalType,
+                                  const char cintType /*= '\0'*/) 
    : fTypeInfo( &ti ), 
+     fCintType(cintType),
      fScope( Scope::__NIRVANA__() ),
      fSize( size ),
      fTypeType( typeTyp ),
      fPropertyList( OwnedPropertyList( new PropertyListImpl())),
      fBasePosition(Tools::GetBasePosition( nam)),
      fFinalType(finalType.Id() ? new Type(finalType) : 0 ),
+     fRawType(0) {
+//-------------------------------------------------------------------------------
+// Construct the dictinary info for a type.
+   Type t = TypeName::ByName( nam );
+   if ( t.Id() == 0 ) { 
+      fTypeName = new TypeName( nam, this, &ti ); 
+   }
+   else {
+      fTypeName = (TypeName*)t.Id();
+      if ( t.Id() != TypeName::ByTypeInfo(ti).Id()) fTypeName->SetTypeId( ti );
+      if ( fTypeName->fTypeBase ) delete fTypeName->fTypeBase;
+      fTypeName->fTypeBase = this;
+   }
+
+   if ( typeTyp != FUNDAMENTAL && 
+        typeTyp != FUNCTION &&
+        typeTyp != POINTER  ) {
+      std::string sname = Tools::GetScopeName(nam);
+      fScope = Scope::ByName(sname);
+      if ( fScope.Id() == 0 ) fScope = (new ScopeName(sname.c_str(), 0))->ThisScope();
+    
+      // Set declaring At
+      if ( fScope ) fScope.AddSubType(ThisType());
+   }
+}
+
+
+//-------------------------------------------------------------------------------
+Reflex::TypeBase::TypeBase( const char * nam, 
+                                  size_t size,
+                                  TYPE typeTyp, 
+                                  const std::type_info & ti,
+                                  const char cintType) 
+   : fTypeInfo( &ti ), 
+     fCintType(cintType),
+     fScope( Scope::__NIRVANA__() ),
+     fSize( size ),
+     fTypeType( typeTyp ),
+     fPropertyList( OwnedPropertyList( new PropertyListImpl())),
+     fBasePosition(Tools::GetBasePosition( nam)),
+     fFinalType(0),
      fRawType(0) {
 //-------------------------------------------------------------------------------
 // Construct the dictinary info for a type.
