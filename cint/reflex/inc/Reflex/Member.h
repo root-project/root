@@ -393,6 +393,8 @@ namespace Reflex {
       * @return offset of member as int
       */
       size_t Offset() const;
+      void CintOffset(char*);
+      char*& CintOffset() const;
 
 
       /** 
@@ -856,6 +858,20 @@ inline size_t Reflex::Member::Offset() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->Offset();
    return 0;
+}
+
+
+inline void Reflex::Member::CintOffset(char* offset)
+{
+   if (*this) {
+      fMemberBase->CintOffset(offset);
+   }
+}
+
+
+inline char*& Reflex::Member::CintOffset() const
+{
+   return fMemberBase->CintOffset();
 }
 
 

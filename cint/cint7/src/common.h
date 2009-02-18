@@ -1431,8 +1431,8 @@ public:
 
 class G__RflxVarProperties : public G__RflxProperties {
 public:
-   G__RflxVarProperties(): G__RflxProperties(), bitfield_start(0), bitfield_width(0), addressOffset(0), lock(false) {}
-   G__RflxVarProperties(const G__RflxVarProperties& rhs): G__RflxProperties(rhs), bitfield_start(rhs.bitfield_start), bitfield_width(rhs.bitfield_width), addressOffset(rhs.addressOffset), lock(rhs.lock) {}
+   G__RflxVarProperties(): G__RflxProperties(), bitfield_start(0), bitfield_width(0), lock(false) {}
+   G__RflxVarProperties(const G__RflxVarProperties& rhs): G__RflxProperties(rhs), bitfield_start(rhs.bitfield_start), bitfield_width(rhs.bitfield_width), lock(rhs.lock) {}
    virtual ~G__RflxVarProperties();
    G__RflxVarProperties& operator=(const G__RflxVarProperties& rhs)
    {
@@ -1440,7 +1440,6 @@ public:
          this->G__RflxProperties::operator=(rhs);
          bitfield_start = rhs.bitfield_start;
          bitfield_width = rhs.bitfield_width;
-         addressOffset = rhs.addressOffset;
          lock = rhs.lock;
       }
       return *this;
@@ -1448,7 +1447,6 @@ public:
 public:
    short bitfield_start;
    short bitfield_width;
-   char* addressOffset;   // Offset to be added to the 'base' address (the object address for data member, 0 for global variable, etc.)
    bool lock;
 };
 

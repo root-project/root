@@ -37,7 +37,8 @@ namespace Reflex {
       DataMember( const char *   nam,
          const Type &   typ, 
          size_t         offs,
-         unsigned int   modifiers = 0 );
+         unsigned int   modifiers = 0,
+         char* cintOffset = 0 );
 
 
       /** destructor */
@@ -61,6 +62,8 @@ namespace Reflex {
 
       /** return the Offset of the MemberAt */
       size_t Offset() const;
+      void CintOffset(char*);
+      char*& CintOffset() const;
 
 
       /** Set the MemberAt value */
@@ -73,15 +76,27 @@ namespace Reflex {
 
       /** Offset of the MemberAt */
       size_t fOffset;
+      char* fCintOffset;
 
    }; // class DataMember
 } //namespace Reflex
 
 
-//-------------------------------------------------------------------------------
-inline size_t Reflex::DataMember::Offset() const {
-//-------------------------------------------------------------------------------
+inline size_t Reflex::DataMember::Offset() const
+{
    return fOffset;
+}
+
+inline void Reflex::DataMember::CintOffset(char* offset)
+{
+   //fOffset = reinterpret_cast<size_t>(offset);
+   fCintOffset = offset;
+}
+
+inline char*& Reflex::DataMember::CintOffset() const
+{
+   //return *reinterpret_cast<char**>(const_cast<size_t*>(&fOffset));
+   return *const_cast<char**>(&fCintOffset);
 }
 
 #endif // Reflex_DataMember

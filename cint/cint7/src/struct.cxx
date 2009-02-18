@@ -42,7 +42,7 @@ int G__isenclosingclassbase(int enclosingtagnum, int env_tagnum);
 char* G__find_first_scope_operator(char* name);
 char* G__find_last_scope_operator(char* name);
 ::Reflex::Type G__find_type(const char* type_name, int /*errorflag*/, int /*templateflag*/);
-::Reflex::Member G__add_scopemember(::Reflex::Scope envvar, const char* varname, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* offset, int var_access, int var_statictype);
+::Reflex::Member G__add_scopemember(::Reflex::Scope envvar, const char* varname, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* cint_offset, int var_access, int var_statictype);
 void G__define_struct(char type);
 void G__create_global_namespace();
 void G__create_bytecode_arena();
@@ -107,12 +107,11 @@ static void G__add_anonymousunion(const ::Reflex::Type uniontype, int def_struct
       }
       store_statictype = G__COMPILEDGLOBAL;
    }
-   char* offset = (char*) G__malloc(1, uniontype.SizeOf(), "");
+   char* cint_offset = (char*) G__malloc(1, uniontype.SizeOf(), "");
    for (unsigned int idx = 0; idx < uniontype.DataMemberSize(); ++idx) {
       ::Reflex::Member mbr = uniontype.DataMemberAt(idx);
-      ::Reflex::Member new_mbr = G__add_scopemember(envvar, mbr.Name().c_str(), mbr.TypeOf(), 0, mbr.Offset(), offset, access, statictype);
-      *G__get_properties(new_mbr) = *G__get_properties(mbr); // WARNING: This overwrites the offset, and statictype we just passed to the function call.
-      G__get_offset(new_mbr) = offset;
+      ::Reflex::Member new_mbr = G__add_scopemember(envvar, mbr.Name().c_str(), mbr.TypeOf(), 0, mbr.Offset(), cint_offset, access, statictype);
+      *G__get_properties(new_mbr) = *G__get_properties(mbr); // WARNING: This overwrites the statictype we just passed to the function call.
       G__get_properties(new_mbr)->statictype = statictype;
       statictype = store_statictype;
    }
@@ -266,7 +265,7 @@ int Cint::Internal::G__using_namespace()
          if (G__p_local) {
             varscope = G__p_local;
          }
-         ::Reflex::Member avar = G__add_scopemember(varscope, varname.c_str(), member.TypeOf(), 0 /* should be member.Modifiers() */, member.Offset(), G__get_offset(member), G__access, G__get_properties(member)->statictype);
+         ::Reflex::Member avar = G__add_scopemember(varscope, varname.c_str(), member.TypeOf(), 0, member.Offset(), G__get_offset(member), G__access, G__get_properties(member)->statictype);
          *G__get_properties(avar) = *G__get_properties(member);
          G__get_properties(avar)->isFromUsing = true;
 
@@ -605,7 +604,7 @@ int Cint::Internal::G__class_autoloading(int* ptagnum)
 }
 
 //______________________________________________________________________________
-::Reflex::Member Cint::Internal::G__add_scopemember(::Reflex::Scope scope, const char* name, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* offset, int var_access, int var_statictype)
+::Reflex::Member Cint::Internal::G__add_scopemember(::Reflex::Scope scope, const char* name, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* cint_offset, int var_access, int var_statictype)
 {
    // Add a member variable to a scope.
    int modifiers = reflex_modifiers;
@@ -624,8 +623,7 @@ int Cint::Internal::G__class_autoloading(int* ptagnum)
       };
    }
    ::Reflex::Member d;
-   scope.AddDataMember(d, name, type, reflex_offset, modifiers);
-   G__get_offset(d) = offset;
+   scope.AddDataMember(d, name, type, reflex_offset, modifiers, cint_offset);
    G__get_properties(d)->statictype = var_statictype;
    return d;
 }

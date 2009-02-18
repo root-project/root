@@ -409,7 +409,7 @@ long Cint::G__DataMemberInfo::Offset()
    if (!IsValid()) {
       return -1;
    }
-   return (long) G__get_properties(m_datambr)->addressOffset;
+   return (long) G__get_offset(m_datambr);
 }
 
 //______________________________________________________________________________

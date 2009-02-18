@@ -399,13 +399,15 @@ void Reflex::Scope::AddDataMember(  Member &output,
                                     const char * name,
                                     const Type & type,
                                     size_t offset,
-                                    unsigned int modifiers ) const {
+                                    unsigned int modifiers,
+                                    char* cintOffset ) const {
    //-------------------------------------------------------------------------------
    // Add data member to this scope.
    if ( * this ) fScopeName->fScopeBase->AddDataMember(output, name, 
                                                        type, 
                                                        offset, 
-                                                       modifiers );
+                                                       modifiers,
+                                                       cintOffset );
 }
 
 //-------------------------------------------------------------------------------

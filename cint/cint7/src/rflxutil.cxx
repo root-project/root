@@ -60,7 +60,6 @@ int G__get_tagnum(const ::Reflex::Scope in);
 int G__get_paran(const Reflex::Member var);
 size_t G__get_bitfield_width(const Reflex::Member var);
 size_t G__get_bitfield_start(const Reflex::Member var);
-char*& G__get_offset(const ::Reflex::Member var);
 Reflex::Type G__strip_array(const Reflex::Type typein);
 Reflex::Type G__strip_one_array(const Reflex::Type typein);
 Reflex::Type G__deref(const Reflex::Type typein);
@@ -1133,12 +1132,6 @@ size_t Cint::Internal::G__get_bitfield_start(const Reflex::Member var)
 }
 
 //______________________________________________________________________________
-char*& Cint::Internal::G__get_offset(const ::Reflex::Member var)
-{
-   return G__get_properties(var)->addressOffset;
-}
-
-//______________________________________________________________________________
 Reflex::Type Cint::Internal::G__strip_array(const Reflex::Type typein)
 {
    // Return the type obtains after stripping all array dimensions.
@@ -1657,6 +1650,7 @@ void Cint::Internal::G__set_G__tagnum(const G__value& result)
    assert(member.TypeOf().FinalType().IsPointer() || member.TypeOf().FinalType().IsArray());
    ::Reflex::Type newType(::Reflex::ArrayBuilder(member.TypeOf().FinalType().ToType(), nelem));
    size_t offset = member.Offset();
+   char* cint_offset = member.CintOffset();
 #ifdef __GNUC__
 #else
 #pragma message (FIXME("Should call ::Reflex::Member::Modifiers()"))
@@ -1680,8 +1674,9 @@ void Cint::Internal::G__set_G__tagnum(const G__value& result)
    }
    // etc...
    varscope.RemoveDataMember(member);
-   varscope.AddDataMember(member, name.c_str(), newType, offset, modifiers);
+   varscope.AddDataMember(member, name.c_str(), newType, offset, modifiers, cint_offset);
    *G__get_properties(member) = prop;
+   G__get_offset(member) = cint_offset;
    return member;
 }
 

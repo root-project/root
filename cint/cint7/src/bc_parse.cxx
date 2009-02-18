@@ -2198,7 +2198,7 @@ Reflex::Member G__blockscope::allocatevariable(G__TypeReader& type
     ::Reflex::Member var(
        G__add_scopemember(m_scope, name.c_str(),
           var_type, (type.Isstatic()?Reflex::STATIC:0), 
-          ((Type)(m_scope)).SizeOf(),
+          0 /*((Type)(m_scope)).SizeOf()*/,
           var_offset,
           G__PUBLIC, var_statictype));
 

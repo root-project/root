@@ -407,7 +407,7 @@ int G__free_shl_upto(int allsl);
 G__value G__pointer2func(G__value* obj_p2f,char *parameter0,char *parameter1,int *known3);
 bool G__search_func(char *funcname,G__value *buf);
 char *G__search_next_member(char *text,int state);
-int G__Loffsetof(char *tagname,char *memname);
+long G__Loffsetof(char *tagname,char *memname);
 int G__Lsizeof(const char *typenamein);
 long *G__typeid(char *typenamein);
 void G__getcomment(char *buf,struct G__comment_info *pcomment,int tagnum);
@@ -480,7 +480,7 @@ void G__returnvartype(G__value* presult,const ::Reflex::Member &var,int paran);
 int G__getthis(G__value *result7,const char *varname,const char *item);
 void G__letpointer2memfunc(const ::Reflex::Member &var,int paran,const char *item,int p_inc,G__value *presult,char *G__struct_offset);
 void G__letautomatic(const ::Reflex::Member &var,char *G__struct_offset,int p_inc,G__value result);
-::Reflex::Member G__add_scopemember(::Reflex::Scope envvar, const char* varname, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* offset, int access, int statictype);
+::Reflex::Member G__add_scopemember(::Reflex::Scope envvar, const char* varname, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* cint_offset, int access, int statictype);
 void G__display_classkeyword(FILE *fout,const char *classnamein,const char *keyword,int base);
 void G__display_tempobject(const char* action);
 #ifdef G__FRIEND
@@ -688,7 +688,7 @@ bool G__test_access(const ::Reflex::Member var, int access);
 bool G__is_cppmacro(const ::Reflex::Member var);
 bool G__filescopeaccess(int filenum, int statictype);
 int G__get_access(const ::Reflex::Member mem);
-char*& G__get_offset(const ::Reflex::Member var);
+inline char*& G__get_offset(const ::Reflex::Member& mbr) { return mbr.CintOffset(); }
 Reflex::Type G__replace_rawtype(const Reflex::Type target, const Reflex::Type raw);
 Reflex::Type G__apply_const_to_typedef(const Reflex::Type target);
 

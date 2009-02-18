@@ -563,7 +563,8 @@ namespace Reflex {
                                  const char * name,
                                  const Type & type,
                                  size_t offset,
-                                 unsigned int modifiers = 0 ) const;
+                                 unsigned int modifiers = 0,
+                                 char* cintOffset = 0 ) const;
       
 
       /**

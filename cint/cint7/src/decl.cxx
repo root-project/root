@@ -853,7 +853,7 @@ static int G__initary(char* new_name,Reflex::Member &in_var)
             // FIXME: Do we need to copy any properties here?
             G__RflxVarProperties prop = *G__get_properties(varstatic);
             prop.statictype = G__LOCALSTATIC; // new mbr will be static
-            prop.addressOffset = G__get_offset(var); // new mbr has same storage as as old mbr
+            varstatic.CintOffset(G__get_offset(var)); // new mbr has same storage as as old mbr
             ::Reflex::Scope varscope = var.DeclaringScope();
             std::string varname = var.Name();
             varscope.RemoveDataMember(var);

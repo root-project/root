@@ -54,7 +54,7 @@ public: // -- Member Functions.
    //::Reflex::Type ReflexType(); // reflex type of current data member
    G__TypeInfo* Type(); // datatype of current data member as a G__TypeInfo
    long Property(); // summary of properties of current data member
-   long Offset(); // addressOffset of current data member
+   long Offset(); // address of storage for current data member
    int Bitfield(); // bitfield width of current data member
    int ArrayDim(); // number of array bounds of current data member
    int MaxIndex(int dim); // array bound for a given dimension of current data member

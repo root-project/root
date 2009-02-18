@@ -174,7 +174,7 @@ int Cint::Internal::G__sizeof_deref(const G__value *object)
 * int G__Loffsetof()
 *
 ******************************************************************/
-int Cint::Internal::G__Loffsetof(char *tagname,char *memname)
+long Cint::Internal::G__Loffsetof(char *tagname,char *memname)
 {
   int tagnum;
   int i,hash;
@@ -188,7 +188,7 @@ int Cint::Internal::G__Loffsetof(char *tagname,char *memname)
   ::Reflex::Type type( G__Dict::GetDict().GetType(tagnum) );
   ::Reflex::Member m( type.MemberByName( memname ) );
   if (m) {
-     return m.Offset(); // was ->p[ig15]
+     return (long) G__get_offset(m);
   }
                        
   G__fprinterr(G__serr,"Error: member %s not found in %s ",memname,tagname);
