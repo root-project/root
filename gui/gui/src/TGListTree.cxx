@@ -850,9 +850,9 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
                }
                else {
                   fDNDData.fDataType = fDNDTypeList[1];
-                  TString str = Form("file://%s/%s\r\n",
-                              gSystem->UnixPathName(gSystem->WorkingDirectory()),
-                              item->GetText());
+                  TString str = TString::Format("file://%s/%s\r\n",
+                                gSystem->UnixPathName(gSystem->WorkingDirectory()),
+                                item->GetText());
                   fDNDData.fData = (void *)strdup(str.Data());
                   fDNDData.fDataLength = str.Length()+1;
                }
@@ -2564,7 +2564,7 @@ void TGListTree::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    while (current) {
       out << "   TGListTreeItem *item" << n << " = " << GetName() << "->AddItem(";
-      current->SavePrimitive(out, Form("%d",n), n);
+      current->SavePrimitive(out, TString::Format("%d",n), n);
       if (current->IsOpen())
          out << "   " << GetName() << "->OpenItem(item" << n << ");" << endl;
       else
@@ -2591,7 +2591,7 @@ void TGListTree::SaveChildren(ostream &out, TGListTreeItem *item, Int_t &n)
    Int_t p = n-1;
    while (item) {
       out << "   TGListTreeItem *item" << n << " = " << GetName() << "->AddItem(";
-      item->SavePrimitive(out, Form("%d",p),n);
+      item->SavePrimitive(out, TString::Format("%d",p),n);
       n++;
       if (item->fFirstchild) {
          SaveChildren(out, item->fFirstchild, n);
@@ -2614,7 +2614,7 @@ void TGListTreeItemStd::SavePrimitive(ostream &out, Option_t *option, Int_t n)
    static Color_t oldcolor = -1;
 
    char quote = '"';
-   TString s = Form("%d",n);
+   TString s = TString::Format("%d", n);
 
    if (!fParent)
       out << "NULL,";

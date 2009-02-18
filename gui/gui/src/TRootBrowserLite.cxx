@@ -571,13 +571,13 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
             TGTextButton** buttons = fListView->GetHeaderButtons();
             if (buttons) {
                buttons[0]->Connect("Clicked()", "TRootBrowserLite", fBrowser,
-                                   Form("SetSortMode(=%d)", kViewArrangeByName));
+                                   TString::Format("SetSortMode(=%d)", kViewArrangeByName));
                buttons[1]->Connect("Clicked()", "TRootBrowserLite", fBrowser,
-                                   Form("SetSortMode(=%d)", kViewArrangeByType));
+                                   TString::Format("SetSortMode(=%d)", kViewArrangeByType));
                buttons[2]->Connect("Clicked()", "TRootBrowserLite", fBrowser,
-                                   Form("SetSortMode(=%d)", kViewArrangeBySize));
+                                   TString::Format("SetSortMode(=%d)", kViewArrangeBySize));
                buttons[5]->Connect("Clicked()", "TRootBrowserLite", fBrowser,
-                                   Form("SetSortMode(=%d)", kViewArrangeByDate));
+                                   TString::Format("SetSortMode(=%d)", kViewArrangeByDate));
             }
          }
          fCheckHeaders = kFALSE;
@@ -604,9 +604,9 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
          if (obj->IsA() == TSystemFile::Class()) {
             TString str;
             TDNDData data;
-            str = Form("file://%s/%s\r\n",
-                    gSystem->UnixPathName(obj->GetTitle()),
-                    obj->GetName());
+            str = TString::Format("file://%s/%s\r\n",
+                                  gSystem->UnixPathName(obj->GetTitle()),
+                                  obj->GetName());
             data.fData = (void *)strdup(str.Data());
             data.fDataLength = str.Length()+1;
             data.fDataType = gVirtualX->InternAtom("text/uri-list", kFALSE);
@@ -2318,7 +2318,7 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
             if (!gApplication->GetAppRemote()) {
                gROOT->ProcessLine(Form(".R %s", item->GetText()));
                if (gApplication->GetAppRemote()) {
-                  Getlinem(kInit, Form("\n%s:root [0]", 
+                  Getlinem(kInit, TString::Format("\n%s:root [0]", 
                            gApplication->GetAppRemote()->ApplicationName()));
                }
             }
@@ -2339,8 +2339,8 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
                   // remotely browse file (remotely call TFile::cd())
                   gApplication->SetBit(TApplication::kProcessRemotely);
                   gApplication->ProcessLine(
-                     Form("((TApplicationServer *)gApplication)->BrowseFile(\"%s\");",
-                          probj->GetName()));
+                     TString::Format("((TApplicationServer *)gApplication)->BrowseFile(\"%s\");",
+                                     probj->GetName()));
                }
             }
          }
@@ -2350,7 +2350,7 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
             if (!gApplication->GetAppRemote()) {
                gROOT->ProcessLine(Form(".R %s", item->GetParent()->GetText()));
                if (gApplication->GetAppRemote()) {
-                  Getlinem(kInit, Form("\n%s:root [0]", 
+                  Getlinem(kInit, TString::Format("\n%s:root [0]", 
                            gApplication->GetAppRemote()->ApplicationName()));
                }
             }
@@ -2374,7 +2374,7 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
                   // switch to remote session if not already in
                   gROOT->ProcessLine(Form(".R %s", top->GetText()));
                   if (gApplication->GetAppRemote()) {
-                     Getlinem(kInit, Form("\n%s:root [0]", 
+                     Getlinem(kInit, TString::Format("\n%s:root [0]", 
                               gApplication->GetAppRemote()->ApplicationName()));
                   }
                }
@@ -2815,13 +2815,13 @@ void TRootBrowserLite::SetViewMode(Int_t new_mode, Bool_t force)
       if ((lv == kLVDetails) && (buttons)) {
          if (!strcmp(fListView->GetHeader(1), "Attributes")) {
             buttons[0]->Connect("Clicked()", "TRootBrowserLite", this,
-                                Form("SetSortMode(=%d)", kViewArrangeByName));
+                                TString::Format("SetSortMode(=%d)", kViewArrangeByName));
             buttons[1]->Connect("Clicked()", "TRootBrowserLite", this,
-                                Form("SetSortMode(=%d)", kViewArrangeByType));
+                                TString::Format("SetSortMode(=%d)", kViewArrangeByType));
             buttons[2]->Connect("Clicked()", "TRootBrowserLite", this,
-                                Form("SetSortMode(=%d)", kViewArrangeBySize));
+                                TString::Format("SetSortMode(=%d)", kViewArrangeBySize));
             buttons[5]->Connect("Clicked()", "TRootBrowserLite", this,
-                                Form("SetSortMode(=%d)", kViewArrangeByDate));
+                                TString::Format("SetSortMode(=%d)", kViewArrangeByDate));
          }
       }
       fIconBox->AdjustPosition();

@@ -140,7 +140,10 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
    fCanvasContainer = new TRootEmbeddedContainer(this, win, GetViewPort());
    SetContainer(fCanvasContainer);
 
-   fCanvas = new TCanvas(name ? name : Form("%s_canvas", GetName()), w, h, fCWinId);
+   TString cname;
+   if (name) cname = name;
+   else cname = TString::Format("%s_canvas", GetName());
+   fCanvas = new TCanvas(cname.Data(), w, h, fCWinId);
 
    // define DND types
    fDNDTypeList = new Atom_t[3];
@@ -447,7 +450,7 @@ void TRootEmbeddedCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
        << "->GetCanvasWindowId();" << endl;
 
    static int n = 123;
-   TString cname = Form("c%d", n);
+   TString cname = TString::Format("c%d", n);
 
    out << "   TCanvas *";
    out <<  cname << " = new TCanvas(";

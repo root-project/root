@@ -1489,8 +1489,8 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
          else {
             Int_t retval;
             new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                        Form("file (%s) must have extension .C", fname),
-                        kMBIconExclamation, kMBRetry | kMBCancel, &retval);
+                         TString::Format("file (%s) must have extension .C", fname),
+                         kMBIconExclamation, kMBRetry | kMBCancel, &retval);
             if (retval == kMBRetry)
                HandleKey(event);
          }
@@ -2907,7 +2907,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
          out << endl;
 
          if (rb - lb > 1 && eq == -1) {
-            p = Form(" par%d", pnumber);
+            p = TString::Format(" par%d", pnumber);
             s.Insert(rb, p);
             pnumber++;
             out << "void " << s << endl;
@@ -3395,7 +3395,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
          out << endl;
 
          if (rb - lb > 1 && eq == -1) {
-            p = Form(" par%d", pnumber);
+            p = TString::Format(" par%d", pnumber);
             s.Insert(rb, p);
             pnumber++;
             out << "void " << s << endl;

@@ -504,15 +504,16 @@ Long_t TRootBrowser::ExecPlugin(const char *name, const char *fname,
    StartEmbedding(pos, subpos);
    if (cmd && strlen(cmd)) {
       command = cmd;
-      pname = name ? name : Form("Plugin %d", fPlugins.GetSize());
-      p = new TBrowserPlugin(pname, command.Data(), pos, subpos);
+      if (name) pname = name;
+      else pname = TString::Format("Plugin %d", fPlugins.GetSize());
+      p = new TBrowserPlugin(pname.Data(), command.Data(), pos, subpos);
    }
    else if (fname && strlen(fname)) {
       pname = name ? name : gSystem->BaseName(fname);
       Ssiz_t t = pname.Last('.');
       if (t > 0) pname.Remove(t);
       command.Form("gROOT->Macro(\"%s\");", gSystem->UnixPathName(fname));
-      p = new TBrowserPlugin(pname, command.Data(), pos, subpos);
+      p = new TBrowserPlugin(pname.Data(), command.Data(), pos, subpos);
    }
    else return 0;
    fPlugins.Add(p);
@@ -521,7 +522,7 @@ Long_t TRootBrowser::ExecPlugin(const char *name, const char *fname,
       pname = gPad->GetName();
       p->SetName(pname.Data());
    }
-   SetTabTitle(pname, pos, subpos);
+   SetTabTitle(pname.Data(), pos, subpos);
    StopEmbedding();
    return retval;
 }

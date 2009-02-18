@@ -1292,7 +1292,7 @@ void TRootCanvas::PrintCanvas()
       TString fn = "rootprint";
       FILE *f = gSystem->TempFileName(fn, gEnv->GetValue("Print.Directory", gSystem->TempDirectory()));
       fclose(f);
-      fn += Form(".%s",gEnv->GetValue("Print.FileType", "pdf"));
+      fn += TString::Format(".%s",gEnv->GetValue("Print.FileType", "pdf"));
       fCanvas->Print(fn);
 
       TString cmd = sprintCmd;

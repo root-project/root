@@ -323,8 +323,8 @@ TGFileItem::TGFileItem(const TGWindow *p,
          fSubnames[3] = new TGString(user_group->fGroup);
          delete user_group;
       } else {
-         fSubnames[2] = new TGString(Form("%d", fUid));
-         fSubnames[3] = new TGString(Form("%d", fGid));
+         fSubnames[2] = new TGString(TString::Format("%d", fUid));
+         fSubnames[3] = new TGString(TString::Format("%d", fGid));
       }
    }
 

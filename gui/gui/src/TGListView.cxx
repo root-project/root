@@ -1197,7 +1197,7 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
    // alignmode for the item text.
 
    if (idx < 0 || idx >= fNColumns-1) {
-      Error("SetHeader", Form("header index must be [0 - %d>", fNColumns-1));
+      Error("SetHeader", TString::Format("header index must be [0 - %d>", fNColumns-1));
       return;
    }
    delete fColHeader[idx];

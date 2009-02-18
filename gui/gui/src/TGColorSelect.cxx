@@ -594,7 +594,7 @@ void TGColorSelect::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
    char quote = '"';
    static Int_t nn = 1;
-   TString cvar = Form("ColPar%d",nn);
+   TString cvar = TString::Format("ColPar%d",nn);
 
    ULong_t color = GetColor();
    const char *colorname = TColor::PixelAsHexString(color);

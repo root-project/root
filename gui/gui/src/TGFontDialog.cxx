@@ -551,7 +551,7 @@ void TGFontDialog::UpdateStyleSize(const char *family)
    TString fname;
    char **fontList = 0;
 
-   fname = Form("-*-%s-*-*", family);
+   fname = TString::Format("-*-%s-*-*", family);
    fontList = gVirtualX->ListFonts(fname.Data(), 1000, cnt);
 
    fFontSizes->RemoveEntries(0, 1000);
@@ -695,7 +695,7 @@ void TGFontDialog::UpdateStyleSize(const char *family)
    fFontStyles->Layout();
 //
 
-   sz = Form("%d", fSize);
+   sz = TString::Format("%d", fSize);
    if (sz.Length() == 1) {
       sz = " " + sz;
    }
@@ -771,7 +771,8 @@ void TGFontDialog::GetFontName()
    }
 
    TString oldFont = fLName;
-   fLName = Form("-*-%s-%s-*-*-%s-*-*-*-*-*-%s-*", name, gFontStylesReal[sel].Data(), size, rgstry);
+   fLName = TString::Format("-*-%s-%s-*-*-%s-*-*-*-*-*-%s-*", name, 
+                            gFontStylesReal[sel].Data(), size, rgstry);
 
    if (oldFont != fLName) {
       if (fLabelFont) {

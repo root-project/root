@@ -647,7 +647,8 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
 
    for (Int_t i = 1; i <= 10; i++)
-      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), 0, i),
+      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, 
+               TString::Format("%d",i), 0, i),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
    Select(1, kFALSE);  // to have first entry selected
@@ -688,7 +689,8 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
    }
 
    for (Int_t i = 1; i < 16; i++)
-      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), i, 0),
+      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, 
+               TString::Format("%d",i), i, 0),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    Select(1, kFALSE);  // to have first entry selected
    SetWindowName();

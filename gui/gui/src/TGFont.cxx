@@ -1657,7 +1657,7 @@ TGFont *TGFontPool::GetFont(FontStruct_t fs)
    }
 
    static int i = 0;
-   f = MakeFont(0, fs, Form("unknown-%d", i));
+   f = MakeFont(0, fs, TString::Format("unknown-%d", i));
    fList->Add(f);
    i++;
 

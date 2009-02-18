@@ -688,7 +688,11 @@ void TGTab::NewTab(const char *text)
 {
    // Create new tab. Used in context menu.
 
-   TString name = text ? text : Form("tab%d", GetNumberOfTabs()+1);
+   TString name;
+   if (text)
+      name = text;
+   else
+      name = TString::Format("tab%d", GetNumberOfTabs()+1);
    AddTab(name.Data());
 
    GetLayoutManager()->Layout();

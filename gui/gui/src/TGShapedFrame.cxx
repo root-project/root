@@ -42,7 +42,7 @@ TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w,
       picName = "Default.png";
    fImage = TImage::Open(picName.Data());
    if (!fImage || !fImage->IsValid())
-      Error("TGShapedFrame::TGShapedFrame", Form("%s not found", 
+      Error("TGShapedFrame::TGShapedFrame", TString::Format("%s not found", 
             picName.Data()));
    fBgnd = fClient->GetPicturePool()->GetPicture(picName.Data(),
            fImage->GetPixmap(), fImage->GetMask());
