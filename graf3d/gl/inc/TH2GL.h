@@ -15,7 +15,7 @@
 #include <TGLObject.h>
 
 class TGLRnrCtx;
-class TH2;
+class TH1;
 
 #include "TGLPlotPainter.h"
 
@@ -26,7 +26,7 @@ private:
    TH2GL& operator=(const TH2GL&); // Not implemented
 
 protected:
-   TH2                *fM; // fModel dynamic-casted to TH2
+   TH1                *fM; // fModel dynamic-casted to TH2
 
    TGLPlotPainter     *fPlotPainter;
    TGLPlotCoordinates  fCoord;
