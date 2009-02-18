@@ -1956,9 +1956,9 @@ void TFitEditor::DoFunction(Int_t selected)
          np = tmp.GetNpar();
       }
       if (np)
-         s += Form("+%s(%d)", te->GetTitle(), np);
+         s += TString::Format("+%s(%d)", te->GetTitle(), np);
       else
-         s += Form("%s(%d)", te->GetTitle(), np);
+         s += TString::Format("%s(%d)", te->GetTitle(), np);
       fEnteredFunc->SetText(s.Data());
       editable = true;
    }
