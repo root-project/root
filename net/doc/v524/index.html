@@ -2,4 +2,15 @@
 <html><head></head><body><br> 
 <hr> 
 <a name="net"></a> 
-<h3>Networking</h3><h3>XROOTD</h3><ul><li>New version 20090217-0500</li></ul><ul><ul><li>Fixes on the server side</li><ul><li>Fix wrong reporting of the refresh option for Locate</li><li>Fix incorrect propagation of selected nodes</li><li>Prevent potential long duration loop (15 mins) after client disconnections</li><li>Avoid potential deadlocks when trying to remove a node from a cluster</li><li>Correct matching of incoming connection with previously dropped connection</li><li>Correct export of cluster identification</li><li>Correctly propagate information about files that could not be staged</li><li>Prevent endsess deadlock when parallel streams stall due to large WAN RTT</li></ul><li>Fixes on the client side</li><ul><li>Better handling of errno, especially for parallel streams</li><li>Allow the client to cycle through all the remaining valid security protocols in the list of protocols returned by the server</li><li>Make the readahead strategy more conservative</li><li>Fix a rare race condition happening when destroying instances with outstanding open requests</li><li>Enforce cache coherency in the case of reads+writes in the same file</li><li>Correctly guess the filesize of a file opened for writing in sync mode</li><li>Make server host name check more flexible for GSI authentication</li></ul><li>New features</li><ul><li>New File Residency Manager (frm), replacement for the MPS scripts</li></ul></ul></ul></body></html>
+<h3>Networking</h3>
+<ul>
+<li>
+Class TWebFile now supports proxies. Set the proxy URL either via
+static method:
+<pre>
+   TWebFile::SetProxy(const char *url);
+</pre>
+or via the shell variable http_proxy, like is used for e.g. wget.
+</li>
+</ul>
+<h3>XROOTD</h3><ul><li>New version 20090217-0500</li></ul><ul><ul><li>Fixes on the server side</li><ul><li>Fix wrong reporting of the refresh option for Locate</li><li>Fix incorrect propagation of selected nodes</li><li>Prevent potential long duration loop (15 mins) after client disconnections</li><li>Avoid potential deadlocks when trying to remove a node from a cluster</li><li>Correct matching of incoming connection with previously dropped connection</li><li>Correct export of cluster identification</li><li>Correctly propagate information about files that could not be staged</li><li>Prevent endsess deadlock when parallel streams stall due to large WAN RTT</li></ul><li>Fixes on the client side</li><ul><li>Better handling of errno, especially for parallel streams</li><li>Allow the client to cycle through all the remaining valid security protocols in the list of protocols returned by the server</li><li>Make the readahead strategy more conservative</li><li>Fix a rare race condition happening when destroying instances with outstanding open requests</li><li>Enforce cache coherency in the case of reads+writes in the same file</li><li>Correctly guess the filesize of a file opened for writing in sync mode</li><li>Make server host name check more flexible for GSI authentication</li></ul><li>New features</li><ul><li>New File Residency Manager (frm), replacement for the MPS scripts</li></ul></ul></ul></body></html>
