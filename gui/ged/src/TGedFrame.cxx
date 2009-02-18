@@ -270,8 +270,8 @@ void TGedNameFrame::SetModel(TObject* obj)
    string.Append(obj->ClassName());
 
    fLabel->SetText(new TGString(string));
-   string = Form("Name: %s\nTitle:   %s\nClass: %s",
-                 obj->GetName(), obj->GetTitle(), obj->ClassName());
+   string = TString::Format("Name: %s\nTitle:   %s\nClass: %s",
+                            obj->GetName(), obj->GetTitle(), obj->ClassName());
    fTip->SetText(string);
 
    // Resize label-frame to a reasonable width.

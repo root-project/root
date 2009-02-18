@@ -1741,12 +1741,12 @@ void TStyleManager::ConnectAll()
    Connect("CloseWindow()", "TStyleManager", this, "CloseWindow()");
    fMenuStyle->Connect("Activated(Int_t)", "TStyleManager", this, "DoMenu(Int_t)");
    fMenuHelp->Connect("Activated(Int_t)", "TStyleManager", this, "DoMenu(Int_t)");
-   fToolBarNew->Connect("Clicked()", "TStyleManager", this, Form("DoMenu(Int_t=%d)", kMenuNew));
-   fToolBarDelete->Connect("Clicked()", "TStyleManager", this, Form("DoMenu(Int_t=%d)", kMenuDelete));
-   fToolBarImportCanvas->Connect("Clicked()", "TStyleManager", this, Form("DoMenu(Int_t=%d)", kMenuImportCanvas));
-   fToolBarImportMacro->Connect("Clicked()", "TStyleManager", this, Form("DoMenu(Int_t=%d)", kMenuImportMacro));
-   fToolBarExport->Connect("Clicked()", "TStyleManager", this, Form("DoMenu(Int_t=%d)", kMenuExport));
-   fToolBarHelp->Connect("Clicked()", "TStyleManager", this, Form("DoMenu(Int_t=%d)", kMenuHelp));
+   fToolBarNew->Connect("Clicked()", "TStyleManager", this, TString::Format("DoMenu(Int_t=%d)", kMenuNew));
+   fToolBarDelete->Connect("Clicked()", "TStyleManager", this, TString::Format("DoMenu(Int_t=%d)", kMenuDelete));
+   fToolBarImportCanvas->Connect("Clicked()", "TStyleManager", this, TString::Format("DoMenu(Int_t=%d)", kMenuImportCanvas));
+   fToolBarImportMacro->Connect("Clicked()", "TStyleManager", this, TString::Format("DoMenu(Int_t=%d)", kMenuImportMacro));
+   fToolBarExport->Connect("Clicked()", "TStyleManager", this, TString::Format("DoMenu(Int_t=%d)", kMenuExport));
+   fToolBarHelp->Connect("Clicked()", "TStyleManager", this, TString::Format("DoMenu(Int_t=%d)", kMenuHelp));
    fListComboBox->Connect("Selected(Int_t)", "TStyleManager", this, "DoListSelect()");
    fPreviewButton->Connect("Toggled(Bool_t)", "TStyleManager", this, "DoPreview(Bool_t)");
    fPreviewRealTime->Connect("Toggled(Bool_t)", "TStyleManager", this, "DoRealTime(Bool_t)");
@@ -1755,7 +1755,7 @@ void TStyleManager::ConnectAll()
    fApplyOnButton->Connect("Clicked()", "TStyleManager", this, "DoApplyOn()");
    fMoreLess->Connect("Clicked()", "TStyleManager", this, "DoMoreLess()");
 
-   fEditionHelp->Connect("Clicked()", "TStyleManager", this, Form("DoMenu(Int_t=%d)", kMenuHelpEditor));
+   fEditionHelp->Connect("Clicked()", "TStyleManager", this, TString::Format("DoMenu(Int_t=%d)", kMenuHelpEditor));
    fEditionUpdatePreview->Connect("Clicked()", "TStyleManager", this, "DoEditionUpdatePreview()");
    fEditionReset->Connect("Clicked()", "TStyleManager", this, "DoImportMacro(Int_t=kFALSE)");
    fEditionTab->Connect("Selected(Int_t)", "TStyleManager", this, "DoChangeTab(Int_t)");
