@@ -2006,7 +2006,7 @@ bool testLabel()
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(minRange, maxRange);
       Int_t bin = h1->GetXaxis()->FindBin(value);
-      h1->AddBinContent( bin, 1.0);
+      h1->Fill(h1->GetXaxis()->GetBinCenter(bin));
 
       ostringstream label;
       label << bin;
