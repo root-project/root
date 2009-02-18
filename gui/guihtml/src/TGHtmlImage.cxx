@@ -239,8 +239,8 @@ static TImage *ReadRemoteImage(const char *url)
       free(buf);
       return 0;
    }
-   TString pathtmp = Form("%s/%s",
-      gSystem->TempDirectory(), gSystem->BaseName(url));
+   TString pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(), 
+                                     gSystem->BaseName(url));
    tmp = fopen(pathtmp.Data(), "wb");
    if (!tmp) {
       free(buf);
