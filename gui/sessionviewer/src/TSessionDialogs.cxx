@@ -192,13 +192,13 @@ void TNewChainDlg::OnElementClicked(TGLVEntry *entry, Int_t)
 
    fChain = (TObject *)entry->GetUserData();
    if (fChain->IsA() == TChain::Class()) {
-      TString s = Form("%s : %s" , ((TChain *)fChain)->GetTitle(),
-                      ((TChain *)fChain)->GetName());
+      TString s = TString::Format("%s : %s" , ((TChain *)fChain)->GetTitle(),
+                                  ((TChain *)fChain)->GetName());
       fName->SetText(s);
    }
    else if (fChain->IsA() == TDSet::Class()) {
-      TString s = Form("%s : %s" , ((TDSet *)fChain)->GetName(),
-                      ((TDSet *)fChain)->GetObjName());
+      TString s = TString::Format("%s : %s" , ((TDSet *)fChain)->GetName(),
+                                  ((TDSet *)fChain)->GetObjName());
       fName->SetText(s);
    }
    fOkButton->SetEnabled(kTRUE);
@@ -265,9 +265,9 @@ void TNewChainDlg::OnDoubleClick(TGLVEntry* f, Int_t btn)
    // Check if the file is a root macro file type
    if (name.Contains(".C")) {
       // form the command
-      TString command = Form(".x %s/%s",
-            gSystem->UnixPathName(fContents->GetDirectory()),
-            name.Data());
+      TString command = TString::Format(".x %s/%s",
+                        gSystem->UnixPathName(fContents->GetDirectory()),
+                        name.Data());
       // and process
       gApplication->ProcessLine(command.Data());
       UpdateList();
@@ -1083,10 +1083,10 @@ void TUploadDataSetDlg::AddFiles(const char *fileName)
          if (entryString.Index(rg) != kNPOS &&
              gSystem->AccessPathName(Form("%s/%s", gSystem->DirName(fileName),
                 ent), kReadPermission) == kFALSE) {
-            const char *text = Form("%s/%s",
+            TString text = TString::Format("%s/%s",
                gSystem->UnixPathName(gSystem->DirName(fileName)), ent);
-            if (!fLVContainer->FindItem(text)) {
-               TGLVEntry *entry = new TGLVEntry(fLVContainer, text, text);
+            if (!fLVContainer->FindItem(text.Data())) {
+               TGLVEntry *entry = new TGLVEntry(fLVContainer, text.Data(), text.Data());
                entry->SetPictures(gClient->GetPicture("rootdb_t.xpm"),
                                   gClient->GetPicture("rootdb_t.xpm"));
                fLVContainer->AddItem(entry);
@@ -1117,12 +1117,12 @@ void TUploadDataSetDlg::AddFiles(TList *fileList)
    TObjString *el;
    TIter next(fileList);
    while ((el = (TObjString *) next())) {
-      const char *fileName = Form("%s/%s",
+      TString fileName = TString::Format("%s/%s",
                   gSystem->UnixPathName(gSystem->DirName(el->GetString())),
                   gSystem->BaseName(el->GetString()));
       // single file
-      if (!fLVContainer->FindItem(fileName)) {
-         TGLVEntry *entry = new TGLVEntry(fLVContainer, fileName, fileName);
+      if (!fLVContainer->FindItem(fileName.Data())) {
+         TGLVEntry *entry = new TGLVEntry(fLVContainer, fileName.Data(), fileName.Data());
          entry->SetPictures(gClient->GetPicture("rootdb_t.xpm"),
                             gClient->GetPicture("rootdb_t.xpm"));
          fLVContainer->AddItem(entry);
@@ -1258,7 +1258,7 @@ void TUploadDataSetDlg::UploadDataSet()
       // ask user what to do :
       // cancel/overwrite and change option
       new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
-                   Form("The dataset \"%s\" already exists on the cluster ! Overwrite ?",
+                   TString::Format("The dataset \"%s\" already exists on the cluster ! Overwrite ?",
                    dsetName), kMBIconQuestion, kMBYes | kMBNo | kMBCancel | kMBAppend,
                    &retval);
       if (retval == kMBYes) {
@@ -1293,9 +1293,9 @@ void TUploadDataSetDlg::UploadDataSet()
          // Notify user that file: obj->GetFirstUrl()->GetUrl() exists on
          // the cluster and ask user what to do
          new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
-                   Form("The file \"%s\" already exists on the cluster ! Overwrite ?",
-                   obj->GetFirstUrl()->GetUrl()), kMBIconQuestion,
-                   kMBYes | kMBNo | kMBYesAll | kMBNoAll | kMBDismiss, &retval);
+                      TString::Format("The file \"%s\" already exists on the cluster ! Overwrite ?",
+                      obj->GetFirstUrl()->GetUrl()), kMBIconQuestion,
+                      kMBYes | kMBNo | kMBYesAll | kMBNoAll | kMBDismiss, &retval);
          if (retval == kMBYesAll) {
             ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
                            skippedFiles, destination,
@@ -1304,7 +1304,7 @@ void TUploadDataSetDlg::UploadDataSet()
             if (ret == TProof::kError) {
                // Inform user
                new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
-                            Form("Failed uploading \"%s\" to the cluster",
+                            TString::Format("Failed uploading \"%s\" to the cluster",
                             obj->GetFirstUrl()->GetUrl()), kMBIconExclamation,
                             kMBOk, &retval);
             }
@@ -1329,7 +1329,7 @@ void TUploadDataSetDlg::UploadDataSet()
             if (ret == TProof::kError) {
                // Inform user
                new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
-                            Form("Failed uploading \"%s\" to the cluster",
+                            TString::Format("Failed uploading \"%s\" to the cluster",
                             obj->GetFirstUrl()->GetUrl()), kMBIconExclamation,
                             kMBOk, &retval);
             }

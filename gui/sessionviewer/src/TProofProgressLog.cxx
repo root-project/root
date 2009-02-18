@@ -166,16 +166,8 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    SetIconName(title);
 
    MapSubwindows();
-
    Resize();
-
-   Window_t wdummy;
-   int ax, ay;
-   gVirtualX->TranslateCoordinates(GetParent()->GetId(), fDialog->fDialog->GetId(),
-       (Int_t)(((TGFrame *)GetParent())->GetWidth() + w),
-       (Int_t)(((TGFrame *)GetParent())->GetHeight()- 3*h/2), ax, ay, wdummy);
-   Move(ax, ay);
-
+   CenterOnParent();
    Popup();
 }
 
@@ -280,7 +272,7 @@ TGListBox* TProofProgressLog::BuildLogList(TGFrame *parent)
    Int_t is = 0;
    while ((pe=(TProofLogElem*)next())){
       TUrl url(pe->GetTitle());
-      TString buf = Form("%s %s", pe->GetName(), url.GetHost());
+      TString buf = TString::Format("%s %s", pe->GetName(), url.GetHost());
       c->AddEntry(buf.Data(), is);
       is++;
    }
@@ -386,8 +378,9 @@ void TProofProgressLog::SaveToFile()
    // File name: the default is <session-tag>.log
    TString filename = fFileName->GetText();
    if (filename.IsNull() || filename == "<session-tag>.log") {
-      filename = (fDialog && fDialog->fProof) ? Form("%s.log", fDialog->fProof->GetName())
-                                              : "proof.log";
+      filename = (fDialog && fDialog->fProof) ? 
+                  TString::Format("%s.log", fDialog->fProof->GetName()) :
+                  "proof.log";
    }
 
    TList *selected = new TList;

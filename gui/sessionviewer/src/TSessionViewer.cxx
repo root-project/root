@@ -676,9 +676,9 @@ void TSessionServerFrame::OnBtnAddClicked()
       desc = dynamic_cast<TSessionDescription*>(obj);
    if (desc) {
       new TGMsgBox(fClient->GetRoot(), fViewer, "Adding Session",
-          Form("The session \"%s\" already exists ! Overwrite ?",
-          fTxtName->GetText()), kMBIconQuestion, kMBYes | kMBNo |
-          kMBCancel, &retval);
+                   TString::Format("The session \"%s\" already exists ! Overwrite ?",
+                   fTxtName->GetText()), kMBIconQuestion, kMBYes | kMBNo |
+                   kMBCancel, &retval);
       if (retval != kMBYes)
          return;
       newSession = kFALSE;
@@ -1835,8 +1835,8 @@ void TSessionFrame::OnBtnGetQueriesClicked()
       while ((query = (TQueryResult *)nextp())) {
          // create new query description
          newquery = new TQueryDescription();
-         newquery->fReference = Form("%s:%s", query->GetTitle(),
-                                    query->GetName());
+         newquery->fReference = TString::Format("%s:%s", query->GetTitle(),
+                                                query->GetName());
          // check in our tree if it is already there
          TGListTreeItem *item =
             fViewer->GetSessionHierarchy()->FindChildByData(
@@ -1860,8 +1860,8 @@ void TSessionFrame::OnBtnGetQueriesClicked()
                TQueryDescription::kSessionQueryFinalized :
                (TQueryDescription::ESessionQueryStatus)query->GetStatus();
          newquery->fSelectorString  = query->GetSelecImp()->GetName();
-         newquery->fQueryName       = Form("%s:%s", query->GetTitle(),
-                                          query->GetName());
+         newquery->fQueryName       = TString::Format("%s:%s", query->GetTitle(),
+                                                      query->GetName());
          newquery->fOptions         = query->GetOptions();
          newquery->fEventList       = "";
          newquery->fNbFiles         = 0;
@@ -1894,8 +1894,8 @@ void TSessionFrame::OnCommandLine()
    const char *cmd = fCommandTxt->GetText();
    char opt[2];
    // form temporary file path
-   TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
-         kSession_RedirectCmd);
+   TString pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(),
+                                     kSession_RedirectCmd);
    // if check box "clear view" is checked, open temp file in write mode
    // (overwrite), in append mode otherwise.
    if (fClearCheck->IsOn())
@@ -2592,18 +2592,18 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
    // if no change since last call, just return
    if (fPrevProcessed == processed)
       return;
-   char *buf;
+   TString buf;
 
    // Update informations at first call
    if (fEntries != total) {
-      buf = Form("PROOF cluster : \"%s\" - %d worker nodes",
-            fViewer->GetActDesc()->fProof->GetMaster(),
-            fViewer->GetActDesc()->fProof->GetParallel());
+      buf = TString::Format("PROOF cluster : \"%s\" - %d worker nodes",
+                            fViewer->GetActDesc()->fProof->GetMaster(),
+                            fViewer->GetActDesc()->fProof->GetParallel());
       fLabInfos->SetText(buf);
 
       fEntries = total;
-      buf = Form(" %d files, %lld events, starting event %lld",
-              fFiles, fEntries, fFirst);
+      buf = TString::Format(" %d files, %lld events, starting event %lld",
+                            fFiles, fEntries, fFirst);
       fLabStatus->SetText(buf);
    }
 
@@ -2655,17 +2655,17 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
          sprintf(stm, "%d min %d sec", mm, ss);
       else
          sprintf(stm, "%d sec", ss);
-      buf = Form(" Processed : %lld events in %s", total, stm);
+      buf = TString::Format(" Processed : %lld events in %s", total, stm);
       fTotal->SetText(buf);
    } else {
       // update status infos
-      buf = Form(" Estimated time left : %s (%lld events of %lld processed)        ",
-                 stm, processed, total);
+      buf = TString::Format(" Estimated time left : %s (%lld events of %lld processed)        ",
+                            stm, processed, total);
       fTotal->SetText(buf);
    }
    if (processed > 0 && (Long_t)tdiff > 0) {
-      buf = Form(" Processing Rate : %.1f events/sec   ",
-                 (Float_t)processed/(Long_t)tdiff*1000.);
+      buf = TString::Format(" Processing Rate : %.1f events/sec   ",
+                           (Float_t)processed/(Long_t)tdiff*1000.);
       fRate->SetText(buf);
    }
    fPrevProcessed = processed;
@@ -2692,27 +2692,27 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
 
    Long_t tt;
    UInt_t hh=0, mm=0, ss=0;
-   char stm[256];
-   char cproc[80];
+   TString stm;
+   TString cproc;
    Int_t status;
 
    switch (fViewer->GetActDesc()->fActQuery->fStatus) {
 
       case TQueryDescription::kSessionQueryAborted:
-         strcpy(cproc, " - ABORTED");
+         cproc = " - ABORTED";
          status = kAborted;
          break;
       case TQueryDescription::kSessionQueryStopped:
-         strcpy(cproc, " - STOPPED");
+         cproc = " - STOPPED";
          status = kStopped;
          break;
       case TQueryDescription::kSessionQueryRunning:
-         strcpy(cproc, " ");
+         cproc = " ";
          status = kRunning;
          break;
       case TQueryDescription::kSessionQueryCompleted:
       case TQueryDescription::kSessionQueryFinalized:
-         strcpy(cproc, " ");
+         cproc = " ";
          status = kDone;
          break;
       default:
@@ -2740,16 +2740,16 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
       fPrevTotal = total;
 
    // if no change since last call, just return
-   char *buf;
+   TString buf;
 
    // Update informations at first call
    if (fEntries != total) {
       fLabInfos->SetText("Local Session");
 
       fEntries = total;
-      buf = Form(" %d files, %lld events, starting event %lld",
-              fFiles, fEntries, fFirst);
-      fLabStatus->SetText(buf);
+      buf = TString::Format(" %d files, %lld events, starting event %lld",
+                            fFiles, fEntries, fFirst);
+      fLabStatus->SetText(buf.Data());
    }
 
    // compute progress bar position and update
@@ -2780,15 +2780,15 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
       ss = (UInt_t)((tt % 3600) % 60);
    }
    if (hh)
-      sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+      stm = TString::Format("%d h %d min %d sec", hh, mm, ss);
    else if (mm)
-      sprintf(stm, "%d min %d sec", mm, ss);
+      stm = TString::Format("%d min %d sec", mm, ss);
    else
-      sprintf(stm, "%d sec", ss);
+      stm = TString::Format("%d sec", ss);
    if ((processed != total) && (status == kRunning)) {
       // update status infos
-      buf = Form(" Estimated time left : %s (%lld events of %lld processed)        ",
-                 stm, processed, total);
+      buf = TString::Format(" Estimated time left : %s (%lld events of %lld processed)        ",
+                            stm.Data(), processed, total);
       fTotal->SetText(buf);
    } else {
       tt = (Long_t(tdiff)/1000);
@@ -2798,19 +2798,19 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
          ss = (UInt_t)((tt % 3600) % 60);
       }
       if (hh)
-         sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+         stm = TString::Format("%d h %d min %d sec", hh, mm, ss);
       else if (mm)
-         sprintf(stm, "%d min %d sec", mm, ss);
+         stm = TString::Format("%d min %d sec", mm, ss);
       else
-         sprintf(stm, "%d sec", ss);
-      buf = Form(" Processed : %ld events in %s", (Long_t)processed, stm);
-      strcat(buf, cproc);
-      fTotal->SetText(buf);
+         stm = TString::Format("%d sec", ss);
+      buf = TString::Format(" Processed : %ld events in %s", (Long_t)processed, stm.Data());
+      buf += cproc;
+      fTotal->SetText(buf.Data());
    }
    if (processed > 0 && (Long_t)tdiff > 0) {
-      buf = Form(" Processing Rate : %.1f events/sec   ",
-                 (Float_t)processed/(Long_t)tdiff*1000.);
-      fRate->SetText(buf);
+      buf = TString::Format(" Processing Rate : %.1f events/sec   ",
+                            (Float_t)processed/(Long_t)tdiff*1000.);
+      fRate->SetText(buf.Data());
    }
    fPrevProcessed = processed;
 
@@ -2848,7 +2848,7 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
 {
    // Reset progress frame information fields.
 
-   char *buf;
+   TString buf;
    fFiles         = files > 0 ? files : 0;
    fFirst         = first;
    fEntries       = entries;
@@ -2860,10 +2860,10 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
       frmProg->Reset();
    }
 
-   buf = Form("%0d files, %0lld events, starting event %0lld",
-           fFiles > 0 ? fFiles : 0, fEntries > 0 ? fEntries : 0,
-           fFirst >= 0 ? fFirst : 0);
-   fLabStatus->SetText(buf);
+   buf = TString::Format("%0d files, %0lld events, starting event %0lld",
+                         fFiles > 0 ? fFiles : 0, fEntries > 0 ? fEntries : 0,
+                         fFirst >= 0 ? fFirst : 0);
+   fLabStatus->SetText(buf.Data());
    // Reconnect the slots
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
@@ -2874,10 +2874,10 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
                "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fViewer->GetActDesc()->fProof->Connect("StopProcess(Bool_t)",
                "TSessionQueryFrame", this, "IndicateStop(Bool_t)");
-      sprintf(buf, "PROOF cluster : \"%s\" - %d worker nodes",
+      buf = TString::Format("PROOF cluster : \"%s\" - %d worker nodes",
                fViewer->GetActDesc()->fProof->GetMaster(),
                fViewer->GetActDesc()->fProof->GetParallel());
-      fLabInfos->SetText(buf);
+      fLabInfos->SetText(buf.Data());
    }
    else if (fViewer->GetActDesc()->fLocal) {
       fStatsCanvas->Clear();
@@ -3102,8 +3102,8 @@ void TSessionQueryFrame::OnBtnSubmit()
          return;
       }
       // set query reference id to unique identifier
-      newquery->fReference= Form("session-%s:q%lld",
-            fViewer->GetActDesc()->fProof->GetSessionTag(), id);
+      newquery->fReference= TString::Format("session-%s:q%lld",
+                            fViewer->GetActDesc()->fProof->GetSessionTag(), id);
       // start icon animation
       fViewer->SetChangePic(kTRUE);
    }
@@ -3153,7 +3153,7 @@ void TSessionQueryFrame::OnBtnSubmit()
          return;
       }
       // set query reference id to unique identifier
-      newquery->fReference = Form("local-session-%s:q%lld", newquery->fQueryName.Data(), id);
+      newquery->fReference = TString::Format("local-session-%s:q%lld", newquery->fQueryName.Data(), id);
    }
    // update buttons state
    UpdateButtons(newquery);
@@ -3272,7 +3272,7 @@ void TSessionQueryFrame::UpdateInfos()
 {
    // Update query information (header) text view.
 
-   char *buffer;
+   TString buffer;
    const char *qst[] = {"aborted  ", "submitted", "running  ",
                         "stopped  ", "completed"};
 
@@ -3323,49 +3323,47 @@ void TSessionQueryFrame::UpdateInfos()
 
    Int_t qry = result->GetSeqNum();
 
-   buffer = Form("------------------------------------------------------\n");
+   buffer = TString::Format("------------------------------------------------------\n");
    // Print header
    if (!result->IsDraw()) {
       const char *fin = result->IsFinalized() ? "finalized" : qst[st];
       const char *arc = result->IsArchived() ? "(A)" : "";
-      buffer = Form("%s Query No  : %d\n", buffer, qry);
-      buffer = Form("%s Ref       : \"%s:%s\"\n", buffer, result->GetTitle(),
-                 result->GetName());
-      buffer = Form("%s Selector  : %s\n", buffer,
-                 result->GetSelecImp()->GetTitle());
-      buffer = Form("%s Status    : %9s%s\n", buffer, fin, arc);
-      buffer = Form("%s------------------------------------------------------\n",
-                 buffer);
+      buffer = TString::Format(" Query No  : %d\n", qry);
+      buffer += TString::Format(" Ref       : \"%s:%s\"\n", result->GetTitle(),
+                                result->GetName());
+      buffer += TString::Format(" Selector  : %s\n",
+                                result->GetSelecImp()->GetTitle());
+      buffer += TString::Format("Status    : %9s%s\n", fin, arc);
+      buffer += TString::Format("------------------------------------------------------\n");
    } else {
-      buffer = Form("%s Query No  : %d\n", buffer, qry);
-      buffer = Form("%s Ref       : \"%s:%s\"\n", buffer, result->GetTitle(),
-                 result->GetName());
-      buffer = Form("%s Selector  : %s\n", buffer,
-                 result->GetSelecImp()->GetTitle());
-      buffer = Form("%s------------------------------------------------------\n",
-                 buffer);
+      buffer += TString::Format(" Query No  : %d\n", qry);
+      buffer += TString::Format(" Ref       : \"%s:%s\"\n", result->GetTitle(),
+                                result->GetName());
+      buffer += TString::Format(" Selector  : %s\n",
+                                result->GetSelecImp()->GetTitle());
+      buffer += TString::Format("------------------------------------------------------\n");
    }
 
    // Time information
    Int_t elapsed = (Int_t)(result->GetEndTime().Convert() -
                            result->GetStartTime().Convert());
-   buffer = Form("%s Started   : %s\n",buffer,
-              result->GetStartTime().AsString());
-   buffer = Form("%s Real time : %d sec (CPU time: %.1f sec)\n", buffer, elapsed,
-              result->GetUsedCPU());
+   buffer += TString::Format(" Started   : %s\n",
+                             result->GetStartTime().AsString());
+   buffer += TString::Format(" Real time : %d sec (CPU time: %.1f sec)\n", 
+                             elapsed, result->GetUsedCPU());
 
    // Number of events processed, rate, size
    Double_t rate = 0.0;
    if (result->GetEntries() > -1 && elapsed > 0)
       rate = result->GetEntries() / (Double_t)elapsed ;
    Float_t size = ((Float_t)result->GetBytes())/(1024*1024);
-   buffer = Form("%s Processed : %lld events (size: %.3f MBs)\n",buffer,
-              result->GetEntries(), size);
-   buffer = Form("%s Rate      : %.1f evts/sec\n",buffer, rate);
+   buffer += TString::Format(" Processed : %lld events (size: %.3f MBs)\n",
+                             result->GetEntries(), size);
+   buffer += TString::Format(" Rate      : %.1f evts/sec\n", rate);
 
    // Package information
    if (strlen(result->GetParList()) > 1) {
-      buffer = Form("%s Packages  :  %s\n",buffer, result->GetParList());
+      buffer += TString::Format("%s Packages  :  %s\n", result->GetParList());
    }
 
    // Result information
@@ -3382,18 +3380,16 @@ void TSessionQueryFrame::UpdateInfos()
       }
    }
    if (res.Length() > 1) {
-      buffer = Form("%s------------------------------------------------------\n",
-                 buffer);
-      buffer = Form("%s Results   : %s\n",buffer, res.Data());
+      buffer += TString::Format("------------------------------------------------------\n");
+      buffer += TString::Format(" Results   : %s\n", res.Data());
    }
 
    if (result->GetOutputList() && result->GetOutputList()->GetSize() > 0) {
-      buffer = Form("%s Outlist   : %d objects\n",buffer,
-                 result->GetOutputList()->GetSize());
-      buffer = Form("%s------------------------------------------------------\n",
-                 buffer);
+      buffer += TString::Format("%s Outlist   : %d objects\n",
+                                result->GetOutputList()->GetSize());
+      buffer += TString::Format("------------------------------------------------------\n");
    }
-   fInfoTextView->LoadBuffer(buffer);
+   fInfoTextView->LoadBuffer(buffer.Data());
 
    //Float_t pos = Float_t((Double_t)(result->GetEntries() * 100)/(Double_t)total);
    if (result->GetStatus() == TQueryResult::kAborted)
@@ -3405,11 +3401,11 @@ void TSessionQueryFrame::UpdateInfos()
 
    frmProg->SetPosition(100.0);
 
-   buffer = Form(" Processed : %lld events in %.1f sec", result->GetEntries(),
-              (Float_t)elapsed);
-   fTotal->SetText(buffer);
-   buffer = Form(" Processing Rate : %.1f events/sec   ", rate);
-   fRate->SetText(buffer);
+   buffer = TString::Format(" Processed : %lld events in %.1f sec", result->GetEntries(),
+                           (Float_t)elapsed);
+   fTotal->SetText(buffer.Data());
+   buffer = TString::Format(" Processing Rate : %.1f events/sec   ", rate);
+   fRate->SetText(buffer.Data());
    fFB->Layout();
 }
 
@@ -3483,7 +3479,7 @@ void TSessionOutputFrame::OnElementDblClicked(TGLVEntry* entry, Int_t , Int_t, I
    gPad->SetEditable(kFALSE);
    // check default action from root.mimes
    if (fClient->GetMimeTypeList()->GetAction(obj->IsA()->GetName(), action)) {
-      act = Form("((%s*)0x%lx)%s", obj->IsA()->GetName(), (Long_t)obj, action);
+      act = TString::Format("((%s*)0x%lx)%s", obj->IsA()->GetName(), (Long_t)obj, action);
       if (act[0] == '!') {
          act.Remove(0, 1);
          gSystem->Exec(act.Data());
@@ -4140,17 +4136,17 @@ void TSessionViewer::WriteConfiguration(const char *filename)
       sessionstring += ";";
       sessionstring += session->fAddress;
       sessionstring += ";";
-      sessionstring += Form("%d", session->fPort);
+      sessionstring += TString::Format("%d", session->fPort);
       sessionstring += ";";
-      sessionstring += Form("%d", session->fLogLevel);
+      sessionstring += TString::Format("%d", session->fLogLevel);
       sessionstring += ";";
       sessionstring += session->fConfigFile.Length() > 1 ? session->fConfigFile.Data() : " ";
       sessionstring += ";";
       sessionstring += session->fUserName;
       sessionstring += ";";
-      sessionstring += Form("%d", session->fSync);
+      sessionstring += TString::Format("%d", session->fSync);
       sessionstring += ";";
-      sessionstring += Form("%d", session->fAutoEnable);
+      sessionstring += TString::Format("%d", session->fAutoEnable);
       if (scnt > 0) // skip local session
          fViewerEnv->SetValue(Form("SessionDescription.%d",scnt), sessionstring);
       scnt++;
@@ -4158,7 +4154,7 @@ void TSessionViewer::WriteConfiguration(const char *filename)
       TIter qnext(session->fQueries);
       while ((query = (TQueryDescription *) qnext())) {
          TString querystring;
-         querystring += Form("%d", query->fStatus);
+         querystring += TString::Format("%d", query->fStatus);
          querystring += ";";
          querystring += query->fReference.Length() > 1 ? query->fReference.Data() : " ";
          querystring += ";";
@@ -4172,11 +4168,11 @@ void TSessionViewer::WriteConfiguration(const char *filename)
          querystring += ";";
          querystring += query->fEventList.Length() > 1 ? query->fEventList.Data() : " ";
          querystring += ";";
-         querystring += Form("%d",query->fNbFiles);
+         querystring += TString::Format("%d",query->fNbFiles);
          querystring += ";";
-         querystring += Form("%d",query->fNoEntries);
+         querystring += TString::Format("%d",query->fNoEntries);
          querystring += ";";
-         querystring += Form("%d",query->fFirstEntry);
+         querystring += TString::Format("%d",query->fFirstEntry);
          fViewerEnv->SetValue(Form("QueryDescription.%d",qcnt), querystring);
          qcnt++;
       }
@@ -4249,9 +4245,9 @@ void TSessionViewer::Build()
 
    fViewerEnv = 0;
 #ifdef WIN32
-   fConfigFile = Form("%s\\%s", gSystem->HomeDirectory(), kConfigFile);
+   fConfigFile = TString::Format("%s\\%s", gSystem->HomeDirectory(), kConfigFile);
 #else
-   fConfigFile = Form("%s/%s", gSystem->HomeDirectory(), kConfigFile);
+   fConfigFile = TString::Format("%s/%s", gSystem->HomeDirectory(), kConfigFile);
 #endif
 
    fCascadeMenu = new TGPopupMenu(fClient->GetDefaultRoot());
@@ -4797,11 +4793,11 @@ void TSessionViewer::Terminate()
 
    // clean-up temporary files
    TString pathtmp;
-   pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectFile);
+   pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(), kSession_RedirectFile);
    if (!gSystem->AccessPathName(pathtmp)) {
       gSystem->Unlink(pathtmp);
    }
-   pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectCmd);
+   pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(), kSession_RedirectCmd);
    if (!gSystem->AccessPathName(pathtmp)) {
       gSystem->Unlink(pathtmp);
    }
@@ -4825,11 +4821,11 @@ void TSessionViewer::CloseWindow()
 
    // clean-up temporary files
    TString pathtmp;
-   pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectFile);
+   pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(), kSession_RedirectFile);
    if (!gSystem->AccessPathName(pathtmp)) {
       gSystem->Unlink(pathtmp);
    }
-   pathtmp = Form("%s/%s", gSystem->TempDirectory(), kSession_RedirectCmd);
+   pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(), kSession_RedirectCmd);
    if (!gSystem->AccessPathName(pathtmp)) {
       gSystem->Unlink(pathtmp);
    }
@@ -5161,7 +5157,7 @@ void TSessionViewer::ShowPackages()
    if (fActDesc->fLocal) return;
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid())
       return;
-   TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
+   TString pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(),
             kSession_RedirectFile);
    // redirect stdout/stderr to temp file
    if (gSystem->RedirectOutput(pathtmp.Data(), "w") != 0) {
@@ -5246,7 +5242,7 @@ void TSessionViewer::ShowEnabledPackages()
    if (fActDesc->fLocal) return;
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid())
       return;
-   TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
+   TString pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(),
          kSession_RedirectFile);
    // redirect stdout/stderr to temp file
    if (gSystem->RedirectOutput(pathtmp.Data(), "w") != 0) {
@@ -5327,7 +5323,7 @@ void TSessionViewer::ShowStatus()
 
    if (!fActDesc->fProof || !fActDesc->fProof->IsValid())
       return;
-   TString pathtmp = Form("%s/%s", gSystem->TempDirectory(),
+   TString pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(),
             kSession_RedirectFile);
    // redirect stdout/stderr to temp file
    if (gSystem->RedirectOutput(pathtmp.Data(), "w") != 0) {

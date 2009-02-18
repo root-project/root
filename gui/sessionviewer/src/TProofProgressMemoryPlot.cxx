@@ -108,17 +108,8 @@ TProofProgressMemoryPlot::TProofProgressMemoryPlot(TProofProgressDialog *d,
    SetIconName(title);
 
    MapSubwindows();
-
    Resize();
-
-   Window_t wdummy;
-   int ax, ay;
-   gVirtualX->TranslateCoordinates(GetParent()->GetId(), fDialog->fDialog->GetId(),
-       (Int_t)(((TGFrame *)GetParent())->GetWidth() + w),
-       (Int_t)(((TGFrame *)GetParent())->GetHeight()- 3*h/2), ax, ay, wdummy);
-   Move(ax, ay);
-
-   //Popup();
+   CenterOnParent();
    MapWindow();
 }
 
@@ -171,7 +162,7 @@ TGListBox* TProofProgressMemoryPlot::BuildLogList(TGFrame *parent)
    Int_t is = 1;
    while ((pe=(TProofLogElem*)next())){
       TUrl url(pe->GetTitle());
-      buf = Form("%s %s", pe->GetName(), url.GetHost());
+      buf = TString::Format("%s %s", pe->GetName(), url.GetHost());
       c->AddEntry(buf.Data(), is);
       is++;
    }
@@ -281,7 +272,7 @@ void TProofProgressMemoryPlot::DoPlot()
             gr->SetLineColor(2);
             gr->SetLineStyle(3);
             fWPlot->Add(gr, "l");
-            legw->AddEntry(gr, Form("%s - min", pltemp->GetName()) , "l");
+            legw->AddEntry(gr, TString::Format("%s - min", pltemp->GetName()) , "l");
          }
          pltemp = (TProofLogElem*)elem->At(max+1);
          gr = DoWorkerPlot(pltemp);
@@ -290,7 +281,7 @@ void TProofProgressMemoryPlot::DoPlot()
             gr->SetLineColor(2);
             gr->SetLineStyle(2);
             fWPlot->Add(gr, "l");
-            legw->AddEntry(gr, Form("%s - max", pltemp->GetName()), "l");
+            legw->AddEntry(gr, TString::Format("%s - max", pltemp->GetName()), "l");
          }
 
 
