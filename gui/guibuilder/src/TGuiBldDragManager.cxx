@@ -901,10 +901,10 @@ TGuiBldDragManager::TGuiBldDragManager() : TVirtualDragManager() ,
 
    TString tmpfile = gSystem->TempDirectory();
    fPasteFileName = gSystem->ConcatFileName(tmpfile.Data(),
-                             Form("RootGuiBldClipboard%d.C", gSystem->GetPid()));
+                             TString::Format("RootGuiBldClipboard%d.C", gSystem->GetPid()));
 
    fTmpBuildFile = gSystem->ConcatFileName(tmpfile.Data(),
-                             Form("RootGuiBldTmpFile%d.C", gSystem->GetPid()));
+                             TString::Format("RootGuiBldTmpFile%d.C", gSystem->GetPid()));
 
    fName = "Gui Builder Drag Manager";
    SetWindowName(fName.Data());
@@ -2388,7 +2388,7 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
             } else {
                Int_t retval;
                new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                            Form("file (%s) must have extension .C", fname.Data()),
+                            TString::Format("file (%s) must have extension .C", fname.Data()),
                             kMBIconExclamation, kMBRetry | kMBCancel, &retval);
                if (retval == kMBRetry) {
                   HandleKey(event);
@@ -3211,8 +3211,8 @@ void TGuiBldDragManager::CloneEditable()
    }
 
    TString tmpfile = gSystem->TempDirectory();
-   tmpfile = gSystem->ConcatFileName(tmpfile.Data(),
-                                     Form("tmp%d.C", gRandom->Integer(100)));
+   tmpfile = gSystem->ConcatFileName(tmpfile.Data(), TString::Format("tmp%d.C", 
+                                     gRandom->Integer(100)));
    Save(tmpfile.Data());
    gROOT->Macro(tmpfile.Data());
    gSystem->Unlink(tmpfile.Data());
@@ -3276,7 +3276,7 @@ Bool_t TGuiBldDragManager::Save(const char *file)
 
    } else {
       Int_t retval;
-      TString msg = Form("file (%s) must have extension .C", fname.Data());
+      TString msg = TString::Format("file (%s) must have extension .C", fname.Data());
 
       new TGMsgBox(fClient->GetDefaultRoot(), main, "Error...", msg.Data(),
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
@@ -3358,7 +3358,7 @@ Bool_t TGuiBldDragManager::SaveFrame(const char *file)
       fBuilder->AddMacro(fname.Data(), img);
    } else {
       Int_t retval;
-      TString msg = Form("file (%s) must have extension .C", fname.Data());
+      TString msg = TString::Format("file (%s) must have extension .C", fname.Data());
 
       new TGMsgBox(fClient->GetDefaultRoot(), frame, "Error...", msg.Data(),
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
@@ -3608,7 +3608,7 @@ void TGuiBldDragManager::DoResize()
       str += "::";
       str += fr->GetName();
       str += " resized   ";
-      str += Form("(%d x %d)", w, h);
+      str += TString::Format("(%d x %d)", w, h);
       fBuilder->UpdateStatusBar(str.Data());
    }
 
@@ -3662,7 +3662,7 @@ void TGuiBldDragManager::DoMove()
       str += "::";
       str += fPimpl->fGrab->GetName();
       str += " is moved to absolute position   ";
-      str += Form("(%d , %d)", x, y);
+      str += TString::Format("(%d , %d)", x, y);
       fBuilder->UpdateStatusBar(str.Data());
    }
 
@@ -4369,7 +4369,7 @@ Bool_t TGuiBldDragManager::Drop()
          str += "::";
          str += parent->GetName();
          str += " at position  ";
-         str += Form("(%d , %d)", x, y);
+         str += TString::Format("(%d , %d)", x, y);
          fBuilder->UpdateStatusBar(str.Data());
       }
       fTarget = 0;
@@ -5928,7 +5928,7 @@ void TGuiBldDragManager::ChangePicture(TGPictureButton *fr)
    if (!pic) {
       Int_t retval;
       new TGMsgBox(fClient->GetDefaultRoot(), fr, "Error...",
-                   Form("Cannot read image file (%s)", fname.Data()),
+                   TString::Format("Cannot read image file (%s)", fname.Data()),
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
 
       if (retval == kMBRetry) {
@@ -6207,7 +6207,7 @@ void TGuiBldDragManager::ChangeImage(TGIcon *fr)
    if (!img) {
       Int_t retval;
       new TGMsgBox(fClient->GetDefaultRoot(), fr, "Error...",
-                   Form("Cannot read image file (%s)", fname.Data()),
+                   TString::Format("Cannot read image file (%s)", fname.Data()),
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
 
       if (retval == kMBRetry) {

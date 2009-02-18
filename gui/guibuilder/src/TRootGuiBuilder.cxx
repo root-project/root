@@ -1471,8 +1471,8 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
    } else {
       Int_t retval;
       new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                   Form("file (%s) must have source extension (.C, .c, .cxx, .cpp, .cc)", fname.Data()),
-                   kMBIconExclamation, kMBRetry | kMBCancel, &retval);
+                   TString::Format("file (%s) must have source extension (.C, .c, .cxx, .cpp, .cc)",
+                   fname.Data()), kMBIconExclamation, kMBRetry | kMBCancel, &retval);
 
       if (retval == kMBRetry) {
          OpenProject(event);
@@ -1560,8 +1560,8 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    } else {
       Int_t retval;
       new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                   Form("file (%s) must have source extension (.C, .c, .cxx, .cpp, .cc)", fname.Data()),
-                   kMBIconExclamation, kMBRetry | kMBCancel, &retval);
+                   TString::Format("file (%s) must have source extension (.C, .c, .cxx, .cpp, .cc)",
+                   fname.Data()), kMBIconExclamation, kMBRetry | kMBCancel, &retval);
       if (retval == kMBRetry) {
          SaveProject(event);
       }
