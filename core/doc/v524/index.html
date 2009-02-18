@@ -2,3 +2,13 @@
 <hr> 
 <a name="core"></a> 
 <h3>Core</h3>
+<ul>
+<li>
+New method in TSystem:
+<pre>
+   TString TSystem::GetFromPipe(const char *command)
+</pre>
+which executes "command" in the shell and returns the output in the TString.
+Multi-line output is separated by \n's.
+</li>
+</ul>
