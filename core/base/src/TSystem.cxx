@@ -654,6 +654,33 @@ int TSystem::ClosePipe(FILE*)
 }
 
 //______________________________________________________________________________
+TString TSystem::GetFromPipe(const char *command)
+{
+   // Execute command and return output in TString.
+
+   TString out;
+
+   FILE *pipe = OpenPipe(command, "r");
+   if (!pipe) {
+      SysError("GetFromPipe", "cannot run command \"%s\"", command);
+      return out;
+   }
+
+   TString line;
+   while (line.Gets(pipe)) {
+      if (out != "")
+         out += "\n";
+      out += line;
+   }
+
+   Int_t r = ClosePipe(pipe);
+   if (r) {
+      Error("GetFromPipe", "command \"%s\" returned %d", command, r);
+   }
+   return out;
+}
+
+//______________________________________________________________________________
 int TSystem::GetPid()
 {
    // Get process id.

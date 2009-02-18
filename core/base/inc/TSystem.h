@@ -387,6 +387,7 @@ public:
    virtual Int_t           Exec(const char *shellcmd);
    virtual FILE           *OpenPipe(const char *command, const char *mode);
    virtual int             ClosePipe(FILE *pipe);
+   virtual TString         GetFromPipe(const char *command);
    virtual void            Exit(int code, Bool_t mode = kTRUE);
    virtual void            Abort(int code = 0);
    virtual int             GetPid();
@@ -527,7 +528,7 @@ public:
    virtual void            SetLinkdefSuffix(const char *suffix);
    virtual void            SetSoExt(const char *soExt);
    virtual void            SetObjExt(const char *objExt);
-   virtual TString         SplitAclicMode(const char* filename, TString &mode, TString &args, TString &io) const;
+   virtual TString         SplitAclicMode(const char *filename, TString &mode, TString &args, TString &io) const;
    virtual void            CleanCompiledMacros();
 
    ClassDef(TSystem,0)  //ABC defining a generic interface to the OS
