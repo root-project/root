@@ -150,6 +150,7 @@ const Int_t TGLSAViewer::fgInitH = 670;
 const char *gGLSaveAsTypes[] = {"Encapsulated PostScript", "*.eps",
                                 "PDF",                     "*.pdf",
                                 "GIF",                     "*.gif",
+                                "Animated GIF",            "*.gif+",
                                 "JPEG",                    "*.jpg",
                                 "PNG",                     "*.png",
                                 0, 0};
@@ -541,8 +542,21 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
                fOverwrite = fi.fOverwrite;
 
                TString file = fi.fFilename;
-               if (ft.Index(".") != kNPOS)
+               Bool_t  match = kFALSE;
+               const char** fin = gGLSaveAsTypes; ++fin;
+               while (*fin != 0)
+               {
+                  if (file.EndsWith(*fin + 1))
+                  {
+                     match = kTRUE;
+                     break;
+                  }
+                  fin += 2;
+               }
+               if ( ! match)
+               {
                   file += ft(ft.Index("."), ft.Length());
+               }
                SavePicture(file);
             }
             break;

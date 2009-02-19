@@ -551,15 +551,15 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
    // can be covered by other windows.
    // Returns false if something obvious goes wrong, true otherwise.
 
-   if (fileName.EndsWith(".gif") || fileName.Contains("gif+") ||
-            fileName.EndsWith(".jpg") || fileName.EndsWith(".png"))
+   if (fileName.EndsWith(".gif") || fileName.EndsWith(".gif+") ||
+       fileName.EndsWith(".jpg") || fileName.EndsWith(".png"))
    {
       if ( ! TakeLock(kDrawLock)) {
          Error("TGLViewer::SavePicture", "viewer locked - try later.");
          return kFALSE;
       }
 
-      std::auto_ptr<TImage>gif(TImage::Create());
+      std::auto_ptr<TImage> image(TImage::Create());
 
       fRnrCtx->SetGrabImage(kTRUE);
 
@@ -570,13 +570,13 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
       else
          DoDraw();
 
-      gif->FromGLBuffer(fRnrCtx->GetGrabbedImage(), fViewport.Width(), fViewport.Height());
+      image->FromGLBuffer(fRnrCtx->GetGrabbedImage(), fViewport.Width(), fViewport.Height());
 
       fRnrCtx->SetGrabImage(kFALSE);
       delete [] fRnrCtx->GetGrabbedImage();
       fRnrCtx->SetGrabbedImage(0);
 
-      gif->WriteImage(fileName.Data());
+      image->WriteImage(fileName.Data());
    }
    else if (fileName.EndsWith(".eps"))
    {
