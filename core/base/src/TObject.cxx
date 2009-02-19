@@ -59,7 +59,7 @@ Bool_t TObject::fgObjectStat = kTRUE;
 ClassImp(TObject)
 
 //______________________________________________________________________________
-TObject::TObject() :   fUniqueID(0), fBits(kNotDeleted)
+TObject::TObject() : fUniqueID(0), fBits(kNotDeleted)
 {
    // TObject constructor. It sets the two data words of TObject to their
    // initial values. The unique ID is set to 0 and the status word is
@@ -193,9 +193,9 @@ TObject *TObject::Clone(const char *) const
    // If the object derives from TNamed, this function is called
    // by TNamed::Clone. TNamed::Clone uses the optional argument to set
    // a new name to the newly created object.
-   // 
+   //
    // If the object class has a DirectoryAutoAdd function, it will be
-   // called at the end of the function with the parameter gDirector.  
+   // called at the end of the function with the parameter gDirector.
    // This usually means that the object will be appended to the current
    // ROOT directory.
 
