@@ -520,7 +520,7 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
    }
 
    // If graph has been drawn with the fill area option, check if we are inside
-   TString drawOption = GetDrawOption();
+   TString drawOption = theGraph->GetDrawOption();
    drawOption.ToLower();
    if (drawOption.Contains("f")) {
       Double_t xp = gPad->AbsPixeltoX(px); xp = gPad->PadtoX(xp);
