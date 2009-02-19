@@ -69,8 +69,8 @@ static const char *gRootDevelopers[] = {
    "Jan Iwaszkiewicz",
    "Lorenzo Moneta",
    "Axel Naumann",
-   "Matevz Tadel",
    "Paul Russo",
+   "Matevz Tadel",
    0
 };
 
