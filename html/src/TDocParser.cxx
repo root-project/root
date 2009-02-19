@@ -134,7 +134,7 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
    fCurrentClass(cl), fRecentClass(0), fCurrentModule(0),
    fDirectiveCount(0), fLineNumber(0), fDocContext(kIgnore), 
    fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized), 
-   fCommentAtBOL(kFALSE)
+   fCommentAtBOL(kFALSE), fAllowDirectives(kTRUE)
 {
    // Constructor called for parsing class sources
 
@@ -170,7 +170,7 @@ TDocParser::TDocParser(TDocOutput& docOutput):
    fCurrentClass(0), fRecentClass(0), fDirectiveCount(0),
    fLineNumber(0), fDocContext(kIgnore), 
    fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized),
-   fCommentAtBOL(kFALSE)
+   fCommentAtBOL(kFALSE), fAllowDirectives(kFALSE)
 {
    // constructor called for parsing text files with Convert()
    InitKeywords();
@@ -1194,6 +1194,9 @@ TClass* TDocParser::IsDirective(const TString& line, Ssiz_t pos,
    // You can implement your own handlers by implementing a class deriving
    // from TDocHandler, and calling it TDocTagDirective for "BEGIN_TAG",
    // "END_TAG" blocks.
+
+   if (!fAllowDirectives)
+      return 0;
 
    // '"' serves as escape char
    if (pos > 0 &&  line[pos - 1] == '"')

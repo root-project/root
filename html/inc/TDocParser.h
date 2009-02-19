@@ -123,6 +123,7 @@ protected:
    TString        fClassDescrTag;   // tag for finding the class description
    TString        fSourceInfoTags[kNumSourceInfos]; // tags for source info elements (copyright, last changed, author)
    TList          fDirectiveHandlers;// handler for doc directives (TDocDirective objects)
+   Bool_t         fAllowDirectives;  // whether directives are to be interpreted
    std::set<UInt_t> fExtraLinesWithAnchor; // lines that need an additional anchor
    TString        fSourceInfo[kNumSourceInfos];// author, last changed, ...
    TList          fMethods[3];      // methods as TMethodWrapper objects (by access)

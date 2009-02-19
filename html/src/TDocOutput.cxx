@@ -511,12 +511,12 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
       }
       out << "<table><tr><td style=\"vertical-align:top;padding-right:2em;\">" << endl;
    }
-   out << "<pre class=\"code\">" << endl;
+   out << "<div class=\"listing\"><pre class=\"listing\">" << endl;
 
    TDocParser parser(*this);
    parser.Convert(out, in, relpath, (includeOutput) /* determines whether it's code or not */);
 
-   out << "</pre>" << endl;
+   out << "</pre></div>" << endl;
    out << "<div id=\"linenums\">";
    for (Long_t i = 0; i < parser.GetLineNumber(); ++i)
       out << "<div class=\"ln\">&nbsp;<span class=\"ln\">" << i + 1 << "</span></div>";
