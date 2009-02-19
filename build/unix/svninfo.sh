@@ -23,7 +23,8 @@ for i in $INFO; do
          echo ${i#${HTTP}} > $OUT
       fi
    else
-      echo $i | tee -a $OUT
+      echo $i >> $OUT
+      echo $i
    fi
 done
 
