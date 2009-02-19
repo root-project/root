@@ -126,7 +126,7 @@ $(SECGSITEST): $(OBJECTA) $(LIBDEPS)
 
 $(SECGSIPROXY): $(OBJECTB) $(LIBDEPS)
 	@echo Creating executable $(SECGSIPROXY) 
-	$(ECHO)$(LD) $(LDOP) $(OBJECTB) $(BINLIBS) $(LIBS) -o $(SECGSIPROXY)
+	$(ECHO)$(LD) $(LDOP) $(OBJECTB) $(BINLIBS) $(LIBSSL) $(LIBS) -o $(SECGSIPROXY)
 
 $(OBJDIR)/XrdSecgsitest.o: XrdSecgsitest.cc XrdOucString.hh \
 		XrdSysError.hh XrdSutAux.hh XProtocol.hh XPtypes.hh XrdCryptoAux.hh \
