@@ -27,6 +27,7 @@ void arrow()
    TEveArrow* a1 = new TEveArrow(1., 1., 10., 10., 4., 0.);
    a1->SetMainColor(kBlue);
    a1->SetTubeR(0.02);
+   a1->SetPickable(kTRUE);
    gEve->AddElement(a1);
    TEveText* t1 = new TEveText("blue");
    t1->SetFontSize(20);
@@ -36,10 +37,12 @@ void arrow()
 
    TEveArrow* a2 = new TEveArrow(20., 1., 10., 3., 0., 4.);
    a2->SetMainColor(kGreen);
+   a2->SetPickable(kTRUE);
    gEve->AddElement(a2);
 
    TEveArrow* a3 = new TEveArrow(1., 10., 10., 0., 20., 0.);
    a3->SetMainColor(kOrange);
+   a3->SetPickable(kTRUE);
    gEve->AddElement(a3);
 
    gEve->FullRedraw3D(kTRUE);
