@@ -18,13 +18,6 @@ body {
    padding: 3px 16px;
 }
 
-pre {
-   /*font-size: larger;*/
-}
-
-p {
-}
-
 /* links */
 a {
    text-decoration: none;
@@ -51,7 +44,6 @@ a:hover {
 /* headers */
 h1, h2, h3, h4 {
    color: inherit;
-   /*clear: both;*/
 }
 h1 {
    font-size: 2em;
@@ -77,12 +69,6 @@ h3 {
 #footer em {
   padding: 1em;
   font-style: normal;
-}
-
-/* box with drop shadow */
-div.dropshadow {
-}
-div.withshadow {
 }
 
 /* tabbed divs */
@@ -140,7 +126,7 @@ a.tabsel:active {
    border-bottom: solid 3px White;
 }
 div.tabcontent {
-   border: solid 2px Black; /*margin-right: auto;*/
+   border: solid 2px Black;
    display: table;
    margin: 0em 2em 0em 2em;
    padding: 0.5em 0.5em 0.5em 0.5em;
@@ -170,7 +156,6 @@ div.clear {
 /* links on top of page */
 #root_header {
    background: #336299 url(http://root.cern.ch/drupal/sites/all/themes/newsflash/images/blue/root-banner.png) no-repeat scroll 0 0;
-   /*padding: 150px 0 2px 0;*/
   margin:0px -13px;
 }
 #root_header img {
@@ -209,7 +194,6 @@ a.descrheadentry {
    margin: 0;
    font-weight: 95%;
    border: none;
-   /*border-left: dotted 1px #dddddd;*/
    border-left: solid 1px #dddddd;
    padding: 1px 14px;
    white-space: nowrap;
@@ -683,6 +667,7 @@ span.string {
 }
 #codeAndLineNumbers {
    margin-left: -32px;
+   font-size: 110%;
 }
 pre.code {
    margin: 5px 0px 0px 45px;
@@ -704,14 +689,12 @@ div.ln {
    -moz-user-select: none;
    -khtml-user-select: none;
    user-select: none;
-   /*z-index: -10;*/
    height: 100%;
    border-right: 1px solid #aaaaaa;
 }
 span.ln {
    display: inline-block;
    font-size: 80%;
-   /*border-top: 1px dotted #aaaaaa;*/
    margin: 0;
    padding: 0 0.2em 0 0;
 }
