@@ -26,7 +26,7 @@ Reflex::Array::Array( const Type & arrayType,
                             const std::type_info & typeinfo ) 
 //-------------------------------------------------------------------------------
 // Constructs an array type.
-   : TypeBase(BuildTypeName(arrayType, len).c_str(), arrayType.SizeOf() * len, ARRAY, typeinfo, arrayType.CintType()), 
+   : TypeBase(BuildTypeName(arrayType, len).c_str(), arrayType.SizeOf() * len, ARRAY, typeinfo, Type(), arrayType.CintType()), 
      fArrayType(arrayType), 
      fLength(len) {
 }

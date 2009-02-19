@@ -59,13 +59,6 @@ namespace Reflex {
          const char cintType = '\0');
 
 
-      TypeBase( const char *           nam, 
-         size_t                 size, 
-         TYPE                   typeTyp,
-         const std::type_info & ti,
-         const char cintType);
-
-
       /** destructor */
       virtual ~TypeBase();
 

@@ -25,7 +25,7 @@ Reflex::Function::Function( const Type & retType,
                                   TYPE functionType) 
 //-------------------------------------------------------------------------------
 // Default constructor for a function type.
-   : TypeBase(BuildTypeName(retType, parameters, QUALIFIED | SCOPED).c_str(), 0, functionType, ti, '1'),
+   : TypeBase(BuildTypeName(retType, parameters, QUALIFIED | SCOPED).c_str(), 0, functionType, ti, Type(), '1'),
      fParameters(parameters),
      fReturnType(retType),
      fModifiers(0) { }

@@ -27,7 +27,7 @@ Reflex::Enum::Enum( const char * enumType,
                           unsigned int modifiers )
 //-------------------------------------------------------------------------------
 // Construct the dictionary information for an enum
-   : TypeBase( enumType, sizeof(int), ENUM, ti, 'i' ),
+   : TypeBase( enumType, sizeof(int), ENUM, ti, Type(), 'i' ),
      ScopeBase( enumType, ENUM ),
      fModifiers( modifiers ) {}
 
