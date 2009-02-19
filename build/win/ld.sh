@@ -40,8 +40,10 @@ fi
 
 if [ "$dll" != "" ]; then
    build/win/makeresource.sh "$dll" \
-      && rc $debug -Iinclude /Fo"${dll}.res" "${dll}.rc" > /dev/null 2>&1 \
-      && args="$args ${dll}.res"
+      && rc $debug -Iinclude /Fo"${dll}.res" "${dll}.rc" > /dev/null 2>&1
+   if [ -r "${dll}.res" ]; then
+      args="$args ${dll}.res"
+   fi
    rm -f "${dll}.rc"
 fi
 
