@@ -115,7 +115,7 @@ __mmalloc_free (mdp, ptr)
 	{
 	  register size_t bytes = blocks * BLOCKSIZE;
 	  mdp -> heaplimit -= blocks;
-	  mdp -> morecore (mdp, -bytes);
+	  mdp -> morecore (mdp, -(ptrdiff_t)bytes);
 	  mdp -> heapinfo[mdp -> heapinfo[block].free.prev].free.next
 	    = mdp -> heapinfo[block].free.next;
 	  mdp -> heapinfo[mdp -> heapinfo[block].free.next].free.prev

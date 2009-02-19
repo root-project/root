@@ -34,6 +34,8 @@ Boston, MA 02111-1307, USA.  */
 
 #ifndef WIN32
 #  include <sys/mman.h>
+#else
+#  include <io.h>
 #endif
 
 #ifndef SEEK_SET
@@ -243,12 +245,12 @@ reuse (cfd)
 {
   struct mdesc *mtemp = (struct mdesc*) malloc(sizeof(struct mdesc));
   struct mdesc *mdp = NULL;
-  int val, rdonly = 0;
 
 #ifdef WIN32
+  int rdonly = 0;
   BY_HANDLE_FILE_INFORMATION FileInformation;
   DWORD lbuf;
-  long fd = _get_osfhandle(cfd);
+  long fd = _get_osfhandle((int)cfd);
   if (!GetFileInformationByHandle(cfd,&FileInformation))
   {
      fprintf(stderr, "reuse: error calling GetFileInformationByHandle(%d)\n", GetLastError());
@@ -263,6 +265,7 @@ reuse (cfd)
       (strcmp (mtemp->magic, MMALLOC_MAGIC) == 0) &&
       (mtemp->version <= MMALLOC_VERSION))
 #else
+  int val, rdonly = 0;
   int fd = cfd;
 
   if ((val = fcntl(fd, F_GETFL, 0)) < 0) {

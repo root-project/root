@@ -107,7 +107,7 @@ morecore (mdp, size)
       newinfo = (malloc_info *) align (mdp, newsize * sizeof (malloc_info));
       if (newinfo == NULL)
 	{
-	  mdp -> morecore (mdp, -size);
+	  mdp -> morecore (mdp, -(ptrdiff_t)size);
 	  return (NULL);
 	}
       memset ((PTR) newinfo, 0, newsize * sizeof (malloc_info));
