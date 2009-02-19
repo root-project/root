@@ -34,11 +34,7 @@ namespace Reflex {
    public:
 
       /** default constructor */
-      DataMember( const char *   nam,
-         const Type &   typ, 
-         size_t         offs,
-         unsigned int   modifiers = 0,
-         char* cintOffset = 0 );
+      DataMember(const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0, char* cintOffset = 0);
 
 
       /** destructor */

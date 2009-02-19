@@ -643,12 +643,8 @@ void Reflex::ScopeBase::AddDataMember( const char * name,
 }
 
 //-------------------------------------------------------------------------------
-void Reflex::ScopeBase::AddDataMember( Member &output,
-                                      const char * name,
-                                      const Type & type,
-                                      size_t offset,
-                                      unsigned int modifiers,
-                                      char* cintOffset ) const {
+void Reflex::ScopeBase::AddDataMember(Member& output, const char* name, const Type& type, size_t offset, unsigned int modifiers, char* cintOffset) const
+{
    //-------------------------------------------------------------------------------
    // Add data member to this scope.
    output = new DataMember(name, type, offset, modifiers, cintOffset);

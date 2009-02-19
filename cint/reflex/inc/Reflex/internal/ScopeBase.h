@@ -554,17 +554,9 @@ namespace Reflex {
       * AddDataMember will add the information about a data MemberAt
       * @param dm pointer to data MemberAt
       */
-      virtual void AddDataMember( const Member & dm ) const;
-      virtual void AddDataMember( const char * name,
-         const Type & type,
-         size_t offset,
-         unsigned int modifiers = 0 ) const;
-      virtual void AddDataMember( Member &output,
-                                 const char * name,
-                                 const Type & type,
-                                 size_t offset,
-                                 unsigned int modifiers = 0,
-                                 char* cintOffset = 0 ) const;
+      virtual void AddDataMember(const Member& dm) const;
+      virtual void AddDataMember(const char* name, const Type& type, size_t offset, unsigned int modifiers = 0) const;
+      virtual void AddDataMember(Member& output, const char* name, const Type& type, size_t offset, unsigned int modifiers = 0, char* cintOffset = 0) const;
       
 
       /**

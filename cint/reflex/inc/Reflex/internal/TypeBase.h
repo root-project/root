@@ -651,16 +651,9 @@ namespace Reflex {
       * AddDataMember will add the information about a data MemberAt
       * @param dm pointer to data MemberAt
       */
-      virtual void AddDataMember( const Member & dm ) const;
-      virtual void AddDataMember( const char * nam,
-         const Type & typ,
-         size_t offs,
-         unsigned int modifiers = 0 ) const;
-      virtual void AddDataMember(Member &output,
-                                   const char * nam,
-                                   const Type & typ,
-                                   size_t offs,
-                                   unsigned int modifiers = 0 ) const;
+      virtual void AddDataMember(const Member& dm) const;
+      virtual void AddDataMember(const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0) const;
+      virtual void AddDataMember(Member& output, const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0, char* cintOffset = 0) const;
       
       
 
@@ -1369,11 +1362,7 @@ inline void Reflex::TypeBase::AddDataMember( const char * /* nam */,
 
 
 //-------------------------------------------------------------------------------
-inline void Reflex::TypeBase::AddDataMember(Member & /* output */,
-                                            const char * /* nam */,
-                                            const Type & /* typ */,
-                                            size_t /* offs */,
-                                            unsigned int /* modifiers */ ) const {
+inline void Reflex::TypeBase::AddDataMember(Member& /*output*/, const char* /*nam*/, const Type& /*typ*/, size_t /*offs*/, unsigned int /*modifiers*/, char* /*cintOffset*/) const {
    //-------------------------------------------------------------------------------
    throw RuntimeError("Function AddDataMember  not callable on this object");
 }

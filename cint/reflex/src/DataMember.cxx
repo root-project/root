@@ -27,15 +27,11 @@
 
 
 //-------------------------------------------------------------------------------
-Reflex::DataMember::DataMember( const char *  nam,
-                                      const Type &  typ,
-                                      size_t        offs,
-                                      unsigned int  modifiers,
-                                      char* cintOffset )
-//-------------------------------------------------------------------------------
-// Construct the dictionary information for a data member.
-   : MemberBase ( nam, typ, DATAMEMBER, modifiers ),
-     fOffset( offs ), fCintOffset(cintOffset) { }
+Reflex::DataMember::DataMember(const char* nam, const Type& typ, size_t offs, unsigned int modifiers, char* cintOffset)
+   : MemberBase(nam, typ, DATAMEMBER, modifiers), fOffset(offs), fCintOffset(cintOffset)
+{
+   // Construct the dictionary information for a data member.
+}
 
 
 //-------------------------------------------------------------------------------
