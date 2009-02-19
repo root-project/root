@@ -1,3 +1,4 @@
+# -*- mode: makefile -*-
 # $Id: Makefile.macosx 20845 2007-11-16 15:48:58Z rdm $
 
 # MacOSX 64-bit platform dependent definitions
@@ -13,8 +14,8 @@ ARCH_PPCI386 := $(shell arch)
 FINK_ROOT := $(shell which fink | sed -e 's?/bin/fink??')
 
 # The compilers
-CXX   	  = g++ 
-CC	  = gcc
+CXX   	  = $(shell root-config --cxx)
+CC	  = $(shell root-config --cc)
 F77	  = $(shell root-config --f77)
 
 # Global optimisation
@@ -42,7 +43,7 @@ else
 CLIBDEFS      = $(CLIBDEFS_TMP) -DCERNLIB_PPC
 endif
 
-ifeq (g95,$(F77))
+ifneq (,$(findstring g95,$(F77)))
 CLIBDEFS     += -DCERNLIB_G95
 else
 CLIBDEFS     += -DCERNLIB_GFORTRAN
@@ -54,17 +55,17 @@ CLIBFOPT      = $(CLIBDEFS)
 
 LD            = export MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) ; \
 		unset LD_PREBIND ; \
-		g++
+		$(shell root-config --ld)
 
 LDFLAGS       = $(OPT) -m64 -bind_at_load
 
 SHLD	      = $(LD)
 SOFLAGS       = -m64 -dynamiclib -undefined dynamic_lookup -single_module
 
-ifeq (g95,$(F77))
-SHLIB += -L$(shell g95 --print-search-dirs | sed -n -e 's/install: //p') -lf95
+ifneq (,$(findstring g95,$(F77)))
+SHLIB += -L$(shell $(F77) --print-search-dirs | sed -n -e 's/install: //p') -lf95
 else
-SHLIB := $(shell gfortran -m64 -print-file-name=libgfortran.dylib)
-SHLIB += $(shell gfortran -m64 -print-file-name=libgfortranbegin.a)
+SHLIB := $(shell $(F77) -m64 -print-file-name=libgfortran.dylib)
+SHLIB += $(shell $(F77) -m64 -print-file-name=libgfortranbegin.a)
 SHLIB += -ldl
 endif

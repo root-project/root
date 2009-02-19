@@ -1,11 +1,12 @@
+# -*- mode: makefile -*-
 # $Id$
 
 # Linux platform dependent definitions
 
 # The compilers
-CXX   = g++ 
-F77	  = g77
-CC	  = gcc
+CXX       = $(shell root-config --cxx)
+CC	  = $(shell root-config --cc)
+F77	  = $(shell root-config --f77)
 
 # Global optimisation
 OPT   = -g #-O
@@ -32,7 +33,7 @@ CLIBCXXOPTS   = $(CLIBDEFS)
 CLIBCOPT      = $(CLIBDEFS)
 CLIBFOPT      = $(CLIBDEFS)
 
-LD            = g++
+LD            = $(shell root-config --ld)
 LDFLAGS       = $(OPT)
 
 SHLD	      = $(LD)

@@ -1,10 +1,12 @@
+# -*- mode: makefile -*-
 # $Id$
 
 # HP (with aCC) platform dependent definitions
 
 # The compilers
-CXX       = aCC
-F77	      = f77
+CXX           = $(shell root-config --cxx)
+CC            = $(shell root-config --cc)
+F77	      = $(shell root-config --f77)
 
 # Global optimisation
 OPT	      = -O
@@ -27,7 +29,7 @@ CLIBCXXOPTS   = $(CLIBDEFS)
 CLIBCOPT      = $(CLIBDEFS) +z -Ae 
 CLIBFOPT      = $(CLIBDEFS) -WF,-P
 
-LD            = aCC
+LD            = $(shell root-config --ld)
 LDFLAGS       = $(OPT) -z -Wl,+s -Wl,-E
 
 SHLD	      = $(LD)

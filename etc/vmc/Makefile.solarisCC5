@@ -1,12 +1,12 @@
+# -*- mode: makefile -*-
 # $Id$
 
 # Sun platform dependent definitions
 
 # The compilers
-SUNCOMP   = /opt/SUNWspro
-CXX       = $(SUNCOMP)/bin/CC
-CC	      = $(SUNCOMP)/bin/cc
-F77	      = $(SUNCOMP)/bin/f77
+CXX           = $(shell root-config --cxx)
+CC	      = $(shell root-config --cc)
+F77	      = $(shell root-config --f77)
 
 # Global optimisation
 OPT       = -O
@@ -29,10 +29,10 @@ CLIBCXXOPTS   = $(CLIBDEFS)
 CLIBCOPT      = $(CLIBDEFS)
 CLIBFOPT      = $(CLIBDEFS) -xpp=cpp
 
-LD            = $(SUNCOMP)/bin/CC
+LD            = $(shell root-config --ld)
 LDFLAGS       = $(OPT) -Qoption ld -t
 
 SHLD	      = $(LD)
 SOFLAGS       = -G
-SHLIB         = -L$(SUNCOMP)/lib -lF77 -lM77
+SHLIB         = -L/opt/SUNWspro/lib -lF77 -lM77
 

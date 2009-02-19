@@ -1,11 +1,12 @@
+# -*- mode: makefile -*-
 # $Id$
 
 # MacOS X with xlc platform dependent definitions
 
 # The compilers
-CXX   	  = xlC
-F77	  = xlf
-CC	  = xlc
+CXX   	  = $(shell root-config --cxx)
+CC	  = $(shell root-config --cc)
+F77	  = $(shell root-config --f77)
 
 # Global optimisation
 OPT   = -qnoopt #-g -O
@@ -31,10 +32,10 @@ CLIBCXXOPTS   = $(CLIBDEFS)
 CLIBCOPT      = $(CLIBDEFS)
 CLIBFOPT      = $(shell echo $(CLIBDEFS) | sed -e's/-D/-WF,-D/g')
 
-LD            = export MACOSX_DEPLOYMENT_TARGET=10.3 ; unset LD_PREBIND; g++
+LD            = export MACOSX_DEPLOYMENT_TARGET=10.3 ; unset LD_PREBIND; $(shell root-config --ld)
 LDFLAGS       = $(OPT) -bind_at_load 
 
-SHLD	      = export MACOSX_DEPLOYMENT_TARGET=10.3 ; unset LD_PREBIND; g++
+SHLD	      = export MACOSX_DEPLOYMENT_TARGET=10.3 ; unset LD_PREBIND; $(shell root-config --ld)
 SOFLAGS       = -dynamiclib -undefined dynamic_lookup -single_module
 SHLIB         = -lg2c
 

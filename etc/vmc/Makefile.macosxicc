@@ -1,3 +1,4 @@
+# -*- mode: makefile -*-
 # $Id$
 
 # MacOSX platform dependent definitions
@@ -9,10 +10,9 @@ ARCH_PPCI386 := $(shell arch)
 FINK_ROOT := $(shell which fink | sed -e 's?/bin/fink??')
 
 # The compilers
-CXX   	  = icc 
-CC	  = icc
-
-F77	      = ifort
+CXX   	  = $(shell root-config --cxx)
+CC	  = $(shell root-config --cc)
+F77	  = $(shell root-config --f77)
 
 # Global optimisation
 OPT   = -O -g
@@ -44,7 +44,7 @@ CLIBCXXOPTS   = $(CLIBDEFS)
 CLIBCOPT      = $(CLIBDEFS)
 CLIBFOPT      = $(CLIBDEFS)
 
-LD            = icpc
+LD            = $(shell root-config --ld)
 
 LDFLAGS       = $(OPT)
 

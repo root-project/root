@@ -4,9 +4,9 @@
 # Alpha OSF platform dependent definitions
 
 # The compilers
-CC	      = gcc
-CXX	      = g++
-F77	      = g77
+CC	      = $(shell root-config --cc)
+CXX	      = $(shell root-config --cxx)
+F77	      = $(shell root-config --f77)
 
 # Global optimisation
 OPT	      = -O2 -g -mieee -mno-soft-float
@@ -29,7 +29,7 @@ CLIBCXXOPTS   = $(CLIBDEFS)
 CLIBCOPT      = $(CLIBDEFS)
 CLIBFOPT      =  $(CLIBDEFS)
 
-LD            = g++
+LD            = $(shell root-config --ld)
 LDFLAGS       = $(OPT)
 
 SHLD          = $(LD)
