@@ -556,7 +556,7 @@ namespace Reflex {
       */
       virtual void AddDataMember(const Member& dm) const;
       virtual void AddDataMember(const char* name, const Type& type, size_t offset, unsigned int modifiers = 0) const;
-      virtual void AddDataMember(Member& output, const char* name, const Type& type, size_t offset, unsigned int modifiers = 0, char* cintOffset = 0) const;
+      virtual void AddDataMember(Member& output, const char* name, const Type& type, size_t offset, unsigned int modifiers = 0, char* interpreterOffset = 0) const;
       
 
       /**

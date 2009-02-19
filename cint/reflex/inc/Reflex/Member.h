@@ -393,8 +393,8 @@ namespace Reflex {
       * @return offset of member as int
       */
       size_t Offset() const;
-      void CintOffset(char*);
-      char*& CintOffset() const;
+      void InterpreterOffset(char*);
+      char*& InterpreterOffset() const;
 
 
       /** 
@@ -861,17 +861,17 @@ inline size_t Reflex::Member::Offset() const {
 }
 
 
-inline void Reflex::Member::CintOffset(char* offset)
+inline void Reflex::Member::InterpreterOffset(char* offset)
 {
    if (*this) {
-      fMemberBase->CintOffset(offset);
+      fMemberBase->InterpreterOffset(offset);
    }
 }
 
 
-inline char*& Reflex::Member::CintOffset() const
+inline char*& Reflex::Member::InterpreterOffset() const
 {
-   return fMemberBase->CintOffset();
+   return fMemberBase->InterpreterOffset();
 }
 
 

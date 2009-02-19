@@ -209,8 +209,8 @@ namespace Reflex {
       
       /** return the offset of the member */
       virtual size_t Offset() const;
-      virtual void CintOffset(char*);
-      virtual char*& CintOffset() const;
+      virtual void InterpreterOffset(char*);
+      virtual char*& InterpreterOffset() const;
 
 
       /** number of parameters */
@@ -620,13 +620,13 @@ inline size_t Reflex::MemberBase::Offset() const {
 
 
 //-------------------------------------------------------------------------------
-inline void Reflex::MemberBase::CintOffset(char*) {
+inline void Reflex::MemberBase::InterpreterOffset(char*) {
 //-------------------------------------------------------------------------------
 }
 
 
 //-------------------------------------------------------------------------------
-inline char*& Reflex::MemberBase::CintOffset() const {
+inline char*& Reflex::MemberBase::InterpreterOffset() const {
 //-------------------------------------------------------------------------------
    static char* p = 0;
    return p;

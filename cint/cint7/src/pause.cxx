@@ -1416,7 +1416,7 @@ static void G__debugvariable(FILE* fp, ::Reflex::Scope var, char* name)
             fp,
             "%s p=%ld type=%c typenum=%d tagnum=%d const=%x static=%d\n paran=%d ",
             iter->Name().c_str(),
-            (long) iter->CintOffset(),
+            (long) iter->InterpreterOffset(),
             type,
             typenum,
             tagnum,

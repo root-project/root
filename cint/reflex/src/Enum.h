@@ -65,7 +65,7 @@ namespace Reflex {
          const Type & typ,
          size_t offs,
          unsigned int modifiers = 0 ) const;
-      virtual void AddDataMember(Member& output, const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0, char* cintOffset = 0) const;
+      virtual void AddDataMember(Member& output, const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0, char* interpreterOffset = 0) const;
       
 
       /**
@@ -287,10 +287,10 @@ inline void Reflex::Enum::AddDataMember( const char * nam,
 }
 
 //-------------------------------------------------------------------------------
-inline void Reflex::Enum::AddDataMember(Member& output, const char* nam, const Type& typ, size_t offs, unsigned int modifiers, char* cintOffset) const
+inline void Reflex::Enum::AddDataMember(Member& output, const char* nam, const Type& typ, size_t offs, unsigned int modifiers, char* interpreterOffset) const
 {
    //-------------------------------------------------------------------------------
-   ScopeBase::AddDataMember(output, nam, typ, offs, modifiers, cintOffset);
+   ScopeBase::AddDataMember(output, nam, typ, offs, modifiers, interpreterOffset);
 }
 
 

@@ -1650,7 +1650,7 @@ void Cint::Internal::G__set_G__tagnum(const G__value& result)
    assert(member.TypeOf().FinalType().IsPointer() || member.TypeOf().FinalType().IsArray());
    ::Reflex::Type newType(::Reflex::ArrayBuilder(member.TypeOf().FinalType().ToType(), nelem));
    size_t offset = member.Offset();
-   char* cint_offset = member.CintOffset();
+   char* cint_offset = member.InterpreterOffset();
 #ifdef __GNUC__
 #else
 #pragma message (FIXME("Should call ::Reflex::Member::Modifiers()"))

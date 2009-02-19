@@ -688,7 +688,7 @@ bool G__test_access(const ::Reflex::Member var, int access);
 bool G__is_cppmacro(const ::Reflex::Member var);
 bool G__filescopeaccess(int filenum, int statictype);
 int G__get_access(const ::Reflex::Member mem);
-inline char*& G__get_offset(const ::Reflex::Member& mbr) { return mbr.CintOffset(); }
+inline char*& G__get_offset(const ::Reflex::Member& mbr) { return mbr.InterpreterOffset(); }
 Reflex::Type G__replace_rawtype(const Reflex::Type target, const Reflex::Type raw);
 Reflex::Type G__apply_const_to_typedef(const Reflex::Type target);
 

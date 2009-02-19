@@ -859,7 +859,7 @@ namespace Reflex {
        * @param offs the offset of the data member relative to the beginning of the scope
        * @param modifiers of the data member
        */
-      void AddDataMember(Member& output, const char* name, const Type& type, size_t offset, unsigned int modifiers = 0, char* cintOffset = 0) const;
+      void AddDataMember(Member& output, const char* name, const Type& type, size_t offset, unsigned int modifiers = 0, char* interpreterOffset = 0) const;
 
       /**
       * AddFunctionMember will add the information about a function member

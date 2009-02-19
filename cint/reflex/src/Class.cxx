@@ -461,11 +461,11 @@ void Reflex::Class::AddDataMember(const char * nam,
 
 
 //-------------------------------------------------------------------------------
-void Reflex::Class::AddDataMember(Member& output, const char* nam, const Type& typ, size_t offs, unsigned int modifiers, char* cintOffset) const
+void Reflex::Class::AddDataMember(Member& output, const char* nam, const Type& typ, size_t offs, unsigned int modifiers, char* interpreterOffset) const
 {
    //-------------------------------------------------------------------------------
    // Add data member to this class
-   ScopeBase::AddDataMember(output, nam, typ, offs, modifiers, cintOffset);
+   ScopeBase::AddDataMember(output, nam, typ, offs, modifiers, interpreterOffset);
 }
 
 
