@@ -469,9 +469,12 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
       G__TypedefInfo td;
       // map<a,b,less<a> > is in fact stored as the typedef called
       // map<a,b,less<a>>. So remove spaces between '>':
-      size_t posSpace = std::string::npos;
-      while ((posSpace = nameSuperLong.find("> >")) != std::string::npos) {
-         nameSuperLong.replace(posSpace,3,">>");
+      {
+         // posSpace is local
+         size_t posSpace = std::string::npos;
+         while ((posSpace = nameSuperLong.find("> >")) != std::string::npos) {
+            nameSuperLong.replace(posSpace,3,">>");
+         }
       }
       td.Init(nameSuperLong.c_str());
       if (td.IsValid()) {
