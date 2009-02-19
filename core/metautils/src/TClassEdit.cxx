@@ -467,35 +467,16 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
       // "superlong" because tLong might turn typeDesc into an even longer name
       std::string nameSuperLong = typeDesc;
       G__TypedefInfo td;
-      // map<a,b,less<a> > is in fact stored as the typedef called
-      // map<a,b,less<a>>. So remove spaces between '>':
-      {
-         // posSpace is local
-         size_t posSpace = std::string::npos;
-         while ((posSpace = nameSuperLong.find("> >")) != std::string::npos) {
-            nameSuperLong.replace(posSpace,3,">>");
-         }
-      }
       td.Init(nameSuperLong.c_str());
-      if (td.IsValid()) {
+      if (td.IsValid())
          nameSuperLong = td.TrueName();
-      } else {
-         // But classes are stored as map<a,b,less<a> >
-         // i.e. with spaces between '>'. So revert:
-         nameSuperLong = typeDesc;
-      }
       while (++nargNonDefault < narg) {
          // If T<a> is a "typedef" (aka default template params)
          // to T<a,b> then we can strip the "b".
-         // map<a,b,less<a> > is in fact stored as the typedef called
-         // map<a,b,less<a>>. So remove spaces between '>':
-         size_t posSpace = std::string::npos;
-         while ((posSpace = nonDefName.find("> >")) != std::string::npos) {
-            nonDefName.replace(posSpace,3,">>");
-         }
-         // Simply add '>' even if nonDefName ends in '>';
-         // see above comment on typedef names
-         td.Init((nonDefName + ">").c_str());
+         const char* closeTemplate = " >";
+         if (nonDefName[nonDefName.length() - 1] != '>')
+            ++closeTemplate;
+         td.Init((nonDefName + closeTemplate).c_str());
          if (td.IsValid() && nameSuperLong == td.TrueName())
             break;
          if (nargNonDefault>1) nonDefName += ",";
