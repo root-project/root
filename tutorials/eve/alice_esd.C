@@ -104,9 +104,16 @@ Double_t   trackGetP(AliExternalTrackParam* tp);
 // Configuration and global variables.
 
 const char* esd_file_name         = "http://root.cern.ch/files/alice_ESDs.root";
-//const char* esd_friends_file_name = "http://root.cern.ch/files/alice_ESDfriends.root";
-const char* esd_friends_file_name = "http://root.cern.ch/files/AliESDfriends.root";
+// Temporarily disable reading of ESD friend.
+// There seems to be no way to get it working without AliRoot.
+// const char* esd_friends_file_name = "http://root.cern.ch/files/alice_ESDfriends.root";
+const char* esd_friends_file_name = 0;
+
 const char* esd_geom_file_name    = "http://root.cern.ch/files/alice_ESDgeometry.root";
+
+// For testing
+// const char* esd_file_name         = "AliESDs.root";
+// const char* esd_friends_file_name = "AliESDfriends.root";
 
 TFile *esd_file          = 0;
 TFile *esd_friends_file  = 0;
@@ -114,6 +121,7 @@ TFile *esd_friends_file  = 0;
 TTree *esd_tree          = 0;
 
 AliESDEvent  *esd        = 0;
+TList        *esd_objs   = 0;
 AliESDfriend *esd_friend = 0;
 
 Int_t esd_event_id       = 0; // Current event id.
@@ -152,7 +160,7 @@ void alice_esd()
 
    TFile::SetCacheFileDir(".");
 
-   if (!alice_esd_loadlib(esd_file_name, "aliesd"))
+   if (!alice_esd_loadlib("aliesd"))
    {
       Error("alice_esd", "Can not load project libraries.");
       return;
@@ -163,34 +171,57 @@ void alice_esd()
    if (!esd_file)
       return;
 
-   printf("*** Opening ESD-friends ***\n");
-   esd_friends_file = TFile::Open(esd_friends_file_name, "CACHEREAD");
-   if (!esd_friends_file)
-      return;
+   esd_tree = (TTree*)       esd_file->Get("esdTree");
+   esd      = (AliESDEvent*) esd_tree->GetUserInfo()->FindObject("AliESDEvent");
+   esd_objs = esd->fESDObjects;
 
-   esd_tree = (TTree*) esd_file->Get("esdTree");
-   esd_tree->GetBranch("ESDfriend.")->SetFile(esd_friends_file);
-   
-   esd = (AliESDEvent*) esd_tree->GetUserInfo()->FindObject("AliESDEvent");
+   if (esd_friends_file_name != 0)
+   {
+      printf("*** Opening ESD-friends ***\n");
+      esd_friends_file = TFile::Open(esd_friends_file_name, "CACHEREAD");
+      if (!esd_friends_file)
+         return;
+
+      esd_tree->SetBranchStatus ("ESDfriend*", 1);
+   }
 
    // Set the branch addresses.
    {
-      TIter next(esd->fESDObjects);
+      TIter next(esd_objs);
       TObject *el;
-      while ((el=(TNamed*)next()))
+      while ((el = (TNamed*)next()))
       {
          TString bname(el->GetName());
-         if(bname.CompareTo("AliESDfriend")==0)
+         if (bname == "AliESDfriend")
          {
-            // AliESDfriend needs some '.' magick.
-            esd_tree->SetBranchAddress("ESDfriend.", esd->fESDObjects->GetObjectRef(el));
+            // AliESDfriend needs special treatment.
+            TBranch *br = esd_tree->GetBranch("ESDfriend.");
+            br->SetAddress(esd_objs->GetObjectRef(el));
          }
          else
          {
-            esd_tree->SetBranchAddress(bname, esd->fESDObjects->GetObjectRef(el));
+            TBranch *br = esd_tree->GetBranch(bname);
+            if (br)
+            {
+               br->SetAddress(esd_objs->GetObjectRef(el));
+            }
+            else
+            {
+               br = esd_tree->GetBranch(bname + ".");
+               if (br)
+               {
+                  br->SetAddress(esd_objs->GetObjectRef(el));
+               }
+               else
+               {
+                  Warning("AliESDEvent::ReadFromTree() No Branch found with Name '%s' or '%s.'.",
+                          bname.Data(),bname.Data());
+               }
+            }
          }
       }
    }
+
 
    TEveManager::Create();
 
@@ -283,6 +314,21 @@ void alice_esd()
    gRhoZView->AddScene(gRhoZGeomScene);
    gRhoZView->AddScene(gRhoZEventScene);
 
+
+   // HTML summary view
+   //===================
+
+   gROOT->LoadMacro("alice_esd_html_summary.C");
+   fgHtmlSummary = new HtmlSummary("Alice Event Display Summary Table");
+   slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   fgHtml = new TGHtml(0, 100, 100);
+   TEveWindowFrame *wf = slot->MakeFrame(fgHtml);
+   fgHtml->MapSubwindows();
+   wf->SetElementName("Summary");
+
+   // Final stuff
+   //=============
+
    gEve->GetBrowser()->GetTabRight()->SetTab(1);
 
    make_gui();
@@ -293,7 +339,7 @@ void alice_esd()
 }
 
 //______________________________________________________________________________
-Bool_t alice_esd_loadlib(const char* file, const char* project)
+Bool_t alice_esd_loadlib(const char* project)
 {
    // Make sure that shared library created from the auto-generated project
    // files exists and load it.
@@ -301,9 +347,12 @@ Bool_t alice_esd_loadlib(const char* file, const char* project)
    TString lib(Form("%s/%s.%s", project, project, gSystem->GetSoExt()));
 
    if (gSystem->AccessPathName(lib, kReadPermission)) {
-      TFile* f = TFile::Open(file, "CACHEREAD");
+      TFile* f = TFile::Open(esd_file_name, "CACHEREAD");
       if (f == 0)
          return kFALSE;
+      TFile *f2 = TFile::Open(esd_friends_file_name, "CACHEREAD");
+      TTree *tree = (TTree*) f->Get("esdTree");
+      tree->SetBranchStatus ("ESDfriend*", 1);
       f->MakeProject(project, "*", "++");
       f->Close();
       delete f;
@@ -339,6 +388,8 @@ void load_event()
       gRhoZEventScene->DestroyElements();
       gRhoZMgr->ImportElements(top, gRhoZEventScene);
    }
+
+   update_html_summary();
 
    gEve->Redraw3D(kFALSE, kTRUE);
 }
@@ -435,14 +486,15 @@ void alice_esd_read()
 {
    // Read tracks and associated clusters from current event.
 
-   AliESDRun    *esdrun = (AliESDRun*)    esd->fESDObjects->FindObject("AliESDRun");
-   TClonesArray *tracks = (TClonesArray*) esd->fESDObjects->FindObject("Tracks");
+   AliESDRun    *esdrun = (AliESDRun*)    esd_objs->FindObject("AliESDRun");
+   TClonesArray *tracks = (TClonesArray*) esd_objs->FindObject("Tracks");
 
    // This needs further investigation. Clusters not shown.
-    AliESDfriend *frnd   = (AliESDfriend*) esd->fESDObjects->FindObject("AliESDfriend");
-    printf("Friend %p, n_tracks:%d\n", frnd, frnd->fTracks.GetEntries());
+   // esd_friend = (AliESDfriend*) esd_objs->FindObject("AliESDfriend");
+   // printf("Friend %p, n_tracks:%d\n", esd_friend, esd_friend->fTracks.GetEntries());
 
-   if (gTrackList == 0) {
+   if (gTrackList == 0)
+   {
       gTrackList = new TEveTrackList("ESD Tracks"); 
       gTrackList->SetMainColor(6);
       gTrackList->SetMarkerColor(kYellow);
