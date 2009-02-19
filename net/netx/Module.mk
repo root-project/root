@@ -70,12 +70,12 @@ include/%.h:    $(NETXDIRI)/%.h $(XROOTDETAG)
 		cp $< $@
 
 $(NETXLIB):     $(NETXO) $(NETXDO) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP) \
-                $(XRDPLUGINS)
+                $(XRDNETXD)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
 		   "$(NETXLIBEXTRA)"
 
-$(NETXDS):      $(NETXH1) $(NETXL) $(XROOTDETAG) $(ROOTCINTTMPDEP)
+$(NETXDS):      $(NETXH1) $(NETXL) $(XROOTDETAG) $(ROOTCINTTMPDEP) $(XRDPLUGINS)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 
@@ -95,7 +95,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(NETXO) $(NETXDO): $(XROOTDETAG)
+$(NETXO) $(NETXDO): $(XROOTDETAG) $(XRDHDRS)
 $(NETXO) $(NETXDO): CXXFLAGS += $(NETXINCEXTRA) $(EXTRA_XRDFLAGS)
 ifeq ($(PLATFORM),win32)
 $(NETXO) $(NETXDO): CXXFLAGS += -DNOGDI $(EXTRA_XRDFLAGS)

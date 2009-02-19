@@ -13,6 +13,7 @@ XROOTDDIRD := $(MODDIRS)/xrootd
 XROOTDDIRI := $(MODDIRS)/xrootd/src
 XROOTDDIRL := $(MODDIRS)/xrootd/lib
 XROOTDMAKE := $(XROOTDDIRD)/GNUmakefile
+XROOTDBUILD:= $(XROOTDDIRD)/LastBuild
 
 ##### Xrootd config options #####
 ifeq ($(PLATFORM),win32)
@@ -47,29 +48,46 @@ else
 XRDEXEC     = xrdcp.exe
 endif
 XRDEXECS   := $(patsubst %,bin/%,$(XRDEXEC))
+XRDEXECSA  := $(patsubst %,$(XROOTDDIRD)/bin/%,$(XRDEXEC))
 
 ##### Xrootd plugins #####
 ifeq ($(PLATFORM),win32)
 XRDPLUGINSA:= $(XROOTDDIRL)/libXrdClient.$(XRDSOEXT)
 XRDPLUGINS := $(XRDPLUGINSA)
+XRDLIBS    := $(XRDPLUGINS)
 else
-XRDPLUGINSA:= $(XROOTDDIRL)/libXrdSec.$(XRDSOEXT)
-XRDPLUGINS := $(LPATH)/libXrdSec.$(XRDSOEXT)
-XROOTDDIRP := $(LPATH)
+XRDLIBS      := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdSys.a \
+                $(LPATH)/libXrdClient.$(XRDSOEXT) $(LPATH)/libXrdSut.$(XRDSOEXT)
+XRDNETXD    := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdSys.a $(LPATH)/libXrdClient.$(XRDSOEXT)
+XRDPROOFXD  := $(XRDLIBS)
+XROOTDDIRP  := $(LPATH)
 ifeq ($(ARCH),win32gcc)
-XRDPLUGINS := $(patsubst $(LPATH)/%.$(XRDSOEXT),bin/%.$(XRDSOEXT),$(XRDPLUGINS))
+XRDLIBS     := $(patsubst $(LPATH)/%.$(XRDSOEXT),bin/%.$(XRDSOEXT),$(XRDLIBS))
 endif
 endif
 
+##### Xrootd headers used by netx, proofx#####
+XRDHDRS    := $(wildcard $(XROOTDDIRI)/Xrd/*.hh) $(wildcard $(XROOTDDIRI)/XrdClient/*.hh) \
+              $(wildcard $(XROOTDDIRI)/XrdNet/*.hh) $(wildcard $(XROOTDDIRI)/XrdOuc/*.hh) \
+              $(wildcard $(XROOTDDIRI)/XrdSec/*.hh) $(wildcard $(XROOTDDIRI)/XrdSut/*.hh) \
+              $(wildcard $(XROOTDDIRI)/XrdSys/*.hh)
+
+##### Xrootd headers, sources, config dependences #####
+XROOTDDEPS := $(wildcard $(XROOTDDIRI)/*/*.hh) $(wildcard $(XROOTDDIRI)/*/*.cc)
+XROOTDCFGD := $(wildcard $(XROOTDDIRD)/config/*) $(wildcard $(XROOTDDIRD)/config/test/*) \
+              $(XROOTDDIRD)/configure.classic
+
 # used in the main Makefile
-ALLLIBS    += $(XRDPLUGINS)
+ALLLIBS    += $(XRDLIBS)
+ifeq ($(PLATFORM),win32)
 ALLEXECS   += $(XRDEXECS)
+endif
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 ifneq ($(PLATFORM),win32)
-$(XROOTDMAKE):
+$(XROOTDMAKE): $(XROOTDCFGD)
 		@(cd $(XROOTDDIRS); \
 		RELE=`uname -r`; \
 		CHIP=`uname -m | tr '[A-Z]' '[a-z]'`; \
@@ -136,6 +154,7 @@ $(XROOTDMAKE):
 		rc=$$? ; \
 		if [ $$rc != "0" ] ; then \
 		   echo "*** Error condition reported by Xrootd-configure (rc = $$rc):" \
+		   rm -f $(XROOTDMAKE) \
 	 	   exit 1; \
 		fi)
 else
@@ -148,64 +167,84 @@ $(XROOTDMAKE):
 		@touch $(XROOTDMAKE)
 endif
 
-ifneq ($(PLATFORM),win32)
-$(XRDPLUGINS): $(XRDPLUGINSA)
-		@(if [ -d $(XROOTDDIRL) ]; then \
-		    lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ;\
-		    lsplug="$$lsplug `find $(XROOTDDIRL) -name "libXrd*.dylib"`" ;\
-		    for i in $$lsplug ; do \
-		       echo "Copying $$i ..." ; \
-		       if [ "x$(ARCH)" = "xwin32gcc" ] ; then \
-		          cp $$i bin ; \
-		          lname=`basename $$i` ; \
-		          ln -sf bin/$$lname $(LPATH)/$$lname ; \
-		          ln -sf bin/$$lname "$(LPATH)/$$lname.a" ; \
-		       else \
-		          if [ "x$(PLATFORM)" = "xmacosx" ] ; then \
-		             lname=`basename $$i` ; \
-		             install_name_tool -id $(LIBDIR)/$$lname $$i ; \
-		          fi ; \
-		          cp $$i $(LPATH)/ ; \
-		       fi ; \
-		    done ; \
-		  fi)
-endif
-
-$(XRDEXECS): $(XRDPLUGINSA)
-ifneq ($(PLATFORM),win32)
-		@(for i in $(XRDEXEC); do \
-		     fopt="" ; \
-		     if [ -f bin/$$i ] ; then \
-		        fopt="-newer bin/$$i" ; \
-		     fi ; \
-		     bexe=`find $(XROOTDDIRD)/bin $$fopt -name $$i 2>/dev/null` ; \
-		     if test "x$$bexe" != "x" ; then \
-		        echo "Copying $$bexe executables ..." ; \
-		        cp $$bexe bin/$$i ; \
-		     fi ; \
-		  done)
-else
+$(XRDEXECS): $(XRDEXECSA)
+ifeq ($(PLATFORM),win32)
 		@(echo "Copying xrootd executables ..." ; \
 		cp $(XROOTDDIRD)/bin/*.exe "bin" ;)
 endif
 
-$(XRDPLUGINSA): $(XROOTDMAKE)
+$(XROOTDBUILD): $(XROOTDMAKE) $(XROOTDDEPS)
 ifneq ($(PLATFORM),win32)
-		@(cd $(XROOTDDIRD); \
-	   	echo "*** Building xrootd ..." ; \
-		$(MAKE))
+		@(topdir=$(PWD); \
+		cd $(XROOTDDIRD); \
+	   	echo "*** Building xrootd ... topdir= $$topdir" ; \
+		$(MAKE); \
+		rc=$$? ; \
+		if [ $$rc != "0" ] ; then \
+		   echo "*** Error condition reported by make (rc = $$rc):" \
+		   rm -f $(XROOTDMAKE) \
+	 	   exit 1; \
+		fi ; \
+		cd $$topdir ; \
+		if [ -d $(XROOTDDIRL) ]; then \
+		   lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ;\
+		   lsplug="$$lsplug `find $(XROOTDDIRL) -name "libXrd*.dylib"`" ;\
+		   for i in $$lsplug ; do \
+		      echo "Copying $$i ..." ; \
+		      if [ "x$(ARCH)" = "xwin32gcc" ] ; then \
+		         cp $$i bin ; \
+		         lname=`basename $$i` ; \
+		         ln -sf bin/$$lname $(LPATH)/$$lname ; \
+		         ln -sf bin/$$lname "$(LPATH)/$$lname.a" ; \
+		      else \
+		         if [ "x$(PLATFORM)" = "xmacosx" ] ; then \
+		            lname=`basename $$i` ; \
+		            install_name_tool -id $(LIBDIR)/$$lname $$i ; \
+		         fi ; \
+		         cp -p $$i $(LPATH)/ ; \
+		      fi ; \
+		   done ; \
+		fi ; \
+		for i in $(XRDEXEC); do \
+		   fopt="" ; \
+		   if [ -f bin/$$i ] ; then \
+		      fopt="-newer bin/$$i" ; \
+		   fi ; \
+		   bexe=`find $(XROOTDDIRD)/bin $$fopt -name $$i 2>/dev/null` ; \
+		   if test "x$$bexe" != "x" ; then \
+		      echo "Copying $$bexe executables ..." ; \
+		      cp -p $$bexe bin/$$i ; \
+		   fi ; \
+		done ; \
+		touch $(XROOTDBUILD))
 else
 		@(cd $(XROOTDDIRD); \
-		echo "*** Building xrootd..."; \
+		echo "*** Building xrootd ..."; \
 		unset MAKEFLAGS; \
 		nmake -f Makefile.msc CFG=$(XRDDBG))
 endif
+
+### Rules for single components
+#
+$(LPATH)/libXrdClient.$(XRDSOEXT): $(XROOTDDIRL)/libXrdClient.$(XRDSOEXT)
+$(XROOTDDIRL)/libXrdClient.$(XRDSOEXT): $(XROOTDBUILD)
+#
+$(LPATH)/libXrdSut.$(XRDSOEXT): $(XROOTDDIRL)/libXrdSut.$(XRDSOEXT)
+$(XROOTDDIRL)/libXrdSut.$(XRDSOEXT): $(XROOTDBUILD)
+#
+$(XROOTDDIRL)/libXrdOuc.a: $(XROOTDBUILD)
+$(XROOTDDIRL)/libXrdNet.a: $(XROOTDBUILD)
+$(XROOTDDIRL)/libXrdSys.a: $(XROOTDBUILD)
+
+### General rules
 
 all-$(MODNAME): $(XRDPLUGINS) $(XRDEXECS)
 
 clean-$(MODNAME):
 ifneq ($(PLATFORM),win32)
 		@(if [ -f $(XROOTDMAKE) ]; then \
+		   $(MAKE) clean-netx;  \
+		   $(MAKE) clean-proofx;  \
 		   cd $(XROOTDDIRD); \
 		   $(MAKE) clean; \
 		fi)
@@ -220,9 +259,11 @@ endif
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -rf $(XRDEXECS) $(LPATH)/libXrd* bin/libXrd*
+		@rm -rf $(XRDEXECS) $(LPATH)/libXrd* bin/libXrd* $(XROOTDBUILD)
 ifneq ($(PLATFORM),win32)
 		@(if [ -f $(XROOTDMAKE) ]; then \
+		   $(MAKE) distclean-netx;  \
+		   $(MAKE) distclean-proofx;  \
 		   cd $(XROOTDDIRD); \
 		   $(MAKE) distclean; \
 		fi)

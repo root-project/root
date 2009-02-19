@@ -78,7 +78,7 @@ include/%.h:    $(PROOFXDIRI)/%.h $(XROOTDETAG)
 		cp $< $@
 
 $(PROOFXLIB):   $(PROOFXO) $(PROOFXDO) $(XPCONNO) $(ORDER_) $(MAINLIBS) \
-                $(PROOFXLIBDEP) $(XRDPLUGINS)
+                $(PROOFXLIBDEP) $(XRDPROOFXD)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libProofx.$(SOEXT) $@ \
 		   "$(PROOFXO) $(XPCONNO) $(PROOFXDO)" \
@@ -105,7 +105,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(PROOFXO) $(PROOFXDO): $(XROOTDETAG)
+$(PROOFXO) $(PROOFXDO): $(XROOTDETAG) $(XRDHDRS)
 
 ifeq ($(PLATFORM),win32)
 $(PROOFXO) $(PROOFXDO): CXXFLAGS += $(PROOFXINCEXTRA) $(EXTRA_XRDFLAGS)

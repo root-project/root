@@ -39,7 +39,7 @@ XPDLIB       := $(LPATH)/libXrdProofd.$(SOEXT)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
 
-XPDLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
+XPDLIBEXTRA  += $(XROOTDDIRL)/libXrdClient.lib
 
 # used in the main Makefile
 PROOFDEXEH   := $(MODDIRI)/proofdp.h
@@ -142,7 +142,7 @@ $(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(RPDUTILO) $(GLBPATCHO) \
 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(SYSLIBS)
 
-$(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPLUGINS)
+$(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPROOFXD)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO)" \
 		   "$(XPDLIBEXTRA)"
@@ -164,7 +164,7 @@ $(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
 $(PROOFDEXEO): PCHCXXFLAGS =
 $(XPDO):       PCHCXXFLAGS =
 
-$(XPDO): $(XRDPLUGINS)
+$(XPDO): $(XRDHDRS)
 ifneq ($(ICC_GE_9),)
 # remove when xrootd has moved from strstream.h -> sstream.
 $(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
