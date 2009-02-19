@@ -118,7 +118,21 @@ AliESDfriend *esd_friend = 0;
 
 Int_t esd_event_id       = 0; // Current event id.
 
-TEveTrackList *track_list = 0;
+TEveTrackList *gTrackList = 0;
+
+TEveGeoShape *gGeomGentle = 0;
+
+TEveProjectionManager *gRPhiMgr = 0;
+TEveProjectionManager *gRhoZMgr = 0;
+
+TEveViewer *g3DView   = 0;
+TEveViewer *gRPhiView = 0;
+TEveViewer *gRhoZView = 0;
+
+TEveScene *gRPhiGeomScene  = 0;
+TEveScene *gRhoZGeomScene  = 0;
+TEveScene *gRPhiEventScene = 0;
+TEveScene *gRhoZEventScene = 0;
 
 
 /******************************************************************************/
@@ -185,11 +199,91 @@ void alice_esd()
       if (!geom)
          return;
       TEveGeoShapeExtract* gse = (TEveGeoShapeExtract*) geom->Get("Gentle");
-      TEveGeoShape* gsre = TEveGeoShape::ImportShapeExtract(gse, 0);
+      gGeomGentle = TEveGeoShape::ImportShapeExtract(gse, 0);
       geom->Close();
       delete geom;
-      gEve->AddGlobalElement(gsre);
+      gEve->AddGlobalElement(gGeomGentle);
    }
+
+
+   // Scenes
+   //========
+
+   gRPhiGeomScene  = gEve->SpawnNewScene("RPhi Geometry",
+                                         "Scene holding projected geometry for the RPhi view.");
+   gRhoZGeomScene  = gEve->SpawnNewScene("RhoZ Geometry",
+                                         "Scene holding projected geometry for the RhoZ view.");
+   gRPhiEventScene = gEve->SpawnNewScene("RPhi Event Data",
+                                         "Scene holding projected geometry for the RPhi view.");
+   gRhoZEventScene = gEve->SpawnNewScene("RhoZ Event Data",
+                                         "Scene holding projected geometry for the RhoZ view.");
+
+
+   // Projection managers
+   //=====================
+
+   gRPhiMgr = new TEveProjectionManager();
+   gRPhiMgr->SetProjection(TEveProjection::kPT_RPhi);
+   gEve->AddToListTree(gRPhiMgr, kFALSE);
+   {
+      TEveProjectionAxes* a = new TEveProjectionAxes(gRPhiMgr);
+      a->SetMainColor(kWhite);
+      a->SetTitle("R-Phi");
+      a->SetTitleSize(0.05);
+      a->SetTitleFont(102);
+      a->SetLabelSize(0.025);
+      a->SetLabelFont(102);
+      gRPhiGeomScene->AddElement(a);
+   }
+   gRPhiMgr->ImportElements(gGeomGentle, gRPhiGeomScene);
+
+   gRhoZMgr = new TEveProjectionManager();
+   gRhoZMgr->SetProjection(TEveProjection::kPT_RhoZ);
+   gEve->AddToListTree(gRhoZMgr, kFALSE);
+   {
+      TEveProjectionAxes* a = new TEveProjectionAxes(gRhoZMgr);
+      a->SetMainColor(kWhite);
+      a->SetTitle("Rho-Z");
+      a->SetTitleSize(0.05);
+      a->SetTitleFont(102);
+      a->SetLabelSize(0.025);
+      a->SetLabelFont(102);
+      gRhoZGeomScene->AddElement(a);
+   }
+   gRhoZMgr->ImportElements(gGeomGentle, gRhoZGeomScene);
+
+
+   // Viewers
+   //=========
+
+   TEveWindowSlot *slot = 0;
+   TEveWindowPack *pack = 0;
+
+   slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   pack = slot->MakePack();
+   pack->SetElementName("Multi View");
+   pack->SetHorizontal();
+   pack->SetShowTitleBar(kFALSE);
+   pack->NewSlot()->MakeCurrent();
+   g3DView = gEve->SpawnNewViewer("3D View", "");
+   g3DView->AddScene(gEve->GetGlobalScene());
+   g3DView->AddScene(gEve->GetEventScene());
+
+   pack = pack->NewSlot()->MakePack();
+   pack->SetShowTitleBar(kFALSE);
+   pack->NewSlot()->MakeCurrent();
+   gRPhiView = gEve->SpawnNewViewer("RPhi View", "");
+   gRPhiView->GetGLViewer()->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+   gRPhiView->AddScene(gRPhiGeomScene);
+   gRPhiView->AddScene(gRPhiEventScene);
+
+   pack->NewSlot()->MakeCurrent();
+   gRhoZView = gEve->SpawnNewViewer("RhoZ View", "");
+   gRhoZView->GetGLViewer()->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+   gRhoZView->AddScene(gRhoZGeomScene);
+   gRhoZView->AddScene(gRhoZEventScene);
+
+   gEve->GetBrowser()->GetTabRight()->SetTab(1);
 
    make_gui();
 
@@ -225,13 +319,26 @@ void load_event()
 
    printf("Loading event %d.\n", esd_event_id);
 
-   if (track_list)
-      track_list->DestroyElements();
+   if (gTrackList)
+      gTrackList->DestroyElements();
 
    esd_tree->GetEntry(esd_event_id);
-//   esd_tree->Show();
+   // esd_tree->Show();
 
    alice_esd_read();
+
+   TEveElement* top = gEve->GetCurrentEvent();
+
+   if (gRPhiMgr && top)
+   {
+      gRPhiEventScene->DestroyElements();
+      gRPhiMgr->ImportElements(top, gRPhiEventScene);
+   }
+   if (gRhoZMgr && top)
+   {
+      gRhoZEventScene->DestroyElements();
+      gRhoZMgr->ImportElements(top, gRhoZEventScene);
+   }
 
    gEve->Redraw3D(kFALSE, kTRUE);
 }
@@ -335,17 +442,17 @@ void alice_esd_read()
     AliESDfriend *frnd   = (AliESDfriend*) esd->fESDObjects->FindObject("AliESDfriend");
     printf("Friend %p, n_tracks:%d\n", frnd, frnd->fTracks.GetEntries());
 
-   if (track_list == 0) {
-      track_list = new TEveTrackList("ESD Tracks"); 
-      track_list->SetMainColor(6);
-      track_list->SetMarkerColor(kYellow);
-      track_list->SetMarkerStyle(4);
-      track_list->SetMarkerSize(0.5);
+   if (gTrackList == 0) {
+      gTrackList = new TEveTrackList("ESD Tracks"); 
+      gTrackList->SetMainColor(6);
+      gTrackList->SetMarkerColor(kYellow);
+      gTrackList->SetMarkerStyle(4);
+      gTrackList->SetMarkerSize(0.5);
 
-      gEve->AddElement(track_list);
+      gEve->AddElement(gTrackList);
    }
 
-   TEveTrackPropagator* trkProp = track_list->GetPropagator();
+   TEveTrackPropagator* trkProp = gTrackList->GetPropagator();
    trkProp->SetMagField( 0.1 * esdrun->fMagneticField ); // kGaus to Tesla
 
    for (Int_t n=0; n<tracks->GetEntriesFast(); ++n)
@@ -359,8 +466,8 @@ void alice_esd_read()
       }
 
       TEveTrack* track = esd_make_track(trkProp, n, at, tp);
-      track->SetAttLineAttMarker(track_list);
-      gEve->AddElement(track, track_list);
+      track->SetAttLineAttMarker(gTrackList);
+      gEve->AddElement(track, gTrackList);
 
       // This needs further investigation. Clusters not shown.
       // if (frnd)
@@ -370,7 +477,7 @@ void alice_esd_read()
       // }
    }
 
-   track_list->MakeTracks();
+   gTrackList->MakeTracks();
 }
 
 //______________________________________________________________________________
