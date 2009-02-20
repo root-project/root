@@ -241,8 +241,9 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    //   //machine/file_name.root/subdir/tree_name
    // machine, subdir and tree_name are optional. If tree_name is missing,
    // the chain name will be assumed.
-   // Name may use the wildcarding notation, eg "xxx*.root" means all files
-   // starting with xxx in the current file system directory.
+   // In the file name part (but not in preceding directories) wildcarding
+   // notation may be used, eg. specifying "xxx*.root" adds all files starting
+   // with xxx in the current file system directory.
    // NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
    //
    //    A- if nentries <= 0, the file is connected and the tree header read
