@@ -28,4 +28,7 @@ void geom_atlas()
    TGLViewer *v = gEve->GetDefaultGLViewer();
    v->GetClipSet()->SetClipType(1);
    v->RefreshPadEditor(v);
+
+   v->CurrentCamera().RotateRad(-.7, 0.5);
+   v->DoDraw();
 }

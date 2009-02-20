@@ -32,4 +32,7 @@ void geom_alias()
    TGLViewer *v = gEve->GetDefaultGLViewer();
    v->GetClipSet()->SetClipType(2);
    v->RefreshPadEditor(v);
+
+   v->CurrentCamera().RotateRad(-0.5, -2.4);
+   v->DoDraw();
 }
