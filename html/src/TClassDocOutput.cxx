@@ -12,6 +12,7 @@
 #include "TClassDocOutput.h"
 
 #include "TBaseClass.h"
+#include "TClassEdit.h"
 #include "TDataMember.h"
 #include "TMethodArg.h"
 #include "TDataType.h"
@@ -316,7 +317,8 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
             if (access < 3) {
                if (member->Property() & G__BIT_ISSTATIC)
                   classFile << "static ";
-               fParser->DecorateKeywords(classFile, member->GetFullTypeName());
+               std::string shortTypeName(TClassEdit::ShortType(member->GetFullTypeName(), 1<<7));
+               fParser->DecorateKeywords(classFile, shortTypeName.c_str());
             }
 
          TString mangled(member->GetClass()->GetName());
@@ -1470,10 +1472,16 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
    if (headerFileName.Length())
       classFile << "<a class=\"descrheadentry\" href=\"src/" << classFileName
                 << ".h.html\">header file</a>" << endl;
+   else
+      classFile << "<a class=\"descrheadentry\" href=\"src/" << classFileName
+                << ".h.html\"></a>" << endl;
 
    if (sourceFileName.Length())
       classFile << "<a class=\"descrheadentry\" href=\"src/" << classFileName
                 << ".cxx.html\">source file</a>" << endl;
+   else
+      classFile << "<a class=\"descrheadentry\" href=\"src/" << classFileName
+                << ".cxx.html\"></a>" << endl;
 
    if (!fHtml->IsNamespace(fCurrentClass) && !fHtml->HaveDot()) {
       // make a link to the inheritance tree (postscript)
@@ -1515,13 +1523,15 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
          if (mustReplace) link.ReplaceAll("%f", sHeader);
          else link += sHeader;
          classFile << "<a class=\"descrheadentry\" href=\"" << link << "\">viewVC header</a> ";
-      }
+      } else
+         classFile << "<a class=\"descrheadentry\" href=\"" << link << "\"></a> ";
       if (sourceFileName.Length()) {
          TString link(viewCVSLink);
          if (mustReplace) link.ReplaceAll("%f", sourceFileName);
          else link += sourceFileName;
          classFile << "<a class=\"descrheadentry\" href=\"" << link << "\">viewVC source</a> ";
-      }
+      } else
+         classFile << "<a class=\"descrheadentry\" href=\"" << link << "\"></a> ";
    }
 
    TString currClassNameMangled(fCurrentClass->GetName());

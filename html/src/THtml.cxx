@@ -1507,7 +1507,6 @@ void THtml::CreateListOfClasses(const char* filter)
       const char *cname = 0;
       if (i < 0) cname = "TObject";
       else cname = gClassTable->Next();
-      TString s = cname;
 
       // This is a hack for until after Cint and Reflex are one.
       if (strstr(cname, "__gnu_cxx::")) continue;
@@ -1517,7 +1516,15 @@ void THtml::CreateListOfClasses(const char* filter)
       TClass *classPtr = TClass::GetClass((const char *) cname, kTRUE);
       if (!classPtr) continue;
 
+      std::string shortName(cname);
+      if (strchr(cname,'<')) {
+         shortName = TClassEdit::ShortType(cname, 1<<7);
+         cname = shortName.c_str();
+      }
+
+      TString s = cname;
       Bool_t matchesSelection = re.Match(s);
+
 
       TString hdr;
       TString hdrFS;

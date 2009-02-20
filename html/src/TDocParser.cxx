@@ -1759,7 +1759,6 @@ void TDocParser::LocateMethodsInSource(std::ostream& out)
    if (fHtml->GetImplFileName(fCurrentClass, kTRUE, implFileName))
       LocateMethods(out, implFileName, kFALSE /*source info*/, useDocxxStyle, 
                     kFALSE /*allowPureVirtual*/, pattern, ".cxx.html");
-   else out << "</div>" << endl; // close class descr div
 }
 
 //______________________________________________________________________________

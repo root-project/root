@@ -13,6 +13,7 @@
 
 #include "Riostream.h"
 #include "TClassDocOutput.h"
+#include "TClassEdit.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TDocInfo.h"
@@ -1194,7 +1195,8 @@ void TDocOutput::CreateClassTypeDefs()
             << "<div class=\"classdescr\">" << endl;
 
          outfile << dtName << " is a typedef to ";
-         parser.DecorateKeywords(outfile, cls->GetName());
+         std::string shortClsName(TClassEdit::ShortType(cls->GetName(), 1<<7));
+         parser.DecorateKeywords(outfile, shortClsName.c_str());
          outfile << endl
             << "</div>" << std::endl 
             << "</div></div><div style=\"clear:both;\"></div>" << std::endl;
@@ -1545,6 +1547,8 @@ void TDocOutput::NameSpace2FileName(TString& name)
    TString encScope(name);
    Ssiz_t posTemplate = encScope.Index('<');
    if (posTemplate != kNPOS) {
+      // strip default template params
+      name = TClassEdit::ShortType(name, 1<<7);
       TString templateArgs = encScope(posTemplate, encScope.Length());
       encScope.Remove(posTemplate, encScope.Length());
       // shorten the name a bit:
@@ -1785,8 +1789,10 @@ void TDocOutput::ReferenceEntity(TSubString& str, TDataType* entity, const char*
    if (isClassTypedef)
       /* is class/ struct / union */
       isClassTypedef = isClassTypedef && (entity->Property() & 7);
-   if (isClassTypedef)
-      cdi = (TClassDocInfo*) GetHtml()->GetListOfClasses()->FindObject(entity->GetFullTypeName());
+   if (isClassTypedef) {
+      std::string shortTypeName(TClassEdit::ShortType(entity->GetFullTypeName(), 1<<7));
+      cdi = (TClassDocInfo*) GetHtml()->GetListOfClasses()->FindObject(shortTypeName.c_str());
+   }
    if (cdi) {
       link = mangledEntity + ".html";
    } else {
