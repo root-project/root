@@ -1440,6 +1440,18 @@ void TGLViewer::SetEventHandler(TGEventHandler *handler)
 }
 
 //______________________________________________________________________________
+void  TGLViewer::RemoveOverlayElement(TGLOverlayElement* el)
+{
+   // Remove overlay element.
+
+   if (el == fCurrentOvlElm)
+   {
+      fCurrentOvlElm = 0;
+   }
+   TGLViewerBase::RemoveOverlayElement(el);
+}
+
+//______________________________________________________________________________
 void TGLViewer::ClearCurrentOvlElm()
 {
    // Reset current overlay-element to zero, eventually notifying the

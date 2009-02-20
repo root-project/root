@@ -87,8 +87,8 @@ public:
 
    TGLSceneInfo* GetSceneInfo(TGLSceneBase* scene);
 
-   void AddOverlayElement(TGLOverlayElement* el);
-   void RemoveOverlayElement(TGLOverlayElement* el);
+   virtual void AddOverlayElement(TGLOverlayElement* el);
+   virtual void RemoveOverlayElement(TGLOverlayElement* el);
 
    TGLClip* Clip()         const { return fClip; }
    void     SetClip(TGLClip *p)  { fClip = p;    }

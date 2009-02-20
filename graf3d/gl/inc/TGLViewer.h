@@ -103,7 +103,7 @@ protected:
    // Mouse ineraction
 public:
    enum EPushAction   { kPushStd,
-                        kPushCamCenter };
+                        kPushCamCenter, kPushAnnotate };
    enum EDragAction   { kDragNone,
                         kDragCameraRotate, kDragCameraTruck, kDragCameraDolly,
                         kDragOverlay };
@@ -219,6 +219,7 @@ public:
    void SetDrawCameraCenter(Bool_t x);
    Bool_t GetDrawCameraCenter() { return fDrawCameraCenter; }
    void   PickCameraCenter()    { fPushAction = kPushCamCenter; RefreshPadEditor(this); }
+   void   PickAnnotate()        { fPushAction = kPushAnnotate; }
    TGLCameraOverlay* GetCameraOverlay() const { return fCameraOverlay; }
    void SetCameraOverlay(TGLCameraOverlay* m) { fCameraOverlay = m; }
 
@@ -284,6 +285,8 @@ public:
 
    TGEventHandler *GetEventHandler() const { return fEventHandler; }
    virtual void    SetEventHandler(TGEventHandler *handler);
+
+   virtual void RemoveOverlayElement(TGLOverlayElement* el);
 
    TGLSelectRecord&    GetSelRec()    { return fSelRec; }
    TGLOvlSelectRecord& GetOvlSelRec() { return fOvlSelRec; }

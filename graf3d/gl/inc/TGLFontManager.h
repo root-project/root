@@ -64,16 +64,21 @@ public:
 
    void  SetFont(FTFont *f) { fFont =f;}
    const FTFont* GetFont() const { return fFont; }
-   void  SetManager(TGLFontManager *mng) {fManager = mng;}
+   void  SetManager(TGLFontManager *mng)    { fManager = mng;  }
    const TGLFontManager* GetManager() const { return fManager; }
 
-   Float_t GetDepth() const { return fDepth;}
-   void  SetDepth(Float_t d) { fDepth = d; }
+   Float_t GetDepth()    const { return fDepth; }
+   void    SetDepth(Float_t d) { fDepth = d;    }
 
    // FTGL wrapper functions
+   Float_t GetAscent() const;
+   Float_t GetDescent() const;
+   Float_t GetLineHeight() const;
+   void    GetBaseLineParams(Float_t& ascent, Float_t& descent, Float_t& line_height);
+
    void  BBox(const char* txt,
-               Float_t& llx, Float_t& lly, Float_t& llz,
-               Float_t& urx, Float_t& ury, Float_t& urz) const;
+              Float_t& llx, Float_t& lly, Float_t& llz,
+              Float_t& urx, Float_t& ury, Float_t& urz) const;
 
    void  Render(const char* txt) const;
    void  RenderBitmap(const char* txt, Float_t x, Float_t y, Float_t zs, ETextAlign_e align) const;

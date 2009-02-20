@@ -102,7 +102,48 @@ void TGLFont::CopyAttributes(const TGLFont &o)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TGLFont::BBox(const char* txt, Float_t& llx, Float_t& lly, Float_t& llz, Float_t& urx, Float_t& ury, Float_t& urz) const
+Float_t TGLFont::GetAscent() const
+{
+   // Get font's ascent.
+   // Does not work in FTGL, use GetBaseLineParams().
+
+   fFont->Ascender();
+}
+
+//______________________________________________________________________________
+Float_t TGLFont::GetDescent() const
+{
+   // Get font's descent.
+   // Does not work in FTGL, use GetBaseLineParams().
+
+   fFont->Descender();
+}
+
+//______________________________________________________________________________
+Float_t TGLFont::GetLineHeight() const
+{
+   // Get font's line-height.
+   // Does not work in FTGL, use GetBaseLineParams().
+
+   fFont->LineHeight();
+}
+
+//______________________________________________________________________________
+void TGLFont::GetBaseLineParams(Float_t& ascent, Float_t& descent, Float_t& line_height)
+{
+   // Measure font's base-line parameters.
+
+   Float_t llx, lly, llz, urx, ury, urz;
+   BBox("Xj", llx, lly, llz, urx, ury, urz);
+   ascent      =  ury;
+   descent     = -lly;
+   line_height =  ury - lly;
+}
+
+//______________________________________________________________________________
+void TGLFont::BBox(const char* txt,
+                   Float_t& llx, Float_t& lly, Float_t& llz,
+                   Float_t& urx, Float_t& ury, Float_t& urz) const
 {
    // Get bounding box.
 
