@@ -400,11 +400,17 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor, TRec
    TFile f (fFile->GetName());
    TIter nextkey(f.GetListOfKeys());
    TKey *key;
-   while ((key = (TKey*)nextkey())){
+   while ((key = (TKey*)nextkey())) {
       fFilterStatusBar = kTRUE;
       fCanv = (TCanvas*) key->ReadObj();
       fCanv->Draw();
    }
+   TCanvas *canvas;
+   TIter nextc(gROOT->GetListOfCanvases());
+   while ((canvas = (TCanvas*)nextc())) {
+      canvas->SetWindowSize(canvas->GetWindowWidth(), canvas->GetWindowHeight());
+   }
+
    fFilterStatusBar = kFALSE;
 
    f.Close();
@@ -1027,7 +1033,7 @@ TRecorderRecording::TRecorderRecording(TRecorder *r, const char *filename,
 
    // Filer pave events (mouse button move)
    fFilterEventPave = kFALSE;
-   
+
    // No registered windows in the beginning
    fRegWinCounter = 0;
 
@@ -1091,6 +1097,9 @@ Bool_t TRecorderRecording::StartRecording()
    // When a PaveLabel is created, TRecorderRecording::FilterEventPave() is called to filter mouse clicks events.
    TQObject::Connect("TPad", "EventPave()", "TRecorderRecording", this, "FilterEventPave()");
 
+   // When starting editing a TLatex or a TPaveLabel, StartEditing() is called to memorize edition starting time.
+   TQObject::Connect("TPad", "StartEditing()", "TRecorderRecording", this, "StartEditing()");
+
    // Creates in TTrees appropriate branches to store registered windows, commandline events and GUI events
    fWinTree->Branch(kBranchName, &fWin, "fWin/l");
    fCmdTree->Branch(kBranchName, " TRecCmdEvent", &fCmdEvent);
@@ -1138,6 +1147,7 @@ void TRecorderRecording::Stop(TRecorder *, Bool_t guiCommand)
    TQObject::Disconnect("TPad", "RecordPave(const TObject*)", this, "RecordPave(const TObject*)");
    TQObject::Disconnect("TPad", "RecordLatex(const TObject*)", this, "RecordText(const TObject*)");
    TQObject::Disconnect("TPad", "EventPave()", this, "FilterEventPave()");
+   TQObject::Disconnect("TPad", "StartEditing()", this, "StartEditing()");
    gClient->Disconnect(gClient, "ProcessedEvent(Event_t*, Window_t)", this, "RecordGuiEvent(Event_t*, Window_t)");
    gClient->Disconnect(gClient, "RegisteredWindow(Window_t)", this, "RegisterWindow(Window_t)");
    gApplication->Disconnect(gApplication, "LineProcessed(const char*)", this, "RecordCmdEvent(const char* line)");
@@ -1248,9 +1258,14 @@ void TRecorderRecording::RecordPave(const TObject* obj)
 {
    // Records TPaveLabel object created in TCreatePrimitives::Pave()
 
+   ULong_t extratime = fBeginPave;
+   ULong_t interval = (unsigned long)fTimer->GetAbsTime() - fBeginPave;
    TPaveLabel *pavel = (TPaveLabel *) obj;
+   const char* label;
+   label = pavel->GetLabel();
+   TString aux = "";
    TString cad = "";
-   cad = "TPaveLabel p; p.DrawPaveLabel(";
+   cad = "TPaveLabel *p = new TPaveLabel(";
    cad += pavel->GetX1();
    cad += ",";
    cad += pavel->GetY1();
@@ -1258,10 +1273,28 @@ void TRecorderRecording::RecordPave(const TObject* obj)
    cad += pavel->GetX2();
    cad += ",";
    cad += pavel->GetY2();
-   cad += ",\"";
-   cad += pavel->GetLabel();
-   cad += "\"); gPad->Update();";
-   RecordExtraEvent(cad);
+   cad += ",\"\"); p->Draw(); gPad->Modified(); gPad->Update();";
+   Int_t i, len = (Int_t)strlen(label);
+   interval /= (ULong_t)(len + 2);
+   RecordExtraEvent(cad, extratime);
+   for (i=0; i < len; ++i) {
+      cad = "p->SetLabel(\"";
+      cad += (aux += label[i]);
+      cad += "\"); ";
+#ifndef R__WIN32
+      cad += " p->SetTextFont(83); p->SetTextSizePixels(14); ";
+#endif
+      cad += " gPad->Modified(); gPad->Update();";
+      extratime += interval;
+      RecordExtraEvent(cad, extratime);
+   }
+   cad  = "p->SetTextFont(";
+   cad += pavel->GetTextFont();
+   cad += "); p->SetTextSize(";
+   cad += pavel->GetTextSize();
+   cad += "); gPad->Modified(); gPad->Update();";
+   extratime += interval;
+   RecordExtraEvent(cad, extratime);
 }
 
 //______________________________________________________________________________
@@ -1269,32 +1302,64 @@ void TRecorderRecording::RecordText(const TObject* obj)
 {
    // Records TLatex object created in TCreatePrimitives::Text()
 
+   ULong_t extratime = fBeginPave;
+   ULong_t interval = (unsigned long)fTimer->GetAbsTime() - fBeginPave;
    TLatex *texto = (TLatex *) obj;
-   TString cad ="";
+   const char* label;
+   label = texto->GetTitle();
+   TString aux = "";
+   TString cad = "";
    cad = "TLatex *l = new TLatex(";
    cad += texto->GetX();
    cad += ",";
    cad += texto->GetY();
-   cad += ",\"";
-   cad += texto->GetTitle();
-   cad += "\"); l->ResetAttText(); l->Draw(); gPad->Update();";
-   RecordExtraEvent(cad);
+   cad += ",\"\"); l->Draw(); gPad->Modified(); gPad->Update();";
+   Int_t i, len = (Int_t)strlen(label);
+   interval /= (ULong_t)(len + 2);
+   RecordExtraEvent(cad, extratime);
+   for (i=0; i < len; ++i) {
+      cad = "l->SetTitle(\"";
+      cad += (aux += label[i]);
+      cad += "\"); ";
+#ifndef R__WIN32
+      cad += " l->SetTextFont(83); l->SetTextSizePixels(14); ";
+#endif
+      cad += " gPad->Modified(); gPad->Update();";
+      extratime += interval;
+      RecordExtraEvent(cad, extratime);
+   }
+   cad  = "l->SetTextFont(";
+   cad += texto->GetTextFont();
+   cad += "); l->SetTextSize(";
+   cad += texto->GetTextSize();
+   cad += "); gPad->Modified(); gPad->Update();";
+   extratime += interval;
+   RecordExtraEvent(cad, extratime);
 }
 
 //______________________________________________________________________________
 void TRecorderRecording::FilterEventPave()
 {
    // Change the state of the flag to kTRUE when you are recording a pavelabel.
-   
+
    fFilterEventPave = kTRUE;
 }
 
 //______________________________________________________________________________
-void TRecorderRecording::RecordExtraEvent(TString line)
+void TRecorderRecording::StartEditing()
 {
-   // Records TLatex or TPaveLabel object created in TCreatePrimitives
+   // Memorize the starting time of editinga TLatex or a TPaveLabel
 
-   fExtraEvent->SetTime(fTimer->GetAbsTime());
+   fBeginPave = (long)fTimer->GetAbsTime();
+}
+
+//______________________________________________________________________________
+void TRecorderRecording::RecordExtraEvent(TString line, ULong_t ExtTime)
+{
+   // Records TLatex or TPaveLabel object created in TCreatePrimitives,
+   // ExtTime is needed for the correct replay of these events.
+
+   fExtraEvent->SetTime(TTime(ExtTime));
    fExtraEvent->SetText(line);
    fExtraTree->Fill();
 }
@@ -1791,3 +1856,4 @@ Event_t *TRecGuiEvent::CreateEvent(TRecGuiEvent *ge)
 }
 
 ClassImp(TRecWinPair)
+

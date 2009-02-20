@@ -651,6 +651,7 @@ private:
 
    TFile              *fFile;             // ROOT file to store recorded events in
    TTimer             *fTimer;            // Timer used for recording
+   ULong_t             fBeginPave;        // TLatex/TPaveLabel edition starting time
 
    TTree              *fWinTree;          // TTree with registered windows
    TTree              *fGuiTree;          // TTree with recorded GUI events
@@ -691,9 +692,10 @@ public:
    void  RecordGuiCNEvent(Event_t* e);             //SLOT
    void  RecordPave(const TObject* obj);           //SLOT
    void  RecordText(const TObject* obj);           //SLOT
-   void  FilterEventPave();                        //SLOT                      
+   void  FilterEventPave();                        //SLOT
+   void  StartEditing();                           //SLOT
 
-   void  RecordExtraEvent(TString line);
+   void  RecordExtraEvent(TString line, ULong_t ExtTime);
 
    ClassDef(TRecorderRecording, 0) // Represents state of TRecorder when recording events
 };
