@@ -13,7 +13,7 @@ XROOTDDIRD := $(MODDIRS)/xrootd
 XROOTDDIRI := $(MODDIRS)/xrootd/src
 XROOTDDIRL := $(MODDIRS)/xrootd/lib
 XROOTDMAKE := $(XROOTDDIRD)/GNUmakefile
-XROOTDBUILD:= $(XROOTDDIRD)/LastBuild
+XROOTDBUILD:= $(XROOTDDIRD)/LastBuild.d
 
 ##### Xrootd config options #####
 ifeq ($(PLATFORM),win32)
