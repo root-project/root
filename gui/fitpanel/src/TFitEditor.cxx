@@ -156,6 +156,7 @@
 #include "TTreeInput.h"
 #include "TAdvancedGraphicsDialog.h"
 
+#include <sstream>
 #include <vector>
 #include <queue>
 using std::vector;
@@ -1350,10 +1351,6 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
       //fFuncPars = FuncParams_t( fitFunc->GetNpar() );
       GetParameters(fFuncPars, fitFunc);
 
-      // get function range
-      fitFunc->GetRange(fFuncXmin, fFuncYmin, fFuncZmin, fFuncXmax,  fFuncYmax,  fFuncZmax);
-
-
       TString tmpStr = fitFunc->GetExpFormula();
       TGLBEntry *en = 0;
       if ( tmpStr.Length() == 0 )
@@ -1499,15 +1496,23 @@ void TFitEditor::FillFunctionList(Int_t)
       TObject* obj;
       while( ( obj = (TObject*) functionsIter() ) ) {
          if ( TF1* func = dynamic_cast<TF1*>(obj) ) {
-            fFuncList->AddEntry(func->GetName(), newid++); 
+            // Do not include functions used previously to fit
+            if ( strncmp(func->GetName(), "PrevFit", 7) != 0 )
+               fFuncList->AddEntry(func->GetName(), newid++); 
          }
       }
        if ( newid != kFP_ALTFUNC )
             fFuncList->Select(newid-1);
    } 
    else if ( fTypeFit->GetSelected() == kFP_PREVFIT ) {
-      TList *listOfFunctions = GetFitObjectListOfFunctions();
       Int_t newid = kFP_ALTFUNC;
+
+      for ( std::vector<TF1*>::iterator i = fPrevFit.begin();
+            i != fPrevFit.end(); ++i ) {
+         fFuncList->AddEntry((*i)->GetName(), newid++);
+      }
+
+      TList *listOfFunctions = GetFitObjectListOfFunctions();
       if ( listOfFunctions ) {
          TIter next(listOfFunctions, kIterForward);
          TObject* obj;
@@ -1774,6 +1779,13 @@ void TFitEditor::DoFit()
    // update parameters value shown in dialog 
    //if (!fFuncPars) fFuncPars = new Double_t[fitFunc->GetNpar()][3];
    GetParameters(fFuncPars,fitFunc);
+
+   // Save fit data for future use
+   TF1* tmpTF1 = static_cast<TF1*>( fitFunc->Clone() );
+   ostringstream name;
+   name << "PrevFit" << fPrevFit.size() + 1;
+   tmpTF1->SetName(name.str().c_str());
+   fPrevFit.push_back(tmpTF1);
 
    float xmin, xmax, ymin, ymax, zmin, zmax;
    if ( fParentPad ) {
