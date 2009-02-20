@@ -301,11 +301,25 @@ XrdSutBucket *XrdCryptosslX509Req::Export()
 bool XrdCryptosslX509Req::Verify()
 {
    // Verify signature of the request 
+   EPNAME("X509Req::Verify");
 
    // We must have been initialized
    if (!creq)
       return 0;
 
    // Ok: we can verify
-   return X509_REQ_verify(creq,X509_REQ_get_pubkey(creq));
+   int rc = X509_REQ_verify(creq,X509_REQ_get_pubkey(creq));
+   if (rc <= 0) {
+     // Failure
+     if (rc == 0) {
+       // Signatures are not OK
+       DEBUG("signature not OK");
+     } else {
+       // General failure
+       DEBUG("could not verify signature");
+     }
+     return 0;
+   }
+   // OK
+   return 1;
 }
