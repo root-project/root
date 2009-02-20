@@ -38,13 +38,12 @@
 #endif
 
 
-class TPolyLine3D : public TObject, public TAttLine, public TAtt3D {
-
+class TPolyLine3D : public TObject, public TAttLine, public TAtt3D
+{
 protected:
    Int_t        fN;            //Number of points
    Float_t     *fP;            //[3*fN] Array of 3-D coordinates  (x,y,z)
    TString      fOption;       //options
-   UInt_t       fGLList;       //!The list number for OpenGL view
    Int_t        fLastPoint;    //The index of the last filled point
 
 public:

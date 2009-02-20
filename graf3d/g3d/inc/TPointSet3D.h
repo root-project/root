@@ -28,6 +28,8 @@ protected:
    Bool_t    fOwnIds; //Flag specifying id-objects are owned by the point-set
    TRefArray fIds;    //User-provided point identifications
 
+   void CopyIds(const TPointSet3D& t);
+
 public:
    TPointSet3D() :
       TPolyMarker3D(), fOwnIds(kFALSE), fIds() { fName="TPointSet3D"; }

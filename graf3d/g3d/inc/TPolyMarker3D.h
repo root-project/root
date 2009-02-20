@@ -37,13 +37,12 @@
 class TH1;
 class TCollection;
 
-class TPolyMarker3D : public TObject, public TAttMarker, public TAtt3D {
-
+class TPolyMarker3D : public TObject, public TAttMarker, public TAtt3D
+{
 protected:
    Int_t            fN;            //number of points
    Float_t         *fP;            //[3*fN] Array of X,Y,Z coordinates
    TString          fOption;       //options
-   UInt_t           fGLList;       //!The list number for OpenGL view
    Int_t            fLastPoint;    //The index of the last filled point
    TString          fName;         //name of polymarker
 

@@ -55,6 +55,8 @@ public:
 
    virtual TEvePointSet* CloneElement() const { return new TEvePointSet(*this); }
 
+   virtual void ClonePoints(const TEvePointSet& e);
+
    virtual void ComputeBBox();
 
    void  Reset(Int_t n_points=0, Int_t n_int_ids=0);

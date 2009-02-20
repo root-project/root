@@ -49,6 +49,7 @@ protected:
    Int_t              fCharge;     // Charge in units of e0
    Int_t              fLabel;      // Simulation label
    Int_t              fIndex;      // Reconstruction index
+   Bool_t             fLockPoints; // Lock points that are currently in - do nothing in MakeTrack().
    vPathMark_t        fPathMarks;  // TEveVector of known points along the track
 
    TEveTrackPropagator *fPropagator;   // Pointer to shared render-style
@@ -80,32 +81,26 @@ public:
    const TEveVector& GetMomentum()    const { return fP;    }
    const TEveVector& GetEndMomentum() const { return fPEnd; }
 
-   Int_t GetPdg()    const   { return fPdg;   }
-   void  SetPdg(Int_t pdg)    { fPdg = pdg;    }
-   Int_t GetCharge() const   { return fCharge; }
-   void  SetCharge(Int_t chg) { fCharge = chg; }
-   Int_t GetLabel()  const   { return fLabel; }
-   void  SetLabel(Int_t lbl) { fLabel = lbl;  }
-   Int_t GetIndex()  const   { return fIndex; }
-   void  SetIndex(Int_t idx) { fIndex = idx;  }
+   Int_t GetPdg()    const    { return fPdg;    }
+   void  SetPdg(Int_t pdg)    { fPdg = pdg;     }
+   Int_t GetCharge() const    { return fCharge; }
+   void  SetCharge(Int_t chg) { fCharge = chg;  }
+   Int_t GetLabel()  const    { return fLabel;  }
+   void  SetLabel(Int_t lbl)  { fLabel = lbl;   }
+   Int_t GetIndex()  const    { return fIndex;  }
+   void  SetIndex(Int_t idx)  { fIndex = idx;   }
 
    void  AddPathMark(const TEvePathMark& pm) { fPathMarks.push_back(pm); }
    void  SortPathMarksByTime();
          vPathMark_t& RefPathMarks()       { return fPathMarks; }
    const vPathMark_t& RefPathMarks() const { return fPathMarks; }
 
-   //--------------------------------
+   void  PrintPathMarks(); // *MENU*
 
-   void ImportHits();              // *MENU*
-   void ImportClusters();          // *MENU*
-   void ImportClustersFromIndex(); // *MENU*
-   void ImportKine();              // *MENU*
-   void ImportKineWithArgs(Bool_t importMother=kTRUE, Bool_t impDaugters=kTRUE,
-                           Bool_t colorPdg    =kTRUE, Bool_t recurse    =kTRUE); // *MENU*
-   void PrintKineStack();          // *MENU*
-   void PrintPathMarks();          // *MENU*
+   void   SetLockPoints(Bool_t l) { fLockPoints = l;    }
+   Bool_t GetLockPoints()   const { return fLockPoints; }
 
-   //--------------------------------
+   //-------------------------------------------------------------------
 
    virtual void SecSelected(TEveTrack*); // *SIGNAL*
    virtual void SetLineStyle(Style_t lstyle);
@@ -213,13 +208,10 @@ public:
    Float_t GetMaxP()  const { return fMaxP;  }
    Float_t GetLimP()  const { return fLimP;  }
 
-   //--------------------------------
+   //-------------------------------------------------------------------
 
    TEveTrack* FindTrackByLabel(Int_t label); // *MENU*
    TEveTrack* FindTrackByIndex(Int_t index); // *MENU*
-
-   void ImportHits();     // *MENU*
-   void ImportClusters(); // *MENU*
 
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(ostream& out, const TString& var);

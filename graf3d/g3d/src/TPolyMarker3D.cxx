@@ -159,7 +159,6 @@ TPolyMarker3D& TPolyMarker3D::operator=(const TPolyMarker3D& tp3)
       fN=tp3.fN;
       fP=tp3.fP;
       fOption=tp3.fOption;
-      fGLList=tp3.fGLList;
       fLastPoint=tp3.fLastPoint;
       fName=tp3.fName;
    }

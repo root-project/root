@@ -14,7 +14,6 @@
 #include "TClass.h"
 
 //______________________________________________________________________
-// TPointSet3D
 //
 // TPolyMarker3D using TPointSet3DGL for direct OpenGL rendering.
 // Supports only elementary marker types:
@@ -39,18 +38,11 @@ ClassImp(TPointSet3D);
 
 //______________________________________________________________________________
 TPointSet3D::TPointSet3D(const TPointSet3D &t) :
-   TPolyMarker3D(t), TAttBBox(t), fOwnIds(t.fOwnIds), fIds()
+   TPolyMarker3D(t), TAttBBox(t), fOwnIds(kFALSE), fIds()
 {
    // Copy constructor.
 
-   fIds.Expand(t.fIds.GetSize());
-   if (fOwnIds) {
-      for (Int_t i=0; i<t.fIds.GetSize(); ++i)
-         fIds.AddAt(t.fIds.At(i)->Clone(), i);
-   } else {
-      for (Int_t i=0; i<t.fIds.GetSize(); ++i)
-         fIds.AddAt(t.fIds.At(i), i);
-   }
+   CopyIds(t);
 }
 
 //______________________________________________________________________________
@@ -62,6 +54,22 @@ TPointSet3D::~TPointSet3D()
 }
 
 //______________________________________________________________________________
+void TPointSet3D::CopyIds(const TPointSet3D& t)
+{
+   // Copy id objects from point-set 't'.
+
+   fOwnIds = t.fOwnIds;
+   fIds.Expand(t.fIds.GetSize());
+   if (fOwnIds) {
+      for (Int_t i=0; i<t.fIds.GetSize(); ++i)
+         fIds.AddAt(t.fIds.At(i)->Clone(), i);
+   } else {
+      for (Int_t i=0; i<t.fIds.GetSize(); ++i)
+         fIds.AddAt(t.fIds.At(i), i);
+   }
+}
+
+//______________________________________________________________________________
 TPointSet3D& TPointSet3D::operator=(const TPointSet3D& t)
 {
    // Assignement operator.
@@ -69,15 +77,7 @@ TPointSet3D& TPointSet3D::operator=(const TPointSet3D& t)
    if (this != &t) {
       ClearIds();
       TPolyMarker3D::operator=(t);
-      fOwnIds = t.fOwnIds;
-      fIds.Expand(t.fIds.GetSize());
-      if (fOwnIds) {
-         for (Int_t i=0; i<t.fIds.GetSize(); ++i)
-            fIds.AddAt(t.fIds.At(i)->Clone(), i);
-      } else {
-         for (Int_t i=0; i<t.fIds.GetSize(); ++i)
-            fIds.AddAt(t.fIds.At(i), i);
-      }
+      CopyIds(t);
    }
    return *this;
 }

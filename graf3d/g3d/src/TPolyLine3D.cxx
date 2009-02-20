@@ -22,8 +22,7 @@
 
 #include <assert.h>
 
-ClassImp(TPolyLine3D)
-
+ClassImp(TPolyLine3D);
 
 //______________________________________________________________________________
 // PolyLine3D is a 3-dimensional polyline. It has 4 different constructors.
@@ -247,7 +246,6 @@ TPolyLine3D& TPolyLine3D::operator=(const TPolyLine3D& pl)
       fN=pl.fN;
       fP=pl.fP;
       fOption=pl.fOption;
-      fGLList=pl.fGLList;
       fLastPoint=pl.fLastPoint;
    } 
    return *this;

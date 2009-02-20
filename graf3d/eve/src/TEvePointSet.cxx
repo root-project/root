@@ -115,6 +115,35 @@ TEvePointSet::~TEvePointSet()
 /******************************************************************************/
 
 //______________________________________________________________________________
+void TEvePointSet::ClonePoints(const TEvePointSet& e)
+{
+   // Clone points and all point-related information from point-set 'e'.
+
+   // TPolyMarker3D
+   delete [] fP;
+   fN = e.fN;
+   if (fN > 0)
+   {
+      const Int_t nn = 3 * e.fN;
+      fP = new Float_t [nn];
+      for (Int_t i = 0; i < nn; i++) fP[i] = e.fP[i];
+   } else {
+      fP = 0;
+   }
+   fLastPoint = e.fLastPoint;
+
+   // TPointSet3D
+   CopyIds(e);
+
+   // TEvePointSet
+   delete fIntIds;
+   fIntIds         = e.fIntIds ? new TArrayI(*e.fIntIds) : 0;
+   fIntIdsPerPoint = e.fIntIdsPerPoint;
+}
+
+/******************************************************************************/
+
+//______________________________________________________________________________
 const TGPicture* TEvePointSet::GetListTreeIcon(Bool_t)
 {
    // Return pointset icon.

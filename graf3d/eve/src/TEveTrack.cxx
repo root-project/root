@@ -22,7 +22,6 @@
 #include "TEveManager.h"
 #include "TEveBrowser.h"
 #include "TEveTrackProjected.h"
-#include "TROOT.h"
 
 #include <vector>
 #include <algorithm>
@@ -55,6 +54,7 @@ TEveTrack::TEveTrack() :
    fCharge(0),
    fLabel(kMinInt),
    fIndex(kMinInt),
+   fLockPoints(kFALSE),
    fPathMarks(),
    fPropagator(0),
    fBreakProjectedTracks(kBPTDefault)
@@ -74,6 +74,7 @@ TEveTrack::TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* rs):
    fCharge(0),
    fLabel(label),
    fIndex(kMinInt),
+   fLockPoints(kFALSE),
    fPathMarks(),
    fPropagator(0),
    fBreakProjectedTracks(kBPTDefault)
@@ -104,6 +105,7 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* rs):
    fCharge(0),
    fLabel(t->fLabel),
    fIndex(t->fIndex),
+   fLockPoints(kFALSE),
    fPathMarks(),
    fPropagator(0),
    fBreakProjectedTracks(kBPTDefault)
@@ -134,6 +136,7 @@ TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* rs) :
    fCharge(t->fSign),
    fLabel(t->fLabel),
    fIndex(t->fIndex),
+   fLockPoints(kFALSE),
    fPathMarks(),
    fPropagator(0),
    fBreakProjectedTracks(kBPTDefault)
@@ -157,6 +160,7 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
    fCharge(t.fCharge),
    fLabel(t.fLabel),
    fIndex(t.fIndex),
+   fLockPoints(t.fLockPoints),
    fPathMarks(),
    fPropagator(0),
    fBreakProjectedTracks(t.fBreakProjectedTracks)
@@ -164,6 +168,10 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
    // Copy constructor. Track paremeters are copied but the
    // extrapolation is not perfermed so you should still call
    // MakeTrack() to do that.
+   // If points of 't' are locked, they are cloned.
+
+   if (fLockPoints)
+      ClonePoints(t);
 
    SetMainColor(t.GetMainColor());
    // TEveLine
@@ -214,15 +222,21 @@ void TEveTrack::SetStdTitle()
 void TEveTrack::SetTrackParams(const TEveTrack& t)
 {
    // Copy track parameters from t.
-   // PathMarks are cleared.
+   // PathMarks are cleared - you can copy them via SetPathMarks(t).
+   // If track 't' is locked, you should probably clone its points
+   // over - use TEvePointSet::ClonePoints(t);
 
-   fV         = t.fV;
-   fP         = t.fP;
-   fBeta      = t.fBeta;
-   fPdg       = t.fPdg;
-   fCharge    = t.fCharge;
-   fLabel     = t.fLabel;
-   fIndex     = t.fIndex;
+   fV          = t.fV;
+   fP          = t.fP;
+   fBeta       = t.fBeta;
+   fPdg        = t.fPdg;
+   fCharge     = t.fCharge;
+   fLabel      = t.fLabel;
+   fIndex      = t.fIndex;
+
+   fPathMarks.clear();
+   SetPropagator(t.fPropagator);
+   fBreakProjectedTracks = t.fBreakProjectedTracks;
 
    SetMainColor(t.GetMainColor());
    // TEveLine
@@ -236,9 +250,6 @@ void TEveTrack::SetTrackParams(const TEveTrack& t)
    fLineColor = t.fLineColor;
    fLineStyle = t.fLineStyle;
    fLineWidth = t.fLineWidth;
-   fPathMarks.clear();
-   SetPropagator(t.fPropagator);
-   fBreakProjectedTracks = t.fBreakProjectedTracks;
 }
 
 //______________________________________________________________________________
@@ -291,84 +302,87 @@ void TEveTrack::MakeTrack(Bool_t recurse)
    // settings of the render-style.
    // If recurse is true, descend into children.
 
-   Reset(0);
-
-   TEveTrackPropagator& rTP((fPropagator != 0) ? *fPropagator : TEveTrackPropagator::fgDefStyle);
-
-   const Float_t maxRsq = rTP.GetMaxR() * rTP.GetMaxR();
-   const Float_t maxZ   = rTP.GetMaxZ();
-
-   if (TMath::Abs(fV.fZ) < maxZ && fV.fX*fV.fX + fV.fY*fV.fY < maxRsq)
+   if (!fLockPoints)
    {
-      TEveVector currP = fP;
-      Bool_t decay = kFALSE;
-      fPropagator->InitTrack(fV, fCharge);
-      for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
-      {
-         if (rTP.GetFitReferences() && pm->fType == TEvePathMark::kReference)
-         {
-            if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
-               break;
-            // printf("%s fit reference  \n", fName.Data());
-            if (fPropagator->GoToVertex(pm->fV, currP)) {
-               currP.fX = pm->fP.fX; currP.fY = pm->fP.fY; currP.fZ = pm->fP.fZ;
-            }
-            else
-            {
-               break;
-            }
-         }
-         else if (rTP.GetFitDaughters() && pm->fType == TEvePathMark::kDaughter)
-         {
-            if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
-               break;
-            // printf("%s fit daughter  \n", fName.Data());
-            if (fPropagator->GoToVertex(pm->fV, currP)) {
-               currP.fX -= pm->fP.fX; currP.fY -= pm->fP.fY; currP.fZ -= pm->fP.fZ;
-            }
-            else
-            {
-               break;
-            }
-         }
-         else if (rTP.GetFitDecay() && pm->fType == TEvePathMark::kDecay)
-         {
-            if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
-               break;
-            // printf("%s fit decay \n", fName.Data());
-            fPropagator->GoToVertex(pm->fV, currP);
-            decay = true;
-            break;
-         }
-         else if (rTP.GetFitCluster2Ds() && pm->fType == TEvePathMark::kCluster2D)
-         {
-            // This if should actually be done for corrected point.
-            TEveVector itsect;
-            if (fPropagator->IntersectPlane(currP, pm->fV, pm->fP, itsect))
-            {
-               TEveVector delta   = itsect - pm->fV;
-               TEveVector vtopass = pm->fV + pm->fE*(pm->fE.Dot(delta));
-               if (TEveTrackPropagator::IsOutsideBounds(vtopass, maxRsq, maxZ))
-                  break;
-               fPropagator->GoToVertex(vtopass, currP);
-            }
-            else
-            {
-               Warning("TEveTrack::MakeTrack", "Failed to intersect plane for Cluster2D. Ignoring path-mark.");
-            }
-            break;
-         }
-      } // loop path-marks
+      Reset(0);
 
-      if (!decay || rTP.GetFitDecay() == kFALSE)
+      TEveTrackPropagator& rTP((fPropagator != 0) ? *fPropagator : TEveTrackPropagator::fgDefStyle);
+
+      const Float_t maxRsq = rTP.GetMaxR() * rTP.GetMaxR();
+      const Float_t maxZ   = rTP.GetMaxZ();
+
+      if (TMath::Abs(fV.fZ) < maxZ && fV.fX*fV.fX + fV.fY*fV.fY < maxRsq)
       {
-         // printf("%s loop to bounds  \n",fName.Data() );
-         fPropagator->GoToBounds(currP);
+         TEveVector currP = fP;
+         Bool_t decay = kFALSE;
+         fPropagator->InitTrack(fV, fCharge);
+         for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
+         {
+            if (rTP.GetFitReferences() && pm->fType == TEvePathMark::kReference)
+            {
+               if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
+                  break;
+               // printf("%s fit reference  \n", fName.Data());
+               if (fPropagator->GoToVertex(pm->fV, currP)) {
+                  currP.fX = pm->fP.fX; currP.fY = pm->fP.fY; currP.fZ = pm->fP.fZ;
+               }
+               else
+               {
+                  break;
+               }
+            }
+            else if (rTP.GetFitDaughters() && pm->fType == TEvePathMark::kDaughter)
+            {
+               if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
+                  break;
+               // printf("%s fit daughter  \n", fName.Data());
+               if (fPropagator->GoToVertex(pm->fV, currP)) {
+                  currP.fX -= pm->fP.fX; currP.fY -= pm->fP.fY; currP.fZ -= pm->fP.fZ;
+               }
+               else
+               {
+                  break;
+               }
+            }
+            else if (rTP.GetFitDecay() && pm->fType == TEvePathMark::kDecay)
+            {
+               if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
+                  break;
+               // printf("%s fit decay \n", fName.Data());
+               fPropagator->GoToVertex(pm->fV, currP);
+               decay = true;
+               break;
+            }
+            else if (rTP.GetFitCluster2Ds() && pm->fType == TEvePathMark::kCluster2D)
+            {
+               // This if should actually be done for corrected point.
+               TEveVector itsect;
+               if (fPropagator->IntersectPlane(currP, pm->fV, pm->fP, itsect))
+               {
+                  TEveVector delta   = itsect - pm->fV;
+                  TEveVector vtopass = pm->fV + pm->fE*(pm->fE.Dot(delta));
+                  if (TEveTrackPropagator::IsOutsideBounds(vtopass, maxRsq, maxZ))
+                     break;
+                  fPropagator->GoToVertex(vtopass, currP);
+               }
+               else
+               {
+                  Warning("TEveTrack::MakeTrack", "Failed to intersect plane for Cluster2D. Ignoring path-mark.");
+               }
+               break;
+            }
+         } // loop path-marks
+
+         if (!decay || rTP.GetFitDecay() == kFALSE)
+         {
+            // printf("%s loop to bounds  \n",fName.Data() );
+            fPropagator->GoToBounds(currP);
+         }
+         fPEnd = currP;
+         //  make_polyline:
+         fPropagator->FillPointSet(this);
+         fPropagator->ResetTrack();
       }
-      fPEnd = currP;
-      //  make_polyline:
-      fPropagator->FillPointSet(this);
-      fPropagator->ResetTrack();
    }
 
    if (recurse)
@@ -450,128 +464,6 @@ void TEveTrack::SortPathMarksByTime()
    // Sort registerd pat-marks by time.
 
    std::sort(fPathMarks.begin(), fPathMarks.end(), Cmp_pathmark_t());
-}
-
-/******************************************************************************/
-
-//______________________________________________________________________________
-void TEveTrack::ImportHits()
-{
-   // Import hits with same label as the track.
-   // Uses macro "hits_from_label.C".
-
-   TEveUtil::LoadMacro("hits_from_label.C");
-   gROOT->ProcessLine(Form("hits_from_label(%d, (TEveElement*)%p);",
-                           fLabel, this));
-}
-
-//______________________________________________________________________________
-void TEveTrack::ImportClusters()
-{
-   // Import clusters with same label as the track.
-   // Uses macro "clusters_from_label.C".
-
-   TEveUtil::LoadMacro("clusters_from_label.C");
-   gROOT->ProcessLine(Form("clusters_from_label(%d, (TEveElement*)%p);",
-                           fLabel, this));
-}
-
-//______________________________________________________________________________
-void TEveTrack::ImportClustersFromIndex()
-{
-   // Import clusters marked with same reconstructed track index as the track.
-   // Uses macro "clusters_from_index.C".
-
-   static const TEveException eh("TEveTrack::ImportClustersFromIndex ");
-
-   if (fIndex == kMinInt)
-      throw(eh + "index not set.");
-
-   TEveUtil::LoadMacro("clusters_from_index.C");
-   gROOT->ProcessLine(Form("clusters_from_index(%d, (TEveElement*)%p);",
-                           fIndex, this));
-}
-
-/******************************************************************************/
-
-//______________________________________________________________________________
-void TEveTrack::ImportKine()
-{
-   // Import kinematics of the track's label recursively.
-   // Uses macro "kine_tracks.C".
-
-   static const TEveException eh("TEveTrack::ImportKine ");
-
-   if (fLabel == kMinInt)
-      throw(eh + "label not set.");
-
-   Int_t label;
-   if (fLabel < 0) {
-      Warning(eh, "label negative, taking absolute value.");
-      label = -fLabel;
-   } else {
-      label = fLabel;
-   }
-
-   TEveUtil::LoadMacro("kine_tracks.C");
-   gROOT->ProcessLine(Form("kine_track(%d, kTRUE, kTRUE, kTRUE, kTRUE, (TEveElement*)%p);",
-                           label, this));
-
-}
-
-//______________________________________________________________________________
-void TEveTrack::ImportKineWithArgs(Bool_t importMother, Bool_t importDaugters,
-                                   Bool_t colorPdg,     Bool_t recurse)
-{
-   // Import kinematics of the track's label. Arguments steer the
-   // import process:
-   //   importMother     import particle with track's label
-   //   importDaugters   import direct daughters of label
-   //   colorPdg         color kinematics by PDG code
-   //   recurse          recursive import of daughters' daughters
-   // Uses macro "kine_tracks.C".
-
-   static const TEveException eh("TEveTrack::ImportKineWithArgs ");
-
-   if (fLabel == kMinInt)
-      throw(eh + "label not set.");
-
-   Int_t label;
-   if (fLabel < 0) {
-      Warning(eh, "label negative, taking absolute value.");
-      label = -fLabel;
-   } else {
-      label = fLabel;
-   }
-
-   TEveUtil::LoadMacro("kine_tracks.C");
-   gROOT->ProcessLine(Form("kine_track(%d, %d, %d, %d, %d, (TEveElement*)%p);",
-                           label, importMother, importDaugters, colorPdg, recurse, this));
-}
-
-/******************************************************************************/
-
-//______________________________________________________________________________
-void TEveTrack::PrintKineStack()
-{
-   // Print kinematics pertaining to track's label.
-   // Uses macro "print_kine_from_label.C".
-
-   static const TEveException eh("TEveTrack::PrintKineStack ");
-
-   if (fLabel == kMinInt)
-      throw(eh + "label not set.");
-
-   Int_t label;
-   if (fLabel < 0) {
-      Warning(eh, "label negative, taking absolute value.");
-      label = -fLabel;
-   } else {
-      label = fLabel;
-   }
-
-   TEveUtil::LoadMacro("print_kine_from_label.C");
-   gROOT->ProcessLine(Form("print_kine_from_label(%d);", label));
 }
 
 //______________________________________________________________________________
@@ -1182,8 +1074,10 @@ TEveTrack* TEveTrackList::FindTrackByLabel(Int_t label)
 {
    // Find track by label, select it and display it in the editor.
 
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-      if (((TEveTrack*)(*i))->GetLabel() == label) {
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      if (((TEveTrack*)(*i))->GetLabel() == label)
+      {
          TGListTree     *lt   = gEve->GetLTEFrame()->GetListTree();
          TGListTreeItem *mlti = lt->GetSelected();
          if (mlti->GetUserData() != this)
@@ -1203,8 +1097,10 @@ TEveTrack* TEveTrackList::FindTrackByIndex(Int_t index)
 {
    // Find track by index, select it and display it in the editor.
 
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-      if (((TEveTrack*)(*i))->GetIndex() == index) {
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      if (((TEveTrack*)(*i))->GetIndex() == index)
+      {
          TGListTree     *lt   = gEve->GetLTEFrame()->GetListTree();
          TGListTreeItem *mlti = lt->GetSelected();
          if (mlti->GetUserData() != this)
@@ -1217,26 +1113,6 @@ TEveTrack* TEveTrackList::FindTrackByIndex(Int_t index)
       }
    }
    return 0;
-}
-
-//______________________________________________________________________________
-void TEveTrackList::ImportHits()
-{
-   // Import hits for all track.
-
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-      ((TEveTrack*)(*i))->ImportHits();
-   }
-}
-
-//______________________________________________________________________________
-void TEveTrackList::ImportClusters()
-{
-   // Import clusters for all track.
-
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-      ((TEveTrack*)(*i))->ImportClusters();
-   }
 }
 
 /******************************************************************************/
