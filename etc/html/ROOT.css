@@ -130,6 +130,7 @@ div.tabcontent {
    display: table;
    margin: 0em 2em 0em 2em;
    padding: 0.5em 0.5em 0.5em 0.5em;
+   background-color: #fff;
 }
 div.tabwidth {
    width: 28em;
@@ -669,7 +670,7 @@ span.string {
    margin-left: -32px;
    font-size: 110%;
 }
-pre.code {
+pre.listing {
    margin: 5px 0px 0px 45px;
    padding-left: 1.2em;
    line-height: normal;

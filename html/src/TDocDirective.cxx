@@ -489,7 +489,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
                "<a id=\"" + id + "_A1\" class=\"tab\" href=\"#\" onclick=\"javascript:return SetDiv('" + id + "',1);\">Source</a>\n"
                "<br /></div><div class=\"tabcontent\">\n"
                "<div id=\"" + id + "_0\" class=\"tabvisible\">" + result + "</div>\n"
-               "<div id=\"" + id + "_1\" class=\"tabhidden\"><div class=\"code\"><pre class=\"code\">");
+               "<div id=\"" + id + "_1\" class=\"tabhidden\"><div class=\"listing\"><pre class=\"code\">");
             TIter iLine(fMacro->GetListOfLines());
             TObjString* osLine = 0;
             while ((osLine = (TObjString*) iLine()))

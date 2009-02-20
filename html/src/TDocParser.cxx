@@ -377,13 +377,8 @@ void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpat
       ProcessComment();
 
       if (!InContext(kDirective)) {
-         if (fLineComment.Length() ) {
-            GetDocOutput()->AdjustSourcePath(fLineComment, relpath);
-            out << fLineComment << endl;
-         } else {
-            GetDocOutput()->AdjustSourcePath(fLineSource, relpath);
-            out << fLineSource << endl;
-         }
+         GetDocOutput()->AdjustSourcePath(fLineSource, relpath);
+         out << fLineSource << endl;
       }
    }
 }
@@ -1194,9 +1189,6 @@ TClass* TDocParser::IsDirective(const TString& line, Ssiz_t pos,
    // You can implement your own handlers by implementing a class deriving
    // from TDocHandler, and calling it TDocTagDirective for "BEGIN_TAG",
    // "END_TAG" blocks.
-
-   if (!fAllowDirectives)
-      return 0;
 
    // '"' serves as escape char
    if (pos > 0 &&  line[pos - 1] == '"')

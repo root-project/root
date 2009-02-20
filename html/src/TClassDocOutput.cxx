@@ -1189,7 +1189,7 @@ void TClassDocOutput::CreateSourceOutputStream(std::ostream& out, const char* ex
    TString title(fCurrentClass->GetName());
    title += " - source file";
    WriteHtmlHeader(out, title, "../", fCurrentClass);
-   out << "<div id=\"codeAndLineNumbers\"><pre class=\"code\">" << std::endl;
+   out << "<div id=\"codeAndLineNumbers\"><pre class=\"listing\">" << std::endl;
 }
 
 //______________________________________________________________________________
