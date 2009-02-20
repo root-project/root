@@ -110,7 +110,16 @@
 #define NAME_SOCKS4HOST            (char *)"Socks4Server"
 #define NAME_SOCKS4PORT            (char *)"Socks4Port"
 
-#define DFLT_DFLTTCPWINDOWSIZE     (0) // Enable window scaling by default
+// Default TCP windows size
+// A value of '0' implies "use the default OS settings"
+// which enables window scaling on some platforms (linux, MacOsX)
+// but may be to small on others (solaris); the preprocessor macro
+// is set based on the platform information found in configure
+#if defined(__linux__) || defined(__macos__)
+#define DFLT_DFLTTCPWINDOWSIZE     (0)
+#else
+#define DFLT_DFLTTCPWINDOWSIZE     (262144)
+#endif
 #define NAME_DFLTTCPWINDOWSIZE     (char *)"DfltTcpWindowSize"
 
 // A connection towards a data server timeouts quickly
