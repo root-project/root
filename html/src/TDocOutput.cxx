@@ -518,10 +518,8 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
    parser.Convert(out, in, relpath, (includeOutput) /* determines whether it's code or not */);
 
    out << "</pre></div>" << endl;
-   out << "<div id=\"linenums\">";
-   for (Long_t i = 0; i < parser.GetLineNumber(); ++i)
-      out << "<div class=\"ln\">&nbsp;<span class=\"ln\">" << i + 1 << "</span></div>";
-   out << "</div>" << std::endl;
+
+   WriteLineNumbers(out, parser.GetLineNumber(), gSystem->BaseName(infilename));
 
    if (includeOutput) {
       out << "</td><td style=\"vertical-align:top;\">" << endl;
@@ -2243,6 +2241,25 @@ void TDocOutput::WriteModuleLinks(std::ostream& out)
       }
       out<< "</div><br />" << endl;
    }
+}
+
+//______________________________________________________________________________
+void TDocOutput::WriteLineNumbers(std::ostream& out, Long_t nLines, const TString& infileBase) const
+{
+   // Create a div containing the line numbers (for a source listing) 1 to nLines.
+   // Create links to the source file's line number and anchors, such that one can
+   // jump to SourceFile.cxx.html#27 (using the anchor), and one can copy and paste
+   // the link into e.g. gdb to get the text "SourceFile.cxx:27".
+
+   out << "<div id=\"linenums\">";
+   for (Long_t i = 0; i < nLines; ++i) {
+      // &nbsp; to force correct line height
+      out << "<div class=\"ln\">&nbsp;<span class=\"lnfile\">" << infileBase
+          << ":</span><a name=\"" << i + 1 << "\" href=\"#" << i + 1
+          << "\" class=\"ln\">" << i + 1 << "</a></div>";
+   }
+   out << "</div>" << std::endl;
+
 }
 
 //______________________________________________________________________________

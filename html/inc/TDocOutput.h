@@ -112,6 +112,7 @@ public:
    virtual void   WriteHtmlHeader(std::ostream &out, const char *title, const char* dir="", TClass *cls=0);
    virtual void   WriteHtmlFooter(std::ostream &out, const char *dir="", const char *lastUpdate="",
                                   const char *author="", const char *copyright="");
+   void           WriteLineNumbers(std::ostream& out, Long_t nLines, const TString& infileBase) const;
 
    ClassDef(TDocOutput, 0); // generates documentation web pages
 };

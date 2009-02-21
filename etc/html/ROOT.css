@@ -688,16 +688,24 @@ div.ln {
    line-height: normal;
    width: 50px;
    text-align: right;
-   color: #CE9201;
-   -moz-user-select: none;
-   -khtml-user-select: none;
-   user-select: none;
    height: 100%;
    border-right: 1px solid #aaaaaa;
 }
-span.ln {
+a.ln {
    display: inline-block;
+   height: 100%;
+   text-decoration:none;
+   color: #CE9201;
    font-size: 80%;
    margin: 0;
    padding: 0 0.2em 0 0;
+}
+span.lnfile {
+   font-size:1%;
+   display: inline-block;
+   overflow: hidden;
+   width: 1px;
+   color: #fff;
+   margin: 0;
+   padding: 0;
 }

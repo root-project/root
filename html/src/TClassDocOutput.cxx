@@ -1524,14 +1524,14 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
          else link += sHeader;
          classFile << "<a class=\"descrheadentry\" href=\"" << link << "\">viewVC header</a> ";
       } else
-         classFile << "<a class=\"descrheadentry\" href=\"" << link << "\"></a> ";
+         classFile << "<a class=\"descrheadentry\"> </a> ";
       if (sourceFileName.Length()) {
          TString link(viewCVSLink);
          if (mustReplace) link.ReplaceAll("%f", sourceFileName);
          else link += sourceFileName;
          classFile << "<a class=\"descrheadentry\" href=\"" << link << "\">viewVC source</a> ";
       } else
-         classFile << "<a class=\"descrheadentry\" href=\"" << link << "\"></a> ";
+         classFile << "<a class=\"descrheadentry\"> </a> ";
    }
 
    TString currClassNameMangled(fCurrentClass->GetName());
