@@ -105,27 +105,24 @@ void TGLFont::CopyAttributes(const TGLFont &o)
 Float_t TGLFont::GetAscent() const
 {
    // Get font's ascent.
-   // Does not work in FTGL, use GetBaseLineParams().
 
-   fFont->Ascender();
+   return fFont->Ascender();
 }
 
 //______________________________________________________________________________
 Float_t TGLFont::GetDescent() const
 {
    // Get font's descent.
-   // Does not work in FTGL, use GetBaseLineParams().
 
-   fFont->Descender();
+   return fFont->Descender();
 }
 
 //______________________________________________________________________________
 Float_t TGLFont::GetLineHeight() const
 {
    // Get font's line-height.
-   // Does not work in FTGL, use GetBaseLineParams().
 
-   fFont->LineHeight();
+   return fFont->LineHeight();
 }
 
 //______________________________________________________________________________
