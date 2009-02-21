@@ -74,7 +74,8 @@ public:
    Float_t GetAscent() const;
    Float_t GetDescent() const;
    Float_t GetLineHeight() const;
-   void    GetBaseLineParams(Float_t& ascent, Float_t& descent, Float_t& line_height);
+   void    MeasureBaseLineParams(Float_t& ascent, Float_t& descent, Float_t& line_height,
+                                 const char* txt="Xj") const;
 
    void  BBox(const char* txt,
               Float_t& llx, Float_t& lly, Float_t& llz,

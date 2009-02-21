@@ -112,9 +112,9 @@ Float_t TGLFont::GetAscent() const
 //______________________________________________________________________________
 Float_t TGLFont::GetDescent() const
 {
-   // Get font's descent.
+   // Get font's descent. The returned value is positive.
 
-   return fFont->Descender();
+   return -fFont->Descender();
 }
 
 //______________________________________________________________________________
@@ -126,12 +126,15 @@ Float_t TGLFont::GetLineHeight() const
 }
 
 //______________________________________________________________________________
-void TGLFont::GetBaseLineParams(Float_t& ascent, Float_t& descent, Float_t& line_height)
+void TGLFont::MeasureBaseLineParams(Float_t& ascent, Float_t& descent, Float_t& line_height,
+                                    const char* txt) const
 {
-   // Measure font's base-line parameters.
+   // Measure font's base-line parameters from the passed text.
+   // Note that the measured parameters are not the same as the ones
+   // returned by get-functions - those were set by the font designer.
 
-   Float_t llx, lly, llz, urx, ury, urz;
-   BBox("Xj", llx, lly, llz, urx, ury, urz);
+   Float_t dum, lly, ury;
+   const_cast<FTFont*>(fFont)->BBox(txt, dum, lly, dum, dum, ury, dum);
    ascent      =  ury;
    descent     = -lly;
    line_height =  ury - lly;

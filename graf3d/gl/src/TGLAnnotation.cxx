@@ -217,7 +217,7 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
 
       // get size of bg area
       Float_t ascent, descent, line_height;
-      fLabelFont.GetBaseLineParams(ascent, descent, line_height);
+      fLabelFont.MeasureBaseLineParams(ascent, descent, line_height);
 
       Float_t llx, lly, llz, urx, ury, urz;
 
@@ -386,22 +386,25 @@ void TGLAnnotation::MakeEditor()
    if (fMainFrame == 0)
    {
       fMainFrame = new TGMainFrame(gClient->GetRoot(), 1000, 1000);
+      fMainFrame->SetWindowName("Annotation Editor");
+
       TGVerticalFrame* vf = new TGVerticalFrame(fMainFrame);
 
       fTextEdit = new TGTextEdit(vf,  1000, 1000, kSunkenFrame);
-
       vf->AddFrame(fTextEdit,  new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
 
       TGHorizontalFrame* hf = new TGHorizontalFrame(vf);
-      TGTextButton* btt1 = new TGTextButton(hf, "Ok");
+
+      TGTextButton* btt1 = new TGTextButton(hf, "OK");
       hf->AddFrame(btt1, new TGLayoutHints(kLHintsExpandX, 2, 2, 2, 2));
+
       TGTextButton* btt2 = new TGTextButton(hf, "Cancel");
       hf->AddFrame(btt2, new TGLayoutHints(kLHintsExpandX, 2, 2, 2, 2));
 
       btt1->Connect("Clicked()", "TGLAnnotation", this, "UpdateText()");
       btt2->Connect("Clicked()", "TGLAnnotation", this, "CloseEditor()");
-      vf->AddFrame(hf, new TGLayoutHints(kLHintsBottom | kLHintsRight | kLHintsExpandX, 2, 2, 5, 1));
 
+      vf->AddFrame(hf, new TGLayoutHints(kLHintsBottom | kLHintsRight | kLHintsExpandX, 2, 2, 5, 1));
 
       fMainFrame->AddFrame(vf,  new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
       fMainFrame->SetCleanup(kDeepCleanup);
