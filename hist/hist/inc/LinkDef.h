@@ -83,6 +83,7 @@
 #pragma link C++ class TVirtualGraphPainter+;
 #pragma link C++ class TBackCompFitter+;
 #pragma link C++ class TUnfold+;
+#pragma link C++ class TUnfoldSys+;
 
 
 #pragma link C++ typedef THnSparseD;

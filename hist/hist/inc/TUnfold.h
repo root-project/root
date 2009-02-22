@@ -1,9 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 13/10/08
 
-//  Version 12, with support for preconditioned matrix inversion
+//  Version 13, new methods for derived classes
 //
 //  History:
+//    Version 12, with support for preconditioned matrix inversion
 //    Version 11, regularisation methods have return values
 //    Version 10, with bug-fix in TUnfold.cxx
 //    Version 9, implements method for optimized inversion of sparse matrix
@@ -59,10 +60,11 @@
 #include <TSpline.h>
 #include <TMatrixDSparse.h>
 #include <TMatrixD.h>
+#include <TObjArray.h>
 
 class TUnfold:public TObject {
  private:
-   void ClearTUnfold(void);     // initialize all data members
+   void InitTUnfold(void);     // initialize all data members
  protected:
    TMatrixDSparse * fA;        // Input: matrix
    TMatrixDSparse *fLsquared;   // Input: regularisation conditions squared
@@ -73,7 +75,9 @@ class TUnfold:public TObject {
    Double_t fBiasScale;         // Input: scale factor for the bias
    TArrayI fXToHist;            // Input: matrix indices -> histogram bins
    TArrayI fHistToX;            // Input: histogram bins -> matrix indices
+   TArrayD fSumOverY;           // Input: sum of all columns
    TMatrixDSparse *fEinv;       // Result: inverse error matrix
+   TMatrixDSparse *fAtV;        // Result: fA# times fV
    TMatrixD *fE;                // Result: error matrix
    TMatrixD *fX;                // Result: x
    TMatrixDSparse *fAx;         // Result: Ax
@@ -86,11 +90,13 @@ class TUnfold:public TObject {
    TUnfold(void);              // for derived classes
    virtual Double_t DoUnfold(void);     // the unfolding algorithm
    virtual void CalculateChi2Rho(void); // supplementory calculations
+   virtual void ClearResults(void);     // clear all results
+
    static TMatrixDSparse *MultiplyMSparseM(TMatrixDSparse const &a,TMatrixD const &b); // multiply sparse and non-sparse matrix
    static TMatrixDSparse *MultiplyMSparseMSparse(TMatrixDSparse const &a,TMatrixDSparse const &b); // multiply sparse and sparse matrix
    static TMatrixDSparse *MultiplyMSparseTranspMSparse(TMatrixDSparse const &a,TMatrixDSparse const &b); // multiply transposed sparse and sparse matrix
    static Double_t MultiplyVecMSparseVec(TMatrixDSparse const &a,TMatrixD const &v); // scalar product of v and Av
-   TMatrixD *InvertMSparse(TMatrixDSparse const &A) const; // invert sparse matrix
+   static TMatrixD *InvertMSparse(TMatrixDSparse const &A); // invert sparse matrix
    static Bool_t InvertMConditioned(TMatrixD &A); // invert matrix including preconditioning
    static void AddMSparse(TMatrixDSparse &dest,Double_t const &f,TMatrixDSparse const &src); // replacement for dest += f*src
    inline Int_t GetNx(void) const {
@@ -99,6 +105,8 @@ class TUnfold:public TObject {
    inline Int_t GetNy(void) const {
       return fA->GetNrows();
    } // number of input bins
+   void ErrorMatrixToHist(TH2 *ematrix,TMatrixD const *emat,Int_t const *binMap,
+                          Bool_t doClear) const; // return an error matrix as histogram
  public:
    enum EHistMap {              // mapping between unfolding matrix and TH2 axes
       kHistMapOutputHoriz = 0,  // map unfolding output to x-axis of TH2 matrix
@@ -113,6 +121,8 @@ class TUnfold:public TObject {
    };
    TUnfold(TH2 const *hist_A, EHistMap histmap, ERegMode regmode = kRegModeSize);      // constructor
    virtual ~ TUnfold(void);    // delete data members
+   static void DeleteMatrix(TMatrixD **m); // delete and invalidate pointer
+   static void DeleteMatrix(TMatrixDSparse **m); // delete and invalidate pointer
    void SetBias(TH1 const *bias);       // set alternative bias
    Int_t RegularizeSize(int bin, Double_t const &scale = 1.0);   // regularise the size of one output bin
    Int_t RegularizeDerivative(int left_bin, int right_bin, Double_t const &scale = 1.0); // regularize difference of two output bins (1st derivative)
@@ -139,7 +149,6 @@ class TUnfold:public TObject {
    void GetEmatrix(TH2 *ematrix,Int_t const *binMap=0) const; // get error matrix, averaged over bins
    Double_t GetRhoI(TH1 *rhoi,TH2 *ematrixinv=0,Int_t const *binMap=0) const; // get global correlation coefficients and inverse of error matrix, averaged over bins
    void GetRhoIJ(TH2 *rhoij,Int_t const *binMap=0) const; // get correlation coefficients, averaged over bins
-
    Double_t const &GetTau(void) const;  // regularisation parameter
    Double_t const &GetRhoMax(void) const;       // maximum global correlation
    Double_t const &GetRhoAvg(void) const;       // average global correlation
