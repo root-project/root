@@ -1,9 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-//  Version 12, catch error when defining the input
+//  Version 13, include test of systematoc errors
 //
 //  History:
+//    Version 12, catch error when defining the input
 //    Version 11,  print chi**2 and number of degrees of freedom
 //    Version 10,  with bug-fix in TUnfold.cxx
 //    Version 9,  with bug-fix in TUnfold.cxx and TUnfold.h
@@ -28,13 +29,13 @@
 #include <TVector.h>
 #include <TGraph.h>
 
-#include "TUnfold.h"
+#include "TUnfoldSys.h"
 
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////
 // 
-//  Test program for the class TUnfold
+//  Test program for the classes TUnfold, TUnfoldSys
 //
 //  (1) Generate Monte Carlo and Data events
 //      The events consist of
@@ -169,7 +170,7 @@ int testUnfold1()
   rnd=new TRandom3();
 
   // data and MC luminosity, cross-section
-  Double_t const luminosityData=10000;
+  Double_t const luminosityData=100000;
   Double_t const luminosityMC=1000000;
   Double_t const crossSection=1.0;
 
@@ -185,8 +186,8 @@ int testUnfold1()
   //
   TH1D *histMgenMC=new TH1D("MgenMC",";mass(gen)",nGen,xminGen,xmaxGen);
   TH1D *histMdetMC=new TH1D("MdetMC",";mass(det)",nDet,xminDet,xmaxDet);
-  TH2D *histMdetGenMC=new TH2D("MdetgenMC",";mass(det);mass(gen)",nDet,xminDet,xmaxDet,
-                              nGen,xminGen,xmaxGen);
+  TH2D *histMdetGenMC=new TH2D("MdetgenMC",";mass(det);mass(gen)",
+                               nDet,xminDet,xmaxDet,nGen,xminGen,xmaxGen);
   Int_t neventMC=rnd->Poisson(luminosityMC*crossSection);
   for(Int_t i=0;i<neventMC;i++) {
     Double_t mGen=GenerateEvent(0.3, // relative fraction of background
@@ -220,6 +221,16 @@ int testUnfold1()
     //  -> the background normalisation will be contained in the underflow bin
     histMdetGenMC->Fill(mDet,mGen,luminosityData/luminosityMC);
   }
+  TH2D *histMdetGenSysMC=new TH2D("MdetgenSysMC",";mass(det);mass(gen)",
+                                  nDet,xminDet,xmaxDet,nGen,xminGen,xmaxGen);
+  neventMC=rnd->Poisson(luminosityMC*crossSection);
+  for(Int_t i=0;i<neventMC;i++) {
+    Double_t mGen=GenerateEvent(0.5, // relative fraction of background
+                                3.6, // peak position in MC with systematic shift
+                                0.15); // peak width in MC
+    Double_t mDet=DetectorEvent(TMath::Abs(mGen));
+    histMdetGenSysMC->Fill(mDet,mGen,luminosityData/luminosityMC);
+  }
 
   //============================================
   // generate data distribution
@@ -243,7 +254,7 @@ int testUnfold1()
   //=========================================================================
   // set up the unfolding
   // define migration matrix
-  TUnfold unfold(histMdetGenMC,TUnfold::kHistMapOutputVert);
+  TUnfoldSys unfold(histMdetGenMC,TUnfold::kHistMapOutputVert);
 
   // define input and bias scame
   // do not use the bias, because MC peak may be at the wrong place
@@ -263,9 +274,6 @@ int testUnfold1()
   // this method scans the parameter tau and finds the kink in the L curve
   // finally, the unfolding is done for the best choice of tau
   iBest=unfold.ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
-  std::cout<<"tau="<<unfold.GetTau()<<"\n";
-  std::cout<<"chi**2="<<unfold.GetChi2A()<<"+"<<unfold.GetChi2L()
-           <<" / "<<unfold.GetNdf()<<"\n";
 
   // save graphs with one point to visualize best choice of tau
   Double_t t[1],x[1],y[1];
@@ -293,9 +301,49 @@ int testUnfold1()
                                               xminDet,xmaxDet);
 
   // get matrix of correlation coefficients
-  TH2D *histRhoij=new TH2D("rho_ij",";mass(gen);mass(gen)",
-                           nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
-  unfold.GetRhoIJ(histRhoij,binMap);
+  //TH2D *histRhoij=new TH2D("rho_ij",";mass(gen);mass(gen)",
+  //                         nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
+  //unfold.GetRhoIJ(histRhoij,binMap);
+
+  // get error matrix (data errors only)
+  TH2D *histEmatData=new TH2D("EmatData",";mass(gen);mass(gen)",
+                               nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
+  unfold.GetEmatrix(histEmatData,binMap);
+
+  //==========================================================================
+  // define correlated systematic error
+  // for testing, assume there is a 10% correlated error for all reconstructed
+  // masses larger than 7
+  Double_t SYS_ERROR1_MSTART=6;
+  Double_t SYS_ERROR1_SIZE=0.1;
+  TH2D *histMdetGenSys1=new TH2D("Mdetgensys1",";mass(det);mass(gen)",
+                                 nDet,xminDet,xmaxDet,nGen,xminGen,xmaxGen);
+  for(Int_t i=0;i<=nDet+1;i++) {
+     if(histMdetData->GetBinCenter(i)>=SYS_ERROR1_MSTART) {
+        for(Int_t j=0;j<=nGen+1;j++) {
+           histMdetGenSys1->SetBinContent(i,j,SYS_ERROR1_SIZE);
+        }
+     }
+  }
+  unfold.AddSysError(histMdetGenSysMC,"SYSERROR_MC",TUnfold::kHistMapOutputVert,
+                     TUnfoldSys::kSysErrModeMatrix);
+  unfold.AddSysError(histMdetGenSys1,"SYSERROR1",TUnfold::kHistMapOutputVert,
+                     TUnfoldSys::kSysErrModeRelative);
+
+  std::cout<<"tau="<<unfold.GetTau()<<"\n";
+  std::cout<<"chi**2="<<unfold.GetChi2A()<<"+"<<unfold.GetChi2L()
+           <<" / "<<unfold.GetNdf()<<"\n";
+  std::cout<<"chi**2(sys)="<<unfold.GetChi2Sys()<<"\n";
+
+  // get total error matrix:
+  //   migration matrix uncorrelated and colrrelated systematic errors
+  //   added inquadrature with the data statistical errors
+  TH2D *histEmatSysSysUncorr=new TH2D("EmatSysSysUncorr",";mass(gen);mass(gen)",
+                                  nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
+  TH2D *histEmatTotal=new TH2D("EmatTotal",";mass(gen);mass(gen)",
+                               nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
+  unfold.GetEmatrixSysUncorr(histEmatSysSysUncorr,binMap);
+  unfold.GetEmatrixTotal(histEmatTotal,binMap);
 
   // get global correlation coefficients and inverse of covariance matrix
   gHistInvEMatrix=new TH2D("invEmat",";mass(gen);mass(gen)",
@@ -320,6 +368,21 @@ int testUnfold1()
   // for (wrong!) fitting without correlations, drop the option "U" 
   histMunfold->Fit(bw,"UE");
 
+  // create data histogram with all errors added in quadrature
+  TH1D *histTotalError=new TH1D("TotalError",";mass(gen)",nGen,xminGen,xmaxGen);
+  TH1D *histRelSysError=new TH1D("RelSysError",";mass(gen)",nGen,xminGen,xmaxGen);
+  for(Int_t bin=1;bin<=nGen;bin++) {
+    histTotalError->SetBinContent(bin,histMunfold->GetBinContent(bin));
+    histTotalError->SetBinError
+       (bin,TMath::Sqrt(histEmatTotal->GetBinContent(bin,bin)));
+    Double_t e2_stat=histEmatData->GetBinContent(bin,bin);
+    Double_t e2_astat=histEmatSysSysUncorr->GetBinContent(bin,bin);
+    Double_t e2_total=histEmatTotal->GetBinContent(bin,bin);
+    histRelSysError->SetBinContent
+       (bin,TMath::Sqrt(TMath::Abs(e2_total-e2_stat-e2_astat))/
+        bw->Eval(histMunfold->GetBinCenter(bin)));
+  }
+
   //=====================================================================
   // plot some histograms
   TCanvas output;
@@ -341,8 +404,10 @@ int testUnfold1()
   //   MC input (black) [with completely wrong peak position and shape]
   //   unfolded data (blue)
   output.cd(2);
-  histMunfold->SetLineColor(kBlue);
-  histMunfold->Draw();
+  histTotalError->SetLineColor(kBlue);
+  histTotalError->Draw("E");
+  histMunfold->SetLineColor(kGreen);
+  histMunfold->Draw("SAME E1");
   histMgenData->SetLineColor(kRed);
   histMgenData->Draw("SAME");
   histMgenMC->Draw("SAME HIST");
@@ -372,9 +437,10 @@ int testUnfold1()
 
   // show tau as a function of chi**2
   output.cd(5);
-  logTauX->Draw();
-  bestLogTauLogChi2->SetMarkerColor(kRed);
-  bestLogTauLogChi2->Draw("*");
+  //logTauX->Draw();
+  //bestLogTauLogChi2->SetMarkerColor(kRed);
+  //bestLogTauLogChi2->Draw("*");
+  histRelSysError->Draw();
 
   // show the L curve
   output.cd(6);

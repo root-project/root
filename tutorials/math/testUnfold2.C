@@ -1,9 +1,10 @@
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-//  Version 12,  with improvements to TUnfold.cxx
+//  Version 13,  with changes to TUnfold.C
 //
 //  History:
+//    Version 12,  with improvements to TUnfold.cxx
 //    Version 11,  print chi**2 and number of degrees of freedom
 //    Version 10, with bug-fix in TUnfold.cxx
 //    Version 9, with bug-fix in TUnfold.cxx, TUnfold.h
