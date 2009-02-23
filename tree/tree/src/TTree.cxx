@@ -3317,11 +3317,11 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //
    //   Important note: By default TTree::Draw creates the arrays obtained
    //    with GetV1, GetV2, GetV3, GetW with a length corresponding to the
-   //    parameter fEstimate. By default fEstimate=10000 and can be modified
+   //    parameter fEstimate. By default fEstimate=1000000 and can be modified
    //    via TTree::SetEstimate. A possible recipee is to do
    //       tree->SetEstimate(tree->GetEntries());
    //    You must call SetEstimate if the expected number of selected rows
-   //    is greater than 10000.
+   //    is greater than 1000000.
    //
    //    You can use the option "goff" to turn off the graphics output
    //    of TTree::Draw in the above example.
