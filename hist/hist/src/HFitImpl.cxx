@@ -208,13 +208,34 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
    // is done automatically in the Fitter.cxx 
    for (int i = 0; i < npar; ++i) { 
       ROOT::Fit::ParameterSettings & parSettings = fitConfig.ParSettings(i); 
+
+      // check limits
       double plow,pup; 
       f1->GetParLimits(i,plow,pup);  
       if (plow*pup != 0 && plow >= pup) { // this is a limitation - cannot fix a parameter to zero value
          parSettings.Fix();
       }
-      else if (plow < pup ) 
+      else if (plow < pup ) { 
          parSettings.SetLimits(plow,pup);
+      }
+
+      // set the parameter step size (by default are set to 0.3 of value)
+      // if function provides meaningful error values
+      double err = f1->GetParError(i); 
+      if ( err > 0) 
+         parSettings.SetStepSize(err); 
+      else if (plow < pup) { // in case of limits improve step sizes 
+         double step = 0.1 * (pup - plow); 
+         // check if value is not too close to limit otherwise trim value
+         if (  parSettings.Value() < pup && pup - parSettings.Value() < 2 * step  ) 
+            step = (pup - parSettings.Value() ) / 2; 
+         else if ( parSettings.Value() > plow && parSettings.Value() - plow < 2 * step ) 
+            step = (parSettings.Value() - plow ) / 2; 
+         
+         parSettings.SetStepSize(step); 
+      }
+      
+      
    }
 
    // needed for setting precision ? 
@@ -424,7 +445,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, const TF1 * f1, const ROOT::F
 
    TList * funcList = h1->GetListOfFunctions();
    if (funcList == 0){
-      Error("StoreAndDrawFitFunction","Empty funciton list- cannot store fitted function");
+      Error("StoreAndDrawFitFunction","Function list has not been created - cannot store the fitted function");
       return;
    } 
 
@@ -572,12 +593,29 @@ int ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t
       }
       else if (plow < pup ) 
          parSettings.SetLimits(plow,pup);
+
+      // set the parameter step size (by default are set to 0.3 of value)
+      // if function provides meaningful error values
+      double err = fitfunc->GetParError(i); 
+      if ( err > 0) 
+         parSettings.SetStepSize(err); 
+      else if (plow < pup) { // in case of limits improve step sizes 
+         double step = 0.1 * (pup - plow); 
+         // check if value is not too close to limit otherwise trim value
+         if (  parSettings.Value() < pup && pup - parSettings.Value() < 2 * step  ) 
+            step = (pup - parSettings.Value() ) / 2; 
+         else if ( parSettings.Value() > plow && parSettings.Value() - plow < 2 * step ) 
+            step = (parSettings.Value() - plow ) / 2; 
+         
+         parSettings.SetStepSize(step); 
+      }
+
    }
 
    fitConfig.SetMinimizerOptions(minOption); 
 
    if (fitOption.Verbose)   fitConfig.MinimizerOptions().SetPrintLevel(3); 
-   if (fitOption.Quiet)   fitConfig.MinimizerOptions().SetPrintLevel(0); 
+   else   fitConfig.MinimizerOptions().SetPrintLevel(0); 
   
    // more 
    if (fitOption.More)   fitConfig.SetMinimizer("Minuit","MigradImproved");
