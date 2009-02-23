@@ -636,6 +636,10 @@ void TDocLatexDirective::CreateLatex(const char* filename)
       // add magic batch vs. gui canvas sizes (4, 28)
       fBBCanvas = (TVirtualPad*)gROOT->ProcessLineFast(
          Form("new TCanvas(\"R__TDocLatexDirective_BBCanvas\",\"fBBCanvas\",%g,%g);", -(canvSize + 4.), canvSize + 28.));
+   if (!fBBCanvas) {
+      Error("CreateLatex", "Cannot create a TCanvas via the interpreter!");
+      return;
+   }
    fBBCanvas->SetBorderMode(0);
    fBBCanvas->SetFillColor(kWhite);
 
