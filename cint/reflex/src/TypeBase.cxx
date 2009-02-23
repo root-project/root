@@ -47,9 +47,9 @@ Reflex::TypeBase::TypeBase( const char * nam,
                                   TYPE typeTyp, 
                                   const std::type_info & ti,
                                   const Type & finalType,
-                                  const char cintType /*= '\0'*/) 
+                                  REPRESTYPE represType /*= REPRES_NOTYPE */) 
    : fTypeInfo( &ti ), 
-     fCintType(cintType),
+     fRepresType(represType),
      fScope( Scope::__NIRVANA__() ),
      fSize( size ),
      fTypeType( typeTyp ),

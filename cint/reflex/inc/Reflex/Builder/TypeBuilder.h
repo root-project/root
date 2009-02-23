@@ -59,7 +59,7 @@ namespace Reflex {
 
    RFLX_API Type TypedefTypeBuilder( const char * Name, 
       const Type & t,
-      const char cintType = '\0' );
+      REPRESTYPE represType = REPRES_NOTYPE );
 
 
    RFLX_API Type FunctionTypeBuilder( const Type & r,

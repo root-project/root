@@ -41,7 +41,7 @@ namespace Reflex {
          const Type & typedefType,
          TYPE typeTyp = TYPEDEF,
          const Type & finalType = Dummy::Type(),
-         const char cintType = '\0') ;
+         REPRESTYPE represType = REPRES_NOTYPE) ;
 
 
       /** destructor */
@@ -530,7 +530,7 @@ inline Reflex::Reverse_Member_Iterator Reflex::Typedef::DataMember_REnd() const 
 
 //-------------------------------------------------------------------------------
 inline void Reflex::Typedef::Destruct( void * instance,
-                                             bool dealloc ) const {
+                                       bool dealloc ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) fTypedefType.Destruct( instance, dealloc );
 }

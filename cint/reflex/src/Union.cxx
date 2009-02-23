@@ -19,7 +19,7 @@
 
 //______________________________________________________________________________
 Reflex::Union::Union(const char* typ, size_t size, const std::type_info& ti, unsigned int modifiers, TYPE unionType /*=UNION*/)
-: TypeBase(typ, size, unionType, ti, Type(), 'u')
+: TypeBase(typ, size, unionType, ti, Type(), REPRES_STRUCT)
 , ScopeBase(typ, unionType)
 , fModifiers(modifiers)
 , fCompleteType(false)

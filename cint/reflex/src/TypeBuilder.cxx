@@ -141,8 +141,8 @@ Reflex::Type Reflex::EnumTypeBuilder( const char * nam,
 
 //-------------------------------------------------------------------------------
 Reflex::Type Reflex::TypedefTypeBuilder(const char * nam, 
-                                                    const Type & t,
-                                                    const char cintType) {
+                                        const Type & t,
+                                        REPRESTYPE represType) {
 //-------------------------------------------------------------------------------
 // Construct a typedef type.
    Type ret = Type::ByName(nam);
@@ -153,7 +153,7 @@ Reflex::Type Reflex::TypedefTypeBuilder(const char * nam,
    // We found the typedef type
    else if ( ret ) return ret;
    // Create a new typedef
-   return (new Typedef(nam , t, Reflex::TYPEDEF, Reflex::Dummy::Type(), cintType))->ThisType();        
+   return (new Typedef(nam , t, Reflex::TYPEDEF, Reflex::Dummy::Type(), represType))->ThisType();        
 }
 
 

@@ -308,8 +308,37 @@ namespace Reflex {
       FUNCTIONMEMBER,
       UNRESOLVED
    };
-
-
+   
+   /** enum containing all possible 'representation' types */
+   enum REPRESTYPE {
+      REPRES_POINTER             = 'a' - 'A',  // To be added to the other value to refer to a pointer to
+      REPRES_CHAR                = 'c',
+      REPRES_SIGNED_CHAR         = 'c',
+      REPRES_SHORT_INT           = 's',
+      REPRES_INT                 = 'i',
+      REPRES_LONG_INT            = 'l',
+      REPRES_UNSIGNED_CHAR       = 'b',
+      REPRES_UNSIGNED_SHORT_INT  = 'r',
+      REPRES_UNSIGNED_INT        = 'h',
+      REPRES_UNSIGNED_LONG_INT   = 'k',
+      REPRES_BOOL                = 'g',
+      REPRES_FLOAT               = 'f',
+      REPRES_DOUBLE              = 'd',
+      REPRES_LONG_DOUBLE         = 'q',
+      REPRES_VOID                = 'y',
+      REPRES_LONGLONG            = 'n',
+      REPRES_ULONGLONG           = 'm',
+      REPRES_STRUCT              = 'u',
+      REPRES_CLASS               = 'u',
+      REPRES_ENUM                = 'i', // Intentionally equal to REPRES_INT
+      REPRES_NOTYPE              = '\0'
+      // '1' is also a value used (for legacy implementation of function pointer)
+      // 'E' is also a value used (for legacy implementation of FILE*)
+      // 'a', 'j', 'T', 'o', 'O', 'p', 'P', 'z', 'Z', '\011', '\001', 'w' are also a value used (for support of various interpreter types)
+   };
+   
+   // Note TYPE and REPRESTYPE are 'small' enums and could be stored as 'char' to save space
+   
    /** the max unsigned int */
    size_t NPos();
 

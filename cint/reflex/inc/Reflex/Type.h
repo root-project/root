@@ -1178,7 +1178,7 @@ namespace Reflex {
       /** */
       const TypeBase * ToTypeBase() const;
 
-      char CintType() const;
+      REPRESTYPE RepresType() const;
 
    private:
 
@@ -1202,12 +1202,12 @@ namespace Reflex {
 #include "Reflex/internal/TypeBase.h"
 #include "Reflex/PropertyList.h"
 
-inline char Reflex::Type::CintType() const
+inline Reflex::REPRESTYPE Reflex::Type::RepresType() const
 {
    if (*this) {
-      return fTypeName->fTypeBase->CintType();
+      return fTypeName->fTypeBase->RepresType();
    }
-   return '\0';
+   return REPRES_NOTYPE;
 }
 
 //-------------------------------------------------------------------------------
@@ -1385,7 +1385,7 @@ inline Reflex::Scope Reflex::Type::DeclaringScope() const {
 
 //-------------------------------------------------------------------------------
 inline void Reflex::Type::Destruct( void * instance, 
-                                          bool dealloc ) const {
+                                    bool dealloc ) const {
 //-------------------------------------------------------------------------------
    if ( * this ) fTypeName->fTypeBase->Destruct( instance, dealloc ); 
 }

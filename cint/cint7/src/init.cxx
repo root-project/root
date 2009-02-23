@@ -561,7 +561,7 @@ int Cint::Internal::G__init_globals()
    G__one.ref = 0;
    {
       //fprintf(stderr, "G__init_globals: calling Reflex::TypedefTypeBuilder for 'switchStart$'\n");
-      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("switchStart$", ::Reflex::Type::ByName("int"), 'a'); // 'a' type
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("switchStart$", ::Reflex::Type::ByName("int"), (Reflex::REPRESTYPE)'a'); // 'a' type
       G__RflxProperties* prop = G__get_properties(result);
       if (prop) {
          //fprintf(stderr, "G__init_globals: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());
@@ -572,13 +572,36 @@ int Cint::Internal::G__init_globals()
    G__start.ref = 0;
    {
       //fprintf(stderr, "G__init_globals: calling Reflex::TypedefTypeBuilder for 'switchDefault$'\n");
-      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("switchDefault$", ::Reflex::Type::ByName("int"), 'z'); // 'z' type
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("switchDefault$", ::Reflex::Type::ByName("int"), (Reflex::REPRESTYPE)'z'); // 'z' type
       G__RflxProperties* prop = G__get_properties(result);
       if (prop) {
          //fprintf(stderr, "G__init_globals: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());
          prop->typenum = G__Dict::GetDict().Register(result);
       }
    }
+
+   //new TypeBase("rootSpecial$", sizeof(void*) * 2, FUNDAMENTAL, typeid(::Reflex::UnknownType), Type(), (Reflex::REPRESTYPE)'Z'); // 'Z' type
+   {
+      //fprintf(stderr, "G__init_globals: calling Reflex::TypedefTypeBuilder for 'rootSpecial$'\n");
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("rootSpecial$", ::Reflex::ArrayBuilder( ::Reflex::PointerBuilder(Reflex::Type::ByName("void")), 2 ), (Reflex::REPRESTYPE)'Z'); // 'Z' type
+      G__RflxProperties* prop = G__get_properties(result);
+      if (prop) {
+         //fprintf(stderr, "G__init_globals: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());
+         prop->typenum = G__Dict::GetDict().Register(result);
+      }      
+   }
+
+   // new TypeBase("blockBreakContinueGoto$", sizeof(int), FUNDAMENTAL, typeid(::Reflex::UnknownType), Type(), (Reflex::REPRESTYPE)'\001'); // was also 'Z' type (confusing)
+   {
+      //fprintf(stderr, "G__init_globals: calling Reflex::TypedefTypeBuilder for 'blockBreakContinueGoto$'\n");
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("blockBreakContinueGoto$", ::Reflex::Type::ByName("int"), (Reflex::REPRESTYPE)'\001'); // was also 'Z' type (confusing)
+      G__RflxProperties* prop = G__get_properties(result);
+      if (prop) {
+         //fprintf(stderr, "G__init_globals: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());
+         prop->typenum = G__Dict::GetDict().Register(result);
+      }
+   }
+
    G__letint(&G__default, 'z', G__SWITCH_DEFAULT);
    G__default.ref = 0;
    G__letint(&G__block_break, '\001', G__BLOCK_BREAK);
@@ -590,7 +613,7 @@ int Cint::Internal::G__init_globals()
    G__gotolabel[0] = '\0';
    {
       //fprintf(stderr, "G__init_globals: calling Reflex::TypedefTypeBuilder for 'defaultFunccall$'\n");
-      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("defaultFunccall$", ::Reflex::Type::ByName("int"), '\011'); // '\011' type
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("defaultFunccall$", ::Reflex::Type::ByName("int"), (Reflex::REPRESTYPE)'\011'); // '\011' type
       G__RflxProperties* prop = G__get_properties(result);
       if (prop) {
          //fprintf(stderr, "G__init_globals: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());
@@ -767,7 +790,7 @@ static void G__platformMacro()
     ****************************************************/
    {
       //fprintf(stderr, "G__platformMacro: calling Reflex::TypedefTypeBuilder for 'macroInt$'\n");
-      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("macroInt$", ::Reflex::ConstBuilder(::Reflex::Type::ByName("int")), 'p'); // type 'p'
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("macroInt$", ::Reflex::ConstBuilder(::Reflex::Type::ByName("int")), (Reflex::REPRESTYPE) 'p'); // type 'p'
       G__RflxProperties* prop = G__get_properties(result);
       if (prop) {
          //fprintf(stderr, "G__platformMacro: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());
@@ -777,7 +800,7 @@ static void G__platformMacro()
 
    {
       //fprintf(stderr, "G__platformMacro: calling Reflex::TypedefTypeBuilder for 'macroDouble$'\n");
-      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("macroDouble$", ::Reflex::ConstBuilder(::Reflex::Type::ByName("double")), 'P'); // type 'P'
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("macroDouble$", ::Reflex::ConstBuilder(::Reflex::Type::ByName("double")), (Reflex::REPRESTYPE) 'P'); // type 'P'
       G__RflxProperties* prop = G__get_properties(result);
       if (prop) {
          //fprintf(stderr, "G__platformMacro: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());
@@ -787,7 +810,7 @@ static void G__platformMacro()
 
    {
       //fprintf(stderr, "G__platformMacro: calling Reflex::TypedefTypeBuilder for 'autoInt$'\n");
-      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("autoInt$", ::Reflex::Type::ByName("int"), 'o'); // type 'o'
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("autoInt$", ::Reflex::Type::ByName("int"), (Reflex::REPRESTYPE) 'o'); // type 'o'
       G__RflxProperties* prop = G__get_properties(result);
       if (prop) {
          //fprintf(stderr, "G__platformMacro: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());
@@ -797,7 +820,7 @@ static void G__platformMacro()
 
    {
       //fprintf(stderr, "G__platformMacro: calling Reflex::TypedefTypeBuilder for 'autoDouble$'\n");
-      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("autoDouble$", ::Reflex::Type::ByName("double"), 'O'); // type 'O'
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("autoDouble$", ::Reflex::Type::ByName("double"), (Reflex::REPRESTYPE)'O'); // type 'O'
       G__RflxProperties* prop = G__get_properties(result);
       if (prop) {
          //fprintf(stderr, "G__platformMacro: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());
@@ -807,7 +830,7 @@ static void G__platformMacro()
 
    {
       //fprintf(stderr, "G__platformMacro: calling Reflex::TypedefTypeBuilder for 'macroChar*$'\n");
-      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("macroChar*$", ::Reflex::PointerBuilder(::Reflex::ConstBuilder(::Reflex::Type::ByName("char"))), 'T'); // type 'T'
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("macroChar*$", ::Reflex::PointerBuilder(::Reflex::ConstBuilder(::Reflex::Type::ByName("char"))),  (Reflex::REPRESTYPE)'T'); // type 'T'
       G__RflxProperties* prop = G__get_properties(result);
       if (prop) {
          //fprintf(stderr, "G__platformMacro: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());
@@ -817,7 +840,7 @@ static void G__platformMacro()
 
    {
       //fprintf(stderr, "G__platformMacro: calling Reflex::TypedefTypeBuilder for 'macro$'\n");
-      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("macro$", ::Reflex::PointerBuilder(::Reflex::ConstBuilder(::Reflex::Type::ByName("char"))), 'j'); // type 'j'
+      ::Reflex::Type result = ::Reflex::TypedefTypeBuilder("macro$", ::Reflex::PointerBuilder(::Reflex::ConstBuilder(::Reflex::Type::ByName("char"))), (Reflex::REPRESTYPE) 'j'); // type 'j'
       G__RflxProperties* prop = G__get_properties(result);
       if (prop) {
          //fprintf(stderr, "G__platformMacro: registering typedef '%s'\n", result.Name(Reflex::QUALIFIED).c_str());

@@ -56,7 +56,7 @@ namespace Reflex {
          TYPE                   typeTyp,
          const std::type_info & ti,
          const Type &           finalType = Dummy::Type(),
-         const char cintType = '\0');
+         REPRESTYPE represType = REPRES_NOTYPE);
 
 
       /** destructor */
@@ -738,7 +738,7 @@ namespace Reflex {
        */
       virtual void UnhideName() const;
       
-      char CintType() const { return fCintType; }
+      REPRESTYPE RepresType() const { return fRepresType; }
 
    protected:
 
@@ -773,7 +773,7 @@ namespace Reflex {
 
    private:
 
-      char fCintType;
+      REPRESTYPE fRepresType;
 
       /**
       * The Scope of the Type

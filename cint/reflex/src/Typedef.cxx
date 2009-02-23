@@ -23,9 +23,9 @@ Reflex::Typedef::Typedef( const char * typ,
                                 const Type & typedefType,
                                 TYPE typeTyp,
                                 const Type & finalType,
-                                const char cintType )
+                                REPRESTYPE represType )
 //-------------------------------------------------------------------------------
-      : TypeBase(typ, typedefType.SizeOf(), typeTyp, typeid(UnknownType), finalType, cintType ? cintType : (((typedefType.CintType() == 'y') && typ && strchr(typ, '(')) ? '1' : typedefType.CintType())), fTypedefType(typedefType)
+      : TypeBase(typ, typedefType.SizeOf(), typeTyp, typeid(UnknownType), finalType, represType ? represType : (REPRESTYPE)(((typedefType.RepresType() == 'y') && typ && strchr(typ, '(')) ? (REPRESTYPE)'1' : typedefType.RepresType())), fTypedefType(typedefType)
 { 
    // Construct typedef info.
 

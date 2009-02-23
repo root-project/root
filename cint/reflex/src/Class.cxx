@@ -40,7 +40,7 @@ Reflex::Class::Class(const char *           typ,
                      TYPE                   classType)
 //-------------------------------------------------------------------------------
 // Construct a Class instance.
-      : TypeBase(typ, size, classType, ti, Type(), (typ && (typ[0] == 'F') && !strcmp(typ, "FILE")) ? 'e' : 'u'),
+    : TypeBase(typ, size, classType, ti, Type(), (typ && (typ[0] == 'F') && !strcmp(typ, "FILE")) ? (REPRESTYPE)'e' : REPRES_STRUCT),
       ScopeBase(typ, classType),
       fModifiers(modifiers),
       fAllBases(0),
