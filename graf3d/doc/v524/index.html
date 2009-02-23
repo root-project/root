@@ -1,7 +1,60 @@
+<!-- DOCTYPE HTML SYSTEM><html><head><title>graf3d</title></head><body -->
+
 <br> 
 <hr> 
 <a name="graf3d"></a> 
 <h3>OpenGL</h3>
 
-<h4>GL-viewer</h4>
-It is now possible to draw an histogram with the "GLBOX" in the GL-viewer.
+<ul>
+
+<li> It is now possible to draw a histogram with the "GLBOX" in the
+GL-viewer.
+
+<li> New class <tt>TGLAnnotation</tt> - it allows display of
+annotation-text on top of displayed objects.
+
+The annotation can be created from the <tt>TGLViewer</tt> editor
+("Guides" tab). After that it can be dragged around the screen, edited
+or closed.
+
+<li> <tt>TGLAxisPainter</tt> - reimplemented to completely separate
+label and tick-mark positioning code from the rendering itself.
+
+<li> <tt>TGLSAViewer</tt> - when exporting an image properly take into
+account image extension if it was typed by the user.
+
+<li> <tt>TGLFont</tt> now uses the same font-naming scheme as the rest
+of ROOT (had to specify font-file names before).
+
+</ul>
+
+
+<!------------------------------------------------------------------------------>
+
+
+<br>
+<hr>
+<h3>Eve</h3>
+
+<ul>
+
+<li> <tt>TEveElement</tt> - add context-menu functions allowing the
+source-object to be printed, dumped or exported to CINT.
+
+<li> <tt>TEveTrack</tt> - added flag for locking of current
+track-points - the track will not be re-extrapolated automatically
+even when the extrapolation parameters are changed.
+
+<li> <tt>TEveTrack</tt> - removed ALICE specific <tt>ImportXyzz()</tt>
+functions for loading of kinematics, hits and clusters associated with
+a track. These were calling macros that were not available in ROOT.
+
+<li> Several improvements in rendering of coordinate axes
+in <tt>TEveCaloLego</tt> and <tt>TEveProjectionAxes</tt>.
+
+<li> New class <tt>TEveJetCone</tt> for display of jet-cones clipped
+to the calorimeter's inner surface.
+
+</ul>
+
+<!-- /body></html -->
