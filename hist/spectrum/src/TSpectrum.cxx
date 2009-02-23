@@ -359,1037 +359,442 @@ void TSpectrum::SetResolution(Float_t resolution)
 
 
 //_____________________________________________________________________________
-//_____________________________________________________________________________
-    
-/////////////////////NEW FUNCTIONS  JANUARY 2006
 const char *TSpectrum::Background(float *spectrum, int ssize,
                                           int numberIterations,
                                           int direction, int filterOrder,
                                           bool smoothing,int smoothWindow,
                                           bool compton)
 {   
-/////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - GENERAL FUNCTION 
-//                                                                          
-//        This function calculates background spectrum from source spectrum.
-//        The result is placed in the vector pointed by spe1945ctrum pointer.   
-//                                                                         
-//        Function parameters:                                             
-//        spectrum-pointer to the vector of source spectrum                
-//        ssize-length of the spectrum vector                              
-//        numberIterations-maximal width of clipping window,               
-//        direction- direction of change of clipping window               
-//               - possible values=kBackIncreasingWindow                  
-//                                 kBackDecreasingWindow                  
-//        filterOrder-order of clipping filter,                           
-//                  -possible values=kBackOrder2                          
-//                                   kBackOrder4                          
-//                                   kBackOrder6                           
-//                                   kBackOrder8                           
-//        smoothing- logical variable whether the smoothing operation      
-//               in the estimation of background will be included           
-//             - possible values=kFALSE                      
-//                               kTRUE                      
-//        smoothWindow-width of smoothing window,          
-//                  -possible values=kBackSmoothing3                        
-//                                   kBackSmoothing5                       
-//                                   kBackSmoothing7                       
-//                                   kBackSmoothing9                        
-//                                   kBackSmoothing11                       
-//                                   kBackSmoothing13                       
-//                                   kBackSmoothing15                        
-//         compton- logical variable whether the estimation of Compton edge
-//                  will be included                                         
-//             - possible values=kFALSE                        
-//                               kTRUE                        
-//                                                                        
-///////////////////////////////////////////////////////////////////////////////
-//
-//Begin_Html <!--
-/* -->
+/* Begin_Html
+This function calculates background spectrum from source spectrum.
+The result is placed in the vector pointed by spe1945ctrum pointer.   
+The goal is to separate the useful information (peaks) from useless
+information (background).
 
-<div class=Section1>
+<ul>
+<li> method is based on Sensitive Nonlinear Iterative Peak (SNIP) clipping algorithm.
+<li> new value in the channel "i" is calculated
+</ul>
 
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:20.0pt'>Background
-estimation</span></b></p>
+<img width=486 height=72 src="gif/TSpectrum_Background.gif">
 
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
+where p = 1, 2, ..., numberIterations. In fact it represents second order difference
+filter (-1,2,-1).
 
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>Goal:
-Separation of useful information (peaks) from useless information (background)</span></i><span
-style='font-size:18.0pt'> </span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-indent:-18.0pt'><span
-style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>method is based on Sensitive
-Nonlinear Iterative Peak (SNIP) clipping algorithm</span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-indent:-18.0pt'><span
-style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'> new value in the channel “i” is
-calculated</span></p>
-
-<p class=MsoNormal>
-
-<table cellpadding=0 cellspacing=0 align=left>
- <tr>
-  <td width=53 height=23></td>
- </tr>
- <tr>
-  <td></td>
-  <td><img width=486 height=72 src="gif/TSpectrum_Background.gif"></td>
- </tr>
-</table>
-
-<span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<br clear=ALL>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>where
-p = 1, 2, …, numberIterations. In fact it represents second order difference
-filter (-1,2,-1).</span></p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Function:</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:18.0pt'>const
-<a href="http://root.cern.ch/root/html/ListOtransTypes.html#char" target="_parent">char</a>*
-<a
-href="http://root.cern.ch/root/html/src/TSpectrum.cxx.html#TSpectrum:Background1General"
-target="_parent">Background</a>(<a
-href="http://root.cern.ch/root/html/ListOtransTypes.html#float" target="_parent">float</a>
-*spectrum, <a href="http://root.cern.ch/root/html/ListOtransTypes.html#int"
-target="_parent">int</a> ssize, <a
-href="http://root.cern.ch/root/html/ListOtransTypes.html#int" target="_parent">int</a>
-numberIterations, <a href="http://root.cern.ch/root/html/ListOtransTypes.html#int"
-target="_parent">int</a> direction, <a
-href="http://root.cern.ch/root/html/ListOtransTypes.html#int" target="_parent">int</a>
-filterOrder,  <a href="http://root.cern.ch/root/html/ListOtransTypes.html#bool"
-target="_parent">bool</a> smoothing,  <a
-href="http://root.cern.ch/root/html/ListOtransTypes.html#int" target="_parent">int</a>
-smoothingWindow, <a href="http://root.cern.ch/root/html/ListOtransTypes.html#bool"
-target="_parent">bool</a> compton)  </span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>This
-function calculates background spectrum from the source spectrum.  The result
-is placed in the vector pointed by spectrum pointer.  One can also change the
+One can also change the
 direction of the change of the clipping window, the order of the clipping
 filter, to include smoothing, to set width of smoothing window and to include
-the estimation of Compton edges.</span><span style='font-size:18.0pt'> </span><span
-style='font-size:16.0pt'>On successful completion it returns 0. On error it
-returns pointer to the string describing error.</span></p>
+the estimation of Compton edges. On successful completion it returns 0. On error it
+returns pointer to the string describing error.
 
-<p class=MsoNormal>&nbsp;</p>
+<h4>Parameters:</h4>
+<ul>
+<li> spectrum: pointer to the vector of source spectrum                 
+<li> ssize: length of the spectrum vector
+<li> numberIterations: maximal width of clipping window,
+<li> direction:  direction of change of clipping window.
+     Possible values: kBackIncreasingWindow, kBackDecreasingWindow                     
+<li> filterOrder: order of clipping filter.                             
+     Possible values: kBackOrder2, kBackOrder4, kBackOrder6, kBackOrder8
+<li> smoothing: logical variable whether the smoothing operation in the estimation of
+     background will be included.
+     Possible values: kFALSE, kTRUE                        
+<li> smoothWindow: width of smoothing window.
+     Possible values: kBackSmoothing3, kBackSmoothing5, kBackSmoothing7, kBackSmoothing9
+     kBackSmoothing11, kBackSmoothing13, kBackSmoothing15.
 
-<p class=MsoNormal><i><span style='font-size:16.0pt;color:red'>Parameters:</span></i></p>
+<li> compton: logical variable whether the estimation of Compton edge will be included.
+     Possible values: kFALSE, kTRUE.
+</ul>
 
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>spectrum</span></b>-pointer
-to the vector of source spectrum                  </p>
 
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>ssize</span></b>-length
-of the spectrum vector                                 </p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>numberIterations</span></b>-maximal
-width of clipping window,                                 </p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>direction</span></b>-
-direction of change of clipping window                  </p>
-
-<p class=MsoNormal>               - possible
-values=kBackIncreasingWindow                      </p>
-
-<p class=MsoNormal>                                            kBackDecreasingWindow                     
-</p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>filterOrder</span></b>-order
-of clipping filter,                              </p>
-
-<p class=MsoNormal>                  -possible
-values=kBackOrder2                              </p>
-
-<p class=MsoNormal>                                              kBackOrder4                             
-</p>
-
-<p class=MsoNormal>                                              kBackOrder6                             
-</p>
-
-<p class=MsoNormal>                                              kBackOrder8                            
-</p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>smoothing</span></b>-
-logical variable whether the smoothing operation in the estimation of </p>
-
-<p class=MsoNormal>               background will be included              </p>
-
-<p class=MsoNormal>             - possible
-values=kFALSE                        </p>
-
-<p class=MsoNormal>                                          kTRUE          
-             </p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>smoothWindow</span></b>-width
-of smoothing window,                            </p>
-
-<p class=MsoNormal>                  -possible
-values=kBackSmoothing3                          </p>
-
-<p class=MsoNormal>                                             kBackSmoothing5                         
-</p>
-
-<p class=MsoNormal>                                             kBackSmoothing7                         
-</p>
-
-<p class=MsoNormal>                                             kBackSmoothing9                         
-</p>
-
-<p class=MsoNormal>                                             kBackSmoothing11                     
-   </p>
-
-<p class=MsoNormal>                                             kBackSmoothing13                        
-</p>
-
-<p class=MsoNormal>                                             kBackSmoothing15                        
-</p>
-
-<p class=MsoNormal>        <b><span style='font-size:14.0pt'>compton</span></b>-
-logical variable whether the estimation of Compton edge   will be
-included                                           </p>
-
-<p class=MsoNormal>             - possible
-values=kFALSE                          </p>
-
-<p class=MsoNormal>                                          kTRUE                          
-</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><i><span style='font-size:18.0pt'>References:</span></i></b></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[1] 
-C. G Ryan et al.: SNIP, a statistics-sensitive background treatment for the
+<h4>References:</h4>
+<pre>
+[1] C. G Ryan et al.: SNIP, a statistics-sensitive background treatment for the
 quantitative analysis of PIXE spectra in geoscience applications. NIM, B34
-(1988), 396-402.</span></p>
+(1988), 396-402.
 
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[2]
-</span><span lang=SK style='font-size:16.0pt'> M. Morhá&#269;, J. Kliman, V.
-Matoušek, M. Veselský, I. Turzo</span><span style='font-size:16.0pt'>.:
+[2] M. Morhá&#269;, J. Kliman, V. Matoušek, M. Veselský, I. Turzo:
 Background elimination methods for multidimensional gamma-ray spectra. NIM,
-A401 (1997) 113-132.</span></p>
+A401 (1997) 113-132.
 
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[3]
-D. D. Burgess, R. J. Tervo: Background estimation for gamma-ray spectroscopy.
-NIM 214 (1983), 431-434. </span></p>
+[3] D. D. Burgess, R. J. Tervo: Background estimation for gamma-ray spectroscopy.
+NIM 214 (1983), 431-434.
+</pre>
 
-</div>
+Example 1 script Background_incr.c:
 
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section2>
+<img width=601 height=407 src="gif/TSpectrum_Background_incr.jpg">
 
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 1– script
-Background_incr.c :</span></i></p>
+Figure 1 Example of the estimation of background for number of iterations=6.
+Original spectrum is shown in black color, estimated background in red color.
+<p>
+Script:
+<pre>
+// Example to illustrate the background estimator (class TSpectrum).
+// To execute this example, do
+// root > .x Background_incr.C
 
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_incr.jpg"></p>
+#include <TSpectrum>
 
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-1 Example of the estimation of background for number of iterations=6. Original
-spectrum is shown in black color, estimated background in red color.</span></b></p>
+void Background_incr() {
+   Int_t i;
+   Double_t nbins = 256;
+   Double_t xmin  = 0;
+   Double_t xmax  = (Double_t)nbins;
+   Float_t * source = new float[nbins];
+   TH1F *back = new TH1F("back","",nbins,xmin,xmax);
+   TH1F *d = new TH1F("d","",nbins,xmin,xmax);     
+   TFile *f = new TFile("spectra\\TSpectrum.root");
+   back=(TH1F*) f->Get("back1;1");
+   TCanvas *Background = gROOT->GetListOfCanvases()->FindObject("Background");
+   if (!Background) Background =
+     new TCanvas("Background","Estimation of background with increasing window",10,10,1000,700);
+   back->Draw("L");
+   TSpectrum *s = new TSpectrum();
+   for (i = 0; i < nbins; i++) source[i]=back->GetBinContent(i + 1);
+   s->Background(source,nbins,6,kBackIncreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);
+   for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);  
+   d->SetLineColor(kRed);
+   d->Draw("SAME L");  
+}
+</pre>
 
-<p class=MsoNormal><b><span style='font-size:14.0pt;color:green'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:green'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_incr.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt; </p>
-
-<p class=MsoNormal>void Background_incr() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 256;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *back = new
-TH1F(&quot;back&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d = new
-TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   back=(TH1F*) f-&gt;Get(&quot;back1;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Background = gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Background&quot;);</p>
-
-<p class=MsoNormal>   if (!Background) Background = new
-TCanvas(&quot;Background&quot;,&quot;Estimation of background with increasing
-window&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   back-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) source[i]=back-&gt;GetBinContent(i
-+ 1); </p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,6,kBackIncreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   }</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section3>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 2 – script
-Background_decr.c :</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>In
-Figure 1. one can notice that at the edges of the peaks the estimated
+Example 2 script Background_decr.c: 
+<p>
+In Figure 1. one can notice that at the edges of the peaks the estimated
 background goes under the peaks. An alternative approach is to decrease the
 clipping window from a given value numberIterations to the value of one, which
-is presented in this example. </span></p>
+is presented in this example.
 
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_decr.jpg"></p>
+<img width=601 height=407 src="gif/TSpectrum_Background_decr.jpg">
 
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-2 Example of the estimation of background for numberIterations=6 using
+Figure 2 Example of the estimation of background for numberIterations=6 using
 decreasing clipping window algorithm. Original spectrum is shown in black
-color, estimated background in red color.</span></b></p>
+color, estimated background in red color.
+<p>
+Script:
 
-<p class=MsoNormal>&nbsp;</p>
+<pre>
+// Example to illustrate the background estimator (class TSpectrum).
+// To execute this example, do
+// root > .x Background_decr.C
 
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+#include <TSpectrum>  
 
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum).</p>
+void Background_decr() {
+   Int_t i;
+   Double_t nbins = 256;
+   Double_t xmin  = 0;
+   Double_t xmax  = (Double_t)nbins;
+   Float_t * source = new float[nbins];
+   TH1F *back = new TH1F("back","",nbins,xmin,xmax);
+   TH1F *d = new TH1F("d","",nbins,xmin,xmax);     
+   TFile *f = new TFile("spectra\\TSpectrum.root");
+   back=(TH1F*) f->Get("back1;1");
+   TCanvas *Background = gROOT->GetListOfCanvases()->FindObject("Background");
+   if (!Background) Background =
+     new TCanvas("Background","Estimation of background with decreasing window",10,10,1000,700);
+   back->Draw("L");
+   TSpectrum *s = new TSpectrum();
+   for (i = 0; i < nbins; i++) source[i]=back->GetBinContent(i + 1);
+   s->Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);
+   for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);  
+   d->SetLineColor(kRed);
+   d->Draw("SAME L");  
+}
+</pre>
 
-<p class=MsoNormal>// To execute this example, do</p>
+Example 3 script Background_width.c:
+<p>
+The question is how to choose the width of the clipping window, i.e.,  numberIterations
+parameter. The influence of this parameter on the estimated background is illustrated in Figure 3.
 
-<p class=MsoNormal>// root &gt; .x Background_decr.C</p>
+<img width=601 height=407 src="gif/TSpectrum_Background_width.jpg">
 
-<p class=MsoNormal>#include &lt;TSpectrum&gt;   </p>
-
-<p class=MsoNormal>void Background_decr() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 256;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *back = new
-TH1F(&quot;back&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d = new
-TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
-
-<p class=MsoNormal>   TFile *f = new TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   back=(TH1F*) f-&gt;Get(&quot;back1;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Background =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Background&quot;);</p>
-
-<p class=MsoNormal>   if (!Background) Background = new
-TCanvas(&quot;Background&quot;,&quot;Estimation of background with decreasing
-window&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   back-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=back-&gt;GetBinContent(i + 1); </p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   }</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section4>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 3 – script
-Background_width.c :</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>the question is how to choose the
-width of the clipping window, i.e.,  numberIterations   parameter. The
-influence of this parameter on the estimated background is illustrated in
-Figure 3.</span></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_width.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-3 Example of the influence of clipping window width on the estimated background
+Figure 3 Example of the influence of clipping window width on the estimated background
 for numberIterations=4 (red line), 6 (blue line) 8 (green line) using
-decreasing clipping window algorithm.</span></b></p>
+decreasing clipping window algorithm.
 
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><i><span style='font-size:18.0pt'>in general one should set this
-parameter so that the value 2*numberIterations+1 was greater than the widths
-of preserved objects (peaks).</span></i></p>
+<p>
+in general one should set this parameter so that the value 2*numberIterations+1 was greater
+than the widths of preserved objects (peaks).
 
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+<p>
+Script:
 
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt;
-color:#339966'>Script:</span></b></p>
+<pre>
+// Example to illustrate the influence of the clipping window width on the estimated background
+// To execute this example, do
+// root > .x Background_width.C
 
-<p class=MsoNormal>// Example to illustrate the influence of the clipping
-window width on the estimated background</p>
+#include <TSpectrum>
 
-<p class=MsoNormal>// To execute this example, do</p>
+void Background_width() {
+   Int_t i;
+   Double_t nbins = 256;
+   Double_t xmin  = 0;
+   Double_t xmax  = (Double_t)nbins;
+   Float_t * source = new float[nbins];
+   TH1F *h = new TH1F("h","",nbins,xmin,xmax);
+   TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);     
+   TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);        
+   TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);        
+   TFile *f = new TFile("spectra\\TSpectrum.root");
+   h=(TH1F*) f->Get("back1;1");     
+   TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
+   if (!background) background = new TCanvas("background",
+   "Influence of clipping window width on the estimated background",10,10,1000,700);
+   h->Draw("L");
+   TSpectrum *s = new TSpectrum();
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);  
+   s->Background(source,nbins,4,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);
+   for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,source[i]);  
+   d1->SetLineColor(kRed);
+   d1->Draw("SAME L");  
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+   s->Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+   for (i = 0; i < nbins; i++) d2->SetBinContent(i + 1,source[i]);  
+   d2->SetLineColor(kBlue);
+   d2->Draw("SAME L");  
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+   s->Background(source,nbins,8,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+   for (i = 0; i < nbins; i++) d3->SetBinContent(i + 1,source[i]);  
+   d3->SetLineColor(kGreen);
+   d3->Draw("SAME L");        
+}
+</pre>
 
-<p class=MsoNormal>// root &gt; .x Background_width.C</p>
+Example 4 script Background_width2.c:
+<p>
+another example for very complex spectrum is given in Figure 4.
 
-<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
+<img width=601 height=407 src="gif/TSpectrum_Background_width2.jpg">
 
-<p class=MsoNormal>void Background_width() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 256;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d1 = new
-TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
-
-<p class=MsoNormal>   TH1F *d2 = new
-TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TH1F *d3 = new
-TH1F(&quot;d3&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back1;1&quot;);      </p>
-
-<p class=MsoNormal>   TCanvas *background = gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
-
-<p class=MsoNormal>   if (!background) background = new
-TCanvas(&quot;background&quot;,&quot;Influence of clipping window width on the
-estimated background&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) source[i]=h-&gt;GetBinContent(i
-+ 1);   </p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,4,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
-
-<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,8,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d3-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d3-&gt;SetLineColor(kGreen);</p>
-
-<p class=MsoNormal>   d3-&gt;Draw(&quot;SAME L&quot;);         </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section5>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 4 – script
-Background_width2.c :</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-indent:-18.0pt'><span
-style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>another example for very complex
-spectrum is given in Figure 4.</span></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_width2.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-4 Example of the influence of clipping window width on the estimated background
+Figure 4 Example of the influence of clipping window width on the estimated background
 for numberIterations=10 (red line), 20 (blue line), 30 (green line) and 40
-(magenta line) using decreasing clipping window algorithm.</span></b></p>
+(magenta line) using decreasing clipping window algorithm.
 
-<p class=MsoNormal>&nbsp;</p>
+<p>
+Script:
 
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+<pre>
+// Example to illustrate the influence of the clipping window width on the estimated background
+// To execute this example, do
+// root > .x Background_width2.C
 
-<p class=MsoNormal>// Example to illustrate the influence of the clipping
-window width on the estimated background</p>
+#include <TSpectrum> 
 
-<p class=MsoNormal>// To execute this example, do</p>
+void Background_width2() {
+   Int_t i;
+   Double_t nbins = 4096;
+   Double_t xmin  = 0;
+   Double_t xmax  = (Double_t)4096;
+   Float_t * source = new float[nbins];
+   TH1F *h = new TH1F("h","",nbins,xmin,xmax);
+   TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);     
+   TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);        
+   TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);        
+   TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);           
+   TFile *f = new TFile("spectra\\TSpectrum.root");
+   h=(TH1F*) f->Get("back2;1");  
+   TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
+   if (!background) background = new TCanvas("background",
+   "Influence of clipping window width on the estimated background",10,10,1000,700);
+   h->SetAxisRange(0,1000);
+   h->SetMaximum(20000);
+   h->Draw("L");
+   TSpectrum *s = new TSpectrum();
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);  
+   s->Background(source,nbins,10,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);       
+   for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,source[i]);  
+   d1->SetLineColor(kRed);
+   d1->Draw("SAME L");  
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+   s->Background(source,nbins,20,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+   for (i = 0; i < nbins; i++) d2->SetBinContent(i + 1,source[i]);  
+   d2->SetLineColor(kBlue);
+   d2->Draw("SAME L");  
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+   s->Background(source,nbins,30,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+   for (i = 0; i < nbins; i++) d3->SetBinContent(i + 1,source[i]);  
+   d3->SetLineColor(kGreen);
+   d3->Draw("SAME L");        
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+   s->Background(source,nbins,10,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+   for (i = 0; i < nbins; i++) d4->SetBinContent(i + 1,source[i]);  
+   d4->SetLineColor(kMagenta);
+   d4->Draw("SAME L");           
+}
+</pre>
 
-<p class=MsoNormal>// root &gt; .x Background_width2.C</p>
+Example 5 script Background_order.c:
+<p>
+Second order difference filter removes linear (quasi-linear) background and preserves
+symmetrical peaks. However if the shape of the background is more complex one can employ
+higher-order clipping filters (see example in Figure 5)
 
-<p class=MsoNormal>#include &lt;TSpectrum&gt;  </p>
+<img width=601 height=407 src="gif/TSpectrum_Background_order.jpg">
 
-<p class=MsoNormal>void Background_width2() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 4096;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)4096;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d1 = new TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);     
-</p>
-
-<p class=MsoNormal>   TH1F *d2 = new
-TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TH1F *d3 = new
-TH1F(&quot;d3&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TH1F *d4 = new
-TH1F(&quot;d4&quot;,&quot;&quot;,nbins,xmin,xmax);            </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back2;1&quot;);   </p>
-
-<p class=MsoNormal>   TCanvas *background =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
-
-<p class=MsoNormal>   if (!background) background = new
-TCanvas(&quot;background&quot;,&quot;Influence of clipping window width on the
-estimated background&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   h-&gt;SetAxisRange(0,1000);</p>
-
-<p class=MsoNormal>   h-&gt;SetMaximum(20000);</p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,10,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-    </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,20,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
-
-<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,30,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d3-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d3-&gt;SetLineColor(kGreen);</p>
-
-<p class=MsoNormal>   d3-&gt;Draw(&quot;SAME L&quot;);         </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,10,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d4-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d4-&gt;SetLineColor(kMagenta);</p>
-
-<p class=MsoNormal>   d4-&gt;Draw(&quot;SAME L&quot;);            </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section6>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 5 – script
-Background_order.c :</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>second order difference filter
-removes linear (quasi-linear) background and preserves symmetrical peaks.</span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>however if the shape of the
-background is more complex one can employ higher-order clipping filters (see
-example in Figure 5)</span></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_order.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-5 Example of the influence of clipping filter difference order on the estimated
+Figure 5 Example of the influence of clipping filter difference order on the estimated
 background for fNnumberIterations=40, 2-nd order red line, 4-th order blue
 line, 6-th order green line and 8-th order magenta line, and using decreasing
-clipping window algorithm.</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the influence of the clipping
-filter difference order on the estimated background</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_order.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Background_order() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 4096;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)4096;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d1 = new
-TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
-
-<p class=MsoNormal>   TH1F *d2 = new
-TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TH1F *d3 = new
-TH1F(&quot;d3&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TH1F *d4 = new
-TH1F(&quot;d4&quot;,&quot;&quot;,nbins,xmin,xmax);            </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back2;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *background =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
-
-<p class=MsoNormal>   if (!background) background = new
-TCanvas(&quot;background&quot;,&quot;Influence of clipping filter difference
-order on the estimated background&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   h-&gt;SetAxisRange(1220,1460);</p>
-
-<p class=MsoNormal>   h-&gt;SetMaximum(11000);</p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-    </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder4,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
-
-<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder6,kFALSE,kBackSmoothing3,kFALSE);     
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d3-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d3-&gt;SetLineColor(kGreen);</p>
-
-<p class=MsoNormal>   d3-&gt;Draw(&quot;SAME L&quot;);         </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder8,kFALSE,kBackSmoothing3,kFALSE);     
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d4-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d4-&gt;SetLineColor(kMagenta);</p>
-
-<p class=MsoNormal>   d4-&gt;Draw(&quot;SAME L&quot;);            </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-</div>
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section7>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 6 – script
-Background_smooth.c :</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>the estimate of the background can
-be influenced by noise present in the spectrum. We proposed  the algorithm of
-the background estimate with simultaneous smoothing</span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>in the original algorithm without
-smoothing, the estimated background snatches the lower spikes in the noise.
-Consequently, the areas of peaks are biased by this error. </span></p>
-
-<p class=MsoNormal style='text-indent:5.7pt'><img width=554 height=104
-src="gif/TSpectrum_Background_smooth1.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-7 Principle of background estimation algorithm with  simultaneous smoothing</span></b></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_smooth2.jpg"></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt'>Figure 8 Illustration of
-non-smoothing (red line) and smoothing algorithm of background estimation (blue
-line).</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum) including Compton edges.</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_smooth.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Background_smooth() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 4096;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d1 = new TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d2 = new
-TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);                  </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back4;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *background =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
-
-<p class=MsoNormal>   if (!background) background = new
-TCanvas(&quot;background&quot;,&quot;Estimation of background with
-noise&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   h-&gt;SetAxisRange(3460,3830);   </p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);     
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kTRUE,kBackSmoothing3,kFALSE);     
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
-
-<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);      </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-//Begin_Html <!--
-/* -->
-<div class=Section8>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 8 – script
-Background_compton.c :</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>sometimes it is necessary to
-include also the Compton edges into the estimate of the background. In Figure 8
-we present the example of the synthetic spectrum with Compton edges. </span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>the background was estimated using
-the 8-th order filter with the estimation of the Compton edges using decreasing
-clipping window algorithm (numberIterations=10) with smoothing (
-smoothingWindow=5).</span></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_compton.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-8 Example of the estimate of the background with Compton edges (red line) for
+clipping window algorithm.
+<p>
+Script:
+<pre>
+// Example to illustrate the influence of the clipping filter difference order on the estimated background
+// To execute this example, do
+// root > .x Background_order.C
+
+#include <TSpectrum>
+
+void Background_order() {
+   Int_t i;
+   Double_t nbins = 4096;
+   Double_t xmin  = 0;
+   Double_t xmax  = (Double_t)4096;
+   Float_t * source = new float[nbins];
+   TH1F *h = new TH1F("h","",nbins,xmin,xmax);
+   TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);     
+   TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);        
+   TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);        
+   TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);           
+   TFile *f = new TFile("spectra\\TSpectrum.root");
+   h=(TH1F*) f->Get("back2;1");
+   TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
+   if (!background) background = new TCanvas("background",
+   "Influence of clipping filter difference order on the estimated background",10,10,1000,700);
+   h->SetAxisRange(1220,1460);
+   h->SetMaximum(11000);
+   h->Draw("L");
+   TSpectrum *s = new TSpectrum();
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);  
+   s->Background(source,nbins,40,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);       
+   for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,source[i]);  
+   d1->SetLineColor(kRed);
+   d1->Draw("SAME L");  
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+   s->Background(source,nbins,40,kBackDecreasingWindow,kBackOrder4,kFALSE,kBackSmoothing3,kFALSE);  
+   for (i = 0; i < nbins; i++) d2->SetBinContent(i + 1,source[i]);  
+   d2->SetLineColor(kBlue);
+   d2->Draw("SAME L");  
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+   s->Background(source,nbins,40,kBackDecreasingWindow,kBackOrder6,kFALSE,kBackSmoothing3,kFALSE);     
+   for (i = 0; i < nbins; i++) d3->SetBinContent(i + 1,source[i]);  
+   d3->SetLineColor(kGreen);
+   d3->Draw("SAME L");         
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+   s->Background(source,nbins,40,kBackDecreasingWindow,kBackOrder8,kFALSE,kBackSmoothing3,kFALSE);     
+   for (i = 0; i < nbins; i++) d4->SetBinContent(i + 1,source[i]);  
+   d4->SetLineColor(kMagenta);
+   d4->Draw("SAME L");           
+}
+</pre>
+
+Example 6 script Background_smooth.c:
+<p>
+The estimate of the background can be influenced by noise present in the spectrum.
+We proposed the algorithm of the background estimate with simultaneous smoothing.
+In the original algorithm without smoothing, the estimated background snatches the
+lower spikes in the noise. Consequently, the areas of peaks are biased by this error.
+
+<img width=554 height=104 src="gif/TSpectrum_Background_smooth1.jpg">
+
+Figure 7 Principle of background estimation algorithm with simultaneous smoothing.
+
+<img width=601 height=407 src="gif/TSpectrum_Background_smooth2.jpg">
+
+Figure 8 Illustration of non-smoothing (red line) and smoothing algorithm of
+background estimation (blue line).
+
+<p>
+
+Script:
+
+<pre>
+// Example to illustrate the background estimator (class TSpectrum) including Compton edges.
+// To execute this example, do
+// root > .x Background_smooth.C
+
+#include <TSpectrum>
+
+void Background_smooth() {
+   Int_t i;
+   Double_t nbins = 4096;
+   Double_t xmin  = 0;
+   Double_t xmax  = (Double_t)nbins;
+   Float_t * source = new float[nbins];
+   TH1F *h = new TH1F("h","",nbins,xmin,xmax);
+   TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
+   TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);                 
+   TFile *f = new TFile("spectra\\TSpectrum.root");
+   h=(TH1F*) f->Get("back4;1");
+   TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
+   if (!background) background = new TCanvas("background","Estimation of background with noise",10,10,1000,700);
+   h->SetAxisRange(3460,3830);  
+   h->Draw("L");
+   TSpectrum *s = new TSpectrum();
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);  
+   s->Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);     
+   for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,source[i]);  
+   d1->SetLineColor(kRed);
+   d1->Draw("SAME L");
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);  
+   s->Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kTRUE,kBackSmoothing3,kFALSE);     
+   for (i = 0; i < nbins; i++) d2->SetBinContent(i + 1,source[i]);  
+   d2->SetLineColor(kBlue);
+   d2->Draw("SAME L");     
+}
+</pre>
+
+Example 8 script Background_compton.c:
+<p>
+Sometimes it is necessary to include also the Compton edges into the estimate of
+the background. In Figure 8 we present the example of the synthetic spectrum with
+Compton edges. The background was estimated using the 8-th order filter with the
+estimation of the Compton edges using decreasing
+clipping window algorithm (numberIterations=10) with smoothing (smoothingWindow=5).
+
+<img width=601 height=407 src="gif/TSpectrum_Background_compton.jpg">
+
+Figure 8 Example of the estimate of the background with Compton edges (red line) for
 numberIterations=10, 8-th order difference filter, using decreasing clipping
-window algorithm and smoothing (smoothingWindow=5).</span></b></p>
+window algorithm and smoothing (smoothingWindow=5).
+<p>
+Script:
 
-<p class=MsoNormal>&nbsp;</p>
+<pre>
+// Example to illustrate the background estimator (class TSpectrum) including Compton edges.
+// To execute this example, do
+// root > .x Background_compton.C
 
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+#include <TSpectrum>
 
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum) including Compton edges.</p>
+void Background_compton() {
+   Int_t i;
+   Double_t nbins = 512;
+   Double_t xmin  = 0;
+   Double_t xmax  = (Double_t)nbins;
+   Float_t * source = new float[nbins];
+   TH1F *h = new TH1F("h","",nbins,xmin,xmax);
+   TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);     
+   TFile *f = new TFile("spectra\\TSpectrum.root");
+   h=(TH1F*) f->Get("back3;1");
+   TCanvas *background = gROOT->GetListOfCanvases()->FindObject("background");
+   if (!background) background = new TCanvas("background",
+   "Estimation of background with Compton edges under peaks",10,10,1000,700);
+   h->Draw("L");
+   TSpectrum *s = new TSpectrum();
+   for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);  
+   s->Background(source,nbins,10,kBackDecreasingWindow,kBackOrder8,kTRUE,kBackSmoothing5,,kTRUE);     
+   for (i = 0; i < nbins; i++) d1->SetBinContent(i + 1,source[i]);  
+   d1->SetLineColor(kRed);
+   d1->Draw("SAME L");  
+}
+</pre>
 
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_compton.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Background_compton() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 512;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d1 = new
-TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back3;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *background =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
-
-<p class=MsoNormal>   if (!background) background = new
-TCanvas(&quot;background&quot;,&quot;Estimation of background with Compton edges under peaks&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,10,kBackDecreasingWindow,kBackOrder8,kTRUE,kBackSmoothing5,,kTRUE);     
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
+End_Html */
 
    int i, j, w, bw, b1, b2, priz;
    float a, b, c, d, e, yb1, yb2, ai, av, men, b4, c4, d4, e4, b6, c6, d6, e6, f6, g6, b8, c8, d8, e8, f8, g8, h8, i8;
