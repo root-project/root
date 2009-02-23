@@ -952,7 +952,7 @@ TMatrixD *TUnfold::InvertMSparse(TMatrixDSparse const &A) {
    const Int_t *CAschurBDinv_col=CAschurBDinv->GetColIndexArray();
    const Double_t *CAschurBDinv_data=CAschurBDinv->GetMatrixArray();
    for(Int_t row=0;row<CAschurBDinv->GetNrows();row++) {
-      bool has_diagonal=false;
+//      bool has_diagonal=false;
       for(Int_t i=CAschurBDinv_row[row];i<CAschurBDinv_row[row+1];i++) {
          Int_t col=CAschurBDinv_col[i];
          (*r)(row+nmin,col+nmin)=CAschurBDinv_data[i]*Dinv[row];
@@ -1471,7 +1471,7 @@ Int_t TUnfold::SetInput(TH1 const *input, Double_t const &scaleBias,
     if(oneOverZeroError<=0.0) {
       const Int_t *a_rows=fA->GetRowIndexArray();
       const Int_t *a_cols=fA->GetColIndexArray();
-      const Double_t *a_data=fA->GetMatrixArray();
+      // const Double_t *a_data=fA->GetMatrixArray();
       for (Int_t col = 0; col <mAtV->GetNrows();col++) {
         if(mAtV->GetRowIndexArray()[col]==
            mAtV->GetRowIndexArray()[col+1]) {

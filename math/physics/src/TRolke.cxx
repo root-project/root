@@ -1185,7 +1185,7 @@ bool TRolke::GetLimitsML(Double_t& low, Double_t& high, Int_t& out_x)
    Double_t background = GetBackground();
 
    Int_t loop_x = 0; // this can be optimized if needed. 
-   Int_t loop_max = 1000 + background; //     --||--
+   Int_t loop_max = Int_t(1000 + background); //     --||--
 
    Double_t max = TMath::PoissonI(loop_x, background);
    while (loop_x <= loop_max) {
@@ -1217,7 +1217,7 @@ bool TRolke::GetCriticalNumber(Int_t& ncrit, Int_t maxtry)
    int rolke_ncrit = -1;
    int maxj =maxtry ;
    if(maxtry<1){
-     maxj = 1000 + background; // max value to try
+     maxj = int(1000 + background); // max value to try
    }
    for (j = 0;j < maxj;j++) {
       Int_t rolke_x = j;
