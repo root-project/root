@@ -368,6 +368,8 @@ void load_event()
 
    printf("Loading event %d.\n", esd_event_id);
 
+   gEve->GetViewers()->DeleteAnnotations();
+
    if (gTrackList)
       gTrackList->DestroyElements();
 

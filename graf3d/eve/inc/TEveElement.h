@@ -211,8 +211,12 @@ public:
 
    virtual Int_t GetNItems() const { return fItems.size(); }
 
-   void         SpawnEditor();                  // *MENU*
+   void         SpawnEditor();                // *MENU*
    virtual void ExportToCINT(char* var_name); // *MENU*
+
+   void    DumpSourceObject() const;                       // *MENU*
+   void    PrintSourceObject() const;                      // *MENU*
+   void    ExportSourceObjectToCINT(char* var_name) const; // *MENU*
 
    virtual Bool_t AcceptElement(TEveElement* el);
 

@@ -348,6 +348,18 @@ void TEveViewerList::RepaintAllViewers(Bool_t resetCameras, Bool_t dropLogicals)
    }
 }
 
+//______________________________________________________________________________
+void TEveViewerList::DeleteAnnotations()
+{
+   // Delete annotations from all viewers.
+
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      TGLViewer* glv = ((TEveViewer*)*i)->GetGLViewer();
+      glv->DeleteOverlayAnnotations();
+   }
+}
+
 /******************************************************************************/
 
 //______________________________________________________________________________

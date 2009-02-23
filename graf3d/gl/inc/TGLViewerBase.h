@@ -39,12 +39,13 @@ private:
 
 protected:
    typedef std::list<TGLSceneInfo*>             SceneInfoList_t;
-   typedef std::list<TGLSceneInfo*>::iterator   SceneInfoList_i;
+   typedef SceneInfoList_t::iterator            SceneInfoList_i;
 
    typedef std::vector<TGLSceneInfo*>           SceneInfoVec_t;
-   typedef std::vector<TGLSceneInfo*>::iterator SceneInfoVec_i;
+   typedef SceneInfoVec_t::iterator             SceneInfoVec_i;
 
    typedef std::vector<TGLOverlayElement*>      OverlayElmVec_t;
+   typedef OverlayElmVec_t::iterator            OverlayElmVec_i;
 
    SceneInfoList_i FindScene(TGLSceneBase* scene);
 
@@ -89,6 +90,7 @@ public:
 
    virtual void AddOverlayElement(TGLOverlayElement* el);
    virtual void RemoveOverlayElement(TGLOverlayElement* el);
+   virtual void DeleteOverlayAnnotations();
 
    TGLClip* Clip()         const { return fClip; }
    void     SetClip(TGLClip *p)  { fClip = p;    }

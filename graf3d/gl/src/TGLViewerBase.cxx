@@ -14,12 +14,14 @@
 #include "TGLSceneBase.h"
 #include "TGLSceneInfo.h"
 
-#include <TGLRnrCtx.h>
+#include "TGLRnrCtx.h"
 #include "TGLCamera.h"
-#include <TGLOverlay.h>
-#include <TGLSelectBuffer.h>
-#include <TGLSelectRecord.h>
-#include <TGLUtil.h>
+#include "TGLOverlay.h"
+#include "TGLSelectBuffer.h"
+#include "TGLSelectRecord.h"
+#include "TGLAnnotation.h"
+#include "TGLUtil.h"
+
 #include "TGLContext.h"
 #include "TGLIncludes.h"
 
@@ -189,16 +191,37 @@ void TGLViewerBase::AddOverlayElement(TGLOverlayElement* el)
 void TGLViewerBase::RemoveOverlayElement(TGLOverlayElement* el)
 {
    // Remove overlay element.
-   std::vector<TGLOverlayElement*>::iterator it = std::find(fOverlay.begin(), fOverlay.end(), el);
-   if(it != fOverlay.end())
+
+   OverlayElmVec_i it = std::find(fOverlay.begin(), fOverlay.end(), el);
+   if (it != fOverlay.end())
       fOverlay.erase(it);
    Changed();
+}
+
+//______________________________________________________________________
+void TGLViewerBase::DeleteOverlayAnnotations()
+{
+   // Delete overlay elements that are annotations.
+
+   OverlayElmVec_t goners;
+   for (OverlayElmVec_i i = fOverlay.begin(); i != fOverlay.end(); ++i)
+   {
+      if (dynamic_cast<TGLAnnotation*>(*i))
+         goners.push_back(*i);
+   }
+   if ( ! goners.empty())
+   {
+      for (OverlayElmVec_i i = goners.begin(); i != goners.end(); ++i)
+         delete *i;
+      Changed();
+   }
 }
 
 /**************************************************************************/
 // SceneInfo update / check
 /**************************************************************************/
 
+//______________________________________________________________________________
 void TGLViewerBase::ResetSceneInfos()
 {
    // Force rebuild of view-dependent scene-info structures.
@@ -214,6 +237,7 @@ void TGLViewerBase::ResetSceneInfos()
    }
 }
 
+//______________________________________________________________________________
 void TGLViewerBase::MergeSceneBBoxes(TGLBoundingBox& bbox)
 {
    // Merge bounding-boxes of all active registered scenes.

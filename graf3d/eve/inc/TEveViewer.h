@@ -91,6 +91,7 @@ public:
 
    void RepaintChangedViewers(Bool_t resetCameras, Bool_t dropLogicals);
    void RepaintAllViewers(Bool_t resetCameras, Bool_t dropLogicals);
+   void DeleteAnnotations();
 
    void SceneDestructing(TEveScene* scene);
 

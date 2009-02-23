@@ -317,9 +317,8 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
       eventSt.fY = event->fY;
       eventSt.fCode = event->fCode;
 
-      if (fGLViewer->GetPushAction() == TGLViewer::kPushCamCenter || fGLViewer->GetPushAction() == TGLViewer::kPushAnnotate)
+      if ( fGLViewer->GetPushAction() != TGLViewer::kPushStd )
       {
-         fGLViewer->fPushAction = TGLViewer::kPushStd;
          fGLViewer->RequestSelect(event->fX, event->fY);
          if (fGLViewer->fSelRec.GetN() > 0)
          {
@@ -341,7 +340,6 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
 
             fGLViewer->RequestDraw();
          }
-         fGLViewer->RefreshPadEditor(this);
          return kTRUE;
       }
 
@@ -447,7 +445,14 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
          fInPointerGrab = kFALSE;
       }
 
-      if (fGLViewer->fDragAction == TGLViewer::kDragOverlay && fGLViewer->fCurrentOvlElm)
+      if (fGLViewer->GetPushAction() !=  TGLViewer::kPushStd)
+      {
+         // This should be 'tool' dependant.
+         fGLViewer->fPushAction = TGLViewer::kPushStd;
+         fGLViewer->RefreshPadEditor(fGLViewer);
+         return kTRUE;
+      }
+      else if (fGLViewer->fDragAction == TGLViewer::kDragOverlay && fGLViewer->fCurrentOvlElm)
       {
          fGLViewer->fCurrentOvlElm->Handle(*fGLViewer->fRnrCtx, fGLViewer->fOvlSelRec, event);
          fGLViewer->OverlayDragFinished();
@@ -483,10 +488,13 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
       }
       fGLViewer->fDragAction = TGLViewer::kDragNone;
       if (fGLViewer->fGLDevice != -1)
+      {
          gGLManager->MarkForDirectCopy(fGLViewer->fGLDevice, kFALSE);
+      }
       if ((event->fX == eventSt.fX) &&
           (event->fY == eventSt.fY) &&
-          (eventSt.fCode == event->fCode)) {
+          (eventSt.fCode == event->fCode))
+      {
          TObject *obj = 0;
          fGLViewer->RequestSelect(fLastPos.fX, fLastPos.fY, kFALSE);
          TGLPhysicalShape *phys_shape = fGLViewer->fSelRec.GetPhysShape();
@@ -500,7 +508,8 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
          eventSt.fCode = 0;
          eventSt.fState = 0;
       }
-      if (event->fCode == kButton1 && fMouseTimer) {
+      if (event->fCode == kButton1 && fMouseTimer)
+      {
          fMouseTimer->TurnOn();
       }
    }

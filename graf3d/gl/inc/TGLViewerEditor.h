@@ -52,6 +52,8 @@ private:
    TGNumberEntry    *fCameraCenterY;
    TGNumberEntry    *fCameraCenterZ;
 
+   TGCheckButton*    fCaptureAnnotate;
+
    Int_t             fAxesType;
    TGButtonGroup    *fAxesContainer;
    TGRadioButton    *fAxesNone;
@@ -105,6 +107,7 @@ public:
    void UpdateMaxDrawTimes();
    void DoCameraCenterExt();
    void DoCaptureCenter();
+   void DoAnnotation();
    void DoDrawCameraCenter();
    void UpdateCameraCenter();
    //Axis manipulation

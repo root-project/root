@@ -904,7 +904,46 @@ void TEveElement::ExportToCINT(char* var_name)
    // Export render-element to CINT with variable name var_name.
 
    const char* cname = IsA()->GetName();
-   gROOT->ProcessLine(Form("%s* %s = (%s*)0x%lx;", cname, var_name, cname, this));
+   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, this));
+}
+
+/******************************************************************************/
+
+//______________________________________________________________________________
+void TEveElement::DumpSourceObject() const
+{
+   static const TEveException eh("TEveElement::DumpSourceObject ");
+
+   TObject *so = GetSourceObject();
+   if (!so)
+      throw eh + "source-object not set.";
+
+   so->Dump();
+}
+
+//______________________________________________________________________________
+void TEveElement::PrintSourceObject() const
+{
+   static const TEveException eh("TEveElement::PrintSourceObject ");
+
+   TObject *so = GetSourceObject();
+   if (!so)
+      throw eh + "source-object not set.";
+
+   so->Print();
+}
+
+//______________________________________________________________________________
+void TEveElement::ExportSourceObjectToCINT(char* var_name) const
+{
+   static const TEveException eh("TEveElement::ExportSourceObjectToCINT ");
+
+   TObject *so = GetSourceObject();
+   if (!so)
+      throw eh + "source-object not set.";
+
+   const char* cname = so->IsA()->GetName();
+   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, so));
 }
 
 /******************************************************************************/
@@ -1019,7 +1058,7 @@ void TEveElement::PropagateRnrStateToProjecteds()
    // Propagate render state to the projected replicas of this element.
    // Maybe this should be optional on gEve/element level.
 
-   TEveProjectable* pable = dynamic_cast<TEveProjectable*>(this);
+   TEveProjectable *pable = dynamic_cast<TEveProjectable*>(this);
    if (pable && pable->HasProjecteds())
    {
       pable->PropagateRenderState(fRnrSelf, fRnrChildren);

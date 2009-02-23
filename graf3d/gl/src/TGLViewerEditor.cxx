@@ -45,6 +45,7 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fCameraCenterX(0),
    fCameraCenterY(0),
    fCameraCenterZ(0),
+   fCaptureAnnotate(),
    fAxesType(0),
    fAxesContainer(0),
    fAxesNone(0),
@@ -96,6 +97,8 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fCameraCenterX->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateCameraCenter()");
    fCameraCenterY->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateCameraCenter()");
    fCameraCenterZ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateCameraCenter()");
+
+   fCaptureAnnotate->Connect("Clicked()", "TGLViewerEditor", this, "DoAnnotation()");
 
    fAxesContainer->Connect("Clicked(Int_t)", "TGLViewerEditor", this, "UpdateViewerAxes(Int_t)");
 
@@ -156,10 +159,10 @@ void TGLViewerEditor::SetModel(TObject* obj)
    fCameraCenterX->SetState(fCameraCenterExt->IsDown());
    fCameraCenterY->SetState(fCameraCenterExt->IsDown());
    fCameraCenterZ->SetState(fCameraCenterExt->IsDown());
-   if (fViewer->GetPushAction() == TGLViewer::kPushCamCenter)
-      fCaptureCenter->SetTextColor(0xa03060);
-   else
-      fCaptureCenter->SetTextColor(0x000000);
+
+   // push action
+   fCaptureCenter->SetTextColor((fViewer->GetPushAction() == TGLViewer::kPushCamCenter) ? 0xa03060 : 0x000000);
+   fCaptureAnnotate->SetDown( (fViewer->GetPushAction() == TGLViewer::kPushAnnotate), kFALSE);
 }
 
 //______________________________________________________________________________
@@ -264,6 +267,7 @@ void TGLViewerEditor::DoCaptureCenter()
    // Capture camera-center via picking.
 
    fViewer->PickCameraCenter();
+   ViewerRedraw();
 }
 
 //______________________________________________________________________________
@@ -283,6 +287,14 @@ void TGLViewerEditor::UpdateCameraCenter()
    TGLCamera& cam = fViewer->CurrentCamera();
    cam.SetCenterVec(fCameraCenterX->GetNumber(), fCameraCenterY->GetNumber(), fCameraCenterZ->GetNumber());
    ViewerRedraw();
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoAnnotation()
+{
+   // Create annotation via picking.
+
+   fViewer->PickAnnotate();
 }
 
 //______________________________________________________________________________
@@ -396,6 +408,12 @@ void TGLViewerEditor::CreateGuidesTab()
    fCameraCenterZ = MakeLabeledNEntry(grf, "Z:", labw, 8, TGNumberFormat::kNESRealThree);
    fCaptureCenter = new TGTextButton(grf, " Pick center ");
    grf->AddFrame(fCaptureCenter, new TGLayoutHints(kLHintsNormal, labw + 2, 0, 2, 0));
+
+   // annotate
+   TGGroupFrame* annf  = new TGGroupFrame(fGuidesFrame, "Annotation");
+   fGuidesFrame->AddFrame(annf, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 0, 0));
+   fCaptureAnnotate = new TGCheckButton(annf, "Pick annotation");
+   annf->AddFrame(fCaptureAnnotate, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX));
 
    // reference container
    fRefContainer = new TGGroupFrame(fGuidesFrame, "Reference marker");

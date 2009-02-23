@@ -219,7 +219,7 @@ public:
    void SetDrawCameraCenter(Bool_t x);
    Bool_t GetDrawCameraCenter() { return fDrawCameraCenter; }
    void   PickCameraCenter()    { fPushAction = kPushCamCenter; RefreshPadEditor(this); }
-   void   PickAnnotate()        { fPushAction = kPushAnnotate; }
+   void   PickAnnotate()        { fPushAction = kPushAnnotate;  RefreshPadEditor(this); }
    TGLCameraOverlay* GetCameraOverlay() const { return fCameraOverlay; }
    void SetCameraOverlay(TGLCameraOverlay* m) { fCameraOverlay = m; }
 
