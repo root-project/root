@@ -139,7 +139,7 @@ public:
    Int_t          GetSlaveType() const { return (Int_t)fSlaveType; }
    Int_t          GetStatus() const { return fStatus; }
    Int_t          GetParallel() const { return fParallel; }
-   TString        GetMsd() const { return fMsd; }
+   const char    *GetMsd() const { return fMsd; }
    TFileHandler  *GetInputHandler() const { return fInput; }
    void           SetInputHandler(TFileHandler *ih);
 

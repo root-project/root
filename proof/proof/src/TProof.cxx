@@ -2904,7 +2904,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                         if (!active) slinfo->SetStatus(TSlaveInfo::kNotActive);
                         if (bad) slinfo->SetStatus(TSlaveInfo::kBad);
                      }
-                     if (!sl->GetMsd().IsNull()) slinfo->fMsd = sl->GetMsd();
+                     if (sl->GetMsd() && (strlen(sl->GetMsd()) > 0))
+                        slinfo->fMsd = sl->GetMsd();
                   }
                }
                delete tmpinfo;

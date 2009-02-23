@@ -248,6 +248,10 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
 
    if (dset->ElementsValid()) return;
 
+   // We need to recheck after this
+   dset->ResetBit(TDSet::kValidityChecked);
+   dset->ResetBit(TDSet::kSomeInvalid);
+
    TList msds;
    msds.SetOwner();
 
