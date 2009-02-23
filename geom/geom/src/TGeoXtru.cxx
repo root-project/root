@@ -374,6 +374,13 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    }   
    TGeoXtru *xtru = (TGeoXtru*)this;
    Int_t iz = TMath::BinarySearch(fNz, fZ, point[2]);
+   if (iz < 0) {
+      if (dir[2]<=0) {
+         xtru->SetIz(-1);
+         return 0.;
+      }
+      iz = 0;
+   }            
    if (iz==fNz-1) {
       if (dir[2]>=0) {
          xtru->SetIz(-1);
@@ -389,8 +396,8 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       }
    }   
    Bool_t convex = fPoly->IsConvex();
-   Double_t stepmax = step;
-   if (stepmax>TGeoShape::Big()) stepmax = TGeoShape::Big();
+//   Double_t stepmax = step;
+//   if (stepmax>TGeoShape::Big()) stepmax = TGeoShape::Big();
    Double_t snext = TGeoShape::Big();
    Double_t dist, sz;
    Double_t pt[3];
@@ -399,15 +406,14 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    if (dir[2]==0) {
       for (iv=0; iv<fNvert; iv++) {
          xtru->SetIz(-1);
-         dist = DistToPlane(point,dir,iz,iv,stepmax,kTRUE);
-         if (dist<stepmax) {
-            stepmax = dist;
+         dist = DistToPlane(point,dir,iz,iv,TGeoShape::Big(),kTRUE);
+         if (dist<snext) {
             snext = dist;
             xtru->SetSeg(iv);
             if (convex) return snext;
          }   
       }
-      return snext;
+      return TGeoShape::Tolerance();
    }      
    
    // normal case   
@@ -419,7 +425,7 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       ipl = iz+((incseg+1)>>1); // next plane
       inext = ipl+incseg; // next next plane
       sz = (fZ[ipl]-point[2])/dir[2];
-      if (sz<stepmax) {
+      if (sz<snext) {
          iznext += incseg;
          // we cross the next Z section before stepmax
          pt[0] = point[0]+sz*dir[0];
@@ -432,7 +438,6 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
                if (convex) return sz;
                zexit = kTRUE;
                snext = sz;
-               stepmax = sz;
             }   
             // maybe a Z discontinuity - check this
             if (!zexit && fZ[ipl]==fZ[inext]) {
@@ -443,7 +448,6 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
                   if (convex) return sz;
                   zexit = kTRUE;
                   snext = sz;
-                  stepmax = sz;
                } else {  
                   iznext = inext;
                }   
@@ -455,11 +459,10 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       // ray may cross the lateral surfaces of section iz      
       xtru->SetIz(iz);
       for (iv=0; iv<fNvert; iv++) {
-         dist = DistToPlane(point,dir,iz,iv,stepmax,kTRUE); 
-         if (dist<stepmax) {
+         dist = DistToPlane(point,dir,iz,iv,TGeoShape::Big(),kTRUE); 
+         if (dist<snext) {
             xtru->SetSeg(iv);
             snext = dist;
-            stepmax = dist;
             if (convex) return snext;
             zexit = kTRUE;
          }   
@@ -467,7 +470,6 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       if (zexit) return snext;
       iz = iznext;
    }
-//   return TGeoShape::Big();  // should never happen       
    return TGeoShape::Tolerance();
 }
 
