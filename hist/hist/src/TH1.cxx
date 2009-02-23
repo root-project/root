@@ -2841,7 +2841,7 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*-*-*-*-*-*-*
 
    Int_t bin, binx, ibin, loop;
-   Double_t r1, x, xv[1];
+   Double_t r1, x;
 //   - Search for fname in the list of ROOT defined functions
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
    if (!f1) { Error("FillRandom", "Unknown function: %s",fname); return; }
@@ -2850,13 +2850,10 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
    Int_t nbinsx = GetNbinsX();
 
    Double_t *integral = new Double_t[nbinsx+1];
-   ibin = 0;
-   integral[ibin] = 0;
+   integral[0] = 0;
    for (binx=1;binx<=nbinsx;binx++) {
-      xv[0] = fXaxis.GetBinCenter(binx);
-      ibin++;
-      Double_t fval = f1->Eval(xv[0]);
-      integral[ibin] = integral[ibin-1] + TMath::Abs(fval)*fXaxis.GetBinWidth(binx);
+      Double_t fint = f1->Integral(fXaxis.GetBinLowEdge(binx),fXaxis.GetBinUpEdge(binx));
+      integral[binx] = integral[binx-1] + fint;
    }
 
 //   - Normalize integral to 1
