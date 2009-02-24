@@ -13,8 +13,8 @@ bin         - directory containing executables
 include     - directory containing the ROOT header files
 lib         - directory containing the ROOT libraries (in shared library format)
 etc         - directory containing default resource and mime type files
-proof       - directory containing setting for the PROOF system
-macros      - directory containing system macros (might be missing)
+etc/proof   - directory containing settings for the PROOF system
+macros      - directory containing system macros
 icons       - directory containing xpm icons
 test        - some ROOT test programs
 tutorials   - example macros that can be executed by the bin/root module
@@ -23,45 +23,18 @@ tutorials   - example macros that can be executed by the bin/root module
 Environment variables
 =====================
 
-Define the variable ROOTSYS pointing to the directory where you unpacked
-the ROOT distribution:
+To set the needed environment variables, PATH and LD_LIBRARY_PATH, use
+the following convenience script. For the sh shell family do:
 
-   export ROOTSYS=<pathname>/root   (in bash or ksh)
-   setenv ROOTSYS <pathname>/root   (in csh or tcsh)
+   . <pathname>/root/bin/thisroot.sh
 
-Add ROOTSYS/bin to your PATH:
+and for the csh shell family do:
 
-   export PATH=$PATH:$ROOTSYS/bin        (in bash or ksh)
-   set path=($path $ROOTSYS/bin)         (in csh or tcsh)
+   source <pathname>/root/bin/thisroot.csh
 
-On systems using shared libraries you must specify the load path
-before you can run the root module. NOTE: with version 2.00 this
-is not necessary anymore since the front-end program sets the
-load path correctly.
+where <pathname> is the location where you unpacked the ROOT distribution.
 
-On HP-UX do:
-
-   export SHLIB_PATH=$SHLIB_PATH:$ROOTSYS/lib       (in bash or ksh)
-   setenv SHLIB_PATH ${SHLIB_PATH}:${ROOTSYS}/lib   (in csh or tcsh)
-
-On Solaris, Linux, SGI, Alpha/OSF do:
-
-   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTSYS/lib
-
-On MacOS X do:
-
-   export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$ROOTSYS/lib
-
-On AIX do:
-
-   [ -z "$LIBPATH" ] && export LIBPATH=/lib:/usr/lib
-   export LIBPATH=$LIBPATH:$ROOTSYS/lib
-
-To have access to the man pages add ROOTSYS/man to you MANPATH:
-
-   export MANPATH=$MANPATH:$ROOTSYS/man      (in bash or ksh)
-   setenv MANPATH $MANPATH:$ROOTSYS/man      (in csh or tcsh)
-
+Typically add these lines to your .profile or .login files.
 
 
 Running interactive ROOT and the tutorial macros
@@ -82,7 +55,6 @@ root [1] .x demos.C
 root [2] .q
 
 
-
 Compiling and running ROOT test programs
 ========================================
 
@@ -95,3 +67,4 @@ $ ./hsimple
 $ ./minexam
 $ ./tcollex
 $ ./tstring
+etc...
