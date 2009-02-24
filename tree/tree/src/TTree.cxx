@@ -4986,7 +4986,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* /* option */)
          newtree->GetTreeIndex()->Append(tree->GetTreeIndex(),kTRUE);
       }
    }
-   if (newtree->GetTreeIndex()) {
+   if (newtree && newtree->GetTreeIndex()) {
       newtree->GetTreeIndex()->Append(0,kFALSE); // Force the sorting
    }
    return newtree;
