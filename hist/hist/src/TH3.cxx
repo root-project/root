@@ -1097,12 +1097,66 @@ Double_t TH3::Interpolate(Double_t, Double_t)
 }
 
 //______________________________________________________________________________
-Double_t TH3::Interpolate(Double_t, Double_t, Double_t)
+Double_t TH3::Interpolate(Double_t x, Double_t y, Double_t z)
 {
-   
-   //Not yet implemented
-   Error("Interpolate","This function is not yet implemented for a TH3");
-   return 0;
+   // Given a point P(x,y,z), Interpolate approximates the value via trilinear interpolation
+   // based on the 8 nearest bin center points ( corner of the cube surronding the points) 
+   // The Algorithm is described in http://en.wikipedia.org/wiki/Trilinear_interpolation
+   // The given values (x,y,z) must be between first bin center and  last bin center for each coordinate: 
+   //
+   //   fXAxis.GetBinCenter(1) < x  < fXaxis.GetBinCenter(nbinX)     AND
+   //   fYAxis.GetBinCenter(1) < y  < fYaxis.GetBinCenter(nbinY)     AND
+   //   fZAxis.GetBinCenter(1) < z  < fZaxis.GetBinCenter(nbinZ) 
+
+   Int_t ubx = fXaxis.FindBin(x);
+   if ( x < fXaxis.GetBinCenter(ubx) ) ubx -= 1;
+   Int_t obx = ubx + 1;
+
+   Int_t uby = fYaxis.FindBin(y);
+   if ( y < fYaxis.GetBinCenter(uby) ) uby -= 1;
+   Int_t oby = uby + 1;
+
+   Int_t ubz = fZaxis.FindBin(z);
+   if ( z < fZaxis.GetBinCenter(ubz) ) ubz -= 1;
+   Int_t obz = ubz + 1;
+
+
+//    if ( IsBinUnderflow(GetBin(ubx, uby, ubz)) ||
+//         IsBinOverflow (GetBin(obx, oby, obz)) ) {
+   if (ubx <=0 || uby <=0 || ubz <= 0 ||
+       obx > fXaxis.GetNbins() || oby > fYaxis.GetNbins() || obz > fZaxis.GetNbins() ) {
+      Error("Interpolate","Cannot interpolate outside histogram domain.");
+      return 0;
+   }
+
+   Double_t xw = fXaxis.GetBinCenter(obx) - fXaxis.GetBinCenter(ubx);
+   Double_t yw = fYaxis.GetBinCenter(oby) - fYaxis.GetBinCenter(uby);
+   Double_t zw = fZaxis.GetBinCenter(obz) - fZaxis.GetBinCenter(ubz);
+
+   Double_t xd = (x - fXaxis.GetBinCenter(ubx)) / xw;
+   Double_t yd = (y - fYaxis.GetBinCenter(uby)) / yw;
+   Double_t zd = (z - fZaxis.GetBinCenter(ubz)) / zw;
+
+
+   Double_t v[] = { GetBinContent( ubx, uby, ubz ), GetBinContent( ubx, uby, obz ),
+                    GetBinContent( ubx, oby, ubz ), GetBinContent( ubx, oby, obz ),
+                    GetBinContent( obx, uby, ubz ), GetBinContent( obx, uby, obz ),
+                    GetBinContent( obx, oby, ubz ), GetBinContent( obx, oby, obz ) };
+
+
+   Double_t i1 = v[0] * (1 - zd) + v[1] * zd;
+   Double_t i2 = v[2] * (1 - zd) + v[3] * zd;
+   Double_t j1 = v[4] * (1 - zd) + v[5] * zd;
+   Double_t j2 = v[6] * (1 - zd) + v[7] * zd;
+
+
+   Double_t w1 = i1 * (1 - yd) + i2 * yd;
+   Double_t w2 = j1 * (1 - yd) + j2 * yd;
+
+
+   Double_t result = w1 * (1 - xd) + w2 * xd;
+
+   return result;
 }
 
 //______________________________________________________________________________
