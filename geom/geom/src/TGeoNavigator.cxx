@@ -2092,7 +2092,7 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
    }
    Double_t local[3];
    // convert to local frame
-   MasterToLocal(point,local);
+   fGlobalMatrix->MasterToLocal(point,local);
    // check if still in current volume.
    if (!vol->GetShape()->Contains(local)) {
       if (!change) return kFALSE;
@@ -2129,7 +2129,7 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
       for (Int_t id=0; id<ncheck; id++) {
          node = vol->GetNode(check_list[id]);
          CdDown(check_list[id]);
-         fCurrentNode->GetMatrix()->MasterToLocal(local,local1);
+         fGlobalMatrix->MasterToLocal(point,local1);
          if (fCurrentNode->GetVolume()->GetShape()->Contains(local1)) {
             if (!change) {
                PopPath();
@@ -2147,7 +2147,7 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
    if (!change) PushPath();
    while ((node=fCurrentNode->GetDaughter(id++))) {
       CdDown(id-1);
-      fCurrentNode->GetMatrix()->MasterToLocal(local,local1);
+      fGlobalMatrix->MasterToLocal(point,local1);
       if (fCurrentNode->GetVolume()->GetShape()->Contains(local1)) {
          if (!change) {
             PopPath();

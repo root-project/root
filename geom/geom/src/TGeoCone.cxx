@@ -423,7 +423,7 @@ Double_t TGeoCone::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz,
    // compute distance to inner cone
    snxt = TGeoShape::Big();
    if (!inrmin) {
-      // ray can cross only inner cone
+      // ray can cross inner cone (but not only!)
       TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
       if (delta<0) return TGeoShape::Big();
       snxt = -b+delta;
@@ -433,8 +433,8 @@ Double_t TGeoCone::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz,
       snxt = -b-delta;
       if (snxt<=0) return TGeoShape::Big();
       zp = point[2]+snxt*dir[2];
-      if (TMath::Abs(zp)<=dz) return snxt;      
-      return TGeoShape::Big();
+      if (TMath::Abs(zp)<=dz) return snxt;
+      snxt = TGeoShape::Big();      
    } else {
       if (hasrmin) {
          TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
@@ -449,7 +449,7 @@ Double_t TGeoCone::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz,
    }   
    
    if (inrmax) return snxt;
-   // we can cross only outer cone, both solutions possible
+   // We can cross outer cone, both solutions possible
    // compute distance to outer cone
    TGeoCone::DistToCone(point, dir, dz, rmax1, rmax2, b, delta);
    if (delta<0) return snxt;
