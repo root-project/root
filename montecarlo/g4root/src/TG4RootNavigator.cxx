@@ -325,8 +325,8 @@ TG4RootNavigator::LocateGlobalPointAndSetup(const G4ThreeVector& globalPoint,
    Bool_t onBoundary = kFALSE;
    if (fStepEntering || fStepExiting) {
       Double_t d2 = globalPoint.diff2(fNextPoint);
-      if (d2 < 1.e-10) {
-         fNextPoint = globalPoint;
+      if (d2 < 1.e-16) {
+//         fNextPoint = globalPoint;
          onBoundary = kTRUE;
       }   
 #ifdef G4ROOT_DEBUG
