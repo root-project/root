@@ -498,19 +498,25 @@ void DoFillData ( BinData  & dv,  const TGraph * gr,  BinData::ErrorType type, T
       else { // case use error in x or asym errors 
          double errorX = 0; 
          if (fitOpt.fCoordErrors)  
+            // shoulkd take combined average (sqrt(0.5(e1^2+e2^2))  or math average ? 
+            // gr->GetErrorX(i) returns combined average
+            // use math average for same behaviour as before 
             errorX =  std::max( 0.5 * ( gr->GetErrorXlow(i) + gr->GetErrorXhigh(i) ) , 0. ) ;
+         
+
+         // adjust error in y according to option 
+         double errorY = std::max(gr->GetErrorY(i), 0.); 
+         HFitInterface::AdjustError(fitOpt, errorY); 
+
+         // skip points with totla error = 0
+         if ( errorX <=0 && errorY <= 0 ) continue; 
          
          if (type == BinData::kAsymError)   { 
             // asymmetric errors 
-            double erry = gr->GetErrorY(i); 
-            if ( !HFitInterface::AdjustError(fitOpt, erry)  ) continue; 
             dv.Add( gx[i], gy[i], errorX, gr->GetErrorYlow(i), gr->GetErrorYhigh(i) );            
          }
-         // case sym errors
          else {             
-            double errorY =  gr->GetErrorY(i);    
-            if (errorX <= 0 ) errorX = 0;  
-            if (!HFitInterface::AdjustError(fitOpt,errorY) ) continue; 
+            // case symmetric Y errors
             dv.Add( gx[i], gy[i], errorX, errorY );
          }
       }

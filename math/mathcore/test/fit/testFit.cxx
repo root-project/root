@@ -241,6 +241,7 @@ int testHisto1DFit() {
    ROOT::Fit::BinData dger; 
    // not needed since they are used by default
    //dger.Opt().fCoordErrors = true;  // use coordinate errors
+   dger.Opt().fUseEmpty = true;  // this will set error 1 for the empty bins
    ROOT::Fit::FillData(dger,&gr);
 
    f.SetParameters(p);   
@@ -255,7 +256,11 @@ int testHisto1DFit() {
 
    // compare with TGraphErrors::Fit
    std::cout << "\n******************************\n\t TGraphErrors::Fit Result \n" << std::endl; 
-   func->SetParameters(p);   
+   func->SetParameters(p); 
+   // set error = 1 for empty bins
+   for (int ip = 0; ip < gr.GetN(); ++ip) 
+      if (gr.GetErrorY(ip) <= 0) gr.SetPointError(ip, gr.GetErrorX(ip), 1.);
+
    gr.Fit(func); 
    std::cout << "Ndf of TGraphErrors::Fit  = " << func->GetNDF() << std::endl;
    iret |= compareResult(func->GetChisquare(),fitter.Result().Chi2(),"TGraphErrors::Fit ",0.001);
