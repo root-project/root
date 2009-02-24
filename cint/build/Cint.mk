@@ -27,7 +27,7 @@ ifeq ($(subst msvc,,$(G__CFG_ARCH)),$(G__CFG_ARCH))
   ALLDLLS += longlong.cintdll ipc.cintdll posix.cintdll
 endif
 
-BUILDDLL = chmod a+x setup; PATH=../../../bin:$$PATH LD_LIBRARY_PATH=../../../lib:$$LD_LIBRARY_PATH DYLD_LIBRARY_PATH=../../../lib:$$DYLD_LIBRARY_PATH ./setup
+BUILDDLL = chmod a+x setup; PATH=../../../bin:../../../lib:$$PATH LD_LIBRARY_PATH=../../../lib:$$LD_LIBRARY_PATH DYLD_LIBRARY_PATH=../../../lib:$$DYLD_LIBRARY_PATH ./setup
 MKTYPES  = $(G__CFG_COREVERSION)/lib/posix/mktypes$(G__CFG_EXEEXT)
 MAKEINCL = $(G__CFG_COREVERSION)/include/mkincld$(G__CFG_EXEEXT)
 IOSENUMH = $(G__CFG_COREVERSION)/include/iosenum.h
