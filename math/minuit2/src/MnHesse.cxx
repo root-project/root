@@ -151,8 +151,8 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
 #ifdef DEBUG
             std::cout << "cycle " << icyc << " mul " << multpy << "\t sag = " << sag << " d = " << d << std::endl; 
 #endif
-            // FMinuit checks that fabs(sag) != 0 (t.b.i)
-            if(fabs(sag) > prec.Eps2()) goto L30; // break;
+            //  Now as F77 Minuit - check taht sag is not zero
+            if (sag != 0) goto L30; // break
             if(trafo.Parameter(i).HasLimits()) {
                if(d > 0.5) goto L26;
                d *= 10.;
@@ -245,8 +245,24 @@ L30:
    }
    
    //verify if matrix pos-def (still 2nd derivative)
+
+#ifdef DEBUG
+   std::cout << "Original error matrix " << vhmat << std::endl;
+#endif
+
    MinimumError tmpErr = MnPosDef()(MinimumError(vhmat,1.), prec);
+
+#ifdef DEBUG
+   std::cout << "Original error matrix " << vhmat << std::endl;
+#endif
+
    vhmat = tmpErr.InvHessian();
+
+#ifdef DEBUG
+   std::cout << "PosDef error matrix " << vhmat << std::endl;
+#endif
+
+
    int ifail = Invert(vhmat);
    if(ifail != 0) {
       

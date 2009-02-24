@@ -44,17 +44,23 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    double delgam = inner_product(dx, dg);
    double gvg = similarity(dg, v0);
 
+
 #ifdef DEBUG
    std::cout << "dx = " << dx << std::endl; 
    std::cout << "dg = " << dg << std::endl; 
    std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
 #endif
-   if (delgam <= 0 ) { 
+
+   if (delgam == 0 ) { 
 #ifdef WARNINGMSG
-      MN_INFO_MSG("DavidonErrorUpdator: delgam < 0 : cannot update - return same matrix ");
+      MN_INFO_MSG("DavidonErrorUpdator: delgam = 0 : cannot update - return same matrix ");
 #endif
       return s0.Error();
    }
+#ifdef WARNINGMSG
+   if (delgam < 0)  MN_INFO_MSG("DavidonErrorUpdator: delgam < 0 : first derivatives increasing along search line");
+#endif
+
    if (gvg <= 0 ) { 
       // since v0 is pos def this gvg can be only = 0 if  dg = 0 - should never be here
 #ifdef WARNINGMSG

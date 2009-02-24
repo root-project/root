@@ -43,7 +43,10 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    // top level function to find minimum from a given initial seed 
    // iterate on a minimum search in case of first attempt is not succesfull
    
-   edmval *= 0.001; // to be consistent with F77 Minuit
+   // to be consistent with F77 Minuit
+   // in Minuit2 edm is correct and is ~ a factor of 2 smaller than F77Minuit
+   // There are also a check for convergence if (edm < 0.1 edmval for exiting the loop) 
+   edmval *= 0.0002; 
    
    
 #ifdef DEBUG
@@ -212,7 +215,14 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          break;
       }
       
+
       double gdel = inner_product(step, s0.Gradient().Grad());
+
+#ifdef DEBUG
+      std::cout << " gdel = " << gdel << std::endl;
+#endif
+
+
       if(gdel > 0.) {
 #ifdef WARNINGMSG
          MN_INFO_MSG("VariableMetricBuilder: matrix not pos.def, gdel > 0");
