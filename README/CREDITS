@@ -643,6 +643,10 @@ N: Joerg Stelzer
 E: Joerz.Stelzer@cern.ch
 D: contribution to the TMVA package
 
+N: Matthew Strait
+E: strait@physics.umn.edu
+D: Documentation improvements
+
 N: Christian Stratowa
 E: cstrato@EUnet.at
 D: development of class TGraphSmooth + many suggestions
