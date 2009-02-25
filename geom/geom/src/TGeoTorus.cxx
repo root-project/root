@@ -366,12 +366,13 @@ Double_t TGeoTorus::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, 
    
    // If outside the ring, compute distance to it.
    Double_t dring = TGeoShape::Big();
+   Double_t eps = 1.E-8;
    snext = 0;
    daxis = -1;
    memcpy(pt,point,3*sizeof(Double_t));
    if (!inbring) {
-      if (hasphi) dring = TGeoTubeSeg::DistFromOutsideS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);            
-      else        dring = TGeoTube::DistFromOutsideS(point,dir,fR-fRmax,fR+fRmax, fRmax);
+      if (hasphi) dring = TGeoTubeSeg::DistFromOutsideS(point,dir,TMath::Max(0.,fR-fRmax-eps),fR+fRmax+eps, fRmax+eps, c1,s1,c2,s2,cm,sm,cdfi);            
+      else        dring = TGeoTube::DistFromOutsideS(point,dir,TMath::Max(0.,fR-fRmax-eps),fR+fRmax+eps, fRmax+eps);
       // If not crossing it, return BIG.
       if (dring>1E10) return TGeoShape::Big();
       snext = dring;
@@ -388,15 +389,15 @@ Double_t TGeoTorus::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, 
       // We are in the hole. Check if we came from outside.
       if (snext>0) {
          // we can cross either the inner torus or exit the other hole.
-         snext += 1E-6;
-         for (i=0; i<3; i++) pt[i] += 1E-6*dir[i];
+         snext += 0.1*eps;
+         for (i=0; i<3; i++) pt[i] += 0.1*eps*dir[i];
       }
       // We are in the hole from the begining.   
       // find first crossing with inner torus
       dd = ToBoundary(pt,dir, fRmin);
       // find exit distance from inner bounding ring
-      if (hasphi) dring = TGeoTubeSeg::DistFromInsideS(point,dir,fR-fRmin,fR+fRmin, fRmin, c1,s1,c2,s2,cm,sm,cdfi);            
-      else        dring = TGeoTube::DistFromInsideS(point,dir,fR-fRmin,fR+fRmin, fRmin);
+      if (hasphi) dring = TGeoTubeSeg::DistFromInsideS(pt,dir,fR-fRmin,fR+fRmin, fRmin, c1,s1,c2,s2,cm,sm,cdfi);
+      else        dring = TGeoTube::DistFromInsideS(pt,dir,fR-fRmin,fR+fRmin, fRmin);
       if (dd<dring) return (snext+dd);
       // we were exiting a hole
       return TGeoShape::Big();
@@ -407,17 +408,17 @@ Double_t TGeoTorus::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, 
    // Compute distance to exit the bounding ring (again)
    if (snext>0) {
       // we can cross either the inner torus or exit the other hole.
-      snext += 1E-6;
-      for (i=0; i<3; i++) pt[i] += 1E-6*dir[i];
+      snext += 0.1*eps;
+      for (i=0; i<3; i++) pt[i] += 0.1*eps*dir[i];
    }
-   if (hasphi) dring = TGeoTubeSeg::DistFromInsideS(pt,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);            
-   else        dring = TGeoTube::DistFromInsideS(pt,dir,fR-fRmax,fR+fRmax, fRmax);
+   if (hasphi) dring = TGeoTubeSeg::DistFromInsideS(pt,dir,TMath::Max(0.,fR-fRmax-eps),fR+fRmax+eps, fRmax+eps, c1,s1,c2,s2,cm,sm,cdfi);            
+   else        dring = TGeoTube::DistFromInsideS(pt,dir,TMath::Max(0.,fR-fRmax-eps),fR+fRmax+eps, fRmax+eps);
    if (dd<dring) {
       snext += dd;
       return snext;
    }
    // We are exiting the bounding ring before crossing the torus -> propagate
-   snext += dring+1E-6;   
+   snext += dring+eps;   
    for (i=0; i<3; i++) pt[i] = point[i] + snext*dir[i];
    snext += DistFromOutside(pt,dir,3);
    return snext;

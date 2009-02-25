@@ -427,13 +427,15 @@ Double_t TGeoCone::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz,
       TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
       if (delta<0) return TGeoShape::Big();
       snxt = -b+delta;
-      if (snxt<=0) return TGeoShape::Big();
-      zp = point[2]+snxt*dir[2];
-      if (TMath::Abs(zp)<=dz) return snxt;
+      if (snxt>0) {
+         zp = point[2]+snxt*dir[2];
+         if (TMath::Abs(zp)<=dz) return snxt;
+      }   
       snxt = -b-delta;
-      if (snxt<=0) return TGeoShape::Big();
-      zp = point[2]+snxt*dir[2];
-      if (TMath::Abs(zp)<=dz) return snxt;
+      if (snxt>0) {
+         zp = point[2]+snxt*dir[2];
+         if (TMath::Abs(zp)<=dz) return snxt;
+      }   
       snxt = TGeoShape::Big();      
    } else {
       if (hasrmin) {
