@@ -4397,9 +4397,7 @@ static int G__defined_type(char* type_name, int len)
       //
       G__tagnum = G__defined_tagname(type_name, 1);
       if (G__tagnum != -1) {
-         // -- Ok, we found it, now check again as a typedef name
-         // to pick up template aliases that might have been generated
-         // by template instantiation during above G__defined_tagname
+         // -- Ok, we found it, now check again as a typedef name (FIXME: Why???).
          G__typenum = G__defined_typename(type_name);
          if (G__typenum != -1) {
             // Note: G__var_type was set by the G__defined_typename() call above to G__newtype.type[G__typenum] + ptroffset.

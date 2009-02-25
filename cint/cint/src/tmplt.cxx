@@ -2236,7 +2236,6 @@ int G__instantiate_templateclass(const char *tagnamein, int noerror)
     baseclass = (struct G__inheritance*)NULL;
 
   /* scope operator resolution, A::templatename<int> ... */
-  size_t lenScope = 0;
  {
    char *patom;
    char *p;
@@ -2249,12 +2248,8 @@ int G__instantiate_templateclass(const char *tagnamein, int noerror)
    }
    else {
      *(patom-2) = 0;
-     lenScope = strlen(atom_name);
-     if(lenScope==0||strcmp(atom_name,"::")==0) scope_tagnum = -1;
-     else {
-        scope_tagnum = G__defined_tagname(atom_name,0);
-        lenScope += 2; // skip ::
-     }
+     if(strlen(atom_name)==0||strcmp(atom_name,"::")==0) scope_tagnum = -1;
+     else scope_tagnum = G__defined_tagname(atom_name,0);
      p = atom_name;
      while(*patom) *p++ = *patom++;
      *p = 0;
@@ -2358,13 +2353,12 @@ int G__instantiate_templateclass(const char *tagnamein, int noerror)
     int templatearg_enclosedscope=G__templatearg_enclosedscope;
     G__templatearg_enclosedscope=store_templatearg_enclosedscope;
 #endif
-    char* unscopedname = tagname + lenScope;
     if(-1==G__defined_typename(tagname)) {
       typenum=G__newtype.alltype++;
       G__newtype.type[typenum]='u';
-      G__newtype.name[typenum]=(char*)malloc(strlen(unscopedname)+1);
-      strcpy(G__newtype.name[typenum],unscopedname);
-      G__newtype.hash[typenum] = strlen(unscopedname);
+      G__newtype.name[typenum]=(char*)malloc(strlen(tagname)+1);
+      strcpy(G__newtype.name[typenum],tagname);
+      G__newtype.hash[typenum] = strlen(tagname);
       G__newtype.globalcomp[typenum] = G__globalcomp;
       G__newtype.reftype[typenum] = G__PARANORMAL;
       G__newtype.nindex[typenum] = 0;
@@ -2375,7 +2369,7 @@ int G__instantiate_templateclass(const char *tagnamein, int noerror)
     G__cattemplatearg(tagname,&call_para);
     tagnum = G__defined_tagname(tagname,1);
 #ifndef G__OLDIMPLEMENTATION1867
-    G__settemplatealias(tagnamein,unscopedname,tagnum,&call_para
+    G__settemplatealias(tagnamein,tagname,tagnum,&call_para
                         ,deftmpclass->def_para,templatearg_enclosedscope);
 #endif
     if(-1!=typenum) {
