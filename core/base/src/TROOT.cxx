@@ -1503,9 +1503,9 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 Long_t TROOT::ProcessLine(const char *line, Int_t *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
-   // On Win32 the line will be processed a-synchronously by sending
-   // it to the CINT interpreter thread. For explicit synchrounous processing
-   // use ProcessLineSync(). On non-Win32 platforms there is not difference
+   // On Win32 the line will be processed asynchronously by sending
+   // it to the CINT interpreter thread. For explicit synchronous processing
+   // use ProcessLineSync(). On non-Win32 platforms there is no difference
    // between ProcessLine() and ProcessLineSync().
    // The possible error codes are defined by TInterpreter::EErrorCode. In
    // particular, error will equal to TInterpreter::kProcessing until the
@@ -1527,7 +1527,7 @@ Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed synchronously (i.e. it will
    // only return when the CINT interpreter thread has finished executing
-   // the line). On non-Win32 platforms there is not difference between
+   // the line). On non-Win32 platforms there is no difference between
    // ProcessLine() and ProcessLineSync().
    // The possible error codes are defined by TInterpreter::EErrorCode.
    // Returns the result of the command, cast to a Long_t.

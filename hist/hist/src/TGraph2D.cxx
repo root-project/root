@@ -594,13 +594,13 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //            = "R" Use the Range specified in the function range
    //            = "N" Do not store the graphics function, do not draw
    //            = "0" Do not plot the result of the fit. By default the fitted function
-   //                  is drawn unless the option"N" above is specified.
+   //                  is drawn unless the option "N" above is specified.
    //            = "+" Add this new fitted function to the list of fitted functions
    //                  (by default, any previous function is deleted)
    //            = "C" In case of linear fitting, not calculate the chisquare
    //                  (saves time)
    //            = "ROB" In case of linear fitting, compute the LTS regression
-   //                     coefficients (robust(resistant) regression), using
+   //                     coefficients (robust (resistant) regression), using
    //                     the default fraction of good points
    //              "ROB=0.x" - compute the LTS regression coefficients, using
    //                           0.x as a fraction of good points

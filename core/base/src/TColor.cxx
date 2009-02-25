@@ -32,7 +32,7 @@ TArrayI TColor::fgPalette(0);
 <center><h2>TColor: Color Creation and Management</h2></center>
  Color defined by RGB or HLS.
  At initialization time, a table of colors is generated. This linked
- list can be accessed from the TROOT object via the color index, eg
+ list can be accessed from the TROOT object via the color index, e.g.
  <pre>
  TColor *color = gROOT->GetColor(kOrange);
  </pre>
@@ -57,14 +57,14 @@ The wheel contains the recommended 216 colors to be used in web applications.
 The colors in the Color Wheel are created by TColor::CreateColorWheel.
 <p>Using this color set for your text, background or graphics will give your
 application a consistent appearance across different platforms and browsers.
-<p>Colors are grouped by hue, the aspect most important in human perception
+<p>Colors are grouped by hue, the aspect most important in human perception.
 Touching color chips have the same hue, but with different brightness and vividness.
 <p>Colors of slightly different hues <b>clash</b>. If you intend to display
 colors of the same hue together, you should pick them from the same group.
-<p>Each color chip is identified by a mnemonic (eg kYellow) and a number.
+<p>Each color chip is identified by a mnemonic (e.g. kYellow) and a number.
 The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file <b>Rtypes.h</b>
 that is included in all ROOT other header files. We strongly recommend to use these keywords
-in your code instead of hardcoded color numbers, eg:
+in your code instead of hardcoded color numbers, e.g.:
 <pre>
    myObject.SetFillColor(kRed);
    myObject.SetFillColor(kYellow-10);
@@ -83,7 +83,7 @@ Begin_Html
 
 <h4>Bright and Dark colors</h4>
  The dark and bright color are used to give 3-D effects when drawing
- various boxes (see TWbox, TPave, TPaveText, TPaveLabel,etc).
+ various boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
 <ul>
    <li>The Dark colors have an index = color_index+100
    <li>The Bright colors have an index = color_index+150

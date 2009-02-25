@@ -57,7 +57,7 @@ Subscripts and superscripts are made with the <tt>_</tt> and <tt>^</tt>
 commands. These commands can be combined to make complicated subscript and
 superscript expressions. You may choose how to display subscripts and
 superscripts using the 2 functions <tt>SetIndiceSize(Double_t)</tt> and
-<tt>SetLimitindiceSize(Int_t)</tt>.
+<tt>SetLimitIndiceSize(Int_t)</tt>.
 <p>Examples:
 End_Html
    x^{2y} :    Begin_Latex x^{2y}    End_Latex x_{2y} :    Begin_Latex x^{2y}    End_Latex

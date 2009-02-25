@@ -29,14 +29,14 @@ The wheel contains the recommended 216 colors to be used in web applications.
 The colors in the Color Wheel are created by TColor::CreateColorWheel.
 <p>Using this color set for your text, background or graphics will give your
 application a consistent appearance across different platforms and browsers.
-<p>Colors are grouped by hue, the aspect most important in human perception
+<p>Colors are grouped by hue, the aspect most important in human perception.
 Touching color chips have the same hue, but with different brightness and vividness.
 <p>Colors of slightly different hues <b>clash</b>. If you intend to display
 colors of the same hue together, you should pick them from the same group.
-<p>Each color chip is identified by a mnemonic (eg kYellow) and a number.
+<p>Each color chip is identified by a mnemonic (e.g. kYellow) and a number.
 The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file <b>Rtypes.h</b>
 that is included in all ROOT other header files. We strongly recommend to use these keywords
-in your code instead of hardcoded color numbers, eg:
+in your code instead of hardcoded color numbers, e.g.:
 <pre>
    myObject.SetFillColor(kRed);
    myObject.SetFillColor(kYellow-10);

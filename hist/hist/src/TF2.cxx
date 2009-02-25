@@ -404,7 +404,7 @@ void TF2::GetMinimumXY(Double_t &x, Double_t &y)
 // Method:
 //   First, a grid search is performed to find the initial estimate of the 
 //   minimum location. The range of the function is divided into fNpx and fNpy
-//   sub-ranges. If the function is "good"(or "bad"), these values can be changed
+//   sub-ranges. If the function is "good" (or "bad"), these values can be changed
 //   by SetNpx and SetNpy functions
 //   Then, Minuit minimization is used with starting values found by the grid search
 

@@ -259,7 +259,7 @@ Int_t TH2::Fill(Double_t x,Double_t y)
    //*-*
    //*-* If the storage of the sum of squares of weights has been triggered,
    //*-* via the function Sumw2, then the sum of the squares of weights is incremented
-   //*-* by 1in the cell corresponding to x,y.
+   //*-* by 1 in the cell corresponding to x,y.
    //*-*
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 

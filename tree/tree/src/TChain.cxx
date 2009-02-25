@@ -268,6 +268,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    //       TChain::GetEntries will force of the Tree headers in the chain to be
    //       read to read the number of entries in each Tree.
    //
+   //
    //    D- The TChain data structure
    //       Each TChainElement has a name equal to the tree name of this TChain
    //       and a title equal to the file name. So, to loop over the
@@ -1010,6 +1011,7 @@ TObjArray* TChain::GetListOfBranches()
    //
    // Warning: May set current tree!
    //
+   // Returns 1 on success and 0 on failure.
 
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate

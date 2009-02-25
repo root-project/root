@@ -54,7 +54,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
 //*-*-*-*-*-*-*-*-*-*-*-* Create a new Directory *-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                     ======================
 //  A new directory with name,title is created in the current directory
-//  The directory header information is immediatly saved on the file
+//  The directory header information is immediately saved in the file
 //  A new key is added in the parent directory
 //
 //  When this constructor is called from a class directly derived
@@ -704,7 +704,7 @@ void *TDirectory::GetObjectUnchecked(const char *namecycle)
 //
 //  VERY IMPORTANT NOTE:
 //  The calling application must cast the returned object to
-//  the final type, eg
+//  the final type, e.g.
 //      MyClass *obj = (MyClass*)directory->GetObject("some object of MyClass");
 
    return GetObjectChecked(namecycle,(TClass*)0);
@@ -973,7 +973,7 @@ TObject *TDirectory::Remove(TObject* obj)
 void TDirectory::rmdir(const char *name)
 {
    // Removes subdirectory from the directory
-   // When diredctory is deleted, all keys in all subdirectories will be
+   // When directory is deleted, all keys in all subdirectories will be
    // read first and deleted from file (if exists)
    // Equivalent call is Delete("name;*");
 
@@ -1112,7 +1112,7 @@ void TDirectory::TContext::CdNull()
 {
    // Set the current directory to null.
    // This is called from the TContext destructor.  Since the destructor is
-   // inline, we do no want to have it use directly a global variable.
+   // inline, we do not want to have it directly use a global variable.
 
    gDirectory = 0;
 }

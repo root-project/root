@@ -283,7 +283,7 @@ void TF3::GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z)
 // Method:
 //   First, a grid search is performed to find the initial estimate of the 
 //   minimum location. The range of the function is divided 
-//   into fNpx,fNpy and fNpz sub-ranges. If the function is "good"(or "bad"), 
+//   into fNpx,fNpy and fNpz sub-ranges. If the function is "good" (or "bad"), 
 //   these values can be changed by SetNpx(), SetNpy() and SetNpz() functions.
 //   Then, Minuit minimization is used with starting values found by the grid search
 

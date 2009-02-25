@@ -16,7 +16,7 @@
 // Abstract base class defining a generic interface to the underlying   //
 // Operating System.                                                    //
 // This is not an ABC in the strict sense of the (C++) word. For        //
-// every member function their is an implementation (often not more     //
+// every member function there is an implementation (often not more     //
 // than a call to AbstractMethod() which prints a warning saying        //
 // that the method should be overridden in a derived class), which      //
 // allows a simple partial implementation for new OS'es.                //

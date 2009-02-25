@@ -172,7 +172,7 @@ void TObject::AppendPad(Option_t *option)
 //______________________________________________________________________________
 void TObject::Browse(TBrowser *b)
 {
-   // Browse object. May be overridden for  other default action
+   // Browse object. May be overridden for another default action
 
    //Inspect();
    TClass::AutoBrowse(this,b);

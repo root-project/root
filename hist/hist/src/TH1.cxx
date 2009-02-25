@@ -115,10 +115,10 @@ All histogram classes are derived from the base class TH1
 
 <h4>Creating histograms</h4>
 <p>
-     Histograms are created by invoking one of the constructors, eg
+     Histograms are created by invoking one of the constructors, e.g.
 <pre>
-       TH1F *h1 = new TH1F("h1","h1 title",100,0,4.4);
-       TH2F *h2 = new TH2F("h2","h2 title",40,0,4,30,-3,3);
+       TH1F *h1 = new TH1F("h1", "h1 title", 100, 0, 4.4);
+       TH2F *h2 = new TH2F("h2", "h2 title", 40, 0, 4, 30, -3, 3);
 </pre>
 <p>  Histograms may also be created by:
   <ul>
@@ -163,35 +163,35 @@ All histogram classes are derived from the base class TH1
         bin = nbins+1; overflow bin
 </pre>
 <p>      In case of 2-D or 3-D histograms, a "global bin" number is defined.
-      For example, assuming a 3-D histogram with binx,biny,binz, the function
+      For example, assuming a 3-D histogram with (binx, biny, binz), the function
 <pre>
-        Int_t gbin = h->GetBin(binx,biny,binz);
+        Int_t gbin = h->GetBin(binx, biny, binz);
 </pre>
       returns a global/linearized gbin number. This global gbin is useful
       to access the bin content/error information independently of the dimension.
       Note that to access the information other than bin content and errors
-      one should use the TAxis object directly with eg:
+      one should use the TAxis object directly with e.g.:
 <pre>
          Double_t xcenter = h3->GetZaxis()->GetBinCenter(27);
 </pre>
        returns the center along z of bin number 27 (not the global bin)
-       in the 3-d histogram h3.
+       in the 3-D histogram h3.
 
 <h4>Alphanumeric Bin Labels</h4>
 
      By default, an histogram axis is drawn with its numeric bin labels.
      One can specify alphanumeric labels instead with:
 <ul>
-       <li> call TAxis::SetBinLabel(bin,label);
+       <li> call TAxis::SetBinLabel(bin, label);
            This can always be done before or after filling.
            When the histogram is drawn, bin labels will be automatically drawn.
            See example in $ROOTSYS/tutorials/graphs/labels1.C, labels2.C
-       <li> call to a Fill function with one of the arguments being a string, eg
+       <li> call to a Fill function with one of the arguments being a string, e.g.
 <pre>
-           hist1->Fill(somename,weigth);
-           hist2->Fill(x,somename,weight);
-           hist2->Fill(somename,y,weight);
-           hist2->Fill(somenamex,somenamey,weight);
+           hist1->Fill(somename, weigth);
+           hist2->Fill(x, somename, weight);
+           hist2->Fill(somename, y, weight);
+           hist2->Fill(somenamex, somenamey, weight);
 </pre>
            See example in $ROOTSYS/tutorials/hist/hlabels1.C, hlabels2.C
        <li> via TTree::Draw.
@@ -206,13 +206,17 @@ All histogram classes are derived from the base class TH1
      added to the list (THashList) of labels for a given axis.
      By default, an axis is drawn with the order of bins corresponding
      to the filling sequence. It is possible to reorder the axis
-       - alphabetically
-       - by increasing or decreasing values
-     The reordering can be triggered via the TAxis contextMenu by selecting
-     the menu item "LabelsOption" or by calling directly
-        TH1::LabelsOption(option,axis) where
+
 <ul>
-          <li>axis may be "X","Y" or "Z"
+          <li>alphabetically
+          <li>by increasing or decreasing values
+</ul>
+
+<p>     The reordering can be triggered via the TAxis context menu by selecting
+     the menu item "LabelsOption" or by calling directly
+        TH1::LabelsOption(option, axis) where
+<ul>
+          <li>axis may be "X", "Y" or "Z"
           <li>option may be:
            <ul>
              <li>"a" sort by alphabetic order
@@ -229,7 +233,7 @@ All histogram classes are derived from the base class TH1
      When the Filling is terminated, it is possible to trim the number
      of bins to match the number of active labels by calling
 <pre>
-           TH1::LabelsDeflate(axis) with axis = "X","Y" or "Z"
+           TH1::LabelsDeflate(axis) with axis = "X", "Y" or "Z"
 </pre>
      This operation is automatic when using TTree::Draw.
      Once bin labels have been created, they become persistent if the histogram
@@ -249,15 +253,15 @@ All histogram classes are derived from the base class TH1
      An histogram is typically filled with statements like:
 <pre>
        h1->Fill(x);
-       h1->Fill(x,w); fill with weight
-       h2->Fill(x,y)
-       h2->Fill(x,y,w)
-       h3->Fill(x,y,z)
-       h3->Fill(x,y,z,w)
+       h1->Fill(x, w); //fill with weight
+       h2->Fill(x, y)
+       h2->Fill(x, y, w)
+       h3->Fill(x, y, z)
+       h3->Fill(x, y, z, w)
 </pre>
      or via one of the Fill functions accepting names described above.
      The Fill functions compute the bin number corresponding to the given
-     x,y or z argument and increment this bin by the given weight.
+     x, y or z argument and increment this bin by the given weight.
      The Fill functions return the bin number for 1-D histograms or global
      bin number for 2-D and 3-D histograms.
 <p>     If TH1::Sumw2 has been called before filling, the sum of squares of
@@ -280,7 +284,7 @@ All histogram classes are derived from the base class TH1
      merging bins two by two. This automatic binning options is extensively
      used by the TTree::Draw function when histogramming Tree variables
      with an unknown range.
-<p>     This automatic binning option is supported for 1-d, 2-D and 3-D histograms.
+<p>     This automatic binning option is supported for 1-D, 2-D and 3-D histograms.
 
      During filling, some statistics parameters are incremented to compute
      the mean value and Root Mean Square with the maximum precision.
@@ -325,11 +329,11 @@ All histogram classes are derived from the base class TH1
 
      Many types of operations are supported on histograms or between histograms
 <ul>
-     <li> Addition of an histogram to the current histogram
+     <li> Addition of an histogram to the current histogram.
      <li> Additions of two histograms with coefficients and storage into the current
-       histogram
+       histogram.
      <li> Multiplications and Divisions are supported in the same way as additions.
-     <li> The Add, Divide and Multiply functions also exist to add,divide or multiply
+     <li> The Add, Divide and Multiply functions also exist to add, divide or multiply
        an histogram by a function.
 </ul>
      If an histogram has associated error bars (TH1::Sumw2 has been called),
@@ -343,7 +347,7 @@ All histogram classes are derived from the base class TH1
 
 <h4>Fitting histograms</h4>
 
-     Histograms (1-D,2-D,3-D and Profiles) can be fitted with a user
+     Histograms (1-D, 2-D, 3-D and Profiles) can be fitted with a user
      specified function via TH1::Fit. When an histogram is fitted, the
      resulting function with its parameters is added to the list of functions
      of this histogram. If the histogram is made persistent, the list of
@@ -379,8 +383,8 @@ All histogram classes are derived from the base class TH1
 <p>     For example the following two statements create and fill an histogram
      10000 times with a default gaussian distribution of mean 0 and sigma 1:
 <pre>
-       TH1F h1("h1","histo from a gaussian",100,-3,3);
-       h1.FillRandom("gaus",10000);
+       TH1F h1("h1", "histo from a gaussian", 100, -3, 3);
+       h1.FillRandom("gaus", 10000);
 </pre>
      TH1::GetRandom can be used to return a random number distributed
                     according the contents of an histogram.
@@ -457,17 +461,17 @@ All histogram classes are derived from the base class TH1
      titles at creation time. These titles can be given in the "title"
      parameter. They must be separated by ";":
 <pre>
-        TH1F* h=new TH1F("h","Histogram title;X Axis;Y Axis;Z Axis",100,0,1);
+        TH1F* h=new TH1F("h", "Histogram title;X Axis;Y Axis;Z Axis", 100, 0, 1);
 </pre>
      Any title can be omitted:
 <pre>
-        TH1F* h=new TH1F("h","Histogram title;;Y Axis",100,0,1);
-        TH1F* h=new TH1F("h",";;Y Axis",100,0,1);
+        TH1F* h=new TH1F("h", "Histogram title;;Y Axis", 100, 0, 1);
+        TH1F* h=new TH1F("h", ";;Y Axis", 100, 0, 1);
 </pre>
      The method SetTitle has the same syntax:
 <pre>
 </pre>
-        h->SetTitle("Histogram title;An other X title Axis");
+        h->SetTitle("Histogram title;Another X title Axis");
 
 <h4>Saving/Reading histograms to/from a ROOT file</h4>
 
@@ -475,12 +479,12 @@ All histogram classes are derived from the base class TH1
      on the file. Because TH1 derives from TNamed, the key identifier on
      the file is the histogram name:
 <pre>
-        TFile f("histos.root","new");
-        TH1F h1("hgaus","histo from a gaussian",100,-3,3);
-        h1.FillRandom("gaus",10000);
+        TFile f("histos.root", "new");
+        TH1F h1("hgaus", "histo from a gaussian", 100, -3, 3);
+        h1.FillRandom("gaus", 10000);
         h1->Write();
 </pre>
-     To Read this histogram in another Root session, do:
+     To read this histogram in another Root session, do:
 <pre>
         TFile f("histos.root");
         TH1F *h = (TH1F*)f.Get("hgaus");
@@ -602,7 +606,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 //        title  : histogram title
 //                 if title is of the form "stringt;stringx;stringy;stringz"
 //                 the histogram title is set to stringt,
-//                 the x axis title to stringy, the y axis title to stringy,etc
+//                 the x axis title to stringy, the y axis title to stringy, etc.
 //        nbins  : number of bins
 //        xlow   : low edge of first bin
 //        xup    : upper edge of last bin (not included in last bin)
@@ -633,7 +637,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 //     title  : histogram title
 //              if title is of the form "stringt;stringx;stringy;stringz"
 //              the histogram title is set to stringt,
-//              the x axis title to stringx, the y axis title to stringy,etc
+//              the x axis title to stringx, the y axis title to stringy, etc.
 //     nbins  : number of bins
 //     xbins  : array of low-edges for each bin
 //              This is an array of size nbins+1
@@ -659,7 +663,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //     title  : histogram title
 //              if title is of the form "stringt;stringx;stringy;stringz"
 //              the histogram title is set to stringt,
-//              the x axis title to stringx, the y axis title to stringy,etc
+//              the x axis title to stringx, the y axis title to stringy, etc.
 //     nbins  : number of bins
 //     xbins  : array of low-edges for each bin
 //              This is an array of size nbins+1
@@ -1204,8 +1208,8 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    // Overview:
    //
    //   Comparison of two histograms expect hypotheses that two histograms
-   //   represent the identical distributions. To make a decision p-value should
-   //   be calculated. The hypotheses of identity is rejected if p-value is
+   //   represent identical distributions. To make a decision p-value should
+   //   be calculated. The hypotheses of identity is rejected if the p-value is
    //   lower then some significance level. Traditionally significance levels
    //   0.1, 0.05 and 0.01 are used. The comparison procedure should include an
    //   analysis of the residuals which is often helpful in identifying the
@@ -1240,7 +1244,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   #sum_{i=1}^{r} p_{i}=1
    //End_Latex
    //    and the probability of belonging to the ith bin for some measured value
-   //    in both experiments is  equal to pi. The number of events in the ith
+   //    in both experiments is equal to pi. The number of events in the ith
    //    bin is a random variable with a distribution approximated by a Poisson
    //    probability distribution
    //Begin_Latex
@@ -1278,7 +1282,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //
    //  Unweighted and weighted histograms comparison:
    //
-   //   A simple  modification of the  ideas described above can be used for the
+   //   A simple modification of the ideas described above can be used for the
    //   comparison of the usual (unweighted) and weighted histograms. Let us
    //   denote the number of events in the ith bin in the unweighted
    //   histogram as ni and the common weight of events in the ith bin of the
@@ -3020,7 +3024,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //                = "V"  Verbose mode (default is between Q and V)
 //                = "E"  Perform better Errors estimation using Minos technique
 //                = "B"  Use this option when you want to fix one or more parameters
-//                       and the fitting function is like "gaus","expo","poln","landau".
+//                       and the fitting function is like "gaus", "expo", "poln", "landau".
 //                = "M"  More. Improve fit results
 //                = "R"  Use the Range specified in the function range
 //                = "N"  Do not store the graphics function, do not draw
@@ -3040,8 +3044,8 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //      with the expression to be fitted. For example, if your histogram
 //      has a defined range between -4 and 4 and you want to fit a gaussian
 //      only in the interval 1 to 3, you can do:
-//           TF1 *f1 = new TF1("f1","gaus",1,3);
-//           histo->Fit("f1","R");
+//           TF1 *f1 = new TF1("f1", "gaus", 1, 3);
+//           histo->Fit("f1", "R");
 //
 //      Setting initial conditions
 //      ==========================
@@ -3057,10 +3061,10 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //      if parmin>=parmax, the parameter is fixed
 //      Note that you are not forced to fix the limits for all parameters.
 //      For example, if you fit a function with 6 parameters, you can do:
-//        func->SetParameters(0,3.1,1.e-6,-8,0,100);
-//        func->SetParLimits(3,-10,-4);
-//        func->FixParameter(4,0);
-//        func->SetParLimits(5, 1,1);
+//        func->SetParameters(0, 3.1, 1.e-6, -8, 0, 100);
+//        func->SetParLimits(3, -10, -4);
+//        func->FixParameter(4, 0);
+//        func->SetParLimits(5, 1, 1);
 //      With this setup, parameters 0->2 can vary freely
 //      Parameter 3 has boundaries [-10,-4] with initial value -8
 //      Parameter 4 is fixed to 0
@@ -3114,25 +3118,25 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //      Access to the fit covariance matrix
 //      ===================================
 //      Example1:
-//         TH1F h("h","test",100,-2,2);
-//         h.FillRandom("gaus",1000);
+//         TH1F h("h", "test", 100, -2, 2);
+//         h.FillRandom("gaus", 1000);
 //         h.Fit("gaus");
 //         Double_t matrix[3][3];
-//         gMinuit->mnemat(&matrix[0][0],3);
+//         gMinuit->mnemat(&matrix[0][0], 3);
 //      Example2:
-//         TH1F h("h","test",100,-2,2);
-//         h.FillRandom("gaus",1000);
+//         TH1F h("h", "test", 100, -2, 2);
+//         h.FillRandom("gaus", 1000);
 //         h.Fit("gaus");
 //         TVirtualFitter *fitter = TVirtualFitter::GetFitter();
-//         TMatrixD matrix(npar,npar,fitter->GetCovarianceMatrix());
-//         Double_t errorFirstPar = fitter->GetCovarianceMatrixElement(0,0);
+//         TMatrixD matrix(npar, npar, fitter->GetCovarianceMatrix());
+//         Double_t errorFirstPar = fitter->GetCovarianceMatrixElement(0, 0);
 //
 //
 //      Changing the maximum number of parameters
 //      =========================================
 //     By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
 //     You can redefine this default value by calling :
-//       TVirtualFitter::Fitter(0,150); //to get a maximum of 150 parameters
+//       TVirtualFitter::Fitter(0, 150); //to get a maximum of 150 parameters
 //
 //      Excluding points
 //      ================
@@ -3148,13 +3152,13 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //     }
 //
 //     void exclude() {
-//        TF1 *f1 = new TF1("f1","[0] +[1]*x +gaus(2)",0,5);
-//        f1->SetParameters(6,-1,5,3,0.2);
-//        TH1F *h = new TH1F("h","background + signal",100,0,5);
-//        h->FillRandom("f1",2000);
-//        TF1 *fline = new TF1("fline",fline,0,5,2);
-//        fline->SetParameters(2,-1);
-//        h->Fit("fline","l");
+//        TF1 *f1 = new TF1("f1", "[0] +[1]*x +gaus(2)", 0, 5);
+//        f1->SetParameters(6, -1,5, 3, 0.2);
+//        TH1F *h = new TH1F("h", "background + signal", 100, 0, 5);
+//        h->FillRandom("f1", 2000);
+//        TF1 *fline = new TF1("fline", fline, 0, 5, 2);
+//        fline->SetParameters(2, -1);
+//        h->Fit("fline", "l");
 //     }
 //
 //      Warning when using the option "0"
@@ -3162,7 +3166,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //     When selecting the option "0", the fitted function is added to
 //     the list of functions of the histogram, but it is not drawn.
 //     You can undo what you disabled in the following way:
-//       h.Fit("myFunction","0"); // fit, store function but do not draw
+//       h.Fit("myFunction", "0"); // fit, store function but do not draw
 //       h.Draw(); function is not drawn
 //       const Int_t kNotDraw = 1<<9;
 //       h.GetFunction("myFunction")->ResetBit(kNotDraw);
@@ -3944,7 +3948,7 @@ Double_t TH1::GetBinContent(Int_t binx, Int_t biny) const
 {
    //   -*-*-*-*-*Return content of bin number binx, biny
    //             =======================================
-   // NB: Function to be called for 2-d histograms only
+   // NB: Function to be called for 2-D histograms only
    // see convention for numbering bins in TH1::GetBin
 
    Int_t bin = GetBin(binx,biny);
@@ -3956,7 +3960,7 @@ Double_t TH1::GetBinContent(Int_t binx, Int_t biny, Int_t binz) const
 {
    //   -*-*-*-*-*Return content of bin number binx,biny,binz
    //             ===========================================
-   // NB: Function to be called for 3-d histograms only
+   // NB: Function to be called for 3-D histograms only
    // see convention for numbering bins in TH1::GetBin
 
    Int_t bin = GetBin(binx,biny,binz);
@@ -5206,7 +5210,7 @@ void TH1::RebinAxis(Double_t x, TAxis *axis)
    // The algorithm makes a copy of the histogram, then loops on all bins
    // of the old histogram to fill the rebinned histogram.
    // Takes into account errors (Sumw2) if any.
-   // The algorithm works for 1-d, 2-d and 3-d histograms.
+   // The algorithm works for 1-d, 2-D and 3-D histograms.
    // The bit kCanRebin must be set before invoking this function.
    //  Ex:  h->SetBit(TH1::kCanRebin);
 
@@ -6983,7 +6987,7 @@ void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymi
    // To change only the axis limits, see TAxis::SetRange
 
    if (GetDimension() != 2) {
-      Error("SetBins","Operation only valid for 2-d histograms");
+      Error("SetBins","Operation only valid for 2-D histograms");
       return;
    }
    fXaxis.SetRange(0,0);
@@ -7011,7 +7015,7 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBi
    // xBins is supposed to be of length nx+1, yBins is supposed to be of length ny+1
 
    if (GetDimension() != 2) {
-      Error("SetBins","Operation only valid for 2-d histograms");
+      Error("SetBins","Operation only valid for 2-D histograms");
       return;
    }
    fXaxis.SetRange(0,0);
@@ -7039,7 +7043,7 @@ void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymi
    // To change only the axis limits, see TAxis::SetRange
 
    if (GetDimension() != 3) {
-      Error("SetBins","Operation only valid for 3-d histograms");
+      Error("SetBins","Operation only valid for 3-D histograms");
       return;
    }
    fXaxis.SetRange(0,0);
@@ -7228,7 +7232,7 @@ Double_t TH1::GetBinError(Int_t binx, Int_t biny) const
 {
    //   -*-*-*-*-*Return error of bin number binx, biny
    //             =====================================
-   // NB: Function to be called for 2-d histograms only
+   // NB: Function to be called for 2-D histograms only
 
    Int_t bin = GetBin(binx,biny);
    return GetBinError(bin);
@@ -7239,7 +7243,7 @@ Double_t TH1::GetBinError(Int_t binx, Int_t biny, Int_t binz) const
 {
    //   -*-*-*-*-*Return error of bin number binx,biny,binz
    //             =========================================
-   // NB: Function to be called for 3-d histograms only
+   // NB: Function to be called for 3-D histograms only
 
    Int_t bin = GetBin(binx,biny,binz);
    return GetBinError(bin);
@@ -7250,7 +7254,7 @@ Double_t TH1::GetCellContent(Int_t binx, Int_t biny) const
 {
    //   -*-*-*-*-*Return content of bin number binx, biny
    //             =====================================
-   // NB: Function to be called for 2-d histograms only
+   // NB: Function to be called for 2-D histograms only
 
    Int_t bin = GetBin(binx,biny);
    return GetBinContent(bin);
@@ -7261,7 +7265,7 @@ Double_t TH1::GetCellError(Int_t binx, Int_t biny) const
 {
    //   -*-*-*-*-*Return error of bin number binx, biny
    //             =====================================
-   // NB: Function to be called for 2-d histograms only
+   // NB: Function to be called for 2-D histograms only
 
    Int_t bin = GetBin(binx,biny);
    return GetBinError(bin);
@@ -7376,7 +7380,7 @@ TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 //                 This option is given by default.
 //
 //  NOTE that the background is only evaluated in the current range of this histogram.
-//  ie, if this has a bin range (set via h->GetXaxis()->SetRange(binmin,binmax),
+//  i.e., if this has a bin range (set via h->GetXaxis()->SetRange(binmin, binmax),
 //  the returned histogram will be created with the same number of bins
 //  as this input histogram, but only bins from binmin to binmax will be filled
 //  with the estimated background.

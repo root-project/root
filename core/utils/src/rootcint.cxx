@@ -2466,8 +2466,8 @@ void WriteClassInit(G__ClassInfo &cl)
    if (NeedShadowClass(cl)) {
       (*dictSrcOut) << "      // Make sure the shadow class has the right sizeof" << std::endl;
       if (G__ShadowMaker::IsStdPair(cl)) {
-         // Some compiler don't recognize ::pair even after a 'using namespace std;'
-         // and there is not risk of confusion since it is a template.
+         // Some compilers don't recognize ::pair even after a 'using namespace std;'
+         // and there is no risk of confusion since it is a template.
          //fprintf(fp, "      R__ASSERT(sizeof(%s)", classname.c_str() );
       } else {
          std::string clfullname;

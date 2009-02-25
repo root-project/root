@@ -1010,7 +1010,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 {
    // Automatic pad generation by division.
    //
-   //  The current canvas is divided in nx by ny equal divisions(pads).
+   //  The current canvas is divided in nx by ny equal divisions (pads).
    //  xmargin is the space along x between pads in percent of canvas.
    //  ymargin is the space along y between pads in percent of canvas.
    //    (see Note3 below for the special case xmargin <=0 and ymargin <=0)
@@ -4116,7 +4116,7 @@ void TPad::Pop()
 //______________________________________________________________________________
 void TPad::Print(const char *filename) const
 {
-   // Save Pad contents on a file in various formats
+   // Save Pad contents in a file in one of various formats.
    //
    //   if filename is "", the file produced is padname.ps
    //   if filename starts with a dot, the padname is added in front
@@ -4158,7 +4158,7 @@ static Bool_t ContainsTImage(TList *li)
 //______________________________________________________________________________
 void TPad::Print(const char *filenam, Option_t *option)
 {
-   // Save Pad contents on a file in various formats.
+   // Save Pad contents in a file in one of various formats.
    //
    //   if option  =  0   - as "ps"
    //               "ps"  - Postscript file is produced (see special cases below)
@@ -4172,7 +4172,8 @@ void TPad::Print(const char *filenam, Option_t *option)
    //               "gif+NN" - an animated GIF file is produced, where NN is delay in 10ms units
    //               "xpm" - a XPM file is produced
    //               "png" - a PNG file is produced
-   //               "jpg" - a JPEG file is produced
+   //               "jpg" - a JPEG file is produced. 
+   //                       NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
    //               "tiff" - a TIFF file is produced
    //               "cxx" - a C++ macro file is produced
    //               "xml" - a XML file
@@ -4207,7 +4208,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    //  To generate a Postscript file containing more than one picture, see
    //  class TPostScript.
    //
-   //   Writing several canvases to the same Postscript file
+   //   Writing several canvases to the same Postscript file:
    //   ----------------------------------------------------
    // if the Postscript file name finishes with "(", the file is not closed
    // if the Postscript file name finishes with ")" and the file has been opened
@@ -4878,7 +4879,7 @@ void TPad::ResizePad(Option_t *option)
 //______________________________________________________________________________
 void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
 {
-   // Save Pad contents on a  file in various formats
+   // Save Pad contents in a file in one of various formats.
    //
    //   if filename is "", the file produced is padname.ps
    //   if filename starts with a dot, the padname is added in front
@@ -4890,6 +4891,7 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
    //   if filename contains .xpm, a XPM file is produced
    //   if filename contains .png, a PNG file is produced
    //   if filename contains .jpg, a JPEG file is produced
+   //     NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
    //   if filename contains .tiff, a TIFF file is produced
    //   if filename contains .C or .cxx, a C++ macro file is produced
    //   if filename contains .root, a Root file is produced

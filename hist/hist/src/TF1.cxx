@@ -1320,7 +1320,7 @@ void TF1::Draw(Option_t *option)
    // Possible option values are:
    //   "SAME"  superimpose on top of existing picture
    //   "L"     connect all computed points with a straight line
-   //   "C"     connect all computed points with a smooth curve.
+   //   "C"     connect all computed points with a smooth curve
    //   "FC"    draw a fill area below a smooth curve
    //
    // Note that the default value is "L". Therefore to draw on top
@@ -1348,7 +1348,7 @@ TF1 *TF1::DrawCopy(Option_t *option) const
    // Possible option values are:
    //   "SAME"  superimpose on top of existing picture
    //   "L"     connect all computed points with a straight line
-   //   "C"     connect all computed points with a smooth curve.
+   //   "C"     connect all computed points with a smooth curve
    //   "FC"    draw a fill area below a smooth curve
    //
    // Note that the default value is "L". Therefore to draw on top
@@ -2390,11 +2390,14 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
 //______________________________________________________________________________
 Double_t TF1::IntegralError(Double_t a, Double_t b, Double_t epsilon)
 {
-   // Return Error on Integral of a parameteric function between a and b due to the parameters uncertainties
-   // It is assumed the parameters are estimated from a fit and the covariance matrix resulting from the fit is used in
-   // estimating this error.
-   // IMPORTANT NOTE: The calculation is valid assuming the parameters are resulting from the latest fit. If in the meantime
-   // a fit is done using another function, the routine will signal  an error and return zero.
+   // Return Error on Integral of a parameteric function between a and b 
+   // due to the parameters uncertainties.
+   // It is assumed the parameters are estimated from a fit and the covariance
+   // matrix resulting from the fit is used in estimating this error.
+   //
+   // IMPORTANT NOTE: The calculation is valid assuming the parameters 
+   // are resulting from the latest fit. If in the meantime a fit is done 
+   // using another function, the routine will signal an error and return zero.
 
    return ROOT::TF1Helper::IntegralError(this,a,b,epsilon);
 }

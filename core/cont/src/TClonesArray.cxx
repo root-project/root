@@ -76,7 +76,7 @@ TClonesArray::TClonesArray() : TObjArray()
 TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s)
 {
    // Create an array of clone objects of classname. The class must inherit from
-   // TObject. If the class defines an own operator delete(), make sure that
+   // TObject. If the class defines its own operator delete(), make sure that
    // it looks like this:
    //
    //    void MyClass::operator delete(void *vp)
@@ -113,7 +113,7 @@ TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
    //          TObject::SetDtorOnly(0);
    //    }
    //
-   // The second argument s indicates an approximate number of objects
+   // The second argument, s, indicates an approximate number of objects
    // that will be entered in the array. If more than s objects are entered,
    // the array will be automatically expanded.
    //

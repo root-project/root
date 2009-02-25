@@ -11,32 +11,32 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  The TKey class includes functions to book space on a file,          //
+//  The TKey class includes functions to book space in a file,          //
 //   to create I/O buffers, to fill these buffers,                      //
 //   to compress/uncompress data buffers.                               //
 //                                                                      //
-//  Before saving (making persistent) an object on a file, a key must   //
+//  Before saving (making persistent) an object in a file, a key must   //
 //  be created. The key structure contains all the information to       //
-//  uniquely identify a persistent object on a file.                    //
-//     fNbytes    = number of bytes for the compressed object+key       //
+//  uniquely identify a persistent object in a file.                    //
+//     fNbytes    = Number of bytes for the compressed object+key       //
 //     fObjlen    = Length of uncompressed object                       //
 //     fDatime    = Date/Time when the object was written               //
-//     fKeylen    = number of bytes for the key structure               //
-//     fCycle     = cycle number of the object                          //
+//     fKeylen    = Number of bytes for the key structure               //
+//     fCycle     = Cycle number of the object                          //
 //     fSeekKey   = Address of the object on file (points to fNbytes)   //
 //                  This is a redundant information used to cross-check //
 //                  the data base integrity.                            //
 //     fSeekPdir  = Pointer to the directory supporting this object     //
 //     fClassName = Object class name                                   //
-//     fName      = name of the object                                  //
-//     fTitle     = title of the object                                 //
+//     fName      = Name of the object                                  //
+//     fTitle     = Title of the object                                 //
 //                                                                      //
-//  In the 16 highest bit of fSeekPdir is encoded a pid offset.  This   //
+//  In the 16 highest bits of fSeekPdir is encoded a pid offset.  This  //
 //  offset is to be added to the pid index stored in the TRef object    //
 //  and the referenced TObject.                                         //
 //                                                                      //
 //  The TKey class is used by ROOT to:                                  //
-//    - to write an object in the Current Directory                     //
+//    - to write an object in the current directory                     //
 //    - to write a new ntuple buffer                                    //
 //                                                                      //
 //  The structure of a file is shown in TFile::TFile.                   //

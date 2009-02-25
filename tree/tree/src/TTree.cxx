@@ -13,14 +13,13 @@
 //                                                                      //
 // TTree                                                                //
 //                                                                      //
-//  a TTree object has a header with a name and a title.
+//  A TTree object has a header with a name and a title.
 //  It consists of a list of independent branches (TBranch). Each branch
 //  has its own definition and list of buffers. Branch buffers may be
 //  automatically written to disk or kept in memory until the Tree attribute
-//  fMaxVirtualSize is reached.
-//  Variables of one branch are written to the same buffer.
-//  A branch buffer is automatically compressed if the file compression
-//  attribute is set (default).
+//  fMaxVirtualSize is reached. Variables of one branch are written to the
+//  same buffer. A branch buffer is automatically compressed if the file
+//  compression attribute is set (default).
 //
 //  Branches may be written to different files (see TBranch::SetFile).
 //
@@ -37,8 +36,8 @@
 //     Creates a Tree with name and title.
 //
 //     Various kinds of branches can be added to a tree:
-//       A - simple structures or list of variables. (may be for C or Fortran structures)
-//       B - any object (inheriting from TObject). (we expect this option be the most frequent)
+//       A - simple structures or list of variables. (maybe for C or Fortran structures)
+//       B - any object inheriting from TObject. (expected be most frequently used)
 //       C - a ClonesArray. (a specialized object for collections of same class objects)
 //
 //  ==> Case A
@@ -130,7 +129,7 @@
 //
 //  ==> Case E
 //      ======
-//     TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel );
+//     TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel);
 //         STLcollection is the address of a pointer to std::vector, std::list,
 //         std::deque, std::set or std::multiset containing pointers to objects.
 //         If the splitlevel is a value bigger than 100 then the collection
@@ -161,32 +160,33 @@
 // are saved.
 //
 // void tree3AddBranch(){
-//   TFile f("tree3.root","update");
+//   TFile f("tree3.root", "update");
 //
 //   Float_t new_v;
 //   TTree *t3 = (TTree*)f->Get("t3");
-//   TBranch *newBranch = t3->Branch("new_v",&new_v,"new_v/F");
+//   TBranch *newBranch = t3->Branch("new_v", &new_v, "new_v/F");
 //
 //   //read the number of entries in the t3
 //   Long64_t nentries = t3->GetEntries();
 //
 //   for (Long64_t i = 0; i < nentries; i++){
-//     new_v= gRandom->Gaus(0,1);
+//     new_v= gRandom->Gaus(0, 1);
 //     newBranch->Fill();
 //   }
 //   // save only the new version of the tree
-//   t3->Write("",TObject::kOverwrite);
+//   t3->Write("", TObject::kOverwrite);
 // }
 // Adding a branch is often not possible because the tree is in a read-only
 // file and you do not have permission to save the modified tree with the
-// new branch. Even if you do have the permission, you risk loosing the
+// new branch. Even if you do have the permission, you risk losing the
 // original tree with an unsuccessful attempt to save  the modification.
 // Since trees are usually large, adding a branch could extend it over the
-// 2GB  limit. In this case, the attempt to write the tree fails, and the
+// 2GB limit. In this case, the attempt to write the tree fails, and the
 // original data is erased.
 // In addition, adding a branch to a tree enlarges the tree and increases
 // the amount of memory needed to read an entry, and therefore decreases
 // the performance.
+//
 // For these reasons, ROOT offers the concept of friends for trees (and chains).
 // We encourage you to use TTree::AddFriend rather than adding a branch manually.
 //
@@ -707,7 +707,8 @@ TTree::~TTree()
 //______________________________________________________________________________
 void TTree::AddClone(TTree* clone)
 {
-   // Add a cloned tree to our list of trees to be notified whenever we change our branch addresses or when we are deleted.
+   // Add a cloned tree to our list of trees to be notified whenever we change
+   //  our branch addresses or when we are deleted.
    if (!fClones) {
       fClones = new TList();
       fClones->SetOwner(false);
@@ -2196,8 +2197,9 @@ TFile* TTree::ChangeFile(TFile* file)
 //______________________________________________________________________________
 Bool_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t isptr)
 {
-   // Check whether or not the address described by the last 3 parameters matches the content of the branch.
-   // If a Data Model Evolution conversion is involved, reset the fInfo of the branch.
+   // Check whether or not the address described by the last 3 parameters
+   // matches the content of the branch. If a Data Model Evolution conversion
+   // is involved, reset the fInfo of the branch.
 
    if (GetMakeClass()) {
       // If we are in MakeClass mode so we do not really use classes.
@@ -2842,7 +2844,8 @@ void TTree::Delete(Option_t* option /* = "" */)
  //______________________________________________________________________________
 void TTree::DirectoryAutoAdd(TDirectory* dir)
 {
-   // Called by TKey and TObject::Clone to automatically add us to a directory when we are read from a file.
+   // Called by TKey and TObject::Clone to automatically add us to a directory
+   // when we are read from a file.
 
    if (fDirectory == dir) return;
    if (fDirectory) fDirectory->Remove(this);
@@ -3132,7 +3135,8 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //    tree.Draw("myvar","Entry$%2==0");
    //
    //  Entry$      : return the current entry number (== TTree::GetReadEntry())
-   //  LocalEntry$ : return the current entry number in the current tree of a chain (== GetTree()->GetReadEntry())
+   //  LocalEntry$ : return the current entry number in the current tree of a 
+   //                chain (== GetTree()->GetReadEntry())
    //  Entries$    : return the total number of entries (== TTree::GetEntries())
    //  Length$     : return the total number of element of this formula for this
    //                 entry (==TTreeFormula::GetNdata())
@@ -3977,7 +3981,8 @@ Long64_t TTree::GetEntries(const char *selection)
 //______________________________________________________________________________
 Long64_t TTree::GetEntriesFriend() const
 {
-   // Return number of entries of this tree if not zero, otherwise return the number of entries in the first friend tree.
+   // Return pointer to the 1st Leaf named name in any Branch of this Tree or
+   // any branch in the list of friend trees.
 
    if (fEntries) return fEntries;
    if (!fFriends) return 0;
