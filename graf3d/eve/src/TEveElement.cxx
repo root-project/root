@@ -912,6 +912,9 @@ void TEveElement::ExportToCINT(char* var_name)
 //______________________________________________________________________________
 void TEveElement::DumpSourceObject() const
 {
+   // Call Dump() on source object.
+   // Throws an exception if it is not set.
+
    static const TEveException eh("TEveElement::DumpSourceObject ");
 
    TObject *so = GetSourceObject();
@@ -924,6 +927,9 @@ void TEveElement::DumpSourceObject() const
 //______________________________________________________________________________
 void TEveElement::PrintSourceObject() const
 {
+   // Call Print() on source object.
+   // Throws an exception if it is not set.
+
    static const TEveException eh("TEveElement::PrintSourceObject ");
 
    TObject *so = GetSourceObject();
@@ -936,6 +942,9 @@ void TEveElement::PrintSourceObject() const
 //______________________________________________________________________________
 void TEveElement::ExportSourceObjectToCINT(char* var_name) const
 {
+   // Export source object to CINT with given name for the variable.
+   // Throws an exception if it is not set.
+
    static const TEveException eh("TEveElement::ExportSourceObjectToCINT ");
 
    TObject *so = GetSourceObject();
