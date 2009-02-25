@@ -1,4 +1,69 @@
-<br> 
-<hr> 
-<a name="proof"></a> 
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+</head><body>
+<br>
+<hr> <a name="proof"></a>
 <h3>Proof</h3>
+<ul>
+<li>New functionality</li>
+<ul>
+<li> Add support for session queuing in the scheduler. This
+allows to control the number of sessions allowed to process queries
+concurrently. The feature is enabled by a new parameter 'queue:fifo' in
+the 'xpd.schedparam' directive. In case of static worker assignment
+(default, random,
+round-robin) the max number of running sessions can be limited by
+another new parameter 'mxrun'; for
+example<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; <big><span style="font-family: monospace;">xpd.schedparam default
+mxrun:3 queue:fifo</span></big><br>
+will run concurrently only 3 sessions. Additional requests are queued and run as soon as one of the running
+sessions goes idle. The current policy is FIFO, so that there is a rotation among queued
+sessions. In the case of load-based worker assignment, the max number of running
+queries is determined dynamically.</li>
+<li>Add support for repeat functionality in the xrd.worker
+directive. To avoid repeating the same line N times one can just add 'repeat=N' in the line; for
+example<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; <big><span style="font-family: monospace;">xpd.worker worker proofwrks:2093 repeat=4</span></big><br>
+will define 4 workers on port 2093 of machine 'proofwrks'.</li>
+</ul>
+<li>Fixes</li>
+<ul>
+<li>Fix several problems in TChain::Draw including</li>
+</ul>
+<ul>
+<ul>
+<li>drawing into an existing histogram, i.e.
+chain-&gt;Draw("var&gt;&gt;myhist");</li>
+</ul>
+<ul>
+<li>treatment of histogram merging in case of small
+statistics, i.e. when<br>
+the autobinning is not or only partially active;</li>
+</ul>
+<ul>
+<li>usage of existing canvases when different histogram
+names are specified;<br>
+</li>
+</ul>
+</ul>
+<ul>
+<li>Fix a problem causing a duplication of the final feedback
+object</li>
+</ul>
+<ul>
+<li>Fix problem with determining the subdir name in
+TFileMerger::MergeRecursive on Windows</li>
+<li>Make sure that the default sandbox is under $HOME/.proof</li>
+<li>Fix a problem with dataset validation in multi-level
+master setups</li>
+<li>Fix a problem with ordinal numbers in multi-master setups</li>
+<li>Fix a problem with defining the internal paths for
+executables when configuring with '--prefix'</li>
+<li>Fix backward-incompatibility issue giving the error message &nbsp;"unknown action code: 5112"</li>
+</ul>
+
+</ul>
+</body></html>
