@@ -839,8 +839,12 @@ Bool_t TCint::CheckClassInfo(const char *name)
 
    Int_t tagnum = G__defined_tagname(classname, 2); // This function might modify the name (to add space between >>).
    if (tagnum >= 0) {
-      delete [] classname;
-      return kTRUE;
+      G__ClassInfo info(tagnum);
+      if (info.Property() & (G__BIT_ISENUM | G__BIT_ISCLASS | G__BIT_ISSTRUCT | G__BIT_ISUNION | G__BIT_ISNAMESPACE)) {
+         // We are now sure that the entry is not in fact an autoload entry.
+         delete [] classname;
+         return kTRUE;
+      }
    }
    G__TypedefInfo t(name);
    if (t.IsValid() && !(t.Property()&G__BIT_ISFUNDAMENTAL)) {
