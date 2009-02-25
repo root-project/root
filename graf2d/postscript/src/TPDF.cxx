@@ -1933,6 +1933,8 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    // yy: y position of the text
    // chars: text to be drawn
 
+   if (fTextSize <= 0) return;
+
    const Double_t kDEGRAD = TMath::Pi()/180.;
    char str[8];
    Double_t x = xx;
