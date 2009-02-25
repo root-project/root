@@ -47,6 +47,22 @@
      }
      </pre>
 </li>
+<li>Fixed  the bug <a href="https://savannah.cern.ch/bugs/?45607">#45607</a> by creating a list of functions when using TGraph default constructor.
+<li>Fixed a bug when fitting TGraphErrors with zero error in y but non-zero error in x
+</li>
+</ul>
+
+<h4>TH1</h4>
+<ul>
+  <li>Speed up <tt>TH1::GetStats, TH2::GetStats, TH3::GetStats</tt> in case the sum of weights is null and the number of entries is also null
+  <li>Optimize the way the function integral is computed in <tt>TH1::FillRandom</tt>
+  </ul>
+
+<h4>TH3</h4>
+<ul>
+  <li>Add implementation of <tt>TH3::Interpolate</tt> using a tri-linear interpolation method</li>
+  <li>Fix a bug in TH3::Project3D (https://savannah.cern.ch/bugs/?46432) for the error calculation in case of weighted histogram (or when using option "E") and no axis range is set.
+</li>
 </ul>
 
 <h4>THistPainter</h4>
@@ -66,3 +82,15 @@
 </li>
 </ul>
 
+<h4>TUnfold</h4>
+<ul>
+<li>Add a new version. A new class <tt>TUnfoldSys</tt> provides support for the propagation of systematic errors.
+<li>  Some bugs were also fixed due to multiplication of addition of sparse matrices.
+</ul>
+
+<h4>Fitting Methods</h4>
+<ul>
+  <li>Introduce a better treatment of the step size used when fitting an object with a TF1. Use now by default is not zero the error provided by TF1. In case of limits use an appropriate step size to avoid Minuit to go over the limits.
+  <li>fix bug https://savannah.cern.ch/bugs/?45909  when fitting with bad range values (outside the histogram range). 
+<li> detect the case when the data set is empty and don't perform any minimizationin this case but exits from fitting and produce a warning message
+  </ul>
