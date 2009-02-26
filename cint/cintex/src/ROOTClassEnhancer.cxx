@@ -254,8 +254,7 @@ namespace ROOT { namespace Cintex {
       Member getfuncs = TypeGet().MemberByName("__getNewDelFunctions");
       if( getfuncs ) {
          NewDelFunctions_t* newdelfunc = 0;
-         ValueObject voNewDelFunc = ValueObject::Create(newdelfunc);
-         getfuncs.Invoke(&voNewDelFunc);
+         getfuncs.Invoke(newdelfunc);
 
          if ( newdelfunc ) {
             info->SetNew(newdelfunc->fNew);
