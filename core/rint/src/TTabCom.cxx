@@ -1540,8 +1540,9 @@ TString TTabCom::DeterminePath(const TString & fileName,
    if (PathIsSpecifiedInFileName(fileName)) {
       TString path = fileName;
       gSystem->ExpandPathName(path);
-      path = gSystem->DirName(path);
-
+      if (path[path.Length()-1]!='/' && path[path.Length()-1]!='\') {
+         path = gSystem->DirName(path);
+      }
       return path;
    } else {
       TString newBase;
