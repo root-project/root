@@ -30,6 +30,12 @@ namespace PyROOT {
 
 namespace {
 
+// helper to test whether a method is used in a pseudo-function modus
+   bool inline IsPseudoFunc( MethodProxy* pymeth )
+   {
+      return (void*)pymeth == (void*)pymeth->fSelf;
+   }
+
 // helper for collecting/maintaining exception data in overload dispatch
    struct PyError_t {
       PyError_t() { fType = fValue = fTrace = 0; }
@@ -138,7 +144,13 @@ namespace {
 //____________________________________________________________________________
    PyObject* mp_meth_self( MethodProxy* pymeth, void* )
    {
-      if ( pymeth->fSelf != 0 && (void*)pymeth->fSelf != (void*)pymeth ) {
+   // return the bound self, if any; in case of pseudo-function role, pretend
+   // that the data member im_self does not exist
+      if ( IsPseudoFunc( pymeth ) ) {
+         PyErr_Format( PyExc_AttributeError,
+            "function %s has no attribute \'im_self\'", pymeth->fMethodInfo->fName.c_str() );
+         return 0;
+      } else if ( pymeth->fSelf != 0 ) {
          Py_INCREF( (PyObject*)pymeth->fSelf );
          return (PyObject*)pymeth->fSelf;
       }
@@ -150,11 +162,25 @@ namespace {
 //____________________________________________________________________________
    PyObject* mp_meth_class( MethodProxy* pymeth, void* )
    {
-      if ( (void*)pymeth->fSelf != (void*)pymeth ) {
+   // return scoping class; in case of pseudo-function role, pretend that there
+   // is no encompassing class (i.e. global scope)
+      if ( ! IsPseudoFunc( pymeth ) ) {
          PyObject* pyclass = pymeth->fMethodInfo->fMethods[0]->GetScope();
+         if ( ! pyclass ) {
+            PyErr_Format( PyExc_AttributeError,
+               "function %s has no attribute \'im_class\'", pymeth->fMethodInfo->fName.c_str() );
+            return 0;
+         }
          return pyclass;
       }
 
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
+//____________________________________________________________________________
+   PyObject* mp_func_closure( MethodProxy* /* pymeth */, void* )
+   {
       Py_INCREF( Py_None );
       return Py_None;
    }
@@ -174,23 +200,34 @@ namespace {
             maxargmeth = imeth;
          }
       }
+      co_argcount += 1;       // for 'self'
 
-   // code object representing the statement 'pass'
-      PyObject* co_code = PyString_FromString( "d\x00\x00S" );
+   // for now, code object representing the statement 'pass'
+      PyObject* co_code = PyString_FromStringAndSize( "d\x00\x00S", 4 );
+   //   PyObject* co_code = PyString_FromStringAndSize( "t\x00\x00d\x01\x00\x83\x01\x00}\x02\x00|\x02\x00S", 16 );
 
    // tuple with all the const literals used in the function
-      PyObject* co_consts = PyTuple_New( 1 );
+      PyObject* co_consts = PyTuple_New( 2 );
       Py_INCREF( Py_None );
       PyTuple_SET_ITEM( co_consts, 0, Py_None );
+      PyObject* val1 = PyFloat_FromDouble( -1.0 );
+      PyTuple_SET_ITEM( co_consts, 1, val1 );
+
+      PyObject* co_names = PyTuple_New( 2 );
+      PyTuple_SET_ITEM( co_names, 0, PyString_FromString( "dafunc" ) );
+      PyTuple_SET_ITEM( co_names, 1, PyString_FromString( "acos" ) );
+
 
    // names, freevars, and cellvars go unused
       PyObject* co_unused = PyTuple_New( 0 );
 
    // variable names are both the argument and local names
-      PyObject* co_varnames = PyTuple_New( co_argcount );
-      for ( int iarg = 0; iarg < co_argcount; ++iarg ) {
-         PyTuple_SET_ITEM( co_varnames, iarg, (*maxargmeth)->GetArgSpec( iarg ) );
+      PyObject* co_varnames = PyTuple_New( co_argcount + 1 );
+      PyTuple_SET_ITEM( co_varnames, 0, PyString_FromString( "self" ) );
+      for ( int iarg = 1; iarg < co_argcount; ++iarg ) {
+         PyTuple_SET_ITEM( co_varnames, iarg, (*maxargmeth)->GetArgSpec( iarg - 1 ) );
       }
+      PyTuple_SET_ITEM( co_varnames, co_argcount, PyString_FromString( "d" ) );
 
    // filename is made-up
       PyObject* co_filename = PyString_FromString( "ROOT.py" );
@@ -201,16 +238,17 @@ namespace {
    // firstlineno is the line number of first function code in the containing scope
 
    // lnotab is a packed table that maps instruction count and line number
-      PyObject* co_lnotab = PyString_FromString( "\x00\x01" );
+   //PyObject* co_lnotab = PyString_FromString( "\x00\x01" );
+      PyObject* co_lnotab = PyString_FromString( "\x00\x01\x0c\x01" );
 
       PyObject* code = (PyObject*)PyCode_New(
          co_argcount,                             // argcount
-         co_argcount,                             // nlocals
-         1,                                       // stacksize
+         co_argcount + 1,                         // nlocals
+         2,                                       // stacksize
          CO_OPTIMIZED | CO_NEWLOCALS | CO_NOFREE, // flags
          co_code,                                 // code
          co_consts,                               // consts
-         co_unused,                               // names
+         co_names,                                // names
          co_varnames,                             // varnames
          co_unused,                               // freevars
          co_unused,                               // cellvars
@@ -224,6 +262,7 @@ namespace {
       Py_DECREF( co_unused );
       Py_DECREF( co_filename );
       Py_DECREF( co_varnames );
+      Py_DECREF( co_names );
       Py_DECREF( co_consts );
       Py_DECREF( co_code );
 
@@ -256,6 +295,16 @@ namespace {
       _PyTuple_Resize( &defaults, itup );
 
       return defaults;
+   }
+
+//____________________________________________________________________________
+   PyObject* mp_func_globals( MethodProxy* /* pymeth */, void* )
+   {
+   // could also use __main__'s dict here; used for lookup of names from co_code
+   // indexing into co_names
+      PyObject* pyglobal = PyModule_GetDict( PyImport_AddModule( (char*)"ROOT" ) );
+      Py_XINCREF( pyglobal );
+      return pyglobal;
    }
 
 //____________________________________________________________________________
@@ -295,10 +344,12 @@ namespace {
       { (char*)"im_self",  (getter)mp_meth_self,  NULL, NULL, NULL },
       { (char*)"im_class", (getter)mp_meth_class, NULL, NULL, NULL },
 
-      { (char*)"func_code",     (getter)mp_func_code, NULL, NULL, NULL },
+      { (char*)"func_closure",  (getter)mp_func_closure,  NULL, NULL, NULL },
+      { (char*)"func_code",     (getter)mp_func_code,     NULL, NULL, NULL },
       { (char*)"func_defaults", (getter)mp_func_defaults, NULL, NULL, NULL },
-      { (char*)"func_doc",      (getter)mp_doc,  NULL, NULL, NULL },
-      { (char*)"func_name",     (getter)mp_name, NULL, NULL, NULL },
+      { (char*)"func_globals",  (getter)mp_func_globals,  NULL, NULL, NULL },
+      { (char*)"func_doc",      (getter)mp_doc,           NULL, NULL, NULL },
+      { (char*)"func_name",     (getter)mp_name,          NULL, NULL, NULL },
 
       { (char*)"_creates", (getter)mp_getcreates, (setter)mp_setcreates,
             (char*)"For ownership rules of result: if true, objects are python-owned", NULL },
@@ -310,7 +361,7 @@ namespace {
    {
    // if called through im_func pseudo-representation (this can be gamed if the
    // user really wants to ... )
-      if ( (void*)pymeth->fSelf == (void*)pymeth )
+      if ( IsPseudoFunc( pymeth ) )
          pymeth->fSelf = NULL;
 
    // get local handles to proxy internals
@@ -427,7 +478,7 @@ namespace {
    {
       PyObject_GC_UnTrack( pymeth );
 
-      if ( (void*)pymeth->fSelf != (void*)pymeth ) {
+      if ( ! IsPseudoFunc( pymeth ) ) {
          Py_XDECREF( (PyObject*)pymeth->fSelf );
       }
 
@@ -440,10 +491,18 @@ namespace {
       PyObject_GC_Del( pymeth );
    }
 
+
+//____________________________________________________________________________
+   long mp_hash( MethodProxy* pymeth )
+   {
+   // with fMethodInfo shared, it's address is better suited for the hash
+      return _Py_HashPointer( pymeth->fMethodInfo );
+   }
+
 //____________________________________________________________________________
    int mp_traverse( MethodProxy* pymeth, visitproc visit, void* args )
    {
-      if ( pymeth->fSelf && (void*)pymeth->fSelf != (void*)pymeth )
+      if ( pymeth->fSelf && ! IsPseudoFunc( pymeth ) )
          return visit( (PyObject*)pymeth->fSelf, args );
 
       return 0;
@@ -457,6 +516,23 @@ namespace {
 
       return 0;
    }
+
+//____________________________________________________________________________
+   PyObject* mp_richcompare( MethodProxy* self, MethodProxy* other, int op )
+   {
+      if ( op != Py_EQ )
+         return PyType_Type.tp_richcompare( (PyObject*)self, (PyObject*)other, op );
+
+   // defined by type + (shared) MethodInfo + bound self, with special case for fSelf (i.e. pseudo-function)
+      if ( ( self->ob_type == other->ob_type && self->fMethodInfo == other->fMethodInfo ) && \
+           ( ( IsPseudoFunc( self ) && IsPseudoFunc( other ) ) || self->fSelf == other->fSelf ) ) {
+         Py_INCREF( Py_True );
+         return Py_True;
+      }
+      Py_INCREF( Py_False );
+      return Py_False;
+   }
+
 
 //= PyROOT method proxy access to internals =================================
    PyObject* mp_disp( MethodProxy* pymeth, PyObject* args, PyObject* )
@@ -514,7 +590,7 @@ PyTypeObject MethodProxy_Type = {
    0,                         // tp_as_number
    0,                         // tp_as_sequence
    0,                         // tp_as_mapping
-   0,                         // tp_hash
+   (hashfunc)mp_hash,         // tp_hash
    (ternaryfunc)mp_call,      // tp_call
    0,                         // tp_str
    0,                         // tp_getattro
@@ -524,7 +600,7 @@ PyTypeObject MethodProxy_Type = {
    (char*)"PyROOT method proxy (internal)",      // tp_doc
    (traverseproc)mp_traverse, // tp_traverse
    (inquiry)mp_clear,         // tp_clear
-   0,                         // tp_richcompare
+   (richcmpfunc)mp_richcompare,                  // tp_richcompare
    0,                         // tp_weaklistoffset
    0,                         // tp_iter
    0,                         // tp_iternext

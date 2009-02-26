@@ -1092,6 +1092,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
    public:
       virtual PyObject* GetSignature() { return PyString_FromString( "(...)" ); }
+      virtual PyObject* GetPrototype() { return PyObject_GetAttrString( (PyObject*)fOrg, (char*)"__doc__" ); }
+      virtual PyObject* GetScope()
+      {
+         return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( "TTree" );
+      }
 
    protected:
       MethodProxy* fOrg;
@@ -1103,11 +1108,6 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTreeBranch( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
-      virtual PyObject* GetPrototype()
-      {
-         return PyString_FromString( "TBranch* TTree::Branch( ... )" );
-      }
-
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
       {
       // acceptable signatures:
