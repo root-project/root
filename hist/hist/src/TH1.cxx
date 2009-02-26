@@ -5119,6 +5119,11 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
 
    // copy merged bin contents (ignore under/overflows)
    Int_t oldbin = 1;
+   // Start merging only once the new lowest edge is reached
+   const Double_t newxmin = hnew->GetXaxis()->GetBinLowEdge(1);
+   while( fXaxis.GetBinCenter(oldbin) < newxmin && oldbin <= nbins ) { 
+      oldbin++; 
+   }
    Double_t binContent, binError;
    for (bin = 1;bin<=newbins;bin++) {
       binContent = 0;
