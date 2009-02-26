@@ -16,7 +16,6 @@ UNRVERS      := unuran-1.3.0-root
 
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
 UNRDIRS      := $(MODDIRS)/$(UNRVERS)
-UNRALLDIRS   := $(MODDIRS)/unuran-*-root
 UNURANETAG   := $(UNURANDIRS)/headers.d
 UNRCFG       := $(UNURANDIRS)/$(UNRVERS)/config.h
 
@@ -46,7 +45,6 @@ UNURANDO     := $(UNURANDS:.cxx=.o)
 UNURANDH     := $(UNURANDS:.cxx=.h)
 UNURANDH1    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 
-
 UNURANH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 UNURANS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
@@ -71,27 +69,23 @@ INCLUDEFILES += $(UNURANDEP)
 include/%.h: 	$(UNURANDIRI)/%.h $(UNURANETAG)
 		cp $< $@
 
-# force untar in first pass, so that in second pass UNRS is correctly set
-ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
--include $(UNURANETAG)
-endif
 $(UNURANDEP):   $(UNRCFG)
 
 $(UNURANETAG):	$(UNRSRCS)
-		echo "** untar unuran"
+		@echo "**** untarring UNURAN !!!!"
 		@(if  [ -d $(UNRDIRS) ]; then \
-			rm -rf $(UNRDIRS); \
+		   rm -rf $(UNRDIRS); \
 		fi; \
 		cd $(UNURANDIRS); \
 		rm -rf unuran*root; \
 		if [ ! -d $(UNRVERS) ]; then \
-			gunzip -c $(UNRVERS).tar.gz | tar xf -; \
+		   gunzip -c $(UNRVERS).tar.gz | tar xf -; \
 		   etag=`basename $(UNURANETAG)` ; \
 		   touch $$etag ; \
 		fi); 
+
 #configure unuran (required for creating the config.h used by unuran source files)
 $(UNRCFG):	$(UNRANETAG)
-		@echo "** configure unuran"
 		@(cd $(UNURANDIRS)/$(UNRVERS) ; \
 		ACC=$(CC); \
 		if [ "$(CC)" = "icc" ]; then \
@@ -118,7 +112,8 @@ $(UNRCFG):	$(UNRANETAG)
 		GNUMAKE=$(MAKE) ./configure  CC="$$ACC"  \
 		CFLAGS="$$ACFLAGS");
 
-$(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) $(MAINLIBS) $(UNURANLIBDEP)
+$(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) \
+                $(MAINLIBS) $(UNURANLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libUnuran.$(SOEXT) $@     \
 		   "$(UNURANO) $(UNURANDO)"             \
@@ -143,21 +138,18 @@ clean-$(MODNAME):
 
 clean::         clean-$(MODNAME)
 
-distclean-$(MODNAME): 
-		@rm -f $(UNURANO) $(UNURANDO) $(UNURANETAG) $(UNURANDEP) $(UNURANDS) $(UNURANDH) $(UNURANLIB) $(UNURANMAP)
-ifneq ($(wildcard $(UNRSRCS)), )
+distclean-$(MODNAME): clean-$(MODNAME)
+		@rm -f $(UNURANO) $(UNURANDO) $(UNURANETAG) $(UNURANDEP) \
+		   $(UNURANDS) $(UNURANDH) $(UNURANLIB) $(UNURANMAP)
 		@mv $(UNRSRCS) $(UNURANDIRS)/-$(UNRVERS).tar.gz
-endif
 ifeq ($(UNURKEEP),yes)
 		@mv $(UNURANDIRS)/$(UNRVERS) $(UNURANDIRS)/$(UNRVERS).keep
 endif
-		@rm -rf $(UNURANDIRS)/unuran-*-root
+		@rm -rf $(UNURANDIRS)/$(UNRVERS)
 ifeq ($(UNURKEEP),yes)
 		@mv $(UNURANDIRS)/$(UNRVERS).keep $(UNURANDIRS)/$(UNRVERS)
 endif
-ifneq ($(wildcard $(UNRSRCS)), )
 		@mv $(UNURANDIRS)/-$(UNRVERS).tar.gz $(UNRSRCS)
-endif
 
 distclean::     distclean-$(MODNAME)
 
