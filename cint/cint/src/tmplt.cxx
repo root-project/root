@@ -1464,9 +1464,12 @@ void G__declare_template()
           This should be removed from the func name (what we are looking for)
           anything preceding combinations of *,& and const. */
        c = G__fgetname_template(temp2,"*&(;=");
-       if (!strncmp(temp2,"operator",strlen("operator"))
+       size_t len = strlen(temp2);
+       static size_t oplen( strlen( "::operator" ) );
+       
+       if ((  !strncmp(temp2,"operator",strlen("operator"))
+              ||(len>=oplen && !strncmp(temp2+(len-oplen),"::operator",oplen)))
            && strchr("&*=", c)) {
-          size_t len = strlen(temp2);
           while (c=='&'||c=='*'||c=='=') {
              temp2[len + 1] = 0;
              temp2[len] = c;
