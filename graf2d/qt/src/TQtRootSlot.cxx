@@ -12,13 +12,7 @@
 ** LICENSE.QPL included in the packaging of this file.
 **
 *****************************************************************************/
-
-#include "TQtRootSlot.h"
-#include "TROOT.h"
-#include "TApplication.h"
-#include <qapplication.h>
-
-//______________________________________________________________________________
+///////////////////////////////////////////////////////////////////////////
 //
 // The TQRootSlot singleton class introduces the global SLOT to invoke
 // the  ROOT command line from the GUI signals
@@ -31,12 +25,22 @@
 //
 //  connect(GUI object, SIGNAL(const char *editedLine),TQtRootSlot::CintSlot(),SLOT(ProcessLine(const char*)))
 //
-//  To terminate the ROOT from QUI element connect the signal with the Terminate slot.
-//  For example to terminate ROOT and Qt smootly do
+//  To terminate the ROOT from Qt GUI element connect the signal with 
+//  the Terminate  or TerminateAndQuite slot.
+//  For example to terminate ROOT and Qt smoothly do
 //  
 //  connect(qApp,SIGNAL(lastWindowClosed()),TQtRootSlot::CintSlot(),SLOT(TerminateAndQuit())
 //
-//______________________________________________________________________________
+//  To terminate just ROOT (in case the Qt is terminated by the other means)
+//  connect(qApp,SIGNAL(lastWindowClosed()),TQtRootSlot::CintSlot(),SLOT(Terminate())
+//
+///////////////////////////////////////////////////////////////////////////
+
+#include "TQtRootSlot.h"
+#include "TROOT.h"
+#include "TApplication.h"
+#include <qapplication.h>
+#include <QString>
 
 TQtRootSlot *TQtRootSlot::fgTQtRootSlot = 0;
 //____________________________________________________
@@ -46,6 +50,15 @@ TQtRootSlot *TQtRootSlot::CintSlot()
    if (!fgTQtRootSlot) fgTQtRootSlot = new TQtRootSlot();
    return fgTQtRootSlot;
 }
+//____________________________________________________
+void TQtRootSlot::ProcessLine(const QString &command)
+{
+     // execute the arbitrary ROOT /CINt command via 
+     // CINT C++ interpreter and emit the result
+   std::string cmd = command.toStdString();
+   ProcessLine(cmd.c_str());
+}
+
 //____________________________________________________
 void TQtRootSlot::ProcessLine(const char *command)
 {
@@ -58,15 +71,17 @@ void TQtRootSlot::ProcessLine(const char *command)
 //____________________________________________________
 void TQtRootSlot::Terminate(int status)const
 {
-    // the dedicated slot to terminate the ROOT application
+   // the dedicated slot to terminate the ROOT application
+   // with "status"
    if (gApplication) gApplication->Terminate(status);
 }
 
 //____________________________________________________
 void TQtRootSlot::Terminate()const
 {
-    // the dedicated slot to terminate the ROOT application
-   if (gApplication) gApplication->Terminate(0);
+   // the dedicated slot to terminate the ROOT application
+   // and return the "0" status
+   Terminate(0);
 }
 
 //____________________________________________________

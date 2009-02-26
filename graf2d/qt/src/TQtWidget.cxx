@@ -72,13 +72,36 @@ class TQtSynchPainting {
 TQtWidgetBuffer::TQtWidgetBuffer(const QWidget *w, bool clear)
 : fWidget(w),fBuffer(0), fIsImage(clear)
 {
-   if (clear) {
-      fBuffer = new  QImage(w?w->size():QSize(0,0),QImage::Format_ARGB32_Premultiplied);
+   if (fIsImage) {
+      fBuffer = new  QImage(fWidget?fWidget->size():QSize(0,0),QImage::Format_ARGB32_Premultiplied);
 //      ((QImage*)fBuffer)->fill(0);
    } else {
-      fBuffer = new  QPixmap(w?w->size():QSize(0,0));
+      fBuffer = new  QPixmap(fWidget?fWidget->size():QSize(0,0));
    }
 }
+//___________________________________________________________________
+TQtWidgetBuffer::TQtWidgetBuffer(const TQtWidgetBuffer &b)
+: fWidget(b.fWidget),fBuffer(0), fIsImage(b.fIsImage)
+{
+   // Copy ctor. Create the copy and account the new widget size
+   if (fWidget && (fWidget->size() != QSize(0,0))) { 
+      if (fIsImage) {
+         QImage resized =((QImage*)b.fBuffer)->scaled (fWidget->size());
+         fBuffer = new  QImage(resized);
+      } else {
+         QPixmap resized =((QPixmap*) b.fBuffer)->scaled (fWidget->size());
+         fBuffer = new  QPixmap(resized);
+      }
+   }
+} 
+//___________________________________________________________________
+TQtWidgetBuffer:: ~TQtWidgetBuffer()
+{
+   // dtor
+   delete fBuffer;
+   fBuffer = 0;
+}
+
 //___________________________________________________________________
 void TQtWidgetBuffer::Clear()
 {
@@ -181,8 +204,9 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedd
 #else
       QWidget(parent,f)
 #endif
-          ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0),fPixmapScreen(0),fPaint(TRUE),fSizeChanged(FALSE)
-          ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
+        ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0),fPixmapScreen(0)
+        ,fPaint(TRUE),fSizeChanged(FALSE),fDoubleBufferOn(FALSE),fEmbedded(embedded)
+        ,fWrapper(0),fSaveFormat("PNG")
 {
    if (name && name[0]) setName(name);
    Init() ;
@@ -195,7 +219,8 @@ TQtWidget::TQtWidget(QWidget* parent, Qt::WFlags f,bool embedded) :
 #else
       QWidget(parent,f)
 #endif
-          ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0),fPixmapScreen(0),fPaint(TRUE),fSizeChanged(FALSE)
+        ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0)
+		  ,fPixmapScreen(0),fPaint(TRUE),fSizeChanged(FALSE)
           ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
 { Init() ;}
 //_____________________________________________________________________________
@@ -264,9 +289,19 @@ void TQtWidget::AdjustBufferSize()
    TQtWidgetBuffer &buf = SetBuffer();
    QSize s(buf.Width(),buf.Height());
    if ( s != size() )  {
-      delete  fPixmapID;     fPixmapID = 0;
-      delete  fPixmapScreen; fPixmapScreen = 0;
-      SetBuffer();
+#if 0
+       qDebug() << "TQtWidget::AdjustBufferSize(): " 
+             << this 
+             << s << size();
+#endif
+      if (fPixmapID) {
+         TQtWidgetBuffer *buf = new TQtWidgetBuffer(*fPixmapID);
+         delete  fPixmapID;     fPixmapID = buf;
+      }
+      if (fPixmapScreen) {
+         TQtWidgetBuffer *buf = new TQtWidgetBuffer(*fPixmapScreen);
+         delete  fPixmapScreen; fPixmapScreen = buf;
+      }
    }
 }
 //_____________________________________________________________________________
@@ -802,7 +837,11 @@ void TQtWidget::exitSizeEvent ()
       TQtSynchPainting a(*this);
       AdjustBufferSize();
    }
-   Refresh();
+   //Refresh();
+   TCanvas *c = Canvas();
+   if (c)   c->Resize();
+   // One more time to catch the last size
+   QTimer::singleShot(0,this, SLOT(Refresh()));
 }
 
 //____________________________________________________________________________
@@ -848,7 +887,6 @@ void TQtWidget::paintEvent (QPaintEvent *e)
       {
          fSizeChanged = kTRUE;
          exitSizeEvent();
-         update();
          return;
       }
 #endif

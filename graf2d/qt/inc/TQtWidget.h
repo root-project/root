@@ -80,9 +80,10 @@ private:
    bool  fIsImage;
 public:
    TQtWidgetBuffer(const QWidget *w, bool clear=false);
+   TQtWidgetBuffer(const TQtWidgetBuffer &b);
    const QPaintDevice  *Buffer() const  { return fBuffer; }
    QPaintDevice  *Buffer()  { return fBuffer; }
-   ~TQtWidgetBuffer(){}
+   ~TQtWidgetBuffer();
    void Clear();
    bool PaintingActive(){ return fBuffer ? fBuffer->paintingActive() : false; }
    QRect Rect () const { return fWidget->rect();                }

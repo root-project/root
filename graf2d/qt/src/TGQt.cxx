@@ -499,7 +499,7 @@ QPaintDevice *TGQt::iwid(Int_t wid)
    if (0 <= wid && wid <= int(fWidgetArray->MaxId()) )
      topDevice = (*fWidgetArray)[wid];
      if (topDevice == (QPaintDevice *)(-1) ) topDevice = 0;
-	else {
+   else {
      assert(wid <= Int_t(fWidgetArray->MaxTotalId()));
      // this is allowed from the embedded TCanvas dtor only.
      //  at this point "wid" may have been destroyed
@@ -1367,6 +1367,14 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    static const int Q3=0;
 #endif
    TQtLock lock;
+   // Some workaround to fix issue from TBox::ExecuteEvent case pC. 
+   // The reason of the problem has not been found yet.
+   // By some reason TBox::ExecuteEvent messes y2 and y1
+   if (y2 > y1) {
+	   // swap them :-(()
+	   int swap = y1; 
+	   y1=y2; y2=swap;
+   }
    if ( (fSelectedWindow->devType() ==  QInternal::Widget) && fFeedBackMode && fFeedBackWidget) {
       fFeedBackWidget->SetGeometry(x1,y2,x2-x1,y1-y2,(TQtWidget *)fSelectedWindow);
       if (fFeedBackWidget->isHidden() ) fFeedBackWidget->show();
@@ -2084,7 +2092,7 @@ void  TGQt::SetDoubleBuffer(int wid, int mode)
    if (wid == -1 || wid == kDefault) return;
    QPaintDevice *dev = iwid(wid);
    TQtWidget *widget = 0;
-   if ( dev && (widget = (TQtWidget *)IsWidget(dev)) ) {
+   if (dev && (widget = (TQtWidget *)IsWidget(dev) ))  {
       widget->SetDoubleBuffer(mode);
       // fprintf(stderr," TGQt::SetDoubleBuffer \n");
    }
@@ -2666,23 +2674,7 @@ Int_t  TGQt::SetTextFont(char* /*fontname*/, TVirtualX::ETextSetMode /*mode*/)
    // Qt takes care to make sure the proper font is loaded and scaled.
    return 0;
 }
-#if 0
-//______________________________________________________________________________
-void  TGQt::SetTextFont(const char *fontname, int italic, int bold)
-{
 
-   //*-*    mode              : Option message
-   //*-*    italic   : Italic attribut of the TTF font
-   //*-*    bold     : Weight attribute of the TTF font
-   //*-*    fontname : the name of True Type Font (TTF) to draw text.
-   //*-*
-   //*-*    Set text font to specified name. This function returns 0 if
-   //*-*    the specified font is found, 1 if not.
-    fQFont->SetTextFont(fontname, italic, bold);
-    fTextFontModified = 1;
-   // fprintf(stderr, "TGQt::SetTextFont font: <%s> bold=%d italic=%d\n",fontname,bold,italic);
-}
-#endif
 //______________________________________________________________________________
 void  TGQt::SetTextFont(Font_t fontnumber)
 {
@@ -2920,7 +2912,7 @@ void TGQt::UpdateClipRectangle()
 //______________________________________________________________________________
 void TGQt::Begin()
 {
-   // Start the painting of the current slection (Pixmap or Widget)
+   // Start the painting of the current selection (Pixmap or Widget)
 
    if (!fQPainter || !fQPainter->isActive() )
    {
@@ -2930,7 +2922,7 @@ void TGQt::Begin()
       if ( fSelectedWindow->devType() ==  QInternal::Widget)
       {
          TQtWidget *theWidget =  (TQtWidget *)fSelectedWindow;
-         theWidget->AdjustBufferSize();
+         // theWidget->AdjustBufferSize();
          src = theWidget->SetBuffer().Buffer();
       }
 

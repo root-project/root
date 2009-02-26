@@ -59,8 +59,8 @@ win32 {
 #-- permanent components to be included into any ".pro" file to build the RootCint dictionary
 
 win32 {
-   LIBS	+=                                                                                                \
-      -include:_G__cpp_setupG__Hist       -include:_G__cpp_setupG__Graf1  -include:_G__cpp_setupG__G3D     \
+   LIBS	+=                                                                                                 \
+      -include:_G__cpp_setupG__Hist       -include:_G__cpp_setupG__G3D                                     \
       -include:_G__cpp_setupG__GPad       -include:_G__cpp_setupG__Tree   -include:_G__cpp_setupG__Rint    \
       -include:_G__cpp_setupG__PostScript -include:_G__cpp_setupG__Matrix -include:_G__cpp_setupG__Physics \
       -include:_G__cpp_setupG__Gui1       -include:_G__cpp_setupG__Geom1 

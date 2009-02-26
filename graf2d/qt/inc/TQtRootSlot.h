@@ -35,6 +35,8 @@ class QObject;
 #define slots
 #endif
 
+class QString;
+
 class TQtRootSlot : public QObject {
    Q_OBJECT
 private:
@@ -49,6 +51,7 @@ public:
    
 public slots:
    void ProcessLine(const char *);
+   void ProcessLine(const QString &);
    void Terminate(int status) const;
    void Terminate()           const;
    void TerminateAndQuit()    const;

@@ -63,7 +63,8 @@ TQtClientWidget::TQtClientWidget(TQtClientGuard *guard, QWidget* parent, const c
    setName(name);
    setAttribute(Qt::WA_PaintOnScreen);
    setAttribute(Qt::WA_PaintOutsidePaintEvent);
-//   fEraseColor  = new QColor("red");
+   setAutoFillBackground(true); 
+ //   fEraseColor  = new QColor("red");
 //   fErasePixmap = new QPixmap(palette().brush(QPalette::Window).texture());
 #endif
 }
