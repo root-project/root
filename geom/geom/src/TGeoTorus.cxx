@@ -366,7 +366,7 @@ Double_t TGeoTorus::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, 
    
    // If outside the ring, compute distance to it.
    Double_t dring = TGeoShape::Big();
-   Double_t eps = 1.E-8;
+   Double_t eps = 1.E-5;
    snext = 0;
    daxis = -1;
    memcpy(pt,point,3*sizeof(Double_t));

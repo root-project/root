@@ -873,14 +873,14 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
          // we are entering the unique slice on this axis
          //---> intersect and store Y and Z
             if (fPriority[1]==2) {
-               if (fSlices[1]<0 || fSlices[1]>fIby-1) return fCheckList; // outside range
+               if (fSlices[1]<0 || fSlices[1]>=fIby-1) return fCheckList; // outside range
                ndd[0] = fNsliceY[fSlices[1]];
                if (!ndd[0]) return fCheckList;
                slice1 = &fIndcY[fOBy[fSlices[1]]];
                islices++;
             }
             if (fPriority[2]==2) {
-               if (fSlices[2]<0 || fSlices[2]>fIbz-1) return fCheckList; // outside range
+               if (fSlices[2]<0 || fSlices[2]>=fIbz-1) return fCheckList; // outside range
                ndd[1] = fNsliceZ[fSlices[2]];
                if (!ndd[1]) return fCheckList;
                islices++;
@@ -905,7 +905,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
 //         printf("   New list on X : %i new candidates\n", ncheck);
          if (!ncheck) return fCheckList;
          if (fPriority[1]==2) {
-            if (fSlices[1]<0 || fSlices[1]>fIby-1) {
+            if (fSlices[1]<0 || fSlices[1]>=fIby-1) {
                ncheck = 0;
                return fCheckList; // outside range
             }
@@ -918,7 +918,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
             islices++;
          }
          if (fPriority[2]==2) {
-            if (fSlices[2]<0 || fSlices[2]>fIbz-1) {
+            if (fSlices[2]<0 || fSlices[2]>=fIbz-1) {
                ncheck = 0;
                return fCheckList; // outside range
             }
@@ -985,14 +985,14 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
          // we are entering the unique slice on this axis
          //---> intersect and store X and Z
             if (fPriority[0]==2) {
-               if (fSlices[0]<0 || fSlices[0]>fIbx-1) return fCheckList; // outside range
+               if (fSlices[0]<0 || fSlices[0]>=fIbx-1) return fCheckList; // outside range
                ndd[0] = fNsliceX[fSlices[0]];
                if (!ndd[0]) return fCheckList;
                slice1 = &fIndcX[fOBx[fSlices[0]]];
                islices++;
             }
             if (fPriority[2]==2) {
-               if (fSlices[2]<0 || fSlices[2]>fIbz-1) return fCheckList; // outside range
+               if (fSlices[2]<0 || fSlices[2]>=fIbz-1) return fCheckList; // outside range
                ndd[1] = fNsliceZ[fSlices[2]];
                if (!ndd[1]) return fCheckList;
                islices++;
@@ -1017,7 +1017,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
 //         printf("   New list on Y : %i new candidates\n", ncheck);
          if (!ncheck) return fCheckList;
          if (fPriority[0]==2) {
-            if (fSlices[0]<0 || fSlices[0]>fIbx-1) {
+            if (fSlices[0]<0 || fSlices[0]>=fIbx-1) {
                ncheck = 0;
                return fCheckList; // outside range
             }
@@ -1030,7 +1030,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
             islices++;
          }
          if (fPriority[2]==2) {
-            if (fSlices[2]<0 || fSlices[2]>fIbz-1) {
+            if (fSlices[2]<0 || fSlices[2]>=fIbz-1) {
                ncheck = 0;
                return fCheckList; // outside range
             }
@@ -1097,14 +1097,14 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
          // we are entering the unique slice on this axis
          //---> intersect and store Y and X
             if (fPriority[1]==2) {
-               if (fSlices[1]<0 || fSlices[1]>fIby-1) return fCheckList; // outside range
+               if (fSlices[1]<0 || fSlices[1]>=fIby-1) return fCheckList; // outside range
                ndd[0] = fNsliceY[fSlices[1]];
                if (!ndd[0]) return fCheckList;
                slice1 = &fIndcY[fOBy[fSlices[1]]];
                islices++;
             }
             if (fPriority[0]==2) {
-               if (fSlices[0]<0 || fSlices[0]>fIbx-1) return fCheckList; // outside range
+               if (fSlices[0]<0 || fSlices[0]>=fIbx-1) return fCheckList; // outside range
                ndd[1] = fNsliceX[fSlices[0]];
                if (!ndd[1]) return fCheckList;
                islices++;
@@ -1129,7 +1129,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
 //         printf("   New list on Z : %i new candidates\n", ncheck);
          if (!ncheck) return fCheckList;
          if (fPriority[1]==2) {
-            if (fSlices[1]<0 || fSlices[1]>fIby-1) {
+            if (fSlices[1]<0 || fSlices[1]>=fIby-1) {
                ncheck = 0;
                return fCheckList; // outside range
             }
@@ -1142,7 +1142,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
             islices++;
          }
          if (fPriority[0]==2) {
-            if (fSlices[0]<0 || fSlices[0]>fIbx-1) {
+            if (fSlices[0]<0 || fSlices[0]>=fIbx-1) {
                ncheck = 0;
                return fCheckList; // outside range
             }
