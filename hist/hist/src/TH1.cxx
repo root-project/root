@@ -5118,12 +5118,13 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    fXaxis.SetTitleFont(titleFont);
 
    // copy merged bin contents (ignore under/overflows)
-   Int_t oldbin = 1;
    // Start merging only once the new lowest edge is reached
+   Int_t startbin = 1;
    const Double_t newxmin = hnew->GetXaxis()->GetBinLowEdge(1);
-   while( fXaxis.GetBinCenter(oldbin) < newxmin && oldbin <= nbins ) { 
-      oldbin++; 
+   while( fXaxis.GetBinCenter(startbin) < newxmin && startbin <= nbins ) { 
+      startbin++; 
    }
+   Int_t oldbin = startbin; 
    Double_t binContent, binError;
    for (bin = 1;bin<=newbins;bin++) {
       binContent = 0;
@@ -5143,8 +5144,25 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       if (oldErrors) hnew->SetBinError(bin,TMath::Sqrt(binError));
       oldbin += imax;
    }
-   hnew->SetBinContent(0,oldBins[0]);
-   hnew->SetBinContent(newbins+1,oldBins[nbins+1]);
+   // sum underfllow and overflow contents until startbin 
+   binContent = 0; 
+   binError = 0; 
+   for (i = 0; i < startbin; ++i)  { 
+      binContent += oldBins[i]; 
+      if (oldErrors) binError += oldErrors[i]*oldErrors[i];
+   }
+   hnew->SetBinContent(0,binContent);
+   if (oldErrors) hnew->SetBinError(0,TMath::Sqrt(binError));
+   // sum overflow
+   binContent = 0; 
+   binError = 0; 
+   for (i = oldbin; i <= nbins+1; ++i)  { 
+      binContent += oldBins[i]; 
+      if (oldErrors) binError += oldErrors[i]*oldErrors[i];
+   }
+   hnew->SetBinContent(newbins+1,binContent);
+   if (oldErrors) hnew->SetBinError(newbins+1,TMath::Sqrt(binError));
+
    //restore statistics and entries  modified by SetBinContent
    hnew->SetEntries(entries); 
    if (!resetStat) hnew->PutStats(stat);
