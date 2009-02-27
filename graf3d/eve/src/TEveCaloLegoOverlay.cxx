@@ -40,6 +40,7 @@ TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
    fHeaderSelected(kFALSE),
 
    fCalo(0),
+   fSliderAxis(0),
    fMainColor(kGray),
 
    fShowCamera(kTRUE),
@@ -58,6 +59,7 @@ TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
 {
    // Constructor.
   fMainColorPtr = &fMainColor;
+  fSliderAxis = new TAxis();
 
 }
 
@@ -85,34 +87,32 @@ void TEveCaloLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
    // render
    if ( fCalo->GetData() && fCalo->GetData()->Empty() == kFALSE)
    {
-      // axis
+      // slider axis
       Double_t maxVal = fCalo->GetMaxVal();
-
+      fAxisPainter->SetLabelPixelFontSize(TMath::CeilNint(rnrCtx.GetCamera()->RefViewport().Height()*0.06));
       fAxisPainter->RefDir().Set(0, 1, 0);
-      fAxisPainter->RefTMOff(0).Set(-1, 0, 0);
+      fAxisPainter->RefTMOff(0).Set(1, 0, 0);
       fAxisPainter->SetLabelAlign(TGLFont::kLeft);
-      fAxisPainter->SetUseRelativeFontSize(kTRUE);
-      fAxis->SetRangeUser(0, maxVal);
-      fAxis->SetLimits(0, maxVal);
-      fAxis->SetNdivisions(710);
-      fAxis->SetTickLength(0.02);
-      fAxis->SetLabelOffset(0.02);
-      fAxis->SetLabelSize(0.03);
-      fAxis->SetAxisColor(fMainColor);
-      fAxis->SetLabelColor(fMainColor);
+      fSliderAxis->SetRangeUser(0, maxVal);
+      fSliderAxis->SetLimits(0, maxVal);
+      fSliderAxis->SetNdivisions(710);
+      fSliderAxis->SetTickLength(0.02*maxVal);
+      fSliderAxis->SetLabelOffset(0.02*maxVal);
+      fSliderAxis->SetLabelSize(0.05);
+      fSliderAxis->SetAxisColor(fMainColor);
+      fSliderAxis->SetLabelColor(fMainColor);
 
       glPushMatrix();
-      glScalef(1, fSliderH/maxVal, 1.);
-      fAxisPainter->PaintAxis(rnrCtx, fAxis);
+      glScalef(fSliderH/maxVal, fSliderH/maxVal, 1.);
+      fAxisPainter->PaintAxis(rnrCtx, fSliderAxis);
       glPopMatrix();
-      
+
       // marker
       TGLUtil::Color((fActiveID == 2) ? fActiveCol : 3);
       glPointSize(8);
       glBegin(GL_POINTS);
       glVertex3f(0, fSliderVal*fSliderH, -0.1);
       glEnd();
-     
    }
 }
 
@@ -169,9 +169,9 @@ void TEveCaloLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
    glVertex2f( bwt, bh);
    glVertex2f(-bwt, bh);
    glEnd();
+   glLineWidth(1);
 
    glPopMatrix();
-
    if (fShowSlider) DrawSlider(rnrCtx);
 
    glPopName();

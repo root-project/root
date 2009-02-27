@@ -23,7 +23,6 @@ class TAttAxis;
 class TAxis;
 
 class TGLCameraOverlay : public TGLOverlayElement
-                        
 {
 public:
    enum EMode { kPlaneIntersect, kBar, kAxis };
@@ -48,9 +47,9 @@ protected:
    TGLPlane       fExternalRefPlane;
    Bool_t         fUseExternalRefPlane;
 
-   void    RenderPlaneIntersect(TGLRnrCtx& rnrCtx, const TGLFont &font);
+   void    RenderPlaneIntersect(TGLRnrCtx& rnrCtx);
    void    RenderAxis(TGLRnrCtx& rnrCtx);
-   void    RenderBar(TGLRnrCtx& rnrCtx, const TGLFont &font);
+   void    RenderBar(TGLRnrCtx& rnrCtx);
 
 public:
    TGLCameraOverlay(Bool_t showOrtho=kTRUE, Bool_t showPersp=kFALSE);

@@ -55,7 +55,6 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
 
    // X axis
    fEtaAxis = new TAxis();
-   fEtaAxis->SetTickLength(0.02);
 
    // Y axis
    fPhiAxis = new TAxis();
@@ -66,6 +65,8 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fZAxis->SetTitleSize(0.05);
    fZAxis->SetTickLength(1);
    fZAxis->SetLabelOffset(0.5);
+
+    fAxisPainter.SetFontMode(TGLFont::kPixmap);
 }
 
 //______________________________________________________________________________
@@ -336,7 +337,7 @@ void TEveCaloLegoGL::SetAxis3DTitlePos(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1
    Int_t xyIdx = idxFront;
    if (zMin - zt < 1e-2) xyIdx = 0; // avoid flipping in front view
 
-   
+
    switch (xyIdx) {
       case 0:
          fXAxisTitlePos.fX = x1;
@@ -417,6 +418,27 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
    // Draw z-axis and z-box at the appropriate grid corner-point including
    // tick-marks and labels.
 
+   // set font size first depending on size of projected axis
+
+   TGLMatrix mm;
+   GLdouble pm[16];
+   GLint    vp[4];
+   glGetDoublev(GL_MODELVIEW_MATRIX, mm.Arr());
+   glGetDoublev(GL_PROJECTION_MATRIX, pm);
+   glGetIntegerv(GL_VIEWPORT, vp);
+
+   GLdouble dn[3];
+   GLdouble up[3];
+   gluProject(0, 0, 0, mm.Arr(), pm, vp, &dn[0], &dn[1], &dn[2]);
+   gluProject(0, 0, fDataMax,mm.Arr(), pm, vp, &up[0], &up[1], &up[2]);
+   Double_t len = TMath::Sqrt((up[0] - dn[0]) * (up[0] - dn[0])
+                              + (up[1] - dn[1]) * (up[1] - dn[1])
+                              + (up[2] - dn[2]) * (up[2] - dn[2]));
+
+
+   fAxisPainter.SetLabelPixelFontSize(TMath::CeilNint(len*fZAxis->GetLabelSize()));
+   fAxisPainter.SetTitlePixelFontSize(TMath::CeilNint(len*fZAxis->GetTitleSize()));
+
    // Z axis
    //
    fZAxis->SetAxisColor(fM->fGridColor);
@@ -428,17 +450,16 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
 
    fAxisPainter.SetTMNDim(1);
    fAxisPainter.RefDir().Set(0., 0., 1.);
-   fAxisPainter.SetUseRelativeFontSize(kTRUE);
    fAxisPainter.SetLabelAlign(TGLFont::kRight);
    glPushMatrix();
    glTranslatef(fZAxisTitlePos.fX, fZAxisTitlePos.fY, 0);
-   {
-      // tickmark vector = 10 pixels left
-      TGLMatrix modview;
-      glGetDoublev(GL_MODELVIEW_MATRIX, modview.Arr());  
-      TGLVertex3 worldRef(0, 0, fZAxisTitlePos.fZ);
-      fAxisPainter.RefTMOff(0) = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -10, 0, &modview);
-   }
+
+   // tickmark vector = 10 pixels left
+   TGLVertex3 worldRef(0, 0, fZAxisTitlePos.fZ);
+   fAxisPainter.RefTMOff(0) = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -10, 0, &mm);
+
+
+
    fAxisPainter.PaintAxis(rnrCtx, fZAxis);
    glTranslated( fAxisPainter.RefTMOff(0).X(),  fAxisPainter.RefTMOff(0).Y(),  fAxisPainter.RefTMOff(0).Z());
    fAxisPainter.RnrTitle(titleZ, fZAxisTitlePos.fZ, TGLFont::kRight);
@@ -511,8 +532,8 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
 
    Float_t yOff  = fM->GetPhiRng();
    if (fXAxisTitlePos.fY < fM->GetPhiMax()) yOff = -yOff;
- 
-   Float_t xOff  = fM->GetEtaRng(); 
+
+   Float_t xOff  = fM->GetEtaRng();
    if (fYAxisTitlePos.fX < fM->GetEtaMax()) xOff = -xOff;
 
    TAxis ax;
@@ -522,11 +543,11 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
    ax.SetTitleFont(fM->GetData()->GetEtaBins()->GetTitleFont());
    ax.SetLabelOffset(0.02);
    ax.SetTickLength(0.05);
+   ax.SetLabelSize(0.03);
 
    fAxisPainter.SetTMNDim(2);
    fAxisPainter.RefTMOff(1).Set(0, 0, -fDataMax);
    fAxisPainter.SetLabelAlign(TGLFont::kCenterUp);
-   fAxisPainter.SetUseRelativeFontSize(kFALSE);
 
    // eta
    glPushMatrix();
@@ -564,20 +585,29 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
    ax.SetLabelColor(fM->fFontColor);
    ax.SetTitleColor(fM->fFontColor);
    ax.SetTitleFont(fM->GetData()->GetEtaBins()->GetTitleFont());
-   ax.SetLabelSize(0.02);
-   ax.SetTitleSize(0.02);
    ax.SetLabelOffset(0.01);
    ax.SetTickLength(0.05);
 
    // set fonts
    fAxisPainter.SetAttAxis(&ax);
-   fAxisPainter.SetUseRelativeFontSize(kTRUE);
-   GLint   vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
-   Float_t refLength =  TMath::Sqrt((TMath::Power(vp[2]-vp[0], 2) + TMath::Power(vp[3]-vp[1], 2))*0.5);
-   fAxisPainter.SetLabelFont(rnrCtx, refLength);
-   fAxisPainter.SetTitleFont(rnrCtx, refLength);
-   fAxisPainter.SetUseRelativeFontSize(kFALSE);
 
+   // get projected length of diagonal to determine
+   TGLMatrix mm;
+   GLdouble pm[16];
+   GLint    vp[4];
+   glGetDoublev(GL_MODELVIEW_MATRIX, mm.Arr());
+   glGetDoublev(GL_PROJECTION_MATRIX, pm);
+   glGetIntegerv(GL_VIEWPORT, vp);
+
+   GLdouble dn[3];
+   GLdouble up[3];
+   gluProject(fM->GetEtaMin(), fM->GetPhiMin(), 0, mm.Arr(), pm, vp, &dn[0], &dn[1], &dn[2]);
+   gluProject(fM->GetEtaMax(), fM->GetPhiMax(), 0, mm.Arr(), pm, vp, &up[0], &up[1], &up[2]);
+   Double_t len = TMath::Sqrt((up[0] - dn[0]) * (up[0] - dn[0])
+                              + (up[1] - dn[1]) * (up[1] - dn[1])
+                              + (up[2] - dn[2]) * (up[2] - dn[2]));
+   fAxisPainter.SetLabelPixelFontSize(TMath::CeilNint(len*0.02));
+   fAxisPainter.SetTitlePixelFontSize(TMath::CeilNint(len*0.02));
 
    // eta
    ax.SetNdivisions(710);

@@ -440,6 +440,8 @@ const char* TGLFontManager::GetFontNameFromId(Int_t id)
 {
    // Get font name from TAttAxis font id.
 
+   if (fgStaticInitDone == kFALSE) InitStatics();
+
    TObjString* os = (TObjString*)fgFontFileArray[id / 10];
    return os->GetString().Data();
 }

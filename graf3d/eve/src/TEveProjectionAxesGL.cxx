@@ -343,9 +343,9 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       using namespace TMath;
       GLint   vp[4];
       glGetIntegerv(GL_VIEWPORT, vp);
-      Float_t refLength =  TMath::Sqrt((TMath::Power(vp[2]-vp[0], 2) + TMath::Power(vp[3]-vp[1], 2))*0.5);
-      Float_t tickLength = TMath::Sqrt((TMath::Power(r-l, 2) + TMath::Power(t-b, 2))*0.5);
-      fAxisPainter.SetLabelFont(rnrCtx, refLength); 
+      Float_t refLength =  TMath::Sqrt((TMath::Power(vp[2]-vp[0], 2) + TMath::Power(vp[3]-vp[1], 2)));
+      Float_t tickLength = TMath::Sqrt((TMath::Power(r-l, 2) + TMath::Power(t-b, 2)));
+      fAxisPainter.SetLabelFont(rnrCtx, TGLFontManager::GetFontNameFromId(fM->GetLabelFont()),  TMath::CeilNint(refLength*0.02), tickLength*fM->GetLabelSize());
 
       Float_t min, max;
       // X-axis.

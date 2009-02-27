@@ -33,6 +33,7 @@ private:
 
 protected:
    TEveCaloLego*  fCalo;
+   TAxis         *fSliderAxis;
 
    Color_t        fMainColor;
 

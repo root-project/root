@@ -46,9 +46,10 @@ private:
    void FormAxisValue(Float_t x, char* lab) const;
 
 protected:
-   TAttAxis  *fAttAxis;    // Model.
-   LabVec_t   fLabVec;     // List of Labels position-value pairs
-   TMVec_t    fTMVec;      // List of tick-mark position-value pairs
+   TAttAxis        *fAttAxis;    // Model.
+   TGLFont::EMode   fFontMode;   // Later in AttAxis
+   LabVec_t         fLabVec;     // List of Labels position-value pairs
+   TMVec_t          fTMVec;      // List of tick-mark position-value pairs
 
    //
    // Additional axis attributes required for GL rendering:
@@ -59,9 +60,10 @@ protected:
    Int_t      fTMNDim;
 
    // Font.
-   Bool_t fUseRelativeFontSize;
-   Int_t  fAbsoluteLabelFontSize;
-   Int_t  fAbsoluteTitleFontSize;
+   Int_t    fLabelPixelFontSize;
+   Double_t fLabel3DFontSize;
+   Int_t    fTitlePixelFontSize;
+   Double_t fTitle3DFontSize;
 
    // Labels options. Allready exist in TAttAxis, but can't be set.
    TGLFont::ETextAlign_e fLabelAlign;
@@ -77,14 +79,14 @@ public:
    TGLVector3&  RefDir() { return fDir; }
    TGLVector3&  RefTMOff(Int_t i) { return fTMOff[i]; }
 
-   Bool_t       GetUseRelativeFontSize() const { return fUseRelativeFontSize; }
-   void         SetUseRelativeFontSize( Bool_t x ) { fUseRelativeFontSize = x; }
+   TGLFont::EMode GetFontMode() const { return fFontMode; }
+   void  SetFontMode(TGLFont::EMode m) { fFontMode=m; }
 
-   void         SetAbsoluteLabelFontSize(Int_t fs) { fAbsoluteLabelFontSize=fs; }
-   Int_t        GetAbsoluteLabelFontSize() const { return fAbsoluteLabelFontSize; }
-
-   void         SetAbsoluteTitleFontSize(Int_t fs) { fAbsoluteTitleFontSize=fs; }
-   Int_t        GetAbsoluteTitleFontSize() const { return fAbsoluteTitleFontSize; }
+   // this setter not necessary
+   void         SetLabelPixelFontSize(Int_t fs) { fLabelPixelFontSize=fs; }
+   Int_t        GetLabelPixelFontSize() const { return fLabelPixelFontSize; }
+   void         SetTitlePixelFontSize(Int_t fs) { fTitlePixelFontSize=fs; }
+   Int_t        GetTitlePixelFontSize() const { return fTitlePixelFontSize; }
 
    TGLFont::ETextAlign_e GetLabelAlign() const { return fLabelAlign; }
    void         SetLabelAlign(TGLFont::ETextAlign_e x) { fLabelAlign = x; }
@@ -96,11 +98,14 @@ public:
    TAttAxis* GetAttAxis() { return fAttAxis; }
 
    // Utility.
-   void SetLabelFont(TGLRnrCtx &rnrCtx, Double_t refLength = -1);
-   void SetTitleFont(TGLRnrCtx &rnrCtx, Double_t refLength = -1);
+   void SetLabelFont(TGLRnrCtx &rnrCtx, const char* fontName, Int_t pixelSize = 64, Double_t font3DSize = -1);
+   void SetTitleFont(TGLRnrCtx &rnrCtx, const char* fontName, Int_t pixelSize = 64, Double_t font3DSize = -1);
+   void SetFont(TGLRnrCtx &rnrCtx, Double_t refLength, Int_t pixelSize, TGLFont &font);
+
    void SetTextFormat(Double_t min, Double_t max, Double_t binWidth);
 
    // Renderers.
+   void RnrText( const char* txt, const TGLVector3 &pos, const TGLFont::ETextAlign_e align, const TGLFont &font) const;
    void RnrTitle(const char* title, Float_t pos, TGLFont::ETextAlign_e align) const;
    void RnrLabels() const;
    void RnrLines() const;

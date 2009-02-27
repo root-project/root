@@ -48,10 +48,11 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m) :
 
    // Axis attributes.
    fNdivisions = 1010;
-   fLabelSize = 0.01;
-   fLabelColor = kGray;
-   fTickLength = 0.02;
-   fLabelOffset = 0.003;
+   fLabelSize = 0.015;
+   fLabelColor = kGray+1;
+   fAxisColor = kGray+1;
+   fTickLength = 0.015;
+   fLabelOffset = 0.01;
 }
 
 //______________________________________________________________________________
