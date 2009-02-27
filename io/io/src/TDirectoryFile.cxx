@@ -735,7 +735,7 @@ TObject *TDirectoryFile::FindObjectAny(const char *aname) const
    // use FindKeyAny(aname)->ReadObj().
 
    //object may be already in the list of objects in memory
-   TObject *obj = fList->FindObject(aname);
+   TObject *obj = TDirectory::FindObjectAny(aname);
    if (obj) return obj;
 
    TDirectory *dirsav = gDirectory;
