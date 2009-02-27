@@ -27,14 +27,12 @@ OUTLINE =====================================================================
 
 2) Compiling UserMain 
 
-   UNIX
-	$ makecint -mk Makefile -m -I$CINTSYSDIR -o UserMain -H UserMain.h -C++ UserMain.cxx
+   UNIX and Windows with Cygwin:
+	$ makecint -mk Makefile -m `cint-config --cflags` -o UserMain -H UserMain.h -C++ UserMain.cxx
 
-   Windows Visual C++
-	$ makecint -mk Makefile -m -I%CINTSYSDIR% -o UserMain -H UserMain.h -C++ UserMain.cxx
+   Windows Visual C++ without Cygwin [NOT FUNCTIONAL AT THE MOMENT]
+	$ makecint -mk Makefile -m -I%CINTSYSDIR%\%CINTCOREVERSION%\inc -o UserMain -H UserMain.h -C++ UserMain.cxx
 
-   Windows Borland C++
-	$ makecint -mk Makefile -m -Ic/cint -o UserMain -H UserMain.h -C++ UserMain.cxx
 
 You need to do above only once. After this, you can create the object 
 "Complex" simply by make.

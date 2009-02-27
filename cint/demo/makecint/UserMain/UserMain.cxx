@@ -15,7 +15,7 @@
 // main application 
 //////////////////////////////////////////////////////////////////////
 void TheSimplestExample() {
-  G__init_cint("cint script.cxx");
+  G__init_cint("UserMain script.cxx");
   G__scratch_all();
 }
 
