@@ -35,19 +35,26 @@
 #include "TMath.h"
 
 //  Define the names of the Fortran common blocks for the different OSs
-
+// Note that with gcc3.4 or above the size of PAWC_SIZE must be the same 
+// as in the Fortran definition in hbook.f and zebra
+// Also, the arrays must be declared extern like on Windows
 #ifndef WIN32
-#define PAWC_SIZE 5000000
+#define PAWC_SIZE 2000000
 #  define pawc pawc_
 #  define quest quest_
 #  define hcbits hcbits_
 #  define hcbook hcbook_
 #  define rzcl rzcl_
-int pawc[PAWC_SIZE];
-int quest[100];
-int hcbits[37];
-int hcbook[51];
-int rzcl[11];
+//int pawc[PAWC_SIZE];
+//int quest[100];
+//int hcbits[37];
+//int hcbook[51];
+//int rzcl[11];
+extern "C" int pawc[PAWC_SIZE];
+extern "C" int quest[100];
+extern "C" int hcbits[37];
+extern "C" int hcbook[51];
+extern "C" int rzcl[11];
 #else
 // on windows /pawc/ must have the same length as in libPacklib.a !!
 #define PAWC_SIZE 2000000
