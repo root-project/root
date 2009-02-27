@@ -1388,7 +1388,7 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
       {
          fQPainter->setBrush(Qt::NoBrush);
          fQPainter->drawRect(x1,y2,x2-x1+Q3,y1-y2+Q3);
-      } else {
+      } else if (fQBrush->GetColor().alpha() ) {
          if (fQBrush->style() != Qt::SolidPattern) fQPainter->setPen(fQBrush->GetColor());
          fQPainter->fillRect(x1,y2,x2-x1+1,y1-y2+1,*fQBrush);
       }
