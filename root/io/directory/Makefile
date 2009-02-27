@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog runcd*.root TDirGetObj.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog runcd*.root TDirGetObj.root 
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += getobj cd withautoadd
+TEST_TARGETS += getobj cd withautoadd testFindObjectAny
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -71,4 +71,10 @@ withautoadd.log: withautoadd_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l withautoadd.C+ > withautoadd.log 2>&1
 
 withautoadd: withautoadd.log
+	$(TestDiff)
+
+testFindObjectAny.log: testFindObjectAny.C
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l testFindObjectAny.C > testFindObjectAny.log 2>&1
+
+testFindObjectAny: testFindObjectAny.log
 	$(TestDiff)
