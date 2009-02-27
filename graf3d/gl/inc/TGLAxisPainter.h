@@ -100,7 +100,6 @@ public:
    // Utility.
    void SetLabelFont(TGLRnrCtx &rnrCtx, const char* fontName, Int_t pixelSize = 64, Double_t font3DSize = -1);
    void SetTitleFont(TGLRnrCtx &rnrCtx, const char* fontName, Int_t pixelSize = 64, Double_t font3DSize = -1);
-   void SetFont(TGLRnrCtx &rnrCtx, Double_t refLength, Int_t pixelSize, TGLFont &font);
 
    void SetTextFormat(Double_t min, Double_t max, Double_t binWidth);
 
