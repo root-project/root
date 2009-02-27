@@ -3597,7 +3597,7 @@ copyout:
       ::Error("TFile::Cp", "read and written bytes differ (%lld != %lld)",
                            sfile->GetBytesRead(), dfile->GetBytesWritten());
       // success = kFALSE;       This should be just a severe warning
-  }
+   }
 
    if (sfile) delete sfile;
    if (dfile) delete dfile;
