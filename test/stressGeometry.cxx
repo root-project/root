@@ -75,46 +75,86 @@ typedef struct {
 } p_t;
 p_t p;
   
-const char *exps[10] = {"aleph",      // 0
-                        "alice2",     // 1
-                        "brahms",     // 2
-                        "cdf",        // 3
-                        "cms",        // 4
-                        "hades2",     // 5
-                        "lhcbfull",   // 6
-                        "star",       // 7
-                        "babar2",     // 8
-                        "atlas"       // 10
+const Int_t NG = 23;
+const char *exps[NG] = {"aleph",  
+                        "barres",
+                        "bes",
+                        "dubna",
+                        "ganil",
+                        "hermes",
+                        "na35",
+                        "na47",
+                        "na49",
+                        "wa91",
+                        "integral",
+                        "tesla",
+                        "btev",
+                        "brahms",
+                        "cdf",  
+                        "hades2", 
+                        "lhcbfull",
+                        "star",    
+                        "cms",   
+                        "alice2",
+                        "babar2", 
+                        "belle",
+                        "atlas" 
 };
 // The timings below are on my machine PIV 3GHz
-const Double_t cp_brun[10] = {0.8,
-                              5.4,
-                              1.3,
-                              2.2,
-                              7.5,
-                              0.3,
-                              2.0,
-                              2.9,
-                             17.5,
-                             31.0};
+const Double_t cp_brun[NG] = {2.3,  //aleph
+                              0.1,  //barres
+                              1.2,  //bes
+                              0.12, //dubna
+                              0.11, //ganil
+                              0.24, //hermes
+                              0.14, //na35
+                              0.21, //na47
+                              0.23, //na49
+                              0.16, //wa91
+                              0.81, //integral
+                              1.7,  //tesla
+                              1.6,  //btev
+                              1.1,  //brahms
+                              2.2,  //cdf
+                              1.5,  //hades2
+                              1.6,  //lhcbfull
+                              2.5,  //star
+                              7.1,  //cms
+                              8.1,  //alice2
+                             17.9,  //babar2
+                             25.1,  //belle
+                             26.7}; //atlas
 // Bounding boxes for experiments
-Double_t boxes[10][3] = {{600,600,500},     // aleph
-                         {400,400,400},     // alice
+Double_t boxes[NG][3] = {{600,600,500},     // aleph
+                         {100,100,220},     // barres
+                         {400,400,240},     // bes
+                         {500,500,2000},    // dubna
+                         {500,500,500},     // ganil
+                         {250,250,770},     // hermes
+                         {310,160,1500},    // na35
+                         {750,500,3000},    // na47
+                         {600,200,2000},    // na49
+                         {175,325,680},     // wa91
+                         {100,100,200},     // integral
+                         {1500,1500,1500},  // tesla
+                         {600,475,1270},    // btev
                          {50,50,50},        // brahms
                          {500,500,500},     // cdf
-                         {800,800,1000},    // cms
-                         {250,250,200},     // hades
-                         {6700,5000,19000}, // lhcb
+                         {250,250,200},     // hades2
+                         {6700,5000,19000}, // lhcbfull
                          {350,350,350},     // star
-                         {300,300,400},     // babar
+                         {800,800,1000},    // cms
+                         {400,400,400},     // alice
+                         {300,300,400},     // babar2
+                         {440,440,538},     // belle
                          {1000,1000,1500}   // atlas
 };                     
 // Total and reference times
 Double_t tpstot = 0;
-Double_t tpsref = 70.90; //time including the generation of the ref files
+Double_t tpsref = 102.3; //time including the generation of the ref files
 Bool_t testfailed = kFALSE;
                          
-Int_t iexp[10];
+Int_t iexp[NG];
 Bool_t gen_ref=kFALSE;
 void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, Int_t &nbound, Float_t &length, Float_t &safe, Float_t &rad, Bool_t verbose=kFALSE);
 void ReadRef(Int_t kexp);
@@ -132,7 +172,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
    Bool_t all = kFALSE;
    if (opt.Contains("*")) all = kTRUE;
    Int_t i;
-   for (i=0; i<10; i++) {
+   for (i=0; i<NG; i++) {
       if (all) {
          iexp[i] = 1;
          continue;
@@ -141,7 +181,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
       else                       iexp[i] = 0;
    }       
    char fname[24];
-   for (i=0; i<10; i++) {
+   for (i=0; i<NG; i++) {
       if (!iexp[i]) continue;
       sprintf(fname, "%s.root", exps[i]);
       if (gGeoManager) {
