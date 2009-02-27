@@ -345,7 +345,7 @@ void Cint::Internal::G__set_stubflags(G__dictposition* dictpos)
    int i = 0;
    for (Reflex::Member_Iterator iter = dictpos->var.DataMember_Begin(); iter != dictpos->var.DataMember_End(); ++iter, ++i) {
       if (i < dictpos->ig15) continue;
-      if (G__is_cppmacro(*iter)) {
+      if (!G__is_cppmacro(*iter)) {
          if (G__dispmsg >= G__DISPWARN) {
             G__fprinterr(G__serr,
                          "Warning: global variable %s specified in stub file. Ignored\n"
@@ -354,6 +354,10 @@ void Cint::Internal::G__set_stubflags(G__dictposition* dictpos)
       }
    }
    for (int tagnum = dictpos->tagnum;tagnum < G__struct.alltag;tagnum++) {
+      if (tagnum == 0) {
+         // Skip the global namespace!
+         continue;
+      }
       ::Reflex::Scope s(G__Dict::GetDict().GetScope(tagnum));
 
       for (::Reflex::Member_Iterator m(s.FunctionMember_Begin());
@@ -361,7 +365,7 @@ void Cint::Internal::G__set_stubflags(G__dictposition* dictpos)
             ++m) {
          G__RflxFuncProperties *fprop = G__get_funcproperties(*m);
 
-         if (-1 == fprop->linenum
+         if (-1 == fprop->entry.line_number
                && !m->TypeOf().IsAbstract()) {
             switch (G__globalcomp) {
                case G__CPPLINK:
