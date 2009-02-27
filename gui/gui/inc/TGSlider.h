@@ -94,6 +94,7 @@ public:
    virtual ~TGSlider() { }
 
    virtual Bool_t HandleButton(Event_t *event) = 0;
+   virtual Bool_t HandleConfigureNotify(Event_t* event) = 0;
    virtual Bool_t HandleMotion(Event_t *event) = 0;
 
    virtual void  SetScale(Int_t scale) { fScale = scale; }                          //*MENU*
@@ -132,6 +133,7 @@ public:
    virtual ~TGVSlider();
 
    virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleConfigureNotify(Event_t* event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(kSliderWidth, fHeight); }
@@ -158,6 +160,7 @@ public:
    virtual ~TGHSlider();
 
    virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleConfigureNotify(Event_t* event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fWidth, kSliderHeight); }
