@@ -1591,8 +1591,21 @@ void G__declare_template()
     /* Do nothing */
   }
   else if(isspace(c) && strcmp(temp,"operator")==0) {
-    temp[8] = ' ';
-    c=G__fgetname_template(temp+9,"(");
+    unsigned int len = 8;
+    do {
+       temp[len++] = ' ';
+       temp[len] = '\0';
+
+       char* ptr = temp + len;
+       c=G__fgetname_template(ptr,"(");
+       len = strlen(temp);
+	   if (len >= G__LONGLINE)
+	   {
+		   temp[G__LONGLINE-1] = '\0';
+		   G__fprinterr(G__serr,"line too long. '%s'\n", temp);
+		   break;
+	   }
+    } while (c != '(');
   } 
   else if (c == '(' && strstr(temp,"::")) {
      // template<..> inline A::A(T a,S b) { ... }
