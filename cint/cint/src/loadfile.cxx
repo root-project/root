@@ -44,7 +44,9 @@
 
 #define G__OLDIMPLEMENTATION1849
 
+#ifdef G__SHAREDLIB
 extern std::list<G__DLLINIT>* G__initpermanentsl;
+#endif
 
 extern "C" {
 
@@ -1293,8 +1295,8 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        * try $CINTSYSDIR/stl
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"%s/%s/stl/%s%s",G__cintsysdir,G__CFG_COREVERSION
-                 ,filename,addpost[i2]);
+         sprintf(workname,"%s%s%s%sstl%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
+                 ,G__psep,G__psep,filename,addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }
@@ -1304,8 +1306,8 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        **********************************************/
       /* G__getcintsysdir(); */
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"%s/%s/lib/%s%s",G__cintsysdir,G__CFG_COREVERSION
-                 ,filename,addpost[i2]);
+         sprintf(workname,"%s%s%s%slib%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
+                 ,G__psep,G__psep,filename,addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }
@@ -1443,8 +1445,10 @@ int G__loadfile(const char *filenamein)
   int temp;
   int store_macroORtemplateINfile;
   int len;
+#ifdef G__SHAREDLIB
   int len1;
   const char *dllpost;
+#endif //G__SHAREDLIB
   short store_iscpp;
   G__UINT32 store_security;
   char addpost[3][8];
@@ -1952,7 +1956,6 @@ int G__loadfile(const char *filenamein)
        **********************************************/
 
       sprintf(G__ifile.name,"sys$common:decc$lib.reference.decc$rtdef]%s",filename);
-      printf("Trying to open %s\n",G__ifile.name,"r");
 
       G__ifile.fp = fopen(G__ifile.name,"r");
       G__globalcomp=G__store_globalcomp;

@@ -93,13 +93,13 @@ typedef void* G__SHLHANDLE;
     sharedlib_func=(int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,setupfunc,TYPE_PROCEDURE);   \
     if(sharedlib_func!=NULL) (*sharedlib_func)()
 
+std::list<G__DLLINIT>* G__initpermanentsl = 0;
+
 #else /* G__SHAREDLIB */
 
 typedef void* G__SHLHANDLE;
 
 #endif /* G__SHAREDLIB */
-
-std::list<G__DLLINIT>* G__initpermanentsl = 0;
 
 struct G__CintSlHandle {
    G__CintSlHandle(G__SHLHANDLE h = 0, bool p = false) : handle(h),ispermanent(p) {}
@@ -2106,6 +2106,9 @@ void* G__FindSym(char *filename,char *funcname)
    
 const char *G__dladdr(void (*func)())
 {
+#ifndef G__SHAREDLIB
+   return 0;
+#else //G__SHAREDLIB
    // Wrapper around dladdr (and friends)
 #if defined(__CYGWIN__) && defined(__GNUC__)
    return 0;
@@ -2134,6 +2137,8 @@ const char *G__dladdr(void (*func)())
       return info.dli_fname;
    }
 #endif 
+
+#endif //G__SHAREDLIB
 }
 
 // G__RegisterLibrary

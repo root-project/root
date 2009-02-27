@@ -282,14 +282,15 @@ int G__IncludePathInfo::Next() {
 }
 ////////////////////////////////////////////////////////////////////
 
+#if !defined(__hpux) || __HP_aCC >= 53000
+using namespace std;
+#endif
+
 #ifdef G__EXCEPTIONWRAPPER
 #ifdef G__STD_EXCEPTION
 #include <exception>
 #include <typeinfo>
 #include <string>
-#if !defined(__hpux) || __HP_aCC >= 53000
-using namespace std;
-#endif
 #endif
 
 #if defined(__GNUC__) && __GNUC__ >= 3
@@ -375,11 +376,14 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
     return (*funcp)(result7,funcname,libp,hash);
    
   }
+#if ENABLE_CPP_EXCEPTIONS
   try {
+#endif //ENABLE_CPP_EXCEPTIONS
 
 	// Stub Calling
 	return (*funcp)(result7,funcname,libp,hash);
 
+#if ENABLE_CPP_EXCEPTIONS
   }
   catch(G__bc_exception& /* x */) {
     throw;
@@ -453,6 +457,7 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
     G__genericerror("Error: C++ exception caught");
   }
  return 0;
+#endif //ENABLE_CPP_EXCEPTIONS
 }
 #endif
 ////////////////////////////////////////////////////////////////////

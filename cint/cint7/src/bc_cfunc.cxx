@@ -933,11 +933,14 @@ void Cint::Bytecode::G__functionscope::Setstatus() {
 int Cint::Bytecode::G__functionscope::compile_normalfunction(const Reflex::Member& func) {
   int store_cintv6 = G__cintv6;
   G__cintv6 |= G__BC_COMPILEERROR;
+#if ENABLE_CPP_EXCEPTIONS
   try {
+#endif //ENABLE_CPP_EXCEPTIONS
     int result=compile_function(func);
     G__cintv6 = store_cintv6;
     return(result);
   }
+#if ENABLE_CPP_EXCEPTIONS
   catch(G__bc_compile_error& /*x*/) {
     G__cintv6 = store_cintv6;
     return(G__BYTECODE_FAILURE);
@@ -950,6 +953,7 @@ int Cint::Bytecode::G__functionscope::compile_normalfunction(const Reflex::Membe
  
   G__cintv6 = store_cintv6;
   return(G__BYTECODE_FAILURE);
+#endif //ENABLE_CPP_EXCEPTIONS
 }
 
 //////////////////////////////////////////////////////////////////////////

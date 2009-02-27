@@ -23,7 +23,9 @@
 #include <libgen.h> //needed for basename
 #endif
 
+#ifdef G__SHAREDLIB
 extern std::list<G__DLLINIT>* G__initpermanentsl;
+#endif //G__SHAREDLIB
 
 extern "C" {
 
@@ -132,9 +134,11 @@ int G__call_setup_funcs()
    int i, k = 0;
    G__var_array* store_p_local = G__p_local; // changed by setupfuncs
    G__LockCriticalSection();
+#ifdef G__SHAREDLIB
    if (!G__initpermanentsl) {
       G__initpermanentsl = new std::list<G__DLLINIT>;
    }
+#endif //G__SHAREDLIB
    // Call G__RegisterLibrary() again, after it got called already
    // in G__init_setup_funcs(), because G__scratchall might have been
    // called in between.
@@ -151,7 +155,9 @@ int G__call_setup_funcs()
       if (G__setup_func_list[i] && !G__setup_func_list[i]->inited) {
          (G__setup_func_list[i]->func)();
          G__setup_func_list[i]->inited = 1;
+#ifdef G__SHAREDLIB
          G__initpermanentsl->push_back(G__setup_func_list[i]->func);
+#endif //G__SHAREDLIB
          k++;
 #ifdef G__DEBUG
          fprintf(G__sout, "Dictionary for %s initialized\n", G__setup_func_list[i]->libname); /* only for debug */
@@ -1726,7 +1732,7 @@ int G__init_globals()
 #ifdef SIGUSR2
    G__SIGUSR2 = 0;
 #endif
-#endif
+#endif //G__SIGNAL
 
 #ifdef G__SHAREDLIB
    G__allsl = 0;

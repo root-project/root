@@ -142,9 +142,11 @@ extern "C" int G__call_setup_funcs()
    int init_counter = 0; // Number of initializers run.
    ::Reflex::Scope store_p_local = G__p_local; // changed by setupfuncs
    G__LockCriticalSection();
+#ifdef G__SHAREDLIB
    if (!G__initpermanentsl) {
       G__initpermanentsl = new std::list<G__DLLINIT>;
    }
+#endif //G__SHAREDLIB
    // Call G__RegisterLibrary() again, after it got called already
    // in G__init_setup_funcs(), because G__scratchall might have been
    // called in between.
@@ -983,7 +985,7 @@ static void G__platformMacro()
    }
    G__DEFINE_MACRO_C(__xlc__);
 #endif
-#endif
+#endif //G__SIGNAL
 
    if (G__globalcomp == G__NOLINK) {
       G__initcxx();

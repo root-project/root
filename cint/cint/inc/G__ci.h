@@ -394,6 +394,8 @@ typedef unsigned long long G__uint64;
  * Something that depends on platform
  ***********************************************************************/
 
+#define ENABLE_CPP_EXCEPTIONS 1
+
 /* Exception */
 #if defined(G__WIN32) && !defined(G__STD_EXCEPTION)
 #define G__STD_EXCEPTION

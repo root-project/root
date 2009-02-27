@@ -380,16 +380,20 @@ void G__bc_make_dtor(const Reflex::Scope& tagnum) {
 ***********************************************************************/
 void G__bc_struct(const Reflex::Scope& tagnum) {
   if(G__NOLINK!=G__globalcomp) return;
+#if ENABLE_CPP_EXCEPTIONS
   try {
+#endif //ENABLE_CPP_EXCEPTIONS
     G__bc_make_vtbl(tagnum);
     G__bc_make_defaultctor(tagnum); 
     G__bc_make_copyctor(tagnum);
     G__bc_make_assignopr(tagnum);
     G__bc_make_dtor(tagnum); // need defaultdtor if base or member has dtor
+#if ENABLE_CPP_EXCEPTIONS
   }
   // TODO
   catch(...) {
   }
+#endif //ENABLE_CPP_EXCEPTIONS
 }
 
 /***********************************************************************

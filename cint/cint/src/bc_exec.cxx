@@ -269,10 +269,13 @@ extern "C" int G__bc_exec_try_bytecode(int start,
   env.save();
   G__catchexception = 0; // don't use try.catch in G__ExceptionWrapper()
                          // this is restored in env.restore()
+#if ENABLE_CPP_EXCEPTIONS
   try {
+#endif //ENABLE_CPP_EXCEPTIONS
     G__exec_asm(start,stack,presult,localmem);
     env.restore();
     return(G__TRY_NORMAL);
+#if ENABLE_CPP_EXCEPTIONS
   }
   catch(G__bc_exception& /* x */) {
     env.restore();
@@ -295,6 +298,7 @@ extern "C" int G__bc_exec_try_bytecode(int start,
   }
 
   return(G__TRY_UNCAUGHT); // never happens
+#endif //ENABLE_CPP_EXCEPTIONS
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -302,7 +306,11 @@ extern "C" int G__bc_exec_try_bytecode(int start,
 * G__bc_exec_throw_bytecode()
 ***********************************************************************/
 extern "C" int G__bc_exec_throw_bytecode(G__value* pval) {
+#if ENABLE_CPP_EXCEPTIONS
   throw G__bc_exception(*pval);
+#else //ENABLE_CPP_EXCEPTIONS
+	G__fprinterr(G__serr, "G__bc_exe_throw_bytecode has no effect with exceptions disabled! %s, %d\n", __FILE__, __LINE__);
+#endif //ENABLE_CPP_EXCEPTIONS
   return 0;
 }
 
@@ -625,7 +633,11 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
 * G__bc_throw_compile_error()
 ***********************************************************************/
 int G__bc_throw_compile_error() {
+#if ENABLE_CPP_EXCEPTIONS
   throw G__bc_compile_error();
+#else //ENABLE_CPP_EXCEPTIONS
+  G__fprinterr(G__serr, "G__bc_throw_compile_error has no effect with exceptions disabled. %s %d\n", __FILE__, __LINE__);
+#endif //ENABLE_CPP_EXCEPTIONS
   return 0;
 }
 
@@ -633,7 +645,11 @@ int G__bc_throw_compile_error() {
 * G__bc_throw_runtime_error()
 ***********************************************************************/
 int G__bc_throw_runtime_error() {
+#if ENABLE_CPP_EXCEPTIONS
   throw G__bc_runtime_error();
+#else //ENABLE_CPP_EXCEPTIONS
+	G__fprinterr(G__serr, "G__bc_throw_runtime_error has no effect with exceptions disabled. %s %d\n", __FILE__, __LINE__);
+#endif //ENABLE_CPP_EXCEPTIONS
   return 0;
 }
 

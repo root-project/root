@@ -69,8 +69,10 @@ int Cint::Internal::G__interpretexit()
    }
    G__scratch_all();
    // FIXME: Do we need to G__Lock/UnlockCriticalSection here?
+#ifdef G__SHAREDLIB
    delete G__initpermanentsl;
    G__initpermanentsl = 0;
+#endif //G__SHAREDLIB
    if (G__breaksignal) {
       G__fprinterr(G__serr, "\nEND OF EXECUTION\n");
    }

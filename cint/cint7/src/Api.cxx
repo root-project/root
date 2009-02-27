@@ -303,9 +303,12 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp, G__value* result7, char*
    if (!G__catchexception) {
       return (*funcp)(result7, funcname, libp, hash);
    }
+#if ENABLE_CPP_EXCEPTIONS
    try {
-      return (*funcp)(result7, funcname, libp, hash);
+#endif //ENABLE_CPP_EXCEPTIONS
+       return (*funcp)(result7, funcname, libp, hash);
    }
+#if ENABLE_CPP_EXCEPTIONS
 #ifdef G__STD_EXCEPTION
    catch (std::exception& x) {
       G__StrBuf buf_sb(G__LONGLINE);
@@ -376,6 +379,7 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp, G__value* result7, char*
       G__genericerror("Error: C++ exception caught");
    }
    return 0;
+#endif //ENABLE_CPP_EXCEPTIONS
 }
 #endif // G__EXCEPTIONWRAPPER
 

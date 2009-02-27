@@ -91,6 +91,9 @@ typedef void* G__SHLHANDLE;
     sharedlib_func=(int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,setupfunc,TYPE_PROCEDURE);   \
     if(sharedlib_func!=NULL) (*sharedlib_func)()
 
+int Cint::Internal::G__ispermanentsl = 0;
+std::list<G__DLLINIT>* Cint::Internal::G__initpermanentsl = 0;
+
 #else /* G__SHAREDLIB */
 
 typedef void* G__SHLHANDLE;
@@ -164,9 +167,6 @@ extern "C" int G__dlclose(G__SHLHANDLE handle);
 static int G__RTLD_flag = G__RTLD_LAZY;
 #endif
 
-
-int Cint::Internal::G__ispermanentsl = 0;
-std::list<G__DLLINIT>* Cint::Internal::G__initpermanentsl = 0;
 
 /**************************************************************************
 * G__loadsystemfile
