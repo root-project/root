@@ -1131,6 +1131,7 @@ void G__define_struct(char type)
             G__prerun = 1;
             struct G__var_array* store_local = G__p_local;
             G__p_local = G__struct.memvar[G__tagnum];
+            G__struct.memvar[G__tagnum]->prev_local = 0;
             int store_tagdefining = G__tagdefining;
             G__tagdefining = G__tagnum;
             int store_def_struct_member = G__def_struct_member;
