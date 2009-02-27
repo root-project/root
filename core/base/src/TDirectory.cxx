@@ -609,7 +609,21 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
    // use FindKeyAny(aname)->ReadObj().
 
    //object may be already in the list of objects in memory
-   return fList->FindObject(aname);
+   TObject *obj =  fList->FindObject(aname);
+   if (obj) return obj;
+   
+   //try with subdirectories
+   TIter next(fList);
+   while( (obj = next()) ) {
+      if (obj->IsA()->InheritsFrom(TDirectory::Class())) {
+         TDirectory* subdir = dynamic_cast<TDirectory*>(obj);
+         TObject *subobj = subdir->TDirectory::FindObjectAny(aname); // Explicitly recurse into _this_ exact function.
+         if (subobj) {
+            return subobj;
+         }
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
