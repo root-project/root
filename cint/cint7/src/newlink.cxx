@@ -5455,8 +5455,14 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
             if ((ifunc->IsPublic()) || G__precomp_private || G__isprivatectordtorassgn(i, *ifunc) || ((ifunc->IsProtected()) && (G__struct.protectedaccess[i] & G__PROTECTEDACCESS)) || (G__struct.protectedaccess[i] & G__PRIVATEACCESS)) {
                // public
 
-               if ((G__struct.globalcomp[i] == G__ONLYMETHODLINK) && (G__get_funcproperties(*ifunc)->globalcomp != G__METHODLINK)) {
+               int ifunc_globalcomp = G__get_funcproperties(*ifunc)->globalcomp;
+               if ((G__struct.globalcomp[i] == G__ONLYMETHODLINK) && ( ifunc_globalcomp != G__METHODLINK)) {
                   // not marked for link, skip it.
+                  continue;
+               }
+
+               if ( ifunc_globalcomp == G__CSTUB || ifunc_globalcomp == G__CPPSTUB) {
+                  // Do not generate a stub around the 'stubbed' method which are supposed to be interpreted!
                   continue;
                }
 
