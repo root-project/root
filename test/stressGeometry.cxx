@@ -75,12 +75,14 @@ typedef struct {
 } p_t;
 p_t p;
   
-const Int_t NG = 23;
+const Int_t NG = 25;
 const char *exps[NG] = {"aleph",  
                         "barres",
                         "bes",
                         "dubna",
                         "ganil",
+                        "e907",
+                        "phobos2",
                         "hermes",
                         "na35",
                         "na47",
@@ -106,6 +108,8 @@ const Double_t cp_brun[NG] = {2.3,  //aleph
                               1.2,  //bes
                               0.12, //dubna
                               0.11, //ganil
+                              0.17, //e907
+                              0.22, //phobos2
                               0.24, //hermes
                               0.14, //na35
                               0.21, //na47
@@ -130,6 +134,8 @@ Double_t boxes[NG][3] = {{600,600,500},     // aleph
                          {400,400,240},     // bes
                          {500,500,2000},    // dubna
                          {500,500,500},     // ganil
+                         {250,250,2000},    // e907
+                         {400,40,520},      // phobos2
                          {250,250,770},     // hermes
                          {310,160,1500},    // na35
                          {750,500,3000},    // na47
