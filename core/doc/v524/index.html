@@ -11,4 +11,9 @@ New method in TSystem:
 which executes "command" in the shell and returns the output in the TString.
 Multi-line output is separated by \n's.
 </li>
+<li>Add proper support for Microsoft Visual C++ 9.0</li>
+<li>Add support for 'unix' socket on Windows.</li>
+<li>New method Clear() to reset the string but not to resize it to the default
+(small) size. Useful when the string was pre-allocated to a large size and
+has to be re-used.</li>
 </ul>
