@@ -52,7 +52,7 @@
 ClassImp(TTableMap)
 
 TTableMap::TTableMap(const TTable *table)
-          : fTable((TTable *)table)
+          : fTable(table)
 {
    //to be documented
 }

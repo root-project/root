@@ -34,7 +34,7 @@ class TTableMap : public TObject
 #endif
 {
 protected:
-   TTable  *fTable;         // pointer to the refered TTable
+   const TTable  *fTable;         // pointer to the refered TTable
 
 public:
 
@@ -48,7 +48,7 @@ public:
    Bool_t  IsValid() const;
    Bool_t  IsFolder() const;
    void Push_back(Long_t next); // workaround for Cint
-   TTable *Table(){return fTable;}
+   const TTable *Table(){return fTable;}
 
    TTable::iterator Begin();
    TTable::iterator Begin() const;
@@ -76,11 +76,11 @@ inline  Bool_t TTableMap::IsValid() const
 //___________________________________________________________________________________________________________
 inline TTable::iterator TTableMap::Begin()          { std::vector<Long_t>::iterator bMap = this->begin(); return TTable::iterator(*fTable, bMap);}
 //___________________________________________________________________________________________________________
-inline TTable::iterator TTableMap::Begin()    const { std::vector<Long_t>::const_iterator bMap = ((TTableMap*) this)->begin(); return TTable::iterator(*fTable, bMap);}
+inline TTable::iterator TTableMap::Begin()    const { std::vector<Long_t>::const_iterator bMap = this->begin(); return TTable::iterator(*fTable, bMap);}
 //___________________________________________________________________________________________________________
 inline TTable::iterator TTableMap::End()            { std::vector<Long_t>::iterator eMap = this->end(); return TTable::iterator(*fTable, eMap);}
 //___________________________________________________________________________________________________________
-inline TTable::iterator TTableMap::End()      const { std::vector<Long_t>::const_iterator eMap = ((TTableMap*) this)->end();  return TTable::iterator(*fTable, eMap);}
+inline TTable::iterator TTableMap::End()      const { std::vector<Long_t>::const_iterator eMap = this->end();  return TTable::iterator(*fTable, eMap);}
 //___________________________________________________________________________________________________________
 inline Bool_t           TTableMap::IsFolder() const { return kTRUE;}
 //___________________________________________________________________________________________________________
