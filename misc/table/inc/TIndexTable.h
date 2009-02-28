@@ -32,10 +32,10 @@ public:
    class iterator {
    protected:
       const TTable *fTable;
-      int   *fCurrentRow;
+      const int   *fCurrentRow;
       iterator(): fTable(0), fCurrentRow(0) {}
    public:
-      iterator(const TTable &t, int &rowPtr): fTable(&t), fCurrentRow(&rowPtr){}
+      iterator(const TTable &t, const int &rowPtr): fTable(&t), fCurrentRow(&rowPtr){}
       iterator(const TTable &t): fTable(&t),fCurrentRow(0){}
       iterator(const iterator& iter) : fTable(iter.fTable), fCurrentRow(iter.fCurrentRow){}
       iterator &operator=(const iterator& iter) {fTable = iter.fTable; fCurrentRow = iter.fCurrentRow; return *this;}
@@ -59,9 +59,9 @@ public:
 
    const TTable *Table() const;
    iterator begin()        { return ((const TIndexTable *)this)->begin();}
-   iterator begin() const  { return GetNRows() ? iterator(*Table(),*(int *)GetTable(0)):end();}
+   iterator begin() const  { return GetNRows() ? iterator(*Table(),*GetTable(0)):end();}
    iterator end()   { return ((const TIndexTable *)this)->end(); }
-   iterator end()   const  {Long_t i = GetNRows(); return i? iterator(*Table(), *(int *)GetTable(i)):iterator(*this);}
+   iterator end()   const  {Long_t i = GetNRows(); return i? iterator(*Table(), *GetTable(i)):iterator(*this);}
 
 protected:
    static TTableDescriptor *CreateDescriptor();

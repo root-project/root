@@ -82,7 +82,7 @@ Bool_t TDsKey::operator==(const TDsKey &from) const
    Bool_t numMatch = kTRUE;
    int i = 0;
    for (; i < fUrr.GetSize(); i++) {
-      if ( (*(TArrayI *)(&fUrr))[i] != (*(TArrayI *)(&from.fUrr))[i]) {
+      if ( fUrr[i] != from.fUrr[i] )  {
          numMatch =kFALSE;
          break;
       }
@@ -105,7 +105,7 @@ TString TDsKey::GetKey() const
    Int_t lUrr = fUrr.GetSize();
    for (int i=0;i<lUrr;i++){
       tk +=".";
-      sprintf(ubuf,"%010u",(*(TArrayI *)(&fUrr))[i]);
+      sprintf(ubuf,"%010u",fUrr[i]);
       tk +=ubuf;
    }
    return tk;
@@ -126,8 +126,8 @@ void TDsKey::SetKey(const char *key)
 UInt_t  TDsKey::GetSum() const
 {
    //to be documented
-   UInt_t s = (*(TArrayI *)(&fUrr))[0];
-   for (int i=1;i<fUrr.GetSize();i++) s^=(*(TArrayI *)(&fUrr))[i];
+   UInt_t s = fUrr[0];
+   for (int i=1;i<fUrr.GetSize();i++) s^=fUrr[i];
    return s;
 }
 

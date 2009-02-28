@@ -34,7 +34,7 @@ public:
    virtual  TDsKey &operator=( Int_t from){ *this=(UInt_t)from; return *this;}
    virtual  TDsKey &operator=( const char *from);
    virtual  Bool_t operator==(const TDsKey &from) const;
-   virtual  UInt_t  operator[](Int_t i) const { return (*(TArrayI *)(&fUrr))[i]; }
+   virtual  UInt_t  operator[](Int_t i) const { return fUrr[i]; }
    virtual  void    Update(const TDsKey &from,const char *name=0);
    virtual  void    SetName(const char *name){fName=name;}
    virtual  const char *GetName() const {return fName;}
@@ -44,8 +44,8 @@ public:
    virtual  void    SetKey(const char *key);
    virtual  void    SetUrr(const UInt_t *key,int nk);
    virtual  UInt_t  GetSum() const;
-   virtual  Int_t   EOK()    const { return (UInt_t)(*(TArrayI *)(&fUrr))[0]==kUMAX;}
-   virtual  Int_t   IsNull() const { return !(*(TArrayI *)(&fUrr))[0];}
+   virtual  Int_t   EOK()    const { return (UInt_t)fUrr[0]==kUMAX;}
+   virtual  Int_t   IsNull() const { return !fUrr[0];}
 
 };
 
