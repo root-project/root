@@ -389,7 +389,7 @@ namespace ROOT {
    };
 
    template <> struct TCollectionProxyInfo::Type<std::vector<bool> >
-   : public Address<std::vector<bool>::const_reference>
+   : public TCollectionProxyInfo::Address<std::vector<bool>::const_reference>
    {
       typedef std::vector<bool>             Cont_t;
       typedef std::vector<bool>::iterator   Iter_t;
@@ -449,7 +449,7 @@ namespace ROOT {
       }
    };
    
-   template <> struct TCollectionProxyInfo::Pushback<std::vector<bool> > : public Type<std::vector<bool> > {
+   template <> struct TCollectionProxyInfo::Pushback<std::vector<bool> > : public TCollectionProxyInfo::Type<std::vector<bool> > {
       typedef std::vector<bool>      Cont_t;
       typedef Cont_t::iterator       Iter_t;
       typedef Cont_t::value_type     Value_t;
