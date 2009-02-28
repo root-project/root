@@ -85,7 +85,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
 TDirectory::TDirectory(const TDirectory &directory) : TNamed(directory)
 {
    // Copy constructor.
-   ((TDirectory&)directory).Copy(*this);
+   directory.Copy(*this);
 }
 
 //______________________________________________________________________________
@@ -260,7 +260,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
    TBuffer *buffer = (TBuffer*)gROOT->ProcessLine(Form("new TBufferFile(%d,10000);",TBuffer::kWrite));
    if (!buffer) return 0;
    buffer->MapObject(obj);  //register obj in map to handle self reference
-   ((TObject*)obj)->Streamer(*buffer);
+   const_cast<TObject*>(obj)->Streamer(*buffer);
 
    // read new object from buffer
    buffer->SetReadMode();

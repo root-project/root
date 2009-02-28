@@ -536,3 +536,15 @@ Int_t TMD5::FileChecksum(const char *file, UChar_t digest[16])
 
    return -1;
 }
+
+//______________________________________________________________________________
+TBuffer &operator<<(TBuffer &buf, const TMD5 &uuid) 
+{
+   // Input operator.  Delegate to Streamer.
+
+   R__ASSERT( buf.IsWriting() );
+
+   const_cast<TMD5&>(uuid).Streamer(buf); 
+   return buf; 
+}
+

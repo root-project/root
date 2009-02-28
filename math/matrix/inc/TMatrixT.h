@@ -121,7 +121,7 @@ public:
            TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Element *data);
    const   TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,const Element *data) const
                                             { return (const TMatrixT<Element>&)
-                                                     (((TMatrixT<Element> *)this)->Use(row_lwb,row_upb,col_lwb,col_upb,(Element *)data)); }
+                                                     ((const_cast<TMatrixT<Element> *>(this))->Use(row_lwb,row_upb,col_lwb,col_upb, const_cast<Element *>(data))); }
            TMatrixT    <Element> &Use     (Int_t nrows,Int_t ncols,Element *data);
    const   TMatrixT    <Element> &Use     (Int_t nrows,Int_t ncols,const Element *data) const;
            TMatrixT    <Element> &Use     (TMatrixT<Element> &a);

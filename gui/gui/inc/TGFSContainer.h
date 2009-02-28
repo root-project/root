@@ -108,7 +108,7 @@ public:
    }
 
    virtual Bool_t HandleDNDFinished() {
-      return ((TGFrame *)GetParent())->HandleDNDFinished();
+      return ((TGFrame *)(const_cast<TGWindow*>(GetParent())))->HandleDNDFinished();
    }
 
    void SetDNDData(TDNDData *data) {

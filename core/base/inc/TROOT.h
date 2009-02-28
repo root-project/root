@@ -94,7 +94,7 @@ protected:
    Bool_t          fEscape;               //True if ESC has been pressed
    Bool_t          fExecutingMacro;       //True while executing a TMacro
    Int_t           fEditorMode;           //Current Editor mode
-   TObject         *fPrimitive;           //Currently selected primitive
+   const TObject   *fPrimitive;           //Currently selected primitive
    TVirtualPad     *fSelectPad;           //Currently selected pad
    TCollection     *fClasses;             //List of classes definition
    TCollection     *fTypes;               //List of data types definition
@@ -204,7 +204,7 @@ public:
    TFunction        *GetGlobalFunction(const char *name, const char *params = 0, Bool_t load = kFALSE);
    TFunction        *GetGlobalFunctionWithPrototype(const char *name, const char *proto = 0, Bool_t load = kFALSE);
    TObject          *GetGeometry(const char *name) const;
-   TObject          *GetSelectedPrimitive() const { return fPrimitive; }
+   const TObject    *GetSelectedPrimitive() const { return fPrimitive; }
    TVirtualPad      *GetSelectedPad() const { return fSelectPad; }
    Int_t             GetNclasses() const { return fClasses->GetSize(); }
    Int_t             GetNtypes() const { return fTypes->GetSize(); }
@@ -249,7 +249,7 @@ public:
    void              SetLineHasBeenProcessed() { if (fLineIsProcessing) fLineIsProcessing--; }
    void              SetReadingObject(Bool_t flag = kTRUE) { fReadingObject = flag; }
    void              SetMustClean(Bool_t flag = kTRUE) { fMustClean=flag; }
-   void              SetSelectedPrimitive(const TObject *obj) { fPrimitive = (TObject*)obj; }
+   void              SetSelectedPrimitive(const TObject *obj) { fPrimitive = obj; }
    void              SetSelectedPad(TVirtualPad *pad) { fSelectPad = pad; }
    void              SetStyle(const char *stylename = "Default");
    void              Time(Int_t casetime=1) { fTimer = casetime; }

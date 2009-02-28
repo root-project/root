@@ -179,7 +179,7 @@ public:
    virtual void        SaveSelf(Bool_t /*force*/ = kFALSE) {}
    virtual void        SetBufferSize(Int_t /* bufsize */) {}
    virtual void        SetModified() {}
-   virtual void        SetMother(const TObject *mother) {fMother = (TObject*)mother;}
+   virtual void        SetMother(TObject *mother) {fMother = (TObject*)mother;}
    virtual void        SetName(const char* newname);
    virtual void        SetTRefAction(TObject * /*ref*/, TObject * /*parent*/) {}
    virtual void        SetSeekDir(Long64_t) {}

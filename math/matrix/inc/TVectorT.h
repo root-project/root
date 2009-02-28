@@ -97,7 +97,7 @@ public:
 
           TVectorT<Element> &Use       (Int_t lwb,Int_t upb,Element *data);
    const  TVectorT<Element> &Use       (Int_t lwb,Int_t upb,const Element *data) const
-					 { return (const TVectorT<Element>&)(((TVectorT<Element> *)this)->Use(lwb,upb,(Element *)data)); }
+					 { return (const TVectorT<Element>&)(const_cast<TVectorT<Element> *>(this))->Use(lwb,upb,const_cast<Element *>(data)); }
           TVectorT<Element> &Use       (Int_t n,Element *data);
    const  TVectorT<Element> &Use       (Int_t n,const Element *data) const ;
           TVectorT<Element> &Use       (TVectorT<Element> &v);
@@ -123,9 +123,9 @@ public:
    Element Max     () const;
 
    inline const Element &operator()(Int_t index) const;
-   inline       Element &operator()(Int_t index)       { return (Element&)((*(const TVectorT<Element> *)this)(index)); }
-   inline const Element &operator[](Int_t index) const { return (Element&)((*(const TVectorT<Element> *)this)(index)); }
-   inline       Element &operator[](Int_t index)       { return (Element&)((*(const TVectorT<Element> *)this)(index)); }
+   inline       Element &operator()(Int_t index);
+   inline const Element &operator[](Int_t index) const { return (*this)(index); }
+   inline       Element &operator[](Int_t index)       { return (*this)(index); }
 
    TVectorT<Element> &operator= (const TVectorT                <Element> &source);
    TVectorT<Element> &operator= (const TMatrixTRow_const       <Element> &mr);
@@ -215,6 +215,19 @@ template<class Element> inline const Element           &TVectorT<Element>::opera
       return fElements[0];
    }
 
+   return fElements[aind];
+}
+template<class Element> inline Element           &TVectorT<Element>::operator()(Int_t ind)
+{
+   // Access a vector element.
+   
+   R__ASSERT(IsValid());
+   const Int_t aind = ind-fRowLwb;
+   if (aind >= fNrows || aind < 0) {
+      Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
+      return fElements[0];
+   }
+   
    return fElements[aind];
 }
 template<class Element1,class Element2>

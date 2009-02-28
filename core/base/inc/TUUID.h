@@ -93,8 +93,8 @@ public:
 inline TBuffer &operator>>(TBuffer &buf, TUUID &uuid)
 { uuid.Streamer(buf); return buf; }
 
-inline TBuffer &operator<<(TBuffer &buf, const TUUID &uuid)
-{ ((TUUID&)uuid).Streamer(buf); return buf; }
+// Not inlined in order to avoid const casted away warning in user code.  
+TBuffer &operator<<(TBuffer &buf, const TUUID &uuid);
 
 inline Bool_t operator==(const TUUID &u1, const TUUID &u2)
 { return (!u1.Compare(u2)) ? kTRUE : kFALSE; }

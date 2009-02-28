@@ -100,7 +100,7 @@ public:
            TMatrixTSym <Element> &Use           (Int_t row_lwb,Int_t row_upb,Element *data);
    const   TMatrixTSym <Element> &Use           (Int_t row_lwb,Int_t row_upb,const Element *data) const
                                                   { return (const TMatrixTSym<Element>&)
-                                                           (((TMatrixTSym<Element> *)this)->Use(row_lwb,row_upb,(Element *)data)); }
+                                                           ((const_cast<TMatrixTSym<Element> *>(this))->Use(row_lwb,row_upb,const_cast<Element *>(data))); }
            TMatrixTSym <Element> &Use           (Int_t nrows,Element *data);
    const   TMatrixTSym <Element> &Use           (Int_t nrows,const Element *data) const;
            TMatrixTSym <Element> &Use           (TMatrixTSym<Element> &a);

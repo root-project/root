@@ -125,8 +125,10 @@ public:
    const   TMatrixTSparse<Element> &Use   (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros,
                                            const Int_t *pRowIndex,const Int_t *pColIndex,const Element *pData) const
                                             { return (const TMatrixTSparse<Element>&)
-                                                     (((TMatrixTSparse<Element> *)this)->Use(row_lwb,row_upb,col_lwb,col_upb,nr_nonzeros,
-                                                                                             (Int_t *)pRowIndex,(Int_t *)pColIndex,(Element *)pData)); }
+                                                     ((const_cast<TMatrixTSparse<Element> *>(this))->Use(row_lwb,row_upb,col_lwb,col_upb,nr_nonzeros,
+                                                                                             const_cast<Int_t *>(pRowIndex),
+                                                                                             const_cast<Int_t *>(pColIndex),
+                                                                                             const_cast<Element *>(pData))); }
            TMatrixTSparse<Element> &Use   (Int_t nrows,Int_t ncols,Int_t nr_nonzeros,
                                            Int_t *pRowIndex,Int_t *pColIndex,Element *pData);
    const   TMatrixTSparse<Element> &Use   (Int_t nrows,Int_t ncols,Int_t nr_nonzeros,

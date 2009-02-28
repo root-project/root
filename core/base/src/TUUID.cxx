@@ -657,3 +657,14 @@ void TUUID::SetUUID(const char *uuid)
 
    SetFromString(uuid);
 }
+
+//______________________________________________________________________________
+TBuffer &operator<<(TBuffer &buf, const TUUID &uuid) 
+{
+   // Input operator.  Delegate to Streamer.
+
+   R__ASSERT( buf.IsWriting() );
+
+   const_cast<TUUID&>(uuid).Streamer(buf); 
+   return buf; 
+}

@@ -84,8 +84,8 @@ public:
 inline TBuffer &operator>>(TBuffer &buf, TMD5 &md5)
 { md5.Streamer(buf); return buf; }
 
-inline TBuffer &operator<<(TBuffer &buf, const TMD5 &md5)
-{ ((TMD5&)md5).Streamer(buf); return buf; }
+// Not inlined in order to avoid const casted away warning in user code.  
+TBuffer &operator<<(TBuffer &buf, const TMD5 &md5);
 
 inline Bool_t operator!=(const TMD5 &m1, const TMD5 &m2)
 { return !(m1 == m2); }

@@ -307,7 +307,7 @@ public:
    virtual Long64_t        GetSelectedRows() { return GetPlayer()->GetSelectedRows(); }
    virtual Int_t           GetTimerInterval() const { return fTimerInterval; }
    virtual Long64_t        GetTotBytes() const { return fTotBytes; }
-   virtual TTree          *GetTree() const { return (TTree*)this; }
+   virtual TTree          *GetTree() const { return const_cast<TTree*>(this); }
    virtual TVirtualIndex  *GetTreeIndex() const { return fTreeIndex; }
    virtual Int_t           GetTreeNumber() const { return 0; }
    virtual Int_t           GetUpdate() const { return fUpdate; }
