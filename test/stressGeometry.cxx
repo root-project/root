@@ -75,9 +75,12 @@ typedef struct {
 } p_t;
 p_t p;
   
-const Int_t NG = 25;
+const Int_t NG = 28;
 const char *exps[NG] = {"aleph",  
                         "barres",
+                        "chambers",
+                        "felix",
+                        "p326",
                         "bes",
                         "dubna",
                         "ganil",
@@ -105,6 +108,9 @@ const char *exps[NG] = {"aleph",
 // The timings below are on my machine PIV 3GHz
 const Double_t cp_brun[NG] = {2.3,  //aleph
                               0.1,  //barres
+                              0.1,  //chambers
+                              0.13, //felix
+                              0.1,  //p326
                               1.2,  //bes
                               0.12, //dubna
                               0.11, //ganil
@@ -131,6 +137,9 @@ const Double_t cp_brun[NG] = {2.3,  //aleph
 // Bounding boxes for experiments
 Double_t boxes[NG][3] = {{600,600,500},     // aleph
                          {100,100,220},     // barres
+                         {500,500,500},     // chambers
+                         {200,200,12000},   // felix
+                         {201,201,26000},   // p326
                          {400,400,240},     // bes
                          {500,500,2000},    // dubna
                          {500,500,500},     // ganil
