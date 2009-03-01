@@ -7,5 +7,5 @@
 //*--  for the /PAWC/ common block for H2Root C++ utility.
 //*--  This common is defined as "external" in the H2Root and
 //*--  its size is ignored by linker.
-int PAWC[2000000];
+int PAWC[4000000];
 void setpawc(){}
