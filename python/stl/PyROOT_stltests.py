@@ -1,7 +1,7 @@
 # File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 06/27/08
+# Last: 03/02/09
 
 """STL unit tests for PyROOT package."""
 
@@ -130,9 +130,15 @@ class STL3MapTestCase( unittest.TestCase ):
       self.assertEqual( len(a), self.N )
 
       for key, value in a:
+         self.assert_( key in a )
          self.assertEqual( key, value )
       self.assertEqual( key,   self.N-1 )
       self.assertEqual( value, self.N-1 )
+
+    # some negative checks
+      self.assert_( not ( "peanutbutter" in a ) )
+      self.assert_( not ( -1 in a ) )
+      self.assert_( not ( (self.N+1) in a ) )
 
     # add a variation, just in case
       m = std.map( int, int )()
