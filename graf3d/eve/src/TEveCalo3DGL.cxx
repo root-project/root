@@ -260,6 +260,19 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
 
    if (rnrCtx.Highlight() || rnrCtx.Selection()) return;
 
+   Bool_t transparent_p = fM->fFrameTransparency > 0;
+
+   if (transparent_p)
+   {
+      TGLUtil::ColorTransparency(fM->fFrameColor, fM->fFrameTransparency);
+
+      glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+
+      glDepthMask(GL_FALSE);
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   }
+
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
 
    glBegin(GL_LINES);
@@ -279,6 +292,13 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
    }
 
    glEnd();
+
+   if (transparent_p)
+   {
+      glPopAttrib();
+
+      TGLUtil::ColorTransparency(fM->fFrameColor, fM->fMainTransparency);
+   }
 }
 
 //______________________________________________________________________________

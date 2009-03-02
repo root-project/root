@@ -377,14 +377,14 @@ ClassImp(TEveCalo3D);
 
 TEveCalo3D::TEveCalo3D(TEveCaloData* d, const char* n, const char* t): 
    TEveCaloViz(d, n, t),
-   fRnrEndCapFrame(kTRUE),
-   fRnrBarrelFrame(kTRUE)
+
+   fRnrEndCapFrame    (kTRUE),
+   fRnrBarrelFrame    (kTRUE),
+   fFrameColor        (kGray+1),
+   fFrameTransparency (80)
 {
 
    // Constructor.
-
-   fFrameColor = kGray+1;
-   fMainTransparency= 50;
 
    fMainColorPtr = &fFrameColor;
 }

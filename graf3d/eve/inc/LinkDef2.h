@@ -108,6 +108,7 @@
 #pragma link C++ class TEveCaloViz+;
 #pragma link C++ class TEveCaloVizEditor+;
 #pragma link C++ class TEveCalo3D+;
+#pragma link C++ class TEveCalo3DEditor+;
 #pragma link C++ class TEveCalo3DGL+;
 #pragma link C++ class TEveCalo2D+;
 #pragma link C++ class TEveCalo2DGL+;

@@ -15,11 +15,13 @@
 #include "TGedFrame.h"
 
 class TEveCaloViz;
+class TEveCalo3D;
 class TGDoubleHSlider;
 class TEveGValuator;
 class TEveGDoubleValuator;
 class TGCheckButton;
 class TGRadioButton;
+class TGNumberEntry;
 
 class TGVerticalFrame;
 
@@ -32,6 +34,8 @@ private:
 
 protected:
    TEveCaloViz               *fM; // Model object.
+
+   TGNumberEntry             *fFrameTransparency;
 
    TGRadioButton             *fPlotE;
    TGRadioButton             *fPlotEt;
@@ -67,6 +71,29 @@ public:
    void DoSliceColor(Pixel_t color);
 
    ClassDef(TEveCaloVizEditor, 0); // GUI editor for TEveCaloVizEditor.
+};
+
+/**************************************************************************/
+
+class TEveCalo3DEditor : public TGedFrame
+{
+private:
+   TEveCalo3DEditor(const TEveCalo3DEditor&);            // Not implemented
+   TEveCalo3DEditor& operator=(const TEveCalo3DEditor&); // Not implemented
+
+protected:
+   TEveCalo3D          *fM; // Model object.
+   TGNumberEntry       *fFrameTransparency;
+
+public:
+   TEveCalo3DEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+                     UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
+   virtual ~TEveCalo3DEditor() {}
+
+   virtual void SetModel(TObject* obj);
+   void    DoFrameTransparency();
+
+   ClassDef(TEveCalo3DEditor, 0); // GUI editor for TEveCalo3DEditor.
 };
 
 #endif
