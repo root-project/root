@@ -108,7 +108,7 @@ of the canvas. It gives a short explanation about the canvas' menus.
 <p>
 A canvas may be automatically divided into pads via <tt>TPad::Divide</tt>.
 <p>
-At creation time, the canvas size defines the size of the canvas window 
+At creation time, the canvas size defines the size of the canvas window
 (including the window manager's decoration). To define precisely the graphics
 area size of a canvas, the following four lines of code should be used:
 <pre>
@@ -179,10 +179,12 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // Create an embedded canvas, i.e. a canvas that is in a TGCanvas widget
    // which is placed in a TGFrame. This ctor is only called via the
    // TRootEmbeddedCanvas class.
+   //
+   //  If "name" starts with "gl" the canvas is ready to receive GL output.
 
    Init();
 
-   fUseGL = (name && strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
+   fUseGL = (name && name == strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
 
    fCanvasID     = winid;
    fWindowTopX   = 0;
@@ -211,7 +213,10 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad()
    //  form = 3    500x500 at 30,30
    //  form = 4    500x500 at 40,40
    //  form = 5    500x500 at 50,50
-   fUseGL = (name && strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
+   //
+   //  If "name" starts with "gl" the canvas is ready to receive GL output.
+
+   fUseGL = (name && name == strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
 
    Constructor(name, title, form);
 }
@@ -293,7 +298,10 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad
    //  ww is the canvas size in pixels along X
    //      (if ww < 0  the menubar is not shown)
    //  wh is the canvas size in pixels along Y
-   fUseGL = (name && strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
+   //
+   //  If "name" starts with "gl" the canvas is ready to receive GL output.
+
+   fUseGL = (name && name == strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
 
    Constructor(name, title, ww, wh);
 }
@@ -361,7 +369,10 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, 
    //  the canvas (if wtopx < 0) the menubar is not shown)
    //  ww is the canvas size in pixels along X
    //  wh is the canvas size in pixels along Y
-   fUseGL = (name && strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
+   //
+   //  If "name" starts with "gl" the canvas is ready to receive GL output.
+
+   fUseGL = (name && name == strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
 
    Constructor(name, title, wtopx, wtopy, ww, wh);
 }
@@ -1589,7 +1600,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    // When outputing floating point numbers, the default precision is 7 digits.
    // The precision can be changed (via system.rootrc) by changing the value
    // of the environment variable "Canvas.SavePrecision"
-   
+
    //    reset bit TClass::kClassSaved for all classes
    TIter next(gROOT->GetListOfClasses());
    TClass *cl;
@@ -1627,7 +1638,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       if (!lenfile) delete [] fname;
       return;
    }
-   
+
    //set precision
    Int_t precision = gEnv->GetValue("Canvas.SavePrecision",7);
    out.precision(precision);
@@ -1654,7 +1665,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
    if (gStyle->GetCanvasPreferGL())
       out <<endl<<"   gStyle->SetCanvasPreferGL(kTRUE);"<<endl<<endl;
-       
+
    //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
       out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()
@@ -2021,7 +2032,7 @@ void TCanvas::Update()
    }
 
    if (!fCanvasImp) return;
-   
+
    if (!gVirtualX->IsCmdThread()) {
       gInterpreter->Execute(this, IsA(), "Update", "");
       return;
