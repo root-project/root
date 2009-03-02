@@ -107,7 +107,7 @@ const char *exps[NG] = {"aleph",
                         "cms",   
                         "alice2",
                         "babar2", 
-                        "belle",
+                        "chambers", //should be belle
                         "atlas" 
 };
 // The timings below are on my machine PIV 3GHz
