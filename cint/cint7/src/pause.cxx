@@ -3353,6 +3353,7 @@ extern "C" int G__process_cmd(char* line, char* prompt, int* more, int* err, G__
           * Execute temp file
           *******************************************************/
          G__store_undo_position();
+         ++G__templevel;
          G__more_pause((FILE*)NULL, 1);
          {
             struct G__store_env local_store;
@@ -3412,6 +3413,7 @@ extern "C" int G__process_cmd(char* line, char* prompt, int* more, int* err, G__
          noprintflag = 0;
          G__command_eval = 0;
          G__free_tempobject();
+         --G__templevel;
          if (!G__func_now) {
             G__p_local = global_store.var_local;
          }

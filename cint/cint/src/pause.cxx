@@ -3235,6 +3235,7 @@ multi_line_command:
           * Execute temp file
           *******************************************************/
          G__store_undo_position();
+         ++G__templevel;
          G__more_pause((FILE*)NULL, 1);
          {
             struct G__store_env store;
@@ -3288,6 +3289,7 @@ multi_line_command:
          noprintflag = 0;
          G__command_eval = 0 ;
          G__free_tempobject();
+         --G__templevel;
          if (-1 == G__func_now) G__p_local = store.var_local;
          if (G__security_error) G__cancel_undo_position();
 #ifdef G__SECURITY
