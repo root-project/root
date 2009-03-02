@@ -75,13 +75,12 @@ typedef struct {
 } p_t;
 p_t p;
   
-const Int_t NG = 30;
+const Int_t NG = 33;
 const char *exps[NG] = {"aleph",  
                         "barres",
 			"felix",
 			"phenix",
                         "chambers",
-                        "felix",
                         "p326",
                         "bes",
                         "dubna",
@@ -93,14 +92,18 @@ const char *exps[NG] = {"aleph",
                         "na47",
                         "na49",
                         "wa91",
+                        "sdc",
                         "integral",
+                        "ams", 
+                        "brahms",
+                        "gem",
                         "tesla",
                         "btev",
-                        "brahms",
                         "cdf",  
                         "hades2", 
                         "lhcbfull",
-                        "star",    
+                        "star", 
+                        "sld",   
                         "cms",   
                         "alice2",
                         "babar2", 
@@ -108,13 +111,12 @@ const char *exps[NG] = {"aleph",
                         "atlas" 
 };
 // The timings below are on my machine PIV 3GHz
-const Double_t cp_brun[NG] = {2.3,  //aleph
+const Double_t cp_brun[NG] = {1.7,  //aleph
                               0.1,  //barres
-                              0.1,  //felix
-                              0.1,  //phenix
+                              0.12, //felix
+                              0.62, //phenix
                               0.1,  //chambers
-                              0.13, //felix
-                              0.1,  //p326
+                              0.19, //p326
                               1.2,  //bes
                               0.12, //dubna
                               0.11, //ganil
@@ -125,18 +127,22 @@ const Double_t cp_brun[NG] = {2.3,  //aleph
                               0.21, //na47
                               0.23, //na49
                               0.16, //wa91
-                              0.81, //integral
-                              1.7,  //tesla
-                              1.6,  //btev
+                              0.17, //sdc
+                              0.63, //integral
+                              0.9,  //ams
                               1.1,  //brahms
+                              1.8,  //gem
+                              1.5,  //tesla
+                              1.6,  //btev
                               2.2,  //cdf
-                              1.5,  //hades2
+                              2.0,  //hades2
                               1.6,  //lhcbfull
                               2.5,  //star
-                              7.1,  //cms
-                              8.1,  //alice2
-                             17.9,  //babar2
-                             25.1,  //belle
+                              3.3,  //sld
+                              7.5,  //cms
+                              8.0,  //alice2
+                             18.9,  //babar2
+                             24.1,  //belle
                              26.7}; //atlas
 // Bounding boxes for experiments
 Double_t boxes[NG][3] = {{600,600,500},     // aleph
@@ -144,7 +150,6 @@ Double_t boxes[NG][3] = {{600,600,500},     // aleph
                          {200,200,12000},   // felix
                          {750,750,1000},    // phenix
                          {500,500,500},     // chambers
-                         {200,200,12000},   // felix
                          {201,201,26000},   // p326
                          {400,400,240},     // bes
                          {500,500,2000},    // dubna
@@ -156,23 +161,27 @@ Double_t boxes[NG][3] = {{600,600,500},     // aleph
                          {750,500,3000},    // na47
                          {600,200,2000},    // na49
                          {175,325,680},     // wa91
+                         {1400,1400,2100},  // sdc
                          {100,100,200},     // integral
+                         {200,200,200},     // ams
+                         {50,50,50},        // brahms
+                         {2000,2000,5000},  // gem
                          {1500,1500,1500},  // tesla
                          {600,475,1270},    // btev
-                         {50,50,50},        // brahms
                          {500,500,500},     // cdf
                          {250,250,200},     // hades2
                          {6700,5000,19000}, // lhcbfull
                          {350,350,350},     // star
+                         {500,500,500},     // sld
                          {800,800,1000},    // cms
-                         {400,400,400},     // alice
+                         {400,400,400},     // alice2
                          {300,300,400},     // babar2
                          {440,440,538},     // belle
                          {1000,1000,1500}   // atlas
 };                     
 // Total and reference times
 Double_t tpstot = 0;
-Double_t tpsref = 102.3; //time including the generation of the ref files
+Double_t tpsref = 110.3; //time including the generation of the ref files
 Bool_t testfailed = kFALSE;
                          
 Int_t iexp[NG];
