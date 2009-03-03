@@ -782,8 +782,10 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 // actual binding
    ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( address, klass, isRef );
 
-// memory management, for TObject's only
-   if ( object )
+// memory management, for TObject's only (for referenced objects, it is assumed
+// that the (typically global) reference itself is zeroed out (or replaced) on
+// destruction; it can't thus be reliably zeroed out from the python side)
+   if ( object && ! ( pyobj->fFlags & ObjectProxy::kIsReference ) )
       TMemoryRegulator::RegisterObject( pyobj, object );
 
 // completion (returned object may be zero w/ a python exception set)
