@@ -1,0 +1,7 @@
+
+Processing runownership.C+...
+Fatal in <TBufferFile::Expand>: Failed to expand the data buffer because TBuffer does not own it and no custom memory reallocator was provided.
+The expected error "Failed to expand the data buffer because TBuffer does not own it and no custom memory reallocator was provided." was seen
+Running custom allocator
+Running custom allocator
+(int)0
