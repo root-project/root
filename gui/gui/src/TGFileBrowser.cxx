@@ -573,10 +573,9 @@ void TGFileBrowser::AddKey(TGListTreeItem *itm, TObject *obj, const char *name)
       item->Rename(newname.Data());
    }
    GetObjPicture(&pic, obj);
-   if (!pic) pic = gClient->GetPicture("leaf_t.xpm");
    if (!fListTree->FindChildByName(item, name)) {
       TGListTreeItem *it = fListTree->AddItem(item, name, obj, pic, pic);
-      if ((pic != fFileIcon) && (pic != fCachedPic))
+      if (pic && (pic != fFileIcon) && (pic != fCachedPic))
          fClient->FreePicture(pic);
       it->SetDNDSource(kTRUE);
    }
@@ -1022,6 +1021,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       else if (fname.EndsWith(".png")) {
          gSystem->ChangeDirectory(dirname.Data());
          XXExecuteDefaultAction(&f);
+         gSystem->ChangeDirectory(savdir.Data());
       }
       else if (IsTextFile(fullpath.Data())) {
          gSystem->ChangeDirectory(dirname.Data());
@@ -1051,13 +1051,15 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                XXExecuteDefaultAction(&f);
             }
          }
+         gSystem->ChangeDirectory(savdir.Data());
       }
       else {
          gSystem->ChangeDirectory(dirname.Data());
          XXExecuteDefaultAction(&f);
+         gSystem->ChangeDirectory(savdir.Data());
       }
    }
-   gSystem->ChangeDirectory(savdir.Data());
+   //gSystem->ChangeDirectory(savdir.Data());
    fListTree->ClearViewPort();
 }
 
