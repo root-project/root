@@ -17,12 +17,13 @@
 
 ClassImp(TCrown)
 
+
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>TCrown : to draw crown</h2></center>
 A crown is specified with the position of its centre, its inner/outer radius
 a minimum and maximum angle. The attributes of the outline line are given via
-TAttLineThe attributes of the fill area are given via TAttFill
+TAttLine. The attributes of the fill area are given via TAttFill.
 <p> Example:
 End_Html
 Begin_Macro(source)
@@ -48,68 +49,95 @@ Begin_Macro(source)
 }
 End_Macro */
 
+
 //______________________________________________________________________________
 TCrown::TCrown(): TEllipse()
 {
-   // Crown default constructor.
+   /* Begin_Html
+   Crown default constructor.
+   End_Html */
 
 }
+
+
 //______________________________________________________________________________
 TCrown::TCrown(Double_t x1, Double_t y1,Double_t radin, Double_t radout,Double_t phimin,Double_t phimax)
       :TEllipse(x1,y1,radin,radout,phimin,phimax,0)
 {
-   // Crown normal constructor.
-   //
-   //  x1,y1  : coordinates of centre of crown
-   //  radin  : inner crown radius
-   //  radout : outer crown radius
-   //  phimin : min angle in degrees (default is 0)
-   //  phimax : max angle in degrees (default is 360)
-   //
-   //  When a crown sector only is drawn, the lines connecting the center
-   //  of the crown to the edges are drawn by default. One can specify
-   //  the drawing option "only" to not draw these lines.
+   /* Begin_Html
+   Crown normal constructor.
+   <ul>
+   <li> x1,y1  : coordinates of centre of crown
+   <li> radin  : inner crown radius
+   <li> radout : outer crown radius
+   <li> phimin : min angle in degrees (default is 0)
+   <li> phimax : max angle in degrees (default is 360)
+   </ul>
+   When a crown sector only is drawn, the lines connecting the center
+   of the crown to the edges are drawn by default. One can specify
+   the drawing option "only" to not draw these lines.
+   End_Html */
 
 }
+
 
 //______________________________________________________________________________
 TCrown::TCrown(const TCrown &crown) : TEllipse(crown)
 {
-   // Crown copy constructor.
+   /* Begin_Html
+   Crown copy constructor.
+   End_Html */
 
    ((TCrown&)crown).Copy(*this);
 }
 
+
 //______________________________________________________________________________
 TCrown::~TCrown()
 {
-   // Crown default destructor.
+   /* Begin_Html
+   Crown default destructor.
+   End_Html */
 }
+
 
 //______________________________________________________________________________
 void TCrown::Copy(TObject &crown) const
 {
-   // Copy this crown to crown.
+   /* Begin_Html
+   Copy this crown to crown.
+   End_Html */
 
    TEllipse::Copy(crown);
 }
 
+
 //______________________________________________________________________________
 Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a crown
-   //
-   // if crown is filled, return OK if we are inside
-   // otherwise, crown is found if near the crown edges
+   /* Begin_Html
+   Compute distance from point px,py to a crown.
+   <p>
+   If crown is filled, return OK if we are inside
+   otherwise, crown is found if near the crown edges.
+   End_Html */
 
    const Double_t kPI = TMath::Pi();
-   Double_t x = gPad->AbsPixeltoX(px) - GetX1();
-   Double_t y = gPad->AbsPixeltoY(py) - GetY1();
-   Double_t r = TMath::Sqrt(x*x+y*y);
-   
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px)) - fX1;
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py)) - fY1;
+
+   Double_t r1 = fR1;
+   Double_t r2 = fR2;
+   Double_t r  = TMath::Sqrt(x*x+y*y);
+
+   if (r1>r2) {
+      r1 = fR2;
+      r2 = fR1;
+   }
+
    Int_t dist = 9999;
-   if (r > fR2) return dist;
-   if (r < fR1) return dist;
+   if (r > r2) return dist;
+   if (r < r1) return dist;
    if (fPhimax-fPhimin < 360) {
       Double_t phi = 180*TMath::ACos(x/r)/kPI;
       if (phi < fPhimin) return dist;
@@ -119,16 +147,19 @@ Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
    if (GetFillColor() && GetFillStyle()) {
       return 0;
    } else {
-      if (TMath::Abs(fR2-r)/fR2 < 0.02) return 0;
-      if (TMath::Abs(fR1-r)/fR1 < 0.02) return 0;
+      if (TMath::Abs(r2-r)/r2 < 0.02) return 0;
+      if (TMath::Abs(r1-r)/r1 < 0.02) return 0;
    }
    return dist;
 }
 
+
 //______________________________________________________________________________
 void TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,Double_t phimin,Double_t phimax,Option_t *option)
 {
-   // Draw this crown with new coordinates
+   /* Begin_Html
+   Draw this crown with new coordinates.
+   End_Html */
 
    TCrown *newcrown = new TCrown(x1, y1, radin, radout, phimin, phimax);
    TAttLine::Copy(*newcrown);
@@ -137,20 +168,26 @@ void TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,D
    newcrown->AppendPad(option);
 }
 
+
 //______________________________________________________________________________
 void TCrown::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event
-   //
-   //  For the time being TEllipse::ExecuteEvent is OK
+   /* Begin_Html
+   Execute action corresponding to one event
+   <p>
+   For the time being TEllipse::ExecuteEvent is used.
+   End_Html */
 
    TEllipse::ExecuteEvent(event,px,py);
 }
 
+
 //______________________________________________________________________________
 void TCrown::Paint(Option_t *)
 {
-   // Paint this crown with its current attributes
+   /* Begin_Html
+   Paint this crown with its current attributes.
+   End_Html */
 
    const Double_t kPI = TMath::Pi();
    const Int_t np = 40;
@@ -184,7 +221,7 @@ void TCrown::Paint(Option_t *)
    if (fPhimax-fPhimin >= 360 ) {
       // a complete filled crown
       if (GetFillColor()  && GetFillStyle()) {
-         gPad->PaintFillArea(2*np+2,x,y); 
+         gPad->PaintFillArea(2*np+2,x,y);
       }
       // a complete empty crown
       if (GetLineStyle()) {
@@ -198,10 +235,13 @@ void TCrown::Paint(Option_t *)
    }
 }
 
+
 //______________________________________________________________________________
 void TCrown::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
+   /* Begin_Html
+   Save primitive as a C++ statement(s) on output stream out.
+   End_Html */
 
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TCrown::Class())) {
