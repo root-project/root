@@ -28,6 +28,7 @@
 typedef void (*FreeHookFun_t)(void*, void *addr, size_t);
 typedef void *(*ReAllocFun_t)(void*, size_t);
 typedef void *(*ReAllocCFun_t)(void*, size_t, size_t);
+typedef char *(*ReAllocCharFun_t)(char*, size_t, size_t);
 
 
 class TStorage {

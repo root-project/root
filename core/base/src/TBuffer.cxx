@@ -26,6 +26,14 @@ const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for
 ClassImp(TBuffer)
 
 //______________________________________________________________________________
+static char *R__NoReAllocChar(char *, size_t, size_t)
+{
+   // The user has provided memory than we don't own, thus we can not extent it
+   // either.
+   return 0;
+}
+
+//______________________________________________________________________________
 static inline ULong_t Void_Hash(const void *ptr)
 {
    // Return hash value for this object.
@@ -52,6 +60,8 @@ TBuffer::TBuffer(EMode mode)
 
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
+   
+   SetReAllocFunc( 0 );
 }
 
 //______________________________________________________________________________
@@ -72,17 +82,22 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
+
+   SetReAllocFunc( 0 );
 }
 
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite. By default the I/O buffer has a size of
    // TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
    // to TBuffer via the buf argument. By default this buffer will be adopted
    // unless adopt is false.
-
+   // If the new buffer is _not_ adopted and no memory allocation routine
+   // is provided, a Fatal error will be issued if the Buffer attempts to
+   // expand.
+   
    if (!buf && bufsiz < kMinimalSize) bufsiz = kMinimalSize;
    fBufSize  = bufsiz;
    fMode     = mode;
@@ -98,6 +113,8 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
       fBuffer = new char[fBufSize+kExtraSpace];
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
+   
+   SetReAllocFunc( reallocfunc );
 }
 
 //______________________________________________________________________________
@@ -114,7 +131,7 @@ TBuffer::~TBuffer()
 }
 
 //______________________________________________________________________________
-void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt)
+void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
    // Sets a new buffer in an existing TBuffer object. If newsiz=0 then the
    // new buffer is expected to have the same size as the previous buffer.
@@ -122,6 +139,9 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt)
    // If the TBuffer owned the previous buffer, it will be deleted prior
    // to accepting the new buffer. By default the new buffer will be
    // adopted unless adopt is false.
+   // If the new buffer is _not_ adopted and no memory allocation routine
+   // is provided, a Fatal error will be issued if the Buffer attempts to
+   // expand.
 
    if (fBuffer && TestBit(kIsOwner))
       delete [] fBuffer;
@@ -135,6 +155,8 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt)
    fBufCur = fBuffer;
    if (newsiz > 0) fBufSize = newsiz;
    fBufMax = fBuffer + fBufSize;
+   
+   SetReAllocFunc( reallocfunc );
 }
 
 //______________________________________________________________________________
@@ -143,8 +165,17 @@ void TBuffer::Expand(Int_t newsize)
    // Expand the I/O buffer to newsize bytes.
 
    Int_t l  = Length();
-   fBuffer  = TStorage::ReAllocChar(fBuffer, newsize+kExtraSpace,
-                                    fBufSize+kExtraSpace);
+   fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
+                           fBufSize+kExtraSpace);
+   if (fBuffer == 0) {
+      if (fReAllocFunc == TStorage::ReAllocChar) {
+         Fatal("Expand","Failed to expand the data buffer using TStorage::ReAllocChar.");
+      } if (fReAllocFunc == R__NoReAllocChar) {
+         Fatal("Expand","Failed to expand the data buffer because TBuffer does not own it and no custom memory reallocator was provided.");         
+      } else {
+         Fatal("Expand","Failed to expand the data buffer using custom memory reallocator 0x%lx.", fReAllocFunc);
+      }
+   }
    fBufSize = newsize;
    fBufCur  = fBuffer + l;
    fBufMax  = fBuffer + fBufSize;
@@ -164,6 +195,29 @@ void TBuffer::SetParent(TObject *parent)
    // Set parent owning this buffer.
 
    fParent = parent;
+}
+//______________________________________________________________________________
+ReAllocCharFun_t TBuffer::GetReAllocFunc() 
+{
+   // Return the reallocation method currently used.
+   return fReAllocFunc;
+}
+
+//______________________________________________________________________________
+void  TBuffer::SetReAllocFunc(ReAllocCharFun_t reallocfunc )
+{
+   // Set which memory reallocation method to use.  If reallocafunc is null,
+   // reset it to the defaul value (TStorage::ReAlloc)
+   
+   if (reallocfunc) {
+      fReAllocFunc = reallocfunc;
+   } else {
+      if (TestBit(kIsOwner)) {
+         fReAllocFunc = TStorage::ReAllocChar;
+      } else {
+         fReAllocFunc = R__NoReAllocChar;
+      }
+   }
 }
 
 //______________________________________________________________________________

@@ -36,13 +36,14 @@ class TRefTable;
 class TBuffer : public TObject {
 
 protected:
-   Bool_t          fMode;          //Read or write mode
-   Int_t           fVersion;       //Buffer format version
-   Int_t           fBufSize;       //Size of buffer
-   char           *fBuffer;        //Buffer used to store objects
-   char           *fBufCur;        //Current position in buffer
-   char           *fBufMax;        //End of buffer
-   TObject        *fParent;        //Pointer to parent object owning this buffer
+   Bool_t           fMode;          //Read or write mode
+   Int_t            fVersion;       //Buffer format version
+   Int_t            fBufSize;       //Size of buffer
+   char            *fBuffer;        //Buffer used to store objects
+   char            *fBufCur;        //Current position in buffer
+   char            *fBufMax;        //End of buffer
+   TObject         *fParent;        //Pointer to parent object owning this buffer
+   ReAllocCharFun_t fReAllocFunc;   //! Realloc function to be used when extending the buffer.
 
    // Default ctor
    TBuffer() : TObject(), fMode(0), fVersion(0), fBufSize(0), fBuffer(0),
@@ -68,7 +69,7 @@ public:
 
    TBuffer(EMode mode);
    TBuffer(EMode mode, Int_t bufsiz);
-   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE);
+   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
    virtual ~TBuffer();
 
    Int_t    GetBufferVersion() const { return fVersion; }
@@ -76,7 +77,9 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
-   void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE);
+   void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
+   ReAllocCharFun_t GetReAllocFunc();
+   void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = 0);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
    TObject *GetParent()  const;

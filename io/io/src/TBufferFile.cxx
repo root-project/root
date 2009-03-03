@@ -102,8 +102,8 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 }
 
 //______________________________________________________________________________
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt) :
-   TBuffer(mode,bufsiz,buf,adopt),
+TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
+   TBuffer(mode,bufsiz,buf,adopt,reallocfunc),
    fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
    fInfo(0), fInfoStack()
 {
@@ -112,7 +112,10 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t ad
    // TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
    // to TBuffer via the buf argument. By default this buffer will be adopted
    // unless adopt is false.
-
+   // If the new buffer is _not_ adopted and no memory allocation routine
+   // is provided, a Fatal error will be issued if the Buffer attempts to
+   // expand.
+   
    fMapCount = 0;
    fMapSize  = fgMapSize;
    fMap      = 0;
@@ -2850,7 +2853,7 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
 }
 
 //______________________________________________________________________________
-void TBufferFile::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt)
+void TBufferFile::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
    // Sets a new buffer in an existing TBuffer object. If newsiz=0 then the
    // new buffer is expected to have the same size as the previous buffer.
@@ -2858,7 +2861,10 @@ void TBufferFile::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt)
    // If the TBuffer owned the previous buffer, it will be deleted prior
    // to accepting the new buffer. By default the new buffer will be
    // adopted unless adopt is false.
-
+   // If the new buffer is _not_ adopted and no memory allocation routine
+   // is provided, a Fatal error will be issued if the Buffer attempts to
+   // expand.
+   
    if (fBuffer && TestBit(kIsOwner))
       delete [] fBuffer;
 
@@ -2871,6 +2877,8 @@ void TBufferFile::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt)
    fBufCur = fBuffer;
    if (newsiz > 0) fBufSize = newsiz;
    fBufMax = fBuffer + fBufSize;
+   
+   SetReAllocFunc( reallocfunc );
 }
 
 //______________________________________________________________________________

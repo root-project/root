@@ -26,6 +26,10 @@ Warning in <TStreamerInfo::CompareContent>: The following data member of the in-
    int three; //
 </pre>
 </li>
+<li>Allow user to provide a custom reallocator when the TBuffer is being passed
+memory.  If the TBuffer does not own the memory __and__ no custom memory
+reallocator has been set, a Fatal error will be issued:
+<pre>Fatal in <TBufferFile::Expand>: Failed to expand the data buffer because TBuffer does not own it and no custom memory reallocator was provided.</pre></li>
 <li>Re-allow reading empty vector&lt long double&gt, however long double is <b>still</b> not supported.</li>
 
 </ul>
