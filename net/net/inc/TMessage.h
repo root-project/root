@@ -59,6 +59,9 @@ private:
    TMessage(const TMessage &);           // not implemented
    void operator=(const TMessage &);     // not implemented
 
+   // used by friend TSocket
+   Bool_t TestBitNumber(UInt_t bitnumber) const { return fBitsPIDs.TestBitNumber(bitnumber); }
+
 protected:
    TMessage(void *buf, Int_t bufsize);   // only called by T(P)Socket::Recv()
    void SetLength() const;               // only called by T(P)Socket::Send()
@@ -84,7 +87,6 @@ public:
    Int_t    Uncompress();
    char    *CompBuffer() const { return fBufComp; }
    Int_t    CompLength() const { return (Int_t)(fBufCompCur - fBufComp); }
-   Bool_t   TestBitNumber(UInt_t bitnumber) const {return fBitsPIDs.TestBitNumber(bitnumber);}
    void     WriteObject(const TObject *obj);
    UShort_t WriteProcessID(TProcessID *pid);
 
