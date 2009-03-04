@@ -1536,33 +1536,40 @@ Bool_t TClass::CanSplit() const
 //______________________________________________________________________________
 TObject *TClass::Clone(const char *new_name) const
 {
-   // Duplicate this TClass object under a different.  This can be used to 
-   // provide 'hard' alias to classname.
+   // Create a Clone of this TClass object using a different name but using the same 'dictionary'.
+   // This effectively creates a hard alias for the class name.
 
    if (new_name == 0 || new_name[0]=='\0' || fName == new_name) {
       Error("Clone","The name of the class must be changed when cloning a TClass object.");
       return 0;
    }
+   // Temporarily remove the original from the list of classes.
+   TClass::RemoveClass(const_cast<TClass*>(this));
+ 
    TClass *copy;
    if (fTypeInfo) {
-      copy = new TClass(new_name,
-                             fClassVersion,
-                             *fTypeInfo,
-                             new TIsAProxy(*fTypeInfo),
-                             fShowMembers,
-                             GetDeclFileName(),
-                             GetImplFileName(),
-                             GetDeclFileLine(),
-                             GetImplFileLine());
+      copy = new TClass(GetName(),
+                        fClassVersion,
+                        *fTypeInfo,
+                        new TIsAProxy(*fTypeInfo),
+                        fShowMembers,
+                        GetDeclFileName(),
+                        GetImplFileName(),
+                        GetDeclFileLine(),
+                        GetImplFileLine());
    } else {
-      copy = new TClass(new_name,
+      copy = new TClass(GetName(),
                         fClassVersion,
                         GetDeclFileName(),
                         GetImplFileName(),
                         GetDeclFileLine(),
                         GetImplFileLine());
       copy->fShowMembers = fShowMembers;
-   }      
+   }
+   // Remove the copy before renaming it
+   TClass::RemoveClass(copy);
+   copy->SetName(new_name);
+   TClass::AddClass(copy);
 
    copy->SetNew(fNew);
    copy->SetNewArray(fNewArray);
@@ -1573,7 +1580,7 @@ TObject *TClass::Clone(const char *new_name) const
    if (fStreamer) {
       copy->AdoptStreamer(fStreamer->Generate());
    }
-   // If IsZombie is true, something went wront and we will not be
+   // If IsZombie is true, something went wrong and we will not be
    // able to properly copy the collection proxy
    if (fCollectionProxy && !copy->IsZombie()) {
       copy->CopyCollectionProxy(*fCollectionProxy);
@@ -1582,6 +1589,7 @@ TObject *TClass::Clone(const char *new_name) const
    if (fRefProxy) {
       copy->AdoptReferenceProxy( fRefProxy->Clone() );
    }
+   TClass::AddClass(const_cast<TClass*>(this));
    return copy;
 }   
 
