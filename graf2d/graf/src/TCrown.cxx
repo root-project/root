@@ -140,8 +140,17 @@ Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
    if (r < r1) return dist;
    if (fPhimax-fPhimin < 360) {
       Double_t phi = 180*TMath::ACos(x/r)/kPI;
-      if (phi < fPhimin) return dist;
-      if (phi > fPhimax) return dist;
+      if (y<0) phi = 360-phi;
+      Double_t phi1 = fPhimin;
+      Double_t phi2 = fPhimax;
+      if (phi1<0) phi1=phi1+360;
+      if (phi2<0) phi2=phi2+360;
+      if (phi2<phi1) {
+         if (phi < phi1 && phi > phi2) return dist;
+      } else {
+         if (phi < phi1) return dist;
+         if (phi > phi2) return dist;
+      }
    }
 
    if (GetFillColor() && GetFillStyle()) {
