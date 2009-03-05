@@ -14,9 +14,10 @@
 //      Copyright CERN 2004,2009           Jan.Conrad@cern.ch,
 //                                     Johan.Lundberg@cern.ch
 //
-//  This file lists the methods and their syntax. For information about
-//  the statistical meaning of the parameters, consult TRolke.cxx.
-//                                             -------------------
+//  For information about the statistical meaning of the parameters
+//  and the syntax, consult TRolke.cxx
+//                  ------------------
+//
 //  Examples are found in the file Rolke.C
 //  --------------------------------------
 //
@@ -62,7 +63,7 @@ private:
    Double_t Interval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m);
 
    // LIKELIHOOD ROUTINE
-   Double_t Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m, Int_t what);
+   Double_t Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m, Int_t what);
 
    //MODEL 1
    Double_t EvalLikeMod1(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m, Int_t what);
@@ -110,8 +111,7 @@ private:
 
 public:
 
-   /* Constructor with optional Confidence Level argument.
-      'option' is not used. */
+   /* Constructor */
    TRolke(Double_t CL = 0.9, Option_t *option = "");
 
    /* Destructor */
@@ -160,32 +160,27 @@ public:
    Double_t GetUpperLimit();
    Double_t GetLowerLimit();
 
-   /* get the upper and lower average limits based on the specified model.
-      No uncertainties are considered for the Poisson weights in the averaging sum */
+   // get the upper and lower average limits
    bool GetSensitivity(Double_t& low, Double_t& high, Double_t pPrecision = 0.00001);
 
-   /* get the upper and lower limits for the outcome corresponding to
-      a given quantile. For integral=0.5 this gives the median limits
-      in repeated experiments. The returned out_x is the corresponding
-      (e.g. median) value of x.
-      No uncertainties are considered for the Poisson weights when calculating 
-      the Poisson integral */
+   // get the upper and lower limits for the outcome corresponding to
+   // a given quantile.
    bool GetLimitsQuantile(Double_t& low, Double_t& high, Int_t& out_x, Double_t integral = 0.5);
 
-   /* get the upper and lower limits for the most likely outcome.
-      The returned out_x is the corresponding value of x 
-      No uncertainties are considered for the Poisson weights when finding ML */
+   // get the upper and lower limits for the most likely outcome.
    bool GetLimitsML(Double_t& low, Double_t& high, Int_t& out_x);
 
-   /* get the value of x corresponding to rejection of the null hypothesis.
-      This means a lower limit >0 with the pre-specified Confidence Level. 
-      maxtry is the maximum value of x to try. maxtry<0 gives automatic mode. */
+   // get the value of x corresponding to rejection of the null hypothesis.
    bool GetCriticalNumber(Int_t& ncrit,Int_t maxtry=-1);
 
-   /* Set the bounding mode flag. Read TRolke.cxx for details. */
+   /* Get the bounding mode flag. True activates bounded mode. Read
+      TRolke.cxx and the references therein for details. */
    bool GetBounding() const {
       return fBounding;
    }
+
+   /* Get the bounding mode flag. True activates bounded mode. Read
+      TRolke.cxx and the references therein for details. */
    void SetBounding(const bool bnd) {
       fBounding = bnd;
    }
