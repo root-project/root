@@ -1204,6 +1204,14 @@ void TGFileBrowser::GotoDir(const char *path)
    if (item == 0) return;
    fListTree->OpenItem(item);
    TObjArray *tokens = sPath.Tokenize("/");
+   if (tokens->IsEmpty()) {
+      fListTree->HighlightItem(item);
+      DoubleClicked(item, 1);
+      delete tokens;
+      fListTree->ClearViewPort();
+      fListTree->AdjustPosition(item);
+      return;
+   }
    TString first = ((TObjString*)tokens->At(0))->GetName();
    if (first == "afs")
       expand = kFALSE;
