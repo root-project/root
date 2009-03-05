@@ -42,8 +42,8 @@ void fitslicesy() {
    hpxpy->GetYaxis()->SetLabelSize(0.06);
    hpxpy->SetMarkerColor(kYellow);
 
-// Fit slices projected along Y fron bins in X [7,32]
-   hpxpy->FitSlicesY(0,0,0,20);
+// Fit slices projected along Y fron bins in X [7,32] with more than 20 bins  in Y filled
+   hpxpy->FitSlicesY(0,7,32,20);
 
 // Show fitted "mean" for each slice
    left->cd(2);
