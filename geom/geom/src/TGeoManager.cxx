@@ -3250,8 +3250,8 @@ Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
          return weight;
       }
       Info("Weight", "Estimating weight of %s with %g %% precision", fTopVolume->GetName(), 100.*precision);
-      printf("    event         weight         err\n");
-      printf("========================================\n");
+      Printf("    event         weight         err");
+      Printf("========================================");
    }
    weight = fPainter->Weight(precision, option);
    return weight;
@@ -3347,7 +3347,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
 
       // write file
       gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.writeFile()\")");
-      printf("Info in <TPython::Exec>: GDML Export complete - %s is ready\n", filename);
+      ::Info("TPython::Exec","GDML Export complete - %s is ready", filename);
       return 1;
    }
    if (sfile.Contains(".root") || sfile.Contains(".xml")) {
@@ -3433,22 +3433,22 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    //before importing the new object.
 
    if (fgLock) {
-      printf("WARNING: TGeoManager::Import : TGeoMananager in lock mode. NOT IMPORTING new geometry\n");
+      ::Warning("TGeoManager::Import","TGeoMananager in lock mode. NOT IMPORTING new geometry");
       return NULL;
    }
    if (!filename) return 0;
-   printf("Info: TGeoManager::Import : Reading geometry from file: %s\n",filename);
+   ::Info("TGeoManager::Import","Reading geometry from file: %s",filename);
 
    if (gGeoManager) delete gGeoManager;
    gGeoManager = 0;
 
    if (strstr(filename,".gdml")) {
       // import from a gdml file
-      const char* cmd = Form("TGDMLParse::StartGDML(\"%s\")", filename);
+      TString cmd = Form("TGDMLParse::StartGDML(\"%s\")", filename);
       TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
 
       if(world == 0) {
-         printf("Error in <TGeoManager::Import>: Cannot open file\n");
+         ::Error("TGeoManager::Import","Cannot open file");
       }
       else {
          gGeoManager->SetTopVolume(world);
@@ -3471,7 +3471,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
          f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          if (old) old->cd();
-         printf("Error in <TGeoManager::Import>: Cannot open file\n");
+         ::Error("TGeoManager::Import","Cannot open file");
          return 0;
       }
       if (name && strlen(name) > 0) {
