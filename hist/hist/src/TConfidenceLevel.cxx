@@ -155,14 +155,14 @@ Double_t TConfidenceLevel::CLb(bool use_sMC) const
    case kFALSE:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] <= fTSD)
+            if (fTSB[fISB[i]] < fTSD)
                result = (Double_t(i + 1)) / fNMC;
          return result;
       }
    case kTRUE:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSS[fISS[i]] <= fTSD)
+            if (fTSS[fISS[i]] < fTSD)
                result += (1 / (fLRS[fISS[i]] * fNMC));
          return result;
       }
@@ -181,14 +181,14 @@ Double_t TConfidenceLevel::CLsb(bool use_sMC) const
    case kFALSE:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] <= fTSD)
+            if (fTSB[fISB[i]] < fTSD)
                result += (fLRB[fISB[i]]) / fNMC;
          return result;
       }
    case kTRUE:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSS[fISS[i]] <= fTSD)
+            if (fTSS[fISS[i]] < fTSD)
                result = i / fNMC;
          return result;
       }
