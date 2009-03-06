@@ -1,4 +1,4 @@
-// Example of a simple script creating 3 threads.
+//+ Example of a simple script creating 3 threads.
 // This script can only be executed via ACliC .x threadsh1.C++.
 
 #include "TCanvas.h"

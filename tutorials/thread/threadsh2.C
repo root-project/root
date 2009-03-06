@@ -1,6 +1,6 @@
-// Example of a simple script creating 2 threads each with one canvas.
-// The canvases are saved in a animated gif file.
+//+ Example of a simple script creating 2 threads each with one canvas.
 // This script can only be executed via ACliC .x threadsh2.C++.
+// The canvases are saved in a animated gif file.
 
 #include "TROOT.h"
 #include "TCanvas.h"

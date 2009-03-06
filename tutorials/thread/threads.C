@@ -1,4 +1,4 @@
-// Example of a simple script creating 3 threads.
+//+ Example of a simple script creating 3 threads.
 // This script can only be executed via ACliC: .x threads.C++.
 // Before executing the script, load the Thread library with:
 //   gSystem->Load("libThread");
@@ -11,14 +11,14 @@
 
 void *handle(void *ptr)
 {
-   int nr = (int) ptr;
+   long nr = (long) ptr;
 
    for (int i = 0; i < 10; i++) {
       //TThread::Lock();
       //printf("Here I am loop index: %3d , thread: %d\n",i,nr);
       //TThread::UnLock();
 
-      TThread::Printf("Here I am loop index: %3d , thread: %d", i, nr);
+      TThread::Printf("Here I am loop index: %3d , thread: %lld", i, nr);
       gSystem->Sleep(1000);
    }
    return 0;
