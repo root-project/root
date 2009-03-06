@@ -195,8 +195,8 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
    gen_ref = generate_ref;
    gErrorIgnoreLevel = 10;
    
-   printf("******************************************************************\n");
-   printf("* STRESS GEOMETRY\n");
+   fprintf(stderr,"******************************************************************\n");
+   fprintf(stderr,"* STRESS GEOMETRY\n");
    TString opt = exp;
    opt.ToLower();
    Bool_t all = kFALSE;
@@ -223,8 +223,8 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
       sprintf(fname, "%s_ref.root", exps[i]);
       
       if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_3.root",exps[i]))) {
-         if (!gen_ref) printf("File: %s does not exist, generating it\n", fname);
-         else               printf("Generating reference file %s\n", fname);
+         if (!gen_ref) fprintf(stderr,"File: %s does not exist, generating it\n", fname);
+         else               fprintf(stderr,"Generating reference file %s\n", fname);
          WriteRef(i);
       }
    
@@ -237,21 +237,21 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
          FILE *fp = gSystem->OpenPipe("uname -a", "r");
          char line[60];
          fgets(line,60,fp); line[59] = 0;
-         printf("*  SYS: %s\n",line);
+         fprintf(stderr,"*  SYS: %s\n",line);
          gSystem->ClosePipe(fp);
       } else {
          const char *os = gSystem->Getenv("OS");
-         if (!os) printf("*  SYS: Windows 95\n");
-         else     printf("*  SYS: %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
+         if (!os) fprintf(stderr,"*  SYS: Windows 95\n");
+         else     fprintf(stderr,"*  SYS: %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
       }
-      printf("******************************************************************\n");
-      if (testfailed) printf("*  stressGeometry found bad points ............. FAILED\n");
-      else          printf("*  stressGeometry .................................. OK\n");
-      printf("******************************************************************\n");
-      printf("*  CPU time in ReadRef = %6.2f seconds\n",tpstot);
-      printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
+      fprintf(stderr,"******************************************************************\n");
+      if (testfailed) fprintf(stderr,"*  stressGeometry found bad points ............. FAILED\n");
+      else          fprintf(stderr,"*  stressGeometry .................................. OK\n");
+      fprintf(stderr,"******************************************************************\n");
+      fprintf(stderr,"*  CPU time in ReadRef = %6.2f seconds\n",tpstot);
+      fprintf(stderr,"*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
    }
-   printf("******************************************************************\n");
+   fprintf(stderr,"******************************************************************\n");
 }
 
 void ReadRef(Int_t kexp) {
@@ -266,10 +266,10 @@ void ReadRef(Int_t kexp) {
    
    f = TFile::Open(fname);
    if (!f) {
-      printf("Reference file %s not found ! Skipping.\n", fname);
+      fprintf(stderr,"Reference file %s not found ! Skipping.\n", fname);
       return;
    }   
-   printf("Reference file %s found\n", fname);
+   fprintf(stderr,"Reference file %s found\n", fname);
    sprintf(fname, "%s_diff.root", exps[kexp]);
    TFile fdiff(fname,"RECREATE");
    TTree *TD = new TTree("TD","TGeo stress diff");
@@ -279,7 +279,7 @@ void ReadRef(Int_t kexp) {
    Long64_t nentries = T->GetEntries();
    TVectorD *vref = (TVectorD *)T->GetUserInfo()->At(0);
    if (!vref) {
-      printf(" ERROR: User info not found, regenerate reference file\n");
+      fprintf(stderr," ERROR: User info not found, regenerate reference file\n");
       return;
    }   
    TVectorD vect(4);
@@ -307,10 +307,10 @@ void ReadRef(Int_t kexp) {
       if ((TMath::Abs(rad-p.rad)/p.rad)>diffmax || TMath::Abs(nbound-p.nbound)>100) {
          nbad++;
          if (nbad < 10) {
-            printf(" ==>Point %lld differs with diff = %g, x=%g, y=%g, z=%g\n",i,diff,p.x,p.y,p.z);
-            printf("    p.nbound=%d, p.length=%g, p.safe=%g, p.rad=%g\n",
+            fprintf(stderr," ==>Point %lld differs with diff = %g, x=%g, y=%g, z=%g\n",i,diff,p.x,p.y,p.z);
+            fprintf(stderr,"    p.nbound=%d, p.length=%g, p.safe=%g, p.rad=%g\n",
                         p.nbound,p.length,p.safe,p.rad);
-            printf("      nbound=%d,   length=%g,   safe=%g,   rad=%g\n",
+            fprintf(stderr,"      nbound=%d,   length=%g,   safe=%g,   rad=%g\n",
                         nbound,length,safe,rad);
          }
          TD->Fill();
@@ -325,10 +325,10 @@ void ReadRef(Int_t kexp) {
    //for (Int_t j=1; j<4; j++) diff += TMath::Abs(vect_ref(j)-vect(j));
    diff += TMath::Abs(vect_ref(3)-vect(3))/vect_ref(3);
    if (diff > diffmax) {
-//      printf("Total weight=%g   ref=%g\n", vect(0), vect_ref(0));
-      printf("Total nbound=%g   ref=%g\n", vect(1), vect_ref(1));
-      printf("Total length=%g   ref=%g\n", vect(2), vect_ref(2));
-      printf("Total    rad=%g   ref=%g\n", vect(3), vect_ref(3));
+//      fprintf(stderr,"Total weight=%g   ref=%g\n", vect(0), vect_ref(0));
+      fprintf(stderr,"Total nbound=%g   ref=%g\n", vect(1), vect_ref(1));
+      fprintf(stderr,"Total length=%g   ref=%g\n", vect(2), vect_ref(2));
+      fprintf(stderr,"Total    rad=%g   ref=%g\n", vect(3), vect_ref(3));
       nbad++;  
    }   
       
@@ -342,8 +342,8 @@ void ReadRef(Int_t kexp) {
    
    Double_t cp = sw.CpuTime();
    tpstot += cp;
-   if (nbad > 0) printf("*     stress %-15s  found %5d bad points ............. failed\n",exps[kexp],nbad);
-   else          printf("*     stress %-15s: time/ref = %6.2f/%6.2f............ OK\n",exps[kexp],cp,cp_brun[kexp]);
+   if (nbad > 0) fprintf(stderr,"*     stress %-15s  found %5d bad points ............. failed\n",exps[kexp],nbad);
+   else          fprintf(stderr,"*     stress %-15s: time/ref = %6.2f/%6.2f............ OK\n",exps[kexp],cp,cp_brun[kexp]);
 }
 
 void WriteRef(Int_t kexp) {
@@ -409,7 +409,7 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
    TGeoNode *lastnode;
    gGeoManager->InitTrack(x,y,z,xp,yp,zp);
    if (verbose) {
-      printf("Track: (%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f)\n",
+      fprintf(stderr,"Track: (%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f)\n",
                        x,y,z,xp,yp,zp);
       sprintf(path, "%s", gGeoManager->GetPath());
    }                    
@@ -436,7 +436,7 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
          } else {  
             // Relocate point
             if (ismall > 3) {
-               printf("ERROR: Small steps in: %s shape=%s\n",gGeoManager->GetPath(), shape->ClassName());
+               fprintf(stderr,"ERROR: Small steps in: %s shape=%s\n",gGeoManager->GetPath(), shape->ClassName());
                return;
             }   
             memcpy(pt,gGeoManager->GetCurrentPoint(),3*sizeof(Double_t));
@@ -451,7 +451,7 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
             TGeoMatrix *mat = gGeoManager->GetCurrentMatrix();
             mat->MasterToLocal(pt,loc);
             if (!gGeoManager->GetCurrentVolume()->Contains(loc)) {
-//            printf("Woops - out\n");
+//            fprintf(stderr,"Woops - out\n");
                gGeoManager->CdUp();
                nextnode = gGeoManager->GetCurrentNode();
             }   
@@ -471,8 +471,8 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
             lastrad = 0.;
          }      
          if (verbose) {
-            printf(" STEP #%d: %s\n",nbound, path);
-            printf("    step=%g  length=%g  rad=%g %s\n", snext,length,
+            fprintf(stderr," STEP #%d: %s\n",nbound, path);
+            fprintf(stderr,"    step=%g  length=%g  rad=%g %s\n", snext,length,
                    med->GetMaterial()->GetDensity()*snext/med->GetMaterial()->GetRadLen(),med->GetName());
             sprintf(path, "%s", gGeoManager->GetPath());
          }   
@@ -500,20 +500,20 @@ void InspectDiff(const char* exp="alice",Long64_t ientry=-1) {
    Long64_t nentries = TD->GetEntries();
    nentries = nentries>>1;
    if (ientry>=0 && ientry<nentries) {
-      printf("DIFFERENCE #%lld\n", ientry);
+      fprintf(stderr,"DIFFERENCE #%lld\n", ientry);
       TD->GetEntry(2*ientry);
-      printf("   NEW: nbound=%d  length=%g  safe=%g  rad=%g\n", p.nbound,p.length,p.safe,p.rad);
+      fprintf(stderr,"   NEW: nbound=%d  length=%g  safe=%g  rad=%g\n", p.nbound,p.length,p.safe,p.rad);
       TD->GetEntry(2*ientry+1);
-      printf("   OLD: nbound=%d  length=%g  safe=%g  rad=%g\n", p.nbound,p.length,p.safe,p.rad);
+      fprintf(stderr,"   OLD: nbound=%d  length=%g  safe=%g  rad=%g\n", p.nbound,p.length,p.safe,p.rad);
       FindRad(p.x,p.y,p.z, p.theta, p.phi, nbound,length,safe,rad, kTRUE);
       return;
    }   
    for (Long64_t i=0;i<nentries;i++) {
-      printf("DIFFERENCE #%lld\n", i);
+      fprintf(stderr,"DIFFERENCE #%lld\n", i);
       TD->GetEntry(2*i);
-      printf("   NEW: nbound=%d  length=%g  safe=%g rad=%g\n", p.nbound,p.length,p.safe,p.rad);
+      fprintf(stderr,"   NEW: nbound=%d  length=%g  safe=%g rad=%g\n", p.nbound,p.length,p.safe,p.rad);
       TD->GetEntry(2*i+1);
-      printf("   OLD: nbound=%d  length=%g  safe=%g rad=%g\n", p.nbound,p.length,p.safe,p.rad);
+      fprintf(stderr,"   OLD: nbound=%d  length=%g  safe=%g rad=%g\n", p.nbound,p.length,p.safe,p.rad);
       FindRad(p.x,p.y,p.z, p.theta, p.phi, nbound,length,safe,rad, kTRUE);
    }
 }   
@@ -523,7 +523,7 @@ void InspectRef(const char *exp) {
    char fname[64];
    sprintf(fname, "%s_ref_2.root", exp);
    if (gSystem->AccessPathName(fname)) {
-      printf("ERROR: file %s does not exist\n", fname);
+      fprintf(stderr,"ERROR: file %s does not exist\n", fname);
       return;
    }
    TFile f(fname);
@@ -549,10 +549,10 @@ void InspectRef(const char *exp) {
    c->SetFillColor(kYellow);
    TVectorD *vref = (TVectorD *)T->GetUserInfo()->At(0);
    TVectorD vect = *vref;
-   printf("=====================================\n");
-//   printf("Total weight:  %g [kg]\n", vect(0));
-   printf("Total nbound:  %g boundaries crossed\n", vect(1));
-   printf("Total length:  %g [m]\n", 0.01*vect(2));
-   printf("Total nradlen: %f\n", vect(3));   
-   printf("=====================================\n");
+   fprintf(stderr,"=====================================\n");
+//   fprintf(stderr,"Total weight:  %g [kg]\n", vect(0));
+   fprintf(stderr,"Total nbound:  %g boundaries crossed\n", vect(1));
+   fprintf(stderr,"Total length:  %g [m]\n", 0.01*vect(2));
+   fprintf(stderr,"Total nradlen: %f\n", vect(3));   
+   fprintf(stderr,"=====================================\n");
 }
