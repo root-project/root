@@ -181,14 +181,14 @@ Double_t TConfidenceLevel::CLsb(bool use_sMC) const
    case kFALSE:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSD)
+            if (fTSB[fISB[i]] <= fTSD)
                result += (fLRB[fISB[i]]) / fNMC;
          return result;
       }
    case kTRUE:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSS[fISS[i]] < fTSD)
+            if (fTSS[fISS[i]] <= fTSD)
                result = i / fNMC;
          return result;
       }
@@ -221,35 +221,35 @@ Double_t TConfidenceLevel::GetExpectedCLsb_b(Int_t sigma) const
    case -2:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP2S)))]])
+            if (fTSB[fISB[i]] <= fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP2S)))]])
                result += fLRB[fISB[i]] / fNMC;
          return result;
       }
    case -1:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP1S)))]])
+            if (fTSB[fISB[i]] <= fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP1S)))]])
                result += fLRB[fISB[i]] / fNMC;
          return result;
       }
    case 0:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLMED)))]])
+            if (fTSB[fISB[i]] <= fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLMED)))]])
                result += fLRB[fISB[i]] / fNMC;
          return result;
       }
    case 1:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM1S)))]])
+            if (fTSB[fISB[i]] <= fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM1S)))]])
                result += fLRB[fISB[i]] / fNMC;
          return result;
       }
    case 2:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM2S)))]])
+            if (fTSB[fISB[i]] <= fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM2S)))]])
                result += fLRB[fISB[i]] / fNMC;
          return result;
       }
@@ -270,35 +270,35 @@ Double_t TConfidenceLevel::GetExpectedCLb_sb(Int_t sigma) const
    case 2:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSS[fISS[i]] < fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP2S)))]])
+            if (fTSS[fISS[i]] <= fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP2S)))]])
                result += fLRS[fISS[i]] / fNMC;
          return result;
       }
    case 1:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSS[fISS[i]] < fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP1S)))]])
+            if (fTSS[fISS[i]] <= fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP1S)))]])
                result += fLRS[fISS[i]] / fNMC;
          return result;
       }
    case 0:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSS[fISS[i]] < fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLMED)))]])
+            if (fTSS[fISS[i]] <= fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLMED)))]])
                result += fLRS[fISS[i]] / fNMC;
          return result;
       }
    case -1:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSS[fISS[i]] < fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM1S)))]])
+            if (fTSS[fISS[i]] <= fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM1S)))]])
                result += fLRS[fISS[i]] / fNMC;
          return result;
       }
    case -2:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSS[fISS[i]] < fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM2S)))]])
+            if (fTSS[fISS[i]] <= fTSS[fISS[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM2S)))]])
                result += fLRS[fISS[i]] / fNMC;
          return result;
       }
@@ -319,35 +319,35 @@ Double_t TConfidenceLevel::GetExpectedCLb_b(Int_t sigma) const
    case 2:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM2S)))]])
+            if (fTSB[fISB[i]] <= fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM2S)))]])
                result = (i + 1) / double (fNMC);
          return result;
       }
    case 1:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM1S)))]])
+            if (fTSB[fISB[i]] <= fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLM1S)))]])
                result = (i + 1) / double (fNMC);
          return result;
       }
    case 0:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLMED)))]])
+            if (fTSB[fISB[i]] <= fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLMED)))]])
                result = (i + 1) / double (fNMC);
          return result;
       }
    case -1:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP1S)))]])
+            if (fTSB[fISB[i]] <= fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP1S)))]])
                result = (i + 1) / double (fNMC);
          return result;
       }
    case -2:
       {
          for (Int_t i = 0; i < fNMC; i++)
-            if (fTSB[fISB[i]] < fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP2S)))]])
+            if (fTSB[fISB[i]] <= fTSB[fISB[TMath::Min((Int_t) fNMC,(Int_t) TMath::Max((Int_t) 1,(Int_t) (fNMC * fgMCLP2S)))]])
                result = (i + 1) / double (fNMC);
          return result;
       }
@@ -395,7 +395,7 @@ Double_t TConfidenceLevel::Get3sProbability() const
    Double_t psumbs = 0;
    for (Int_t i = 0; i < fNMC; i++) {
       psumbs += 1 / (Double_t) (fLRS[(fISS[(Int_t) (fNMC - i)])] * fNMC);
-      if (psumbs < fMCL3S)
+      if (psumbs <= fMCL3S)
          result = i / fNMC;
    }
    return result;
@@ -411,7 +411,7 @@ Double_t TConfidenceLevel::Get5sProbability() const
    Double_t psumbs = 0;
    for (Int_t i = 0; i < fNMC; i++) {
       psumbs += 1 / (Double_t) (fLRS[(fISS[(Int_t) (fNMC - i)])] * fNMC);
-      if (psumbs < fMCL5S)
+      if (psumbs <= fMCL5S)
          result = i / fNMC;
    }
    return result;
