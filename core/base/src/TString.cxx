@@ -1818,7 +1818,7 @@ void TString::FormImp(const char *fmt, va_list ap)
    // Formats a string using a printf style format descriptor.
    // Existing string contents will be overwritten.
 
-   Ssiz_t buflen = 20 * strlen(fmt);    // pick a number, any number
+   Ssiz_t buflen = 20 + 20 * strlen(fmt);    // pick a number, any strictly positive number
    Clobber(buflen);
 
    va_list sap;
