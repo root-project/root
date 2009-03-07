@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root loadernotapp$(ExeSuf) loadernotapp.dSYM loadernotapp.success
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += missingInfo nospace namespace autoload mytest drawing
+TEST_TARGETS += missingInfo nospace namespace autoload mytest drawing testloadernotapp
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -89,3 +89,15 @@ missingInfo.log: missingInfo_C.$(DllSuf)
 
 missingInfo: missingInfo.log
 	$(TestDiff)
+
+loadernotapp$(ExeSuf): loadernotapp.cxx
+	$(CMDECHO)$(CXX)  $^ $(CFLAGS) $(CXXFLAGS) $(CLDFLAGS) $(ROOTLIBS) $(OutPutOpt)$@
+
+loadernotapp.log: loadernotapp$(ExeSuf)
+	$(CMDECHO) ./loadernotapp$(ExeSuf) > loadernotapp.log
+
+testloadernotapp: loadernotapp.success
+
+loadernotapp.success: loadernotapp.log
+	$(SuccessTestDiff) && touch $@
+
