@@ -1292,7 +1292,11 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
 
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
-   }
+
+      // Make sure that this information will be useable by inserting our 
+      // autoload call back!
+      G__set_class_autoloading_callback(&TCint_AutoLoadCallback);      
+   } 
 
    // Load all rootmap files in the dynamic load path ((DY)LD_LIBRARY_PATH, etc.).
    // A rootmap file must end with the string ".rootmap".
