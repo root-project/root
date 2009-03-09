@@ -316,7 +316,7 @@ Double_t TGeoPolygon::Safety(Double_t *point, Int_t &isegment) const
    Double_t safe=1E30;
    Int_t isegmin=0;
    for (i1=0; i1<fNvert; i1++) {
-      if (safe==0.) {
+      if (TGeoShape::IsSameWithinTolerance(safe,0)) {
          isegment = isegmin;
          return 0.;
       }   
@@ -332,7 +332,7 @@ Double_t TGeoPolygon::Safety(Double_t *point, Int_t &isegment) const
       dpy = point[1] - p1[1];
       
       lsq = dx*dx + dy*dy;
-      if (lsq==0) {
+      if (TGeoShape::IsSameWithinTolerance(lsq,0)) {
          ssq = dpx*dpx + dpy*dpy;
          if (ssq < safe) {
             safe = ssq;

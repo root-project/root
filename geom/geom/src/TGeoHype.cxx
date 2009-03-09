@@ -315,8 +315,8 @@ Int_t TGeoHype::DistToHype(Double_t *point, Double_t *dir, Double_t *s, Bool_t i
    Double_t b = t0*point[2]*dir[2] - point[0]*dir[0] - point[1]*dir[1];
    Double_t c = point[0]*point[0] + point[1]*point[1] - t0*point[2]*point[2] - r0*r0;      
 
-   if (a == 0.) {
-      if (b == 0.) return 0;
+   if (TMath::Abs(a) < TGeoShape::Tolerance()) {
+      if (TMath::Abs(b) < TGeoShape::Tolerance()) return 0;
       snext = 0.5*c/b;
       if (snext < 0.) return 0;
       s[0] = snext;
@@ -669,7 +669,7 @@ Double_t TGeoHype::ZHypeSq(Double_t r, Bool_t inner) const
       r0 = fRmax;
       tsq = fToutsq;
    }
-   if (tsq==0) return TGeoShape::Big();
+   if (TMath::Abs(tsq) < TGeoShape::Tolerance()) return TGeoShape::Big();
    return ((r*r-r0*r0)/tsq);
 }     
 
@@ -709,15 +709,15 @@ Double_t TGeoHype::SafetyToHype(Double_t *point, Bool_t inner, Bool_t in) const
    dr = r - rh;
    if (inner) {
       if (!in && dr>0) return -TGeoShape::Big();
-      if (fStIn == 0) return TMath::Abs(dr);
-      if (fRmin==0) return TMath::Abs(dr/TMath::Sqrt(1.+ fTinsq));
+      if (TMath::Abs(fStIn) < TGeoShape::Tolerance()) return TMath::Abs(dr);
+      if (fRmin<TGeoShape::Tolerance()) return TMath::Abs(dr/TMath::Sqrt(1.+ fTinsq));
       tsq = fTinsq;
    } else {
       if (!in && dr<0) return -TGeoShape::Big();
-      if (fStOut == 0) return TMath::Abs(dr);
+      if (TMath::Abs(fStOut) < TGeoShape::Tolerance()) return TMath::Abs(dr);
       tsq = fToutsq;
    }
-   if (dr==0) return 0.;
+   if (TMath::Abs(dr)<TGeoShape::Tolerance()) return 0.;
    // 1. dr<0 => approximate safety with distance to tangent to hyperbola in z = |point[2]|   
    Double_t m;
    if (dr<0) {

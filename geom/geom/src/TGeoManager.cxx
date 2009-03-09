@@ -539,7 +539,7 @@ TGeoManager::TGeoManager(const char *name, const char *title)
    Init();
    gGeoIdentity = new TGeoIdentity("Identity");
    BuildDefaultMaterials();
-   Info("TGeoManager","Geometry %s, %s created", GetName(), GetTitle());
+   if (fgVerboseLevel>0) Info("TGeoManager","Geometry %s, %s created", GetName(), GetTitle());
 }
 
 //_____________________________________________________________________________
@@ -1382,7 +1382,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    Int_t nnavigators = fNavigators->GetEntriesFast();
    // Check if the geometry is streamed from file
    if (fIsGeomReading) {
-      Info("CloseGeometry","Geometry loaded from file...");
+      if (fgVerboseLevel>0) Info("CloseGeometry","Geometry loaded from file...");
       gGeoIdentity=(TGeoIdentity *)fMatrices->At(0);
       if (!fElementTable) fElementTable = new TGeoElementTable(200);
       if (!fTopNode) {
@@ -1391,7 +1391,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
             return;
          }
          SetTopVolume(fMasterVolume);
-         if (fStreamVoxels) Info("CloseGeometry","Voxelization retrieved from file");
+         if (fStreamVoxels && fgVerboseLevel>0) Info("CloseGeometry","Voxelization retrieved from file");
          Voxelize("ALL");
          for (Int_t i=0; i<nnavigators; i++) {
             nav = (TGeoNavigator*)fNavigators->At(i);
@@ -1415,29 +1415,31 @@ void TGeoManager::CloseGeometry(Option_t *option)
          for (i=0; i<nvol; i++) fHashVolumes->AddLast(fVolumes->At(i));
       }
 
-      Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
-      Info("CloseGeometry","----------------modeler ready----------------");
+      if (fgVerboseLevel>0) Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
+      if (fgVerboseLevel>0) Info("CloseGeometry","----------------modeler ready----------------");
       fClosed = kTRUE;
       return;
    }
 
    SelectTrackingMedia();
    CheckGeometry();
-   Info("CloseGeometry","Counting nodes...");
+   if (fgVerboseLevel>0) Info("CloseGeometry","Counting nodes...");
    fNNodes = CountNodes();
    fNLevel = fMasterVolume->CountNodes(1,3)+1;
    if (fNLevel<30) fNLevel = 100;
 
 //   BuildIdArray();
    Voxelize("ALL");
-   Info("CloseGeometry","Building cache...");
+   if (fgVerboseLevel>0) Info("CloseGeometry","Building cache...");
    for (Int_t i=0; i<nnavigators; i++) {
       nav = (TGeoNavigator*)fNavigators->At(i);
       nav->BuildCache(dummy,nodeid);
    }
    fClosed = kTRUE;
-   Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
-   Info("CloseGeometry","----------------modeler ready----------------");
+   if (fgVerboseLevel>0) {
+      Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
+      Info("CloseGeometry","----------------modeler ready----------------");
+   }   
 }
 
 //_____________________________________________________________________________
@@ -1547,7 +1549,7 @@ void TGeoManager::ConvertReflections()
 {
 // Convert all reflections in geometry to normal rotations + reflected shapes.
    if (!fTopNode) return;
-   Info("ConvertReflections", "Converting reflections in: %s - %s ...", GetName(), GetTitle());
+   if (fgVerboseLevel>0) Info("ConvertReflections", "Converting reflections in: %s - %s ...", GetName(), GetTitle());
    TGeoIterator next(fTopVolume);
    TGeoNode *node;
    TGeoNodeMatrix *nodematrix;
@@ -1570,7 +1572,7 @@ void TGeoManager::ConvertReflections()
          node->SetVolume(reflected);
       }
    }
-   Info("ConvertReflections", "Done");
+   if (fgVerboseLevel>0) Info("ConvertReflections", "Done");
 }
 
 //_____________________________________________________________________________
@@ -2436,7 +2438,7 @@ Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
    TIter next3(fMedia);
    TGeoMedium *med;
    while ((med=(TGeoMedium*)next3())) count += med->GetByteCount();
-   Info("GetByteCount","Total size of logical tree : %i bytes", count);
+   if (fgVerboseLevel>0) Info("GetByteCount","Total size of logical tree : %i bytes", count);
    return count;
 }
 //_____________________________________________________________________________
@@ -2609,7 +2611,7 @@ void TGeoManager::Voxelize(Option_t *option)
 // Voxelize all non-divided volumes.
    TGeoVolume *vol;
    TGeoVoxelFinder *vox = 0;
-   if (!fStreamVoxels) Info("Voxelize","Voxelizing...");
+   if (!fStreamVoxels && fgVerboseLevel>0) Info("Voxelize","Voxelizing...");
 //   Int_t nentries = fVolumes->GetSize();
    TIter next(fVolumes);
    while ((vol = (TGeoVolume*)next())) {
@@ -2631,7 +2633,7 @@ void TGeoManager::ModifiedPad() const
    fPainter->ModifiedPad();
 }
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeArb8(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeArb8(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t *vertices)
 {
 // Make an TGeoArb8 volume.
@@ -2639,7 +2641,7 @@ TGeoVolume *TGeoManager::MakeArb8(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeBox(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeBox(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz)
 {
 // Make in one step a volume pointing to a box shape with given medium.
@@ -2647,7 +2649,7 @@ TGeoVolume *TGeoManager::MakeBox(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakePara(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakePara(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz,
                                     Double_t alpha, Double_t theta, Double_t phi)
 {
@@ -2656,7 +2658,7 @@ TGeoVolume *TGeoManager::MakePara(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeSphere(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeSphere(const char *name, TGeoMedium *medium,
                                     Double_t rmin, Double_t rmax, Double_t themin, Double_t themax,
                                     Double_t phimin, Double_t phimax)
 {
@@ -2665,7 +2667,7 @@ TGeoVolume *TGeoManager::MakeSphere(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeTorus(const char *name, const TGeoMedium *medium, Double_t r,
+TGeoVolume *TGeoManager::MakeTorus(const char *name, TGeoMedium *medium, Double_t r,
                                    Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi)
 {
 // Make in one step a volume pointing to a torus shape with given medium.
@@ -2673,7 +2675,7 @@ TGeoVolume *TGeoManager::MakeTorus(const char *name, const TGeoMedium *medium, D
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeTube(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeTube(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium.
@@ -2681,7 +2683,7 @@ TGeoVolume *TGeoManager::MakeTube(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeTubs(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeTubs(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz,
                                      Double_t phi1, Double_t phi2)
 {
@@ -2690,7 +2692,7 @@ TGeoVolume *TGeoManager::MakeTubs(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeEltu(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeEltu(const char *name, TGeoMedium *medium,
                                      Double_t a, Double_t b, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium
@@ -2698,7 +2700,7 @@ TGeoVolume *TGeoManager::MakeEltu(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeHype(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeHype(const char *name, TGeoMedium *medium,
                                         Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium
@@ -2706,7 +2708,7 @@ TGeoVolume *TGeoManager::MakeHype(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeParaboloid(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeParaboloid(const char *name, TGeoMedium *medium,
                                         Double_t rlo, Double_t rhi, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium
@@ -2714,7 +2716,7 @@ TGeoVolume *TGeoManager::MakeParaboloid(const char *name, const TGeoMedium *medi
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeCtub(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeCtub(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
                                      Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
 {
@@ -2723,7 +2725,7 @@ TGeoVolume *TGeoManager::MakeCtub(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeCone(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeCone(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2)
 {
@@ -2732,7 +2734,7 @@ TGeoVolume *TGeoManager::MakeCone(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeCons(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeCons(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2,
                                      Double_t phi1, Double_t phi2)
@@ -2742,7 +2744,7 @@ TGeoVolume *TGeoManager::MakeCons(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakePcon(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakePcon(const char *name, TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nz)
 {
 // Make in one step a volume pointing to a polycone shape with given medium.
@@ -2750,7 +2752,7 @@ TGeoVolume *TGeoManager::MakePcon(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakePgon(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakePgon(const char *name, TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 {
 // Make in one step a volume pointing to a polygone shape with given medium.
@@ -2758,7 +2760,7 @@ TGeoVolume *TGeoManager::MakePgon(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeTrd1(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeTrd1(const char *name, TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 {
 // Make in one step a volume pointing to a TGeoTrd1 shape with given medium.
@@ -2766,7 +2768,7 @@ TGeoVolume *TGeoManager::MakeTrd1(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeTrd2(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeTrd2(const char *name, TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2,
                                   Double_t dz)
 {
@@ -2775,7 +2777,7 @@ TGeoVolume *TGeoManager::MakeTrd2(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeTrap(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeTrap(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t theta, Double_t phi, Double_t h1,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
@@ -2785,7 +2787,7 @@ TGeoVolume *TGeoManager::MakeTrap(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeGtra(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoManager::MakeGtra(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
@@ -2795,7 +2797,7 @@ TGeoVolume *TGeoManager::MakeGtra(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoManager::MakeXtru(const char *name, const TGeoMedium *medium, Int_t nz)
+TGeoVolume *TGeoManager::MakeXtru(const char *name, TGeoMedium *medium, Int_t nz)
 {
 // Make a TGeoXtru-shaped volume with nz planes
    return TGeoBuilder::Instance(this)->MakeXtru(name, medium, nz);
@@ -2995,7 +2997,7 @@ TGeoVolumeAssembly *TGeoManager::MakeVolumeAssembly(const char *name)
 }
 
 //_____________________________________________________________________________
-TGeoVolumeMulti *TGeoManager::MakeVolumeMulti(const char *name, const TGeoMedium *medium)
+TGeoVolumeMulti *TGeoManager::MakeVolumeMulti(const char *name, TGeoMedium *medium)
 {
 // Make a TGeoVolumeMulti handling a list of volumes.
    return TGeoBuilder::Instance(this)->MakeVolumeMulti(name, medium);
@@ -3087,7 +3089,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    } else {
       fMasterVolume = vol;
       fUniqueVolumes->AddAtAndExpand(vol,0);
-      Info("SetTopVolume","Top volume is %s. Master volume is %s", fTopVolume->GetName(),
+      if (fgVerboseLevel>0) Info("SetTopVolume","Top volume is %s. Master volume is %s", fTopVolume->GetName(),
            fMasterVolume->GetName());
    }
 //   fMasterVolume->FindMatrixOfDaughterVolume(vol);
@@ -3195,7 +3197,7 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
 // Instanciate a TGeoChecker object and investigates the geometry according to
 // option. Not implemented yet.
    // check shapes first
-   Info("CheckGeometry","Fixing runtime shapes...");
+   if (fgVerboseLevel>0) Info("CheckGeometry","Fixing runtime shapes...");
    TIter next(fShapes);
    TGeoShape *shape;
    Bool_t has_runtime = kFALSE;
@@ -3207,7 +3209,7 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
          if (!shape->TestShapeBit(TGeoShape::kGeoClosedShape)) shape->ComputeBBox();
    }
    if (has_runtime) fTopNode->CheckShapes();
-   else Info("CheckGeometry","...Nothing to fix");
+   else if (fgVerboseLevel>0) Info("CheckGeometry","...Nothing to fix");
 }
 
 //_____________________________________________________________________________
@@ -3215,7 +3217,7 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
 {
 // Check all geometry for illegal overlaps within a limit OVLP.
    if (!fTopNode) {
-      Info("CheckOverlaps","Top node not set");
+      Error("CheckOverlaps","Top node not set");
       return;
    }
    fTopNode->CheckOverlaps(ovlp,option);
@@ -3244,14 +3246,16 @@ Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
    TGeoVolume *volume = fTopVolume;
    if (opt.Contains("v")) {
       if (opt.Contains("a")) {
-         Info("Weight", "Computing analytically weight of %s", volume->GetName());
+         if (fgVerboseLevel>0) Info("Weight", "Computing analytically weight of %s", volume->GetName());
          weight = volume->WeightA();
-         Info("Weight", "Computed weight: %f [kg]\n", weight);
+         if (fgVerboseLevel>0) Info("Weight", "Computed weight: %f [kg]\n", weight);
          return weight;
       }
-      Info("Weight", "Estimating weight of %s with %g %% precision", fTopVolume->GetName(), 100.*precision);
-      Printf("    event         weight         err");
-      Printf("========================================");
+      if (fgVerboseLevel>0) {
+         Info("Weight", "Estimating weight of %s with %g %% precision", fTopVolume->GetName(), 100.*precision);
+         printf("    event         weight         err\n");
+         printf("========================================\n");
+      }   
    }
    weight = fPainter->Weight(precision, option);
    return weight;
@@ -3311,13 +3315,13 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    TString sfile(filename);
    if (sfile.Contains(".C")) {
       //Save geometry as a C++ script
-      Info("Export","Exporting %s %s as C++ code", GetName(), GetTitle());
+      if (fgVerboseLevel>0) Info("Export","Exporting %s %s as C++ code", GetName(), GetTitle());
       fTopVolume->SaveAs(filename);
       return 1;
    }
    if (sfile.Contains(".gdml")) {
       //Save geometry as a gdml file
-      Info("Export","Exporting %s %s as gdml code", GetName(), GetTitle());
+      if (fgVerboseLevel>0) Info("Export","Exporting %s %s as gdml code", GetName(), GetTitle());
       gROOT->ProcessLine("TPython::Exec(\"from math import *\")");
 
       gROOT->ProcessLine("TPython::Exec(\"import writer\")");
@@ -3347,7 +3351,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
 
       // write file
       gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.writeFile()\")");
-      ::Info("TPython::Exec","GDML Export complete - %s is ready", filename);
+      if (fgVerboseLevel>0) printf("Info in <TPython::Exec>: GDML Export complete - %s is ready\n", filename);
       return 1;
    }
    if (sfile.Contains(".root") || sfile.Contains(".xml")) {
@@ -3364,10 +3368,10 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       opt.ToLower();
       if (opt.Contains("v")) {
          fStreamVoxels = kTRUE;
-         Info("Export","Exporting %s %s as root file. Optimizations streamed.", GetName(), GetTitle());
+         if (fgVerboseLevel>0) Info("Export","Exporting %s %s as root file. Optimizations streamed.", GetName(), GetTitle());
       } else {
          fStreamVoxels = kFALSE;
-         Info("Export","Exporting %s %s as root file. Optimizations not streamed.", GetName(), GetTitle());
+         if (fgVerboseLevel>0) Info("Export","Exporting %s %s as root file. Optimizations not streamed.", GetName(), GetTitle());
       }
       Int_t nbytes = Write(keyname);
       fStreamVoxels = kFALSE;
@@ -3433,22 +3437,22 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    //before importing the new object.
 
    if (fgLock) {
-      ::Warning("TGeoManager::Import","TGeoMananager in lock mode. NOT IMPORTING new geometry");
+      ::Warning("TGeoManager::Import", "TGeoMananager in lock mode. NOT IMPORTING new geometry");
       return NULL;
    }
    if (!filename) return 0;
-   ::Info("TGeoManager::Import","Reading geometry from file: %s",filename);
+   if (fgVerboseLevel>0) ::Info("TGeoManager::Import","Reading geometry from file: %s",filename);
 
    if (gGeoManager) delete gGeoManager;
    gGeoManager = 0;
 
    if (strstr(filename,".gdml")) {
       // import from a gdml file
-      TString cmd = Form("TGDMLParse::StartGDML(\"%s\")", filename);
+      const char* cmd = Form("TGDMLParse::StartGDML(\"%s\")", filename);
       TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
 
       if(world == 0) {
-         ::Error("TGeoManager::Import","Cannot open file");
+         ::Error("TGeoManager::Import", "Cannot open file");
       }
       else {
          gGeoManager->SetTopVolume(world);
@@ -3471,7 +3475,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
          f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          if (old) old->cd();
-         ::Error("TGeoManager::Import","Cannot open file");
+         ::Error("TGeoManager::Import", "Cannot open file");
          return 0;
       }
       if (name && strlen(name) > 0) {

@@ -1814,9 +1814,11 @@ TGeoNode *TGeoNavigator::FindInCluster(Int_t *cluster, Int_t nc)
    for (i=0; i<nc; i++) {
       clnode = current->GetDaughter(cluster[i]);
       CdDown(cluster[i]);
+      Bool_t max_priority = (clnode==fNextNode)?kTRUE:kFALSE;
       found = SearchNode(kTRUE, clnode);
-      if (!fSearchOverlaps) {
+      if (!fSearchOverlaps || max_priority) {
       // an only was found during the search -> exiting
+      // The node given by FindNextBoundary returned -> exiting
          PopDummy(ipop);
          return found;
       }
@@ -2170,9 +2172,9 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
 Bool_t TGeoNavigator::IsSamePoint(Double_t x, Double_t y, Double_t z) const
 {
 // Check if a new point with given coordinates is the same as the last located one.
-   if (x==fLastPoint[0]) {
-      if (y==fLastPoint[1]) {
-         if (z==fLastPoint[2]) return kTRUE;
+   if (TMath::Abs(x-fLastPoint[0]) < 1.E-20) {
+      if (TMath::Abs(y-fLastPoint[1]) < 1.E-20) {
+         if (TMath::Abs(z-fLastPoint[2]) < 1.E-20) return kTRUE;
       }
    }
    return kFALSE;

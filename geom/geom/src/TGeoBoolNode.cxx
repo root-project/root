@@ -467,7 +467,7 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
          inside1 = kFALSE;
          for (i=0; i<3; i++) {
             master[i] += d1*dir[i];
-            pushed[i] = master[i]+d1*TGeoShape::Tolerance()*dir[i];
+            pushed[i] = master[i]+(1.+d1)*TGeoShape::Tolerance()*dir[i];
          }   
          // check if propagated point is in right shape        
          fRightMat->MasterToLocal(pushed, local);
@@ -475,7 +475,7 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
          if (!inside2) return snxt;
          d2 = fRight->DistFromInside(local, rdir, 3);
          if (d2 < TGeoShape::Tolerance()) return snxt;
-         d2 += d1*TGeoShape::Tolerance();
+         d2 += (1.+d1)*TGeoShape::Tolerance();
       }   
       if (inside2) {
          snxt += d2;
@@ -484,7 +484,7 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
          inside2 = kFALSE;
          for (i=0; i<3; i++) {
             master[i] += d2*dir[i];
-            pushed[i] = master[i]+d2*TGeoShape::Tolerance()*dir[i];
+            pushed[i] = master[i]+(1.+d2)*TGeoShape::Tolerance()*dir[i];
          }   
          // check if propagated point is in left shape        
          fLeftMat->MasterToLocal(pushed, local);
@@ -492,7 +492,7 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
          if (!inside1) return snxt;
          d1 = fLeft->DistFromInside(local, ldir, 3);
          if (d1 < TGeoShape::Tolerance()) return snxt;
-         d1 += d2*TGeoShape::Tolerance();
+         d1 += (1.+d2)*TGeoShape::Tolerance();
       }
    }      
    return snxt;

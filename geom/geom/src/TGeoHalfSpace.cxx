@@ -111,7 +111,7 @@ Double_t TGeoHalfSpace::DistFromInside(Double_t *point, Double_t *dir, Int_t iac
    // compute distance to plane 
    Double_t snxt = TGeoShape::Big();
    Double_t ddotn = dir[0]*fN[0]+dir[1]*fN[1]+dir[2]*fN[2];
-   if (ddotn==0) return snxt;
+   if (TMath::Abs(ddotn)<TGeoShape::Tolerance()) return snxt;
    snxt = rdotn/ddotn;
    if (snxt<0) return TGeoShape::Big();
    return snxt;  
@@ -134,7 +134,7 @@ Double_t TGeoHalfSpace::DistFromOutside(Double_t *point, Double_t *dir, Int_t ia
    // compute distance to plane
    Double_t snxt = TGeoShape::Big();
    Double_t ddotn = dir[0]*fN[0]+dir[1]*fN[1]+dir[2]*fN[2];
-   if (ddotn==0) return snxt;
+   if (TMath::Abs(ddotn)<TGeoShape::Tolerance()) return snxt;
    snxt = rdotn/ddotn;
    if (snxt<0) return TGeoShape::Big();
    return snxt;  

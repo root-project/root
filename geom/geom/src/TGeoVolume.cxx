@@ -999,7 +999,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
    // for phi divisions correct the range
    if (!strcmp(fShape->GetAxisName(iaxis), "PHI")) {
       if ((start-xlo)<-1E-3) start+=360.;
-      if (range==360) {
+      if (TGeoShape::IsSameWithinTolerance(range,360)) {
          xlo = start;
          xhi = start+range;
       }   
@@ -2143,7 +2143,7 @@ TGeoVolumeMulti::TGeoVolumeMulti()
 }
 
 //_____________________________________________________________________________
-TGeoVolumeMulti::TGeoVolumeMulti(const char *name, const TGeoMedium *med)
+TGeoVolumeMulti::TGeoVolumeMulti(const char *name, TGeoMedium *med)
 {
 // default constructor
    fVolumes = new TObjArray();
@@ -2412,7 +2412,7 @@ void TGeoVolumeMulti::SetLineWidth(Width_t lwidth)
 }
 
 //_____________________________________________________________________________
-void TGeoVolumeMulti::SetMedium(const TGeoMedium *med)
+void TGeoVolumeMulti::SetMedium(TGeoMedium *med)
 {
 // Set medium for a multiple volume.
    TGeoVolume::SetMedium(med);

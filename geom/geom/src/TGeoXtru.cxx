@@ -213,7 +213,7 @@ Double_t TGeoXtru::Capacity() const
    area = fPoly->Area();
    for (iz=0; iz<fNz-1; iz++) {
       dz = fZ[iz+1]-fZ[iz];
-      if (dz==0) continue;
+      if (TGeoShape::IsSameWithinTolerance(dz,0)) continue;
       sc1 = fScale[iz];
       sc2 = fScale[iz+1];
       capacity += (area*dz/3.)*(sc1*sc1+sc1*sc2+sc2*sc2);
@@ -283,14 +283,14 @@ Bool_t TGeoXtru::Contains(Double_t *point) const
    if (point[2]>fZ[fNz-1]) return kFALSE; 
    Int_t iz = TMath::BinarySearch(fNz, fZ, point[2]);
    if (iz<0 || iz==fNz-1) return kFALSE;
-   if (point[2]==fZ[iz]) {
+   if (TGeoShape::IsSameWithinTolerance(point[2],fZ[iz])) {
       xtru->SetIz(-1);
       xtru->SetCurrentVertices(fX0[iz],fY0[iz], fScale[iz]);
       if (fPoly->Contains(point)) return kTRUE;
-      if (iz>1 && fZ[iz]==fZ[iz-1]) {
+      if (iz>1 && TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz-1])) {
          xtru->SetCurrentVertices(fX0[iz-1],fY0[iz-1], fScale[iz-1]);
          return fPoly->Contains(point);
-      } else if (iz<fNz-2 && fZ[iz]==fZ[iz+1]) {
+      } else if (iz<fNz-2 && TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1])) {
          xtru->SetCurrentVertices(fX0[iz+1],fY0[iz+1], fScale[iz+1]);
          return fPoly->Contains(point);
       }      
@@ -319,7 +319,7 @@ Double_t TGeoXtru::DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t i
    Double_t znew;
    Double_t pt[3];
    Double_t safe;
-   if (fZ[iz]==fZ[iz+1] && !in) {
+   if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1]) && !in) {
       TGeoXtru *xtru = (TGeoXtru*)this;
       snext = (fZ[iz]-point[2])/dir[2];
       if (snext<0) return TGeoShape::Big();
@@ -389,9 +389,9 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       iz--;
    } else {   
       if (iz>0) {
-         if (point[2] == fZ[iz]) {
-            if ((fZ[iz]==fZ[iz+1]) && (dir[2]<0)) iz++;
-            else if ((fZ[iz]==fZ[iz-1]) && (dir[2]>0)) iz--;
+         if (TGeoShape::IsSameWithinTolerance(point[2],fZ[iz])) {
+            if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1]) && dir[2]<0) iz++;
+            else if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz-1]) && dir[2]>0) iz--;
          }   
       }
    }   
@@ -403,7 +403,7 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    Double_t pt[3];
    Int_t iv, ipl, inext;
    // we treat the special case when dir[2]=0
-   if (dir[2]==0) {
+   if (TGeoShape::IsSameWithinTolerance(dir[2],0)) {
       for (iv=0; iv<fNvert; iv++) {
          xtru->SetIz(-1);
          dist = DistToPlane(point,dir,iz,iv,TGeoShape::Big(),kTRUE);
@@ -440,7 +440,7 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
                snext = sz;
             }   
             // maybe a Z discontinuity - check this
-            if (!zexit && fZ[ipl]==fZ[inext]) {
+            if (!zexit && TGeoShape::IsSameWithinTolerance(fZ[ipl],fZ[inext])) {
                xtru->SetCurrentVertices(fX0[inext],fY0[inext],fScale[inext]);
                // if we do not cross the next polygone, we are out
                if (!fPoly->Contains(pt)) {
@@ -542,7 +542,7 @@ Double_t TGeoXtru::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    // - first solve particular case dir[2]=0
    Bool_t convex = fPoly->IsConvex();
    Bool_t hit = kFALSE;
-   if (dir[2]==0) {
+   if (TGeoShape::IsSameWithinTolerance(dir[2],0)) {
       // loop lateral planes to see if we cross something
       xtru->SetIz(iz);
       for (iv=0; iv<fNvert; iv++) {
@@ -562,7 +562,7 @@ Double_t TGeoXtru::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    while (iz>=0 && iz<fNz-1) {
       // compute distance to lateral planes
       xtru->SetIz(iz);
-      if (fZ[iz]==fZ[iz+1]) xtru->SetIz(-1);
+      if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1])) xtru->SetIz(-1);
       for (iv=0; iv<fNvert; iv++) {
          dist = DistToPlane(pt,dir,iz,iv,stepmax,kFALSE);
          if (dist<stepmax) {
@@ -873,7 +873,7 @@ Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin)
    Int_t iseg;
    Double_t safe = TGeoShape::Big();
    // segment-break case
-   if (fZ[iz] == fZ[iz+1]) {
+   if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1])) {
       safz = TMath::Abs(point[2]-fZ[iz]);
       if (safz>safmin) return TGeoShape::Big();
       SetCurrentVertices(fX0[iz], fY0[iz], fScale[iz]);

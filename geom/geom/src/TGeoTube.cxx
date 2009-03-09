@@ -346,7 +346,7 @@ Double_t TGeoTube::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmi
       Bool_t checkout = kFALSE;
       Double_t r = TMath::Sqrt(rsq);
       if (zi<rmax-r) {
-         if ((rmin==0) || (zi<r-rmin)) {
+         if ((TGeoShape::IsSameWithinTolerance(rmin,0)) || (zi<r-rmin)) {
             if (point[2]*dir[2]<0) return 0.0;
             return TGeoShape::Big();
          }
@@ -356,7 +356,7 @@ Double_t TGeoTube::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmi
          if (rdotn>=0) return TGeoShape::Big();
          return 0.0;
       }
-      if (rmin==0) return 0.0;
+      if (TGeoShape::IsSameWithinTolerance(rmin,0)) return 0.0;
       if (rdotn>=0) return 0.0;
       // Ray exiting rmin -> check (+) solution for inner tube
       if (TMath::Abs(nsq)<TGeoShape::Tolerance()) return TGeoShape::Big();
@@ -1446,7 +1446,7 @@ Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
 //      Double_t sch, cch;
       // check if on Z boundaries
       if (zi<rmax-r) {
-         if ((rmin==0) || (zi<r-rmin)) {
+         if (TGeoShape::IsSameWithinTolerance(rmin,0) || (zi<r-rmin)) {
             if (zi<safphi) {
                if (point[2]*dir[2]<0) return 0.0;
                return TGeoShape::Big();
@@ -1461,7 +1461,7 @@ Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
       }
       if (TMath::Abs(nsq)<TGeoShape::Tolerance()) return TGeoShape::Big();
       // check if on phi boundary
-      if ((rmin==0) || (safphi<r-rmin)) {
+      if (TGeoShape::IsSameWithinTolerance(rmin,0) || (safphi<r-rmin)) {
          // We may cross again a phi of rmin boundary
          // check first if we are on phi1 or phi2
          Double_t un;
@@ -2027,7 +2027,7 @@ void TGeoTubeSeg::SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
    if (fPhi1 < 0) fPhi1+=360.;
    fPhi2 = phi2;
    while (fPhi2<=fPhi1) fPhi2+=360.;
-   if (fPhi1==fPhi2) Error("SetTubsDimensions", "In shape %s invalid phi1=%g, phi2=%g\n", GetName(), fPhi1, fPhi2);
+   if (TGeoShape::IsSameWithinTolerance(fPhi1,fPhi2)) Error("SetTubsDimensions", "In shape %s invalid phi1=%g, phi2=%g\n", GetName(), fPhi1, fPhi2);
 }
 
 //_____________________________________________________________________________
@@ -2631,7 +2631,7 @@ Double_t TGeoCtub::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    // check phi planes
    if (tub) return snxt;
    Double_t un=dir[0]*s1-dir[1]*c1;
-   if (un != 0) {
+   if (!TGeoShape::IsSameWithinTolerance(un,0)) {
       s=(point[1]*c1-point[0]*s1)/un;
       if (s>=0) {
          xi=point[0]+s*dir[0];
@@ -2650,7 +2650,7 @@ Double_t TGeoCtub::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       }
    }
    un=dir[0]*s2-dir[1]*c2;
-   if (un != 0) {
+   if (!TGeoShape::IsSameWithinTolerance(un,0)) {
       s=(point[1]*c2-point[0]*s2)/un;
       if (s>=0) {
          xi=point[0]+s*dir[0];

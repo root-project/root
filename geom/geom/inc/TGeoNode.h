@@ -116,14 +116,14 @@ public:
    Double_t          Safety(Double_t *point, Bool_t in=kTRUE) const;
    void              SaveAttributes(ostream &out);
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
-   void              SetVolume(const TGeoVolume *volume) {fVolume = (TGeoVolume*)volume;}
+   void              SetVolume(TGeoVolume *volume)       {fVolume = volume;}
    void              SetNumber(Int_t number)             {fNumber=number;}
    void              SetOverlapping(Bool_t flag=kTRUE)   {TObject::SetBit(kGeoNodeOverlap, flag);}
    void              SetVirtual()                        {TObject::SetBit(kGeoNodeVC, kTRUE);}
    void              SetVisibility(Bool_t vis=kTRUE); // *MENU*
    void              SetInvisible()                      {SetVisibility(kFALSE);} // *MENU*
    void              SetAllInvisible()                   {VisibleDaughters(kFALSE);} // *MENU*
-   void              SetMotherVolume(const TGeoVolume *mother) {fMother = (TGeoVolume*)mother;}
+   void              SetMotherVolume(TGeoVolume *mother) {fMother = mother;}
    void              SetOverlaps(Int_t *ovlp, Int_t novlp);
 
    virtual void      MasterToLocal(const Double_t *master, Double_t *local) const;

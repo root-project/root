@@ -82,7 +82,7 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual Bool_t        IsValidBox() const {return ((fDX<0)||(fDY<0)||(fDZ<0))?kFALSE:kTRUE;}
-   virtual Bool_t        IsNullBox() const {return ((fDX==0)&&(fDY==0)&&(fDZ==0))?kTRUE:kFALSE;}
+   virtual Bool_t        IsNullBox() const {return ((fDX<1.E-16)&&(fDY<1.E-16)&&(fDZ<1.E-16))?kTRUE:kFALSE;}
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");

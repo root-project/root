@@ -248,13 +248,13 @@ void TGeoArb8::ComputeTwist()
    for (Int_t i=0; i<4; i++) {
       dx1 = fXY[(i+1)%4][0]-fXY[i][0];
       dy1 = fXY[(i+1)%4][1]-fXY[i][1];
-      if (dx1==0 && dy1==0) {
+      if (TMath::Abs(dx1)<TGeoShape::Tolerance() && TMath::Abs(dy1)<TGeoShape::Tolerance()) {
          twist[i] = 0;
          continue;
       }   
       dx2 = fXY[4+(i+1)%4][0]-fXY[4+i][0];
       dy2 = fXY[4+(i+1)%4][1]-fXY[4+i][1];
-      if (dx2==0 && dy2==0) {
+      if (TMath::Abs(dx2)<TGeoShape::Tolerance() && TMath::Abs(dy2)<TGeoShape::Tolerance()) {
          twist[i] = 0;
          continue;
       }
@@ -509,7 +509,7 @@ Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*
    // check Z planes
    dist[4]=TGeoShape::Big();
    if (TMath::Abs(point[2])>fDz) {
-      if (dir[2]!=0) {
+      if (!TGeoShape::IsSameWithinTolerance(dir[2],0)) {
          Double_t pt[3];
          if (point[2]>0) {
             dist[4] = (fDz-point[2])/dir[2];
@@ -764,7 +764,7 @@ void TGeoArb8::GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t
    cross += norm[1]*norm[1];
    norm[2] = v1[0]*v2[1]-v1[1]*v2[0];
    cross += norm[2]*norm[2];
-   if (cross == 0.) return;
+   if (TMath::Abs(cross) < TGeoShape::Tolerance()) return;
    cross = 1./TMath::Sqrt(cross);
    for (i=0; i<3; i++) norm[i] *= cross;
 }   
@@ -883,7 +883,7 @@ Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
       Double_t umin = 0.;
       SetPlaneVertices (point[2], vert);
       for (iseg=0; iseg<4; iseg++) {
-         if (safe==0.) return 0.;
+         if (safe<TGeoShape::Tolerance()) return 0.;
          p1 = &vert[2*iseg];
          p2 = &vert[2*((iseg+1)%4)];
          dx = p2[0] - p1[0];
@@ -1473,12 +1473,12 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
       y2 = fXY[j][1];
       bx = x2-x0;
       by = y2-y0;
-      if (bx==0 && by==0) {
+      if (TMath::Abs(bx)<TGeoShape::Tolerance() && TMath::Abs(by)<TGeoShape::Tolerance()) {
          x2 = fXY[4+j][0];
          y2 = fXY[4+j][1];
          bx = x2-x1;
          by = y2-y1;
-         if (bx==0 && by==0) continue;
+         if (TMath::Abs(bx)<TGeoShape::Tolerance() && TMath::Abs(by)<TGeoShape::Tolerance()) continue;
       }
       norm[0] = -az*by;
       norm[1] = az*bx;

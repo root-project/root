@@ -115,8 +115,8 @@ void TGeoSphere::ComputeBBox()
 {
 // compute bounding box of the sphere
 //   Double_t xmin, xmax, ymin, ymax, zmin, zmax;
-   if (TMath::Abs(fTheta2-fTheta1) == 180) {
-      if (TMath::Abs(fPhi2-fPhi1) == 360) {
+   if (TGeoShape::IsSameWithinTolerance(TMath::Abs(fTheta2-fTheta1),180)) {
+      if (TGeoShape::IsSameWithinTolerance(TMath::Abs(fPhi2-fPhi1),360)) {
          TGeoBBox::SetBoxDimensions(fRmax, fRmax, fRmax);
          memset(fOrigin, 0, 3*sizeof(Double_t));
          return;
@@ -203,7 +203,7 @@ void TGeoSphere::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    phi=TMath::ATan2(point[1], point[0]);
 
    Double_t saf[4];
-   saf[0]=(fRmin==0 && !TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?TGeoShape::Big():TMath::Abs(r-fRmin);
+   saf[0]=(TGeoShape::IsSameWithinTolerance(fRmin,0) && !TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?TGeoShape::Big():TMath::Abs(r-fRmin);
    saf[1]=TMath::Abs(fRmax-r);
    saf[2]=saf[3]= TGeoShape::Big();
    if (TestShapeBit(kGeoThetaSeg)) {
@@ -428,7 +428,7 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
             return 0.0; // already in
          }
          // close to Rmin
-         if (fRmin==0.0 || rdotn>=0) return 0.0;
+         if (TGeoShape::IsSameWithinTolerance(fRmin,0) || rdotn>=0) return 0.0;
          // check second crossing of Rmin
          return DistToSphere(point, dir, fRmin, kFALSE, kFALSE);
       }
@@ -458,7 +458,7 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
    Double_t st1=TGeoShape::Big(), st2=TGeoShape::Big();
    if (TestShapeBit(kGeoThetaSeg)) {
       if (fTheta1>0) {
-         if (fTheta1==90) {
+         if (TGeoShape::IsSameWithinTolerance(fTheta1,90)) {
          // surface is a plane
             if (point[2]*dir[2]<0) {
                snxt = -point[2]/dir[2];
@@ -504,7 +504,7 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
       }
       
       if (fTheta2<180) {
-         if (fTheta2==90) {
+         if (TGeoShape::IsSameWithinTolerance(fTheta2,90)) {
             // surface is a plane
             if (point[2]*dir[2]<0) {
                snxt = -point[2]/dir[2];
@@ -619,7 +619,7 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
       if (phi<0) phi+=360.;
    }   
    if (iact<3 && safe) {
-      saf[0]=(fRmin==0)?TGeoShape::Big():r-fRmin;
+      saf[0]=(TGeoShape::IsSameWithinTolerance(fRmin,0))?TGeoShape::Big():r-fRmin;
       saf[1]=fRmax-r;
       saf[2]=saf[3]=saf[4]=saf[5]= TGeoShape::Big();
       if (TestShapeBit(kGeoThetaSeg)) {
@@ -672,7 +672,7 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
    sn1 = TGeoShape::Big();
    sn2 = TGeoShape::Big();
    if (TestShapeBit(kGeoThetaSeg)) {
-      if (fTheta1==90) {
+      if (TGeoShape::IsSameWithinTolerance(fTheta1,90)) {
       // surface is a plane
          if (point[2]*dir[2]<0)  sn1 = -point[2]/dir[2];
       } else {
@@ -711,7 +711,7 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
             }
          }        
       }
-      if (fTheta2==90) {
+      if (TGeoShape::IsSameWithinTolerance(fTheta2,90)) {
          // surface is a plane
          if (point[2]*dir[2]<0)  sn1 = -point[2]/dir[2];
       } else {
@@ -869,7 +869,7 @@ void TGeoSphere::GetBoundingCylinder(Double_t *param) const
    param[1] *= param[1];
    param[2] = (fPhi1<0)?(fPhi1+360.):fPhi1; // Phi1
    param[3] = fPhi2;
-   if ((param[3]-param[2])==360.) {         // Phi2
+   if (TGeoShape::IsSameWithinTolerance(param[3]-param[2],360)) {         // Phi2
       param[2] = 0.;
       param[3] = 360.;
    }   
@@ -1317,7 +1317,7 @@ Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const
       th = TMath::ACos(point[2]/r)*TMath::RadToDeg();
    }
    Double_t saf[4];
-   saf[0]=(fRmin==0 && !TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?TGeoShape::Big():r-fRmin;
+   saf[0]=(TGeoShape::IsSameWithinTolerance(fRmin,0) && !TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?TGeoShape::Big():r-fRmin;
    saf[1]=fRmax-r;
    saf[2]=saf[3]= TGeoShape::Big();
    if (TestShapeBit(kGeoThetaSeg)) {
@@ -1376,7 +1376,7 @@ void TGeoSphere::SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
    if (phi1<0) fPhi1+=360.;
    fPhi2 = phi2;
    while (fPhi2<fPhi1) fPhi2+=360.;
-   if (TMath::Abs(phi2-phi1)!=360.) SetShapeBit(kGeoPhiSeg);
+   if (!TGeoShape::IsSameWithinTolerance(TMath::Abs(phi2-phi1),360)) SetShapeBit(kGeoPhiSeg);
 }   
 
 //_____________________________________________________________________________

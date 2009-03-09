@@ -372,7 +372,7 @@ Double_t TGeoVoxelFinder::Efficiency()
       for (id=0; id<fIbx-1; id++) {  // loop on boundaries
          effslice += fNsliceX[id];
       }
-      if (effslice != 0) effslice = nd/effslice;
+      if (!TGeoShape::IsSameWithinTolerance(effslice,0)) effslice = nd/effslice;
       else printf("Woops : slice X\n");
    }
    printf("X efficiency : %g\n", effslice);
@@ -382,7 +382,7 @@ Double_t TGeoVoxelFinder::Efficiency()
       for (id=0; id<fIby-1; id++) {  // loop on boundaries
          effslice += fNsliceY[id];
       }
-      if (effslice != 0) effslice = nd/effslice;
+      if (!TGeoShape::IsSameWithinTolerance(effslice,0)) effslice = nd/effslice;
       else printf("Woops : slice X\n");
    }
    printf("Y efficiency : %g\n", effslice);
@@ -392,7 +392,7 @@ Double_t TGeoVoxelFinder::Efficiency()
       for (id=0; id<fIbz-1; id++) {  // loop on boundaries
          effslice += fNsliceZ[id];
       }
-      if (effslice != 0) effslice = nd/effslice;
+      if (!TGeoShape::IsSameWithinTolerance(effslice,0)) effslice = nd/effslice;
       else printf("Woops : slice X\n");
    }
    printf("Z efficiency : %g\n", effslice);

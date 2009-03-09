@@ -805,7 +805,9 @@ void TGeoBBox::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   dx = " << fDX << ";" << endl;
    out << "   dy = " << fDY << ";" << endl;
    out << "   dz = " << fDZ << ";" << endl;
-   if (fOrigin[0]!=0 || fOrigin[1]!=0 || fOrigin[2]!=0) { 
+   if (!TGeoShape::IsSameWithinTolerance(fOrigin[0],0) || 
+       !TGeoShape::IsSameWithinTolerance(fOrigin[1],0) || 
+       !TGeoShape::IsSameWithinTolerance(fOrigin[2],0)) { 
       out << "   origin[0] = " << fOrigin[0] << ";" << endl;
       out << "   origin[1] = " << fOrigin[1] << ";" << endl;
       out << "   origin[2] = " << fOrigin[2] << ";" << endl;
@@ -828,7 +830,9 @@ void TGeoBBox::SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t 
       fOrigin[1] = origin[1];
       fOrigin[2] = origin[2];
    }   
-   if ((fDX==0) && (fDY==0) && (fDZ==0)) return;
+   if (TMath::Abs(fDX)<TGeoShape::Tolerance() && 
+       TMath::Abs(fDY)<TGeoShape::Tolerance() &&
+       TMath::Abs(fDZ)<TGeoShape::Tolerance()) return;
    if ((fDX<0) || (fDY<0) || (fDZ<0)) SetShapeBit(kGeoRunTimeShape);
 }        
 
@@ -846,7 +850,9 @@ void TGeoBBox::SetDimensions(Double_t *param)
    fDX = param[0];
    fDY = param[1];
    fDZ = param[2];
-   if ((fDX==0) && (fDY==0) && (fDZ==0)) return;
+   if (TMath::Abs(fDX)<TGeoShape::Tolerance() && 
+       TMath::Abs(fDY)<TGeoShape::Tolerance() &&
+       TMath::Abs(fDZ)<TGeoShape::Tolerance()) return;
    if ((fDX<0) || (fDY<0) || (fDZ<0)) SetShapeBit(kGeoRunTimeShape);
 }   
 

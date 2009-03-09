@@ -229,7 +229,7 @@ Double_t TGeoPara::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    Double_t s;
    saf[0] = fZ+point[2];
    saf[1] = fZ-point[2];
-   if (dir[2]!=0) {
+   if (!TGeoShape::IsSameWithinTolerance(dir[2],0)) {
       s = (dir[2]>0)?(saf[1]/dir[2]):(-saf[0]/dir[2]);
       if (s<0) return 0.0;
       if (s<snxt) snxt = s;
@@ -239,7 +239,7 @@ Double_t TGeoPara::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    saf[0] = fY+yt;
    saf[1] = fY-yt;
    Double_t dy = dir[1]-fTyz*dir[2];
-   if (dy!=0) {
+   if (!TGeoShape::IsSameWithinTolerance(dy,0)) {
       s = (dy>0)?(saf[1]/dy):(-saf[0]/dy);
       if (s<0) return 0.0;
       if (s<snxt) snxt = s;
@@ -249,7 +249,7 @@ Double_t TGeoPara::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    saf[0] = fX+xt;
    saf[1] = fX-xt;
    Double_t dx = dir[0]-fTxz*dir[2]-fTxy*dy;
-   if (dx!=0) {
+   if (!TGeoShape::IsSameWithinTolerance(dx,0)) {
       s = (dx>0)?(saf[1]/dx):(-saf[0]/dx);
       if (s<0) return 0.0;
       if (s<snxt) snxt = s;

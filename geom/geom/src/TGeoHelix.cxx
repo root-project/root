@@ -40,6 +40,7 @@
 //   - computation of the total track length along a helix
 
 #include "TMath.h"
+#include "TGeoShape.h"
 #include "TGeoMatrix.h"
 #include "TGeoHelix.h"
 
@@ -87,7 +88,7 @@ Double_t TGeoHelix::ComputeSafeStep(Double_t epsil) const
 {
 // Compute safe linear step that can be made such that the error
 // between linear-helix extrapolation is less than EPSIL.
-   if (TestBit(kHelixStraigth) || fC==0.) return 1.E30;
+   if (TestBit(kHelixStraigth) || TMath::Abs(fC)<TGeoShape::Tolerance()) return 1.E30;
    Double_t c = GetTotalCurvature();
    Double_t step = TMath::Sqrt(2.*epsil/c);
    return step;
@@ -148,7 +149,7 @@ void TGeoHelix::SetXYcurvature(Double_t curvature)
       Error("SetXYcurvature", "Curvature %f not valid. Must be positive.", fC);
       return;
    } 
-   if (fC == 0) {
+   if (TMath::Abs(fC) < TGeoShape::Tolerance()) {
       Warning("SetXYcurvature", "Curvature is zero. Helix is a straigth line.");      
       TObject::SetBit(kHelixStraigth, kTRUE);
    }   
@@ -191,7 +192,7 @@ void TGeoHelix::SetHelixStep(Double_t step)
    }   
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
    fS    = 0.5*step/TMath::Pi();
-   if (fS == 0.) TObject::SetBit(kHelixCircle, kTRUE);
+   if (fS < TGeoShape::Tolerance()) TObject::SetBit(kHelixCircle, kTRUE);
 }   
 
 //_____________________________________________________________________________
@@ -305,7 +306,7 @@ void TGeoHelix::UpdateHelix()
    Double_t rot[9];
    Double_t tr[3];
    Double_t ddb = fDirInit[0]*fB[0]+fDirInit[1]*fB[1]+fDirInit[2]*fB[2];
-   if ((1.-TMath::Abs(ddb))<1E-10 || fC==0) {
+   if ((1.-TMath::Abs(ddb))<TGeoShape::Tolerance() || TMath::Abs(fC)<TGeoShape::Tolerance()) {
       // helix is just a straigth line
       TObject::SetBit(kHelixStraigth, kTRUE);
       fMatrix->Clear();

@@ -173,8 +173,8 @@ Double_t TGeoParaboloid::DistToParaboloid(Double_t *point, Double_t *dir) const
    Double_t b = 2.*fA*(point[0]*dir[0]+point[1]*dir[1])-dir[2];
    Double_t c = fA*(point[0]*point[0]+point[1]*point[1]) + fB - point[2];
    Double_t dist = TGeoShape::Big();
-   if (a==0) {
-      if (b==0) return dist; // big
+   if (TMath::Abs(a)<TGeoShape::Tolerance()) {
+      if (TMath::Abs(b)<TGeoShape::Tolerance()) return dist; // big
       dist = -c/b;
       if (dist < 0) return TGeoShape::Big();
       return dist; // OK
@@ -184,7 +184,7 @@ Double_t TGeoParaboloid::DistToParaboloid(Double_t *point, Double_t *dir) const
    Double_t prod = c*ainv;
    Double_t delta = sum*sum - 4.*prod;
    if (delta<0) return dist; // big
-   if (prod == 0) return 0.;
+   if (TMath::Abs(prod)<TGeoShape::Tolerance()) return 0.;
    if (prod < 0) {
       dist = 0.5*(sum + TMath::Sqrt(delta));
       return dist; // OK
@@ -397,7 +397,7 @@ Double_t TGeoParaboloid::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 void TGeoParaboloid::SetParaboloidDimensions(Double_t rlo, Double_t rhi, Double_t dz)
 {
 // Set paraboloid dimensions.
-   if ((rlo<0) || (rlo<0) || (dz<=0) || (rlo==rhi)) {
+   if ((rlo<0) || (rlo<0) || (dz<=0) || TMath::Abs(rlo-rhi)<TGeoShape::Tolerance()) {
       SetShapeBit(kGeoRunTimeShape);
       Error("SetParaboloidDimensions", "Dimensions of %s invalid: check (rlo>=0) (rhi>=0) (rlo!=rhi) dz>0",GetName());
       return;

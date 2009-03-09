@@ -146,7 +146,7 @@ void TGeoBuilder::RegisterMatrix(TGeoMatrix *matrix)
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeArb8(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeArb8(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t *vertices)
 {
 // Make an TGeoArb8 volume.
@@ -156,7 +156,7 @@ TGeoVolume *TGeoBuilder::MakeArb8(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeBox(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeBox(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz)
 {
 // Make in one step a volume pointing to a box shape with given medium.
@@ -172,12 +172,12 @@ TGeoVolume *TGeoBuilder::MakeBox(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakePara(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakePara(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz,
                                     Double_t alpha, Double_t theta, Double_t phi)
 {
 // Make in one step a volume pointing to a paralelipiped shape with given medium.
-   if ((alpha==0) && (theta==0)) {
+   if (TMath::Abs(alpha)<TGeoShape::Tolerance() && TMath::Abs(theta)<TGeoShape::Tolerance()) {
       Warning("MakePara","parallelipiped %s having alpha=0, theta=0 -> making box instead", name);
       return MakeBox(name, medium, dx, dy, dz);
    }
@@ -194,7 +194,7 @@ TGeoVolume *TGeoBuilder::MakePara(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeSphere(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeSphere(const char *name, TGeoMedium *medium,
                                     Double_t rmin, Double_t rmax, Double_t themin, Double_t themax,
                                     Double_t phimin, Double_t phimax)
 {
@@ -205,7 +205,7 @@ TGeoVolume *TGeoBuilder::MakeSphere(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeTorus(const char *name, const TGeoMedium *medium, Double_t r,
+TGeoVolume *TGeoBuilder::MakeTorus(const char *name, TGeoMedium *medium, Double_t r,
                                    Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi)
 {
 // Make in one step a volume pointing to a torus shape with given medium.
@@ -215,7 +215,7 @@ TGeoVolume *TGeoBuilder::MakeTorus(const char *name, const TGeoMedium *medium, D
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeTube(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeTube(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium.
@@ -234,7 +234,7 @@ TGeoVolume *TGeoBuilder::MakeTube(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeTubs(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeTubs(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz,
                                      Double_t phi1, Double_t phi2)
 {
@@ -251,7 +251,7 @@ TGeoVolume *TGeoBuilder::MakeTubs(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeEltu(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeEltu(const char *name, TGeoMedium *medium,
                                      Double_t a, Double_t b, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium
@@ -267,7 +267,7 @@ TGeoVolume *TGeoBuilder::MakeEltu(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeHype(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeHype(const char *name, TGeoMedium *medium,
                                         Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium
@@ -283,7 +283,7 @@ TGeoVolume *TGeoBuilder::MakeHype(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeParaboloid(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeParaboloid(const char *name, TGeoMedium *medium,
                                         Double_t rlo, Double_t rhi, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium
@@ -299,7 +299,7 @@ TGeoVolume *TGeoBuilder::MakeParaboloid(const char *name, const TGeoMedium *medi
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeCtub(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeCtub(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
                                      Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
 {
@@ -310,7 +310,7 @@ TGeoVolume *TGeoBuilder::MakeCtub(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeCone(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeCone(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2)
 {
@@ -327,7 +327,7 @@ TGeoVolume *TGeoBuilder::MakeCone(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeCons(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeCons(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2,
                                      Double_t phi1, Double_t phi2)
@@ -345,7 +345,7 @@ TGeoVolume *TGeoBuilder::MakeCons(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakePcon(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakePcon(const char *name, TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nz)
 {
 // Make in one step a volume pointing to a polycone shape with given medium.
@@ -355,7 +355,7 @@ TGeoVolume *TGeoBuilder::MakePcon(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakePgon(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakePgon(const char *name, TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 {
 // Make in one step a volume pointing to a polygone shape with given medium.
@@ -365,7 +365,7 @@ TGeoVolume *TGeoBuilder::MakePgon(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeTrd1(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeTrd1(const char *name, TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 {
 // Make in one step a volume pointing to a TGeoTrd1 shape with given medium.
@@ -381,7 +381,7 @@ TGeoVolume *TGeoBuilder::MakeTrd1(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeTrd2(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeTrd2(const char *name, TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2,
                                   Double_t dz)
 {
@@ -398,7 +398,7 @@ TGeoVolume *TGeoBuilder::MakeTrd2(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeTrap(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeTrap(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t theta, Double_t phi, Double_t h1,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
@@ -411,7 +411,7 @@ TGeoVolume *TGeoBuilder::MakeTrap(const char *name, const TGeoMedium *medium,
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeGtra(const char *name, const TGeoMedium *medium,
+TGeoVolume *TGeoBuilder::MakeGtra(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
@@ -423,7 +423,7 @@ TGeoVolume *TGeoBuilder::MakeGtra(const char *name, const TGeoMedium *medium,
    return vol;
 }
 //_____________________________________________________________________________
-TGeoVolume *TGeoBuilder::MakeXtru(const char *name, const TGeoMedium *medium, Int_t nz)
+TGeoVolume *TGeoBuilder::MakeXtru(const char *name, TGeoMedium *medium, Int_t nz)
 {
 // Make a TGeoXtru-shaped volume with nz planes
    TGeoXtru *xtru = new TGeoXtru(nz);
@@ -440,7 +440,7 @@ TGeoVolumeAssembly *TGeoBuilder::MakeVolumeAssembly(const char *name)
 }
 
 //_____________________________________________________________________________
-TGeoVolumeMulti *TGeoBuilder::MakeVolumeMulti(const char *name, const TGeoMedium *medium)
+TGeoVolumeMulti *TGeoBuilder::MakeVolumeMulti(const char *name, TGeoMedium *medium)
 {
 // Make a TGeoVolumeMulti handling a list of volumes.
    return (new TGeoVolumeMulti(name, medium));
@@ -695,7 +695,9 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
       if (isOnly) amother->AddNode(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
       else        amother->AddNodeOverlap(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
    } else {
-      if (x == 0 && y== 0 && z == 0) {
+      if (TMath::Abs(x)<TGeoShape::Tolerance() && 
+          TMath::Abs(y)<TGeoShape::Tolerance() &&
+          TMath::Abs(z)<TGeoShape::Tolerance()) {
          if (isOnly) amother->AddNode(volume,nr);
          else        amother->AddNodeOverlap(volume,nr);
       } else {
@@ -832,7 +834,9 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
       if (isOnly) amother->AddNode(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
       else        amother->AddNodeOverlap(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
    } else {
-      if (x == 0 && y== 0 && z == 0) {
+      if (TMath::Abs(x)<TGeoShape::Tolerance() && 
+          TMath::Abs(y)<TGeoShape::Tolerance() &&
+          TMath::Abs(z)<TGeoShape::Tolerance()) {
          if (isOnly) amother->AddNode(volume,nr);
          else        amother->AddNodeOverlap(volume,nr);
       } else {

@@ -104,7 +104,7 @@ void TGeoTorus::ComputeBBox()
 {
 // Compute bounding box of the torus.
    fDZ = fRmax;
-   if (fDphi == 360.) {
+   if (TGeoShape::IsSameWithinTolerance(fDphi,360)) {
       fDX = fDY = fR+fRmax;
       return;
    }
@@ -160,7 +160,7 @@ void TGeoTorus::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 
       Double_t daxis = Daxis(point,dir,0);
       if ((fRmax-daxis)>1E-5) {
-         if (fRmin==0 || (daxis-fRmin)>1E-5) {
+         if (TGeoShape::IsSameWithinTolerance(fRmin,0) || (daxis-fRmin)>1E-5) {
             TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
             return;
          }
@@ -192,7 +192,7 @@ Bool_t TGeoTorus::Contains(Double_t *point) const
 {
 // Test if point is inside the torus.
    // check phi range
-   if (fDphi!=360) {
+   if (!TGeoShape::IsSameWithinTolerance(fDphi,360)) {
       Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
       if (phi < 0) phi+=360.0;
       Double_t ddp = phi-fPhi1;
@@ -237,7 +237,7 @@ Double_t TGeoTorus::DDaxis(Double_t *pt, Double_t *dir, Double_t t) const
    Double_t rxy = TMath::Sqrt(p[0]*p[0]+p[1]*p[1]);
    if (rxy<1E-4) return ((p[2]*dir[2]-fR*TMath::Sqrt(dir[0]*dir[0]+dir[1]*dir[1]))/TMath::Sqrt(fR*fR+p[2]*p[2]));
    Double_t d = TMath::Sqrt((rxy-fR)*(rxy-fR)+p[2]*p[2]);
-   if (d==0) return 0.;
+   if (TGeoShape::IsSameWithinTolerance(d,0)) return 0.;
    Double_t dd = (p[0]*dir[0]+p[1]*dir[1]+p[2]*dir[2] - (p[0]*dir[0]+p[1]*dir[1])*fR/rxy)/d;
    return dd;
 }   
@@ -251,7 +251,7 @@ Double_t TGeoTorus::DDDaxis(Double_t *pt, Double_t *dir, Double_t t) const
    Double_t rxy = TMath::Sqrt(p[0]*p[0]+p[1]*p[1]);
    if (rxy<1E-6) return 0;
    Double_t daxis = TMath::Sqrt((rxy-fR)*(rxy-fR)+p[2]*p[2]);
-   if (daxis==0) return 0;
+   if (TGeoShape::IsSameWithinTolerance(daxis,0)) return 0;
    Double_t ddaxis = (p[0]*dir[0]+p[1]*dir[1]+p[2]*dir[2] - (p[0]*dir[0]+p[1]*dir[1])*fR/rxy)/daxis;
    Double_t dddaxis = 1 - ddaxis*ddaxis - (1-dir[2]*dir[2])*fR/rxy +
                       fR*(p[0]*dir[0]+p[1]*dir[1])*(p[0]*dir[0]+p[1]*dir[1])/(rxy*rxy*rxy);
@@ -403,14 +403,14 @@ Double_t TGeoTorus::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, 
       return TGeoShape::Big();
    }    
    // We are inside the outer ring, having daxis>fRmax
-   // Check intersection with outer torus
-   dd = ToBoundary(pt, dir, fRmax);
    // Compute distance to exit the bounding ring (again)
    if (snext>0) {
       // we can cross either the inner torus or exit the other hole.
       snext += 0.1*eps;
       for (i=0; i<3; i++) pt[i] += 0.1*eps*dir[i];
    }
+   // Check intersection with outer torus
+   dd = ToBoundary(pt, dir, fRmax);
    if (hasphi) dring = TGeoTubeSeg::DistFromInsideS(pt,dir,TMath::Max(0.,fR-fRmax-eps),fR+fRmax+eps, fRmax+eps, c1,s1,c2,s2,cm,sm,cdfi);            
    else        dring = TGeoTube::DistFromInsideS(pt,dir,TMath::Max(0.,fR-fRmax-eps),fR+fRmax+eps, fRmax+eps);
    if (dd<dring) {
@@ -710,7 +710,7 @@ Double_t TGeoTorus::Safety(Double_t *point, Bool_t in) const
    Double_t rad = TMath::Sqrt((rxy-fR)*(rxy-fR) + point[2]*point[2]);
    saf[0] = rad-fRmin;
    saf[1] = fRmax-rad;
-   if (fDphi==360) {
+   if (TGeoShape::IsSameWithinTolerance(fDphi,360)) {
       if (in) return TMath::Min(saf[0],saf[1]);
       for (i=0; i<2; i++) saf[i]=-saf[i];
       return TMath::Max(saf[0], saf[1]);
@@ -973,7 +973,7 @@ Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Do
    Double_t h=0;
    Int_t ireal = 0;
    Int_t i;
-   if (f==0) {
+   if (TGeoShape::IsSameWithinTolerance(f,0)) {
       delta = e*e-4.*g;
       if (delta<0) return 0;
       delta = TMath::Sqrt(delta);
@@ -997,7 +997,7 @@ Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Do
       return ireal; 
    }     
    
-   if (g==0) {
+   if (TGeoShape::IsSameWithinTolerance(g,0)) {
       x[ireal++] = -0.25*a;
       ind[0] = SolveCubic(0,e,f,xx);
       for (i=0; i<ind[0]; i++) x[ireal++] = xx[i]-0.25*a;      

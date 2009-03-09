@@ -293,6 +293,14 @@ Bool_t TGeoShape::IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t c
 }
 
 //_____________________________________________________________________________  
+Bool_t TGeoShape::IsSameWithinTolerance(Double_t a, Double_t b)
+{
+// Check if two numbers differ with less than a tolerance.
+   if (TMath::Abs(a-b)<1.E-10) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________  
 Bool_t TGeoShape::IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t y2,Double_t x3, Double_t y3,Double_t x4, Double_t y4)
 {
 // Check if segments (A,B) and (C,D) are crossing,

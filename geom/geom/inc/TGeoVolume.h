@@ -205,7 +205,7 @@ public:
    void            SetNodes(TObjArray *nodes) {fNodes = nodes; TObject::SetBit(kVolumeImportNodes);}
    void            SetShape(const TGeoShape *shape);
    void            SetTransparency(Char_t transparency=0) {if (fMedium) fMedium->GetMaterial()->SetTransparency(transparency);} // *MENU*
-   void            SetField(const TObject *field)          {fField = (TObject*)field;}
+   void            SetField(TObject *field)          {fField = field;}
    void            SetOption(const char *option);
    void            SetAttVisibility(Bool_t vis) {TGeoAtt::SetVisibility(vis);}
    virtual void    SetVisibility(Bool_t vis=kTRUE); // *TOGGLE* *GETTER=IsVisible
@@ -216,9 +216,9 @@ public:
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);
    void            SetInvisible() {SetVisibility(kFALSE);}
-   virtual void    SetMedium(const TGeoMedium *medium) {fMedium = (TGeoMedium*)medium;}
-   void            SetVoxelFinder(const TGeoVoxelFinder *finder) {fVoxels=(TGeoVoxelFinder*)finder;}
-   void            SetFinder(const TGeoPatternFinder *finder) {fFinder=(TGeoPatternFinder*)finder;}
+   virtual void    SetMedium(TGeoMedium *medium) {fMedium = medium;}
+   void            SetVoxelFinder(TGeoVoxelFinder *finder) {fVoxels = finder;}
+   void            SetFinder(TGeoPatternFinder *finder) {fFinder = finder;}
    void            SetNumber(Int_t number) {fNumber = number;}
    void            SetNtotal(Int_t ntotal) {fNtotal = ntotal;}
    void            SortNodes();
@@ -258,7 +258,7 @@ protected:
 
 public:
    TGeoVolumeMulti();
-   TGeoVolumeMulti(const char* name, const TGeoMedium *med=0);
+   TGeoVolumeMulti(const char* name, TGeoMedium *med=0);
    virtual ~TGeoVolumeMulti();
 
    void            AddVolume(TGeoVolume *vol);
@@ -277,7 +277,7 @@ public:
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);
-   virtual void    SetMedium(const TGeoMedium *medium);
+   virtual void    SetMedium(TGeoMedium *medium);
    virtual void    SetVisibility(Bool_t vis=kTRUE);
 
 
