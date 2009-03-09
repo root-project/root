@@ -1286,6 +1286,9 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
       name.Remove(0);
       TMethod * meth = 0;
       Ssiz_t posBlock = fLineRaw.Index('{');
+      Ssiz_t posQuote = fLineRaw.Index('"');
+      if (posQuote != kNPOS && posQuote < posBlock)
+         posBlock = posQuote;
       if (posBlock == kNPOS) 
          posBlock = fLineRaw.Length();
       for (MethodCount_t::iterator iMethodName = fMethodCounts.begin();
