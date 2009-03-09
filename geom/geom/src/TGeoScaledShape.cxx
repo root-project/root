@@ -143,7 +143,7 @@ Double_t TGeoScaledShape::DistFromInside(Double_t *point, Double_t *dir, Int_t i
    fScale->MasterToLocalVect(dir,ldir);
    TGeoMatrix::Normalize(ldir);
    Double_t dist = fShape->DistFromInside(local,ldir, iact, lstep, safe);
-   if (safe) *safe = fScale->LocalToMaster(*safe);
+   if (iact<3 && safe) *safe = fScale->LocalToMaster(*safe);
    dist = fScale->LocalToMaster(dist, ldir);
    return dist;
 }
