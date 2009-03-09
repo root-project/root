@@ -254,6 +254,7 @@ public:
    void          SetOutputDir(const char *dir);
    void          SetInputDir(const char *dir);
    void          SetSourceDir(const char *dir) { SetInputDir(dir); }
+   void          SetIncludePath(const char* dir) { fPathInfo.fIncludePath = dir; }
    void          SetEtcDir(const char* dir) { fPathInfo.fEtcDir = dir; }
    void          SetDocPath(const char* path) { fPathInfo.fDocPath = path; }
    void          SetDotDir(const char* dir) { fPathInfo.fDotDir = dir; fPathInfo.fFoundDot = PathInfo_t::kDotUnknown; }

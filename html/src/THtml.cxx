@@ -300,6 +300,14 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
          TString asincl(clfile);
          GetOwner()->GetPathDefinition().GetFileNameFromInclude(asincl, clfile);
          out_filename = clfile;
+      } else {
+         // header file without a -Iinclude-dir prefix
+         TFileSysEntry* fsentry = (TFileSysEntry*) GetOwner()->GetLocalFiles()->GetEntries().FindObject(clfile);
+         if (fsentry) {
+            fsentry->GetFullName(filesysname, kFALSE);
+            clfile = filesysname;
+            out_filename = filesysname;
+         }
       }
    } else {
       // check for a file named like the class:
@@ -491,6 +499,8 @@ bool THtml::TPathDefinition::GetIncludeAs(TClass* cl, TString& out_dir) const
    while (!includePathMatches && GetOwner()->GetPathInfo().fIncludePath.Tokenize(tok, pos, THtml::GetDirDelimiter()))
       if (out_dir.BeginsWith(tok)) {
          out_dir = hdr(tok.Length(), hdr.Length());
+         if (out_dir[0] == '/' || out_dir[0] == '\\')
+            out_dir.Remove(0, 1);
          includePathMatches = true;
       }
 
