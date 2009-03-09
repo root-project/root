@@ -25,9 +25,9 @@ void NonDefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location
    }
 }
 
-char * gMyBuffer = new char[3];
+char * gMyBuffer = new char[128];
 
-char *R__MyReAllocChar(char *what, size_t oldsize, size_t newsize)
+char *R__MyReAllocChar(char *what, size_t newsize, size_t oldsize)
 {
    // The user has provided memory than we don't own, thus we can not extent it
    // either.
@@ -35,9 +35,9 @@ char *R__MyReAllocChar(char *what, size_t oldsize, size_t newsize)
    if (old != what) {
       fprintf(stderr,"Did no get the expected buffer location in reallocation routine\n");
       return 0;
-   } else {
-      fprintf(stderr,"Running custom allocator\n");
    }
+
+   fprintf(stderr,"Running custom allocator (increase from %ld to %ld)\n",(long)oldsize,(long)newsize);
    gMyBuffer = new char[newsize];
    memcpy(gMyBuffer, old, oldsize);
    delete [] old;
@@ -50,26 +50,44 @@ int runownership()
    
    gErrorAbortLevel = 7000; // Never aborts
    
-   TBufferFile *buf = new TBufferFile(TBuffer::kWrite, 3, gMyBuffer, kFALSE);
+   TBufferFile *buf = new TBufferFile(TBuffer::kWrite, 128, gMyBuffer, kFALSE);
    int a = 3;
    bool success = true;
    try {
-      (*buf) << a;
-      success = false; // We should not get here!
+      for (int i=0; i< 128/sizeof(a); ++i) {
+         (*buf) << a;
+      }
    } catch (myexception e) {
-      fprintf(stderr,"The expected error \"%s\" was seen\n", e.what());
+      success = false; // We should not get here!
+      fprintf(stderr,"An Unexpected error \"%s\" was seen\n", e.what());
+   } 
+   if (success) {
+      try {
+         (*buf) << a;
+         success = false; // We should not get here!
+      } catch (myexception e) {
+         fprintf(stderr,"The expected error \"%s\" was seen\n", e.what());
+      }
    }
    
    buf->Reset();
    buf->SetBuffer(gMyBuffer, 3, kFALSE, R__MyReAllocChar);
    
    try {
+      for (int i=0; i< 128/sizeof(a); ++i) {
+         (*buf) << a;
+      }
       (*buf) << a;
       (*buf) << a;
       (*buf) << a;
    } catch (myexception e) {
       success = false; // We should not get here!
       fprintf(stderr,"An Unexpected error \"%s\" was seen\n", e.what());
+   }
+   if (success) { 
+      fprintf(stderr,"The test has completed successfully\n");
+   } else {
+      fprintf(stderr,"The test has run to completion but failed\n");
    }
    return !success; // Value to be used by gmake
 }
