@@ -782,7 +782,11 @@ namespace {
 
       PyObject* iter = CallPySelfObjMethod( args, "find", "OO" );
       if ( ObjectProxy_Check( iter ) ) {
-         PyObject* end = CallPySelfMethod( args, "end", "OO" ); // cheating on the arguments here ...
+         PyObject* arg1 = PyTuple_New( 1 );
+         PyObject* self = PyTuple_GET_ITEM( args, 0 );
+         Py_INCREF( self );
+         PyTuple_SET_ITEM( arg1, 0, self );
+         PyObject* end = CallPySelfMethod( arg1, "end", "O" );
          if ( ObjectProxy_Check( end ) ) {
             if ( *(void**)((ObjectProxy*)iter)->GetObject() != *(void**)((ObjectProxy*)end)->GetObject() ) {
                Py_INCREF( Py_True );
@@ -790,6 +794,7 @@ namespace {
             }
          }
          Py_XDECREF( end );
+         Py_DECREF( arg1 );
       }
       Py_XDECREF( iter );
 

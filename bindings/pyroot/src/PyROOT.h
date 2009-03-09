@@ -81,4 +81,6 @@ inline Py_ssize_t PyNumber_AsSsize_t( PyObject* obj, PyObject* ) {
 #define Py_True ( (PyObject*)(void*)&_Py_TrueStruct )
 #endif
 
+#include <iostream>
+
 #endif // !PYROOT_PYROOT_H
