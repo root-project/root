@@ -1,7 +1,7 @@
 // $Id: NewDelFunctions.h 2134 2007-11-30 18:07:51Z pcanal $
 
 #ifndef Reflex_NewDelFunctions
-#define Reflex_NewFelFunctions
+#define Reflex_NewDelFunctions
 
 /**
  * @file  NewDelFunctions.h
