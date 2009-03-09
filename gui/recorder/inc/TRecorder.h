@@ -9,6 +9,9 @@
 * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 *************************************************************************/
 
+#ifndef ROOT_TRecorder
+#define ROOT_TRecorder
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  ROOT EVENT RECORDING SYSTEM                                         //
@@ -806,3 +809,6 @@ public:
 
    ClassDef(TGRecorder,0) // GUI class of the event recorder.
 };
+
+#endif // ROOT_TRecorder
+
