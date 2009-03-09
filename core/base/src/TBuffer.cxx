@@ -98,7 +98,6 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
    // is provided, a Fatal error will be issued if the Buffer attempts to
    // expand.
    
-   if (!buf && bufsiz < kMinimalSize) bufsiz = kMinimalSize;
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
@@ -109,12 +108,20 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
    if (buf) {
       fBuffer = (char *)buf;
       if (!adopt) ResetBit(kIsOwner);
-   } else
+   } else {
+      if (fBufSize < kMinimalSize) {
+         fBufSize = kMinimalSize;
+      }
       fBuffer = new char[fBufSize+kExtraSpace];
+   }
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
    
    SetReAllocFunc( reallocfunc );
+
+   if (buf && fBufSize < kMinimalSize) {
+      Expand( kMinimalSize );
+   }
 }
 
 //______________________________________________________________________________
@@ -153,10 +160,16 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
 
    fBuffer = (char *)buf;
    fBufCur = fBuffer;
-   if (newsiz > 0) fBufSize = newsiz;
+   if (newsiz > 0) {
+      fBufSize = newsiz - kExtraSpace;
+   }
    fBufMax = fBuffer + fBufSize;
    
    SetReAllocFunc( reallocfunc );
+
+   if (buf && fBufSize < kMinimalSize) {
+      Expand( kMinimalSize );
+   }
 }
 
 //______________________________________________________________________________
