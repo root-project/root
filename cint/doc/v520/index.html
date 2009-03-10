@@ -17,7 +17,7 @@ If you still need to include CINT headers directly because functionality is miss
 When calling compiled functions, CINT can use the functions' symbols instead of generating function wrappers.
 The symbol-based call significantly reduces the dictionary sizes; up to 50% are possible.
 It is implemented in a way that does not affect performance nor memory usage; it even fixes a few long standing issues with CINT's function overload resolution and default parameter resolution. 
-This is an optional feature disabled by default; see <a href="http://root.cern.ch/twiki/bin/view/ROOT/CINTnostub">the CINT web pages</a> for how to enable it.</p>
+This is an optional feature disabled by default; see <a href="http://root.cern.ch/drupal/content/cint-stub-suppression">the CINT web pages</a> for how to enable it.</p>
 <p>As part of the directory restructuring, CINT's files have been renamed (the "v6_" prefix is removed), its dictionary files are now moved to a new subdirectory of src called "dict", and both CINT5 ( the current default) and CINT7 are available in the main cint/ subdirectory.
 The previous CINT stand-alone CVS / SVN repositories are now abandoned; CINT stand-alone can be checked out as <tt>svn co http://root.cern.ch/svn/root/trunk/cint</tt>. CINT's stand-alone build system is thus now included in ROOT's cint module.</p>
 </li>
