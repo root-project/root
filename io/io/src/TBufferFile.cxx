@@ -2853,35 +2853,6 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
 }
 
 //______________________________________________________________________________
-void TBufferFile::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
-{
-   // Sets a new buffer in an existing TBuffer object. If newsiz=0 then the
-   // new buffer is expected to have the same size as the previous buffer.
-   // The current buffer position is reset to the start of the buffer.
-   // If the TBuffer owned the previous buffer, it will be deleted prior
-   // to accepting the new buffer. By default the new buffer will be
-   // adopted unless adopt is false.
-   // If the new buffer is _not_ adopted and no memory allocation routine
-   // is provided, a Fatal error will be issued if the Buffer attempts to
-   // expand.
-   
-   if (fBuffer && TestBit(kIsOwner))
-      delete [] fBuffer;
-
-   if (adopt)
-      SetBit(kIsOwner);
-   else
-      ResetBit(kIsOwner);
-
-   fBuffer = (char *)buf;
-   fBufCur = fBuffer;
-   if (newsiz > 0) fBufSize = newsiz;
-   fBufMax = fBuffer + fBufSize;
-   
-   SetReAllocFunc( reallocfunc );
-}
-
-//______________________________________________________________________________
 Bool_t TBufferFile::CheckObject(const TObject *obj)
 {
    // Check if the specified object is already in the buffer.

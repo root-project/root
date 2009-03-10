@@ -99,7 +99,6 @@ public:
    void     ResetMap();
    void     SetReadParam(Int_t mapsize);
    void     SetWriteParam(Int_t mapsize);
-   void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
 
    Bool_t   CheckObject(const TObject *obj);
    Bool_t   CheckObject(const void *obj, const TClass *ptrClass);
