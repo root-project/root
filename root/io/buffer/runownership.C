@@ -54,7 +54,7 @@ int runownership()
    int a = 3;
    bool success = true;
    try {
-      for (int i=0; i< 128/sizeof(a); ++i) {
+      for (int i=0; i< (128-8)/sizeof(a); ++i) { // 8 is take into account TBuffer's kExtraSpace 
          (*buf) << a;
       }
    } catch (myexception e) {
@@ -82,7 +82,7 @@ int runownership()
       (*buf) << a;
    } catch (myexception e) {
       success = false; // We should not get here!
-      fprintf(stderr,"An Unexpected error \"%s\" was seen\n", e.what());
+      fprintf(stderr,"After SetBuffer, an unexpected error \"%s\" was seen\n", e.what());
    }
    if (success) { 
       fprintf(stderr,"The test has completed successfully\n");
