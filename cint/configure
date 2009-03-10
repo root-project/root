@@ -766,7 +766,7 @@ rm -f ${COREVERSION}/src/dict/Apiif*.*
 $RM bin/cint-config
 echo Writing bin/cint-config...
 [ "x$BINDIR" = "x" ] && BINDIR='$CINTSYSDIR/bin'
-[ "x$INCLUDEDIR" = "x" ] && INCLUDEDIR='$CINTSYSDIR'/${COREVERSION}/inc && INCLUDEDIRCINT='$CINTSYSDIR'/${COREVERSION}/include
+[ "x$INCLUDEDIR" = "x" ] && INCLUDEDIR='$CINTSYSDIR'/${COREVERSION}/inc && INCLUDEDIRCINT='$CINTSYSDIR'/${COREVERSION}/inc
 [ "x$LIBDIR" = "x" ] && LIBDIR='$CINTSYSDIR/lib'
 [ "x$DATADIR" = "x" ] && DATADIR='$CINTSYSDIR/'${COREVERSION}'/'
 
