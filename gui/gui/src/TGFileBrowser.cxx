@@ -226,10 +226,17 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
    // called by a browser. If check < 0 (default) no check box is drawn,
    // if 0 then unchecked checkbox is added, if 1 checked checkbox is added.
 
-   if (obj && obj->InheritsFrom("TApplication"))
-      fListLevel = 0;
-   if (obj && obj->InheritsFrom("TSystemDirectory"))
-      return;
+   if (fListLevel && !strcmp(fListLevel->GetText(), "Classes") &&
+      fListLevel->GetParent() && 
+      !strcmp(fListLevel->GetParent()->GetText(), "root")) {
+      // Browsing list of root classes...
+   }
+   else {
+      if (obj && obj->InheritsFrom("TApplication"))
+         fListLevel = 0;
+      if (obj && obj->InheritsFrom("TSystemDirectory"))
+         return;
+   }
    const TGPicture *pic=0;
    if (obj && obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class()))
       AddKey(fListLevel, obj, name);
