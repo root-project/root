@@ -542,7 +542,7 @@ namespace Reflex {
 //-------------------------------------------------------------------------------
 inline bool Reflex::Member::operator < ( const Member & rh ) const {
 //-------------------------------------------------------------------------------
-   if ( (*this) && rh ) 
+   if ( (*this) && (bool)rh ) 
       return ( TypeOf() < rh.TypeOf() && Name() < rh.Name());
    return false;
 }
@@ -551,7 +551,7 @@ inline bool Reflex::Member::operator < ( const Member & rh ) const {
 //-------------------------------------------------------------------------------
 inline bool Reflex::Member::operator == ( const Member & rh ) const {
 //-------------------------------------------------------------------------------
-   if ( (*this) && rh ) 
+   if ( (*this) && (bool)rh ) 
       return ( TypeOf() == rh.TypeOf() && 0==strcmp(Name_c_str(),rh.Name_c_str()) );
    // both invalid is equal, too
    return (!(*this)) && (!rh);
