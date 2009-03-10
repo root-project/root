@@ -107,6 +107,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
 
    if (buf) {
       fBuffer = (char *)buf;
+      fBufSize -= kExtraSpace;
       if (!adopt) ResetBit(kIsOwner);
    } else {
       if (fBufSize < kMinimalSize) {
@@ -119,7 +120,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
    
    SetReAllocFunc( reallocfunc );
 
-   if (buf && fBufSize < kMinimalSize) {
+   if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < 0) {
       Expand( kMinimalSize );
    }
 }
