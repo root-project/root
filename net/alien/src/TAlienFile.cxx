@@ -392,7 +392,7 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
             ::Info("TAlienFile::Open", "Accessing image %u of %s", imagenr, purl.GetUrl());
       }
       // the treatement of ZIP files is done in the following way:
-      // LFNs in AliEn pointint to files in ZIP archives don't contain the .zip suffix in the file name
+      // LFNs in AliEn pointing to files in ZIP archives don't contain the .zip suffix in the file name
       // to tell TArchiveFile about the ZIP nature, we add to the URL options 'zip=<member>'
       // This options are not visible in the file name, they are passed through TXNetFile to TNetFile to TArchiveFile
 
