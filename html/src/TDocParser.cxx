@@ -1287,7 +1287,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
       TMethod * meth = 0;
       Ssiz_t posBlock = fLineRaw.Index('{');
       Ssiz_t posQuote = fLineRaw.Index('"');
-      if (posQuote != kNPOS && posQuote < posBlock)
+      if (posQuote != kNPOS && (posBlock == kNPOS || posQuote < posBlock))
          posBlock = posQuote;
       if (posBlock == kNPOS) 
          posBlock = fLineRaw.Length();
@@ -1650,6 +1650,15 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
          if (!wroteMethodNowWaitingForOpenBlock) {
             // check for method
             Ssiz_t posPattern = pattern.Length() ? fLineRaw.Index(pattern) : kNPOS;
+            if (posPattern != kNPOS && pattern.Length()) {
+               // no strings, no blocks in front of function declarations / implementations
+               static const char vetoChars[] = "{\"";
+               for (int ich = 0; posPattern != kNPOS && vetoChars[ich]; ++ich) {
+                  Ssiz_t posVeto = fLineRaw.Index(vetoChars[ich]);
+                  if (posVeto != kNPOS && posVeto < posPattern)
+                     posPattern = kNPOS;
+               }
+            }
             if (posPattern != kNPOS || !pattern.Length()) {
                posPattern += pattern.Length();
                LocateMethodInCurrentLine(posPattern, methodRet, methodName, 
