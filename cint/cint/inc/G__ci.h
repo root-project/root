@@ -370,7 +370,7 @@
 #endif
 
 /* added by Fons Radamakers in 2000 Oct 2 */
-#if defined(__linux) || defined(__linux__) || defined(linux)
+#if (defined(__linux) || defined(__linux__) || defined(linux)) && ! defined(__CINT__)
 #   include <features.h>
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 2
 #      define G__NONSCALARFPOS2
