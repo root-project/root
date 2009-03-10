@@ -211,6 +211,8 @@ public:
    void                   SetMaxVisNodes(Int_t maxnodes=10000); // *MENU*
    //--- geometry checking
    void                   AnimateTracks(Double_t tmin=0, Double_t tmax=5E-8, Int_t nframes=200, Option_t *option="/*"); // *MENU*
+   void                   CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.); // *MENU*
+   void                   CheckBoundaryReference(Int_t icheck=-1);
    void                   CheckGeometryFull(Int_t ntracks=1000000, Double_t vx=0., Double_t vy=0., Double_t vz=0., Option_t *option="ob"); // *MENU*
    void                   CheckGeometry(Option_t *option="");
    void                   CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*

@@ -175,6 +175,24 @@ void TGeoPainter::BombTranslation(const Double_t *tr, Double_t *bombtr)
    }   
 }
 
+//_____________________________________________________________________________
+void TGeoPainter::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
+{
+// Check pushes and pulls needed to cross the next boundary with respect to the
+// position given by FindNextBoundary. If radius is not mentioned the full bounding
+// box will be sampled.
+   fChecker->CheckBoundaryErrors(ntracks, radius);
+}   
+
+//_____________________________________________________________________________
+void TGeoPainter::CheckBoundaryReference(Int_t icheck)
+{
+// Check the boundary errors reference file created by CheckBoundaryErrors method.
+// The shape for which the crossing failed is drawn with the starting point in red
+// and the extrapolated point to boundary (+/- failing push/pull) in yellow.
+   fChecker->CheckBoundaryReference(icheck);
+}   
+
 //______________________________________________________________________________
 void TGeoPainter::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings, Int_t ntracks, const Double_t *vertex)
 {

@@ -3149,6 +3149,24 @@ void TGeoManager::SelectTrackingMedia()
 }
 
 //_____________________________________________________________________________
+void TGeoManager::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
+{
+// Check pushes and pulls needed to cross the next boundary with respect to the
+// position given by FindNextBoundary. If radius is not mentioned the full bounding
+// box will be sampled.
+   GetGeomPainter()->CheckBoundaryErrors(ntracks, radius);
+}   
+
+//_____________________________________________________________________________
+void TGeoManager::CheckBoundaryReference(Int_t icheck)
+{
+// Check the boundary errors reference file created by CheckBoundaryErrors method.
+// The shape for which the crossing failed is drawn with the starting point in red
+// and the extrapolated point to boundary (+/- failing push/pull) in yellow.
+   GetGeomPainter()->CheckBoundaryReference(icheck);
+}   
+
+//_____________________________________________________________________________
 void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option)
 {
 // Classify a given point. See TGeoChecker::CheckPoint().

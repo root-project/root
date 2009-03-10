@@ -64,6 +64,8 @@ public:
    // destructor
    virtual ~TGeoChecker();
    // methods
+   virtual void     CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.); 
+   virtual void     CheckBoundaryReference(Int_t icheck=-1);
    void             CheckGeometryFull(Bool_t checkoverlaps=kTRUE, Bool_t checkcrossings=kTRUE, Int_t nrays=10000, const Double_t *vertex=NULL);
    void             CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    void             CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="");

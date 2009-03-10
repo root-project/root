@@ -85,6 +85,8 @@ public:
    virtual TVirtualGeoTrack *AddTrack(Int_t id, Int_t pdgcode, TObject *part);
    virtual void       AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset=kFALSE);
    virtual void       BombTranslation(const Double_t *tr, Double_t *bombtr);
+   virtual void       CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.); 
+   virtual void       CheckBoundaryReference(Int_t icheck=-1);
    virtual void       CheckGeometryFull(Bool_t checkoverlaps=kTRUE, Bool_t checkcrossings=kTRUE, Int_t nrays=10000, const Double_t *vertex=NULL);
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    void               CheckEdit();

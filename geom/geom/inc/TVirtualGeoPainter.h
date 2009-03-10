@@ -70,6 +70,8 @@ public:
    virtual void       AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset=kFALSE) = 0;
    virtual void       BombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
    virtual void       CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="") = 0;
+   virtual void       CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.) = 0; 
+   virtual void       CheckBoundaryReference(Int_t icheck=-1) = 0;
    virtual void       CheckGeometryFull(Bool_t checkoverlaps=kTRUE, Bool_t checkcrossings=kTRUE, Int_t nrays=10000, const Double_t *vertex=NULL) = 0;
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const = 0;
    virtual void       CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="") const = 0;

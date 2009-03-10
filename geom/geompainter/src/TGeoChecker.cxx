@@ -69,6 +69,7 @@
 
 #include "TVirtualPad.h"
 #include "TCanvas.h"
+#include "TStyle.h"
 #include "TFile.h"
 #include "TNtuple.h"
 #include "TH2.h"
@@ -230,6 +231,219 @@ void TGeoChecker::OpProgress(const char *opname, Long64_t current, Long64_t size
    }   
 }   
 
+//_____________________________________________________________________________
+void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
+{
+// Check pushes and pulls needed to cross the next boundary with respect to the
+// position given by FindNextBoundary. If radius is not mentioned the full bounding
+// box will be sampled.
+   gRandom = new TRandom3();
+   TGeoVolume *tvol = fGeoManager->GetTopVolume();
+   Info("CheckBoundaryErrors", "Top volume is %s",tvol->GetName());  
+   const TGeoShape *shape = tvol->GetShape();
+   TGeoBBox *box = (TGeoBBox *)shape;
+   Double_t dl[3];
+   Double_t ori[3];
+   Double_t xyz[3];
+   Double_t nxyz[3];
+   Double_t dir[3];
+   Double_t relp;
+   Char_t path[1024];
+   Char_t cdir[10];
+
+   // Tree part
+   TFile *f=new TFile("geobugs.root","recreate");
+   TTree *bug=new TTree("bug","Geometrical problems");
+   bug->Branch("pos",xyz,"xyz[3]/D");
+   bug->Branch("dir",dir,"dir[3]/D");
+   bug->Branch("push",&relp,"push/D");
+   bug->Branch("path",&path,"path/C");
+   bug->Branch("cdir",&cdir,"cdir/C");
+  
+   dl[0] = box->GetDX();
+   dl[1] = box->GetDY();
+   dl[2] = box->GetDZ();
+   ori[0] = (box->GetOrigin())[0];
+   ori[1] = (box->GetOrigin())[1];
+   ori[2] = (box->GetOrigin())[2];
+   if (radius>0)
+      dl[0] = dl[1] = dl[2] = radius;
+  
+   TH1::AddDirectory(kFALSE);
+   TH1F *hnew = new TH1F("hnew","Precision pushing",30,-20.,10.);
+   TH1F *hold = new TH1F("hold","Precision pulling", 30,-20.,10.);
+   TH2F *hplotS = new TH2F("hplotS","Problematic points",100,-dl[0],dl[0],100,-dl[1],dl[1]);
+   gStyle->SetOptStat(111111);
+
+   TGeoNode *node = 0;
+   Long_t igen=0;
+   Long_t itry=0;
+   Long_t n100 = ntracks/100;
+   Double_t rad = TMath::Sqrt(dl[0]*dl[0]+dl[1]*dl[1]);
+   printf("Random box : %f, %f, %f, %f, %f, %f\n", ori[0], ori[1], ori[2], dl[0], dl[1], dl[2]);
+   printf("Start... %i points\n", ntracks);
+   if (!fTimer) fTimer = new TStopwatch();
+   fTimer->Reset();
+   fTimer->Start();
+   while (igen<ntracks) {
+      Double_t phi1  = TMath::TwoPi()*gRandom->Rndm();
+      Double_t r     = rad*gRandom->Rndm();
+      xyz[0] = ori[0] + r*TMath::Cos(phi1);
+      xyz[1] = ori[1] + r*TMath::Sin(phi1);
+      Double_t z = (1.-2.*gRandom->Rndm());
+      xyz[2] = ori[2]+dl[2]*z*TMath::Abs(z);
+      ++itry;
+      fGeoManager->SetCurrentPoint(xyz);
+      node = fGeoManager->FindNode();
+      if (!node || node==fGeoManager->GetTopNode()) continue;
+      ++igen;
+      if (n100 && !(igen%n100)) 
+         OpProgress("Sampling progress:",igen, ntracks, fTimer);
+      Double_t cost = 1.-2.*gRandom->Rndm();
+      Double_t sint = TMath::Sqrt((1.+cost)*(1.-cost));
+      Double_t phi  = TMath::TwoPi()*gRandom->Rndm();
+      dir[0] = sint * TMath::Cos(phi);
+      dir[1] = sint * TMath::Sin(phi);
+      dir[2] = cost;
+      fGeoManager->SetCurrentDirection(dir);
+      fGeoManager->FindNextBoundary();
+      Double_t step = fGeoManager->GetStep();
+
+      relp = 1.e-21;
+      for(Int_t i=0; i<30; ++i) {
+         relp *=10.;
+         for(Int_t j=0; j<3; ++j) nxyz[j]=xyz[j]+step*(1.+relp)*dir[j];
+         if(!fGeoManager->IsSameLocation(nxyz[0],nxyz[1],nxyz[2])) {
+            hnew->Fill(i-20.);
+            if(i>15) {
+               const Double_t* norm = fGeoManager->FindNormal();
+               strcpy(path,fGeoManager->GetPath());
+               Double_t dotp = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
+               printf("Forward error i=%d p=%5.4f %5.4f %5.4f s=%5.4f dot=%5.4f path=%s\n",
+                       i,xyz[0],xyz[1],xyz[2],step,dotp,path);
+               hplotS->Fill(xyz[0],xyz[1],(Double_t)i);
+               strcpy(cdir,"Forward");
+               bug->Fill();
+            }
+	         break;
+         }
+      }
+      
+      relp = -1.e-21;
+      for(Int_t i=0; i<30; ++i) {
+         relp *=10.;
+         for(Int_t j=0; j<3; ++j) nxyz[j]=xyz[j]+step*(1.+relp)*dir[j];
+         if(fGeoManager->IsSameLocation(nxyz[0],nxyz[1],nxyz[2])) {
+            hold->Fill(i-20.);
+            if(i>15) {
+               const Double_t* norm = fGeoManager->FindNormal();
+               strcpy(path,fGeoManager->GetPath());
+               Double_t dotp = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
+               printf("Backward error i=%d p=%5.4f %5.4f %5.4f s=%5.4f dot=%5.4f path=%s\n",
+                       i,xyz[0],xyz[1],xyz[2],step,dotp,path);
+               strcpy(cdir,"Backward");
+               bug->Fill();
+            }
+            break;
+         }
+      }
+   }
+   fTimer->Stop();
+
+   printf("CPU time/point = %5.2emus: Real time/point = %5.2emus\n",
+	       1000000.*fTimer->CpuTime()/itry,1000000.*fTimer->RealTime()/itry);
+   bug->Write();
+   delete bug;
+   bug=0;
+   delete f;
+
+   CheckBoundaryReference();
+
+   printf("Effic = %3.1f%%\n",(100.*igen)/itry);
+   TCanvas *c1 = new TCanvas("c1","Results",600,800);
+   c1->Divide(1,2);
+   c1->cd(1);
+   gPad->SetLogy();
+   hold->Draw();
+   c1->cd(2);
+   gPad->SetLogy();
+   hnew->Draw();
+   /*TCanvas *c3 = */new TCanvas("c3","Plot",600,600);
+   hplotS->Draw("cont0");
+}   
+
+//_____________________________________________________________________________
+void TGeoChecker::CheckBoundaryReference(Int_t icheck)
+{
+// Check the boundary errors reference file created by CheckBoundaryErrors method.
+// The shape for which the crossing failed is drawn with the starting point in red
+// and the extrapolated point to boundary (+/- failing push/pull) in yellow.
+   Double_t xyz[3];
+   Double_t nxyz[3];
+   Double_t dir[3];
+   Double_t lnext[3];
+   Double_t push;
+   Char_t path[1024];
+   Char_t cdir[10];
+   // Tree part
+   TFile *f=new TFile("geobugs.root","read");
+   TTree *bug=(TTree*)f->Get("bug");
+   bug->SetBranchAddress("pos",xyz);
+   bug->SetBranchAddress("dir",dir);
+   bug->SetBranchAddress("push",&push);
+   bug->SetBranchAddress("path",&path);
+   bug->SetBranchAddress("cdir",&cdir);
+
+   Int_t nentries = (Int_t)bug->GetEntries();
+   printf("nentries %d\n",nentries);
+   if (icheck<0) {
+      for (Int_t i=0;i<nentries;i++) {
+         bug->GetEntry(i);
+         printf("%-9s error push=%g p=%5.4f %5.4f %5.4f s=%5.4f dot=%5.4f path=%s\n",
+	             cdir,push,xyz[0],xyz[1],xyz[2],1.,1.,path);
+      }
+   } else {
+      if (icheck>=nentries) return;
+      Int_t idebug = TGeoManager::GetVerboseLevel();
+      TGeoManager::SetVerboseLevel(5);
+      bug->GetEntry(icheck);
+      printf("%-9s error push=%g p=%5.4f %5.4f %5.4f s=%5.4f dot=%5.4f path=%s\n",
+	          cdir,push,xyz[0],xyz[1],xyz[2],1.,1.,path);
+      fGeoManager->SetCurrentPoint(xyz);
+      fGeoManager->SetCurrentDirection(dir);
+      fGeoManager->FindNode();
+      TGeoNode *next = fGeoManager->FindNextBoundary();
+      Double_t step = fGeoManager->GetStep();
+      for (Int_t j=0; j<3; j++) nxyz[j]=xyz[j]+step*(1.+0.1*push)*dir[j];
+      Bool_t change = !fGeoManager->IsSameLocation(nxyz[0],nxyz[1],nxyz[2]);
+      printf("step=%g in: %s\n", step, fGeoManager->GetPath());
+      printf("  -> next = %s push=%g  change=%d\n", next->GetName(),push, (UInt_t)change);
+      next->GetVolume()->InspectShape();
+      next->GetVolume()->DrawOnly();
+      if (next != fGeoManager->GetCurrentNode()) {
+         Int_t index1 = fGeoManager->GetCurrentVolume()->GetIndex(next);
+         if (index1>=0) fGeoManager->CdDown(index1);
+      }
+      TPolyMarker3D *pm = new TPolyMarker3D();
+      fGeoManager->MasterToLocal(xyz, lnext);
+      pm->SetNextPoint(lnext[0], lnext[1], lnext[2]);
+      pm->SetMarkerStyle(2);
+      pm->SetMarkerSize(0.2);
+      pm->SetMarkerColor(kRed);
+      pm->Draw("SAME");
+      TPolyMarker3D *pm1 = new TPolyMarker3D();
+      fGeoManager->MasterToLocal(nxyz, lnext);
+      pm1->SetNextPoint(lnext[0], lnext[1], lnext[2]);
+      pm1->SetMarkerStyle(2);
+      pm1->SetMarkerSize(0.2);
+      pm1->SetMarkerColor(kYellow);
+      pm1->Draw("SAME");
+      TGeoManager::SetVerboseLevel(idebug);
+   }   
+   delete bug;
+   delete f;
+}   
+
 //______________________________________________________________________________
 void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings, Int_t ntracks, const Double_t *vertex)
 {
@@ -252,7 +466,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
 //  volume vs. number of daughters is produced. 
 // All histos are saved in the file statistics.root
    Int_t nuid = fGeoManager->GetListOfUVolumes()->GetEntries();
-   fTimer = new TStopwatch();
+   if (!fTimer) fTimer = new TStopwatch();
    Int_t i;
    Double_t value;
    fFlags = new Bool_t[nuid];
