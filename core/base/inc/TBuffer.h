@@ -47,7 +47,7 @@ protected:
 
    // Default ctor
    TBuffer() : TObject(), fMode(0), fVersion(0), fBufSize(0), fBuffer(0),
-               fBufCur(0), fBufMax(0), fParent(0) {}
+     fBufCur(0), fBufMax(0), fParent(0), fReAllocFunc(0) {}
 
    // TBuffer objects cannot be copied or assigned
    TBuffer(const TBuffer &);           // not implemented
