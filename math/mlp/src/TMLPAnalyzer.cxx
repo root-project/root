@@ -293,6 +293,21 @@ void TMLPAnalyzer::DrawDInputs()
    // Draws the distribution (on the test sample) of the
    // impact on the network output of a small variation of
    // each input.
+   // DrawDInputs() draws something that approximates the distribution of the 
+   // derivative of the NN w.r.t. each input. That quantity is recognized as 
+   // one of the measures to determine key quantities in the network.
+   // 
+   // What is done is to vary one input around its nominal value and to see 
+   // how the NN changes. This is done for each entry in the sample and produces
+   // a distribution.
+   // 
+   // What you can learn from that is:
+   // - is variable a really useful, or is my network insensitive to it ?
+   // - is there any risk of big systematic ? Is the network extremely sensitive
+   //   to small variations of any of my inputs ?
+   // 
+   // As you might understand, this is to be considered with care and can serve 
+   // as input for an "educated guess" when optimizing the network.
 
    THStack* stack  = new THStack("differences","differences (impact of variables on ANN)");
    TLegend* legend = new TLegend(0.75,0.75,0.95,0.95);
