@@ -1,5 +1,7 @@
 // @(#)root/table:$Id$
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
+#ifndef ROOT_TResponseTable
+#define ROOT_TResponseTable
 
 #include "TGenericTable.h"
 
@@ -27,3 +29,4 @@ class TResponseTable : public TGenericTable
 
      ClassDef(TResponseTable,4) // Generic Geant detector response table
 };
+#endif

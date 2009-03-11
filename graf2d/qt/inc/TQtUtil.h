@@ -51,7 +51,7 @@ inline HDC wigdetHdc(TCanvas *c)
 inline HDC wigdetHdc(TCanvasImp *c)
 { return canvasWidget(c)->handle(); }
 
-ifdef WIN32
+#ifdef WIN32
 //_______________________________________
 inline HWND hwndWin32(TCanvas *c)
 {  return canvasWidget(c)->winId(); }
