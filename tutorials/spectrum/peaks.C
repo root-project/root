@@ -10,13 +10,14 @@
 //  root > .x peaks.C++ (use the compiler)
 //  root > .x peaks.C++(30) (generates 30 peaks)
 //
-// To execute only the first part of teh script (without fitting)
+// To execute only the first part of the script (without fitting)
 // specify a negative value for the number of peaks, eg
 //  root > .x peaks.C(-20)
 //
 //Author: Rene Brun
 
 #include "TCanvas.h"
+#include "TMath.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TRandom.h"
@@ -62,7 +63,7 @@ void peaks(Int_t np=10) {
    printf("Found %d candidate peaks to fit\n",nfound);
    //Estimate background using TSpectrum::Background
    TH1 *hb = s->Background(h,20,"same");
-   c1->Update();
+   if (hb) c1->Update();
    if (np <0) return;
 
    //estimate linear background using a fitting method

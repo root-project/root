@@ -18,6 +18,8 @@
 #include "TRandom.h"
 #include "TH2.h"
 #include "TF2.h"
+#include "TMath.h"
+#include "TROOT.h"
 
 TSpectrum2 *s;
 TH2F *h2 = 0;
