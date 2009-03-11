@@ -379,6 +379,8 @@ void TGFileBrowser::BrowseObj(TObject *obj)
          AddFSDirectory("/");
       }
       GotoDir(gSystem->WorkingDirectory());
+      if (gROOT->GetListOfFiles() && !gROOT->GetListOfFiles()->IsEmpty())
+         Selected(0);
    }
 }
 
