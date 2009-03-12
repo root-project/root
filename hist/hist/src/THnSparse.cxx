@@ -465,6 +465,7 @@ TH1* THnSparse::CreateHist(const char* name, const char* title,
       TAxis* reqaxis = (TAxis*)(*axes)[d];
       if (reqaxis->TestBit(TAxis::kAxisRange)) {
          Int_t binFirst = reqaxis->GetFirst();
+         if (binFirst == 0) binFirst = 1;
          Int_t binLast = reqaxis->GetLast();
          Int_t nBins = binLast - binFirst + 1;
          if (reqaxis->GetXbins()->GetSize()) {
