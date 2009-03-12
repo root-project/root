@@ -1191,7 +1191,7 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 	free( mapped_im );
 	destroy_colormap( &cmap, True );
 	
-	if (outfile && outfile != stdout)
+	if (outfile && outfile != stdout && gif)
 		fclose (outfile);
 
 	SHOW_TIME("image export",started);
