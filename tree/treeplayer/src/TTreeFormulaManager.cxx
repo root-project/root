@@ -88,6 +88,10 @@ void TTreeFormulaManager::Add(TTreeFormula* adding)
       }
    }
 
+   if (adding->TestBit(TTreeFormula::kNeedEntries)) {
+      SetBit(TTreeFormula::kNeedEntries);
+   }
+
    fFormulas.Add(adding);
    adding->fManager = this;
    fNeedSync = kTRUE;

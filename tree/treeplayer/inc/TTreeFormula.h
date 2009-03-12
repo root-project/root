@@ -69,7 +69,8 @@ protected:
    enum {
       kIsCharacter = BIT(12),
       kMissingLeaf = BIT(15), // true if some of the needed leaves are missing in the current TTree
-      kIsInteger   = BIT(17)  // true if the branch contains an integer variable
+      kIsInteger   = BIT(17), // true if the branch contains an integer variable
+      kNeedEntries = BIT(18)  // true if the formula uses Entries$
    };
    enum { 
       kDirect, kDataMember, kMethod, 
