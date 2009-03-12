@@ -107,11 +107,11 @@ const char *exps[NG] = {"aleph",
                         "cms",   
                         "alice2",
                         "babar2", 
-                        "chambers", //should be belle
+                        "belle",
                         "atlas" 
 };
 // The timings below are on my machine PIV 3GHz
-const Double_t cp_brun[NG] = {1.7,  //aleph
+const Double_t cp_brun[NG] = {1.9,  //aleph
                               0.1,  //barres
                               0.12, //felix
                               0.62, //phenix
@@ -135,13 +135,13 @@ const Double_t cp_brun[NG] = {1.7,  //aleph
                               1.5,  //tesla
                               1.6,  //btev
                               2.2,  //cdf
-                              2.0,  //hades2
+                              1.2,  //hades2
                               1.6,  //lhcbfull
-                              2.5,  //star
+                              2.7,  //star
                               3.3,  //sld
                               7.5,  //cms
                               8.0,  //alice2
-                             18.9,  //babar2
+                             19.6,  //babar2
                              24.1,  //belle
                              26.7}; //atlas
 // Bounding boxes for experiments
@@ -181,7 +181,7 @@ Double_t boxes[NG][3] = {{600,600,500},     // aleph
 };                     
 // Total and reference times
 Double_t tpstot = 0;
-Double_t tpsref = 110.3; //time including the generation of the ref files
+Double_t tpsref = 112.1; //time including the generation of the ref files
 Bool_t testfailed = kFALSE;
                          
 Int_t iexp[NG];
