@@ -534,7 +534,7 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
 // Extrapolate current point with estimated error.
    Double_t *tr = fGlobalMatrix->GetTranslation();
    Double_t trmax = 1.+TMath::Abs(tr[0])+TMath::Abs(tr[1])+TMath::Abs(tr[2]);
-   Double_t extra = (trmax+fStep)*gTolerance;
+   Double_t extra = 100.*(trmax+fStep)*gTolerance;
    fPoint[0] += extra*fDirection[0];
    fPoint[1] += extra*fDirection[1];
    fPoint[2] += extra*fDirection[2];
@@ -1046,6 +1046,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    static Int_t icount = 0;
    icount++;
    Int_t iact = 3;
+   Int_t idebug = TGeoManager::GetVerboseLevel();
    Int_t nextindex;
    Bool_t is_assembly;
    fForcedNode = 0;
@@ -1066,6 +1067,13 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    fPoint[1] += extra*fDirection[1];
    fPoint[2] += extra*fDirection[2];
    fCurrentMatrix->CopyFrom(fGlobalMatrix);
+   if (idebug>4) {
+      printf("TGeoManager::FindNextBAndStep:  point=(%19.16f, %19.16f, %19.16f)\n",
+             fPoint[0],fPoint[1],fPoint[2]);
+      printf("                                dir=  (%19.16f, %19.16f, %19.16f)\n",
+             fDirection[0], fDirection[1], fDirection[2]);
+      printf("  pstep=%9.6g  path=%s\n", stepmax, GetPath());
+   }   
    
    if (fIsOutside) {
       snext = fGeometry->GetTopVolume()->GetShape()->DistFromOutside(fPoint, fDirection, iact, fStep);
@@ -1116,7 +1124,17 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    fGlobalMatrix->MasterToLocalVect(fDirection, &dir[0]);
    TGeoVolume *vol = fCurrentNode->GetVolume();
    // find distance to exiting current node
+   if (idebug>4) {
+      printf("   -> from local=(%19.16f, %19.16f, %19.16f)\n",
+             point[0],point[1],point[2]);
+      printf("           ldir =(%19.16f, %19.16f, %19.16f)\n",
+             dir[0],dir[1],dir[2]);             
+   }           
+   // find distance to exiting current node
    snext = vol->GetShape()->DistFromInside(point, dir, iact, fStep);
+   if (idebug>4) {
+      printf("      exiting %s shape %s at snext=%g\n", vol->GetName(), vol->GetShape()->ClassName(),snext);
+   }   
    fNextNode = fCurrentNode;
    if (snext <= gTolerance) {
       // Current point on the boundary while track exiting
@@ -1644,6 +1662,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    Double_t point[3];
    fNextDaughterIndex = -2;
    TGeoVolume *vol = 0;
+   Int_t idebug = TGeoManager::GetVerboseLevel();
    Bool_t inside_current = (fCurrentNode==skipnode)?kTRUE:kFALSE;
    if (!downwards) {
    // we are looking upwards until inside current node or exit
@@ -1692,6 +1711,10 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
             fIsOutside = kFALSE;
             fIsSameLocation = kFALSE;
          }
+         if (idebug>4) {
+            printf("Search node local=(%19.16f, %19.16f, %19.16f) -> %s\n",
+                   point[0],point[1],point[2], fCurrentNode->GetName());
+         }                    
       }      
    }
    // point inside current (safe) node -> search downwards
