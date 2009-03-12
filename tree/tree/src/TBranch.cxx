@@ -1539,7 +1539,7 @@ Int_t TBranch::LoadBaskets()
    //  See also TTree::LoadBaskets to load all baskets of all branches in memory.
 
    Int_t nimported = 0;
-   Int_t nbaskets = fBaskets.GetEntriesFast();
+   Int_t nbaskets = fWriteBasket;
    TFile *file = GetFile(0);
    TBasket *basket;
    for (Int_t i=0;i<nbaskets;i++) {
