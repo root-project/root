@@ -3212,6 +3212,13 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                      fVarIndexes[codeindex][0]->LoadBranches();
                   }
                   local_index = (Int_t)fVarIndexes[codeindex][0]->EvalInstance(local_index);
+                  if (local_index<0) {
+                     Error("EvalInstance","Index %s is out of bound (%d) in formula %s",
+                           fVarIndexes[codeindex][0]->GetTitle(),
+                           local_index,
+                           GetTitle());
+                     return fNdata[0]+1;
+                  }
                }
                real_instance = local_index * fCumulSizes[codeindex][1];
                virt_dim ++;
