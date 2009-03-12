@@ -249,14 +249,14 @@ Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 58110 nodes/ 607 volume UID's in babar.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Reference file http://root.cern.ch/files/babar2_ref_3.root found
-Info in <TGeoManager::Import>: Reading geometry from file: http://root.cern.ch/files/chambers.root
-Info in <TFile::OpenFromCache>: using local cache copy of http://root.cern.ch/files/chambers.root [./files/chambers.root]
+Info in <TGeoManager::Import>: Reading geometry from file: http://root.cern.ch/files/belle.root
+Info in <TFile::OpenFromCache>: using local cache copy of http://root.cern.ch/files/belle.root [./files/belle.root]
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
-Info in <TGeoManager::SetTopVolume>: Top volume is UNIV. Master volume is UNIV
+Info in <TGeoManager::SetTopVolume>: Top volume is BDET. Master volume is BDET
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CloseGeometry>: 534 nodes/ 8 volume UID's in chambers.C
+Info in <TGeoManager::CloseGeometry>: 11534 nodes/ 181 volume UID's in belle.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
-Reference file http://root.cern.ch/files/chambers_ref_3.root found
+Reference file http://root.cern.ch/files/belle_ref_3.root found
 Info in <TGeoManager::Import>: Reading geometry from file: http://root.cern.ch/files/atlas.root
 Info in <TFile::OpenFromCache>: using local cache copy of http://root.cern.ch/files/atlas.root [./files/atlas.root]
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
