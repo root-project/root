@@ -1,6 +1,7 @@
 # This is a template for all makefiles.
 
 FILES_IN_TAR := $(shell tar tzf geometries.tar.gz)
+C_FILES_IN_TAR := $(filter %.C,$(FILES_IN_TAR))
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log unpack.last \
@@ -66,9 +67,15 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 $(FILES_IN_TAR): unpack.last
 
+ifneq ($(FAIL),yes)
 unpack.last: geometries.tar.gz
 	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - && touch unpack.last && \
 	    touch $(FILES_IN_TAR)
+else
+unpack.last: geometries.tar.gz
+	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - && touch unpack.last && \
+	    touch $(C_FILES_IN_TAR)
+endif
 
 readGeo.log: unpack.last aleph.root ams.root brahms.root btev.root d0.root e907.root gem.root phobos.root tesla.root
 
