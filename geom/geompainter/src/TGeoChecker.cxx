@@ -432,6 +432,7 @@ void TGeoChecker::CheckBoundaryReference(Int_t icheck)
       pm->SetMarkerColor(kRed);
       pm->Draw("SAME");
       TPolyMarker3D *pm1 = new TPolyMarker3D();
+      for (Int_t j=0; j<3; j++) nxyz[j]=xyz[j]+step*dir[j];
       fGeoManager->MasterToLocal(nxyz, lnext);
       pm1->SetNextPoint(lnext[0], lnext[1], lnext[2]);
       pm1->SetMarkerStyle(2);

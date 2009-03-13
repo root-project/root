@@ -272,18 +272,10 @@ Double_t TGeoTorus::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, D
    Bool_t hasphi = (fDphi<360)?kTRUE:kFALSE;
    Bool_t hasrmin = (fRmin>0)?kTRUE:kFALSE;
    Double_t dout = ToBoundary(point,dir,fRmax);
-   if (dout>1E10) {
-      Double_t pt[3];
-      for (Int_t i=0; i<3; i++) pt[i] = point[i]-1E-4*dir[i];
-      dout = ToBoundary(pt,dir,fRmax)-1E-4;
-      if (dout<1E10) return dout;
-      Error("DistFromInside", "cannot get outside");
-      printf("point (%f,%f,%f) daxis=%f contains=%i\n", point[0],point[1],point[2],
-             Daxis(point,dir,0), Contains(point));
-      return TGeoShape::Big();
-   }
+//   Double_t dax = Daxis(point,dir,dout);
    Double_t din = (hasrmin)?ToBoundary(point,dir,fRmin):TGeoShape::Big();
    snext = TMath::Min(dout,din);
+   if (snext>1E10) return TGeoShape::Tolerance();
    Double_t dphi = TGeoShape::Big();
    if (hasphi) {
       // Torus segment case.
@@ -299,17 +291,8 @@ Double_t TGeoTorus::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, D
       sm=TMath::Sin(fio);
       cdfi = TMath::Cos(0.5*(phi2-phi1));
       dphi = TGeoTubeSeg::DistFromInsideS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);
-      if (dphi>1E10) {
-         Double_t pt[3];
-         for (Int_t i=0; i<3; i++) pt[i] = point[i]-1E-4*dir[i];
-         dphi = TGeoTubeSeg::DistFromInsideS(pt,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi)-1E-4;
-         if (dphi>1E10) {
-            Error("DistFromInside", "cannot get outside");
-            return TGeoShape::Big();
-         }   
-      }
-      Double_t daxis = Daxis(point,dir,dphi+1E-8);
-      if (daxis>=fRmin && daxis<=fRmax) snext=TMath::Min(snext,dphi);
+      Double_t daxis = Daxis(point,dir,dphi);
+      if (daxis>=fRmin+1.E-8 && daxis<=fRmax-1.E-8) snext=TMath::Min(snext,dphi);
    }      
    return snext;
 }
@@ -1053,6 +1036,7 @@ Double_t TGeoTorus::ToBoundary(Double_t *pt, Double_t *dir, Double_t r) const
 // to the torus is decreasing while moving along the given direction.
    
    // Compute coeficients of the quartic
+   Double_t s = TGeoShape::Big();
    Double_t r0sq  = pt[0]*pt[0]+pt[1]*pt[1]+pt[2]*pt[2];
    Double_t rdotn = pt[0]*dir[0]+pt[1]*dir[1]+pt[2]*dir[2];
    Double_t rsumsq = fR*fR+r*r;
@@ -1062,11 +1046,55 @@ Double_t TGeoTorus::ToBoundary(Double_t *pt, Double_t *dir, Double_t r) const
    Double_t d = r0sq*r0sq-2.*r0sq*rsumsq+4.*fR*fR*pt[2]*pt[2]+(fR*fR-r*r)*(fR*fR-r*r);
    
    Double_t x[4];
-   Int_t nsol = SolveQuartic(a,b,c,d,x);
+   Int_t nsol = 0;
+
+   if (TMath::Abs(dir[2])<1.E-3 && TMath::Abs(pt[2])<r) {
+      Double_t r0 = fR - TMath::Sqrt((r-pt[2])*(r+pt[2]));
+      Double_t b0 = (pt[0]*dir[0]+pt[1]*dir[1])/(dir[0]*dir[0]+dir[1]*dir[1]);
+      Double_t c0 = (pt[0]*pt[0] + (pt[1]-r0)*(pt[1]+r0))/(dir[0]*dir[0]+dir[1]*dir[1]);
+      Double_t delta = b0*b0-c0;
+      if (delta>0) {
+         x[nsol] = -b0-TMath::Sqrt(delta);
+         if (x[nsol]>0) nsol++;
+         else {
+            x[nsol] = -b0+TMath::Sqrt(delta);
+            if (x[nsol]>0) nsol++;
+         }
+      }
+      r0 = fR + TMath::Sqrt((r-pt[2])*(r+pt[2]));
+      c0 = (pt[0]*pt[0] + (pt[1]-r0)*(pt[1]+r0))/(dir[0]*dir[0]+dir[1]*dir[1]);
+      delta = b0*b0-c0;
+      if (delta>0) {
+         x[nsol] = -b0-TMath::Sqrt(delta);
+         if (x[nsol]>0) nsol++;
+         else {
+            x[nsol] = -b0+TMath::Sqrt(delta);
+            if (x[nsol]>0) nsol++;
+         }
+      }
+      if (nsol==2) {
+         x[0] = TMath::Min(x[0], x[1]);
+         nsol = 1;
+      }
+   } else {               
+      nsol = SolveQuartic(a,b,c,d,x);
+   }   
    if (!nsol) return TGeoShape::Big();
    // look for first positive solution
    for (Int_t i=0; i<nsol; i++) {
-      if (x[i]>1.e-7) return x[i];
+      if (x[i]<1.e-7) continue;
+      s = x[i];
+      Double_t eps = TGeoShape::Big();
+      Double_t delta = s*s*s*s + a*s*s*s + b*s*s + c*s + d;
+      Double_t eps0 = -delta/(4.*s*s*s + 3.*a*s*s + 2.*b*s + c);
+      while (TMath::Abs(eps)>TGeoShape::Tolerance()) {
+         s += eps0;
+         delta = s*s*s*s + a*s*s*s + b*s*s + c*s + d;
+         eps = -delta/(4.*s*s*s + 3.*a*s*s + 2.*b*s + c);
+         if (TMath::Abs(eps)>TMath::Abs(eps0)) break;
+         eps0 = eps;
+      }
+      return s;   
    }
    return TGeoShape::Big();   
 }      
