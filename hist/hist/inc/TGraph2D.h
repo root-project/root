@@ -145,7 +145,7 @@ public:
    virtual void     SetNameTitle(const char *name, const char *title);
    void             SetNpx(Int_t npx=40); // *MENU*
    void             SetNpy(Int_t npx=40); // *MENU*
-   void             SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
+   virtual void     SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void     SetTitle(const char *title=""); // *MENU*
 
    ClassDef(TGraph2D,1)  //Set of n x[i],y[i],z[i] points with 3-d graphics including Delaunay triangulation
