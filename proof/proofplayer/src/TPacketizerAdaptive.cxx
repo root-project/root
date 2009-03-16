@@ -1253,7 +1253,7 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
          // - The completed part was marked as done.
          // - Create a new packet with the part to be resubmitted.
          TDSetElement *newPacket = new TDSetElement(*(slstat->fCurElem));
-         if (newPacket && numev < newPacket->GetNum()) {
+         if (newPacket && numev < expectedNumEv) {
             Long64_t first = newPacket->GetFirst();
             newPacket->SetFirst(first + numev);
             if (listOfMissingFiles && *listOfMissingFiles)
