@@ -772,7 +772,7 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
       } else {
          theX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
          theY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
-         if (InheritsFrom("TCutG")) {
+         if (theGraph->InheritsFrom("TCutG")) {
             //make sure first and last point are the same
             if (ipoint == 0) {
                theX[theNpoints-1] = theX[0];
