@@ -51,7 +51,6 @@ const UInt_t kByteCountMask     = 0x40000000;  // OR the byte count with this
 const UInt_t kMaxMapCount       = 0x3FFFFFFE;  // last valid fMapCount and byte count
 const Version_t kByteCountVMask = 0x4000;      // OR the version byte count with this
 const Version_t kMaxVersion     = 0x3FFF;      // highest possible version number
-const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for free block count)
 const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null obj and self obj
 
 Int_t TBufferFile::fgMapSize   = kMapSize;

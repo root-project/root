@@ -107,7 +107,9 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
 
    if (buf) {
       fBuffer = (char *)buf;
-      fBufSize -= kExtraSpace;
+      if ( (fMode&kWrite)!=0 ) {
+         fBufSize -= kExtraSpace;
+      }
       if (!adopt) ResetBit(kIsOwner);
    } else {
       if (fBufSize < kMinimalSize) {
@@ -168,7 +170,7 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
    
    SetReAllocFunc( reallocfunc );
 
-   if (buf && fBufSize < kMinimalSize) {
+   if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < 0) {
       Expand( kMinimalSize );
    }
 }
@@ -211,7 +213,7 @@ void TBuffer::SetParent(TObject *parent)
    fParent = parent;
 }
 //______________________________________________________________________________
-ReAllocCharFun_t TBuffer::GetReAllocFunc() 
+ReAllocCharFun_t TBuffer::GetReAllocFunc() const
 {
    // Return the reallocation method currently used.
    return fReAllocFunc;

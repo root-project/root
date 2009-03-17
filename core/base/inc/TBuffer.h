@@ -78,7 +78,7 @@ public:
    void     SetReadMode();
    void     SetWriteMode();
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
-   ReAllocCharFun_t GetReAllocFunc();
+   ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = 0);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
