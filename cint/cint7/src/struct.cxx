@@ -458,6 +458,7 @@ int Cint::Internal::G__class_autoloading(int* ptagnum)
       strcpy(copyLibname, libname);
       if (G__p_class_autoloading) {
          // -- We have a callback, use that.
+         int oldAutoLoading = G__enable_autoloading;
          G__enable_autoloading = 0;
          // reset the def tagnums to not collide with dict setup
          ::Reflex::Scope store_def_tagnum = G__def_tagnum;
@@ -527,23 +528,24 @@ int Cint::Internal::G__class_autoloading(int* ptagnum)
                }                  
             }
          }
-         G__enable_autoloading = 1;
+         G__enable_autoloading = oldAutoLoading;
          delete[] copyLibname;
          return res;
       }
       else if (libname && libname[0]) {
          // -- No autoload callback, try to load the library.
+         int oldAutoLoading = G__enable_autoloading;
          G__enable_autoloading = 0;
          if (G__loadfile(copyLibname) >= G__LOADFILE_SUCCESS) {
             // -- Library load succeeded.
-            G__enable_autoloading = 1;
+            G__enable_autoloading = oldAutoLoading;
             delete[] copyLibname;
             return 1;
          }
          else {
             // -- Library load failed.
             G__struct.type[tagnum] = G__CLASS_AUTOLOAD;
-            G__enable_autoloading = 1;
+            G__enable_autoloading = oldAutoLoading;
             delete[] copyLibname;
             return -1;
          }

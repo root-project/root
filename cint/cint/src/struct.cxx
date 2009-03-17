@@ -481,6 +481,7 @@ int G__class_autoloading(int* ptagnum)
       char* copyLibname = new char[strlen(libname) + 1];
       strcpy(copyLibname, libname);
       if (G__p_class_autoloading) {
+         int oldAutoLoading = G__enable_autoloading;
          G__enable_autoloading = 0;
          // reset the def tagnums to not collide with dict setup
          int store_def_tagnum = G__def_tagnum;
@@ -526,21 +527,22 @@ int G__class_autoloading(int* ptagnum)
                }
             }
          }
-         G__enable_autoloading = 1;
+         G__enable_autoloading = oldAutoLoading;
          delete[] copyLibname;
          return res;
       }
       else {
+         int oldAutoLoading = G__enable_autoloading;
          G__enable_autoloading = 0;
          int ret = G__loadfile(copyLibname);
          if (ret >= G__LOADFILE_SUCCESS) {
-            G__enable_autoloading = 1;
+            G__enable_autoloading = oldAutoLoading;
             delete[] copyLibname;
             return 1;
          }
          else {
             G__struct.type[tagnum] = G__CLASS_AUTOLOAD;
-            G__enable_autoloading = 1;
+            G__enable_autoloading = oldAutoLoading;
             delete[] copyLibname;
             return -1;
          }
@@ -1263,11 +1265,11 @@ void G__define_struct(char type)
       int store_linenum = G__ifile.line_number;
       G__disp_mask = 1000; // FIXME: Crazy!
       char buf[G__ONELINE];
-      int c = G__fgetname(buf, ";,(");
+      int ch = G__fgetname(buf, ";,(");
       int errflag = 0;
-      if (isspace(c) && (buf[0] != '*') && !strchr(buf, '[')) {
+      if (isspace(ch) && (buf[0] != '*') && !strchr(buf, '[')) {
          char tmp[G__ONELINE];
-         c = G__fgetname(tmp, ";,(");
+         ch = G__fgetname(tmp, ";,(");
          if (isalnum(tmp[0])) {
             errflag = 1;
          }
@@ -1275,7 +1277,7 @@ void G__define_struct(char type)
       G__disp_mask = 0;
       fsetpos(G__ifile.fp, &store_pos);
       G__ifile.line_number = store_linenum;
-      if (errflag || (isclassdef && (c == '('))) {
+      if (errflag || (isclassdef && (ch == '('))) {
          G__genericerror("Error: ';' missing after class/struct/enum declaration");
          G__tagnum = store_tagnum;
          G__def_tagnum = store_def_tagnum;
