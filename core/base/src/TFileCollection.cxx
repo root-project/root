@@ -37,7 +37,7 @@ ClassImp(TFileCollection)
 //______________________________________________________________________________
 TFileCollection::TFileCollection(const char *name, const char *title,
                                  const char *textfile, Int_t nfiles, Int_t firstfile)
-   : TNamed(name, title), fList(0), fMetaDataList(0),
+   : TNamed(name, title), fList(0), fMetaDataList(0), fDefaultTree(),
      fTotalSize(0), fNFiles(0), fNStagedFiles(0), fNCorruptFiles(0)
 {
    // TFileCollection constructor. Specify a name and title describing
@@ -382,8 +382,12 @@ void TFileCollection::ResetBitAll(UInt_t f)
 //______________________________________________________________________________
 const char *TFileCollection::GetDefaultTreeName() const
 {
+   // Returns the tree set with SetDefaultTreeName if set
    // Returns the name of the first tree in the meta data list.
    // Returns 0 in case no trees are found in the meta data list.
+
+   if (fDefaultTree.Length() > 0)
+     return fDefaultTree;
 
    TIter metaDataIter(fMetaDataList);
    TFileInfoMeta *metaData = 0;
