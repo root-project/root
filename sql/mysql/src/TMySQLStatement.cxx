@@ -337,8 +337,8 @@ const char* TMySQLStatement::ConvertToString(Int_t npar)
 
    switch(fBind[npar].buffer_type) {
       case MYSQL_TYPE_LONG:
-         if (sig) snprintf(buf,100,"%ld",*((long*) addr));
-             else snprintf(buf,100,"%lu",*((unsigned long*) addr));
+         if (sig) snprintf(buf,100,"%d",*((int*) addr));
+             else snprintf(buf,100,"%u",*((unsigned int*) addr));
          break;
       case MYSQL_TYPE_LONGLONG:
          if (sig) snprintf(buf,100,"%lld",*((long long*) addr)); else
@@ -730,7 +730,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, unsig
    fBuffer[npar].fStrBuffer = 0;
 
    ULong64_t allocsize = 0;
-   
+
    bool doreset = false;
 
    switch (sqltype) {
@@ -945,7 +945,7 @@ Bool_t TMySQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t max
    // Set parameter value as binary data.
 
    if (size>=maxsize) maxsize = size + 1;
-   
+
    int bin_type = MYSQL_TYPE_BLOB;
    if (maxsize > 65525) bin_type = MYSQL_TYPE_MEDIUM_BLOB;
    if (maxsize > 16777205) bin_type = MYSQL_TYPE_LONG_BLOB;
