@@ -1417,7 +1417,14 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                fnam.ReplaceAll("cache:", Form("%s/", fCacheDir.Data()));
                copytocache = kFALSE;
             }
-            ReceiveFile(fnam, bin ? kTRUE : kFALSE, size);
+            if (size > 0) {
+               ReceiveFile(fnam, bin ? kTRUE : kFALSE, size);
+            } else {
+               // Take it from the cache
+               if (!fnam.BeginsWith(fCacheDir.Data())) {
+                  fnam.Insert(0, Form("%s/", fCacheDir.Data()));
+               }
+            }
             // copy file to cache if not a PAR file
             if (copytocache && size > 0 &&
                 strncmp(fPackageDir, name, fPackageDir.Length()))
@@ -1426,6 +1433,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                Int_t opt = TProof::kForward | TProof::kCp;
                if (bin)
                   opt |= TProof::kBinary;
+               PDB(kGlobal, 1)
+                  Info("HandleSocketInput","forwarding file: %s", fnam.Data());
                fProof->SendFile(fnam, opt, (copytocache ? "cache" : ""));
             }
             if (fProtocol > 19) fSocket->Send(kPROOF_SENDFILE);

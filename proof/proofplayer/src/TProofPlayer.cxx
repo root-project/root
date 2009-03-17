@@ -724,6 +724,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    fSelectorClass = 0;
    Int_t version = -1;
    TRY {
+      // Get selector files from cache
+      if (gProofServ)
+         gProofServ->CopyFromCache(selector_file, 1);
+
       if (!(fSelector = TSelector::GetSelector(selector_file))) {
          Error("Process", "cannot load: %s", selector_file );
          return -1;
