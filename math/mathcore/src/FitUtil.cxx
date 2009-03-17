@@ -20,6 +20,8 @@
 #include "Math/Integrator.h"
 #include "Math/IntegratorMultiDim.h"
 #include "Math/WrappedFunction.h"
+#include "Math/OneDimFunctionAdapter.h"
+#include "Math/RichardsonDerivator.h"
 
 #include "Math/Error.h"
 #include "Math/Util.h"  // for safe log(x)
@@ -424,16 +426,18 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
    //func.SetParameters(p); 
 
    unsigned int ndim = func.NDim();
-   SimpleGradientCalculator gradCalc(ndim, func );  
-   std::vector<double> grad( ndim ); 
+
+   // use Richardson derivator
+   ROOT::Math::RichardsonDerivator derivator;
 
    double maxResValue = std::numeric_limits<double>::max() /n;
+
 
 
    for (unsigned int i = 0; i < n; ++ i) { 
 
 
-      double y = 0; 
+      double y = 0;
       const double * x = data.GetPoint(i,y);
 
       double fval = func( x, p );
@@ -459,11 +463,23 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
       while ( j < ndim && ex[j] == 0.)  { j++; } 
       // if j is less ndim some elements are not zero
       if (j < ndim) { 
+         // need an adapter from a multi-dim function to a one-dimensional
+         ROOT::Math::OneDimMultiFunctionAdapter<const IModelFunction &> f1D(func,x,0,p);
+         // select optimal step size  (use 10--3 by default as was done in TF1:
+         double kEps = 0.001;
+         double kPrecision = 1.E-8;
          for (unsigned int icoord = 0; icoord < ndim; ++icoord) { 
-            if (ex[icoord] != 0) 
-               gradCalc.Gradient(x, p, fval, &grad[0]);
-            double edx = ex[icoord] * grad[icoord]; 
-            e2 += edx * edx;  
+            // calculate derivative for each coordinate 
+            if (ex[icoord] > 0) {               
+               //gradCalc.Gradient(x, p, fval, &grad[0]);
+               f1D.SetCoord(icoord);
+               // optimal spep size (maybe should take average or  range in points) 
+               double x0= x[icoord];
+               double h = std::max( kEps* std::abs(x0), 8.0*kPrecision*(std::abs(x0) + kPrecision) );
+               double deriv = derivator.Derivative1(f1D, x[icoord], h);  
+               double edx = ex[icoord] * deriv; 
+               e2 += edx * edx;  
+            }
          } 
       }
       double w2 = (e2 > 0) ? 1.0/e2 : 0;  
