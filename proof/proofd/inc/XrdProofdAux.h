@@ -250,6 +250,7 @@ public:
    static int GetProcesses(const char *pn, std::map<int,XrdOucString> *plist);
    static int GetUserInfo(const char *usr, XrdProofUI &ui);
    static int GetUserInfo(int uid, XrdProofUI &ui);
+   static bool HasToken(const char *s, const char *tokens);
    static int KillProcess(int pid, bool forcekill, XrdProofUI ui, bool changeown);
    static int MvDir(const char *oldpath, const char *newpath);
    static int ParsePidPath(const char *path, XrdOucString &rest);

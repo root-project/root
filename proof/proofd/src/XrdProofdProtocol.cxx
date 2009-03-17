@@ -351,12 +351,9 @@ int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
    if (!getuid()) XrdSysPriv::ChangePerm((uid_t)0, (gid_t)0);
 
    // Process the config file for directives meaningful to us
-   if (pi->ConfigFN) {
-      // Create and Configure the manager
-      fgMgr = new XrdProofdManager(pi, &fgEDest);
-      if (fgMgr->Config(0))
-         return 0;
-   }
+   // Create and Configure the manager
+   fgMgr = new XrdProofdManager(pi, &fgEDest);
+   if (fgMgr->Config(0)) return 0;
    mp.form("global manager created");
    TRACE(ALL, mp);
 

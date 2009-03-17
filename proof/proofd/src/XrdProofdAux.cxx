@@ -913,6 +913,21 @@ int XrdProofdAux::GetIDFromPath(const char *path, XrdOucString &emsg)
 }
 
 //______________________________________________________________________________
+bool XrdProofdAux::HasToken(const char *s, const char *tokens)
+{
+   // Returns true is 's' contains at least one of the comma-separated tokens
+   // in 'tokens'. Else returns false.
+
+   if (s && strlen(s) > 0) {
+      XrdOucString tks(tokens), tok;
+      int from = 0;
+      while ((from = tks.tokenize(tok, from, ',')) != -1)
+         if (strstr(s, tok.c_str())) return 1;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
 {
    // Check if a process named 'pname' and process 'pid' is still
@@ -956,7 +971,7 @@ int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
    // Read status line
    char line[2048] = { 0 };
    if (fgets(line, sizeof(line), ffn)) {
-      if (strstr(line, pn))
+      if (XrdProofdAux::HasToken(line, pn))
          // Still there
          rc = 1;
    } else {
@@ -995,7 +1010,7 @@ int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
    }
 
    // Verify now
-   if (strstr(psi.pr_fname, pn))
+   if (XrdProofdAux::HasToken(psi.pr_fname, pn))
       // The process is still there
       rc = 1;
 
@@ -1017,7 +1032,7 @@ int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
    // Loop over the list
    while (np--) {
       if (pl[np].kp_proc.p_pid == pid &&
-          strstr(pl[np].kp_proc.p_comm, pn)) {
+         XrdProofdAux::HasToken(pl[np].kp_proc.p_comm, pn)) {
          // Process still exists
          rc = 1;
          break;

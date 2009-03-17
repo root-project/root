@@ -1658,6 +1658,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
          close(fp[1]);
          exit(1);
       }
+      TRACE(FORK, (int)getpid() << ": proofserv env set up");
 
       // Setup OK: now we go
       // Communicate the logfile path
@@ -1678,6 +1679,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
             }
          }
       }
+      TRACE(FORK, (int)getpid()<< ": log file path communicated");
 
       // Unblock SIGUSR1 and SIGUSR2
       sigset_t myset;
@@ -1690,7 +1692,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       close(fp[0]);
       close(fp[1]);
 
-      TRACE(FORK, "user: "<<p->Client()->User()<<
+      TRACE(FORK, (int)getpid()<<": user: "<<p->Client()->User()<<
                   ", uid: "<<getuid()<<", euid:"<<geteuid());
       // Run the program
       execv(xps->ROOT()->PrgmSrv(), argvv);
@@ -2600,7 +2602,7 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    if (XrdProofdAux::SymLink(rcfile.c_str(), "session.rootrc") != 0) {
       TRACE(XERR, "problems creating symlink to 'session.rootrc' (errno: "<<errno<<")");
    }
-   TRACE(DBG, "session rootrc file: "<< rcfile);
+   TRACE(REQ, "session rootrc file: "<< rcfile);
 
    // Port
    fprintf(frc, "# XrdProofdProtocol listening port\n");
@@ -2735,7 +2737,7 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
       TRACE(XERR, "unable to open env file: "<<envfile);
       return -1;
    }
-   TRACE(DBG, "environment file: "<< envfile);
+   TRACE(REQ, "environment file: "<< envfile);
 
    // Forwarded sec credentials, if any
    if (p->AuthProt()) {
@@ -2810,12 +2812,14 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    sprintf(ev, "ROOTRCFILE=%s", rcfile.c_str());
    putenv(ev);
    fprintf(fenv, "%s\n", ev);
+   TRACE(DBG, ev);
 
    // ROOT version tag (needed in building packages)
    ev = new char[strlen("ROOTVERSIONTAG=")+strlen(p->Client()->ROOT()->Tag())+2];
    sprintf(ev, "ROOTVERSIONTAG=%s", p->Client()->ROOT()->Tag());
    putenv(ev);
    fprintf(fenv, "%s\n", ev);
+   TRACE(DBG, ev);
 
    // Log file in the log dir
    ev = new char[strlen("ROOTPROOFLOGFILE=") + in->fLogFile.length() + 2];
@@ -2823,12 +2827,16 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    putenv(ev);
    fprintf(fenv, "%s\n", ev);
    xps->SetFileout(in->fLogFile.c_str());
+   TRACE(DBG, ev);
 
    // Xrootd config file
-   ev = new char[strlen("XRDCF=")+strlen(CfgFile())+2];
-   sprintf(ev, "XRDCF=%s", CfgFile());
-   putenv(ev);
-   fprintf(fenv, "%s\n", ev);
+   if (CfgFile()) {
+      ev = new char[strlen("XRDCF=")+strlen(CfgFile())+2];
+      sprintf(ev, "XRDCF=%s", CfgFile());
+      putenv(ev);
+      fprintf(fenv, "%s\n", ev);
+      TRACE(DBG, ev);
+   }
 
    // Additional envs (xpd.putenv directive)
    if (fProofServEnvs.length() > 0) {
@@ -2883,7 +2891,7 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    fclose(fenv);
 
    // Create or Update symlink to last session
-   TRACE(DBG, "creating symlink");
+   TRACE(REQ, "creating symlink");
    XrdOucString syml = udir;
    if (p->ConnType() == kXPD_MasterWorker)
       syml += "/last-worker-session";
@@ -2895,7 +2903,7 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    }
 
    // We are done
-   TRACE(DBG, "done");
+   TRACE(REQ, "done");
    return 0;
 }
 
@@ -2955,7 +2963,7 @@ int XrdProofdProofServMgr::CleanupLostProofServ()
          int xpid = XrdProofdAux::GetIDFromPath(pidpath.c_str(), emsg);
          int *alive = xrdproc.Find(xpid);
          if (!alive) {
-            a = (XrdProofdAux::VerifyProcessByID(xpid, "xrootd")) ? 1 : 0;
+            a = (XrdProofdAux::VerifyProcessByID(xpid, "xproofd,xrootd")) ? 1 : 0;
             xrdproc.Add(xpid, a);
             if (!(alive = xrdproc.Find(xpid))) {
                TRACE(ALL, "unable to add info in the Rash table!");
@@ -3086,7 +3094,7 @@ int XrdProofdProofServMgr::CleanupProofServ(bool all, const char *usr)
             if (xppid && strstr(line, "PPid:")) {
                ppid = (int) XrdProofdAux::GetLong(&line[strlen("PPid:")]);
                // Parent process must be us or be dead
-               if (ppid != getpid() && XrdProofdAux::VerifyProcessByID(ppid, "xrootd"))
+               if (ppid != getpid() && XrdProofdAux::VerifyProcessByID(ppid, "xproofd,xrootd"))
                   // Process created by another running xrootd
                   break;
                xppid = 0;
@@ -3174,7 +3182,7 @@ int XrdProofdProofServMgr::CleanupProofServ(bool all, const char *usr)
          }
          // Parent process must be us or be dead
          int ppid = psi.pr_ppid;
-         if (ppid != getpid() && XrdProofdAux::VerifyProcessByID(ppid, "xrootd")) {
+         if (ppid != getpid() && XrdProofdAux::VerifyProcessByID(ppid, "xproofd,xrootd")) {
             // Process created by another running xrootd
             continue;
             xppid = 0;
@@ -3292,7 +3300,7 @@ int XrdProofdProofServMgr::CleanupProofServ(bool all, const char *usr)
             int ppid = (int) XrdProofdAux::GetLong(pi);
             TRACE(HDBG, "found alternative parent ID: "<< ppid);
             // If still running then skip
-            if (XrdProofdAux::VerifyProcessByID(ppid, "xrootd"))
+            if (XrdProofdAux::VerifyProcessByID(ppid, "xproofd,xrootd"))
                continue;
          }
          // Get pid now

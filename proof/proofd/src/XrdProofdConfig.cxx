@@ -68,28 +68,30 @@ bool XrdProofdConfig::ReadFile()
    // reading, false otherwise.
    XPDLOC(ALL, "Config::ReadFile")
 
-   // Must have a file
-   if (fCfgFile.fName.length() <= 0) {
-      TRACE(XERR, "no config file!");
-      return -1;
-   }
+   // If we have a file, record the time of last change
+   if (fCfgFile.fName.length() > 0) {
 
-   // Get the modification time
-   struct stat st;
-   if (stat(fCfgFile.fName.c_str(), &st) != 0)
-      return -1;
-   TRACE(DBG, "file: " << fCfgFile.fName);
-   TRACE(DBG, "time of last modification: " << st.st_mtime);
+      // Get the modification time
+      struct stat st;
+      if (stat(fCfgFile.fName.c_str(), &st) != 0)
+         return -1;
+      TRACE(DBG, "file: " << fCfgFile.fName);
+      TRACE(DBG, "time of last modification: " << st.st_mtime);
 
-   // File should be loaded only once
-   if (st.st_mtime <= fCfgFile.fMtime)
+      // File should be loaded only once
+      if (st.st_mtime <= fCfgFile.fMtime)
+         return 0;
+
+      // Save the modification time
+      fCfgFile.fMtime = st.st_mtime;
+
+      // Never read or changed: read it again
+      return 1;
+   } else {
+
+      // Nothing to process
       return 0;
-
-   // Save the modification time
-   fCfgFile.fMtime = st.st_mtime;
-
-   // Never read or changed: read it again
-   return 1;
+   }
 }
 
 //__________________________________________________________________________
