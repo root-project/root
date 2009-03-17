@@ -111,18 +111,19 @@ endif
 endif
 
 # Extra include paths and libs
+XPROOFDEXELIBS :=
+XPROOFDEXE     :=
 ifeq ($(BUILDXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
 XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
                   -L$(XROOTDDIRP) -lXrdClient -lXrdSut
+ifeq ($(PLATFORM),linux)
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
                   $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
 XPROOFDEXE     := bin/xproofd
-else
-XPROOFDEXELIBS :=
-XPROOFDEXE     :=
+endif
 endif
 
 # used in the main Makefile
