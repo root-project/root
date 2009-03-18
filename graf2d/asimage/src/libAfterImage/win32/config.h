@@ -38,6 +38,11 @@ typedef unsigned char boolean;
 /* Define if using builtin libungif */
 #define HAVE_BUILTIN_UNGIF 1
 
+#if _MSC_VER >= 1400
+#define NO_DOUBLE_FCLOSE_AFTER_FDOPEN
+#else
+/*#undef NO_DOUBLE_FCLOSE_AFTER_FDOPEN */
+#endif
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1

@@ -1191,8 +1191,14 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 	free( mapped_im );
 	destroy_colormap( &cmap, True );
 	
-	if (outfile && outfile != stdout && gif)
+	if (outfile 
+#ifndef NO_DOUBLE_FCLOSE_AFTER_FDOPEN
+		&& !gif  /* can't do double fclose in MS CRT after VC2005 */
+#endif
+		&& outfile != stdout)
+	{
 		fclose (outfile);
+	}
 
 	SHOW_TIME("image export",started);
 	return True ;
