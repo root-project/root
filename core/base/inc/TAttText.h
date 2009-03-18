@@ -42,22 +42,22 @@ public:
    TAttText();
    TAttText(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize);
    virtual ~TAttText();
-   void     Copy(TAttText &atttext) const;
-   Short_t  GetTextAlign() const {return fTextAlign;}
-   Float_t  GetTextAngle() const {return fTextAngle;}
-   Color_t  GetTextColor() const {return fTextColor;}
-   Font_t   GetTextFont()  const {return fTextFont;}
-   Float_t  GetTextSize()  const {return fTextSize;}
-   void     Modify();
-   void     ResetAttText(Option_t *toption="");
-   void     SaveTextAttributes(ostream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);
-   void     SetTextAttributes();  // *MENU*
-   void     SetTextAlign(Short_t align=11) { fTextAlign = align;}
-   void     SetTextAngle(Float_t tangle=0) { fTextAngle = tangle;}  // *MENU*
-   void     SetTextColor(Color_t tcolor=1) { fTextColor = tcolor;}
-   void     SetTextFont(Font_t tfont=62)   { fTextFont = tfont;}
-   void     SetTextSize(Float_t tsize=1)   { fTextSize = tsize;}
-   void     SetTextSizePixels(Int_t npixels);
+           void     Copy(TAttText &atttext) const;
+   virtual Short_t  GetTextAlign() const {return fTextAlign;}
+   virtual Float_t  GetTextAngle() const {return fTextAngle;}
+   virtual Color_t  GetTextColor() const {return fTextColor;}
+   virtual Font_t   GetTextFont()  const {return fTextFont;}
+   virtual Float_t  GetTextSize()  const {return fTextSize;}
+   virtual void     Modify();
+   virtual void     ResetAttText(Option_t *toption="");
+   virtual void     SaveTextAttributes(ostream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);
+   virtual void     SetTextAttributes();  // *MENU*
+   virtual void     SetTextAlign(Short_t align=11) { fTextAlign = align;}
+   virtual void     SetTextAngle(Float_t tangle=0) { fTextAngle = tangle;}  // *MENU*
+   virtual void     SetTextColor(Color_t tcolor=1) { fTextColor = tcolor;}
+   virtual void     SetTextFont(Font_t tfont=62) { fTextFont = tfont;}
+   virtual void     SetTextSize(Float_t tsize=1) { fTextSize = tsize;}
+   virtual void     SetTextSizePixels(Int_t npixels);
 
    ClassDef(TAttText,1)  //Text attributes
 };
