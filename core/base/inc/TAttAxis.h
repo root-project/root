@@ -45,33 +45,33 @@ protected:
 
 public:
    TAttAxis();
-   virtual ~TAttAxis();
+   virtual          ~TAttAxis();
    void     Copy(TAttAxis &attaxis) const;
-   Int_t    GetNdivisions()  const {return fNdivisions;}
-   Color_t  GetAxisColor()   const {return fAxisColor;}
-   Color_t  GetLabelColor()  const {return fLabelColor;}
-   Style_t  GetLabelFont()   const {return fLabelFont;}
-   Float_t  GetLabelOffset() const {return fLabelOffset;}
-   Float_t  GetLabelSize()   const {return fLabelSize;}
-   Float_t  GetTitleOffset() const {return fTitleOffset;}
-   Float_t  GetTitleSize()   const {return fTitleSize;}
-   Float_t  GetTickLength()  const {return fTickLength;}
-   Color_t  GetTitleColor()  const {return fTitleColor;}
-   Style_t  GetTitleFont()   const {return fTitleFont;}
-   void     ResetAttAxis(Option_t *option="");
-   void     SaveAttributes(ostream &out, const char *name, const char *subname);
-   void     SetNdivisions(Int_t n=510, Bool_t optim=kTRUE);  // *MENU*
-   void     SetNdivisions(Int_t n1, Int_t n2, Int_t n3, Bool_t optim=kTRUE);
-   void     SetAxisColor(Color_t color=1);        // *MENU*
-   void     SetLabelColor(Color_t color=1);       // *MENU*
-   void     SetLabelFont(Style_t font=62);        // *MENU*
-   void     SetLabelOffset(Float_t offset=0.005); // *MENU*
-   void     SetLabelSize(Float_t size=0.04);      // *MENU*
-   void     SetTickLength(Float_t length=0.03);   // *MENU*
-   void     SetTitleOffset(Float_t offset=1);     // *MENU*
-   void     SetTitleSize(Float_t size=0.04);      // *MENU*
-   void     SetTitleColor(Color_t color=1);       // *MENU*
-   void     SetTitleFont(Style_t font=62);        // *MENU*
+   virtual Int_t    GetNdivisions()  const {return fNdivisions;}
+   virtual Color_t  GetAxisColor()   const {return fAxisColor;}
+   virtual Color_t  GetLabelColor()  const {return fLabelColor;}
+   virtual Style_t  GetLabelFont()   const {return fLabelFont;}
+   virtual Float_t  GetLabelOffset() const {return fLabelOffset;}
+   virtual Float_t  GetLabelSize()   const {return fLabelSize;}
+   virtual Float_t  GetTitleOffset() const {return fTitleOffset;}
+   virtual Float_t  GetTitleSize()   const {return fTitleSize;}
+   virtual Float_t  GetTickLength()  const {return fTickLength;}
+   virtual Color_t  GetTitleColor()  const {return fTitleColor;}
+   virtual Style_t  GetTitleFont()   const {return fTitleFont;}
+   virtual void     ResetAttAxis(Option_t *option="");
+   virtual void     SaveAttributes(ostream &out, const char *name, const char *subname);
+   virtual void     SetNdivisions(Int_t n=510, Bool_t optim=kTRUE);  // *MENU*
+   virtual void     SetNdivisions(Int_t n1, Int_t n2, Int_t n3, Bool_t optim=kTRUE);
+   virtual void     SetAxisColor(Color_t color=1);        // *MENU*
+   virtual void     SetLabelColor(Color_t color=1);       // *MENU*
+   virtual void     SetLabelFont(Style_t font=62);        // *MENU*
+   virtual void     SetLabelOffset(Float_t offset=0.005); // *MENU*
+   virtual void     SetLabelSize(Float_t size=0.04);      // *MENU*
+   virtual void     SetTickLength(Float_t length=0.03);   // *MENU*
+   virtual void     SetTitleOffset(Float_t offset=1);     // *MENU*
+   virtual void     SetTitleSize(Float_t size=0.04);      // *MENU*
+   virtual void     SetTitleColor(Color_t color=1);       // *MENU*
+   virtual void     SetTitleFont(Style_t font=62);        // *MENU*
 
    ClassDef(TAttAxis,4);  //Axis attributes
 };
