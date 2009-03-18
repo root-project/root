@@ -2376,8 +2376,8 @@ void TFile::ShowStreamerInfo()
 //______________________________________________________________________________
 UShort_t TFile::WriteProcessID(TProcessID *pidd)
 {
-   // Check if the ProcessID pidd is already in the file.
-   // if not, add it and return the index  number in the local file list
+   // Check if the ProcessID pidd is already in the file,
+   // if not, add it and return the index  number in the local file list.
 
    TProcessID *pid = pidd;
    if (!pid) pid = TProcessID::GetPID();
@@ -2395,7 +2395,7 @@ UShort_t TFile::WriteProcessID(TProcessID *pidd)
    this->WriteTObject(pid,name);
    this->IncrementProcessIDs();
    if (gDebug > 0) {
-      printf("WriteProcessID, name=%s, file=%s\n",name,GetName());
+      Info("WriteProcessID", "name=%s, file=%s", name, GetName());
    }
    return (UShort_t)npids;
 }
