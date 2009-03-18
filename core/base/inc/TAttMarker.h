@@ -40,17 +40,17 @@ public:
    TAttMarker();
    TAttMarker(Color_t color, Style_t style, Size_t msize);
    virtual ~TAttMarker();
-           void     Copy(TAttMarker &attmarker) const;
-   virtual Color_t  GetMarkerColor() const {return fMarkerColor;}
-   virtual Style_t  GetMarkerStyle() const {return fMarkerStyle;}
-   virtual Size_t   GetMarkerSize()  const {return fMarkerSize;}
-   virtual void     Modify();
-   virtual void     ResetAttMarker(Option_t *toption="");
-   virtual void     SaveMarkerAttributes(ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1);
-   virtual void     SetMarkerAttributes();  // *MENU*
-   virtual void     SetMarkerColor(Color_t tcolor=1) { fMarkerColor = tcolor;}
-   virtual void     SetMarkerStyle(Style_t mstyle=1) { fMarkerStyle = mstyle;}
-   virtual void     SetMarkerSize(Size_t msize=1)    { fMarkerSize  = msize;}
+   void     Copy(TAttMarker &attmarker) const;
+   Color_t  GetMarkerColor() const {return fMarkerColor;}
+   Style_t  GetMarkerStyle() const {return fMarkerStyle;}
+   Size_t   GetMarkerSize()  const {return fMarkerSize;}
+   void     Modify();
+   void     ResetAttMarker(Option_t *toption="");
+   void     SaveMarkerAttributes(ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1);
+   void     SetMarkerAttributes();  // *MENU*
+   void     SetMarkerColor(Color_t tcolor=1) { fMarkerColor = tcolor;}
+   void     SetMarkerStyle(Style_t mstyle=1) { fMarkerStyle = mstyle;}
+   void     SetMarkerSize(Size_t msize=1)    { fMarkerSize  = msize;}
 
    ClassDef(TAttMarker,2);  //Marker attributes
 };

@@ -39,16 +39,16 @@ public:
    TAttFill();
    TAttFill(Color_t fcolor,Style_t fstyle);
    virtual ~TAttFill();
-   void             Copy(TAttFill &attfill) const;
-   virtual Color_t  GetFillColor() const { return fFillColor; }
-   virtual Style_t  GetFillStyle() const { return fFillStyle; }
-   virtual Bool_t   IsTransparent() const;
-   virtual void     Modify();
-   virtual void     ResetAttFill(Option_t *option="");
-   virtual void     SaveFillAttributes(ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1001);
-   virtual void     SetFillAttributes(); // *MENU*
-   virtual void     SetFillColor(Color_t fcolor) { fFillColor = fcolor; }
-   virtual void     SetFillStyle(Style_t fstyle) { fFillStyle = fstyle; }
+   void     Copy(TAttFill &attfill) const;
+   Color_t  GetFillColor() const { return fFillColor; }
+   Style_t  GetFillStyle() const { return fFillStyle; }
+   Bool_t   IsTransparent() const;
+   void     Modify();
+   void     ResetAttFill(Option_t *option="");
+   void     SaveFillAttributes(ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1001);
+   void     SetFillAttributes(); // *MENU*
+   void     SetFillColor(Color_t fcolor) { fFillColor = fcolor; }
+   void     SetFillStyle(Style_t fstyle) { fFillStyle = fstyle; }
 
    ClassDef(TAttFill,1)  //Fill area attributes
 };

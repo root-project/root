@@ -225,6 +225,14 @@ void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
 
 
 //______________________________________________________________________________
+void TAttAxis::SetNdivisions(Int_t n1, Int_t n2, Int_t n3, Bool_t optim)
+{
+   //see function above
+   SetNdivisions(n1+100*n2+10000*n3, optim);
+}
+
+
+//______________________________________________________________________________
 void TAttAxis::SetTickLength(Float_t length)
 {
    // Set tick mark length
