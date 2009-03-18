@@ -114,7 +114,7 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t ad
    // If the new buffer is _not_ adopted and no memory allocation routine
    // is provided, a Fatal error will be issued if the Buffer attempts to
    // expand.
-   
+
    fMapCount = 0;
    fMapSize  = fgMapSize;
    fMap      = 0;
@@ -162,16 +162,16 @@ void TBufferFile::DecrementLevel(TVirtualStreamerInfo* /*info*/)
 //______________________________________________________________________________
 void TBufferFile::PushDataCache(TVirtualArray *obj)
 {
-   // Push a new data cache area onto the list of area to be used for 
+   // Push a new data cache area onto the list of area to be used for
    // temporarily store 'missing' data members.
 
    fCacheStack.push_back(obj);
 }
 
 //______________________________________________________________________________
-TVirtualArray *TBufferFile::PeekDataCache() const 
+TVirtualArray *TBufferFile::PeekDataCache() const
 {
-   // Return the 'current' data cache area from the list of area to be used for 
+   // Return the 'current' data cache area from the list of area to be used for
    // temporarily store 'missing' data members.
 
    if (fCacheStack.empty()) return 0;
@@ -179,9 +179,9 @@ TVirtualArray *TBufferFile::PeekDataCache() const
 }
 
 //______________________________________________________________________________
-TVirtualArray *TBufferFile::PopDataCache() 
+TVirtualArray *TBufferFile::PopDataCache()
 {
-   // Pop and Return the 'current' data cache area from the list of area to be used for 
+   // Pop and Return the 'current' data cache area from the list of area to be used for
    // temporarily store 'missing' data members.
 
    TVirtualArray *val = PeekDataCache();
@@ -1477,7 +1477,7 @@ void TBufferFile::ReadFastArray(void **start, const TClass *cl, Int_t n,
          //delete the object or collection
          void *old = start[j];
          start[j] = ReadObjectAny(cl);
-         if (old && old!=start[j] && 
+         if (old && old!=start[j] &&
              TStreamerInfo::CanDelete()
              // There are some cases where the user may set up a pointer in the (default)
              // constructor but not mark this pointer as transient.  Sometime the value
@@ -2193,15 +2193,15 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
       //baseOffset will be -1 if clRef does not inherit from clCast.
       baseOffset = clRef->GetBaseClassOffset(clCast);
       if (baseOffset == -1) {
-         // The 2 classes are unrelated, maybe there is a converter between the 2.  
-         
-         if (!clCast->GetSchemaRules() || 
-             !clCast->GetSchemaRules()->HasRuleWithSourceClass(clRef->GetName())) 
+         // The 2 classes are unrelated, maybe there is a converter between the 2.
+
+         if (!clCast->GetSchemaRules() ||
+             !clCast->GetSchemaRules()->HasRuleWithSourceClass(clRef->GetName()))
          {
             // There is no converter
             Error("ReadObject", "got object of wrong class! requested %s but got %s",
                   clCast->GetName(), clRef->GetName());
-            
+
             CheckByteCount(startpos, tag, (TClass*)0); // avoid mis-leading byte count error message
             return 0; // We better return at this point
          }
@@ -2509,7 +2509,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       cl = (TClass *)fMap->GetValue(clTag);
    }
 
-   if (cl && clReq && 
+   if (cl && clReq &&
        (!cl->InheritsFrom(clReq) &&
         !(clReq->GetSchemaRules() &&
           clReq->GetSchemaRules()->HasRuleWithSourceClass(cl->GetName()) )
@@ -3182,7 +3182,7 @@ UInt_t TBufferFile::GetTRefExecId()
 UShort_t TBufferFile::WriteProcessID(TProcessID *pid)
 {
    // Check if the ProcessID pid is already in the file.
-   // If not, add it and return the index  number in the local file list.
+   // If not, add it and return the index number in the local file list.
 
    TFile *file = (TFile*)GetParent();
    if (!file) return 0;
@@ -3195,10 +3195,10 @@ UShort_t TBufferFile::WriteProcessID(TProcessID *pid)
 void TBufferFile::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force)
 {
    // force writing the TStreamerInfo to the file
-   
+
    if (info) info->ForceWriteInfo((TFile*)GetParent(),force);
 }
-   
+
 
 //______________________________________________________________________________
 void TBufferFile::ForceWriteInfoClones(TClonesArray *a)
@@ -3319,7 +3319,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
          sinfo->BuildOld();
       }
    }
-   
+
    // Deserialize the object.
    void *ptr = &pointer;
    sinfo->ReadBuffer(*this, (char**)ptr,-1);
