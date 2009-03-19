@@ -283,7 +283,97 @@ Begin_Macro(source)
 }
 End_Macro
 Begin_Html
+The option "3" allows to shows the error as band.
 
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c41 = new TCanvas("c41","c41",200,10,600,400);
+   double x[] = {0, 1, 2, 3, 4};
+   double y[] = {0, 2, 4, 1, 3};
+   double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
+   double ey[] = {1, 0.5, 1, 0.5, 1};
+   TGraphErrors* ge = new TGraphErrors(5, x, y, ex, ey);
+   ge->SetFillColor(4);
+   ge->SetFillStyle(3010);
+   ge->Draw("a3");
+   return c41;
+}
+End_Macro
+Begin_Html
+
+The option "4" is similar to the option "3" except that the band is smoothed.
+As the following picture shows, this option should be used carefuly because
+the smoothing algorithm may show some (huge) "bouncing" effects. In some case 
+looks nicer than the option "3" (because it is smooth) but it can be 
+misleading.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c42 = new TCanvas("c42","c42",200,10,600,400);
+   double x[] = {0, 1, 2, 3, 4};
+   double y[] = {0, 2, 4, 1, 3};
+   double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
+   double ey[] = {1, 0.5, 1, 0.5, 1};
+   TGraphErrors* ge = new TGraphErrors(5, x, y, ex, ey);
+   ge->SetFillColor(6);
+   ge->SetFillStyle(3005);
+   ge->Draw("a4");
+   return c42;
+}
+End_Macro
+Begin_Html
+
+The following example shows how the option "[]" can be used to superimpose
+systematic errors on top of a graph with statistical errors. 
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c43 = new TCanvas("c43","c43",200,10,600,400);
+   c43->DrawFrame(0., -0.5, 6., 2);
+
+   double x[5]    = {1, 2, 3, 4, 5};
+   double zero[5] = {0, 0, 0, 0, 0};
+
+   // data set (1) with stat and sys errors
+   double y1[5]       = {1.2, 1.15, 1.19, 0.9, 1.4};
+   double ey_stat1[5] = {0.2, 0.18, 0.17, 0.2, 0.4};
+   double ey_sys1[5]  = {0.5, 0.71, 0.76, 0.5, 0.45};
+
+   // data set (2) with stat and sys errors
+   double y2[5]       = {0.25, 0.18, 0.29, 0.2, 0.21};
+   double ey_stat2[5] = {0.2, 0.18, 0.17, 0.2, 0.4};
+   double ey_sys2[5]  = {0.63, 0.19, 0.7, 0.2, 0.7};
+
+   // Now draw data set (1)
+
+   // We first have to draw it only with the stat errors
+   TGraphErrors *graph1 = new TGraphErrors(5, x, y1, zero, ey_stat1);
+   graph1->SetMarkerStyle(20);
+   graph1->Draw("P");
+
+   // Now we have to somehow depict the sys errors
+
+   TGraphErrors *graph1_sys = new TGraphErrors(5, x, y1, zero, ey_sys1);
+   graph1_sys->Draw("[]");
+
+   // Now draw data set (2)
+
+   // We first have to draw it only with the stat errors
+   TGraphErrors *graph2 = new TGraphErrors(5, x, y2, zero, ey_stat2);
+   graph2->SetMarkerStyle(24);
+   graph2->Draw("P");
+
+   // Now we have to somehow depict the sys errors
+
+   TGraphErrors *graph2_sys = new TGraphErrors(5, x, y2, zero, ey_sys2);
+   graph2_sys->Draw("[]");
+   return c43;
+}
+End_Macro
+Begin_Html
 
 <a name="GP03b"><h4><u>TGraphAsymmErrors</u></h4>
 A <tt>TGraphAsymmErrors</tt> is like a <tt>TGraphErrors</tt> but the errors
