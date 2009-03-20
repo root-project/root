@@ -148,6 +148,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
                            name = clname + cur + 2;
                         }
                      } else {
+                        istemplate = kFALSE;
                         name = clname + cur + 2;
                      }
                   }
@@ -204,7 +205,11 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
       // Forward declaration of template.
       fprintf(fp, "template <");
       for (UInt_t p = 0; p < nparam; ++p) {
-         fprintf(fp, "%s T%d", argtype[p], p);
+         if (p >= argtype.size() ) {
+            fprintf(fp, "/* missing */ T%d", p);
+         } else {
+            fprintf(fp, "%s T%d", argtype[p], p);
+         }
          if (p != (nparam - 1)) fprintf(fp, ", ");
       }
       fprintf(fp, "> class %s;\n", protoname.Data());
