@@ -237,7 +237,7 @@ a.contextheadentry:visited {
 }
 a.contextheadentry:hover {
    color: #FFFFFF;
-   background-color: #eeeeff;
+   background-color: #336299;
    text-decoration: underline;
 }
 td.contextheadentry {
@@ -258,6 +258,10 @@ a.contextheadarrow {
    color: inherit;
    padding-left: 0.3em;
    padding-right: 0.3em;
+}
+a.contextheadarrow:hover {
+   color: #FFFFFF;
+   background-color: #336299;
 }
 
 #contexttitle div {
@@ -354,6 +358,8 @@ a.linkeddoc {
 }
 #indxShortX a, #indxModules a {
    font-weight: bold;
+   display: inline-block;
+   padding: 0px 0.5em;
 }
 
 #searchform {

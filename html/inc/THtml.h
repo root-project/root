@@ -56,13 +56,15 @@ public:
       ClassDef(THelperBase, 0); // a helper object's base class
    };
 
+   class TFileSysEntry;
+
    //______________________________________________________________
    // Helper class to translate between classes and their
    // modules. Can be derived from and thus replaced by
    // the user; see THtml::SetModuleDefinition().
    class TModuleDefinition: public THelperBase {
    public:
-      virtual bool GetModule(TClass* cl, TString& out_modulename) const;
+      virtual bool GetModule(TClass* cl, TFileSysEntry* fse, TString& out_modulename) const;
       ClassDef(TModuleDefinition, 0); // helper class to determine a class's module
    };
 
@@ -72,12 +74,17 @@ public:
    // the user; see THtml::SetFileDefinition().
    class TFileDefinition: public THelperBase {
    public:
-      virtual bool GetDeclFileName(const TClass* cl, TString& out_filename, TString& out_fsys) const;
-      virtual bool GetImplFileName(const TClass* cl, TString& out_filename, TString& out_fsys) const;
+      virtual bool GetDeclFileName(const TClass* cl, TString& out_filename, TString& out_fsys,
+                                   TFileSysEntry** fse = 0) const;
+      virtual bool GetImplFileName(const TClass* cl, TString& out_filename, TString& out_fsys,
+                                   TFileSysEntry** fse = 0) const;
    protected:
-      virtual bool GetFileName(const TClass* cl, bool decl, TString& out_filename, TString& out_fsys) const;
+      virtual bool GetFileName(const TClass* cl, bool decl, TString& out_filename, TString& out_fsys,
+                               TFileSysEntry** fse = 0) const;
+      TString MatchFileSysName(TString& filename, TFileSysEntry** fse = 0) const;
 
       void SplitClassIntoDirFile(const TString& clname, TString& dir, TString& filename) const;
+      void NormalizePath(TString& path) const;
       void ExpandSearchPath(TString& path) const;
       ClassDef(TFileDefinition, 0); // helper class to determine a class's source files
    };
@@ -109,7 +116,8 @@ public:
       virtual void GetFullName(TString& fullname, Bool_t asIncluded) const {
          if (fParent) {
             fParent->GetFullName(fullname, asIncluded);
-            fullname += "/";
+            if (fullname[0])
+               fullname += "/";
          } else
             fullname = "";
          fullname += fName;
@@ -310,6 +318,7 @@ public:
    Bool_t              CopyFileFromEtcDir(const char* filename) const;
    virtual void        CreateAuxiliaryFiles() const;
    virtual TClass*     GetClass(const char *name) const;
+   const char*         ShortType(const char *name) const;
    const char*         GetCounter() const { return fCounter; }
    void                GetModuleMacroPath(const TString& module, TString& out_path) const { GetPathDefinition().GetMacroPath(module, out_path); }
    virtual bool        GetDeclFileName(TClass* cl, Bool_t filesys, TString& out_name) const;
@@ -374,8 +383,10 @@ protected:
    };
 
    struct DocEntityInfo_t {
+      DocEntityInfo_t(): fClasses(500, 3) {}
       TString        fClassFilter;     // filter used for buidling known classes
       THashList      fClasses;         // known classes
+      mutable THashList fShortClassNames; // class names with default template args replaced
       THashList      fModules;         // known modules
       THashList      fLibDeps;         // Library dependencies
    };

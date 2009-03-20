@@ -22,6 +22,7 @@
 #include "TEnv.h"
 #include "TGlobal.h"
 #include "THtml.h"
+#include "TInterpreter.h"
 #include "TMethod.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -309,8 +310,29 @@ void TDocParser::AddClassDataMembersRecursively(TBaseClass* bc) {
 
       const Int_t flagEnumConst = G__BIT_ISENUM | G__BIT_ISCONSTANT | G__BIT_ISSTATIC;
       if ((dm->Property() & flagEnumConst) == flagEnumConst
-         && dm->GetDataType() && dm->GetDataType()->GetType() == kInt_t)
-         mtype += 3;
+          && dm->GetDataType() && dm->GetDataType()->GetType() == kInt_t) {
+         mtype = 3;
+         // The access of the enum constant is defined by the access of the enum:
+         // for CINT, all enum constants are public.
+         // There is no TClass or TDataType for enum types; instead, use CINT:
+         /*
+           No - CINT does not know their access restriction.
+           With CINT5 we have no way of determining it...
+           Wait for CINT57
+
+         ClassInfo_t* enumCI = gInterpreter->ClassInfo_Factory(dm->GetTypeName());
+         if (enumCI) {
+            Long_t prop = gInterpreter->ClassInfo_Property(enumCI);
+            if (kIsPrivate & prop)
+               mtype = 3;
+            else if (kIsProtected & prop)
+               mtype = 4;
+            else if (kIsPublic & prop)
+               mtype = 5;
+            gInterpreter->ClassInfo_Delete(enumCI);
+         }
+         */
+      }
 
       fDataMembers[mtype].Add(dm);
    }
@@ -352,7 +374,7 @@ void TDocParser::AnchorFromLine(const TString& line, TString& anchor) {
 
 //______________________________________________________________________________
 void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpath,
-                         Bool_t isCode)
+                         Bool_t isCode, Bool_t interpretDirectives)
 {
    // Parse text file "in", add links etc, and write output to "out".
    // If "isCode", "in" is assumed to be C++ code.
@@ -376,9 +398,25 @@ void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpat
       DecorateKeywords(fLineSource);
       ProcessComment();
 
-      if (!InContext(kDirective)) {
-         GetDocOutput()->AdjustSourcePath(fLineSource, relpath);
-         out << fLineSource << endl;
+      // Changes in this bit of code have consequences for:
+      // * module index,
+      // * source files,
+      // * THtml::Convert() e.g. in tutorials/html/MakeTutorials.C
+      if (!interpretDirectives) {
+         // Only write the raw, uninterpreted directive code:
+         if (!InContext(kDirective)) {
+            GetDocOutput()->AdjustSourcePath(fLineSource, relpath);
+            out << fLineSource << endl;
+         }
+      } else {
+         // Write source for source and interpreted directives if they exist.
+         if (fLineComment.Length() ) { 	 
+            GetDocOutput()->AdjustSourcePath(fLineComment, relpath); 	 
+            out << fLineComment << endl; 	 
+         } else if (!InContext(kDirective)) {
+            GetDocOutput()->AdjustSourcePath(fLineSource, relpath);
+            out << fLineSource << endl;
+         }
       }
    }
 }

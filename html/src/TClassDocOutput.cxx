@@ -317,7 +317,7 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
             if (access < 3) {
                if (member->Property() & G__BIT_ISSTATIC)
                   classFile << "static ";
-               std::string shortTypeName(TClassEdit::ShortType(member->GetFullTypeName(), 1<<7));
+               std::string shortTypeName(fHtml->ShortType(member->GetFullTypeName()));
                fParser->DecorateKeywords(classFile, shortTypeName.c_str());
             }
 

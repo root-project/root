@@ -78,7 +78,8 @@ void THtml::THelperBase::SetOwner(THtml* html) {
 
 
 //______________________________________________________________________________
-bool THtml::TModuleDefinition::GetModule(TClass* cl, TString& out_modulename) const
+bool THtml::TModuleDefinition::GetModule(TClass* cl, TFileSysEntry* fse,
+                                         TString& out_modulename) const
 {
    // Set out_modulename to cl's module name; return true if it's valid.
    // If applicable, the module contains super modules separated by "/".
@@ -96,28 +97,40 @@ bool THtml::TModuleDefinition::GetModule(TClass* cl, TString& out_modulename) co
    //
    // If your software cannot be mapped into this scheme then derive your
    // own class from TModuleDefinition and pass it to THtml::SetModuleDefinition().
+   //
+   // The fse parameter is used to determine the relevant part of the path, i.e.
+   // to not include parent directories of a TFileSysRoot.
 
    out_modulename = "USER";
    if (!cl) return false;
 
    // Filename: impl or decl?
    TString filename;
-   if (!GetOwner()->GetImplFileName(cl, kFALSE, filename))
-      if (!GetOwner()->GetDeclFileName(cl, kFALSE, filename))
-         return false;
+   if (fse) fse->GetFullName(filename, kFALSE);
+   else {
+      if (!GetOwner()->GetImplFileName(cl, kFALSE, filename))
+         if (!GetOwner()->GetDeclFileName(cl, kFALSE, filename))
+            return false;
+   }
+   TString inputdir = GetOwner()->GetInputPath();
+   TString tok;
+   Ssiz_t start = 0;
+   // For -Idir/sub and A.h in dir/sub/A.h, use sub as module name if 
+   // it would eb empty otehrwise.
+   TString trailingInclude;
+   while (inputdir.Tokenize(tok, start, THtml::GetDirDelimiter())) {      
+      if (filename.BeginsWith(tok)) {
+         if (tok.EndsWith("/") || tok.EndsWith("\\"))
+            tok.Remove(tok.Length() - 1);
+         trailingInclude = gSystem->BaseName(tok);
+         filename.Remove(0, tok.Length());
+         break;
+      }
+   }
 
    // take the directory name without "/" or leading "."
    out_modulename = gSystem->DirName(filename);
 
-   TString inputdir = GetOwner()->GetInputPath();
-   TString tok;
-   Ssiz_t start = 0;
-   while (inputdir.Tokenize(tok, start, THtml::GetDirDelimiter())) {      
-      if (out_modulename.BeginsWith(tok)) {
-         out_modulename.Remove(0, tok.Length());
-         break;
-      }
-   }
    while (out_modulename[0] == '.')
       out_modulename.Remove(0, 1);
    out_modulename.ReplaceAll("\\", "/");
@@ -125,6 +138,12 @@ bool THtml::TModuleDefinition::GetModule(TClass* cl, TString& out_modulename) co
       out_modulename.Remove(0, 1);
    while (out_modulename.EndsWith("/"))
       out_modulename.Remove(out_modulename.Length() - 1);
+
+   if (!out_modulename[0])
+      out_modulename = trailingInclude;
+
+   if (!out_modulename[0])
+      out_modulename = trailingInclude;
 
    // remove "/src", "/inc"
    if (out_modulename.EndsWith("/src")
@@ -205,7 +224,8 @@ void THtml::TFileDefinition::ExpandSearchPath(TString& path) const
 }
 
 //______________________________________________________________________________
-void THtml::TFileDefinition::SplitClassIntoDirFile(const TString& clname, TString& dir, TString& filename) const
+void THtml::TFileDefinition::SplitClassIntoDirFile(const TString& clname, TString& dir,
+                                                   TString& filename) const
 {
    // Given a class name with a scope, split the class name into directory part
    // and file name: A::B::C becomes module B, filename C.
@@ -224,7 +244,8 @@ void THtml::TFileDefinition::SplitClassIntoDirFile(const TString& clname, TStrin
 
 
 //______________________________________________________________________________
-bool THtml::TFileDefinition::GetDeclFileName(const TClass* cl, TString& out_filename, TString& out_fsys) const
+bool THtml::TFileDefinition::GetDeclFileName(const TClass* cl, TString& out_filename,
+                                             TString& out_fsys, TFileSysEntry** fse) const
 {
    // Determine cl's declaration file name. Usually it's just
    // cl->GetDeclFileName(), but sometimes conversions need to be done
@@ -236,11 +257,12 @@ bool THtml::TFileDefinition::GetDeclFileName(const TClass* cl, TString& out_file
    // If your software cannot be mapped into this scheme then derive your
    // own class from TFileDefinition and pass it to THtml::SetFileDefinition().
 
-   return GetFileName(cl, true, out_filename, out_fsys);
+   return GetFileName(cl, true, out_filename, out_fsys, fse);
 }
 
 //______________________________________________________________________________
-bool THtml::TFileDefinition::GetImplFileName(const TClass* cl, TString& out_filename, TString& out_fsys) const
+bool THtml::TFileDefinition::GetImplFileName(const TClass* cl, TString& out_filename,
+                                             TString& out_fsys, TFileSysEntry** fse) const
 {
    // Determine cl's implementation file name. Usually it's just
    // cl->GetImplFileName(), but sometimes conversions need to be done.
@@ -252,12 +274,57 @@ bool THtml::TFileDefinition::GetImplFileName(const TClass* cl, TString& out_file
    // If your software cannot be mapped into this scheme then derive your
    // own class from TFileDefinition and pass it to THtml::SetFileDefinition().
 
-   return GetFileName(cl, false, out_filename, out_fsys);
+   return GetFileName(cl, false, out_filename, out_fsys, fse);
 }
 
 
 //______________________________________________________________________________
-bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& out_filename, TString& out_fsys) const
+void THtml::TFileDefinition::NormalizePath(TString& filename) const
+{
+   // Remove "/./" and collapse "/subdir/../" to "/"
+   filename = filename.ReplaceAll("\\.\\","\\");
+   static const char* delim[] = {"/", "\\\\"};
+   for (int i = 0; i < 2; ++i) {
+      const char* d = delim[i];
+      TPRegexp reg(TString::Format("%s[^%s]+%s..%s", d, d, d, d));
+      filename = filename.ReplaceAll(TString::Format("%c.%c", d[0], d[0]), TString(d[0]));
+      while (reg.Substitute(filename, TString(d[0]), "", 0, 1)) {}
+   }
+}
+
+
+//______________________________________________________________________________
+TString THtml::TFileDefinition::MatchFileSysName(TString& filename, TFileSysEntry** fse) const
+{
+   // Find filename in the list of system files; return the system file name
+   // and change filename to the file name as included.
+   // filename must be normalized (no "/./" etc) before calling.
+
+   TList* bucket = GetOwner()->GetLocalFiles()->GetEntries().GetListForObject(gSystem->BaseName(filename));
+   TString filesysname;
+   if (bucket) {
+      TIter iFS(bucket);
+      TFileSysEntry* fsentry = 0;
+      while ((fsentry = (TFileSysEntry*) iFS())) {
+         fsentry->GetFullName(filesysname, kTRUE); // get the short version
+         if (!filename.EndsWith(filesysname)) {
+            filesysname = "";
+            continue;
+         }
+         filename = filesysname;
+         fsentry->GetFullName(filesysname, kFALSE); // get the long version
+         if (fse) *fse = fsentry;
+         break;
+      }
+   }
+   return filesysname;
+}
+
+
+//______________________________________________________________________________
+bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl,
+                                         TString& out_filename, TString& out_fsys,
+                                         TFileSysEntry** fse) const
 {
    // Common implementation for GetDeclFileName(), GetImplFileName()
 
@@ -273,6 +340,8 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
    TString filesysname;
 
    TString clfile = decl ? cl->GetDeclFileName() : cl->GetImplFileName();
+   NormalizePath(clfile);
+             
    out_filename = clfile;
    if (clfile.Length()) {
       // check that clfile doesn't start with one of the include paths;
@@ -302,11 +371,9 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
          out_filename = clfile;
       } else {
          // header file without a -Iinclude-dir prefix
-         TFileSysEntry* fsentry = (TFileSysEntry*) GetOwner()->GetLocalFiles()->GetEntries().FindObject(clfile);
-         if (fsentry) {
-            fsentry->GetFullName(filesysname, kFALSE);
-            clfile = filesysname;
-            out_filename = filesysname;
+         filesysname = MatchFileSysName(out_filename, fse);
+         if (filesysname[0]) {
+            clfile = out_filename;
          }
       }
    } else {
@@ -329,11 +396,10 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
          filesysname += ".h";
       else
          filesysname += ".cxx";
-      TFileSysEntry* fsentry = (TFileSysEntry*) GetOwner()->GetLocalFiles()->GetEntries().FindObject(filesysname);
-      if (fsentry) {
-         fsentry->GetFullName(filesysname, kFALSE);
-         clfile = filesysname;
-         out_filename = filesysname;
+      out_filename = filesysname;
+      filesysname = MatchFileSysName(out_filename, fse);
+      if (filesysname[0]) {
+         clfile = out_filename;
       }
    }
 
@@ -348,11 +414,10 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
          if (posExt != kNPOS)
             filesysname.Remove(posExt);
          filesysname += ".cxx";
-         TFileSysEntry* fsentry = (TFileSysEntry*) GetOwner()->GetLocalFiles()->GetEntries().FindObject(filesysname);
-         if (fsentry) {
-            fsentry->GetFullName(filesysname, kFALSE);
-            clfile = filesysname;
-            out_filename = filesysname;
+         out_filename = filesysname;
+         filesysname = MatchFileSysName(out_filename, fse);
+         if (filesysname[0]) {
+            clfile = out_filename;
          }
       }
    }
@@ -415,7 +480,10 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
    else possiblePath=".";
 
    out_fsys = gSystem->FindFile(possiblePath, possibleFileName, kReadPermission);
-   if (out_fsys.Length()) return true;
+   if (out_fsys.Length()) {
+      NormalizePath(out_fsys);
+      return true;
+   }
    out_filename = "";
    return false;
 }
@@ -1526,11 +1594,8 @@ void THtml::CreateListOfClasses(const char* filter)
       TClass *classPtr = TClass::GetClass((const char *) cname, kTRUE);
       if (!classPtr) continue;
 
-      std::string shortName(cname);
-      if (strchr(cname,'<')) {
-         shortName = TClassEdit::ShortType(cname, 1<<7);
-         cname = shortName.c_str();
-      }
+      std::string shortName(ShortType(cname));
+      cname = shortName.c_str();
 
       TString s = cname;
       Bool_t matchesSelection = re.Match(s);
@@ -1541,6 +1606,7 @@ void THtml::CreateListOfClasses(const char* filter)
       TString src;
       TString srcFS;
       TString htmlfilename;
+      TFileSysEntry* fse = 0;
 
       TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cname);
       if (cdi) {
@@ -1552,7 +1618,7 @@ void THtml::CreateListOfClasses(const char* filter)
       }
 
       if (!hdrFS.Length()) {
-         if (!GetFileDefinition().GetDeclFileName(classPtr, hdr, hdrFS)) {
+         if (!GetFileDefinition().GetDeclFileName(classPtr, hdr, hdrFS, &fse)) {
             // we don't even know where the class is defined;
             // just skip. Silence if it doesn't match the selection anyway
             if (i == -1 ) {
@@ -1628,7 +1694,7 @@ void THtml::CreateListOfClasses(const char* filter)
 
       Bool_t haveSource = (srcFS.Length());
       if (!haveSource)
-         haveSource = GetFileDefinition().GetImplFileName(classPtr, src, srcFS);
+         haveSource = GetFileDefinition().GetImplFileName(classPtr, src, srcFS, fse ? 0 : &fse);
 
       if (!haveSource) {
          classesImplFileNotFound.AddLast(classPtr);
@@ -1651,7 +1717,7 @@ void THtml::CreateListOfClasses(const char* filter)
       cdi->SetSelected(matchesSelection);
 
       TString modulename;
-      GetModuleDefinition().GetModule(classPtr, modulename);
+      GetModuleDefinition().GetModule(classPtr, fse, modulename);
       if (!modulename.Length() || modulename == "USER") 
          GetModuleNameForClass(modulename, classPtr);
       
@@ -1786,8 +1852,12 @@ void THtml::CreateListOfClasses(const char* filter)
       // if we have these modules we're probably building the root doc
       fProductName = "ROOT";
 
-   if (fProductName == "(UNKNOWN PRODUCT)")
+   if (fProductName == "(UNKNOWN PRODUCT)") {
       Warning("CreateListOfClasses", "Product not set. You should call gHtml->SetProduct(\"MyProductName\");");
+   } else if (fProductName != "ROOT") {
+      if (GetViewCVS().Contains("http://root.cern.ch/"))
+         SetViewCVS("");
+   }
 
    if (fDocEntityInfo.fModules.GetEntries() == 1
       && fDocEntityInfo.fModules.At(0)->GetName()
@@ -2430,4 +2500,26 @@ void THtml::SetImplFileName(TClass* cl, const char* filename)
       fDocEntityInfo.fClasses.Add(cdi);
    } else
       cdi->SetImplFileName(filename);
+}
+
+//______________________________________________________________________________
+const char* THtml::ShortType(const char* name) const
+{
+   // Get short type name, i.e. with default templates removed.
+   const char* tmplt = strchr(name, '<');
+   if (!tmplt) return name;
+   tmplt = strrchr(tmplt, ':');
+   if (tmplt > name && tmplt[-1] == ':') {
+      // work-around for CINT bug: template instantiation can produce bogus
+      // typedefs e.g. in namespace ROOT::Math::ROOT::Math instead of ROOT::Math.
+      TString namesp(name, tmplt - name - 1);
+      // is the enclosing namespace known?
+      if (!GetClass(namesp)) return name;
+   }
+   TObject* scn = fDocEntityInfo.fShortClassNames.FindObject(name);
+   if (!scn) {
+      scn = new TNamed(name, TClassEdit::ShortType(name, 1<<7));
+      fDocEntityInfo.fShortClassNames.Add(scn);
+   }
+   return scn->GetTitle();
 }

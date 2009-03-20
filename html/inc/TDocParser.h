@@ -27,8 +27,8 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
-#ifndef ROOT_TList
-#include "TList.h"
+#ifndef ROOT_THashList
+#include "THashList.h"
 #endif
 #ifndef ROOT_TString
 #include "TString.h"
@@ -126,7 +126,7 @@ protected:
    Bool_t         fAllowDirectives;  // whether directives are to be interpreted
    std::set<UInt_t> fExtraLinesWithAnchor; // lines that need an additional anchor
    TString        fSourceInfo[kNumSourceInfos];// author, last changed, ...
-   TList          fMethods[3];      // methods as TMethodWrapper objects (by access)
+   THashList      fMethods[3];      // methods as TMethodWrapper objects (by access)
    TList          fDataMembers[6];  // data members (by access, plus enums)
 
    static std::set<std::string>  fgKeywords; // C++ keywords
@@ -167,7 +167,7 @@ public:
 
    static void   AnchorFromLine(const TString& line, TString& anchor);
    void          Convert(std::ostream& out, std::istream& in, const char* relpath,
-                         Bool_t isCode);
+                         Bool_t isCode, Bool_t interpretDirectives);
    void          DecrementMethodCount(const char* name);
    virtual void  DecorateKeywords(std::ostream& out, const char* text);
    virtual void  DecorateKeywords(TString& text);

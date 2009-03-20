@@ -515,7 +515,8 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
    out << "<div class=\"listing\"><pre class=\"listing\">" << endl;
 
    TDocParser parser(*this);
-   parser.Convert(out, in, relpath, (includeOutput) /* determines whether it's code or not */);
+   parser.Convert(out, in, relpath, (includeOutput) /* determines whether it's code or not */,
+                  kFALSE /*interpretDirectives*/);
 
    out << "</pre></div>" << endl;
 
@@ -1193,7 +1194,7 @@ void TDocOutput::CreateClassTypeDefs()
             << "<div class=\"classdescr\">" << endl;
 
          outfile << dtName << " is a typedef to ";
-         std::string shortClsName(TClassEdit::ShortType(cls->GetName(), 1<<7));
+         std::string shortClsName(fHtml->ShortType(cls->GetName()));
          parser.DecorateKeywords(outfile, shortClsName.c_str());
          outfile << endl
             << "</div>" << std::endl 
@@ -1546,7 +1547,7 @@ void TDocOutput::NameSpace2FileName(TString& name)
    Ssiz_t posTemplate = encScope.Index('<');
    if (posTemplate != kNPOS) {
       // strip default template params
-      name = TClassEdit::ShortType(name, 1<<7);
+      name = fHtml->ShortType(name);
       TString templateArgs = encScope(posTemplate, encScope.Length());
       encScope.Remove(posTemplate, encScope.Length());
       // shorten the name a bit:
@@ -1625,7 +1626,7 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
             if (in) {
                out << "<pre>"; // this is what e.g. the html directive expects
                TDocParser parser(*this);
-               parser.Convert(out, in, "./", kFALSE /* no code */);
+               parser.Convert(out, in, "./", kFALSE /* no code */, kTRUE /*process Directives*/);
                out << "</pre>";
             }
          } else if (filename.EndsWith(".html", TString::kIgnoreCase)) {
@@ -1666,7 +1667,7 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
          if (inFurther && outFurther) {
             outFurther << "<pre>"; // this is what e.g. the html directive expects
             TDocParser parser(*this);
-            parser.Convert(outFurther, inFurther, "../", kFALSE /*no code*/);
+            parser.Convert(outFurther, inFurther, "../", kFALSE /*no code*/, kTRUE /*process Directives*/);
             outFurther << "</pre>";
          }
       } else {
@@ -1788,7 +1789,7 @@ void TDocOutput::ReferenceEntity(TSubString& str, TDataType* entity, const char*
       /* is class/ struct / union */
       isClassTypedef = isClassTypedef && (entity->Property() & 7);
    if (isClassTypedef) {
-      std::string shortTypeName(TClassEdit::ShortType(entity->GetFullTypeName(), 1<<7));
+      std::string shortTypeName(fHtml->ShortType(entity->GetFullTypeName()));
       cdi = (TClassDocInfo*) GetHtml()->GetListOfClasses()->FindObject(shortTypeName.c_str());
    }
    if (cdi) {
