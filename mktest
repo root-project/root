@@ -31,11 +31,14 @@ r=`echo $1 | grep '/'`
 
 #Make Direcroty	
 mkdir $1
+svn add $1
 
 #Copy Makefile.template to the new test directory
 cp scripts/Makefile.template $1/Makefile
-cp scripts/cvsignore.template $1/.cvsignore
+svn propset svn:ignore -F scripts/cvsignore.template $1
 cp scripts/rootrc.template $1/.rootrc
+
+svn add $1/Makefile $1/.rootrc
 
 #Add to CVS
 #cvs add $1
