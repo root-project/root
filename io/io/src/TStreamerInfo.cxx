@@ -2002,11 +2002,43 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    }
    fprintf(fp," {\n");
 
+   // Generate forward declaration nested classes.
+   if (subClasses && subClasses->GetEntries()) {
+      bool needheader = true;
+      
+      TIter subnext(subClasses);
+      TStreamerInfo *subinfo;
+      Int_t len = strlen(GetName());
+      while ((subinfo = (TStreamerInfo*)subnext())) {
+         if (strncmp(GetName(),subinfo->GetName(),len)==0) {
+            if (subinfo->GetName()[len+1]==':' && strstr(subinfo->GetName()+len+2,":")==0) {
+               if (needheader) {
+                  fprintf(fp,"\npublic:\n");
+                  fprintf(fp,"// Nested classes forward declaration.\n");
+                  needheader = false;
+               }
+               TString protoname;
+               UInt_t numberOfClasses = 0;
+               UInt_t numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, subinfo->GetName() + len+2, kFALSE, protoname, &numberOfClasses, kFALSE);
+
+               fprintf(fp, ";\n");
+               for (UInt_t i = 0;i < numberOfClasses;++i) {
+                  fprintf(fp, "}; // end of class.\n");
+               }
+               if (numberOfNamespaces > 0) {
+                  Error("GenerateDeclaration","Nested classes %s thought to be inside a namespace inside the class %s",subinfo->GetName(),GetName());
+               }
+            }
+         }
+      }
+   }
+   
+   fprintf(fp,"\npublic:\n");
+   fprintf(fp,"// Nested classes declaration.\n");
+
    // Generate nested classes.
    if (subClasses && subClasses->GetEntries()) {
-      fprintf(fp,"\npublic:\n");
-
-      TIter subnext(subClasses);
+      TIter subnext(subClasses,kIterBackward);
       TStreamerInfo *subinfo;
       Int_t len = strlen(GetName());
       while ((subinfo = (TStreamerInfo*)subnext())) {
@@ -2018,18 +2050,19 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       }
    }
 
-   fprintf(fp,"\npublic:\n");
-
    // Now checks if any of the parameter of data member which are of templated type
    // are nested __and__ not in the list of subclasses (hence empty).
    next.Reset();
    while ((element = (TStreamerElement*)next())) {
       const char *eclname = element->GetTypeName();
       if (strchr(eclname,'<')==0) continue;
-
+      
       TMakeProject::GenerateEmptyNestedClass(fp, GetName(), eclname);
    }
-
+   
+   fprintf(fp,"\npublic:\n");
+   fprintf(fp,"// Data Members.\n");
+   
    // Generate data members.
    char *line = new char[kMaxLen];
    char name[128];
@@ -2349,7 +2382,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    fprintf(fp,"\n");
 
    TString sourcename; sourcename.Form( "%s/%sProjectSource.cxx", dirname, dirname );
-   FILE *sfp = fopen( sourcename.Data(), "a");
+   FILE *sfp = fopen( sourcename.Data(), "a" );
    GenerateDeclaration(fp, sfp, subClasses);
 
    fprintf(fp,"#endif\n");
