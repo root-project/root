@@ -3162,8 +3162,9 @@ void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total,
 {
    // Report progress.
 
-   Info("Progress","%s: %lld %lld %f %f %f %f", sl->GetName(),
-                   processed, bytesread, initTime, procTime, evtrti, mbrti);
+   PDB(kGlobal,2)
+      Info("Progress","%s: %lld %lld %f %f %f %f", sl->GetName(),
+                      processed, bytesread, initTime, procTime, evtrti, mbrti);
 
    Int_t idx = fSlaves.IndexOf(sl);
    if (fSlaveTotals[idx] != total)
