@@ -24,7 +24,11 @@ CINT7DIRIOSEN := $(MODDIRBASE)/iosenum
 ##### libCint7 #####
 CINT7CONF     := $(CINT7DIRI)/configcint.h
 CINT7H        := $(filter-out $(CINT7CONF),$(wildcard $(CINT7DIRI)/*.h))
+ifeq ($(BUILDBOTHCINT),)
+CINT7HT       := $(sort $(patsubst $(CINT7DIRI)/%.h,include/%.h,$(CINT7H) $(CINT7CONF)))
+else
 CINT7HT       := $(sort $(patsubst $(CINT7DIRI)/%.h,include/cint7/%.h,$(CINT7H) $(CINT7CONF)))
+endif
 CINT7S1       := $(wildcard $(MODDIRS)/*.c)
 CINT7S2       := $(wildcard $(CINT7DIRS)/*.cxx) $(CINT7DIRSD)/longif.cxx $(CINT7DIRSD)/Apiif.cxx $(CINT7DIRSD)/stdstrct.o
 
@@ -183,19 +187,31 @@ CINT7DEP      += $(CINT7DIRS)/pragma_tmp.d
 CINT7ALLDEP   += $(CINT7DIRS)/loadfile_tmp.d
 CINT7ALLDEP   += $(CINT7DIRS)/pragma_tmp.d
 
+ifeq ($(BUILDBOTHCINT),)
+CINT7LIB      := $(LPATH)/libCint.$(SOEXT)
+else
 CINT7LIB      := $(LPATH)/libCint7.$(SOEXT)
+endif
 
 ##### cint #####
 CINT7EXES     := $(CINT7DIRM)/cppmain.cxx
 CINT7EXEO     := $(CINT7EXES:.cxx=.o)
 CINT7EXEDEP   := $(CINT7EXEO:.o=.d)
 CINT7TMP      := $(CINT7DIRM)/cint_tmp$(EXEEXT)
+ifeq ($(BUILDBOTHCINT),)
+CINT7         := bin/cint$(EXEEXT)
+else
 CINT7         := bin/cint7$(EXEEXT)
+endif
 
 ##### makecint #####
 MAKECINT7S    := $(CINT7DIRT)/makecint.cxx
 MAKECINT7O    := $(MAKECINT7S:.cxx=.o)
+ifeq ($(BUILDBOTHCINT),)
+MAKECINT7     := bin/makecint$(EXEEXT)
+else
 MAKECINT7     := bin/makecint7$(EXEEXT)
+endif
 
 ##### iosenum.h #####
 IOSENUM7      := $(MODDIR)/include/iosenum.h
@@ -243,6 +259,7 @@ G__CFG_CONF     := $(CINT7CONF)
 G__CFG_CONFMK   := $(CINT7CONFMK)
 
 ##### used by cintdlls.mk #####
+ifneq ($(BUILDBOTHCINT),)
 CINTDLLDIRSTL_BAK := $(CINTDLLDIRSTL) 
 CINTDLLDIRDLLS_BAK := $(CINTDLLDIRDLLS) 
 CINTDLLDIRDLLSTL_BAK := $(CINTDLLDIRDLLSTL)
@@ -252,13 +269,14 @@ CINTDLLDICTVER_BAK := $(CINTDLLDICTVER)
 CINTDLLCINTTMP_BAK := $(CINTDLLCINTTMP) 
 CINTDLLCFLAGS_BAK := $(CINTDLLCFLAGS) 
 CINTDLLCXXFLAGS_BAK := $(CINTDLLCXXFLAGS) 
+endif
 
 CINTDLLDIRSTL    := $(CINT7DIRSTL)
 CINTDLLDIRDLLS   := $(CINT7DIRDLLS)
 CINTDLLDIRDLLSTL := $(CINT7DIRDLLSTL)
 CINTDLLDIRL      := $(CINT7DIRL)
 CINTDLLIOSENUM   := $(IOSENUM7)
-CINTDLLDICTVER   := $(CINTDIRI)/cintdictversion.h
+CINTDLLDICTVER   := $(CINT7DIRI)/cintdictversion.h
 CINTDLLCINTTMP   := $(CINT7TMP)
 CINTDLLCFLAGS    := $(filter-out -DG__CINTBODY,$(CINT7CFLAGS))
 CINTDLLCXXFLAGS  := $(filter-out -DG__CINTBODY,$(CINT7CXXFLAGS))
@@ -271,15 +289,23 @@ CINTDLLROOTCINTTMPDEP = $(ROOTCINT7TMPDEP)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
+ifeq ($(BUILDBOTHCINT),)
+include/%.h: $(CINT7DIRI)/%.h
+		@(if [ ! -d "include" ]; then    \
+			mkdir -p include;             \
+		fi)
+		cp $< $@
+else
 include/cint7/%.h: $(CINT7DIRI)/%.h
 		@(if [ ! -d "include/cint7" ]; then    \
 			mkdir -p include/cint7;             \
 		fi)
 		cp $< $@
+endif
 
 $(CINT7LIB):    $(CINT7O) $(CINT7LIBDEP) $(REFLEXLIB)
 		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" \
-		   libCint7.$(SOEXT) $@ "$(CINT7O)" "$(CINT7LIBEXTRA) $(REFLEXLL)"
+		   $(notdir $(CINT7LIB)) $@ "$(CINT7O)" "$(CINT7LIBEXTRA) $(REFLEXLL)"
 
 $(CINT7):       $(CINT7EXEO) $(CINT7LIB) $(REFLEXLIB)
 		$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(RPATH) $(CINT7LIBS) $(CILIBS)
@@ -325,6 +351,23 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(CINT7HT) $(CINT7CONF)
 		   @rm -rf include/cint7
 
+ifeq ($(BUILDBOTHCINT),)
+# Transition rules
+all-cint: all-cint7
+clean-cint: clean-cint7
+distclean-cint: distclean-cint7
+
+CINTO    = $(CINT7O)
+CINTALLO = $(CINT7ALLO)
+CINTTMPO = $(CINT7TMPO) $(REFLEXO)
+CINTLIB  = $(CINT7LIB)
+CINTLIBS := $(subst Cint7,Cint,$(CINT7LIBS))
+BOOTLIBS := $(BOOTLIBS) $(RFLX_REFLEXLL)
+ROOTLIBS := $(ROOTLIBS) $(RFLX_REFLEXLL) 
+
+CINTLIB : $(REFLEXLIB)
+endif
+
 distclean:: distclean-$(MODNAME)
 
 ##### extra rules ######
@@ -361,6 +404,7 @@ include $(CINT7CONFMK)
 ##### cintdlls #####
 include cint/ROOT/cintdlls.mk
 
+ifneq ($(BUILDBOTHCINT),)
 CINTDLLDIRSTL := $(CINTDLLDIRSTL_BAK) 
 CINTDLLDIRDLLS := $(CINTDLLDIRDLLS_BAK) 
 CINTDLLDIRDLLSTL := $(CINTDLLDIRDLLSTL_BAK)
@@ -370,3 +414,5 @@ CINTDLLDICTVER := $(CINTDLLDICTVER_BAK)
 CINTDLLCINTTMP := $(CINTDLLCINTTMP_BAK) 
 CINTDLLCFLAGS := $(CINTDLLCFLAGS_BAK) 
 CINTDLLCXXFLAGS := $(CINTDLLCXXFLAGS_BAK) 
+endif
+

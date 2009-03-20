@@ -51,7 +51,7 @@ endif
 ROOTPYC      := $(ROOTPY:.py=.pyc)
 ROOTPYO      := $(ROOTPY:.py=.pyo)
 
-ifeq ($(BUILDCINT7),yes)
+ifneq ($(BUILDBOTHCINT),)
 ifeq ($(ARCH),win32)
 PYROOTEXTRALIB   := $(LPATH)/libCint.lib
 else

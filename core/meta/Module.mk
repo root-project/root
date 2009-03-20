@@ -40,9 +40,9 @@ METATCINTMAP := $(METATCINTLIB:.$(SOEXT)=.rootmap)
 
 ##### libMetaTCint_7 #####
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-BUILDCINT7    := yes
+BUILDBOTHCINT:= yes
 endif
-ifneq ($(BUILDCINT7),)
+ifneq ($(BUILDBOTHCINT),)
 METATCINT7L   := $(MODDIRI)/LinkDef_TCint.h # intentionally identical to libMetaTCint!
 METATCINT7DS  := $(MODDIRS)/G__TCint_7.cxx
 METATCINT7DO  := $(METATCINT7DS:.cxx=.o)
@@ -73,7 +73,7 @@ INCLUDEFILES += $(METADEP) $(METATCINTDEP) $(METATCINT7DEP)
 include/%.h:    $(METADIRI)/%.h
 		cp $< $@
 
-ifneq ($(BUILDCINT7),)
+ifneq ($(BUILDBOTHCINT),)
 $(METATCINT7H): $(METATCINTH)
 		cp $< $@
 
@@ -87,7 +87,7 @@ $(METATCINTLIB): $(METATCINTO) $(METATCINTDO) $(ORDER_)  $(CINTLIB) $(CORELIB) \
 		   "$(SOFLAGS)" libMetaTCint.$(SOEXT) $@ "$(METATCINTO) $(METATCINTDO)" \
 		   "$(METATCINTLIBEXTRA)"
 
-ifneq ($(BUILDCINT7),)
+ifneq ($(BUILDBOTHCINT),)
 $(METATCINT7LIB): $(METATCINT7O) $(METATCINT7DO) $(ORDER_) $(CINT7LIB)  $(CINTLIB) $(CORELIB) \
                   $(METATCINT7LIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
@@ -104,7 +104,7 @@ $(METATCINTDS): $(METATCINTH) $(METATCINTL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METATCINTH) $(METATCINTL)
 
-ifneq ($(BUILDCINT7),)
+ifneq ($(BUILDBOTHCINT),)
 $(METATCINT7DS): $(METATCINT7H) $(METATCINT7L) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METATCINT7H) $(METATCINT7L)
@@ -114,7 +114,7 @@ $(METATCINTMAP): $(RLIBMAP) $(MAKEFILEDEP) $(METATCINTL)
 		$(RLIBMAP) -o $(METATCINTMAP) -l $(METATCINTLIB) \
 		   -d $(METATCINTLIBDEPM) -c $(METATCINTL)
 
-ifneq ($(BUILDCINT7),)
+ifneq ($(BUILDBOTHCINT),)
 $(METATCINT7MAP): $(RLIBMAP) $(MAKEFILEDEP) $(METATCINT7L)
 		$(RLIBMAP) -o $(METATCINT7MAP) -l $(METATCINT7LIB) \
 		   -d $(METATCINT7LIBDEPM) -c $(METATCINT7L)
@@ -139,6 +139,8 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
-ifneq ($(BUILDCINT7),)
+ifneq ($(BUILDBOTHCINT),)
 $(METATCINT7O): CXXFLAGS += -DR__BUILDING_CINT7
+else 
+$(METATCINTO): CXXFLAGS += -DR__BUILDING_ONLYCINT7
 endif

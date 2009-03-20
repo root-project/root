@@ -193,7 +193,11 @@ ifeq ($(BUILDUNURAN),yes)
 MODULES      += math/unuran
 endif
 ifeq ($(BUILDCINT7),yes)
+ifeq ($(BUILDCINT5),yes)
 MODULES      := $(subst cint/cint,cint/cint cint/cint7,$(MODULES))
+else
+MODULES      := $(subst cint/cint,cint/cint7,$(MODULES))
+endif
 endif
 ifeq ($(BUILDCINTEX),yes)
 MODULES      += cint/cintex

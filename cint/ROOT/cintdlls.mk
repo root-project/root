@@ -26,8 +26,13 @@ ifeq ($(subst cint7,,$(CINTDLLDIRL)),$(CINTDLLDIRL))
 BUILDINGCINT :=5
 CINT7VERSIONNO:=
 else
+ifneq ($(BUILDBOTHCINT),)
 BUILDINGCINT :=7
 CINT7VERSIONNO:=7
+else
+BUILDINGCINT :=5
+CINT7VERSIONNO:=
+endif
 endif
 
 
@@ -237,10 +242,17 @@ $(CINTDLLDIRDLLS)/sys/ipc.dll: $(CINTDLLDIRL)/G__c_ipc.o
 ##### ipc special treatment - END
 
 ##### dictionaries
+ifeq ($(BUILDBOTHCINT),)
+$(CINTDLLDIRDLLSTL)/rootcint_%.cxx: core/metautils/src/%Linkdef.h $(CINTDLLROOTCINTTMPDEP)
+	core/utils/src/rootcint_tmp -f $@ -c \
+	   $(subst multi,,${*:2=}) \
+	   core/metautils/src/$*Linkdef.h
+else
 $(CINTDLLDIRDLLSTL)/rootcint_%.cxx: core/metautils/src/%Linkdef.h $(CINTDLLROOTCINTTMPDEP)
 	core/utils/src/root$(patsubst cint/%/lib/dll_stl/,%,$(dir $@))_tmp -f $@ -c \
 	   $(subst multi,,${*:2=}) \
 	   core/metautils/src/$*Linkdef.h
+endif
 
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDLLDIRDLLSTL)/rootcint_%.o,$(CINTDICTDLLS)): CINTCXXFLAGS += -I.
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDLLDIRDLLSTL)/rootcint_%.cxx,$(CINTDICTDLLS)): $(CINTDLLROOTCINTTMPDEP)

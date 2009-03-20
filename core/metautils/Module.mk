@@ -17,7 +17,7 @@ METAUTILSH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 METAUTILSS     := $(filter-out %7.cxx,$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 METAUTILSO     := $(METAUTILSS:.cxx=.o)
 
-ifneq ($(BUILDCINT7),)
+ifneq ($(BUILDBOTHCINT),)
 METAUTILS7S     := $(patsubst %.cxx,%7.cxx,$(METAUTILSS))
 METAUTILS7O     := $(METAUTILS7S:.cxx=.o)
 endif

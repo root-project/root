@@ -57,13 +57,18 @@ fi
 ### ROOT libraries ###
 
 newlib="-lNew"
-rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
-          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread $zliblib"
 rootglibs="-lGui"
-
-if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
-    rootlibs="$rootlibs -lReflex"
+if [ "cint5=@cint5enabled" = "cint5=yes" ] ; then
+   rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
+             -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread $zliblib"
+   if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
+      rootlibs="$rootlibs -lReflex"
+   fi
+else 
+   rootlibs="-lCore -lCint -lReflex -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
+             -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread $zliblib"
 fi
+
 
 if test "$platform" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Net        \

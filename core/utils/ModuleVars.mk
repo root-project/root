@@ -23,9 +23,9 @@ ROOTCINTTMPDEP = $(ROOTCINTTMPO) $(ORDER_) $(ROOTCINTTMPEXE)
 
 ##### rootcint7 #####
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-BUILDCINT7    := yes
+BUILDBOTHCINT := yes
 endif
-ifneq ($(BUILDCINT7),)
+ifneq ($(BUILDBOTHCINT),)
 ROOTCINT7S    := $(patsubst %.cxx,%7.cxx,$(ROOTCINTS))
 ROOTCINT7TMPO := $(ROOTCINT7S:.cxx=_tmp.o)
 
