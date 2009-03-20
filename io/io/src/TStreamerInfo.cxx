@@ -2017,15 +2017,15 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                   fprintf(fp,"// Nested classes forward declaration.\n");
                   needheader = false;
                }
-               TString protoname;
-               UInt_t numberOfClasses = 0;
-               UInt_t numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, subinfo->GetName() + len+2, kFALSE, protoname, &numberOfClasses, kFALSE);
+               TString sub_protoname;
+               UInt_t sub_numberOfClasses = 0;
+               UInt_t sub_numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, subinfo->GetName() + len+2, kFALSE, sub_protoname, &sub_numberOfClasses, kFALSE);
 
                fprintf(fp, ";\n");
-               for (UInt_t i = 0;i < numberOfClasses;++i) {
+               for (UInt_t i = 0;i < sub_numberOfClasses;++i) {
                   fprintf(fp, "}; // end of class.\n");
                }
-               if (numberOfNamespaces > 0) {
+               if (sub_numberOfNamespaces > 0) {
                   Error("GenerateDeclaration","Nested classes %s thought to be inside a namespace inside the class %s",subinfo->GetName(),GetName());
                }
             }
