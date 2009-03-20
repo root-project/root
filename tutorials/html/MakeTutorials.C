@@ -226,7 +226,7 @@ void writeTutorials(THtml& html) {
    }
 
    fptop << "</ul>" << endl;
-   fptop << "<p>To run the tutorials yourself <a href=\"Availability.html#download\">download</a> the ROOT Development Kit (RDK).</p>" << endl;
+   fptop << "<p><a href=\"http://root.cern.ch/drupal/content/downloading-root\">Download ROOT</a> and run the tutorials in $ROOTSYS/tutorials yourself!</p>" << endl;
    writeTrailer(html, fptop);
 }
 
@@ -298,7 +298,7 @@ Bool_t CreateOutput_Dir(const char* dir) {
      if (strstr(dir,"foam"))  return kFALSE;
      if (strstr(dir,"unuran"))  return kFALSE;
      if (strstr(dir,"roofit"))  return kFALSE;
-     if (strstr(dir,"threads"))  return kFALSE;
+     if (strstr(dir,"thread"))  return kFALSE;
 
    /* They should all work now:
 
@@ -326,28 +326,20 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
       "mathcore",
       "permute",
       "testrandom",
-      //"testUnfold",
-      //"tStudent",
-      //"seism",
       "psview",
       "readCode",
       "importCode",
-      //"analyze",
       "hadd",
-      //"langaus",
-      //"fithist",
-      //"fit2dHist",
-      //"fitLinearRobust",
+      "Legendre",
+      "solveLinear",
+      "threadsh1",
+      "threadsh2",
       "line3Dfit",
       "gtime",
       "event",
       "exec1",
       "exec2",
       "exec3",
-      //"quantiles",
-      //"gui",
-      //"TwoHistoFit2D",
-      //"CPUMeter",
       "games",
       "guiWithCINT",
       "statusBar",
@@ -356,8 +348,8 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
       "viewer3DMaster.C",
       "anim",
       "pack",
-      //"hsumTimer",
       "htest",
+      "h1chain",
       "jets",
       "bill",
       "tcl",
@@ -431,6 +423,7 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
       if(strstr(direntry,"na49")) continue;
       if(strstr(direntry,"fit1_C")) continue;
       if(strstr(direntry,"MDF.C")) continue;
+      if(strstr(direntry,"threadsh2")) continue;
       if(strstr(direntry,"cms_calo_detail")) continue;
       TString atut(inpath + direntry);
       TString comment;
