@@ -2174,6 +2174,16 @@ void G__platformMacro()
       G__add_macro(temp);
    }
    G__DEFINE_MACRO_C(_MSC_VER);
+   if (G__globalcomp == G__NOLINK) {
+#ifdef _HAS_ITERATOR_DEBUGGING
+      sprintf(temp, "G__HAS_ITERATOR_DEBUGGING=%d", _HAS_ITERATOR_DEBUGGING);
+      G__add_macro(temp);
+#endif
+#ifdef _SECURE_SCL
+      sprintf(temp, "G__SECURE_SCL=%d", _SECURE_SCL);
+      G__add_macro(temp);
+#endif
+   }
 #endif
 #ifdef __SC__       /* Symantec C/C++ compiler */
    G__DEFINE_MACRO_N_C(__SC__, "G__SYMANTEC");
