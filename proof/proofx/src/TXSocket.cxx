@@ -919,11 +919,11 @@ Int_t TXSocket::Flush()
          // Save size for later semaphore cleanup
          Int_t sz = fAQue.size();
          // get the highest interrupt level
-         for (i = fAQue.begin(); i != fAQue.end(); i++) {
+         for (i = fAQue.begin(); i != fAQue.end();) {
             if (*i) {
                splist.push_back(*i);
-               fAQue.erase(i);
                nf += (*i)->fLen;
+               i = fAQue.erase(i);
             }
          }
 
@@ -937,9 +937,9 @@ Int_t TXSocket::Flush()
    // Move spares to the spare queue
    if (splist.size() > 0) {
       R__LOCKGUARD(&fgSMtx);
-      for (i = splist.begin(); i != splist.end(); i++) {
+      for (i = splist.begin(); i != splist.end();) {
          fgSQue.push_back(*i);
-         splist.erase(i);
+         i = splist.erase(i);
       }
    }
 
