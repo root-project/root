@@ -231,6 +231,24 @@ TObject *THashList::FindObject(const TObject *obj) const
 }
 
 //______________________________________________________________________________
+TList *THashList::GetListForObject(const char *name) const
+{
+   // Return the THashTable's list (bucket) in which obj can be found based on
+   // its hash; see THashTable::GetListForObject().
+
+   return fTable->GetListForObject(name);
+}
+
+//______________________________________________________________________________
+TList *THashList::GetListForObject(const TObject *obj) const
+{
+   // Return the THashTable's list (bucket) in which obj can be found based on
+   // its hash; see THashTable::GetListForObject().
+
+   return fTable->GetListForObject(obj);
+}
+
+//______________________________________________________________________________
 void THashList::RecursiveRemove(TObject *obj)
 {
    // Remove object from this collection and recursively remove the object

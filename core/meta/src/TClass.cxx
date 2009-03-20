@@ -39,6 +39,7 @@
 #include "TDataType.h"
 #include "TError.h"
 #include "TExMap.h"
+#include "THashList.h"
 #include "TInterpreter.h"
 #include "TMemberInspector.h"
 #include "TMethod.h"
@@ -2463,7 +2464,7 @@ TList *TClass::GetListOfMethods()
    // Return list containing the TMethods of a class.
 
    if (!fClassInfo) {
-      if (!fMethod) fMethod = new TList;
+      if (!fMethod) fMethod = new THashList;
       return fMethod;
    }
 
@@ -2757,14 +2758,7 @@ TMethod *TClass::GetMethodAny(const char *method)
    // Does not look in (possible) base classes.
 
    if (!fClassInfo) return 0;
-
-   TMethod *m;
-   TIter    next(GetListOfMethods());
-
-   while ((m = (TMethod *) next())) {
-      if (strcmp(method, m->GetName()) == 0) return m;
-   }
-   return 0;
+   return (TMethod*) GetListOfMethods()->FindObject(method);
 }
 
 //______________________________________________________________________________
@@ -2775,12 +2769,8 @@ TMethod *TClass::GetMethodAllAny(const char *method)
 
    if (!fClassInfo) return 0;
 
-   TMethod *m;
-   TIter    next(GetListOfMethods());
-
-   while ((m = (TMethod *) next())) {
-      if (strcmp(method, m->GetName()) == 0) return m;
-   }
+   TMethod* m = GetMethodAny(method);
+   if (m) return m;
 
    TBaseClass *base;
    TIter       nextb(GetListOfBases());
@@ -2916,23 +2906,25 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params)
    // Need to go through those loops to get the signature from
    // the valued params (i.e. from "1.0,3" to "double,int")
 
-   R__LOCKGUARD2(gCINTMutex);
-   CallFunc_t  *func = gCint->CallFunc_Factory();
-   Long_t       offset;
-   gCint->CallFunc_SetFunc(func,GetClassInfo(), name, params, &offset);
-   MethodInfo_t *info = gCint->CallFunc_FactoryMethod(func);
-   TMethod request(info,this);
-
-   TMethod *m;
-   TIter    next(GetListOfMethods());
-   while ((m = (TMethod *) next())) {
-      if (!strcmp(name,m->GetName())
-          &&!strcmp(request.GetSignature(),m->GetSignature())) {
-         gCint->CallFunc_Delete(func);
-         return m;
+   TList* bucketForMethod = ((THashList*)GetListOfMethods())->GetListForObject(name);
+   if (bucketForMethod) {
+      R__LOCKGUARD2(gCINTMutex);
+      CallFunc_t  *func = gCint->CallFunc_Factory();
+      Long_t       offset;
+      gCint->CallFunc_SetFunc(func,GetClassInfo(), name, params, &offset);
+      MethodInfo_t *info = gCint->CallFunc_FactoryMethod(func);
+      TMethod request(info,this);
+      TMethod *m;
+      TIter    next(bucketForMethod);
+      while ((m = (TMethod *) next())) {
+         if (!strcmp(name,m->GetName())
+             &&!strcmp(request.GetSignature(),m->GetSignature())) {
+            gCint->CallFunc_Delete(func);
+            return m;
+         }
       }
+      gCint->CallFunc_Delete(func);
    }
-   gCint->CallFunc_Delete(func);
    return 0;
 }
 

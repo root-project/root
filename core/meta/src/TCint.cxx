@@ -904,7 +904,7 @@ void TCint::CreateListOfMethods(TClass *cl)
 
    if (!cl->fMethod) {
 
-      cl->fMethod = new TList;
+      cl->fMethod = new THashList;
 
       G__MethodInfo *a;
       G__MethodInfo t(*(G__ClassInfo*)cl->GetClassInfo());
