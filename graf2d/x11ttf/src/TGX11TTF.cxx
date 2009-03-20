@@ -611,6 +611,11 @@ void TGX11TTF::GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &ma
 {
    //  Return some font properties
 
+   // Use standard GetFontProperties, as there is a problem with
+   // xftfont->ascent and xftfont->descent values...
+   TGX11::GetFontProperties(font, max_ascent, max_descent);
+   return;
+
    if (!fXftFontHash) {
       TGX11::GetFontProperties(font, max_ascent, max_descent);
       return;
