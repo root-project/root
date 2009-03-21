@@ -2025,6 +2025,7 @@ const char *TCint::GetSTLIncludePath() const
 #if defined(R__BUILDING_CINT7) || (R__BUILDING_ONLYCINT7)
       stldir += "cint7/stl";
 #else
+      // Default to Cint5's directory
       stldir += "cint/stl";
 #endif
    }

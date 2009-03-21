@@ -141,6 +141,6 @@ distclean::     distclean-$(MODNAME)
 
 ifneq ($(BUILDBOTHCINT),)
 $(METATCINT7O): CXXFLAGS += -DR__BUILDING_CINT7
-else 
+elif ($(BUILDCINT7),yes)
 $(METATCINTO): CXXFLAGS += -DR__BUILDING_ONLYCINT7
 endif
