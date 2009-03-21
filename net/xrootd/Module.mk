@@ -52,14 +52,16 @@ XRDEXECSA  := $(patsubst %,$(XROOTDDIRD)/bin/%,$(XRDEXEC))
 
 ##### Xrootd plugins #####
 ifeq ($(PLATFORM),win32)
-XRDPLUGINSA:= $(XROOTDDIRL)/libXrdClient.$(XRDSOEXT)
-XRDPLUGINS := $(XRDPLUGINSA)
-XRDLIBS    := $(XRDPLUGINS)
+XRDPLUGINSA := $(XROOTDDIRL)/libXrdClient.$(XRDSOEXT)
+XRDPLUGINS  := $(XRDPLUGINSA)
+XRDLIBS     := $(XRDPLUGINS)
 else
-XRDLIBS      := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdSys.a \
-                $(LPATH)/libXrdClient.$(XRDSOEXT) $(LPATH)/libXrdSut.$(XRDSOEXT)
-XRDNETXD    := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdSys.a $(LPATH)/libXrdClient.$(XRDSOEXT)
-XRDPROOFXD  := $(XRDLIBS)
+XRDLIBS     := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdNet.a \
+               $(XROOTDDIRL)/libXrdSys.a \
+               $(LPATH)/libXrdClient.$(XRDSOEXT) $(LPATH)/libXrdSut.$(XRDSOEXT)
+XRDNETXD    := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdSys.a \
+               $(LPATH)/libXrdClient.$(XRDSOEXT)
+XRDPROOFXD  := $(XRDLIBS) $(XROOTDDIRL)/libXrd.a
 XROOTDDIRP  := $(LPATH)
 ifeq ($(ARCH),win32gcc)
 XRDLIBS     := $(patsubst $(LPATH)/%.$(XRDSOEXT),bin/%.$(XRDSOEXT),$(XRDLIBS))
@@ -235,6 +237,9 @@ $(XROOTDDIRL)/libXrdSut.$(XRDSOEXT): $(XROOTDBUILD)
 $(XROOTDDIRL)/libXrdOuc.a: $(XROOTDBUILD)
 $(XROOTDDIRL)/libXrdNet.a: $(XROOTDBUILD)
 $(XROOTDDIRL)/libXrdSys.a: $(XROOTDBUILD)
+$(XROOTDDIRL)/libXrd.a: $(XROOTDBUILD)
+$(XROOTDDIRL)/libXrdClient.a: $(XROOTDBUILD)
+$(XROOTDDIRL)/libXrdSut.a: $(XROOTDBUILD)
 
 ### General rules
 
