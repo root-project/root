@@ -282,12 +282,11 @@ bool THtml::TFileDefinition::GetImplFileName(const TClass* cl, TString& out_file
 void THtml::TFileDefinition::NormalizePath(TString& filename) const
 {
    // Remove "/./" and collapse "/subdir/../" to "/"
-   filename = filename.ReplaceAll("\\.\\","\\");
    static const char* delim[] = {"/", "\\\\"};
    for (int i = 0; i < 2; ++i) {
       const char* d = delim[i];
-      TPRegexp reg(TString::Format("%s[^%s]+%s..%s", d, d, d, d));
       filename = filename.ReplaceAll(TString::Format("%c.%c", d[0], d[0]), TString(d[0]));
+      TPRegexp reg(TString::Format("%s[^%s]+%s\\.\\.%s", d, d, d, d));
       while (reg.Substitute(filename, TString(d[0]), "", 0, 1)) {}
    }
 }
@@ -306,6 +305,8 @@ TString THtml::TFileDefinition::MatchFileSysName(TString& filename, TFileSysEntr
       TIter iFS(bucket);
       TFileSysEntry* fsentry = 0;
       while ((fsentry = (TFileSysEntry*) iFS())) {
+         if (!filename.EndsWith(fsentry->GetName()))
+            continue;
          fsentry->GetFullName(filesysname, kTRUE); // get the short version
          if (!filename.EndsWith(filesysname)) {
             filesysname = "";

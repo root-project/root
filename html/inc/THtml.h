@@ -173,7 +173,7 @@ public:
    class TFileSysDB: public TFileSysDir {
    public:
       TFileSysDB(const char* path, const char* ignore, Int_t maxdirlevel):
-         TFileSysDir(path, 0), fIgnorePath(ignore), fMaxLevel(maxdirlevel)
+         TFileSysDir(path, 0), fEntries(1009, 5), fIgnorePath(ignore), fMaxLevel(maxdirlevel)
       { Fill(); }
 
       TExMap& GetMapIno() { return fMapIno; }
@@ -383,7 +383,7 @@ protected:
    };
 
    struct DocEntityInfo_t {
-      DocEntityInfo_t(): fClasses(500, 3) {}
+      DocEntityInfo_t(): fClasses(503, 3) {}
       TString        fClassFilter;     // filter used for buidling known classes
       THashList      fClasses;         // known classes
       mutable THashList fShortClassNames; // class names with default template args replaced
