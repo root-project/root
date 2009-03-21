@@ -2062,7 +2062,10 @@ void TH1::Copy(TObject &obj) const
 
    TArray* a = dynamic_cast<TArray*>(&obj);
    if (a) a->Set(fNcells);
+   Int_t canRebin = ((TH1&)obj).TestBit(kCanRebin);
+   ((TH1&)obj).ResetBit(kCanRebin);  //we want to avoid the call to LabelsInflate
    for (i=0;i<fNcells;i++) ((TH1&)obj).SetBinContent(i,this->GetBinContent(i));
+   if (canRebin) ((TH1&)obj).SetBit(kCanRebin);
    ((TH1&)obj).fEntries   = fEntries;
 
    ((TH1&)obj).fTsumw     = fTsumw;
