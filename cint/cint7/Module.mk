@@ -357,6 +357,7 @@ all-cint: all-cint7
 clean-cint: clean-cint7
 distclean-cint: distclean-cint7
 
+IOSENUM  = $(IOSENUM7)
 CINTO    = $(CINT7O)
 CINTALLO = $(CINT7ALLO)
 CINTTMPO = $(CINT7TMPO) $(REFLEXO)

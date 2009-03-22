@@ -40,7 +40,7 @@ METATCINTMAP := $(METATCINTLIB:.$(SOEXT)=.rootmap)
 
 ##### libMetaTCint_7 #####
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-BUILDBOTHCINT:= yes
+BUILDBOTHCINT := yes
 endif
 ifneq ($(BUILDBOTHCINT),)
 METATCINT7L   := $(MODDIRI)/LinkDef_TCint.h # intentionally identical to libMetaTCint!
