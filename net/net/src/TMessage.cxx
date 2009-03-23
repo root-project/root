@@ -133,7 +133,10 @@ void TMessage::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t /* force */)
 {
    // Force writing the TStreamerInfo to the message.
 
-   if (fgEvolution || fEvolution) fInfos->Add(info);
+   if (fgEvolution || fEvolution) {
+      if (!fInfos) fInfos = new TList();
+      fInfos->Add(info);
+   }
 }
 
 //______________________________________________________________________________
@@ -160,7 +163,10 @@ void TMessage::IncrementLevel(TVirtualStreamerInfo *info)
 
    TBufferFile::IncrementLevel(info);
 
-   if (fgEvolution || fEvolution) fInfos->Add(info);
+   if (fgEvolution || fEvolution) {
+      if (!fInfos) fInfos = new TList();
+      fInfos->Add(info);
+   }
 }
 
 //______________________________________________________________________________
