@@ -1561,6 +1561,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
    Int_t fwidth = gPad->GetFrameLineWidth();
    TFrame *frame = gPad->GetFrame();
    if (frame) fwidth = frame->GetLineWidth();
+   if (optionOff) fwidth = 1;
    Double_t dxframe = gPad->AbsPixeltoX(fwidth/2) - gPad->AbsPixeltoX(0);
    Double_t vxmin = gPad->PadtoX(gPad->GetUxmin() + dxframe);
    Double_t vxmax = gPad->PadtoX(gPad->GetUxmax() - dxframe);
