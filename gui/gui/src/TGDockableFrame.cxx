@@ -260,16 +260,12 @@ TGDockableFrame::~TGDockableFrame()
 {
    // Cleanup dockable frame.
 
+   // Just set the flag and delete fFrame. The other components
+   // are deleted in TGCompositeFrame destructor.
    if (fFrame) {
       fDeleted = kTRUE;
       delete fFrame;
-   } else {
-      delete fContainer;
    }
-   delete fCl;
-   delete fLb;
-   delete fLc;
-   delete fButtons;
 }
 
 //______________________________________________________________________________
