@@ -400,7 +400,7 @@ void TClonesArray::ExpandCreateFast(Int_t n)
 {
    // Expand or shrink the array to n elements and create the clone
    // objects by calling their default ctor. If n is less than the current size
-   // the array is shrinked and the allocated space is freed.
+   // the array is shrinked but the allocated space is _not_ freed.
    // This routine is typically used to create a clonesarray into which
    // one can directly copy object data without going via the
    // "new (arr[i]) MyObj()" (i.e. the vtbl is already set correctly).
