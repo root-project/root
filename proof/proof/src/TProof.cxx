@@ -4234,6 +4234,29 @@ Int_t TProof::SendGroupView()
 }
 
 //______________________________________________________________________________
+Bool_t TProof::GetFileInCmd(const char *cmd, TString &fn)
+{
+   // Static method to extract the filename (if any) form a CINT command.
+   // Returns kTRUE and the filename in 'fn'; returns kFALSE if not found or not
+   // appliable.
+
+   TString s = cmd;
+   s = s.Strip(TString::kBoth);
+
+   if (s.Length() > 0 &&
+      (s.BeginsWith(".L") || s.BeginsWith(".x") || s.BeginsWith(".X"))) {
+      TString file = s(2, s.Length());
+      TString acm, arg, io;
+      fn = gSystem->SplitAclicMode(file, acm, arg, io);
+      if (!fn.IsNull())
+         return kTRUE;
+   }
+
+   // Not found
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 Int_t TProof::Exec(const char *cmd, Bool_t plusMaster)
 {
    // Send command to be executed on the PROOF master and/or slaves.
@@ -4263,10 +4286,8 @@ Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
    if (!s.Length()) return 0;
 
    // check for macro file and make sure the file is available on all slaves
-   if (s.BeginsWith(".L") || s.BeginsWith(".x") || s.BeginsWith(".X")) {
-      TString file = s(2, s.Length());
-      TString acm, arg, io;
-      TString filename = gSystem->SplitAclicMode(file, acm, arg, io);
+   TString filename;
+   if (TProof::GetFileInCmd(s.Data(), filename)) {
       char *fn = gSystem->Which(TROOT::GetMacroPath(), filename, kReadPermission);
       if (fn) {
          if (GetNumberOfUniqueSlaves() > 0) {
@@ -4282,7 +4303,7 @@ Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
             return n;
          }
       } else {
-         Error("Exec", "macro %s not found", file.Data());
+         Error("Exec", "macro %s not found", filename.Data());
          return -1;
       }
       delete [] fn;

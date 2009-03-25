@@ -1180,6 +1180,10 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
       case kMESS_CINT:
          if (all) {
             mess->ReadString(str, sizeof(str));
+            // Make sure that the relevant files are available
+            TString fn;
+            if (TProof::GetFileInCmd(str, fn))
+               CopyFromCache(fn, 1);
             if (IsParallel()) {
                fProof->SendCommand(str);
             } else {
@@ -3943,7 +3947,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
 
       if (md5local && md5 == (*md5local)) {
          // copy file from cache to working directory
-         Bool_t cp = ((opt & TProof::kCp) || (fProtocol <= 19)) ? kTRUE : kFALSE;
+         Bool_t cp = ((opt & TProof::kCp || opt & TProof::kCpBin) || (fProtocol <= 19)) ? kTRUE : kFALSE;
          if (cp) {
             Bool_t cpbin = (opt & TProof::kCpBin) ? kTRUE : kFALSE;
             CopyFromCache(filenam, cpbin);
