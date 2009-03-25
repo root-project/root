@@ -2317,6 +2317,7 @@ void TFile::ReadStreamerInfo()
 
          if (info->IsA() != TStreamerInfo::Class()) {
             Warning("ReadStreamerInfo","%s: not a TStreamerInfo object", GetName());
+            lnk = lnk->Next();
             continue;
          }
          // This is a quick way (instead of parsing the name) to see if this is
