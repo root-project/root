@@ -87,7 +87,7 @@
       }                                         \
    }
 
-// Helper function for TStreamerInfo::ReadBuffer
+// Helper function for TStreamerInfo::WriteBuffer
 namespace {
    template <class T> Bool_t R__TestUseCache(TStreamerElement *element) 
    {
@@ -158,12 +158,12 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 
       if (R__TestUseCache<T>(aElement)) {
          if (gDebug > 1) {
-           printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d,"
+           printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d,"
                 " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
                 fClass->GetName(),aElement->GetName(),i,fType[i],
                 aElement->ClassName(),b.Length(),arr[0], eoffset,((TBufferFile&)b).PeekDataCache()->GetObjectAt(0));
          }
-         thisVar->ReadBuffer(b,*((TBufferFile&)b).PeekDataCache(),i,narr,eoffset, arrayMode);
+         thisVar->WriteBufferAux(b,*((TBufferFile&)b).PeekDataCache(),i,narr,eoffset, arrayMode);
          continue;
       }
 
@@ -804,6 +804,13 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const TPointerCollectionAdapter 
   return TStreamerInfo__WriteBufferAuxImp(this,b,arr,first,narr,eoffset,mode,
                                           fMethod,fElem,fLength,fClass,fOffset,fNewType,
                                           fNdata,fType,fgElement,fComp);
+}
+
+Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const TVirtualArray &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode)
+{
+   return TStreamerInfo__WriteBufferAuxImp(this,b,arr,first,narr,eoffset,mode,
+                                           fMethod,fElem,fLength,fClass,fOffset,fNewType,
+                                           fNdata,fType,fgElement,fComp);
 }
 
 #endif
