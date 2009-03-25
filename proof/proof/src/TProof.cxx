@@ -625,6 +625,16 @@ Int_t TProof::Init(const char *, const char *conffile,
    fLoadedMacros            = 0;
    fGlobalPackageDirList    = 0;
 
+   // Enable optimized sending of streamer infos to use embedded backward/forward
+   // compatibility support between different ROOT versions and different versions of
+   // users classes
+   Bool_t enableSchemaEvolution = gEnv->GetValue("Proof.SchemaEvolution",1);
+   if (enableSchemaEvolution) {
+      TMessage::EnableSchemaEvolutionForAll();
+   } else {
+      Info("TProof", "automatic schema evolution in TMessage explicitely disabled");
+   }
+
    if (IsMaster()) {
       // to make UploadPackage() method work on the master as well.
       fPackageDir = gProofServ->GetPackageDir();

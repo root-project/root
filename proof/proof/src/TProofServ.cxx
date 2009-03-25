@@ -502,7 +502,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fLogToSysLog     = (gEnv->GetValue("ProofServ.LogToSysLog", 0) != 0) ? kTRUE : kFALSE;
    fSendLogToMaster = kFALSE;
 
-   // abort on higher than kSysError's and set error handler
+   // Abort on higher than kSysError's and set error handler
    gErrorAbortLevel = kSysError + 1;
    SetErrorHandlerFile(stderr);
    SetErrorHandler(ErrorHandler);
@@ -571,6 +571,16 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    if (fOrdinal != "-1")
       fPrefix += fOrdinal;
    TProofServLogHandler::SetDefaultPrefix(fPrefix);
+
+   // Enable optimized sending of streamer infos to use embedded backward/forward
+   // compatibility support between different ROOT versions and different versions of
+   // users classes
+   Bool_t enableSchemaEvolution = gEnv->GetValue("Proof.SchemaEvolution",1);
+   if (enableSchemaEvolution) {
+      TMessage::EnableSchemaEvolutionForAll();
+   } else {
+      Info("TProofServ", "automatic schema evolution in TMessage explicitely disabled");
+   }
 }
 
 //______________________________________________________________________________
@@ -759,6 +769,16 @@ Int_t TProofServ::CreateServer()
       // Check activity on socket every 5 mins
       fShutdownTimer = new TShutdownTimer(this, 300000);
       fShutdownTimer->Start(-1, kFALSE);
+   }
+
+   // Check if schema evolution is effective: clients running versions <=17 do not
+   // support that: send a warning message
+   if (fProtocol <= 17) {
+      TString msg;
+      msg.Form("Warning: client version is too old: automatic schema evolution is ineffective.\n"
+               "         This may generate compatibility problems between streamed objects.\n"
+               "         The advise is to move to ROOT >= 5.21/02 .");
+      SendAsynMessage(msg.Data());
    }
 
    // Done
