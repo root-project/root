@@ -195,9 +195,9 @@ void TAlienJDL::SetSplitArguments(const char *splitarguments, const char *descri
    // Sets the split.
 
    if (splitarguments)
-      SetValue("SplitArguments", AddQuotes(splitarguments));
+      SetValue("Split", AddQuotes(splitarguments));
    if (description)
-      SetDescription("SplitArguments", description);
+      SetDescription("Split", description);
 }
 
 //______________________________________________________________________________
