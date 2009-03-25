@@ -21,6 +21,7 @@
 
 #pragma create TClass string;
 #pragma link C++ class vector<string>;
+#ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class vector<string>::iterator; 
 #pragma link C++ class vector<string>::reverse_iterator; 
 #pragma link C++ function operator!=(vector<string>,vector<string>); 
@@ -44,7 +45,8 @@
 //#pragma link C++ function operator<(vector<string>::reverse_iterator,vector<string>::reverse_iterator); 
 //#pragma link C++ function operator>(vector<string>::reverse_iterator,vector<string>::reverse_iterator); 
 //#pragma link C++ function operator+(long,vector<string>::reverse_iterator); 
-//#pragma link C++ function operator-(vector<string>::reverse_iterator,vector<string>::reverse_iterator); 
+//#pragma link C++ function operator-(vector<string>::reverse_iterator,vector<string>::reverse_iterator);
+#endif
 
 #pragma link C++ class vector<TString>;
 #pragma link C++ class vector<TString>::iterator; 

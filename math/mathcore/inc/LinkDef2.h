@@ -27,6 +27,7 @@
 #endif
 
 #pragma link C++ class vector<Double_t>+;
+#ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class vector<Double_t>::iterator; 
 #pragma link C++ class vector<Double_t>::reverse_iterator; 
 #pragma link C++ function operator!=(vector<Double_t>,vector<Double_t>); 
@@ -51,6 +52,7 @@
 //#pragma link C++ function operator>(vector<Double_t>::reverse_iterator,vector<Double_t>::reverse_iterator); 
 //#pragma link C++ function operator+(long,vector<Double_t>::reverse_iterator); 
 //#pragma link C++ function operator-(vector<Double_t>::reverse_iterator,vector<Double_t>::reverse_iterator);
+#endif
 
  
 #pragma link C++ global gRandom;

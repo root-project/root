@@ -100,6 +100,8 @@ class vector {
 
 #elif defined(G__VISUAL) && (G__MSC_VER>=1300)
 
+   #define G__VECTOR_HAS_CLASS_ITERATOR
+   
         // CLASS const_iterator
 	class const_iterator;
 	friend class const_iterator;
@@ -204,6 +206,8 @@ class vector {
 
 #elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER>3001)) 
 
+  #define G__VECTOR_HAS_CLASS_ITERATOR
+
 #ifndef G__OLDIMPLEMENTATION1703
   class iterator {
    public:
@@ -267,6 +271,8 @@ class vector {
 
 #elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER==3001))
 
+  #define G__VECTOR_HAS_CLASS_ITERATOR
+
   class iterator {
    public:
      typedef vector::pointer pointer;
@@ -312,6 +318,8 @@ class vector {
   typedef const iterator const_iterator;
 
 #elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER==3000))
+  #define G__VECTOR_HAS_CLASS_ITERATOR
+
   typedef vector<T, Allocator> vector_type;
   typedef std::__normal_iterator<T*, vector_type> iterator;
   typedef std::__normal_iterator<T*, vector_type> const_iterator;
