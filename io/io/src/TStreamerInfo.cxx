@@ -417,7 +417,7 @@ void TStreamerInfo::Build()
          }
       }
 
-      if ( !wasCompiled && (element->GetNewType()==-1||(rules && rules->HasRuleWithSource( element->GetName() )) ) ) {
+      if ( !wasCompiled && (rules && rules->HasRuleWithSource( element->GetName() )) ) {
          needAllocClass = kTRUE;
          
          // If this is optimized to re-use TStreamerElement(s) in case of variable renaming,
