@@ -657,7 +657,18 @@ namespace Reflex {
        * Un-Hide this scope from any lookup by removing the string " @HIDDEN@" to its name.
        */
       virtual void UnhideName() const;
-      
+
+   protected:
+
+      /** The MemberByName work-horse: find a member called name in members,
+          if signature also compare its signature, and if matchReturnType
+          also compare the signature's return types. */
+      Member MemberByName2( const std::vector<Member>& members,
+                            const std::string & name,
+                            const Type * signature = 0,
+                            unsigned int modifiers_mask = 0,
+                            bool matchReturnType = true) const;
+ 
    private:
 
       /* no copying */

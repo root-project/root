@@ -188,11 +188,8 @@ Reflex::ScopeBase::DataMemberAt( size_t nth ) const {
 Reflex::Member
 Reflex::ScopeBase::DataMemberByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
-   // Return data member info by name.
-   for ( Members::const_iterator it = fDataMembers.begin(); it != fDataMembers.end(); ++it) {
-      if (it->Name() == nam) return (*it);
-   }
-   return Dummy::Member();
+   // Return function member by name and signature including the return type.
+   return MemberByName2(fDataMembers, nam);
 }
 
 
@@ -217,18 +214,45 @@ Reflex::ScopeBase::FunctionMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 Reflex::Member
 Reflex::ScopeBase::FunctionMemberByName( const std::string & name,
-                                               const Type & signature,
-                                               unsigned int modifiers_mask) const {
+                                         const Type & signature,
+                                         unsigned int modifiers_mask) const {
 //-------------------------------------------------------------------------------
-   // Return function member by name and signature.
-   for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
-      if (it->ToMemberBase()->MemberBase::Name() == name) {
-         if (signature) {
-            if (signature.IsEquivalentTo(it->TypeOf(),modifiers_mask)) return (*it);
+   // Return function member by name and signature including the return type.
+   return MemberByName2(fFunctionMembers, name, &signature, modifiers_mask, true);
+}
+
+
+//-------------------------------------------------------------------------------
+Reflex::Member
+Reflex::ScopeBase::MemberByName2( const std::vector<Member>& members,
+                                  const std::string & name,
+                                  const Type* signature,
+                                  unsigned int modifiers_mask,
+                                  bool matchReturnType) const {
+//-------------------------------------------------------------------------------
+   // Return function member called name in members with signature including the
+   // return type if matchReturnType.
+   if (signature && *signature) {
+      if (matchReturnType) {
+         for (Members::const_iterator it = members.begin(), itend = members.end(); it != itend; ++it ) {
+            if (it->ToMemberBase()->MemberBase::Name() == name) {
+               if (signature->IsEquivalentTo(it->TypeOf(),modifiers_mask))
+                  return (*it);
+            }
          }
-         else {
-            return (*it);
+      } else {
+         for (Members::const_iterator it = members.begin(), itend = members.end(); it != itend; ++it ) {
+            if (it->ToMemberBase()->MemberBase::Name() == name) {
+               if (signature->IsSignatureEquivalentTo(it->TypeOf(),modifiers_mask))
+                  return (*it);
+            }
          }
+      }
+   } else {
+      for (Members::const_iterator it = members.begin(), itend = members.end(); it != itend; ++it ) {
+         if (it->ToMemberBase()->MemberBase::Name() == name) {
+             return (*it);
+          }
       }
    }
    return Dummy::Member();
@@ -241,22 +265,8 @@ Reflex::ScopeBase::FunctionMemberByNameAndSignature( const std::string & name,
                                                const Type & signature,
                                                unsigned int modifiers_mask) const {
 //-------------------------------------------------------------------------------
-   // Return function member by name and signature.
-   if (signature) {
-      for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
-         if (it->ToMemberBase()->MemberBase::Name_c_str() == name) {
-            if (signature.IsSignatureEquivalentTo(it->TypeOf(),modifiers_mask)) return (*it);
-         }
-      }
-   }
-   else {
-      for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
-         if (it->ToMemberBase()->MemberBase::Name_c_str() == name) {
-            return (*it);
-         }
-      }
-   }
-   return Dummy::Member();
+   // Return function member by name and signature excluding the return type.
+   return MemberByName2(fFunctionMembers, name, &signature, modifiers_mask, false);
 }
 
 
@@ -382,14 +392,10 @@ size_t Reflex::ScopeBase::MemberSize() const {
 //-------------------------------------------------------------------------------
 Reflex::Member 
 Reflex::ScopeBase::MemberByName( const std::string & name,
-                                       const Type & signature ) const {
+                                 const Type & signature ) const {
 //-------------------------------------------------------------------------------
    // Return member by name and signature.
-   if (signature) return FunctionMemberByName(name, signature, 0);
-   for ( size_t i = 0; i < fMembers.size() ; i++ ) {
-      if ( fMembers[i].Name() == name ) return fMembers[i];
-   }
-   return Dummy::Member();
+   return MemberByName2((const std::vector<Member>&)fMembers, name);
 }
 
 
