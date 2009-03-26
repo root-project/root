@@ -1740,10 +1740,17 @@ extern "C" void G__set_class_autoloading_table(char* classname, char* libname)
    }
    int ntagnum = G__search_tagname(classname, G__CLASS_AUTOLOAD);
    if (libname == (void*)-1) {
-      if (G__struct.name[ntagnum][0]) {
-         G__struct.name[ntagnum][0] = '@';
+      if (G__struct.type[tagnum] != G__CLASS_AUTOLOAD) {
+         if (G__struct.libname[tagnum]) {
+            free((void*)G__struct.libname[tagnum]);
+         }
+         G__struct.libname[tagnum] = 0;
+      } else {
+         if (G__struct.name[ntagnum][0]) {
+            G__struct.name[ntagnum][0] = '@';
+         }
+         G__Dict::GetDict().GetType( ntagnum ).ToTypeBase()->HideName();
       }
-      G__Dict::GetDict().GetType( ntagnum ).ToTypeBase()->HideName();
       G__enable_autoloading = store_enable_autoloading;
       return;
    }
