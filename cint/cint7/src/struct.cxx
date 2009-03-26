@@ -1740,11 +1740,11 @@ extern "C" void G__set_class_autoloading_table(char* classname, char* libname)
    }
    int ntagnum = G__search_tagname(classname, G__CLASS_AUTOLOAD);
    if (libname == (void*)-1) {
-      if (G__struct.type[tagnum] != G__CLASS_AUTOLOAD) {
-         if (G__struct.libname[tagnum]) {
-            free((void*)G__struct.libname[tagnum]);
+      if (G__struct.type[ntagnum] != G__CLASS_AUTOLOAD) {
+         if (G__struct.libname[ntagnum]) {
+            free((void*)G__struct.libname[ntagnum]);
          }
-         G__struct.libname[tagnum] = 0;
+         G__struct.libname[ntagnum] = 0;
       } else {
          if (G__struct.name[ntagnum][0]) {
             G__struct.name[ntagnum][0] = '@';
