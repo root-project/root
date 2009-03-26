@@ -12,6 +12,8 @@
 #include <list>
 #include <string>
 #include <cstdlib>
+#include "TROOT.h"
+#include "Riostream.h"
 
 #include "RConversionRuleParser.h"
 
@@ -68,6 +70,32 @@ TSchemaRule& TSchemaRule::operator = ( const TSchemaRule& rhs )
       fRuleType       = rhs.fRuleType;
    }
    return *this;
+}
+
+//------------------------------------------------------------------------------
+void TSchemaRule::ls(Option_t *targetname) const
+{
+   // The ls function lists the contents of a class on stdout. Ls output
+   // is typically much less verbose then Dump().
+   
+   TROOT::IndentLevel();
+   cout <<"Schema Evolution Rule: \n";
+   TROOT::IndentLevel();
+   cout << "sourceClass=\"" << fSourceClass << "\" "
+   << "version=\"" << fVersion << "\" "
+   << "checksum=\"" << fChecksum << "\" ";
+   if (targetname && targetname[0]) cout << "targetClass=\"" << targetname << "\" ";
+   cout << "\n";
+   TROOT::IndentLevel();
+   cout << "source=\"" << fSource << "\" ";
+   cout << "target=\"" << fTarget << "\" ";
+   cout << "\n";
+   TROOT::IndentLevel();
+   cout << "include=\"" << fInclude << "\" "
+   << "\n";
+   TROOT::IndentLevel();
+   cout << "code=\"" << fCode << "\" "
+   << "\n";
 }
 
 //------------------------------------------------------------------------------

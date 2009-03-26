@@ -6,6 +6,8 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TClass.h"
+#include "TROOT.h"
+#include "Riostream.h"
 
 ClassImp(TSchemaRule)
 
@@ -27,6 +29,29 @@ TSchemaRuleSet::~TSchemaRuleSet()
    delete fPersistentRules;
    delete fRemainingRules;
    delete fAllRules;
+}
+
+//------------------------------------------------------------------------------
+void TSchemaRuleSet::ls(Option_t *) const
+{
+   // The ls function lists the contents of a class on stdout. Ls output
+   // is typically much less verbose then Dump().
+   
+   TROOT::IndentLevel();
+   cout << "TSchemaRuleSet for " << fClassName << ":\n";
+   TROOT::IncreaseDirLevel();
+   TObject *object = 0;
+   TIter next(fPersistentRules);
+   while ((object = next())) {
+      object->ls(fClassName);
+   }
+   TROOT::DecreaseDirLevel();   
+}
+
+//------------------------------------------------------------------------------
+Bool_t TSchemaRuleSet::AddRules( TSchemaRuleSet* /* rules */, Bool_t /* checkConsistency */ )
+{
+   return kFALSE;
 }
 
 //------------------------------------------------------------------------------
@@ -297,6 +322,8 @@ void TSchemaRuleSet::Streamer(TBuffer &R__b)
    
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(ROOT::TSchemaRuleSet::Class(),this);
+      fAllRules->Clear(); 
+      fAllRules->AddAll(fPersistentRules);
    } else {
       GetClassCheckSum();
       R__b.WriteClassBuffer(ROOT::TSchemaRuleSet::Class(),this);

@@ -163,7 +163,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                 fClass->GetName(),aElement->GetName(),i,fType[i],
                 aElement->ClassName(),b.Length(),arr[0], eoffset,((TBufferFile&)b).PeekDataCache()->GetObjectAt(0));
          }
-         thisVar->WriteBufferAux(b,*((TBufferFile&)b).PeekDataCache(),i,narr,eoffset, arrayMode);
+         if (aElement->TestBit(TStreamerElement::kWrite)) {
+            thisVar->WriteBufferAux(b,*((TBufferFile&)b).PeekDataCache(),i,narr,eoffset, arrayMode);
+         }
          continue;
       }
 

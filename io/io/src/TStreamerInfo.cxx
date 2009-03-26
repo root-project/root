@@ -201,13 +201,14 @@ void TStreamerInfo::Build()
       return;
    }
 
-   //if (!strcmp(fClass->GetName(), "TVector3")) fClass->IgnoreTObjectStreamer();
    TStreamerElement::Class()->IgnoreTObjectStreamer();
 
    fClass->BuildRealData();
 
    fCheckSum = fClass->GetCheckSum();
 
+   Bool_t needAllocClass = kFALSE;
+   Bool_t wasCompiled = fOffset != 0;
    const ROOT::TSchemaMatch* rules = 0;
    if (fClass->GetSchemaRules()) {
        rules = fClass->GetSchemaRules()->FindRules(fClass->GetName(), fClassVersion);
@@ -415,13 +416,71 @@ void TStreamerInfo::Build()
             element->SetType(-1);
          }
       }
+
+      if ( !wasCompiled && (element->GetNewType()==-1||(rules && rules->HasRuleWithSource( element->GetName() )) ) ) {
+         needAllocClass = kTRUE;
+         
+         // If this is optimized to re-use TStreamerElement(s) in case of variable renaming,
+         // then we must revisit the code in TBranchElement::InitInfo that recalculate the
+         // fID (i.e. the index of the TStreamerElement to be used for streaming).
+         
+         TStreamerElement *cached = element;
+         // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
+         if (element->GetNewType()>0 /* intentionally not including base class for now */ 
+             && rules && !rules->HasRuleWithTarget( element->GetName() ) ) 
+         {
+            TStreamerElement *copy = (TStreamerElement*)element->Clone();
+            fElements->Add(copy);
+            copy->SetBit(TStreamerElement::kRepeat);
+            cached = copy;
+            
+            // Warning("BuildOld","%s::%s is not set from the version %d of %s (You must add a rule for it)\n",GetName(), element->GetName(), GetClassVersion(), GetName() );
+         }
+         cached->SetBit(TStreamerElement::kCache);
+         cached->SetNewType( cached->GetType() );
+      }
+      
       fElements->Add(element);
    } // end of member loop
 
    // Now add artificial TStreamerElement (i.e. rules that creates new members or set transient members).
    InsertArtificialElements(rules);
 
-
+   if (needAllocClass) {
+      TVirtualStreamerInfo *infoalloc  = (TVirtualStreamerInfo *)Clone(TString::Format("%s@@%d",fClass->GetName(),GetClassVersion()));
+      infoalloc->BuildCheck();
+      TClass *allocClass = infoalloc->GetClass();
+      
+      {
+         TIter next(fElements);
+         TStreamerElement* element;
+         while ((element = (TStreamerElement*) next())) {
+            if (element->TestBit(TStreamerElement::kRepeat) && element->IsaPointer()) {
+               TStreamerElement *other = (TStreamerElement*) infoalloc->GetElements()->FindObject(element->GetName());
+               if (other) {
+                  other->SetBit(TStreamerElement::kDoNotDelete);
+               }
+            }
+         }
+         infoalloc->GetElements()->Compress();
+      }
+      {
+         TIter next(fElements);
+         TStreamerElement* element;
+         while ((element = (TStreamerElement*) next())) {
+            if (element->TestBit(TStreamerElement::kCache)) {
+               element->SetOffset(allocClass->GetDataMemberOffset(element->GetName()));            
+            }
+         }
+      }
+      
+      TStreamerElement *el = new TStreamerArtificial("@@alloc","", 0, TStreamerInfo::kCacheNew, allocClass->GetName());
+      R__TObjArray_InsertAt( fElements, el, 0 );
+      
+      el = new TStreamerArtificial("@@dealloc","", 0, TStreamerInfo::kCacheDelete, allocClass->GetName());
+      fElements->Add( el );
+   }
+   
    //
    // Make a more compact version.
    //
@@ -1062,8 +1121,8 @@ void TStreamerInfo::BuildOld()
                if( !targets ) {
                   Error("BuildOld", "Could not find base class: %s for %s, renaming rule was found but is malformed\n", base->GetName(), GetName());
                }
-               TString newClass = ((TObjString*)targets->At(0))->GetString();
-               baseclass = TClass::GetClass( newClass );
+               TString newBaseClass = ((TObjString*)targets->At(0))->GetString();
+               baseclass = TClass::GetClass( newBaseClass );
                base->SetNewBaseClass( baseclass );
             }
             //-------------------------------------------------------------------
@@ -2830,14 +2889,25 @@ void TStreamerInfo::ls(Option_t *option) const
    }
    for (Int_t i=0;i < fNdata;i++) {
       TStreamerElement *element = (TStreamerElement*)fElem[i];
-      TString sequenceType;
-      if (element->TestBit(TStreamerElement::kCache) && element->TestBit(TStreamerElement::kRepeat)) {
-         sequenceType = " [cached,repeat]";
-      } else if (element->TestBit(TStreamerElement::kCache)) {
-         sequenceType = " [cached]";
-      } else if (element->TestBit(TStreamerElement::kRepeat)) {
-         sequenceType = " [repeat]";
+      TString sequenceType = " [";
+      Bool_t first = kTRUE;
+      if (element->TestBit(TStreamerElement::kCache)) {
+         first = kFALSE;
+         sequenceType += "cached";
       }
+      if (element->TestBit(TStreamerElement::kRepeat)) {
+         if (!first) sequenceType += ",";
+         first = kFALSE;
+         sequenceType += "repeat";
+      }
+      if (element->TestBit(TStreamerElement::kDoNotDelete)) {
+         if (!first) sequenceType += ",";
+         first = kFALSE;
+         sequenceType += "nodelete";
+      }
+      if (first) sequenceType.Clear();
+      else sequenceType += "]";
+      
       Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i],sequenceType.Data());
    }
 }
@@ -3076,7 +3146,7 @@ void TStreamerInfo::Destructor(void* obj, Bool_t dtorOnly)
          }
       }
 
-      if (etype == kObjectP || etype == kAnyP || etype == kSTLp) {
+      if ((etype == kObjectP || etype == kAnyP || etype == kSTLp) && !ele->TestBit(TStreamerElement::kDoNotDelete)) {
          // Destroy an array of pointers to not-pre-allocated objects.
          Int_t len = ele->GetArrayLength();
          if (!len) {
@@ -3302,7 +3372,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          TStreamerElement *el;
          for (Int_t i = 0; i < nobjects; i++) {
             el = (TStreamerElement*)fElements->UncheckedAt(i);
-            if( el != 0 && el->IsA() == TStreamerArtificial::Class() ) {
+            if( el != 0 && (el->IsA() == TStreamerArtificial::Class() || el->TestBit(TStreamerElement::kCache))) {
                fElements->RemoveAt( i );
             }
          }

@@ -66,6 +66,7 @@ namespace ROOT {
          RuleType_t       GetRuleType() const;
          Bool_t           Conflicts( const TSchemaRule* rule ) const;
 
+         void             ls(Option_t *option="") const;
           // Bool_t           GenerateFor( const TStreamerInfo *info );
 
          ClassDef( TSchemaRule, 1 );
