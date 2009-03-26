@@ -302,6 +302,15 @@ namespace Reflex {
 
 
       /**
+      * HasBase will check whether this class has a base class given
+      * as argument
+      * @param  cl the base-class to check for
+      * @return the Base info if it is found, an empty base otherwise (can be tested for bool)
+      */
+      bool HasBase( const Type & cl ) const;
+
+
+      /**
       * Id returns a unique identifier of the type in the system
       * @return unique identifier
       */
@@ -1147,7 +1156,7 @@ inline Reflex::Reverse_Member_Iterator Reflex::Scope::DataMember_REnd() const {
 //-------------------------------------------------------------------------------
 inline Reflex::Scope Reflex::Scope::DeclaringScope() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->DeclaringScope(); 
+   if ( * this ) return fScopeName->fScopeBase->DeclaringScope();
    return Dummy::Scope();
 }
 

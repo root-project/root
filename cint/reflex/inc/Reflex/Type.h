@@ -1266,8 +1266,8 @@ inline Reflex::Type::Type( const Type & rh )
 
 //-------------------------------------------------------------------------------
 inline Reflex::Type::Type( const Type & rh, 
-                                 unsigned int modifiers,
-                                 TYPE_MODIFICATION operation ) 
+                           unsigned int modifiers,
+                           TYPE_MODIFICATION operation ) 
 //-------------------------------------------------------------------------------
    : fTypeName( rh.fTypeName ),
      fModifiers( operation == APPEND ? rh.fModifiers | modifiers : 
@@ -1291,80 +1291,70 @@ inline void * Reflex::Type::Allocate() const {
 //-------------------------------------------------------------------------------
 inline size_t Reflex::Type::BaseSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->BaseSize();
-   return 0;
+   return operator Scope().BaseSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Base_Iterator Reflex::Type::Base_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->Base_Begin();
-   return Dummy::BaseCont().begin();
+   return operator Scope().Base_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Base_Iterator Reflex::Type::Base_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->Base_End();
-   return Dummy::BaseCont().end();
+   return operator Scope().Base_End();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Base_Iterator Reflex::Type::Base_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->Base_RBegin();
-   return Dummy::BaseCont().rbegin();
+   return operator Scope().Base_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Base_Iterator Reflex::Type::Base_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->Base_REnd();
-   return Dummy::BaseCont().rend();
+   return operator Scope().Base_REnd();
 }
 
 
 //-------------------------------------------------------------------------------
 inline size_t Reflex::Type::DataMemberSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->DataMemberSize();
-   return 0;
+   return operator Scope().DataMemberSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Member_Iterator Reflex::Type::DataMember_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->DataMember_Begin();
-   return Dummy::MemberCont().begin();
+   return operator Scope().DataMember_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Member_Iterator Reflex::Type::DataMember_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->DataMember_End();
-   return Dummy::MemberCont().end();
+   return operator Scope().DataMember_End();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Member_Iterator Reflex::Type::DataMember_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->DataMember_RBegin();
-   return Dummy::MemberCont().rbegin();
+   return operator Scope().DataMember_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Member_Iterator Reflex::Type::DataMember_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->DataMember_REnd();
-   return Dummy::MemberCont().rend();
+   return operator Scope().DataMember_REnd();
 }
 
 
@@ -1394,40 +1384,35 @@ inline void Reflex::Type::Destruct( void * instance,
 //-------------------------------------------------------------------------------
 inline size_t Reflex::Type::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->FunctionMemberSize();
-   return 0;
+   return operator Scope().FunctionMemberSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Member_Iterator Reflex::Type::FunctionMember_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->FunctionMember_Begin();
-   return Dummy::MemberCont().begin();
+   return operator Scope().FunctionMember_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Member_Iterator Reflex::Type::FunctionMember_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->FunctionMember_End();
-   return Dummy::MemberCont().end();
+   return operator Scope().FunctionMember_End();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Member_Iterator Reflex::Type::FunctionMember_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->FunctionMember_RBegin();
-   return Dummy::MemberCont().rbegin();
+   return operator Scope().FunctionMember_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Member_Iterator Reflex::Type::FunctionMember_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->FunctionMember_REnd();
-   return Dummy::MemberCont().rend();
+   return operator Scope().FunctionMember_REnd();
 }
 
 
@@ -1628,80 +1613,70 @@ inline Reflex::Type Reflex::Type::FinalType() const {
 //-------------------------------------------------------------------------------
 inline size_t Reflex::Type::MemberTemplateSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->MemberTemplateSize();
-   return 0;
+   return operator Scope().MemberTemplateSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline size_t Reflex::Type::MemberSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->MemberSize();
-   return 0;
+   return operator Scope().MemberSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Member_Iterator Reflex::Type::Member_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->Member_Begin();
-   return Dummy::MemberCont().begin();
+   return operator Scope().Member_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Member_Iterator Reflex::Type::Member_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->Member_End();
-   return Dummy::MemberCont().end();
+   return operator Scope().Member_End();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Member_Iterator Reflex::Type::Member_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->Member_RBegin();
-   return Dummy::MemberCont().rbegin();
+   return operator Scope().Member_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Member_Iterator Reflex::Type::Member_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->Member_REnd();
-   return Dummy::MemberCont().rend();
+   return operator Scope().Member_REnd();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::MemberTemplate_Iterator Reflex::Type::MemberTemplate_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->MemberTemplate_Begin();
-   return Dummy::MemberTemplateCont().begin();
+   return operator Scope().MemberTemplate_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::MemberTemplate_Iterator Reflex::Type::MemberTemplate_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->MemberTemplate_End();
-   return Dummy::MemberTemplateCont().end();
+   return operator Scope().MemberTemplate_End();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_MemberTemplate_Iterator Reflex::Type::MemberTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->MemberTemplate_RBegin();
-   return Dummy::MemberTemplateCont().rbegin();
+   return operator Scope().MemberTemplate_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_MemberTemplate_Iterator Reflex::Type::MemberTemplate_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->MemberTemplate_REnd();
-   return Dummy::MemberTemplateCont().rend();
+   return operator Scope().MemberTemplate_REnd();
 }
 
 
@@ -1788,32 +1763,28 @@ inline Reflex::Type Reflex::Type::ReturnType() const {
 //-------------------------------------------------------------------------------
 inline Reflex::Scope_Iterator Reflex::Type::SubScope_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubScope_Begin();
-   return Dummy::ScopeCont().begin();
+   return operator Scope().SubScope_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Scope_Iterator Reflex::Type::SubScope_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubScope_End();
-   return Dummy::ScopeCont().end();
+   return operator Scope().SubScope_End();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Scope_Iterator Reflex::Type::SubScope_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubScope_RBegin();
-   return Dummy::ScopeCont().rbegin();
+   return operator Scope().SubScope_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Scope_Iterator Reflex::Type::SubScope_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubScope_REnd();
-   return Dummy::ScopeCont().rend();
+   return operator Scope().SubScope_REnd();
 }
 
 
@@ -1828,48 +1799,42 @@ inline size_t Reflex::Type::SizeOf() const {
 //-------------------------------------------------------------------------------
 inline size_t Reflex::Type::SubScopeSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubScopeSize();
-   return 0;
+   return operator Scope().SubScopeSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline size_t Reflex::Type::SubTypeSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubTypeSize();
-   return 0;
+   return operator Scope().SubTypeSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Type_Iterator Reflex::Type::SubType_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubType_Begin();
-   return Dummy::TypeCont().begin();
+   return operator Scope().SubType_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Type_Iterator Reflex::Type::SubType_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubType_End();
-   return Dummy::TypeCont().end();
+   return operator Scope().SubType_End();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Type_Iterator Reflex::Type::SubType_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubType_RBegin();
-   return Dummy::TypeCont().rbegin();
+   return operator Scope().SubType_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_Type_Iterator Reflex::Type::SubType_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubType_REnd();
-   return Dummy::TypeCont().rend();
+   return operator Scope().SubType_REnd();
 }
 
 
@@ -1952,40 +1917,35 @@ inline const std::type_info & Reflex::Type::TypeInfo() const {
 //-------------------------------------------------------------------------------
 inline size_t Reflex::Type::SubTypeTemplateSize() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubTypeTemplateSize();
-   return 0;
+   return operator Scope().SubTypeTemplateSize();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::TypeTemplate_Iterator Reflex::Type::SubTypeTemplate_Begin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubTypeTemplate_Begin();
-   return Dummy::TypeTemplateCont().begin();
+   return operator Scope().SubTypeTemplate_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::TypeTemplate_Iterator Reflex::Type::SubTypeTemplate_End() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubTypeTemplate_End();
-   return Dummy::TypeTemplateCont().end();
+   return operator Scope().SubTypeTemplate_End();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_TypeTemplate_Iterator Reflex::Type::SubTypeTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubTypeTemplate_RBegin();
-   return Dummy::TypeTemplateCont().rbegin();
+   return operator Scope().SubTypeTemplate_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
 inline Reflex::Reverse_TypeTemplate_Iterator Reflex::Type::SubTypeTemplate_REnd() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fTypeName->fTypeBase->SubTypeTemplate_REnd();
-   return Dummy::TypeTemplateCont().rend();
+   return operator Scope().SubTypeTemplate_REnd();
 }
 
 
@@ -2008,7 +1968,7 @@ inline std::string Reflex::Type::TypeTypeAsString() const {
 //-------------------------------------------------------------------------------
 inline void Reflex::Type::UpdateMembers() const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->UpdateMembers();
+   if ( * this ) fTypeName->fTypeBase->UpdateMembers(); 
 }
 
 
@@ -2047,7 +2007,7 @@ inline const Reflex::TypeBase * Reflex::Type::ToTypeBase() const {
 //-------------------------------------------------------------------------------
 inline void Reflex::Type::AddDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->AddDataMember( dm );
+   return operator Scope().AddDataMember(dm);
 }
 
 
@@ -2057,14 +2017,14 @@ inline void Reflex::Type::AddDataMember( const char * nam,
                                                size_t offs,
                                                unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->AddDataMember( nam, typ, offs, modifiers );
+   return operator Scope().AddDataMember( nam, typ, offs, modifiers );
 }
 
 
 //-------------------------------------------------------------------------------
 inline void Reflex::Type::AddFunctionMember( const Member & fm ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->AddFunctionMember( fm );
+   return operator Scope().AddFunctionMember( fm );
 }
 
 
@@ -2076,14 +2036,14 @@ inline void Reflex::Type::AddFunctionMember( const char * nam,
                                                    const char * params,
                                                    unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->AddFunctionMember( nam, typ, stubFP, stubCtx, params, modifiers );
+   return operator Scope().AddFunctionMember( nam, typ, stubFP, stubCtx, params, modifiers );
 }
 
 
 //-------------------------------------------------------------------------------
 inline void Reflex::Type::AddSubScope( const Scope & sc ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->AddSubScope( sc );
+   return operator Scope().AddSubScope( sc );
 }
 
 
@@ -2091,14 +2051,14 @@ inline void Reflex::Type::AddSubScope( const Scope & sc ) const {
 inline void Reflex::Type::AddSubScope( const char * scop,
                                              TYPE scopeTyp ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->AddSubScope( scop, scopeTyp );
+   return operator Scope().AddSubScope( scop, scopeTyp );
 }
 
 
 //-------------------------------------------------------------------------------
 inline void Reflex::Type::AddSubType( const Type & ty ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->AddSubType( ty );
+   return operator Scope().AddSubType( ty );
 }
 
 
@@ -2109,35 +2069,35 @@ inline void Reflex::Type::AddSubType( const char * typ,
                                             const std::type_info & ti,
                                             unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->AddSubType( typ, size, typeTyp, ti, modifiers );
+   return operator Scope().AddSubType( typ, size, typeTyp, ti, modifiers );
 }
 
 
 //-------------------------------------------------------------------------------
 inline void Reflex::Type::RemoveDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->RemoveDataMember( dm );
+   return operator Scope().RemoveDataMember( dm );
 }
 
 
 //-------------------------------------------------------------------------------
 inline void Reflex::Type::RemoveFunctionMember( const Member & fm ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->RemoveFunctionMember( fm );
+   return operator Scope().RemoveFunctionMember( fm );
 }
 
 
 //-------------------------------------------------------------------------------
 inline void Reflex::Type::RemoveSubScope( const Scope & sc ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->RemoveSubScope( sc );
+   return operator Scope().RemoveSubScope( sc );
 }
 
 
 //-------------------------------------------------------------------------------
 inline void Reflex::Type::RemoveSubType( const Type & ty ) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) fTypeName->fTypeBase->RemoveSubType( ty );
+   return operator Scope().RemoveSubType( ty );
 }
 
 //-------------------------------------------------------------------------------

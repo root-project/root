@@ -15,6 +15,7 @@
 
 #include "Enum.h"
 
+#include "Reflex/Member.h"
 #include "Reflex/Tools.h"
 #include "Reflex/DictionaryGenerator.h"
 
@@ -23,13 +24,12 @@
 
 //-------------------------------------------------------------------------------
 Reflex::Enum::Enum( const char * enumType,
-                          const std::type_info & ti,
-                          unsigned int modifiers )
+                    const std::type_info & ti,
+                    unsigned int modifiers )
 //-------------------------------------------------------------------------------
 // Construct the dictionary information for an enum
-   : TypeBase( enumType, sizeof(int), ENUM, ti, Type(), REPRES_ENUM ),
-     ScopeBase( enumType, ENUM ),
-     fModifiers( modifiers ) {}
+   : ScopedType( enumType, sizeof(int), ENUM, ti, Type(),modifiers, REPRES_ENUM )
+     {}
 
 
 //-------------------------------------------------------------------------------

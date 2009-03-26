@@ -127,7 +127,7 @@ namespace Reflex {
       * DeclaringScope will return a pointer to the At of this one
       * @return pointer to declaring At
       */
-      Scope DeclaringScope() const;
+      virtual Scope DeclaringScope() const;
 
 
       /**
@@ -190,6 +190,15 @@ namespace Reflex {
       * @return global scope
       */
       static Scope GlobalScope();
+
+
+      /**
+      * HasBase will check whether this class has a base class given
+      * as argument
+      * @param  cl the base-class to check for
+      * @return the Base info if it is found, an empty base otherwise (can be tested for bool)
+      */
+      virtual bool HasBase( const Type & cl ) const;
 
 
       /** 
@@ -978,6 +987,15 @@ inline Reflex::Reverse_TypeTemplate_Iterator Reflex::ScopeBase::SubTypeTemplate_
 inline Reflex::Reverse_TypeTemplate_Iterator Reflex::ScopeBase::SubTypeTemplate_REnd() const {
 //-------------------------------------------------------------------------------
    return ((const std::vector<TypeTemplate>&)fTypeTemplates).rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline
+bool
+Reflex::ScopeBase::HasBase( const Type &) const {
+//-------------------------------------------------------------------------------
+   return false;
 }
 
 

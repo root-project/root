@@ -40,14 +40,10 @@ Reflex::Class::Class(const char *           typ,
                      TYPE                   classType)
 //-------------------------------------------------------------------------------
 // Construct a Class instance.
-    : TypeBase(typ, size, classType, ti, Type(), (typ && (typ[0] == 'F') && !strcmp(typ, "FILE")) ? (REPRESTYPE)'e' : REPRES_STRUCT),
-      ScopeBase(typ, classType),
-      fModifiers(modifiers),
+   : ScopedType(typ, size, classType, ti, Type(), modifiers,
+                (typ && (typ[0] == 'F') && !strcmp(typ, "FILE")) ? (REPRESTYPE)'e' : REPRES_STRUCT),
       fAllBases(0),
-      fCompleteType(false),
-      fConstructors(std::vector< Member >()),
-      fDestructor(Member()),
-      fPathsToBase(PathsToBase()) {}
+      fCompleteType(false) {}
 
 
 //-------------------------------------------------------------------------------

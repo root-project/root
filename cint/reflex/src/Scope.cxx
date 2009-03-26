@@ -147,6 +147,15 @@ size_t Reflex::Scope::FunctionMemberSize() const {
 
 
 //-------------------------------------------------------------------------------
+bool Reflex::Scope::HasBase( const Type & cl ) const {
+//-------------------------------------------------------------------------------
+   // Return base info if type has base cl.
+   if ( * this ) return fScopeName->fScopeBase->HasBase(cl);
+   return false;
+}
+
+
+//-------------------------------------------------------------------------------
 Reflex::Member 
 Reflex::Scope::LookupMember( const std::string & nam ) const {
 //-------------------------------------------------------------------------------

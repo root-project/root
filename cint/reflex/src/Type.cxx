@@ -41,8 +41,7 @@ Reflex::Type::operator Reflex::Scope () const {
 Reflex::Base Reflex::Type::BaseAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return nth base info.
-   if ( * this ) return fTypeName->fTypeBase->BaseAt( nth );
-   return Dummy::Base();
+   return operator Scope().BaseAt( nth );
 }
 
 
@@ -109,8 +108,7 @@ Reflex::Type::Construct( const Type & signature,
 Reflex::Member Reflex::Type::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth data member.
-   if ( * this ) return fTypeName->fTypeBase->DataMemberAt( nth );
-   return Dummy::Member();
+   return operator Scope().DataMemberAt( nth );
 }
 
 
@@ -118,8 +116,7 @@ Reflex::Member Reflex::Type::DataMemberAt( size_t nth ) const {
 Reflex::Member Reflex::Type::DataMemberByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
 // Return a data member by name.
-   if ( * this ) return fTypeName->fTypeBase->DataMemberByName( nam );
-   return Dummy::Member();
+   return operator Scope().DataMemberByName( nam );
 }
 
 
@@ -136,8 +133,7 @@ Reflex::Type Reflex::Type::DynamicType( const Object & obj ) const {
 Reflex::Member Reflex::Type::FunctionMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth function member.
-   if ( * this ) return fTypeName->fTypeBase->FunctionMemberAt( nth );
-   return Dummy::Member();
+   return operator Scope().FunctionMemberAt( nth );
 }
 
 
@@ -147,8 +143,7 @@ Reflex::Member Reflex::Type::FunctionMemberByName( const std::string & nam,
                                                    unsigned int modifiers_mask /*= 0*/) const {
 //-------------------------------------------------------------------------------
 // Return a function member by name. Signature can be used for overloaded functions.
-   if ( * this ) return fTypeName->fTypeBase->FunctionMemberByName( nam, signature, modifiers_mask );
-   return Dummy::Member();
+   return operator Scope().FunctionMemberByName( nam, signature, modifiers_mask );
 }
 
 
@@ -156,8 +151,7 @@ Reflex::Member Reflex::Type::FunctionMemberByName( const std::string & nam,
 bool Reflex::Type::HasBase( const Type & cl ) const {
 //-------------------------------------------------------------------------------
    // Return base info if type has base cl.
-   if ( * this ) return fTypeName->fTypeBase->HasBase( cl );
-   return false;
+   return operator Scope().HasBase( cl );
 }
 
 
@@ -308,8 +302,7 @@ Reflex::Member Reflex::Type::MemberByName( const std::string & nam,
                                                        const Type & signature ) const {
 //-------------------------------------------------------------------------------
 // Return a member by name. Signature is optional for overloaded function members.
-   if ( * this ) return fTypeName->fTypeBase->MemberByName( nam, signature );
-   return Dummy::Member();
+   return operator Scope().MemberByName( nam, signature );
 }
 
 
@@ -317,8 +310,7 @@ Reflex::Member Reflex::Type::MemberByName( const std::string & nam,
 Reflex::Member Reflex::Type::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth member.
-   if ( * this ) return fTypeName->fTypeBase->MemberAt( nth );
-   return Dummy::Member();
+   return operator Scope().MemberAt( nth );
 }
 
 
@@ -326,8 +318,7 @@ Reflex::Member Reflex::Type::MemberAt( size_t nth ) const {
 Reflex::MemberTemplate Reflex::Type::MemberTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth member template.
-   if ( * this ) return fTypeName->fTypeBase->MemberTemplateAt( nth );
-   return Dummy::MemberTemplate();
+   return operator Scope().MemberTemplateAt( nth );
 }
 
 
@@ -391,8 +382,7 @@ Reflex::Scope Reflex::Type::PointerToMemberScope() const {
 Reflex::Scope Reflex::Type::SubScopeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth sub scope.
-   if ( * this ) return fTypeName->fTypeBase->SubScopeAt( nth );
-   return Dummy::Scope();
+   return operator Scope().SubScopeAt( nth );
 }
 
 
@@ -400,8 +390,7 @@ Reflex::Scope Reflex::Type::SubScopeAt( size_t nth ) const {
 Reflex::Type Reflex::Type::SubTypeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth sub type.
-   if ( * this ) return fTypeName->fTypeBase->SubTypeAt( nth );
-   return Dummy::Type();
+   return operator Scope().SubTypeAt( nth );
 }
 
 
@@ -425,8 +414,7 @@ size_t Reflex::Type::TypeSize() {
 Reflex::TypeTemplate Reflex::Type::SubTypeTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth sub type template.
-   if ( * this ) return fTypeName->fTypeBase->SubTypeTemplateAt( nth );
-   return Dummy::TypeTemplate();
+   return operator Scope().SubTypeTemplateAt( nth );
 }
 
 
