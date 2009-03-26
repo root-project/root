@@ -2245,6 +2245,9 @@ void TBranchElement::InitializeOffsets()
          }
 
          localOffset = subBranchElement->GetOffset();
+         if (localOffset == TStreamerInfo::kMissing) {
+            localOffset = 0;
+         }
 
          {
             Int_t streamerType = subBranchElement->GetType();
