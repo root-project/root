@@ -44,9 +44,14 @@ void test2() {
    ACache *ptr = 0;
    tree->SetBranchAddress("obj",&ptr);
    tree->GetEntry(0);
-   ptr->Print();
+   if (ptr==0) {
+      ::Error("test2","No object read from the TTree");
+   } else {
+      ptr->Print();
+   }
 
    //tree->Print("debugInfo");
+   //TClass::GetClass("ACache")->GetStreamerInfos()->ls();
 
    delete f;
 }

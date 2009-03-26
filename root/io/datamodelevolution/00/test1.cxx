@@ -19,6 +19,7 @@ void test1() {
 
    cout << "Create an object\n";
    ACache a(6,7);
+   a.CreateObjs();
    a.Print();
    
    TClassRef cl = TClass::GetClass("ACache");
@@ -43,6 +44,7 @@ void test1() {
 
    cout << "Create embedded object\n";
    Container c(8);
+   c.a.CreateObjs();
    c.a.Print();
 
    //cl->GetStreamerInfo()->ls();
