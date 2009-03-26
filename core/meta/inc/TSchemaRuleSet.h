@@ -24,6 +24,7 @@ namespace ROOT {
          const TSchemaRule* GetRuleWithTarget( const TString& name ) const;
                Bool_t       HasRuleWithSource( const TString& name ) const;
                Bool_t       HasRuleWithTarget( const TString& name ) const;
+      ClassDef(TSchemaMatch,0);
    };
 
    class TSchemaRuleSet: public TObject
