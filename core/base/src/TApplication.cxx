@@ -419,7 +419,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                // file ending on .root but does not exist, likely a typo, warn user...
                Warning("GetOptions", "file %s not found", dir);
             } else {
-               char *mac, *s = strtok(dir, "+(");
+               char *mac, *s = Strip(dir, '+');
                if ((mac = gSystem->Which(TROOT::GetMacroPath(), s,
                                          kReadPermission))) {
                   // if file add to list of files to be processed
@@ -433,6 +433,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                   if (!strcmp(gROOT->GetName(), "Rint"))
                      Warning("GetOptions", "macro %s not found", s);
                }
+               delete [] s;
             }
          }
          delete [] dir;
