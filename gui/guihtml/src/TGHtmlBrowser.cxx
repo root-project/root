@@ -246,7 +246,7 @@ Ssiz_t ReadSize(const char *url)
 
    char buf[4096];
    TUrl fUrl(url);
-   
+
    // Give full URL so Apache's virtual hosts solution works.
    TString msg = "HEAD ";
    msg += fUrl.GetProtocol();
@@ -260,7 +260,7 @@ Ssiz_t ReadSize(const char *url)
    msg += "\r\n";
    msg += "User-Agent: ROOT-TWebFile/1.1";
    msg += "\r\n\r\n";
-  
+
    TString uri(url);
    if (!uri.BeginsWith("http://"))
       return 0;
@@ -326,7 +326,7 @@ void TGHtmlBrowser::Selected(const char *uri)
 
    char *buf = 0;
    FILE *f;
-   
+
    if (IsMapped() && CheckAnchors(uri))
       return;
 
@@ -447,7 +447,22 @@ Bool_t TGHtmlBrowser::CheckAnchors(const char *uri)
 
    TString surl(gSystem->UnixPathName(uri));
 
+   if (!fHtml->GetBaseUri())
+      return kFALSE;
+   TString actual = fHtml->GetBaseUri();
    Ssiz_t idx = surl.Last('#');
+   Ssiz_t idy = actual.Last('#');
+   TString short1(surl.Data());
+   TString short2(actual.Data());
+   if (idx > 0)
+      short1 = surl(0, idx);
+   if (idy > 0)
+      short2 = actual(0, idy);
+
+   if (!actual.Contains(short1.Data(), TString::kIgnoreCase) ||
+       !surl.Contains(short2.Data(), TString::kIgnoreCase))
+      return kFALSE;
+
    if (idx > 0) {
       TString base = surl(0, idx);
       TString act(fURL->GetText());
