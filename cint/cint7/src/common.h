@@ -1039,61 +1039,6 @@ public: // -- Member Functions.
 
 };
 
-
-#if 0
-/**************************************************************************
-* structure for ifunc (Interpleted FUNCtion) table
-*
-**************************************************************************/
-struct G__ifunc_table {
-  /* number of interpreted function */
-  int allifunc;
-
-  /* function name and hash for identification */
-  char *funcname[G__MAXIFUNC];
-  int  hash[G__MAXIFUNC];
-
-  struct G__funcentry entry[G__MAXIFUNC],*pentry[G__MAXIFUNC];
-
-  /* type of return value */
-  G__SIGNEDCHAR_T type[G__MAXIFUNC];
-  short p_tagtable[G__MAXIFUNC];
-  ::Reflex::Type p_typetable[G__MAXIFUNC];
-  G__SIGNEDCHAR_T reftype[G__MAXIFUNC];
-  short para_nu[G__MAXIFUNC];
-  G__SIGNEDCHAR_T isconst[G__MAXIFUNC];
-  G__SIGNEDCHAR_T isexplicit[G__MAXIFUNC];
-
-  /* number and type of function parameter */
-  /* G__inheritclass() depends on type of following members */
-  char para_reftype[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_type[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_isconst[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_tagtable[G__MAXIFUNC][G__MAXFUNCPARA];
-  ::Reflex::Type para_p_typetable[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_name[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_def[G__MAXIFUNC][G__MAXFUNCPARA];
-
-  /* C or C++ */
-  char iscpp[G__MAXIFUNC];
-
-  struct G__ifunc_table *next;
-  short page;
-
-  G__SIGNEDCHAR_T access[G__MAXIFUNC];  /* private, protected, public */
-  char staticalloc[G__MAXIFUNC];
-
-  int tagnum;
-  char isvirtual[G__MAXIFUNC]; /* virtual function flag */
-  char ispurevirtual[G__MAXIFUNC]; /* virtual function flag */
-
-  G__SIGNEDCHAR_T globalcomp[G__MAXIFUNC];
-
-  struct G__comment_info comment[G__MAXIFUNC];
-
-};
-#endif
-
 /**************************************************************************
 * structure for class inheritance
 *
@@ -1109,64 +1054,6 @@ struct G__inheritance {
   G__SIGNEDCHAR_T baseaccess[G__MAXBASE];
   char property[G__MAXBASE];
 };
-
-#if 0
-/**************************************************************************
-* structure for variable table
-*
-**************************************************************************/
-struct G__var_array {
-  /* union for variable pointer */
-  long p[G__MEMDEPTH]; /* used to be int */
-  int allvar;
-  char *varnamebuf[G__MEMDEPTH]; /* variable name */
-  int hash[G__MEMDEPTH];                    /* hash table of varname */
-  int varlabel[G__MEMDEPTH+1][G__MAXVARDIM];  /* points varpointer */
-  short paran[G__MEMDEPTH];
-  char bitfield[G__MEMDEPTH];
-#ifdef G__VARIABLEFPOS
-  int filenum[G__MEMDEPTH];
-  int linenum[G__MEMDEPTH];
-#endif
-
-  /* type information,
-     if pointer : Char,Int,Short,Long,Double,U(struct,union)
-     if value   : char,int,short,long,double,u(struct,union) */
-  G__SIGNEDCHAR_T  type[G__MEMDEPTH];
-  G__SIGNEDCHAR_T constvar[G__MEMDEPTH];
-  short p_tagtable[G__MEMDEPTH];        /* tagname if struct,union */
-  ::Reflex::Type p_typetable[G__MEMDEPTH];       /* typename if typedef */
-  short statictype[G__MEMDEPTH];
-  G__SIGNEDCHAR_T reftype[G__MEMDEPTH];
-
-  /* chain for next G__var_array */
-  struct G__var_array *next;
-
-  G__SIGNEDCHAR_T access[G__MEMDEPTH];  /* private, protected, public */
-
-#ifdef G__SHOWSTACK
-  ::Reflex::Member ifunc;
-  ::Reflex::Scope prev_local;
-  int prev_filenum;
-  short prev_line_number;
-  char* struct_offset;
-  int tagnum;
-  int exec_memberfunc;
-#endif
-#ifdef G__VAARG
-  struct G__param *libp;
-#endif
-
-#ifndef G__NEWINHERIT
-  char isinherit[G__MEMDEPTH];
-#endif
-  G__SIGNEDCHAR_T globalcomp[G__MEMDEPTH];
-
-  struct G__comment_info comment[G__MEMDEPTH];
-
-} ;
-#endif
-
 
 /**************************************************************************
 * structure struct,union tag information
@@ -1188,8 +1075,7 @@ struct G__tagtable {
   int  hash[G__MAXSTRUCT];
   int  size[G__MAXSTRUCT];
   /* member information */
-  struct G__var_array *memvar[G__MAXSTRUCT];
-  // struct G__ifunc_table *memfunc[G__MAXSTRUCT]; go via Reflex if you need funcs!
+
   struct G__inheritance *baseclass[G__MAXSTRUCT];
   char* virtual_offset[G__MAXSTRUCT];
   G__SIGNEDCHAR_T globalcomp[G__MAXSTRUCT];
@@ -1233,34 +1119,6 @@ struct G__tagtable {
 #else
 struct G__tagtable;
 #endif
-
-/**************************************************************************
-* structure typedef information
-*
-**************************************************************************/
-/*
-struct G__typedef {
-  char type[G__MAXTYPEDEF];
-  char *name[G__MAXTYPEDEF];
-  int  hash[G__MAXTYPEDEF];
-  short  tagnum[G__MAXTYPEDEF];
-  char reftype[G__MAXTYPEDEF];
-#ifdef G__CPPLINK1
-  G__SIGNEDCHAR_T globalcomp[G__MAXTYPEDEF];
-#endif
-  int nindex[G__MAXTYPEDEF];
-  int *index[G__MAXTYPEDEF];
-  short parent_tagnum[G__MAXTYPEDEF];
-  char iscpplink[G__MAXTYPEDEF];
-  struct G__comment_info comment[G__MAXTYPEDEF];
-#ifdef G__TYPEDEFFPOS
-  int filenum[G__MAXTYPEDEF];
-  int linenum[G__MAXTYPEDEF];
-#endif
-  int alltype;
-  G__SIGNEDCHAR_T isconst[G__MAXTYPEDEF];
-};
-*/
 
 /**************************************************************************
 * tempobject list
