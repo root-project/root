@@ -2701,9 +2701,15 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
 
    // Config file
    if (in->fCfg.length() > 0) {
-      fprintf(frc, "# Config file\n");
-      // User defined
-      fprintf(frc, "ProofServ.ProofConfFile: %s\n", in->fCfg.c_str());
+      if (in->fCfg == "masteronly") {
+         fprintf(frc, "# MasterOnly option\n");
+         // Master Only setup
+         fprintf(frc, "Proof.MasterOnly: 1\n");
+      } else {
+         fprintf(frc, "# Config file\n");
+         // User defined
+         fprintf(frc, "ProofServ.ProofConfFile: %s\n", in->fCfg.c_str());
+      }
    } else {
       fprintf(frc, "# Config file\n");
       if (fMgr->IsSuperMst()) {

@@ -700,9 +700,15 @@ Int_t TProof::Init(const char *, const char *conffile,
             return 0;
       }
    } else {
-      // Start slaves (the old, static, per-session way)
-      if (!StartSlaves(attach))
-         return 0;
+
+      // Master Only mode (for operations requiring only the master, e.g. dataset browsing,
+      // result retrieving, ...)
+      Bool_t masterOnly = gEnv->GetValue("Proof.MasterOnly", kFALSE);
+      if (!IsMaster() || !masterOnly) {
+         // Start slaves (the old, static, per-session way)
+         if (!StartSlaves(attach))
+            return 0;
+      }
    }
 
    if (fgSemaphore)
