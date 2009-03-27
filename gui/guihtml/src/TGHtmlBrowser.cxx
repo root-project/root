@@ -459,30 +459,22 @@ Bool_t TGHtmlBrowser::CheckAnchors(const char *uri)
    if (idy > 0)
       short2 = actual(0, idy);
 
-   if (!actual.Contains(short1.Data(), TString::kIgnoreCase) ||
-       !surl.Contains(short2.Data(), TString::kIgnoreCase))
-      return kFALSE;
-
-   if (idx > 0) {
-      TString base = surl(0, idx);
-      TString act(fURL->GetText());
-      TString base2(act.Data());
-      Ssiz_t idx2 = act.Last('#');
-      if (idx2 > 0) {
-         base2 = act(0, idx2);
-      }
-      if (base == base2) {
+   if (short1 == short2) {
+      if (idx > 0) {
          idx +=1; // skip #
          TString anchor = surl(idx, surl.Length() - idx);
          fHtml->GotoAnchor(anchor.Data());
-         fHtml->SetBaseUri(surl.Data());
-         if (!fComboBox->FindEntry(surl.Data()))
-            fComboBox->AddEntry(surl.Data(), fComboBox->GetNumberOfEntries()+1);
-         fURL->SetText(surl.Data());
-         fComboBox->Select(fComboBox->GetNumberOfEntries(), kFALSE);
-         SetWindowName(Form("%s - RHTML",surl.Data()));
-         return kTRUE;
       }
+      else {
+         fHtml->ScrollToPosition(TGLongPosition(0, 0));
+      }
+      fHtml->SetBaseUri(surl.Data());
+      if (!fComboBox->FindEntry(surl.Data()))
+         fComboBox->AddEntry(surl.Data(), fComboBox->GetNumberOfEntries()+1);
+      fURL->SetText(surl.Data());
+      fComboBox->Select(fComboBox->GetNumberOfEntries(), kFALSE);
+      SetWindowName(Form("%s - RHTML",surl.Data()));
+      return kTRUE;
    }
    return kFALSE;
 }
