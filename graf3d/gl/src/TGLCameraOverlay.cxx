@@ -53,7 +53,7 @@ TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp) :
    fAxis->SetLabelColor(kGray+1);
 
    fAxisPainter = new TGLAxisPainter();
-   fAxisPainter->SetFontMode(TGLFont::kTexture);
+   fAxisPainter->SetFontMode(TGLFont::kBitmap);
 }
 
 //______________________________________________________________________________
@@ -155,27 +155,33 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx)
    Float_t tlX = 0.015*rl/(vp[3]-vp[1]);
 
 
+   TGLVector3 xdir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(2); // left
+   TGLVector3 ydir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(3); // up
+   xdir.Normalise();
+   ydir.Normalise();
+   Float_t tms = 0;
    // horizontal X
    //
    {
       fAxis->SetLabelSize(sizeX);
       fAxis->SetTickLength(tlX);
-      fAxisPainter->RefDir().Set(1, 0, 0);
+      fAxisPainter->RefDir() = xdir;
       Float_t axisXOff = (fFrustum[2] - fFrustum[0]) * (1 - fAxisExtend);
       fAxis->SetLimits(fFrustum[0] + axisXOff, fFrustum[2] - axisXOff);
       fAxis->SetRangeUser(fFrustum[0] + axisXOff, fFrustum[2] - axisXOff);
-      // bottom
+      tms = fFrustum[3] - fFrustum[1];
+      fAxisPainter->RefTMOff(0) = ydir*tms;
 
+      // bottom
       glPushMatrix();
-      glTranslatef(0, fFrustum[1], 0);
+      glTranslated(ydir.X()*fFrustum[1], ydir.Y()*fFrustum[1], ydir.Z()*fFrustum[1]);
       fAxisPainter->SetLabelAlign(TGLFont::kCenterDown);
-      fAxisPainter->RefTMOff(0).Set(0, fFrustum[3] - fFrustum[1],  0);
       fAxisPainter->PaintAxis(rnrCtx, fAxis);
       glPopMatrix();
 
       // top
       glPushMatrix();
-      glTranslatef(0, fFrustum[3], 0);
+      glTranslated(ydir.X()*fFrustum[3], ydir.Y()*fFrustum[3], ydir.Z()*fFrustum[3]);
       fAxisPainter->SetLabelAlign(TGLFont::kCenterUp);
       fAxisPainter->RefTMOff(0).Negate();
       fAxisPainter->RnrLabels();
@@ -188,20 +194,21 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx)
    {
       fAxis->SetLabelSize(sizeY);
       fAxis->SetTickLength(tlY);
-      fAxisPainter->RefDir().Set(0, 1, 0);
+      fAxisPainter->RefDir() = ydir;
       Float_t axisYOff = (fFrustum[3] - fFrustum[1]) * (1 - fAxisExtend);
       fAxis->SetLimits(fFrustum[1] + axisYOff, fFrustum[3] - axisYOff);
-      // left
+      tms = fFrustum[2] - fFrustum[0];
+      fAxisPainter->RefTMOff(0) = xdir*tms;
 
+      // left
       glPushMatrix();
-      glTranslated(fFrustum[0], 0, 0);
-      fAxisPainter->RefTMOff(0).Set(fFrustum[2] - fFrustum[0], 0, 0);
+      glTranslated(xdir.X()*fFrustum[0], xdir.Y()*fFrustum[0], xdir.Z()*fFrustum[0]);
       fAxisPainter->SetLabelAlign(TGLFont::kLeft);
       fAxisPainter->PaintAxis(rnrCtx, fAxis);
       glPopMatrix();
       // right
       glPushMatrix();
-      glTranslatef(fFrustum[2], 0, 0);
+      glTranslated(xdir.X()*fFrustum[2], xdir.Y()*fFrustum[2], xdir.Z()*fFrustum[2]);
       fAxisPainter->SetLabelAlign(TGLFont::kRight);
       fAxisPainter->RefTMOff(0).Negate();
       fAxisPainter->RnrLabels();
@@ -233,6 +240,13 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
       red = TMath::Power(10, exp);
    }
 
+   TGLVector3 v;
+   TGLVector3 v1;
+   TGLVector3 xdir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(2); // left
+   TGLVector3 ydir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(3); // up
+   xdir.Normalise();
+   ydir.Normalise();
+
    TGLUtil::Color(kWhite);
    const char* txt = Form("%.*f", (exp < 0) ? -exp : 0, red);
    Float_t bb[6];
@@ -242,7 +256,8 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
    TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
    Double_t mH = (fFrustum[3]-fFrustum[1])*bb[4]/vp.Height();
    glPushMatrix();
-   glTranslatef(fFrustum[2] -barsize, fFrustum[3] - (mH*1.5), 0);
+   v = xdir*(fFrustum[2]-barsize) + ydir*(fFrustum[3] - mH*1.5);
+   glTranslated(v.X(), v.Y(), v.Z());
    glRasterPos2i(0,0);
    TGLUtil::Color(kGray);
    font.Render(txt);
@@ -251,24 +266,37 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
    glLineWidth(2.);
    glPushMatrix();
-   glTranslatef (fFrustum[2] - 1.1*barsize,  fFrustum[3] - 2.1*mH, 0);
+   Float_t xt = fFrustum[2] - 1.1*barsize;
+   Float_t yt = fFrustum[3] - 2.1*mH;
+   v = xdir*xt + ydir*yt;
+   glTranslated(v.X(), v.Y(), v.Z());
+
    glBegin(GL_LINES);
    // horizontal static
-   glVertex3d(red, 0.,0.);
-   glVertex3d(barsize, 0., 0.);
-   // corner bars
-   glVertex3d(barsize,  mH, 0.);
-   glVertex3d(barsize, -mH, 0.);
-   // marker cormer bar
+   v = red*xdir;
+   glVertex3dv(v.Arr());
+   v = barsize*xdir;
+   glVertex3dv(v.Arr());
+   // corner bars end
+   v = xdir*barsize + ydir*mH;
+   glVertex3dv(v.Arr());
+   v = xdir*barsize - ydir*mH;
+   glVertex3dv(v.Arr());
+   // corner bar start
    TGLUtil::Color(kRed);
-   glVertex3d(0.,  mH, 0.);
-   glVertex3d(0., -mH, 0.);
+   v = ydir*mH;
+   glVertex3dv(v.Arr());
+   v.Negate();
+   glVertex3dv(v.Arr());
    // marker pointer
-   glVertex3d(red, 0., 0.);
-   glVertex3d(red, mH, 0.);
+   v = red*ydir;
+   glVertex3dv(v.Arr());
+   v += ydir*mH;
+   glVertex3dv(v.Arr());
    //marker line
-   glVertex3d(0, 0.,0.);
-   glVertex3d(red, 0., 0.);
+   glVertex3d(0, 0., 0.);
+   v = red*xdir;
+   glVertex3dv(v.Arr());
    glEnd();
    glPopAttrib();
    glPopMatrix();
@@ -286,14 +314,13 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
 
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
 
-   const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
-   GLdouble mm[16];
-   GLint    vp[4];
-   glGetDoublev(GL_MODELVIEW_MATRIX,  mm);
-   glGetIntegerv(GL_VIEWPORT, vp);
-   GLdouble l, r, t, b, z;
-   gluUnProject(vp[0]+0.5, vp[1]+0.5, 0,  mm, pm, vp, &l, &b, &z);
-   gluUnProject(vp[0]+vp[2]-0.5, vp[1]+vp[3]-0.5, 0,  mm, pm, vp, &r, &t, &z);
+   // Frustum size.
+   TGLCamera &camera = rnrCtx.RefCamera();
+   Float_t l = -camera.FrustumPlane(TGLCamera::kLeft).D();
+   Float_t r =  camera.FrustumPlane(TGLCamera::kRight).D();
+   Float_t t =  camera.FrustumPlane(TGLCamera::kTop).D();
+   Float_t b = -camera.FrustumPlane(TGLCamera::kBottom).D();
+
    fFrustum[0]=l;
    fFrustum[1]=b;
    fFrustum[2]=r;
