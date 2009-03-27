@@ -221,13 +221,13 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fHtml->Connect("MouseOver(const char *)", "TGHtmlBrowser", this, "MouseOver(const char *)");
    fHtml->Connect("MouseDown(const char *)", "TGHtmlBrowser", this, "MouseDown(const char *)");
 
-   if (filename)
-      Selected(filename);
-
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
    Resize(w, h);
+
+   if (filename)
+      Selected(filename);
 }
 
 //______________________________________________________________________________
@@ -327,7 +327,7 @@ void TGHtmlBrowser::Selected(const char *uri)
    char *buf = 0;
    FILE *f;
 
-   if (IsMapped() && CheckAnchors(uri))
+   if (CheckAnchors(uri))
       return;
 
    TString surl(gSystem->UnixPathName(uri));
