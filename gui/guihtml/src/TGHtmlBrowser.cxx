@@ -221,7 +221,8 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fHtml->Connect("MouseOver(const char *)", "TGHtmlBrowser", this, "MouseOver(const char *)");
    fHtml->Connect("MouseDown(const char *)", "TGHtmlBrowser", this, "MouseDown(const char *)");
 
-   Selected(filename);
+   if (filename)
+      Selected(filename);
 
    MapSubwindows();
    Resize(GetDefaultSize());
@@ -239,12 +240,58 @@ void TGHtmlBrowser::CloseWindow()
 }
 
 //______________________________________________________________________________
+Ssiz_t ReadSize(const char *url)
+{
+   // Read (open) remote files.
+
+   char buf[4096];
+   TUrl fUrl(url);
+   
+   // Give full URL so Apache's virtual hosts solution works.
+   TString msg = "HEAD ";
+   msg += fUrl.GetProtocol();
+   msg += "://";
+   msg += fUrl.GetHost();
+   msg += ":";
+   msg += fUrl.GetPort();
+   msg += "/";
+   msg += fUrl.GetFile();
+   msg += " HTTP/1.0";
+   msg += "\r\n";
+   msg += "User-Agent: ROOT-TWebFile/1.1";
+   msg += "\r\n\r\n";
+  
+   TString uri(url);
+   if (!uri.BeginsWith("http://"))
+      return 0;
+   TSocket s(fUrl.GetHost(), fUrl.GetPort());
+   if (!s.IsValid())
+      return 0;
+   if (s.SendRaw(msg.Data(), msg.Length()) == -1)
+      return 0;
+   if (s.RecvRaw(buf, 4096) == -1) {
+      return 0;
+   }
+   TString reply(buf);
+   Ssiz_t idx = reply.Index("Content-length:", 0, TString::kIgnoreCase);
+   if (idx > 0) {
+      idx += 15;
+      TString slen = reply(idx, reply.Length() - idx);
+      return (Ssiz_t)atol(slen.Data());
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 static char *ReadRemote(const char *url)
 {
    // Read (open) remote files.
 
    static char *buf = 0;
    TUrl fUrl(url);
+
+   Ssiz_t size = ReadSize(url);
+   if (size <= 0) size = 1024*1024;
 
    TString msg = "GET ";
    msg += fUrl.GetProtocol();
@@ -264,7 +311,6 @@ static char *ReadRemote(const char *url)
       return 0;
    if (s.SendRaw(msg.Data(), msg.Length()) == -1)
       return 0;
-   Int_t size = 1024*1024;
    buf = (char *)calloc(size, sizeof(char));
    if (s.RecvRaw(buf, size) == -1) {
       free(buf);
@@ -280,6 +326,9 @@ void TGHtmlBrowser::Selected(const char *uri)
 
    char *buf = 0;
    FILE *f;
+   
+   if (IsMapped() && CheckAnchors(uri))
+      return;
 
    TString surl(gSystem->UnixPathName(uri));
    if (!surl.BeginsWith("http://") && !surl.BeginsWith("file://")) {
@@ -349,6 +398,12 @@ void TGHtmlBrowser::Selected(const char *uri)
    }
    gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kPointer));
    fHtml->Layout();
+   Ssiz_t idx = surl.Last('#');
+   if (idx > 0) {
+      idx +=1; // skip #
+      TString anchor = surl(idx, surl.Length() - idx);
+      fHtml->GotoAnchor(anchor.Data());
+   }
    SetWindowName(Form("%s - RHTML",surl.Data()));
 }
 
@@ -382,6 +437,39 @@ void TGHtmlBrowser::Back()
             Selected(string);
       }
    }
+}
+
+//______________________________________________________________________________
+Bool_t TGHtmlBrowser::CheckAnchors(const char *uri)
+{
+   // Check if we just change position in the page (using anchor)
+   // and return kTRUE if any anchor has been found and followed.
+
+   TString surl(gSystem->UnixPathName(uri));
+
+   Ssiz_t idx = surl.Last('#');
+   if (idx > 0) {
+      TString base = surl(0, idx);
+      TString act(fURL->GetText());
+      TString base2(act.Data());
+      Ssiz_t idx2 = act.Last('#');
+      if (idx2 > 0) {
+         base2 = act(0, idx2);
+      }
+      if (base == base2) {
+         idx +=1; // skip #
+         TString anchor = surl(idx, surl.Length() - idx);
+         fHtml->GotoAnchor(anchor.Data());
+         fHtml->SetBaseUri(surl.Data());
+         if (!fComboBox->FindEntry(surl.Data()))
+            fComboBox->AddEntry(surl.Data(), fComboBox->GetNumberOfEntries()+1);
+         fURL->SetText(surl.Data());
+         fComboBox->Select(fComboBox->GetNumberOfEntries(), kFALSE);
+         SetWindowName(Form("%s - RHTML",surl.Data()));
+         return kTRUE;
+      }
+   }
+   return kFALSE;
 }
 
 //______________________________________________________________________________

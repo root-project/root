@@ -64,6 +64,7 @@ public:
    void              Selected(const char *txt);
    void              URLChanged();
    void              Back();
+   Bool_t            CheckAnchors(const char *);
    void              Forward();
    void              Reload();
    void              Stop();
