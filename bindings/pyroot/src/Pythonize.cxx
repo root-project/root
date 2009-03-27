@@ -1338,7 +1338,7 @@ namespace {
 
    // retrieve function information
       Long_t npar = 0;
-      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( res->tagnum, &npar );
+      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res), &npar );
       if ( ! pyfunc )
          return 0;
 
@@ -1376,7 +1376,7 @@ namespace {
       PyObject* result = 0;
 
    // retrieve function information
-      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( res->tagnum );
+      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res) );
       if ( ! pyfunc )
          return 0;
 

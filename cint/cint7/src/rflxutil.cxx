@@ -82,6 +82,7 @@ int G__get_access(const ::Reflex::Member mem);
 // C interface functions.
 extern "C" {
 int G__value_get_type(G__value *buf);
+int G__value_get_tagnum(G__value *buf);
 void G__dump_reflex();
 void G__dump_reflex_atlevel(const ::Reflex::Scope scope, int level);
 void G__dump_reflex_function(const ::Reflex::Scope scope, int level);
@@ -302,6 +303,12 @@ int Cint::Internal::G__get_cint5_typenum(const ::Reflex::Type in_type)
 extern "C" int G__value_get_type(G__value *buf)
 {
    return Cint::Internal::G__get_type(*buf);
+}
+
+//______________________________________________________________________________
+extern "C" int G__value_get_tagnum(G__value *buf)
+{
+   return Cint::Internal::G__get_tagnum(G__value_typenum(*buf));
 }
 
 //______________________________________________________________________________

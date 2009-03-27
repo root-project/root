@@ -180,7 +180,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg( PyObject* pyobject, TParameter& para, G
    if ( func ) {
       G__value v;
       v.ref = (long)&((PyIntObject*)pyobject)->ob_ival;
-      v.type = 'i'; v.obj.i = para.fl; v.tagnum = -1; v.typenum = -1;
+      G__letint(&v,'i',para.fl);
       func->SetArg( v );
    }
 

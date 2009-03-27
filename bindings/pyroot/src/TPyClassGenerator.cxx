@@ -23,7 +23,7 @@ namespace {
    //_________________________________________________________________________
    int PyCtorCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
-      PyObject* pyclass = PyROOT::Utility::GetInstalledMethod( res->tagnum );
+      PyObject* pyclass = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res) );
       if ( ! pyclass )
          return 0;
 
@@ -33,9 +33,8 @@ namespace {
          PyErr_Print();
       Py_DECREF( args );
 
-      res->obj.i = (Long_t)result;
+      G__letint(res,'u',(Long_t)result);
       res->ref   = (Long_t)result;
-      res->type  = 'u';
 
       G__linked_taginfo pti;
       pti.tagnum = -1;
@@ -48,7 +47,7 @@ namespace {
       clName = clName.substr( clName.rfind( '.' )+1, std::string::npos );
       pti.tagname = clName.c_str();
 
-      res->tagnum = G__get_linked_tagnum( &pti );
+      G__set_tagnum(res,G__get_linked_tagnum( &pti ));
 
       return ( 1 || hash || res || libp );
    }
@@ -56,7 +55,7 @@ namespace {
    //_________________________________________________________________________
    int PyMemFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
-      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( res->tagnum );
+      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res) );
       if ( ! pyfunc )
          return 0;
 
@@ -67,7 +66,7 @@ namespace {
       PyTuple_SetItem( args, 0, self );
       for ( int i = 0; i < libp->paran; ++i ) {
          PyObject* arg = 0;
-         switch ( libp->para[i].type ) {
+         switch ( G__value_get_type(&libp->para[i]) ) {
          case 'd':
             arg = PyFloat_FromDouble( G__Mdouble(libp->para[i]) );
             break;
@@ -112,7 +111,7 @@ namespace {
             PyTuple_SetItem( args, i+1, arg );         // steals ref to arg
          else {
             PyErr_Format( PyExc_TypeError,
-               "error converting parameter: %d (type: %c)", i, libp->para[i].type );
+               "error converting parameter: %d (type: %c)", i, G__value_get_type(&libp->para[i]) );
             break;
          }
 

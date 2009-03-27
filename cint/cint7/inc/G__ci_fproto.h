@@ -193,6 +193,7 @@ G__DECL_API(98, int, G__memfunc_setup, (G__CONST char *funcname,int hash,G__Inte
 G__DECL_API(99, int, G__memfunc_next, (void));
 G__DECL_API(101, int, G__tag_memfunc_reset, (void));
 G__DECL_API(100, int, G__value_get_type, (G__value* buf));
+G__DECL_API(262, int, G__value_get_tagnum, (G__value* buf));
 G__DECL_API(102, void, G__letint, (G__value *buf,int type,long value));
 G__DECL_API(103, void, G__letdouble, (G__value *buf,int type,double value));
 G__DECL_API(104, void, G__store_tempobject, (G__value reg));
@@ -358,6 +359,7 @@ G__DECL_API(233, G__CONST char, *G__fulltagname, (int tagnum,int mask_dollar));
 G__DECL_API(234, void, G__loadlonglong, (int* ptag,int* ptype,int which));
 G__DECL_API(235, int, G__isanybase, (int basetagnum,int derivedtagnum,long pobject));
 G__DECL_API(236, int, G__pop_tempobject, (void));
+G__DECL_API(263, int, G__pop_tempobject_nodel, (void));
 G__DECL_API(237, const char*, G__stripfilename, (const char* filename));
 
 /***********************************************************************
@@ -385,5 +387,5 @@ G__DECL_API(255, FILE*, FOpenAndSleep, (const char *filename, const char *mode))
 #endif
 G__DECL_API(256, void, G__letbool, (G__value* buf,int type,long value));
 
-#define G__NUMBER_OF_API_FUNCTIONS 262
+#define G__NUMBER_OF_API_FUNCTIONS 264
 G__DUMMYTOCHECKFORDUPLICATES(G__NUMBER_OF_API_FUNCTIONS)

@@ -395,7 +395,7 @@ Reflex::ScopeBase::MemberByName( const std::string & name,
                                  const Type & signature ) const {
 //-------------------------------------------------------------------------------
    // Return member by name and signature.
-   return MemberByName2((const std::vector<Member>&)fMembers, name);
+   return MemberByName2((const std::vector<Member>&)fMembers, name, &signature);
 }
 
 

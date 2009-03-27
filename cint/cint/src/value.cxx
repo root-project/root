@@ -773,6 +773,11 @@ int G__value_get_type(G__value* val)
    return val->type;
 }
 
+int G__value_get_tagnum(G__value* val) 
+   {
+      return val->tagnum;
+   }
+   
 } /* extern "C" */
 
 /*
