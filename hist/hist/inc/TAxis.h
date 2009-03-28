@@ -85,6 +85,7 @@ public:
    virtual Int_t      FindBin(const char *label);
    virtual Int_t      FindFixBin(Double_t x) const;
    virtual Double_t   GetBinCenter(Int_t bin) const;
+   virtual Double_t   GetBinCenterLog(Int_t bin) const;
    const char        *GetBinLabel(Int_t bin) const;
    virtual Double_t   GetBinLowEdge(Int_t bin) const;
    virtual Double_t   GetBinUpEdge(Int_t bin) const;

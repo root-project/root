@@ -414,6 +414,30 @@ Double_t TAxis::GetBinCenter(Int_t bin) const
 }
 
 //______________________________________________________________________________
+Double_t TAxis::GetBinCenterLog(Int_t bin) const
+{
+   // Return center of bin in log
+   // With a log-equidistant binning for a bin with low and up edges, the mean is : 
+   // 0.5*(ln low + ln up) i.e. sqrt(low*up) in logx (e.g. sqrt(10^0*10^2) = 10). 
+   //Imagine a bin with low=1 and up=100 : 
+   // - the center in lin is (100-1)/2=50.5 
+   // - the center in log would be sqrt(1*100)=10 (!=log(50.5)) 
+   // NB: if the low edge of the bin is negative, the function returns the bin center
+   //     as computed by TAxis::GetBinCenter
+   
+   Double_t low,up;
+   if (!fXbins.fN || bin<1 || bin>fNbins) {
+      Double_t binwidth = (fXmax - fXmin) / Double_t(fNbins);
+      low = fXmin + (bin-1) * binwidth;
+      up  = low+binwidth;
+   } else {
+      low = fXbins.fArray[bin-1];
+      up  = fXbins.fArray[bin];
+   }
+   if (low <=0 ) return GetBinCenter(bin);
+   return TMath::Sqrt(low*up);
+}
+//______________________________________________________________________________
 Double_t TAxis::GetBinLowEdge(Int_t bin) const
 {
    // Return low edge of bin
