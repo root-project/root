@@ -1005,9 +1005,9 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    for (binz=0;binz<=nbinsz+1;binz++) {
       Double_t wz = h1->GetZaxis()->GetBinWidth(binz);
       for (biny=0;biny<=nbinsy+1;biny++) {
-         Double_t wy = h1->GetYaxis()->GetBinWidth(binz);
+         Double_t wy = h1->GetYaxis()->GetBinWidth(biny);
          for (binx=0;binx<=nbinsx+1;binx++) {
-            Double_t wx = h1->GetXaxis()->GetBinWidth(binz);
+            Double_t wx = h1->GetXaxis()->GetBinWidth(binx);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             //special case where histograms have the kIsAverage bit set
             if (h1->TestBit(kIsAverage) && h2->TestBit(kIsAverage)) {
