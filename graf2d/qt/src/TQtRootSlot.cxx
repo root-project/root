@@ -99,7 +99,8 @@ void TQtRootSlot::TerminateAndQuit() const
    if (qApp) qApp->quit();
    else if (!rtrm && gApplication ) {
       gApplication->SetReturnFromRun(rtrm);
-      gApplication->Terminate(0);
+      // to make sure the ROOT event loop is terminated
+      gROOT->ProcessLine(".q");
    }
 }
 

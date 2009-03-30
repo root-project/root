@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootcint.pri,v 1.7 2008/09/25 22:19:24 fine Exp $
+# $Id: rootcint.pri,v 1.8 2009/03/22 04:58:00 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -57,6 +57,7 @@
 # -------  define rootlibs.pri -----------------
 ROOTLIBSPRI = 
 ROOTLIBSPRIFILE = rootlibs.pri
+win32: DEFINES +=  _CRT_SECURE_NO_WARNINGS
 # Wow !!! Qt exists function for the nested include file applies the relative path
 exists ($$ROOTLIBSPRIFILE){
 #  ROOTLIBSPRI = inc/$$ROOTLIBSPRIFILE

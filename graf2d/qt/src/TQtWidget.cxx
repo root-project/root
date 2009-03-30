@@ -524,14 +524,9 @@ TQtWidget::customEvent(QCustomEvent *e)
 void TQtWidget::contextMenuEvent(QContextMenuEvent *e)
 {
    TCanvas *c = Canvas();
-   if (e && c) {
-#if (QT_VERSION >= 0x040000)
-       if (e->reason() != QContextMenuEvent::Mouse) {
-          // the mouse click has been processed by mouseEvent handler
-         c->HandleInput(kButton3Down, e->x(), e->y());
-         e->accept();
-      }
-#endif
+   if (e && c && (e->reason() != QContextMenuEvent::Mouse) ) {
+      c->HandleInput(kButton3Down, e->x(), e->y());
+      e->accept();
    }
 }
 //_____________________________________________________________________________
@@ -570,7 +565,17 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
       switch (e->button ())
       {
       case Qt::LeftButton:  rootButton = kButton1Down; break;
-      case Qt::RightButton: rootButton = kButton3Down; break;
+      case Qt::RightButton: {
+//          rootButton = kButton3Down; 
+         // respect the QWidget::contextMenuPolicy
+         // treat this event as QContextMenuEvent
+          if (contextMenuPolicy()) {
+             QContextMenuEvent event(QContextMenuEvent::Other, e->pos() );
+             QApplication::sendEvent(this, &event);
+             e->accept(); 
+          }
+          break;
+       }
       case Qt::MidButton:   rootButton = kButton2Down; break;
       default: break;
       };
@@ -725,8 +730,17 @@ void TQtWidget::resizeEvent(QResizeEvent *e)
 #else
       {
          fSizeChanged=TRUE;
-         fPaint = kTRUE;
-         exitSizeEvent();
+#if 0
+         if (Qt::LeftButton == QApplication::mouseButtons()) 
+         {
+            fNeedStretch=true;
+            fPaint = false;
+         } else 
+#endif
+         {
+            fPaint = kTRUE;
+            exitSizeEvent();
+         }
 #endif
       } }
 }

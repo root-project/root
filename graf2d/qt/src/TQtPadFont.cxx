@@ -22,9 +22,7 @@
 #include "TSystem.h"
 #include "TMath.h"
 #include <qfontmetrics.h>
-#if QT_VERSION >= 0x40000
-#  include <QDebug>
-#endif
+#include <QDebug>
 
 const char *TQtPadFont::fgRomanFontName   = "Times New Roman";
 const char *TQtPadFont::fgArialFontName   = "Arial";
@@ -46,23 +44,20 @@ static float CalibrateFont()
           fontCalibFactor= QString(envFactor).toFloat(&ok);
        if (!ok) {
           TQtPadFont pattern;
-          pattern.SetTextFont(6);
+          pattern.SetTextFont(62);
 
           int w,h;
           QFontMetrics metrics(pattern);
           w = metrics.width("This is a PX distribution");
           h = metrics.height();
 
-// I found 0.94 matches well what Rene thinks it should be
-// for TTF and XFT and it should be 1.1 for X Fonts
-//
 //  X11 returns          h = 12
 //  XFT returns          h = 14
 //  WIN32 TTF returns    h = 16
 //  Nimbus Roman returns h = 18
-//  Qt4 XFT              h = 20
+//  Qt4 XFT              h = 21
 
-          // printf(" Font metric w = %d , h = %d\n", w,h);
+          // qDebug() << " Font metric w = " << w <<" h = "<< h;
           float f;
           switch (h) {
              case 12: f = 1.10;  break;// it was  f = 1.13 :-(;
@@ -70,6 +65,7 @@ static float CalibrateFont()
              case 16: f = 0.965; break;// to be tested yet
              case 18: f = 0.92;  break;// to be tested yet
              case 20: f = 0.99;  break;// to be tested yet
+             case 21: f = 0.90;  break;// to be tested yet
              default: f = 1.10;  break;
           }
           fontCalibFactor = f;
@@ -89,7 +85,7 @@ static inline float FontMagicFactor(float size)
 
 //______________________________________________________________________________
 TQtPadFont::TQtPadFont(): TAttText()
-{}
+{fTextFont = -1;}
 
 //______________________________________________________________________________
 void  TQtPadFont::SetTextFont(const char *fontname, int italic, int bold)
@@ -123,7 +119,11 @@ void  TQtPadFont::SetTextFont(const char *fontname, int italic, int bold)
          << "ROOT  font number=" << fTextFont;
 #endif
 #endif
-   // fprintf(stderr, "TGQt::SetTextFont font: <%s> bold=%d italic=%d\n",fontname,bold,italic);
+#if 0
+   qDebug() << "TGQt::SetTextFont font:"    << fontname 
+            << " bold="  << bold
+            << " italic="<< italic;
+#endif
 }
 
 //______________________________________________________________________________
@@ -255,7 +255,7 @@ void  TQtPadFont::SetTextSize(Float_t textsize)
  {
     // Set the text pixel size
     TAttText::SetTextSizePixels(npixels);
-    this->setPixelSize(int(FontMagicFactor(npixels)));
+    this->setPixelSize(npixels);
  }
 //______________________________________________________________________________
 const char *TQtPadFont::RomanFontName() 
