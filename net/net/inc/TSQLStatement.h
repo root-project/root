@@ -21,6 +21,7 @@
 #ifndef ROOT_TDatime
 #include "TDatime.h"
 #endif
+#include<vector>
 
 class TSQLStatement : public TObject {
 
@@ -61,6 +62,12 @@ public:
            Bool_t      SetTimestamp(Int_t, const TDatime&);
    virtual void        SetTimeFormating(const char*) {}
    virtual Bool_t      SetBinary(Int_t, void*, Long_t, Long_t = 0x1000) { return kFALSE; }
+   virtual Bool_t      SetVInt(Int_t, const std::vector<Int_t>, const char*, const char*) { return kFALSE; }
+   virtual Bool_t      SetVUInt(Int_t, const std::vector<UInt_t>, const char*, const char*) { return kFALSE; }
+   virtual Bool_t      SetVLong(Int_t, const std::vector<Long_t>, const char*, const char*) { return kFALSE; }
+   virtual Bool_t      SetVLong64(Int_t, const std::vector<Long64_t>, const char*, const char*) { return kFALSE; }
+   virtual Bool_t      SetVULong64(Int_t, const std::vector<ULong64_t>, const char*, const char*) { return kFALSE; }
+   virtual Bool_t      SetVDouble(Int_t, const std::vector<Double_t>, const char*, const char*) { return kFALSE; }
 
    virtual Bool_t      Process() = 0;
    virtual Int_t       GetNumAffectedRows() { return 0; }
@@ -93,6 +100,12 @@ public:
            Int_t       GetSecond(Int_t);
    virtual Bool_t      GetTimestamp(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&) { return kFALSE; }
            TDatime     GetTimestamp(Int_t);
+   virtual Bool_t      GetVInt(Int_t, std::vector<Int_t>&) { return kFALSE; }
+   virtual Bool_t      GetVUInt(Int_t, std::vector<UInt_t>&) { return kFALSE; }
+   virtual Bool_t      GetVLong(Int_t, std::vector<Long_t>&) { return kFALSE; }
+   virtual Bool_t      GetVLong64(Int_t, std::vector<Long64_t>&) { return kFALSE; }
+   virtual Bool_t      GetVULong64(Int_t, std::vector<ULong64_t>&) { return kFALSE; }
+   virtual Bool_t      GetVDouble(Int_t, std::vector<Double_t>&) { return kFALSE; }
 
    virtual Bool_t      IsError() const { return GetErrorCode()!=0; }
    virtual Int_t       GetErrorCode() const;

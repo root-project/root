@@ -459,6 +459,122 @@ Bool_t TOracleStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t
 }
 
 //______________________________________________________________________________
+Bool_t TOracleStatement::SetVInt(Int_t npar, const std::vector<Int_t> value, const char* schemaName, const char* typeName)
+{
+   // Set vector of integer values for parameter npar
+    
+   CheckSetPar("SetVInt");
+
+   try {
+      setVector(fStmt, npar+1, value, schemaName, typeName);
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVInt");
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::SetVUInt(Int_t npar, const std::vector<UInt_t> value, const char* schemaName, const char* typeName)
+{
+   // Set vector of unsigned integer values for parameter npar
+
+   CheckSetPar("SetVUInt");
+
+   try {
+      setVector(fStmt, npar+1, value, schemaName, typeName);
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVUInt");
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::SetVLong(Int_t npar, const std::vector<Long_t> value, const char* schemaName, const char* typeName)
+{
+   // Set vector of long integer values for parameter npar
+
+   CheckSetPar("SetVLong");
+
+   try {
+      std::vector<Number> nvec;
+      for (std::vector<Long_t>::const_iterator it = value.begin();
+           it != value.end();
+           it++) {
+         nvec.push_back(Number(*it));
+      }
+      setVector(fStmt, npar+1, nvec, schemaName, typeName);
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVLong");
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::SetVLong64(Int_t npar, const std::vector<Long64_t> value, const char* schemaName, const char* typeName)
+{
+   // Set vector of 64-bit integer values for parameter npar
+
+   CheckSetPar("SetVLong64");
+   
+   try {
+      std::vector<Number> nvec;
+      for (std::vector<Long64_t>::const_iterator it = value.begin();
+           it != value.end();
+           it++) {
+        nvec.push_back(Number((long double)*it));
+      }
+      setVector(fStmt, npar+1, nvec, schemaName, typeName);
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVLong64");
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::SetVULong64(Int_t npar, std::vector<ULong64_t> value, const char* schemaName, const char* typeName)
+{
+   // Set vector of unsigned 64-bit integer values for parameter npar
+
+   CheckSetPar("SetVULong64");
+
+   try {
+      std::vector<Number> nvec;
+      for (std::vector<ULong64_t>::const_iterator it = value.begin();
+           it != value.end();
+           it++) {
+        nvec.push_back(Number((long double)*it));
+      }
+      setVector(fStmt, npar+1, nvec, schemaName, typeName);
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVULong64");
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::SetVDouble(Int_t npar, const std::vector<Double_t> value, const char* schemaName, const char* typeName)
+{
+   // Set vector of double values for parameter npar
+
+   CheckSetPar("SetVDouble");
+   
+   try {
+      setVector(fStmt, npar+1, value, schemaName, typeName);
+      return kTRUE;
+   } catch (SQLException &oraex)  {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVDouble");
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 Bool_t TOracleStatement::NextIteration()
 {
    // Add next iteration for statement with parameters
@@ -1000,3 +1116,113 @@ Bool_t TOracleStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int
 
    return kFALSE;
 }
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetVInt(Int_t npar, std::vector<Int_t> &value)
+{
+   // return field value as vector of integers
+   CheckGetField("GetVInt", kFALSE);
+   try {
+      if (!fResult->isNull(npar+1))
+         getVector(fResult, npar+1, value);
+      return kTRUE;
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVInt");
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetVUInt(Int_t npar, std::vector<UInt_t> &value)
+{
+   // return field value as vector of unsigned integers
+   CheckGetField("GetVUInt", kFALSE);
+   try {
+      if (!fResult->isNull(npar+1))
+         getVector(fResult, npar+1, value);
+      return kTRUE;
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVUInt");
+   }
+   return kFALSE;
+}
+
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetVLong(Int_t npar, std::vector<Long_t> &value)
+{
+   // return field value as vector of long integers
+   CheckGetField("GetVLong", kFALSE);
+   try {
+      std::vector<Number> res;
+      if (!fResult->isNull(npar+1))
+         getVector(fResult, npar+1, res);
+      for (std::vector<Number>::const_iterator it = res.begin();
+           it != res.end();
+           it++ ) {
+         value.push_back((Long_t)*it);
+      }
+      return kTRUE;
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVLong");
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetVLong64(Int_t npar, std::vector<Long64_t> &value)
+{
+   // return field value as vector of 64-bit integers
+   CheckGetField("GetVLong64", kFALSE);
+   try {
+      std::vector<Number> res;
+      if (!fResult->isNull(npar+1))
+         getVector(fResult, npar+1, res);
+      for (std::vector<Number>::const_iterator it = res.begin();
+           it != res.end();
+           it++ ) {
+         value.push_back((Long_t)*it);
+      }
+      return kTRUE;
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVLong64");
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetVULong64(Int_t npar, std::vector<ULong64_t> &value)
+{
+   // return field value as vector of unsigned 64-bit integers
+   CheckGetField("GetVULong64", kFALSE);
+   try {
+      std::vector<Number> res;
+      if (!fResult->isNull(npar+1))
+         getVector(fResult, npar+1, res);
+      for (std::vector<Number>::const_iterator it = res.begin();
+           it != res.end();
+           it++ ) {
+        value.push_back((Long_t)(long double)*it);
+      }
+      return kTRUE;
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVULong64");
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TOracleStatement::GetVDouble(Int_t npar, std::vector<Double_t> &value)
+{
+   // return field value as vector of doubles
+   CheckGetField("GetVDouble", kFALSE);
+   try {
+      if (!fResult->isNull(npar+1))
+         getVector(fResult, npar+1, value);
+      return kTRUE;
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVDouble");
+   }
+   return kFALSE;
+}
+

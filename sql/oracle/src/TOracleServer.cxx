@@ -107,7 +107,15 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
      if (*conn_str == '/') conn_str++; //skip leading "/" if appears
 
    try {
-      fEnv = Environment::createEnvironment();
+      // found out whether to use objet mode
+      TString options = url.GetOptions();
+      Int_t pos = options.Index("ObjectMode");
+      // create environment accordingly
+      if (pos != kNPOS) {
+        fEnv = Environment::createEnvironment(Environment::OBJECT);
+      } else {
+        fEnv = Environment::createEnvironment();
+      }
       fConn = fEnv->createConnection(uid, pw, conn_str);
 
       fType = "Oracle";

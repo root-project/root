@@ -81,6 +81,12 @@ public:
    virtual Bool_t      SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec);
    virtual Bool_t      SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac = 0);
    virtual void        SetTimeFormating(const char* fmt) { fTimeFmt = fmt; }
+   virtual Bool_t      SetVInt(Int_t npar, const std::vector<Int_t> value, const char* schemaName, const char* typeName);
+   virtual Bool_t      SetVUInt(Int_t npar, const std::vector<UInt_t> value, const char* schemaName, const char* typeName);
+   virtual Bool_t      SetVLong(Int_t npar, const std::vector<Long_t> value, const char* schemaName, const char* typeName);
+   virtual Bool_t      SetVLong64(Int_t npar, const std::vector<Long64_t> value, const char* schemaName, const char* typeName);
+   virtual Bool_t      SetVULong64(Int_t npar, const std::vector<ULong64_t> value, const char* schemaName, const char* typeName);
+   virtual Bool_t      SetVDouble(Int_t npar, const std::vector<Double_t> value, const char* schemaName, const char* typeName);
 
    virtual Bool_t      NextIteration();
 
@@ -106,6 +112,12 @@ public:
    virtual Bool_t      GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec);
    virtual Bool_t      GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec);
    virtual Bool_t      GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac);
+   virtual Bool_t      GetVInt(Int_t npar, std::vector<Int_t> &value);
+   virtual Bool_t      GetVUInt(Int_t npar, std::vector<UInt_t> &value);
+   virtual Bool_t      GetVLong(Int_t npar, std::vector<Long_t> &value);
+   virtual Bool_t      GetVLong64(Int_t npar, std::vector<Long64_t> &value);
+   virtual Bool_t      GetVULong64(Int_t npar, std::vector<ULong64_t> &value);
+   virtual Bool_t      GetVDouble(Int_t npar, std::vector<Double_t> &value);
 
    ClassDef(TOracleStatement, 0); // SQL statement class for Oracle
 };
