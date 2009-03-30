@@ -54,16 +54,22 @@ bool IsPointOutOfRange(const TF1 * func, const double * x) {
    return !func->IsInside(x);       
 }
 
-bool AdjustError(const DataOptions & option, double & error) {
+bool AdjustError(const DataOptions & option, double & error, double value = 1) {
    // adjust the given error according to the option
-   //  if false is returned bin must be skipped 
-   if (error <= 0 ) { 
-      if (option.fUseEmpty) 
-         error = 1.; // set error to 1 for empty bins 
-      else 
-         return false; 
-   }
-   if (option.fErrors1) error = 1;
+   // return false when point must be skipped.
+   // When point error = 0, the point is kept if the option UseEmpty is set or if 
+   // fErrors1 is set and the point value is not zero.
+   // The value should be used only for points representing counts (histograms), not for the graph. 
+   // In the graph points with zero errors are by default skipped indepentently of the value. 
+   // If one wants to keep the points, the option fUseEmpty must be set
+
+   if (error <= 0) { 
+      if (option.fUseEmpty || (option.fErrors1 && std::abs(value) > 0 ) ) 
+         error = 1.; // set error to 1 
+      else
+         return false;   // skip  bins with zero errors or empty
+   } else if (option.fErrors1) 
+      error = 1;   // set all error to 1 for non-empty bins
    return true; 
 }
 
@@ -207,24 +213,26 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
                   else
                      x[2] = zaxis->GetBinCenter(binz);
 //                  if (fitOpt.fUseRange && HFitInterface::IsPointOutOfRange(func,&x.front()) ) continue;
+                  double value =  hfit->GetBinContent(binx, biny, binz);
                   double error =  hfit->GetBinError(binx, biny, binz); 
-                  if (!HFitInterface::AdjustError(fitOpt,error) ) continue; 
+                  if (!HFitInterface::AdjustError(fitOpt,error,value) ) continue; 
                   //dv.Add(BinPoint(  x,  hfit->GetBinContent(binx, biny, binz), error ) );
                   if (ndim < hdim) // case of fitting a function with less dimension
                      dv.Add(   &x.front(),  x[2], error * zaxis->GetBinWidth(binz)  );
                   else 
-                     dv.Add(   &x.front(),  hfit->GetBinContent(binx, biny, binz), error  );
+                     dv.Add(   &x.front(),  value, error  );
                }  // end loop on z bins
             }
             else if (hdim == 2) { 
                // for dim == 2
 //               if (fitOpt.fUseRange && HFitInterface::IsPointOutOfRange(func,&x.front()) ) continue;
+               double value =  hfit->GetBinContent(binx, biny);
                double error =  hfit->GetBinError(binx, biny); 
-               if (!HFitInterface::AdjustError(fitOpt,error) ) continue; 
+               if (!HFitInterface::AdjustError(fitOpt,error,value) ) continue; 
                if (ndim < hdim) // case of fitting a function with less dimension
                   dv.Add(   &x.front(),  x[1], error * yaxis->GetBinWidth(biny)  );
                else 
-                  dv.Add( &x.front(), hfit->GetBinContent(binx, biny), error  );
+                  dv.Add( &x.front(), value, error  );
             }   
             
          }  // end loop on y bins
@@ -236,9 +244,10 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
 #endif
          // for 1D 
 //         if (fitOpt.fUseRange && HFitInterface::IsPointOutOfRange(func,&x.front()) ) continue;
+         double value =  hfit->GetBinContent(binx);
          double error =  hfit->GetBinError(binx); 
-         if (!HFitInterface::AdjustError(fitOpt,error) ) continue; 
-         dv.Add( x.front(),  hfit->GetBinContent(binx), error  );
+         if (!HFitInterface::AdjustError(fitOpt,error,value) ) continue; 
+         dv.Add( x.front(),  value, error  );
       }
       
    }   // end 1D loop 
@@ -485,7 +494,8 @@ void DoFillData ( BinData  & dv,  const TGraph * gr,  BinData::ErrorType type, T
       // (like in a case of a graph)
       else if (type == BinData::kValueError)  { 
          double errorY =  gr->GetErrorY(i);    
-         // consider error = 0 as 1 
+         // should consider error = 0 as 1 ? Decide to skip points with zero errors 
+         // in case want to keep points with error = 0 as errrors=1 need to set the option UseEmpty
          if (!HFitInterface::AdjustError(fitOpt,errorY) ) continue; 
          dv.Add( gx[i], gy[i], errorY );
 
@@ -540,7 +550,8 @@ void FillData ( BinData  & dv, const TGraph * gr,  TF1 * func ) {
    BinData::ErrorType type = GetDataType(gr,fitOpt); 
    // adjust option according to type
    fitOpt.fErrors1 = (type == BinData::kNoError);
-   if (fitOpt.fErrors1) fitOpt.fUseEmpty = true; // need to use empty
+   // set this if we want to have error=1 for points with zero errors (by default they are skipped)
+   // fitOpt.fUseEmpty = true;
    fitOpt.fCoordErrors = (type ==  BinData::kCoordError);
    fitOpt.fAsymErrors = (type ==  BinData::kAsymError);
 
