@@ -1126,20 +1126,18 @@ const QColor &TGQt::ColorIndex(Color_t ic) const
    // See #ifndef R_WIN32 with  TColor::SetRGB method
 
    if (!fPallete.contains(ic)) {
-      // Allocate color
+       Warning("ColorIndex","Unknown color. No RGB component for the index %d was defined\n",ic);
+       return unknownColor;
+   } else {
+      // Make sure the alpha channel was set properly
+      // due lack of the TVirtualX interface to account it elsewhere
       TColor *myColor = gROOT->GetColor(ic);
-      if (myColor) {
-         ((TGQt *)this)->SetRGB(ic,myColor->GetRed()
-            ,myColor->GetGreen()
-            ,myColor->GetBlue()
-            ,myColor->GetAlpha()
-            );
-      } else {
-         Warning("ColorIndex","Unknown color. No RGB component for the index %d was defined\n",ic);
-         return unknownColor;
+      Float_t a = myColor->GetAlpha();
+      colorBuffer = fPallete[ic];
+      if (TMath::Abs(colorBuffer->alphaF() - a) > 0.01) {
+         colorBuffer->setAlphaF(a);
       }
    }
-   colorBuffer = fPallete[ic];
    return *colorBuffer;
 }
 
@@ -1282,15 +1280,18 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
          assert(dst != (QPaintDevice *)-1);
       }
       End();
-      TQtWidget *theWidget =  (TQtWidget *)fSelectedWindow;
-      dst = theWidget->GetOffScreenBuffer();
+      bool itIsWidget = fSelectedWindow->devType() == QInternal::Widget;
+      TQtWidget *theWidget = 0;
+      if (itIsWidget) { 
+          theWidget =  (TQtWidget *)fSelectedWindow;
+          dst = theWidget->GetOffScreenBuffer();
+      }
       { 
         QPainter paint(dst);
         paint.drawPixmap(xpos,ypos,*src);
       }
       Emitter()->EmitPadPainted(src);
-      if ( fSelectedWindow->devType() == QInternal::Widget  )
-      {  theWidget->EmitCanvasPainted();                    }
+      if (theWidget)  theWidget->EmitCanvasPainted();
    }
    Begin();
 }
