@@ -231,15 +231,6 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
 }
 
 //______________________________________________________________________________
-void TGHtmlBrowser::CloseWindow()
-{
-   // Close TGHtmlBrowser window.
-
-   Cleanup();
-   DeleteWindow();
-}
-
-//______________________________________________________________________________
 Ssiz_t ReadSize(const char *url)
 {
    // Read (open) remote files.
@@ -331,13 +322,15 @@ void TGHtmlBrowser::Selected(const char *uri)
       return;
 
    TString surl(gSystem->UnixPathName(uri));
-   if (!surl.BeginsWith("http://") && !surl.BeginsWith("file://")) {
+   if (!surl.BeginsWith("http://") && !surl.BeginsWith("ftp://") &&
+       !surl.BeginsWith("file://")) {
       if (surl.BeginsWith("file:"))
          surl.ReplaceAll("file:", "file://");
       else
          surl.Prepend("file://");
    }
    if (surl.EndsWith(".root")) {
+      // in case of root file, just open it and refresh browsers
       gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kWatch));
       gROOT->ProcessLine(Form("TFile::Open(\"%s\");", surl.Data()));
       Clicked((char *)surl.Data());
@@ -347,7 +340,32 @@ void TGHtmlBrowser::Selected(const char *uri)
    }
    gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kWatch));
    TUrl url(surl.Data());
+   if (surl.EndsWith(".pdf", TString::kIgnoreCase)) {
+      // special case: open pdf files with external viewer
+      // works only on Windows for the time being...
+      if (!gVirtualX->InheritsFrom("TGX11")) {
+         TString cmd = TString::Format("explorer %s", surl.Data());
+         gSystem->Exec(cmd.Data());
+      }
+      gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kPointer));
+      return;
+   }
+   if (surl.EndsWith(".gif") || surl.EndsWith(".jpg") || surl.EndsWith(".png")) {
+      // special case: single picture
+      fHtml->Clear();
+      char imgHtml[1024];
+      sprintf(imgHtml, "<IMG src=\"%s\"> ", surl.Data());
+      fHtml->ParseText(imgHtml);
+      fHtml->SetBaseUri(url.GetUrl());
+      fURL->SetText(surl.Data());
+      if (!fComboBox->FindEntry(surl.Data()))
+         fComboBox->AddEntry(surl.Data(), fComboBox->GetNumberOfEntries()+1);
+      fHtml->Layout();
+      gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kPointer));
+      return;
+   }
    if ((!strcmp(url.GetProtocol(), "http"))) {
+      // standard web page
       buf = ReadRemote(url.GetUrl());
       if (buf) {
          fHtml->Clear();
@@ -369,6 +387,7 @@ void TGHtmlBrowser::Selected(const char *uri)
       }
    }
    else {
+      // local file
       f = fopen(url.GetFile(), "r");
       if (f) {
          TString fpath = url.GetUrl();
@@ -396,6 +415,7 @@ void TGHtmlBrowser::Selected(const char *uri)
          }
       }
    }
+   // restore cursor
    gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kPointer));
    fHtml->Layout();
    Ssiz_t idx = surl.Last('#');
