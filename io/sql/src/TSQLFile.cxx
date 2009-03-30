@@ -1525,7 +1525,13 @@ Bool_t TSQLFile::SQLTestTable(const char* tablename)
 
    if (fSQL==0) return kFALSE;
 
-   return fSQL->HasTable(tablename);
+   if (fSQL->HasTable(tablename)) return kTRUE;
+   
+   TString buf(tablename);
+   buf.ToLower();
+   if (fSQL->HasTable(buf.Data())) return kTRUE;
+   buf.ToUpper();
+   return fSQL->HasTable(buf.Data());
 }
 
 //______________________________________________________________________________
