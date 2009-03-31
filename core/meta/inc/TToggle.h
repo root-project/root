@@ -87,6 +87,9 @@ public:
    virtual Int_t   GetValue(){return fValue;};
    virtual void    SetValue(Long_t val);
 
+   TMethodCall    *GetGetter() const { return fGetter; }
+   TMethodCall    *GetSetter() const { return fSetter; }
+
    ClassDef(TToggle,0)  //Facility for toggling datamembers on/off
 };
 
