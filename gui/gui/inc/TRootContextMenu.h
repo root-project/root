@@ -50,8 +50,10 @@ public:
    virtual void   DisplayPopup(Int_t x, Int_t y);
    virtual void   Dialog(TObject *object, TMethod *method);
    virtual void   Dialog(TObject *object, TFunction *function);
+   virtual void   DrawEntry(TGMenuEntry *entry);
    TRootDialog   *GetDialog() const { return fDialog; };
    virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleMotion(Event_t *event);
    virtual void   OnlineHelp();
 
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
