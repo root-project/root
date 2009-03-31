@@ -163,6 +163,7 @@ protected:
     Int_t                 fQtEventHasBeenProcessed; // Flag whether the events were processed
     Bool_t                fFeedBackMode;      // TCanvas feedback mode 
     TQtFeedBackWidget    *fFeedBackWidget;   // The dedicated widget for TCanvas feebback mode
+    Bool_t                fBlockRGB;         // Protect agaist color doubel setting
 //
 //   Text management
 //
@@ -181,6 +182,7 @@ protected:
    void UpdatePen();
    void UpdateBrush();
    void UpdateClipRectangle();
+   int  UpdateColor(int cindex);
 
    QPaintDevice *GetDoubleBuffer(QPaintDevice *dev);
 
