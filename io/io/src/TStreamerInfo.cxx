@@ -2069,7 +2069,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       TStreamerInfo *subinfo;
       Int_t len = strlen(GetName());
       while ((subinfo = (TStreamerInfo*)subnext())) {
-         if (strncmp(GetName(),subinfo->GetName(),len)==0) {
+         if (strncmp(GetName(),subinfo->GetName(),len)==0 && (subinfo->GetName()[len]==':') ) {
             if (subinfo->GetName()[len+1]==':' && strstr(subinfo->GetName()+len+2,":")==0) {
                if (needheader) {
                   fprintf(fp,"\npublic:\n");
@@ -2101,7 +2101,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       TStreamerInfo *subinfo;
       Int_t len = strlen(GetName());
       while ((subinfo = (TStreamerInfo*)subnext())) {
-         if (strncmp(GetName(),subinfo->GetName(),len)==0) {
+         if (strncmp(GetName(),subinfo->GetName(),len)==0 && (subinfo->GetName()[len]==':')) {
             if (subinfo->GetName()[len+1]==':' && strstr(subinfo->GetName()+len+2,":")==0) {
                subinfo->GenerateDeclaration(fp, sfp, subClasses, kFALSE);
             }
