@@ -469,7 +469,10 @@ namespace ROOT
 
       WriteAutoVariables( target, source, members, className, mappedName, output );
       output << "      " << className << "* newObj = (" << className;
-      output << "*)target;" << std::endl << std::endl;
+      output << "*)target;" << std::endl;
+      output << "      // Supress warning message.\n";
+      output << "      " << "if (oldObj) {}\n\n";
+      output << "      " << "if (newObj) {}\n\n";
 
       //-----------------------------------------------------------------------
       // Write the user's code
