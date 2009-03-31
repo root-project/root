@@ -47,6 +47,7 @@
 #include "TRootBrowser.h"
 #include "TClassMenuItem.h"
 #include "TObjectSpy.h"
+#include "KeySymbols.h"
 
 enum EContextMenu {
    kToggleStart       = 1000, // first id of toggle menu items
@@ -517,6 +518,78 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 }
 
 //______________________________________________________________________________
+Bool_t TRootContextMenu::HandleButton(Event_t *event)
+{
+   // Handle button event in the popup menu.
+
+   int   id;
+   void *ud;
+   if ((event->fState & kKeyControlMask) &&
+       (event->fType == kButtonRelease)) {
+      id = EndMenu(ud);
+      if (fHasGrab) gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab
+      if (ud) {
+         TFunction *function = 0;
+         if (id < kToggleStart) {
+            TMethod *m = (TMethod *)ud;
+            function = (TFunction *)m;
+         } else if (id >= kToggleStart && id < kUserFunctionStart) {
+            TToggle *t = (TToggle *)ud;
+            TMethodCall *mc = (TMethodCall *)t->GetSetter();
+            function = (TFunction *)mc->GetMethod();
+         } else {
+            TClassMenuItem *mi = (TClassMenuItem *)ud;
+            function = gROOT->GetGlobalFunctionWithPrototype(mi->GetFunctionName());
+         }
+         if (function)
+            fContextMenu->SetMethod(function);
+      }
+      OnlineHelp();
+      return kTRUE;
+   }
+   return TGPopupMenu::HandleButton(event);
+}
+
+//______________________________________________________________________________
+void TRootContextMenu::OnlineHelp()
+{
+   // Open the online help matching the actual class/method.
+
+   TString clname;
+   TString cmd;
+   TString url = gEnv->GetValue("Browser.StartUrl", "http://root.cern.ch/root/html/");
+   if (url.EndsWith(".html", TString::kIgnoreCase)) {
+      url.Remove(url.Last('/'));
+   }
+   if (!url.EndsWith("/")) {
+      url += '/';
+   }
+   TObject *obj = fContextMenu->GetSelectedObject();
+   if (obj) {
+      clname = obj->ClassName();
+      if (fContextMenu->GetSelectedMethod()) {
+         TString smeth = fContextMenu->GetSelectedMethod()->GetName();
+         TMethod *method = obj->IsA()->GetMethodAllAny(smeth.Data());
+         if (method) clname = method->GetClass()->GetName();
+         url += clname;
+         url += ".html";
+         url += "#";
+         url += clname;
+         url += ":";
+         url += smeth.Data();
+      }
+      else {
+         url += clname;
+         url += ".html";
+      }
+      if (fDialog) delete fDialog;
+      fDialog = 0;
+      cmd = TString::Format("new TGHtmlBrowser(\"%s\", 0, 900, 300);", url.Data());
+      gROOT->ProcessLine(cmd.Data());
+   }
+}
+
+//______________________________________________________________________________
 Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    // Handle context menu messages.
@@ -567,38 +640,7 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   fDialog = 0;
                }
                if (parm1 == 4) {
-                  TString clname;
-                  TString cmd;
-                  TString url = gEnv->GetValue("Browser.StartUrl", "http://root.cern.ch/root/html/");
-                  if (url.EndsWith(".html", TString::kIgnoreCase)) {
-                     url.Remove(url.Last('/'));
-                  }
-                  if (!url.EndsWith("/")) {
-                     url += '/';
-                  }
-                  TObject *obj = fContextMenu->GetSelectedObject();
-                  if (obj) {
-                     clname = obj->ClassName();
-                     if (fContextMenu->GetSelectedMethod()) {
-                        TString smeth = fContextMenu->GetSelectedMethod()->GetName();
-                        TMethod *method = obj->IsA()->GetMethodAllAny(smeth.Data());
-                        if (method) clname = method->GetClass()->GetName();
-                        url += clname;
-                        url += ".html";
-                        url += "#";
-                        url += clname;
-                        url += ":";
-                        url += smeth.Data();
-                     }
-                     else {
-                        url += clname;
-                        url += ".html";
-                     }
-                     delete fDialog;
-                     fDialog = 0;
-                     cmd = TString::Format("new TGHtmlBrowser(\"%s\", 0, 900, 300);", url.Data());
-                     gROOT->ProcessLine(cmd.Data());
-                  }
+                  OnlineHelp();
                }
                break;
 
