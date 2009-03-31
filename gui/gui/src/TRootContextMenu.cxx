@@ -29,6 +29,7 @@
 #include "TRootContextMenu.h"
 #include "TROOT.h"
 #include "TGClient.h"
+#include "TEnv.h"
 #include "TList.h"
 #include "TContextMenu.h"
 #include "TMethod.h"
@@ -128,7 +129,7 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
    TGPopupMenu *currentMenu = 0;
 
    // search for arguments to the MENU statement
-   // strcpy(cmd,commentstring);		
+   // strcpy(cmd,commentstring);
    Ssiz_t opt_ptr;
    if ((opt_ptr=cmd.Index("*MENU={"))   != kNPOS ||
        (opt_ptr=cmd.Index("*SUBMENU={"))!= kNPOS ||
@@ -149,7 +150,7 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
             Ssiz_t tend = token.Index("\"",tstart+1);
             if (tend == kNPOS) continue;
             hierarchy = token(tstart,tend - tstart);
-         }				  
+         }
       }
       delete array;
    }
@@ -166,10 +167,10 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
          TGMenuEntry *ptr;
          TIter next(currentMenu->GetListOfEntries());
          // Search for popup with corresponding name
-         while ((ptr = (TGMenuEntry *) next()) &&				    
-                (ptr->GetType() != kMenuPopup || 
+         while ((ptr = (TGMenuEntry *) next()) &&
+                (ptr->GetType() != kMenuPopup ||
                 last_component.CompareTo(ptr->GetName()))) { }
-         if (ptr) 
+         if (ptr)
             currentMenu = ptr->GetPopup();
          else {
             TGPopupMenu *r = new TGPopupMenu(gClient->GetDefaultRoot());
@@ -177,10 +178,10 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
             TGMenuEntry *ptr2;
             TIter next2(currentMenu->GetListOfEntries());
             // Search for popup with corresponding name
-            while ((ptr2 = (TGMenuEntry *) next2()) &&				    
+            while ((ptr2 = (TGMenuEntry *) next2()) &&
                    (ptr2->GetType() != kMenuPopup  ||
                    last_component.CompareTo(ptr2->GetName()) > 0 )) { }
-	
+
             currentMenu->AddPopup(last_component, r,ptr2);
             currentMenu = r;
             fTrash->Add(r);
@@ -188,7 +189,7 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
          }
       }
    }
-  
+
    delete array;
    return currentMenu;
 }
@@ -198,13 +199,13 @@ void TRootContextMenu::AddEntrySorted(TGPopupMenu *currentMenu, const char *s, I
                                          const TGPicture *p , Bool_t sorted)
 {
    // Add a entry to current menu with alphabetical ordering.
-   
+
    TGMenuEntry *ptr2 = 0;
    if (sorted) {
       TIter next(currentMenu->GetListOfEntries());
       // Search for popup with corresponding name
-      while ((ptr2 = (TGMenuEntry *) next()) &&				    
-             (ptr2->GetType() != kMenuEntry || 
+      while ((ptr2 = (TGMenuEntry *) next()) &&
+             (ptr2->GetType() != kMenuEntry ||
              strcmp(ptr2->GetName(), s)<0 )) { }
    }
    currentMenu->AddEntry(s,id,ud,p,ptr2);
@@ -262,7 +263,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
                   EMenuItemKind menuKind = method->IsMenuItem();
                   TGPopupMenu *currentMenu = 0;
                   TString last_component;
-		  
+
                   switch (menuKind) {
                      case kMenuDialog:
                         // search for arguments to the MENU statement
@@ -275,7 +276,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
                         break;
                      case kMenuSubMenu:
                         if ((m = method->FindDataMember())) {
-			  
+
                            // search for arguments to the MENU statement
                            currentMenu = FindHierarchy(method->GetCommentString(),last_component);
 
@@ -301,9 +302,9 @@ void TRootContextMenu::CreateMenu(TObject *object)
                                  t->SetToggledObject(object, method);
                                  t->SetOnValue(val);
                                  fTrash->Add(t);
-			      
+
                                  r->AddEntry(name, togglelist++, t);
-                                 if (t->GetState()) 
+                                 if (t->GetState())
                                     r->CheckEntry(togglelist-1);
                               }
                            } else {
@@ -439,10 +440,10 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 
          if (strchr(argname, '*')) {
             strcat(basictype, "*");
-            if (!strncmp(type, "char", 4)) 
+            if (!strncmp(type, "char", 4))
                type = charstar;
          }
-         
+
          TDataMember *m = argument->GetDataMember();
          if (m && m->GetterMethod(object->IsA())) {
 
@@ -503,7 +504,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
             if (tval && strlen(tval)) {
                // Remove leading and trailing quotes
                strncpy(val, tval + (tval[0] == '"' ? 1 : 0), 255);
-               if (val[strlen(val)-1] == '"')		
+               if (val[strlen(val)-1] == '"')
                   val[strlen(val)-1]= 0;
             }
             fDialog->Add(argname, val, type);
@@ -519,7 +520,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    // Handle context menu messages.
-   
+
    TObjectSpy savedPad;
    if (GetContextMenu()->GetSelectedPad()) {
       savedPad.SetObject(gPad);
@@ -533,7 +534,7 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          switch (GET_SUBMSG(msg)) {
 
             case kCM_MENU:
-   
+
                if (parm1 < kToggleStart) {
                   TMethod *m = (TMethod *) parm2;
                   GetContextMenu()->Action(m);
@@ -564,6 +565,40 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                if (parm1 == 3) {
                   delete fDialog;
                   fDialog = 0;
+               }
+               if (parm1 == 4) {
+                  TString clname;
+                  TString cmd;
+                  TString url = gEnv->GetValue("Browser.StartUrl", "http://root.cern.ch/root/html/");
+                  if (url.EndsWith(".html", TString::kIgnoreCase)) {
+                     url.Remove(url.Last('/'));
+                  }
+                  if (!url.EndsWith("/")) {
+                     url += '/';
+                  }
+                  TObject *obj = fContextMenu->GetSelectedObject();
+                  if (obj) {
+                     clname = obj->ClassName();
+                     if (fContextMenu->GetSelectedMethod()) {
+                        TString smeth = fContextMenu->GetSelectedMethod()->GetName();
+                        TMethod *method = obj->IsA()->GetMethodAllAny(smeth.Data());
+                        if (method) clname = method->GetClass()->GetName();
+                        url += clname;
+                        url += ".html";
+                        url += "#";
+                        url += clname;
+                        url += ":";
+                        url += smeth.Data();
+                     }
+                     else {
+                        url += clname;
+                        url += ".html";
+                     }
+                     delete fDialog;
+                     fDialog = 0;
+                     cmd = TString::Format("new TGHtmlBrowser(\"%s\", 0, 900, 300);", url.Data());
+                     gROOT->ProcessLine(cmd.Data());
+                  }
                }
                break;
 

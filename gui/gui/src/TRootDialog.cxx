@@ -36,8 +36,8 @@ ClassImp(TRootDialog)
 
 //______________________________________________________________________________
 TRootDialog::TRootDialog(TRootContextMenu *cmenu, const TGWindow *main,
-    const char *title, Bool_t okB, Bool_t cancelB, Bool_t applyB) :
-    TGTransientFrame(gClient->GetRoot(), main, 200, 100)
+    const char *title, Bool_t okB, Bool_t cancelB, Bool_t applyB,
+    Bool_t helpB) : TGTransientFrame(gClient->GetRoot(), main, 200, 100)
 {
    // Create a method argument prompt dialog.
 
@@ -46,6 +46,7 @@ TRootDialog::TRootDialog(TRootContextMenu *cmenu, const TGWindow *main,
    fOk     = okB;
    fCancel = cancelB;
    fApply  = applyB;
+   fHelp   = helpB;
 
    fWidgets = new TList;
 
@@ -55,7 +56,7 @@ TRootDialog::TRootDialog(TRootContextMenu *cmenu, const TGWindow *main,
    SetWindowName(title);
    SetIconName(title);
    SetEditDisabled(kEditDisable);
-   
+
    AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask);
 }
 
@@ -199,6 +200,14 @@ void TRootDialog::Popup()
       height = b->GetDefaultHeight();
       width  = TMath::Max(width, b->GetDefaultWidth()); ++nb;
    }
+   if (fHelp) {
+      b = new TGTextButton(hf, "Online &Help", 4);
+      fWidgets->Add(b);
+      b->Associate(fMenu);
+      hf->AddFrame(b, l1);
+      height = b->GetDefaultHeight();
+      width  = TMath::Max(width, b->GetDefaultWidth()); ++nb;
+   }
 
    // place buttons at the bottom
    l1 = new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 0, 0, 5, 5);
@@ -281,7 +290,7 @@ void TRootDialog::TabPressed()
 Bool_t TRootDialog::HandleKey(Event_t* event)
 {
    // The key press event handler in this dialog.
-   
+
    Int_t  n;
    char   tmp[10];
    UInt_t keysym;
