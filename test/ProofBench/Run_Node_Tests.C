@@ -47,6 +47,7 @@ void Run_Node_Tests(Int_t fps, Int_t niter, const Char_t *basedir,
 
    if (start==0) start = stepsize;
 
+#if 0
    // load Event library
    if (!TString(gSystem->GetLibraries()).Contains("Event")) {
       if(gSystem->Load("$ROOTSYS/test/libEvent.so")) {
@@ -58,8 +59,9 @@ void Run_Node_Tests(Int_t fps, Int_t niter, const Char_t *basedir,
    // add $ROOTSYS/test to include path
    if (!TString(gSystem->GetIncludePath()).Contains("-I$ROOTSYS/test"))
       gSystem->AddIncludePath("-I$ROOTSYS/test");
+#endif
 
-   if (gProof->UploadPackage("event.par")) {
+   if (gProof->UploadPackage("event")) {
       cout << "Could not upload Event par file to slaves" << endl;
       return;
    }
@@ -74,24 +76,32 @@ void Run_Node_Tests(Int_t fps, Int_t niter, const Char_t *basedir,
       return;
    }
 
+#if 0
    //use new packetizer
    gProof->AddInput(new TNamed("PROOF_NewPacketizer",""));
+#else
+   gProof->SetParameter("PROOF_ForceLocal", 1);
+
+#endif
 
    //run the tests
-   run_selector_tests("EventTree_Proc.C+", fps, niter, outputfile, "_Proc", basedir, stepsize, start);
-   run_selector_tests("EventTree_ProcOpt.C+", fps, niter, outputfile, "_ProcOpt", basedir, stepsize, start);
-   run_selector_tests("EventTree_NoProc.C+", fps, niter, outputfile, "_NoProc", basedir, stepsize, start);
+   run_selector_tests("EventTree_Proc.C++", fps, niter, outputfile, "_Proc", basedir, stepsize, start);
+   run_selector_tests("EventTree_ProcOpt.C++", fps, niter, outputfile, "_ProcOpt", basedir, stepsize, start);
+   run_selector_tests("EventTree_NoProc.C++", fps, niter, outputfile, "_NoProc", basedir, stepsize, start);
 
 }
 
-void run_selector_tests(TString selector_name, Int_t fps, Int_t niter,
+void run_selector_tests(TString selector_file, Int_t fps, Int_t niter,
                         TFile* outputfile, TString name_stem,
                         const Char_t *basedir, Int_t stepsize, Int_t start)
 {
 
+   TString selector_name(selector_file);
+   selector_name.Remove(selector_file.Last('.'));
+
    gProof->SetParallel(9999);
    Int_t nslaves = gProof->GetParallel();
-   if (start>nslaves) {
+   if (start > nslaves) {
       cout << "starting number of nodes must be atleast 1" << endl
            << "  (with 0 making start = stepsize)" << endl;
       return;
@@ -103,8 +113,9 @@ void run_selector_tests(TString selector_name, Int_t fps, Int_t niter,
    gEnv->SetValue("Proof.SlaveStatsTrace",0);
    TDSet* dset = make_tdset(basedir, fps);
    cout << "Running on all nodes first" << endl;
+   gProof->Load(selector_file);
    dset->Process(selector_name);
-   delete dset;
+//   delete dset;
    cout << "done" << endl;
 
    // switch logging on (no slave logging)
@@ -132,7 +143,7 @@ void run_selector_tests(TString selector_name, Int_t fps, Int_t niter,
    Bool_t done = kFALSE;
    for (Int_t nactive=start; !done; nactive+=stepsize) {
 
-      if (nactive>=nslaves) {
+      if (nactive >= nslaves) {
          done=kTRUE;
          nactive=nslaves;
       }
@@ -141,7 +152,7 @@ void run_selector_tests(TString selector_name, Int_t fps, Int_t niter,
       ns_holder = nactive;
       for (Int_t j=0; j<niter; j++) {
          run_holder=j;
-         dset = make_tdset(basedir,fps);
+//         dset = make_tdset(basedir,fps);
          TTime starttime = gSystem->Now();
          dset->Process(selector_name);
          TTime endtime = gSystem->Now();
@@ -222,10 +233,12 @@ void run_selector_tests(TString selector_name, Int_t fps, Int_t niter,
             }
          }
 
-         delete dset;
+//         delete dset;
          timing_tree.Fill();
       }
    }
+
+         delete dset;
 
    if (outputfile && !outputfile->IsZombie()) {
       TDirectory* dirsav=gDirectory;

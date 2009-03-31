@@ -18,32 +18,39 @@
 #include "make_event_trees.C"
 #include "make_tdset.C"
 
-const char data_dir[] = "/var/tmp";
 const bool show_feedback = true;
 const bool show_stats = true;
-const int  files_per_node = 2;
+const int  files_per_node = 10;
 const int  max_files_per_slave = 1;
 
-
-void Run_Simple_Test(char *host)
+void Run_Simple_Test(char *host, const char *data_dir = "/var/tmp", Int_t dbg = 0)
 {
 
-   gSystem->Exec("cd $ROOTSYS/test; make libEvent.so");
-   gSystem->Exec("./make_event_par.sh");
-   gSystem->Exec("ln -s ../Event.h");
-   gSystem->Load("../libEvent.so");
+   if (gSystem->AccessPathName("../libEvent.so")) {
+      gSystem->Exec("cd $ROOTSYS/test; make libEvent.so");
+      gSystem->Exec("./make_event_par.sh");
+      gSystem->Exec("ln -s ../Event.h");
+      gSystem->Load("../libEvent.so");
+   }
 
-   TProof::Reset(host);
-   TProof::Open(host);
-//   gProof->SetLogLevel(2);
+   TProof *p = 0;
+   if (dbg > 0) {
+      p = TProof::Open(host, "", "", dbg);
+   } else {
+      p = TProof::Open(host);
+   }
+   if (!p || !p->IsValid()) {
+      cout << "Could not start the PROOF session - exit "<<endl;
+      return;
+   }
+   if (dbg > 0) p->SetLogLevel(dbg);
 
-   gProof->UploadPackage("event.par");
-   gProof->EnablePackage("event");
+   p->UploadPackage("event");
+   p->EnablePackage("event");
 
-   make_event_trees(data_dir, 10000, files_per_node);
+   make_event_trees(data_dir, 100000, files_per_node);
 
-   TDSet *d = make_tdset(data_dir, max_files_per_slave,
-                         files_per_node);
+   TDSet *d = make_tdset(data_dir, files_per_node);
 
    d->Print("a");
 
@@ -52,17 +59,21 @@ void Run_Simple_Test(char *host)
    TDrawFeedback *fb(0);
    if (show_feedback) {
       if (show_stats) {
-	 gProof->AddFeedback("PROOF_ProcTimeHist");
-	 gProof->AddFeedback("PROOF_LatencyHist");
-	 gProof->AddFeedback("PROOF_EventsHist");
+         p->AddFeedback("PROOF_ProcTimeHist");
+         p->AddFeedback("PROOF_LatencyHist");
+         p->AddFeedback("PROOF_EventsHist");
       }
 
-      gProof->AddFeedback("pt_dist");
+      p->AddFeedback("pt_dist");
 
-      fb = new TDrawFeedback(gProof);
+      fb = new TDrawFeedback(p);
    }
 
-   d->Process("EventTree_Proc.C","");
+   // We load the selector before execution to avoid a problem affecting some versions
+   // (in particular 5.22/00 and 5.22/00a); with problem-free versions this is equivalent
+   // to direct processing via d->Process("EventTree_Proc.C+","")
+   p->Load("EventTree_Proc.C+");
+   d->Process("EventTree_Proc");
 
    if (fb) delete fb;
 }
