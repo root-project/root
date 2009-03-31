@@ -28,11 +28,10 @@ The last argument is the number of files on each node.
 
 root [] .x make_event_trees.C("/data1/tmp", 100000, 4)
 
-Create the TDSet for these files. In this example we have two
-slaves on one node, we ask for one file per slave:
+Create the TDSet for these files:
 
 root [] .L make_tdset.C
-root [] TDSet *d = make_tdset("/data1/tmp",1)
+root [] TDSet *d = make_tdset("/data1/tmp",4)
 root [] d->Print("a")
 OBJ: TDSet      type TTree      EventTree       in /    elements 2
 TDSetElement file='root://gluon.local//data1/tmp/event_tree_gluon.local_1.root' dir='' obj='' first=0 num=-1
@@ -125,11 +124,18 @@ root[] gROOT->Time()
 Running one of the provided selectors is straight forward,
 using the TDSet that was created earlier:
 
-root[] d->Process("EventTree_Proc.C","")
+root[] gProof->Load("EventTree_Proc.C+")
+root[] d->Process("EventTree_Proc","")
 
 The monitoring histograms should appear shortly after the
 processing starts. The resulting histogram from the selector
 will also be drawn at the end.
+
+Loading the selector before processing is not strictly needed but it allows to
+circumvent a problem with file distribution that was present in some versions,
+including 5.22/00 and 5.22/00a.
+
+The above set of commands are included in the script Run_Simple_Test.C .
 
 
 Extra Scripts Included
