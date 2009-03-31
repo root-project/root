@@ -549,8 +549,8 @@ Bool_t TRootContextMenu::HandleButton(Event_t *event)
 
    int   id;
    void *ud;
-   if ((event->fType == kButtonRelease) && (event->fX >= fMenuWidth-15) &&
-       (event->fX <= fMenuWidth)) {
+   if ((event->fType == kButtonRelease) && (event->fX >= (Int_t)(fMenuWidth-15)) &&
+       (event->fX <= (Int_t)fMenuWidth)) {
       id = EndMenu(ud);
       if (fHasGrab) gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab
       if (ud) {
@@ -590,7 +590,7 @@ Bool_t TRootContextMenu::HandleMotion(Event_t *event)
       rightCur   = gVirtualX->CreateCursor(kArrowRight);
 
    // change the cursot to a small hand when over the ? (help)
-   if ((event->fX >= fMenuWidth-15) && (event->fX <= fMenuWidth) &&
+   if ((event->fX >= (Int_t)(fMenuWidth-15)) && (event->fX <= (Int_t)fMenuWidth) &&
        fCurrent && (fCurrent->GetType() == kMenuEntry)) {
       if (toggle == 0) {
          gVirtualX->SetCursor(fId, handCur);
