@@ -395,7 +395,15 @@ Reflex::ScopeBase::MemberByName( const std::string & name,
                                  const Type & signature ) const {
 //-------------------------------------------------------------------------------
    // Return member by name and signature.
-   return MemberByName2((const std::vector<Member>&)fMembers, name, &signature);
+   
+   // The class Members and OwnedMembers are the exact same size.  The only
+   // difference is the constructor and the destructor.  Since MemberByName2 does
+   // insert or remove element from the vector, it is alright to cast one vector
+   // type into the other.
+   // The following syntax is to avoid the warning: 
+   //    'dereferencing type-punned pointer will break strict-aliasing rules'
+   void *tmp = &fMembers;
+   return MemberByName2(* (const std::vector<Member>*)tmp, name, &signature);
 }
 
 
