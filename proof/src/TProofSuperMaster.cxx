@@ -220,9 +220,9 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel, Bool_t)
          gProofServ->GetSocket()->Send(m);
       }
 
-      TIter next(fSlaves);
+      TIter nxw(fSlaves);
       TSlave *sl = 0;
-      while ((sl = (TSlave *)next())) {
+      while ((sl = (TSlave *)nxw())) {
          if (sl->IsValid()) {
             if (fProtocol == 1) {
                Error("StartSlaves", "master and submaster protocols"

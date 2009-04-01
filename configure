@@ -2922,7 +2922,7 @@ xrdcomm=""
 
 # If we are required to use an external XROOTD distribution
 # we just define the pointers
-extraxrdflags=""
+extraxrdflags="-DUSENEWHDRS"
 # extraxrdflags="-DOLDXRDLOCATE"
 if test ! "x$xrootddir" = "x"; then
 
@@ -2949,17 +2949,17 @@ if test ! "x$xrootddir" = "x"; then
    if [ $decver -gt $decrefone ] ; then
       if [ $decver -gt $decrefthree ] ; then
          xrdcomm="$xrdcomm (version is > 20071004)"
-         extraxrdflags=""
+         extraxrdflags="$extraxrdflags"
       elif [ $decver -gt $decreftwo ] ; then
          xrdcomm="$xrdcomm (version is > 20070723)"
-         extraxrdflags="-DOLDXRDLOCATE"
+         extraxrdflags="-DOLDXRDLOCATE $extraxrdflags"
       else
          xrdcomm="$xrdcomm (version is > 20070628)"
-         extraxrdflags="-DOLDXRDOUC -DOLDXRDLOCATE"
+         extraxrdflags="-DOLDXRDOUC -DOLDXRDLOCATE $extraxrdflags"
       fi
    else
       xrdcomm="$xrdcomm (version is <= 20070628: setting the appropriate compilation flag)"
-      extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE"
+      extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE $extraxrdflags"
    fi
 
 else

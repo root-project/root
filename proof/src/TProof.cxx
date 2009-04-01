@@ -819,9 +819,9 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
             gProofServ->GetSocket()->Send(m);
          }
 
-         TIter next(fSlaves);
+         TIter nxw(fSlaves);
          TSlave *sl = 0;
-         while ((sl = (TSlave *)next())) {
+         while ((sl = (TSlave *)nxw())) {
             if (sl->IsValid())
                fAllMonitor->Add(sl->GetSocket());
             else
@@ -2093,11 +2093,11 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                }
             } else if (type > 0) {
                // Read object
-               TObject *obj = mess->ReadObject(TObject::Class());
+               TObject *oo = mess->ReadObject(TObject::Class());
                // Add or merge it
-               if ((fPlayer->AddOutputObject(obj) == 1))
+               if ((fPlayer->AddOutputObject(oo) == 1))
                   // Remove the object if it has been merged
-                  SafeDelete(obj);
+                  SafeDelete(oo);
 
                if (type > 1 && !IsMaster()) {
                   TQueryResult *pq = fPlayer->GetCurrentQuery();
@@ -5016,7 +5016,7 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
       TMD5 *md5local = TMD5::ReadChecksum(md5f);
       if (!md5local || (*md5) != (*md5local)) {
          // if not, unzip and untar package in package directory
-         Int_t st = 0;
+         st = 0;
          if ((opt & TProof::kRemoveOld)) {
             // remove any previous package directory with same name
             st = gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
@@ -7431,9 +7431,9 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, TString &value)
 
    TObject *obj = c->FindObject(par);
    if (obj) {
-      TNamed *par = dynamic_cast<TNamed*>(obj);
-      if (par) {
-         value = par->GetTitle();
+      TNamed *pp = dynamic_cast<TNamed*>(obj);
+      if (pp) {
+         value = pp->GetTitle();
          return 0;
       }
    }
@@ -7450,9 +7450,9 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Int_t &value)
 
    TObject *obj = c->FindObject(par);
    if (obj) {
-      TParameter<Int_t> *par = dynamic_cast<TParameter<Int_t>*>(obj);
-      if (par) {
-         value = par->GetVal();
+      TParameter<Int_t> *pp = dynamic_cast<TParameter<Int_t>*>(obj);
+      if (pp) {
+         value = pp->GetVal();
          return 0;
       }
    }
@@ -7468,9 +7468,9 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Long_t &value)
 
    TObject *obj = c->FindObject(par);
    if (obj) {
-      TParameter<Long_t> *par = dynamic_cast<TParameter<Long_t>*>(obj);
-      if (par) {
-         value = par->GetVal();
+      TParameter<Long_t> *pp = dynamic_cast<TParameter<Long_t>*>(obj);
+      if (pp) {
+         value = pp->GetVal();
          return 0;
       }
    }
@@ -7486,9 +7486,9 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Long64_t &value)
 
    TObject *obj = c->FindObject(par);
    if (obj) {
-      TParameter<Long64_t> *par = dynamic_cast<TParameter<Long64_t>*>(obj);
-      if (par) {
-         value = par->GetVal();
+      TParameter<Long64_t> *pp = dynamic_cast<TParameter<Long64_t>*>(obj);
+      if (pp) {
+         value = pp->GetVal();
          return 0;
       }
    }
@@ -7504,9 +7504,9 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Double_t &value)
 
    TObject *obj = c->FindObject(par);
    if (obj) {
-      TParameter<Double_t> *par = dynamic_cast<TParameter<Double_t>*>(obj);
-      if (par) {
-         value = par->GetVal();
+      TParameter<Double_t> *pp = dynamic_cast<TParameter<Double_t>*>(obj);
+      if (pp) {
+         value = pp->GetVal();
          return 0;
       }
    }

@@ -853,30 +853,40 @@ Int_t TXSocket::Flush()
    // Typically called when a kHardInterrupt is received.
    // Returns number of bytes in flushed buffers.
 
-   R__LOCKGUARD(fAMtx);
-
-   // Must have something to flush
    Int_t nf = 0;
-   if (fAQue.size() > 0) {
+   list<TXSockBuf *> splist;
+   list<TXSockBuf *>::iterator i;
 
-      // Save size for later semaphore cleanup
-      Int_t sz = fAQue.size();
-      // get the highest interrupt level
-      list<TXSockBuf *>::iterator i;
-      for (i = fAQue.begin(); i != fAQue.end(); i++) {
-         if (*i) {
-            {  R__LOCKGUARD(&fgSMtx);
-               fgSQue.push_back(*i);
+   {  R__LOCKGUARD(fAMtx);
+
+      // Must have something to flush
+      if (fAQue.size() > 0) {
+
+         // Save size for later semaphore cleanup
+         Int_t sz = fAQue.size();
+         // get the highest interrupt level
+         for (i = fAQue.begin(); i != fAQue.end();) {
+            if (*i) {
+               splist.push_back(*i);
+               nf += (*i)->fLen;
+               i = fAQue.erase(i);
             }
-            fAQue.erase(i);
-            nf += (*i)->fLen;
          }
-      }
 
-      // Reset the asynchronous queue
-      while (sz--)
-         fASem.TryWait();
-      fAQue.clear();
+         // Reset the asynchronous queue
+         while (sz--)
+            fASem.TryWait();
+         fAQue.clear();
+      }
+   }
+
+   // Move spares to the spare queue
+   if (splist.size() > 0) {
+      R__LOCKGUARD(&fgSMtx);
+      for (i = splist.begin(); i != splist.end();) {
+         fgSQue.push_back(*i);
+         i = splist.erase(i);
+      }
    }
 
    // We are done

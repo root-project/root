@@ -899,9 +899,9 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
                   if ((psrv = pmgr->ProofServs()->at(is))) {
                      // Release CIDs in attached sessions: loop over attached clients
                      XrdClientID *cid = 0;
-                     int ic = 0;
-                     for (ic = 0; ic < (int) psrv->Clients()->size(); ic++) {
-                        if ((cid = psrv->Clients()->at(ic))) {
+                     int iic = 0;
+                     for (iic = 0; iic < (int) psrv->Clients()->size(); iic++) {
+                        if ((cid = psrv->Clients()->at(iic))) {
                            if (cid->P() == this)
                               cid->Reset();
                         }
@@ -1182,7 +1182,7 @@ int XrdProofdProtocol::Login()
 
    // Make sure the directory exists
    if (XrdProofdAux::AssertDir(fUI.fWorkDir.c_str(), fUI, fgMgr.ChangeOwn()) == -1) {
-      XrdOucString emsg("Login: unable to create work dir: ");
+      emsg = "Login: unable to create work dir: ";
       emsg += fUI.fWorkDir;
       TRACEP(XERR, emsg);
       fResponse.Send(kXP_ServerError, emsg.c_str());
@@ -1203,7 +1203,7 @@ int XrdProofdProtocol::Login()
          dsetdir += "/datasets";
       }
       if (XrdProofdAux::AssertDir(dsetdir.c_str(), fUI, fgMgr.ChangeOwn()) == -1) {
-         XrdOucString emsg("Login: unable to assert dataset dir: ");
+         emsg = "Login: unable to assert dataset dir: ";
          emsg += dsetdir;
          TRACEP(XERR, emsg);
          fResponse.Send(kXP_ServerError, emsg.c_str());
@@ -1219,14 +1219,14 @@ int XrdProofdProtocol::Login()
       // Acquire user identity
       XrdSysPrivGuard pGuard((uid_t)fUI.fUid, (gid_t)fUI.fGid);
       if (!pGuard.Valid()) {
-         XrdOucString emsg("Login: could not get privileges to create credential dir ");
+         emsg = "Login: could not get privileges to create credential dir ";
          emsg += credsdir;
          TRACEP(XERR, emsg);
          fResponse.Send(kXP_ServerError, emsg.c_str());
          return rc;
       }
       if (XrdProofdAux::AssertDir(credsdir.c_str(), fUI, fgMgr.ChangeOwn()) == -1) {
-         XrdOucString emsg("Login: unable to create credential dir: ");
+         emsg = "Login: unable to create credential dir: ";
          emsg += credsdir;
          TRACEP(XERR, emsg);
          fResponse.Send(kXP_ServerError, emsg.c_str());
@@ -2921,9 +2921,9 @@ int XrdProofdProtocol::Create()
       write(fp[1], &lfout, sizeof(lfout));
       if (lfout > 0) {
          int n, ns = 0;
-         char *buf = (char *) xps->Fileout();
+         char *b = (char *) xps->Fileout();
          for (n = 0; n < lfout; n += ns) {
-            if ((ns = write(fp[1], buf + n, lfout - n)) <= 0) {
+            if ((ns = write(fp[1], b + n, lfout - n)) <= 0) {
                MTRACE(XERR, "xpd:child: ",
                             "Create: SetProofServEnv did not return OK - EXIT");
                write(fp[1], &setupOK, sizeof(setupOK));
@@ -2987,10 +2987,10 @@ int XrdProofdProtocol::Create()
          if (setupOK > 0) {
             // Receive path of the log file
             int lfout = setupOK;
-            char *buf = new char[lfout + 1];
+            char *b = new char[lfout + 1];
             int n, nr = 0;
             for (n = 0; n < lfout; n += nr) {
-               while ((nr = read(fp[0], buf + n, lfout - n)) == -1 && errno == EINTR)
+               while ((nr = read(fp[0], b + n, lfout - n)) == -1 && errno == EINTR)
                   errno = 0;   // probably a SIGCLD that was caught
                if (nr == 0)
                   break;          // EOF
@@ -3002,15 +3002,15 @@ int XrdProofdProtocol::Create()
                }
             }
             if (setupOK > 0) {
-               buf[lfout] = 0;
-               xps->SetFileout(buf);
+               b[lfout] = 0;
+               xps->SetFileout(b);
                // Set also the session tag
-               XrdOucString stag(buf);
+               XrdOucString stag(b);
                stag.erase(stag.rfind('/'));
                stag.erase(0, stag.find("session-") + strlen("session-"));
                xps->SetTag(stag.c_str());
             }
-            delete[] buf;
+            delete[] b;
          } else {
             emsg += ": proofserv startup failed";
          }

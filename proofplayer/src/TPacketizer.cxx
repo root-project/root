@@ -608,7 +608,7 @@ void TPacketizer::Reset()
    TObject *key;
    while ((key = slaves.Next()) != 0) {
       TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue(key);
-      TFileNode *fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
+      fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
       if (fn != 0 ) {
          slstat->SetFileNode(fn);
          fn->IncMySlaveCnt();
@@ -723,7 +723,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
       PDB(kPacketizer,3) Info("ValidateFiles", "select returned: %p", sock);
 
-      TSlave *slave = (TSlave *) slaves_by_sock.GetValue( sock );
+      slave = (TSlave *) slaves_by_sock.GetValue( sock );
 
       TMessage *reply;
 
@@ -755,13 +755,13 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          continue;
       } else if ( reply->What() == kPROOF_MESSAGE ) {
          // Send one level up
-         TString msg;
-         (*reply) >> msg;
+         TString tmsg;
+         (*reply) >> tmsg;
          Bool_t lfeed = kTRUE;
          if ((reply->BufferSize() > reply->Length()))
             (*reply) >> lfeed;
          TMessage m(kPROOF_MESSAGE);
-         m << msg << lfeed;
+         m << tmsg << lfeed;
          gProofServ->GetSocket()->Send(m);
          mon.Activate(sock);
          continue;

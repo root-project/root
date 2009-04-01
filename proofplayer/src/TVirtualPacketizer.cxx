@@ -145,14 +145,14 @@ Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
          delete file;
          return -1;
       }
-      TTree *tree = (TTree *) key->ReadObj();
-      if ( tree == 0 ) {
+      TTree *t = (TTree *) key->ReadObj();
+      if ( t == 0 ) {
          // Error always reported?
          delete file;
          return -1;
       }
-      entries = (Long64_t) tree->GetEntries();
-      delete tree;
+      entries = (Long64_t) t->GetEntries();
+      delete t;
 
    } else {
       TList *keys = dir->GetListOfKeys();
