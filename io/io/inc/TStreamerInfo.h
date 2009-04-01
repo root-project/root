@@ -273,6 +273,7 @@ public:
    Int_t               WriteBufferAux      (TBuffer &b, char ** const &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
    Int_t               WriteBufferAux      (TBuffer &b, const TVirtualCollectionProxy &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
    Int_t               WriteBufferAux      (TBuffer &b, const TPointerCollectionAdapter &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
+   Int_t               WriteBufferAux      (TBuffer &b, const TVirtualArray &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 #else
    template <class T>
    Int_t               WriteBufferAux      (TBuffer &b, const T &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
