@@ -2665,9 +2665,20 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                char *cintdictversion = Which(incPath,"cintdictversion.h");
                if (cintdictversion) {
                   adddictdep += cintdictversion;
+                  adddictdep += " ";
                   delete [] cintdictversion;
                } else {
                   adddictdep += rootsys+"/include/cintdictversion.h ";
+               }
+            }
+            {
+               char *RVersion = Which(incPath,"RVersion.h");
+               if (RVersion) {
+                  adddictdep += RVersion;
+                  adddictdep += " ";                  
+                  delete [] RVersion;
+               } else {
+                  adddictdep += rootsys+"/include/RVersion.h ";
                }
             }
             adddictdep += " >> \""+depfilename+"\"";
