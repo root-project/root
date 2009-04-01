@@ -70,7 +70,7 @@ ROOT supports the following histogram types:
          <li>TH3F : histograms with one float per channel.  Maximum precision 7 digits
          <li>TH3D : histograms with one double per channel. Maximum precision 14 digits
    </ul>
-  <li>Profile histograms: See classes  TProfile and TProfile2D.
+  <li>Profile histograms: See classes  TProfile, TProfile2D and TProfile3D.
       Profile histograms are used to display the mean value of Y and its RMS
       for each bin in X. Profile histograms are in many cases an elegant
       replacement of two-dimensional histograms : the inter-relation of two
@@ -105,6 +105,9 @@ All histogram classes are derived from the base class TH1
                 -------------------------------------
                         |      |      |      |      |
                        TH3C   TH3S   TH3I   TH3F   TH3D
+                                                    |
+                                                    |
+                                                 TProfile3D
 
       The TH*C classes also inherit from the array class TArrayC.
       The TH*S classes also inherit from the array class TArrayS.
@@ -4076,6 +4079,46 @@ Double_t TH1::Interpolate(Double_t, Double_t, Double_t)
    return 0;
 }
 
+//______________________________________________________________________________
+Bool_t TH1::IsBinOverflow(Int_t bin) const
+{
+   
+   // Return true if the bin is overflow.
+   Int_t binx, biny, binz;
+   GetBinXYZ(bin, binx, biny, binz);
+   
+   if ( fDimension == 1 )
+      return binx >= GetNbinsX() + 1;
+   else if ( fDimension == 2 )
+      return (binx >= GetNbinsX() + 1) || 
+             (biny >= GetNbinsY() + 1);
+   else if ( fDimension == 3 )
+      return (binx >= GetNbinsX() + 1) || 
+             (biny >= GetNbinsY() + 1) ||
+             (binz >= GetNbinsZ() + 1);
+   else
+      return 0;
+}
+
+
+//______________________________________________________________________________
+Bool_t TH1::IsBinUnderflow(Int_t bin) const
+{
+   
+   // Return true if the bin is overflow.
+   Int_t binx, biny, binz;
+   GetBinXYZ(bin, binx, biny, binz);
+   
+   if ( fDimension == 1 )
+      return (binx <= 0);
+   else if ( fDimension == 2 )
+      return (binx <= 0 || biny <= 0);
+   else if ( fDimension == 3 )
+      return (binx <= 0 || biny <= 0 || binz <= 0);
+   else
+      return 0;
+}
+
 //___________________________________________________________________________
 void TH1::LabelsDeflate(Option_t *ax)
 {
@@ -7213,9 +7256,10 @@ void TH1::Sumw2()
 
    fSumw2.Set(fNcells);
 
-   for (Int_t bin=0; bin<fNcells; bin++) {
-      fSumw2.fArray[bin] = GetBinContent(bin);
-   }
+   if ( fEntries > 0 )
+      for (Int_t bin=0; bin<fNcells; bin++) {
+         fSumw2.fArray[bin] = GetBinContent(bin);
+      }
 }
 
 //______________________________________________________________________________

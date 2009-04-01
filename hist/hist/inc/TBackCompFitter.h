@@ -102,6 +102,9 @@ public:
 
    // get reference to Fit Result object (NOTE: it will be invalid when class is deleted) 
    const ROOT::Fit::FitResult & GetFitResult() const { return fFitter->Result(); }
+
+   // get reference to Fit Data object (NOTE: it will be invalid when class is deleted) 
+   const ROOT::Fit::FitData & GetFitData() const { return *fFitData; }
    
    // scan likelihood value of  parameter and fill the given graph. 
    bool  Scan(unsigned int ipar, TGraph * gr, double xmin = 0, double xmax = 0);

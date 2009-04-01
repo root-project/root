@@ -224,6 +224,16 @@
 #pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TGraph *,  TF1 * );
 #pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TMultiGraph *,  TF1 * );
 
+// for having backward comptibility after new data member in TProfile
+#pragma read sourceClass="TProfile" version="[1-5]" targetClass="TProfile" \
+  source="" target="fBinSumw2" \
+  code="{ fBinSumw2.Reset(); }"
+#pragma read sourceClass="TProfile2D" version="[1-6]" targetClass="TProfile2D" \
+  source="" target="fBinSumw2" \
+  code="{ fBinSumw2.Reset(); }"
+#pragma read sourceClass="TProfile3D" version="[1-6]" targetClass="TProfile3D" \
+  source="" target="fBinSumw2" \
+  code="{ fBinSumw2.Reset(); }"
 
 
 #endif

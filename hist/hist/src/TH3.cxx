@@ -2322,6 +2322,9 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    delete [] title;
    if (p2 == 0) return 0;
 
+   bool useWeights = (GetSumw2N() > 0); 
+   if (useWeights ) p2->Sumw2(); // store sum of w2 in profile if histo is weighted
+
    bool useUF = opt.Contains("uf");
    bool useOF = opt.Contains("of");
    // Fill the projected histogram taking into accounts underflow/overflows
@@ -2337,50 +2340,58 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
       if (useUF) izmin--; 
       if (useOF) izmax++;
    }
-   Double_t cont;
    Double_t entries  = 0;
+
    for (Int_t ixbin=0;ixbin<=1+fXaxis.GetNbins();ixbin++){
       for (Int_t iybin=0;iybin<=1+fYaxis.GetNbins();iybin++){
          for (Int_t izbin=0;izbin<=1+fZaxis.GetNbins();izbin++){
             Int_t bin = GetBin(ixbin,iybin,izbin);
-            cont = GetBinContent(bin);
             switch (pcase) {
                case 4:
                   // "xy"
                   if (izbin < izmin || izbin > izmax) continue;
-                  if (cont) p2->Fill(fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin), cont);
+                  // order is y x z 
+                  DoFillProfileProjection(p2, fYaxis, fXaxis, fZaxis, iybin, ixbin, izbin, bin, useWeights); 
                   break;
 
                case 5:
                   // "yx"
                   if (izbin < izmin || izbin > izmax) continue;
-                  if (cont) p2->Fill(fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin), cont);
+                  // order is x y z 
+                  DoFillProfileProjection(p2, fXaxis, fYaxis, fZaxis, ixbin, iybin, izbin, bin, useWeights); 
                   break;
 
                case 6:
-                  // "xz"
+                  // "xz" 
                   if (iybin < iymin || iybin > iymax) continue;
-                  if (cont) p2->Fill(fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(iybin), cont);
+                  // order is z x y 
+                  DoFillProfileProjection(p2, fZaxis, fXaxis, fYaxis, izbin, ixbin, iybin, bin, useWeights); 
                   break;
 
                case 7:
-                  // "zx"
+                  // "zx" 
                   if (iybin < iymin || iybin > iymax) continue;
-                  if (cont) p2->Fill(fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin), cont);
+                  // order is x z y 
+                  DoFillProfileProjection(p2, fXaxis, fZaxis, fYaxis, ixbin, izbin, iybin, bin, useWeights); 
                   break;
 
                case 8:
-                  // "yz"
+                  // "yz" 
                   if (ixbin < ixmin || ixbin > ixmax) continue;
-                  if (cont) p2->Fill(fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(ixbin), cont);
+                  // order is z y x 
+                  DoFillProfileProjection(p2, fZaxis, fYaxis, fXaxis, izbin, iybin, ixbin, bin, useWeights); 
                   break;
 
                case 9:
                   // "zy"
                   if (ixbin < ixmin || ixbin > ixmax) continue;
-                  if (cont) p2->Fill(fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin), cont);
+                  // order is y z x 
+                  DoFillProfileProjection(p2, fYaxis, fZaxis, fXaxis, iybin, izbin, ixbin, bin, useWeights); 
                   break;
             }
+
+            // not sure if still needed
+            Double_t cont = GetBinContent(bin); 
             if (cont) {
                // count total effective entries of the profile
                Double_t err = GetBinError(bin);
@@ -2392,6 +2403,26 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    p2->SetEntries(entries);
    return p2;
 }
+
+void TH3::DoFillProfileProjection(TProfile2D * p2, const TAxis & a1, const TAxis & a2,  const TAxis & a3, Int_t bin1, Int_t bin2, Int_t bin3, Int_t inBin, Bool_t useWeights ) const { 
+   // internal function to fill the bins of the projected profile histogram 
+   Double_t cont = GetBinContent(inBin); 
+   if (!cont) return; 
+   TArrayD & binSumw2 = *(p2->GetBinSumw2()); 
+   if (useWeights && binSumw2.fN <= 0) useWeights = false;  
+   // the following fill update wrongly the fBinSumw2- need to save it before
+   Double_t u = a1.GetBinCenter(bin1);
+   Double_t v = a2.GetBinCenter(bin2);
+   Double_t w = a3.GetBinCenter(bin3);
+   Int_t outBin = p2->FindBin(u, v);
+   Double_t tmp = 0;
+   if ( useWeights ) tmp = binSumw2.fArray[outBin];            
+   p2->Fill( u , v, w, cont);
+//                      std::cout << "use "  << useWeights; 
+//                      std::cout << " size " << binSumw2.fN << " bin " << bin << " o " << outBin << "  "  << iybin << "  " << ixbin << "
+//  " << fSumw2.fN << std::endl; 
+   if (useWeights ) binSumw2.fArray[outBin] = tmp + fSumw2.fArray[inBin];
+} 
 
 //______________________________________________________________________________
 void TH3::PutStats(Double_t *stats)

@@ -56,6 +56,8 @@ protected:
    virtual Int_t    BufferFill(Double_t, Double_t, Double_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Double_t x, Double_t y, Double_t z, Double_t w);
 
+   void DoFillProfileProjection(TProfile2D * p2, const TAxis & a1, const TAxis & a2, const TAxis & a3, Int_t bin1, Int_t bin2, Int_t bin3, Int_t inBin, Bool_t useWeights) const;
+
 public:
    TH3(const TH3&);
    virtual ~TH3();

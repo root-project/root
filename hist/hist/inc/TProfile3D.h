@@ -30,6 +30,9 @@
 
 class TProfile3D : public TH3D {
 
+public:
+   friend class TProfileHelper;
+
 protected:
    TArrayD       fBinEntries;      //number of entries per bin
    EErrorType    fErrorMode;       //Option to compute errors
@@ -38,6 +41,7 @@ protected:
    Bool_t        fScaling;         //!True when TProfile3D::Scale is called
    Double_t      fTsumwt;          //Total Sum of weight*T
    Double_t      fTsumwt2;         //Total Sum of weight*T*T
+   TArrayD       fBinSumw2;        //Array of sum of squares of weights per bin 
    static Bool_t fgApproximate;    //bin error approximation option
 
    virtual Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
@@ -45,8 +49,15 @@ protected:
    virtual Int_t    BufferFill(Double_t, Double_t, Double_t, Double_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t w);
 
+   // helper methods for the Merge unification in TProfileHelper
+   void SetBins(const Int_t* nbins,const Double_t* range) { SetBins(nbins[0], range[0], range[1], 
+                                                                    nbins[1], range[2], range[3], 
+                                                                    nbins[2], range[4], range[5]); };
+   Int_t Fill(const Double_t* v) { return Fill(v[0], v[1], v[2], v[3], v[4]); };
+   
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
+   Double_t *GetB2() {return (fBinSumw2.fN ? &fBinSumw2.fArray[0] : 0 ); }
    Double_t *GetW()  {return &fArray[0];}
    Double_t *GetW2() {return &fSumw2.fArray[0];}
 
@@ -92,6 +103,9 @@ public:
                      { MayNotUse("GetBinError(Int_t, Int_t"); return -1; }
    virtual Double_t  GetBinError(Int_t binx, Int_t biny, Int_t binz) const {return GetBinError(GetBin(binx,biny,binz));}
    virtual Double_t  GetBinEntries(Int_t bin) const;
+   virtual Double_t  GetBinEffectiveEntries(Int_t bin);
+   virtual TArrayD *GetBinSumw2() {return &fBinSumw2;}
+   virtual const TArrayD *GetBinSumw2() const {return &fBinSumw2;}
    Option_t         *GetErrorOption() const;
    virtual void      GetStats(Double_t *stats) const;
    virtual Double_t  GetTmin() const {return fTmin;}
@@ -110,16 +124,19 @@ public:
    void              SetBins(Int_t, Double_t, Double_t)
                        { MayNotUse("SetBins(Int_t, Double_t, Double_t"); }
    void              SetBins(Int_t, const Double_t*)
-                       { MayNotUse("SetBins(Int_t, const Double_t*"); }
+                       { MayNotUse("SetBins(Int_t, const Double_t*)"); }
    void              SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
                        { MayNotUse("SetBins(Int_t, const Double_t*"); }
-   virtual void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, Int_t nbinsy, Double_t ymin, Double_t ymax, Int_t nbinsz, Double_t zmin, Double_t zmax);
+   virtual void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, 
+                             Int_t nbinsy, Double_t ymin, Double_t ymax, 
+                             Int_t nbinsz, Double_t zmin, Double_t zmax);
    void              SetBins(Int_t, const Double_t*, Int_t, const Double_t*)
                        { MayNotUse("SetBins(Int_t, const Double_t*, Int_t, const Double_t*"); }
    virtual void      SetBuffer(Int_t buffersize, Option_t *opt="");
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
+   virtual void      Sumw2(); 
 
-   ClassDef(TProfile3D,6)  //Profile3D histogram class
+   ClassDef(TProfile3D,7)  //Profile3D histogram class
 };
 
 #endif

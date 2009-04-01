@@ -30,22 +30,32 @@
 
 class TProfile2D : public TH2D {
 
+public:
+   friend class TProfileHelper;
+
 protected:
-    TArrayD     fBinEntries;      //number of entries per bin
-    EErrorType  fErrorMode;       //Option to compute errors
-    Double_t    fZmin;            //Lower limit in Z (if set)
-    Double_t    fZmax;            //Upper limit in Z (if set)
-    Bool_t      fScaling;         //!True when TProfile2D::Scale is called
-    Double_t    fTsumwz;          //Total Sum of weight*Z
-    Double_t    fTsumwz2;         //Total Sum of weight*Z*Z
-static Bool_t   fgApproximate;    //bin error approximation option
+   TArrayD     fBinEntries;      //number of entries per bin
+   EErrorType  fErrorMode;       //Option to compute errors
+   Double_t    fZmin;            //Lower limit in Z (if set)
+   Double_t    fZmax;            //Upper limit in Z (if set)
+   Bool_t      fScaling;         //!True when TProfile2D::Scale is called
+   Double_t    fTsumwz;          //Total Sum of weight*Z
+   Double_t    fTsumwz2;         //Total Sum of weight*Z*Z
+   TArrayD     fBinSumw2;         //Array of sum of squares of weights per bin 
+   static Bool_t   fgApproximate; //bin error approximation option
 
    virtual Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Double_t, Double_t, Double_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Double_t x, Double_t y, Double_t z, Double_t w);
 
+   // helper methods for the Merge unification in TProfileHelper
+   void SetBins(const Int_t* nbins, const Double_t* range) { SetBins(nbins[0], range[0], range[1], 
+                                                                     nbins[1], range[2], range[3]); };
+   Int_t Fill(const Double_t* v) { return Fill(v[0], v[1], v[2], v[3]); };
+
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
+   Double_t *GetB2() {return (fBinSumw2.fN ? &fBinSumw2.fArray[0] : 0 ); }
    Double_t *GetW()  {return &fArray[0];}
    Double_t *GetW2() {return &fSumw2.fArray[0];}
 
@@ -90,6 +100,9 @@ public:
    virtual Double_t  GetBinError(Int_t binx, Int_t biny) const {return GetBinError(GetBin(binx,biny));}
    virtual Double_t  GetBinError(Int_t binx, Int_t biny, Int_t) const {return GetBinError(GetBin(binx,biny));}
    virtual Double_t  GetBinEntries(Int_t bin) const;
+   virtual Double_t  GetBinEffectiveEntries(Int_t bin);
+   virtual TArrayD *GetBinSumw2() {return &fBinSumw2;}
+   virtual const TArrayD *GetBinSumw2() const {return &fBinSumw2;}
    Option_t         *GetErrorOption() const;
    virtual void      GetStats(Double_t *stats) const;
    virtual Double_t  GetZmin() const {return fZmin;}
@@ -120,8 +133,9 @@ public:
                       { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
    virtual void      SetBuffer(Int_t buffersize, Option_t *option="");
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
+   virtual void      Sumw2();
 
-   ClassDef(TProfile2D,6)  //Profile2D histogram class
+   ClassDef(TProfile2D,7)  //Profile2D histogram class
 };
 
 #endif

@@ -1663,31 +1663,63 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
       hnew->SetBinContent(0,0,oldBins[0]);
       hnew->SetBinContent(0,newybins+1,oldBins[nybins+1]);
       hnew->SetBinContent(newxbins+1,0,oldBins[(nxbins+1)*(nybins+2)]);
+      if (oldErrors) { 
+         hnew->SetBinError(newxbins+1,newybins+1,oldErrors[(nxbins+1)*(nybins+2)+(nybins+1)]);
+         hnew->SetBinError(0,0,oldErrors[0]);
+         hnew->SetBinError(0,newybins+1,oldErrors[nybins+1]);
+         hnew->SetBinError(newxbins+1,0,oldErrors[(nxbins+1)*(nybins+2)]);
+      }
 
+      //  recompute under/overflow contents in y for the new  x bins 
       Double_t binContent0, binContent2;
+      Double_t binError0, binError2;
       oldxbin = 1;
       for (xbin = 1; xbin<=newxbins; xbin++) {
          binContent0 = binContent2 = 0;
+         binError0 = binError2 = 0;
          for (i=0; i<nxgroup; i++) {
             if (oldxbin+i > nxbins) break;
-            binContent0 += oldBins[(oldxbin+i)*(nybins+2)];
-            binContent2 += oldBins[(oldxbin+i)*(nybins+2)+(nybins+1)];
+            //N.B  convention used for index is opposite than TH1::GetBin(ix,iy)
+            Int_t ufbin = (oldxbin+i)*(nybins+2);   // index for y underflow bins 
+            Int_t ofbin = (oldxbin+i)*(nybins+2) + (nybins+1);   // index for y overflow bins 
+            binContent0 += oldBins[ufbin];
+            binContent2 += oldBins[ofbin];
+            if (oldErrors)  { 
+               binError0 += oldErrors[ufbin] * oldErrors[ufbin];
+               binError2 += oldErrors[ofbin] * oldErrors[ofbin];
+            }
          }
          hnew->SetBinContent(xbin,0,binContent0);
          hnew->SetBinContent(xbin,newybins+1,binContent2);
+         if (oldErrors) { 
+            hnew->SetBinError(xbin,0,TMath::Sqrt(binError0));
+            hnew->SetBinError(xbin,newybins+1,TMath::Sqrt(binError2) );
+         }
          oldxbin += nxgroup;
       }
 
+      //  recompute under/overflow contents in x for the new y bins
       Int_t oldybin = 1;
       for (ybin = 1; ybin<=newybins; ybin++) {
          binContent0 = binContent2 = 0;
+         binError0 = binError2 = 0;
          for (i=0; i<nygroup; i++) {
             if (oldybin+i > nybins) break;
-            binContent0 += oldBins[(oldybin+i)];
-            binContent2 += oldBins[(nxbins+1)*(nybins+2)+(oldybin+i)];
+            Int_t ufbin = (oldybin+i);   // global index for x underflow bins 
+            Int_t ofbin = (nxbins+1)*(nybins+2) + (oldybin+i);   // global index for x overflow bins 
+            binContent0 += oldBins[ufbin];
+            binContent2 += oldBins[ofbin];
+            if (oldErrors)  { 
+               binError0 += oldErrors[ufbin] * oldErrors[ufbin];
+               binError2 += oldErrors[ofbin] * oldErrors[ofbin];
+            }
          }
          hnew->SetBinContent(0,ybin,binContent0);
          hnew->SetBinContent(newxbins+1,ybin,binContent2);
+         if (oldErrors) { 
+            hnew->SetBinError(0,ybin, TMath::Sqrt(binError0));
+            hnew->SetBinError(newxbins+1, ybin, TMath::Sqrt(binError2));
+         }
          oldybin += nygroup;
       }
    }
@@ -1781,20 +1813,31 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    h1->SetMarkerColor(this->GetMarkerColor());
    h1->SetMarkerStyle(this->GetMarkerStyle());
 
-   //
+   // check if histogram is weighted
+   // in case need to store sum of weight square/bin for the profile
+   bool useWeights = (GetSumw2N() > 0); 
+   if (useWeights) h1->Sumw2(); 
+
    // Fill the profile histogram
+   // no entries/bin is available so can fill only using bin content as weight
    Double_t cont;
+   TArrayD & binSumw2 = *(h1->GetBinSumw2()); 
    for (Int_t outBin =0;outBin<=outN+1;outBin++) {
       for (Int_t inBin=firstbin;inBin<=lastbin;inBin++) {
-         Int_t& binx = (onX ? outBin :  inBin );
-         Int_t& biny = (onX ?  inBin : outBin );
+         Int_t binx = (onX ? outBin :  inBin );
+         Int_t biny = (onX ?  inBin : outBin );
+         Int_t bin = GetBin(binx,biny); 
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
-         cont =  GetCellContent(binx,biny);
+         cont =  GetBinContent(bin);
 
          if (cont) {
+            Double_t tmp = 0; 
+            // the following fill update wrongly the fBinSumw2- need to save it before
+            if ( useWeights ) tmp = binSumw2.fArray[outBin];            
             h1->Fill(outAxis.GetBinCenter(outBin),inAxis.GetBinCenter(inBin), cont );
+            if ( useWeights ) binSumw2.fArray[outBin] = tmp + fSumw2.fArray[bin];
          }
       }
    }
