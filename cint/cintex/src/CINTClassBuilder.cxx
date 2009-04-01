@@ -178,14 +178,22 @@ namespace ROOT { namespace Cintex {
 
    void CINTClassBuilder::Setup_memfunc() {
       // Setup a CINT member function.
-      for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) 
-         CINTScopeBuilder::Setup(fClass.FunctionMemberAt(i).TypeOf());
+      for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) {
+         Member method = fClass.FunctionMemberAt(i);
+         if (method.DeclaringScope() == fClass) {
+            // against a possible UpdateMembers() call
+            CINTScopeBuilder::Setup(method.TypeOf());
+         }
+      }
 
       G__tag_memfunc_setup(fTaginfo->tagnum);
       for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) {
          Member method = fClass.FunctionMemberAt(i); 
-         std::string n = method.Name();
-         CINTFunctionBuilder::Setup(method);
+         if (method.DeclaringScope() == fClass) {
+            // against a possible UpdateMembers() call
+            std::string n = method.Name();
+            CINTFunctionBuilder::Setup(method);
+         }
       }
       ::G__tag_memfunc_reset();
 
@@ -193,8 +201,13 @@ namespace ROOT { namespace Cintex {
 
    void CINTClassBuilder::Setup_memvar() {
       // Setup a CINT data member.
-      for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) 
-         CINTScopeBuilder::Setup(fClass.DataMemberAt(i).TypeOf());
+      for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) {
+         Member dm = fClass.DataMemberAt(i);
+         if (dm.DeclaringScope() == fClass) {
+            // against a possible UpdateMembers() call
+            CINTScopeBuilder::Setup(dm.TypeOf());
+         }
+      }
 
       G__tag_memvar_setup(fTaginfo->tagnum);
 
@@ -207,7 +220,10 @@ namespace ROOT { namespace Cintex {
          for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) {
 
             Member dm = fClass.DataMemberAt(i);
-            CINTVariableBuilder::Setup(dm);
+            if (dm.DeclaringScope() == fClass) {
+               // against a possible UpdateMembers() call
+               CINTVariableBuilder::Setup(dm);
+            }
          }
       }
       G__tag_memvar_reset();
@@ -218,8 +234,9 @@ namespace ROOT { namespace Cintex {
       // Get base class info.
       if ( fBases ) return fBases;
       Member getbases = fClass.MemberByName("__getBasesTable");
-      if ( !getbases ) getbases = fClass.MemberByName("getBasesTable");
-      if( getbases ) {
+      if ( !getbases || getbases.DeclaringScope() != fClass )
+         getbases = fClass.MemberByName("getBasesTable");
+      if( getbases && getbases.DeclaringScope() == fClass ) {
          static Type tBases = Type::ByTypeInfo(typeid(Bases));
          Object ret(tBases, &fBases);
          getbases.Invoke(&ret);
@@ -242,9 +259,12 @@ namespace ROOT { namespace Cintex {
             if ( !fClass.IsAbstract() )  {
                Member ctor, dtor;
                for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) {
-                  Member method = fClass.FunctionMemberAt(i); 
-                  if( method.IsConstructor() && method.FunctionParameterSize() == 0 )  ctor = method;
-                  else if ( method.IsDestructor() )  dtor = method;
+                  Member method = fClass.FunctionMemberAt(i);
+                  if (method.DeclaringScope() == fClass) {
+                     // against a possible UpdateMembers() call
+                     if( method.IsConstructor() && method.FunctionParameterSize() == 0 )  ctor = method;
+                     else if ( method.IsDestructor() )  dtor = method;
+                  }
                }
                if ( ctor )  {
                   Object obj = fClass.Construct();

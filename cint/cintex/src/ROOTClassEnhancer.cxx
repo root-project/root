@@ -252,7 +252,7 @@ namespace ROOT { namespace Cintex {
       info->SetImplFile("", 1);
       //----Fill the New and Deletete functions
       Member getfuncs = TypeGet().MemberByName("__getNewDelFunctions");
-      if( getfuncs ) {
+      if( getfuncs && getfuncs.DeclaringScope() == TypeGet()) {
          NewDelFunctions_t* newdelfunc = 0;
          ValueObject voNewDelFunc = ValueObject::Create(newdelfunc);
          getfuncs.Invoke(&voNewDelFunc);
@@ -411,7 +411,7 @@ namespace ROOT { namespace Cintex {
          case TClassEdit::kMultiSet:
             {
                Member method = typ.MemberByName("createCollFuncTable");
-               if ( !method )   {
+               if ( !method  || method.DeclaringScope() != typ )   {
                   if ( Cintex::Debug() )  {
                      cout << "Cintex: " << Name << "' Setup failed to create this class! "
                           << "The function createCollFuncTable is not availible."
@@ -522,6 +522,10 @@ namespace ROOT { namespace Cintex {
       if ( IsSTL(cl.Name(SCOPED)) || cl.IsArray() ) return;
       for ( size_t m = 0; m < cl.DataMemberSize(); m++) {
          Member mem = cl.DataMemberAt(m);
+         if (mem.DeclaringScope() != cl) {
+            // against a possible UpdateMembers() call
+            continue;
+         }
          if ( ! mem.IsTransient() ) {
             Type typ = mem.TypeOf();
             string nam = mem.Properties().HasProperty("ioname") ?
