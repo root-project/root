@@ -46,3 +46,7 @@ Some files have been modified compare to the official libAfterImage version:
    Remove the word "Warning" in the message
    "Warning: cannot find "libAfterImage.dep" to prevent to SPI
    nightly build to issue an error.
+
+   import.c: to fix the warning (on SLC5):
+   "warning: dereferencing type-punned pointer will break strict-aliasing rules"
+
