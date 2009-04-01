@@ -577,29 +577,47 @@ Bool_t TRootContextMenu::HandleButton(Event_t *event)
 }
 
 //______________________________________________________________________________
+Bool_t TRootContextMenu::HandleCrossing(Event_t *event)
+{
+   // Handle pointer crossing event in context menu.
+
+   if (event->fType == kLeaveNotify) {
+      // just to reset the mouse pointer...
+      HandleMotion(event);
+   }
+   return TGPopupMenu::HandleCrossing(event);
+}
+
+//______________________________________________________________________________
 Bool_t TRootContextMenu::HandleMotion(Event_t *event)
 {
    // Handle pointer motion event in context menu.
 
    static int toggle = 0;
    static Cursor_t handCur = kNone, rightCur = kNone;
+   static UInt_t mask = kButtonPressMask | kButtonReleaseMask | kPointerMotionMask;
 
    if (handCur == kNone)
       handCur    = gVirtualX->CreateCursor(kHand);
    if (rightCur == kNone)
       rightCur   = gVirtualX->CreateCursor(kArrowRight);
 
+   if (event->fType == kLeaveNotify) {
+      gVirtualX->ChangeActivePointerGrab(fId, mask, rightCur);
+      toggle = 0;
+      return kTRUE;
+   }
    // change the cursot to a small hand when over the ? (help)
    if ((event->fX >= (Int_t)(fMenuWidth-15)) && (event->fX <= (Int_t)fMenuWidth) &&
        fCurrent && (fCurrent->GetType() == kMenuEntry)) {
       if (toggle == 0) {
-         gVirtualX->SetCursor(fId, handCur);
+         gVirtualX->ChangeActivePointerGrab(fId, mask, handCur);
          toggle = 1;
       }
    }
    else {
       if (toggle == 1) {
-         gVirtualX->SetCursor(fId, rightCur);
+         gVirtualX->ChangeActivePointerGrab(fId, mask, rightCur);
          toggle = 0;
       }
    }

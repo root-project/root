@@ -53,6 +53,7 @@ public:
    virtual void   DrawEntry(TGMenuEntry *entry);
    TRootDialog   *GetDialog() const { return fDialog; };
    virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual void   OnlineHelp();
 
