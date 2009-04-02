@@ -29,6 +29,7 @@
 #  include "XrdSys/XrdSysLogger.hh"
 #endif
 #include "XrdSys/XrdSysPriv.hh"
+#include "XrdOuc/XrdOucStream.hh"
 
 #include "XrdVersion.hh"
 #include "Xrd/XrdBuffer.hh"
@@ -36,6 +37,7 @@
 
 #include "XrdProofdClient.h"
 #include "XrdProofdClientMgr.h"
+#include "XrdProofdConfig.h"
 #include "XrdProofdManager.h"
 #include "XrdProofdPriorityMgr.h"
 #include "XrdProofdProofServMgr.h"
@@ -109,6 +111,58 @@ typedef struct {
    kXR_int32 styp;
 } hs_response_t;
 
+//
+// Derivation of XrdProofdConfig to read the port from the config file
+class XrdProofdProtCfg : public XrdProofdConfig {
+public:
+   int  fPort; // The port on which we listen
+   XrdProofdProtCfg(const char *cfg, XrdSysError *edest = 0);
+   int  DoDirective(XrdProofdDirective *, char *, XrdOucStream *, bool);
+   void RegisterDirectives();
+};
+
+//__________________________________________________________________________
+XrdProofdProtCfg::XrdProofdProtCfg(const char *cfg, XrdSysError *edest)
+                 : XrdProofdConfig(cfg, edest)
+{
+   // Constructor
+
+   fPort = -1;
+   RegisterDirectives();
+}
+
+//__________________________________________________________________________
+void XrdProofdProtCfg::RegisterDirectives()
+{
+   // Register directives for configuration
+
+   Register("port", new XrdProofdDirective("port", this, &DoDirectiveClass));
+   Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
+}
+
+//______________________________________________________________________________
+int XrdProofdProtCfg::DoDirective(XrdProofdDirective *d,
+                                  char *val, XrdOucStream *, bool)
+{
+   // Parse directives
+
+   if (!d) return -1;
+
+   if (d->fName == "xrd.protocol" || d->fName == "port") {
+      XrdOucString port(val);
+      if (port.beginswith("xproofd:")) {
+         port.replace("xproofd:","");
+      }
+      if (port.length() > 0) {
+         fPort = strtol(port.c_str(), 0, 10);
+      }
+      fPort = (fPort < 0) ? XPD_DEF_PORT : fPort;
+      return 0;
+   }
+   return -1;
+}
+
+
 extern "C" {
 //_________________________________________________________________________________
 XrdProtocol *XrdgetProtocol(const char *, char *parms, XrdProtocol_Config *pi)
@@ -131,8 +185,18 @@ int XrdgetProtocolPort(const char * /*pname*/, char * /*parms*/, XrdProtocol_Con
       // This function is called early on to determine the port we need to use. The
       // The default is ostensibly 1093 but can be overidden; which we allow.
 
+      XrdProofdProtCfg pcfg(pi->ConfigFN, pi->eDest);
+      pcfg.Config(0);
+
       // Default XPD_DEF_PORT (1093)
-      int port = (pi && pi->Port > 0) ? pi->Port : XPD_DEF_PORT;
+      int port = XPD_DEF_PORT;
+
+      if (pcfg.fPort > 0) {
+         port = pcfg.fPort;
+      } else {
+         port = (pi && pi->Port > 0) ? pi->Port : XPD_DEF_PORT;
+      }
+
       return port;
 }}
 

@@ -772,6 +772,7 @@ void XrdProofdManager::RegisterDirectives()
    Register("allowedusers", new XrdProofdDirective("allowedusers", this, &DoDirectiveClass));
    Register("role", new XrdProofdDirective("role", this, &DoDirectiveClass));
    Register("cron", new XrdProofdDirective("cron", this, &DoDirectiveClass));
+   Register("port", new XrdProofdDirective("port", this, &DoDirectiveClass));
    Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
    // Register config directives for strings
    Register("tmp", new XrdProofdDirective("tmp", (void *)&fTMPdir, &DoDirectiveString));
@@ -849,7 +850,7 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
       return DoDirectiveRole(val, cfg, rcf);
    } else if (d->fName == "multiuser") {
       return DoDirectiveMultiUser(val, cfg, rcf);
-   } else if (d->fName == "xrd.protocol") {
+   } else if (d->fName == "xrd.protocol" || d->fName == "port") {
       return DoDirectivePort(val, cfg, rcf);
    }
    TRACE(XERR, "unknown directive: "<<d->fName);
@@ -1134,21 +1135,23 @@ int XrdProofdManager::DoDirectiveRole(char *val, XrdOucStream *cfg, bool)
 }
 
 //______________________________________________________________________________
-int XrdProofdManager::DoDirectivePort(char *, XrdOucStream *cfg, bool)
+int XrdProofdManager::DoDirectivePort(char *val, XrdOucStream *, bool)
 {
    // Process 'xrd.protocol' directive to find the port
 
-   if (!cfg)
+   if (!val)
       // undefined inputs
       return -1;
 
-   // Get the value
-   XrdOucString proto = cfg->GetToken();
-   if (proto.length() > 0 && proto.beginswith("xproofd:")) {
-      proto.replace("xproofd:","");
-      fPort = strtol(proto.c_str(), 0, 10);
-      fPort = (fPort < 0) ? XPD_DEF_PORT : fPort;
+   XrdOucString port(val);
+   if (port.beginswith("xproofd:")) {
+      port.replace("xproofd:","");
    }
+   if (port.length() > 0) {
+      fPort = strtol(port.c_str(), 0, 10);
+   }
+   fPort = (fPort < 0) ? XPD_DEF_PORT : fPort;
+
    return 0;
 }
 
