@@ -729,7 +729,7 @@ Reflex::Class::MemberByName( const std::string & nam, const Type & signature, EM
          return MemberByName2(fInherited->fMembers, nam, &signature);
       else return Dummy::Member();
    }
-   return MemberByName2((const std::vector<Member>&)fMembers, nam, &signature);
+   return ScopeBase::MemberByName(nam, signature, inh);
 }
 
 
