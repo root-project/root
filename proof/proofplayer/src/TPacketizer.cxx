@@ -371,7 +371,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fUnAllocated->Clear();  // avoid dangling pointers
    fActive->Clear();
    fFileNodes->Clear();    // then delete all objects
-   PDB(kPacketizer,2) Info("","Processing Range: First %lld, Num %lld", first, num);
+   PDB(kPacketizer,2) Info("TPacketizer","Processing Range: First %lld, Num %lld", first, num);
 
    dset->Reset();
    Long64_t cur = 0;
@@ -384,20 +384,23 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       TUrl url = e->GetFileName();
       Long64_t eFirst = e->GetFirst();
       Long64_t eNum = e->GetNum();
-      PDB(kPacketizer,2) Info("","Processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
+      PDB(kPacketizer,2)
+         Info("TPacketizer","Processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
 
       if (!e->GetEntryList()){
          // this element is before the start of the global range, skip it
          if (cur + eNum < first) {
             cur += eNum;
-            PDB(kPacketizer,2) Info("","Processing element: skip element cur %lld", cur);
+            PDB(kPacketizer,2)
+               Info("TPacketizer","Processing element: skip element cur %lld", cur);
             continue;
          }
 
          // this element is after the end of the global range, skip it
          if (num != -1 && (first+num <= cur)) {
             cur += eNum;
-            PDB(kPacketizer,2) Info("","Processing element: drop element cur %lld", cur);
+            PDB(kPacketizer,2)
+               Info("TPacketizer","Processing element: drop element cur %lld", cur);
             continue; // break ??
          }
 
@@ -405,7 +408,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
          // adjust its number of entries
          if (num != -1 && (first+num < cur+eNum)) {
             e->SetNum( first + num - cur );
-            PDB(kPacketizer,2) Info("","Processing element: Adjust end %lld", first + num - cur);
+            PDB(kPacketizer,2)
+               Info("TPacketizer","Processing element: Adjust end %lld", first + num - cur);
          }
 
          // If this element contains the start of the global range
@@ -413,8 +417,9 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
          if (cur < first) {
             e->SetFirst( eFirst + (first - cur) );
             e->SetNum( e->GetNum() - (first - cur) );
-            PDB(kPacketizer,2) Info("","Processing element: Adjust start %lld and end %lld",
-                eFirst + (first - cur), first + num - cur);
+            PDB(kPacketizer,2)
+               Info("TPacketizer","Processing element: Adjust start %lld and end %lld",
+                                  eFirst + (first - cur), first + num - cur);
          }
 
          cur += eNum;
@@ -430,7 +435,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
          if (!n)
             continue;
       }
-      PDB(kPacketizer,2) Info("","Processing element: next cur %lld", cur);
+      PDB(kPacketizer,2)
+         Info("TPacketizer","Processing element: next cur %lld", cur);
 
       // Map non URL filenames to dummy host
       TString host;
@@ -462,8 +468,9 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       fTotalEntries = evl ? evl->GetN() : fTotalEntries;
    }
 
-   PDB(kGlobal,1) Info("TPacketizer","Processing %lld entries in %d files on %d hosts",
-                       fTotalEntries, files, fFileNodes->GetSize());
+   PDB(kGlobal,1)
+      Info("TPacketizer","Processing %lld entries in %d files on %d hosts",
+                         fTotalEntries, files, fFileNodes->GetSize());
 
    Reset();
 
@@ -759,6 +766,8 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
                // Fill the info
                elem->SetTDSetOffset(entries);
                if (entries > 0) {
+                  // Most likely valid
+                  elem->SetValid();
                   if (!elem->GetEntryList()) {
                      if (elem->GetFirst() > entries) {
                         Error("ValidateFiles",
@@ -780,7 +789,6 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
                      PDB(kPacketizer,2)
                         Info("ValidateFiles",
                              "found elem '%s' with %lld entries", elem->GetFileName(), entries);
-                     elem->SetValid();
                   }
                }
                // Notify the client
@@ -875,10 +883,13 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       e->SetTDSetOffset(entries);
       if ( entries > 0 ) {
 
+         // This dataset element is most likely valid
+         e->SetValid();
+
          //if (!e->GetEventList()) {
          if (!e->GetEntryList()){
             if ( e->GetFirst() > entries ) {
-               Error("ValidateFiles", "first (%d) higher then number of entries (%d) in %d",
+               Error("ValidateFiles", "first (%d) higher then number of entries (%lld) in %s",
                      e->GetFirst(), entries, e->GetFileName() );
 
                // Invalidate the element
@@ -891,11 +902,10 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
                e->SetNum( entries - e->GetFirst() );
             } else if ( e->GetFirst() + e->GetNum() > entries ) {
                Error("ValidateFiles",
-                     "Num (%d) + First (%d) larger then number of keys/entries (%d) in %s",
+                     "Num (%d) + First (%d) larger then number of keys/entries (%lld) in %s",
                      e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
                e->SetNum( entries - e->GetFirst() );
             }
-            e->SetValid();
          }
 
 
@@ -934,6 +944,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
    // No reason to continue if invalid
    if (!fValid)
       return;
+
 
    // compute the offset for each file element
    Long64_t offset = 0;
