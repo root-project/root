@@ -361,6 +361,8 @@ Bool_t TFormLeafInfo::IsInteger() const
       case kLong64_t:
       case kULong64_t:
          return kTRUE;
+      case kCharStar:
+         return kTRUE; // For consistency with the leaf list method and proper axis setting
       case kFloat_t:
       case kFloat16_t:
       case kDouble_t:
