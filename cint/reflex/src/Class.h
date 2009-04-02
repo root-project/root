@@ -664,7 +664,7 @@ inline Reflex::Member_Iterator Reflex::Class::Member_Begin(EMEMBERQUERY inh) con
          return fInherited->fMembers.begin();
       else return Dummy::MemberCont().begin();
    }
-   return ((const std::vector<Member>&)fMembers).begin();
+   return ScopeBase::Member_Begin(inh);
 }
 
 
@@ -676,7 +676,7 @@ inline Reflex::Member_Iterator Reflex::Class::Member_End(EMEMBERQUERY inh) const
          return fInherited->fMembers.end();
       else return Dummy::MemberCont().end();
    }
-   return ((const std::vector<Member>&)fMembers).end();
+   return ScopeBase::Member_End(inh);
 }
 
 
@@ -688,7 +688,7 @@ inline Reflex::Reverse_Member_Iterator Reflex::Class::Member_RBegin(EMEMBERQUERY
          return const_cast<const std::vector<Member>&>(fInherited->fMembers).rbegin();
       else return Dummy::MemberCont().rbegin();
    }
-   return ((const std::vector<Member>&)fMembers).rbegin();
+   return ScopeBase::Member_RBegin(inh);
 }
 
 
@@ -700,7 +700,7 @@ inline Reflex::Reverse_Member_Iterator Reflex::Class::Member_REnd(EMEMBERQUERY i
          return const_cast<const std::vector<Member>&>(fInherited->fMembers).rend();
       else return Dummy::MemberCont().rend();
    }
-   return ((const std::vector<Member>&)fMembers).rend();
+   return ScopeBase::Member_REnd(inh);
 }
 
 
