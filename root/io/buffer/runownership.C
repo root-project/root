@@ -89,5 +89,6 @@ int runownership()
    } else {
       fprintf(stderr,"The test has run to completion but failed\n");
    }
+   fflush(stderr);
    return !success; // Value to be used by gmake
 }
