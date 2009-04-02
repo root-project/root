@@ -336,6 +336,12 @@ namespace Reflex {
       // 'E' is also a value used (for legacy implementation of FILE*)
       // 'a', 'j', 'T', 'o', 'O', 'p', 'P', 'z', 'Z', '\011', '\001', 'w' are also a value used (for support of various interpreter types)
    };
+
+   enum EMEMBERQUERY {
+      INHERITEDMEMBERS_DEFAULT, // NO by default, set to ALSO by UpdateMembers()
+      INHERITEDMEMBERS_NO,
+      INHERITEDMEMBERS_ALSO
+   };
    
    // Note TYPE and REPRESTYPE are 'small' enums and could be stored as 'char' to save space
    

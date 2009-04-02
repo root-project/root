@@ -20,11 +20,8 @@
 namespace Reflex {
 
    // forward declarations
-   class Class;
    class Base;
-   class InstantiatedTemplateClass;
    class Member;
-   class Namespace;
    class PropertyList;
    class Type;
    class ScopeBase;
@@ -152,7 +149,7 @@ namespace Reflex {
       * @param  nth the nth data member
       * @return nth data member 
       */
-      Member DataMemberAt( size_t nth ) const;
+      Member DataMemberAt( size_t nth, EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT ) const;
 
 
       /**
@@ -160,42 +157,42 @@ namespace Reflex {
       * @param  name of data member
       * @return data member
       */
-      Member DataMemberByName( const std::string & name ) const;
+      Member DataMemberByName( const std::string & name, EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT ) const;
 
 
       /**
       * DataMemberSize will return the number of data members of this type
       * @return number of data members
       */
-      size_t DataMemberSize() const;
+      size_t DataMemberSize(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * Member_Begin returns the begin of the container of members
       * @return begin of container of members
       */
-      Member_Iterator DataMember_Begin() const;
+      Member_Iterator DataMember_Begin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * Member_End returns the end of the container of members
       * @return end of container of members
       */
-      Member_Iterator DataMember_End() const;
+      Member_Iterator DataMember_End(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * Member_RBegin returns the reverse begin of the container of members
       * @return reverse begin of container of members
       */
-      Reverse_Member_Iterator DataMember_RBegin() const;
+      Reverse_Member_Iterator DataMember_RBegin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * Member_REnd returns the reverse end of the container of members
       * @return reverse end of container of members
       */
-      Reverse_Member_Iterator DataMember_REnd() const;
+      Reverse_Member_Iterator DataMember_REnd(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
@@ -210,7 +207,7 @@ namespace Reflex {
       * @param  nth function member
       * @return reflection information of nth function member
       */
-      Member FunctionMemberAt( size_t nth ) const;
+      Member FunctionMemberAt( size_t nth, EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT ) const;
 
 
       /**
@@ -219,7 +216,7 @@ namespace Reflex {
       * @param  name of function member
       * @return reflection information of the function member
       */
-      Member FunctionMemberByName( const std::string & name ) const;
+      Member FunctionMemberByName( const std::string & name, EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT ) const;
 
 
       /**
@@ -232,8 +229,9 @@ namespace Reflex {
       */
       // this overloading is unfortunate but I can't include Type.h here
       Member FunctionMemberByName( const std::string & name,
-         const Type & signature,
-         unsigned int modifers_mask = 0) const;
+                                   const Type & signature,
+                                   unsigned int modifers_mask = 0,
+                                   EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
@@ -246,8 +244,9 @@ namespace Reflex {
       */
       // this overloading is unfortunate but I can't include Type.h here
       Member FunctionMemberByNameAndSignature( const std::string & name,
-         const Type & signature,
-         unsigned int modifers_mask = 0) const;
+                                               const Type & signature,
+                                               unsigned int modifers_mask = 0,
+                                               EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
@@ -255,35 +254,35 @@ namespace Reflex {
       * this type
       * @return number of function members
       */
-      size_t FunctionMemberSize() const;
+      size_t FunctionMemberSize(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * FunctionMember_Begin returns the begin of the container of function members
       * @return begin of container of function members
       */
-      Member_Iterator FunctionMember_Begin() const;
+      Member_Iterator FunctionMember_Begin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * FunctionMember_End returns the end of the container of function members
       * @return end of container of function members
       */
-      Member_Iterator FunctionMember_End() const;
+      Member_Iterator FunctionMember_End(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * FunctionMember_RBegin returns the reverse begin of the container of function members
       * @return reverse begin of container of function members
       */
-      Reverse_Member_Iterator FunctionMember_RBegin() const;
+      Reverse_Member_Iterator FunctionMember_RBegin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * FunctionMember_RBegin returns the reverse begin of the container of function members
       * @return reverse begin of container of function members
       */
-      Reverse_Member_Iterator FunctionMember_REnd() const;
+      Reverse_Member_Iterator FunctionMember_REnd(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
 
@@ -409,7 +408,7 @@ namespace Reflex {
       * @param  nth member
       * @return reflection information nth member
       */
-      Member MemberAt( size_t nth ) const;
+      Member MemberAt( size_t nth, EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT ) const;
 
 
       /**
@@ -417,7 +416,7 @@ namespace Reflex {
       * @param  member name
       * @return reflection information of the member
       */
-      Member MemberByName( const std::string & name ) const;
+      Member MemberByName( const std::string & name, EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT ) const;
 
 
       /**
@@ -428,42 +427,43 @@ namespace Reflex {
       */
       // this overloading is unfortunate but I can't include Type.h here
       Member MemberByName( const std::string & name,
-         const Type & signature ) const;
+                           const Type & signature,
+                           EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * MemberSize will return the number of members
       * @return number of members
       */
-      size_t MemberSize() const;
+      size_t MemberSize(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * Member_Begin returns the begin of the container of members
       * @return begin of container of members
       */
-      Member_Iterator Member_Begin() const;
+      Member_Iterator Member_Begin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * Member_End returns the end of the container of members
       * @return end of container of members
       */
-      Member_Iterator Member_End() const;
+      Member_Iterator Member_End(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * Member_RBegin returns the reverse begin of the container of members
       * @return reverse begin of container of members
       */
-      Reverse_Member_Iterator Member_RBegin() const;
+      Reverse_Member_Iterator Member_RBegin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /**
       * Member_REnd returns the reverse end of the container of members
       * @return reverse end of container of members
       */
-      Reverse_Member_Iterator Member_REnd() const;
+      Reverse_Member_Iterator Member_REnd(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
 
 
       /** 
@@ -819,6 +819,13 @@ namespace Reflex {
       void Unload() const;
 
 
+      /** 
+      * UpdateMembers will update the list of Function/Data/Members with all
+      * members of base classes currently availabe in the system, switching
+      * INHERITEDMEMBERS_DEFAULT to INHERITEDMEMBERS_ALSO.
+      */
+      void UpdateMembers() const;
+
       /**
       * UsingDirectiveAt will return the nth using directive
       * @param  nth using directive
@@ -1122,33 +1129,33 @@ inline Reflex::Reverse_Base_Iterator Reflex::Scope::Base_REnd() const {
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Member_Iterator Reflex::Scope::DataMember_Begin() const {
+inline Reflex::Member_Iterator Reflex::Scope::DataMember_Begin(EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->DataMember_Begin();
+   if ( * this ) return fScopeName->fScopeBase->DataMember_Begin(inh);
    return Dummy::MemberCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Member_Iterator Reflex::Scope::DataMember_End() const {
+inline Reflex::Member_Iterator Reflex::Scope::DataMember_End(EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->DataMember_End();
+   if ( * this ) return fScopeName->fScopeBase->DataMember_End(inh);
    return Dummy::MemberCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Reverse_Member_Iterator Reflex::Scope::DataMember_RBegin() const {
+inline Reflex::Reverse_Member_Iterator Reflex::Scope::DataMember_RBegin(EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->DataMember_RBegin();
+   if ( * this ) return fScopeName->fScopeBase->DataMember_RBegin(inh);
    return Dummy::MemberCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Reverse_Member_Iterator Reflex::Scope::DataMember_REnd() const {
+inline Reflex::Reverse_Member_Iterator Reflex::Scope::DataMember_REnd(EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->DataMember_REnd();
+   if ( * this ) return fScopeName->fScopeBase->DataMember_REnd(inh);
    return Dummy::MemberCont().rend();
 }
 
@@ -1162,33 +1169,33 @@ inline Reflex::Scope Reflex::Scope::DeclaringScope() const {
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Member_Iterator Reflex::Scope::FunctionMember_Begin() const {
+inline Reflex::Member_Iterator Reflex::Scope::FunctionMember_Begin(EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->FunctionMember_Begin();
+   if ( * this ) return fScopeName->fScopeBase->FunctionMember_Begin(inh);
    return Dummy::MemberCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Member_Iterator Reflex::Scope::FunctionMember_End() const {
+inline Reflex::Member_Iterator Reflex::Scope::FunctionMember_End(EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->FunctionMember_End();
+   if ( * this ) return fScopeName->fScopeBase->FunctionMember_End(inh);
    return Dummy::MemberCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Reverse_Member_Iterator Reflex::Scope::FunctionMember_RBegin() const {
+inline Reflex::Reverse_Member_Iterator Reflex::Scope::FunctionMember_RBegin(EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->FunctionMember_RBegin();
+   if ( * this ) return fScopeName->fScopeBase->FunctionMember_RBegin(inh);
    return Dummy::MemberCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Reverse_Member_Iterator Reflex::Scope::FunctionMember_REnd() const {
+inline Reflex::Reverse_Member_Iterator Reflex::Scope::FunctionMember_REnd(EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->FunctionMember_REnd();
+   if ( * this ) return fScopeName->fScopeBase->FunctionMember_REnd(inh);
    return Dummy::MemberCont().rend();
 }
 
@@ -1232,30 +1239,6 @@ inline bool Reflex::Scope::IsNamespace() const {
 
 
 //-------------------------------------------------------------------------------
-inline bool Reflex::Scope::IsPrivate() const {
-//-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->IsPrivate(); 
-   return false;
-}
-
-
-//-------------------------------------------------------------------------------
-inline bool Reflex::Scope::IsProtected() const {
-//-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->IsProtected(); 
-   return false;
-}
-
-
-//-------------------------------------------------------------------------------
-inline bool Reflex::Scope::IsPublic() const {
-//-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->IsPublic(); 
-   return false;
-}
-
-
-//-------------------------------------------------------------------------------
 inline bool Reflex::Scope::IsTemplateInstance() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->IsTemplateInstance(); 
@@ -1280,9 +1263,9 @@ inline bool Reflex::Scope::IsUnion() const {
 
 
 //-------------------------------------------------------------------------------
-inline size_t Reflex::Scope::MemberSize() const {
+inline size_t Reflex::Scope::MemberSize(EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->MemberSize(); 
+   if ( * this ) return fScopeName->fScopeBase->MemberSize(inh); 
    return 0;
 }
 
@@ -1481,46 +1464,6 @@ inline const Reflex::ScopeBase * Reflex::Scope::ToScopeBase() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase;
    return 0;
-}
-
-
-//-------------------------------------------------------------------------------
-inline size_t Reflex::Scope::TemplateArgumentSize() const {
-//-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->TemplateArgumentSize();
-   return 0;
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Type_Iterator Reflex::Scope::TemplateArgument_Begin() const {
-//-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->TemplateArgument_Begin();
-   return Dummy::TypeCont().begin();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Type_Iterator Reflex::Scope::TemplateArgument_End() const {
-//-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->TemplateArgument_End();
-   return Dummy::TypeCont().end();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Reverse_Type_Iterator Reflex::Scope::TemplateArgument_RBegin() const {
-//-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->TemplateArgument_RBegin();
-   return Dummy::TypeCont().rbegin();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Reverse_Type_Iterator Reflex::Scope::TemplateArgument_REnd() const {
-//-------------------------------------------------------------------------------
-   if ( * this ) return fScopeName->fScopeBase->TemplateArgument_REnd();
-   return Dummy::TypeCont().rend();
 }
 
 

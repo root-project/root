@@ -86,6 +86,84 @@ public:
 
 
    /**
+    * nthDataMember will return the nth data MemberAt of the At
+    * @param  nth data MemberAt
+    * @return pointer to data MemberAt
+    */
+   Member DataMemberAt( size_t nth, EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT ) const;
+
+
+   /**
+    * DataMemberByName will return the MemberAt with Name
+    * @param  Name of data MemberAt
+    * @return data MemberAt
+    */
+   Member DataMemberByName( const std::string & nam, EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT ) const;
+
+
+   /**
+    * DataMemberSize will return the number of data members of this At
+    * @return number of data members
+    */
+   size_t DataMemberSize(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+
+
+   Member_Iterator DataMember_Begin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+   Member_Iterator DataMember_End(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+   Reverse_Member_Iterator DataMember_RBegin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+   Reverse_Member_Iterator DataMember_REnd(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+
+   /**
+    * nthFunctionMember will return the nth function MemberAt of the At
+    * @param  nth function MemberAt
+    * @return pointer to function MemberAt
+    */
+   Member FunctionMemberAt( size_t nth, EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT ) const;
+
+
+   /**
+    * FunctionMemberByName will return the MemberAt with the Name, 
+    * optionally the signature of the function may be given
+    * @param  Name of function MemberAt
+    * @param  signature of the MemberAt function
+    * @modifiers_mask When matching, do not compare the listed modifiers
+    * @return function MemberAt
+    */
+   Member FunctionMemberByName( const std::string & name,
+                                const Type & signature,
+                                unsigned int modifiers_mask = 0,
+                                EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+
+
+   /**
+    * FunctionMemberByNameAndSignature will return the MemberAt with the Name, 
+    * optionally the signature of the function may be given
+    * @param  Name of function MemberAt
+    * @param  signature of the MemberAt function
+    * @modifiers_mask When matching, do not compare the listed modifiers
+    * @return function MemberAt
+    */
+   Member FunctionMemberByNameAndSignature( const std::string & name,
+                                            const Type & signature,
+                                            unsigned int modifiers_mask = 0,
+                                            EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+
+
+   /**
+    * FunctionMemberSize will return the number of function members of
+    * this type
+    * @return number of function members
+    */
+   size_t FunctionMemberSize(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+
+
+   Member_Iterator FunctionMember_Begin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+   Member_Iterator FunctionMember_End(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+   Reverse_Member_Iterator FunctionMember_RBegin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+   Reverse_Member_Iterator FunctionMember_REnd(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+
+
+   /**
    * GenerateDict will produce the dictionary information of this type
    * @param generator a reference to the dictionary generator instance
    */
@@ -143,6 +221,37 @@ public:
    virtual bool IsVirtual() const;
 
    /**
+    * MemberByName will return the first MemberAt with a given Name
+    * @param Name  MemberAt Name
+    * @return pointer to MemberAt
+    */
+   Member MemberByName( const std::string & name,
+                        const Type & signature,
+                        EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+
+
+   /**
+    * MemberAt will return the nth MemberAt of the At
+    * @param  nth MemberAt
+    * @return pointer to nth MemberAt
+    */
+   Member MemberAt( size_t nth, EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT ) const;
+
+
+   Member_Iterator Member_Begin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+   Member_Iterator Member_End(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+   Reverse_Member_Iterator Member_RBegin(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+   Reverse_Member_Iterator Member_REnd(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+
+
+   /**
+    * MemberSize will return the number of members
+    * @return number of members
+    */
+   size_t MemberSize(EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+
+
+   /**
    * PathToBase will return a vector of function pointers to the base class
    * ( !!! Attention !!! the most derived class comes first )
    * @param base the scope to look for
@@ -150,12 +259,6 @@ public:
    */
    const std::vector<OffsetFunction>& PathToBase(const Scope& bas) const;
 
-
-   /**
-   * UpdateMembers2 will update the list of Function/Data/Members with all
-   * MemberAt of BaseAt classes currently availabe in the system
-   */
-   virtual void UpdateMembers() const;
 
    /**
    * AddBase will add the information about a BaseAt class
@@ -199,22 +302,37 @@ public:
    */
    virtual void RemoveFunctionMember(const Member& fm) const;
 
+   /** Initialize the vector of inherited members.
+    *  Returns false if one of the bases is not complete.
+    */
+   virtual bool UpdateMembers() const;
+
+
 private:
 
    /** map with the class as a key and the path to it as the value
    the key (void*) is a pointer to the unique ScopeName */
+   typedef std::vector<OffsetFunction> BasePath_t;
    typedef std::map<void*, std::vector<OffsetFunction>* > PathsToBase;
 
-   /**
-   * UpdateMembers2 will update the list of Function/Data/Members with all
-   * MemberAt of BaseAt classes currently availabe in the system
-   * @param members the list of members
-   * @param dataMembers the list of data members
-   * @param functionMembers the list of function members
-   * @param pathsToBase the cache storing pathes to all known bases
-   * @param basePath the current path to the BaseAt class
-   */
-   void UpdateMembers2(OMembers& members, Members& dataMembers, Members& functionMembers, PathsToBase& pathsToBase, std::vector<OffsetFunction>& basePath) const;
+   struct InheritedMembersInfo_t {
+      InheritedMembersInfo_t(size_t ndata, size_t nfunc):
+         fDataMembers(ndata), fFunctionMembers(nfunc), fMembers(ndata + nfunc) {
+         // Resize the members, so the c'tor allocates the right amount directly.
+         // Then clear, because vector does not have a "reserve only" c'tor.
+         fDataMembers.clear();
+         fFunctionMembers.clear();
+         fMembers.clear();
+         // The reserve again, just to be sure - ideally this is a no-op.
+         fDataMembers.reserve(ndata);
+         fFunctionMembers.reserve(nfunc);
+         fMembers.reserve(ndata + nfunc);
+      }
+      std::vector< Member > fDataMembers;
+      std::vector< Member > fFunctionMembers;
+      std::vector< Member > fMembers;
+   };
+
 
    /**
    * NewBases will return true if new BaseAt classes have been discovered
@@ -274,6 +392,8 @@ private:
 
    /** map to all inherited datamembers and their inheritance path */
    mutable PathsToBase fPathsToBase;
+
+   mutable InheritedMembersInfo_t *fInherited;
 
 }; // class Class
 } //namespace Reflex
@@ -337,6 +457,292 @@ inline Reflex::Reverse_Base_Iterator Reflex::Class::Base_REnd() const
 {
 //-------------------------------------------------------------------------------
    return ((const std::vector<Base>&)fBases).rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member_Iterator Reflex::Class::DataMember_Begin(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fDataMembers.begin();
+      else return Dummy::MemberCont().begin();
+   }
+   return fDataMembers.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member_Iterator Reflex::Class::DataMember_End(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fDataMembers.end();
+      else return Dummy::MemberCont().end();
+   }
+   return fDataMembers.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Reverse_Member_Iterator Reflex::Class::DataMember_RBegin(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fDataMembers.rbegin();
+      else return Dummy::MemberCont().rbegin();
+   }
+   return ((const std::vector<Member>&)fDataMembers).rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Reverse_Member_Iterator Reflex::Class::DataMember_REnd(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fDataMembers.rend();
+      else return Dummy::MemberCont().rend();
+   }
+   return ((const std::vector<Member>&)fDataMembers).rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member
+Reflex::Class::DataMemberAt( size_t nth, EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   // Return nth data member info.
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers() && nth < fInherited->fDataMembers.size())
+         return fInherited->fDataMembers[nth];
+      else return Dummy::Member();
+   }
+   if ( nth < fDataMembers.size() ) return fDataMembers[ nth ];
+   return Dummy::Member();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member
+Reflex::Class::DataMemberByName( const std::string & nam, EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   // Return function member by name and signature including the return type.
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return MemberByName2(fInherited->fDataMembers, nam);
+      else return Dummy::Member();
+   }
+   return MemberByName2(fDataMembers, nam);
+}
+
+
+//-------------------------------------------------------------------------------
+inline size_t Reflex::Class::DataMemberSize(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   // Return number of data members.
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fDataMembers.size();
+      else return 0;
+   }
+   return fDataMembers.size();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member_Iterator Reflex::Class::FunctionMember_Begin(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fFunctionMembers.begin();
+      else return Dummy::MemberCont().begin();
+   }
+   return fFunctionMembers.begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member_Iterator Reflex::Class::FunctionMember_End(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fFunctionMembers.end();
+      else return Dummy::MemberCont().end();
+   }
+   return fFunctionMembers.end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Reverse_Member_Iterator Reflex::Class::FunctionMember_RBegin(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fFunctionMembers.rbegin();
+      else return Dummy::MemberCont().rbegin();
+   }
+   return ((const std::vector<Member>&)fFunctionMembers).rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Reverse_Member_Iterator Reflex::Class::FunctionMember_REnd(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fFunctionMembers.rend();
+      else return Dummy::MemberCont().rend();
+   }
+   return ((const std::vector<Member>&)fFunctionMembers).rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member
+Reflex::Class::FunctionMemberAt( size_t nth, EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   // Return nth data member info.
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers() && nth < fInherited->fFunctionMembers.size())
+         return fInherited->fFunctionMembers[nth];
+      else return Dummy::Member();
+   }
+   if ( nth < fFunctionMembers.size() ) return fFunctionMembers[ nth ];
+   return Dummy::Member();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member
+Reflex::Class::FunctionMemberByName( const std::string & nam, const Type & signature,
+                                     unsigned int modifiers_mask, EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   // Return function member by name and signature including the return type.
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return MemberByName2(fInherited->fFunctionMembers, nam, &signature, modifiers_mask);
+      else return Dummy::Member();
+   }
+   return MemberByName2(fFunctionMembers, nam, &signature, modifiers_mask);
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member
+Reflex::Class::FunctionMemberByNameAndSignature( const std::string & nam, const Type & signature,
+                                                 unsigned int modifiers_mask, EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   // Return function member by name and signature excluding the return type.
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return MemberByName2(fInherited->fFunctionMembers, nam, &signature, modifiers_mask, false);
+      else return Dummy::Member();
+   }
+   return MemberByName2(fFunctionMembers, nam, &signature, modifiers_mask, false);
+}
+
+
+//-------------------------------------------------------------------------------
+inline size_t Reflex::Class::FunctionMemberSize(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   // Return number of data members.
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fFunctionMembers.size();
+      else return 0;
+   }
+   return fFunctionMembers.size();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member_Iterator Reflex::Class::Member_Begin(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fMembers.begin();
+      else return Dummy::MemberCont().begin();
+   }
+   return ((const std::vector<Member>&)fMembers).begin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member_Iterator Reflex::Class::Member_End(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fMembers.end();
+      else return Dummy::MemberCont().end();
+   }
+   return ((const std::vector<Member>&)fMembers).end();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Reverse_Member_Iterator Reflex::Class::Member_RBegin(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fMembers.rbegin();
+      else return Dummy::MemberCont().rbegin();
+   }
+   return ((const std::vector<Member>&)fMembers).rbegin();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Reverse_Member_Iterator Reflex::Class::Member_REnd(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fMembers.rend();
+      else return Dummy::MemberCont().rend();
+   }
+   return ((const std::vector<Member>&)fMembers).rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member
+Reflex::Class::MemberAt( size_t nth, EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   // Return nth data member info.
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers() && nth < fInherited->fMembers.size())
+         return fInherited->fMembers[nth];
+      else return Dummy::Member();
+   }
+   if ( nth < fMembers.size() ) return fMembers[ nth ];
+   return Dummy::Member();
+}
+
+
+//-------------------------------------------------------------------------------
+inline Reflex::Member
+Reflex::Class::MemberByName( const std::string & nam, const Type & signature, EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   // Return function member by name and signature including the return type.
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return MemberByName2(fInherited->fMembers, nam, &signature);
+      else return Dummy::Member();
+   }
+   return MemberByName2((const std::vector<Member>&)fMembers, nam, &signature);
+}
+
+
+//-------------------------------------------------------------------------------
+inline size_t Reflex::Class::MemberSize(EMEMBERQUERY inh) const {
+//-------------------------------------------------------------------------------
+   // Return number of data members.
+   if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
+      if (Class::UpdateMembers())
+         return fInherited->fMembers.size();
+      else return 0;
+   }
+   return fMembers.size();
 }
 
 

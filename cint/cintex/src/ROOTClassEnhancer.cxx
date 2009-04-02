@@ -251,7 +251,7 @@ namespace ROOT { namespace Cintex {
                                                                       );
       info->SetImplFile("", 1);
       //----Fill the New and Deletete functions
-      Member getfuncs = TypeGet().MemberByName("__getNewDelFunctions");
+      Member getfuncs = TypeGet().MemberByName("__getNewDelFunctions", Reflex::Type(), INHERITEDMEMBERS_NO);
       if( getfuncs ) {
          NewDelFunctions_t* newdelfunc = 0;
          getfuncs.Invoke(newdelfunc);
@@ -409,7 +409,7 @@ namespace ROOT { namespace Cintex {
          case TClassEdit::kSet:
          case TClassEdit::kMultiSet:
             {
-               Member method = typ.MemberByName("createCollFuncTable");
+               Member method = typ.MemberByName("createCollFuncTable", Reflex::Type(), INHERITEDMEMBERS_NO);
                if ( !method )   {
                   if ( Cintex::Debug() )  {
                      cout << "Cintex: " << Name << "' Setup failed to create this class! "
@@ -517,8 +517,8 @@ namespace ROOT { namespace Cintex {
       int ncp = ::strlen(par);
       // Loop over data members
       if ( IsSTL(cl.Name(SCOPED)) || cl.IsArray() ) return;
-      for ( size_t m = 0; m < cl.DataMemberSize(); m++) {
-         Member mem = cl.DataMemberAt(m);
+      for ( size_t m = 0; m < cl.DataMemberSize(INHERITEDMEMBERS_NO); m++) {
+         Member mem = cl.DataMemberAt(m, INHERITEDMEMBERS_NO);
          if ( ! mem.IsTransient() ) {
             Type typ = mem.TypeOf();
             string nam = mem.Properties().HasProperty("ioname") ?

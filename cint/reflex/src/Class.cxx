@@ -42,8 +42,9 @@ Reflex::Class::Class(const char *           typ,
 // Construct a Class instance.
    : ScopedType(typ, size, classType, ti, Type(), modifiers,
                 (typ && (typ[0] == 'F') && !strcmp(typ, "FILE")) ? (REPRESTYPE)'e' : REPRES_STRUCT),
-      fAllBases(0),
-      fCompleteType(false) {}
+     fAllBases(0),
+     fCompleteType(false),
+     fInherited(0) {}
 
 
 //-------------------------------------------------------------------------------
@@ -53,6 +54,7 @@ Reflex::Class::~Class()
    for (PathsToBase::iterator it = fPathsToBase.begin(); it != fPathsToBase.end(); ++it) {
       delete it->second;
    }
+   delete fInherited;
 }
 
 
@@ -280,6 +282,113 @@ bool Reflex::Class::HasBase(const Type & cl,
 
 
 //-------------------------------------------------------------------------------
+bool Reflex::Class::UpdateMembers() const {
+//-------------------------------------------------------------------------------
+   // Initialize the vector of inherited members, accessible by
+   // ...Member(INHERITEDMEMBERS_ALSO)
+   // Return false if one of the bases is not complete.
+   //
+   // This function recurses over all bases in left-to-right order, i.e.
+   //   class A: public A0, public A1 {int a;};
+   //   class A0: public A01 { int a0;}
+   //   class A1 {int a1;};
+   //   class A01 {int a01;}
+   // will fill the members in the order a, a0, a01, a1.
+   // Members of virtual bases and of their bases will only be enumerated once
+   // (the left-most occurrence).
+   // Function members with the same name and signature that occurr multiple times
+   // will only be enumerated once. NOTE: the left-most occurrence is taken,
+   // which does NOT correspond to C++ virtual function resolution (for
+   // backward compatibility reasons). And anyway multiple occurrences of the
+   // "same" non-virtual function are fine and should not be suppressed, but again
+   // for backward compatibility reasons that's what UpdateMembers does.
+
+   if (fInherited) return true;
+   if (!IsComplete()) return false;
+
+   // flatten the bases, where the current class is at front
+   // and the basiest base classes are at the end:
+   typedef std::list<std::pair<Scope, std::pair<bool, size_t> > > BaseList_t;
+   BaseList_t bases;
+   {
+      size_t numDataMembers = 0;
+      size_t numFunctionMembers = 0;
+      // bases are ordered by inheritance level
+      BaseList_t basesToProcess;
+      basesToProcess.push_back(std::make_pair(operator Scope(), std::make_pair(false, 0)));
+      while (!basesToProcess.empty()) {
+         Scope s = basesToProcess.front().first;
+         bool virt = basesToProcess.front().second.first;
+         size_t level = basesToProcess.front().second.second;
+         bool duplicateVirtualBase = false;
+
+         if (virt) {
+            for (BaseList_t::iterator iV = bases.begin(), iVe = bases.end(); iV != iVe; ++iV)
+               if (iV->second.first && iV->first == s)
+                  // duplicate virtual base, skip this.
+                  duplicateVirtualBase = true;
+         }
+         basesToProcess.pop_front();
+         if (!duplicateVirtualBase) {
+            bases.push_back(std::make_pair(s, std::make_pair(virt, level)));
+            for (Reverse_Base_Iterator iB = s.Base_RBegin(), iBe = s.Base_REnd(); iB != iBe; ++iB) {
+               basesToProcess.push_front(std::make_pair(iB->ToScope(),
+                                                        std::make_pair(virt || iB->IsVirtual(), level + 1)));
+            }
+            numDataMembers += s.DataMemberSize(INHERITEDMEMBERS_NO);
+            numFunctionMembers += s.FunctionMemberSize(INHERITEDMEMBERS_NO);
+         }
+      }
+      fInherited = new InheritedMembersInfo_t(numDataMembers, numFunctionMembers);
+   }
+
+   for (BaseList_t::const_iterator iS = bases.begin(), iSe = bases.end();
+        iS != iSe; ++iS) {
+      const Scope sc = iS->first;
+      // we collect all data members...
+      fInherited->fDataMembers.insert(fInherited->fDataMembers.end(),
+                                      sc.DataMember_Begin(INHERITEDMEMBERS_NO),
+                                      sc.DataMember_End(INHERITEDMEMBERS_NO));
+      fInherited->fMembers.insert(fInherited->fMembers.end(),
+                                  sc.DataMember_Begin(INHERITEDMEMBERS_NO),
+                                  sc.DataMember_End(INHERITEDMEMBERS_NO));
+      // ...but only non-existing function members.
+      // There is no use searching for an existing function in its own scope,
+      // so only iterate over members collected before the current scope:
+      size_t numMembersBefore = fInherited->fFunctionMembers.size();
+      for (Member_Iterator iM = sc.FunctionMember_Begin(INHERITEDMEMBERS_NO), iMe = sc.FunctionMember_End(INHERITEDMEMBERS_NO);
+           iM != iMe; ++iM) {
+         std::vector<Member>::iterator iExists = std::find(fInherited->fFunctionMembers.begin(), fInherited->fFunctionMembers.begin() + numMembersBefore, *iM);
+         if (iExists == fInherited->fFunctionMembers.end()
+             || iExists == fInherited->fFunctionMembers.begin() + numMembersBefore) {
+            fInherited->fFunctionMembers.push_back(*iM);
+            fInherited->fMembers.push_back(*iM);
+         } else {
+            // The function already exists. Let's keep the one with the lowest inheritance level.
+            if (iExists != fInherited->fFunctionMembers.end()) {
+               const Scope declExists = iExists->DeclaringScope();
+               for (BaseList_t::const_iterator iES = bases.begin(), iESe = bases.end(); iES != iESe; ++iES) {
+                  if (declExists == iES->first) {
+                     if (iES->second.second > iS->second.second) {
+                        // the existing one has a larger inheritance distance, so replace it:
+                        *iExists = *iM;
+                        // "end" is just fine, we will find it before that anyway.
+                        iExists = std::find(fInherited->fMembers.begin(), fInherited->fMembers.end(), *iM);
+                        if (iExists != fInherited->fMembers.end())
+                           *iExists = *iM;
+                     }
+                     break;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   return true;
+}
+
+//-------------------------------------------------------------------------------
 bool Reflex::Class::IsComplete() const
 {
 //-------------------------------------------------------------------------------
@@ -339,99 +448,44 @@ bool Reflex::Class::NewBases() const
 
 
 //-------------------------------------------------------------------------------
-void Reflex::Class::UpdateMembers() const
-{
-//-------------------------------------------------------------------------------
-// Update information for function and data members.
-   std::vector < OffsetFunction > basePath = std::vector < OffsetFunction >();
-   UpdateMembers2(fMembers,
-                  fDataMembers,
-                  fFunctionMembers,
-                  fPathsToBase,
-                  basePath);
-}
-
-
-//-------------------------------------------------------------------------------
 const std::vector < Reflex::OffsetFunction > &
 Reflex::Class::PathToBase(const Scope & bas) const
 {
 //-------------------------------------------------------------------------------
 // Return a vector of offset functions from the current class to the base class.
-   std::vector < OffsetFunction > * pathToBase = fPathsToBase[ bas.Id()];
+   const BasePath_t * pathToBase = fPathsToBase[ bas.Id()];
    if (! pathToBase) {
-      UpdateMembers();
-      pathToBase = fPathsToBase[ bas.Id()];
-      /* fixme can Get rid of UpdateMembers() ?
-         std::cerr << Reflex::Argv0() << ": WARNING: No path found from "
-         << this->Name() << " to " << bas.Name() << std::endl;
-         if ( NewBases()) {
-         std::cerr << Reflex::Argv0() << ": INFO: Not all base classes have resolved, "
-         << "do Class::UpdateMembers() and try again " << std::endl;
+      static const BasePath_t sEmptyBasePath;
+      // if bas is a base, it muts be one of our direct bases,
+      // or one of them must have it as a base:
+      bool isDirectBase = false;
+      for (std::vector<Base>::const_iterator iBase = fBases.begin(), endBase = fBases.end();
+           !isDirectBase && iBase != endBase; ++iBase) {
+         isDirectBase |= iBase->ToScope() == bas;
+      }
+      for (std::vector<Base>::const_iterator iBase = fBases.begin(), endBase = fBases.end();
+           !pathToBase && iBase != endBase; ++iBase) {
+         const Scope scBase = iBase->ToScope();
+         if (scBase == bas || (!isDirectBase && scBase.HasBase(bas))) {
+            const Class* clBase = dynamic_cast<const Class*>(scBase.ToScopeBase());
+            if (clBase) {
+               BasePath_t* newPathToBase = new BasePath_t(1, iBase->OffsetFP());
+               if (scBase != bas) {
+                  const BasePath_t& baseOffset = clBase->PathToBase(bas);
+                  newPathToBase->insert(newPathToBase->begin() + 1, baseOffset.begin(), baseOffset.end());
+               }
+               fPathsToBase[ bas.Id()] = newPathToBase;
+               pathToBase = newPathToBase;
+            } else {
+               pathToBase = &sEmptyBasePath;
+            }
          }
-      */
+      }
+      if (!pathToBase) {
+         pathToBase = &sEmptyBasePath;
+      }
    }
    return * pathToBase;
-}
-
-
-//-------------------------------------------------------------------------------
-void Reflex::Class::UpdateMembers2(OMembers & members,
-                                   Members & dataMembers,
-                                   Members & functionMembers,
-                                   PathsToBase & pathsToBase,
-                                   std::vector < OffsetFunction > & basePath) const
-{
-//-------------------------------------------------------------------------------
-// Internal function to update the data and function member information.
-   std::vector < Base >::const_iterator bIter;
-   for (bIter = fBases.begin(); bIter != fBases.end(); ++bIter) {
-      Type bType = bIter->ToType().FinalType();
-      basePath.push_back(bIter->OffsetFP());
-      if (bType) {
-         void * id = (dynamic_cast<const Class*>(bType.ToTypeBase()))->ThisScope().Id();
-         PathsToBase::iterator it = pathsToBase.find(id);
-         if (it != pathsToBase.end()) delete it->second;
-         pathsToBase[ id ] = new std::vector < OffsetFunction >(basePath);
-         size_t i = 0;
-         for (i = 0; i < bType.DataMemberSize(); ++i) {
-            Member dm = bType.DataMemberAt(i);
-            if (std::find(dataMembers.begin(),
-                          dataMembers.end(),
-                          dm) == dataMembers.end()) {
-               members.push_back(OwnedMember(dm));
-               dataMembers.push_back(dm);
-            }
-         }
-         for (i = 0; i < bType.FunctionMemberSize(); ++i) {
-            Member fm = bType.FunctionMemberAt(i);
-            if (std::find(functionMembers.begin(),
-                          functionMembers.end(),
-                          fm) == functionMembers.end()) {
-               members.push_back(OwnedMember(fm));
-               functionMembers.push_back(fm);
-            }
-         }
-         if (bType)(dynamic_cast<const Class*>(bType.ToTypeBase()))->UpdateMembers2(members,
-                  dataMembers,
-                  functionMembers,
-                  pathsToBase,
-                  basePath);
-      }
-      basePath.pop_back();
-   }
-   /*
-   // breath first search to find the "lowest" members in the hierarchy
-   for ( bIter = fBases.begin(); bIter != fBases.end(); ++bIter ) {
-   const Class * bClass = (*bIter)->toClass();
-   if ( bClass ) {  bClass->UpdateMembers2( members,
-   dataMembers,
-   functionMembers,
-   pathsToBase,
-   basePath );
-   }
-   }
-   */
 }
 
 

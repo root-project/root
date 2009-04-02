@@ -178,12 +178,12 @@ namespace ROOT { namespace Cintex {
 
    void CINTClassBuilder::Setup_memfunc() {
       // Setup a CINT member function.
-      for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) 
-         CINTScopeBuilder::Setup(fClass.FunctionMemberAt(i).TypeOf());
+      for ( size_t i = 0; i < fClass.FunctionMemberSize(INHERITEDMEMBERS_NO); i++ ) 
+         CINTScopeBuilder::Setup(fClass.FunctionMemberAt(i, INHERITEDMEMBERS_NO).TypeOf());
 
       G__tag_memfunc_setup(fTaginfo->tagnum);
-      for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) {
-         Member method = fClass.FunctionMemberAt(i); 
+      for ( size_t i = 0; i < fClass.FunctionMemberSize(INHERITEDMEMBERS_NO); i++ ) {
+         Member method = fClass.FunctionMemberAt(i, INHERITEDMEMBERS_NO); 
          std::string n = method.Name();
          CINTFunctionBuilder::Setup(method);
       }
@@ -193,8 +193,8 @@ namespace ROOT { namespace Cintex {
 
    void CINTClassBuilder::Setup_memvar() {
       // Setup a CINT data member.
-      for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) 
-         CINTScopeBuilder::Setup(fClass.DataMemberAt(i).TypeOf());
+      for ( size_t i = 0; i < fClass.DataMemberSize(INHERITEDMEMBERS_NO); i++ ) 
+         CINTScopeBuilder::Setup(fClass.DataMemberAt(i, INHERITEDMEMBERS_NO).TypeOf());
 
       G__tag_memvar_setup(fTaginfo->tagnum);
 
@@ -204,9 +204,9 @@ namespace ROOT { namespace Cintex {
       }
 
       if ( ! IsSTL(fClass.Name(SCOPED)) )  {
-         for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) {
+         for ( size_t i = 0; i < fClass.DataMemberSize(INHERITEDMEMBERS_NO); i++ ) {
 
-            Member dm = fClass.DataMemberAt(i);
+            Member dm = fClass.DataMemberAt(i, INHERITEDMEMBERS_NO);
             CINTVariableBuilder::Setup(dm);
          }
       }
@@ -217,8 +217,8 @@ namespace ROOT { namespace Cintex {
    CINTClassBuilder::Bases* CINTClassBuilder::GetBases() {
       // Get base class info.
       if ( fBases ) return fBases;
-      Member getbases = fClass.MemberByName("__getBasesTable");
-      if ( !getbases ) getbases = fClass.MemberByName("getBasesTable");
+      Member getbases = fClass.MemberByName("__getBasesTable", Reflex::Type(), INHERITEDMEMBERS_NO);
+      if ( !getbases ) getbases = fClass.MemberByName("getBasesTable", Reflex::Type(), INHERITEDMEMBERS_NO);
       if( getbases ) {
          static Type tBases = Type::ByTypeInfo(typeid(Bases));
          Object ret(tBases, &fBases);
@@ -241,8 +241,8 @@ namespace ROOT { namespace Cintex {
          if ( isVirtual ) {
             if ( !fClass.IsAbstract() )  {
                Member ctor, dtor;
-               for ( size_t i = 0; i < fClass.FunctionMemberSize(); i++ ) {
-                  Member method = fClass.FunctionMemberAt(i); 
+               for ( size_t i = 0; i < fClass.FunctionMemberSize(INHERITEDMEMBERS_NO); i++ ) {
+                  Member method = fClass.FunctionMemberAt(i, INHERITEDMEMBERS_NO); 
                   if( method.IsConstructor() && method.FunctionParameterSize() == 0 )  ctor = method;
                   else if ( method.IsDestructor() )  dtor = method;
                }
@@ -263,7 +263,7 @@ namespace ROOT { namespace Cintex {
             // possible without having an Instance of the object. In case of pure abstract classes
             // we can not do it. So, in case the abstract class has no data members then we assume
             // offsets to base class to be 0.
-            else if ( fClass.IsAbstract() && fClass.DataMemberSize() == 0) {
+            else if ( fClass.IsAbstract() && fClass.DataMemberSize(INHERITEDMEMBERS_NO) == 0) {
                Object obj(fClass, 0);
                Setup_inheritance(obj);
             }

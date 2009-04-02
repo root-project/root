@@ -413,12 +413,6 @@ namespace Reflex {
       std::string TypeTypeAsString() const;
 
 
-      /** 
-      * UpdateMembers2 will update the list of Function/Data/Members with all
-      * MemberAt of BaseAt classes currently availabe in the system
-      */
-      virtual void UpdateMembers() const;
-
    public:
 
       /**
@@ -763,13 +757,6 @@ inline Reflex::TypeTemplate Reflex::TypeBase::TemplateFamily() const {
 inline const std::type_info & Reflex::TypeBase::TypeInfo() const {
 //-------------------------------------------------------------------------------
    return *fTypeInfo;
-}
-
-
-//-------------------------------------------------------------------------------
-inline void Reflex::TypeBase::UpdateMembers() const {
-//-------------------------------------------------------------------------------
-   throw RuntimeError("Function UpdateMembers can only be called on Class/Struct");
 }
 
 

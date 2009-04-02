@@ -35,7 +35,7 @@ namespace ROOT { namespace Cintex {
             // But did we just declare it via an EnumTypeBuilder?
             // If so it won't have any members yet, so only return if
             // the e's first member is already known to CINT:
-            if (!e.DataMemberSize() || cintEnum.NDataMembers())
+            if (!e.DataMemberSize(INHERITEDMEMBERS_NO) || cintEnum.NDataMembers())
                return;
          }
 
@@ -72,11 +72,11 @@ namespace ROOT { namespace Cintex {
             if( -1 == stagnum ) return;
             ::G__tag_memvar_setup(stagnum);
          }
-         for ( size_t i = 0; i < e.DataMemberSize(); i++ ) {
+         for ( size_t i = 0; i < e.DataMemberSize(INHERITEDMEMBERS_NO); i++ ) {
             stringstream s;
-            s << e.DataMemberAt(i).Name() << "=";
-            if ( isCPPMacroEnum ) s << (const char*)e.DataMemberAt(i).Offset();
-            else                  s << (int)e.DataMemberAt(i).Offset();
+            s << e.DataMemberAt(i, INHERITEDMEMBERS_NO).Name() << "=";
+            if ( isCPPMacroEnum ) s << (const char*)e.DataMemberAt(i, INHERITEDMEMBERS_NO).Offset();
+            else                  s << (int)e.DataMemberAt(i, INHERITEDMEMBERS_NO).Offset();
         
             string item = s.str();
             if ( Cintex::Debug() ) cout << "Cintex:          item " << i << " " << item  <<endl;

@@ -105,18 +105,18 @@ Reflex::Type::Construct( const Type & signature,
 
 
 //-------------------------------------------------------------------------------
-Reflex::Member Reflex::Type::DataMemberAt( size_t nth ) const {
+Reflex::Member Reflex::Type::DataMemberAt( size_t nth, EMEMBERQUERY inh ) const {
 //-------------------------------------------------------------------------------
 // Return the nth data member.
-   return operator Scope().DataMemberAt( nth );
+   return operator Scope().DataMemberAt( nth, inh );
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Member Reflex::Type::DataMemberByName( const std::string & nam ) const {
+Reflex::Member Reflex::Type::DataMemberByName( const std::string & nam, EMEMBERQUERY inh ) const {
 //-------------------------------------------------------------------------------
 // Return a data member by name.
-   return operator Scope().DataMemberByName( nam );
+   return operator Scope().DataMemberByName( nam, inh );
 }
 
 
@@ -130,20 +130,21 @@ Reflex::Type Reflex::Type::DynamicType( const Object & obj ) const {
 
 
 //-------------------------------------------------------------------------------
-Reflex::Member Reflex::Type::FunctionMemberAt( size_t nth ) const {
+Reflex::Member Reflex::Type::FunctionMemberAt( size_t nth, EMEMBERQUERY inh ) const {
 //-------------------------------------------------------------------------------
 // Return the nth function member.
-   return operator Scope().FunctionMemberAt( nth );
+   return operator Scope().FunctionMemberAt( nth, inh );
 }
 
 
 //-------------------------------------------------------------------------------
 Reflex::Member Reflex::Type::FunctionMemberByName( const std::string & nam,
                                                    const Type & signature,
-                                                   unsigned int modifiers_mask /*= 0*/) const {
+                                                   unsigned int modifiers_mask /*= 0*/,
+                                                   EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
 // Return a function member by name. Signature can be used for overloaded functions.
-   return operator Scope().FunctionMemberByName( nam, signature, modifiers_mask );
+   return operator Scope().FunctionMemberByName( nam, signature, modifiers_mask, inh );
 }
 
 
@@ -299,18 +300,19 @@ bool Reflex::Type::IsSignatureEquivalentTo( const Type & typ, unsigned int modif
 
 //-------------------------------------------------------------------------------
 Reflex::Member Reflex::Type::MemberByName( const std::string & nam,
-                                                       const Type & signature ) const {
+                                           const Type & signature,
+                                           EMEMBERQUERY inh) const {
 //-------------------------------------------------------------------------------
 // Return a member by name. Signature is optional for overloaded function members.
-   return operator Scope().MemberByName( nam, signature );
+   return operator Scope().MemberByName( nam, signature, inh );
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Member Reflex::Type::MemberAt( size_t nth ) const {
+Reflex::Member Reflex::Type::MemberAt( size_t nth, EMEMBERQUERY inh ) const {
 //-------------------------------------------------------------------------------
 // Return the nth member.
-   return operator Scope().MemberAt( nth );
+   return operator Scope().MemberAt( nth, inh );
 }
 
 
