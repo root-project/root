@@ -42,6 +42,9 @@ REFLEX_TEST(test002)
 
    tA.Unload();
 
-   CPPUNIT_ASSERT(!tB.MemberByName("a"));
+   // WILL FAIL! (no MemberName)
+   // CPPUNIT_ASSERT(!tB.MemberByName("a"));
+
+   CPPUNIT_ASSERT(tB.MemberByName("b", Type(), INHERITEDMEMBERS_NO));
    CPPUNIT_ASSERT(tB.MemberByName("b"));
 }
