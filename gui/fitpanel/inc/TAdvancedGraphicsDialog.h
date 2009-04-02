@@ -39,10 +39,14 @@ private:
    TGColorSelect    *fContourColor;  // Color for the graph
 
    TGVerticalFrame  *fScanFrame;     // Scan Frame
-   TGNumberEntry    *fScanPoints; // Number of points for the graph
+   TGNumberEntry    *fScanPoints;    // Number of points for the graph
    TGComboBox       *fScanPar;       // Parameter for Scan
    TGNumberEntry    *fScanMin;       // Min Value for Contour
    TGNumberEntry    *fScanMax;       // Max Value for Contour
+
+   TGVerticalFrame  *fConfFrame;     // Confidence Intervals Frame
+   TGNumberEntry    *fConfLevel;     // Confidence Level
+   TGColorSelect    *fConfColor;     // Color for the graph
 
    TGTextButton     *fDraw;          // ok button
    TGTextButton     *fClose;         // cancel button
@@ -51,10 +55,12 @@ private:
 
    void CreateContourFrame();
    void CreateScanFrame();
+   void CreateConfFrame();
    void AddParameters(TGComboBox*);
 
    void DrawContour();
    void DrawScan();
+   void DrawConfidenceLevels();
 
    void ConnectSlots();
 

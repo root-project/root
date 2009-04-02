@@ -1503,6 +1503,9 @@ void TFitEditor::FillFunctionList(Int_t)
       }
        if ( newid != kFP_ALTFUNC )
             fFuncList->Select(newid-1);
+       else if( fDim <= 1 ) {
+          fTypeFit->Select(kFP_PRED1D, kTRUE);
+       }
    } 
    else if ( fTypeFit->GetSelected() == kFP_PREVFIT ) {
       Int_t newid = kFP_ALTFUNC;
@@ -1880,8 +1883,8 @@ void TFitEditor::DoDataSet(Int_t selected)
    string name = textEntry->GetText()->GetString()+textEntry->GetText()->First(':')+2;
    
    // Check the object exists and it is registered
-   TObject* objSelected = gROOT->FindObject(name.substr(0, name.find(' ')).c_str());
-   assert(objSelected);
+   TObject* objSelected = gROOT->FindObject(name.c_str());
+   if ( !objSelected ) return;
 
    // If it is a tree, and there is no variables selected, show a dialog
    if ( objSelected->InheritsFrom("TTree") && 
@@ -2460,7 +2463,7 @@ void TFitEditor::ShowObjectName(TObject* obj)
    TGTextLBEntry* selectedEntry = static_cast<TGTextLBEntry*> ( fDataSet->GetSelectedEntry());
    if ( selectedEntry ) {
       string selectedName = selectedEntry->GetText()->GetString();
-      if ( name.CompareTo(selectedName.substr(0, selectedName.find(' ')).c_str()) == 0 ) {
+      if ( name.CompareTo(selectedName.c_str()) == 0 ) {
          Layout();
          return;
       }
@@ -2472,7 +2475,7 @@ void TFitEditor::ShowObjectName(TObject* obj)
    while ( TGTextLBEntry* entry = static_cast<TGTextLBEntry*> 
            ( fDataSet->GetListBox()->GetEntry(entryId)) ) {
       string compareName = entry->GetText()->GetString();
-      if ( name.CompareTo(compareName.substr(0, compareName.find(' ')).c_str()) == 0 ) {
+      if ( name.CompareTo(compareName.c_str()) == 0 ) {
          // If the object is found, select it
          fDataSet->Select(entryId, false);
          found = true;

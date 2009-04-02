@@ -4,6 +4,13 @@
 #include "TPad.h"
 #include "TColor.h"
 
+#include "Fit/BinData.h"
+#include "Math/IParamFunction.h"
+#include "TGraphErrors.h"
+#include "TGraph2DErrors.h"
+
+#include <sstream>
+
 #include <string>
 
 TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWindow *main):
@@ -33,6 +40,9 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWind
    // Add the second method to the dialog (Scan)
    CreateScanFrame();
    fTab->AddTab("Scan", fScanFrame);
+
+   CreateConfFrame();
+   fTab->AddTab("Conf Intervals", fConfFrame);
 
    TGCompositeFrame * frame = new TGHorizontalFrame(fMainFrame);
 
@@ -229,6 +239,40 @@ void TAdvancedGraphicsDialog::CreateScanFrame()
    
 }
 
+//______________________________________________________________________________
+void TAdvancedGraphicsDialog::CreateConfFrame()
+{
+   // Create the frame that contains all the necessary information for
+   // the Scan method.
+
+   fConfFrame = new TGVerticalFrame(fTab);
+   TGHorizontalFrame* frame = new TGHorizontalFrame(fConfFrame);
+
+   TGLabel* label = new TGLabel(frame, "Number of Points: ");
+   frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
+
+   fConfLevel = new TGNumberEntry(frame, 0.95, 
+                                  5, kAGD_SCANMIN,
+                                  TGNumberFormat::kNESRealTwo,
+                                  TGNumberFormat::kNEAPositive,
+                                  TGNumberFormat::kNELLimitMinMax,
+                                  0, 0.9999);
+   fConfLevel->Resize(140, 20);
+   fConfLevel->GetNumberEntry()->SetToolTipText("Sets the number of points used in the confidence level");
+   frame->AddFrame(fConfLevel, new TGLayoutHints(kLHintsNormal, 0, 0, 5, 0));
+   fConfFrame->AddFrame(frame, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 0));
+
+   frame = new TGHorizontalFrame(fConfFrame);
+   
+   label = new TGLabel(frame, "Fill Colour: ");
+   frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
+
+   fConfColor = new TGColorSelect(frame, TColor::Number2Pixel(kYellow - 10), kAGD_CONTCOLOR);
+   frame->AddFrame(fConfColor, new TGLayoutHints(kLHintsNormal, 5, 0, 5, 0));
+
+   fConfFrame->AddFrame(frame, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 5));
+}
+
 void TAdvancedGraphicsDialog::AddParameters(TGComboBox* comboBox) 
 {
    // Add all the parameters of the VirtualFitter into a comboBox
@@ -274,6 +318,8 @@ void TAdvancedGraphicsDialog::DoDraw()
       DrawContour();
    } else if ( fTab->GetCurrent() == 1 ) {
       DrawScan();
+   } else if ( fTab->GetCurrent() == 2 ) {
+      DrawConfidenceLevels();
    }
 }
 
@@ -327,6 +373,70 @@ void TAdvancedGraphicsDialog::DrawScan()
    graph->GetXaxis()->SetTitle(fFitter->GetParName(par) );
    graph->GetYaxis()->SetTitle("FCN" );
    graph->Draw("APL");
+   gPad->Update();
+}
+
+//______________________________________________________________________________
+void TAdvancedGraphicsDialog::DrawConfidenceLevels()
+{
+   // Generates all necessary data for the Scan method from its
+   // tab. Then it call Virtual Fitter to perform it.
+
+   const ROOT::Fit::FitResult& result = fFitter->GetFitResult();
+   const ROOT::Fit::FitResult::IModelFunction* function = result.FittedFunction();
+   const ROOT::Fit::BinData* data = dynamic_cast<const ROOT::Fit::BinData*>(&(fFitter->GetFitData()));
+   if ( !data ) 
+   {
+      Error("DrawConfidenceLevels","Unbinned data set cannot draw confidence levels."); 
+      return;
+   }
+
+   if ( !function )
+   {
+      Error("DrawConfidenceLevels","Fit Function does not exist!");
+      return;
+   }
+
+   std::vector<Double_t> ci(data->Size());
+   result.GetConfidenceIntervals(*data, &ci[0], fConfLevel->GetNumber());
+
+   if ( data->NDim() == 1 )
+   {
+      TGraphErrors* g = new TGraphErrors(ci.size());
+      for (unsigned int i = 0; i < ci.size(); ++i)
+      {
+         const Double_t *x = data->Coords(i);
+         const Double_t y = (*function)(x);
+         g->SetPoint(i, *x, y);
+         g->SetPointError(i, 0, ci[i]);
+      }
+      std::ostringstream os;
+      os << "Confidence Intervals with " << fConfLevel->GetNumber()
+         << " conf. band.";
+      g->SetTitle(os.str().c_str());
+      g->SetLineColor( TColor::GetColor( fConfColor->GetColor() ));
+      g->SetFillColor( TColor::GetColor( fConfColor->GetColor() ));
+      g->SetFillStyle(3001);
+      g->Draw("C3same");
+   } else if ( data->NDim() == 2 )
+   {
+      TGraph2DErrors* g = new TGraph2DErrors(ci.size());
+      for (unsigned int i = 0; i < ci.size(); ++i)
+      {
+         const Double_t *x = data->Coords(i);
+         const Double_t y = (*function)(x);
+         g->SetPoint(i, x[0], x[1], y);
+         g->SetPointError(i, 0, 0, ci[i]);
+      }
+      std::ostringstream os;
+      os << "Confidence Intervals with " << fConfLevel->GetNumber()
+         << " conf. band.";
+      g->SetTitle(os.str().c_str());
+      g->SetLineColor( TColor::GetColor( fConfColor->GetColor() ));
+      g->SetFillColor( TColor::GetColor( fConfColor->GetColor() ));
+      g->SetFillStyle(3001);
+      g->Draw("C3same");
+   }
    gPad->Update();
 }
 
