@@ -1526,7 +1526,10 @@ void TFitEditor::FillFunctionList(Int_t)
       }
       if ( newid == kFP_ALTFUNC ) {
          fTypeFit->RemoveEntry(kFP_PREVFIT);
-         fTypeFit->Select(kFP_UFUNC, kTRUE);
+         if( fDim <= 1 )
+            fTypeFit->Select(kFP_PRED1D, kTRUE);
+         else
+            fTypeFit->Select(kFP_UFUNC, kTRUE);
       }
       else
          fFuncList->Select(newid-1, kTRUE);
