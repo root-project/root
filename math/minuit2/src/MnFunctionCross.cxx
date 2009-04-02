@@ -17,7 +17,7 @@
 #include "Minuit2/MnCross.h"
 #include "Minuit2/MnMachinePrecision.h"
 
-//#define DEBUG
+#define DEBUG
 
 #if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
@@ -354,9 +354,8 @@ L500:
                    << x2 << " s1 = " << s1 << " s2 = " << s2 << std::endl;   
 #endif
          
-         if(s1*s2 > 0.) 
 #ifdef WARNINGMSG
-            MN_INFO_MSG("MnFunctionCross problem 1");
+         if(s1*s2 > 0.)   MN_INFO_MSG("MnFunctionCross problem 1");
 #endif
          // find with root is the right one
          aopt = x1;
