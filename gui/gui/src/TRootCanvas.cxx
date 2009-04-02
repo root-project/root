@@ -1219,6 +1219,13 @@ void TRootCanvas::SetWindowSize(UInt_t w, UInt_t h)
    // Set size of canvas (units in pixels).
 
    Resize(w, h);
+   
+   // Make sure the change of size is really done.
+   if (!gThreadXAR) {
+      gSystem->ProcessEvents();
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+   }
 }
 
 //______________________________________________________________________________
