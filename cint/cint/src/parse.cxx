@@ -55,6 +55,9 @@ extern void G__CMP2_equal(G__value*, G__value*); // v6_pcode.cxx
 //
 
 // statics
+#ifdef G__WIN32
+static void G__toUniquePath(char* s);
+#endif // G__WIN32
 static int G__setline(char* statement, int c, int* piout);
 static int G__pp_ifdefextern(char* temp);
 static void G__pp_undef();
@@ -134,6 +137,28 @@ static int G__prevcase = 0; // Communication between G__exec_switch() and G__exe
 //  Preprocessor commands.
 //
 
+#ifdef G__WIN32
+//______________________________________________________________________________
+static void G__toUniquePath(char* s)
+{
+   // -- FIXME: Describe this function!
+   if (!s) {
+      return;
+   }
+   char* d = (char*) malloc(strlen(s) + 1);
+   int j = 0;
+   for (int i = 0; s[i]; ++i) {
+      d[j] = s[i];
+      if (!i || (s[i] != '\\') || (s[i-1] != '\\')) {
+         ++j;
+      }
+   }
+   d[j] = 0;
+   strcpy(s, d);
+   free(d);
+}
+#endif // G__WIN32
+
 //______________________________________________________________________________
 static int G__setline(char* statement, int c, int* piout)
 {
@@ -166,6 +191,11 @@ static int G__setline(char* statement, int c, int* piout)
                sprintf(sysstl, "%s/%s/stl/", G__cintsysdir, G__CFG_COREVERSION);
                int len = strlen(sysinclude);
                int lenstl = strlen(sysstl);
+#ifdef G__WIN32
+               G__toUniquePath(sysinclude);
+               G__toUniquePath(sysstl);
+               G__toUniquePath(statement);
+#endif // G__WIN32
                if (
                   !strncmp(sysinclude, statement + 1, (size_t)len) ||
                   !strncmp(sysstl, statement + 1, (size_t)lenstl)
@@ -4367,7 +4397,9 @@ static int G__defined_type(char* type_name, int len)
       //
       G__tagnum = G__defined_tagname(type_name, 1);
       if (G__tagnum != -1) {
-         // -- Ok, we found it, now check again as a typedef name (FIXME: Why???).
+         // -- Ok, we found it, now check again as a typedef name
+         // to pick up template aliases that might have been generated
+         // by template instantiation during above G__defined_tagname
          G__typenum = G__defined_typename(type_name);
          if (G__typenum != -1) {
             // Note: G__var_type was set by the G__defined_typename() call above to G__newtype.type[G__typenum] + ptroffset.
