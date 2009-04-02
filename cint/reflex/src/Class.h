@@ -489,7 +489,7 @@ inline Reflex::Reverse_Member_Iterator Reflex::Class::DataMember_RBegin(EMEMBERQ
 //-------------------------------------------------------------------------------
    if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
       if (Class::UpdateMembers())
-         return fInherited->fDataMembers.rbegin();
+         return const_cast<const std::vector<Member>&>(fInherited->fDataMembers).rbegin();
       else return Dummy::MemberCont().rbegin();
    }
    return ((const std::vector<Member>&)fDataMembers).rbegin();
@@ -501,7 +501,7 @@ inline Reflex::Reverse_Member_Iterator Reflex::Class::DataMember_REnd(EMEMBERQUE
 //-------------------------------------------------------------------------------
    if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
       if (Class::UpdateMembers())
-         return fInherited->fDataMembers.rend();
+         return const_cast<const std::vector<Member>&>(fInherited->fDataMembers).rend();
       else return Dummy::MemberCont().rend();
    }
    return ((const std::vector<Member>&)fDataMembers).rend();
@@ -579,7 +579,7 @@ inline Reflex::Reverse_Member_Iterator Reflex::Class::FunctionMember_RBegin(EMEM
 //-------------------------------------------------------------------------------
    if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
       if (Class::UpdateMembers())
-         return fInherited->fFunctionMembers.rbegin();
+         return const_cast<const std::vector<Member>&>(fInherited->fFunctionMembers).rbegin();
       else return Dummy::MemberCont().rbegin();
    }
    return ((const std::vector<Member>&)fFunctionMembers).rbegin();
@@ -591,7 +591,7 @@ inline Reflex::Reverse_Member_Iterator Reflex::Class::FunctionMember_REnd(EMEMBE
 //-------------------------------------------------------------------------------
    if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
       if (Class::UpdateMembers())
-         return fInherited->fFunctionMembers.rend();
+         return const_cast<const std::vector<Member>&>(fInherited->fFunctionMembers).rend();
       else return Dummy::MemberCont().rend();
    }
    return ((const std::vector<Member>&)fFunctionMembers).rend();
@@ -685,7 +685,7 @@ inline Reflex::Reverse_Member_Iterator Reflex::Class::Member_RBegin(EMEMBERQUERY
 //-------------------------------------------------------------------------------
    if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
       if (Class::UpdateMembers())
-         return fInherited->fMembers.rbegin();
+         return const_cast<const std::vector<Member>&>(fInherited->fMembers).rbegin();
       else return Dummy::MemberCont().rbegin();
    }
    return ((const std::vector<Member>&)fMembers).rbegin();
@@ -697,7 +697,7 @@ inline Reflex::Reverse_Member_Iterator Reflex::Class::Member_REnd(EMEMBERQUERY i
 //-------------------------------------------------------------------------------
    if (inh == INHERITEDMEMBERS_ALSO || (inh == INHERITEDMEMBERS_DEFAULT && fInherited)) {
       if (Class::UpdateMembers())
-         return fInherited->fMembers.rend();
+         return const_cast<const std::vector<Member>&>(fInherited->fMembers).rend();
       else return Dummy::MemberCont().rend();
    }
    return ((const std::vector<Member>&)fMembers).rend();

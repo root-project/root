@@ -315,7 +315,7 @@ bool Reflex::Class::UpdateMembers() const {
       size_t numFunctionMembers = 0;
       // bases are ordered by inheritance level
       BaseList_t basesToProcess;
-      basesToProcess.push_back(std::make_pair(operator Scope(), std::make_pair(false, 0)));
+      basesToProcess.push_back(std::make_pair(operator Scope(), std::make_pair(false, (size_t)0)));
       while (!basesToProcess.empty()) {
          Scope s = basesToProcess.front().first;
          bool virt = basesToProcess.front().second.first;
