@@ -14,6 +14,7 @@
 
 #include <TROOT.h>
 #include <TChain.h>
+#include <TEntryList.h>
 #include <TFile.h>
 #include <TSelector.h>
 
@@ -25,6 +26,10 @@ class h1analysis : public TSelector {
 
    TH1F           *hdmd;
    TH2F           *h2;
+
+   Bool_t          useList;
+   Bool_t          fillList;
+   TEntryList     *elist;
 
    TTree          *fChain;    //pointer to the analyzed TTree or TChain
    //Declaration of leaves types
@@ -362,6 +367,10 @@ h1analysis::h1analysis(TTree * /*tree*/)
 {
 // Build the chain of Root files
 //
+   fChain = 0;
+   elist = 0;
+   fillList = kFALSE;
+   useList  = kFALSE;
 }
 
 //_____________________________________________________________________
@@ -372,7 +381,10 @@ h1analysis::~h1analysis()
 //_____________________________________________________________________
 void h1analysis::Init(TTree *tree)
 {
-//   Set branch addresses
+   //   Set branch addresses
+
+   Info("Init","tree: %p", tree);
+
    if (tree == 0) return;
    fChain    = tree;
 
@@ -537,5 +549,13 @@ Bool_t h1analysis::Notify()
 //   get branch pointers
 
    Info("Notify","processing file: %s",fChain->GetCurrentFile()->GetName());
+
+   if (elist && fChain) {
+      if (fillList) {
+         elist->SetTree(fChain);
+      } else if (useList) {
+         fChain->SetEntryList(elist);
+      }
+   }
    return kTRUE;
 }
