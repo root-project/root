@@ -68,6 +68,7 @@ namespace TClassEdit {
    int         STLArgs   (int kind);            //Min number of arguments without allocator
    std::string ResolveTypedef(const char *tname, bool resolveAll = false);
    std::string ShortType (const char *typeDesc, int mode);
+   std::string InsertStd(const char *tname);
 }
 
 #endif
