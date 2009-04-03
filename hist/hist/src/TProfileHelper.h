@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TProfileHelper.h 22724 2008-03-19 09:24:06Z moneta $
+// @(#)root/hist:$Id$
 // Author: David Gonzalez Maline   18/01/2008
 
 /*************************************************************************
