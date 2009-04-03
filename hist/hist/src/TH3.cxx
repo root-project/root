@@ -681,6 +681,92 @@ void TH3::FillRandom(TH1 *h, Int_t ntimes)
 
 
 //______________________________________________________________________________
+Int_t TH3::FindFirstBinAbove(Double_t threshold, Int_t axis) const
+{
+   //find first bin with content > threshold for axis (1=x, 2=y, 3=z)
+   //if no bins with content > threshold is found the function returns -1.
+   
+   if (axis < 1 || axis > 3) {
+      Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
+      axis = 1;
+   }
+   Int_t nbinsx = fXaxis.GetNbins();
+   Int_t nbinsy = fYaxis.GetNbins();
+   Int_t nbinsz = fZaxis.GetNbins();
+   Int_t binx, biny, binz;
+   if (axis == 1) {
+      for (binx=1;binx<=nbinsx;binx++) {
+         for (biny=1;biny<=nbinsy;biny++) {
+            for (binz=1;binz<=nbinsz;binz++) {
+               if (GetBinContent(binx,biny,binz) > threshold) return binx;
+            }
+         }
+      }
+   } else if (axis == 2) {
+      for (biny=1;biny<=nbinsy;biny++) {
+         for (binx=1;binx<=nbinsx;binx++) {
+            for (binz=1;binz<=nbinsz;binz++) {
+               if (GetBinContent(binx,biny,binz) > threshold) return biny;
+            }
+         }
+      }
+   } else {
+      for (binz=1;binz<=nbinsz;binz++) {
+         for (binx=1;binx<=nbinsx;binx++) {
+            for (biny=1;biny<=nbinsy;biny++) {
+               if (GetBinContent(binx,biny,binz) > threshold) return binz;
+            }
+         }
+      }
+   }
+   return -1;
+}
+
+
+//______________________________________________________________________________
+Int_t TH3::FindLastBinAbove(Double_t threshold, Int_t axis) const
+{
+   //find last bin with content > threshold for axis (1=x, 2=y, 3=z)
+   //if no bins with content > threshold is found the function returns -1.
+   
+   if (axis < 1 || axis > 3) {
+      Warning("FindLastBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
+      axis = 1;
+   }
+   Int_t nbinsx = fXaxis.GetNbins();
+   Int_t nbinsy = fYaxis.GetNbins();
+   Int_t nbinsz = fZaxis.GetNbins();
+   Int_t binx, biny, binz;
+   if (axis == 1) {
+      for (binx=nbinsx;binx>=1;binx--) {
+         for (biny=1;biny<=nbinsy;biny++) {
+            for (binz=1;binz<=nbinsz;binz++) {
+               if (GetBinContent(binx,biny,binz) > threshold) return binx;
+            }
+         }
+      }
+   } else if (axis == 2) {
+      for (biny=nbinsy;biny>=1;biny--) {
+         for (binx=1;binx<=nbinsx;binx++) {
+            for (binz=1;binz<=nbinsz;binz++) {
+               if (GetBinContent(binx,biny,binz) > threshold) return biny;
+            }
+         }
+      }
+   } else {
+      for (binz=nbinsz;binz>=1;binz--) {
+         for (binx=1;binx<=nbinsx;binx++) {
+            for (biny=1;biny<=nbinsy;biny++) {
+               if (GetBinContent(binx,biny,binz) > threshold) return binz;
+            }
+         }
+      }
+   }
+   return -1;
+}
+
+
+//______________________________________________________________________________
 void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t binmaxy, Int_t cut, Option_t *option)
 {
    // Project slices along Z in case of a 3-D histogram, then fit each slice

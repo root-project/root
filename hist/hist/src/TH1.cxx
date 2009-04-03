@@ -2951,6 +2951,42 @@ Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
    return -1;
 }
 
+
+//______________________________________________________________________________
+Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
+{
+   //find first bin with content > threshold for axis (1=x, 2=y, 3=z)
+   //if no bins with content > threshold is found the function returns -1.
+   
+   if (axis != 1) {
+      Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
+      axis = 1;
+   }
+   Int_t nbins = fXaxis.GetNbins();
+   for (Int_t bin=1;bin<=nbins;bin++) {
+      if (GetBinContent(bin) > threshold) return bin;
+   }
+   return -1;
+}
+
+
+//______________________________________________________________________________
+Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis) const
+{
+   //find last bin with content > threshold for axis (1=x, 2=y, 3=z)
+   //if no bins with content > threshold is found the function returns -1.
+   
+   if (axis != 1) {
+      Warning("FindLastBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
+      axis = 1;
+   }
+   Int_t nbins = fXaxis.GetNbins();
+   for (Int_t bin=nbins;bin>=1;bin--) {
+      if (GetBinContent(bin) > threshold) return bin;
+   }
+   return -1;
+}
+
 //______________________________________________________________________________
 TObject *TH1::FindObject(const char *name) const
 {
