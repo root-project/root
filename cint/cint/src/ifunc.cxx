@@ -1122,7 +1122,8 @@ void G__make_ifunctable(char* funcheader)
    if ((paraname[0] == '\0'
 #ifndef G__OLDIMPLEMETATION817
          || ((strncmp(paraname, "throw", 5) == 0
-              || strncmp(paraname, "const throw", 11) == 0) && 0 == strchr(paraname, '='))
+              || strncmp(paraname, "const throw", 11) == 0
+              || strncmp(paraname, "_attribute_", 11) == 0) && 0 == strchr(paraname, '='))
 #endif
        ) && ((cin == ',') || (cin == ';'))
          && strncmp(funcheader, "ClassDef", 8) != 0
@@ -1171,7 +1172,8 @@ void G__make_ifunctable(char* funcheader)
       || (
          (
             strncmp(paraname, "throw", 5) == 0 ||
-            strncmp(paraname, "const throw", 11) == 0
+            strncmp(paraname, "const throw", 11) == 0 ||
+            strncmp(paraname, "_attribute_", 11) == 0
          ) &&
          0 != strchr(paraname, '=')
       )

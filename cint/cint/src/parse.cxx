@@ -6720,6 +6720,21 @@ G__value G__exec_statement(int* mparen)
                }
                G__ASSERT(!G__decl || (G__decl == 1));
                if (G__prerun && !G__decl) {
+                  if (iout == 12) {
+                     // -- Handle _attribute_.
+                     if (!strcmp(statement, "_attribute_(")) {
+                        // -- Handle '_attribute_( ... )'.
+                        //                       ^
+                        // also get (...)
+                        G__fignorestream(")");
+                        // We just ignore it.
+                        // Reset the statement buffer.
+                        iout = 0;
+                        // Flag that any following whitespace does not trigger any semantic action.
+                        spaceflag = -1;
+                        break;
+                     }
+                  }
                   // -- Make ifunc table at prerun and skip out.
                   // We have: 'functionname(...)'
                   G__var_type = 'i';
@@ -6734,8 +6749,22 @@ G__value G__exec_statement(int* mparen)
                   spaceflag = 0;
                   break;
                }
-               // Handle return(, switch(, if(, while(, catch(, throw(, for(.
+               // Handle _attribute(,return(, switch(, if(, while(, catch(, throw(, for(.
                switch (iout) {
+                  case 12:
+                     // -- Handle _attribute_.
+                     if (!strcmp(statement, "_attribute_(")) {
+                        // -- Handle '_attribute_( ... )'.
+                        //                       ^
+                        // also get (...)
+                        G__fignorestream(")");
+                        // We just ignore it.
+                        // Reset the statement buffer.
+                        iout = 0;
+                        // Flag that any following whitespace does not trigger any semantic action.
+                        spaceflag = -1;
+                        break;
+                     }
                   case 7:
                      if (!strcmp(statement, "return(")) {
                         //

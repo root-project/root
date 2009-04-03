@@ -964,7 +964,10 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       (
          !paraname[0]
 #ifndef G__OLDIMPLEMETATION817
-         || ((!strncmp(paraname, "throw", 5) || !strncmp(paraname, "const throw", 11)) && !strchr(paraname, '='))
+         || ((!strncmp(paraname, "throw", 5) ||
+              !strncmp(paraname, "const throw", 11) ||
+              !strncmp(paraname, "_attribute_", 11))
+             && !strchr(paraname, '='))
 #endif // G__OLDIMPLEMETATION817
          // --
       ) &&
@@ -1009,7 +1012,10 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       !strncmp(paraname, "const =", 7) ||
       !strncmp(paraname, "const=", 6)
 #ifndef G__OLDIMPLEMETATION817
-      || ((!strncmp(paraname, "throw", 5) || !strncmp(paraname, "const throw", 11)) && strchr(paraname, '='))
+      || ((!strncmp(paraname, "throw", 5) ||
+           !strncmp(paraname, "const throw", 11) ||
+           !strncmp(paraname, "_attribute_", 11))
+          && strchr(paraname, '='))
 #endif // G__OLDIMPLEMETATION817
       // --
    ) {
