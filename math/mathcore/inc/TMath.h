@@ -548,7 +548,8 @@ struct CompareDesc {
 
    CompareDesc(T d) : fData(d) {}
 
-   bool operator()(int i1, int i2) { 
+   template<typename Index>
+   bool operator()(Index i1, Index i2) { 
       return *(fData + i1) > *(fData + i2);
    }
 
@@ -560,7 +561,8 @@ struct CompareAsc {
 
    CompareAsc(T d) : fData(d) {}
 
-   bool operator()(int i1, int i2) { 
+   template<typename Index>
+   bool operator()(Index i1, Index i2) { 
       return *(fData + i1) < *(fData + i2);
    }
 
