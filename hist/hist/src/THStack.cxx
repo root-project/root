@@ -381,8 +381,7 @@ Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void THStack::Draw(Option_t *option)
 {
-   //*-*-*-*-*-*-*-*-*-*-*Draw this multihist with its current attributes*-*-*-*-*-*-*
-   //*-*                  ==========================================
+   // Draw this multihist with its current attributes.
    //
    //   Options to draw histograms  are described in THistPainter::Paint
    // By default (if option "nostack" is not specified), histograms will be paint
@@ -400,6 +399,7 @@ void THStack::Draw(Option_t *option)
       }
    }
    AppendPad(opt.Data());
+   gPad->RedrawAxis();
 }
 
 //______________________________________________________________________________
@@ -584,8 +584,8 @@ void THStack::Paint(Option_t *option)
          padsav->Clear();
          Int_t nx = (Int_t)TMath::Sqrt((Double_t)npads);
          if (nx*nx < npads) nx++;
-	 Int_t ny = nx;
-	 if (((nx*ny)-nx) >= npads) ny--;
+         Int_t ny = nx;
+         if (((nx*ny)-nx) >= npads) ny--;
          padsav->Divide(nx,ny);
       }
       TH1 *h;
@@ -755,7 +755,6 @@ void THStack::Paint(Option_t *option)
          lnk = (TObjOptLink*)lnk->Prev();
       }
    }
-   gPad->RedrawAxis();
 }
 
 //______________________________________________________________________________
