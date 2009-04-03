@@ -197,14 +197,10 @@ void Reflex::Class::Destruct(void * instance,
       // we found a destructor -> Invoke it
       Object dummy = Object(Type(), instance);
       fDestructor.Invoke(dummy, (Object*)0);
-      // if deallocation of memory wanted
-      if (dealloc) {
-         Deallocate(instance);
-      }
    }
-   else {
-      // this class has no destructor defined we call the operator delete on it
-      ::operator delete(instance);
+   // if deallocation of memory wanted
+   if (dealloc) {
+      Deallocate(instance);
    }
 }
 
