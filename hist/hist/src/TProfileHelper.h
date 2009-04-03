@@ -237,18 +237,28 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
          if (h->GetXaxis()->GetXmin() >= h->GetXaxis()->GetXmax() && h->fBuffer) {
              // no limits
             Int_t nbentries = (Int_t)h->fBuffer[0];
+            Double_t v[5];
             for (Int_t i = 0; i < nbentries; i++)
                if ( p->GetDimension() == 3 ) {
-                  Double_t v[] = { h->fBuffer[5*i + 2], h->fBuffer[5*i + 3],
-                                   h->fBuffer[5*i + 4], h->fBuffer[5*i + 5], h->fBuffer[5*i + 1] };
+                  v[0] = h->fBuffer[5*i + 2];
+                  v[1] = h->fBuffer[5*i + 3];
+                  v[2] = h->fBuffer[5*i + 4];
+                  v[3] = h->fBuffer[5*i + 5];
+                  v[4] = h->fBuffer[5*i + 1];
                   p->Fill(v);
                } else if ( p->GetDimension() == 2 ) {
-                  Double_t v[] = { h->fBuffer[4*i + 2], h->fBuffer[4*i + 3],
-                                   h->fBuffer[4*i + 4], h->fBuffer[4*i + 1] };
+                  v[0] = h->fBuffer[4*i + 2];
+                  v[1] = h->fBuffer[4*i + 3];
+                  v[2] = h->fBuffer[4*i + 4];
+                  v[3] = h->fBuffer[4*i + 1];
+                  v[4] = 0;
                   p->Fill(v);
                }
                else if ( p->GetDimension() == 1 ) {
-                  Double_t v[] = { h->fBuffer[3*i + 2], h->fBuffer[3*i + 3], h->fBuffer[3*i + 1] };
+                  v[0] = h->fBuffer[3*i + 2];
+                  v[1] = h->fBuffer[3*i + 3];
+                  v[2] = h->fBuffer[3*i + 1];
+                  v[3] = v[4] = 0;
                   p->Fill(v);
                }
          }
