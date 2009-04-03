@@ -2254,6 +2254,7 @@ void TBranchElement::InitializeOffsets()
          }
 
          {
+            Int_t streamerType = subBranchElement->GetType();
             if (streamerType > TStreamerInfo::kObject 
                 && aSubBranch->GetListOfBranches()->GetEntries()==0
                 && CanSelfReference(subBranchElement->GetClass())) 
