@@ -17,7 +17,7 @@
 #include "Minuit2/MnCross.h"
 #include "Minuit2/MnMachinePrecision.h"
 
-#define DEBUG
+//#define DEBUG
 
 #if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
