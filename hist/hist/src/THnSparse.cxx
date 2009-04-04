@@ -944,6 +944,7 @@ void THnSparse::Scale(Double_t c)
    Int_t* coord = new Int_t[fNdimensions];
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
 
+   Double_t nEntries = GetEntries();
    // Scale the contents & errors
    Bool_t haveErrors = GetCalculateErrors();
    for (Long64_t i = 0; i < GetNbins(); ++i) {
@@ -955,6 +956,7 @@ void THnSparse::Scale(Double_t c)
          SetBinError(coord, c * err);
       }
    }
+   SetEntries(nEntries);
 
    delete [] coord;
 }
@@ -1063,6 +1065,7 @@ void THnSparse::Multiply(const THnSparse* h)
 
    if (wantErrors) Sumw2();
 
+   Double_t nEntries = GetEntries();
    // Now multiply the contents: in this case we have the intersection of the sets of bins
    Int_t* coord = new Int_t[fNdimensions];
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
@@ -1078,6 +1081,7 @@ void THnSparse::Multiply(const THnSparse* h)
          SetBinError(coord,TMath::Sqrt((err2 * err2 + err1 * err1)));
       }
    }
+   SetEntries(nEntries);
 
    //now deposit the result in the original histogram....
    delete [] coord;
@@ -1266,6 +1270,7 @@ void THnSparse::SetBinContent(const Int_t* coord, Double_t v)
    Long_t bin = GetBinIndexForCurrentBin(kTRUE);
    THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
    chunk->fContent->SetAt(v, bin % fChunkSize);
+   ++fEntries;
 }
 
 //______________________________________________________________________________
