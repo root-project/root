@@ -290,7 +290,9 @@ void InitGaus(const ROOT::Fit::BinData & data, TF1 * f1)
    double allcha = 0;
    double valmax = 0; 
    double rangex = data.Coords(n-1)[0] - data.Coords(0)[0];
-   double binwidth = rangex;
+   // to avoid binwidth = 0 set arbitrarly to 1
+   double binwidth = 1;
+   if ( rangex > 0) binwidth = rangex; 
    double x0 = 0;
    for (unsigned int i = 0; i < n; ++ i) { 
       double val; 
