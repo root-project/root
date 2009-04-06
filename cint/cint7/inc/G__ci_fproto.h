@@ -50,7 +50,7 @@ G__DECL_API(15, struct G__var_array*, G__searchvariable, (char *varname,int varh
 G__DECL_API(16, struct G__ifunc_table*, G__p2f2funchandle, (void* p2f,struct G__ifunc_table* p_ifunc,int* pindex));
 G__DECL_API(17, char*, G__p2f2funcname, (void *p2f));
 G__DECL_API(18, int, G__isinterpretedp2f, (void* p2f));
-G__DECL_API(19, int, G__compile_bytecode, (struct G__ifunc_table* ifunc,int index));
+G__DECL_API(19, int, G__compile_bytecode, (struct G__ifunc_table* ifunc,int index_in_ifunc));
 
 
 G__DECL_API(20, void, G__va_arg_setalign, (int n));
@@ -159,7 +159,7 @@ G__DECL_API(72, void, G__setothermain, (int othermain));
 G__DECL_API(73, void, G__exit, (int rtn));
 G__DECL_API(74, int, G__getnumbaseclass, (int tagnum));
 G__DECL_API(75, void, G__setnewtype, (int globalcomp,G__CONST char* comment,int nindex));
-G__DECL_API(76, void, G__setnewtypeindex, (int j,int index));
+G__DECL_API(76, void, G__setnewtypeindex, (int j,int type_index));
 G__DECL_API(77, void, G__resetplocal, (void));
 G__DECL_API(78, long, G__getgvp, (void));
 G__DECL_API(79, void, G__resetglobalenv, (void));
@@ -178,16 +178,16 @@ G__DECL_API(90, int, G__search_tagname, (G__CONST char *tagname,int type));
 G__DECL_API(91, int, G__search_typename, (G__CONST char *typenamein,int typein,int tagnum,int reftype));
 G__DECL_API(92, int, G__defined_typename, (G__CONST char* typenamein));
 G__DECL_API(93, int, G__tag_memvar_setup, (int tagnum));
-G__DECL_API(94, int, G__memvar_setup, (void *p,int type,int reftype,int constvar,int tagnum,int typenum,int statictype,int access,G__CONST char *expr,int definemacro,G__CONST char *comment));
+G__DECL_API(94, int, G__memvar_setup, (void *p,int type,int reftype,int constvar,int tagnum,int typenum,int statictype,int var_access,G__CONST char *expr,int definemacro,G__CONST char *comment));
 G__DECL_API(95, int, G__tag_memvar_reset, (void));
 G__DECL_API(96, int, G__tag_memfunc_setup, (int tagnum));
 
 #ifdef G__TRUEP2F
 G__DECL_API(97, int, G__memfunc_setup, (G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
-,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual));
+,int tagnum,int typenum,int reftype,int para_nu,int ansi,int var_access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual));
 #else /* G__TRUEP2F */
 G__DECL_API(98, int, G__memfunc_setup, (G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
-,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment));
+,int tagnum,int typenum,int reftype,int para_nu,int ansi,int var_access,int isconst,G__CONST char *paras,G__CONST char *comment));
 #endif /* G__TRUEP2F */
 
 G__DECL_API(99, int, G__memfunc_next, (void));
@@ -259,7 +259,7 @@ G__DECL_API(158, void, G__addpragma, (char* comname, void (* /*p2f*/) (char*)) )
 G__DECL_API(159, void, G__add_setup_func, (G__CONST char *libname, G__incsetup func));
 G__DECL_API(160, void, G__remove_setup_func, (G__CONST char *libname));
 G__DECL_API(161, void, G__setgvp, (long gvp));
-G__DECL_API(162, void, G__set_stdio_handle, (FILE* sout,FILE* serr,FILE* sin));
+G__DECL_API(162, void, G__set_stdio_handle, (FILE* s_out,FILE* s_err,FILE* s_in));
 G__DECL_API(163, void, G__setautoconsole, (int autoconsole));
 G__DECL_API(164, int, G__AllocConsole, (void));
 G__DECL_API(165, int, G__FreeConsole, (void));
