@@ -1653,7 +1653,8 @@ jpeg2ASImage( const char * path, ASImageImportParams *params )
 		prepare_scanline( im->width, 0, &buf, False );
 
 	/* Make a one-row-high sample array that will go away when done with image */
-	void* temp_cinfo = &cinfo;
+	void *temp_cinfo = NULL;
+	temp_cinfo = &cinfo;
 	buffer = cinfo.mem->alloc_sarray((j_common_ptr) temp_cinfo, JPOOL_IMAGE,
 									cinfo.output_width * cinfo.output_components, 1);
 
