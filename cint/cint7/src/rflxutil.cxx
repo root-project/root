@@ -1062,8 +1062,23 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
             break;            
          }
       }
+      if (isconst & G__CONSTVAR) {
+         raw = Reflex::Type(raw, Reflex::CONST, Reflex::Type::APPEND);
+      }      
    } else if (type >= 'A' && type <= 'Z') {
-      if (type == 'Z' || type == 'P' || type == 'O' || type == 'T' || type == 'A' || type == 'E') {
+      if (type=='E') {
+         if (isconst & G__CONSTVAR) {
+            raw = typeCPCache[type - 'A'];            
+            if (!raw) {
+               raw = typeCPCache['E' - 'A'] = Reflex::PointerBuilder(Reflex::Type(Reflex::Type::ByName("FILE"), Reflex::CONST, Reflex::Type::APPEND));
+            }
+         } else {
+            raw = typePCache[type - 'A'];
+            if (!raw) {
+               raw = typePCache['E' - 'A'] = Reflex::PointerBuilder(Reflex::Type::ByName("FILE"));
+            }
+         }
+      } else if (type == 'Z' || type == 'P' || type == 'O' || type == 'T' || type == 'A') {
          raw = typePCache[type - 'A'];
          if (raw == Reflex::Dummy::Type()) {
             // special macro, not yet set up
@@ -1080,9 +1095,6 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
             case 'T':
                raw = typePCache['T' - 'A'] = Reflex::Type::ByName("macroChar*$");
                break;
-            case 'E':
-               raw = typePCache['E' - 'A'] = Reflex::PointerBuilder(Reflex::Type::ByName("FILE"));
-               break;            
             }
          }
          return raw;
