@@ -828,6 +828,7 @@ struct G__DUMMY_FOR_CINT5 {
    // Stuff we removed from Cint5
    int type;
    int tagnum;
+   int typenum;
 #ifndef G__OLDIMPLEMENTATION1259
    G__SIGNEDCHAR_T isconst;
 #endif
