@@ -167,6 +167,18 @@ Bool_t PyROOT::TLongRefConverter::SetArg( PyObject* pyobject, TParameter& para, 
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
+Bool_t PyROOT::TConstLongRefConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
+{
+// convert <pyobject> to C++ const long&, set arg for call using buffer
+   para.fl = fBuffer = PyLong_AsLong( pyobject );
+   if ( para.fl == -1 && PyErr_Occurred() )
+      return kFALSE;
+   else if ( func )
+      func->SetArgRef( fBuffer );
+   return kTRUE;
+}
+
+//____________________________________________________________________________
 Bool_t PyROOT::TIntRefConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
 {
 // convert <pyobject> to C++ (pseudo)int&, set arg for call
@@ -1019,6 +1031,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( UInt )
    PYROOT_BASIC_CONVERTER_FACTORY( Long )
    PYROOT_BASIC_CONVERTER_FACTORY( LongRef )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstLongRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ULong )
    PYROOT_BASIC_CONVERTER_FACTORY( Float )
    PYROOT_BASIC_CONVERTER_FACTORY( Double )
@@ -1062,14 +1075,14 @@ namespace {
       NFp_t( "UInt_t", /* enum */  &CreateUIntConverter               ),
       NFp_t( "long",               &CreateLongConverter               ),
       NFp_t( "long&",              &CreateLongRefConverter            ),
-      NFp_t( "const long&",        &CreateLongConverter               ),
+      NFp_t( "const long&",        &CreateConstLongRefConverter       ),
       NFp_t( "unsigned long",      &CreateULongConverter              ),
       NFp_t( "long long",          &CreateLongLongConverter           ),
       NFp_t( "unsigned long long", &CreateULongLongConverter          ),
       NFp_t( "float",              &CreateFloatConverter              ),
       NFp_t( "double",             &CreateDoubleConverter             ),
       NFp_t( "double&",            &CreateDoubleRefConverter          ),
-      NFp_t( "const double&",      &CreateDoubleConverter             ),
+      NFp_t( "const double&",      &CreateConstDoubleRefConverter     ),
       NFp_t( "void",               &CreateVoidConverter               ),
       NFp_t( "#define",            &CreateMacroConverter              ),
 

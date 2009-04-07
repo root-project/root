@@ -85,6 +85,14 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_CONVERTER2( Float, Double );
    PYROOT_DECLARE_BASIC_CONVERTER( DoubleRef );
 
+   class TConstLongRefConverter : public TLongConverter {
+   public:
+      virtual Bool_t SetArg( PyObject*, TParameter&, G__CallFunc* = 0 );
+
+   private:
+      long fBuffer;
+   };
+
    class TConstDoubleRefConverter : public TDoubleConverter { // required for Cintex only
    public:
       virtual Bool_t SetArg( PyObject*, TParameter&, G__CallFunc* = 0 );
