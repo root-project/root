@@ -1078,6 +1078,7 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
                raw = typePCache['E' - 'A'] = Reflex::PointerBuilder(Reflex::Type::ByName("FILE"));
             }
          }
+         return raw;
       } else if (type == 'Z' || type == 'P' || type == 'O' || type == 'T' || type == 'A') {
          raw = typePCache[type - 'A'];
          if (!raw) {
