@@ -21,7 +21,8 @@
 //-------------------------------------------------------------------------------
 Reflex::Namespace::Namespace( const char * scop ) 
 //-------------------------------------------------------------------------------
-   : ScopeBase( scop, NAMESPACE ) {
+   : ScopeBase( scop, NAMESPACE ),
+     fPropertyList( OwnedPropertyList( new PropertyListImpl())) {
    // Create dictionary info for a namespace scope.
 }
 
@@ -29,10 +30,17 @@ Reflex::Namespace::Namespace( const char * scop )
 //-------------------------------------------------------------------------------
 Reflex::Namespace::Namespace() 
 //-------------------------------------------------------------------------------
-   : ScopeBase() {
-   // Destructor.
+   : ScopeBase(),
+     fPropertyList( OwnedPropertyList( new PropertyListImpl())) {
+   // Default Constructore (for the global namespace)
 }
 
+//-------------------------------------------------------------------------------
+Reflex::Namespace::~Namespace() {
+//-------------------------------------------------------------------------------
+// Default destructor
+   fPropertyList.Delete();
+}
 
 //-------------------------------------------------------------------------------
 const Reflex::Scope & Reflex::Namespace::GlobalScope() {

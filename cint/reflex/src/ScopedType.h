@@ -211,7 +211,7 @@ inline const std::string&  Reflex::ScopedType::SimpleName(size_t & pos,
 inline Reflex::PropertyList Reflex::ScopedType::Properties() const
 {
 //-------------------------------------------------------------------------------
-   return ScopeBase::Properties();
+   return TypeBase::Properties();
 }
 
 

@@ -38,7 +38,7 @@ namespace Reflex {
 
 
       /** destructor */
-      virtual ~Namespace() {}
+      virtual ~Namespace();
 
 
       /**
@@ -53,12 +53,40 @@ namespace Reflex {
       */
       static const Scope & GlobalScope();
 
+
+      /**
+      * Properties will return a pointer to the PropertyNth list attached
+      * to this item
+      * @return pointer to PropertyNth list
+      */
+      virtual PropertyList Properties() const;
+
+
    private:
 
       /** constructor for initialisation of the global namespace */
       Namespace();
 
+   private:
+      /**
+      * pointer to the property list
+      * @label propertylist
+      * @link aggregationByValue
+      * @clientCardinality 1
+      * @supplierCardinality 1
+      */
+      OwnedPropertyList fPropertyList;
+
    }; // class Namespace
 } //namespace Reflex
+
+//-------------------------------------------------------------------------------
+inline Reflex::PropertyList
+Reflex::Namespace::Properties() const {
+//-------------------------------------------------------------------------------
+// Retrieve the namespace's properties.
+   return fPropertyList;
+}
+
 
 #endif // Reflex_Namespace

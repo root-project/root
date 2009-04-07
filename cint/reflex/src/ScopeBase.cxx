@@ -39,7 +39,6 @@ Reflex::ScopeBase::ScopeBase( const char * scope,
                                     TYPE scopeType )
    : fScopeName( 0 ),
      fScopeType( scopeType ),
-     fPropertyList( OwnedPropertyList( new PropertyListImpl())),
      fBasePosition( Tools::GetBasePosition( scope )) {
 //-------------------------------------------------------------------------------
    // Construct the dictionary information for a scope.
@@ -81,12 +80,11 @@ Reflex::ScopeBase::ScopeBase()
    : fScopeName( 0 ),
      fScopeType( NAMESPACE ),
      fDeclaringScope( Scope::__NIRVANA__() ),
-     fPropertyList( OwnedPropertyList( new PropertyListImpl()) ),
      fBasePosition( 0 ) {
 //-------------------------------------------------------------------------------
    // Default constructor for the ScopeBase (used at init time for the global scope)
    fScopeName = new ScopeName("", this);
-   fPropertyList.AddProperty("Description", "global namespace");
+   PropertyList().AddProperty("Description", "global namespace");
 }
 
 
@@ -121,9 +119,6 @@ Reflex::ScopeBase::~ScopeBase( ) {
    if ( fDeclaringScope ) {
       fDeclaringScope.RemoveSubScope(ThisScope());
    }
-
-   fPropertyList.Delete();
-
 }
 
 
@@ -484,7 +479,7 @@ const std::string& Reflex::ScopeBase::SimpleName( size_t & pos,
 Reflex::PropertyList Reflex::ScopeBase::Properties() const {
 //-------------------------------------------------------------------------------
    // Return property list attached to this scope.
-   return fPropertyList;
+   return Dummy::PropertyList();
 }
 
 

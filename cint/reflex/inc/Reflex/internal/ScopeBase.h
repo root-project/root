@@ -758,16 +758,6 @@ namespace Reflex {
          std::vector < Scope > fUsingDirectives;
 
 
-      /**
-      * pointer to the property list
-      * @label propertylist
-      * @link aggregationByValue
-      * @clientCardinality 1
-      * @supplierCardinality 1
-      */
-      OwnedPropertyList fPropertyList;
-
-
       /** 
       * The position where the unscoped Name starts in the scopename
       */
