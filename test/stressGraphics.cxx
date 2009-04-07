@@ -93,6 +93,7 @@ void     tlatex3        ();
 void     tlatex4        ();
 void     tlatex5        ();
 void     transpad       ();
+void     statfitparam   ();
 void     tgaxis1        ();
 void     tgaxis2        ();
 void     tgaxis3        ();
@@ -133,18 +134,18 @@ void     cleanup        ();
 // Global variables.
 Int_t     gVerbose;
 Int_t     gTestNum;
-Int_t     gPS1RefNb[40];
-Int_t     gPS1ErrNb[40];
-Int_t     gPDFRefNb[40];
-Int_t     gPDFErrNb[40];
-Int_t     gGIFRefNb[40];
-Int_t     gGIFErrNb[40];
-Int_t     gJPGRefNb[40];
-Int_t     gJPGErrNb[40];
-Int_t     gPNGRefNb[40];
-Int_t     gPNGErrNb[40];
-Int_t     gPS2RefNb[40];
-Int_t     gPS2ErrNb[40];
+Int_t     gPS1RefNb[50];
+Int_t     gPS1ErrNb[50];
+Int_t     gPDFRefNb[50];
+Int_t     gPDFErrNb[50];
+Int_t     gGIFRefNb[50];
+Int_t     gGIFErrNb[50];
+Int_t     gJPGRefNb[50];
+Int_t     gJPGErrNb[50];
+Int_t     gPNGRefNb[50];
+Int_t     gPNGErrNb[50];
+Int_t     gPS2RefNb[50];
+Int_t     gPS2ErrNb[50];
 Bool_t    gOptionR;
 Bool_t    gOptionK;
 TH2F     *gH2;
@@ -281,6 +282,7 @@ void stressGraphics(Int_t verbose = 0)
    tlatex4      ();
    tlatex5      ();
    transpad     ();
+   statfitparam ();
    if (!gOptionR) {
       cout << "**********************************************************************" <<endl;
       cout << "*  Starting High Level 2D Primitives - S T R E S S                   *" <<endl;
@@ -1129,6 +1131,65 @@ void transpad()
    TestReport2();
 }
 
+
+//______________________________________________________________________________
+void statfitparam ()
+{
+   // Stat and fit parameters with errors.
+
+   TCanvas *C = StartTest(800,500);
+
+   C->Divide(3,2);
+   gStyle->SetOptFit(1111);  
+   gStyle->SetOptStat(111111); 
+   gStyle->SetStatW(0.43);
+   gStyle->SetStatH(0.35);
+
+   TH1 *hsf1 = new TH1F("hsf1","hsf1", 2,0.,1.);
+   TH1 *hsf2 = new TH1F("hsf2","hsf2", 2,0.,1.);
+   TH1 *hsf3 = new TH1F("hsf3","hsf3", 2,0.,1.);
+   TH1 *hsf4 = new TH1F("hsf4","hsf4", 2,0.,1.);
+   TH1 *hsf5 = new TH1F("hsf5","hsf5", 2,0.,1.);
+
+   C->cd(1);
+   hsf1->SetBinContent (1, 5.3E5); hsf1->SetBinError (1, 0.9);
+   hsf1->SetBinContent (2, 5.3E5); hsf1->SetBinError (2, 0.1);
+   hsf1->Fit("pol0","Q");
+
+   C->cd(2);
+   hsf2->SetBinContent (1, 5.0E15); hsf2->SetBinError (1, 4.9E15);
+   hsf2->SetBinContent (2, 5.0E15); hsf2->SetBinError (2, 4.9E11);
+   hsf2->Fit("pol0","Q");
+
+   C->cd(3);
+   hsf3->SetBinContent (1, 5.0E-15); hsf3->SetBinError (1, 4.9E-15);
+   hsf3->SetBinContent (2, 5.0E-15); hsf3->SetBinError (2, 4.9E-11);
+   hsf3->Fit("pol0","Q");
+
+   C->cd(4);
+   hsf4->SetBinContent (1, 5); hsf4->SetBinError (1, 3);     
+   hsf4->SetBinContent (2, 5); hsf4->SetBinError (2, 1);     
+   hsf4->Fit("pol0","Q");
+
+   C->cd(5);
+   hsf5->SetBinContent (1, 5.3); hsf5->SetBinError (1, 0.9);
+   hsf5->SetBinContent (2, 5.3); hsf5->SetBinError (2, 0.1);
+   hsf5->Fit("pol0","Q");
+
+   C->cd(6);
+   TPaveText *pt = new TPaveText(0.02,0.2,0.98,0.8,"brNDC");
+   pt->SetFillColor(18);
+   pt->SetTextAlign(12);
+   pt->AddText("This example test all the possible cases");
+   pt->AddText("handled by ThistPainter::GetBestFormat.");
+   pt->AddText("This method returns the best format to");
+   pt->AddText("paint the fit parameters errors.");
+   pt->Draw();
+
+   TestReport1(C, "Stat and fit parameters with errors");
+   DoCcode(C);
+   TestReport2();
+}
 
 //______________________________________________________________________________
 void tgaxis1()
