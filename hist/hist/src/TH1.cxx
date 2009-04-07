@@ -4261,12 +4261,12 @@ void TH1::LabelsInflate(Option_t *ax)
    Double_t err,cu;
    Double_t oldEntries = fEntries;
    Int_t bin,ibin,binx,biny,binz;
-   for (binz=1;binz<=nbinsz;binz++) {
-      for (biny=1;biny<=nbinsy;biny++) {
-         for (binx=1;binx<=nbinsx;binx++) {
+   for (binz=0;binz<=nbinsz+1;binz++) {
+      for (biny=0;biny<=nbinsy+1;biny++) {
+         for (binx=0;binx<=nbinsx+1;binx++) {
             bin = hold->GetBin(binx,biny,binz);
             ibin= GetBin(binx,biny,binz);
-            if (binx > nbxold || biny > nbyold || binz > nbzold) bin = -1;
+            if (binx > nbxold+1 || biny > nbyold+1 || binz > nbzold+1) bin = -1;
             if (bin > 0) cu  = hold->GetBinContent(bin);
             else         cu = 0;
             SetBinContent(ibin,cu);
