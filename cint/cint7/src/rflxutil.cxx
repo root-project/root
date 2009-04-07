@@ -1121,11 +1121,13 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
          if (!raw) {
             return typeCache['z' - 'a' + 2] = Reflex::Type::ByName("blockBreakContinueGoto$");
          }
+         return raw;
       case G__DEFAULT_FUNCCALL:
          raw = typeCache['z' - 'a' + 3];
          if (!raw) {
             return typeCache['z' - 'a' + 3] = Reflex::Type::ByName("defaultFunccall$");
          }
+         return raw;
 #ifndef G__OLDIMPLEMENTATION2191
       case '1':
          return typeCache['z' - 'a' + 4];
