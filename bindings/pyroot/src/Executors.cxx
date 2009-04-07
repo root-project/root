@@ -106,6 +106,8 @@ PyObject* PyROOT::T##name##RefExecutor::Execute( G__CallFunc* func, void* self )
    }                                                                         \
 }
 
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Short,  Short_t,  Long_t,   PyInt_FromLong,     PyLong_AsLong,    ExecInt )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( UShort, UShort_t, ULong_t,  PyInt_FromLong,     PyLongOrInt_AsULong, ExecInt )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Int,    Int_t,    Long_t,   PyInt_FromLong,     PyLong_AsLong,    ExecInt )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( UInt,   UInt_t,   ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong, ExecInt )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Long,   Long_t,   Long_t,   PyLong_FromLong,    PyLong_AsLong,    ExecInt )
@@ -219,12 +221,12 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( G__CallFunc* func, void* 
 // stop CINT from tracking the object, so that ownership is ours
    G__pop_tempobject_nodel();
 
-// the result can then now bound
+// the result can then be bound
    ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( result, fClass );
    if ( ! pyobj )
       return 0;
 
-// python ref counting will now control the object life span
+// python ref counting will now control this object's life span
    pyobj->fFlags |= ObjectProxy::kIsOwner;
    return (PyObject*)pyobj;
 }
@@ -339,6 +341,8 @@ namespace {
 
 // use macro rather than template for portability ...
    PYROOT_EXECUTOR_FACTORY( Char )
+   PYROOT_EXECUTOR_FACTORY( ShortRef )
+   PYROOT_EXECUTOR_FACTORY( UShortRef )
    PYROOT_EXECUTOR_FACTORY( Int )
    PYROOT_EXECUTOR_FACTORY( IntRef )
    PYROOT_EXECUTOR_FACTORY( UIntRef )
@@ -376,7 +380,9 @@ namespace {
       NFp_t( "char",               &CreateCharExecutor                ),
       NFp_t( "unsigned char",      &CreateCharExecutor                ),
       NFp_t( "short",              &CreateIntExecutor                 ),
+      NFp_t( "short&",             &CreateShortRefExecutor            ),
       NFp_t( "unsigned short",     &CreateIntExecutor                 ),
+      NFp_t( "unsigned short&",    &CreateUShortRefExecutor           ),
       NFp_t( "int",                &CreateIntExecutor                 ),
       NFp_t( "int&",               &CreateIntRefExecutor              ),
       NFp_t( "unsigned int",       &CreateULongExecutor               ),
