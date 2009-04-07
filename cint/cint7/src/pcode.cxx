@@ -810,7 +810,15 @@ static void G__OP2_multiply(G__value* bufm1, G__value* bufm2)
       G__OP2_multiply_T<long double>(bufm1, bufm2);
    }
    else if (fundType1 == 'd' || fundType2 == 'd') {
-      G__OP2_multiply_T<double>(bufm1, bufm2);
+      if (fundType1 == fundType2) {
+         bufm2->obj.d = bufm2->obj.d * bufm1->obj.d;
+      } else if (fundType2 == 'd') {
+         bufm2->obj.d = bufm2->obj.d * G__convertT<double>(bufm1);         
+      } else {
+         // assert(fundType1 == 'd');
+         bufm2->obj.d = G__convertT<double>(bufm2) * bufm1->obj.d; 
+         G__value_typenum(*bufm2) = G__value_typenum(*bufm1); // Because we know that buf1 is a double.
+      } 
    }
    else if (fundType1 == 'f' || fundType2 == 'f') {
       G__OP2_multiply_T<float>(bufm1, bufm2);

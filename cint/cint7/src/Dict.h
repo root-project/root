@@ -38,22 +38,44 @@ namespace Cint {
       std::vector<Reflex::Type> mTypenums; // link between typenums/tagnums and Reflex types
       Reflex::Scope mScopes[G__MAXSTRUCT]; 
 
+      ::Reflex::Type GetTypeImpl(int tagnum);
+      
       G__Dict() {};
       ~G__Dict() {};
    public:
 
       static G__Dict &GetDict();
 
-      ::Reflex::Type GetType(int tagnum);
-      ::Reflex::Type GetTypeFromId(size_t handle);
+      
+      ::Reflex::Type GetType(int tagnum) {
+         // Return the Reflex type (class or namespace) corresponding 
+         // to the CINT tagnum.
+
+         static ::Reflex::Type null_type;
+         if (-1 == tagnum) return null_type;
+         ::Reflex::Type t = mScopes[tagnum];
+         if (t) return t;
+         return GetTypeImpl(tagnum);
+      }
+      static inline Reflex::Type GetTypeFromId(size_t handle) {
+         return Reflex::Type( reinterpret_cast< const Reflex::TypeName* >(handle));
+      }
       ::Reflex::Type GetTypedef(int typenum);
       ::Reflex::Scope GetScope(int tagnum);
-      ::Reflex::Scope GetScope(const struct G__ifunc_table* funcnum);
-      ::Reflex::Scope GetScope(const struct G__var_array* varnum);
+      static inline ::Reflex::Scope GetScope(const struct G__ifunc_table* funcnum) {
+         return Reflex::Scope(reinterpret_cast<const Reflex::ScopeName*>(funcnum));
+      }
+      static inline ::Reflex::Scope GetScope(const struct G__var_array* varnum) {
+         return Reflex::Scope(reinterpret_cast<const Reflex::ScopeName*>(varnum));
+      }
       ::Reflex::Member GetFunction( const struct G__ifunc_table* funcnum, int ifn );
-      ::Reflex::Member GetFunction(size_t handle);
+      static inline ::Reflex::Member GetFunction(size_t handle) {
+         return Reflex::Member(reinterpret_cast< const Reflex::MemberBase* >(handle));
+      }
       ::Reflex::Member GetDataMember( const struct G__var_array* varnum, int ig15 );
-      ::Reflex::Member GetDataMember(size_t handle);
+      static inline ::Reflex::Member GetDataMember(size_t handle) {
+         return Reflex::Member(reinterpret_cast< const Reflex::MemberBase* >(handle));
+      }
       int Register(const ::Reflex::Type&);
       bool RegisterScope(int tagnum, const ::Reflex::Scope&);
 

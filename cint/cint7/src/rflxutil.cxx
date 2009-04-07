@@ -959,7 +959,7 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
     *   Z : codeBreak (continue, break, goto)
     ****************************************************/
    static Reflex::Type typeCache[] = {
-      Reflex::PointerToMemberBuilder(Reflex::Dummy::Type(), Reflex::Dummy::Scope()), // 'a'
+      Reflex::PointerToMemberBuilder(Reflex::Type(), Reflex::Scope()), // 'a'
       Reflex::Type::ByName("unsigned char"), // 'b'
       Reflex::Type::ByName("char"), // 'c'
       Reflex::Type::ByName("double"), // 'd'
@@ -968,26 +968,26 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
       Reflex::Type::ByName("bool"), // 'g'
       Reflex::Type::ByName("unsigned int"), // 'h'
       Reflex::Type::ByName("int"), // 'i'
-      Reflex::Dummy::Type(), // 'j' - macro$""
+      Reflex::Type(), // 'j' - macro$""
       Reflex::Type::ByName("unsigned long"), // 'k'
       Reflex::Type::ByName("long"), // 'l'
       Reflex::Type::ByName("unsigned long long"), // 'm'
       Reflex::Type::ByName("long long"), // 'n'
-      Reflex::Dummy::Type(), // 'o' - "autoInt$"
-      Reflex::Dummy::Type(), // 'p' - "macroInt$"
+      Reflex::Type(), // 'o' - "autoInt$"
+      Reflex::Type(), // 'p' - "macroInt$"
       Reflex::Type::ByName("long double"), // 'q'
       Reflex::Type::ByName("unsigned short"), // 'r'
       Reflex::Type::ByName("short"), // 's'
-      Reflex::Dummy::Type(), // 't' - "#define"
-      Reflex::Dummy::Type(), // 'u' - "enum"
+      Reflex::Type(), // 't' - "#define"
+      Reflex::Type(), // 'u' - "enum"
       Reflex::Type(), // 'v'
       Reflex::Type(), // 'w'
       Reflex::Type(), // 'x'
       Reflex::Type::ByName("void"), // 'y'
-      Reflex::Dummy::Type(), // 'z' - "switchDefault$"
+      Reflex::Type(), // 'z' - "switchDefault$"
       Reflex::Type(), // '\0'
-      Reflex::Dummy::Type(), // \001 - "blockBreakContinueGoto$"
-      Reflex::Dummy::Type(), // G__DEFAULT_FUNCCALL = "defaultFunccall$"
+      Reflex::Type(), // \001 - "blockBreakContinueGoto$"
+      Reflex::Type(), // G__DEFAULT_FUNCCALL = "defaultFunccall$"
 #ifndef G__OLDIMPLEMENTATION2191
       Reflex::Type::ByName("void") // '1'
 #endif
@@ -1002,19 +1002,19 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
       for (size_t i = 0; i < numtypes; ++i) {
          switch (i + 'A') {
          case 'Z': 
-            typePCache[i] = Reflex::Dummy::Type(); // "codeBreak$"
+            typePCache[i] = Reflex::Type(); // "codeBreak$"
             typeCPCache[i] = typePCache[i];
             break;
          case 'P':
-            typePCache[i] = Reflex::Dummy::Type(); // "macroDouble$"
+            typePCache[i] = Reflex::Type(); // "macroDouble$"
             typeCPCache[i] = typePCache[i];
             break;
          case 'O':
-            typePCache[i] = Reflex::Dummy::Type(); // "autoDouble$"
+            typePCache[i] = Reflex::Type(); // "autoDouble$"
             typeCPCache[i] = typePCache[i];
             break;
          case 'T':
-            typePCache[i] = Reflex::Dummy::Type(); // "macroChar*$"
+            typePCache[i] = Reflex::Type(); // "macroChar*$"
             typeCPCache[i] = typePCache[i];
             break;
          case 'A':
@@ -1036,7 +1036,7 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
    Reflex::Type raw;
    if (type >= 'a' && type <= 'z' ) {
       raw = typeCache[type - 'a'];
-      if (raw == Reflex::Dummy::Type()) {
+      if (!raw) {
          // special macro, not yet set up
          switch (type) {
          case 'j':
@@ -1080,7 +1080,7 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
          }
       } else if (type == 'Z' || type == 'P' || type == 'O' || type == 'T' || type == 'A') {
          raw = typePCache[type - 'A'];
-         if (raw == Reflex::Dummy::Type()) {
+         if (!raw) {
             // special macro, not yet set up
             switch (type) {
             case 'Z':
@@ -1117,12 +1117,12 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
          return typeCache['z' - 'a' + 1];
       case '\001':
          raw = typeCache['z' - 'a' + 2];
-         if (raw == Reflex::Dummy::Type()) {
+         if (!raw) {
             return typeCache['z' - 'a' + 2] = Reflex::Type::ByName("blockBreakContinueGoto$");
          }
       case G__DEFAULT_FUNCCALL:
          raw = typeCache['z' - 'a' + 3];
-         if (raw == Reflex::Dummy::Type()) {
+         if (!raw) {
             return typeCache['z' - 'a' + 3] = Reflex::Type::ByName("defaultFunccall$");
          }
 #ifndef G__OLDIMPLEMENTATION2191
