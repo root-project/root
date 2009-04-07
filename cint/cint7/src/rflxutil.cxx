@@ -1067,15 +1067,25 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
       }      
    } else if (type >= 'A' && type <= 'Z') {
       if (type=='E') {
-         if (isconst & G__CONSTVAR) {
-            raw = typeCPCache[type - 'A'];            
-            if (!raw) {
-               raw = typeCPCache['E' - 'A'] = Reflex::PointerBuilder(Reflex::Type(Reflex::Type::ByName("FILE"), Reflex::CONST, Reflex::Type::APPEND));
+         if (createpointer) {
+            if (isconst & G__CONSTVAR) {
+               raw = typeCPCache['E' - 'A'];            
+               if (!raw) {
+                  raw = typeCPCache['E' - 'A'] = Reflex::PointerBuilder(Reflex::Type(Reflex::Type::ByName("FILE"), Reflex::CONST, Reflex::Type::APPEND));
+               }
+            } else {
+               raw = typePCache['E' - 'A'];
+               if (!raw) {
+                  raw = typePCache['E' - 'A'] = Reflex::PointerBuilder(Reflex::Type::ByName("FILE"));
+               }
             }
          } else {
-            raw = typePCache[type - 'A'];
+            raw = typeCache['E' - 'A'];
             if (!raw) {
-               raw = typePCache['E' - 'A'] = Reflex::PointerBuilder(Reflex::Type::ByName("FILE"));
+               raw = typeCache['E' - 'A'] = Reflex::Type::ByName("FILE");
+            }           
+            if (isconst & G__CONSTVAR) {
+               raw = Reflex::Type(raw, Reflex::CONST, Reflex::Type::APPEND);
             }
          }
          return raw;
