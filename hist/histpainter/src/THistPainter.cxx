@@ -7947,7 +7947,11 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
          if (e < 1) {
             sprintf(ef,"%s.1f","%");
          } else {
-            sprintf(ef,"%sg","%");
+            if (ie >= 0) {
+               sprintf(ef,"%s.%de","%",ie-id-1);
+            } else {
+               sprintf(ef,"%s.%dE","%",iE-id-1);
+            }
          }
       } else {
          if (ie >= 0) {
