@@ -477,12 +477,12 @@ int Cint::G__MethodInfo::Next()
       fIndex = -1;
       fFunc = ::Reflex::Member();
    }
-   if (!fFunc && !fScope && (fUsingIndex < G__globalusingnamespace.basen)) {
+   if (!fFunc && !fScope && (fUsingIndex < (long) G__globalusingnamespace.vec.size())) {
       ++fUsingIndex;
-      G__incsetup_memfunc(G__globalusingnamespace.basetagnum[fUsingIndex]);
+      G__incsetup_memfunc(G__globalusingnamespace.vec[fUsingIndex].basetagnum);
       delete fClassInfo;
       fClassInfo = 0;
-      fScope = G__Dict::GetDict().GetScope(G__globalusingnamespace.basetagnum[fUsingIndex]);
+      fScope = G__Dict::GetDict().GetScope(G__globalusingnamespace.vec[fUsingIndex].basetagnum);
       return Next();
    }
    return (bool) fFunc;

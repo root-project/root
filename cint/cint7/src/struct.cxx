@@ -197,19 +197,8 @@ int Cint::Internal::G__using_namespace()
          /* using directive in other namespace or class/struct */
          envtagnum = G__get_envtagnum();
          if (envtagnum) {
-            int* pbasen;
             struct G__inheritance *base = G__struct.baseclass[G__get_tagnum(envtagnum)];
-            pbasen = &base->basen;
-            if (*pbasen < G__MAXBASE) {
-               base->basetagnum[*pbasen] = G__get_tagnum(basetagnum);
-               base->baseoffset[*pbasen] = 0;
-               base->baseaccess[*pbasen] = G__PUBLIC;
-               base->property[*pbasen] = 0;
-               ++(*pbasen);
-            }
-            else {
-               G__genericerror("Limitation: too many using directives");
-            }
+            base->vec.push_back(G__inheritance::G__Entry(basetagnum));
          }
       }
       else {
@@ -219,28 +208,19 @@ int Cint::Internal::G__using_namespace()
          */
          /* first check whether we already have this directive in
          memory */
-         int j;
+         size_t j;
          int found;
          found = 0;
-         for (j = 0; j < G__globalusingnamespace.basen; ++j) {
+         for (j = 0; j < G__globalusingnamespace.vec.size(); ++j) {
             struct G__inheritance *base = &G__globalusingnamespace;
-            if (base->basetagnum[j] == G__get_tagnum(basetagnum)) {
+            if (base->vec[j].basetagnum == G__get_tagnum(basetagnum)) {
                found = 1;
                break;
             }
          }
          if (!found) {
-            if (G__globalusingnamespace.basen < G__MAXBASE) {
-               struct G__inheritance *base = &G__globalusingnamespace;
-               int* pbasen = &base->basen;
-               base->basetagnum[*pbasen] = G__get_tagnum(basetagnum);
-               base->baseoffset[*pbasen] = 0;
-               base->baseaccess[*pbasen] = G__PUBLIC;
-               ++(*pbasen);
-            }
-            else {
-               G__genericerror("Limitation: too many using directives in global scope");
-            }
+            struct G__inheritance *base = &G__globalusingnamespace;
+            base->vec.push_back(G__inheritance::G__Entry(G__get_tagnum(basetagnum)));
          }
          result = 1;
       }
@@ -669,7 +649,7 @@ void Cint::Internal::G__define_struct(char type)
    int store_access;
    G__StrBuf basename_sb(G__LONGLINE);
    char* basename = basename_sb;
-   int* pbasen;
+   int basen;
    struct G__inheritance* baseclass;
    int baseaccess;
    int newdecl;
@@ -1053,27 +1033,26 @@ void Cint::Internal::G__define_struct(char type)
          /* copy pointer for readability */
          /* member = G__struct.memvar[lstore_tagnum]; */
          baseclass = G__struct.baseclass[G__get_tagnum(lstore_tagnum)];
-         pbasen = &baseclass->basen;
+         basen = baseclass->vec.size();
          // Enter parsed information into base class information table.
-         baseclass->property[*pbasen] = G__ISDIRECTINHERIT + isvirtualbase;
          // Note: We are requiring the base class to exist here, we get an error message if it does not.
-         baseclass->basetagnum[*pbasen] = G__defined_tagname(basename, 0);
+         // And set the base class access (private|protected|public).
+         baseclass->vec.push_back(G__inheritance::G__Entry(G__defined_tagname(basename, 0), 0, baseaccess,
+                                                           G__ISDIRECTINHERIT + isvirtualbase));
          // Calculate the base class offset.
          long current_size = G__struct.size[G__get_tagnum(lstore_tagnum)];
          // or? ((::Reflex::Type) lstore_tagnum).SizeOf()
          if (
             (current_size == 1) &&
             (!lstore_tagnum.MemberSize() == 0) &&
-            (G__struct.baseclass[G__get_tagnum(lstore_tagnum)]->basen == 0)
+            (G__struct.baseclass[G__get_tagnum(lstore_tagnum)]->vec.empty())
          ) {
-            baseclass->baseoffset[*pbasen] = 0;
+            baseclass->vec[basen].baseoffset = 0;
          }
          else {
             // FIXME: ((::Reflex::Type)lstore_tagnum).SizeOf();
-            baseclass->baseoffset[*pbasen] = (char*) current_size;
+            baseclass->vec[basen].baseoffset = (char*) current_size;
          }
-         // Set the base class access (private|protected|public).
-         baseclass->baseaccess[*pbasen] = baseaccess;
          {
             // -- Set the base class information in the Reflex data structures.
             if (lstore_tagnum.IsClass()) {
@@ -1110,9 +1089,9 @@ void Cint::Internal::G__define_struct(char type)
          G__def_struct_member = lstore_def_struct_member;
          /* virtual base class for interpretation to be implemented and
           * 2 limitation messages above should be deleted. */
-         if (1 == G__struct.size[baseclass->basetagnum[*pbasen]]
-               && 0 == G__Dict::GetDict().GetScope(baseclass->basetagnum[*pbasen]).DataMemberSize()
-               && 0 == G__struct.baseclass[baseclass->basetagnum[*pbasen]]->basen
+         if (1 == G__struct.size[baseclass->vec[basen].basetagnum]
+               && 0 == G__Dict::GetDict().GetScope(baseclass->vec[basen].basetagnum).DataMemberSize()
+               && G__struct.baseclass[baseclass->vec[basen].basetagnum]->vec.empty()
             ) {
             if (isvirtualbase)
                G__struct.size[G__get_tagnum(G__tagnum)] += G__DOUBLEALLOC;
@@ -1122,16 +1101,16 @@ void Cint::Internal::G__define_struct(char type)
          else {
             if (isvirtualbase)
                G__struct.size[G__get_tagnum(G__tagnum)]
-               += (G__struct.size[baseclass->basetagnum[*pbasen]] + G__DOUBLEALLOC);
+               += (G__struct.size[baseclass->vec[basen].basetagnum] + G__DOUBLEALLOC);
             else
                G__struct.size[G__get_tagnum(G__tagnum)]
-               += G__struct.size[baseclass->basetagnum[*pbasen]];
+               += G__struct.size[baseclass->vec[basen].basetagnum];
          }
 
          /*
           * inherit base class info, variable member, function member
           */
-         G__inheritclass(G__get_tagnum(G__tagnum), baseclass->basetagnum[*pbasen], baseaccess);
+         G__inheritclass(G__get_tagnum(G__tagnum), baseclass->vec[basen].basetagnum, baseaccess);
 
          /* ++(*pbasen); */
       }
@@ -1158,21 +1137,21 @@ void Cint::Internal::G__define_struct(char type)
    // Anyway we already checked once.
    if (newdecl) {
       int purecount = 0;
-      int lastdirect = 0;
-      int ivb;
-      for (ivb = 0; ivb < baseclass->basen; ++ivb) {
+      size_t lastdirect = 0;
+      size_t ivb;
+      for (ivb = 0; ivb < baseclass->vec.size(); ++ivb) {
          ::Reflex::Scope itab;
 
-         if (baseclass->property[ivb] & G__ISDIRECTINHERIT) {
+         if (baseclass->vec[ivb].property & G__ISDIRECTINHERIT) {
             lastdirect = ivb;
          }
 
 #ifndef G__OLDIMPLEMENTATION2037
          // Insure the loading of the memfunc.
-         G__incsetup_memfunc(baseclass->basetagnum[ivb]);
+         G__incsetup_memfunc(baseclass->vec[ivb].basetagnum);
 #endif
 
-         itab = G__Dict::GetDict().GetScope(baseclass->basetagnum[ivb]);
+         itab = G__Dict::GetDict().GetScope(baseclass->vec[ivb].basetagnum);
          for (unsigned int ifunc = 0; ifunc < itab.FunctionMemberSize(); ++ifunc) {
 
             if (itab.FunctionMemberAt(ifunc).IsAbstract()) {
@@ -1180,13 +1159,13 @@ void Cint::Internal::G__define_struct(char type)
                   If we get this class through virtual derivation, search
                   all classes; otherwise, search only those derived
                   from it. */
-               int firstb, lastb;
-               int b2;
+               size_t firstb, lastb;
+               size_t b2;
                int found_flag = 0;
 
-               if (baseclass->property[ivb] & G__ISVIRTUALBASE) {
+               if (baseclass->vec[ivb].property & G__ISVIRTUALBASE) {
                   firstb = 0;
-                  lastb = baseclass->basen;
+                  lastb = baseclass->vec.size();
                }
                else {
                   firstb = lastdirect;
@@ -1200,8 +1179,8 @@ void Cint::Internal::G__define_struct(char type)
                   if (b2 == ivb)
                      continue;
 
-                  basetag = baseclass->basetagnum[b2];
-                  if (G__isanybase(baseclass->basetagnum[ivb], basetag
+                  basetag = baseclass->vec[b2].basetagnum;
+                  if (G__isanybase(baseclass->vec[ivb].basetagnum, basetag
                                    , (long)G__STATICRESOLUTION) < 0)
                      continue;
 
@@ -1351,7 +1330,7 @@ void Cint::Internal::G__define_struct(char type)
             //
             if ( // We have only one data member and no base classes.
                (G__tagnum.DataMemberSize() == 1) && // We have only one data member, and
-               !G__struct.baseclass[G__get_tagnum(G__tagnum)]->basen // no base classes.
+               G__struct.baseclass[G__get_tagnum(G__tagnum)]->vec.empty() // no base classes.
             ) {
                // TODO: this is still questionable, inherit0.c
                ::Reflex::Type var_type = G__tagnum.DataMemberAt(0).TypeOf(); // Get our only data member.
@@ -1466,8 +1445,7 @@ void Cint::Internal::G__create_global_namespace()
    G__struct.size[i] = 0;
    G__struct.type[i] = 'n';
 
-   G__struct.baseclass[i] = (struct G__inheritance *)malloc(sizeof(struct G__inheritance));
-   memset(G__struct.baseclass[i], 0, sizeof(struct G__inheritance));
+   G__struct.baseclass[i] = new G__inheritance();
    G__struct.virtual_offset[i] = G__PVOID;
    G__struct.isabstract[i] = 0;
 
@@ -1533,8 +1511,7 @@ void Cint::Internal::G__create_bytecode_arena()
    G__struct.hash[1] = strlen(G__struct.name[1]);
    G__struct.size[1] = 0;
    G__struct.type[1] = 'c';
-   G__struct.baseclass[1] = (G__inheritance*) malloc(sizeof(G__inheritance));
-   memset(G__struct.baseclass[1], 0, sizeof(G__inheritance));
+   G__struct.baseclass[1] = new G__inheritance();
    G__struct.virtual_offset[1] = G__PVOID;
    G__struct.isabstract[1] = 0;
    G__struct.globalcomp[1] = G__NOLINK;
@@ -2381,8 +2358,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
       G__struct.hash[i] = len;
       G__struct.size[i] = 0;
       G__struct.type[i] = type; // 'c' class, 'e' enum, 'n', namespace, 's' struct, 'u' union
-      G__struct.baseclass[i] = (struct G__inheritance*) malloc(sizeof(struct G__inheritance));
-      G__struct.baseclass[i]->basen = 0;
+      G__struct.baseclass[i] = new G__inheritance();
       G__struct.virtual_offset[i] = G__PVOID; // -1 means no virtual function
       G__struct.isabstract[i] = 0;
       G__struct.globalcomp[i] = G__default_link ? G__globalcomp : G__NOLINK;

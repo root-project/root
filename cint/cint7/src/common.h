@@ -34,6 +34,8 @@ namespace Reflex {
 } // namespace Reflex
 #endif
 
+#include "vector"
+
 /**************************************************************************
 * Note, Warning message display flag
 **************************************************************************/
@@ -1044,15 +1046,15 @@ public: // -- Member Functions.
 *
 **************************************************************************/
 struct G__inheritance {
-  int basen;
-  short basetagnum[G__MAXBASE];
-#ifdef G__VIRTUALBASE
-  char* baseoffset[G__MAXBASE];
-#else
-  char* baseoffset[G__MAXBASE];
-#endif
-  G__SIGNEDCHAR_T baseaccess[G__MAXBASE];
-  char property[G__MAXBASE];
+   struct G__Entry {
+      G__Entry(short tag = 0, char* off = 0, G__SIGNEDCHAR_T acc = G__PUBLIC, char prop = 0):
+         basetagnum(tag), baseoffset(off), baseaccess(acc), property(prop) {}
+      short basetagnum;
+      char* baseoffset;
+      G__SIGNEDCHAR_T baseaccess;
+      char property;
+   };
+   std::vector<G__Entry> vec;
 };
 
 /**************************************************************************

@@ -1869,7 +1869,7 @@ static int G__matchtemplatefunc(G__Definetemplatefunc* deftmpfunc, G__param* lib
             return 0;
          }
          // template argument  (T<E> a)
-         basen = G__struct.baseclass[tagnum]->basen;
+         basen = G__struct.baseclass[tagnum]->vec.size();
          bn = -1;
          basetagnum = tagnum;
          bmatch = 0;
@@ -1877,7 +1877,7 @@ static int G__matchtemplatefunc(G__Definetemplatefunc* deftmpfunc, G__param* lib
             int nest = 0;
             cnt = 0;
             if (bn >= 0) {
-               basetagnum = G__struct.baseclass[tagnum]->basetagnum[bn];
+               basetagnum = G__struct.baseclass[tagnum]->vec[bn].basetagnum;
             }
             ++bn;
             bmatch = 1;
@@ -3503,7 +3503,7 @@ void Cint::Internal::G__freetemplatefunc(G__Definetemplatefunc* deftmpfunc)
    //   G__inheritance* baseclass = 0;
    //   ::Reflex::Scope env_tagnum = G__get_envtagnum();
    //   int int_env_tagnum = G__get_tagnum(env_tagnum);
-   //   if (env_tagnum && !env_tagnum.IsTopScope() && G__struct.baseclass[int_env_tagnum]->basen) {
+   //   if (env_tagnum && !env_tagnum.IsTopScope() && G__struct.baseclass[int_env_tagnum]->vec.size()) {
    //      baseclass = G__struct.baseclass[int_env_tagnum];
    //   }
    //   //
@@ -3579,8 +3579,8 @@ void Cint::Internal::G__freetemplatefunc(G__Definetemplatefunc* deftmpfunc)
    //      if (baseclass) {
    //         // look for using directive scope resolution
    //         bool found = false;
-   //         for (temp = 0; temp < baseclass->basen; ++temp) {
-   //            if (baseclass->basetagnum[temp] == class_tmpl->parent_tagnum) {
+   //         for (temp = 0; temp < baseclass->vec.size(); ++temp) {
+   //            if (baseclass->vec[temp].basetagnum == class_tmpl->parent_tagnum) {
    //               found = true;
    //               break;
    //            }
@@ -3600,8 +3600,8 @@ void Cint::Internal::G__freetemplatefunc(G__Definetemplatefunc* deftmpfunc)
    //               break;
    //            }
    //            if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]) {
-   //               for (temp = 0; temp < G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->basen; ++temp) {
-   //                  if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->basetagnum[temp] == class_tmpl->parent_tagnum) {
+   //               for (temp = 0; temp < G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->vec.size(); ++temp) {
+   //                  if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->vec[temp].basetagnum == class_tmpl->parent_tagnum) {
    //                     found = true;
    //                     break;
    //                  }
@@ -3940,7 +3940,7 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    G__inheritance* baseclass = 0;
    ::Reflex::Scope env_tagnum = G__get_envtagnum();
    int int_env_tagnum = G__get_tagnum(env_tagnum);
-   if (env_tagnum && !env_tagnum.IsTopScope() && G__struct.baseclass[int_env_tagnum]->basen) {
+   if (env_tagnum && !env_tagnum.IsTopScope() && !G__struct.baseclass[int_env_tagnum]->vec.empty()) {
       baseclass = G__struct.baseclass[int_env_tagnum];
    }
    //
@@ -4032,8 +4032,8 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
       if (baseclass) {
          // look for using directive scope resolution
          bool found = false;
-         for (temp = 0; temp < baseclass->basen; ++temp) {
-            if (baseclass->basetagnum[temp] == class_tmpl->parent_tagnum) {
+         for (size_t temp1 = 0; temp1 < baseclass->vec.size(); ++temp1) {
+            if (baseclass->vec[temp1].basetagnum == class_tmpl->parent_tagnum) {
                found = true;
                break;
             }
@@ -4053,8 +4053,8 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
                break;
             }
             if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]) {
-               for (temp = 0; temp < G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->basen; ++temp) {
-                  if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->basetagnum[temp] == class_tmpl->parent_tagnum) {
+               for (size_t temp1 = 0; temp1 < G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->vec.size(); ++temp1) {
+                  if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->vec[temp1].basetagnum == class_tmpl->parent_tagnum) {
                      found = true;
                      break;
                   }
@@ -4071,8 +4071,8 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
       // look in global scope (handle using declaration)
       {
          bool found = false;
-         for (temp = 0; temp < G__globalusingnamespace.basen; ++temp) {
-            if (G__globalusingnamespace.basetagnum[temp] == class_tmpl->parent_tagnum) {
+         for (size_t temp1 = 0; temp1 < G__globalusingnamespace.vec.size(); ++temp1) {
+            if (G__globalusingnamespace.vec[temp1].basetagnum == class_tmpl->parent_tagnum) {
                found = true;
                break;
             }
@@ -4884,7 +4884,7 @@ int Cint::Internal::G__templatefunc(G__value* result, const char* funcname, G__p
    ::Reflex::Scope env_tagnum = G__get_envtagnum();
    ::Reflex::Scope store_friendtagnum = G__friendtagnum;
    G__inheritance* baseclass = 0;
-   if (env_tagnum && !env_tagnum.IsTopScope() && G__struct.baseclass[G__get_tagnum(env_tagnum)]->basen) {
+   if (env_tagnum && !env_tagnum.IsTopScope() && !G__struct.baseclass[G__get_tagnum(env_tagnum)]->vec.empty()) {
       baseclass = G__struct.baseclass[G__get_tagnum(env_tagnum)];
    }
    pexplicitarg = (char*) strchr(funcname, '<');
@@ -4921,14 +4921,14 @@ int Cint::Internal::G__templatefunc(G__value* result, const char* funcname, G__p
             (env_tagnum != G__Dict::GetDict().GetScope(deftmpfunc->parent_tagnum))
          ) {
             if (baseclass) {
-               for (int temp = 0; temp < baseclass->basen; ++temp) {
-                  if (baseclass->basetagnum[temp] == deftmpfunc->parent_tagnum) {
+               for (size_t temp = 0; temp < baseclass->vec.size(); ++temp) {
+                  if (baseclass->vec[temp].basetagnum == deftmpfunc->parent_tagnum) {
                      goto match_found;
                   }
                }
                // look in global scope (handle for using declaration info
-               for (int temp = 0; temp < G__globalusingnamespace.basen; ++temp) {
-                  if (G__globalusingnamespace.basetagnum[temp] == deftmpfunc->parent_tagnum) {
+               for (size_t temp = 0; temp < G__globalusingnamespace.vec.size(); ++temp) {
+                  if (G__globalusingnamespace.vec[temp].basetagnum == deftmpfunc->parent_tagnum) {
                      goto match_found;
                   }
                }
@@ -5012,7 +5012,7 @@ G__funclist* Cint::Internal::G__add_templatefunc(const char* funcnamein, G__para
    if (env_tagnum != -1) {
       baseclass = G__struct.baseclass[env_tagnum];
    }
-   if (!baseclass->basen) {
+   if (baseclass->vec.empty()) {
       baseclass = 0;
    }
    //
@@ -5088,8 +5088,8 @@ G__funclist* Cint::Internal::G__add_templatefunc(const char* funcnamein, G__para
             if (!baseclass) {
                continue;
             }
-            for (int n = 0; n < baseclass->basen; ++n) {
-               if (baseclass->basetagnum[n] == f->parent_tagnum) {
+            for (size_t n = 0; n < baseclass->vec.size(); ++n) {
+               if (baseclass->vec[n].basetagnum == f->parent_tagnum) {
                   goto match_found;
                }
             }
@@ -5193,7 +5193,7 @@ extern "C" G__Definedtemplateclass* G__defined_templateclass(const char* name)
    if (env_tagnum && !env_tagnum.IsTopScope()) {
       int tagnum = G__get_tagnum(env_tagnum);
       assert(tagnum != -1);
-      if (G__struct.baseclass[tagnum]->basen) {
+      if (!G__struct.baseclass[tagnum]->vec.empty()) {
          baseclass = G__struct.baseclass[tagnum];
       }
    }
@@ -5239,8 +5239,8 @@ extern "C" G__Definedtemplateclass* G__defined_templateclass(const char* name)
             ::Reflex::Scope env_parent_tagnum = env_tagnum;
             if (baseclass && !candidate) {
                // look for using directive scope resolution
-               for (temp = 0; temp < baseclass->basen; ++temp) {
-                  if (baseclass->basetagnum[temp] == deftmplt->parent_tagnum) {
+               for (size_t temp1 = 0; temp1 < baseclass->vec.size(); ++temp1) {
+                  if (baseclass->vec[temp1].basetagnum == deftmplt->parent_tagnum) {
                      candidate = deftmplt;
                   }
                }
@@ -5255,8 +5255,8 @@ extern "C" G__Definedtemplateclass* G__defined_templateclass(const char* name)
                int parent_tagnum = G__get_tagnum(env_parent_tagnum);
                if (parent_tagnum != -1) {
                   if (G__struct.baseclass[parent_tagnum]) {
-                     for (temp = 0; temp < G__struct.baseclass[parent_tagnum]->basen; ++temp) {
-                        if (G__struct.baseclass[parent_tagnum]->basetagnum[temp] == deftmplt->parent_tagnum) {
+                     for (size_t temp1 = 0; temp1 < G__struct.baseclass[parent_tagnum]->vec.size(); ++temp1) {
+                        if (G__struct.baseclass[parent_tagnum]->vec[temp1].basetagnum == deftmplt->parent_tagnum) {
                            candidate = deftmplt;
                            break;
                         }
@@ -5269,8 +5269,8 @@ extern "C" G__Definedtemplateclass* G__defined_templateclass(const char* name)
             }
             // look in global scope (handle for using declaration info
             if (!candidate) {
-               for (temp = 0; temp < G__globalusingnamespace.basen; ++temp) {
-                  if (G__globalusingnamespace.basetagnum[temp] == deftmplt->parent_tagnum) {
+               for (size_t temp1 = 0; temp1 < G__globalusingnamespace.vec.size(); ++temp1) {
+                  if (G__globalusingnamespace.vec[temp1].basetagnum == deftmplt->parent_tagnum) {
                      candidate = deftmplt;
                   }
                }
@@ -5300,7 +5300,7 @@ G__Definetemplatefunc* Cint::Internal::G__defined_templatefunc(const char* name)
    }
    // get a handle for using declaration info
    baseclass = 0;
-   if (!env_tagnum.IsTopScope() && G__struct.baseclass[G__get_tagnum(env_tagnum)]->basen) {
+   if (!env_tagnum.IsTopScope() && !G__struct.baseclass[G__get_tagnum(env_tagnum)]->vec.empty()) {
       baseclass = G__struct.baseclass[G__get_tagnum(env_tagnum)];
    }
    // scope operator resolution, A::templatename<int> ...
@@ -5355,8 +5355,8 @@ G__Definetemplatefunc* Cint::Internal::G__defined_templatefunc(const char* name)
             ::Reflex::Scope env_parent_tagnum = env_tagnum;
             if (baseclass) {
                // look for using directive scope resolution
-               for (temp = 0; temp < baseclass->basen; ++temp) {
-                  if (baseclass->basetagnum[temp] == deftmplt->parent_tagnum) {
+               for (size_t temp2 = 0; temp2 < baseclass->vec.size(); ++temp2) {
+                  if (baseclass->vec[temp2].basetagnum == deftmplt->parent_tagnum) {
                      return deftmplt;
                   }
                }
@@ -5374,16 +5374,17 @@ G__Definetemplatefunc* Cint::Internal::G__defined_templatefunc(const char* name)
                   return deftmplt;
                }
                if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]) {
-                  for (temp = 0; temp < G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->basen; ++temp) {
-                     if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->basetagnum[temp] == deftmplt->parent_tagnum) {
+                  size_t nbases = G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->vec.size();
+                  for (size_t temp2 = 0; temp2 < nbases; ++temp2) {
+                     if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->vec[temp2].basetagnum == deftmplt->parent_tagnum) {
                         return deftmplt;
                      }
                   }
                }
             }
             // look in global scope (handle for using declaration info
-            for (temp = 0; temp < G__globalusingnamespace.basen; ++temp) {
-               if (G__globalusingnamespace.basetagnum[temp] == deftmplt->parent_tagnum) {
+            for (size_t temp1 = 0; temp1 < G__globalusingnamespace.vec.size(); ++temp1) {
+               if (G__globalusingnamespace.vec[temp1].basetagnum == deftmplt->parent_tagnum) {
                   return deftmplt;
                }
             }

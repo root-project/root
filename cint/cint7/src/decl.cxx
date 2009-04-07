@@ -658,7 +658,7 @@ static int G__initstruct(char* new_name)
       return c;
    }
    // We must be an aggregate type, enforce that.
-   if (G__struct.baseclass[G__get_tagnum(member.TypeOf().RawType())]->basen) {
+   if (!G__struct.baseclass[G__get_tagnum(member.TypeOf().RawType())]->vec.empty()) {
       // -- We have base classes, i.e., we are not an aggregate.
       // FIXME: This test should be stronger, the accessibility
       //        of the data members should be tested for example.

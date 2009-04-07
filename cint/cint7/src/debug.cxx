@@ -160,10 +160,10 @@ int Cint::Internal::G__display_proto_pretty(FILE *fp,const char *func, char frie
    }
 
    if(ifunc.IsClass()) {
-      int i1;
+      size_t i1;
       struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
-      for(i1=0;i1<baseclass->basen;i1++) {
-         ifunc = G__Dict::GetDict().GetScope(baseclass->basetagnum[i1]);
+      for(i1=0;i1<baseclass->vec.size();i1++) {
+         ifunc = G__Dict::GetDict().GetScope(baseclass->vec[i1].basetagnum);
          if(i) {
             if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname.c_str(),ifunc,friendlyStyle)) 
                return(1);

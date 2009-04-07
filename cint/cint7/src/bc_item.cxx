@@ -445,8 +445,8 @@ G__value G__blockscope_expr::searchobject(const string& name, G__object_id* id)
       }
 
       // base class or using namespace
-      for (int ib = 0;ib < G__struct.baseclass[G__get_tagnum(m_blockscope->m_scope)]->basen;ib++) {
-         Reflex::Scope btagnum = G__Dict::GetDict().GetScope(G__struct.baseclass[G__get_tagnum(m_blockscope->m_scope)]->basetagnum[ib]);
+      for (int ib = 0;ib < G__struct.baseclass[G__get_tagnum(m_blockscope->m_scope)]->vec.size();ib++) {
+         Reflex::Scope btagnum = G__Dict::GetDict().GetScope(G__struct.baseclass[G__get_tagnum(m_blockscope->m_scope)]->vec[ib].basetagnum);
          for (Reflex::Member_Iterator ig15 = btagnum.DataMember_Begin(); ig15 != btagnum.DataMember_End(); ++ig15) {
             if (ig15->Name() == name) {
                var = *ig15;

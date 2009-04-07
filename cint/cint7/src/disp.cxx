@@ -724,7 +724,7 @@ int Cint::Internal::G__display_string(FILE *fout)
 //______________________________________________________________________________
 static int G__display_classinheritance(FILE *fout, int tagnum, const char *space)
 {
-   int i;
+   size_t i;
    struct G__inheritance *baseclass;
    char addspace[50];
    G__StrBuf temp_sb(G__ONELINE);
@@ -738,30 +738,30 @@ static int G__display_classinheritance(FILE *fout, int tagnum, const char *space
 
    sprintf(addspace, "%s  ", space);
 
-   for (i = 0;i < baseclass->basen;i++) {
-      if (baseclass->property[i]&G__ISDIRECTINHERIT) {
-         sprintf(msg, "%s0x%-8lx ", space , (unsigned long)baseclass->baseoffset[i]);
+   for (i = 0;i < baseclass->vec.size();i++) {
+      if (baseclass->vec[i].property&G__ISDIRECTINHERIT) {
+         sprintf(msg, "%s0x%-8lx ", space , (unsigned long)baseclass->vec[i].baseoffset);
          if (G__more(fout, msg)) return(1);
-         if (baseclass->property[i]&G__ISVIRTUALBASE) {
+         if (baseclass->vec[i].property&G__ISVIRTUALBASE) {
             sprintf(msg, "virtual ");
             if (G__more(fout, msg)) return(1);
          }
-         if (baseclass->property[i]&G__ISINDIRECTVIRTUALBASE) {
+         if (baseclass->vec[i].property&G__ISINDIRECTVIRTUALBASE) {
             sprintf(msg, "(virtual) ");
             if (G__more(fout, msg)) return(1);
          }
          sprintf(msg, "%s %s"
-                 , G__access2string(baseclass->baseaccess[i])
-                 , G__fulltagname(baseclass->basetagnum[i], 0));
+                 , G__access2string(baseclass->vec[i].baseaccess)
+                 , G__fulltagname(baseclass->vec[i].basetagnum, 0));
          if (G__more(fout, msg)) return(1);
          temp[0] = '\0';
-         G__getcomment(temp, baseclass->basetagnum[i]);
+         G__getcomment(temp, baseclass->vec[i].basetagnum);
          if (temp[0]) {
             sprintf(msg, " //%s", temp);
             if (G__more(fout, msg)) return(1);
          }
          if (G__more(fout, "\n")) return(1);
-         if (G__display_classinheritance(fout, baseclass->basetagnum[i], addspace))
+         if (G__display_classinheritance(fout, baseclass->vec[i].basetagnum, addspace))
             return(1);
       }
    }
@@ -772,14 +772,14 @@ static int G__display_classinheritance(FILE *fout, int tagnum, const char *space
 static int G__display_membervariable(FILE *fout, int tagnum, int base)
 {
    struct G__inheritance *baseclass;
-   int i;
+   size_t i;
    baseclass = G__struct.baseclass[tagnum];
 
    if (base) {
-      for (i = 0;i < baseclass->basen;i++) {
+      for (i = 0;i < baseclass->vec.size();i++) {
          if (!G__browsing) return(0);
-         if (baseclass->property[i]&G__ISDIRECTINHERIT) {
-            if (G__display_membervariable(fout, baseclass->basetagnum[i], base))
+         if (baseclass->vec[i].property&G__ISDIRECTINHERIT) {
+            if (G__display_membervariable(fout, baseclass->vec[i].basetagnum, base))
                return(1);
          }
       }
@@ -802,15 +802,15 @@ static int G__display_memberfunction(FILE *fout, int tagnum, int access, int bas
    ::Reflex::Scope store_ifunc;
    int store_exec_memberfunc;
    struct G__inheritance *baseclass;
-   int i;
+   size_t i;
    int tmp;
    baseclass = G__struct.baseclass[tagnum];
 
    if (base) {
-      for (i = 0;i < baseclass->basen;i++) {
+      for (i = 0;i < baseclass->vec.size();i++) {
          if (!G__browsing) return(0);
-         if (baseclass->property[i]&G__ISDIRECTINHERIT) {
-            if (G__display_memberfunction(fout, baseclass->basetagnum[i]
+         if (baseclass->vec[i].property&G__ISDIRECTINHERIT) {
+            if (G__display_memberfunction(fout, baseclass->vec[i].basetagnum
                                           , access, base)) return(1);
          }
       }
@@ -1459,14 +1459,14 @@ int Cint::Internal::G__objectmonitor(FILE *fout, char *pobject, const ::Reflex::
    char *space = space_sb;
    G__StrBuf msg_sb(G__LONGLINE);
    char *msg = msg_sb;
-   int i;
+   size_t i;
 
    sprintf(space, "%s  ", addspace);
 
    baseclass = G__struct.baseclass[G__get_tagnum(tagnum)];
-   for (i = 0;i < baseclass->basen;i++) {
-      if (baseclass->property[i]&G__ISDIRECTINHERIT) {
-         if (baseclass->property[i]&G__ISVIRTUALBASE) {
+   for (i = 0;i < baseclass->vec.size();i++) {
+      if (baseclass->vec[i].property&G__ISDIRECTINHERIT) {
+         if (baseclass->vec[i].property&G__ISVIRTUALBASE) {
             if (0 > G__getvirtualbaseoffset(pobject, G__get_tagnum(tagnum), baseclass, i)) {
                sprintf(msg, "%s-0x%-7lx virtual ", space
                        , -1*G__getvirtualbaseoffset(pobject, G__get_tagnum(tagnum), baseclass, i));
@@ -1477,7 +1477,7 @@ int Cint::Internal::G__objectmonitor(FILE *fout, char *pobject, const ::Reflex::
             }
             if (G__more(fout, msg)) return(1);
             msg[0] = 0;
-            switch (baseclass->baseaccess[i]) {
+            switch (baseclass->vec[i].baseaccess) {
                case G__PRIVATE:
                   sprintf(msg, "private: ");
                   break;
@@ -1489,20 +1489,20 @@ int Cint::Internal::G__objectmonitor(FILE *fout, char *pobject, const ::Reflex::
                   break;
             }
             if (G__more(fout, msg)) return(1);
-            sprintf(msg, "%s\n", G__fulltagname(baseclass->basetagnum[i], 1));
+            sprintf(msg, "%s\n", G__fulltagname(baseclass->vec[i].basetagnum, 1));
             if (G__more(fout, msg)) return(1);
 #ifdef G__NEVER_BUT_KEEP
             if (G__objectmonitor(fout
-                                 , pobject + (*(long*)(pobject + baseclass->baseoffset[i]))
-                                 , baseclass->basetagnum[i], space))
+                                 , pobject + (*(long*)(pobject + baseclass->vec[i].baseoffset))
+                                 , baseclass->vec[i].basetagnum, space))
                return(1);
 #endif
          }
          else {
-            sprintf(msg, "%s0x%-8lx ", space , (unsigned long)baseclass->baseoffset[i]);
+            sprintf(msg, "%s0x%-8lx ", space , (unsigned long)baseclass->vec[i].baseoffset);
             if (G__more(fout, msg)) return(1);
             msg[0] = 0;
-            switch (baseclass->baseaccess[i]) {
+            switch (baseclass->vec[i].baseaccess) {
                case G__PRIVATE:
                   sprintf(msg, "private: ");
                   break;
@@ -1514,11 +1514,11 @@ int Cint::Internal::G__objectmonitor(FILE *fout, char *pobject, const ::Reflex::
                   break;
             }
             if (G__more(fout, msg)) return(1);
-            sprintf(msg, "%s\n", G__fulltagname(baseclass->basetagnum[i], 1));
+            sprintf(msg, "%s\n", G__fulltagname(baseclass->vec[i].basetagnum, 1));
             if (G__more(fout, msg)) return(1);
             if (G__objectmonitor(fout
-                                 , pobject + (size_t)baseclass->baseoffset[i]
-                                 , G__Dict::GetDict().GetType(baseclass->basetagnum[i]), space))
+                                 , pobject + (size_t)baseclass->vec[i].baseoffset
+                                 , G__Dict::GetDict().GetType(baseclass->vec[i].basetagnum), space))
                return(1);
          }
       }
@@ -2401,7 +2401,8 @@ extern "C" int G__display_class(FILE *fout, const char *in_name, int base, int s
 {
    using namespace ::Cint::Internal;
    int tagnum;
-   int i, j;
+   int i;
+   size_t j;
    struct G__inheritance *baseclass;
    G__StrBuf temp_sb(G__ONELINE);
    char *temp = temp_sb;
@@ -2492,15 +2493,15 @@ extern "C" int G__display_class(FILE *fout, const char *in_name, int base, int s
          if (G__more(fout, msg)) return(1);
          baseclass = G__struct.baseclass[i];
          if (baseclass) {
-            for (j = 0;j < baseclass->basen;j++) {
-               if (baseclass->property[j]&G__ISDIRECTINHERIT) {
-                  if (baseclass->property[j]&G__ISVIRTUALBASE) {
+            for (j = 0;j < baseclass->vec.size();j++) {
+               if (baseclass->vec[j].property&G__ISDIRECTINHERIT) {
+                  if (baseclass->vec[j].property&G__ISVIRTUALBASE) {
                      sprintf(msg, "virtual ");
                      if (G__more(fout, msg)) return(1);
                   }
                   sprintf(msg, "%s%s "
-                          , G__access2string(baseclass->baseaccess[j])
-                          , G__fulltagname(baseclass->basetagnum[j], 0));
+                          , G__access2string(baseclass->vec[j].baseaccess)
+                          , G__fulltagname(baseclass->vec[j].basetagnum, 0));
                   if (G__more(fout, msg)) return(1);
                }
             }

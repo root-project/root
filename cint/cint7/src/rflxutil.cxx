@@ -2127,9 +2127,9 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
       !m // not previous declared
    ) {
       struct G__inheritance* baseclass = G__struct.baseclass[G__get_tagnum(G__tagdefining)];
-      for (int basen = 0; basen < baseclass->basen; ++basen) {
-         G__incsetup_memfunc(baseclass->basetagnum[basen]);
-         ::Reflex::Scope scope(G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]));
+      for (size_t basen = 0; basen < baseclass->vec.size(); ++basen) {
+         G__incsetup_memfunc(baseclass->vec[basen].basetagnum);
+         ::Reflex::Scope scope(G__Dict::GetDict().GetScope(baseclass->vec[basen].basetagnum));
          //fprintf(stderr, "G__BuilderInfo::Build: search base class '%s' for function member '%s' type '%s'\n", scope.Name(Reflex::SCOPED).c_str(), name.c_str(), modftype.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
          ::Reflex::Member base_m = scope.FunctionMemberByNameAndSignature(name, modftype, modifiers_mask);
          //if (base_m) {

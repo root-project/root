@@ -551,7 +551,6 @@ int Cint::Internal::G__init_globals()
    G__cintsysdir[0] = '*';
    G__cintsysdir[1] = '\0';
    G__p_local = 0;
-   G__globalusingnamespace.basen = 0;
    G__cpp_aryconstruct = 0;
    G__cppconstruct = 0;
    G__breakfile[0] = '\0';

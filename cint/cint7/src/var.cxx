@@ -7057,7 +7057,7 @@ void Cint::Internal::G__returnvartype(G__value* presult, const ::Reflex::Member&
    int ilg = 0;
    int in_memfunc = 0;
 #ifdef G__NEWINHERIT
-   int basen;
+   size_t basen;
    int isbase;
    int accesslimit;
    int memfunc_or_friend = 0;
@@ -7177,24 +7177,24 @@ void Cint::Internal::G__returnvartype(G__value* presult, const ::Reflex::Member&
          //--
          // Next base class if searching for class member.
          if (isbase) {
-            while (baseclass && (basen < baseclass->basen)) {
+            while (baseclass && (basen < baseclass->vec.size())) {
                if (memfunc_or_friend) {
                   if (
-                     (baseclass->baseaccess[basen] & G__PUBLIC_PROTECTED) ||
-                     (baseclass->property[basen] & G__ISDIRECTINHERIT)
+                     (baseclass->vec[basen].baseaccess & G__PUBLIC_PROTECTED) ||
+                     (baseclass->vec[basen].property & G__ISDIRECTINHERIT)
                   ) {
                      accesslimit = G__PUBLIC_PROTECTED;
-                     G__incsetup_memvar(baseclass->basetagnum[basen]);
-                     varscope = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
+                     G__incsetup_memvar(baseclass->vec[basen].basetagnum);
+                     varscope = G__Dict::GetDict().GetScope(baseclass->vec[basen].basetagnum);
                      ++basen;
                      goto next_base;
                   }
                }
                else {
-                  if (baseclass->baseaccess[basen] & G__PUBLIC) {
+                  if (baseclass->vec[basen].baseaccess & G__PUBLIC) {
                      accesslimit = G__PUBLIC;
-                     G__incsetup_memvar(baseclass->basetagnum[basen]);
-                     varscope = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
+                     G__incsetup_memvar(baseclass->vec[basen].basetagnum);
+                     varscope = G__Dict::GetDict().GetScope(baseclass->vec[basen].basetagnum);
                      ++basen;
                      goto next_base;
                   }
@@ -7296,7 +7296,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
    int in_memfunc = 0;
    char* scope_struct_offset = 0;
    ::Reflex::Scope scope_tagnum;
-   int basen = 0;
+   size_t basen = 0;
    int isbase = 0;
    int accesslimit = 0;
    int memfunc_or_friend = 0;
@@ -7457,43 +7457,43 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
             isbase = 0;
          }
          if (isbase) {
-            while (baseclass && (basen < baseclass->basen)) {
+            while (baseclass && (basen < baseclass->vec.size())) {
                if (memfunc_or_friend) {
                   if (
-                     (baseclass->baseaccess[basen] & G__PUBLIC_PROTECTED) ||
-                     (baseclass->property[basen] & G__ISDIRECTINHERIT)
+                     (baseclass->vec[basen].baseaccess & G__PUBLIC_PROTECTED) ||
+                     (baseclass->vec[basen].property & G__ISDIRECTINHERIT)
                   ) {
                      accesslimit = G__PUBLIC_PROTECTED;
-                     G__incsetup_memvar(baseclass->basetagnum[basen]);
-                     var = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
+                     G__incsetup_memvar(baseclass->vec[basen].basetagnum);
+                     var = G__Dict::GetDict().GetScope(baseclass->vec[basen].basetagnum);
 #ifdef G__VIRTUALBASE
-                     if (baseclass->property[basen] & G__ISVIRTUALBASE) {
+                     if (baseclass->vec[basen].property & G__ISVIRTUALBASE) {
                         *pG__struct_offset = *pstore_struct_offset + G__getvirtualbaseoffset(*pstore_struct_offset, G__get_tagnum(scope_tagnum), baseclass, basen);
                      }
                      else {
-                        *pG__struct_offset = *pstore_struct_offset + (size_t) baseclass->baseoffset[basen];
+                        *pG__struct_offset = *pstore_struct_offset + (size_t) baseclass->vec[basen].baseoffset;
                      }
 #else // G__VIRTUALBASE
-                     *pG__struct_offset = *pstore_struct_offset + (size_t) baseclass->baseoffset[basen];
+                     *pG__struct_offset = *pstore_struct_offset + (size_t) baseclass->vec[basen].baseoffset;
 #endif // G__VIRTUALBASE
                      ++basen;
                      goto next_base;
                   }
                }
                else {
-                  if (baseclass->baseaccess[basen] & G__PUBLIC) {
+                  if (baseclass->vec[basen].baseaccess & G__PUBLIC) {
                      accesslimit = G__PUBLIC;
-                     G__incsetup_memvar(baseclass->basetagnum[basen]);
-                     var = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
+                     G__incsetup_memvar(baseclass->vec[basen].basetagnum);
+                     var = G__Dict::GetDict().GetScope(baseclass->vec[basen].basetagnum);
 #ifdef G__VIRTUALBASE
-                     if (baseclass->property[basen] & G__ISVIRTUALBASE) {
+                     if (baseclass->vec[basen].property & G__ISVIRTUALBASE) {
                         *pG__struct_offset = *pstore_struct_offset + G__getvirtualbaseoffset(*pstore_struct_offset, G__get_tagnum(scope_tagnum), baseclass, basen);
                      }
                      else {
-                        *pG__struct_offset = *pstore_struct_offset + (size_t) baseclass->baseoffset[basen];
+                        *pG__struct_offset = *pstore_struct_offset + (size_t) baseclass->vec[basen].baseoffset;
                      }
 #else // G__VIRTUALBASE
-                     *pG__struct_offset = *pstore_struct_offset + (size_t) baseclass->baseoffset[basen];
+                     *pG__struct_offset = *pstore_struct_offset + (size_t) baseclass->vec[basen].baseoffset;
 #endif // G__VIRTUALBASE
                      ++basen;
                      goto next_base;

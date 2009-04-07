@@ -43,7 +43,7 @@ void Cint::G__BaseClassInfo::Init(G__ClassInfo &a)
 long Cint::G__BaseClassInfo::Offset()
 {
   if (IsValid()) {
-    return (long) G__struct.baseclass[derivedtagnum]->baseoffset[basep];
+    return (long) G__struct.baseclass[derivedtagnum]->vec[basep].baseoffset;
   }
   else {
     return -1;
@@ -55,13 +55,13 @@ long Cint::G__BaseClassInfo::Property()
 {
   if (IsValid()) {
     long property = G__ClassInfo::Property();
-    if (G__struct.baseclass[derivedtagnum]->property[basep] & G__ISVIRTUALBASE) {
+    if (G__struct.baseclass[derivedtagnum]->vec[basep].property & G__ISVIRTUALBASE) {
       property |= G__BIT_ISVIRTUALBASE;
     }
-    if (G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT) {
+    if (G__struct.baseclass[derivedtagnum]->vec[basep].property&G__ISDIRECTINHERIT) {
       property |= G__BIT_ISDIRECTINHERIT;
     }
-    switch (G__struct.baseclass[derivedtagnum]->baseaccess[basep]) {
+    switch (G__struct.baseclass[derivedtagnum]->vec[basep].baseaccess) {
     case G__PUBLIC:
       property |= G__BIT_ISPUBLIC;
       break;
@@ -88,7 +88,7 @@ int Cint::G__BaseClassInfo::IsValid()
       (0 <= derivedtagnum) &&
       (derivedtagnum < G__struct.alltag) &&
       (0 <= basep) &&
-      (basep < G__struct.baseclass[derivedtagnum]->basen)
+      (basep < (long)G__struct.baseclass[derivedtagnum]->vec.size())
   ) {
     return 1;
   }
@@ -108,13 +108,13 @@ int Cint::G__BaseClassInfo::Next(int onlydirect)
 {
   ++basep;
   if (onlydirect) {
-    while (IsValid() && !(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT)) {
+    while (IsValid() && !(G__struct.baseclass[derivedtagnum]->vec[basep].property&G__ISDIRECTINHERIT)) {
       ++basep;
     }
   }
   // initialize base class so we can get name of baseclass
   if (IsValid()) {
-    G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->basetagnum[basep]);
+    G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->vec[basep].basetagnum);
     return 1;
   }
   return 0;
@@ -130,19 +130,19 @@ int Cint::G__BaseClassInfo::Prev()
 int G__BaseClassInfo::Prev(int onlydirect)
 {
   if (basep == -1) {
-    basep = G__struct.baseclass[derivedtagnum]->basen - 1;
+    basep = G__struct.baseclass[derivedtagnum]->vec.size() - 1;
   }
   else {
     --basep;
   }
   if(onlydirect) {
-    while (IsValid() && !(G__struct.baseclass[derivedtagnum]->property[basep] & G__ISDIRECTINHERIT)) {
+    while (IsValid() && !(G__struct.baseclass[derivedtagnum]->vec[basep].property & G__ISDIRECTINHERIT)) {
       --basep;
     }
   }
   // initialize base class so we can get name of baseclass
   if (IsValid()) {
-     G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->basetagnum[basep]);
+     G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->vec[basep].basetagnum);
      return 1;
   }
   return 0;

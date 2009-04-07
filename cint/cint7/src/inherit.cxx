@@ -26,9 +26,8 @@ using namespace Cint::Internal;
 **************************************************************************/
 void Cint::Internal::G__inheritclass(int to_tagnum, int from_tagnum, char baseaccess)
 {
-   int i;
+   size_t i;
    char *offset;
-   int basen;
    struct G__inheritance *to_base, *from_base;
    int isvirtualbase;
 
@@ -59,7 +58,8 @@ void Cint::Internal::G__inheritclass(int to_tagnum, int from_tagnum, char baseac
 
    if (!to_base || !from_base) return;
 
-   offset = to_base->baseoffset[to_base->basen]; /* just to simplify */
+   size_t idx = to_base->vec.size() - 1;
+   offset = to_base->vec[idx].baseoffset; /* just to simplify */
 
    /****************************************************
    * copy virtual offset
@@ -69,7 +69,7 @@ void Cint::Internal::G__inheritclass(int to_tagnum, int from_tagnum, char baseac
    if (G__PVOID != G__struct.virtual_offset[from_tagnum] &&
          G__PVOID == G__struct.virtual_offset[to_tagnum]) {
 #ifdef G__VIRTUALBASE
-      if (to_base->property[to_base->basen]&G__ISVIRTUALBASE) {
+      if (to_base->vec[idx].property&G__ISVIRTUALBASE) {
          G__struct.virtual_offset[to_tagnum]
          = offset + (size_t)G__struct.virtual_offset[from_tagnum] + G__DOUBLEALLOC;
       }
@@ -90,28 +90,25 @@ void Cint::Internal::G__inheritclass(int to_tagnum, int from_tagnum, char baseac
    /****************************************************
    *  copy grand base class info
    ****************************************************/
-   isvirtualbase = (to_base->property[to_base->basen] & G__ISVIRTUALBASE);
-   if (to_base->property[to_base->basen]&G__ISVIRTUALBASE) {
+   isvirtualbase = (to_base->vec[idx].property & G__ISVIRTUALBASE);
+   if (to_base->vec[idx].property&G__ISVIRTUALBASE) {
       isvirtualbase |= G__ISINDIRECTVIRTUALBASE;
    }
-   basen = to_base->basen;
-   for (i = 0;i < from_base->basen;i++) {
-      ++basen;
-      to_base->basetagnum[basen] = from_base->basetagnum[i];
-      to_base->baseoffset[basen] = offset + (size_t)from_base->baseoffset[i];
-      to_base->property[basen]
-      = ((from_base->property[i] & (G__ISVIRTUALBASE | G__ISINDIRECTVIRTUALBASE))
-         | isvirtualbase);
-      if (from_base->baseaccess[i] >= G__PRIVATE)
-         to_base->baseaccess[basen] = G__GRANDPRIVATE;
+   for (i = 0;i < from_base->vec.size();i++) {
+      G__inheritance::G__Entry entry(from_base->vec[i].basetagnum,
+                                     offset + (size_t)from_base->vec[i].baseoffset,
+                                     G__PUBLIC,
+                                     ((from_base->vec[i].property & (G__ISVIRTUALBASE | G__ISINDIRECTVIRTUALBASE)) | isvirtualbase));
+      if (from_base->vec[i].baseaccess >= G__PRIVATE)
+         entry.baseaccess = G__GRANDPRIVATE;
       else if (G__PRIVATE == baseaccess)
-         to_base->baseaccess[basen] = G__PRIVATE;
-      else if (G__PROTECTED == baseaccess && G__PUBLIC == from_base->baseaccess[i])
-         to_base->baseaccess[basen] = G__PROTECTED;
+         entry.baseaccess = G__PRIVATE;
+      else if (G__PROTECTED == baseaccess && G__PUBLIC == from_base->vec[i].baseaccess)
+         entry.baseaccess = G__PROTECTED;
       else
-         to_base->baseaccess[basen] = from_base->baseaccess[i];
+         entry.baseaccess = from_base->vec[i].baseaccess;
+      to_base->vec.push_back(entry);
    }
-   to_base->basen = basen + 1;
 }
 
 /**************************************************************************
@@ -310,18 +307,18 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam* pbaseparamin)
    if (!store_tagnum) return(0);
    baseclass = G__struct.baseclass[G__get_tagnum(store_tagnum)];
    if (!baseclass) return(0);
-   for (int bi = 0; bi < baseclass->basen; ++bi) {
-      if (baseclass->property[bi]&G__ISDIRECTINHERIT) {
-         G__tagnum = G__Dict::GetDict().GetScope(baseclass->basetagnum[bi]);
+   for (size_t bi = 0; bi < baseclass->vec.size(); ++bi) {
+      if (baseclass->vec[bi].property&G__ISDIRECTINHERIT) {
+         G__tagnum = G__Dict::GetDict().GetScope(baseclass->vec[bi].basetagnum);
 #define G__OLDIMPLEMENTATION1606
 #ifdef G__VIRTUALBASE
-         if (baseclass->property[bi]&G__ISVIRTUALBASE) {
+         if (baseclass->vec[bi].property&G__ISVIRTUALBASE) {
             char *vbaseosaddr;
-            vbaseosaddr = store_struct_offset + (size_t)baseclass->baseoffset[bi];
+            vbaseosaddr = store_struct_offset + (size_t)baseclass->vec[bi].baseoffset;
             G__setvbaseaddrlist(G__get_tagnum(G__tagnum), store_struct_offset
-                                , baseclass->baseoffset[bi]);
+                                , baseclass->vec[bi].baseoffset);
             /*
-            if(baseclass->baseoffset[bi]+G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
+            if(baseclass->vec[bi].baseoffset+G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
               G__store_struct_offset=store_struct_offset+(*(long*)vbaseosaddr);
             }
             */
@@ -338,10 +335,10 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam* pbaseparamin)
             }
          }
          else {
-            G__store_struct_offset = store_struct_offset + (size_t)baseclass->baseoffset[bi];
+            G__store_struct_offset = store_struct_offset + (size_t)baseclass->vec[bi].baseoffset;
          }
 #else
-         G__store_struct_offset = store_struct_offset + baseclass->baseoffset[bi];
+         G__store_struct_offset = store_struct_offset + baseclass->vec[bi].baseoffset;
 #endif
 
          /* search for constructor argument */
@@ -379,10 +376,10 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam* pbaseparamin)
          }
       } /* end of if ISDIRECTINHERIT */
       else { /* !ISDIREDCTINHERIT , bug fix for multiple inheritance */
-         if (0 == (baseclass->property[bi]&G__ISVIRTUALBASE)) {
-            G__tagnum = G__Dict::GetDict().GetScope(baseclass->basetagnum[bi]);
+         if (0 == (baseclass->vec[bi].property&G__ISVIRTUALBASE)) {
+            G__tagnum = G__Dict::GetDict().GetScope(baseclass->vec[bi].basetagnum);
             if (G__PVOID != G__struct.virtual_offset[G__get_tagnum(G__tagnum)]) {
-               G__store_struct_offset = store_struct_offset + (size_t)baseclass->baseoffset[bi];
+               G__store_struct_offset = store_struct_offset + (size_t)baseclass->vec[bi].baseoffset;
                *(long*)(G__store_struct_offset + (size_t)G__struct.virtual_offset[G__get_tagnum(G__tagnum)])
                = G__get_tagnum(store_tagnum);
             }
@@ -652,22 +649,22 @@ int Cint::Internal::G__basedestructor()
     * base classes
     ****************************************************************/
    baseclass = G__struct.baseclass[G__get_tagnum(store_tagnum)];
-   for (i = baseclass->basen - 1;i >= 0;i--) {
-      if (baseclass->property[i]&G__ISDIRECTINHERIT) {
-         G__tagnum = G__Dict::GetDict().GetScope(baseclass->basetagnum[i]);
+   for (i = baseclass->vec.size() - 1;i >= 0;i--) {
+      if (baseclass->vec[i].property&G__ISDIRECTINHERIT) {
+         G__tagnum = G__Dict::GetDict().GetScope(baseclass->vec[i].basetagnum);
 #ifdef G__VIRTUALBASE
-         if (baseclass->property[i]&G__ISVIRTUALBASE) {
+         if (baseclass->vec[i].property&G__ISVIRTUALBASE) {
             long vbaseosaddr;
-            vbaseosaddr = (long)(store_struct_offset + (size_t)baseclass->baseoffset[i]);
+            vbaseosaddr = (long)(store_struct_offset + (size_t)baseclass->vec[i].baseoffset);
             /*
-            if(baseclass->baseoffset[i]+G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
+            if(baseclass->vec[i].baseoffset+G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
               G__store_struct_offset=store_struct_offset+(*(long*)vbaseosaddr);
             }
             */
             if (G__DOUBLEALLOC == (*(long*)vbaseosaddr)) {
                G__store_struct_offset = (char*)(vbaseosaddr + (*(long*)vbaseosaddr));
                if (G__asm_noverflow) {
-                  store_addstros = baseclass->baseoffset[i] + (*(long*)vbaseosaddr);
+                  store_addstros = baseclass->vec[i].baseoffset + (*(long*)vbaseosaddr);
                }
             }
             else {
@@ -675,13 +672,13 @@ int Cint::Internal::G__basedestructor()
             }
          }
          else {
-            G__store_struct_offset = store_struct_offset + (size_t)baseclass->baseoffset[i];
+            G__store_struct_offset = store_struct_offset + (size_t)baseclass->vec[i].baseoffset;
             if (G__asm_noverflow) {
-               store_addstros = baseclass->baseoffset[i];
+               store_addstros = baseclass->vec[i].baseoffset;
             }
          }
 #else
-         G__store_struct_offset = store_struct_offset + baseclass->baseoffset[i];
+         G__store_struct_offset = store_struct_offset + baseclass->vec[i].baseoffset;
 #endif
          if (G__asm_noverflow) G__gen_addstros((long)store_addstros);
          /* avoid recursive and infinite virtual destructor call
@@ -833,21 +830,21 @@ long Cint::Internal::G__ispublicbase(
    if (basetagnum == derivedtagnum) return 0;
    derived = G__struct.baseclass[derivedtagnum];
    if (derived == 0) return -1;
-   n = derived->basen;
+   n = derived->vec.size();
    for (i = 0;i < n;i++) {
-      if (basetagnum == derived->basetagnum[i]) {
-         if (derived->baseaccess[i] == G__PUBLIC ||
+      if (basetagnum == derived->vec[i].basetagnum) {
+         if (derived->vec[i].baseaccess == G__PUBLIC ||
                (G__exec_memberfunc && G__tagnum == G__Dict::GetDict().GetScope(derivedtagnum) &&
-                G__GRANDPRIVATE != derived->baseaccess[i])) {
+                G__GRANDPRIVATE != derived->vec[i].baseaccess)) {
 #ifdef G__VIRTUALBASE
-            if (derived->property[i]&G__ISVIRTUALBASE) {
+            if (derived->vec[i].property&G__ISVIRTUALBASE) {
                return G__getvirtualbaseoffset((char*)pobject, derivedtagnum, derived, i);
             }
             else {
-               return (long) derived->baseoffset[i];
+               return (long) derived->vec[i].baseoffset;
             }
 #else // G__VIRTUALBASE
-            return derived->baseoffset[i];
+            return derived->vec[i].baseoffset;
 #endif // G__VIRTUALBASE
             // --
          }
@@ -872,30 +869,31 @@ extern "C" int G__isanybase(
    )
 {
    struct G__inheritance *derived;
-   int i, n;
+   int i;
+   int n;
 
    if (0 > derivedtagnum) {
-      for (i = 0; i < G__globalusingnamespace.basen; i++) {
-         if (G__globalusingnamespace.basetagnum[i] == basetagnum)
+      for (i = 0; i < (int) G__globalusingnamespace.vec.size(); i++) {
+         if (G__globalusingnamespace.vec[i].basetagnum == basetagnum)
             return 0;
       }
       return -1;
    }
    if (basetagnum == derivedtagnum) return(0);
    derived = G__struct.baseclass[derivedtagnum];
-   n = derived ? derived->basen : -1;
+   n = derived ? (int) derived->vec.size() : -1;
 
    for (i = 0;i < n;i++) {
-      if (basetagnum == derived->basetagnum[i]) {
+      if (basetagnum == derived->vec[i].basetagnum) {
 #ifdef G__VIRTUALBASE
-         if (derived->property[i]&G__ISVIRTUALBASE) {
+         if (derived->vec[i].property&G__ISVIRTUALBASE) {
             return(G__getvirtualbaseoffset((void*)pobject, derivedtagnum, derived, i));
          }
          else {
-            return(long)(derived->baseoffset[i]);
+            return(long)(derived->vec[i].baseoffset);
          }
 #else
-         return(derived->baseoffset[i]);
+         return(derived->vec[i].baseoffset);
 #endif
       }
    }
@@ -911,18 +909,18 @@ extern "C" int G__isanybase(
 **************************************************************************/
 long Cint::Internal::G__find_virtualoffset(int virtualtag)
 {
-   int i;
+   size_t i;
    struct G__inheritance *baseclass;
 
    if (0 > virtualtag) return(0);
    baseclass = G__struct.baseclass[virtualtag];
-   for (i = 0;i < baseclass->basen;i++) {
-      if (G__tagnum == G__Dict::GetDict().GetScope(baseclass->basetagnum[i])) {
-         if (baseclass->property[i]&G__ISVIRTUALBASE) {
-            return(long)(baseclass->baseoffset[i] + G__DOUBLEALLOC);
+   for (i = 0;i < baseclass->vec.size();i++) {
+      if (G__tagnum == G__Dict::GetDict().GetScope(baseclass->vec[i].basetagnum)) {
+         if (baseclass->vec[i].property&G__ISVIRTUALBASE) {
+            return(long)(baseclass->vec[i].baseoffset + G__DOUBLEALLOC);
          }
          else {
-            return(long)(baseclass->baseoffset[i]);
+            return(long)(baseclass->vec[i].baseoffset);
          }
       }
    }
@@ -945,13 +943,13 @@ long Cint::Internal::G__getvirtualbaseoffset(void* i_pobject, int tagnum, G__inh
       return(0);
    }
    if (G__CPPLINK == G__struct.iscpplink[tagnum]) {
-      f = (long(*)(long))(baseclass->baseoffset[basen]);
+      f = (long(*)(long))(baseclass->vec[basen].baseoffset);
       return((*f)((long)pobject));
    }
    else {
-      /* return((*(long*)(pobject+baseclass->baseoffset[basen]))); */
-      return(long)(baseclass->baseoffset[basen]
-                   + (*(long*)(pobject + (size_t)baseclass->baseoffset[basen])));
+      /* return((*(long*)(pobject+baseclass->vec[basen].baseoffset))); */
+      return(long)(baseclass->vec[basen].baseoffset
+                   + (*(long*)(pobject + (size_t)baseclass->vec[basen].baseoffset)));
    }
 }
 #endif // G__VIRTUALBASE

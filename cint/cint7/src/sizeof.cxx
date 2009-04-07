@@ -965,7 +965,7 @@ long Cint::Internal::G__get_classinfo(char *item,int tagnum)
    int tag_string_buf;
    struct G__inheritance *baseclass;
    int p;
-   int i;
+   size_t i;
 
    /**********************************************************************
     * get next class/struct
@@ -1019,14 +1019,14 @@ long Cint::Internal::G__get_classinfo(char *item,int tagnum)
       if(!baseclass) return((long)0);
       p=0;
       buf[0]='\0';
-      for(i=0;i<baseclass->basen;i++) {
-         if(baseclass->property[i]&G__ISDIRECTINHERIT) {
+      for(i=0;i<baseclass->vec.size();i++) {
+         if(baseclass->vec[i].property&G__ISDIRECTINHERIT) {
             if(p) {
                sprintf(buf+p,",");
                ++p;
             }
-            sprintf(buf+p,"%s%s" ,G__access2string(baseclass->baseaccess[i])
-                    ,G__struct.name[baseclass->basetagnum[i]]);
+            sprintf(buf+p,"%s%s" ,G__access2string(baseclass->vec[i].baseaccess)
+                    ,G__struct.name[baseclass->vec[i].basetagnum]);
             p=strlen(buf);
          }
       }

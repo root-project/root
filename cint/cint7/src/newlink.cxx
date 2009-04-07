@@ -2053,8 +2053,8 @@ int Cint::Internal::G__method_inbase(const Reflex::Member mbr)
       //fprintf(stderr, "G__method_inbase: %s: class of member has no base classes, done.\n", name);
       return 0;
    }
-   for (int i = 0; i < bases->basen; ++i) { // loop over all base classes
-      Reflex::Type base_type = G__Dict::GetDict().GetType(bases->basetagnum[i]);
+   for (size_t i = 0; i < bases->vec.size(); ++i) { // loop over all base classes
+      Reflex::Type base_type = G__Dict::GetDict().GetType(bases->vec[i].basetagnum);
       if (!base_type) { // invalid base, skip it
          //fprintf(stderr, "G__method_inbase: %s: invalid base, skipping ...\n", name);
          continue;
@@ -3179,8 +3179,8 @@ int Cint::Internal::G__isprivateconstructor(int tagnum, int iscopy)
    // -- Check if private constructor exists in base class or class of member obj.
    // Check base class private constructor
    struct G__inheritance* baseclass = G__struct.baseclass[tagnum];
-   for (int basen = 0; basen < baseclass->basen; ++basen) {
-      int basetagnum = baseclass->basetagnum[basen];
+   for (size_t basen = 0; basen < baseclass->vec.size(); ++basen) {
+      int basetagnum = baseclass->vec[basen].basetagnum;
       if (G__isprivateconstructorclass(basetagnum, iscopy)) {
          return 1;
       }
@@ -3282,8 +3282,8 @@ static int G__isprivatedestructor(int tagnum)
    // -- Check if private destructor exists in base class or class of member obj.
    // Check base class private destructor
    struct G__inheritance* baseclass = G__struct.baseclass[tagnum];
-   for (int basen = 0; basen < baseclass->basen; ++basen) {
-      int basetagnum = baseclass->basetagnum[basen];
+   for (size_t basen = 0; basen < baseclass->vec.size(); ++basen) {
+      int basetagnum = baseclass->vec[basen].basetagnum;
       if (G__isprivatedestructorclass(basetagnum)) {
          return 1;
       }
@@ -3403,8 +3403,8 @@ static int G__isprivateassignopr(int tagnum)
    // -- Check if private assignopr exists in base class or class of member obj.
    // Check base class private assignopr
    struct G__inheritance* baseclass = G__struct.baseclass[tagnum];
-   for (int basen = 0; basen < baseclass->basen; ++basen) {
-      int basetagnum = baseclass->basetagnum[basen];
+   for (size_t basen = 0; basen < baseclass->vec.size(); ++basen) {
+      int basetagnum = baseclass->vec[basen].basetagnum;
       if (G__isprivateassignoprclass(basetagnum)) {
          return 1;
       }
@@ -4822,7 +4822,7 @@ static char* G__vbo_funcname(int tagnum, int basetagnum, int basen)
 void Cint::Internal::G__cppif_inheritance(FILE* fp)
 {
    int i;
-   int basen;
+   size_t basen;
    int basetagnum;
    G__StrBuf temp_sb(G__LONGLINE*2);
    char *temp = temp_sb;
@@ -4842,12 +4842,12 @@ void Cint::Internal::G__cppif_inheritance(FILE* fp)
          switch (G__struct.type[i]) {
             case 'c': /* class */
             case 's': /* struct */
-               if (G__struct.baseclass[i]->basen > 0) {
-                  for (basen = 0;basen < G__struct.baseclass[i]->basen;basen++) {
-                     if (G__PUBLIC != G__struct.baseclass[i]->baseaccess[basen] ||
-                           0 == (G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE))
+               if (!G__struct.baseclass[i]->vec.empty()) {
+                  for (basen = 0;basen < G__struct.baseclass[i]->vec.size();basen++) {
+                     if (G__PUBLIC != G__struct.baseclass[i]->vec[basen].baseaccess ||
+                           0 == (G__struct.baseclass[i]->vec[basen].property&G__ISVIRTUALBASE))
                         continue;
-                     basetagnum = G__struct.baseclass[i]->basetagnum[basen];
+                     basetagnum = G__struct.baseclass[i]->vec[basen].basetagnum;
                      fprintf(fp, "static long %s(long pobject) {\n"
                              , G__vbo_funcname(i, basetagnum, basen));
                      strcpy(temp, G__fulltagname(i, 1));
@@ -4872,7 +4872,7 @@ void Cint::Internal::G__cpplink_inheritance(FILE* fp)
    // --
 #ifndef G__SMALLOBJECT
    int i;
-   int basen;
+   size_t basen;
    int basetagnum;
    G__StrBuf temp_sb(G__MAXNAME*6);
    char *temp = temp_sb;
@@ -4898,24 +4898,24 @@ void Cint::Internal::G__cpplink_inheritance(FILE* fp)
          switch (G__struct.type[i]) {
             case 'c': /* class */
             case 's': /* struct */
-               if (G__struct.baseclass[i]->basen > 0) {
+               if (!G__struct.baseclass[i]->vec.empty()) {
                   fprintf(fp, "   if(0==G__getnumbaseclass(G__get_linked_tagnum(&%s))) {\n"
                           , G__get_link_tagname(i));
                   flag = 0;
-                  for (basen = 0;basen < G__struct.baseclass[i]->basen;basen++) {
-                     if (0 == (G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE))
+                  for (basen = 0;basen < G__struct.baseclass[i]->vec.size();basen++) {
+                     if (0 == (G__struct.baseclass[i]->vec[basen].property&G__ISVIRTUALBASE))
                         ++flag;
                   }
                   if (flag) {
                      fprintf(fp, "     %s *G__Lderived;\n", G__fulltagname(i, 0));
                      fprintf(fp, "     G__Lderived=(%s*)0x1000;\n", G__fulltagname(i, 1));
                   }
-                  for (basen = 0;basen < G__struct.baseclass[i]->basen;basen++) {
-                     basetagnum = G__struct.baseclass[i]->basetagnum[basen];
+                  for (basen = 0;basen < G__struct.baseclass[i]->vec.size();basen++) {
+                     basetagnum = G__struct.baseclass[i]->vec[basen].basetagnum;
                      fprintf(fp, "     {\n");
 #ifdef G__VIRTUALBASE
                      strcpy(temp, G__mark_linked_tagnum(basetagnum));
-                     if (G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE) {
+                     if (G__struct.baseclass[i]->vec[basen].property&G__ISVIRTUALBASE) {
                         G__StrBuf temp2_sb(G__LONGLINE*2);
                         char *temp2 = temp2_sb;
                         strcpy(temp2, G__vbo_funcname(i, basetagnum, basen));
@@ -4923,19 +4923,19 @@ void Cint::Internal::G__cpplink_inheritance(FILE* fp)
                                 , G__mark_linked_tagnum(i)
                                 , temp
                                 , temp2
-                                , G__struct.baseclass[i]->baseaccess[basen]
-                                , (long)G__struct.baseclass[i]->property[basen]
+                                , G__struct.baseclass[i]->vec[basen].baseaccess
+                                , (long)G__struct.baseclass[i]->vec[basen].property
                                );
                      }
                      else {
-                        int basen2, flag2 = 0;
-                        for (basen2 = 0;basen2 < G__struct.baseclass[i]->basen;basen2++) {
+                        size_t basen2, flag2 = 0;
+                        for (basen2 = 0;basen2 < G__struct.baseclass[i]->vec.size();basen2++) {
                            if (basen2 != basen &&
-                                 (G__struct.baseclass[i]->basetagnum[basen]
-                                  == G__struct.baseclass[i]->basetagnum[basen2]) &&
-                                 ((G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE)
+                                 (G__struct.baseclass[i]->vec[basen].basetagnum
+                                  == G__struct.baseclass[i]->vec[basen2].basetagnum) &&
+                                 ((G__struct.baseclass[i]->vec[basen].property&G__ISVIRTUALBASE)
                                   == 0 ||
-                                  (G__struct.baseclass[i]->property[basen2]&G__ISVIRTUALBASE)
+                                  (G__struct.baseclass[i]->vec[basen2].property&G__ISVIRTUALBASE)
                                   == 0)) {
                               flag2 = 1;
                            }
@@ -4955,13 +4955,13 @@ void Cint::Internal::G__cpplink_inheritance(FILE* fp)
                         fprintf(fp, "       G__inheritance_setup(G__get_linked_tagnum(&%s),G__get_linked_tagnum(&%s),(long)G__Lpbase-(long)G__Lderived,%d,%ld);\n"
                                 , G__mark_linked_tagnum(i)
                                 , temp
-                                , G__struct.baseclass[i]->baseaccess[basen]
-                                , (long)G__struct.baseclass[i]->property[basen]
+                                , G__struct.baseclass[i]->vec[basen].baseaccess
+                                , (long)G__struct.baseclass[i]->vec[basen].property
                                );
                      }
 #else
                      strcpy(temp, G__fulltagname(basetagnum, 1));
-                     if (G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE) {
+                     if (G__struct.baseclass[i]->vec[basen].property&G__ISVIRTUALBASE) {
                         fprintf(fp, "       %s *pbase=(%s*)0x1000;\n"
                                 , temp, G__fulltagname(basetagnum, 1));
                      }
@@ -4973,8 +4973,8 @@ void Cint::Internal::G__cpplink_inheritance(FILE* fp)
                      fprintf(fp, "       G__inheritance_setup(G__get_linked_tagnum(&%s),G__get_linked_tagnum(&%s),(long)pbase-(long)G__Lderived,%d,%ld);\n"
                              , G__mark_linked_tagnum(i)
                              , temp
-                             , G__struct.baseclass[i]->baseaccess[basen]
-                             , G__struct.baseclass[i]->property[basen]
+                             , G__struct.baseclass[i]->vec[basen].baseaccess
+                             , G__struct.baseclass[i]->vec[basen].property
                             );
 #endif
                      fprintf(fp, "     }\n");
@@ -6493,14 +6493,8 @@ extern "C" int G__inheritance_setup(int tagnum, int basetagnum, long baseoffset,
 {
    // --
 #ifndef G__SMALLOBJECT
-   int basen;
    G__ASSERT(0 <= tagnum && 0 <= basetagnum);
-   basen = G__struct.baseclass[tagnum]->basen;
-   G__struct.baseclass[tagnum]->basetagnum[basen] = basetagnum;
-   G__struct.baseclass[tagnum]->baseoffset[basen] = (char*)baseoffset;
-   G__struct.baseclass[tagnum]->baseaccess[basen] = baseaccess;
-   G__struct.baseclass[tagnum]->property[basen] = property;
-   ++G__struct.baseclass[tagnum]->basen;
+   G__struct.baseclass[tagnum]->vec.push_back(G__inheritance::G__Entry(basetagnum,(char*)baseoffset, baseaccess, property));
 #endif // G__SMALLOBJECT
    return(0);
 }
@@ -6727,8 +6721,8 @@ extern "C" int G__memfunc_setup(const char* funcname, int /*hash*/, G__Interface
       G__inheritance* cbases = G__struct.baseclass[G__get_tagnum(G__p_ifunc)];
       if (cbases) {
          void* base_memberfunc_addr = 0;
-         for (int idx = 0; (idx < cbases->basen) && !base_memberfunc_addr; ++idx) {
-            int basetagnum = cbases->basetagnum[idx];
+         for (size_t idx = 0; (idx < cbases->vec.size()) && !base_memberfunc_addr; ++idx) {
+            int basetagnum = cbases->vec[idx].basetagnum;
             {
                Reflex::Scope store_ifunc = G__p_ifunc;
                G__incsetup_memfunc(basetagnum); // Force memfunc_setup for the base.
@@ -8459,7 +8453,7 @@ void Cint::Internal::G__incsetup_memfunc(int tagnum)
 //______________________________________________________________________________
 extern "C" int G__getnumbaseclass(int tagnum)
 {
-   return(G__struct.baseclass[tagnum]->basen);
+   return(G__struct.baseclass[tagnum]->vec.size());
 }
 
 //______________________________________________________________________________
