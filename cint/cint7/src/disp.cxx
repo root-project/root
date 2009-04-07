@@ -755,8 +755,7 @@ static int G__display_classinheritance(FILE *fout, int tagnum, const char *space
                  , G__fulltagname(baseclass->basetagnum[i], 0));
          if (G__more(fout, msg)) return(1);
          temp[0] = '\0';
-         G__getcomment(temp, &G__struct.comment[baseclass->basetagnum[i]]
-                       , baseclass->basetagnum[i]);
+         G__getcomment(temp, baseclass->basetagnum[i]);
          if (temp[0]) {
             sprintf(msg, " //%s", temp);
             if (G__more(fout, msg)) return(1);
@@ -2511,7 +2510,7 @@ extern "C" int G__display_class(FILE *fout, const char *in_name, int base, int s
             if (G__more(fout, msg)) return(1);
          }
          temp[0] = '\0';
-         G__getcomment(temp, &G__struct.comment[i], i);
+         G__getcomment(temp, i);
          if (temp[0]) {
             sprintf(msg, " //%s", temp);
             if (G__more(fout, msg)) return(1);
@@ -2558,7 +2557,7 @@ extern "C" int G__display_class(FILE *fout, const char *in_name, int base, int s
    sprintf(msg, "%s", G__fulltagname(tagnum, 0));
    if (G__more(fout, msg)) return(1);
    temp[0] = '\0';
-   G__getcomment(temp, &G__struct.comment[tagnum], tagnum);
+   G__getcomment(temp, tagnum);
    if (temp[0]) {
       sprintf(msg, " //%s", temp);
       if (G__more(fout, msg)) return(1);

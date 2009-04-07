@@ -1098,8 +1098,6 @@ struct G__tagtable {
   struct G__friendtag *friendtag[G__MAXSTRUCT];
 #endif
 
-  struct G__comment_info comment[G__MAXSTRUCT];
-
   std::list<G__incsetup> *incsetup_memvar[G__MAXSTRUCT];
   std::list<G__incsetup> *incsetup_memfunc[G__MAXSTRUCT];
 

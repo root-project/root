@@ -171,8 +171,6 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
             G__struct.istypedefed[itag] = 0;
             G__struct.istrace[itag] = 0;
             G__struct.isbreak[itag] = 0;
-            G__struct.comment[itag].p.com = 0;
-            G__struct.comment[itag].filenum = -1;
             G__struct.friendtag[itag] = 0;
             // Clean up G__setup_memfunc and G__setup_memvar pointers list
             if (G__struct.incsetup_memvar[itag])

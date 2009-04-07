@@ -1004,7 +1004,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
             !strncmp(funcname.c_str(), "DeclFileLine(", 13)
          )
       ) {
-         G__fsetcomment(&G__struct.comment[G__get_tagnum(G__tagdefining)]);
+         G__fsetcomment(G__tagdefining);
       }
    }
    else if (
@@ -1134,7 +1134,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
             !strncmp(paraname, "ClassDefT(", 10)
          )
       ) {
-         G__fsetcomment(&G__struct.comment[G__get_tagnum(G__tagdefining)]);
+         G__fsetcomment(G__tagdefining);
       }
       return;
    }
@@ -1300,7 +1300,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
             strncmp(newFunction.Name().c_str(), "ClassDefT(", 10) == 0 ||
             strncmp(newFunction.Name().c_str(), "DeclFileLine", 12) == 0 ||
             strncmp(newFunction.Name().c_str(), "DeclFileLine(", 13) == 0)) {
-         G__fsetcomment(&G__struct.comment[G__get_tagnum(G__tagdefining)]);
+         G__fsetcomment(G__tagdefining);
       }
       else {
          G__fsetcomment(&G__get_funcproperties(newFunction)->comment);

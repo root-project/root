@@ -115,7 +115,11 @@ const char* Cint::G__ClassInfo::Title()
    static char buf[G__INFO_TITLELEN];
    buf[0] = '\0';
    if (IsValid()) {
-      G__getcomment(buf, &G__struct.comment[fTagnum], (int) fTagnum);
+      ::Reflex::Scope var = G__Dict::GetDict().GetScope(fTagnum);
+      G__RflxProperties *prop = G__get_properties(var);
+      if (prop) {
+         G__getcomment(buf, &prop->comment, (int) fTagnum);
+      }
       return buf; // FIXME: We are returning a pointer to a statically allocated buffer, this is not thread-safe.
    }
    return 0;

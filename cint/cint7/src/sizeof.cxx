@@ -810,6 +810,18 @@ long *Cint::Internal::G__typeid(char *typenamein)
 * G__getcomment()
 *
 ******************************************************************/
+void Cint::Internal::G__getcomment(char *buf,int tagnum)
+{
+   
+   G__RflxProperties *prop = G__get_properties(G__Dict::GetDict().GetScope(tagnum));
+   G__getcomment(buf,&prop->comment,tagnum);
+}
+void Cint::Internal::G__getcomment(char *buf,Reflex::Scope &scope)
+{
+   
+   G__RflxProperties *prop = G__get_properties(scope);
+   G__getcomment(buf,&prop->comment,G__get_tagnum(scope));
+}
 void Cint::Internal::G__getcomment(char *buf,G__comment_info *pcomment,int tagnum)
 {
   fpos_t pos,store_pos;
@@ -1030,7 +1042,7 @@ long Cint::Internal::G__get_classinfo(char *item,int tagnum)
       G__alloc_tempobject(tag_string_buf, -1 );
       buf = (char*)G__p_tempbuf->obj.obj.i;
       
-      G__getcomment(buf,&G__struct.comment[tagnum],tagnum);
+      G__getcomment(buf,tagnum);
       return((long)buf);
    }
    

@@ -2767,6 +2767,11 @@ extern "C" int G__fgetline(char *string)
 *         ^ ------------V-------------->
 *
 ***********************************************************************/
+void Cint::Internal::G__fsetcomment(Reflex::Scope &scope)
+{
+   G__RflxProperties *prop = G__get_properties(scope);
+   G__fsetcomment(&prop->comment);
+}
 void Cint::Internal::G__fsetcomment(G__comment_info *pcomment)
 {
   int c;

@@ -19,8 +19,15 @@
 #include "Dict.h"
 
 /*********************************************************************
-* class G__ClassInfo
+* 'Dictionary' class mapping types to ints (for now)
 *********************************************************************/
+///////////////////////////////////////////////////////////////////////////
+Cint::Internal::G__Dict::G__Dict() : mTypenums(), mScopes(1000) 
+{
+   mTypenums.reserve(1000);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 Cint::Internal::G__Dict &Cint::Internal::G__Dict::GetDict() 
 {
@@ -34,7 +41,6 @@ Cint::Internal::G__Dict &Cint::Internal::G__Dict::GetDict()
 {
    // Return the Reflex type (class or namespace) corresponding 
    // to the CINT tagnum.
-
    // In case of non scope entity:
    std::string fulltagname(G__fulltagname(tagnum,0));
    Reflex::Type t = ::Reflex::Type::ByName(fulltagname); // We stored the dollar (at least for now)
@@ -56,17 +62,10 @@ Cint::Internal::G__Dict &Cint::Internal::G__Dict::GetDict()
    // to the CINT tagnum.
    if (-1 == tagnum) {
       return ::Reflex::Scope::GlobalScope();
-   } else {
+   } else if (tagnum<((int)mScopes.size())) {
       return mScopes[tagnum];
    }
-   std::string fulltagname(G__fulltagname(tagnum,0));
-   ::Reflex::Scope s = ::Reflex::Scope::ByName(fulltagname);
-   if (!s) {
-      // Note: "This is very bad we need to fix the std lookup more globabaly"
-      fulltagname.insert(0, "std::");
-      s = ::Reflex::Type::ByName(fulltagname); 
-   }
-   return s;
+   return ::Reflex::Dummy::Scope();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -105,6 +104,8 @@ bool Cint::Internal::G__Dict::RegisterScope(int tagnum, const ::Reflex::Scope &i
    
    if (tagnum<0 || tagnum>G__MAXSTRUCT) {
       return false;
+   } else if (tagnum >= ((int)mScopes.size())) {
+      mScopes.resize( (1+tagnum)*2 );
    }
    mScopes[tagnum] = in;
    return true;

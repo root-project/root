@@ -4644,7 +4644,7 @@ void Cint::Internal::G__cpplink_tagtable(FILE* fp, FILE* hfp)
             /* G__genericerror((char*)NULL); */
          }
 
-         G__getcommentstring(buf, i, &G__struct.comment[i]);
+         G__getcommentstring(buf, i, &G__get_properties(G__Dict::GetDict().GetScope(i))->comment);
 
          strcpy(tagname, G__fulltagname(i, 0));
          if (-1 != G__struct.line_number[i]
@@ -6406,11 +6406,12 @@ extern "C" int G__tagtable_setup(int tagnum, int size, int cpplink, int isabstra
    G__struct.size[tagnum] = size;
 
    Reflex::Scope type = G__Dict::GetDict().GetScope(tagnum);
+   G__RflxProperties *prop = G__get_properties(type);
    if (type.IsClass() || type.IsUnion()) {
       G__get_properties(type)->builder.Class().SetSizeOf(size);
    }
 
-   G__get_properties(type)->iscpplink = cpplink;
+   prop->iscpplink = cpplink;
    G__struct.iscpplink[tagnum] = cpplink;
 
 #ifndef G__OLDIMPLEMENTATION1545
@@ -6423,13 +6424,11 @@ extern "C" int G__tagtable_setup(int tagnum, int size, int cpplink, int isabstra
 #endif // G__OLDIMPLEMENTATION1545
 
    G__struct.filenum[tagnum] = G__ifile.filenum;
-   G__get_properties(type)->filenum = G__ifile.filenum;
+   prop->filenum = G__ifile.filenum;
 
-   G__struct.comment[tagnum].p.com = (char*)comment;
-   if (comment) G__struct.comment[tagnum].filenum = -2;
-   else         G__struct.comment[tagnum].filenum = -1;
-   G__get_properties(type)->comment.p.com = (char*)comment;
-   G__get_properties(type)->comment.filenum = G__struct.comment[tagnum].filenum;
+   prop->comment.p.com = (char*)comment;
+   if (comment) prop->comment.filenum = -2;
+   else         prop->comment.filenum = -1;
 
 
    if(0==type.DataMemberSize()
@@ -8413,6 +8412,11 @@ void Cint::Internal::G__incsetup_memfunc(int tagnum)
       store_var_type = G__var_type;
       G__input_file store_ifile = G__ifile;
       int fileno = G__struct.filenum[tagnum];
+      if (fileno >= G__nfile) {
+         // Most likely we are in the unloading of the shared library holding this
+         // dictionary.  Let's avoid a spurrious message (Function can not be defined in a command line or a tempfile).
+         fileno = -1;
+      }
       G__ifile.filenum = fileno;
       G__ifile.line_number = -1;
       G__ifile.str = 0;

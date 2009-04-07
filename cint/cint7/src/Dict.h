@@ -36,11 +36,11 @@ namespace Cint {
    G__Dict {
    private:
       std::vector<Reflex::Type> mTypenums; // link between typenums/tagnums and Reflex types
-      Reflex::Scope mScopes[G__MAXSTRUCT]; 
+      std::vector<Reflex::Scope> mScopes; 
 
       ::Reflex::Type GetTypeImpl(int tagnum);
       
-      G__Dict() {};
+      G__Dict();
       ~G__Dict() {};
    public:
 
@@ -52,7 +52,7 @@ namespace Cint {
          // to the CINT tagnum.
 
          static ::Reflex::Type null_type;
-         if (-1 == tagnum) return null_type;
+         if (-1 == tagnum || tagnum>=((int)mScopes.size())) return null_type;
          ::Reflex::Type t = mScopes[tagnum];
          if (t) return t;
          return GetTypeImpl(tagnum);

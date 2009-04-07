@@ -1489,9 +1489,6 @@ void Cint::Internal::G__create_global_namespace()
    G__struct.friendtag[i] = (struct G__friendtag*)NULL;
 #endif
 
-   G__struct.comment[i].p.com = (char*)NULL;
-   G__struct.comment[i].filenum = -1;
-
    G__struct.incsetup_memvar[i] = 0;
    G__struct.incsetup_memfunc[i] = 0;
    G__struct.rootflag[i] = 0;
@@ -1552,8 +1549,6 @@ void Cint::Internal::G__create_bytecode_arena()
 #ifdef G__FRIEND
    G__struct.friendtag[1] = 0;
 #endif // G__FRIEND
-   G__struct.comment[1].p.com = 0;
-   G__struct.comment[1].filenum = -1;
    G__struct.incsetup_memvar[1] = 0;
    G__struct.incsetup_memfunc[1] = 0;
    G__struct.rootflag[1] = 0;
@@ -2402,8 +2397,6 @@ extern "C" int G__search_tagname(const char* tagname, int type)
 #ifdef G__FRIEND
       G__struct.friendtag[i] = 0;
 #endif // G__FRIEND
-      G__struct.comment[i].p.com = 0;
-      G__struct.comment[i].filenum = -1;
       // G__setup_memfunc and G__setup_memvar pointers list initialization.
       G__struct.incsetup_memvar[i] = new std::list<G__incsetup>();
       G__struct.incsetup_memfunc[i] = new std::list<G__incsetup>();

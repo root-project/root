@@ -122,7 +122,7 @@ static void G__IntList_addunique(G__IntList* body, long iin);
 static void G__IntList_free(G__IntList* body);
 
 static int G__generate_template_dict(const char* template_id, G__Definedtemplateclass* class_tmpl, G__Charlist* tmpl_arg_list);
-static int G__getIndex(int index, int tagnum, std::vector<std::string>& headers);
+static int G__getIndex(int index,::Reflex::Type tagnum, std::vector<std::string>& headers);
 static bool G__isSource(const char* filename);
 
 static void G__freetemplatearg(G__Templatearg* def_para);
@@ -255,7 +255,7 @@ static int G__generate_template_dict(const char* template_id, G__Definedtemplate
    if (fileNum < 0) {
       return -1;
    }
-   fileNum = G__getIndex(fileNum, -1, headers);
+   fileNum = G__getIndex(fileNum, Reflex::Type(), headers);
    if (fileNum == -1) {
       return -1;
    }
@@ -267,12 +267,7 @@ static int G__generate_template_dict(const char* template_id, G__Definedtemplate
       G__value gValue = G__string2type_body(tmpl_arg_list->string, 1);
       ::Reflex::Type ty = G__value_typenum(gValue).RawType();
       if (ty.IsClass()) { // FIXME: We need to support union here too!
-         int tagnum = G__get_tagnum(ty);
-         int index = G__struct.filenum[tagnum];
-         if (index < 0) {
-            return -1;
-         }
-         index = G__getIndex(index, tagnum, headers); // Note: Do real work, headers is modified here.
+         int index = G__getIndex(-1, ty, headers); // Note: Do real work, headers is modified here.
          if (index == -1) {
             return -1;
          }
@@ -296,20 +291,21 @@ static int G__generate_template_dict(const char* template_id, G__Definedtemplate
    //  the generated template instantiation.
    //
    if (tagnum != -1) {
-      if (!G__struct.comment[tagnum].p.com) {
+      G__RflxProperties *prop = G__get_properties(G__Dict::GetDict().GetType(tagnum));
+      if (!prop->comment.p.com) {
          string headersToInclude("//[INCLUDE:");
          for (vector<string>::iterator iter = headers.begin(); iter != headers.end(); ++iter) {
             headersToInclude += *iter + ";";
          }
-         G__struct.comment[tagnum].p.com = new char[headersToInclude.size() + 1];
-         strcpy(G__struct.comment[tagnum].p.com, headersToInclude.c_str());
+         prop->comment.p.com = new char[headersToInclude.size() + 1];
+         strcpy(prop->comment.p.com, headersToInclude.c_str());
       }
    }
    return tagnum;
 }
 
 //______________________________________________________________________________
-static int G__getIndex(int index, int tagnum, std::vector<std::string>& headers)
+static int G__getIndex(int index, Reflex::Type tagnum, std::vector<std::string>& headers)
 {
    // Find the header file or shared library which contains the definition
    // of the passed template instantiation.  If no instantiation is passed,
@@ -331,6 +327,18 @@ static int G__getIndex(int index, int tagnum, std::vector<std::string>& headers)
    //  index looking for the index of the last file included from
    //  a shared library or a source file (not a header file).
    //
+   G__RflxProperties *prop = 0;
+   if (tagnum) {
+      prop = G__get_properties(tagnum);
+      if (index==-1) {
+         index = prop->filenum;
+         if (index < 0) {
+            return -1;
+         }
+      }
+   } else if (index == -1) {
+      return -1;
+   }
    for (
       ;
       (G__srcfile[index].included_from > -1) && (G__srcfile[index].included_from < G__nfile);
@@ -355,7 +363,7 @@ static int G__getIndex(int index, int tagnum, std::vector<std::string>& headers)
    //
    //  At this point, we have a shared library.
    //
-   if (tagnum == -1) { // No template instantiation given, return error.
+   if (!tagnum) { // No template instantiation given, return error.
       return -1;
    }
    //
@@ -365,10 +373,11 @@ static int G__getIndex(int index, int tagnum, std::vector<std::string>& headers)
    //  FIXME: to the next filename after finding the first one.
    //
    if ( // The template instantiation has our special comment.
-      G__struct.comment[tagnum].p.com &&
-      strstr(G__struct.comment[tagnum].p.com, "//[INCLUDE:")
+      prop &&
+      prop->comment.p.com &&
+      strstr(prop->comment.p.com, "//[INCLUDE:")
    ) { // The template instantiation has our special comment.
-      char* p = G__struct.comment[tagnum].p.com;
+      char* p = prop->comment.p.com;
       while (*p && (*p != ':')) {
          ++p;
       }
