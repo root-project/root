@@ -31,6 +31,7 @@ protected:
    TGWin32CallBack   fCallBack;           // callback function (executed by "main" thread)
    void              *fParam;             // arguments passed to/from callback function
    ULong_t           fId;                 // thread id. There is one proxy per client thread
+   Bool_t            fIsVirtualX;         // true if actual TVirtualX implementation
    static UInt_t     fMaxResponseTime;    // max period for waiting response from server thread 
    static Long_t     fgLock;              // fgLock=1 - all client threads locked
 

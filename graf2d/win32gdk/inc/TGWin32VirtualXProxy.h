@@ -39,7 +39,7 @@ protected:
    static TVirtualX *fgRealObject;    // TGWin32 object
 
 public:
-   TGWin32VirtualXProxy() { fMaxResponseTime = 1000; }
+   TGWin32VirtualXProxy() { fMaxResponseTime = 1000; fIsVirtualX = kTRUE; }
    TGWin32VirtualXProxy(const char *name, const char *title) {}
    virtual   ~TGWin32VirtualXProxy() {}
 

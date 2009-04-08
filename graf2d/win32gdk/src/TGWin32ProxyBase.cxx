@@ -137,6 +137,7 @@ TGWin32ProxyBase::TGWin32ProxyBase()
 {
    // ctor
 
+   fIsVirtualX = kFALSE;
    fCallBack = 0;
    fParam = 0;
    fListOfCallBacks = new TList();
@@ -274,7 +275,13 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
       if (!fgMainThreadId) return kFALSE; // server thread terminated 
    }
 
-   Bool_t batch = !sync &&  (fListOfCallBacks->GetSize()<fBatchLimit);
+   Bool_t batch = !sync && (fListOfCallBacks->GetSize() < fBatchLimit);
+
+   // if it is a call to gVirtualX and comes from a secondary thread, 
+   // delay it and process it via the main thread (to avoid deadlocks).
+   if ((fIsVirtualX) && (GetCurrentThreadId() != fgMainThreadId) &&
+       (fListOfCallBacks->GetSize() < fBatchLimit))
+      batch = kTRUE;
 
    if (batch) {
       fListOfCallBacks->Add(new TGWin32CallBackObject(fCallBack, fParam));
@@ -299,9 +306,6 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
       if (cnt++ > 20) break; // VO after some efforts go out from loop
    }
    ::ResetEvent(fPimpl->fEvent);
-
-//   DWORD res = ::WaitForSingleObject(fPimpl->fEvent, INFINITE);
-//   ::ResetEvent(fPimpl->fEvent);
 
    if (res == WAIT_TIMEOUT) { // server thread is blocked
       GlobalLock();

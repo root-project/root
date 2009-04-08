@@ -28,6 +28,7 @@ TGLManager *TGWin32GLManagerProxy::RealObject()
 
 TGWin32GLManagerProxy::TGWin32GLManagerProxy()
 {
+   fIsVirtualX = kFALSE;
 }
 
 RETURN_PROXY_OBJECT(GLManager)

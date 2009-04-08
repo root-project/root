@@ -38,7 +38,7 @@ protected:
 
 public:
 
-   TGWin32InterpreterProxy() { fMaxResponseTime = 1000000; }
+   TGWin32InterpreterProxy() { fMaxResponseTime = 1000000; fIsVirtualX = kFALSE; }
    TGWin32InterpreterProxy(const char *name, const char *title = "Generic Interpreter") {}
    virtual ~TGWin32InterpreterProxy() {}
 
