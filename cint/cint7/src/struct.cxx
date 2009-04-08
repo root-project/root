@@ -198,7 +198,7 @@ int Cint::Internal::G__using_namespace()
          envtagnum = G__get_envtagnum();
          if (envtagnum) {
             struct G__inheritance *base = G__struct.baseclass[G__get_tagnum(envtagnum)];
-            base->vec.push_back(G__inheritance::G__Entry(basetagnum));
+            base->vec.push_back(G__inheritance::G__Entry(G__get_tagnum(basetagnum)));
          }
       }
       else {
