@@ -377,6 +377,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             } else {
                obj->Write( key->GetName() );
             }
+            delete obj;
          }
          oldkey = key;
       } // while ( ( TKey *key = (TKey*)nextkey() ) )
