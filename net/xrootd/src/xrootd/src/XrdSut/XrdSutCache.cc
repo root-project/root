@@ -636,80 +636,15 @@ int XrdSutCache::Refresh()
       return 0;
    }
 
-   // Attach to file and open it
-   XrdSutPFile ff(pfile.c_str(), kPFEopen);
-   if (!ff.IsValid()) {
-      DEBUG("cannot attach to file "<<pfile<<" ("<<ff.LastErrStr()<<")");
+   if (Load(pfile.c_str()) != 0) {
+      DEBUG("problems loading passwd information from file: "<<pfile);
       return -1;
    }
-
-   // Read the header
-   XrdSutPFHeader header;
-   if (ff.ReadHeader(header) < 0) {
-      ff.Close();
-      return -1;
-   }
-
-   // If the file has no entries there is nothing to do
-   if (header.entries <= 0) {
-      DEBUG("PFEntry file is empty - return )");
-      return 0;
-   }
-
-   // Read entries
-   kXR_int32 nupd = 0;
-   XrdSutPFEntInd ind;
-   kXR_int32 nxtofs = header.indofs;
-   while (nxtofs > 0) {
-      //
-      // read index entry
-      if (ff.ReadInd(nxtofs, ind) < 0) {
-         DEBUG("problems reading index entry ");
-         ff.Close();
-         return -1;
-      }
-
-      // If active ...
-      if (ind.entofs > 0) {
-
-         // Read entry out
-         XrdSutPFEntry ent;
-         if (ff.ReadEnt(ind.entofs, ent) < 0) {
-            ff.Close();
-            return -1;
-         }
-
-         // Get corresponding entry in cache
-         XrdSutPFEntry *cent = Get(ind.name);
-
-         // Analyse if there ...
-         if (cent && (cent->mtime < ent.mtime)) {
-
-            // Update the cache
-            cent->status = ent.status;
-            cent->cnt = ent.cnt;
-            cent->mtime = ent.mtime;
-            cent->buf1.SetBuf(ent.buf1.buf, ent.buf1.len);
-            cent->buf2.SetBuf(ent.buf2.buf, ent.buf2.len);
-            cent->buf3.SetBuf(ent.buf3.buf, ent.buf3.len);
-            cent->buf4.SetBuf(ent.buf4.buf, ent.buf4.len);
-
-            // Count
-            nupd++;
-         }
-      }
-
-      // Go to next
-      nxtofs = ind.nxtofs;
-   }
-
-   // Close the file
-   ff.Close();
 
    // Update the time stamp (to avoid fake loads or refreshs later on)
    utime = (kXR_int32)time(0);
 
-   DEBUG("Cache refreshed from file "<<pfile<<" ("<<nupd<<" entries updated)");
+   DEBUG("Cache refreshed from file: "<<pfile);
 
    return 0;
 }
