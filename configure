@@ -52,17 +52,18 @@ options="                    \
    enable_exceptions         \
    enable_explicitlink       \
    enable_fftw3              \
-   enable_gdml               \
-   enable_gfal               \
    enable_g4root             \
+   enable_gdml               \
+   enable_genvector          \
+   enable_gfal               \
    enable_glite              \
    enable_globus             \
    enable_gsl_shared         \
    enable_krb5               \
    enable_ldap               \
-   enable_genvector          \
    enable_mathmore           \
    enable_memstat            \
+   enable_minuit2            \
    enable_monalisa           \
    enable_mysql              \
    enable_odbc               \
@@ -78,7 +79,6 @@ options="                    \
    enable_qtgsi              \
    enable_reflex             \
    enable_roofit             \
-   enable_minuit2            \
    enable_ruby               \
    enable_rfio               \
    enable_rpath              \
