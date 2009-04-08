@@ -899,7 +899,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    return logPdf;
 }
 
-double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, const double * p, unsigned int & /* nPoints */) {  
+double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, const double * p, unsigned int &   nPoints ) {  
    // evaluate the Poisson Log Likelihood
    // for binned likelihood fits
 
@@ -907,7 +907,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
 
    
    double loglike = 0;
-   //int nRejected = 0; 
+   int nRejected = 0; 
 
    // get fit option and check case of using integral of bins
    const DataOptions & fitOpt = data.Opt();
@@ -921,18 +921,19 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
       if (!fitOpt.fIntegral )
          fval = func ( x, p ); 
       else { 
-         // calculate normalized integral (divided by bin volume)
          fval = igEval( x, data.Coords(i+1) ) ; 
       }
-
-
-      loglike +=  fval - y * ROOT::Math::Util::EvalLog( fval);  
       
-      
+      // skip points with negative function values
+      if (fval > 0) 
+         loglike +=  fval - y * ROOT::Math::Util::EvalLog( fval);  
+      else 
+         nRejected++; 
+
    }
    
    // reset the number of fitting data points
-   //if (nRejected != 0)  nPoints = n - nRejected;
+   if (nRejected != 0)  nPoints = n - nRejected;
 
 #ifdef DEBUG
    std::cout << "Loglikelihood  = " << loglike << " np = " << nPoints << std::endl;
