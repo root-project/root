@@ -179,9 +179,14 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
           {
             double sqrtQ = sqrt (Q);
             double sqrtQ3 = sqrtQ * sqrtQ * sqrtQ;
-            double theta = acos (R / sqrtQ3);
-            if (R / sqrtQ3 >= 1.0)
-              theta = 0.0;
+            double ctheta = R / sqrtQ3;
+            double theta = 0; 
+            // protect against numerical error can make this larger than one
+            if ( fabs(ctheta) < 1.0 )
+               theta = acos( ctheta); 
+            else if ( ctheta <= -1.0) 
+               theta = M_PI; 
+
             double norm = -2 * sqrtQ;
 
             u[0] = norm * cos (theta / 3) - rc / 3;
@@ -211,10 +216,7 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
        * mt=2 : 0 real roots
        * mt=3 : 2 real roots
        */
-      if (0 == disc)
-        {
-          u[2] = u[1];
-        }
+      // when disc == 0  2 roots are identicals 
       if (0 >= disc)
         {
           mt = 2;
