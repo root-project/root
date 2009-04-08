@@ -32,7 +32,7 @@ typedef void * XrdCryptoX509Reqdata;
 class XrdCryptoX509Req {
 public:
 
-   XrdCryptoX509Req() { }
+   XrdCryptoX509Req(int v = -1) { SetVersion(v); }
    virtual ~XrdCryptoX509Req() { }
 
    // Status
@@ -59,6 +59,13 @@ public:
 
    // Verify signature
    virtual bool Verify();
+
+   // Set / Get version
+   int Version() const { return version; }
+   void SetVersion(int v) { version = v; }
+
+private:
+   int version;   // Version of the plugin producing the request
 };
 
 #endif

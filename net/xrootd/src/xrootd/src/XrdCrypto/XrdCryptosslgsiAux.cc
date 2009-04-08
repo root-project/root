@@ -830,16 +830,7 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
    // number.
    // Duplicate user subject name
    X509_NAME *psubj = X509_NAME_dup(X509_get_subject_name(xpi)); 
-   // Delete existing proxy CN addition
-   int ne = psubj->entries->num;
-   if (ne >= 0) {
-      X509_NAME_ENTRY *cne = X509_NAME_delete_entry(psubj, ne-1);
-      if (cne) {
-         X509_NAME_ENTRY_free(cne);
-      } else {
-         DEBUG("problems modifying subject name"); 
-      }
-   }
+   //
    // Create an entry with the common name
    unsigned char sn[20] = {0};
    sprintf((char *)sn, "%d", serial);
@@ -1020,12 +1011,22 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
       return -kErrPX_BadNames;
    }
 
-   // Check EEC parts: they must be the same
-   XrdOucString neecp(psbj,0,psbj.rfind("/CN="));
-   XrdOucString neecr(rsbj,0,rsbj.rfind("/CN="));
+   // Check the subject name: the new proxy one must be in the form
+   // '<issuer subject> + /CN=<serial>'
+   XrdOucString neecp(psbj);
+   XrdOucString neecr(rsbj,0,rsbj.rfind("/CN=")-1);
    if (neecr.length() <= 0 || neecr.length() <= 0 || neecp != neecr) {
-      DEBUG("EEC part of proxy certs names do not coincide");
-      return -kErrPX_BadNames;
+      if (xcri->Version() <= 10100) {
+         // Support previous format
+         neecp.erase(psbj.rfind("/CN="));
+         if (neecr.length() <= 0 || neecr.length() <= 0 || neecp != neecr) {
+            DEBUG("Request subject not in the form '<EEC subject> + /CN=<serial>'");
+            return -kErrPX_BadNames;
+         }
+      } else {
+         DEBUG("Request subject not in the form '<issuer subject> + /CN=<serial>'");
+         return -kErrPX_BadNames;
+      }
    }
 
    // Extract serial number

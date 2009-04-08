@@ -111,8 +111,9 @@ public:
    virtual XrdCryptoX509 *X509(const char *cf, const char *kf = 0);
    virtual XrdCryptoX509 *X509(XrdSutBucket *b);
 
-   // X509 CRL constructor
-   virtual XrdCryptoX509Crl *X509Crl(const char *crlfile);
+   // X509 CRL constructors
+   virtual XrdCryptoX509Crl *X509Crl(const char *crlfile, int opt = 0);
+   virtual XrdCryptoX509Crl *X509Crl(XrdCryptoX509 *cacert);
 
    // X509 REQ constructors
    virtual XrdCryptoX509Req *X509Req(XrdSutBucket *bck);

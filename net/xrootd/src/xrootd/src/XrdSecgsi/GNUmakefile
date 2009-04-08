@@ -85,7 +85,7 @@ SECGSITEST = $(BINDIR)/xrdsecgsitest
 
 SECGSIPROXY = $(BINDIR)/xrdgsiproxy
 
-TARGETS = $(LIBRARY) $(LIBLDAP) $(SECGSIPROXY)
+TARGETS = $(LIBRARY) $(LIBLDAP) $(SECGSIPROXY) $(SECGSITEST)
 
 #------------------------------------------------------------------------------#
 #                           S e a r c h   P a t h s                            #

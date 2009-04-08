@@ -28,11 +28,10 @@
 #include <openssl/pem.h>
 
 //_____________________________________________________________________________
-XrdCryptosslX509Crl::XrdCryptosslX509Crl(const char *cf)
+XrdCryptosslX509Crl::XrdCryptosslX509Crl(const char *cf, int opt)
                  : XrdCryptoX509Crl()
 {
-   // Constructor certificate from file 'cf'. If 'kf' is defined,
-   // complete the key of the certificate with the private key in kf.
+   // Constructor certificate from file 'cf'.
    EPNAME("X509Crl::XrdCryptosslX509Crl_file");
 
    // Init private members
@@ -45,9 +44,106 @@ XrdCryptosslX509Crl::XrdCryptosslX509Crl(const char *cf)
    nrevoked = 0;    // number of revoked certificates
 
    // Make sure file name is defined;
+   if (opt == 0) {
+      if (Init(cf) != 0) {
+         DEBUG("could not initialize the CRL from "<<cf);
+         return;
+      }
+   } else {
+      if (InitFromURI(cf, 0) != 0) {
+         DEBUG("could not initialize the CRL from URI"<<cf);
+         return;
+      }
+   }
+}
+
+//_____________________________________________________________________________
+XrdCryptosslX509Crl::XrdCryptosslX509Crl(XrdCryptoX509 *cacert)
+                 : XrdCryptoX509Crl()
+{
+   // Constructor certificate from CA certificate 'cacert'. This constructor
+   // extracts the information about the location of the CRL cerificate from the
+   // CA certificate extension 'crlDistributionPoints', downloads the file and
+   // loads it in the cache
+   EPNAME("X509Crl::XrdCryptosslX509Crl_CA");
+
+   // Init private members
+   crl = 0;         // The crl object
+   lastupdate = -1;  // begin-validity time in secs since Epoch
+   nextupdate = -1;   // end-validity time in secs since Epoch
+   issuer = "";     // issuer;
+   issuerhash = "";  // hash of issuer;
+   srcfile = "";    // source file;
+   nrevoked = 0;    // number of revoked certificates
+
+   // The CA certificate must be defined
+   if (!cacert || cacert->type != XrdCryptoX509::kCA) {
+      DEBUG("the CA certificate is undefined or not CA! ("<<cacert<<")");
+      return;
+   }
+
+   // Get the extension
+   X509_EXTENSION *crlext = (X509_EXTENSION *) cacert->GetExtension("crlDistributionPoints");
+   if (!crlext) {
+      DEBUG("extension 'crlDistributionPoints' not found in the CA certificate");
+      return;
+   }
+
+   // Bio for exporting the extension
+   BIO *bext = BIO_new(BIO_s_mem());
+   ASN1_OBJECT *obj = X509_EXTENSION_get_object(crlext);
+   i2a_ASN1_OBJECT(bext, obj);
+   X509V3_EXT_print(bext, crlext, 0, 4);
+   // data length
+   char *cbio = 0;
+   int lbio = (int) BIO_get_mem_data(bext, &cbio);
+   char *buf = (char *) malloc(lbio+1);
+   // Read key from BIO to buf
+   memcpy(buf, cbio, lbio);
+   buf[lbio] = 0;
+   BIO_free(bext);
+   // Save it
+   XrdOucString uris(buf);
+   free(buf);
+
+   DEBUG("URI string: "<< uris);
+
+   XrdOucString uri;
+   int from = 0;
+   while ((from = uris.tokenize(uri, from, ' ')) != -1) {
+      if (uri.beginswith("URI:")) {
+         uri.replace("URI:","");
+         uri.replace("\n","");
+         if (InitFromURI(uri.c_str(), cacert->SubjectHash()) == 0) {
+            crluri = uri;
+            // We are done
+            break;
+         }
+      }
+   }
+}
+
+//_____________________________________________________________________________
+XrdCryptosslX509Crl::~XrdCryptosslX509Crl()
+{
+   // Destructor
+
+   // Cleanup CRL
+   if (crl)
+      X509_CRL_free(crl);
+}
+
+//_____________________________________________________________________________
+int XrdCryptosslX509Crl::Init(const char *cf)
+{
+   // Constructor certificate from file 'cf'.
+   // Return 0 on success, -1 on failure
+   EPNAME("X509Crl::Init");
+
+   // Make sure file name is defined;
    if (!cf) {
       DEBUG("file name undefined");
-      return;
+      return -1;
    }
    // Make sure file exists;
    struct stat st;
@@ -57,20 +153,20 @@ XrdCryptosslX509Crl::XrdCryptosslX509Crl(const char *cf)
       } else {
          DEBUG("cannot stat file "<<cf<<" (errno: "<<errno<<")");
       }
-      return;
+      return -1;
    }
    //
    // Open file in read mode
    FILE *fc = fopen(cf, "r");
    if (!fc) {
       DEBUG("cannot open file "<<cf<<" (errno: "<<errno<<")");
-      return;
+      return -1;
    }
    //
    // Read the content:
    if (!PEM_read_X509_CRL(fc, &crl, 0, 0)) {
       DEBUG("Unable to load CRL from file");
-      return;
+      return -1;
    } else {
       DEBUG("CRL successfully loaded");
    }
@@ -86,16 +182,91 @@ XrdCryptosslX509Crl::XrdCryptosslX509Crl(const char *cf)
    //
    // Load into cache
    LoadCache();
+   //
+   // Done
+   return 0;
 }
 
 //_____________________________________________________________________________
-XrdCryptosslX509Crl::~XrdCryptosslX509Crl()
+int XrdCryptosslX509Crl::InitFromURI(const char *uri, const char *hash)
 {
-   // Destructor
+   // Initialize the CRL taking the file indicated by URI. Download and
+   // reformat the file first.
+   // Returns 0 on success, -1 on failure.
+   EPNAME("X509Crl::InitFromURI");
 
-   // Cleanup CRL
-   if (crl)
-      X509_CRL_free(crl);
+   // Make sure file name is defined;
+   if (!uri) {
+      DEBUG("uri undefined");
+      return -1;
+   }
+   XrdOucString u(uri), h(hash);
+   if (h == "") h = "hashtmp";
+
+   // Create local output file path
+   bool needsopenssl = 0;
+   XrdOucString outder(getenv("TMPDIR")), outpem;
+   if (outder.length() <= 0) outder = "/tmp";
+   if (!outder.endswith("/")) outder += "/";
+   outder += hash;
+   if (u.endswith(".pem")) {
+      outder += ".pem";
+   } else {
+      outder += "_crl.der";
+      needsopenssl = 1;
+   }
+
+   // Prepare 'wget' command
+   XrdOucString cmd("wget ");
+   cmd += uri;
+   cmd += " -O ";
+   cmd += outder;
+
+   // Execute 'wget'
+   DEBUG("executing ... "<<cmd);
+   system(cmd.c_str());
+   struct stat st;
+   if (stat(outder.c_str(), &st) != 0) {
+      DEBUG("did not manage to get the CRL file from "<<uri);
+      return -1;
+   }
+   outpem = outder;
+
+   if (needsopenssl) {
+      // Put it in PEM format
+      outpem.replace("_crl.der", ".pem");
+      cmd = "openssl crl -inform DER -in ";
+      cmd += outder;
+      cmd += " -out ";
+      cmd += outpem;
+      cmd += " -text";
+
+      // Execute 'openssl crl'
+      DEBUG("executing ... "<<cmd);
+      system(cmd.c_str());
+
+      // Cleanup the temporary files
+      unlink(outder.c_str());
+   }
+
+   // Make sure the file is there
+   if (stat(outpem.c_str(), &st) != 0) {
+      DEBUG("did not manage to change format from DER to PEM ("<<outpem<<")");
+      return -1;
+   }
+
+   // Now init from the new file
+   if (Init(outpem.c_str()) != 0) {
+      DEBUG("could not initialize the CRL from "<<outpem);
+      return -1;
+   }
+
+   // Cleanup the temporary files
+   unlink(outpem.c_str());
+
+   //
+   // Done
+   return 0;
 }
 
 //_____________________________________________________________________________

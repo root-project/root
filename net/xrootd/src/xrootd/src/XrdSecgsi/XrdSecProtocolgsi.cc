@@ -2535,6 +2535,7 @@ int XrdSecProtocolgsi::ClientDoPxyreq(XrdSutBuffer *br, XrdSutBuffer **bm,
          emsg = "could not resolve proxy request";
          return 0;
       }
+      req->SetVersion(hs->RemVers);
       // Get our proxy and its private key
       XrdCryptoX509 *pxy = 0;
       XrdCryptoRSA *kpxy = 0;
@@ -3373,6 +3374,29 @@ XrdCryptoX509Crl *XrdSecProtocolgsi::LoadCRL(XrdCryptoX509 *xca,
       return crl;
    }
 
+   // Get the signing certificate
+   bool verify = 1;
+   XrdCryptoX509 *xcasig = xca;
+   while (xcasig && strcmp(xcasig->Issuer(), xcasig->Subject())) {
+      String crldir;
+      int from = 0;
+      while ((from = CRLdir.tokenize(crldir, from, ',')) != -1) {
+         if (crldir.length() <= 0) continue;
+         String casigfile = crldir + xcasig->Issuer();
+         // Try to init a crl
+         if ((xcasig = CF->X509(casigfile.c_str()))) break;
+      }
+   }
+   if (!xcasig) {
+      verify = 0;
+      if (CACheck == 2) {
+         DEBUG("CA certificate to verify the signature could not be loaded - exit");
+         return crl;
+      } else if (CACheck == 1) {
+         DEBUG("CA certificate to verify the signature could not be loaded - verification skipped");
+      }
+   }
+
    // Get the CA hash
    String cahash = xca->SubjectHash();
    // Drop the extension (".0")
@@ -3391,19 +3415,75 @@ XrdCryptoX509Crl *XrdSecProtocolgsi::LoadCRL(XrdCryptoX509 *xca,
       DEBUG("target file: "<<crlfile);
       // Try to init a crl
       if ((crl = CF->X509Crl(crlfile.c_str()))) {
-         // Verify issuer
-         if (!(strcmp(crl->Issuer(),xca->Subject()))) {
-            // Verify signature
-            if (crl->Verify(xca)) {
-               // Ok, we are done
-               return crl;
+         if (verify) {
+            // Verify issuer
+            if (!(strcmp(crl->Issuer(),xcasig->Subject()))) {
+               // Verify signature
+               if (crl->Verify(xcasig)) {
+                  // Ok, we are done
+                  return crl;
+               }
             }
+         } else {
+            // Ok, we are done
+            return crl;
          }
       }
       SafeDelete(crl);
    }
 
-   // We need to parse the full dirs: make sime cleanup first
+   // Try to retrieve it from the URI in the CA certificate, if any
+   if ((crl = CF->X509Crl(xca))) {
+      if (verify) {
+         // Verify issuer
+         if (!(strcmp(crl->Issuer(),xcasig->Subject()))) {
+            // Verify signature
+            if (crl->Verify(xcasig)) {
+               // Ok, we are done
+               return crl;
+            }
+         }
+      } else {
+         // Ok, we are done
+         return crl;
+      }
+   }
+
+   // Finally try the ".crl_url" file
+   from = 0;
+   while ((from = CRLdir.tokenize(crldir, from, ',')) != -1) {
+      if (crldir.length() <= 0) continue;
+      SafeDelete(crl);
+      String crlurl = crldir + caroot;
+      crlurl += ".crl_url";
+      DEBUG("target file: "<<crlurl);
+      FILE *furl = fopen(crlurl.c_str(), "r");
+      if (!furl) {
+         DEBUG("could not open file: "<<crlurl);
+         continue;
+      }
+      char line[2048];
+      while ((fgets(line, sizeof(line), furl))) {
+         if (line[strlen(line) - 1] == '\n') line[strlen(line) - 1] = 0;
+         if ((crl = CF->X509Crl(line, 1))) {
+            if (verify) {
+               // Verify issuer
+               if (!(strcmp(crl->Issuer(),xcasig->Subject()))) {
+                  // Verify signature
+                  if (crl->Verify(xcasig)) {
+                     // Ok, we are done
+                     return crl;
+                  }
+               }
+            } else {
+               // Ok, we are done
+               return crl;
+            }
+         }
+      }
+   }
+
+   // We need to parse the full dirs: make some cleanup first
    from = 0;
    while ((from = CRLdir.tokenize(crldir, from, ',')) != -1) {
       if (crldir.length() <= 0) continue;
@@ -3427,15 +3507,17 @@ XrdCryptoX509Crl *XrdSecProtocolgsi::LoadCRL(XrdCryptoX509 *xca,
          // Try to init a crl
          crl = CF->X509Crl(crlfile.c_str());
          if (!crl) continue;
-         // Verify issuer
-         if (strcmp(crl->Issuer(),xca->Subject())) {
-            SafeDelete(crl);
-            continue;
-         }
-         // Verify signature
-         if (!(crl->Verify(xca))) {
-            SafeDelete(crl);
-            continue;
+         if (verify) {
+            // Verify issuer
+            if (strcmp(crl->Issuer(),xca->Subject())) {
+               SafeDelete(crl);
+               continue;
+            }
+            // Verify signature
+            if (!(crl->Verify(xca))) {
+               SafeDelete(crl);
+               continue;
+            }
          }
          // Ok
          break;

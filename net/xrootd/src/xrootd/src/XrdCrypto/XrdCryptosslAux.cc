@@ -214,7 +214,7 @@ XrdSutBucket *XrdCryptosslX509ExportChain(XrdCryptoX509Chain *chain,
       }
    }
    // Now write all other certificates
-   while ((c = chain->SearchBySubject(c->Issuer()))) {
+   while ((c = chain->SearchBySubject(c->Issuer())) && c->type != XrdCryptoX509::kCA) {
       // Write to bucket
       if (!PEM_write_bio_X509(bmem, (X509 *)c->Opaque())) {
          DEBUG("error while writing proxy certificate"); 
@@ -310,7 +310,7 @@ int XrdCryptosslX509ChainToFile(XrdCryptoX509Chain *ch, const char *fn)
          }
       }
       // Now write all other certificates
-      while ((c = ch->SearchBySubject(c->Issuer()))) {
+      while ((c = ch->SearchBySubject(c->Issuer())) && c->type != XrdCryptoX509::kCA) {
          // Write to file
          if (PEM_write_X509(fp, (X509 *)c->Opaque()) != 1) {
             DEBUG("error while writing proxy certificate"); 
