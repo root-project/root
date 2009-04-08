@@ -1121,7 +1121,7 @@ const QColor &TGQt::ColorIndex(Color_t ic) const
    // Define the QColor object by ROOT color index
    QColor *colorBuffer=0;
    static QColor unknownColor;
-   // There three different ways in ROOT to define RGB.
+   // There are three different ways in ROOT to define RGB.
    // It took 4 months to figure out.
    // See #ifndef R_WIN32 with  TColor::SetRGB method
    if (!fPallete.contains(ic)) {
@@ -1724,7 +1724,7 @@ ULong_t  TGQt::GetPixel(Color_t cindex)
    // Return pixel value associated to specified ROOT color number.
    // see: GQTGUI.cxx:QtColor() also
    ULong_t rootPixel = 0;
-   QColor color = ColorIndex(cindex);
+   QColor color = ColorIndex(UpdateColor(cindex));
 #ifdef R__WIN32
    rootPixel =                    ( color.blue () & 255 );
    rootPixel = (rootPixel << 8) | ( color.green() & 255 ) ;
@@ -1799,11 +1799,7 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
 
    TQtLock lock;
    if (fQFont) {
-#if QT_VERSION < 0x40000
-      QSize textSize = QFontMetrics(*fQFont).size(Qt::SingleLine,GetTextDecoder()->toUnicode(mess)) ;
-#else /* QT_VERSION */
       QSize textSize = QFontMetrics(*fQFont).size(Qt::TextSingleLine,GetTextDecoder()->toUnicode(mess)) ;
-#endif /* QT_VERSION */
       w = textSize.width() ;
       h = (unsigned int)(textSize.height());
 //      fprintf(stderr,"  TGQt::GetTextExtent  w=%d h=%d font = %d size =%f\n", w,h,fTextFont, fTextSize);
@@ -2947,7 +2943,7 @@ void TGQt::UpdateClipRectangle()
 void TGQt::Begin()
 {
    // Start the painting of the current selection (Pixmap or Widget)
-
+   if (fSelectedWindow == NoOperation) return;
    if (!fQPainter || !fQPainter->isActive() )
    {
       QPaintDevice *src = fSelectedWindow;

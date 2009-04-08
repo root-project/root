@@ -30,11 +30,11 @@ void TQtTimer::AwakeRootEvent(){
      start(300,TRUE);
 }
 //______________________________________________________________________________
-TQtTimer * TQtTimer::Create(QObject *parent, const char *name)
+TQtTimer * TQtTimer::Create(QObject *parent)
 {
    // Create a singelton object TQtTimer
    if (!fgQTimer) {
-      fgQTimer = new  TQtTimer(parent,name);
+      fgQTimer = new  TQtTimer(parent);
       connect(fgQTimer,SIGNAL(timeout()),fgQTimer,SLOT(AwakeRootEvent()) );
    }
    return fgQTimer;

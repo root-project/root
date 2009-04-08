@@ -12,9 +12,8 @@
 
 #include "TQtEventQueue.h"
 #include "TQtLock.h"
-#include <qapplication.h>
+#include <QApplication>
 #include <cassert>
-
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -28,51 +27,17 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-#if QT_VERSION < 0x40000
-TQtEventQueue::TQtEventQueue(bool autoDelete): QPtrList<Event_t> ()
-{ 
-  //  If auto-deleting is turned on, all the items in a collection 
-  //  are deleted when the collection itself is deleted.
-   setAutoDelete(autoDelete); 
+TQtEventQueue::TQtEventQueue(): QQueue<const Event_t *> ()
+{
+   // Create the ROOT event queue
 }
-#else /* QT_VERSION */
-TQtEventQueue::TQtEventQueue(bool /*autoDelete*/): QQueue<const Event_t *> ()
-{ 
-  //  If auto-deleting is turned on, all the items in a collection 
-  //  are deleted when the collection itself is deleted.
-}
-#endif /* QT_VERSION */
 
 //______________________________________________________________________________
 TQtEventQueue::~TQtEventQueue()
 {
-#if QT_VERSION >= 0x40000
+    // Remove all remaining events if any
     qDeleteAll(*this); 
-#endif
 }
-#if 0
-//______________________________________________________________________________
-#if QT_VERSION < 0x40000
-int TQtEventQueue::compareItems(QPtrCollection::Item i1, QPtrCollection::Item i2)
-#else /* QT_VERSION */
-int TQtEventQueue::compareItems(Q3PtrCollection::Item i1, Q3PtrCollection::Item i2)
-#endif /* QT_VERSION */
-{
-//   This virtual function compares two list items. 
-//   Returns:   zero if item1 == item2  
-//   --------   nonzero if item1 != item2 
-//             
-//   This function returns int rather than bool 
-//   so that reimplementations can return three values 
-//   and use it to sort by: 
-//       0 if item1 == item2 
-//     > 0 (positive integer) if item1 > item2 
-//     < 0 (negative integer) if item1 < item2 
-   Event_t &ev1 = *(Event_t *)i1;
-   Event_t &ev2 = *(Event_t *)i2;
-   return ev1.fWindow - ev2.fWindow;
-}
-#endif
 
 //______________________________________________________________________________
 int TQtEventQueue::RemoveItems(const Event_t *ev)
@@ -84,27 +49,7 @@ int TQtEventQueue::RemoveItems(const Event_t *ev)
    // This method is used to debug the application only (by far)
    int counter = 0;
    assert(0);
-   if (ev) {
-#if 0
-      TQtLock lock;
-#if QT_VERSION < 0x40000
-      int next = find(ev);
-      while(next != -1) {
-         remove();            // The removed item is deleted also
-         next = findNext(ev);
-         counter++;
-      }
-#else
-      // to be done yet.  
-      assert(0);
-      int next = remove_if(begin(),end(),ev);
-      while(next != -1) {
-         remove();            // The removed item is deleted also
-         next = findNext(ev);
-         counter++;
-      }
-#endif
-#endif 
-   }
+   if (ev) { }
    return counter;
 }
+

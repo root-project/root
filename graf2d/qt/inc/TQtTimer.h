@@ -16,7 +16,7 @@
 #include "Rtypes.h"
 
 #ifndef __CINT__
-#  include <qtimer.h>
+#  include <QTimer>
 #else
   class QTimer;
 #endif
@@ -36,14 +36,15 @@ private:
 protected:
   static TQtTimer *fgQTimer;
   int fCounter;     
-  TQtTimer (QObject *parent=0, const char *name=0): QTimer(parent,name),fCounter(0){}
-  
+  TQtTimer (QObject *parent=0): QTimer(parent),fCounter(0)
+  {}
+
 protected slots:
   virtual void AwakeRootEvent();
  
 public:
   virtual ~TQtTimer(){}
-  static TQtTimer *Create(QObject *parent=0, const char *name=0);
+  static TQtTimer *Create(QObject *parent=0);
   static TQtTimer *QtTimer();
   ClassDef(TQtTimer,0) // QTimer to awake the ROOT event loop from Qt event loop
 };

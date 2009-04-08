@@ -33,9 +33,6 @@ protected:
   QColor fBackground;
   int fStyle;
   int fFasi;
-#if defined(R__WIN32) &&  (QT_VERSION < 0x40000)
-  QPixmap fCustomPixmap; // shadow transparent pixmap for WIN32
-#endif
   // Reset the brush color to take in account the new transperency if needed
   void ResetColor(){  SetColor(fBackground); } 
 

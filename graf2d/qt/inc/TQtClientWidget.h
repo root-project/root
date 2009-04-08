@@ -13,16 +13,12 @@
 
 
 #ifndef __CINT__
-#  include "qglobal.h"
-#  if QT_VERSION < 0x40000
-#     include <qframe.h>
-#  else /* QT_VERSION */
-#     include <QFrame>
-#  endif /* QT_VERSION */
-#  include <qcursor.h>
+# include <QKeySequence>
+# include <QFrame>
+# include <QCursor>
+# include <map>
 #else
   class QFrame;
-  class QAccel;
   class QColor;
   class QPixmap;
 #endif
@@ -35,13 +31,12 @@
 // It tries to mimic the X11 Widget behaviour, that kind the ROOT Gui relies on heavily.
 //________________________________________________________________________
 
-
 class QCursor;
 class QCloseEvent;
 class QPaintEvent;
 class TQtClientGuard;
 class TQtWidget;
-class Q3Accel;
+class QShortcut;
 class TGWindow;
 
 class TQtClientWidget: public QFrame {
@@ -60,11 +55,9 @@ protected:
        UInt_t fSelectEventMask;       // input mask for SelectInput
        UInt_t fSaveSelectInputMask;   // To save dutinr the grabbing the selectInput
        EMouseButton fButton;
-#if (QT_VERSION >= 0x39999)
-       Q3Accel  *fGrabbedKey;
-#else /* QT_VERSION */
-       QAccel  *fGrabbedKey;
-#endif /* QT_VERSION */
+#ifndef __CINT__
+       std::map<QKeySequence,QShortcut*>  fGrabbedKey;
+#endif
        Bool_t   fPointerOwner;
        QCursor *fNormalPointerCursor;
        QCursor *fGrabPointerCursor;
@@ -94,11 +87,7 @@ public:
     bool   DeleteNotify();
     TQtWidget *GetCanvasWidget() const;
     void   GrabEvent(Event_t &ev,bool own=TRUE);
-#if (QT_VERSION >= 0x39999)
-    Q3Accel *HasAccel() const ;
-#else /* QT_VERSION */
-    QAccel *HasAccel() const ;
-#endif /* QT_VERSION */
+//    Q3Accel *HasAccel() const ;
     bool   IsClosing();
     bool   IsGrabbed       (Event_t &ev);
     bool   IsGrabPointerSelected(UInt_t evmask) const;
@@ -129,12 +118,10 @@ protected slots:
       void Disconnect();
 #endif
 public slots:
-    virtual void Accelerate(int id);
+    virtual void Accelerate();
     virtual void polish();
 #ifndef Q_MOC_RUN
-//MOC_SKIP_BEGIN
     ClassDef(TQtClientWidget,0) // QFrame implementation backing  ROOT TGWindow objects
-//MOC_SKIP_END
 #endif
 };
 
@@ -144,13 +131,9 @@ inline bool TQtClientWidget::DeleteNotify(){return fDeleteNotify; }
 //______________________________________________________________________________
 inline TQtWidget *TQtClientWidget::GetCanvasWidget() const
 { return fCanvasWidget;}
- //______________________________________________________________________________
-#if QT_VERSION < 0x40000
-inline QAccel *TQtClientWidget::HasAccel() const 
-#else /* QT_VERSION */
-inline Q3Accel *TQtClientWidget::HasAccel() const 
-#endif /* QT_VERSION */
-{  return fGrabbedKey; }
+//______________________________________________________________________________
+//inline Q3Accel *TQtClientWidget::HasAccel() const 
+//{  return fGrabbedKey; }
 
 //______________________________________________________________________________
 inline bool  TQtClientWidget::IsClosing(){ return fIsClosing; }
