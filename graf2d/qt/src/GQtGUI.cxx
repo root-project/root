@@ -129,7 +129,7 @@ public:
    bool              HasValid(EContext bit) const { return TESTBIT (fMask , bit); }
    Mask_t            Mask() const { return fMask; }
    void              SetBackground(ULong_t background);
-   void              SetMask(Mask_t mask){ fMask = mask;}
+   void              SetMask(Mask_t rootMask){ fMask = rootMask;}
    void              SetForeground(ULong_t foreground);
    GContext_t        gc() const { return (GContext_t)this; }
    operator          GContext_t() const { return gc(); }
@@ -293,10 +293,10 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
    if (!&gval) return *this;
    // Fill this object from the "GCValues_t" structure
    // map GCValues_t to QtGContext
-   Mask_t mask = gval.fMask;
-   // fprintf(stderr,"&QtGContext::Copy(const GCValues_t &gval) this=%p mask=%x function=%x\n",this, mask,kGCFunction);
-   if ((mask & kGCFunction)) {
-      // fprintf(stderr," QtGContext::Copy this=%p, kGCFunction,%x, %d\n",this,  mask, gval.fFunction);
+   Mask_t rootMask = gval.fMask;
+   // fprintf(stderr,"&QtGContext::Copy(const GCValues_t &gval) this=%p rootMask=%x function=%x\n",this, rootMask,kGCFunction);
+   if ((rootMask & kGCFunction)) {
+      // fprintf(stderr," QtGContext::Copy this=%p, kGCFunction,%x, %d\n",this,  rootMask, gval.fFunction);
       SETBIT(fMask, kROp);
       switch (gval.fFunction)
       {
@@ -373,7 +373,7 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
 #endif /* QT_VERSION */
    };
 
-   if (mask & kGCSubwindowMode) {
+   if (rootMask & kGCSubwindowMode) {
 #if 0
       SETBIT(fMask,kXXX
       if (gval.fSubwindowMode == kIncludeInferiors)
@@ -382,78 +382,78 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
          fSubwindow_mode = GDK_CLIP_BY_CHILDREN
 #endif
    }
-   if ((mask & kGCForeground)) {
+   if ((rootMask & kGCForeground)) {
       // xmask |= GDK_GC_FOREGROUND;
       // QColor paletteBackgroundColor - the background color of the widget
        SetForeground(gval.fForeground);
 	 // fprintf(stderr," kGCForeground %s \root.exen", (const char*)QtColor(gval.fForeground).name());
    }
-   if ((mask & kGCBackground)) {
+   if ((rootMask & kGCBackground)) {
        SetBackground(gval.fBackground);
         // fprintf(stderr," kGCBackgroun %s \n", (const char*)QtColor(gval.fBackground).name());
    }
-   if ((mask & kGCLineWidth)) {
+   if ((rootMask & kGCLineWidth)) {
       SETBIT(fMask,kPen);
       fPen.setWidth(gval.fLineWidth);
    }
-   if ((mask & kGCLineStyle)) {
+   if ((rootMask & kGCLineStyle)) {
       SETBIT(fMask,kPen);
-      Qt::PenStyle style = Qt::NoPen;
+      Qt::PenStyle nextStyle = Qt::NoPen;
       switch (gval.fLineStyle)
       {
-        case kLineSolid:      style = Qt::SolidLine;   break;
-        case kLineOnOffDash:  style = Qt::DashLine;    break;
-        case kLineDoubleDash: style = Qt::DashDotLine; break;
+        case kLineSolid:      nextStyle = Qt::SolidLine;   break;
+        case kLineOnOffDash:  nextStyle = Qt::DashLine;    break;
+        case kLineDoubleDash: nextStyle = Qt::DashDotLine; break;
       };
-      fPen.setStyle(style);
+      fPen.setStyle(nextStyle);
    }
-   if ((mask & kGCCapStyle)) {
+   if ((rootMask & kGCCapStyle)) {
       SETBIT(fMask,kPen);
-      Qt::PenCapStyle style = Qt::FlatCap;
+      Qt::PenCapStyle nextStyle = Qt::FlatCap;
       switch (gval.fCapStyle)
       {
-         case kCapNotLast:    style = Qt::FlatCap;   break;
-         case kCapButt:       style = Qt::FlatCap;   break;
-         case kCapRound:      style = Qt::RoundCap;  break;
-         case kCapProjecting: style = Qt::SquareCap; break;  // no idea what this does mean
+         case kCapNotLast:    nextStyle = Qt::FlatCap;   break;
+         case kCapButt:       nextStyle = Qt::FlatCap;   break;
+         case kCapRound:      nextStyle = Qt::RoundCap;  break;
+         case kCapProjecting: nextStyle = Qt::SquareCap; break;  // no idea what this does mean
       };
-      fPen.setCapStyle(style);
+      fPen.setCapStyle(nextStyle);
    }
-   if ((mask & kGCJoinStyle)) {
+   if ((rootMask & kGCJoinStyle)) {
       SETBIT(fMask,kPen);
-      Qt::PenJoinStyle style = Qt::MiterJoin;
+      Qt::PenJoinStyle nextStyle = Qt::MiterJoin;
       switch (gval.fJoinStyle)
       {
-         case kJoinMiter: style = Qt::MiterJoin; break;
-         case kJoinBevel: style = Qt::BevelJoin; break;
-         case kJoinRound: style = Qt::RoundJoin; break;
+         case kJoinMiter: nextStyle = Qt::MiterJoin; break;
+         case kJoinBevel: nextStyle = Qt::BevelJoin; break;
+         case kJoinRound: nextStyle = Qt::RoundJoin; break;
       };
-      fPen.setJoinStyle(style);
+      fPen.setJoinStyle(nextStyle);
    }
-   if ((mask & kGCFillStyle)) {
+   if ((rootMask & kGCFillStyle)) {
       SETBIT(fMask,kBrush);
-      Qt::BrushStyle style = Qt::NoBrush;
+      Qt::BrushStyle nextStyle = Qt::NoBrush;
       switch (gval.fFillStyle)
       {
-         case kFillSolid:          style = Qt::SolidPattern;  break;
-         case kFillTiled:          style = Qt::Dense1Pattern; break;
-         case kFillStippled:       style = Qt::Dense6Pattern; break;
-         case kFillOpaqueStippled: style = Qt::Dense7Pattern; break;
-         default:                  style = Qt::NoBrush;       break;
+         case kFillSolid:          nextStyle = Qt::SolidPattern;  break;
+         case kFillTiled:          nextStyle = Qt::Dense1Pattern; break;
+         case kFillStippled:       nextStyle = Qt::Dense6Pattern; break;
+         case kFillOpaqueStippled: nextStyle = Qt::Dense7Pattern; break;
+         default:                  nextStyle = Qt::NoBrush;       break;
       };
-      fBrush.setStyle(style);
+      fBrush.setStyle(nextStyle);
    }
-   if ((mask & kGCTile)) {
+   if ((rootMask & kGCTile)) {
 #ifdef QTDEBUG
-      fprintf(stderr," kGCTile,%x, %p\n",mask,(QPixmap *) gval.fTile);
+      fprintf(stderr," kGCTile,%x, %p\n",rootMask,(QPixmap *) gval.fTile);
 #endif
       if ( gval.fTile  != 0xFFFFFFFF ) {
          SETBIT(fMask,kTilePixmap);
          fTilePixmap = (QPixmap *) gval.fTile;
       }
    }
-   if ((mask & kGCStipple)) {
-      // fprintf(stderr," kGCStipple,%x, %p\n",mask,(QPixmap *) gval.fStipple);
+   if ((rootMask & kGCStipple)) {
+      // fprintf(stderr," kGCStipple,%x, %p\n",rootMask,(QPixmap *) gval.fStipple);
       SETBIT(fMask,kStipple);
       fStipple = (QPixmap *) gval.fStipple;
       // setPaletteBackgroundPixmap (*fStipple);
@@ -461,36 +461,36 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
       SETBIT(fMask, kROp);
       fROp = QPainter::CompositionMode_Xor; // Qt::XorROP;
    }
-   if ((mask & kGCTileStipXOrigin)) {
+   if ((rootMask & kGCTileStipXOrigin)) {
       SETBIT(fMask,kTileRect);
       fTileRect.setX(gval.fTsXOrigin);
    }
-   if ((mask & kGCTileStipYOrigin)) {
+   if ((rootMask & kGCTileStipYOrigin)) {
       SETBIT(fMask,kTileRect);
       fTileRect.setY(gval.fTsYOrigin);
    }
-   if ((mask & kGCFont)) {
+   if ((rootMask & kGCFont)) {
       SETBIT(fMask,kFont);
       setFont(*(QFont *) gval.fFont);
       fFont = (QFont *) gval.fFont;
       // fprintf(stderr,"kGCFont font=0x%p\n", fFont);
    }
-   if ((mask & kGCGraphicsExposures)) {
+   if ((rootMask & kGCGraphicsExposures)) {
 #if 0
       xmask |= GDK_GC_EXPOSURES;
       fGraphics_exposures = gval.fGraphicsExposures;
 #endif
    }
-   if ((mask & kGCClipXOrigin)) {
-      // fprintf(stderr," kGCClipXOrigin,%x, %p\n",mask,(QPixmap *) gval.fClipXOrigin);
+   if ((rootMask & kGCClipXOrigin)) {
+      // fprintf(stderr," kGCClipXOrigin,%x, %p\n",rootMask,(QPixmap *) gval.fClipXOrigin);
       SETBIT(fMask,kClipOrigin);
       fClipOrigin.setX(gval.fClipXOrigin);
    }
-   if ((mask & kGCClipYOrigin)) {
+   if ((rootMask & kGCClipYOrigin)) {
       SETBIT(fMask,kClipOrigin);
       fClipOrigin.setY(gval.fClipYOrigin);
    }
-   if ((mask & kGCClipMask)) {
+   if ((rootMask & kGCClipMask)) {
       SETBIT(fMask,kClipMask);
       fClipMask = (QBitmap *) gval.fClipMask;
    }
@@ -1279,7 +1279,9 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
             | Qt::X11BypassWindowManagerHint
             | Qt::FramelessWindowHint
             | Qt::WindowStaysOnTopHint );
+#if QT_VERSION >= 0x040400
       win->setAttribute(Qt::WA_X11NetWmWindowTypeToolTip);
+#endif
       win->setFrameStyle(QFrame::Box | QFrame::Plain);
    } else {
       win =  fQClientGuard.Create(pWidget,"Other"
@@ -2424,7 +2426,11 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
     QLine *segments = new QLine[nseg];
     // QLine segments[nseg];
     for (int i=0;i<nseg;i++) 
+#if QT_VERSION >= 0x040400
        segments[nseg].setLine (seg[i].fX1, seg[i].fY1,seg[i].fX2, seg[i].fY2);
+#else
+       segments[nseg].setPoints (QPoint(seg[i].fX1, seg[i].fY1),QPoint(seg[i].fX2, seg[i].fY2));
+#endif
     paint.drawLines (segments,nseg);
     delete [] segments;
  }
@@ -3127,7 +3133,7 @@ void  TGQt::SendDestroyEvent(TQtClientWidget *widget) const
 
 
 //______________________________________________________________________________
-unsigned char *TGQt::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
+unsigned char *TGQt::GetColorBits(Drawable_t rootWid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Returns an array of pixels created from a part of drawable (defined by x, y, w, h)
    // in format:
@@ -3138,9 +3144,9 @@ unsigned char *TGQt::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UI
    //
    // Note that return array is 32-bit aligned
 
-   if (!wid || (int(wid) == -1) ) return 0;
+   if (!rootWid  || (int(rootWid) == -1) ) return 0;
 
-   QPaintDevice &dev = *iwid(wid);
+   QPaintDevice &dev = *iwid(rootWid);
    QPixmap *pix=0;
    switch (dev.devType()) {
    case QInternal::Widget:
