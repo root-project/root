@@ -400,10 +400,7 @@ int Cint::Internal::G__getcintsysdir()
 
 #ifdef G__ROOT
 # ifdef ROOTBUILD
-   env = getenv("CINTSYSDIR");
-   if (!env) {
-      env = "cint";
-   }
+   env = "cint";
 # else // ROOTBUILD
 #  ifdef CINTINCDIR
    env = CINTINCDIR;
