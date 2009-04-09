@@ -789,7 +789,11 @@ int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
    // Resolve special keywords in 's' for client 'pcl'. Recognized keywords
    //     <workdir>          root for working dirs
    //     <host>             local host name
+   //     <homedir>          user home dir
    //     <user>             user name
+   //     <group>            user group
+   //     <uid>              user ID
+   //     <gid>              user group ID
    // Return the number of keywords resolved.
    XPDLOC(ALL, "Manager::ResolveKeywords")
 
@@ -813,6 +817,30 @@ int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
    if (pcl)
       if (s.replace("<user>", pcl->User()))
          nk++;
+
+   // Parse <group>
+   if (pcl)
+      if (s.replace("<group>", pcl->Group()))
+         nk++;
+
+   // Parse <homedir>
+   if (pcl)
+      if (s.replace("<homedir>", pcl->UI().fHomeDir.c_str()))
+         nk++;
+
+   // Parse <uid>
+   if (pcl && (s.find("<uid>") != STR_NPOS)) {
+      XrdOucString suid; suid += pcl->UI().fUid;
+      if (s.replace("<uid>", suid.c_str()))
+         nk++;
+   }
+
+   // Parse <gid>
+   if (pcl && (s.find("<gid>") != STR_NPOS)) {
+      XrdOucString sgid; sgid += pcl->UI().fGid;
+      if (s.replace("<gid>", sgid.c_str()))
+         nk++;
+   }
 
    TRACE(HDBG,"exit: "<<s);
 

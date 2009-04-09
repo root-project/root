@@ -445,6 +445,87 @@ int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui, bool changeown)
 }
 
 //_____________________________________________________________________________
+int XrdProofdAux::ChangeOwn(const char *path, XrdProofUI ui)
+{
+   // Change the ownership of 'path' to the entity described by 'ui'.
+   // If 'path' is a directory, go thorugh the paths inside it recursively.
+   // Return 0 in case of success, -1 in case of error
+   XPDLOC(AUX, "Aux::ChangeOwn")
+
+   TRACE(DBG, path);
+
+   if (!path || strlen(path) <= 0)
+      return -1;
+
+   struct stat st;
+   if (stat(path,&st) != 0) {
+      // Failure: stop
+      TRACE(XERR, "unable to stat dir: "<<path<<" (errno: "<<errno<<")");
+      return -1;
+   }
+
+   // If is a directory apply this on it
+   if (S_ISDIR(st.st_mode)) {
+      // Loop over the dir
+      DIR *dir = opendir(path);
+      if (!dir) {
+         TRACE(XERR,"cannot open "<<path<< "- errno: "<< errno);
+         return -1;
+      }
+      XrdOucString proot(path);
+      if (!proot.endswith('/')) proot += "/";
+
+      struct dirent *ent = 0;
+      while ((ent = readdir(dir))) {
+         if (ent->d_name[0] == '.' || !strcmp(ent->d_name, "..")) continue;
+         XrdOucString fn(proot);
+         fn += ent->d_name;
+
+         struct stat xst;
+         if (stat(fn.c_str(),&xst) == 0) {
+            // If is a directory apply this on it
+            if (S_ISDIR(xst.st_mode)) {
+               if (XrdProofdAux::ChangeOwn(fn.c_str(), ui) != 0) {
+                  TRACE(XERR, "problems changing recursively ownership of: "<<fn);
+                  return -1;
+               }
+            } else {
+               // Get the privileges, if needed
+               XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+               if (XpdBadPGuard(pGuard, ui.fUid)) {
+                  TRACE(XERR, "could not get privileges to change ownership");
+                  return -1;
+               }
+               // Set ownership of the path to the client
+               if (chown(fn.c_str(), ui.fUid, ui.fGid) == -1) {
+                  TRACE(XERR, "cannot set user ownership on path (errno: "<<errno<<")");
+                  return -1;
+               }
+            }
+         } else {
+            TRACE(XERR, "unable to stat dir: "<<fn<<" (errno: "<<errno<<")");
+         }
+      }
+
+   } else if (((int) st.st_uid != ui.fUid) || ((int) st.st_gid != ui.fGid)) {
+      // Get the privileges, if needed
+      XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+      if (XpdBadPGuard(pGuard, ui.fUid)) {
+         TRACE(XERR, "could not get privileges to change ownership");
+         return -1;
+      }
+      // Set ownership of the path to the client
+      if (chown(path, ui.fUid, ui.fGid) == -1) {
+         TRACE(XERR, "cannot set user ownership on path (errno: "<<errno<<")");
+         return -1;
+      }
+   }
+
+   // We are done
+   return 0;
+}
+
+//_____________________________________________________________________________
 int XrdProofdAux::ChangeToDir(const char *dir, XrdProofUI ui, bool changeown)
 {
    // Change current directory to 'dir'.

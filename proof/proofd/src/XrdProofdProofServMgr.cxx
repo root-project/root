@@ -3377,6 +3377,15 @@ int XrdProofdProofServMgr::SetUserEnvironment(XrdProofdProtocol *p)
    }
 
    if (fMgr->ChangeOwn()) {
+
+      // Change ownership of '.creds'
+      XrdOucString creds(p->Client()->Sandbox()->Dir());
+      creds += "/.creds";
+      if (XrdProofdAux::ChangeOwn(creds.c_str(), p->Client()->UI()) != 0) {
+         TRACE(XERR, "can't change ownership of "<<creds);
+         return -1;
+      }
+
       // acquire permanently target user privileges
       TRACE(DBG, "acquiring target user identity");
       if (XrdSysPriv::ChangePerm((uid_t)p->Client()->UI().fUid,
