@@ -1215,6 +1215,7 @@ gdk_window_set_geometry_hints(GdkWindow * window,
    DWORD dwStyle;
    DWORD dwExStyle;
    int diff;
+   int maxw, maxh;
 
    g_return_if_fail(window != NULL);
    g_return_if_fail(GDK_IS_WINDOW(window));
@@ -1223,6 +1224,8 @@ gdk_window_set_geometry_hints(GdkWindow * window,
       return;
 
    size_hints.length = sizeof(size_hints);
+   maxw = gdk_screen_width();
+   maxh = gdk_screen_height();
 
    GDK_WINDOW_WIN32DATA(window)->hint_flags = geom_mask;
 
@@ -1256,8 +1259,8 @@ gdk_window_set_geometry_hints(GdkWindow * window,
    if (geom_mask & GDK_HINT_MAX_SIZE) {
       rect.left = 0;
       rect.top = 0;
-      rect.right = geometry->max_width;
-      rect.bottom = geometry->max_height;
+      rect.right = geometry->max_width > maxw ? maxw : geometry->max_width;
+      rect.bottom = geometry->max_height > maxh ? maxh : geometry->max_height;
       dwStyle = GetWindowLong(GDK_DRAWABLE_XID(window), GWL_STYLE);
       dwExStyle = GetWindowLong(GDK_DRAWABLE_XID(window), GWL_EXSTYLE);
       AdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle);
