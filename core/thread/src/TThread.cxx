@@ -197,7 +197,7 @@ TThread::TThread(const char *thname, VoidRtnFunc_t fn, void *arg,
 TThread::TThread(const char *thname, VoidFunc_t fn, void *arg,
                  EPriority pri) : TNamed(thname, "")
 {
-   // Create a detached thread with a name. Specify the function or static 
+   // Create a detached thread with a name. Specify the function or static
    // class method to be executed by the thread and a pointer to the argument
    // structure. To start the thread call Run().
 
@@ -1043,7 +1043,6 @@ Bool_t TThreadTimer::Notify()
 {
    // Periodically execute the TThread::XAxtion() method in the main thread.
 
-   R__LOCKGUARD2(gROOTMutex);
    if (TThread::fgXAct) { TThread::XAction(); }
    Reset();
 
