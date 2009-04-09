@@ -2426,7 +2426,7 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
     QLine *segments = new QLine[nseg];
     // QLine segments[nseg];
     for (int i=0;i<nseg;i++) 
-#if QT_VERSION >= 0x040400
+#if QT_VERSION < 0x040400
        segments[nseg].setLine (seg[i].fX1, seg[i].fY1,seg[i].fX2, seg[i].fY2);
 #else
        segments[nseg].setPoints (QPoint(seg[i].fX1, seg[i].fY1),QPoint(seg[i].fX2, seg[i].fY2));
