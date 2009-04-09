@@ -26,6 +26,7 @@
 
 ClassImp(TGraph2D)
 
+
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>Graph 2D class</h2></center>
@@ -98,6 +99,19 @@ Draw a marker at each vertex
 Draw a circle at each vertex. Each circle background is white.
 </td></tr>
 
+<tr><th valign=top>"PCOL" </th><td>
+Draw a marker at each vertex. The color of each marker is
+defined according to its Z position.
+</td></tr>
+
+<tr><th valign=top>"CONT" </th><td>
+Draw contours.
+</td></tr>
+
+<tr><th valign=top>"LINE" </th><td>
+Draw a 3D polyline.
+</td></tr>
+
 </table>
 
 A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram.
@@ -146,6 +160,42 @@ Begin_Html
 End_Html
 Begin_Macro(source)
 ../../../tutorials/fit/graph2dfit.C
+End_Macro
+Begin_Html
+
+Example showing the PCOL option.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c1 = new TCanvas("c1","Graph2D example",0,0,600,400);
+   Double_t P = 5.;
+   Int_t npx  = 20 ;
+   Int_t npy  = 20 ;
+   Double_t x = -P;
+   Double_t y = -P;
+   Double_t z;
+   Int_t k = 0;
+   Double_t dx = (2*P)/npx;
+   Double_t dy = (2*P)/npy;
+   TGraph2D *dt = new TGraph2D(npx*npy);
+   dt->SetNpy(41);
+   dt->SetNpx(40);
+   for (Int_t i=0; i<npx; i++) {
+      for (Int_t j=0; j<npy; j++) {
+         z = sin(sqrt(x*x+y*y))+1;
+         dt->SetPoint(k,x,y,z);
+         k++;
+         y = y+dx;
+      }
+      x = x+dx;
+      y = -P;
+   }
+   gStyle->SetPalette(1);
+   dt->SetMarkerStyle(20);
+   dt->Draw("pcol");
+   return c1;
+}
 End_Macro
 Begin_Html
 
@@ -254,7 +304,7 @@ TGraph2D::TGraph2D(TH2 *h2)
 {
    // Graph2D constructor with a TH2 (h2) as input.
    // Only the h2's bins within the X and Y axis ranges are used.
-   // Empty bins, recognized when both content and errors are zero, are excluded. 
+   // Empty bins, recognized when both content and errors are zero, are excluded.
 
    Build(10);
 
@@ -277,7 +327,7 @@ TGraph2D::TGraph2D(TH2 *h2)
          x = xaxis->GetBinCenter(i);
          y = yaxis->GetBinCenter(j);
          z = h2->GetBinContent(i,j);
-         Double_t ez = h2->GetBinError(i,j); 
+         Double_t ez = h2->GetBinError(i,j);
          if (z != 0. || ez != 0) {
             SetPoint(k, x, y, z);
             k++;
@@ -433,6 +483,7 @@ void TGraph2D::Build(Int_t n)
    }
 }
 
+
 //______________________________________________________________________________
 void TGraph2D::Clear(Option_t * /*option = "" */)
 {
@@ -456,21 +507,22 @@ void TGraph2D::Clear(Option_t * /*option = "" */)
    fPainter   = 0;
 }
 
+
 //______________________________________________________________________________
 void TGraph2D::DirectoryAutoAdd(TDirectory *dir)
 {
    // Perform the automatic addition of the graph to the given directory
    //
-   // Note this function is called in place when the semantic requires 
+   // Note this function is called in place when the semantic requires
    // this object to be added to a directory (I.e. when being read from
    // a TKey or being Cloned)
-   // 
 
    Bool_t addStatus = TH1::AddDirectoryStatus();
    if (addStatus) {
       SetDirectory(dir);
-   }  
+   }
 }
+
 
 //______________________________________________________________________________
 Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
@@ -687,6 +739,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    return DoFit(f2, option, "");
 }
 
+
 //______________________________________________________________________________
 void TGraph2D::FitPanel()
 {
@@ -707,10 +760,11 @@ void TGraph2D::FitPanel()
       if (handler->ExecPlugin(2, gPad, this) == 0)
          Error("FitPanel", "Unable to crate the FitPanel");
    }
-   else 
-         Error("FitPanel", "Unable to find the FitPanel plug-in");
+   else
+      Error("FitPanel", "Unable to find the FitPanel plug-in");
 
 }
+
 
 //______________________________________________________________________________
 TAxis *TGraph2D::GetXaxis() const
@@ -722,6 +776,7 @@ TAxis *TGraph2D::GetXaxis() const
    if (!h) return 0;
    return h->GetXaxis();
 }
+
 
 //______________________________________________________________________________
 TAxis *TGraph2D::GetYaxis() const
@@ -1291,6 +1346,7 @@ void TGraph2D::SetName(const char *name)
    if (fDirectory) fDirectory->Append(this);
 }
 
+
 //______________________________________________________________________________
 void TGraph2D::SetNameTitle(const char *name, const char *title)
 {
@@ -1304,6 +1360,7 @@ void TGraph2D::SetNameTitle(const char *name, const char *title)
    SetTitle(title);
    if (fDirectory) fDirectory->Append(this);
 }
+
 
 //______________________________________________________________________________
 void TGraph2D::SetNpx(Int_t npx)
