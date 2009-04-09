@@ -467,19 +467,19 @@ int XrdSslgsiX509CreateProxy(const char *fnc, const char *fnk,
       if (PEM_read_X509(fc, &xEEC, 0, 0)) {
          DEBUG("EEC certificate loaded from file: "<<fnc);
       } else {
-         DEBUG("unable to load EEC certificate from file: "<<fnc);
+         PRINT("unable to load EEC certificate from file: "<<fnc);
          fclose(fc);
          return -kErrPX_BadEECfile;
       }
    } else {
-      DEBUG("EEC certificate cannot be opened (file: "<<fnc<<")"); 
+      PRINT("EEC certificate cannot be opened (file: "<<fnc<<")"); 
       return -kErrPX_BadEECfile;
    }
    fclose(fc);
    // Make sure the certificate is not expired
    int now = (int)time(0);
    if (now > XrdCryptosslASN1toUTC(X509_get_notAfter(xEEC))) {
-      DEBUG("EEC certificate has expired"); 
+      PRINT("EEC certificate has expired"); 
       return -kErrPX_ExpiredEEC;
    }
 
@@ -494,39 +494,39 @@ int XrdSslgsiX509CreateProxy(const char *fnc, const char *fnk,
       if (PEM_read_PrivateKey(fk, &ekEEC, 0, 0)) {
          DEBUG("EEC private key loaded from file: "<<fnk);
       } else {
-         DEBUG("unable to load EEC private key from file: "<<fnk);
+         PRINT("unable to load EEC private key from file: "<<fnk);
          fclose(fk);
          return -kErrPX_BadEECfile;
       }
    } else {
-      DEBUG("EEC private key file cannot be opened (file: "<<fnk<<")"); 
+      PRINT("EEC private key file cannot be opened (file: "<<fnk<<")"); 
       return -kErrPX_BadEECfile;
    }
    fclose(fk);
    // Check key consistency
    if (RSA_check_key(ekEEC->pkey.rsa) == 0) {
-      DEBUG("inconsistent key loaded");
+      PRINT("inconsistent key loaded");
       return -kErrPX_BadEECkey;
    }
    //
    // Create a new request
    X509_REQ *preq = X509_REQ_new();
    if (!preq) {
-      DEBUG("cannot to create cert request");
+      PRINT("cannot to create cert request");
       return -kErrPX_NoResources;
    }
    //
    // Create the new PKI for the proxy (exponent 65537)
    RSA *kPX = RSA_generate_key(bits, 0x10001, 0, 0);
    if (!kPX) {
-      DEBUG("proxy key could not be generated - return"); 
+      PRINT("proxy key could not be generated - return"); 
       return -kErrPX_GenerateKey;
    }
    //
    // Set the key into the request
    EVP_PKEY *ekPX = EVP_PKEY_new();
    if (!ekPX) {
-      DEBUG("could not create a EVP_PKEY * instance - return"); 
+      PRINT("could not create a EVP_PKEY * instance - return"); 
       return -kErrPX_NoResources;
    }
    EVP_PKEY_set1_RSA(ekPX, kPX);
@@ -546,20 +546,20 @@ int XrdSslgsiX509CreateProxy(const char *fnc, const char *fnk,
    sprintf((char *)sn, "%d", serial);
    if (!X509_NAME_add_entry_by_txt(psubj, (char *)"CN", MBSTRING_ASC,
                                    sn, -1, -1, 0)) {
-      DEBUG("could not add CN - (serial: "<<serial<<", sn: "<<sn<<")"); 
+      PRINT("could not add CN - (serial: "<<serial<<", sn: "<<sn<<")"); 
       return -kErrPX_SetAttribute;
    }
    //
    // Set the name
    if (X509_REQ_set_subject_name(preq, psubj) != 1) {
-      DEBUG("could not set subject name - return"); 
+      PRINT("could not set subject name - return"); 
       return -kErrPX_SetAttribute;
    }
    //
    // Create the extension CertProxyInfo
    gsiProxyCertInfo_t *pci = gsiProxyCertInfo_new();
    if (!pci) {
-      DEBUG("could not create structure for extension - return"); 
+      PRINT("could not create structure for extension - return"); 
       return -kErrPX_NoResources;
    }
    // Set the new length
@@ -567,7 +567,7 @@ int XrdSslgsiX509CreateProxy(const char *fnc, const char *fnk,
       if ((pci->proxyCertPathLengthConstraint = ASN1_INTEGER_new())) {
          ASN1_INTEGER_set(pci->proxyCertPathLengthConstraint, depthlen);
       } else {
-         DEBUG("could not set the path length contrain"); 
+         PRINT("could not set the path length contrain"); 
          return -kErrPX_SetPathDepth;
       }
    }
@@ -575,7 +575,7 @@ int XrdSslgsiX509CreateProxy(const char *fnc, const char *fnk,
    // create extension
    X509_EXTENSION *ext = X509_EXTENSION_new();
    if (!ext) {
-      DEBUG("could not create extension object"); 
+      PRINT("could not create extension object"); 
       return -kErrPX_NoResources;
    }
    // Set extension name.
@@ -590,113 +590,113 @@ int XrdSslgsiX509CreateProxy(const char *fnc, const char *fnk,
    ASN1_OBJECT *obj = OBJ_txt2obj_fix(gsiProxyCertInfo_OID, 1);
 #endif
    if (!obj || X509_EXTENSION_set_object(ext, obj) != 1) {
-      DEBUG("could not set extension name"); 
+      PRINT("could not set extension name"); 
       return -kErrPX_SetAttribute;
    }
    // flag as critical
    if (X509_EXTENSION_set_critical(ext, 1) != 1) {
-      DEBUG("could not set extension critical flag"); 
+      PRINT("could not set extension critical flag"); 
       return -kErrPX_SetAttribute;
    }
    // Extract data in format for extension
    ext->value->length = i2d_gsiProxyCertInfo(pci, 0);
    if (!(ext->value->data = (unsigned char *)malloc(ext->value->length+1))) {
-      DEBUG("could not allocate data field for extension"); 
+      PRINT("could not allocate data field for extension"); 
       return -kErrPX_NoResources;
    }
    unsigned char *pp = ext->value->data;
    if ((i2d_gsiProxyCertInfo(pci, &pp)) <= 0) {
-      DEBUG("problem converting data for extension"); 
+      PRINT("problem converting data for extension"); 
       return -kErrPX_Error;
    }
    // Create a stack
    STACK_OF(X509_EXTENSION) *esk = sk_X509_EXTENSION_new_null();
    if (!esk) {
-      DEBUG("could not create stack for extensions"); 
+      PRINT("could not create stack for extensions"); 
       return -kErrPX_NoResources;
    }
    if (sk_X509_EXTENSION_push(esk, ext) != 1) {
-      DEBUG("could not push the extension in the stack"); 
+      PRINT("could not push the extension in the stack"); 
       return -kErrPX_Error;
    }
    // Add extension
    if (!(X509_REQ_add_extensions(preq, esk))) {
-      DEBUG("problem adding extension"); 
+      PRINT("problem adding extension"); 
       return -kErrPX_SetAttribute;
    }
    //
    // Sign the request
    if (!(X509_REQ_sign(preq, ekPX, EVP_md5()))) {
-      DEBUG("problems signing the request"); 
+      PRINT("problems signing the request"); 
       return -kErrPX_Signing;
    }
    //
    // Create new proxy cert
    X509 *xPX = X509_new();
    if (!xPX) {
-      DEBUG("could not create certificate object for proxies"); 
+      PRINT("could not create certificate object for proxies"); 
       return -kErrPX_NoResources;
    }
 
    // Set version number
    if (X509_set_version(xPX, 2L) != 1) {
-      DEBUG("could not set version"); 
+      PRINT("could not set version"); 
       return -kErrPX_SetAttribute;
    }
 
    // Set serial number
    if (ASN1_INTEGER_set(X509_get_serialNumber(xPX), serial) != 1) {
-      DEBUG("could not set serial number"); 
+      PRINT("could not set serial number"); 
       return -kErrPX_SetAttribute;
    }
 
    // Set subject name
    if (X509_set_subject_name(xPX, psubj) != 1) {
-      DEBUG("could not set subject name"); 
+      PRINT("could not set subject name"); 
       return -kErrPX_SetAttribute;
    }
    
    // Set issuer name
    if (X509_set_issuer_name(xPX, X509_get_subject_name(xEEC)) != 1) {
-      DEBUG("could not set issuer name"); 
+      PRINT("could not set issuer name"); 
       return -kErrPX_SetAttribute;
    }
 
    // Set public key
    if (X509_set_pubkey(xPX, ekPX) != 1) {
-      DEBUG("could not set issuer name"); 
+      PRINT("could not set issuer name"); 
       return -kErrPX_SetAttribute;
    }
 
    // Set proxy validity: notBefore now
    if (!X509_gmtime_adj(X509_get_notBefore(xPX), 0)) {
-      DEBUG("could not set notBefore"); 
+      PRINT("could not set notBefore"); 
       return -kErrPX_SetAttribute;
    }
 
    // Set proxy validity: notAfter expire_secs from now
    if (!X509_gmtime_adj(X509_get_notAfter(xPX), valid)) {
-      DEBUG("could not set notAfter"); 
+      PRINT("could not set notAfter"); 
       return -kErrPX_SetAttribute;
    }
 
    // Add the extension
    if (X509_add_ext(xPX, ext, -1) != 1) {
-      DEBUG("could not add extension"); 
+      PRINT("could not add extension"); 
       return -kErrPX_SetAttribute;
    }
 
    //
    // Sign the certificate
    if (!(X509_sign(xPX, ekEEC, EVP_md5()))) {
-      DEBUG("problems signing the certificate"); 
+      PRINT("problems signing the certificate"); 
       return -kErrPX_Signing;
    }
 
    // Fill outputs
    XrdCryptoX509 *xcPX = new XrdCryptosslX509(xPX);
    if (!xcPX) {
-      DEBUG("could not create container for proxy certificate"); 
+      PRINT("could not create container for proxy certificate"); 
       return -kErrPX_NoResources;
    }
    // We need the full key
@@ -704,13 +704,13 @@ int XrdSslgsiX509CreateProxy(const char *fnc, const char *fnk,
    xp->PushBack(xcPX);
    XrdCryptoX509 *xcEEC = new XrdCryptosslX509(xEEC);
    if (!xcEEC) {
-      DEBUG("could not create container for EEC certificate"); 
+      PRINT("could not create container for EEC certificate"); 
       return -kErrPX_NoResources;
    }
    xp->PushBack(xcEEC);
    *kp = new XrdCryptosslRSA(ekPX);
    if (!(*kp)) {
-      DEBUG("could not creatr out PKI"); 
+      PRINT("could not creatr out PKI"); 
       return -kErrPX_NoResources;
    }
    
@@ -721,36 +721,36 @@ int XrdSslgsiX509CreateProxy(const char *fnc, const char *fnk,
       // Open the file in write mode
       FILE *fp = fopen(fnp,"w");
       if (!fp) {
-         DEBUG("cannot open file to save the proxy certificate (file: "<<fnp<<")"); 
+         PRINT("cannot open file to save the proxy certificate (file: "<<fnp<<")"); 
          fclose(fp);
          rc = -kErrPX_ProxyFile;
       }
       int ifp = fileno(fp);
       if (ifp == -1) {
-         DEBUG("got invalid file descriptor for the proxy certificate (file: "<<
+         PRINT("got invalid file descriptor for the proxy certificate (file: "<<
                 fnp<<")"); 
          fclose(fp);
          rc = -kErrPX_ProxyFile;
       }
       // Set permissions to 0600
       if (fchmod(ifp, 0600) == -1) {
-         DEBUG("cannot set permissions on file: "<<fnp<<" (errno: "<<errno<<")"); 
+         PRINT("cannot set permissions on file: "<<fnp<<" (errno: "<<errno<<")"); 
          fclose(fp);
          rc = -kErrPX_ProxyFile;
       } 
 
       if (!rc && PEM_write_X509(fp, xPX) != 1) {
-         DEBUG("error while writing proxy certificate"); 
+         PRINT("error while writing proxy certificate"); 
          fclose(fp);
          rc = -kErrPX_ProxyFile;
       }   
       if (!rc && PEM_write_RSAPrivateKey(fp, kPX, 0, 0, 0, 0, 0) != 1) {
-         DEBUG("error while writing proxy private key"); 
+         PRINT("error while writing proxy private key"); 
          fclose(fp);
          rc = -kErrPX_ProxyFile;
       }   
       if (!rc && PEM_write_X509(fp, xEEC) != 1) {
-         DEBUG("error while writing EEC certificate"); 
+         PRINT("error while writing EEC certificate"); 
          fclose(fp);
          rc = -kErrPX_ProxyFile;
       }   
@@ -789,14 +789,14 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
 
    // Make sure the certificate is not expired
    if (!(xcpi->IsValid())) {
-      DEBUG("EEC certificate has expired"); 
+      PRINT("EEC certificate has expired"); 
       return -kErrPX_ExpiredEEC;
    }
    //
    // Create a new request
    X509_REQ *xro = X509_REQ_new();
    if (!xro) {
-      DEBUG("cannot to create cert request");
+      PRINT("cannot to create cert request");
       return -kErrPX_NoResources;
    }
    //
@@ -808,14 +808,14 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
    // Create the new PKI for the proxy (exponent 65537)
    RSA *kro = RSA_generate_key(bits, 0x10001, 0, 0);
    if (!kro) {
-      DEBUG("proxy key could not be generated - return"); 
+      PRINT("proxy key could not be generated - return"); 
       return -kErrPX_GenerateKey;
    }
    //
    // Set the key into the request
    EVP_PKEY *ekro = EVP_PKEY_new();
    if (!ekro) {
-      DEBUG("could not create a EVP_PKEY * instance - return"); 
+      PRINT("could not create a EVP_PKEY * instance - return"); 
       return -kErrPX_NoResources;
    }
    EVP_PKEY_set1_RSA(ekro, kro);
@@ -836,20 +836,20 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
    sprintf((char *)sn, "%d", serial);
    if (!X509_NAME_add_entry_by_txt(psubj, (char *)"CN", MBSTRING_ASC,
                                    sn, -1, -1, 0)) {
-      DEBUG("could not add CN - (serial: "<<serial<<", sn: "<<sn<<")"); 
+      PRINT("could not add CN - (serial: "<<serial<<", sn: "<<sn<<")"); 
       return -kErrPX_SetAttribute;
    }
    //
    // Set the name
    if (X509_REQ_set_subject_name(xro, psubj) != 1) {
-      DEBUG("could not set subject name - return"); 
+      PRINT("could not set subject name - return"); 
       return -kErrPX_SetAttribute;
    }
    //
    // Create the extension CertProxyInfo
    gsiProxyCertInfo_t *pci = gsiProxyCertInfo_new();
    if (!pci) {
-      DEBUG("could not create structure for extension - return"); 
+      PRINT("could not create structure for extension - return"); 
       return -kErrPX_NoResources;
    }
    //
@@ -885,7 +885,7 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
          int depthlen = (indepthlen > 0) ? (indepthlen-1) : 0;
          ASN1_INTEGER_set(pci->proxyCertPathLengthConstraint, depthlen);
       } else {
-         DEBUG("could not set the path length contrain"); 
+         PRINT("could not set the path length contrain"); 
          return -kErrPX_SetPathDepth;
       }
    }
@@ -893,18 +893,18 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
    // create extension
    X509_EXTENSION *ext = X509_EXTENSION_new();
    if (!ext) {
-      DEBUG("could not create extension object"); 
+      PRINT("could not create extension object"); 
       return -kErrPX_NoResources;
    }
    // Extract data in format for extension
    ext->value->length = i2d_gsiProxyCertInfo(pci, 0);
    if (!(ext->value->data = (unsigned char *)malloc(ext->value->length+1))) {
-      DEBUG("could not allocate data field for extension"); 
+      PRINT("could not allocate data field for extension"); 
       return -kErrPX_NoResources;
    }
    unsigned char *pp = ext->value->data;
    if ((i2d_gsiProxyCertInfo(pci, &pp)) <= 0) {
-      DEBUG("problem converting data for extension"); 
+      PRINT("problem converting data for extension"); 
       return -kErrPX_Error;
    }
    // Set extension name.
@@ -919,33 +919,33 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
    ASN1_OBJECT *obj = OBJ_txt2obj_fix(gsiProxyCertInfo_OID, 1);
 #endif
    if (!obj || X509_EXTENSION_set_object(ext, obj) != 1) {
-      DEBUG("could not set extension name"); 
+      PRINT("could not set extension name"); 
       return -kErrPX_SetAttribute;
    }
    // flag as critical
    if (X509_EXTENSION_set_critical(ext, 1) != 1) {
-      DEBUG("could not set extension critical flag"); 
+      PRINT("could not set extension critical flag"); 
       return -kErrPX_SetAttribute;
    }
    // Create a stack
    STACK_OF(X509_EXTENSION) *esk = sk_X509_EXTENSION_new_null();
    if (!esk) {
-      DEBUG("could not create stack for extensions"); 
+      PRINT("could not create stack for extensions"); 
       return -kErrPX_NoResources;
    }
    if (sk_X509_EXTENSION_push(esk, ext) != 1) {
-      DEBUG("could not push the extension in the stack"); 
+      PRINT("could not push the extension in the stack"); 
       return -kErrPX_Error;
    }
    // Add extension
    if (!(X509_REQ_add_extensions(xro, esk))) {
-      DEBUG("problem adding extension"); 
+      PRINT("problem adding extension"); 
       return -kErrPX_SetAttribute;
    }
    //
    // Sign the request
    if (!(X509_REQ_sign(xro, ekro, EVP_md5()))) {
-      DEBUG("problems signing the request"); 
+      PRINT("problems signing the request"); 
       return -kErrPX_Signing;
    }
 
@@ -978,7 +978,7 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
    // Make sure the certificate is not expired
    int timeleft = xcpi->NotAfter() - (int)time(0);
    if (timeleft < 0) {
-      DEBUG("EEC certificate has expired"); 
+      PRINT("EEC certificate has expired"); 
       return -kErrPX_ExpiredEEC;
    }
    // Point to the cerificate
@@ -986,7 +986,7 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
 
    // Check key consistency
    if (kcpi->status != XrdCryptoRSA::kComplete) {
-      DEBUG("inconsistent key loaded");
+      PRINT("inconsistent key loaded");
       return -kErrPX_BadEECkey;
    }
    // Point to the cerificate
@@ -995,7 +995,7 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
    // Set the key into the request
    EVP_PKEY *ekpi = EVP_PKEY_new();
    if (!ekpi) {
-      DEBUG("could not create a EVP_PKEY * instance - return"); 
+      PRINT("could not create a EVP_PKEY * instance - return"); 
       return -kErrPX_NoResources;
    }
    EVP_PKEY_set1_RSA(ekpi, kpi);
@@ -1007,7 +1007,7 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
    XrdOucString psbj = X509_NAME_oneline(X509_get_subject_name(xpi), 0, 0);
    XrdOucString rsbj = X509_NAME_oneline(X509_REQ_get_subject_name(xri), 0, 0);
    if (psbj.length() <= 0 || rsbj.length() <= 0) {
-      DEBUG("names undefined");
+      PRINT("names undefined");
       return -kErrPX_BadNames;
    }
 
@@ -1020,11 +1020,11 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
          // Support previous format
          neecp.erase(psbj.rfind("/CN="));
          if (neecr.length() <= 0 || neecr.length() <= 0 || neecp != neecr) {
-            DEBUG("Request subject not in the form '<EEC subject> + /CN=<serial>'");
+            PRINT("Request subject not in the form '<EEC subject> + /CN=<serial>'");
             return -kErrPX_BadNames;
          }
       } else {
-         DEBUG("Request subject not in the form '<issuer subject> + /CN=<serial>'");
+         PRINT("Request subject not in the form '<issuer subject> + /CN=<serial>'");
          return -kErrPX_BadNames;
       }
    }
@@ -1036,49 +1036,49 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
    // Create new proxy cert
    X509 *xpo = X509_new();
    if (!xpo) {
-      DEBUG("could not create certificate object for proxies"); 
+      PRINT("could not create certificate object for proxies"); 
       return -kErrPX_NoResources;
    }
 
    // Set version number
    if (X509_set_version(xpo, 2L) != 1) {
-      DEBUG("could not set version"); 
+      PRINT("could not set version"); 
       return -kErrPX_SetAttribute;
    }
 
    // Set serial number
    if (ASN1_INTEGER_set(X509_get_serialNumber(xpo), serial) != 1) {
-      DEBUG("could not set serial number"); 
+      PRINT("could not set serial number"); 
       return -kErrPX_SetAttribute;
    }
 
    // Set subject name
    if (X509_set_subject_name(xpo, X509_REQ_get_subject_name(xri)) != 1) {
-      DEBUG("could not set subject name"); 
+      PRINT("could not set subject name"); 
       return -kErrPX_SetAttribute;
    }
    
    // Set issuer name
    if (X509_set_issuer_name(xpo, X509_get_subject_name(xpi)) != 1) {
-      DEBUG("could not set issuer name"); 
+      PRINT("could not set issuer name"); 
       return -kErrPX_SetAttribute;
    }
 
    // Set public key
    if (X509_set_pubkey(xpo, X509_REQ_get_pubkey(xri)) != 1) {
-      DEBUG("could not set public key"); 
+      PRINT("could not set public key"); 
       return -kErrPX_SetAttribute;
    }
 
    // Set proxy validity: notBefore now
    if (!X509_gmtime_adj(X509_get_notBefore(xpo), 0)) {
-      DEBUG("could not set notBefore"); 
+      PRINT("could not set notBefore"); 
       return -kErrPX_SetAttribute;
    }
 
    // Set proxy validity: notAfter timeleft from now
    if (!X509_gmtime_adj(X509_get_notAfter(xpo), timeleft)) {
-      DEBUG("could not set notAfter"); 
+      PRINT("could not set notAfter"); 
       return -kErrPX_SetAttribute;
    }
 
@@ -1118,20 +1118,20 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
    // There must be at most one extension
    int nriext = sk_num(xrisk);
    if (nriext != 1) {
-      DEBUG("missing or too many extensions in request"); 
+      PRINT("missing or too many extensions in request"); 
       return -kErrPX_BadExtension;
    }
    // Get it
    X509_EXTENSION *xriext = (X509_EXTENSION *)sk_value(xrisk, 0);
    if (!xriext) {
-      DEBUG("could not get extensions from request"); 
+      PRINT("could not get extensions from request"); 
       return -kErrPX_BadExtension;
    }
    // Check the extension type
    char s[256];
    OBJ_obj2txt(s, sizeof(s), X509_EXTENSION_get_object(xriext), 1);
    if (strcmp(s, gsiProxyCertInfo_OID)) {
-      DEBUG("wrong extension found"); 
+      PRINT("wrong extension found"); 
       return -kErrPX_BadExtension;
    }
    // Get the content
@@ -1155,7 +1155,7 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
    // Create the extension CertProxyInfo
    gsiProxyCertInfo_t *pci = gsiProxyCertInfo_new();
    if (!pci) {
-      DEBUG("could not create structure for extension - return"); 
+      PRINT("could not create structure for extension - return"); 
       return -kErrPX_NoResources;
    }
 
@@ -1165,25 +1165,25 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
          int depthlen = (outdepthlen > 0) ? (outdepthlen-1) : 0;
          ASN1_INTEGER_set(pci->proxyCertPathLengthConstraint, depthlen);
       } else {
-         DEBUG("could not set the path length contrain"); 
+         PRINT("could not set the path length contrain"); 
          return -kErrPX_SetPathDepth;
       }
    }
    // create extension
    X509_EXTENSION *ext = X509_EXTENSION_new();
    if (!ext) {
-      DEBUG("could not create extension object"); 
+      PRINT("could not create extension object"); 
       return -kErrPX_NoResources;
    }
    // Extract data in format for extension
    ext->value->length = i2d_gsiProxyCertInfo(pci, 0);
    if (!(ext->value->data = (unsigned char *)malloc(ext->value->length+1))) {
-      DEBUG("could not allocate data field for extension"); 
+      PRINT("could not allocate data field for extension"); 
       return -kErrPX_NoResources;
    }
    unsigned char *pp = ext->value->data;
    if ((i2d_gsiProxyCertInfo(pci, &pp)) <= 0) {
-      DEBUG("problem converting data for extension"); 
+      PRINT("problem converting data for extension"); 
       return -kErrPX_Error;
    }
    // Set extension name.
@@ -1198,25 +1198,25 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
    ASN1_OBJECT *obj = OBJ_txt2obj_fix(gsiProxyCertInfo_OID, 1);
 #endif
    if (!obj || X509_EXTENSION_set_object(ext, obj) != 1) {
-      DEBUG("could not set extension name"); 
+      PRINT("could not set extension name"); 
       return -kErrPX_SetAttribute;
    }
    // flag as critical
    if (X509_EXTENSION_set_critical(ext, 1) != 1) {
-      DEBUG("could not set extension critical flag"); 
+      PRINT("could not set extension critical flag"); 
       return -kErrPX_SetAttribute;
    }
 
    // Add the extension
    if (X509_add_ext(xpo, ext, -1) != 1) {
-      DEBUG("could not add extension"); 
+      PRINT("could not add extension"); 
       return -kErrPX_SetAttribute;
    }
 
    //
    // Sign the certificate
    if (!(X509_sign(xpo, ekpi, EVP_md5()))) {
-      DEBUG("problems signing the certificate"); 
+      PRINT("problems signing the certificate"); 
       return -kErrPX_Signing;
    }
 
