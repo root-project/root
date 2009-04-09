@@ -51,6 +51,7 @@
 #  include <QSize>
 #  include <QImage>
 #  include <QLine>
+#  include <QVector>
 #ifdef R__QTX11
 #  include <QX11Info>
 #endif
@@ -123,7 +124,7 @@ public:
    QtGContext() : QWidget(0) ,fMask(0),fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0) {}
    QtGContext(const GCValues_t &gval) : QWidget(0) ,fMask(0),fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0){Copy(gval);}
    QtGContext(const QtGContext & /*src*/)  : QWidget() {fprintf(stderr,"QtGContext(const QtGContext &src)\n");}
-   void              Copy(const QtGContext &dst,Mask_t mask = 0xff);
+   void              Copy(const QtGContext &dst,Mask_t rootMask = 0xff);
    const QtGContext &Copy(const GCValues_t &gval);
    void              DumpMask() const;
    bool              HasValid(EContext bit) const { return TESTBIT (fMask , bit); }
@@ -186,7 +187,7 @@ QColor &TGQt::QtColor(ULong_t pixel)
 #endif
 
 #define CopyQTContext(member)                                                 \
-   if (dst.HasValid(_NAME2_(k,member))&&TESTBIT(mask, _NAME2_(k,member))) {   \
+   if (dst.HasValid(_NAME2_(k,member))&&TESTBIT(rootMask, _NAME2_(k,member))) {   \
       SETBIT( fMask, _NAME2_(k,member));                                      \
       _NAME2_(f,member) = dst._NAME2_(f,member);                              \
    }
@@ -267,7 +268,7 @@ inline void QtGContext::DumpMask() const
 #endif
 
 //______________________________________________________________________________
-inline void QtGContext::Copy(const QtGContext &dst, Mask_t mask)
+inline void QtGContext::Copy(const QtGContext &dst, Mask_t rootMask)
 {
    // fprintf(stderr,"&QtGContext::Copy(const QtGContext &dst, Mask_t mask=%x)\n",mask);
    CopyQTContext(ROp);
@@ -534,14 +535,14 @@ void   QtGContext::SetForeground(ULong_t foreground)
 class TQtPainter : public QPainter {
 public:
 #if QT_VERSION < 0x40000
-   TQtPainter(const QPaintDevice * pd,const QtGContext &rootContext, Mask_t mask=0xff,bool unclipped = FALSE):
+   TQtPainter(const QPaintDevice * pd,const QtGContext &rootContext, Mask_t rootMask=0xff,bool unclipped = FALSE):
       QPainter(pd,unclipped){
 #else /* QT_VERSION */
-   TQtPainter(QPaintDevice * pd,const QtGContext &rootContext, Mask_t mask=0xff,bool unclipped = FALSE):
+   TQtPainter(QPaintDevice * pd,const QtGContext &rootContext, Mask_t rootMask=0xff,bool unclipped = FALSE):
       QPainter(pd){
          setClipping(!unclipped);
 #endif /* QT_VERSION */
-         if (mask){}
+         if (rootMask){}
          if (rootContext.HasValid(QtGContext::kROp)) {
 #if QT_VERSION < 0x40000
             setRasterOp (rootContext.fROp);
@@ -2423,16 +2424,10 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
     // Draws multiple line segments. Each line is specified by a pair of points.
     if (id == kNone) return;
     TQtPainter paint(iwid(id),qtcontext(gc));
-    QLine *segments = new QLine[nseg];
-    // QLine segments[nseg];
-    for (int i=0;i<nseg;i++) 
-#if QT_VERSION < 0x040400
-       segments[nseg].setLine (seg[i].fX1, seg[i].fY1,seg[i].fX2, seg[i].fY2);
-#else
-       segments[nseg].setPoints (QPoint(seg[i].fX1, seg[i].fY1),QPoint(seg[i].fX2, seg[i].fY2));
-#endif
-    paint.drawLines (segments,nseg);
-    delete [] segments;
+    QVector<QLine> segments(nseg);
+    for (int i=0;i<nseg;i++)
+       segments.push_back(QLine(seg[i].fX1, seg[i].fY1,seg[i].fX2, seg[i].fY2));
+    paint.drawLines (segments);
  }
 //______________________________________________________________________________
  void         TGQt::SelectInput(Window_t id, UInt_t evmask)
