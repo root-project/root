@@ -1,7 +1,7 @@
 # File: roottest/python/memory/PyROOT_memorytests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 02/15/05
-# Last: 05/05/05
+# Last: 04/13/09
 
 """Memory tests for PyROOT package."""
 
@@ -39,7 +39,7 @@ class Memory1TestCase( unittest.TestCase ):
       del b, c
       self.assertEqual( MemTester.counter, 0 )
 
-   def test2ObjectDestuctionCallback( self ):
+   def test2ObjectDestructionCallback( self ):
       """Test ROOT notification on object destruction"""
 
     # create ROOT traced object
