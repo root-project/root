@@ -471,7 +471,8 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetArgDefault( Int_t iarg )
 template< class T, class M>
 PyObject* PyROOT::TMethodHolder< T, M >::GetScope()
 {
-   return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( fMethod.DeclaringScope().Name() );
+   return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >(
+      fMethod.DeclaringScope().Name( ROOT::Reflex::SCOPED | ROOT::Reflex::FINAL ) );
 }
 
 //____________________________________________________________________________
