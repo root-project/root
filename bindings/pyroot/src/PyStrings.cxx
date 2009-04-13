@@ -39,7 +39,7 @@ PyObject* PyROOT::PyStrings::gTClassDynCast = 0;
 
 //____________________________________________________________________________
 #define PYROOT_INITIALIZE_STRING( var, str )                                 \
-   if ( ! ( PyStrings::var = PyString_FromString( (char*)#str ) ) )          \
+   if ( ! ( PyStrings::var = PyString_InternFromString( (char*)#str ) ) )    \
       return kFALSE
 
 Bool_t PyROOT::CreatePyStrings() {
