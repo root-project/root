@@ -166,11 +166,9 @@ namespace {
    // is no encompassing class (i.e. global scope)
       if ( ! IsPseudoFunc( pymeth ) ) {
          PyObject* pyclass = pymeth->fMethodInfo->fMethods[0]->GetScope();
-         if ( ! pyclass ) {
+         if ( ! pyclass )
             PyErr_Format( PyExc_AttributeError,
                "function %s has no attribute \'im_class\'", pymeth->fMethodInfo->fName.c_str() );
-            return 0;
-         }
          return pyclass;
       }
 
