@@ -120,10 +120,28 @@ The default value is:
       gStyle->SetOptStat("nemr");
 </pre>
 
-<p>When a histogram is drawn, a <tt>TPaveStats</tt> object is created and added
+<p>When a histogram is painted, a <tt>TPaveStats</tt> object is created and added
 to the list of functions of the histogram. If a <tt>TPaveStats</tt> object
 already exists in the histogram list of functions, the existing object is just
 updated with the current histogram parameters.
+
+<p>Once a histogram is painted, the statistics box can be accessed using
+<tt>h->FindObject("stats")</tt>. In the command line it is enough to do:
+<pre> 
+      Root > h->Draw()
+      Root > TPaveStats *st = (TPaveStats*)h->FindObject("stats")
+</pre>
+because after <tt>h->Draw()</tt> the histogram is automatically painted. But
+in a script file the painting should be forced using <tt>gPad->Update()</tt>
+in order to make sure the statistics box is created:
+<pre>
+      h->Draw();
+      gPad->Update();
+      TPaveStats *st = (TPaveStats*)h->FindObject("stats");
+</pre>
+
+<p>Without <tt>gPad->Update()</tt> the line <tt>h->FindObject("stats")</tt>
+returns a null pointer.
 
 <p>When a histogram is drawn with the option "<tt>SAME</tt>", the statistics box
 is not drawn. To force the statistics box drawing with the option
