@@ -18,7 +18,7 @@
 #include "TH1.h"
 
 #include "TGLSurfacePainter.h"
-#include "TGLOrthoCamera.h"
+#include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 
 //______________________________________________________________________________
@@ -37,7 +37,7 @@ void TGLSurfacePainter::Projection_t::Swap(Projection_t &rhs)
 }
 
 //______________________________________________________________________________
-TGLSurfacePainter::TGLSurfacePainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
+TGLSurfacePainter::TGLSurfacePainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
                                      : TGLPlotPainter(hist, camera, coord, dev, kTRUE, kTRUE, kTRUE),
                                        fType(kSurf),
                                        fSectionPass(kFALSE),

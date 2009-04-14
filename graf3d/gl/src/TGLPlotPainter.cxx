@@ -24,7 +24,7 @@
 #include "TF3.h"
 
 #include "TGLPlotPainter.h"
-#include "TGLOrthoCamera.h"
+#include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 #include "TGLAdapter.h"
 #include "TGLOutput.h"
@@ -38,7 +38,7 @@
 ClassImp(TGLPlotPainter)
 
 //______________________________________________________________________________
-TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
+TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
                                TGLPaintDevice *dev, Bool_t xoy, Bool_t xoz, Bool_t yoz)
                   : //fGLContext(context),
                     fGLDevice(dev),
@@ -73,7 +73,7 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordin
 }
 
 //______________________________________________________________________________
-TGLPlotPainter::TGLPlotPainter(TGLOrthoCamera *camera, TGLPaintDevice *dev)
+TGLPlotPainter::TGLPlotPainter(TGLPlotCamera *camera, TGLPaintDevice *dev)
                   : //fGLContext(context),
                     fGLDevice(dev),
                     fPadColor(0),
@@ -1748,7 +1748,7 @@ namespace Rgl {
    }
 
    //______________________________________________________________________________
-   void DrawPalette(const TGLOrthoCamera * camera, const TGLLevelPalette & palette)
+   void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette)
    {
       //Draw. Palette.
       const TGLDisableGuard light(GL_LIGHTING);
@@ -1795,7 +1795,7 @@ namespace Rgl {
 
    }
 
-   void DrawPaletteAxis(const TGLOrthoCamera * camera, const Range_t & minMax, Bool_t logZ)
+   void DrawPaletteAxis(const TGLPlotCamera * camera, const Range_t & minMax, Bool_t logZ)
    {
       const Double_t x = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw() + rr * camera->GetWidth()));
       const Double_t yMin = gPad->AbsPixeltoY(Int_t(camera->GetHeight() - camera->GetHeight() * 0.1

@@ -9,8 +9,8 @@
 #ifndef ROOT_TGLPlotPainter
 #include "TGLPlotPainter.h"
 #endif
-#ifndef ROOT_TGLOrthoCamera
-#include "TGLOrthoCamera.h"
+#ifndef ROOT_TGLPlotCamera
+#include "TGLPlotCamera.h"
 #endif
 #ifndef ROOT_TGLAdapter
 #include "TGLAdapter.h"
@@ -46,7 +46,7 @@ private:
    TF3                   *fF3;
    TList                 *fStack;
    EGLPlotType            fPlotType;
-   TGLOrthoCamera         fCamera;
+   TGLPlotCamera          fCamera;
    TGLPlotCoordinates     fCoord;
 
    TGLAdapter             fGLDevice;

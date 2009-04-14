@@ -54,7 +54,7 @@ private:
    mutable Bool_t                  fUpdateTexMap;
 
 public:
-   TGLSurfacePainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
+   TGLSurfacePainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
                      TGLPaintDevice *dev = 0);
 
    //TGLPlotPainter's final-overriders.

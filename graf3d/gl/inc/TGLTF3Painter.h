@@ -14,7 +14,7 @@
 #include "TGLUtil.h"
 #endif
 
-class TGLOrthoCamera;
+class TGLPlotCamera;
 class TF3;
 
 /*
@@ -40,7 +40,7 @@ private:
    TGLTH3Slice fXOYSlice;
 
 public:
-   TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
+   TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
                  TGLPaintDevice *dev = 0);
 
    char   *GetPlotInfo(Int_t px, Int_t py);
@@ -104,7 +104,7 @@ private:
    Bool_t                fInit;
 
 public:
-   TGLIsoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
+   TGLIsoPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
                  TGLPaintDevice *dev = 0);
    //TGLPlotPainter final-overriders.
    char    *GetPlotInfo(Int_t px, Int_t py);

@@ -31,7 +31,7 @@
 #endif
 
 class TGLPlotCoordinates;
-class TGLOrthoCamera;
+class TGLPlotCamera;
 class TString;
 class TColor;
 class TAxis;
@@ -172,7 +172,7 @@ protected:
    TAxis                *fZAxis;
 
    TGLPlotCoordinates   *fCoord;
-   TGLOrthoCamera       *fCamera;
+   TGLPlotCamera        *fCamera;
    TGLSelectionBuffer    fSelection;
    Bool_t                fUpdateSelection;
    Bool_t                fSelectionPass;
@@ -196,12 +196,12 @@ protected:
    mutable Bool_t        fDrawPalette;
 
 public:
-/*   TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t context,
+/*   TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord, Int_t context,
                   Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
-   TGLPlotPainter(TGLOrthoCamera *camera, Int_t context);*/
-   TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev,
+   TGLPlotPainter(TGLPlotCamera *camera, Int_t context);*/
+   TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev,
                   Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
-   TGLPlotPainter(TGLOrthoCamera *camera, TGLPaintDevice *dev);
+   TGLPlotPainter(TGLPlotCamera *camera, TGLPaintDevice *dev);
 
    const TGLPlotBox& RefBackBox() const { return fBackBox; }
 
@@ -360,8 +360,8 @@ class TGLLevelPalette;
 
 namespace Rgl {
 
-   void DrawPalette(const TGLOrthoCamera * camera, const TGLLevelPalette & palette);
-   void DrawPaletteAxis(const TGLOrthoCamera * camera, const Range_t & minMax, Bool_t logZ);
+   void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette);
+   void DrawPaletteAxis(const TGLPlotCamera * camera, const Range_t & minMax, Bool_t logZ);
 
 }
 

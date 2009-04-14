@@ -12,13 +12,8 @@
 #ifndef ROOT_TGLOrthoCamera
 #define ROOT_TGLOrthoCamera
 
-#ifndef ROOT_TGLCamera
 #include "TGLCamera.h"
-#endif
 
-#ifndef ROOT_TArcBall
-#include "TArcBall.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -37,7 +32,8 @@
 
 class TGLPaintDevice;
 
-class TGLOrthoCamera : public TGLCamera {
+class TGLOrthoCamera : public TGLCamera
+{
 public:
    enum EType { kZOY,  kXOZ,  kXOY,    // Pair of world axes aligned to h/v screen.
                 kZnOY, kXnOZ, kXnOY }; // 'n' means preceeding axis is negated.
@@ -57,19 +53,8 @@ private:
    Double_t       fDefXSize, fDefYSize; //! x, y size of scene from camera view
    Double_t       fZoom;                //! current zoom
 
-   //Stuff for TGLPlotPainter. MT: This *must* go to a special subclass.
-   Double_t       fShift;
-   Double_t       fOrthoBox[4];
-   TGLVertex3     fCenter;
-   TGLVector3     fTruck;
-   TArcBall       fArcBall;
-   TPoint         fMousePos;
-   Bool_t         fVpChanged;
+   static UInt_t  fgZoomDeltaSens;
 
-   // Methods
-   void Init();
-
-   static   UInt_t   fgZoomDeltaSens;
 public:
    TGLOrthoCamera();
    TGLOrthoCamera(EType type, const TGLVector3 & hAxis, const TGLVector3 & vAxis);
@@ -103,23 +88,6 @@ public:
 
    void     SetDollyToZoom(Bool_t x) { fDollyToZoom = x; }
    Bool_t   GetDollyToZoom()   const { return fDollyToZoom; }
-
-   // Stuff for TGLPlotPainter.
-   void   SetViewport(TGLPaintDevice *dev);
-   void   SetViewVolume(const TGLVertex3 *box);
-   void   StartRotation(Int_t px, Int_t py);
-   void   RotateCamera(Int_t px, Int_t py);
-   void   StartPan(Int_t px, Int_t py);
-   void   Pan(Int_t px, Int_t py);
-   void   ZoomIn();
-   void   ZoomOut();
-   void   SetCamera()const;
-   void   Apply(Double_t phi, Double_t theta)const;
-   Bool_t ViewportChanged()const{return fVpChanged;}
-   Int_t  GetX()const;
-   Int_t  GetY()const;
-   Int_t  GetWidth()const;
-   Int_t  GetHeight()const;
 
    ClassDef(TGLOrthoCamera,0) // Camera for orthographic view.
 };

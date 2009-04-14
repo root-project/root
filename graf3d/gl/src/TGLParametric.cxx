@@ -20,7 +20,7 @@
 #include "TString.h"
 #include "TROOT.h"
 
-#include "TGLOrthoCamera.h"
+#include "TGLPlotCamera.h"
 #include "TGLParametric.h"
 #include "TGLIncludes.h"
 #include "TVirtualPad.h"
@@ -268,7 +268,7 @@ ClassImp(TGLParametricPlot)
 
 //______________________________________________________________________________
 TGLParametricPlot::TGLParametricPlot(TGLParametricEquation *eq,
-                                     TGLOrthoCamera *camera, TGLPaintDevice *dev)
+                                     TGLPlotCamera *camera, TGLPaintDevice *dev)
                       : TGLPlotPainter(camera, dev),
                         fMeshSize(90),
                         fShowMesh(kFALSE),

@@ -10,7 +10,7 @@
 #include "TStyle.h"
 #include "TH3.h"
 
-#include "TGLOrthoCamera.h"
+#include "TGLPlotCamera.h"
 #include "TGLBoxPainter.h"
 #include "TGLIncludes.h"
 
@@ -22,7 +22,7 @@
 ClassImp(TGLBoxPainter)
 
 //______________________________________________________________________________
-TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
+TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
                   : TGLPlotPainter(hist, cam, coord, dev, kTRUE, kTRUE, kTRUE),
                     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
                     fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),

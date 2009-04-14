@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLPerspectiveCamera
 #define ROOT_TGLPerspectiveCamera
 
-#ifndef ROOT_TGLCamera
 #include "TGLCamera.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

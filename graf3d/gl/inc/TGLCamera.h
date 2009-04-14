@@ -12,15 +12,9 @@
 #ifndef ROOT_TGLCamera
 #define ROOT_TGLCamera
 
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
-#ifndef ROOT_TGLBoundingBox
 #include "TGLBoundingBox.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
 
 #include <cassert>
 #include <cmath>

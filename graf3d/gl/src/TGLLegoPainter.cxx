@@ -24,7 +24,7 @@
 #include "TH1.h"
 
 #include "TGLLegoPainter.h"
-#include "TGLOrthoCamera.h"
+#include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 
 //______________________________________________________________________________
@@ -35,7 +35,7 @@
 ClassImp(TGLLegoPainter)
 
 //______________________________________________________________________________
-TGLLegoPainter::TGLLegoPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
+TGLLegoPainter::TGLLegoPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
                   : TGLPlotPainter(hist, cam, coord, dev, kFALSE, kTRUE, kTRUE),
                     fLegoType(kColorSimple),
                     fMinZ(0.),

@@ -12,7 +12,7 @@
 #include "TF3.h"
 
 #include "TGLMarchingCubes.h"
-#include "TGLOrthoCamera.h"
+#include "TGLPlotCamera.h"
 #include "TGLTF3Painter.h"
 #include "TGLIncludes.h"
 
@@ -193,7 +193,7 @@ void DrawMapleMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> 
 ClassImp(TGLTF3Painter)
 
 //______________________________________________________________________________
-TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera,
+TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera,
                              TGLPlotCoordinates *coord, TGLPaintDevice *dev) :
    TGLPlotPainter(hist, camera, coord, dev, kFALSE, kFALSE, kFALSE),
    fStyle(kDefault),
@@ -506,7 +506,7 @@ void TGLTF3Painter::DrawSectionXOY() const
 ClassImp(TGLIsoPainter)
 
 //______________________________________________________________________________
-TGLIsoPainter::TGLIsoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
+TGLIsoPainter::TGLIsoPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
                   : TGLPlotPainter(hist, camera, coord, dev, kFALSE, kFALSE, kFALSE),
                     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
                     fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
