@@ -66,8 +66,31 @@
 ClassImp(TEveCompositeFrame);
 
 TContextMenu* TEveCompositeFrame::fgCtxMenu = 0;
+
 const TString TEveCompositeFrame::fgkEmptyFrameName("<relinquished>");
 TList*        TEveCompositeFrame::fgFrameList = new THashList;
+
+TEveCompositeFrame::IconBarCreator_foo TEveCompositeFrame::fgIconBarCreator = 0;
+
+UInt_t             TEveCompositeFrame::fgTopFrameHeight        = 14;
+UInt_t             TEveCompositeFrame::fgMiniBarHeight         = 4;
+Bool_t             TEveCompositeFrame::fgAllowTopFrameCollapse = kTRUE;
+
+//______________________________________________________________________________
+void TEveCompositeFrame::SetupFrameMarkup(IconBarCreator_foo creator,
+                                          UInt_t top_frame_height,
+                                          UInt_t mini_bar_height,
+                                          Bool_t allow_top_collapse)
+{
+   // Set properties of the EVE frame.
+   // Should be called before the windows are created.
+
+   fgIconBarCreator        = creator;
+   fgTopFrameHeight        = top_frame_height;
+   fgMiniBarHeight         = mini_bar_height;
+   fgAllowTopFrameCollapse = allow_top_collapse;
+}
+
 //______________________________________________________________________________
 TEveCompositeFrame::TEveCompositeFrame(TGCompositeFrame* parent,
                                        TEveWindow*   eve_parent) :
@@ -88,42 +111,49 @@ TEveCompositeFrame::TEveCompositeFrame(TGCompositeFrame* parent,
 {
    // Constructor.
 
-   static const UInt_t topH = 14, miniH = 4;
+   fTopFrame = new TGHorizontalFrame(this, 20, fgTopFrameHeight);
 
-   // --- TopFrame
-
-   fTopFrame = new TGHorizontalFrame(this, 20, topH);
-
-   fToggleBar = new TGTextButton(fTopFrame, "Hide");
-   fToggleBar->ChangeOptions(kRaisedFrame);
-   fToggleBar->Resize(40, topH);
-   fTopFrame->AddFrame(fToggleBar, new TGLayoutHints(kLHintsNormal));
+   if (fgAllowTopFrameCollapse)
+   {
+      fToggleBar = new TGTextButton(fTopFrame, "Hide");
+      fToggleBar->ChangeOptions(kRaisedFrame);
+      fToggleBar->Resize(40, fgTopFrameHeight);
+      fToggleBar->Connect("Clicked()", "TEveCompositeFrame", this, "FlipTitleBarState()");
+      fTopFrame->AddFrame(fToggleBar, new TGLayoutHints(kLHintsNormal));
+   }
 
    fTitleBar = new TGTextButton(fTopFrame, "Title Bar");
    fTitleBar->ChangeOptions(kRaisedFrame);
-   fTitleBar->Resize(40, topH);
+   fTitleBar->Resize(40, fgTopFrameHeight);
+   fTitleBar->Connect("Clicked()", "TEveCompositeFrame", this, "TitleBarClicked()");
    fTopFrame->AddFrame(fTitleBar, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
 
-   fIconBar = new TGTextButton(fTopFrame, "Actions");
-   fIconBar->ChangeOptions(kRaisedFrame);
-   fIconBar->Resize(40, topH);
+   if (fgIconBarCreator)
+   {
+      fIconBar = (fgIconBarCreator)(this, fTopFrame, fgTopFrameHeight);
+   }
+   else
+   {
+      TGButton* b = new TGTextButton(fTopFrame, "Actions");
+      b->ChangeOptions(kRaisedFrame);
+      b->Resize(40, fgTopFrameHeight);
+      b->Connect("Pressed()", "TEveCompositeFrame", this, "ActionPressed()");
+      fIconBar = b;
+   }
    fTopFrame->AddFrame(fIconBar, new TGLayoutHints(kLHintsNormal));
 
    AddFrame(fTopFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
 
-   fToggleBar->Connect("Clicked()", "TEveCompositeFrame", this, "FlipTitleBarState()");
-   fTitleBar ->Connect("Clicked()", "TEveCompositeFrame", this, "TitleBarClicked()");
-   fIconBar  ->Connect("Pressed()", "TEveCompositeFrame", this, "ActionPressed()");
-
    // --- MiniBar
-
-   fMiniBar = new TGButton(this);
-   fMiniBar->ChangeOptions(kRaisedFrame | kFixedHeight);
-   fMiniBar->Resize(20, miniH);
-   fMiniBar->SetBackgroundColor(TEveWindow::GetMiniBarBackgroundColor());
-   AddFrame(fMiniBar, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
-
-   fMiniBar->Connect("Clicked()", "TEveCompositeFrame", this, "FlipTitleBarState()");
+   if (fgAllowTopFrameCollapse)
+   {
+      fMiniBar = new TGButton(this);
+      fMiniBar->ChangeOptions(kRaisedFrame | kFixedHeight);
+      fMiniBar->Resize(20, fgMiniBarHeight);
+      fMiniBar->SetBackgroundColor(TEveWindow::GetMiniBarBackgroundColor());
+      fMiniBar->Connect("Clicked()", "TEveCompositeFrame", this, "FlipTitleBarState()");
+      AddFrame(fMiniBar, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
+   }
 
    // --- Common settings.
 
@@ -298,28 +328,6 @@ void TEveCompositeFrame::ShowNormalDecorations()
    // Show title-bar or mini-bar, as dictated by the window.
 
    SetShowTitleBar(fEveWindow->GetShowTitleBar());
-}
-
-//______________________________________________________________________________
-void TEveCompositeFrame::ReplaceIconBox(TGFrame* icon_box)
-{
-   // Replace default action-button with the provided frame.
-   // The contents will erased via local-cleanup so make sure the frame
-   // will properly destroy its children.
-   // MapWindow is called on the passed frame but not map-subwindows.
-
-   if (fIconBar)
-   {
-      fTopFrame->RemoveFrame(fIconBar);
-      fIconBar->DestroyWindow();
-      delete fIconBar;
-      fIconBar = 0;
-   }
-
-   icon_box->ReparentWindow(fTopFrame);
-   fTopFrame->AddFrame(icon_box, new TGLayoutHints(kLHintsNormal));
-   fTopFrame->Layout();
-   icon_box->MapWindow();
 }
 
 //______________________________________________________________________________

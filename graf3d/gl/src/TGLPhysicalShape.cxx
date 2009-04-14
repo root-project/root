@@ -320,7 +320,7 @@ void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color) c
       {
          // Outline also needs grey wireframe but respecting
          // transparency of main diffuse color.
-         glColor4f(0.1, 0.1, 0.1, color[3]/2.0);
+         TGLUtil::Color(rnrCtx.ColorSet().Outline(), 0.5f*color[3]);
          break;
       }
       default:
@@ -388,7 +388,7 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
       for (int i = first_outer; i < 8; ++i)
       {
          glViewport(vp.X() + outer[i][0], vp.Y() + outer[i][1], vp.Width(), vp.Height());
-         glColor4ubv(rnrCtx.GetSSLColor(fSelected));
+         glColor4ubv(rnrCtx.ColorSet().Selection(fSelected).CArr());
          fLogicalShape->Draw(rnrCtx);
       }
       TGLUtil::UnlockColor();

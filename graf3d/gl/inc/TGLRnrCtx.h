@@ -12,7 +12,7 @@
 #ifndef ROOT_TGLRnrCtx
 #define ROOT_TGLRnrCtx
 
-#include <Rtypes.h>
+#include "Rtypes.h"
 #include "TGLStopwatch.h"
 
 class TGLViewerBase;
@@ -20,6 +20,7 @@ class TGLCamera;
 class TGLSceneBase;
 class TGLSceneInfo;
 
+class TGLColorSet;
 class TGLFont;
 class TGLContextIdentity;
 
@@ -112,7 +113,7 @@ protected:
    TGLRect        *fPickRectangle;
    TGLSelectBuffer*fSelectBuffer;
 
-   UChar_t         fSSLColor[5][4];    // Colors for shape-selection-levels
+   void           *fColorSetStack;
 
    UInt_t          fEventKeySym;
 
@@ -202,9 +203,11 @@ public:
    void      BeginSelection(Int_t x, Int_t y, Int_t r=3);
    void      EndSelection  (Int_t glResult);
 
-   UChar_t* GetSSLColor(Int_t level) { return fSSLColor[level]; }
-   void SetSSLColor(Int_t level, UChar_t r, UChar_t g, UChar_t b, UChar_t a=1);
-   void SetSSLColor(Int_t level, UChar_t rgba[4]);
+   void         PushColorSet();
+   TGLColorSet& ColorSet();
+   void         PopColorSet();
+   TGLColorSet* ChangeBaseColorSet(TGLColorSet* set);
+   TGLColorSet* GetBaseColorSet();
 
    UInt_t GetEventKeySym()   const { return fEventKeySym; }
    void   SetEventKeySym(UInt_t k) { fEventKeySym = k; }

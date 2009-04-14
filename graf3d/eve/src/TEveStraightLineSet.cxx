@@ -42,6 +42,7 @@ TEveStraightLineSet::TEveStraightLineSet(const char* n, const char* t):
    fOwnMarkersIds (kFALSE),
    fRnrMarkers    (kTRUE),
    fRnrLines      (kTRUE),
+   fDepthTest     (kTRUE),
    fLastLine      (0)
 {
    // Constructor.

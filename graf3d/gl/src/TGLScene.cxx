@@ -712,7 +712,7 @@ void TGLScene::RenderAllPasses(TGLRnrCtx&           rnrCtx,
       {
          // First pass - filled polygons
          glEnable(GL_POLYGON_OFFSET_FILL);
-         glPolygonOffset(1.f, 1.f);
+         glPolygonOffset(0.5f, 0.5f);
       }
       else if (pass == TGLRnrCtx::kPassOutlineLine)
       {

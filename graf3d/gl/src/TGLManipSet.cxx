@@ -168,15 +168,7 @@ void TGLManipSet::Render(TGLRnrCtx& rnrCtx)
       // TODO: This must be replaced by some color in rnrCtx,
       // like def-overlay-color, background-color, foreground-color
       // Or at least bkgcol ... i can then find high contrast.
-      if (rnrCtx.SceneStyle() == TGLRnrCtx::kFill       ||
-          rnrCtx.SceneStyle() == TGLRnrCtx::kWireFrame)
-      {
-         // White for wireframe and fill style,
-         glColor3d(1.0, 1.0, 1.0);
-      } else {
-         // Red for outlines
-         glColor3d(1.0, 0.0, 0.0);
-      }
+      TGLUtil::Color(rnrCtx.ColorSet().Markup());
       glDisable(GL_LIGHTING);
       fPShape->BoundingBox().Draw();
       glEnable(GL_LIGHTING);

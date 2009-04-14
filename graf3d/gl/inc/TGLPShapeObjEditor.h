@@ -36,7 +36,7 @@ class TGLPShapeObjEditor : public TGedFrame,
 {
 
 private:
-   enum ELightMode   { kDiffuse, kAmbient, kSpecular, kEmission, kLTot };
+   enum ELightMode   { kDiffuse, kAmbient, kSpecular, kEmission };
    ELightMode        fLMode;
 
    TGLayoutHints     fLb;  //button layout
@@ -64,7 +64,6 @@ private:
 
    TGButton         *fColorApplyButton;  //apply to selected
    TGButton         *fColorApplyFamily;  //apply to selected and family
-   Bool_t            fIsLight;           //does object emit light
    Float_t           fRGBA[17];          //color multiplet
 
    Window_t          fGLWin;             //GL window with sphere
@@ -109,7 +108,7 @@ public:
    void DoColorSlider(Int_t val);
    void DoColorButton();
 
-   ClassDef(TGLPShapeObjEditor, 0) //GUI for editing TGLViewer attributes
+   ClassDef(TGLPShapeObjEditor, 0); //GUI for editing attributes of a physical-shape.
 };
 
 #endif

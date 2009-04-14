@@ -142,7 +142,8 @@ void TGLViewerEditor::SetModel(TObject* obj)
    fClipSet->SetModel(fViewer->GetClipSet());
 
    // style tab
-   fClearColor->SetColor(TColor::Number2Pixel(fViewer->GetClearColor()), kFALSE);
+   fClearColor->SetColor(TColor::Number2Pixel(fViewer->RnrCtx().ColorSet().Background().GetColorIndex()), kFALSE);
+   fClearColor->Enable(!fViewer->IsUsingDefaultColorSet());
    fIgnoreSizesOnUpdate->SetState(fViewer->GetIgnoreSizesOnUpdate() ? kButtonDown : kButtonUp);
    fResetCamerasOnUpdate->SetState(fViewer->GetResetCamerasOnUpdate() ? kButtonDown : kButtonUp);
    fResetCameraOnDoubleClick->SetState(fViewer->GetResetCameraOnDoubleClick() ? kButtonDown : kButtonUp);
@@ -170,7 +171,7 @@ void TGLViewerEditor::DoClearColor(Pixel_t color)
 {
    // Clear-color was changed.
 
-   fViewer->SetClearColor(Color_t(TColor::GetColor(color)));
+   fViewer->RnrCtx().ColorSet().Background().SetColor(Color_t(TColor::GetColor(color)));
    ViewerRedraw();
 }
 
@@ -342,7 +343,7 @@ TGNumberEntry* TGLViewerEditor::MakeLabeledNEntry(TGCompositeFrame* p, const cha
    rfr->AddFrame(labfr, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 0, 0, 0));
 
    TGNumberEntry* ne = new TGNumberEntry(rfr, 0.0f, nd, -1, (TGNumberFormat::EStyle)style);
-   rfr->AddFrame( ne, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsBottom, 2, 0, 0));
+   rfr->AddFrame(ne, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsBottom, 2, 0, 0));
 
    p->AddFrame(rfr, new TGLayoutHints(kLHintsLeft, 0, 0, 1, 0));
    return ne;

@@ -57,6 +57,18 @@ void TEvePolygonSetProjectedGL::SetBBox()
 /******************************************************************************/
 
 //______________________________________________________________________________
+void TEvePolygonSetProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
+{
+   // Draw function for TEvePolygonSetProjectedGL.
+   // Skips line-pass of outline mode.
+
+   if (rnrCtx.IsDrawPassOutlineLine())
+      return;
+
+   TGLObject::Draw(rnrCtx);
+}
+
+//______________________________________________________________________________
 void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
 {
    // Do GL rendering.

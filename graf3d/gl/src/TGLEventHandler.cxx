@@ -269,6 +269,11 @@ Bool_t TGLEventHandler::HandleCrossing(Event_t *event)
    // Handle generic Event_t type 'event' - provided to catch focus changes
    // and terminate any interaction in viewer.
 
+   // Ignore grab and ungrab events.
+   if (event->fCode != 0) {
+      return kTRUE;
+   }
+
    fGLViewer->MouseIdle(0, 0, 0);
    if (event->fType == kEnterNotify) {
       if (fGLViewer->fDragAction != TGLViewer::kDragNone) {
@@ -624,28 +629,21 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
          case kKey_R:
          case kKey_r:
             fGLViewer->SetStyle(TGLRnrCtx::kFill);
-            if (fGLViewer->fClearColor == 0) {
-               fGLViewer->fClearColor = 1; // Black
-               fGLViewer->RefreshPadEditor(this);
-            }
+            redraw = kTRUE;
+            break;
+         case kKey_E:
+         case kKey_e:
+            fGLViewer->SwitchColorSet();
             redraw = kTRUE;
             break;
          case kKey_W:
          case kKey_w:
             fGLViewer->SetStyle(TGLRnrCtx::kWireFrame);
-            if (fGLViewer->fClearColor == 0) {
-               fGLViewer->fClearColor = 1; // Black
-               fGLViewer->RefreshPadEditor(this);
-            }
             redraw = kTRUE;
             break;
          case kKey_T:
          case kKey_t:
             fGLViewer->SetStyle(TGLRnrCtx::kOutline);
-            if (fGLViewer->fClearColor == 1) {
-               fGLViewer->fClearColor = 0; // White
-               fGLViewer->RefreshPadEditor(this);
-            }
             redraw = kTRUE;
             break;
 

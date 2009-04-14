@@ -36,6 +36,10 @@ protected:
    UInt_t        fLightState;   //! light states (on/off) mask
    Bool_t        fUseSpecular;  //!
 
+   Float_t       fFrontPower;    //! power of the front lamp
+   Float_t       fSidePower;     //! power of the side lamps
+   Float_t       fSpecularPower; //! power of specular lamp
+
 public:
    TGLLightSet();
    virtual ~TGLLightSet() {}
@@ -46,6 +50,13 @@ public:
 
    Bool_t GetUseSpecular() const   { return fUseSpecular; }
    void   SetUseSpecular(Bool_t s) { fUseSpecular = s; }
+
+   Float_t GetFrontPower()     const { return fFrontPower; }
+   Float_t GetSidePower()      const { return fSidePower; }
+   Float_t GetSpecularPower()  const { return fSpecularPower; }
+   void SetFrontPower(Float_t  p)    { fFrontPower = p; }
+   void SetSidePower(Float_t  p)     { fSidePower  = p; }
+   void SetSpecularPower(Float_t  p) { fSpecularPower = p; }
 
    void StdSetupLights(const TGLBoundingBox& bbox, const TGLCamera& camera,
                        Bool_t debug=kFALSE);

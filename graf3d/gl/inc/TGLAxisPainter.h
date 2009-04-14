@@ -43,7 +43,7 @@ private:
 
    // Print format.
    void LabelsLimits(const char *label, Int_t &first, Int_t &last) const;
-   void FormAxisValue(Float_t x, char* lab) const;
+   void FormAxisValue(Double_t x, TString &s) const;
 
 protected:
    TAttAxis        *fAttAxis;    // Model.
@@ -67,6 +67,7 @@ protected:
 
    // Labels options. Allready exist in TAttAxis, but can't be set.
    TGLFont::ETextAlign_e fLabelAlign;
+   TGLVector3 fTitlePos;
 
 public:
    TGLAxisPainter();
@@ -88,6 +89,9 @@ public:
    void         SetTitlePixelFontSize(Int_t fs) { fTitlePixelFontSize=fs; }
    Int_t        GetTitlePixelFontSize() const { return fTitlePixelFontSize; }
 
+   TGLVector3&  RefTitlePos() { return fTitlePos; }
+
+
    TGLFont::ETextAlign_e GetLabelAlign() const { return fLabelAlign; }
    void         SetLabelAlign(TGLFont::ETextAlign_e x) { fLabelAlign = x; }
 
@@ -105,7 +109,7 @@ public:
 
    // Renderers.
    void RnrText( const char* txt, const TGLVector3 &pos, const TGLFont::ETextAlign_e align, const TGLFont &font) const;
-   void RnrTitle(const char* title, Float_t pos, TGLFont::ETextAlign_e align) const;
+   void RnrTitle(const char* title, TGLVector3 &pos, TGLFont::ETextAlign_e align) const;
    void RnrLabels() const;
    void RnrLines() const;
 

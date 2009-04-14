@@ -77,6 +77,8 @@ protected:
    Bool_t            fRnrMarkers;
    Bool_t            fRnrLines;
 
+   Bool_t            fDepthTest;
+
    Line_t*           fLastLine; //!
 
 public:
@@ -93,10 +95,12 @@ public:
 
    virtual Bool_t GetRnrMarkers() { return fRnrMarkers; }
    virtual Bool_t GetRnrLines()   { return fRnrLines;   }
+   virtual Bool_t GetDepthTest()  { return fDepthTest;   }
 
    virtual void SetRnrMarkers(Bool_t x) { fRnrMarkers = x; }
    virtual void SetRnrLines(Bool_t x)   { fRnrLines   = x; }
-
+   virtual void SetDepthTest(Bool_t x)  { fDepthTest   = x; }
+   
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(ostream& out, const TString& var);
 

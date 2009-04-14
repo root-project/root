@@ -289,6 +289,17 @@ void TEveProjectionAxesGL::GetRange(Int_t ax, Float_t frustMin, Float_t frustMax
 }
 
 //______________________________________________________________________________
+void TEveProjectionAxesGL::Draw(TGLRnrCtx& rnrCtx) const
+{
+   // Draw function for TEveProjectionAxesGL. Skips line-pass of outline mode.
+
+   if (rnrCtx.IsDrawPassOutlineLine())
+      return;
+
+   TGLObject::Draw(rnrCtx);
+}
+
+//______________________________________________________________________________
 void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
    // Actual rendering code.
@@ -296,10 +307,18 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    if (rnrCtx.Selection() || rnrCtx.Highlight()) return;
 
+   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
+
+   glDisable(GL_LIGHTING);
+   glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+   glEnable(GL_COLOR_MATERIAL);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   glDisable(GL_CULL_FACE);
+
    // Draw on front-clipping plane.
    Float_t old_depth_range[2];
    glGetFloatv(GL_DEPTH_RANGE, old_depth_range);
-   glDepthRange(0, 0);
+   glDepthRange(0, 0.001);
 
    // Frustum size.
    TGLCamera &camera = rnrCtx.RefCamera();
@@ -338,7 +357,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    }
 
    //
-   // Axses.
+   // Axes.
    {
       using namespace TMath;
       GLint   vp[4];
@@ -405,4 +424,6 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       }
    }
    glDepthRange(old_depth_range[0], old_depth_range[1]);
+
+   glPopAttrib();
 }

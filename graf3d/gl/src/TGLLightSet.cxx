@@ -28,7 +28,9 @@ TGLLightSet::TGLLightSet() :
    TObject(),
 
    fLightState(kLightMask), // All on
-   fUseSpecular(kTRUE)
+   fUseSpecular(kTRUE),
+
+   fFrontPower(0.4), fSidePower(0.7), fSpecularPower(0.8)
 {
    // Constructor.
 }
@@ -114,14 +116,14 @@ void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
       Float_t pos3[] = { center.X() - lightRadius, center.Y(), sideLightsZ, 1.0 };
       Float_t pos4[] = { center.X() + lightRadius, center.Y(), sideLightsZ, 1.0 };
 
-      const Float_t frontLightColor[] = { 0.4, 0.4, 0.4, 1.0 };
-      const Float_t sideLightColor[]  = { 0.7, 0.7, 0.7, 1.0 };
-      const Float_t whiteSpec[]       = { 0.8, 0.8, 0.8, 1.0 };
-      const Float_t nullSpec[]        = { 0.0, 0.0, 0.0, 1.0 };
+      Float_t specular = fUseSpecular ? fSpecularPower : 0.0f;
+      const Float_t frontLightColor[] = { fFrontPower, fFrontPower, fFrontPower, 1.0f };
+      const Float_t sideLightColor[]  = { fSidePower,  fSidePower,  fSidePower,  1.0f };
+      const Float_t specLightColor[]  = { specular,    specular,    specular,    1.0f };
 
       glLightfv(GL_LIGHT0, GL_POSITION, pos0);
-      glLightfv(GL_LIGHT0, GL_DIFFUSE, frontLightColor);
-      glLightfv(GL_LIGHT0, GL_SPECULAR, fUseSpecular ? whiteSpec : nullSpec);
+      glLightfv(GL_LIGHT0, GL_DIFFUSE,  frontLightColor);
+      glLightfv(GL_LIGHT0, GL_SPECULAR, specLightColor);
 
       glLightfv(GL_LIGHT1, GL_POSITION, pos1);
       glLightfv(GL_LIGHT1, GL_DIFFUSE,  sideLightColor);

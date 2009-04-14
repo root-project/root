@@ -18,6 +18,8 @@
 class TGWindow;
 class TGedEditor;
 class TGLViewer;
+class TGLSAViewer;
+class TGLEmbeddedViewer;
 class TGLPhysicalShape;
 
 class TEveScene;
@@ -45,8 +47,10 @@ public:
 
    TGLViewer* GetGLViewer() const { return fGLViewer; }
    void SetGLViewer(TGLViewer* viewer, TGFrame* frame);
-   void SpawnGLViewer(TGedEditor* ged);
-   void SpawnGLEmbeddedViewer(Int_t border=0);
+
+   TGLSAViewer*       SpawnGLViewer(TGedEditor* ged);
+   TGLEmbeddedViewer* SpawnGLEmbeddedViewer(Int_t border=0);
+
    void Redraw(Bool_t resetCameras=kFALSE);
 
    virtual void AddScene(TEveScene* scene);

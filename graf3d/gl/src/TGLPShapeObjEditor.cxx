@@ -34,7 +34,7 @@
 //
 // GUI editor for TGLPShapeObj.
 
-ClassImp(TGLPShapeObjEditor)
+ClassImp(TGLPShapeObjEditor);
 
 enum EGeometry {
       kCenterX,
@@ -52,11 +52,6 @@ enum EApplyButtonIds {
       kTBda,
       kTBa,
       kTBaf,
-      kTBTop,
-      kTBRight,
-      kTBBottom,
-      kTBLeft,
-      kTBFront,
       kTBEndOfList
 };
 
@@ -82,13 +77,14 @@ TGLPShapeObjEditor::TGLPShapeObjEditor(const TGWindow *p,  Int_t width, Int_t he
      fColorFrame(0),
      fRedSlider(0), fGreenSlider(0), fBlueSlider(0), fAlphaSlider(0), fShineSlider(0),
      fColorApplyButton(0), fColorApplyFamily(0),
-     fIsLight(kFALSE), fRGBA(),
+     fRGBA(),
      fPShapeObj(0)
 {
    // Constructor of TGLPhysicalShape editor GUI.
 
-   fRGBA[12] = 0.f, fRGBA[13] = 0.f, fRGBA[14] = 0.f;
-   fRGBA[15] = 1.f, fRGBA[16] = 60.f;
+   fRGBA[12] = fRGBA[13] = fRGBA[14] = 0.0f;
+   fRGBA[15] = 1.0f;
+   fRGBA[16] = 60.0f;
 
    CreateColorControls();
    CreateGeoControls();
@@ -294,24 +290,10 @@ void TGLPShapeObjEditor::SetRGBA(const Float_t *rgba)
 
    for (Int_t i = 0; i < 17; ++i) fRGBA[i] = rgba[i];
 
-   if (rgba[16] < 0.f) {//this conditional part is obsolete now, we cannot edit ligts more
-      if (fLMode == kEmission) {
-         fLMode = kDiffuse;
-         fLightTypes[kDiffuse]->SetState(kButtonDown);
-         fLightTypes[kEmission]->SetState(kButtonUp);
-      }
-      fLightTypes[kEmission]->SetState(kButtonDisabled);
-      fIsLight = kTRUE;
-   } else {
-      fIsLight = kFALSE;
-      fLightTypes[kEmission]->SetState(kButtonUp);
-      //fAlphaSlider->SetPosition(Int_t(fRGBA[3] * 100));
-      fShineSlider->SetPosition(Int_t(fRGBA[16]));
-   }
-
    fRedSlider->SetPosition(Int_t(fRGBA[fLMode * 4] * 100));
    fGreenSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 1] * 100));
    fBlueSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 2] * 100));
+   fShineSlider->SetPosition(Int_t(fRGBA[16]));
 
    DrawSphere();
 }
@@ -337,18 +319,16 @@ void TGLPShapeObjEditor::DoColorSlider(Int_t val)
          fRGBA[fLMode * 4 + 2] = val / 100.f;
          break;
       case kHSa:
-         if (!fIsLight) fRGBA[fLMode * 4 + 3] = val / 100.f;
+         fRGBA[fLMode * 4 + 3] = val / 100.f;
          break;
       case kHSs:
-         if (!fIsLight) fRGBA[16] = val;
+         fRGBA[16] = val;
          break;
       }
 
-      if (!fIsLight || (wid != kHSa && wid != kHSs)) {
-         fColorApplyButton->SetState(kButtonUp);
-         if (!fIsLight) fColorApplyFamily->SetState(kButtonUp);
-         DrawSphere();
-      }
+      fColorApplyButton->SetState(kButtonUp);
+      fColorApplyFamily->SetState(kButtonUp);
+      DrawSphere();
    }
 }
 

@@ -120,7 +120,7 @@ void TEveViewer::SetGLViewer(TGLViewer* viewer, TGFrame* frame)
 }
 
 //______________________________________________________________________________
-void TEveViewer::SpawnGLViewer(TGedEditor* ged)
+TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged)
 {
    // Spawn new GLViewer and adopt it.
 
@@ -136,10 +136,12 @@ void TEveViewer::SpawnGLViewer(TGedEditor* ged)
 
    if (fEveFrame == 0)
       PreUndock();
+
+   return v;
 }
 
 //______________________________________________________________________________
-void TEveViewer::SpawnGLEmbeddedViewer(Int_t border)
+TGLEmbeddedViewer* TEveViewer::SpawnGLEmbeddedViewer(Int_t border)
 {
    // Spawn new GLViewer and adopt it.
 
@@ -156,6 +158,8 @@ void TEveViewer::SpawnGLEmbeddedViewer(Int_t border)
 
    if (fEveFrame == 0)
       PreUndock();
+
+   return v;
 }
 
 //______________________________________________________________________________

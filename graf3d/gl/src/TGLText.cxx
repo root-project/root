@@ -14,6 +14,7 @@
 #include "TError.h"
 
 #include "TGLText.h"
+#include "TGLUtil.h"
 #include "TColor.h"
 #include "TSystem.h"
 #include "TEnv.h"
@@ -96,14 +97,7 @@ void TGLText::PaintGLText(Double_t x, Double_t y, Double_t z, const char *text)
    glPushMatrix();
    glTranslatef(x, y, z);
 
-   // Set Text color.
-   TColor *col;
-   Float_t red, green, blue;
-   col = gROOT->GetColor(GetTextColor());
-   col->GetRGB(red, green, blue);
-   glColor3d(red, green, blue);
-
-   // Text size
+   TGLUtil::Color(GetTextColor());
    Double_t s = GetTextSize();
    glScalef(s,s,s);
 

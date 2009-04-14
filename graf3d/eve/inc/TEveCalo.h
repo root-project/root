@@ -194,7 +194,7 @@ protected:
 
 public:
    TEveCalo2D(const char* n="TEveCalo2D", const char* t="");
-   virtual ~TEveCalo2D(){}
+   virtual ~TEveCalo2D();
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
    virtual void UpdateProjection();

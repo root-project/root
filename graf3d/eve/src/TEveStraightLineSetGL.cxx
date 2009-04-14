@@ -73,6 +73,17 @@ Bool_t TEveStraightLineSetGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 /******************************************************************************/
 
 //______________________________________________________________________________
+void TEveStraightLineSetGL::Draw(TGLRnrCtx& rnrCtx) const
+{
+   // Draw function for TEveStraightLineSetGL. Skips line-pass of outline mode.
+
+   if (rnrCtx.IsDrawPassOutlineLine())
+      return;
+
+   TGLObject::Draw(rnrCtx);
+}
+
+//______________________________________________________________________________
 void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
    // Render the line-set with GL.
@@ -81,13 +92,17 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    TEveStraightLineSet& mL = * fM;
 
-   // lines
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
+   if (mL.GetDepthTest() == kFALSE)
+   {
+      glPushAttrib(GL_VIEWPORT_BIT);
+      glDepthRange(0, 0.1); 
+   }
+
+   // lines
    if (mL.GetRnrLines() && mL.GetLinePlex().Size() > 0)
    {
       glPushAttrib(GL_LINE_BIT | GL_ENABLE_BIT);
-
-      glDisable(GL_LIGHTING);
       glLineWidth(mL.GetLineWidth());
       if (mL.GetLineStyle() > 1) {
          Int_t    fac = 1;
@@ -179,6 +194,8 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       delete [] pnts;
    }
 
+   if (mL.GetDepthTest() == kFALSE)
+      glPopAttrib();
 }
 
 /******************************************************************************/

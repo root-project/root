@@ -40,11 +40,10 @@ public:
 
    virtual Bool_t  SetModel(TObject* obj, const Option_t* opt = 0);
    virtual void    SetBBox();
+   virtual void    Draw(TGLRnrCtx& rnrCtx) const;
    virtual void    DirectDraw(TGLRnrCtx & rnrCtx) const;
 
-   Bool_t IgnoreSizeForOfInterest() const {
-      return kTRUE;
-   }
+   Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
 
    ClassDef(TEveProjectionAxesGL, 0); // GL renderer class for TEveProjectionAxes.
 };

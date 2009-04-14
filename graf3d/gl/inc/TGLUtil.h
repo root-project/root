@@ -12,12 +12,8 @@
 #ifndef ROOT_TGLUtil
 #define ROOT_TGLUtil
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 class TString;
 class TGLBoundingBox;
@@ -28,8 +24,8 @@ class TAttLine;
 
 class GLUtesselator;
 
-#include <cmath>
 #include <vector>
+#include <cmath>
 #include <cassert>
 
 // TODO:Find a better place for these enums - TGLEnum.h?
@@ -897,6 +893,97 @@ inline void TGLMatrix::GetBaseVec(Int_t b, Double_t* x) const
 
 
 //////////////////////////////////////////////////////////////////////////
+//
+// TGLColor
+//
+// Encapsulate color in preferred GL format - UChar_t RGBA array.
+//
+//////////////////////////////////////////////////////////////////////////
+
+class TGLColor
+{
+protected:
+   UChar_t fRGBA[4];
+
+public:
+   TGLColor();
+   TGLColor(Int_t r, Int_t g, Int_t b, Int_t a=255);
+   TGLColor(Float_t r, Float_t g, Float_t b, Float_t a=1);
+   TGLColor(Color_t color_index, Char_t transparency=0);
+   virtual ~TGLColor();
+
+   TGLColor& operator=(const TGLColor& c);
+
+   UChar_t*        Arr()       { return fRGBA; }
+   const UChar_t* CArr() const { return fRGBA; }
+
+   UChar_t GetRed()   const { return fRGBA[0]; }
+   UChar_t GetGreen() const { return fRGBA[1]; }
+   UChar_t GetBlue()  const { return fRGBA[2]; }
+   UChar_t GetAlpha() const { return fRGBA[3]; }
+
+   Color_t GetColorIndex()   const;
+   Char_t  GetTransparency() const;
+
+   void SetRed(Int_t v)   { fRGBA[0] = v; }
+   void SetGreen(Int_t v) { fRGBA[1] = v; }
+   void SetBlue(Int_t v)  { fRGBA[2] = v; }
+   void SetAlpha(Int_t v) { fRGBA[3] = v; }
+
+   void SetColor(Int_t r, Int_t g, Int_t b, Int_t a=255);
+   void SetColor(Float_t r, Float_t g, Float_t b, Float_t a=1);
+   void SetColor(Color_t color_index);
+   void SetColor(Color_t color_index, Char_t transparency);
+   void SetTransparency(Char_t transparency);
+
+   TString AsString() const;
+
+   ClassDef(TGLColor, 0); // Color in preferred GL format - RGBA.
+};
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+// TGLColorSet
+//
+// A collection of colors used for OpenGL rendering.
+//
+//////////////////////////////////////////////////////////////////////////
+
+class TGLColorSet
+{
+protected:
+   TGLColor        fBackground;
+   TGLColor        fForeground;
+   TGLColor        fOutline;
+   TGLColor        fMarkup;
+   TGLColor        fSelection[5];   // Colors for shape-selection-levels
+
+public:
+   TGLColorSet();
+   virtual ~TGLColorSet();
+
+   TGLColorSet& operator=(const TGLColorSet& s);
+
+   TGLColor& Background()       { return fBackground; }
+   TGLColor& Foreground()       { return fForeground; }
+   TGLColor& Outline()          { return fOutline; }
+   TGLColor& Markup()           { return fMarkup;  }
+   TGLColor& Selection(Int_t i) { return fSelection[i]; }
+
+   const TGLColor& Background()       const { return fBackground; }
+   const TGLColor& Foreground()       const { return fForeground; }
+   const TGLColor& Outline()          const { return fOutline; }
+   const TGLColor& Markup()           const { return fMarkup;  }
+   const TGLColor& Selection(Int_t i) const { return fSelection[i]; }
+
+   void StdDarkBackground();
+   void StdLightBackground();
+
+   ClassDef(TGLColorSet, 0); // Collection of colors used for GL rendering.
+};
+
+//////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TGLUtil                                                              //
 //                                                                      //
@@ -978,8 +1065,10 @@ public:
    static UInt_t UnlockColor();
    static Bool_t IsColorLocked();
 
+   static void Color(const TGLColor& color);
+   static void Color(const TGLColor& color, Float_t alpha);
    static void Color(Color_t color_index, Float_t alpha=1);
-   static void ColorTransparency(Color_t color_index, UChar_t transparency=0);
+   static void ColorTransparency(Color_t color_index, Char_t transparency=0);
    static void Color3ub(UChar_t r, UChar_t g, UChar_t b);
    static void Color4ub(UChar_t r, UChar_t g, UChar_t b, UChar_t a);
    static void Color3ubv(const UChar_t* rgb);

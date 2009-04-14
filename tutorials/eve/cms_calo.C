@@ -73,7 +73,7 @@ void MakeCalo2D(TEveCalo3D* calo3d)
    TGLViewer* v = v1->GetGLViewer();
    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
    v->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
-   v->SetClearColor(kBlue + 4);
+   v->ColorSet().Background().SetColor(kBlue + 4);
 
    // projected calorimeter
    TEveProjectionManager* mng = new TEveProjectionManager();

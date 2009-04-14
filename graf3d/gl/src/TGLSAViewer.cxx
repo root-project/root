@@ -55,6 +55,7 @@ const char * TGLSAViewer::fgHelpText1 = "\
 DIRECT SCENE INTERACTIONS\n\n\
    Press:\n\
    \tw          --- wireframe mode\n\
+   \te          --- switch between dark / light color-set\n\
    \tr          --- filled polygons mode\n\
    \tt          --- outline mode\n\
    \tj          --- ZOOM in\n\
@@ -275,6 +276,8 @@ void TGLSAViewer::CreateGLWidget()
       return;
    }
 
+   ResetInitGL();
+
    fGLWidget = TGLWidget::Create(fRightVerticalFrame, kTRUE, kTRUE, 0, 10, 10);
    fGLWidget->SetEventHandler(fEventHandler);
 
@@ -295,7 +298,10 @@ void TGLSAViewer::DestroyGLWidget()
       return;
    }
 
+   ResetInitGL();
+
    fGLWidget->UnmapWindow();
+   fGLWidget->SetEventHandler(0);
 
    fRightVerticalFrame->RemoveFrame(fGLWidget);
    fGLWidget->DeleteWindow();

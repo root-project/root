@@ -439,6 +439,19 @@ TEveCalo2D::TEveCalo2D(const char* n, const char* t):
 }
 
 //______________________________________________________________________________
+TEveCalo2D::~TEveCalo2D()
+{
+   // Destructor.
+
+   for(UInt_t vi = 0; vi < fCellLists.size(); ++vi)
+   {
+      TEveCaloData::vCellId_t* cids = fCellLists[vi];
+      cids->clear();
+      delete cids;
+   }
+}
+
+//______________________________________________________________________________
 void TEveCalo2D::UpdateProjection()
 {
    // This is virtual method from base-class TEveProjected.
@@ -635,34 +648,35 @@ void TEveCaloLego::ComputeBBox()
 
    // Float_t[6] X(min,max), Y(min,max), Z(min,max)
 
-   if (fData)
+
+   Float_t ex = 1.2;
+
+   Float_t a = 0.5*ex;
+
+   fBBox[0] = -a;
+   fBBox[1] =  a;
+   fBBox[2] = -a;
+   fBBox[3] =  a;
+
+   // scaling is relative to shortest XY axis
+   Double_t em, eM, pm, pM;
+   fData->GetEtaLimits(em, eM);
+   fData->GetPhiLimits(pm, pM);
+   Double_t r = (eM-em)/(pM-pm);
+   if (r<1)
    {
-      Float_t ex = 1.2;
-
-      Float_t a = 0.5*ex;
-
-      fBBox[0] = -a;
-      fBBox[1] =  a;
-      fBBox[2] = -a;
-      fBBox[3] =  a;
-
-      // scaling is relative to shortest XY axis
-      Double_t em, eM, pm, pM;
-      fData->GetEtaLimits(em, eM);
-      fData->GetPhiLimits(pm, pM);
-      Double_t r = (eM-em)/(pM-pm);
-      if (r<1)
-      {
-         fBBox[2] /= r;
-         fBBox[3] /= r;
-      }
-      else
-      {
-         fBBox[0] *= r;
-         fBBox[1] *= r;
-      }
-
-      fBBox[4] =  fMaxTowerH*(1-ex);
-      fBBox[5] =  fMaxTowerH*ex;
+      fBBox[2] /= r;
+      fBBox[3] /= r;
    }
+   else
+   {
+      fBBox[0] *= r;
+      fBBox[1] *= r;
+   }
+
+   fBBox[4] =  0;
+   if (fScaleAbs)
+      fBBox[5] = fMaxTowerH;
+   else 
+      fBBox[5] = 1;
 }

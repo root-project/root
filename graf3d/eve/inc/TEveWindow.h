@@ -41,18 +41,26 @@ class TEveCompositeFrame : public TGCompositeFrame
    friend class TEveWindow;
    friend class TEveWindowManager;
 
+public:
+   typedef TGFrame* (*IconBarCreator_foo)(TEveCompositeFrame*, TGCompositeFrame*, Int_t);
+
 private:
    TEveCompositeFrame(const TEveCompositeFrame&);            // Not implemented
    TEveCompositeFrame& operator=(const TEveCompositeFrame&); // Not implemented
+
+   static IconBarCreator_foo fgIconBarCreator;
+   static UInt_t             fgTopFrameHeight;
+   static UInt_t             fgMiniBarHeight;
+   static Bool_t             fgAllowTopFrameCollapse;
 
 protected:
    TGCompositeFrame  *fTopFrame;
    TGTextButton      *fToggleBar;
    TGTextButton      *fTitleBar;
-   TGTextButton      *fIconBar;
+   TGFrame           *fIconBar;
    TGLayoutHints     *fEveWindowLH;
 
-   TGButton          *fMiniBar;
+   TGFrame           *fMiniBar;
 
    TEveElement       *fEveParent;
    TEveWindow        *fEveWindow;
@@ -83,11 +91,14 @@ public:
    virtual void HideAllDecorations();
    virtual void ShowNormalDecorations();
 
-   void ReplaceIconBox(TGFrame* icon_box);
-
    void ActionPressed();
    void FlipTitleBarState();
    void TitleBarClicked();
+
+   static void SetupFrameMarkup(IconBarCreator_foo creator,
+                                UInt_t top_frame_height   = 14,
+                                UInt_t mini_bar_height    = 4,
+                                Bool_t allow_top_collapse = kTRUE);
 
    ClassDef(TEveCompositeFrame, 0); // Composite frame containing eve-window-controls and eve-windows.
 };

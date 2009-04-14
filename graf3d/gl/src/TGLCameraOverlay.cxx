@@ -68,7 +68,7 @@ TGLCameraOverlay::~TGLCameraOverlay()
 //______________________________________________________________________________
 TAttAxis* TGLCameraOverlay::GetAttAxis()
 {
-   return (TAttAxis*) fAxis;
+   return dynamic_cast<TAttAxis*>(fAxis);
 }
 
 //______________________________________________________________________________
@@ -241,13 +241,13 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
    }
 
    TGLVector3 v;
-   TGLVector3 v1;
    TGLVector3 xdir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(2); // left
    TGLVector3 ydir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(3); // up
    xdir.Normalise();
    ydir.Normalise();
 
-   TGLUtil::Color(kWhite);
+   TGLUtil::Color(rnrCtx.ColorSet().Foreground());
+
    const char* txt = Form("%.*f", (exp < 0) ? -exp : 0, red);
    Float_t bb[6];
    TGLFont font;
