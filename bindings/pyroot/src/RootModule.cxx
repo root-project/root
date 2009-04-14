@@ -485,6 +485,9 @@ extern "C" void initlibPyROOT()
    if ( ! Utility::InitProxy( gRootModule, &TCustomInt_Type, "Long" ) )
       return;
 
+   if ( ! Utility::InitProxy( gRootModule, &TCustomInstanceMethod_Type, "InstanceMethod" ) )
+      return;
+
 // policy labels
    PyModule_AddObject( gRootModule, (char*)"kMemoryHeuristics", PyInt_FromLong( 1l ) );
    PyModule_AddObject( gRootModule, (char*)"kMemoryStrict",     PyInt_FromLong( 2l ) );

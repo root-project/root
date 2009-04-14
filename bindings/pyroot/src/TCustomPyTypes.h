@@ -45,6 +45,23 @@ namespace PyROOT {
       return object && object->ob_type == &TCustomInt_Type;
    }
 
+//- custom instance method object type and type verification -----------------
+   R__EXTERN PyTypeObject TCustomInstanceMethod_Type;
+
+   template< typename T >
+   inline Bool_t TCustomInstanceMethod_Check( T* object )
+   {
+      return object && PyObject_TypeCheck( object, &TCustomInstanceMethod_Type );
+   }
+
+   template< typename T >
+   inline Bool_t TCustomInstanceMethod_CheckExact( T* object )
+   {
+      return object && object->ob_type == &TCustomInstanceMethod_Type;
+   }
+
+   PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject* klass );
+
 } // namespace PyROOT
 
 #endif // !PYROOT_TCUSTOMPYTYPES_H

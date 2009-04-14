@@ -7,6 +7,7 @@
 #include "Utility.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
+#include "TCustomPyTypes.h"
 #include "RootWrapper.h"
 #include "PyCallable.h"
 
@@ -165,7 +166,7 @@ Bool_t PyROOT::Utility::AddToClass(
    pdef->ml_doc   = NULL;
 
    PyObject* func = PyCFunction_New( pdef, NULL );
-   PyObject* method = PyMethod_New( func, NULL, pyclass );
+   PyObject* method = TCustomInstanceMethod_New( func, NULL, pyclass );
    Bool_t isOk = PyObject_SetAttrString( pyclass, pdef->ml_name, method ) == 0;
    Py_DECREF( method );
    Py_DECREF( func );

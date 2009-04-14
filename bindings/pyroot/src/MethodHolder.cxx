@@ -556,7 +556,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args )
    }
 
 // convert the arguments to the method call array
-   for ( int i = 0; i < argc; i++ ) {
+   for ( int i = 0; i < argc; ++i ) {
       if ( ! fConverters[ i ]->SetArg( PyTuple_GET_ITEM( args, i ), fParameters[i], fMethodCall ) ) {
          SetPyError_( PyString_FromFormat( "could not convert argument %d", i+1 ) );
          return kFALSE;
