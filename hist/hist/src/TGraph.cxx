@@ -1243,11 +1243,23 @@ TH1F *TGraph::GetHistogram() const
    //    1- option 'A' was specified in TGraph::Draw. Return fHistogram
    //    2- user had called TPad::DrawFrame. return pointer to hframe histogram
 
-   if (fHistogram) return fHistogram;
    Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum, dx, dy;
    Double_t uxmin, uxmax;
 
    ComputeRange(rwxmin, rwymin, rwxmax, rwymax);  //this is redefined in TGraphErrors
+
+   // Return fHistogram if it exists unless the log scale is on and the 
+   // computed minimum is greater than zero. In that case the histogram needs
+   // to be recomputed.
+   if (fHistogram) {
+      if (gPad->GetLogx()) {
+         if (rwxmin <= 0) return fHistogram;
+      } else if (gPad->GetLogx()) {
+         if (rwymin <= 0) return fHistogram;
+      } else {
+	return fHistogram;
+      }
+   }
 
    if (rwxmin == rwxmax) rwxmax += 1.;
    if (rwymin == rwymax) rwymax += 1.;
