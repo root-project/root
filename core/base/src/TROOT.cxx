@@ -194,7 +194,11 @@ namespace {
       libMetaTCintDir += "\\bin\\";
       hLibMetaTCint = (void*) ::LoadLibrary((libMetaTCintDir + libMetaTCint).Data());
 #else
+#ifdef ROOTLIBDIR
+      libMetaTCintDir = ROOTLIBDIR"/";
+#else
       libMetaTCintDir += "/lib/";
+#endif
 # if defined (R__MACOSX)
       hLibMetaTCint = (void*) dlopen((libMetaTCintDir + libMetaTCint + ".dylib").Data(), R__DLOPEN_NOW);
       // continue below if failed
