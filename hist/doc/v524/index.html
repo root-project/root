@@ -50,6 +50,12 @@
 <li>Fixed  the bug <a href="https://savannah.cern.ch/bugs/?45607">#45607</a> by creating a list of functions when using TGraph default constructor.
 <li>Fixed a bug when fitting TGraphErrors with zero error in y but non-zero error in x
 </li>
+<li> In GetHistogram: 
+     The existing fHistogram is returned if it exists unless the log scale 
+     is ON and the computed minimum is greater than zero. In that case the 
+     histogram needs to be recomputed. Before this fix wrong outputs were
+     generated in some fits.
+</li>
 </ul>
 
 <h4>TH1</h4>
