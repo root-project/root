@@ -9,9 +9,7 @@
 **********************************************************************/
 
 #include "TQtSymbolCodec.h"
-#if QT_VERSION >= 0x40000
-#   include <QByteArray>
-#endif /* QT_VERSION */
+#include <QByteArray>
 
 #ifndef QT_NO_CODEC_SYMBOL
 
@@ -173,14 +171,10 @@ QByteArray QSymbolCodec::fromUnicode(const QString& uc, int& lenInOut) const
    qWarning( "Method <QSymbolCodec::fromUnicode> has not been implemated yet");
    int l;
    if( lenInOut > 0 )
-      l = QMIN((int)uc.length(),lenInOut);
+      l = qMin((int)uc.length(),lenInOut);
    else
       l = (int)uc.length();
-#if QT_VERSION < 0x40000
-   QCString rstr;
-#else /* QT_VERSION */
    QByteArray rstr;
-#endif /* QT_VERSION */
 
    return rstr;
 }

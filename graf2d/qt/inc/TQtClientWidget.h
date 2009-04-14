@@ -119,7 +119,6 @@ protected slots:
 #endif
 public slots:
     virtual void Accelerate();
-    virtual void polish();
 #ifndef Q_MOC_RUN
     ClassDef(TQtClientWidget,0) // QFrame implementation backing  ROOT TGWindow objects
 #endif
@@ -153,10 +152,10 @@ inline void TQtClientWidget::SetCursor()
    if (fNormalPointerCursor) setCursor(*fNormalPointerCursor);
 }
 //______________________________________________________________________________
-inline void TQtClientWidget::SetCursor(Cursor_t cursor)
+inline void TQtClientWidget::SetCursor(Cursor_t crsr)
 {
    // Change the pre-define curos shape and set it
-   fNormalPointerCursor = (QCursor *)cursor;
+   fNormalPointerCursor = (QCursor *)crsr;
    SetCursor();
 }
 
@@ -169,8 +168,8 @@ inline void  TQtClientWidget::SetDeleteNotify(bool flag){fDeleteNotify = flag;}
 inline void TQtClientWidget::SetAttributeEventMask(UInt_t evmask) { SelectInput (evmask);}
 
 //______________________________________________________________________________
-inline void TQtClientWidget::SetButtonEventMask(UInt_t evmask,Cursor_t cursor)
-{ fGrabEventButtonMask = evmask; fGrabButtonCursor =(QCursor *) cursor; }
+inline void TQtClientWidget::SetButtonEventMask(UInt_t evmask,Cursor_t crsr)
+{ fGrabEventButtonMask = evmask; fGrabButtonCursor =(QCursor *) crsr; }
 
 //______________________________________________________________________________
 inline EMouseButton TQtClientWidget::Button() const { return fButton;          }

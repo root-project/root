@@ -22,12 +22,9 @@
 #include <assert.h>
 #include "TQtApplication.h"
 
-#if QT_VERSION < 0x40000
-#  include "qapplication.h"
-#else
-#  include <QApplication>
-#  include <QCoreApplication>
-#endif
+#include <QApplication>
+#include <QCoreApplication>
+#include <QDebug>
 
 #include "TSystem.h"
 
@@ -74,24 +71,25 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
        QString display = gSystem->Getenv("DISPLAY");
        // check the QT_BATCH option
        if (display.contains("QT_BATCH")) GUIenabled = false;
-#if QT_VERSION < 0x40000
-       qApp = new QApplication(argc,argv,GUIenabled);
-#else /* QT_VERSION */
 #ifndef R__WIN32       
        QCoreApplication::setAttribute(Qt::AA_ImmediateWidgetCreation);
 #endif       
        // Check whether we want to debug the Qt X11
        QString fatalWarnings = gSystem->Getenv("QT_FATAL_WARNINGS");
        if (fatalWarnings.contains("1")) {
-          //int argC = 2;
-          //static char *argV[] = {"root.exe", "-sync" };
-          fprintf(stderr," ATTENTION. the env variable \"QT_FATAL_WARNIGNS\" was defined. The special debug option has  been turned on. argc = %d, argv = %s %s\n", argc,argv[0],argv[1]);
+          int argC = 2;
+          static char *argV[] = {"root.exe", "-sync" };
+          qDebug() << "TQtApplication::CreateQApplication: "
+                   << "ATTENTION !!! "
+                   << "The env variable \"QT_FATAL_WARNIGNS\" was defined. The special debug option has  been turned on." 
+                   << " argc = " << argc << " argv = " << argv[0] << argv[1];
+          qDebug() << " You may want to restart ROOT with " << argC << " paramaters :"
+                   << " like this: \"" << argV[0] << " " << argV[1];
 //          new QApplication(argC,argV,GUIenabled);
           new QApplication(argc,argv,GUIenabled);
        } else {       
           new QApplication(argc,argv,GUIenabled);
        }
-#endif /* QT_VERSION */
        // The string must be one of the QStyleFactory::keys(),
        // typically one of
        //      "windows", "motif",     "cde",    "motifplus", "platinum", "sgi"
@@ -110,19 +108,19 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
    Int_t thisQtVersion  = QVersion(qVersion());
    if (thisQtVersion < validQtVersion) {
        QString s = QApplication::tr("Executable '%1' was compiled with Qt %2 and requires Qt %3 at least, found Qt %4.")
-            .arg(QString::fromLatin1(qAppName()))
-            .arg(QString::fromLatin1(QT_VERSION_STR))
+            .arg(qAppName())
+            .arg(QT_VERSION_STR)
             .arg(QString::fromLatin1(ROOT_VALID_QT_VERSION))
             .arg(QString::fromLatin1(qVersion()) ); 
       QMessageBox::critical( 0, QApplication::tr("Incompatible Qt Library Error" ), s, QMessageBox::Abort,0 );
-      qFatal(s.ascii());
+      qFatal(s.toAscii().data());
    } else if (thisQtVersion < QtVersion()) {
        QString s = QApplication::tr("Executable '%1' was compiled with Qt %2, found Qt %3.")
-            .arg(QString::fromLatin1(qAppName()))
-            .arg(QString::fromLatin1(QT_VERSION_STR))
+            .arg(qAppName())
+            .arg(QT_VERSION_STR)
             .arg(QString::fromLatin1(qVersion()) ); 
       QMessageBox::warning( 0, QApplication::tr("Upgrade Qt Library Warning" ), s, QMessageBox::Abort,0 );
-      qWarning(s.ascii());
+      qWarning(s.toAscii().data());
    }
   
    // Add Qt plugin path if  present (it is the case for Windows binary ROOT distribution)

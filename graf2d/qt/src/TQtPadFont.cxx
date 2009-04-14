@@ -14,20 +14,20 @@
 
 /////////////////////////////////////////////////////////////////////////////////
 //
-// TQtPadFont creates the QFort object to map to ROOT  TAttText attributes
+// TQtPadFont class is Qt QFont class with TAttText ROOT class interface
 //
 /////////////////////////////////////////////////////////////////////////////////
 
 #include "TQtPadFont.h"
 #include "TSystem.h"
 #include "TMath.h"
-#include <qfontmetrics.h>
+#include <QFontMetrics>
 #include <QDebug>
 
-const char *TQtPadFont::fgRomanFontName   = "Times New Roman";
-const char *TQtPadFont::fgArialFontName   = "Arial";
-const char *TQtPadFont::fgCourierFontName = "Courier New";
-const char *TQtPadFont::fgSymbolFontFamily= "Symbol";
+TString TQtPadFont::fgRomanFontName   = "Times New Roman";
+TString TQtPadFont::fgArialFontName   = "Arial";
+TString TQtPadFont::fgCourierFontName = "Courier New";
+TString TQtPadFont::fgSymbolFontFamily= "Symbol";
 
 
 //______________________________________________________________________________
@@ -88,7 +88,7 @@ TQtPadFont::TQtPadFont(): TAttText()
 {fTextFont = -1;}
 
 //______________________________________________________________________________
-void  TQtPadFont::SetTextFont(const char *fontname, int italic, int bold)
+void  TQtPadFont::SetTextFont(const char *fontname, int italic_, int bold_)
 {
 
    //*-*    mode              : Option message
@@ -99,8 +99,8 @@ void  TQtPadFont::SetTextFont(const char *fontname, int italic, int bold)
    //*-*    Set text font to specified name. This function returns 0 if
    //*-*    the specified font is found, 1 if not.
 
-   this->setWeight((long) bold*10);
-   this->setItalic((Bool_t)italic);
+   this->setWeight((long) bold_*10);
+   this->setItalic((Bool_t)italic_);
    this->setFamily(fontname);
 #if QT_VERSION >= 0x40000
    if (!strcmp(fontname,RomanFontName())) {
@@ -121,8 +121,8 @@ void  TQtPadFont::SetTextFont(const char *fontname, int italic, int bold)
 #endif
 #if 0
    qDebug() << "TGQt::SetTextFont font:"    << fontname 
-            << " bold="  << bold
-            << " italic="<< italic;
+            << " bold="  << bold_
+            << " italic="<< italic_;
 #endif
 }
 
@@ -152,89 +152,89 @@ void  TQtPadFont::SetTextFont(Font_t fontnumber)
    if ( (fTextFont == fontnumber)  || (fontnumber <0) ) return;
    TAttText::SetTextFont(fontnumber);
 
-   int italic, bold;
+   int it, bld;
    const char *fontName = RomanFontName();
 
    switch(fTextFont/10) {
 
    case  1:
-      italic = 1;
-      bold   = 5;
+      it  = 1;
+      bld = 5;
       fontName = RomanFontName();
       break;
    case  2:
-      italic = 0;
-      bold   = 8;
+      it  = 0;
+      bld = 8;
       fontName = RomanFontName();
       break;
    case  3:
-      italic = 1;
-      bold   = 8;
+      it  = 1;
+      bld = 8;
       fontName = RomanFontName();
       break;
    case  4:
-      italic = 0;
-      bold   = 5;
+      it  = 0;
+      bld = 5;
       fontName = ArialFontName();
       break;
    case  5:
-      italic = 1;
-      bold   = 5;
+      it  = 1;
+      bld = 5;
       fontName = ArialFontName();
       break;
    case  6:
-      italic = 0;
-      bold   = 8;
+      it  = 0;
+      bld = 8;
       fontName = ArialFontName();
       break;
    case  7:
-      italic = 1;
-      bold   = 8;
+      it  = 1;
+      bld = 8;
       fontName = ArialFontName();
       break;
    case  8:
-      italic = 0;
-      bold   = 5;
+      it   = 0;
+      bld  = 5;
       fontName = CourierFontName();
       break;
    case  9:
-      italic = 1;
-      bold   = 5;
+      it  = 1;
+      bld = 5;
       fontName = CourierFontName();
       break;
    case 10:
-      italic = 0;
-      bold   = 8;
+      it  = 0;
+      bld = 8;
       fontName = CourierFontName();
       break;
    case 11:
-      italic = 1;
-      bold   = 8;
+      it  = 1;
+      bld = 8;
       fontName = CourierFontName();
       break;
    case 12:
-      italic = 0;
-      bold   = 5;
+      it  = 0;
+      bld = 5;
       fontName = SymbolFontFamily();
       break;
    case 13:
-      italic = 0;
-      bold   = 5;
+      it  = 0;
+      bld = 5;
       fontName = RomanFontName();
       break;
    case 14:
-      italic = 0;
-      bold   = 5;
+      it  = 0;
+      bld = 5;
       fontName = "Wingdings";
       break;
    default:
-      italic = 0;
-      bold   = 5;
+      it  = 0;
+      bld = 5;
       fontName = RomanFontName();
       break;
 
    }
-   SetTextFont(fontName, italic, bold);
+   SetTextFont(fontName, it, bld);
 }
 
 //______________________________________________________________________________
@@ -300,5 +300,5 @@ void   TQtPadFont::SetTextMaginfy(Float_t  mgn)
    // see: TVirtualX::DrawText(int x, int y, float angle, float mgn, const char *text, TVirtualX::ETextMode /*mode*/)
    //
     Int_t tsize = (Int_t)(fTextSize+0.5);
-    if (TMath::Abs(mgn-1) >0.05)  this->setPixelSizeFloat(mgn*FontMagicFactor(tsize));
+    if (TMath::Abs(mgn-1) >0.05)  this->setPixelSize(int(mgn*FontMagicFactor(tsize)));
 }

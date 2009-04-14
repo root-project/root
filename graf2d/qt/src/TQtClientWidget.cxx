@@ -41,8 +41,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-TQtClientWidget::TQtClientWidget(TQtClientGuard *guard, QWidget* parent, const char* name, Qt::WFlags f ):
-          QFrame(parent,f)
+TQtClientWidget::TQtClientWidget(TQtClientGuard *guard, QWidget* mother, const char* name, Qt::WFlags f ):
+          QFrame(mother,f)
          ,fGrabButtonMask(kAnyModifier),      fGrabEventPointerMask(kNoEventMask)
          ,fGrabEventButtonMask(kNoEventMask), fSelectEventMask(kNoEventMask), fSaveSelectInputMask(kNoEventMask) // ,fAttributeEventMask(0)
          ,fButton(kAnyButton), fPointerOwner(kFALSE)
@@ -50,14 +50,12 @@ TQtClientWidget::TQtClientWidget(TQtClientGuard *guard, QWidget* parent, const c
          ,fIsClosing(false)  ,fDeleteNotify(false), fGuard(guard)
          ,fCanvasWidget(0),fMyRootWindow(0),fEraseColor(0), fErasePixmap(0)
 {
-#if QT_VERSION >= 0x40000
-   setName(name);
+   setObjectName(name);
    setAttribute(Qt::WA_PaintOnScreen);
    setAttribute(Qt::WA_PaintOutsidePaintEvent);
    setAutoFillBackground(true); 
  //   fEraseColor  = new QColor("red");
 //   fErasePixmap = new QPixmap(palette().brush(QPalette::Window).texture());
-#endif
 }
 
 //______________________________________________________________________________
@@ -135,25 +133,25 @@ bool TQtClientWidget::IsGrabbed(Event_t &ev)
    //        on any ancestor of grab_window.
    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    bool grab = false;
-   QWidget *parent = parentWidget();
+   QWidget *mother = parentWidget();
 //   fprintf(stderr,"\n -1- TQtClientWidget::IsGrabbed  parent = %p mask %o register = %d "
 //          , parent, ButtonEventMask(),TGQt::IsRegistered(parent));
    if (     ButtonEventMask()
          && !isHidden() 
-         && !(   parent 
-               && dynamic_cast<TQtClientWidget*>(parent)  // TGQt::IsRegistered(parent)
-               && ((TQtClientWidget *)parent)->IsGrabbed(ev)
+         && !(   mother 
+               && dynamic_cast<TQtClientWidget*>(mother)  // TGQt::IsRegistered(parent)
+               && ((TQtClientWidget *)mother)->IsGrabbed(ev)
              )
       )
       {
 
         //Test whether the current button is grabbed by this window
-        bool mask = (ev.fState & fGrabButtonMask) || (fGrabButtonMask & kAnyModifier);
+        bool msk = (ev.fState & fGrabButtonMask) || (fGrabButtonMask & kAnyModifier);
         
-        if ((fButton == kAnyButton) && mask)
+        if ((fButton == kAnyButton) && msk)
            grab = true;
         else 
-           grab = (fButton == EMouseButton(ev.fCode)) && mask;
+           grab = (fButton == EMouseButton(ev.fCode)) && msk;
         
         // Check whether this window holds the pointer coordinate
         TQtClientWidget *w = (TQtClientWidget *)TGQt::wid(ev.fWindow);
@@ -260,19 +258,16 @@ Bool_t TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, int insert)
    //             0 - test
    //            +1 - insert
    Bool_t found = kTRUE;
-   int key[5]= {0,0,0,0,0};
    int ikeys = 0;
-   int index = 0;
    if (keycode) {
-      if (modifier & kKeyShiftMask)   { key[index++] = Qt::SHIFT; ikeys += Qt::SHIFT;}
-      if (modifier & kKeyLockMask)    { key[index++] = Qt::META;  ikeys += Qt::META; }
-      if (modifier & kKeyControlMask) { key[index++] = Qt::CTRL;  ikeys += Qt::CTRL; }
-      if (modifier & kKeyMod1Mask)    { key[index++] = Qt::ALT;   ikeys += Qt::ALT;  }
-                                        key[index++] = Qt::UNICODE_ACCEL + keycode;  ikeys += Qt::UNICODE_ACCEL + keycode; 
+      if (modifier & kKeyShiftMask)   ikeys |= Qt::SHIFT;
+      if (modifier & kKeyLockMask)    ikeys |= Qt::META;
+      if (modifier & kKeyControlMask) ikeys |= Qt::CTRL;
+      if (modifier & kKeyMod1Mask)    ikeys |= Qt::ALT;
+                                      ikeys |= keycode;
    }
    QKeySequence keys(ikeys);
 
-   assert(index<=4);
    std::map<QKeySequence,QShortcut*>::iterator i = fGrabbedKey.find(keys);
    switch (insert) {
       case kInsert:
@@ -340,7 +335,7 @@ void TQtClientWidget::Accelerate()
   qDebug() << "TQtClientWidget::Accelerate()" << key;
   int l = key.count();
   int keycode = key[l-1];
-  uint state =0;
+  Qt::KeyboardModifiers state = Qt::NoModifier;
   
   if (keycode & Qt::SHIFT) state |=  Qt::ShiftModifier;
   if (keycode & Qt::META)  state |=  Qt::MetaModifier;
@@ -348,11 +343,11 @@ void TQtClientWidget::Accelerate()
   if (keycode & Qt::ALT)   state |=  Qt::AltModifier;
         
   // Create ROOT event
-  QKeyEvent ac(QEvent::KeyPress,keycode,keycode,state);
+  QKeyEvent ac(QEvent::KeyPress,keycode & 0x01FFFFFF,state);
   // call Event filter directly 
   TQtClientFilter *f = gQt->QClientFilter();
   if (f) f->AddKeyEvent(ac,this); 
-  QKeyEvent acRelease(QEvent::KeyRelease,keycode,keycode,state);
+  QKeyEvent acRelease(QEvent::KeyRelease,keycode & 0x01FFFFFF,state);
   if (f) f->AddKeyEvent(acRelease,this); 
 }
 //______________________________________________________________________________
@@ -376,14 +371,4 @@ void TQtClientWidget::paintEvent( QPaintEvent *e )
       }
    }
 #endif   
-}
-//______________________________________________________________________________
-void TQtClientWidget::polish()
-{
-   // Delayed initialization of a widget.
-   // This function will be called after a widget has been fully created
-   // and before it is shown the very first time.
-
-   QWidget::polish();
-   // setMouseTracking(true);
 }

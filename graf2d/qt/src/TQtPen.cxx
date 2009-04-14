@@ -14,7 +14,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////
 //
-// TQtPen creates the QFort object to map to ROOT  TAttLine attributes
+// TQtPen class is Qt QPen with ROOT TAttLine interface 
 //
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,7 @@ void  TQtPen::SetLineColor(Color_t cindex)
 
   if (fLineColor != cindex) {
     fLineColor = cindex;
-    if (fLineColor >= 0)  setColor(gQt->ColorIndex(fLineColor));
+    if (fLineColor >= 0)  setColor(gQt->ColorIndex(gQt->UpdateColor(fLineColor)));
   }
 }
 //______________________________________________________________________________
@@ -119,7 +119,7 @@ void  TQtPen::SetLineStyle(Style_t linestyle)
 //*-*      < -6 - solid line
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   // Copy/Paste from TGX11::SetLineStyle (it is called "subclassing")
+   // Copy/Paste from TGX11::SetLineStyle (it is called "subclassing" ;-)
    // Set line style.
 
    if (fLineStyle != linestyle) { //set style index only if different
@@ -145,16 +145,15 @@ void  TQtPen::SetLineStyle(Style_t linestyle)
 }
 
 //______________________________________________________________________________
-void  TQtPen::SetLineWidth(Width_t width)
+void  TQtPen::SetLineWidth(Width_t w)
 {
    //*-*-*-*-*-*-*-*-*-*-*Set line width*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                  ==============
-   //*-*  width   : line width in pixels
+   //*-*  w   : line width in pixels
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   if (width==1) width =0;
-   if (fLineWidth != width) {
-      fLineWidth = width;
+   if (w==1) w =0;
+   if (fLineWidth != w) {
+      fLineWidth = w;
       if (fLineWidth >= 0 )  setWidth(fLineWidth);
    }
 }
-

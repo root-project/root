@@ -13,23 +13,17 @@
 #ifndef ROOT_TQtEvent
 #define ROOT_TQtEvent
 
-#include "qevent.h"
-#if QT_VERSION >= 0x40000
-//Added by qt3to4:
-#include <QCustomEvent>
-#endif /* QT_VERSION */
-
-#include "TVirtualX.h"
+#include <QEvent>
 
 class TQtObject;
 class TWaitCondition;
 //______________________________________________________________________________
-class TQtEvent : public QCustomEvent 
+class TQtEvent : public QEvent 
 {
 
 private:
     TWaitCondition *fCondition;
-    ULong_t *fResult;   // QApplication owns QEvent and will destroy it
+    unsigned long *fResult;   // QApplication owns QEvent and will destroy it
     QObject *fReceiver;
     QEvent  *fThatEvent;
 
@@ -37,9 +31,9 @@ public:
     TQtEvent(int code);
     TQtEvent(QObject *o, QEvent *e);
     virtual ~TQtEvent(){}
-    void SetWait(TWaitCondition &condition,ULong_t &result);
+    void SetWait(TWaitCondition &condition, unsigned long  &result);
     void SetWait(TWaitCondition &condition);
-    void SetResult(ULong_t e=0);
+    void SetResult(unsigned long e=0);
  //   QEvent *WaitResult(); too dangerous
     bool Notify();
     virtual void ExecuteCB(){;}

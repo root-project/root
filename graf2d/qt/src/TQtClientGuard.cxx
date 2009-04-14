@@ -9,18 +9,12 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #include <assert.h>
 
 #include "TQtClientGuard.h"
 #include "TGQt.h"
-#if QT_VERSION < 0x40000
-#  include <qobjectlist.h>
-#else /* QT_VERSION */
-#  include <qobject.h>
-#  include <QPixmap>
-#endif /* QT_VERSION */
-#include <qbitmap.h>
+#include <QPixmap>
+#include <QBitmap>
 
 //______________________________________________________________________________
 void TQtClientGuard::Add(QWidget *w)
@@ -31,14 +25,10 @@ void TQtClientGuard::Add(QWidget *w)
    connect(w,SIGNAL(destroyed()),this,SLOT(Disconnect()));
 }
 //______________________________________________________________________________
-#if QT_VERSION < 0x40000
-TQtClientWidget *TQtClientGuard::Create(QWidget* parent, const char* name, WFlags f)
-#else /* QT_VERSION */
-TQtClientWidget *TQtClientGuard::Create(QWidget* parent, const char* name, Qt::WFlags f)
-#endif /* QT_VERSION */
+TQtClientWidget *TQtClientGuard::Create(QWidget* mother, const char* name, Qt::WFlags f)
 {
    // TQtClientWidget object factory
-   TQtClientWidget *w =  new TQtClientWidget(this,parent,name,f);
+   TQtClientWidget *w =  new TQtClientWidget(this,mother,name,f);
    // w->setBackgroundMode(Qt::NoBackground);
    Add(w);
    return  w;
@@ -58,7 +48,7 @@ void TQtClientGuard::Delete(QWidget *w)
       Disconnect(w,found);
       //((TQtClientWidget *)w)->SetClosing();
       //w->close(true);
-      delete w;
+      w->deleteLater();
       assert( w != QWidget::mouseGrabber() );
    }
 }
@@ -187,7 +177,8 @@ void TQtPixmapGuard::Add(QPixmap *w)
 //______________________________________________________________________________
 QPixmap* TQtPixmapGuard::Create(int w, int h, const uchar *bits, bool isXbitmap)
 {
-   QPixmap *p = (QPixmap*)new QBitmap(w,h,bits,isXbitmap);
+   QPixmap *p = new QBitmap(
+         QBitmap::fromData (QSize(w,h), bits, isXbitmap ? QImage::Format_MonoLSB : QImage::Format_Mono));
    Add(p);
    return p;
 }
@@ -195,12 +186,8 @@ QPixmap* TQtPixmapGuard::Create(int w, int h, const uchar *bits, bool isXbitmap)
 QPixmap* TQtPixmapGuard::Create(int width, int height, int depth)
                                 // , Optimization optimization)
 {
-#if QT_VERSION < 0x40000
-   QPixmap *w =  new QPixmap(width,height,depth); // ,optimization);
-#else /* QT_VERSION */
-   if (depth) {/* fool the compiler wit  Qt4 */ }
+   if (depth) {/* fool the compiler with  Qt4 */ }
    QPixmap *w =  new QPixmap(width,height); // ,optimization);
-#endif /* QT_VERSION */
    Add(w);
    return  w;
 }

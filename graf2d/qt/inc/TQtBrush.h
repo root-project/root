@@ -46,7 +46,7 @@ public:
    }
    virtual ~TQtBrush(){;}
    Bool_t IsTransparent() const;
-   void SetStyle(int style=1000){  SetStyle(style/1000,style%1000); };
+   void SetStyle(int newStyle=1000){  SetStyle(newStyle/1000,newStyle%1000); };
    void SetStyle(int style, int fasi);
    void SetColor(const QColor &color);
    const QColor &GetColor() const { return fBackground;}

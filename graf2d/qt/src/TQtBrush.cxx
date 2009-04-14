@@ -141,9 +141,9 @@ TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0)
 {}
 
 //______________________________________________________________________________
-void TQtBrush::SetColor(const QColor &color)
+void TQtBrush::SetColor(const QColor &col)
 {
-  fBackground = color;
+  fBackground = col;
   if (fStyle == 4) {
      // set alpha channel / (extra) transparency;
      if (!fFasi) fBackground = Qt::transparent;
@@ -159,16 +159,16 @@ void TQtBrush::SetColor(const QColor &color)
 }
 
 //______________________________________________________________________________
-void TQtBrush::SetStyle(int style, int fasi)
+void TQtBrush::SetStyle(int sty, int fasi)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set fill area style index*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
 //*-*  style   : fill area interior style hollow or solid
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-  fStyle =  style;
+  fStyle =  sty;
   fFasi  =  fasi;
 
-  switch( style ) {
+  switch( fStyle ) {
 
   case 0:
     setStyle(Qt::NoBrush);                          // hollow
@@ -181,8 +181,8 @@ void TQtBrush::SetStyle(int style, int fasi)
      {
         int pattern = 1;
         if (fasi > 0 && fasi < 26 ) pattern = fasi-1;
-        QBitmap bm(16,16,patter_bits[pattern],TRUE);
-        setPixmap(bm);
+        QBitmap bm =  QBitmap::fromData(QSize(16,16),patter_bits[pattern]);
+        setTexture(bm);
      }
     break;
   case 2:                                           // hatch

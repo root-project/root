@@ -99,6 +99,9 @@ class TGQt  : public TVirtualX  {
    friend class TQtClientFilter;
    friend class TQtSynchPainting;
    friend class TQtToggleFeedBack;
+   friend class TQtColorSelect;
+   friend class TQt16ColorSelector;
+   friend class TQtPen;
 
 protected:
    enum DEFWINDOWID { kDefault=1 };
@@ -183,6 +186,7 @@ protected:
    void UpdateBrush();
    void UpdateClipRectangle();
    int  UpdateColor(int cindex);
+   virtual const QColor&   ColorIndex(Color_t indx) const;
 
    QPaintDevice *GetDoubleBuffer(QPaintDevice *dev);
 
@@ -202,7 +206,6 @@ public:
 #include "TVirtualX.interface.h"
 #ifndef __CINT__
 // extracted methods
-    virtual const QColor&   ColorIndex(Color_t indx) const;
     virtual QPaintDevice *GetSelectedWindow(){ return fSelectedWindow; }
     virtual void      SetFillStyleIndex( Int_t style, Int_t fasi);
     virtual void      SetMarkerType( Int_t type, Int_t n, TPoint *xy );
@@ -239,7 +242,7 @@ public:
 
    void SetQClientFilter(TQtClientFilter *filter) {fQClientFilter = filter;}
    TQtClientFilter  *QClientFilter() const {return fQClientFilter;}
-   QColor &QtColor(ULong_t pixel);
+   QColor QtColor(ULong_t pixel);
    void SendDestroyEvent(TQtClientWidget *) const;
 
    TQtEmitter *Emitter(){ return &fEmitter;}

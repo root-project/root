@@ -150,6 +150,7 @@ protected:
    QSize       fSizeHint;
    QWidget    *fWrapper;
    QString     fSaveFormat;
+   bool        fInsidePaintEvent;
 
    void SetRootID(QWidget *wrapper);
    QWidget *GetRootID() const;

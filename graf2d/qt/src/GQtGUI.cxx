@@ -121,7 +121,7 @@ public:
                  , kFont
                  , kAllFields
                  };
-   QtGContext() : QWidget(0) ,fMask(0),fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0) {}
+   QtGContext() : QWidget(0) ,fMask(0),fBrush(Qt::SolidPattern), fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0) {}
    QtGContext(const GCValues_t &gval) : QWidget(0) ,fMask(0),fTilePixmap(0),fStipple(0),fClipMask(0),fFont(0){Copy(gval);}
    QtGContext(const QtGContext & /*src*/)  : QWidget() {fprintf(stderr,"QtGContext(const QtGContext &src)\n");}
    void              Copy(const QtGContext &dst,Mask_t rootMask = 0xff);
@@ -135,19 +135,22 @@ public:
    GContext_t        gc() const { return (GContext_t)this; }
    operator          GContext_t() const { return gc(); }
    const QtGContext &operator=(const GCValues_t &gval){ return Copy(gval);}
-   QColor &QtColor(ULong_t pixel) {return gQt->QtColor(pixel);}
+   QColor QtColor(ULong_t pixel) {return gQt->QtColor(pixel);}
 
 };
 
 //______________________________________________________________________________
 static QtGContext   &qtcontext(GContext_t context) { return *(QtGContext *)context;}
 //______________________________________________________________________________
-QColor &TGQt::QtColor(ULong_t pixel)
+QColor TGQt::QtColor(ULong_t pixel)
 {
-   // Look up the color table and return the reference to the QColor object.
-   // Add a new entry if the object with the "pixel" color value was not found
+   // Return  the QColor object by platform depended "pixel" value
+   // (see: TGQt::AllocColor  and  QColormap::pixel )
    // Add the special treatment for the pixel "0"
    static QColor black("black");
+#ifndef OLD
+   return pixel  ? QColormap::instance().colorAt(pixel) : black;
+#else
    if (pixel == 0) {
       QColormap cmap = QColormap::instance();
       pixel = cmap.pixel(black);
@@ -179,6 +182,7 @@ QColor &TGQt::QtColor(ULong_t pixel)
       gVirtualX->AllocColor(cmap, newColor);
       return QtColor(newColor.fPixel);
    }
+#endif
 }
 //______________________________________________________________________________
 #ifdef CopyQTContext
@@ -433,14 +437,13 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
    }
    if ((rootMask & kGCFillStyle)) {
       SETBIT(fMask,kBrush);
-      Qt::BrushStyle nextStyle = Qt::NoBrush;
+      Qt::BrushStyle nextStyle = Qt::SolidPattern;
       switch (gval.fFillStyle)
       {
-         case kFillSolid:          nextStyle = Qt::SolidPattern;  break;
          case kFillTiled:          nextStyle = Qt::Dense1Pattern; break;
          case kFillStippled:       nextStyle = Qt::Dense6Pattern; break;
          case kFillOpaqueStippled: nextStyle = Qt::Dense7Pattern; break;
-         default:                  nextStyle = Qt::NoBrush;       break;
+         case kFillSolid: default: nextStyle = Qt::SolidPattern;  break;
       };
       fBrush.setStyle(nextStyle);
    }
@@ -502,12 +505,13 @@ void   QtGContext::SetBackground(ULong_t background)
 {
     // reset the context background color
     SETBIT(fMask,kBrush);
+    QColor bg = QtColor(background);
 #if QT_VERSION < 0x40000    
-    setPaletteBackgroundColor(QtColor(background));
-    setEraseColor(QtColor(background));
+    setPaletteBackgroundColor(bg);
+    setEraseColor(bg);
 #else    
     QPalette pp=palette();
-    pp.setColor(QPalette::Window, QtColor(background));
+    pp.setColor(QPalette::Window,bg);
     setPalette(pp);
 #endif 
 }
@@ -518,15 +522,12 @@ void   QtGContext::SetForeground(ULong_t foreground)
    // QColor paletteBackgroundColor - the background color of the widget
    SETBIT(fMask,kBrush);
    SETBIT(fMask,kPen);
-#if QT_VERSION < 0x40000   
-   setPaletteForegroundColor (QtColor(foreground));
-#else   
+   QColor bg = QtColor(foreground);
    QPalette pp = palette();
-   pp.setColor(QPalette::WindowText, QtColor(foreground));
+   pp.setColor(QPalette::WindowText, bg);
    setPalette(pp);
-#endif
-   fBrush.setColor(QtColor(foreground));
-   fPen.setColor(QtColor(foreground)); 
+   fBrush.setColor(bg);
+   fPen.setColor(bg); 
 }
 //______________________________________________________________________________
 //
@@ -802,7 +803,7 @@ void TGQt::GetWindowAttributes(Window_t id, WindowAttributes_t &attr)
 #endif
    // QPaintDeviceMetrics pdm(&thisWindow);
    attr.fDepth    = QPixmap::defaultDepth();
-   attr.fColormap = (Colormap_t)&thisWindow.palette ();
+   attr.fColormap = 0; // (Colormap_t)&thisWindow.palette ();
    if (!thisWindow.isHidden()) {
       attr.fMapState = thisWindow.isVisible() ? kIsViewable : kIsUnviewable;
    } else {
@@ -877,7 +878,9 @@ Bool_t TGQt::AllocColor(Colormap_t /*cmap*/, ColorStruct_t &color)
    color.fPixel = cmap.pixel(*thisColor);
 //   color.fPixel = (ULong_t)new QColor(color.fRed/257,color.fGreen,color.fBlue);
    // Add the color to the cash
+#ifdef OLD
    fColorMap[color.fPixel] = thisColor;
+#endif
    return kTRUE;
 }
 //______________________________________________________________________________
@@ -890,7 +893,7 @@ void TGQt::QueryColor(Colormap_t /*cmap*/, ColorStruct_t &color)
    // Set color components to default.
 
    // fprintf(stderr,"QueryColor(Colormap_t cmap, ColorStruct_t &color)\n");
-   QColor &c  = QtColor(color.fPixel);
+   QColor c  = QtColor(color.fPixel);
    // Fons thinks they must be 65535  (see TColor::RGB2Pixel and TColor::RGB2Pixel)
    color.fRed   = c.red()  <<8;
    color.fGreen = c.green()<<8;
@@ -1758,11 +1761,21 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
              pix->setMask(*mask);
          }
          TQtPainter copyArea(iwid(dest),qtcontext(gc));
-         copyArea.drawPixmap(dest_x,dest_y, *pix, src_x,src_y,width,height);
+         if (src==dest) {
+            QPixmap tmp = pix->copy(src_x,src_y,width,height);
+            copyArea.drawPixmap(dest_x,dest_y, tmp);
+         } else {
+            copyArea.drawPixmap(dest_x,dest_y, *pix, src_x,src_y,width,height);
+         }
       } else {
          if (pix) {
            TQtPainter copyArea(iwid(dest),qtcontext(gc));
-           copyArea.drawPixmap(dest_x,dest_y,*pix, src_x,src_y,width,height);
+            if (src==dest) {
+               QPixmap tmp = pix->copy(src_x,src_y,width,height);
+               copyArea.drawPixmap(dest_x,dest_y, tmp);
+            } else {
+                copyArea.drawPixmap(dest_x,dest_y,*pix, src_x,src_y,width,height);
+            }
          } else {
             QImage *im = dynamic_cast<QImage*>(iwid(src)); 
             if (im) {
@@ -2304,11 +2317,7 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key_Escape,    kKey_Escape},
    {Qt::Key_Tab,       kKey_Tab},
    {Qt::Key_Backtab,   kKey_Backtab},
-#if QT_VERSION < 0x40000
-   {Qt::Key_BackSpace, kKey_Backspace},
-#else /* QT_VERSION */
    {Qt::Key_Backspace, kKey_Backspace},
-#endif /* QT_VERSION */
    {Qt::Key_Return,    kKey_Return},
    {Qt::Key_Insert,    kKey_Insert},
    {Qt::Key_Delete,    kKey_Delete},
@@ -2321,13 +2330,8 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key_Up,        kKey_Up},
    {Qt::Key_Right,     kKey_Right},
    {Qt::Key_Down,      kKey_Down},
-#if QT_VERSION < 0x40000
-   {Qt::Key_Prior,     kKey_Prior},
-   {Qt::Key_Next,      kKey_Next},
-#else /* QT_VERSION */
-   {Qt::Key_PageUp,     kKey_Prior},
-   {Qt::Key_PageDown,      kKey_Next},
-#endif /* QT_VERSION */
+   {Qt::Key_PageUp,    kKey_Prior},
+   {Qt::Key_PageDown,  kKey_Next},
    {Qt::Key_Shift,     kKey_Shift},
    {Qt::Key_Control,   kKey_Control},
    {Qt::Key_Meta,      kKey_Meta},
@@ -2363,11 +2367,7 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
    }
 #if 0
    UInt_t text;
-#if QT_VERSION < 0x40000
-   QCString r = gQt->GetTextDecoder()->fromUnicode(qev.text());
-#else /* QT_VERSION */
    QByteArray r = gQt->GetTextDecoder()->fromUnicode(qev.text());
-#endif /* QT_VERSION */
    qstrncpy((char *)&text, (const char *)r,1);
    return text;
 #else
@@ -2405,6 +2405,8 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
           }
           paint.setBackgroundMode( Qt::OpaqueMode); // Qt::TransparentMode
        }
+       // Workaround of the bug in the TGContainer::DrawRegion
+       if (qtcontext(gc).fBrush.style() == Qt::NoBrush) qtcontext(gc).fBrush.setStyle(Qt::SolidPattern);
        paint.fillRect ( x, y, w, h, qtcontext(gc).fBrush );
     }
  }

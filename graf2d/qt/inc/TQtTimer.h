@@ -36,7 +36,7 @@ private:
 protected:
   static TQtTimer *fgQTimer;
   int fCounter;     
-  TQtTimer (QObject *parent=0): QTimer(parent),fCounter(0)
+  TQtTimer (QObject *mother=0): QTimer(mother),fCounter(0)
   {}
 
 protected slots:

@@ -29,36 +29,21 @@
 
 #include "TQtRConfig.h"
 
-#if QT_VERSION < 0x40000
-#  include <qiconset.h>
-#  include <qfiledialog.h>
-#else /* QT_VERSION */
-#  include <QIcon>
-#  include <QFileIconProvider>
-#endif /* QT_VERSION */
-#include <qpixmap.h>
+#include <QIcon>
+#include <QFileIconProvider>
+#include <QPixmap>
 #include <qfileinfo.h>
 
 ClassImp(TQMimeTypes)
 QFileIconProvider  *TQMimeTypes::fgDefaultProvider = 0; // Default provider of the system icons;
 //______________________________________________________________________________
-#if QT_VERSION < 0x40000
-   const QPixmap&  
-#else
-   QIcon  
-#endif 
+QIcon
 TQMimeTypes::IconProvider(const QFileInfo &info)
 {
     if (!fgDefaultProvider) {
       fgDefaultProvider = new QFileIconProvider;
     }
-#if QT_VERSION < 0x40000
-    const QPixmap *px = fgDefaultProvider-> pixmap(info);
-    static QPixmap empty;
-    return px ? *px : empty;
-#else
     return fgDefaultProvider->icon(info);
-#endif 
 }
 
 //______________________________________________________________________________
@@ -193,11 +178,7 @@ TQMime *TQMimeTypes::Find(const char *filename) const
 }
 
 //______________________________________________________________________________
-#if QT_VERSION < 0x40000
-const QIconSet *TQMimeTypes::GetIcon(const char *filename) const
-#else /* QT_VERSION */
 const QIcon *TQMimeTypes::GetIcon(const char *filename) const
-#endif /* QT_VERSION */
 {
    // Return icon belonging to mime type of filename.
    TQMime *mime= Find(filename);
@@ -205,50 +186,30 @@ const QIcon *TQMimeTypes::GetIcon(const char *filename) const
    return 0;
 }
 //______________________________________________________________________________
-#if QT_VERSION < 0x40000
-const QIconSet *TQMimeTypes::GetIcon(const TSystemFile *filename)
-#else /* QT_VERSION */
 const QIcon *TQMimeTypes::GetIcon(const TSystemFile *filename)
-#endif /* QT_VERSION */
 {
    // Return icon belonging to mime type of TSystemFile extension
    const char *name = filename->GetName();
-#if QT_VERSION < 0x40000
-   const QIconSet *set = GetIcon(name);
-#else /* QT_VERSION */
    const QIcon *set = GetIcon(name);
-#endif /* QT_VERSION */
    if (!set) set = AddType(filename);
    return set;
 }
 //______________________________________________________________________________
-#if QT_VERSION < 0x40000
-const QIconSet *TQMimeTypes::AddType(const TSystemFile *filename)
-#else /* QT_VERSION */
 const QIcon *TQMimeTypes::AddType(const TSystemFile *filename)
-#endif /* QT_VERSION */
 {
    //
 
    QFileInfo info(filename->GetName());
-#if QT_VERSION < 0x40000
-   const QPixmap &icon = IconProvider(info);
-#else
    const QIcon    icon = IconProvider(info);
-#endif
    if (icon.isNull()) return 0;
 
    // Add an artificial mime type to the list of mime types from the default system
    TQMime *mime = new TQMime;
    mime->fType    = "system/file";
    mime->fPattern = "*.";
-   mime->fPattern += (const char *)info.extension(FALSE);
+   mime->fPattern += info.suffix().toAscii().data();
    mime->fIcon  = 0;
-#if QT_VERSION < 0x40000
-   mime->fIcon  = new QIconSet( QPixmap(icon) ) ;
-#else /* QT_VERSION */
    mime->fIcon  = new QIcon(icon) ;
-#endif /* QT_VERSION */
 #ifdef R__QTWIN32
    mime->fAction  = "!%s";
 #else
@@ -354,13 +315,7 @@ void TQMimeTypes::AddType(const char *type, const char *pattern, const char *ico
    mime->fPattern = pattern;
    mime->fIcon    = 0;
    char *picnam = gSystem->Which(fIconPath.Data(),icon, kReadPermission);
-   if (picnam) {
-#if QT_VERSION < 0x40000
-      mime->fIcon  = new QIconSet( QPixmap(picnam) ) ;
-#else /* QT_VERSION */
-      mime->fIcon  = new QIcon( QPixmap(picnam) ) ;
-#endif /* QT_VERSION */
-   }
+   if (picnam) mime->fIcon  = new QIcon( QPixmap(picnam) ) ;
    delete [] picnam;
    mime->fAction  = action;
 

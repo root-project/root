@@ -13,22 +13,23 @@
 #define ROOT_TQtPadFont
 
 #include "TAttText.h"
+#include "TString.h"
 
 #ifndef __CINT__
-#  include <qfont.h>
+#  include <QFont>
 #else
    class  QFont;
 #endif
    //
-   // TQtPadFont creates the QFort object to map to ROOT  TAttText attributes
+   // TQtPadFont class is Qt QFont class with TAttText ROOT class interface
    //
 class TQtPadFont : public QFont, public TAttText
 {
 private:
-   static const char *fgRomanFontName;
-   static const char *fgArialFontName;
-   static const char *fgCourierFontName;
-   static const char *fgSymbolFontFamily;
+   static TString fgRomanFontName;
+   static TString fgArialFontName;
+   static TString fgCourierFontName;
+   static TString fgSymbolFontFamily;
 
 public:
    TQtPadFont();

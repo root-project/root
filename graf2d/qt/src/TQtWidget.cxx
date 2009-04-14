@@ -198,31 +198,25 @@ ClassImp(TQtWidget)
 ////////////////////////////////////////////////////////////////////////////////
 
 //_____________________________________________________________________________
-TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedded) :
-#if QT_VERSION < 0x40000
-      QWidget(parent,name,f)
-#else
-      QWidget(parent,f)
-#endif
+TQtWidget::TQtWidget(QWidget* mother, const char* name, Qt::WFlags f,bool embedded) :
+      QWidget(mother,f)
         ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0),fPixmapScreen(0)
         ,fPaint(TRUE),fSizeChanged(FALSE),fDoubleBufferOn(FALSE),fEmbedded(embedded)
-        ,fWrapper(0),fSaveFormat("PNG")
+        ,fWrapper(0),fSaveFormat("PNG"),fInsidePaintEvent(false)
 {
-   if (name && name[0]) setName(name);
+   if (name && name[0]) setObjectName(name);
    Init() ;
 }
 
 //_____________________________________________________________________________
-TQtWidget::TQtWidget(QWidget* parent, Qt::WFlags f,bool embedded) :
-#if QT_VERSION < 0x40000
-      QWidget(parent,"tqtwidget",f)
-#else
-      QWidget(parent,f)
-#endif
-        ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0)
-		  ,fPixmapScreen(0),fPaint(TRUE),fSizeChanged(FALSE)
-          ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
-{ Init() ;}
+TQtWidget::TQtWidget(QWidget* mother, Qt::WFlags f,bool embedded) :
+      QWidget(mother,f)
+     ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0)
+     ,fPixmapScreen(0),fPaint(TRUE),fSizeChanged(FALSE)
+     ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
+     ,fInsidePaintEvent(false)
+{ setObjectName("tqtwidget"); Init() ;}
+
 //_____________________________________________________________________________
 void TQtWidget::Init()
 {
@@ -241,7 +235,7 @@ void TQtWidget::Init()
      Bool_t batch = gROOT->IsBatch();
     if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
     TGQt::RegisterWid(this);
-    fCanvas = new TCanvas(name(),minw,minh, TGQt::RegisterWid(this));
+    fCanvas = new TCanvas(objectName().toStdString().c_str(),minw,minh, TGQt::RegisterWid(this));
     gROOT->SetBatch(batch);
     //   schedule the flush operation fCanvas->Flush(); via timer
     QTimer::singleShot(0,this, SLOT(Refresh()));
@@ -295,12 +289,12 @@ void TQtWidget::AdjustBufferSize()
              << s << size();
 #endif
       if (fPixmapID) {
-         TQtWidgetBuffer *buf = new TQtWidgetBuffer(*fPixmapID);
-         delete  fPixmapID;     fPixmapID = buf;
+         TQtWidgetBuffer *bf = new TQtWidgetBuffer(*fPixmapID);
+         delete  fPixmapID;     fPixmapID = bf;
       }
       if (fPixmapScreen) {
-         TQtWidgetBuffer *buf = new TQtWidgetBuffer(*fPixmapScreen);
-         delete  fPixmapScreen; fPixmapScreen = buf;
+         TQtWidgetBuffer *bf = new TQtWidgetBuffer(*fPixmapScreen);
+         delete  fPixmapScreen; fPixmapScreen = bf;
       }
    }
 }
@@ -394,7 +388,7 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
            // Remove Ctrl-C, there will be ROOT prompt anyway
            gSystem->RemoveSignalHandler(rint->GetSignalHandler());
        }
-       TQtTimer::Create()->start(0,TRUE);
+       TQtTimer::Create()->start(0);
    }
    return gApplication;
 }
@@ -446,7 +440,10 @@ void TQtWidget::Refresh()
       c->Resize();
       c->Update();
    }
-   update();
+   if (!fInsidePaintEvent) { update(); }
+   else {
+      qDebug() << " TQtWidget::Refresh() update inside of paintEvent !!!" << this; 
+   }
 }
 //_____________________________________________________________________________
 void TQtWidget::SetCanvas(TCanvas *c) 
@@ -454,7 +451,7 @@ void TQtWidget::SetCanvas(TCanvas *c)
    //  remember my host TCanvas and adopt its name
    fCanvas = c;
    // qDebug() << "TQtWidget::SetCanvas(TCanvas *c)" << fCanvas << fCanvas->GetName() ;
-   setName(fCanvas->GetName());
+   setObjectName(fCanvas->GetName());
 }
 
 //_____________________________________________________________________________
@@ -484,7 +481,7 @@ TQtWidget::customEvent(QEvent *e)
 TQtWidget::customEvent(QCustomEvent *e)
 #endif
 {
-   // The custom responce to the special WIN32 events
+   // The custom response to the special WIN32 events
    // These events are not present with X11 systems
    switch (e->type() - QEvent::User) {
    case kEXITSIZEMOVE:
@@ -532,7 +529,7 @@ void TQtWidget::contextMenuEvent(QContextMenuEvent *e)
 //_____________________________________________________________________________
 void TQtWidget::focusInEvent ( QFocusEvent *e )
 {
-   // The custom responce to the Qt QFocusEvent "in"
+   // The custom response to the Qt QFocusEvent "in"
    // this imposes an extra protection to avoid TObject interaction with
    // mouse event accidently
    if (!fWrapper && e->gotFocus()) {
@@ -542,7 +539,7 @@ void TQtWidget::focusInEvent ( QFocusEvent *e )
 //_____________________________________________________________________________
 void TQtWidget::focusOutEvent ( QFocusEvent *e )
 {
-   // The custom responce to the Qt QFocusEvent "out"
+   // The custom response to the Qt QFocusEvent "out"
    // this imposes an extra protection to avoid TObject interaction with
    // mouse event accidently
    if (!fWrapper && e->lostFocus()) {
@@ -570,8 +567,8 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
          // respect the QWidget::contextMenuPolicy
          // treat this event as QContextMenuEvent
           if (contextMenuPolicy()) {
-             QContextMenuEvent event(QContextMenuEvent::Other, e->pos() );
-             QApplication::sendEvent(this, &event);
+             QContextMenuEvent evt(QContextMenuEvent::Other, e->pos() );
+             QApplication::sendEvent(this, &evt);
              e->accept(); 
           }
           break;
@@ -600,7 +597,7 @@ void TQtWidget::mouseMoveEvent (QMouseEvent * e)
    EEventType rootButton = kMouseMotion;
    TCanvas *c = Canvas();
    if (c && !fWrapper){
-      if (e->state() & Qt::LeftButton) { rootButton = kButton1Motion; }
+      if (e->buttons() & Qt::LeftButton) { rootButton = kButton1Motion; }
       c->HandleInput(rootButton, e->x(), e->y());
       e->accept();
       EmitSignal(kMouseMoveEvent);
@@ -666,11 +663,11 @@ void TQtWidget::mouseDoubleClickEvent(QMouseEvent * e)
 //_____________________________________________________________________________
 void TQtWidget::keyPressEvent(QKeyEvent * e)
 {
-   //  Map the Qt key press event to the ROOT TCanvas events
+   // Map the Qt key press event to the ROOT TCanvas events
    // kKeyDown  =  4
    TCanvas *c = Canvas();
    if (c && !fWrapper){
-      c->HandleInput(kKeyPress, e->ascii(), e->key());
+      c->HandleInput(kKeyPress, e->text().toStdString().c_str()[0], e->key());
       EmitSignal(kKeyPressEvent);
    } else {
       e->ignore();
@@ -774,14 +771,14 @@ bool TQtWidget::Save(const QString &fileName) const
    //  The deafult format is "PNG".
    //  It can be changed with the TQtWidget::SetSaveFormat method
    //
-   QString fileNameExtension = QFileInfo(fileName).extension(FALSE).upper();
+   QString fileNameExtension = QFileInfo(fileName).suffix().toUpper();
    QString saveFormat;
    if (fileNameExtension.isEmpty() ) {
       saveFormat = fSaveFormat; // this is default
    } else {
       saveFormat = TGQt::QtFileFormat(fileNameExtension);
    }
-   return Save(fileName,saveFormat);
+   return Save(fileName,saveFormat.toStdString().c_str());
 }
 
 //____________________________________________________________________________
@@ -803,19 +800,19 @@ bool TQtWidget::Save(const QString &fileName,const char *format,int quality)cons
    }
    TCanvas *c = GetCanvas();
    if (rootFormatFound && c) {
-      c->Print((const char *)fileName,(const char *)saveType);
+      c->Print(fileName.toStdString().c_str(),saveType.toStdString().c_str());
       Ok = true;
    } else {
       TQtSynchPainting a(*this);
       // Since the "+" is a legal part of the file name and it is used by Onuchin
       // to indicate  the "animation" mode, we have to proceed very carefully
-      int dot = fileName.findRev('.');
+      int dot = fileName.lastIndexOf('.');
       int plus = 0;
-      if (dot) {
-         plus = fileName.find('+',dot+1);
+      if (dot > -1) {
+         plus = fileName.indexOf('+',dot+1);
       }
-      QString fln = (plus) ? TGQt::GetNewFileName(fileName.left(plus)) : fileName;
-      Ok = GetOffScreenBuffer() ? GetOffScreenBuffer()->save(fln,saveType,quality): false;
+      QString fln = (plus > -1) ? TGQt::GetNewFileName(fileName.left(plus)) : fileName;
+      Ok = GetOffScreenBuffer() ? GetOffScreenBuffer()->save(fln,saveType.toStdString().c_str(),quality): false;
    }
    emit ((TQtWidget *)this)->Saved(Ok);
    return Ok;
@@ -844,7 +841,7 @@ void TQtWidget::stretchWidget(QResizeEvent * /*s*/)
 //_____________________________________________________________________________
 void TQtWidget::exitSizeEvent ()
 {
-   // Responce to the "exit size event"
+   // Response to the "exit size event"
 
    if (!fSizeChanged ) return;
    {
@@ -890,7 +887,7 @@ void TQtWidget::paintEvent (QPaintEvent *e)
    // A paint event is a request to repaint all or part of the widget.
    // It can happen as a result of repaint() or update(), or because the widget
    // was obscured and has now been uncovered, or for many other reasons.
-
+   fInsidePaintEvent = true;
    if (fNeedStretch) {
       stretchWidget((QResizeEvent *)0);
    } else {
@@ -901,6 +898,7 @@ void TQtWidget::paintEvent (QPaintEvent *e)
       {
          fSizeChanged = kTRUE;
          exitSizeEvent();
+         fInsidePaintEvent = false;
          return;
       }
 #endif
@@ -919,12 +917,13 @@ void TQtWidget::paintEvent (QPaintEvent *e)
          if (fPixmapID)  screen.drawPixmap(0,0,*GetOffScreenBuffer());
       }
    }
+   fInsidePaintEvent = false;
 }
 //  Layout methods:
 //____________________________________________________________________________
-void TQtWidget::SetSizeHint (const QSize &size) {
+void TQtWidget::SetSizeHint (const QSize &sz) {
    //  sets the preferred size of the widget.
-   fSizeHint = size;
+   fSizeHint = sz;
 }
 //____________________________________________________________________________
 QSize TQtWidget::sizeHint () const{
@@ -946,8 +945,8 @@ void  TQtWidget::EmitTestedSignal()
 {
    TCanvas *c        = GetCanvas();
    TObject *selected = GetSelected();
-   UInt_t event      = GetEvent();
-   emit RootEventProcessed(selected, event, c);
+   UInt_t evt      = GetEvent();
+   emit RootEventProcessed(selected, evt, c);
 }
 //____________________________________________________________________________
 void  TQtWidget::SetBit(UInt_t f, Bool_t set)
