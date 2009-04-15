@@ -255,9 +255,14 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       delete old;
    }
    if (strlen(name) == 0 || gROOT->IsBatch()) {   //We are in Batch mode
-      fWindowTopX   = fWindowTopY = 0;
-      fWindowWidth  = gStyle->GetCanvasDefW()-4;
-      fWindowHeight = gStyle->GetCanvasDefH()-28;
+      fWindowTopX = fWindowTopY = 0;
+      if (form == 1) {
+         fWindowWidth  = gStyle->GetCanvasDefW();
+         fWindowHeight = gStyle->GetCanvasDefH();
+      } else {
+         fWindowWidth  = 500;
+         fWindowHeight = 500;
+      }
       fCw           = fWindowWidth;
       fCh           = fWindowHeight;
       fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
