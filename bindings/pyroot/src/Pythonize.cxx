@@ -554,15 +554,16 @@ namespace {
 //____________________________________________________________________________
    PyObject* TSeqCollectionPop( ObjectProxy* self, PyObject* args )
    {
-      if ( PyTuple_GET_SIZE( args ) == 0 ) {
+      int nArgs = PyTuple_GET_SIZE( args );
+      if ( nArgs == 0 ) {
       // create the default argument 'end of sequence'
          PyObject* index = PyInt_FromSsize_t( PySequence_Size( (PyObject*)self ) - 1 );
          PyObject* result = CallSelfIndex( self, index, "RemoveAt" );
          Py_DECREF( index );
          return result;
-      } else if ( PyTuple_GET_SIZE( args ) != 1 ) {
+      } else if ( nArgs != 1 ) {
          PyErr_Format( PyExc_TypeError,
-            "pop() takes at most 1 argument (%d given)", PyTuple_GET_SIZE( args ) );
+            "pop() takes at most 1 argument (%d given)", nArgs );
          return 0;
       }
 

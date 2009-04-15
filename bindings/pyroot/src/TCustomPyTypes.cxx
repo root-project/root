@@ -143,7 +143,7 @@ PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject* p
    im = free_list;
    if ( im != NULL ) {
       free_list = (PyMethodObject*)( im->im_self );
-      PyObject_INIT( im, &TCustomInstanceMethod_Type );
+      (void)PyObject_INIT( im, &TCustomInstanceMethod_Type );
    }
    else {
       im = PyObject_GC_New( PyMethodObject, &TCustomInstanceMethod_Type );
