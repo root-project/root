@@ -1066,6 +1066,7 @@ public:
    static Bool_t IsColorLocked();
 
    static void Color(const TGLColor& color);
+   static void Color(const TGLColor& color, UChar_t alpha);
    static void Color(const TGLColor& color, Float_t alpha);
    static void Color(Color_t color_index, Float_t alpha=1);
    static void ColorTransparency(Color_t color_index, Char_t transparency=0);

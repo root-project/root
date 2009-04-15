@@ -1406,16 +1406,26 @@ void TGLUtil::Color(const TGLColor& color)
 }
 
 //______________________________________________________________________________
+void TGLUtil::Color(const TGLColor& color, UChar_t alpha)
+{
+   // Set color from TGLColor and alpha value.
+
+   if (fgColorLockCount == 0)
+   {
+      glColor4ub(color.GetRed(), color.GetGreen(), color.GetBlue(), alpha);
+   }
+}
+
+//______________________________________________________________________________
 void TGLUtil::Color(const TGLColor& color, Float_t alpha)
 {
    // Set color from TGLColor and alpha value.
 
    if (fgColorLockCount == 0)
    {
-      glColor4ub(color.GetRed(), color.GetGreen(), color.GetBlue(), 255*alpha);
+      glColor4ub(color.GetRed(), color.GetGreen(), color.GetBlue(), (UChar_t)(255*alpha));
    }
 }
-
 
 //______________________________________________________________________________
 void TGLUtil::Color(Color_t color_index, Float_t alpha)
