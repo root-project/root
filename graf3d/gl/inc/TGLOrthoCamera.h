@@ -56,7 +56,6 @@ private:
    static UInt_t  fgZoomDeltaSens;
 
 public:
-   TGLOrthoCamera();
    TGLOrthoCamera(EType type, const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLOrthoCamera();
 
