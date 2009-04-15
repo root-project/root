@@ -46,7 +46,8 @@ public:
    void SetCylinder( const Float_t& r, const Float_t& z ) {
       fCylinderBorder.Set( r, 0.f, z ); fThetaC = fCylinderBorder.Theta(); } // Set border cylinder
 
-   Int_t AddCone( const Float_t& eta, const Float_t& phi, const Float_t& coneRadius, const Float_t& height = -1. );
+   Int_t AddCone(Float_t eta, Float_t phi, Float_t coneRadius, Float_t height=-1);
+   Int_t AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t height=-1);
 
    virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
 

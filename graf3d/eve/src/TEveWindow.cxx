@@ -404,10 +404,18 @@ TEveCompositeFrameInMainFrame::~TEveCompositeFrameInMainFrame()
    // Destructor.
 
    if (gDebug > 0)
-      Info("TEveCompositeFrameInMainFrame::~TEveCompositeFrameInMainFrame",
-           "Destructor.");
+      Info("~TEveCompositeFrameInMainFrame", "Destructor.");
 
-   gEve->GetWindowManager()->Disconnect("WindowDeleted(TEveWindow*)", this, "SomeWindowClosed(TEveWindow*)");
+   // MainFrames get deleted with a time-out. So, during EVE manager
+   // shutdown, it might happen that this gets called when gEve is null.
+   if (gEve && gEve->GetWindowManager())
+   {
+      gEve->GetWindowManager()->Disconnect("WindowDeleted(TEveWindow*)", this, "SomeWindowClosed(TEveWindow*)");
+   }
+   else
+   {
+      Info("~TEveCompositeFrameInMainFrame", "gEve null - OK if it was terminated.");
+   }
 }
 
 //______________________________________________________________________________

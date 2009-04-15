@@ -48,6 +48,7 @@ TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp) :
 
    fAxis = new TAxis();
    fAxis->SetNdivisions(710);
+   fAxis->SetLabelSize(0.018);
    fAxis->SetLabelOffset(0.01);
    fAxis->SetAxisColor(kGray+1);
    fAxis->SetLabelColor(kGray+1);
@@ -148,9 +149,7 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx)
    fAxisPainter->SetAttAxis(fAxis);
    GLint   vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
    Float_t rl = 0.5 *((vp[2]-vp[0]) + (vp[3]-vp[1]));
-   Float_t als = 0.025;
-   Float_t sizeX = als*rl/(vp[2]-vp[0]);
-   Float_t sizeY = als*rl/(vp[3]-vp[1]);
+   Int_t fsize = (Int_t)(fAxis->GetLabelSize()*rl);
    Float_t tlY = 0.015*rl/(vp[2]-vp[0]);
    Float_t tlX = 0.015*rl/(vp[3]-vp[1]);
 
@@ -163,7 +162,7 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx)
    // horizontal X
    //
    {
-      fAxis->SetLabelSize(sizeX);
+      fAxisPainter->SetLabelPixelFontSize(fsize);
       fAxis->SetTickLength(tlX);
       fAxisPainter->RefDir() = xdir;
       Float_t axisXOff = (fFrustum[2] - fFrustum[0]) * (1 - fAxisExtend);
@@ -192,7 +191,6 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx)
    //
    // vertical Y
    {
-      fAxis->SetLabelSize(sizeY);
       fAxis->SetTickLength(tlY);
       fAxisPainter->RefDir() = ydir;
       Float_t axisYOff = (fFrustum[3] - fFrustum[1]) * (1 - fAxisExtend);

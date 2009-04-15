@@ -96,7 +96,7 @@ void TEveJetCone::Paint(Option_t*)
 }
 
 //______________________________________________________________________________
-Int_t TEveJetCone::AddCone( const Float_t& eta, const Float_t& phi, const Float_t& coneRadius, const Float_t& height )
+Int_t TEveJetCone::AddCone(Float_t eta, Float_t phi, Float_t coneRadius, Float_t height )
 {
    // Add jet cone
    // parameters are :
@@ -122,6 +122,56 @@ Int_t TEveJetCone::AddCone( const Float_t& eta, const Float_t& phi, const Float_
       FillTEveVectorFromEtaPhi( contourPoint,
                                 eta + coneRadius * TMath::Cos(angleRad),
                                 phi + coneRadius * TMath::Sin(angleRad) );
+
+      // -- Set length of the contourPoint
+      if ( fCylinderBorder.fZ != -1. && fCylinderBorder.fX != -1. ) {
+         if ( contourPoint.Theta() < fThetaC )
+            contourPoint *= fCylinderBorder.fZ / TMath::Cos( contourPoint.Theta() ) ;
+         else if ( contourPoint.Theta() > ( TMath::Pi() - fThetaC ) )
+            contourPoint *= fCylinderBorder.fZ / TMath::Cos( contourPoint.Theta() - TMath::Pi() ) ;
+         else
+            contourPoint *= fCylinderBorder.fX / TMath::Sin( contourPoint.Theta() ) ;
+
+         if ( height != -1 ) contourPoint *= height;
+      }
+      else {
+         contourPoint *= height / GetArcCosConeOpeningAngle( coneAxis, contourPoint );
+      }
+
+      // -- Add contourPoint
+      fBasePoints.push_back( contourPoint );
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TEveJetCone::AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t height)
+{
+   // Add jet cone
+   // parameters are :
+   // * (eta,phi)    : of the center/leading particle
+   // * (reta, rphi) : radius of cone in eta-phi space
+   // * height       : height of the cone
+   //                  * if cylinder is set and length is adapted to cylinder.
+   //                    - if height is given, it will be used as scalar factor
+   //                  * if cylinder is not set, height is used as height of the cone
+   // Return 0 on sucess
+
+   if ( fCylinderBorder.fZ == -1. && fCylinderBorder.fX == -1. && height == -1 )
+      return -1;
+
+   TEveVector coneAxis;
+   FillTEveVectorFromEtaPhi( coneAxis, eta, phi );
+
+   Float_t angleRad = 0.;
+   for ( Float_t angle = 0.; angle < 360. ; angle+=5. , angleRad=angle*TMath::Pi()/180 ) {
+
+      // -- Get Contour point
+      TEveVector contourPoint;
+      FillTEveVectorFromEtaPhi( contourPoint,
+                                eta + reta * TMath::Cos(angleRad),
+                                phi + rphi * TMath::Sin(angleRad) );
 
       // -- Set length of the contourPoint
       if ( fCylinderBorder.fZ != -1. && fCylinderBorder.fX != -1. ) {

@@ -245,10 +245,9 @@ void TGLAxisPainter::SetLabelFont(TGLRnrCtx &rnrCtx, const char* fontName, Int_t
 
    fLabelPixelFontSize = TGLFontManager::GetFontSize(fontSize, 10, 128);
    fLabel3DFontSize = size3d;
-
    if (fLabelFont.GetMode() == TGLFont::kUndef)
    {
-      rnrCtx.RegisterFont(fontSize, fontName, fFontMode, fLabelFont);
+      rnrCtx.RegisterFont(fLabelPixelFontSize, fontName, fFontMode, fLabelFont);
    }
    else if (fLabelFont.GetSize() != fontSize|| fLabelFont.GetFile() != fAttAxis->GetLabelFont() || fLabelFont.GetMode() != fFontMode )
    {
