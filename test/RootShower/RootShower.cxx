@@ -549,14 +549,14 @@ void RootShower::MakeMenuBarFrame()
 
    // file popup menu
    fMenuFile = new TGPopupMenu(gClient->GetRoot());
-   fMenuFile->AddEntry("&Open...       Ctrl+O", M_FILE_OPEN);
-   fMenuFile->AddEntry("S&ave as...  Ctrl+A", M_FILE_SAVEAS);
+   fMenuFile->AddEntry("&Open...\tCtrl+O", M_FILE_OPEN);
+   fMenuFile->AddEntry("S&ave as...\tCtrl+A", M_FILE_SAVEAS);
    fMenuFile->AddEntry("&Close", -1);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("&Print", -1);
    fMenuFile->AddEntry("P&rint setup...", -1);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry("E&xit             Ctrl+Q", M_FILE_EXIT);
+   fMenuFile->AddEntry("E&xit\tCtrl+Q", M_FILE_EXIT);
    fMenuFile->DisableEntry(M_FILE_SAVEAS);
    fMenuFile->Associate(this);
 
@@ -567,7 +567,7 @@ void RootShower::MakeMenuBarFrame()
    fMenuEvent->AddEntry("Save &Parameters", M_SETTINGS_SAVE);
    fMenuEvent->AddEntry("Show &Process", M_SHOW_PROCESS);
    fMenuEvent->AddEntry("Animated &GIF", M_ANIMATE_GIF);
-   fMenuEvent->AddEntry("&Infos...                   Ctrl+I", M_SHOW_INFOS);
+   fMenuEvent->AddEntry("&Infos...\tCtrl+I", M_SHOW_INFOS);
    fMenuEvent->AddSeparator();
    fMenuEvent->AddEntry("&3D View", M_SHOW_3D);
    fMenuEvent->AddEntry("&Show Selected  Track", M_SHOW_TRACK);
@@ -583,7 +583,7 @@ void RootShower::MakeMenuBarFrame()
    fMenuTools = new TGPopupMenu(gClient->GetRoot());
    fMenuTools->AddLabel("Simulation Tools...");
    fMenuTools->AddSeparator();
-   fMenuTools->AddEntry("Start &Browser          Ctrl+B", M_INSPECT_BROWSER);
+   fMenuTools->AddEntry("Start &Browser\tCtrl+B", M_INSPECT_BROWSER);
    fMenuTools->AddEntry("&Create Html Doc", M_FILE_HTML);
    fMenuTools->Associate(this);
 
