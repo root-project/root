@@ -339,9 +339,12 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
       font = fFontStruct;
    }
 
+   UInt_t tw = 0;
    UInt_t sep = fEntrySep;
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(font, max_ascent, max_descent);
+   if (entry->GetShortcut())
+      tw = 7 + gVirtualX->TextWidth(fFontStruct, entry->GetShortcutText(), entry->GetShortcut()->Length());
 
    int tx = entry->GetEx() + fXl;
    int ty = entry->GetEy() + max_ascent;
@@ -380,6 +383,9 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
             entry->GetLabel()->Draw(fId,
                            (entry->GetStatus() & kMenuEnableMask) ? fSelGC : GetShadowGC()(),
                            tx, ty);
+            if (entry->GetShortcut())
+               entry->GetShortcut()->Draw(fId, (entry->GetStatus() & kMenuEnableMask) ? fSelGC : GetShadowGC()(),
+                                      fMenuWidth - tw, ty);
          } else {
             if ( entry->GetType() != kMenuLabel) {
                gVirtualX->FillRectangle(fId, TRootGuiBuilder::GetBgndGC()->GetGC(),
@@ -414,9 +420,15 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
 
             if (entry->GetStatus() & kMenuEnableMask) {
                entry->GetLabel()->Draw(fId, fNormGC, tx, ty);
+               if (entry->GetShortcut())
+                  entry->GetShortcut()->Draw(fId, fNormGC, fMenuWidth - tw, ty);
             } else {
                entry->GetLabel()->Draw(fId, GetHilightGC()(), tx+1, ty+1);
                entry->GetLabel()->Draw(fId, GetShadowGC()(), tx, ty);
+               if (entry->GetShortcut()) {
+                  entry->GetShortcut()->Draw(fId, GetHilightGC()(), fMenuWidth - tw+1, ty+1);
+                  entry->GetShortcut()->Draw(fId, GetShadowGC()(), fMenuWidth - tw, ty);
+               }
             }
          }
          break;

@@ -5516,16 +5516,16 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
    // special case - menu for editable Mdi frame
    if (fBuilder && (frame == fBuilder->GetMdiMain()->GetCurrent())) {
       if (!gSystem->AccessPathName(fPasteFileName.Data())) {
-         fFrameMenu->AddEntry("Paste               Ctrl+V", kPasteAct,
+         fFrameMenu->AddEntry("Paste\tCtrl+V", kPasteAct,
                                0, fClient->GetPicture("bld_paste.png"));
       }
-      fFrameMenu->AddEntry("Compact          Ctrl+L", kCompactAct,
+      fFrameMenu->AddEntry("Compact\tCtrl+L", kCompactAct,
                                0, fClient->GetPicture("bld_compact.png"));
-      fFrameMenu->AddEntry("Grid On/Off       Ctrl+G", kGridAct,
+      fFrameMenu->AddEntry("Grid On/Off\tCtrl+G", kGridAct,
                               0, fClient->GetPicture("bld_grid.png"));
-      fFrameMenu->AddEntry("Save As ...        Ctrl+S", kSaveAct,
+      fFrameMenu->AddEntry("Save As ...\tCtrl+S", kSaveAct,
                               0, fClient->GetPicture("bld_save.png"));
-      fFrameMenu->AddEntry("End Edit         Ctrl+DblClick", kEndEditAct,
+      fFrameMenu->AddEntry("End Edit\tCtrl+DblClick", kEndEditAct,
                               0, fClient->GetPicture("bld_stop.png"));
       goto out;
    }
@@ -5546,53 +5546,53 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
       fFrameMenu->AddSeparator();
 
       if (composite && !IsFixedLayout(frame) && cfr->GetList()->GetEntries()) {
-         fFrameMenu->AddEntry("Drop               Ctrl+Return", kDropAct);
+         fFrameMenu->AddEntry("Drop\tCtrl+Return", kDropAct);
       }
 
       if (!IsFixedLayout(cfrp)) {
-         fFrameMenu->AddEntry("Cut                 Ctrl+X", kCutAct,
+         fFrameMenu->AddEntry("Cut\tCtrl+X", kCutAct,
                                0, fClient->GetPicture("bld_cut.png"));
       }
       //
-      fFrameMenu->AddEntry("Copy              Ctrl+C", kCopyAct,
+      fFrameMenu->AddEntry("Copy\tCtrl+C", kCopyAct,
                             0, fClient->GetPicture("bld_copy.png"));
 
       if (frame->IsEditable() && !IsFixedLayout(frame) && 
           !gSystem->AccessPathName(fPasteFileName.Data())) {
-         fFrameMenu->AddEntry("Paste              Ctrl+V", kPasteAct,
+         fFrameMenu->AddEntry("Paste\tCtrl+V", kPasteAct,
                                0, fClient->GetPicture("bld_paste.png"));
       }
 
       if (!IsFixedLayout(cfrp)) {
-         fFrameMenu->AddEntry("Delete             Del", kDeleteAct,
+         fFrameMenu->AddEntry("Delete\tDel", kDeleteAct,
                               0, fClient->GetPicture("bld_delete.png"));
       }
 
       if (!IsFixedLayout(cfrp)) {
-         fFrameMenu->AddEntry("Crop               Shift+Del", kCropAct,
+         fFrameMenu->AddEntry("Crop\tShift+Del", kCropAct,
                                0, fClient->GetPicture("bld_crop.png"));
       }
 
 //      if (!IsFixedLayout(cfrp) && !gSystem->AccessPathName(fPasteFileName.Data())) {
-//         fFrameMenu->AddEntry("Replace          Ctrl+R", kReplaceAct, 
+//         fFrameMenu->AddEntry("Replace\tCtrl+R", kReplaceAct, 
 //                               0, fClient->GetPicture("bld_paste_into.png"));
 //      }
 
       fFrameMenu->AddSeparator();
    } else {
       if (!gSystem->AccessPathName(fPasteFileName.Data()) && !IsFixedLayout(frame)) {
-         fFrameMenu->AddEntry("Paste               Ctrl+V", kPasteAct,
+         fFrameMenu->AddEntry("Paste\tCtrl+V", kPasteAct,
                                0, fClient->GetPicture("bld_paste.png"));
       }
       if (frame->GetMainFrame() == frame) {
-         fFrameMenu->AddEntry("Clone               Ctrl+A", kCloneAct);
+         fFrameMenu->AddEntry("Clone\tCtrl+A", kCloneAct);
       }
       fFrameMenu->AddSeparator();
    }
 
    if (CanChangeLayout(frame)) {
-      const char *label = (frame->IsLayoutBroken() ? "Allow Layout   Ctrl+B" : 
-                                                     "Break Layout   Ctrl+B");
+      const char *label = (frame->IsLayoutBroken() ? "Allow Layout\tCtrl+B" : 
+                                                     "Break Layout\tCtrl+B");
       fFrameMenu->AddEntry(label, kBreakLayoutAct,
                             0, fClient->GetPicture("bld_break.png"));
    }
@@ -5600,10 +5600,10 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
    if (composite && !cfr->GetList()->IsEmpty()) {
       if (CanCompact(frame)) {
          if (!frame->IsEditable()) {
-            fFrameMenu->AddEntry("Compact          Ctrl+L", kCompactAct,
+            fFrameMenu->AddEntry("Compact\tCtrl+L", kCompactAct,
                                   0, fClient->GetPicture("bld_compact.png"));
          } else {
-            fFrameMenu->AddEntry("Compact          Ctrl+L", kCompactGlobalAct,
+            fFrameMenu->AddEntry("Compact\tCtrl+L", kCompactGlobalAct,
                                   0, fClient->GetPicture("bld_compact.png"));
          }
       }
@@ -5612,10 +5612,10 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
            (lm->IsA() == TGHorizontalLayout::Class())) && !IsFixedLayout(frame)) {
 
          if (lm->IsA() == TGVerticalLayout::Class()) {
-            fFrameMenu->AddEntry("Horizontal         Ctrl+H", kSwitchLayoutAct,
+            fFrameMenu->AddEntry("Horizontal\tCtrl+H", kSwitchLayoutAct,
                                  0, fClient->GetPicture("bld_hbox.png"));
          } else if (lm->IsA() == TGHorizontalLayout::Class()) {
-            fFrameMenu->AddEntry("Vertical            Ctrl+H", kSwitchLayoutAct,
+            fFrameMenu->AddEntry("Vertical\tCtrl+H", kSwitchLayoutAct,
                                  0, fClient->GetPicture("bld_vbox.png"));
          }
       }
@@ -5623,16 +5623,16 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
 
    if (compar && (cfrp->GetList()->GetSize() > 1) && CanChangeLayoutOrder(frame)) {
       if (cfrp->GetList()->First() != frame->GetFrameElement()) {
-         fFrameMenu->AddEntry("Lay Up             Up/Left", kLayUpAct);
+         fFrameMenu->AddEntry("Lay Up\tUp/Left", kLayUpAct);
       }
       if (cfrp->GetList()->Last() != frame->GetFrameElement()) {
-         fFrameMenu->AddEntry("Lay Down         Down/Right", kLayDownAct);
+         fFrameMenu->AddEntry("Lay Down\tDown/Right", kLayDownAct);
       }
       fFrameMenu->AddSeparator();
    }
 
    if (frame->IsEditable()) {
-      fFrameMenu->AddEntry("Grid On/Off       Ctrl+G", kGridAct,
+      fFrameMenu->AddEntry("Grid On/Off\tCtrl+G", kGridAct,
                             0, fClient->GetPicture("bld_grid.png"));
    }
    if (composite && !cfr->GetList()->IsEmpty()) {
@@ -5666,20 +5666,20 @@ void TGuiBldDragManager::Menu4Lasso(Int_t x, Int_t y)
    fLassoMenu = TRootGuiBuilder::CreatePopup();
    fLassoMenu->AddLabel("Edit actions");
    fLassoMenu->AddSeparator();
-   fLassoMenu->AddEntry("Grab              Return", kGrabAct);
+   fLassoMenu->AddEntry("Grab\tReturn", kGrabAct);
    fLassoMenu->AddSeparator();
-   fLassoMenu->AddEntry("Delete            Delete", kDeleteAct, 
+   fLassoMenu->AddEntry("Delete\tDelete", kDeleteAct, 
                         0, fClient->GetPicture("bld_delete.png"));
-   fLassoMenu->AddEntry("Crop              Shift+Delete", kCropAct, 
+   fLassoMenu->AddEntry("Crop\tShift+Delete", kCropAct, 
                         0, fClient->GetPicture("bld_crop.png"));
    fLassoMenu->AddSeparator();
-   fLassoMenu->AddEntry("Align Left        Left Key", kLeftAct, 
+   fLassoMenu->AddEntry("Align Left\tLeft Key", kLeftAct, 
                         0, fClient->GetPicture("bld_AlignLeft.png"));
-   fLassoMenu->AddEntry("Align Right      Right Key", kRightAct, 
+   fLassoMenu->AddEntry("Align Right\tRight Key", kRightAct, 
                         0, fClient->GetPicture("bld_AlignRight.png"));
-   fLassoMenu->AddEntry("Align Up         Up Key", kUpAct, 
+   fLassoMenu->AddEntry("Align Up\tUp Key", kUpAct, 
                         0, fClient->GetPicture("bld_AlignTop.png"));
-   fLassoMenu->AddEntry("Align Down     Down Key", kDownAct, 
+   fLassoMenu->AddEntry("Align Down\tDown Key", kDownAct, 
                         0, fClient->GetPicture("bld_AlignBtm.png"));
 
    fLassoMenu->Connect("Activated(Int_t)", "TGuiBldDragManager", this, "HandleAction(Int_t)");
