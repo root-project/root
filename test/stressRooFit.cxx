@@ -78,8 +78,8 @@ public:
   virtual Bool_t isTestAvailable() { return kTRUE ; }
   virtual Bool_t testCode() = 0 ;  
 
-  virtual Double_t htol() { return 2e-4 ; } // histogram test tolerance (KS dist != prob)
-  virtual Double_t ctol() { return 1e-3 ; } // curve test tolerance
+  virtual Double_t htol() { return 5e-4 ; } // histogram test tolerance (KS dist != prob)
+  virtual Double_t ctol() { return 2e-3 ; } // curve test tolerance
   virtual Double_t fptol() { return 1e-3 ; } // fit parameter test tolerance
   virtual Double_t fctol() { return 1e-3 ; } // fit correlation test tolerance
   virtual Double_t vtol() { return 1e-3 ; } // value test tolerance
@@ -583,6 +583,7 @@ Bool_t RooFitTestUnit::runTest()
   RooMsgService::instance().clearErrorCount() ;
 
   // Reset random generator seed to make results independent of test ordering
+  gRandom->SetSeed(12345) ;
   RooRandom::randomGenerator()->SetSeed(12345) ;
 
   if (!testCode()) return kFALSE ;
@@ -784,7 +785,7 @@ int main(int argc,const char *argv[])
   Int_t dryRun    = kFALSE ;
   Bool_t doDump   = kFALSE ;
 
-  string refFileName = "http://root.cern.ch/files/stressRooFit_v522_ref.root" ;
+  string refFileName = "http://root.cern.ch/files/stressRooFit_v524_ref.root" ;
 
   // Parse command line arguments 
   for (Int_t i=1 ;  i<argc ; i++) {

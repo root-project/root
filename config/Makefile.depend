@@ -71,9 +71,9 @@ FOAMLIBDEPM            = $(HISTLIB)
 ALIENLIBDEPM           = $(XMLLIB) $(NETXLIB) $(TREELIB) $(PROOFPLAYERLIB) \
                          $(NETLIB) $(IOLIB)
 ROOFITCORELIBDEPM      = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
-                         $(MINUITLIB) $(IOLIB) $(MATHCORELIB)
+                         $(MINUITLIB) $(IOLIB) $(MATHCORELIB) $(FOAMLIB)
 ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(MATRIXLIB) \
-                         $(MATHCORELIB)
+                         $(MATHCORELIB) 
 ROOSTATSLIBDEPM        = $(ROOFITLIB) $(ROOFITCORELIB) $(TREELIB) $(IOLIB) \
                          $(MATRIXLIB) $(HISTLIB) $(MATHCORELIB) $(GRAFLIB) $(GPADLIB)
 CINT7LIBDEPM           = $(REFLEXLIB)
@@ -298,7 +298,7 @@ ALIENLIBEXTRA           = lib/libXMLIO.lib lib/libNetx.lib lib/libTree.lib \
                           lib/libProofPlayer.lib lib/libNet.lib lib/RIO.lib
 ROOFITCORELIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libMinuit.lib lib/libRIO.lib \
-                          lib/libMathCore.lib
+                          lib/libMathCore.lib lib/libFoam.lib
 ROOFITLIBEXTRA          = lib/libRooFitCore.lib lib/libTree.lib lib/libRIO.lib \
                           lib/libMatrix.lib lib/libMathCore.lib
 ROOSTATSLIBEXTRA        = lib/libRooFit.lib lib/libRooFitCore.lib \
@@ -412,7 +412,7 @@ XMLLIBEXTRA             = -Llib -lRIO
 FOAMLIBEXTRA            = -Llib -lHist
 ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProofPlayer -lNet -lRIO
 ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lRIO \
-                          -lMathCore
+                          -lMathCore -lFoam
 ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lMatrix -lMathCore
 ROOSTATSLIBEXTRA        = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lMatrix \
                           -lHist -lMathCore -lGraf -lGpad
