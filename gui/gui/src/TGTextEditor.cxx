@@ -339,19 +339,19 @@ void TGTextEditor::Build()
    fMenuFile->AddEntry("E&xit", kM_FILE_EXIT);
 
    fMenuEdit = new TGPopupMenu(fClient->GetDefaultRoot());
-   fMenuEdit->AddEntry("Cu&t             Ctrl+X", kM_EDIT_CUT);
-   fMenuEdit->AddEntry("&Copy          Ctrl+C", kM_EDIT_COPY);
-   fMenuEdit->AddEntry("&Paste         Ctrl+V", kM_EDIT_PASTE);
-   fMenuEdit->AddEntry("De&lete        Del", kM_EDIT_DELETE);
+   fMenuEdit->AddEntry("Cu&t\tCtrl+X", kM_EDIT_CUT);
+   fMenuEdit->AddEntry("&Copy\tCtrl+C", kM_EDIT_COPY);
+   fMenuEdit->AddEntry("&Paste\tCtrl+V", kM_EDIT_PASTE);
+   fMenuEdit->AddEntry("De&lete\tDel", kM_EDIT_DELETE);
    fMenuEdit->AddSeparator();
-   fMenuEdit->AddEntry("Select &All   Ctrl+A", kM_EDIT_SELECTALL);
+   fMenuEdit->AddEntry("Select &All\tCtrl+A", kM_EDIT_SELECTALL);
    fMenuEdit->AddSeparator();
    fMenuEdit->AddEntry("Set &Font", kM_EDIT_SELFONT);
 
    fMenuTools = new TGPopupMenu(fClient->GetDefaultRoot());
-   fMenuTools->AddEntry("&Compile Macro  Ctrl+F7", kM_TOOLS_COMPILE);
-   fMenuTools->AddEntry("&Execute Macro   Ctrl+F5", kM_TOOLS_EXECUTE);
-   fMenuTools->AddEntry("&Interrupt              Shift+F5", kM_TOOLS_INTERRUPT);
+   fMenuTools->AddEntry("&Compile Macro\tCtrl+F7", kM_TOOLS_COMPILE);
+   fMenuTools->AddEntry("&Execute Macro\tCtrl+F5", kM_TOOLS_EXECUTE);
+   fMenuTools->AddEntry("&Interrupt\tShift+F5", kM_TOOLS_INTERRUPT);
 
    fMenuEdit->DisableEntry(kM_EDIT_CUT);
    fMenuEdit->DisableEntry(kM_EDIT_COPY);
@@ -359,13 +359,13 @@ void TGTextEditor::Build()
    fMenuEdit->DisableEntry(kM_EDIT_PASTE);
 
    fMenuSearch = new TGPopupMenu(fClient->GetDefaultRoot());
-   fMenuSearch->AddEntry("&Find...         Ctrl+F", kM_SEARCH_FIND);
-   fMenuSearch->AddEntry("Find &Next    F3", kM_SEARCH_FINDNEXT);
+   fMenuSearch->AddEntry("&Find...\tCtrl+F", kM_SEARCH_FIND);
+   fMenuSearch->AddEntry("Find &Next\tF3", kM_SEARCH_FINDNEXT);
    fMenuSearch->AddSeparator();
-   fMenuSearch->AddEntry("&Goto Line... Ctrl+L", kM_SEARCH_GOTO);
+   fMenuSearch->AddEntry("&Goto Line...\tCtrl+L", kM_SEARCH_GOTO);
 
    fMenuHelp = new TGPopupMenu(fClient->GetDefaultRoot());
-   fMenuHelp->AddEntry("&Help Topics    F1", kM_HELP_CONTENTS);
+   fMenuHelp->AddEntry("&Help Topics\tF1", kM_HELP_CONTENTS);
    fMenuHelp->AddSeparator();
    fMenuHelp->AddEntry("&About...", kM_HELP_ABOUT);
 
