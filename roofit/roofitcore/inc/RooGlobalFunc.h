@@ -82,6 +82,7 @@ RooCmdArg CutRange(const char* rangeName) ;
 RooCmdArg XErrorSize(Double_t width) ;
 RooCmdArg RefreshNorm() ;
 RooCmdArg Efficiency(const RooCategory& cat) ;
+RooCmdArg Rescale(Double_t factor) ;
 
 // RooDataHist::ctor arguments
 RooCmdArg Weight(Double_t wgt) ;
@@ -95,6 +96,8 @@ RooCmdArg WeightVar(const RooRealVar& arg) ;
 RooCmdArg Import(const char* state, RooDataSet& data) ;
 RooCmdArg Import(RooDataSet& data) ;
 RooCmdArg Import(TTree& tree) ;
+RooCmdArg StoreError(const RooArgSet& aset) ; 
+RooCmdArg StoreAsymError(const RooArgSet& aset) ; 
 
 // RooChi2Var::ctor arguments
 RooCmdArg Extended(Bool_t flag=kTRUE) ;
@@ -147,6 +150,9 @@ RooCmdArg Constrain(const RooArgSet& params) ;
 RooCmdArg ExternalConstraints(const RooArgSet& constraintPdfs) ;
 RooCmdArg PrintEvalErrors(Int_t numErrors) ;
 RooCmdArg EvalErrorWall(Bool_t flag) ;
+RooCmdArg SumW2Error(Bool_t flag) ;
+RooCmdArg CloneData(Bool_t flag) ;
+RooCmdArg Integrate(Bool_t flag) ;
 
 // RooAbsPdf::paramOn arguments
 RooCmdArg Label(const char* str) ;
@@ -158,7 +164,7 @@ RooCmdArg ShowConstants(Bool_t flag=kTRUE) ;
 RooCmdArg What(const char* str) ;
 
 // RooProdPdf::ctor arguments
-RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet) ;
+RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, Bool_t depsAreCond=kFALSE) ;
 
 // RooAbsPdf::generate arguments
 RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder=kFALSE, Bool_t resample=kFALSE) ;
@@ -214,7 +220,7 @@ RooCmdArg RenameConflictNodes(const char* suffix) ;
 RooCmdArg RenameAllNodes(const char* suffix) ; 
 RooCmdArg RenameAllVariables(const char* suffix) ; 
 RooCmdArg RenameVariable(const char* inputName, const char* outputName) ;
-RooCmdArg RenameDataset(const char* suffix) ;
+RooCmdArg Rename(const char* suffix) ;
 RooCmdArg RecycleConflictNodes(Bool_t flag=kTRUE) ;
 
 // RooSimCloneTool::build() arguments

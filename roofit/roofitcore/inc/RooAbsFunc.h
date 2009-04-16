@@ -23,6 +23,8 @@ class RooAbsRealLValue ;
 class RooAbsFunc {
 public:
   inline RooAbsFunc(UInt_t dimension) : _ncall(0), _dimension(dimension), _valid(kTRUE) { }
+  inline RooAbsFunc(const RooAbsFunc& other) : _ncall(0), _dimension(other._dimension), _valid(kTRUE) { }
+
   inline virtual ~RooAbsFunc() { }
   inline UInt_t getDimension() const { 
     // Dimension of function

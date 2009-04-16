@@ -286,15 +286,18 @@ void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
 
   // Process insert hooks required for parameterized binnings
   if (!name) {
+    RooAbsBinning* newBinning = binning.clone() ;
     if (_binning) {
       _binning->removeHook(*this) ;
       delete _binning ;
     }
-    _binning = binning.clone() ;
-    _binning->insertHook(*this) ;
+    newBinning->insertHook(*this) ;
+    _binning = newBinning ;
   } else {
 
     RooLinkedList* altBinning = binning.isShareable() ? &(sharedProp()->_altBinning) : &_altNonSharedBinning ;
+
+    RooAbsBinning* newBinning = binning.clone() ;
 
     // Remove any old binning with this name
     RooAbsBinning* oldBinning = (RooAbsBinning*) altBinning->FindObject(name) ;
@@ -305,7 +308,6 @@ void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
     }
 
     // Insert new binning in list of alternative binnings
-    RooAbsBinning* newBinning = binning.clone() ;
     newBinning->SetName(name) ;
     newBinning->SetTitle(name) ;
     newBinning->insertHook(*this) ;
@@ -936,7 +938,7 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
     } else {
       TString format2(errName);
       format2.Append("/D");
-      t.Branch(errName, &_error, (const char*)format2, bufSize);
+      t.Branch(errName, &_error, (const Text_t*)format2, bufSize);
     }
   }
 
@@ -950,7 +952,7 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
     } else {
       TString format2(loName);
       format2.Append("/D");
-      t.Branch(loName, &_asymErrLo, (const char*)format2, bufSize);
+      t.Branch(loName, &_asymErrLo, (const Text_t*)format2, bufSize);
     }
 
     TString hiName(GetName()) ;
@@ -961,7 +963,7 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
     } else {
       TString format2(hiName);
       format2.Append("/D");
-      t.Branch(hiName, &_asymErrHi, (const char*)format2, bufSize);
+      t.Branch(hiName, &_asymErrHi, (const Text_t*)format2, bufSize);
     }
   }
 }
@@ -1006,7 +1008,7 @@ void RooRealVar::fillTreeBranch(TTree& t)
 
 
 //_____________________________________________________________________________
-void RooRealVar::copyCache(const RooAbsArg* source) 
+void RooRealVar::copyCache(const RooAbsArg* source, Bool_t valueOnly) 
 {
   // Copy the cached value of another RooAbsArg to our cache
   // Warning: This function copies the cached values of source,
@@ -1014,6 +1016,8 @@ void RooRealVar::copyCache(const RooAbsArg* source)
 
   // Follow usual procedure for valueklog
   RooAbsReal::copyCache(source) ;
+
+  if (valueOnly) return ;
 
   // Copy error too, if source has one
   RooRealVar* other = dynamic_cast<RooRealVar*>(const_cast<RooAbsArg*>(source)) ;
@@ -1056,14 +1060,12 @@ void RooRealVar::Streamer(TBuffer &R__b)
       R__b >> _sharedProp ;
       _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(_sharedProp,kFALSE) ;
     }
-    if (R__v==4) {
+    if (R__v>=4) {
       RooRealVarSharedProperties* tmpSharedProp = new RooRealVarSharedProperties() ;
       tmpSharedProp->Streamer(R__b) ;
       if (!(_nullProp==*tmpSharedProp)) {
-	// 	  cout << "RooRealVar::streamer registering shared prop " << tmpSharedProp << endl ;
 	_sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(tmpSharedProp,kFALSE) ;
       } else {
-	// 	  cout << "RooRealVar::streamer deleting shared prop " << tmpSharedProp << endl ;
 	delete tmpSharedProp ;
 	_sharedProp = 0 ;
       }

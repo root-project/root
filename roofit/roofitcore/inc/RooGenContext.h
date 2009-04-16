@@ -25,6 +25,7 @@ class RooRealIntegral;
 class RooAcceptReject;
 class TRandom;
 class RooRealVar ;
+class RooAbsNumGenerator ;
 
 class RooGenContext : public RooAbsGenContext {
 public:
@@ -47,7 +48,7 @@ protected:
   Int_t _code;                        // Internal generation code
   Double_t _maxProb, _area, _norm;    // Maximum probability, p.d.f area and normalization
   RooRealIntegral *_acceptRejectFunc; // Projection function to be passed to accept/reject sampler
-  RooAcceptReject *_generator;        // Accept/reject generation engine
+  RooAbsNumGenerator *_generator;     // MC sampling generation engine
   RooRealVar *_maxVar ;               // Variable holding maximum value of p.d.f
   TIterator *_uniIter ;               // Iterator over uniform observables
   Int_t _updateFMaxPerEvent ;         // If true, maximum p.d.f value needs to be recalculated for each event

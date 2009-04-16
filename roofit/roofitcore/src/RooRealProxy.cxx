@@ -38,6 +38,16 @@ ClassImp(RooRealProxy)
 
 
 //_____________________________________________________________________________
+RooRealProxy::RooRealProxy(const char* inName, const char* desc, RooAbsArg* owner, 
+			   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
+  RooArgProxy(inName, desc, owner, valueServer, shapeServer, ownArg)
+{
+  // Constructor with owner. 
+}
+
+
+
+//_____________________________________________________________________________
 RooRealProxy::RooRealProxy(const char* inName, const char* desc, RooAbsArg* owner, RooAbsReal& ref,
 			   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
   RooArgProxy(inName, desc, owner,ref, valueServer, shapeServer, ownArg)
@@ -81,3 +91,12 @@ RooAbsRealLValue* RooRealProxy::lvptr() const
   return Lvptr ;
 }
 
+
+//_____________________________________________________________________________
+Bool_t RooRealProxy::setArg(RooAbsReal& newRef) 
+{
+  // Change object held in proxy into newRef
+
+  newRef.setAttribute(Form("ORIGNAME:%s",arg().GetName())) ;
+  return changePointer(RooArgSet(newRef),kTRUE) ;
+}

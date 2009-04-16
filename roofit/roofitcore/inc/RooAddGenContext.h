@@ -20,6 +20,7 @@
 #include "RooArgSet.h"
 
 class RooAddPdf;
+class RooAddModel;
 class RooDataSet;
 class RooRealIntegral;
 class RooAcceptReject;
@@ -29,6 +30,8 @@ class TIterator;
 class RooAddGenContext : public RooAbsGenContext {
 public:
   RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
+                   const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
+  RooAddGenContext(const RooAddModel &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   virtual ~RooAddGenContext();
 
@@ -48,10 +51,11 @@ protected:
 
   const RooArgSet* _vars ;       
   RooArgSet* _pdfSet ;           //  Set owned all nodes of internal clone of p.d.f
-  RooAddPdf *_pdf ;              //  Pointer to cloned p.d.f
+  RooAbsPdf *_pdf ;              //  Pointer to cloned p.d.f
   TList _gcList ;                //  List of component generator contexts
   Int_t  _nComp ;                //  Number of PDF components
   Double_t* _coefThresh ;        //[_nComp] Array of coefficient thresholds 
+  Bool_t _isModel ;              // Are we generating from a RooAddPdf or a RooAddModel
 
   ClassDef(RooAddGenContext,0) // Specialized context for generating a dataset from a RooAddPdf
 };

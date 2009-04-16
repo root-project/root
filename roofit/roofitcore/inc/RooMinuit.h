@@ -19,6 +19,7 @@
 #include "TObject.h"
 #include "TStopwatch.h"
 #include <fstream>
+#include "TMatrixDSymfwd.h"
 
 class RooAbsReal ;
 class RooFitResult ;
@@ -72,6 +73,9 @@ public:
   
 protected:
 
+  friend class RooAbsPdf ;
+  void applyCovarianceMatrix(TMatrixDSym& V) ;
+
   friend void RooMinuitGlue(Int_t &np, Double_t *gin, Double_t &f, Double_t *par, Int_t flag) ;
 
   void profileStart() ;
@@ -114,6 +118,8 @@ private:
   Bool_t      _verbose ;
   TStopwatch  _timer ;
   TStopwatch  _cumulTimer ;
+
+  TMatrixDSym* _extV ;
 
   static TVirtualFitter *_theFitter ; 
 

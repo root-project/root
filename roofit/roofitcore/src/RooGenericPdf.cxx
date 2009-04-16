@@ -53,10 +53,10 @@ ClassImp(RooGenericPdf)
 RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgList& dependents) : 
   RooAbsPdf(name,title), 
   _actualVars("actualVars","Variables used by PDF expression",this),
-  _formula(name,title,dependents)
+  _formula(0),
+  _formExpr(title)
 {  
   // Constructor with formula expression and list of input variables
-
   _actualVars.add(dependents) ; 
 
   if (_actualVars.getSize()==0) _value = traceEval(0) ;
@@ -66,10 +66,11 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgLi
 
 //_____________________________________________________________________________
 RooGenericPdf::RooGenericPdf(const char *name, const char *title, 
-			     const char* formula, const RooArgList& dependents) : 
+			     const char* inFormula, const RooArgList& dependents) : 
   RooAbsPdf(name,title), 
   _actualVars("actualVars","Variables used by PDF expression",this),
-  _formula(name,formula,dependents)
+  _formula(0),
+  _formExpr(inFormula)
 {  
   // Constructor with a name, title, formula expression and a list of variables
 
@@ -84,7 +85,8 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title,
 RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) : 
   RooAbsPdf(other, name), 
   _actualVars("actualVars",this,other._actualVars),
-  _formula(other._formula)
+  _formula(0),
+  _formExpr(other._formExpr)
 {
   // Copy constructor
 }
@@ -95,6 +97,18 @@ RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) :
 RooGenericPdf::~RooGenericPdf() 
 {
   // Destructor
+  if (_formula) delete _formula ;
+}
+
+
+
+//_____________________________________________________________________________
+RooFormula& RooGenericPdf::formula() const
+{
+  if (!_formula) {
+    _formula = new RooFormula(GetName(),_formExpr.Data(),_actualVars) ;
+  } 
+  return *_formula ;
 }
 
 
@@ -103,20 +117,20 @@ RooGenericPdf::~RooGenericPdf()
 Double_t RooGenericPdf::evaluate() const
 {
   // Calculate current value of this object
-
-  return _formula.eval(_normSet) ;
+  
+  return formula().eval(_normSet) ;
 }
 
 
 
 //_____________________________________________________________________________
-Bool_t RooGenericPdf::setFormula(const char* formula) 
+Bool_t RooGenericPdf::setFormula(const char* inFormula) 
 {
   // Change formula expression to given expression
 
-  if (_formula.reCompile(formula)) return kTRUE ;
-  
-  SetTitle(formula) ;
+  if (formula().reCompile(inFormula)) return kTRUE ;
+
+  _formExpr = inFormula ;
   setValueDirty() ;
   return kFALSE ;
 }
@@ -137,7 +151,11 @@ Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList,
 {
   // Propagate server changes to embedded formula object
 
-  return _formula.changeDependents(newServerList,mustReplaceAll,nameChange) ;
+  if (_formula) {
+     return _formula->changeDependents(newServerList,mustReplaceAll,nameChange) ;
+  } else {
+    return kTRUE ;
+  }
 }
 
 
@@ -152,8 +170,17 @@ void RooGenericPdf::printMultiline(ostream& os, Int_t content, Bool_t verbose, T
     os << " --- RooGenericPdf --- " << endl ;
     indent.Append("  ");
     os << indent ;
-    _formula.printMultiline(os,content,verbose,indent);
+    formula().printMultiline(os,content,verbose,indent);
   }
+}
+
+
+
+//_____________________________________________________________________________
+void RooGenericPdf::printMetaArgs(ostream& os) const 
+{
+  // Add formula expression as meta argument in printing interface
+  os << "formula=\"" << _formExpr << "\" " ;
 }
 
 

@@ -57,7 +57,7 @@ protected:
   virtual Bool_t isValidString(const char*, Bool_t printError=kFALSE) const ;
 
   virtual void syncCache(const RooArgSet* nset=0) ;
-  void copyCache(const RooAbsArg* source) ;
+  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void fillTreeBranch(TTree& t) ;
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;

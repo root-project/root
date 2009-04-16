@@ -38,6 +38,7 @@ using namespace std ;
 #include "RooDataHist.h"
 #include "RooHistFunc.h"
 #include "RooChangeTracker.h"
+#include "RooExpensiveObjectCache.h"
 
 ClassImp(RooAbsCachedReal) 
 
@@ -133,7 +134,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx,0) ;
   if (cache) {
     if (cache->paramTracker()->hasChanged(kTRUE)) {
-      coutI(Eval) << "RooAbsCachedPdf::getCache(" << GetName() << ") cache " << cache << " function " 
+      coutI(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cache " << cache << " function " 
 		  << cache->func()->GetName() << " requires recalculation as parameters changed" << endl ;
       fillCacheObject(*cache) ;  
       cache->func()->setValueDirty() ;
@@ -142,7 +143,23 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   }
 
   cache = createCache(nset) ;
-  fillCacheObject(*cache) ;  
+
+  // Check if we have contents registered already in global expensive object cache 
+  RooDataHist* htmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
+
+  if (htmp) {    
+
+    cache->hist()->reset() ;
+    cache->hist()->add(*htmp) ;
+
+  } else {
+
+    fillCacheObject(*cache) ;  
+
+    RooDataHist* eoclone = new RooDataHist(*cache->hist()) ;
+    eoclone->removeSelfFromDir() ;
+    expensiveObjectCache().registerObject(GetName(),cache->hist()->GetName(),*eoclone,cache->paramTracker()->parameters()) ;
+  } 
 
   // Store this cache configuration
   Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
@@ -172,10 +189,11 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
 
   // Create RooDataHist
   TString hname = self.inputBaseName() ;
-  hname.Append("_CACHEHIST_") ;
+  hname.Append("_CACHEHIST") ;
   hname.Append(self.cacheNameSuffix(*nset2)) ;
 
   _hist = new RooDataHist(hname,hname,*nset2,self.binningName()) ;
+  _hist->removeSelfFromDir() ;
 
   RooArgSet* observables= self.actualObservables(*nset2) ;
 
@@ -188,7 +206,6 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   // Set initial state of cache to dirty
   _func->setValueDirty() ;
 
-  // Create pseudo-object that tracks changes in parameter values
   // Create pseudo-object that tracks changes in parameter values
   RooArgSet* params = self.actualParameters(orderedObs) ;
   string name= Form("%s_CACHEPARAMS",_func->GetName()) ;

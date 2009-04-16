@@ -70,11 +70,23 @@ public:
     return _coefList ; 
   }
 
+  Bool_t isDirectGenSafe(const RooAbsArg& arg) const ;
+
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
+  void generateEvent(Int_t code);
+
+
   void fixCoefNormalization(const RooArgSet& refCoefNorm) ;
   void fixCoefRange(const char* rangeName) ;
   virtual void resetErrorCounters(Int_t resetValue=10) ;
 
+  void printMetaArgs(ostream& os) const ;
+
 protected:
+
+  friend class RooAddGenContext ;
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
+                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
   virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;

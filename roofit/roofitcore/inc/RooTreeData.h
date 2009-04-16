@@ -65,7 +65,7 @@ public:
   virtual RooArgSet* addColumns(const RooArgList& varList) ;
 
 
-  virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ;
+  virtual Int_t numEntries() const ;
   virtual void reset() { Reset() ; }
 
   using RooAbsData::table ;
@@ -90,8 +90,8 @@ public:
   Double_t moment(RooRealVar &var, Double_t order, Double_t offset, const char* cutSpec=0, const char* cutRange=0) const ;
   Double_t standMoment(RooRealVar &var, Double_t order, const char* cutSpec=0, const char* cutRange=0) const ;
 
-  Double_t mean(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,0,0,cutSpec,cutRange) ; }
-  Double_t sigma(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,1,cutSpec,cutRange) ; }
+  Double_t mean(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,1,0,cutSpec,cutRange) ; }
+  Double_t sigma(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,2,cutSpec,cutRange) ; }
   Double_t skewness(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,3,cutSpec,cutRange) ; }
   Double_t kurtosis(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,4,cutSpec,cutRange) ; }
 
@@ -120,7 +120,8 @@ public:
   // WVE --- This needs to be public to avoid CINT problems
   struct PlotOpt {
    PlotOpt() : cuts(""), drawOptions("P"), bins(0), etype(RooAbsData::Poisson), cutRange(0), histName(0), histInvisible(kFALSE),
-              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(kFALSE),correctForBinWidth(kTRUE) {} ;
+              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(kFALSE),correctForBinWidth(kTRUE),
+              scaleFactor(1.) {} ;
    const char* cuts ;
    Option_t* drawOptions ;
    RooAbsBinning* bins ;
@@ -134,6 +135,7 @@ public:
    Double_t xErrorSize ;
    Bool_t refreshFrameNorm ;
    Bool_t correctForBinWidth ;
+   Double_t scaleFactor ;
   } ;
 	
   // PlotOn implementation
@@ -149,7 +151,7 @@ protected:
 
   friend class RooMCStudy ;
 
-  virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList) ;
+  virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList, const RooArgSet& keepObsList) ;
   Bool_t allClientsCached(RooAbsArg*, const RooArgSet&) ;
 
 
@@ -182,7 +184,7 @@ protected:
 
   void checkInit() const {
     if (_defCtor) {
-      ((RooTreeData*)this)->initialize() ;
+      const_cast<RooTreeData*>(this)->initialize() ;
       _defCtor = kFALSE ;    
     }
   }

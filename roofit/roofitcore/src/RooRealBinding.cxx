@@ -77,6 +77,29 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
 
 
 //_____________________________________________________________________________
+RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nset) :
+  RooAbsFunc(other), _func(other._func), _nset(nset?nset:other._nset), _xvecValid(other._xvecValid),
+  _clipInvalid(other._clipInvalid), _xsave(0), _rangeName(other._rangeName)
+{
+  // Construct a lightweight function binding of RooAbsReal func to
+  // variables 'vars'.  Use the provided nset as normalization set to
+  // be passed to RooAbsReal::getVal() If rangeName is not null, use
+  // the range of with that name as range associated with the
+  // variables of this function binding. If clipInvalid is true,
+  // values requested to the function binding that are outside the
+  // defined range of the variables are clipped to fit in the defined
+  // range.
+
+  // allocate memory
+  _vars= new RooAbsRealLValue*[getDimension()];
+
+  for(unsigned int index=0 ; index<getDimension() ; index++) {
+    _vars[index]= other._vars[index] ;
+  }
+}
+
+
+//_____________________________________________________________________________
 RooRealBinding::~RooRealBinding() 
 {
   // Destructor
@@ -142,7 +165,7 @@ Double_t RooRealBinding::operator()(const Double_t xvector[]) const
   assert(isValid());
   _ncall++ ;
   loadValues(xvector);
-  //cout << getName() << "(x=" << xvector[0] << ")=" << _func->getVal(_nset) << endl ;
+  //cout << getName() << "(x=" << xvector[0] << ")=" << _func->getVal(_nset) << " (nset = " << (_nset? *_nset:RooArgSet()) << ")" << endl ;
   return _xvecValid ? _func->getVal(_nset) : 0. ;
 }
 

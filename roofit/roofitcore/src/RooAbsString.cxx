@@ -205,7 +205,7 @@ void RooAbsString::syncCache(const RooArgSet*)
 
 
 //_____________________________________________________________________________
-void RooAbsString::copyCache(const RooAbsArg* source) 
+void RooAbsString::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/) 
 {
   // Copy cache of another RooAbsArg to our cache
   //
@@ -237,7 +237,7 @@ void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
   } else {
     TString format(GetName());
     format.Append("/C");
-    branch = t.Branch(GetName(), _value, (const char*)format, bufSize);
+    branch = t.Branch(GetName(), _value, (const Text_t*)format, bufSize);
     branch->SetCompressionLevel(1) ;
   }
 }

@@ -62,7 +62,7 @@ public:
   }
 
   void Print(const char* opt) const ;
-  void Sort(Bool_t ascend) ;
+  void Sort(Bool_t ascend=kTRUE) ;
 
 protected:  
 

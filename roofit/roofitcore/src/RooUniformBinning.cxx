@@ -111,10 +111,10 @@ Int_t RooUniformBinning::binNumber(Double_t x) const
 {
   // Return the index of the bin that encloses 'x'
 
-  if (x >= _xhi) return _nbins-1 ;
-  if (x < _xlo) return 0 ;
-
-  return Int_t((x - _xlo)/_binw) ;
+  Int_t bin = Int_t((x - _xlo)/_binw) ;
+  if (bin<0) return 0 ;
+  if (bin>_nbins-1) return _nbins-1 ;
+  return bin ;
 }
 
 

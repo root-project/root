@@ -86,8 +86,8 @@ RooProduct::~RooProduct()
 //_____________________________________________________________________________
 RooProduct::RooProduct(const char* name, const char* title, const RooArgSet& prodSet) :
   RooAbsReal(name, title),
-  _compRSet("compRSet","Set of real product components",this),
-  _compCSet("compCSet","Set of category product components",this),
+  _compRSet("!compRSet","Set of real product components",this),
+  _compCSet("!compCSet","Set of category product components",this),
   _compRIter( _compRSet.createIterator() ),
   _compCIter( _compCSet.createIterator() ),
   _cacheMgr(this,10)
@@ -115,8 +115,8 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgSet& pro
 //_____________________________________________________________________________
 RooProduct::RooProduct(const RooProduct& other, const char* name) :
   RooAbsReal(other, name), 
-  _compRSet("compRSet",this,other._compRSet),
-  _compCSet("compCSet",this,other._compCSet),
+  _compRSet("!compRSet",this,other._compRSet),
+  _compCSet("!compCSet",this,other._compCSet),
   _compRIter(_compRSet.createIterator()),
   _compCIter(_compCSet.createIterator()),
   _cacheMgr(other._cacheMgr,this)
@@ -394,6 +394,37 @@ RooArgList RooProduct::CacheElem::containedArgs(Action)
   RooArgList ret(_ownedList) ;
   return ret ;
 }
+
+
+
+
+//_____________________________________________________________________________
+void RooProduct::printMetaArgs(ostream& os) const 
+{
+  // Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the
+  // product operator construction
+
+  Bool_t first(kTRUE) ;
+
+  _compRIter->Reset() ;
+  RooAbsReal* rcomp ;
+  while((rcomp=(RooAbsReal*)_compRIter->Next())) {
+    if (!first) {  os << " * " ; } else {  first = kFALSE ; }
+    os << rcomp->GetName() ;
+  }
+  
+  _compCIter->Reset() ;
+  RooAbsCategory* ccomp ;
+  while((ccomp=(RooAbsCategory*)_compCIter->Next())) {
+    if (!first) {  os << " * " ; } else {  first = kFALSE ; }
+    os << rcomp->GetName() ;
+  }
+
+  os << " " ;    
+}
+
+
+
 
 
 namespace {

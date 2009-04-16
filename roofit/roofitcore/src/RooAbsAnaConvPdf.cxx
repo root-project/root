@@ -92,7 +92,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
 				   const RooResolutionModel& model, RooRealVar& cVar) :
   RooAbsPdf(name,title), _isCopy(kFALSE),
   _model((RooResolutionModel*)&model), _convVar((RooRealVar*)&cVar),
-  _convSet("convSet","Set of resModel X basisFunc convolutions",this),
+  _convSet("!convSet","Set of resModel X basisFunc convolutions",this),
   _convNormSet(0), _convSetIter(_convSet.createIterator()),
   _coefNormMgr(this,10),
   _codeReg(10)
@@ -110,7 +110,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* na
   RooAbsPdf(other,name), _isCopy(kTRUE),
   _model(other._model), 
   _convVar(other._convVar), 
-  _convSet("convSet",this,other._convSet),
+  _convSet("!convSet",this,other._convSet),
   _basisList(other._basisList),
   _convNormSet(other._convNormSet? new RooArgSet(*other._convNormSet) : new RooArgSet() ),
   _convSetIter(_convSet.createIterator()),
@@ -190,6 +190,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   delete iter ;  
 
   RooFormulaVar* basisFunc = new RooFormulaVar(basisName,expression,basisArgs) ;
+  basisFunc->setAttribute("RooWorkspace::Recycle") ;
   basisFunc->setOperMode(operMode()) ;
   _basisList.addOwned(*basisFunc) ;
 
@@ -279,6 +280,12 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
   if (numAddDep>0 || !pdfCanDir || !resCanDir) {
     // Any resolution model with more dependents than the convolution variable
     // or pdf or resmodel do not support direct generation
+    string reason ;
+    if (numAddDep>0) reason += "Resolution model has more onservables that the convolution variable. " ;
+    if (!pdfCanDir) reason += "PDF does not support internal generation of convolution observable. " ;
+    if (!resCanDir) reason += "Resolution model does not support internal generation of convolution observable. " ;
+
+    coutI(Generation) << "RooAbsAnaConvPdf::genContext(" << GetName() << ") Using regular accept/reject generator for convolution p.d.f because: " << reason.c_str() << endl ;    
     return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
   } 
   
@@ -367,6 +374,8 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
 
   // Handle trivial no-integration scenario
   if (allVars.getSize()==0) return 0 ;
+  
+  if (_forceNumInt) return 0 ;
 
   // Select subset of allVars that are actual dependents
   RooArgSet* allDeps = getObservables(allVars) ;

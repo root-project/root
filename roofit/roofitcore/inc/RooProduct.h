@@ -48,6 +48,8 @@ public:
 
   class ProdMap ;
 
+  void printMetaArgs(ostream& os) const ;
+
 protected:
 
   RooSetProxy _compRSet ;

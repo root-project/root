@@ -27,6 +27,8 @@ public:
   virtual ~RooSharedProperties() ;
   Bool_t operator==(const RooSharedProperties& other) ;
 
+  virtual RooSharedProperties* clone() = 0 ;
+
   virtual void Print(Option_t* opts=0) const ;
 
 protected:

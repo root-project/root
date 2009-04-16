@@ -54,6 +54,7 @@ public:
   Bool_t defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defValue=0.) ;
   Bool_t defineString(const char* name, const char* argName, Int_t stringNum, const char* defValue="",Bool_t appendMode=kFALSE) ;
   Bool_t defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=0, Bool_t isArray=kFALSE) ;
+  Bool_t defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* set=0) ;
 
   Bool_t process(const RooCmdArg& arg) ;
   Bool_t process(const RooCmdArg& arg1, const RooCmdArg& arg2, 
@@ -66,12 +67,14 @@ public:
   Double_t getDouble(const char* name, Double_t defaultValue=0) ;
   const char* getString(const char* name, const char* defaultValue="",Bool_t convEmptyToNull=kFALSE) ;
   TObject* getObject(const char* name, TObject* obj=0) ;
+  RooArgSet* getSet(const char* name, RooArgSet* set=0) ;
   const RooLinkedList& getObjectList(const char* name) ;
 
   Bool_t ok(Bool_t verbose) const ;
 
   const char* missingArgs() const ;
 
+  RooLinkedList filterCmdList(RooLinkedList& cmdInList, const char* cmdNameList, Bool_t removeFromInList=kTRUE) ;
   void stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge) ;
   Bool_t hasProcessed(const char* cmdName) const ;
 
@@ -104,7 +107,8 @@ protected:
   TList _iList ; // Integer list
   TList _dList ; // Double list
   TList _sList ; // String list
-  TList _oList ; // ArgSet list
+  TList _oList ; // Object list
+  TList _cList ; // RooArgSet list
 
   TList _rList ; // Required cmd list
   TList _fList ; // Forbidden cmd list
@@ -116,6 +120,7 @@ protected:
   TIterator* _dIter ; // Iterator over double list
   TIterator* _sIter ; // Iterator over string list
   TIterator* _oIter ; // Iterator over object list
+  TIterator* _cIter ; // Iterator over RooArgSet list
   TIterator* _rIter ; // Iterator over required cmd list
   TIterator* _fIter ; // Iterator over forbidden cmd list
   TIterator* _mIter ; // Iterator over mutex list

@@ -78,12 +78,13 @@ public:
   } 
   virtual const RooArgSet* get(Int_t masterIdx) const ;
   virtual const RooArgSet* get(const RooArgSet& coord) const ;
-  virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ; 
+  virtual Int_t numEntries() const ; 
   virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const ;
   virtual Bool_t isWeighted() const { 
     // Return true as all histograms have in principle events weight != 1
     return kTRUE ;     
   }
+  virtual Bool_t isNonPoissonWeighted() const ;
 
   Double_t sum(Bool_t correctForBinSize) const ;
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize) ;
@@ -120,6 +121,10 @@ public:
   void SetName(const char *name) ;
   void SetNameTitle(const char *name, const char* title) ;
 
+  Int_t getIndex(const RooArgSet& coord) ;
+
+  void removeSelfFromDir() { removeFromDir(this) ; }
+  
 protected:
 
   friend class RooAbsCachedPdf ;
@@ -127,11 +132,12 @@ protected:
   friend class RooDataHistSliceIter ;
   friend class RooAbsOptTestStatistic ;
 
+  Int_t calcTreeIndex() const ;
   void cacheValidEntries() ;
 
   void setAllWeights(Double_t value) ;
  
-  void initialize(Bool_t fillTree=kTRUE) ;
+  void initialize(const char* binningName=0,Bool_t fillTree=kTRUE) ;
   RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 	      const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) ;
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
@@ -145,7 +151,6 @@ protected:
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
 
-  Int_t calcTreeIndex() const ;
 
   Int_t       _arrSize ; //  Size of the weight array
   Int_t*      _idxMult ; //! Multiplier jump table for index calculation
@@ -166,16 +171,10 @@ protected:
   mutable Int_t    _curIndex ; // Current index
 
   mutable std::vector<Double_t>* _pbinv ; //! Partial bin volume array
-  mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; // Cache manager for arrays of partial bin volumes
+  mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; //! Cache manager for arrays of partial bin volumes
   std::list<RooAbsLValue*> _lvvars ; //! List of observables casted as RooAbsLValue
   std::list<const RooAbsBinning*> _lvbins ; //! List of used binnings associated with lvalues
 
-  char* _binningName ;               //!Name of binning to be used to define grid
-  inline const char* bname() const { 
-    // Return name of binning to be used for RooDataHist bin definition
-    return _binningName ; 
-  }
-    
 private:
 
   ClassDef(RooDataHist,2) // Binned data set

@@ -26,7 +26,7 @@
 //
 
 #include "RooFit.h"
-
+#include "TClass.h"
 #include "RooClassFactory.h"
 #include "RooClassFactory.h"
 #include "RooAbsReal.h"
@@ -34,6 +34,8 @@
 #include "RooArgList.h"
 #include "RooMsgService.h"
 #include "TInterpreter.h"
+#include "RooWorkspace.h"
+#include "RooGlobalFunc.h"
 #include <fstream>
 #include <vector>
 #include <string>
@@ -42,6 +44,16 @@ using namespace std ;
 
 ClassImp(RooClassFactory) 
 ;
+
+static Int_t init()
+{
+  RooFactoryWSTool::IFace* iface = new RooClassFactory::ClassFacIFace ;
+  RooFactoryWSTool::registerSpecial("CEXPR",iface) ;
+  RooFactoryWSTool::registerSpecial("cexpr",iface) ;
+  return 0 ;
+}
+static Int_t dummy = init() ;
+
 
 
 
@@ -145,9 +157,38 @@ Bool_t RooClassFactory::makeAndCompileFunction(const char* name, const char* exp
 }
 
 
-
 //_____________________________________________________________________________
 RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression) 
+{
+  // Write, compile and load code and instantiate object for a
+  // RooAbsReal implementation with class name 'name', taking all
+  // elements of 'vars' as constructor arguments. The initial value
+  // expression is taken to be 'expression' which can be any one-line
+  // C++ expression in terms of variables that occur in 'vars'. 
+  //
+  // The returned object is an instance of the object you just defined
+  // connected to the variables listed in 'vars'. The name of the
+  // object is 'name', its class name Roo<name>Class.
+  //
+  // This function is an effective compiled replacement of RooFormulaVar
+  //
+  // You can add optional expressions for analytical integrals to be
+  // advertised by your class in the syntax
+  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+  // where <intObsName> a name of the observable integrated over and
+  // <CPPAnaIntExpression> is the C++ expression that calculates that
+  // integral.
+
+  // Construct unique class name for this function expression
+  string tmpName(name) ;
+  tmpName[0] = toupper(tmpName[0]) ;
+  string className = Form("Roo%sFunc",tmpName.c_str()) ;
+
+  return makeFunctionInstance(className.c_str(),name,expression,vars,intExpression) ;
+}
+
+//_____________________________________________________________________________
+RooAbsReal* RooClassFactory::makeFunctionInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression) 
 {
   // Write, compile and load code and instantiate object for a
   // RooAbsReal implementation with class name 'name', taking all
@@ -172,11 +213,8 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* 
     gInterpreter->EnableAutoLoading() ;
   }
 
-  // Construct unique class name for this function expression
-  string className = Form("Roo%sClass",name) ;
-
   // Use class factory to compile and link specialized function
-  Bool_t error = makeAndCompileFunction(className.c_str(),expression,vars,intExpression) ;
+  Bool_t error = makeAndCompileFunction(className,expression,vars,intExpression) ;
 
   // Check that class was created OK
   if (error) {
@@ -184,7 +222,7 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* 
   }
 
   // Create CINT line that instantiates specialized object
-  string line = Form("new %s(\"%s\",\"%s\"",className.c_str(),name,name) ;
+  string line = Form("new %s(\"%s\",\"%s\"",className,name,name) ;
 
   // Make list of pointer values (represented in hex ascii) to be passed to cint  
   // Note that the order of passing arguments must match the convention in which
@@ -208,11 +246,12 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* 
   }
   delete iter ;
 
-  line += argList + ") " ;
+  line += argList + ") ;" ;
 
   // Let CINT instantiate specialized formula
   return (RooAbsReal*) gInterpreter->ProcessLineSynch(line.c_str()) ;
 }
+
 
 
 
@@ -239,15 +278,43 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expres
   // <CPPAnaIntExpression> is the C++ expression that calculates that
   // integral.
 
+  // Construct unique class name for this function expression
+  string tmpName(name) ;
+  tmpName[0] = toupper(tmpName[0]) ;
+  string className = Form("Roo%sPdf",tmpName.c_str()) ;
+  
+  return makePdfInstance(className.c_str(),name,expression,vars,intExpression) ;
+}
+
+//_____________________________________________________________________________
+RooAbsPdf* RooClassFactory::makePdfInstance(const char* className, const char* name, const char* expression, 
+					    const RooArgList& vars, const char* intExpression)
+{
+  // Write, compile and load code and instantiate object for a
+  // RooAbsPdf implementation with class name 'name', taking all
+  // elements of 'vars' as constructor arguments. The initial value
+  // expression is taken to be 'expression' which can be any one-line
+  // C++ expression in terms of variables that occur in 'vars'. 
+  //
+  // The returned object is an instance of the object you just defined
+  // connected to the variables listed in 'vars'. The name of the
+  // object is 'name', its class name Roo<name>Class.
+  //
+  // This function is an effective compiled replacement of RooGenericPdf
+  //
+  // You can add optional expressions for analytical integrals to be
+  // advertised by your class in the syntax
+  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+  // where <intObsName> a name of the observable integrated over and
+  // <CPPAnaIntExpression> is the C++ expression that calculates that
+  // integral.
+
   if (gInterpreter->GetRootMapFiles()==0) {
     gInterpreter->EnableAutoLoading() ;
   }
 
-  // Construct unique class name for this function expression
-  string className = Form("Roo%sClass",name) ;
-
   // Use class factory to compile and link specialized function
-  Bool_t error = makeAndCompilePdf(className.c_str(),expression,vars,intExpression) ;
+  Bool_t error = makeAndCompilePdf(className,expression,vars,intExpression) ;
 
   // Check that class was created OK
   if (error) {
@@ -255,7 +322,7 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expres
   }
 
   // Create CINT line that instantiates specialized object
-  string line = Form("new %s(\"%s\",\"%s\"",className.c_str(),name,name) ;
+  string line = Form("new %s(\"%s\",\"%s\"",className,name,name) ;
 
   // Make list of pointer values (represented in hex ascii) to be passed to cint  
   // Note that the order of passing arguments must match the convention in which
@@ -279,7 +346,7 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expres
   }
   delete iter ;
 
-  line += argList + ") " ;
+  line += argList + ") ;" ;
 
   // Let CINT instantiate specialized formula
   return (RooAbsPdf*) gInterpreter->ProcessLineSynch(line.c_str()) ;
@@ -505,6 +572,8 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
      << " #include \"" << className << ".h\" " << endl 
      << " #include \"RooAbsReal.h\" " << endl 
      << " #include \"RooAbsCategory.h\" " << endl 
+     << " #include <math.h> " << endl 
+     << " #include \"TMath.h\" " << endl
      << endl 
 
      << " ClassImp(" << className << ") " << endl 
@@ -671,4 +740,72 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
   return kFALSE ;
 }
 
+//_____________________________________________________________________________
+std::string RooClassFactory::ClassFacIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) 
+{
+  static int classCounter = 0 ;
+
+  string tn(typeName) ;
+  if (tn=="CEXPR" || tn=="cexpr") {
+
+    if (args.size()<2) {
+      throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR: CEXPR requires at least 2 arguments (expr,var,...), but only %d args found",args.size())) ;      	
+    }
+
+    RooAbsArg* ret ;
+    cout << "args[0] = " << args[0] << endl ;
+    // Strip quotation marks from expression string
+    char expr[1024] ;
+    strncpy(expr,args[0].c_str()+1,args[0].size()-2) ;
+    expr[args[0].size()-2]=0 ;
+
+    
+    RooArgList varList ;
+
+    try {
+      if (args.size()==2) {
+	// Interpret 2nd arg as list
+	varList.add(ft.asLIST(args[1].c_str())) ;
+      } else {
+	for (unsigned int i=1 ; i<args.size() ; i++) {
+	  varList.add(ft.asARG(args[i].c_str())) ;
+	}
+      }
+    } catch (string err) {
+      throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR: %s",err.c_str())) ;      
+    }
+
+    string className ;
+    while(true) {
+      className = Form("RooCFAuto%03d%s",classCounter,(tn=="CEXPR")?"Pdf":"Func") ;
+      TClass* tc =  TClass::GetClass(className.c_str(),kTRUE,kTRUE) ;
+      classCounter++ ;
+      if (!tc) {
+	break ;
+      }
+    }
+
+    if (tn=="CEXPR") {
+      ret = makePdfInstance(className.c_str(),instanceName,expr,varList) ;
+    } else {
+      ret = makeFunctionInstance(className.c_str(),instanceName,expr,varList) ;
+    }
+    if (!ret) {
+      throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR creating %s %s with RooClassFactory",((tn=="CEXPR")?"pdf":"function"),instanceName)) ;      
+    }
+
+    // Import object
+    ft.ws().import(*ret,RooFit::Silence()) ;
+
+    // Import class code as well
+    ft.ws().importClassCode(ret->IsA()) ;
+
+
+  } else {
+
+    throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR: Unknown meta-type %s requested",typeName)) ;
+
+  }
+  return string(instanceName) ;
+}
 

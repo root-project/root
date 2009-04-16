@@ -40,9 +40,12 @@
 #include "RooRealVar.h"
 #include "RooDataHist.h"
 #include "RooErrorHandler.h"
+#include "RooNumGenConfig.h"
+#include "RooNumGenFactory.h"
 
 #include "TString.h"
 #include "TIterator.h"
+#include "TClass.h"
 
 
 
@@ -193,6 +196,10 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   nname.Append("_AccRej") ;
   TString ntitle(_pdfClone->GetTitle()) ;
   ntitle.Append(" (Accept/Reject)") ;
+  
+
+  RooArgSet* protoDeps = model.getObservables(_protoVars) ;
+  
 
   if (_protoVars.getSize()==0) {
 
@@ -204,8 +211,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       // Check if PDF supports maximum finding
       Int_t maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
       if (maxFindCode != 0) {
-	coutI(Generation) << "RooGenContext::ctor() no prototype data provided, all observables are generated with accept/reject and "
-			      << "model supports maximum finding, initial sampling phase skipped" << endl ;
+	coutI(Generation) << "RooGenContext::ctor() no prototype data provided, all observables are generated with numerically and "
+			      << "model supports analytical maximum findin:, can provide analytical pdf maximum to numeric generator" << endl ;
 	Double_t maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(_theEvent) ;
 	_maxVar = new RooRealVar("funcMax","function maximum",maxVal) ;
 	cxcoutD(Generation) << "RooGenContext::ctor() maximum value returned by RooAbsPdf::maxVal() is " << maxVal << endl ;
@@ -222,7 +229,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   } else {
 
-    // Generation with prototype variable
+    // Generation _with_ prototype variable
     depList->remove(_protoVars,kTRUE,kTRUE) ;
     _acceptRejectFunc= (RooRealIntegral*) _pdfClone->createIntegral(*depList,vars) ;
     cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
@@ -234,8 +241,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       if (maxFindCode != 0) {
 	
 	// Special case: PDF supports max-finding in otherVars, no need to scan other+proto space for maximum
-	coutI(Generation) << "RooGenContext::ctor() prototype data provided, all observables are generated with accept/reject and "
-			    << "model supports maximum finding, initial sampling phase skipped" << endl ;
+	coutI(Generation) << "RooGenContext::ctor() prototype data provided, all observables are generated numerically and "
+			    << "model supports analytical maximum finding: can provide analytical pdf maximum to numeric generator" << endl ;
 	_maxVar = new RooRealVar("funcMax","function maximum",1) ;
 	_updateFMaxPerEvent = maxFindCode ;
 	cxcoutD(Generation) << "RooGenContext::ctor() maximum value must be reevaluated for each event with configuration code " << maxFindCode << endl ;
@@ -247,20 +254,29 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       // Regular case: First find maximum in other+proto space
       RooArgSet otherAndProto(_otherVars) ;
 
-      RooArgSet* protoDeps = model.getObservables(_protoVars) ;
       otherAndProto.add(*protoDeps) ;
-      delete protoDeps ;
       
       if (_otherVars.getSize()>0) {      
 
-	cxcoutD(Generation) << "RooGenContext::ctor() sampling observables through accept/reject sample and have prototype data and no " 
-			      << "maximum function value provided by mode, will determine maximum value through initial sampling space "
+	cxcoutD(Generation) << "RooGenContext::ctor() prototype data provided, observables are generated numericaly no " 
+			      << "analytical estimate of maximum function value provided by model, must determine maximum value through initial sampling space "
 			      << "of accept/reject observables plus prototype observables: " << otherAndProto << endl ;
 
 	// Calculate maximum in other+proto space if there are any accept/reject generated observables
-	RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,0,_verbose) ;
-	Double_t max = maxFinder.getFuncMax() ;
+	RooAbsNumGenerator* maxFinder = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,otherAndProto,RooArgSet(_protoVars),
+										   *model.getGeneratorConfig(),_verbose) ;
+// 	RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,RooNumGenConfig::defaultConfig(),_verbose) ;
+	Double_t max = maxFinder->getFuncMax() ;
 	_maxVar = new RooRealVar("funcMax","function maximum",max) ;
+
+	if (max==0) {	  
+	  coutE(Generation) << "RooGenContext::ctor(" << model.GetName() 
+			    << ") ERROR: generating conditional p.d.f. which requires prior knowledge of function maximum, " 
+			    << "but chosen numeric generator (" << maxFinder->IsA()->GetName() << ") does not support maximum finding" << endl ;	
+	  delete maxFinder ;	
+	  throw string("RooGenContext::ctor()") ;	  
+	}	
+	delete maxFinder ;	
 
 	cxcoutD(Generation) << "RooGenContext::ctor() maximum function value found through initial sampling is " << max << endl ;
       }
@@ -268,13 +284,15 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       
   }
 
-  if (_acceptRejectFunc) {
-    cxcoutD(Generation) << "RooGenContext::ctor() creating accept reject generator from a/r function for observables " << _otherVars << endl ;
-    _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,_maxVar,_verbose);
+  if (_acceptRejectFunc && _otherVars.getSize()>0) {
+    _generator = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,_otherVars,RooArgSet(*protoDeps),*model.getGeneratorConfig(),_verbose,_maxVar) ;    
+    cxcoutD(Generation) << "RooGenContext::ctor() creating MC sampling generator " << _generator->IsA()->GetName() << "  from function for observables " << _otherVars << endl ;
+    //_generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,RooNumGenConfig::defaultConfig(),_verbose,_maxVar);
   } else {
     _generator = 0 ;
   }
 
+  delete protoDeps ;
   delete depList;
   _otherVars.add(_uniformVars);
 }
@@ -355,8 +373,13 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     }
 
     if (_generator) {
-      const RooArgSet *subEvent= _generator->generateEvent(remaining);
-
+      Double_t resampleRatio(1) ;
+      const RooArgSet *subEvent= _generator->generateEvent(remaining,resampleRatio);
+      if (resampleRatio<1) {
+	coutI(Generation) << "RooGenContext::generateEvent INFO: accept/reject generator requests resampling of previously produced events by factor " 
+			  << resampleRatio << " due to increased maximum weight" << endl ; 
+	resampleData(resampleRatio) ;
+      }
       if(0 == subEvent) {
 	coutE(Generation) << "RooGenContext::generateEvent ERROR accept/reject generator failed" << endl ;
 	return;

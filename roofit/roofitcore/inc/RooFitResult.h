@@ -25,12 +25,14 @@
 #include "RVersion.h"
 #if ROOT_VERSION_CODE >= 327680
 #include "TMatrixFfwd.h"
+#include "TMatrixDSymfwd.h"
 #include "TRootIOCtor.h"
 #else
 class TMatrixF;
 #endif
 
 class RooArgSet ;
+class RooAbsPdf ;
 class RooPlot;
 class TObject ;
 class TH2 ;
@@ -63,7 +65,7 @@ public:
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
   virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
 
-
+  RooAbsPdf* createPdf(const RooArgSet& params) const ;
 
   // Accessors
   inline Int_t status() const {
@@ -113,6 +115,11 @@ public:
   Double_t correlation(const char* parname1, const char* parname2) const ;
   const RooArgList* correlation(const char* parname) const ;
 
+  
+  const TMatrixDSym& covarianceMatrix() const ;
+  const TMatrixDSym& correlationMatrix() const ;
+
+
   // Global correlation accessors
   Double_t globalCorr(const RooAbsArg& par) { return globalCorr(par.GetName()) ; }
   Double_t globalCorr(const char* parname) ;
@@ -140,6 +147,7 @@ protected:
   
   friend class RooMinuit ;
   friend class RooNag ;
+  void setCovarianceMatrix(TMatrixDSym& V) ; 
   void setConstParList(const RooArgList& list) ;
   void setInitParList(const RooArgList& list) ;
   void setFinalParList(const RooArgList& list) ;
@@ -166,6 +174,9 @@ protected:
 
   mutable RooArgList *_randomPars; //! List of floating parameters with most recent random perturbation applied
   mutable TMatrixF* _Lt;            //! triangular matrix used for generate random perturbations
+
+  TMatrixDSym* _C ;  //! Correlation matrix ;
+  TMatrixDSym* _V ;  //! Covariance matrix ;
 
   ClassDef(RooFitResult,1) // Container class for fit result
 };

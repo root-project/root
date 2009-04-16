@@ -52,8 +52,15 @@ public:
 
   RooDataHist* binnedClone(const char* newName=0, const char* newTitle=0) const ;
 
-  virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ;
+  virtual Int_t numEntries() const ;
   virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const ;
+
+  virtual RooPlot* plotOnXY(RooPlot* frame, 
+			    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
+			    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
+			    const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
+			    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
+
 
   // Read data from a text file and create a dataset from it.
   // The possible options are: (D)ebug, (Q)uiet.
@@ -71,13 +78,21 @@ public:
     // Return true if dataset contains weighted events
     return _wgtVar ? kTRUE : kFALSE ; 
   }
+  virtual Bool_t isNonPoissonWeighted() const ;
 
   virtual Double_t weight() const ; 
+  virtual void weightError(Double_t& lo, Double_t& hi,ErrorType etype=SumW2) const ;
+  Double_t weightError(ErrorType etype=SumW2) const ;
+
   virtual const RooArgSet* get(Int_t index) const;
   virtual const RooArgSet* get() const ; 
 
   // Add one ore more rows of data
-  virtual void add(const RooArgSet& row, Double_t weight=1.0);
+  virtual void add(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0);
+  virtual void add(const RooArgSet& row, Double_t weight, Double_t weightErrorLo, Double_t weightErrorHi);
+
+  virtual void addFast(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0);
+
   void append(RooTreeData& data) ;
   Bool_t merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0, 
 	       RooDataSet* data4=0, RooDataSet* data5=0, RooDataSet* data6=0) ;

@@ -197,29 +197,30 @@ public:
   virtual void printClassName(ostream& os) const ;
   virtual void printAddress(ostream& os) const ;
   virtual void printArgs(ostream& os) const ;
+  virtual void printMetaArgs(ostream& /*os*/) const {} ;
   virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
   virtual void printTree(ostream& os, TString indent="") const ;
 
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
 
   // Accessors to attributes
-  void setAttribute(const char* name, Bool_t value=kTRUE) ;
-  Bool_t getAttribute(const char* name) const ;
+  void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
+  Bool_t getAttribute(const Text_t* name) const ;
   inline const std::set<std::string>& attributes() const { 
     // Returns set of names of boolean attributes defined
     return _boolAttrib ; 
   }
 
-  void setStringAttribute(const char* key, const char* value) ;
-  const char* getStringAttribute(const char* key) const ;
+  void setStringAttribute(const Text_t* key, const Text_t* value) ;
+  const Text_t* getStringAttribute(const Text_t* key) const ;
   inline const std::map<std::string,std::string>& stringAttributes() const { 
     // Returns map<string,string> with all string attributes defined
     return _stringAttrib ; 
   }
 
   // Accessors to transient attributes
-  void setTransientAttribute(const char* name, Bool_t value=kTRUE) ;
-  Bool_t getTransientAttribute(const char* name) const ;
+  void setTransientAttribute(const Text_t* name, Bool_t value=kTRUE) ;
+  Bool_t getTransientAttribute(const Text_t* name) const ;
   inline const std::set<std::string>& transientAttributes() const { 
     // Return set of transient boolean attributes 
     return _boolAttribTransient ; 
@@ -257,6 +258,7 @@ public:
     // Has this argument a defined range (dummy interface always returns flase)
     return kFALSE ; 
   }
+
 
   enum ConstOpCode { Activate=0, DeActivate=1, ConfigChange=2, ValueChange=3 } ;
   
@@ -375,6 +377,8 @@ public:
   void removeServer(RooAbsArg& server, Bool_t force=kFALSE) ;
   RooAbsArg *findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const;
 
+  RooExpensiveObjectCache& expensiveObjectCache() const ;
+
  protected:
 
   // Proxy management
@@ -382,6 +386,7 @@ public:
   friend class RooArgProxy ;
   friend class RooSetProxy ;
   friend class RooListProxy ;
+  friend class RooObjectFactory ;
   void registerProxy(RooArgProxy& proxy) ;
   void registerProxy(RooSetProxy& proxy) ;
   void registerProxy(RooListProxy& proxy) ;
@@ -397,14 +402,15 @@ public:
   std::map<std::string,std::string> _stringAttrib ; // String attributes
   std::set<std::string> _boolAttribTransient ; //! Transient boolean attributes (not copied in ctor)
 
-void printAttribList(ostream& os) const;
+  void printAttribList(ostream& os) const;
 
   // Hooks for RooTreeData interface
   friend class RooTreeData ;
   friend class RooDataSet ;
   friend class RooRealMPFE ;
+  friend class RooHistPdf ;
   virtual void syncCache(const RooArgSet* nset=0) = 0 ;
-  virtual void copyCache(const RooAbsArg* source) = 0 ;
+  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) = 0 ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) = 0 ;
   virtual void fillTreeBranch(TTree& t) = 0 ;
@@ -437,7 +443,6 @@ void printAttribList(ostream& os) const;
   mutable Bool_t _prohibitServerRedirect ; //! Prohibit server redirects -- Debugging tool
 
   void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
-  RooExpensiveObjectCache& expensiveObjectCache() const ;
   mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
   
   ClassDef(RooAbsArg,4) // Abstract variable

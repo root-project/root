@@ -31,7 +31,7 @@ public:
   void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
   Bool_t alwaysStartFromMin() const { return _startFromMin ; }
 
-  RooAbsReal& nll() { return (RooAbsReal&) _nll.arg() ; }
+  RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
   const RooArgSet& bestFitParams() const ;
 
   virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;

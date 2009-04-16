@@ -226,6 +226,19 @@ RooArgSet::RooArgSet(const char *name) :
 
 
 
+
+//_____________________________________________________________________________
+RooArgSet::RooArgSet(const RooArgSet& set1, const RooArgSet& set2, const char *name) : RooAbsCollection(name)
+{
+  // Construct a set from two existing sets
+  add(set1) ;
+  add(set2) ;
+    
+}
+
+
+
+
 //_____________________________________________________________________________
 RooArgSet::RooArgSet(const RooAbsArg& var1,
 		     const char *name) :

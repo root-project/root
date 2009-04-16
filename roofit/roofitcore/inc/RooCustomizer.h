@@ -23,6 +23,7 @@
 #include "TString.h"
 #include "RooArgSet.h"
 #include "RooPrintable.h"
+#include "RooFactoryWSTool.h"
 class RooAbsCategoryLValue ; 
 class RooAbsCategory ;
 class RooAbsArg ;
@@ -71,6 +72,13 @@ public:
 
   // Releases ownership of list of cloned branch nodes
   void setCloneBranchSet(RooArgSet& cloneBranchSet) ;
+
+  // Factory interface
+  class CustIFace : public RooFactoryWSTool::IFace {
+  public:
+    virtual ~CustIFace() {} ;
+    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) ;
+  } ;
 
 protected:
   

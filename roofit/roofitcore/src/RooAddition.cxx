@@ -56,8 +56,8 @@ RooAddition::RooAddition()
 //_____________________________________________________________________________
 RooAddition::RooAddition(const char* name, const char* title, const RooArgSet& sumSet, Bool_t takeOwnership) :
   RooAbsReal(name, title),
-  _set1("set1","First set of components",this),
-  _set2("set2","Second set of components",this)
+  _set1("!set1","First set of components",this),
+  _set2("!set2","Second set of components",this)
 {
   // Constructor with a single set of RooAbsReals. The value of the function will be
   // the sum of the values in sumSet. If takeOwnership is true the RooAddition object
@@ -88,8 +88,8 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgSet& s
 //_____________________________________________________________________________
 RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnership) :
   RooAbsReal(name, title),
-  _set1("set1","First set of components",this),
-  _set2("set2","Second set of components",this)
+  _set1("!set1","First set of components",this),
+  _set2("!set2","Second set of components",this)
 {
   // Constructor with two set of RooAbsReals. The value of the function will be
   //
@@ -141,8 +141,8 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 //_____________________________________________________________________________
 RooAddition::RooAddition(const RooAddition& other, const char* name) :
   RooAbsReal(other, name), 
-  _set1("set1",this,other._set1),
-  _set2("set2",this,other._set2)
+  _set1("!set1",this,other._set1),
+  _set2("!set2",this,other._set2)
 {
   // Copy constructor
 
@@ -264,5 +264,48 @@ Double_t RooAddition::defaultErrorLevel() const
   }
 
   return 1.0 ;
+}
+
+
+//_____________________________________________________________________________
+void RooAddition::printMetaArgs(ostream& os) const 
+{
+  // Customized printing of arguments of a RooAddition to more intuitively reflect the contents of the
+  // product operator construction
+
+  _setIter1->Reset() ;
+  if (_setIter2) {
+    _setIter2->Reset() ;
+  }
+
+  Bool_t first(kTRUE) ;
+    
+  RooAbsArg* arg1, *arg2 ;
+  if (_set2.getSize()!=0) { 
+
+    while((arg1=(RooAbsArg*)_setIter1->Next())) {
+      if (!first) {
+	os << " + " ;
+      } else {
+	first = kFALSE ;
+      }
+      arg2=(RooAbsArg*)_setIter2->Next() ;
+      os << arg1->GetName() << " * " << arg2->GetName() ;
+    }
+
+  } else {
+    
+    while((arg1=(RooAbsArg*)_setIter1->Next())) {
+      if (!first) {
+	os << " + " ;
+      } else {
+	first = kFALSE ;
+      }
+      os << arg1->GetName() ; 
+    }  
+
+  }
+
+  os << " " ;    
 }
 

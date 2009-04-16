@@ -20,6 +20,7 @@
 #include "Rtypes.h"
 #include "RooWorkspace.h"
 #include "RooCmdArg.h"
+#include "RooFactoryWSTool.h"
 #include <list>
 #include <map>
 #include <string>
@@ -52,14 +53,21 @@ public:
 			 const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
 			 const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 
-  RooSimultaneous* build(const char* simPdfName,BuildConfig& bc) ;
+  RooSimultaneous* build(const char* simPdfName,BuildConfig& bc, Bool_t verbose=kTRUE) ;
+
+  class SimWSIFace : public RooFactoryWSTool::IFace {
+  public:
+    virtual ~SimWSIFace() {} ;
+    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) ;
+  } ;
+
   
 protected:
 
   RooSimWSTool(const RooSimWSTool&) ;
 
   ObjBuildConfig* validateConfig(BuildConfig& bc) ;
-  RooSimultaneous* executeBuild(const char* simPdfName,ObjBuildConfig& obc) ;
+  RooSimultaneous* executeBuild(const char* simPdfName,ObjBuildConfig& obc, Bool_t verbose=kTRUE) ;
   std::string makeSplitName(const RooArgSet& splitCatSet) ;
 
   RooWorkspace* _ws ;

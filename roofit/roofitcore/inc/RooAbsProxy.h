@@ -55,7 +55,8 @@ protected:
   RooArgSet* _nset ; //! Normalization set to be used for evaluation of RooAbsPdf contents
 
   friend class RooAbsArg ;
-  virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE) = 0 ;
+  friend class RooObjectFactory ;
+  virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) = 0 ;
 
   friend class RooAbsPdf ;
   virtual void changeNormSet(const RooArgSet* newNormSet) ;

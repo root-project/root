@@ -43,6 +43,7 @@
 #include "RooDataHist.h"
 #include "RooMsgService.h"
 #include "RooCmdConfig.h"
+#include "RooHist.h"
 #include "TROOT.h"
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
@@ -96,6 +97,8 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   // WeightVar(const char*)      -- Interpret the given variable as event weight rather than as observable
   // WeightVar(const RooAbsArg&) 
   //
+  // StoreError(const RooArgSet&)     -- Store symmetric error along with value for given subset of observables
+  // StoreAsymError(const RooArgSet&) -- Store asymmetric error along with value for given subset of observables
   //
 
   // Define configuration for this method
@@ -110,6 +113,8 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   pc.defineString("cutRange","CutRange",0,"") ;
   pc.defineString("wgtVarName","WeightVarName",0,"") ;
   pc.defineObject("wgtVar","WeightVar",0) ;
+  pc.defineSet("errorSet","StoreError",0) ;
+  pc.defineSet("asymErrSet","StoreAsymError",0) ;
   pc.defineMutex("ImportTree","ImportData","ImportDataSlice") ;
   pc.defineMutex("CutSpec","CutVar") ;
   pc.defineMutex("WeightVarName","WeightVar") ;
@@ -140,7 +145,8 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   const char* impSliceNames = pc.getString("impSliceState","",kTRUE) ;
   const RooLinkedList& impSliceData = pc.getObjectList("impSliceData") ;
   RooCategory* indexCat = static_cast<RooCategory*>(pc.getObject("indexCat")) ;
-
+  RooArgSet* errorSet = pc.getSet("errorSet") ;
+  RooArgSet* asymErrorSet = pc.getSet("asymErrSet") ;
 
   // Make import mapping if index category is specified
   map<string,RooDataSet*> hmap ;  
@@ -154,6 +160,30 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
       token = strtok(0,",") ;
     }
     delete hiter ;
+  }
+  
+  // process StoreError requests
+  if (errorSet) {
+    RooArgSet* intErrorSet = (RooArgSet*) _vars.selectCommon(*errorSet) ;
+    intErrorSet->setAttribAll("StoreError") ;
+    TIterator* iter = intErrorSet->createIterator() ;
+    RooAbsArg* arg ;
+    while((arg=(RooAbsArg*)iter->Next())) {
+      arg->attachToTree(*_tree) ;
+    }
+    delete iter ;
+    delete intErrorSet ;
+  }
+  if (asymErrorSet) {
+    RooArgSet* intAsymErrorSet = (RooArgSet*) _vars.selectCommon(*asymErrorSet) ;
+    intAsymErrorSet->setAttribAll("StoreAsymError") ;
+    TIterator* iter = intAsymErrorSet->createIterator() ;
+    RooAbsArg* arg ;
+    while((arg=(RooAbsArg*)iter->Next())) {
+      arg->attachToTree(*_tree) ;
+    }
+    delete iter ;
+    delete intAsymErrorSet ;
   }
 
   // Lookup name of weight variable if it was specified by object reference
@@ -613,6 +643,39 @@ Double_t RooDataSet::weight() const
 
 
 
+
+//_____________________________________________________________________________
+void RooDataSet::weightError(Double_t& lo, Double_t& hi, ErrorType /*etype*/) const 
+{
+  if (!_wgtVar) {
+    lo=0 ;
+    hi=0 ;
+    return ;
+  } 
+
+  if (_wgtVar->hasAsymError()) {
+    lo = _wgtVar->getAsymErrorLo() ;
+    hi = _wgtVar->getAsymErrorHi() ;
+  } else {
+    lo = hi = _wgtVar->getError() ;
+  }
+}
+
+
+
+//_____________________________________________________________________________
+Double_t RooDataSet::weightError(ErrorType /*etype*/) const 
+{
+  if (!_wgtVar) return 0 ;
+  if (_wgtVar->hasAsymError()) {
+    return ( _wgtVar->getAsymErrorHi() - _wgtVar->getAsymErrorLo() ) / 2 ;
+  } else {
+    return _wgtVar->getError() ;    
+  }
+}
+
+
+
 //_____________________________________________________________________________
 const RooArgSet* RooDataSet::get(Int_t index) const
 {
@@ -624,17 +687,10 @@ const RooArgSet* RooDataSet::get(Int_t index) const
 
 
 //_____________________________________________________________________________
-Int_t RooDataSet::numEntries(Bool_t useWeights) const 
+Int_t RooDataSet::numEntries() const 
 {
-  // Return either number of entries (useWeights=false) or
-  // rounded sum of weights (useWeights=true). Use the
-  // sumEntries() function to get the exact sum of weight
-
-  // Return number of entries if no weights are requested or available
-  if (!useWeights || !_wgtVar) return (Int_t) GetEntries() ;
-
-  // Otherwise sum the weights in the event
-  return (Int_t)sumEntries() ;
+  // Return either number of entries 
+  return (Int_t)GetEntries() ;
 }
 
 
@@ -669,6 +725,25 @@ Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
 
 
 //_____________________________________________________________________________
+Bool_t RooDataSet::isNonPoissonWeighted() const
+{
+  // Returns true if histogram contains bins with entries with a non-integer weight
+
+  // Return false if we have no weights
+  if (!_wgtVar) return kFALSE ;
+  
+  // Now examine individual weights
+  for (int i=0 ; i<numEntries() ; i++) {
+    get(i) ;
+    if (fabs(weight()-Int_t(weight()))>1e-10) return kTRUE ;
+  }
+  return kFALSE ;
+}
+
+
+
+
+//_____________________________________________________________________________
 const RooArgSet* RooDataSet::get() const 
 { 
   // Return a RooArgSet with the coordinates of the current event
@@ -678,7 +753,7 @@ const RooArgSet* RooDataSet::get() const
 
 
 //_____________________________________________________________________________
-void RooDataSet::add(const RooArgSet& data, Double_t wgt) 
+void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError) 
 {
   // Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
   // Any variables present in 'data' but not in the dataset will be silently ignored
@@ -687,7 +762,56 @@ void RooDataSet::add(const RooArgSet& data, Double_t wgt)
   checkInit() ;
 
   _varsNoWgt = data;
-  if (_wgtVar) _wgtVar->setVal(wgt) ;
+  if (_wgtVar) {
+    _wgtVar->setVal(wgt) ;
+    if (wgtError!=0.) {
+      _wgtVar->setError(wgtError) ;
+    }
+  }
+  Fill();
+}
+
+
+
+
+//_____________________________________________________________________________
+void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weightErrorLo, Double_t weightErrorHi) 
+{
+  // Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
+  // Any variables present in 'data' but not in the dataset will be silently ignored
+  //
+
+  checkInit() ;
+
+  _varsNoWgt = indata;
+  if (_wgtVar) {
+    _wgtVar->setVal(inweight) ;
+    _wgtVar->setAsymError(weightErrorLo,weightErrorHi) ;
+  }
+  Fill();
+}
+
+
+
+
+
+//_____________________________________________________________________________
+void RooDataSet::addFast(const RooArgSet& data, Double_t wgt, Double_t wgtError) 
+{
+  // Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
+  // Layout and size of input argument data is ASSUMED to be the same as RooArgSet returned
+  // RooDataSet::get()
+  //
+
+  checkInit() ;
+
+  _varsNoWgt.assignFast(data);
+  if (_wgtVar) {
+    _wgtVar->setVal(wgt) ;
+    if (wgtError!=0.) {
+      _wgtVar->setError(wgtError) ;
+    }
+  }
   Fill();
 }
 
@@ -940,6 +1064,146 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
 
   return histogram ;
 }
+
+
+
+
+
+//_____________________________________________________________________________
+RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
+			      const RooCmdArg& arg3, const RooCmdArg& arg4,
+			      const RooCmdArg& arg5, const RooCmdArg& arg6,
+			      const RooCmdArg& arg7, const RooCmdArg& arg8) const 
+{
+  // Special plot method for 'X-Y' datasets used in Chi^2 fitting. These datasets 
+  // have one observable (X) and have weights (Y) and associated errors.
+  //
+  // Contents options
+  // ---------------------
+  // YVar(RooRealVar& var)           -- Designate specified observable as 'y' variable
+  //                                    If not specified, the event weight will be the y variable
+  // Histogram drawing options
+  // -------------------------
+  // DrawOption(const char* opt)     -- Select ROOT draw option for resulting TGraph object
+  // LineStyle(Int_t style)          -- Select line style by ROOT line style code, default is solid
+  // LineColor(Int_t color)          -- Select line color by ROOT color code, default is black
+  // LineWidth(Int_t width)          -- Select line with in pixels, default is 3
+  // MarkerStyle(Int_t style)        -- Select the ROOT marker style, default is 21
+  // MarkerColor(Int_t color)        -- Select the ROOT marker color, default is black
+  // MarkerSize(Double_t size)       -- Select the ROOT marker size
+  // Rescale(Double_t factor)        -- Apply global rescaling factor to histogram
+  //
+  //
+  // Misc. other options
+  // -------------------
+  // Name(const chat* name)          -- Give curve specified name in frame. Useful if curve is to be referenced later
+  // Invisible(Bool_t flag)          -- Add curve to frame, but do not display. Useful in combination AddTo()
+  // 
+
+  RooLinkedList argList ;
+  argList.Add((TObject*)&arg1) ;  argList.Add((TObject*)&arg2) ;  
+  argList.Add((TObject*)&arg3) ;  argList.Add((TObject*)&arg4) ;
+  argList.Add((TObject*)&arg5) ;  argList.Add((TObject*)&arg6) ;  
+  argList.Add((TObject*)&arg7) ;  argList.Add((TObject*)&arg8) ;
+
+  // Process named arguments
+  RooCmdConfig pc(Form("RooDataSet::plotOnXY(%s)",GetName())) ;
+  pc.defineString("drawOption","DrawOption",0,"P") ;
+  pc.defineString("histName","Name",0,"") ;
+  pc.defineInt("lineColor","LineColor",0,-999) ;
+  pc.defineInt("lineStyle","LineStyle",0,-999) ;
+  pc.defineInt("lineWidth","LineWidth",0,-999) ;
+  pc.defineInt("markerColor","MarkerColor",0,-999) ;
+  pc.defineInt("markerStyle","MarkerStyle",0,8) ;
+  pc.defineDouble("markerSize","MarkerSize",0,-999) ;
+  pc.defineInt("fillColor","FillColor",0,-999) ;
+  pc.defineInt("fillStyle","FillStyle",0,-999) ;
+  pc.defineInt("histInvisible","Invisible",0,0) ;
+  pc.defineDouble("scaleFactor","Rescale",0,1.) ;
+  pc.defineObject("xvar","XVar",0,0) ;
+  pc.defineObject("yvar","YVar",0,0) ;
+
+  
+  // Process & check varargs 
+  pc.process(argList) ;
+  if (!pc.ok(kTRUE)) {
+    return frame ;
+  }
+  
+  // Extract values from named arguments
+  const char* drawOptions = pc.getString("drawOption") ;
+  Int_t histInvisible = pc.getInt("histInvisible") ;
+  const char* histName = pc.getString("histName",0,kTRUE) ;
+  Double_t scaleFactor = pc.getDouble("scaleFactor") ;
+
+  RooRealVar* xvar = (RooRealVar*) _vars.find(frame->getPlotVar()->GetName()) ;
+
+  // Determine Y variable (default is weight, if present)
+  RooRealVar* yvar = (RooRealVar*)(pc.getObject("yvar")) ;
+
+  // Sanity check. XY plotting only applies to weighted datasets if no YVar is specified
+  if (!_wgtVar && !yvar) {
+    coutE(InputArguments) << "RooDataSet::plotOnXY(" << GetName() << ") ERROR: no YVar() argument specified and dataset is not weighted" << endl ;
+    return 0 ;
+  }
+  
+  RooRealVar* dataY = yvar ? (RooRealVar*) _vars.find(yvar->GetName()) : 0 ;
+  if (yvar && !dataY) {
+    coutE(InputArguments) << "RooDataSet::plotOnXY(" << GetName() << ") ERROR on YVar() argument, dataset does not contain a variable named " << yvar->GetName() << endl ;
+    return 0 ;
+  }
+
+
+  // Make RooHist representing XY contents of data
+  RooHist* graph = new RooHist ;
+  if (histName) {
+    graph->SetName(histName) ;
+  } else {
+    graph->SetName(Form("hxy_%s",GetName())) ;
+  }
+  
+  for (int i=0 ; i<numEntries() ; i++) {
+    get(i) ;
+    Double_t x = xvar->getVal() ;
+    Double_t exlo = xvar->getErrorLo() ;
+    Double_t exhi = xvar->getErrorHi() ;
+    Double_t y,eylo,eyhi ;
+    if (!dataY) {
+      y = weight() ;
+      weightError(eylo,eyhi) ;
+    } else {
+      y = dataY->getVal() ;
+      eylo = dataY->getErrorLo() ;
+      eyhi = dataY->getErrorHi() ;
+    }
+    graph->addBinWithXYError(x,y,-1*exlo,exhi,-1*eylo,eyhi,scaleFactor) ;
+  }
+
+  // Adjust style options according to named arguments
+  Int_t lineColor   = pc.getInt("lineColor") ;
+  Int_t lineStyle   = pc.getInt("lineStyle") ;
+  Int_t lineWidth   = pc.getInt("lineWidth") ;
+  Int_t markerColor = pc.getInt("markerColor") ;
+  Int_t markerStyle = pc.getInt("markerStyle") ;
+  Size_t markerSize  = pc.getDouble("markerSize") ;
+  Int_t fillColor = pc.getInt("fillColor") ;
+  Int_t fillStyle = pc.getInt("fillStyle") ;
+
+  if (lineColor!=-999) graph->SetLineColor(lineColor) ;
+  if (lineStyle!=-999) graph->SetLineStyle(lineStyle) ;
+  if (lineWidth!=-999) graph->SetLineWidth(lineWidth) ;
+  if (markerColor!=-999) graph->SetMarkerColor(markerColor) ;
+  if (markerStyle!=-999) graph->SetMarkerStyle(markerStyle) ;
+  if (markerSize!=-999) graph->SetMarkerSize(markerSize) ;
+  if (fillColor!=-999) graph->SetFillColor(fillColor) ;
+  if (fillStyle!=-999) graph->SetFillStyle(fillStyle) ;
+
+  // Add graph to frame
+  frame->addPlotable(graph,drawOptions,histInvisible) ;
+ 
+  return frame ;
+}
+
 
 
 
@@ -1252,7 +1516,7 @@ void RooDataSet::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TSt
 void RooDataSet::printValue(ostream& os) const 
 {
   // Print value of the dataset, i.e. the sum of weights contained in the dataset
-  os << numEntries(kFALSE) << " entries" ;
+  os << numEntries() << " entries" ;
   if (isWeighted()) {
     os << " (" << sumEntries() << " weighted)" ;
   }

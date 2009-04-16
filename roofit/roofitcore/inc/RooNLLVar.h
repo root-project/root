@@ -41,13 +41,15 @@ public:
   RooNLLVar(const RooNLLVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }
 
-  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& data,
+  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
 				      const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName=0, 
 				      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE) {
-    return new RooNLLVar(name,title,(RooAbsPdf&)pdf,data,projDeps,_extended,rangeName, addCoefRangeName, nCPU, interleave,verbose,splitRange) ;
+    return new RooNLLVar(name,title,(RooAbsPdf&)pdf,adata,projDeps,_extended,rangeName, addCoefRangeName, nCPU, interleave,verbose,splitRange) ;
   }
   
   virtual ~RooNLLVar();
+
+  void applyWeightSquared(Bool_t flag) { _weightSq = flag ; setValueDirty() ; } 
 
   virtual Double_t defaultErrorLevel() const { return 0.5 ; }
 
@@ -57,6 +59,7 @@ protected:
 
   Bool_t _extended ;
   virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
+  Bool_t _weightSq ; // Apply weights squared?
   
   ClassDef(RooNLLVar,1) // Function representing (extended) -log(L) of p.d.f and dataset
 };

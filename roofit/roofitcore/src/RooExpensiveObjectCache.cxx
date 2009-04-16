@@ -48,7 +48,7 @@ RooExpensiveObjectCache* RooExpensiveObjectCache::_instance = 0 ;
 
 
 //_____________________________________________________________________________
-RooExpensiveObjectCache::RooExpensiveObjectCache() 
+RooExpensiveObjectCache::RooExpensiveObjectCache() : _nextUID(0)
 {
   // Constructor
 }
@@ -57,7 +57,7 @@ RooExpensiveObjectCache::RooExpensiveObjectCache()
 
 //_____________________________________________________________________________
 RooExpensiveObjectCache::RooExpensiveObjectCache(const RooExpensiveObjectCache& other) :
-  TObject(other)
+  TObject(other), _nextUID(0)
 {
   // Copy constructor
 }
@@ -133,11 +133,13 @@ Bool_t RooExpensiveObjectCache::registerObject(const char* ownerName, const char
 
   // Delete any previous object
   ExpensiveObject* eo = _map[objectName] ;
+  Int_t olduid(-1) ;
   if (eo) {
+    olduid = eo->uid() ;
     delete eo ;
   }
   // Install new object
-  _map[objectName] = new ExpensiveObject(ownerName,cacheObject,parIter) ;
+  _map[objectName] = new ExpensiveObject(olduid!=-1?olduid:_nextUID++, ownerName,cacheObject,parIter) ;
 
   return kFALSE ;
 }
@@ -169,11 +171,71 @@ const TObject* RooExpensiveObjectCache::retrieveObject(const char* name, TClass*
 
 
 //_____________________________________________________________________________
-RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(const char* inOwnerName, TObject& inPayload, TIterator* parIter) 
+const TObject* RooExpensiveObjectCache::getObj(Int_t uid) 
+{
+  // Retrieve payload object of cache element with given unique ID  
+  for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter !=_map.end() ; iter++) {
+    if (iter->second->uid() == uid) {
+      return iter->second->payload() ;
+    }
+  }  
+  return 0 ;
+}
+
+
+
+//_____________________________________________________________________________
+Bool_t RooExpensiveObjectCache::clearObj(Int_t uid) 
+{
+  // Clear cache element with given unique ID
+  // Retrieve payload object of cache element with given unique ID  
+  for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter !=_map.end() ; iter++) {
+    if (iter->second->uid() == uid) {
+      _map.erase(iter->first) ;
+      return kFALSE ;
+    }
+  }  
+  return kTRUE ;  
+}
+
+
+
+//_____________________________________________________________________________
+Bool_t RooExpensiveObjectCache::setObj(Int_t uid, TObject* obj) 
+{
+  // Place new payload object in cache element with given unique ID. Cache
+  // will take ownership of provided object!
+
+  for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter !=_map.end() ; iter++) {
+    if (iter->second->uid() == uid) {
+      iter->second->setPayload(obj) ;
+      return kFALSE ;
+    }
+  }  
+  return kTRUE ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooExpensiveObjectCache::clearAll() 
+{
+  // Clear all cache elements
+  _map.clear() ;
+}
+
+
+
+
+
+
+//_____________________________________________________________________________
+RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const char* inOwnerName, TObject& inPayload, TIterator* parIter) 
 {
   // Construct ExpensiveObject oject for inPayLoad and store reference values
   // for all RooAbsReal and RooAbsCategory parameters in params.
 
+  _uid = uidIn ;
   _ownerName = inOwnerName;
 
   _payload = &inPayload ;
@@ -199,7 +261,8 @@ RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(const char* inOwnerNam
 
 
 //_____________________________________________________________________________
-RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(const ExpensiveObject& other) : 
+RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const ExpensiveObject& other) : 
+  _uid(uidIn),
   _realRefParams(other._realRefParams), 
   _catRefParams(other._catRefParams),
   _ownerName(other._ownerName)
@@ -261,7 +324,7 @@ void RooExpensiveObjectCache::print() const
   map<TString,ExpensiveObject*>::const_iterator iter = _map.begin() ;
 
   while(iter!=_map.end()) {
-    cout << "key=" << iter->first << " value=" ;
+    cout << "uid = " << iter->second->uid() << " key=" << iter->first << " value=" ;
     iter->second->print() ;    
     ++iter ;
   }
@@ -272,18 +335,22 @@ void RooExpensiveObjectCache::print() const
 //_____________________________________________________________________________
 void RooExpensiveObjectCache::ExpensiveObject::print() 
 {
-  cout << _payload->IsA()->GetName() << "::" << _payload->GetName() << " parameters=( " ;
-  map<TString,Double_t>::iterator iter = _realRefParams.begin() ;
-  while(iter!=_realRefParams.end()) {
-    cout << iter->first << "=" << iter->second << " " ;
-    ++iter ;
-  }  
-  map<TString,Int_t>::iterator iter2 = _catRefParams.begin() ;
-  while(iter2!=_catRefParams.end()) {
-    cout << iter2->first << "=" << iter2->second << " " ;
-    ++iter2 ;
+  cout << _payload->IsA()->GetName() << "::" << _payload->GetName() ;
+  if (_realRefParams.size()>0 || _catRefParams.size()>0) {
+    cout << " parameters=( " ;
+    map<TString,Double_t>::iterator iter = _realRefParams.begin() ;
+    while(iter!=_realRefParams.end()) {
+      cout << iter->first << "=" << iter->second << " " ;
+      ++iter ;
+    }  
+    map<TString,Int_t>::iterator iter2 = _catRefParams.begin() ;
+    while(iter2!=_catRefParams.end()) {
+      cout << iter2->first << "=" << iter2->second << " " ;
+      ++iter2 ;
+    }
+    cout << ")" ;
   }
-  cout << ")" << endl ;
+  cout << endl ;
 }
 
 
@@ -295,7 +362,7 @@ void RooExpensiveObjectCache::importCacheObjects(RooExpensiveObjectCache& other,
   map<TString,ExpensiveObject*>::const_iterator iter = other._map.begin() ;
   while(iter!=other._map.end()) {
     if (string(ownerName)==iter->second->ownerName()) {      
-      _map[iter->first.Data()] = new ExpensiveObject(*iter->second) ;
+      _map[iter->first.Data()] = new ExpensiveObject(_nextUID++, *iter->second) ;
       if (verbose) {
 	oocoutI(iter->second->payload(),Caching) << "RooExpensiveObjectCache::importCache() importing cache object " 
 						 << iter->first << " associated with object " << iter->second->ownerName() << endl ;

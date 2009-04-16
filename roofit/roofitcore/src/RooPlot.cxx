@@ -447,9 +447,11 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, Bool_t refreshNorm)
     Double_t corFac(1.0) ;
     if (dynamic_cast<const RooHist*>(rp)) corFac = _normBinWidth/rp->getFitRangeBinW() ;
     
-    
-    coutI(Plotting) << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac 
-		    << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
+
+    if (fabs(rp->getFitRangeNEvt()/corFac-_normNumEvts)>1e-6) {
+      coutI(Plotting) << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac 
+		      << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
+    }      
 
     // Nominal bin width (i.e event density) is already locked in by previously drawn histogram
     // scale this histogram to match that density

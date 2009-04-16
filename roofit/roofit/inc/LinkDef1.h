@@ -36,6 +36,8 @@
 #pragma link C++ class RooChi2MCSModule+ ;
 #pragma link C++ class RooTFnBinding+ ;
 #pragma link C++ class RooTFnPdfBinding+ ;
+#pragma link C++ class RooBernstein+ ;
+#pragma link C++ class RooChiSquarePdf+ ;
 //
 #pragma link C++ class RooCFunction1Binding<Double_t,Double_t>+ ;
 #pragma link C++ class RooCFunction1PdfBinding<Double_t,Double_t>+ ;
@@ -88,9 +90,10 @@
 #pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Bool_t>+ ;
 #pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Bool_t>+ ;
 #pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,Bool_t>- ;
-#ifdef USE_FOR_AUTLOADING
-#pragma link C++ class RooFit ;
-#else
+//#ifdef USE_FOR_AUTLOADING
+//#pragma link C++ class RooFit ;
+//#else
 #pragma link C++ namespace RooFit ;
-#endif
+//#endif
+//
 #endif 

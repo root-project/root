@@ -35,6 +35,8 @@ public:
 
   virtual Double_t defaultErrorLevel() const ;
 
+  void printMetaArgs(ostream& os) const ;
+
 protected:
 
   RooArgList   _ownedList ;       // List of owned components

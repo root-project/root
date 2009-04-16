@@ -3,7 +3,11 @@
 #pragma link off all classes;
 #pragma link off all functions;
 #pragma link C++ function Roo* ;
-#pragma link C++ namespace RooFit ; 
+#ifdef USE_FOR_AUTLOADING
+#pragma link C++ class RooFit ;
+#else
+#pragma link C++ namespace RooFit ;
+#endif
 #pragma link C++ namespace RooFitShortHand ;
 #pragma link C++ class RooDouble+ ;
 #pragma link C++ class RooEffGenContext+ ;
@@ -36,6 +40,7 @@
 #pragma link C++ class RooListProxy+ ;
 #pragma link C++ class RooMapCatEntry+ ;
 #pragma link C++ class RooMappedCategory+ ;
+#pragma link C++ class RooMappedCategory::Entry- ;
 #pragma link C++ class RooMath+ ;
 #pragma link C++ class RooMCIntegrator+ ;
 #pragma link C++ class RooMinuit+ ;

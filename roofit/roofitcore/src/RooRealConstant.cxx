@@ -31,6 +31,8 @@
 
 #include "RooFit.h"
 
+#include <math.h>
+#include <sstream>
 #include "RooRealConstant.h"
 #include "RooRealConstant.h"
 #include "RooConstVar.h"
@@ -74,9 +76,10 @@ RooConstVar& RooRealConstant::value(Double_t value)
   }
 
   // Create new constant
-  char label[128] ;
-  sprintf(label,"%8.6f",value) ;
-  var = new RooConstVar(label,label,value) ;
+  std::ostringstream s ;
+  s << value ;  
+
+  var = new RooConstVar(s.str().c_str(),s.str().c_str(),value) ;
   var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
   _constDB->addOwned(*var) ;
 

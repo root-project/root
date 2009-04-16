@@ -33,7 +33,8 @@ public:
   virtual ~RooImproperIntegrator1D();
 
   virtual Bool_t checkLimits() const;
-  Bool_t setLimits(Double_t xmin, Double_t xmax);
+  using RooAbsIntegrator::setLimits ;
+  Bool_t setLimits(Double_t* xmin, Double_t* xmax);
   virtual Bool_t setUseIntegrandLimits(Bool_t flag) {_useIntegrandLimits = flag ; return kTRUE ; }
   virtual Double_t integral(const Double_t* yvec=0) ;
 

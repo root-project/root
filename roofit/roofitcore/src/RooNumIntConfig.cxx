@@ -64,8 +64,6 @@ RooNumIntConfig& RooNumIntConfig::defaultConfig()
   if (_default==0) {
     _default = new RooNumIntConfig ;    
     RooNumIntFactory::instance() ;
-    //_default->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D") ;
-    _default->method1D().setLabel("RooIntegrator1D") ;
   }
   return *_default ;
 }
@@ -249,6 +247,22 @@ void RooNumIntConfig::setEpsAbs(Double_t newEpsAbs)
     return ;
   }
   _epsAbs = newEpsAbs ;
+}
+
+
+RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) const 
+{ 
+  if (!opt) {
+    return kStandard ;
+  }
+
+  TString o(opt) ;
+  o.ToLower() ;
+
+  if (o.Contains("v")) {
+    return kVerbose ;
+  }
+  return kStandard ; 
 }
 
 

@@ -34,6 +34,7 @@
 #include "RooProjectedPdf.h" 
 #include "RooMsgService.h"
 #include "RooAbsReal.h" 
+#include "RooRealVar.h"
 
 
 
@@ -52,8 +53,8 @@ RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
 //_____________________________________________________________________________
  RooProjectedPdf::RooProjectedPdf(const char *name, const char *title, RooAbsReal& _intpdf, const RooArgSet& intObs) :
    RooAbsPdf(name,title), 
-   intpdf("IntegratedPdf","intpdf",this,_intpdf,kFALSE,kFALSE),
-   intobs("IntegrationObservables","intobs",this,kFALSE,kFALSE),
+   intpdf("!IntegratedPdf","intpdf",this,_intpdf,kFALSE,kFALSE),
+   intobs("!IntegrationObservables","intobs",this,kFALSE,kFALSE),
    deps("!Dependents","deps",this,kTRUE,kTRUE),
    _cacheMgr(this,10)
  { 
@@ -72,8 +73,8 @@ RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
 //_____________________________________________________________________________
  RooProjectedPdf::RooProjectedPdf(const RooProjectedPdf& other, const char* name) :  
    RooAbsPdf(other,name), 
-   intpdf("IntegratedPdf",this,other.intpdf),
-   intobs("IntegrarionObservable",this,other.intobs),
+   intpdf("!IntegratedPdf",this,other.intpdf),
+   intobs("!IntegrationObservable",this,other.intobs),
    deps("!Dependents",this,other.deps),
    _cacheMgr(other._cacheMgr,this)
 { 
@@ -88,6 +89,7 @@ Double_t RooProjectedPdf::getVal(const RooArgSet* set) const
   // Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
 
   _curNormSet = (RooArgSet*)set ;
+
   return RooAbsPdf::getVal(set) ;
 }
 
@@ -122,6 +124,7 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
   }
 
   RooArgSet* nset2 =  intpdf.arg().getObservables(*nset) ;
+
   if (iset) {
     nset2->add(*iset) ;
   }
@@ -255,6 +258,23 @@ RooArgList RooProjectedPdf::CacheElem::containedArgs(Action)
   RooArgList ret(*_projection) ;  
   return ret ;
 }
+
+
+
+//_____________________________________________________________________________
+void RooProjectedPdf::printMetaArgs(ostream& os) const
+{
+  // Customized printing of arguments of a RooRealIntegral to more intuitively reflect the contents of the
+  // integration operation
+
+  os << "Int " << intpdf.arg().GetName() ;
+ 
+  os << " d" ;
+  os << intobs ;
+  os << " " ;
+  
+}
+
 
 
 

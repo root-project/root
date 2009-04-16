@@ -56,6 +56,9 @@ public:
   inline Bool_t hasAsymError(Bool_t allowZero=kTRUE) const { return allowZero ? ((_asymErrHi>=0 && _asymErrLo<=0)) :  ((_asymErrHi>0 && _asymErrLo<0)) ; }
   inline void removeAsymError() { _asymErrLo = 1 ; _asymErrHi = -1 ; }
   inline void setAsymError(Double_t lo, Double_t hi) { _asymErrLo = lo ; _asymErrHi = hi ; }
+  inline Double_t getErrorLo() const { return _asymErrLo<=0?_asymErrLo:-1*_error ; }
+  inline Double_t getErrorHi() const { return _asymErrHi>=0?_asymErrHi:_error ; }
+  
   RooErrorVar* errorVar() const ;
 
   // Set/get finite fit range limits
@@ -118,7 +121,7 @@ public:
 
 
   virtual Double_t evaluate() const { return _value ; } // dummy because we overloaded getVal()
-  virtual void copyCache(const RooAbsArg* source) ;
+  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void fillTreeBranch(TTree& t) ;
 
@@ -131,17 +134,17 @@ public:
   RooLinkedList _altNonSharedBinning ; // Non-shareable alternative binnings
 
   inline RooRealVarSharedProperties* sharedProp() const {
-     if (!_sharedProp) {
-     	_sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(new RooRealVarSharedProperties()) ;
-     }
-     return _sharedProp ;
+    if (!_sharedProp) {
+      _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(new RooRealVarSharedProperties()) ;
+    }
+    return _sharedProp ;
   }
-
+  
   static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
   static RooRealVarSharedProperties _nullProp ; // Null property
   mutable RooRealVarSharedProperties* _sharedProp ; //! Shared properties associated with this instance
 
-  ClassDef(RooRealVar,4) // Real-valued variable 
+  ClassDef(RooRealVar,5) // Real-valued variable 
 };
 
 

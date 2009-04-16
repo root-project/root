@@ -73,7 +73,8 @@ public:
 protected:
 
   static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
-  RooCategorySharedProperties* _sharedProp ; // Shared properties associated with this instance
+  static RooCategorySharedProperties _nullProp ; // Null property
+  RooCategorySharedProperties* _sharedProp ; //! Shared properties associated with this instance
 
   virtual RooCatType evaluate() const { 
     // Dummy implementation

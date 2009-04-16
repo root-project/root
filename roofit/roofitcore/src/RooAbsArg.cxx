@@ -234,7 +234,7 @@ Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const
 
 
 //_____________________________________________________________________________
-void RooAbsArg::setAttribute(const char* name, Bool_t value)
+void RooAbsArg::setAttribute(const Text_t* name, Bool_t value)
 {
   // Set (default) or clear a named boolean attribute of this object.
 
@@ -255,7 +255,7 @@ void RooAbsArg::setAttribute(const char* name, Bool_t value)
 
 
 //_____________________________________________________________________________
-Bool_t RooAbsArg::getAttribute(const char* name) const
+Bool_t RooAbsArg::getAttribute(const Text_t* name) const
 {
   // Check if a named attribute is set. By default, all attributes are unset.
 
@@ -264,7 +264,7 @@ Bool_t RooAbsArg::getAttribute(const char* name) const
 
 
 //_____________________________________________________________________________
-void RooAbsArg::setStringAttribute(const char* key, const char* value)
+void RooAbsArg::setStringAttribute(const Text_t* key, const Text_t* value)
 {
   // Associate string 'value' to this object under key 'key'
 
@@ -278,7 +278,7 @@ void RooAbsArg::setStringAttribute(const char* key, const char* value)
 }
 
 //_____________________________________________________________________________
-const char* RooAbsArg::getStringAttribute(const char* key) const
+const Text_t* RooAbsArg::getStringAttribute(const Text_t* key) const
 {
   // Get string attribute mapped under key 'key'. Returns null pointer
   // if no attribute exists under that key
@@ -293,7 +293,7 @@ const char* RooAbsArg::getStringAttribute(const char* key) const
 
 
 //_____________________________________________________________________________
-void RooAbsArg::setTransientAttribute(const char* name, Bool_t value)
+void RooAbsArg::setTransientAttribute(const Text_t* name, Bool_t value)
 {
   // Set (default) or clear a named boolean attribute of this object.
 
@@ -314,7 +314,7 @@ void RooAbsArg::setTransientAttribute(const char* name, Bool_t value)
 
 
 //_____________________________________________________________________________
-Bool_t RooAbsArg::getTransientAttribute(const char* name) const
+Bool_t RooAbsArg::getTransientAttribute(const Text_t* name) const
 {
   // Check if a named attribute is set. By default, all attributes
   // are unset.
@@ -795,7 +795,8 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
   } else if (source==this) {
     // Cyclical dependency, abort
     coutE(LinkStateMgmt) << "RooAbsArg::setValueDirty(" << GetName()
-	 << "): cyclical dependency detected" << endl ;
+			 << "): cyclical dependency detected, source = " << source->GetName() << endl ;
+    assert(0) ;
     return ;
   }
 
@@ -1057,7 +1058,9 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
 //        << (proxy.isValueServer()?"V":"-") << (proxy.isShapeServer()?"S":"-") << endl ;
 
   // Register proxied object as server
-  addServer(*proxy.absArg(),proxy.isValueServer(),proxy.isShapeServer()) ;
+  if (proxy.absArg()) {
+    addServer(*proxy.absArg(),proxy.isValueServer(),proxy.isShapeServer()) ;
+  }
 
   // Register proxy itself
   _proxyList.Add(&proxy) ;
@@ -1263,6 +1266,7 @@ void RooAbsArg::printArgs(ostream& os) const
       os << " " ;
     }
   }    
+  printMetaArgs(os) ;
   os << "]" ;  
 }
 
@@ -1334,6 +1338,7 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
       ((RooArgProxy*)proxy)->absArg()->printStream(os,kName,kSingleLine) ;
     } else {
       os << indent << "    " << proxy->name() << " -> " ;
+      os << endl ;
       TString moreIndent(indent) ;
       moreIndent.Append("    ") ;
       ((RooSetProxy*)proxy)->printStream(os,kName,kStandard,moreIndent.Data()) ;
@@ -2014,3 +2019,6 @@ Bool_t RooAbsArg::flipAClean()
 {
   return _flipAClean ;
 }
+
+
+

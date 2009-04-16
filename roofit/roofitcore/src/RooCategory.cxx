@@ -41,7 +41,7 @@ ClassImp(RooCategory)
 ;
 
 RooSharedPropertiesList RooCategory::_sharedPropList ;
-
+RooCategorySharedProperties RooCategory::_nullProp("00000000-0000-0000-0000-000000000000") ;
 
 //_____________________________________________________________________________
 RooCategory::RooCategory() : _sharedProp(0)
@@ -274,6 +274,40 @@ Bool_t RooCategory::isStateInRange(const char* rangeName, const char* stateName)
   // Range does not exists -- create it on the fly with full set of states (analoguous to RooRealVar)
   return kTRUE ;
 
+}
+
+
+//______________________________________________________________________________
+void RooCategory::Streamer(TBuffer &R__b)
+{
+  UInt_t R__s, R__c;
+  if (R__b.IsReading()) {
+    
+    Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+    RooAbsCategoryLValue::Streamer(R__b);
+    RooCategorySharedProperties* tmpSharedProp = new RooCategorySharedProperties() ;
+    tmpSharedProp->Streamer(R__b) ;
+    if (!(_nullProp==*tmpSharedProp)) {
+      _sharedProp = (RooCategorySharedProperties*) _sharedPropList.registerProperties(tmpSharedProp,kFALSE) ;
+    } else {
+      delete tmpSharedProp ;
+      _sharedProp = 0 ;
+    }
+  
+    R__b.CheckByteCount(R__s, R__c, RooCategory::IsA());
+    
+  } else {
+    
+    R__c = R__b.WriteVersion(RooCategory::IsA(), kTRUE);
+    RooAbsCategoryLValue::Streamer(R__b);
+    if (_sharedProp) {
+      _sharedProp->Streamer(R__b) ;
+    } else {
+      _nullProp.Streamer(R__b) ;
+    }
+    R__b.SetByteCount(R__c, kTRUE);      
+    
+  }
 }
 
 

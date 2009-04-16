@@ -369,7 +369,7 @@ RooPlot *RooAbsRealLValue::frame() const
 
 
 //_____________________________________________________________________________
-void RooAbsRealLValue::copyCache(const RooAbsArg* source) 
+void RooAbsRealLValue::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/) 
 {
   // Copy cache of another RooAbsArg to our cache
 

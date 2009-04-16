@@ -11,13 +11,13 @@
 // END_HTML
 //
 
-const char* VTAG="2.95" ;
+const char* VTAG="2.98" ;
 
 Int_t doBanner()
 {
   cout << endl
   << "\033[1mRooFit v" << VTAG << " -- Developed by Wouter Verkerke and David Kirkby\033[0m " << endl 
-              << "                Copyright (C) 2000-2008 NIKHEF, University of California & Stanford University" << endl 
+              << "                Copyright (C) 2000-2009 NIKHEF, University of California & Stanford University" << endl 
               << "                All rights reserved, please read http://roofit.sourceforge.net/license.txt" << endl << endl ;
   return 0 ;
 }

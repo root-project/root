@@ -28,6 +28,8 @@ public:
   RooRealVarSharedProperties(const char* uuidstr) ;
   virtual ~RooRealVarSharedProperties() ;
 
+  RooSharedProperties* clone() { return new RooRealVarSharedProperties(*this)  ; }
+
 protected:
 
   friend class RooRealVar ;

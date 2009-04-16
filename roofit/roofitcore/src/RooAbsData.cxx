@@ -351,6 +351,7 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   //                                    If set, any subsequent PDF will normalize to this dataset, even if it is
   //                                    not the first one added to the frame. By default only the 1st dataset
   //                                    added to a frame will update the normalization information
+  // Rescale(Double_t factor)        -- Apply global rescaling factor to histogram
   //
   // Histogram drawing options
   // -------------------------

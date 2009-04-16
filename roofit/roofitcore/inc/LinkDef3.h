@@ -79,7 +79,21 @@
 #pragma link C++ class RooExpensiveObjectCache+ ;
 #pragma link C++ class RooExpensiveObjectCache::ExpensiveObject+ ;
 #pragma link C++ class std::map<std::string,TH1*>+ ;
+#pragma link C++ class RooFactoryWSTool+ ;
 #pragma link C++ class RooBinningCategory+ ;
+#pragma link C++ class RooDerivative+ ;
+#pragma link C++ class RooFunctor+ ;
+#pragma link C++ class RooGenFunction+ ;
+#pragma link C++ class RooMultiGenFunction+ ;
+#pragma link C++ class RooTFoamBinding+ ;
+#pragma link C++ class RooAdaptiveIntegratorND+ ;
+#pragma link C++ class RooAbsNumGenerator+ ;
+#pragma link C++ class RooFoamGenerator+ ;
+#pragma link C++ class RooNumGenConfig+ ;
+#pragma link C++ class RooNumGenFactory+ ;
+#pragma link C++ class RooMultiVarGaussian+ ;
+#pragma link C++ class RooXYChi2Var+ ;
+#pragma link C++ namespace RooCintUtils+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;
 #endif 

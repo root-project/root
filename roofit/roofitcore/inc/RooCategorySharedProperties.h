@@ -23,7 +23,11 @@ class RooCategorySharedProperties : public RooSharedProperties {
 public:
 
   RooCategorySharedProperties() ;
+  RooCategorySharedProperties(const char* uuidstr) ;
+  RooCategorySharedProperties(const RooCategorySharedProperties& other) ;
   virtual ~RooCategorySharedProperties() ;
+
+  RooSharedProperties* clone() { return new RooCategorySharedProperties(*this)  ; }
 
 protected:
 

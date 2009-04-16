@@ -72,7 +72,7 @@ public:
 protected:
 
   Bool_t setOrdinal(UInt_t index, const char* rangeName);
-  void copyCache(const RooAbsArg* source) ;
+  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
 
   ClassDef(RooAbsCategoryLValue,1) // Abstract modifiable index variable 
 };

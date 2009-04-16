@@ -79,6 +79,16 @@ ClassImp(RooNumConvolution)
 ;
 
 
+//_____________________________________________________________________________
+RooNumConvolution::RooNumConvolution() :
+  _init(kFALSE),
+  _integrand(0),
+  _integrator(0),
+  _callHist(0)
+{
+}
+
+
 
 //_____________________________________________________________________________
 RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRealVar& convVar, RooAbsReal& inPdf, RooAbsReal& resmodel, const RooNumConvolution* proto) : 

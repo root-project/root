@@ -38,6 +38,7 @@
 #include "RooAddPdf.h"
 #include "RooDataSet.h"
 #include "RooRandom.h"
+#include "RooAddModel.h"
 
 ClassImp(RooAddGenContext)
 ;
@@ -47,7 +48,7 @@ ClassImp(RooAddGenContext)
 RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars, 
 				   const RooDataSet *prototype, const RooArgSet* auxProto,
 				   Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,auxProto,verbose)
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _isModel(kFALSE)
 {
   // Constructor
 
@@ -80,7 +81,43 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
     _gcList.Add(cx) ;
   }  
 
-  _pdf->getProjCache(_vars) ;
+  ((RooAddPdf*)_pdf)->getProjCache(_vars) ;
+  _pdf->recursiveRedirectServers(*_theEvent) ;
+}
+
+
+
+//_____________________________________________________________________________
+RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &vars, 
+				   const RooDataSet *prototype, const RooArgSet* auxProto,
+				   Bool_t verbose) :
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _isModel(kTRUE)
+{
+  // Constructor
+
+  cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum resolution model " << model.GetName() 
+			<< " for generation of observable(s) " << vars ;
+  if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
+  if (auxProto && auxProto->getSize()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
+  ccxcoutI(Generation) << endl ;
+
+  // Constructor. Build an array of generator contexts for each product component PDF
+  _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
+  _pdf = (RooAbsPdf*) _pdfSet->find(model.GetName()) ;
+
+
+  model._pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  _nComp = model._pdfList.getSize() ;
+  _coefThresh = new Double_t[_nComp+1] ;
+  _vars = (RooArgSet*) vars.snapshot(kFALSE) ;
+
+  while((pdf=(RooAbsPdf*)model._pdfIter->Next())) {
+    RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
+    _gcList.Add(cx) ;
+  }  
+
+  ((RooAddModel*)_pdf)->getProjCache(_vars) ;
   _pdf->recursiveRedirectServers(*_theEvent) ;
 }
 
@@ -161,15 +198,35 @@ void RooAddGenContext::updateThresholds()
   // Update the cumulative threshold table from the current coefficient
   // values
 
-  RooAddPdf::CacheElem* cache = _pdf->getProjCache(_vars) ;
-  _pdf->updateCoefficients(*cache,_vars) ;
+  if (_isModel) {
+    
+    RooAddModel* amod = (RooAddModel*) _pdf ;
 
-  _coefThresh[0] = 0. ;
-  Int_t i ;
-  for (i=0 ; i<_nComp ; i++) {
-    _coefThresh[i+1] = _pdf->_coefCache[i] ;
-    _coefThresh[i+1] += _coefThresh[i] ;
+    RooAddModel::CacheElem* cache = amod->getProjCache(_vars) ;
+    amod->updateCoefficients(*cache,_vars) ;
+
+    _coefThresh[0] = 0. ;
+    Int_t i ;
+    for (i=0 ; i<_nComp ; i++) {
+      _coefThresh[i+1] = amod->_coefCache[i] ;
+      _coefThresh[i+1] += _coefThresh[i] ;
+    }
+
+  } else {
+    RooAddPdf* apdf = (RooAddPdf*) _pdf ;
+
+    RooAddPdf::CacheElem* cache = apdf->getProjCache(_vars) ;
+    apdf->updateCoefficients(*cache,_vars) ;
+
+    _coefThresh[0] = 0. ;
+    Int_t i ;
+    for (i=0 ; i<_nComp ; i++) {
+      _coefThresh[i+1] = apdf->_coefCache[i] ;
+      _coefThresh[i+1] += _coefThresh[i] ;
+    }
+    
   }
+
 }
 
 

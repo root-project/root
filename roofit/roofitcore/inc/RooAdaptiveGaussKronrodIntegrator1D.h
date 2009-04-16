@@ -35,7 +35,8 @@ public:
   virtual Bool_t checkLimits() const;
   virtual Double_t integral(const Double_t *yvec=0) ;
 
-  Bool_t setLimits(Double_t xmin, Double_t xmax);
+  using RooAbsIntegrator::setLimits ;
+  Bool_t setLimits(Double_t* xmin, Double_t* xmax);
   virtual Bool_t setUseIntegrandLimits(Bool_t flag) {
     // If flag is true, intergration limits are taken from definition in input function binding
     _useIntegrandLimits = flag ; return kTRUE ; 

@@ -26,6 +26,10 @@
 
 #include "RooFit.h"
 #include "RooCategorySharedProperties.h"
+#include "TList.h"
+#include "RooCatType.h"
+#include <iostream>
+using namespace std ;
 
 ClassImp(RooCategorySharedProperties)
 ;
@@ -36,6 +40,42 @@ RooCategorySharedProperties::RooCategorySharedProperties()
 {
   // Constructor
 } 
+
+
+//_____________________________________________________________________________
+RooCategorySharedProperties::RooCategorySharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr)
+{
+  // Constructor with unique-id string
+} 
+
+
+
+
+
+//_____________________________________________________________________________
+RooCategorySharedProperties::RooCategorySharedProperties(const RooCategorySharedProperties& other) :
+  RooSharedProperties(other)
+{
+  cout << "RooCategorySharedProperties::cctor()" << endl ;
+  // Copy constructor
+  TIterator* iter = other._altRanges.MakeIterator() ;
+  TList* olist ;
+  while((olist=(TList*)iter->Next())) {
+    TList* mylist = new TList ; 
+    mylist->SetName(olist->GetName()) ;
+    RooCatType* ctype ;
+    TIterator* citer = olist->MakeIterator() ;    
+    while ((ctype=(RooCatType*)citer->Next())) {
+      mylist->Add(new RooCatType(*ctype)) ;
+    }
+    delete citer ;
+    mylist->SetOwner(kTRUE) ;
+    _altRanges.Add(mylist) ;
+  }
+  delete iter ;
+}
+
+
 
 
 

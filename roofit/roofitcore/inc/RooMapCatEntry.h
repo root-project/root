@@ -40,6 +40,7 @@ public:
 protected:
 
   TString mangle(const char* exp) const ;
+
   TRegexp _regexp ;
   RooCatType _cat ;
 	

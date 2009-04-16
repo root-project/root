@@ -85,13 +85,23 @@ ClassImp(RooNumConvPdf)
 
 
 //_____________________________________________________________________________
+RooNumConvPdf::RooNumConvPdf() :
+  _init(kFALSE),
+  _conv(0)
+{  
+}
+
+
+
+
+//_____________________________________________________________________________R
 RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& inPdf, RooAbsPdf& resmodel) : 
   RooAbsPdf(name,title), 
   _init(kFALSE),
   _conv(0),
-  _origVar("origVar","Original Convolution variable",this,convVar),
-  _origPdf("origPdf","Original Input PDF",this,inPdf),
-  _origModel("origModel","Original Resolution model",this,resmodel)
+  _origVar("!origVar","Original Convolution variable",this,convVar),
+  _origPdf("!origPdf","Original Input PDF",this,inPdf),
+  _origModel("!origModel","Original Resolution model",this,resmodel)
 {
   // Constructor of convolution operator PDF
   // 
@@ -109,9 +119,9 @@ RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& co
 RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _init(kFALSE),
-  _origVar("origVar",this,other._origVar),
-  _origPdf("origPdf",this,other._origPdf),
-  _origModel("origModel",this,other._origModel)
+  _origVar("!origVar",this,other._origVar),
+  _origPdf("!origPdf",this,other._origPdf),
+  _origModel("!origModel",this,other._origModel)
 {
   // Copy constructor
 
@@ -203,4 +213,15 @@ RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooData
   
   // Any other resolution model: use specialized generator context
   return new RooConvGenContext(*this,vars,prototype,auxProto,verbose) ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooNumConvPdf::printMetaArgs(ostream& os) const 
+{
+  // Customized printing of arguments of a RooNumConvPdf to more intuitively reflect the contents of the
+  // product operator construction
+
+  os << _origPdf.arg().GetName() << "(" << _origVar.arg().GetName() << ") (*) " << _origModel.arg().GetName() << "(" << _origVar.arg().GetName() << ") " ;
 }

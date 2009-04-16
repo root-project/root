@@ -36,6 +36,7 @@
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooMsgService.h"
+#include "RooGlobalFunc.h"
 
 #include "Riostream.h"
 
@@ -52,7 +53,8 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   _theEvent(0), 
   _isValid(kTRUE),
   _verbose(verbose),
-  _protoOrder(0) 
+  _protoOrder(0),
+  _genData(0)
 {
   // Constructor
 
@@ -181,14 +183,16 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents)
   TString name(GetName()),title(GetTitle());
   name.Append("Data");
   title.Prepend("Generated From ");
-  RooDataSet *data= new RooDataSet(name.Data(), title.Data(), *_theEvent);
+  
+  _genData = new RooDataSet(name.Data(), title.Data(), *_theEvent);
 
   // Perform any subclass implementation-specific initialization
   initGenerator(*_theEvent);
-
+  
   // Loop over the events to generate
-  for(Int_t evt= 0; evt < nEvents; evt++) {
-
+  Int_t evt(0) ;
+  while(_genData->numEntries()<nEvents) {
+    
     // first, load values from the prototype dataset, if one was provided
     if(0 != _prototype) {
       if(_nextProtoIndex >= _prototype->numEntries()) _nextProtoIndex= 0;
@@ -208,12 +212,16 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents)
     }
 
     // delegate the generation of the rest of this event to our subclass implementation
-    generateEvent(*_theEvent, nEvents - evt);
+    generateEvent(*_theEvent, nEvents - _genData->numEntries());
 
-    data->add(*_theEvent);
+    _genData->addFast(*_theEvent);
+    evt++ ;
   }
-  
-  return data;
+
+  RooDataSet* output = _genData ;
+  _genData = 0 ;
+
+  return output;
 }
 
 
@@ -313,6 +321,36 @@ void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
     }
   }
 }
+
+
+
+
+//_____________________________________________________________________________
+void RooAbsGenContext::resampleData(Double_t& ratio) 
+{
+  // Rescale existing output buffer with given ratio
+
+
+  Int_t nOrig = _genData->numEntries() ;
+  Int_t nTarg = Int_t(nOrig*ratio+0.5) ;
+  RooDataSet* trimmedData = (RooDataSet*) _genData->reduce(RooFit::EventRange(0,nTarg)) ;
+
+  cxcoutD(Generation) << "RooGenContext::resampleData*( existing production trimmed from " << nOrig << " to " << trimmedData->numEntries() << " events" << endl ;
+
+  delete _genData ;
+  _genData = trimmedData ;
+
+  if (_prototype) {
+    // Push back proto index by trimmed amount to force recycling of the
+    // proto entries that were trimmed away
+    _nextProtoIndex -= (nOrig-nTarg) ;
+    while (_nextProtoIndex<0) {
+      _nextProtoIndex += _prototype->numEntries() ;
+    }
+  }  
+
+}
+
 
 
 

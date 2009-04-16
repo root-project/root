@@ -227,7 +227,7 @@ RooIntegrator1D::~RooIntegrator1D()
 
 
 //_____________________________________________________________________________
-Bool_t RooIntegrator1D::setLimits(Double_t xmin, Double_t xmax) 
+Bool_t RooIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax) 
 {
   // Change our integration limits. Return kTRUE if the new limits are
   // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
@@ -237,8 +237,8 @@ Bool_t RooIntegrator1D::setLimits(Double_t xmin, Double_t xmax)
     oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
   }
-  _xmin= xmin;
-  _xmax= xmax;
+  _xmin= *xmin;
+  _xmax= *xmax;
   return checkLimits();
 }
 
@@ -332,7 +332,7 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
   for(j= 1; j <= _maxSteps; j++) {
     ooccoutW((TObject*)0,Integration) << "   [" << j << "] h = " << _h[j] << " , s = " << _s[j] << endl;
   }
-  return 0;
+  return _s[_maxSteps] ;
 }
 
 

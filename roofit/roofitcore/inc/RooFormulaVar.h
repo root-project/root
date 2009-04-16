@@ -50,6 +50,7 @@ public:
 
   // Printing interface (human readable)
   virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const ;
+  void printMetaArgs(ostream& os) const ;
 
   // Debugging
   void dumpFormula() { formula().dump() ; }

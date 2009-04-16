@@ -165,7 +165,7 @@ RooGaussKronrodIntegrator1D::~RooGaussKronrodIntegrator1D()
 
 
 //_____________________________________________________________________________
-Bool_t RooGaussKronrodIntegrator1D::setLimits(Double_t xmin, Double_t xmax) 
+Bool_t RooGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax) 
 {
   // Change our integration limits. Return kTRUE if the new limits are
   // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
@@ -175,8 +175,8 @@ Bool_t RooGaussKronrodIntegrator1D::setLimits(Double_t xmin, Double_t xmax)
     oocoutE((TObject*)0,Eval) << "RooGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
   }
-  _xmin= xmin;
-  _xmax= xmax;
+  _xmin= *xmin;
+  _xmax= *xmax;
   return checkLimits();
 }
 

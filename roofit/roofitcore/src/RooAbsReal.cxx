@@ -62,9 +62,19 @@
 #include "RooGlobalFunc.h"
 #include "RooParamBinning.h"
 #include "RooProfileLL.h"
+#include "RooFunctor.h"
+#include "RooDerivative.h"
+#include "RooGenFunction.h"
+#include "RooMultiGenFunction.h"
+#include "RooCmdConfig.h"
+#include "RooXYChi2Var.h"
+#include "RooMinuit.h"
+#include "RooChi2Var.h"
 
 #include "Riostream.h"
 
+#include "Math/IFunction.h"
+#include "TMath.h"
 #include "TObjString.h"
 #include "TTree.h"
 #include "TH1.h"
@@ -73,6 +83,9 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 #include "TAttLine.h"
+#include "TF1.h"
+#include "TF2.h"
+#include "TF3.h"
 
 #include <sstream>
 
@@ -229,6 +242,11 @@ Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
   // Calculate current value of object, with error tracing wrapper
 
   Double_t value = evaluate() ;
+
+  if (TMath::IsNaN(value)) {
+    logEvalError("function value is NAN") ;
+  }
+
   cxcoutD(Tracing) << "RooAbsReal::getVal(" << GetName() << ") operMode = " << _operMode << " recalculated, new value = " << value << endl ;
   
   //Standard tracing code goes here
@@ -463,6 +481,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg ar
 
 
 
+//_____________________________________________________________________________
 RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset, 
 				       const RooNumIntConfig* cfg, const char* rangeName) const 
 {
@@ -653,11 +672,15 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
 {
   // Construct string with unique suffix name to give to integral object that encodes
   // integrated observables, normalization observables and the integration range name
-
+  
   TString name ;
   if (iset.getSize()>0) {
+
+    RooArgSet isetTmp(iset) ;
+    isetTmp.sort() ;  
+
     name.Append("_Int[") ;
-    TIterator* iter = iset.createIterator() ;
+    TIterator* iter = isetTmp.createIterator() ;
     RooAbsArg* arg ;
     Bool_t first(kTRUE) ;
     while((arg=(RooAbsArg*)iter->Next())) {
@@ -679,9 +702,13 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
   }
 
   if (nset && nset->getSize()>0 ) {
+
+    RooArgSet nsetTmp(*nset) ;
+    nsetTmp.sort() ;
+
     name.Append("_Norm[") ;
     Bool_t first(kTRUE); 
-    TIterator* iter  = nset->createIterator() ;
+    TIterator* iter  = nsetTmp.createIterator() ;
     RooAbsArg* arg ;
     while((arg=(RooAbsArg*)iter->Next())) {
       if (first) {
@@ -2374,7 +2401,10 @@ RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, B
   return binding;
 }
 
-void RooAbsReal::copyCache(const RooAbsArg* source) 
+
+
+//_____________________________________________________________________________
+void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/) 
 {
   // Copy the cached value of another RooAbsArg to our cache.
   // Warning: This function copies the cached values of source,
@@ -2400,6 +2430,7 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
 
 
 
+//_____________________________________________________________________________
 void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 {
   // Attach object to a branch of given TTree. By default it will
@@ -2471,7 +2502,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 
     TString format(cleanName);
     format.Append("/D");
-    branch = t.Branch(cleanName, &_value, (const char*)format, bufSize);
+    branch = t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
     branch->SetCompressionLevel(1) ;
     //      cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree " << (void*)&t << endl ;
   }
@@ -2667,10 +2698,26 @@ RooNumIntConfig* RooAbsReal::defaultIntegratorConfig()
 
 
 //_____________________________________________________________________________
-RooNumIntConfig* RooAbsReal::specialIntegratorConfig() const 
+RooNumIntConfig* RooAbsReal::specialIntegratorConfig() const
 {
   // Returns the specialized integrator configuration for _this_ RooAbsReal.
-  // If this object has no specialized configuration, a null pointer is returned
+  // If this object has no specialized configuration, a null pointer is returned.
+
+  return _specIntegratorConfig ;
+}
+ 
+
+//_____________________________________________________________________________
+RooNumIntConfig* RooAbsReal::specialIntegratorConfig(Bool_t createOnTheFly) 
+{
+  // Returns the specialized integrator configuration for _this_ RooAbsReal.
+  // If this object has no specialized configuration, a null pointer is returned,
+  // unless createOnTheFly is kTRUE in which case a clone of the default integrator
+  // configuration is created, installed as specialized configuration, and returned
+
+  if (!_specIntegratorConfig && createOnTheFly) {
+    _specIntegratorConfig = new RooNumIntConfig(*defaultIntegratorConfig()) ;
+  }
   return _specIntegratorConfig ;
 }
 
@@ -2684,6 +2731,19 @@ const RooNumIntConfig* RooAbsReal::getIntegratorConfig() const
   // is returned, otherwise the default configuration for all RooAbsReals is returned
 
   const RooNumIntConfig* config = specialIntegratorConfig() ;
+  if (config) return config ;
+  return defaultIntegratorConfig() ;
+}
+
+
+//_____________________________________________________________________________
+RooNumIntConfig* RooAbsReal::getIntegratorConfig() 
+{
+  // Return the numeric integration configuration used for this object. If
+  // a specialized configuration was associated with this object, that configuration
+  // is returned, otherwise the default configuration for all RooAbsReals is returned
+
+  RooNumIntConfig* config = specialIntegratorConfig() ;
   if (config) return config ;
   return defaultIntegratorConfig() ;
 }
@@ -2764,7 +2824,7 @@ Int_t RooAbsReal::getMaxVal(const RooArgSet& /*vars*/) const
 
 
 //_____________________________________________________________________________
-Double_t RooAbsReal::maxVal(Int_t /*code*/) 
+Double_t RooAbsReal::maxVal(Int_t /*code*/) const
 {
   // Return maximum value for set of observables identified by code assigned
   // in getMaxVal
@@ -2801,8 +2861,8 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
     ostringstream oss ;
     Bool_t first(kTRUE) ;
     for (Int_t i=0 ; i<numProxies() ; i++) {
-      RooAbsProxy* p = getProxy(i) ;
-      if (p->name()[0]=='!') continue ;
+      //RooAbsProxy* p = getProxy(i) ;
+      //if (p->name()[0]=='!') continue ;
       if (first) {
 	first=kFALSE ;
       } else {
@@ -3158,4 +3218,536 @@ RooAbsReal* RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset
 
   return cdf ;
 }
+
+
+//_____________________________________________________________________________
+RooFunctor* RooAbsReal::functor(const RooArgList& obs, const RooArgList& pars, const RooArgSet& nset) const 
+{
+  // Return a RooFunctor object bound to this RooAbsReal with given definition of observables
+  // and parameters
+
+  RooArgSet* realObs = getObservables(obs) ;
+  if (realObs->getSize() != obs.getSize()) {
+    coutE(InputArguments) << "RooAbsReal::functor(" << GetName() << ") ERROR: one or more specified observables are not variables of this p.d.f" << endl ;
+    delete realObs ;
+    return 0 ;
+  }
+  RooArgSet* realPars = getObservables(pars) ;
+  if (realPars->getSize() != pars.getSize()) {
+    coutE(InputArguments) << "RooAbsReal::functor(" << GetName() << ") ERROR: one or more specified parameters are not variables of this p.d.f" << endl ;
+    delete realPars ;
+    return 0 ;
+  }
+  delete realObs ;
+  delete realPars ;
+    
+  return new RooFunctor(*this,obs,pars,nset) ;
+}
+
+
+
+//_____________________________________________________________________________
+TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooArgSet& nset) const 
+{
+  // Return a ROOT TF1,2,3 object bound to this RooAbsReal with given definition of observables
+  // and parameters
+
+  // Check that specified input are indeed variables of this function
+  RooArgSet* realObs = getObservables(obs) ;
+  if (realObs->getSize() != obs.getSize()) {
+    coutE(InputArguments) << "RooAbsReal::functor(" << GetName() << ") ERROR: one or more specified observables are not variables of this p.d.f" << endl ;
+    delete realObs ;
+    return 0 ;
+  }
+  RooArgSet* realPars = getObservables(pars) ;
+  if (realPars->getSize() != pars.getSize()) {
+    coutE(InputArguments) << "RooAbsReal::functor(" << GetName() << ") ERROR: one or more specified parameters are not variables of this p.d.f" << endl ;
+    delete realPars ;
+    return 0 ;
+  }
+  delete realObs ;
+  delete realPars ;
+  
+  // Check that all obs and par are of type RooRealVar
+  for (int i=0 ; i<obs.getSize() ; i++) {
+    if (dynamic_cast<RooRealVar*>(obs.at(i))==0) {
+      coutE(ObjectHandling) << "RooAbsReal::asTF(" << GetName() << ") ERROR: proposed observable " << obs.at(0)->GetName() << " is not of type RooRealVar" << endl ;
+      return 0 ;
+    }
+  }
+  for (int i=0 ; i<pars.getSize() ; i++) {
+    if (dynamic_cast<RooRealVar*>(pars.at(i))==0) {
+      coutE(ObjectHandling) << "RooAbsReal::asTF(" << GetName() << ") ERROR: proposed parameter " << pars.at(0)->GetName() << " is not of type RooRealVar" << endl ;
+      return 0 ;
+    }
+  }
+  
+  // Create functor and TFx of matching dimension
+  TF1* tf=0 ;
+  RooFunctor* f ;
+  switch(obs.getSize()) {
+  case 1: {
+    RooRealVar* x = (RooRealVar*)obs.at(0) ;
+    f = functor(obs,pars,nset) ;
+    tf = new TF1(GetName(),f,x->getMin(),x->getMax(),pars.getSize(),"RooFunctor") ;
+    break ;
+  }
+  case 2: {
+    RooRealVar* x = (RooRealVar*)obs.at(0) ;
+    RooRealVar* y = (RooRealVar*)obs.at(1) ;
+    f = functor(obs,pars,nset) ;
+    tf = new TF2(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),pars.getSize(),"RooFunctor") ;
+    break ;
+  }
+  case 3: {
+    RooRealVar* x = (RooRealVar*)obs.at(0) ;
+    RooRealVar* y = (RooRealVar*)obs.at(1) ;
+    RooRealVar* z = (RooRealVar*)obs.at(2) ;
+    f = functor(obs,pars,nset) ;
+    tf = new TF3(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),z->getMin(),z->getMax(),pars.getSize(),"RooFunctor") ;
+    break ;
+  }
+  default:
+    coutE(InputArguments) << "RooAbsReal::asTF(" << GetName() << ") ERROR: " << obs.getSize() 
+			  << " observables specified, but a ROOT TFx can only have  1,2 or3 observables" << endl ;
+    return 0 ;
+  }
+
+  // Set initial parameter values of TFx to those of RooRealVars
+  for (int i=0 ; i<pars.getSize() ; i++) {
+    RooRealVar* p = (RooRealVar*) pars.at(i) ;
+    tf->SetParameter(i,p->getVal()) ;
+  }
+
+  return tf ;
+}
+
+
+//_____________________________________________________________________________
+RooAbsReal* RooAbsReal::derivative(RooRealVar& obs, Int_t order, Double_t eps) 
+{
+  // Return function representing first, second or third order derivative of this function
+  string name=Form("%s_DERIV_%s",GetName(),obs.GetName()) ;
+  string title=Form("Derivative of %s w.r.t %s ",GetName(),obs.GetName()) ;
+  return new RooDerivative(name.c_str(),title.c_str(),*this,obs,order,eps) ;
+}
+
+
+
+
+//_____________________________________________________________________________
+RooGenFunction* RooAbsReal::iGenFunction(RooRealVar& x, const RooArgSet& nset) 
+{
+  return new RooGenFunction(*this,x,RooArgList(),nset.getSize()>0?nset:RooArgSet(x)) ;
+}
+
+
+
+//_____________________________________________________________________________
+RooMultiGenFunction* RooAbsReal::iGenFunction(const RooArgSet& observables, const RooArgSet& nset) 
+{
+  return new RooMultiGenFunction(*this,observables,RooArgList(),nset.getSize()>0?nset:observables) ;
+}
+
+
+
+
+//_____________________________________________________________________________
+RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, RooCmdArg arg1,  RooCmdArg arg2,  
+				    RooCmdArg arg3,  RooCmdArg arg4, RooCmdArg arg5,  
+				    RooCmdArg arg6,  RooCmdArg arg7, RooCmdArg arg8) 
+{  
+  // Perform a chi^2 fit to given histogram By default the fit is executed through the MINUIT
+  // commands MIGRAD, HESSE in succession
+  //
+  // The following named arguments are supported
+  //
+  // Options to control construction of -log(L)
+  // ------------------------------------------
+  // Range(const char* name)         -- Fit only data inside range with given name
+  // Range(Double_t lo, Double_t hi) -- Fit only data inside given range. A range named "fit" is created on the fly on all observables.
+  //                                    Multiple comma separated range names can be specified.
+  // NumCPU(int num)                 -- Parallelize NLL calculation on num CPUs
+  // Optimize(Bool_t flag)           -- Activate constant term optimization (on by default)
+  //
+  // Options to control flow of fit procedure
+  // ----------------------------------------
+  // InitialHesse(Bool_t flag)      -- Flag controls if HESSE before MIGRAD as well, off by default
+  // Hesse(Bool_t flag)             -- Flag controls if HESSE is run after MIGRAD, on by default
+  // Minos(Bool_t flag)             -- Flag controls if MINOS is run after HESSE, on by default
+  // Minos(const RooArgSet& set)    -- Only run MINOS on given subset of arguments
+  // Save(Bool_t flag)              -- Flac controls if RooFitResult object is produced and returned, off by default
+  // Strategy(Int_t flag)           -- Set Minuit strategy (0 through 2, default is 1)
+  // FitOptions(const char* optStr) -- Steer fit with classic options string (for backward compatibility). Use of this option
+  //                                   excludes use of any of the new style steering options.
+  //
+  // Options to control informational output
+  // ---------------------------------------
+  // Verbose(Bool_t flag)           -- Flag controls if verbose output is printed (NLL, parameter changes during fit
+  // Timer(Bool_t flag)             -- Time CPU and wall clock consumption of fit steps, off by default
+  // PrintLevel(Int_t level)        -- Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational 
+  //                                   messages are suppressed as well
+  // Warnings(Bool_t flag)          -- Enable or disable MINUIT warnings (enabled by default)
+  // PrintEvalErrors(Int_t numErr)  -- Control number of p.d.f evaluation errors printed per likelihood evaluation. A negative
+  //                                   value suppress output completely, a zero value will only print the error count per p.d.f component,
+  //                                   a positive value is will print details of each error up to numErr messages per p.d.f component.
+  // 
+  // 
+  
+  RooLinkedList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  return chi2FitTo(data,l) ;
+  
+}
+
+
+
+//_____________________________________________________________________________
+RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) 
+{
+  // Internal back-end function to steer chi2 fits
+
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::chi2FitTo(%s)",GetName())) ;
+
+  // Pull arguments to be passed to chi2 construction from list
+  RooLinkedList fitCmdList(cmdList) ;
+  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize") ;
+
+  RooAbsReal* chi2 = createChi2(data,chi2CmdList) ;
+  RooFitResult* ret = chi2FitDriver(*chi2,fitCmdList) ;
+  
+  // Cleanup
+  delete chi2 ;
+  return ret ;
+}
+
+
+
+
+//_____________________________________________________________________________
+RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, RooCmdArg arg1,  RooCmdArg arg2,  
+				   RooCmdArg arg3,  RooCmdArg arg4, RooCmdArg arg5,  
+				   RooCmdArg arg6,  RooCmdArg arg7, RooCmdArg arg8) 
+{
+  // Create a chi-2 from a histogram and this function.
+  //
+  // The following named arguments are supported
+  //
+  //  Options to control construction of the chi^2
+  //  ------------------------------------------
+  //  DataError(RooAbsData::ErrorType)  -- Choose between Poisson errors and Sum-of-weights errors
+  //  NumCPU(Int_t)                     -- Activate parallel processing feature on N processes
+  //  Range()                           -- Calculate Chi2 only in selected region
+
+  string name = Form("chi2_%s_%s",GetName(),data.GetName()) ;
+ 
+  return new RooChi2Var(name.c_str(),name.c_str(),*this,data,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+}
+
+
+
+
+//_____________________________________________________________________________
+RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList) 
+{
+  // Internal back-end function to create a chi2
+
+  // Fill array of commands
+  const RooCmdArg* cmds[8] ;
+  TIterator* iter = cmdList.MakeIterator() ;
+  Int_t i(0) ;
+  RooCmdArg* arg ;
+  while((arg=(RooCmdArg*)iter->Next())) {
+    cmds[i++] = arg ;
+  }
+  for (;i<8 ; i++) {
+    cmds[i++] = &RooCmdArg::none() ;
+  }
+  delete iter ;
+  
+  // Construct chi2
+  string name = Form("chi2_%s_%s",GetName(),data.GetName()) ;
+  return new RooChi2Var(name.c_str(),name.c_str(),*this,data,*cmds[0],*cmds[1],*cmds[2],*cmds[3],*cmds[4],*cmds[5],*cmds[6],*cmds[7]) ;
+  
+}
+
+
+
+
+
+//_____________________________________________________________________________
+RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, RooCmdArg arg1,  RooCmdArg arg2,  
+				      RooCmdArg arg3,  RooCmdArg arg4, RooCmdArg arg5,  
+				      RooCmdArg arg6,  RooCmdArg arg7, RooCmdArg arg8) 
+{
+  // Create a chi-2 from a series of x and y value stored in a dataset.
+  // The y values can either be the event weights, or can be another column designated
+  // by the YVar() argument. The y value must have errors defined for the chi-2 to
+  // be well defined.
+  //
+  // The following named arguments are supported
+  //
+  // Options to control construction of the chi^2
+  // ------------------------------------------
+  // YVar(RooRealVar& yvar)          -- Designate given column in dataset as Y value 
+  // Integrate(Bool_t flag)          -- Integrate function over range specified by X errors
+  //                                    rather than take value at bin center.
+  //
+  // Options to control flow of fit procedure
+  // ----------------------------------------
+  // InitialHesse(Bool_t flag)      -- Flag controls if HESSE before MIGRAD as well, off by default
+  // Hesse(Bool_t flag)             -- Flag controls if HESSE is run after MIGRAD, on by default
+  // Minos(Bool_t flag)             -- Flag controls if MINOS is run after HESSE, on by default
+  // Minos(const RooArgSet& set)    -- Only run MINOS on given subset of arguments
+  // Save(Bool_t flag)              -- Flac controls if RooFitResult object is produced and returned, off by default
+  // Strategy(Int_t flag)           -- Set Minuit strategy (0 through 2, default is 1)
+  // FitOptions(const char* optStr) -- Steer fit with classic options string (for backward compatibility). Use of this option
+  //                                   excludes use of any of the new style steering options.
+  //
+  // Options to control informational output
+  // ---------------------------------------
+  // Verbose(Bool_t flag)           -- Flag controls if verbose output is printed (NLL, parameter changes during fit
+  // Timer(Bool_t flag)             -- Time CPU and wall clock consumption of fit steps, off by default
+  // PrintLevel(Int_t level)        -- Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational 
+  //                                   messages are suppressed as well
+  // Warnings(Bool_t flag)          -- Enable or disable MINUIT warnings (enabled by default)
+  // PrintEvalErrors(Int_t numErr)  -- Control number of p.d.f evaluation errors printed per likelihood evaluation. A negative
+  //                                   value suppress output completely, a zero value will only print the error count per p.d.f component,
+  //                                   a positive value is will print details of each error up to numErr messages per p.d.f component.
+
+  RooLinkedList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  return chi2FitTo(xydata,l) ;  
+}
+
+
+
+
+//_____________________________________________________________________________
+RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) 
+{  
+  // Internal back-end function to steer chi2 fits
+  
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::chi2FitTo(%s)",GetName())) ;
+
+  // Pull arguments to be passed to chi2 construction from list
+  RooLinkedList fitCmdList(cmdList) ;
+  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"YVar,Integrate") ;
+
+  RooAbsReal* xychi2 = createChi2(xydata,chi2CmdList) ;
+  RooFitResult* ret = chi2FitDriver(*xychi2,fitCmdList) ;
+  
+  // Cleanup
+  delete xychi2 ;
+  return ret ;
+}
+
+
+
+
+//_____________________________________________________________________________
+RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, RooCmdArg arg1,  RooCmdArg arg2,  
+				     RooCmdArg arg3,  RooCmdArg arg4, RooCmdArg arg5,  
+				     RooCmdArg arg6,  RooCmdArg arg7, RooCmdArg arg8) 
+{
+  // Create a chi-2 from a series of x and y value stored in a dataset.
+  // The y values can either be the event weights (default), or can be another column designated
+  // by the YVar() argument. The y value must have errors defined for the chi-2 to
+  // be well defined. 
+  //
+  // The following named arguments are supported
+  //
+  // Options to control construction of the chi^2
+  // ------------------------------------------
+  // YVar(RooRealVar& yvar)          -- Designate given column in dataset as Y value 
+  // Integrate(Bool_t flag)          -- Integrate function over range specified by X errors
+  //                                    rather than take value at bin center.
+  // 
+  
+  RooLinkedList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  return createChi2(data,l) ;
+}
+
+
+
+//_____________________________________________________________________________
+RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList) 
+{
+  // Internal back-end function to create a chi^2 from a function and a dataset
+
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
+
+  pc.defineInt("integrate","Integrate",0,0) ;
+  pc.defineObject("yvar","YVar",0,0) ;
+  
+  // Process and check varargs 
+  pc.process(cmdList) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Decode command line arguments 
+  Bool_t integrate = pc.getInt("integrate") ;
+  RooRealVar* yvar = (RooRealVar*) pc.getObject("yvar") ;
+
+  string name = Form("chi2_%s_%s",GetName(),data.GetName()) ;
+ 
+  if (yvar) {
+    return new RooXYChi2Var(name.c_str(),name.c_str(),*this,data,*yvar,integrate) ;
+  } else {
+    return new RooXYChi2Var(name.c_str(),name.c_str(),*this,data,integrate) ;
+  }  
+}
+
+
+
+
+
+
+//_____________________________________________________________________________
+RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList) 
+{
+  // Internal driver function for chi2 fits
+
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::chi2FitDriver(%s)",GetName())) ;
+
+  pc.defineString("fitOpt","FitOptions",0,"") ;
+
+  pc.defineInt("optConst","Optimize",0,1) ;
+  pc.defineInt("verbose","Verbose",0,0) ;
+  pc.defineInt("doSave","Save",0,0) ;
+  pc.defineInt("doTimer","Timer",0,0) ;
+  pc.defineInt("plevel","PrintLevel",0,1) ;
+  pc.defineInt("strat","Strategy",0,1) ;
+  pc.defineInt("initHesse","InitialHesse",0,0) ;
+  pc.defineInt("hesse","Hesse",0,1) ;
+  pc.defineInt("minos","Minos",0,0) ;
+  pc.defineInt("ext","Extended",0,2) ;
+  pc.defineInt("numee","PrintEvalErrors",0,10) ;
+  pc.defineInt("doWarn","Warnings",0,1) ;
+  pc.defineObject("minosSet","Minos",0,0) ;
+
+  pc.defineMutex("FitOptions","Verbose") ;
+  pc.defineMutex("FitOptions","Save") ;
+  pc.defineMutex("FitOptions","Timer") ;
+  pc.defineMutex("FitOptions","Strategy") ;
+  pc.defineMutex("FitOptions","InitialHesse") ;
+  pc.defineMutex("FitOptions","Hesse") ;
+  pc.defineMutex("FitOptions","Minos") ;
+  
+  // Process and check varargs 
+  pc.process(cmdList) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Decode command line arguments
+  const char* fitOpt = pc.getString("fitOpt",0,kTRUE) ;
+  Int_t optConst = pc.getInt("optConst") ;
+  Int_t verbose  = pc.getInt("verbose") ;
+  Int_t doSave   = pc.getInt("doSave") ;
+  Int_t doTimer  = pc.getInt("doTimer") ;
+  Int_t plevel    = pc.getInt("plevel") ;
+  Int_t strat    = pc.getInt("strat") ;
+  Int_t initHesse= pc.getInt("initHesse") ;
+  Int_t hesse    = pc.getInt("hesse") ;
+  Int_t minos    = pc.getInt("minos") ;
+  Int_t numee    = pc.getInt("numee") ;
+  Int_t doWarn   = pc.getInt("doWarn") ;
+  const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
+
+  // Instantiate MINUIT
+  RooMinuit m(fcn) ;
+
+  if (doWarn==0) {
+    m.setNoWarn() ;
+  }
+  
+  m.setPrintEvalErrors(numee) ;
+  if (plevel!=1) {
+    m.setPrintLevel(plevel) ;
+  }
+
+  if (optConst) {
+    // Activate constant term optimization
+    m.optimizeConst(1) ;
+  }
+
+  RooFitResult *ret = 0 ;
+
+  if (fitOpt) {
+
+    // Play fit options as historically defined
+    ret = m.fit(fitOpt) ;
+    
+  } else {
+
+    if (verbose) {
+      // Activate verbose options
+      m.setVerbose(1) ;
+    }
+    if (doTimer) {
+      // Activate timer options
+      m.setProfile(1) ;
+    }
+    
+    if (strat!=1) {
+      // Modify fit strategy
+      m.setStrategy(strat) ;
+    }
+
+    if (initHesse) {
+      // Initialize errors with hesse
+      m.hesse() ;
+    }
+
+    // Minimize using migrad
+    m.migrad() ;
+
+    if (hesse) {
+      // Evaluate errors with Hesse
+      m.hesse() ;
+    }
+
+    if (minos) {
+      // Evaluate errs with Minos
+      if (minosSet) {
+	m.minos(*minosSet) ;
+      } else {
+	m.minos() ;
+      }
+    }
+
+    // Optionally return fit result
+    if (doSave) {
+      string name = Form("fitresult_%s",fcn.GetName()) ;
+      string title = Form("Result of fit of %s ",GetName()) ;
+      ret = m.save(name.c_str(),title.c_str()) ;
+    } 
+
+  }
+  
+  // Cleanup
+  return ret ;
+
+}
+
+
+
+
+
 

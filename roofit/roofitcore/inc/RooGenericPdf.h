@@ -25,9 +25,9 @@ class RooArgList ;
 class RooGenericPdf : public RooAbsPdf {
 public:
   // Constructors, assignment etc
-  inline RooGenericPdf() { }
-  RooGenericPdf(const char *name, const char *title, const RooArgList& dependents);
+  inline RooGenericPdf() : _formula(0) { }
   RooGenericPdf(const char *name, const char *title, const char* formula, const RooArgList& dependents);
+  RooGenericPdf(const char *name, const char *title, const RooArgList& dependents);
   RooGenericPdf(const RooGenericPdf& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooGenericPdf(*this,newname); }
   virtual ~RooGenericPdf();
@@ -38,11 +38,14 @@ public:
 
   // Printing interface (human readable)
   void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMetaArgs(ostream& os) const ;
 
   // Debugging
-  void dumpFormula() { _formula.dump() ; }
+  void dumpFormula() { formula().dump() ; }
 
 protected:
+
+  RooFormula& formula() const ;
 
   // Function evaluation
   RooListProxy _actualVars ; 
@@ -55,7 +58,8 @@ protected:
 
   virtual Bool_t isValidReal(Double_t value, Bool_t printError) const ;
 
-  mutable RooFormula _formula ; // Formula engine 
+  mutable RooFormula* _formula ; //! Formula engine 
+  TString _formExpr ;            // Formula expression string
 
   ClassDef(RooGenericPdf,1) // Generic PDF defined by string expression and list of variables
 };

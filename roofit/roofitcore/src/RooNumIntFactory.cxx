@@ -46,6 +46,7 @@
 #include "RooMCIntegrator.h"
 #include "RooGaussKronrodIntegrator1D.h"
 #include "RooAdaptiveGaussKronrodIntegrator1D.h"
+#include "RooAdaptiveIntegratorND.h"
 #include "RooSentinel.h"
 
 #include "RooMsgService.h"
@@ -65,6 +66,8 @@ RooNumIntFactory::RooNumIntFactory()
   // Constructor. Register all known integrators by calling
   // their static registration functions
 
+  _instance = this ;
+
   RooIntegrator1D::registerIntegrator(*this) ;
   RooIntegrator2D::registerIntegrator(*this) ;
   RooSegmentedIntegrator1D::registerIntegrator(*this) ;
@@ -73,6 +76,13 @@ RooNumIntFactory::RooNumIntFactory()
   RooMCIntegrator::registerIntegrator(*this) ;
   RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(*this) ;
   RooGaussKronrodIntegrator1D::registerIntegrator(*this) ;  
+  RooAdaptiveIntegratorND::registerIntegrator(*this) ;
+
+  RooNumIntConfig::defaultConfig().method1D().setLabel("RooIntegrator1D") ;
+  RooNumIntConfig::defaultConfig().method1DOpen().setLabel("RooImproperIntegrator1D") ;
+  RooNumIntConfig::defaultConfig().method2D().setLabel("RooAdaptiveIntegratorND") ;
+  RooNumIntConfig::defaultConfig().methodND().setLabel("RooAdaptiveIntegratorND") ;
+  
 }
 
 
@@ -104,7 +114,7 @@ RooNumIntFactory& RooNumIntFactory::instance()
   // Static method returning reference to singleton instance of factory
 
   if (_instance==0) {
-    _instance = new RooNumIntFactory ;
+    new RooNumIntFactory ;
     RooSentinel::activate() ;
   } 
   return *_instance ;

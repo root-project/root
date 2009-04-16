@@ -25,6 +25,8 @@
 #include "RooObjCacheManager.h"
 #include "RooAbsCacheElement.h"
 #include "RooArgList.h"
+#include <map>
+#include <string>
 class RooAbsCategoryLValue ;
 class RooFitResult ;
 class RooPlot ;
@@ -37,6 +39,7 @@ public:
   // Constructors, assignment etc
   inline RooSimultaneous() : _plotCoefNormRange(0) { }
   RooSimultaneous(const char *name, const char *title, RooAbsCategoryLValue& indexCat) ;
+  RooSimultaneous(const char *name, const char *title, std::map<std::string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) ;
   RooSimultaneous(const char *name, const char *title, const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const RooSimultaneous& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooSimultaneous(*this,newname) ; }
@@ -76,10 +79,11 @@ public:
 			  Double_t rangeLo=0, Double_t rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
   
   RooAbsPdf* getPdf(const char* catName) const ;
-  const RooAbsCategory& indexCat() const { return _indexCat.arg() ; }
+  const RooAbsCategoryLValue& indexCat() const { return (RooAbsCategoryLValue&) _indexCat.arg() ; }
   
 protected:
 
+  void initialize(RooAbsCategoryLValue& inIndexCat, std::map<std::string,RooAbsPdf*> pdfMap) ;
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;

@@ -32,6 +32,7 @@
 #include "RooCmdArg.h"
 #include "RooCmdArg.h"
 #include "Riostream.h"
+#include "RooArgSet.h"
 #include <string>
 
 ClassImp(RooCmdArg)
@@ -53,13 +54,14 @@ RooCmdArg::RooCmdArg() : TNamed("","")
 {
   // Default constructor
   _procSubArgs = kFALSE ;
+  _c = 0 ;
 }
 
 
 //_____________________________________________________________________________
 RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t d2, 
 		     const char* s1, const char* s2, const TObject* o1, const TObject* o2, 
-		     const RooCmdArg* ca, const char* s3) :
+		     const RooCmdArg* ca, const char* s3, const RooArgSet* c1, const RooArgSet* c2) :
   TNamed(name,name)
 {
   // Constructor with full specification of payload: two integers, two doubles,
@@ -74,6 +76,12 @@ RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t
   _s[2] = s3 ;
   _o[0] = (TObject*) o1 ;
   _o[1] = (TObject*) o2 ;
+  _c = 0 ;
+
+  if (c1||c2) _c = new RooArgSet[2] ;
+  if (c1) _c[0].add(*c1) ;
+  if (c2) _c[1].add(*c1) ;
+
   _procSubArgs = kTRUE ;
   if (ca) {
     _argList.Add(new RooCmdArg(*ca)) ;
@@ -97,6 +105,14 @@ RooCmdArg::RooCmdArg(const RooCmdArg& other) :
   _s[2] = other._s[2] ;
   _o[0] = other._o[0] ;
   _o[1] = other._o[1] ;
+  if (other._c) {
+    _c = new RooArgSet[2] ;
+    _c[0].add(other._c[0]) ;
+    _c[1].add(other._c[1]) ;
+  } else {
+    _c = 0 ;
+  }
+  
   _procSubArgs = other._procSubArgs ;
   for (Int_t i=0 ; i<other._argList.GetSize() ; i++) {
     _argList.Add(new RooCmdArg((RooCmdArg&)*other._argList.At(i))) ;
@@ -123,7 +139,12 @@ RooCmdArg& RooCmdArg::operator=(const RooCmdArg& other)
   _s[2] = other._s[2] ;
   _o[0] = other._o[0] ;
   _o[1] = other._o[1] ;
-
+  if (!_c) _c = new RooArgSet[2] ;
+  if (other._c) {
+    _c[0].removeAll() ; _c[0].add(other._c[0]) ;
+    _c[1].removeAll() ; _c[1].add(other._c[1]) ;
+  }
+  
   _procSubArgs = other._procSubArgs ;
 
   for (Int_t i=0 ; i<other._argList.GetSize() ; i++) {
@@ -140,6 +161,7 @@ RooCmdArg::~RooCmdArg()
 {
   // Destructor
   _argList.Delete() ;
+  if (_c) delete[] _c ;
 }
 
 
@@ -150,4 +172,24 @@ void RooCmdArg::addArg(const RooCmdArg& arg)
   // Utility function to add nested RooCmdArg to payload of this RooCmdArg
 
   _argList.Add(new RooCmdArg(arg)) ;
+}
+
+
+
+//_____________________________________________________________________________
+const RooArgSet* RooCmdArg::getSet(Int_t idx) const {
+  // Return RooArgSet stored in slot idx
+    return _c ? &_c[idx] : 0 ;
+  }
+
+
+
+//_____________________________________________________________________________
+void RooCmdArg::setSet(Int_t idx,const RooArgSet& set) 
+{
+  if (!_c) {
+    _c = new RooArgSet[2] ;
+  }
+    _c[idx].removeAll() ;
+    _c[idx].add(set) ;
 }

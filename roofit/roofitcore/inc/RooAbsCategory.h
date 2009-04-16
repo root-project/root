@@ -97,7 +97,7 @@ protected:
   virtual Bool_t isValid(RooCatType value) const ;
 
   virtual void syncCache(const RooArgSet* set=0) ;
-  virtual void copyCache(const RooAbsArg* source) ;
+  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
   virtual void fillTreeBranch(TTree& t) ;

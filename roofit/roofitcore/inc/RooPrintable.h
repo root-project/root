@@ -31,7 +31,7 @@ public:
   // New-style printing
 
   // Master print function
-  enum ContentsOption { kName=1, kClassName=2, kValue=4, kArgs=8, kExtras=16, kAddress=32, kTitle=64 } ; // Can be ORed
+  enum ContentsOption { kName=1, kClassName=2, kValue=4, kArgs=8, kExtras=16, kAddress=32, kTitle=64,  kCollectionHeader=128} ; // Can be ORed
   enum StyleOption { kInline=1, kSingleLine=2, kStandard=3, kVerbose=4, kTreeStructure=5 } ; // Exclusive
   virtual void printStream(ostream& os, Int_t contents, StyleOption style, TString indent="") const ;
   

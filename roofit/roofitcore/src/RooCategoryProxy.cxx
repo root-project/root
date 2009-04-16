@@ -29,11 +29,21 @@
 
 #include "RooFit.h"
 #include "Riostream.h"
-
+#include "RooArgSet.h"
 #include "RooCategoryProxy.h"
 
 ClassImp(RooCategoryProxy)
 ;
+
+
+//_____________________________________________________________________________
+RooCategoryProxy::RooCategoryProxy(const char* Name, const char* desc, RooAbsArg* owner,
+				   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
+  RooArgProxy(Name, desc, owner, valueServer, shapeServer, ownArg)
+{
+  // Constructor with owner and proxied category object
+}
+
 
 
 //_____________________________________________________________________________
@@ -78,3 +88,13 @@ RooAbsCategoryLValue* RooCategoryProxy::lvptr() const
   return Lvptr ;
 }
 
+
+
+//_____________________________________________________________________________
+Bool_t RooCategoryProxy::setArg(RooAbsCategory& newRef) 
+{
+  // Change object held in proxy into newRef
+
+  newRef.setAttribute(Form("ORIGNAME:%s",arg().GetName())) ;
+  return changePointer(RooArgSet(newRef),kTRUE) ;
+}

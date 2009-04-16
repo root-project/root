@@ -183,14 +183,24 @@ RooListProxy& RooListProxy::operator=(const RooArgList& other)
 
 
 //_____________________________________________________________________________
-Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange) 
+Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange, Bool_t factoryInitMode) 
 {
   // Internal function that implements consequences of a server redirect on the
   // owner. If the list contains any element with names identical to those in newServerList
   // replace them with the instance in newServerList
 
-  if (getSize()==0) return kTRUE ;
-
+  if (getSize()==0) {
+    if (factoryInitMode) {
+      TIterator* iter = newServerList.createIterator() ;
+      RooAbsArg* arg ;
+      while((arg=(RooAbsArg*)iter->Next())) {
+	add(*arg,kTRUE) ;
+      }
+      delete iter ;
+    } else {
+      return kTRUE ;	
+    }
+  }
   _iter->Reset() ;
   RooAbsArg* arg ;
   Bool_t error(kFALSE) ;

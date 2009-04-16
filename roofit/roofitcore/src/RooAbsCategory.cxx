@@ -493,7 +493,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
     TString format(idxName);
     format.Append("/I");
     void* ptr = &(_value._value) ;
-    branch = t.Branch(idxName, ptr, (const char*)format, bufSize);
+    branch = t.Branch(idxName, ptr, (const Text_t*)format, bufSize);
     branch->SetCompressionLevel(1) ;
   }
   
@@ -510,7 +510,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
     TString format(lblName);
     format.Append("/C");
     void* ptr = _value._label ;
-    branch = t.Branch(lblName, ptr, (const char*)format, bufSize);
+    branch = t.Branch(lblName, ptr, (const Text_t*)format, bufSize);
     branch->SetCompressionLevel(1) ;
   }
 
@@ -567,7 +567,7 @@ void RooAbsCategory::syncCache(const RooArgSet*)
 
 
 //_____________________________________________________________________________
-void RooAbsCategory::copyCache(const RooAbsArg* source) 
+void RooAbsCategory::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/) 
 {
   // Copy the cached value from given source and raise dirty flag.
   // It is the callers responsability to ensure that the sources

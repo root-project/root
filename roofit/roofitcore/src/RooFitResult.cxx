@@ -51,6 +51,8 @@
 #include "RooMsgService.h"
 #include "TH2D.h"
 #include "TText.h"
+#include "TMatrixDSym.h"
+#include "RooMultiVarGaussian.h"
 
 
 
@@ -61,7 +63,8 @@ ClassImp(RooFitResult)
 
 //_____________________________________________________________________________
 RooFitResult::RooFitResult(const char* name, const char* title) : 
-  TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0)
+  TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0),
+  _C(0), _V(0)
 {  
   // Constructor with name and title
 
@@ -80,7 +83,9 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   _minNLL(other._minNLL),
   _edm(other._edm),
   _randomPars(0),
-  _Lt(0)
+  _Lt(0),
+  _C(0),
+  _V(0)
 {
   // Copy constructor
 
@@ -109,6 +114,8 @@ RooFitResult::~RooFitResult()
   if (_globalCorr) delete _globalCorr;
   if (_randomPars) delete _randomPars;
   if (_Lt) delete _Lt;
+  if (_C) delete _C ;
+  if (_V) delete _V ;
 
   _corrMatrix.Delete();
 
@@ -452,10 +459,11 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbos
      << indent << "  RooFitResult: minimized FCN value: " << _minNLL << ", estimated distance to minimum: " << _edm << endl
      << indent << "                coviarance matrix quality: " ;
   switch(_covQual) {
-  case 0: os << "Not calculated at all" ; break ;
-  case 1: os << "Approximation only, not accurate" ; break ;
-  case 2: os << "Full matrix, but forced positive-definite" ; break ;
-  case 3: os << "Full, accurate covariance matrix" ; break ;
+  case -1 : os << "Unknown, matrix was externally provided" ; break ;
+  case 0  : os << "Not calculated at all" ; break ;
+  case 1  : os << "Approximation only, not accurate" ; break ;
+  case 2  : os << "Full matrix, but forced positive-definite" ; break ;
+  case 3  : os << "Full, accurate covariance matrix" ; break ;
   }
   os << endl 
      << endl ;
@@ -541,8 +549,8 @@ void RooFitResult::fillCorrMatrix()
   // fill the internal arrays.
 
   // Sanity check
-  if (gMinuit->fNpar <= 1) {
-    coutI(Minimization) << "RooFitResult::fillCorrMatrix: number of floating parameters <=1, correlation matrix not filled" << endl ;
+  if (gMinuit->fNpar < 1) {
+    coutI(Minimization) << "RooFitResult::fillCorrMatrix: number of floating parameters is zero, correlation matrix not filled" << endl ;
     return ;
   }
 
@@ -553,11 +561,17 @@ void RooFitResult::fillCorrMatrix()
 
   // Delete eventual prevous correlation data holders
   if (_globalCorr) delete _globalCorr ;
+  if (_C) delete _C ;
+  if (_V) delete _V ;
 
   _corrMatrix.Delete();
 
+
   // Build holding arrays for correlation coefficients
   _globalCorr = new RooArgList("globalCorrelations") ;
+  _C = new TMatrixDSym(_initPars->getSize()) ;
+  _V = new TMatrixDSym(_initPars->getSize()) ;
+
   TIterator* vIter = _initPars->createIterator() ;
   RooAbsArg* arg ;
   Int_t idx(0) ;
@@ -608,6 +622,7 @@ void RooFitResult::fillCorrMatrix()
   ncoef = (gMinuit->fNpagwd - 19) / 6;
   nparm = TMath::Min(gMinuit->fNpar,ncoef);
   RooRealVar* gcVal = 0;
+  Double_t tmp[1000] ;
   for (i = 1; i <= gMinuit->fNpar; ++i) {
     ix  = gMinuit->fNexofi[i-1];
     ndi = i*(i + 1) / 2;
@@ -617,6 +632,7 @@ void RooFitResult::fillCorrMatrix()
       ndex = m*(m-1) / 2 + n;
       ndj  = j*(j + 1) / 2;
       gMinuit->fMATUvline[j-1] = gMinuit->fVhmat[ndex-1] / TMath::Sqrt(TMath::Abs(gMinuit->fVhmat[ndi-1]*gMinuit->fVhmat[ndj-1]));
+      tmp[j-1] = gMinuit->fVhmat[ndex-1] ;
     }
     nparm = TMath::Min(gMinuit->fNpar,ncoef);
 
@@ -629,12 +645,19 @@ void RooFitResult::fillCorrMatrix()
     for (it = 1; it <= gMinuit->fNpar ; ++it) {
       RooRealVar* cVal = (RooRealVar*) cIter->Next() ;
       cVal->setVal(gMinuit->fMATUvline[it-1]) ;
+      (*_C)(i-1,it-1) = gMinuit->fMATUvline[it-1] ;
     }
     delete cIter ;
   }
 
   delete gcIter ;
   delete parIter ;
+
+  for (int ii=0 ; ii<_finalPars->getSize() ; ii++) {
+    for (int jj=0 ; jj<_finalPars->getSize() ; jj++) {
+      (*_V)(ii,jj) = (*_C)(ii,jj) * ((RooRealVar*)_finalPars->at(ii))->getError() * ((RooRealVar*)_finalPars->at(jj))->getError() ;
+    }
+  }
 } 
 
 
@@ -824,6 +847,40 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 
 
 //_____________________________________________________________________________
+void RooFitResult::setCovarianceMatrix(TMatrixDSym& V) 
+{
+  // Store externally provided correlation matrix in his RooFitResult ;
+
+  // Delete any previous matrices
+  if (_V) {
+    delete _V ;
+  }
+  if (_C) {
+    delete _C ;
+  }
+  
+  // Clone input covariance matrix ;
+  _V = (TMatrixDSym*) V.Clone() ;
+
+  // Now construct correlation matrix from it
+  _C = (TMatrixDSym*) _V->Clone() ;
+  for (Int_t i=0 ; i<_C->GetNrows() ; i++) {
+    for (Int_t j=0 ; j<_C->GetNcols() ; j++) {
+      if (i!=j) {
+	(*_C)(i,j) = (*_C)(i,j) / sqrt((*_C)(i,i)*(*_C)(j,j)) ;
+      }
+    }
+  }
+  for (Int_t i=0 ; i<_C->GetNrows() ; i++) {
+    (*_C)(i,i) = 1.0 ;
+  }
+
+  _covQual = -1 ;
+}
+
+
+
+//_____________________________________________________________________________
 TH2* RooFitResult::correlationHist(const char* name) const 
 {
   // Return TH2D of correlation matrix 
@@ -847,6 +904,119 @@ TH2* RooFitResult::correlationHist(const char* name) const
   return hh ;
 }
 
+
+
+
+//_____________________________________________________________________________
+const TMatrixDSym& RooFitResult::covarianceMatrix() const 
+{
+  // Return covariance matrix 
+  return *_V ;
+}
+
+
+
+//_____________________________________________________________________________
+const TMatrixDSym& RooFitResult::correlationMatrix() const 
+{
+  // Return correlation matrix ;
+  return *_C ;
+}
+
+
+
+//_____________________________________________________________________________
+RooAbsPdf* RooFitResult::createPdf(const RooArgSet& params) const
+{
+  // Return a p.d.f that represents the fit result as a multi-variate probability densisty
+  // function on the floating fit parameters, including correlations
+
+  const TMatrixDSym& V = covarianceMatrix() ;
+  Double_t det = V.Determinant() ;
+
+  if (det<=0) {
+    coutE(Eval) << "RooFitResult::createPdf(" << GetName() << ") ERROR: covariance matrix is not positive definite (|V|=" 
+		<< det << ") cannot construct p.d.f" << endl ;
+    return 0 ;
+  }
+
+  // Make sure that all given params were floating parameters in the represented fit
+  RooArgList params2 ;
+  TIterator* iter = params.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (_finalPars->find(arg->GetName())) {
+      params2.add(*arg) ;
+    } else {
+      coutW(InputArguments) << "RooFitResult::createPdf(" << GetName() << ") WARNING input variable " 
+			    << arg->GetName() << " was not a floating parameters in fit result and is ignored" << endl ;
+    }
+  }
+  delete iter ;
+
+  // Handle special case of representing full covariance matrix here
+  if (params2.getSize()==_finalPars->getSize()) {
+
+    TVectorD mu(_finalPars->getSize())  ;
+    for (Int_t i=0 ; i<_finalPars->getSize() ; i++) {
+      mu(i) = ((RooAbsReal*)_finalPars->at(i))->getVal() ;
+    }
+
+    string name  = Form("pdf_%s",GetName()) ;
+    string title = Form("P.d.f of %s",GetTitle()) ;
+    
+    // Create p.d.f.
+    return  new RooMultiVarGaussian(name.c_str(),title.c_str(),params2,mu,V) ;         
+  }
+
+  //                                       -> ->
+  // Handle case of conditional p.d.f. MVG(p1|p2) here
+
+  // Find (subset) of parameters that are stored in the covariance matrix
+  vector<int> map1, map2 ;
+  for (int i=0 ; i<_finalPars->getSize() ; i++) {
+    if (params2.find(_finalPars->at(i)->GetName())) {
+      map2.push_back(i) ;
+    } else {
+      map1.push_back(i) ;
+    }
+  }
+
+  // Rearrange matrix in block form with 'params' first and 'others' last
+  // (preserving relative order) 
+  TMatrixDSym S11, S22 ;
+  TMatrixD S12, S21 ;
+  RooMultiVarGaussian::blockDecompose(V,map1,map2,S11,S12,S21,S22) ;
+
+  // Calculate offset vectors mu1 and mu2
+  TVectorD mu1(map1.size())  ;
+  for (UInt_t i=0 ; i<map1.size() ; i++) {
+    mu1(i) = ((RooAbsReal*)_finalPars->at(map1[i]))->getVal() ;
+  }
+
+  // Constructed conditional matrix form         -1
+  // F(X1|X2) --> CovI --> S22bar = S11 - S12 S22  S21
+  
+  // Do eigenvalue decomposition
+  TMatrixD S22Inv(TMatrixD::kInverted,S22) ;
+  TMatrixD S22bar =  S11 - S12 * (S22Inv * S21) ;
+
+  // Convert explicitly to symmetric form
+  TMatrixDSym Vred(S22bar.GetNcols()) ;
+  for (int i=0 ; i<Vred.GetNcols() ; i++) {
+    for (int j=i ; j<Vred.GetNcols() ; j++) {
+      Vred(i,j) = (S22bar(i,j) + S22bar(j,i))/2 ;
+      Vred(j,i) = Vred(i,j) ;
+    }
+  }
+  string name  = Form("pdf_%s",GetName()) ;
+  string title = Form("P.d.f of %s",GetTitle()) ;
+
+  // Create p.d.f.
+  RooAbsPdf* ret =  new RooMultiVarGaussian(name.c_str(),title.c_str(),params2,mu1,Vred) ;
+  
+  return ret ;
+}
 
 
 

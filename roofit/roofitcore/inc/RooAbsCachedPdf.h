@@ -100,12 +100,14 @@ protected:
   virtual const char* inputBaseName() const = 0 ;
   virtual RooArgSet* actualObservables(const RooArgSet& nset) const = 0 ;
   virtual RooArgSet* actualParameters(const RooArgSet& nset) const = 0 ;
+  virtual RooAbsArg& pdfObservable(RooAbsArg& histObservable) const { return histObservable ; }
   virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;
 
   mutable RooObjCacheManager _cacheMgr ; // The cache manager  
   Int_t _ipOrder ; // Interpolation order for cache histograms 
  
   TString cacheNameSuffix(const RooArgSet& nset) const ;
+  virtual TString histNameSuffix() const { return TString("") ; }
   void disableCache(Bool_t flag) { 
     // Flag to disable caching mechanism
     _disableCache = flag ; 

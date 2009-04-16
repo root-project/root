@@ -27,7 +27,7 @@ public:
 
   // Initial element ctor
   RooSetPair(const RooArgSet* set1=0, const RooArgSet* set2=0) : 
-    _set1((RooArgSet*)set1), _set2((RooArgSet*)set2) {
+    _set1(const_cast<RooArgSet*>(set1)), _set2(const_cast<RooArgSet*>(set2)) {
   }
 
   // Destructor

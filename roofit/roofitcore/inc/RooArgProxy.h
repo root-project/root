@@ -28,6 +28,8 @@ public:
   RooArgProxy() : _owner(0), _arg(0), _ownArg(kFALSE) {
     // Default constructor
   } ;
+  RooArgProxy(const char* name, const char* desc, RooAbsArg* owner,
+	      Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg=kFALSE) ;
   RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg, 
 	      Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg=kFALSE) ;
   RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) ;
@@ -64,7 +66,7 @@ protected:
     // Returns true if contents is shape server of owner
     return _shapeServer ; 
   }
-  virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE) ;
+  virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) ;
 
   virtual void changeDataSet(const RooArgSet* newNormSet) ;
 

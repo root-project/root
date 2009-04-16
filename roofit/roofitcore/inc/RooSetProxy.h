@@ -63,7 +63,7 @@ protected:
   Bool_t _defShapeServer ;
   TIterator* _iter ; //! do not persist
 
-  virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE) ;
+  virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) ;
 
   ClassDef(RooSetProxy,1) // Proxy class for a RooArgSet
 };

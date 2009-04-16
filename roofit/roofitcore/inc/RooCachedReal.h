@@ -19,6 +19,8 @@
 
 class RooCachedReal : public RooAbsCachedReal {
 public:
+  RooCachedReal() {} 
+  RooCachedReal(const char *name, const char *title, RooAbsReal& _func, const RooArgSet& cacheObs);
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func);
   RooCachedReal(const RooCachedReal& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooCachedReal(*this,newname); }
@@ -42,14 +44,8 @@ protected:
     // Return base name for caches, i.e. the name of the cached function
     return func.arg().GetName() ; 
   } ;
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const { 
-    // Return the observables to be cached, i.e. the observable of the cached function
-    return func.arg().getObservables(nset) ; 
-  }
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const { 
-    // Return the parameters on which the cache contents depends, i.e. the parameters of the cached function
-    return func.arg().getParameters(nset) ; 
-  }
+  virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
+  virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
   virtual void fillCacheObject(FuncCacheElem& cacheFunc) const ;
   virtual Double_t evaluate() const { 
     // Dummy evaluate, it is never called
@@ -57,6 +53,7 @@ protected:
   }
   
   RooRealProxy func ;           // Proxy to function being cached
+  RooSetProxy  _cacheObs ;      // Variables to be cached
   Bool_t _useCdfBoundaries ;    // Are c.d.f boundary conditions used by the RooHistFuncs?
 
 private:

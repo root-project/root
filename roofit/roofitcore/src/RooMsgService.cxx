@@ -123,6 +123,7 @@ RooMsgService::RooMsgService()
 
   addStream(RooMsgService::PROGRESS) ;
   addStream(RooMsgService::INFO,Topic(RooMsgService::Eval|RooMsgService::Plotting|RooMsgService::Fitting|RooMsgService::Minimization|RooMsgService::Caching|RooMsgService::ObjectHandling|RooMsgService::NumIntegration|RooMsgService::InputArguments|RooMsgService::DataHandling)) ;
+  addStream(RooMsgService::INFO,Topic(RooMsgService::NumIntegration)) ;
 
 
 }

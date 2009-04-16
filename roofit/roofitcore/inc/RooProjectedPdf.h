@@ -43,6 +43,8 @@ public:
   // Handle projection of projection explicitly
   virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;  
 
+  void printMetaArgs(ostream& os) const ;
+
 
 protected:
 
@@ -59,7 +61,7 @@ protected:
     virtual RooArgList containedArgs(Action) ; 
     virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
   } ;
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
 
   Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
   
@@ -70,7 +72,7 @@ protected:
 
 private:
 
-  ClassDef(RooProjectedPdf,0) // Operator p.d.f calculating projection of another p.d.f
+  ClassDef(RooProjectedPdf,1) // Operator p.d.f calculating projection of another p.d.f
 };
  
 #endif

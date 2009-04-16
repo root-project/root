@@ -78,6 +78,9 @@ public:
 
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
 
+  void printMetaArgs(ostream& os) const ;
+
+
 protected:
 
   void initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l) ;
@@ -132,7 +135,7 @@ protected:
 
   void useDefaultGen(Bool_t flag=kTRUE) { _useDefaultGen = flag ; }
   Bool_t _useDefaultGen ; // Use default or distributed event generator
-
+  
 private:
 
   ClassDef(RooProdPdf,1) // PDF representing a product of PDFs

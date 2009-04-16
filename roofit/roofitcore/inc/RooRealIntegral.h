@@ -44,6 +44,7 @@ public:
   Bool_t isValid() const { return _valid; }
 
   void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMetaArgs(ostream& os) const ;
 
   const RooArgSet& numIntCatVars() const { return _sumList ; }
   const RooArgSet& numIntRealVars() const { return _intList ; }
@@ -66,6 +67,8 @@ public:
     return _function.arg().plotSamplingHint(obs,xlo,xhi) ;
   }
 
+  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;  
+
 protected:
 
   mutable Bool_t _valid;
@@ -85,7 +88,7 @@ protected:
   // Evaluation and validation implementation
   Double_t evaluate() const ;
   virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
-  Bool_t servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches) const ;
+  Bool_t servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches, const RooArgSet& allBranches) const ;
 
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 

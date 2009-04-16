@@ -38,7 +38,7 @@ public:
 
   // Optimized accept/reject generator support
   virtual Int_t getMaxVal(const RooArgSet& vars) const ;
-  virtual Double_t maxVal(Int_t code) ;
+  virtual Double_t maxVal(Int_t code) const ;
 
 protected:
 

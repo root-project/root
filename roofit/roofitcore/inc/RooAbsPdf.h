@@ -34,6 +34,7 @@ class TH1F;
 class TH2F;
 class TList ;
 class RooLinkedList ;
+class RooNumGenConfig ;
 
 class RooAbsPdf : public RooAbsReal {
 public:
@@ -82,23 +83,39 @@ public:
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   virtual void initGenerator(Int_t code) ;
   virtual void generateEvent(Int_t code);  
-
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
-  // Interactions with a dataset  
+  // Configuration of MC generators used for this pdf
+  const RooNumGenConfig* getGeneratorConfig() const ;
+  static RooNumGenConfig* defaultGeneratorConfig()  ;
+  RooNumGenConfig* specialGeneratorConfig() const ;
+  void setGeneratorConfig() ;
+  void setGeneratorConfig(const RooNumGenConfig& config) ;
+
+  // -log(L) fits to binned and unbinned data
   virtual RooFitResult* fitTo(RooAbsData& data, RooCmdArg arg1=RooCmdArg::none(),  RooCmdArg arg2=RooCmdArg::none(),  
                               RooCmdArg arg3=RooCmdArg::none(),  RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),  
                               RooCmdArg arg6=RooCmdArg::none(),  RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
   virtual RooFitResult* fitTo(RooAbsData& data, const RooLinkedList& cmdList) ;
 
-  virtual RooFitResult* fitTo(RooAbsData& data, const RooArgSet& projDeps, 
-			      Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
-  virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt = "c", const char* fitRange=0) ;
-
   virtual RooAbsReal* createNLL(RooAbsData& data, const RooLinkedList& cmdList) ;
   virtual RooAbsReal* createNLL(RooAbsData& data, RooCmdArg arg1=RooCmdArg::none(),  RooCmdArg arg2=RooCmdArg::none(),  
 				RooCmdArg arg3=RooCmdArg::none(),  RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),  
 				RooCmdArg arg6=RooCmdArg::none(),  RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
+
+  // Chi^2 fits to histograms
+  using RooAbsReal::chi2FitTo ;
+  using RooAbsReal::createChi2 ;
+  virtual RooFitResult* chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
+  virtual RooAbsReal* createChi2(RooDataHist& data, RooCmdArg arg1=RooCmdArg::none(),  RooCmdArg arg2=RooCmdArg::none(),  
+				 RooCmdArg arg3=RooCmdArg::none(),  RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),  
+				 RooCmdArg arg6=RooCmdArg::none(),  RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
+
+  // Chi^2 fits to X-Y datasets
+  virtual RooAbsReal* createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
+  
+
+
 
 
   // Constraint management
@@ -123,6 +140,11 @@ public:
   virtual Bool_t traceEvalHook(Double_t value) const ;  
   virtual Double_t getVal(const RooArgSet* set=0) const ;
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
+
+  void setNormValueCaching(Int_t minNumIntDim, Int_t ipOrder=2) ;
+  Int_t minDimNormValueCaching() const { return _minDimNormValueCache ; }
+  Int_t intOrderNormValueCaching() const { return _valueCacheIntOrder ; }
+  
 
   Double_t getNorm(const RooArgSet& nset) const { 
     // Get p.d.f normalization term needed for observables 'nset'
@@ -175,8 +197,10 @@ public:
 
   static void clearEvalError() ;
   static Bool_t evalError() ;
+
+
   
-protected:
+protected:   
 
 public:
   virtual const RooAbsReal* getNormObj(const RooArgSet* set, const RooArgSet* iset, const TNamed* rangeName=0) const ;
@@ -220,6 +244,8 @@ protected:
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      //! Normalization integral (owned by _normMgr)
   mutable RooArgSet* _normSet ;      //! Normalization set with for above integral
+  Int_t _minDimNormValueCache ;      // Minimum number of numerically integrated dimensions to activate normalization value caching
+  Int_t _valueCacheIntOrder ;        // Interpolation order for numeric integral value cache
 
   class CacheElem : public RooAbsCacheElement {
   public:
@@ -251,10 +277,13 @@ protected:
   Bool_t _selectComp ;               // Component selection flag for RooAbsPdf::plotCompOn
 
   static void raiseEvalError() ;
-  
+
   static Bool_t _evalError ;
+
+  RooNumGenConfig* _specGeneratorConfig ; //! MC generator configuration specific for this object
   
-  ClassDef(RooAbsPdf,1) // Abstract PDF with normalization support
+  
+  ClassDef(RooAbsPdf,2) // Abstract PDF with normalization support
 };
 
 

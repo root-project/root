@@ -13,8 +13,8 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_NLL_VAR
-#define ROO_NLL_VAR
+#ifndef ROO_DATA_WEIGHTED_AVERAGE
+#define ROO_DATA_WEIGHTED_AVERAGE
 
 #include "RooAbsOptTestStatistic.h"
 #include "RooCmdArg.h"
@@ -33,11 +33,11 @@ public:
   RooDataWeightedAverage(const RooDataWeightedAverage& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooDataWeightedAverage(*this,newname); }
 
-  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
+  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& adata,
 				      const RooArgSet& /*projDeps*/, const char* /*rangeName*/=0, const char* /*addCoefRangeName*/=0, 
 				      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t /*splitCutRange*/=kFALSE) {
     // Virtual constructor
-    return new RooDataWeightedAverage(name,title,real,data,nCPU,interleave,verbose) ;
+    return new RooDataWeightedAverage(name,title,real,adata,nCPU,interleave,verbose) ;
   }
 
   virtual Double_t globalNormalization() const ;

@@ -119,10 +119,20 @@
 #include "RooCustomizer.h"
 
 #include "Riostream.h"
-
+#include "RooWorkspace.h"
+#include "RooGlobalFunc.h"
 
 ClassImp(RooCustomizer) 
 ;
+
+
+static Int_t init()
+{
+  RooFactoryWSTool::IFace* iface = new RooCustomizer::CustIFace ;
+  RooFactoryWSTool::registerSpecial("EDIT",iface) ;
+  return 0 ;
+}
+static Int_t dummy = init() ;
 
 
 
@@ -610,3 +620,60 @@ void RooCustomizer::setCloneBranchSet(RooArgSet& cloneBranchSet)
 }
 
 
+
+
+//_____________________________________________________________________________
+std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) 
+{
+  // Check number of arguments
+  if (args.size()<2) {
+    throw string(Form("RooCustomizer::CustIFace::create() ERROR: expect at least 2 arguments for EDIT: the input object and at least one $Replace() rule")) ;
+  }
+
+  if (string(typeName)!="EDIT") {
+    throw string(Form("RooCustomizer::CustIFace::create() ERROR: unknown type requested: %s",typeName)) ;
+  }
+
+
+  // Check that first arg exists as RooAbsArg
+  RooAbsArg* arg = ft.ws().arg(args[0].c_str()) ;
+  if (!arg) {
+    throw string(Form("RooCustomizer::CustIFace::create() ERROR: input RooAbsArg %s does not exist",args[0].c_str())) ;
+  }
+
+  // Create a customizer
+  RooCustomizer cust(*arg,instanceName) ;
+  
+  for (unsigned int i=1 ; i<args.size() ; i++) {
+    char buf[1024] ;
+    strcpy(buf,args[i].c_str()) ;
+    char* sep = strchr(buf,'=') ;
+    if (!sep) {
+      throw string(Form("RooCustomizer::CustIFace::create() ERROR: unknown argument: %s, expect form orig=subst",args[i].c_str())) ;
+    }
+    *sep = 0 ;    
+    RooAbsArg* orig = ft.ws().arg(buf) ;
+    RooAbsArg* subst = ft.ws().arg(sep+1) ;
+    if (!orig) {
+      throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",orig)) ;
+    }
+    if (!subst) {
+      throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",sep+1)) ;
+    }
+    cust.replaceArg(*orig,*subst) ;
+  }
+
+  // Build the desired edited object
+  RooAbsArg* targ = cust.build(kFALSE)  ;
+  if (!targ) {
+    throw string(Form("RooCustomizer::CustIFace::create() ERROR in customizer build, object %snot created",instanceName)) ;
+  }
+
+  // Set the desired name of the top level node
+  targ->SetName(instanceName) ;
+
+  // Import the object into the workspace
+  ft.ws().import(*targ,RooFit::Silence()) ;
+      
+  return string(instanceName) ;
+}

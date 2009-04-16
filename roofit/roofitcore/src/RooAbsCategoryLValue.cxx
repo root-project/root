@@ -132,7 +132,7 @@ Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n, const char* rangeName)
 
 
 //_____________________________________________________________________________
-void RooAbsCategoryLValue::copyCache(const RooAbsArg* source) 
+void RooAbsCategoryLValue::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/) 
 {
   // Copy the cached value from given source and raise dirty flag.
   // It is the callers responsability to ensure that the sources

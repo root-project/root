@@ -64,6 +64,7 @@ RooCmdConfig::RooCmdConfig(const char* methodName) :
   _dIter = _dList.MakeIterator() ;
   _sIter = _sList.MakeIterator() ;
   _oIter = _oList.MakeIterator() ;
+  _cIter = _cList.MakeIterator() ;
 
   _rIter = _rList.MakeIterator() ;
   _fIter = _fList.MakeIterator() ;
@@ -88,6 +89,7 @@ RooCmdConfig::RooCmdConfig(const RooCmdConfig& other)  : TObject(other)
   _dIter = _dList.MakeIterator() ;
   _sIter = _sList.MakeIterator() ;
   _oIter = _oList.MakeIterator() ;
+  _cIter = _cList.MakeIterator() ;
   _rIter = _rList.MakeIterator() ;
   _fIter = _fList.MakeIterator() ;
   _mIter = _mList.MakeIterator() ;
@@ -116,6 +118,12 @@ RooCmdConfig::RooCmdConfig(const RooCmdConfig& other)  : TObject(other)
   RooTObjWrap* os ;
   while((os=(RooTObjWrap*)other._oIter->Next())) {
     _oList.Add(os->Clone()) ;
+  }
+
+  other._cIter->Reset() ;
+  RooTObjWrap* cs ;
+  while((cs=(RooTObjWrap*)other._cIter->Next())) {
+    _cList.Add(cs->Clone()) ;
   }
 
   other._rIter->Reset() ;
@@ -161,6 +169,7 @@ RooCmdConfig::~RooCmdConfig()
   delete _dIter ;
   delete _sIter ;
   delete _oIter ;
+  delete _cIter ;
   delete _rIter ;
   delete _fIter ;
   delete _mIter ;
@@ -170,6 +179,7 @@ RooCmdConfig::~RooCmdConfig()
   _iList.Delete() ;
   _dList.Delete() ;
   _sList.Delete() ;
+  _cList.Delete() ;
   _oList.Delete() ;
   _rList.Delete() ;
   _fList.Delete() ;
@@ -372,6 +382,31 @@ Bool_t RooCmdConfig::defineObject(const char* name, const char* argName, Int_t s
 
 
 //_____________________________________________________________________________
+Bool_t RooCmdConfig::defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* defVal) 
+{
+  // Define TObject property name 'name' mapped to object in slot 'setNum' in RooCmdArg with name argName
+  // Define default value for this TObject property to be defVal in case named argument is not processed.
+  // If isArray is true, an array of TObjects is harvested in case multiple matching named arguments are processed.
+  // If isArray is false, only the TObject in the last processed named argument is retained
+
+
+  if (_cList.FindObject(name)) {
+    coutE(InputArguments) << "RooCmdConfig::defineObject: name '" << name << "' already defined" << endl ;
+    return kTRUE ;
+  }
+
+  RooTObjWrap* cs = new RooTObjWrap((TObject*)defVal) ;
+  cs->SetName(name) ;
+  cs->SetTitle(argName) ;
+  cs->SetUniqueID(setNum) ;
+  
+  _cList.Add(cs) ;
+  return kFALSE ;
+}
+
+
+
+//_____________________________________________________________________________
 void RooCmdConfig::print()
 {
   // Print configuration of parser
@@ -532,7 +567,6 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
       
       const char* oldStr = rs->getVal() ;
 
-//_____________________________________________________________________________
       if (oldStr && strlen(oldStr)>0 && rs->getAttribute("RooCmdConfig::AppendMode")) {
 	rs->setVal(Form("%s,%s",rs->getVal(),arg.getString(rs->GetUniqueID()))) ;
       } else {
@@ -545,7 +579,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
     }
   }
 
-  // Find registered dataset fields for this opcode 
+  // Find registered TObject fields for this opcode 
   _oIter->Reset() ;
   RooTObjWrap* os ;
   while((os=(RooTObjWrap*)_oIter->Next())) {
@@ -556,6 +590,24 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
 	cout << "RooCmdConfig::process " << os->GetName() << "[TObject]" << " set to " ;
 	if (os->obj()) {
 	  cout << os->obj()->GetName() << endl ;
+	} else {
+	  cout << "(null)" << endl ;
+	}
+      }
+    }
+  }
+
+  // Find registered RooArgSet fields for this opcode 
+  _cIter->Reset() ;
+  RooTObjWrap* cs ;
+  while((cs=(RooTObjWrap*)_cIter->Next())) {
+    if (!TString(opc).CompareTo(cs->GetTitle())) {
+      cs->setObj((TObject*)arg.getSet(cs->GetUniqueID())) ;
+      anyField = kTRUE ;
+      if (_verbose) {
+	cout << "RooCmdConfig::process " << cs->GetName() << "[RooArgSet]" << " set to " ;
+	if (cs->obj()) {
+	  cout << cs->obj()->GetName() << endl ;
 	} else {
 	  cout << "(null)" << endl ;
 	}
@@ -653,6 +705,17 @@ TObject* RooCmdConfig::getObject(const char* name, TObject* defVal)
 }
 
 
+//_____________________________________________________________________________
+RooArgSet* RooCmdConfig::getSet(const char* name, RooArgSet* defVal) 
+{
+  // Return RooArgSet property registered with name 'name'. If no
+  // property is registered, return defVal
+
+  RooTObjWrap* ro = (RooTObjWrap*) _cList.FindObject(name) ;
+  return ro ? ((RooArgSet*)ro->obj()) : defVal ;
+}
+
+
 
 //_____________________________________________________________________________
 const RooLinkedList& RooCmdConfig::getObjectList(const char* name) 
@@ -705,6 +768,35 @@ void RooCmdConfig::stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge)
     name = strtok(0,",") ;
   }
 
+}
+
+
+
+//_____________________________________________________________________________
+RooLinkedList RooCmdConfig::filterCmdList(RooLinkedList& cmdInList, const char* cmdNameList, Bool_t removeFromInList) 
+{
+  // Utility function to filter commands listed in cmdNameList from cmdInList. Filtered arguments are put in the returned list.
+  // If removeFromInList is true then these commands are removed from the input list
+
+  RooLinkedList filterList ;
+  if (!cmdNameList) return filterList ;
+
+  // Copy command list for parsing
+  char buf[1024] ;
+  strcpy(buf,cmdNameList) ;
+  
+  char* name = strtok(buf,",") ;
+  while(name) {
+    TObject* cmd = cmdInList.FindObject(name) ;
+    if (cmd) {
+      if (removeFromInList) {
+	cmdInList.Remove(cmd) ;
+      }
+      filterList.Add(cmd) ;
+    }
+    name = strtok(0,",") ;
+  }
+  return filterList ;  
 }
 
 

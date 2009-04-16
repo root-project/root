@@ -1122,8 +1122,11 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   // Asymmetry(const RooCategory& c) -- Show the asymmetry of the data in given two-state category [F(+)-F(-)] / [F(+)+F(-)]. 
   //                                    Category must have two states with indices -1 and +1 or three states with indeces -1,0 and +1.
   // Efficiency(const RooCategory& c)-- Show the efficiency F(acc)/[F(acc)+F(rej)]. Category must have two states with indices 0 and 1
-  // ErrorType(RooAbsData::EType)    -- Select the type of error drawn: Poisson (default) draws asymmetric Poisson
-  //                                    confidence intervals. SumW2 draws symmetric sum-of-weights error
+  // DataError(RooAbsData::EType)    -- Select the type of error drawn: 
+  //                                     - Auto(default) results in Poisson for unweighted data and SumW2 for weighted data
+  //                                     - Poisson draws asymmetric Poisson confidence intervals. 
+  //                                     - SumW2 draws symmetric sum-of-weights error ( sum(w)^2/sum(w^2) )
+  //                                     - None draws no error bars
   // Binning(double xlo, double xhi, -- Use specified binning to draw dataset
   //                      int nbins)
   // Binning(const RooAbsBinning&)   -- Use specified binning to draw dataset
@@ -1132,6 +1135,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   //                                    If set, any subsequent PDF will normalize to this dataset, even if it is
   //                                    not the first one added to the frame. By default only the 1st dataset
   //                                    added to a frame will update the normalization information
+  // Rescale(Double_t f)             -- Rescale drawn histogram by given factor
   //
   // Histogram drawing options
   // -------------------------
@@ -1150,7 +1154,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   // Misc. other options
   // -------------------
   // Name(const chat* name)          -- Give curve specified name in frame. Useful if curve is to be referenced later
-  // Invisble(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
+  // Invisble()                      -- Add curve to frame, but do not display. Useful in combination AddTo()
   // AddTo(const char* name,         -- Add constructed histogram to already existing histogram with given name and relative weight factors
   // double_t wgtSelf, double_t wgtOther)
   // 
@@ -1181,13 +1185,14 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   pc.defineDouble("markerSize","MarkerSize",0,-999) ;
   pc.defineInt("fillColor","FillColor",0,-999) ;
   pc.defineInt("fillStyle","FillStyle",0,-999) ;
-  pc.defineInt("errorType","DataError",0,(Int_t)RooAbsData::Poisson) ;
+  pc.defineInt("errorType","DataError",0,(Int_t)RooAbsData::Auto) ;
   pc.defineInt("histInvisible","Invisible",0,0) ;
   pc.defineInt("refreshFrameNorm","RefreshNorm",0,1) ;
   pc.defineString("addToHistName","AddTo",0,"") ;
   pc.defineDouble("addToWgtSelf","AddTo",0,1.) ;
   pc.defineDouble("addToWgtOther","AddTo",1,1.) ;
   pc.defineDouble("xErrorSize","XErrorSize",0,1.) ;
+  pc.defineDouble("scaleFactor","Rescale",0,1.) ;
   pc.defineMutex("DataError","Asymmetry","Efficiency") ;
   pc.defineMutex("Binning","BinningName","BinningSpec") ;
 
@@ -1223,9 +1228,20 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   o.addToWgtSelf = pc.getDouble("addToWgtSelf") ;
   o.addToWgtOther = pc.getDouble("addToWgtOther") ;
   o.refreshFrameNorm = pc.getInt("refreshFrameNorm") ;
+  o.scaleFactor = pc.getDouble("scaleFactor") ;
+
+  // Map auto error type to actual type
+  if (o.etype == Auto) {
+    o.etype = isNonPoissonWeighted() ? SumW2 : Poisson ;    
+    if (o.etype == SumW2) {
+      coutI(InputArguments) << "RooTreeData::plotOn(" << GetName() 
+			    << ") INFO: dataset has non-integer weights, auto-selecting SumW2 errors instead of Poisson errors" << endl ;
+    }
+  }
   
   if (o.addToHistName && !frame->findObject(o.addToHistName,RooHist::Class())) {
-    coutE(InputArguments) << "RooTreeData::plotOn(" << GetName() << ") cannot find existing histogram " << o.addToHistName << " to add to in RooPlot" << endl ;
+    coutE(InputArguments) << "RooTreeData::plotOn(" << GetName() << ") cannot find existing histogram " << o.addToHistName 
+			  << " to add to in RooPlot" << endl ;
     return frame ;
   }
 
@@ -1319,7 +1335,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
   }
 
   // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist,nomBinWidth,1,o.etype,o.xErrorSize,o.correctForBinWidth); 
+  RooHist *graph= new RooHist(*hist,nomBinWidth,1,o.etype,o.xErrorSize,o.correctForBinWidth,o.scaleFactor); 
   if(0 == graph) {
     coutE(Plotting) << ClassName() << "::" << GetName()
 	 << ":plotOn: unable to create a RooHist object" << endl;
@@ -1454,7 +1470,7 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   }
 
   // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.xErrorSize);
+  RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.xErrorSize,kFALSE,o.scaleFactor);
   graph->setYAxisLabel(Form("Asymmetry in %s",asymCat.GetName())) ;
 
   // initialize the frame's normalization setup, if necessary
@@ -1744,10 +1760,15 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
 
     Double_t error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2)  ;
     Double_t we = weightError(RooAbsData::SumW2) ;
+
+
     if (we==0) we = weight() ;
     error2 += TMath::Power(we,2) ;
     //hist->AddBinContent(bin,weight());
     hist->SetBinError(bin,sqrt(error2)) ;
+
+    //cout << "RooTreeData::fillHistogram() bin = " << bin << " weight() = " << weight() << " we = " << we << endl ;
+
   }
 
   if(0 != select) delete select;
@@ -2201,7 +2222,7 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
 
 
 //_____________________________________________________________________________
-Int_t RooTreeData::numEntries(Bool_t) const 
+Int_t RooTreeData::numEntries() const 
 { 
   // Return the number of entries in this dataset
   return (Int_t)GetEntries() ; 
@@ -2226,7 +2247,7 @@ void RooTreeData::printMultiline(ostream& os, Int_t content, Bool_t verbose, TSt
   if (!verbose) {
     os << indent << "  Observables " << _vars << endl ;
   } else {
-    os << indent << "  Observables: " ;
+    os << indent << "  Observables: " << endl ;
     _vars.printStream(os,kName|kValue|kExtras|kTitle,kVerbose,indent+"  ") ;
   }
 
@@ -2246,7 +2267,7 @@ void RooTreeData::printMultiline(ostream& os, Int_t content, Bool_t verbose, TSt
 
 
 //_____________________________________________________________________________
-void RooTreeData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList)
+void RooTreeData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList, const RooArgSet& keepObsList)
 {
   // Prepare dataset for use with cached constant terms listed in
   // 'cacheList' of expression 'arg'. Deactivate tree branches
@@ -2297,6 +2318,10 @@ void RooTreeData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& ca
     }
     delete uIter ;
   }
+
+
+  // Remove all observables in keep list from prune list
+  pruneSet.remove(keepObsList,kTRUE,kTRUE) ;
 
   if (pruneSet.getSize()!=0) {
     

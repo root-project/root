@@ -26,20 +26,21 @@
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "TString.h"
 #include "RooMappedCategory.h"
 #include "RooStreamParser.h"
-#include "RooMapCatEntry.h"
 #include "RooMsgService.h"
 
+using namespace std ;
+
 ClassImp(RooMappedCategory)
+ClassImp(RooMappedCategory::Entry)
 
 
 RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defOut, Int_t defOutIdx) :
-  RooAbsCategory(name, title), _inputCat("inputCat","Input category",this,inputCat)
+  RooAbsCategory(name, title), _inputCat("input","Input category",this,inputCat)
 {
   // Constructor with input category and name of default output state, which is assigned
   // to all input category states that do not follow any mapping rule.
@@ -52,15 +53,9 @@ RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbs
 
 
 RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char *name) :
-  RooAbsCategory(other,name), _inputCat("inputCat",this,other._inputCat)
+  RooAbsCategory(other,name), _inputCat("input",this,other._inputCat), _mapArray(other._mapArray)
 {
   _defCat = (RooCatType*) lookupType(other._defCat->GetName()) ;
-
-  // Copy constructor
-  int i ;
-  for (i=0 ; i<other._mapArray.GetEntries() ; i++) {
-    _mapArray.Add(new RooMapCatEntry(*(RooMapCatEntry*)other._mapArray.At(i))) ;
-  }
 }
 
 
@@ -68,7 +63,6 @@ RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char 
 RooMappedCategory::~RooMappedCategory() 
 {
   // Destructor
-  _mapArray.Delete() ;
 }
 
 
@@ -84,7 +78,7 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t
   if (!inKeyRegExp || !outKey) return kTRUE ;  
 
   // Check if pattern is already registered
-  if (_mapArray.FindObject(inKeyRegExp)) {
+  if (_mapArray.find(inKeyRegExp)!=_mapArray.end()) {
     coutE(InputArguments) << "RooMappedCategory::map(" << GetName() << "): ERROR expression " 
 			  << inKeyRegExp << " already mapped" << endl ;
     return kTRUE ;
@@ -106,31 +100,28 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t
   }
 
   // Create new map entry ;
-  RooMapCatEntry *newMap = new RooMapCatEntry(inKeyRegExp,outType) ;
-  if (!newMap->ok()) {
+  Entry e(inKeyRegExp,outType) ;
+  if (!e.ok()) {
     coutE(InputArguments) << "RooMappedCategory::map(" << GetName() 
 			  << "): ERROR, expression " << inKeyRegExp << " didn't compile" << endl ;
-    delete newMap ;
     return kTRUE ;    
   }
 
-  _mapArray.Add(newMap) ;  
+  _mapArray[inKeyRegExp] = e ;
   return kFALSE ;
 }
 
 
 
-RooCatType
-RooMappedCategory::evaluate() const
+RooCatType RooMappedCategory::evaluate() const
 {
   // Calculate the current value of the object
   const char* inKey = _inputCat.label() ;
 
   // Scan array of regexps
-  for (int i=0 ; i<_mapArray.GetEntries() ; i++) {
-    RooMapCatEntry* theMap = (RooMapCatEntry*)_mapArray.At(i) ;
-    if (theMap->match(inKey)) {
-      return theMap->outCat() ;
+  for ( std::map<string,Entry>::const_iterator iter = _mapArray.begin() ; iter != _mapArray.end() ; iter++) {
+    if (iter->second.match(inKey)) {
+      return iter->second.outCat() ;
     }
   }
 
@@ -159,10 +150,8 @@ void RooMappedCategory::printMultiline(ostream& os, Int_t content, Bool_t verbos
     _defCat->printStream(os,kName|kValue,kSingleLine);
     
     os << indent << "  Mapping rules:" << endl;
-    Int_t n= _mapArray.GetEntries();
-    for(Int_t i= 0 ; i< n; i++) {
-      RooMapCatEntry* theMap = (RooMapCatEntry*)_mapArray.At(i) ;
-      os << indent << "  " << theMap->GetName() << " -> " << theMap->outCat().GetName() << endl ;
+    for (std::map<string,Entry>::const_iterator iter = _mapArray.begin() ; iter!=_mapArray.end() ; iter++) {
+      os << indent << "  " << iter->first << " -> " << iter->second.outCat().GetName() << endl ;
     }
   }
 }
@@ -178,7 +167,7 @@ Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t /*v
 
      //Clear existing definitions, but preserve default output
      TString defCatName(_defCat->GetName()) ;
-     _mapArray.Delete() ;
+     _mapArray.clear() ;
      clearTypes() ;
      _defCat = (RooCatType*) defineType(defCatName) ;
 
@@ -222,6 +211,36 @@ Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t /*v
 }
 
 
+//_____________________________________________________________________________
+void RooMappedCategory::printMetaArgs(ostream& os) const 
+{
+  // Customized printing of arguments of a RooMappedCategory to more intuitively reflect the contents of the
+  // product operator construction
+
+  // Scan array of regexps
+  RooCatType prevOutCat ;
+  Bool_t first(kTRUE) ;
+  os << "map=(" ;
+  for (std::map<string,Entry>::const_iterator iter = _mapArray.begin() ; iter!=_mapArray.end() ; iter++) {
+    if (iter->second.outCat().getVal()!=prevOutCat.getVal()) {
+      if (!first) { os << " " ; }
+      first=kFALSE ;
+      
+      os << iter->second.outCat().GetName() << ":" << iter->first ;
+      prevOutCat=iter->second.outCat() ;
+    } else {
+      os << "," << iter->first ;
+    }
+  }
+  
+  if (!first) { os << " " ; }
+  os << _defCat->GetName() << ":*" ;  
+  
+  os << ") " ;    
+}
+
+
+
 
 void RooMappedCategory::writeToStream(ostream& os, Bool_t compact) const
 {
@@ -235,20 +254,87 @@ void RooMappedCategory::writeToStream(ostream& os, Bool_t compact) const
     // Scan array of regexps
     RooCatType prevOutCat ;
     Bool_t first(kTRUE) ;
-    for (int i=0 ; i<_mapArray.GetEntries() ; i++) {
-      RooMapCatEntry* theMap = (RooMapCatEntry*)_mapArray.At(i) ;
-      if (theMap->outCat().getVal()!=prevOutCat.getVal()) {
+    for (std::map<string,Entry>::const_iterator iter = _mapArray.begin() ; iter!=_mapArray.end() ; iter++) {
+      if (iter->second.outCat().getVal()!=prevOutCat.getVal()) {
 	if (!first) { os << " " ; }
 	first=kFALSE ;
 
-	os << theMap->outCat().GetName() << ":" << theMap->GetName() ;
-	prevOutCat=theMap->outCat() ;
+	os << iter->second.outCat().GetName() << "<-" << iter->first ;
+	prevOutCat=iter->second.outCat() ;
       } else {
-	os << "," << theMap->GetName() ;
+	os << "," << iter->first ;
       }
     }
     
     if (!first) { os << " " ; }
     os << _defCat->GetName() << ":*" ;  
   }
+}
+
+
+
+
+//_____________________________________________________________________________
+RooMappedCategory::Entry& RooMappedCategory::Entry::operator=(const RooMappedCategory::Entry& other)
+{
+  if (&other==this) return *this ;
+
+  _expr = other._expr ;
+  _cat = other._cat ;
+
+  if (_regexp) {
+    delete _regexp ;
+  }
+  _regexp = new TRegexp(_expr.Data(),kTRUE) ;
+
+  return *this;  
+}
+
+
+
+//_____________________________________________________________________________
+TString RooMappedCategory::Entry::mangle(const char* exp) const
+{
+  // Mangle name : escape regexp character '+'
+  TString t ;
+  const char *c = exp ;
+  while(*c) {
+    if (*c=='+') t.Append('\\') ;
+    t.Append(*c) ;
+    c++ ;
+  }
+  return t ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooMappedCategory::Entry::Streamer(TBuffer &R__b)
+{
+  typedef ::RooMappedCategory::Entry ThisClass;
+
+   // Stream an object of class RooWorkspace::CodeRepo.
+   if (R__b.IsReading()) {
+
+     UInt_t R__s, R__c;
+     R__b.ReadVersion(&R__s, &R__c); 
+     
+     // Stream contents of ClassFiles map     
+     R__b >> _expr ;
+     _cat.Streamer(R__b) ;     
+     _regexp = new TRegexp(_expr.Data(),kTRUE) ;
+     R__b.CheckByteCount(R__s, R__c, ThisClass::IsA());
+
+   } else {
+     
+     UInt_t R__c;
+     R__c = R__b.WriteVersion(ThisClass::IsA(), kTRUE);
+     
+     // Stream contents of ClassRelInfo map
+     R__b << _expr ;
+     _cat.Streamer(R__b) ;
+
+     R__b.SetByteCount(R__c, kTRUE);
+     
+   }
 }

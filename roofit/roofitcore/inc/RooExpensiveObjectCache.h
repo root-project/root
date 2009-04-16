@@ -33,6 +33,11 @@ public:
   Bool_t registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params) ;
   const TObject* retrieveObject(const char* name, TClass* tclass, const RooArgSet& params) ;
 
+  const TObject* getObj(Int_t uniqueID) ;
+  Bool_t clearObj(Int_t uniqueID) ;
+  Bool_t setObj(Int_t uniqueID, TObject* obj) ;
+  void clearAll() ;
+
   void importCacheObjects(RooExpensiveObjectCache& other, const char* ownerName, Bool_t verbose=kFALSE) ;
 
   static RooExpensiveObjectCache& instance() ;
@@ -46,36 +51,41 @@ public:
   class ExpensiveObject {
   public:
     ExpensiveObject() { _payload = 0 ; } ;
-    ExpensiveObject(const char* ownerName, TObject& payload, TIterator* paramIter) ;
-    ExpensiveObject(const ExpensiveObject& other) ;
+    ExpensiveObject(Int_t uid, const char* ownerName, TObject& payload, TIterator* paramIter) ;
+    ExpensiveObject(Int_t uid, const ExpensiveObject& other) ;
     virtual ~ExpensiveObject() ;
     Bool_t matches(TClass* tc, const RooArgSet& params) ;
 
+    Int_t uid() const { return _uid ; }
     const TObject* payload() const { return _payload ; }
     TObject* payload() { return _payload ; }
+    void setPayload(TObject* obj) { _payload = obj ; }
     const char* ownerName() const { return _ownerName.Data() ; }
 
     void print() ;
 
   protected:
     
+    Int_t _uid ; // Unique element ID ;
     TObject* _payload ; // Payload
     std::map<TString,Double_t> _realRefParams ; // Names and values of real-valued reference parameters
     std::map<TString,Int_t> _catRefParams ; // Names and values of discrete-valued reference parameters 
     TString _ownerName ; // Name of RooAbsArg object that is associated to cache contents
   
-    ClassDef(ExpensiveObject,1) ; // Cache element containing expensive object and parameter values for which object is valid
+    ClassDef(ExpensiveObject,2) ; // Cache element containing expensive object and parameter values for which object is valid
 } ;
 
  
 protected:
+
+  Int_t _nextUID ; 
 
   static RooExpensiveObjectCache* _instance ;  //!
 
   std::map<TString,ExpensiveObject*> _map ;
  
   
-  ClassDef(RooExpensiveObjectCache,1) // Singleton class that serves as session repository for expensive objects
+  ClassDef(RooExpensiveObjectCache,2) // Singleton class that serves as session repository for expensive objects
 };
 
 #endif

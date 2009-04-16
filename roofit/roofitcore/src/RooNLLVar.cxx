@@ -45,11 +45,11 @@ RooArgSet RooNLLVar::_emptySet ;
 
 
 //_____________________________________________________________________________
-RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& data,
+RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& indata,
 		     const RooCmdArg& arg1, const RooCmdArg& arg2,const RooCmdArg& arg3,
 		     const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6,
 		     const RooCmdArg& arg7, const RooCmdArg& arg8,const RooCmdArg& arg9) :
-  RooAbsOptTestStatistic(name,title,pdf,data,
+  RooAbsOptTestStatistic(name,title,pdf,indata,
 			 *(const RooArgSet*)RooCmdConfig::decodeObjOnTheFly("RooNLLVar::RooNLLVar","ProjectedObservables",0,&_emptySet
 									    ,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","RangeWithName",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
@@ -57,7 +57,8 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 kFALSE,
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))             
+			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","CloneData",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))             
 {
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   //
@@ -68,6 +69,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
   //  SplitRange()   -- Fit range is split by index catory of simultaneous PDF
   //  ConditionalObservables() -- Define conditional observables 
   //  Verbose()      -- Verbose output of GOF framework classes
+  //  CloneData()    -- Clone input dataset for internal use (default is kTRUE)
 
   RooCmdConfig pc("RooNLLVar::RooNLLVar") ;
   pc.allowUndefined() ;
@@ -78,16 +80,18 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
 
   _extended = pc.getInt("extended") ;
+  _weightSq = kFALSE ;
 }
 
 
 
 //_____________________________________________________________________________
-RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
 		     Bool_t extended, const char* rangeName, const char* addCoefRangeName,
 		     Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitRange) : 
-  RooAbsOptTestStatistic(name,title,pdf,data,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange),
-  _extended(extended)
+  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange),
+  _extended(extended),
+  _weightSq(kFALSE)
 {
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   // For internal use.
@@ -97,11 +101,12 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
 
 //_____________________________________________________________________________
-RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
 		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,const char* addCoefRangeName, 
 		     Int_t nCPU,Bool_t interleave,Bool_t verbose, Bool_t splitRange) : 
-  RooAbsOptTestStatistic(name,title,pdf,data,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange),
-  _extended(extended)
+  RooAbsOptTestStatistic(name,title,pdf,indata,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange),
+  _extended(extended),
+  _weightSq(kFALSE)
 {
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   // For internal use.  
@@ -114,7 +119,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 //_____________________________________________________________________________
 RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) : 
   RooAbsOptTestStatistic(other,name),
-  _extended(other._extended)
+  _extended(other._extended),
+  _weightSq(other._weightSq)
 {
   // Copy constructor
 }
@@ -156,8 +162,12 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     if (_dataClone->weight()==0) continue ;
 
     // cout << "evaluating nll for event #" << i << " of " << lastEvent-firstEvent << endl ;
-    Double_t term = _dataClone->weight() * pdfClone->getLogVal(_normSet);
-    sumWeight += _dataClone->weight() ;
+
+    Double_t eventWeight = _dataClone->weight() ;
+    if (_weightSq) eventWeight *= eventWeight ;
+
+    Double_t term = eventWeight * pdfClone->getLogVal(_normSet);
+    sumWeight += eventWeight ;
 
     //cout << "RooNLLVar term of event [" << i << "] is " << term << endl ; 
 

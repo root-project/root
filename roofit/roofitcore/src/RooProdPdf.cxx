@@ -79,7 +79,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   _cacheMgr(this,10),
   _genCode(10),
   _cutOff(cutOff),
-  _pdfList("pdfs","List of PDFs",this),
+  _pdfList("!pdfs","List of PDFs",this),
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
 {
@@ -96,7 +96,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   _cacheMgr(this,10),
   _genCode(10),
   _cutOff(cutOff),
-  _pdfList("pdfs","List of PDFs",this),
+  _pdfList("!pdfs","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
@@ -119,14 +119,14 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   //
 
   _pdfList.add(pdf1) ;
-  RooArgSet* nset1 = new RooArgSet("nset1") ;
+  RooArgSet* nset1 = new RooArgSet("nset") ;
   _pdfNSetList.Add(nset1) ;
   if (pdf1.canBeExtended()) {
     _extendedIndex = _pdfList.index(&pdf1) ;
   }
 
   _pdfList.add(pdf2) ;
-  RooArgSet* nset2 = new RooArgSet("nset2") ;
+  RooArgSet* nset2 = new RooArgSet("nset") ;
   _pdfNSetList.Add(nset2) ;
 
   if (pdf2.canBeExtended()) {
@@ -150,7 +150,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& in
   _cacheMgr(this,10),
   _genCode(10),
   _cutOff(cutOff),
-  _pdfList("pdfs","List of PDFs",this),
+  _pdfList("!pdfs","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
@@ -215,7 +215,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
   _cacheMgr(this,10),
   _genCode(10),
   _cutOff(0),
-  _pdfList("pdfs","List of PDFs",this),
+  _pdfList("!pdfs","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
@@ -267,7 +267,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title,
   _cacheMgr(this,10),
   _genCode(10),
   _cutOff(0),
-  _pdfList("_pdfList","List of PDFs",this),
+  _pdfList("!pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
@@ -315,7 +315,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
   _cacheMgr(this,10),
   _genCode(10),
   _cutOff(0),
-  _pdfList("pdfs","List of PDFs",this),
+  _pdfList("!pdfs","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
@@ -332,10 +332,10 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   _cacheMgr(other._cacheMgr,this),
   _genCode(other._genCode),
   _cutOff(other._cutOff),
-  _pdfList("pdfs",this,other._pdfList),
+  _pdfList("!pdfs",this,other._pdfList),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(other._extendedIndex),
-  _useDefaultGen(other._useDefaultGen) 
+  _useDefaultGen(other._useDefaultGen)
 {
   // Copy constructor
 
@@ -343,7 +343,9 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   TIterator* iter = other._pdfNSetList.MakeIterator() ;
   RooArgSet* nset ;
   while((nset=(RooArgSet*)iter->Next())) {
-    _pdfNSetList.Add(nset->snapshot()) ;
+    RooArgSet* tmp = (RooArgSet*) nset->snapshot() ;
+    tmp->setName(nset->GetName()) ;
+    _pdfNSetList.Add(tmp) ;
   }
   delete iter ;
 
@@ -364,7 +366,7 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
   RooAbsPdf* pdf ;
   while((pdf=(RooAbsPdf*)siter->Next())) {
     _pdfList.add(*pdf) ;
-    RooArgSet* nset1 = new RooArgSet("nset1") ;
+    RooArgSet* nset1 = new RooArgSet("nset") ;
     _pdfNSetList.Add(nset1) ;       
 
     if (pdf->canBeExtended()) {
@@ -379,15 +381,27 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
   TIterator* iter = l.MakeIterator() ;
   RooCmdArg* carg ;
   while((carg=(RooCmdArg*)iter->Next())) {
+
     if (!TString(carg->GetName()).CompareTo("Conditional")) {
-   
+
+      Int_t argType = carg->getInt(0) ;
       RooArgSet* pdfSet = (RooArgSet*) carg->getObject(0) ;
       RooArgSet* normSet = (RooArgSet*) carg->getObject(1) ;
+
       TIterator* siter2 = pdfSet->createIterator() ;
       RooAbsPdf* thePdf ;
       while((thePdf=(RooAbsPdf*)siter2->Next())) {
 	_pdfList.add(*thePdf) ;
-	_pdfNSetList.Add(normSet->snapshot()) ;       
+
+	if (argType==0) {
+	  RooArgSet* tmp = (RooArgSet*) normSet->snapshot() ;
+	  tmp->setName("nset") ;
+	  _pdfNSetList.Add(tmp) ;       	  
+	} else {
+	  RooArgSet* tmp = (RooArgSet*) normSet->snapshot() ;
+	  tmp->setName("cset") ;
+	  _pdfNSetList.Add(tmp) ;       	  
+	}
 
 	if (thePdf->canBeExtended()) {
 	  _extendedIndex = _pdfList.index(thePdf) ;
@@ -515,8 +529,19 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     laIter->Reset() ;
 
     // Reduce pdfNSet to actual dependents
-    pdfNSet = pdf->getObservables(*pdfNSet) ;
-
+    if (string("nset")==pdfNSet->GetName()) {
+      pdfNSet = pdf->getObservables(*pdfNSet) ;
+//       cout << "term pdf = " << pdf->GetName() << " old-style mode: pdfNSet = " << *pdfNSet << endl ;
+    } else if (string("cset") == pdfNSet->GetName()) {
+      RooArgSet* tmp = pdf->getObservables(normSet) ;
+      tmp->remove(*pdfNSet,kTRUE,kTRUE) ;
+      pdfNSet = tmp ;
+//       cout << "term pdf = " << pdf->GetName() << " new-style mode: pdfNSet = " << *pdfNSet << endl ;
+    } else {
+      coutE(InputArguments) << "RooProdPdf::factorizeProduct(" << GetName() << ") ERROR: internal error encountered in input arguments set of observables associated with pdf " 
+			    << pdf->GetName() << " is labeled neither 'nset' nor 'cset'" << endl ;
+      return ;
+    }
 
     RooArgSet pdfNormDeps ; // Dependents to be normalized for the PDF
     RooArgSet pdfAllDeps ; // All dependents of this PDF ;
@@ -534,6 +559,8 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     } else {
       pdfNormDeps.add(pdfAllDeps) ;
     }
+
+//     cout << "pdfNormDeps for " << pdf->GetName() << " = " << pdfNormDeps << endl ;
 
     RooArgSet* pdfIntSet = pdf->getObservables(intSet) ;
 
@@ -1382,4 +1409,39 @@ std::list<Double_t>* RooProdPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_
   }
   
   return 0 ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooProdPdf::printMetaArgs(ostream& os) const 
+{
+  // Customized printing of arguments of a RooProdPdf to more intuitively reflect the contents of the
+  // product operator construction
+
+  TIterator* niter = _pdfNSetList.MakeIterator() ;
+  for (int i=0 ; i<_pdfList.getSize() ; i++) {
+    if (i>0) os << " * " ;
+    RooArgSet* ncset = (RooArgSet*) niter->Next() ;
+    os << _pdfList.at(i)->GetName() ;
+    if (ncset->getSize()>0) {
+      if (string("nset")==ncset->GetName()) {
+	os << *ncset  ;
+      } else {
+	os << "|" ;
+	TIterator* nciter = ncset->createIterator() ;
+	RooAbsArg* arg ;
+	Bool_t first(kTRUE) ;
+	while((arg=(RooAbsArg*)nciter->Next())) {
+	  if (!first) {
+	    os << "," ;
+	  } else {
+	    first = kFALSE ;
+	  }	  
+	  os << arg->GetName() ;	  
+	}
+      }
+    }
+  }
+  os << " " ;    
 }

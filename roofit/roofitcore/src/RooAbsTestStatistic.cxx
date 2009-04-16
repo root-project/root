@@ -442,7 +442,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsPdf* pdf =  simpdf->getPdf(type->GetName()) ;
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName()) ;
 
-    if (pdf && dset && (dset->numEntries(kTRUE)!=0. || processEmptyDataSets() )) {      
+    if (pdf && dset && (dset->sumEntries()!=0. || processEmptyDataSets() )) {      
       _nGof++ ;
     }
   }
@@ -458,7 +458,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsPdf* pdf =  simpdf->getPdf(type->GetName()) ;
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName()) ;
 
-    if (pdf && dset && (dset->numEntries(kTRUE)!=0. || processEmptyDataSets())) {      
+    if (pdf && dset && (dset->sumEntries()!=0. || processEmptyDataSets())) {      
       coutI(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << n << " for state " << type->GetName() 
 		     << " (" << dset->numEntries() << " dataset entries)" << endl ;
 
@@ -475,7 +475,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       _gofArray[n]->recursiveRedirectServers(_paramSet) ;
       n++ ;
     } else {
-      if ((!dset || (dset->numEntries(kTRUE)==0. && !processEmptyDataSets()) ) && pdf) {
+      if ((!dset || (dset->sumEntries()==0. && !processEmptyDataSets()) ) && pdf) {
 	if (_verbose) {
 	  coutI(Fitting) << "RooAbsTestStatistic::initSimMode: state " << type->GetName() 
 			 << " has no data entries, no slave calculator created" << endl ;

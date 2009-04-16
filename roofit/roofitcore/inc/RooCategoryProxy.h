@@ -27,6 +27,8 @@ public:
   RooCategoryProxy() {
     // Default constructor
   } ;
+  RooCategoryProxy(const char* name, const char* desc, RooAbsArg* owner,
+		   Bool_t valueServer=kTRUE, Bool_t shapeServer=kFALSE, Bool_t proxyOwnsArg=kFALSE) ;
   RooCategoryProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsCategory& ref,
 		   Bool_t valueServer=kTRUE, Bool_t shapeServer=kFALSE, Bool_t proxyOwnsArg=kFALSE) ;
   RooCategoryProxy(const char* name, RooAbsArg* owner, const RooCategoryProxy& other) ;
@@ -51,6 +53,9 @@ public:
     return arg().hasRange(rangeName) ; 
   }
 
+  // Modifier
+  virtual Bool_t setArg(RooAbsCategory& newRef) ;
+			
 protected:
 
   RooAbsCategoryLValue* lvptr() const ;

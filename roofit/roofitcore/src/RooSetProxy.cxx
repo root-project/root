@@ -254,12 +254,23 @@ RooSetProxy& RooSetProxy::operator=(const RooArgSet& other)
 
 
 //_____________________________________________________________________________
-Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange) 
+Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange, Bool_t factoryInitMode) 
 {
   // Process server change operation on owner. Replace elements in set with equally
   // named objects in 'newServerList'
 
-  if (getSize()==0) return kTRUE ;
+  if (getSize()==0) {
+    if (factoryInitMode) {
+      TIterator* iter = newServerList.createIterator() ;
+      RooAbsArg* arg ;
+      while((arg=(RooAbsArg*)iter->Next())) {
+	add(*arg,kTRUE) ;
+      }
+      delete iter ;
+    } else {
+      return kTRUE ;	
+    }
+  }
 
   _iter->Reset() ;
   RooAbsArg* arg ;

@@ -171,6 +171,16 @@ void RooFormulaVar::printMultiline(ostream& os, Int_t contents, Bool_t verbose, 
 
 
 //_____________________________________________________________________________
+void RooFormulaVar::printMetaArgs(ostream& os) const 
+{
+  // Add formula expression as meta argument in printing interface
+  os << "formula=\"" << _formExpr << "\" " ;
+}
+
+
+
+
+//_____________________________________________________________________________
 Bool_t RooFormulaVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/)
 {
   // Read object contents from given stream

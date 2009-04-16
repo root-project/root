@@ -43,6 +43,7 @@
 #include "Riostream.h"
 
 #include "TClass.h"
+
 #include <fstream>
 #include <iomanip>
 #include "TH1.h"
@@ -53,6 +54,7 @@
 #include "TFitter.h"
 #include "TMinuit.h"
 #include "TDirectory.h"
+#include "TMatrixDSym.h"
 #include "RooMinuit.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
@@ -108,6 +110,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   RooSentinel::activate() ;
 
   // Store function reference
+  _extV = 0 ;
   _func = &function ;
   _logfile = 0 ;
   _optConst = kFALSE ;
@@ -197,6 +200,9 @@ RooMinuit::~RooMinuit()
   delete _initFloatParamList ;
   delete _constParamList ;
   delete _initConstParamList ;
+  if (_extV) {
+    delete _extV ;
+  }
 }
 
 
@@ -800,7 +806,11 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
   fitRes->setNumInvalidNLL(_numBadNLL) ;
   fitRes->setEDM(edm) ;    
   fitRes->setFinalParList(saveFloatFinalList) ;
-  fitRes->fillCorrMatrix() ;
+  if (!_extV) {
+    fitRes->fillCorrMatrix() ;
+  } else {
+    fitRes->setCovarianceMatrix(*_extV) ;
+  }
 
   return fitRes ;
 }
@@ -1015,6 +1025,29 @@ void RooMinuit::backProp()
     }
   }
 }
+
+
+
+
+//_____________________________________________________________________________
+void RooMinuit::applyCovarianceMatrix(TMatrixDSym& V) 
+{
+  // Apply results of given external covariance matrix. i.e. propagate its errors
+  // to all RRV parameter representations and give this matrix instead of the
+  // HESSE matrix at the next save() call
+
+  _extV = (TMatrixDSym*) V.Clone() ;
+
+  for (Int_t i=0 ; i<getNPar() ; i++) {
+    // Skip fixed parameters
+    if (_floatParamList->at(i)->isConstant()) {
+      continue ;
+    }
+    setPdfParamErr(i, sqrt((*_extV)(i,i))) ;		  
+  }
+
+}
+
 
 
 

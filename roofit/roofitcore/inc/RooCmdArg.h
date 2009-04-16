@@ -21,7 +21,7 @@
 #include "TString.h"
 #include "RooLinkedList.h"
 class RooAbsData ;
-
+class RooArgSet ;
 
 class RooCmdArg : public TNamed {
 public:
@@ -31,7 +31,8 @@ public:
 	    Int_t i1=0, Int_t i2=0, 
 	    Double_t d1=0, Double_t d2=0, 
 	    const char* s1=0, const char* s2=0, 
-	    const TObject* o1=0, const TObject* o2=0, const RooCmdArg* ca=0, const char* s3=0) ;
+	    const TObject* o1=0, const TObject* o2=0, const RooCmdArg* ca=0, const char* s3=0,
+	    const RooArgSet* c1=0, const RooArgSet* c2=0) ;
   RooCmdArg(const RooCmdArg& other) ;
   RooCmdArg& operator=(const RooCmdArg& other) ;
   void addArg(const RooCmdArg& arg) ;
@@ -72,6 +73,7 @@ public:
   void setObject(Int_t idx,TObject* value) {
     _o[idx] = value ;
   }
+  void setSet(Int_t idx,const RooArgSet& set) ;
 
   Int_t getInt(Int_t idx) const { 
     // Return integer stored in slot idx
@@ -90,6 +92,8 @@ public:
     return _o[idx] ; 
   }
 
+  const RooArgSet* getSet(Int_t idx) const ;
+
 protected:
 
   static const RooCmdArg _none  ; // Static instance of null object
@@ -105,6 +109,7 @@ private:
   const char* _s[3] ;    // Payload strings
   TObject* _o[2] ;       // Payload objects
   Bool_t _procSubArgs ;  // If true argument requires recursive processing
+  RooArgSet* _c ;        // Payload RooArgSets 
   RooLinkedList _argList ; // Payload sub-arguments
 	
   ClassDef(RooCmdArg,0) // Generic named argument container

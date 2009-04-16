@@ -29,6 +29,8 @@ class TH2 ;
 class RooNumConvolution : public RooAbsReal {
 public:
 
+  RooNumConvolution() ;
+
   RooNumConvolution(const char *name, const char *title, 
 	         RooRealVar& convVar, RooAbsReal& pdf, RooAbsReal& resmodel, const RooNumConvolution* proto=0) ;
 
@@ -92,7 +94,7 @@ protected:
   Bool_t       _doProf   ;        // Switch to activate profiling option
   TH2*         _callHist ;        //! Histogram recording number of calls per convolution integral calculation
 
-  ClassDef(RooNumConvolution,0)   // Operator PDF implementing numeric convolution of 2 input functions
+  ClassDef(RooNumConvolution,1)   // Operator PDF implementing numeric convolution of 2 input functions
 };
 
 #endif

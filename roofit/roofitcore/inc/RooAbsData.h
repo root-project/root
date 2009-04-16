@@ -52,7 +52,7 @@ public:
   virtual Bool_t changeObservableName(const char* from, const char* to) = 0 ;
 
   // Add one ore more rows of data
-  virtual void add(const RooArgSet& row, Double_t weight=1) = 0 ;
+  virtual void add(const RooArgSet& row, Double_t weight=1, Double_t weightError=0) = 0 ;
   virtual void fill() = 0 ;
 
   // Load a given row of data
@@ -62,15 +62,19 @@ public:
   } 
   virtual Double_t weight() const = 0 ; 
   virtual Bool_t valid() const = 0 ;
-  enum ErrorType { Poisson, SumW2, None } ;
+  enum ErrorType { Poisson, SumW2, None, Auto } ;
   virtual Double_t weightError(ErrorType etype=Poisson) const ;
   virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ; 
   virtual const RooArgSet* get(Int_t index) const = 0 ;
 
-  virtual Int_t numEntries(Bool_t useWeights=kFALSE) const = 0 ;
+  virtual Int_t numEntries() const = 0 ;
   virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const = 0 ;
   virtual Bool_t isWeighted() const { 
     // Do events in dataset have weights?
+    return kFALSE ; 
+  }
+  virtual Bool_t isNonPoissonWeighted() const { 
+    // Do events in dataset have non-integer weights?
     return kFALSE ; 
   }
   virtual void reset() = 0 ;
@@ -123,7 +127,7 @@ public:
 
 protected:
 
-  virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList) =0 ;
+  virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList, const RooArgSet& keepObsList) =0 ;
 
 
   // Constant term optimizer interface

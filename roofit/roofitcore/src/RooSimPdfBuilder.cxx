@@ -429,8 +429,7 @@
 #else
 
 
-char *
-strtok_r(char *s1, const char *s2, char **lasts)
+static char *strtok_r(char *s1, const char *s2, char **lasts)
 {
   char *ret;
   

@@ -42,6 +42,10 @@
 #include "TIterator.h"
 #include "RooMsgService.h"
 #include "TClass.h"
+#include "TFoam.h"
+#include "RooRealBinding.h"
+#include "RooNumGenFactory.h"
+#include "RooNumGenConfig.h"
 
 #include <assert.h>
 
@@ -50,90 +54,48 @@ ClassImp(RooAcceptReject)
 
 
 //_____________________________________________________________________________
-RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooAbsReal* maxFuncVal, Bool_t verbose) :
-  TNamed(func), _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose)
+void RooAcceptReject::registerSampler(RooNumGenFactory& fact)
+{
+  // Register RooIntegrator1D, is parameters and capabilities with RooNumIntFactory 
+  RooRealVar nTrial0D("nTrial0D","Number of trial samples for cat-only generation",100,0,1e9) ;
+  RooRealVar nTrial1D("nTrial1D","Number of trial samples for 1-dim generation",1000,0,1e9) ;
+  RooRealVar nTrial2D("nTrial2D","Number of trial samples for 2-dim generation",100000,0,1e9) ;
+  RooRealVar nTrial3D("nTrial3D","Number of trial samples for N-dim generation",10000000,0,1e9) ;
+
+  RooAcceptReject* proto = new RooAcceptReject ;
+  fact.storeProtoSampler(proto,RooArgSet(nTrial0D,nTrial1D,nTrial2D,nTrial3D)) ;
+}
+
+
+
+//_____________________________________________________________________________
+RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose, const RooAbsReal* maxFuncVal) :
+  RooAbsNumGenerator(func,genVars,verbose,maxFuncVal)
 {
   // Initialize an accept-reject generator for the specified distribution function,
   // which must be non-negative but does not need to be normalized over the
   // variables to be generated, genVars. The function and its dependents are
   // cloned and so will not be disturbed during the generation process.
 
-  // Clone the function and all nodes that it depends on so that this generator
-  // is independent of any existing objects.
-  RooArgSet nodes(func,func.GetName());
-  _cloneSet= (RooArgSet*) nodes.snapshot(kTRUE);
-  if (!_cloneSet) {
-    coutE(Generation) << "RooAcceptReject::RooAcceptReject(" << GetName() << ") Couldn't deep-clone function, abort," << endl ;
-    RooErrorHandler::softAbort() ;
+  _minTrialsArray[0] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial0D")) ;
+  _minTrialsArray[1] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial1D")) ;
+  _minTrialsArray[2] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial2D")) ;
+  _minTrialsArray[3] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial3D")) ;
+
+  _realSampleDim = _realVars.getSize() ;
+  TIterator* iter = _catVars.createIterator() ;
+  RooAbsCategory* cat ;
+  _catSampleMult = 1 ;
+  while((cat=(RooAbsCategory*)iter->Next())) {
+    _catSampleMult *=  cat->numTypes() ;
   }
 
-  // Find the clone in the snapshot list
-  _funcClone = (RooAbsReal*)_cloneSet->find(func.GetName());
-  
-  // Check that each argument is fundamental, and separate them into
-  // sets of categories and reals. Check that the area of the generating
-  // space is finite.
-  _realSampleDim= 0;
-  _catSampleMult= 1;
-  _isValid= kTRUE;
-  TIterator *iterator= genVars.createIterator();
-  const RooAbsArg *found = 0;
-  const RooAbsArg *arg   = 0;
-  while((arg= (const RooAbsArg*)iterator->Next())) {
-    if(!arg->isFundamental()) {
-      coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for derived \""
-			<< arg->GetName() << "\"" << endl;
-      _isValid= kFALSE;
-      continue;
-    }
-    // look for this argument in the generating function's dependents
-    found= (const RooAbsArg*)_cloneSet->find(arg->GetName());
-    if(found) {
-      arg= found;
-      const RooAbsCategory * cat = dynamic_cast<const RooAbsCategory*>(found) ;
-      if (cat) {
-	_catSampleMult *= cat->numTypes() ;
-      } else {
-	_realSampleDim++;
-      }
-    }
-    else {
-      // clone any variables we generate that we haven't cloned already
-      arg= _cloneSet->addClone(*arg);
-    }
-    assert(0 != arg);
-    // is this argument a category or a real?
-    const RooCategory *catVar= dynamic_cast<const RooCategory*>(arg);
-    const RooRealVar *realVar= dynamic_cast<const RooRealVar*>(arg);
-    if(0 != catVar) {
-      _catVars.add(*catVar);
-    }
-    else if(0 != realVar) {
-      if(realVar->hasMin() && realVar->hasMax()) {
-	_realVars.add(*realVar);
-      }
-      else {
-	coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
-			  << realVar->GetName() << "\" with unbound range" << endl;
-	_isValid= kFALSE;
-      }
-    }
-    else {
-      coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
-			<< arg->GetName() << "\" with unexpected type" << endl;
-      _isValid= kFALSE;
-    }
-  }
-  delete iterator;
-  if(!_isValid) {
-    coutE(Generation) << fName << "::" << ClassName() << ": constructor failed with errors" << endl;
-    return;
-  }
 
   // calculate the minimum number of trials needed to estimate our integral and max value
   if (!_funcMaxVal) {
-    if(_realSampleDim > _maxSampleDim) {
-      _minTrials= _minTrialsArray[_maxSampleDim]*_catSampleMult;
+
+    if(_realSampleDim > 3) {
+      _minTrials= _minTrialsArray[3]*_catSampleMult;
       coutW(Generation) << fName << "::" << ClassName() << ": WARNING: generating " << _realSampleDim
 			<< " variables with accept-reject may not be accurate" << endl;
     }
@@ -143,6 +105,19 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   } else {
     // No trials needed if we know the maximum a priori
     _minTrials=0 ;
+  }
+
+  // Need to fix some things here
+  if (_realSampleDim > 1) {
+    coutW(Generation) << "RooAcceptReject::ctor(" << fName 
+		      << ") WARNING: performing accept/reject sampling on a p.d.f in " << _realSampleDim << " dimensions "
+		      << "without prior knowledge on maximum value of p.d.f. Determining maximum value by taking " << _minTrials 
+		      << " trial samples. If p.d.f contains sharp peaks smaller than average distance between trial sampling points"
+		      << " these may be missed and p.d.f. may be sampled incorrectly." << endl ;
+  }
+  if (_minTrials>10000) {
+    coutW(Generation) << "RooAcceptReject::ctor(" << fName << "): WARNING: " << _minTrials << " trial samples requested by p.d.f for " 
+		      << _realSampleDim << "-dimensional accept/reject sampling, this may take some time" << endl ;
   }
 
   // print a verbose summary of our configuration, if requested
@@ -164,31 +139,6 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
       ccoutI(Generation) << "  Will generate real vars " << _realVars << endl ;
     }
   }
-
-  // create a fundamental type for storing function values
-  _funcValStore= dynamic_cast<RooRealVar*>(_funcClone->createFundamental());
-  assert(0 != _funcValStore);
-
-  // create a new dataset to cache trial events and function values
-  RooArgSet cacheArgs(_catVars);
-  cacheArgs.add(_realVars);
-  cacheArgs.add(*_funcValStore);
-  _cache= new RooDataSet("cache","Accept-Reject Event Cache",cacheArgs);
-  assert(0 != _cache);
-
-  // attach our function clone to the cache dataset
-  const RooArgSet *cacheVars= _cache->get();
-  assert(0 != cacheVars);
-  _funcClone->recursiveRedirectServers(*cacheVars,kFALSE);
-
-  // update ours sets of category and real args to refer to the cache dataset
-  const RooArgSet *dataVars= _cache->get();
-  _catVars.replace(*dataVars);
-  _realVars.replace(*dataVars);
-
-  // find the function value in the dataset
-  _funcValPtr= (RooRealVar*)dataVars->find(_funcValStore->GetName());
-
   // create iterators for the new sets
   _nextCatVar= _catVars.createIterator();
   _nextRealVar= _realVars.createIterator();
@@ -207,30 +157,14 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
 RooAcceptReject::~RooAcceptReject() 
 {
   // Destructor
-
-  delete _cache ;
   delete _nextCatVar;
   delete _nextRealVar;
-  delete _cloneSet;
-  delete _funcValStore;
 }
 
 
 
 //_____________________________________________________________________________
-void RooAcceptReject::attachParameters(const RooArgSet& vars) 
-{
-  // Reattach original parameters to function clone
-
-  RooArgSet newParams(vars) ;
-  newParams.remove(*_cache->get(),kTRUE,kTRUE) ;
-  _funcClone->recursiveRedirectServers(newParams) ;
-}
-
-
-
-//_____________________________________________________________________________
-const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) 
+const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, Double_t& resampleRatio) 
 {
   // Return a pointer to a generated event. The caller does not own the event and it
   // will be overwritten by a subsequent call. The input parameter 'remaining' should
@@ -258,8 +192,14 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining)
     }
     
     event= 0;
+    Double_t oldMax2(_maxFuncVal);
     while(0 == event) {
       // Use any cached events first
+      if (_maxFuncVal>oldMax2) {
+	cxcoutD(Generation) << "RooAcceptReject::generateEvent maxFuncVal has changed, need to resample already accepted events by factor" 
+			    << oldMax2 << "/" << _maxFuncVal << "=" << oldMax2/_maxFuncVal << endl ;	
+	resampleRatio=oldMax2/_maxFuncVal ;
+      }
       event= nextAcceptedEvent();
       if(event) break;
       // When we have used up the cache, start a new cache and add
@@ -272,14 +212,19 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining)
 	coutE(Generation) << "RooAcceptReject::generateEvent: cannot estimate efficiency...giving up" << endl;
 	return 0;
       }
+
       Double_t eff= _funcSum/(_totalEvents*_maxFuncVal);
-      Int_t extra= 1 + (Int_t)(1.05*remaining/eff);
-      cxcoutD(Generation) << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache" << endl;
+      Long64_t extra= 1 + (Long64_t)(1.05*remaining/eff);
+      cxcoutD(Generation) << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache, eff = " << eff << endl;
       Double_t oldMax(_maxFuncVal);
-      while(extra--) addEventToCache();
-      if((_maxFuncVal > oldMax)) {
-	cxcoutD(Generation) << "RooAcceptReject::generateEvent: estimated function maximum increased from "
-			  << oldMax << " to " << _maxFuncVal << endl;
+      while(extra--) {
+	addEventToCache();
+	if((_maxFuncVal > oldMax)) {
+	  cxcoutD(Generation) << "RooAcceptReject::generateEvent: estimated function maximum increased from "
+			      << oldMax << " to " << _maxFuncVal << endl;
+	  oldMax = _maxFuncVal ;
+	  // Trim cache here
+	}
       }
     }
 
@@ -320,7 +265,11 @@ const RooArgSet *RooAcceptReject::nextAcceptedEvent()
     _eventsUsed++ ;
     // accept this cached event?
     Double_t r= RooRandom::uniform();
-    if(r*_maxFuncVal > _funcValPtr->getVal()) continue;
+    if(r*_maxFuncVal > _funcValPtr->getVal()) {
+      //cout << " event number " << _eventsUsed << " has been rejected" << endl ;
+      continue;
+    }
+    //cout << " event number " << _eventsUsed << " has been accepted" << endl ;
     // copy this event into the output container
     if(_verbose && (_eventsUsed%1000==0)) {
       cerr << "RooAcceptReject: accepted event (used " << _eventsUsed << " of "
@@ -328,6 +277,7 @@ const RooArgSet *RooAcceptReject::nextAcceptedEvent()
     }
     break;
   }  
+  //cout << "accepted event " << _eventsUsed << " of " << _cache->numEntries() << endl ;
   return event;
 }
 
@@ -390,45 +340,3 @@ Double_t RooAcceptReject::getFuncMax()
   return _maxFuncVal ;
 }
 
-
-//_____________________________________________________________________________
-void RooAcceptReject::printName(ostream& os) const 
-{
-  // Print name of the generator
-
-  os << GetName() ;
-}
-
-
-
-//_____________________________________________________________________________
-void RooAcceptReject::printTitle(ostream& os) const 
-{
-  // Print the title of the generator
-
-  os << GetTitle() ;
-}
-
-
-
-//_____________________________________________________________________________
-void RooAcceptReject::printClassName(ostream& os) const 
-{
-  // Print the class name of the generator
-
-  os << IsA()->GetName() ;
-}
-
-
-
-//_____________________________________________________________________________
-void RooAcceptReject::printArgs(ostream& os) const 
-{
-  // Print the arguments of the generator
-
-  os << "[ function=" << _funcClone->GetName() << " catobs=" << _catVars << " realobs=" << _realVars << " ]" ;
-}
-
-
-const UInt_t RooAcceptReject::_minTrialsArray[] = { 100,1000,100000,10000000 };
-const UInt_t RooAcceptReject::_maxSampleDim = (sizeof(_minTrialsArray) / sizeof(int)) - 1;

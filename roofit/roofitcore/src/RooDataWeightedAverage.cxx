@@ -45,9 +45,9 @@ ClassImp(RooDataWeightedAverage)
 
 
 //_____________________________________________________________________________
-RooDataWeightedAverage::RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& data,
+RooDataWeightedAverage::RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& indata,
 					       Int_t nCPU, Bool_t interleave, Bool_t showProgress, Bool_t verbose) : 
-  RooAbsOptTestStatistic(name,title,pdf,data,RooArgSet(),0,0,nCPU,interleave,verbose,kFALSE),
+  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),0,0,nCPU,interleave,verbose,kFALSE),
   _showProgress(showProgress)
 {
   // Constructor of data weighted average of given p.d.f over given data. If nCPU>1 the calculation is parallelized
@@ -57,9 +57,9 @@ RooDataWeightedAverage::RooDataWeightedAverage(const char *name, const char *tit
 
   if (_showProgress) {
     coutI(Plotting) << "RooDataWeightedAverage::ctor(" << GetName() << ") constructing data weighted average of function " << pdf.GetName() 
-		    << " over " << data.numEntries() << " data points of " << *(data.get()) << " with a total weight of " << data.numEntries(kTRUE) << endl ;
+		    << " over " << indata.numEntries() << " data points of " << *(indata.get()) << " with a total weight of " << indata.sumEntries() << endl ;
   }
-  _sumWeight = data.numEntries(kTRUE) ;
+  _sumWeight = indata.sumEntries() ;
 }
 
 

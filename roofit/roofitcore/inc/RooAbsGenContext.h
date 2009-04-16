@@ -68,12 +68,13 @@ protected:
   friend class RooConvGenContext ;
   friend class RooProdGenContext ;
   friend class RooAddGenContext ;
-  friend class RooAddGenContextOrig ;
   friend class RooSimGenContext ;
   friend class RooEffGenContext ;
 
   virtual void initGenerator(const RooArgSet &theEvent);
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining) = 0;
+
+  void resampleData(Double_t& ratio) ;
 
   const RooDataSet *_prototype; // Pointer to prototype dataset
   RooArgSet *_theEvent;         // Pointer to observable event being generated
@@ -84,6 +85,8 @@ protected:
   Int_t _nextProtoIndex;        // Next prototype event to load according to LUT
   RooAbsPdf::ExtendMode _extendMode ;  // Extended mode capabilities of p.d.f.
   Int_t* _protoOrder ;          // LUT with traversal order of prototype data
+
+  RooDataSet* _genData ;        //! Data being generated
 
   ClassDef(RooAbsGenContext,0) // Abstract context for generating a dataset from a PDF
 };

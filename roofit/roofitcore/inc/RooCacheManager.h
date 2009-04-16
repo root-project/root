@@ -227,6 +227,10 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
   if (sterileIdx>=0) {
     // Found sterile slot that can should be recycled [ sterileIndex only set if isetRangeName matches ]
     _object[sterileIdx] = obj ;
+
+    // Allow optional post-processing of object inserted in cache
+    insertObjectHook(*obj) ;
+
     return lastIndex() ;
   }
 

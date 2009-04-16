@@ -20,6 +20,8 @@
 #include "RooArgProxy.h"
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
+#include <iostream>
+using namespace std ;
 
 //////////////////////////////////////////////////////////////////////////////
 // 
@@ -39,6 +41,18 @@
 
 ClassImp(RooArgProxy)
 ;
+
+
+//_____________________________________________________________________________
+RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
+			 Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg) : 
+  TNamed(inName,desc), _owner(owner), _arg(0),
+  _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
+{
+  // Constructor with owner and proxied variable. 
+  _owner->registerProxy(*this) ;
+}
+
 
 
 //_____________________________________________________________________________
@@ -66,7 +80,7 @@ RooArgProxy::RooArgProxy(const char* inName, RooAbsArg* owner, const RooArgProxy
   // Copy constructor
 
   if (_ownArg) {
-    _arg = (RooAbsArg*) _arg->Clone() ;
+    _arg = _arg ? (RooAbsArg*) _arg->Clone() : 0 ;
   }
 
   _owner->registerProxy(*this) ;
@@ -86,18 +100,27 @@ RooArgProxy::~RooArgProxy()
 
 
 //_____________________________________________________________________________
-Bool_t RooArgProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange) 
+Bool_t RooArgProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange, Bool_t factoryInitMode) 
 {
   // Change proxied object to object of same name in given list. If nameChange is true
   // the replacement object can have a different name and is identified as the replacement object by
   // the existence of a boolean attribute "origName:MyName" where MyName is the name of this instance
-
-  RooAbsArg* newArg= _arg->findNewServer(newServerList, nameChange);
+  
+  RooAbsArg* newArg ;
+  Bool_t initEmpty = _arg ? kFALSE : kTRUE ;
+  if (_arg) {
+    newArg= _arg->findNewServer(newServerList, nameChange);
+  } else if (factoryInitMode) {
+    newArg = newServerList.first() ;
+    _owner->addServer(*newArg,_valueServer,_shapeServer) ;
+  } else {
+    newArg = 0 ;
+  }
   if (newArg) {
     _arg = newArg ;
     _isFund = _arg->isFundamental() ;
-  }
-
+  }  
+  if (initEmpty && !factoryInitMode) return kTRUE ;
   return newArg?kTRUE:kFALSE ;
 }
 

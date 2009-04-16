@@ -20,6 +20,7 @@
 #include "RooCmdArg.h"
 #include "RooCurve.h"
 #include "RooArgSet.h"
+#include "RooArgList.h"
 
 class RooArgList ;
 class RooDataSet ;
@@ -31,6 +32,10 @@ class RooCategory ;
 class RooLinkedList ;
 class RooNumIntConfig ;
 class RooDataHist ;
+class RooFunctor ;
+class RooGenFunction ;
+class RooMultiGenFunction ;
+class RooFitResult ;
 
 class TH1;
 class TH1F;
@@ -60,7 +65,7 @@ public:
   }
   Bool_t operator==(Double_t value) const ;
   virtual Bool_t operator==(const RooAbsArg& other) ;
-  inline const char *getUnit() const { 
+  inline const Text_t *getUnit() const { 
     // Return string with unit description
     return _unit.Data(); 
   }
@@ -91,6 +96,29 @@ public:
     // and all integrals are calculated numerically
     _forceNumInt = flag ; 
   }
+
+  // Chi^2 fits to histograms
+  virtual RooFitResult* chi2FitTo(RooDataHist& data, RooCmdArg arg1=RooCmdArg::none(),  RooCmdArg arg2=RooCmdArg::none(),  
+                              RooCmdArg arg3=RooCmdArg::none(),  RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),  
+                              RooCmdArg arg6=RooCmdArg::none(),  RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
+  virtual RooFitResult* chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
+
+  virtual RooAbsReal* createChi2(RooDataHist& data, const RooLinkedList& cmdList) ;
+  virtual RooAbsReal* createChi2(RooDataHist& data, RooCmdArg arg1=RooCmdArg::none(),  RooCmdArg arg2=RooCmdArg::none(),  
+				 RooCmdArg arg3=RooCmdArg::none(),  RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),  
+				 RooCmdArg arg6=RooCmdArg::none(),  RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
+
+  // Chi^2 fits to X-Y datasets
+  virtual RooFitResult* chi2FitTo(RooDataSet& xydata, RooCmdArg arg1=RooCmdArg::none(),  RooCmdArg arg2=RooCmdArg::none(),  
+                              RooCmdArg arg3=RooCmdArg::none(),  RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),  
+                              RooCmdArg arg6=RooCmdArg::none(),  RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
+  virtual RooFitResult* chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) ;
+
+  virtual RooAbsReal* createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
+  virtual RooAbsReal* createChi2(RooDataSet& data, RooCmdArg arg1=RooCmdArg::none(),  RooCmdArg arg2=RooCmdArg::none(),  
+				   RooCmdArg arg3=RooCmdArg::none(),  RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),  
+				   RooCmdArg arg6=RooCmdArg::none(),  RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
+
 
   virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
 
@@ -131,7 +159,8 @@ public:
   
   // Optimized accept/reject generator support
   virtual Int_t getMaxVal(const RooArgSet& vars) const ;
-  virtual Double_t maxVal(Int_t code) ;
+  virtual Double_t maxVal(Int_t code) const ;
+  virtual Int_t minTrialSamples(const RooArgSet& /*arGenObs*/) const { return 0 ; }
 
 
   // Plotting options
@@ -144,8 +173,10 @@ public:
   }
 
   const RooNumIntConfig* getIntegratorConfig() const ;
+  RooNumIntConfig* getIntegratorConfig() ;
   static RooNumIntConfig* defaultIntegratorConfig()  ;
   RooNumIntConfig* specialIntegratorConfig() const ;
+  RooNumIntConfig* specialIntegratorConfig(Bool_t createOnTheFly) ;
   void setIntegratorConfig() ;
   void setIntegratorConfig(const RooNumIntConfig& config) ;
 
@@ -224,6 +255,15 @@ public:
     return 0 ; 
   }
 
+  RooGenFunction* iGenFunction(RooRealVar& x, const RooArgSet& nset=RooArgSet()) ;
+  RooMultiGenFunction* iGenFunction(const RooArgSet& observables, const RooArgSet& nset=RooArgSet()) ;
+
+  RooFunctor* functor(const RooArgList& obs, const RooArgList& pars=RooArgList(), const RooArgSet& nset=RooArgSet()) const ;
+  TF1* asTF(const RooArgList& obs, const RooArgList& pars=RooArgList(), const RooArgSet& nset=RooArgSet()) const ;
+
+  RooAbsReal* derivative(RooRealVar& obs, Int_t order=1, Double_t eps=0.001) ;
+
+
 protected:
 
   // PlotOn with command list
@@ -251,6 +291,7 @@ protected:
 				         RooArgSet *&cloneSet, const char* rangeName=0) const;
  protected:
 
+  RooFitResult* chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList) ;
 
   // Support interface for subclasses to advertise their analytic integration
   // and generator capabilities in their analticalIntegral() and generateEvent()
@@ -288,7 +329,7 @@ protected:
   // Hooks for RooDataSet interface
   friend class RooRealIntegral ;
   virtual void syncCache(const RooArgSet* set=0) { getVal(set) ; }
-  virtual void copyCache(const RooAbsArg* source) ;
+  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
   virtual void fillTreeBranch(TTree& t) ;
@@ -310,7 +351,7 @@ protected:
   friend class RooAbsAnaConvPdf ;
   friend class RooRealProxy ;
 
-  RooNumIntConfig* _specIntegratorConfig ; //! Numeric integrator configuration specific for this object
+  RooNumIntConfig* _specIntegratorConfig ; // Numeric integrator configuration specific for this object
 
   Bool_t   _treeVar ;       // !do not persist
 

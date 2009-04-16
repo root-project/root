@@ -99,8 +99,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _projectCoefs(kFALSE),
   _projCacheMgr(this,10),
   _codeReg(10),
-  _pdfList("pdfs","List of PDFs",this),
-  _coefList("coefficients","List of coefficients",this),
+  _pdfList("!pdfs","List of PDFs",this),
+  _coefList("!coefficients","List of coefficients",this),
   _snormList(0),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)
@@ -125,8 +125,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   _projectCoefs(kFALSE),
   _projCacheMgr(this,10),
   _codeReg(10),
-  _pdfList("pdfs","List of PDFs",this),
-  _coefList("coefficients","List of coefficients",this),
+  _pdfList("!pdfs","List of PDFs",this),
+  _coefList("!coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)
 {
@@ -153,8 +153,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   _projectCoefs(kFALSE),
   _projCacheMgr(this,10),
   _codeReg(10),
-  _pdfList("pdfs","List of PDFs",this),
-  _coefList("coefficients","List of coefficients",this),
+  _pdfList("!pdfs","List of PDFs",this),
+  _coefList("!coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)
 { 
@@ -274,8 +274,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   _refCoefRangeName(0),
   _projectCoefs(kFALSE),
   _projCacheMgr(this,10),
-  _pdfList("pdfs","List of PDFs",this),
-  _coefList("coefficients","List of coefficients",this),
+  _pdfList("!pdfs","List of PDFs",this),
+  _coefList("!coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
   _allExtendable(kTRUE)
 { 
@@ -320,8 +320,8 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   _projectCoefs(other._projectCoefs),
   _projCacheMgr(other._projCacheMgr,this),
   _codeReg(other._codeReg),
-  _pdfList("pdfs",this,other._pdfList),
-  _coefList("coefficients",this,other._coefList),
+  _pdfList("!pdfs",this,other._pdfList),
+  _coefList("!coefficients",this,other._coefList),
   _haveLastCoef(other._haveLastCoef),
   _allExtendable(other._allExtendable)
 {
@@ -980,6 +980,7 @@ RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet 
 					const RooArgSet* auxProto, Bool_t verbose) const 
 {
   // Return specialized context to efficiently generate toy events from RooAddPdfs
+  // return RooAbsPdf::genContext(vars,prototype,auxProto,verbose) ; // WVE DEBUG
 
   return new RooAddGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
@@ -1039,4 +1040,46 @@ std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t
   }
 
   return sumHint ;
+}
+
+
+//_____________________________________________________________________________
+void RooAddPdf::printMetaArgs(ostream& os) const 
+{
+  // Customized printing of arguments of a RooAddPdf to more intuitively reflect the contents of the
+  // product operator construction
+
+  _pdfIter->Reset() ;
+  _coefIter->Reset() ;
+
+  Bool_t first(kTRUE) ;
+    
+  RooAbsArg* coef, *pdf ;
+  if (_coefList.getSize()!=0) { 
+    while((coef=(RooAbsArg*)_coefIter->Next())) {
+      if (!first) {
+	os << " + " ;
+      } else {
+	first = kFALSE ;
+      }
+      pdf=(RooAbsArg*)_pdfIter->Next() ;
+      os << coef->GetName() << " * " << pdf->GetName() ;
+    }
+    pdf = (RooAbsArg*) _pdfIter->Next() ;
+    if (pdf) {
+      os << " + [%] * " << pdf->GetName() ;
+    }
+  } else {
+    
+    while((pdf=(RooAbsArg*)_pdfIter->Next())) {
+      if (!first) {
+	os << " + " ;
+      } else {
+	first = kFALSE ;
+      }
+      os << pdf->GetName() ; 
+    }  
+  }
+
+  os << " " ;    
 }

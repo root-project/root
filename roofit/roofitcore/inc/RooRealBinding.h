@@ -25,6 +25,7 @@ class RooArgSet;
 class RooRealBinding : public RooAbsFunc {
 public:
   RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE, const TNamed* rangeName=0);
+  RooRealBinding(const RooRealBinding& other, const RooArgSet* nset=0) ;
   virtual ~RooRealBinding();
 
   virtual Double_t operator()(const Double_t xvector[]) const;

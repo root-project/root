@@ -58,6 +58,7 @@ public:
   Bool_t printEvalCounter() const { return _printEvalCounter ; }
   void setPrintEvalCounter(Bool_t value) { _printEvalCounter = value ; }
 
+  virtual Bool_t setLimits(Double_t*, Double_t*) { return kFALSE ; }
   virtual Bool_t setLimits(Double_t xmin, Double_t xmax) ;
   virtual Bool_t setUseIntegrandLimits(Bool_t flag) ;
 

@@ -191,7 +191,7 @@ Int_t RooCBShape::getMaxVal(const RooArgSet& vars) const
 
 
 //_____________________________________________________________________________
-Double_t RooCBShape::maxVal(Int_t code) 
+Double_t RooCBShape::maxVal(Int_t code) const
 {
   assert(code==1) ;
 

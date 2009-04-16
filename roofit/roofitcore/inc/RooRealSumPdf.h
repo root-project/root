@@ -19,15 +19,16 @@
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
 #include "RooAICRegistry.h"
+#include "RooObjCacheManager.h"
 
 class RooRealSumPdf : public RooAbsPdf {
 public:
 
   RooRealSumPdf() ;
   RooRealSumPdf(const char *name, const char *title);
+  RooRealSumPdf(const char *name, const char *title, const RooArgList& funcList, const RooArgList& coefList) ;
   RooRealSumPdf(const char *name, const char *title,
 		   RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) ;
-  RooRealSumPdf(const char *name, const char *title, const RooArgList& funcList, const RooArgList& coefList) ;
   RooRealSumPdf(const RooRealSumPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooRealSumPdf(*this,newname) ; }
   virtual ~RooRealSumPdf() ;
@@ -42,17 +43,28 @@ public:
   const RooArgList& funcList() const { return _funcList ; }
   const RooArgList& coefList() const { return _coefList ; }
 
+  virtual ExtendMode extendMode() const ; 
+
+  virtual Double_t expectedEvents(const RooArgSet* nset) const ;
+  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
+    // Return expected number of events for extended likelihood calculation
+    // which is the sum of all coefficients
+    return expectedEvents(&nset) ; 
+  }
+
+  void printMetaArgs(ostream& os) const ;
 
 protected:
   
-  mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
-
-  void syncFuncIntList(const RooArgSet* intSet) const ;
-  void syncFuncNormList(const RooArgSet* normSet) const ;
-  mutable RooArgSet* _lastFuncIntSet ; //!
-  mutable RooArgSet* _lastFuncNormSet ; //!
-  mutable RooArgList* _funcIntList ;  //!
-  mutable RooArgList* _funcNormList ; //!
+  class CacheElem : public RooAbsCacheElement {
+  public:
+    CacheElem()  {} ;
+    virtual ~CacheElem() {} ; 
+    virtual RooArgList containedArgs(Action) { RooArgList ret(_funcIntList) ; ret.add(_funcNormList) ; return ret ; }
+    RooArgList _funcIntList ;
+    RooArgList _funcNormList ;
+  } ;
+  mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
 
   Bool_t _haveLastCoef ;
 

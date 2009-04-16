@@ -42,7 +42,7 @@ public:
   virtual Double_t highBound() const { return _range[1] ; }
   virtual Double_t averageBinWidth() const { return binWidth(0) ; }
 
-  virtual Double_t* array() const { return (Double_t*) _range ; }
+  virtual Double_t* array() const { return const_cast<Double_t*>(_range) ; }
 
 protected:
 

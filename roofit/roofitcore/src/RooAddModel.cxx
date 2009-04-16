@@ -89,8 +89,8 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
   _projCacheMgr(this,10),
   _intCacheMgr(this,10),
   _codeReg(10),
-  _pdfList("pdfs","List of PDFs",this),
-  _coefList("coefficients","List of coefficients",this),
+  _pdfList("!pdfs","List of PDFs",this),
+  _coefList("!coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)
 { 
@@ -169,8 +169,8 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   _projCacheMgr(other._projCacheMgr,this),
   _intCacheMgr(other._intCacheMgr,this),
   _codeReg(other._codeReg),
-  _pdfList("pdfs",this,other._pdfList),
-  _coefList("coefficients",this,other._coefList),
+  _pdfList("!pdfs",this,other._pdfList),
+  _coefList("!coefficients",this,other._coefList),
   _haveLastCoef(other._haveLastCoef),
   _allExtendable(other._allExtendable)
 {
@@ -875,6 +875,62 @@ void RooAddModel::selectNormalizationRange(const char* rangeName, Bool_t force)
 
 
 //_____________________________________________________________________________
+RooAbsGenContext* RooAddModel::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
+					const RooArgSet* auxProto, Bool_t verbose) const 
+{
+  // Return specialized context to efficiently generate toy events from RooAddPdfs
+
+  return new RooAddGenContext(*this,vars,prototype,auxProto,verbose) ;
+}
+
+
+
+//_____________________________________________________________________________
+Bool_t RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const 
+{
+  // Direct generation is safe if all components say so
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+    if (!pdf->isDirectGenSafe(arg)) {
+      return kFALSE ;
+    }
+  }
+  return kTRUE ;
+}
+
+
+
+//_____________________________________________________________________________
+Int_t RooAddModel::getGenerator(const RooArgSet& directVars, RooArgSet &/*generateVars*/, Bool_t /*staticInitOK*/) const
+{
+  // Return pseud-code that indicates if all components can do internal generation (1) or not (0)
+
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+    RooArgSet tmp ;
+    if (pdf->getGenerator(directVars,tmp)==0) {
+      return 0 ;
+    }
+  }
+  return 1 ;  
+}
+
+
+
+
+//_____________________________________________________________________________
+void RooAddModel::generateEvent(Int_t /*code*/)
+{
+  // This function should never be called as RooAddModel implements a custom generator context
+  assert(0) ;
+}
+
+
+
+
+//_____________________________________________________________________________
 RooArgList RooAddModel::CacheElem::containedArgs(Action) 
 {
   // List all RooAbsArg derived contents in this cache element
@@ -897,5 +953,35 @@ RooArgList RooAddModel::IntCacheElem::containedArgs(Action)
 
   RooArgList allNodes(_intList) ;
   return allNodes ;
+}
+
+
+//_____________________________________________________________________________
+void RooAddModel::printMetaArgs(ostream& os) const 
+{
+  // Customized printing of arguments of a RooAddModel to more intuitively reflect the contents of the
+  // product operator construction
+
+  _pdfIter->Reset() ;
+  _coefIter->Reset() ;
+
+  Bool_t first(kTRUE) ;
+    
+  os << "(" ;
+  RooAbsArg* coef, *pdf ;
+  while((coef=(RooAbsArg*)_coefIter->Next())) {
+    if (!first) {
+      os << " + " ;
+    } else {
+      first = kFALSE ;
+    }
+    pdf=(RooAbsArg*)_pdfIter->Next() ;
+    os << coef->GetName() << " * " << pdf->GetName() ;
+  }
+  pdf = (RooAbsArg*) _pdfIter->Next() ;
+  if (pdf) {
+    os << " + [%] * " << pdf->GetName() ;
+  }
+  os << ") " ;    
 }
 

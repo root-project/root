@@ -43,6 +43,7 @@ public:
   Double_t getNorm(const RooArgSet* nset=0) const ;
 
   inline const RooFormulaVar& basis() const { return _basis?*_basis:*identity() ; }
+  Bool_t isConvolved() { return _basis ? kTRUE : kFALSE ; }
 
   virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 

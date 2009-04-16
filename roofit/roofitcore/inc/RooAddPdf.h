@@ -78,6 +78,8 @@ public:
 
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
 
+  void printMetaArgs(ostream& os) const ;
+
 protected:
 
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
