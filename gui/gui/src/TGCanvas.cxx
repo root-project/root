@@ -817,7 +817,7 @@ void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
       if (!gcBg) {
          GCValues_t gcValues;
          gcValues.fForeground = fBackground;
-         gcValues.fForeground = fBackground;
+         gcValues.fBackground = fBackground;
          gcValues.fGraphicsExposures = kTRUE;
          gcValues.fMask = kGCForeground | kGCBackground | kGCGraphicsExposures;
          gcBg = gVirtualX->CreateGC(fId, &gcValues);
