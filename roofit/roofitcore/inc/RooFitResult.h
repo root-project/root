@@ -25,7 +25,7 @@
 #include "RVersion.h"
 #if ROOT_VERSION_CODE >= 327680
 #include "TMatrixFfwd.h"
-#include "TMatrixDSymfwd.h"
+#include "TMatrixDSym.h"
 #include "TRootIOCtor.h"
 #else
 class TMatrixF;
