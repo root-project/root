@@ -187,8 +187,8 @@ void TRootBrowser::CreateBrowser(const char *name)
    fPreMenuFrame = new TGHorizontalFrame(fTopMenuFrame, 0, 20, kRaisedFrame);
    fMenuBar   = new TGMenuBar(fPreMenuFrame, 10, 10, kHorizontalFrame);
    fMenuFile  = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuFile->AddEntry("&Browse...             Ctrl+B", kBrowse);
-   fMenuFile->AddEntry("&Open...                 Ctrl+O", kOpenFile);
+   fMenuFile->AddEntry("&Browse...\tCtrl+B", kBrowse);
+   fMenuFile->AddEntry("&Open...\tCtrl+O", kOpenFile);
    fMenuFile->AddSeparator();
    
    fMenuHelp = new TGPopupMenu(fClient->GetRoot());
@@ -204,21 +204,21 @@ void TRootBrowser::CreateBrowser(const char *name)
    fMenuFile->AddPopup("Browser Help...", fMenuHelp);
    
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry("&Clone                   Ctrl+N", kClone);
+   fMenuFile->AddEntry("&Clone\tCtrl+N", kClone);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry("New &Editor          Ctrl+E", kNewEditor);
-   fMenuFile->AddEntry("New &Canvas       Ctrl+C", kNewCanvas);
-   fMenuFile->AddEntry("New &HTML          Ctrl+H", kNewHtml);
+   fMenuFile->AddEntry("New &Editor\tCtrl+E", kNewEditor);
+   fMenuFile->AddEntry("New &Canvas\tCtrl+C", kNewCanvas);
+   fMenuFile->AddEntry("New &HTML\tCtrl+H", kNewHtml);
    fMenuFile->AddSeparator();
    fMenuExecPlugin = new TGPopupMenu(fClient->GetRoot());
    fMenuExecPlugin->AddEntry("&Macro...", kExecPluginMacro);
    fMenuExecPlugin->AddEntry("&Command...", kExecPluginCmd);
    fMenuFile->AddPopup("Execute &Plugin...", fMenuExecPlugin);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry("Close &Tab           Ctrl+T", kCloseTab);
-   fMenuFile->AddEntry("Close &Window   Ctrl+W", kCloseWindow);
+   fMenuFile->AddEntry("Close &Tab\tCtrl+T", kCloseTab);
+   fMenuFile->AddEntry("Close &Window\tCtrl+W", kCloseWindow);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry("&Quit Root             Ctrl+Q", kQuitRoot);
+   fMenuFile->AddEntry("&Quit Root\tCtrl+Q", kQuitRoot);
    fMenuBar->AddPopup("&Browser", fMenuFile, fLH1);
    fMenuFile->Connect("Activated(Int_t)", "TRootBrowser", this,
                       "HandleMenu(Int_t)");
