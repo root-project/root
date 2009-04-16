@@ -124,13 +124,13 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fMenuBar = new TGMenuBar(this, 35, 50, kHorizontalFrame);
 
    fMenuFile = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuFile->AddEntry(" &Open...            Ctrl+O", kM_FILE_OPEN, 0,
+   fMenuFile->AddEntry(" &Open...\tCtrl+O", kM_FILE_OPEN, 0,
                        gClient->GetPicture("ed_open.png"));
-   fMenuFile->AddEntry(" Save &As...       Ctrl+A", kM_FILE_SAVEAS, 0,
+   fMenuFile->AddEntry(" Save &As...\tCtrl+A", kM_FILE_SAVEAS, 0,
                        gClient->GetPicture("ed_save.png"));
-   fMenuFile->AddEntry(" &Browse...         Ctrl+B", kM_FILE_BROWSE);
+   fMenuFile->AddEntry(" &Browse...\tCtrl+B", kM_FILE_BROWSE);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry(" E&xit                   Ctrl+Q", kM_FILE_EXIT, 0,
+   fMenuFile->AddEntry(" E&xit\tCtrl+Q", kM_FILE_EXIT, 0,
                        gClient->GetPicture("bld_exit.png"));
    fMenuFile->Associate(this);
 
