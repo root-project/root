@@ -78,7 +78,7 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
        QString fatalWarnings = gSystem->Getenv("QT_FATAL_WARNINGS");
        if (fatalWarnings.contains("1")) {
           int argC = 2;
-          static char *argV[] = {"root.exe", "-sync" };
+          static const char *argV[] = {"root.exe", "-sync" };
           qDebug() << "TQtApplication::CreateQApplication: "
                    << "ATTENTION !!! "
                    << "The env variable \"QT_FATAL_WARNIGNS\" was defined. The special debug option has  been turned on." 
