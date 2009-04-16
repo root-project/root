@@ -2876,7 +2876,7 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
    for (loop=0;loop<ntimes;loop++) {
       r1 = gRandom->Rndm(loop);
       ibin = TMath::BinarySearch(nbinsx,&integral[0],r1);
-      binx = 1 + ibin;
+      //binx = 1 + ibin;
       //x    = fXaxis.GetBinCenter(binx); //this is not OK when SetBuffer is used
       x    = fXaxis.GetBinLowEdge(ibin+1)
              +fXaxis.GetBinWidth(ibin+1)*(r1-integral[ibin])/(integral[ibin+1] - integral[ibin]);
