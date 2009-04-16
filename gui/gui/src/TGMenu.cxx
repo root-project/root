@@ -974,8 +974,17 @@ void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud,
    // If before is not 0, the entry will be added before it.
 
    TGMenuEntry *nw = new TGMenuEntry;
-
-   nw->fLabel    = s;
+   Ssiz_t tab = s->Index('\t');
+   if (tab > 0) {
+      TString ts(s->Data());
+      TString shortcut = ts(tab+1, s->Length());
+      nw->fShortcut = new TGString(shortcut.Data());
+      nw->fLabel = new TGHotString(*s);
+      nw->fLabel->Remove(tab);
+   }
+   else {
+      nw->fLabel = s;
+   }
    nw->fPic      = p;
    nw->fType     = kMenuEntry;
    nw->fEntryId  = id;
@@ -996,6 +1005,10 @@ void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud,
       ph = p->GetHeight();
       pw = p->GetWidth();
       if (pw+12 > fXl) { fMenuWidth += pw+12-fXl; fXl = pw+12; }
+   }
+   if (nw->fShortcut) {
+      tw += 10;
+      if (s) delete s;
    }
 
    Int_t max_ascent, max_descent;
@@ -1473,6 +1486,7 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
       font = fFontStruct;
    }
 
+   UInt_t tw = 0;
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(font, max_ascent, max_descent);
    int tx = entry->fEx + fXl;
@@ -1481,6 +1495,8 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
    if (offset > 0) offset -= 1;
    else offset = 0;
    int ty = entry->fEy + max_ascent + offset;
+   if (entry->fShortcut)
+      tw = 7 + gVirtualX->TextWidth(fFontStruct, entry->fShortcut->Data(), entry->fShortcut->Length());
 
    switch (entry->fType) {
       case kMenuPopup:
@@ -1500,6 +1516,9 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
             entry->fLabel->Draw(fId,
                            (entry->fStatus & kMenuEnableMask) ? fSelGC : GetShadowGC()(),
                            tx, ty);
+            if (entry->fShortcut)
+               entry->fShortcut->Draw(fId, (entry->fStatus & kMenuEnableMask) ? fSelGC : GetShadowGC()(),
+                                      fMenuWidth - tw, ty);
          } else {
             gVirtualX->FillRectangle(fId, GetBckgndGC()(), entry->fEx+1, entry->fEy-1,
                                      fMenuWidth-6, entry->fEh);
@@ -1513,9 +1532,15 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
                entry->fPic->Draw(fId, fNormGC, 8, entry->fEy+1);
             if (entry->fStatus & kMenuEnableMask) {
                entry->fLabel->Draw(fId, fNormGC, tx, ty);
+               if (entry->fShortcut)
+                  entry->fShortcut->Draw(fId, fNormGC, fMenuWidth - tw, ty);
             } else {
                entry->fLabel->Draw(fId, GetHilightGC()(), tx+1, ty+1);
                entry->fLabel->Draw(fId, GetShadowGC()(), tx, ty);
+               if (entry->fShortcut) {
+                  entry->fShortcut->Draw(fId, GetHilightGC()(), fMenuWidth - tw+1, ty+1);
+                  entry->fShortcut->Draw(fId, GetShadowGC()(), fMenuWidth - tw, ty);
+               }
             }
          }
          break;
@@ -2099,6 +2124,7 @@ void TGPopupMenu::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    while ((mentry = (TGMenuEntry *) next())) {
       const char *text;
       Int_t i, lentext, hotpos;
+      char shortcut[80];
       char *outext;
 
       switch (mentry->GetType()) {
@@ -2117,9 +2143,16 @@ void TGPopupMenu::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
                i++; text++; lentext--;
             }
             outext[i]=0;
+            if (mentry->fShortcut) {
+               sprintf(shortcut, "\\t%s", mentry->GetShortcut());
+            }
+            else {
+               memset(shortcut, 0, 80);
+            }
 
             out << "   " << GetName() << "->AddEntry(" << quote
                 << gSystem->ExpandPathName(gSystem->UnixPathName(outext)) // can be a file name
+                << shortcut
                 << quote << "," << mentry->GetEntryId();
             if (mentry->fUserData) {
                out << "," << mentry->fUserData;
