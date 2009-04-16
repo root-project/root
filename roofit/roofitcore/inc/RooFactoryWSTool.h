@@ -129,6 +129,9 @@ public:
   RooDataHist& asDHIST(const char*) ;
   RooDataSet& asDSET(const char*) ;
 
+  const char* asSTRING(const char*) ;
+  Int_t asINT(const char*) ;
+  Double_t asDOUBLE(const char*) ;
   
   class IFace {
   public:
@@ -153,9 +156,6 @@ protected:
 
   static void checkIndex(UInt_t index) ;
 
-  const char* asSTRING(const char*) ;
-  Int_t asINT(const char*) ;
-  Double_t asDOUBLE(const char*) ;
   
   std::string processCompositeExpression(const char* arg) ;
   std::string processSingleExpression(const char* arg) ;
