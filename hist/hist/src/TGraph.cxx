@@ -1252,10 +1252,12 @@ TH1F *TGraph::GetHistogram() const
    // computed minimum is greater than zero. In that case the histogram needs
    // to be recomputed.
    if (fHistogram) {
-      if (gPad->GetLogx()) {
-         if (rwxmin <= 0) return fHistogram;
-      } else if (gPad->GetLogx()) {
-         if (rwymin <= 0) return fHistogram;
+      if (gPad) {
+         if (gPad->GetLogx()) {
+            if (rwxmin <= 0) return fHistogram;
+         } else if (gPad->GetLogy()) {
+            if (rwymin <= 0) return fHistogram;
+	 }
       } else {
 	return fHistogram;
       }
