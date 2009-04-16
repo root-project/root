@@ -80,7 +80,7 @@ RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t
 
   if (c1||c2) _c = new RooArgSet[2] ;
   if (c1) _c[0].add(*c1) ;
-  if (c2) _c[1].add(*c1) ;
+  if (c2) _c[1].add(*c2) ;
 
   _procSubArgs = kTRUE ;
   if (ca) {

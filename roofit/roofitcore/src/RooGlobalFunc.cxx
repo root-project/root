@@ -161,7 +161,7 @@ namespace RooFit {
   RooCmdArg What(const char* str) { return RooCmdArg("What",0,0,0,0,str,0,0,0) ; }
 
   // RooProdPdf::ctor arguments
-  RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, Bool_t depsAreCond) { return RooCmdArg("Conditional",depsAreCond,0,0,0,0,0,&pdfSet,&depSet) ; } ;
+  RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, Bool_t depsAreCond) { return RooCmdArg("Conditional",depsAreCond,0,0,0,0,0,0,0,0,0,&pdfSet,&depSet) ; } ;
   
   // RooAbsPdf::generate arguments
   RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder, Bool_t resample) 

@@ -503,7 +503,6 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
 
   // Separate conditional and non-conditional p.d.f terms
   RooLinkedList cmdList ;
-  vector<RooArgSet> setList ;
   string regPdfList="{" ;
   char buf[1024] ;
   strcpy(buf,pdfList) ;
@@ -517,9 +516,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
       sep++ ;
       
       try {
- 	setList.push_back(asSET(tok)) ;
- 	setList.push_back(asSET(sep)) ;
- 	cmdList.Add(Conditional(setList[setList.size()-2],setList[setList.size()-1],kTRUE).Clone()) ;
+ 	cmdList.Add(Conditional(asSET(tok),asSET(sep),kTRUE).Clone()) ;
       } catch (string err) {
 	coutE(ObjectHandling) << "RooFactoryWSTool::prod(" << objName << ") ERROR creating RooProdPdf Conditional argument: " << err << endl ;
 	logError() ;

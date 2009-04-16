@@ -385,8 +385,8 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
     if (!TString(carg->GetName()).CompareTo("Conditional")) {
 
       Int_t argType = carg->getInt(0) ;
-      RooArgSet* pdfSet = (RooArgSet*) carg->getObject(0) ;
-      RooArgSet* normSet = (RooArgSet*) carg->getObject(1) ;
+      RooArgSet* pdfSet = (RooArgSet*) carg->getSet(0) ;
+      RooArgSet* normSet = (RooArgSet*) carg->getSet(1) ;
 
       TIterator* siter2 = pdfSet->createIterator() ;
       RooAbsPdf* thePdf ;
