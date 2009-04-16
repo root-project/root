@@ -76,8 +76,8 @@ DIRECT SCENE INTERACTIONS\n\n\
    SELECT a shape with Shift+Left mouse button click.\n\n\
    SELECT the viewer with Shift+Left mouse button click on a free space.\n\n\
    MOVE a selected shape using Shift+Mid mouse drag.\n\n\
-   Invoke the CONTEXT menu with Shift+Right mouse click.\n\n\
-   Secondary selection and direct render object interaction is initiated\n\
+   Invoke the CONTEXT menu with Shift+Right mouse click.\n\n"
+   "Secondary selection and direct render object interaction is initiated\n\
    by Alt+Left mouse click (Mod1, actually). Only few classes support this option.\n\n\
 CAMERA\n\n\
    The \"Camera\" menu is used to select the different projections from \n\
@@ -107,8 +107,8 @@ SCENE CLIPPING\n\n\
    In the Scene-Clipping tabs select a 'Clip Type': None, Plane, Box\n\n\
    For 'Plane' and 'Box' the lower pane shows the relevant parameters:\n\n\
 \tPlane: Equation coefficients of form aX + bY + cZ + d = 0\n\
-\tBox: Center X/Y/Z and Length X/Y/Z\n\n\
-   For Box checking the 'Show / Edit' checkbox shows the clip box (in light blue)\n\
+\tBox: Center X/Y/Z and Length X/Y/Z\n\n"
+   "For Box checking the 'Show / Edit' checkbox shows the clip box (in light blue)\n\
    in viewer. It also attaches the current manipulator to the box - enabling\n\
    direct editing in viewer.\n\n\
 MANIPULATORS\n\n\
