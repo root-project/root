@@ -144,6 +144,8 @@ public:
 
   static void registerSpecial(const char* typeName, RooFactoryWSTool::IFace* iface) ;
 
+  void logError() { _errorCount++ ; }
+
 protected:
 
   std::stack<std::string> _autoNamePrefix ; 
@@ -176,7 +178,6 @@ protected:
 
   RooWorkspace* _ws ; //! Associated workspace
 
-  void logError() { _errorCount++ ; }
   void clearError() { _errorCount = 0 ; }
   Int_t errorCount() { return _errorCount ; }
 

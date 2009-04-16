@@ -103,10 +103,10 @@ namespace RooCintUtils
 	continue ;
       }
 
-      return pair<list<string>,int>(ret,nreq) ;
+      return pair<list<string>,unsigned int>(ret,nreq) ;
       
     }
-    return pair<list<string>,int>(ret,nreq) ;
+    return pair<list<string>,unsigned int>(ret,nreq) ;
   }
 
 

@@ -23,13 +23,9 @@
 #include "RooArgList.h"
 
 #include "RVersion.h"
-#if ROOT_VERSION_CODE >= 327680
 #include "TMatrixFfwd.h"
 #include "TMatrixDSym.h"
 #include "TRootIOCtor.h"
-#else
-class TMatrixF;
-#endif
 
 class RooArgSet ;
 class RooAbsPdf ;
@@ -175,8 +171,8 @@ protected:
   mutable RooArgList *_randomPars; //! List of floating parameters with most recent random perturbation applied
   mutable TMatrixF* _Lt;            //! triangular matrix used for generate random perturbations
 
-  TMatrixDSym* _C ;  //! Correlation matrix ;
-  TMatrixDSym* _V ;  //! Covariance matrix ;
+  TMatrixDSym* _CM ;  //! Correlation matrix ;
+  TMatrixDSym* _VM ;  //! Covariance matrix ;
 
   ClassDef(RooFitResult,1) // Container class for fit result
 };

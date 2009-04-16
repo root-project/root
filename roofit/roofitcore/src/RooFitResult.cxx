@@ -64,7 +64,7 @@ ClassImp(RooFitResult)
 //_____________________________________________________________________________
 RooFitResult::RooFitResult(const char* name, const char* title) : 
   TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0),
-  _C(0), _V(0)
+  _CM(0), _VM(0)
 {  
   // Constructor with name and title
 
@@ -84,8 +84,8 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   _edm(other._edm),
   _randomPars(0),
   _Lt(0),
-  _C(0),
-  _V(0)
+  _CM(0),
+  _VM(0)
 {
   // Copy constructor
 
@@ -114,8 +114,8 @@ RooFitResult::~RooFitResult()
   if (_globalCorr) delete _globalCorr;
   if (_randomPars) delete _randomPars;
   if (_Lt) delete _Lt;
-  if (_C) delete _C ;
-  if (_V) delete _V ;
+  if (_CM) delete _CM ;
+  if (_VM) delete _VM ;
 
   _corrMatrix.Delete();
 
@@ -561,16 +561,16 @@ void RooFitResult::fillCorrMatrix()
 
   // Delete eventual prevous correlation data holders
   if (_globalCorr) delete _globalCorr ;
-  if (_C) delete _C ;
-  if (_V) delete _V ;
+  if (_CM) delete _CM ;
+  if (_VM) delete _VM ;
 
   _corrMatrix.Delete();
 
 
   // Build holding arrays for correlation coefficients
   _globalCorr = new RooArgList("globalCorrelations") ;
-  _C = new TMatrixDSym(_initPars->getSize()) ;
-  _V = new TMatrixDSym(_initPars->getSize()) ;
+  _CM = new TMatrixDSym(_initPars->getSize()) ;
+  _VM = new TMatrixDSym(_initPars->getSize()) ;
 
   TIterator* vIter = _initPars->createIterator() ;
   RooAbsArg* arg ;
@@ -645,7 +645,7 @@ void RooFitResult::fillCorrMatrix()
     for (it = 1; it <= gMinuit->fNpar ; ++it) {
       RooRealVar* cVal = (RooRealVar*) cIter->Next() ;
       cVal->setVal(gMinuit->fMATUvline[it-1]) ;
-      (*_C)(i-1,it-1) = gMinuit->fMATUvline[it-1] ;
+      (*_CM)(i-1,it-1) = gMinuit->fMATUvline[it-1] ;
     }
     delete cIter ;
   }
@@ -655,7 +655,7 @@ void RooFitResult::fillCorrMatrix()
 
   for (int ii=0 ; ii<_finalPars->getSize() ; ii++) {
     for (int jj=0 ; jj<_finalPars->getSize() ; jj++) {
-      (*_V)(ii,jj) = (*_C)(ii,jj) * ((RooRealVar*)_finalPars->at(ii))->getError() * ((RooRealVar*)_finalPars->at(jj))->getError() ;
+      (*_VM)(ii,jj) = (*_CM)(ii,jj) * ((RooRealVar*)_finalPars->at(ii))->getError() * ((RooRealVar*)_finalPars->at(jj))->getError() ;
     }
   }
 } 
@@ -852,27 +852,27 @@ void RooFitResult::setCovarianceMatrix(TMatrixDSym& V)
   // Store externally provided correlation matrix in his RooFitResult ;
 
   // Delete any previous matrices
-  if (_V) {
-    delete _V ;
+  if (_VM) {
+    delete _VM ;
   }
-  if (_C) {
-    delete _C ;
+  if (_CM) {
+    delete _CM ;
   }
   
   // Clone input covariance matrix ;
-  _V = (TMatrixDSym*) V.Clone() ;
+  _VM = (TMatrixDSym*) V.Clone() ;
 
   // Now construct correlation matrix from it
-  _C = (TMatrixDSym*) _V->Clone() ;
-  for (Int_t i=0 ; i<_C->GetNrows() ; i++) {
-    for (Int_t j=0 ; j<_C->GetNcols() ; j++) {
+  _CM = (TMatrixDSym*) _VM->Clone() ;
+  for (Int_t i=0 ; i<_CM->GetNrows() ; i++) {
+    for (Int_t j=0 ; j<_CM->GetNcols() ; j++) {
       if (i!=j) {
-	(*_C)(i,j) = (*_C)(i,j) / sqrt((*_C)(i,i)*(*_C)(j,j)) ;
+	(*_CM)(i,j) = (*_CM)(i,j) / sqrt((*_CM)(i,i)*(*_CM)(j,j)) ;
       }
     }
   }
-  for (Int_t i=0 ; i<_C->GetNrows() ; i++) {
-    (*_C)(i,i) = 1.0 ;
+  for (Int_t i=0 ; i<_CM->GetNrows() ; i++) {
+    (*_CM)(i,i) = 1.0 ;
   }
 
   _covQual = -1 ;
@@ -911,7 +911,7 @@ TH2* RooFitResult::correlationHist(const char* name) const
 const TMatrixDSym& RooFitResult::covarianceMatrix() const 
 {
   // Return covariance matrix 
-  return *_V ;
+  return *_VM ;
 }
 
 
@@ -920,7 +920,7 @@ const TMatrixDSym& RooFitResult::covarianceMatrix() const
 const TMatrixDSym& RooFitResult::correlationMatrix() const 
 {
   // Return correlation matrix ;
-  return *_C ;
+  return *_CM ;
 }
 
 
