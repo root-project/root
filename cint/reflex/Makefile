@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *_rflx.cpp *_rflxdriver.C
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-RFLXDICTTESTS:= classVersion_rflx properties_rflx
+RFLXDICTTESTS:= classVersion_rflx properties_rflx updateMembers_rflx
 TEST_TARGETS += $(RFLXDICTTESTS) ReflexCintexOrder CintexReflexOrder Tools
 
 # Search for Rules.mk in roottest/scripts
