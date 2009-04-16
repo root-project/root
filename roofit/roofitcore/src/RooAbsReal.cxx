@@ -3296,7 +3296,8 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
     RooRealVar* x = (RooRealVar*)obs.at(0) ;
     RooRealVar* y = (RooRealVar*)obs.at(1) ;
     f = functor(obs,pars,nset) ;
-    tf = new TF2(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),pars.getSize(),"RooFunctor") ;
+    const char* name = "RooFunctor" ;
+    tf = new TF2(GetName(),(void*)f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),pars.getSize(),(char*)name) ;
     break ;
   }
   case 3: {
@@ -3304,12 +3305,13 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
     RooRealVar* y = (RooRealVar*)obs.at(1) ;
     RooRealVar* z = (RooRealVar*)obs.at(2) ;
     f = functor(obs,pars,nset) ;
-    tf = new TF3(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),z->getMin(),z->getMax(),pars.getSize(),"RooFunctor") ;
+    const char* name = "RooFunctor" ;
+    tf = new TF3(GetName(),(void*)f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),z->getMin(),z->getMax(),pars.getSize(),(char*)name) ;
     break ;
   }
   default:
     coutE(InputArguments) << "RooAbsReal::asTF(" << GetName() << ") ERROR: " << obs.getSize() 
-			  << " observables specified, but a ROOT TFx can only have  1,2 or3 observables" << endl ;
+			  << " observables specified, but a ROOT TFx can only have  1,2 or 3 observables" << endl ;
     return 0 ;
   }
 
