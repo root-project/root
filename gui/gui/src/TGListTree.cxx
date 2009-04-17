@@ -1494,7 +1494,7 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
    }
 
    // height must be even, otherwise our dashed line wont appear properly
-   ++height; height &= ~1;
+   //++height; height &= ~1;
 
    // Save the basic graphics info for use by other functions
    item->fY      = y;
