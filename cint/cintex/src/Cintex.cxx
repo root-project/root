@@ -12,7 +12,6 @@
 #include "Reflex/Callback.h"
 #include "Reflex/Type.h"
 #include "Reflex/Member.h"
-#include "Reflex/Member.h"
 #include "Reflex/Builder/ReflexBuilder.h"
 
 #include "Cintex/Cintex.h"
@@ -57,11 +56,13 @@ namespace {
          Cintex::SetDebug(*(bool*)arg[0]);
       }
       static void Debug(void*, void* ret, const std::vector<void*>&, void*) {
-         *(int*)ret = Cintex::Debug();
+         if (ret) *(int*)ret = Cintex::Debug();
+         else Cintex::Debug();
       }
 
       static void PropagateClassTypedefs(void*, void* ret, const std::vector<void*>&, void*) {
-         *(bool*)ret = Cintex::PropagateClassTypedefs();
+         if (ret) *(bool*)ret = Cintex::PropagateClassTypedefs();
+         else Cintex::PropagateClassTypedefs();
       }
 
       static void SetPropagateClassTypedefs(void*, void*, const std::vector<void*>& arg, void*) {
@@ -170,6 +171,11 @@ namespace ROOT {
          Instance().fPropagateClassEnums = val;
       }
   
+      void Cintex::Default_CreateClass(const char* name, TGenericClassInfo* gci) {
+         // Create a TClass object from the Reflex data; forward to ROOTClassEnhancer.
+         ROOTClassEnhancer::Default_CreateClass(Reflex::Type::ByName(name), gci);
+      }
+
       void Callback::operator () ( const Type& t ) {
          ArtificialSourceFile asf;
          int autoload = G__set_class_autoloading(0); // To avoid recursive loads

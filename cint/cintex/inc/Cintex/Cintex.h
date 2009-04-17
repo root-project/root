@@ -22,6 +22,7 @@ class TClass;
 
 
 namespace ROOT {
+  class TGenericClassInfo;
   namespace Cintex {
     
     class Callback : public ROOT::Reflex::ICallback {
@@ -45,6 +46,8 @@ namespace ROOT {
       static void SetPropagateClassTypedefs(bool);
       static bool PropagateClassEnums();
       static void SetPropagateClassEnums(bool);
+      static void Default_CreateClass(const char* name, TGenericClassInfo* gci);
+
     private:
       static Cintex& Instance();
       Callback*     fCallback;

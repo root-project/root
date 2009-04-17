@@ -11,7 +11,7 @@
 namespace Reflex {
 
    typedef void* (*NewFunc_t)( void* );
-   typedef void* (*NewArrFunc_t)( size_t size, void *arena );
+   typedef void* (*NewArrFunc_t)( long size, void *arena );
    typedef void  (*DelFunc_t)( void* );
    typedef void  (*DelArrFunc_t)( void* );
    typedef void  (*DesFunc_t)( void* ); 
@@ -28,7 +28,7 @@ namespace Reflex {
       static void* new_T(void* p) { return p ? new(p) T : new T; }
       static void* new_p_T(void* p) { return p ? new(p) T : ::new T; }
       static void* new_np_T(void* p) { return p ? ::new(p) T : new T; }
-      static void* newArray_T(size_t size, void* p) { return p ? new (p) T[size] : new T[size]; }
+      static void* newArray_T(long size, void* p) { return p ? new (p) T[size] : new T[size]; }
       static void* newArray_p_T(size_t size, void* p) { return p ? new (p) T[size] : ::new T[size]; }
       static void* newArray_np_T(size_t size, void* p) { return p ? ::new (p) T[size] : new T[size]; }
       static void  delete_T(void *p) { delete (T*)p; }

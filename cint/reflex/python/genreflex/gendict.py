@@ -2117,14 +2117,15 @@ class genDictionary(object) :
   def genGetNewDelFunctionsDecl( self, attrs, args ) :
     return 'static void method%s( void*, void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
   def genGetNewDelFunctionsBuild( self, attrs, args ) :
+    cid      = attrs['context']
     mod = self.genModifier(attrs, None)  
-    return '  .AddFunctionMember<void*(void)>("__getNewDelFunctions", method%s, 0, 0, %s)' % (attrs['id'], mod)
+    return '  .AddFunctionMember<void*(void)>("__getNewDelFunctions", method_newdel%s, 0, 0, %s)' % (cid, mod)
   def genGetNewDelFunctionsDef( self, attrs, args ) :
     cid      = attrs['context']
     cl       = self.genTypeName(cid, colon=True)
     clt      = string.translate(str(cl), self.transtable)
     (newc, newa) = self.checkOperators(cid)
-    s  = 'static void method%s( void* retaddr, void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'] )
+    s  = 'static void method_newdel%s( void* retaddr, void*, const std::vector<void*>&, void*)\n{\n' %( cid )
     s += '  static ::Reflex::NewDelFunctions s_funcs;\n'
     s += '  s_funcs.fNew         = ::Reflex::NewDelFunctionsT< %s >::new%s_T;\n' % (cl, newc)
     s += '  s_funcs.fNewArray    = ::Reflex::NewDelFunctionsT< %s >::newArray%s_T;\n' % (cl, newa)
@@ -2402,6 +2403,8 @@ def ClassDefImplementation(selclasses, self) :
   returnValue += '#include "TClass.h"\n'
   returnValue += '#include "TMemberInspector.h"\n'
   returnValue += '#include "RtypesImp.h"\n' # for GenericShowMembers etc
+  returnValue += '#include "Cintex/Cintex.h"\n'
+  returnValue += '#include "TIsAProxy.h"\n'
   haveClassDef = 0
 
   for attrs in selclasses :
@@ -2442,18 +2445,46 @@ def ClassDefImplementation(selclasses, self) :
       if attrs.has_key('extra') : attrs['extra']['ClassDef'] = extraval
       else                      : attrs['extra'] = {'ClassDef': extraval}
       attrs['extra']['DictionaryFunc'] = '!RAW!' + clname + '::Dictionary';
+      id = attrs['id']
 
       returnValue += 'TClass* ' + clname + '::fgIsA = 0;\n'
+      returnValue += '::ROOT::TGenericClassInfo genericClassInfo' + attrs['id'] + '("' + clname[2:] + '",\n   ' + clname + '::Class_Version(),\n   '
+      returnValue += clname + '::DeclFileName(),\n   ' + clname + '::DeclFileLine(),\n   '
+      returnValue += 'typeid( ' + clname + ' ),\n   ::ROOT::DefineBehavior(0,0), 0, ' + clname + '::Dictionary,\n   '
+      returnValue += 'new ::TInstrumentedIsAProxy< ' + clname + ' >(0),\n   '
+      returnValue += '0, sizeof( ' + clname + '));\n'
       returnValue += 'TClass* ' + clname + '::Class() {\n'
       returnValue += '   if (!fgIsA)\n'
       returnValue += '      fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
       returnValue += '   return fgIsA;\n'
       returnValue += '}\n'
       returnValue += 'const char * ' + clname + '::Class_Name() {return "' + clname[2:]  + '";}\n'
-      returnValue += 'void ' + clname + '::Dictionary() {}\n'
+      returnValue += 'void ' + clname + '::Dictionary() {\n'
+      returnValue += '   genericClassInfo' + id + '.SetImplFile("", 1);\n'
+      returnValue += '   ::Reflex::NewDelFunctions* ndf = 0;\n'
+      returnValue += '   method_newdel' + id + '(&ndf, 0, std::vector<void*>(), 0);\n'
+      returnValue += '   genericClassInfo' + id + '.SetNew(ndf->fNew);\n'
+      returnValue += '   genericClassInfo' + id + '.SetNewArray(ndf->fNewArray);\n'
+      returnValue += '   genericClassInfo' + id + '.SetDelete(ndf->fDelete);\n'
+      returnValue += '   genericClassInfo' + id + '.SetDeleteArray(ndf->fDeleteArray);\n'
+      returnValue += '   genericClassInfo' + id + '.SetDestructor(ndf->fDestructor);\n'
+      for rule in ('ioread', 'ioreadraw'):
+        if attrs['extra'].has_key(rule):
+          if rule == 'ioreadraw': setrrr = 'Raw'
+          else:                   setrrr = ''
+          returnValue += '   Any& obj = TypeGet().Properties().PropertyValue( "' + rule + '" );\n'
+          returnValue += '   std::vector<ROOT::TSchemaHelper> rules = any_cast<std::vector<ROOT::TSchemaHelper> >( obj );\n'
+          returnValue += '   info->SetRead' + setrrr + 'Rules( rules );\n'
+      returnValue += '   if( ::ROOT::Cintex::Cintex::GetROOTCreator() ) {\n'
+      returnValue += '      (* ::ROOT::Cintex::Cintex::GetROOTCreator())( Reflex::Type::ByName("' + clname + '"), &genericClassInfo' + attrs['id'] + ' );\n'
+
+      returnValue += '   } else {\n'
+      returnValue += '      ::ROOT::Cintex::Cintex::Default_CreateClass( "' + clname + '", &genericClassInfo' + attrs['id'] + ' );\n'
+      returnValue += '   }\n'
+      returnValue += '}\n'
       returnValue += 'const char *' + clname  + '::ImplFileName() {return "";}\n'
 
-      returnValue += 'int ' + clname + '::ImplFileLine() {return 0;}\n'
+      returnValue += 'int ' + clname + '::ImplFileLine() {return 1;}\n'
 
       returnValue += 'void '+ clname  +'::ShowMembers(TMemberInspector &R__insp, char *R__parent) {\n'
       returnValue += '   TClass *R__cl = ' + clname  + '::IsA();\n'
