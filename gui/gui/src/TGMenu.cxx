@@ -1492,9 +1492,7 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
    int tx = entry->fEx + fXl;
    // center text
    int offset = (entry->fEh - (max_ascent + max_descent)) / 2;
-   if (offset > 0) offset -= 1;
-   else offset = 0;
-   int ty = entry->fEy + max_ascent + offset;
+   int ty = entry->fEy + max_ascent + offset - 1;
    if (entry->fShortcut)
       tw = 7 + gVirtualX->TextWidth(fFontStruct, entry->fShortcut->Data(), entry->fShortcut->Length());
 

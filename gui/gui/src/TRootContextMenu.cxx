@@ -535,8 +535,7 @@ void TRootContextMenu::DrawEntry(TGMenuEntry *entry)
          gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
       }
       offset = (entry->GetEh() - (max_ascent + max_descent)) / 2;
-      if (offset > 0) offset -= 1; else offset = 0;
-      ty = entry->GetEy() + max_ascent + offset;
+      ty = entry->GetEy() + max_ascent + offset - 1;
       TGHotString s("&?");
       s.Draw(fId, fSelGC, fMenuWidth-12, ty);
    }
