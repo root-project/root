@@ -2537,6 +2537,7 @@ class G__func2void {
    typedef void (*funcptr_t)();
 
    union funcptr_and_voidptr {
+      typedef void (*funcptr_t)();
       void *read;
       funcptr_t write;
    };
