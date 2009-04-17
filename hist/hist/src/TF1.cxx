@@ -2631,17 +2631,20 @@ void TF1::Paint(Option_t *option)
          minimum = fHistogram->GetYaxis()->GetXmin();
       } else {
          minimum = fMinimum;
+         // Optimize the computation of the scale in Y in case the min/max of the 
+         // function oscillate around a constant value
          if (minimum == -1111) {
             Double_t hmin;
             if (optSAME) hmin = gPad->GetUymin();
             else         hmin = fHistogram->GetMinimum();
             if (hmin > 0) {
                Double_t hmax;
+               Double_t hminpos = hmin;
                if (optSAME) hmax = gPad->GetUymax();
                else         hmax = fHistogram->GetMaximum();
                hmin -= 0.05*(hmax-hmin);
                if (hmin < 0) hmin = 0;
-               if (hmin <= 0 && gPad && gPad->GetLogy()) hmin = 0.001*hmax;
+               if (hmin <= 0 && gPad && gPad->GetLogy()) hmin = hminpos;
                minimum = hmin;
             }
          }
