@@ -82,6 +82,8 @@ TChain::TChain()
    fTreeOffset[0]  = 0;
    gDirectory->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
+   fFile = 0;
+   fDirectory = 0;
 
    // Reset PROOF-related bits
    ResetBit(kProofUptodate);
@@ -148,6 +150,8 @@ TChain::TChain(const char* name, const char* title)
    fTreeOffset[0]  = 0;
    gDirectory->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
+   fFile = 0;
+   fDirectory = 0;
 
    // Reset PROOF-related bits
    ResetBit(kProofUptodate);
