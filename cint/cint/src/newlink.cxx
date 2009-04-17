@@ -9609,7 +9609,7 @@ void G__cpplink_memfunc(FILE *fp)
                && G__MACROLINK != ifunc->globalcomp[j]
               ) {
               int k;
-              fprintf(fp, ", (void*) (%s (*)("
+              fprintf(fp, ", (void*) G__func2void( (%s (*)("
                       , G__type2string(ifunc->type[j]
                                        ,ifunc->p_tagtable[j]
                                        ,ifunc->p_typetable[j]
@@ -9626,7 +9626,7 @@ void G__cpplink_memfunc(FILE *fp)
                                         ,ifunc->param[j][k]->reftype
                                         ,ifunc->param[j][k]->isconst));
               }
-              fprintf(fp, "))(&%s::%s)", G__fulltagname(ifunc->tagnum, 1), ifunc->funcname[j]);
+              fprintf(fp, "))(&%s::%s) )", G__fulltagname(ifunc->tagnum, 1), ifunc->funcname[j]);
             }
             else
               fprintf(fp, ", (void*) NULL");

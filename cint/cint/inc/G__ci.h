@@ -2529,6 +2529,30 @@ extern G__EXPORT G__uint64 G__expr_strtoull G__P((const char *nptr, char **endpt
 } /* extern C 3 */
 #endif
 
+/***********************************************************************/
+#if defined(__cplusplus) && !defined(__CINT__)
+// Helper class to avoid compiler warning about casting function pointer
+// to void pointer.
+class G__func2void {
+   typedef void (*funcptr_t)();
+
+   union funcptr_and_voidptr {
+      void *read;
+      funcptr_t write;
+   };
+
+   funcptr_and_voidptr _tmp;
+public:
+   template <typename T>
+   G__func2void( T vfp ) {
+      _tmp.write = ( funcptr_t )vfp;
+   }
+
+   operator void* () const {
+      return _tmp.read;
+   }
+};
+#endif
 #endif /* __MAKECINT__ */
 /**************************************************************************
 * endif #ifndef G__MAKECINT

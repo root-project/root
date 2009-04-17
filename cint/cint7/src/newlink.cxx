@@ -5643,7 +5643,7 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
                   && G__MACROLINK != G__get_funcproperties(*ifunc)->globalcomp
                ) {
 #ifndef G__OLDIMPLEMENTATION1993
-                  fprintf(fp, ", (void*) (%s (*)("
+                  fprintf(fp, ", (void*) G__func2void( (%s (*)("
                           , G__type2string(G__get_type(ifunc->TypeOf().ReturnType())
                                            , G__get_tagnum(ifunc->TypeOf().ReturnType().RawType())
                                            , G__get_typenum(ifunc->TypeOf().ReturnType())
@@ -5660,7 +5660,7 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
                                               , G__get_reftype(ifunc->TypeOf().FunctionParameterAt(fpind))
                                               , G__get_isconst(ifunc->TypeOf().FunctionParameterAt(fpind))));
                   }
-                  fprintf(fp, "))(&%s::%s)", ifunc->DeclaringScope().Name(::Reflex::SCOPED).c_str(), ifunc->Name().c_str());
+                  fprintf(fp, "))(&%s::%s) ) ", ifunc->DeclaringScope().Name(::Reflex::SCOPED).c_str(), ifunc->Name().c_str());
 #else // G__OLDIMPLEMENTATION1993
                   fprintf(fp, ", (void*)%s::%s", ifunc->DeclaringScope().Name(::Reflex::SCOPED).c_str(), ifunc->Name().c_str());
 #endif // G__OLDIMPLEMENTATION1993
