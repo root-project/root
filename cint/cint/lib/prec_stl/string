@@ -227,6 +227,8 @@ class string {
   //void put_at(size_t pos,char c);
   const char& operator[](size_t pos) const;
   char& operator[](size_t pos);
+  const char& at(size_t pos) const;
+  char& at(size_t pos);
   const char* c_str(void) const;
   const char* data(void) const;
   size_t length(void) const;
