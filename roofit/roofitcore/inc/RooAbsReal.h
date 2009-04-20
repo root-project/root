@@ -419,7 +419,7 @@ protected:
   static Bool_t _globalSelectComp ;  // Global activation switch for component selection
 
 
-  ClassDef(RooAbsReal,1) // Abstract real-valued variable
+  ClassDef(RooAbsReal,2) // Abstract real-valued variable
 };
 
 #endif
