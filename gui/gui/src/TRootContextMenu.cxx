@@ -446,9 +446,9 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
             strcat(basictype, "*");
             if (!strncmp(type, "char", 4))
                type = charstar;
-            else if (strstr(argname, "[default: 0]")) {
-               // skip pointer arguments that are not char *
-               // if they have a default value being 0
+            else if (strstr(argname, "[default:")) {
+               // skip arguments that are pointers (but not char *)
+               // and have a default value
                argpos++;
                continue;
             }
