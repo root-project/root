@@ -51,7 +51,7 @@ double SinParameterTransformation::Ext2int(double Value, double Upper, double Lo
 
 double SinParameterTransformation::DInt2Ext(double Value, double Upper, double Lower) const {
    // return the derivative of the transformation d Ext/ d Int
-   return 0.5*fabs((Upper - Lower)*cos(Value));
+   return 0.5*((Upper - Lower)*cos(Value));
 }
 
    }  // namespace Minuit2
