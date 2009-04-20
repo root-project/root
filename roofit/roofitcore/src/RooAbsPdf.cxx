@@ -655,7 +655,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg
   // SplitRange(Bool_t flag)         -- Use separate fit ranges in a simultaneous fit. Actual range name for each
   //                                    subsample is assumed to by rangeName_{indexState} where indexState
   //                                    is the state of the master index category of the simultaneous fit
-  // Contrain(const RooArgSet&pars)  -- Include constraints to listed parameters in likelihood using internal constrains in p.d.f
+  // Constrain(const RooArgSet&pars) -- Include constraints to listed parameters in likelihood using internal constrains in p.d.f
   // ExternalConstraints(const RooArgSet& ) -- Include given external constraints to likelihood
   // Verbose(Bool_t flag)           -- Constrols RooFit informational messages in likelihood construction
   // 
@@ -751,9 +751,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   // Construct NLL
   RooAbsReal::enableEvalErrorLogging(kTRUE) ;
   RooAbsReal* nll ;
+  string baseName = Form("nll_%s_%s",GetName(),data.GetName()) ;
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: default range, or single restricted range
-    nll = new RooNLLVar("nll","-log(likelihood)",*this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,kFALSE,verbose,splitr) ;
+    nll = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,kFALSE,verbose,splitr) ;
 
   } else {
     // Composite case: multiple ranges
@@ -762,12 +763,12 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     strcpy(buf,rangeName) ;
     char* token = strtok(buf,",") ;
     while(token) {
-      RooAbsReal* nllComp = new RooNLLVar(Form("nll_%s",token),"-log(likelihood)",*this,data,projDeps,ext,token,addCoefRangeName,numcpu,kFALSE,verbose,splitr) ;
+      RooAbsReal* nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token),"-log(likelihood)",*this,data,projDeps,ext,token,addCoefRangeName,numcpu,kFALSE,verbose,splitr) ;
       nllList.add(*nllComp) ;
       token = strtok(0,",") ;
     }
     delete[] buf ;
-    nll = new RooAddition("nll","-log(likelihood)",nllList,kTRUE) ;
+    nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,kTRUE) ;
   }
   RooAbsReal::enableEvalErrorLogging(kFALSE) ;
   
@@ -788,9 +789,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
     coutI(Minimization) << " Including the following contraint terms in minimization: " << allConstraints << endl ;
 
-    nllCons = new RooConstraintSum("nllCons","nllCons",allConstraints) ;
+    nllCons = new RooConstraintSum(Form("%s_constr",baseName.c_str()),"nllCons",allConstraints) ;
     RooAbsReal* orignll = nll ;
-    nll = new RooAddition("nllWithCons","nllWithCons",RooArgSet(*nll,*nllCons)) ;
+    nll = new RooAddition(Form("%s_with_constr",baseName.c_str()),"nllWithCons",RooArgSet(*nll,*nllCons)) ;
     nll->addOwnedComponents(RooArgSet(*orignll,*nllCons)) ;
   }
 
@@ -2418,6 +2419,22 @@ RooNumGenConfig* RooAbsPdf::specialGeneratorConfig() const
 {
   // Returns the specialized integrator configuration for _this_ RooAbsReal.
   // If this object has no specialized configuration, a null pointer is returned
+  return _specGeneratorConfig ;
+}
+
+
+
+//_____________________________________________________________________________
+RooNumGenConfig* RooAbsPdf::specialGeneratorConfig(Bool_t createOnTheFly) 
+{
+  // Returns the specialized integrator configuration for _this_ RooAbsReal.
+  // If this object has no specialized configuration, a null pointer is returned,
+  // unless createOnTheFly is kTRUE in which case a clone of the default integrator
+  // configuration is created, installed as specialized configuration, and returned
+
+  if (!_specGeneratorConfig && createOnTheFly) {
+    _specGeneratorConfig = new RooNumGenConfig(*defaultGeneratorConfig()) ;
+  }
   return _specGeneratorConfig ;
 }
 

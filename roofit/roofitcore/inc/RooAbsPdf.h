@@ -89,6 +89,7 @@ public:
   const RooNumGenConfig* getGeneratorConfig() const ;
   static RooNumGenConfig* defaultGeneratorConfig()  ;
   RooNumGenConfig* specialGeneratorConfig() const ;
+  RooNumGenConfig* specialGeneratorConfig(Bool_t createOnTheFly) ;
   void setGeneratorConfig() ;
   void setGeneratorConfig(const RooNumGenConfig& config) ;
 
