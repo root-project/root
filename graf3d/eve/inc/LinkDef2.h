@@ -83,6 +83,9 @@
 // TEveGeoShapeExtract
 #pragma link C++ class TEveGeoShapeExtract+;
 
+// Arbitrary-tesselation TGeoShape.
+#pragma link C++ class TEveGeoPolyShape+;
+
 // TEvePolygonSetProjected
 #pragma link C++ class TEvePolygonSetProjected+;
 #pragma link C++ class TEvePolygonSetProjectedEditor+;

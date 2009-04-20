@@ -37,6 +37,12 @@ public:
 
    void SetFromMesh(const RootCsg::TBaseMesh *m);
 
+   std::vector<Double_t>& GetVertices() { return fVertices; }
+   std::vector<Double_t>& GetNormals()  { return fNormals;  }
+   std::vector<Int_t>&    GetPolyDesc() { return fPolyDesc; }
+   UInt_t                 GetNbPols()   { return fNbPols;   }
+
+
 private:
    void GLDrawPolys()const;
    Int_t CheckPoints(const Int_t *source, Int_t *dest)const;

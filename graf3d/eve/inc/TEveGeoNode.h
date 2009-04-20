@@ -38,6 +38,9 @@ protected:
    TGeoNode *fNode;
    TEveGeoShapeExtract* DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeExtract* parent = 0, Int_t level = 0);
 
+   static Int_t                  fgCSGExportNSeg;  //!
+   static std::list<TGeoShape*>  fgTemporaryStore; //!
+
 public:
    TEveGeoNode(TGeoNode* node);
 
@@ -70,6 +73,9 @@ public:
    void Save(const char* file, const char* name="Extract");
 
    virtual void Draw(Option_t* option="");
+
+   static Int_t GetCSGExportNSeg();
+   static void  SetCSGExportNSeg(Int_t nseg);
 
    ClassDef(TEveGeoNode, 1); // Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
 };

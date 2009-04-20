@@ -14,6 +14,10 @@
 #include "TEvePolygonSetProjected.h"
 
 #include "TEveGeoShapeExtract.h"
+#include "TEvePad.h"
+#include "TEveGeoPolyShape.h"
+#include "TGLScenePad.h"
+#include "TGLFaceSet.h"
 
 #include "TROOT.h"
 #include "TPad.h"
@@ -40,6 +44,25 @@
 // Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
 
 ClassImp(TEveGeoNode);
+
+Int_t                 TEveGeoNode::fgCSGExportNSeg = 64;
+std::list<TGeoShape*> TEveGeoNode::fgTemporaryStore;
+
+//______________________________________________________________________________
+Int_t TEveGeoNode::GetCSGExportNSeg()
+{
+   // Returns number of segments used for CSG export.
+
+   return fgCSGExportNSeg;
+}
+
+//______________________________________________________________________________
+void TEveGeoNode::SetCSGExportNSeg(Int_t nseg)
+{
+   // Sets number of segments used for CSG export.
+
+   fgCSGExportNSeg = nseg;
+}
 
 //______________________________________________________________________________
 TEveGeoNode::TEveGeoNode(TGeoNode* node) :
@@ -272,6 +295,10 @@ void TEveGeoNode::Save(const char* file, const char* name)
    TFile f(file, "RECREATE");
    gse->Write(name);
    f.Close();
+
+   for (std::list<TGeoShape*>::iterator i = fgTemporaryStore.begin(); i != fgTemporaryStore.end(); ++i)
+      delete *i;
+   fgTemporaryStore.clear();
 }
 
 /******************************************************************************/
@@ -288,6 +315,8 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
    TGeoVolume* tvolume = 0;
    TGeoShape*  tshape  = 0;
 
+   Bool_t descend = kTRUE;
+
    tnode = geon->GetNode();
    if (tnode == 0)
    {
@@ -301,6 +330,30 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
          return 0;
       }
       tshape  = tvolume->GetShape();
+      if (tshape->IsComposite())
+      {
+         TEvePad pad;
+         pad.GetListOfPrimitives()->Add(tnode);
+         TGLScenePad scene_pad(&pad);
+
+         Int_t nseg = gGeoManager->GetNsegments();
+         gGeoManager->SetNsegments(fgCSGExportNSeg);
+         scene_pad.PadPaint(&pad);
+         gGeoManager->SetNsegments(nseg);
+
+         TGLFaceSet* fs = dynamic_cast<TGLFaceSet*>(scene_pad.FindLogical(tvolume));
+         if (!fs) {
+            Warning(eh, "Failed extracting CSG tesselation TEveGeoNode '%s'; skipping its sub-tree.\n", geon->GetName());
+            return 0;
+         }
+
+         TEveGeoPolyShape* egps = new TEveGeoPolyShape();
+         egps->SetFromFaceSet(fs);
+         tshape = egps;
+         fgTemporaryStore.push_back(egps);
+
+         descend = kFALSE;
+      }
    }
 
    // transformation
@@ -339,7 +392,7 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
 
    gse->SetShape(tshape);
    ++level;
-   if (geon->HasChildren())
+   if (geon->HasChildren() && descend)
    {
       TList* ele = new TList();
       gse->SetElements(ele);
@@ -593,7 +646,6 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
    buff.fTransparency = GetMainTransparency();
    RefMainTrans().SetBuffer3D(buff);
    buff.fLocalFrame   = kTRUE; // Always enforce local frame (no geo manager).
-
 
    Int_t sections = TBuffer3D::kBoundingBox | TBuffer3D::kShapeSpecific;
    if (fNSegments > 2)
