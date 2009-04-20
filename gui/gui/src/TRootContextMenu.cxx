@@ -429,7 +429,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
       if (selfobjpos != argpos) {
          char       *argname    = fContextMenu->CreateArgumentTitle(argument);
          const char *type       = argument->GetTypeName();
-         TDataType    *datatype   = gROOT->GetType(type);
+         TDataType  *datatype   = gROOT->GetType(type);
          const char *charstar   = "char*";
          char        basictype[32];
 
@@ -446,6 +446,12 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
             strcat(basictype, "*");
             if (!strncmp(type, "char", 4))
                type = charstar;
+            else if (strstr(argname, "[default: 0]")) {
+               // skip pointer arguments that are not char *
+               // if they have a default value being 0
+               argpos++;
+               continue;
+            }
          }
 
          TDataMember *m = argument->GetDataMember();
