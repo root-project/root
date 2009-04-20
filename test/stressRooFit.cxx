@@ -791,7 +791,7 @@ int main(int argc,const char *argv[])
   for (Int_t i=1 ;  i<argc ; i++) {
     string arg = argv[i] ;
 
-    if (arg=="-r") {
+    if (arg=="-f") {
       cout << "stressRooFit: using reference file " << argv[i+1] << endl ;
       refFileName = argv[++i] ;
     }
@@ -829,6 +829,21 @@ int main(int argc,const char *argv[])
     if (arg=="-c") {
       cout << "stressRooFit: dumping comparison file for failed tests " << endl ;
       doDump=kTRUE ;
+    }
+
+    if (arg=="-h") {
+      cout << "usage: stressRooFit [ options ] " << endl ;
+      cout << "" << endl ;
+      cout << "       -f <file> : use given reference file instead of default (" <<  refFileName << ")" << endl ;
+      cout << "       -w        : write reference file, instead of reading file and running comparison tests" << endl ;
+      cout << " " << endl ;
+      cout << "       -n N      : Only run test with sequential number N instead of full suite of tests" << endl ;
+      cout << "       -c        : dump file stressRooFit_DEBUG.root to which results of both current result and reference for each failed test are written" << endl ;
+      cout << "       -mc       : memory check mode, no regression test are performed. Set this flag when running with valgrind" << endl ;
+      cout << "       -v/-vv    : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)" << endl ;
+      cout << "       -d N      : set ROOT gDebug flag to N" << endl ;
+      cout << " " << endl ;
+      return 0 ;
     }
 
    }
