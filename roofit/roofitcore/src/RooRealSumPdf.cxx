@@ -54,6 +54,7 @@ RooRealSumPdf::RooRealSumPdf()
   // Default constructor
   _funcIter  = _funcList.createIterator() ;
   _coefIter  = _coefList.createIterator() ;
+  _extended = kFALSE ;
 }
 
 
@@ -64,7 +65,8 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
   _normIntMgr(this,10),
   _haveLastCoef(kFALSE),
   _funcList("!funcList","List of functions",this),
-  _coefList("!coefList","List of coefficients",this)
+  _coefList("!coefList","List of coefficients",this),
+  _extended(kFALSE)
 {
   // Constructor with name and title
   _funcIter   = _funcList.createIterator() ;
@@ -80,7 +82,8 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
   _normIntMgr(this,10),
   _haveLastCoef(kFALSE),
   _funcList("!funcList","List of functions",this),
-  _coefList("!coefList","List of coefficients",this)
+  _coefList("!coefList","List of coefficients",this),
+  _extended(kFALSE)
 {
   // Construct p.d.f consisting of coef1*func1 + (1-coef1)*func2
   // The input coefficients and functions are allowed to be negative
@@ -98,12 +101,13 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 
 
 //_____________________________________________________________________________
-RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgList& inFuncList, const RooArgList& inCoefList) :
+RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgList& inFuncList, const RooArgList& inCoefList, Bool_t extended) :
   RooAbsPdf(name,title),
   _normIntMgr(this,10),
   _haveLastCoef(kFALSE),
   _funcList("!funcList","List of functions",this),
-  _coefList("!coefList","List of coefficients",this)
+  _coefList("!coefList","List of coefficients",this),
+  _extended(extended)
 { 
   // Constructor p.d.f implementing sum_i [ coef_i * func_i ], if N_coef==N_func
   // or sum_i [ coef_i * func_i ] + (1 - sum_i [ coef_i ] )* func_N if Ncoef==N_func-1
@@ -165,7 +169,8 @@ RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
   _normIntMgr(other._normIntMgr,this),
   _haveLastCoef(other._haveLastCoef),
   _funcList("!funcList",this,other._funcList),
-  _coefList("!coefList",this,other._coefList)
+  _coefList("!coefList",this,other._coefList),
+  _extended(other._extended)
 {
   // Copy constructor
 
@@ -188,7 +193,7 @@ RooRealSumPdf::~RooRealSumPdf()
 //_____________________________________________________________________________
 RooAbsPdf::ExtendMode RooRealSumPdf::extendMode() const 
 {
-  return (_funcList.getSize()==_coefList.getSize()) ? CanBeExtended : CanNotBeExtended ;
+  return (_extended && (_funcList.getSize()==_coefList.getSize())) ? CanBeExtended : CanNotBeExtended ;
 }
 
 

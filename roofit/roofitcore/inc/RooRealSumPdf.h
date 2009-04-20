@@ -26,7 +26,7 @@ public:
 
   RooRealSumPdf() ;
   RooRealSumPdf(const char *name, const char *title);
-  RooRealSumPdf(const char *name, const char *title, const RooArgList& funcList, const RooArgList& coefList) ;
+  RooRealSumPdf(const char *name, const char *title, const RooArgList& funcList, const RooArgList& coefList, Bool_t extended=kFALSE) ;
   RooRealSumPdf(const char *name, const char *title,
 		   RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) ;
   RooRealSumPdf(const RooRealSumPdf& other, const char* name=0) ;
@@ -72,10 +72,11 @@ protected:
   RooListProxy _coefList ;  //  List of coefficients
   TIterator* _funcIter ;     //! Iterator over FUNC list
   TIterator* _coefIter ;    //! Iterator over coefficient list
+  Bool_t _extended ;        // Allow use as extended p.d.f.
   
 private:
 
-  ClassDef(RooRealSumPdf,1) // PDF constructed from a sum of (non-pdf) functions
+  ClassDef(RooRealSumPdf,2) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif
