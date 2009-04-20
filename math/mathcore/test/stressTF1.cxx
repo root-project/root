@@ -17,6 +17,8 @@ const double TNORM = REP / 1000000.;
 
 double sumTime = 0; 
 
+int ncall = 0; 
+
 
 void DrawFunction(TF1* f1)
 {
@@ -125,11 +127,14 @@ int TestMaxMin(TF1* f1)
         << endl;
 
    w.Start(kTRUE);
-   for ( int j = 0; j < REP; ++j )
+   for ( int j = 0; j < REP; ++j ) {
+      ncall = 0; 
       x = f1->GetMaximumX(XMIN, TMath::Pi());
+   }
    w.Stop();
    maxmin = TMath::Pi() / 2;
    status += PrintStatus("Maximum", x, maxmin, w.RealTime()/ TNORM );
+   std::cout << "ncall = " << ncall << std::endl;
    totalTime += w.RealTime();
 
    w.Start(kTRUE);
@@ -205,18 +210,19 @@ int TestIntegral(TF1* f1)
    return status;
 }
 
-double func(double * x, double * ) { 
+double func(double * x, double * p) { 
    double xx = *x; 
-   return sin(xx)*cos(xx)+ sin(2.*xx)*cos(2.*xx); 
-   //return sin(xx); 
+   ncall++;
+   //return sin(xx)*cos(xx)+ sin(2.*xx)*cos(2.*xx); 
+   return p[0]*sin(xx) + p[1]; 
 }
 int stressTF1() 
 {
    int status = 0;
    sumTime = 0;
 
-   TF1* f1 = new TF1("f1", "[0]*sin(x)+[1]", XMIN, XMAX);
-   //TF1* f1 = new TF1("f1", func, XMIN, XMAX);
+   //TF1* f1 = new TF1("f1", "[0]*sin(x)+[1]", XMIN, XMAX);
+   TF1* f1 = new TF1("f1", func, XMIN, XMAX,2);
    //DrawFunction(f1);
    double par[2] = {1.,0.};
    f1->SetParameters(par); 
