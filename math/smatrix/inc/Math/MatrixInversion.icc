@@ -67,7 +67,10 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
    mIter ip, mjj, iq;
    double lambda, sigma;
    const double alpha = .6404; // = (1+sqrt(17))/8
-   const double epsilon = 32*std::numeric_limits<T>::epsilon();
+   // LM (04/2009) remove this useless check (it is not in LAPACK) which fails inversion of 
+   // a matrix with  values < epsilon in the diagonal
+   //
+   //const double epsilon = 32*std::numeric_limits<T>::epsilon();
    // whenever a sum of two doubles is below or equal to epsilon
    // it is set to zero.
    // this constant could be set to zero but then the algorithm
@@ -122,7 +125,8 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                   sigma = std::abs(*ip);
                ip++;
             }
-            if (sigma * std::abs(*mjj) >= alpha * lambda * lambda)
+            // sigma cannot be zero because it is at least lambda which is not zero
+            if ( std::abs(*mjj) >= alpha * lambda * (lambda/ sigma) )
             {
                s=1;
                pivrow = j;
@@ -151,8 +155,8 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                for (k=j+1; k<=i; k++)
                {
                   *ip -= static_cast<T> ( temp1 * *(rhs.Array() + k*(k-1)/2 + j-1) );
-                  if (std::abs(*ip) <= epsilon)
-                     *ip=0;
+//                   if (std::abs(*ip) <= epsilon)
+//                      *ip=0;
                   ip++;
                }
             }
@@ -201,8 +205,8 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                for (k=j+1; k<=i; k++)
                {
                   *ip -= static_cast<T> (temp1 * *(rhs.Array() + k*(k-1)/2 + j-1) );
-                  if (std::abs(*ip) <= epsilon)
-                     *ip=0;
+//                   if (std::abs(*ip) <= epsilon)
+//                      *ip=0;
                   ip++;
                }
             }
@@ -264,18 +268,18 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                {
                   ip = rhs.Array() + i*(i-1)/2 + j-1;
                   temp1 = *ip * *mjj + *(ip + 1) * *(mjj + j);
-                  if (std::abs(temp1 ) <= epsilon)
-                     temp1 = 0;
+//                   if (std::abs(temp1 ) <= epsilon)
+//                      temp1 = 0;
                   temp2 = *ip * *(mjj + j) + *(ip + 1) * *(mjj + j + 1);
-                  if (std::abs(temp2 ) <= epsilon)
-                     temp2 = 0;
+//                   if (std::abs(temp2 ) <= epsilon)
+//                      temp2 = 0;
                   for (k = j+2; k <= i ; k++)
                   {
                      ip = rhs.Array() + i*(i-1)/2 + k-1;
                      iq = rhs.Array() + k*(k-1)/2 + j-1;
                      *ip -= static_cast<T>( temp1 * *iq + temp2 * *(iq+1) );
-                     if (std::abs(*ip) <= epsilon)
-                        *ip = 0;
+//                      if (std::abs(*ip) <= epsilon)
+//                         *ip = 0;
                   }
                }
                // update L
@@ -283,12 +287,12 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                {
                   ip = rhs.Array() + i*(i-1)/2 + j-1;
                   temp1 = *ip * *mjj + *(ip+1) * *(mjj + j);
-                  if (std::abs(temp1) <= epsilon)
-                     temp1 = 0;
+//                   if (std::abs(temp1) <= epsilon)
+//                      temp1 = 0;
                   *(ip+1) = *ip * *(mjj + j) 
                      + *(ip+1) * *(mjj + j + 1);
-                  if (std::abs(*(ip+1)) <= epsilon)
-                     *(ip+1) = 0;
+//                   if (std::abs(*(ip+1)) <= epsilon)
+//                      *(ip+1) = 0;
                   *ip = static_cast<T>( temp1 );
                }
             }
@@ -447,7 +451,9 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
    double p, q, t;
    double s11, s12;
 
-   double epsilon = 8*std::numeric_limits<T>::epsilon();
+   // LM (04.09) : remove useless check on epsilon and set it to zero
+   const double epsilon = 0.0;
+   //double epsilon = 8*std::numeric_limits<T>::epsilon();
    // could be set to zero (like it was before)
    // but then the algorithm often doesn't detect
    // that a matrix is singular
