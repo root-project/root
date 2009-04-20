@@ -60,17 +60,17 @@ public:
 protected:
 
   mutable Double_t* _array ; //! do not persist
-  mutable RooAbsReal* _xlo ;
-  mutable RooAbsReal* _xhi ;
+  mutable RooAbsReal* _xlo ; //!
+  mutable RooAbsReal* _xhi ; //!
   Int_t    _nbins ;
   Double_t _binw ;
-  mutable RooListProxy* _lp ; //!
-  mutable RooAbsArg* _owner ; //!
+  mutable RooListProxy* _lp ; //
+  mutable RooAbsArg* _owner ; //
 
   RooAbsReal* xlo() const { return _lp ? ((RooAbsReal*)_lp->at(0)) : _xlo ; }
   RooAbsReal* xhi() const { return _lp ? ((RooAbsReal*)_lp->at(1)) : _xhi ; }
 
-  ClassDef(RooParamBinning,1) // Binning specification with ranges parameterized by external RooAbsReal functions
+  ClassDef(RooParamBinning,2) // Binning specification with ranges parameterized by external RooAbsReal functions
 };
 
 #endif
