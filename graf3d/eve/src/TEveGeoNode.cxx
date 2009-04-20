@@ -333,14 +333,15 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
       if (tshape->IsComposite())
       {
          TEvePad pad;
-         pad.GetListOfPrimitives()->Add(tnode);
+         pad.GetListOfPrimitives()->Add(tvolume);
          TGLScenePad scene_pad(&pad);
-
-         Int_t nseg = gGeoManager->GetNsegments();
-         gGeoManager->SetNsegments(fgCSGExportNSeg);
-         scene_pad.PadPaint(&pad);
-         gGeoManager->SetNsegments(nseg);
-
+         {
+            TEveGeoManagerHolder gmgr(tvolume->GetGeoManager());
+            Int_t nseg = gGeoManager->GetNsegments();
+            gGeoManager->SetNsegments(fgCSGExportNSeg);
+            scene_pad.PadPaint(&pad);
+            gGeoManager->SetNsegments(nseg);
+         }
          TGLFaceSet* fs = dynamic_cast<TGLFaceSet*>(scene_pad.FindLogical(tvolume));
          if (!fs) {
             Warning(eh, "Failed extracting CSG tesselation TEveGeoNode '%s'; skipping its sub-tree.\n", geon->GetName());
