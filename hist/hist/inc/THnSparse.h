@@ -151,12 +151,13 @@ class THnSparse: public TNamed {
       return bin;
    }
    THnSparse* CloneEmpty(const char* name, const char* title,
-                         const TObjArray* axes, Int_t chunksize) const;
+                         const TObjArray* axes, Int_t chunksize,
+                         Bool_t keepTargetAxis) const;
 
    Bool_t CheckConsistency(const THnSparse *h, const char *tag) const;
    Bool_t IsInRange(Int_t *coord) const;
    TH1* CreateHist(const char* name, const char* title,
-                   const TObjArray* axes) const;
+                   const TObjArray* axes, Bool_t keepTargetAxis) const;
    TObject* ProjectionAny(Int_t ndim, const Int_t* dim,
                           Bool_t wantSparse, Option_t* option = "") const;
 

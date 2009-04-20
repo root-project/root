@@ -412,10 +412,13 @@ THnSparseArrayChunk* THnSparse::AddChunk()
 
 //______________________________________________________________________________
 THnSparse* THnSparse::CloneEmpty(const char* name, const char* title,
-                                 const TObjArray* axes, Int_t chunksize) const
+                                 const TObjArray* axes, Int_t chunksize,
+                                 Bool_t keepTargetAxis) const
 {
    // Create a new THnSparse object that is of the same type as *this,
    // but with dimensions and bins given by axes.
+   // If keepTargetAxis is true, the axes will keep their original xmin / xmax,
+   // else they will be restricted to the range selected (first / last).
 
    THnSparse* ret = (THnSparse*)IsA()->New();
    ret->SetNameTitle(name, title);
@@ -427,8 +430,23 @@ THnSparse* THnSparse::CloneEmpty(const char* name, const char* title,
    Int_t pos = 0;
    Int_t *nbins = new Int_t[axes->GetEntriesFast()];
    while ((axis = (TAxis*)iAxis())) {
-      nbins[pos] = axis->GetNbins();
-      ret->fAxes.AddAtAndExpand(axis->Clone(), pos++);
+      TAxis* reqaxis = (TAxis*)axis->Clone();
+      if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
+         Int_t binFirst = axis->GetFirst();
+         Int_t binLast = axis->GetLast();
+         Int_t nBins = binLast - binFirst + 1;
+         if (axis->GetXbins()->GetSize()) {
+            // non-uniform bins:
+            reqaxis->Set(nBins, axis->GetXbins()->GetArray() + binFirst - 1);
+         } else {
+            // uniform bins:
+            reqaxis->Set(nBins, axis->GetBinLowEdge(binFirst), axis->GetBinUpEdge(binLast));
+         }
+         reqaxis->ResetBit(TAxis::kAxisRange);
+      }
+
+      nbins[pos] = reqaxis->GetNbins();
+      ret->fAxes.AddAtAndExpand(reqaxis->Clone(), pos++);
    }
    ret->fAxes.SetOwner();
 
@@ -440,7 +458,8 @@ THnSparse* THnSparse::CloneEmpty(const char* name, const char* title,
 
 //______________________________________________________________________________
 TH1* THnSparse::CreateHist(const char* name, const char* title,
-                           const TObjArray* axes) const {
+                           const TObjArray* axes,
+                           Bool_t keepTargetAxis ) const {
    // Create an empty histogram with name and title with a given
    // set of axes. Create a TH1D/TH2D/TH3D, depending on the number
    // of elements in axes.
@@ -463,7 +482,7 @@ TH1* THnSparse::CreateHist(const char* name, const char* title,
    TAxis* hax[3] = {hist->GetXaxis(), hist->GetYaxis(), hist->GetZaxis()};
    for (Int_t d = 0; d < ndim; ++d) {
       TAxis* reqaxis = (TAxis*)(*axes)[d];
-      if (reqaxis->TestBit(TAxis::kAxisRange)) {
+      if (!keepTargetAxis && reqaxis->TestBit(TAxis::kAxisRange)) {
          Int_t binFirst = reqaxis->GetFirst();
          if (binFirst == 0) binFirst = 1;
          Int_t binLast = reqaxis->GetLast();
@@ -767,6 +786,9 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
    // keeping only axis "xDim".
    // If "option" contains "E" errors will be calculated.
    //                      "A" ranges of the taget axes will be ignored.
+   //                      "O" original axis range of the taget axes will be
+   //                          kept, but only bins inside the selected range
+   //                          will be filled.
 
    return (TH1D*) ProjectionAny(1, &xDim, false, option);
 }
@@ -777,6 +799,7 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
    // Project all bins into a 2-dimensional histogram,
    // keeping only axes "xDim" and "yDim".
    // If "option" contains "E" errors will be calculated.
+   //                      "A" ranges of the taget axes will be ignored.
 
    // y, x looks wrong, but it's what TH3::Project3D("xy") does
    const Int_t dim[2] = {yDim, xDim};
@@ -791,6 +814,9 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
    // keeping only axes "xDim", "yDim", and "zDim".
    // If "option" contains "E" errors will be calculated.
    //                      "A" ranges of the taget axes will be ignored.
+   //                      "O" original axis range of the taget axes will be
+   //                          kept, but only bins inside the selected range
+   //                          will be filled.
 
    const Int_t dim[3] = {xDim, yDim, zDim};
    return (TH3D*) ProjectionAny(3, dim, false, option);
@@ -800,10 +826,13 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
 THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
                                  Option_t* option /*= ""*/) const
 {
-   // Project all bins into a ndim-dimensional histogram,
-   // keeping only axes "dim".
+   // Project all bins into a ndim-dimensional THnSparse histogram,
+   // keeping only axes in dim (specifying ndim dimensions)
    // If "option" contains "E" errors will be calculated.
    //                      "A" ranges of the taget axes will be ignored.
+   //                      "O" original axis range of the taget axes will be
+   //                          kept, but only bins inside the selected range
+   //                          will be filled.
 
    return (THnSparse*) ProjectionAny(ndim, dim, true, option);
 }
@@ -813,10 +842,13 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
 TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
                                   Bool_t wantSparse, Option_t* option /*= ""*/) const
 {
-   // Project all bins into a 3-dimensional histogram,
-   // keeping only axes "xDim", "yDim", and "zDim".
+   // Project all bins into a ndim-dimensional THnSparse histogram,
+   // keeping only axes in dim (specifying ndim dimensions)
    // If "option" contains "E" errors will be calculated.
    //                      "A" ranges of the taget axes will be ignored.
+   //                      "O" original axis range of the taget axes will be
+   //                          kept, but only bins inside the selected range
+   //                          will be filled.
 
    TString name(GetName());
    name += "_";
@@ -849,6 +881,7 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
 
    Bool_t* hadRange = 0;
    Bool_t ignoreTargetRange = (option && (strchr(option, 'A') || strchr(option, 'a')));
+   Bool_t keepTargetAxis = ignoreTargetRange || (option && (strchr(option, 'O') || strchr(option, 'o')));
    if (ignoreTargetRange) {
       hadRange = new Bool_t[ndim];
       for (Int_t d = 0; d < ndim; ++d){
@@ -859,9 +892,22 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
    }
 
    if (wantSparse)
-      ret = sparse = CloneEmpty(name, title, &newaxes, fChunkSize);
+      ret = sparse = CloneEmpty(name, title, &newaxes, fChunkSize, keepTargetAxis);
    else
-      ret = hist = CreateHist(name, title, &newaxes); 
+      ret = hist = CreateHist(name, title, &newaxes, keepTargetAxis); 
+
+   if (keepTargetAxis) {
+      // make the whole axes visible, i.e. unset the range
+      if (wantSparse) {
+         for (Int_t d = 0; d < ndim; ++d) {
+            sparse->GetAxis(d)->SetRange(0, 0);
+         }
+      } else {
+         hist->GetXaxis()->SetRange(0, 0);
+         hist->GetYaxis()->SetRange(0, 0);
+         hist->GetZaxis()->SetRange(0, 0);
+      }
+   }
 
    Bool_t haveErrors = GetCalculateErrors();
    Bool_t wantErrors = (option && (strchr(option, 'E') || strchr(option, 'e'))) || haveErrors;
@@ -882,7 +928,7 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
 
       for (Int_t d = 0; d < ndim; ++d) {
          bins[d] = coord[dim[d]];
-         if (GetAxis(dim[d])->TestBit(TAxis::kAxisRange)) {
+         if (!keepTargetAxis && GetAxis(dim[d])->TestBit(TAxis::kAxisRange)) {
             bins[d] -= GetAxis(dim[d])->GetFirst() - 1;
          }
       }
@@ -1031,7 +1077,7 @@ Long64_t THnSparse::Merge(TCollection* list)
    const TObject* addMeObj = 0;
    while ((addMeObj = iter())) {
       const THnSparse* addMe = dynamic_cast<const THnSparse*>(addMeObj);
-      if (!addMe) 
+      if (!addMe)
          Error("Merge", "Object named %s is not THnSpase! Skipping it.",
                addMeObj->GetName());
       else
@@ -1287,7 +1333,7 @@ void THnSparse::SetBinError(const Int_t* coord, Double_t e)
       assert(!GetCalculateErrors() );
       Sumw2(); // enable error calculation
    }
-   
+
    chunk->fSumw2->SetAt(e*e, bin % fChunkSize);
 }
 
@@ -1368,7 +1414,7 @@ THnSparse* THnSparse::Rebin(const Int_t* group) const
       }
    }
 
-   THnSparse* h = CloneEmpty(name.Data(), title.Data(), &newaxes, fChunkSize);
+   THnSparse* h = CloneEmpty(name.Data(), title.Data(), &newaxes, fChunkSize, kTRUE);
    Bool_t haveErrors = GetCalculateErrors();
    Bool_t wantErrors = haveErrors;
 
