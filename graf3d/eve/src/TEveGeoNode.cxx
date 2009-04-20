@@ -109,6 +109,32 @@ void TEveGeoNode::ExpandIntoListTree(TGListTree* ltree,
    TEveElement::ExpandIntoListTree(ltree, parent);
 }
 
+//______________________________________________________________________________
+void TEveGeoNode::ExpandIntoListTrees()
+{
+   // Expand children into all list-trees.
+
+   for (sLTI_i i = fItems.begin(); i != fItems.end(); ++i)
+   {
+      ExpandIntoListTree(i->fTree, i->fItem);
+   }
+}
+
+//______________________________________________________________________________
+void TEveGeoNode::ExpandIntoListTreesRecursively()
+{
+   // Expand children into all list-trees recursively.
+   // This is useful if one wants to export extracted shapes.
+
+   ExpandIntoListTrees();
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      TEveGeoNode *egn = dynamic_cast<TEveGeoNode*>(*i);
+      if (egn)
+         egn->ExpandIntoListTreesRecursively();
+   }
+}
+
 /******************************************************************************/
 
 //______________________________________________________________________________
@@ -302,16 +328,15 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
       rgba[2] = c->GetBlue();
    }
    gse->SetRGBA(rgba);
-   Bool_t rnr = geon->GetRnrSelf();
-   if (level > gGeoManager->GetVisLevel())
-      rnr = kFALSE;
-   gse->SetRnrSelf(rnr);
-   gse->SetRnrElements(geon->GetRnrChildren());
-
-   if (dynamic_cast<TGeoShapeAssembly*>(tshape)) {
-      Info(eh, "TGeoShapeAssembly name='%s' encountered in traversal. This is not supported.", tshape->GetName());
-      tshape = 0;
+   Bool_t rnr     = tnode->IsVisible();
+   Bool_t rnr_els = tnode->IsVisDaughters();
+   if (tvolume) {
+      rnr     = rnr     && tvolume->IsVisible();
+      rnr_els = rnr_els && tvolume->IsVisDaughters();
    }
+   gse->SetRnrSelf    (rnr);
+   gse->SetRnrElements(rnr_els);
+
    gse->SetShape(tshape);
    ++level;
    if (geon->HasChildren())

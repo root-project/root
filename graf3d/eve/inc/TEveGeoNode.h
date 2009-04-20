@@ -50,6 +50,9 @@ public:
 
    virtual void   ExpandIntoListTree(TGListTree* ltree, TGListTreeItem* parent);
 
+   virtual void   ExpandIntoListTrees();
+   virtual void   ExpandIntoListTreesRecursively();
+
    virtual Bool_t CanEditElement() const { return kFALSE; }
 
    virtual void   AddStamp(UChar_t bits);
