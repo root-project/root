@@ -283,17 +283,22 @@ void RooCategory::Streamer(TBuffer &R__b)
   UInt_t R__s, R__c;
   if (R__b.IsReading()) {
     
-    Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+    Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }    
     RooAbsCategoryLValue::Streamer(R__b);
-    RooCategorySharedProperties* tmpSharedProp = new RooCategorySharedProperties() ;
-    tmpSharedProp->Streamer(R__b) ;
-    if (!(_nullProp==*tmpSharedProp)) {
-      _sharedProp = (RooCategorySharedProperties*) _sharedPropList.registerProperties(tmpSharedProp,kFALSE) ;
-    } else {
-      delete tmpSharedProp ;
-      _sharedProp = 0 ;
+    if (R__v==1) {
+      // Implement V1 streamer here
+      R__b >> _sharedProp;      
+    } else { 
+      RooCategorySharedProperties* tmpSharedProp = new RooCategorySharedProperties() ;
+      tmpSharedProp->Streamer(R__b) ;
+      if (!(_nullProp==*tmpSharedProp)) {
+	_sharedProp = (RooCategorySharedProperties*) _sharedPropList.registerProperties(tmpSharedProp,kFALSE) ;
+      } else {
+	delete tmpSharedProp ;
+	_sharedProp = 0 ;
+      }
     }
-  
+
     R__b.CheckByteCount(R__s, R__c, RooCategory::IsA());
     
   } else {

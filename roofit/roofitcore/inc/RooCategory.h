@@ -81,7 +81,7 @@ protected:
     return RooCatType() ;
   } 
 
-  ClassDef(RooCategory,1) // Discrete valued variable type
+  ClassDef(RooCategory,2) // Discrete valued variable type
 };
 
 #endif
