@@ -3,7 +3,9 @@
 <a name="cint"></a> 
 <h3>CINT</h3>
 <p>This version contains no major new features.
-CINT7 has seen considerable speed improvements; only bug fixes were incorporated in the other packages.</p>
+CINT7 has seen considerable speed improvements; only bug fixes were incorporated in the other packages.
+CINT5 or 7 can now be configured independently; <tt>--enable-cint5 --disable-cint7</tt> is the default.
+New web site for <a href="http://root.cern.ch/drupal/content/interpreter">ROOT's interpreters and dictionaries</a> and <a href="http://root.cern.ch/drupal/content/cint">stand-alone CINT</a> as well as <a href="http://root.cern.ch/drupal/content/reflex">Reflex</a>.</p>
 <ul>
   <li>CINT5 and CINT7
     <ul>
@@ -14,6 +16,9 @@ CINT7 has seen considerable speed improvements; only bug fixes were incorporated
       <li>Fix parsing of negative values that are larger than int.</li>
       <li>Create the proper short name for templates with templated default arguments: <tt>a&lt;b&lt;c&gt;,d=e&gt;</tt> was shortened to <tt>a&lt;b&lt;c&gt;&gt;</tt> instead of <tt>a&lt;b&lt;c&gt; &gt;</tt>.</li>
       <li>Add missing <tt>complex&lt;T&gt;</tt> functions (thanks, Daniel Barna!).</li>
+      <li>Improve the casting from (free) function pointer to void* in dictionaries using a union.</li>
+      <li>Support <tt>_attribute_</tt> in the parser (by ignoring it).</li>
+      <li>Do not convert path names to lower case anymore.</li>
     </ul>
   </li>
   <li>CINT5
@@ -29,11 +34,16 @@ CINT7 has seen considerable speed improvements; only bug fixes were incorporated
       <li>Fix issue with G__struct being initialized too late.</li>
       <li>Properly identify the library that a dictionary belongs to.</li>
       <li>Fix compiler warnings.</li>
-      <li>Fix dictionary for <tt>abs()</tt></li>
+      <li>Fix dictionary for <tt>abs()</tt>.</li>
+      <li>Reduce memory usage by reimplementing some internal data structures.</li>
     </ul>
   </li>
   <li><em>Reflex</em>
     <ul>
+      <li>Reimplement <tt>UpdateMembers()</tt> and <tt>PathToBase()</tt> in a backward compatible way.
+      The Member getters now support an enum argument (<tt>Reflex::INHERITEDMEMBERS_NO</tt> or <tt>Reflex::INHERITEDMEMBERS_ALSO</tt>) to request only the class's member or also inherited members.
+      This allows to ignore possible calls to <tt>UpdateMembers()</tt>.
+      The default value for this argument to the member getters is <tt>Reflex::INHERITEDMEMBERS_DEFAULT</tt> which will behave like <tt>Reflex::INHERITEDMEMBERS_NO</tt> until the first call to <tt>UpdateMembers()</tt>.</li>
       <li>Fix visibility of UnionBuilder's symbols (GCC, MSVC)</li>
       <li>Fix for unnamed types in genreflex.</li>
       <li>genreflex got fixed for functions taking arrays or pointers thereof.</li>
