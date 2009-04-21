@@ -29,6 +29,7 @@ using namespace RooFit ;
 
 void rf105_funcbinding()
 {
+
   // B i n d   T M a t h : : E r f   C   f u n c t i o n
   // ---------------------------------------------------
 
@@ -48,7 +49,7 @@ void rf105_funcbinding()
   // -----------------------------------------------------------------------
 
   // Bind pdf ROOT::Math::Beta with three variables as RooAbsPdf function
-  RooRealVar x2("x2","x2",0,1) ;
+  RooRealVar x2("x2","x2",0,0.999) ;
   RooRealVar a("a","a",5,0,10) ;
   RooRealVar b("b","b",2,0,10) ;
   RooAbsPdf* beta = bindPdf("beta",ROOT::Math::beta_pdf,x2,a,b) ;

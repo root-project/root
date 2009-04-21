@@ -17,8 +17,6 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "RooAddPdf.h"
-#include "RooNLLVar.h"
-#include "RooProfileLL.h"
 #include "RooMinuit.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
@@ -53,18 +51,18 @@ void rf605_profilell()
   // ---------------------------------------------------
 
   // Construct unbinned likelihood
-  RooNLLVar nll("nll","nll",model,*data,NumCPU(2)) ;
+  RooAbsReal* nll = model.createNLL(*data,NumCPU(2)) ;
 
   // Minimize likelihood w.r.t all parameters before making plots
-  RooMinuit(nll).migrad() ;
+  RooMinuit(*nll).migrad() ;
 
   // Plot likelihood scan frac 
   RooPlot* frame1 = frac.frame(Bins(10),Range(0.01,0.95),Title("LL and profileLL in frac")) ;
-  nll.plotOn(frame1,ShiftToZero()) ;
+  nll->plotOn(frame1,ShiftToZero()) ;
 
   // Plot likelihood scan in sigma_g2
   RooPlot* frame2 = sigma_g2.frame(Bins(10),Range(3.3,5.0),Title("LL and profileLL in sigma_g2")) ;
-  nll.plotOn(frame2,ShiftToZero()) ;
+  nll->plotOn(frame2,ShiftToZero()) ;
 
 
 
@@ -73,10 +71,11 @@ void rf605_profilell()
 
   // The profile likelihood estimator on nll for frac will minimize nll w.r.t
   // all floating parameters except frac for each evaluation
-  RooProfileLL pll_frac("pll_frac","pll_frac",nll,frac) ;
+
+  RooAbsReal* pll_frac = nll->createProfile(frac) ;
 
   // Plot the profile likelihood in frac
-  pll_frac.plotOn(frame1,LineColor(kRed)) ;
+  pll_frac->plotOn(frame1,LineColor(kRed)) ;
 
   // Adjust frame maximum for visual clarity
   frame1->SetMinimum(0) ;
@@ -89,10 +88,10 @@ void rf605_profilell()
 
   // The profile likelihood estimator on nll for sigma_g2 will minimize nll
   // w.r.t all floating parameters except sigma_g2 for each evaluation
-  RooProfileLL pll_sigmag2("pll_sigmag2","pll_sigmag2",nll,sigma_g2) ;
+  RooAbsReal* pll_sigmag2 = nll->createProfile(sigma_g2) ;
 
   // Plot the profile likelihood in sigma_g2
-  pll_sigmag2.plotOn(frame2,LineColor(kRed)) ;
+  pll_sigmag2->plotOn(frame2,LineColor(kRed)) ;
 
   // Adjust frame maximum for visual clarity
   frame2->SetMinimum(0) ;
@@ -106,6 +105,8 @@ void rf605_profilell()
   c->cd(1) ; frame1->Draw() ;
   c->cd(2) ; frame2->Draw() ;
 
-
+  delete pll_frac ;
+  delete pll_sigmag2 ;
+  delete nll ;
 }
 

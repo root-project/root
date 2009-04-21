@@ -76,12 +76,27 @@ void rf403_weightedevts()
 
   // Fit quadratic polynomial to weighted data
 
-  // NOTE: Maximum likelihood fit to weighted data does in general 
+  // NOTE: A plain Maximum likelihood fit to weighted data does in general 
   //       NOT result in correct error estimates, unless individual
   //       event weights represent Poisson statistics themselves.
-  //       In general, parameter error reflect precision of SumOfWeights
-  //       events rather than NumEvents events. See comparisons below
+  //       
+  // Fit with 'wrong' errors
   RooFitResult* r_ml_wgt = p2.fitTo(*data,Save()) ;
+  
+  // A first order correction to estimated parameter errors in an 
+  // (unbinned) ML fit can be obtained by calculating the
+  // covariance matrix as
+  //
+  //    V' = V C-1 V
+  //
+  // where V is the covariance matrix calculated from a fit
+  // to -logL = - sum [ w_i log f(x_i) ] and C is the covariance
+  // matrix calculated from -logL' = -sum [ w_i^2 log f(x_i) ] 
+  // (i.e. the weights are applied squared)
+  //
+  // A fit in this mode can be performed as follows:
+
+  RooFitResult* r_ml_wgt_corr = p2.fitTo(*data,Save(),SumW2Error(kTRUE)) ;
 
 
 
@@ -152,6 +167,8 @@ void rf403_weightedevts()
   r_ml_unw43->Print() ;
   cout << "==> ML Fit results on 1K weighted events with a summed weight of 43K" << endl ;
   r_ml_wgt->Print() ;
+  cout << "==> Corrected ML Fit results on 1K weighted events with a summed weight of 43K" << endl ;
+  r_ml_wgt_corr->Print() ;
   cout << "==> Chi2 Fit results on 1K weighted events with a summed weight of 43K" << endl ;
   r_chi2_wgt->Print() ;
 

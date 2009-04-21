@@ -24,6 +24,7 @@
 #include "TFile.h"
 #include "TStyle.h"
 #include "TH2.h"
+#include "TMatrixDSym.h"
 
 using namespace RooFit ;
 
@@ -92,7 +93,7 @@ void rf607_fitresult()
 
 
   // Visualize ellipse corresponding to single correlation matrix element
-  RooPlot* frame = new RooPlot(sigma1,sig1frac,0.37,0.5,0.55,0.8) ;
+  RooPlot* frame = new RooPlot(sigma1,sig1frac,0.45,0.60,0.65,0.90) ;
   frame->SetTitle("Covariance between sigma1 and sig1frac") ;
   r->plotOn(frame,sigma1,sig1frac,"ME12ABHV") ;
 
@@ -113,18 +114,14 @@ void rf607_fitresult()
   cout << "correlation between sig1frac and a0 is  " << r->correlation(sig1frac,a0) << endl ;
   cout << "correlation between bkgfrac and mean is " << r->correlation("bkgfrac","mean") << endl ;
 
+  // Extract covariance and correlation matrix as TMatrixDSym
+  const TMatrixDSym& cor = r->correlationMatrix() ;
+  const TMatrixDSym& cov = r->covarianceMatrix() ;
 
-  // Sample dataset with parameter values according to distribution
-  // of covariance matrix of fit result
-  RooDataSet randPars("randPars","randPars",r->floatParsFinal()) ;
-  for (Int_t i=0 ; i<10000 ; i++) {
-    randPars.add(r->randomizePars()) ;    
-  }
-
-  // make histogram of 2D distribution in sigma1 vs sig1frac
-  TH1* hhrand = randPars.createHistogram("hhrand",sigma1,Binning(35,0.25,0.65),YVar(sig1frac,Binning(35,0.3,1.1))) ;
-
-
+  // Print correlation, covariance matrix
+  cor.Print() ;
+  cov.Print() ;
+  
 
   // P e r s i s t   f i t   r e s u l t   i n   r o o t   f i l e 
   // -------------------------------------------------------------
@@ -136,13 +133,11 @@ void rf607_fitresult()
 
   // In a clean ROOT session retrieve the persisted fit result as follows:
   // RooFitResult* r = gDirectory->Get("rf607") ;
-
  
 
-  TCanvas* c = new TCanvas("rf607_fitresult","rf607_fitresult",1200,400) ;
-  c->Divide(3) ;
+  TCanvas* c = new TCanvas("rf607_fitresult","rf607_fitresult",800,400) ;
+  c->Divide(2) ;
   c->cd(1) ; hcorr->Draw("colz") ;
   c->cd(2) ; frame->Draw() ;
-  c->cd(3) ; hhrand->Draw("box") ;
 
 }

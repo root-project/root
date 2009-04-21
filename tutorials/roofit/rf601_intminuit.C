@@ -18,7 +18,6 @@
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
 #include "RooMinuit.h"
-#include "RooNLLVar.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
@@ -48,15 +47,14 @@ void rf601_intminuit()
   // Generate 1000 events
   RooDataSet* data = model.generate(x,1000) ;
   
-  // Construct unbinned likelihood
-  RooNLLVar nll("nll","nll",model,*data) ;
-
+  // Construct unbinned likelihood of model w.r.t. data
+  RooAbsReal* nll = model.createNLL(*data) ;
 
   // I n t e r a c t i v e   m i n i m i z a t i o n ,   e r r o r   a n a l y s i s
   // -------------------------------------------------------------------------------
 
   // Create MINUIT interface object
-  RooMinuit m(nll) ;
+  RooMinuit m(*nll) ;
 
   // Activate verbose logging of MINUIT parameter space stepping
   m.setVerbose(kTRUE) ;

@@ -2,7 +2,7 @@
 //
 // 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #602
 // 
-// Setting up a binning chi^2 fit
+// Setting up a chi^2 fit to a binned dataset
 //
 //
 //
@@ -62,22 +62,19 @@ void rf602_chi2fit()
   RooDataSet* d = model.generate(x,10000) ;
   RooDataHist* dh = d->binnedClone() ;
 
+  // Construct a chi^2 of the data and the model.
+  // When a p.d.f. is used in a chi^2 fit, the probability density scaled
+  // by the number of events in the dataset to obtain the fit function
+  // If model is an extended p.d.f, the expected number events is used
+  // instead of the observed number of events.
+  model.chi2FitTo(*dh) ;
 
-  // Construct a chi^2 of the data and the model,
-  // which is the input probability density scaled
-  // by the number of events in the dataset
-  RooChi2Var chi2("chi2","chi2",model,*dh) ;
+  // NB: It is also possible to fit a RooAbsReal function to a RooDataHist
+  // using chi2FitTo(). 
 
-  // Use RooMinuit interface to minimize chi^2
-  RooMinuit m(chi2) ;
-  m.migrad() ;
-  m.hesse() ;
-  
-  
   // Note that entries with zero bins are _not_ allowed 
   // for a proper chi^2 calculation and will give error
-  // messages
-  
+  // messages  
   RooDataSet* dsmall = (RooDataSet*) d->reduce(EventRange(1,100)) ;
   RooDataHist* dhsmall = dsmall->binnedClone() ;
   RooChi2Var chi2_lowstat("chi2_lowstat","chi2",model,*dhsmall) ;

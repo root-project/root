@@ -81,10 +81,7 @@ void rf502_wspacewrite()
   // -------------------------------------------
 
   // Save the workspace into a ROOT file
-  TFile f("rf502_workspace.root","RECREATE") ;
-  w->Write() ;
-  f.Close() ;
-
+  w->writeToFile("rf502_workspace.root") ;
 
 
   // Workspace will remain in memory after macro finishes

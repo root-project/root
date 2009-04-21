@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #111 
+// 'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #901 
 // 
 // Configuration and customization of how numeric (partial) integrals
 // are executed
@@ -26,7 +26,7 @@
 using namespace RooFit ;
 
 
-void rf111_numintconfig()
+void rf901_numintconfig()
 {
 
   // A d j u s t   g l o b a l   1 D   i n t e g r a t i o n   p r e c i s i o n 
