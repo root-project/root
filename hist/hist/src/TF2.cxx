@@ -179,7 +179,7 @@ TF2::TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 }
 
 //______________________________________________________________________________
-TF2::TF2(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char *className)
+TF2::TF2(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char *className)
       : TF1(name, ptr, xmin, xmax, npar,className)
 {
 //*-*-*-*-*-*-*F2 constructor used by CINT for interpreted function objects

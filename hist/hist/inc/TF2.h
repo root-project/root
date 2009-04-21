@@ -63,7 +63,7 @@ public:
    // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
    // and returning a double.    
    template <typename Func> 
-   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char * tmp  ) : 
+   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * tmp  ) : 
       TF1(name,f,xmin,xmax,npar,tmp),
 	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
@@ -72,7 +72,7 @@ public:
    } 
 
    // constructor used by CINT 
-   TF2(const char *name, void *ptr,  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char *className ); 
+   TF2(const char *name, void *ptr,  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char *className ); 
    TF2(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char *className, const char *methodName = 0);
 
    TF2(const TF2 &f2);
