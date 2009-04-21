@@ -28,6 +28,11 @@
 </li>
 </ul>
 
+<h4>TAxis</h4>
+<ul>
+  <li>Implement a new function, <tt>TAxis::GetBinCenterLog(Int_t bin)</tt>, as suggested at the issue <a href="http://root.cern.ch/phpBB2/viewtopic.php?t=8263">#8263</a>. 
+  </ul>
+
 <h4>TGraph</h4>
 <ul>
 <li> When adding an object in the list of funtions of a <tt>TGraph</tt>,
@@ -62,14 +67,37 @@
 <ul>
   <li>Speed up <tt>TH1::GetStats, TH2::GetStats, TH3::GetStats</tt> in case the sum of weights is null and the number of entries is also null
   <li>Optimize the way the function integral is computed in <tt>TH1::FillRandom</tt>
+  <li>Add new functions <tt>TH1::IsBinUnderflow(bin)</tt> and <tt>TH1::IsBinOverflow(bin)</tt> which use the global bin number.
+  <li>Add new functions <tt>Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis)</tt> and <tt>Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis)</tt> which find first (and last) bin with the content above the given threshold. Same function have been added in TH2 and TH3.  
+  <li>Add a protection in TH1::Sumw2() to avaoid calling GetBinContent when the histograms are empty.
+  <li>In TH1::Copy reset temporarily the kCanRebin bit before calling SetBinContent.
+  <li>Fix the bug <a href="https://savannah.cern.ch/bugs/?48649">#48649</a>in TH1::Add.
   </ul>
 
 <h4>TH3</h4>
 <ul>
-  <li>Add implementation of <tt>TH3::Interpolate</tt> using a tri-linear interpolation method</li>
+ <li>Add implementation of <tt>TH3::Interpolate</tt> using a tri-linear interpolation method</li>
   <li>Fix a bug in TH3::Project3D (https://savannah.cern.ch/bugs/?46432) for the error calculation in case of weighted histogram (or when using option "E") and no axis range is set.
 </li>
+<li>In the projection to Profile's, when Sumw2 is set, have the correct projected errors now with the new TProfile data member. 
 </ul>
+
+<h4>TProfile, TProfile2D, TProfile3D</h4>
+<ul>
+  <li>Add a new data member (TArrayD fBinSumw2) for storing the sum of weight square per bin. This is needed for correct error calculation in case of profile filled with weights different than 1. The new structure is filled only when TProfile::Sumw2() is called or when TH1::SetDefaultSumw2() is set.
+  <li>Add a new internal class, <tt>TProfileHelper</tt> for providing a common implementations for all TProfile classes for complex methods like Add and Merge.
+  </li>
+  
+</ul>
+
+<h4>THnSparse</h4>
+<ul>
+  <li>Fix a bug where the axes of a THnSparse created by THnSparse::Projection() would be filled wrongly if the axis's range was set.
+  <li>Fix a bug where the TAxis::kAxisRange bit was not reset for the new TH1/2/3 axes created by THnSparse::Projection(), if the original axis had a range and "A" was not given.
+  <li>Implement new option "O" for Projection(): respect the range set for the target axis (i.e. only project bins that are in range) but create the target histogram with the full axis.
+  <li>Fix a bug in the multiplication of THnSparse. 
+  <li>Fix a bug whe creating with a given set of axis. Ensure that the first bin of the axis is >= 1.
+  </ul>
 
 <h4>THistPainter</h4>
 <ul>
@@ -104,6 +132,8 @@
 <h4>Fitting Methods</h4>
 <ul>
   <li>Introduce a better treatment of the step size used when fitting an object with a TF1. Use now by default is not zero the error provided by TF1. In case of limits use an appropriate step size to avoid Minuit to go over the limits.
-  <li>fix bug https://savannah.cern.ch/bugs/?45909  when fitting with bad range values (outside the histogram range). 
+  <li>Fix bug https://savannah.cern.ch/bugs/?45909  when fitting with bad range values (outside the histogram range). 
 <li> detect the case when the data set is empty and don't perform any minimizationin this case but exits from fitting and produce a warning message
+  <li>Fix a bug when fitting histograms with option W and the bin errors are = 0. 
+ <li>Fix a bug in the InitGaus function when having only one data point (see https://savannah.cern.ch/bugs/?48936)
   </ul>

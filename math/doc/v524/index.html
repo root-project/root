@@ -11,19 +11,44 @@
   <li>Fix a problem in Chi2 calculation in case of overflow</li>
   <li>Fix issue <href="http://savannah.cern.ch/bugs/?46601">#46601</a> for avoiding crashes when a linear fit fails.</li>
    <li>Fix in the FitData classes the bug <href="http://savannah.cern.ch/bugs/?45909">#45909</a> occurring when setting a function range outside histogram range</li>
-   <li>Fix default integration method to be Gauss alalgorithm of MathCore instead of the GSL method, when libMathmore is not built or when the plug-in manager fails to load it. 
+   <li>Fix default integration method to be Gauss algorithm of MathCore instead of the GSL method, when libMathmore is not built or when the plug-in manager fails to load it.
+   <li>Add a protection against negative log when fitting using the Poisson log likelihood function
+   <li>Improve calculation of derivative in x for fitted function. This fixes some problem observed when fitting using the error on the coordinates.  
   </ul>
+
+ <h4>MathMore</h4>
+  <ul> 
+    <li>Fix 2 bugs in the quartic equation solver (see issue <a href="https://savannah.cern.ch/bugs/?49031">#49031</a>).
+    <ul><li>
+    A protection has been added against numerical errors which could cause NaN due to wrong inputs to an <tt>acos</tt> function.
+      <li>
+   A wrong statement (coming from the original CERNLIB code but not applicable in this case)  has been removed.
+      </ul>
+    </li>
+ </ul>
+
+  <h4>SMatrix</h4>
+  <ul> 
+    <li>Remove an unneeded check on the element value in the factorization routines used for inverting the matrices (both for the LU and for the  Bunch-Kaufmann factorization). The check was preventing to inverting matrices when some of the matrix elements (like the diagonal) were smaller than an epsilon value set to ~ 10-15. This is not needed since it is enough to check that the values are not zero (i.e. when the matrix is singular). This bug was causing several failures in the CMS code when inverting matrices.  
+    </li>
+ </ul>
 
 <h4>Minuit2</h4>
   <ul>
     <li>Apply some fixes in MnHesse and MnPosDef classes to check correctly variables to not be zero.
     (use same checks as in F77Minuit)
     </li>
-    <li>Fix a bug introduced in DavidonErrorCalculator when checking for delgam. Negative values are allowed. This fixes a test problem given privatly by A. Suter.
+    <li>Fix a bug introduced in DavidonErrorCalculator when checking for delgam. Negative values are allowed. This fixes a test problem given privately by A. Suter.
     </li>
-    <li>Uses also a tighter condition on edm when exiting the iterations (factor of 5 smaller). This is more consistent with conditions used by F77Minuit. 
+    <li>Uses also a tighter condition on edm when exiting the iterations (factor of 5 smaller). This is more consistent with conditions used by F77Minuit.
+    </li>
+    <li>Fix a bug in MnCross in the standalone version of Minuit (when WARNINGMSG was not defined).
+    </li>
+    <li>Fix a bug in the sign of the derivative for sine transformation which are used with double bound parameters. The bug could affect the minimization of function with user provided gradient and bound parameters and bound parameters. It could also affected Fumili2. Furthermore, a wrong sign for the correlation matrix could also have been obtained in some cases with bound parameters.
     </li>
 </ul>
+
+
 
 <h4>TRolke</h4>
 New version of TRolke from J. Lundberg.
