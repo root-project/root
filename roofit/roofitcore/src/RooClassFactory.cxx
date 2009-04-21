@@ -753,7 +753,6 @@ std::string RooClassFactory::ClassFacIFace::create(RooFactoryWSTool& ft, const c
     }
 
     RooAbsArg* ret ;
-    cout << "args[0] = " << args[0] << endl ;
     // Strip quotation marks from expression string
     char expr[1024] ;
     strncpy(expr,args[0].c_str()+1,args[0].size()-2) ;
