@@ -202,7 +202,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* TObjectIsEqual( PyObject* self, PyObject* obj )
    {
-      if ( ! ObjectProxy_Check( obj ) )
+      if ( ! ObjectProxy_Check( obj ) || ! ((ObjectProxy*)obj)->fObject )
          return ObjectProxy_Type.tp_richcompare( self, obj, Py_EQ );
 
       return CallPyObjMethod( self, "IsEqual", obj );
@@ -211,7 +211,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* GenObjectIsEqual( PyObject* self, PyObject* obj )
    {
-      if ( ! ObjectProxy_Check( obj ) )
+      if ( ! ObjectProxy_Check( obj ) || ! ((ObjectProxy*)obj)->fObject )
          return ObjectProxy_Type.tp_richcompare( self, obj, Py_EQ );
 
       return CallPyObjMethod( self, "__cpp_eq__", obj );
