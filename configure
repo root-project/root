@@ -2273,6 +2273,12 @@ if test ! "x$enable_qt" = "xno" || \
 	    check_library "libQtXml QtXml QtXml$qt4suffix QtXml4" \
 		"$enable_shared" "$found_raw_dir" ""
 	    qtlib="$qtlib $found_lib"
+	    check_library "libQtWebKit QtWebKit QtWebKit$qt4suffix QtWebKit4" \
+		"$enable_shared" "$found_raw_dir" ""
+	    qtlib="$qtlib $found_lib"
+	    check_library "libQtNetwork QtNetwork QtNetwork$qt4suffix QtNetwork4" \
+		"$enable_shared" "$found_raw_dir" ""
+	    qtlib="$qtlib $found_lib"
 	else
             qtinc=
             qtmainincdir=
