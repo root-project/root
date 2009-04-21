@@ -3467,7 +3467,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
     cmds[i++] = arg ;
   }
   for (;i<8 ; i++) {
-    cmds[i++] = &RooCmdArg::none() ;
+    cmds[i] = &RooCmdArg::none() ;
   }
   delete iter ;
   
