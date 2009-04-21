@@ -114,11 +114,19 @@ namespace {
          return Py_NotImplemented;
       }
 
-   // type + held pointer value defines identity
+   // special case for None to compare True to a null-pointer
+      if ( (PyObject*)other == Py_None && ! self->fObject ) {
+         Py_INCREF( Py_True );
+         return Py_True;
+      }
+
+   // type + held pointer value defines identity (will cover if other is not
+   // actually an ObjectProxy, as ob_type will be unequal)
       if ( self->ob_type == other->ob_type && self->fObject == other->fObject ) {
          Py_INCREF( Py_True );
          return Py_True;
       }
+
       Py_INCREF( Py_False );
       return Py_False;
    }

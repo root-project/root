@@ -10,6 +10,8 @@ PyObject* PyROOT::PyStrings::gBases = 0;
 PyObject* PyROOT::PyStrings::gClass = 0;
 PyObject* PyROOT::PyStrings::gDeref = 0;
 PyObject* PyROOT::PyStrings::gDict = 0;
+PyObject* PyROOT::PyStrings::gEmptyString = 0;
+PyObject* PyROOT::PyStrings::gEq = 0;
 PyObject* PyROOT::PyStrings::gFollow = 0;
 PyObject* PyROOT::PyStrings::gGetItem = 0;
 PyObject* PyROOT::PyStrings::gInit = 0;
@@ -23,7 +25,6 @@ PyObject* PyROOT::PyStrings::gTypeCode = 0;
 PyObject* PyROOT::PyStrings::gAt = 0;
 PyObject* PyROOT::PyStrings::gBegin = 0;
 PyObject* PyROOT::PyStrings::gEnd = 0;
-PyObject* PyROOT::PyStrings::gEmptyString = 0;
 PyObject* PyROOT::PyStrings::gFirst = 0;
 PyObject* PyROOT::PyStrings::gSecond = 0;
 PyObject* PyROOT::PyStrings::gSize = 0;
@@ -47,8 +48,9 @@ Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gClass, __class__ );
    PYROOT_INITIALIZE_STRING( gDeref, __deref__ );
    PYROOT_INITIALIZE_STRING( gDict, __dict__ );
-   if ( ! ( PyStrings::gEmptyString = PyString_FromString( (char*)"" ) ) ) 
+   if ( ! ( PyStrings::gEmptyString = PyString_FromString( (char*)"" ) ) )
       return kFALSE;
+   PYROOT_INITIALIZE_STRING( gEq, __eq__ );
    PYROOT_INITIALIZE_STRING( gFollow, __follow__ );
    PYROOT_INITIALIZE_STRING( gGetItem, __getitem__ );
    PYROOT_INITIALIZE_STRING( gInit, __init__ );
@@ -84,6 +86,7 @@ PyObject* PyROOT::DestroyPyStrings() {
    Py_DECREF( PyStrings::gDeref ); PyStrings::gDeref = 0;
    Py_DECREF( PyStrings::gDict ); PyStrings::gDict = 0;
    Py_DECREF( PyStrings::gEmptyString ); PyStrings::gEmptyString = 0;
+   Py_DECREF( PyStrings::gEq ); PyStrings::gEq = 0;
    Py_DECREF( PyStrings::gFollow ); PyStrings::gFollow = 0;
    Py_DECREF( PyStrings::gGetItem ); PyStrings::gGetItem = 0;
    Py_DECREF( PyStrings::gInit ); PyStrings::gInit = 0;

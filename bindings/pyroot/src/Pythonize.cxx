@@ -48,11 +48,11 @@ namespace {
    using namespace PyROOT;
 
 //____________________________________________________________________________
-   Bool_t HasAttrDirect( PyObject* pyclass, PyObject* pyname ) {
+   Bool_t HasAttrDirect( PyObject* pyclass, PyObject* pyname, Bool_t mustBePyROOT = kFALSE ) {
    // prevents calls to pyclass->ob_type->tp_getattr, which is unnecessary for our
    // purposes here and could tickle problems w/ spurious lookups into ROOT meta
       PyObject* attr = PyType_Type.tp_getattro( pyclass, pyname );
-      if ( attr != 0 ) {
+      if ( attr != 0 && ( ! mustBePyROOT || MethodProxy_Check( attr ) ) ) {
          Py_DECREF( attr );
          return kTRUE;
       }
@@ -203,9 +203,18 @@ namespace {
    PyObject* TObjectIsEqual( PyObject* self, PyObject* obj )
    {
       if ( ! ObjectProxy_Check( obj ) )
-         return PyInt_FromLong( 0l );
+         return ObjectProxy_Type.tp_richcompare( self, obj, Py_EQ );
 
       return CallPyObjMethod( self, "IsEqual", obj );
+   }
+
+//____________________________________________________________________________
+   PyObject* GenObjectIsEqual( PyObject* self, PyObject* obj )
+   {
+      if ( ! ObjectProxy_Check( obj ) )
+         return ObjectProxy_Type.tp_richcompare( self, obj, Py_EQ );
+
+      return CallPyObjMethod( self, "__cpp_eq__", obj );
    }
 
 //- TClass behavior ------------------------------------------------------------
@@ -1579,6 +1588,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
          Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
       }
+   }
+
+// map operator==() through GenObjectIsEqual to allow comparison to None
+   if ( HasAttrDirect( pyclass, PyStrings::gEq, kTRUE ) ) {
+      Utility::AddToClass( pyclass, "__cpp_eq__",  "__eq__" );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) GenObjectIsEqual, METH_O );
    }
 
 

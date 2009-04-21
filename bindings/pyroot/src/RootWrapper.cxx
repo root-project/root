@@ -746,11 +746,9 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isR
 //____________________________________________________________________________
 PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 {
-// for safety (None can't be used as NULL pointer)
-   if ( ! address ) {
-      Py_INCREF( Py_None );
-      return Py_None;
-   }
+// if the object is a null pointer, return a typed one (as needed for overloading)
+   if ( ! address )
+      return BindRootObjectNoCast( address, klass, kFALSE );
 
 // only known or knowable objects will be bound
    if ( ! klass ) {

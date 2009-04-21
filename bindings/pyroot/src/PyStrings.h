@@ -18,6 +18,7 @@ namespace PyROOT {
       R__EXTERN PyObject* gDeref;
       R__EXTERN PyObject* gDict;
       R__EXTERN PyObject* gEmptyString;
+      R__EXTERN PyObject* gEq;
       R__EXTERN PyObject* gFollow;
       R__EXTERN PyObject* gGetItem;
       R__EXTERN PyObject* gInit;
