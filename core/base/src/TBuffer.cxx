@@ -164,7 +164,11 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
    fBuffer = (char *)buf;
    fBufCur = fBuffer;
    if (newsiz > 0) {
-      fBufSize = newsiz - kExtraSpace;
+      if ( (fMode&kWrite)!=0 ) {
+         fBufSize = newsiz - kExtraSpace;
+      } else {
+         fBufSize = newsiz;
+      }         
    }
    fBufMax = fBuffer + fBufSize;
    
