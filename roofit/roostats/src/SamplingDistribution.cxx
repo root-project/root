@@ -122,7 +122,7 @@ Double_t SamplingDistribution::InverseCDF(Double_t pvalue,
    // returns the inverse of the cumulative distribution function, with variations depending on number of samples
 
   // will need to deal with weights, but for now:
-  sort(fSamplingDist.begin(), fSamplingDist.end());
+  std::sort(fSamplingDist.begin(), fSamplingDist.end());
 
 
   // Acceptance regions are meant to be inclusive of (1-\alpha) of the probability
@@ -198,7 +198,7 @@ Double_t SamplingDistribution::InverseCDFInterpolate(Double_t pvalue)
    // returns the inverse of the cumulative distribution function
 
   // will need to deal with weights, but for now:
-  sort(fSamplingDist.begin(), fSamplingDist.end());
+  std::sort(fSamplingDist.begin(), fSamplingDist.end());
 
   // casting will round down, eg. give i
   int nominal = (unsigned int) (pvalue*fSamplingDist.size());
