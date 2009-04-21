@@ -30,7 +30,7 @@ The basic idea is the following:
 The class allows the user to input models as RooAbsPdf or TH1 object 
 pointers (the pdfs must be "extended": for more information please refer to 
 http://roofit.sourceforge.net). The dataset can be entered as a 
-RooTreeData or TH1 object pointer. 
+RooTreeData or TH1 object pointer.  
 
 Unlike the TLimit Class a complete MC generation is performed at each step 
 and not a simple Poisson fluctuation of the contents of the bins.
@@ -249,6 +249,7 @@ void HybridCalculator::SetTestStatistics(int index)
    /// set the desired test statistics:
    /// index=1 : 2 * log( L_sb / L_b )  (DEFAULT)
    /// index=2 : number of generated events
+   /// index=3 : profiled likelihood ratio
    /// if the index is different to any of those values, the default is used
    fTestStatisticsIdx = index;
 }
@@ -279,7 +280,17 @@ HybridResult* HybridCalculator::Calculate(RooTreeData& data, unsigned int nToys,
       /// number of events used as test statistics
       double nEvents = data.sumEntries();
       testStatData = nEvents;
-   } else {
+   } else if ( fTestStatisticsIdx==3 ) {
+      /// profiled likelihood ratio used as test statistics
+      RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,data,RooFit::Extended());
+      fSbModel->fitTo(data);
+      double sb_nll_val = sb_nll.getVal();
+      RooNLLVar b_nll("b_nll","b_nll",*fBModel,data,RooFit::Extended());
+      fBModel->fitTo(data);
+      double b_nll_val = b_nll.getVal();
+      double m2lnQ = 2*(sb_nll_val-b_nll_val);
+      testStatData = m2lnQ;
+   } else if ( fTestStatisticsIdx==1 ) {
       /// likelihood ratio used as test statistics (default)
       RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,data,RooFit::Extended());
       RooNLLVar b_nll("b_nll","b_nll",*fBModel,data,RooFit::Extended());
@@ -399,11 +410,21 @@ void HybridCalculator::RunToys(std::vector<double>& bVals, std::vector<double>& 
          double nEvents = 0;
          if ( !sbIsEmpty ) nEvents = sbData->numEntries();
          sbVals.push_back(nEvents);
-      } else {
+      } else if ( fTestStatisticsIdx==3 ) {
+         /// profiled likelihood ratio used as test statistics
+         RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,*sbData,RooFit::Extended());
+         fSbModel->fitTo(*sbData);
+         double sb_nll_val = sb_nll.getVal();
+         RooNLLVar b_nll("b_nll","b_nll",*fBModel,*sbData,RooFit::Extended());
+         fBModel->fitTo(*sbData);
+         double b_nll_val = b_nll.getVal();
+         double m2lnQ = 2*(sb_nll_val-b_nll_val);
+         sbVals.push_back(m2lnQ);
+      } else if ( fTestStatisticsIdx==1 ) {
          /// likelihood ratio used as test statistics (default)
-         RooNLLVar sb_sb_nll("sb_sb_nll","sb_sb_nll",*fSbModel,*sbData,RooFit::Extended());
-         RooNLLVar b_sb_nll("b_sb_nll","b_sb_nll",*fBModel,*sbData,RooFit::Extended());
-         double m2lnQ = 2*(sb_sb_nll.getVal()-b_sb_nll.getVal());
+         RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,*sbData,RooFit::Extended());
+         RooNLLVar b_nll("b_nll","b_nll",*fBModel,*sbData,RooFit::Extended());
+         double m2lnQ = 2*(sb_nll.getVal()-b_nll.getVal());
          sbVals.push_back(m2lnQ);
       }
 
@@ -413,11 +434,21 @@ void HybridCalculator::RunToys(std::vector<double>& bVals, std::vector<double>& 
          double nEvents = 0;
          if ( !bIsEmpty ) nEvents = bData->numEntries();
          bVals.push_back(nEvents);
-      } else {
+      } else if ( fTestStatisticsIdx==3 ) {
+         /// profiled likelihood ratio used as test statistics
+         RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,*bData,RooFit::Extended());
+         fSbModel->fitTo(*bData);
+         double sb_nll_val = sb_nll.getVal();
+         RooNLLVar b_nll("b_nll","b_nll",*fBModel,*bData,RooFit::Extended());
+         fBModel->fitTo(*bData);
+         double b_nll_val = b_nll.getVal();
+         double m2lnQ = 2*(sb_nll_val-b_nll_val);
+         bVals.push_back(m2lnQ);
+      } else if ( fTestStatisticsIdx==1 ) {
          /// likelihood ratio used as test statistics (default)
-         RooNLLVar sb_b_nll("sb_b_nll","sb_b_nll",*fSbModel,*bData,RooFit::Extended());
-         RooNLLVar b_b_nll("b_b_nll","b_b_nll",*fBModel,*bData,RooFit::Extended());
-         double m2lnQ = 2*(sb_b_nll.getVal()-b_b_nll.getVal());
+         RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,*bData,RooFit::Extended());
+         RooNLLVar b_nll("b_nll","b_nll",*fBModel,*bData,RooFit::Extended());
+         double m2lnQ = 2*(sb_nll.getVal()-b_nll.getVal());
          bVals.push_back(m2lnQ);
       }
 

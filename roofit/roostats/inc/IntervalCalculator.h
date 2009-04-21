@@ -46,7 +46,6 @@ END_HTML
 #endif
 //#include "TNamed.h"
 
-
 class RooAbsPdf;
 class RooArgSet; 
 class RooAbsData; 
@@ -88,7 +87,7 @@ namespace RooStats {
       // specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(RooArgSet&) = 0;
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetSize(Double_t size) = 0;
+      virtual void SetTestSize(Double_t size) = 0;
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
       virtual void SetConfidenceLevel(Double_t cl) = 0;
       

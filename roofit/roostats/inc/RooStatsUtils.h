@@ -38,7 +38,7 @@ namespace RooStats {
   }
 
 
-  inline void SetParameters(RooArgSet* desiredVals, RooArgSet* paramsToChange){
+  inline void SetParameters(const RooArgSet* desiredVals, RooArgSet* paramsToChange){
     TIter it = desiredVals->createIterator();
     RooRealVar *myarg; 
     RooRealVar *mytarget; 

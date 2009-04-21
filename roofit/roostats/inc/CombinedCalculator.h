@@ -89,7 +89,7 @@ namespace RooStats {
          SetData(data);
          SetPdf(pdf);
          SetParameters(paramsOfInterest);
-         SetSize(size);
+         SetTestSize(size);
          if(nullParams ) 
             SetNullParameters(*nullParams);
          else
@@ -106,7 +106,7 @@ namespace RooStats {
          SetData(data);
          SetPdf(pdf);
          SetParameters(paramsOfInterest);
-         SetSize(size);
+         SetTestSize(size);
          if(nullParams ) 
             SetNullParameters(*nullParams);
          else
@@ -133,7 +133,7 @@ namespace RooStats {
 
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetSize(Double_t size) {fSize = size;}
+      virtual void SetTestSize(Double_t size) {fSize = size;}
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
       virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
       // Get the size of the test (eg. rate of Type I error)

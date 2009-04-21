@@ -56,9 +56,11 @@ END_HTML
 #ifndef RooStats_LikelihoodInterval
 #include "RooStats/LikelihoodInterval.h"
 #endif
+#include "RooStats/RooStatsUtils.h"
+
 #include "RooAbsReal.h"
 #include "RooMsgService.h"
-#include "RooStats/RooStatsUtils.h"
+
 #include <string>
 
 
@@ -140,6 +142,16 @@ Bool_t LikelihoodInterval::IsInInterval(RooArgSet &parameterPoint)
     std::cout << "The likelihood ratio is < 0, indicates a bad minimum or numerical precision problems.  Will return true" << std::endl;
     return true;
   }
+
+  /*
+  std::cout << "in likelihood interval: LR = " <<
+    fLikelihoodRatio->getVal() << 
+    " ndof = " << parameterPoint.getSize() << 
+    " alpha = " << 1.-fConfidenceLevel << " cl = " << fConfidenceLevel <<
+    " with P = " <<
+    TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.getSize())  <<
+    " and CL = " << fConfidenceLevel << std::endl;
+  */
 
   // here we use Wilks' theorem.
   if ( TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.getSize()) < (1.-fConfidenceLevel) )
@@ -223,6 +235,7 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param )
   // put the parameters back to the way they were
   //  (*fParameters) = (*snapshot);
 
+  delete newProfile;
   return myarg->getVal();
 
 }
@@ -233,7 +246,7 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param )
 Double_t LikelihoodInterval::UpperLimit(RooRealVar& param ) 
 {  
 
-// A binary search to get lower/upper limit for a given parameter.  Slow.
+  // A binary search to get lower/upper limit for a given parameter.  Slow.
   RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
   RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(param.GetName());
 
@@ -271,6 +284,7 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param )
   }
   
 
+  // delete newProfile;
 
   // put the parameters back to the way they were
   //  (*fParameters) = (*snapshot);

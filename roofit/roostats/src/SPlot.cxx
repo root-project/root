@@ -168,13 +168,16 @@ RooDataSet* SPlot::AddSWeightToData(const RooSimultaneous* pdf,
       // matrix. See BAD 509 V2 eqn. 15
 
       // Sum for the denominator
-      Double_t dsum(0);
+     data.get(ievt);
+
+
+     Double_t dsum(0);
       for(Int_t k = 0; k < nspec; ++k) 
          dsum += pdfvalues[ievt][k] * yieldvalues[k] ;
 
       for(Int_t n=0; n<nspec; ++n)
          for(Int_t j=0; j<nspec; ++j) 
-            covInv(n,j) +=  pdfvalues[ievt][n]*pdfvalues[ievt][j]/(dsum*dsum);
+	   covInv(n,j) +=  pdfvalues[ievt][n]*pdfvalues[ievt][j]*(data.weight())/(dsum*dsum);
    }
    // Covariance inverse should now be computed!
    covInv.Print();

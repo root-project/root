@@ -61,15 +61,9 @@ END_HTML
 #include "RooRealVar.h"
 #include "RooProfileLL.h"
 #include "RooNLLVar.h"
-#include "RooDataSet.h"
 #include "RooGlobalFunc.h"
-#include "RooCmdArg.h"
-
-
 
 ClassImp(RooStats::ProfileLikelihoodCalculator) ;
-
-
 
 using namespace RooFit;
 using namespace RooStats;
@@ -108,7 +102,7 @@ ConfInterval* ProfileLikelihoodCalculator::GetInterval() const {
    RooAbsData* data = fWS->data(fDataName);
    if (!data || !pdf || !fPOI) return 0;
 
-   RooNLLVar* nll = new RooNLLVar("nll","",*pdf,*data);
+   RooNLLVar* nll = new RooNLLVar("nll","",*pdf,*data, Extended());
    RooProfileLL* profile = new RooProfileLL("pll","",*nll, *fPOI);
    profile->addOwnedComponents(*nll) ;  // to avoid memory leak
 
@@ -118,7 +112,7 @@ ConfInterval* ProfileLikelihoodCalculator::GetInterval() const {
 
    LikelihoodInterval* interval 
       = new LikelihoodInterval("LikelihoodInterval", profile, fPOI);
-
+   interval->SetConfidenceLevel(1.-fSize);
    return interval;
 }
 
