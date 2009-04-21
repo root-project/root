@@ -345,6 +345,7 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
     // Fill cache data
     cacheData.UT.ResizeTo(TU) ;
     cacheData.UT = TU ;    
+    cacheData.omap.resize(_x.getSize()) ;
     for (int i=0 ; i<_x.getSize() ; i++) {
       cacheData.omap[i] = i ;
     }    
