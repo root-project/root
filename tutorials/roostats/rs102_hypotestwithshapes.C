@@ -167,7 +167,7 @@ void AddData(RooWorkspace* wks){
  
   RooDataSet* data = model->generate(*invMass,nEvents);
   
-  wks->import(*data, RenameDataset("data"));
+  wks->import(*data, Rename("data"));
 
 }
 
