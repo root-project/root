@@ -878,6 +878,7 @@ Bool_t TGQt::Init(void* /*display*/)
 #ifndef R__QTWIN32
    // Check whether "Symbol" font is available
     QFontDatabase fdb;
+    QString fontFamily;
     QStringList families = fdb.families();
     Bool_t symbolFontFound = kFALSE;
     Bool_t isXdfSupport = !gSystem->Getenv("QT_X11_NO_FONTCONFIG");
@@ -888,11 +889,8 @@ Bool_t TGQt::Init(void* /*display*/)
          )  || (!isXdfSupport && ((*f) == fSymbolFontFamily)) )
         {
            symbolFontFound = kTRUE;
-           const char *fnfam=(*f).toAscii().data();
-           fSymbolFontFamily = fnfam;
-           TQtPadFont::SetSymbolFontFamily(fnfam);
-           qDebug() << "Symbol font family found: \"" <<  fSymbolFontFamily<<"\"";
-           break;
+           qDebug() << "Symbol font family found: \"" <<  *f <<"\"";
+           if (*f == "Standard Symbols L") { fontFamily = *f; break; }
         }
     }
 
@@ -911,18 +909,20 @@ Bool_t TGQt::Init(void* /*display*/)
     if (!symbolFontFound) {
         fprintf(stderr, "The font \"symbol.ttf\" was not installed yet\n");
          //  provide the replacement and the codec
-        fSymbolFontFamily = "Arial";
-        fprintf(stderr, " Substitute it with \"%s\"\n",fSymbolFontFamily);
-        fprintf(stderr, " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \""
+        fontFamily = fSymbolFontFamily = "Arial";
+        qDebug() << " Substitute it with \""<<fontFamily <<"\"";
+        qDebug() << " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \""
+                 << 
 #ifdef TTFFONTDIR
 		TTFFONTDIR
 #else
 		"$ROOOTSYS/fonts"
 #endif
-		"\" directory to get the proper support for ROOT TLatex class\n");
+		<< "\" directory to get the proper support for ROOT TLatex class";
         // create a custom codec
         new QSymbolCodec();
     }
+    if (symbolFontFound) TQtPadFont::SetSymbolFontFamily(fontFamily.toAscii().data());
 #endif
    //  printf(" TGQt::Init finsihed\n");
    // Install filter for the desktop
@@ -960,7 +960,7 @@ Bool_t TGQt::Init(void* /*display*/)
          gSystem->ExpandPathName(qtlibdir);
          QDir qtdir((const char*)qtlibdir);
          if (qtdir.isReadable ()) {
-            QStringList qtLibFile =  qtdir.entryList("Q*4.lib",QDir::Files);
+            QStringList qtLibFile =  qtdir.entryList(QStringList("Q*4.lib"),QDir::Files);
             QStringListIterator libFiles(qtLibFile);
             if (libFiles.hasNext()) {
                libPath += " -LIBPATH:\"";libPath += qtlibdir;  libPath += "\" ";
@@ -974,7 +974,7 @@ Bool_t TGQt::Init(void* /*display*/)
 #else
                   libPath += "QtCore4.lib QtGui4.lib QtOpenGL4.lib Qt3Support4.lib";
 #endif
-               gSystem->SetLinkedLibs((const char*)libPath);
+               gSystem->SetLinkedLibs(libPath.toAscii().data());
             }
          } else {
             qWarning(" Can not open the QTDIR %s",(const char*)qtlibdir);

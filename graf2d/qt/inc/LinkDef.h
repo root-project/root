@@ -24,6 +24,7 @@
 #pragma link C++ class TQtApplication;
 #pragma link C++ class TGQt;
 #pragma link C++ class TQtRootSlot;
+#pragma link C++ class TQtPadFont;
 #pragma link C++ function QConnectCint;
 #pragma link C++ function QConnectTerminate;
 #pragma link C++ global gQt;
