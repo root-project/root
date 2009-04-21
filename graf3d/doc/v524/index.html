@@ -10,6 +10,17 @@
 <li> It is now possible to draw a histogram with the "GLBOX" in the
 GL-viewer.
 
+<li> New class <tt>TGLColor</tt> has been introduced to simplify color
+management in <tt>TGLViewer</tt> and <tt>TGLRnrCtx</tt>.
+
+<li> Add support for several color-sets (class <tt>TGLColorSet</tt> -
+each defines colors for background, foreground, outline, markup and
+for outlines of selected and highlighted objects.
+
+Thios also allows for independent changing of background color and
+outline mode in the GL viewer - the <tt>e</tt> key now toggles between
+dark / light background.
+
 <li> New class <tt>TGLAnnotation</tt> - it allows display of
 annotation-text on top of displayed objects.
 
@@ -52,8 +63,16 @@ a track. These were calling macros that were not available in ROOT.
 <li> Several improvements in rendering of coordinate axes
 in <tt>TEveCaloLego</tt> and <tt>TEveProjectionAxes</tt>.
 
-<li> New class <tt>TEveJetCone</tt> for display of jet-cones clipped
-to the calorimeter's inner surface.
+<li> New class <tt>TEveJetCone</tt> for display of circular and
+elliptic jet-cones clipped to the calorimeter's inner surface.
+
+<li> Add support for extraction of composite-shape tesselations. A new
+class <tt>TEveGeoPolyShape</tt> has been introduced to make this
+tesselation serializable. See examples
+in <tt>tutorials/eve/advanced/</tt>.
+
+<li> Generalize representation of EVE-window title-bar - it can be
+modified to display user-provided icons, menus or buttons.
 
 </ul>
 
