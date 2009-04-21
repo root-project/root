@@ -16,4 +16,14 @@ Multi-line output is separated by \n's.
 <li>New method Clear() to reset the string but not to resize it to the default
 (small) size. Useful when the string was pre-allocated to a large size and
 has to be re-used.</li>
+<li>Insure that ROOT's autoloader is always enabled whenever loading rootmap files.</li>
+<li>Add function void <pre>TAttAxis::SetNdivisions(Int_t n1, Int_t n2, Int_t n3, Bool_t optim);</pre> </li>
+</ul>
+<h4>Meta</h4>
+<li>Improve performance of TClass::GetMethod (and friends)</li>
+<li>
+<h4>ACLiC</h4>
+<ul>Implement TClassEdit::InsertStd() which puts "std::" in front of all STL classes.</li>
+<li>The generated library now always depends on RVersion.h</li>
+<li>Add support for '+' character embedded in the script's name or directory name.</li>
 </ul>
