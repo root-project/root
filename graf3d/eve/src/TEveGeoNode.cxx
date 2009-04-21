@@ -30,6 +30,7 @@
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 #include "TGeoShapeAssembly.h"
+#include "TGeoCompositeShape.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TVirtualGeoPainter.h"
@@ -315,8 +316,6 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
    TGeoVolume* tvolume = 0;
    TGeoShape*  tshape  = 0;
 
-   Bool_t descend = kTRUE;
-
    tnode = geon->GetNode();
    if (tnode == 0)
    {
@@ -333,15 +332,34 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
       if (tshape->IsComposite())
       {
          TEvePad pad;
-         pad.GetListOfPrimitives()->Add(tvolume);
+         TEvePadHolder gpad(kFALSE, &pad);
+         pad.GetListOfPrimitives()->Add(tshape);
          TGLScenePad scene_pad(&pad);
-         {
-            TEveGeoManagerHolder gmgr(tvolume->GetGeoManager());
-            Int_t nseg = gGeoManager->GetNsegments();
-            gGeoManager->SetNsegments(fgCSGExportNSeg);
-            scene_pad.PadPaint(&pad);
-            gGeoManager->SetNsegments(nseg);
+         pad.SetViewer3D(&scene_pad);
+
+         TEveGeoManagerHolder gmgr(tvolume->GetGeoManager());
+         gGeoManager->SetPaintVolume(tvolume);
+         Int_t nseg = gGeoManager->GetNsegments();
+         gGeoManager->SetNsegments(fgCSGExportNSeg);
+
+         Bool_t had_null_transform = kFALSE;
+         if (tshape->GetTransform() == 0) {
+            had_null_transform = kTRUE;
+            tshape->SetTransform(gGeoIdentity);
          }
+
+         scene_pad.BeginScene();
+         dynamic_cast<TGeoCompositeShape*>(tshape)->PaintComposite();
+         scene_pad.EndScene();
+
+         if (had_null_transform) {
+            tshape->SetTransform(0);
+         }
+
+         gGeoManager->SetNsegments(nseg);
+
+         pad.SetViewer3D(0);
+
          TGLFaceSet* fs = dynamic_cast<TGLFaceSet*>(scene_pad.FindLogical(tvolume));
          if (!fs) {
             Warning(eh, "Failed extracting CSG tesselation TEveGeoNode '%s'; skipping its sub-tree.\n", geon->GetName());
@@ -352,8 +370,6 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
          egps->SetFromFaceSet(fs);
          tshape = egps;
          fgTemporaryStore.push_back(egps);
-
-         descend = kFALSE;
       }
    }
 
@@ -393,7 +409,7 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
 
    gse->SetShape(tshape);
    ++level;
-   if (geon->HasChildren() && descend)
+   if (geon->HasChildren())
    {
       TList* ele = new TList();
       gse->SetElements(ele);
