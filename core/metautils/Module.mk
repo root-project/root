@@ -59,3 +59,6 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(METAUTILSO):  PCHCXXFLAGS =
+ifneq ($(BUILDBOTHCINT),)
+$(METAUTILS7O): CXXFLAGS += -DR__BUILDING_CINT7
+endif

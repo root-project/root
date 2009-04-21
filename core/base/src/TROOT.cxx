@@ -119,9 +119,7 @@ namespace std {} using namespace std;
 #endif
 
 #ifdef R__BUILDCINT7
-#ifdef _WIN32
-extern "C" void* LoadLibrary( const char* lpFileName);
-#else
+#ifndef _WIN32
 #define R__DLOPEN_NOW 2
 extern "C" void* dlopen(const char*, int);
 extern "C" char* dlerror();
