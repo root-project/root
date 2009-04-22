@@ -57,7 +57,7 @@ INCLUDEPATH += $$GQTDIRS $$GQTDIRI $(ROOTSYS)/include
 GQTH1  =  $$GQTDIRI/TGQt.h            $$GQTDIRI/TQtApplication.h  $$GQTDIRI/TQtTimer.h    \
           $$GQTDIRI/TQtBrush.h        $$GQTDIRI/TQMimeTypes.h $$GQTDIRI/TQtClientFilter.h \
           $$GQTDIRI/TQtClientWidget.h $$GQTDIRI/TQtWidget.h   $$GQTDIRI/TQtMarker.h       \
-          $$GQTDIRI/TQtRootSlot.h
+          $$GQTDIRI/TQtRootSlot.h     $$GQTDIRI/TQtPadFont.h
           
 
 CREATE_ROOT_DICT_FOR_CLASSES  = $$GQTH1 $$GQTDIRI/LinkDef.h
@@ -146,7 +146,8 @@ HEADERS += $$GQTDIRI/TGQt.h \
            $$GQTDIRI/TQtLockGuard.h         \
            $$GQTDIRI/TQtPadFont.h           \
            $$GQTDIRI/TQtPen.h               \
-           $$GQTDIRI/TQtRootSlot.h
+           $$GQTDIRI/TQtRootSlot.h          \
+           $$GQTDIRI/TQtPadFont.h
            
 SOURCES += $$GQTDIRS/GQtGUI.cxx             \
            $$GQTDIRS/TGQt.cxx               \
@@ -166,7 +167,8 @@ SOURCES += $$GQTDIRS/GQtGUI.cxx             \
            $$GQTDIRS/TQtWidget.cxx          \
            $$GQTDIRS/TQtPadFont.cxx         \
            $$GQTDIRS/TQtPen.cxx             \
-           $$GQTDIRS/TQtRootSlot.cxx
+           $$GQTDIRS/TQtRootSlot.cxx        \
+           $$GQTDIRS/TQtPadFont.cxx
            
 DISTFILES += LICENSE.QPL  Module.mk  Module.mk.unix  Module.mk.win32
 

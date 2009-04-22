@@ -23,7 +23,7 @@ GQTH1         := $(GQTDIRI)/TGQt.h  $(GQTDIRI)/TQtTimer.h              \
                  $(GQTDIRI)/TQtApplication.h $(GQTDIRI)/TQtBrush.h     \
                  $(GQTDIRI)/TQMimeTypes.h $(GQTDIRI)/TQtClientFilter.h \
                  $(GQTDIRI)/TQtClientWidget.h $(GQTDIRI)/TQtWidget.h   \
-                 $(GQTDIRI)/TQtMarker.h $(GQTDIRI)/TQtTimer.h \
+                 $(GQTDIRI)/TQtMarker.h $(GQTDIRI)/TQtTimer.h          \
                  $(GQTDIRI)/TQtRootSlot.h $(GQTDIRI)/TQtPadFont.h
 
 GQTH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
@@ -31,10 +31,10 @@ GQTS          := $(filter-out $(MODDIRS)/moc_%,\
                  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 GQTO          := $(GQTS:.cxx=.o)
 
-GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h \
+GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h     \
                  $(MODDIRI)/TQtClientFilter.h $(MODDIRI)/TQtClientGuard.h \
-                 $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h \
-                 $(MODDIRI)/TQtRootSlot.h $(MODDIRI)/TQtPadFont.h
+                 $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h      \
+                 $(MODDIRI)/TQtRootSlot.h
 
 GQTMOC        := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH)))
 GQTMOCO       := $(GQTMOC:.cxx=.o)
