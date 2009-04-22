@@ -46,6 +46,9 @@
     </li>
     <li>Fix a bug in the sign of the derivative for sine transformation which are used with double bound parameters. The bug could affect the minimization of function with user provided gradient and bound parameters and bound parameters. It could also affected Fumili2. Furthermore, a wrong sign for the correlation matrix could also have been obtained in some cases with bound parameters.
     </li>
+    <li>
+    Fix a problem in building the parallel version of Minuit2. The parallel version is built if the environment variables USE_PARALLEL_MINUIT2 and USE_OPENMP are set before compiling Minuit2 on a compiler which supports openMP (for example gcc version >= 4.2) 
+    </li>
 </ul>
 
 

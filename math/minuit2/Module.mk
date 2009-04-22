@@ -120,5 +120,6 @@ ifneq ($(USE_OPENMP),)
 #math/minuit2/src/Numerical2PGradientCalculator.o: 
 $(MINUIT2O):CXXFLAGS +=  -D_GLIBCXX_PARALLEL -fopenmp 
 $(MINUIT2DO):CXXFLAGS +=  -D_GLIBCXX_PARALLEL -fopenmp 
+$(MINUIT2LIB):LDFLAGS += -fopenmp
 endif
 endif
