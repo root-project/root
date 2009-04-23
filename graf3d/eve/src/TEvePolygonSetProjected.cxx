@@ -11,7 +11,7 @@
 
 #include "TEvePolygonSetProjected.h"
 #include "TEveVSDStructs.h"
-#include "TEveGeoNode.h"
+#include "TEveGeoShape.h"
 #include "TEveProjectionManager.h"
 
 #include "TBuffer3D.h"

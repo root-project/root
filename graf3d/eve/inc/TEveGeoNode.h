@@ -13,8 +13,6 @@
 #define ROOT_TEveGeoNode
 
 #include "TEveElement.h"
-#include "TEveTrans.h"
-#include "TEveProjectionBases.h"
 
 class TGeoVolume;
 class TGeoNode;
@@ -36,7 +34,7 @@ class TEveGeoNode : public TEveElement,
 
 protected:
    TGeoNode *fNode;
-   TEveGeoShapeExtract* DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeExtract* parent = 0, Int_t level = 0);
+   TEveGeoShapeExtract* DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeExtract* parent=0, Bool_t leafs_only=kFALSE);
 
    static Int_t                  fgCSGExportNSeg;  //!
    static std::list<TGeoShape*>  fgTemporaryStore; //!
@@ -70,7 +68,9 @@ public:
    void UpdateNode(TGeoNode* node);
    void UpdateVolume(TGeoVolume* volume);
 
-   void Save(const char* file, const char* name="Extract");
+   void Save(const char* file, const char* name="Extract", Bool_t leafs_only=kFALSE);
+   void SaveExtract(const char* file, const char* name, Bool_t leafs_only);
+   void WriteExtract(const char* name, Bool_t leafs_only);
 
    virtual void Draw(Option_t* option="");
 
@@ -123,54 +123,6 @@ public:
    void NodeVisChanged(TGeoNode* node);
 
    ClassDef(TEveGeoTopNode, 1); // Top-level TEveGeoNode with a pointer to TGeoManager and controls for steering of TGeoPainter.
-};
-
-
-//----------------------------------------------------------------
-//----------------------------------------------------------------
-
-class TEveGeoShape : public TEveElement,
-                     public TNamed,
-                     public TEveProjectable
-{
-   TEveGeoShape(const TEveGeoShape&);            // Not implemented
-   TEveGeoShape& operator=(const TEveGeoShape&); // Not implemented
-
-protected:
-   Color_t           fColor;
-   Int_t             fNSegments;
-   TGeoShape*        fShape;
-
-   static TGeoManager* fgGeoMangeur;
-
-   static TEveGeoShape* SubImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent);
-   TEveGeoShapeExtract* DumpShapeTree(TEveGeoShape* geon, TEveGeoShapeExtract* parent = 0);
-
-public:
-   TEveGeoShape(const char* name="TEveGeoShape", const char* title=0);
-   virtual ~TEveGeoShape();
-
-   virtual Bool_t  CanEditMainColor()        const { return kTRUE; }
-   virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
-
-   Color_t     GetColor()      const { return fColor; }
-   Int_t       GetNSegments()  const { return fNSegments; }
-   void        SetNSegments(Int_t s) { fNSegments = s; }
-   TGeoShape*  GetShape()            { return fShape; }
-   void        SetShape(TGeoShape* s);
-
-   virtual void Paint(Option_t* option="");
-
-   void Save(const char* file, const char* name="Extract");
-   static TEveGeoShape* ImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent=0);
-
-   // GeoProjectable
-   virtual TBuffer3D*   MakeBuffer3D();
-   virtual TClass*      ProjectedClass() const;
-
-   static TGeoManager*  GetGeoMangeur();
-
-   ClassDef(TEveGeoShape, 1); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
 };
 
 #endif

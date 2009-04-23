@@ -33,8 +33,8 @@ EVEH1     := TEveBrowser TEveChunkManager TEveCompound \
              TEveUtil TEveVSD TEveViewer TEveWindow
 
 EVEH2     := TEveArrow TEveBoxSet TEveCalo \
-             TEveDigitSet TEveFrameBox TEveGeoNode TEveGeoShapeExtract \
-             TEveGeoPolyShape TEveGridStepper TEveLegoEventHandler \
+             TEveDigitSet TEveFrameBox TEveGeo \
+             TEveGridStepper TEveLegoEventHandler \
              TEveLine TEvePointSet TEvePolygonSetProjected TEveQuadSet \
              TEveRGBAPalette TEveScalableStraightLineSet TEveStraightLineSet \
              TEveText TEveTrack TEveTriangleSet TEveJetCone

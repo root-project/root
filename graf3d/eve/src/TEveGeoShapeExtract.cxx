@@ -11,6 +11,7 @@
 
 #include "TEveGeoShapeExtract.h"
 #include "TEveGeoNode.h"
+#include "TEveGeoShape.h"
 
 #include "TList.h"
 #include "TGeoManager.h"
