@@ -278,12 +278,33 @@ public: \
    static int ImplFileLine(); \
    static const char *ImplFileName();
 
+// Version without any virtual functions.
+#define _ClassDefNV_(name,id) \
+private: \
+static TClass *fgIsA; \
+public: \
+static TClass *Class(); \
+static const char *Class_Name(); \
+static Version_t Class_Version() { return id; } \
+static void Dictionary(); \
+TClass *IsA() const { return name::Class(); } \
+void ShowMembers(TMemberInspector &insp, char *parent); \
+void Streamer(TBuffer &b); \
+void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
+static const char *DeclFileName() { return __FILE__; } \
+static int ImplFileLine(); \
+static const char *ImplFileName();
+
 
 #if !defined(R__CONCRETE_INPUT_OPERATOR)
 #if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__)
 
 #define ClassDef(name,id) \
    _ClassDef_(name,id) \
+   static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefNV(name,id) \
+   _ClassDefNV_(name,id) \
    static int DeclFileLine() { return __LINE__; }
 
 #else
@@ -294,12 +315,24 @@ public: \
                                      char *R__parent); \
    static int DeclFileLine() { return __LINE__; }
 
+#define ClassDefNV(name,id) \
+   _ClassDefNV_(name,id) \
+   friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp, \
+                                     char *R__parent); \
+   static int DeclFileLine() { return __LINE__; }
+
 #endif
 
 #else
 
 #define ClassDef(name,id) \
    _ClassDef_(name,id) \
+   friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
+   friend TBuffer &operator>>(TBuffer &buf, const name *&obj); \
+   static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefNV(name,id) \
+   _ClassDefNV_(name,id) \
    friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
    friend TBuffer &operator>>(TBuffer &buf, const name *&obj); \
    static int DeclFileLine() { return __LINE__; }
@@ -358,10 +391,21 @@ public: \
    _ClassDef_(name,id) \
    static int DeclFileLine() { return __LINE__; }
 
+#define ClassDefTNV(name,id) \
+   _ClassDefNV_(name,id) \
+   static int DeclFileLine() { return __LINE__; }
+
+
 #else
 
 #define ClassDefT(name,id) \
    _ClassDef_(name,id) \
+   friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp, \
+                                     char *R__parent); \
+   static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefTNV(name,id) \
+   _ClassDefNV_(name,id) \
    friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp, \
                                      char *R__parent); \
    static int DeclFileLine() { return __LINE__; }

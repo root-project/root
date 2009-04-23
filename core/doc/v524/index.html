@@ -19,11 +19,16 @@ has to be re-used.</li>
 <li>Insure that ROOT's autoloader is always enabled whenever loading rootmap files.</li>
 <li>Add function void <pre>TAttAxis::SetNdivisions(Int_t n1, Int_t n2, Int_t n3, Bool_t optim);</pre> </li>
 </ul>
-<h4>Meta</h4>
+
+<h3>Meta</h3>
+<ul>
+<li>Add new macro ClassDefNV (ClassDef Non Virtual) which does not define any virtual function.  ClassDef does define IsA, Streamer and ShowMember as virtual. <br> This should be used <b>only</b> in classes that are <b>never</b> inherited from!</li>
 <li>Improve performance of TClass::GetMethod (and friends)</li>
-<li>
-<h4>ACLiC</h4>
-<ul>Implement TClassEdit::InsertStd() which puts "std::" in front of all STL classes.</li>
+</ul>
+
+<h3>ACLiC</h3>
+<ul>
+<li>Implement TClassEdit::InsertStd() which puts "std::" in front of all STL classes.</li>
 <li>The generated library now always depends on RVersion.h</li>
 <li>Add support for '+' character embedded in the script's name or directory name.</li>
 </ul>
