@@ -91,6 +91,9 @@
 <li><a href="#HP14">The COLor option</li></a>
 <li><a href="#HP15">The TEXT and TEXTnn Option</li></a>
 <li><a href="#HP16">The CONTour options</li></a>
+<ul>
+<li><a href="#HP16a">The LIST option</li></a>
+</ul>
 <li><a href="#HP17">The LEGO options</li></a>
 <li><a href="#HP18">The "SURFace" options</li></a>
 <li><a href="#HP19">Cylindrical, Polar, Spherical and PseudoRapidity/Phi options</li></a>
@@ -1343,9 +1346,19 @@ Begin_Html
 The default number of contour levels is 20 equidistant levels and can be changed
 with <tt>TH1::SetContour()</tt> or <tt>TStyle::SetNumberContours()</tt>.
 
+<a name="HP16a"></a><h4><u>The LIST option</u></h4>
+
 <p>When option <tt>"LIST"</tt> is specified together with option
 <tt>"CONT"</tt>, the points used to draw the contours are saved in
-<tt>TGraph</tt> objects and are accessible in the following way:
+<tt>TGraph</tt> objects:
+<pre>
+      h->Draw("CONT LIST");
+      gPad->Update();
+</pre>
+The contour are saved in <tt>TGraph</tt> objects once the pad is painted.
+Therefore to use this funtionnality in a macro, <tt>gPad->Update()</tt>
+should be performed after the histogram drawing. Once the list is
+built, the contours are accessible in the following way:
 <pre>
       TObjArray *contours = gROOT->GetListOfSpecials()->FindObject("contours")
       Int_t ncontours     = contours->GetSize();
