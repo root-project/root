@@ -477,7 +477,7 @@ private:
    * @param pathsToBase the cache storing pathes to all known bases
    * @param basePath the current path to the BaseAt class
    */
-   void UpdateMembers2(OMembers& members, Members& dataMembers, Members& functionMembers, PathsToBase& pathsToBase, std::vector<OffsetFunction>& basePath) const;
+   void UpdateMembers2(OMembers& members, std::vector<bool>& membersOwned, Members& dataMembers, Members& functionMembers, PathsToBase& pathsToBase, std::vector<OffsetFunction>& basePath) const;
 
    /**
    * NewBases will return true if new BaseAt classes have been discovered

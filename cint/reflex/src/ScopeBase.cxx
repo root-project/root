@@ -125,8 +125,9 @@ Reflex::ScopeBase::~ScopeBase( ) {
 //-------------------------------------------------------------------------------
    // Destructor.
 
-   for ( std::vector<OwnedMember>::iterator it = fMembers.begin(); it != fMembers.end(); ++it ) {
-      if ( *it && it->DeclaringScope() == ThisScope()) it->Delete();
+   std::vector< bool >::iterator itOwned = fMembersOwned.begin();
+   for ( std::vector<OwnedMember>::iterator it = fMembers.begin(); it != fMembers.end(); ++it, ++itOwned ) {
+      if ( *it && *itOwned ) it->Delete();
    }
 
    // Informing Scope that I am going away
@@ -625,6 +626,7 @@ void Reflex::ScopeBase::AddDataMember( const Member & dm ) const {
    dm.SetScope( ThisScope() );
    fDataMembers.push_back( dm );
    fMembers.push_back( dm );
+   fMembersOwned.push_back(true);
 }
 
 
@@ -651,9 +653,12 @@ void Reflex::ScopeBase::RemoveDataMember( const Member & dm ) const {
       }
    }
    std::vector< OwnedMember >::iterator im;
-   for ( im = fMembers.begin(); im != fMembers.end(); ++im) {
+   std::vector< bool >::iterator imOwned;
+   for ( im = fMembers.begin(), imOwned = fMembersOwned.begin();
+         im != fMembers.end(); ++im, ++imOwned) {
       if ( *im == dm ) {
-         fMembers.erase(im); 
+         fMembers.erase(im);
+         fMembersOwned.erase(imOwned);
          break;
       }
    }
@@ -667,6 +672,7 @@ void Reflex::ScopeBase::AddFunctionMember( const Member & fm ) const {
    fm.SetScope( ThisScope());
    fFunctionMembers.push_back( fm );
    fMembers.push_back( fm );
+   fMembersOwned.push_back(true);
 }
 
 
@@ -695,9 +701,11 @@ void Reflex::ScopeBase::RemoveFunctionMember( const Member & fm ) const {
       }
    }
    std::vector< OwnedMember >::iterator im;
-   for ( im = fMembers.begin(); im != fMembers.end(); ++im) {
+   std::vector< bool >::iterator imOwned = fMembersOwned.begin();
+   for ( im = fMembers.begin(); im != fMembers.end(); ++im, ++imOwned) {
       if ( *im == fm ) {
-         fMembers.erase(im); 
+         fMembers.erase(im);
+         fMembersOwned.erase(imOwned);
          break;
       }
    }

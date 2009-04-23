@@ -345,6 +345,7 @@ void Reflex::Class::UpdateMembers() const
 // Update information for function and data members.
    std::vector < OffsetFunction > basePath = std::vector < OffsetFunction >();
    UpdateMembers2(fMembers,
+                  fMembersOwned,
                   fDataMembers,
                   fFunctionMembers,
                   fPathsToBase,
@@ -377,6 +378,7 @@ Reflex::Class::PathToBase(const Scope & bas) const
 
 //-------------------------------------------------------------------------------
 void Reflex::Class::UpdateMembers2(OMembers & members,
+                                   std::vector<bool>& membersOwned,
                                    Members & dataMembers,
                                    Members & functionMembers,
                                    PathsToBase & pathsToBase,
@@ -400,6 +402,7 @@ void Reflex::Class::UpdateMembers2(OMembers & members,
                           dataMembers.end(),
                           dm) == dataMembers.end()) {
                members.push_back(OwnedMember(dm));
+               membersOwned.push_back(false);
                dataMembers.push_back(dm);
             }
          }
@@ -409,10 +412,12 @@ void Reflex::Class::UpdateMembers2(OMembers & members,
                           functionMembers.end(),
                           fm) == functionMembers.end()) {
                members.push_back(OwnedMember(fm));
+               membersOwned.push_back(false);
                functionMembers.push_back(fm);
             }
          }
          if (bType)(dynamic_cast<const Class*>(bType.ToTypeBase()))->UpdateMembers2(members,
+                  membersOwned,
                   dataMembers,
                   functionMembers,
                   pathsToBase,

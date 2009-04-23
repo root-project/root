@@ -676,6 +676,16 @@ namespace Reflex {
          std::vector< OwnedMember > fMembers;
 
       /**
+      * whether this really owns the member in fMembers
+      * @label scope members' ownership
+      * @link aggregationByValue
+      * @supplierCardinality 0..*
+      * @clientCardinality 1
+      */
+      mutable
+         std::vector< bool > fMembersOwned;
+
+      /**
       * container with pointers to all data members in this scope
       * @label scope datamembers
       * @link aggregation
