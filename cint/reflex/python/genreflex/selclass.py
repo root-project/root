@@ -261,10 +261,14 @@ class selClass :
   def selclass(self, clname, fname, sltor ) :
     for c in sltor :
       attrs = c['attrs']
-      if 'n_name' in attrs and attrs['n_name'] == clname :  c['used'] = 1; return attrs
-      if 'n_pattern' in attrs and matchpattern(clname,attrs['n_pattern']) : return attrs
-      if 'file_name' in attrs and attrs['file_name'] == fname : return attrs
-      if 'file_pattern' in attrs and matchpattern(fname,attrs['file_pattern']): return attrs
+      if 'n_name' in attrs and attrs['n_name'] == clname \
+            or 'n_pattern' in attrs and self.matchpattern(clname,attrs['n_pattern']) \
+            or 'file_name' in attrs and attrs['file_name'] == fname \
+            or 'file_pattern' in attrs and self.matchpattern(fname,attrs['file_pattern']) :
+        c['used'] = 1
+        if c.has_key('fields'):
+          attrs['fields'] = c['fields']
+        return attrs
     return None
 #----------------------------------------------------------------------------------
   def excclass(self, clname, fname ) :
@@ -272,9 +276,9 @@ class selClass :
       if c['methods'] or c['fields'] : continue
       attrs = c['attrs']
       if 'n_name' in attrs  and attrs['n_name'] == clname : return attrs 
-      if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return attrs
+      if 'n_pattern' in attrs and self.matchpattern(clname, attrs['n_pattern']) : return attrs
       if 'file_name' in attrs and attrs['file_name'] == fname : return attrs
-      if 'file_pattern' in attrs and matchpattern(fname,attrs['file_pattern']): return attrs
+      if 'file_pattern' in attrs and self.matchpattern(fname,attrs['file_pattern']): return attrs
     return None
 #----------------------------------------------------------------------------------
   def matchfield(self, clname, field ) :
@@ -287,7 +291,7 @@ class selClass :
         if 'name' in f and f['name'] == field :
           attrs = c['attrs'] 
           if 'n_name' in attrs and attrs['n_name'] == clname : return f
-          if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return f
+          if 'n_pattern' in attrs and self.matchpattern(clname, attrs['n_pattern']) : return f
     return None
 #----------------------------------------------------------------------------------
   def excfield(self, clname, field ) :
@@ -297,7 +301,7 @@ class selClass :
         if 'name' in f and f['name'] == field :
           attrs = c['attrs'] 
           if 'n_name' in attrs and attrs['n_name'] == clname : return f
-          if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return f
+          if 'n_pattern' in attrs and self.matchpattern(clname, attrs['n_pattern']) : return f
     return None
 #----------------------------------------------------------------------------------
 # unused
@@ -310,12 +314,12 @@ class selClass :
     for c in self.sel_classes :
       for m in c['methods'] :
         if ('name' in m and m['name'] == method ) \
-               or ('pattern' in m and matchpattern(method, m['pattern'])) \
+               or ('pattern' in m and self.matchpattern(method, m['pattern'])) \
                or ('proto_name' in m and m['proto_name'] == method + '(' + arguments + ')' ) \
-               or ('proto_pattern' in m and matchpattern(method + '(' + arguments + ')', m['proto_pattern'])) :
+               or ('proto_pattern' in m and self.matchpattern(method + '(' + arguments + ')', m['proto_pattern'])) :
           attrs = c['attrs']
           if 'n_name' in attrs and attrs['n_name'] == clname : return m
-          if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return m
+          if 'n_pattern' in attrs and self.matchpattern(clname, attrs['n_pattern']) : return m
     return None
 #----------------------------------------------------------------------------------
   def excmethod(self, clname, method, demangled ) :
@@ -323,21 +327,21 @@ class selClass :
     for c in self.exc_classes :
       for m in c['methods'] :
         if ('name' in m and m['name'] == method ) \
-           or ('pattern' in m and matchpattern(method, m['pattern'])) \
+           or ('pattern' in m and self.matchpattern(method, m['pattern'])) \
            or ('proto_name' in m and m['proto_name'] == demangled ) \
-           or('proto_pattern' in m and matchpattern(demangled, m['proto_pattern'])) :
+           or('proto_pattern' in m and self.matchpattern(demangled, m['proto_pattern'])) :
           attrs = c['attrs']
           if 'n_name' in attrs and attrs['n_name'] == clname : return m
-          if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return m
+          if 'n_pattern' in attrs and self.matchpattern(clname, attrs['n_pattern']) : return m
     return None
 #----------------------------------------------------------------------------------
   def selfunction(self, funcname, demangled ) :
     for f in self.sel_functions :
       attrs = f['attrs']
       if ('name' in attrs and attrs['name'] == funcname ) \
-             or ('pattern' in attrs and matchpattern(funcname, attrs['pattern'])) \
+             or ('pattern' in attrs and self.matchpattern(funcname, attrs['pattern'])) \
              or ('proto_name' in attrs and attrs['proto_name'] == demangled ) \
-             or ('proto_pattern' in attrs and matchpattern(demangled, attrs['proto_pattern'])) :
+             or ('proto_pattern' in attrs and self.matchpattern(demangled, attrs['proto_pattern'])) :
         return attrs
     return None
 #----------------------------------------------------------------------------------
@@ -345,9 +349,9 @@ class selClass :
     for f in self.exc_functions :
       attrs = f['attrs']
       if ('name' in attrs and attrs['name'] == funcname ) \
-             or ('pattern' in attrs and matchpattern(funcname, attrs['pattern'])) \
+             or ('pattern' in attrs and self.matchpattern(funcname, attrs['pattern'])) \
              or ('proto_name' in attrs and attrs['proto_name'] == demangled ) \
-             or ('proto_pattern' in attrs and matchpattern(demangled, attrs['proto_pattern'])) :
+             or ('proto_pattern' in attrs and self.matchpattern(demangled, attrs['proto_pattern'])) :
         return attrs
     return None
 #----------------------------------------------------------------------------------
@@ -355,28 +359,28 @@ class selClass :
     for enum in self.sel_enums :
       attrs = enum['attrs']
       if 'name' in attrs and attrs['name'] == enumname :  return attrs
-      if 'pattern' in attrs and matchpattern(enumname,attrs['pattern']) : return attrs
+      if 'pattern' in attrs and self.matchpattern(enumname,attrs['pattern']) : return attrs
     return None
 #----------------------------------------------------------------------------------
   def excenum(self, enumname ) :
     for enum in self.exc_enums :
       attrs = enum['attrs']
       if 'name' in attrs  and attrs['name'] == enumname : return attrs 
-      if 'pattern' in attrs and matchpattern(enumname, attrs['pattern']) : return attrs
+      if 'pattern' in attrs and self.matchpattern(enumname, attrs['pattern']) : return attrs
     return None
 #----------------------------------------------------------------------------------
   def selvariable(self, varname ) :
     for var in self.sel_vars :
       attrs = var['attrs']
       if 'name' in attrs and attrs['name'] == varname :  return attrs
-      if 'pattern' in attrs and matchpattern(varname,attrs['pattern']) : return attrs
+      if 'pattern' in attrs and self.matchpattern(varname,attrs['pattern']) : return attrs
     return None
 #----------------------------------------------------------------------------------
   def excvariable(self, varname ) :
     for var in self.exc_vars :
       attrs = var['attrs']
       if 'name' in attrs  and attrs['name'] == varname : return attrs 
-      if 'pattern' in attrs and matchpattern(varname, attrs['pattern']) : return attrs
+      if 'pattern' in attrs and self.matchpattern(varname, attrs['pattern']) : return attrs
     return None
 #----------------------------------------------------------------------------------
   def reportUnusedClasses(self) :
@@ -387,5 +391,5 @@ class selClass :
          warnings += 1
     return warnings
 #-----------------------------------------------------------------------------------
-def matchpattern( name, pattern ) :
-  return fnmatch.fnmatch(name.replace('*','#'),pattern.replace('\*','#'))
+  def matchpattern(self, name, pattern ) :
+    return fnmatch.fnmatch(name.replace('*','#'),pattern.replace('\*','#'))
