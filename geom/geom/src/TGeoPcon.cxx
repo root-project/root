@@ -191,6 +191,7 @@ void TGeoPcon::ComputeBBox()
 // compute bounding box of the pcon
    // Check if the sections are in increasing Z order
    for (Int_t isec=0; isec<fNz-1; isec++) {
+      if (TMath::Abs(fZ[isec]-fZ[isec+1]) < TGeoShape::Tolerance()) fZ[isec+1]=fZ[isec];
       if (fZ[isec]>fZ[isec+1]) {
          InspectShape();
          Fatal("ComputeBBox", "Wrong section order");
