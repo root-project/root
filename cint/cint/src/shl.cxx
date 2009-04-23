@@ -13,6 +13,10 @@
  *
  ************************************************************************/
 
+#if defined(TRU64)
+#define __EXTENSIONS__
+#endif
+
 #include "common.h"
 #include "dllrev.h"
 #include <vector>
