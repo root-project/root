@@ -1031,7 +1031,8 @@ void TPDF::NewPage()
    PrintStr("]");
    PrintStr("@");
 
-   PrintStr("/Rotate 0@");
+   if (fPageOrientation == 1) PrintStr("/Rotate 0@");
+   if (fPageOrientation == 2) PrintStr("/Rotate 90@");
 
    PrintStr("/Resources");
    WriteInteger(kObjPageResources);
@@ -1056,10 +1057,14 @@ void TPDF::NewPage()
    fCompress = kTRUE;
 
    PrintStr("1 0 0 1");
+   if (fPageOrientation == 2) {
+      ymargin = CMtoPDF(height)-CMtoPDF(fXsize*xup)-xmargin;
+      xmargin = xmargin+CMtoPDF(fYsize*yup);
+   }
    WriteReal(xmargin);
    WriteReal(ymargin);
    PrintStr(" cm");
-   if (fPageOrientation == 2) PrintStr(" 0 -1 1 0 0 0 cm");
+   if (fPageOrientation == 2) PrintStr(" 0 1 -1 0 0 0 cm");
 }
 
 
