@@ -7,4 +7,9 @@
 <li>Improve read performance of sub-branch containing vector of sinple types.</li>
 <li>Fix TTree::LoadBasket to properly handle the (new) case where no basket is stored with the TTree object.</li>
 <li>Fix the axis used for an histogram created by TTree::Draw for a branch of TString or std::string objects.</li> 
+<li>MakeProxy now correctly support branches that created with a leaflist with more than one leaf
+(usually used for C-struct).</li>
+<li>TTree::CloneTree and TChain::Merge in fast mode now can recover from some mismatch errors between
+the input and output TTrees by falling back to using the 'slow' mode.  In particular this allow
+a 'fast cloning' to handle files that requires schema evolution (albeit it is of course much slower).</li>
 </ul>

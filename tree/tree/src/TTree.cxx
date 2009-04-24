@@ -2538,10 +2538,10 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
                }
             }
          }
-         TTreeCloner t(GetTree(), newtree, option);
-         if (t.IsValid()) {
+         TTreeCloner cloner(GetTree(), newtree, option, TTreeCloner::kNoWarnings);
+         if (cloner.IsValid()) {
             newtree->SetEntries(newtree->GetEntries() + GetTree()->GetEntries());
-            t.Exec();
+            cloner.Exec();
          } else {
             if (!i) {
                Error("CloneTree", "Tree has not been cloned\n");
@@ -2549,10 +2549,25 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
                newtree = 0;
                return 0;
             } else {
-               if (GetCurrentFile()) {
-                  Warning("CloneTree", "Skipped file %s\n", GetCurrentFile()->GetName());
+               if (cloner.NeedConversion()) {
+                  TTree *localtree = GetTree();
+                  Long64_t tentries = localtree->GetEntries();
+                  for (Long64_t i = 0; i < tentries; i++) {
+                     if (localtree->GetEntry(i) <= 0) {
+                        break;
+                     }
+                     newtree->Fill();
+                  }
+                  if (newtree->GetTreeIndex()) {
+                     newtree->GetTreeIndex()->Append(GetTree()->GetTreeIndex(), kTRUE);
+                  }
                } else {
-                  Warning("Merge", "Skipped file number %d\n", GetTreeNumber());
+                  Warning("CloneTree",cloner.GetWarning());
+                  if (GetCurrentFile()) {
+                     Warning("CloneTree", "Skipped file %s\n", GetCurrentFile()->GetName());
+                  } else {
+                     Warning("CloneTree", "Skipped file number %d\n", GetTreeNumber());
+                  }
                }
             }
          }

@@ -33,8 +33,10 @@
 #include "TLeafI.h"
 #include "TLeafL.h"
 
-TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
+TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options) :
    fIsValid(kTRUE),
+   fNeedConversion(kFALSE),
+   fOptions(options),
    fFromTree(from),
    fToTree(to),
    fMethod(method),
@@ -47,7 +49,8 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
    fBasketEntry(new Long64_t[fMaxBaskets]),
    fBasketIndex(new UInt_t[fMaxBaskets]),
    fCloneMethod(TTreeCloner::kDefault),
-   fToStartEntries(0)
+   fToStartEntries(0),
+   fWarningMsg()
 {
    // Constructor.  This object would transfer the data from
    // 'from' to 'to' using the method indicated in method.
@@ -140,8 +143,7 @@ void TTreeCloner::CloseOutWriteBaskets()
    }
 }
 
-UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to)
-{
+UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
    // Fill the array of branches, adding the branch 'from' and 'to',
    // and matching the sub-branches of the 'from' and 'to' branches.
    // Returns the total number of baskets in all the from branch and
@@ -151,56 +153,82 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to)
 
    UInt_t numBaskets = 0;
    if (from->InheritsFrom(TBranchClones::Class())) {
-      TBranchClones *fromclones = (TBranchClones*)from;
-      TBranchClones *toclones = (TBranchClones*)to;
-      numBaskets += CollectBranches(fromclones->fBranchCount,toclones->fBranchCount);
+      TBranchClones *fromclones = (TBranchClones*) from;
+      TBranchClones *toclones = (TBranchClones*) to;
+      numBaskets += CollectBranches(fromclones->fBranchCount, toclones->fBranchCount);
 
    } else if (from->InheritsFrom(TBranchElement::Class())) {
       Int_t nb = from->GetListOfLeaves()->GetEntries();
-      Int_t fnb= to->GetListOfLeaves()->GetEntries();
-      if (nb!=fnb && (nb==0 || fnb==0)) {
+      Int_t fnb = to->GetListOfLeaves()->GetEntries();
+      if (nb != fnb && (nb == 0 || fnb == 0)) {
          // We might be in the case where one branch is split
          // while the other is not split.  We must reject this match.
-         Error("TTreeCloner::CollectBranches",
-               "The export branch and the import branch do not have the same split level. (The branch name is %s.)",
-               from->GetName());
+         fWarningMsg.Form("The export branch and the import branch do not have the same split level. (The branch name is %s.)",
+                          from->GetName());
+         if (!(fOptions & kNoWarnings)) {
+            Warning("TTreeCloner::CollectBranches", fWarningMsg.Data());
+         }
+         fNeedConversion = kTRUE;
          fIsValid = kFALSE;
          return 0;
       }
-
-      TBranchElement *fromelem = (TBranchElement*)from;
-      TBranchElement *toelem   = (TBranchElement*)to;
+      if (((TBranchElement*) from)->GetStreamerType() != ((TBranchElement*) to)->GetStreamerType()) {
+         fWarningMsg.Form("The export branch and the import branch do not have the same streamer type. (The branch name is %s.)",
+                          from->GetName());
+         if (!(fOptions & kNoWarnings)) {
+            Warning("TTreeCloner::CollectBranches",fWarningMsg.Data());
+         }
+         fIsValid = kFALSE;
+         return 0;
+      }
+      TBranchElement *fromelem = (TBranchElement*) from;
+      TBranchElement *toelem = (TBranchElement*) to;
       if (fromelem->fMaximum > toelem->fMaximum) toelem->fMaximum = fromelem->fMaximum;
    } else {
 
       Int_t nb = from->GetListOfLeaves()->GetEntries();
-      Int_t fnb= to->GetListOfLeaves()->GetEntries();
-      if (nb!=fnb) {
-         Error("TTreeCloner::CollectBranches",
-            "The export branch and the import branch (%s) do not have the same number of leaves (%d vs %d)",
-            from->GetName(), fnb,nb);
+      Int_t fnb = to->GetListOfLeaves()->GetEntries();
+      if (nb != fnb) {
+         fWarningMsg.Form("The export branch and the import branch (%s) do not have the same number of leaves (%d vs %d)",
+                          from->GetName(), fnb, nb);
+         if (!(fOptions & kNoWarnings)) {
+            Error("TTreeCloner::CollectBranches",fWarningMsg.Data());
+         }
          fIsValid = kFALSE;
          return 0;
       }
       for (Int_t i=0;i<nb;i++)  {
+
          TLeaf *fromleaf_gen = (TLeaf*)from->GetListOfLeaves()->At(i);
+         TLeaf *toleaf_gen = (TLeaf*)to->GetListOfLeaves()->At(i);
+         if (toleaf_gen->IsA() != fromleaf_gen->IsA() ) {
+            // The data type do not match, we can not do a fast merge.
+            fWarningMsg.Form("The export leaf and the import leaf (%s.%s) do not have the data type (%s vs %s)",
+                              from->GetName(),fromleaf_gen->GetName(),fromleaf_gen->GetTypeName(),toleaf_gen->GetTypeName());
+            if (! (fOptions & kNoWarnings) ) {
+               Warning("TTreeCloner::CollectBranches",fWarningMsg.Data());
+            }
+            fIsValid = kFALSE;
+            fNeedConversion = kTRUE;
+            return 0;
+         }
          if (fromleaf_gen->IsA()==TLeafI::Class()) {
-            TLeafI *fromleaf = (TLeafI*)from->GetListOfLeaves()->At(i);
-            TLeafI *toleaf   = (TLeafI*)to->GetListOfLeaves()->At(i);
+            TLeafI *fromleaf = (TLeafI*)fromleaf_gen;
+            TLeafI *toleaf   = (TLeafI*)toleaf_gen;
             if (fromleaf->GetMaximum() > toleaf->GetMaximum())
                toleaf->SetMaximum( fromleaf->GetMaximum() );
             if (fromleaf->GetMinimum() < toleaf->GetMinimum())
                toleaf->SetMinimum( fromleaf->GetMinimum() );
          } else if (fromleaf_gen->IsA()==TLeafL::Class()) {
-            TLeafL *fromleaf = (TLeafL*)from->GetListOfLeaves()->At(i);
-            TLeafL *toleaf   = (TLeafL*)to->GetListOfLeaves()->At(i);
+            TLeafL *fromleaf = (TLeafL*)fromleaf_gen;
+            TLeafL *toleaf   = (TLeafL*)toleaf_gen;
             if (fromleaf->GetMaximum() > toleaf->GetMaximum())
                toleaf->SetMaximum( fromleaf->GetMaximum() );
             if (fromleaf->GetMinimum() < toleaf->GetMinimum())
                toleaf->SetMinimum( fromleaf->GetMinimum() );
          } else if (fromleaf_gen->IsA()==TLeafB::Class()) {
-            TLeafB *fromleaf = (TLeafB*)from->GetListOfLeaves()->At(i);
-            TLeafB *toleaf   = (TLeafB*)to->GetListOfLeaves()->At(i);
+            TLeafB *fromleaf = (TLeafB*)fromleaf_gen;
+            TLeafB *toleaf   = (TLeafB*)toleaf_gen;
             if (fromleaf->GetMaximum() > toleaf->GetMaximum())
                toleaf->SetMaximum( fromleaf->GetMaximum() );
             if (fromleaf->GetMinimum() < toleaf->GetMinimum())
