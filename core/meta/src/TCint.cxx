@@ -1293,10 +1293,10 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
 
-      // Make sure that this information will be useable by inserting our 
+      // Make sure that this information will be useable by inserting our
       // autoload call back!
-      G__set_class_autoloading_callback(&TCint_AutoLoadCallback);      
-   } 
+      G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
+   }
 
    // Load all rootmap files in the dynamic load path ((DY)LD_LIBRARY_PATH, etc.).
    // A rootmap file must end with the string ".rootmap".
@@ -1378,7 +1378,7 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
          if (libs == "") continue;
          TString delim(" ");
          TObjArray *tokens = libs.Tokenize(delim);
-         char *lib = (char *)((TObjString*)tokens->At(0))->GetName();
+         const char *lib = ((TObjString*)tokens->At(0))->GetName();
          // convert "@@" to "::", we used "@@" because TEnv
          // considers "::" a terminator
          cls.Remove(0,8);
@@ -1419,11 +1419,14 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
                }
             }
          }
-         G__set_class_autoloading_table((char*)cls.Data(), lib);
+         G__set_class_autoloading_table((char*)cls.Data(), (char*)lib);
          G__security_recover(stderr); // Ignore any error during this setting.
          if (gDebug > 6) {
-            const char *wlib = gSystem->Which(gSystem->GetDynamicPath(), lib);
-            Info("LoadLibraryMap", "class %s in %s", cls.Data(), wlib);
+            const char *wlib = gSystem->DynamicPathName(lib, kTRUE);
+            if (wlib)
+               Info("LoadLibraryMap", "class %s in %s", cls.Data(), wlib);
+            else
+               Info("LoadLibraryMap", "class %s in %s (library does not exist)", cls.Data(), lib);
             delete [] wlib;
          }
          delete tokens;
