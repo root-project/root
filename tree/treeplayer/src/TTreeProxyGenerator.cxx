@@ -1084,12 +1084,14 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       if (topdesc) {
          topdesc->AddDescriptor( desc = new TBranchProxyDescriptor( dataMemberName.Data(),
                                                                     type,
-                                                                    branchName.Data() ),
+                                                                    branchName.Data(),
+                                                                    true, false, true ),
                                  0 );
       } else {
          AddDescriptor( desc = new TBranchProxyDescriptor( dataMemberName.Data(),
                                                            type,
-                                                           branchName.Data() ) );
+                                                           branchName.Data(),
+                                                           true, false, true ) );
       }
 
       return 0;
@@ -1768,8 +1770,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"\n\n");
 
       fprintf(hf,"class %s_Interface {\n", scriptfunc.Data());
-      fprintf(hf,"   // This class defines the list of method directly used by %s,\n",classname.Data());
-      fprintf(hf,"   // and that can be overload in the user's script\n"); 
+      fprintf(hf,"   // This class defines the list of methods that are directly used by %s,\n",classname.Data());
+      fprintf(hf,"   // and that can be overloaded in the user's script\n"); 
       fprintf(hf,"public:\n");
       fprintf(hf,"   void %s_Begin(TTree*) {}\n",scriptfunc.Data());
       fprintf(hf,"   void %s_SlaveBegin(TTree*) {}\n",scriptfunc.Data());

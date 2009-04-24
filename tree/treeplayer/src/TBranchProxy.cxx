@@ -186,13 +186,16 @@ Bool_t ROOT::TBranchProxy::Setup()
       fBranch = fDirector->GetTree()->GetBranch(fBranchName.Data());
       if (!fBranch) return false;
 
-      TLeaf *leaf = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
-      if (leaf) leaf = leaf->GetLeafCount();
-      if (leaf) {
-         fBranchCount = leaf->GetBranch();
-//          fprintf(stderr,"for leaf %s setting up leafcount %s branchcount %s\n",
-//                  fBranch->GetName(),leaf->GetName(),fBranchCount->GetName());
-         //fBranchCount->Print();
+      {
+         // Calculate fBranchCount for a leaf.
+         TLeaf *leaf = (TLeaf*) fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
+         if (leaf) leaf = leaf->GetLeafCount();
+         if (leaf) {
+            fBranchCount = leaf->GetBranch();
+            //          fprintf(stderr,"for leaf %s setting up leafcount %s branchcount %s\n",
+            //                  fBranch->GetName(),leaf->GetName(),fBranchCount->GetName());
+            //fBranchCount->Print();
+         }
       }
 
       fWhere = (double*)fBranch->GetAddress();
@@ -207,7 +210,12 @@ Bool_t ROOT::TBranchProxy::Setup()
 
       }
       if (!fWhere && fBranch->IsA()==TBranch::Class()) {
-         TLeaf *leaf2 = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
+         TLeaf *leaf2;
+         if (fDataMember.Length()) {
+            leaf2 = fBranch->GetLeaf(fDataMember);
+         } else {
+            leaf2 = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
+         }
          fWhere = leaf2->GetValuePointer();
       }
 
@@ -375,7 +383,7 @@ Bool_t ROOT::TBranchProxy::Setup()
 
             }
 
-         } else {
+         } else if (fBranch->IsA() != TBranch::Class()) {
             Error("Setup",Form("Missing TClass object for %s\n",fClassName.Data()));
          }
 

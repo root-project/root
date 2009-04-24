@@ -38,8 +38,9 @@ namespace ROOT {
                                                   const char *type, 
                                                   const char *branchname, 
                                                   Bool_t split,
-                                                  Bool_t skipped) :
-      TNamed(dataname,type),fBranchName(branchname),fIsSplit(split),fBranchIsSkipped(skipped) 
+                                                  Bool_t skipped,
+                                                  Bool_t isleaflist) :
+      TNamed(dataname,type),fBranchName(branchname),fIsSplit(split),fBranchIsSkipped(skipped),fIsLeafList(isleaflist)
    {
       // Constructor.
 
@@ -125,8 +126,13 @@ namespace ROOT {
            fprintf(hf,"\n%-*s      %-*s(director, obj.GetProxy(), \"%s\", %s\"%s\")",
                    offset," ", maxVarname, GetDataName(), GetDataName(), above, subbranchname);
          } else {
-            fprintf(hf,"\n%-*s      %-*s(director, %s\"%s\")",
-                    offset," ", maxVarname, GetDataName(), above, subbranchname);
+            if (fIsLeafList) {
+               fprintf(hf,"\n%-*s      %-*s(director, %s\"%s\", \"\", \"%s\")",
+                       offset," ", maxVarname, GetDataName(), above, subbranchname, GetDataName());
+            } else {
+               fprintf(hf,"\n%-*s      %-*s(director, %s\"%s\")",
+                       offset," ", maxVarname, GetDataName(), above, subbranchname);
+            }
          }
       } else {
 

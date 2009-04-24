@@ -22,12 +22,13 @@ namespace ROOT {
    class TBranchProxyDescriptor : public TNamed {
       TString fDataName;
       TString fBranchName;
-      Bool_t fIsSplit;
-      Bool_t fBranchIsSkipped;
+      Bool_t  fIsSplit;
+      Bool_t  fBranchIsSkipped;
+      Bool_t  fIsLeafList;      // true if the branch was constructed from a leaf list.
 
    public:
       TBranchProxyDescriptor(const char *dataname, const char *type,
-                             const char *branchname, Bool_t split = true, Bool_t skipped = false);
+                             const char *branchname, Bool_t split = true, Bool_t skipped = false, Bool_t isleaflist = false);
       const char *GetDataName();
       const char *GetTypeName();
       const char *GetBranchName();
