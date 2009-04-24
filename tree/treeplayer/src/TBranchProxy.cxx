@@ -209,14 +209,15 @@ Bool_t ROOT::TBranchProxy::Setup()
          fWhere =  (double*)fBranch->GetAddress();
 
       }
-      if (!fWhere && fBranch->IsA()==TBranch::Class()) {
+      if (fBranch->IsA()==TBranch::Class()) {
          TLeaf *leaf2;
          if (fDataMember.Length()) {
             leaf2 = fBranch->GetLeaf(fDataMember);
-         } else {
+            fWhere = leaf2->GetValuePointer();
+         } else if (!fWhere) {
             leaf2 = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
+            fWhere = leaf2->GetValuePointer();
          }
-         fWhere = leaf2->GetValuePointer();
       }
 
       if (!fWhere) {

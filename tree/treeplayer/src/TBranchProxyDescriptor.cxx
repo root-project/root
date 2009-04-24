@@ -127,8 +127,13 @@ namespace ROOT {
                    offset," ", maxVarname, GetDataName(), GetDataName(), above, subbranchname);
          } else {
             if (fIsLeafList) {
-               fprintf(hf,"\n%-*s      %-*s(director, %s\"%s\", \"\", \"%s\")",
-                       offset," ", maxVarname, GetDataName(), above, subbranchname, GetDataName());
+               if (above[0]=='\0') {
+                  fprintf(hf,"\n%-*s      %-*s(director, \"%s\", \"\", \"%s\")",
+                          offset," ", maxVarname, GetDataName(), subbranchname, GetDataName());
+               } else {
+                  fprintf(hf,"\n%-*s      %-*s(director, %s\"%s\", \"%s\")",
+                          offset," ", maxVarname, GetDataName(), above, subbranchname, GetDataName());
+               }
             } else {
                fprintf(hf,"\n%-*s      %-*s(director, %s\"%s\")",
                        offset," ", maxVarname, GetDataName(), above, subbranchname);
