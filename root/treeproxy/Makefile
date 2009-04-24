@@ -2,13 +2,13 @@
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log red.h generatedSel.h val3dimSel.h forproxy.root \
-	vec.root vectorintSel.h vectorintEmuSel.h *.rootmap 
+	vec.root vectorintSel.h vectorintEmuSel.h *.rootmap make_tuple.root make_tuple_sel.h
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += reducedSpill leaflist valdim3 vectorint vectorintEmu
+TEST_TARGETS += reducedSpill leaflist valdim3 vectorint vectorintEmu make_tuple
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -133,4 +133,10 @@ vectorintEmu.clog: vectorintEmuSel_h.$(DllSuf) $(CORELIBS) runvectorintEmu_C.$(D
 	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorintEmu.C+(5)' 2>&1 | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > vectorintEmu.clog 2>&1
 
 vectorintEmu: vectorintEmu.clog
+	$(TestDiff)
+
+make_tuple.log: runmake_tuple.C make_tuple.C make_tuple_draw.C
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l runmake_tuple.C 2>&1 | grep -v 'creating shared library' > make_tuple.log
+
+make_tuple: make_tuple.log
 	$(TestDiff)
