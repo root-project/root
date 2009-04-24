@@ -775,12 +775,8 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
          std::cout << p[ipar] << "\t";
       std::cout << "\tfval = " << fval << std::endl; 
 #endif
-      if (fval < 0) { 
-         nRejected++; // reject points with negative pdf (cannot exist)
-      }
-      else 
-         logl += ROOT::Math::Util::EvalLog( fval); 
-      
+      // function EvalLog protects against negative or too small values of fval
+      logl += ROOT::Math::Util::EvalLog( fval);       
    }
    
    // reset the number of fitting data points
@@ -816,13 +812,21 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction & f, const UnBinData & d
    for (unsigned int i = 0; i < n; ++ i) { 
       const double * x = data.Coords(i);
       double fval = func ( x , p); 
-      if (fval > 0) { 
-         func.ParameterGradient( x, p, &gradFunc[0] );
-         for (unsigned int kpar = 0; kpar < npar; ++ kpar) { 
+      func.ParameterGradient( x, p, &gradFunc[0] );
+      for (unsigned int kpar = 0; kpar < npar; ++ kpar) { 
+         if (fval > 0)  
             g[kpar] -= 1./fval * gradFunc[ kpar ]; 
+         else if (gradFunc [ kpar] != 0) { 
+            const double kdmax1 = std::sqrt( std::numeric_limits<double>::max() );
+            const double kdmax2 = std::numeric_limits<double>::max() / (4*n);
+            double gg = kdmax1 * gradFunc[ kpar ];  
+            if ( gg > 0) gg = std::min( gg, kdmax2);
+            else gg = std::max(gg, - kdmax2);
+            g[kpar] -= gg;
          }
-            
+         // if func derivative is zero term is also zero so do not add in g[kpar]
       }
+            
     // copy result 
    std::copy(g.begin(), g.end(), grad);
    }
@@ -851,6 +855,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    }
 
    // logPdf for Poisson: ignore constant term depending on N
+   fval = std::max(fval, 0.0);  // avoid negative or too small values 
    double logPdf =   y * ROOT::Math::Util::EvalLog( fval) - fval;  
    // need to return the pdf contribution (not the log)
 
@@ -884,7 +889,14 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    }
    // correct g[] do be derivative of poisson term 
    for (unsigned int k = 0; k < npar; ++k) {
-      g[k] *= ( y/fval - 1.) ;//* pdfval; 
+      if ( fval > 0) 
+         g[k] *= ( y/fval - 1.) ;//* pdfval; 
+      else if (y > 0) { 
+         const double kdmax1 = std::sqrt( std::numeric_limits<double>::max() );
+         g[k] *= kdmax1; 
+      }
+      else   // y == 0 cannot have  negative y
+         g[k] *= -1;         
    }       
      
 
@@ -924,11 +936,10 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
          fval = igEval( x, data.Coords(i+1) ) ; 
       }
       
-      // skip points with negative function values
-      if (fval > 0) 
-         loglike +=  fval - y * ROOT::Math::Util::EvalLog( fval);  
-      else 
-         nRejected++; 
+      // EvalLog protects against 0 values of fval but don't want to add in the -log sum 
+      // negative values of fval 
+      fval = std::max(fval, 0.0);
+      loglike +=  fval - y * ROOT::Math::Util::EvalLog( fval);  
 
    }
    
@@ -972,19 +983,27 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinDat
          fval = igEval( x, x2 ) ; 
       }
       
-      if (fval > 0) { 
-         if (!useBinIntegral ) 
-            func.ParameterGradient(  x , p, &gradFunc[0] ); 
-         else 
-            CalculateGradientIntegral( func, x, x2, p, &gradFunc[0]); 
-
-         for (unsigned int kpar = 0; kpar < npar; ++ kpar) { 
-            // df/dp * (1.  - y/f )
+      if (!useBinIntegral ) 
+         func.ParameterGradient(  x , p, &gradFunc[0] ); 
+      else 
+         CalculateGradientIntegral( func, x, x2, p, &gradFunc[0]); 
+      
+      for (unsigned int kpar = 0; kpar < npar; ++ kpar) { 
+         // df/dp * (1.  - y/f )
+         if (fval > 0)  
             g[kpar] += gradFunc[ kpar ] * ( 1. - y/fval ); 
-         }            
-      }
-    // copy result 
-   std::copy(g.begin(), g.end(), grad);
+         else if (gradFunc [ kpar] != 0) { 
+            const double kdmax1 = std::sqrt( std::numeric_limits<double>::max() );
+            const double kdmax2 = std::numeric_limits<double>::max() / (4*n);
+            double gg = kdmax1 * gradFunc[ kpar ];  
+            if ( gg > 0) gg = std::min( gg, kdmax2);
+            else gg = std::max(gg, - kdmax2);
+            g[kpar] -= gg;
+         }
+      }            
+
+      // copy result 
+      std::copy(g.begin(), g.end(), grad);
    }
 }
    
