@@ -19,7 +19,11 @@ class TGeoNode;
 class TGeoHMatrix;
 class TGeoManager;
 
-class TGeoShape;
+// Added here to ease transition - forward declaration should be used.
+// This include will be removed for 5.24.
+#include <TEveGeoShape.h>
+// class TGeoShape;
+
 class TEveGeoShapeExtract;
 
 //----------------------------------------------------------------
