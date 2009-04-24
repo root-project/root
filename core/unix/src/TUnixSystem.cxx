@@ -4247,10 +4247,10 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
       ext  = 1;
    } else {
       TString fname;
-      fname.Form("%s.dll", lib);
+      fname.Form("%s.so", lib);
       name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
       if (!name) {
-         fname.Form("%s.so", lib);
+         fname.Form("%s.dll", lib);
          name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
          if (!name) {
             fname.Form("%s.sl", lib);
