@@ -1,7 +1,10 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* Event.h one two merged \
-	Event*.root dt_reference.root CloneTree.root cal.root Tuple_merge.root
+	Event*.root dt_reference.root CloneTree.root cal.root Tuple_merge.root TestFile2.root \
+   output.root TestMerged.root mix_merge.root mix_int.root mix_char.root \
+   TestFile1.root Tuple_merge.root missplit-1.root missplit-99.root missplit.fail.root
 
-TEST_TARGETS += cloneChain single merge Plot SplitMismatch outoforder filemergererror
+
+TEST_TARGETS += cloneChain single merge Plot SplitMismatch outoforder filemergererror badmix
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
@@ -148,5 +151,8 @@ outoforder: outoforder.log
 	$(TestDiff)
 
 filemergererror: filemergererror.log	
+	$(TestDiff)
+
+badmix: badmix.log
 	$(TestDiff)
 

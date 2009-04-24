@@ -9,6 +9,7 @@ public:
 };
 
 class Top {
+public:
    int a;
    Bottom b;
 };
@@ -17,9 +18,13 @@ void write(const char *stem, Int_t splitlevel) {
    TFile file(TString::Format("%s-%d.root",stem,splitlevel),"RECREATE");
    TTree tree("T","T title");
    Top obj;
+   obj.a = 100+splitlevel;
+   obj.b.i = 200+splitlevel;
+   obj.b.j = 300+splitlevel;
    tree.Branch("obj.",&obj,32000,splitlevel);
    tree.Fill();
    file.Write();
+   tree.Scan("obj.a:obj.b.i:obj.b.j");
 }
 
 void runSplitMismatch() {
@@ -31,8 +36,6 @@ void runSplitMismatch() {
    c.CloneTree(-1,"fast");
    f.Write();
    TTree *output; f.GetObject("T",output);
-   if (output->GetEntries() > 1) {
-      cout << "Error: the split 99 TTree was used eventhough it is not compatible with the first (split 1) TTree)\n";
-   }
+   output->Scan("obj.a:obj.b.i:obj.b.j");
 }
 
