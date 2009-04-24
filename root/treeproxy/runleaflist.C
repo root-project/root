@@ -1,12 +1,16 @@
 
 struct simPos {
+   simPos() : X(0),Y(-1),Z(-2) {};
+   simPos(int val) : X(val),Y(val+2),Z(val+4) {};
+   
    float X;
    float Y;
    float Z;
+   float dummy; //!
 };
 
 void runleaflist(int kase = 0) {
-   simPos pos;
+   simPos pos(3);
    TTree *vertexTree = new TTree;
    vertexTree->Branch("simPos.",&pos,"X/F:Y/F:Z/F:3A");
    vertexTree->Fill();
