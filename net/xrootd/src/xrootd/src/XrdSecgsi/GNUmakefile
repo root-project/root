@@ -1,5 +1,3 @@
-# $Id: GNUmakefile,v 1.9 2008/09/27 09:17:37 ganis Exp $
-#------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
 #------------------------------------------------------------------------------#
 include ../GNUmake.env
@@ -122,7 +120,7 @@ $(LIBLDAP): $(OBJECTC)
 
 $(SECGSITEST): $(OBJECTA) $(LIBDEPS)
 	@echo Creating executable $(SECGSITEST) 
-	$(ECHO)$(LD) $(OBJECTA) $(BINLIBS) $(LIBS) -o $(SECGSITEST)
+	$(ECHO)$(LD) $(LDOP) $(OBJECTA) $(BINLIBS) $(LIBS) -o $(SECGSITEST)
 
 $(SECGSIPROXY): $(OBJECTB) $(LIBDEPS)
 	@echo Creating executable $(SECGSIPROXY) 
