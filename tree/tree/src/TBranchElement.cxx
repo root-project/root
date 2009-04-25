@@ -3278,6 +3278,7 @@ void TBranchElement::Reset(Option_t* option)
       TBranch* branch = (TBranch*) fBranches[i];
       branch->Reset(option);
    }
+   fBranchID = -1;
    TBranch::Reset(option);
 }
 
