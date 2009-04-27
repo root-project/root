@@ -31,6 +31,11 @@ class TGLRect;
 
 class GLUquadric;
 
+namespace std
+{
+   template<typename _Tp> class allocator;
+   template<typename _Tp, typename _Alc> class list;
+}
 
 /**************************************************************************/
 // TGLRnrCtx
@@ -80,6 +85,8 @@ private:
    TGLRnrCtx(const TGLRnrCtx&);            // Not implemented
    TGLRnrCtx& operator=(const TGLRnrCtx&); // Not implemented
 
+   typedef std::list<TGLColorSet*, std::allocator<TGLColorSet*> > lpTGLColorSet_t;
+
 protected:
    TGLViewerBase  *fViewer;
    TGLCamera      *fCamera;
@@ -113,7 +120,7 @@ protected:
    TGLRect        *fPickRectangle;
    TGLSelectBuffer*fSelectBuffer;
 
-   void           *fColorSetStack;
+   lpTGLColorSet_t*fColorSetStack;
 
    UInt_t          fEventKeySym;
 

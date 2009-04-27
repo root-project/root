@@ -28,10 +28,6 @@
 #include <algorithm>
 #include <cassert>
 
-typedef std::list<TGLColorSet*>           lpTGLColorSet_t;
-typedef std::list<TGLColorSet*>::iterator lpTGLColorSet_i;
-
-
 //______________________________________________________________________
 //
 // The TGLRnrCtx class aggregates data for a given redering context as
@@ -97,7 +93,7 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
 
    
    fColorSetStack = new lpTGLColorSet_t;
-   static_cast<lpTGLColorSet_t*>(fColorSetStack)->push_back(0);
+   fColorSetStack->push_back(0);
 
    fSelectBuffer = new TGLSelectBuffer;
    fQuadric = gluNewQuadric();
@@ -121,7 +117,7 @@ TGLRnrCtx::~TGLRnrCtx()
    gluDeleteQuadric(fQuadric);
    delete fPickRectangle;
    delete fSelectBuffer;
-   delete static_cast<lpTGLColorSet_t*>(fColorSetStack);
+   delete fColorSetStack;
 }
 
 //______________________________________________________________________
@@ -264,14 +260,15 @@ void TGLRnrCtx::PushColorSet()
 {
    // Create copy of current color-set on the top of the stack.
 
-   lpTGLColorSet_t& css = * static_cast<lpTGLColorSet_t*>(fColorSetStack);
-   css.push_back(new TGLColorSet(*css.back()));
+   fColorSetStack->push_back(new TGLColorSet(*fColorSetStack->back()));
 }
 
 //______________________________________________________________________________
 TGLColorSet& TGLRnrCtx::ColorSet()
 {
-   return * static_cast<lpTGLColorSet_t*>(fColorSetStack)->back();
+   // Return reference to current color-set (top of hte stack).
+
+   return * fColorSetStack->back();
 }
 
 //______________________________________________________________________________
@@ -280,12 +277,10 @@ void TGLRnrCtx::PopColorSet()
    // Pops the top-most color-set.
    // If only one entry is available, error is printed and the entry remains.
 
-   lpTGLColorSet_t& css = * static_cast<lpTGLColorSet_t*>(fColorSetStack);
-
-   if (css.size() >= 2)
+   if (fColorSetStack->size() >= 2)
    {
-      delete css.back();
-      css.pop_back();
+      delete fColorSetStack->back();
+      fColorSetStack->pop_back();
    }
    else
    {
@@ -299,9 +294,8 @@ TGLColorSet* TGLRnrCtx::ChangeBaseColorSet(TGLColorSet* set)
    // Change the default/bottom color-set.
    // Returns the previous color-set.
 
-   lpTGLColorSet_t& css = * static_cast<lpTGLColorSet_t*>(fColorSetStack);
-   TGLColorSet* old = css.front();
-   css.front() = set;
+   TGLColorSet* old = fColorSetStack->front();
+   fColorSetStack->front() = set;
    return old;
 }
 
@@ -310,7 +304,7 @@ TGLColorSet* TGLRnrCtx::GetBaseColorSet()
 {
    // Returns the current base color-set.
 
-   return static_cast<lpTGLColorSet_t*>(fColorSetStack)->front();
+   return fColorSetStack->front();
 }
 
 

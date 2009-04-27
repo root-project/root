@@ -23,12 +23,6 @@
 
 class TBuffer3D;
 
-namespace std
-{
-template<typename _Tp> class allocator;
-template<typename _Tp, typename _Alloc > class list;
-}
-
 class TEveVector;
 
 class TEvePolygonSetProjected :  public TEveElementList,
