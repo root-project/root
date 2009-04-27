@@ -93,6 +93,7 @@ enum EMessageTypes {
    kPROOF_ENDINIT        = 1052,         //signals end of initialization on worker
    kPROOF_TOUCH          = 1053,         //touch the client admin file
    kPROOF_FORK           = 1054,         //ask the worker to clone itself
+   kPROOF_GOASYNC        = 1055,         //Switch to asynchronous mode
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER           = 2000,         //user id follows
