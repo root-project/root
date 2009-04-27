@@ -1057,7 +1057,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    }
 
    // Set Clipping option
-   gPad->SetBit(TGraph::kClipFrame, TestBit(TGraph::kClipFrame));
+   gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
 
    TF1 *fit = 0;
    TList *functions = theGraph->GetListOfFunctions();
@@ -1460,9 +1460,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
 
    // Set Clipping option
    Option_t *noClip;
-   if (TestBit(TGraph::kClipFrame)) noClip = "";
-   else                     noClip = "C";
-   gPad->SetBit(TGraph::kClipFrame, TestBit(TGraph::kClipFrame));
+   if (theGraph->TestBit(TGraph::kClipFrame)) noClip = "";
+   else noClip = "C";
+   gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
 
    optionZ = 1;
 
@@ -2301,7 +2301,7 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    ty    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
-   gPad->SetBit(TGraph::kClipFrame, TestBit(TGraph::kClipFrame));
+   gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
@@ -2512,7 +2512,7 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    ty   =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
-   gPad->SetBit(TGraph::kClipFrame, TestBit(TGraph::kClipFrame));
+   gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
@@ -2721,7 +2721,7 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    ty    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
-   gPad->SetBit(TGraph::kClipFrame, TestBit(TGraph::kClipFrame));
+   gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
