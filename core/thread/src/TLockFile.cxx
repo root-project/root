@@ -90,6 +90,7 @@ Bool_t TLockFile::Lock(const char *path, Int_t timeLimit)
    delete file;
 
    // chance access to 666, so if the lock is expired, other users can remove it
+   // (attention, currently only supported for local files systems)
    gSystem->Chmod(path, 0666);
 
    if (gDebug > 0)

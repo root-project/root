@@ -36,8 +36,8 @@
 #endif
 
 
-class TLockFile : public TObject
-{
+class TLockFile : public TObject {
+
 private:
    TLockFile(const TLockFile&);             // not implemented
    TLockFile& operator=(const TLockFile&);  // not implemented
@@ -45,14 +45,13 @@ private:
 protected:
    TString fPath;         // path to file holding the lock
 
-   Bool_t Lock(const char* path, Int_t timeLimit);
+   Bool_t Lock(const char *path, Int_t timeLimit);
 
 public:
-   TLockFile(const char* path, Int_t timeLimit = 0);
+   TLockFile(const char *path, Int_t timeLimit = 0);
    virtual ~TLockFile();
 
    ClassDef(TLockFile, 0) //Lock an object using a file
 };
 
 #endif
-
