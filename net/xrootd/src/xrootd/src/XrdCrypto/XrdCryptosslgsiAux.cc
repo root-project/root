@@ -830,7 +830,19 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
    // number.
    // Duplicate user subject name
    X509_NAME *psubj = X509_NAME_dup(X509_get_subject_name(xpi)); 
-   //
+   if (xcro && *xcro && *((int *)xcro) <= 10100) {
+      // Delete existing proxy CN addition; for backward compatibility
+      int ne = psubj->entries->num;
+      if (ne >= 0) {
+         X509_NAME_ENTRY *cne = X509_NAME_delete_entry(psubj, ne-1);
+         if (cne) {
+            X509_NAME_ENTRY_free(cne);
+         } else {
+            DEBUG("problems modifying subject name");
+         }
+      }
+      *xcro = 0;
+   }
    // Create an entry with the common name
    unsigned char sn[20] = {0};
    sprintf((char *)sn, "%d", serial);

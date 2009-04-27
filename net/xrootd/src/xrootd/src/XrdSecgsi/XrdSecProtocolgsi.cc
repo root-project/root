@@ -2899,7 +2899,7 @@ int XrdSecProtocolgsi::ServerDoCert(XrdSutBuffer *br,  XrdSutBuffer **bm,
          hs->PxyChain->Reorder();
          if (needReq) {
             // Create the request
-            XrdCryptoX509Req *rPXp = 0;
+            XrdCryptoX509Req *rPXp = (XrdCryptoX509Req *) &(hs->RemVers);
             XrdCryptoRSA *krPXp = 0;
             if (XrdSslgsiX509CreateProxyReq(hs->PxyChain->End(), &rPXp, &krPXp) == 0) {
                // Save key in the cache
