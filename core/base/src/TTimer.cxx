@@ -126,15 +126,7 @@ Bool_t TTimer::CheckTimer(const TTime &now)
 {
    // Check if timer timed out.
 
-   // To prevent from time-drift related problems observed on some dual-processor
-   // machines, we make the resolution proportional to the timeout period for
-   // periods longer than 200s, with a proportionality factor of 5*10**-5
-   // hand-calculated to ensure 10ms (the minimal resolution) at transition.
-   TTime xnow = TMath::Max((ULong_t)kItimerResolution,
-                           (ULong_t) (0.05 * (ULong_t)fTime));
-   xnow += now;
-
-   if (fAbsTime <= xnow) {
+   if (fAbsTime <= now) {
       fTimeout = kTRUE;
       Notify();
       return kTRUE;
