@@ -29,8 +29,8 @@ namespace Reflex {
       static void* new_p_T(void* p) { return p ? new(p) T : ::new T; }
       static void* new_np_T(void* p) { return p ? ::new(p) T : new T; }
       static void* newArray_T(long size, void* p) { return p ? new (p) T[size] : new T[size]; }
-      static void* newArray_p_T(size_t size, void* p) { return p ? new (p) T[size] : ::new T[size]; }
-      static void* newArray_np_T(size_t size, void* p) { return p ? ::new (p) T[size] : new T[size]; }
+      static void* newArray_p_T(long size, void* p) { return p ? new (p) T[size] : ::new T[size]; }
+      static void* newArray_np_T(long size, void* p) { return p ? ::new (p) T[size] : new T[size]; }
       static void  delete_T(void *p) { delete (T*)p; }
       static void  deleteArray_T(void* p) { delete [] (T*)p; }
       static void  destruct_T(void* p) { ((T*)p)->~T(); }
