@@ -120,6 +120,20 @@
 <ul>
 <li> The painting option "][" did not work if the frame line width
      (set with gStyle->SetFrameLineWidth()) was bigger than 1.
+<li> The clipping in case of option "same" was not correct since 
+     the move from TGraph to TGraphPainter. The following small example
+     showed the problem:
+     <pre>
+        {
+           TH1F * h1 = new TH1F("h1", "h1", 100, -3., 3.);
+           TH1F * h2 = new TH1F("h2", "h2", 100, -3., 3.);
+           h1->FillRandom("gaus", 5000);
+           h2->FillRandom("gaus", 4000);
+           h1->SetMaximum(100);
+           h1->Draw();
+           h2->Draw("same");  
+        }
+     </pre>
 </li>
 </ul>
 
