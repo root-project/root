@@ -8,8 +8,8 @@
 ### Definition of groups.
 ### A user can be part of many groups; the default group is defined by the
 ### first occurence, so the order is important.
-# group tpc ernst pippo mst
-# group ecal abd karl ernst
+# group tpc ernst,pippo,mst
+# group ecal abd,karl,ernst
 
 ###
 ### Define group properties.
@@ -23,5 +23,5 @@
 # property tpc diskquota 100
 
 ### Example: properties of group 'ecal'
-# property ecal priority 233
+# property ecal priority 100
 # property ecal diskquota 30
