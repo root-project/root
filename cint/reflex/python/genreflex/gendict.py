@@ -376,7 +376,12 @@ class genDictionary(object) :
                 print '--->> genreflex: INFO: Using typedef %s to select class %s' % (t['fullname'], self.genTypeName(catt['id']))
               selec.append(catt)
               self.typedefs_for_usr.append(t)
-            if match[0].has_key('fields') :
+              if match[0].has_key('fields') :
+                # copy all fields selection attrs over to the underlying class, see sav #49472
+                clsname = self.genTypeName(catt['id'])
+                newselattrs = {'name': clsname, 'n_name': clsname} 
+                self.selector.sel_classes.append({'fields': match[0]['fields'], 'attrs': newselattrs,'used': 1 })
+            elif match[0].has_key('fields') :
               # copy all fields selection attrs over to the underlying class, see sav #49472
               clname = self.genTypeName(catt['id'])
               for c in self.selector.sel_classes :
