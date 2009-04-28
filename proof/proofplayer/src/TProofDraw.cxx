@@ -1656,8 +1656,8 @@ void TProofDrawPolyMarker3D::Terminate(void)
             Double_t v[3];
             fPolyMarker3D->GetPoint(i, v[0], v[1], v[2]);
             for (int ii = 0; ii < 3; ii++) {
-               if (v[ii] < rmin[ii]) rmin[ii] = v[ii];
-               if (v[ii] > rmax[ii]) rmax[ii] = v[ii];
+               if (v[ii] < rmin[i]) rmin[i] = v[ii];
+               if (v[ii] > rmax[i]) rmax[i] = v[ii];
             }
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hist,
