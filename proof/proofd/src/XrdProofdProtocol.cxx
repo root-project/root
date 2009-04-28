@@ -142,24 +142,24 @@ void XrdProofdProtCfg::RegisterDirectives()
 
 //______________________________________________________________________________
 int XrdProofdProtCfg::DoDirective(XrdProofdDirective *d,
-                                  char *val, XrdOucStream *, bool)
+                                  char *val, XrdOucStream *cfg, bool)
 {
    // Parse directives
 
    if (!d) return -1;
 
-   if (d->fName == "xrd.protocol" || d->fName == "port") {
-      XrdOucString port(val);
-      if (port.beginswith("xproofd:")) {
-         port.replace("xproofd:","");
-      }
-      if (port.length() > 0) {
-         fPort = strtol(port.c_str(), 0, 10);
-      }
-      fPort = (fPort < 0) ? XPD_DEF_PORT : fPort;
-      return 0;
+   XrdOucString port(val);
+   if (d->fName == "xrd.protocol") {
+      port = cfg->GetToken();
+      port.replace("xproofd:", "");
+   } else if (d->fName != "port") {
+      return -1;
    }
-   return -1;
+   if (port.length() > 0) {
+      fPort = strtol(port.c_str(), 0, 10);
+   }
+   fPort = (fPort < 0) ? XPD_DEF_PORT : fPort;
+   return 0;
 }
 
 
