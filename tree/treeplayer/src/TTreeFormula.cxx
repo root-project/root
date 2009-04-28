@@ -3684,7 +3684,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             return gcut->IsInside(xcut,ycut);
          }
          case -1: {
-            TCutG *gcut = (TCutG*)fExternalCuts.At(0);            TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+            TCutG *gcut = (TCutG*)fExternalCuts.At(0);
+            TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
             return fx->EvalInstance(instance);
          }
          default: return 0;
@@ -4659,7 +4660,7 @@ void TTreeFormula::UpdateFormulaLeaves()
       }
       if (fLookupType[j]==kDataMember || fLookupType[j]==kTreeMember) GetLeafInfo(j)->Update();
       if (j<fNval && fCodes[j]<0) {
-         TCutG *gcut = (TCutG*)fMethods.At(j);
+         TCutG *gcut = (TCutG*)fExternalCuts.At(j);
          if (gcut) {
            TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
            TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
