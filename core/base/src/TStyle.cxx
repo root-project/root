@@ -417,7 +417,7 @@ void TStyle::Reset(Option_t *opt)
    fHistMinimumZero= kFALSE;
    fHistTopMargin  = 0.05;
    fFrameLineColor = 1;
-   fFrameFillColor = 19;
+   fFrameFillColor = 0;
    fFrameFillStyle = 1001;
    fFrameLineStyle = 1;
    fFrameLineWidth = 1;
