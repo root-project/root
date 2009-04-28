@@ -55,6 +55,7 @@ private:
    TGTextButton       *fClose;
    TGTextButton       *fStop;
    TGTextButton       *fAbort;
+   TGTextButton       *fAsyn;
    TGTextButton       *fLog;
    TGTextButton       *fRatePlot;
    TGTextButton       *fMemPlot;
@@ -105,6 +106,7 @@ public:
    void Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
                  Float_t initTime, Float_t procTime,
                  Float_t evtrti, Float_t mbrti);
+   void DisableAsyn();
    void IndicateStop(Bool_t aborted);
    void LogMessage(const char *msg, Bool_t all);
 
@@ -115,6 +117,7 @@ public:
    void DoSetLogQuery(Bool_t on);
    void DoStop();
    void DoAbort();
+   void DoAsyn();
    void DoPlotRateGraph();
    void DoMemoryPlot();
 

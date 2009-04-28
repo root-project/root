@@ -1726,6 +1726,24 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          }
          break;
 
+      case kPROOF_GOASYNC:
+         {  // The client requested to switch to asynchronous mode:
+            // communicate the sequential number of the running query for later
+            // identification, if any
+            if (!fIdle && fPlayer) {
+               // Get query currently being processed
+               TProofQueryResult *pq = (TProofQueryResult *) fPlayer->GetCurrentQuery();
+               TMessage m(kPROOF_QUERYSUBMITTED);
+               m << pq->GetSeqNum() << kFALSE;
+               fSocket->Send(m);
+            } else {
+               // Idle or undefined: nothing to do; ignore
+               SendAsynMessage("Processing request to go asynchronous:"
+                               " idle or undefined player - ignoring");
+            }
+         }
+         break;
+
       default:
          Error("HandleSocketInput", "unknown command %d", what);
          rc = -2;
@@ -4204,6 +4222,10 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                      }
                   }
                }
+            } else {
+               // Notify the user
+               PDB(kPackage, 1)
+                  Info("HandleCache", "no PROOF-INF/BUILD.sh found for package %s", package.Data());
             }
             gSystem->ChangeDirectory(ocwd);
          }

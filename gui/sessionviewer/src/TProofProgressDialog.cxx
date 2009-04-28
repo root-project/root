@@ -185,6 +185,18 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
 
    UInt_t  nb1 = 0, width1 = 0, height1 = 0;
 
+   fAsyn = new TGTextButton(hf3, "&Run in background");
+   if (fProof->GetRemoteProtocol() >= 22) {
+      fAsyn->SetToolTipText("Continue running in the background (asynchronous mode), releasing the ROOT prompt");
+   } else {
+      fAsyn->SetToolTipText("Switch to asynchronous mode disabled: functionality not supported by the server");
+      fAsyn->SetState(kButtonDisabled);
+   }
+   fAsyn->Connect("Clicked()", "TProofProgressDialog", this, "DoAsyn()");
+   hf3->AddFrame(fAsyn, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
+   height1 = TMath::Max(height1, fAsyn->GetDefaultHeight());
+   width1  = TMath::Max(width1, fAsyn->GetDefaultWidth()); ++nb1;
+
    fStop = new TGTextButton(hf3, "&Stop");
    fStop->SetToolTipText("Stop processing, Terminate() will be executed");
    fStop->Connect("Clicked()", "TProofProgressDialog", this, "DoStop()");
@@ -267,6 +279,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
                       "TProofProgressDialog", this,
                       "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
       fProof->Connect("CloseProgressDialog()", "TProofProgressDialog", this, "DoClose()");
+      fProof->Connect("DisableGoAsyn()", "TProofProgressDialog", this, "DisableAsyn()");
    }
 
    // Set dialog title
@@ -359,6 +372,11 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    fStop->SetState(kButtonUp);
    fAbort->SetState(kButtonUp);
    fClose->SetState(kButtonDisabled);
+   if (fProof->IsSync() && fProof->GetRemoteProtocol() >= 22) {
+      fAsyn->SetState(kButtonUp);
+   } else {
+      fAsyn->SetState(kButtonDisabled);
+   }
 
    // Reconnect the slots
    if (fProof) {
@@ -369,6 +387,7 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
                       "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fProof->Connect("StopProcess(Bool_t)", "TProofProgressDialog", this,
                       "IndicateStop(Bool_t)");
+      fProof->Connect("DisableGoAsyn()", "TProofProgressDialog", this, "DisableAsyn()");
    }
 
    // Reset start time
@@ -453,9 +472,11 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
                             "Progress(Long64_t,Long64_t)");
          fProof->Disconnect("StopProcess(Bool_t)", this,
                             "IndicateStop(Bool_t)");
+         fProof->Disconnect("DisableGoAsyn()", this, "DisableAsyn()");
       }
 
       // Set button state
+      fAsyn->SetState(kButtonDisabled);
       fStop->SetState(kButtonDisabled);
       fAbort->SetState(kButtonDisabled);
       fClose->SetState(kButtonUp);
@@ -500,6 +521,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
 
       if (processed < 0) {
          // And we disable the buttons
+         fAsyn->SetState(kButtonDisabled);
          fStop->SetState(kButtonDisabled);
          fAbort->SetState(kButtonDisabled);
          fClose->SetState(kButtonUp);
@@ -633,11 +655,12 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                             this,
                             "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
-         fProof->Disconnect("StopProcess(Bool_t)", this,
-                            "IndicateStop(Bool_t)");
+         fProof->Disconnect("StopProcess(Bool_t)", this, "IndicateStop(Bool_t)");
+         fProof->Disconnect("DisableGoAsyn()", this, "DisableAsyn()");
       }
 
       // Set button state
+      fAsyn->SetState(kButtonDisabled);
       fStop->SetState(kButtonDisabled);
       fAbort->SetState(kButtonDisabled);
       fClose->SetState(kButtonUp);
@@ -691,6 +714,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
 
       if (processed < 0) {
          // And we disable the buttons
+         fAsyn->SetState(kButtonDisabled);
          fStop->SetState(kButtonDisabled);
          fAbort->SetState(kButtonDisabled);
          fClose->SetState(kButtonUp);
@@ -715,10 +739,8 @@ TProofProgressDialog::~TProofProgressDialog()
       fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                          this,
                          "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
-      fProof->Disconnect("StopProcess(Bool_t)", this,
-                         "IndicateStop(Bool_t)");
-      //fProof->Disconnect("LogMessage(const char*,Bool_t)", this,
-      //                   "LogMessage(const char*,Bool_t)");
+      fProof->Disconnect("StopProcess(Bool_t)", this, "IndicateStop(Bool_t)");
+      fProof->Disconnect("DisableGoAsyn()", this, "DisableAsyn()");
       fProof->Disconnect("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
                          this,
                          "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
@@ -745,6 +767,15 @@ void TProofProgressDialog::CloseWindow()
 }
 
 //______________________________________________________________________________
+void TProofProgressDialog::DisableAsyn()
+{
+   // Disable the asyn switch when an external request for going asynchronous is issued
+
+   fProof->Disconnect("DisableGoAsyn()", this, "DisableAsyn()");
+   fAsyn->SetState(kButtonDisabled);
+}
+
+//______________________________________________________________________________
 void TProofProgressDialog::IndicateStop(Bool_t aborted)
 {
    // Indicate that Cancel or Stop was clicked.
@@ -760,9 +791,10 @@ void TProofProgressDialog::IndicateStop(Bool_t aborted)
       fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                          this,
                          "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
-      fProof->Disconnect("StopProcess(Bool_t)", this,
-                         "IndicateStop(Bool_t)");
+      fProof->Disconnect("StopProcess(Bool_t)", this, "IndicateStop(Bool_t)");
+      fProof->Disconnect("DisableGoAsyn()", this, "DisableAsyn()");
       // These buttons are meaningless at this point
+      fAsyn->SetState(kButtonDisabled);
       fStop->SetState(kButtonDisabled);
       fAbort->SetState(kButtonDisabled);
    }
@@ -856,6 +888,7 @@ void TProofProgressDialog::DoStop()
    fStatus = kStopped;
 
    // Set buttons states
+   fAsyn->SetState(kButtonDisabled);
    fStop->SetState(kButtonDisabled);
    fAbort->SetState(kButtonDisabled);
    fClose->SetState(kButtonUp);
@@ -870,9 +903,21 @@ void TProofProgressDialog::DoAbort()
    fStatus = kAborted;
 
    // Set buttons states
+   fAsyn->SetState(kButtonDisabled);
    fStop->SetState(kButtonDisabled);
    fAbort->SetState(kButtonDisabled);
    fClose->SetState(kButtonUp);
+}
+
+//______________________________________________________________________________
+void TProofProgressDialog::DoAsyn()
+{
+   // Handle Asyn button.
+
+   fProof->GoAsynchronous();
+
+   // Set buttons states
+   fAsyn->SetState(kButtonDisabled);
 }
 
 //______________________________________________________________________________

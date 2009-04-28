@@ -114,9 +114,10 @@ class TProofDataSetManager;
 //           and kPROOF_GETNEXTPACKET messages in Master - worker communication
 // 19 -> 20: Fix the asynchronous mode (required changes in some messages)
 // 20 -> 21: Add support for session queuing
+// 21 -> 22: Add support for switching from sync to async while running ('Ctrl-Z' functionality)
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 21;            // protocol version number
+const Int_t       kPROOF_Protocol        = 22;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -624,6 +625,8 @@ public:
    Int_t       Retrieve(Int_t query, const char *path = 0);
    Int_t       Retrieve(const char *queryref, const char *path = 0);
 
+   void        DisableGoAsyn();
+   void        GoAsynchronous();
    void        StopProcess(Bool_t abort, Int_t timeout = -1);
    void        Browse(TBrowser *b);
 

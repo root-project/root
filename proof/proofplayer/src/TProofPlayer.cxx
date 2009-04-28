@@ -1554,8 +1554,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       fProof->Collect();
       if (!(fProof->IsSync())) {
          // The server required to switch to asynchronous mode
-         Info("Process", "switching the query to the asynchronous mode"
-                         " following the server reply");
+         Info("Process", "switching to the asynchronous mode ...");
          return fProof->fSeqNum;
       }
 
