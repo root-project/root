@@ -111,6 +111,7 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    int                fRecoverTimeOut;
    int                fRecoverDeadline;
    bool               fCheckLost;
+   XrdOucString       fParentExecs;   // List of possible 'proofserv' parent names
 
    int                fCounters[PSMMAXCNTS];  // Internal counters (see enum PSMCounters)
    int                fCurrentSessions;       // Number of sessions (top masters)

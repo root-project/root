@@ -308,6 +308,7 @@ XrdProofdProofServMgr::XrdProofdProofServMgr(XrdProofdManager *mgr,
    fVerifyTimeOut = 3 * fCheckFrequency;
    fRecoverTimeOut = 10;
    fCheckLost = 1;
+   fParentExecs = "xproofd,xrootd";
 
    // Recover-related quantities
    fRecoverClients = 0;
@@ -1110,6 +1111,8 @@ void XrdProofdProofServMgr::RegisterDirectives()
    // Register config directives for strings
    Register("proofplugin",
                   new XrdProofdDirective("proofplugin", (void *)&fProofPlugin, &DoDirectiveString));
+   Register("proofservparents",
+                  new XrdProofdDirective("proofservparents", (void *)&fParentExecs, &DoDirectiveString));
 }
 
 //______________________________________________________________________________
@@ -2969,7 +2972,7 @@ int XrdProofdProofServMgr::CleanupLostProofServ()
          int xpid = XrdProofdAux::GetIDFromPath(pidpath.c_str(), emsg);
          int *alive = xrdproc.Find(xpid);
          if (!alive) {
-            a = (XrdProofdAux::VerifyProcessByID(xpid, "xproofd,xrootd")) ? 1 : 0;
+            a = (XrdProofdAux::VerifyProcessByID(xpid, fParentExecs.c_str())) ? 1 : 0;
             xrdproc.Add(xpid, a);
             if (!(alive = xrdproc.Find(xpid))) {
                TRACE(ALL, "unable to add info in the Rash table!");
@@ -3100,7 +3103,7 @@ int XrdProofdProofServMgr::CleanupProofServ(bool all, const char *usr)
             if (xppid && strstr(line, "PPid:")) {
                ppid = (int) XrdProofdAux::GetLong(&line[strlen("PPid:")]);
                // Parent process must be us or be dead
-               if (ppid != getpid() && XrdProofdAux::VerifyProcessByID(ppid, "xproofd,xrootd"))
+               if (ppid != getpid() && XrdProofdAux::VerifyProcessByID(ppid, fParentExecs.c_str()))
                   // Process created by another running xrootd
                   break;
                xppid = 0;
@@ -3188,7 +3191,7 @@ int XrdProofdProofServMgr::CleanupProofServ(bool all, const char *usr)
          }
          // Parent process must be us or be dead
          int ppid = psi.pr_ppid;
-         if (ppid != getpid() && XrdProofdAux::VerifyProcessByID(ppid, "xproofd,xrootd")) {
+         if (ppid != getpid() && XrdProofdAux::VerifyProcessByID(ppid, fParentExecs.c_str())) {
             // Process created by another running xrootd
             continue;
             xppid = 0;
@@ -3306,7 +3309,7 @@ int XrdProofdProofServMgr::CleanupProofServ(bool all, const char *usr)
             int ppid = (int) XrdProofdAux::GetLong(pi);
             TRACE(HDBG, "found alternative parent ID: "<< ppid);
             // If still running then skip
-            if (XrdProofdAux::VerifyProcessByID(ppid, "xproofd,xrootd"))
+            if (XrdProofdAux::VerifyProcessByID(ppid, fParentExecs.c_str()))
                continue;
          }
          // Get pid now
