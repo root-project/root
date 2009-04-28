@@ -13,9 +13,12 @@
 #define ROOT_TH2GL
 
 #include <TGLObject.h>
+#include <TGLUtil.h>
+#include <TGLAxisPainter.h>
 
 class TGLRnrCtx;
-class TH1;
+class TH2;
+class TAxis;
 
 #include "TGLPlotPainter.h"
 
@@ -26,7 +29,7 @@ private:
    TH2GL& operator=(const TH2GL&); // Not implemented
 
 protected:
-   TH1                *fM; // fModel dynamic-casted to TH2
+   TH2                *fM; // Model object dynamic-casted to TH2.
 
    TGLPlotPainter     *fPlotPainter;
    TGLPlotCoordinates  fCoord;
@@ -45,7 +48,7 @@ public:
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
 
-   ClassDef(TH2GL, 0) // GL renderer for TH2 and TH3.
+   ClassDef(TH2GL, 0); // GL renderer for TH2 and TH3.
 }; // endclass TH2GL
 
 #endif

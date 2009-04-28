@@ -216,6 +216,8 @@ public:
    TGLColorSet* ChangeBaseColorSet(TGLColorSet* set);
    TGLColorSet* GetBaseColorSet();
 
+   void         ColorOrForeground(Color_t col);
+
    UInt_t GetEventKeySym()   const { return fEventKeySym; }
    void   SetEventKeySym(UInt_t k) { fEventKeySym = k; }
 

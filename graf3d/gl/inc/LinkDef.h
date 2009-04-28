@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: LinkDef.h,v 1.1.1.1
+// @(#)root/gl:$Id$
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -96,7 +96,8 @@
 #pragma link C++ class TGLSphere;
 #pragma link C++ class TGLText;
 #pragma link C++ class TGLAxis;
-#pragma link C++ class TGLAxisPainter;
+#pragma link C++ class TGLAxisPainter+;
+#pragma link C++ class TGLAxisPainterBox+;
 
 #pragma link C++ class TGLSelectionBuffer;
 #pragma link C++ class TGLPlotCoordinates;
@@ -117,8 +118,9 @@
 #pragma link C++ class TGLContextIdentity;
 #pragma link C++ class TGLFormat;
 #pragma link C++ class TGLAdapter;
-#pragma link C++ class TF2GL;
-#pragma link C++ class TH2GL;
+#pragma link C++ class TF2GL+;
+#pragma link C++ class TH2GL+;
+#pragma link C++ class TH3GL+;
 #pragma link C++ class TGLParametricEquationGL;
 #pragma link C++ class TGLEmbeddedViewer;
 #pragma link C++ class TGLEventHandler;

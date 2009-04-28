@@ -16,10 +16,8 @@
 
 #include "TGLSurfacePainter.h"
 #include "TGLTF3Painter.h"
-#include "TGLAxis.h"
 
 #include "TGLRnrCtx.h"
-
 #include "TGLIncludes.h"
 
 //______________________________________________________________________
@@ -27,7 +25,7 @@
 // GL-renderer wrapper for TGLParametricEquation.
 // This allows rendering of parametric-equations in standard GL viewer.
 
-ClassImp(TGLParametricEquationGL)
+ClassImp(TGLParametricEquationGL);
 
 //______________________________________________________________________________
 TGLParametricEquationGL::TGLParametricEquationGL() : TGLObject(), fM(0)
@@ -71,7 +69,7 @@ void TGLParametricEquationGL::SetBBox()
 }
 
 //______________________________________________________________________________
-void TGLParametricEquationGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
+void TGLParametricEquationGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 {
    // Render the object.
 

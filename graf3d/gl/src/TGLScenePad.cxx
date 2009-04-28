@@ -31,8 +31,10 @@
 #include "TList.h"
 #include "TMath.h"
 
-#include "TH2.h"         // Preliminary support for GL plot painters
-#include "TH3.h"         // Preliminary support for GL plot painters
+// Preliminary support for GL plot painters
+#include "TH3.h"
+#include "TH3GL.h"
+#include "TH2.h"
 #include "TH2GL.h"
 #include "TF2.h"
 #include "TF2GL.h"
@@ -71,7 +73,6 @@ TGLScenePad::TGLScenePad(TVirtualPad* pad) :
 /******************************************************************************/
 // Histo import and Sub-pad traversal
 /******************************************************************************/
-
 
 //______________________________________________________________________________
 void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log)
@@ -122,7 +123,6 @@ void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log)
    // phys->BoundingBox().Dump();
 }
 
-
 //______________________________________________________________________________
 void TGLScenePad::SubPadPaint(TVirtualPad* pad)
 {
@@ -153,13 +153,24 @@ void TGLScenePad::ObjectPaint(TObject* obj, Option_t* opt)
    // Special handling of 2D/3D histograms to activate Timur's
    // histo-painters.
 
-   if (obj->InheritsFrom(TAtt3D::Class()) && !obj->InheritsFrom(TH3::Class()))
+   if (obj->InheritsFrom(TH3::Class()))
+   {
+      // TH3 in principle inherits from TAtt3D, but it gets painted
+      // via the histo-painters - which we need to bypass.
+      // printf("histo 3d\n");
+      TGLObject* log = new TH3GL();
+      log->SetModel(obj, opt);
+      log->SetBBox();
+      AdoptLogical(*log);
+      AddHistoPhysical(log);
+   }
+   else if (obj->InheritsFrom(TAtt3D::Class()))
    {
       //Since TH3's derived from TAtt3D, it should be checked here.
       //printf("normal-painting %s / %s\n", obj->GetName(), obj->ClassName());
       obj->Paint(opt);
    }
-   else if (obj->InheritsFrom(TH2::Class()) || obj->InheritsFrom(TH3::Class()))
+   else if (obj->InheritsFrom(TH2::Class()))
    {
       // printf("histo 2d\n");
       TGLObject* log = new TH2GL();
@@ -199,7 +210,6 @@ void TGLScenePad::ObjectPaint(TObject* obj, Option_t* opt)
    }
 }
 
-
 //______________________________________________________________________________
 void TGLScenePad::PadPaintFromViewer(TGLViewer* viewer)
 {
@@ -213,7 +223,6 @@ void TGLScenePad::PadPaintFromViewer(TGLViewer* viewer)
 
    fSmartRefresh = sr;
 }
-
 
 //______________________________________________________________________________
 void TGLScenePad::PadPaint(TVirtualPad* pad)
@@ -235,10 +244,9 @@ void TGLScenePad::PadPaint(TVirtualPad* pad)
 }
 
 
-/******************************************************************************/
+//==============================================================================
 // VV3D
-/******************************************************************************/
-
+//==============================================================================
 
 //______________________________________________________________________________
 void TGLScenePad::BeginScene()
@@ -294,7 +302,6 @@ void TGLScenePad::BeginScene()
    }
 }
 
-
 //______________________________________________________________________________
 void TGLScenePad::EndScene()
 {
@@ -314,7 +321,6 @@ void TGLScenePad::EndScene()
    }
 }
 
-
 //______________________________________________________________________________
 Int_t TGLScenePad::AddObject(const TBuffer3D& buffer, Bool_t* addChildren)
 {
@@ -327,7 +333,6 @@ Int_t TGLScenePad::AddObject(const TBuffer3D& buffer, Bool_t* addChildren)
    Int_t sections = AddObject(fNextInternalPID, buffer, addChildren);
    return sections;
 }
-
 
 //______________________________________________________________________________
 Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren)
@@ -469,7 +474,6 @@ Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t*
    return TBuffer3D::kNone;
 }
 
-
 //______________________________________________________________________________
 Bool_t TGLScenePad::OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren)
 {
@@ -495,7 +499,6 @@ Bool_t TGLScenePad::OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren)
    }
 }
 
-
 //______________________________________________________________________________
 void TGLScenePad::CloseComposite()
 {
@@ -517,7 +520,6 @@ void TGLScenePad::CloseComposite()
    }
 }
 
-
 //______________________________________________________________________________
 void TGLScenePad::AddCompositeOp(UInt_t operation)
 {
@@ -530,7 +532,6 @@ void TGLScenePad::AddCompositeOp(UInt_t operation)
 
 
 // Protected methods
-
 
 //______________________________________________________________________________
 Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D& buffer, Bool_t includeRaw) const
@@ -603,7 +604,6 @@ Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D& buffer, Bool_t includeR
       return TBuffer3D::kNone;
    }
 }
-
 
 //______________________________________________________________________________
 TGLLogicalShape* TGLScenePad::CreateNewLogical(const TBuffer3D& buffer) const
@@ -678,7 +678,6 @@ TGLLogicalShape* TGLScenePad::CreateNewLogical(const TBuffer3D& buffer) const
    return newLogical;
 }
 
-
 //______________________________________________________________________________
 TGLPhysicalShape*
 TGLScenePad::CreateNewPhysical(UInt_t ID, const TBuffer3D& buffer,
@@ -697,7 +696,6 @@ TGLScenePad::CreateNewPhysical(UInt_t ID, const TBuffer3D& buffer,
    return new TGLPhysicalShape(ID, logical, buffer.fLocalMaster,
                                buffer.fReflection, rgba);
 }
-
 
 //______________________________________________________________________________
 RootCsg::TBaseMesh* TGLScenePad::BuildComposite()
@@ -724,7 +722,6 @@ RootCsg::TBaseMesh* TGLScenePad::BuildComposite()
       }
    } else return fCSTokens[fCSLevel++].second;
 }
-
 
 //______________________________________________________________________________
 TGLLogicalShape* TGLScenePad::AttemptDirectRenderer(TObject* id)

@@ -1,5 +1,5 @@
 // @(#)root/gl:$Id$
-// Author:  Olivier Couet 12/04/2007
+// Author: Alja Mrak-Tadel 2008
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -143,7 +143,8 @@ public:
    static TObjArray*        GetFontFileArray();
    static FontSizeVec_t*    GetFontSizeArray();
 
-   static Int_t             GetFontSize(Float_t ds, Int_t min = -1, Int_t max = -1);
+   static Int_t             GetFontSize(Float_t ds);
+   static Int_t             GetFontSize(Float_t ds, Int_t min, Int_t max);
    static const char*       GetFontNameFromId(Int_t);
 
    void   ClearFontTrash();

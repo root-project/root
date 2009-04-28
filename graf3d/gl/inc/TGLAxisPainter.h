@@ -17,7 +17,13 @@
 
 class TAttAxis;
 class TAxis;
+class TH1;
 class TGLRnrCtx;
+
+
+//==============================================================================
+// TGLAxisPainter
+//==============================================================================
 
 class TGLAxisPainter
 {
@@ -47,7 +53,7 @@ private:
 
 protected:
    TAttAxis        *fAttAxis;    // Model.
-   TGLFont::EMode   fFontMode;   // Later in AttAxis
+   TGLFont::EMode   fFontMode;   // To be put into TAttAxis
    LabVec_t         fLabVec;     // List of Labels position-value pairs
    TMVec_t          fTMVec;      // List of tick-mark position-value pairs
 
@@ -108,7 +114,7 @@ public:
    void SetTextFormat(Double_t min, Double_t max, Double_t binWidth);
 
    // Renderers.
-   void RnrText( const char* txt, const TGLVector3 &pos, const TGLFont::ETextAlign_e align, const TGLFont &font) const;
+   void RnrText (const char* txt, const TGLVector3 &pos, const TGLFont::ETextAlign_e align, const TGLFont &font) const;
    void RnrTitle(const char* title, TGLVector3 &pos, TGLFont::ETextAlign_e align) const;
    void RnrLabels() const;
    void RnrLines() const;
@@ -116,6 +122,29 @@ public:
    void PaintAxis(TGLRnrCtx& ctx, TAxis* ax);
 
    ClassDef(TGLAxisPainter, 0); // GL axis painter.
+};
+
+
+//==============================================================================
+// TGLAxisPainterBox
+//==============================================================================
+
+class TGLAxisPainterBox : public TGLAxisPainter
+{
+protected:
+   TGLVector3          fAxisTitlePos[3];
+   TAxis*              fAxis[3];
+
+public:
+   TGLAxisPainterBox();
+   virtual ~TGLAxisPainterBox();
+
+   void SetAxis3DTitlePos(TGLRnrCtx &rnrCtx);
+   void DrawAxis3D(TGLRnrCtx &rnrCtx);
+
+   void PlotStandard(TGLRnrCtx &rnrCtx, const TH1* histo, const TGLBoundingBox& bbox);
+
+   ClassDef(TGLAxisPainterBox, 0); // Painter of GL axes for a 3D box.
 };
 
 #endif

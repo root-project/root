@@ -48,7 +48,7 @@ public:
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
 
-   ClassDef(TGLParametricEquationGL, 0) // GL renderer for TGLParametricEquation
+   ClassDef(TGLParametricEquationGL, 0); // GL renderer for TGLParametricEquation
 };
 
 #endif

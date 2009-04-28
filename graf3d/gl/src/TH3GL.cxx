@@ -1,16 +1,16 @@
-// @(#)root/gl:$Id$
-// Author:  Matevz Tadel, Jun 2007
+// @(#)root/eve:$Id$
+// Author: Matevz Tadel 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TH2GL.h"
-#include "TH2.h"
+#include "TH3GL.h"
+#include "TH3.h"
 #include "TVirtualPad.h"
 #include "TAxis.h"
 #include "TMath.h"
@@ -24,19 +24,17 @@
 #include "TGLCamera.h"
 
 #include "TGLRnrCtx.h"
-
 #include "TGLIncludes.h"
 
 //______________________________________________________________________________
+// OpenGL renderer class for TH3.
 //
-// Rendering of TH2 and derived classes.
-// Interface to plot-painters also used for gl-in-pad.
 
-ClassImp(TH2GL);
+ClassImp(TH3GL);
 
 //______________________________________________________________________________
-TH2GL::TH2GL() :
-TGLObject(), fM(0), fPlotPainter(0)
+TH3GL::TH3GL() :
+   TGLObject(), fM(0), fPlotPainter(0)
 {
    // Constructor.
 
@@ -44,42 +42,29 @@ TGLObject(), fM(0), fPlotPainter(0)
 }
 
 //______________________________________________________________________________
-TH2GL::~TH2GL()
+TH3GL::~TH3GL()
 {
    // Destructor.
 
    delete fPlotPainter;
 }
 
+/******************************************************************************/
+
 //______________________________________________________________________________
-Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
+Bool_t TH3GL::SetModel(TObject* obj, const Option_t* opt)
 {
    // Set model object.
 
    TString option(opt);
    option.ToLower();
 
-   if (SetModelCheckClass(obj, TH2::Class()))
-   {
-      fM = dynamic_cast<TH2*>(obj);
-
-      // Plot type
-      if (option.Index("surf") != kNPOS)
-         fPlotPainter = new TGLSurfacePainter(fM, 0, &fCoord);
-      else
-         fPlotPainter = new TGLLegoPainter(fM, 0, &fCoord);
-
-      // Coord-system
-      fCoord.SetXLog(gPad->GetLogx());
-      fCoord.SetYLog(gPad->GetLogy());
-      fCoord.SetZLog(gPad->GetLogz());
-
-      if (option.Index("sph") != kNPOS)
-         fCoord.SetCoordType(kGLSpherical);
-      else if (option.Index("pol") != kNPOS)
-         fCoord.SetCoordType(kGLPolar);
-      else if (option.Index("cyl") != kNPOS)
-         fCoord.SetCoordType(kGLCylindrical);
+   if (SetModelCheckClass(obj, TH3::Class())) {
+      fM = dynamic_cast<TH3*>(obj);
+      if (option.Index("iso") != kNPOS)
+         fPlotPainter = new TGLIsoPainter(fM, 0, &fCoord);
+      else if (option.Index("box") != kNPOS)
+         fPlotPainter = new TGLBoxPainter(fM, 0, &fCoord);
 
       fPlotPainter->AddOption(option);
       fPlotPainter->InitGeometry();
@@ -89,17 +74,19 @@ Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
 }
 
 //______________________________________________________________________________
-void TH2GL::SetBBox()
+void TH3GL::SetBBox()
 {
-   // Setup bounding-box.
+   // Set bounding box.
 
    fBoundingBox.Set(fPlotPainter->RefBackBox().Get3DBox());
 }
 
+/******************************************************************************/
+
 //______________________________________________________________________________
-void TH2GL::DirectDraw(TGLRnrCtx & rnrCtx) const
+void TH3GL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Render the object.
+   // Render with OpenGL.
 
    fPlotPainter->RefBackBox().FindFrontPoint();
 

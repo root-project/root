@@ -307,6 +307,17 @@ TGLColorSet* TGLRnrCtx::GetBaseColorSet()
    return fColorSetStack->front();
 }
 
+//______________________________________________________________________________
+void TGLRnrCtx::ColorOrForeground(Color_t col)
+{
+   // Set col if it is different from background, otherwise use
+   // current foreground color.
+
+   if (fColorSetStack->back()->Background().GetColorIndex() == col)
+      TGLUtil::Color(fColorSetStack->back()->Foreground());
+   else
+      TGLUtil::Color(col);
+}
 
 /**************************************************************************/
 // Display-list state

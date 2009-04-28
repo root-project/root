@@ -897,13 +897,16 @@ inline void TGLMatrix::GetBaseVec(Int_t b, Double_t* x) const
 // TGLColor
 //
 // Encapsulate color in preferred GL format - UChar_t RGBA array.
+// Color index is also cached for easier interfacing with the
+// traditional ROOT graphics.
 //
 //////////////////////////////////////////////////////////////////////////
 
 class TGLColor
 {
 protected:
-   UChar_t fRGBA[4];
+   UChar_t         fRGBA[4];
+   mutable Short_t fIndex;
 
 public:
    TGLColor();

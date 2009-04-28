@@ -223,10 +223,17 @@ void TGLViewer::InitSecondaryObjects()
    fSelectedPShapeRef->SetDrawBBox(kTRUE);
 
    fLightColorSet.StdLightBackground();
-   if (fgUseDefaultColorSetForNewViewers)
+   if (fgUseDefaultColorSetForNewViewers) {
       fRnrCtx->ChangeBaseColorSet(&fgDefaultColorSet);
-   else
-      fRnrCtx->ChangeBaseColorSet(&fDarkColorSet);
+   } else {
+      if (fPad) {
+         fRnrCtx->ChangeBaseColorSet(&fLightColorSet);
+         fLightColorSet.Background().SetColor(fPad->GetFillColor());
+         fLightColorSet.Foreground().SetColor(fPad->GetLineColor());
+      } else {
+         fRnrCtx->ChangeBaseColorSet(&fDarkColorSet);
+      }
+   }
 
    fCameraOverlay = new TGLCameraOverlay(kFALSE, kFALSE);
    AddOverlayElement(fCameraOverlay);

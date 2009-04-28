@@ -976,6 +976,8 @@ void TGLMatrix::Dump() const
 //
 // Class encapsulating color information in preferred GL format - an
 // array of four unsigned bytes.
+// Color index is also cached for easier interfacing with the
+// traditional ROOT graphics.
 //
 
 ClassImp(TGLColor);
@@ -987,6 +989,7 @@ TGLColor::TGLColor()
 
    fRGBA[0] = fRGBA[1] = fRGBA[2] = 0;
    fRGBA[3] = 255;
+   fIndex   = -1;
 }
 
 //______________________________________________________________________________
@@ -1028,6 +1031,7 @@ TGLColor& TGLColor::operator=(const TGLColor& c)
    fRGBA[1] = c.fRGBA[1];
    fRGBA[2] = c.fRGBA[2];
    fRGBA[3] = c.fRGBA[3];
+   fIndex   = c.fIndex;
    return *this;
 }
 
@@ -1036,7 +1040,9 @@ Color_t TGLColor::GetColorIndex() const
 {
    // Returns color-index representing the color.
 
-   return TColor::GetColor(fRGBA[0], fRGBA[1], fRGBA[2]);
+   if (fIndex == -1)
+      fIndex = TColor::GetColor(fRGBA[0], fRGBA[1], fRGBA[2]);
+   return fIndex;
 }
 
 //______________________________________________________________________________
@@ -1056,6 +1062,7 @@ void TGLColor::SetColor(Int_t r, Int_t g, Int_t b, Int_t a)
    fRGBA[1] = g;
    fRGBA[2] = b;
    fRGBA[3] = a;
+   fIndex   = -1;
 }
 
 //______________________________________________________________________________
@@ -1067,6 +1074,7 @@ void TGLColor::SetColor(Float_t r, Float_t g, Float_t b, Float_t a)
    fRGBA[1] = (UChar_t)(255*g);
    fRGBA[2] = (UChar_t)(255*b);
    fRGBA[3] = (UChar_t)(255*a);
+   fIndex   = -1;
 }
 
 //______________________________________________________________________________
@@ -1081,6 +1089,7 @@ void TGLColor::SetColor(Color_t color_index)
       fRGBA[0] = (UChar_t)(255*c->GetRed());
       fRGBA[1] = (UChar_t)(255*c->GetGreen());
       fRGBA[2] = (UChar_t)(255*c->GetBlue());
+      fIndex   = color_index;
    }
    else
    {
@@ -1088,6 +1097,7 @@ void TGLColor::SetColor(Color_t color_index)
       fRGBA[0] = 255;
       fRGBA[1] = 0;
       fRGBA[2] = 255;
+      fIndex   = -1;
    }
 }
 
@@ -1106,6 +1116,7 @@ void TGLColor::SetColor(Color_t color_index, Char_t transparency)
       fRGBA[1] = (UChar_t)(255*c->GetGreen());
       fRGBA[2] = (UChar_t)(255*c->GetBlue());
       fRGBA[3] = alpha;
+      fIndex   = color_index;
    }
    else
    {
@@ -1114,6 +1125,7 @@ void TGLColor::SetColor(Color_t color_index, Char_t transparency)
       fRGBA[1] = 0;
       fRGBA[2] = 255;
       fRGBA[3] = alpha;
+      fIndex   = -1;
       return;
    }
 }

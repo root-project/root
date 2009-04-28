@@ -18,7 +18,7 @@
 
 #include "TGLSurfacePainter.h"
 #include "TGLTF3Painter.h"
-#include "TGLAxis.h"
+#include "TGLAxisPainter.h"
 
 #include "TGLRnrCtx.h"
 
@@ -29,8 +29,9 @@
 // GL renderer for TF2.
 // TGLPlotPainter is used internally.
 
-ClassImp(TF2GL)
+ClassImp(TF2GL);
 
+//______________________________________________________________________________
 TF2GL::TF2GL() : TGLObject(), fM(0), fH(0)
 {
    // Constructor.
@@ -38,6 +39,7 @@ TF2GL::TF2GL() : TGLObject(), fM(0), fH(0)
    fDLCache = kFALSE; // Disable display list.
 }
 
+//______________________________________________________________________________
 TF2GL::~TF2GL()
 {
    // Destructor.
@@ -48,14 +50,19 @@ TF2GL::~TF2GL()
 
 /**************************************************************************/
 
+//______________________________________________________________________________
 Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
 {
    // Set model object.
+
+   TString option(opt);
+   option.ToLower();
 
    if(SetModelCheckClass(obj, TF2::Class()))
    {
       fM = dynamic_cast<TF2*>(obj);
       fH = (TH2*) fM->CreateHistogram();
+      fH->GetZaxis()->SetLimits(fH->GetMinimum(), fH->GetMaximum());
 
       if (dynamic_cast<TF3*>(fM))
          fPlotPainter = new TGLTF3Painter((TF3*)fM, fH, 0, &fCoord);
@@ -66,8 +73,6 @@ Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
       fCoord.SetXLog(gPad->GetLogx());
       fCoord.SetYLog(gPad->GetLogy());
       fCoord.SetZLog(gPad->GetLogz());
-
-      TString option(opt);
 
       if (option.Index("sph") != kNPOS)
          fCoord.SetCoordType(kGLSpherical);
@@ -84,6 +89,7 @@ Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
    return kFALSE;
 }
 
+//______________________________________________________________________________
 void TF2GL::SetBBox()
 {
    // Setup bounding-box.
@@ -91,9 +97,8 @@ void TF2GL::SetBBox()
    fBoundingBox.Set(fPlotPainter->RefBackBox().Get3DBox());
 }
 
-/**************************************************************************/
-
-void TF2GL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
+//______________________________________________________________________________
+void TF2GL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Render the object.
 
@@ -108,17 +113,10 @@ void TF2GL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    fPlotPainter->DrawPlot();
 
    glDisable(GL_CULL_FACE);
-
-   TGLAxis ap;
-   const Rgl::Range_t & xr = fCoord.GetXRange();
-   ap.PaintGLAxis(fBoundingBox[0].CArr(), fBoundingBox[1].CArr(),
-                  xr.first, xr.second, 205);
-   const Rgl::Range_t & yr = fCoord.GetXRange();
-   ap.PaintGLAxis(fBoundingBox[0].CArr(), fBoundingBox[3].CArr(),
-                  yr.first, yr.second, 205);
-   const Rgl::Range_t & zr = fCoord.GetXRange();
-   ap.PaintGLAxis(fBoundingBox[0].CArr(), fBoundingBox[4].CArr(),
-                  zr.first, zr.second, 205);
-
    glPopAttrib();
+
+   // Axes
+   TGLAxisPainterBox axe_painter;
+   axe_painter.SetFontMode(TGLFont::kPixmap);
+   axe_painter.PlotStandard(rnrCtx, fH, fBoundingBox);
 }

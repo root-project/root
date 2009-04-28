@@ -1,5 +1,5 @@
 // @(#)root/gl:$Id$
-// Author:  Olivier Couet  12/04/2007
+// Author: Alja Mrak-Tadel 2008
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -12,6 +12,7 @@
 #include "RConfigure.h"
 #include "TGLFontManager.h"
 
+#include "TMath.h"
 #include "TSystem.h"
 #include "TEnv.h"
 #include "TObjString.h"
@@ -410,29 +411,26 @@ TGLFontManager::FontSizeVec_t* TGLFontManager::GetFontSizeArray()
 }
 
 //______________________________________________________________________________
-Int_t TGLFontManager::GetFontSize(Float_t ds, Int_t min, Int_t max)
+Int_t TGLFontManager::GetFontSize(Float_t ds)
 {
    // Get availabe font size.
 
    if (fgStaticInitDone == kFALSE) InitStatics();
 
-   Int_t  nums = fgFontSizeArray.size();
-   Int_t i = 0;
-   while (i<nums)
-   {
-      if (ds<=fgFontSizeArray[i]) break;
-      i++;
-   }
+   Int_t idx = TMath::BinarySearch(fgFontSizeArray.size(), &fgFontSizeArray[0],
+                                   TMath::CeilNint(ds));
+   if (idx < 0) idx = 0;
+   return fgFontSizeArray[idx];
+}
 
-   Int_t fs =  fgFontSizeArray[i];
+//______________________________________________________________________________
+Int_t TGLFontManager::GetFontSize(Float_t ds, Int_t min, Int_t max)
+{
+   // Get availabe font size.
 
-   if (min>0 && fs<min)
-      fs = min;
-
-   if (max>0 && fs>max)
-      fs = max;
-
-   return fs;
+   if (ds < min) ds = min;
+   if (ds > max) ds = max;
+   return GetFontSize(ds);
 }
 
 //______________________________________________________________________________
@@ -477,7 +475,7 @@ void TGLFontManager::InitStatics()
       fgFontSizeArray.push_back(i);
    for (Int_t i = 24; i <= 64; i+=4)
       fgFontSizeArray.push_back(i);
-   for (Int_t i = 72; i <= 120; i+=8)
+   for (Int_t i = 72; i <= 128; i+=8)
       fgFontSizeArray.push_back(i);
 
    fgStaticInitDone = kTRUE;
