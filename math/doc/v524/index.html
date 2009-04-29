@@ -15,12 +15,17 @@
    <li>Add a protection against negative log when fitting using the Poisson log likelihood function
    <li>Improve calculation of derivative in x for fitted function. This fixes some problem observed when fitting using the error on the coordinates.  
   </ul>
+  <h5>TMath</h5>
+  <ul>
+    <li>
+    Fix a numerical problem in <tt>TMath::ErfcInverse</tt> for small input values. Now the normal quantile function is used for implementing it.  
+    </li>
 
  <h4>MathMore</h4>
   <ul> 
     <li>Fix 2 bugs in the quartic equation solver (see issue <a href="https://savannah.cern.ch/bugs/?49031">#49031</a>).
     <ul><li>
-    A protection has been added against numerical errors which could cause NaN due to wrong inputs to an <tt>acos</tt> function.
+    A protection has been added against numerical errors which could cause NaN due to wrong inputs to an <tt>acos</tt> function. This problem appears also in the GSL cubic solver. A new GSL patched cubic function has been then added in MathMore.
       <li>
    A wrong statement (coming from the original CERNLIB code but not applicable in this case)  has been removed.
       </ul>
