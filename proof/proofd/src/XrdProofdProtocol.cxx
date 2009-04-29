@@ -813,8 +813,8 @@ int XrdProofdProtocol::SendMsg()
    // Handle a request to forward a message to another process
    XPDLOC(ALL, "Protocol::SendMsg")
 
-   static const char *crecv[4] = {"master proofserv", "top master",
-                                  "client", "undefined"};
+   static const char *crecv[5] = {"master proofserv", "top master",
+                                  "client", "undefined", "any"};
    int rc = 0;
 
    XPD_SETRESP(this, "SendMsg");
@@ -916,7 +916,10 @@ int XrdProofdProtocol::SendMsg()
          xps->SetStartMsg(savedBuf);
 
       if (TRACING(DBG)) {
-         msg.form("INT: message sent to %s (%d bytes)", crecv[xps->SrvType()], len);
+         int ii = xps->SrvType();
+         if (ii > 3) ii = 3;
+         if (ii < 0) ii = 4;
+         msg.form("INT: message sent to %s (%d bytes)", crecv[ii], len);
          TRACEP(this, DBG, msg);
       }
       // Notify to proofsrv
