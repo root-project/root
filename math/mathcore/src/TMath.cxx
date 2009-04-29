@@ -279,6 +279,19 @@ Double_t TMath::ErfInverse(Double_t x)
    }
    return 0; //did not converge
 }
+Double_t TMath::ErfcInverse(Double_t x)
+{
+   // returns  the inverse of the complementary error function
+   // x must be  <-1<x<1
+   // implement using  the quantile of the normal distribution
+   // instead of ErfInverse for better numerical precision for large x 
+   
+   // erfc-1(x) = - 1/sqrt(2) * normal_quantile( 0.5 * x)
+   return - 0.70710678118654752440 * TMath::NormQuantile( 0.5 * x); 
+}
+   
+
+
 
 //______________________________________________________________________________
 Double_t TMath::Factorial(Int_t n)
