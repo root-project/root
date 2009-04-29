@@ -109,20 +109,23 @@ namespace {
 //____________________________________________________________________________
    PyObject* op_richcompare( ObjectProxy* self, ObjectProxy* other, int op )
    {
-      if ( op != Py_EQ ) {
+      if ( op != Py_EQ && op != Py_NE ) {
          Py_INCREF( Py_NotImplemented );
          return Py_NotImplemented;
       }
 
+      bool bIsEq = false;
+
    // special case for None to compare True to a null-pointer
-      if ( (PyObject*)other == Py_None && ! self->fObject ) {
-         Py_INCREF( Py_True );
-         return Py_True;
-      }
+      if ( (PyObject*)other == Py_None && ! self->fObject )
+         bIsEq = true;
 
    // type + held pointer value defines identity (will cover if other is not
    // actually an ObjectProxy, as ob_type will be unequal)
-      if ( self->ob_type == other->ob_type && self->fObject == other->fObject ) {
+      else if ( self->ob_type == other->ob_type && self->fObject == other->fObject )
+         bIsEq = true;
+
+      if ( ( op == Py_EQ && bIsEq ) || ( op == Py_NE && ! bIsEq ) ) {
          Py_INCREF( Py_True );
          return Py_True;
       }

@@ -211,10 +211,30 @@ namespace {
 //____________________________________________________________________________
    PyObject* GenObjectIsEqual( PyObject* self, PyObject* obj )
    {
-      if ( ! ObjectProxy_Check( obj ) || ! ((ObjectProxy*)obj)->fObject )
-         return ObjectProxy_Type.tp_richcompare( self, obj, Py_EQ );
+   // Contrary to TObjectIsEqual, it can now not be relied upon that the only
+   // non-ObjectProxy obj is None, as any operator==(), taking any object (e.g.
+   // an enum) can be implemented. However, those cases will yield an exception
+   // if presented with None.
+      PyObject* result = CallPyObjMethod( self, "__cpp_eq__", obj );
+      if ( ! result ) {
+         PyErr_Clear();
+         result = ObjectProxy_Type.tp_richcompare( self, obj, Py_EQ );
+      }
 
-      return CallPyObjMethod( self, "__cpp_eq__", obj );
+      return result;
+   }
+
+//____________________________________________________________________________
+   PyObject* GenObjectIsNotEqual( PyObject* self, PyObject* obj )
+   {
+   // Reverse of GenObjectIsEqual, if operator!= defined
+      PyObject* result = CallPyObjMethod( self, "__cpp_ne__", obj );
+      if ( ! result ) {
+         PyErr_Clear();
+         result = ObjectProxy_Type.tp_richcompare( self, obj, Py_NE );
+      }
+
+      return result;
    }
 
 //- TClass behavior ------------------------------------------------------------
@@ -1594,6 +1614,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( HasAttrDirect( pyclass, PyStrings::gEq, kTRUE ) ) {
       Utility::AddToClass( pyclass, "__cpp_eq__",  "__eq__" );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) GenObjectIsEqual, METH_O );
+   }
+
+// map operator!=() through GenObjectIsNotEqual to allow comparison to None
+   if ( HasAttrDirect( pyclass, PyStrings::gNe, kTRUE ) ) {
+      Utility::AddToClass( pyclass, "__cpp_ne__",  "__ne__" );
+      Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) GenObjectIsNotEqual, METH_O );
    }
 
 

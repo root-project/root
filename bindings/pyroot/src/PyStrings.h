@@ -27,6 +27,7 @@ namespace PyROOT {
       R__EXTERN PyObject* gLifeLine;
       R__EXTERN PyObject* gModule;
       R__EXTERN PyObject* gName;
+      R__EXTERN PyObject* gNe;
       R__EXTERN PyObject* gTypeCode;
 
       R__EXTERN PyObject* gAt;
