@@ -1657,6 +1657,9 @@ class genDictionary(object) :
     s = ''
     i = 0;
     for e in selenums :
+      # Do not generate dictionaries for unnamed enums; we cannot reference them anyway.
+      if not e.has_key('name') or len(e['name']) == 0 or e['name'][0] == '.':
+        continue
       id   = e['id']
       cname = self.genTypeName(id, colon=True)
       name  = self.genTypeName(id)
