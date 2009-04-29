@@ -1872,8 +1872,8 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
             if (cloner.NeedConversion()) {
                TTree *localtree = GetTree();
                Long64_t tentries = localtree->GetEntries();
-               for (Long64_t i = 0; i < tentries; i++) {
-                  if (localtree->GetEntry(i) <= 0) {
+               for (Long64_t ii = 0; ii < tentries; ii++) {
+                  if (localtree->GetEntry(ii) <= 0) {
                      break;
                   }
                   newTree->Fill();
