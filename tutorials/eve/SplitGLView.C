@@ -698,6 +698,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
 
    // create eve pad (our geometry container)
    fPad = new TEvePad();
+   fPad->SetFillColor(kBlack);
 
    // create the split frames
    fSplitFrame = new TGSplitFrame(this, 800, 600);
