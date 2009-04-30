@@ -57,7 +57,7 @@ public:
    Bool_t RemoveDataSet(const char *uri);
 
    Int_t RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt);
-   Int_t ScanDataSet(const char *uri, UInt_t /*option*/ = 0);
+   Int_t ScanDataSet(const char *uri, UInt_t option = 0);
 
    // These should / could be private but they are used directly by the external daemon
    TFileCollection *GetDataSet(const char *group, const char *user, const char *dsName,

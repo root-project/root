@@ -671,18 +671,31 @@ Int_t TProofDataSetManagerFile::RegisterDataSet(const char *uri,
    return ((success) ? 0 : -1);
 }
 //______________________________________________________________________________
-Int_t TProofDataSetManagerFile::ScanDataSet(const char *uri, UInt_t)
+Int_t TProofDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
 {
    // Scans the dataset indicated by <uri> and returns the number of missing files.
-   // Returns -1 if any failure occurs.
+   // Returns -1 if any failure occurs, >= 0 on success.
    // For more details, see documentation of
    // ScanDataSet(TFileCollection *dataset, const char *option)
 
-   TString dsName;
-   if (TestBit(TProofDataSetManager::kAllowVerify)) {
-      if (ParseUri(uri, 0, 0, &dsName, 0, kTRUE)) {
-         if (ScanDataSet(fGroup, fUser, dsName, (UInt_t)(kReopen | kDebug)) > 0)
-            return GetNDisapparedFiles();
+   TString dsName, dsTree;
+   if ((opt & kSetDefaultTree)) {
+      if (TestBit(TProofDataSetManager::kAllowRegister)) {
+         if (ParseUri(uri, 0, 0, &dsName, &dsTree, kTRUE)) {
+            TFileCollection *dataset = GetDataSet(fGroup, fUser, dsName);
+            if (!dataset) return -1;
+            dataset->SetDefaultTreeName(dsTree.Data());
+            Int_t rc = WriteDataSet(fGroup, fUser, dsName, dataset);
+            delete dataset;
+            return (rc == 0) ? -1 : 0;
+         }
+      }
+   } else {
+      if (TestBit(TProofDataSetManager::kAllowVerify)) {
+         if (ParseUri(uri, 0, 0, &dsName, 0, kTRUE)) {
+            if (ScanDataSet(fGroup, fUser, dsName, (UInt_t)(kReopen | kDebug)) > 0)
+               return GetNDisapparedFiles();
+         }
       }
    }
    return -1;
@@ -703,10 +716,12 @@ Int_t TProofDataSetManagerFile::ScanDataSet(const char *group, const char *user,
 
    Int_t result = ScanDataSet(dataset, option);
 
-   if (result == 2)
-      if (WriteDataSet(group, user, dsName, dataset) == 0)
+   if (result == 2) {
+      if (WriteDataSet(group, user, dsName, dataset) == 0) {
+         delete dataset;
          return -2;
-
+      }
+   }
    delete dataset;
 
    return result;

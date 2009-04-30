@@ -114,11 +114,13 @@ public:
 
    // Dataset handling
    Bool_t   RegisterDataSet(const char *dsName, TFileCollection *ds, const char *opt = "");
+   Bool_t   ExistsDataSet(const char *uri);
    TMap    *GetDataSets(const char *uri = "", const char * = 0);
    void     ShowDataSets(const char *uri = "", const char * = 0);
    TFileCollection *GetDataSet(const char *uri, const char * = 0);
    Int_t    RemoveDataSet(const char *uri, const char * = 0);
    Int_t    VerifyDataSet(const char *uri, const char * = 0);
+   Int_t    SetDataSetTreeName( const char *dataset, const char *treename);
 
    // Browsing
    TTree *GetTreeHeader(TDSet *tdset);

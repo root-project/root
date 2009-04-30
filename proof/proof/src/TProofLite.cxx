@@ -1410,10 +1410,59 @@ Bool_t TProofLite::RegisterDataSet(const char *uri,
 }
 
 //______________________________________________________________________________
+Int_t TProofLite::SetDataSetTreeName(const char *dataset, const char *treename)
+{
+   // Set/Change the name of the default tree. The tree name may contain
+   // subdir specification in the form "subdir/name".
+   // Returns 0 on success, -1 otherwise.
+
+   if (!fDataSetManager) {
+      Info("ExistsDataSet", "dataset manager not available");
+      return kFALSE;
+   }
+
+   if (!dataset || strlen(dataset) <= 0) {
+      Info("SetDataSetTreeName", "specifying a dataset name is mandatory");
+      return -1;
+   }
+
+   if (!treename || strlen(treename) <= 0) {
+      Info("SetDataSetTreeName", "specifying a tree name is mandatory");
+      return -1;
+   }
+
+   TUri uri(dataset);
+   TString fragment(treename);
+   if (!fragment.BeginsWith("/")) fragment.Insert(0, "/");
+   uri.SetFragment(fragment);
+
+   return fDataSetManager->ScanDataSet(uri.GetUri().Data(),
+                                      (UInt_t)TProofDataSetManager::kSetDefaultTree);
+}
+
+//______________________________________________________________________________
+Bool_t TProofLite::ExistsDataSet(const char *uri)
+{
+   // Returns kTRUE if 'dataset' described by 'uri' exists, kFALSE otherwise
+
+   if (!fDataSetManager) {
+      Info("ExistsDataSet", "dataset manager not available");
+      return kFALSE;
+   }
+
+   if (!uri || strlen(uri) <= 0) {
+      Error("ExistsDataSet", "dataset name missing");
+      return kFALSE;
+   }
+
+   // Check if the dataset exists
+   return fDataSetManager->ExistsDataSet(uri);
+}
+
+//______________________________________________________________________________
 TMap *TProofLite::GetDataSets(const char *uri, const char *)
 {
-   // lists all datasets
-   // that match given uri
+   // lists all datasets that match given uri
 
    if (!fDataSetManager) {
       Info("GetDataSets", "dataset manager not available");

@@ -93,7 +93,7 @@ public:
 
    enum EDataSetWorkOpts { // General (bits 1-8)
                            kDebug = 1, kShowDefault = 2, kPrint = 4, kExport = 8,
-                           kQuotaUpdate = 16,
+                           kQuotaUpdate = 16, kSetDefaultTree = 32,
                            // File-based specific (bits 9-16)
                            kReopen = 256, kTouch = 512, kMaxFiles = 1024, kReadShort = 2048,
                            kFileMustExist = 4096};
@@ -114,7 +114,7 @@ public:
    virtual void             ParseInitOpts(const char *opts);
    virtual Bool_t           RemoveDataSet(const char *uri);
    virtual Int_t            RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt);
-   virtual Int_t            ScanDataSet(const char *uri, UInt_t /*option*/ = 0);
+   virtual Int_t            ScanDataSet(const char *uri, UInt_t option = 0);
    virtual void             ShowQuota(const char *opt);
 
    static TString           CreateUri(const char *dsGroup = 0, const char *dsUser = 0,

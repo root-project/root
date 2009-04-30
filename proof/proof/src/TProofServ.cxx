@@ -5141,7 +5141,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
    }
 
    // Used in most cases
-   TString dsUser, dsGroup, dsName, uri, opt;
+   TString dsUser, dsGroup, dsName, dsTree, uri, opt;
    Int_t rc = 0;
 
    // Message type
@@ -5270,6 +5270,17 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
                fDataSetManager->ShowQuota(opt);
             } else {
                Info("HandleDataSets", "quota control disabled");
+            }
+         }
+         break;
+      case TProof::kSetDefaultTreeName:
+         {
+            if (fDataSetManager->TestBit(TProofDataSetManager::kAllowRegister)) {
+               (*mess) >> uri;
+               rc = fDataSetManager->ScanDataSet(uri, (UInt_t)TProofDataSetManager::kSetDefaultTree);
+            } else {
+               Info("HandleDataSets", "kSetDefaultTreeName: modification of dataset info not allowed");
+               return -1;
             }
          }
          break;

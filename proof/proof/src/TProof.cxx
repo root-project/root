@@ -299,12 +299,16 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
 
    // Server type
    if (strlen(fUrl.GetOptions()) > 0) {
+      TString opts(fUrl.GetOptions());
       if (!(strncmp(fUrl.GetOptions(),"std",3))) {
          fServType = TProofMgr::kProofd;
+         opts.Remove(0,3);
+         fUrl.SetOptions(opts.Data());
       } else if (!(strncmp(fUrl.GetOptions(),"lite",4))) {
          fServType = TProofMgr::kProofLite;
+         opts.Remove(0,4);
+         fUrl.SetOptions(opts.Data());
       }
-      fUrl.SetOptions("");
    }
 
    // Instance type
@@ -7943,6 +7947,47 @@ Bool_t TProof::RegisterDataSet(const char *dataSetName,
 }
 
 //______________________________________________________________________________
+Int_t TProof::SetDataSetTreeName(const char *dataset, const char *treename)
+{
+   // Set/Change the name of the default tree. The tree name may contain
+   // subdir specification in the form "subdir/name".
+   // Returns 0 on success, -1 otherwise.
+
+   // Check TFileInfo compatibility
+   if (fProtocol < 23) {
+      Info("SetDataSetTreeName", "functionality not supported by the server");
+      return -1;
+   }
+
+   if (!dataset || strlen(dataset) <= 0) {
+      Info("SetDataSetTreeName", "specifying a dataset name is mandatory");
+      return -1;
+   }
+
+   if (!treename || strlen(treename) <= 0) {
+      Info("SetDataSetTreeName", "specifying a tree name is mandatory");
+      return -1;
+   }
+
+   TUri uri(dataset);
+   TString fragment(treename);
+   if (!fragment.BeginsWith("/")) fragment.Insert(0, "/");
+   uri.SetFragment(fragment);
+
+   TMessage mess(kPROOF_DATASETS);
+   mess << Int_t(kSetDefaultTreeName);
+   mess << uri.GetUri();
+   Broadcast(mess);
+
+   Collect();
+   if (fStatus != 0) {
+      Error("SetDataSetTreeName", "some error occured: default tree name not changed");
+      return -1;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 TMap *TProof::GetDataSets(const char *uri, const char* optStr)
 {
    // Lists all datasets that match given uri.
@@ -8014,6 +8059,34 @@ void TProof::ShowDataSets(const char *uri, const char* optStr)
    Collect(kActive, fCollectTimeout);
    if (fStatus != 0)
       Error("ShowDataSets", "error receiving datasets information");
+}
+
+//______________________________________________________________________________
+Bool_t TProof::ExistsDataSet(const char *dataset)
+{
+   // Returns kTRUE if 'dataset' exists, kFALSE otherwise
+
+   if (fProtocol < 15) {
+      Info("ExistsDataSet", "functionality not available: the server has an"
+                            " incompatible version of TFileInfo");
+      return kFALSE;
+   }
+
+   if (!dataset || strlen(dataset) <= 0) {
+      Error("ExistsDataSet", "dataset name missing");
+      return kFALSE;
+   }
+
+   TMessage msg(kPROOF_DATASETS);
+   msg << Int_t(kCheckDataSetName) << TString(dataset);
+   Broadcast(msg);
+   Collect(kActive, fCollectTimeout);
+   if (fStatus == -1) {
+      // The dataset exists
+      return kTRUE;
+   }
+   // The dataset does not exists
+   return kFALSE;
 }
 
 //______________________________________________________________________________
