@@ -127,14 +127,14 @@ void ReflexSimple1Test::testMembers() {
   CPPUNIT_ASSERT(o.Address());
 
   CPPUNIT_ASSERT_EQUAL(1, int(t.DataMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(33, int(t.FunctionMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(34, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(31, int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(32, int(t.MemberSize()));
 
   t.UpdateMembers();
 
   CPPUNIT_ASSERT_EQUAL(1, int(t.DataMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(33, int(t.FunctionMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(34, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(31, int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(32, int(t.MemberSize()));
   Member_Iterator iM = t.DataMember_Begin();
 
   m = *iM++;
@@ -215,12 +215,15 @@ void ReflexSimple1Test::testMembers() {
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
+  /*
+    removed from dictionary
   m = *iM++;
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("HasKey"), m.Name());
   CPPUNIT_ASSERT_EQUAL(std::string("Reflex::PropertyList::HasKey"), m.Name(SCOPED));
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
+  */
 
   m = *iM++;
   CPPUNIT_ASSERT(m);
