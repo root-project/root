@@ -137,7 +137,7 @@ TGLabel::~TGLabel()
    if (fHasOwnFont) {
       TGGCPool *pool = fClient->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
-      pool->FreeGC(gc);
+      if (gc) pool->FreeGC(gc);
    }
 
    if (fFont != fgDefaultFont) {
