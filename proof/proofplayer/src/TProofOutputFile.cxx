@@ -55,22 +55,19 @@ TProofOutputFile::TProofOutputFile(const char* path,
 
    if (fDir == "file:") {
       fIsLocal = kTRUE;
+      // The directory for the file will be the sandbox
       TString dirPath = gSystem->WorkingDirectory();
-      if (gSystem->Getenv("XRDCF")) {
-         // The directory for the file will be the sandbox
-         TString pfx  = gEnv->GetValue("Path.Localroot","");
-         fDir = Form("root://%s",gSystem->HostName());
-         if (gSystem->Getenv("XRDPORT")) {
-            TString sp(gSystem->Getenv("XRDPORT"));
-            if (sp.IsDigit())
-               fDir += Form(":%s", sp.Data());
-         }
-         if (!pfx.IsNull())
-            dirPath.Remove(0, pfx.Length());
+      TString pfx  = gEnv->GetValue("Path.Localroot","");
+      if (!pfx.IsNull()) dirPath.Remove(0, pfx.Length());
+      // Check if a local data server has been specified
+      if (gSystem->Getenv("LOCALDATASERVER")) {
+         fDir = gSystem->Getenv("LOCALDATASERVER");
       } else {
-         fDir += "/";
+         // Default is a local XROODT server on default port
+         fDir = Form("root://%s",TUrl(gSystem->HostName()).GetHostFQDN());
       }
-      fDir += Form("/%s", dirPath.Data());
+      if (!fDir.EndsWith("/")) fDir += "/";
+      fDir += Form("%s", dirPath.Data());
    }
    // Notify
    Info("TProofOutputFile", "dir: %s", fDir.Data());
