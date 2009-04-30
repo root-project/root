@@ -808,6 +808,13 @@ class genDictionary(object) :
     c += '#pragma warning ( disable : 4786 )\n'
     c += '#pragma warning ( disable : 4345 )\n'
     c += '#endif\n'
+    # to silence conversion warnings woth -pedantic, see Savannah #49792
+    c += '#ifdef __GNUC__\n'
+    c += '#define RFLX_SILENCE __extension__\n'
+    c += '#else\n'
+    c += '#define RFLX_SILENCE\n'
+    c += '#endif\n'
+
     c += '#include "%s"\n' % self.hfile
     c += '#include "Reflex/Builder/ReflexBuilder.h"\n'
     c += '#include <typeinfo>\n'
@@ -1878,6 +1885,7 @@ class genDictionary(object) :
         td += pad*' ' + 'typedef %s RflxDict_arg_td%d%s;\n' % (argnoptr[:argnoptr.index('[')], i, argnoptr[argnoptr.index('['):])
         arg = 'RflxDict_arg_td%d' % i
         arg += argptr;
+      s += "RFLX_SILENCE "
       if arg[-1] == '*' or len(arg) > 7 and arg[-7:] == '* const':
         if arg[-2:] == ':*' or arg[-8:] == ':* const' : # Pointer to data member
           s += '*(%s*)arg[%d]' % (arg, i )
