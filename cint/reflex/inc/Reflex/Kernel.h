@@ -219,6 +219,7 @@ namespace Reflex {
       ~Instance();
 
    private:
+      static size_t fgInstanceCount;
       void Shutdown();
 
    }; // struct Reflex

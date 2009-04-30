@@ -71,17 +71,19 @@ namespace {
 }
 
 //-------------------------------------------------------------------------------
+size_t Reflex::Instance::fgInstanceCount = 0;
+//-------------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------
 Reflex::Instance::Instance() {
 //-------------------------------------------------------------------------------
 // Initialisation of Reflex.Setup of global scope, fundamental types.
 
-   static bool initialized = false;
+   ++fgInstanceCount;
 
-   if (initialized) {
+   if (fgInstanceCount > 1) {
       return;
    }
-
-   initialized = true;
 
    /** initialisation of the global namespace */
    Namespace::GlobalScope();
@@ -179,8 +181,8 @@ Reflex::Instance::~Instance() {
 //-------------------------------------------------------------------------------
    // Destructor
 
-   // Uncomment this once Unload work:
-   // Shutdown;
+   if (--fgInstanceCount == 0)
+      Shutdown();
 }
 
 

@@ -32,8 +32,9 @@ typedef std::vector< Reflex::TypeTemplate > TypeTemplateVec_t;
 static Name2TypeTemplate_t & sTypeTemplates() {
 //-------------------------------------------------------------------------------
    // Static wrapper around the type template map.
-   static Name2TypeTemplate_t t;
-   return t;
+   static Name2TypeTemplate_t* t = 0;
+   if (!t) t = new Name2TypeTemplate_t;
+   return *t;
 }
 
 
@@ -41,8 +42,9 @@ static Name2TypeTemplate_t & sTypeTemplates() {
 static TypeTemplateVec_t & sTypeTemplateVec() {
 //-------------------------------------------------------------------------------
    // Static wrapper around the type template vector.
-   static TypeTemplateVec_t t;
-   return t;
+   static TypeTemplateVec_t* t = 0;
+   if (!t) t = new TypeTemplateVec_t;
+   return *t;
 }
 
 

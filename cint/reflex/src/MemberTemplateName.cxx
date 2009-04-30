@@ -32,8 +32,9 @@ typedef std::vector< Reflex::MemberTemplate > MemberTemplateVec_t;
 static Name2MemberTemplate_t & sMemberTemplates() {
 //-------------------------------------------------------------------------------
    // Static wrapper around the member template map.
-   static Name2MemberTemplate_t t;
-   return t;
+   static Name2MemberTemplate_t* t = 0;
+   if (!t) t = new Name2MemberTemplate_t;
+   return *t;
 }
 
 
@@ -41,8 +42,9 @@ static Name2MemberTemplate_t & sMemberTemplates() {
 static MemberTemplateVec_t & sMemberTemplateVec() {
 //-------------------------------------------------------------------------------
    // Static wrapper around the member template vector.
-   static MemberTemplateVec_t t;
-   return t;
+   static MemberTemplateVec_t* t = 0;
+   if (!t) t = new MemberTemplateVec_t;
+   return *t;
 }
 
 
@@ -94,10 +96,12 @@ void Reflex::MemberTemplateName::CleanUp() {
    // Do the final cleanup for the member templates.  
    for ( MemberTemplateVec_t::iterator it = sMemberTemplateVec().begin(); it != sMemberTemplateVec().end(); ++it ) {
       MemberTemplateName * tn = (MemberTemplateName*)it->Id();
-      MemberTemplate * t = tn->fThisMemberTemplate;
-      tn->DeleteMemberTemplate();
-      delete t;
-      delete tn;
+      if (tn) {
+         MemberTemplate * t = tn->fThisMemberTemplate;
+         tn->DeleteMemberTemplate();
+         delete t;
+         delete tn;
+      }
    }
 }
 
