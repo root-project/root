@@ -1478,6 +1478,7 @@ void ReflexSimple2Test::testArray() {
 
    }
 
+   o.Destruct();
 }
 
 
