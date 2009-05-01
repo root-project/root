@@ -433,7 +433,7 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
    // add all libs loaded before libSystem.B.dylib
    if (!gotFirstSo && (lib.EndsWith(".dylib") || lib.EndsWith(".so"))) {
-      if (i > 1)
+      if (linkedDylibs.Length())
          linkedDylibs += " ";
       linkedDylibs += lib;
    }

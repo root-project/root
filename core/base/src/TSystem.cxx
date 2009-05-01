@@ -1959,12 +1959,12 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
             if (index >= 0) {
                TString sub = slinked(index,end);
                if (sub[0]=='-' && sub[1]=='L') {
-                  libs.Append(" ");
-                  libs.Append(sub);
+                  libs.Prepend(" ");
+                  libs.Prepend(sub);
                } else {
                   if (libs.Index(sub) == kNPOS) {
-                     libs.Append(" ");
-                     libs.Append(sub);
+                     libs.Prepend(" ");
+                     libs.Prepend(sub);
                   }                     
                }
             }
@@ -1988,7 +1988,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
          }
          start += end+1;
       }
-         
+      libs = libs.Strip(TString::kBoth);         
    }
 
    // Select according to regexp
