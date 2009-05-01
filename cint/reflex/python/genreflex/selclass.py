@@ -290,8 +290,9 @@ class selClass :
       for f in c['fields'] :
         if 'name' in f and f['name'] == field :
           attrs = c['attrs'] 
-          if 'n_name' in attrs and attrs['n_name'] == clname : return f
-          if 'n_pattern' in attrs and self.matchpattern(clname, attrs['n_pattern']) : return f
+          if 'n_name' in attrs and attrs['n_name'] == clname \
+                or 'n_pattern' in attrs and self.matchpattern(clname, attrs['n_pattern']) :
+            return f
     return None
 #----------------------------------------------------------------------------------
   def excfield(self, clname, field ) :
