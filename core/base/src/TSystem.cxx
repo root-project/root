@@ -1914,28 +1914,81 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    Bool_t so2dylib = (opt.First('L') != kNPOS);
    if (so2dylib)
       opt.ReplaceAll("L", "");
+   
    if (opt.IsNull() || opt.First('D') != kNPOS)
       libs += gInterpreter->GetSharedLibs();
 
-   if (opt.IsNull() || opt.First('S') != kNPOS) {
-      if (!libs.IsNull()) libs.Append(" ");
-      const char *linked;
-      if ((linked = GetLinkedLibraries())) {
-         if (fLinkedLibs != LINKEDLIBS) {
-            // This is not the default value, we need to keep the custom part.
-            TString custom = fLinkedLibs;
-            custom.ReplaceAll(LINKEDLIBS,linked);
-            if (custom == fLinkedLibs) {
-               // no replacement done, let's append linked
-               libs.Append(linked);
-               libs.Append(" ");
-            }
-            libs.Append(custom);
-         } else {
-            libs.Append(linked);
+   // Cint currently register all libraries that
+   // are loaded and have a dictionary in them, this
+   // includes all the libraries that are included 
+   // in the list of (hard) linked libraries.
+   
+   TString slinked;
+   const char *linked;
+   if ((linked = GetLinkedLibraries())) {
+      if (fLinkedLibs != LINKEDLIBS) {
+         // This is not the default value, we need to keep the custom part.
+         TString custom = fLinkedLibs;
+         custom.ReplaceAll(LINKEDLIBS,linked);
+         if (custom == fLinkedLibs) {
+            // no replacement done, let's append linked
+            slinked.Append(linked);
+            slinked.Append(" ");
          }
-      } else
-         libs.Append(fLinkedLibs);
+         slinked.Append(custom);
+      } else {
+         slinked.Append(linked);
+      }
+   } else {
+      slinked.Append(fLinkedLibs);
+   }
+
+   if (opt.IsNull() || opt.First('S') != kNPOS) {
+      // We are done, the statically linked library
+      // are already included.
+      if (libs.Length() == 0) {
+         libs = slinked;
+      } else {
+         // We need to add the missing linked library
+         TRegexp separator("[^ \\t\\s]+");
+         Ssiz_t start, index, end;
+         start = index = end = 0;
+         
+         while ((start < slinked.Length()) && (index != kNPOS)) {
+            index = slinked.Index(separator,&end,start);
+            if (index >= 0) {
+               TString sub = slinked(index,end);
+               if (sub[0]=='-' && sub[1]=='L') {
+                  libs.Append(" ");
+                  libs.Append(sub);
+               } else {
+                  if (libs.Index(sub) == kNPOS) {
+                     libs.Append(" ");
+                     libs.Append(sub);
+                  }                     
+               }
+            }
+            start += end+1;
+         }
+      }
+   } else if (libs.Length() != 0) {
+      // Let remove the statically linked library 
+      // from the list.
+      TRegexp separator("[^ \\t\\s]+");
+      Ssiz_t start, index, end;
+      start = index = end = 0;
+      
+      while ((start < slinked.Length()) && (index != kNPOS)) {
+         index = slinked.Index(separator,&end,start);
+         if (index >= 0) {
+            TString sub = slinked(index,end);
+            if (sub[0]!='-' && sub[1]!='L') {
+               libs.ReplaceAll(sub,"");
+            }
+         }
+         start += end+1;
+      }
+         
    }
 
    // Select according to regexp
