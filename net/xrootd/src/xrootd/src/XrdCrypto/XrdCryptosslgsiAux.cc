@@ -830,7 +830,7 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
    // number.
    // Duplicate user subject name
    X509_NAME *psubj = X509_NAME_dup(X509_get_subject_name(xpi)); 
-   if (xcro && *xcro && *((int *)xcro) <= 10100) {
+   if (xcro && *xcro && *((int *)(*xcro)) <= 10100) {
       // Delete existing proxy CN addition; for backward compatibility
       int ne = psubj->entries->num;
       if (ne >= 0) {
@@ -1033,10 +1033,16 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
          neecp.erase(psbj.rfind("/CN="));
          if (neecr.length() <= 0 || neecr.length() <= 0 || neecp != neecr) {
             PRINT("Request subject not in the form '<EEC subject> + /CN=<serial>'");
+            PRINT("   Versn: "<<xcri->Version());
+            PRINT("   Proxy: "<<neecp);
+            PRINT("   SubRq: "<<neecr);
             return -kErrPX_BadNames;
          }
       } else {
          PRINT("Request subject not in the form '<issuer subject> + /CN=<serial>'");
+         PRINT("   Versn: "<<xcri->Version());
+         PRINT("   Proxy: "<<neecp);
+         PRINT("   SubRq: "<<neecr);
          return -kErrPX_BadNames;
       }
    }
