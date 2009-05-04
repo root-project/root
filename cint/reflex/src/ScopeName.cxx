@@ -34,8 +34,9 @@ typedef std::vector< Reflex::Scope > ScopeVec_t;
 static Name2Scope_t & sScopes() {
 //-------------------------------------------------------------------------------
 // Static wrapper around scope map.
-   static Name2Scope_t m;
-   return m;
+   static Name2Scope_t* m = 0;
+   if (!m) m = new Name2Scope_t;
+   return *m;
 }
 
 
@@ -43,8 +44,9 @@ static Name2Scope_t & sScopes() {
 static ScopeVec_t & sScopeVec() {
 //-------------------------------------------------------------------------------
 // Static wrapper around scope vector.
-   static ScopeVec_t m;
-   return m;
+   static ScopeVec_t* m = 0;
+   if (!m) m = new ScopeVec_t;
+   return *m;
 }
 
 

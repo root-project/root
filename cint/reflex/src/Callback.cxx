@@ -36,8 +36,9 @@ private:
 static CbList & sClassCallbacks() {
 //------------------------------------------------------------------------------
 // Wraper for static callback list.
-   static CbList m;
-   return m;
+   static CbList* m = 0;
+   if (!m) m = new CbList;
+   return *m;
 }
 
 //-------------------------------------------------------------------------------

@@ -45,8 +45,9 @@ typedef std::map<std::string, Directive_t> Map_t;
 static Map_t & sMap() {
 //-------------------------------------------------------------------------------
 // Static wrapper for the map.
-   static Map_t s_map;
-   return s_map;
+   static Map_t* s_map = 0;
+   if (!s_map) s_map = new Map_t;
+   return *s_map;
 }
 
 //-------------------------------------------------------------------------------

@@ -32,8 +32,9 @@ typedef std::vector< Reflex::Type > TypeVec_t;
 static Name2Type_t & sTypes() {
 //-------------------------------------------------------------------------------
 // Static wrapper for type map.
-   static Name2Type_t m;
-   return m;
+   static Name2Type_t* m = 0;
+   if (!m) m = new Name2Type_t;
+   return *m;
 }
 
 
@@ -41,8 +42,9 @@ static Name2Type_t & sTypes() {
 static TypeId2Type_t & sTypeInfos() {
 //-------------------------------------------------------------------------------
 // Static wrapper for type map (type_infos).
-   static TypeId2Type_t m;
-   return m;
+   static TypeId2Type_t* m;
+   if (!m) m = new TypeId2Type_t;
+   return *m;
 }
 
 
@@ -50,8 +52,9 @@ static TypeId2Type_t & sTypeInfos() {
 static TypeVec_t & sTypeVec() {
 //-------------------------------------------------------------------------------
 // Static wrapper for type vector.
-   static TypeVec_t m;
-   return m;
+   static TypeVec_t* m = 0;
+   if (!m) m = new TypeVec_t;
+   return *m;
 }
 
 

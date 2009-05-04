@@ -29,8 +29,9 @@ typedef std::vector< std::string > Keys_t;
 Keys_t & sKeys() {
 //-------------------------------------------------------------------------------
    // Wrapper for static keys container.
-   static Keys_t k;
-   return k;
+   static Keys_t* k = 0;
+   if (!k) k = new Keys_t;
+   return *k;
 }
 
 
