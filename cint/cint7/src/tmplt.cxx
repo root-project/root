@@ -335,6 +335,10 @@ static int G__getIndex(int index, Reflex::Type tagnum, std::vector<std::string>&
          if (index < 0) {
             return -1;
          }
+         if (G__srcfile[index].filename[0] == '{') {
+            // ignore "{CINTEX dictionary translator}"
+            return -1;
+         }
       }
    } else if (index == -1) {
       return -1;

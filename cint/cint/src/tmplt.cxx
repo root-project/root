@@ -2142,6 +2142,9 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
   //getting 'vector' header file
   int fileNum = deftmpclass->filenum;
   if( fileNum < 0 ) return -1;
+  if (G__srcfile[fileNum].filename[0] == '{')
+     // ignore "{CINTEX dictionary translator}"
+     return -4;
   fileNum = G__getIndex(fileNum,-1, headers);
   if( fileNum < 0 ) return fileNum;
   //headers.push_back( G__srcfile[ fileNum ].filename );
@@ -2153,6 +2156,9 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
       int index = gValue.tagnum;
       index = G__struct.filenum[index];
       if( index < 0 ) return -3;
+      if (G__srcfile[index].filename[0] == '{')
+         // ignore "{CINTEX dictionary translator}"
+         return -4;
       index = G__getIndex(index, gValue.tagnum, headers);
       if( index < 0 ) return index;
       //it = find( headers.begin(), headers.end(),G__srcfile[ index ].filename  );
