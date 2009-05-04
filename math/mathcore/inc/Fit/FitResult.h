@@ -179,7 +179,7 @@ public:
    /// fill covariance matrix elements using a generic symmetric matrix class implementing operator(i,j)
    /// the matrix must be previously allocates with right size (npar * npar) 
    template<class Matrix> 
-   void GetCovarianceMatrix(Matrix & mat) { 
+   void GetCovarianceMatrix(Matrix & mat) const { 
       int npar = fErrors.size();
       assert(fCovMatrix.size() == npar*(npar+1)/2);
       for (int i = 0; i< npar; ++i) { 
@@ -192,7 +192,7 @@ public:
    /// fill a correlation matrix elements using a generic symmetric matrix class implementing operator(i,j)
    /// the matrix must be previously allocates with right size (npar * npar) 
    template<class Matrix> 
-   void GetCorrelationMatrix(Matrix & mat) { 
+   void GetCorrelationMatrix(Matrix & mat) const { 
       int npar = fErrors.size(); 
       assert(fCovMatrix.size() == npar*(npar+1)/2);
       for (int i = 0; i< npar; ++i) { 
