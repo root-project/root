@@ -298,6 +298,10 @@ static int G__generate_template_dict(const char* template_id, G__Definedtemplate
    if (fileNum < 0) {
       return -1;
    }
+   if (G__srcfile[fileNum].filename[0] == '{') {
+      // ignore "{CINTEX dictionary translator}"
+      return -1;
+   }
    fileNum = G__getIndex(fileNum, -1, headers);
    if (fileNum == -1) {
       return -1;
@@ -313,6 +317,10 @@ static int G__generate_template_dict(const char* template_id, G__Definedtemplate
          int tagnum = G__get_tagnum(ty);
          int index = G__struct.filenum[tagnum];
          if (index < 0) {
+            return -1;
+         }
+         if (G__srcfile[index].filename[0] == '{') {
+            // ignore "{CINTEX dictionary translator}"
             return -1;
          }
          index = G__getIndex(index, tagnum, headers); // Note: Do real work, headers is modified here.
