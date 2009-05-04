@@ -35,8 +35,8 @@
 #ifndef __GL2PS_H__
 #define __GL2PS_H__
 
-#include <cstdio>
-#include <cstdlib>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <TGLIncludes.h>
 
