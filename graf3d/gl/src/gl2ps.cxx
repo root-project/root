@@ -5002,7 +5002,7 @@ static void gl2psEndSVGLine(void)
   }
 }
 
-static void gl2psPrintSVGPixmap(GLfloat /*x*/, GLfloat /*y*/, GL2PSimage */*pixmap*/)
+static void gl2psPrintSVGPixmap(GLfloat /*x*/, GLfloat /*y*/, GL2PSimage * /*pixmap*/)
 {
 #if defined(GL2PS_HAVE_LIBPNG)
   GL2PSlist *png;
