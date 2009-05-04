@@ -2014,6 +2014,15 @@ void TTree::Browse(TBrowser* b)
    // Browse content of the TTree.
 
    fBranches.Browse(b);
+   if (fUserInfo) {
+      if (strcmp("TList",fUserInfo->GetName())==0) {
+         fUserInfo->SetName("UserInfo");
+         b->Add(fUserInfo);
+         fUserInfo->SetName("TList");
+      } else {
+         b->Add(fUserInfo);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -4568,6 +4577,7 @@ TList* TTree::GetUserInfo()
 
    if (!fUserInfo) {
       fUserInfo = new TList();
+      fUserInfo->SetName("UserInfo");
    }
    return fUserInfo;
 }
