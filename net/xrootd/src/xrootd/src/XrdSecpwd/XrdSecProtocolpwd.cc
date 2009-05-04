@@ -984,7 +984,7 @@ XrdSecCredentials *XrdSecProtocolpwd::getCredentials(XrdSecParameters *parm,
               kPWErrCreateBucket,XrdSutBuckStr(kXRS_cryptomod),stepstr);
       //
       // Add bucket with our version to the main list
-      if (bmai->MarshalBucket(kXRS_version,(kXR_int32)(hs->RemVers)) != 0)
+      if (bmai->MarshalBucket(kXRS_version,(kXR_int32)(Version)) != 0)
          return ErrC(ei,bpar,bmai,0, kPWErrCreateBucket,
                 XrdSutBuckStr(kXRS_version),"(main list)",stepstr);
       //
