@@ -176,15 +176,16 @@ public:
       return ( tmp > 0) ? CovMatrix(i,j)/ std::sqrt(tmp) : 0; 
    }
    
-   /// fill covariance matrix elements using a generic symmetric matrix class implementing operator(i,j)
+   /// fill covariance matrix elements using a generic matrix class implementing operator(i,j)
    /// the matrix must be previously allocates with right size (npar * npar) 
    template<class Matrix> 
    void GetCovarianceMatrix(Matrix & mat) const { 
-      int npar = fErrors.size();
+      unsigned int npar = fErrors.size();
       assert(fCovMatrix.size() == npar*(npar+1)/2);
-      for (int i = 0; i< npar; ++i) { 
-         for (int j = 0; j<=i; ++i) { 
+      for (unsigned int i = 0; i< npar; ++i) { 
+         for (unsigned int j = 0; j<=i; ++j) { 
             mat(i,j) = fCovMatrix[j + i*(i+1)/2 ];
+            if (i != j) mat(j,i) = mat(i,j);  
          }
       }
    }
@@ -193,15 +194,18 @@ public:
    /// the matrix must be previously allocates with right size (npar * npar) 
    template<class Matrix> 
    void GetCorrelationMatrix(Matrix & mat) const { 
-      int npar = fErrors.size(); 
+      unsigned int npar = fErrors.size(); 
       assert(fCovMatrix.size() == npar*(npar+1)/2);
-      for (int i = 0; i< npar; ++i) { 
-         for (int j = 0; j<=i; ++i) { 
+      for (unsigned int i = 0; i< npar; ++i) { 
+         for (unsigned int j = 0; j<=i; ++j) { 
             double tmp = fCovMatrix[i * (i +3)/2 ] * fCovMatrix[ j * (j+3)/2 ]; 
             if (tmp < 0) 
                mat(i,j) = 0; 
             else 
                mat(i,j) = fCovMatrix[j + i*(i+1)/2 ] / std::sqrt(tmp); 
+
+            if (i != j) mat(j,i) = mat(i,j); 
+
          }
       }
    }

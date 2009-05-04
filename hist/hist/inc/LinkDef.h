@@ -224,6 +224,14 @@
 #pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TGraph *,  TF1 * );
 #pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TMultiGraph *,  TF1 * );
 
+#pragma link C++ function ROOT::Fit::FitResult::GetCovarianceMatrix<TMatrixD>( TMatrixD & );
+#pragma link C++ function ROOT::Fit::FitResult::GetCovarianceMatrix<TMatrixDSym>( TMatrixDSym & );
+#pragma link C++ function ROOT::Fit::FitResult::GetCorrelationMatrix<TMatrixD>( TMatrixD & );
+#pragma link C++ function ROOT::Fit::FitResult::GetCorrelationMatrix<TMatrixDSym>( TMatrixDSym & );
+
+
+
+
 // for having backward comptibility after new data member in TProfile
 #pragma read sourceClass="TProfile" version="[1-5]" targetClass="TProfile" \
   source="" target="fBinSumw2" \
