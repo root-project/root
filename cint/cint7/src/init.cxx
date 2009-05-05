@@ -391,6 +391,7 @@ extern int G__quiet;
 //______________________________________________________________________________
 int Cint::Internal::G__init_globals()
 {
+   Reflex::Instance initReflex;
    // Explicit initialization of all necessary global variables.
    if (G__init) {
       return 1;

@@ -208,20 +208,24 @@ namespace Reflex {
    }
 
 
-   /** some general information about the Reflex package */
+   /** The Reflex instance ensures the setup of the databases
+       and provides access to some general information about the Reflex package */
    class RFLX_API Instance {
    public:
 
       /** default constructor */
-     Instance();
+      Instance();
 
       /** destructor */
       ~Instance();
 
    private:
-      static size_t fgInstanceCount;
-      void Shutdown();
+      Instance(Instance* createSingleton);
+      static Instance& CreateReflexInstance();
 
+      static Instance* fgSingleton;
+      void Shutdown();
+      /** default constructor */
    }; // struct Reflex
 
    /** the Name of the package - used for messages */

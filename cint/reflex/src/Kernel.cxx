@@ -68,22 +68,34 @@ namespace {
    FundamentalDeclarator DeclFundamental(const char* name, Reflex::REPRESTYPE repres) {
       return FundamentalDeclarator(name, GetSizeOf<T>()(), typeid(T), repres);
    }
+
 }
 
 //-------------------------------------------------------------------------------
-size_t Reflex::Instance::fgInstanceCount = 0;
+Reflex::Instance* Reflex::Instance::fgSingleton = 0;
 //-------------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------
+Reflex::Instance& Reflex::Instance::CreateReflexInstance() {
+//-------------------------------------------------------------------------------
+// Initialize the singleton.
+   static Reflex::Instance instance((Reflex::Instance*)0);
+   return instance;
+}
 
 //-------------------------------------------------------------------------------
 Reflex::Instance::Instance() {
 //-------------------------------------------------------------------------------
+// Ensure that Reflex is initialized.
+   CreateReflexInstance();
+}
+
+//-------------------------------------------------------------------------------
+Reflex::Instance::Instance(Instance*) {
+//-------------------------------------------------------------------------------
 // Initialisation of Reflex.Setup of global scope, fundamental types.
 
-   ++fgInstanceCount;
-
-   if (fgInstanceCount > 1) {
-      return;
-   }
+   fgSingleton = this;
 
    /** initialisation of the global namespace */
    Namespace::GlobalScope();
@@ -181,7 +193,7 @@ Reflex::Instance::~Instance() {
 //-------------------------------------------------------------------------------
    // Destructor
 
-   if (--fgInstanceCount == 0)
+   if (fgSingleton == this)
       Shutdown();
 }
 
@@ -331,13 +343,6 @@ const std::string & Reflex::Argv0() {
    static std::string str = "REFLEX";
    return str;
 }
-
-
-//-------------------------------------------------------------------------------
-namespace {
-   Reflex::Instance initialise;
-}
-//-------------------------------------------------------------------------------
 
 
 
