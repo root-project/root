@@ -16,6 +16,8 @@
 #ifndef G__STRBUF_H
 #define G__STRBUF_H
 
+#include <stdarg.h>
+
 namespace Cint {
    namespace Internal {
       class G__BufferReservoir;
@@ -40,8 +42,12 @@ namespace Cint {
       //
       class G__StrBuf {
       public:
-         G__StrBuf(int reqsize): fSize(reqsize) {
-            fBuf = GetBuf(fSize); }
+         G__StrBuf(int reqsize): fBuf(0), fBucket(reqsize) {
+            // GetBuf takes as parameter the size in bytes
+            // and modify the parameter (fBucket) to hold the 
+            // bucket number.
+            fBuf = GetBuf(fBucket); 
+         }
          ~G__StrBuf();
 
          // plenty of char* conversion fuctions:
@@ -57,13 +63,18 @@ namespace Cint {
 
          const char* data() const { return fBuf; }
 
+         int FormatArgList(const char *fmt, va_list args);
+         int Format(const char *fmt, ...);
+         
       protected:
-         static char* GetBuf(int &size);
+         static char* GetBuf(int &size_then_bucket_index);
          static G__BufferReservoir& GetReservoir();
 
+         void ResizeNoCopy(int newsize);
+         
       private:
-         char* fBuf; // the buffer
-         int   fSize; // measure representing the buffer's size, used by the internal reservoir
+         char* fBuf;    // the buffer
+         int   fBucket; // measure representing the buffer's size, used by the internal reservoir
       };
    } // Internal
 } // Cint

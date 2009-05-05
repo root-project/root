@@ -33,6 +33,7 @@
 
 #include "common.h"
 #include "Api.h"
+#include "strbuf.h"
 
 #ifndef G__TESTMAIN
 #include <sys/stat.h>
@@ -2475,7 +2476,6 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
                    ,const char *macros,const char *undeflist,const char *ppopt
                    ,const char *includepath)
 {
-  char temp[G__LARGEBUF];
   /* char *envcpp; */
   char tmpfile[G__MAXFILENAME];
   int tmplen;
@@ -2640,19 +2640,20 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
     }
 #endif
 
+    G__StrBuf temp(G__LARGEBUF);
 #if defined(G__SYMANTEC)
     /**************************************************************
      * preprocessor statement for Symantec C++
      ***************************************************************/
     if(G__cintsysdir[0]) {
-      sprintf(temp,"%s %s %s -I. %s %s -D__CINT__ -I%s/%s/include -I%s/%s/stl -I%s/%s/lib %s -o%s"
-              ,G__ccom ,macros,undeflist,ppopt ,includepath,
-              ,G__cintsysdir, G__CFG_COREVERSION, G__cintsysdir,G__CFG_COREVERSION
-              ,G__cintsysdir, G__CFG_COREVERSION, tmpfile,outname);
+       temp.Format("%s %s %s -I. %s %s -D__CINT__ -I%s/%s/include -I%s/%s/stl -I%s/%s/lib %s -o%s"
+                   ,G__ccom ,macros,undeflist,ppopt ,includepath,
+                   ,G__cintsysdir, G__CFG_COREVERSION, G__cintsysdir,G__CFG_COREVERSION
+                   ,G__cintsysdir, G__CFG_COREVERSION, tmpfile,outname);
     }
     else {
-      sprintf(temp,"%s %s %s %s -I. %s -D__CINT__ %s -o%s" ,G__ccom
-              ,macros,undeflist,ppopt ,includepath ,tmpfile,outname);
+       temp.Format("%s %s %s %s -I. %s -D__CINT__ %s -o%s" ,G__ccom
+                   ,macros,undeflist,ppopt ,includepath ,tmpfile,outname);
     }
 #elif defined(G__BORLAND)
     /**************************************************************
@@ -2661,14 +2662,14 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
      ***************************************************************/
     strcat(outname,".i");
     if(G__cintsysdir[0]) {
-      sprintf(temp,"%s %s %s -I. %s %s -D__CINT__ -I%s/%s/include -I%s/%s/stl -I%s/%s/lib -o%s %s"
-              ,G__ccom ,macros,undeflist,ppopt ,includepath
-              ,G__cintsysdir,G__CFG_COREVERSION,G__cintsysdir,G__CFG_COREVERSION,
-              G__cintsysdir,G__CFG_COREVERSION,outname,tmpfile);
+       temp.Format("%s %s %s -I. %s %s -D__CINT__ -I%s/%s/include -I%s/%s/stl -I%s/%s/lib -o%s %s"
+                   ,G__ccom ,macros,undeflist,ppopt ,includepath
+                   ,G__cintsysdir,G__CFG_COREVERSION,G__cintsysdir,G__CFG_COREVERSION,
+                   G__cintsysdir,G__CFG_COREVERSION,outname,tmpfile);
     }
     else {
-      sprintf(temp,"%s %s %s %s -I. %s -D__CINT__ -o%s %s" ,G__ccom
-              ,macros,undeflist,ppopt ,includepath ,outname,tmpfile);
+       temp.Format("%s %s %s %s -I. %s -D__CINT__ -o%s %s" ,G__ccom
+                   ,macros,undeflist,ppopt ,includepath ,outname,tmpfile);
     }
 #else
     /**************************************************************
@@ -2678,19 +2679,20 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
     /**************************************************************
      * preprocessor statement for UNIX
      ***************************************************************/
-   if(G__cintsysdir[0]) {
-      sprintf(temp,"%s %s %s -I. %s %s -D__CINT__ -I%s/%s/include -I%s/%s/stl -I%s/%s/lib %s > %s"
-              ,G__ccom ,macros,undeflist,ppopt ,includepath
-              ,G__cintsysdir,G__CFG_COREVERSION,G__cintsysdir,G__CFG_COREVERSION,
-              G__cintsysdir,G__CFG_COREVERSION,tmpfile,outname);
+    if(G__cintsysdir[0]) {
+       temp.Format("%s %s %s -I. %s %s -D__CINT__ -I%s/%s/include -I%s/%s/stl -I%s/%s/lib %s > %s"
+                   ,G__ccom ,macros,undeflist,ppopt ,includepath
+                   ,G__cintsysdir,G__CFG_COREVERSION,G__cintsysdir,G__CFG_COREVERSION,
+                   G__cintsysdir,G__CFG_COREVERSION,tmpfile,outname);
     }
     else {
-      sprintf(temp,"%s %s %s %s -I. %s -D__CINT__ %s > %s" ,G__ccom
-              ,macros,undeflist,ppopt ,includepath ,tmpfile,outname);
+       temp.Format("%s %s %s %s -I. %s -D__CINT__ %s > %s" ,G__ccom
+                   ,macros,undeflist,ppopt ,includepath ,tmpfile,outname);
     }
 #endif
-    if(G__debugtrace||G__steptrace||G__step||G__asm_dbg)
-      G__fprinterr(G__serr," %s\n",temp);
+     if(G__debugtrace||G__steptrace||G__step||G__asm_dbg) {
+        G__fprinterr(G__serr," %s\n",temp.data());
+     }
     int pres = system(temp);
 
     if(tmplen) remove(tmpfile);

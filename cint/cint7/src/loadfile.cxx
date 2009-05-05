@@ -2454,8 +2454,6 @@ int Cint::Internal::G__preprocessor(char* outname, char* inname, int cppflag, ch
    // Use C/C++ preprocessor prior to interpretation.
    // Name of preprocessor must be defined in $CINTSYSDIR/MAKEINFO file as
    // CPPPREP and CPREP.
-   G__StrBuf temp_sb(G__LARGEBUF);
-   char* temp = temp_sb;
    G__StrBuf tmpfilen_sb(G__MAXFILENAME);
    char* tmpfilen = tmpfilen_sb;
    int tmplen;
@@ -2657,15 +2655,16 @@ int Cint::Internal::G__preprocessor(char* outname, char* inname, int cppflag, ch
       }
 #endif // G__SYMANTEC && !G__TMPFILE
 
+      G__StrBuf temp_sb(G__LARGEBUF);
 #ifdef G__SYMANTEC
       //
       // preprocessor statement for Symantec C++
       //
       if (G__cintsysdir[0]) {
-         sprintf(temp, "%s %s %s -I. %s %s -D__CINT__ -I%s/include -I%s/stl -I%s/lib %s -o%s", G__ccom, macros, undeflist, ppopt, includepath, G__cintsysdir, G__cintsysdir, G__cintsysdir, tmpfilen, outname);
+         temp_sb.Format("%s %s %s -I. %s %s -D__CINT__ -I%s/include -I%s/stl -I%s/lib %s -o%s", G__ccom, macros, undeflist, ppopt, includepath, G__cintsysdir, G__cintsysdir, G__cintsysdir, tmpfilen, outname);
       }
       else {
-         sprintf(temp, "%s %s %s %s -I. %s -D__CINT__ %s -o%s", G__ccom, macros, undeflist, ppopt, includepath, tmpfilen, outname);
+         temp_sb.Format("%s %s %s %s -I. %s -D__CINT__ %s -o%s", G__ccom, macros, undeflist, ppopt, includepath, tmpfilen, outname);
       }
 #elif defined(G__BORLAND)
       strcat(outname, ".i");
@@ -2674,10 +2673,10 @@ int Cint::Internal::G__preprocessor(char* outname, char* inname, int cppflag, ch
          corecintsysdir += "/";
          corecintsysdir += G__CFG_COREVERSION;
          corecintsysdir += "/";
-         sprintf(temp, "%s %s %s -I. %s %s -D__CINT__ -I%s/include -I%s/stl -I%s/lib -o%s %s", G__ccom, macros, undeflist, ppopt, includepath, corecintsysdir.c_str(), corecintsysdir.c_str(), corecintsysdir.c_str(), outname, tmpfilen);
+         temp_sb.Format("%s %s %s -I. %s %s -D__CINT__ -I%s/include -I%s/stl -I%s/lib -o%s %s", G__ccom, macros, undeflist, ppopt, includepath, corecintsysdir.c_str(), corecintsysdir.c_str(), corecintsysdir.c_str(), outname, tmpfilen);
       }
       else {
-         sprintf(temp, "%s %s %s %s -I. %s -D__CINT__ -o%s %s" , G__ccom, macros, undeflist, ppopt, includepath, outname, tmpfilen);
+         temp_sb.Format("%s %s %s %s -I. %s -D__CINT__ -o%s %s" , G__ccom, macros, undeflist, ppopt, includepath, outname, tmpfilen);
       }
 #else
       //
@@ -2688,16 +2687,16 @@ int Cint::Internal::G__preprocessor(char* outname, char* inname, int cppflag, ch
          corecintsysdir += "/";
          corecintsysdir += G__CFG_COREVERSION;
          corecintsysdir += "/";
-         sprintf(temp, "%s %s %s -I. %s %s -D__CINT__ -I%s/include -I%s/stl -I%s/lib %s > %s", G__ccom, macros, undeflist, ppopt , includepath, corecintsysdir.c_str(), corecintsysdir.c_str(), corecintsysdir.c_str(), tmpfilen, outname);
+         temp_sb.Format("%s %s %s -I. %s %s -D__CINT__ -I%s/include -I%s/stl -I%s/lib %s > %s", G__ccom, macros, undeflist, ppopt , includepath, corecintsysdir.c_str(), corecintsysdir.c_str(), corecintsysdir.c_str(), tmpfilen, outname);
       }
       else {
-         sprintf(temp, "%s %s %s %s -I. %s -D__CINT__ %s > %s", G__ccom, macros, undeflist, ppopt, includepath, tmpfilen, outname);
+         temp_sb.Format("%s %s %s %s -I. %s -D__CINT__ %s > %s", G__ccom, macros, undeflist, ppopt, includepath, tmpfilen, outname);
       }
 #endif
       if (G__debugtrace || G__steptrace || G__step || G__asm_dbg) {
-         G__fprinterr(G__serr, " %s\n", temp);
+         G__fprinterr(G__serr, " %s\n", temp_sb.data());
       }
-      int pres = system(temp);
+      int pres = system(temp_sb);
       if (tmplen) {
          remove(tmpfilen);
       }
