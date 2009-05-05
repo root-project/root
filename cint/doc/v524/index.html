@@ -40,6 +40,7 @@ New web site for <a href="http://root.cern.ch/drupal/content/interpreter">ROOT's
   </li>
   <li><em>Reflex</em>
     <ul>
+      <li>Full support for ClassDef() macros with the full benefits of faster I/O due to a direct access instead of a search in a map for writing out objects.</li>
       <li>Reimplement <tt>UpdateMembers()</tt> and <tt>PathToBase()</tt> in a backward compatible way.
       The Member getters now support an enum argument (<tt>Reflex::INHERITEDMEMBERS_NO</tt> or <tt>Reflex::INHERITEDMEMBERS_ALSO</tt>) to request only the class's member or also inherited members.
       This allows to ignore possible calls to <tt>UpdateMembers()</tt>.
@@ -58,6 +59,13 @@ New web site for <a href="http://root.cern.ch/drupal/content/interpreter">ROOT's
       <li>Added MSVC8 to genreflex's list of supported compilers, fix build for MSVC7.1.</li>
       <li>Remove stray spaces after <tt>string</tt> in rootmap files.</li>
       <li>Use qualified types for Reflex types instead of <tt>using namespace Reflex</tt>.</li>
+      <li>Allow selection of genreflex classes and their members via a typedef-to-class.</li>
+      <li>Implement new genreflex option <tt>--gccxmlpost</tt> to postprocess a GCC_XML output file with genreflex, useful for debugging.</li>
+      <li>Remove dictionaries for PropertyList methods that had been deprecated for years.</li>
+      <li>Suppress dictionaries for unnamed enums.</li>
+      <li>Satisfy python 2.6.2 and silence its warnings.</li>
+      <li>Rename GCC_XML output file to *_gccxmlout.xml, so it is easier to distinguish it from selection.xml file.</li>
+      <li>Improve the initialization and shutdown of Reflex; remove the memory leaks due to the reflection containers not beeing cleared at the end of the process.</li>
     </ul>
   </li>
   <li><em>Cintex</em>
