@@ -30,6 +30,7 @@
 #include "TInterpreter.h"
 #include "TError.h"
 #include "TDataType.h"
+#include "TVirtualMutex.h"
 #include <iostream>
 
 #include <string>
@@ -586,6 +587,7 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
    if (fMethod) {
       ULong_t args[1];
       args[0] = (ULong_t)&b;
+      R__LOCKGUARD2(gCINTMutex);
       fMethod->SetParamPtrs(args);
       fMethod->Execute((void*)(pointer+fOffset));
    } else {
@@ -669,6 +671,7 @@ Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
    }
    ULong_t args[1];
    args[0] = (ULong_t)&b;
+   R__LOCKGUARD2(gCINTMutex);
    fMethod->SetParamPtrs(args);
    fMethod->Execute((void*)(pointer+fOffset));
    b.ForceWriteInfo(fBaseClass->GetStreamerInfo(),kFALSE);
