@@ -2561,8 +2561,8 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
                if (cloner.NeedConversion()) {
                   TTree *localtree = GetTree();
                   Long64_t tentries = localtree->GetEntries();
-                  for (Long64_t i = 0; i < tentries; i++) {
-                     if (localtree->GetEntry(i) <= 0) {
+                  for (Long64_t j = 0; j < tentries; j++) {
+                     if (localtree->GetEntry(j) <= 0) {
                         break;
                      }
                      newtree->Fill();
