@@ -411,6 +411,16 @@ Int_t TXProofServ::CreateServer()
       fShutdownTimer->Start(-1, kFALSE);
    }
 
+   // Check if schema evolution is effective: clients running versions <=17 do not
+   // support that: send a warning message
+   if (fProtocol <= 17) {
+      TString msg;
+      msg.Form("Warning: client version is too old: automatic schema evolution is ineffective.\n"
+               "         This may generate compatibility problems between streamed objects.\n"
+               "         The advise is to move to ROOT >= 5.21/02 .");
+      SendAsynMessage(msg.Data());
+   }
+
    // Done
    return 0;
 }

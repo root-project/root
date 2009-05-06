@@ -133,7 +133,10 @@ void TMessage::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t /* force */)
 {
    // Force writing the TStreamerInfo to the message.
 
-   if (fgEvolution || fEvolution) fInfos->Add(info);
+   if (fgEvolution || fEvolution) {
+      if (!fInfos) fInfos = new TList();
+      fInfos->Add(info);
+   }
 }
 
 //______________________________________________________________________________
@@ -160,7 +163,10 @@ void TMessage::IncrementLevel(TVirtualStreamerInfo *info)
 
    TBufferFile::IncrementLevel(info);
 
-   if (fgEvolution || fEvolution) fInfos->Add(info);
+   if (fgEvolution || fEvolution) {
+      if (!fInfos) fInfos = new TList();
+      fInfos->Add(info);
+   }
 }
 
 //______________________________________________________________________________
@@ -383,11 +389,14 @@ void TMessage::WriteObject(const TObject *obj)
 UShort_t TMessage::WriteProcessID(TProcessID *pid)
 {
    // Check if the ProcessID pid is already in the message.
-   // If not, then
-   //   -mark bit 0 of fBitsPIDs to indicate that a ProcessID has been found
-   //   -mark bit uid+1 where uid id the uid of the ProcessID
+   // If not, then:
+   //   - mark bit 0 of fBitsPIDs to indicate that a ProcessID has been found
+   //   - mark bit uid+1 where uid id the uid of the ProcessID
 
    if (fBitsPIDs.TestBitNumber(0)) return 0;
+   if (!pid)
+      pid = TProcessID::GetPID();
+   if (!pid) return 0;
    fBitsPIDs.SetBitNumber(0);
    UInt_t uid = pid->GetUniqueID();
    fBitsPIDs.SetBitNumber(uid+1);

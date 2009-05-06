@@ -502,7 +502,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fLogToSysLog     = (gEnv->GetValue("ProofServ.LogToSysLog", 0) != 0) ? kTRUE : kFALSE;
    fSendLogToMaster = kFALSE;
 
-   // abort on higher than kSysError's and set error handler
+   // Abort on higher than kSysError's and set error handler
    gErrorAbortLevel = kSysError + 1;
    SetErrorHandlerFile(stderr);
    SetErrorHandler(ErrorHandler);
@@ -571,6 +571,16 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    if (fOrdinal != "-1")
       fPrefix += fOrdinal;
    TProofServLogHandler::SetDefaultPrefix(fPrefix);
+
+   // Enable optimized sending of streamer infos to use embedded backward/forward
+   // compatibility support between different ROOT versions and different versions of
+   // users classes
+   Bool_t enableSchemaEvolution = gEnv->GetValue("Proof.SchemaEvolution",1);
+   if (enableSchemaEvolution) {
+      TMessage::EnableSchemaEvolutionForAll();
+   } else {
+      Info("TProofServ", "automatic schema evolution in TMessage explicitely disabled");
+   }
 }
 
 //______________________________________________________________________________
@@ -759,6 +769,16 @@ Int_t TProofServ::CreateServer()
       // Check activity on socket every 5 mins
       fShutdownTimer = new TShutdownTimer(this, 300000);
       fShutdownTimer->Start(-1, kFALSE);
+   }
+
+   // Check if schema evolution is effective: clients running versions <=17 do not
+   // support that: send a warning message
+   if (fProtocol <= 17) {
+      TString msg;
+      msg.Form("Warning: client version is too old: automatic schema evolution is ineffective.\n"
+               "         This may generate compatibility problems between streamed objects.\n"
+               "         The advise is to move to ROOT >= 5.21/02 .");
+      SendAsynMessage(msg.Data());
    }
 
    // Done
@@ -1158,6 +1178,10 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
       case kMESS_CINT:
          if (all) {
             mess->ReadString(str, sizeof(str));
+            // Make sure that the relevant files are available
+            TString fn;
+            if (TProof::GetFileInCmd(str, fn))
+               CopyFromCache(fn, 1);
             if (IsParallel()) {
                fProof->SendCommand(str);
             } else {
@@ -1415,7 +1439,14 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                fnam.ReplaceAll("cache:", Form("%s/", fCacheDir.Data()));
                copytocache = kFALSE;
             }
-            ReceiveFile(fnam, bin ? kTRUE : kFALSE, size);
+            if (size > 0) {
+               ReceiveFile(fnam, bin ? kTRUE : kFALSE, size);
+            } else {
+               // Take it from the cache
+               if (!fnam.BeginsWith(fCacheDir.Data())) {
+                  fnam.Insert(0, Form("%s/", fCacheDir.Data()));
+               }
+            }
             // copy file to cache if not a PAR file
             if (copytocache && size > 0 &&
                 strncmp(fPackageDir, name, fPackageDir.Length()))
@@ -1424,8 +1455,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                Int_t opt = TProof::kForward | TProof::kCp;
                if (bin)
                   opt |= TProof::kBinary;
-               // Old clients do not wait for the termination of SendFile, so we need
-               // to disable new inputs while doing this
+               PDB(kGlobal, 1)
+                  Info("HandleSocketInput","forwarding file: %s", fnam.Data());
                fProof->SendFile(fnam, opt, (copytocache ? "cache" : ""));
             }
             if (fProtocol > 19) fSocket->Send(kPROOF_SENDFILE);
@@ -3808,7 +3839,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
 
       if (md5local && md5 == (*md5local)) {
          // copy file from cache to working directory
-         Bool_t cp = ((opt & TProof::kCp) || (fProtocol <= 19)) ? kTRUE : kFALSE;
+         Bool_t cp = ((opt & TProof::kCp || opt & TProof::kCpBin) || (fProtocol <= 19)) ? kTRUE : kFALSE;
          if (cp) {
             Bool_t cpbin = (opt & TProof::kCpBin) ? kTRUE : kFALSE;
             CopyFromCache(filenam, cpbin);

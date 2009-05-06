@@ -627,6 +627,9 @@ protected:
    static Int_t SaveInputData(TQueryResult *qr, const char *cachedir, TString &emsg);
    static Int_t SendInputData(TQueryResult *qr, TProof *p, TString &emsg);
 
+   // Parse CINT commands
+   static Bool_t GetFileInCmd(const char *cmd, TString &fn);
+
 public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
           const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0,
