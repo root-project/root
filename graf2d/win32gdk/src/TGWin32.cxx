@@ -827,7 +827,7 @@ VOID CALLBACK MyTimerProc(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime)
    // Windows timer handling events while moving/resizing windows
 
    gSystem->ProcessEvents();
-   gVirtualX->UpdateWindow(1);
+   //gVirtualX->UpdateWindow(1); // cause problems with OpenGL in pad...
 } 
 
 //______________________________________________________________________________
