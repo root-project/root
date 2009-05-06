@@ -35,8 +35,8 @@
 ClassImp(TGLLegoPainter)
 
 //______________________________________________________________________________
-TGLLegoPainter::TGLLegoPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
-                  : TGLPlotPainter(hist, cam, coord, dev, kFALSE, kTRUE, kTRUE),
+TGLLegoPainter::TGLLegoPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord)
+                  : TGLPlotPainter(hist, cam, coord, kFALSE, kTRUE, kTRUE),
                     fLegoType(kColorSimple),
                     fMinZ(0.),
                     fDrawErrors(kFALSE)
@@ -384,15 +384,26 @@ void TGLLegoPainter::StartPan(Int_t px, Int_t py)
 void TGLLegoPainter::Pan(Int_t px, Int_t py)
 {
    //Move lego or section.
-   if (!MakeGLContextCurrent())
-      return;
-
-   if (fSelectedPart >= fSelectionBase || fSelectedPart == 1)
+   if (fSelectedPart >= fSelectionBase || fSelectedPart == 1) {
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
+      
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
       fCamera->Pan(px, py);
-   else if (fSelectedPart > 0) {
+
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
+   } else if (fSelectedPart > 0) {
       //Convert py into bottom-top orientation.
       py = fCamera->GetHeight() - py;
 
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
+      
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
+      
       if (!fHighColor) {
          if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
             fBoxCut.MoveBox(px, py, fSelectedPart);
@@ -400,6 +411,9 @@ void TGLLegoPainter::Pan(Int_t px, Int_t py)
             MoveSection(px, py);
       } else
          MoveSection(px, py);
+         
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
    }
 
    fMousePosition.fX = px, fMousePosition.fY = py;
@@ -453,9 +467,22 @@ void TGLLegoPainter::InitGL()const
 }
 
 //______________________________________________________________________________
+void TGLLegoPainter::DeInitGL()const
+{
+   //Return some gl states to original values.
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_LIGHTING);
+   glDisable(GL_LIGHT0);
+   glDisable(GL_CULL_FACE);
+   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+}
+
+//______________________________________________________________________________
 void TGLLegoPainter::DrawPlot()const
 {
    //Select method corresponding to coordinate system.
+   
+   
    switch (fCoord->GetCoordType()) {
    case kGLCartesian:
       return DrawLegoCartesian();
@@ -479,6 +506,8 @@ void TGLLegoPainter::DrawLegoCartesian()const
       DrawSections();
    }
 
+   //const TGLDisableGuard depthTest(GL_DEPTH_TEST); //[0-0]
+   
    if (!fSelectionPass) {
       glEnable(GL_POLYGON_OFFSET_FILL);//[0
       glPolygonOffset(1.f, 1.f);

@@ -193,14 +193,13 @@ void DrawMapleMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> 
 ClassImp(TGLTF3Painter)
 
 //______________________________________________________________________________
-TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera,
-                             TGLPlotCoordinates *coord, TGLPaintDevice *dev) :
-   TGLPlotPainter(hist, camera, coord, dev, kFALSE, kFALSE, kFALSE),
-   fStyle(kDefault),
-   fF3(fun),
-   fXOZSlice("XOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOZ),
-   fYOZSlice("YOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kYOZ),
-   fXOYSlice("XOY", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOY)
+TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord) 
+                  : TGLPlotPainter(hist, camera, coord, kFALSE, kFALSE, kFALSE),
+                    fStyle(kDefault),
+                    fF3(fun),
+                    fXOZSlice("XOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOZ),
+                    fYOZSlice("YOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kYOZ),
+                    fXOYSlice("XOY", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOY)
 {
    // Constructor.
 }
@@ -272,15 +271,27 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
    //User's moving mouse cursor, with middle mouse button pressed (for pad).
    //Calculate 3d shift related to 2d mouse movement.
    //Slicing is disabled (since somebody has broken it).
-   if (!MakeGLContextCurrent())
-      return;
+   if (fSelectedPart >= fSelectionBase) {//Pan camera.
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
 
-   if (fSelectedPart >= fSelectionBase)//Pan camera.
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
       fCamera->Pan(px, py);
-   else if (fSelectedPart > 0) {
+      
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
+   } else if (fSelectedPart > 0) {
       //Convert py into bottom-top orientation.
       //Possibly, move box here
       py = fCamera->GetHeight() - py;
+      
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
+
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
+      
       if (!fHighColor) {
          if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis)) {
             fBoxCut.MoveBox(px, py, fSelectedPart);
@@ -290,6 +301,9 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
       } else {
          //MoveSection(px, py);
       }
+      
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
    }
 
    fMousePosition.fX = px, fMousePosition.fY = py;
@@ -341,6 +355,17 @@ void TGLTF3Painter::InitGL() const
    glEnable(GL_DEPTH_TEST);
    glDisable(GL_CULL_FACE);
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+}
+
+//______________________________________________________________________________
+void TGLTF3Painter::DeInitGL() const
+{
+   //Initialize OpenGL state variables.
+   glDisable(GL_LIGHTING);
+   glDisable(GL_LIGHT0);
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_CULL_FACE);
+   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 }
 
 //______________________________________________________________________________
@@ -506,8 +531,8 @@ void TGLTF3Painter::DrawSectionXOY() const
 ClassImp(TGLIsoPainter)
 
 //______________________________________________________________________________
-TGLIsoPainter::TGLIsoPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
-                  : TGLPlotPainter(hist, camera, coord, dev, kFALSE, kFALSE, kFALSE),
+TGLIsoPainter::TGLIsoPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
+                  : TGLPlotPainter(hist, camera, coord, kFALSE, kFALSE, kFALSE),
                     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
                     fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
                     fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
@@ -631,16 +656,27 @@ void TGLIsoPainter::Pan(Int_t px, Int_t py)
    //Calculate 3d shift related to 2d mouse movement.
    //User's moving mouse cursor, with middle mouse button pressed (for pad).
    //Calculate 3d shift related to 2d mouse movement.
+   if (fSelectedPart >= fSelectionBase) {//Pan camera.
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
 
-   if (!MakeGLContextCurrent())
-      return;
-
-   if (fSelectedPart >= fSelectionBase)//Pan camera.
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
       fCamera->Pan(px, py);
-   else if (fSelectedPart > 0) {
+      
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
+   } else if (fSelectedPart > 0) {
       //Convert py into bottom-top orientation.
       //Possibly, move box here
       py = fCamera->GetHeight() - py;
+      
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
+
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
+      
       if (!fHighColor) {
          if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis)) {
             fBoxCut.MoveBox(px, py, fSelectedPart);
@@ -650,6 +686,10 @@ void TGLIsoPainter::Pan(Int_t px, Int_t py)
       } else {
          //MoveSection(px, py);
       }
+      
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
+
    }
 
    fMousePosition.fX = px, fMousePosition.fY = py;
@@ -699,6 +739,17 @@ void TGLIsoPainter::InitGL() const
    glEnable(GL_DEPTH_TEST);
    glDisable(GL_CULL_FACE);
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::DeInitGL() const
+{
+   //Initialize OpenGL state variables.
+   glDisable(GL_LIGHTING);
+   glDisable(GL_LIGHT0);
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_CULL_FACE);
+   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 }
 
 //______________________________________________________________________________

@@ -39,7 +39,8 @@ public:
    TGLPlotCamera();
    virtual ~TGLPlotCamera() {}
 
-   void   SetViewport(TGLPaintDevice *dev);
+   void   SetViewport(const TGLRect &vp);
+
    void   SetViewVolume(const TGLVertex3 *box);
    void   StartRotation(Int_t px, Int_t py);
    void   RotateCamera(Int_t px, Int_t py);

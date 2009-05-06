@@ -20,8 +20,8 @@ void glparametric()
    //       Parametric surfaces support 21 color "schemes", you can change the color:
    //       -place mouse cursor above surface (surface is selected in pad)
    //       -press 's' or 'S'.
-
-   TCanvas *c = new TCanvas("glcanvas","Parametric surfaces with gl", 100, 10, 700, 700);
+   gStyle->SetCanvasPreferGL(kTRUE);
+   TCanvas *c = new TCanvas("canvas","Parametric surfaces with gl", 100, 10, 700, 700);
    c->SetFillColor(42);
    gStyle->SetFrameFillColor(42);
 

@@ -84,6 +84,8 @@ protected:
    Bool_t        fUpdating;        //!True when Updating the canvas
    Bool_t        fRetained;        //Retain structure flag
    Bool_t        fUseGL;           //!True when rendering is with GL
+   //
+   TVirtualPadPainter *fPainter;   //!Canvas (pad) painter.
 
    static Bool_t fgIsFolder;       //Indicates if canvas can be browsed as a folder
 
@@ -94,6 +96,9 @@ private:
    void     CopyPixmaps();
    void     DrawEventStatus(Int_t event, Int_t x, Int_t y, TObject *selected);
    void     RunAutoExec();
+
+   //Initialize PadPainter.
+   void     CreatePainter();
 
 protected:
    virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);
@@ -227,9 +232,15 @@ public:
    virtual void      ToggleToolBar();
    virtual void      ToggleEditor();
    virtual void      Update();
+   //Still need this.
    Bool_t            UseGL() const { return fUseGL; }
    void              SetSupportGL(Bool_t support) {fUseGL = support;}
-
+   
+   //Name is GetPainter, not GetPadPainter
+   //to avoid name hiding and confusion.
+   //GetPadPainter and GetPainter are non-virtual (no need, in fact).
+   TVirtualPadPainter *GetCanvasPainter();
+   
    static TCanvas   *MakeDefCanvas();
 
    ClassDef(TCanvas,6)  //Graphics canvas

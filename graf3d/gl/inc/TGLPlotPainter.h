@@ -159,8 +159,8 @@ private:
 
 class TGLPlotPainter : public TVirtualGLPainter {
 private:
-//   Int_t                 fGLContext;
-   TGLPaintDevice       *fGLDevice;
+   //Int_t                 fGLContext;
+   //TGLPaintDevice       *fGLDevice;
    const TColor         *fPadColor;
 
 protected:
@@ -174,6 +174,7 @@ protected:
    TGLPlotCoordinates   *fCoord;
    TGLPlotCamera        *fCamera;
    TGLSelectionBuffer    fSelection;
+   
    Bool_t                fUpdateSelection;
    Bool_t                fSelectionPass;
    Int_t                 fSelectedPart;
@@ -199,13 +200,14 @@ public:
 /*   TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord, Int_t context,
                   Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
    TGLPlotPainter(TGLPlotCamera *camera, Int_t context);*/
-   TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev,
+   TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
                   Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
-   TGLPlotPainter(TGLPlotCamera *camera, TGLPaintDevice *dev);
+   TGLPlotPainter(TGLPlotCamera *camera);
 
    const TGLPlotBox& RefBackBox() const { return fBackBox; }
 
    virtual void     InitGL()const = 0;
+   virtual void     DeInitGL()const = 0;
    virtual void     DrawPlot()const = 0;
    virtual void     Paint();
 
@@ -222,9 +224,8 @@ public:
    //Function to process additional events (key presses, mouse clicks.)
    virtual void     ProcessEvent(Int_t event, Int_t px, Int_t py) = 0;
    //Used by GLpad
-   //   void             SetGLContext(Int_t context);
-   void             SetGLDevice(TGLPaintDevice *dev){fGLDevice = dev;}
    void             SetPadColor(const TColor *color);
+   
    virtual void     SetFrameColor(const TColor *frameColor);
    //Camera is external to painter, if zoom was changed, or camera
    //was rotated, selection must be invalidated.
@@ -239,9 +240,7 @@ public:
    Bool_t           CutAxisSelected()const{return !fHighColor && fSelectedPart <= kZAxis && fSelectedPart >= kXAxis;}
 
 protected:
-//   Int_t            GetGLContext()const;
    const TColor    *GetPadColor()const;
-   Bool_t           MakeGLContextCurrent()const;
    //
    void             MoveSection(Int_t px, Int_t py);
    void             DrawSections()const;
@@ -254,6 +253,16 @@ protected:
    virtual void     ClearBuffers()const;
 
    void             PrintPlot()const;
+   
+   //Attention! After one of this methods was called,
+   //the GL_MATRIX_MODE could become different from what
+   //you had before the call: for example, SaveModelviewMatrix will 
+   //change it to GL_MODELVIEW.
+   void             SaveModelviewMatrix()const;
+   void             SaveProjectionMatrix()const;
+   
+   void             RestoreModelviewMatrix()const;
+   void             RestoreProjectionMatrix()const;
    //
 
    ClassDef(TGLPlotPainter, 0) //Base for gl plots

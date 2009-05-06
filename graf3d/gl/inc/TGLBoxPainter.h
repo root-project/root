@@ -40,7 +40,7 @@ private:
    TGLBoxPainter &operator = (const TGLBoxPainter &);
 
 public:
-   TGLBoxPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev = 0);
+   TGLBoxPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
 
    char   *GetPlotInfo(Int_t px, Int_t py);
    Bool_t  InitGeometry();
@@ -52,6 +52,8 @@ public:
 private:
    //Overriders
    void    InitGL()const;
+   void    DeInitGL()const;
+   
    void    DrawPlot()const;
 
    void    SetPlotColor()const;

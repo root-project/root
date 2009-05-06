@@ -124,6 +124,7 @@
 #pragma link C++ class TGLParametricEquationGL;
 #pragma link C++ class TGLEmbeddedViewer;
 #pragma link C++ class TGLEventHandler;
+#pragma link C++ class TGLPadPainter;
 
 #ifndef _WIN32
 #pragma link C++ class TX11GLManager;

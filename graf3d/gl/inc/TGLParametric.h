@@ -109,7 +109,7 @@ private:
    TGLParametricEquation *fEquation;
 
 public:
-   TGLParametricPlot(TGLParametricEquation *equation, TGLPlotCamera *camera, TGLPaintDevice *dev = 0);
+   TGLParametricPlot(TGLParametricEquation *equation, TGLPlotCamera *camera);
 
    Bool_t   InitGeometry();
    void     StartPan(Int_t px, Int_t py);
@@ -120,6 +120,8 @@ public:
 
 private:
    void     InitGL()const;
+   void     DeInitGL()const;
+   
    void     DrawPlot()const;
 
    void     InitColors();

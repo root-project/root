@@ -22,8 +22,8 @@
 ClassImp(TGLBoxPainter)
 
 //______________________________________________________________________________
-TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
-                  : TGLPlotPainter(hist, cam, coord, dev, kTRUE, kTRUE, kTRUE),
+TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord)
+                  : TGLPlotPainter(hist, cam, coord, kTRUE, kTRUE, kTRUE),
                     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
                     fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
                     fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
@@ -122,16 +122,27 @@ void TGLBoxPainter::Pan(Int_t px, Int_t py)
 {
    // User's moving mouse cursor, with middle mouse button pressed (for pad).
    // Calculate 3d shift related to 2d mouse movement.
-
-   if (!MakeGLContextCurrent())
-      return;
-
-   if (fSelectedPart >= fSelectionBase)//Pan camera.
+   if (fSelectedPart >= fSelectionBase) {//Pan camera.
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
+      
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
       fCamera->Pan(px, py);
-   else if (fSelectedPart > 0) {
+
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
+   } else if (fSelectedPart > 0) {
       //Convert py into bottom-top orientation.
       //Possibly, move box here
       py = fCamera->GetHeight() - py;
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
+      
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
+      
+      
       if (!fHighColor) {
          if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
             fBoxCut.MoveBox(px, py, fSelectedPart);
@@ -140,6 +151,9 @@ void TGLBoxPainter::Pan(Int_t px, Int_t py)
       } else {
          MoveSection(px, py);
       }
+      
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
    }
 
    fMousePosition.fX = px, fMousePosition.fY = py;
@@ -189,7 +203,6 @@ void TGLBoxPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 void TGLBoxPainter::InitGL()const
 {
    // Initialize some gl state variables.
-
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
@@ -198,6 +211,17 @@ void TGLBoxPainter::InitGL()const
    glCullFace(GL_BACK);
 
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+}
+
+//______________________________________________________________________________
+void TGLBoxPainter::DeInitGL()const
+{
+   //Return back some gl state variables.
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_LIGHTING);
+   glDisable(GL_LIGHT0);
+   glDisable(GL_CULL_FACE);
+   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 }
 
 namespace {

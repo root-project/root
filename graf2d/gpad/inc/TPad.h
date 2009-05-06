@@ -27,6 +27,7 @@
 #endif
 
 class TVirtualViewer3D;
+class TVirtualPadPainter;
 class TBrowser;
 class TBox;
 class TLegend;
@@ -129,6 +130,7 @@ protected:
    virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetBatch(Bool_t batch=kTRUE);
 
+   TVirtualPadPainter *GetPainter();
 private:
    TPad(const TPad &pad);  // cannot copy pads, use TObject::Clone()
    TPad &operator=(const TPad &rhs);  // idem
@@ -337,10 +339,10 @@ public:
    virtual void      SetVertical(Bool_t vert=kTRUE);
    virtual void      SetView(TView *view = 0);
    virtual void      SetViewer3D(TVirtualViewer3D *viewer3d) {fViewer3D = viewer3d;}
-
+   //
+   virtual void      SetGLDevice(Int_t dev) {fGLDevice = dev;}
    virtual void      SetCopyGLDevice(Bool_t copy) {fCopyGLDevice = copy;}
-
-
+   //
    virtual void      Update();
 ///   virtual void      UpdateFillAttributes(Int_t col, Int_t sty);
 ///   virtual void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
@@ -370,7 +372,7 @@ public:
    virtual TVirtualViewer3D *GetViewer3D(Option_t * type = "");
    virtual Bool_t            HasViewer3D() const { return (fViewer3D); }
    virtual void              ReleaseViewer3D(Option_t * type = "");
-
+   
    virtual void      RecordPave(const TObject *obj);              // *SIGNAL*
    virtual void      RecordLatex(const TObject *obj);             // *SIGNAL*
    virtual void      EventPave() { Emit("EventPave()"); }         // *SIGNAL*

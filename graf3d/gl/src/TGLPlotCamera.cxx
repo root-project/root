@@ -8,7 +8,8 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
+#include <iostream>
+ 
 #include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 #include "TVirtualGL.h"
@@ -32,18 +33,15 @@ TGLPlotCamera::TGLPlotCamera() :
 }
 
 //______________________________________________________________________________
-void TGLPlotCamera::SetViewport(TGLPaintDevice *dev)
+void TGLPlotCamera::SetViewport(const TGLRect &vp)
 {
    //Setup viewport, if it was changed, plus reset arcball.
-   Int_t vp[4] = {0};
-   // gGLManager->ExtractViewport(context, vp);
-   dev->ExtractViewport(vp);
-   if (vp[2] != Int_t(fViewport.Width()) || vp[3] != Int_t(fViewport.Height()) ||
-       vp[0] != fViewport.X() || vp[1] != fViewport.Y())
+   if (vp.Width() != fViewport.Width() || vp.Height() != fViewport.Height() ||
+       vp.X() != fViewport.X() || vp.Y() != fViewport.Y())
    {
       fVpChanged = kTRUE;
-      fArcBall.SetBounds(vp[2], vp[3]);
-      fViewport.Set(vp[0], vp[1], vp[2], vp[3]);
+      fArcBall.SetBounds(vp.Width(), vp.Height());
+      fViewport = vp;
    } else
       fVpChanged = kFALSE;
 }
@@ -109,7 +107,7 @@ void TGLPlotCamera::Pan(Int_t px, Int_t py)
 void TGLPlotCamera::SetCamera()const
 {
    //Viewport and projection.
-   glViewport(0, 0, fViewport.Width(), fViewport.Height());
+   glViewport(fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height());
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();

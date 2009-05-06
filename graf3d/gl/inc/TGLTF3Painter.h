@@ -40,8 +40,7 @@ private:
    TGLTH3Slice fXOYSlice;
 
 public:
-   TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
-                 TGLPaintDevice *dev = 0);
+   TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
 
    char   *GetPlotInfo(Int_t px, Int_t py);
    Bool_t  InitGeometry();
@@ -52,6 +51,8 @@ public:
 
 private:
    void    InitGL()const;
+   void    DeInitGL()const;
+   
    void    DrawPlot()const;
    //
    void    DrawToSelectionBuffer()const;
@@ -104,8 +105,8 @@ private:
    Bool_t                fInit;
 
 public:
-   TGLIsoPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
-                 TGLPaintDevice *dev = 0);
+   TGLIsoPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
+
    //TGLPlotPainter final-overriders.
    char    *GetPlotInfo(Int_t px, Int_t py);
    Bool_t   InitGeometry();
@@ -117,6 +118,8 @@ public:
 private:
    //TGLPlotPainter final-overriders.
    void     InitGL()const;
+   void     DeInitGL()const;
+   
    void     DrawPlot()const;
    void     DrawSectionXOZ()const;
    void     DrawSectionYOZ()const;

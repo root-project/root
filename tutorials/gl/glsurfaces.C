@@ -11,6 +11,7 @@ void glsurfaces()
    
    // after this command all legos surfaces (surf/srf1/surf2/surf4/tf3
    // options) are automatically rendered with OpenGL.
+   gStyle->SetCanvasPreferGL(kTRUE);
 
    TCanvas *c1 = new TCanvas("glc1","Surfaces Drawing Options",200,10,700,900);
    c1->SetFillColor(42);

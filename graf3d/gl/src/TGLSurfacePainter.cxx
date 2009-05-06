@@ -37,8 +37,8 @@ void TGLSurfacePainter::Projection_t::Swap(Projection_t &rhs)
 }
 
 //______________________________________________________________________________
-TGLSurfacePainter::TGLSurfacePainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
-                                     : TGLPlotPainter(hist, camera, coord, dev, kTRUE, kTRUE, kTRUE),
+TGLSurfacePainter::TGLSurfacePainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
+                                     : TGLPlotPainter(hist, camera, coord, kTRUE, kTRUE, kTRUE),
                                        fType(kSurf),
                                        fSectionPass(kFALSE),
                                        fUpdateTexMap(kTRUE)
@@ -96,14 +96,26 @@ void TGLSurfacePainter::Pan(Int_t px, Int_t py)
 {
    //User's moving mouse cursor, with middle mouse button pressed (for pad).
    //Calculate 3d shift related to 2d mouse movement.
-   if (!MakeGLContextCurrent())
-      return;
+   if (fSelectedPart >= fSelectionBase) {//Pan camera.
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
 
-   if (fSelectedPart >= fSelectionBase)//Pan camera.
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
       fCamera->Pan(px, py);
-   else if (fSelectedPart > 0) {
+      
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
+   } else if (fSelectedPart > 0) {
       //Convert py into bottom-top orientation.
       py = fCamera->GetHeight() - py;
+      
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
+      
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
+
 
       if (!fHighColor) {
          if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
@@ -113,6 +125,9 @@ void TGLSurfacePainter::Pan(Int_t px, Int_t py)
       }
       else
          MoveSection(px, py);
+         
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
    }
 
    fMousePosition.fX = px, fMousePosition.fY = py;
@@ -205,6 +220,18 @@ void TGLSurfacePainter::InitGL()const
    glDisable(GL_CULL_FACE);
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
+
+//______________________________________________________________________________
+void TGLSurfacePainter::DeInitGL()const
+{
+   //Initialize some OpenGL state variables.
+   glDisable(GL_LIGHTING);
+   glDisable(GL_LIGHT0);
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_CULL_FACE);
+   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+}
+
 
 //______________________________________________________________________________
 void TGLSurfacePainter::SetNormals()
@@ -366,7 +393,7 @@ void TGLSurfacePainter::DrawPlot()const
    if (fBoxCut.IsActive())
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
 
-   if (Textured() && !fSelectionPass)
+   if (fType != kSurf3 && Textured() && !fSelectionPass)
       fPalette.DisableTexture();
 
    //Draw outlines here
@@ -396,13 +423,11 @@ void TGLSurfacePainter::DrawPlot()const
 
    if (fType == kSurf3 && !fSelectionPass) {
       fPalette.EnableTexture(GL_MODULATE);
-      glEnable(GL_BLEND);
+      const TGLEnableGuard blend(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       DrawContoursProjection();
-   }
-
-   if (Textured() && !fSelectionPass)
       fPalette.DisableTexture();
+   }
 
    if (!fSelectionPass && fSelectedPart > 6) {
       //Draw red outline for surface.
@@ -1030,10 +1055,10 @@ void TGLSurfacePainter::ClampZ(Double_t &zVal)const
 char *TGLSurfacePainter::WindowPointTo3DPoint(Int_t px, Int_t py)const
 {
    //Find 3d coords using mouse cursor coords.
-   if (!MakeGLContextCurrent()) {
+/*   if (!MakeGLContextCurrent()) {
       static char err[] = { "Apocalipshit!" };
       return err;
-   }
+   }*/
 
    py = fCamera->GetHeight() - py;
 

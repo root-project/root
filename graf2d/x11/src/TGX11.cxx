@@ -2189,6 +2189,8 @@ void TGX11::SetLineColor(Color_t cindex)
 
    if (cindex < 0) return;
 
+   TAttLine::SetLineColor(cindex);
+   
    SetColor(*gGCline, Int_t(cindex));
    SetColor(*gGCdash, Int_t(cindex));
 }
@@ -2287,6 +2289,8 @@ void TGX11::SetMarkerColor(Color_t cindex)
    // Set color index for markers.
 
    if (cindex < 0) return;
+   
+   TAttMarker::SetMarkerColor(cindex);
 
    SetColor(*gGCmark, Int_t(cindex));
 }
@@ -2737,6 +2741,8 @@ void TGX11::SetTextAlign(Short_t talign)
          }
          break;
    }
+   
+   TAttText::SetTextAlign(fTextAlign);
 }
 
 //______________________________________________________________________________
@@ -2746,6 +2752,8 @@ void TGX11::SetTextColor(Color_t cindex)
 
    if (cindex < 0) return;
 
+   TAttText::SetTextColor(cindex);
+   
    SetColor(*gGCtext, Int_t(cindex));
 
    XGCValues values;

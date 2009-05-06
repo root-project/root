@@ -268,8 +268,8 @@ ClassImp(TGLParametricPlot)
 
 //______________________________________________________________________________
 TGLParametricPlot::TGLParametricPlot(TGLParametricEquation *eq,
-                                     TGLPlotCamera *camera, TGLPaintDevice *dev)
-                      : TGLPlotPainter(camera, dev),
+                                     TGLPlotCamera *camera)
+                      : TGLPlotPainter(camera),
                         fMeshSize(90),
                         fShowMesh(kFALSE),
                         fColorScheme(4),
@@ -387,17 +387,23 @@ void TGLParametricPlot::Pan(Int_t px, Int_t py)
 {
    //User's moving mouse cursor, with middle mouse button pressed (for pad).
    //Calculate 3d shift related to 2d mouse movement.
-   if (!MakeGLContextCurrent())
-      return;
-
    if (fSelectedPart) {
+      SaveModelviewMatrix();
+      SaveProjectionMatrix();
+      
+      fCamera->SetCamera();
+      fCamera->Apply(fPadPhi, fPadTheta);
+   
       if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
          fBoxCut.MoveBox(px, fCamera->GetHeight() - py, fSelectedPart);
       else
          fCamera->Pan(px, py);
+         
+      RestoreProjectionMatrix();
+      RestoreModelviewMatrix();
    }
 
-   fUpdateSelection = kTRUE;
+   fUpdateSelection = kTRUE;//
 }
 
 //______________________________________________________________________________
@@ -456,6 +462,17 @@ void TGLParametricPlot::InitGL()const
    glEnable(GL_LIGHT0);
    glDisable(GL_CULL_FACE);
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+}
+
+//______________________________________________________________________________
+void TGLParametricPlot::DeInitGL()const
+{
+   //Initialize gl state.
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_LIGHTING);
+   glDisable(GL_LIGHT0);
+   glDisable(GL_CULL_FACE);
+   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 }
 
 //______________________________________________________________________________

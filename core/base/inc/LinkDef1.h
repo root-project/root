@@ -158,6 +158,7 @@
 #pragma link C++ class TVirtualGLManip;
 #pragma link C++ class TVirtualPS;
 #pragma link C++ class TGLPaintDevice;
+#pragma link C++ class TVirtualPadPainter;
 
 #pragma link C++ class TVirtualPadEditor;
 

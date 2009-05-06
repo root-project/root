@@ -3876,6 +3876,7 @@ void TGWin32::SetTextAlign(Short_t talign)
       }
       break;
    }
+   TAttText::SetTextAlign(fTextAlign);
 }
 
 //______________________________________________________________________________

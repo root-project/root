@@ -8,10 +8,12 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
+#include <iostream>
 #include "RConfigure.h"
 #include "TGLFontManager.h"
 
+
+#include "TVirtualX.h"
 #include "TMath.h"
 #include "TSystem.h"
 #include "TEnv.h"
@@ -150,6 +152,77 @@ void TGLFont::BBox(const char* txt,
 
    // FTGL is not const correct.
    const_cast<FTFont*>(fFont)->BBox(txt, llx, lly, llz, urx, ury, urz);
+}
+
+//______________________________________________________________________________
+void TGLFont::Render(const char* txt, Double_t x, Double_t y, Double_t angle, Double_t /*mgn*/) const
+{
+   //mgn is simply ignored, because ROOT's TVirtualX TGX11 are complete mess with
+   //painting attributes.
+   glPushMatrix();
+   //glLoadIdentity();
+   
+   // FTGL is not const correct.
+   Float_t llx = 0.f, lly = 0.f, llz = 0.f, urx = 0.f, ury = 0.f, urz = 0.f;
+   BBox(txt, llx, lly, llz, urx, ury, urz);
+   
+   /*
+    V\H   | left | center | right
+   _______________________________
+   bottom |  7   |   8    |   9
+   _______________________________
+   center |  4   |   5    |   6
+   _______________________________
+    top   |  1   |   2    |   3
+   */
+   const Double_t dx = urx - llx, dy = ury - lly;
+   Double_t xc = 0., yc = 0.;
+   const UInt_t align = gVirtualX->GetTextAlign();
+
+   switch (align) {
+   case 7:
+      xc += 0.5 * dx;
+      yc += 0.5 * dy;
+      break;
+   case 8:
+      yc += 0.5 * dy;
+      break;
+   case 9:
+      xc -= 0.5 * dx;
+      yc += 0.5 * dy;
+      break;
+   case 4:
+      xc += 0.5 * dx;
+      break;
+   case 5:
+      break;
+   case 6:
+      xc = -0.5 * dx;
+      break;
+   case 1:
+      xc += 0.5 * dx;
+      yc -= 0.5 * dy;
+      break;
+   case 2:
+      yc -= 0.5 * dy;
+      break;
+   case 3:
+      xc -= 0.5 * dx;
+      yc -= 0.5 * dy;
+      break;
+   }
+   
+   glTranslated(x, y, 0.);
+   glRotated(angle, 0., 0., 1.);
+   glTranslated(xc, yc, 0.);
+   glTranslated(-0.5 * dx, -0.5 * dy, 0.);
+   //glScaled(mgn, mgn, 1.);
+      
+   const_cast<FTFont*>(fFont)->Render(txt);
+   
+   glPopMatrix();
+   
+   
 }
 
 //______________________________________________________________________________

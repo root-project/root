@@ -82,6 +82,7 @@ public:
               Float_t& urx, Float_t& ury, Float_t& urz) const;
 
    void  Render(const char* txt) const;
+   void  Render(const char* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const;
    void  RenderBitmap(const char* txt, Float_t x, Float_t y, Float_t zs, ETextAlign_e align) const;
 
    // helper gl draw functions

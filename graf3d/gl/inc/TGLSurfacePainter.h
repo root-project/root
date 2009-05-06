@@ -54,8 +54,7 @@ private:
    mutable Bool_t                  fUpdateTexMap;
 
 public:
-   TGLSurfacePainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
-                     TGLPaintDevice *dev = 0);
+   TGLSurfacePainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
 
    //TGLPlotPainter's final-overriders.
    char  *GetPlotInfo(Int_t px, Int_t py);
@@ -67,6 +66,8 @@ public:
 
 private:
    void   InitGL()const;
+   void   DeInitGL()const;
+
    void   DrawPlot()const;
 
    void   SetNormals();

@@ -9,7 +9,7 @@ void gltf3()
    // kMaple2 (nice colour outlines).
    // To switch between them, you can press 's' key.
    // Author: Timur Pocheptsov
-
+   gStyle->SetCanvasPreferGL(1);
    TCanvas *cnv = new TCanvas("glc", "TF3: Klein bottle", 200, 10, 600, 600);
    // TCanvas *cnv = new TCanvas("glc", "TF3: Torus", 200, 10, 600, 600);
 
