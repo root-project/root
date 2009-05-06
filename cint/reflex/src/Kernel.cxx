@@ -69,6 +69,8 @@ namespace {
       return FundamentalDeclarator(name, GetSizeOf<T>()(), typeid(T), repres);
    }
 
+   Reflex::Instance instantiate;
+
 }
 
 //-------------------------------------------------------------------------------
