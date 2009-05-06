@@ -62,7 +62,8 @@ public:
    XrdCryptoX509 *X509(XrdSutBucket *b);
 
    // X509 CRL constructor
-   XrdCryptoX509Crl *X509Crl(const char *crlfile);
+   XrdCryptoX509Crl *X509Crl(const char *crlfile, int opt = 0);
+   XrdCryptoX509Crl *X509Crl(XrdCryptoX509 *cacert);
 
    // X509 REQ constructors
    XrdCryptoX509Req *X509Req(XrdSutBucket *bck);

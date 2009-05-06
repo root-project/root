@@ -197,7 +197,16 @@ XrdCryptoX509 *XrdCryptoFactory::X509(XrdSutBucket *)
 }
 
 //______________________________________________________________________________
-XrdCryptoX509Crl *XrdCryptoFactory::X509Crl(const char *)
+XrdCryptoX509Crl *XrdCryptoFactory::X509Crl(const char *, int)
+{
+   // Return an instance of an implementation of XrdCryptoX509Crl.
+
+   ABSTRACTMETHOD("XrdCryptoFactory::X509Crl");
+   return 0;
+}
+
+//______________________________________________________________________________
+XrdCryptoX509Crl *XrdCryptoFactory::X509Crl(XrdCryptoX509 *)
 {
    // Return an instance of an implementation of XrdCryptoX509Crl.
 

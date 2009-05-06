@@ -170,7 +170,7 @@ bool XrdCryptoX509Chain::CheckCA(bool checkselfsigned)
    while (c) {
       n = c->Next();
       xc = c->Cert();
-      if (xc->type == XrdCryptoX509::kCA) {
+      if (xc && xc->type == XrdCryptoX509::kCA) {
          caname = xc->Subject();
          cahash = xc->SubjectHash();
          EX509ChainErr ecode = kNone;
@@ -442,7 +442,7 @@ XrdCryptoX509ChainNode *XrdCryptoX509Chain::FindSubject(const char *subject,
    while (cn) {
       n = cn->Next();
       c = cn->Cert();
-      const char *ps = c->Subject();
+      const char *ps = c ? c->Subject() : 0;
       if (c && ps) {
          if (mode == kExact) {
             if (!strcmp(ps, subject))
@@ -495,9 +495,11 @@ void XrdCryptoX509Chain::Dump()
    XrdCryptoX509ChainNode *c = begin;
    while (c) {
       n = c->Next();
-      LOCDUMP("// Issuer: "<<c->Cert()->IssuerHash()<<
-            " Subject: "<<c->Cert()->SubjectHash()<<
-                " Type: "<<c->Cert()->Type());
+      if (c->Cert()) {
+         LOCDUMP("// Issuer: "<<c->Cert()->IssuerHash()<<
+               " Subject: "<<c->Cert()->SubjectHash()<<
+                  " Type: "<<c->Cert()->Type());
+      }
       c = n;
    }
    LOCDUMP("//");
@@ -554,28 +556,30 @@ int XrdCryptoX509Chain::Reorder()
    int left = size-1;
    np = begin;
    while (np) {
-      const char *pi = np->Cert()->Subject();
-      // Set the EEC name, if not yet done
-      if (np->Cert()->type == XrdCryptoX509::kEEC && eecname.length() <= 0) {
-         eecname = pi;
-         eechash = np->Cert()->SubjectHash();
-      }
-      npp = np;
-      nc = np->Next();
-      while (nc) {
-         if (!strcmp(pi, nc->Cert()->Issuer())) {
-            left--;
-            if (npp != np) {
-               npp->SetNext(nc->Next()); // drop child from previous pos
-               nc->SetNext(np->Next());  // set child next as our present
-               np->SetNext(nc);          // set our next as child
-               if (nc == end)
-                  end = npp;
-            }
-            break;
+      if (np->Cert()) {
+         const char *pi = np->Cert()->Subject();
+         // Set the EEC name, if not yet done
+         if (np->Cert()->type == XrdCryptoX509::kEEC && eecname.length() <= 0) {
+            eecname = pi;
+            eechash = np->Cert()->SubjectHash();
          }
-         npp = nc;
-         nc = nc->Next();
+         npp = np;
+         nc = np->Next();
+         while (nc) {
+            if (nc->Cert() && !strcmp(pi, nc->Cert()->Issuer())) {
+               left--;
+               if (npp != np) {
+                  npp->SetNext(nc->Next()); // drop child from previous pos
+                  nc->SetNext(np->Next());  // set child next as our present
+                  np->SetNext(nc);          // set our next as child
+                  if (nc == end)
+                     end = npp;
+               }
+               break;
+            }
+            npp = nc;
+            nc = nc->Next();
+         }
       }
       np = np->Next();
    }

@@ -28,11 +28,13 @@
 // ---------------------------------------------------------------------------//
 
 class XrdSutCache;
+class XrdCryptoX509;
 
 class XrdCryptosslX509Crl : public XrdCryptoX509Crl {
 public:
 
-   XrdCryptosslX509Crl(const char *crlf);
+   XrdCryptosslX509Crl(const char *crlf, int opt = 0);
+   XrdCryptosslX509Crl(XrdCryptoX509 *cacert);
    virtual ~XrdCryptosslX509Crl();
 
    // Status
@@ -67,11 +69,14 @@ private:
    XrdOucString issuer;     // issuer name;
    XrdOucString issuerhash; // hash of issuer name;
    XrdOucString srcfile;    // source file name, if any;
+   XrdOucString crluri;     // URI from where to get the CRL file, if any;
 
    int          nrevoked;   // Number of certificates revoked
    XrdSutCache  cache;      // cached infor about revoked certificates
 
    int LoadCache();         // Load the cache
+   int Init(const char *crlf); // Init from file
+   int InitFromURI(const char *uri, const char *hash); // Init from URI
 };
 
 #endif
