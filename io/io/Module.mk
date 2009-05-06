@@ -64,3 +64,10 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(IODEP) $(IODS) $(IODH) $(IOLIB) $(IOMAP)
 
 distclean::     distclean-$(MODNAME)
+
+##### extra rules ######
+ifeq ($(GCC_VERS_FULL),gcc-4.4.0)
+ifneq ($(filter -O%,$(OPT)),)
+   $(IODIRS)/TStreamerInfoReadBuffer.o: OPT = -O
+endif
+endif
