@@ -103,6 +103,7 @@ void     tellipse       ();
 void     feynman        ();
 void     tgraph1        ();
 void     tgraph2        ();
+void     tgraph3        ();
 void     tmultigraph1   ();
 void     tmultigraph2   ();
 void     options2d1     ();
@@ -297,6 +298,7 @@ void stressGraphics(Int_t verbose = 0)
    feynman      ();
    tgraph1      ();
    tgraph2      ();
+   tgraph3      ();
    tmultigraph1 ();
    tmultigraph2 ();
    waves        ();
@@ -1596,6 +1598,57 @@ void tgraph2()
    mg->Draw("AC");
 
    TestReport1(C, "TGraph 2 (Exclusion Zone)");
+   DoCcode(C);
+   TestReport2();
+}
+
+
+//______________________________________________________________________________
+void tgraph3()
+{
+   // 3rd TGraph test.
+
+   TCanvas *C = StartTest(800,400);
+
+   C->Divide(2,1);
+
+   TGraph *g1 = new TGraph();
+   g1->SetPoint(0, 1e-4, 1);
+   g1->SetPoint(1, 1e-2, 2);
+   g1->SetPoint(2, 1e-1, 3);
+   g1->SetPoint(3, 1, 4);
+   g1->SetPoint(4, 1e1, 5);
+   g1->SetPoint(5, 1e2, 5);
+   g1->SetPoint(6, 1e3, 4);
+   g1->SetPoint(7, 1e4, 3);
+   g1->SetPoint(8, 1e5, 2);
+   g1->SetPoint(9, 1e6, 1);
+   g1->SetTitle("10 blue circles should be visible");
+
+   g1->SetMarkerStyle(kFullCircle);
+   g1->SetMarkerSize(1.0);
+   g1->SetMarkerColor(kBlue);
+   g1->SetLineColor(kBlue);
+
+   C->cd(1);
+   g1->Fit("gaus","Q");       
+   g1->Draw("AP");
+   gPad->SetLogx(); 
+   
+   C->cd(2);
+   gPad->SetLogx();
+   gPad->SetLogy();
+   TGraph* g2 = new TGraph();
+   for (int i = 0; i < 10; i++) g2->SetPoint(i, i + 1, i + 1);
+   g2->SetTitle("2 log scales from 1e-2 to 1e2;x;y");
+   g2->GetXaxis()->SetLimits(1e-2, 1e2);
+   g2->GetHistogram()->SetMinimum(1e-2);
+   g2->GetHistogram()->SetMaximum(1e2);
+   g2->GetXaxis()->CenterTitle();
+   g2->GetYaxis()->CenterTitle();
+   g2->Draw("a*");
+
+   TestReport1(C, "TGraph 3 (Fitting and log scales)");
    DoCcode(C);
    TestReport2();
 }
