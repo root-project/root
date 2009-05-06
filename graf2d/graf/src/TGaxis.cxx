@@ -1062,7 +1062,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (GetLabelFont()%10 > 2) {
       charheight /= padh;
    }
-   if (!optionUp && !optionDown && !optionY) {
+   if (!optionUp && !optionDown && !optionY && !optionUnlab) {
       if (!drawGridOnly && optionText && ((ymin == ymax) || (xmin == xmax))) {
          textaxis->SetTextAlign(32);
          optionText = 2;
