@@ -10,6 +10,15 @@
 #include "TGLUtil.h"
 #include "TError.h"
 
+//______________________________________________________________________________
+   //"Delegating" part of TGLPadPainter. Line/fill/etc. attributes can be
+   //set inside TPad, but not only there: 
+   //many of them are set by base sub-objects of 2d primitives
+   //(2d primitives usually inherit TAttLine or TAttFill etc.).  And these sub-objects
+   //call gVirtualX->SetLineWidth ... etc. So, if I save some attributes in my painter,
+   //it will be mess - at any moment I do not know, where to take line attribute - from
+   //gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualX.
+
 ClassImp(TGLPadPainter)
 
 //______________________________________________________________________________
@@ -19,15 +28,6 @@ TGLPadPainter::TGLPadPainter()
 {
 }
 
-/*
-"Delegating" part of TGLPadPainter. Line/fill/etc. attributes can be
-set inside TPad, but not onle where: 
-many of them are set by base sub-objects of 2d primitives
-(2d primitives usually inherit TAttLine or TAttFill etc.).  And these sub-objects
-call gVirtualX->SetLineWidth ... etc. So, if I save some attributes in my painter,
-it will be mess - at any moment I do not know, where to take line attribute - from
-gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualX.
-*/
 
 //______________________________________________________________________________
 Color_t TGLPadPainter::GetLineColor() const
