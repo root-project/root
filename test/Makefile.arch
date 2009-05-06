@@ -464,7 +464,7 @@ MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
 CXX           = g++
 CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
 LD            = $(MACOSXTARGET) g++
-LDFLAGS       = $(OPT2) -m64
+LDFLAGS       = $(OPT2)
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
