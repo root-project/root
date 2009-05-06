@@ -351,6 +351,7 @@ int MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
             }
          }
          oldkey = key;
+         delete obj;
       } // while ( ( TKey *key = (TKey*)nextkey() ) )
       first_source = (TDirectory*)sourcelist->After(first_source);
    }
