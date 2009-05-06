@@ -1248,16 +1248,19 @@ TH1F *TGraph::GetHistogram() const
 
    ComputeRange(rwxmin, rwymin, rwxmax, rwymax);  //this is redefined in TGraphErrors
 
-   // Return fHistogram if it exists unless the log scale is on and the 
-   // computed minimum is greater than zero. In that case the histogram needs
-   // to be recomputed.
+   // (if fHistogram exist) && (if the log scale is on) && 
+   // (if the computed range minimum is > 0) && (if the fHistogram minimum is zero)
+   // then it means fHistogram limits have been computed in linear scale
+   // therefore they might be too strict and cut some points. In that case the
+   // fHistogram limits should be recomputed ie: the existing fHistogram
+   // should not be returned.
    if (fHistogram) {
       if (gPad && gPad->GetLogx()) {
-         if (rwxmin <= 0) return fHistogram;
+         if (rwxmin <= 0 || fHistogram->GetXaxis()->GetXmin() != 0) return fHistogram;
       } else if (gPad && gPad->GetLogy()) {
-         if (rwymin <= 0) return fHistogram;
+         if (rwymin <= 0 || fHistogram->GetMinimum() != 0) return fHistogram;
       } else {
-	return fHistogram;
+   	return fHistogram;
       }
    }
 
