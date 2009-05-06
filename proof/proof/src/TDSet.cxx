@@ -546,9 +546,9 @@ void TDSetElement::SetEntryList(TObject *aList, Long64_t first, Long64_t num)
 
    // Link the proper object
    TEventList *evl = 0;
-   TEntryList *enl = dynamic_cast<TEntryList *>(aList);
+   TEntryList *enl = dynamic_cast<TEntryList*>(aList);
    if (!enl)
-      evl = dynamic_cast<TEventList *>(aList);
+      evl = dynamic_cast<TEventList*>(aList);
    if (!enl && !evl) {
       Error("SetEntryList", "type of input object must be either TEntryList "
                             "or TEventList (found: '%s' - do nothing", aList->ClassName());
@@ -1671,9 +1671,9 @@ void TDSet::SetEntryList(TObject *aList)
 
    // Link the proper object
    TEventList *evl = 0;
-   TEntryList *enl = dynamic_cast<TEntryList *>(aList);
+   TEntryList *enl = dynamic_cast<TEntryList*>(aList);
    if (!enl)
-      evl = dynamic_cast<TEventList *>(aList);
+      evl = dynamic_cast<TEventList*>(aList);
    if (!enl && !evl) {
       Error("SetEntryList", "type of input object must be either TEntryList "
                             "or TEventList (found: '%s' - do nothing", aList->ClassName());

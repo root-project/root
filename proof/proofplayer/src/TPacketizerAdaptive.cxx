@@ -954,6 +954,8 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
                // Fill the info
                elem->SetTDSetOffset(entries);
                if (entries > 0) {
+                  // Most likely valid
+                  elem->SetValid();
                   if (!elem->GetEntryList()) {
                      if (elem->GetFirst() > entries) {
                         Error("ValidateFiles",
@@ -975,7 +977,6 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
                      PDB(kPacketizer,2)
                         Info("ValidateFiles",
                              "found elem '%s' with %lld entries", elem->GetFileName(), entries);
-                     elem->SetValid();
                   }
                }
                // Notify the client
@@ -1070,10 +1071,13 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
       e->SetTDSetOffset(entries);
       if (entries > 0) {
 
+         // This dataset element is most likely valid
+         e->SetValid();
+
          if (!e->GetEntryList()) {
             if (e->GetFirst() > entries) {
                Error("ValidateFiles",
-                     "first (%d) higher then number of entries (%d) in %d",
+                     "first (%d) higher then number of entries (%lld) in %s",
                      e->GetFirst(), entries, e->GetFileName() );
 
                // Invalidate the element
@@ -1086,11 +1090,10 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
                e->SetNum(entries - e->GetFirst());
             } else if (e->GetFirst() + e->GetNum() > entries) {
                Error("ValidateFiles",
-                     "Num (%d) + First (%d) larger then number of keys/entries (%d) in %s",
+                     "Num (%d) + First (%d) larger then number of keys/entries (%lld) in %s",
                      e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
                e->SetNum(entries - e->GetFirst());
             }
-            e->SetValid();
          }
 
 
@@ -1253,7 +1256,7 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
          // - The completed part was marked as done.
          // - Create a new packet with the part to be resubmitted.
          TDSetElement *newPacket = new TDSetElement(*(slstat->fCurElem));
-         if (newPacket && numev < newPacket->GetNum()) {
+         if (newPacket && numev < expectedNumEv) {
             Long64_t first = newPacket->GetFirst();
             newPacket->SetFirst(first + numev);
             if (listOfMissingFiles && *listOfMissingFiles)
