@@ -2485,7 +2485,7 @@ int XrdSecProtocolgsi::ClientDoPxyreq(XrdSutBuffer *br, XrdSutBuffer **bm,
    // Decrypt the main buffer with the session cipher, if available
    if (sessionKey) {
       if (!(sessionKey->Decrypt(*bckm))) {
-         emsg = "error decrypting main buffer with session cipher";
+         emsg = "error   with session cipher";
          return -1;
       }
    }
@@ -3431,6 +3431,17 @@ XrdCryptoX509Crl *XrdSecProtocolgsi::LoadCRL(XrdCryptoX509 *xca,
       }
       SafeDelete(crl);
    }
+
+   // If not required, we are done
+   if (CRLCheck < 2) {
+      // Done
+      return crl;
+   }
+
+   // If in 'required' mode, we will also try to load the CRL from the
+   // information found in the CA certificate or in the certificate directory.
+   // To avoid this overload, the CRL information should be installed offline, e.g. with
+   // utils/getCRLcert
 
    // Try to retrieve it from the URI in the CA certificate, if any
    if ((crl = CF->X509Crl(xca))) {
