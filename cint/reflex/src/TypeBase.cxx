@@ -415,9 +415,6 @@ std::string Reflex::TypeBase::TypeTypeAsString() const {
    case POINTER:
       return "POINTER";
       break;
-   case REFERENCE:
-      return "REFERENCE";
-      break;
    case TYPEDEF:
       return "TYPEDEF";
       break;
