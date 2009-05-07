@@ -332,8 +332,19 @@ const Double_t lineWidthTS = 3.;
 void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
    //Draw line segment.
-   if (fLocked)
+   if (fLocked) {
+      //GL pad painter can be called in non-standard situation:
+      //not from TPad::Paint, but
+      //from TView3D::ExecuteRotateView. This means in fact,
+      //that TView3D wants to draw itself in a XOR mode, via
+      //gVirtualX.
+      if (gVirtualX->GetDrawMode() == TVirtualX::kInvert) {
+         gVirtualX->DrawLine(gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1), 
+                             gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2));
+      }
+
       return;
+   }
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
 
