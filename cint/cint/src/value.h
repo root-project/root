@@ -67,12 +67,18 @@ template <> inline int & G__value_ref<int>(G__value  & buf){ return buf.obj.in;}
 template <> inline long & G__value_ref<long>(G__value  & buf){ return buf.obj.i;}
 template <> inline long long & G__value_ref<long long>(G__value  & buf){ return buf.obj.ll;}
 
+#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif // __GNUC__ && __GNUC__ > 3 && __GNUC_MINOR__ > 1
 template <> inline bool & G__value_ref<bool>(G__value  & buf)
 #ifdef G__BOOL4BYTE
 { return (bool&)buf.obj.i; }
 #else
 { return (bool&)buf.obj.uch; }
 #endif
+#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif // __GNUC__ && __GNUC__ > 3 && __GNUC_MINOR__ > 1
 
 template <typename T>
 inline void G__setvalue(G__value* pbuf, const T& value) { pbuf->obj.i = (long) value; }
