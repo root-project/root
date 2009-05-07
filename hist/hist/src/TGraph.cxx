@@ -1248,7 +1248,7 @@ TH1F *TGraph::GetHistogram() const
 
    ComputeRange(rwxmin, rwymin, rwxmax, rwymax);  //this is redefined in TGraphErrors
 
-   // (if fHistogram exist) && (if the log scale is on) && 
+   // (if fHistogram exist) && (if the log scale is on) &&
    // (if the computed range minimum is > 0) && (if the fHistogram minimum is zero)
    // then it means fHistogram limits have been computed in linear scale
    // therefore they might be too strict and cut some points. In that case the
@@ -1260,7 +1260,7 @@ TH1F *TGraph::GetHistogram() const
       } else if (gPad && gPad->GetLogy()) {
          if (rwymin <= 0 || fHistogram->GetMinimum() != 0) return fHistogram;
       } else {
-   	return fHistogram;
+         return fHistogram;
       }
    }
 
