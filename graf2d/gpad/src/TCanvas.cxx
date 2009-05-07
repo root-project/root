@@ -33,6 +33,7 @@
 #include "TVirtualViewer3D.h"
 #include "TPadPainter.h"
 #include "TVirtualGL.h"
+#include "TVirtualPS.h"
 #include "TObjectSpy.h"
 
 class TCanvasInit {
@@ -121,10 +122,12 @@ area size of a canvas, the following four lines of code should be used:
 </pre>
 End_Html */
 
+
 //______________________________________________________________________________
 TCanvas::TCanvas(Bool_t build) : TPad()
 {
    // Canvas default constructor.
+
    fPainter = 0;
    fUseGL = gStyle->GetCanvasPreferGL();
 
@@ -182,6 +185,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // TRootEmbeddedCanvas class.
    //
    //  If "name" starts with "gl" the canvas is ready to receive GL output.
+
    fPainter = 0;
    Init();
 
@@ -198,7 +202,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    //This is a very special ctor. A window exists already!
    //Can create painter now.
    fUseGL = gStyle->GetCanvasPreferGL();
-   
+
    if (fUseGL) {
       fGLDevice = gGLManager->CreateGLContext(winid);
       if (fGLDevice == -1)
@@ -206,7 +210,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    }
 
    CreatePainter();
-   
+
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
    SetName(name);
    Build();
@@ -226,6 +230,7 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad()
    //  form = 5    500x500 at 50,50
    //
    //  If "name" starts with "gl" the canvas is ready to receive GL output.
+
    fPainter = 0;
    fUseGL = gStyle->GetCanvasPreferGL();
 
@@ -297,7 +302,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
-   
+
    CreatePainter();
 
    SetName(name);
@@ -369,9 +374,9 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
-   
+
    CreatePainter();
-   
+
    SetName(name);
    SetTitle(title); // requires fCanvasImp set
    Build();
@@ -393,6 +398,7 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, 
    //  wh is the canvas size in pixels along Y
    //
    //  If "name" starts with "gl" the canvas is ready to receive GL output.
+
    fPainter = 0;
    fUseGL = gStyle->GetCanvasPreferGL();
 
@@ -446,9 +452,9 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
-   
+
    CreatePainter();
-   
+
    SetName(name);
    SetTitle(title); // requires fCanvasImp set
    Build();
@@ -566,7 +572,7 @@ void TCanvas::Build()
       fBorderMode=gStyle->GetCanvasBorderMode(); // do not call SetBorderMode (function redefined in TCanvas)
       SetPad(0, 0, 1, 1);
       Range(0, 0, 1, 1);   //pad range is set by default to [0,1] in x and y
-      
+
       fPainter->SelectDrawable(fPixmapID);//gVirtualX->SelectPixmap(fPixmapID);    //pixmap must be selected
       PaintBorder(GetFillColor(), kTRUE);    //paint background
    }
@@ -586,6 +592,7 @@ void TCanvas::Build()
 TCanvas::TCanvas(const TCanvas &) : TPad()
 {
    // Intentionally not implemented
+
    fPainter = 0;
 }
 
@@ -620,14 +627,14 @@ void TCanvas::Destructor()
       arr[1] = this;
       if ((*gThreadXAR)("CDEL", 2, arr, 0)) return;
    }
-   
+
    if (!TestBit(kNotDeleted)) return;
 
    if (fContextMenu) { delete fContextMenu; fContextMenu = 0; }
    if (!gPad) return;
 
    Close();
-   
+
    delete fPainter;
 }
 
@@ -694,7 +701,7 @@ void TCanvas::Clear(Option_t *option)
 //______________________________________________________________________________
 void TCanvas::Cleared(TVirtualPad *pad)
 {
-   // emit pad Cleared signal
+   // Emit pad Cleared signal.
 
    Emit("Cleared(TVirtualPad*)", (Long_t)pad);
 }
@@ -703,7 +710,7 @@ void TCanvas::Cleared(TVirtualPad *pad)
 //______________________________________________________________________________
 void TCanvas::Closed()
 {
-   // emit Closed signal
+   // Emit Closed signal.
 
    Emit("Closed()");
 }
@@ -733,10 +740,10 @@ void TCanvas::Close(Option_t *option)
 
    if (!IsBatch()) {
       gVirtualX->SelectWindow(fCanvasID);    //select current canvas
-      
+
       if (fGLDevice != -1)
          gGLManager->DeleteGLContext(fGLDevice);//?
-      
+
       if (fCanvasImp) fCanvasImp->Close();
    }
    fCanvasID = -1;
@@ -1006,6 +1013,7 @@ void TCanvas::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 void TCanvas::FeedbackMode(Bool_t set)
 {
    // Turn rubberband feedback mode on or off.
+
    if (set) {
       SetDoubleBuffer(0);             // turn off double buffer mode
       gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
@@ -1032,6 +1040,8 @@ void TCanvas::Flush()
          CopyPixmaps();
          gVirtualX->UpdateWindow(1);
       } else {
+         TVirtualPS *tvps = gVirtualPS;
+         gVirtualPS = 0;
          gGLManager->MakeCurrent(fGLDevice);
          fPainter->InitPainter();
          Paint();
@@ -1042,6 +1052,7 @@ void TCanvas::Flush()
          }
          fPainter->LockPainter();
          gGLManager->Flush(fGLDevice);
+         gVirtualPS = tvps;
       }
    }
    if (padsav) padsav->cd();
@@ -1231,7 +1242,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
                     // we will only use its coordinate system
 
       FeedbackMode(kTRUE);
-      
+
       fSelected->Pop();           // pop object to foreground
       pad->cd();                  // and make its pad the current pad
       if (gDebug)
@@ -1600,7 +1611,7 @@ void TCanvas::RunAutoExec()
 //______________________________________________________________________________
 void TCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-   // Save primitives in this canvas in C++ macro file with GUI
+   // Save primitives in this canvas in C++ macro file with GUI.
 
    Bool_t invalid = kFALSE;
 
@@ -1814,6 +1825,7 @@ void TCanvas::SetCursor(ECursor cursor)
 void TCanvas::SetDoubleBuffer(Int_t mode)
 {
    // Set Double Buffer On/Off.
+
    if (IsBatch()) return;
    fDoubleBuffer = mode;
    gVirtualX->SetDoubleBuffer(fCanvasID, mode);
@@ -1852,8 +1864,8 @@ void TCanvas::SetFixedAspectRatio(Bool_t fixed)
 //______________________________________________________________________________
 void TCanvas::SetFolder(Bool_t isfolder)
 {
-   // if isfolder=kTRUE, the canvas can be browsed like a folder
-   // by default a canvas is not browsable
+   // If isfolder=kTRUE, the canvas can be browsed like a folder
+   // by default a canvas is not browsable.
 
    fgIsFolder = isfolder;
 }
@@ -1862,7 +1874,7 @@ void TCanvas::SetFolder(Bool_t isfolder)
 //______________________________________________________________________________
 void TCanvas::SetSelected(TObject *obj)
 {
-   // Set selectd canvas.
+   // Set selected canvas.
 
    fSelected = obj;
    if (obj) obj->SetBit(kMustCleanup);
@@ -1872,7 +1884,7 @@ void TCanvas::SetSelected(TObject *obj)
 //______________________________________________________________________________
 void TCanvas::SetTitle(const char *title)
 {
-   // Set Canvas title.
+   // Set canvas title.
 
    fTitle = title;
    if (fCanvasImp) fCanvasImp->SetWindowTitle(title);
@@ -2044,6 +2056,7 @@ void TCanvas::ToggleEventStatus()
 void TCanvas::ToggleToolBar()
 {
    // Toggle toolbar.
+
    Bool_t showToolBar = !TestBit(kShowToolBar);
    SetBit(kShowToolBar,showToolBar);
 
@@ -2055,6 +2068,7 @@ void TCanvas::ToggleToolBar()
 void TCanvas::ToggleEditor()
 {
    // Toggle editor.
+
    Bool_t showEditor = !TestBit(kShowEditor);
    SetBit(kShowEditor,showEditor);
 
@@ -2065,7 +2079,7 @@ void TCanvas::ToggleEditor()
 //______________________________________________________________________________
 void TCanvas::Update()
 {
-   // Update canvas pad buffers
+   // Update canvas pad buffers.
 
    if (fUpdating) return;
 
@@ -2104,33 +2118,36 @@ void TCanvas::DisconnectWidget()
    fContextMenu = 0;
 }
 
+
 //______________________________________________________________________________
 Bool_t TCanvas::IsGrayscale()
 {
    // Check whether this canvas is to be drawn in grayscale mode.
+
    return TestBit(kIsGrayscale);
 }
+
 
 //______________________________________________________________________________
 void TCanvas::SetGrayscale(Bool_t set /*= kTRUE*/)
 {
    // Set whether this canvas should be painted in grayscale, and re-paint
    // it if necessary.
+
    if (IsGrayscale() == set) return;
    SetBit(kIsGrayscale, set);
    Paint(); // update canvas and all sub-pads, unconditionally!
 }
 
+
 //______________________________________________________________________________
 void TCanvas::CreatePainter()
 {
-   /*
-   Probably, TPadPainter must be placed in a separate ROOT module - 
-   "padpainter" (the same as "histpainter"). But now, it's directly in a
-   gpad dir, so, in case of default painter, no *.so should be loaded,
-   no need in plugin managers.
-   May change in future.
-   */
+   // Probably, TPadPainter must be placed in a separate ROOT module -
+   // "padpainter" (the same as "histpainter"). But now, it's directly in a
+   // gpad dir, so, in case of default painter, no *.so should be loaded,
+   // no need in plugin managers.
+   // May change in future.
 
    //Even for batch mode painter is still required, just to delegate
    //some calls to batch "virtual X".
@@ -2146,12 +2163,12 @@ void TCanvas::CreatePainter()
    }
 }
 
+
 //______________________________________________________________________________
 TVirtualPadPainter *TCanvas::GetCanvasPainter()
 {
-   //Access and (probably) creation of pad painter.
-   if (!fPainter)
-      CreatePainter();
-   
+   // Access and (probably) creation of pad painter.
+
+   if (!fPainter) CreatePainter();
    return fPainter;
 }

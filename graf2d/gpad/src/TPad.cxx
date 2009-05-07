@@ -239,7 +239,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
 
    fViewer3D = 0;
 
-   fGLDevice = fCanvas->GetGLDevice();   
+   fGLDevice = fCanvas->GetGLDevice();
    // Set default world coordinates to NDC [0,1]
    fX1 = 0;
    fX2 = 1;
@@ -2718,6 +2718,7 @@ Double_t TPad::YtoPad(Double_t y) const
 void TPad::Paint(Option_t * /*option*/)
 {
    // Paint all primitives in pad.
+
    if (!fPrimitives) fPrimitives = new TList;
    if (fViewer3D && fViewer3D->CanLoopOnPrimitives()) {
       fViewer3D->PadPaint(this);
@@ -2773,12 +2774,12 @@ void TPad::Paint(Option_t * /*option*/)
       fViewer3D->EndScene();
    }
 
-   // Generate the PS output using gl2ps
-   if (GetGLDevice()!=-1 && gVirtualPS) {
-      gPad = this;
-      gGLManager->PrintViewer(GetViewer3D());
-      gPad = padsav;
-   }
+///// Generate the PS output using gl2ps
+///if (GetGLDevice()!=-1 && gVirtualPS) {
+///   gPad = this;
+///   gGLManager->PrintViewer(GetViewer3D());
+///   gPad = padsav;
+///}
 }
 
 
@@ -2803,7 +2804,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
 
    const Double_t realBsX = bordersize / (GetAbsWNDC() * GetWw()) * (fX2 - fX1);
    const Double_t realBsY = bordersize / (GetAbsHNDC() * GetWh()) * (fY2 - fY1);
-   
+
    Short_t px1,py1,px2,py2;
    Double_t xl, xt, yl, yt;
 
@@ -2826,7 +2827,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    else           {yl = fY2; yt = fY1;}
 
    Double_t frameXs[7] = {}, frameYs[7] = {};
-      
+
    if (!IsBatch()) {
       // Draw top&left part of the box
       frameXs[0] = xl;           frameYs[0] = yl;
@@ -2836,7 +2837,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
       frameXs[4] = xt;           frameYs[4] = yt;
       frameXs[5] = xl;           frameYs[5] = yt;
       frameXs[6] = xl;           frameYs[6] = yl;
-      
+
       if (fBorderMode == -1) GetPainter()->SetFillColor(dark);
       else                   GetPainter()->SetFillColor(light);
       GetPainter()->DrawFillArea(7, frameXs, frameYs);
@@ -3529,7 +3530,7 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    } else {
       if (Clip(x,y,fX1,fY1,fX2,fY2) == 2) return;
    }
-   
+
    if (!gPad->IsBatch())
       GetPainter()->DrawLine(x[0], y[0], x[1], y[1]);
 
@@ -3604,7 +3605,7 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
    // Paint polyline in CurrentPad World coordinates.
 
    if (n < 2) return;
-   
+
    Double_t xmin,xmax,ymin,ymax;
    if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
@@ -3639,7 +3640,7 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
       i1 = -1;
       np = 1;
    }
-   
+
    Modified();
 }
 
@@ -3652,7 +3653,7 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
    //  If option[0] == 'C' no clipping
 
    if (n < 2) return;
-   
+
    Double_t xmin,xmax,ymin,ymax;
    Bool_t mustClip = kTRUE;
    if (TestBit(TGraph::kClipFrame)) {
@@ -3661,9 +3662,9 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
       if (option && (option[0] == 'C')) mustClip = kFALSE;
    }
-   
+
    Int_t i, i1=-1, np=1, iclip=0;
-   
+
    for (i=0; i < n-1; i++) {
       Double_t x1=x[i];
       Double_t y1=y[i];
@@ -3693,7 +3694,7 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       i1 = -1;
       np = 1;
    }
-   
+
    Modified();
 }
 
@@ -4031,7 +4032,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    //               "gif+NN" - an animated GIF file is produced, where NN is delay in 10ms units
    //               "xpm" - a XPM file is produced
    //               "png" - a PNG file is produced
-   //               "jpg" - a JPEG file is produced. 
+   //               "jpg" - a JPEG file is produced.
    //                       NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
    //               "tiff" - a TIFF file is produced
    //               "cxx" - a C++ macro file is produced
@@ -4119,9 +4120,6 @@ void TPad::Print(const char *filenam, Option_t *option)
    //
    // The delay between each frame must be specified in each Print() statement.
 
-   if (fCanvas->UseGL())
-      return;
-   
    TString psname, fs1, fs2;
    char *filename;
 
@@ -4304,7 +4302,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    // in case we read directly from a Root file and the canvas
    // is not on the screen, set batch mode
-   
+
    Bool_t mustOpen  = kTRUE;
    Bool_t mustClose = kTRUE;
    char *copen=0, *cclose=0, *copenb=0, *ccloseb=0;
@@ -4337,7 +4335,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    TPad *padsav = (TPad*)gPad;
    cd();
    TVirtualPS *psave = gVirtualPS;
-   
+
    if (!gVirtualPS || mustOpen) {
       // Plugin Postscript driver
       TPluginHandler *h;
@@ -4369,7 +4367,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
       if (noScreen) GetCanvas()->SetBatch(kFALSE);
       if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt, psname.Data());
-      
+
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;
@@ -4429,7 +4427,7 @@ void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
    if (gPad == this)
       GetPainter()->InvalidateCS();
-   
+
    // emit signal
    RangeChanged();
 }
@@ -4688,7 +4686,6 @@ void TPad::ResizePad(Option_t *option)
          ((TPad*)obj)->ResizePad(option);
    }
 
-   
    // Reset all current sizes
    if (gPad->IsBatch())
       fPixmapID = 0;
