@@ -63,18 +63,7 @@ namespace {
 
    typedef std::deque<TX11GLManager::TGLContext_t> DeviceTable_t;
    typedef DeviceTable_t::size_type SizeType_t;
-#ifndef R__MACOSX
    typedef std::map<Int_t, XVisualInfo *> WinTable_t;
-#else
-   struct WinInfo_t {
-      UInt_t       fW;
-      UInt_t       fH;
-      Window_t     fGLWin;
-      XVisualInfo *fVisInfo;
-   };
-
-   typedef std::map<Int_t, WinInfo_t> WinTable_t;
-#endif
    XSetWindowAttributes dummyAttr;
 
    //RAII class for Pixmap
@@ -241,14 +230,6 @@ Int_t TX11GLManager::InitGLWindow(Window_t winID)
    ULong_t mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask | CWBackingStore | CWBitGravity;
 
    // Create window with specific visual.
-#ifdef R__MACOSX
-   Window glBack = XCreateWindow(
-                                 fPimpl->fDpy, winID,
-                                 x, y, w, h,
-                                 0, visInfo->depth, InputOutput,
-                                 visInfo->visual, mask, &attr
-                                );
-#endif
    Window glWin = XCreateWindow(
                                 fPimpl->fDpy, winID,
                                 x, y, w, h,
@@ -257,24 +238,13 @@ Int_t TX11GLManager::InitGLWindow(Window_t winID)
                                );
 
    // Check results.
-#ifdef R__MACOSX
-   XMapWindow(fPimpl->fDpy, glBack);
-   gVirtualX->AddWindow(glBack,  w, h);
-#endif
    XMapWindow(fPimpl->fDpy, glWin);
 
    // Register window for gVirtualX.
    Int_t x11Ind = gVirtualX->AddWindow(glWin,  w, h);
 
    // Register this window for GL manager.
-#ifndef R__MACOSX
    fPimpl->fGLWindows[x11Ind] = visInfo;
-#else
-   fPimpl->fGLWindows[x11Ind].fVisInfo = visInfo;
-   fPimpl->fGLWindows[x11Ind].fGLWin   = glBack;
-   fPimpl->fGLWindows[x11Ind].fW = w;
-   fPimpl->fGLWindows[x11Ind].fH = h;
-#endif
 
    return x11Ind;
 }
@@ -285,11 +255,7 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
 {
    // Context creation requires Display * and XVisualInfo
    // (was saved for such winInd).
-#ifndef R__MACOSX
    GLXContext glxCtx = glXCreateContext(fPimpl->fDpy, fPimpl->fGLWindows[winInd], None, True);
-#else
-   GLXContext glxCtx = glXCreateContext(fPimpl->fDpy, fPimpl->fGLWindows[winInd].fVisInfo, None, True);
-#endif
 
    if (!glxCtx) {
       Error("CreateContext", "glXCreateContext failed\n");
@@ -321,13 +287,8 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
 Bool_t TX11GLManager::MakeCurrent(Int_t ctxInd)
 {
    // Make GL context current.
-#ifndef R__MACOSX
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
    return glXMakeCurrent(fPimpl->fDpy, gVirtualX->GetWindowID(ctx.fWindowIndex), ctx.fGLXContext);
-#else
-   TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
-   return glXMakeCurrent(fPimpl->fDpy, fPimpl->fGLWindows[ctx.fWindowIndex].fGLWin, ctx.fGLXContext);
-#endif
 }
 
 
@@ -362,13 +323,8 @@ Bool_t TX11GLManager::CreateGLPixmap(TGLContext_t &ctx)
    // Create GL pixmap.
 
    // Create new x11 pixmap and XImage.
-#ifndef R__MACOSX
    Pixmap x11Pix = XCreatePixmap(fPimpl->fDpy, gVirtualX->GetWindowID(ctx.fWindowIndex), ctx.fW,
                                  ctx.fH, fPimpl->fGLWindows[ctx.fWindowIndex]->depth);
-#else
-   Pixmap x11Pix = XCreatePixmap(fPimpl->fDpy, gVirtualX->GetWindowID(ctx.fWindowIndex), ctx.fW,
-                                 ctx.fH, fPimpl->fGLWindows[ctx.fWindowIndex].fVisInfo->depth);
-#endif
 
    if (!x11Pix) {
       Error("CreateGLPixmap", "XCreatePixmap failed\n");
@@ -378,11 +334,7 @@ Bool_t TX11GLManager::CreateGLPixmap(TGLContext_t &ctx)
    TX11PixGuard pixGuard(fPimpl->fDpy, x11Pix);
 
    // XImage part here.
-#ifndef R__MACOSX
    XVisualInfo *visInfo = fPimpl->fGLWindows[ctx.fWindowIndex];
-#else
-   XVisualInfo *visInfo = fPimpl->fGLWindows[ctx.fWindowIndex].fVisInfo;
-#endif
    XImage *testIm = XCreateImage(fPimpl->fDpy, visInfo->visual, visInfo->depth, ZPixmap, 0, 0, ctx.fW, ctx.fH, 32, 0);
 
    if (testIm) {
@@ -462,13 +414,6 @@ Bool_t TX11GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt
             if (ctx.fXImage) XDestroyImage(ctx.fXImage);
             ctx.fXImage = newCtx.fXImage;
             ctx.fBUBuffer.swap(newCtx.fBUBuffer);
-#ifdef R__MACOSX
-            if (w > fPimpl->fGLWindows[ctx.fWindowIndex].fW || h > fPimpl->fGLWindows[ctx.fWindowIndex].fH) {
-               XResizeWindow(fPimpl->fDpy, fPimpl->fGLWindows[ctx.fWindowIndex].fGLWin, w, h);
-               fPimpl->fGLWindows[ctx.fWindowIndex].fW = w;
-               fPimpl->fGLWindows[ctx.fWindowIndex].fH = h;
-            }
-#endif
             return kTRUE;
          } else
             Error("ResizeOffScreenDevice", "Resize failed\n");
