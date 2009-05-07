@@ -3296,8 +3296,7 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
     RooRealVar* x = (RooRealVar*)obs.at(0) ;
     RooRealVar* y = (RooRealVar*)obs.at(1) ;
     f = functor(obs,pars,nset) ;
-    const char* name = "RooFunctor" ;
-    tf = new TF2(GetName(),(void*)f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),pars.getSize(),(char*)name) ;
+    tf = new TF2(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),pars.getSize(),"RooFunctor") ;
     break ;
   }
   case 3: {
@@ -3305,8 +3304,7 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
     RooRealVar* y = (RooRealVar*)obs.at(1) ;
     RooRealVar* z = (RooRealVar*)obs.at(2) ;
     f = functor(obs,pars,nset) ;
-    const char* name = "RooFunctor" ;
-    tf = new TF3(GetName(),(void*)f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),z->getMin(),z->getMax(),pars.getSize(),(char*)name) ;
+    tf = new TF3(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),z->getMin(),z->getMax(),pars.getSize(),"RooFunctor") ;
     break ;
   }
   default:
