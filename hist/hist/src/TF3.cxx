@@ -154,7 +154,7 @@ TF3::TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 }
 
 //______________________________________________________________________________
-TF3::TF3(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, char *className)
+TF3::TF3(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char *className)
    : TF2(name, ptr, xmin, xmax, ymin, ymax,  npar, className), 
    fZmin(zmin), 
    fZmax(zmax), 
@@ -173,7 +173,7 @@ TF3::TF3(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ym
 }
 
 //______________________________________________________________________________
-TF3::TF3(const char *name, void * ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, char *className, char * methodName)
+TF3::TF3(const char *name, void * ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char *className, const char * methodName)
    : TF2(name, ptr, (void*)0,xmin, xmax, ymin, ymax, npar,className, methodName), 
    fZmin(zmin), 
    fZmax(zmax), 

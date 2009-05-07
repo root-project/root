@@ -53,7 +53,7 @@ public:
    // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type 
    // MemFn. 
    template <class PtrObj, typename MemFn>
-   TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, char * c1, char * c2) : 
+   TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char * c1, const char * c2) : 
       TF2(name,p,memFn,xmin,xmax,ymin,ymax,npar,c1,c2),
       fZmin(zmin), fZmax(zmax), fNpz(30) 
    {
@@ -62,7 +62,7 @@ public:
    // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
    // and returning a double.    
    template <typename Func> 
-   TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, char * c1  ) : 
+   TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char * c1  ) : 
       TF2(name,f,xmin,xmax,ymin,ymax,npar,c1),
       fZmin(zmin), fZmax(zmax), fNpz(30) 
    {
@@ -70,8 +70,8 @@ public:
    } 
 
    // constructor used by CINT 
-   TF3(const char *name, void *ptr,  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, char *className ); 
-   TF3(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, char *className, char *methodName = 0);
+   TF3(const char *name, void *ptr,  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char *className ); 
+   TF3(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char *className, const char *methodName = 0);
 
    TF3(const TF3 &f3);
    TF3& operator=(const TF3 &rhs);
