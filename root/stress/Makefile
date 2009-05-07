@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.nomark *.log *.root *.dat *.ps test files \
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root *.dat *.ps test files \
   stressGraphics.ref *.tmp weights
 
 # we don't run stressHepix for now; it's simply calling all the other stress tests
@@ -44,22 +44,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 define RootsysTestDiff
-	$(CMDECHO) grep -v -i Mbytes $< | grep -v -i seconds | grep -v -i MARKS \
-	| grep -v SYS: | grep -v -i time \
-	| grep -v 'does not exist, generating it' \
-	| grep -v 'does not exist in' \
-	| grep -v 'or has wrong file extension' \
-	| grep -v 'RooFit v' \
-	| grep -v 'Copyright ' \
-	| grep -v 'MB/s' \
-	| sed 's,\([[:space:]]\?[.[:digit:]]\+e[+-]\)0\([[:digit:]]\{2\}\), \1\2,g' \
-	> $<.nomark || true
-	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
-	   diff -u -b $@.ref$(ROOTBITS) $<.nomark ; \
-	else \
-	   diff -u -b $@.ref $<.nomark ; \
-	fi
-	$(CMDECHO) rm -f $<.nomark
+	$(CMDECHO) [ "x`grep -i fail $<`" = "x" ] || ( grep -i fail $<; false )
 	$(CMDECHO) ( \
 	  MARKS=`cat $< \
 	  | sed 's,^.*ROOTMARKS[[:space:]:=]*\([[:digit:].]\+\).*$$,\1 ROOTmarks,' \
@@ -106,15 +91,14 @@ STRESSFILESCOPIEDTAG := test/.COPIEDTAG
 # interpreted mode
 $(STRESSTESTS): %-test: %-itest %-ctest
 
-# .ref: reference file, should match .log.nomark
 # .log: output of running the test
 
 # rule for compiled tests
-$(STRESSTESTSCOMP): %-ctest: %-ctest.log %-ctest.ref
+$(STRESSTESTSCOMP): %-ctest: %-ctest.log
 	$(RootsysTestDiff)
 
 # rule for interpreted tests
-$(STRESSTESTSINTERP): %-itest: %-itest.log %-itest.ref
+$(STRESSTESTSINTERP): %-itest: %-itest.log
 	$(RootsysTestDiff)
 
 # tests to skip
