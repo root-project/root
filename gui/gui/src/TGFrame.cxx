@@ -1473,7 +1473,7 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
       char str[2];
       gVirtualX->LookupString(event, str, sizeof(str), keysym);
 
-      if (str[0] == 19) {  // ctrl-s
+      if ((keysym & ~0x20) == kKey_S) { // case insensitive ctrl-s
          static TString dir(".");
          static Bool_t overwr = kFALSE;
          TGFileInfo fi;
