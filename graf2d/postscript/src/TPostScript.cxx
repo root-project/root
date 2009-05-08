@@ -1050,7 +1050,7 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
                                     180, 90,135, 45,150, 30,120, 60,
                                     180, 90,135, 45,150, 30,120, 60};
    Int_t  i, n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
-   fais = fasi = 0;
+   fais = fasi = n = 0;
    Int_t jxd0 = XtoPS(xw[0]);
    Int_t jyd0 = YtoPS(yw[0]);
    Style_t linestylesav = fLineStyle;
@@ -1061,7 +1061,8 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
       SetColor(Int_t(fLineColor));
-   } else {
+   }
+   if (nn < 0) {
       n = -nn;
       SetLineStyle(1);
       SetLineWidth(1);
@@ -1160,7 +1161,7 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
                                     180, 90,135, 45,150, 30,120, 60,
                                     180, 90,135, 45,150, 30,120, 60};
    Int_t  i, n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
-   fais = fasi = 0;
+   fais = fasi = n = 0;
    Int_t jxd0 = XtoPS(xw[0]);
    Int_t jyd0 = YtoPS(yw[0]);
    Style_t linestylesav = fLineStyle;
@@ -1171,7 +1172,8 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
       SetColor(Int_t(fLineColor));
-   } else {
+   }
+   if (nn < 0) {
       n = -nn;
       SetLineStyle(1);
       SetLineWidth(1);
