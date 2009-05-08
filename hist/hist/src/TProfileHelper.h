@@ -405,14 +405,15 @@ void TProfileHelper::Sumw2(T* p)
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
 
-   if (!p->fgDefaultSumw2 && p->fBinSumw2.fN == p->fNcells) {
-      Warning("Sumw2","Sum of squares of weights structure already created");
+   if ( p->fBinSumw2.fN == p->fNcells) {
+      if (!p->fgDefaultSumw2) 
+         Warning("Sumw2","Sum of squares of profile bin weights structure already created");
       return;
    }
 
    p->fBinSumw2.Set(p->fNcells);
 
-   // by default fill with the sum of weights wich are stored in fBinEntries
+   // by default fill with the sum of weights which are stored in fBinEntries
    for (Int_t bin=0; bin<p->fNcells; bin++) {
       p->fBinSumw2.fArray[bin] = p->fBinEntries.fArray[bin]; 
    }

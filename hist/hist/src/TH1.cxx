@@ -7288,10 +7288,11 @@ void TH1::Sumw2()
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
 
-   if (!fgDefaultSumw2 && fSumw2.fN) {
-      Warning("Sumw2","Sum of squares of weights structure already created");
-      return;
-   }
+      if (fSumw2.fN == fNcells) {
+         if (!fgDefaultSumw2 )  
+            Warning("Sumw2","Sum of squares of weights structure already created");         
+         return;
+      }
 
    fSumw2.Set(fNcells);
 
