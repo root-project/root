@@ -2212,6 +2212,10 @@ void TBranchElement::InitializeOffsets()
          }
          localOffset = branchElem->GetOffset();
          branchClass = branchElem->GetClassPointer();
+         if (localOffset == TStreamerInfo::kMissing) {
+            localOffset = 0;
+            fObject = 0;
+         }
       }
       if (!branchClass) {
          Error("InitializeOffsets", "Could not find class for branch: %s", GetName());
@@ -2251,6 +2255,7 @@ void TBranchElement::InitializeOffsets()
          localOffset = subBranchElement->GetOffset();
          if (localOffset == TStreamerInfo::kMissing) {
             localOffset = 0;
+            subBranch->fObject = 0;
          }
 
          {
