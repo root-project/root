@@ -4143,9 +4143,13 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    while ((fe = (TFriendElement*)nextf())) {
       TTree *t = fe->GetTree();
       if (t) {
-         if ( t->LoadTreeFriend(entry,this) >= 0 ) {
+         if (fe->TestBit(TFriendElement::kFromChain)) {
             nb = t->GetEntry(t->GetReadEntry(),getall);
-         } else nb = 0;
+         } else {
+            if ( t->LoadTreeFriend(entry,this) >= 0 ) {
+               nb = t->GetEntry(t->GetReadEntry(),getall);
+            } else nb = 0;
+         }
          if (nb < 0) return nb;
          nbytes += nb;
       }
