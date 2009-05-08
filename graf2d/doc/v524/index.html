@@ -28,6 +28,11 @@
 <li> The landscape orientation is now correct in pdf files. gv recognizes
      the files as "Landscape" and the orientation is not upside down
      as it was before (seascape).
+<li> In PostScript and PDF files the method <tt>DrawPS</tt> is used to write
+     a single (x,y) position.
+     This case was not treated correctly and, because of that, the PS and PDF
+     files might contain useless attributes settings. That was only a few
+     bytes more in the file but they were useless.
 </ul>
 
 <h4>TLegend</h4>
