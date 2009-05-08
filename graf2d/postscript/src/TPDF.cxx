@@ -269,7 +269,7 @@ void TPDF::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    //
    // mode = -1  box looks as it is behind the screen
    // mode =  1  box looks as it is in front of the screen
-   // border is the border size in already precomputed PostScript units
+   // border is the border size in already precomputed PDF units
    // dark  is the color for the dark part of the frame
    // light is the color for the light part of the frame
 
@@ -699,7 +699,7 @@ void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
    //
    //  Draw a polyline through the points xw,yw.
    //  If nn=1 moves only to point xw,yw.
-   //  If nn=0 the XW(1) and YW(1) are  written  in the PostScript file
+   //  If nn=0 the XW(1) and YW(1) are  written  in the PDF file
    //          according to the current NT.
    //  If nn>0 the line is clipped as a line.
    //  If nn<0 the line is clipped as a fill area.
@@ -710,7 +710,7 @@ void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
    static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
                                     180, 90,135, 45,150, 30,120, 60,
                                     180, 90,135, 45,150, 30,120, 60};
-   Int_t  n, fais = 0 , fasi = 0;
+   Int_t  n = 0, fais = 0 , fasi = 0;
 
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
@@ -720,7 +720,8 @@ void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
       SetColor(Int_t(fLineColor));
-   } else {
+   }
+   if (nn < 0) {
       n = -nn;
       SetLineStyle(1);
       SetLineWidth(1);
@@ -783,7 +784,7 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    //
    // Draw a polyline through  the points xw,yw.
    // If nn=1 moves only to point xw,yw.
-   // If nn=0 the xw(1) and YW(1) are  written  in the PostScript file
+   // If nn=0 the xw(1) and YW(1) are  written  in the PDF file
    //         according to the current NT.
    // If nn>0 the line is clipped as a line.
    // If nn<0 the line is clipped as a fill area.
@@ -794,7 +795,7 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
                                     180, 90,135, 45,150, 30,120, 60,
                                     180, 90,135, 45,150, 30,120, 60};
-   Int_t  n, fais = 0, fasi = 0;
+   Int_t  n = 0, fais = 0, fasi = 0;
 
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
@@ -804,7 +805,8 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
       SetColor(Int_t(fLineColor));
-   } else {
+   }
+   if (nn < 0) {
       n = -nn;
       SetLineStyle(1);
       SetLineWidth(1);
