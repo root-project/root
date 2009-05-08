@@ -29,7 +29,7 @@ TEveJetConeGL::TEveJetConeGL() :
 {
    // Constructor.
 
-   // fDLCache = kFALSE; // Disable display list.
+   fDLCache = kFALSE; // Disable display list.
 }
 
 /******************************************************************************/
