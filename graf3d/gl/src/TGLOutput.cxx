@@ -109,9 +109,7 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
          buffsize += 1024*1024;
          gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
          gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
-         | GL2PS_POLYGON_OFFSET_FILL | GL2PS_SILENT
-         | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
-         | 0,
+         | GL2PS_SILENT | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL | 0,
          GL_RGBA, 0, NULL,0, 0, 0,
          buffsize, output, NULL);
          viewer.DoDraw();
@@ -212,9 +210,7 @@ void TGLOutput::Capture(TGLViewer & viewer)
       buffsize += 1024*1024;
       gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
       gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
-      | GL2PS_POLYGON_OFFSET_FILL | GL2PS_SILENT
-      | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
-      | 0,
+      | GL2PS_SILENT | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL | 0,
       GL_RGBA, 0, NULL,0, 0, 0,
       buffsize, output, NULL);
       viewer.DoDraw();

@@ -196,6 +196,7 @@ void TGLPlotPainter::Paint()
 void TGLPlotPainter::PrintPlot()const
 {
    // Generate PS using gl2ps
+
    using namespace std;
 
    TGLOutput::StartEmbeddedPS();
@@ -204,14 +205,16 @@ void TGLPlotPainter::PrintPlot()const
    Int_t gl2psSort   = GL2PS_BSP_SORT;
    Int_t buffsize    = 0;
    Int_t state       = GL2PS_OVERFLOW;
+   GLint gl2psoption = GL2PS_USE_CURRENT_VIEWPORT | 
+                       GL2PS_SILENT               |
+		       GL2PS_BEST_ROOT            |
+		       GL2PS_OCCLUSION_CULL       |
+		       0;
 
    while (state == GL2PS_OVERFLOW) {
       buffsize += 1024*1024;
       gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
-                      gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
-                      | GL2PS_POLYGON_OFFSET_FILL | GL2PS_SILENT
-                      | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
-                      | 0,
+                      gl2psFormat, gl2psSort, gl2psoption,
                       GL_RGBA, 0, NULL,0, 0, 0,
                       buffsize, output, NULL);
       DrawPlot();
