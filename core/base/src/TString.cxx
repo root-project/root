@@ -19,11 +19,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-// silence warning about gNullRef cast
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ >= 1
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-#endif
-
 #include "RConfig.h"
 #include <stdlib.h>
 #include <ctype.h>
@@ -57,12 +52,13 @@ const UInt_t kHashShift = 5;
 // loader will set to zero
 
 static long gNullRef[(sizeof(TStringRef)+1)/sizeof(long) + 1];
+static void *gNullRefTmp = gNullRef;
 
 // Use macro in stead of the following to side-step compilers (e.g. DEC)
 // that generate pre-main code for the initialization of address constants.
 // static TStringRef* const gNullStringRef = (TStringRef*)gNullRef;
 
-#define gNullStringRef ((TStringRef*)gNullRef)
+#define gNullStringRef ((TStringRef*)gNullRefTmp)
 
 // ------------------------------------------------------------------------
 //

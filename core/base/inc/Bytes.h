@@ -475,7 +475,8 @@ inline ULong_t host2net(ULong_t x)
    return Rbswap_64(x);
 # else
    char sw[sizeof(ULong_t)];
-   *(ULong_t *)sw = x;
+   void *tmp = sw;
+   *(ULong_t *)tmp = x;
 
    char *sb = (char *)&x;
    sb[0] = sw[7];
@@ -499,7 +500,8 @@ inline ULong64_t host2net(ULong64_t x)
    return Rbswap_64(x);
 #else
    char sw[sizeof(ULong64_t)];
-   *(ULong64_t *)sw = x;
+   void *tmp = sw;
+   *(ULong64_t *)tmp = x;
 
    char *sb = (char *)&x;
    sb[0] = sw[7];
@@ -544,7 +546,8 @@ inline Double_t host2net(Double_t x)
    return u.d;
 # else
    char sw[sizeof(Double_t)];
-   *(Double_t *)sw = x;
+   void *tmp = sw;
+   *(Double_t *)tmp = x;
 
    char *sb = (char *)&x;
    sb[0] = sw[7];

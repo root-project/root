@@ -223,13 +223,15 @@ void smartPrintClientHeader(XPClientRequest* hdr)
    printf("%40s%s (%d)\n", "ClientHeader.requestid = ",
           convertRequestIdToChar(hdr->header.requestid), hdr->header.requestid);
 
+   void *tmp;
    switch(hdr->header.requestid) {
 
    case kXP_login:
       printf("%40s%d \n", "ClientHeader.login.pid = ", hdr->login.pid);
       printf("%40s%s\n", "ClientHeader.login_body.username = ", hdr->login.username);
+      tmp = &hdr->login.reserved[0];
       printf("%40s0 repeated %d times\n", "ClientHeader.login.reserved = ",
-             *((kXR_int16 *)&(hdr->login.reserved[0])));
+             *((kXR_int16 *)tmp)); // use tmp to avoid type punned warning
       printf("%40s%d\n", "ClientHeader.login.role = ", (kXR_int32)hdr->login.role[0]);
       break;
    case kXP_auth:

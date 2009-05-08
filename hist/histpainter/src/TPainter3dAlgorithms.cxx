@@ -1018,6 +1018,8 @@ void TPainter3dAlgorithms::FillPolygonBorder(Int_t nn, Double_t *xy)
    if (fIfrast) return;
 
    n = nn;
+   x1[0] = 0;
+   y1[0] = 0;
    for (i = 1; i <= n; ++i) {
       x1[i - 1] = Int_t(fNxrast*((xy[2*i + 1] - fXrast) /fDXrast) - 0.01);
       y1[i - 1] = Int_t(fNyrast*((xy[2*i + 2] - fYrast) /fDYrast) - 0.01);

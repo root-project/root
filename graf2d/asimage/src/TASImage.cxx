@@ -114,6 +114,11 @@ THashTable *TASImage::fgPlugList = new THashTable(50);
 static char *gIconPaths[7] = {0, 0, 0, 0, 0, 0, 0};
 
 ///////////////////////////// alphablending macros ///////////////////////////////
+
+#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
+
 #ifdef R__BYTESWAP
 typedef struct {
    unsigned char b;

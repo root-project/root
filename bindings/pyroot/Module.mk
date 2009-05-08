@@ -135,3 +135,6 @@ else
 $(PYROOTO): CXXFLAGS += $(PYTHONINCDIR:%=-I%)
 endif
 $(PYTHON64O): CFLAGS += $(PYTHONINCDIR:%=-I%)
+ifeq ($(GCC_MAJOR),4)
+$(PYROOTO): CXXFLAGS += -fno-strict-aliasing
+endif
