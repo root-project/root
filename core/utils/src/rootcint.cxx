@@ -567,7 +567,7 @@ void SetRootSys()
 namespace {
    class R__tmpnamElement {
    public:
-      R__tmpnamElement() {}
+      R__tmpnamElement() : fTmpnam() {}
       R__tmpnamElement(const std::string& tmpnam): fTmpnam(tmpnam) {}
       ~R__tmpnamElement() { unlink(fTmpnam.c_str()); }
    private:

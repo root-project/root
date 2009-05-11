@@ -45,7 +45,7 @@ namespace ROOT {
       void WriteStreamer(FILE *file);
       
    private:
-      RStl() {};
+      RStl() : fList() {};
       RStl(const RStl&);
       RStl& operator=(const RStl&);
    };
