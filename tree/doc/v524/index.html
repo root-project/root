@@ -13,3 +13,9 @@
 the input and output TTrees by falling back to using the 'slow' mode.  In particular this allow
 a 'fast cloning' to handle files that requires schema evolution (albeit it is of course much slower).</li>
 </ul>
+
+<h3>Parallel Coordinates</h3>
+<ul>
+<li> Fix a memory leak. The <tt>TParallelCoord</tt> destructor was not called
+     when the canvas used to draw it was closed.
+</ul>
