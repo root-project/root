@@ -158,7 +158,6 @@ TParallelCoord::~TParallelCoord()
 {
    // Destructor.
 
-   printf("TParallelCoord::~TParallelCoord()");
    if (fCurrentEntries) delete fCurrentEntries;
    if (fInitEntries != fCurrentEntries && fInitEntries != 0) delete fInitEntries;
    if (fVarList) {
@@ -273,6 +272,7 @@ void  TParallelCoord::BuildParallelCoord(TSelectorDraw* selector, Bool_t candle)
    // Call constructor and add the variables.
 
    TParallelCoord* pc = new TParallelCoord(selector->GetTree(),selector->GetNfill());
+   pc->SetBit(kCanDelete);
    selector->SetObject(pc);
    TString varexp = "";
    for(Int_t i=0;i<selector->GetDimension();++i) {
