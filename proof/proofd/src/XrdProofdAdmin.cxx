@@ -586,6 +586,9 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
                   }
                   rmsg += ln; rmsg += '/';
                   rmsg += pp;
+                  // Reposition on the file name
+                  char *ppl = strrchr(pp, '/');
+                  pp = (ppl) ? ppl : pp;
                   // If the line is for a submaster, we have to get the info
                   // about its workers
                   bool ismst = (strstr(pp, "master-")) ? 1 : 0;
