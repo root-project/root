@@ -7,7 +7,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
+#include <iostream>
 
 #include <algorithm>
 #include <stdexcept>
@@ -21,6 +21,7 @@
 #include "TString.h"
 #include "TError.h"
 #include "TColor.h"
+#include "TTree.h"
 #include "TROOT.h"
 #include "TMath.h"
 #include "TH3.h"
@@ -30,8 +31,6 @@
 #include "TGLPadUtils.h"
 #include "TGLIncludes.h"
 #include "TGL5D.h"
-
-
 
 namespace {
 
@@ -209,90 +208,154 @@ void DrawMapleMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> 
 
 }//Unnamed namespace.
 
-//______________________________________________________________________________
-//
-// "gl5d" option for TH3F.
 
-ClassImp(TGL5D)
+ClassImp(TGL5DDataSet)
+
+namespace {
+void FindRange(Long64_t size, const Double_t *src, Rgl::Range_t &range);
+}
 
 //______________________________________________________________________________
-TGL5D::TGL5D(TH3F *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
-         : TGLPlotPainter(hist, camera, coord, kFALSE, kFALSE, kFALSE),
+TGL5DDataSet::TGL5DDataSet(TTree *tree)
+               : TNamed("TGL5DataSet", "TGL5DataSet"),
+                 fNP(0),
+                 fV1(0), fV2(0), fV3(0), fV4(0), fV5(0),
+                 fHist(0)
+{
+   //Ctor.
+   if (!tree) {
+      Error("TGL5Data", "Null pointer tree.");
+      throw std::runtime_error("");
+   }
+   
+   fNP = tree->GetEntries();
+   if (fNP > tree->GetEstimate()) {
+      Warning("TGL5DDataSet", "Number of entries in TTree != GetEstimate");
+      fNP = tree->GetEstimate();
+   }
+
+   //Now, let's access the data and find ranges.
+   fV1 = tree->GetVal(0);
+   fV2 = tree->GetVal(1);
+   fV3 = tree->GetVal(2);
+   fV4 = tree->GetVal(3);
+   fV5 = tree->GetVal(4);
+   //
+   if (!fV1 || !fV2 || !fV3 || !fV4 || !fV5) {
+      Error("TGL5DDataSet", "One or all of vN is a null pointer.");
+      throw std::runtime_error("");
+   }
+   
+   FindRange(fNP, fV1, fV1MinMax);
+   FindRange(fNP, fV2, fV2MinMax);
+   FindRange(fNP, fV3, fV3MinMax);
+   FindRange(fNP, fV4, fV4MinMax);
+   FindRange(fNP, fV5, fV5MinMax);
+   
+   //
+   const Double_t xAdd = 0.05 * (fV1MinMax.second - fV1MinMax.first);
+   const Double_t yAdd = 0.05 * (fV2MinMax.second - fV2MinMax.first);
+   const Double_t zAdd = 0.05 * (fV3MinMax.second - fV3MinMax.first);
+   
+   fHist = new TH3F("gl5dtmp", "gl5dtmp", 
+                     kDefaultNB, fV1MinMax.first - xAdd, fV1MinMax.second + xAdd,
+                     kDefaultNB, fV2MinMax.first - yAdd, fV2MinMax.second + yAdd,
+                     kDefaultNB, fV3MinMax.first - zAdd, fV3MinMax.second + zAdd);
+   
+   fPainter.reset(new TGLHistPainter(this));
+}
+
+//______________________________________________________________________________
+TGL5DDataSet::~TGL5DDataSet()
+{
+   //Dtor.
+   delete fHist;
+}
+
+//______________________________________________________________________________
+TGL5DDataSet *TGL5DDataSet::BuildGL5DPainter(TTree *tree)
+{
+   //
+   TGL5DDataSet *data = new TGL5DDataSet(tree);//I do not, who will delete it if at all.
+   data->Draw();
+   return data;
+}
+
+//______________________________________________________________________________
+Int_t TGL5DDataSet::DistancetoPrimitive(Int_t px, Int_t py)
+{
+   return fPainter->DistancetoPrimitive(px, py);
+}
+
+//______________________________________________________________________________
+void TGL5DDataSet::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+{
+   return fPainter->ExecuteEvent(event, px, py);
+}
+
+//______________________________________________________________________________
+char *TGL5DDataSet::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
+{
+   static char mess[] = { "5d data set" };
+   return mess;
+}
+
+//______________________________________________________________________________
+void TGL5DDataSet::Paint(Option_t */*option*/)
+{
+   fPainter->Paint("dummyoption");
+}
+
+ClassImp(TGL5DPainter)
+
+//______________________________________________________________________________
+TGL5DPainter::TGL5DPainter(const TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
+         : TGLPlotPainter(data->fHist, camera, coord, kFALSE, kFALSE, kFALSE),
            fInit(kFALSE),
+           fData(data),
            /*fV5SliderMin(0.), fV5SliderMax(0.),*/
-           fNP(0),
-           fV1(0), fV2(0), fV3(0), fV4(0), fV5(0),
            fShowSlider(kFALSE)
 {
    //Constructor.
 }
 
-namespace {
-void FindRange(Int_t size, const Double_t *src, Rgl::Range_t &range);
-}
-
 //______________________________________________________________________________
-void TGL5D::SetDataSources(Int_t size, const Double_t *v1, const Double_t *v2, const Double_t *v3,
-                           const Double_t *v4, const Double_t *v5)
-{
-   if (!size || !v1 || !v2 || !v3 || !v4 || !v5) {
-      Error("TGL5D::SetDataSources", "Set data sources correctly.");
-      return;
-   }
-   //Copy data from external vectors.
-   fNP = size;
-   fV1 = v1;
-   fV2 = v2;
-   fV3 = v3;
-   fV4 = v4;
-   fV5 = v5;
-   FindRange(size, v1, fV1MinMax);
-   FindRange(size, v2, fV2MinMax);
-   FindRange(size, v3, fV3MinMax);
-   FindRange(size, v4, fV4MinMax);
-   FindRange(size, v5, fV5MinMax);
-   /*
-   fV5SliderMin = fV5MinMax.first;
-   fV5SliderMax = fV5MinMax.second;*/
-}
-
-//______________________________________________________________________________
-const Rgl::Range_t &TGL5D::GetV1Range()const
+const Rgl::Range_t &TGL5DPainter::GetV1Range()const
 {
    //Range for the first variable.
-   return fV1MinMax;
+   return fData->fV1MinMax;
 }
 
 //______________________________________________________________________________
-const Rgl::Range_t &TGL5D::GetV2Range()const
+const Rgl::Range_t &TGL5DPainter::GetV2Range()const
 {
    //Range for the second variable.
-   return fV2MinMax;
+   return fData->fV2MinMax;
 }
 
 //______________________________________________________________________________
-const Rgl::Range_t &TGL5D::GetV3Range()const
+const Rgl::Range_t &TGL5DPainter::GetV3Range()const
 {
    //Range for the third variable.
-   return fV3MinMax;
+   return fData->fV3MinMax;
 }
 
 //______________________________________________________________________________
-const Rgl::Range_t &TGL5D::GetV4Range()const
+const Rgl::Range_t &TGL5DPainter::GetV4Range()const
 {
    //Range for the forth variable.
-   return fV4MinMax;
+   return fData->fV4MinMax;
 }
 
 //______________________________________________________________________________
-const Rgl::Range_t &TGL5D::GetV5Range()const
+const Rgl::Range_t &TGL5DPainter::GetV5Range()const
 {
    //Range for the fith variable.
-   return fV5MinMax;
+   return fData->fV5MinMax;
 }
 /*
 //______________________________________________________________________________
-void TGL5D::SetV5SliderMin(Double_t min)
+void TGL5DPainter::SetV5SliderMin(Double_t min)
 {
    if (min > fV5MinMax.second || min < fV5MinMax.first)
       return;
@@ -300,7 +363,7 @@ void TGL5D::SetV5SliderMin(Double_t min)
 }
 
 //______________________________________________________________________________
-void TGL5D::SetV5SliderMax(Double_t max)
+void TGL5DPainter::SetV5SliderMax(Double_t max)
 {
    if (max > fV5MinMax.second || max < fV5MinMax.first)
       return;
@@ -320,31 +383,27 @@ Double_t Emulate5th(const Float_t *v)
 }
 
 //______________________________________________________________________________
-TGL5D::SurfIter_t TGL5D::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
-                             Double_t eVal, Double_t range, Int_t lownps)
+TGL5DPainter::SurfIter_t 
+TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, Double_t eVal, Double_t range, Int_t lownps)
 {
    //Try to add new iso-surface.
    //If something goes wrong, return
    //pointer to the end of fIsos - so, such
-   //iterator can be checked later in TGL5D
+   //iterator can be checked later in TGL5DPainter
    //functions. Do not use this iterator externally.
-   if (!fNP || !fV1 || !fV2 || !fV3 || !fV4 || !fV5) {
-      Error("TGL5D::AddSurface", "Set data sources correctly before adding a surface.");
-      return fIsos.end();
-   }
    
    fPtsSorted.clear();
 
-   for (Int_t i = 0; i < fNP; ++i) {
-      if (TMath::Abs(fV4[i] - v4) < range) {
-         fPtsSorted.push_back(fV1[i]);//x
-         fPtsSorted.push_back(fV2[i]);//y
-         fPtsSorted.push_back(fV3[i]);//z
+   for (Int_t i = 0; i < fData->fNP; ++i) {
+      if (TMath::Abs(fData->fV4[i] - v4) < range) {
+         fPtsSorted.push_back(fData->fV1[i]);//x
+         fPtsSorted.push_back(fData->fV2[i]);//y
+         fPtsSorted.push_back(fData->fV3[i]);//z
       }
    }
    
    if (fPtsSorted.size() / 3 < size_type(lownps)) {
-      Warning("TGL5D::AddNewSurface", "Number of selected points is too small: %d", Int_t(fPtsSorted.size()));
+      Warning("TGL5DPainter::AddNewSurface", "Number of selected points is too small: %d", Int_t(fPtsSorted.size()));
       return fIsos.end();//This is valid iterator, but invalid surface.
    }
 
@@ -354,7 +413,7 @@ TGL5D::SurfIter_t TGL5D::AddSurface(Double_t v4, Color_t ci, Double_t iso, Doubl
    const UInt_t nY = fYAxis->GetNbins();
    const UInt_t nX = fXAxis->GetNbins();
 
-   Info("TGL5D::AddSurface", "Preparing targets ...");
+   Info("TGL5DPainter::AddSurface", "Preparing targets ...");
 
    fTS.clear();
    fTS.reserve(nX * nY * nZ * 3);
@@ -369,7 +428,7 @@ TGL5D::SurfIter_t TGL5D::AddSurface(Double_t v4, Color_t ci, Double_t iso, Doubl
       }
    }
    
-   Info("TGL5D::AddSurface", "Targets are ready.");
+   Info("TGL5DPainter::AddSurface", "Targets are ready.");
    fDens.assign(fTS.size() / 3, 0);
    
    fKDE.Predict(fTS, fDens, eVal);
@@ -380,7 +439,7 @@ TGL5D::SurfIter_t TGL5D::AddSurface(Double_t v4, Color_t ci, Double_t iso, Doubl
             fHist->SetBinContent(k, j, i, fDens[ind++]);
 
 
-   Info("TGL5D::AddSurface", "Building the mesh ...");
+   Info("TGL5DPainter::AddSurface", "Building the mesh ...");
    Rgl::Mc::TGridGeometry<Float_t> geom;
    //Get grid parameters.
    geom.fMinX  = fXAxis->GetBinCenter(fXAxis->GetFirst());
@@ -398,7 +457,7 @@ TGL5D::SurfIter_t TGL5D::AddSurface(Double_t v4, Color_t ci, Double_t iso, Doubl
    Rgl::Mc::TMeshBuilder<TH3F, Float_t> builder(kTRUE);
    builder.BuildMesh(static_cast<TH3F *>(fHist), geom, &mesh, iso);
 
-   Info("TGL5D::AddSurface", "Mesh has %d vertices", Int_t(mesh.fVerts.size() / 3));
+   Info("TGL5DPainter::AddSurface", "Mesh has %d vertices", Int_t(mesh.fVerts.size() / 3));
    
    if (!mesh.fVerts.size())//I do not need an empty mesh.
       return fIsos.end();
@@ -439,11 +498,11 @@ TGL5D::SurfIter_t TGL5D::AddSurface(Double_t v4, Color_t ci, Double_t iso, Doubl
 }
 
 //______________________________________________________________________________
-void TGL5D::SetSurfaceMode(SurfIter_t surf, Bool_t cloudOn)
+void TGL5DPainter::SetSurfaceMode(SurfIter_t surf, Bool_t cloudOn)
 {
    //Show/hide cloud for surface.
    if (surf == fIsos.end()) {
-      Error("TGL5D::SetSurfaceMode", "Invalid iterator, no such surface exists.");
+      Error("TGL5DPainter::SetSurfaceMode", "Invalid iterator, no such surface exists.");
       return;
    }
    
@@ -454,11 +513,11 @@ void TGL5D::SetSurfaceMode(SurfIter_t surf, Bool_t cloudOn)
 }
 
 //______________________________________________________________________________
-void TGL5D::SetSurfaceColor(SurfIter_t surf, Color_t ci)
+void TGL5DPainter::SetSurfaceColor(SurfIter_t surf, Color_t ci)
 {
    //Change the color for iso-surface.
    if (surf == fIsos.end()) {
-      Error("TGL5D::SetSurfaceColor", "Invalid iterator, no such surface exists.");
+      Error("TGL5DPainter::SetSurfaceColor", "Invalid iterator, no such surface exists.");
       return;
    }
    
@@ -467,11 +526,11 @@ void TGL5D::SetSurfaceColor(SurfIter_t surf, Color_t ci)
 }
 
 //______________________________________________________________________________
-void TGL5D::HideSurface(SurfIter_t surf)
+void TGL5DPainter::HideSurface(SurfIter_t surf)
 {
    //Hide iso-surface.
    if (surf == fIsos.end()) {
-      Error("TGL5D::HideSurface", "Invalid iterator, no such surface exists.");
+      Error("TGL5DPainter::HideSurface", "Invalid iterator, no such surface exists.");
       return;
    }
    
@@ -480,11 +539,11 @@ void TGL5D::HideSurface(SurfIter_t surf)
 }
 
 //______________________________________________________________________________
-void TGL5D::ShowSurface(SurfIter_t surf)
+void TGL5DPainter::ShowSurface(SurfIter_t surf)
 {
    //Show previously hidden iso-surface.
    if (surf == fIsos.end()) {
-      Error("TGL5D::ShowSurface", "Invalid iterator, no such surface exists.");
+      Error("TGL5DPainter::ShowSurface", "Invalid iterator, no such surface exists.");
       return;
    }
    
@@ -493,11 +552,11 @@ void TGL5D::ShowSurface(SurfIter_t surf)
 }
 
 //______________________________________________________________________________
-void TGL5D::RemoveSurface(SurfIter_t surf)
+void TGL5DPainter::RemoveSurface(SurfIter_t surf)
 {
    //Remove iso-surface.
    if (surf == fIsos.end()) {
-      Error("TGL5D::RemoveSurface", "Invalid iterator, no such surface exists.");
+      Error("TGL5DPainter::RemoveSurface", "Invalid iterator, no such surface exists.");
       return;
    }
 
@@ -506,7 +565,7 @@ void TGL5D::RemoveSurface(SurfIter_t surf)
 }
 
 //______________________________________________________________________________
-char *TGL5D::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
+char *TGL5DPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
    //Return info for plot part under cursor.
    static char mess[] = { "gl5d" };
@@ -514,7 +573,7 @@ char *TGL5D::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 }
 
 //______________________________________________________________________________
-Bool_t TGL5D::InitGeometry()
+Bool_t TGL5DPainter::InitGeometry()
 {
    //Create mesh.
    if (fInit)
@@ -532,7 +591,7 @@ Bool_t TGL5D::InitGeometry()
 }
 
 //______________________________________________________________________________
-void TGL5D::StartPan(Int_t px, Int_t py)
+void TGL5DPainter::StartPan(Int_t px, Int_t py)
 {
    //User clicks right mouse button (in a pad).
    fMousePosition.fX = px;
@@ -542,7 +601,7 @@ void TGL5D::StartPan(Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TGL5D::Pan(Int_t px, Int_t py)
+void TGL5DPainter::Pan(Int_t px, Int_t py)
 {
    //Mouse events handler.
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
@@ -580,13 +639,13 @@ void TGL5D::Pan(Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TGL5D::AddOption(const TString &/*option*/)
+void TGL5DPainter::AddOption(const TString &/*option*/)
 {
-   //No additional options for TGL5D.
+   //No additional options for TGL5DPainter.
 }
 
 //______________________________________________________________________________
-void TGL5D::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
+void TGL5DPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
 
    //Change color sheme.
@@ -617,7 +676,7 @@ void TGL5D::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 }
 
 //______________________________________________________________________________
-void TGL5D::InitGL() const
+void TGL5DPainter::InitGL() const
 {
    //Initialize OpenGL state variables.
    glEnable(GL_LIGHTING);
@@ -628,7 +687,7 @@ void TGL5D::InitGL() const
 }
 
 //______________________________________________________________________________
-void TGL5D::DeInitGL()const
+void TGL5DPainter::DeInitGL()const
 {
    //Return some gl states to original values.
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
@@ -639,7 +698,7 @@ void TGL5D::DeInitGL()const
 }
 
 //______________________________________________________________________________
-void TGL5D::DrawPlot() const
+void TGL5DPainter::DrawPlot() const
 {
    //Draw set of meshes.
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
@@ -661,7 +720,7 @@ void TGL5D::DrawPlot() const
 }
 
 //______________________________________________________________________________
-void TGL5D::SetSurfaceColor(Color_t ind)const
+void TGL5DPainter::SetSurfaceColor(Color_t ind)const
 {
    //Set the color for iso-surface.
    Float_t rgba[] = {0.f, 0.f, 0.f, 0.5f};
@@ -674,14 +733,9 @@ void TGL5D::SetSurfaceColor(Color_t ind)const
 }
 
 //______________________________________________________________________________
-void TGL5D::DrawCloud()const
+void TGL5DPainter::DrawCloud()const
 {
    //Draw full cloud of points.
-   if (!fNP || !fV1 || !fV2 || !fV3 || !fV4 || !fV5) {
-      //Error("TGL5D::DrawCloud", "Set data sources correctly.");
-      return;
-   }
-
    const TGLDisableGuard light(GL_LIGHTING);
    const TGLDisableGuard depth(GL_DEPTH_TEST);
    
@@ -694,8 +748,8 @@ void TGL5D::DrawCloud()const
    const Double_t ys = fCoord->GetYScale();
    const Double_t zs = fCoord->GetZScale();
    
-   for (Int_t i = 0; i < fNP; ++i)
-      glVertex3d(fV1[i] * xs, fV2[i] * ys, fV3[i] * zs);
+   for (Int_t i = 0; i < fData->fNP; ++i)
+      glVertex3d(fData->fV1[i] * xs, fData->fV2[i] * ys, fData->fV3[i] * zs);
    
    glEnd();
    
@@ -703,14 +757,9 @@ void TGL5D::DrawCloud()const
 }
 
 //______________________________________________________________________________
-void TGL5D::DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const
+void TGL5DPainter::DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const
 {
    //Draw cloud for selected iso-surface.
-   if (!fNP || !fV1 || !fV2 || !fV3 || !fV4 || !fV5) {
-      Error("TGL5D::DrawSubCloud", "Set data sources correctly.");
-      return;
-   }
-      
    const TGLDisableGuard light(GL_LIGHTING);
    
    Float_t rgb[3] = {};
@@ -725,9 +774,9 @@ void TGL5D::DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const
    const Double_t ys = fCoord->GetYScale();
    const Double_t zs = fCoord->GetZScale();
    
-   for (Int_t i = 0; i < fNP; ++i)
-      if (TMath::Abs(fV4[i] - v4) < range)
-         glVertex3d(fV1[i] * xs, fV2[i] * ys, fV3[i] * zs);
+   for (Int_t i = 0; i < fData->fNP; ++i)
+      if (TMath::Abs(fData->fV4[i] - v4) < range)
+         glVertex3d(fData->fV1[i] * xs, fData->fV2[i] * ys, fData->fV3[i] * zs);
    
    glEnd();
    
@@ -739,7 +788,7 @@ Bool_t InRange(const std::vector<Double_t> &preds, const UInt_t *tri, Double_t m
 }
 
 //______________________________________________________________________________
-void TGL5D::DrawMesh(ConstSurfIter_t surf)const
+void TGL5DPainter::DrawMesh(ConstSurfIter_t surf)const
 {
    //Draw one iso-surface.
    const Mesh_t &m = surf->fMesh;
@@ -790,12 +839,12 @@ void TGL5D::DrawMesh(ConstSurfIter_t surf)const
 
 namespace {
 //______________________________________________________________________________
-void FindRange(Int_t size, const Double_t *src, Rgl::Range_t &range)
+void FindRange(Long64_t size, const Double_t *src, Rgl::Range_t &range)
 {
-   range.first = src[0];
+   range.first  = src[0];
    range.second = src[0];
    
-   for (Int_t i = 1; i < size; ++i) {
+   for (Long64_t i = 1; i < size; ++i) {
       range.first  = TMath::Min(range.first,  src[i]);
       range.second = TMath::Max(range.second, src[i]);
    }

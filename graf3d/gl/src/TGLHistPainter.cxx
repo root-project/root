@@ -203,6 +203,31 @@ TGLHistPainter::TGLHistPainter(TGLParametricEquation *equation)
 }
 
 //______________________________________________________________________________
+TGLHistPainter::TGLHistPainter(TGL5DDataSet *data)
+                   : fEq(0),
+                     fHist(data->GetHist()),
+                     fF3(0),
+                     fStack(0),
+                     fPlotType(kGL5D)//THistPainter
+{
+   //This ctor creates gl-parametric plot's painter.
+   fGLPainter.reset(new TGL5DPainter(data, &fCamera, &fCoord));
+}
+
+//______________________________________________________________________________
+/*
+TGLHistPainter::TGLHistPainter(TGL5D *gl5d)
+                   : fEq(0),
+                     fHist(0),
+                     fF3(0),
+                     fStack(0),
+                     fPlotType(kGL5D)//THistPainter
+{
+   //This ctor creates gl-parametric plot's painter.
+   //fGLPainter.reset(new TGLParametricPlot(equation, &fCamera));
+}
+*/
+//______________________________________________________________________________
 Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
    //Selects plot or axis.
@@ -501,14 +526,14 @@ void TGLHistPainter::Paint(Option_t *o)
    const Ssiz_t glPos = option.Index("gl");
    if (glPos != kNPOS)
       option.Remove(glPos, 2);
-   else if (fPlotType != kGLParametricPlot){
+   else if (fPlotType != kGLParametricPlot && fPlotType != kGL5D) {
       gPad->SetCopyGLDevice(kFALSE);
       if (fDefaultPainter.get())
          fDefaultPainter->Paint(o);//option.Data());
       return;
    }
 
-   if (fPlotType != kGLParametricPlot)
+   if (fPlotType != kGLParametricPlot && fPlotType != kGL5D)
       CreatePainter(ParsePaintOption(option), option);
 
    if (fPlotType == kGLDefaultPlot) {
@@ -571,8 +596,6 @@ TGLHistPainter::ParsePaintOption(const TString &option)const
       parsedOption.fPlotType = kGLBoxPlot;
    if (option.Index("iso") != kNPOS)
       parsedOption.fPlotType = kGLIsoPlot;
-   if (option.Index("5d") != kNPOS)
-      parsedOption.fPlotType = kGL5D;
 
    return parsedOption;
 }
@@ -601,16 +624,6 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
    } else if (option.fPlotType == kGLIsoPlot) {
       if (!fGLPainter.get())
          fGLPainter.reset(new TGLIsoPainter(fHist, &fCamera, &fCoord));
-   } else if (option.fPlotType == kGL5D) {
-      if (!fGLPainter.get()) {
-         if (TH3F *hist = dynamic_cast<TH3F *>(fHist)) {
-            Info("CreatePainter", "GL5D option");
-            fGLPainter.reset(new TGL5D(hist, &fCamera, &fCoord));
-         } else {
-            Error("CreatePainter", "Wrong type of hist for \"gl5d\" option!");
-            throw std::runtime_error("");
-         }
-      }
    }
 
    if (fGLPainter.get()) {

@@ -18,6 +18,9 @@
 #ifndef ROOT_TGLPlotPainter
 #include "TGLPlotPainter.h"
 #endif
+#ifndef ROOT_TGLHistPainter
+#include "TGLHistPainter.h"
+#endif
 #ifndef ROOT_TGLIsoMesh
 #include "TGLIsoMesh.h"
 #endif
@@ -27,16 +30,63 @@
 #ifndef ROOT_KDEFGT
 #include "TKDEFGT.h"
 #endif
+#ifndef ROOT_TNamed
+#include "TNamed.h"
+#endif
 
 class TGLPlotCamera;
+class TTree;
 class TH3F;
+
+//TGL5D is a class to setup TGL5DPainter from TTree.
+class TGL5DDataSet : public TNamed {
+   friend class TGL5DPainter;
+private:
+   enum {
+      kDefaultNB = 100
+   };
+public:
+   TGL5DDataSet(TTree *inputData);
+   ~TGL5DDataSet();//
+   
+   Int_t                DistancetoPrimitive(Int_t px, Int_t py);
+   void                 ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   char                *GetObjectInfo(Int_t px, Int_t py) const;
+   void                 Paint(Option_t *option);
+
+   static TGL5DDataSet *BuildGL5DPainter(TTree *selector);
+   
+   TH3F                *GetHist()const {return fHist;}
+private:
+   Long64_t        fNP;//Number of entries.
+   const Double_t *fV1;//V1.
+   const Double_t *fV2;//V2.
+   const Double_t *fV3;//V3.
+   const Double_t *fV4;//V4.
+   const Double_t *fV5;//V5.
+   
+   Rgl::Range_t    fV1MinMax;//V1 range.
+   Rgl::Range_t    fV2MinMax;//V2 range.
+   Rgl::Range_t    fV3MinMax;//V3 range.
+   Rgl::Range_t    fV4MinMax;//V4 range.
+   Rgl::Range_t    fV5MinMax;//V5 range.
+
+   TH3F           *fHist;
+   
+   std::auto_ptr<TGLHistPainter> fPainter;
+   
+   TGL5DDataSet(const TGL5DDataSet &rhs);
+   TGL5DDataSet &operator = (const TGL5DDataSet &rhs);
+   
+   ClassDef(TGL5DDataSet, 0)//Class to read data from TTree and create TGL5DPainter.
+};
 
 //
 //This class paints set of iso-surfaces. xyz - range must be specified
 //via TH3F, data (5 vectors) must be set via SetDataSources.
 //
 
-class TGL5D : public TGLPlotPainter {
+class TGL5DPainter : public TGLPlotPainter {
 public:
    typedef Rgl::Mc::TIsoMesh<Float_t>        Mesh_t;
    
@@ -69,20 +119,9 @@ private:
    SurfList_t              fIsos;  //List of iso-surfaces.
    
    //Input data.
-   Int_t                   fNP;//Size of input.
-   const Double_t         *fV1;//V1.
-   const Double_t         *fV2;//V2.
-   const Double_t         *fV3;//V3.
-   const Double_t         *fV4;//V4.
-   const Double_t         *fV5;//V5.
+   const TGL5DDataSet     *fData;
    
    typedef std::vector<Double_t>::size_type size_type;
-   
-   Rgl::Range_t fV1MinMax;//V1 range.
-   Rgl::Range_t fV2MinMax;//V2 range.
-   Rgl::Range_t fV3MinMax;//V3 range.
-   Rgl::Range_t fV4MinMax;//V4 range.
-   Rgl::Range_t fV5MinMax;//V5 range.
    //
    std::vector<Double_t>   fTS;  //targets.
    std::vector<Double_t>   fDens;//densities in target points.
@@ -92,12 +131,9 @@ private:
    //Double_t fV5SliderMin, fV5SliderMax;
    Bool_t                 fShowSlider;//For future.
 public:
-   TGL5D(TH3F *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
+   TGL5DPainter(const TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
    
-   //Interface to manipulate TGL5D object.
-   void SetDataSources(Int_t size, const Double_t *v1, const Double_t *v2, const Double_t *v3,
-                       const Double_t *v4, const Double_t *v5);
-   
+   //Interface to manipulate TGL5DPainter object.
    const Rgl::Range_t &GetV1Range()const;
    const Rgl::Range_t &GetV2Range()const;
    const Rgl::Range_t &GetV3Range()const;
@@ -122,35 +158,35 @@ public:
    void       RemoveSurface(SurfIter_t surf);
    
    //TGLPlotPainter final-overriders.
-   char    *GetPlotInfo(Int_t px, Int_t py);
-   Bool_t   InitGeometry();
-   void     StartPan(Int_t px, Int_t py);
-   void     Pan(Int_t px, Int_t py);
-   void     AddOption(const TString &option);
-   void     ProcessEvent(Int_t event, Int_t px, Int_t py);
+   char      *GetPlotInfo(Int_t px, Int_t py);
+   Bool_t     InitGeometry();
+   void       StartPan(Int_t px, Int_t py);
+   void       Pan(Int_t px, Int_t py);
+   void       AddOption(const TString &option);
+   void       ProcessEvent(Int_t event, Int_t px, Int_t py);
 
 private:
    //TGLPlotPainter final-overriders.
-   void     InitGL()const;
-   void     DeInitGL()const;
+   void       InitGL()const;
+   void       DeInitGL()const;
    
-   void     DrawPlot()const;
+   void       DrawPlot()const;
    
    //Empty overriders.
-   void     DrawSectionXOZ()const{}
-   void     DrawSectionYOZ()const{}
-   void     DrawSectionXOY()const{}
+   void       DrawSectionXOZ()const{}
+   void       DrawSectionYOZ()const{}
+   void       DrawSectionXOY()const{}
    
    //Auxiliary functions.
-   void     SetSurfaceColor(Color_t index)const;
-   void     DrawCloud()const;
-   void     DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const;
-   void     DrawMesh(ConstSurfIter_t surf)const;
+   void       SetSurfaceColor(Color_t index)const;
+   void       DrawCloud()const;
+   void       DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const;
+   void       DrawMesh(ConstSurfIter_t surf)const;
    
-   TGL5D(const TGL5D &);
-   TGL5D &operator = (const TGL5D &);
+   TGL5DPainter(const TGL5DPainter &);
+   TGL5DPainter &operator = (const TGL5DPainter &);
 
-   ClassDef(TGL5D, 0)//Class to paint set of iso surfaces.
+   ClassDef(TGL5DPainter, 0)//Class to paint set of iso surfaces.
 };
 
 #endif

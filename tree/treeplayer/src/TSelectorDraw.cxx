@@ -128,6 +128,7 @@ void TSelectorDraw::Begin(TTree *tree)
    Bool_t optEnlist = kFALSE;
    Bool_t optpara = kFALSE;
    Bool_t optcandle = kFALSE;
+   Bool_t opt5d = kFALSE;
    if (opt.Contains("same")) {
       optSame = kTRUE;
       opt.ReplaceAll("same","");
@@ -143,6 +144,10 @@ void TSelectorDraw::Begin(TTree *tree)
    if (opt.Contains("candle")) {
       optcandle = kTRUE;
       opt.ReplaceAll("candle","");
+   }
+   if (opt.Contains("gl5d")) {
+      opt5d = kTRUE;
+      opt.ReplaceAll("gl5d","");
    }
    TCut realSelection(selection);
    //input list - only TEntryList
@@ -448,7 +453,7 @@ void TSelectorDraw::Begin(TTree *tree)
 
    // Decode varexp and selection
    if (!CompileVariables(varexp, realSelection.GetTitle())) {SetStatus(-1); return;}
-   if (fDimension > 4 && !(optpara || optcandle)) {
+   if (fDimension > 4 && !(optpara || optcandle || opt5d)) {
       Error("Begin","Too many variables. Use the option \"para\" or \"candle\" to display more than 4 variables.");
       SetStatus(-1);
       return;
@@ -824,9 +829,10 @@ void TSelectorDraw::Begin(TTree *tree)
       fOldEstimate = fTree->GetEstimate();
       fTree->SetEstimate(1);
       fObject = evlist;
-   } else if (optcandle || optpara) {
-      if (optcandle) fAction = 7;
-      else           fAction = 6;
+   } else if (optcandle || optpara || opt5d) {
+      if (optcandle)  fAction = 7;
+      else if (opt5d) fAction = 8;
+      else            fAction = 6;
    }
    if (hkeep) delete [] varexp;
    if (hnamealloc) delete [] hnamealloc;
@@ -1389,13 +1395,16 @@ void TSelectorDraw::TakeAction()
       }
    }
    //__________________________Parallel coordinates / candle chart_______________________
-   else if (fAction == 6 || fAction == 7){
-   TakeEstimate();
-   Bool_t candle = (fAction==7);
-   // Using CINT to avoid a dependency in TParallelCoord
-   if (!fOption.Contains("goff"))
-      gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%lx,0x%lx",
-                                  this, candle));
+   else if (fAction == 6 || fAction == 7) {
+      TakeEstimate();
+      Bool_t candle = (fAction==7);
+      // Using CINT to avoid a dependency in TParallelCoord
+      if (!fOption.Contains("goff"))
+         gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%lx,0x%lx",
+                                this, candle));
+   } else if (fAction == 8) {
+      Info("TakeAction", "I'll try to create 5d plot now\n");
+      gROOT->ProcessLineFast(Form("TGL5DDataSet::BuildGL5DPainter((TTree*)0x%lx", fTree));
    }
    //__________________________something else_______________________
    else if (fAction < 0) {
