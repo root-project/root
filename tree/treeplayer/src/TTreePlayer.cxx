@@ -266,6 +266,7 @@
 #include "TRefArrayProxy.h"
 #include "TVirtualMonitoring.h"
 #include "TTreeCache.h"
+#include "TStyle.h"
 
 #include "HFitInterface.h"
 #include "Foption.h"
@@ -1020,6 +1021,24 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    if (cvarexp) cvarexp->SetTitle(varexp0);
    if (cselection) cselection->SetTitle(selection);
 
+   TString opt = option;
+   opt.ToLower();
+   Bool_t optpara   = kFALSE;
+   Bool_t optcandle = kFALSE;
+   Bool_t optgl5d   = kFALSE;
+   if (opt.Contains("para")) optpara = kTRUE;
+   if (opt.Contains("candle")) optcandle = kTRUE;
+   if (opt.Contains("gl5d")) optgl5d = kTRUE;
+   Bool_t pgl = gStyle->GetCanvasPreferGL();
+   if (optgl5d) {
+      fTree->SetEstimate(fTree->GetEntries());
+      if (!gPad) {
+         if (pgl == kFALSE) gStyle->SetCanvasPreferGL(kTRUE);
+         gROOT->ProcessLineFast("new TCanvas();");
+      }
+   }
+         
+
    // Do not process more than fMaxEntryLoop entries
    if (nentries > fTree->GetMaxEntryLoop()) nentries = fTree->GetMaxEntryLoop();
 
@@ -1042,14 +1061,8 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    // Draw generated histogram
    Long64_t drawflag = fSelector->GetDrawFlag();
    Int_t action   = fSelector->GetAction();
-   TString opt = option;
-   opt.ToLower();
    Bool_t draw = kFALSE;
    if (!drawflag && !opt.Contains("goff")) draw = kTRUE;
-   Bool_t optpara = kFALSE;
-   Bool_t optcandle = kFALSE;
-   if (opt.Contains("para")) optpara = kTRUE;
-   if (opt.Contains("candle")) optcandle = kTRUE;
    if (!optcandle && !optpara) fHistogram = (TH1*)fSelector->GetObject();
 
    if (!nrows && drawflag && !opt.Contains("same")) {
@@ -1117,6 +1130,10 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
          fTree->Draw(">>enlist",selection,"entrylist",nentries,firstentry);
          gROOT->ProcessLineFast(Form("TParallelCoord::SetEntryList((TParallelCoord*)0x%lx,enlist)",para));
       }
+   //*-*- 5d with gl
+   } else if (optgl5d) {
+      gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%1x))->Draw(\"%s\");", fTree, opt.Data()));
+      gStyle->SetCanvasPreferGL(pgl);
    }
 
    if (fHistogram) fHistogram->ResetBit(TH1::kCanRebin);

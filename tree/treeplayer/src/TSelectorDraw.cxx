@@ -1403,7 +1403,7 @@ void TSelectorDraw::TakeAction()
          gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%lx,0x%lx",
                                 this, candle));
    } else if (fAction == 8) {
-      gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%1x))->Draw(\"%s\");", fTree, fOption.Data()));
+      //gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%1x))->Draw(\"%s\");", fTree, fOption.Data()));
    }
    //__________________________something else_______________________
    else if (fAction < 0) {
