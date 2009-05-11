@@ -145,12 +145,14 @@ void TGLOutput::StartEmbeddedPS()
    xx[1] = gPad->GetUxmax();
    yy[1] = gPad->GetUymax();
    gVirtualPS->PrintStr("@");
-   gVirtualPS->DrawPS(0, xx, yy);
-   gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
-   gVirtualPS->PrintStr(" add exch");
-   gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
-   gVirtualPS->PrintStr(" add exch translate");
-   gVirtualPS->PrintStr("@");
+   
+///gVirtualPS->DrawPS(0, xx, yy);
+///gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
+///gVirtualPS->PrintStr(" add exch");
+///gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
+///gVirtualPS->PrintStr(" add exch translate");
+///gVirtualPS->PrintStr("@");
+
    GLint vp[4];
    glGetIntegerv(GL_VIEWPORT,vp);
    gVirtualPS->DrawPS(0, xx, yy);
