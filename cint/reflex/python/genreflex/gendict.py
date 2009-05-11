@@ -1615,7 +1615,8 @@ class genDictionary(object) :
             body += iden + '  if (retaddr) *(void**)retaddr = (void*)&%s(' % ( name, )
             head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
             body += ');\n'
-            body += iden + '  else %s(' % ( name, )
+            body += iden + " // The seemingly useless '&' below is to work around Microsoft's compiler odd complaint C2027 if there reference has only been forward declared."
+            body += iden + '  else &%s(' % ( name, )
             head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
             body += ');\n'
           else :
@@ -1849,7 +1850,11 @@ class genDictionary(object) :
           body += iden + '  if (retaddr) new (retaddr) (%s)((((%s*)o)->%s)(' % ( returns, cl, name )
           head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
           body += '));\n' + iden + 'else '
-      body += iden + '  (((%s*)o)->%s)(' % ( cl, name )
+      if returns[-1] == '&' :
+          body += iden + " // The seemingly useless '&' below is to work around Microsoft's compiler odd complaint C2027 if there reference has only been forward declared."
+          body += iden + '  &(((%s*)o)->%s)(' % ( cl, name )
+      else: 
+          body += iden + '  (((%s*)o)->%s)(' % ( cl, name )
       head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
       body += ');\n'
       if ndarg : 
