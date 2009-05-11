@@ -849,6 +849,12 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  The option=prof is automatically selected in case of z:y:x>>pf
 //  where pf is an existing TProfile2D histogram.
 //
+//     Making a 5-D plot with GL
+//     =========================
+//  When the option "gl5d" is specified and the dimension of the query is 5
+//  a 5-d plot is created using GL, eg
+//      T->Draw("x:y:z:u:w","","gl5d")
+//
 //     Making a parallel coordinates plot.
 //     ===========================
 //  In case of a 2-Dim or more expression with the option=para, one can generate
