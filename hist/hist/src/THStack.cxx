@@ -811,6 +811,17 @@ void THStack::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<endl;
    }
 
+   static Int_t frameNumber = 0;
+   if (fHistogram) {
+      frameNumber++;
+      TString hname = fHistogram->GetName();
+      hname += frameNumber;
+      fHistogram->SetName(hname.Data());
+      fHistogram->SavePrimitive(out,"nodraw");
+      out<<"   "<<GetName()<<"->SetHistogram("<<fHistogram->GetName()<<");"<<endl;
+      out<<"   "<<endl;
+   }
+
    TH1 *h;
    if (fHists) {
       TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
