@@ -5374,6 +5374,13 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    //
    // A TBranch object is created for each variable in the expression.
    // The total number of rows read from the file is returned.
+   //
+   // FILLING a TTree WITH MULTIPLE INPUT TEXT FILES
+   // ----------------------------------------------
+   // To fill a TTree with multiple input text files, proceed as indicated above 
+   // for the first input file and omit the second argument for subsequent calls
+   //    T.ReadFile("file1.dat","branch descriptor");
+   //    T.ReadFile("file2.dat");
 
    gTree = this;
    std::ifstream in;
@@ -5384,54 +5391,60 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    }
 
    TBranch *branch;
-   char *bdname = new char[1000];
-   char *bd = new char[10000];
-   Int_t nch = 0;
-   if (branchDescriptor) nch = strlen(branchDescriptor);
-   // branch Descriptor is null, read its definition from the first line in the file
-   if (!nch) {
-      in >> bd;
-      if (!in.good()) {
-         Error("ReadFile","Error reading file: %s",filename);
-         return 0;
+   Int_t nbranches = fBranches.GetEntries();
+   if (nbranches == 0) {
+      char *bdname = new char[1000];
+      char *bd = new char[10000];
+      Int_t nch = 0;
+      if (branchDescriptor) nch = strlen(branchDescriptor);
+      // branch Descriptor is null, read its definition from the first line in the file
+      if (!nch) {
+         in >> bd;
+         if (!in.good()) {
+            Error("ReadFile","Error reading file: %s",filename);
+            return 0;
+         }
+         in.ignore(8192,'\n');
+         nch = strlen(bd);
+      } else {
+         strcpy(bd,branchDescriptor);
       }
-      in.ignore(8192,'\n');
-      nch = strlen(bd);
-   } else {
-      strcpy(bd,branchDescriptor);
-   }
 
-   //parse the branch descriptor and create a branch for each element
-   //separated by ":"
-   void *address = &bd[9000];
-   char *bdcur = bd;
-   TString desc="", olddesc="F";
-   while (bdcur) {
-      char *colon = strchr(bdcur,':');
-      if (colon) *colon = 0;
-      strcpy(bdname,bdcur);
-      char *slash = strchr(bdname,'/');
-      if (slash) {
-         *slash = 0;
-         desc = bdcur;
-         olddesc = slash+1;
-      } else {
-         desc = Form("%s/%s",bdname,olddesc.Data());
+      //parse the branch descriptor and create a branch for each element
+      //separated by ":"
+      void *address = &bd[9000];
+      char *bdcur = bd;
+      TString desc="", olddesc="F";
+      while (bdcur) {
+         char *colon = strchr(bdcur,':');
+         if (colon) *colon = 0;
+         strcpy(bdname,bdcur);
+         char *slash = strchr(bdname,'/');
+         if (slash) {
+            *slash = 0;
+            desc = bdcur;
+            olddesc = slash+1;
+         } else {
+            desc = Form("%s/%s",bdname,olddesc.Data());
+         }
+         branch = new TBranch(this,bdname,address,desc.Data(),32000);
+         if (branch->IsZombie()) {
+            delete branch;
+            Warning("ReadFile","Illegal branch definition: %s",bdcur);
+         } else {
+            fBranches.Add(branch);
+            branch->SetAddress(0);
+         }
+         if (!colon)break;
+         bdcur = colon+1;
       }
-      branch = new TBranch(this,bdname,address,desc.Data(),32000);
-      if (branch->IsZombie()) {
-         delete branch;
-         Warning("ReadFile","Illegal branch definition: %s",bdcur);
-      } else {
-         fBranches.Add(branch);
-         branch->SetAddress(0);
-      }
-      if (!colon)break;
-      bdcur = colon+1;
+      delete [] bdname;
+      delete [] bd;
+
    }
 
    //loop on all lines in the file
-   Int_t nbranches = fBranches.GetEntries();
+   nbranches = fBranches.GetEntries();
    Int_t status = 1;
    Long64_t nlines = 0;
    while(status > 0) {
@@ -5456,8 +5469,6 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
       in.ignore(8192,'\n');
    }
 
-   delete [] bdname;
-   delete [] bd;
    return nlines;
 }
 
