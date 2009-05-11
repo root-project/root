@@ -55,7 +55,7 @@ SPLOTLIBDEPM           = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(G3DLIB) $(GRAFLIB) $(MATHCORELIB)
 QUADPLIBDEPM           = $(MATRIXLIB) 
 GLLIBDEPM              = $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) $(GEDLIB) \
-                         $(FTGLLIB) $(MATHCORELIB)
+                         $(FTGLLIB) $(MATHCORELIB) $(TREELIB) $(TREEPLAYERLIB)
 HBOOKLIBDEPM           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                          $(TREEPLAYERLIB) $(IOLIB) $(MINICERNLIB)
 GEOMLIBDEPM            = $(IOLIB) $(MATHCORELIB)
@@ -276,7 +276,8 @@ SPLOTLIBEXTRA           = lib/libMatrix.lib lib/libHist.lib lib/libTree.lib \
                           lib/libGraf.lib lib/libMathCore.lib
 QUADPLIBEXTRA           = lib/libMatrix.lib 
 GLLIBEXTRA              = lib/libGraf3d.lib lib/libGui.lib lib/libGraf.lib \
-                          lib/libHist.lib lib/libGed.lib lib/libMathCore.lib
+                          lib/libHist.lib lib/libGed.lib lib/libMathCore.lib \
+                          lib/libTree.lib lib/libTreePlayer.lib lib/libRIO.lib
 HBOOKLIBEXTRA           = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                           lib/libGraf.lib lib/libTreePlayer.lib lib/libRIO.lib \
                           lib/libminicern.lib
@@ -385,7 +386,7 @@ X11TTFLIBEXTRA          = -Llib -lGX11 -lGraf
 TABLELIBEXTRA           = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO \
                           -lMathCore
 GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed \
-                          -lMathCore
+                          -lMathCore -lTree -lTreePlayer -lRIO
 HBOOKLIBEXTRA           = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer \
                           -lRIO -lminicern
 GEOMLIBEXTRA            = -Llib -lRIO -lMathCore
