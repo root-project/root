@@ -35,6 +35,7 @@
 #endif
 
 class TGLPlotCamera;
+class TGL5DPainter;
 class TTree;
 class TH3F;
 
@@ -53,10 +54,9 @@ public:
    void                 ExecuteEvent(Int_t event, Int_t px, Int_t py);
    char                *GetObjectInfo(Int_t px, Int_t py) const;
    void                 Paint(Option_t *option);
-
-   static TGL5DDataSet *BuildGL5DPainter(TTree *selector);
    
    TH3F                *GetHist()const {return fHist;}
+   TGL5DPainter        *GetRealPainter()const;
 private:
    Long64_t        fNP;//Number of entries.
    const Double_t *fV1;//V1.

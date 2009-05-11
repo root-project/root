@@ -7,8 +7,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include <iostream>
-
 #include <algorithm>
 #include <stdexcept>
 #include <typeinfo>
@@ -263,6 +261,7 @@ TGL5DDataSet::TGL5DDataSet(TTree *tree)
                      kDefaultNB, fV3MinMax.first - zAdd, fV3MinMax.second + zAdd);
    
    fPainter.reset(new TGLHistPainter(this));
+   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -273,29 +272,30 @@ TGL5DDataSet::~TGL5DDataSet()
 }
 
 //______________________________________________________________________________
-TGL5DDataSet *TGL5DDataSet::BuildGL5DPainter(TTree *tree)
+TGL5DPainter *TGL5DDataSet::GetRealPainter()const
 {
-   //
-   TGL5DDataSet *data = new TGL5DDataSet(tree);//I do not, who will delete it if at all.
-   data->Draw();
-   return data;
+   //Get access to painter.
+   return static_cast<TGL5DPainter *>(fPainter->GetRealPainter());
 }
 
 //______________________________________________________________________________
 Int_t TGL5DDataSet::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   //Check, if the object is under cursor.
    return fPainter->DistancetoPrimitive(px, py);
 }
 
 //______________________________________________________________________________
 void TGL5DDataSet::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
+   //Action.
    return fPainter->ExecuteEvent(event, px, py);
 }
 
 //______________________________________________________________________________
 char *TGL5DDataSet::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 {
+   //Info for status bar.
    static char mess[] = { "5d data set" };
    return mess;
 }
@@ -303,6 +303,7 @@ char *TGL5DDataSet::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 //______________________________________________________________________________
 void TGL5DDataSet::Paint(Option_t */*option*/)
 {
+   //Paint.
    fPainter->Paint("dummyoption");
 }
 
