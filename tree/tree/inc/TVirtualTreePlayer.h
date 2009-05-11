@@ -60,10 +60,12 @@ public:
    virtual Long64_t       GetEntries(const char *) = 0;
    virtual Long64_t       GetSelectedRows() const = 0;
    virtual TTreeFormula  *GetSelect() const = 0;
+   virtual TTreeFormula  *GetVar(Int_t) const = 0;
    virtual TTreeFormula  *GetVar1() const = 0;
    virtual TTreeFormula  *GetVar2() const = 0;
    virtual TTreeFormula  *GetVar3() const = 0;
    virtual TTreeFormula  *GetVar4() const = 0;
+   virtual Double_t      *GetVal(Int_t) const = 0;
    virtual Double_t      *GetV1() const = 0;
    virtual Double_t      *GetV2() const = 0;
    virtual Double_t      *GetV3() const = 0;

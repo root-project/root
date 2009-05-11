@@ -89,10 +89,12 @@ public:
    virtual Long64_t  GetSelectedRows() const {return fSelectedRows;}
    TSelector        *GetSelector() const {return fSelector;}
    TSelector        *GetSelectorFromFile() const {return fSelectorFromFile;}
+   TTreeFormula     *GetVar(Int_t i) const {return fSelector->GetVar(i);};
    TTreeFormula     *GetVar1() const {return fSelector->GetVar1();}
    TTreeFormula     *GetVar2() const {return fSelector->GetVar2();}
    TTreeFormula     *GetVar3() const {return fSelector->GetVar3();}
    TTreeFormula     *GetVar4() const {return fSelector->GetVar4();}
+   virtual Double_t *GetVal(Int_t i) const {return fSelector->GetVal(i);};
    virtual Double_t *GetV1() const   {return fSelector->GetV1();}
    virtual Double_t *GetV2() const   {return fSelector->GetV2();}
    virtual Double_t *GetV3() const   {return fSelector->GetV3();}

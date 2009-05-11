@@ -312,10 +312,12 @@ public:
    virtual Int_t           GetTreeNumber() const { return 0; }
    virtual Int_t           GetUpdate() const { return fUpdate; }
    virtual TList          *GetUserInfo();
+   TTreeFormula           *GetVar(Int_t i)  { return GetPlayer()->GetVar(i); }
    TTreeFormula           *GetVar1() { return GetPlayer()->GetVar1(); }
    TTreeFormula           *GetVar2() { return GetPlayer()->GetVar2(); }
    TTreeFormula           *GetVar3() { return GetPlayer()->GetVar3(); }
    TTreeFormula           *GetVar4() { return GetPlayer()->GetVar4(); }
+   virtual Double_t       *GetVal(Int_t i)   { return GetPlayer()->GetVal(i); }
    virtual Double_t       *GetV1()   { return GetPlayer()->GetV1(); }
    virtual Double_t       *GetV2()   { return GetPlayer()->GetV2(); }
    virtual Double_t       *GetV3()   { return GetPlayer()->GetV3(); }
