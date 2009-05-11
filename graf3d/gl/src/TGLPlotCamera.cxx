@@ -8,8 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include <iostream>
- 
 #include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 #include "TVirtualGL.h"
@@ -36,12 +34,14 @@ TGLPlotCamera::TGLPlotCamera() :
 void TGLPlotCamera::SetViewport(const TGLRect &vp)
 {
    //Setup viewport, if it was changed, plus reset arcball.
+   
    if (vp.Width() != fViewport.Width() || vp.Height() != fViewport.Height() ||
        vp.X() != fViewport.X() || vp.Y() != fViewport.Y())
    {
       fVpChanged = kTRUE;
       fArcBall.SetBounds(vp.Width(), vp.Height());
       fViewport = vp;
+      
    } else
       fVpChanged = kFALSE;
 }

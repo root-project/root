@@ -67,6 +67,7 @@ public:
    Int_t          MakeCuts(char *cutsOpt);
    void           SetShowProjection(const char *option, Int_t nbins);
 
+   TGLPlotPainter *GetRealPainter(){return fGLPainter.get();}
 private:
 
    struct PlotOption_t;

@@ -73,6 +73,7 @@ enum EGLPlotType {
    kGLStackPlot,
    kGLParametricPlot,
    kGLIsoPlot,
+   kGL5D,
    kGLDefaultPlot
 };
 
@@ -1189,6 +1190,7 @@ public:
    virtual ~TGLSelectionBuffer();
 
    void           ReadColorBuffer(Int_t width, Int_t height);
+   void           ReadColorBuffer(Int_t x, Int_t y, Int_t width, Int_t height);
    const UChar_t *GetPixelColor(Int_t px, Int_t py)const;
 
 private:

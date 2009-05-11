@@ -2205,6 +2205,17 @@ void TGLSelectionBuffer::ReadColorBuffer(Int_t w, Int_t h)
 }
 
 //______________________________________________________________________________
+void TGLSelectionBuffer::ReadColorBuffer(Int_t x, Int_t y, Int_t w, Int_t h)
+{
+   // Read color buffer.
+   fWidth = w;
+   fHeight = h;
+   fBuffer.resize(w * h * 4);
+   glPixelStorei(GL_PACK_ALIGNMENT, 1);
+   glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, &fBuffer[0]);
+}
+
+//______________________________________________________________________________
 const UChar_t *TGLSelectionBuffer::GetPixelColor(Int_t px, Int_t py)const
 {
    // Get pixel color.

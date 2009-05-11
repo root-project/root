@@ -126,8 +126,10 @@ void TGLPlotPainter::Paint()
    //
    glClear(GL_DEPTH_BUFFER_BIT);
    //
-   if (fCamera->ViewportChanged())
+/*   if (fCamera->ViewportChanged()) {
+      std::cout<<"Set need update\n";
       fUpdateSelection = kTRUE;
+   }*/
    //Set light.
    const Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
    glLightfv(GL_LIGHT0, GL_POSITION, pos);
@@ -237,7 +239,6 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
       glMatrixMode(GL_MODELVIEW);//[2
       glPushMatrix();
    
-   
       fSelectionPass = kTRUE;
       fCamera->SetCamera();
       
@@ -249,7 +250,8 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
       DrawPlot();
       
       glFinish();
-      fSelection.ReadColorBuffer(fCamera->GetWidth(), fCamera->GetHeight());
+      //fSelection.ReadColorBuffer(fCamera->GetWidth(), fCamera->GetHeight());
+      fSelection.ReadColorBuffer(fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight());
       fSelectionPass   = kFALSE;
       fUpdateSelection = kFALSE;
       
@@ -262,8 +264,11 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
       glMatrixMode(GL_MODELVIEW);//2]
       glPopMatrix();
    }
+   
    //Convert from window top-bottom into gl bottom-top.
-   py = fCamera->GetHeight() - py;
+   px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
+   py -= Int_t(gPad->GetWh() - gPad->YtoAbsPixel(gPad->GetY1()));
+   //py = fCamera->GetHeight() - py;
    //Y is a number of a row, x - column.
    std::swap(px, py);
    Int_t newSelected(Rgl::ColorToObjectID(fSelection.GetPixelColor(px, py), fHighColor));

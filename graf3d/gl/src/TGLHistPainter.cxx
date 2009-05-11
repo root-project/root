@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <iostream>
 #include <cstring>
 
@@ -5,8 +6,10 @@
 #include "TClass.h"
 #include "TVirtualGL.h"
 #include "KeySymbols.h"
+#include "TGL5D.h"
 #include "TMath.h"
 #include "TPad.h"
+#include "TH3.h"
 #include "TF3.h"
 
 #include "TGLSurfacePainter.h"
@@ -213,8 +216,12 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    else {
       //Adjust px and py - canvas can have several pads inside, so we need to convert
       //the from canvas' system into pad's.
-      py -= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
-      px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
+      
+      /*py -= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
+      px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());*/
+      
+      py = gPad->GetWh() - py;//-= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
+
       //One hist can be appended to several pads,
       //the current pad should have valid OpenGL context.
       const Int_t glContext = gPad->GetGLDevice();
@@ -356,7 +363,8 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          } else if (py == kKey_p || py == kKey_P || py == kKey_S || py == kKey_s
                     || py == kKey_c || py == kKey_C || py == kKey_x || py == kKey_X
                     || py == kKey_y || py == kKey_Y || py == kKey_z || py == kKey_Z
-                    || py == kKey_w || py == kKey_W || py == kKey_l || py == kKey_L)
+                    || py == kKey_w || py == kKey_W || py == kKey_l || py == kKey_L
+                    /*|| py == kKey_r || py == kKey_R*/)
          {
             fGLPainter->ProcessEvent(event, px, py);
             //gGLManager->PaintSingleObject(fGLPainter.get());
@@ -563,7 +571,8 @@ TGLHistPainter::ParsePaintOption(const TString &option)const
       parsedOption.fPlotType = kGLBoxPlot;
    if (option.Index("iso") != kNPOS)
       parsedOption.fPlotType = kGLIsoPlot;
-
+   if (option.Index("5d") != kNPOS)
+      parsedOption.fPlotType = kGL5D;
 
    return parsedOption;
 }
@@ -592,6 +601,16 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
    } else if (option.fPlotType == kGLIsoPlot) {
       if (!fGLPainter.get())
          fGLPainter.reset(new TGLIsoPainter(fHist, &fCamera, &fCoord));
+   } else if (option.fPlotType == kGL5D) {
+      if (!fGLPainter.get()) {
+         if (TH3F *hist = dynamic_cast<TH3F *>(fHist)) {
+            Info("CreatePainter", "GL5D option");
+            fGLPainter.reset(new TGL5D(hist, &fCamera, &fCoord));
+         } else {
+            Error("CreatePainter", "Wrong type of hist for \"gl5d\" option!");
+            throw std::runtime_error("");
+         }
+      }
    }
 
    if (fGLPainter.get()) {
@@ -612,24 +631,19 @@ void TGLHistPainter::SetShowProjection(const char *, Int_t)
 }
 
 //______________________________________________________________________________
-void TGLHistPainter::PadToViewport(Bool_t selectionPass)
+void TGLHistPainter::PadToViewport(Bool_t /*selectionPass*/)
 {
    if (!fGLPainter.get())
       return;
-      
+
    TGLRect vp;
    vp.Width()  = Int_t(gPad->GetAbsWNDC() * gPad->GetWw());
    vp.Height() = Int_t(gPad->GetAbsHNDC() * gPad->GetWh());
    
-   if (!selectionPass) {
-      vp.X() = Int_t(gPad->GetAbsXlowNDC() * gPad->GetWw());
-      vp.Y() = Int_t(gPad->GetAbsYlowNDC() * gPad->GetWh());
-      
-      vp.X() = Int_t(gPad->XtoAbsPixel(gPad->GetX1()));
-      vp.Y() = gPad->GetWh() - gPad->YtoAbsPixel(gPad->GetY1());
-      
-      fCamera.SetViewport(vp);
-   }
+   vp.X() = Int_t(gPad->XtoAbsPixel(gPad->GetX1()));
+   vp.Y() = gPad->GetWh() - gPad->YtoAbsPixel(gPad->GetY1());
    
    fCamera.SetViewport(vp);
+   if (fCamera.ViewportChanged() && fGLPainter.get())
+      fGLPainter->InvalidateSelection();
 }
