@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 01/28/09
+# Last: 05/11/09
 
 """PyROOT user module.
 
@@ -15,7 +15,7 @@ from __future__ import generators
 
 """
 
-__version__ = '6.0.0'
+__version__ = '6.0.1'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
@@ -118,9 +118,10 @@ del isfunction, ismethod
 
 ### configuration ---------------------------------------------------------------
 class _Configuration( object ):
-   __slots__ = [ 'StartGuiThread', '_gts' ]
+   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', '_gts' ]
 
    def __init__( self ):
+      self.IgnoreCommandLineOptions = 0
       self.StartGuiThread = 1
       self._gts = []
 
@@ -445,11 +446,18 @@ class ModuleFacade( types.ModuleType ):
 
     # normally, you'll want a ROOT application; don't init any further if
     # one pre-exists from some C++ code somewhere
+      if PyConfig.IgnoreCommandLineOptions:
+         argv = sys.argv
+         sys.argv = []
+
       appc = _root.MakeRootClass( 'PyROOT::TPyROOTApplication' )
       if appc.CreatePyROOTApplication():
          appc.InitROOTGlobals()
          appc.InitCINTMessageCallback();
          appc.InitROOTMessageCallback();
+
+      if PyConfig.IgnoreCommandLineOptions:
+         sys.argv = argv
 
     # must be called after gApplication creation:
       if __builtins__.has_key( '__IPYTHON__' ):
