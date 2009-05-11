@@ -796,8 +796,8 @@ void FindRange(Int_t size, const Double_t *src, Rgl::Range_t &range)
    range.second = src[0];
    
    for (Int_t i = 1; i < size; ++i) {
-      range.first  = std::min(range.first,  src[i]);
-      range.second = std::max(range.second, src[i]);
+      range.first  = TMath::Min(range.first,  src[i]);
+      range.second = TMath::Max(range.second, src[i]);
    }
 }
 

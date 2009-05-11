@@ -198,9 +198,8 @@ void TGLPlotPainter::Paint()
 void TGLPlotPainter::PrintPlot()const
 {
    // Generate PS using gl2ps
-
    using namespace std;
-
+   
    TGLOutput::StartEmbeddedPS();
    FILE *output = fopen(gVirtualPS->GetName(), "a");
    Int_t gl2psFormat = GL2PS_EPS;
@@ -209,9 +208,9 @@ void TGLPlotPainter::PrintPlot()const
    Int_t state       = GL2PS_OVERFLOW;
    GLint gl2psoption = GL2PS_USE_CURRENT_VIEWPORT | 
                        GL2PS_SILENT               |
-		       GL2PS_BEST_ROOT            |
-		       GL2PS_OCCLUSION_CULL       |
-		       0;
+                       GL2PS_BEST_ROOT            |
+                       GL2PS_OCCLUSION_CULL       |
+                       0;
 
    while (state == GL2PS_OVERFLOW) {
       buffsize += 1024*1024;
