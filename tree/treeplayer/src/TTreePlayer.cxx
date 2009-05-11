@@ -1138,7 +1138,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       }
    //*-*- 5d with gl
    } else if (optgl5d) {
-      gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%1x))->Draw(\"%s\");", fTree, opt.Data()));
+      gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%llx))->Draw(\"%s\");", fTree, opt.Data()));
       gStyle->SetCanvasPreferGL(pgl);
    }
 
