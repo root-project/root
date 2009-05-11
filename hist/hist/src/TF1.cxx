@@ -38,7 +38,6 @@
 
 Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
-static TF1 *gHelper = 0;
 static Double_t gErrorTF1 = 0;
 
 double ROOT::Math::WrappedTF1::fgEps = 0.001; 
@@ -46,6 +45,7 @@ double ROOT::Math::WrappedTF1::fgEps = 0.001;
 
 ClassImp(TF1)
 
+// class wrapping evaluation of TF1(x) - y0
 class GFunc {
    const TF1* fFunction;
    const double fY0;
@@ -56,6 +56,7 @@ public:
    }
 };
 
+// class wrapping evaluation of -TF1(x)
 class GInverseFunc {
    const TF1* fFunction;
 public:
@@ -64,6 +65,52 @@ public:
       return - fFunction->Eval(x);
    }
 };
+
+// class wrapping function evaluation directly in 1D interface (used for integration) 
+// and implementing the methods for the momentum calculations
+
+class  TF1_EvalWrapper : public ROOT::Math::IGenFunction { 
+public: 
+   TF1_EvalWrapper(TF1 * f, const Double_t * par, bool useAbsVal, Double_t n = 1, Double_t x0 = 0) : 
+      fFunc(f), 
+      fPar( ( (par) ? par : f->GetParameters() ) ),
+      fAbsVal(useAbsVal),
+      fN(n), 
+      fX0(x0)   
+   {
+      fFunc->InitArgs(fX, fPar); 
+   }
+   ROOT::Math::IGenFunction * Clone()  const { 
+      // use default copy constructor
+      return new TF1_EvalWrapper( *this);
+   }
+   // evaluate |f(x)|
+   Double_t DoEval( Double_t x) const { 
+      fX[0] = x; 
+      Double_t fval = fFunc->EvalPar( fX, fPar);
+      if (fAbsVal && fval < 0)  return -fval;
+      return fval; 
+   } 
+   // evaluate x * |f(x)|
+   Double_t EvalFirstMom( Double_t x) { 
+      fX[0] = x; 
+      return fX[0] * TMath::Abs( fFunc->EvalPar( fX, fPar) ); 
+   } 
+   // evaluate (x - x0) ^n * f(x)
+   Double_t EvalNMom( Double_t x) const  { 
+      fX[0] = x; 
+      return TMath::Power( fX[0] - fX0, fN) * TMath::Abs( fFunc->EvalPar( fX, fPar) ); 
+   }
+
+   TF1 * fFunc; 
+   mutable Double_t fX[1]; 
+   const double * fPar; 
+   Bool_t fAbsVal;
+   Double_t fN; 
+   Double_t fX0;
+};
+
+
 
 //______________________________________________________________________________
 /* Begin_Html
@@ -2356,9 +2403,8 @@ Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t 
    //      g->IntegralFast(n,x,w,0,10000) = 1.25331
    //      g->IntegralFast(n,x,w,0,100000)= 1.253
 
-   ROOT::Math::WrappedTF1 wf1(*this);
-   if ( params )
-      wf1.SetParameters( params );
+
+   TF1_EvalWrapper wf1( this, params, fgAbsValue ); 
 
    ROOT::Math::GaussIntegrator giod;
    giod.SetFunction(wf1);
@@ -3097,49 +3143,35 @@ Bool_t TF1::RejectedPoint()
    return fgRejectPoint;
 }
 
-
-//______________________________________________________________________________
-Double_t TF1_ExpValHelperx(Double_t *x, Double_t *par) {
-   return x[0]*gHelper->EvalPar(x,par);
-}
-
-
-//______________________________________________________________________________
-Double_t TF1_ExpValHelper(Double_t *x, Double_t *par) {
-   Int_t npar    = gHelper->GetNpar();
-   Double_t xbar = par[npar];
-   Double_t n    = par[npar+1];
-   return TMath::Power(x[0]-xbar,n)*gHelper->EvalPar(x,par);
-}
-
-
 //______________________________________________________________________________
 Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
 {
    // Return nth moment of function between a and b
    //
    // See TF1::Integral() for parameter definitions
-   //   Author: Gene Van Buren <gene@bnl.gov>
 
-   fgAbsValue = kTRUE;
-   Double_t norm = Integral(a,b,params,epsilon);
+   // wrapped function in interface for integral calculation
+   // using abs value of integral 
+
+   TF1_EvalWrapper func(this, params, kTRUE, n); 
+
+   ROOT::Math::GaussIntegrator giod;
+
+   giod.SetFunction(func);
+   giod.SetRelTolerance(epsilon);
+
+   Double_t norm =  giod.Integral(a, b);
    if (norm == 0) {
-      fgAbsValue = kFALSE;
       Error("Moment", "Integral zero over range");
       return 0;
    }
 
-   gHelper = this;
-   //TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x,%f)",GetName(),n));
-   TF1 fnc("TF1_ExpValHelper",TF1_ExpValHelper,fXmin,fXmax,fNpar+2);
-   for (Int_t i=0;i<fNpar;i++) {
-      if(params) fnc.SetParameter(i,params[i]);
-      else       fnc.SetParameter(i,fParams[i]);
-   }
-   fnc.SetParameter(fNpar,0);
-   fnc.SetParameter(fNpar+1,n);
-   fgAbsValue = kFALSE;
-   Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
+   // calculate now integral of x^n f(x)
+   // wrapped the member function EvalNum in  interface required by integrator using the functor class 
+   ROOT::Math::Functor1D xnfunc( &func, &TF1_EvalWrapper::EvalNMom);
+   giod.SetFunction(xnfunc);
+
+   Double_t res = giod.Integral(a,b)/norm;
 
    return res;
 }
@@ -3149,40 +3181,38 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
 Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
 {
    // Return nth central moment of function between a and b
+   // (i.e the n-th moment around the mean value)   
    //
    // See TF1::Integral() for parameter definitions
    //   Author: Gene Van Buren <gene@bnl.gov>
+  
+   TF1_EvalWrapper func(this, params, kTRUE, n); 
 
-   fgAbsValue = kTRUE;
-   Double_t norm = Integral(a,b,params,epsilon);
+   ROOT::Math::GaussIntegrator giod;
+
+   giod.SetFunction(func);
+   giod.SetRelTolerance(epsilon);
+
+   Double_t norm =  giod.Integral(a, b);
    if (norm == 0) {
-      fgAbsValue = kFALSE;
-      Error("CentralMoment", "Integral zero over range");
+      Error("Moment", "Integral zero over range");
       return 0;
    }
 
-   gHelper = this;
-   //TF1 fncx("TF1_ExpValHelperx",Form("%s*x",GetName()));
-   TF1 fncx("TF1_ExpValHelperx",TF1_ExpValHelperx,fXmin,fXmax,fNpar);
-   Int_t i;
-   for (i=0;i<fNpar;i++) {
-      if(params) fncx.SetParameter(i,params[i]);
-      else       fncx.SetParameter(i,fParams[i]);
-   }
-   fgAbsValue = kFALSE;
-   Double_t xbar = fncx.Integral(a,b,params,epsilon)/norm;
+   // calculate now integral of xf(x)
+   // wrapped the member function EvalFirstMom in  interface required by integrator using the functor class 
+   ROOT::Math::Functor1D xfunc( &func, &TF1_EvalWrapper::EvalFirstMom);
+   giod.SetFunction(xfunc);
 
-   //TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x-%f,%f)",GetName(),xbar,n));
-   TF1 fnc("TF1_ExpValHelper",TF1_ExpValHelper,fXmin,fXmax,fNpar+2);
-   for (i=0;i<fNpar;i++) {
-      if(params) fnc.SetParameter(i,params[i]);
-      else       fnc.SetParameter(i,fParams[i]);
-   }
-   fnc.SetParameter(fNpar,0);
-   fnc.SetParameter(fNpar+1,n);
-   fnc.SetParameter(fNpar,xbar);
-   fnc.SetParameter(fNpar+1,n);
-   Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
+   // estimate of mean value
+   Double_t xbar = giod.Integral(a,b)/norm;
+
+   // use different mean value in function wrapper 
+   func.fX0 = xbar; 
+   ROOT::Math::Functor1D xnfunc( &func, &TF1_EvalWrapper::EvalNMom);
+   giod.SetFunction(xnfunc);
+
+   Double_t res = giod.Integral(a,b)/norm;
    return res;
 }
 
