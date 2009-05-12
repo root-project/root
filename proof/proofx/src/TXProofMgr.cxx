@@ -462,7 +462,7 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
    // The special value stag = "NR" allows to just initialize the TProofLog
    // object w/o retrieving the files; this may be useful when the number
    // of workers is large and only a subset of logs is required.
-   // If 'stag' is specified 'isess' is ignored.
+   // If 'stag' is specified 'isess' is ignored (unless stag = "NR").
    // If 'pattern' is specified only the lines containing it are retrieved
    // (remote grep functionality); to filter out a pattern 'pat' use
    // pattern = "-v pat".

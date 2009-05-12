@@ -111,7 +111,10 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess,
    //              for the next to last session; the absolute value is taken
    //              so -1 and 1 are equivalent.
    //      stag    specifies the unique tag of the wanted session
-   // If 'stag' is specified 'isess' is ignored.
+   // The special value stag = "NR" allows to just initialize the TProofLog
+   // object w/o retrieving the files; this may be useful when the number
+   // of workers is large and only a subset of logs is required.
+   // If 'stag' is specified 'isess' is ignored (unless stag = "NR").
    // If 'pattern' is specified only the lines containing it are retrieved
    // (remote grep functionality); to filter out a pattern 'pat' use
    // pattern = "-v pat".
@@ -122,6 +125,14 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess,
 
    // The absolute value of isess counts
    isess = (isess < 0) ? -isess : isess;
+
+   // Special option in stag
+   bool retrieve = 1;
+   TString tag(stag);
+   if (tag == "NR") {
+      retrieve = 0;
+      tag = "";
+   }
 
    // The working dir
    TString sandbox(gSystem->WorkingDirectory());
@@ -137,12 +148,11 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess,
    }
    gSystem->ExpandPathName(sandbox);
 
-   TString sessiondir, tag;
-   if (stag && strlen(stag) > 0) {
-      tag = stag;
-      sessiondir = Form("%s/session-", sandbox.Data(), stag);
+   TString sessiondir;
+   if (tag.Length() > 0) {
+      sessiondir.Form("%s/session-%s", sandbox.Data(), tag.Data());
       if (gSystem->AccessPathName(sessiondir, kReadPermission)) {
-         Error("GetSessionLogs", "information for session '%s' not available", stag);
+         Error("GetSessionLogs", "information for session '%s' not available", tag.Data());
          return (TProofLog *)0;
       }
    } else {
@@ -236,7 +246,7 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess,
    }
 
    // Retrieve the default part
-   if (pl) {
+   if (pl && retrieve) {
       if (pattern && strlen(pattern) > 0)
          pl->Retrieve("*", TProofLog::kGrep, 0, pattern);
       else
