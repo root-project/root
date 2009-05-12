@@ -7,8 +7,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-
 #include <climits>
 
 #include "TError.h"
@@ -222,7 +220,7 @@ Int_t InvNChooseK(Int_t d, Int_t cnk);
 }
 
 //______________________________________________________________________________
-void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v, Double_t e)const
+void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v, Double_t eval)const
 {
    //Calculate densities.
    
@@ -246,7 +244,7 @@ void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v,
    
    const Double_t ctesigma = 1. / fSigma;
    const Int_t p = InvNChooseK(fDim , fPD);
-   const Int_t nP = ts.size() / fDim;
+   const Int_t nP = Int_t(ts.size() / fDim);
    
    for (Int_t m = 0; m < nP; ++m) {
       Double_t temp = 0.;
@@ -262,7 +260,7 @@ void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v,
             fHeads[i] = 0;
          }
 
-         if (sum2 > e) continue; //skip to next kn
+         if (sum2 > eval) continue; //skip to next kn
 
          fProds[0] = TMath::Exp(-sum2);
 
@@ -283,6 +281,22 @@ void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v,
       v[m] = temp;
    }
    
+   Double_t dMin = v[0], dMax = dMin;
+   for (Int_t i = 1, e = Int_t(v.size()); i < e; ++i) {
+      dMin = TMath::Min(dMin, v[i]);
+      dMax = TMath::Max(dMax, v[i]);
+   }
+   
+   const Double_t dRange = dMax - dMin;
+   for (Int_t i = 0, e = Int_t(v.size()); i < e; ++i)
+      v[i] = (v[i] - dMin) / dRange;
+
+   dMin = v[0], dMax = dMin;
+   for (Int_t i = 1, e = Int_t(v.size()); i < e; ++i) {
+      dMin = TMath::Min(dMin, v[i]);
+      dMax = TMath::Max(dMax, v[i]);
+   }
+
    Info("TKDEFGT::Predict", "Estimation done.");
 }
 

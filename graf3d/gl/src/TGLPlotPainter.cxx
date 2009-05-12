@@ -1234,7 +1234,7 @@ void TGLBoxCut::TurnOnOff()
          break;
       }
 
-      fCenter.Z() = box[4].Z();
+      fCenter.Z() = box[0].Z() * 0.5 + box[4].Z() * 0.5;
       AdjustBox();
    }
 }
@@ -1277,7 +1277,7 @@ void TGLBoxCut::DrawBox(Bool_t selectionPass, Int_t selected)const
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-      const Float_t diffuseColor[] = {0.f, 0.f, 1.f, 0.2f};
+      const Float_t diffuseColor[] = {0.f, 0.f, 1.f, 0.1f};
       glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuseColor);
 
       Rgl::DrawBoxFront(fXRange.first, fXRange.second, fYRange.first, fYRange.second,

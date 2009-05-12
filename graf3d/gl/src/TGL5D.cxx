@@ -32,7 +32,7 @@
 
 namespace {
 
-const double gEps = 1e-3;
+const double gEps = 1e-6;
 
 /*
 Auxilary functions to draw iso-meshes.
@@ -251,9 +251,9 @@ TGL5DDataSet::TGL5DDataSet(TTree *tree)
    FindRange(fNP, fV5, fV5MinMax);
    
    //
-   const Double_t xAdd = 0.05 * (fV1MinMax.second - fV1MinMax.first);
-   const Double_t yAdd = 0.05 * (fV2MinMax.second - fV2MinMax.first);
-   const Double_t zAdd = 0.05 * (fV3MinMax.second - fV3MinMax.first);
+   const Double_t xAdd = 0.1 * (fV1MinMax.second - fV1MinMax.first);
+   const Double_t yAdd = 0.1 * (fV2MinMax.second - fV2MinMax.first);
+   const Double_t zAdd = 0.1 * (fV3MinMax.second - fV3MinMax.first);
    
    fHist = new TH3F("gl5dtmp", "gl5dtmp", 
                      kDefaultNB, fV1MinMax.first - xAdd, fV1MinMax.second + xAdd,
@@ -587,6 +587,24 @@ Bool_t TGL5DPainter::InitGeometry()
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
    if (fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
+   
+   //Add several iso-surfaces.
+   const Rgl::Range_t & mm = fData->fV4MinMax;
+   if (mm.second - mm.first > gEps) {
+      Info("TGL5DPainter::InitGeometry", "Adding iso-surfaces ...");
+
+      const Double_t v4Step = (mm.second - mm.first) / 5;
+      AddSurface(v4Step,     kRed,    0.125, 0.09, 10.);
+      AddSurface(2 * v4Step, kGreen,  0.125, 0.09, 10.);
+      AddSurface(3 * v4Step, kBlue,   0.125, 0.09, 10.);
+      AddSurface(4 * v4Step, kOrange, 0.125, 0.09, 10.);
+
+      if (fIsos.size())
+         fBoxCut.TurnOnOff();
+      Info("TGL5DPainter::InitGeometry", "Done.");
+   }
+   
+   fInit = kTRUE;
 
    return kTRUE;
 }
