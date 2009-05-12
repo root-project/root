@@ -459,6 +459,9 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
    //              for the next to last session; the absolute value is taken
    //              so -1 and 1 are equivalent.
    //      stag    specifies the unique tag of the wanted session
+   // The special value stag = "NR" allows to just initialize the TProofLog
+   // object w/o retrieving the files; this may be useful when the number
+   // of workers is large and only a subset of logs is required.
    // If 'stag' is specified 'isess' is ignored.
    // If 'pattern' is specified only the lines containing it are retrieved
    // (remote grep functionality); to filter out a pattern 'pat' use
@@ -477,8 +480,16 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
    // The absolute value of isess counts
    isess = (isess > 0) ? -isess : isess;
 
+   // Special option in stag
+   bool retrieve = 1;
+   TString sesstag(stag);
+   if (sesstag == "NR") {
+      retrieve = 0;
+      sesstag = "";
+   }
+
    // Get the list of paths
-   TObjString *os = fSocket->SendCoordinator(kQueryLogPaths, stag, isess);
+   TObjString *os = fSocket->SendCoordinator(kQueryLogPaths, sesstag.Data(), isess);
 
    // Analyse it now
    Int_t ii = 0;
@@ -523,8 +534,8 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
       }
       // Cleanup
       SafeDelete(os);
-      // Retrieve the default part
-      if (pl) {
+      // Retrieve the default part if required
+      if (pl && retrieve) {
          if (pattern && strlen(pattern) > 0)
             pl->Retrieve("*", TProofLog::kGrep, 0, pattern);
          else
