@@ -76,6 +76,7 @@ protected:
    Int_t    GetNOpenedFiles() const { return fNOpenedFiles; }
    Int_t    GetNDisapparedFiles() const { return fNDisappearedFiles; }
    void     GetQuota(const char *group, const char *user, const char *dsName, TFileCollection *dataset);
+   void     PrintDataSet(TFileCollection *fc, Int_t popt = 0);
    void     PrintUsedSpace();
    Bool_t   ReadGroupConfig(const char *cf = 0);
    virtual void UpdateUsedSpace();
@@ -103,6 +104,8 @@ public:
 
    virtual TFileCollection *GetDataSet(const char *uri);
    virtual TMap            *GetDataSets(const char *uri, UInt_t /*option*/ = 0);
+   virtual TFileCollection *GetDataSetOnServer(const char *uri, const char *server);
+   virtual TMap            *GetDataSetPerServer(const char *uri, const char *exclude);
    virtual Long64_t         GetGroupQuota(const char *group);
    virtual TMap            *GetGroupQuotaMap() { return &fGroupQuota; }
    virtual Long64_t         GetGroupUsed(const char *group);
@@ -116,6 +119,8 @@ public:
    virtual Int_t            RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt);
    virtual Int_t            ScanDataSet(const char *uri, UInt_t option = 0);
    virtual void             ShowQuota(const char *opt);
+
+   virtual void             ShowDataSets(const char *uri = "*", const char *opt = "");
 
    static TString           CreateUri(const char *dsGroup = 0, const char *dsUser = 0,
                                       const char *dsName = 0, const char *dsTree = 0);

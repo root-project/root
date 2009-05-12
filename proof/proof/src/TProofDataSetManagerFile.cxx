@@ -341,45 +341,45 @@ TMap *TProofDataSetManagerFile::GetDataSets(const char *group, const char *user,
    // group, user defined, no looping needed
    if (user && group) {
       BrowseDataSets(group, user, option, result);
-      return (TMap *)result;
-   }
+      if (!printing) return (TMap *)result;
+   } else {
+      // loop needed
+      void *dataSetDir = 0;
+      if ((dataSetDir = gSystem->OpenDirectory(fDataSetDir))) {
+         // loop over groups
+         const char *currentGroup = 0;
+         while ((currentGroup = gSystem->GetDirEntry(dataSetDir))) {
 
-   void *dataSetDir = 0;
-   if ((dataSetDir = gSystem->OpenDirectory(fDataSetDir))) {
-      // loop over groups
-      const char *currentGroup = 0;
-      while ((currentGroup = gSystem->GetDirEntry(dataSetDir))) {
-
-         if (strcmp(currentGroup, ".") == 0 || strcmp(currentGroup, "..") == 0)
-            continue;
-
-         if (group && strcmp(group, currentGroup))
-            continue;
-
-         TString groupDirPath;
-         groupDirPath.Form("%s/%s", fDataSetDir.Data(), currentGroup);
-
-         void *groupDir = gSystem->OpenDirectory(groupDirPath);
-         if (!groupDir)
-            continue;
-
-         // loop over users
-         const char *currentUser = 0;
-         while ((currentUser = gSystem->GetDirEntry(groupDir))) {
-
-            if (strcmp(currentUser, ".") == 0 || strcmp(currentUser, "..") == 0)
+            if (strcmp(currentGroup, ".") == 0 || strcmp(currentGroup, "..") == 0)
                continue;
 
-            if (user && strcmp(user, currentUser))
+            if (group && strcmp(group, currentGroup))
                continue;
 
-            BrowseDataSets(currentGroup, currentUser, option, result);
+            TString groupDirPath;
+            groupDirPath.Form("%s/%s", fDataSetDir.Data(), currentGroup);
+
+            void *groupDir = gSystem->OpenDirectory(groupDirPath);
+            if (!groupDir)
+               continue;
+
+            // loop over users
+            const char *currentUser = 0;
+            while ((currentUser = gSystem->GetDirEntry(groupDir))) {
+
+               if (strcmp(currentUser, ".") == 0 || strcmp(currentUser, "..") == 0)
+                  continue;
+
+               if (user && strcmp(user, currentUser))
+                  continue;
+
+               BrowseDataSets(currentGroup, currentUser, option, result);
+            }
+            gSystem->FreeDirectory(groupDir);
          }
-         gSystem->FreeDirectory(groupDir);
+         gSystem->FreeDirectory(dataSetDir);
       }
-      gSystem->FreeDirectory(dataSetDir);
    }
-
    // Print the result, if required
    if (printing) {
       TList *output = (TList *)result;
@@ -914,6 +914,8 @@ Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
 
       if (file->GetSize() > 0)
           fileInfo->SetSize(file->GetSize());
+      fileInfo->SetUUID(file->GetUUID().AsString());
+
       file->Close();
       delete file;
 
@@ -977,6 +979,7 @@ Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
 
    TFile::SetOnlyStaged(oldStatus);
 
+   dataset->RemoveDuplicates();
    dataset->Update(fAvgFileSize);
 
    Int_t result = (changed) ? 2 : 1;
