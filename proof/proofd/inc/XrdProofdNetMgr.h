@@ -51,6 +51,7 @@ private:
    int                fNumLocalWrks;   // Number of workers to be started locally
    int                fResourceType;   // resource type
    XrdProofdFile      fPROOFcfg;       // PROOF static configuration
+   bool               fReloadPROOFcfg; // Whether the file should regurarl checked for updates
    bool               fWorkerUsrCfg;   // user cfg files enabled / disabled
    int                fRequestTO;      // Timeout on broadcast request
 
