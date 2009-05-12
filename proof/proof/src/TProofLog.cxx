@@ -142,11 +142,11 @@ void TProofLog::Print(Option_t *opt) const
 
    Int_t nel = (fElem) ? fElem->GetSize() : 0;
    // Write global header
-   fprintf(stderr,Form("// --------- PROOF Session logs object --------\n"));
-   fprintf(stderr,Form("// Server: %s \n", GetTitle()));
-   fprintf(stderr,Form("// Session: %s \n", GetName()));
-   fprintf(stderr,Form("// # of elements: %d \n", nel));
-   fprintf(stderr,Form("// --------------------------------------------\n"));
+   fprintf(stderr, "// --------- PROOF Session logs object --------\n");
+   fprintf(stderr, "// Server: %s \n", GetTitle());
+   fprintf(stderr, "// Session: %s \n", GetName());
+   fprintf(stderr, "// # of elements: %d \n", nel);
+   fprintf(stderr, "// --------------------------------------------\n");
 
    // Iterate over the elements
    TIter nxe(fElem);
@@ -155,7 +155,7 @@ void TProofLog::Print(Option_t *opt) const
       ple->Print(opt);
 
    // Write global tail
-   fprintf(stderr,Form("// --------------------------------------------\n"));
+   fprintf(stderr, "// --------------------------------------------\n");
 }
 
 //________________________________________________________________________
@@ -471,7 +471,7 @@ void TProofLogElem::Print(Option_t *) const
                 fMacro->GetListOfLines()->GetSize() : 0;
    const char *role = (strstr(GetTitle(), "worker-")) ? "worker" : "master";
 
-   fprintf(stderr, Form("Ord: %s Host: Role: %s lines: %d\n", GetName(), role, nls));
+   fprintf(stderr, "Ord: %s Host: Role: %s lines: %d\n", GetName(), role, nls);
 }
 
 //________________________________________________________________________
