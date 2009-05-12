@@ -14,7 +14,7 @@ TCanvas* graph2dfit()
    gStyle->SetOptStat(0);
    gStyle->SetOptFit();
 
-   TCanvas *c = new TCanvas("c","Graph2D example",0,0,800,800);
+   TCanvas *c = new TCanvas("c","Graph2D example",0,0,600,800);
    c->Divide(2,3);
 
    Double_t rnd, x, y, z;
@@ -42,13 +42,13 @@ TCanvas* graph2dfit()
 
    Double_t hr = 350;
    TH1D *h1 = new TH1D("h1",
-   "#splitline{Difference between Original function}{and Function with noise}",
+   "#splitline{Difference between Original}{#splitline{function and Function}{with noise}}",
    100, -hr, hr);
    TH1D *h2 = new TH1D("h2",
-   "#splitline{Difference between Original function}{and Interpolation with Delaunay triangles}",
+   "#splitline{Difference between Original}{#splitline{function and Delaunay triangles}{interpolation}}",
    100, -hr, hr);
    TH1D *h3 = new TH1D("h3",
-   "#splitline{Difference between Original function}{and Minuit fit}",
+   "#splitline{Difference between Original}{function and Minuit fit}",
    500, -hr, hr);
 
    f2->SetParameters(0.5,1.5);
