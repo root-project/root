@@ -201,7 +201,14 @@ Long64_t TSeqCollection::Merge(TCollection *list)
             return 0;
          }
          // The next object to be merged with is a collection
+         // the iterator skips the 'holes' the collections, we also need to do so.
          objtomerge = ((TSeqCollection*)collcrt)->At(indobj);
+         while (objtomerge == 0
+                && indobj < ((TSeqCollection*)collcrt)->LastIndex() 
+               ) {
+            ++indobj;
+            objtomerge = ((TSeqCollection*)collcrt)->At(indobj);
+         }
          if (object->IsA() != objtomerge->IsA()) {
             Error("Merge", "object of type %s at index %d not matching object of type %s in input list",
                   object->ClassName(), indobj, objtomerge->ClassName());
