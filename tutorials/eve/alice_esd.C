@@ -130,18 +130,9 @@ TEveTrackList *gTrackList = 0;
 
 TEveGeoShape *gGeomGentle = 0;
 
-TEveProjectionManager *gRPhiMgr = 0;
-TEveProjectionManager *gRhoZMgr = 0;
-
-TEveViewer *g3DView   = 0;
-TEveViewer *gRPhiView = 0;
-TEveViewer *gRhoZView = 0;
-
-TEveScene *gRPhiGeomScene  = 0;
-TEveScene *gRhoZGeomScene  = 0;
-TEveScene *gRPhiEventScene = 0;
-TEveScene *gRhoZEventScene = 0;
-
+// Implemented in MultiView.C
+class MultiView;
+MultiView* gMultiView = 0;
 
 /******************************************************************************/
 // Initialization and steering functions
@@ -157,6 +148,14 @@ void alice_esd()
    // 3. Load cartoon geometry.
    // 4. Spawn simple GUI.
    // 5. Load first event.
+
+   const TString weh("alice_esd()");
+
+   if (gROOT->LoadMacro("MultiView.C+") != 0)
+   {
+      Error(weh, "Failed loading MultiView.C in compiled mode.");
+      return;
+   }
 
    TFile::SetCacheFileDir(".");
 
@@ -237,82 +236,13 @@ void alice_esd()
    }
 
 
-   // Scenes
-   //========
-
-   gRPhiGeomScene  = gEve->SpawnNewScene("RPhi Geometry",
-                                         "Scene holding projected geometry for the RPhi view.");
-   gRhoZGeomScene  = gEve->SpawnNewScene("RhoZ Geometry",
-                                         "Scene holding projected geometry for the RhoZ view.");
-   gRPhiEventScene = gEve->SpawnNewScene("RPhi Event Data",
-                                         "Scene holding projected geometry for the RPhi view.");
-   gRhoZEventScene = gEve->SpawnNewScene("RhoZ Event Data",
-                                         "Scene holding projected geometry for the RhoZ view.");
-
-
-   // Projection managers
+   // Standard multi-view
    //=====================
 
-   gRPhiMgr = new TEveProjectionManager();
-   gRPhiMgr->SetProjection(TEveProjection::kPT_RPhi);
-   gEve->AddToListTree(gRPhiMgr, kFALSE);
-   {
-      TEveProjectionAxes* a = new TEveProjectionAxes(gRPhiMgr);
-      a->SetMainColor(kWhite);
-      a->SetTitle("R-Phi");
-      a->SetTitleSize(0.05);
-      a->SetTitleFont(102);
-      a->SetLabelSize(0.025);
-      a->SetLabelFont(102);
-      gRPhiGeomScene->AddElement(a);
-   }
-   gRPhiMgr->ImportElements(gGeomGentle, gRPhiGeomScene);
+   gMultiView = new MultiView;
 
-   gRhoZMgr = new TEveProjectionManager();
-   gRhoZMgr->SetProjection(TEveProjection::kPT_RhoZ);
-   gEve->AddToListTree(gRhoZMgr, kFALSE);
-   {
-      TEveProjectionAxes* a = new TEveProjectionAxes(gRhoZMgr);
-      a->SetMainColor(kWhite);
-      a->SetTitle("Rho-Z");
-      a->SetTitleSize(0.05);
-      a->SetTitleFont(102);
-      a->SetLabelSize(0.025);
-      a->SetLabelFont(102);
-      gRhoZGeomScene->AddElement(a);
-   }
-   gRhoZMgr->ImportElements(gGeomGentle, gRhoZGeomScene);
-
-
-   // Viewers
-   //=========
-
-   TEveWindowSlot *slot = 0;
-   TEveWindowPack *pack = 0;
-
-   slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
-   pack = slot->MakePack();
-   pack->SetElementName("Multi View");
-   pack->SetHorizontal();
-   pack->SetShowTitleBar(kFALSE);
-   pack->NewSlot()->MakeCurrent();
-   g3DView = gEve->SpawnNewViewer("3D View", "");
-   g3DView->AddScene(gEve->GetGlobalScene());
-   g3DView->AddScene(gEve->GetEventScene());
-
-   pack = pack->NewSlot()->MakePack();
-   pack->SetShowTitleBar(kFALSE);
-   pack->NewSlot()->MakeCurrent();
-   gRPhiView = gEve->SpawnNewViewer("RPhi View", "");
-   gRPhiView->GetGLViewer()->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   gRPhiView->AddScene(gRPhiGeomScene);
-   gRPhiView->AddScene(gRPhiEventScene);
-
-   pack->NewSlot()->MakeCurrent();
-   gRhoZView = gEve->SpawnNewViewer("RhoZ View", "");
-   gRhoZView->GetGLViewer()->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   gRhoZView->AddScene(gRhoZGeomScene);
-   gRhoZView->AddScene(gRhoZEventScene);
+   gMultiView->ImportGeomRPhi(gGeomGentle);
+   gMultiView->ImportGeomRhoZ(gGeomGentle);
 
 
    // HTML summary view
@@ -325,6 +255,7 @@ void alice_esd()
    TEveWindowFrame *wf = slot->MakeFrame(fgHtml);
    fgHtml->MapSubwindows();
    wf->SetElementName("Summary");
+
 
    // Final stuff
    //=============
@@ -380,16 +311,11 @@ void load_event()
 
    TEveElement* top = gEve->GetCurrentEvent();
 
-   if (gRPhiMgr && top)
-   {
-      gRPhiEventScene->DestroyElements();
-      gRPhiMgr->ImportElements(top, gRPhiEventScene);
-   }
-   if (gRhoZMgr && top)
-   {
-      gRhoZEventScene->DestroyElements();
-      gRhoZMgr->ImportElements(top, gRhoZEventScene);
-   }
+   gMultiView->DestroyEventRPhi();
+   gMultiView->ImportEventRPhi(top);
+
+   gMultiView->DestroyEventRhoZ();
+   gMultiView->ImportEventRhoZ(top);
 
    update_html_summary();
 
@@ -521,7 +447,7 @@ void alice_esd_read()
 
       TEveTrack* track = esd_make_track(trkProp, n, at, tp);
       track->SetAttLineAttMarker(gTrackList);
-      gEve->AddElement(track, gTrackList);
+      gTrackList->AddElement(track);
 
       // This needs further investigation. Clusters not shown.
       // if (frnd)
