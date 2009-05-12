@@ -58,7 +58,6 @@ private:
    TMD5            *fMD5;            //-> md5 digest of the file
    TList           *fMetaDataList;   // generic list of file meta data object(s)
 
-   TFileInfo(const TFileInfo&);             // not implemented
    TFileInfo& operator=(const TFileInfo&);  // not implemented
 
 public:
@@ -69,6 +68,7 @@ public:
 
    TFileInfo(const char *url = 0, Long64_t size = -1, const char *uuid = 0,
              const char *md5 = 0, TObject *meta = 0);
+   TFileInfo(const TFileInfo &);
 
    virtual ~TFileInfo();
 
@@ -78,6 +78,9 @@ public:
    TUrl           *GetFirstUrl() const { return (TUrl*)fUrlList->First(); }
    Int_t           GetNUrls() const    { return fUrlList->GetEntries(); }
 
+   Bool_t          SetCurrentUrl(const char *url);
+   Bool_t          SetCurrentUrl(TUrl *url);
+
    Long64_t        GetSize() const         { return fSize; }
    TUUID          *GetUUID() const         { return fUUID; }
    TMD5           *GetMD5() const          { return fMD5; }
@@ -85,8 +88,9 @@ public:
    TFileInfoMeta  *GetMetaData(const char *meta = 0) const;
 
    void            SetSize(Long64_t size)  { fSize = size; }
+   void            SetUUID(const char *uuid);
 
-   TUrl           *FindByUrl(const char *url);
+   TUrl           *FindByUrl(const char *url, Bool_t withDeflt = kFALSE);
 
    Bool_t          AddUrl(const char *url, Bool_t infront = kFALSE);
    Bool_t          RemoveUrl(const char *url);
@@ -112,12 +116,14 @@ private:
    Long64_t      fTotBytes;   // uncompressed size in bytes
    Long64_t      fZipBytes;   // compressed size in bytes
 
-   TFileInfoMeta(const TFileInfoMeta&);             // not implemented
    TFileInfoMeta& operator=(const TFileInfoMeta&);  // not implemented
 
 public:
+   enum EStatusBits { kExternal  = BIT(15) };
+
    TFileInfoMeta() : fEntries(-1), fFirst(0), fLast(-1),
-                     fIsTree(kFALSE), fTotBytes(-1), fZipBytes(-1){ }
+                     fIsTree(kFALSE), fTotBytes(-1), fZipBytes(-1)
+                     { ResetBit(TFileInfoMeta::kExternal); }
    TFileInfoMeta(const char *objPath, const char *objClass = "TTree",
                  Long64_t entries = -1, Long64_t first = 0, Long64_t last = -1,
                  Long64_t totbytes = -1, Long64_t zipbytes = -1);
@@ -125,6 +131,7 @@ public:
                  const char *objClass, Long64_t entries = -1,
                  Long64_t first = 0, Long64_t last = -1,
                  Long64_t totbytes = -1, Long64_t zipbytes = -1);
+   TFileInfoMeta(const TFileInfoMeta &m);
 
    virtual ~TFileInfoMeta() { }
 

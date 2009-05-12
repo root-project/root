@@ -24,7 +24,9 @@
 #include "THashList.h"
 #include "TFileInfo.h"
 #include "TIterator.h"
+#include "TMap.h"
 #include "TObjString.h"
+#include "TUri.h"
 #include "TUrl.h"
 #include "TSystem.h"
 #include "Riostream.h"
@@ -68,11 +70,15 @@ Int_t TFileCollection::Add(TFileInfo *info)
    // Add TFileInfo to the collection.
 
    if (fList && info) {
-      fList->Add(info);
-      return 1;
-   } else {
-      return 0;
+      if (!fList->FindObject(info->GetName())) {
+         fList->Add(info);
+         return 1;
+      } else {
+         Warning("Add", "file: '%s' already in the list - ignoring",
+                        info->GetCurrentUrl()->GetUrl());
+      }
    }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -81,9 +87,10 @@ Int_t TFileCollection::Add(TFileCollection *coll)
    // Add content of the TFileCollection to this collection.
 
    if (fList && coll && coll->GetList()) {
-      TList* list = coll->GetList();
-      for (Int_t i=0; i<list->GetEntries(); i++) {
-         fList->Add((TFileInfo*) list->At(i));
+      TIter nxfi(coll->GetList());
+      TFileInfo *fi = 0;
+      while ((fi = (TFileInfo *) nxfi())) {
+         fList->Add(new TFileInfo(*fi));
       }
       return 1;
    } else {
@@ -146,7 +153,7 @@ Int_t TFileCollection::Add(const char *dir)
       return nf;
 
    if (!dir || !*dir) {
-      Error("AddFromDirectory", "input dir undefined");
+      Error("Add", "input dir undefined");
       return nf;
    }
 
@@ -169,7 +176,7 @@ Int_t TFileCollection::Add(const char *dir)
          void *dataSetDir = gSystem->OpenDirectory(gSystem->DirName(dir));
          if (!dataSetDir) {
             // directory cannot be opened
-            Error("AddFromDirectory", "directory %s cannot be opened",
+            Error("Add", "directory %s cannot be opened",
                   gSystem->DirName(dir));
          } else {
             const char *ent;
@@ -200,6 +207,36 @@ Int_t TFileCollection::Add(const char *dir)
       }
    }
    return nf;
+}
+
+//______________________________________________________________________________
+Int_t TFileCollection::RemoveDuplicates()
+{
+   // Remove duplicates based on the UUID, typically after a verification.
+   // Return the number of entries removed.
+
+   THashList *hl = new THashList;
+   hl->SetOwner();
+
+   Int_t n0 = fList->GetSize();
+   TIter nxfi(fList);
+   TFileInfo *fi = 0;
+   while ((fi = (TFileInfo *)nxfi())) {
+      if (!(hl->FindObject(fi->GetUUID()->AsString()))) {
+         // We hash on the UUID
+         fList->Remove(fi);
+         fi->SetName(fi->GetUUID()->AsString());
+         hl->Add(fi);
+      }
+   }
+   delete fList;
+   fList = hl;
+   // How many removed?
+   Int_t nr = n0 - fList->GetSize();
+   if (nr > 0)
+      Info("RemoveDuplicates", "%d duplicates found and removed", nr);
+   // Done
+   return nr;
 }
 
 //______________________________________________________________________________
@@ -243,7 +280,17 @@ Int_t TFileCollection::Update(Long64_t avgsize)
    fTotalSize = 0;
    fNStagedFiles = 0;
    fNCorruptFiles = 0;
-   fMetaDataList->Clear();
+
+   // Clear internal meta information which is going to be rebuilt in this
+   // function
+   TIter nxm(fMetaDataList);
+   TFileInfoMeta *m = 0;
+   while ((m = (TFileInfoMeta *)nxm())) {
+      if (!(m->TestBit(TFileInfoMeta::kExternal))) {
+         fMetaDataList->Remove(m);
+         delete m;
+      }
+   }
 
    fNFiles = fList->GetEntries();
 
@@ -479,7 +526,7 @@ void TFileCollection::Sort()
 }
 
 //______________________________________________________________________________
-TObjString *TFileCollection::ExportInfo(const char *name)
+TObjString *TFileCollection::ExportInfo(const char *name, Int_t popt)
 {
    // Export the relevant info as a string; use 'name' as collection name,
    // if defined, else use GetName().
@@ -487,16 +534,25 @@ TObjString *TFileCollection::ExportInfo(const char *name)
 
    TString treeInfo;
    if (GetDefaultTreeName()) {
-      treeInfo = Form(" %s ", GetDefaultTreeName());
-      if (treeInfo.Length() < 14)
-         treeInfo.Resize(14);
       TFileInfoMeta* meta = GetMetaData(GetDefaultTreeName());
-      if (meta)
-         treeInfo += Form("| %8lld ", meta->GetEntries());
+      if (popt == 1) {
+         treeInfo = GetDefaultTreeName();
+         if (meta)
+            treeInfo += Form(", %lld entries", meta->GetEntries());
+         TFileInfoMeta *frac = GetMetaData("/FractionOfTotal");
+         if (frac)
+            treeInfo += Form(", %3.1f %% of total", frac->GetEntries() / 10.);
+      } else {
+         treeInfo = Form(" %s ", GetDefaultTreeName());
+         if (treeInfo.Length() < 14)
+            treeInfo.Resize(14);
+         if (meta)
+            treeInfo += Form("| %8lld ", meta->GetEntries());
+      }
    } else {
       treeInfo = "        N/A";
    }
-   treeInfo.Resize(25);
+   if (popt == 0) treeInfo.Resize(25);
 
    // Renormalize the size to kB, MB or GB
    const char *unit[4] = {"kB", "MB", "GB", "TB"};
@@ -514,10 +570,248 @@ TObjString *TFileCollection::ExportInfo(const char *name)
    if (dsname.IsNull()) dsname = GetName();
 
    // Create the output string
-   TObjString *outs =
-      new TObjString(Form("%s| %7lld |%s| %5lld %s |  %3d %%", dsname.Data(),
-                     GetNFiles(), treeInfo.Data(), xsz, unit[k],
-                     (Int_t)GetStagedPercentage()));
+   TObjString *outs = 0;
+   if (popt == 1) {
+      outs = new TObjString(Form("%s %lld files, %lld %s, staged %d %%, tree: %s", dsname.Data(),
+                                 GetNFiles(), xsz, unit[k],
+                                 (Int_t)GetStagedPercentage(), treeInfo.Data()));
+   } else {
+      outs = new TObjString(Form("%s| %7lld |%s| %5lld %s |  %3d %%", dsname.Data(),
+                                 GetNFiles(), treeInfo.Data(), xsz, unit[k],
+                                 (Int_t)GetStagedPercentage()));
+   }
    // Done
    return outs;
+}
+
+//______________________________________________________________________________
+TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
+{
+   // Return the subset of files served by 'server'. The sysntax for 'server' is
+   // the standard URI one, i.e. [<scheme>://]<host>[:port]
+
+   TFileCollection *fc = (TFileCollection *)0;
+
+   // Server specification is mandatory
+   if (!server || strlen(server) <= 0) {
+      Info("GetFilesOnServer", "server undefined - do nothing");
+      return fc;
+   }
+
+   // Nothing to do for empty lists
+   if (!fList || fList->GetSize() <= 0) {
+      Info("GetFilesOnServer", "the list is empty - do nothing");
+      return fc;
+   }
+
+   // Define the server reference string
+   TUri uri(server);
+   TString srv, scheme("root"), port("1094");
+   if (uri.GetScheme() != "") scheme = uri.GetScheme();
+   if (uri.GetPort() != "") port= uri.GetPort();
+   srv.Form("%s://%s:%s", scheme.Data(), TUrl(server).GetHostFQDN(), port.Data());
+   if (gDebug > 0)
+      Info("GetFilesOnServer", "searching for files on server: '%s' (input: '%s')", srv.Data(), server);
+
+   // Prepare the output
+   fc = new TFileCollection(GetName());
+   TString title;
+   if (GetTitle() && strlen(GetTitle()) > 0) {
+      title.Form("%s (subset on server %s)", GetTitle(), srv.Data());
+   } else {
+      title.Form("subset of '%s' on server %s", GetName(), srv.Data());
+   }
+   fc->SetTitle(title.Data());
+   // The default tree name
+   fc->SetDefaultTreeName(GetDefaultTreeName());
+
+   // We look for URL starting with srv
+   srv.Insert(0, "^");
+   srv += "*";
+
+   // Go through the list
+   TIter nxf(fList);
+   TFileInfo *fi = 0;
+   while ((fi = (TFileInfo *)nxf())) {
+      TUrl *xu = 0;
+      if ((xu = fi->FindByUrl(srv.Data(), kTRUE))) {
+         // Create a new TFileInfo object
+         TFileInfo *nfi = new TFileInfo(xu->GetUrl(kTRUE), fi->GetSize(),
+                                        fi->GetUUID()->AsString(), fi->GetMD5()->AsString());
+         if (fi->GetMetaDataList()) {
+            TIter nxm(fi->GetMetaDataList());
+            TFileInfoMeta *md = 0;
+            while ((md = (TFileInfoMeta *) nxm())) {
+               nfi->AddMetaData(new TFileInfoMeta(*md));
+            }
+         }
+         if (fi->TestBit(TFileInfo::kStaged)) nfi->SetBit(TFileInfo::kStaged);
+         if (fi->TestBit(TFileInfo::kCorrupted)) nfi->SetBit(TFileInfo::kCorrupted);
+         if (gDebug > 1)
+            Info("GetFilesOnServer", "adding: %s", xu->GetUrl(kTRUE));
+         fc->Add(nfi);
+      }
+   }
+
+   // If nothing found, delete the object
+   if (fc->GetList()->GetSize() <= 0) {
+      delete fc;
+      fc = 0;
+      Info("GetFilesOnServer", "dataset '%s' has no files on server: '%s' (searched for: '%s')",
+                               GetName(), server, srv.Data());
+   }
+
+   // Fill up sums on the sub file collection
+   if (fc) {
+      fc->Update();
+      // Fraction of total in permille
+      Long64_t xf = (fc->GetTotalSize() * 1000) / GetTotalSize();
+      TFileInfoMeta *m = new TFileInfoMeta("FractionOfTotal", "External Info", xf);
+      m->SetBit(TFileInfoMeta::kExternal);
+      fc->AddMetaData(m);
+   }
+
+   // Done
+   return fc;
+}
+
+//______________________________________________________________________________
+TMap *TFileCollection::GetFilesPerServer(const char *exclude)
+{
+   // Return a map of TFileCollections with the files on each data server,
+   // excluding servers in the comma-separated list 'exclude'
+
+   TMap *dsmap = 0;
+
+   // Nothing to do for empty lists
+   if (!fList || fList->GetSize() <= 0) {
+      Info("GetFilesPerServer", "the list is empty - do nothing");
+      return dsmap;
+   }
+
+   // List of servers to be ignored
+   THashList *excl = 0;
+   if (exclude && strlen(exclude) > 0) {
+      excl = new THashList;
+      excl->SetOwner();
+      TUri uri;
+      TString srvs(exclude), s, srv, scheme, port;
+      Int_t from = 0;
+      while (srvs.Tokenize(s, from, ",")) {
+         uri.SetUri(s.Data());
+         scheme = "root";
+         port = "1094";
+         if (uri.GetScheme() != "") scheme = uri.GetScheme();
+         if (uri.GetPort() != "") port= uri.GetPort();
+         srv.Form("%s://%s:%s", scheme.Data(), TUrl(s.Data()).GetHostFQDN(), port.Data());
+         // Add
+         excl->Add(new TObjString(srv.Data()));
+      }
+   }
+
+   // Prepare the output
+   dsmap = new TMap();
+
+   // Go through the list
+   TIter nxf(fList);
+   TFileInfo *fi = 0;
+   TUri uri;
+   TString key;
+   TFileCollection *fc = 0;
+   while ((fi = (TFileInfo *)nxf())) {
+      // Save current URL
+      TUrl *curl = fi->GetCurrentUrl();
+      // Loop over URLs
+      fi->ResetUrl();
+      TUrl *xurl = 0;
+      while ((xurl = fi->NextUrl())) {
+         // Find the key for this server
+         uri.SetUri(xurl->GetUrl(kTRUE));
+         if (xurl->GetPort() > 0) {
+            key.Form("%s://%s:%d", uri.GetScheme().Data(), xurl->GetHostFQDN(), xurl->GetPort());
+         } else {
+            key.Form("%s://%s", uri.GetScheme().Data(), xurl->GetHostFQDN());
+         }
+         // Check if this has to be ignored
+         if (excl && excl->FindObject(key.Data())) continue;
+         // Get the map entry for this key
+         TPair *ent = 0;
+         if (!(ent = (TPair *) dsmap->FindObject(key.Data()))) {
+            // Create the TFileCollection
+            fc = new TFileCollection(GetName());
+            TString title;
+            if (GetTitle() && strlen(GetTitle()) > 0) {
+               title.Form("%s (subset on server %s)", GetTitle(), key.Data());
+            } else {
+               title.Form("subset of '%s' on server %s", GetName(), key.Data());
+            }
+            fc->SetTitle(title.Data());
+            // The default tree name
+            fc->SetDefaultTreeName(GetDefaultTreeName());
+            // Add it to the map
+            dsmap->Add(new TObjString(key.Data()), fc);
+            // Notify
+            if (gDebug > 0)
+               Info("GetFilesPerServer", "found server: '%s' (fc: %p)", key.Data(), fc);
+         } else {
+            // Attach to the TFileCollection
+            fc = (TFileCollection *) ent->Value();
+         }
+         // Create a new TFileInfo object
+         TFileInfo *nfi = new TFileInfo(xurl->GetUrl(kTRUE), fi->GetSize(),
+                                        fi->GetUUID()->AsString(), fi->GetMD5()->AsString());
+         if (fi->GetMetaDataList()) {
+            TIter nxm(fi->GetMetaDataList());
+            TFileInfoMeta *md = 0;
+            while ((md = (TFileInfoMeta *) nxm())) {
+               nfi->AddMetaData(new TFileInfoMeta(*md));
+            }
+         }
+         if (fi->TestBit(TFileInfo::kStaged)) nfi->SetBit(TFileInfo::kStaged);
+         if (fi->TestBit(TFileInfo::kCorrupted)) nfi->SetBit(TFileInfo::kCorrupted);
+         fc->Add(nfi);
+      }
+      // Restore current URL
+      fi->SetCurrentUrl(curl);
+   }
+
+   // Fill up sums on the sub file collections
+   TIter nxk(dsmap);
+   TObject *k = 0;
+   while ((k = nxk()) && (fc = (TFileCollection *) dsmap->GetValue(k))) {
+      fc->Update();
+      // Fraction of total in permille
+      Long64_t xf = (fc->GetTotalSize() * 1000) / GetTotalSize();
+      TFileInfoMeta *m = new TFileInfoMeta("FractionOfTotal", "External Info", xf);
+      m->SetBit(TFileInfoMeta::kExternal);
+      fc->AddMetaData(m);
+   }
+
+   // Cleanup
+   if (excl) delete excl;
+
+   // Done
+   return dsmap;
+}
+
+//______________________________________________________________________________
+Bool_t TFileCollection::AddMetaData(TObject *meta)
+{
+   // Add's a meta data object to the file collection object. The object will be
+   // adopted by the TFileCollection and should not be deleted by the user.
+   // Typically objects of class TFileInfoMeta or derivatives should be added,
+   // but any class is accepted.
+   // NB : a call to TFileCollection::Update will remove these objects unless the
+   //      bit TFileInfoMeta::kExternal is set.
+   // Returns kTRUE if successful, kFALSE otherwise.
+
+   if (meta) {
+      if (!fMetaDataList) {
+         fMetaDataList = new TList;
+         fMetaDataList->SetOwner();
+      }
+      fMetaDataList->Add(meta);
+      return kTRUE;
+   }
+   return kFALSE;
 }

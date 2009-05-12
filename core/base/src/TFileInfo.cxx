@@ -17,8 +17,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TFileInfo.h"
 #include "Riostream.h"
+#include "TFileInfo.h"
+#include "TRegexp.h"
 #include "TSystem.h"
 #include "TClass.h"
 
@@ -56,6 +57,49 @@ TFileInfo::TFileInfo(const char *url, Long64_t size, const char *uuid,
 }
 
 //______________________________________________________________________________
+TFileInfo::TFileInfo(const TFileInfo &fi) : TNamed(fi.GetName(), fi.GetTitle()),
+                                            fCurrentUrl(0), fUrlList(0),
+                                            fSize(fi.fSize), fUUID(0), fMD5(0),
+                                            fMetaDataList(0)
+{
+   // Copy constructor
+
+   if (fi.fUrlList) {
+      fUrlList = new TList;
+      fUrlList->SetOwner();
+      TIter nxu(fi.fUrlList);
+      TUrl *u = 0;
+      while ((u = (TUrl *)nxu())) {
+         fUrlList->Add(new TUrl(u->GetUrl(), kTRUE));
+      }
+      ResetUrl();
+   }
+   fSize = fi.fSize;
+
+   if (fi.fUUID)
+      fUUID = new TUUID(fi.fUUID->AsString());
+
+   if (fi.fMD5)
+      fMD5 = new TMD5(*(fi.fMD5));
+
+   // Staged and corrupted bits
+   ResetBit(TFileInfo::kStaged);
+   ResetBit(TFileInfo::kCorrupted);
+   if (fi.TestBit(TFileInfo::kStaged)) SetBit(TFileInfo::kStaged);
+   if (fi.TestBit(TFileInfo::kCorrupted)) SetBit(TFileInfo::kCorrupted);
+
+   if (fi.fMetaDataList) {
+      fMetaDataList = new TList;
+      fMetaDataList->SetOwner();
+      TIter nxm(fi.fMetaDataList);
+      TFileInfoMeta *fim = 0;
+      while ((fim = (TFileInfoMeta *)nxm())) {
+         fMetaDataList->Add(new TFileInfoMeta(*fim));
+      }
+   }
+}
+
+//______________________________________________________________________________
 TFileInfo::~TFileInfo()
 {
    // Destructor.
@@ -64,6 +108,21 @@ TFileInfo::~TFileInfo()
    SafeDelete(fUUID);
    SafeDelete(fMD5);
    SafeDelete(fUrlList);
+}
+
+//______________________________________________________________________________
+void TFileInfo::SetUUID(const char *uuid)
+{
+   // Set the UUID to the value associated to the string 'uuid'. This is
+   // useful to set the UUID to the one of the ROOT file during verification.
+   // NB: we do not change the name in here, because this would screw up lists
+   //     of these objects hashed on the name. Those lists need to be rebuild.
+   //     TFileCollection does that in RemoveDuplicates.
+
+   if (uuid) {
+      if (fUUID) delete fUUID;
+      fUUID = new TUUID(uuid);
+   }
 }
 
 //______________________________________________________________________________
@@ -95,15 +154,16 @@ TUrl *TFileInfo::NextUrl()
 }
 
 //______________________________________________________________________________
-TUrl *TFileInfo::FindByUrl(const char *url)
+TUrl *TFileInfo::FindByUrl(const char *url, Bool_t withDeflt)
 {
    // Find an element from a URL. Returns 0 if not found.
 
    TIter nextUrl(fUrlList);
    TUrl *urlelement;
 
+   TRegexp rg(url);
    while  ((urlelement = (TUrl*) nextUrl())) {
-      if ( TString(urlelement->GetUrl()) == TString(url) ) {
+      if (TString(urlelement->GetUrl(withDeflt)).Index(rg) != kNPOS) {
          return urlelement;
       }
    }
@@ -148,6 +208,33 @@ Bool_t TFileInfo::RemoveUrl(const char *url)
       if (lurl == fCurrentUrl)
          ResetUrl();
       delete lurl;
+      return kTRUE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TFileInfo::SetCurrentUrl(const char *url)
+{
+   // Set 'url' as current URL, if in the list
+   // Return kFALSE if not in the list
+
+   TUrl *lurl;
+   if ((lurl = FindByUrl(url))) {
+      fCurrentUrl = lurl;
+      return kTRUE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TFileInfo::SetCurrentUrl(TUrl *url)
+{
+   // Set 'url' as current URL, if in the list
+   // Return kFALSE if not in the list
+
+   if (url && fUrlList && fUrlList->FindObject(url)) {
+      fCurrentUrl = url;
       return kTRUE;
    }
    return kFALSE;
@@ -268,6 +355,7 @@ TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objClass,
 
    TClass *c = TClass::GetClass(objClass);
    fIsTree = (c && c->InheritsFrom("TTree")) ? kTRUE : kFALSE;
+   ResetBit(TFileInfoMeta::kExternal);
 }
 
 //______________________________________________________________________________
@@ -290,6 +378,23 @@ TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objDir,
 
    TClass *c = TClass::GetClass(objClass);
    fIsTree = (c && c->InheritsFrom("TTree")) ? kTRUE : kFALSE;
+   ResetBit(TFileInfoMeta::kExternal);
+}
+
+//______________________________________________________________________________
+TFileInfoMeta::TFileInfoMeta(const TFileInfoMeta &m)
+              : TNamed(m.GetName(), m.GetTitle())
+{
+   // Copy constructor
+
+   fEntries = m.fEntries;
+   fFirst = m.fFirst;
+   fLast = m.fLast;
+   fIsTree = m.fIsTree;
+   fTotBytes = m.fTotBytes;
+   fZipBytes = m.fZipBytes;
+   ResetBit(TFileInfoMeta::kExternal);
+   if (m.TestBit(TFileInfoMeta::kExternal)) SetBit(TFileInfoMeta::kExternal);
 }
 
 //______________________________________________________________________________
