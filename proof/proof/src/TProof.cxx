@@ -8052,8 +8052,8 @@ void TProof::ShowDataSets(const char *uri, const char* optStr)
 
    TMessage mess(kPROOF_DATASETS);
    mess << Int_t(kShowDataSets);
-   mess << TString(uri?uri:"");
-   mess << TString(optStr?optStr:"");
+   mess << TString(uri ? uri : "");
+   mess << TString(optStr ? optStr : "");
    Broadcast(mess);
 
    Collect(kActive, fCollectTimeout);

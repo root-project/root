@@ -5185,9 +5185,9 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
 
       case TProof::kShowDataSets:
          {
-            (*mess) >> uri;
-            // Scan the existing datasets and print the content
-            fDataSetManager->GetDataSets(uri, (UInt_t)TProofDataSetManager::kPrint);
+            (*mess) >> uri >> opt;
+            // Show content
+            fDataSetManager->ShowDataSets(uri, opt);
          }
          break;
 
