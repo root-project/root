@@ -57,6 +57,9 @@ class TProofProgressMemoryPlot : public TGTransientFrame {
    TGraph*    DoMasterPlot(TProofLogElem *ple);
    TGraph*    DoAveragePlot(Int_t &max_el, Int_t &min_el);
    TGraph*    DoAveragePlotOld(Int_t &max_el, Int_t &min_el);
+
+   Int_t      ParseLine(TString l, Long64_t &v, Long64_t &r, Long64_t &e);
+
  public:
    TProofProgressMemoryPlot(TProofProgressDialog *d, Int_t w = 700, Int_t h = 300);
    virtual ~TProofProgressMemoryPlot();
