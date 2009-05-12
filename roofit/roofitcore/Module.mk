@@ -73,7 +73,7 @@ ROOFITCOREH3   := RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic
                   RooSharedPropertiesList.h RooSimGenContext.h \
                   RooStreamParser.h RooStringVar.h RooSuperCategory.h \
                   RooTable.h RooThreshEntry.h RooThresholdCategory.h \
-                  RooTObjWrap.h RooTrace.h RooTreeData.h RooUniformBinning.h \
+                  RooTObjWrap.h RooTrace.h RooUniformBinning.h \
                   RooSimultaneous.h RooRealSumPdf.h RooResolutionModel.h \
                   RooProdPdf.h RooMCStudy.h RooSimPdfBuilder.h RooTruthModel.h RooMsgService.h \
                   RooProjectedPdf.h RooWorkspace.h RooProfileLL.h RooAbsCachedPdf.h RooAbsSelfCachedPdf.h \
@@ -86,7 +86,7 @@ ROOFITCOREH3   := RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic
                   RooBinningCategory.h RooCintUtils.h RooFactoryWSTool.h RooTFoamBinding.h RooFunctor.h	\
                   RooDerivative.h RooGenFunction.h RooMultiGenFunction.h RooAdaptiveIntegratorND.h \
                   RooAbsNumGenerator.h RooFoamGenerator.h RooNumGenConfig.h RooNumGenFactory.h \
-                  RooMultiVarGaussian.h RooXYChi2Var.h
+                  RooMultiVarGaussian.h RooXYChi2Var.h RooAbsDataStore.h RooTreeDataStore.h RooTreeData.h
 
 ROOFITCOREH1   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH1))
 ROOFITCOREH2   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH2))
