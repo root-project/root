@@ -76,7 +76,7 @@ public:
    void   Popup();
    void   SaveToFile();
    void   NoLineEntry();
-   void   Select(Int_t id);
+   void   Select(Int_t id, Bool_t all = kTRUE);
    // slots
    void   CloseWindow();
 

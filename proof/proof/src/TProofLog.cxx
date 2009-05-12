@@ -301,6 +301,17 @@ TProofLogElem::TProofLogElem(const char *ord, const char *url,
    fSize = -1;
    fFrom = -1;
    fTo = -1;
+
+   //Note the role here, don't redo at each call of Display()
+   if (strstr(GetTitle(), "worker-")) {
+      fRole = "worker";
+   } else {
+      if (strchr(GetName(), '.')) {
+         fRole = "submaster";
+      } else {
+         fRole = "master";
+      }
+   }
 }
 
 //________________________________________________________________________
@@ -390,17 +401,6 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
 
       // Cleanup
       delete os;
-   }
-
-   //Note the role here, don't redo at each call of Display()
-   if (strstr(GetTitle(), "worker-")) {
-      fRole = "worker";
-   } else {
-      if (strchr(GetName(), '.')) {
-         fRole = "submaster";
-      } else {
-         fRole = "master";
-      }
    }
 
    // Done

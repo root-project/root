@@ -23,6 +23,9 @@
 #include "TGMenu.h"
 #include "TGButton.h"
 
+static UInt_t kLogElemFilled = BIT(17); // If the log element has been retrieved at least once
+static UInt_t kDefaultActive = BIT(18); // If the log element is active by default
+
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
 // TProofProgressLog                                                     //
@@ -43,7 +46,7 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
 
    fDialog = d;
    fProofLog = 0;
-   fFullText = kTRUE;
+   fFullText = kFALSE;
    fTextType = kStd;
    // use hierarchical cleaning
    SetCleanup(kDeepCleanup);
@@ -76,8 +79,9 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    fAllWorkers->Connect("ItemClicked(Int_t)", "TProofProgressLog", this, 
                      "Select(Int_t)");
    fAllWorkers->SetSplit(kFALSE);
-   //select all for the first display
-   Select(0);
+
+   //select the defaut actives to start with
+   Select(0, kFALSE);
 
    //Display button
    fLogNew = new TGTextButton(vworkers, "&Display");
@@ -257,7 +261,7 @@ TGListBox* TProofProgressLog::BuildLogList(TGFrame *parent)
                               fDialog->fSessionUrl.Data());
       return c;
    }
-   if (!(fProofLog = mgr->GetSessionLogs())) {
+   if (!(fProofLog = mgr->GetSessionLogs(0,"NR"))) {
       Warning("BuildLogList", "unable to get logs from %s",
                               fDialog->fSessionUrl.Data());
       return c;
@@ -270,12 +274,19 @@ TGListBox* TProofProgressLog::BuildLogList(TGFrame *parent)
    TProofLogElem *pe = 0;
 
    Int_t is = 0;
+   TGLBEntry *ent = 0;
    while ((pe=(TProofLogElem*)next())){
       TUrl url(pe->GetTitle());
       TString buf = TString::Format("%s %s", pe->GetName(), url.GetHost());
       c->AddEntry(buf.Data(), is);
+      if ((ent = c->FindEntry(buf.Data()))) {
+         ent->ResetBit(kLogElemFilled);
+         ent->ResetBit(kDefaultActive);
+         if (!(pe->IsWorker())) ent->SetBit(kDefaultActive);
+      }
       is++;
    }
+
    return c;
 
 }
@@ -297,40 +308,44 @@ void TProofProgressLog::DoLog(Bool_t grep)
       to = fLinesTo->GetIntNumber();
    }
 
-   TProofMgr *mgr = 0;
+   // Create the TProofLog instance
+   if (!fProofLog) {
+      TProofMgr *mgr = 0;
+      if ((mgr = TProof::Mgr(fDialog->fSessionUrl.Data()))) {
+         if (!(fProofLog = mgr->GetSessionLogs(0, "NR"))) {
+            Warning("DoLog", "unable to instantiate TProofLog for %s",
+                             fDialog->fSessionUrl.Data());
+         }
+      } else {
+         Warning("DoLog", "unable to instantiate a TProofMgr for %s",
+                          fDialog->fSessionUrl.Data());
+      }
+   }
+
+   // Defaulr is not retrieving
+   Bool_t retrieve = kFALSE;
    if (!grep) {
-      if (!fProofLog || !fFullText ||
+      if (!fFullText ||
           ((fTextType != kRaw && fRawLines->IsOn())   ||
            (fTextType != kStd && !fRawLines->IsOn())) ||
           fDialog->fStatus==TProofProgressDialog::kRunning) {
-         SafeDelete(fProofLog);
-         if ((mgr = TProof::Mgr(fDialog->fSessionUrl.Data()))) {
-            if (fRawLines->IsOn()) {
-               fProofLog = mgr->GetSessionLogs(0, 0, 0);
-               fTextType = kRaw;
-            } else {
-               fProofLog = mgr->GetSessionLogs();
-               fTextType = kStd;
-            }
+         retrieve = kTRUE;
+         if (fRawLines->IsOn()) {
+            fTextType = kRaw;
          } else {
-            Warning("DoLog", "unable to instantiate a TProofMgr for %s",
-                             fDialog->fSessionUrl.Data());
+            fTextType = kStd;
          }
          if (fDialog->fStatus != TProofProgressDialog::kRunning)
             fFullText = kTRUE;
       }
    } else {
-      SafeDelete(fProofLog);
-      if ((mgr = TProof::Mgr(fDialog->fSessionUrl.Data()))) {
-         fProofLog = mgr->GetSessionLogs(0, 0, greptext.Data());
-      } else {
-         Warning("DoLog", "unable to instantiate a TProofMgr for %s",
-                          fDialog->fSessionUrl.Data());
-      }
+      retrieve = kTRUE;
       fTextType = kGrep;
       if (fDialog->fStatus != TProofProgressDialog::kRunning)
          fFullText = kTRUE;
    }
+
+   // Display now
    if (fProofLog) {
       TList *selected = new TList;
       fLogList->GetSelectedEntries(selected);
@@ -345,6 +360,16 @@ void TProofProgressLog::DoLog(Bool_t grep)
          TString ord = selentry->GetText()->GetString();
          Int_t is = ord.Index(" ");
          if (is != kNPOS) ord.Remove(is);
+         if (retrieve || !selentry->TestBit(kLogElemFilled)) {
+            if (fTextType == kGrep) {
+               fProofLog->Retrieve(ord.Data(), TProofLog::kGrep, 0, greptext.Data());
+            } else if (fTextType == kRaw) {
+               fProofLog->Retrieve(ord.Data(), TProofLog::kTrailing, 0, 0);
+            } else {
+               fProofLog->Retrieve(ord.Data(), TProofLog::kGrep, 0, "-v \"| SvcMsg\"");
+            }
+            selentry->SetBit(kLogElemFilled);
+         }
          fProofLog->Display(ord.Data(), from, to);
       }
       fProofLog->SetLogToBox(logonly);
@@ -422,15 +447,22 @@ void TProofProgressLog::NoLineEntry()
 }
 
 //______________________________________________________________________________
-void TProofProgressLog::Select(Int_t id)
+void TProofProgressLog::Select(Int_t id, Bool_t all)
 {
    //actions of select all/clear all button
 
    Int_t nen = fLogList->GetNumberOfEntries();
    Bool_t sel = id ? 0 : 1;
 
+   TGLBEntry *ent = 0;
    for (Int_t ie=0; ie<nen; ie++) {
-      fLogList->Select(ie, sel);
+      if (all) {
+         fLogList->Select(ie, sel);
+      } else {
+         if ((ent = fLogList->GetEntry(ie))) {
+            if (ent->TestBit(kDefaultActive)) fLogList->Select(ie, sel);
+         }
+      }
    }
 }
 
