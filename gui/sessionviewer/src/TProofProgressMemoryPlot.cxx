@@ -370,11 +370,10 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
    Long64_t step = -1;
    TObjString *curline = 0;
    TObjString *prevline = 0;
-   TObjString *curevent = 0;
    Long64_t curevent_value;
    Long64_t prevevent_value;
    Long64_t *last = new Long64_t[elem->GetEntries()];
-   TObjArray *parts = 0;
+   Long64_t vmem = -1, rmem = -1, nevt = -1;
    TString token;
    Int_t ielem=0;
    while ((ple = (TProofLogElem *)next())){
@@ -385,30 +384,22 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
       if (!lines || lines->GetSize() <= 0) continue;
       curline = (TObjString *) lines->Last();
       if (!curline) continue;
-      parts = curline->String().Tokenize(" ");
-      if (!parts) continue;
-      curevent = (TObjString *) parts->At(kEventNumberPos);
-      if (!curevent) continue;
-      curevent_value = curevent->String().Atoll();
+      curevent_value = 0;
+      if (ParseLine(curline->String(), vmem, rmem, curevent_value) != 0) {
+         Warning("DoAveragePlot", "error parsing line: '%s'", curline->String().Data());
+         continue;
+      }
       if (maxevent < curevent_value) maxevent = curevent_value;
       last[ielem] = curevent_value;
-      parts->Delete();
-      delete parts;
-      parts = 0;
       if (step < 0) {
          // Find the step
          prevline = (TObjString *)lines->Before(curline);
          if (prevline) {
-            parts = prevline->String().Tokenize(" ");
-            if (parts) {
-               curevent = (TObjString *) parts->At(kEventNumberPos);
-               if (curevent) {
-                  prevevent_value = curevent->String().Atoll();
-                  step = curevent_value - prevevent_value;
-               }
-               parts->Delete();
-               delete parts;
-               parts = 0;
+            prevevent_value = 0;
+            if (ParseLine(prevline->String(), vmem, rmem, prevevent_value) != 0) {
+               Warning("DoAveragePlot", "error parsing line: '%s'", curline->String().Data());
+            } else {
+               step = curevent_value - prevevent_value;
             }
          }
       }
@@ -429,7 +420,6 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
    next.Reset();
    ielem=0;
    Int_t iline=0;
-   Double_t tempval;
    Double_t cur_av;
    Long64_t nev;
    Long64_t nextevent = Long64_t(10E16);
@@ -445,18 +435,14 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
       cur_av = 0;
       while ((curline = (TObjString*)prev()) && iline<last[ielem]){
          // a backward loop, so that only the last query is counted
-         Int_t from = 0;
-         Int_t iword = 0;
-         while (curline->String().Tokenize(token, from, " ")){
-            if (iword==kMemValuePos){
-               tempval = token.Atof();
-               av_mem[last[ielem] -1 - iline] += tempval; //last[ielem] is the number of lines for
-               nw[last[ielem] -1 - iline]++;              //this query and this element
-               cur_av += tempval/last[ielem];
-               // printf("added value %f at position %lld\n", tempval, last[ielem]-1-iline);
-            }
-            iword++;
+         vmem = 0;
+         if (ParseLine(curline->String(), vmem, rmem, nevt) != 0) {
+            Warning("DoWorkerPlot", "error parsing line: '%s'", curline->String().Data());
+            continue;
          }
+         av_mem[last[ielem] -1 - iline] += vmem; //last[ielem] is the number of lines for
+         nw[last[ielem] -1 - iline]++;              //this query and this element
+         if (last[ielem] > 0) cur_av += (Double_t)vmem / last[ielem];
          iline++;
       }
       if (cur_av > max_av){
@@ -479,8 +465,62 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
    av_mem = 0;
    delete [] nw;
    nw = 0;
+   delete [] last;
+   last = 0;
    return gr;
 
+}
+
+//______________________________________________________________________________
+Int_t TProofProgressMemoryPlot::ParseLine(TString l,
+                                          Long64_t &v, Long64_t &r, Long64_t &e)
+{
+   // Extract from line 'l' the virtual memory 'v', the resident memory 'r' and the
+   // number of events 'e'.
+   // The line is assumed to be in the form
+   // "... Memory 130868 virtual 31540 ... event 5550"
+   // The fields are only filled if >= 0 .
+   // Return 0 on success, -1 if any of the values coudl not be filled (the output
+   // fields are not touched in such a case).
+
+   // Something to parse is mandatory
+   if (l.IsNull()) return -1;
+
+   // At least one field needs to be filled
+   if (v < 0 && r < 0 && e < 0) return 0;
+
+   // Position at the start of the relevant info
+   Int_t from = kNPOS;
+   if ((from = l.Index("Memory")) == kNPOS) return -1;
+
+   // Prepare extraction
+   from += 7;
+   TString tok;
+
+   // The virtual memory
+   if (v >= 0) {
+      if (!l.Tokenize(tok, from, " ")) return -1;
+      v = tok.Atoll();
+   }
+
+   // The resident memory
+   if (r >= 0) {
+      if ((from = l.Index("virtual", from)) == kNPOS) return -1;
+      from += 8;
+      if (!l.Tokenize(tok, from, " ")) return -1;
+      r = tok.Atoll();
+   }
+
+   // The number of events
+   if (e >= 0) {
+      if ((from = l.Index("event", from)) == kNPOS) return -1;
+      from += 6;
+      if (!l.Tokenize(tok, from, " ")) return -1;
+      e = tok.Atoll();
+   }
+
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -495,24 +535,28 @@ TGraph *TProofProgressMemoryPlot::DoWorkerPlot(TProofLogElem *ple)
       return 0;
    }
 
+   Long64_t vmem = -1, rmem = -1, nevt = -1;
+
    //find the last event value
    curline = (TObjString*)lines->Last();
-   TObjArray *parts = curline->String().Tokenize(" ");
-   TObjString *lastevent = (TObjString*)parts->At(kEventNumberPos);
-   Long64_t lastevent_value = lastevent->String().Atoll();
-   parts->Delete();
-   delete parts;
-   parts = 0;
+   Long64_t lastevent_value = 0;
+   if (ParseLine(curline->String(), vmem, rmem, lastevent_value) != 0) {
+      Error("DoWorkerPlot", "error parsing line: '%s'", curline->String().Data());
+      return 0;
+   }
 
    //find the step
    TObjString *prevline = (TObjString*)lines->Before(curline);
-   parts = prevline->String().Tokenize(" ");
-   lastevent = (TObjString*)parts->At(kEventNumberPos);
-   Long64_t prevevent_value = lastevent->String().Atoll();
+   Long64_t prevevent_value = 0;
+   if (ParseLine(prevline->String(), vmem, rmem, prevevent_value) != 0) {
+      Error("DoWorkerPlot", "error parsing line: '%s'", prevline->String().Data());
+      return 0;
+   }
    Long64_t step = lastevent_value - prevevent_value;
-   parts->Delete();
-   delete parts;
-   parts = 0;
+   if (step <= 0) {
+      Error("DoWorkerPlot", "null or negative step (%lld) - cannot continue", step);
+      return 0;
+   }
 
    Int_t nlines = lastevent_value/step;
    TGraph *gr = new TGraph(nlines);
@@ -520,19 +564,14 @@ TGraph *TProofProgressMemoryPlot::DoWorkerPlot(TProofLogElem *ple)
    TIter prevl(lines, kIterBackward);
    Int_t iline = 0;
    TString token;
-   Double_t tempval;
    while ((curline = (TObjString*)prevl()) && iline<nlines){
       //iterate backwards so that only lines for the last query are taken
-      Int_t from = 0;
-      Int_t iword = 0;
-      while (curline->String().Tokenize(token, from, " ")){
-         if (iword==kMemValuePos){
-            tempval = token.Atof();
-            gr->SetPoint(nlines-1-iline,lastevent_value-iline*step, tempval/1024.);
-            // printf("setting point %d x=%f, y=%lld\n", nlines-1-iline, tempval/1024., lastevent_value-iline*step);
-         }
-         iword++;
+      vmem = 0;
+      if (ParseLine(curline->String(), vmem, rmem, nevt) != 0) {
+         Warning("DoWorkerPlot", "error parsing line: '%s'", curline->String().Data());
+         continue;
       }
+      gr->SetPoint(nlines-1-iline, lastevent_value-iline*step, vmem/1024.);
       iline++;
    }
 
@@ -555,26 +594,22 @@ TGraph *TProofProgressMemoryPlot::DoMasterPlot(TProofLogElem *ple)
       iline++;
    }
 
+   Long64_t vmem = -1, rmem = -1, nevt = -1;
+
    Int_t nlines = iline;
    TString token;
-   Double_t tempval;
    TGraph *gr = new TGraph(nlines);
    prevline.Reset();
    iline = 0;
    while ((curline = (TObjString*)prevline()) && iline<nlines) {
-   //iterate backwards so that only lines for the last query are taken
-   Int_t from = 0;
-   Int_t iword = 0;
-   while (curline->String().Tokenize(token, from, " ")){
-      if (iword==kMemValuePosMaster){
-         tempval = token.Atof();
-         gr->SetPoint(nlines-iline, nlines-iline, tempval/1024.);
-         //printf("setting point %d %d %f\n", nlines-iline, nlines-iline, tempval/1024.);
-         break;
+      //iterate backwards so that only lines for the last query are taken
+      vmem = 0;
+      if (ParseLine(curline->String(), vmem, rmem, nevt) != 0) {
+         Warning("DoWorkerPlot", "error parsing line: '%s'", curline->String().Data());
+         continue;
       }
-      iword++;
-   }
-   iline++;
+      gr->SetPoint(nlines-iline, nlines-iline, vmem/1024.);
+      iline++;
    }
    return gr;
 }
