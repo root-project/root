@@ -15,7 +15,7 @@
 #include "RooArgSet.h"
 #endif
 #ifndef ROO_TREE_DATA
-#include "RooTreeData.h"
+#include "RooAbsData.h"
 #endif
 #ifndef RooStats_ConfInterval
 #include "RooStats/ConfInterval.h"
@@ -163,7 +163,7 @@ namespace RooStats {
   private:
     SamplingSummaryLookup fSamplingSummaryLookup;
     vector<SamplingSummary> fSamplingSummaries; // composite of several AcceptanceRegions
-    RooTreeData* fParameterPoints;  // either a histogram (RooDataHist) or a tree (RooDataSet)
+    RooAbsData* fParameterPoints;  // either a histogram (RooDataHist) or a tree (RooDataSet)
 
 
   public:
@@ -171,8 +171,8 @@ namespace RooStats {
     ConfidenceBelt();
     ConfidenceBelt(const char* name);
     ConfidenceBelt(const char* name, const char* title);
-    ConfidenceBelt(const char* name, RooTreeData&);
-    ConfidenceBelt(const char* name, const char* title, RooTreeData&);
+    ConfidenceBelt(const char* name, RooAbsData&);
+    ConfidenceBelt(const char* name, const char* title, RooAbsData&);
     virtual ~ConfidenceBelt();
         
     // add after creating a region

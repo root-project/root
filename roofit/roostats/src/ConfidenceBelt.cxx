@@ -66,14 +66,14 @@ ConfidenceBelt::ConfidenceBelt(const char* name, const char* title) :
 }
 
 //____________________________________________________________________
-ConfidenceBelt::ConfidenceBelt(const char* name, RooTreeData& data) :
+ConfidenceBelt::ConfidenceBelt(const char* name, RooAbsData& data) :
    TNamed(name,name), fParameterPoints(&data)
 {
    // Alternate constructor
 }
 
 //____________________________________________________________________
-ConfidenceBelt::ConfidenceBelt(const char* name, const char* title, RooTreeData& data) :
+ConfidenceBelt::ConfidenceBelt(const char* name, const char* title, RooAbsData& data) :
    TNamed(name,title), fParameterPoints(&data)
 {
    // Alternate constructor
