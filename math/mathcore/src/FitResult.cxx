@@ -127,7 +127,7 @@ FitResult::FitResult() :
          fMinosErrors.reserve(npar);
          for (unsigned int i = 0; i < npar; ++i) { 
             double elow, eup; 
-            bool ret = min.GetMinosError(0, elow, eup); 
+            bool ret = min.GetMinosError(i, elow, eup); 
             if (ret) fMinosErrors.push_back(std::make_pair(elow,eup) );
             else fMinosErrors.push_back(std::make_pair(0.,0.) );
          }
