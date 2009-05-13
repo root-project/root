@@ -474,11 +474,11 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
       return false; 
    }
 
+   double arglist[2];
+   int ierr = 0; 
 
    // if Minos is not run run it 
    if (!fMinosRun) { 
-      double arglist[2];
-      int ierr = 0; 
 
       // set error and print level 
       arglist[0] = ErrorDef(); 
@@ -489,17 +489,18 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
 
       // suppress warning in case Printlevel() == 0 
       if (PrintLevel() == 0)    fMinuit->mnexcm("SET NOW",arglist,0,ierr);
-
-      arglist[0] = MaxFunctionCalls(); 
-      arglist[1] = Tolerance(); 
-   
-      int nargs = 2; 
-      fMinuit->mnexcm("MINOS",arglist,nargs,ierr);
-      fStatus += 10*ierr;
-
-      fMinosRun = true; 
-
    }
+
+   // syntax of MINOS is MINOS [maxcalls] [parno]
+   // if parno = 0 all parameters are done 
+   arglist[0] = MaxFunctionCalls(); 
+   arglist[1] = i+1;  // parno starts from 1 in TMInuit
+   
+   int nargs = 2; 
+   fMinuit->mnexcm("MINOS",arglist,nargs,ierr);
+   fStatus += 10*ierr;
+
+   fMinosRun = true; 
 
    double errParab = 0; 
    double gcor = 0; 

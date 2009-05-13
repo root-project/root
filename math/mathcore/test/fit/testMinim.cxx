@@ -19,7 +19,7 @@
 #include "TRandom3.h"
 #include "TMath.h"
 
-#define DEBUG
+//#define DEBUG
 
 int gNCall = 0;
 int gNCall2 = 0;
