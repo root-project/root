@@ -135,7 +135,8 @@ pr(ip, file, base)
         if (rootBuild)
            ROOT_adddep(buf, len);
         else
-	   fwrite(buf, len, 1, stdout);
+	   if (fwrite(buf, len, 1, stdout) != 1)
+              fprintf(stderr, "pr: fwrite error\n");
 
 	/*
 	 * If verbose is set, then print out what this file includes.
