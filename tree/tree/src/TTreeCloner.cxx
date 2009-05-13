@@ -34,6 +34,7 @@
 #include "TLeafL.h"
 
 TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options) :
+   fWarningMsg(),
    fIsValid(kTRUE),
    fNeedConversion(kFALSE),
    fOptions(options),
@@ -49,8 +50,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
    fBasketEntry(new Long64_t[fMaxBaskets]),
    fBasketIndex(new UInt_t[fMaxBaskets]),
    fCloneMethod(TTreeCloner::kDefault),
-   fToStartEntries(0),
-   fWarningMsg()
+   fToStartEntries(0)
 {
    // Constructor.  This object would transfer the data from
    // 'from' to 'to' using the method indicated in method.
@@ -286,6 +286,13 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
          if (fi >= fnb) {
            fi = 0;
          }
+      } else {
+         fWarningMsg.Form("One of the export branch (%s) is not present in the import TTree.",
+                          tb->GetName());
+         if (!(fOptions & kNoWarnings)) {
+            Error("TTreeCloner::CollectBranches",fWarningMsg.Data());
+         }         
+         fIsValid = kFALSE;
       }
       ++ti;
    }

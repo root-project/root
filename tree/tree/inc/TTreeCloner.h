@@ -37,6 +37,8 @@ class TBranch;
 class TTree;
 
 class TTreeCloner {
+   TString    fWarningMsg;       //Text of the error message lead to an 'invalid' state
+
    Bool_t     fIsValid;
    Bool_t     fNeedConversion;   //True if the fast merge is not possible but a slow merge might possible.
    UInt_t     fOptions;
@@ -58,8 +60,6 @@ class TTreeCloner {
 
    UInt_t     fCloneMethod;      //Indicates which cloning method was selected.
    Long64_t   fToStartEntries;   //Number of entries in the target tree before any addition.
-
-   TString    fWarningMsg;       //Text of the error message lead to an 'invalid' state
 
    enum ECloneMethod {
       kDefault             = 0,
