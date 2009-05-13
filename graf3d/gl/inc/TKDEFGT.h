@@ -45,6 +45,7 @@ private:
    Double_t                fSigma;      //Noise Standard deviation of the kernel (default sigma = 1)
    Int_t                   fPD;         //nchoosek(fP + fDim - 1, fDim); 
    Bool_t                  fModelValid; //Check, if coefficients are ok.
+   Bool_t                  fVerbose;
    
 public:
    TKDEFGT();
@@ -57,6 +58,8 @@ public:
                    Int_t dim = 3, Int_t p = 8, Int_t k = 0);
    void Predict(const std::vector<Double_t> &targets, std::vector<Double_t> &densities,
                 Double_t e)const;
+                
+   void SetVerbose(Bool_t v) {fVerbose = v;}
 private:
    void Kcenter(const std::vector<double> &x);
    void Compute_C_k();

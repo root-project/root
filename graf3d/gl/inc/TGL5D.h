@@ -44,7 +44,7 @@ class TGL5DDataSet : public TNamed {
    friend class TGL5DPainter;
 private:
    enum {
-      kDefaultNB = 100
+      kDefaultNB = 50
    };
 public:
    TGL5DDataSet(TTree *inputData);
@@ -150,7 +150,7 @@ public:
    void       ShowSlider(Bool_t show) {fShowSlider = show;}
    //Add new iso for selected value of v4. +- range
    SurfIter_t AddSurface(Double_t v4, Color_t ci, Double_t isoVal = 1., Double_t sigma = 1., 
-                         Double_t e = 10., Double_t range = 1e-3, Int_t lowNumOfPoints = 100);
+                         Double_t e = 10., Double_t range = 1e-3, Int_t lowNumOfPoints = 50);
    void       SetSurfaceMode(SurfIter_t surf, Bool_t cloudOn);
    void       SetSurfaceColor(SurfIter_t surf, Color_t colorIndex);
    void       HideSurface(SurfIter_t surf);

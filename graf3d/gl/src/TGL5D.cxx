@@ -404,10 +404,11 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    }
    
    if (fPtsSorted.size() / 3 < size_type(lownps)) {
-      Warning("TGL5DPainter::AddNewSurface", "Number of selected points is too small: %d", Int_t(fPtsSorted.size()));
+      Warning("TGL5DPainter::AddNewSurface", "Number of selected points is too small: %d", Int_t(fPtsSorted.size() / 3));
       return fIsos.end();//This is valid iterator, but invalid surface.
    }
 
+   Info("TGL5DPainter::AddNewSurface", "Number of points selected is %d", Int_t(fPtsSorted.size() / 3));
    fKDE.BuildModel(fPtsSorted, sigma, 3, 8);
 
    const UInt_t nZ = fZAxis->GetNbins();
@@ -589,6 +590,8 @@ Bool_t TGL5DPainter::InitGeometry()
    if (fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
    
    //Add several iso-surfaces.
+   //Naive iso-level selection commented.
+   /* 
    const Rgl::Range_t & mm = fData->fV4MinMax;
    if (mm.second - mm.first > gEps) {
       Info("TGL5DPainter::InitGeometry", "Adding iso-surfaces ...");
@@ -603,6 +606,27 @@ Bool_t TGL5DPainter::InitGeometry()
          fBoxCut.TurnOnOff();
       Info("TGL5DPainter::InitGeometry", "Done.");
    }
+   */
+   //Rene's code to automatically find
+   //4 "pre-defined" iso-levels.
+   const Int_t nContours = 4;
+   const Color_t colors[nContours] = {kRed, kGreen, kBlue, kOrange};
+   
+   const Double_t xMean = TMath::Mean(fData->fNP, fData->fV4);//mean value of the NP points.
+   const Double_t xRms  = TMath::RMS(fData->fNP, fData->fV4);  //RMS of the N points
+   const Double_t xMin  = xMean - 3 * xRms;                    //take a range +- 3*xrms
+   const Double_t dX    = 6 * xRms / nContours;
+   const Double_t alpha = 0.1; //a value say in [0.1,0.5]
+   Info("InitGeometry", "xmin = %g, xmean = %g, xrms = %g, dx = %g", xMin, xMean, xRms, dX);
+   
+   for (Int_t j = 0; j < nContours; ++j) {
+      const Double_t isoLevel = xMin + j * dX;
+      Info("TGL5DPainter::InitGeometry", "Trying to add iso-level %g, range is %g ...", isoLevel, alpha * dX);
+      AddSurface(isoLevel, colors[j], 0.125, 0.05, 10., alpha * dX);
+   }
+   
+   if (fIsos.size())
+      fBoxCut.TurnOnOff();
    
    fInit = kTRUE;
 

@@ -31,7 +31,8 @@ TKDEFGT::TKDEFGT()
            fK(0),
            fSigma(1.),
            fPD(0),
-           fModelValid(kFALSE)
+           fModelValid(kFALSE),
+           fVerbose(kTRUE)
 {
    //Constructor.
 }
@@ -86,14 +87,16 @@ void TKDEFGT::BuildModel(const std::vector<Double_t> &sources, Double_t sigma, I
    fDx.assign(fDim, 0.);
    fProds.assign(fPD, 0.);
 
-   Info("TKDEFGT::BuildModel", "Initializing ...");
+   if (fVerbose)
+      Info("TKDEFGT::BuildModel", "Initializing ...");
 
    Kcenter(sources);
    Compute_C_k();
    Compute_A_k(sources);
 
-   Info("TKDEFGT::BuildModel", "Done.");
-                   
+   if (fVerbose)
+      Info("TKDEFGT::BuildModel", "Done.");
+
    fModelValid = kTRUE;
 }
 
@@ -233,8 +236,9 @@ void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v,
       Warning("TKDEFGT::Predict", "Empty targets vector.");
       return;
    }
-   
-   Info("TKDEFGT::Predict", "Estimation started ...");
+ 
+   if (fVerbose)  
+      Info("TKDEFGT::Predict", "Estimation started ...");
    
    v.assign(ts.size() / fDim, 0.);
    
@@ -296,8 +300,6 @@ void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v,
       dMin = TMath::Min(dMin, v[i]);
       dMax = TMath::Max(dMax, v[i]);
    }
-
-   Info("TKDEFGT::Predict", "Estimation done.");
 }
 
 namespace {
