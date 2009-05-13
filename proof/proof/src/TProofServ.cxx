@@ -2570,8 +2570,11 @@ Int_t TProofServ::SetupCommon()
       fGroupPriority = GetPriority();
       // Dataset manager instance via plug-in
       TPluginHandler *h = 0;
-      TString dsm = gEnv->GetValue("Proof.DataSetManager", "");
-      if (!dsm.IsNull()) {
+      TString dsms = gEnv->GetValue("Proof.DataSetManager", "");
+      if (!dsms.IsNull()) {
+         TString dsm;
+         Int_t from  = 0;
+         dsms.Tokenize(dsm, from, ",");
          // Get plugin manager to load the appropriate TProofDataSetManager
          if (gROOT->GetPluginManager()) {
             // Find the appropriate handler

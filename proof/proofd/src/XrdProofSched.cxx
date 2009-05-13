@@ -252,8 +252,8 @@ int XrdProofSched::Config(bool rcf)
    XrdOucString msg;
 
    // Notify
-   msg.form("maxsess: %d, maxrun: %d, maxwrks: %d, selopt: %d, fifo:%d",
-            fMaxSessions, fMaxRunning, fWorkerMax, fWorkerSel, fUseFIFO);
+   XPDFORM(msg, "maxsess: %d, maxrun: %d, maxwrks: %d, selopt: %d, fifo:%d",
+                fMaxSessions, fMaxRunning, fWorkerMax, fWorkerSel, fUseFIFO);
    TRACE(DBG, msg);
 
    if (!rcf) {

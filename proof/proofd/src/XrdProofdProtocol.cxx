@@ -239,7 +239,7 @@ XrdProofdResponse *XrdProofdProtocol::GetNewResponse(kXR_unt16 sid)
    XPDLOC(ALL, "Protocol::GetNewResponse")
 
    XrdOucString msg;
-   msg.form("sid: %d", sid);
+   XPDFORM(msg, "sid: %d", sid);
    if (sid > 0) {
       if (sid > fResponses.size()) {
          if (sid > fResponses.capacity()) {
@@ -418,7 +418,7 @@ int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
    // Create and Configure the manager
    fgMgr = new XrdProofdManager(pi, &fgEDest);
    if (fgMgr->Config(0)) return 0;
-   mp.form("global manager created");
+   mp = "global manager created";
    TRACE(ALL, mp);
 
    // Issue herald indicating we configured successfully
@@ -566,10 +566,10 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
 
    // Document the disconnect
    if (fPClient)
-      buf.form("user %s disconnected; type: %s", fPClient->User(),
-               srvtype[fConnType+1]);
+      XPDFORM(buf, "user %s disconnected; type: %s", fPClient->User(),
+                   srvtype[fConnType+1]);
    else
-      buf.form("user disconnected; type: %s", srvtype[fConnType+1]);
+      XPDFORM(buf, "user disconnected; type: %s", srvtype[fConnType+1]);
    TRACEP(this, LOGIN, buf);
 
    // If we have a buffer, release it
@@ -589,7 +589,7 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
          // Signal the client manager that a client has just gone
          if (fgMgr && fgMgr->ClientMgr()) {
             TRACE(HDBG, "fAdminPath: "<<fAdminPath);
-            buf.form("%s %p %d %d", fAdminPath.c_str(), pmgr, fCID, fPid);
+            XPDFORM(buf, "%s %p %d %d", fAdminPath.c_str(), pmgr, fCID, fPid);
             TRACE(DBG, "sending to ClientMgr: "<<buf);
             fgMgr->ClientMgr()->Pipe()->Post(XrdProofdClientMgr::kClientDisconnect, buf.c_str());
          }
@@ -719,12 +719,12 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
       // Send
       if (sid > -1) {
          if (TRACING(HDBG))
-            msg.form("EXT: server ID: %d, sending: %d bytes", sid, quantum);
+            XPDFORM(msg, "EXT: server ID: %d, sending: %d bytes", sid, quantum);
          if (!response || response->Send(kXR_attn, kXPD_msgsid, sid,
                                          argp->buff, quantum) != 0) {
             { XrdSysMutexHelper mh(fgBMutex); fgBPool->Release(argp); }
-            msg.form("EXT: server ID: %d, problems sending: %d bytes to server",
-                     sid, quantum);
+            XPDFORM(msg, "EXT: server ID: %d, problems sending: %d bytes to server",
+                         sid, quantum);
             TRACEP(this, XERR, msg);
             return 0;
          }
@@ -733,11 +733,11 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
          // Get ID of the client
          int cid = ntohl(fRequest.sendrcv.cid);
          if (TRACING(HDBG))
-            msg.form("INT: client ID: %d, sending: %d bytes", cid, quantum);
+            XPDFORM(msg, "INT: client ID: %d, sending: %d bytes", cid, quantum);
          if (xps->SendData(cid, argp->buff, quantum) != 0) {
             { XrdSysMutexHelper mh(fgBMutex); fgBPool->Release(argp); }
-            msg.form("INT: client ID: %d, problems sending: %d bytes to client",
-                     cid, quantum);
+            XPDFORM(msg, "INT: client ID: %d, problems sending: %d bytes to client",
+                         cid, quantum);
             TRACEP(this, XERR, msg);
             return 0;
          }
@@ -827,7 +827,7 @@ int XrdProofdProtocol::SendMsg()
    // Find server session
    XrdProofdProofServ *xps = 0;
    if (!fPClient || !(xps = fPClient->GetServer(psid))) {
-      msg.form("%s: session ID not found: %d", (Internal() ? "INT" : "EXT"), psid);
+      XPDFORM(msg, "%s: session ID not found: %d", (Internal() ? "INT" : "EXT"), psid);
       TRACEP(this, XERR, msg.c_str());
       response->Send(kXR_InvalidRequest, msg.c_str());
       return 0;
@@ -839,8 +839,8 @@ int XrdProofdProtocol::SendMsg()
    if (!Internal()) {
 
       // Notify
-      msg.form("EXT: sending %d bytes to proofserv (psid: %d, xps: %p, status: %d,"
-               " cid: %d)", len, psid, xps, xps->Status(), fCID);
+      XPDFORM(msg, "EXT: sending %d bytes to proofserv (psid: %d, xps: %p, status: %d,"
+                   " cid: %d)", len, psid, xps, xps->Status(), fCID);
       TRACEP(this, REQ, msg.c_str());
 
       // Send to proofsrv our client ID
@@ -861,8 +861,8 @@ int XrdProofdProtocol::SendMsg()
    } else {
 
       // Notify
-      msg.form("INT: sending %d bytes to client/master (psid: %d, xps: %p, status: %d)",
-               len, psid, xps, xps->Status());
+      XPDFORM(msg, "INT: sending %d bytes to client/master (psid: %d, xps: %p, status: %d)",
+                   len, psid, xps, xps->Status());
       TRACEP(this, REQ, msg.c_str());
 
       bool saveStartMsg = 0;
@@ -919,7 +919,7 @@ int XrdProofdProtocol::SendMsg()
          int ii = xps->SrvType();
          if (ii > 3) ii = 3;
          if (ii < 0) ii = 4;
-         msg.form("INT: message sent to %s (%d bytes)", crecv[ii], len);
+         XPDFORM(msg, "INT: message sent to %s (%d bytes)", crecv[ii], len);
          TRACEP(this, DBG, msg);
       }
       // Notify to proofsrv
@@ -1029,8 +1029,8 @@ int XrdProofdProtocol::Interrupt()
       }
 
       XrdOucString msg;
-      msg.form("xps: %p, link ID: %s, proofsrv PID: %d",
-                xps, xps->Response()->TraceID(), xps->SrvPID());
+      XPDFORM(msg, "xps: %p, link ID: %s, proofsrv PID: %d",
+                   xps, xps->Response()->TraceID(), xps->SrvPID());
       TRACEP(this, DBG, msg.c_str());
 
       // Propagate the type as unsolicited
@@ -1173,7 +1173,7 @@ void XrdProofdProtocol::PostSession(int on, const char *u, const char *g,
          return;
       }
       XrdOucString buf;
-      buf.form("%d %s %s %d", on, u, g, pid);
+      XPDFORM(buf, "%d %s %s %d", on, u, g, pid);
 
       if (fgMgr->PriorityMgr()->Pipe()->Post(XrdProofdPriorityMgr::kChangeStatus,
                                              buf.c_str()) != 0) {

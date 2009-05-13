@@ -90,6 +90,8 @@ class XrdProofdManager : public XrdProofdConfig {
    const char       *TMPdir() const { return fTMPdir.c_str(); }
    const char       *WorkDir() const { return fWorkDir.c_str(); }
 
+   std::list<XrdProofdDSInfo *> *DataSetSrcs() { return &fDataSetSrcs; }
+
    // Services
    XrdProofdClientMgr *ClientMgr() const { return fClientMgr; }
    const char       *EffectiveUser() const { return fEffectiveUser.c_str(); }
@@ -145,11 +147,13 @@ class XrdProofdManager : public XrdProofdConfig {
 
    //
    // Lists
-   std::list<XrdOucString *> fMastersAllowed;          // list of master (domains) allowed
+   std::list<XrdOucString *> fMastersAllowed; // list of master (domains) allowed
+   std::list<XrdProofdDSInfo *> fDataSetSrcs; // sources of dataset info
 
    int               DoDirectiveAllow(char *, XrdOucStream *, bool);
    int               DoDirectiveAllowedGroups(char *, XrdOucStream *, bool);
    int               DoDirectiveAllowedUsers(char *, XrdOucStream *, bool);
+   int               DoDirectiveDataSetSrc(char *, XrdOucStream *, bool);
    int               DoDirectiveGroupfile(char *, XrdOucStream *, bool);
    int               DoDirectiveMaxOldLogs(char *, XrdOucStream *, bool);
    int               DoDirectiveMultiUser(char *, XrdOucStream *, bool);

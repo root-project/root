@@ -378,7 +378,7 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
             }
          }
       } else {
-         m.form("failure opening config file; errno: %d", errno);
+         XPDFORM(m, "failure opening config file; errno: %d", errno);
          TRACE(XERR, m);
       }
    }
@@ -387,7 +387,7 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
    if (name == "default" || !(name.length() > 0 && lib.length() > 0)) {
       if ((name.length() <= 0 && lib.length() > 0) ||
           (name.length() > 0 && lib.length() <= 0)) {
-         m.form("missing or incomplete info (name: %s, lib: %s)", name.c_str(), lib.c_str());
+         XPDFORM(m, "missing or incomplete info (name: %s, lib: %s)", name.c_str(), lib.c_str());
          TRACE(DBG, m);
       }
       TRACE(DBG, "instantiating default scheduler");
@@ -459,9 +459,9 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
          XrdProofWorker *w = *iw;
          // Count (fActive is increased inside here)
          if (ii == -1) 
-            ord.form("master");
+            ord = "master";
          else
-            ord.form("%d", ii);
+            XPDFORM(ord, "%d", ii);
          ii++;
          xps->AddWorker(ord.c_str(), w);
          // Add proofserv and increase the counter
@@ -530,7 +530,7 @@ int XrdProofdManager::Config(bool rcf)
    fChangeOwn = (fMultiUser && getuid()) ? 0 : 1;
 
    // Notify port
-   msg.form("listening on port %d",fPort);
+   XPDFORM(msg, "listening on port %d",fPort);
    TRACE(ALL, msg);
 
    XrdProofUI ui;
@@ -540,7 +540,7 @@ int XrdProofdManager::Config(bool rcf)
       if (XrdProofdAux::GetUserInfo(effuid, ui) == 0) {
          fEffectiveUser = ui.fUser;
       } else {
-         msg.form("could not resolve effective uid %d (errno: %d)", effuid, errno);
+         XPDFORM(msg, "could not resolve effective uid %d (errno: %d)", effuid, errno);
          XPDERR(msg);
          return -1;
       }
@@ -570,7 +570,7 @@ int XrdProofdManager::Config(bool rcf)
       pidfile += "/xrootd.pid";
       FILE *fpid = fopen(pidfile.c_str(), "w");
       if (!fpid) {
-         msg.form("unable to open pid file: %s; errno: %d", pidfile.c_str(), errno);
+         XPDFORM(msg, "unable to open pid file: %s; errno: %d", pidfile.c_str(), errno);
          XPDERR(msg);
          return -1;
       }
@@ -578,7 +578,7 @@ int XrdProofdManager::Config(bool rcf)
       fclose(fpid);
    } else {
       if (XrdProofdAux::GetUserInfo(effuid, ui) == 0) {
-         msg.form("could not resolve effective uid %d (errno: %d)", effuid, errno);
+         XPDFORM(msg, "could not resolve effective uid %d (errno: %d)", effuid, errno);
          XPDERR(msg);
       }
    }
@@ -635,10 +635,11 @@ int XrdProofdManager::Config(bool rcf)
          fSuperUsers += sui.fUser;
       }
    } else {
-      msg.form("could not resolve effective uid %d (errno: %d)", XrdProofdProtocol::EUidAtStartup(), errno);
+      XPDFORM(msg, "could not resolve effective uid %d (errno: %d)",
+                   XrdProofdProtocol::EUidAtStartup(), errno);
       XPDERR(msg);
    }
-   msg.form("list of superusers: %s", fSuperUsers.c_str());
+   XPDFORM(msg, "list of superusers: %s", fSuperUsers.c_str());
    TRACE(ALL, msg);
 
    // Notify controlled mode, if such
@@ -653,14 +654,14 @@ int XrdProofdManager::Config(bool rcf)
       XrdOucString uls;
       fAllowedUsers.Apply(FillKeyValues, (void *)&uls);
       if (uls.length()) {
-         msg.form("running in controlled access mode: users allowed: %s", uls.c_str());
+         XPDFORM(msg, "running in controlled access mode: users allowed: %s", uls.c_str());
          TRACE(ALL, msg);
       }
       // Extract now the list of allowed groups
       XrdOucString gls;
       fAllowedGroups.Apply(FillKeyValues, (void *)&gls);
       if (gls.length()) {
-         msg.form("running in controlled access mode: UNIX groups allowed: %s", gls.c_str());
+         XPDFORM(msg, "running in controlled access mode: UNIX groups allowed: %s", gls.c_str());
          TRACE(ALL, msg);
       }
    }
@@ -773,6 +774,7 @@ void XrdProofdManager::RegisterDirectives()
    Register("role", new XrdProofdDirective("role", this, &DoDirectiveClass));
    Register("cron", new XrdProofdDirective("cron", this, &DoDirectiveClass));
    Register("port", new XrdProofdDirective("port", this, &DoDirectiveClass));
+   Register("datasetsrc", new XrdProofdDirective("datasetsrc", this, &DoDirectiveClass));
    Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
    // Register config directives for strings
    Register("tmp", new XrdProofdDirective("tmp", (void *)&fTMPdir, &DoDirectiveString));
@@ -880,6 +882,8 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
       return DoDirectiveMultiUser(val, cfg, rcf);
    } else if (d->fName == "xrd.protocol" || d->fName == "port") {
       return DoDirectivePort(val, cfg, rcf);
+   } else if (d->fName == "datasetsrc") {
+      return DoDirectiveDataSetSrc(val, cfg, rcf);
    }
    TRACE(XERR, "unknown directive: "<<d->fName);
    return -1;
@@ -1200,6 +1204,73 @@ int XrdProofdManager::DoDirectiveMultiUser(char *val, XrdOucStream *cfg, bool)
    // Multi-user option
    int mu = strtol(val,0,10);
    fMultiUser = (mu == 1) ? 1 : fMultiUser;
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
+{
+   // Process 'datasetsrc' directive
+   XPDLOC(ALL, "Manager::DoDirectiveDataSetSrc")
+
+   if (!val)
+      // undefined inputs
+      return -1;
+
+   // URL for this source
+   XrdOucString type(val), url, opts;
+   bool rw = 0, local = 0, goodsrc = 1;
+   char *nxt = 0;
+   while ((nxt = cfg->GetToken())) {
+      XPDPRT("tok: " << nxt);
+      if (!strcmp(nxt, "rw=1")) {
+         rw = 1;
+      } else if (!strncmp(nxt, "url:", 4)) {
+         url = nxt+4;
+      } else if (!strncmp(nxt, "opt:", 4)) {
+         opts = nxt+4;
+      }
+   }
+
+   if (url.length() > 0) {
+
+      // Check if local source
+      if (url.beginswith("file:")) url.replace("file:","");
+      if (url.beginswith("/")) {
+	 local = 1;
+	 goodsrc = 0;
+	 // Make sure the directory exists and has mode 0755
+	 XrdProofUI ui;
+	 XrdProofdAux::GetUserInfo(fEffectiveUser.c_str(), ui);
+	 if (XrdProofdAux::AssertDir(url.c_str(), ui, ChangeOwn()) == 0) {
+	    goodsrc = 1;
+	 } else {
+	    TRACE(XERR,"Cannot assert path '"<<url<<"' - ignoring");   
+	 }
+      }
+   }
+
+   // Add to the list
+   if (goodsrc) {
+      // If first local, add it in front
+      std::list<XrdProofdDSInfo *>::iterator ii = fDataSetSrcs.begin();
+      bool haslocal = 0;
+      for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ii++) {
+	 if ((*ii)->fLocal) {
+            haslocal = 1;
+            break;
+         }
+      }
+      // Default options      
+      if (opts.length() <= 0) {
+         opts = rw ? "Ar:Av:" : "-Ar:-Av:";
+      }
+      if (haslocal || !local) {
+	 fDataSetSrcs.push_back(new XrdProofdDSInfo(type.c_str(), url.c_str(), local, rw, opts.c_str()));
+      } else {
+	 fDataSetSrcs.push_front(new XrdProofdDSInfo(type.c_str(), url.c_str(), local, rw, opts.c_str()));
+      }
+   }
    return 0;
 }
 

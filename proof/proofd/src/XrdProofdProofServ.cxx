@@ -280,7 +280,7 @@ XrdClientID *XrdProofdProofServ::GetClientID(int cid)
 
          // Notification message
          if (TRACING(DBG)) {
-            msg.form("cid: %d, size: %d", cid, fClients.size());
+            XPDFORM(msg, "cid: %d, size: %d", cid, fClients.size());
          }
       }
 
@@ -296,7 +296,7 @@ XrdClientID *XrdProofdProofServ::GetClientID(int cid)
 
          // Notification message
          if (TRACING(DBG)) {
-            msg.form("cid: %d, new size: %d", cid, fClients.size());
+            XPDFORM(msg, "cid: %d, new size: %d", cid, fClients.size());
          }
       }
    }
@@ -445,7 +445,7 @@ void XrdProofdProofServ::Broadcast(const char *msg, int type)
                response->Send(kXR_attn, (XProofActionCode)type, (void *)msg, len);
                nc++;
             } else {
-               m.form("response instance for sid: %d not found", sid);
+               XPDFORM(m, "response instance for sid: %d not found", sid);
             }
          }
          if (m.length() > 0)
@@ -454,7 +454,7 @@ void XrdProofdProofServ::Broadcast(const char *msg, int type)
       }
    }
    if (TRACING(DBG)) {
-      m.form("type: %d, message: '%s' notified to %d clients", type, msg, nc);
+      XPDFORM(m, "type: %d, message: '%s' notified to %d clients", type, msg, nc);
       XPDPRT(m);
    }
 }
@@ -572,12 +572,12 @@ int XrdProofdProofServ::SendData(int cid, void *buff, int len)
    XrdClientID *csid = 0;
    {  XrdSysMutexHelper mhp(fMutex);
       if (cid < 0 || cid > (int)(fClients.size() - 1) || !(csid = fClients.at(cid))) {
-         msg.form("client ID not found (cid: %d, size: %d)", cid, fClients.size());
+         XPDFORM(msg, "client ID not found (cid: %d, size: %d)", cid, fClients.size());
          rs = -1;
       }
       if (!rs && !(csid->R())) {
-         msg.form("client not connected: csid: %p, cid: %d, fSid: %d",
-                  csid, cid, csid->Sid());
+         XPDFORM(msg, "client not connected: csid: %p, cid: %d, fSid: %d",
+                       csid, cid, csid->Sid());
          rs = -1;
       }
    }
@@ -642,7 +642,7 @@ void XrdProofdProofServ::ExportBuf(XrdOucString &buf)
       nc = fNClients;
       tag = fTag;
       alias = fAlias; }
-   buf.form(" | %d %s %s %d %d", id, tag.c_str(), alias.c_str(), status, nc);
+   XPDFORM(buf, " | %d %s %s %d %d", id, tag.c_str(), alias.c_str(), status, nc);
    TRACE(HDBG, "buf: "<< buf);
 
    // Done

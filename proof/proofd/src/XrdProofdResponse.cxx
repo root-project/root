@@ -95,7 +95,7 @@ int XrdProofdResponse::Send(XResponseType rcode)
 
       // Send over
       rc = LinkSend((char *)&fResp, sizeof(fResp), emsg);
-      if (XPRTRACING(rc)) tmsg.form("sending OK: status = %d", rcode);
+      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending OK: status = %d", rcode);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -120,7 +120,7 @@ int XrdProofdResponse::Send(const char *msg)
 
       // Send over
       rc = LinkSend(fRespIO, 2, sizeof(fResp) + fRespIO[1].iov_len, emsg);
-      if (XPRTRACING(rc)) tmsg.form("sending OK: %s", msg);
+      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending OK: %s", msg);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -145,7 +145,7 @@ int XrdProofdResponse::Send(XResponseType rcode, void *data, int dlen)
 
       // Send over
       rc = LinkSend(fRespIO, 2, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) tmsg.form("sending %d data bytes; status=%d", dlen, rcode);
+      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending %d data bytes; status=%d", dlen, rcode);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -181,9 +181,9 @@ int XrdProofdResponse::Send(XResponseType rcode, int info, char *data)
       rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
       if (XPRTRACING(rc)) {
          if (data)
-            tmsg.form("sending %d data bytes; info=%d; status=%d", dlen, info, rcode);
+            XPDFORM(tmsg, "sending %d data bytes; info=%d; status=%d", dlen, info, rcode);
          else
-            tmsg.form("sending info=%d; status=%d", info, rcode);
+            XPDFORM(tmsg, "sending info=%d; status=%d", info, rcode);
       }
    }
    XPRNOTIFY(tmsg, emsg);
@@ -219,10 +219,10 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
       // Send over
       rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
       if (XPRTRACING(rc)) {
-         tmsg.form("sending %d data bytes; status=%d; action=%d",
-                   dlen, rcode, acode);
+         XPDFORM(tmsg, "sending %d data bytes; status=%d; action=%d",
+                       dlen, rcode, acode);
       } else {
-         tmsg.form("sending status=%d; action=%d", rcode, acode);
+         XPDFORM(tmsg, "sending status=%d; action=%d", rcode, acode);
       }
    }
    XPRNOTIFY(tmsg, emsg);
@@ -262,10 +262,10 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
       // Send over
       rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
       if (XPRTRACING(rc)) {
-         tmsg.form("sending %d data bytes; status=%d; action=%d; cid=%d",
-                   dlen, rcode, acode, cid);
+         XPDFORM(tmsg, "sending %d data bytes; status=%d; action=%d; cid=%d",
+                       dlen, rcode, acode, cid);
       } else {
-         tmsg.form("sending status=%d; action=%d; cid=%d", rcode, acode, cid);
+         XPDFORM(tmsg, "sending status=%d; action=%d; cid=%d", rcode, acode, cid);
       }
    }
    XPRNOTIFY(tmsg, emsg);
@@ -299,7 +299,7 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
       // Send over
       rc = LinkSend(fRespIO, 3, sizeof(fResp), emsg);
       if (XPRTRACING(rc))
-         tmsg.form("sending info=%d; status=%d; action=%d", info, rcode, acode);
+         XPDFORM(tmsg, "sending info=%d; status=%d; action=%d", info, rcode, acode);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -341,10 +341,10 @@ int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int16 int2, kXR_int16 int3,
       // Send over
       rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
       if (XPRTRACING(rc)) {
-         tmsg.form("sending %d data bytes; int1=%d; int2=%d; int3=%d",
-                    dlen, int1, int2, int3);
+         XPDFORM(tmsg, "sending %d data bytes; int1=%d; int2=%d; int3=%d",
+                       dlen, int1, int2, int3);
       } else {
-         tmsg.form("sending int1=%d; int2=%d; int3=%d", int1, int2, int3);
+         XPDFORM(tmsg, "sending int1=%d; int2=%d; int3=%d", int1, int2, int3);
       }
    }
    XPRNOTIFY(tmsg, emsg);
@@ -383,10 +383,10 @@ int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int32 int2, void *data, int dle
       // Send over
       rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
       if (XPRTRACING(rc)) {
-         tmsg.form("sending %d data bytes; int1=%d; int2=%d",
-                   dlen, int1, int2);
+         XPDFORM(tmsg, "sending %d data bytes; int1=%d; int2=%d",
+                       dlen, int1, int2);
       } else {
-         tmsg.form("sending int1=%d; int2=%d", int1, int2);
+         XPDFORM(tmsg, "sending int1=%d; int2=%d", int1, int2);
       }
    }
    XPRNOTIFY(tmsg, emsg);
@@ -422,9 +422,9 @@ int XrdProofdResponse::SendI(kXR_int32 int1, void *data, int dlen )
       // Send over
       rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
       if (XPRTRACING(rc)) {
-         tmsg.form("sending %d data bytes; int1=%d", dlen, int1);
+         XPDFORM(tmsg, "sending %d data bytes; int1=%d", dlen, int1);
       } else {
-         tmsg.form("sending int1=%d", int1);
+         XPDFORM(tmsg, "sending int1=%d", int1);
       }
    }
    XPRNOTIFY(tmsg, emsg);
@@ -450,7 +450,7 @@ int XrdProofdResponse::Send(void *data, int dlen)
 
       // Send over
       rc = LinkSend(fRespIO, 2, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) tmsg.form("sending %d data bytes; status=0", dlen);
+      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending %d data bytes; status=0", dlen);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -483,7 +483,7 @@ int XrdProofdResponse::Send(struct iovec *IOResp, int iornum, int iolen)
 
       // Send over
       rc = LinkSend(fRespIO, iornum, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) tmsg.form("sending %d data bytes; status=0", dlen);
+      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending %d data bytes; status=0", dlen);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -514,7 +514,7 @@ int XrdProofdResponse::Send(XErrorCode ecode, const char *msg)
 
       // Send over
       rc = LinkSend(fRespIO, 3, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) tmsg.form("sending err %d: %s", ecode, msg);
+      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending err %d: %s", ecode, msg);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -545,7 +545,7 @@ int XrdProofdResponse::Send(XPErrorCode ecode, const char *msg)
 
       // Send over
       rc = LinkSend(fRespIO, 3, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) tmsg.form("sending err %d: %s", ecode, msg);
+      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending err %d: %s", ecode, msg);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -563,7 +563,7 @@ int XrdProofdResponse::LinkSend(const char *buff, int len, XrdOucString &emsg)
 
    // If we fail we close the link, and ask the client to reconnect
    if ((rc = fLink->Send(buff, len)) < 0) {
-      emsg.form("problems sending %d bytes", len);
+      XPDFORM(emsg, "problems sending %d bytes", len);
       fLink->Close();
    }
 
@@ -586,7 +586,7 @@ int XrdProofdResponse::LinkSend(const struct iovec *iov,
    if ((rc = fLink->Send(iov, iocnt, 0)) < 0) {
       int bytes = 0;
       for (int i = 0; i < iocnt; i++) bytes += iov[i].iov_len;
-      emsg.form("problems sending %d bytes (writev)", bytes);
+      XPDFORM(emsg, "problems sending %d bytes (writev)", bytes);
       fLink->Close();
    }
 
@@ -663,13 +663,13 @@ void XrdProofdResponse::SetTraceID()
 
    {  XrdSysMutexHelper mh(fMutex);
       if (fLink && fTag.length() > 0) {
-         fTraceID.form("%s%s: %s: ", fTrsid, fLink->ID, fTag.c_str());
+         XPDFORM(fTraceID, "%s%s: %s: ", fTrsid, fLink->ID, fTag.c_str());
       } else if (fLink) {
-         fTraceID.form("%s%s: ", fTrsid, fLink->ID);
+         XPDFORM(fTraceID, "%s%s: ", fTrsid, fLink->ID);
       } else if (fTag.length() > 0) {
-         fTraceID.form("%s%s: ", fTrsid, fTag.c_str());
+         XPDFORM(fTraceID, "%s%s: ", fTrsid, fTag.c_str());
       } else {
-         fTraceID.form("%s: ", fTrsid);
+         XPDFORM(fTraceID, "%s: ", fTrsid);
       }
    }
 

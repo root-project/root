@@ -146,8 +146,8 @@ static int DumpPriorityChanges(const char *, XrdProofdPriority *p, void *s)
 
    if (p && e) {
       XrdOucString msg;
-      msg.form("priority will be changed by %d for user(s): %s",
-                p->fDeltaPriority, p->fUser.c_str());
+      XPDFORM(msg, "priority will be changed by %d for user(s): %s",
+                   p->fDeltaPriority, p->fUser.c_str());
       TRACE(ALL, msg);
       // Check next
       return 0;
@@ -183,8 +183,8 @@ int XrdProofdPriorityMgr::Config(bool rcf)
 
    // Scheduling option
    if (fMgr->GroupsMgr() && fMgr->GroupsMgr()->Num() > 1 && fSchedOpt != kXPD_sched_off) {
-      msg.form("worker sched based on '%s' priorities",
-               (fSchedOpt == kXPD_sched_central) ? "central" : "local");
+      XPDFORM(msg, "worker sched based on '%s' priorities",
+                   (fSchedOpt == kXPD_sched_central) ? "central" : "local");
       TRACE(ALL, msg);
    }
 

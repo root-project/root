@@ -647,7 +647,7 @@ int XrdProofdAux::GetNumCPUs()
       if (errno == ENOENT) {
          TRACE(XERR, "/proc/cpuinfo missing!!! Something very bad going on");
       } else {
-         emsg.form("cannot open %s; errno: %d", fcpu.c_str(), errno);
+         XPDFORM(emsg, "cannot open %s; errno: %d", fcpu.c_str(), errno);
          TRACE(XERR, emsg);
       }
       return -1;
@@ -986,7 +986,7 @@ int XrdProofdAux::GetIDFromPath(const char *path, XrdOucString &emsg)
          sscanf(line, "%d", &id);
       fclose(fid);
    } else if (errno != ENOENT) {
-      emsg.form("GetIDFromPath: error reading id from: %s (errno: %d)",
+      XPDFORM(emsg, "GetIDFromPath: error reading id from: %s (errno: %d)",
                 path, errno);
    }
    // Done
@@ -1044,7 +1044,7 @@ int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
          TRACE(DBG, "process does not exists anymore");
          return 0;
       } else {
-         emsg.form("cannot open %s; errno: %d", fn.c_str(), errno);
+         XPDFORM(emsg, "cannot open %s; errno: %d", fn.c_str(), errno);
          TRACE(XERR, emsg);
          return -1;
       }
@@ -1056,7 +1056,7 @@ int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
          // Still there
          rc = 1;
    } else {
-      emsg.form("cannot read %s; errno: %d", fn.c_str(), errno);
+      XPDFORM(emsg, "cannot read %s; errno: %d", fn.c_str(), errno);
       TRACE(XERR, emsg);
       fclose(ffn);
       return -1;
@@ -1076,7 +1076,7 @@ int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
          TRACE(DBG, "VerifyProcessByID: process does not exists anymore");
          return 0;
       } else {
-         emsg.form("cannot open %s; errno: %d", fn.c_str(), errno);
+         XPDFORM(emsg, "cannot open %s; errno: %d", fn.c_str(), errno);
          TRACE(XERR, emsg);
          return -1;
       }
@@ -1084,7 +1084,7 @@ int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
    // Get the information
    psinfo_t psi;
    if (read(ffd, &psi, sizeof(psinfo_t)) != sizeof(psinfo_t)) {
-      emsg.form("cannot read %s; errno: %d", fn.c_str(), errno);
+      XPDFORM(emsg, "cannot read %s; errno: %d", fn.c_str(), errno);
       TRACE(XERR, emsg);
       close(ffd);
       return -1;
@@ -1105,7 +1105,7 @@ int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
    int np;
    int ern = 0;
    if ((ern = XrdProofdAux::GetMacProcList(&pl, np)) != 0) {
-      emsg.form("cannot get the process list: errno: %d", ern);
+      XPDFORM(emsg, "cannot get the process list: errno: %d", ern);
       TRACE(XERR, emsg);
       return -1;
    }
@@ -1171,7 +1171,7 @@ int XrdProofdAux::KillProcess(int pid, bool forcekill, XrdProofUI ui, bool chang
             // Hard shutdown via SIGKILL
             if (kill(pid, SIGKILL) != 0) {
                if (errno != ESRCH) {
-                  msg.form("kill(pid,SIGKILL) failed for process %d; errno: %d", pid, errno);
+                  XPDFORM(msg, "kill(pid,SIGKILL) failed for process %d; errno: %d", pid, errno);
                   TRACE(XERR, msg);
                   return -1;
                }
@@ -1181,7 +1181,7 @@ int XrdProofdAux::KillProcess(int pid, bool forcekill, XrdProofUI ui, bool chang
             // Softer shutdown via SIGTERM
             if (kill(pid, SIGTERM) != 0) {
                if (errno != ESRCH) {
-                  msg.form("kill(pid,SIGTERM) failed for process %d; errno: %d", pid, errno);
+                  XPDFORM(msg, "kill(pid,SIGTERM) failed for process %d; errno: %d", pid, errno);
                   TRACE(XERR, msg);
                   return -1;
                }
@@ -1227,7 +1227,7 @@ int XrdProofdAux::RmDir(const char *path)
       // Skip the basic entries
       if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) continue;
       // Get info about the entry
-      entry.form("%s/%s", path, ent->d_name);
+      XPDFORM(entry, "%s/%s", path, ent->d_name);
       if (stat(entry.c_str(), &st) != 0) {
          TRACE(XERR, "cannot stat entry "<<entry<<" ; error: "<<errno);
          rc = -errno;
@@ -1296,14 +1296,14 @@ int XrdProofdAux::MvDir(const char *oldpath, const char *newpath)
       // Skip the basic entries
       if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) continue;
       // Get info about the entry
-      srcentry.form("%s/%s", oldpath, ent->d_name);
+      XPDFORM(srcentry, "%s/%s", oldpath, ent->d_name);
       if (stat(srcentry.c_str(), &st) != 0) {
          TRACE(XERR, "cannot stat entry "<<srcentry<<" ; error: "<<errno);
          rc = -errno;
          break;
       }
       // Destination entry
-      dstentry.form("%s/%s", newpath, ent->d_name);
+      XPDFORM(dstentry, "%s/%s", newpath, ent->d_name);
       // Mv directories recursively
       if (S_ISDIR(st.st_mode)) {
          mode_t srcmode = st.st_mode;
@@ -1602,7 +1602,7 @@ int XrdProofdPipe::Post(int type, const char *msg)
       XrdSysMutexHelper mh(fWrMtx);
       XrdOucString buf;
       if (msg && strlen(msg) > 0) {
-         buf.form("%d %s", type, msg);
+         XPDFORM(buf, "%d %s", type, msg);
       } else {
          buf += type;
       }
@@ -2081,5 +2081,331 @@ XrdOucString XrdProofdMultiStrToken::Export(int &next)
    while (dl--) tkn += "0";
    tkn += tmp;
    return tkn;
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
+                                         int ns, const char *ss[5],
+                                         int ni, int ii[5],
+                                         int np, void *pp[5])
+{
+   // Recreate the string according to 'fmt', the up to 5 'const char *' and the
+   // up to 5 'int' arguments.
+
+   int len = 0;
+   if (!fmt || (len = strlen(fmt)) <= 0) return;
+
+   char si[32], sp[32];
+
+   // Estimate length
+   int i = ns;
+   while (i-- > 0) { if (ss[i]) { len += strlen(ss[i]); } }
+   i = ni + np;
+   while (i-- > 0) { len += 32; }
+
+   s.resize(len+1);
+
+   int from = 0;
+   s.assign(fmt, from);
+   int nii = 0, nss = 0, npp = 0;
+   int k = STR_NPOS;
+   while ((k = s.find('%', from)) != STR_NPOS) {
+      bool replaced = 0;
+      if (s[k+1] == 's') {
+         if (nss < ns) {
+            s.replace("%s", ss[nss++], k, k + 1);
+            replaced = 1;
+         }
+      } else if (s[k+1] == 'd') {
+         if (nii < ni) {
+            sprintf(si,"%d", ii[nii++]);
+            s.replace("%d", si, k, k + 1);
+            replaced = 1;
+         }
+      } else if (s[k+1] == 'p') {
+         if (npp < np) {
+            sprintf(sp,"%p", pp[npp++]);
+            s.replace("%p", sp, k, k + 1);
+            replaced = 1;
+         }
+      }
+      if (!replaced) from = k + 1;
+   }
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
+                        const char *s0, const char *s1,
+                        const char *s2, const char *s3, const char *s4)
+{
+   // Recreate the string according to 'fmt' and the 5 'const char *' arguments
+
+   const char *ss[5] = {s0, s1, s2, s3, s4};
+   int ii[5] = {0,0,0,0,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,5,ss,0,ii,0,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
+                                         int i0, int i1, int i2, int i3, int i4)
+{
+   // Recreate the string according to 'fmt' and the 5 'int' arguments
+
+   const char *ss[5] = {0, 0, 0, 0, 0};
+   int ii[5] = {i0,i1,i2,i3,i4};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,0,ss,5,ii,5,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
+                                         void *p0, void *p1, void *p2, void *p3, void *p4)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {0, 0, 0, 0, 0};
+   int ii[5] = {0,0,0,0,0};
+   void *pp[5] = {p0,p1,p2,p3,p4};
+
+   XrdProofdAux::Form(s,fmt,0,ss,0,ii,5,pp);
+}
+
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, const char *s0,
+                                     const char *s1, const char *s2, const char *s3)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0, s1, s2, s3, 0};
+   int ii[5] = {i0,0,0,0,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,4,ss,1,ii,0,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
+                                     int i0, int i1, int i2, int i3)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,0,0,0,0};
+   int ii[5] = {i0,i1,i2,i3,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,1,ss,4,ii,0,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1,
+                                     int i0, int i1, int i2)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,s1,0,0,0};
+   int ii[5] = {i0,i1,i2,0,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,2,ss,3,ii,0,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1,
+                                     const char *s0, const char *s1, const char *s2)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,s1,s2,0,0};
+   int ii[5] = {i0,i1,0,0,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,3,ss,2,ii,0,pp);
+}
+
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
+                                         const char *s1, const char *s2,
+                                         int i0, int i1)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,s1,s2,0,0};
+   int ii[5] = {i0,i1,0,0,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,3,ss,2,ii,0,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2,
+                                         const char *s0, const char *s1)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,s1,0,0,0};
+   int ii[5] = {i0,i1,i2,0,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,2,ss,3,ii,0,pp);
+}
+
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
+                          const char *s1, const char *s2, const char *s3, int i0)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,s1,s2,s3,0};
+   int ii[5] = {i0,0,0,0,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,4,ss,1,ii,0,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2,
+                                         int i3, const char *s0)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,0,0,0,0};
+   int ii[5] = {i0,i1,i2,i3,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,1,ss,4,ii,0,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1, void *p0)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {0,0,0,0,0};
+   int ii[5] = {i0,i1,0,0,0};
+   void *pp[5] = {p0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,0,ss,2,ii,1,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
+                                         int i0, int i1, int i2, void *p0)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {0,0,0,0,0};
+   int ii[5] = {i0,i1,i2,0,0};
+   void *pp[5] = {p0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,0,ss,3,ii,1,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
+                                         int i0, int i1, int i2, int i3, void *p0)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {0,0,0,0,0};
+   int ii[5] = {i0,i1,i2,i3,0};
+   void *pp[5] = {p0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,0,ss,4,ii,1,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1,
+                                                          void *p0, int i2, int i3)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {0,0,0,0,0};
+   int ii[5] = {i0,i1,i2,i3,0};
+   void *pp[5] = {p0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,0,ss,4,ii,1,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, void *p0, int i0, int i1)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {0,0,0,0,0};
+   int ii[5] = {i0,i1,0,0,0};
+   void *pp[5] = {p0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,0,ss,2,ii,1,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
+                                         const char *s0, void *p0, int i0, int i1)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,0,0,0,0};
+   int ii[5] = {i0,i1,0,0,0};
+   void *pp[5] = {p0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,1,ss,2,ii,1,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
+                                         void *p0, const char *s0, int i0)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,0,0,0,0};
+   int ii[5] = {i0,0,0,0,0};
+   void *pp[5] = {p0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,1,ss,1,ii,1,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
+                                         const char *s0, const char *s1, void *p0)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,s1,0,0,0};
+   int ii[5] = {0,0,0,0,0};
+   void *pp[5] = {p0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,2,ss,0,ii,1,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0,
+                                         const char *s0, const char *s1, int i1, int i2)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,s1,0,0,0};
+   int ii[5] = {i0,i1,i2,0,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,2,ss,3,ii,0,pp);
+}
+
+//______________________________________________________________________________
+void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0,
+                                         const char *s0, int i1, int i2)
+{
+   // Recreate the string according to 'fmt' and the 5 'void *' arguments
+
+   const char *ss[5] = {s0,0,0,0,0};
+   int ii[5] = {i0,i1,i2,0,0};
+   void *pp[5] = {0,0,0,0,0};
+
+   XrdProofdAux::Form(s,fmt,1,ss,3,ii,0,pp);
 }
 

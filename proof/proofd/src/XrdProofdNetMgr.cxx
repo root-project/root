@@ -137,7 +137,7 @@ int XrdProofdNetMgr::Config(bool rcf)
          // Nothing defined: use default
          CreateDefaultPROOFcfg();
       }
-      msg.form("%d worker nodes defined", fWorkers.size() - 1);
+      XPDFORM(msg, "%d worker nodes defined", fWorkers.size() - 1);
       TRACE(ALL, msg);
 
       // Find unique nodes
@@ -254,7 +254,7 @@ int XrdProofdNetMgr::DoDirectiveWorker(char *val, XrdOucStream *cfg, bool)
    if (val) {
       // Build the line
       XrdOucString line;
-      line.form("%s %s", val, rest);
+      XPDFORM(line, "%s %s", val, rest);
       // Parse it now
       if (!strcmp(val, "master") || !strcmp(val, "node")) {
          // Init a master instance
@@ -588,14 +588,14 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
       if (lout > 0) {
          if (grep > 0) {
             if (TRACING(DBG)) {
-               emsg.form("nothing found by 'grep' in %s, pattern: %s", filen, pattern);
+               XPDFORM(emsg, "nothing found by 'grep' in %s, pattern: %s", filen, pattern);
                TRACEP(p, DBG, emsg);
             }
             response->Send();
             return 0;
          } else {
-            emsg.form("could not read buffer from %s %s",
-                     (local) ? "local file " : "remote file ", file);
+            XPDFORM(emsg, "could not read buffer from %s %s",
+                          (local) ? "local file " : "remote file ", file);
             TRACEP(p, XERR, emsg);
             response->Send(kXR_InvalidRequest, emsg.c_str());
             return 0;

@@ -258,7 +258,7 @@ int XrdROOTMgr::Config(bool rcf)
          if (dir.length() > 0) {
             XrdROOT *rootc = new XrdROOT(dir.c_str(), "",
                                          bd.c_str(), id.c_str(), ld.c_str(), dd.c_str());
-            msg.form("ROOT dist: '%s'", rootc->Export());
+            XPDFORM(msg, "ROOT dist: '%s'", rootc->Export());
             if (Validate(rootc, fSched) == 0) {
                msg += " validated";
                fROOT.push_back(rootc);

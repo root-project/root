@@ -58,12 +58,27 @@ TProofDataSetManagerFile::TProofDataSetManagerFile(const char *group,
    if (!fUser.IsNull() && !fGroup.IsNull() && !fDataSetDir.IsNull()) {
 
       // Make sure that the dataset dir exists
-      TString dir(Form("%s/%s/%s", fDataSetDir.Data(), fGroup.Data(), fUser.Data()));
+      TString dir;
+      dir.Form("%s/%s/%s", fDataSetDir.Data(), fGroup.Data(), fUser.Data());
       if (gSystem->AccessPathName(dir)) {
          if (gSystem->mkdir(dir, kTRUE) != 0) {
-            Error("TProofDataSetManagerFile", "could not create the dataset dir");
-            SetBit(TObject::kInvalidObject);
-            return;
+            TString emsg = dir;
+            // Read only dataset info system: switch to COMMON
+	    fUser = fCommonUser;
+	    fGroup = fCommonGroup;
+            ResetBit(TProofDataSetManager::kCheckQuota);
+            ResetBit(TProofDataSetManager::kAllowRegister);
+            ResetBit(TProofDataSetManager::kAllowVerify);
+            ResetBit(TProofDataSetManager::kAllowStaging);
+            dir.Form("%s/%s/%s", fDataSetDir.Data(), fGroup.Data(), fUser.Data());
+	    if (gSystem->AccessPathName(dir)) {
+		Error("TProofDataSetManagerFile",
+                      "could not attach to a valid the dataset dir; paths tried:");
+		Error("TProofDataSetManagerFile", "    %s", emsg.Data());
+		Error("TProofDataSetManagerFile", "    %s", dir.Data());
+		SetBit(TObject::kInvalidObject);
+		return;
+	    }
          }
       }
 

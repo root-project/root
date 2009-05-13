@@ -48,7 +48,7 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
    fChangeOwn = changeown;
 
    // Make sure the admin path exists
-   fAdminPath.form("%s/%s.%s", adminpath, ui.fUser.c_str(), ui.fGroup.c_str());
+   XPDFORM(fAdminPath, "%s/%s.%s", adminpath, ui.fUser.c_str(), ui.fGroup.c_str());
    struct stat st;
    if (stat(adminpath, &st) != 0) {
       TRACE(XERR, "problems stating admin path "<<adminpath<<"; errno = "<<errno);
@@ -201,10 +201,10 @@ XrdProofdProofServ *XrdProofdClient::GetFreeServObj()
    // Notify
    if (TRACING(DBG)) {
       if (newsz > 0) {
-         msg.form("new capacity = %d, size = %d, ic = %d, xps = %p",
-                   newsz, sz, ic, xps);
+         XPDFORM(msg, "new capacity = %d, size = %d, ic = %d, xps = %p",
+                      newsz, sz, ic, xps);
       } else {
-         msg.form("size = %d, ic = %d, xps = %p", sz, ic, xps);
+         XPDFORM(msg, "size = %d, ic = %d, xps = %p", sz, ic, xps);
       }
       XPDPRT(msg);
    }
@@ -538,7 +538,7 @@ bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps, XrdProofdResponse *
          TRACE(HDBG, "waiting "<<ns<<" secs for session "<<pid<<
                      " to touch the admin path");
          if (r && ns == 5) {
-            notmsg.form("verifying existing sessions, %d seconds ...", ns);
+            XPDFORM(notmsg, "verifying existing sessions, %d seconds ...", ns);
             r->Send(kXR_attn, kXPD_srvmsg, 0, (char *) notmsg.c_str(), notmsg.length());
          }
          sleep(1);
@@ -599,7 +599,7 @@ XrdOucString XrdProofdClient::ExportSessions(XrdOucString &emsg,
 
    // Fill info
    XrdProofdProofServ *xps = 0;
-   out.form("%d", active.size());
+   out += (int) active.size();
    std::list<XrdProofdProofServ *>::iterator ia;
    for (ia = active.begin(); ia != active.end(); ++ia) {
       if ((xps = *ia) && xps->IsValid()) {

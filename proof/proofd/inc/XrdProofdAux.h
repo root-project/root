@@ -220,6 +220,20 @@ public:
    void SetFd(void *fds);
 };
 
+//
+// Container for DS information
+//
+class XrdProofdDSInfo {
+public:
+   XrdOucString  fType;  // Backend type
+   XrdOucString  fUrl;   // URL from where to take the information
+   bool          fLocal; // TRUE if on the local file system
+   bool          fRW;    // TRUE if users can modify their area
+   XrdOucString  fOpts;  // Options for this source
+   XrdProofdDSInfo(const char *t, const char *u, bool local, bool rw,
+                   const char *o = "Ar:Av:") : 
+                   fType(t), fUrl(u), fLocal(local), fRW(rw), fOpts(o) { }
+};
 
 //
 // Static methods
@@ -240,6 +254,44 @@ public:
    static int CheckIf(XrdOucStream *s, const char *h);
    static char *Expand(char *p);
    static void Expand(XrdOucString &path);
+   // String form functions
+   static void Form(XrdOucString &s, const char *fmt, int ns, const char *ss[5], int ni, int ii[5],
+                                     int np, void *pp[5]);
+   static void Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1 = 0,
+                                     const char *s2 = 0, const char *s3 = 0, const char *s4 = 0);
+   static void Form(XrdOucString &s, const char *fmt, int i0, int i1 = 0, int i2 = 0,
+                                                      int i3 = 0, int i4 = 0);
+   static void Form(XrdOucString &s, const char *fmt, void *p0, void *p1 = 0, void *p2 = 0,
+                                                      void *p3 = 0, void *p4 = 0);
+   static void Form(XrdOucString &s, const char *fmt, int i0, const char *s0,
+                                     const char *s1 = 0, const char *s2 = 0, const char *s3 = 0);
+   static void Form(XrdOucString &s, const char *fmt, const char *s0,
+                                     int i0, int i1 = 0, int i2 = 0, int i3 = 0);
+   static void Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1,
+                                     int i0, int i1, int i2);
+   static void Form(XrdOucString &s, const char *fmt, int i0, int i1,
+                                     const char *s0, const char *s1, const char *s2);
+   static void Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1,
+                                                      const char *s2, int i0, int i1 = 0);
+   static void Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2,
+                                                      const char *s0, const char *s1);
+
+   static void Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1, const char *s2,
+                                                      const char *s3, int i1);
+   static void Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2, int i3, const char *s0);
+
+   static void Form(XrdOucString &s, const char *fmt, int i0, int i1, void *p0);
+   static void Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2, void *p0);
+   static void Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2, int i3, void *p0);
+   static void Form(XrdOucString &s, const char *fmt, int i0, int i1, void *p0, int i2, int i3 = 0);
+   static void Form(XrdOucString &s, const char *fmt, void *p0, int i0, int i1);
+   static void Form(XrdOucString &s, const char *fmt, const char *s0, void *p0, int i0, int i1);
+   static void Form(XrdOucString &s, const char *fmt, void *p0, const char *s0, int i0);
+   static void Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1, void *p0);
+   static void Form(XrdOucString &s, const char *fmt, int i0, const char *s0, const char *s1,
+                                                      int i1, int i2 = 0);
+   static void Form(XrdOucString &s, const char *fmt, int i0, const char *s0, int i1, int i2 = 0);
+
    static int GetIDFromPath(const char *path, XrdOucString &emsg);
    static long int GetLong(char *str);
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
@@ -311,5 +363,9 @@ public:
 
 #undef  RESPONSE
 #define RESPONSE fResponse
+
+#ifndef XPDFORM
+#define XPDFORM XrdProofdAux::Form
+#endif
 
 #endif

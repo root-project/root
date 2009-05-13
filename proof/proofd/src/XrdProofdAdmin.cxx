@@ -326,7 +326,7 @@ int XrdProofdAdmin::SetGroupProperties(XrdProofdProtocol *p)
    // Tell the priority manager
    if (fMgr && fMgr->PriorityMgr()) {
       XrdOucString buf;
-      buf.form("%s %d", grp, priority);
+      XPDFORM(buf, "%s %d", grp, priority);
       if (fMgr->PriorityMgr()->Pipe()->Post(XrdProofdPriorityMgr::kSetGroupPriority,
                                              buf.c_str()) != 0) {
          TRACEP(p, XERR, "problem sending message on the pipe");
@@ -695,12 +695,12 @@ int XrdProofdAdmin::CleanupSessions(XrdProofdProtocol *p)
 
    // Asynchronous notification to requester
    if (fMgr->SrvType() != kXPD_Worker) {
-      cmsg.form("CleanupSessions: %s: signalling active sessions for termination", lab);
+      XPDFORM(cmsg, "CleanupSessions: %s: signalling active sessions for termination", lab);
       response->Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
    }
 
    // Send a termination request to client sessions
-   cmsg.form("CleanupSessions: %s: cleaning up client: requested by: %s", lab, p->Link()->ID);
+   XPDFORM(cmsg, "CleanupSessions: %s: cleaning up client: requested by: %s", lab, p->Link()->ID);
    int srvtype = ntohl(p->Request()->proof.int2);
    fMgr->ClientMgr()->TerminateSessions(tgtclnt, cmsg.c_str(), srvtype);
 
@@ -708,7 +708,7 @@ int XrdProofdAdmin::CleanupSessions(XrdProofdProtocol *p)
    if (hard && fMgr->SrvType() != kXPD_Worker) {
 
       // Asynchronous notification to requester
-      cmsg.form("CleanupSessions: %s: forwarding the reset request to next tier(s) ", lab);
+      XPDFORM(cmsg, "CleanupSessions: %s: forwarding the reset request to next tier(s) ", lab);
       response->Send(kXR_attn, kXPD_srvmsg, 0, (char *) cmsg.c_str(), cmsg.length());
 
       int type = ntohl(p->Request()->proof.int1);
@@ -723,7 +723,7 @@ int XrdProofdAdmin::CleanupSessions(XrdProofdProtocol *p)
    while (twait > 0 &&
           fMgr->SessionMgr()->CheckCounter(XrdProofdProofServMgr::kCleanSessionsCnt) > 0) {
       if (twait < 7) {
-         cmsg.form("CleanupSessions: %s: wait %d more seconds for completion ...", lab, twait);
+         XPDFORM(cmsg, "CleanupSessions: %s: wait %d more seconds for completion ...", lab, twait);
          response->Send(kXR_attn, kXPD_srvmsg, 0, (char *) cmsg.c_str(), cmsg.length());
       }
       sleep(1);

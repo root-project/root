@@ -127,7 +127,7 @@ void *XrdProofdClientCron(void *p)
             }
             
             // Tell the session manager that a client has gone
-            buf.form("%d", pid);
+            XPDFORM(buf, "%d", pid);
             smgr->Pipe()->Post(XrdProofdProofServMgr::kClientDisconnect, buf.c_str());
             TRACE(DBG,"sending to ProofServMgr: "<<buf);
 
@@ -241,7 +241,7 @@ int XrdProofdClientMgr::DoDirectiveClientMgr(char *val, XrdOucStream *cfg, bool)
    fActivityTimeOut = (XPD_LONGOK(activityto) && activityto > 0) ? activityto : fActivityTimeOut;
 
    XrdOucString msg;
-   msg.form("checkfq: %d s, activityto: %d s", fCheckFrequency, fActivityTimeOut);
+   XPDFORM(msg, "checkfq: %d s, activityto: %d s", fCheckFrequency, fActivityTimeOut);
    TRACE(ALL, msg);
 
    return 0;
@@ -465,7 +465,7 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
    XrdProofUI ui;
    bool su;
    if (fMgr->CheckUser(uname.c_str(), ui, emsg, su) != 0) {
-      emsg.form("username not allowed: %s", uname.c_str());
+      XPDFORM(emsg, "username not allowed: %s", uname.c_str());
       TRACEP(p, XERR, emsg);
       response->Send(kXR_InvalidRequest, emsg.c_str());
       return 0;
@@ -484,13 +484,13 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
       if (gname.length() > 0) {
          g = fMgr->GroupsMgr()->GetGroup(gname.c_str());
          if (!g) {
-            emsg.form("group unknown: %s", gname.c_str());
+            XPDFORM(emsg, "group unknown: %s", gname.c_str());
             TRACEP(p, XERR, emsg);
             response->Send(kXR_InvalidRequest, emsg.c_str());
             return 0;
          } else if (strncmp(g->Name(),"default",7) &&
                    !g->HasMember(uname.c_str())) {
-            emsg.form("user %s is not member of group %s", uname.c_str(), gname.c_str());
+            XPDFORM(emsg, "user %s is not member of group %s", uname.c_str(), gname.c_str());
             TRACEP(p, XERR, emsg);
             response->Send(kXR_InvalidRequest, emsg.c_str());
             return 0;
@@ -629,7 +629,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
          psrv->SetValid(1);
          // Set Trace ID
          XrdOucString tid;
-         tid.form("xrd->%s", psrv->Ordinal());
+         XPDFORM(tid, "xrd->%s", psrv->Ordinal());
          resp->SetTag(tid.c_str());
          resp->SetTraceID();
          TRACEI(resp->TraceID(), DBG, "proofsrv callback: link assigned to target session "<<psid);
@@ -655,7 +655,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
          XrdOucString discpath(cpath, 0, cpath.rfind("/cid"));
          discpath += "/disconnected";
          if (unlink(discpath.c_str()) != 0) {
-            msg.form("warning: could not remove %s (errno: %d)", discpath.c_str(), errno);
+            XPDFORM(msg, "warning: could not remove %s (errno: %d)", discpath.c_str(), errno);
             TRACEP(p, XERR, msg.c_str());
          }
          // Update counters
@@ -675,7 +675,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
          }
       }
       p->SetAdminPath(cpath.c_str());
-      msg.form("client ID and admin paths created: %s", cpath.c_str());
+      XPDFORM(msg, "client ID and admin paths created: %s", cpath.c_str());
       TRACEP(p, DBG, msg.c_str());
 
       TRACEP(p, DBG, "CID: "<<p->CID()<<", size: "<<p->Client()->Size());
@@ -685,8 +685,8 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
    if (!(p->Status() & XPD_NEED_AUTH)) {
       const char *srvtype[6] = {"ANY", "MasterWorker", "MasterMaster",
                                 "ClientMaster", "Internal", "Admin"};
-      msg.form("user %s logged-in%s; type: %s", p->Client()->User(),
-               p->SuperUser() ? " (privileged)" : "", srvtype[p->ConnType()+1]);
+      XPDFORM(msg, "user %s logged-in%s; type: %s", p->Client()->User(),
+                   p->SuperUser() ? " (privileged)" : "", srvtype[p->ConnType()+1]);
       TRACEP(p, LOGIN, msg);
    }
 
@@ -701,20 +701,20 @@ int XrdProofdClientMgr::CreateAdminPath(XrdProofdProtocol *p,
    // Create the client directory in the admin path
 
    if (!p || !p->Link()) {
-      emsg.form("invalid inputs (p: %p)", p);
+      XPDFORM(emsg, "invalid inputs (p: %p)", p);
       return -1;
    }
 
    // Create link ID
    XrdOucString lid;
-   lid.form("%s.%d", p->Link()->Host(), p->Pid());
+   XPDFORM(lid, "%s.%d", p->Link()->Host(), p->Pid());
 
    // Create the path now
-   cpath.form("%s/%s", p->Client()->AdminPath(), lid.c_str());
+   XPDFORM(cpath, "%s/%s", p->Client()->AdminPath(), lid.c_str());
    XrdProofUI ui;
    XrdProofdAux::GetUserInfo(fMgr->EffectiveUser(), ui);
    if (XrdProofdAux::AssertDir(cpath.c_str(), ui, 1) != 0) {
-      emsg.form("error creating client admin path: %s", cpath.c_str());
+      XPDFORM(emsg, "error creating client admin path: %s", cpath.c_str());
       return -1;
    }
    // Save client ID for full recovery
@@ -724,7 +724,7 @@ int XrdProofdClientMgr::CreateAdminPath(XrdProofdProtocol *p,
       fprintf(fcid, "%d", p->CID());
       fclose(fcid);
    } else {
-      emsg.form("error creating file for client id: %s", cpath.c_str());
+      XPDFORM(emsg, "error creating file for client id: %s", cpath.c_str());
       return -1;
    }
    // Done
@@ -740,16 +740,16 @@ int XrdProofdClientMgr::CheckAdminPath(XrdProofdProtocol *p,
 
    emsg = "";
    if (!p) {
-      emsg.form("CheckAdminPath: invalid inputs (p: %p)", p);
+      XPDFORM(emsg, "CheckAdminPath: invalid inputs (p: %p)", p);
       return -1;
    }
 
    // Create link ID
    XrdOucString lid;
-   lid.form("%s.%d", p->Link()->Host(), p->Pid());
+   XPDFORM(lid, "%s.%d", p->Link()->Host(), p->Pid());
 
    // Create the path now
-   cidpath.form("%s/%s/cid", p->Client()->AdminPath(), lid.c_str());
+   XPDFORM(cidpath, "%s/%s/cid", p->Client()->AdminPath(), lid.c_str());
 
    // Check last access time
    int rc = 0;
@@ -761,14 +761,15 @@ int XrdProofdClientMgr::CheckAdminPath(XrdProofdProtocol *p,
          // Remove the file
          cidpath.replace("/cid", "");
          if (expired)
-            emsg.form("CheckAdminPath: reconnection timeout expired: remove %s ", cidpath.c_str());
+            XPDFORM(emsg, "CheckAdminPath: reconnection timeout expired: remove %s ",
+                          cidpath.c_str());
          else
-            emsg.form("CheckAdminPath: problems stat'ing %s (errno: %d): remove ",
-                      cidpath.c_str(), errno);
+            XPDFORM(emsg, "CheckAdminPath: problems stat'ing %s (errno: %d): remove ",
+                          cidpath.c_str(), errno);
          if (XrdProofdAux::RmDir(cidpath.c_str()) != 0)
             emsg += ": failure!";
       } else {
-         emsg.form("CheckAdminPath: no such file %s", cidpath.c_str());
+         XPDFORM(emsg, "CheckAdminPath: no such file %s", cidpath.c_str());
       }
       return -1;
    }
@@ -799,7 +800,7 @@ int XrdProofdClientMgr::ParsePreviousClients(XrdOucString &emsg)
    while ((ent = (struct dirent *)readdir(dir))) {
       // Skip the basic entries
       if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) continue;
-      usrpath.form("%s/%s", fClntAdminPath.c_str(), ent->d_name);
+      XPDFORM(usrpath, "%s/%s", fClntAdminPath.c_str(), ent->d_name);
       bool rm = 0;
       struct stat st;
       if (stat(usrpath.c_str(), &st) == 0) {
@@ -811,8 +812,8 @@ int XrdProofdClientMgr::ParsePreviousClients(XrdOucString &emsg)
          // Get client instance
          XrdProofdClient *c = GetClient(usr.c_str(), grp.c_str());
          if (!c) {
-            emsg.form("ParsePreviousClients: could not get client instance"
-                      " for {%s, %s}", usr.c_str(), grp.c_str());
+            XPDFORM(emsg, "ParsePreviousClients: could not get client instance"
+                          " for {%s, %s}", usr.c_str(), grp.c_str());
             rm = 1;
          }
          // Open user sub-dir
@@ -828,7 +829,7 @@ int XrdProofdClientMgr::ParsePreviousClients(XrdOucString &emsg)
                // Skip the basic entries
                if (!strcmp(sent->d_name, ".") || !strcmp(sent->d_name, "..")) continue;
                if (!strcmp(sent->d_name, "xpdsock")) continue;
-               cidpath.form("%s/%s/cid", usrpath.c_str(), sent->d_name);
+               XPDFORM(cidpath, "%s/%s/cid", usrpath.c_str(), sent->d_name);
                // Check last access time
                if (stat(cidpath.c_str(), &st) != 0 ||
                   (int)(time(0) - st.st_atime) > fReconnectTimeOut) {
@@ -843,7 +844,7 @@ int XrdProofdClientMgr::ParsePreviousClients(XrdOucString &emsg)
                   xrm = 1;
                // Flag this as disconnected
                if (!xrm) {
-                  discpath.form("%s/%s/disconnected", usrpath.c_str(), sent->d_name);
+                  XPDFORM(discpath, "%s/%s/disconnected", usrpath.c_str(), sent->d_name);
                   FILE *fd = fopen(discpath.c_str(), "w");
                   if (!fd) {
                      TRACE(XERR, "unable to create path: " <<discpath);
@@ -857,7 +858,7 @@ int XrdProofdClientMgr::ParsePreviousClients(XrdOucString &emsg)
                if (xrm) {
                   TRACE(DBG, "removing path: " <<cidpath);
                   cidpath.replace("/cid", "");
-                  emsg.form("ParsePreviousClients: failure: remove %s ", cidpath.c_str());
+                  XPDFORM(emsg, "ParsePreviousClients: failure: remove %s ", cidpath.c_str());
                   if (XrdProofdAux::RmDir(cidpath.c_str()) != 0)
                      emsg += ": failure!";
                }
@@ -871,7 +872,7 @@ int XrdProofdClientMgr::ParsePreviousClients(XrdOucString &emsg)
       // If it did not work remove the entry
       if (rm) {
          TRACE(DBG, "removing path: " <<usrpath);
-         emsg.form("ParsePreviousClients: failure: remove %s ", usrpath.c_str());
+         XPDFORM(emsg, "ParsePreviousClients: failure: remove %s ", usrpath.c_str());
          if (XrdProofdAux::RmDir(usrpath.c_str()) != 0)
             emsg += ": failure!";
       }
@@ -907,7 +908,7 @@ int XrdProofdClientMgr::CheckClients()
    while ((ent = (struct dirent *)readdir(dir))) {
       // Skip the basic entries
       if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) continue;
-      usrpath.form("%s/%s", fClntAdminPath.c_str(), ent->d_name);
+      XPDFORM(usrpath, "%s/%s", fClntAdminPath.c_str(), ent->d_name);
       bool rm = 0;
       XrdProofdClient *c = 0;
       struct stat st, xst;
@@ -932,9 +933,9 @@ int XrdProofdClientMgr::CheckClients()
                // Skip the basic entries
                if (!strcmp(sent->d_name, ".") || !strcmp(sent->d_name, "..")) continue;
                if (!strcmp(sent->d_name, "xpdsock")) continue;
-               discpath.form("%s/%s/disconnected", usrpath.c_str(), sent->d_name);
+               XPDFORM(discpath, "%s/%s/disconnected", usrpath.c_str(), sent->d_name);
                // Client admin path
-               cidpath.form("%s/%s/cid", usrpath.c_str(), sent->d_name);
+               XPDFORM(cidpath, "%s/%s/cid", usrpath.c_str(), sent->d_name);
                // Check last access time
                if (stat(cidpath.c_str(), &st) == 0) {
                   // If in disconnected state, check if it needs to be cleaned
@@ -1308,7 +1309,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
             XrdOucString tmp(fMgr->TMPdir());
             if (sock)
                // Use existing unix socket
-               tmp.form("sock:%s", sock);
+               XPDFORM(tmp, "sock:%s", sock);
             c = new XrdProofdClient(ui, full, fMgr->ChangeOwn(), fEDest, fClntAdminPath.c_str());
             if (c && c->IsValid()) {
                // Locate and set the group, if any
@@ -1322,18 +1323,19 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
                // Add to the list
                fProofdClients.push_back(c);
                if (TRACING(DBG)) {
-                  dmsg.form("instance for {client, group} = {%s, %s} created"
-                            " and added to the list (%p)", usr, grp, c);
+                  XPDFORM(dmsg, "instance for {client, group} = {%s, %s} created"
+                                " and added to the list (%p)", usr, grp, c);
                }
             } else {
                if (TRACING(XERR)) {
-                  dmsg.form("instance for {client, group} = {%s, %s} is invalid", usr, grp);
+                  XPDFORM(dmsg, "instance for {client, group} = {%s, %s} is invalid", usr, grp);
                }
                SafeDelete(c);
             }
          } else {
             if (TRACING(XERR)) {
-               dmsg.form("instance for {client, group} = {%s, %s} could not be created: %s", usr, grp, emsg.c_str());
+               XPDFORM(dmsg, "instance for {client, group} = {%s, %s} could not be created: %s",
+                             usr, grp, emsg.c_str());
             }
          }
       }
@@ -1416,7 +1418,7 @@ void XrdProofdClientMgr::TerminateSessions(XrdProofdClient *clnt, const char *ms
    if (fMgr && fMgr->SessionMgr()) {
       int rc = 0;
       XrdOucString buf;
-      buf.form("%s %d", (all ? "all" : clnt->User()), srvtype);
+      XPDFORM(buf, "%s %d", (all ? "all" : clnt->User()), srvtype);
       TRACE(DBG, "posting: "<<buf);
       if ((rc = fMgr->SessionMgr()->Pipe()->Post(XrdProofdProofServMgr::kCleanSessions,
                                                  buf.c_str())) != 0) {
