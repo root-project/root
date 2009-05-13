@@ -278,7 +278,7 @@ void TGDoubleVSlider::DoRedraw()
       for (int i = 0; i <= lines; i++) {
          int y = i * fScale + (i * remain) / lines;
          gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth/2+8, y+7, fWidth/2+10, y+7);
-         if ((fScaleType && kDoubleScaleBoth))
+         if ((fScaleType & kDoubleScaleBoth))
             gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth/2-9, y+7, fWidth/2-11, y+7);
       }
    }
@@ -468,7 +468,7 @@ void TGDoubleHSlider::DoRedraw()
       for (int i = 0; i <= lines; i++) {
          int x = i * fScale + (i * remain) / lines;
          gVirtualX->DrawLine(fId, GetBlackGC()(), x+7, fHeight/2+8, x+7, fHeight/2+10);
-         if ((fScaleType && kDoubleScaleBoth))
+         if ((fScaleType & kDoubleScaleBoth))
             gVirtualX->DrawLine(fId, GetBlackGC()(), x+7, fHeight/2-9, x+7, fHeight/2-11);
       }
    }
