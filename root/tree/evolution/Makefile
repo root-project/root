@@ -94,6 +94,9 @@ containerEvolution: containerEvolution.log ReadClones.log ReadVector.log ReadLis
 	$(CMDECHO) diff -b -w ReadNolib.ref ReadNolib.log
 	$(TestDiff)
 
+SimpleOne_C.$(DllSuf): Simple.h
+SimpleTwo_C.$(DllSuf): Simple.h
+
 SimpleOne.root: SimpleOne_C.$(DllSuf) SimpleWrite.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'SimpleWrite.C(1)' > SimpleWriteOne.log
 
@@ -104,7 +107,7 @@ SimpleRead.log: SimpleOne.root SimpleTwo.root SimpleRead.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l SimpleRead.C > SimpleRead.log 2>&1
 
 SimpleTest: SimpleRead.log 
-	$(CMDECHO) diff -b -w SimpleRead.ref SimpleRead.log
+	$(CMDECHO) diff -u -b -w SimpleRead.ref SimpleRead.log
 
 
 cloning.root: cloningOne_C.$(DllSuf)

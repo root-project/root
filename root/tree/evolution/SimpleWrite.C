@@ -4,6 +4,7 @@ void Write(const char *filename)
    TTree *tree = new TTree("tree","simple tree");
    Simple *s = new Simple;
    tree->Branch("simple","Simple",&s,32000,0);
+   tree->Branch("simpleSplit.","Simple",&s,32000,99);
    for(int i=0; i<3; ++i) {
       s->fData = i;
       tree->Fill();
