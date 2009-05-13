@@ -14,6 +14,10 @@ int SimpleReadWithLib(int mode = 0) {
    c->Add("SimpleTwo.root");
 
    for(Long64_t i = 0; i < c->GetEntries(); ++i) {
+      if (mode > 0) {
+         void *p = TClass::GetClass("Simple")->New();
+         c->SetBranchAddress("simpleSplit.",&p);
+      }
       c->GetEntry(i);
    }
 }
