@@ -1,0 +1,200 @@
+#!/bin/sh
+
+# pq2-ls-files-server
+#
+# Purpose: list the file content of a dataset
+#
+# Syntax:
+#         pq2-ls-files-server datasetname server [masterurl]
+#
+# datasetname:  Name of the dataset whose files have to be listed;
+# server:       Name of the server for which the information is wanted; can be in
+#               URL form
+# masterurl:    URL of the PROOF master (including the user name if needed)
+#               Can be specified via the env PROOFURL.
+
+#--- Help function -------------
+printhelp()
+{
+   echo "Syntax:"
+   echo "         pq2-ls-files-server datasetname server [masterurl]"
+   echo " "
+   echo " datasetname:  Name of the dataset to be listed; it accepts the '*' wild card: in"
+   echo "               such a case the full path - as shown by pq2-ls - should be given in"
+   echo "               quotes, e.g. \"/default/ganis/h1-set5*\""
+   echo " server:       Name of the server for which the information is wanted; can be in "
+   echo "               URL form"
+   echo "               quotes, e.g. \"/default/ganis/h1-set5*\""
+   echo " masterurl:    URL of the PROOF master (including the usre name if needed)"
+   echo "               Can be specified via the env PROOFURL."
+   echo " "
+}
+
+TDIR=""
+filltdir()
+{
+   TDIR=$TEMP
+   if test "x$TDIR" = "x" ; then
+      TDIR=$TEMPDIR
+      if test "x$TDIR" = "x" ; then
+	 TDIR=$TEMP_DIR
+         if test "x$TDIR" = "x" ; then
+	    TDIR=$TMP
+            if test "x$TDIR" = "x" ; then
+	       TDIR=$TMP_DIR
+               if test "x$TDIR" = "x" ; then
+                  TDIR="/tmp"
+		  if test ! -d $TDIR ; then
+		     TDIR="c:\\"
+		     if test ! -d $TDIR ; then
+			TDIR=""
+		     fi
+		  fi
+	       fi
+	    fi
+	 fi
+      fi
+   fi
+}
+if test "x$1" = "x-h" || test "x$1" = "x--help" ; then
+   printhelp
+   exit
+fi
+
+if test "x$1" = "x" ; then
+   printhelp
+   exit
+fi
+DSNAME=$1
+if test "x$2" = "x" ; then
+   printhelp
+   exit
+fi
+SERVER=$2
+
+MSTURL="$PROOFURL"
+if test ! "x$3" = "x" ; then
+   MSTURL=$3
+fi
+if test "x$MSTURL" = "x" ; then
+   printhelp
+   exit
+fi
+
+filltdir
+if test ! -d $TDIR ; then
+   echo "no temp directory"
+   exit
+fi
+
+cat > $TDIR/pq2lsfilessrv.C << EOF
+#include "TMap.h"
+#include "TObjString.h"
+#include "TProof.h"
+
+const char *mcn = "pq2lsfilessrv";
+const char *scn = "pq2-ls-files-server";
+
+Int_t pq2lsfilessrv(const char *tdir, const char *master, const char *server, const char *dsname)
+{
+
+   TString flog = Form("%s/%s.log", tdir, mcn);
+   TString ferr = Form("%s/%s.err", tdir, mcn);
+   TString fres = Form("%s/%s.result", tdir, mcn);
+
+   RedirectHandle_t rh;
+   gSystem->RedirectOutput(flog.Data(), "w", &rh);
+
+   // Open a PROOF instance
+   TProof *p = TProof::Open(master,"masteronly");
+   if (!p || !p->IsValid()) {
+      // Notify
+      gSystem->RedirectOutput(0, 0, &rh);
+      gSystem->Rename(flog.Data(), ferr.Data());
+      Printf("%s: ERROR: cannot open a PROOF session at %s", scn, master);
+      return 1;
+   }
+
+   // We need to scan all the datasets to find the matching ones ...
+   TFileCollection *fc = p->GetDataSet(dsname, server);
+   if (!fc) {
+      // Notify
+      gSystem->RedirectOutput(0, 0, &rh);
+      gSystem->Rename(flog.Data(), ferr.Data());
+      Printf("%s: ERROR: problems retrieving info about dataset '%s'", scn, dsname);
+      return 1;
+   }
+
+   // Restore output
+   gSystem->RedirectOutput(0, 0, &rh);
+
+   // Overall info
+   Printf("%s: dataset '%s' has %d files on server %s", scn, dsname, fc->GetList()->GetSize(), server);
+
+   // Header
+   TString num("      #   ");
+   TString nam("File"); nam.Resize(80);
+   TString siz("        Size");
+   TString met("#Objs Obj|Type|Entries, ...");
+   TString header;
+   header.Form("%s%s%s   %s", num.Data(), nam.Data(), siz.Data(), met.Data());
+
+   // Iterate
+   const char *unit[4] = {"kB", "MB", "GB", "TB"};
+   TString uu, meta, name;
+   TIter nxf(fc->GetList());
+   TFileInfo *fi = 0;
+   Int_t nf = 0;
+   while ((fi = (TFileInfo *) nxf())) {
+      nf++;
+      if (nf == 1)
+         Printf("%s:%s", scn, header.Data());
+      // URL
+      uu = fi->GetCurrentUrl()->GetFileAndOptions();
+      if (uu.Length() < 80) uu.Resize(80);
+      // Size renormalize to kB, MB or GB
+      Int_t k = 0;
+      Long64_t refsz = 1024;
+      Long64_t xsz = (Long64_t) (fi->GetSize() / refsz);
+      while (xsz > 1024 && k < 3) {
+         k++;
+         refsz *= 1024;
+         xsz = (Long64_t) (fi->GetSize() / refsz);
+      }
+      // Meta info
+      meta = "";
+      if (fi->GetMetaDataList()) {
+         meta.Form("  %d  ", fi->GetMetaDataList()->GetSize());
+         Bool_t firstObj = kTRUE;
+         TIter nxm(fi->GetMetaDataList());
+         TFileInfoMeta *fim = 0;
+         while ((fim = (TFileInfoMeta *) nxm())) {
+            if (!firstObj) meta += ",";
+            name = fim->GetObject();
+            if (strcmp(fim->GetDirectory(),"/")) name = fim->GetName();
+            meta += Form("%s|%s|%lld", name.Data(), fim->GetClass(), fim->GetEntries());
+            firstObj = kFALSE;
+         }
+      }
+      // Printout
+      if (xsz > 0) {
+         Printf("%s:  %5d   %s %8lld %s    %s", scn, nf, uu.Data(), xsz, unit[k], meta.Data());
+      } else {
+         Printf("%s:  %5d   %s         N/A    N/A", scn, nf, uu.Data());
+      }
+   }
+
+   // Done
+   return 0;
+}
+EOF
+
+# Run the macro
+root -q -l -b $TDIR/pq2lsfilessrv.C\(\"$TDIR\",\"$MSTURL\",\"$SERVER\",\"$DSNAME\"\) | grep "pq2-ls-files-server"
+
+if test -f "$TDIR/pq2lsfilessrv.err" ; then
+   cat $TDIR/pq2lsfilessrv.err
+fi
+
+# Cleanup
+rm -f $TDIR/pq2lsfilessrv.C $TDIR/pq2lsfilessrv.log $TDIR/pq2lsfilessrv.err

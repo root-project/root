@@ -1,0 +1,257 @@
+#!/bin/sh
+
+# pq2-put
+#
+# Purpose: register one or more datasets
+#
+# Syntax:
+#         pq2-put datasetfile [masterurl]
+#
+# datasetfile:  Path to the file with the list of files in the dataset or
+#               directory with the files containing the file lists of the
+#               datasets to be registered; in the first case wildcards '*'
+#               can be specified in the file name, i.e. "<dir>/fil*" is ok
+#               but "<dir>/*/file" is not. In all cases the name of the
+#               dataset is the name of the file finally used
+# masterurl:    URL of the PROOF master (including the user name if needed)
+#               Can be specified via the env PROOFURL.
+
+#--- Help function -------------
+printhelp()
+{
+   echo "Syntax:"
+   echo "         pq2-put datasetfile [masterurl]"
+   echo " "
+   echo " datasetfile:  Path to the file with the list of files in the dataset or"
+   echo "               directory with the files containing the file lists of the"
+   echo "               datasets to be registered; in the first case wildcards '*'"
+   echo "               can be specified in the file name, i.e. \"<dir>/fil*\" is ok"
+   echo "               but \"<dir>/*/file\" is not. In all cases the name of the"
+   echo "               dataset is the name of the file finally used"
+   echo " masterurl:    URL of the PROOF master (including the usre name if needed)"
+   echo "               Can be specified via the env PROOFURL."
+   echo " "
+}
+
+TDIR=""
+filltdir()
+{
+   TDIR=$TEMP
+   if test "x$TDIR" = "x" ; then
+      TDIR=$TEMPDIR
+      if test "x$TDIR" = "x" ; then
+	 TDIR=$TEMP_DIR
+         if test "x$TDIR" = "x" ; then
+	    TDIR=$TMP
+            if test "x$TDIR" = "x" ; then
+	       TDIR=$TMP_DIR
+               if test "x$TDIR" = "x" ; then
+                  TDIR="/tmp"
+		  if test ! -d $TDIR ; then
+		     TDIR="c:\\"
+		     if test ! -d $TDIR ; then
+			TDIR=""
+		     fi
+		  fi
+	       fi
+	    fi
+	 fi
+      fi
+   fi
+}
+if test "x$1" = "x-h" || test "x$1" = "x--help" ; then
+   printhelp
+   exit
+fi
+
+if test "x$1" = "x" ; then
+   printhelp
+   exit
+fi
+FILES=$1
+
+MSTURL="$PROOFURL"
+if test ! "x$2" = "x" ; then
+   MSTURL=$2
+fi
+if test "x$MSTURL" = "x" ; then
+   printhelp
+   exit
+fi
+
+filltdir
+if test ! -d $TDIR ; then
+   echo "no temp directory"
+   exit
+fi
+
+cat > $TDIR/pq2put.C << EOF
+
+#include "TFileCollection.h"
+#include "TProof.h"
+#include "TRegexp.h"
+#include "TString.h"
+#include "TSystem.h"
+
+const char *mcn = "pq2put";
+const char *scn = "pq2-put";
+
+Int_t pq2register(TProof *p, const char *dsname, const char *files) {
+
+   // If the dataset exists already do not continue
+   if (p->ExistsDataSet(dsname)) return 2;
+
+   // Create the file collection
+   fc = new TFileCollection("dum", "dum", files);
+
+   // Register the file collection
+   if (!p->RegisterDataSet(dsname, fc)) return 1;
+
+   // Cleanup
+   delete fc;
+
+   // Done
+   return 0;
+}
+
+Int_t pq2put(const char *tdir, const char *master, const char *files)
+{
+
+   TString flog = Form("%s/%s.log", tdir, mcn);
+   TString ferr = Form("%s/%s.err", tdir, mcn);
+   TString fres = Form("%s/%s.result", tdir, mcn);
+
+   RedirectHandle_t rh;
+   gSystem->RedirectOutput(flog.Data(), "w", &rh);
+
+   // Open a PROOF instance
+   TProof *p = TProof::Open(master,"masteronly");
+   if (!p || !p->IsValid()) {
+      // Notify
+      gSystem->RedirectOutput(0, 0, &rh);
+      gSystem->Rename(flog.Data(), ferr.Data());
+      Printf("%s: ERROR: cannot open a PROOF session at %s", scn, master);
+      return 1;
+   }
+
+   // Check the file path makes sense
+   if (!files || strlen(files) <= 0) {
+      // Notify
+      gSystem->RedirectOutput(0, 0, &rh);
+      gSystem->Rename(flog.Data(), ferr.Data());
+      Printf("%s: ERROR: path files not defined!", scn);
+      return 1;
+   }
+
+   // Find out if it is a single file or a directory or contains a wildcard
+   Bool_t isDir = kFALSE;
+   Bool_t isWild = kFALSE;
+   TString dir, base;
+   FileStat_t st;
+   if (gSystem->GetPathInfo(files, st) != 0) {
+      // Path does not exists: check the basename for wild cards; in such a case
+      // we have to do a selective search in the directory
+      base = gSystem->BaseName(files);
+      if (base.Contains("*")) {
+         isWild = kTRUE;
+         isDir = kTRUE;
+         dir = gSystem->DirName(files);
+      }
+
+   } else {
+      // Path exists: is it a dir or a file ?
+      if (R_ISDIR(st.fMode)) {
+         isDir = kTRUE;
+         dir = files;
+      }
+   }
+
+   Int_t ndp = 0, nd = 0;
+   Int_t printerr = 1;
+   // If simple file ...
+   if (!isDir) {
+      nd++;
+      // ... just register and exit
+      TString dsname = gSystem->BaseName(files);
+      if (pq2register(p, dsname.Data(), files) != 0) {
+         // Notify
+         gSystem->RedirectOutput(0, 0, &rh);
+         gSystem->Rename(flog.Data(), ferr.Data());
+         Printf("%s: ERROR: problems registering '%s' from '%s'", scn, dsname.Data(), files);
+         return 1;
+      }
+      printerr = 0;
+   } else {
+      // ... else, scan the directory
+      void *dirp = gSystem->OpenDirectory(dir.Data());
+      if (!dirp) {
+         // Notify
+         gSystem->RedirectOutput(0, 0, &rh);
+         gSystem->Rename(flog.Data(), ferr.Data());
+         Printf("%s: ERROR: could not open directory '%s'", scn, dir.Data());
+         return 1;
+      }
+      printerr = 0;
+      // Loop over the entries
+      TString file;
+      TRegexp reg(base, kTRUE);
+      const char *ent = 0;
+      while ((ent = gSystem->GetDirEntry(dirp))) {
+         // Skip default entries
+         if (!strcmp(ent, ".") || !strcmp(ent, "..")) continue;
+         if (isWild) {
+            file = ent;
+            if (file.Index(reg) == kNPOS) continue;
+         }
+         nd++;
+         file.Form("%s/%s", dir.Data(), ent);
+         Int_t rc = 0;
+         if ((rc = pq2register(p, ent, file.Data())) != 0) {
+            nd--;
+            ndp++;
+            printerr = 1;
+            // Notify
+            gSystem->RedirectOutput(0, 0, &rh);
+            if (rc == 1) {
+               Printf("%s: ERROR: problems registering '%s' from '%s'", scn, ent, file.Data());
+            } else {
+               Printf("%s: WARNING: dataset '%s' already exists - ignoring request", scn, ent);
+            }
+            gSystem->RedirectOutput(flog.Data(), "a", &rh);
+            continue;
+         }
+      }
+      gSystem->FreeDirectory(dirp);
+   }
+
+   // Restore output
+   gSystem->RedirectOutput(0, 0, &rh);
+
+   // If no match, notify
+   if (printerr == 1) {
+      if (ndp > 0)
+         Printf("%s: WARNING: problems with %d dataset(s)", scn, ndp);
+      else
+         Printf("%s: WARNING: some problems occured", scn);
+      gSystem->Rename(flog.Data(), ferr.Data());
+    }
+   Printf("%s: %d dataset(s) registered", scn, nd);
+
+   // Done
+   return 0;
+}
+EOF
+
+# Run the macro
+root -q -l -b $TDIR/pq2put.C\(\"$TDIR\",\"$MSTURL\",\"$FILES\"\) 2>&1 | grep "pq2-put"
+
+if test -f $TDIR/pq2put.err ; then
+   cat $TDIR/pq2put.err
+fi
+
+# Cleanup
+rm -f $TDIR/pq2put*
+
+
+
+

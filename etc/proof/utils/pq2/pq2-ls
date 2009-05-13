@@ -1,0 +1,125 @@
+#!/bin/sh
+
+# pq2-ls
+#
+# Purpose: list the available datasets
+#
+# Syntax:
+#         pq2-ls [masterurl]
+#
+# masterurl:    URL of the PROOF master (including the user name if needed)
+#               Can be specified via the env PROOFURL.
+
+#--- Help function -------------
+printhelp()
+{
+   echo "Syntax:"
+   echo "         pq2-ls [masterurl]"
+   echo " "
+   echo " masterurl:    URL of the PROOF master (including the usre name if needed)"
+   echo "               Can be specified via the env PROOFURL."
+   echo " "
+}
+
+TDIR=""
+filltdir()
+{
+   TDIR=$TEMP
+   if test "x$TDIR" = "x" ; then
+      TDIR=$TEMPDIR
+      if test "x$TDIR" = "x" ; then
+	 TDIR=$TEMP_DIR
+         if test "x$TDIR" = "x" ; then
+	    TDIR=$TMP
+            if test "x$TDIR" = "x" ; then
+	       TDIR=$TMP_DIR
+               if test "x$TDIR" = "x" ; then
+                  TDIR="/tmp"
+		  if test ! -d $TDIR ; then
+		     TDIR="c:\\"
+		     if test ! -d $TDIR ; then
+			TDIR=""
+		     fi
+		  fi
+	       fi
+	    fi
+	 fi
+      fi
+   fi
+}
+if test "x$1" = "x-h" || test "x$1" = "x--help" ; then
+   printhelp
+   exit
+fi
+
+MSTURL="$PROOFURL"
+if test ! "x$1" = "x" ; then
+   MSTURL=$1
+fi
+if test "x$MSTURL" = "x" ; then
+   printhelp
+   exit
+fi
+
+filltdir
+if test ! -d $TDIR ; then
+   echo "no temp directory"
+   exit
+fi
+
+cat > $TDIR/pq2ls.C << EOF
+#include "TProof.h"
+
+const char *mcn = "pq2ls";
+const char *scn = "pq2-ls";
+
+Int_t pq2ls(const char *tdir, const char *master)
+{
+
+   TString flog = Form("%s/%s.log", tdir, mcn);
+   TString ferr = Form("%s/%s.err", tdir, mcn);
+   TString fres = Form("%s/%s.result", tdir, mcn);
+
+   RedirectHandle_t rh;
+   gSystem->RedirectOutput(flog.Data(), "w", &rh);
+
+   // Open a PROOF instance
+   TProof *p = TProof::Open(master,"masteronly");
+   if (!p || !p->IsValid()) {
+      // Notify
+      gSystem->RedirectOutput(0, 0, &rh);
+      gSystem->Rename(flog.Data(), ferr.Data());
+      Printf("%s: ERROR: cannot open a PROOF session at %s", scn, master);
+      return 1;
+   }
+
+   // Restore output
+   gSystem->RedirectOutput(0, 0, &rh);
+
+   // List the data sets
+   gSystem->RedirectOutput(fres.Data(), "w", &rh);
+   p->ShowDataSets();
+   gSystem->RedirectOutput(0, 0, &rh);
+
+   // Remove the error file
+   gSystem->Unlink(ferr.Data());
+
+   // Done
+   return 0;
+}
+EOF
+
+# Run the macro
+root -q -l -b $TDIR/pq2ls.C\(\"$TDIR\",\"$MSTURL\"\) 2>&1 | grep pq2-ls
+
+if test -f $TDIR/pq2ls.err ; then
+   cat $TDIR/pq2ls.err
+else
+   cat $TDIR/pq2ls.result
+fi
+
+# Cleanup
+rm -f $TDIR/pq2ls*
+
+
+

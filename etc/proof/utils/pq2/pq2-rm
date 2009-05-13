@@ -1,0 +1,184 @@
+#!/bin/sh
+
+# pq2-rm
+#
+# Purpose: remove one or more datasets
+#
+# Syntax:
+#         pq2-rm datasetname [masterurl]
+#
+# datasetname:  Name of the dataset to be removed; it accepts the '*' wild card: in
+#               such a case the full path - as shown by pq2-ls - should be given in
+#               quotes, e.g. "/default/ganis/h1-set5*
+# masterurl:    URL of the PROOF master (including the user name if needed)
+#               Can be specified via the env PROOFURL.
+
+#--- Help function -------------
+printhelp()
+{
+   echo "Syntax:"
+   echo "         pq2-rm datasetname [masterurl]"
+   echo " "
+   echo " datasetname:  Name of the dataset to be removed; it accepts the '*' wild card: in"
+   echo "               such a case the full path - as shown by pq2-ls - should be given in"
+   echo "               quotes, e.g. \"/default/ganis/h1-set5*\""
+   echo " masterurl:    URL of the PROOF master (including the usre name if needed)"
+   echo "               Can be specified via the env PROOFURL."
+   echo " "
+}
+
+TDIR=""
+filltdir()
+{
+   TDIR=$TEMP
+   if test "x$TDIR" = "x" ; then
+      TDIR=$TEMPDIR
+      if test "x$TDIR" = "x" ; then
+	 TDIR=$TEMP_DIR
+         if test "x$TDIR" = "x" ; then
+	    TDIR=$TMP
+            if test "x$TDIR" = "x" ; then
+	       TDIR=$TMP_DIR
+               if test "x$TDIR" = "x" ; then
+                  TDIR="/tmp"
+		  if test ! -d $TDIR ; then
+		     TDIR="c:\\"
+		     if test ! -d $TDIR ; then
+			TDIR=""
+		     fi
+		  fi
+	       fi
+	    fi
+	 fi
+      fi
+   fi
+}
+if test "x$1" = "x-h" || test "x$1" = "x--help" ; then
+   printhelp
+   exit
+fi
+
+if test "x$1" = "x" ; then
+   printhelp
+   exit
+fi
+DSNAME=$1
+
+MSTURL="$PROOFURL"
+if test ! "x$2" = "x" ; then
+   MSTURL=$2
+fi
+if test "x$MSTURL" = "x" ; then
+   printhelp
+   exit
+fi
+
+filltdir
+if test ! -d $TDIR ; then
+   echo "no temp directory"
+   exit
+fi
+
+cat > $TDIR/pq2rm.C << EOF
+#include "TMap.h"
+#include "TObjString.h"
+#include "TProof.h"
+#include "TRegexp.h"
+
+const char *mcn = "pq2rm";
+const char *scn = "pq2-rm";
+
+Int_t pq2rm(const char *tdir, const char *master, const char *dsname)
+{
+
+   TString flog = Form("%s/%s.log", tdir, mcn);
+   TString ferr = Form("%s/%s.err", tdir, mcn);
+   TString fres = Form("%s/%s.result", tdir, mcn);
+
+   RedirectHandle_t rh;
+   gSystem->RedirectOutput(flog.Data(), "w", &rh);
+
+   // Open a PROOF instance
+   TProof *p = TProof::Open(master,"masteronly");
+   if (!p || !p->IsValid()) {
+      // Notify
+      gSystem->RedirectOutput(0, 0, &rh);
+      gSystem->Rename(flog.Data(), ferr.Data());
+      Printf("%s: ERROR: cannot open a PROOF session at %s", scn, master);
+      return 1;
+   }
+
+   Int_t nd = 0;
+   Int_t printerr = 1;
+   TString ds(dsname);
+   if (!ds.Contains("*")) {
+      nd++;
+      // Remove the dataset
+      if (p->RemoveDataSet(dsname) != 0) {
+         // Notify
+         gSystem->RedirectOutput(0, 0, &rh);
+         gSystem->Rename(flog.Data(), ferr.Data());
+         Printf("%s: ERROR: problems removing dataset '%s'", scn, dsname);
+         return 1;
+      }
+      printerr = 0;
+   } else {
+      // We need to scan all the datasets to find the matching ones ...
+      TMap *dss = p->GetDataSets();
+      if (!dss) {
+         // Notify
+         gSystem->RedirectOutput(0, 0, &rh);
+         gSystem->Rename(flog.Data(), ferr.Data());
+         Printf("scn: ERROR: problems retrieving info about datasets", scn);
+         return 1;
+      }
+      printerr = 0;
+      // Iterate
+      TRegexp reg(dsname, kTRUE);
+      TIter nxd(dss);
+      TObjString *os = 0;
+      while ((os = dynamic_cast<TObjString*>(nxd()))) {
+         ds = os->GetName();
+         if (ds.Index(reg) != kNPOS) {
+            nd++;
+            // Remove the dataset
+            if (p->RemoveDataSet(ds.Data()) != 0) {
+               printerr = 1;
+               // Notify
+               gSystem->RedirectOutput(0, 0, &rh);
+               Printf("%s: ERROR: problems removing dataset '%s'", scn, ds.Data());
+               gSystem->RedirectOutput(flog.Data(), "a", &rh);
+               continue;
+            }
+         }
+      }
+
+   }
+
+   // Restore output
+   gSystem->RedirectOutput(0, 0, &rh);
+
+   // If no match, notify
+   if (nd == 0) {
+      Printf("%s: WARNING: no matching dataset found!", scn);
+   } else {
+      Printf("%s: %d dataset(s) removed", scn, nd);
+   }
+   if (printerr)
+      gSystem->Rename(flog.Data(), ferr.Data());
+
+   // Done
+   return 0;
+}
+EOF
+
+# Run the macro
+root -q -l -b $TDIR/pq2rm.C\(\"$TDIR\",\"$MSTURL\",\"$DSNAME\"\) 2>&1 | grep "pq2-rm"
+
+if test -f $TDIR/pq2rm.err ; then
+   cat $TDIR/pq2rm.err
+fi
+
+# Cleanup
+rm -f $TDIR/pq2rm.*
+
