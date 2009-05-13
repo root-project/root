@@ -186,7 +186,8 @@ out:
    // Move current directory to root, make sure we aren't on a mounted
    // file system.
 
-   chdir("/");
+   if (chdir("/") == -1)
+      fprintf(stderr, "DaemonStart: cannot chdir to /\n");
 
    // Clear any inherited file mode creation mask
 

@@ -85,9 +85,9 @@ void ErrorInfo(const char *va_(fmt), ...)
    va_end(ap);
 
    if (gSysLog) {
-      syslog(LOG_INFO, buf);
+      syslog(LOG_INFO, "%s\n", buf);
    } else {
-      fprintf(stderr, "%s\n",buf);
+      fprintf(stderr, "%s\n", buf);
    }
 }
 
@@ -127,9 +127,9 @@ void Error(ErrorHandler_t func, int code, const char *va_(fmt), ...)
    va_end(ap);
 
    if (gSysLog) {
-      syslog(LOG_ERR, buf);
+      syslog(LOG_ERR, "%s\n", buf);
    } else {
-      fprintf(stderr, "%s\n",buf);
+      fprintf(stderr, "%s\n", buf);
    }
 
    // Actions are defined by the specific error handler function

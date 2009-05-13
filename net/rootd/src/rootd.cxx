@@ -671,7 +671,8 @@ again:
          s = n;
       }
       if (changed) {
-         ftruncate(fid, 0);
+         if (ftruncate(fid, 0) == -1)
+            ErrorInfo("RootdCheckTab: ftruncate failed");
          lseek(fid, 0, SEEK_SET);
          if (siz > 0) {
             while (write(fid, fbuf, siz) < 0 && GetErrno() == EINTR)
@@ -690,7 +691,8 @@ again:
          tmsg = new char[lmsg];
       sprintf(tmsg, "%s %lu %lu %s %s %d\n",
                    gFile, dev, ino, smode, gUser.c_str(), (int) getpid());
-      write(fid, tmsg, strlen(tmsg));
+      if (write(fid, tmsg, strlen(tmsg)) == -1)
+         Error(ErrSys, kErrFatal, "RootdCheckTab: error writing %s", sfile);
       if (tmsg && tmsg != msg)
          delete[] tmsg;
    }
@@ -793,7 +795,8 @@ again:
          s = n;
       }
       if (changed) {
-         ftruncate(fid, 0);
+         if (ftruncate(fid, 0) == -1)
+            ErrorInfo("RootdCheckTab: ftruncate failed");
          lseek(fid, 0, SEEK_SET);
          if (siz > 0) {
             while (write(fid, fbuf, siz) < 0 && GetErrno() == EINTR)
