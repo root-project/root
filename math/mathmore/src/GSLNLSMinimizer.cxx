@@ -11,6 +11,7 @@
 // Implementation file for class GSLNLSMinimizer
 
 #include "Math/GSLNLSMinimizer.h"
+#include "Math/Error.h"
 #include "GSLMultiFit.h"
 #include "gsl/gsl_errno.h"
 
@@ -121,9 +122,15 @@ bool GSLNLSMinimizer::Minimize() {
 
 
    assert (fGSLMultiFit != 0);   
-   if (fResiduals.size() !=  fSize) {
-      std::cout << "GSLNLSMinimizer : Error - wrong residual size." << std::endl;
+   if (fResiduals.size() !=  fSize || fObjFunc == 0) {
+      MATH_ERROR_MSG("GSLNLSMinimizer::Minimize","Function has not been  set");
       return false; 
+   }
+
+   unsigned int npar = fValues.size();
+   if (npar == 0 || npar < fDim) { 
+       MATH_ERROR_MSGVAL("GSLNLSMinimizer::Minimize","Wrong number of parameters",npar);
+       return false; 
    }
    
 

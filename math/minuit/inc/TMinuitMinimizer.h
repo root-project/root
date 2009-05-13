@@ -122,7 +122,7 @@ public:
    virtual const double *  MinGradient() const { return 0; } // not available in Minuit2 
 
    /// number of function calls to reach the minimum 
-   virtual unsigned int NCalls() const { return 0; } 
+   virtual unsigned int NCalls() const;
 
    /// this is <= Function().NDim() which is the total 
    /// number of variables (free+ constrained ones) 

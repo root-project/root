@@ -178,7 +178,6 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
 
 }
 
-
 bool TLinearMinimizer::SetFixedVariable(unsigned int ivar, const std::string & /* name */ , double val) { 
    // set a fixed variable.
    if (!fFitter) return false; 

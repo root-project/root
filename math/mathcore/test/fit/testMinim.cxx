@@ -19,7 +19,7 @@
 #include "TRandom3.h"
 #include "TMath.h"
 
-//#define DEBUG
+#define DEBUG
 
 int gNCall = 0;
 int gNCall2 = 0;
@@ -446,7 +446,10 @@ int DoNewMinimization( const ROOT::Math::IMultiGenFunction & func, const double 
          else     std::cout << "MINOS failed for " << i << std::endl; 
       }
    }  
-   
+
+#ifdef DEBUG
+   std::cout << "ncalls = " << min->NCalls() << std::endl;
+#endif   
 
 //   std::cout << "funciton at the minimum " << func(xmin) << std::endl;
    std::copy(xmin,xmin+func.NDim(),minx);

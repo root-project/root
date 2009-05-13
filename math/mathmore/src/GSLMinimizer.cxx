@@ -57,7 +57,7 @@ GSLMinimizer::GSLMinimizer( ROOT::Math::EGSLMinimizerType type) :
 
    fLSTolerance = 0.1; // use 10**-4 
    SetMaxIterations(1000);
-   SetPrintLevel(3);
+   SetPrintLevel(0);
 }
 
 GSLMinimizer::GSLMinimizer( const char *  type) : 
@@ -84,7 +84,7 @@ GSLMinimizer::GSLMinimizer( const char *  type) :
 
    fLSTolerance = 0.1; // use 10**-4 
    SetMaxIterations(1000);
-   SetPrintLevel(3);
+   SetPrintLevel(0);
 }
 
 
@@ -144,8 +144,16 @@ bool GSLMinimizer::Minimize() {
    // set initial parameters of the minimizer
 
    if (fGSLMultiMin == 0) return false; 
-   if (fObjFunc == 0) return false; 
+   if (fObjFunc == 0) { 
+      MATH_ERROR_MSG("GSLMinimizer::Minimize","Function has not been set");
+      return false; 
+   }
 
+   unsigned int npar = fValues.size(); 
+   if (npar == 0 || npar < fObjFunc->NDim()  ) { 
+      MATH_ERROR_MSGVAL("GSLMinimizer::Minimize","Wrong number of parameters",npar);
+      return false;
+   }
 
    // use a global step size = min (step vectors) 
    double stepSize = 1; 
@@ -181,7 +189,7 @@ bool GSLMinimizer::Minimize() {
          minFound = true; 
       }
 
-      if (debugLevel >=1) { 
+      if (debugLevel >=3) { 
          std::cout << "----------> Iteration " << iter << std::endl; 
          int pr = std::cout.precision(18);
          std::cout << "            FVAL = " << fGSLMultiMin->Minimum() << std::endl; 
@@ -223,15 +231,23 @@ bool GSLMinimizer::Minimize() {
       if (debugLevel >= -1 ) { 
          std::cout << "GSLMinimizer: Minimization did not converge" << std::endl;  
          if (iterFailed) { 
-            std::cout << "\t Iteration failed with status " << status << std::endl;
-            double * g = fGSLMultiMin->Gradient();
-            double dg2 = 0; 
-            for (unsigned int i = 0; i < fDim; ++i) dg2 += g[i] * g[1];  
-            std::cout << "Grad module is " << std::sqrt(dg2) << std::endl; 
-         }
-         std::cout << "FVAL         = " << fMinVal << std::endl;
+            if (status == GSL_ENOPROG) // case status 27
+               std::cout << "\t Iteration is not making progress towards solution" << std::endl;
+            else 
+               std::cout << "\t Iteration failed with status " << status << std::endl;
+
+            if (debugLevel >= 1) {
+               double * g = fGSLMultiMin->Gradient();
+               double dg2 = 0; 
+               for (unsigned int i = 0; i < fDim; ++i) dg2 += g[i] * g[1];  
+               std::cout << "Grad module is " << std::sqrt(dg2) << std::endl; 
+               for (unsigned int i = 0; i < fDim; ++i) 
+                  std::cout << fNames[i] << "\t  = " << fValues[i] << std::endl; 
+               std::cout << "FVAL         = " << fMinVal << std::endl;
 //      std::cout << "Edm   = " << fState.Edm() << std::endl;
-         std::cout << "Niterations  = " << iter << std::endl;
+               std::cout << "Niterations  = " << iter << std::endl;
+            }
+         }
       }
       return false; 
    }

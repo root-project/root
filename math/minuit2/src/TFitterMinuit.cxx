@@ -8,6 +8,7 @@
 #include "TChi2ExtendedFCN.h"
 #include "TBinLikelihoodFCN.h"
 #include "TInterpreter.h"
+#include "TError.h"
 
 
 #include "Minuit2/MnMigrad.h"

@@ -180,12 +180,12 @@ public:
       return SetLimitedVariable(ivar, name, val, step, - std::numeric_limits<double>::infinity(), upper );  
    } 
    /// set upper/lower limited variable (override if minimizer supports them )
-   virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */) { 
-      return SetVariable(ivar, name, val, step );  
+   virtual bool SetLimitedVariable(unsigned int /* ivar */ , const std::string & /* name */ , double /*val */ , double /* step  */, double /* lower */, double /* upper */) { 
+      return false;  
    }
    /// set fixed variable (override if minimizer supports them )
-   virtual bool SetFixedVariable(unsigned int ivar , const std::string & name , double val ) { 
-      return SetLimitedVariable(ivar, name, val, 0., val, val); 
+   virtual bool SetFixedVariable(unsigned int /* ivar */ , const std::string & /* name */ , double /* val */ ) { 
+      return false; 
    }
    /// set the value of an existing variable 
    virtual bool SetVariableValue(unsigned int , double ) { return false;  }

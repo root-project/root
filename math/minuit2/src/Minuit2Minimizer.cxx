@@ -143,12 +143,20 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string & name, 
    //Add if not existing or set value if exists already
    // this is implemented in MnUserParameterState::Add
    //   std::cout << " add parameter " << name << "  " <<  val << std::endl;
+
    fState.Add(name.c_str(), val, step); 
    unsigned int minuit2Index = fState.Index(name.c_str() ); 
    if ( minuit2Index != ivar) {
       std::string txtmsg("Wrong index used for the variable " + name);
       MN_INFO_MSG2("Minuit2Minimizer::SetVariable",txtmsg);  
    }
+   if (step <= 0) { 
+      std::string txtmsg = "Parameter " + name + "  has zero or invalid step size - consider it as fixed ";
+      MN_INFO_MSG2("Minuit2Minimizer::SetVariable",txtmsg);
+      fState.Fix(ivar);
+   }
+
+
    return true; 
 }
 

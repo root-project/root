@@ -122,7 +122,7 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
 #ifdef HAS_MINUIT
    // use TMinuit
    if (minimizerType ==  "Minuit" || minimizerType ==  "TMinuit")        
-      min = new ROOT::Fit::TMinuitMinimizer(algoType,c_str());        
+      min = new ROOT::Fit::TMinuitMinimizer(algoType.c_str());        
 #endif
 
 #ifdef R__HAS_MATHMORE

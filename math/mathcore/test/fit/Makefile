@@ -19,7 +19,7 @@ EXTRALIBS= "$(ROOTSYS)/lib/libMathMore.lib"
 ROOFITLIBS= "$(ROOTSYS)/lib/libMinuit.lib" "$(ROOTSYS)/lib/libThread.lib" "$(ROOTSYS)/lib/libRooFit.lib" "$(ROOTSYS)/lib/libRooFitCore.lib" "$(ROOTSYS)/lib/libHtml.lib"
 else
 EXTRALIBS=  
-ROOFITLIBS= -lMathMore -lMinuit  -lThread -lRooFit -lRooFitCore -lHtml
+ROOFITLIBS= -lMathMore -lMinuit  -lThread -lRooFit -lRooFitCore -lHtml -lFoam
 CXXFLAGS += -g
 endif
 
