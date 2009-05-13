@@ -110,6 +110,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
 
    fLightSet          (0),
    fClipSet           (0),
+   fClipAutoUpdate    (kTRUE),
    fSelectedPShapeRef (0),
    fCurrentOvlElm     (0),
 
@@ -165,6 +166,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
 
    fLightSet          (0),
    fClipSet           (0),
+   fClipAutoUpdate    (kTRUE),
    fSelectedPShapeRef (0),
    fCurrentOvlElm     (0),
 
@@ -466,7 +468,11 @@ void TGLViewer::PreRender()
 
    // Setup lighting
    fLightSet->StdSetupLights(fOverallBoundingBox, *fCamera, fDebugMode);
-   fClipSet->SetupClips(fOverallBoundingBox);
+   // Setup clip object.
+   if (fClipAutoUpdate)
+      fClipSet->SetupCurrentClip(fOverallBoundingBox);
+   else
+      fClipSet->SetupCurrentClipIfInvalid(fOverallBoundingBox);
 }
 
 //______________________________________________________________________________

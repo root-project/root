@@ -89,6 +89,7 @@ protected:
    TGLLightSet         *fLightSet;             //!
    // Clipping
    TGLClipSet          *fClipSet;              //!
+   Bool_t               fClipAutoUpdate;       //!
    // Selected physical
    TGLSelectRecord      fCurrentSelRec;        //! select record in use as selected
    TGLSelectRecord      fSelRec;               //! select record from last select (should go to context)
@@ -225,6 +226,8 @@ public:
 
    TGLLightSet* GetLightSet() const { return fLightSet; }
    TGLClipSet * GetClipSet()  const { return fClipSet; }
+   Bool_t GetClipAutoUpdate() const   { return fClipAutoUpdate; }
+   void   SetClipAutoUpdate(Bool_t x) { fClipAutoUpdate = x; }
 
    // External GUI component interface
    TGLCamera & CurrentCamera() const { return *fCurrentCamera; }

@@ -47,7 +47,7 @@
 // required.                                                            //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLVertex3)
+ClassImp(TGLVertex3);
 
 //______________________________________________________________________________
 TGLVertex3::TGLVertex3()
@@ -137,7 +137,7 @@ void TGLVertex3::Dump() const
 // minimum required.                                                    //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLVector3)
+ClassImp(TGLVector3);
 
 //______________________________________________________________________________
 TGLVector3::TGLVector3() :
@@ -182,7 +182,7 @@ TGLVector3::~TGLVector3()
 // pair.                                                                //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLLine3)
+ClassImp(TGLLine3);
 
 //______________________________________________________________________________
 TGLLine3::TGLLine3(const TGLVertex3 & start, const TGLVertex3 & end) :
@@ -239,7 +239,7 @@ void TGLLine3::Draw() const
 // Viewport (pixel base) 2D rectangle class                             //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLRect)
+ClassImp(TGLRect);
 
 //______________________________________________________________________________
 TGLRect::TGLRect() :
@@ -302,7 +302,7 @@ EOverlap TGLRect::Overlap(const TGLRect & other) const
 // required.                                                            //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLPlane)
+ClassImp(TGLPlane);
 
 //______________________________________________________________________________
 TGLPlane::TGLPlane()
@@ -358,11 +358,115 @@ TGLPlane::~TGLPlane()
 }
 
 //______________________________________________________________________________
+void TGLPlane::Normalise()
+{
+   // Normalise the plane.
+
+   Double_t mag = sqrt(fVals[0]*fVals[0] + fVals[1]*fVals[1] + fVals[2]*fVals[2]);
+
+   if (mag == 0.0 ) {
+      Error("TGLPlane::Normalise", "trying to normalise plane with zero magnitude normal");
+      return;
+   }
+   mag = 1.0 / mag;
+   fVals[0] *= mag;
+   fVals[1] *= mag;
+   fVals[2] *= mag;
+   fVals[3] *= mag;
+}
+
+//______________________________________________________________________________
 void TGLPlane::Dump() const
 {
    // Output plane equation to std::out
+
    std::cout.precision(6);
    std::cout << "Plane : " << fVals[0] << "x + " << fVals[1] << "y + " << fVals[2] << "z + " << fVals[3] << std::endl;
+}
+
+//______________________________________________________________________________
+void TGLPlane::Set(const TGLPlane & other)
+{
+   // Assign from other.
+
+   fVals[0] = other.fVals[0];
+   fVals[1] = other.fVals[1];
+   fVals[2] = other.fVals[2];
+   fVals[3] = other.fVals[3];
+}
+
+//______________________________________________________________________________
+void TGLPlane::Set(Double_t a, Double_t b, Double_t c, Double_t d)
+{
+   // Set by values.
+
+   fVals[0] = a;
+   fVals[1] = b;
+   fVals[2] = c;
+   fVals[3] = d;
+   Normalise();
+}
+
+//______________________________________________________________________________
+void TGLPlane::Set(Double_t eq[4])
+{
+   // Set by array values.
+
+   fVals[0] = eq[0];
+   fVals[1] = eq[1];
+   fVals[2] = eq[2];
+   fVals[3] = eq[3];
+   Normalise();
+}
+
+//______________________________________________________________________________
+void TGLPlane::Set(const TGLVector3 & norm, const TGLVertex3 & point)
+{
+   // Set plane from a normal vector and in-plane point pair
+
+   fVals[0] = norm[0];
+   fVals[1] = norm[1];
+   fVals[2] = norm[2];
+   fVals[3] = -(fVals[0]*point[0] + fVals[1]*point[1] + fVals[2]*point[2]);
+   Normalise();
+}
+
+//______________________________________________________________________________
+void TGLPlane::Set(const TGLVertex3 & p1, const TGLVertex3 & p2, const TGLVertex3 & p3)
+{
+   // Set plane by three points.
+
+   TGLVector3 norm = Cross(p2 - p1, p3 - p1);
+   Set(norm, p2);
+}
+
+//______________________________________________________________________________
+void TGLPlane::Negate()
+{
+   // Negate the plane.
+
+   fVals[0] = -fVals[0];
+   fVals[1] = -fVals[1];
+   fVals[2] = -fVals[2];
+   fVals[3] = -fVals[3];
+}
+
+//______________________________________________________________________________
+Double_t TGLPlane::DistanceTo(const TGLVertex3 & vertex) const
+{
+   // Distance from plane to vertex.
+
+   return (fVals[0]*vertex[0] + fVals[1]*vertex[1] + fVals[2]*vertex[2] + fVals[3]);
+}
+
+//______________________________________________________________________________
+TGLVertex3 TGLPlane::NearestOn(const TGLVertex3 & point) const
+{
+   // Return nearest point on plane.
+
+   TGLVector3 o = Norm() * (Dot(Norm(), TGLVector3(point[0], point[1], point[2])) + D() / Dot(Norm(), Norm()));
+   TGLVertex3 v = point - o;
+   return v;
 }
 
 // Some free functions for plane intersections
@@ -453,7 +557,7 @@ std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine
 // required.                                                            //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLMatrix)
+ClassImp(TGLMatrix);
 
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix()
@@ -2178,7 +2282,7 @@ TGLDisableGuard::~TGLDisableGuard()
    glEnable(GLenum(fCap));
 }
 
-ClassImp(TGLSelectionBuffer)
+ClassImp(TGLSelectionBuffer);
 
 //______________________________________________________________________________
 TGLSelectionBuffer::TGLSelectionBuffer()

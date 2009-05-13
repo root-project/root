@@ -142,7 +142,7 @@ public:
 
    void Dump() const;
 
-   ClassDef(TGLVertex3,0) // GL 3 component vertex helper/wrapper class
+   ClassDef(TGLVertex3,0); // GL 3 component vertex helper/wrapper class
 };
 
 //______________________________________________________________________________
@@ -268,7 +268,7 @@ public:
    Double_t Mag() const;
    void     Normalise();
 
-   ClassDef(TGLVector3,0) // GL 3 component vector helper/wrapper class
+   ClassDef(TGLVector3,0); // GL 3 component vector helper/wrapper class
 };
 
 // Inline for TGLVertex3 requiring full TGLVector definition
@@ -416,7 +416,7 @@ public:
    // Debug
    void Draw() const;
 
-   ClassDef(TGLLine3,0) // GL line wrapper class
+   ClassDef(TGLLine3,0); // GL line wrapper class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -472,7 +472,7 @@ public:
    Double_t Aspect() const;
    EOverlap Overlap(const TGLRect & other) const;
 
-   ClassDef(TGLRect,0) // GL rect helper/wrapper class
+   ClassDef(TGLRect,0); // GL rect helper/wrapper class
 };
 
 //______________________________________________________________________________
@@ -577,7 +577,7 @@ public:
    TGLPlane(Double_t eq[4]);
    TGLPlane(const TGLVector3 & norm, const TGLVertex3 & point);
    TGLPlane(const TGLVertex3 & p1, const TGLVertex3 & p2, const TGLVertex3 & p3);
-   virtual ~TGLPlane(); // ClassDef introduces virtual fns
+   virtual ~TGLPlane();
 
    // Manipulators
    void Set(const TGLPlane & other);
@@ -603,7 +603,7 @@ public:
 
    void Dump() const;
 
-   ClassDef(TGLPlane,0) // GL plane helper/wrapper class
+   ClassDef(TGLPlane,0); // GL plane helper/wrapper class
 };
 
 typedef std::vector<TGLPlane>                 TGLPlaneSet_t;
@@ -667,22 +667,6 @@ inline void TGLPlane::Negate()
 }
 
 //______________________________________________________________________________
-inline void TGLPlane::Normalise()
-{
-   Double_t mag = sqrt( fVals[0]*fVals[0] + fVals[1]*fVals[1] + fVals[2]*fVals[2] );
-
-   if ( mag == 0.0 ) {
-      Error("TGLPlane::Normalise", "trying to normalise plane with zero magnitude normal");
-      return;
-   }
-
-   fVals[0] /= mag;
-   fVals[1] /= mag;
-   fVals[2] /= mag;
-   fVals[3] /= mag;
-}
-
-//______________________________________________________________________________
 inline Double_t TGLPlane::DistanceTo(const TGLVertex3 & vertex) const
 {
    return (fVals[0]*vertex[0] + fVals[1]*vertex[1] + fVals[2]*vertex[2] + fVals[3]);
@@ -734,7 +718,7 @@ public:
    TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis);
    TGLMatrix(const Double_t vals[16]);
    TGLMatrix(const TGLMatrix & other);
-   virtual ~TGLMatrix(); // ClassDef introduces virtual fns
+   virtual ~TGLMatrix();
 
    // Operators
    TGLMatrix & operator =(const TGLMatrix & rhs);
@@ -788,7 +772,7 @@ public:
 
    void Dump() const;
 
-   ClassDef(TGLMatrix,0) // GL matrix helper/wrapper class
+   ClassDef(TGLMatrix,0); // GL matrix helper/wrapper class
 };
 
 //______________________________________________________________________________
@@ -1117,7 +1101,7 @@ public:
                           const TGLVertex3 & pos,
                                 Bool_t       center = kFALSE);
 
-   ClassDef(TGLUtil,0) // Wrapper class for misc GL pieces
+   ClassDef(TGLUtil,0); // Wrapper class for misc GL pieces
 };
 
 /**************************************************************************/
@@ -1197,7 +1181,7 @@ private:
    TGLSelectionBuffer(const TGLSelectionBuffer &);
    TGLSelectionBuffer &operator = (const TGLSelectionBuffer &);
 
-   ClassDef(TGLSelectionBuffer, 0)//Holds color buffer content for selection
+   ClassDef(TGLSelectionBuffer, 0); //Holds color buffer content for selection
 };
 
 template<class T>

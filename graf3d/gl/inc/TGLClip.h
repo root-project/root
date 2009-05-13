@@ -34,9 +34,12 @@ public:
    enum EMode { kOutside, // Clip away what's outside
                 kInside   // Clip away what's inside
    };
-private:
+
+protected:
    EMode  fMode;
    UInt_t fTimeStamp;
+   Bool_t fValid;
+
 public:
    TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, const float color[4]);
    virtual ~TGLClip();
@@ -50,6 +53,9 @@ public:
 
    UInt_t TimeStamp() const { return fTimeStamp; }
    void   IncTimeStamp()    { ++fTimeStamp; }
+
+   Bool_t IsValid() const { return fValid;   }
+   void   Invalidate()    { fValid = kFALSE; }
 
    virtual void Draw(TGLRnrCtx & rnrCtx) const;
    virtual void PlaneSet(TGLPlaneSet_t & set) const = 0;
@@ -130,6 +136,8 @@ protected:
    Bool_t                 fShowManip;
    TGLManipSet           *fManip;
 
+   TGLBoundingBox         fLastBBox;
+
 public:
    TGLClipSet();
    virtual ~TGLClipSet();
@@ -148,6 +156,11 @@ public:
 
    // Clipping
    void  SetupClips(const TGLBoundingBox& sceneBBox);
+   void  SetupCurrentClip(const TGLBoundingBox& sceneBBox);
+   void  SetupCurrentClipIfInvalid(const TGLBoundingBox& sceneBBox);
+
+   void  InvalidateClips();
+   void  InvalidateCurrentClip();
 
    void  GetClipState(EClipType type, Double_t data[6]) const;
    void  SetClipState(EClipType type, const Double_t data[6]);

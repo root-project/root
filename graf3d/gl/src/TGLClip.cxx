@@ -89,7 +89,8 @@ ClassImp(TGLClip);
 TGLClip::TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, const float color[4]) :
    TGLPhysicalShape(0, logical, transform, kTRUE, color),
    fMode      (kInside),
-   fTimeStamp (1)
+   fTimeStamp (1),
+   fValid     (kFALSE)
 {
    // Construct a stand-alone physical clipping object.
 
@@ -157,6 +158,7 @@ TGLClipPlane::TGLClipPlane() :
 
    TGLPlane plane(0.0, -1.0, 0.0, 0.0);
    Set(plane);
+   fValid = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -174,6 +176,7 @@ void TGLClipPlane::Setup(const TGLBoundingBox & bbox)
    TGLClipPlaneLogical* cpl = (TGLClipPlaneLogical*) GetLogical();
    cpl->Resize(extents);
    IncTimeStamp();
+   fValid = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -186,12 +189,13 @@ void TGLClipPlane::Set(const TGLPlane& plane)
    TGLVertex3 newCenter = plane.NearestOn(oldCenter);
    SetTransform(TGLMatrix(newCenter, plane.Norm()));
    IncTimeStamp();
+   fValid = kTRUE;
 }
 
 //______________________________________________________________________________
 void TGLClipPlane::PlaneSet(TGLPlaneSet_t& set) const
 {
-   // Return set of planes (actually a single) describing this clip plane.
+   // Return set of planes (actually a single one) describing this clip plane.
 
    set.resize(1);
    set[0] = BoundingBox().GetNearPlane();
@@ -238,6 +242,7 @@ void TGLClipBox::Setup(const TGLBoundingBox& bbox)
    cbl->Resize(center - halfLengths, center + halfLengths);
 
    IncTimeStamp();
+   fValid = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -329,7 +334,7 @@ void TGLClipSet::Render(TGLRnrCtx& rnrCtx)
 {
    // Render clip-shape and manipulator.
 
-   if (fCurrentClip == 0) return;
+   if (!fCurrentClip) return;
 
    rnrCtx.SetShapeLOD(TGLRnrCtx::kLODHigh);
    rnrCtx.SetDrawPass(TGLRnrCtx::kPassFill);
@@ -348,17 +353,56 @@ void TGLClipSet::FillPlaneSet(TGLPlaneSet_t& set) const
 {
    // Forward request to fill the plane-set to the current clip.
 
-   if (fCurrentClip != 0)
+   if (fCurrentClip)
       fCurrentClip->PlaneSet(set);
 }
 
 //______________________________________________________________________________
 void TGLClipSet::SetupClips(const TGLBoundingBox& sceneBBox)
 {
-   // Setup clipping objects for current scene bounding box.
+   // Setup clipping objects for given scene bounding box.
 
+   fLastBBox = sceneBBox;
    fClipPlane->Setup(sceneBBox);
    fClipBox  ->Setup(sceneBBox);
+}
+
+//______________________________________________________________________________
+void TGLClipSet::SetupCurrentClip(const TGLBoundingBox& sceneBBox)
+{
+   // Setup current clipping object for given scene bounding box.
+
+   fLastBBox = sceneBBox;
+   if (fCurrentClip)
+      fCurrentClip->Setup(sceneBBox);
+}
+
+//______________________________________________________________________________
+void TGLClipSet::SetupCurrentClipIfInvalid(const TGLBoundingBox& sceneBBox)
+{
+   // Setup current clipping object for given scene bounding box.
+
+   fLastBBox = sceneBBox;
+   if (fCurrentClip && ! fCurrentClip->IsValid())
+      fCurrentClip->Setup(sceneBBox);
+}
+
+//______________________________________________________________________________
+void TGLClipSet::InvalidateClips()
+{
+   // Invalidate clip objects.
+
+   fClipPlane->Invalidate();
+   fClipBox  ->Invalidate();
+}
+
+//______________________________________________________________________________
+void TGLClipSet::InvalidateCurrentClip()
+{
+   // Invalidate current clip object.
+
+   if (fCurrentClip)
+      fCurrentClip->Invalidate();
 }
 
 //______________________________________________________________________________
@@ -377,6 +421,8 @@ void TGLClipSet::GetClipState(EClipType type, Double_t data[6]) const
 
       case kClipPlane:
       {
+         if (!fClipPlane->IsValid())
+            fClipPlane->Setup(fLastBBox);
          TGLPlaneSet_t planes;
          fClipPlane->PlaneSet(planes);
          data[0] = planes[0].A();
@@ -387,6 +433,8 @@ void TGLClipSet::GetClipState(EClipType type, Double_t data[6]) const
       }
       case kClipBox:
       {
+         if (!fClipBox->IsValid())
+            fClipBox->Setup(fLastBBox);
          const TGLBoundingBox & box = fClipBox->BoundingBox();
          TGLVector3 ext = box.Extents();
          data[0] = box.Center().X();
