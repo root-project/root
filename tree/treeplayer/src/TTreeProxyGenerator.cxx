@@ -1756,7 +1756,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             // We can not forward declared nested classes (well we might be able to do so for
             // the one nested in a namespace but it is not clear yet if we can really reliably
             // find this information)
-            fprintf(hf,current->GetTitle());
+            fprintf(hf,"%s",current->GetTitle());
          }
       }
 
@@ -1765,7 +1765,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       next = &fListOfHeaders;
       TObject *header;
       while ( (header = next()) ) {
-         fprintf(hf,header->GetTitle());
+         fprintf(hf,"%s",header->GetTitle());
       }
       fprintf(hf,"\n\n");
 

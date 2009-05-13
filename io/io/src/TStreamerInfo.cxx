@@ -2139,7 +2139,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       if (element->IsBase()) continue;
       const char *ename = element->GetName();
 
-      sprintf(name,ename);
+      sprintf(name,"%s",ename);
       for (Int_t i=0;i < element->GetArrayDim();i++) {
          sprintf(cdim,"[%d]",element->GetMaxIndex(i));
          strcat(name,cdim);
@@ -2306,7 +2306,7 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist)
       const char *ename = element->GetName();
       const char *colon2 = strstr(ename,"::");
       if (colon2) ename = colon2+2;
-      sprintf(name,ename);
+      sprintf(name,"%s",ename);
       for (Int_t i=0;i < element->GetArrayDim();i++) {
          sprintf(cdim,"[%d]",element->GetMaxIndex(i));
          strcat(name,cdim);
@@ -3613,7 +3613,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
          static TClassRef stringClass("string");
          if (ladd && aElement && aElement->GetClass() == stringClass) {
             std::string *st = (std::string*)(ladd);
-            printf(st->c_str());
+            printf("%s",st->c_str());
          } else {
             printf("(%s*)0x%lx",aElement->GetClass()->GetName(),(Long_t)(ladd));
          }

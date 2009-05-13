@@ -30,7 +30,7 @@ void TMakeProject::AddUniqueStatement(FILE *fp, const char *statement, char *inc
 
    if (!strstr(inclist, statement)) {
       strcat(inclist, statement);
-      fprintf(fp, statement);
+      fprintf(fp, "%s", statement);
    }
 }
 
@@ -229,7 +229,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
          // the dictionary is broken), so for now skip those
          if (strchr(fullname, ':') == 0) {
             // yes this is too aggressive, this needs to be fixed properly by moving the #pragma out of band.
-            fprintf(fp, Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", fullname));
+            fprintf(fp, "%s", Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", fullname));
          }
          fprintf(fp, "#endif\n");
       }
