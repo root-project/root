@@ -247,7 +247,8 @@ void TPadPainter::SetTextSizePixels(Int_t npixels)
 //______________________________________________________________________________
 Int_t TPadPainter::CreateDrawable(UInt_t w, UInt_t h)
 {
-   //please document
+   // Create a gVirtualX Pixmap.
+
    return gVirtualX->OpenPixmap(Int_t(w), Int_t(h));
 }
 
@@ -255,7 +256,8 @@ Int_t TPadPainter::CreateDrawable(UInt_t w, UInt_t h)
 //______________________________________________________________________________
 void TPadPainter::ClearDrawable()
 {
-   //please document
+   // Clear the current gVirtualX window.
+
    gVirtualX->ClearWindow();
 }
 
@@ -263,7 +265,8 @@ void TPadPainter::ClearDrawable()
 //______________________________________________________________________________
 void TPadPainter::CopyDrawable(Int_t id, Int_t px, Int_t py)
 {
-   //please document
+   // Copy a gVirtualX pixmap.
+
    gVirtualX->CopyPixmap(id, px, py);
 }
 
@@ -271,7 +274,8 @@ void TPadPainter::CopyDrawable(Int_t id, Int_t px, Int_t py)
 //______________________________________________________________________________
 void TPadPainter::DestroyDrawable()
 {
-   //please document
+   // Close the current gVirtualX pixmap.
+
    gVirtualX->ClosePixmap();
 }
 
@@ -279,9 +283,11 @@ void TPadPainter::DestroyDrawable()
 //______________________________________________________________________________
 void TPadPainter::SelectDrawable(Int_t device)
 {
-   //please document
+   // Select the window in which the graphics will go.
+
    gVirtualX->SelectWindow(device);
 }
+
 
 //______________________________________________________________________________
 void TPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
@@ -319,9 +325,11 @@ void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EB
    Int_t px2 = gPad->XtoPixel(x2);
    Int_t py1 = gPad->YtoPixel(y1);
    Int_t py2 = gPad->YtoPixel(y2);
-   //box width must be at least one pixel
+
+   // Box width must be at least one pixel
    if (TMath::Abs(px2-px1) < 1) px2 = px1+1;
    if (TMath::Abs(py1-py2) < 1) py1 = py2+1;
+
    gVirtualX->DrawBox(px1,py1,px2,py2,(TVirtualX::EBoxMode)mode);
 }
 
