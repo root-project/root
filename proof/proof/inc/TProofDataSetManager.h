@@ -102,10 +102,10 @@ public:
    TProofDataSetManager(const char *group = 0, const char *user = 0, const char *options = 0);
    virtual ~TProofDataSetManager();
 
-   virtual TFileCollection *GetDataSet(const char *uri);
+   virtual TFileCollection *GetDataSet(const char *uri, const char *server = 0);
    virtual TMap            *GetDataSets(const char *uri, UInt_t /*option*/ = 0);
-   virtual TFileCollection *GetDataSetOnServer(const char *uri, const char *server);
-   virtual TMap            *GetDataSetPerServer(const char *uri, const char *exclude);
+   virtual TMap            *GetSubDataSets(const char *uri, const char *excludeservers);
+
    virtual Long64_t         GetGroupQuota(const char *group);
    virtual TMap            *GetGroupQuotaMap() { return &fGroupQuota; }
    virtual Long64_t         GetGroupUsed(const char *group);

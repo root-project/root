@@ -1037,14 +1037,38 @@ TMap *TProofDataSetManagerFile::GetDataSets(const char *uri, UInt_t option)
 }
 
 //______________________________________________________________________________
-TFileCollection *TProofDataSetManagerFile::GetDataSet(const char *uri)
+TFileCollection *TProofDataSetManagerFile::GetDataSet(const char *uri, const char *srv)
 {
    // Utility function used in various methods for user dataset upload.
 
    TString dsUser, dsGroup, dsName;
-   if (ParseUri(uri, &dsGroup, &dsUser, &dsName))
-      return GetDataSet(dsGroup, dsUser, dsName);
-   return (TFileCollection *)0;
+
+   if (!ParseUri(uri, &dsGroup, &dsUser, &dsName))
+      return (TFileCollection *)0;
+   TFileCollection *fc = GetDataSet(dsGroup, dsUser, dsName);
+
+   if (srv && strlen(srv) > 0) {
+      // Build up the subset
+      TFileCollection *sfc = 0;
+      TString ss(srv), s;
+      Int_t from = 0;
+      while (ss.Tokenize(s, from, ",")) {
+         TFileCollection *xfc = fc->GetFilesOnServer(s.Data());
+         if (xfc) {
+            if (sfc) {
+               sfc->Add(xfc);
+               delete xfc;
+            } else {
+               sfc = xfc;
+            }
+         }
+      }
+      // Cleanup
+      delete fc;
+      fc = sfc;
+   }
+   // Done
+   return fc;
 }
 
 //______________________________________________________________________________

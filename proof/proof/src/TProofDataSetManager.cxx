@@ -370,7 +370,7 @@ Long64_t TProofDataSetManager::ToBytes(const char *size)
 }
 
 //______________________________________________________________________________
-TFileCollection *TProofDataSetManager::GetDataSet(const char *)
+TFileCollection *TProofDataSetManager::GetDataSet(const char *, const char *)
 {
    // Utility function used in various methods for user dataset upload.
 
@@ -808,66 +808,35 @@ Bool_t TProofDataSetManager::ParseUri(const char *uri,
 }
 
 //______________________________________________________________________________
-TFileCollection *TProofDataSetManager::GetDataSetOnServer(const char *ds,
-                                                          const char *srv)
+TMap *TProofDataSetManager::GetSubDataSets(const char *ds, const char *exclude)
 {
-   // Get a the subset of the dataset 'ds' residing on server 'srv'
-
-   TFileCollection *subfc = (TFileCollection *)0;
-
-   if (!ds || strlen(ds) <= 0) {
-      Info("GetDataSetOnServer", "dataset name undefined!");
-      return subfc;
-   }
-   if (!srv || strlen(srv) <= 0) {
-      Info("GetDataSetOnServer", "server name undefined!");
-      return subfc;
-   }
-
-   // Get the dataset
-   TFileCollection *fc = GetDataSet(ds);
-   if (!fc) {
-      Info("GetDataSetOnServer", "could not retrieve the dataset '%s'", ds);
-      return subfc;
-   }
-
-   // Get the subset
-   if (!(subfc = fc->GetFilesOnServer(srv))) {
-      if (gDebug > 0)
-         Info("GetDataSetOnServer", "sub-set of '%s' on '%s' is empty", ds, srv);
-   }
-
-   // Cleanup
-   delete fc;
-
-   // Done
-   return subfc;
-}
-
-//______________________________________________________________________________
-TMap *TProofDataSetManager::GetDataSetPerServer(const char *ds,
-                                                const char *exclude)
-{
-   // Get a the subset of the dataset 'ds' residing on server 'srv'
+   // Partition dataset 'ds' accordingly to the servers.
+   // The returned TMap contains:
+   //                <server> --> <subdataset> (TFileCollection)
+   // where <subdataset> is the subset of 'ds' on <server>
+   // The partitioning is done using all the URLs in the TFileInfo's, so the
+   // resulting datasets are not mutually exclusive.
+   // The string 'exclude' contains a comma-separated list of servers to exclude
+   // from the map.
 
    TMap *map = (TMap *)0;
 
    if (!ds || strlen(ds) <= 0) {
-      Info("GetDataSetPerServer", "dataset name undefined!");
+      Info("GetDataSets", "dataset name undefined!");
       return map;
    }
 
    // Get the dataset
    TFileCollection *fc = GetDataSet(ds);
    if (!fc) {
-      Info("GetDataSetPerServer", "could not retrieve the dataset '%s'", ds);
+      Info("GetDataSets", "could not retrieve the dataset '%s'", ds);
       return map;
    }
 
    // Get the subset
    if (!(map = fc->GetFilesPerServer(exclude))) {
       if (gDebug > 0)
-         Info("GetDataSetPerServer", "could not get map for '%s'", ds);
+         Info("GetDataSets", "could not get map for '%s'", ds);
    }
 
    // Cleanup
@@ -944,7 +913,7 @@ void TProofDataSetManager::ShowDataSets(const char *uri, const char *opt)
       TString srv;
       Int_t from = 0;
       while ((o.Tokenize(srv, from, ","))) {
-         fc = GetDataSetOnServer(uri, srv.Data());
+         fc = GetDataSet(uri, srv.Data());
          PrintDataSet(fc, popt);
          delete fc;
       }
@@ -954,7 +923,7 @@ void TProofDataSetManager::ShowDataSets(const char *uri, const char *opt)
          o.ReplaceAll(":exclude:", "");
       else
          o = "";
-      TMap *dsmap = GetDataSetPerServer(uri, o.Data());
+      TMap *dsmap = GetSubDataSets(uri, o.Data());
       if (dsmap) {
          TIter nxk(dsmap);
          TObject *k = 0;

@@ -1460,7 +1460,7 @@ Bool_t TProofLite::ExistsDataSet(const char *uri)
 }
 
 //______________________________________________________________________________
-TMap *TProofLite::GetDataSets(const char *uri, const char *)
+TMap *TProofLite::GetDataSets(const char *uri, const char *srvex)
 {
    // lists all datasets that match given uri
 
@@ -1470,12 +1470,16 @@ TMap *TProofLite::GetDataSets(const char *uri, const char *)
    }
 
    // Get the datasets and return the map
-   UInt_t opt = (UInt_t)TProofDataSetManager::kExport;
-   return fDataSetManager->GetDataSets(uri, opt);
+   if (srvex && strlen(srvex) > 0) {
+      return fDataSetManager->GetSubDataSets(uri, srvex);
+   } else {
+      UInt_t opt = (UInt_t)TProofDataSetManager::kExport;
+      return fDataSetManager->GetDataSets(uri, opt);
+   }
 }
 
 //______________________________________________________________________________
-void TProofLite::ShowDataSets(const char *uri, const char *)
+void TProofLite::ShowDataSets(const char *uri, const char *opt)
 {
    // Shows datasets in locations that match the uri
    // By default shows the user's datasets and global ones
@@ -1485,9 +1489,7 @@ void TProofLite::ShowDataSets(const char *uri, const char *)
       return;
    }
 
-   // Scan the existing datasets and print the content
-   UInt_t opt = (UInt_t)TProofDataSetManager::kPrint;
-   fDataSetManager->GetDataSets(uri, opt);
+   fDataSetManager->ShowDataSets(uri, opt);
 }
 
 //______________________________________________________________________________
