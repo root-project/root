@@ -610,80 +610,11 @@ typedef std::vector<TGLPlane>                 TGLPlaneSet_t;
 typedef std::vector<TGLPlane>::iterator       TGLPlaneSet_i;
 typedef std::vector<TGLPlane>::const_iterator TGLPlaneSet_ci;
 
-//______________________________________________________________________________
-inline void TGLPlane::Set(const TGLPlane & other)
-{
-   fVals[0] = other.fVals[0];
-   fVals[1] = other.fVals[1];
-   fVals[2] = other.fVals[2];
-   fVals[3] = other.fVals[3];
-}
-
-//______________________________________________________________________________
-inline void TGLPlane::Set(Double_t a, Double_t b, Double_t c, Double_t d)
-{
-   fVals[0] = a;
-   fVals[1] = b;
-   fVals[2] = c;
-   fVals[3] = d;
-   Normalise();
-}
-
-//______________________________________________________________________________
-inline void TGLPlane::Set(Double_t eq[4])
-{
-   fVals[0] = eq[0];
-   fVals[1] = eq[1];
-   fVals[2] = eq[2];
-   fVals[3] = eq[3];
-   Normalise();
-}
-
-//______________________________________________________________________________
-inline void TGLPlane::Set(const TGLVector3 & norm, const TGLVertex3 & point)
-{
-   // Set plane from a normal vector and in-plane point pair
-   fVals[0] = norm[0];
-   fVals[1] = norm[1];
-   fVals[2] = norm[2];
-   fVals[3] = -(fVals[0]*point[0] + fVals[1]*point[1] + fVals[2]*point[2]);
-   Normalise();
-}
-
-//______________________________________________________________________________
-inline void TGLPlane::Set(const TGLVertex3 & p1, const TGLVertex3 & p2, const TGLVertex3 & p3)
-{
-   TGLVector3 norm = Cross(p2 - p1, p3 - p1);
-   Set(norm, p2);
-}
-
-//______________________________________________________________________________
-inline void TGLPlane::Negate()
-{
-   fVals[0] = -fVals[0];
-   fVals[1] = -fVals[1];
-   fVals[2] = -fVals[2];
-   fVals[3] = -fVals[3];
-}
-
-//______________________________________________________________________________
-inline Double_t TGLPlane::DistanceTo(const TGLVertex3 & vertex) const
-{
-   return (fVals[0]*vertex[0] + fVals[1]*vertex[1] + fVals[2]*vertex[2] + fVals[3]);
-}
-
-//______________________________________________________________________________
-inline TGLVertex3 TGLPlane::NearestOn(const TGLVertex3 & point) const
-{
-   TGLVector3 o = Norm() * (Dot(Norm(), TGLVector3(point[0], point[1], point[2])) + D() / Dot(Norm(), Norm()));
-   TGLVertex3 v = point - o;
-   return v;
-}
-
 // Some free functions for planes
 std::pair<Bool_t, TGLLine3>   Intersection(const TGLPlane & p1, const TGLPlane & p2);
 std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & p1, const TGLPlane & p2, const TGLPlane & p3);
 std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine3 & line, Bool_t extend);
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
