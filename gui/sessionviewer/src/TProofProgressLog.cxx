@@ -23,8 +23,8 @@
 #include "TGMenu.h"
 #include "TGButton.h"
 
-static UInt_t kLogElemFilled = BIT(17); // If the log element has been retrieved at least once
-static UInt_t kDefaultActive = BIT(18); // If the log element is active by default
+const UInt_t kLogElemFilled = BIT(17); // If the log element has been retrieved at least once
+const UInt_t kDefaultActive = BIT(18); // If the log element is active by default
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
