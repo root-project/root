@@ -1296,7 +1296,7 @@ void TStreamerInfo::BuildOld()
          if (element->GetType() != newType) {
             element->SetNewType(newType);
             if (gDebug > 0) {
-               Warning("BuildOld", "element: %s::%s %s has new type: %s/%d", GetName(), element->GetTypeName(), element->GetName(), dm->GetFullTypeName(), newType);
+               Info("BuildOld", "element: %s %s::%s has new type: %s/%d", element->GetTypeName(), GetName(), element->GetName(), dm ? dm->GetFullTypeName() : TDataType::GetTypeName((EDataType)newType), newType);
             }
          }
       } else if (newClass.GetClass()) {
@@ -1400,10 +1400,11 @@ void TStreamerInfo::BuildOld()
          }
       } else {
          element->SetNewType(-1);
+         offset = kMissing;
          element->SetOffset(kMissing);
       }
 
-      if (fClass->GetDeclFileLine() < 0) {
+      if (offset != kMissing && fClass->GetDeclFileLine() < 0) {
          // Note the initilization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.

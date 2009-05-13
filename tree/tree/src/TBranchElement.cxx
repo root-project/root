@@ -1767,11 +1767,16 @@ TClass* TBranchElement::GetCurrentClass()
    TString newType;
    if (!dm) {
       // Either the class is not loaded or the data member is gone
-      if (! motherCl->IsLoaded()) {
+      if (!motherCl->IsLoaded()) {
          TVirtualStreamerInfo* newInfo = motherCl->GetStreamerInfo();
          if (newInfo != brInfo) {
             TStreamerElement* newElems = (TStreamerElement*) newInfo->GetElements()->FindObject(currentStreamerElement->GetName());
-            newType = newElems->GetClassPointer()->GetName();
+            if (newElems) {
+               newType = newElems->GetClassPointer()->GetName();
+            }
+         }
+         if (newType.Length()==0) {
+            newType = currentStreamerElement->GetClassPointer()->GetName();
          }
       }
    } else {
@@ -2213,7 +2218,6 @@ void TBranchElement::InitializeOffsets()
          localOffset = branchElem->GetOffset();
          branchClass = branchElem->GetClassPointer();
          if (localOffset == TStreamerInfo::kMissing) {
-            localOffset = 0;
             fObject = 0;
          }
       }
@@ -2254,7 +2258,6 @@ void TBranchElement::InitializeOffsets()
 
          localOffset = subBranchElement->GetOffset();
          if (localOffset == TStreamerInfo::kMissing) {
-            localOffset = 0;
             subBranch->fObject = 0;
          }
 
@@ -2568,7 +2571,11 @@ void TBranchElement::InitializeOffsets()
          } else {
             // -- Set fBranchOffset for sub-branch.
             Int_t numOfSubSubBranches = subBranch->GetListOfBranches()->GetEntriesFast();
-            if (numOfSubSubBranches) {
+            if (subBranch->fObject == 0 && localOffset == TStreamerInfo::kMissing) {
+               // The branch is missing
+               fBranchOffset[subBranchIdx] = TStreamerInfo::kMissing;
+            
+            } else if (numOfSubSubBranches) {
                if (isBaseSubBranch) {
                   // We are split, so we need to add in our local offset
                   // to get our absolute address for our children.
@@ -3860,7 +3867,14 @@ void TBranchElement::SetAddress(void* addr)
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranch* abranch = (TBranch*) fBranches[i];
       // FIXME: This is a tail recursion!
-      abranch->SetAddress(fObject + fBranchOffset[i]);
+      if (fBranchOffset[i] != TStreamerInfo::kMissing) {
+         abranch->SetAddress(fObject + fBranchOffset[i]);
+      } else {
+         // When the member is missing, just leave the address alone
+         // (since setting explicitly to 0 would trigger error/warning
+         // messages).
+         // abranch->SetAddress(0);
+      }
    }
 }
 
