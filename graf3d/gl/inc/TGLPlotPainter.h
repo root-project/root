@@ -66,6 +66,8 @@ public:
 
    void   TurnOnOff();
    Bool_t IsActive()const{return fActive;}
+   void   SetActive(Bool_t a);
+   
    void   SetFactor(Double_t f){fFactor = f;}
 
    void   DrawBox(Bool_t selectionPass, Int_t selected)const;
@@ -86,6 +88,11 @@ public:
          return kTRUE;
       return kFALSE;
    }
+   
+   Rgl::Range_t GetXRange()const{return fXRange;}
+   Rgl::Range_t GetYRange()const{return fYRange;}
+   Rgl::Range_t GetZRange()const{return fZRange;}
+
 private:
    void AdjustBox();
 
@@ -238,7 +245,7 @@ public:
    };
 
    Bool_t           CutAxisSelected()const{return !fHighColor && fSelectedPart <= kZAxis && fSelectedPart >= kXAxis;}
-
+   
 protected:
    const TColor    *GetPadColor()const;
    //

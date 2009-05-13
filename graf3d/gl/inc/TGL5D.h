@@ -57,6 +57,7 @@ public:
    
    TH3F                *GetHist()const {return fHist;}
    TGL5DPainter        *GetRealPainter()const;
+   
 private:
    Long64_t        fNP;//Number of entries.
    const Double_t *fV1;//V1.
@@ -72,6 +73,8 @@ private:
    Rgl::Range_t    fV5MinMax;//V5 range.
 
    TH3F           *fHist;
+   
+   Bool_t          fV4IsString;
    
    std::auto_ptr<TGLHistPainter> fPainter;
    
@@ -92,7 +95,7 @@ public:
    
    //Iso surfaces.
    struct Surf_t {
-      Surf_t() : f4D(0.), fShowCloud(kFALSE), fHide(kFALSE), fColor(0)
+      Surf_t() : f4D(0.), fShowCloud(kFALSE), fHide(kFALSE), fColor(0), fKDE(0)
       {
       }
       
@@ -103,6 +106,7 @@ public:
       Bool_t                fHide;     //Show/Hide surface.
       Color_t               fColor;    //Color.
       std::vector<Double_t> fPreds;    //Predictions for 5-th variable.
+      TKDEFGT              *fKDE;
    };
    
    typedef std::list<Surf_t> SurfList_t;
@@ -111,27 +115,29 @@ public:
 
 private:
    //Density estimator.
-   TKDEFGT                  fKDE;  //Density estimator.
+   //TKDEFGT                fKDE;  //Density estimator.
    
-   const Surf_t            fDummy; //Empty surface.
-   Bool_t                  fInit;  //Geometry was set.
+   const Surf_t             fDummy; //Empty surface.
+   Bool_t                   fInit;  //Geometry was set.
    
-   SurfList_t              fIsos;  //List of iso-surfaces.
+   SurfList_t               fIsos;  //List of iso-surfaces.
    
    //Input data.
-   const TGL5DDataSet     *fData;
+   const TGL5DDataSet      *fData;
    
    typedef std::vector<Double_t>::size_type size_type;
    //
-   std::vector<Double_t>   fTS;  //targets.
-   std::vector<Double_t>   fDens;//densities in target points.
+   mutable std::vector<Double_t>    fTS;  //targets.
+   mutable std::vector<Double_t>    fDens;//densities in target points.
    //
-   std::vector<Double_t>   fPtsSorted;//Packed xyz coordinates for cloud.
+   std::vector<Double_t>    fPtsSorted;//Packed xyz coordinates for cloud.
 
    //Double_t fV5SliderMin, fV5SliderMax;
-   Bool_t                 fShowSlider;//For future.
+   Bool_t                   fShowSlider;//For future.
+   
 public:
    TGL5DPainter(const TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
+   ~TGL5DPainter();
    
    //Interface to manipulate TGL5DPainter object.
    const Rgl::Range_t &GetV1Range()const;
@@ -165,6 +171,10 @@ public:
    void       AddOption(const TString &option);
    void       ProcessEvent(Int_t event, Int_t px, Int_t py);
 
+   //Methods for ged.
+   void       ShowBoxCut(Bool_t show) {fBoxCut.SetActive(show);}
+   Bool_t     IsBoxCutShown()const{return fBoxCut.IsActive();}
+
 private:
    //TGLPlotPainter final-overriders.
    void       InitGL()const;
@@ -182,6 +192,8 @@ private:
    void       DrawCloud()const;
    void       DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const;
    void       DrawMesh(ConstSurfIter_t surf)const;
+   
+   void       DrawCut()const;
    
    TGL5DPainter(const TGL5DPainter &);
    TGL5DPainter &operator = (const TGL5DPainter &);

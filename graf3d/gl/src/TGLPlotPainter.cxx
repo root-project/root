@@ -1240,6 +1240,14 @@ void TGLBoxCut::TurnOnOff()
 }
 
 //______________________________________________________________________________
+void TGLBoxCut::SetActive(Bool_t a)
+{
+   if (a == fActive)
+      return;
+   TurnOnOff();
+}
+
+//______________________________________________________________________________
 void TGLBoxCut::DrawBox(Bool_t selectionPass, Int_t selected)const
 {
    //Draw cut as a semi-transparent box.
