@@ -79,7 +79,7 @@ private:
    TPadPainter(const TPadPainter &rhs);
    TPadPainter & operator = (const TPadPainter &rhs);
    
-   ClassDef(TPadPainter, 0)
+   ClassDef(TPadPainter, 0) //Abstract interface for painting in TPad
 };
 
 #endif

@@ -247,6 +247,7 @@ void TPadPainter::SetTextSizePixels(Int_t npixels)
 //______________________________________________________________________________
 Int_t TPadPainter::CreateDrawable(UInt_t w, UInt_t h)
 {
+   //please document
    return gVirtualX->OpenPixmap(Int_t(w), Int_t(h));
 }
 
@@ -254,6 +255,7 @@ Int_t TPadPainter::CreateDrawable(UInt_t w, UInt_t h)
 //______________________________________________________________________________
 void TPadPainter::ClearDrawable()
 {
+   //please document
    gVirtualX->ClearWindow();
 }
 
@@ -261,6 +263,7 @@ void TPadPainter::ClearDrawable()
 //______________________________________________________________________________
 void TPadPainter::CopyDrawable(Int_t id, Int_t px, Int_t py)
 {
+   //please document
    gVirtualX->CopyPixmap(id, px, py);
 }
 
@@ -268,6 +271,7 @@ void TPadPainter::CopyDrawable(Int_t id, Int_t px, Int_t py)
 //______________________________________________________________________________
 void TPadPainter::DestroyDrawable()
 {
+   //please document
    gVirtualX->ClosePixmap();
 }
 
@@ -275,6 +279,7 @@ void TPadPainter::DestroyDrawable()
 //______________________________________________________________________________
 void TPadPainter::SelectDrawable(Int_t device)
 {
+   //please document
    gVirtualX->SelectWindow(device);
 }
 
