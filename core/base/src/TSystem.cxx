@@ -2725,11 +2725,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                }
             }
             {
-               char *RVersion = Which(incPath,"RVersion.h");
-               if (RVersion) {
-                  adddictdep += RVersion;
+               char *rootVersion = Which(incPath,"RVersion.h");
+               if (rootVersion) {
+                  adddictdep += rootVersion;
                   adddictdep += " ";                  
-                  delete [] RVersion;
+                  delete [] rootVersion;
                } else {
                   adddictdep += rootsys+"/include/RVersion.h ";
                }
