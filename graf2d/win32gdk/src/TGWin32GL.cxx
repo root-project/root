@@ -79,7 +79,7 @@ namespace {
       void Stop()
       {
          fHDC = 0;
-      }   
+      }
    };
 
    //RAII class for HDC, returned by GetWindowDC
@@ -140,7 +140,7 @@ namespace {
       {}
       ~WGLGuard()
       {
-         if (fCtx) 
+         if (fCtx)
             wglDeleteContext(fCtx);
       }
       void Stop()
@@ -152,7 +152,7 @@ namespace {
 
 const PIXELFORMATDESCRIPTOR
 doubleBufferDesc = {
-   sizeof doubleBufferDesc,	   // size of this pfd
+   sizeof doubleBufferDesc,        // size of this pfd
    1,                              // version number
    PFD_DRAW_TO_WINDOW |            // support window
    PFD_SUPPORT_OPENGL |            // support OpenGL
@@ -172,9 +172,9 @@ doubleBufferDesc = {
 
 const PIXELFORMATDESCRIPTOR
 singleScreenDesc = {
-   sizeof singleScreenDesc,	     // size of this pfd
+   sizeof singleScreenDesc,        // size of this pfd
    1,                              // version number
-   PFD_DRAW_TO_BITMAP |	           // draw into bitmap
+   PFD_DRAW_TO_BITMAP |            // draw into bitmap
    PFD_SUPPORT_OPENGL,             // support OpenGL
    PFD_TYPE_RGBA,                  // RGBA type
    24,                             // 24-bit color depth
@@ -204,7 +204,7 @@ TGWin32GLManager::TGWin32GLImpl::~TGWin32GLImpl()
    std::deque<TGLContext>::size_type i = 0;
 
    for (; i < fGLContexts.size(); ++i) {
-      TGLContext &ctx = fGLContexts[i];      
+      TGLContext &ctx = fGLContexts[i];
 
       if (ctx.fGLContext) {
          //gl context (+DIB, if exists) must be destroyed from outside, by pad.
@@ -251,10 +251,10 @@ Int_t TGWin32GLManager::CreateGLContext(Int_t winInd)
    //returns descripto (index) of gl context or -1 if failed
    Window_t winID = gVirtualX->GetWindowID(winInd);
    HDC hDC = GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)winID));
-   
+
    if (!hDC) {
       Error("CreateGLContext", "GetWindowDC failed\n");
-      return -1; 
+      return -1;
    }
 
    WDCGuard dcGuard(hDC, winID);
@@ -306,11 +306,11 @@ Bool_t TGWin32GLManager::CreateDIB(TGLContext &ctx)const
    }
 
    CDCGuard dcGuard(dibDC);
-	
+
    BITMAPINFOHEADER bmpHeader = {sizeof bmpHeader, ctx.fW, ctx.fH, 1, 32, BI_RGB};
    void *bmpCnt = 0;
    HBITMAP hDIB = CreateDIBSection(dibDC, (BITMAPINFO*)&bmpHeader, DIB_RGB_COLORS, &bmpCnt, 0, 0);
-   
+
    if (!hDIB) {
       Error("CreateDIB", "CreateDIBSection failed\n");
       return kFALSE;
@@ -446,7 +446,7 @@ void TGWin32GLManager::DeleteGLContext(Int_t ctxInd)
 
    wglDeleteContext(ctx.fGLContext);
    ctx.fGLContext = 0;
-   ReleaseDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)gVirtualX->GetWindowID(ctx.fWindowIndex)), 
+   ReleaseDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)gVirtualX->GetWindowID(ctx.fWindowIndex)),
              ctx.fDC);
    //now, save its own index before putting into list of free devices
    ctx.fWindowIndex = ctxInd;
