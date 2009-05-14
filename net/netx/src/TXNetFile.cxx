@@ -1202,9 +1202,12 @@ void TXNetFile::SetEnv()
       EnvPutInt(NAME_SOCKS4PORT, socks4Port);
    }
 
+   const char *cenv = 0;
+
    // For password-based authentication
    TString autolog = gEnv->GetValue("XSec.Pwd.AutoLogin","1");
-   if (autolog.Length() > 0)
+   if (autolog.Length() > 0 &&
+      (cenv = gSystem->Getenv("XrdSecPWDAUTOLOG")) && strlen(cenv) <= 0)
       gSystem->Setenv("XrdSecPWDAUTOLOG",autolog.Data());
 
    // Old style netrc file
@@ -1217,7 +1220,8 @@ void TXNetFile::SetEnv()
       gSystem->Setenv("XrdSecPWDALOGFILE",alogfile.Data());
 
    TString verisrv = gEnv->GetValue("XSec.Pwd.VerifySrv","1");
-   if (verisrv.Length() > 0)
+   if (verisrv.Length() > 0 &&
+      (cenv = gSystem->Getenv("XrdSecPWDVERIFYSRV")) && strlen(cenv) <= 0)
       gSystem->Setenv("XrdSecPWDVERIFYSRV",verisrv.Data());
 
    TString srvpuk = gEnv->GetValue("XSec.Pwd.ServerPuk","");
@@ -1254,7 +1258,8 @@ void TXNetFile::SetEnv()
       gSystem->Setenv("XrdSecGSIPROXYVALID",valid.Data());
 
    TString deplen = gEnv->GetValue("XSec.GSI.ProxyForward","0");
-   if (deplen.Length() > 0)
+   if (deplen.Length() > 0 &&
+      (cenv = gSystem->Getenv("XrdSecGSIPROXYDEPLEN")) && strlen(cenv) <= 0)
       gSystem->Setenv("XrdSecGSIPROXYDEPLEN",deplen.Data());
 
    TString pxybits = gEnv->GetValue("XSec.GSI.ProxyKeyBits","");
@@ -1262,15 +1267,18 @@ void TXNetFile::SetEnv()
       gSystem->Setenv("XrdSecGSIPROXYKEYBITS",pxybits.Data());
 
    TString crlcheck = gEnv->GetValue("XSec.GSI.CheckCRL","1");
-   if (crlcheck.Length() > 0)
+   if (crlcheck.Length() > 0 &&
+      (cenv = gSystem->Getenv("XrdSecGSICRLCHECK")) && strlen(cenv) <= 0)
       gSystem->Setenv("XrdSecGSICRLCHECK",crlcheck.Data());
 
    TString delegpxy = gEnv->GetValue("XSec.GSI.DelegProxy","0");
-   if (delegpxy.Length() > 0)
+   if (delegpxy.Length() > 0 &&
+      (cenv = gSystem->Getenv("XrdSecGSIDELEGPROXY")) && strlen(cenv) <= 0)
       gSystem->Setenv("XrdSecGSIDELEGPROXY",delegpxy.Data());
 
    TString signpxy = gEnv->GetValue("XSec.GSI.SignProxy","1");
-   if (signpxy.Length() > 0)
+   if (signpxy.Length() > 0 &&
+      (cenv = gSystem->Getenv("XrdSecGSISIGNPROXY")) && strlen(cenv) <= 0)
       gSystem->Setenv("XrdSecGSISIGNPROXY",signpxy.Data());
 
    // Using ROOT mechanism to IGNORE SIGPIPE signal
