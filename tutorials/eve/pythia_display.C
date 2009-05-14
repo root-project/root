@@ -49,12 +49,13 @@ void pythia_display()
       Warning(weh, "Already initialized.");
       return;
    }
-
+#ifndef G__WIN32 // libPythia6 is a static library on Windoze
    if (gSystem->Load("libPythia6") < 0)
    {
       Error(weh, "Could not load 'libPythia6', make sure it is available!");
       return;
    }
+#endif
    gSystem->Load("libEGPythia6");
 
    if (gROOT->LoadMacro("MultiView.C+") != 0)
