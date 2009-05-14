@@ -13,6 +13,7 @@
 #include "TH2.h"
 #include "THLimitsFinder.h"
 
+#include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
 #include "TGLScene.h"

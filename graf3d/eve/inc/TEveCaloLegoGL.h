@@ -13,7 +13,6 @@
 #define ROOT_TEveCaloLegoGL
 
 #include "TGLObject.h"
-#include "TGLIncludes.h"
 #include "TGLAxisPainter.h"
 
 #include "TEveCaloData.h"
