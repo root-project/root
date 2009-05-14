@@ -137,16 +137,14 @@ int XrdProofdNetMgr::Config(bool rcf)
          // Nothing defined: use default
          CreateDefaultPROOFcfg();
       }
-      XPDFORM(msg, "%d worker nodes defined", fWorkers.size() - 1);
-      TRACE(ALL, msg);
 
       // Find unique nodes
       FindUniqueNodes();
    }
 
-   if (fPROOFcfg.fName.length() <= 0)
-      // Enable user config files
-      fWorkerUsrCfg = 1;
+   // Notification
+   XPDFORM(msg, "%d worker nodes defined at start-up", fWorkers.size() - 1);
+   TRACE(ALL, msg);
 
    // Done
    return 0;
