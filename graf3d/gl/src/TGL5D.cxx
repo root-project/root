@@ -8,10 +8,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include <algorithm>
-#include <iostream>
 #include <stdexcept>
 #include <typeinfo>
-#include <memory>
+//#include <memory>
 
 #include "TTreeFormula.h"
 #include "TVirtualPad.h"
@@ -318,18 +317,22 @@ TGL5DPainter::TGL5DPainter(const TGL5DDataSet *data, TGLPlotCamera *camera, TGLP
            fInit(kFALSE),
            fData(data),
            /*fV5SliderMin(0.), fV5SliderMax(0.),*/
-           fShowSlider(kFALSE)
+           fShowSlider(kFALSE),
+           fAlpha(0.1),
+           fNContours(kNContours)
 {
    //Constructor.
+   if (fData->fV4IsString)
+      fNContours = Int_t(fData->fV4MinMax.second) - Int_t(fData->fV4MinMax.first) + 1;
 }
-
+/*
 //______________________________________________________________________________
 TGL5DPainter::~TGL5DPainter()
 {
    for (SurfIter_t it = fIsos.begin(); it != fIsos.end(); ++it)
       delete it->fKDE;//delete estimators.
 }
-
+*/
 //______________________________________________________________________________
 const Rgl::Range_t &TGL5DPainter::GetV1Range()const
 {
@@ -364,33 +367,30 @@ const Rgl::Range_t &TGL5DPainter::GetV5Range()const
    //Range for the fith variable.
    return fData->fV5MinMax;
 }
-/*
+
 //______________________________________________________________________________
 void TGL5DPainter::SetV5SliderMin(Double_t min)
 {
-   if (min > fV5MinMax.second || min < fV5MinMax.first)
+   if (min > fV5PredictedRange.second || min < fV5PredictedRange.first)
       return;
-   fV5SliderMin = min;
+   fV5SliderRange.first = min;
 }
 
 //______________________________________________________________________________
 void TGL5DPainter::SetV5SliderMax(Double_t max)
 {
-   if (max > fV5MinMax.second || max < fV5MinMax.first)
+   if (max > fV5PredictedRange.second || max < fV5PredictedRange.first)
       return;
-   fV5SliderMax = max;
+   fV5SliderRange.second = max;
 }
-*/
+
 namespace {
-//This must be calculated by regression tool.
-/*
+//This must be calculated by a regression tool.
 //______________________________________________________________________________
 Double_t Emulate5th(const Float_t *v)
 {
-   return v[0] * v[0] - v[1] * v[1] * 0.3 + v[2] * 5.;
+   return v[0] * v[0] + v[1] * v[1] * 0.3 + v[2] * 5.;
 }
-*/
-
 }
 
 //______________________________________________________________________________
@@ -431,8 +431,9 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    }
 
    Info("TGL5DPainter::AddNewSurface", "Number of points selected is %d", Int_t(fPtsSorted.size() / 3));
-   std::auto_ptr<TKDEFGT> kde(new TKDEFGT);
-   kde->BuildModel(fPtsSorted, sigma, 3, 8);
+   //std::auto_ptr<TKDEFGT> kde(new TKDEFGT);
+   //kde->BuildModel(fPtsSorted, sigma, 3, 8);
+   fKDE.BuildModel(fPtsSorted, sigma, 3, 8);
 
    const UInt_t nZ = fZAxis->GetNbins();
    const UInt_t nY = fYAxis->GetNbins();
@@ -456,7 +457,8 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    Info("TGL5DPainter::AddSurface", "Targets are ready.");
    fDens.assign(fTS.size() / 3, 0);
    
-   kde->Predict(fTS, fDens, eVal);
+   //kde->Predict(fTS, fDens, eVal);
+   fKDE.Predict(fTS, fDens, eVal);
    //Now we have densities on a regular grid and can build a mesh.
    for(UInt_t i = 1, ind = 0; i <= nZ; ++i)
       for(UInt_t j = 1; j <= nY; ++j)
@@ -495,8 +497,9 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    fIsos.front().fShowCloud = kFALSE;
    fIsos.front().fHide = kFALSE;
    fIsos.front().fColor = ci;
-   fIsos.front().fKDE = kde.release();
-  /* 
+   //fIsos.front().fKDE = kde.release();
+   
+   //Predictions for the 5-th variable.
    //This part is only for 5d demo.
    std::vector<Float_t>  &m = fIsos.front().fMesh.fVerts;
    std::vector<Double_t> &p = fIsos.front().fPreds;
@@ -505,21 +508,21 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    p[0] = Emulate5th(&m[0]);
    
    if (fIsos.size()) {
-      fV5MinMax.first = TMath::Min(fV5MinMax.first, p[0]);
-      fV5MinMax.second = TMath::Max(fV5MinMax.second, p[0]);
+      fV5PredictedRange.first = TMath::Min(fV5PredictedRange.first, p[0]);
+      fV5PredictedRange.second = TMath::Max(fV5PredictedRange.second, p[0]);
    } else
-      fV5MinMax.second = fV5MinMax.first = p[0];
+      fV5PredictedRange.second = fV5PredictedRange.first = p[0];
       
    for (size_type i = 1, e = m.size() / 3; i < e; ++i) {
       const Double_t val = Emulate5th(&m[i * 3]);
-      fV5MinMax.first = TMath::Min(fV5MinMax.first, val);
-      fV5MinMax.second = TMath::Max(fV5MinMax.second, val);
+      fV5PredictedRange.first  = TMath::Min(fV5PredictedRange.first,  val);
+      fV5PredictedRange.second = TMath::Max(fV5PredictedRange.second, val);
       p[i] = val;
    }
+
+   fV5SliderRange.first  = fV5PredictedRange.first;
+   fV5SliderRange.second = 0.05 * (fV5PredictedRange.second - fV5PredictedRange.first);
    
-   fV5SliderMin = fV5MinMax.first;
-   fV5SliderMax = 0.01 * (fV5MinMax.second - fV5MinMax.first);
-   */
    return fIsos.begin();
 }
 
@@ -586,7 +589,7 @@ void TGL5DPainter::RemoveSurface(SurfIter_t surf)
       return;
    }
 
-   delete surf->fKDE;
+//   delete surf->fKDE;
    fIsos.erase(surf);
    gPad->Update();
 }
@@ -611,25 +614,22 @@ Bool_t TGL5DPainter::InitGeometry()
    if (!fCoord->SetRanges(fHist, kFALSE, kTRUE))
       return kFALSE;
 
+   fIsos.clear();
+
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
    if (fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
    
-   //Rene's code to automatically find
-   //4 "pre-defined" iso-levels.
-   Int_t nContours = 4;
-   if (fData->fV4IsString)
-      nContours = Int_t(fData->fV4MinMax.second) - Int_t(fData->fV4MinMax.first) + 1;
-      
+   //Rene's code to automatically find iso-levels.
    const Double_t xMean = TMath::Mean(fData->fNP, fData->fV4);                            //mean value of the NP points.
    const Double_t xRms  = TMath::RMS(fData->fNP, fData->fV4);                             //RMS of the N points
    const Double_t xMin  = fData->fV4IsString ? fData->fV4MinMax.first : xMean - 3 * xRms; //take a range +- 3*xrms
    const Double_t dX    = fData->fV4IsString ? 
-                            (fData->fV4MinMax.second - fData->fV4MinMax.first) / (nContours - 1) 
-                          : 6 * xRms / nContours;
-   const Double_t range = fData->fV4IsString ? 1e-3 : 0.1 * dX; //alpha[0.1, 0.5], 1e-3 -s good for strings.
+                            (fData->fV4MinMax.second - fData->fV4MinMax.first) / (fNContours - 1) 
+                          : 6 * xRms / fNContours;
+   const Double_t range = fData->fV4IsString ? 1e-3 : fAlpha * dX; //alpha is in [0.1, 0.5], 1e-3 -s good for strings.
    Info("InitGeometry", "xmin = %g, xmean = %g, xrms = %g, dx = %g", xMin, xMean, xRms, dX);
    
-   for (Int_t j = 0; j < nContours; ++j) {
+   for (Int_t j = 0; j < fNContours; ++j) {
       const Double_t isoLevel = xMin + j * dX;
       Info("TGL5DPainter::InitGeometry", "Trying to add iso-level %g, range is %g ...", isoLevel, range);
       const Color_t color = j * 6 + 1;
@@ -730,6 +730,40 @@ void TGL5DPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 }
 
 //______________________________________________________________________________
+void TGL5DPainter::SetAlpha(Double_t newVal)
+{
+   if (fAlpha != newVal && !fData->fV4IsString) {
+      fAlpha = newVal;
+      fInit = kFALSE;
+      InitGeometry();
+   }
+   
+   if (fData->fV4IsString)
+      Warning("SetAlpha", "Alpha is not required for string data (your 4-th dimension is string).");
+}
+
+//______________________________________________________________________________
+void TGL5DPainter::SetNContours(Int_t n)
+{
+   if (n == fNContours)
+      return;
+      
+   if (fData->fV4IsString) {
+      Warning("SetNContours", "N of contours is not required for string data (your 4-th dimension is string).");
+      return;
+   }
+   /*
+   if (n < kNContours) {
+      Warning("SetNContours", "Too small number of contours, less than %d", kNContours);
+      return;
+   }
+   */
+   fNContours = n;
+   fInit = kFALSE;
+   InitGeometry();
+}
+
+//______________________________________________________________________________
 void TGL5DPainter::InitGL() const
 {
    //Initialize OpenGL state variables.
@@ -769,11 +803,8 @@ void TGL5DPainter::DrawPlot() const
       }
    }
    
-   if (fBoxCut.IsActive()) {
-      if (!fSelectionPass)
-         DrawCut();
+   if (fBoxCut.IsActive())
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
-   }
 }
 
 //______________________________________________________________________________
@@ -841,7 +872,7 @@ void TGL5DPainter::DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const
 }
 
 namespace {
-Bool_t InRange(const std::vector<Double_t> &preds, const UInt_t *tri, Double_t min, Double_t max);
+Bool_t InRange(const std::vector<Double_t> &preds, const UInt_t *tri, const Rgl::Range_t &range);
 }
 
 //______________________________________________________________________________
@@ -849,10 +880,10 @@ void TGL5DPainter::DrawMesh(ConstSurfIter_t surf)const
 {
    //Draw one iso-surface.
    const Mesh_t &m = surf->fMesh;
-   /*
+   
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(1.f, 1.f);
-   */
+   
    if (!fBoxCut.IsActive()) {
       if (!fSelectionPass)
          ::DrawMesh(GL_FLOAT, m.fVerts, m.fNorms, m.fTris);
@@ -868,19 +899,19 @@ void TGL5DPainter::DrawMesh(ConstSurfIter_t surf)const
          ::DrawMesh(&glVertex3fv, m.fVerts, m.fTris, fBoxCut);
       }
    }
-   /*
+   
    glDisable(GL_POLYGON_OFFSET_FILL);
    
    if (!fSelectionPass) {
       const TGLEnableGuard  blend(GL_BLEND);
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-      SetSurfaceColor(kCyan);
+      SetSurfaceColor(kOrange);
       
       glBegin(GL_TRIANGLES);
       
       for (size_type i = 0, e = surf->fMesh.fTris.size() / 3; i < e; ++i) {
          const UInt_t *tri = &surf->fMesh.fTris[i * 3];
-         if (InRange(surf->fPreds, tri, fV5SliderMin, fV5SliderMax)) {
+         if (InRange(surf->fPreds, tri, fV5SliderRange)) {
             glNormal3fv(&surf->fMesh.fNorms[tri[0] * 3]);
             glVertex3fv(&surf->fMesh.fVerts[tri[0] * 3]);
             glNormal3fv(&surf->fMesh.fNorms[tri[1] * 3]);
@@ -891,50 +922,7 @@ void TGL5DPainter::DrawMesh(ConstSurfIter_t surf)const
       }
       
       glEnd();
-   }*/
-}
-
-//______________________________________________________________________________
-void TGL5DPainter::DrawCut()const
-{
-   //Draw sliced shell as a solid body.
-/*   if (!fIsos.size())
-      return;
-
-   const Double_t xAdd = 0.1 * (fData->fV1MinMax.second - fData->fV1MinMax.first);
-   const Double_t yAdd = 0.1 * (fData->fV2MinMax.second - fData->fV2MinMax.first);
-   const Double_t zAdd = 0.1 * (fData->fV3MinMax.second - fData->fV3MinMax.first);
-   
-   const Double_t xMin = fData->fV1MinMax.first - xAdd, xMax = fData->fV1MinMax.second + xAdd;
-   const Double_t yMin = fData->fV2MinMax.first - yAdd, yMax = fData->fV2MinMax.second + yAdd;
-   const Double_t zMin = fData->fV3MinMax.first - zAdd, zMax = fData->fV3MinMax.second + zAdd;
-
-   const Double_t xRange = xMax - xMin;
-   const Double_t yRange = yMax - yMin;
-   const Double_t zRange = zMax - zMin;
-
-   const Double_t xPlane = (fBoxCut.GetXRange().second - xMin) / xRange;
-   
-   const UInt_t nZ = fZAxis->GetNbins();
-   const UInt_t nY = fYAxis->GetNbins();
-
-   Info("TGL5DPainter::AddSurface", "Preparing targets ...");
-
-   fTS.clear();
-   fTS.reserve(nY * nZ * 3);
-   
-   for(UInt_t j = 1; j <= nZ; ++j) {
-      for(UInt_t k = 1; k <= nY; ++k) {
-         fTS.push_back(xPlane);
-         fTS.push_back((fYAxis->GetBinCenter(j) - yMin) / yRange);
-         fTS.push_back((fZAxis->GetBinCenter(i) - zMin) / zRange);
-      }
    }
-   
-   SurfIter_t surf = fIsos.begin();
-   
-   fDens.assign(fTS.size() / 3, 0.);
-   surf->fKDE->Predict(fTS, fDens, 10.);*/
 }
 
 namespace {
@@ -952,13 +940,14 @@ void FindRange(Long64_t size, const Double_t *src, Rgl::Range_t &range)
 }
 
 //______________________________________________________________________________
-Bool_t InRange(const std::vector<Double_t> &preds, const UInt_t *tri, Double_t min, Double_t max)
+Bool_t InRange(const std::vector<Double_t> &preds, const UInt_t *tri, const Rgl::Range_t &range)
 {
    //Check, if predicted values for point are in range (min, max).
    for (UInt_t i = 0; i < 3; ++i)
-      if (preds[tri[i]] > max || preds[tri[i]] < min)
+      if (preds[tri[i]] > range.second || preds[tri[i]] < range.first)
          return kFALSE;
    
    return kTRUE;
 }
+
 }

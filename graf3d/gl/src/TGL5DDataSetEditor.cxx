@@ -8,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #include "TGedEditor.h"
 #include "TGDoubleSlider.h"
 #include "TGNumberEntry.h"
@@ -57,6 +56,11 @@ void TGL5DDataSetEditor::ConnectSignals2Slots()
    fLogScale->Connect("Toggled(Bool_t)", "TGL5DDataSetEditor", this, "DoLogScale()");
    fApplyPlanes->Connect("Clicked()", "TGL5DDataSetEditor", this, "DoPlanes()");
    fApplyAlpha->Connect("Clicked()", "TGL5DDataSetEditor", this, "DoAlpha()");
+   
+   fAlpha->Connect("ValueChanged(Long_t)", "TGL5DDataSetEditor", this, "DoAlphaChanged()");
+   fAlpha->Connect("ValueSet(Long_t)", "TGL5DDataSetEditor", this, "DoAlphaChanged()");
+   fNumberOfPlanes->Connect("ValueChanged(Long_t)", "TGL5DDataSetEditor", this, "DoNContoursChanged()");
+   fNumberOfPlanes->Connect("ValueSet(Long_t)", "TGL5DDataSetEditor", this, "DoNContoursChanged()");
 
    fInit = kFALSE;
 }
@@ -75,23 +79,26 @@ void TGL5DDataSetEditor::CreateStyleTab()
    MakeTitle("isosurfaces");
    f = new TGHorizontalFrame(this, 200, 50);
    f->AddFrame(new TGLabel(f, "Number:"), new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5, 2, 2, 2));
-   fNumberOfPlanes = new TGNumberEntry(f, 0, 3, -1, TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative);
+   fNumberOfPlanes = new TGNumberEntry(f, 0, 3, -1, TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
+                                       TGNumberFormat::kNELLimitMinMax, 1, 200);
    fNumberOfPlanes->GetNumberEntry()->SetToolTipText("Set number of isosurfaces");
    f->AddFrame(fNumberOfPlanes, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
    fApplyPlanes = new TGTextButton(f, "   Apply   ");
    f->AddFrame(fApplyPlanes, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 2, 2, 2));
    AddFrame(f, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 0, 0, 0, 0));
+   fApplyPlanes->SetState(kButtonDisabled);
 
    MakeTitle("Alpha");
    f = new TGHorizontalFrame(this, 200, 50);
    f->AddFrame(new TGLabel(f, "Value:"), new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5, 2, 2, 2));
-   fAlpha = new TGNumberEntry(f, 0, 3, -1, TGNumberFormat::kNESRealThree, TGNumberFormat::kNEANonNegative, 
+   fAlpha = new TGNumberEntry(f, 0, 1, -1, TGNumberFormat::kNESRealThree, TGNumberFormat::kNEANonNegative, 
                               TGNumberFormat::kNELLimitMinMax, 0.1, 0.5);
    fAlpha->GetNumberEntry()->SetToolTipText("Value of alpha parameter");
    f->AddFrame(fAlpha, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
    fApplyAlpha = new TGTextButton(f, "   Apply   ");
    f->AddFrame(fApplyAlpha, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 2, 2, 2));
    AddFrame(f, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 0, 0, 0, 0));
+   fApplyAlpha->SetState(kButtonDisabled);
 
    fLogScale  = new TGCheckButton(this, "Log Scale");
    AddFrame(fLogScale, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 2, 2, 2));
@@ -107,6 +114,9 @@ void TGL5DDataSetEditor::DoAlpha()
    // Slot connected to the Log Scale check button.
 
    if (fPainter) {
+      fApplyAlpha->SetState(kButtonDisabled);
+      fPainter->SetAlpha(fAlpha->GetNumber());
+      fAlpha->SetNumber(fPainter->GetAlpha());
    }
    if (gPad) gPad->Update();
 }
@@ -127,6 +137,9 @@ void TGL5DDataSetEditor::DoPlanes()
    // Slot connected to the Number of Planes entry.
 
    if (fPainter) {
+      fApplyPlanes->SetState(kButtonDisabled);
+      fPainter->SetNContours((Int_t)fNumberOfPlanes->GetIntNumber());
+      fNumberOfPlanes->SetIntNumber(fPainter->GetNContours());
    }
    if (gPad) gPad->Update();
 }
@@ -146,8 +159,22 @@ void TGL5DDataSetEditor::DoSliderRangeMoved()
    // Slot connected to the Range Slider.
 
    if (fPainter) {
+      fPainter->SetV5SliderMin(fSlideRange->GetMinPosition());
+      fPainter->SetV5SliderMax(fSlideRange->GetMaxPosition());
    }
    if (gPad) gPad->Update();
+}
+
+//______________________________________________________________________________
+void TGL5DDataSetEditor::DoAlphaChanged()
+{
+   fApplyAlpha->SetState(kButtonUp);
+}
+
+//______________________________________________________________________________
+void TGL5DDataSetEditor::DoNContoursChanged()
+{
+   fApplyPlanes->SetState(kButtonUp);
 }
 
 //______________________________________________________________________________
@@ -164,11 +191,11 @@ void TGL5DDataSetEditor::SetModel(TObject* obj)
 
    // Replace with real variable values...
 
-   fNumberOfPlanes->SetNumber(5);//fPainter->GetNbIso());
-   fAlpha->SetNumber(0.5);//fPainter->GetAlpha());
+   fNumberOfPlanes->SetNumber(fPainter->GetNContours());
+   fAlpha->SetNumber(fPainter->GetAlpha());
 
-   fSlideRange->SetRange(0, 100);
-   fSlideRange->SetPosition(10, 90);
+   fSlideRange->SetRange(fPainter->GetV5PredictedMin(), fPainter->GetV5PredictedMax());
+   fSlideRange->SetPosition(fPainter->GetV5SliderMin(), fPainter->GetV5SliderMax());
 
    //fLogScale->SetState(fPainter->IsLogScale() ? kButtonDown : kButtonUp);
 
@@ -176,4 +203,3 @@ void TGL5DDataSetEditor::SetModel(TObject* obj)
       ConnectSignals2Slots();
 
 }
-

@@ -44,7 +44,7 @@ class TGL5DDataSet : public TNamed {
    friend class TGL5DPainter;
 private:
    enum {
-      kDefaultNB = 50
+      kDefaultNB = 100
    };
 public:
    TGL5DDataSet(TTree *inputData);
@@ -91,11 +91,15 @@ private:
 
 class TGL5DPainter : public TGLPlotPainter {
 public:
+   enum EDefaults {
+      kNContours = 4,
+      kNLowPts   = 50
+   };
    typedef Rgl::Mc::TIsoMesh<Float_t>        Mesh_t;
    
    //Iso surfaces.
    struct Surf_t {
-      Surf_t() : f4D(0.), fShowCloud(kFALSE), fHide(kFALSE), fColor(0), fKDE(0)
+      Surf_t() : f4D(0.), fShowCloud(kFALSE), fHide(kFALSE), fColor(0)//, fKDE(0)
       {
       }
       
@@ -106,7 +110,7 @@ public:
       Bool_t                fHide;     //Show/Hide surface.
       Color_t               fColor;    //Color.
       std::vector<Double_t> fPreds;    //Predictions for 5-th variable.
-      TKDEFGT              *fKDE;
+      //TKDEFGT              *fKDE;
    };
    
    typedef std::list<Surf_t> SurfList_t;
@@ -115,7 +119,7 @@ public:
 
 private:
    //Density estimator.
-   //TKDEFGT                fKDE;  //Density estimator.
+   TKDEFGT                  fKDE;  //Density estimator.
    
    const Surf_t             fDummy; //Empty surface.
    Bool_t                   fInit;  //Geometry was set.
@@ -132,12 +136,17 @@ private:
    //
    std::vector<Double_t>    fPtsSorted;//Packed xyz coordinates for cloud.
 
-   //Double_t fV5SliderMin, fV5SliderMax;
+   Rgl::Range_t             fV5PredictedRange;
+   Rgl::Range_t             fV5SliderRange;
+
    Bool_t                   fShowSlider;//For future.
+   
+   Double_t                 fAlpha;//
+   Int_t                    fNContours;
    
 public:
    TGL5DPainter(const TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
-   ~TGL5DPainter();
+   //~TGL5DPainter();
    
    //Interface to manipulate TGL5DPainter object.
    const Rgl::Range_t &GetV1Range()const;
@@ -146,17 +155,20 @@ public:
    const Rgl::Range_t &GetV4Range()const;
    const Rgl::Range_t &GetV5Range()const;
    
-   //void       SetV5SliderMin(Double_t min);
-   //Double_t   GetV5SliderMin() const {return fV5SliderMin;}
+   Double_t   GetV5PredictedMin()const{return fV5PredictedRange.first;}
+   Double_t   GetV5PredictedMax()const{return fV5PredictedRange.second;}
    
-   //void       SetV5SliderMax(Double_t max);
-   //Double_t   GetV5SliderMax() const {return fV5SliderMax;}
+   void       SetV5SliderMin(Double_t min);
+   Double_t   GetV5SliderMin() const {return fV5SliderRange.first;}
+   
+   void       SetV5SliderMax(Double_t max);
+   Double_t   GetV5SliderMax() const {return fV5SliderRange.second;}
    
    Bool_t     ShowSlider() const {return fShowSlider;}
    void       ShowSlider(Bool_t show) {fShowSlider = show;}
    //Add new iso for selected value of v4. +- range
    SurfIter_t AddSurface(Double_t v4, Color_t ci, Double_t isoVal = 1., Double_t sigma = 1., 
-                         Double_t e = 10., Double_t range = 1e-3, Int_t lowNumOfPoints = 50);
+                         Double_t e = 10., Double_t range = 1e-3, Int_t lowNumOfPoints = kNLowPts);
    void       SetSurfaceMode(SurfIter_t surf, Bool_t cloudOn);
    void       SetSurfaceColor(SurfIter_t surf, Color_t colorIndex);
    void       HideSurface(SurfIter_t surf);
@@ -174,7 +186,13 @@ public:
    //Methods for ged.
    void       ShowBoxCut(Bool_t show) {fBoxCut.SetActive(show);}
    Bool_t     IsBoxCutShown()const{return fBoxCut.IsActive();}
-
+   
+   void       SetAlpha(Double_t newAlpha);
+   Double_t   GetAlpha()const{return fAlpha;}
+   
+   void       SetNContours(Int_t num);
+   Int_t      GetNContours()const{return fNContours;}
+   
 private:
    //TGLPlotPainter final-overriders.
    void       InitGL()const;
@@ -192,8 +210,6 @@ private:
    void       DrawCloud()const;
    void       DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const;
    void       DrawMesh(ConstSurfIter_t surf)const;
-   
-   void       DrawCut()const;
    
    TGL5DPainter(const TGL5DPainter &);
    TGL5DPainter &operator = (const TGL5DPainter &);

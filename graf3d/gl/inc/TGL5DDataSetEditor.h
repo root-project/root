@@ -59,6 +59,8 @@ public:
    void           DoPlanes();
    void           DoShowBoxCut();
    void           DoSliderRangeMoved();
+   void           DoAlphaChanged();
+   void           DoNContoursChanged();
 
    ClassDef(TGL5DDataSetEditor, 0); //GUI for editing OpenGL 5D Viewer attributes
 };
