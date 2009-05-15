@@ -175,6 +175,7 @@
 #pragma link C++ class TUrl;
 #pragma link C++ class TInetAddress-;
 #pragma link C++ class TVirtualTableInterface+;
+#pragma link C++ class TBase64;
 
 // Insure the creation of the TClass object for pairs that might be
 // inside the cintdlls.
