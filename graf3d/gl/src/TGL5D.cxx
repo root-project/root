@@ -421,11 +421,39 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    const Double_t yRange = yMax - yMin;
    const Double_t zRange = zMax - zMin;
       
+   //Build arrays for the 5d density estimator
+   const Int_t kNx =20;
+   const Int_t kNy =kNx;
+   const Int_t kNz =kNx;
+   Double_t *v5 = new Double_t[kNx*kNy*kNz];
+   Int_t *nv5 = new Int_t[kNx*kNy*kNz];
+   memset(nv5,0,kNx*kNy*kNz*sizeof(Int_t));
+   memset(v5,0,kNx*kNy*kNz*sizeof(Double_t));
+   Int_t ix,iy,iz,ind1;
    for (Int_t i = 0; i < fData->fNP; ++i) {
       if (TMath::Abs(fData->fV4[i] - v4) < range) {
-         fPtsSorted.push_back((fData->fV1[i] - xMin) / xRange);//x
-         fPtsSorted.push_back((fData->fV2[i] - yMin) / yRange);//y
-         fPtsSorted.push_back((fData->fV3[i] - zMin) / zRange);//z
+         Double_t xx = (fData->fV1[i] - xMin) / xRange;
+         Double_t yy = (fData->fV2[i] - yMin) / yRange;
+         Double_t zz = (fData->fV3[i] - zMin) / zRange;
+         fPtsSorted.push_back(xx);//x
+         fPtsSorted.push_back(yy);//y
+         fPtsSorted.push_back(zz);//z
+         ix = Int_t(xx*kNx);
+         iy = Int_t(yy*kNy);
+         iz = Int_t(zz*kNz);
+         ind1 = ix +kNx*(iy+kNy*iz);
+         v5[ind1] += fData->fV5[i];
+         nv5[ind1]++;
+      }
+   }
+   //compute average density for 5th dimension
+   for (ix = 0; ix < kNx; ++ix) {
+      for(iy = 0; iy < kNy; ++iy) {
+         for(iz = 0; iz < kNz; ++iz) {
+            ind1 = ix +kNx*(iy+kNy*iz);
+            if (nv5[ind1] > 1) v5[ind1] /= nv5[ind1];
+            //printf("v5[%2d][%2d][%2d] = %g, nv5=%d\n",ix,iy,iz,v5[ind1],nv5[ind1]);
+         }
       }
    }
    
@@ -520,12 +548,18 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
       
    for (size_type i = 1, e = m.size() / 3; i < e; ++i) {
       //const Double_t val = Emulate5th(&m[i * 3]);
-      const Double_t val = m[3*i +4];
+      ix = Int_t(m[3*i]*kNx);
+      iy = Int_t(m[3*i+1]*kNy);
+      iz = Int_t(m[3*i+2]*kNz);
+      ind1 = ix +kNx*(iy+kNy*iz);
+      const Double_t val = v5[ind1];
       fV5PredictedRange.first  = TMath::Min(fV5PredictedRange.first,  val);
       fV5PredictedRange.second = TMath::Max(fV5PredictedRange.second, val);
       p[i] = val;
    }
-
+   delete [] v5;
+   delete [] nv5;
+   
    fV5SliderRange.first  = fV5PredictedRange.first;
    fV5SliderRange.second = 0.05 * (fV5PredictedRange.second - fV5PredictedRange.first);
    
