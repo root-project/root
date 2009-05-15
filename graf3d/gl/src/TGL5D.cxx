@@ -37,12 +37,12 @@ namespace {
 
 const double gEps = 1e-6;
 
-/*
-Auxilary functions to draw iso-meshes.
-Now simply duplicates TGLTF3Painter.cxx contents.
-Must be moved to TGLUtils or TGLPlotPainter to avoid
-code duplication.
-*/
+//____________________________________________________________________________
+// Auxilary functions to draw iso-meshes.
+// Now simply duplicates TGLTF3Painter.cxx contents.
+// Must be moved to TGLUtils or TGLPlotPainter to avoid
+// code duplication.
+//
 
 //______________________________________________________________________________
 template<class V>
@@ -384,14 +384,18 @@ void TGL5DPainter::SetV5SliderMax(Double_t max)
    fV5SliderRange.second = max;
 }
 
+#ifdef NEVER
 namespace {
 //This must be calculated by a regression tool.
 //______________________________________________________________________________
 Double_t Emulate5th(const Float_t *v)
 {
-   return v[0] * v[0] + v[1] * v[1] * 0.3 + v[2] * 5.;
+   //return v[0] * v[0] + v[1] * v[1] * 0.3 + v[2] * 5.;
+   //simply return the 5th variable
+   return v[4];
 }
 }
+#endif
 
 //______________________________________________________________________________
 TGL5DPainter::SurfIter_t 
@@ -505,7 +509,8 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    std::vector<Double_t> &p = fIsos.front().fPreds;
    
    p.assign(m.size() / 3, 0.);
-   p[0] = Emulate5th(&m[0]);
+   //p[0] = Emulate5th(&m[0]);
+   p[0] = m[4];
    
    if (fIsos.size()) {
       fV5PredictedRange.first = TMath::Min(fV5PredictedRange.first, p[0]);
@@ -514,7 +519,8 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
       fV5PredictedRange.second = fV5PredictedRange.first = p[0];
       
    for (size_type i = 1, e = m.size() / 3; i < e; ++i) {
-      const Double_t val = Emulate5th(&m[i * 3]);
+      //const Double_t val = Emulate5th(&m[i * 3]);
+      const Double_t val = m[3*i +4];
       fV5PredictedRange.first  = TMath::Min(fV5PredictedRange.first,  val);
       fV5PredictedRange.second = TMath::Max(fV5PredictedRange.second, val);
       p[i] = val;
