@@ -318,7 +318,7 @@ TGL5DPainter::TGL5DPainter(const TGL5DDataSet *data, TGLPlotCamera *camera, TGLP
            fData(data),
            /*fV5SliderMin(0.), fV5SliderMax(0.),*/
            fShowSlider(kFALSE),
-           fAlpha(0.1),
+           fAlpha(0.4),
            fNContours(kNContours)
 {
    //Constructor.
@@ -425,10 +425,11 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    const Int_t kNx =20;
    const Int_t kNy =kNx;
    const Int_t kNz =kNx;
-   Double_t *v5 = new Double_t[kNx*kNy*kNz];
-   Int_t *nv5 = new Int_t[kNx*kNy*kNz];
-   memset(nv5,0,kNx*kNy*kNz*sizeof(Int_t));
-   memset(v5,0,kNx*kNy*kNz*sizeof(Double_t));
+   Int_t ntot = (kNx+1)*(kNy+1)*(kNz+1);
+   Double_t *v5 = new Double_t[ntot];
+   Int_t *nv5 = new Int_t[ntot];
+   memset(nv5,0,ntot*sizeof(Int_t));
+   memset(v5,0,ntot*sizeof(Double_t));
    Int_t ix,iy,iz,ind1;
    for (Int_t i = 0; i < fData->fNP; ++i) {
       if (TMath::Abs(fData->fV4[i] - v4) < range) {
@@ -438,12 +439,13 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
          fPtsSorted.push_back(xx);//x
          fPtsSorted.push_back(yy);//y
          fPtsSorted.push_back(zz);//z
-         ix = Int_t(xx*kNx);
-         iy = Int_t(yy*kNy);
-         iz = Int_t(zz*kNz);
+         ix = Int_t(xx*kNx);  //if (ix >= kNx) ix = kNx-1;
+         iy = Int_t(yy*kNy);  //if (iy >= kNy) iy = kNy-1;
+         iz = Int_t(zz*kNz);  //if (iz >= kNz) iz = kNz-1;
          ind1 = ix +kNx*(iy+kNy*iz);
          v5[ind1] += fData->fV5[i];
          nv5[ind1]++;
+            //printf("v5a[%2d][%2d][%2d] = %g, nv5a=%d\n",ix,iy,iz,v5[ind1],nv5[ind1]);
       }
    }
    //compute average density for 5th dimension
@@ -536,9 +538,10 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    std::vector<Float_t>  &m = fIsos.front().fMesh.fVerts;
    std::vector<Double_t> &p = fIsos.front().fPreds;
    
-   p.assign(m.size() / 3, 0.);
+   size_type ncsize = m.size()/3;
+   p.assign(ncsize, 0.);
    //p[0] = Emulate5th(&m[0]);
-   p[0] = m[4];
+   p[0] = m[4]; //this must be changed like below
    
    if (fIsos.size()) {
       fV5PredictedRange.first = TMath::Min(fV5PredictedRange.first, p[0]);
@@ -546,13 +549,16 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    } else
       fV5PredictedRange.second = fV5PredictedRange.first = p[0];
       
-   for (size_type i = 1, e = m.size() / 3; i < e; ++i) {
+   for (size_type i = 1; i < ncsize; ++i) {
       //const Double_t val = Emulate5th(&m[i * 3]);
-      ix = Int_t(m[3*i]*kNx);
-      iy = Int_t(m[3*i+1]*kNy);
-      iz = Int_t(m[3*i+2]*kNz);
+      //the following is probably wrong. Hard to find out what the vector m is !!
+      ix = Int_t(kNx*(m[3*i]  -xMin)/xRange);  //if (ix >= kNx) ix = kNx-1;
+      iy = Int_t(kNy*(m[3*i+1]-yMin)/yRange);  //if (iy >= kNy) iy = kNy-1;
+      iz = Int_t(kNz*(m[3*i+2]-zMin)/zRange);  //if (iz >= kNz) iz = kNz-1;
       ind1 = ix +kNx*(iy+kNy*iz);
-      const Double_t val = v5[ind1];
+      Double_t val = 0;
+      if (ind1 >=0 && ind1 < ntot) val = v5[ind1];
+      else printf("wrong value ix=%d, iy=%d, iz=%d, i=%d. m[0]=%g, m[1]=%g, m[2]=%g\n",ix,iy,iz,i,m[3*i],m[3*i+1],m[3*i+2]);
       fV5PredictedRange.first  = TMath::Min(fV5PredictedRange.first,  val);
       fV5PredictedRange.second = TMath::Max(fV5PredictedRange.second, val);
       p[i] = val;
