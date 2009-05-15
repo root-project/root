@@ -48,14 +48,15 @@ private:
    static TUrl       fgProxy;       // globally set proxy URL
 
    TWebFile() : fSocket(0) { }
-   void   Init(Bool_t);
-   void   CheckProxy();
-   Int_t  GetHead();
-   Int_t  GetLine(TSocket *s, char *line, Int_t size);
-   Int_t  GetFromWeb(char *buf, Int_t len, const TString &msg);
-   Int_t  GetFromWeb10(char *buf, Int_t len, const TString &msg);
-   Bool_t ReadBuffer10(char *buf, Int_t len);
-   Bool_t ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
+   void    Init(Bool_t);
+   void    CheckProxy();
+   TString BasicAuthentication();
+   Int_t   GetHead();
+   Int_t   GetLine(TSocket *s, char *line, Int_t size);
+   Int_t   GetFromWeb(char *buf, Int_t len, const TString &msg);
+   Int_t   GetFromWeb10(char *buf, Int_t len, const TString &msg);
+   Bool_t  ReadBuffer10(char *buf, Int_t len);
+   Bool_t  ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
 
 public:
    TWebFile(const char *url, Option_t *opt="");

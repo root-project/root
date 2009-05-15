@@ -24,6 +24,8 @@
 #include "Bytes.h"
 #include "TError.h"
 #include "TSystem.h"
+#include "TBase64.h"
+
 #include <errno.h>
 #include <stdlib.h>
 
@@ -110,6 +112,9 @@ TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
    // variable. The proxy can be specified as (in sh, or equivalent csh):
    //   export http_proxy=http://pcsalo.cern.ch:3128
    // The proxy can also be specified via the static method TWebFile::SetProxy().
+   // Basic authentication (AuthType Basic) is supported. The user name and
+   // passwd can be specified in the url like this:
+   //   http://username:mypasswd@pcsalo.cern.ch/files/aap.root
    // If the file specified in the URL does not exist or is not accessible
    // the kZombie bit will be set in the TWebFile object. Use IsZombie()
    // to see if the file is accessible. The preferred interface to this
@@ -134,6 +139,9 @@ TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB")
    // variable. The proxy can be specified as (in sh, or equivalent csh):
    //   export http_proxy=http://pcsalo.cern.ch:3128
    // The proxy can also be specified via the static method TWebFile::SetProxy().
+   // Basic authentication (AuthType Basic) is supported. The user name and
+   // passwd can be specified in the url like this:
+   //   http://username:mypasswd@pcsalo.cern.ch/files/aap.root
    // If the file specified in the URL does not exist or is not accessible
    // the kZombie bit will be set in the TWebFile object. Use IsZombie()
    // to see if the file is accessible.
@@ -316,6 +324,7 @@ Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
       msg += fUrl.GetHost();
       msg += "\r\n";
    }
+   msg += BasicAuthentication();
    msg += gUserAgent;
    msg += "\r\n";
    msg += "Range: bytes=";
@@ -415,6 +424,7 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
       msgh += fUrl.GetHost();
       msgh += "\r\n";
    }
+   msgh += BasicAuthentication();
    msgh += gUserAgent;
    msgh += "\r\n";
    msgh += "Range: bytes=";
@@ -677,6 +687,7 @@ Int_t TWebFile::GetHead()
    msg += fUrl.GetFile();
    msg += " HTTP/1.0";
    msg += "\r\n";
+   msg += BasicAuthentication();
    msg += gUserAgent;
    msg += "\r\n\r\n";
 
@@ -777,6 +788,25 @@ Int_t TWebFile::GetLine(TSocket *s, char *line, Int_t size)
       return -1;
    }
    return n;
+}
+
+//______________________________________________________________________________
+TString TWebFile::BasicAuthentication()
+{
+   // Return basic authentication scheme, to be added to the request.
+
+   TString msg;
+   if (strlen(fUrl.GetUser())) {
+      TString auth = fUrl.GetUser();
+      if (strlen(fUrl.GetPasswd())) {
+         auth += ":";
+         auth += fUrl.GetPasswd();
+      }
+      msg += "Authorization: Basic ";
+      msg += TBase64::Encode(auth);
+      msg += "\r\n";
+   }
+   return msg;
 }
 
 //______________________________________________________________________________
