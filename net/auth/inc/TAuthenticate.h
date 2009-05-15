@@ -166,10 +166,9 @@ public:
    static void        AuthError(const char *where, Int_t error);
    static Bool_t      CheckProofAuth(Int_t cSec, TString &det);
 
-   static Int_t       DecodeBase64(const char *in, char *out);
    static Int_t       DecodeRSAPublic(const char *rsapubexport, rsa_NUMBER &n,
                                       rsa_NUMBER &d, char **rsassl = 0);
-   static Int_t       EncodeBase64(const char *in, Int_t lin, TString &out);
+
    static TList      *GetAuthInfo();
    static const char *GetAuthMethod(Int_t idx);
    static Int_t       GetAuthMethodIdx(const char *meth);

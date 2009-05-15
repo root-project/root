@@ -39,6 +39,7 @@
 #include "snprintf.h"
 #include "TVirtualMutex.h"
 #include "TTimer.h"
+#include "TBase64.h"
 
 #ifndef R__LYNXOS
 #include <sys/stat.h>
@@ -4646,147 +4647,6 @@ void TAuthenticate::RemoveSecContext(TRootSecContext *ctx)
 
 }
 
-//_________________________________________________________________________
-static int ToB64low(const char *in, char *out, int mod)
-{
-   // Base64 encoding of 3 bytes at in.
-   // Output (4 bytes) saved at out (not null terminated).
-   // Return 0 on success, -1 if input or output arrays are
-   // not defined.
-   static char b64ref[64] = {'A','B','C','D','E','F','G','H','I','J',
-                             'K','L','M','N','O','P','Q','R','S','T',
-                             'U','V','W','X','Y','Z',
-                             'a','b','c','d','e','f','g','h','i','j',
-                             'k','l','m','n','o','p','q','r','s','t',
-                             'u','v','w','x','y','z',
-                             '0','1','2','3','4','5','6','7','8','9',
-                             '+','/'};
-   if (!in || !out)
-      return -1;
-
-   if (mod == 1) {
-      *out++ = b64ref[ 0x3F & (in[0] >> 2) ];
-      *out++ = b64ref[ 0x3F & (0x30 & (in[0] << 4)) ];
-      *out++ = '=';
-      *out++ = '=';
-   } else if (mod == 2) {
-      *out++ = b64ref[ 0x3F & (in[0] >> 2) ];
-      *out++ = b64ref[ 0x3F & ((0x30 & (in[0] << 4)) | (0x0F & (in[1] >> 4))) ];
-      *out++ = b64ref[ 0x3F & (0x3C & (in[1] << 2)) ];
-      *out++ = '=';
-   } else {
-      *out++ = b64ref[ (int)(0x3F & (in[0] >> 2)) ];
-      *out++ = b64ref[ 0x3F & ((0x30 & (in[0] << 4)) | (0x0F & (in[1] >> 4))) ];
-      *out++ = b64ref[ 0x3F & ((0x3C & (in[1] << 2)) | (0x03 & (in[2] >> 6))) ];
-      *out++ = b64ref[ 0x3F & in[2] ];
-   }
-
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TAuthenticate::EncodeBase64(const char *in, Int_t lin, TString &out)
-{
-   // Transform lin bytes at in into a null terminated base64 string
-   // at out.
-   // Returns length of output string or -1 in case of failure
-
-   if (!in)
-      return -1;
-   int lout = (lin%3) ? ((lin/3) + 1)*4 : (lin/3) * 4;
-
-   out = "";
-   int i = 0;
-   int mod = 0;
-   char oo[5] = {0};
-   for (; i < lin; i += 3) {
-      mod = lin-i;
-      ToB64low(in+i,oo,mod);
-      oo[4] = 0;
-      out += oo;
-   }
-
-   return lout;
-}
-
-//_________________________________________________________________________
-static int FromB64low(const char *in, char *out)
-{
-   // Base64 decoding of 4 bytes at in.
-   // Output (3 bytes) returned in out.
-   // No check for base64-ness of input characters.
-   // Return 0 on success, -1 if input or output arrays are
-   // not defined.
-   static int b64inv[256] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,
-                             52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-2,-1,-1,
-                             -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,
-                             15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,
-                             -1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
-                             41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1,
-                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
-   if (!in || !out)
-      return -1;
-
-   UInt_t i0 = (UInt_t)(in[0]);
-   UInt_t i1 = (UInt_t)(in[1]);
-   UInt_t i2 = (UInt_t)(in[2]);
-   UInt_t i3 = (UInt_t)(in[3]);
-   if (in[3] != '=') {
-      *out++ = (0xFC & (b64inv[i0] << 2)) | (0x03 & (b64inv[i1] >> 4));
-      *out++ = (0xF0 & (b64inv[i1] << 4)) | (0x0F & (b64inv[i2] >> 2));
-      *out++ = (0xC0 & (b64inv[i2] << 6)) | (0x3F &  b64inv[i3]);
-      return 3;
-   } else if (in[2] == '=') {
-      *out++ = (0xFC & (b64inv[i0] << 2)) | (0x03 & (b64inv[i1] >> 4));
-      return 1;
-   } else {
-      *out++ = (0xFC & (b64inv[i0] << 2)) | (0x03 & (b64inv[i1] >> 4));
-      *out++ = (0xF0 & (b64inv[i1] << 4)) | (0x0F & (b64inv[i2] >> 2));
-      return 2;
-   }
-}
-
-//______________________________________________________________________________
-Int_t TAuthenticate::DecodeBase64(const char *in, char *out)
-{
-   // Decode base64 string at in into a generic buffer at out.
-   // No check for base64-ness of input characters.
-   // Called with out == 0 return the length of the output buffer.
-   // Return number of meaningful bytes in output, or -1 if input
-   // array is not defined.
-   //
-   // NB: if the length of the input string is not a multiple of
-   //     4, the (strlen(in) - strlen(in)/4) bytes at the end are
-   //     ignored.
-
-   if (!in)
-      return -1;
-   int lin = strlen(in);
-   int lout = (lin/4)*3;
-
-   if (!out)
-      // Just return the output length
-      return lout;
-
-   int i = 0;
-   int k = 0;
-   for (; i < lin; i += 4) {
-      FromB64low(in+i,out+k);
-      k += 3;
-   }
-
-   return lout;
-}
-
 //______________________________________________________________________________
 Int_t TAuthenticate::ProofAuthSetup()
 {
@@ -4809,15 +4669,10 @@ Int_t TAuthenticate::ProofAuthSetup()
          Info("ProofAuthSetup","Buffer not found: nothing to do");
       return 0;
    }
-   Int_t mlen = TAuthenticate::DecodeBase64(p, 0);
-   char *mbuf = new char[mlen];
-   if ((mlen = TAuthenticate::DecodeBase64(p, mbuf)) < 0) {
-      Error("ProofAuthSetup","Problem decoding the buffer");
-      return -1;
-   }
+   TString mbuf = TBase64::Decode(p);
 
    // Create the message
-   TMessage *mess = new TMessage(mbuf, mlen+sizeof(UInt_t));
+   TMessage *mess = new TMessage((void*)mbuf.Data(), mbuf.Length()+sizeof(UInt_t));
 
    // Extract the information
    TString user = "";
@@ -4971,8 +4826,7 @@ Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t client)
    // Get buffer as a base 64 string
    char *mbuf = mess.Buffer();
    Int_t mlen = mess.Length();
-   TString messb64;
-   TAuthenticate::EncodeBase64(mbuf, mlen, messb64);
+   TString messb64 = TBase64::Encode(mbuf, mlen);
 
    if (gDebug > 2)
       ::Info("ProofAuthSetup","sending %d bytes", messb64.Length());
