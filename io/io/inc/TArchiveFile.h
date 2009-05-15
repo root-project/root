@@ -44,8 +44,6 @@ private:
    TArchiveFile& operator=(const TArchiveFile&); // Not implemented because TArchiveFile can not be copied.
 
 protected:
-
-
    TString         fArchiveName;  // Archive file name
    TString         fMemberName;   // Sub-file name
    Int_t           fMemberIndex;  // Index of sub-file in archive

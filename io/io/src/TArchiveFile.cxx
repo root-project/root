@@ -178,6 +178,7 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
 
    if (!strlen(u.GetAnchor())) {
       archive = u.GetFile();
+      type    = archive;
       return kTRUE;
    }
 
@@ -188,6 +189,7 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
    if (archive == "" || member == "") {
       archive = "";
       member  = "";
+      type    = "";
       return kFALSE;
    }
    return kTRUE;
