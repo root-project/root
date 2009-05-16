@@ -616,9 +616,16 @@ with options, prefix with --with-, enables corresponding support
    krb5-incdir     Kerberos5 support, location of krb5.h
    krb5-libdir     Kerberos5 support, location of libkrb5
    perl            Path to the perl executable to be used for the perl module
-   ssl-incdir      OpenSSL support, location of openssl headers
-   ssl-libdir      OpenSSL support, location of libssl
+   ssl             OpenSSL support, location of openssl installation
+   ssl-incdir      OpenSSL support, location of openssl headers (has priority over ssl-dir)
+   ssl-libdir      OpenSSL support, location of libssl, libcrypto (has priority over ssl-dir)
+   ssl-shared      OpenSSL support, controls usage of shared linkage SSL libraries {yes/no}
    thread-libdir   Path to libpthread
+
+with compiler options, prefix with --with-, overrides default value
+
+   cxx             alternative C++ compiler to be used
+   ld              alternative Linker to be used
 
 Advanced options:
 
@@ -696,8 +703,12 @@ hassigwti=""
 hasfstatat=""
 afslibdir=""
 afsincdir=""
+ssldir=""
 ssllibdir=""
 sslincdir=""
+sslshared=""
+altcxx=""
+altld=""
 nccflv="$ccflv"
 if test $# -gt 0 ; then
    while test ! "x$1" = "x" ; do
@@ -734,9 +745,13 @@ if test $# -gt 0 ; then
       --with-krb5-incdir=*)    krb5incdir=$optarg    ; enable_krb5="yes"    ;;
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
       --with-perl=*)           perlbin=$optarg       ; enable_perlint="yes" ;;
+      --with-ssl=*)            ssldir=$optarg        ; enable_ssl="yes"     ;;
       --with-ssl-incdir=*)     sslincdir=$optarg     ; enable_ssl="yes"     ;;
       --with-ssl-libdir=*)     ssllibdir=$optarg     ; enable_ssl="yes"     ;;
+      --with-ssl-shared=*)     sslshared=$optarg     ; enable_ssl="yes"     ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
+      --with-cxx=*)            altcxx=$optarg        ;;
+      --with-ld=*)             altld=$optarg         ;;
       ################################################################
       #
       # Enable/disable to turn on/off third party software linkage and
@@ -848,6 +863,16 @@ if test "x$platform" = "xmacosx" ; then
       echo "$macosx_major.$macosx_minor: OS version not supported (must be >= 10.3). Sorry."
       exit 1
    fi
+fi
+
+#
+#  Check alternatice compiler / linker
+#
+if test ! "x$altcxx" = "x" ; then
+   altcxx="TYPECC = $altcxx"
+fi
+if test ! "x$altld" = "x" ; then
+   altld="TYPELD = $altld"
 fi
 
 #
@@ -1941,6 +1966,31 @@ sslextracflags=""
 if test "x$enable_ssl" = "xyes" ; then
 
     #
+    # dirs: --with-ssl-incdir and --with-ssl-libdir have priority on --with-ssl-dir
+    #       in both cases we link statically unless --with-ssl-shared is 'yes'
+    #
+    if test ! "x$ssldir" = "x" ; then
+       if test "x$sslincdir" = "x" ; then
+          sslincdir=$ssldir/include/openssl
+       fi
+       if test "x$ssllibdir" = "x" ; then
+          ssllibdir=$ssldir/lib
+       fi
+       if test "x$sslshared" = "x" ; then
+          sslshared=no
+       fi
+    else
+       if test ! "x$ssllibdir" = "x" ; then
+          if test "x$sslshared" = "x" ; then
+             sslshared=no
+          fi
+       fi
+    fi
+    if test "x$sslshared" = "x" ; then
+       sslshared="$enable_shared"
+    fi
+
+    #
     # Version
     #
     check_header "openssl/opensslv.h" "$sslincdir" $SSL $SSL/include \
@@ -2004,8 +2054,7 @@ if test "x$enable_ssl" = "xyes" ; then
     #
     # libraries
     #
-    ssl_shared="$enable_shared"
-    check_library "libssl" "$ssl_shared" "$ssllibdir" \
+    check_library "libssl" "$sslshared" "$ssllibdir" \
         $SSL $SSL/lib /lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
     if test "x$found_lib" = "x" ; then
         ssllib=""
@@ -2022,15 +2071,15 @@ if test "x$enable_ssl" = "xyes" ; then
              tmpssllibdir=`dirname $found_lib`
           fi
           ssllibdir=""
-          if test ! "x$ssl_shared" = "xno" ; then
-             ssl_shared=no
+          if test ! "x$sslshared" = "xno" ; then
+             sslshared=no
           fi
        else
           ssllibdir="$found_dir"
           tmpssllibdir=`echo $ssllibdir | cut -c3-`
        fi
        # All libraries in the same directory
-       check_library "libcrypto" "$ssl_shared" "$tmpssllibdir" /usr/lib
+       check_library "libcrypto" "$sslshared" "$tmpssllibdir" /usr/lib
        if test "x$found_lib" = "x" ; then
           ssllib=""
           ssllibdir=""
@@ -2040,11 +2089,14 @@ if test "x$enable_ssl" = "xyes" ; then
           ssllibdir="$found_dir"
        fi
     fi
+    if test "x$sslshared" = "xno" ; then
+       echo "Using OpenSSL static libraries"
+    fi
     #
     # header files
     #
     if test "x$enable_ssl" = "xyes" ; then
-     
+
        incssl="asn1.h asn1_mac.h bio.h dh.h evp.h err.h pem.h \
                rand.h rsa.h ssl.h x509.h x509v3.h"
        for i in $incssl ; do
@@ -2066,7 +2118,7 @@ if test "x$enable_ssl" = "xyes" ; then
         incssl="INCSSL = "
         libssl="LIBSSL = "
         # GSI needs OpenSSL
-        echo "Disabling GSI ... (requires OpenSSL)" 
+        echo "Disabling GSI ... (requires OpenSSL)"
         havegsi=""
         if test "x$havepwd" = "x" ; then
            xrdsut=""
@@ -2299,6 +2351,8 @@ sed -e "s|@arch@|$arch|"                 \
     -e "s|@perlccflags@|$perlccflags|" \
     -e "s|@nostrictalias@|$nostrictalias|" \
     -e "s|@hasoldhdrs@|$hasoldhdrs|" \
+    -e "s|@altcxx@|$altcxx|" \
+    -e "s|@altld@|$altld|" \
     < GNUmake.env.tmp > $ENVOUT
 rm -f GNUmake.env.tmp
 
