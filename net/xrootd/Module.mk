@@ -123,6 +123,12 @@ $(XROOTDMAKE): $(XROOTDCFGD)
 		if [ "x$(BUILDXRDGSI)" = "x" ] ; then \
 		   xopt="$$xopt --disable-gsi"; \
 		fi; \
+		if [ ! "x$(SSLLIB)" = "x" ] ; then \
+		   xlibs=`echo $(SSLLIB)`; \
+		   set $$xlibs; \
+		   xlib=`dirname $$1`; \
+		   xopt="$$xopt --with-ssl-libdir=$$xlib"; \
+		fi; \
 		if [ ! "x$(SSLLIBDIR)" = "x" ] ; then \
 		   xlib=`echo $(SSLLIBDIR) | cut -c3-`; \
 		   xopt="$$xopt --with-ssl-libdir=$$xlib"; \
@@ -130,6 +136,10 @@ $(XROOTDMAKE): $(XROOTDCFGD)
 		if [ ! "x$(SSLINCDIR)" = "x" ] ; then \
 		   xinc=`echo $(SSLINCDIR)`; \
 		   xopt="$$xopt --with-ssl-incdir=$$xinc"; \
+		fi; \
+		if [ ! "x$(SSLSHARED)" = "x" ] ; then \
+		   xsha=`echo $(SSLSHARED)`; \
+		   xopt="$$xopt --with-ssl-shared=$$xsha"; \
 		fi; \
 		if [ ! "x$(SHADOWFLAGS)" = "x" ] ; then \
 		   xopt="$$xopt --enable-shadowpw"; \
@@ -149,7 +159,7 @@ $(XROOTDMAKE): $(XROOTDCFGD)
 		   xaddopts=`echo $(XRDADDOPTS)`; \
 		   xopt="$$xopt $$xaddopts"; \
 		fi; \
-		xopt="$$xopt --disable-krb4 --enable-echo --no-arch-subdirs --disable-mon"; \
+		xopt="$$xopt --disable-krb4 --enable-echo --no-arch-subdirs --disable-mon --with-cxx=$(CXX) --with-ld=$(LD)"; \
 		cd xrootd; \
 		echo "Options to Xrootd-configure: $$xarch $$xopt $(XRDDBG)"; \
 		GNUMAKE=$(MAKE) ./configure.classic $$xarch $$xopt $(XRDDBG); \
