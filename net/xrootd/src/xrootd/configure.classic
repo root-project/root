@@ -1971,7 +1971,7 @@ if test "x$enable_ssl" = "xyes" ; then
     #
     if test ! "x$ssldir" = "x" ; then
        if test "x$sslincdir" = "x" ; then
-          sslincdir=$ssldir/include/openssl
+          sslincdir=$ssldir/include
        fi
        if test "x$ssllibdir" = "x" ; then
           ssllibdir=$ssldir/lib
