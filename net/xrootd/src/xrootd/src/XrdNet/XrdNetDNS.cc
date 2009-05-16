@@ -98,11 +98,13 @@ int XrdNetDNS::getHostAddr(const  char     *InetName,
 // Disable IPv6 for 'localhost...' (potential confusion in the
 // default /etc/hosts on some platforms, e.g. MacOsX)
 //
-   if (!strncmp(InetName,"localhost",9)) myhints.ai_family = AF_INET;
-#ifdef __macos__
+// if (!strncmp(InetName,"localhost",9)) myhints.ai_family = AF_INET;
+// pcal: force ipv4  (was only for MacOS: ifdef __macos____)
+//#ifdef __macos__
 // Disable IPv6 for MacOS X altogether for the time being
+//
    myhints.ai_family = AF_INET;
-#endif
+//#endif
 
 // Translate the name to an address list
 //
@@ -342,7 +344,10 @@ int XrdNetDNS::getHostName(struct sockaddr &InetAddr,
 // Disable IPv6 for 'localhost...' (potential confusion in the
 // default /etc/hosts on some platforms, e.g. MacOsX)
 //
-   if (!strncmp(mybuff,"localhost",9)) myhints.ai_family = AF_INET;
+// if (!strncmp(mybuff,"localhost",9)) myhints.ai_family = AF_INET;
+// pcal: force ipv4
+//
+   myhints.ai_family = AF_INET;
 
 // Get the aliases for this name
 //
