@@ -123,15 +123,18 @@ $(XROOTDMAKE): $(XROOTDCFGD)
 		if [ "x$(BUILDXRDGSI)" = "x" ] ; then \
 		   xopt="$$xopt --disable-gsi"; \
 		fi; \
-		if [ ! "x$(SSLLIB)" = "x" ] ; then \
-		   xlibs=`echo $(SSLLIB)`; \
-		   set $$xlibs; \
-		   xlib=`dirname $$1`; \
-		   xopt="$$xopt --with-ssl-libdir=$$xlib"; \
-		fi; \
 		if [ ! "x$(SSLLIBDIR)" = "x" ] ; then \
 		   xlib=`echo $(SSLLIBDIR) | cut -c3-`; \
 		   xopt="$$xopt --with-ssl-libdir=$$xlib"; \
+		elif [ ! "x$(SSLLIB)" = "x" ] ; then \
+		   xlibs=`echo $(SSLLIB)`; \
+		   for l in $$xlibs; do \
+   		      if [ ! "x$$l" = "x-lssl" ] && [ ! "x$$l" = "x-lcrypto" ]  ; then \
+		         xlib=`dirname $$l`; \
+  		         xopt="$$xopt --with-ssl-libdir=$$xlib"; \
+      		         break; \
+     		      fi; \
+   		   done; \
 		fi; \
 		if [ ! "x$(SSLINCDIR)" = "x" ] ; then \
 		   xinc=`echo $(SSLINCDIR)`; \
