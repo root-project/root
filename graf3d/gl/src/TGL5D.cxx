@@ -558,7 +558,7 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
       ind1 = ix +kNx*(iy+kNy*iz);
       Double_t val = 0;
       if (ind1 >=0 && ind1 < ntot) val = v5[ind1];
-      else printf("wrong value ix=%d, iy=%d, iz=%d, i=%d. m[0]=%g, m[1]=%g, m[2]=%g\n",ix,iy,iz,i,m[3*i],m[3*i+1],m[3*i+2]);
+      //else printf("wrong value ix=%d, iy=%d, iz=%d, i=%d. m[0]=%g, m[1]=%g, m[2]=%g\n",ix,iy,iz,i,m[3*i],m[3*i+1],m[3*i+2]);
       fV5PredictedRange.first  = TMath::Min(fV5PredictedRange.first,  val);
       fV5PredictedRange.second = TMath::Max(fV5PredictedRange.second, val);
       p[i] = val;
