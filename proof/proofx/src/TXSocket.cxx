@@ -1846,7 +1846,7 @@ void TXSocket::InitEnvs()
    // For password-based authentication
    TString autolog = gEnv->GetValue("XSec.Pwd.AutoLogin","1");
    if (autolog.Length() > 0 &&
-      (cenv = gSystem->Getenv("XrdSecPWDAUTOLOG")) && strlen(cenv) <= 0)
+      (!(cenv = gSystem->Getenv("XrdSecPWDAUTOLOG")) || strlen(cenv) <= 0))
       gSystem->Setenv("XrdSecPWDAUTOLOG",autolog.Data());
 
    // For password-based authentication
@@ -1860,7 +1860,7 @@ void TXSocket::InitEnvs()
 
    TString verisrv = gEnv->GetValue("XSec.Pwd.VerifySrv","1");
    if (verisrv.Length() > 0 &&
-      (cenv = gSystem->Getenv("XrdSecPWDVERIFYSRV")) && strlen(cenv) <= 0)
+      (!(cenv = gSystem->Getenv("XrdSecPWDVERIFYSRV")) || strlen(cenv) <= 0))
       gSystem->Setenv("XrdSecPWDVERIFYSRV",verisrv.Data());
 
    TString srvpuk = gEnv->GetValue("XSec.Pwd.ServerPuk","");
@@ -1898,7 +1898,7 @@ void TXSocket::InitEnvs()
 
    TString deplen = gEnv->GetValue("XSec.GSI.ProxyForward","0");
    if (deplen.Length() > 0 &&
-      (cenv = gSystem->Getenv("XrdSecGSIPROXYDEPLEN")) && strlen(cenv) <= 0)
+      (!(cenv = gSystem->Getenv("XrdSecGSIPROXYDEPLEN")) || strlen(cenv) <= 0))
       gSystem->Setenv("XrdSecGSIPROXYDEPLEN",deplen.Data());
 
    TString pxybits = gEnv->GetValue("XSec.GSI.ProxyKeyBits","");
@@ -1907,17 +1907,17 @@ void TXSocket::InitEnvs()
 
    TString crlcheck = gEnv->GetValue("XSec.GSI.CheckCRL","1");
    if (crlcheck.Length() > 0 &&
-      (cenv = gSystem->Getenv("XrdSecGSICRLCHECK")) && strlen(cenv) <= 0)
+      (!(cenv = gSystem->Getenv("XrdSecGSICRLCHECK")) || strlen(cenv) <= 0))
       gSystem->Setenv("XrdSecGSICRLCHECK",crlcheck.Data());
 
    TString delegpxy = gEnv->GetValue("XSec.GSI.DelegProxy","0");
    if (delegpxy.Length() > 0 &&
-      (cenv = gSystem->Getenv("XrdSecGSIDELEGPROXY")) && strlen(cenv) <= 0)
+      (!(cenv = gSystem->Getenv("XrdSecGSIDELEGPROXY")) || strlen(cenv) <= 0))
       gSystem->Setenv("XrdSecGSIDELEGPROXY",delegpxy.Data());
 
    TString signpxy = gEnv->GetValue("XSec.GSI.SignProxy","1");
    if (signpxy.Length() > 0 &&
-      (cenv = gSystem->Getenv("XrdSecGSISIGNPROXY")) && strlen(cenv) <= 0)
+      (!(cenv = gSystem->Getenv("XrdSecGSISIGNPROXY")) || strlen(cenv) <= 0))
       gSystem->Setenv("XrdSecGSISIGNPROXY",signpxy.Data());
 
    // Print the tag, if required (only once)
