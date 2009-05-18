@@ -82,6 +82,7 @@ namespace {
       PyObject* pymeta = PyType_Type.tp_new( &PyROOT::PyRootType_Type, args, NULL );
       Py_DECREF( args );
       if ( ! pymeta ) {
+         PyErr_Print();
          Py_DECREF( pybases );
          return 0;
       }
