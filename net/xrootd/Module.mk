@@ -85,6 +85,12 @@ ifeq ($(PLATFORM),win32)
 ALLEXECS   += $(XRDEXECS)
 endif
 
+# Local targets
+TARGETS    := $(XRDLIBS)
+ifeq ($(PLATFORM),win32)
+TARGETS    += $(XRDEXECS)
+endif
+
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
@@ -256,7 +262,7 @@ $(XROOTDDIRL)/libXrdSut.a: $(XROOTDBUILD)
 
 ### General rules
 
-all-$(MODNAME): $(XRDPLUGINS) $(XRDEXECS)
+all-$(MODNAME): $(TARGETS)
 
 clean-$(MODNAME):
 ifneq ($(PLATFORM),win32)
