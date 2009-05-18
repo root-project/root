@@ -1324,8 +1324,8 @@ void TGTextView::Layout()
 {
    // Layout the components of view.
 
-   HLayout();
    VLayout();
+   HLayout();
 }
 
 //______________________________________________________________________________
@@ -1425,6 +1425,7 @@ void TGTextView::SetSBRange(Int_t direction)
       }
       fVsb->SetRange(Int_t(ReturnHeighestColHeight()/fScrollVal.fY),
                      Int_t(fCanvas->GetHeight()/fScrollVal.fY));
+      HLayout();
    } else {
       if (!fHsb) {
          return;
@@ -1441,6 +1442,7 @@ void TGTextView::SetSBRange(Int_t direction)
       }
       fHsb->SetRange(Int_t(ReturnLongestLineWidth()/fScrollVal.fX),
                      Int_t(fCanvas->GetWidth()/fScrollVal.fX));
+      VLayout();
    }
 }
 
