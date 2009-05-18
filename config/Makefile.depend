@@ -55,7 +55,7 @@ SPLOTLIBDEPM           = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(G3DLIB) $(GRAFLIB) $(MATHCORELIB)
 QUADPLIBDEPM           = $(MATRIXLIB) 
 GLLIBDEPM              = $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) $(GEDLIB) \
-                         $(FTGLLIB) $(MATHCORELIB) $(TREELIB) $(TREEPLAYERLIB)
+                         $(MATHCORELIB) $(TREELIB) $(TREEPLAYERLIB)
 HBOOKLIBDEPM           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                          $(TREEPLAYERLIB) $(IOLIB) $(MINICERNLIB)
 GEOMLIBDEPM            = $(IOLIB) $(MATHCORELIB)
@@ -106,7 +106,7 @@ THREADLIBDEPM          = $(IOLIB)
 EVELIBDEPM             = $(GEOMLIB) $(GEOMPAINTERLIB) $(G3DLIB) $(GUILIB) \
                          $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(PHYSICSLIB) \
                          $(GEDLIB) $(EGLIB) $(TREELIB) $(TREEPLAYERLIB) \
-                         $(GLLIB) $(FTGLLIB) $(IOLIB) $(RINTLIB) $(MATHCORELIB)
+                         $(GLLIB) $(IOLIB) $(RINTLIB) $(MATHCORELIB)
 MEMSTATLIBDEPM         = $(TREELIB)
 MEMSTATGUILIBDEPM      = $(MEMSTATLIB) $(TREELIB) $(GUILIB)
 RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)

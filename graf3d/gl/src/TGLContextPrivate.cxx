@@ -1,10 +1,6 @@
 // @(#)root/gl:$Id$
 // Author:  Timur Pocheptsov, Jun 2007
 
-#ifndef WIN32
-#include <GL/glx.h>
-#endif
-
 #include "TGLContextPrivate.h"
 
 //______________________________________________________________________________

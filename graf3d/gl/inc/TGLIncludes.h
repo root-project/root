@@ -12,14 +12,31 @@
 #ifndef ROOT_TGLIncludes
 #define ROOT_TGLIncludes
 
+#ifndef G__DICTIONARY
+
+#include <GL/glew.h>
+#ifdef WIN32
+#include <GL/wglew.h>
+#include "Windows4Root.h"
+#else //WIN32
+#include <GL/glxew.h>
+#endif //WIN32
+
+#else //G__DICTIONARY
+
 #ifdef WIN32
 #ifndef ROOT_Windows4Root
 #include "Windows4Root.h"
-#endif
-#endif
-
 #include <GL/gl.h>
 #include <GL/glu.h>
+#endif
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glx.h>
+#endif
+
+#endif //G__DICTIONARY
 
 #endif // ROOT_TGLIncludes
 

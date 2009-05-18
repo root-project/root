@@ -126,6 +126,14 @@ ifeq ($(BUILDFTGL), yes)
 FTGLCPPFLAGS   := -DBUILTIN_FTGL
 endif
 
+BUILDGLEW      := @buildglew@
+GLEWLIBDIR     := @glewlibdir@
+GLEWLIBS       := @glewlibs@
+GLEWINCDIR     := $(filter-out /usr/include, @glewincdir@)
+ifeq ($(BUILDGLEW), yes)
+GLEWCPPFLAGS   := -DBUILTIN_GLEW
+endif
+
 BUILDGFAL      := @buildgfal@
 GFALLIBDIR     := @gfallibdir@
 GFALCLILIB     := @gfallib@

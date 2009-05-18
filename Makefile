@@ -108,6 +108,9 @@ ifeq ($(BUILDGL),yes)
 ifeq ($(BUILDFTGL),yes)
 MODULES      += graf3d/ftgl
 endif
+ifeq ($(BUILDGLEW),yes)
+MODULES      += graf3d/glew
+endif
 MODULES      += graf3d/gl graf3d/eve
 endif
 ifeq ($(BUILDMYSQL),yes)
@@ -259,7 +262,7 @@ endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
-                graf3d/gl graf3d/ftgl io/rfio io/castor \
+                graf3d/gl graf3d/ftgl graf3d/glew io/rfio io/castor \
                 montecarlo/pythia6 montecarlo/pythia8 misc/table \
                 sql/mysql sql/pgsql sql/sapdb net/srputils graf3d/x3d \
                 rootx net/rootd io/dcache io/chirp hist/hbook graf2d/asimage \
@@ -1063,7 +1066,7 @@ uninstall:
               . \
               Math/GenVector Math \
               Reflex/internal Reflex/Builder Reflex \
-              Cintex TMVA Minuit2; do \
+              Cintex GL TMVA Minuit2; do \
               if test -d include/$${subdir}; then \
 	         for i in include/$${subdir}/*.h ; do \
 	            rm -f $(DESTDIR)$(INCDIR)/$${subdir}/`basename $$i`; \

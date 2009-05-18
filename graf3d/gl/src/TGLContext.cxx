@@ -13,10 +13,6 @@
 #include <algorithm>
 #include <memory>
 
-#ifndef WIN32
-#include <GL/glx.h>
-#endif
-
 #include "TVirtualX.h"
 #include "GuiTypes.h"
 #include "TString.h"
@@ -24,10 +20,8 @@
 
 #include "TROOT.h"
 
-//#include "TGLPBufferPrivate.h"
 #include "TGLContextPrivate.h"
 #include "TGLIncludes.h"
-//#include "TGLPBuffer.h"
 #include "TGLContext.h"
 #include "TGLWidget.h"
 #include "TGLFormat.h"

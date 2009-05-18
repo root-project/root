@@ -12,10 +12,6 @@
 #include <stdexcept>
 #include <vector>
 
-#ifndef WIN32
-#include <GL/glx.h>
-#endif
-
 #include "TVirtualX.h"
 #include "TGClient.h"
 #include "TError.h"

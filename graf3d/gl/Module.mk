@@ -20,7 +20,6 @@ GLDH         := $(GLDS:.cxx=.h)
 
 GLH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GLS          := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GLS1         := $(wildcard $(MODDIRS)/*.c)
 
 # Excluded from win32 builds
 ifeq ($(ARCH),win32)
@@ -45,8 +44,6 @@ GLLIBS       := opengl32.lib glu32.lib
 endif
 
 GLO          := $(GLS:.cxx=.o)
-GLO1         := $(GLS1:.c=.o)
-
 GLDEP        := $(GLO:.o=.d) $(GLDO:.o=.d) $(GLO1:.o=.d)
 
 GLLIB        := $(LPATH)/libRGL.$(SOEXT)
@@ -66,10 +63,10 @@ INCLUDEFILES += $(GLDEP)
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
-$(GLLIB):       $(GLO) $(GLO1) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP)
+$(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) $(GLEWLIB)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
-		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLLIBS)"
+		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
 
 $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
@@ -82,7 +79,7 @@ $(GLMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(GLL)
 all-$(MODNAME): $(GLLIB) $(GLMAP)
 
 clean-$(MODNAME):
-		@rm -f $(GLO) $(GLO1) $(GLDO)
+		@rm -f $(GLO) $(GLDO)
 
 clean::         clean-$(MODNAME)
 
@@ -98,8 +95,6 @@ $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
 else
 $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
 endif
-
-$(GLDIRS)/gl2ps.o: CFLAGS += $(OPENGLINCDIR:%=-I%)
 
 $(GLDIRS)/TGLText.o: $(FREETYPEDEP)
 $(GLDIRS)/TGLText.o: CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
