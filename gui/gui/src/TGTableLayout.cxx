@@ -637,6 +637,12 @@ TGDimension TGTableLayout::GetDefaultSize() const
 {
    // Return default dimension of the table layout.
 
+   TGDimension msize = fMain->GetSize();
+   UInt_t options = fMain->GetOptions();
+
+   if ((options & kFixedWidth) && (options & kFixedHeight))
+      return msize;
+
    Int_t border_width = fMain->GetBorderWidth();
 
    TGDimension size(2*border_width + (fNcols-1)*fSep,
@@ -648,6 +654,8 @@ TGDimension TGTableLayout::GetDefaultSize() const
    if (fRow)
       for (row = 0; row < fNrows; ++row) size.fHeight += fRow[row].fDefSize;
 
+   if (options & kFixedWidth)  size.fWidth = msize.fWidth;
+   if (options & kFixedHeight) size.fHeight = msize.fHeight;
    return size;
 }
 

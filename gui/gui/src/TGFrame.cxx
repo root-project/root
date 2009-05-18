@@ -998,7 +998,7 @@ void TGCompositeFrame::ChangeOptions(UInt_t options)
 
    if (options & kHorizontalFrame)
       SetLayoutManager(new TGHorizontalLayout(this));
-   else
+   else if (options & kVerticalFrame)
       SetLayoutManager(new TGVerticalLayout(this));
 }
 
