@@ -242,6 +242,7 @@ MONALISAINCDIR := $(filter-out /usr/include, @monalisaincdir@)
 SSLLIB         := @ssllib@
 SSLLIBDIR      := @ssllibdir@
 SSLINCDIR      := $(filter-out /usr/include, @sslincdir@)
+SSLSHARED      := @sslshared@
 
 SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=

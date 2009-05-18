@@ -1124,8 +1124,10 @@ with options, prefix with --with-, enables corresponding support
   srp                Secure Remote Passwd support, location of SRP distribution
   srp-incdir         SRP support, location header of t_server.h
   srp-libdir         SRP support, location header of libsrp.a
+  ssl                OpenSSL support, location of openssl installation
   ssl-incdir         OpenSSL support, location of openssl headers
   ssl-libdir         OpenSSL support, location of libssl
+  ssl-shared         OpenSSL support, controls usage of shared linkage SSL libraries {yes/no}
   sys-iconpath       Extra icon path
   thread-libdir      Thread support, path to libpthread
   xml-incdir         XML support, location of libxml/tree.h
@@ -1332,8 +1334,10 @@ if test $# -gt 0 ; then
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
+      --with-ssl=*)            ssldir=$optarg        ; enable_ssl="yes"     ;;
       --with-ssl-incdir=*)     sslincdir=$optarg     ; enable_ssl="yes"     ;;
       --with-ssl-libdir=*)     ssllibdir=$optarg     ; enable_ssl="yes"     ;;
+      --with-ssl-shared=*)     sslshared=$optarg     ; enable_ssl="yes"     ;;
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
       --with-xml-incdir=*)     xmlincdir=$optarg     ; enable_xml="yes"     ;;
@@ -3587,12 +3591,37 @@ check_explicit "$enable_globus" "$enable_globus_explicit" \
 # conflicts.
 #
 if test "x$enable_ssl" = "xyes" ; then
+
+     #
+     # dirs: --with-ssl-incdir and --with-ssl-libdir have priority on --with-ssl-dir
+     #       in both cases we link statically unless --with-ssl-shared is 'yes'
+     #
+     if test ! "x$ssldir" = "x" ; then
+        if test "x$sslincdir" = "x" ; then
+           sslincdir=$ssldir/include
+        fi
+        if test "x$ssllibdir" = "x" ; then
+           ssllibdir=$ssldir/lib
+        fi
+        if test "x$sslshared" = "x" ; then
+           sslshared=no
+        fi
+     else
+        if test ! "x$ssllibdir" = "x" ; then
+           if test "x$sslshared" = "x" ; then
+              sslshared=no
+           fi
+        fi
+     fi
+     if test "x$sslshared" = "x" ; then
+        sslshared="$enable_shared"
+     fi
      #
      # libssl
      #
      libssl="libssl"
      tmpssllibdir=""
-     check_library "$libssl" "$enable_shared" "$ssllibdir" \
+     check_library "$libssl" "$sslshared" "$ssllibdir" \
          $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
      if test "x$found_lib" != "x" ; then
          ssllib="$found_lib"
@@ -3602,8 +3631,8 @@ if test "x$enable_ssl" = "xyes" ; then
             if test ! "x$tmpssllibdir" = "x" ; then
                tmpssllibdir=`dirname $found_lib`
             fi
-            if test ! "x$ssl_shared" = "xno" ; then
-               ssl_shared=no
+            if test ! "x$sslshared" = "xno" ; then
+               sslshared=no
             fi
          else
             ssllibdir="$found_dir"
@@ -3614,7 +3643,7 @@ if test "x$enable_ssl" = "xyes" ; then
          # libcrypto, in the same dir
          #
          libcrypto="libcrypto"
-         check_library "$libcrypto" "$enable_shared" "$tmpssllibdir" \
+         check_library "$libcrypto" "$sslshared" "$tmpssllibdir" \
                       $SSL $SSL/lib /usr/lib /opt/lib /usr/local/lib $finkdir/lib
          if test "x$found_lib" != "x" ; then
              ssllib="$ssllib $found_lib"
@@ -3632,6 +3661,11 @@ if test "x$enable_ssl" = "xyes" ; then
 fi
 
 if test "x$enable_ssl" = "xyes" ; then
+
+    if test "x$sslshared" = "xno" ; then
+       echo "Using OpenSSL static libraries"
+    fi
+
     incssl="bio.h blowfish.h err.h pem.h rand.h rsa.h"
     ssl_incdir=""
     for i in $incssl ; do
@@ -5039,6 +5073,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@sslincdir@|$sslincdir|"              \
     -e "s|@ssllib@|$ssllib|"                    \
     -e "s|@ssllibdir@|$ssllibdir|"              \
+    -e "s|@sslshared@|$sslshared|"              \
     -e "s|@sslextracflags@|$sslextracflags|"    \
     -e "s|@testdir@|$testdir|"                  \
     -e "s|@threadflag@|$threadflag|"            \
