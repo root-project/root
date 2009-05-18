@@ -12,6 +12,7 @@
 
 const char *XrdBwmHandleCVSID = "$Id$";
 
+#include <stdio.h>
 #include <string.h>
 
 #include "XrdBwm/XrdBwmHandle.hh"

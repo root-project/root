@@ -14,6 +14,7 @@
 
 const char *XrdCmsAdminCVSID = "$Id$";
 
+#include <stdio.h>
 #include <limits.h>
 #include <unistd.h>
 #include <sys/types.h>
