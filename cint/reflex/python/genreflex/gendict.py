@@ -566,6 +566,10 @@ class genDictionary(object) :
     classDefImpl = ClassDefImplementation(selclasses, self)
 
     f_buffer = ''
+    # Need to specialize templated class's functions (e.g. A<T>::Class())
+    # before first instantiation (stubs), so classDefImpl before stubs.
+    f_buffer += classDefImpl
+
     f_shadow =  '\n// Shadow classes to obtain the data member offsets \n'
     f_shadow += 'namespace __shadow__ {\n'
     for c in selclasses :
@@ -592,7 +596,6 @@ class genDictionary(object) :
         f_shadow += self.genClassShadow(c)
     f_shadow += '}\n\n'
     f_buffer += self.genFunctionsStubs( selfunctions )
-    f_buffer += classDefImpl
     f_buffer += self.genInstantiateDict(selclasses, selfunctions, selenums, selvariables)
     f.write('namespace {\n')
     f.write(self.genNamespaces(selclasses + selfunctions + selenums + selvariables))
@@ -2468,20 +2471,21 @@ def ClassDefImplementation(selclasses, self) :
       else                      : attrs['extra'] = {'ClassDef': extraval}
       attrs['extra']['DictionaryFunc'] = '!RAW!' + clname + '::Dictionary';
       id = attrs['id']
+      template = ""
+      if clname.find('<') != -1: template = "template<> "
 
-      returnValue += 'TClass* ' + clname + '::fgIsA = 0;\n'
-      returnValue += '::ROOT::TGenericClassInfo genericClassInfo' + attrs['id'] + '("' + clname[2:] + '",\n   ' + clname + '::Class_Version(),\n   '
-      returnValue += clname + '::DeclFileName(),\n   ' + clname + '::DeclFileLine(),\n   '
-      returnValue += 'typeid( ' + clname + ' ),\n   ::ROOT::DefineBehavior(0,0), 0, ' + clname + '::Dictionary,\n   '
-      returnValue += 'new ::TInstrumentedIsAProxy< ' + clname + ' >(0),\n   '
-      returnValue += '0, sizeof( ' + clname + '));\n'
-      returnValue += 'TClass* ' + clname + '::Class() {\n'
+      returnValue += 'extern ::ROOT::TGenericClassInfo genericClassInfo' + attrs['id'] + ';\n'
+      returnValue += template + 'TClass* ' + clname + '::Class() {\n'
       returnValue += '   if (!fgIsA)\n'
       returnValue += '      fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
       returnValue += '   return fgIsA;\n'
       returnValue += '}\n'
-      returnValue += 'const char * ' + clname + '::Class_Name() {return "' + clname[2:]  + '";}\n'
-      returnValue += 'void ' + clname + '::Dictionary() {\n'
+      returnValue += template + 'const char * ' + clname + '::Class_Name() {return "' + clname[2:]  + '";}\n'
+      # need to fwd decl newdel wrapper because ClassDef is before stubs
+      returnValue += 'namespace {\n'
+      returnValue += '   static void method_newdel' + id + '(void*, void*, const std::vector<void*>&, void*);\n'
+      returnValue += '}\n'
+      returnValue += template + 'void ' + clname + '::Dictionary() {\n'
       returnValue += '   genericClassInfo' + id + '.SetImplFile("", 1);\n'
       returnValue += '   ::Reflex::NewDelFunctions* ndf = 0;\n'
       returnValue += '   method_newdel' + id + '(&ndf, 0, std::vector<void*>(), 0);\n'
@@ -2504,11 +2508,11 @@ def ClassDefImplementation(selclasses, self) :
       returnValue += '      ::ROOT::Cintex::Cintex::Default_CreateClass( "' + clname + '", &genericClassInfo' + attrs['id'] + ' );\n'
       returnValue += '   }\n'
       returnValue += '}\n'
-      returnValue += 'const char *' + clname  + '::ImplFileName() {return "";}\n'
+      returnValue += template + 'const char *' + clname  + '::ImplFileName() {return "";}\n'
 
-      returnValue += 'int ' + clname + '::ImplFileLine() {return 1;}\n'
+      returnValue += template + 'int ' + clname + '::ImplFileLine() {return 1;}\n'
 
-      returnValue += 'void '+ clname  +'::ShowMembers(TMemberInspector &R__insp, char *R__parent) {\n'
+      returnValue += template + 'void '+ clname  +'::ShowMembers(TMemberInspector &R__insp, char *R__parent) {\n'
       returnValue += '   TClass *R__cl = ' + clname  + '::IsA();\n'
       returnValue += '   Int_t R__ncp = strlen(R__parent);\n'
       returnValue += '   if (R__ncp || R__cl || R__insp.IsA()) { }\n'
@@ -2575,12 +2579,18 @@ def ClassDefImplementation(selclasses, self) :
 
       returnValue += '}\n'
 
-      returnValue += 'void '+ clname  +'::Streamer(TBuffer &b) {\n   if (b.IsReading()) {\n'
+      returnValue += template + 'void '+ clname  +'::Streamer(TBuffer &b) {\n   if (b.IsReading()) {\n'
       returnValue += '      b.ReadClassBuffer(' + clname + '::Class(),this);\n'
       returnValue += '   } else {\n'
       returnValue += '      b.WriteClassBuffer(' + clname  + '::Class(),this);\n'
       returnValue += '   }\n'
       returnValue += '}\n'
+      returnValue += template + 'TClass* ' + clname + '::fgIsA = 0;\n'
+      returnValue += '::ROOT::TGenericClassInfo genericClassInfo' + attrs['id'] + '("' + clname[2:] + '",\n   ' + clname + '::Class_Version(),\n   '
+      returnValue += clname + '::DeclFileName(),\n   ' + clname + '::DeclFileLine(),\n   '
+      returnValue += 'typeid( ' + clname + ' ),\n   ::ROOT::DefineBehavior(0,0), 0, ' + clname + '::Dictionary,\n   '
+      returnValue += 'new ::TInstrumentedIsAProxy< ' + clname + ' >(0),\n   '
+      returnValue += '0, sizeof( ' + clname + '));\n'
     elif derivesFromTObject :
       # no fgIsA etc members but derives from TObject!
       print '--->> genreflex: ERROR: class %s derives from TObject but does not use ClassDef!' % attrs['fullname']
