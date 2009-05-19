@@ -77,18 +77,17 @@ CINTS2       += $(MODDIRSD)/libstrm.cxx
 endif
 endif
 ifeq ($(PLATFORM),solaris)
-ifeq ($(SUNCC5),true)
+ ifeq ($(SUNCC5),true)
 CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/longif3.cxx
-ifeq ($(findstring $(CXXFLAGS),-library=iostream,no%Cstd),)
+  ifeq ($(findstring -library=stlport4,$(CXXFLAGS)),)
 CINTS2       += $(MODDIRSD)/sunstrm.cxx
-#CINTS2       += $(MODDIRSD)/sun5strm.cxx
-else
+  else
+CINTS2       += $(MODDIRSD)/stlport4strm.cxx
+  endif
+ else
 CINTS2       += $(MODDIRSD)/libstrm.cxx
-endif
-else
-CINTS2       += $(MODDIRSD)/libstrm.cxx
-endif
+ endif
 endif
 ifeq ($(PLATFORM),aix3)
 CINTS1       += $(MODDIRS)/dlfcn.c

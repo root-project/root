@@ -78,18 +78,17 @@ CINT7S2       += $(CINT7DIRSD)/libstrm.cxx
 endif
 endif
 ifeq ($(PLATFORM),solaris)
-ifeq ($(SUNCC5),true)
+ ifeq ($(SUNCC5),true)
 CINT7S2       := $(filter-out $(CINT7DIRSD)/longif.%,$(CINT7S2))
 CINT7S2       += $(CINT7DIRSD)/longif3.cxx
-ifeq ($(findstring $(CXXFLAGS),-library=iostream,no%Cstd),)
+  ifeq ($(findstring -library=stlport4,$(CXXFLAGS)),)
 CINT7S2       += $(CINT7DIRSD)/sunstrm.cxx
-#CINT7S2       += $(CINT7DIRSD)/sun5strm.cxx
-else
+  else
+CINT7S2       += $(CINT7DIRSD)/stlport4strm.cxx
+  endif
+ else
 CINT7S2       += $(CINT7DIRSD)/libstrm.cxx
-endif
-else
-CINT7S2       += $(CINT7DIRSD)/libstrm.cxx
-endif
+ endif
 endif
 ifeq ($(PLATFORM),aix3)
 CINT7S1       += $(CINT7DIRS)/dlfcn.c
