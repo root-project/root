@@ -117,6 +117,32 @@
      }
 </pre>
 </li>
+<li> In <tt>THistPainter::PaintAxis</tt> repainting (<tt>gPad->RedrawAxis()</tt>)
+     alphanumeric labels axis on a plot done with the option HBAR (horizontal)
+     needed some adjustements. The following macro showed the problem. The
+     axis labels were wrongly painted:
+<pre>
+     {
+        TCanvas* canvas = new TCanvas("Canvas", "Canvas", 0, 0, 1000, 500);
+        canvas->Divide(2,1);
+        THStack* stack = new THStack("Stack", "StackTitle");
+        TH1F* hist1 = new TH1F("Hist1", "Title1", 1, 0, 100);
+        TH1F* hist2 = new TH1F("Hist2", "Title2", 1, 0, 100);
+        hist1->SetFillColor(kBlack);
+        hist2->SetFillColor(kGray);
+        for (int i = 0; i < 4; ++i) {
+           char dataName[50];
+           sprintf(dataName, "Data%d", i);
+           hist1->Fill(dataName, 10 + 50*i);
+           hist2->Fill(dataName, 145 - 40*i);
+        }
+        stack->Add(hist1);
+        stack->Add(hist2);
+        canvas->cd(1); stack->Draw("nostack,bar");
+        canvas->cd(2); stack->Draw("nostack,hbar");
+     }
+</pre>
+</li>
 </ul>
 
 <h4>TGraphPainter</h4>
