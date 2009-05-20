@@ -1784,6 +1784,10 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    //         = 2   if not found just return without trying template
    // 
    //         = 3   like 2, and no autoloading
+   //
+   // noerror & 0x1000: do not look in enclosing scope, i.e. G__tagnum is
+   //               defining a fully qualified identifier. With this bit
+   //               set, tagname="C" and G__tagnum=A::B will not find to A::C.
    // 
    static ::Reflex::NamespaceBuilder stdnp("std");
    int i;
@@ -1803,7 +1807,12 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          return -1;
       case '\0': // Global namespace.
          return 0;
+      case 'c':
+         if (!strcmp(tagname, "const"))
+            return -1;
    }
+   bool enclosing = !(noerror & 0x1000);
+   noerror &= ~0x1000;
    if (strchr(normalized_tagname, '>')) { // There is a template-id in the given tagname.
       // handles X<X<int>> as X<X<int> >
       {
@@ -1905,6 +1914,8 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       env_tagnum = G__get_envtagnum();
    }
    else { // A qualified name, find the specified scope.
+      // A::B::C means we want A::B::C, not A::C, even if it exists.
+      enclosing = false;
       strcpy(atom_tagname, p + 2);
       *p = '\0';
       int slen = p - temp;
@@ -1968,16 +1979,16 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
 #else // G__VIRTUALBASE
             (G__isanybase(dtagnum, etagnum) != -1) ||
 #endif // G__VIRTUALBASE
-            G__isenclosingclass(decl_scope, env_tagnum) ||
-            G__isenclosingclassbase(decl_scope, env_tagnum) ||
+            (enclosing && G__isenclosingclass(decl_scope, env_tagnum)) ||
+            (enclosing && G__isenclosingclassbase(decl_scope, env_tagnum)) ||
             (!p && (G__tmplt_def_tagnum == decl_scope)) ||
 #ifdef G__VIRTUALBASE
             (G__isanybase(dtagnum, tmpltagnum, G__STATICRESOLUTION) != -1) ||
 #else // G__VIRTUALBASE
             (G__isanybase(dtagnum, tmpltagnum) != -1) ||
 #endif // G__VIRTUALBASE
-            G__isenclosingclass(decl_scope, G__tmplt_def_tagnum) ||
-            G__isenclosingclassbase(decl_scope, G__tmplt_def_tagnum)
+            (enclosing && G__isenclosingclass(decl_scope, G__tmplt_def_tagnum)) ||
+            (enclosing && G__isenclosingclassbase(decl_scope, G__tmplt_def_tagnum))
          ) {
             // -- We have found something in a base class, or an enclosing class.
          }
@@ -2019,16 +2030,16 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
 #else // G__VIRTUALBASE
             (G__isanybase(dtagnum, etagnum) != -1) ||
 #endif // G__VIRTUALBASE
-            G__isenclosingclass(decl_scope, env_tagnum) ||
-            G__isenclosingclassbase(decl_scope, env_tagnum) ||
+            (enclosing && G__isenclosingclass(decl_scope, env_tagnum)) ||
+            (enclosing && G__isenclosingclassbase(decl_scope, env_tagnum)) ||
             (!p && (G__tmplt_def_tagnum == decl_scope)) ||
 #ifdef G__VIRTUALBASE
             (G__isanybase(dtagnum, tmpltagnum, G__STATICRESOLUTION) != -1) ||
 #else // G__VIRTUALBASE
             (G__isanybase(dtagnum, tmpltagnum) != -1) ||
 #endif // G__VIRTUALBASE
-            G__isenclosingclass(decl_scope, G__tmplt_def_tagnum) ||
-            G__isenclosingclassbase(decl_scope, G__tmplt_def_tagnum)
+            (enclosing && G__isenclosingclass(decl_scope, G__tmplt_def_tagnum)) ||
+            (enclosing && G__isenclosingclassbase(decl_scope, G__tmplt_def_tagnum))
          ) {
             // We have found something in a base class, or an enclosing class.
          }
@@ -2216,10 +2227,10 @@ extern "C" int G__search_tagname(const char* tagname, int type)
             G__struct.parent_tagnum[i] = -1;
          }
          else {
-            G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror);
+            G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror | 0x1000);
          }
 #else // G__STD_NAMESPACE
-         G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror);
+         G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror | 0x1000);
 #endif // G__STD_NAMESPACE
          // --
       }

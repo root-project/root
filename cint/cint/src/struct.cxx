@@ -1507,6 +1507,9 @@ int G__defined_tagname(const char* tagname, int noerror)
    //         = 2   if not found just return without trying template
    //         = 3   like 2, and no autoloading
    //         = 4   like 3, and don't look for typedef
+   // noerror & 0x1000: do not look in enclosing scope, i.e. G__tagnum is
+   //               defining a fully qualified identifier. With this bit
+   //               set, tagname="C" and G__tagnum=A::B will not find to A::C.
    //
    // CAUTION:
    // If template class with constant argument is given to this function,
@@ -1525,7 +1528,12 @@ int G__defined_tagname(const char* tagname, int noerror)
       case '"':
       case '\'':
          return -1;
+      case 'c':
+         if (!strcmp(tagname, "const"))
+            return -1;
    }
+   bool enclosing = !(noerror & 0x1000);
+   noerror &= ~0x1000;
    if (strchr(tagname, '>')) {
       // handles X<X<int>> as X<X<int> >
       while (0 != (p = (char*) strstr(tagname, ">>"))) {
@@ -1597,6 +1605,8 @@ int G__defined_tagname(const char* tagname, int noerror)
    }
    p = (char*)G__find_last_scope_operator(temp);
    if (p) {
+      // A::B::C means we want A::B::C, not A::C, even if it exists.
+      enclosing = false;
       strcpy(atom_tagname, p + 2);
       *p = '\0';
       if (p == temp) {
@@ -1634,7 +1644,7 @@ int G__defined_tagname(const char* tagname, int noerror)
 try_again:
    for (i = G__struct.alltag - 1; i >= 0; --i) {
       if ((len == G__struct.hash[i]) && !strcmp(atom_tagname, G__struct.name[i])) {
-         if ((!p && (G__struct.parent_tagnum[i] == -1)) || (env_tagnum == G__struct.parent_tagnum[i])) {
+         if ((!p && (enclosing || env_tagnum == -1) && (G__struct.parent_tagnum[i] == -1)) || (env_tagnum == G__struct.parent_tagnum[i])) {
             if (noerror < 3) {
                G__class_autoloading(&i);
             }
@@ -1649,16 +1659,16 @@ try_again:
 #else // G__VIRTUALBASE
                (G__isanybase(G__struct.parent_tagnum[i], env_tagnum) != -1) ||
 #endif // G__VIRTUALBASE
-               G__isenclosingclass(G__struct.parent_tagnum[i], env_tagnum) ||
-               G__isenclosingclassbase(G__struct.parent_tagnum[i], env_tagnum) ||
+               (enclosing && G__isenclosingclass(G__struct.parent_tagnum[i], env_tagnum)) ||
+               (enclosing && G__isenclosingclassbase(G__struct.parent_tagnum[i], env_tagnum)) ||
                (!p && (G__tmplt_def_tagnum == G__struct.parent_tagnum[i]))
 #ifdef G__VIRTUALBASE
                || -1 != G__isanybase(G__struct.parent_tagnum[i], G__tmplt_def_tagnum, G__STATICRESOLUTION)
 #else // G__VIRTUALBASE
                || -1 != G__isanybase(G__struct.parent_tagnum[i], G__tmplt_def_tagnum)
 #endif // G__VIRTUALBASE
-               || G__isenclosingclass(G__struct.parent_tagnum[i], G__tmplt_def_tagnum)
-               || G__isenclosingclassbase(G__struct.parent_tagnum[i], G__tmplt_def_tagnum)
+               || (enclosing && G__isenclosingclass(G__struct.parent_tagnum[i], G__tmplt_def_tagnum))
+               || (enclosing && G__isenclosingclassbase(G__struct.parent_tagnum[i], G__tmplt_def_tagnum))
             )
          ) {
             // --
@@ -1815,10 +1825,10 @@ int G__search_tagname(const char* tagname, int type)
             G__struct.parent_tagnum[i] = -1;
          }
          else {
-            G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror);
+            G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror | 0x1000);
          }
 #else // G__STD_NAMESPACE
-         G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror);
+         G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror | 0x1000);
 #endif // G__STD_NAMESPACE
          // --
       }
