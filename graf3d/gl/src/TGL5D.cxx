@@ -442,7 +442,7 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
          ix = Int_t(xx*kNx);  //if (ix >= kNx) ix = kNx-1;
          iy = Int_t(yy*kNy);  //if (iy >= kNy) iy = kNy-1;
          iz = Int_t(zz*kNz);  //if (iz >= kNz) iz = kNz-1;
-         ind1 = ix +kNx*(iy+kNy*iz);
+         ind1 = ix +(kNx+1)*(iy+(kNy+1)*iz);
          v5[ind1] += fData->fV5[i];
          nv5[ind1]++;
             //printf("v5a[%2d][%2d][%2d] = %g, nv5a=%d\n",ix,iy,iz,v5[ind1],nv5[ind1]);
@@ -452,7 +452,7 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    for (ix = 0; ix < kNx; ++ix) {
       for(iy = 0; iy < kNy; ++iy) {
          for(iz = 0; iz < kNz; ++iz) {
-            ind1 = ix +kNx*(iy+kNy*iz);
+            ind1 = ix +(kNx+1)*(iy+(kNy+1)*iz);
             if (nv5[ind1] > 1) v5[ind1] /= nv5[ind1];
             //printf("v5[%2d][%2d][%2d] = %g, nv5=%d\n",ix,iy,iz,v5[ind1],nv5[ind1]);
          }
@@ -552,10 +552,10 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
    for (size_type i = 1; i < ncsize; ++i) {
       //const Double_t val = Emulate5th(&m[i * 3]);
       //the following is probably wrong. Hard to find out what the vector m is !!
-      ix = Int_t(kNx*(m[3*i]  -xMin)/xRange);  //if (ix >= kNx) ix = kNx-1;
-      iy = Int_t(kNy*(m[3*i+1]-yMin)/yRange);  //if (iy >= kNy) iy = kNy-1;
-      iz = Int_t(kNz*(m[3*i+2]-zMin)/zRange);  //if (iz >= kNz) iz = kNz-1;
-      ind1 = ix +kNx*(iy+kNy*iz);
+      ix = Int_t((kNx+1)*(m[3*i]  -xMin)/xRange);  //if (ix >= kNx) ix = kNx-1;
+      iy = Int_t((kNy+1)*(m[3*i+1]-yMin)/yRange);  //if (iy >= kNy) iy = kNy-1;
+      iz = Int_t((kNz+1)*(m[3*i+2]-zMin)/zRange);  //if (iz >= kNz) iz = kNz-1;
+      ind1 = ix +(kNx+1)*(iy+(kNy+1)*iz);
       Double_t val = 0;
       if (ind1 >=0 && ind1 < ntot) val = v5[ind1];
       //else printf("wrong value ix=%d, iy=%d, iz=%d, i=%d. m[0]=%g, m[1]=%g, m[2]=%g\n",ix,iy,iz,i,m[3*i],m[3*i+1],m[3*i+2]);
