@@ -2474,7 +2474,7 @@ def ClassDefImplementation(selclasses, self) :
       template = ""
       if clname.find('<') != -1: template = "template<> "
 
-      returnValue += 'extern ::ROOT::TGenericClassInfo genericClassInfo' + attrs['id'] + ';\n'
+      returnValue += 'namespace { extern ::ROOT::TGenericClassInfo genericClassInfo' + attrs['id'] + '; }\n'
       returnValue += template + 'TClass* ' + clname + '::Class() {\n'
       returnValue += '   if (!fgIsA)\n'
       returnValue += '      fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
@@ -2586,11 +2586,11 @@ def ClassDefImplementation(selclasses, self) :
       returnValue += '   }\n'
       returnValue += '}\n'
       returnValue += template + 'TClass* ' + clname + '::fgIsA = 0;\n'
-      returnValue += '::ROOT::TGenericClassInfo genericClassInfo' + attrs['id'] + '("' + clname[2:] + '",\n   ' + clname + '::Class_Version(),\n   '
+      returnValue += 'namespace { ::ROOT::TGenericClassInfo genericClassInfo' + attrs['id'] + '("' + clname[2:] + '",\n   ' + clname + '::Class_Version(),\n   '
       returnValue += clname + '::DeclFileName(),\n   ' + clname + '::DeclFileLine(),\n   '
       returnValue += 'typeid( ' + clname + ' ),\n   ::ROOT::DefineBehavior(0,0), 0, ' + clname + '::Dictionary,\n   '
       returnValue += 'new ::TInstrumentedIsAProxy< ' + clname + ' >(0),\n   '
-      returnValue += '0, sizeof( ' + clname + '));\n'
+      returnValue += '0, sizeof( ' + clname + ')); }\n'
     elif derivesFromTObject :
       # no fgIsA etc members but derives from TObject!
       print '--->> genreflex: ERROR: class %s derives from TObject but does not use ClassDef!' % attrs['fullname']
