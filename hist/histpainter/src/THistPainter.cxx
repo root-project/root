@@ -3435,6 +3435,35 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    if (Hoption.Axis == -1) return;
    if (Hoption.Same && Hoption.Axis <= 0) return;
 
+   // Repainting alphanumeric labels axis on a plot done with
+   // the option HBAR (horizontal) needs some adjustements.
+   TAxis *xaxis = 0;
+   TAxis *yaxis = 0;
+   if (Hoption.Same && Hoption.Axis) { // Axis repainted (TPad::RedrawAxis)
+      if (fXaxis->GetLabels() || fYaxis->GetLabels()) { // One axis has alphanumeric labels
+         TIter next(gPad->GetListOfPrimitives());
+         TObject *obj;
+         // Check if the first TH1 of THStack in the pad is drawn with the option HBAR
+         while ((obj = next())) {
+            if (!obj->InheritsFrom("TH1") &&
+                !obj->InheritsFrom("THStack")) continue;
+            TString opt = obj->GetDrawOption();
+            opt.ToLower();
+            // if drawn with HBAR, the axis should be inverted and the pad set to horizontal
+            if (strstr(opt,"hbar")) {
+               gPad->SetVertical(kFALSE);
+               xaxis = fXaxis;
+               yaxis = fYaxis;
+               if (!strcmp(xaxis->GetName(),"xaxis")) {
+                  fXaxis = yaxis;
+                  fYaxis = xaxis;
+               }
+            }
+            break;
+         }
+      }
+   }
+
    static char chopt[10] = "";
    Double_t gridl = 0;
    Int_t ndiv, ndivx, ndivy, nx1, nx2, ndivsave;
@@ -3633,6 +3662,12 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       axis.PaintAxis(yAxisXPos2, aymin,
                      yAxisXPos2, aymax,
                      uminsave, umaxsave,  ndivsave, chopt, gridl, drawGridOnly);
+   }
+
+   // Reset the axis if they have been inverted in case of option HBAR
+   if (xaxis) {
+      fXaxis = xaxis;
+      fYaxis = yaxis;
    }
 }
 
