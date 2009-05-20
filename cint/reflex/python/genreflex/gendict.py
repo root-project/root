@@ -1615,8 +1615,14 @@ class genDictionary(object) :
             body += iden + '  if (retaddr) *(void**)retaddr = (void*)&%s(' % ( name, )
             head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
             body += ');\n'
-            body += iden + " // The seemingly useless '&' below is to work around Microsoft's compiler odd complaint C2027 if there reference has only been forward declared.\n"
-            body += iden + '  else &%s(' % ( name, )
+            # The seemingly useless '&' below is to work around Microsoft's
+            # compiler 7.1-9 odd complaint C2027 if the reference has only
+            # been forward declared.
+            if sys.platform == 'win32':
+              body += iden + '  else &%s(' % ( name, )
+            else:
+              # but '&' will trigger an "unused value" warning on != MSVC
+              body += iden + '  else %s(' % ( name, )
             head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
             body += ');\n'
           else :
@@ -1851,10 +1857,16 @@ class genDictionary(object) :
           head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
           body += '));\n' + iden + 'else '
       if returns[-1] == '&' :
-          body += iden + " // The seemingly useless '&' below is to work around Microsoft's compiler odd complaint C2027 if there reference has only been forward declared.\n"
+        # The seemingly useless '&' below is to work around Microsoft's
+        # compiler 7.1-9 odd complaint C2027 if the reference has only
+        # been forward declared.
+        if sys.platform == 'win32':
           body += iden + '  &(((%s*)o)->%s)(' % ( cl, name )
-      else: 
+        else:
+          # but '&' will trigger an "unused value" warning on != MSVC
           body += iden + '  (((%s*)o)->%s)(' % ( cl, name )
+      else: 
+        body += iden + '  (((%s*)o)->%s)(' % ( cl, name )
       head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
       body += ');\n'
       if ndarg : 
