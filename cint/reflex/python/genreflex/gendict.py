@@ -2493,19 +2493,23 @@ def ClassDefImplementation(selclasses, self) :
       returnValue += '   return fgIsA;\n'
       returnValue += '}\n'
       returnValue += template + 'const char * ' + clname + '::Class_Name() {return "' + clname[2:]  + '";}\n'
-      # need to fwd decl newdel wrapper because ClassDef is before stubs
-      returnValue += 'namespace {\n'
-      returnValue += '   static void method_newdel' + id + '(void*, void*, const std::vector<void*>&, void*);\n'
-      returnValue += '}\n'
+      haveNewDel = 0
+      if 'GetNewDelFunctions' in listOfMembers:
+        haveNewDel = 1
+        # need to fwd decl newdel wrapper because ClassDef is before stubs
+        returnValue += 'namespace {\n'
+        returnValue += '   static void method_newdel' + id + '(void*, void*, const std::vector<void*>&, void*);\n'
+        returnValue += '}\n'
       returnValue += template + 'void ' + clname + '::Dictionary() {\n'
       returnValue += '   genericClassInfo' + id + '.SetImplFile("", 1);\n'
-      returnValue += '   ::Reflex::NewDelFunctions* ndf = 0;\n'
-      returnValue += '   method_newdel' + id + '(&ndf, 0, std::vector<void*>(), 0);\n'
-      returnValue += '   genericClassInfo' + id + '.SetNew(ndf->fNew);\n'
-      returnValue += '   genericClassInfo' + id + '.SetNewArray(ndf->fNewArray);\n'
-      returnValue += '   genericClassInfo' + id + '.SetDelete(ndf->fDelete);\n'
-      returnValue += '   genericClassInfo' + id + '.SetDeleteArray(ndf->fDeleteArray);\n'
-      returnValue += '   genericClassInfo' + id + '.SetDestructor(ndf->fDestructor);\n'
+      if haveNewDel:
+        returnValue += '   ::Reflex::NewDelFunctions* ndf = 0;\n'
+        returnValue += '   method_newdel' + id + '(&ndf, 0, std::vector<void*>(), 0);\n'
+        returnValue += '   genericClassInfo' + id + '.SetNew(ndf->fNew);\n'
+        returnValue += '   genericClassInfo' + id + '.SetNewArray(ndf->fNewArray);\n'
+        returnValue += '   genericClassInfo' + id + '.SetDelete(ndf->fDelete);\n'
+        returnValue += '   genericClassInfo' + id + '.SetDeleteArray(ndf->fDeleteArray);\n'
+        returnValue += '   genericClassInfo' + id + '.SetDestructor(ndf->fDestructor);\n'
       for rule in ('ioread', 'ioreadraw'):
         if attrs['extra'].has_key(rule):
           if rule == 'ioreadraw': setrrr = 'Raw'
