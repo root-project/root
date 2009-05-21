@@ -1,6 +1,10 @@
-{
+#include "TFile.h"
+#include "TTree.h"
+
+int runvectorInVector() {
 // Fill out the code of the actual test
    TFile *file = TFile::Open("CaloTowers.root");
+   TTree *Events; file->GetObject("Events",Events);
    Events->SetScanField(0);
    Long64_t n = Events->Scan("CaloTowerCollection.obj.e");
    if (n!=4207) { return 1; }
