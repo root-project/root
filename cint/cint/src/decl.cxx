@@ -2197,7 +2197,14 @@ void G__define_var(int tagnum, int typenum)
                }
             }
             // skip until comma or semicolon
-            cin = G__fignorestream(",;");
+            cin = G__fgetspace(); // G__fignorestream(",;");
+            if (cin != ',' && cin != ';') {
+               if (!G__xrefflag) {
+                  G__fprinterr(G__serr, "Error: expected ‘,’ or ‘;’ before ‘%c’ ", cin);
+               }
+               G__genericerror(0);
+            }
+            
             //   type varname( const,const) , ;
             //                               ^
             // allocate memory area
