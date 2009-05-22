@@ -3196,6 +3196,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
    cmd.ReplaceAll("$LinkedLibs",linkLibraries);
    cmd.ReplaceAll("$LibName",libname);
+   cmd.ReplaceAll("\"$BuildDir","$BuildDir");
    cmd.ReplaceAll("$BuildDir","\"$BuildDir\"");
    cmd.ReplaceAll("$BuildDir",build_loc);
    if (mode==kDebug) {
