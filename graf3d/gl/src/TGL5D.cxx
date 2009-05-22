@@ -548,13 +548,20 @@ TGL5DPainter::AddSurface(Double_t v4, Color_t ci, Double_t iso, Double_t sigma, 
       fV5PredictedRange.second = TMath::Max(fV5PredictedRange.second, p[0]);
    } else
       fV5PredictedRange.second = fV5PredictedRange.first = p[0];
-      
+   
+   const Rgl::Range_t glXRange(fCoord->GetXRangeScaled());
+   const Double_t xrs = glXRange.second - glXRange.first;
+   const Rgl::Range_t glYRange(fCoord->GetYRangeScaled());
+   const Double_t yrs = glYRange.second - glYRange.first;
+   const Rgl::Range_t glZRange(fCoord->GetZRangeScaled());
+   const Double_t zrs = glZRange.second - glZRange.first;
+   
    for (size_type i = 1; i < ncsize; ++i) {
       //const Double_t val = Emulate5th(&m[i * 3]);
       //the following is probably wrong. Hard to find out what the vector m is !!
-      ix = Int_t((kNx+1)*(m[3*i]  -xMin)/xRange);  //if (ix >= kNx) ix = kNx-1;
-      iy = Int_t((kNy+1)*(m[3*i+1]-yMin)/yRange);  //if (iy >= kNy) iy = kNy-1;
-      iz = Int_t((kNz+1)*(m[3*i+2]-zMin)/zRange);  //if (iz >= kNz) iz = kNz-1;
+      ix = Int_t((kNx+1)*(m[3*i]  - glXRange.first)/xrs);  //if (ix >= kNx) ix = kNx-1;
+      iy = Int_t((kNy+1)*(m[3*i+1]- glYRange.first)/yrs);  //if (iy >= kNy) iy = kNy-1;
+      iz = Int_t((kNz+1)*(m[3*i+2]- glZRange.first)/zrs);  //if (iz >= kNz) iz = kNz-1;
       ind1 = ix +(kNx+1)*(iy+(kNy+1)*iz);
       Double_t val = 0;
       if (ind1 >=0 && ind1 < ntot) val = v5[ind1];
