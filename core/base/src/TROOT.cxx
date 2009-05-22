@@ -527,6 +527,10 @@ TROOT::~TROOT()
       fGeometries->Delete(); SafeDelete(fGeometries);
       fBrowsers->Delete();   SafeDelete(fBrowsers);
       //fBrowsables->Delete(); SafeDelete(fBrowsables);
+      
+      // Stop emitting signals
+      TQObject::BlockAllSignals(kTRUE);
+
       fMessageHandlers->Delete(); SafeDelete(fMessageHandlers);
 //      if (fTypes) fTypes->Delete();
 //      SafeDelete(fTypes);
@@ -535,9 +539,6 @@ TROOT::~TROOT()
 //      if (fGlobalFunctions) fGlobalFunctions->Delete();
 //      SafeDelete(fGlobalFunctions);
 //      fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
-
-      // Stop emitting signals
-      TQObject::BlockAllSignals(kTRUE);
 
       // Remove shared libraries produced by the TSystem::CompileMacro() call
       gSystem->CleanCompiledMacros();
