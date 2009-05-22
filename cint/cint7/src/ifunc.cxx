@@ -4255,7 +4255,7 @@ static ::Reflex::Member G__overload_match(const char* funcname, G__param* libp, 
    // Perform function overload matching, and if found and requested, convert arguments guided by the prototype.
    ::Reflex::Scope store_ifunc = p_ifunc;
 #ifdef G__ASM
-   int active_run = doconvert && !G__asm_wholefunction && !G__asm_noverflow;
+   int active_run = doconvert && !G__asm_wholefunction && !G__asm_noverflow && !(G__no_exec_compile==1 && funcname[0]=='~' /* loop compilation of temporary destruction */);
 #else
    int active_run = doconvert;
 #endif

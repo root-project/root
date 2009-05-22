@@ -4693,7 +4693,7 @@ struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param
    struct G__ifunc_table_internal *store_ifunc = p_ifunc;
    int ix = 0;
 #ifdef G__ASM
-   int active_run = doconvert && !G__asm_wholefunction && !G__asm_noverflow;
+   int active_run = doconvert && !G__asm_wholefunction && !G__asm_noverflow && !(G__no_exec_compile==1 && funcname[0]=='~' /* loop compilation of temporary destruction */);
 #else
    int active_run = doconvert;
 #endif
