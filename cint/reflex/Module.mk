@@ -160,13 +160,13 @@ clean-check-$(MODNAME):
 
 clean-$(MODNAME): clean-genreflex clean-check-$(MODNAME)
 		@rm -f $(RFLX_GENMAPX)
-		@rm -f $(REFLEXO) $(REFLEXDO)
+		@rm -f $(REFLEXO) $(REFLEXDO) $(RFLX_GENMAPO) $(RFLX_UNITTESTO) $(RFLX_TESTLIBO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(REFLEXDEP) $(REFLEXDS) $(REFLEXDH) $(REFLEXLIB) \
-		   $(REFLEXDICTLIB) $(REFLEXDICTMAP)
+		   $(REFLEXDICTLIB) $(REFLEXDICTMAP) $(RFLX_GENMAPDEP)  $(RFLX_TESTLIB)
 		@rm -rf include/Reflex lib/python
 
 distclean::     distclean-$(MODNAME)
