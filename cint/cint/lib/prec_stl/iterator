@@ -147,7 +147,7 @@ struct iterator {
 ////////////////////////////////////////////////////////////////////////
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
-#if defined(G__SUN) && !defined (G__GNUC)
+#if defined(G__SUN) && !defined (G__GNUC) && !defined(G__STLPORT_VERSION)
 
 template <class Iterator, class iterator_category, class value_type, class reference,  class pointer, class difference_type>
 class reverse_iterator 
@@ -155,7 +155,7 @@ class reverse_iterator
 #else
 template <class Iterator>
 class reverse_iterator 
-#if defined(G__KCC) || defined(G__INTEL_COMPILER)
+#if defined(G__KCC) || defined(G__INTEL_COMPILER) || defined(G__STLPORT_VERSION)
   : public iterator<iterator_traits<Iterator>::iterator_category,
                     iterator_traits<Iterator>::value_type,
                     iterator_traits<Iterator>::difference_type,
@@ -170,7 +170,7 @@ class reverse_iterator
 #endif
  public:
 
-#if defined(G__KCC)  || defined(G__INTEL_COMPILER)
+#if defined(G__KCC)  || defined(G__INTEL_COMPILER) || defined(G__STLPORT_VERSION)
    typedef Iterator iterator_type;
    typedef typename iterator_traits<Iterator>::difference_type difference_type;
    typedef typename iterator_traits<Iterator>::reference reference;

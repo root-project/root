@@ -50,7 +50,7 @@ class vector {
  public:
   typedef T value_type;
 
-#if ((defined(G__GNUC) || defined(G__SGI)) && !defined(G__KCC)) || defined(G__HPUX) 
+#if ((defined(G__GNUC) || defined(G__SGI)) && !defined(G__KCC)) || defined(G__HPUX) || defined(G__STLPORT_VERSION)
   typedef value_type* pointer;
   typedef const value_type* const_pointer;
   typedef value_type& reference;
@@ -88,7 +88,10 @@ class vector {
 #elif defined(G__SUN) && !defined(G__GNUC)
   typedef T* iterator;
   typedef const T* const_iterator;
-
+#if defined(G__STLPORT_VERSION)
+  typedef reverse_iterator<const T*> const_reverse_iterator;
+  typedef reverse_iterator<T*> reverse_iterator;
+#else
     typedef reverse_iterator<const_iterator, 
       random_access_iterator_tag, value_type, 
       const_reference, const_pointer, difference_type>
@@ -97,7 +100,7 @@ class vector {
       random_access_iterator_tag, value_type,
       reference, pointer, difference_type>
       reverse_iterator;
-
+#endif // defined(G__STLPORT_VERSION)
 #elif defined(G__VISUAL) && (G__MSC_VER>=1300)
 
    #define G__VECTOR_HAS_CLASS_ITERATOR
@@ -204,7 +207,7 @@ class vector {
 	typedef std::reverse_iterator<iterator> reverse_iterator;
 	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
-#elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER>3001)) 
+#elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER>3001))
 
   #define G__VECTOR_HAS_CLASS_ITERATOR
 
@@ -357,7 +360,8 @@ class vector {
   class reverse_iterator 
 #if defined(G__VISUAL) 
 	: public _Ranit<T,difference_type>
-#elif !defined(G__SUNPRO_CC) && !defined(G__INTEL_COMPILER) && !defined(G__KCC) && !defined(G__AIX) && !defined(G__ALPHA)
+#elif (!defined(G__SUNPRO_CC) && !defined(G__INTEL_COMPILER) && !defined(G__KCC) && !defined(G__AIX) && !defined(G__ALPHA)) \
+  || defined(G__STLPORT_VERSION)
     	: public std::random_access_iterator<T,difference_type>
 #endif
 	{

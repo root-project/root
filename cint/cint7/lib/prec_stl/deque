@@ -90,12 +90,12 @@ class deque {
     iterator operator++(int a);
     iterator& operator--();
     iterator operator--(int a);
-#if (G__GNUC_VER>3001)
+#if (G__GNUC_VER>3001) || defined(G__STLPORT_VERSION)
 #else
     bool operator==(const iterator& x) ;
 #endif
 #if defined(G__HPUX)
-#elif (G__GNUC_VER>3001)
+#elif (G__GNUC_VER>3001) || defined(G__STLPORT_VERSION)
 #else
     bool operator!=(const iterator& x) ;
 #endif
@@ -108,7 +108,7 @@ class deque {
 #if defined(G__HPUX)
   friend bool operator!=(const deque::iterator& x
                         ,const deque::iterator& y) const;
-#elif (G__GNUC_VER>3001) && !defined(G__INTEL_COMPILER)
+#elif (G__GNUC_VER>3001) && !defined(G__INTEL_COMPILER) || defined(G__STLPORT_VERSION)
   friend bool operator==(const deque::iterator& x
                         ,const deque::iterator& y) const;
   friend bool operator!=(const deque::iterator& x

@@ -948,6 +948,10 @@ static void G__platformMacro()
 #ifdef __SUNPRO_C   /* Sun C compiler */
    G__DEFINE_MACRO_C(__SUNPRO_C);
 #endif
+#ifdef _STLPORT_VERSION
+   // stlport version, used on e.g. SUN
+   G__DEFINE_MACRO_C(_STLPORT_VERSION);
+#endif
 #ifdef G__VISUAL    /* Microsoft Visual C++ compiler */
    if (G__globalcomp == G__NOLINK) {
       sprintf(temp, "G__VISUAL=%ld", (long)G__VISUAL);

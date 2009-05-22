@@ -128,24 +128,6 @@ $(CINTDLLDIRL)/G__c_stdfunc.c:		$(CINTDLLDIRL)/stdstrct/stdfunc.h $(CINTCPPDEP)
 $(CINTDLLDIRL)/G__c_posix.c:		$(CINTDLLDIRL)/posix/exten.h $(CINTCPPDEP)
 $(CINTDLLDIRL)/G__c_ipc.c:			$(CINTDLLDIRL)/ipc/ipcif.h $(CINTCPPDEP)
 
-FAVOR_SYSINC := -I-
-ifeq ($(PLATFORM),sgi)
-   FAVOR_SYSINC =
-endif
-CINTDLLINCDIRS := -I. -I$(CINTDLLDIRDLLSTL) $(FAVOR_SYSINC)
-ifeq ($(GCC_MAJOR),4)
-  CINTDLLINCDIRS := -iquote. -iquote$(CINTDLLDIRDLLSTL)
-endif
-ifeq ($(ICC_MAJOR),10)
-  CINTDLLINCDIRS := -iquote. -iquote$(CINTDLLDIRDLLSTL)
-endif
-
-ifeq ($(BUILDINGCINT),5)
-$(CINTDLLS): CINTCXXFLAGS += $(CINTDLLINCDIRS)
-else
-$(CINTDLLS): CINT7CXXFLAGS += $(CINTDLLINCDIRS)
-endif
-
 ##### all cintdlls end on .dll
 ifneq ($(SOEXT),dll)
 CINTDLLSOEXTCMD = mv $(@:.dll=.$(SOEXT)) $@
