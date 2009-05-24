@@ -11,7 +11,6 @@
 			<string>QLGenerator</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>public.data</string>
 				<string>ch.cern.root-data</string>
 			</array>
 		</dict>
@@ -62,7 +61,7 @@
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>ch.cern.root</string>
+			<string>ch.cern.root-data</string>
 			<key>UTTypeReferenceURL</key>
 			<string>http://root.cern.ch/</string>
 			<key>UTTypeDescription</key>
@@ -70,7 +69,6 @@
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>
-				<string>ch.cern.root-data</string>
 			</array>
 			<key>UTTypeTagSpecification</key>
 			<dict>
