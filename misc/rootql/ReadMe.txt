@@ -5,7 +5,7 @@ This is a Quick Look plugin that allows quick inspection of the content
 of a ROOT file. 
 
 Quick Look is available on MacOS X since version 10.5 (Leopard). To use QL
-select an file icon in the Finder and hit the space bar. For all file types
+select a file icon in the Finder and hit the space bar. For all file types
 supported by QL you will get a window showing the file content, for file types
 not supported you will get a generic window showing some basic file info.
 
