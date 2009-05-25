@@ -2579,16 +2579,17 @@ def ClassDefImplementation(selclasses, self) :
           poscol = b.find(':')
           if poscol == -1 : baseid = b
           else            : baseid = b[poscol + 1:]
-          baseDerivesFromTObject = (baseid == self.TObject_id)
-          # a base cannot possibly derive from TObject if we don't derive from TObject:
-          if not baseDerivesFromTObject and derivesFromTObject :
-            allbasebases = []
-            self.getAllBases(baseid, allbasebases)
-            if len( filter( lambda b: b[0] == self.TObject_id, allbasebases ) ) :
-              baseDerivesFromTObject = 1
-          # basename = self.xref[baseid]['attrs']['fullname']
           basename = self.genTypeName(baseid)
-          if baseDerivesFromTObject :
+          basemem = self.xref[baseid]['attrs']['members']
+          baseMembersList = basemem.split()
+          baseHasShowMembers = 0
+          for ml in membersList:
+            if ml[1].isdigit() :
+              if self.xref[ml]['attrs']['name'] == 'ShowMembers' :
+                baseHasShowMembers = 1
+                break
+          # basename = self.xref[baseid]['attrs']['fullname']
+          if baseHasShowMembers :
             returnValue +=  '   %s::ShowMembers(R__insp,R__parent);\n' % basename
           else :
             returnValue +=  '   ::ROOT::GenericShowMembers("%s", ( ::%s *)(this), R__insp, R__parent, false);\n' % (basename, basename)
