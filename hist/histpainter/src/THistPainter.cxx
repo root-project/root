@@ -1097,6 +1097,11 @@ content.
 
 <p>The color table used is defined in the current style.
 
+<p>The default number of color levels used to paint the cells is 20.
+It can be changed with <tt>TH1::SetContour()</tt> or
+<tt>TStyle::SetNumberContours()</tt>. The higher this number is, the smoother
+is the color change between cells.
+
 <p>The color palette in TStyle can be modified via <tt>gStyle->SePalette()</tt>.
 
 <p>All the none empty bins are painted. Empty bins are not painted unless
