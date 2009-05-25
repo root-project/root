@@ -69,8 +69,8 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 264809288;
-			PBXWorkspaceStateSaveDate = 264809288;
+			PBXPerProjectTemplateStateSaveDate = 264925882;
+			PBXWorkspaceStateSaveDate = 264925882;
 		};
 		sourceControlManager = 41C17F490FC2C87400652FD9 /* Source Control */;
 		userBuildSettings = {
@@ -149,7 +149,7 @@
 			YES,
 		);
 		argumentStrings = (
-			"-p -c ch.cern.root-data -g ROOTQL.qlgenerator ~/hsimple.root",
+			"-p -c ch.cern.root.data -g ROOTQL.qlgenerator /Users/rdm/hsimple.root",
 		);
 		autoAttachOnCrash = 1;
 		breakpointsEnabled = 0;

@@ -13,7 +13,7 @@
 
 OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview, CFURLRef url, CFStringRef contentTypeUTI, CFDictionaryRef options)
 {
-   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
 #ifdef DEBUG
    NSDate *startDate = [NSDate date];
@@ -27,7 +27,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
 #endif
 
    // Check for cancel
-	if(QLPreviewRequestIsCancelled(preview)) {
+	if (QLPreviewRequestIsCancelled(preview)) {
 		[pool release];
 		return noErr;
 	}
@@ -48,7 +48,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
    [html appendString: @"<body bgcolor=white>"];
 
    // Read ROOT file and fill html
-   if (ReadFile(fullPath, html) == -1) {
+   if (ReadFile(fullPath, html, preview) == -1) {
       [pool release];
       return noErr;
    }
@@ -56,23 +56,18 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
    [html appendString: @"</body></html>"];
 
 #ifdef DEBUG
-   NSLog(@"Read ROOT %@ file in %.3f sec",
+   NSLog(@"Scanned file %@ in %.3f sec",
          fullPath, -[startDate timeIntervalSinceNow]);
 #endif
 
    // Check for cancel
-	if(QLPreviewRequestIsCancelled(preview)) {
+	if (QLPreviewRequestIsCancelled(preview)) {
 		[pool release];
 		return noErr;
 	}
 
    // Now let WebKit do its thing
    QLPreviewRequestSetDataRepresentation(preview, (CFDataRef)[html dataUsingEncoding: NSUTF8StringEncoding], kUTTypeHTML, (CFDictionaryRef)props);
-
-#ifdef DEBUG
-   NSLog(@"Display HTML for ROOT file %@ in %.3f sec",
-         fullPath, -[startDate timeIntervalSinceNow]);
-#endif
 
    [pool release];
    return noErr;

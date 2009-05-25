@@ -7,4 +7,4 @@
  *
  */
 
-extern int ReadFile(NSString *fullPath, NSMutableString *html);
+extern int ReadFile(NSString *fullPath, NSMutableString *html, QLPreviewRequestRef preview);

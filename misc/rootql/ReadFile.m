@@ -16,6 +16,7 @@
 #include <strings.h>
 #include <errno.h>
 
+#import <QuickLook/QuickLook.h>
 #import <Cocoa/Cocoa.h>
 
 
@@ -271,7 +272,7 @@ static int ReadHeader(int fd, struct FileHeader_t *fh, NSMutableString *html)
    if (versiondir > 1)
       FromBufUUID(&buffer, &fh->uuid, versiondir);
    else
-      fh->uuid = "-";
+      fh->uuid = strdup("-");
 
    buffer = header + nk;
    char *str;
@@ -280,7 +281,7 @@ static int ReadHeader(int fd, struct FileHeader_t *fh, NSMutableString *html)
    FromBufStr(&buffer, &fh->title);
 
 #ifdef DEBUG
-   NSLog(@"%s: version = %d, begin = %d, end = %lld, units = %hhd, compress = %d",
+   NSLog(@"ReadHeader: %s, version = %d, begin = %d, end = %lld, units = %hhd, compress = %d",
          fh->name, fh->version, fh->begin, fh->end, fh->units, fh->compress);
 #endif
 
@@ -301,7 +302,7 @@ static int ReadHeader(int fd, struct FileHeader_t *fh, NSMutableString *html)
    return 0;
 }
 
-static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableString *html)
+static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableString *html, QLPreviewRequestRef preview)
 {
    // Loop over all keys and print information.
    // Returns -1 in case of error, 0 otherwise.
@@ -320,6 +321,8 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableString *html)
    int   nread, datime;
    short versionkey;
    char *header, *buffer;
+
+   NSDate *startDate = [NSDate date];
 
    long long idcur = fh->begin;
 
@@ -366,12 +369,6 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableString *html)
          [html appendString: @"<tr>\n"];
          free(header);
          idcur -= nbytes;
-         continue;
-      }
-      if (idcur == fh->begin) {
-         //skip initial TFile
-         free(header);
-         idcur += nbytes;
          continue;
       }
 
@@ -440,6 +437,20 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableString *html)
       nread = len;
 
       idcur += nbytes;
+
+      if ([startDate timeIntervalSinceNow] < -0.1) {
+         // Check for cancel once per second
+#ifdef DEBUG
+         NSLog(@"ReadKeys: checking for cancel %.3f", [startDate timeIntervalSinceNow]);
+#endif
+         if (QLPreviewRequestIsCancelled(preview)) {
+#ifdef DEBUG
+            NSLog(@"ReadKeys: cancelled");
+#endif
+            return -1;
+         }
+         startDate = [startDate addTimeInterval: 0.1];
+      }
    }
 
    [html appendString: @"</table>\n"];
@@ -447,7 +458,7 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableString *html)
    return 0;
 }
 
-int ReadFile(NSString *fullPath, NSMutableString *html)
+int ReadFile(NSString *fullPath, NSMutableString *html, QLPreviewRequestRef preview)
 {
    // Read ROOT file structure for specified file.
    // Returns -1 in case of error, 0 otherwise.
@@ -463,7 +474,15 @@ int ReadFile(NSString *fullPath, NSMutableString *html)
       return -1;
    }
 
-   if (ReadKeys(fd, &fh, html) == -1) {
+   // Check for cancel
+	if (QLPreviewRequestIsCancelled(preview)) {
+      free(fh.uuid);
+      free(fh.title);
+      close(fd);
+		return -1;
+	}
+
+   if (ReadKeys(fd, &fh, html, preview) == -1) {
       free(fh.uuid);
       free(fh.title);
       close(fd);
