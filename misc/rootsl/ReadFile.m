@@ -390,12 +390,12 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableSet *nameSet, NSMu
       else
          cx = 1.0;
 
-      if (strcmp(classname, "TBasket")) {
+      //if (strcmp(classname, "TBasket")) {
          if (strlen(name))
             [nameSet addObject: [NSString stringWithUTF8String: name]];
          if (strlen(title))
             [titleSet addObject: [NSString stringWithUTF8String: title]];
-      }
+      //}
 
       free(classname);
       free(name);

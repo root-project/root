@@ -11,7 +11,7 @@
 			<string>MDImporter</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>ch.cern.root-data</string>
+				<string>ch.cern.root.data</string>
 			</array>
 		</dict>
 	</array>
@@ -49,7 +49,7 @@
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>ch.cern.root-data</string>
+			<string>ch.cern.root.data</string>
 			<key>UTTypeReferenceURL</key>
 			<string>http://root.cern.ch/</string>
 			<key>UTTypeDescription</key>
