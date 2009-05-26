@@ -286,8 +286,6 @@ XrdSecProtocolpwd::XrdSecProtocolpwd(int opts, const char *hname,
    memcpy(&hostaddr, ipadd, sizeof(hostaddr));
    // Init client name
    CName[0] = '?'; CName[1] = '\0';
-   // And set link to entity
-   Entity.name = CName;
 
    //
    // Notify, if required
@@ -962,10 +960,8 @@ XrdSecCredentials *XrdSecProtocolpwd::getCredentials(XrdSecParameters *parm,
    //
    // Get the status bucket, if any
    if ((bck = bmai->GetBucket(kXRS_status))) {
-      int pst = 0;
-      memcpy(&pst,bck->buffer,sizeof(pwdStatus_t));
-      pst = ntohl(pst);
-      memcpy(&SessionSt, &pst, sizeof(pwdStatus_t));
+      memcpy(&SessionSt, bck->buffer, sizeof(pwdStatus_t));
+      SessionSt.options = ntohs(SessionSt.options);
       bmai->Deactivate(kXRS_status);
    } else {
       SessionSt.ctype = kpCT_normal;
@@ -1100,10 +1096,11 @@ XrdSecCredentials *XrdSecProtocolpwd::getCredentials(XrdSecParameters *parm,
    }
    //
    // Add / Update status
-   int *pst = new int;
+   char *pst = new char[sizeof(pwdStatus_t)];
+   SessionSt.options = htons(SessionSt.options);
    memcpy(pst,&SessionSt,sizeof(pwdStatus_t));
-   *pst = htonl(*pst);
-   if (bmai->AddBucket((char *)pst,sizeof(pwdStatus_t), kXRS_status) != 0) {
+   SessionSt.options = ntohs(SessionSt.options);
+   if (bmai->AddBucket(pst, sizeof(pwdStatus_t), kXRS_status) != 0) {
       DEBUG("problems adding bucket kXRS_status");
    }
    //
@@ -1230,21 +1227,21 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
    //
    // Get handshake status
    if ((bck = bmai->GetBucket(kXRS_status))) {
-      int pst = 0;
-      memcpy(&pst,bck->buffer,sizeof(pwdStatus_t));
-      pst = ntohl(pst);
-      memcpy(&SessionSt, &pst, sizeof(pwdStatus_t));
+      memcpy(&SessionSt, bck->buffer, sizeof(pwdStatus_t));
+      SessionSt.options = ntohs(SessionSt.options);
       bmai->Deactivate(kXRS_status);
    } else {
       DEBUG("no bucket kXRS_status found in main buffer");
    }   
    hs->Tty = SessionSt.options & kOptsClntTty;
    //
-   // Indicate who we are
+   // Client name
    unsigned int ulen = hs->User.length();
    ulen = (ulen > sizeof(CName)-1) ? sizeof(CName)-1 : ulen; 
    if (ulen)
       strcpy(CName, hs->User.c_str());
+   // And set link to entity
+   Entity.name = strdup(CName);
 
    //
    // Version
@@ -1532,13 +1529,14 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
          }
       //
       // We set some options in the option field of a pwdStatus_t structure
-      int *pst = new int;
+      char *pst = new char[sizeof(pwdStatus_t)];
+      SessionSt.options = htons(SessionSt.options);
       memcpy(pst,&SessionSt,sizeof(pwdStatus_t));
-      *pst = htonl(*pst);
-      if (bmai->AddBucket((char *)pst,sizeof(pwdStatus_t), kXRS_status) != 0) {
+      SessionSt.options = ntohs(SessionSt.options);
+      if (bmai->AddBucket(pst,sizeof(pwdStatus_t), kXRS_status) != 0) {
          DEBUG("problems adding bucket kXRS_status");
       }
-      // 
+      //
       // Serialize, encrypt and add to the global list
       if (AddSerialized('s', nextstep, hs->ID,
                         bpar, bmai, kXRS_main, hs->Hcip) != 0)
@@ -2002,9 +2000,11 @@ bool XrdSecProtocolpwd::CheckCredsAFS(XrdSutBucket *creds, int ctype)
    struct ktc_encryptionKey key;
    if (ctype == kpCT_afs) {
       char *errmsg;
-      String pwd(creds->buffer,creds->size);
+      char *pwd = new char[creds->size + 1];
+      memcpy(pwd, creds->buffer, creds->size);
+      pwd[creds->size] = 0;
       rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
-                                      usr, "", "", (char *) pwd.c_str(),
+                                      usr, "", "", pwd,
                                       life, 0, 0, &errmsg);
       if (rc) {
          if (notify)
@@ -2014,10 +2014,11 @@ bool XrdSecProtocolpwd::CheckCredsAFS(XrdSutBucket *creds, int ctype)
          match = 1;
          if (KeepCreds)
             // We need to encrypt te plain passwd
-            ka_StringToKey((char *) pwd.c_str(), 0, &key);
+            ka_StringToKey(pwd, 0, &key);
          if (QTRACE(ALL))
             PRINT("CheckAFS: success!");
       }
+      if (pwd) delete [] pwd;
 
    } else if (ctype == kpCT_afsenc) {
 
@@ -3126,7 +3127,7 @@ int XrdSecProtocolpwd::ParseClientInput(XrdSutBuffer *br, XrdSutBuffer **bm,
         } else {
             // Autoreg is the only alternative at this point ...
             DEBUG("could not create entry in cache - tag: "<<ptag);
-         }            
+         }
       }
       // Get next
       bp = bcklst->Next();

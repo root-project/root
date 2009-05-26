@@ -17,7 +17,7 @@
 #                        - full path to source tarball
 #          <version> : version when the 2nd argument is a tarball
 #
-# When relevant, the script uses 'wget' to retrieve the tarball
+# When relevant, the script uses 'wget' ('curl' on MacOsX) to retrieve the tarball
 
 printhelp()
 {
@@ -38,9 +38,11 @@ printhelp()
      echo "                              - full path to source tarball"
      echo "                <version> : version when the 2nd argument is a tarball"
      echo "    "
-     echo "       When relevant, the script uses 'wget' to retrieve the tarball"
+     echo "       When relevant, the script uses 'wget' ('curl' on MacOsX) to retrieve the tarball"
      echo "    "
 }
+
+ARCH=`uname -s`
 
 XMK=make
 
@@ -96,7 +98,11 @@ cd $BUILDDIR
 
 # Retrieving source
 if test "x$retrieve" = "xyes" ; then
-   wget http://www.openssl.org/source/$TARBALL
+   if test "x$ARCH" = "xDarwin" ; then
+      curl http://www.openssl.org/source/$TARBALL -o $TARBALL
+   else
+      wget http://www.openssl.org/source/$TARBALL
+   fi
    if test ! -f $TARBALL ; then
       echo "Tarball retrieval failed!"
       cd $WRKDIR
@@ -113,11 +119,20 @@ if test ! -d openssl-$VERS ; then
 fi
 cd openssl-$VERS
 
-# Get architecture
-targets=`./config | grep Configuring`
-set $targets
-echo "Machine-OS: $3"
-./Configure $3 no-krb5 shared no-asm -DPURIFY --prefix=$TGTDIR --openssldir=$TGTDIR
+# Architecture dependent
+if test "x$ARCH" = "xDarwin" ; then
+   if `sysctl machdep.cpu.extfeatures | grep "64" > /dev/null  2>&1` ; then
+      target="darwin64-x86_64-cc"
+   fi
+fi
+if test "x$target" = "x" ; then
+   targets=`./config | grep Configuring`
+   set $targets
+   target=$3
+fi
+
+echo "Machine-OS: $target"
+./Configure $target no-krb5 shared no-asm -DPURIFY --prefix=$TGTDIR --openssldir=$TGTDIR
 
 # Build
 $XMK

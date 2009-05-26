@@ -344,7 +344,8 @@ check_symbol() {
 
     # Assert that we got enough arguments
     if test $# -ne 3 ; then
-	echo "check_symbol: Not 3 arguments"
+	echo "check_symbol: not 3 arguments"
+        found_symbol=0
 	return 1
     fi
 
@@ -353,31 +354,98 @@ check_symbol() {
     symbollib=$1  ; shift
     symboldir=$1
 
+    if test "x$symbollib" = "x" ; then
+        found_symbol=0
+        return 1
+    fi
+
+    symbollib=`echo $symbollib | sed -e 's/^-l/lib/'`
+
+    if test ! "x$symboldir" = "x" ; then
+        symboldir=`echo $symboldir | sed -e 's/^-L//'`
+    fi
+
     # Check if we got a specific argument as to where the library
     # is to be found
     symbolfile=$symbollib
-    if test ! "x$symboldir" = "x" ; then
-        symbolfile=$symboldir/$symbollib
-        if test ! -r $symbolfile ; then
-            for i in .a .so .lib ; do
-                if test -r $symbolfile$i ; then
-                    symbolfile=$symbolfile$i
-                    break
-                fi
-             done
-        fi
+    exts=".so .lib"
+    if test ! "x$shared" = "xno" ; then
+	exts="$exts .a"
+    else
+	exts=".a $exts"
     fi
+
+    usrlib="/usr/lib"
+    # look first in the lib32 directories
+    if test "x$checklib32" = "xyes" ; then
+        usrlib="/usr/lib32 $usrlib"
+    fi
+    # look first in the lib64 directories
+    if test "x$checklib64" = "xyes" ; then
+        usrlib="/usr/lib64 $usrlib"
+    fi
+    # look only in the lib64 directories
+    if test "x$checkonlylib64" = "xyes" ; then
+        usrlib="/usr/lib64"
+    fi
+    # look only in the hpux64 directories
+    if test "x$checkhpux64" = "xyes" ; then
+        usrlib="/usr/lib/hpux64"
+    fi
+
+    for d in "$symboldir" $usrlib ; do
+        if test ! -r $d/$symbollib ; then
+           for i in $exts ; do
+              if test -r $d/$symbollib$i ; then
+                 symbolfile=$d/$symbollib$i
+                 break 2
+              fi
+           done
+        else
+            symbolfile=$d/$symbollib
+            break
+        fi
+    done
 
     if test "x$symbolfile" = "x" || test ! -r $symbolfile ; then
        found_symbol=0
+       echo " Symbol not found"
        return 1
     fi
 
-    symbol_in_lib=`nm $symbolfile | grep $symbol > /dev/null 2>&1`
+    checking_msg "$symbol in $symbolfile"
+    nm $symbolfile 2>&1 | grep $symbol > /dev/null 2>&1
     if test $? -eq 0 ; then
         found_symbol=1
     else
-        found_symbol=0
+        nm $symbolfile 2>&1 | grep "no symbols" > /dev/null 2>&1
+        if test $? -eq 0 ; then
+           # stripped library - only safe test is to link against the
+           # library!  However, we do not know what compiler to use
+           # so we can not do the test.  Assume the symbol is in
+           testfile="config/test/test-symbol.cc"
+           if test -f $testfile ; then
+              rm -f $testfile
+           fi
+cat << EOF > $testfile
+extern int $symbol ();
+int main() { $symbol (); return 0; }
+EOF
+           check_prototype "symbol" $ccbin "-c"
+           if test "x$found_prototype" = "xyes" ; then
+              found_symbol=1
+           else
+              found_symbol=0
+           fi
+           rm -f $testfile
+        else
+           found_symbol=0
+        fi
+    fi
+    if test $found_symbol -eq 1 ; then
+       echo "yes"
+    else
+       echo "no"
     fi
 }
 
@@ -1837,7 +1905,7 @@ if test ! "x$enable_afs" = "xno" ; then
           afslib=""
           afslibdir=""
           enable_afs="no"
-          break
+          continue
        fi
        #
        # Check symbols

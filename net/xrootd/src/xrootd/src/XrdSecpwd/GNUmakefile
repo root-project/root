@@ -69,7 +69,7 @@ $(LIBRARY): $(OBJECTS) $(LIBDEPS)
 
 $(SRVADMIN): $(OBJECTA) $(LIBDEPS)
 	@echo Creating executable $(SRVADMIN) 
-	$(ECHO)$(LD) $(LDOP) $(OBJECTA) $(BINLIBS) $(LIBS) -o $(SRVADMIN)
+	$(ECHO)$(LD) $(LDOP) $(OBJECTA) $(BINLIBS) $(LIBS)  $(RESOLVLIB) -o $(SRVADMIN)
 
 $(OBJDIR)/XrdSecpwdSrvAdmin.o: XrdSecpwdSrvAdmin.cc \
 		XrdOucString.hh XrdSutAux.hh XProtocol.hh XPtypes.hh \
