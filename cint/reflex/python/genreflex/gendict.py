@@ -2583,7 +2583,7 @@ def ClassDefImplementation(selclasses, self) :
           basemem = self.xref[baseid]['attrs']['members']
           baseMembersList = basemem.split()
           baseHasShowMembers = 0
-          for ml in membersList:
+          for ml in baseMembersList:
             if ml[1].isdigit() :
               if self.xref[ml]['attrs']['name'] == 'ShowMembers' :
                 baseHasShowMembers = 1
