@@ -1620,8 +1620,9 @@ static G__Templatearg* G__read_specializationarg(G__Templatearg* tmpl_params, ch
       }
       len = strlen(source);
       unsigned int newlen = 0;
-      for (int i = isrc, nest = 0; i < len; ++i) {
-         switch (source[i]) {
+      { // additional block against MSVC 7.1 warning "conflicting var decl for i in for loop and in line 1720"
+         for (int i = isrc, nest = 0; i < len; ++i) {
+            switch (source[i]) {
             case '<':
                ++nest;
                break;
@@ -1640,8 +1641,9 @@ static G__Templatearg* G__read_specializationarg(G__Templatearg* tmpl_params, ch
                   continue;
                }
                break;
+            }
+            type[newlen++] = source[i];
          }
-         type[newlen++] = source[i];
       }
       type[newlen] = 0;
       len = newlen;
