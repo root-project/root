@@ -17,12 +17,9 @@ Get the binary for the ROOTQL plugin from:
 
    ftp://root.cern.ch/root/ROOTQL.tgz
 
-To install the plugin, after untarring the above file, just double click the
-ROOTQL.qlgenerator icon. If you have no admin rights you will be asked for
-the admin password. The plugin will be installed in /Library/QuickLook.
-You can also install the plugin in your private area by dragging the
-plugin to ~/Library/QuickLook. You may have to create that folder if
-it does not exist.
+To install the plugin, after untarring the above file, just drag the
+ROOTQL.qlgenerator icon to either /Library/QuickLook or to ~/Library/QuickLook.
+You may have to create that folder if it does not exist.
 
 To build from source, get it from svn using:
 
@@ -31,8 +28,7 @@ To build from source, get it from svn using:
 Open the ROOTQL project in Xcode and click on "Build" (make sure the Active
 Build Configuration is set to "Release"). A command line short cut to open
 the Xcode project is to type "open ROOTQL.xcodeproj" in the Terminal app.
-Copy the resulting plugin from build/Release to the /Library/QuickLook
-directory by double clicking the icon, or by typing in the shell
-"open ROOTQL.qlgenerator".
+Move the resulting plugin from the build/Release directory to either
+the /Library/QuickLook or ~/Library/QuickLook directory.
 
 Cheers, Fons.
