@@ -336,8 +336,8 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableString *html, QLPr
    [html appendString: @"<th>Title</th>\n"];
    [html appendString: @"<th>Class</th>\n"];
    [html appendString: @"<th>Date</th>\n"];
-   [html appendString: @"<th>Size</th>\n"];
    [html appendString: @"<th>Offset</th>\n"];
+   [html appendString: @"<th>Size</th>\n"];
    [html appendString: @"<th>CX</th>\n"];
    [html appendString: @"</tr>\n"];
 
@@ -362,9 +362,9 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableString *html, QLPr
       }
       if (nbytes < 0) {
          [html appendString: @"<tr>\n"];
-         [html appendString: @"<td colspan=\"4\"><center><b>GAP</b></center></td>\n"];
-         [html appendFormat: @"<td>%d</td>\n", -nbytes];
+         [html appendString: @"<td colspan=\"4\" style=\"color:red\"><center><b>GAP</b></center></td>\n"];
          [html appendFormat: @"<td>%lld</td>\n", idcur];
+         [html appendFormat: @"<td>%d</td>\n", -nbytes];
          [html appendFormat: @"<td>%5.2f</td>\n", 1.0];
          [html appendString: @"<tr>\n"];
          free(header);
@@ -424,8 +424,8 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableString *html, QLPr
       [html appendFormat: @"<td>%s</td>\n", title];
       [html appendFormat: @"<td>%s</td>\n", classname];
       [html appendFormat: @"<td>%d/%d</td>\n", date, time];
-      [html appendFormat: @"<td>%d</td>\n", nbytes];
       [html appendFormat: @"<td>%lld</td>\n", idcur];
+      [html appendFormat: @"<td>%d</td>\n", nbytes];
       [html appendFormat: @"<td>%5.2f</td>\n", cx];
       [html appendString: @"</tr>\n"];
 
