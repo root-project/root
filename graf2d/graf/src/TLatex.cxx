@@ -1617,6 +1617,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
    // Do not use Latex if font is low precision.
    if (fTextFont%10 < 2) {
+      if (gVirtualX) gVirtualX->SetTextAngle(angle);
       gPad->PaintText(x,y,text1);
       return;
    }
