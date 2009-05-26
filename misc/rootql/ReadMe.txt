@@ -19,7 +19,9 @@ Get the binary for the ROOTQL plugin from:
 
 To install the plugin, after untarring the above file, just drag the
 ROOTQL.qlgenerator icon to either /Library/QuickLook or to ~/Library/QuickLook.
-You may have to create that folder if it does not exist.
+You may have to create that folder if it does not exist. Once installed
+you may have to refresh the QL plugin cache by executing:
+   /usr/bin/qlmanage -r
 
 To build from source, get it from svn using:
 
