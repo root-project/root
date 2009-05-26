@@ -390,25 +390,25 @@ void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       }
    }
 
-   // fill bin data (for the moment use all ranges) 
+   // fill bin data (for the moment use all ranges) according to object passed
    ROOT::Fit::BinData data; 
+   data.Opt().fUseEmpty = true; // need to use all bins of given histograms
    // call appropriate function according to type of object
-   if (fitobj->InheritsFrom(TGraph::Class()) ) 
-      ROOT::Fit::FillData(data, dynamic_cast<TGraph *>(fitobj) ); 
-   else if (fitobj->InheritsFrom(TGraph2D::Class()) ) 
-      ROOT::Fit::FillData(data, dynamic_cast<TGraph2D *>(fitobj) ); 
-   else if (fitobj->InheritsFrom(TMultiGraph::Class()) ) 
-      ROOT::Fit::FillData(data, dynamic_cast<TMultiGraph *>(fitobj) ); 
-   else if (fitobj->InheritsFrom(TH1::Class()) ) 
-      ROOT::Fit::FillData(data, dynamic_cast<TH1 *>(fitobj) ); 
+   if (obj->InheritsFrom(TGraph::Class()) ) 
+      ROOT::Fit::FillData(data, dynamic_cast<TGraph *>(obj) ); 
+   else if (obj->InheritsFrom(TGraph2D::Class()) ) 
+      ROOT::Fit::FillData(data, dynamic_cast<TGraph2D *>(obj) ); 
+//    else if (obj->InheritsFrom(TMultiGraph::Class()) ) 
+//       ROOT::Fit::FillData(data, dynamic_cast<TMultiGraph *>(obj) ); 
+   else if (obj->InheritsFrom(TH1::Class()) ) 
+      ROOT::Fit::FillData(data, dynamic_cast<TH1 *>(obj) ); 
    
 
    unsigned int n = data.Size(); 
+
    std::vector<double> ci( n ); 
 
    fFitter->Result().GetConfidenceIntervals(data,&ci[0],cl);         
-
-   
 
    const ROOT::Math::IParamMultiFunction * func =  fFitter->Result().FittedFunction(); 
    assert(func != 0); 
