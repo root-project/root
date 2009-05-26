@@ -58,6 +58,18 @@
 <li> Improve help.
 </ul>
 
+<h4>TLatex</h4>
+<ul>
+<li> The text angle was not taken into account in case the
+  text was painted in low precision like in:
+  <pre>
+  gStyle->SetTitleFont(60,"xy");
+  TH1F* h=new TH1F("foo", "bar;#int;#int", 10, 0, 1);
+  h->Draw();
+  </pre>
+  In that example the Y title was not rotated.
+</ul>
+
 <h4>TCanvas</h4>
 <ul>
 <li> A canvas is turned into GL mode only if the
