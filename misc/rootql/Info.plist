@@ -52,7 +52,7 @@
 	<key>QLPreviewHeight</key>
 	<integer>800</integer>
 	<key>QLPreviewWidth</key>
-	<integer>600</integer>
+	<integer>700</integer>
 	<key>QLSupportsConcurrentRequests</key>
 	<false/>
 	<key>QLThumbnailMinimumSize</key>
