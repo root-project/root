@@ -271,7 +271,7 @@ static int ReadHeader(int fd, struct FileHeader_t *fh, NSMutableSet *titleSet)
    if (versiondir > 1)
       FromBufUUID(&buffer, &fh->uuid, versiondir);
    else
-      fh->uuid = "-";
+      fh->uuid = strdup("-");
 
    buffer = header + nk;
    char *str;
@@ -336,12 +336,6 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableSet *nameSet, NSMu
          idcur -= nbytes;
          continue;
       }
-      if (idcur == fh->begin) {
-         // skip initial TFile
-         free(header);
-         idcur += nbytes;
-         continue;
-      }
 
       FromBufShort(&buffer, &versionkey);
       FromBufInt(&buffer, &objlen);
@@ -390,12 +384,10 @@ static int ReadKeys(int fd, struct FileHeader_t *fh, NSMutableSet *nameSet, NSMu
       else
          cx = 1.0;
 
-      //if (strcmp(classname, "TBasket")) {
-         if (strlen(name))
-            [nameSet addObject: [NSString stringWithUTF8String: name]];
-         if (strlen(title))
-            [titleSet addObject: [NSString stringWithUTF8String: title]];
-      //}
+      if (strlen(name))
+         [nameSet addObject: [NSString stringWithUTF8String: name]];
+      if (strlen(title))
+         [titleSet addObject: [NSString stringWithUTF8String: title]];
 
       free(classname);
       free(name);
