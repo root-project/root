@@ -179,6 +179,8 @@
 <li> detect the case when the data set is empty and don't perform any minimizationin this case but exits from fitting and produce a warning message
   <li>Fix a bug when fitting histograms with option W and the bin errors are = 0. 
  <li>Fix a bug in the InitGaus function when having only one data point (see https://savannah.cern.ch/bugs/?48936)
+  <li>Fix a bug in calculating the error on the integral after having fitted when fix parameters were present
+  <li>Fix a bug in calculating the confidence intervas when the number of bins for the given object is different from the number of bins of the fitted object.   
   </ul>
 
   <h4>FitPanel</h4>
