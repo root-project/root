@@ -85,7 +85,7 @@ double IntegralError(TF1 * func, double a, double b, double epsilon) {
    for (int i = 0; i < nfreepar; ++i) { 
       double s = 0;
       for (int j =0; j < nfreepar; ++j) 
-         s += ig[j] * covMatrix[i*npar + j] ;
+         s += ig[j] * covMatrix[i*nfreepar + j] ;
       
 
       err2 += ig[i] * s; 
