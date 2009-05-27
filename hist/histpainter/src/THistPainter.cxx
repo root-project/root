@@ -7208,12 +7208,29 @@ void THistPainter::PaintTriangles(Option_t *option)
    if (!fGraph2DPainter) fGraph2DPainter = new TGraph2DPainter(dt);
 
    // Define the 3D view
-   fXbuf[0] = Hparam.xmin;
-   fYbuf[0] = Hparam.xmax;
-   fXbuf[1] = Hparam.ymin;
-   fYbuf[1] = Hparam.ymax;
-   fXbuf[2] = Hparam.zmin;
-   fYbuf[2] = Hparam.zmax;
+   if (Hoption.Same) {
+      TView *viewsame = gPad->GetView();
+      if (!viewsame) {
+         Error("PaintTriangles", "no TView in current pad, do not use option SAME");
+         return;
+      }
+      Double_t *rmin = viewsame->GetRmin();
+      Double_t *rmax = viewsame->GetRmax();
+      fXbuf[0] = rmin[0];
+      fYbuf[0] = rmax[0];
+      fXbuf[1] = rmin[1];
+      fYbuf[1] = rmax[1];
+      fXbuf[2] = rmin[2];
+      fYbuf[2] = rmax[2];
+   } else {
+      fXbuf[0] = Hparam.xmin;
+      fYbuf[0] = Hparam.xmax;
+      fXbuf[1] = Hparam.ymin;
+      fYbuf[1] = Hparam.ymax;
+      fXbuf[2] = Hparam.zmin;
+      fYbuf[2] = Hparam.zmax;
+   }
+
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
    TView *view = gPad->GetView();
    if (!view) {
