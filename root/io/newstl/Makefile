@@ -121,7 +121,7 @@ ROOTSYS_SED=$(subst /,\\/,$(subst \,\\\\,$(ROOTSYS)))
 
 ifneq ($(MAKECMDGOALS),clean)
 $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
-	@cat $< | sed -e s/$(LIBDIR_SED2)// -e s/$*.o/$(LIBDIR_SED)$*_C.$(DllSuf)/ \
+	@cat $< | sed -e s/$(LIBDIR_SED2)// -e s/$*.o/$(LIBDIR_SED)$*_C.$(DllSuf)/ -e s/$*_C.$(DllSuf)/$(LIBDIR_SED)$*_C.$(DllSuf)/ \
 	   -e s,$(ROOTSYS_SED)\\\\include\\\\cintdictversion.h,$(ROOT_LOC)/include/cintdictversion.h, > $@
 endif
 
@@ -184,7 +184,7 @@ base.clog: $(LIBDIR)runbase_C.$(DllSuf)
 base: base.clog
 	$(TestDiff)
 
-emulvector.root.log: writetest_emulvector.C
+emulvector.root.log: writetest_emulvector.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q writetest_emulvector.C > emulvector.root.log 2>&1
 
 emulvector.root: emulvector.root.log emulvector.root.ref
