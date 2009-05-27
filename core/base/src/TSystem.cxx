@@ -2307,6 +2307,91 @@ static void R__FixLink(TString &cmd)
 }
 #endif
 
+static void R__WriteDependencyFile(const TString &depfilename, const TString &filename, const TString &library, const TString &libname, 
+                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath) {
+   // Generate the dependency via standard output, not searching the
+   // standard include directories,
+
+#ifndef WIN32
+   const char * stderrfile = "/dev/null";
+#else
+   TString stderrfile;
+   AssignAndDelete( stderrfile, ConcatFileName(build_loc,"stderr.tmp") );
+#endif   
+   TString bakdepfilename = depfilename + ".bak";
+   
+#ifdef WIN32
+   TString touch = "echo # > "; touch += "\"" + depfilename + "\"";
+#else
+   TString touch = "echo > "; touch += "\"" + depfilename + "\"";
+#endif
+   TString builddep = "rmkdepend \"-f";
+   builddep += depfilename;
+   builddep += "\" -o_" + extension + "." + gSystem->GetSoExt() + " ";
+   builddep += " -Y -- ";
+#ifndef ROOTINCDIR
+   TString rootsys = gSystem->Getenv("ROOTSYS");
+#else
+   TString rootsys = ROOTINCDIR;
+#endif
+   builddep += " \"-I"+rootsys+"/include\" "; // cflags
+   builddep += includes;
+   builddep += defines;
+   builddep += " -- \"";
+   builddep += filename;
+   builddep += "\" > ";
+   builddep += stderrfile;
+   builddep += " 2>&1 ";
+   
+   TString adddictdep = "echo ";
+   adddictdep += library;
+   adddictdep += ": ";
+   {
+      char *cintdictversion = gSystem->Which(incPath,"cintdictversion.h");
+      if (cintdictversion) {
+         adddictdep += cintdictversion;
+         adddictdep += " ";
+         delete [] cintdictversion;
+      } else {
+         adddictdep += rootsys+"/include/cintdictversion.h ";
+      }
+   }
+   {
+      char *rootVersion = gSystem->Which(incPath,"RVersion.h");
+      if (rootVersion) {
+         adddictdep += rootVersion;
+         adddictdep += " ";                  
+         delete [] rootVersion;
+      } else {
+         adddictdep += rootsys+"/include/RVersion.h ";
+      }
+   }
+   adddictdep += " >> \""+depfilename+"\"";
+   
+   TString addversiondep( "echo ");
+   addversiondep += libname + version_var_prefix + " \"" + ROOT_RELEASE + "\" >> \""+depfilename+"\"";
+   
+   if (gDebug > 4)  {
+      ::Info("ACLiC",touch.Data());
+      ::Info("ACLiC",builddep.Data());
+      ::Info("ACLiC",adddictdep.Data());
+   }
+   
+   Int_t depbuilt = !gSystem->Exec(touch);
+   if (depbuilt) depbuilt = !gSystem->Exec(builddep);
+   if (depbuilt) depbuilt = !gSystem->Exec(adddictdep);
+   if (depbuilt) depbuilt = !gSystem->Exec(addversiondep);   
+   
+   if (!depbuilt) {
+      ::Warning("ACLiC","Failed to generate the dependency file for %s",
+                library.Data());
+   } else {
+#ifdef WIN32
+      gSystem->Unlink(stderrfile);
+#endif
+      gSystem->Unlink(bakdepfilename);
+   }
+}   
 
 //______________________________________________________________________________
 int TSystem::CompileMacro(const char *filename, Option_t *opt,
@@ -2420,6 +2505,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // (the ... have to be replaced by the actual values and are here only to
    // shorten this comment).
    //
+
+   static const char *version_var_prefix = "__ROOTBUILDVERSION=";
 
    // ======= Analyze the options
    Bool_t keep = kFALSE;
@@ -2641,23 +2728,17 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t canWrite = !gSystem->AccessPathName(build_loc,kWritePermission);
 
    Bool_t modified = kFALSE;
+   
+   // Generate the dependency filename
+   TString depdir = build_loc;
+   TString depfilename;
+   AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
+   depfilename += "_" + extension + ".d";
+   
    if ( !recompile ) {
-      // Generate the dependency filename
-      TString depdir = build_loc;
-      TString depfilename;
-      AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
-      depfilename += "_" + extension + ".d";
-      TString bakdepfilename = depfilename + ".bak";
 
       Long_t lib_time, file_time;
-
-#ifndef WIN32
-      const char * stderrfile = "/dev/null";
-#else
-      TString stderrfile;
-      AssignAndDelete( stderrfile, ConcatFileName(build_loc,"stderr.tmp") );
-#endif
-
+      
       if ((gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) != 0) ||
           (gSystem->GetPathInfo( filename, 0, (Long_t*)0, 0, &file_time ) == 0 &&
           (lib_time < file_time))) {
@@ -2668,97 +2749,19 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
       } else {
 
-         // If the library exist and the dependency file is either older or
-         // does  not exist we regenerate it
-
-         Bool_t needDependencies;
-         if ( gSystem->GetPathInfo( depfilename, 0,(Long_t*) 0, 0, &file_time ) == 0 ) {
-            needDependencies = ( file_time < lib_time );
-         } else {
-            needDependencies = true;
-         }
-
-         if (needDependencies) {
+         if ( gSystem->GetPathInfo( depfilename, 0,(Long_t*) 0, 0, &file_time ) != 0 ) {
             if (!canWrite) {
                depdir = emergency_loc;
                AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
                depfilename += "_" + extension + ".d";
-               bakdepfilename = depfilename + ".bak";
             }
-            gSystem->Unlink(depfilename);
-
-            // Generate the dependency via standard output, not searching the
-            // standard include directories,
-#ifdef WIN32
-            TString touch = "echo # > "; touch += "\"" + depfilename + "\"";
-#else
-            TString touch = "echo > "; touch += "\"" + depfilename + "\"";
-#endif
-            TString builddep = "rmkdepend \"-f";
-            builddep += depfilename;
-            builddep += "\" -Y -- ";
-#ifndef ROOTINCDIR
-            TString rootsys = gSystem->Getenv("ROOTSYS");
-#else
-            TString rootsys = ROOTINCDIR;
-#endif
-            builddep += " \"-I"+rootsys+"/include\" "; // cflags
-            builddep += includes;
-            builddep += defines;
-            builddep += " -- \"";
-            builddep += filename;
-            builddep += "\" > ";
-            builddep += stderrfile;
-            builddep += " 2>&1 ";
-
-            TString adddictdep = "echo ";
-            adddictdep += filename;
-            adddictdep += ": ";
-            {
-               char *cintdictversion = Which(incPath,"cintdictversion.h");
-               if (cintdictversion) {
-                  adddictdep += cintdictversion;
-                  adddictdep += " ";
-                  delete [] cintdictversion;
-               } else {
-                  adddictdep += rootsys+"/include/cintdictversion.h ";
-               }
-            }
-            {
-               char *rootVersion = Which(incPath,"RVersion.h");
-               if (rootVersion) {
-                  adddictdep += rootVersion;
-                  adddictdep += " ";                  
-                  delete [] rootVersion;
-               } else {
-                  adddictdep += rootsys+"/include/RVersion.h ";
-               }
-            }
-            adddictdep += " >> \""+depfilename+"\"";
-
-            if (gDebug > 4)  {
-               ::Info("ACLiC",touch.Data());
-               ::Info("ACLiC",builddep.Data());
-               ::Info("ACLiC",adddictdep.Data());
-            }
-
-            Int_t depbuilt = !gSystem->Exec(touch);
-            if (depbuilt) depbuilt = !gSystem->Exec(builddep);
-            if (depbuilt) depbuilt = !gSystem->Exec(adddictdep);
-
-
-            if (!depbuilt) {
-               ::Warning("ACLiC","Failed to generate the dependency file for %s",
-                         library.Data());
-            } else {
-#ifdef WIN32
-               gSystem->Unlink(stderrfile);
-#endif
-               gSystem->Unlink(bakdepfilename);
-            }
+            R__WriteDependencyFile(depfilename, filename, library, libname, extension, version_var_prefix, includes, defines, incPath);
          }
-
-         // Parse the depdency file
+      }
+      
+      if (!modified) {
+         
+         // We need to check the dependencies
          FILE * depfile = fopen(depfilename.Data(),"r");
          if (depfile==0) {
             // there is no acessible dependency file, let's assume the library has been
@@ -2768,6 +2771,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
          } else {
 
+            TString version_var = libname + version_var_prefix;
+            
             Int_t sz = 256;
             char *line = new char[sz];
             line[0] = 0;
@@ -2775,6 +2780,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             char c;
             Int_t current = 0;
             Int_t nested = 0;
+            Bool_t hasversion = false;
 
             while ((c = fgetc(depfile)) != EOF) {
                if (c=='#') {
@@ -2786,14 +2792,23 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                   }
                   continue;
                }
-               if (isspace(c) && !nested) {
+               if (line[current-1]=='=' && strncmp(version_var.Data(),line,current)==0) {
+                  
+                  // The next word will be the version number.
+                  hasversion = kTRUE;
+                  line[0] = 0;
+                  current = 0;
+               } else if (isspace(c) && !nested) {
                   if (current) {
                      if (line[current-1]!=':') {
                         // ignore target
                         line[current] = 0;
 
                         Long_t filetime;
-                        if ( gSystem->GetPathInfo( line, 0, (Long_t*)0, 0, &filetime ) == 0 ) {
+                        if (hasversion) {
+                           modified |= strcmp(ROOT_RELEASE,line)!=0;
+                           hasversion = kFALSE;
+                        } else if ( gSystem->GetPathInfo( line, 0, (Long_t*)0, 0, &filetime ) == 0 ) {
                            modified |= ( lib_time <= filetime );
                         }
                      }
@@ -2942,6 +2957,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 
    Info("ACLiC","creating shared library %s",library.Data());
+
+   R__WriteDependencyFile(depfilename, filename, library, libname, extension, version_var_prefix, includes, defines, incPath);
 
    // ======= Select the dictionary name
    TString dict = libname + "_ACLiC_dict";
