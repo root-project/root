@@ -50,6 +50,29 @@
 <ul>
 <li> In <tt>PaintAxis</tt> The option "U", for unlabeled axis, was not 
      implemented in case of alphanumeric axis' labels.
+<li> On log-scale TGAxis, with labels having lower values than 1 and ticks marks
+  set to the positive side, alignement issues seem to come up. 
+  The following example shows four TGAxis drawn respectively with the 
+  following options: RG-, RG+, LG-, LG+. For the RG+ and LG+ options, 
+  the 10E-1 and 10E-2 labels were ill-aligned, showing a shift to the right 
+  compared to the 1E2, 1E1 and 1 labels. 
+  <pre>
+  {
+     c1 = new TCanvas("c1","Examples of Log TGaxis",10,10,700,500);
+     c1->Range(-10,-1,10,1);
+     TGaxis *axis1 = new TGaxis(-7,-0.8,-7,0.8,0.01,100,50510,"RG-");
+     axis1->SetTitle("RG-"); axis1->Draw();
+     TGaxis *axis2 = new TGaxis(-2,-0.8,-2,0.8,0.01,100,50510,"RG+");
+     axis2->SetLabelOffset(-0.04); axis2->SetTitleOffset(-1.5);
+     axis2->SetTitle("RG+"); axis2->Draw();
+     TGaxis *axis3 = new TGaxis(2,-0.8,2,0.8,0.01,100,50510,"LG-");
+     axis3->SetLabelOffset(-0.04);
+     axis3->SetTitle("LG-"); axis3->Draw();
+     TGaxis *axis4 = new TGaxis(7,-0.8,7,0.8,0.01,100,50510,"LG+");
+     axis4->SetTitleOffset(-1);
+     axis4->SetTitle("LG+"); axis4->Draw();
+  }
+  </pre>
 </ul>
 
 <h4>TCrown</h4>
