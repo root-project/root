@@ -76,13 +76,15 @@ public:
    virtual TProof     *AttachSession(TProofDesc *, Bool_t = kFALSE);
    virtual TProof     *CreateSession(const char * = 0, const char * = 0, Int_t = -1);
    virtual void        DetachSession(Int_t, Option_t * = "");
+   virtual void        DetachSession(TProof *, Option_t * = "");
+   virtual void        DiscardSession(TProof *p);
    virtual TProofDesc *GetProofDesc(Int_t id);
+   virtual TProofDesc *GetProofDesc(TProof *p);
    virtual Int_t       GetRemoteProtocol() const { return fRemoteProtocol; }
    virtual TProofLog  *GetSessionLogs(Int_t = 0, const char * = 0, const char * = "-v \"| SvcMsg\"")
                                                       { return (TProofLog *)0; }
    virtual const char *GetUrl() { return fUrl.GetUrl(); }
    virtual Bool_t      MatchUrl(const char *url);
-   virtual void        ShowROOTVersions() { }
    virtual TList      *QuerySessions(Option_t *opt = "S");
    virtual TObjString *ReadBuffer(const char *, Long64_t, Int_t)
                                         { return (TObjString *)0; }
@@ -93,8 +95,9 @@ public:
    virtual Int_t       SendMsgToUsers(const char *, const char * = 0);
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
    virtual void        SetROOTVersion(const char *) { }
+   virtual void        ShowROOTVersions() { }
    virtual void        ShutdownSession(Int_t id) { DetachSession(id,"S"); }
-   virtual void        ShutdownSession(TProof *p);
+   virtual void        ShutdownSession(TProof *p) { DetachSession(p,"S"); }
 
    static TList       *GetListOfManagers();
 

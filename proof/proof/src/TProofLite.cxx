@@ -85,6 +85,7 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
    // Protocol and Host
    fUrl.SetProtocol("proof");
    fUrl.SetHost("__lite__");
+   fUrl.SetPort(1093);
 
    // User
    if (strlen(fUrl.GetUser()) <= 0) {

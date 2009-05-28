@@ -183,7 +183,9 @@ TProof *TXProofMgr::AttachSession(TProofDesc *d, Bool_t gui)
 void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
 {
    // Detach session with 'id' from its proofserv. The 'id' is the number
-   // shown by QuerySessions.
+   // shown by QuerySessions. The correspondent TProof object is deleted.
+   // If id == 0 all the known sessions are detached.
+   // Option opt="S" or "s" forces session shutdown.
 
    if (!IsValid()) {
       Warning("DetachSession","invalid TXProofMgr - do nothing");
@@ -197,8 +199,8 @@ void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
          if (fSocket)
             fSocket->DisconnectSession(d->GetRemoteId(), opt);
          TProof *p = d->GetProof();
-         SafeDelete(p);
          fSessions->Remove(d);
+         SafeDelete(p);
          delete d;
       }
    } else if (id == 0) {
@@ -217,6 +219,32 @@ void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
             SafeDelete(p);
          }
          fSessions->Delete();
+      }
+   }
+
+   return;
+}
+
+//______________________________________________________________________________
+void TXProofMgr::DetachSession(TProof *p, Option_t *opt)
+{
+   // Detach session 'p' from its proofserv. The instance 'p' is invalidated
+   // and should be deleted by the caller
+
+   if (!IsValid()) {
+      Warning("DetachSession","invalid TXProofMgr - do nothing");
+      return;
+   }
+
+   if (p) {
+      // Single session request
+      TProofDesc *d = GetProofDesc(p);
+      if (d) {
+         if (fSocket)
+            fSocket->DisconnectSession(d->GetRemoteId(), opt);
+         fSessions->Remove(d);
+         p->Close(opt);
+         delete d;
       }
    }
 

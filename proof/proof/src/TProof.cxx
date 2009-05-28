@@ -501,7 +501,7 @@ TProof::~TProof()
    gROOT->GetListOfProofs()->Remove(this);
    // ... and from the manager list
    if (fManager && fManager->IsValid())
-      fManager->ShutdownSession(this);
+      fManager->DiscardSession(this);
 
    if (gProof && gProof == this) {
       // Set previous as default
@@ -3261,7 +3261,7 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
       // and deleted, since it is not valid anymore
       fSlaves->Remove(wrk);
       if (fManager)
-         fManager->ShutdownSession(this);
+         fManager->DiscardSession(this);
    }
 }
 

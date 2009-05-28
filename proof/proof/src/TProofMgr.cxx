@@ -138,14 +138,69 @@ TProof *TProofMgr::AttachSession(TProofDesc *d, Bool_t)
 void TProofMgr::DetachSession(Int_t id, Option_t *opt)
 {
    // Detach session with 'id' from its proofserv. The 'id' is the number
-   // shown by QuerySessions.
+   // shown by QuerySessions. The correspondent TProof object is deleted.
+   // If id == 0 all the known sessions are detached.
+   // Option opt="S" or "s" forces session shutdown.
 
-   TProofDesc *d = GetProofDesc(id);
-   if (d) {
-      if (d->GetProof())
-         d->GetProof()->Detach(opt);
-      fSessions->Remove(d);
-      delete d;
+   if (!IsValid()) {
+      Warning("DetachSession","invalid TProofMgr - do nothing");
+      return;
+   }
+
+   if (id > 0) {
+
+      TProofDesc *d = GetProofDesc(id);
+      if (d) {
+         if (d->GetProof())
+            d->GetProof()->Detach(opt);
+         TProof *p = d->GetProof();
+         fSessions->Remove(d);
+         SafeDelete(p);
+         delete d;
+      }
+
+   } else if (id == 0) {
+
+      // Requesto to destroy all sessions
+      if (fSessions) {
+         // Delete PROOF sessions
+         TIter nxd(fSessions);
+         TProofDesc *d = 0;
+         while ((d = (TProofDesc *)nxd())) {
+            if (d->GetProof())
+               d->GetProof()->Detach(opt);
+            TProof *p = d->GetProof();
+            fSessions->Remove(d);
+            SafeDelete(p);
+         }
+         fSessions->Delete();
+      }
+   }
+
+   return;
+}
+
+//______________________________________________________________________________
+void TProofMgr::DetachSession(TProof *p, Option_t *opt)
+{
+   // Detach session 'p' from its proofserv. The instance 'p' is invalidated
+   // and should be deleted by the caller
+
+   if (!IsValid()) {
+      Warning("DetachSession","invalid TProofMgr - do nothing");
+      return;
+   }
+
+   if (p) {
+      // Single session request
+      TProofDesc *d = GetProofDesc(p);
+      if (d) {
+         if (d->GetProof())
+            // The session is closed here
+            d->GetProof()->Detach(opt);
+         fSessions->Remove(d);
+         delete d;
+      }
    }
 
    return;
@@ -170,18 +225,22 @@ TList *TProofMgr::QuerySessions(Option_t *opt)
    if (gROOT->GetListOfProofs()) {
       // Loop over
       TIter nxp(gROOT->GetListOfProofs());
+      TObject *o = 0;
       TProof *p = 0;
       Int_t ns = 0;
-      while ((p = (TProof *)nxp())) {
-         // Only those belonging to this server
-         if (MatchUrl(p->GetUrl())) {
-            if (!(fSessions->FindObject(p->GetSessionTag()))) {
-               Int_t st = (p->IsIdle()) ? TProofDesc::kIdle
-                                        : TProofDesc::kRunning;
-               TProofDesc *d =
-                   new TProofDesc(p->GetName(), p->GetTitle(), p->GetUrl(),
-                                         ++ns, p->GetSessionID(), st, p);
-               fSessions->Add(d);
+      while ((o = nxp())) {
+         if (o->InheritsFrom("TProof")) {
+            p = (TProof *)o;
+            // Only those belonging to this server
+            if (MatchUrl(p->GetUrl())) {
+               if (!(fSessions->FindObject(p->GetSessionTag()))) {
+                  Int_t st = (p->IsIdle()) ? TProofDesc::kIdle
+                                          : TProofDesc::kRunning;
+                  TProofDesc *d =
+                     new TProofDesc(p->GetName(), p->GetTitle(), p->GetUrl(),
+                                          ++ns, p->GetSessionID(), st, p);
+                  fSessions->Add(d);
+               }
             }
          }
       }
@@ -246,10 +305,10 @@ void TProofMgr::ShowWorkers()
 //______________________________________________________________________________
 TProofDesc *TProofMgr::GetProofDesc(Int_t id)
 {
-   // Get TProof instance corresponding to 'id'.
+   // Get TProofDesc instance corresponding to 'id'.
 
+   TProofDesc *d = 0;
    if (id > 0) {
-      TProofDesc *d = 0;
       // Retrieve an updated list
       QuerySessions("");
       if (fSessions) {
@@ -261,13 +320,34 @@ TProofDesc *TProofMgr::GetProofDesc(Int_t id)
       }
    }
 
-   return 0;
+   return d;
 }
 
 //______________________________________________________________________________
-void TProofMgr::ShutdownSession(TProof *p)
+TProofDesc *TProofMgr::GetProofDesc(TProof *p)
 {
-   // Discard PROOF session 'p'
+   // Get TProofDesc instance corresponding to TProof object 'p'.
+
+   TProofDesc *d = 0;
+   if (p) {
+      // Retrieve an updated list
+      QuerySessions("");
+      if (fSessions) {
+         TIter nxd(fSessions);
+         while ((d = (TProofDesc *)nxd())) {
+            if (p == d->GetProof())
+               return d;
+         }
+      }
+   }
+
+   return d;
+}
+
+//______________________________________________________________________________
+void TProofMgr::DiscardSession(TProof *p)
+{
+   // Discard TProofDesc of session 'p' from the internal list
 
    if (p) {
       TProofDesc *d = 0;
@@ -341,9 +421,9 @@ Bool_t TProofMgr::MatchUrl(const char *url)
 
    // Correct port
    if (u.GetPort() == TUrl("a").GetPort()) {
-      Int_t port = gSystem->GetServiceByName("rootd");
+      Int_t port = gSystem->GetServiceByName("proofd");
       if (port < 0)
-         port = 1094;
+         port = 1093;
       u.SetPort(port);
    }
 
