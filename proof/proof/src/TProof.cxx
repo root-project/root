@@ -5687,7 +5687,10 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
    }
 
    // Nothing more to do if we are a Lite-session
-   if (IsLite()) return 0;
+   if (IsLite()) {
+      delete md5;
+      return 0;
+   }
 
    TString smsg;
    smsg.Form("+%s", gSystem->BaseName(par));
