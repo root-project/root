@@ -32,7 +32,7 @@ Reflex::Type Reflex::TypeBuilder( const char * n,
                                               unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Construct the type information for a type.
-   Reflex::Instance::Instance();
+   Reflex::Instance initialize_reflex;
    const Type & ret = Type::ByName(n);
    if ( ret.Id() ) return Type(ret, modifiers);
    else {
