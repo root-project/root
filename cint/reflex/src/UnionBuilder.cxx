@@ -34,6 +34,7 @@
 Reflex::UnionBuilderImpl::UnionBuilderImpl(const char* nam, size_t size, const std::type_info& ti, unsigned int modifiers /*= 0*/, TYPE typ /*=UNION*/)
 : fUnion(0)
 , fLastMember()
+, fCallbackEnabled(true)
 {
 // Construct union info.
    std::string nam2(nam);
@@ -55,7 +56,9 @@ Reflex::UnionBuilderImpl::UnionBuilderImpl(const char* nam, size_t size, const s
 Reflex::UnionBuilderImpl::~UnionBuilderImpl()
 {
 // UnionBuilderImpl destructor. Used for call back functions (e.g. Cintex).
-   FireClassCallback(fUnion->ThisType());
+   if (fCallbackEnabled) {
+      FireClassCallback(fUnion->ThisType());
+   }
 }
 
 //______________________________________________________________________________
@@ -104,6 +107,13 @@ void Reflex::UnionBuilderImpl::AddProperty(const char* key, Any value)
    else {
       fUnion->Properties().AddProperty(key, value);
    }
+}
+
+//______________________________________________________________________________
+void Reflex::UnionBuilderImpl::EnableCallback(const bool enable /*= true*/)
+{
+// Enable callback call in the destructor.
+   fCallbackEnabled = enable;
 }
 
 //______________________________________________________________________________
@@ -162,6 +172,14 @@ Reflex::UnionBuilder& Reflex::UnionBuilder::AddFunctionMember(const Type& typ, c
 {
 // Add function member info to this union.
    fUnionBuilderImpl.AddFunctionMember(nam, typ, stubFP, stubCtx, params, modifiers);
+   return *this;
+}
+
+//______________________________________________________________________________
+Reflex::UnionBuilder& Reflex::UnionBuilder::EnableCallback(const bool enable /*= true*/)
+{
+// Enable callback call in the destructor.
+   fUnionBuilderImpl.EnableCallback(enable);
    return *this;
 }
 

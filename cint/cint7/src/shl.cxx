@@ -21,6 +21,7 @@
 #include "dllrev.h"
 #include "Dict.h"
 #include <vector>
+#include "Reflex/Builder/TypeBuilder.h"
 
 using namespace Cint::Internal;
 

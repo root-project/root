@@ -38,6 +38,29 @@ Reflex::Type::operator Reflex::Scope () const {
 
 
 //-------------------------------------------------------------------------------
+Reflex::Member Reflex::Type::AddDataMember( const char * nam,
+                                            const Type & typ,
+                                            size_t offs,
+                                            unsigned int modifiers /* = 0 */,
+                                            char * interpreterOffset /* = 0 */
+                                           ) const {
+   //-------------------------------------------------------------------------------
+   return operator Scope().AddDataMember( nam, typ, offs, modifiers, interpreterOffset );
+}
+
+
+//-------------------------------------------------------------------------------
+Reflex::Member Reflex::Type::AddFunctionMember( const char * nam,
+                                                const Type & typ,
+                                                StubFunction stubFP,
+                                                void * stubCtx,
+                                                const char * params,
+                                                unsigned int modifiers ) const {
+   //-------------------------------------------------------------------------------
+   return operator Scope().AddFunctionMember( nam, typ, stubFP, stubCtx, params, modifiers );
+}
+
+//-------------------------------------------------------------------------------
 Reflex::Base Reflex::Type::BaseAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return nth base info.

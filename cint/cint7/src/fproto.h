@@ -338,7 +338,7 @@ int G__separate_parameter(const char *original,int *pos,char *param);
 int G__parse_parameter_link(char *paras);
 int G__cppif_p2memfunc(FILE *fp);
 int G__set_sizep2memfunc(FILE *fp);
-int G__getcommentstring(char *buf,int tagnum,struct G__comment_info *pcomment);
+int G__getcommentstring(char* buf, int tagnum, struct G__comment_info* pcomment);
 void G__bstore(int operatorin,G__value expressionin,G__value *defined);
 void G__doubleassignbyref(G__value *defined,double val);
 void G__intassignbyref(G__value *defined,G__int64 val);
@@ -409,11 +409,10 @@ G__value G__pointer2func(G__value* obj_p2f,char *parameter0,char *parameter1,int
 bool G__search_func(char *funcname,G__value *buf);
 char *G__search_next_member(char *text,int state);
 long G__Loffsetof(char *tagname,char *memname);
-int G__Lsizeof(const char *typenamein);
 long *G__typeid(char *typenamein);
-void G__getcomment(char *buf,int tagnum);
-void G__getcomment(char *buf,Reflex::Scope &scope);
-void G__getcomment(char *buf,struct G__comment_info *pcomment,int tagnum);
+void G__getcomment(char* buf, int tagnum);
+void G__getcomment(char* buf, Reflex::Scope scope);
+void G__getcomment(char* buf, struct G__comment_info* pcomment, int tagnum);
 void G__getcommenttypedef(char *buf,struct G__comment_info *pcomment,::Reflex::Type typenum);
 long G__get_classinfo(char *item,int tagnum);
 long G__get_variableinfo(char *item,long *phandle,long *pindex,int tagnum);
@@ -468,11 +467,8 @@ G__value G__toXvalue(G__value result,int var_type);
 G__value G__letVvalue(G__value *p,G__value result);
 G__value G__letPvalue(G__value *p,G__value result);
 G__value G__letvalue(G__value *p,G__value result);
-G__value G__letvariable(const char *item,G__value expression,const ::Reflex::Scope &varglobal,const ::Reflex::Scope &varlocal,Reflex::Member &output_var);
-inline G__value G__letvariable(const char *item,G__value expression,const ::Reflex::Scope &varglobal,const ::Reflex::Scope &varlocal) {
-   Reflex::Member dummy;
-   return G__letvariable(item,expression,varglobal,varlocal, dummy);
-}
+G__value G__letvariable(const char* item, G__value expression, const ::Reflex::Scope varglobal, const ::Reflex::Scope varlocal, Reflex::Member& output_var);
+G__value G__letvariable(const char* item, G__value expression, const ::Reflex::Scope varglobal, const ::Reflex::Scope varlocal);
 G__value G__getvariable(char *item,int *known2,const ::Reflex::Scope &varglobal,const ::Reflex::Scope &varlocal);
 G__value G__getstructmem(int store_var_type,char *varname,char *membername,char *tagname,int *known2,const ::Reflex::Scope &varglobal,int objptr);
 G__value G__letstructmem(int store_var_type,const char *varname,char *membername,char *tagname,const ::Reflex::Scope &varglobal,G__value expression,int objptr,Reflex::Member &output_var);
@@ -679,7 +675,7 @@ int G__sizeof_deref(const G__value*);
 ::Reflex::Type G__get_from_type(int type, int createpointer, int isconst = 0);
 ::Reflex::Type G__find_type(const char *type_name, int errorflag, int templateflag);
 ::Reflex::Type G__find_typedef(const char*);
-::Reflex::Type G__findInScope(const ::Reflex::Scope scope, const char* name);
+::Reflex::Scope G__findInScope(const ::Reflex::Scope scope, const char* name);
 ::Reflex::Type G__declare_typedef(const char *typenamein,
                                         int typein,int tagnum,int reftype,
                                         int isconst, int globalcomp,

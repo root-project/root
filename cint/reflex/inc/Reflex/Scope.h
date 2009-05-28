@@ -849,6 +849,22 @@ namespace Reflex {
    public:
 
       /**
+      * AddBase will add information about a Base class
+      * @param base type of the base class
+      * @param offsFP pointer to a function stub for calculating the base class offset
+      * @param modifiers the modifiers of the base class
+      */
+      void AddBase(const Type & bas, OffsetFunction offsFP, unsigned int modifiers = 0) const;
+
+
+      /**
+      * AddBase will add the information about a Base class
+      * @param b pointer to the base class
+      */
+      void AddBase(const Base & b) const;
+
+
+      /**
       * AddDataMember will add the information about a data member
       * @param dm data member to add
       */
@@ -862,20 +878,11 @@ namespace Reflex {
       * @param offs the offset of the data member relative to the beginning of the scope
       * @param modifiers of the data member
       */
-      void AddDataMember( const char * name,
+      Member AddDataMember( const char * name,
          const Type & type,
          size_t offset,
-         unsigned int modifiers = 0 ) const;
-
-      /**
-       * AddDataMember will add the information about a data member
-       * @param output a placeholder for 'Member' pointing to the data member
-       * @param nam the name of the data member
-       * @param typ the type of the data member
-       * @param offs the offset of the data member relative to the beginning of the scope
-       * @param modifiers of the data member
-       */
-      void AddDataMember(Member& output, const char* name, const Type& type, size_t offset, unsigned int modifiers = 0, char* interpreterOffset = 0) const;
+         unsigned int modifiers = 0,
+         char * interpreterOffset = 0 ) const;
 
       /**
       * AddFunctionMember will add the information about a function member
@@ -893,7 +900,7 @@ namespace Reflex {
       * @param params a semi colon separated list of parameters 
       * @param modifiers of the function member
       */ 
-      void AddFunctionMember( const char * name,
+      Member AddFunctionMember( const char * name,
          const Type & type,
          StubFunction stubFP,
          void * stubCtx = 0,
@@ -1544,6 +1551,22 @@ inline Reflex::Reverse_Scope_Iterator Reflex::Scope::UsingDirective_REnd() const
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->UsingDirective_REnd();
    return Dummy::ScopeCont().rend();
+}
+
+
+//-------------------------------------------------------------------------------
+inline void Reflex::Scope::AddBase( const Type & bas,
+                                    OffsetFunction offsFP,
+                                    unsigned int modifiers /* = 0 */) const {
+//-------------------------------------------------------------------------------
+   if ( * this) fScopeName->fScopeBase->AddBase( bas, offsFP, modifiers );
+}
+
+
+//-------------------------------------------------------------------------------
+inline void Reflex::Scope::AddBase(const Base & b) const {
+//-------------------------------------------------------------------------------
+   if ( * this) fScopeName->fScopeBase->AddBase( b );
 }
 
 

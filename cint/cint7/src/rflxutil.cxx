@@ -16,7 +16,7 @@
 #include "common.h"
 
 #include "Reflex/Builder/TypeBuilder.h"
-#include "Reflex/Builder/FunctionBuilder.h"
+//#include "Reflex/Builder/FunctionBuilder.h"
 #include "Reflex/Tools.h"
 #include "Dict.h"
 #include <cassert>
@@ -65,7 +65,7 @@ Reflex::Type G__strip_one_array(const Reflex::Type typein);
 Reflex::Type G__deref(const Reflex::Type typein);
 ::Reflex::Type G__modify_type(const ::Reflex::Type typein, bool ispointer, int reftype, int isconst, int nindex, int* index);
 ::Reflex::Type G__cint5_tuple_to_type(int type, int tagnum, int typenum, int reftype, int isconst);
-::Reflex::Type G__findInScope(const ::Reflex::Scope scope, const char* name);
+::Reflex::Scope G__findInScope(const ::Reflex::Scope scope, const char* name);
 bool G__test_access(const ::Reflex::Member var, int access);
 bool G__is_cppmacro(const ::Reflex::Member var);
 bool G__filescopeaccess(int filenum, int statictype);
@@ -1580,10 +1580,10 @@ extern "C" void G__dump_reflex_function(const ::Reflex::Scope scope, int level)
 }
 
 //______________________________________________________________________________
-::Reflex::Type Cint::Internal::G__findInScope(const ::Reflex::Scope scope, const char* name)
+::Reflex::Scope Cint::Internal::G__findInScope(const ::Reflex::Scope scope, const char* name)
 {
-   // -- Find a REFLEX Type in a REFLEX Scope by name.
-   ::Reflex::Type cl;
+   // -- Find a REFLEX Scope in a REFLEX Scope by name.
+   ::Reflex::Scope cl;
 #ifdef __GNUC__
 #else
 #pragma message (FIXME("This needs to be in Reflex itself"))
@@ -1591,13 +1591,13 @@ extern "C" void G__dump_reflex_function(const ::Reflex::Scope scope, int level)
    if (name==0 || name[0]==0) {
       return cl;
    }
-   ::Reflex::Type_Iterator end = scope.SubType_End();
+   ::Reflex::Scope_Iterator end = scope.SubScope_End();
    for (
-      ::Reflex::Type_Iterator itype = scope.SubType_Begin();
+      ::Reflex::Scope_Iterator itype = scope.SubScope_Begin();
       itype != end;
       ++itype
    ) {
-      const char *iname = itype->Name_c_str();
+      const char *iname = itype->Name_c_str() + itype->ToScopeBase()->GetBasePosition();
       if ( iname[0]==name[0] && iname[1]==name[1] && 0==strcmp(iname,name) ) {
          cl = *itype;
          break;
@@ -1802,7 +1802,7 @@ void Cint::Internal::G__set_G__tagnum(const G__value& result)
    }
    // etc...
    varscope.RemoveDataMember(member);
-   varscope.AddDataMember(member, name.c_str(), newType, offset, modifiers, cint_offset);
+   member = varscope.AddDataMember(name.c_str(), newType, offset, modifiers, cint_offset);
    *G__get_properties(member) = prop;
    G__get_offset(member) = cint_offset;
    return member;
@@ -2046,7 +2046,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
 //______________________________________________________________________________
 ::Reflex::Member Cint::Internal::G__BuilderInfo::Build(const std::string name)
 {
-   // -- Create the reflex database entries for function name.
+   // Create the reflex database entries for function name.
    //
    //  Make the entry into the reflex database.
    //
@@ -2114,6 +2114,29 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
    //else {
    //   fprintf(stderr, "G__BuilderInfo::Build: search failed.\n");
    //}
+   //bool has_reflex_stub = false;
+   bool from_reflex_callback = false;
+   if (m) {
+      //
+      //  Check for the existence of a reflex dictionary
+      //  stub function pointer.  If it is there, then this
+      //  function was entered by a reflex dictionary.
+      //
+      //if (m.StubFunction()) {
+      //   has_reflex_stub = true;
+      //}
+      //
+      //  Check for the existence of cint properties on
+      //  this function.  If they are not there then cint
+      //  does not know about this function so it must
+      //  come from a reflex callback through cintex.
+      //
+      static size_t pid = GetReflexPropertyID();
+      G__RflxFuncProperties* prop = (G__RflxFuncProperties*) m.ToMemberBase()->Properties().PropertyValue(pid).Address();
+      if (!prop) {
+         from_reflex_callback = true;
+      }
+   }
    //
    //  If we implement a pure virtual function from
    //  a base class, decrement the pure virtual count
@@ -2124,12 +2147,15 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
    //
    if ( // is a member function, and not previously declared
       (G__tagdefining && G__tagdefining.IsClass()) && // is a member function, and
-      !m // not previous declared
+      (
+         !m  || // not previous declared, or
+         from_reflex_callback // cint does not yet know about this function
+      )
    ) {
       struct G__inheritance* baseclass = G__struct.baseclass[G__get_tagnum(G__tagdefining)];
       for (size_t basen = 0; basen < baseclass->vec.size(); ++basen) {
          G__incsetup_memfunc(baseclass->vec[basen].basetagnum);
-         ::Reflex::Scope scope(G__Dict::GetDict().GetScope(baseclass->vec[basen].basetagnum));
+         ::Reflex::Scope scope = G__Dict::GetDict().GetScope(baseclass->vec[basen].basetagnum);
          //fprintf(stderr, "G__BuilderInfo::Build: search base class '%s' for function member '%s' type '%s'\n", scope.Name(Reflex::SCOPED).c_str(), name.c_str(), modftype.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
          ::Reflex::Member base_m = scope.FunctionMemberByNameAndSignature(name, modftype, modifiers_mask);
          //if (base_m) {
@@ -2160,12 +2186,15 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
       G__genericerror("You need to write it in a source file");
       return m;
    }
-   if (m) { // function was previously declared
-      // -- Now handle the parts which go into the function property.
+   if (m && !from_reflex_callback) { // function was previously declared
+      //
+      //  Now handle the parts which go into the function property.
       //
       G__RflxFuncProperties* prop = G__get_funcproperties(m);
 #ifdef G__FRIEND
-      // Consume the friendtag, put it into the function properties friendtag list.
+      //
+      //  Consume the friendtag.
+      //
       if (fProp.entry.friendtag) { // New decl has a friendtag list.
          if (!prop->entry.friendtag) { // Old dcl did not have one, copy over from new decl.
             prop->entry.friendtag = fProp.entry.friendtag;
@@ -2192,7 +2221,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
       //      - Avoid double counting pure virtual function.
       //
       if (
-         fProp.entry.p && // we have file pointer to text of body, and
+         fProp.entry.p && // we have a stub function pointer for compiled func, or file pointer to body for interpreted func
          (
             !G__def_struct_member || // not a class member, or
             (G__struct.iscpplink[G__get_tagnum(G__def_tagnum)] != G__CPPLINK) // is not precompiled
@@ -2240,7 +2269,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
    }
    else if ( // function not seen before, and ok to process
       (
-         fProp.entry.p || // we have a file pointer to the function body (definition), or
+         fProp.entry.p || // we have a stub function pointer for compiled func, or file pointer to body for interpreted func, or
          fProp.entry.ansi || // ansi-style declaration, or
          G__nonansi_func || // not ansi-style declaration, or // FIXME: What???  Combined with previous clause is always true???
          (G__globalcomp < G__NOLINK) || // is precompiled, or
@@ -2288,77 +2317,64 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
             break;
       };
       switch (G__get_tagtype(G__p_ifunc)) {
-         case 'c':
-         case 's':
-            // -- Class or struct.
-            //
-            //  Do special processing for a constructor/destructor.
-            //
-            if (name[0] == '~') {
-               modifiers |= ::Reflex::DESTRUCTOR;
-            }
-            else if (name == G__p_ifunc.Name()) { // FIXME: Is this correct for templated classes?
-               modifiers |= ::Reflex::CONSTRUCTOR;
-               if (ftype.FunctionParameterSize() == 1) {
-                  // Get the type without any modifiers
-                  // (i.e., reference and const) nor any typedefs.
-                  ::Reflex::Type argtype  = ftype.FunctionParameterAt(0).FinalType().ToTypeBase()->ThisType();
-                  if (argtype == (::Reflex::Type) G__p_ifunc) {
-                     modifiers |= ::Reflex::COPYCONSTRUCTOR;
+         case 'c': // class
+         case 's': // struct
+         case 'u': // union
+            {
+               //
+               //  Do special processing for a constructor/destructor.
+               //
+               if (name[0] == '~') { // destructor
+                  modifiers |= ::Reflex::DESTRUCTOR;
+               }
+               else if (name == G__p_ifunc.Name()) { // constructor
+                  modifiers |= ::Reflex::CONSTRUCTOR;
+                  if (ftype.FunctionParameterSize() == 1) { // possible copy constructor
+                     // Get the first parameter type without modifiers.
+                     ::Reflex::Type first_param_type = ftype.FunctionParameterAt(0).FinalType().ToTypeBase()->ThisType();
+                     if (first_param_type == (Reflex::Type) G__p_ifunc) { // we have a copy constructor
+                        modifiers |= ::Reflex::COPYCONSTRUCTOR;
+                     }
                   }
                }
-            }
-            G__get_properties(G__p_ifunc)->builder.Class().AddFunctionMember(ftype, name.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
-            modftype = ::Reflex::Type(ftype, modifiers);
-            m = G__p_ifunc.FunctionMemberByNameAndSignature(name, modftype, modifiers_mask);
-            //fprintf(stderr, "G__BuilderInfo::Build: added member function '%s'.\n", m.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
-            break;
-         case 'n':
-            // -- Namespace.
-            {
-               std::string fullname = G__p_ifunc.Name(::Reflex::SCOPED);
-               if (fullname.size()) {
-                  fullname += "::";
+               if (!from_reflex_callback) {
+                  m = G__p_ifunc.AddFunctionMember(name.c_str(), ftype, (Reflex::StubFunction) 0, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
+                  //modftype = ::Reflex::Type(ftype, modifiers);
+                  //m = G__p_ifunc.FunctionMemberByNameAndSignature(name, modftype, modifiers_mask);
+                  //fprintf(stderr, "G__BuilderInfo::Build: added member function '%s'.\n", m.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
                }
-               fullname += name;
-               ::Reflex::FunctionBuilder funcBuilder(ftype, fullname.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
-               m = funcBuilder.ToMember();
+            }
+            break;
+         case 'n': // Namespace.
+            {
+               if (!from_reflex_callback) {
+                  //std::string fullname = G__p_ifunc.Name(::Reflex::SCOPED);
+                  //if (fullname.size()) {
+                  //   fullname += "::";
+                  //}
+                  //fullname += name;
+                  //m = Reflex::FunctionBuilder(ftype, fullname.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers).EnableCallback(false).ToMember();
+                  m = G__p_ifunc.AddFunctionMember(name.c_str(), ftype, (Reflex::StubFunction) 0, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
+                  //modftype = ::Reflex::Type(ftype, modifiers);
+                  //m = G__p_ifunc.FunctionMemberByNameAndSignature(name, modftype, modifiers_mask);
+                  //fprintf(stderr, "G__BuilderInfo::Build: added member function '%s'.\n", m.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+               }
                break;
             }
-         case 'u':
-            // -- Union.
-            //
-            //  Do special processing for a constructor/destructor.
-            //
-            if (name[0] == '~') {
-               modifiers |= ::Reflex::DESTRUCTOR;
-            }
-            else if (name == G__p_ifunc.Name()) { // FIXME: Is this correct for templated classes?
-               modifiers |= ::Reflex::CONSTRUCTOR;
-               if (ftype.FunctionParameterSize() == 1) {
-                  // Get the type without any modifiers
-                  // (i.e., reference and const) nor any typedefs.
-                  Reflex::Type argtype(ftype.FunctionParameterAt(0).FinalType().ToTypeBase()->ThisType());
-                  if (argtype == (Reflex::Type) G__p_ifunc) {
-                     modifiers |= ::Reflex::COPYCONSTRUCTOR;
-                  }
+         default: // Assume this means we want it in the global namespace.
+            {
+               if (!from_reflex_callback) {
+                  //m = Reflex::FunctionBuilder(ftype, name.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers).EnableCallback(false).ToMember();
+                  m = ::Reflex::Scope::GlobalScope().AddFunctionMember(name.c_str(), ftype, (Reflex::StubFunction) 0, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
+                  //modftype = ::Reflex::Type(ftype, modifiers);
+                  //m = G__p_ifunc.FunctionMemberByNameAndSignature(name, modftype, modifiers_mask);
+                  //fprintf(stderr, "G__BuilderInfo::Build: added member function '%s'.\n", m.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
                }
+               //int tag = G__get_tagtype( G__p_ifunc ) ;
+               //fprintf(stderr,"value=%d\n",tag);
+               //G__genericerror("Attempt to add a function to something that does not appear to be a scope");
             }
-            G__get_properties(G__p_ifunc)->builder.Union().AddFunctionMember(ftype, name.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
-            modftype = ::Reflex::Type(ftype, modifiers);
-            m = G__p_ifunc.FunctionMemberByNameAndSignature(name, modftype, modifiers_mask);
-            //fprintf(stderr, "G__BuilderInfo::Build: added member function '%s'.\n", m.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
-            break;
-         default:
-            // -- Assume this means we want it in the global namespace.
-            ::Reflex::FunctionBuilder funcBuilder(ftype, name.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
-            m = (funcBuilder.ToMember());
-            //int tag = G__get_tagtype( G__p_ifunc ) ;
-            //fprintf(stderr,"value=%d\n",tag);
-            //G__genericerror("Attempt to add a function to something that does not appear to be a scope");
       }
-      //::Reflex::FunctionBuilder funcBuilder(ftype, fullname.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
-      //m = funcBuilder.ToMember();
       if (!m) {
          fprintf(stderr, "G__BuilderInfo::Build: Something went wrong creating entry for '%s' in '%s'\n", name.c_str(), G__p_ifunc.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
          G__dump_reflex_function(G__p_ifunc, 1);

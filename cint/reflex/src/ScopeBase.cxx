@@ -606,9 +606,23 @@ size_t Reflex::ScopeBase::SubScopeLevel() const {
 
 
 //-------------------------------------------------------------------------------
+void Reflex::ScopeBase::AddBase( const Type & /* bas */,
+                                 OffsetFunction /* offsFP */,
+                                 unsigned int /* modifiers = 0 */ ) const {
+//-------------------------------------------------------------------------------
+}
+
+
+//-------------------------------------------------------------------------------
+void Reflex::ScopeBase::AddBase( const Base & /* b */ ) const {
+//-------------------------------------------------------------------------------
+}
+
+
+//-------------------------------------------------------------------------------
 void Reflex::ScopeBase::AddDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
-   // Add data member dm to this scope.
+   // Add data member dm to this scope and return a reference to the persistent member representation.
    dm.SetScope( ThisScope() );
    fDataMembers.push_back( dm );
    fMembers.push_back( dm );
@@ -616,23 +630,20 @@ void Reflex::ScopeBase::AddDataMember( const Member & dm ) const {
 
 
 //-------------------------------------------------------------------------------
-void Reflex::ScopeBase::AddDataMember( const char * name,
-                                      const Type & type,
-                                      size_t offset,
-                                      unsigned int modifiers ) const {
+Reflex::Member Reflex::ScopeBase::AddDataMember(const char * name,
+                                          const Type & type,
+                                          size_t offset,
+                                          unsigned int modifiers,
+                                          char * interpreterOffset ) const {
 //-------------------------------------------------------------------------------
    // Add data member to this scope.
-   AddDataMember( new DataMember(name, type, offset, modifiers) );
+   Member dm( new DataMember( name, type, offset, modifiers, interpreterOffset ) );
+   dm.SetScope( ThisScope() );
+   fDataMembers.push_back( dm );
+   fMembers.push_back( dm );
+   return dm;
 }
 
-//-------------------------------------------------------------------------------
-void Reflex::ScopeBase::AddDataMember(Member& output, const char* name, const Type& type, size_t offset, unsigned int modifiers, char* interpreterOffset) const
-{
-   //-------------------------------------------------------------------------------
-   // Add data member to this scope.
-   output = new DataMember(name, type, offset, modifiers, interpreterOffset);
-   AddDataMember( output );
-}
 
 //-------------------------------------------------------------------------------
 void Reflex::ScopeBase::RemoveDataMember( const Member & dm ) const {
@@ -666,15 +677,19 @@ void Reflex::ScopeBase::AddFunctionMember( const Member & fm ) const {
 
 
 //-------------------------------------------------------------------------------
-void Reflex::ScopeBase::AddFunctionMember( const char * name,
-                                                 const Type & type,
-                                                 StubFunction stubFP,
-                                                 void * stubCtx,
-                                                 const char * params,
-                                                 unsigned int modifiers ) const {
+Reflex::Member Reflex::ScopeBase::AddFunctionMember( const char * name,
+                                               const Type & type,
+                                               StubFunction stubFP,
+                                               void * stubCtx,
+                                               const char * params,
+                                               unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
    // Add function member to this scope.
-   AddFunctionMember(Member(new FunctionMember(name, type, stubFP, stubCtx, params, modifiers)));
+   Member fm( new FunctionMember( name, type, stubFP, stubCtx, params, modifiers ) );
+   fm.SetScope( ThisScope() );
+   fFunctionMembers.push_back( fm );
+   fMembers.push_back( fm );
+   return fm;
 }
 
 

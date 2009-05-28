@@ -15,10 +15,6 @@
 
 #include "common.h"
 #include "Reflex/Base.h"
-#include "Reflex/Builder/TypeBuilder.h"
-#include "Reflex/Builder/NamespaceBuilder.h"
-#include "Reflex/Builder/ClassBuilder.h"
-#include "Reflex/Builder/UnionBuilder.h"
 #include "Dict.h"
 
 #include <cctype>
@@ -61,6 +57,10 @@ extern "C" void G__set_class_autoloading_table(char* classname, char* libname);
 extern "C" int G__defined_tagname(const char* tagname, int noerror);
 extern "C" int G__search_tagname(const char* tagname, int type);
 
+#include "Reflex/Builder/TypeBuilder.h"
+#include "Reflex/Builder/NamespaceBuilder.h"
+#include "Reflex/Builder/ClassBuilder.h"
+#include "Reflex/Builder/UnionBuilder.h"
 
 //______________________________________________________________________________
 static const char G__CLASS_AUTOLOAD = 'a';
@@ -267,6 +267,15 @@ int Cint::Internal::G__using_namespace()
 ::Reflex::Scope Cint::Internal::G__get_envtagnum()
 {
    // Return our enclosing scope.
+#if 0
+   if ((!G__def_tagnum || G__def_tagnum.IsTopScope()) && G__exec_memberfunc) { // No enclosing scope, in member function.
+      return G__memberfunc_tagnum; // Use member function's defining class.
+   }
+   if (G__tagdefining) {
+      return G__tagdefining;
+   }
+   return ::Reflex::Scope::GlobalScope(); // We are in the global namespace.
+#endif // 0
    if (G__def_tagnum && !G__def_tagnum.IsTopScope()) { // We are enclosed, and not in the global namespace.
       // -- We are enclosed, and not in the global namespace.
       //
@@ -604,8 +613,7 @@ int Cint::Internal::G__class_autoloading(int* ptagnum)
             break;
       };
    }
-   ::Reflex::Member d;
-   scope.AddDataMember(d, name, type, reflex_offset, modifiers, cint_offset);
+   ::Reflex::Member d = scope.AddDataMember(name, type, reflex_offset, modifiers, cint_offset);
    G__get_properties(d)->statictype = var_statictype;
    return d;
 }
@@ -1079,7 +1087,7 @@ void Cint::Internal::G__define_struct(char type)
                      modifiers |= Reflex::VIRTUAL;
                   }
                   // Add the base class to the class we are defining.
-                  G__get_properties(lstore_tagnum)->builder.Class().AddBase(baseclass_scope, 0, modifiers);
+                  lstore_tagnum.AddBase(baseclass_scope, (Reflex::OffsetFunction) 0, modifiers);
                }
             }
          }
@@ -1362,7 +1370,8 @@ void Cint::Internal::G__define_struct(char type)
             //  some special cases, so remember the new size.
             //
             if (G__tagnum.IsClass() || G__tagnum.IsUnion()) {
-               G__get_properties(G__tagnum)->builder.Class().SetSizeOf(G__struct.size[G__get_tagnum(G__tagnum)]);
+               Reflex::Type ty = G__tagnum;
+               ty.SetSize(G__struct.size[G__get_tagnum(G__tagnum)]);
             }
             //G__tagdefining = store_tagdefining;
             //G__def_struct_member = store_def_struct_member;
@@ -1494,12 +1503,10 @@ void Cint::Internal::G__create_global_namespace()
 void Cint::Internal::G__create_bytecode_arena()
 {
    // Create an artificial variable whose contents will be the storage area for bytecode.
-   ::Reflex::ClassBuilder* builder = new ::Reflex::ClassBuilder("% CINT byte code scratch arena %", typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
-   ::Reflex::Type ty = builder->ToType();
-   G__Dict::GetDict().RegisterScope(1,ty);
+   ::Reflex::Type ty = ::Reflex::ClassBuilder("% CINT byte code scratch arena %", typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS).EnableCallback(false).ToType();
+   G__Dict::GetDict().RegisterScope(1, ty);
    G__RflxProperties* prop = G__get_properties(ty);
-   prop->builder.Set(builder);
-   prop->builder.Class().SetSizeOf(0);
+   ty.SetSize(0);
    prop->typenum = -1;
    prop->tagnum = 1;
    prop->globalcomp = G__NOLINK;
@@ -2258,9 +2265,9 @@ extern "C" int G__search_tagname(const char* tagname, int type)
          ::Reflex::Type cl;
          ::Reflex::Scope newscope;
          if (atom_tagname[0]) {
-            cl = G__findInScope(scope, atom_tagname);
-         }
-         if (!cl) {
+            newscope = G__findInScope(scope, atom_tagname);
+         } 
+         if (!newscope) {
             std::string fullname;
             if (G__struct.parent_tagnum[i] != -1) {
                fullname = G__fulltagname(G__struct.parent_tagnum[i], 0); // parentScope.Name(SCOPED);
@@ -2270,78 +2277,116 @@ extern "C" int G__search_tagname(const char* tagname, int type)
             }
             fullname += atom_tagname;
             switch (type) {
-               case   0:
-                  // -- Unknown type.
+               case 0: // Unknown type.
                   // Note: When called from G__parse_parameter_link
                   //       for a function parameter with a type for
                   //       which we have not yet seen a declaration.
                   {
                      //fprintf(stderr, "G__search_tagname: New unknown type: '%s'\n", fullname.c_str());
-                     ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
-                     cl =  b->ToType();
-                     G__get_properties(cl)->builder.Set(b);
-                     G__Dict::GetDict().RegisterScope(i,cl);
+                     cl = ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS).EnableCallback(false).ToType();
+                     G__Dict::GetDict().RegisterScope(i, cl);
                      break;
                   }
-               case 'a':
-                  // -- Autoloading.
+               case 'a': // Autoloading.
                   {
                      //fprintf(stderr, "G__search_tagname: New autoloading type: '%s'\n", fullname.c_str());
-                     ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
-                     cl =  b->ToType();
-                     G__get_properties(cl)->builder.Set(b);
-                     G__Dict::GetDict().RegisterScope(i,cl);
+                     cl = ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS).EnableCallback(false).ToType();
+                     G__Dict::GetDict().RegisterScope(i, cl);
                      break;
                   }
-               case 'c':
-                  // -- Class.
+               case 'c': // Class.
                   {
                      //fprintf(stderr, "G__search_tagname: New class type: '%s'\n", fullname.c_str());
-                     ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);   // Should also add the privacy with the containing class.
-                     cl =  b->ToType();
-                     G__get_properties(cl)->builder.Set(b);
-                     G__Dict::GetDict().RegisterScope(i,cl);
+                     cl = ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS).EnableCallback(false).ToType();
+                     G__Dict::GetDict().RegisterScope(i, cl);
                      break;
                   }
-               case 's':
-                  // -- Struct.
+               case 's': // Struct.
                   {
                      //fprintf(stderr, "G__search_tagname: New struct type: '%s'\n", fullname.c_str());
-                     ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::STRUCT);   // Should also add the privacy with the containing class.
-                     cl =  b->ToType();
-                     G__get_properties(cl)->builder.Set(b);
-                     G__Dict::GetDict().RegisterScope(i,cl);
+                     cl = ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::STRUCT).EnableCallback(false).ToType();
+                     G__Dict::GetDict().RegisterScope(i, cl);
                      break;
                   }
-               case 'n':
-                  // -- Namespace.
+               case 'n': // Namespace.
                   {
                      //fprintf(stderr, "G__search_tagname: New namespace scope: '%s'\n", fullname.c_str());
-                     ::Reflex::NamespaceBuilder *b = new ::Reflex::NamespaceBuilder(fullname.c_str());
-                     newscope =  b->ToScope();
-                     G__get_properties(newscope)->builder.Set(b);
-                     G__Dict::GetDict().RegisterScope(i,newscope);
-                    break;
+                     newscope = ::Reflex::NamespaceBuilder(fullname.c_str()).ToScope();
+                     G__Dict::GetDict().RegisterScope(i, newscope);
+                     break;
                   }
-               case 'e':
-                  // -- Enum.
+               case 'e': // Enum.
                   {
                      //fprintf(stderr, "G__search_tagname: New enum type: '%s'\n", fullname.c_str());
                      cl = ::Reflex::EnumTypeBuilder(fullname.c_str());
-                     //G__get_properties(cl)->builder.Set(b);
-                     G__Dict::GetDict().RegisterScope(i,cl);
+                     G__Dict::GetDict().RegisterScope(i, cl);
                      break;
                   }
-               case 'u':
-                  // -- Union.
-                  // Note: We must have the space after the '<' here because
-                  // '<:' is the alternative token for '[', see ISO/IEC 14882 (1998) [lex.digraph].
+               case 'u': // Union.
                   {
                      //fprintf(stderr, "G__search_tagname: New union type: '%s'\n", fullname.c_str());
-                     ::Reflex::UnionBuilder* b = new ::Reflex::UnionBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::UNION);
-                     cl = b->ToType();
-                     G__get_properties(cl)->builder.Set(b);
-                     G__Dict::GetDict().RegisterScope(i,cl);
+                     cl = ::Reflex::UnionBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::UNION).EnableCallback(false).ToType();
+                     G__Dict::GetDict().RegisterScope(i, cl);
+                     break;
+                  }
+               default:
+                  // -- Must not happen.
+                  assert(false);
+            }
+         }
+         else {
+            // Reflex knows this class, but cint does not,
+            // we must have been called from cintex which
+            // is responding to a reflex class creation
+            // callback.
+            if (type != 'n') {
+               cl = newscope;
+            }
+            switch (type) {
+               case 0: // Unknown type.
+                  // Note: When called from G__parse_parameter_link
+                  //       for a function parameter with a type for
+                  //       which we have not yet seen a declaration.
+                  {
+                     //fprintf(stderr, "G__search_tagname: New unknown type: '%s'\n", fullname.c_str());
+                     G__Dict::GetDict().RegisterScope(i, cl);
+                     break;
+                  }
+               case 'a': // Autoloading.
+                  {
+                     //fprintf(stderr, "G__search_tagname: New autoloading type: '%s'\n", fullname.c_str());
+                     G__Dict::GetDict().RegisterScope(i, cl);
+                     break;
+                  }
+               case 'c': // Class.
+                  {
+                     //fprintf(stderr, "G__search_tagname: New class type: '%s'\n", fullname.c_str());
+                     G__Dict::GetDict().RegisterScope(i, cl);
+                     break;
+                  }
+               case 's': // Struct.
+                  {
+                     //fprintf(stderr, "G__search_tagname: New struct type: '%s'\n", fullname.c_str());
+                     G__Dict::GetDict().RegisterScope(i, cl);
+                     break;
+                  }
+               case 'n': // Namespace.
+                  {
+                     //fprintf(stderr, "G__search_tagname: New namespace scope: '%s'\n", fullname.c_str());
+                     G__Dict::GetDict().RegisterScope(i, newscope);
+                    break;
+                  }
+               case 'e': // Enum.
+                  {
+                     //fprintf(stderr, "G__search_tagname: New enum type: '%s'\n", fullname.c_str());
+                     //cl = ::Reflex::EnumTypeBuilder(fullname.c_str());
+                     G__Dict::GetDict().RegisterScope(i, cl);
+                     break;
+                  }
+               case 'u': // Union.
+                  {
+                     //fprintf(stderr, "G__search_tagname: New union type: '%s'\n", fullname.c_str());
+                     G__Dict::GetDict().RegisterScope(i, cl);
                      break;
                   }
                default:

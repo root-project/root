@@ -136,21 +136,6 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
             G__free_struct_upto(itag);
             G__struct.alltag = alltag;
             --G__struct.nactives;
-            
-            // Since we are keeping the class in G__struct we also need to keep it (more exactly put it back) in Reflex
-            if (0) {
-               ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
-               cl =  b->ToType();
-               G__RflxProperties* prop = 0;
-               if (prop) {
-                  prop->builder.Set(b);
-                  prop->typenum = -1;
-                  prop->tagnum = itag;
-                  prop->globalcomp = G__default_link ? G__globalcomp : G__NOLINK;
-                  prop->autoload = true;
-               }
-               G__Dict::GetDict().RegisterScope(itag,cl);
-            }
 
             G__struct.name[itag] = name;
             G__struct.libname[itag] = libname;

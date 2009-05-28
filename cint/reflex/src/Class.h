@@ -280,15 +280,14 @@ public:
    * @param dm pointer to data MemberAt
    */
    virtual void AddDataMember(const Member& dm) const;
-   virtual void AddDataMember(const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0) const;
-   virtual void AddDataMember(Member& output, const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0, char* interpreterOffset = 0) const;
+   virtual Member AddDataMember(const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0, char* interpreterOffset = 0) const;
 
    /**
    * AddFunctionMember will add the information about a function MemberAt
    * @param fm pointer to function MemberAt
    */
    virtual void AddFunctionMember(const Member& fm) const;
-   virtual void AddFunctionMember(const char* nam, const Type& typ, StubFunction stubFP, void* stubCtx = 0, const char* params = 0, unsigned int modifiers = 0) const;
+   virtual Member AddFunctionMember(const char* nam, const Type& typ, StubFunction stubFP, void* stubCtx = 0, const char* params = 0, unsigned int modifiers = 0) const;
 
    /**
    * RemoveDataMember will remove the information about a data MemberAt

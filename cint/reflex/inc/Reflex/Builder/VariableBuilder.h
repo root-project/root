@@ -53,6 +53,13 @@ namespace Reflex {
          const char * value );
 
 
+      /** 
+      * EnableCallback Enable or disable the callback call in the destructor
+      * @param  enable true to enable callback call, false to disable callback call
+      */
+      VariableBuilder& EnableCallback(const bool enable = true);
+
+
       /**
       * ToMember will return the member currently being built
       * @return member currently being built
@@ -63,6 +70,9 @@ namespace Reflex {
 
       /** function member */
       Member fDataMember;
+
+      /** flag, fire callback in destructor */
+      bool fCallbackEnabled;
 
    }; // class VariableBuilder
 
@@ -99,6 +109,13 @@ namespace Reflex {
          const char * value );
 
 
+      /** 
+      * EnableCallback Enable or disable the callback call in the destructor
+      * @param  enable true to enable callback call, false to disable callback call
+      */
+      void EnableCallback(const bool enable = true);
+
+
       /**
       * ToMember will return the member currently being built
       * @return member currently being built
@@ -109,6 +126,9 @@ namespace Reflex {
 
       /** member being built */
       Member fDataMember;
+
+      /** flag, fire callback in destructor */
+      bool fCallbackEnabled;
 
    }; // class VariableBuilderImpl
 
@@ -141,6 +161,13 @@ namespace Reflex {
       */
       template < typename P >
       VariableBuilderT & AddProperty( const char * key, P value );
+
+
+      /** 
+      * EnableCallback Enable or disable the callback call in the destructor
+      * @param  enable true to enable callback call, false to disable callback call
+      */
+      VariableBuilderT& EnableCallback(const bool enable = true);
 
 
       /**
@@ -180,6 +207,15 @@ Reflex::VariableBuilderT<D>::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
    fDataMemberBuilderImpl.AddProperty(key, value);
    return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+template < typename D > inline Reflex::VariableBuilderT<D>&
+Reflex::VariableBuilderT<D>::EnableCallback(const bool enable /*= true*/) {
+//-------------------------------------------------------------------------------
+   fDataMemberBuilderImpl.EnableCallback(enable);
+   return *this;
 }
 
 

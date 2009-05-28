@@ -16,6 +16,8 @@
 #include "common.h"
 #include "Dict.h"
 
+#include "Reflex/Builder/TypeBuilder.h"
+
 using namespace Cint::Internal;
 
 //______________________________________________________________________________

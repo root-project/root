@@ -20,7 +20,6 @@
 #include "Reflex/internal/TypeName.h"
 #include "Reflex/Builder/TypeBuilder.h"
 #include "Reflex/Builder/NamespaceBuilder.h"
-#include "Reflex/Builder/FunctionBuilder.h"
 #include "bc_exec.h"
 #include <vector>
 #include <sstream>
@@ -251,8 +250,8 @@ int Cint::G__compile_function_bytecode(const ::Reflex::Member& ifunc)
       G__tagdefining = bytecodeArena;
       G__struct.size[bytecodeTagnum] = 0;
       {
-         G__RflxProperties* prop = G__get_properties(bytecodeArena);
-         prop->builder.Class().SetSizeOf(0);
+         Reflex::Type type = bytecodeArena;
+         type.SetSize(0);
       }
       G__no_exec = 0;
       G__prerun = 0;

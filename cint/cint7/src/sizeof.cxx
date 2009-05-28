@@ -5,9 +5,9 @@
  * Source file sizeof.c
  ************************************************************************
  * Description:
- *  Getting object size 
+ *  Getting object size
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2002  Masaharu Goto
  *
  * For the licensing terms see the file COPYING
  *
@@ -20,8 +20,10 @@
 
 using namespace Cint::Internal;
 
-/* array index for type_info. This must correspond to the class member 
-* layout of class type_info in the <typeinfo.h> */
+//______________________________________________________________________________
+// array index for type_info. This must correspond to the class member
+// layout of class type_info in the <typeinfo.h>
+
 #define G__TYPEINFO_VIRTUALID 0
 #define G__TYPEINFO_TYPE      1
 #define G__TYPEINFO_TAGNUM    2
@@ -30,7 +32,8 @@ using namespace Cint::Internal;
 #define G__TYPEINFO_SIZE      5
 #define G__TYPEINFO_ISCONST   6
 
-int G__rootCcomment=0;
+//______________________________________________________________________________
+int G__rootCcomment = 0;
 
 //______________________________________________________________________________
 extern "C" void G__loadlonglong(int* ptag, int* ptype, int which)
@@ -59,18 +62,15 @@ extern "C" void G__loadlonglong(int* ptag, int* ptype, int which)
    G__def_struct_member = store_def_struct_member;
    if (which == G__LONGLONG || flag) {
       lltag = G__defined_tagname("G__longlong", 2);
-      lltype = Reflex::Type::ByName("long long"); // G__declare_typedef("long long", 'u', lltag, G__PARANORMAL, 0, G__NOLINK, -1, true);
-//       G__struct.defaulttypenum[lltag] = lltype;
+      lltype = Reflex::Type::ByName("long long");
    }
    if (which == G__ULONGLONG || flag) {
       ulltag = G__defined_tagname("G__ulonglong", 2);
-      ulltype = Reflex::Type::ByName("unsigned long long"); //G__declare_typedef("unsigned long long", 'u', ulltag, G__PARANORMAL, 0, G__NOLINK, -1, true);
-//       G__struct.defaulttypenum[ulltag] = ulltype;
+      ulltype = Reflex::Type::ByName("unsigned long long");
    }
    if (which == G__LONGDOUBLE || flag) {
       ldtag = G__defined_tagname("G__longdouble", 2);
-      ldtype = Reflex::Type::ByName("long double"); //G__declare_typedef("long double", 'u', ldtag, G__PARANORMAL, 0, G__NOLINK, -1, true);
-//       G__struct.defaulttypenum[ldtag] = ldtype;
+      ldtype = Reflex::Type::ByName("long double");
    }
    switch (which) {
       case G__LONGLONG:
@@ -96,8 +96,6 @@ extern "C" void G__loadlonglong(int* ptag, int* ptype, int which)
 extern "C" int G__sizeof(G__value* object)
 {
    ::Reflex::Type ty = G__value_typenum(*object);
-   //int result = ty.SizeOf();
-   //return result;
    char type = G__get_type(ty);
    int reftype = G__get_reftype(ty);
    if (isupper(type) && (reftype != G__PARANORMAL)) {
@@ -145,65 +143,51 @@ extern "C" int G__sizeof(G__value* object)
       case 'Q':
          return G__LONGDOUBLEALLOC;
 #endif // G__OLDIMPLEMENTATION2191
-      // --
+         // --
    }
    return 1;
 }
 
-/******************************************************************
-* int G__sizeof_deref(G__value *object)
-*
-* Return the size of the entity being pointed to.
-******************************************************************/
-int Cint::Internal::G__sizeof_deref(const G__value *object)
+//______________________________________________________________________________
+int Cint::Internal::G__sizeof_deref(const G__value* object)
 {
-   ::Reflex::Type type( G__deref( G__value_typenum(*object) ) );
+   ::Reflex::Type type(G__deref(G__value_typenum(*object)));
    int result = type.SizeOf();
-   if (G__get_type(type)=='g') {
+   if (G__get_type(type) == 'g') {
+      // --
 #ifdef G__BOOL4BYTE
-      assert(G__INTALLOC==result);
-#else
-      assert(G__CHARALLOC==result);
-#endif
+      assert(G__INTALLOC == result);
+#else // G__BOOL4BYTE
+      assert(G__CHARALLOC == result);
+#endif // G__BOOL4BYTE
+      // --
    }
-   return result;      
+   return result;
 }
 
-
-/******************************************************************
-* int G__Loffsetof()
-*
-******************************************************************/
-long Cint::Internal::G__Loffsetof(char *tagname,char *memname)
+//______________________________________________________________________________
+long Cint::Internal::G__Loffsetof(char* tagname, char* memname)
 {
-  int tagnum;
-  int i,hash;
-
-  tagnum = G__defined_tagname(tagname,0); /* G__TEMPLATECLASS case 7 */
-  if(-1==tagnum) return(-1);
-
-  G__hash(memname,hash,i)
-  G__incsetup_memvar(tagnum);
-
-  ::Reflex::Type type( G__Dict::GetDict().GetType(tagnum) );
-  ::Reflex::Member m( type.MemberByName( memname ) );
-  if (m) {
-     return (long) G__get_offset(m);
-  }
-                       
-  G__fprinterr(G__serr,"Error: member %s not found in %s ",memname,tagname);
-  G__genericerror((char*)NULL);
-  return(-1);
+   int tagnum = G__defined_tagname(tagname, 0);
+   if (tagnum == -1) {
+      return -1;
+   }
+   int hash;
+   int junk;
+   G__hash(memname, hash, junk)
+   G__incsetup_memvar(tagnum);
+   ::Reflex::Type type = G__Dict::GetDict().GetType(tagnum);
+   ::Reflex::Member m = type.MemberByName(memname);
+   if (!m) {
+      G__fprinterr(G__serr, "Error: member %s not found in %s ", memname, tagname);
+      G__genericerror(0);
+      return -1;
+   }
+   return (long) G__get_offset(m);
 }
 
-/******************************************************************
-* int G__Lsizeof(typename)
-*
-* Called by
-*   G__special_func()
-*
-******************************************************************/
-int Cint::Internal::G__Lsizeof(const char* type_name_in)
+//______________________________________________________________________________
+extern "C" int G__Lsizeof(const char* type_name_in)
 {
    const char* type_name = type_name_in;
    //
@@ -314,10 +298,10 @@ int Cint::Internal::G__Lsizeof(const char* type_name_in)
       return sizeof(int);
    }
    else if (
-     !strcmp(type_name, "long") ||
-     !strcmp(type_name, "longint") ||
-     !strcmp(type_name, "unsignedlong") ||
-     !strcmp(type_name, "unsignedlongint")
+      !strcmp(type_name, "long") ||
+      !strcmp(type_name, "longint") ||
+      !strcmp(type_name, "unsignedlong") ||
+      !strcmp(type_name, "unsignedlongint")
    ) {
       return sizeof(long);
    }
@@ -512,454 +496,439 @@ int Cint::Internal::G__Lsizeof(const char* type_name_in)
    return -1;
 }
 
+//______________________________________________________________________________
 #ifdef G__TYPEINFO
-/******************************************************************
-* int G__typeid(type_name)
-*
-* Called by
-*   G__special_func()
-*
-******************************************************************/
-long *Cint::Internal::G__typeid(char *typenamein)
+long* Cint::Internal::G__typeid(char* typenamein)
 {
-  G__value buf;
-  int c;
-  long *type_info;
-  int tagnum,type=0,reftype=G__PARANORMAL,size=0;
-  ::Reflex::Type typenum;
-  int len;
-  int pointlevel=0,isref=0;
-  int tag_type_info;
-  G__StrBuf typenamebuf_sb(G__MAXNAME*2);
-  char *typenamebuf = typenamebuf_sb;
-  char *type_name;
-  int isconst = 0;
+   G__value buf;
+   int c;
+   long *type_info;
+   int type = 0;
+   int tagnum;
+   int reftype = G__PARANORMAL;
+   int size = 0;
+   ::Reflex::Type typenum;
+   int len;
+   int pointlevel = 0;
+   int isref = 0;
+   int tag_type_info;
+   G__StrBuf typenamebuf_sb(G__MAXNAME*2);
+   char* typenamebuf = typenamebuf_sb;
+   char* type_name;
+   int isconst = 0;
 
-  /**********************************************************************
-  * Get type_info tagname 
-  ***********************************************************************/
-  tag_type_info = G__defined_tagname("type_info",1);
-  if(-1==tag_type_info) {
-    G__genericerror("Error: class type_info not defined. <typeinfo.h> must be included");
-    return((long*)NULL);
-  }
+   /**********************************************************************
+   * Get type_info tagname
+   ***********************************************************************/
+   tag_type_info = G__defined_tagname("type_info", 1);
+   if (tag_type_info == -1) {
+      G__genericerror("Error: class type_info not defined. <typeinfo.h> must be included");
+      return 0;
+   }
+   /**********************************************************************
+   * In case of typeid(X&) , typeid(X*) , strip & or *
+   ***********************************************************************/
+   strcpy(typenamebuf, typenamein);
+   type_name = typenamebuf;
+   len = strlen(type_name);
 
-  /**********************************************************************
-  * In case of typeid(X&) , typeid(X*) , strip & or *
-  ***********************************************************************/
-  strcpy(typenamebuf,typenamein);
-  type_name=typenamebuf;
-  len=strlen(type_name);
-
-  while('*'==(c=type_name[len-1]) || '&'==c) {
-    switch(c) {
-    case '*':
-      ++pointlevel;
-      break;
-    case '&':
-      isref=1;
-      break;
-    }
-    --len;
-    type_name[len]='\0';
-  }
-
-  /**********************************************************************
-  * Search for typedef names
-  **********************************************************************/
-  typenum = G__find_typedef(type_name);
-  if(typenum) {
-    type    = G__get_type(typenum);
-    tagnum  = G__get_tagnum(typenum);
-    reftype = G__get_reftype(typenum);
-    if(-1!=tagnum) {
-      size = G__struct.size[tagnum];
-    }
-    else {
-      switch(tolower(type)) {
-      case 'n':
-      case 'm':
-        size = G__LONGLONGALLOC;
-        break;
-      case 'g':
-#ifdef G__BOOL4BYTE
-        size = G__INTALLOC;
-        break;
-#endif
-      case 'b':
-      case 'c':
-        size = G__CHARALLOC;
-        break;
-      case 'r':
-      case 's':
-        size = G__SHORTALLOC;
-        break;
-      case 'h':
-      case 'i':
-        size = G__INTALLOC;
-        break;
-      case 'k':
-      case 'l':
-        size = G__LONGALLOC;
-        break;
-      case 'f':
-        size = G__FLOATALLOC;
-        break;
-      case 'd':
-        size = G__DOUBLEALLOC;
-        break;
-      case 'e':
-      case 'y':
-        size = -1;
-        break;
-      case 'a':
-        size = G__sizep2memfunc;
-        break;
-      case 'q':
-        break;
+   while ('*' == (c = type_name[len-1]) || '&' == c) {
+      switch (c) {
+         case '*':
+            ++pointlevel;
+            break;
+         case '&':
+            isref = 1;
+            break;
       }
-    }
-  }
-
-  else {
-
-    /*********************************************************************
-     * Search for class/struct/union names
-     *********************************************************************/
-    if((strncmp(type_name,"struct",6)==0)) {
-      type_name = type_name+6;
-    }
-    else if((strncmp(type_name,"class",5)==0)) {
-      type_name = type_name+5;
-    }
-    else if((strncmp(type_name,"union",5)==0)) {
-      type_name = type_name+5;
-    }
-    
-    tagnum = G__defined_tagname(type_name,1); 
-    if(-1 != tagnum) {
-      reftype=G__PARANORMAL;
-      switch(G__struct.type[tagnum]) {
-      case 'u':
-      case 's':
-      case 'c':
-        type = 'u';
-        size = G__struct.size[tagnum];
-        break;
-      case 'e':
-        type = 'i';
-        size = G__INTALLOC;
-        break;
-      case 'n':
-        size = G__struct.size[tagnum];
-        G__genericerror("Error: can not get sizeof namespace");
-        break;
-      }
-    }
-
-    else {
-
-      /********************************************************************
-       * Search for intrinsic types
-       *******************************************************************/
-      reftype = G__PARANORMAL;
-
-      if(strcmp(type_name,"int")==0) {
-        type = 'i';
-        size = G__INTALLOC;
-      }
-      if(strcmp(type_name,"unsignedint")==0) {
-        type = 'h';
-        size = G__INTALLOC;
-      }
-      if((strcmp(type_name,"long")==0)||
-         (strcmp(type_name,"longint")==0)) {
-        type='l';
-        size = G__LONGALLOC;
-      }
-      if((strcmp(type_name,"unsignedlong")==0)||
-         (strcmp(type_name,"unsignedlongint")==0)) {
-        type = 'k';
-        size = G__LONGALLOC;
-      }
-      if((strcmp(type_name,"longlong")==0)) {
-        type='n';
-        size = G__LONGLONGALLOC;
-      }
-      if((strcmp(type_name,"unsignedlonglong")==0)) {
-        type='m';
-        size = G__LONGLONGALLOC;
-      }
-      if((strcmp(type_name,"short")==0)||
-         (strcmp(type_name,"shortint")==0)) {
-        type = 's';
-        size = G__SHORTALLOC;
-      }
-      if((strcmp(type_name,"unsignedshort")==0)||
-         (strcmp(type_name,"unsignedshortint")==0)) {
-        type = 'r';
-        size = G__SHORTALLOC;
-      }
-      if((strcmp(type_name,"char")==0)||
-         (strcmp(type_name,"signedchar")==0)) {
-        type = 'c';
-        size = G__CHARALLOC;
-      }
-      if(strcmp(type_name,"unsignedchar")==0) {
-        type = 'b';
-        size = G__CHARALLOC;
-      }
-      if(strcmp(type_name,"float")==0) {
-        type = 's'; 
-        size = G__FLOATALLOC;
-      }
-      if((strcmp(type_name,"double")==0)
-         ) {
-        type = 'd';
-        size = G__DOUBLEALLOC;
-      }
-      if((strcmp(type_name,"longdouble")==0)
-         ) {
-        type = 'q';
-        size = G__LONGDOUBLEALLOC;
-      }
-      if(strcmp(type_name,"void")==0) {
-        type = 'y';
-        size = sizeof(void*);
-      }
-      if(strcmp(type_name,"FILE")==0) {
-        type = 'e';
-        size = -1;
-      }
-    }
-  }
-
-  /**********************************************************************
-   * If no type name matches, evaluate the expression and get the type 
-   * information of the object
-   *********************************************************************/
-  if(0==type) {
-    buf = G__getexpr(typenamein);
-    typenum = G__value_typenum(buf);
-    type = G__get_type(typenum);
-    tagnum = G__get_tagnum(typenum);
-    isref = 0;
-    isconst = typenum.IsConst();
-
-    if(-1!=tagnum && 'u'==tolower(type) && buf.ref && G__PVOID!=G__struct.virtual_offset[tagnum]) {
-      /* In case of polymorphic object, get the actual tagnum from the hidden
-       * virtual identity field.  */
-      tagnum = *(long*)(buf.obj.i+G__struct.virtual_offset[tagnum]);
-    }
-  }
-
-  /*********************************************************************
-   * Identify reference and pointer level
-   *********************************************************************/
-  if(isref) {
-    reftype = G__PARAREFERENCE;
-    if(pointlevel) type = toupper(type);
-  }
-  else {
-    if(isupper(type)) {
-      ++pointlevel;
-      type = tolower(type);
-    }
-    switch(pointlevel) {
-    case 0:
-      reftype = G__PARANORMAL;
-      break;
-    case 1:
-      type = toupper(type);
-      reftype = G__PARANORMAL;
-      break;
-    case 2:
-      type = toupper(type);
-      reftype = G__PARAP2P;
-      break;
-    case 3:
-      type = toupper(type);
-      reftype = G__PARAP2P2P;
-      break;
-    }
-  }
-
-  if(isupper(type)) size = G__LONGALLOC;
-
-  /**********************************************************************
-   * Create temporary object for return value and copy the reslut
+      --len;
+      type_name[len] = '\0';
+   }
+   /**********************************************************************
+   * Search for typedef names
    **********************************************************************/
-  G__alloc_tempobject(tag_type_info, -1 );
-  type_info = (long*)G__p_tempbuf->obj.obj.i;
-
-  type_info[G__TYPEINFO_VIRTUALID] = tag_type_info;
-  type_info[G__TYPEINFO_TYPE] = type;
-  type_info[G__TYPEINFO_TAGNUM] = tagnum;
-  type_info[G__TYPEINFO_TYPENUM] = G__get_typenum(typenum);
-  type_info[G__TYPEINFO_REFTYPE] = reftype;
-  type_info[G__TYPEINFO_SIZE] = size;
-  type_info[G__TYPEINFO_ISCONST] = isconst;
-
-  return( type_info ) ;
-
+   typenum = G__find_typedef(type_name);
+   if (typenum) {
+      type    = G__get_type(typenum);
+      tagnum  = G__get_tagnum(typenum);
+      reftype = G__get_reftype(typenum);
+      if (-1 != tagnum) {
+         size = G__struct.size[tagnum];
+      }
+      else {
+         switch (tolower(type)) {
+            case 'n':
+            case 'm':
+               size = G__LONGLONGALLOC;
+               break;
+            case 'g':
+#ifdef G__BOOL4BYTE
+               size = G__INTALLOC;
+               break;
+#endif // G__BOOL4BYTE
+            case 'b':
+            case 'c':
+               size = G__CHARALLOC;
+               break;
+            case 'r':
+            case 's':
+               size = G__SHORTALLOC;
+               break;
+            case 'h':
+            case 'i':
+               size = G__INTALLOC;
+               break;
+            case 'k':
+            case 'l':
+               size = G__LONGALLOC;
+               break;
+            case 'f':
+               size = G__FLOATALLOC;
+               break;
+            case 'd':
+               size = G__DOUBLEALLOC;
+               break;
+            case 'e':
+            case 'y':
+               size = -1;
+               break;
+            case 'a':
+               size = G__sizep2memfunc;
+               break;
+            case 'q':
+               break;
+         }
+      }
+   }
+   else {
+      /*********************************************************************
+       * Search for class/struct/union names
+       *********************************************************************/
+      if ((strncmp(type_name, "struct", 6) == 0)) {
+         type_name = type_name + 6;
+      }
+      else if ((strncmp(type_name, "class", 5) == 0)) {
+         type_name = type_name + 5;
+      }
+      else if ((strncmp(type_name, "union", 5) == 0)) {
+         type_name = type_name + 5;
+      }
+      tagnum = G__defined_tagname(type_name, 1);
+      if (-1 != tagnum) {
+         reftype = G__PARANORMAL;
+         switch (G__struct.type[tagnum]) {
+            case 'u':
+            case 's':
+            case 'c':
+               type = 'u';
+               size = G__struct.size[tagnum];
+               break;
+            case 'e':
+               type = 'i';
+               size = G__INTALLOC;
+               break;
+            case 'n':
+               size = G__struct.size[tagnum];
+               G__genericerror("Error: can not get sizeof namespace");
+               break;
+         }
+      }
+      else {
+         /********************************************************************
+          * Search for intrinsic types
+          *******************************************************************/
+         reftype = G__PARANORMAL;
+         if (strcmp(type_name, "int") == 0) {
+            type = 'i';
+            size = G__INTALLOC;
+         }
+         if (strcmp(type_name, "unsignedint") == 0) {
+            type = 'h';
+            size = G__INTALLOC;
+         }
+         if ((strcmp(type_name, "long") == 0) ||
+               (strcmp(type_name, "longint") == 0)) {
+            type = 'l';
+            size = G__LONGALLOC;
+         }
+         if ((strcmp(type_name, "unsignedlong") == 0) ||
+               (strcmp(type_name, "unsignedlongint") == 0)) {
+            type = 'k';
+            size = G__LONGALLOC;
+         }
+         if ((strcmp(type_name, "longlong") == 0)) {
+            type = 'n';
+            size = G__LONGLONGALLOC;
+         }
+         if ((strcmp(type_name, "unsignedlonglong") == 0)) {
+            type = 'm';
+            size = G__LONGLONGALLOC;
+         }
+         if ((strcmp(type_name, "short") == 0) ||
+               (strcmp(type_name, "shortint") == 0)) {
+            type = 's';
+            size = G__SHORTALLOC;
+         }
+         if ((strcmp(type_name, "unsignedshort") == 0) ||
+               (strcmp(type_name, "unsignedshortint") == 0)) {
+            type = 'r';
+            size = G__SHORTALLOC;
+         }
+         if ((strcmp(type_name, "char") == 0) ||
+               (strcmp(type_name, "signedchar") == 0)) {
+            type = 'c';
+            size = G__CHARALLOC;
+         }
+         if (strcmp(type_name, "unsignedchar") == 0) {
+            type = 'b';
+            size = G__CHARALLOC;
+         }
+         if (strcmp(type_name, "float") == 0) {
+            type = 's';
+            size = G__FLOATALLOC;
+         }
+         if ((strcmp(type_name, "double") == 0)
+            ) {
+            type = 'd';
+            size = G__DOUBLEALLOC;
+         }
+         if ((strcmp(type_name, "longdouble") == 0)
+            ) {
+            type = 'q';
+            size = G__LONGDOUBLEALLOC;
+         }
+         if (strcmp(type_name, "void") == 0) {
+            type = 'y';
+            size = sizeof(void*);
+         }
+         if (strcmp(type_name, "FILE") == 0) {
+            type = 'e';
+            size = -1;
+         }
+      }
+   }
+   /**********************************************************************
+    * If no type name matches, evaluate the expression and get the type
+    * information of the object
+    *********************************************************************/
+   if (!type) {
+      buf = G__getexpr(typenamein);
+      typenum = G__value_typenum(buf);
+      type = G__get_type(typenum);
+      tagnum = G__get_tagnum(typenum);
+      isref = 0;
+      isconst = typenum.IsConst();
+      if (-1 != tagnum && 'u' == tolower(type) && buf.ref && G__PVOID != G__struct.virtual_offset[tagnum]) {
+         /* In case of polymorphic object, get the actual tagnum from the hidden
+          * virtual identity field.  */
+         tagnum = *(long*)(buf.obj.i + G__struct.virtual_offset[tagnum]);
+      }
+   }
+   /*********************************************************************
+    * Identify reference and pointer level
+    *********************************************************************/
+   if (isref) {
+      reftype = G__PARAREFERENCE;
+      if (pointlevel) type = toupper(type);
+   }
+   else {
+      if (isupper(type)) {
+         ++pointlevel;
+         type = tolower(type);
+      }
+      switch (pointlevel) {
+         case 0:
+            reftype = G__PARANORMAL;
+            break;
+         case 1:
+            type = toupper(type);
+            reftype = G__PARANORMAL;
+            break;
+         case 2:
+            type = toupper(type);
+            reftype = G__PARAP2P;
+            break;
+         case 3:
+            type = toupper(type);
+            reftype = G__PARAP2P2P;
+            break;
+      }
+   }
+   if (isupper(type)) size = G__LONGALLOC;
+   /**********************************************************************
+    * Create temporary object for return value and copy the reslut
+    **********************************************************************/
+   G__alloc_tempobject(tag_type_info, -1);
+   type_info = (long*)G__p_tempbuf->obj.obj.i;
+   type_info[G__TYPEINFO_VIRTUALID] = tag_type_info;
+   type_info[G__TYPEINFO_TYPE] = type;
+   type_info[G__TYPEINFO_TAGNUM] = tagnum;
+   type_info[G__TYPEINFO_TYPENUM] = G__get_typenum(typenum);
+   type_info[G__TYPEINFO_REFTYPE] = reftype;
+   type_info[G__TYPEINFO_SIZE] = size;
+   type_info[G__TYPEINFO_ISCONST] = isconst;
+   return type_info;
 }
 #endif
 
-
-/******************************************************************
-* G__getcomment()
-*
-******************************************************************/
-void Cint::Internal::G__getcomment(char *buf,int tagnum)
+//______________________________________________________________________________
+void Cint::Internal::G__getcomment(char* buf, int tagnum)
 {
-   
-   G__RflxProperties *prop = G__get_properties(G__Dict::GetDict().GetScope(tagnum));
-   G__getcomment(buf,&prop->comment,tagnum);
-}
-void Cint::Internal::G__getcomment(char *buf,Reflex::Scope &scope)
-{
-   
-   G__RflxProperties *prop = G__get_properties(scope);
-   G__getcomment(buf,&prop->comment,G__get_tagnum(scope));
-}
-void Cint::Internal::G__getcomment(char *buf,G__comment_info *pcomment,int tagnum)
-{
-  fpos_t pos,store_pos;
-  FILE *fp;
-  int filenum;
-  char *p;
-  int flag=1;
-
-  if(-1!=pcomment->filenum) {
-    if(-1!=tagnum && G__NOLINK==G__struct.iscpplink[tagnum] &&
-       pcomment->filenum>=0) {
-      pos = pcomment->p.pos;
-      filenum = pcomment->filenum;
-      if(filenum==G__MAXFILE) fp = G__mfp;
-      else                    fp = G__srcfile[filenum].fp;
-      if((FILE*)NULL==fp) {
-        /* Open the right file even in case where we use the preprocessor */
-        if ( 
-            filenum<G__MAXFILE &&
-            G__srcfile[filenum].prepname ) {
-          fp = fopen(G__srcfile[filenum].prepname,"r");
-        } else {
-          fp = fopen(G__srcfile[filenum].filename,"r");
-        }
-        flag=0;
-      }
-      else {
-        fgetpos(fp,&store_pos);
-      }
-      fsetpos(fp,&pos);
-      fgets(buf,G__ONELINE-1,fp);
-      p = strchr(buf,'\n');
-      if(p) *p = '\0';
-      p = strchr(buf,'\r');
-      if(p) *p = '\0';
-      if(G__rootCcomment) {
-        p = G__strrstr(buf,"*/");
-        if(p) *p = '\0';
-      }
-
-      if(flag) {
-        fsetpos(fp,&store_pos);
-      }
-      else {
-        fclose(fp);
-      }
-    }
-    else if(-2==pcomment->filenum) {
-      strcpy(buf,pcomment->p.com);
-    }
-    else {
-      buf[0]='\0';
-    }
-  }
-  else {
-    buf[0]='\0';
-  }
-  return;
+   G__RflxProperties* prop = G__get_properties(G__Dict::GetDict().GetScope(tagnum));
+   G__getcomment(buf, &prop->comment, tagnum);
 }
 
-/******************************************************************
-* G__getcommenttypedef()
-*
-******************************************************************/
-void Cint::Internal::G__getcommenttypedef(char *buf,G__comment_info *pcomment,
-                                          ::Reflex::Type typenum)
+//______________________________________________________________________________
+void Cint::Internal::G__getcomment(char* buf, Reflex::Scope scope)
 {
-  fpos_t pos,store_pos;
-  FILE *fp;
-  int filenum;
-  char *p;
-  int flag=1;
-
-  if(typenum && -1!=pcomment->filenum) {
-    if(G__get_properties(typenum) && 
-       G__NOLINK==G__get_properties(typenum)->iscpplink && pcomment->filenum>=0) {
-      pos = pcomment->p.pos;
-      filenum = pcomment->filenum;
-      if(filenum==G__MAXFILE) fp = G__mfp;
-      else                    fp = G__srcfile[filenum].fp;
-      if((FILE*)NULL==fp) {
-        /* Open the right file even in case where we use the preprocessor */
-        if ( 
-            filenum<G__MAXFILE &&
-            G__srcfile[filenum].prepname ) {
-          fp = fopen(G__srcfile[filenum].prepname,"r");
-        } else {
-          fp = fopen(G__srcfile[filenum].filename,"r");
-        }
-        flag=0;
-      }
-      else {
-        fgetpos(fp,&store_pos);
-      }
-      if (fp==0) {
-         G__fprinterr(G__serr,"G__getcommenttypedef: Could not open the file #%d (%s) to retrieve te comment!",filenum,G__srcfile[filenum].filename);
-         G__genericerror((char*)NULL);
-         fprintf(stderr,"G__getcommenttypedef %p %d %d %p %p %s\n",pcomment,filenum,G__nfile,pcomment->p.com,fp,G__srcfile[filenum].filename);
-         return;
-      }
-      fsetpos(fp,&pos);
-      fgets(buf,G__ONELINE-1,fp);
-      p = strchr(buf,'\n');
-      if(p) *p = '\0';
-      p = strchr(buf,'\r');
-      if(p) *p = '\0';
-      p = strchr(buf,';');
-      if(p) *(p+1) = '\0';
-
-      if(flag) {
-        fsetpos(fp,&store_pos);
-      }
-      else {
-        fclose(fp);
-      }
-    }
-    else if(-2==pcomment->filenum) {
-      strcpy(buf,pcomment->p.com);
-    }
-    else {
-      buf[0]='\0';
-    }
-  }
-  else {
-    buf[0]='\0';
-  }
-  return;
+   G__RflxProperties* prop = G__get_properties(scope);
+   G__getcomment(buf, &prop->comment, G__get_tagnum(scope));
 }
 
+//______________________________________________________________________________
+void Cint::Internal::G__getcomment(char* buf, G__comment_info* pcomment, int tagnum)
+{
+   buf[0] = '\0';
+   if (pcomment->filenum == -1) { // No comment.
+      return;
+   }
+   if (pcomment->filenum == -2) { // Compiled class, get comment from dictionary, not source file.
+      strcpy(buf, pcomment->p.com);
+      return;
+   }
+   if ( // We have an invalid filenum, an invalid class, or a compiled class, cannot do anything.
+      (pcomment->filenum < 0) || // We have an invalid filenum, or
+      (tagnum == -1) || // We have an invalid class, or
+      (G__struct.iscpplink[tagnum] != G__NOLINK) // class is not interpreted, so we have no source file.
+   ) {
+      return;
+   }
+   FILE* fp = G__mfp;
+   if (pcomment->filenum != G__MAXFILE) {
+      fp = G__srcfile[pcomment->filenum].fp;
+   }
+   int flag = 0; // If 1, then we did not open a file.
+   fpos_t store_pos;
+   if (fp) {
+      flag = 1;
+      fgetpos(fp, &store_pos);
+   }
+   else {
+      // Open the right file even in case where we use the preprocessor.
+      if ((pcomment->filenum < G__MAXFILE) && G__srcfile[pcomment->filenum].prepname) {
+         fp = fopen(G__srcfile[pcomment->filenum].prepname, "r");
+      }
+      else {
+         fp = fopen(G__srcfile[pcomment->filenum].filename, "r");
+      }
+   }
+   // Set file position to the comment string.
+   fsetpos(fp, &pcomment->p.pos);
+   // Read in one line.
+   fgets(buf, G__ONELINE - 1, fp);
+   //
+   //  Remove end-of-line characters.
+   //
+   char* p = strchr(buf, '\n');
+   if (p) {
+      *p = '\0';
+   }
+   p = strchr(buf, '\r');
+   if (p) {
+      *p = '\0';
+   }
+   if (G__rootCcomment) { // If we are processing C-style comments.
+      // Remove the comment termination sequence.
+      p = G__strrstr(buf, "*/");
+      if (p) {
+         *p = '\0';
+      }
+   }
+   if (flag) { // We did not open a file, restore original file position.
+      fsetpos(fp, &store_pos);
+   }
+   else {
+      fclose(fp); // otherwise, close the file we opened.
+   }
+   return;
+}
 
-/******************************************************************
-* long G__get_classinfo()
-*
-* Called by
-*   G__special_func()
-*
-******************************************************************/
-long Cint::Internal::G__get_classinfo(char *item,int tagnum)
+//______________________________________________________________________________
+void Cint::Internal::G__getcommenttypedef(char* buf, G__comment_info* pcomment, ::Reflex::Type typenum)
+{
+   buf[0] = '\0';
+   if (!typenum || (pcomment->filenum == -1)) { // Invalid type, or no comment.
+      return;
+   }
+   if (pcomment->filenum == -2) { // Compiled class, get comment from dictionary, not source file.
+      strcpy(buf, pcomment->p.com);
+      return;
+   }
+   if ( // We have an invalid filenum, no properties, or a compiled class, cannot do anything.
+      (pcomment->filenum < 0) ||
+      !G__get_properties(typenum) ||
+      (G__get_properties(typenum)->iscpplink != G__NOLINK)
+   ) {
+      return;
+   }
+   FILE* fp = G__mfp;
+   if (pcomment->filenum != G__MAXFILE) {
+      fp = G__srcfile[pcomment->filenum].fp;
+   }
+   int flag = 0; // If 1, then we did not open a file.
+   fpos_t store_pos;
+   if (fp) {
+      flag = 1;
+      fgetpos(fp, &store_pos);
+   }
+   else {
+      // Open the right file even in case where we use the preprocessor.
+      if ((pcomment->filenum < G__MAXFILE) && G__srcfile[pcomment->filenum].prepname) {
+         fp = fopen(G__srcfile[pcomment->filenum].prepname, "r");
+      }
+      else {
+         fp = fopen(G__srcfile[pcomment->filenum].filename, "r");
+      }
+   }
+   if (!fp) {
+      G__fprinterr(G__serr, "G__getcommenttypedef: Could not open the file #%d (%s) to retrieve the comment!", pcomment->filenum, G__srcfile[pcomment->filenum].filename);
+      G__genericerror(0);
+      fprintf(stderr, "G__getcommenttypedef %p %d %d %p %p %s\n", pcomment, pcomment->filenum, G__nfile, pcomment->p.com, fp, G__srcfile[pcomment->filenum].filename);
+      return;
+   }
+   // Set file position to the comment string.
+   fsetpos(fp, &pcomment->p.pos);
+   // Read in one line.
+   fgets(buf, G__ONELINE - 1, fp);
+   //
+   //  Remove end-of-line characters.
+   //
+   char* p = strchr(buf, '\n');
+   if (p) {
+      *p = '\0';
+   }
+   p = strchr(buf, '\r');
+   if (p) {
+      *p = '\0';
+   }
+   //
+   //  Terminate string after first semicolon.
+   //
+   p = strchr(buf, ';');
+   if (p) {
+      p[1] = '\0';
+   }
+   if (flag) { // We did not open a file, restore original file position.
+      fsetpos(fp, &store_pos);
+   }
+   else {
+      fclose(fp); // otherwise, close the file we opened.
+   }
+   return;
+}
+
+//______________________________________________________________________________
+long Cint::Internal::G__get_classinfo(char* item, int tagnum)
 {
    char *buf;
    int tag_string_buf;
@@ -970,29 +939,29 @@ long Cint::Internal::G__get_classinfo(char *item,int tagnum)
    /**********************************************************************
     * get next class/struct
     **********************************************************************/
-   if(strcmp("next",item)==0) {
-      while(1) {
+   if (strcmp("next", item) == 0) {
+      while (1) {
          ++tagnum;
-         if(tagnum<0 || G__struct.alltag<=tagnum) return(-1);
-         if(('s'==G__struct.type[tagnum]||'c'==G__struct.type[tagnum])&&
-            -1==G__struct.parent_tagnum[tagnum]) {
+         if (tagnum < 0 || G__struct.alltag <= tagnum) return(-1);
+         if (('s' == G__struct.type[tagnum] || 'c' == G__struct.type[tagnum]) &&
+               -1 == G__struct.parent_tagnum[tagnum]) {
             return((long)tagnum);
          }
       }
    }
-   
+
    /**********************************************************************
     * check validity
     **********************************************************************/
-   if(tagnum<0 || G__struct.alltag<=tagnum || 
-      ('c'!=G__struct.type[tagnum] && 's'!=G__struct.type[tagnum])) 
+   if (tagnum < 0 || G__struct.alltag <= tagnum ||
+         ('c' != G__struct.type[tagnum] && 's' != G__struct.type[tagnum]))
       return(0);
-   
+
    /**********************************************************************
     * return type
     **********************************************************************/
-   if(strcmp("type",item)==0) {
-      switch(G__struct.type[tagnum]) {
+   if (strcmp("type", item) == 0) {
+      switch (G__struct.type[tagnum]) {
          case 'e':
             return((long)'i');
          default:
@@ -1003,86 +972,78 @@ long Cint::Internal::G__get_classinfo(char *item,int tagnum)
    /**********************************************************************
     * size
     **********************************************************************/
-   if(strcmp("size",item)==0) {
+   if (strcmp("size", item) == 0) {
       return(G__struct.size[tagnum]);
    }
 
    /**********************************************************************
     * baseclass
     **********************************************************************/
-   if(strcmp("baseclass",item)==0) {
-      tag_string_buf = G__defined_tagname("G__string_buf",0);
-      G__alloc_tempobject(tag_string_buf, -1 );
+   if (strcmp("baseclass", item) == 0) {
+      tag_string_buf = G__defined_tagname("G__string_buf", 0);
+      G__alloc_tempobject(tag_string_buf, -1);
       buf = (char*)G__p_tempbuf->obj.obj.i;
-      
+
       baseclass = G__struct.baseclass[tagnum];
-      if(!baseclass) return((long)0);
-      p=0;
-      buf[0]='\0';
-      for(i=0;i<baseclass->vec.size();i++) {
-         if(baseclass->vec[i].property&G__ISDIRECTINHERIT) {
-            if(p) {
-               sprintf(buf+p,",");
+      if (!baseclass) return((long)0);
+      p = 0;
+      buf[0] = '\0';
+      for (i = 0;i < baseclass->vec.size();i++) {
+         if (baseclass->vec[i].property&G__ISDIRECTINHERIT) {
+            if (p) {
+               sprintf(buf + p, ",");
                ++p;
             }
-            sprintf(buf+p,"%s%s" ,G__access2string(baseclass->vec[i].baseaccess)
-                    ,G__struct.name[baseclass->vec[i].basetagnum]);
-            p=strlen(buf);
+            sprintf(buf + p, "%s%s" , G__access2string(baseclass->vec[i].baseaccess)
+                    , G__struct.name[baseclass->vec[i].basetagnum]);
+            p = strlen(buf);
          }
       }
-      
+
       return((long)buf);
    }
 
    /**********************************************************************
     * title
     **********************************************************************/
-   if(strcmp("title",item)==0) {
-      tag_string_buf = G__defined_tagname("G__string_buf",0);
-      G__alloc_tempobject(tag_string_buf, -1 );
+   if (strcmp("title", item) == 0) {
+      tag_string_buf = G__defined_tagname("G__string_buf", 0);
+      G__alloc_tempobject(tag_string_buf, -1);
       buf = (char*)G__p_tempbuf->obj.obj.i;
-      
-      G__getcomment(buf,tagnum);
+
+      G__getcomment(buf, tagnum);
       return((long)buf);
    }
-   
+
    /**********************************************************************
     * isabstract
     **********************************************************************/
-   if(strcmp("isabstract",item)==0) {
+   if (strcmp("isabstract", item) == 0) {
       return(G__struct.isabstract[tagnum]);
    }
    return(0);
 }
 
-// CopyInTempObject
-//
-// Called by
-//   G__get_variableinfo
-static const char *CopyInTempObject(const std::string& what)
+//______________________________________________________________________________
+static const char* CopyInTempObject(const std::string& what)
 {
    // Copy a string and put in the list of temporary object.
-   
-   int tag_string_buf = G__defined_tagname("G__string_buf",0);
-   G__alloc_tempobject(tag_string_buf, -1 );
+
+   int tag_string_buf = G__defined_tagname("G__string_buf", 0);
+   G__alloc_tempobject(tag_string_buf, -1);
    char *buf = (char*)G__p_tempbuf->obj.obj.i;
    if (what.size() > 254) {
-      strncpy(buf,what.c_str(),252);
-      strcpy(buf+252,"...");
-   } else {
-      strcpy(buf,what.c_str());
+      strncpy(buf, what.c_str(), 252);
+      strcpy(buf + 252, "...");
+   }
+   else {
+      strcpy(buf, what.c_str());
    }
    return buf;
 }
 
-/******************************************************************
-* long G__get_variableinfo()
-*
-* Called by
-*   G__special_func()
-*
-******************************************************************/
-long Cint::Internal::G__get_variableinfo(char *item,long *phandle,long *pindex,int tagnum)
+//______________________________________________________________________________
+long Cint::Internal::G__get_variableinfo(char* item, long* phandle, long* pindex, int tagnum)
 {
    char *buf;
    int tag_string_buf;
@@ -1092,12 +1053,12 @@ long Cint::Internal::G__get_variableinfo(char *item,long *phandle,long *pindex,i
    /*******************************************************************
     * new
     *******************************************************************/
-   if(strcmp("new",item)==0) {
+   if (strcmp("new", item) == 0) {
       *pindex = 0;
-      if(-1==tagnum) {
+      if (-1 == tagnum) {
          *phandle = (long)(::Reflex::Scope::GlobalScope().Id());
       }
-      else if(G__Dict::GetDict().GetScope(tagnum)) {
+      else if (G__Dict::GetDict().GetScope(tagnum)) {
          G__incsetup_memvar(tagnum);
          *phandle = (long)(G__Dict::GetDict().GetScope(tagnum).Id());
       }
@@ -1110,7 +1071,7 @@ long Cint::Internal::G__get_variableinfo(char *item,long *phandle,long *pindex,i
    var = G__Dict::GetDict().GetScope(*phandle);
    index = (*pindex);
 
-   if(!var || var.DataMemberSize()<=index) {
+   if (!var || var.DataMemberSize() <= index) {
       *phandle = 0;
       *pindex = 0;
       return(0);
@@ -1119,10 +1080,10 @@ long Cint::Internal::G__get_variableinfo(char *item,long *phandle,long *pindex,i
    /*******************************************************************
     * next
     *******************************************************************/
-   if(strcmp("next",item)==0) {
+   if (strcmp("next", item) == 0) {
       *pindex = index + 1;
       index = (*pindex);
-      if(var && index<var.DataMemberSize()) return(1);
+      if (var && index < var.DataMemberSize()) return(1);
       else {
          *phandle = 0;
          return(0);
@@ -1132,36 +1093,36 @@ long Cint::Internal::G__get_variableinfo(char *item,long *phandle,long *pindex,i
    /*******************************************************************
     * name
     *******************************************************************/
-   if(strcmp("name",item)==0) {
-      return (long) CopyInTempObject( var.DataMemberAt(index).Name() );
+   if (strcmp("name", item) == 0) {
+      return (long) CopyInTempObject(var.DataMemberAt(index).Name());
    }
 
    /*******************************************************************
     * type
     *******************************************************************/
-   if(strcmp("type",item)==0) {
-      ::Reflex::Member m( var.DataMemberAt(index) );
-      return (long) CopyInTempObject( m.TypeOf().Name(Reflex::SCOPED) );
+   if (strcmp("type", item) == 0) {
+      ::Reflex::Member m(var.DataMemberAt(index));
+      return (long) CopyInTempObject(m.TypeOf().Name(Reflex::SCOPED));
    }
 
    /*******************************************************************
     * offset
     *******************************************************************/
-   if(strcmp("offset",item)==0) {
-      ::Reflex::Member m( var.DataMemberAt(index) );
+   if (strcmp("offset", item) == 0) {
+      ::Reflex::Member m(var.DataMemberAt(index));
       return (long)G__get_offset(m);
    }
 
    /*******************************************************************
     * title
     *******************************************************************/
-   if(strcmp("title",item)==0) {
-      if(-1!=tagnum) {
-         tag_string_buf = G__defined_tagname("G__string_buf",0);
-         G__alloc_tempobject(tag_string_buf, -1 );
+   if (strcmp("title", item) == 0) {
+      if (-1 != tagnum) {
+         tag_string_buf = G__defined_tagname("G__string_buf", 0);
+         G__alloc_tempobject(tag_string_buf, -1);
          buf = (char*)G__p_tempbuf->obj.obj.i;
-         ::Reflex::Member m( var.DataMemberAt(index) );
-         G__getcomment(buf,&G__get_properties(m)->comment,tagnum);
+         ::Reflex::Member m(var.DataMemberAt(index));
+         G__getcomment(buf, &G__get_properties(m)->comment, tagnum);
          return((long)buf);
       }
       else {
@@ -1172,103 +1133,97 @@ long Cint::Internal::G__get_variableinfo(char *item,long *phandle,long *pindex,i
    return(0);
 }
 
-/******************************************************************
-* long G__get_functioninfo()
-*
-* Called by
-*   G__special_func()
-*
-******************************************************************/
-long Cint::Internal::G__get_functioninfo(char *item,long *phandle,long *pindex,int tagnum)
+//______________________________________________________________________________
+long Cint::Internal::G__get_functioninfo(char* item, long* phandle, long* pindex, int tagnum)
 {
-  char *buf;
-  int tag_string_buf;
-  /* char temp[G__MAXNAME]; */
-  ::Reflex::Scope ifunc;
-  unsigned int index;
-  int p;
+   char *buf;
+   int tag_string_buf;
+   /* char temp[G__MAXNAME]; */
+   ::Reflex::Scope ifunc;
+   unsigned int index;
+   int p;
 
-  /*******************************************************************
-  * new
-  *******************************************************************/
-  if(strcmp("new",item)==0) {
-    *pindex = 0;
-    if(-1==tagnum) {
-       *phandle = (long)(::Reflex::Scope::GlobalScope().Id());
-    }
-    else if((G__Dict::GetDict().GetScope(tagnum))) { 
-      G__incsetup_memfunc(tagnum);
-      *phandle = (long)(G__Dict::GetDict().GetScope(tagnum).Id());
-    }
-    else {
-      *phandle = 0;
-    }
-    return(0);
-  }
-
-  ifunc = G__Dict::GetDict().GetScope(*phandle);
-  index = (*pindex);
-
-  if(ifunc || ifunc.FunctionMemberSize()<=index) {
-    *phandle = 0;
-    *pindex = 0;
-    return(0);
-  }
-
-
-  /*******************************************************************
-  * next
-  *******************************************************************/
-  if(strcmp("next",item)==0) {
-    *pindex = index + 1;
-    if( ifunc && index<ifunc.FunctionMemberSize()) return(1);
-    else {
-      *phandle = 0;
+   /*******************************************************************
+   * new
+   *******************************************************************/
+   if (strcmp("new", item) == 0) {
+      *pindex = 0;
+      if (-1 == tagnum) {
+         *phandle = (long)(::Reflex::Scope::GlobalScope().Id());
+      }
+      else if ((G__Dict::GetDict().GetScope(tagnum))) {
+         G__incsetup_memfunc(tagnum);
+         *phandle = (long)(G__Dict::GetDict().GetScope(tagnum).Id());
+      }
+      else {
+         *phandle = 0;
+      }
       return(0);
-    }
-  }
+   }
 
-  /*******************************************************************
-  * name
-  *******************************************************************/
-  if(strcmp("name",item)==0) {
-      return (long) CopyInTempObject( ifunc.FunctionMemberAt(index).Name() );
-  }
+   ifunc = G__Dict::GetDict().GetScope(*phandle);
+   index = (*pindex);
 
-  /*******************************************************************
-  * type
-  *******************************************************************/
-  if(strcmp("type",item)==0) {
-     ::Reflex::Member func( ifunc.FunctionMemberAt(index));
-     return (long) CopyInTempObject( func.Name(::Reflex::SCOPED) );
-  }
+   if (ifunc || ifunc.FunctionMemberSize() <= index) {
+      *phandle = 0;
+      *pindex = 0;
+      return(0);
+   }
+
+
+   /*******************************************************************
+   * next
+   *******************************************************************/
+   if (strcmp("next", item) == 0) {
+      *pindex = index + 1;
+      if (ifunc && index < ifunc.FunctionMemberSize()) return(1);
+      else {
+         *phandle = 0;
+         return(0);
+      }
+   }
+
+   /*******************************************************************
+   * name
+   *******************************************************************/
+   if (strcmp("name", item) == 0) {
+      return (long) CopyInTempObject(ifunc.FunctionMemberAt(index).Name());
+   }
+
+   /*******************************************************************
+   * type
+   *******************************************************************/
+   if (strcmp("type", item) == 0) {
+      ::Reflex::Member func(ifunc.FunctionMemberAt(index));
+      return (long) CopyInTempObject(func.Name(::Reflex::SCOPED));
+   }
 
    /*******************************************************************
     * arglist
     *******************************************************************/
-   if(strcmp("arglist",item)==0) {
-      tag_string_buf = G__defined_tagname("G__string_buf",0);
-      G__alloc_tempobject(tag_string_buf, -1 );
+   if (strcmp("arglist", item) == 0) {
+      tag_string_buf = G__defined_tagname("G__string_buf", 0);
+      G__alloc_tempobject(tag_string_buf, -1);
       buf = (char*)G__p_tempbuf->obj.obj.i;
 
-      buf[0]='\0';
-      p=0;
-      ::Reflex::Member func( G__Dict::GetDict().GetFunction((G__ifunc_table*)phandle,index) );
+      buf[0] = '\0';
+      p = 0;
+      ::Reflex::Member func(G__Dict::GetDict().GetFunction((G__ifunc_table*)phandle, index));
       int i = 0;
-      for(::Reflex::Type_Iterator iter( func.TypeOf().FunctionParameter_Begin() );
-          iter != func.TypeOf().FunctionParameter_End();
-          ++iter, ++i) {
+      for (::Reflex::Type_Iterator iter(func.TypeOf().FunctionParameter_Begin());
+            iter != func.TypeOf().FunctionParameter_End();
+            ++iter, ++i) {
 
-         if(p) {
-            sprintf(buf+p,",");
+         if (p) {
+            sprintf(buf + p, ",");
             ++p;
          }
-         sprintf(buf+p,"%s",iter->Name(::Reflex::SCOPED).c_str());
-         p=strlen(buf);
+         sprintf(buf + p, "%s", iter->Name(::Reflex::SCOPED).c_str());
+         p = strlen(buf);
          if (func.FunctionParameterDefaultAt(i).length()) {
-            sprintf(buf+p,"=%s",func.FunctionParameterDefaultAt(i).c_str());
+            sprintf(buf + p, "=%s", func.FunctionParameterDefaultAt(i).c_str());
          }
-         p=strlen(buf);
+         p = strlen(buf);
       }
       return((long)buf);
    }
@@ -1276,14 +1231,14 @@ long Cint::Internal::G__get_functioninfo(char *item,long *phandle,long *pindex,i
    /*******************************************************************
     * title
     *******************************************************************/
-   if(strcmp("title",item)==0) {
-      if(-1!=tagnum) {
-         tag_string_buf = G__defined_tagname("G__string_buf",0);
-         G__alloc_tempobject(tag_string_buf, -1 );
+   if (strcmp("title", item) == 0) {
+      if (-1 != tagnum) {
+         tag_string_buf = G__defined_tagname("G__string_buf", 0);
+         G__alloc_tempobject(tag_string_buf, -1);
          buf = (char*)G__p_tempbuf->obj.obj.i;
-         
-         ::Reflex::Member func( G__Dict::GetDict().GetFunction((G__ifunc_table*)phandle,index) );
-         G__getcomment(buf,&G__get_funcproperties(func)->comment,tagnum);
+
+         ::Reflex::Member func(G__Dict::GetDict().GetFunction((G__ifunc_table*)phandle, index));
+         G__getcomment(buf, &G__get_funcproperties(func)->comment, tagnum);
          return((long)buf);
       }
       else {
@@ -1294,302 +1249,301 @@ long Cint::Internal::G__get_functioninfo(char *item,long *phandle,long *pindex,i
    return(0);
 }
 
-/**************************************************************************
- * G__va_arg_setalign()
- **************************************************************************/
+//______________________________________________________________________________
 #ifdef G__VAARG_INC_COPY_N
-static int G__va_arg_align_size=G__VAARG_INC_COPY_N;
-#else
-static int G__va_arg_align_size=0;
-#endif
+static int G__va_arg_align_size = G__VAARG_INC_COPY_N;
+#else // G__VAARG_INC_COPY_N
+static int G__va_arg_align_size = 0;
+#endif // G__VAARG_INC_COPY_N
+
+//______________________________________________________________________________
 void G__va_arg_setalign(int n)
 {
-  G__va_arg_align_size = n;
+   G__va_arg_align_size = n;
 }
 
-/**************************************************************************
- * G__va_arg_copyvalue()
- **************************************************************************/
-extern "C" void G__va_arg_copyvalue(int t,void *p,G__value *pval,int objsize)
+//______________________________________________________________________________
+extern "C" void G__va_arg_copyvalue(int t, void *p, G__value *pval, int objsize)
 {
+   // --
 #ifdef G__VAARG_PASS_BY_REFERENCE
-  if(objsize>G__VAARG_PASS_BY_REFERENCE) {
-     // would need to use G__getproperties(var)->isBytecodeArena
-    if(pval->ref>0x1000) *(long*)(p) = pval->ref;
-    else *(long*)(p) = (long)G__int(*pval);
-    return;
-  }
+   if (objsize > G__VAARG_PASS_BY_REFERENCE) {
+      // would need to use G__getproperties(var)->isBytecodeArena
+      if (pval->ref > 0x1000) *(long*)(p) = pval->ref;
+      else *(long*)(p) = (long)G__int(*pval);
+      return;
+   }
 
 #endif
-  switch(t) {
-  case 'n':
-  case 'm':
-    *(G__int64*)(p) = (G__int64)G__Longlong(*pval);
-    break;
-  case 'g':
+   switch (t) {
+      case 'n':
+      case 'm':
+         *(G__int64*)(p) = (G__int64)G__Longlong(*pval);
+         break;
+      case 'g':
 #ifdef G__BOOL4BYTE
-    *(int*)(p) = (int)G__int(*pval);
-    break;
+         *(int*)(p) = (int)G__int(*pval);
+         break;
 #endif
-  case 'c':
-  case 'b':
+      case 'c':
+      case 'b':
 #if defined(__GNUC__) || defined(G__WIN32)
-    *(int*)(p) = (int)G__int(*pval);
+         *(int*)(p) = (int)G__int(*pval);
 #else
-    *(char*)(p) = (char)G__int(*pval);
+         *(char*)(p) = (char)G__int(*pval);
 #endif
-    break;
-  case 'r':
-  case 's':
+         break;
+      case 'r':
+      case 's':
 #if defined(__GNUC__) || defined(G__WIN32)
-    *(int*)(p) = (int)G__int(*pval);
+         *(int*)(p) = (int)G__int(*pval);
 #else
-    *(short*)(p) = (short)G__int(*pval);
+         *(short*)(p) = (short)G__int(*pval);
 #endif
-    break;
-  case 'h':
-  case 'i':
-    *(int*)(p) = (int)G__int(*pval);
-    break;
-  case 'k':
-  case 'l':
-    *(long*)(p) = (long)G__int(*pval);
-    break;
-  case 'f':
+         break;
+      case 'h':
+      case 'i':
+         *(int*)(p) = (int)G__int(*pval);
+         break;
+      case 'k':
+      case 'l':
+         *(long*)(p) = (long)G__int(*pval);
+         break;
+      case 'f':
 #define G__OLDIMPLEMENTATION2235
 #if defined(__GNUC__) || defined(G__WIN32)
-    *(double*)(p) = (double)G__double(*pval);
+         *(double*)(p) = (double)G__double(*pval);
 #else
-    *(float*)(p) = (float)G__double(*pval);
+         *(float*)(p) = (float)G__double(*pval);
 #endif
-    break;
-  case 'd':
-    *(double*)(p) = (double)G__double(*pval);
-    break;
-  case 'u':
-    memcpy((void*)(p),(void*)pval->obj.i,objsize);
-    break;
-  default:
-    *(long*)(p) = (long)G__int(*pval);
-    break;
-  }
+         break;
+      case 'd':
+         *(double*)(p) = (double)G__double(*pval);
+         break;
+      case 'u':
+         memcpy((void*)(p), (void*)pval->obj.i, objsize);
+         break;
+      default:
+         *(long*)(p) = (long)G__int(*pval);
+         break;
+   }
 }
 
+//______________________________________________________________________________
 #if (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
 #define G__alignof_ppc(objsize)  (objsize>4?16:4)
 #define G__va_rounded_size_ppc(typesize) ((typesize + 3) & ~3)
 #define G__va_align_ppc(AP, objsize)                                           \
-     ((((unsigned long)(AP)) + ((G__alignof_ppc(objsize) == 16) ? 15 : 3)) \
-      & ~((G__alignof_ppc(objsize) == 16) ? 15 : 3))
+   ((((unsigned long)(AP)) + ((G__alignof_ppc(objsize) == 16) ? 15 : 3)) \
+    & ~((G__alignof_ppc(objsize) == 16) ? 15 : 3))
 
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(__linux)||defined(__linux__))
 
 #endif
 
-/**************************************************************************
- * G__va_arg_put()
- **************************************************************************/
-extern "C" void G__va_arg_put(G__va_arg_buf *pbuf,G__param *libp,int n)
+//______________________________________________________________________________
+extern "C" void G__va_arg_put(G__va_arg_buf* pbuf, G__param* libp, int n)
 {
-  int objsize;
-  int type;
-  int i;
+   int objsize;
+   int type;
+   int i;
 #if defined(__hpux) || defined(__hppa__)
-  int j2=G__VAARG_SIZE;
+   int j2 = G__VAARG_SIZE;
 #endif
-  int j=0;
-  int mod;
+   int j = 0;
+   int mod;
 #ifdef G__VAARG_NOSUPPORT
-  G__genericerror("Limitation: Variable argument is not supported for this platform");
+   G__genericerror("Limitation: Variable argument is not supported for this platform");
 #endif
-  for(i=n;i<libp->paran;i++) {
-    type = G__get_type(G__value_typenum(libp->para[i]));
-    if(isupper(type)) objsize = G__LONGALLOC;
-    else              objsize = G__sizeof(&libp->para[i]);
+   for (i = n;i < libp->paran;i++) {
+      type = G__get_type(G__value_typenum(libp->para[i]));
+      if (isupper(type)) objsize = G__LONGALLOC;
+      else              objsize = G__sizeof(&libp->para[i]);
 #if defined(__GNUC__) || defined(G__WIN32)
-    switch(type) { 
-    case 'c': case 'b': case 's': case 'r': objsize = sizeof(int); break;
-    case 'f': objsize = sizeof(double); break;
-    }
+      switch (type) {
+         case 'c':
+         case 'b':
+         case 's':
+         case 'r':
+            objsize = sizeof(int);
+            break;
+         case 'f':
+            objsize = sizeof(double);
+            break;
+      }
 #endif
 
-    /* Platform that decrements address */
+      /* Platform that decrements address */
 #if (defined(__linux)&&defined(__i386))||defined(_WIN32)||defined(G__CYGWIN)
-    /* nothing */
+      /* nothing */
 #elif defined(__hpux) || defined(__hppa__)
-    if(objsize > G__VAARG_PASS_BY_REFERENCE) {
-      j2 = j2 - sizeof(long);
-      j=j2;
-    }
-    else {
-      j2 = (j2 - objsize) & (objsize > 4 ? 0xfffffff8 : 0xfffffffc );
-      j = j2 + ((8 - objsize) % 4);
-    }
+      if (objsize > G__VAARG_PASS_BY_REFERENCE) {
+         j2 = j2 - sizeof(long);
+         j = j2;
+      }
+      else {
+         j2 = (j2 - objsize) & (objsize > 4 ? 0xfffffff8 : 0xfffffffc);
+         j = j2 + ((8 - objsize) % 4);
+      }
 #elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
       defined(__SUNPRO_CC)
-    /* nothing */
+      /* nothing */
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
-    /* nothing */
+      /* nothing */
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(__linux)||defined(__linux__))
-    /* nothing */
+      /* nothing */
 #elif defined(__x86_64__) && defined(__linux)
-    /* nothing */
+      /* nothing */
 #else
-    /* nothing */
+      /* nothing */
 #endif
-    
-    G__va_arg_copyvalue(type,(void*)(&pbuf->x.d[j]),&libp->para[i],objsize);
 
-    /* Platform that increments address */
+      G__va_arg_copyvalue(type, (void*)(&pbuf->x.d[j]), &libp->para[i], objsize);
+
+      /* Platform that increments address */
 #if (defined(__linux)&&defined(__i386))||defined(_WIN32)||defined(G__CYGWIN)
-    j += objsize;
-    mod = j%G__va_arg_align_size;
-    if(mod) j = j-mod+G__va_arg_align_size;
+      j += objsize;
+      mod = j % G__va_arg_align_size;
+      if (mod) j = j - mod + G__va_arg_align_size;
 #elif defined(__hpux) || defined(__hppa__)
-    /* nothing */
+      /* nothing */
 #elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
       defined(__SUNPRO_CC)
-    j += objsize;
-    mod = j%G__va_arg_align_size;
-    if(mod) j = j-mod+G__va_arg_align_size;
+      j += objsize;
+      mod = j % G__va_arg_align_size;
+      if (mod) j = j - mod + G__va_arg_align_size;
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
-    //j =  G__va_align_ppc(j, objsize) + G__va_rounded_size_ppc(objsize);
+      //j =  G__va_align_ppc(j, objsize) + G__va_rounded_size_ppc(objsize);
 #ifdef G__VAARG_PASS_BY_REFERENCE
-    if(objsize>G__VAARG_PASS_BY_REFERENCE) objsize=G__VAARG_PASS_BY_REFERENCE;
+      if (objsize > G__VAARG_PASS_BY_REFERENCE) objsize = G__VAARG_PASS_BY_REFERENCE;
 #endif
-    j += objsize;
-    mod = j%G__va_arg_align_size;
-    if(mod) j = j-mod+G__va_arg_align_size;
+      j += objsize;
+      mod = j % G__va_arg_align_size;
+      if (mod) j = j - mod + G__va_arg_align_size;
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(__linux)||defined(__linux__))
 #ifdef G__VAARG_PASS_BY_REFERENCE
-    if(objsize>G__VAARG_PASS_BY_REFERENCE) objsize=G__VAARG_PASS_BY_REFERENCE;
+      if (objsize > G__VAARG_PASS_BY_REFERENCE) objsize = G__VAARG_PASS_BY_REFERENCE;
 #endif
-    j += objsize;
-    mod = j%G__va_arg_align_size;
-    if(mod) j = j-mod+G__va_arg_align_size;
+      j += objsize;
+      mod = j % G__va_arg_align_size;
+      if (mod) j = j - mod + G__va_arg_align_size;
 #elif defined(__x86_64__) && defined(__linux)
 #ifdef G__VAARG_PASS_BY_REFERENCE
-    if(objsize>G__VAARG_PASS_BY_REFERENCE) objsize=G__VAARG_PASS_BY_REFERENCE;
+      if (objsize > G__VAARG_PASS_BY_REFERENCE) objsize = G__VAARG_PASS_BY_REFERENCE;
 #endif
-    j += objsize;
-    mod = j%G__va_arg_align_size;
-    if(mod) j = j-mod+G__va_arg_align_size;
+      j += objsize;
+      mod = j % G__va_arg_align_size;
+      if (mod) j = j - mod + G__va_arg_align_size;
 #else
 #ifdef G__VAARG_PASS_BY_REFERENCE
-    if(objsize>G__VAARG_PASS_BY_REFERENCE) objsize=G__VAARG_PASS_BY_REFERENCE;
+      if (objsize > G__VAARG_PASS_BY_REFERENCE) objsize = G__VAARG_PASS_BY_REFERENCE;
 #endif
-    j += objsize;
-    mod = j%G__va_arg_align_size;
-    if(mod) j = j-mod+G__va_arg_align_size;
+      j += objsize;
+      mod = j % G__va_arg_align_size;
+      if (mod) j = j - mod + G__va_arg_align_size;
 #endif
 
-  }
+   }
 }
 
+//______________________________________________________________________________
 #ifdef G__VAARG_COPYFUNC
-/**************************************************************************
- * G__va_arg_copyfunc() , Never used so far
- **************************************************************************/
-void Cint::Internal::G__va_arg_copyfunc(FILE *fp,G__ifunc_table *ifunc,int ifn)
+void Cint::Internal::G__va_arg_copyfunc(FILE* fp, G__ifunc_table* ifunc, int ifn)
 {
-  FILE *xfp;
-  int n;
-  int c;
-  int nest = 0;
-  int double_quote = 0;
-  int single_quote = 0;
-  int flag = 0;
+   FILE *xfp;
+   int n;
+   int c;
+   int nest = 0;
+   int double_quote = 0;
+   int single_quote = 0;
+   int flag = 0;
 
-  if(G__srcfile[ifunc->pentry[ifn]->filenum].fp) 
-    xfp = G__srcfile[ifunc->pentry[ifn]->filenum].fp;
-  else {
-    xfp = fopen(G__srcfile[ifunc->pentry[ifn]->filenum].filename,"r");
-    flag = 1;
-  }
-  if(!xfp) return;
-  fsetpos(xfp,&ifunc->pentry[ifn]->pos);
+   if (G__srcfile[ifunc->pentry[ifn]->filenum].fp)
+      xfp = G__srcfile[ifunc->pentry[ifn]->filenum].fp;
+   else {
+      xfp = fopen(G__srcfile[ifunc->pentry[ifn]->filenum].filename, "r");
+      flag = 1;
+   }
+   if (!xfp) return;
+   fsetpos(xfp, &ifunc->pentry[ifn]->pos);
 
-  fprintf(fp,"%s ",G__type2string(ifunc->type[ifn]
-                                  ,ifunc->p_tagtable[ifn]
-                                  ,ifunc->p_typetable[ifn]
-                                  ,ifunc->reftype[ifn]
-                                  ,ifunc->isconst[ifn]));
-  fprintf(fp,"%s(",ifunc->funcname[ifn]);
+   fprintf(fp, "%s ", G__type2string(ifunc->type[ifn]
+                                     , ifunc->p_tagtable[ifn]
+                                     , ifunc->p_typetable[ifn]
+                                     , ifunc->reftype[ifn]
+                                     , ifunc->isconst[ifn]));
+   fprintf(fp, "%s(", ifunc->funcname[ifn]);
 
-  /* print out parameter types */
-  for(n=0;n<ifunc->para_nu[ifn];n++) {
-    
-    if(n!=0) {
-      fprintf(fp,",");
-    }
+   /* print out parameter types */
+   for (n = 0;n < ifunc->para_nu[ifn];n++) {
 
-    if('u'==ifunc->para_type[ifn][n] &&
-       0==strcmp(G__struct.name[ifunc->para_p_tagtable[ifn][n]],"va_list")) {
-      fprintf(fp,"struct G__param* G__VA_libp,int G__VA_n");
-      break;
-    }
-    /* print out type of return value */
-    fprintf(fp,"%s",G__type2string(ifunc->para_type[ifn][n]
-                                    ,ifunc->para_p_tagtable[ifn][n]
-                                    ,ifunc->para_p_typetable[ifn][n]
-                                    ,ifunc->para_reftype[ifn][n]
-                                    ,ifunc->para_isconst[ifn][n]));
-    
-    if(ifunc->para_name[ifn][n]) {
-      fprintf(fp," %s",ifunc->para_name[ifn][n]);
-    }
-    if(ifunc->para_def[ifn][n]) {
-      fprintf(fp,"=%s",ifunc->para_def[ifn][n]);
-    }
-  }
-  fprintf(fp,")");
-  if(ifunc->isconst[ifn]&G__CONSTFUNC) {
-    fprintf(fp," const");
-  }
+      if (n != 0) {
+         fprintf(fp, ",");
+      }
 
-  c = 0;
-  while(c!='{') c = fgetc(xfp);
-  fprintf(fp,"{");
+      if ('u' == ifunc->para_type[ifn][n] &&
+            0 == strcmp(G__struct.name[ifunc->para_p_tagtable[ifn][n]], "va_list")) {
+         fprintf(fp, "struct G__param* G__VA_libp,int G__VA_n");
+         break;
+      }
+      /* print out type of return value */
+      fprintf(fp, "%s", G__type2string(ifunc->para_type[ifn][n]
+                                       , ifunc->para_p_tagtable[ifn][n]
+                                       , ifunc->para_p_typetable[ifn][n]
+                                       , ifunc->para_reftype[ifn][n]
+                                       , ifunc->para_isconst[ifn][n]));
 
-  nest = 1;
-  while(c!='}' || nest) {
-    c = fgetc(xfp);
-    fputc(c,fp);
-    switch(c) {
-    case '"':
-      if(!single_quote) double_quote ^= 1;
-      break;
-    case '\'':
-      if(!double_quote) single_quote ^= 1;
-      break;
-    case '{':
-      if(!single_quote && !double_quote) ++nest;
-      break;
-    case '}':
-      if(!single_quote && !double_quote) --nest;
-      break;
-    }
-  }
-  fprintf(fp,"\n");
-  if(flag && xfp) fclose(xfp);
+      if (ifunc->para_name[ifn][n]) {
+         fprintf(fp, " %s", ifunc->para_name[ifn][n]);
+      }
+      if (ifunc->para_def[ifn][n]) {
+         fprintf(fp, "=%s", ifunc->para_def[ifn][n]);
+      }
+   }
+   fprintf(fp, ")");
+   if (ifunc->isconst[ifn]&G__CONSTFUNC) {
+      fprintf(fp, " const");
+   }
+
+   c = 0;
+   while (c != '{') c = fgetc(xfp);
+   fprintf(fp, "{");
+
+   nest = 1;
+   while (c != '}' || nest) {
+      c = fgetc(xfp);
+      fputc(c, fp);
+      switch (c) {
+         case '"':
+            if (!single_quote) double_quote ^= 1;
+            break;
+         case '\'':
+            if (!double_quote) single_quote ^= 1;
+            break;
+         case '{':
+            if (!single_quote && !double_quote) ++nest;
+            break;
+         case '}':
+            if (!single_quote && !double_quote) --nest;
+            break;
+      }
+   }
+   fprintf(fp, "\n");
+   if (flag && xfp) fclose(xfp);
 }
 #endif
 
-
-/**************************************************************************
- * G__typeconversion
- **************************************************************************/
-static void G__typeconversion(const ::Reflex::Member &ifunc
-                               ,G__param *libp) 
+//______________________________________________________________________________
+static void G__typeconversion(const ::Reflex::Member& ifunc, G__param* libp)
 {
-   for(unsigned int i=0;i<((unsigned int)libp->paran) && i<ifunc.TypeOf().FunctionParameterSize();++i) {
-      ::Reflex::Type formal_type( ifunc.TypeOf().FunctionParameterAt(i) );
-      ::Reflex::Type param_type( G__value_typenum(libp->para[i]) );
-      
-      switch(G__get_type(formal_type)) {
+   for (unsigned int i = 0;i < ((unsigned int)libp->paran) && i < ifunc.TypeOf().FunctionParameterSize();++i) {
+      ::Reflex::Type formal_type(ifunc.TypeOf().FunctionParameterAt(i));
+      ::Reflex::Type param_type(G__value_typenum(libp->para[i]));
+
+      switch (G__get_type(formal_type)) {
          case 'd':
          case 'f':
-            switch(G__get_type(param_type)) {
+            switch (G__get_type(param_type)) {
                case 'c':
                case 's':
                case 'i':
@@ -1612,7 +1566,7 @@ static void G__typeconversion(const ::Reflex::Member &ifunc
          case 'r':
          case 'h':
          case 'k':
-            switch(G__get_type(param_type)) {
+            switch (G__get_type(param_type)) {
                case 'd':
                case 'f':
                   libp->para[i].obj.i = (long)libp->para[i].obj.d;
@@ -1625,64 +1579,55 @@ static void G__typeconversion(const ::Reflex::Member &ifunc
    }
 }
 
-/**************************************************************************
- * G__DLL_direct_globalfunc
- **************************************************************************/
-int Cint::Internal::G__DLL_direct_globalfunc(G__value *result7
-                             ,G__CONST char *funcname /* ifunc */
-                             ,struct G__param *libp
-                             ,int hash)   /* ifn */  {
-  ::Reflex::Member ifunc( G__Dict::GetDict().GetFunction((G__ifunc_table*)funcname,hash));
-
-  int (*itp2f)(G__va_arg_buf);
-  double (*dtp2f)(G__va_arg_buf);
-  void (*vtp2f)(G__va_arg_buf);
-  G__va_arg_buf (*utp2f)(G__va_arg_buf);
-
-  G__va_arg_buf G__va_arg_return;
-  G__va_arg_buf G__va_arg_bufobj;
-  G__typeconversion(ifunc,libp);
-  G__va_arg_put(&G__va_arg_bufobj,libp,0);
-
-  ::Reflex::Type returnType( ifunc.TypeOf().ReturnType() );
-  switch(G__get_type(returnType)) {
-  case 'd':
-  case 'f':
-    dtp2f = (double (*)(G__va_arg_buf))G__get_funcproperties(ifunc)->entry.tp2f;
-    G__letdouble(result7,G__get_type(returnType),dtp2f(G__va_arg_bufobj));
-    G__value_typenum(*result7) = returnType;
-    break;
-  case 'u':
-    utp2f = (G__va_arg_buf (*)(G__va_arg_buf))G__get_funcproperties(ifunc)->entry.tp2f;
-    G__va_arg_return = utp2f(G__va_arg_bufobj);
-    G__value_typenum(*result7) = returnType; 
-    result7->obj.i = (long)(&G__va_arg_return); /* incorrect! experimental */
-    break;
-  case 'y':
-    vtp2f = (void (*)(G__va_arg_buf))G__get_funcproperties(ifunc)->entry.tp2f;
-    vtp2f(G__va_arg_bufobj);
-    G__setnull(result7);
-    break;
-  default:
-    itp2f = (int(*)(G__va_arg_buf))G__get_funcproperties(ifunc)->entry.tp2f;
-    G__letint(result7,G__get_type(returnType),itp2f(G__va_arg_bufobj));
-    G__value_typenum(*result7) = returnType;
-    break;
-  }
-
-
-  return 1;
+//______________________________________________________________________________
+int Cint::Internal::G__DLL_direct_globalfunc(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   ::Reflex::Member ifunc(G__Dict::GetDict().GetFunction((G__ifunc_table*)funcname, hash));
+   int (*itp2f)(G__va_arg_buf);
+   double(*dtp2f)(G__va_arg_buf);
+   void (*vtp2f)(G__va_arg_buf);
+   G__va_arg_buf(*utp2f)(G__va_arg_buf);
+   G__va_arg_buf G__va_arg_return;
+   G__va_arg_buf G__va_arg_bufobj;
+   G__typeconversion(ifunc, libp);
+   G__va_arg_put(&G__va_arg_bufobj, libp, 0);
+   ::Reflex::Type returnType(ifunc.TypeOf().ReturnType());
+   switch (G__get_type(returnType)) {
+      case 'd':
+      case 'f':
+         dtp2f = (double(*)(G__va_arg_buf))G__get_funcproperties(ifunc)->entry.tp2f;
+         G__letdouble(result7, G__get_type(returnType), dtp2f(G__va_arg_bufobj));
+         G__value_typenum(*result7) = returnType;
+         break;
+      case 'u':
+         utp2f = (G__va_arg_buf(*)(G__va_arg_buf))G__get_funcproperties(ifunc)->entry.tp2f;
+         G__va_arg_return = utp2f(G__va_arg_bufobj);
+         G__value_typenum(*result7) = returnType;
+         result7->obj.i = (long)(&G__va_arg_return); /* incorrect! experimental */
+         break;
+      case 'y':
+         vtp2f = (void (*)(G__va_arg_buf))G__get_funcproperties(ifunc)->entry.tp2f;
+         vtp2f(G__va_arg_bufobj);
+         G__setnull(result7);
+         break;
+      default:
+         itp2f = (int(*)(G__va_arg_buf))G__get_funcproperties(ifunc)->entry.tp2f;
+         G__letint(result7, G__get_type(returnType), itp2f(G__va_arg_bufobj));
+         G__value_typenum(*result7) = returnType;
+         break;
+   }
+   return 1;
 }
 
 /*
  * Local Variables:
  * c-tab-always-indent:nil
- * c-indent-level:2
- * c-continued-statement-offset:2
- * c-brace-offset:-2
+ * c-indent-level:3
+ * c-continued-statement-offset:3
+ * c-brace-offset:-3
  * c-brace-imaginary-offset:0
  * c-argdecl-indent:0
- * c-label-offset:-2
+ * c-label-offset:-3
  * compile-command:"make -k"
  * End:
  */

@@ -20,12 +20,6 @@
 #include "Reflex/Type.h"
 #include "Reflex/Member.h"
 
-#include "Reflex/Builder/TypeBuilder.h"
-#include "Reflex/Builder/NamespaceBuilder.h"
-#include "Reflex/Builder/ClassBuilder.h"
-#include "Reflex/Builder/UnionBuilder.h"
-#include "Reflex/Builder/EnumBuilder.h"
-
 #else
 namespace Reflex {
    class Type;
@@ -1187,68 +1181,10 @@ public:
    // --
 }; 
 
-class BuilderHolder {
-public: // Public Interface
-   BuilderHolder() : u(0), tagtype(0) {}
-   BuilderHolder(const BuilderHolder& rhs) : tagtype(rhs.tagtype)
-   {
-      switch (tagtype) {
-         case 'a':
-         case 'c':
-         case 's': c = rhs.c; break;
-         case 'e': e = rhs.e; break;
-         case 'u': u = rhs.u; break;
-         case 'n': n = rhs.n; break;
-      }
-   }
-   ~BuilderHolder() {
-      switch (tagtype) {
-         case 'a':
-         case 'c':
-         case 's': delete c; break;
-         case 'e': delete e; break;
-         case 'u': delete u; break;
-         case 'n': delete n; break;
-      }
-   }
-   BuilderHolder& operator=(const BuilderHolder& rhs)
-   {
-      if (this != &rhs) {
-         tagtype = rhs.tagtype;
-         switch (tagtype) {
-            case 'a':
-            case 'c':
-            case 's': c = rhs.c; break;
-            case 'e': e = rhs.e; break;
-            case 'u': u = rhs.u; break;
-            case 'n': n = rhs.n; break;
-         }
-      }
-      return *this;
-   }
-   Reflex::UnionBuilder& Union() { return *u; }
-   Reflex::ClassBuilder& Class() { return *c; }
-   Reflex::EnumBuilder& Enum()  { return *e; }
-   Reflex::NamespaceBuilder& Namespace() { return *n; }
-   void Set(Reflex::UnionBuilder* b) { u = b; tagtype = 'u'; }
-   void Set(Reflex::ClassBuilder* b) { c = b; tagtype = 'c'; }
-   void Set(Reflex::EnumBuilder* b)  { e = b; tagtype = 'e'; }
-   void Set(Reflex::NamespaceBuilder* b)  { n = b; tagtype = 'n'; }
-   char Tagtype() { return tagtype; }
-private: // Private Data Members
-   union {
-      Reflex::UnionBuilder* u;
-      Reflex::ClassBuilder* c;
-      Reflex::EnumBuilder* e;
-      Reflex::NamespaceBuilder* n;
-   };
-   char tagtype;
-};
-   
 class G__RflxProperties {
 public:
    G__RflxProperties() : autoload(0), filenum(-1), linenum(-1), globalcomp(G__NOLINK), iscpplink(G__NOLINK), typenum(-1), tagnum(-1), isFromUsing(false), vtable(0), isBytecodeArena(0), statictype(0) {}
-   G__RflxProperties(const G__RflxProperties& rhs) : autoload(rhs.autoload), filenum(rhs.filenum), linenum(rhs.linenum), globalcomp(rhs.globalcomp), iscpplink(rhs.iscpplink), typenum(rhs.typenum), tagnum(rhs.tagnum), isFromUsing(rhs.isFromUsing), comment(rhs.comment), stackinfo(rhs.stackinfo), builder(rhs.builder), vtable(rhs.vtable), isBytecodeArena(rhs.isBytecodeArena), statictype(rhs.statictype) {}
+   G__RflxProperties(const G__RflxProperties& rhs) : autoload(rhs.autoload), filenum(rhs.filenum), linenum(rhs.linenum), globalcomp(rhs.globalcomp), iscpplink(rhs.iscpplink), typenum(rhs.typenum), tagnum(rhs.tagnum), isFromUsing(rhs.isFromUsing), comment(rhs.comment), stackinfo(rhs.stackinfo), vtable(rhs.vtable), isBytecodeArena(rhs.isBytecodeArena), statictype(rhs.statictype) {}
    virtual ~G__RflxProperties();
    G__RflxProperties& operator=(const G__RflxProperties& rhs)
    {
@@ -1263,7 +1199,6 @@ public:
          isFromUsing = rhs.isFromUsing;
          comment = rhs.comment;
          stackinfo = rhs.stackinfo;
-         builder = rhs.builder;
          vtable = rhs.vtable;
          isBytecodeArena = rhs.isBytecodeArena;
          statictype = rhs.statictype;
@@ -1281,7 +1216,6 @@ public:
    bool isFromUsing;
    G__comment_info comment;
    G__RflxStackProperties stackinfo;
-   BuilderHolder builder;
    void* vtable;
    bool isBytecodeArena;
    int statictype;

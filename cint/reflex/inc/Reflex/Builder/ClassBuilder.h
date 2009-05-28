@@ -19,6 +19,9 @@
 #include "Reflex/Member.h"
 #include "Reflex/Callback.h"
 
+// Forward declaration for 'friendship' purpose.
+namespace Cint { namespace Internal {} }
+
 namespace Reflex {
 
    // forward declarations 
@@ -101,13 +104,27 @@ namespace Reflex {
       */
       Type ToType();
 
-   private:
+protected:
+      
+      friend class ClassBuilder;
+      template <class T> friend class ClassBuilderT;
+      
+      /** 
+       * EnableCallback Enable or disable the callback call in the destructor
+       * @param  enable true to enable callback call, false to disable callback call
+       */
+      void EnableCallback(const bool enable = true);
+      
+private:
 
       /** current class being built */
       Class * fClass;
 
       /** last added MemberAt */
       Member fLastMember;    
+
+      /** flag, fire callback in destructor */
+      bool fCallbackEnabled;
 
    }; // class ClassBuilderImpl
 
@@ -194,7 +211,21 @@ namespace Reflex {
       */
       Type ToType();
 
-   private:
+protected:
+
+#ifdef G__COMMON_H
+      friend int ::G__search_tagname(const char*, int);
+      friend void Cint::Internal::G__set_stdio();
+      friend void Cint::Internal::G__create_bytecode_arena();
+#endif
+
+      /** 
+       * EnableCallback Enable or disable the callback call in the destructor
+       * @param  enable true to enable callback call, false to disable callback call
+       */
+      ClassBuilder& EnableCallback(const bool enable = true);
+      
+private:
 
       ClassBuilderImpl fClassBuilderImpl;
 
@@ -321,6 +352,14 @@ namespace Reflex {
       */
       Type ToType();
 
+   protected:
+
+      /** 
+       * EnableCallback Enable or disable the callback call in the destructor
+       * @param  enable true to enable callback call, false to disable callback call
+       */
+      ClassBuilderT & EnableCallback( const bool enable = true );
+      
    private:
 
       ClassBuilderImpl fClassBuilderImpl;
@@ -525,6 +564,17 @@ Reflex::ClassBuilderT<C>::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
 {
    fClassBuilderImpl.AddProperty(key , value);
+   return * this;
+}
+
+
+//______________________________________________________________________________
+template < class C >
+inline Reflex::ClassBuilderT<C> &
+Reflex::ClassBuilderT<C>::EnableCallback( const bool enable /* = true */ )
+//-------------------------------------------------------------------------------
+{
+   fClassBuilderImpl.EnableCallback(enable);
    return * this;
 }
 

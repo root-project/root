@@ -495,23 +495,15 @@ void Reflex::Class::AddDataMember(const Member & dm) const
 
 
 //-------------------------------------------------------------------------------
-void Reflex::Class::AddDataMember(const char * nam,
-                                  const Type & typ,
-                                  size_t offs,
-                                  unsigned int modifiers) const
+Reflex::Member Reflex::Class::AddDataMember(const char * nam,
+                                            const Type & typ,
+                                            size_t offs,
+                                            unsigned int modifiers /* = 0 */,
+                                            char * interpreterOffset /* = 0 */ ) const
 {
 //-------------------------------------------------------------------------------
 // Add data member to this class
-   ScopeBase::AddDataMember(nam, typ, offs, modifiers);
-}
-
-
-//-------------------------------------------------------------------------------
-void Reflex::Class::AddDataMember(Member& output, const char* nam, const Type& typ, size_t offs, unsigned int modifiers, char* interpreterOffset) const
-{
-   //-------------------------------------------------------------------------------
-   // Add data member to this class
-   ScopeBase::AddDataMember(output, nam, typ, offs, modifiers, interpreterOffset);
+   return ScopeBase::AddDataMember( nam, typ, offs, modifiers, interpreterOffset );
 }
 
 
@@ -536,18 +528,23 @@ void Reflex::Class::AddFunctionMember(const Member & fm) const
 
 
 //-------------------------------------------------------------------------------
-void Reflex::Class::AddFunctionMember(const char * nam,
-                                      const Type & typ,
-                                      StubFunction stubFP,
-                                      void * stubCtx,
-                                      const char * params,
-                                      unsigned int modifiers) const
+Reflex::Member Reflex::Class::AddFunctionMember(const char * nam,
+                                          const Type & typ,
+                                          StubFunction stubFP,
+                                          void * stubCtx,
+                                          const char * params,
+                                          unsigned int modifiers) const
 {
 //-------------------------------------------------------------------------------
 // Add function member to this class
-   ScopeBase::AddFunctionMember(nam, typ, stubFP, stubCtx, params, modifiers);
-   if (0 != (modifiers & CONSTRUCTOR)) fConstructors.push_back(fFunctionMembers[fFunctionMembers.size()-1]);
-   // setting the destructor is not needed because it is always provided when building the class
+   Member fm(ScopeBase::AddFunctionMember(nam, typ, stubFP, stubCtx, params, modifiers));
+   if (fm.IsConstructor()) {
+      fConstructors.push_back(fm);
+   }
+   else if (fm.IsDestructor()) {
+      fDestructor = fm;
+   }
+   return fm;
 }
 
 

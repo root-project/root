@@ -49,7 +49,7 @@ public:
    * @param fm pointer to function MemberAt
    */
    virtual void AddFunctionMember(const Member& fm) const;
-   virtual void AddFunctionMember(const char* nam, const Type& typ, StubFunction stubFP, void* stubCtx = 0, const char* params = 0, unsigned int modifiers = 0) const;
+   virtual Member AddFunctionMember(const char* nam, const Type& typ, StubFunction stubFP, void* stubCtx = 0, const char* params = 0, unsigned int modifiers = 0) const;
 
 private:
 

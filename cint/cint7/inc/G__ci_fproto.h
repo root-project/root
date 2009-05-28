@@ -386,6 +386,7 @@ G__DECL_API(254, void, G__exec_alloc_unlock, ());
 G__DECL_API(255, FILE*, FOpenAndSleep, (const char *filename, const char *mode));
 #endif
 G__DECL_API(256, void, G__letbool, (G__value* buf,int type,long value));
+G__DECL_API(264, int, G__Lsizeof, (const char* type_name_in));
 
-#define G__NUMBER_OF_API_FUNCTIONS 264
+#define G__NUMBER_OF_API_FUNCTIONS 265
 G__DUMMYTOCHECKFORDUPLICATES(G__NUMBER_OF_API_FUNCTIONS)

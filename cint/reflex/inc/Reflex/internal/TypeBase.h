@@ -147,6 +147,13 @@ namespace Reflex {
 
 
       /**
+       * GetBasePosition will return fBasePosition
+       * @return The position where the unscoped Name starts in the typename
+       */
+      size_t GetBasePosition() const;
+
+
+      /**
       * IsAbstract will return true if the the class is abstract
       * @return true if the class is abstract
       */
@@ -553,6 +560,13 @@ inline size_t Reflex::TypeBase::CalculateSize() const {
 }
 
 
+//-------------------------------------------------------------------------------
+inline size_t Reflex::TypeBase::GetBasePosition() const {
+//-------------------------------------------------------------------------------
+   return fBasePosition;
+}
+
+ 
 //-------------------------------------------------------------------------------
 inline bool Reflex::TypeBase::IsAbstract() const {
 //-------------------------------------------------------------------------------

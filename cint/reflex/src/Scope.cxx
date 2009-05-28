@@ -412,25 +412,19 @@ void Reflex::Scope::AddDataMember( const Member & dm ) const {
 
 
 //-------------------------------------------------------------------------------
-void Reflex::Scope::AddDataMember( const char * name,
+Reflex::Member Reflex::Scope::AddDataMember( const char * name,
                                    const Type & type,
                                    size_t offset,
-                                   unsigned int modifiers ) const {
+                                   unsigned int modifiers /* = 0 */,
+                                   char* interpreterOffset /* = 0 */ ) const {
 //-------------------------------------------------------------------------------
 // Add data member to this scope.
-   if ( * this ) fScopeName->fScopeBase->AddDataMember( name, 
-                                                       type, 
-                                                       offset, 
-                                                       modifiers );
+   if ( * this ) {
+      return fScopeName->fScopeBase->AddDataMember( name, type, offset, modifiers, interpreterOffset );
+   }
+   return Dummy::Member();
 }
 
-
-//-------------------------------------------------------------------------------
-void Reflex::Scope::AddDataMember(Member& output, const char* name, const Type& type, size_t offset, unsigned int modifiers, char* interpreterOffset) const
-{
-   // Add data member to this scope.
-   if (*this) fScopeName->fScopeBase->AddDataMember(output, name, type, offset, modifiers, interpreterOffset);
-}
 
 //-------------------------------------------------------------------------------
 void Reflex::Scope::RemoveDataMember( const Member & dm ) const {
@@ -449,20 +443,18 @@ void Reflex::Scope::AddFunctionMember( const Member & fm ) const {
 
 
 //-------------------------------------------------------------------------------
-void Reflex::Scope::AddFunctionMember( const char * nam,
-                                             const Type & typ,
-                                             StubFunction stubFP,
-                                             void * stubCtx,
-                                             const char * params,
-                                             unsigned int modifiers ) const {
+Reflex::Member Reflex::Scope::AddFunctionMember( const char * nam,
+                                           const Type & typ,
+                                           StubFunction stubFP,
+                                           void * stubCtx,
+                                           const char * params,
+                                           unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
 // Add function member to this scope.
-   if ( * this ) fScopeName->fScopeBase->AddFunctionMember( nam, 
-                                                            typ, 
-                                                            stubFP, 
-                                                            stubCtx, 
-                                                            params, 
-                                                            modifiers );
+   if ( * this ) {
+      return fScopeName->fScopeBase->AddFunctionMember( nam, typ, stubFP, stubCtx, params, modifiers );
+   }
+   return Dummy::Member();
 }
 
 

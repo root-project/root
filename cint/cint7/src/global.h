@@ -660,6 +660,8 @@ extern int G__ispermanentsl;
 **************************************************************************/
 extern int G__scratch_count;
 
+extern int G__in_memvar_setup;
+
    } // namespace Internal
 } // namespace Cint
 

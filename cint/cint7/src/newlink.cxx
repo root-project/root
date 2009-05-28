@@ -21,6 +21,7 @@
 #include "value.h"
 #include "../../reflex/src/FunctionMember.h"
 #include "Reflex/internal/MemberBase.h"
+#include "Reflex/Builder/TypeBuilder.h"
 
 #ifndef G__TESTMAIN
 #include <sys/stat.h>
@@ -1191,25 +1192,29 @@ void Cint::Internal::G__cpplink_linked_taginfo(FILE* fp, FILE* hfp)
 //______________________________________________________________________________
 extern "C" int G__get_linked_tagnum(G__linked_taginfo* p)
 {
-   // -- Setup and return tagnum.
-   if (!p) return(-1);
-   if (-1 == p->tagnum) {
+   // Setup and return tagnum.
+   if (!p) {
+      return -1;
+   }
+   if (p->tagnum == -1) {
       p->tagnum = G__search_tagname(p->tagname, p->tagtype);
       if (G__UserSpecificUpdateClassInfo) {
-         char *varp = G__globalvarpointer;
+         char* varp = G__globalvarpointer;
          G__globalvarpointer = G__PVOID;
-         (*G__UserSpecificUpdateClassInfo)((char*)p->tagname, p->tagnum);
+         (*G__UserSpecificUpdateClassInfo)((char*) p->tagname, p->tagnum);
          G__globalvarpointer = varp;
       }
    }
-   return(p->tagnum);
+   return p->tagnum;
 }
 
 //______________________________________________________________________________
 int G__get_linked_tagnum_fwd(G__linked_taginfo* p)
 {
-   // -- Setup and return tagnum; no autoloading.
-   if (!p) return(-1);
+   // Setup and return tagnum; no autoloading.
+   if (!p) {
+      return -1;
+   }
    int type = p->tagtype;
    p->tagtype = toupper(type);
    int ret = G__get_linked_tagnum(p);
@@ -6360,60 +6365,57 @@ char G__incsetup_exist(std::list<G__incsetup>* incsetuplist, G__incsetup incsetu
 extern "C" int G__tagtable_setup(int tagnum, int size, int cpplink, int isabstract, const char* comment, G__incsetup setup_memvar, G__incsetup setup_memfunc)
 {
    // -- FIXME: Describe this function!
-   char *p;
+   char* p;
 #ifndef G__OLDIMPLEMENTATION1823
    G__StrBuf xbuf_sb(G__BUFLEN);
-   char *xbuf = xbuf_sb;
-   char *buf = xbuf;
+   char* xbuf = xbuf_sb;
+   char* buf = xbuf;
 #else // G__OLDIMPLEMENTATION1823
    G__StrBuf buf_sb(G__ONELINE);
-   char *buf = buf_sb;
+   char* buf = buf_sb;
 #endif // G__OLDIMPLEMENTATION1823
-
-   if (G__struct.incsetup_memvar[tagnum]==0)
+   if (!G__struct.incsetup_memvar[tagnum]) {
       G__struct.incsetup_memvar[tagnum] = new std::list<G__incsetup>();
-
-   if (G__struct.incsetup_memfunc[tagnum]==0)
+   }
+   if (!G__struct.incsetup_memfunc[tagnum]) {
       G__struct.incsetup_memfunc[tagnum] = new std::list<G__incsetup>();
-
-   if (0 == size && 0 != G__struct.size[tagnum]
-         && 'n' != G__struct.type[tagnum]
-      ) return(0);
-
-   if ( ('n' != G__struct.type[tagnum] && 0 != G__struct.size[tagnum] ) // Class already setup
-       || ('n' == G__struct.type[tagnum] && 0 != G__struct.iscpplink[tagnum]) // Namespace already setup
-      ) {
+   }
+   if (!size && G__struct.size[tagnum] && (G__struct.type[tagnum] != 'n')) {
+      return 0;
+   }
+   if (
+      ((G__struct.type[tagnum] != 'n') && G__struct.size[tagnum]) || // Class already setup
+      ((G__struct.type[tagnum] == 'n') && G__struct.iscpplink[tagnum]) // Namespace already setup
+   ) {
+      // --
 #ifndef G__OLDIMPLEMENTATION1656
-     char found = G__incsetup_exist(G__struct.incsetup_memvar[tagnum],setup_memvar);
-     // If setup_memvar is not NULL we push the G__setup_memvarXXX pointer into the list 
-     if (setup_memvar&&!found)
-        G__struct.incsetup_memvar[tagnum]->push_back(setup_memvar);
-
-     found = G__incsetup_exist(G__struct.incsetup_memfunc[tagnum],setup_memfunc);
-     // If setup_memfunc is not NULL we push the G__setup_memfuncXXX pointer into the list 
-     if (setup_memfunc&&!found)
-        G__struct.incsetup_memfunc[tagnum]->push_back(setup_memfunc);
-
+      char found = G__incsetup_exist(G__struct.incsetup_memvar[tagnum], setup_memvar);
+      // If setup_memvar is not NULL we push the G__setup_memvarXXX pointer into the list
+      if (setup_memvar && !found) {
+         G__struct.incsetup_memvar[tagnum]->push_back(setup_memvar);
+      }
+      found = G__incsetup_exist(G__struct.incsetup_memfunc[tagnum], setup_memfunc);
+      // If setup_memfunc is not NULL we push the G__setup_memfuncXXX pointer into the list
+      if (setup_memfunc && !found) {
+         G__struct.incsetup_memfunc[tagnum]->push_back(setup_memfunc);
+      }
 #endif // G__OLDIMPLEMENTATION1656
       if (G__asm_dbg) {
          if (G__dispmsg >= G__DISPWARN) {
-            G__fprinterr(G__serr, "Warning: Try to reload %s from DLL\n"
-                         , G__fulltagname(tagnum, 1));
+            G__fprinterr(G__serr, "Warning: Try to reload %s from DLL\n", G__fulltagname(tagnum, 1));
          }
       }
-      return(0);
+      return 0;
    }
    G__struct.size[tagnum] = size;
-
-   Reflex::Scope type = G__Dict::GetDict().GetScope(tagnum);
-   G__RflxProperties *prop = G__get_properties(type);
-   if (type.IsClass() || type.IsUnion()) {
-      G__get_properties(type)->builder.Class().SetSizeOf(size);
+   Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
+   G__RflxProperties* prop = G__get_properties(scope);
+   if (scope.IsClass() || scope.IsUnion()) {
+      Reflex::Type type = scope;
+      type.SetSize(size);
    }
-
    prop->iscpplink = cpplink;
    G__struct.iscpplink[tagnum] = cpplink;
-
 #ifndef G__OLDIMPLEMENTATION1545
    G__struct.rootflag[tagnum] = (isabstract / 0x10000) % 0x100;
    G__struct.funcs[tagnum] = (isabstract / 0x100) % 0x100;
@@ -6422,48 +6424,44 @@ extern "C" int G__tagtable_setup(int tagnum, int size, int cpplink, int isabstra
    G__struct.funcs[tagnum] = isabstract / 0x100;
    G__struct.isabstract[tagnum] = isabstract % 0x100;
 #endif // G__OLDIMPLEMENTATION1545
-
    G__struct.filenum[tagnum] = G__ifile.filenum;
    prop->filenum = G__ifile.filenum;
-
-   prop->comment.p.com = (char*)comment;
-   if (comment) prop->comment.filenum = -2;
-   else         prop->comment.filenum = -1;
-
-
-   if(0==type.DataMemberSize()
-      || type.IsNamespace()){
-         char found = G__incsetup_exist(G__struct.incsetup_memvar[tagnum],setup_memvar);
-         // If setup_memvar is not NULL we push the G__setup_memvarXXX pointer into the list 
-         if (setup_memvar&&!found)
-            G__struct.incsetup_memvar[tagnum]->push_back(setup_memvar);
+   prop->comment.p.com = (char*) comment;
+   if (comment) {
+      prop->comment.filenum = -2;
    }
-
-if (
+   else {
+      prop->comment.filenum = -1;
+   }
+   if (!scope.DataMemberSize() || scope.IsNamespace()) {
+         char found = G__incsetup_exist(G__struct.incsetup_memvar[tagnum], setup_memvar);
+         if (setup_memvar && !found) {
+            G__struct.incsetup_memvar[tagnum]->push_back(setup_memvar);
+         }
+   }
+   if (
+      !G__Dict::GetDict().GetScope(tagnum).FunctionMemberSize() ||
+      (G__struct.type[tagnum]  == 'n') ||
+      (
+         // --
 #ifndef G__OLDIMPLEMENTATION2027
-    0 /* was 1 */ == G__Dict::GetDict().GetScope(tagnum).FunctionMemberSize()
+         (G__get_funcproperties(G__Dict::GetDict().GetScope(tagnum).FunctionMemberAt(0))->entry.size != -1) &&
 #else // G__OLDIMPLEMENTATION2027
-    0 == G__Dict::GetDict().GetScope(tagnum).FunctionMemberSize()
+         (G__struct.memfunc[tagnum]->pentry[0]->size != -1) &&
 #endif // G__OLDIMPLEMENTATION2027
-      || 'n' == G__struct.type[tagnum]
-      || (
-#ifndef G__OLDIMPLEMENTATION2027
-          - 1 != G__get_funcproperties(G__Dict::GetDict().GetScope(tagnum).FunctionMemberAt(0))->entry.size // G__struct.memfunc[tagnum]->pentry[1]->size
-#else // G__OLDIMPLEMENTATION2027
-         - 1 != G__struct.memfunc[tagnum]->pentry[0]->size
-#endif // G__OLDIMPLEMENTATION2027
-          && 2 >= G__Dict::GetDict().GetScope(tagnum).FunctionMemberSize()))
-      {
-         char found = 0;
-         found = G__incsetup_exist(G__struct.incsetup_memfunc[tagnum], setup_memfunc);
-         if (setup_memfunc&&!found)
-            G__struct.incsetup_memfunc[tagnum]->push_back(setup_memfunc);
+         (G__Dict::GetDict().GetScope(tagnum).FunctionMemberSize() <= 2)
+      )
+   ) {
+      char found = 0;
+      found = G__incsetup_exist(G__struct.incsetup_memfunc[tagnum], setup_memfunc);
+      if (setup_memfunc && !found) {
+         G__struct.incsetup_memfunc[tagnum]->push_back(setup_memfunc);
       }
-
-   /* add template names */
+   }
+   // add template names
 #ifndef G__OLDIMPLEMENTATION1823
-   if (strlen(G__struct.name[tagnum]) > G__BUFLEN - 10) {
-      buf = (char*)malloc(strlen(G__struct.name[tagnum]) + 10);
+   if (strlen(G__struct.name[tagnum]) > (G__BUFLEN - 10)) {
+      buf = (char*) malloc(strlen(G__struct.name[tagnum]) + 10);
    }
 #endif // G__OLDIMPLEMENTATION1823
    strcpy(buf, G__struct.name[tagnum]);
@@ -6473,19 +6471,21 @@ if (
          ::Reflex::Scope store_def_tagnum = G__def_tagnum;
          ::Reflex::Scope store_tagdefining = G__tagdefining;
          FILE* store_fp = G__ifile.fp;
-         G__ifile.fp = (FILE*)NULL;
+         G__ifile.fp = 0;
          G__def_tagnum = G__Dict::GetDict().GetScope(G__struct.parent_tagnum[tagnum]);
          G__tagdefining = G__Dict::GetDict().GetScope(G__struct.parent_tagnum[tagnum]);
-         G__createtemplateclass(buf, (struct G__Templatearg*)NULL, 0);
+         G__createtemplateclass(buf, 0, 0);
          G__ifile.fp = store_fp;
          G__def_tagnum = store_def_tagnum;
          G__tagdefining = store_tagdefining;
       }
    }
 #ifndef G__OLDIMPLEMENTATION1823
-   if (buf != xbuf) free((void*)buf);
+   if (buf != xbuf) {
+      free(buf);
+   }
 #endif // G__OLDIMPLEMENTATION1823
-   return(0);
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -6535,26 +6535,25 @@ extern "C" int G__tag_memvar_setup(int tagnum)
 //______________________________________________________________________________
 extern "C" int G__memvar_setup(void* p, int type, int reftype, int constvar, int tagnum, int typenum, int statictype, int accessin, const char* expr, int definemacro, const char* comment)
 {
-   int store_asm_noverflow;
-   int store_prerun;
-   int store_asm_wholefunction;
-   int store_constvar = G__constvar;
+   int store_in_memvar_setup = G__in_memvar_setup;
+   G__in_memvar_setup = 1;
    int store_def_struct_member = G__def_struct_member;
    ::Reflex::Scope store_tagdefining = G__tagdefining;
    ::Reflex::Scope store_p_local = G__p_local;
-   if ('p' == type && G__def_struct_member) {
+   if ((type == 'p') && G__def_struct_member) {
       G__def_struct_member = 0;
       G__tagdefining = ::Reflex::Scope();
       G__p_local = ::Reflex::Scope();
    }
-
-   G__setcomment = (char*)comment;
-
-   G__globalvarpointer = (char*)p;
-   G__var_type = type;
-   G__reftype = reftype;
-   G__tagnum = G__Dict::GetDict().GetScope(tagnum);
-   G__typenum = G__Dict::GetDict().GetTypedef(typenum);
+   G__setcomment = (char*) comment; // FIXME: We don't save this!
+   G__globalvarpointer = (char*) p; // FIXME: We don't save this!
+   G__var_type = type; // FIXME: We don't save this!
+   G__tagnum = G__Dict::GetDict().GetScope(tagnum); // FIXME: We don't save this!
+   G__typenum = G__Dict::GetDict().GetTypedef(typenum); // FIXME: We don't save this!
+   G__reftype = reftype; // FIXME: We don't save this!
+   int store_constvar = G__constvar;
+   G__constvar = constvar;
+   //int save_static_alloc = G__static_alloc; // FIXME: We probably need a line like this here.
    if ((statictype == G__AUTO) || (statictype == G__AUTOARYDISCRETEOBJ)) {
       G__static_alloc = 0;
    }
@@ -6562,36 +6561,39 @@ extern "C" int G__memvar_setup(void* p, int type, int reftype, int constvar, int
       G__static_alloc = 1;
    }
    else if (statictype == G__COMPILEDGLOBAL) {
-      G__static_alloc = 1;  // FIXME: This is probaby wrong!
+      G__static_alloc = 1; // FIXME: This is probaby wrong!
    }
    else {
-      // -- File scope static variable, which is actually a static data member.
-      G__static_alloc = 1;
+      G__static_alloc = 1; // File scope static variable, which is actually a static data member.
    }
-   /* G__access = constvar;*/  /* dummy statement to avoid lint error */
-   G__constvar = constvar; /* Not sure why I didn't do this for a long time */
-   G__access = accessin;
+   //int store_access = G__access; // FIXME: We probably need a line like this here.
+   G__access = accessin; // FIXME: We don't save this!
    G__definemacro = definemacro;
-   store_asm_noverflow = G__asm_noverflow;
+   int store_asm_noverflow = G__asm_noverflow;
    G__asm_noverflow = 0;
-   store_prerun = G__prerun;
+   int store_prerun = G__prerun;
    G__prerun = 1;
-   store_asm_wholefunction = G__asm_wholefunction;
+   int store_asm_wholefunction = G__asm_wholefunction;
    G__asm_wholefunction = G__ASM_FUNC_NOP;
+   //
    G__getexpr((char*)expr);
-   if ('p' == type && store_def_struct_member) {
+   //
+   G__asm_wholefunction = store_asm_wholefunction;
+   G__prerun = store_prerun;
+   G__asm_noverflow = store_asm_noverflow;
+   G__definemacro = 0; // FIXME: Shouldn't we restore this?
+   //G__access = store_access; // FIXME: We probably need a line like this here.
+   //G__static_alloc = save_static_alloc; // FIXME: We probably need a line like this here.
+   G__constvar = store_constvar;
+   G__reftype = G__PARANORMAL; // FIXME: We should probably restore this instead.
+   G__setcomment = 0; // FIXME: Shouldn't we restore this?
+   if ((type == 'p') && store_def_struct_member) {
       G__def_struct_member = store_def_struct_member;
       G__tagdefining = store_tagdefining;
       G__p_local = store_p_local;
    }
-   G__asm_wholefunction = store_asm_wholefunction;
-   G__prerun = store_prerun;
-   G__asm_noverflow = store_asm_noverflow;
-   G__definemacro = 0;
-   G__setcomment = (char*)NULL;
-   G__reftype = G__PARANORMAL;
-   G__constvar = store_constvar;
-   return(0);
+   G__in_memvar_setup = store_in_memvar_setup;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -6684,10 +6686,10 @@ extern "C" int G__memfunc_setup(const char* funcname, int /*hash*/, G__Interface
    //   builder.fReturnType = G__modify_type(builder.fReturnType, return_is_pointer, reftype, isconst & ~G__CONSTVAR, 0, 0);
    //}
    if (ansi & 0x08) {
-      builder.fProp.entry.ansi = 2;
+      builder.fProp.entry.ansi = 2; // ansi-style prototype and varadic
    }
    else if (ansi & 0x01) {
-      builder.fProp.entry.ansi = 1;
+      builder.fProp.entry.ansi = 1; // ansi-style prototype, not varadic
    }
    builder.fAccess = accessin;
    builder.fIsexplicit = (ansi & 0x04) >> 2;

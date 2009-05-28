@@ -22,6 +22,8 @@
 #include <cstring>
 #include <sstream>
 
+#include "Reflex/Builder/TypeBuilder.h"
+
 using namespace Cint::Internal;
 
 namespace Cint {
@@ -563,7 +565,14 @@ inline G__value G__assign_var(::Reflex::Member& var, char* local_G__struct_offse
    }
 
 //______________________________________________________________________________
-G__value Cint::Internal::G__letvariable(const char* item, G__value expression, const ::Reflex::Scope& varglobal, const ::Reflex::Scope& varlocal, ::Reflex::Member& output_var)
+G__value Cint::Internal::G__letvariable(const char* item, G__value expression, const ::Reflex::Scope varglobal, const ::Reflex::Scope varlocal)
+{
+   ::Reflex::Member dummy;
+   return G__letvariable(item, expression, varglobal, varlocal, dummy);
+}
+
+//______________________________________________________________________________
+G__value Cint::Internal::G__letvariable(const char* item, G__value expression, const ::Reflex::Scope varglobal, const ::Reflex::Scope varlocal, ::Reflex::Member& output_var)
 {
    // -- FIXME: Describe me!
 
@@ -988,17 +997,19 @@ G__value Cint::Internal::G__letvariable(const char* item, G__value expression, c
    // Search local and global variables.
    //
    output_var = ::Reflex::Member();
-   // Avoid searching variables when processing
-   // a function-local const static during prerun.
-   if (
-      !G__func_now ||       // Not in a function declaration/definition.
-      !G__decl ||           // Not in a declaration.
-      !G__static_alloc ||   // Not a static/const/enumerator declaration.
-      !G__constvar ||       // Not a const.
-      !G__prerun            // Not in prerun (we are actually executing).
-   ) {
-      int ig15 = 0;
-      output_var = G__find_variable(varname.c_str(), varhash, varlocal, varglobal, &local_G__struct_offset, &store_struct_offset, &ig15, G__decl || G__def_struct_member);
+   if (!G__in_memvar_setup) {
+      // Avoid searching variables when processing
+      // a function-local const static during prerun.
+      if (
+         !G__func_now ||       // Not in a function declaration/definition.
+         !G__decl ||           // Not in a declaration.
+         !G__static_alloc ||   // Not a static/const/enumerator declaration.
+         !G__constvar ||       // Not a const.
+         !G__prerun            // Not in prerun (we are actually executing).
+      ) {
+         int ig15 = 0;
+         output_var = G__find_variable(varname.c_str(), varhash, varlocal, varglobal, &local_G__struct_offset, &store_struct_offset, &ig15, G__decl || G__def_struct_member);
+      }
    }
    //
    // Assign value.
@@ -3878,9 +3889,9 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
    //  Store comment information which is specific to root.
    //
    G__comment_info var_comment;
-   if (G__setcomment) {
-      var_comment.p.com = G__setcomment;
-      var_comment.filenum = -2;
+   if (G__setcomment) { // If the dictionary interface is passing us a comment string.
+      var_comment.p.com = G__setcomment; // Note: We do not take ownership, we make a copy of the char pointer.  This string must have a lifetime matching the variable!
+      var_comment.filenum = -2; // Flag that comment is an immediate string, not in a source file.
    }
    else {
       var_comment.p.com = 0;
@@ -4084,15 +4095,44 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
    //
    //  Create the variable.
    //
-#ifdef __GNUC__
-#else // __GNUC__
-#pragma message (FIXME("Need to initialize the var's offset to something sensible."))
-#endif // __GNUC__
-   size_t reflex_offset = 0;
-   char* var_offset = 0;
-   int reflex_modifiers = 0;
-   // Create the variable as a data member of its continaing scope, either a namespace or a class.
-   output_var = G__add_scopemember(varscope, varname.c_str(), var_type, reflex_modifiers, reflex_offset, var_offset, var_access, var_statictype);
+   {
+      //
+      //  Lookup variable in scope to see if reflex already knows
+      //  about it.  This can happen if we are called from a reflex
+      //  builder callback through cintex.
+      //
+#if 0
+      int dm_size = varscope.DataMemberSize();
+      const char* varname_c_str = varname.c_str();
+      for (int i = 0; i < dm_size; ++i ) {
+         ::Reflex::Member mbr = varscope.DataMemberAt(i);
+         if (!strcmp(mbr.Name_c_str(), varname_c_str)) {
+            output_var = mbr;
+            break;
+         }
+      }
+#endif // 0
+      output_var = varscope.DataMemberByName(varname, ::Reflex::INHERITEDMEMBERS_NO);
+   }
+   if (
+      !output_var || // var does not exist, or
+      (
+         !G__in_memvar_setup && // we are not being called by dictionary setup, and
+         (
+            G__static_alloc && // we are doing a static variable, and
+            G__func_now // it is a function-local static
+         )
+      )
+   ) {
+      size_t reflex_offset = 0;
+      char* var_offset = 0;
+      int reflex_modifiers = 0;
+      // Create the variable as a data member of its continaing scope, either a namespace or a class.
+      output_var = G__add_scopemember(varscope, varname.c_str(), var_type, reflex_modifiers, reflex_offset, var_offset, var_access, var_statictype);
+   }
+   else if (!G__in_memvar_setup) {
+      assert(0); // Not in dict interface, and variable is found, should be impossible.
+   }
    //
    //  Set variable properties.
    //
