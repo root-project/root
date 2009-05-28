@@ -36,4 +36,6 @@ has to be re-used.</li>
 <li>Implement TClassEdit::InsertStd() which puts "std::" in front of all STL classes.</li>
 <li>The generated library now always depends on RVersion.h</li>
 <li>Add support for '+' character embedded in the script's name or directory name.</li>
+<li>The dependency tracking file (script_C.d) is now always created when the library is built.  
+The dependency tracking file now records with which version of ROOT the library was built and the library is now rebuilt if it is loaded in a different version of ROOT.</li>
 </ul>
