@@ -173,7 +173,7 @@ TList *TProofMgr::QuerySessions(Option_t *opt)
       TProof *p = 0;
       Int_t ns = 0;
       while ((p = (TProof *)nxp())) {
-         // Only those belonginh to this server
+         // Only those belonging to this server
          if (MatchUrl(p->GetUrl())) {
             if (!(fSessions->FindObject(p->GetSessionTag()))) {
                Int_t st = (p->IsIdle()) ? TProofDesc::kIdle
