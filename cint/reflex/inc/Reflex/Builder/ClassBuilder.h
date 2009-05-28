@@ -26,6 +26,8 @@ namespace Reflex {
 
    // forward declarations 
    class Class;
+   class ClassBuilder;
+   template <typename C> class ClassBuilderT;
 
    /** 
    * @class ClassBuilderImpl ClassBuilder.h Reflex/Builder/ClassBuilder.h
@@ -107,7 +109,7 @@ namespace Reflex {
 protected:
       
       friend class ClassBuilder;
-      template <class T> friend class ClassBuilderT;
+      template <class C> friend class ClassBuilderT;
       
       /** 
        * EnableCallback Enable or disable the callback call in the destructor
