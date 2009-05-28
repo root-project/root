@@ -115,7 +115,7 @@ protected:
        * EnableCallback Enable or disable the callback call in the destructor
        * @param  enable true to enable callback call, false to disable callback call
        */
-      void EnableCallback(const bool enable = true);
+      void EnableCallback(bool enable = true);
       
 private:
 
@@ -225,7 +225,7 @@ protected:
        * EnableCallback Enable or disable the callback call in the destructor
        * @param  enable true to enable callback call, false to disable callback call
        */
-      ClassBuilder& EnableCallback(const bool enable = true);
+      ClassBuilder& EnableCallback(bool enable = true);
       
 private:
 
@@ -360,7 +360,7 @@ private:
        * EnableCallback Enable or disable the callback call in the destructor
        * @param  enable true to enable callback call, false to disable callback call
        */
-      ClassBuilderT & EnableCallback( const bool enable = true );
+      ClassBuilderT & EnableCallback(bool enable = true );
       
    private:
 
@@ -573,7 +573,7 @@ Reflex::ClassBuilderT<C>::AddProperty( const char * key,
 //______________________________________________________________________________
 template < class C >
 inline Reflex::ClassBuilderT<C> &
-Reflex::ClassBuilderT<C>::EnableCallback( const bool enable /* = true */ )
+Reflex::ClassBuilderT<C>::EnableCallback(bool enable /* = true */ )
 //-------------------------------------------------------------------------------
 {
    fClassBuilderImpl.EnableCallback(enable);

@@ -170,7 +170,7 @@ void Reflex::ClassBuilderImpl::AddProperty(const char* key, Any value)
 }
 
 //______________________________________________________________________________
-void Reflex::ClassBuilderImpl::EnableCallback(const bool enable /*= true*/)
+void Reflex::ClassBuilderImpl::EnableCallback(bool enable /*= true*/)
 {
    fCallbackEnabled = enable;
 }
@@ -270,7 +270,7 @@ Reflex::ClassBuilder& Reflex::ClassBuilder::addUnion(const char* nam, const char
 */
 
 //______________________________________________________________________________
-Reflex::ClassBuilder& Reflex::ClassBuilder::EnableCallback(const bool enable /*=true*/)
+Reflex::ClassBuilder& Reflex::ClassBuilder::EnableCallback(bool enable /*=true*/)
 {
    fClassBuilderImpl.EnableCallback(enable);
    return *this;
