@@ -4130,7 +4130,7 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
       // Create the variable as a data member of its continaing scope, either a namespace or a class.
       output_var = G__add_scopemember(varscope, varname.c_str(), var_type, reflex_modifiers, reflex_offset, var_offset, var_access, var_statictype);
    }
-   else if (!G__in_memvar_setup) {
+   else if (!G__in_memvar_setup && (varname != "G__virtualinfo")) {
       assert(0); // Not in dict interface, and variable is found, should be impossible.
    }
    //
