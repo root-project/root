@@ -2307,7 +2307,7 @@ static void R__FixLink(TString &cmd)
 }
 #endif
 
-static void R__WriteDependencyFile(const TString &depfilename, const TString &filename, const TString &library, const TString &libname, 
+static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname, 
                                    const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath) {
    // Generate the dependency via standard output, not searching the
    // standard include directories,
@@ -2316,7 +2316,7 @@ static void R__WriteDependencyFile(const TString &depfilename, const TString &fi
    const char * stderrfile = "/dev/null";
 #else
    TString stderrfile;
-   AssignAndDelete( stderrfile, ConcatFileName(build_loc,"stderr.tmp") );
+   AssignAndDelete( stderrfile, gSystem->ConcatFileName(build_loc,"stderr.tmp") );
 #endif   
    TString bakdepfilename = depfilename + ".bak";
    
@@ -2755,7 +2755,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
                depfilename += "_" + extension + ".d";
             }
-            R__WriteDependencyFile(depfilename, filename, library, libname, extension, version_var_prefix, includes, defines, incPath);
+            R__WriteDependencyFile(build_loc, depfilename, filename, library, libname, extension, version_var_prefix, includes, defines, incPath);
          }
       }
       
@@ -2958,7 +2958,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    Info("ACLiC","creating shared library %s",library.Data());
 
-   R__WriteDependencyFile(depfilename, filename, library, libname, extension, version_var_prefix, includes, defines, incPath);
+   R__WriteDependencyFile(build_loc, depfilename, filename, library, libname, extension, version_var_prefix, includes, defines, incPath);
 
    // ======= Select the dictionary name
    TString dict = libname + "_ACLiC_dict";
