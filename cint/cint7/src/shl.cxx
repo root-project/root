@@ -636,7 +636,7 @@ extern "C" void G__SetCintApiPointers(G__SHLHANDLE *pslhandle,const char *fname)
 #undef G__DECL_API
 #undef G__DUMMYTOCHECKFORDUPLICATES
 #define G__DECL_API(IDX, RET, NAME, ARGS) \
-   a[IDX] = (void*) NAME
+   a[IDX] = (void*) NAME;
 #define G__DUMMYTOCHECKFORDUPLICATES(X)
 #include "G__ci_fproto.h"
 

@@ -1291,12 +1291,12 @@ typedef void G__parse_hook_t ();
 # ifndef G__MULTITHREADLIBCINT
 #  ifdef __cplusplus
 #    define G__DUMMYTOCHECKFORDUPLICATES_CONCAT(A,B) A##B
-#    define G__DUMMYTOCHECKFORDUPLICATES(IDX) ;namespace{class G__DUMMYTOCHECKFORDUPLICATES_CONCAT(this_API_function_index_occurs_more_than_once_,IDX) {};}
+#    define G__DUMMYTOCHECKFORDUPLICATES(IDX) namespace{class G__DUMMYTOCHECKFORDUPLICATES_CONCAT(this_API_function_index_occurs_more_than_once_,IDX) {};}
 #  else
-#    define G__DUMMYTOCHECKFORDUPLICATES(IDX)
+#    define G__DUMMYTOCHECKFORDUPLICATES(IDX) 
 #  endif
 #  define G__DECL_API(IDX, RET, NAME, ARGS) \
-   G__EXPORT RET NAME ARGS G__DUMMYTOCHECKFORDUPLICATES(IDX)
+   G__EXPORT RET NAME ARGS ; G__DUMMYTOCHECKFORDUPLICATES(IDX)
 # else
 #  define G__DUMMYTOCHECKFORDUPLICATES(IDX)
 #  define G__DECL_API(IDX, RET, NAME, ARGS) \
