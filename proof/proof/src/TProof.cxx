@@ -337,7 +337,8 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
 
    // Old-style server type: we add this to the list and set the global pointer
    if (IsProofd() || TestBit(TProof::kIsMaster))
-      gROOT->GetListOfProofs()->Add(this);
+      if (!gROOT->GetListOfProofs()->FindObject(this))
+         gROOT->GetListOfProofs()->Add(this);
 
    // Still needed by the packetizers: needs to be changed
    gProof = this;
@@ -425,7 +426,8 @@ TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
 
    fCloseMutex = 0;
 
-   gROOT->GetListOfProofs()->Add(this);
+   if (!gROOT->GetListOfProofs()->FindObject(this))
+      gROOT->GetListOfProofs()->Add(this);
 
    gProof = this;
 }
@@ -497,6 +499,10 @@ TProof::~TProof()
 
    // Remove for the global list
    gROOT->GetListOfProofs()->Remove(this);
+   // ... and from the manager list
+   if (fManager && fManager->IsValid())
+      fManager->ShutdownSession(this);
+
    if (gProof && gProof == this) {
       // Set previous as default
       TIter pvp(gROOT->GetListOfProofs(), kIterBackward);
@@ -1269,6 +1275,7 @@ TSlave *TProof::CreateSlave(const char *url, const char *ord,
 
    return sl;
 }
+
 
 //______________________________________________________________________________
 TSlave *TProof::CreateSubmaster(const char *url, const char *ord,
