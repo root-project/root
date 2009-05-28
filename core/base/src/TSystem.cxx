@@ -1017,7 +1017,8 @@ const char *TSystem::ExpandFileName(const char *fname)
 
    const int   kBufSize = kMAXPATHLEN;
    int         n, ier, iter, lx, ncopy;
-   char       *inp, *out, *c, *b, *e, *x, *t, buff[kBufSize*4];
+   char       *inp, *out, *x, *t, buff[kBufSize*4];
+   const char *b, *c, *e;
    const char *p;
    static char xname[kBufSize];
 
@@ -1025,7 +1026,7 @@ const char *TSystem::ExpandFileName(const char *fname)
 
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';
-   c = (char *)fname + strspn(fname, " \t\f\r");
+   c = fname + strspn(fname, " \t\f\r");
    //VP  if (isalnum(c[0])) { strcpy(inp, WorkingDirectory()); strcat(inp, "/"); } // add $cwd
 
    strcat(inp, c);
@@ -2647,7 +2648,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       ::Info("ACLiC","script has already been loaded in interpreted mode");
       ::Info("ACLiC","unloading %s and compiling it", filename);
 
-      if ( gInterpreter->UnloadFile( (char*) filename ) != 0 ) {
+      if ( gInterpreter->UnloadFile( filename ) != 0 ) {
          // We can not unload it.
          return kFALSE;
       }
@@ -2863,7 +2864,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
          ::Info("ACLiC","%s has been modified and will be reloaded",
                 libname.Data());
-         if ( gInterpreter->UnloadFile( (char*) library.Data() ) != 0 ) {
+         if ( gInterpreter->UnloadFile( library.Data() ) != 0 ) {
             // The library is being used. We can not unload it.
             return kFALSE;
          }
@@ -2893,7 +2894,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          // core dump at termination.
 
          ::Info("ACLiC","it will be regenerated and reloaded!");
-         if ( gInterpreter->UnloadFile( (char*) library.Data() ) != 0 ) {
+         if ( gInterpreter->UnloadFile( library.Data() ) != 0 ) {
             // The library is being used. We can not unload it.
             return kFALSE;
          }
