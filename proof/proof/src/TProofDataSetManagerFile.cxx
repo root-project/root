@@ -1047,7 +1047,7 @@ TFileCollection *TProofDataSetManagerFile::GetDataSet(const char *uri, const cha
       return (TFileCollection *)0;
    TFileCollection *fc = GetDataSet(dsGroup, dsUser, dsName);
 
-   if (srv && strlen(srv) > 0) {
+   if (fc && srv && strlen(srv) > 0) {
       // Build up the subset
       TFileCollection *sfc = 0;
       TString ss(srv), s;
