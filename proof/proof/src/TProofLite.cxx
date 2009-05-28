@@ -107,7 +107,8 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
    Init(url, conffile, confdir, loglevel, alias);
 
    // For final cleanup
-   gROOT->GetListOfProofs()->Add(this);
+   if (!gROOT->GetListOfProofs()->FindObject(this))
+      gROOT->GetListOfProofs()->Add(this);
 
    // Still needed by the packetizers: needs to be changed
    gProof = this;
