@@ -2307,8 +2307,13 @@ static void R__FixLink(TString &cmd)
 }
 #endif
 
+#ifndef WIN32
+static void R__WriteDependencyFile(const TString & /* build_loc */, const TString &depfilename, const TString &filename, const TString &library, const TString &libname, 
+                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath) {
+#else
 static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname, 
                                    const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath) {
+#endif
    // Generate the dependency via standard output, not searching the
    // standard include directories,
 
