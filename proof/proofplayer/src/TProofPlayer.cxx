@@ -2099,7 +2099,7 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
 
    // For other objects we just run the incorporation procedure
    Incorporate(obj, fOutput, merged);
-   if (!IsClient() || fProof->IsLite()){
+   if (fProof && (!IsClient() || fProof->IsLite())){
       ProcInfo_t pi;
       if (!gSystem->GetProcInfo(&pi)){
          // For PROOF-Lite we redirect this output to a the open log file so that the
