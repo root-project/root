@@ -366,7 +366,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    const char *fname;
    if ((fname = gSystem->ExpandPathName(fname1))) {
       SetName(fname);
-      delete [] (char*)fname;
+      delete [] fname;
       fRealName = GetName();
       fname = fRealName.Data();
    } else {
@@ -442,11 +442,11 @@ zombie:
 }
 
 //______________________________________________________________________________
-TFile::TFile(const TFile &file) : TDirectoryFile(), fInfoCache(0)
+TFile::TFile(const TFile &) : TDirectoryFile(), fInfoCache(0)
 {
-   // Copy constructor.
+   // TFile objects can not be copied.
 
-   ((TFile&)file).Copy(*this);
+   MayNotUse("TFile::TFile(const TFile &)"); 
 }
 
 //______________________________________________________________________________
