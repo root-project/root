@@ -2169,6 +2169,8 @@ int XrdProofdProofServMgr::Destroy(XrdProofdProtocol *p)
    psid = ntohl(p->Request()->proof.sid);
    TRACEP(p, REQ, "psid: "<<psid);
 
+   XrdOucString msg;
+
    // Find server session
    XrdProofdProofServ *xpsref = 0;
    if (psid > -1) {
@@ -2178,11 +2180,12 @@ int XrdProofdProofServMgr::Destroy(XrdProofdProtocol *p)
          response->Send(kXR_InvalidRequest,"reference session ID not found");
          return 0;
       }
+      XPDFORM(msg, "session %d destroyed by %s", xpsref->SrvPID(), p->Link()->ID);
+   } else {
+      XPDFORM(msg, "all sessions destroyed by %s", p->Link()->ID);
    }
 
    // Terminate the servers
-   XrdOucString msg;
-   XPDFORM(msg, "session %d destroyed by %s", xpsref->SrvPID(), p->Link()->ID);
    p->Client()->TerminateSessions(kXPD_AnyServer, xpsref,
                                   msg.c_str(), Pipe(), fMgr->ChangeOwn());
 
