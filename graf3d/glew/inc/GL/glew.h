@@ -195,7 +195,11 @@ typedef _W64 int ptrdiff_t;
  */
 
 #include <stddef.h>
+#ifndef __sun
 #include <stdint.h>
+#else
+#include <inttypes.h>
+#endif
 
 #define GLEW_APIENTRY_DEFINED
 #define APIENTRY
