@@ -108,6 +108,8 @@ TFile * refFile = 0;
 const char* refFileName = "http://root.cern.ch/files/stressHistogram.5.18.00.root";
 
 TRandom2 r;
+// set to zero if want to run different every time
+const int initialSeed = 111;   
 
 typedef bool ( * pointer2Test) ();
 
@@ -1197,7 +1199,7 @@ bool testMulSparse()
 
    s1->Multiply(s2);
 
-   bool ret = equals("MultSparse", s3, s1, cmpOptNone, 1E-13);
+   bool ret = equals("MultSparse", s3, s1, cmpOptNone, 1E-10);
    delete s2;
    delete s3;
    return ret;
@@ -5164,7 +5166,6 @@ private:
 
    bool buildWithWeights;
 
-   TRandom2 r;
    
 public:
    ProjectionTester()
@@ -5795,7 +5796,7 @@ public:
 
 int stressHistogram()
 {
-   r.SetSeed(0);
+   r.SetSeed(initialSeed);
 
    int GlobalStatus = false;
    int status = false;
@@ -6000,7 +6001,7 @@ int stressHistogram()
    }
    GlobalStatus += status;
 
-   // Test 12
+    // Test 12
    // Reference Tests
    const unsigned int numberOfRefRead = 7;
    pointer2Test refReadTestPointer[numberOfRefRead] = { testRefRead1D,  testRefReadProf1D,
@@ -6346,6 +6347,7 @@ int main(int argc, char** argv)
       delete theApp;
       theApp = 0;
    }
+
 
    return ret;
 }
