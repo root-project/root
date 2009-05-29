@@ -62,7 +62,9 @@ Reflex::FunctionBuilder::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
 Reflex::FunctionBuilder &
 Reflex::FunctionBuilder::EnableCallback( const bool enable /* = true */ ) {
-//-------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// Enable (or disable) the calling of the callback when this object is 
+// destructed.
    fCallbackEnabled = enable;
    return * this;
 }
@@ -156,6 +158,8 @@ void Reflex::FunctionBuilderImpl::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
 void Reflex::FunctionBuilderImpl::EnableCallback(const bool enable /*= true*/) {
 //-------------------------------------------------------------------------------
+// Enable (or disable) the calling of the callback when this object is 
+// destructed.
    fCallbackEnabled = enable;
 }
 

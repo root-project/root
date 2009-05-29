@@ -64,7 +64,7 @@ void CINTScopeBuilder::Setup(const Scope scope)
       taginfo.tagtype = 'c'; // class
    }
    else if (sname.find('<') != string::npos) { // check for class template-id
-     taginfo.tagtype = 'c'; // class template-id
+      taginfo.tagtype = 'c'; // class template-id
    }
    int tagnum = G__defined_tagname(taginfo.tagname, 2); // check if cint knows this scope
    if (tagnum != -1) {

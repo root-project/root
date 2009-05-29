@@ -26,6 +26,8 @@ namespace Cintex {
 
 int CINTTypedefBuilder::Setup(const Type& t)
 {
+   // Additional setup for this typedef in CINT.
+
    if (!t.IsTypedef())  {
       return -1;
    }
@@ -66,6 +68,8 @@ int CINTTypedefBuilder::Setup(const Type& t)
 
 void CINTTypedefBuilder::Set(const char* name, const char* value)
 {
+   // Set the tagnum for this typedef.
+
    G__linked_taginfo taginfo;
    taginfo.tagnum = -1;
    taginfo.tagtype = 'c';

@@ -77,7 +77,9 @@ Reflex::EnumBuilder &  Reflex::EnumBuilder::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
 Reflex::EnumBuilder & Reflex::EnumBuilder::EnableCallback( const bool enable
                                                            /* = true */ ) {
-//-------------------------------------------------------------------------------
+   // Enable (or disable) the calling of the callback when this object is 
+   // destructed.
+
    fCallbackEnabled = enable;
    return *this;
 }

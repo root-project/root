@@ -63,11 +63,11 @@ void CINTVariableBuilder::Setup(const Member mbr)
    Type mbr_final_type = mbr.TypeOf().FinalType();
    if (!mbr_final_type) {
       if (mbr.IsTransient()) {
-	 if (Cintex::Debug()) {
-	    cout << "Cintex: Ignore transient member: " << mbr.Name(SCOPED) << " [No valid reflection class]" << endl;
-	 }
+         if (Cintex::Debug()) {
+            cout << "Cintex: Ignore transient member: " << mbr.Name(SCOPED) << " [No valid reflection class]" << endl;
+         }
          //cerr << endl << endl << "End CINTVariableBuilder::Setup()" << endl << endl;
-	 return;
+         return;
       }
       if (Cintex::Debug())  {
          cout << "Cintex: WARNING: Member: " << mbr.Name(SCOPED) << " [No valid reflection class]" << endl;
@@ -87,42 +87,42 @@ void CINTVariableBuilder::Setup(const Member mbr)
       Type pointed_at_type = mbr.TypeOf();
       for (; pointed_at_type.IsTypedef(); pointed_at_type = pointed_at_type.ToType()) {}
       for (; pointed_at_type.IsPointer(); pointed_at_type = pointed_at_type.ToType()) {
-	 ++member_reftype;
+         ++member_reftype;
       }
       CintTypeDesc cint_type_desc = CintType(pointed_at_type);
       member_type = cint_type_desc.first;
       if (member_reftype)  {
-	 member_type = toupper(member_type);
-	 if (member_reftype == 1) {
-	    member_reftype = 0;
-	 }
+         member_type = toupper(member_type);
+         if (member_reftype == 1) {
+            member_reftype = 0;
+         }
       }
       //
       //  Get data member tagnum and typenum.
       //
       if (cint_type_desc.first == 'u')  {
-	 if (mbr.Properties().HasProperty("iotype")) {
-	    member_tagnum = CintTag(mbr.Properties().PropertyAsString("iotype"));
-	 }
-	 else {
-	    member_tagnum = CintTag(cint_type_desc.second);
-	 }
+         if (mbr.Properties().HasProperty("iotype")) {
+            member_tagnum = CintTag(mbr.Properties().PropertyAsString("iotype"));
+         }
+         else {
+            member_tagnum = CintTag(cint_type_desc.second);
+         }
 #if defined(_WIN32) && !defined(__CINT__)
-	 typedef __int64 longlong;
-	 typedef unsigned __int64 ulonglong;
+         typedef __int64 longlong;
+         typedef unsigned __int64 ulonglong;
 #else // _WIN32 && !__CINT__
-	 typedef long long int longlong;
-	 typedef unsigned long long int ulonglong;
+         typedef long long int longlong;
+         typedef unsigned long long int ulonglong;
 #endif // _WIN32 && !__CINT__
-	 if (pointed_at_type.TypeInfo() == typeid(longlong)) {
-	    G__loadlonglong(&member_tagnum, &member_typenum, G__LONGLONG);
-	 }
-	 else if (pointed_at_type.TypeInfo() == typeid(ulonglong)) {
-	    G__loadlonglong(&member_tagnum, &member_typenum, G__ULONGLONG);
-	 }
-	 else if (pointed_at_type.TypeInfo() == typeid(long double)) {
-	    G__loadlonglong(&member_tagnum, &member_typenum, G__LONGDOUBLE);
-	 }
+         if (pointed_at_type.TypeInfo() == typeid(longlong)) {
+            G__loadlonglong(&member_tagnum, &member_typenum, G__LONGLONG);
+         }
+         else if (pointed_at_type.TypeInfo() == typeid(ulonglong)) {
+            G__loadlonglong(&member_tagnum, &member_typenum, G__ULONGLONG);
+         }
+         else if (pointed_at_type.TypeInfo() == typeid(long double)) {
+            G__loadlonglong(&member_tagnum, &member_typenum, G__LONGDOUBLE);
+         }
       }
    }
    //
@@ -190,8 +190,8 @@ void CINTVariableBuilder::Setup(const Member mbr)
    else if (
       mbr_final_type.IsClass() &&
       (
-	 IsDerivedFrom(mbr_final_type, ref_t) ||
-	 IsDerivedFrom(mbr_final_type, tok_t)
+         IsDerivedFrom(mbr_final_type, ref_t) ||
+         IsDerivedFrom(mbr_final_type, tok_t)
       )
    ) {
       comment = "|| " + comment;
@@ -261,6 +261,8 @@ CINTVariableBuilder::~CINTVariableBuilder()
 //______________________________________________________________________________
 void CINTVariableBuilder::Setup()
 {
+   // Insure the 'scopes' for this variable are setup properly.
+
    CINTScopeBuilder::Setup(fVariable.TypeOf());
    Scope scope = fVariable.DeclaringScope();
    CINTScopeBuilder::Setup(scope);

@@ -142,6 +142,8 @@ namespace Cintex {
 //______________________________________________________________________________
 void CINTFunctionBuilder::Setup(ROOT::Reflex::Member function)
 {
+   // Insure that the Cint specific data is set for the given function.
+
    Type rt = function.TypeOf().ReturnType();
    int ret_typedeft = -1;
    if (rt.IsTypedef()) {
@@ -243,6 +245,8 @@ CINTFunctionBuilder::~CINTFunctionBuilder()
 //______________________________________________________________________________
 void CINTFunctionBuilder::Setup()
 {
+   // Insure that the 'scopes' for the function are properly setup.
+
    Scope scope = fFunction.DeclaringScope();
    bool is_global = scope.IsTopScope();
    CINTScopeBuilder::Setup(fFunction.TypeOf());

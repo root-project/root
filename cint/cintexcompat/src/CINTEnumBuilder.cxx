@@ -41,7 +41,7 @@ void CINTEnumBuilder::Setup(const Type& e)
       // the e's first member is already known to CINT:
       if (!e.DataMemberSize() || cintEnum.NDataMembers()) {
          if (!e.DataMemberSize(INHERITEDMEMBERS_NO) || cintEnum.NDataMembers()) {
-	    return;
+            return;
          }
       }
    }
@@ -81,10 +81,10 @@ void CINTEnumBuilder::Setup(const Type& e)
       stringstream s;
       s << e.DataMemberAt(i, INHERITEDMEMBERS_NO).Name() << "=";
       if (isCPPMacroEnum) {
-	 s << (const char*) e.DataMemberAt(i, INHERITEDMEMBERS_NO).Offset();
+         s << (const char*) e.DataMemberAt(i, INHERITEDMEMBERS_NO).Offset();
       }
       else {
-	 s << (int) e.DataMemberAt(i, INHERITEDMEMBERS_NO).Offset();
+         s << (int) e.DataMemberAt(i, INHERITEDMEMBERS_NO).Offset();
       }
       string item = s.str();
       if (Cintex::Debug()) {

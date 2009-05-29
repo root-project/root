@@ -111,21 +111,21 @@ public: // Public Interface.
          .AddFunctionMember(FunctionTypeBuilder(t_bool), "PropagateClassTypedefs", PropagateClassTypedefs, 0, 0, PUBLIC | STATIC)
          .AddFunctionMember(FunctionTypeBuilder(t_void, t_bool), "SetPropagateClassTypedefs", SetPropagateClassTypedefs, 0, 0, PUBLIC | STATIC);
 
-      G__linked_taginfo G__mydictLN_ROOT = { "ROOT" , 110 , -1 };
-      G__mydictLN_ROOT.tagnum = -1 ;
-      G__get_linked_tagnum_fwd(&G__mydictLN_ROOT);
+      G__linked_taginfo mydictLN_ROOT = { "ROOT" , 110 , -1 };
+      mydictLN_ROOT.tagnum = -1 ;
+      G__get_linked_tagnum_fwd(&mydictLN_ROOT);
 
-      G__linked_taginfo G__mydictLN_Cintex = { "Cintex" , 110 , -1 };
-      G__mydictLN_Cintex.tagnum = -1 ;
-      G__get_linked_tagnum_fwd(&G__mydictLN_Cintex);
+      G__linked_taginfo mydictLN_Cintex = { "Cintex" , 110 , -1 };
+      mydictLN_Cintex.tagnum = -1 ;
+      G__get_linked_tagnum_fwd(&mydictLN_Cintex);
 
-      G__linked_taginfo G__mydictLN_ROOTcLcLCintex = { "ROOT::Cintex" , 110 , -1 };
-      G__mydictLN_ROOTcLcLCintex.tagnum = -1 ;
-      G__get_linked_tagnum_fwd(&G__mydictLN_ROOTcLcLCintex);
+      G__linked_taginfo mydictLN_ROOTcLcLCintex = { "ROOT::Cintex" , 110 , -1 };
+      mydictLN_ROOTcLcLCintex.tagnum = -1 ;
+      G__get_linked_tagnum_fwd(&mydictLN_ROOTcLcLCintex);
 
-      G__linked_taginfo G__mydictLN_ROOTcLcLCintexcLcLCintex = { "ROOT::Cintex::Cintex" , 99 , -1 };
-      G__mydictLN_ROOTcLcLCintexcLcLCintex.tagnum = -1 ;
-      G__get_linked_tagnum_fwd(&G__mydictLN_ROOTcLcLCintexcLcLCintex);
+      G__linked_taginfo mydictLN_ROOTcLcLCintexcLcLCintex = { "ROOT::Cintex::Cintex" , 99 , -1 };
+      mydictLN_ROOTcLcLCintexcLcLCintex.tagnum = -1 ;
+      G__get_linked_tagnum_fwd(&mydictLN_ROOTcLcLCintexcLcLCintex);
 
       Type outer = Type::ByName("Cintex");
       ::ROOT::Cintex::CINTClassBuilder::Get(outer).Setup();
@@ -144,18 +144,18 @@ static Cintex_dict_t s_dict;
 
 //______________________________________________________________________________
 static const char* btypes[] = {
-  "bool"
-, "char"
-, "unsigned char"
-, "short"
-, "unsigned short"
-, "int"
-, "unsigned int"
-, "long"
-, "unsigned long"
-, "float"
-, "double"
-, "string"
+   "bool"
+   , "char"
+   , "unsigned char"
+   , "short"
+   , "unsigned short"
+   , "int"
+   , "unsigned int"
+   , "long"
+   , "unsigned long"
+   , "float"
+   , "double"
+   , "string"
 };
 
 //______________________________________________________________________________

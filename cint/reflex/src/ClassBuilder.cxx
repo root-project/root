@@ -172,6 +172,9 @@ void Reflex::ClassBuilderImpl::AddProperty(const char* key, Any value)
 //______________________________________________________________________________
 void Reflex::ClassBuilderImpl::EnableCallback(bool enable /*= true*/)
 {
+   // Enable (or disable) the calling of the callback when this object is 
+   // destructed.
+
    fCallbackEnabled = enable;
 }
 
@@ -272,6 +275,9 @@ Reflex::ClassBuilder& Reflex::ClassBuilder::addUnion(const char* nam, const char
 //______________________________________________________________________________
 Reflex::ClassBuilder& Reflex::ClassBuilder::EnableCallback(bool enable /*=true*/)
 {
+   // Enable (or disable) the calling of the callback when this object is 
+   // destructed.
+
    fClassBuilderImpl.EnableCallback(enable);
    return *this;
 }

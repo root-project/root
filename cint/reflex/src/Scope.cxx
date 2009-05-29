@@ -160,6 +160,7 @@ bool Reflex::Scope::HasBase( const Type & cl ) const {
 //-------------------------------------------------------------------------------
 bool Reflex::Scope::IsPrivate() const {
 //-------------------------------------------------------------------------------
+// True if the the type's access is private.
    return operator Type().IsPrivate(); 
 }
 
@@ -167,6 +168,7 @@ bool Reflex::Scope::IsPrivate() const {
 //-------------------------------------------------------------------------------
 bool Reflex::Scope::IsProtected() const {
 //-------------------------------------------------------------------------------
+// True if the the type's access is protected.
    return operator Type().IsProtected(); 
 }
 
@@ -174,6 +176,7 @@ bool Reflex::Scope::IsProtected() const {
 //-------------------------------------------------------------------------------
 bool Reflex::Scope::IsPublic() const {
 //-------------------------------------------------------------------------------
+// True if the the type is publicly accessible.
    return operator Type().IsPublic(); 
 }
 
@@ -533,6 +536,7 @@ void Reflex::Scope::RemoveSubTypeTemplate( const TypeTemplate & tt ) const {
 //-------------------------------------------------------------------------------
 size_t Reflex::Scope::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
+// Return the number of template arguments.
    return operator Type().TemplateArgumentSize();
 }
 
@@ -540,6 +544,7 @@ size_t Reflex::Scope::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
 Reflex::Type_Iterator Reflex::Scope::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
+// Return the 'begin' of the iterator on the template arguments.
    return operator Type().TemplateArgument_Begin();
 }
 
@@ -547,6 +552,7 @@ Reflex::Type_Iterator Reflex::Scope::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
 Reflex::Type_Iterator Reflex::Scope::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
+// Return the 'end' of the iterator on the template arguments.
    return operator Type().TemplateArgument_End();
 }
 
@@ -554,6 +560,7 @@ Reflex::Type_Iterator Reflex::Scope::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
 Reflex::Reverse_Type_Iterator Reflex::Scope::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
+// Return the 'begin' of the reverse iterator on the template arguments.
    return operator Type().TemplateArgument_RBegin();
 }
 
@@ -561,6 +568,7 @@ Reflex::Reverse_Type_Iterator Reflex::Scope::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
 Reflex::Reverse_Type_Iterator Reflex::Scope::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
+// Return the 'end' of the reverse iterator on the template arguments.
    return operator Type().TemplateArgument_REnd();
 }
 

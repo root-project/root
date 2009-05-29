@@ -81,6 +81,7 @@ Reflex::Instance* Reflex::Instance::fgSingleton = 0;
 Reflex::Instance& Reflex::Instance::CreateReflexInstance() {
 //-------------------------------------------------------------------------------
 // Initialize the singleton.
+
    static Reflex::Instance instance((Reflex::Instance*)0);
    return instance;
 }
@@ -88,7 +89,7 @@ Reflex::Instance& Reflex::Instance::CreateReflexInstance() {
 //-------------------------------------------------------------------------------
 Reflex::Instance::Instance() {
 //-------------------------------------------------------------------------------
-// Ensure that Reflex is initialized.
+// Ensure that Reflex is properly initialized.
    CreateReflexInstance();
 }
 
@@ -181,7 +182,8 @@ Reflex::Instance::Instance(Instance*) {
 //-------------------------------------------------------------------------------
 void Reflex::Instance::Shutdown() {
 //-------------------------------------------------------------------------------
-   // function to be called at tear down of Reflex, removes all memory allocations
+// Function to be called at tear down of Reflex, removes all memory allocations.
+
    MemberTemplateName::CleanUp();
    TypeTemplateName::CleanUp();
    TypeName::CleanUp();
@@ -193,7 +195,8 @@ void Reflex::Instance::Shutdown() {
 
 Reflex::Instance::~Instance() {
 //-------------------------------------------------------------------------------
-   // Destructor
+// Destructor.  This will shutdown Reflex only if this instance is the 'main'
+// instance.
 
    if (fgSingleton == this)
       Shutdown();

@@ -44,7 +44,8 @@ Reflex::Member Reflex::Type::AddDataMember( const char * nam,
                                             unsigned int modifiers /* = 0 */,
                                             char * interpreterOffset /* = 0 */
                                            ) const {
-   //-------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------
+// Add a member to this type.
    return operator Scope().AddDataMember( nam, typ, offs, modifiers, interpreterOffset );
 }
 
@@ -56,7 +57,8 @@ Reflex::Member Reflex::Type::AddFunctionMember( const char * nam,
                                                 void * stubCtx,
                                                 const char * params,
                                                 unsigned int modifiers ) const {
-   //-------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------
+// Add a function to this type.
    return operator Scope().AddFunctionMember( nam, typ, stubFP, stubCtx, params, modifiers );
 }
 
