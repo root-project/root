@@ -10,14 +10,18 @@ BEGIN_HTML
     well as for raw-data visualization.
 
     <p>
-    Papers describing Eve (still using the old name - Reve):
+    Papers describing Eve (older ones still using the old name - Reve):
     <ul>
+
+    <li> <a
+    href="http://pos.sissa.it//archive/conferences/070/103/ACAT08_103.pdf">
+    EVE - Event Visualization Environment of the ROOT framework</a>,
+    presented at ACAT 2008.
 
     <li> <a
     href="http://indico.cern.ch/contributionDisplay.py?contribId=25&confId=13356">
     Event Visualization Environment of the ALICE experiment</a>,
-    presented at ROOT Workshop 2007
-
+    presented at ROOT Workshop 2007.
 
     <li> <a
     href="http://indico.cern.ch/contributionDisplay.py?contribId=442&sessionId=23&confId=3580">Raw-data
