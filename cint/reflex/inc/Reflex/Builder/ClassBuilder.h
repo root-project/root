@@ -125,6 +125,9 @@ private:
       /** last added MemberAt */
       Member fLastMember;    
 
+      /** flag, true if this is truly building a new class */
+      bool fNewClass;
+
       /** flag, fire callback in destructor */
       bool fCallbackEnabled;
 

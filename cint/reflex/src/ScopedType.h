@@ -119,6 +119,16 @@ public:
    */
    TypeName* TypeNameGet() const;
 
+   /**
+    * @return all the modifiers
+    */
+   virtual unsigned int Modifiers() const;
+   
+   /**
+    * @return all the modifiers
+    */
+   virtual void SetModifiers(unsigned int modifiers);
+
 protected:
    /**
     * The modifiers of this scoped type
@@ -220,6 +230,20 @@ inline Reflex::TypeName * Reflex::ScopedType::TypeNameGet() const
 {
 //-------------------------------------------------------------------------------
    return fTypeName;
+}
+
+//-------------------------------------------------------------------------------
+inline unsigned int Reflex::ScopedType::Modifiers() const
+{
+   //-------------------------------------------------------------------------------
+   return fModifiers;
+}
+
+//-------------------------------------------------------------------------------
+inline void Reflex::ScopedType::SetModifiers(unsigned int modifiers)
+{
+   //-------------------------------------------------------------------------------
+   fModifiers = modifiers;
 }
 
 #endif // Reflex_ScopedType
