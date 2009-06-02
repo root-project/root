@@ -108,7 +108,7 @@ class TProofDataSetManager;
 // 13 -> 14: new proofserv environment setting
 // 14 -> 15: add support for entry lists; new version of TFileInfo
 // 15 -> 16: add support for generic non-data based processing
-// 16 -> 17: new dataset handling system; support for TFileCollection processing 
+// 16 -> 17: new dataset handling system; support for TFileCollection processing
 // 17 -> 18: support for reconnection on daemon restarts
 // 18 -> 19: TProofProgressStatus used in kPROOF_PROGRESS, kPROOF_STOPPROCESS
 //           and kPROOF_GETNEXTPACKET messages in Master - worker communication
@@ -158,11 +158,10 @@ typedef void (*PrintProgress_t)(Long64_t tot, Long64_t proc, Float_t proctime);
 // PROOF Interrupt signal handler
 class TProofInterruptHandler : public TSignalHandler {
 private:
+   TProof *fProof;
 
    TProofInterruptHandler(const TProofInterruptHandler&); // Not implemented
    TProofInterruptHandler& operator=(const TProofInterruptHandler&); // Not implemented
-
-   TProof *fProof;
 public:
    TProofInterruptHandler(TProof *p)
       : TSignalHandler(kSigInterrupt, kFALSE), fProof(p) { }
@@ -172,12 +171,11 @@ public:
 // Input handler for messages from TProofServ
 class TProofInputHandler : public TFileHandler {
 private:
+   TSocket *fSocket;
+   TProof  *fProof;
 
    TProofInputHandler(const TProofInputHandler&); // Not implemented
    TProofInputHandler& operator=(const TProofInputHandler&); // Not implemented
-
-   TSocket *fSocket;
-   TProof  *fProof;
 public:
    TProofInputHandler(TProof *p, TSocket *s);
    Bool_t Notify();
