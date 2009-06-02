@@ -66,6 +66,7 @@ New web site for <a href="http://root.cern.ch/drupal/content/interpreter">ROOT's
       <li>Satisfy python 2.6.2 and silence its warnings.</li>
       <li>Rename GCC_XML output file to *_gccxmlout.xml, so it is easier to distinguish it from selection.xml file.</li>
       <li>Improve the initialization and shutdown of Reflex; remove the memory leaks due to the reflection containers not beeing cleared at the end of the process.</li>
+      <li>Modified the behavior of Reflex dictionary (namely ClassBuilder).  Rather than unconditionally erasing existing information, a 2nd ClassBuilder will either add new information or check that it is compatible with the existing information (and throwing an exception in case of problems).  To be able to over-ride an existing definition, unload the class before calling ClassBuilder.</li>
     </ul>
   </li>
   <li><em>Cintex</em>
