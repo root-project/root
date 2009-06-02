@@ -303,7 +303,7 @@ char *TGL5DDataSet::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 }
 
 //______________________________________________________________________________
-void TGL5DDataSet::Paint(Option_t */*option*/)
+void TGL5DDataSet::Paint(Option_t * /*option*/)
 {
    //Paint.
    fPainter->Paint("dummyoption");
