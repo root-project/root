@@ -960,8 +960,10 @@ XrdSecCredentials *XrdSecProtocolpwd::getCredentials(XrdSecParameters *parm,
    //
    // Get the status bucket, if any
    if ((bck = bmai->GetBucket(kXRS_status))) {
-      memcpy(&SessionSt, bck->buffer, sizeof(pwdStatus_t));
-      SessionSt.options = ntohs(SessionSt.options);
+      int pst = 0;
+      memcpy(&pst,bck->buffer,sizeof(pwdStatus_t));
+      pst = ntohl(pst);
+      memcpy(&SessionSt, &pst, sizeof(pwdStatus_t));
       bmai->Deactivate(kXRS_status);
    } else {
       SessionSt.ctype = kpCT_normal;
@@ -1096,11 +1098,10 @@ XrdSecCredentials *XrdSecProtocolpwd::getCredentials(XrdSecParameters *parm,
    }
    //
    // Add / Update status
-   char *pst = new char[sizeof(pwdStatus_t)];
-   SessionSt.options = htons(SessionSt.options);
+   int *pst = (int *) new char[sizeof(pwdStatus_t)];
    memcpy(pst,&SessionSt,sizeof(pwdStatus_t));
-   SessionSt.options = ntohs(SessionSt.options);
-   if (bmai->AddBucket(pst, sizeof(pwdStatus_t), kXRS_status) != 0) {
+   *pst = htonl(*pst);
+   if (bmai->AddBucket((char *)pst,sizeof(pwdStatus_t), kXRS_status) != 0) {
       DEBUG("problems adding bucket kXRS_status");
    }
    //
@@ -1227,8 +1228,10 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
    //
    // Get handshake status
    if ((bck = bmai->GetBucket(kXRS_status))) {
-      memcpy(&SessionSt, bck->buffer, sizeof(pwdStatus_t));
-      SessionSt.options = ntohs(SessionSt.options);
+      int pst = 0;
+      memcpy(&pst,bck->buffer,sizeof(pwdStatus_t));
+      pst = ntohl(pst);
+      memcpy(&SessionSt, &pst, sizeof(pwdStatus_t));
       bmai->Deactivate(kXRS_status);
    } else {
       DEBUG("no bucket kXRS_status found in main buffer");
@@ -1529,11 +1532,10 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
          }
       //
       // We set some options in the option field of a pwdStatus_t structure
-      char *pst = new char[sizeof(pwdStatus_t)];
-      SessionSt.options = htons(SessionSt.options);
+      int *pst = (int *) new char[sizeof(pwdStatus_t)];
       memcpy(pst,&SessionSt,sizeof(pwdStatus_t));
-      SessionSt.options = ntohs(SessionSt.options);
-      if (bmai->AddBucket(pst,sizeof(pwdStatus_t), kXRS_status) != 0) {
+      *pst = htonl(*pst);
+      if (bmai->AddBucket((char *)pst,sizeof(pwdStatus_t), kXRS_status) != 0) {
          DEBUG("problems adding bucket kXRS_status");
       }
       //
@@ -1986,7 +1988,7 @@ bool XrdSecProtocolpwd::CheckCredsAFS(XrdSutBucket *creds, int ctype)
 {
    // Check AFS credentials, either in plain (ctype==kpCT_afs) or
    // encrypted (ctype==kpCT_afsenc) form
-   EPNAME("CheckAFS");
+   EPNAME("CheckCredsAFS");
    bool match = 0;
    int rc = 0;
 
