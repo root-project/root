@@ -37,7 +37,7 @@ class TList;
 class TSocket;
 
 
-class TMonitor : public TObject , public TQObject {
+class TMonitor : public TObject, public TQObject {
 
 friend class TSocketHandler;
 friend class TTimeOutTimer;
@@ -48,8 +48,7 @@ private:
    TList    *fActive;     //list of sockets to monitor
    TList    *fDeActive;   //list of (temporary) disabled sockets
    TSocket  *fReady;      //socket which is ready to be read or written
-   Bool_t    fMainLoop;   //true if monitoring sockets within the main
-                          //event loop
+   Bool_t    fMainLoop;   //true if monitoring sockets within the main event loop
    Bool_t    fInterrupt;  //flags an interrupt to Select
 
    void  SetReady(TSocket *sock);

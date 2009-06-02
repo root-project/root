@@ -117,7 +117,7 @@ TMonitor::TMonitor(Bool_t mainloop) : TObject() , TQObject()
 }
 
 //______________________________________________________________________________
-TMonitor::TMonitor(const TMonitor &m) : TObject() , TQObject() 
+TMonitor::TMonitor(const TMonitor &m) : TObject() , TQObject()
 {
    // Copy constructor
 
@@ -149,7 +149,7 @@ TMonitor::TMonitor(const TMonitor &m) : TObject() , TQObject()
 //______________________________________________________________________________
 TMonitor::~TMonitor()
 {
-   // Cleanup the monitor object. Does not delete socket being monitored.
+   // Cleanup the monitor object. Does not delete sockets being monitored.
 
    fActive->Delete();
    SafeDelete(fActive);
@@ -168,6 +168,7 @@ void TMonitor::Add(TSocket *sock, Int_t interest)
 
    fActive->Add(new TSocketHandler(this, sock, interest, fMainLoop));
 }
+
 //______________________________________________________________________________
 void TMonitor::SetInterest(TSocket *sock, Int_t interest)
 {
@@ -410,7 +411,7 @@ void TMonitor::SetReady(TSocket *sock)
    // Called by TSocketHandler::Notify() to signal which socket is ready
    // to be read or written. User should not call this routine. The ready
    // socket will be returned via the Select() user function.
-   // Ready(TSocket *sock) signal is emitted.
+   // The Ready(TSocket *sock) signal is emitted.
 
    fReady = sock;
    Ready(fReady);
