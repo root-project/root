@@ -146,6 +146,9 @@ endif
 ifeq ($(BUILDGLITE),yes)
 MODULES      += net/glite
 endif
+ifeq ($(BUILDBONJOUR),yes)
+MODULES      += net/bonjour
+endif
 ifeq ($(BUILDCHIRP),yes)
 MODULES      += io/chirp
 endif
@@ -281,7 +284,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 cint/cint7 roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat \
-                math/genvector
+                math/genvector net/bonjour
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

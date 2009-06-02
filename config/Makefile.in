@@ -151,6 +151,11 @@ GAW_CPPFLAGS   := $(filter-out /usr/include, @gaw_cppflags@)
 
 BUILDMEMSTAT   := @buildmemstat@
 
+BUILDBONJOUR   := @buildbonjour@
+DNSSDLBDIR     := @dnssdlibdir@
+DNSSDLIB       := @dnssdlib@
+DNSSDINCDIR    := $(filter-out /usr/include, @dnssdincdir@)
+
 BUILDCHIRP     := @buildchirp@
 CHIRPLIBDIR    := @chirplibdir@
 CHIRPCLILIB    := @chirplib@

@@ -37,6 +37,7 @@ options="                    \
    enable_alien              \
    enable_asimage            \
    enable_astiff             \
+   enable_bonjour            \
    enable_builtin_afterimage \
    enable_builtin_ftgl       \
    enable_builtin_freetype   \
@@ -155,6 +156,7 @@ FFTW3            \
 PYTHONDIR        \
 DCACHE           \
 CHIRP            \
+DNSSD            \
 ALIEN            \
 ASIMAGE          \
 LDAP             \
@@ -1007,6 +1009,7 @@ enable/disable options, prefix with either --enable- or --disable-
   alien              AliEn support, requires libgapiUI from ALICE
   asimage            Image processing support, requires libAfterImage
   astiff             Include tiff support in image processing
+  bonjour            Bonjour support, requires libdns_sd
   builtin-afterimage Built included libAfterImage, or use system libAfterImage
   builtin-ftgl       Built included libFTGL, or use system libftgl
   builtin-freetype   Built included libfreetype, or use system libfreetype
@@ -1079,6 +1082,8 @@ with options, prefix with --with-, enables corresponding support
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
   dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
+  dnssd-libdir       Bonjour support, location of libdns_sd
+  dnssd-incdir       Bonjour support, location of dns_sd.h
   ftgl-incdir        FTGL support, location of FTGL.h
   ftgl-libdir        FTGL support, location of libftgl
   fftw3-incdir       FFTW3 support, location of fftw3.h
@@ -1287,6 +1292,8 @@ if test $# -gt 0 ; then
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dicttype=*)       dicttype=$optarg      ;;
+      --with-dnssd-incdir=*)   dnssdincdir=$optarg   ; enable_bonjour="yes" ;;
+      --with-dnssd-libdir=*)   dnssdlibdir=$optarg   ; enable_bonjour="yes" ;;
       --with-ftgl-incdir=*)    ftglincdir=$optarg    ; enable_builtin_ftgl=no;;
       --with-ftgl-libdir=*)    ftgllibdir=$optarg    ; enable_builtin_ftgl=no;;
       --with-fftw3-incdir=*)   fftw3incdir=$optarg   ; enable_fftw3="yes"   ;;
@@ -2802,6 +2809,36 @@ if test ! "x$enable_chirp" = "xno" ; then
 fi
 check_explicit "$enable_chirp" "$enable_chirp_explicit" \
      "Explicitly required Chirp dependencies not fulfilled"
+
+######################################################################
+#
+### echo %%% Bonjour Support - Third party libraries
+#
+# (See http://developer.apple.com/networking/bonjour/index.html)
+#
+# By default available on MacOS X and on Linux via the Avahi package.
+#
+# Check for libdns_sd
+#
+if test ! "x$enable_bonjour" = "xno" ; then
+    # Bonjour is built-in on MacOS X (i.e. available in libSystem)
+    if test ! "x$platform" = "xmacosx"; then
+        check_header "dns_sd.h" "$dnssdincdir" $DNSSD $DNSSD/include \
+	/opt/dnssd/include /usr/include /usr/local/include
+        dnssdincdir=$found_dir
+
+        check_library "libdns_sd" "$enable_shared" "$dnssdlibdir" \
+	$DNSSD $DNSSD/lib /opt/dnssd/lib /usr/lib /usr/local/lib
+        dnssdlib=$found_lib
+        dnssdlibdir=$found_dir
+
+        if test "x$dnssdincdir" = "x" || test "x$dnssdlib" = "x"; then
+            enable_bonjour="no"
+        fi
+    fi
+fi
+check_explicit "$enable_bonjour" "$enable_bonjour_explicit" \
+     "Explicitly required Bonjour dependencies not fulfilled"
 
 ######################################################################
 #
@@ -4324,7 +4361,7 @@ else
     result "no"
 fi
 
-if test "x${enable_cint5}${enable_cint7}" = "x"; then 
+if test "x${enable_cint5}${enable_cint7}" = "x"; then
    result "`basename $0`: Need to enable at least one of cint5 and cint7"
    exit 1
 fi
@@ -4613,6 +4650,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_g4root"   = "xyes" && pl="$pl root-plugin-montecarlo-g4root"
     test "x$enable_pythia6"  = "xyes" && pl="$pl root-plugin-montecarlo-pythia6"
     test "x$enable_alien"    = "xyes" && pl="$pl root-plugin-net-alien"
+    test "x$enable_bonjour"  = "xyes" && pl="$pl root-plugin-net-bonjour"
     test "x$enable_globus"   = "xyes" && pl="$pl root-plugin-net-globus"
     test "x$enable_krb5"     = "xyes" && pl="$pl root-plugin-net-krb5"
     test "x$enable_monalisa" = "xyes" && pl="$pl root-plugin-net-monalisa"
@@ -5051,6 +5089,9 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@fftw3incdir@|$fftw3incdir|"          \
     -e "s|@fftw3lib@|$fftw3lib|"                \
     -e "s|@fftw3libdir@|$fftw3libdir|"          \
+    -e "s|@dnssdincdir@|$dnssdincdir|"          \
+    -e "s|@dnssdlib@|$dnssdlib|"                \
+    -e "s|@dnssdlibdir@|$dnssdlibdir|"          \
     -e "s|@mysqlincdir@|$mysqlincdir|"          \
     -e "s|@mysqllib@|$mysqllib|"                \
     -e "s|@mysqllibdir@|$mysqllibdir|"          \
@@ -5141,6 +5182,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildfftw3@|$enable_fftw3|"          \
     -e "s|@buildgfal@|$enable_gfal|"            \
     -e "s|@buildg4root@|$enable_g4root|"        \
+    -e "s|@buildbonjour@|$enable_bonjour|"      \
     -e "s|@buildchirp@|$enable_chirp|"          \
     -e "s|@buildalien@|$enable_alien|"          \
     -e "s|@buildasimage@|$enable_asimage|"      \
