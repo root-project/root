@@ -322,6 +322,8 @@ class ios_base {
 #endif
 };
 
+typedef ios_base ios;
+
 template<class charT, class traits>
 class basic_ios : public ios_base { 
   public:

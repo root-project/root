@@ -105,6 +105,7 @@ inline const char* basenameEx(const std::string& path) {
 #include <unistd.h>
 #include <dirent.h>
 #include <libgen.h>
+#include <limits.h> /* open solaris */
 
 inline const char* directoryname(const dirent* e) {  return e->d_name;  }
 inline const char* dirnameEx(const std::string& path) {

@@ -996,7 +996,7 @@ private:
 
 
 #ifndef G__ANSI
-#if (__GNUC__>=3)  /* ||defined(__SUNPRO_CC)||defined(__SUNPRO_C) */
+#if (__GNUC__>=3) || defined(_STLPORT_VERSION)
 #define G__ANSI
 #endif
 #endif

@@ -38,6 +38,7 @@
 #include <list>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 std::string G__DLLID;
 std::string G__MACRO;
