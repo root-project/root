@@ -264,7 +264,7 @@ bars.
 at the end of the error bars (when option 1 is used).
 By default <tt>np=1</tt>. (np represents the number of pixels).
 
-<a name="GP03a"><h4><u>TGraphErrors</u></h4>
+<a name="GP03a"></a><h4><u>TGraphErrors</u></h4>
 A <tt>TGraphErrors</tt> is a <tt>TGraph</tt> with error bars. The errors are
 defined along X and Y and are symmetric: The left and right errors are the same
 along X and the bottom and up errors are the same along Y.
@@ -375,7 +375,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-<a name="GP03b"><h4><u>TGraphAsymmErrors</u></h4>
+<a name="GP03b"></a><h4><u>TGraphAsymmErrors</u></h4>
 A <tt>TGraphAsymmErrors</tt> is like a <tt>TGraphErrors</tt> but the errors
 defined along X and Y are not symmetric: The left and right errors are
 different along X and the bottom and up errors are different along Y.
@@ -401,7 +401,7 @@ End_Macro
 Begin_Html
 
 
-<a name="GP03c"><h4><u>TGraphBentErrors</u></h4>
+<a name="GP03c"></a><h4><u>TGraphBentErrors</u></h4>
 A <tt>TGraphBentErrors</tt> is like a <tt>TGraphAsymmErrors</tt>.
 An extra parameter allows to bent the error bars to better see them
 when several graphs are drawn on the same plot.
