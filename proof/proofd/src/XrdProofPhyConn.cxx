@@ -102,17 +102,17 @@ bool XrdProofPhyConn::Init(const char *url)
       fPort = fUrl.Port;
       // Check port
       if (fPort <= 0) {
-         struct servent *sent = getservbyname("rootd", "tcp");
+         struct servent *sent = getservbyname("proofd", "tcp");
          if (!sent) {
-            TRACE(XERR, "service 'rootd' not found by getservbyname" <<
-                        ": using default IANA assigned tcp port 1094");
-            fPort = 1094;
+            TRACE(XERR, "service 'proofd' not found by getservbyname" <<
+                        ": using default IANA assigned tcp port 1093");
+            fPort = 1093;
          } else {
             fPort = (int)ntohs(sent->s_port);
             // Update port in url
             fUrl.Port = fPort;
             TRACE(XERR, "getservbyname found tcp port " << fPort <<
-                        " for service 'rootd'");
+                        " for service 'proofd'");
          }
       }
    }
