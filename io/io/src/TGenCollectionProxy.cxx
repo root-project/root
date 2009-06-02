@@ -132,7 +132,64 @@ public:
       Fatal("TGenVectorProxy","At> Logic error - no proxy object set.");
       return 0;
    }
+   
+   virtual void DeleteItem(bool force, void* ptr) const
+   {
+      // Call to delete/destruct individual item
+      if ( force && ptr ) {
+         fVal->DeleteItem(ptr);
+      }
+   }
+};
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//  class TGenBitsetProxy
+//
+//   Local optimization class.
+//
+//   Collection proxies get copied. On copy we switch the type of the
+//   proxy to the concrete STL type. The concrete types are optimized
+//   for element access.
+//
+//////////////////////////////////////////////////////////////////////////
+class TGenBitsetProxy : public TGenCollectionProxy {
+   
+public:
+   TGenBitsetProxy(const TGenCollectionProxy& c) : TGenCollectionProxy(c)
+   {
+      // Standard Constructor.
+   }
+   virtual ~TGenBitsetProxy()
+   {
+      // Standard Destructor.
+   }
+   virtual void* At(UInt_t idx)
+   {
+      // Return the address of the value at index 'idx'
+      
+      // However we can 'take' the address of the content of vector<bool>.
+      if ( fEnv && fEnv->fObject ) {
+         switch( idx ) {
+            case 0:
+               fEnv->fStart = fFirst.invoke(fEnv);
+               fEnv->fIdx = idx;
+               break;
+            default:
+               fEnv->fIdx = idx - fEnv->fIdx;
+               if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
+               fNext.invoke(fEnv);
+               fEnv->fIdx = idx;
+               break;
+         }
+         typedef ROOT::TCollectionProxyInfo::Environ<std::pair<size_t,bool> > EnvType_t;
+         EnvType_t *e = (EnvType_t*)fEnv;
+         return &(e->fIterator.second);
+      }
+      Fatal("TGenVectorProxy","At> Logic error - no proxy object set.");
+      return 0;
+   }
+   
    virtual void DeleteItem(bool force, void* ptr) const
    {
       // Call to delete/destruct individual item
@@ -568,6 +625,9 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
       return new TGenCollectionProxy(*this);
 
    switch(fSTL_type) {
+   case TClassEdit::kBitSet: {
+      return new TGenBitsetProxy(*this);
+   }
    case TClassEdit::kVector: {
       if (fValue->fKind == (EDataType)kBOOL_t) {
          return new TGenVectorBoolProxy(*this);
@@ -676,6 +736,9 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
                fValOffset += (slong - fKey->fSize%slong)%slong;
             }
             break;
+         case TClassEdit::kBitSet:
+            inside[1] = "bool";
+            // Intentional fall through
          default:
             fValue = new Value(inside[1]);
 
@@ -883,6 +946,10 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
          fEnv->fSize = n;
          fResize.invoke(fEnv);
          return fEnv;
+
+      case TClassEdit::kBitSet:
+         // Nothing to do.
+         return fEnv;
       }
    }
    return 0;
@@ -897,6 +964,7 @@ void TGenCollectionProxy::Commit(void* env)
    case TClassEdit::kVector:
    case TClassEdit::kList:
    case TClassEdit::kDeque:
+   case TClassEdit::kBitSet:
       return;
    case TClassEdit::kMap:
    case TClassEdit::kMultiMap:

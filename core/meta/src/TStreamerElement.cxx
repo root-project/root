@@ -1490,10 +1490,11 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    if      (strstr(s,"vector"))   fSTLtype = kSTLvector;
    else if (strstr(s,"list"))     fSTLtype = kSTLlist;
    else if (strstr(s,"deque"))    fSTLtype = kSTLdeque;
-   else if (strstr(s,"map"))      fSTLtype = kSTLmap;
-   else if (strstr(s,"set"))      fSTLtype = kSTLset;
    else if (strstr(s,"multimap")) fSTLtype = kSTLmultimap;
    else if (strstr(s,"multiset")) fSTLtype = kSTLmultiset;
+   else if (strstr(s,"bitset"))   fSTLtype = kSTLbitset;
+   else if (strstr(s,"map"))      fSTLtype = kSTLmap;
+   else if (strstr(s,"set"))      fSTLtype = kSTLset;
    if (fSTLtype == 0) { delete [] s; return;}
    if (dmPointer) fSTLtype += TVirtualStreamerInfo::kOffsetP;
 
@@ -1514,7 +1515,9 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
 
 
    TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(sopen);
-   if (dt) {
+   if (fSTLtype == kSTLbitset) {
+      // Nothing to check
+   } else if (dt) {
       fCtype = dt->GetType();
       if (isPointer) fCtype += TVirtualStreamerInfo::kOffsetP;
    } else {
@@ -1534,7 +1537,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
                // objects themselves are always empty) and we do not have the
                // dictionary/shared library for the container.
                if (GetClassPointer() && GetClassPointer()->IsLoaded()) {
-                  Warning("TStreamerSTL","For %s we could not find any information about the type %s",fTypeName.Data(),sopen);
+                  Warning("TStreamerSTL","For %s we could not find any information about the type %s %d %s",fTypeName.Data(),sopen,fSTLtype,s);
                }
             }
          }
@@ -1634,6 +1637,7 @@ const char *TStreamerSTL::GetInclude() const
    else if (fSTLtype == kSTLset)      sprintf(gIncludeName,"<%s>","set");
    else if (fSTLtype == kSTLmultimap) sprintf(gIncludeName,"<%s>","multimap");
    else if (fSTLtype == kSTLmultiset) sprintf(gIncludeName,"<%s>","multiset");
+   else if (fSTLtype == kSTLbitset)   sprintf(gIncludeName,"<%s>","bitset");
    return gIncludeName;
 }
 

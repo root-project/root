@@ -51,7 +51,8 @@ namespace TClassEdit {
       kMultiMap = 5,
       kSet      = 6,
       kMultiSet = 7,
-      kEnd      = 8
+      kBitSet   = 8,
+      kEnd      = 9
    };
 
 
@@ -59,6 +60,7 @@ namespace TClassEdit {
    bool        IsDefAlloc(const char *alloc, const char *classname);
    bool        IsDefAlloc(const char *alloc, const char *keyclassname, const char *valueclassname);
    bool        IsDefComp (const char *comp , const char *classname);
+   bool        IsSTLBitset(const char *type);
    int         IsSTLCont (const char *type,int testAlloc=0);
    bool        IsStdClass(const char *type);
    bool        IsVectorBool(const char *name);

@@ -474,7 +474,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             Unroll(name, clOfClones, clOfClones, pointer, basketsize, splitlevel+splitSTLP, 31);
             BuildTitle(name);
             return;
-         } else if (((fSTLtype >= TClassEdit::kVector) && (fSTLtype <= TClassEdit::kMultiSet)) || ((fSTLtype >= -TClassEdit::kMultiSet) && (fSTLtype <= -TClassEdit::kVector))) {
+         } else if (((fSTLtype >= TClassEdit::kVector) && (fSTLtype < TClassEdit::kEnd)) || ((fSTLtype > -TClassEdit::kEnd) && (fSTLtype <= -TClassEdit::kVector))) {
             // -- We are an STL container element.
             TClass* contCl = TClass::GetClass(elem_type);
             fCollProxy = contCl->GetCollectionProxy()->Generate();

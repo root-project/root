@@ -486,6 +486,99 @@ namespace ROOT {
    }
 #endif
    
+   template <typename T> class TStdBitsetHelper {
+      // This class is intentionally empty, this is scaffolding to allow the equivalent
+      // of 'template <int N> struct TCollectionProxyInfo::Type<std::bitset<N> >' which 
+      // is not effective in C++ (as of gcc 4.3.3).
+   };
+
+#ifndef __CINT__
+   template <typename Bitset_t> struct TCollectionProxyInfo::Type<ROOT::TStdBitsetHelper<Bitset_t> > : public TCollectionProxyInfo::Address<const bool &>
+   {
+      typedef Bitset_t                Cont_t;
+      typedef std::pair<size_t,bool>  Iter_t;
+      typedef bool                    Value_t;
+      typedef Environ<Iter_t>         Env_t;
+      typedef Env_t                  *PEnv_t;
+      typedef Cont_t                 *PCont_t;
+      typedef Value_t                *PValue_t;
+      
+      virtual ~Type() {}
+      
+      static inline PCont_t object(void* ptr)   {
+         return PCont_t(PEnv_t(ptr)->fObject);
+      }
+      static void* size(void* env)  {
+         PEnv_t  e = PEnv_t(env);
+         e->fSize   = PCont_t(e->fObject)->size();
+         return &e->fSize;
+      }
+      static void* clear(void* env)  {
+         object(env)->reset();
+         return 0;
+      }
+      static void* first(void* env)  {
+         PEnv_t  e = PEnv_t(env);
+         PCont_t c = PCont_t(e->fObject);
+         e->fIterator.first = 0;
+         e->fIterator.second = c->size() > 0 ? c->test(e->fIterator.first) : false ;  // Iterator actually hold the value.
+         e->fSize  = c->size();
+         return 0;
+      }
+      static void* next(void* env)  {
+         PEnv_t  e = PEnv_t(env);
+         PCont_t c = PCont_t(e->fObject);
+         for (; e->fIdx > 0 && e->fIterator.first != c->size(); ++(e->fIterator.first), --e->fIdx){ }
+         e->fIterator.second = (e->fIterator.first != c->size()) ? c->test(e->fIterator.first) : false;
+         return 0;
+      }
+      static void* construct(void*)  {
+         // Nothing to construct.
+         return 0;
+      }
+      static void* collect(void* env)  {
+         PEnv_t   e = PEnv_t(env);
+         PCont_t  c = PCont_t(e->fObject);
+         PValue_t m = PValue_t(e->fStart); // 'start' is a buffer outside the container.
+         for (size_t i=0; i != c->size(); ++i, ++m )
+            *m = c->test(i);
+         return 0;
+      }
+      static void* destruct(void*)  {
+         // Nothing to destruct.
+         return 0;
+      }
+   };
+   
+   template <typename Bitset_t> 
+   struct TCollectionProxyInfo::Pushback<ROOT::TStdBitsetHelper<Bitset_t>  > : public TCollectionProxyInfo::Type<TStdBitsetHelper<Bitset_t> > {
+      typedef Bitset_t         Cont_t;
+      typedef bool             Iter_t;
+      typedef bool             Value_t;
+      typedef Environ<Iter_t>  Env_t;
+      typedef Env_t           *PEnv_t;
+      typedef Cont_t          *PCont_t;
+      typedef Value_t         *PValue_t;
+      
+      static void* resize(void* env)  {
+         PEnv_t  e = PEnv_t(env);
+         e->fIdx = 0;
+         return 0;
+      }
+      static void* feed(void* env)  {
+         PEnv_t   e = PEnv_t(env);
+         PCont_t  c = PCont_t(e->fObject);
+         PValue_t m = PValue_t(e->fStart); // Here start is actually a 'buffer' outside the container.
+         for (size_t i=0; i<e->fSize; ++i, ++m)
+            c->set(i,*m);
+         return 0;
+      }
+      static int value_offset()  {
+         return 0;
+      }
+   };
+#endif
+   
 }
 
 #endif

@@ -1253,7 +1253,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
    }
 
    // Handle emulated classes and STL containers specially.
-   if (!fClassInfo || TClassEdit::IsSTLCont(GetName(), 0)) {
+   if (!fClassInfo || TClassEdit::IsSTLCont(GetName(), 0) || TClassEdit::IsSTLBitset(GetName())) {
       // We are an emulated class or an STL container.
       fRealData = new TList;
       BuildEmulatedRealData("", 0, this);
@@ -1522,6 +1522,11 @@ Bool_t TClass::CanSplit() const
             return kFALSE;
          }
       }
+   }
+   
+   if (Size()==1) {
+      // 'Empty' class there is nothing to split!.
+      return kFALSE;
    }
 
    TClass *ncThis = const_cast<TClass*>(this);

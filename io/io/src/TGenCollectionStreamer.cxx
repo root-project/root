@@ -743,6 +743,9 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
       }
       if (nElements > 0)  {
          switch (fSTL_type)  {
+            case TClassEdit::kBitSet:
+               ReadPrimitives(nElements, b);
+               return;
             case TClassEdit::kVector:
             case TClassEdit::kList:
             case TClassEdit::kDeque:
@@ -769,6 +772,9 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
       b << nElements;
       if (nElements > 0)  {
          switch (fSTL_type)  {
+            case TClassEdit::kBitSet:
+               WritePrimitives(nElements, b);
+               return;
             case TClassEdit::kVector:
             case TClassEdit::kList:
             case TClassEdit::kDeque:

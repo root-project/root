@@ -146,6 +146,9 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
                   fValOffset += (slong - fKey->fSize%slong)%slong;
                }
                break;
+            case TClassEdit::kBitSet:
+               inside[1] = "bool";
+               // Intentional fall through
             default:
                fValue = new Value(inside[1]);
                fVal   = new Value(*fValue);

@@ -1537,6 +1537,30 @@ bool IsTemplateDouble32(G__ClassInfo &cl)
 
 
 //______________________________________________________________________________
+bool IsSTLBitset(G__DataMemberInfo &m)
+{
+   // Is this a std::bitset
+
+   const char *s = m.Type()->TrueName();
+   if (!s) return false;
+
+   string type(s);
+   return TClassEdit::IsSTLBitset(type.c_str());
+}
+
+//______________________________________________________________________________
+bool IsSTLBitset(G__BaseClassInfo &m)
+{
+   // Is this a std::bitset
+
+   const char *s = m.Name();
+   if (!s) return false;
+
+   string type(s);
+   return TClassEdit::IsSTLBitset(type.c_str());
+}
+
+//______________________________________________________________________________
 int IsSTLContainer(G__DataMemberInfo &m)
 {
    // Is this an STL container?
@@ -2357,6 +2381,7 @@ void WriteClassInit(G__ClassInfo &cl)
    }
 
    int stl = TClassEdit::IsSTLCont(classname.c_str());
+   bool bset = TClassEdit::IsSTLBitset(classname.c_str());
 
    (*dictSrcOut) << "namespace ROOT {" << std::endl
                  << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent);"
@@ -2494,6 +2519,8 @@ void WriteClassInit(G__ClassInfo &cl)
 
    if (cl.HasMethod("Class_Version")) {
       (*dictSrcOut) << csymbol.c_str() << "::Class_Version(), ";
+   } else if (bset) {
+      (*dictSrcOut) << "2, "; // bitset 'version number'
    } else if (stl) {
       (*dictSrcOut) << "-2, "; // "::TStreamerInfo::Class_Version(), ";
    } else if( cl.RootFlag() & G__HASVERSION ) {
@@ -2564,7 +2591,13 @@ void WriteClassInit(G__ClassInfo &cl)
    if (HasDirectoryAutoAdd(cl)) {
       (*dictSrcOut) << "      instance.SetDirectoryAutoAdd(&directoryAutoAdd_" << mappedname.c_str() << ");" << std::endl;
    }
-   if (stl != 0 && ((stl>0 && stl<8) || (stl<0 && stl>-8)) )  {
+   if (bset) {
+      (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
+                    << "Pushback" << "<TStdBitsetHelper< " << classname.c_str() << " > >()));" << std::endl;
+
+      // (*dictSrcOut) << "      instance.SetStreamer(::ROOT::std_bitset_helper" << strchr(csymbol.c_str(),'<') << "::Streamer);\n";
+      gNeedCollectionProxy = true;
+   } else if (stl != 0 && ((stl>0 && stl<8) || (stl<0 && stl>-8)) )  {
       int idx = classname.find("<");
       int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
       const char* methodTCP=0;
@@ -2617,7 +2650,7 @@ void WriteClassInit(G__ClassInfo &cl)
    (*dictSrcOut) << "      return &instance;"  << std::endl
                  << "   }" << std::endl;
 
-   if (!stl && !IsTemplateDouble32(cl) && !IsTemplateFloat16(cl)) {
+   if (!stl && !bset && !IsTemplateDouble32(cl) && !IsTemplateFloat16(cl)) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
       (*dictSrcOut) << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
                     << "   {\n      return GenerateInitInstanceLocal((" <<  csymbol.c_str() << "*)0);\n   }"

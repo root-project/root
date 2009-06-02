@@ -28,7 +28,7 @@ int   TClassEdit::STLKind(const char *type)
    if (strncmp(type,"std::",5)==0) { offset = 5; }
 
    static const char *stls[] =                  //container names
-   {"any","vector","list","deque","map","multimap","set","multiset",0};
+   {"any","vector","list","deque","map","multimap","set","multiset","bitset",0};
 
 //              kind of stl container
    for(int k=1;stls[k];k++) {if (strcmp(type+offset,stls[k])==0) return k;}
@@ -306,11 +306,11 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
          if (done) continue;
       }
 
-      kbl = (!isalnum(c[ 0]) && c[ 0]!='_' && c[ 0]!='$' && c[0]!='[' && c[0]!=']');
+      kbl = (!isalnum(c[ 0]) && c[ 0]!='_' && c[ 0]!='$' && c[0]!='[' && c[0]!=']' && c[0]!='-');
 
       if (*c == '<')   lev++;
       if (lev==0 && !isalnum(*c)) {
-         if (!strchr("*:_$ []",*c)) break;
+         if (!strchr("*:_$ []-",*c)) break;
       }
       if (c[0]=='>' && result.size() && result[result.size()-1]=='>') result+=" ";
 
@@ -507,6 +507,16 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
 }
 
 //______________________________________________________________________________
+bool TClassEdit::IsSTLBitset(const char *classname)
+{
+   // Return true is the name is std::bitset<number> or bitset<number>
+
+   if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
+   if ( strncmp(classname,"std::bitset<",strlen("std::bitset<"))==0) return true;
+   return false;
+}
+
+//______________________________________________________________________________
 int TClassEdit::IsSTLCont(const char *type,int testAlloc)
 {
    //  type     : type name: vector<list<classA,allocator>,allocator>
@@ -570,6 +580,7 @@ bool TClassEdit::IsStdClass(const char *classname)
 
    if ( strncmp(classname,"std::",5)==0 ) classname += 5;
    if ( strcmp(classname,"string")==0 ) return true;
+   if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
    if ( strncmp(classname,"pair<",strlen("pair<"))==0) return true;
    if ( strcmp(classname,"allocator")==0) return true;
    if ( strncmp(classname,"allocator<",strlen("allocator<"))==0) return true;
