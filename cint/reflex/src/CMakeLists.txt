@@ -3,6 +3,11 @@ MACRO_FIND_PACKAGE_IF(DEMANGLE SOLARIS REQUIRED)
 #####################   sources   ####################
 
 FILE(GLOB Reflex_SRCS *.cxx *.h)
+# Do not include ROOT's CINT dictionary
+FILE(GLOB Reflex_SRCS_VETO G__Reflex.*)
+IF(Reflex_SRCS_VETO)
+   LIST(REMOVE_ITEM Reflex_SRCS ${Reflex_SRCS_VETO})
+ENDIF(Reflex_SRCS_VETO)
 FILE(GLOB_RECURSE Reflex_HDRS ${REFLEX_INCLUDE_DIR}/*.h)
 
 #####################    build    ####################
