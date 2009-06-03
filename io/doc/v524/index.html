@@ -9,6 +9,7 @@ used by wget, e.g.:
 <pre>   export http_proxy=http://pcsalo.cern.ch:3128</pre>
 To bypass the proxy, the TWebFile ctor (or via TFile::Open()) supports the
 option "NOPROXY".</li>
+<li>Add support for streaming std::bitset STL containers</li>
 <li>Extend the checks done in case of a StreamerInfo checksum mismatch to
 avoid spurrious failures (for example because of the various possible
 type names for STL containers) and to report details on the nature of
