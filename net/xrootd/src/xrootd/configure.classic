@@ -674,6 +674,7 @@ enable/disable options, prefix with either --enable- or --disable-
 
 with options, prefix with --with-, enables corresponding support
 
+   afs             AFS support, location of AFS distribution
    afs-incdir      AFS support, location of afs/stds.h, afs/kautils.h
    afs-libdir      AFS support, location of libafsauthent.a, libafsrpc.a
    java            Path to the Java SDK to be used for the java interface
@@ -771,6 +772,7 @@ hassigwti=""
 hasfstatat=""
 afslibdir=""
 afsincdir=""
+afsshared=""
 ssldir=""
 ssllibdir=""
 sslincdir=""
@@ -803,8 +805,10 @@ if test $# -gt 0 ; then
       --with-nameinfo=*)       hasnameinfo="$optarg" ;;
       --has-sigwaitinfo)       hassigwti="yes" ;;
       --has-fstatat)           hasfstatat="yes"      ;;
+      --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-afs-incdir=*)     afsincdir=$optarg     ; enable_afs="yes"    ;;
       --with-afs-libdir=*)     afslibdir=$optarg     ; enable_afs="yes"    ;;
+      --with-afs-shared=*)     afsshared=$optarg     ; enable_afs="yes"     ;;
       --with-java=*)           javadir=$optarg       ; enable_javaint="yes" ;;
       --with-krb4=*)           krb4dir=$optarg       ; enable_krb4="yes"    ;;
       --with-krb4-incdir=*)    krb4incdir=$optarg    ; enable_krb4="yes"    ;;
@@ -1890,17 +1894,34 @@ fi
 #
 if test ! "x$enable_afs" = "xno" ; then
 
+    if test ! "x$afsdir" = "x" ; then
+       # Set the search paths, giving priority to explicit settings
+       if test "x$afslibdir" = "x" ; then
+          afslibdir="$afsdir/lib"
+       fi
+       if test "x$afsincdir" = "x" ; then
+          afsincdir="$afsdir/include"
+       fi
+       if test "x$afsshared" = "x" ; then
+          # With external libs, default is static
+          afsshared="no"
+       fi
+    fi
 
-    afs_shared=$enable_shared
+    if test "x$afsshared" = "x" ; then
+       # Use global default if none set
+       afsshared=$enable_shared
+    fi
+
     afslibdirs="/usr/lib /usr/local/lib /opt/lib $finkdir/lib"
     afslibs="libafsrpc libafsauthent"
-    if test "x$afs_shared" = "xyes" ; then
+    if test "x$afsshared" = "xyes" ; then
 
        # We try to use the shared version of the libraries; however, for OpenAFS
        # versions <= 1.4.6 these were inconsistent, some needed symbols not being
        # exported. We need to check the symbols first
        echo "Checking for shared AFS libs:"
-       check_library libafsrpc "$afs_shared" "$afslibdir" $afslibdirs
+       check_library libafsrpc "$afsshared" "$afslibdir" $afslibdirs
        if test "x$found_lib" = "x" ; then
           afslib=""
           afslibdir=""
@@ -1915,28 +1936,41 @@ if test ! "x$enable_afs" = "xno" ; then
           check_symbol $s "$found_lib" "$found_dir"
           if test  $found_symbol -eq 0 ; then
              echo "Checking for AFS symbols: '$s' not found"
-             afs_shared="no"
+             afsshared="no"
              break
           fi
        done
        #
        # Save lib, if OK
-       if test "x$afs_shared" = "xyes" ; then
-          afslib="$found_lib"
-          afslibdir="$found_dir"
-          afslibs="libafsauthent"
-       else
-          echo "Checking for static AFS libs:"
+       if test "x$afsshared" = "xyes" ; then
+         check_library libafsauthent "$afsshared" "$afslibdir" $afslibdirs
+         if test ! "x$found_lib" = "x" ; then
+            check_symbol ka_GetAFSTicket "$found_lib" "$found_dir"
+            if test ! $found_symbol -eq 0 ; then
+               afslib="$found_lib"
+               afslibdir="$found_dir"
+               afslibs="libafsauthent"
+            else
+               afslib=""
+               afslibdirs=""
+               afsshared="no"
+            fi
+         else
+            afslib=""
+            afslibdirs=""
+            afsshared="no"
+         fi
        fi
     fi
 
     dirlibafs=""
     if test "x$enable_afs" = "xyes" ; then
        #
-       # Libraries
+       # Static libraries
+       echo "Checking for static AFS libs:"
        #
        for i in $afslibs ; do
-          check_library "$i" "$afs_shared" "$afslibdir" $afslibdirs
+          check_library "$i" "$afsshared" "$afslibdir" $afslibdirs
           if test "x$found_lib" = "x" ; then
              afslib=""
              afslibdir=""
@@ -1985,11 +2019,11 @@ if test ! "x$enable_afs" = "xno" ; then
         libafs="LIBAFS = $dirlibafs $afslib"
 
         # Warn about usage of static libs to build a shared object
-        if test "x$afs_shared" = "xno" ; then
+        if test "x$afsshared" = "xno" ; then
             echo "### WARNING: AFS enabled using static libraries: this may lead to relocation-related"
             echo "### errors or warnings if the static libraries are not compiled with the correct options;"
-            echo "### if this happens, please re-run with --enable-shared or move to openafs >= 1.5.x"
-            echo "### or rebuild the AFS static libs with the '-fPIC' option."
+            echo "### if this happens, please re-run with --with-afs-shared=yes or rebuild the AFS static"
+            echo "### libs using the script at utils/installOpenAFS.sh."
         fi
     fi
 fi
