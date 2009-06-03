@@ -2774,10 +2774,14 @@ void TFitEditor::RetrieveOptions(Foption_t& fitOpts, TString& drawOpts, ROOT::Ma
       fitOpts.hRobust = fRobustValue->GetNumber();
    }
 
-   if (fDrawSame->GetState() == kButtonDown)
-      drawOpts += "SAME";
-
    drawOpts = GetDrawOption();
+
+   // if SAME is set use this as draw option
+   // otherwise use the original histogram options
+   // (for example if histogram was drawn with HIST 
+   //  no function will be drawm)
+   if (fDrawSame->GetState() == kButtonDown)
+      drawOpts = "SAME";
 
    if ( fLibMinuit->GetState() == kButtonDown )
       minOpts.SetMinimizerType ( "Minuit");
