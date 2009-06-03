@@ -1622,6 +1622,9 @@ void TCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (!gStyle->GetOptStat()) {
       out<<"   gStyle->SetOptStat(0);"<<endl;
    }
+   if (!gStyle->GetOptTitle()) {
+      out<<"   gStyle->SetOptTitle(0);"<<endl;
+   }
    if (gROOT->GetEditHistograms()) {
       out<<"   gROOT->SetEditHistograms();"<<endl;
    }
@@ -1741,6 +1744,9 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    }
    if (!gStyle->GetOptStat()) {
       out<<"   gStyle->SetOptStat(0);"<<endl;
+   }
+   if (!gStyle->GetOptTitle()) {
+      out<<"   gStyle->SetOptTitle(0);"<<endl;
    }
    if (gROOT->GetEditHistograms()) {
       out<<"   gROOT->SetEditHistograms();"<<endl;
