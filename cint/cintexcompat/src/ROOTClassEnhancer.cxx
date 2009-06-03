@@ -569,6 +569,8 @@ TClass* ROOTClassEnhancerInfo::Default_CreateClass(Type typ, ROOT::TGenericClass
          case TClassEdit::kMultiSet:
             cl_info.SetVersion(4);
             break;
+         case TClassEdit::kBitSet:
+            cl_info.SetVersion(2);
          case TClassEdit::kNotSTL:
          case TClassEdit::kEnd:
             cl_info.SetVersion(1);
@@ -592,6 +594,7 @@ TClass* ROOTClassEnhancerInfo::Default_CreateClass(Type typ, ROOT::TGenericClass
       case TClassEdit::kMultiMap:
       case TClassEdit::kSet:
       case TClassEdit::kMultiSet:
+      case TClassEdit::kBitSet:
          {
             Member method = typ.MemberByName("createCollFuncTable", Reflex::Type(), INHERITEDMEMBERS_NO);
             if (!method) {

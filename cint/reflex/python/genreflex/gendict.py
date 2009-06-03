@@ -570,7 +570,8 @@ class genDictionary(object) :
     # before first instantiation (stubs), so classDefImpl before stubs.
     f_buffer += classDefImpl
 
-    f_shadow =  '\n// Shadow classes to obtain the data member offsets \n'
+    f_shadow =  '\n#ifndef __CINT__\n'
+    f_shadow +=  '\n// Shadow classes to obtain the data member offsets \n'
     f_shadow += 'namespace __shadow__ {\n'
     for c in selclasses :
       if 'incomplete' not in c :
@@ -595,6 +596,7 @@ class genDictionary(object) :
         f_buffer += scons
         f_shadow += self.genClassShadow(c)
     f_shadow += '}\n\n'
+    f_shadow +=  '\n#endif __CINT__\n'
     f_buffer += self.genFunctionsStubs( selfunctions )
     f_buffer += self.genInstantiateDict(selclasses, selfunctions, selenums, selvariables)
     f.write('namespace {\n')
@@ -2096,10 +2098,16 @@ class genDictionary(object) :
     cl       = self.genTypeName(attrs['context'], colon=True)
     clt      = string.translate(str(cl), self.transtable)
     t        = getTemplateArgs(cl)[0]
-    s  = 'static void method%s( void* retaddr, void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
-    s += '  if (retaddr) *(void**) retaddr = ::Reflex::Proxy< %s >::Generate();\n' % (cl,)
-    s += '  else ::Reflex::Proxy< %s >::Generate();\n' % (cl,)
-    s += '}\n'
+    if cl[:13] == '::std::bitset'  :
+      s  = 'static void method%s( void* retaddr, void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
+      s += '  if (retaddr) *(void**) retaddr = ::Reflex::Proxy< ::Reflex::StdBitSetHelper< %s > >::Generate();\n' % (cl,)
+      s += '  else ::Reflex::Proxy< ::Reflex::StdBitSetHelper< %s > >::Generate();\n' % (cl,)
+      s += '}\n'
+    else:
+      s  = 'static void method%s( void* retaddr, void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
+      s += '  if (retaddr) *(void**) retaddr = ::Reflex::Proxy< %s >::Generate();\n' % (cl,)
+      s += '  else ::Reflex::Proxy< %s >::Generate();\n' % (cl,)
+      s += '}\n'
     return s
 #----BasesMap stuff--------------------------------------------------------
   def genGetBasesTableDecl( self, attrs, args ) :
@@ -2297,6 +2305,7 @@ def getContainerId(c):
   elif c[:21] == 'stdext::hash_multiset':    return ('HASHMULTISET','set')
   elif c[:10] == 'std::stack'   :            return ('STACK','stack')
   elif c[:11] == 'std::vector'  :            return ('VECTOR','vector')
+  elif c[:11] == 'std::bitset'  :            return ('BITSET','bitset')
   else : return ('NOCONTAINER','')
 #---------------------------------------------------------------------------------------
 stldeftab = {}
