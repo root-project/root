@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += multiTree mytest
+TEST_TARGETS += multiTree mytest cachedchain
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -59,7 +59,12 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+cachedchain.log: runcachedchain.C
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runcachedchain.C 2>&1 \
+	| grep -v -e 'no dictionary for class' -e 'trying to read an emulated class (AliESDEvent)'  > cachedchain.log
 
+cachedchain: cachedchain.log
+	$(TestDiff)
 
 multiTree: multiTree.log
 	$(TestDiff)
