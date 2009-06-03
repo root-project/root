@@ -238,7 +238,7 @@ Bool_t TTreeCache::FillBuffer()
    TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
    Long64_t entry = tree->GetReadEntry();
    
-   if (!fIsManual && entry < fEntryNext) return kFALSE;
+   if (!fIsManual && fIsLearning && entry < fEntryNext) return kFALSE;
    
    // Triggered by the user, not the learning phase
    if (entry == -1)  entry=0;
@@ -273,6 +273,8 @@ Bool_t TTreeCache::FillBuffer()
    for (Int_t i=0;i<fNbranches;i++) {
       if (mustBreak) break;
       TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
+      if (b->GetDirectory()==0) continue;
+      if (b->GetDirectory()->GetFile() != fFile) continue;
       Int_t nb = b->GetMaxBaskets();
       Int_t *lbaskets   = b->GetBasketBytes();
       Long64_t *entries = b->GetBasketEntry();
@@ -498,7 +500,9 @@ void TTreeCache::UpdateBranches(TTree *tree, Bool_t owner)
    TObjString *os;
    while ((os = (TObjString*)next())) {
       TBranch *b = fTree->GetBranch(os->GetName());
-      if (!b) continue;
+      if (!b) {
+         continue;
+      }
       fBranches->AddAt(b, fNbranches);
       fZipBytes   += b->GetZipBytes();
       fNbranches++;
