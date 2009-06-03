@@ -493,6 +493,9 @@ void TTreeCache::UpdateBranches(TTree *tree, Bool_t owner)
    fEntryMin  = 0;
    fEntryMax  = fTree->GetEntries();
    fEntryNext = fEntryMin + fgLearnEntries;
+   if (fBrNames->GetEntries() > 0) {
+      fIsLearning = kFALSE;
+   }
    fZipBytes  = 0;
    fNbranches = 0;
 
