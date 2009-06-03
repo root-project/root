@@ -2481,12 +2481,10 @@ def ClassDefImplementation(selclasses, self) :
       extraval = '!RAW!' + str(derivesFromTObject)
       if attrs.has_key('extra') : attrs['extra']['ClassDef'] = extraval
       else                      : attrs['extra'] = {'ClassDef': extraval}
-      attrs['extra']['DictionaryFunc'] = '!RAW!' + clname + '::Dictionary';
       id = attrs['id']
       template = ""
       if clname.find('<') != -1: template = "template<> "
 
-      returnValue += 'namespace { extern ::ROOT::TGenericClassInfo genericClassInfo' + attrs['id'] + '; }\n'
       returnValue += template + 'TClass* ' + clname + '::Class() {\n'
       returnValue += '   if (!fgIsA)\n'
       returnValue += '      fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
@@ -2500,30 +2498,7 @@ def ClassDefImplementation(selclasses, self) :
         returnValue += 'namespace {\n'
         returnValue += '   static void method_newdel' + id + '(void*, void*, const std::vector<void*>&, void*);\n'
         returnValue += '}\n'
-      returnValue += template + 'void ' + clname + '::Dictionary() {\n'
-      returnValue += '   genericClassInfo' + id + '.SetImplFile("", 1);\n'
-      if haveNewDel:
-        returnValue += '   ::Reflex::NewDelFunctions* ndf = 0;\n'
-        returnValue += '   method_newdel' + id + '(&ndf, 0, std::vector<void*>(), 0);\n'
-        returnValue += '   genericClassInfo' + id + '.SetNew(ndf->fNew);\n'
-        returnValue += '   genericClassInfo' + id + '.SetNewArray(ndf->fNewArray);\n'
-        returnValue += '   genericClassInfo' + id + '.SetDelete(ndf->fDelete);\n'
-        returnValue += '   genericClassInfo' + id + '.SetDeleteArray(ndf->fDeleteArray);\n'
-        returnValue += '   genericClassInfo' + id + '.SetDestructor(ndf->fDestructor);\n'
-      for rule in ('ioread', 'ioreadraw'):
-        if attrs['extra'].has_key(rule):
-          if rule == 'ioreadraw': setrrr = 'Raw'
-          else:                   setrrr = ''
-          returnValue += '   Any& obj = TypeGet().Properties().PropertyValue( "' + rule + '" );\n'
-          returnValue += '   std::vector<ROOT::TSchemaHelper> rules = any_cast<std::vector<ROOT::TSchemaHelper> >( obj );\n'
-          returnValue += '   info->SetRead' + setrrr + 'Rules( rules );\n'
-      returnValue += '   if( ::ROOT::Cintex::Cintex::GetROOTCreator() ) {\n'
-      returnValue += '      (* ::ROOT::Cintex::Cintex::GetROOTCreator())( Reflex::Type::ByName("' + clname + '"), &genericClassInfo' + attrs['id'] + ' );\n'
-
-      returnValue += '   } else {\n'
-      returnValue += '      ::ROOT::Cintex::Cintex::Default_CreateClass( "' + clname + '", &genericClassInfo' + attrs['id'] + ' );\n'
-      returnValue += '   }\n'
-      returnValue += '}\n'
+      returnValue += template + 'void ' + clname + '::Dictionary() {}\n'
       returnValue += template + 'const char *' + clname  + '::ImplFileName() {return "";}\n'
 
       returnValue += template + 'int ' + clname + '::ImplFileLine() {return 1;}\n'
@@ -2603,11 +2578,6 @@ def ClassDefImplementation(selclasses, self) :
       returnValue += '   }\n'
       returnValue += '}\n'
       returnValue += template + 'TClass* ' + clname + '::fgIsA = 0;\n'
-      returnValue += 'namespace { ::ROOT::TGenericClassInfo genericClassInfo' + attrs['id'] + '("' + clname[2:] + '",\n   ' + clname + '::Class_Version(),\n   '
-      returnValue += clname + '::DeclFileName(),\n   ' + clname + '::DeclFileLine(),\n   '
-      returnValue += 'typeid( ' + clname + ' ),\n   ::ROOT::DefineBehavior(0,0), 0, ' + clname + '::Dictionary,\n   '
-      returnValue += 'new ::TInstrumentedIsAProxy< ' + clname + ' >(0),\n   '
-      returnValue += '0, sizeof( ' + clname + ')); }\n'
     elif derivesFromTObject :
       # no fgIsA etc members but derives from TObject!
       print '--->> genreflex: ERROR: class %s derives from TObject but does not use ClassDef!' % attrs['fullname']
