@@ -272,29 +272,28 @@ void ROOTClassEnhancerInfo::CreateInfo()
       return;
    }
    ::ROOT::TGenericClassInfo* info = 0;
-   if (!TypeGet().Properties().HasProperty("ClassDef")) {
-      void* context = this;
+
+   void* context = this;
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
-      fIsa_func = new IsAProxy(this);
+   fIsa_func = new IsAProxy(this);
 #else // ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
-      fIsa_func = (IsAFunc_t) Allocate_1arg_function(context, Stub_IsA2);
+   fIsa_func = (IsAFunc_t) Allocate_1arg_function(context, Stub_IsA2);
 #endif // ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
-      fDictionary_func = Allocate_void_function(context, Stub_Dictionary);
-      fShowMembers_func = Allocate_3arg_function(context, Stub_ShowMembers2);
-      info = new ::ROOT::TGenericClassInfo(
-           Name().c_str() // fullClassname, class name
-         , Version() // version, class version
-         , "" // declFileName, declaration file Name
-         , 1 // declFileLine, declaration line number
-         , TypeGet().TypeInfo() // info, typeid
-         , ROOT::DefineBehavior(0, 0) // action, default behavior
-         , 0 // (void*)&fShowMembers_func // showmembers, show members function
-         , fDictionary_func // dictionary, dictionary function
-         , fIsa_func // isa, IsA function
-         , 0 // pragmabits, pragma bits
-         , TypeGet().SizeOf() // sizof, size of
-      );
-   }
+   fDictionary_func = Allocate_void_function(context, Stub_Dictionary);
+   fShowMembers_func = Allocate_3arg_function(context, Stub_ShowMembers2);
+   info = new ::ROOT::TGenericClassInfo(
+                                        Name().c_str() // fullClassname, class name
+                                        , Version() // version, class version
+                                        , "" // declFileName, declaration file Name
+                                        , 1 // declFileLine, declaration line number
+                                        , TypeGet().TypeInfo() // info, typeid
+                                        , ROOT::DefineBehavior(0, 0) // action, default behavior
+                                        , 0 // (void*)&fShowMembers_func // showmembers, show members function
+                                        , fDictionary_func // dictionary, dictionary function
+                                        , fIsa_func // isa, IsA function
+                                        , 0 // pragmabits, pragma bits
+                                        , TypeGet().SizeOf() // sizof, size of
+                                        );
    info->SetImplFile("", 1);
    Member getfuncs = TypeGet().MemberByName("__getNewDelFunctions", Reflex::Type(), INHERITEDMEMBERS_NO);
    if (getfuncs) {
