@@ -596,7 +596,7 @@ class genDictionary(object) :
         f_buffer += scons
         f_shadow += self.genClassShadow(c)
     f_shadow += '}\n\n'
-    f_shadow +=  '\n#endif __CINT__\n'
+    f_shadow +=  '\n#endif // __CINT__\n'
     f_buffer += self.genFunctionsStubs( selfunctions )
     f_buffer += self.genInstantiateDict(selclasses, selfunctions, selenums, selvariables)
     f.write('namespace {\n')
