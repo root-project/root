@@ -44,7 +44,7 @@ include/%.h:    $(BONJDIRI)/%.h
 $(BONJLIB):     $(BONJO) $(BONJDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libBonjour.$(SOEXT) $@ "$(BONJO) $(BONJDO)" \
-		   "$(BONJLIBEXTRA) $(BONJLIBDIR) $(BONJCLILIB)"
+		   "$(BONJLIBEXTRA) $(DNSSDLIBDIR) $(DNSSDLIB)"
 
 $(BONJDS):      $(BONJH) $(BONJL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
