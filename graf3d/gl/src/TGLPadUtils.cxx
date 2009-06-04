@@ -529,10 +529,14 @@ Small RAII class for GLU tesselator.
 #endif
 
 extern "C" {
-#if defined(R__AIXGCC) || (defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5341 && !defined(__INTEL_COMPILER))
-   typedef extern "C" void (*tess_t)(...);
+#if defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5450 && !defined(__INTEL_COMPILER)
+    typedef GLvoid (*tess_t)(...);
+#elif defined( __mips ) || defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __OpenBSD__ ) || defined( __sun ) || defined (__CYGWIN__) || defined (__APPLE__)
+    typedef GLvoid (*tess_t)();
+#elif defined ( WIN32)
+    typedef GLvoid (CALLBACK *tess_t)( );
 #else
-   typedef void (CALLBACK *tess_t)();
+    #error "Error - need to define type tess_t for this platform/compiler"
 #endif
 }
 

@@ -1347,10 +1347,14 @@ UInt_t TGLUtil::fgColorLockCount     = 0;
 #endif
 
 extern "C" {
-#if defined(R__AIXGCC) || (defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5341 && !defined(__INTEL_COMPILER))
-   typedef extern "C" void (*tessfuncptr_t)(...);
+#if defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5450 && !defined(__INTEL_COMPILER)
+    typedef GLvoid (*tessfuncptr_t)(...);
+#elif defined( __mips ) || defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __OpenBSD__ ) || defined( __sun ) || defined (__CYGWIN__) || defined (__APPLE__)
+    typedef GLvoid (*tessfuncptr_t)();
+#elif defined ( WIN32)
+    typedef GLvoid (CALLBACK *tessfuncptr_t)( );
 #else
-   typedef void (CALLBACK *tessfuncptr_t)();
+    #error "Error - need to define type tessfuncptr_t for this platform/compiler"
 #endif
 }
 
