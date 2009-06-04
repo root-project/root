@@ -37,6 +37,21 @@ TProofLog::TProofLog(const char *stag, const char *url, TProofMgr *mgr)
    fElem = new TList;
    fElem->SetOwner();
    fMgr = mgr;
+   // Set a fake starting time
+   fStartTime.Set((UInt_t)0);
+   // Extract real starting time
+   TString st(stag);
+   Int_t idx = st.Index('-');
+   if (idx != kNPOS) {
+      st.Remove(0, idx+1);
+      idx = st.Index('-');
+      if (idx != kNPOS) {
+         st.Remove(idx);
+         if (st.IsDigit()) {
+            fStartTime.Set(st.Atoi());
+         }
+      }
+   }
 }
 
 //________________________________________________________________________

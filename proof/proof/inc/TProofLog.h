@@ -20,10 +20,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TDatime
+#include "TDatime.h"
+#endif
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
-
 #ifndef ROOT_TQObject
 #include "TQObject.h"
 #endif
@@ -43,6 +45,7 @@ private:
    TProofMgr  *fMgr;   // parent TProofMgr
    void       *fFILE;  // pointer logging file, if any
    TList      *fElem;  // list of TProofLogElem objects
+   TDatime     fStartTime; // Time at which this session started
 
    TProofLogElem *Add(const char *ord, const char *url);
 
@@ -66,6 +69,8 @@ public:
                   TProofLog::ERetrieveOpt opt = TProofLog::kTrailing,
                   const char *fname = 0, const char *pattern = 0);
    Int_t  Save(const char *ord = "*", const char *fname = 0, Option_t *opt="w");
+
+   TDatime StartTime() { return fStartTime; }
 
    // Where to log
    void SetLogToBox(Bool_t lgbox = kFALSE) { SetBit(kLogToBox, lgbox); }
