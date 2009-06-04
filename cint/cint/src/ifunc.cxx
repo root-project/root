@@ -658,7 +658,8 @@ void G__make_ifunctable(char* funcheader)
             ) {
                const char* posEndType = oprtype;
                while (isalnum(*posEndType)
-                      || (posEndType[0] == ':' && posEndType[1] == ':')
+                      // NOTE this increases posEndType to skip '::'!
+                      || (posEndType[0] == ':' && posEndType[1] == ':' && (++posEndType))
                       || *posEndType == '_')
                   ++posEndType;
                char* ptrrefbuf = 0;
