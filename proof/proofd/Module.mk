@@ -118,11 +118,15 @@ XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
 XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
                   -L$(XROOTDDIRP) -lXrdClient -lXrdSut
-ifeq ($(PLATFORM),linux)
+# The 'xproofd' executable is currently build only for linux and MacOsx/gcc
+BUILDXPD       := $(or ($(PLATFORM),linux),($(PLATFORM),macosx))
+ifneq ($(BUILDXPD),)
+ifneq ($(CXX),icc)
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
                   $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
 XPROOFDEXE     := bin/xproofd
+endif
 endif
 endif
 
