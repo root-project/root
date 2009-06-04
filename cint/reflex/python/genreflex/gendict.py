@@ -1748,6 +1748,49 @@ class genDictionary(object) :
         if pname not in ('name', 'transient', 'pattern') :
           c += '\n  .AddProperty("%s","%s")' % (pname, pval)     
     return c
+#----------------------------------------------------------------------------------
+  def genVariableBuild(self, attrs, childs):
+    if 'access' in attrs and attrs['access'] in ('private','protected') : return ''
+    type   = self.genTypeName(attrs['type'], enum=False, const=False)
+    cl     = self.genTypeName(attrs['context'],colon=True)
+    cls    = self.genTypeName(attrs['context'])
+    name = attrs['name']
+    if not name :
+      ftype = self.xref[attrs['type']]
+      # if the member type is an unnamed union we try to take the first member of the union as name
+      if ftype['elem'] == 'Union':
+        firstMember = ftype['attrs']['members'].split()[0]
+        if firstMember : name = self.xref[firstMember]['attrs']['name']
+        else           : return ''       # then this must be an unnamed union without members
+    if type[-1] == '&' :
+      print '--->> genreflex: WARNING: References are not supported as data members (%s %s::%s)' % ( type, cls, name )
+      self.warnings += 1
+      return ''
+    if 'bits' in attrs:
+      print '--->> genreflex: WARNING: Bit-fields are not supported as data members (%s %s::%s:%s)' % ( type, cls, name, attrs['bits'] )
+      self.warnings += 1
+      return ''
+    if self.selector : xattrs = self.selector.selfield( cls,name)
+    else             : xattrs = None
+    mod = self.genModifier(attrs,xattrs)
+    if mod : mod += ' | Reflex::STATIC'
+    else   : mod =  'Reflex::STATIC'
+    if attrs['type'][-1] == 'c' :
+      if mod : mod += ' | Reflex::CONST'
+      else   : mod =  'Reflex::CONST'
+    if attrs['type'][-1] == 'v' :
+      if mod : mod += ' | Reflex::VOLATILE'
+      else   : mod = 'Reflex::VOLATILE'
+    c = ''
+    if not attrs.has_key('init'):
+      c = '  .AddDataMember(%s, "%s", (size_t)&%s::%s, %s)' % (self.genTypeID(attrs['type']), name, cls, name, mod)
+      c += self.genCommentProperty(attrs)
+      # Other properties
+      if xattrs : 
+        for pname, pval in xattrs.items() : 
+          if pname not in ('name', 'transient', 'pattern') :
+            c += '\n  .AddProperty("%s","%s")' % (pname, pval)     
+    return c
 #----------------------------------------------------------------------------------    
   def genCommentProperty(self, attrs):
     if not (self.comments or self.iocomments) \
