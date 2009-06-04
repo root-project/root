@@ -153,16 +153,26 @@ $(XROOTDMAKE): $(XROOTDCFGD)
 		if [ ! "x$(SHADOWFLAGS)" = "x" ] ; then \
 		   xopt="$$xopt --enable-shadowpw"; \
 		fi; \
-		if [ ! "x$(AFSLIB)" = "x" ] ; then \
-		   xopt="$$xopt --enable-afs"; \
-		fi; \
 		if [ ! "x$(AFSLIBDIR)" = "x" ] ; then \
 		   xlib=`echo $(AFSLIBDIR) | cut -c3-`; \
 		   xopt="$$xopt --with-afs-libdir=$$xlib"; \
+		elif [ ! "x$(AFSLIB)" = "x" ] ; then \
+		   xlibs=`echo $(AFSLIB)`; \
+		   for l in $$xlibs; do \
+   		      if [ ! "x$$l" = "x-lafsrpc" ] && [ ! "x$$l" = "x-lafsauthent" ]  ; then \
+		         xlib=`dirname $$l`; \
+  		         xopt="$$xopt --with-afs-libdir=$$xlib"; \
+      		         break; \
+     		      fi; \
+   		   done; \
 		fi; \
 		if [ ! "x$(AFSINCDIR)" = "x" ] ; then \
-		   xinc=`echo $(AFSINCDIR)`; \
+		   xinc=`echo $(AFSINCDIR) | cut -c3-`; \
 		   xopt="$$xopt --with-afs-incdir=$$xinc"; \
+		fi; \
+		if [ ! "x$(AFSSHARED)" = "x" ] ; then \
+		   xsha=`echo $(AFSSHARED)`; \
+		   xopt="$$xopt --with-afs-shared=$$xsha"; \
 		fi; \
 		if [ ! "x$(XRDADDOPTS)" = "x" ] ; then \
 		   xaddopts=`echo $(XRDADDOPTS)`; \

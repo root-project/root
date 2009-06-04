@@ -1072,6 +1072,9 @@ enable/disable options, prefix with either --enable- or --disable-
 with options, prefix with --with-, enables corresponding support
 
   afs                AFS support, location of AFS distribution
+  afs-incdir         AFS support, location of AFS headers
+  afs-libdir         AFS support, location of libafsrpc. libasauthent
+  afs-shared         AFS support, controls usage of shared linkage AFS libraries {yes/no}
   alien-incdir       AliEn support, location of gapiUI.h
   alien-libdir       AliEn support, location of libapiUI
   castor-incdir      CASTOR support, location of stager_api.h
@@ -1279,6 +1282,9 @@ if test $# -gt 0 ; then
       --no-stubs)              no_stubs="yes";;
       --no-stubs-test)         no_stubs="yes"; no_stubs_test="yes";;
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
+      --with-afs-incdir=*)     afsincdir=$optarg     ; enable_afs="yes"     ;;
+      --with-afs-libdir=*)     afslibdir=$optarg     ; enable_afs="yes"     ;;
+      --with-afs-shared=*)     afsshared=$optarg     ; enable_afs="yes"     ;;
       --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
       --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
       --with-afterimage-incdir=*) afterimageincdir=$optarg; enable_builtin_afterimage=no ;;
@@ -3892,71 +3898,107 @@ check_explicit "$enable_srp" "$enable_srp_explicit" \
 #
 afsextracflags=""
 if test ! "x$enable_afs" = "xno" ; then
+
     if test ! "x$afsdir" = "x" ; then
-       afsdir="$afsdir $afsdir/afs"
+       # Set the search paths, giving priority to explicit settings
+       if test "x$afslibdir" = "x" ; then
+          afslibdir="$afsdir/lib"
+       fi
+       if test "x$afsincdir" = "x" ; then
+          afsincdir="$afsdir/include"
+       fi
+       if test "x$afsshared" = "x" ; then
+          # With external libs, default is static
+          afsshared="no"
+       fi
+    fi
+
+    if test "x$afsshared" = "x" ; then
+       # Use global default if none set
+       afsshared=$enable_shared
     fi
 
     hasafserrormessage="no"
-    afs_shared=$enable_shared
-    afslibdirs="$AFS/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib"
+    afssearchlibdirs="$afsdir/afs $AFS/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib"
     afslibs="libafsrpc libafsauthent"
-    if test "x$afs_shared" = "xyes" ; then
+    if test "x$afsshared" = "xyes" ; then
 
        # We try to use the shared version of the libraries; however, for OpenAFS
        # versions <= 1.4.6 these were inconsistent, some needed symbols not being
        # exported. We need to check the symbols first
        echo "Checking for shared AFS libs:"
-       check_library libafsrpc "$afs_shared" "$afsdir" $afslibdirs
-       if test "x$found_lib" = "x" ; then
-          afslib=""
-          afslibdir=""
-          enable_afs="no"
-          break
-       fi
-       #
-       # Check symbols
-       #
-       afssymbols="afs_add_to_error_table strcompose stolower ucstring lcstring AssertionFailed"
-       for s in $afssymbols ; do
-          check_symbol $s "$found_lib" "$found_dir"
-          if test  $found_symbol -eq 0 ; then
-             result "Checking for AFS symbols: '$s' not found"
-             afs_shared="no"
-             break
-          fi
-       done
-       #
-       # Save lib, if OK
-       if test "x$afs_shared" = "xyes" ; then
-          afslib="$found_lib"
-          afslibdir="$found_dir"
-          afslibs="libafsauthent"
-          # Check for afs_error_message, if needed
-          if test "x$hasafserrormessage" = "xno" ; then
-             check_symbol afs_error_message "$found_lib" "$found_dir"
-             if test  $found_symbol -eq 1 ; then
-                hasafserrormessage="yes"
-             fi
-          fi
+       check_library libafsrpc "$afsshared" "$afslibdir" $afssearchlibdirs
+       if test ! "x$found_lib" = "x"; then
+         afslib="$found_lib"
+         afslibdirs="$found_dir"
+         #
+         # Check symbols
+         #
+         afssymbols="afs_add_to_error_table strcompose stolower ucstring lcstring AssertionFailed"
+         for s in $afssymbols ; do
+            check_symbol $s "$found_lib" "$found_dir"
+            if test  $found_symbol -eq 0 ; then
+               afslib=""
+               afslibdirs=""
+               afsshared="no"
+               break
+            fi
+         done
+         #
+         # Save lib, if OK
+         if test "x$afsshared" = "xyes" ; then
+            # Check for afs_error_message, if needed
+            if test "x$hasafserrormessage" = "xno" ; then
+               check_symbol afs_error_message "$found_lib" "$found_dir"
+               if test  $found_symbol -eq 1 ; then
+                  hasafserrormessage="yes"
+               fi
+            fi
+            check_library libafsauthent "$afsshared" "$afslibdir" $afssearchlibdirs
+            if test ! "x$found_lib" = "x" ; then
+               check_symbol ka_GetAFSTicket "$found_lib" "$found_dir"
+               if test  $found_symbol -eq 0 ; then
+                  afslib=""
+                  afslibdirs=""
+                  afsshared="no"
+                  break
+               else
+                  afslib="$afslib $found_lib"
+                  havedir="no"
+                  for l in $afslibdirs ; do
+                     if test "x$l" = "x$found_dir" ; then
+                        havedir="yes"
+                     fi
+                  done
+                  if test "x$havedir" = "xno" ; then
+                     afslibdirs="$afslibdirs $found_dir"
+                  fi
+               fi
+            else
+               afslib=""
+               afslibdirs=""
+               afsshared="no"
+            fi
+         fi
        else
-          echo "Checking for static AFS libs:"
+         afsshared="no"
        fi
     fi
 
-    if test "x$enable_afs" = "xyes" ; then
+    if test "x$enable_afs" = "xyes" && test "x$afsshared" = "xno" ; then
        #
-       # Libraries
+       # Static Libraries
+       echo "Checking for static AFS libs:"
        #
        for i in $afslibs ; do
-          check_library "$i" "$afs_shared" "$afsdir" $afslibdirs
+          check_library "$i" "$afsshared" "$afslibdir" $afssearchlibdirs
           if test "x$found_lib" = "x" ; then
              afslib=""
-             afslibdir=""
+             afslibdirs=""
              enable_afs="no"
              break
           fi
           afslib="$found_lib $afslib"
-          afslibdir=" $found_dir $afslibdir"
 
           # Check for afs_error_message, if needed
           if test "x$hasafserrormessage" = "xno" ; then
@@ -3971,29 +4013,27 @@ if test ! "x$enable_afs" = "xno" ; then
     # header files
     #
     if test "x$enable_afs" = "xyes" ; then
-       incafs="stds.h kautils.h com_err.h"
-       for i in $incafs ; do
-           check_header "afs/$i" "$found_dir" \
-              /usr/include /usr/local/include /opt/include $finkdir/include
-           if test "x$found_hdr" = "x" ; then
-               afsincdir=""
-               enable_afs="no"
-               break
-           fi
-           if test "x$afsincdir" = "x" ; then
-              afsincdir="-I$found_dir"
-           else
-              have_already="no"
-              for k in $afsincdir ; do
-                 if test "x$k" = "x-I$found_dir" ; then
-                    have_already="yes"
-                 fi
-              done
-              if test "x$have_already" = "xno" ; then
-                 afsincdir="-I$found_dir $afsincdir"
-              fi
-           fi
-       done
+
+       check_header "afs/kautils.h" "$afsincdir" \
+          /usr/include /usr/local/include /opt/include $finkdir/include
+       if test ! "x$found_hdr" = "x" ; then
+          afsincdir="-I$found_dir"
+          tmpincdir=$found_dir
+          otherincafs="stds.h com_err.h"
+          for i in $otherincafs ; do
+             if test ! -f "$tmpincdir/afs/$i" ; then
+                echo "Checking for afs/$i ... no"
+                afsincdir=""
+                enable_afs="no"
+                break
+             else
+                echo "Checking for afs/$i ... $tmpincdir"
+             fi
+          done 
+       else
+          afsincdir=""
+          enable_afs="no"
+       fi
     fi
 
     if test "x$afslib" = "x" ; then
@@ -4004,11 +4044,11 @@ if test ! "x$enable_afs" = "xno" ; then
            afsextracflags="-DR__AFSOLDCOMERR"
         fi
         # Warn about usage of static libs to build a shared object
-        if test "x$afs_shared" = "xno" ; then
+        if test "x$afsshared" = "xno" ; then
             echo "### WARNING: AFS enabled using static libraries: this may lead to relocation-related"
             echo "### errors or warnings if the static libraries are not compiled with the correct options;"
-            echo "### if this happens, please re-run with --enable-shared or move to openafs >= 1.5.x"
-            echo "### or rebuild the AFS static libs with the '-fPIC' option."
+            echo "### if this happens, please re-run with --enable-shared or rebuild the AFS static libs "
+            echo "### with the '-fPIC' option."
         fi
     fi
 fi
@@ -4131,7 +4171,7 @@ check_explicit "$enable_krb5" "$enable_krb5_explicit" \
 #
 if test "x$enable_afs" = "xyes" || test "x$enable_krb5" = "xyes" ; then
     if test ! "x$afsdir" = "x" ; then
-        comerrlibdir=$afsdir
+        comerrlibdir="$afsdir/lib"
     fi
     if test ! "x$krb5libdirorg" = "x" ; then
         if test ! "x$comerrlibdir" = "x" ; then
@@ -4141,7 +4181,7 @@ if test "x$enable_afs" = "xyes" || test "x$enable_krb5" = "xyes" ; then
         fi
     fi
     check_library libcom_err "$enable_shared" "$comerrlibdir" \
-                                              "$afslibdirs $krb5libdirs"
+                                              "$afssearchlibdirs $krb5libdirs"
     if test "x$found_lib" = "x" ; then
 	enable_krb5=no
         krb5incdir=""
@@ -4969,9 +5009,10 @@ fi
 message "Writing $MAKEOUT"
 sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@afslib@|$afslib|"                    \
-    -e "s|@afslibdir@|$afslibdir|"              \
+    -e "s|@afslibdir@|$afslibdirs|"              \
     -e "s|@afsincdir@|$afsincdir|"              \
     -e "s|@afsextracflags@|$afsextracflags|"    \
+    -e "s|@afsshared@|$afsshared|"              \
     -e "s|@alienincdir@|$alienincdir|"          \
     -e "s|@alienlib@|$alienlib|"                \
     -e "s|@alienlibdir@|$alienlibdir|"          \
