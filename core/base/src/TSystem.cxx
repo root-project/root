@@ -2798,7 +2798,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                   }
                   continue;
                }
-               if (line[current-1]=='=' && strncmp(version_var.Data(),line,current)==0) {
+               if (current && line[current-1]=='=' && strncmp(version_var.Data(),line,current)==0) {
                   
                   // The next word will be the version number.
                   hasversion = kTRUE;
