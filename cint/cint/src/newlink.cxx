@@ -8956,86 +8956,80 @@ void G__cpplink_memvar(FILE *fp)
          //  Loop over all the data members and write setup info to the file.
          //
          struct G__var_array* var = G__struct.memvar[i];
-         while (var) {
-            // -- Loop over all variable pages.
-            for (int j = 0; j < var->allvar; ++j) {
-               // -- Loop over all variables on page.
-               //
-               // FIXME: What is this block for?
-               //
-               //if (
-               //   (G__struct.virtual_offset[i] != -1) &&
-               //   !strcmp(var->varnamebuf[j], "G__virtualinfo") &&
-               //   !G__hascompiledoriginalbase(i)
-               //) {}
-               if (
-                  // -- Data member is accessible and is not a bitfield, or G__precomp_private.
+         while (var) { // Loop over all variable pages.
+            for (int j = 0; j < var->allvar; ++j) { // Loop over all variables on page.
+               if ( // Data member is not a bitfield and is accessible.
+                  G__precomp_private || // option -V given on the command line, or
                   (
+                     !var->bitfield[j] &&
                      (
-                        (var->access[j] == G__PUBLIC) ||
-                        ((var->access[j] == G__PROTECTED) && (G__struct.protectedaccess[i] & G__PROTECTEDACCESS)) ||
-                        (G__struct.protectedaccess[i] & G__PRIVATEACCESS)
-                     ) &&
-                     !var->bitfield[j]
-                  ) ||
-                  G__precomp_private
-               ) {
-                  // -- Write a data member setup call to the dictionary file.
-                  int pvoidflag = 0;
-                  if (
-                     // -- Is enumerator or unaddressable bool.
+                        (var->access[j] == G__PUBLIC) || // is public, or
+                        (
+                           (var->access[j] == G__PROTECTED) && // is protected, and
+                           (G__struct.protectedaccess[i] & G__PROTECTEDACCESS) // enabled by pragma link
+                        ) || // or,
+                        (G__struct.protectedaccess[i] & G__PRIVATEACCESS) // is private, and enabled by pragma link
+                     )
+                  )
+               ) { // Data member is not a bitfield and is accessible.
+                  //
+                  //  Write a data member setup call to the dictionary file.
+                  //
+                  int pvoidflag = 0; // if true, pass G__PVOID as the addr to force G__malloc to allocate storage.
+                  if ( // Is enumerator or unaddressable bool or const static fundamental.
                      (
                         islower(var->type[j]) && // not a pointer, and
                         var->constvar[j] && // is const, and
                         (var->p_tagtable[j] != -1) && // class tag is valid, and
                         (G__struct.type[var->p_tagtable[j]] == 'e') // data member of an enum
-                     )
+                     ) || // or,
 #ifdef G__UNADDRESSABLEBOOL
-                     || (var->type[j] == 'g') // or, is an unaddressable bool
+                     (var->type[j] == 'g') || // or, is an unaddressable bool, or
 #endif // G__UNADDRESSABLEBOOL
-                     // --
-                  ) {
-                     // -- Pass a null pointer as the address of these things.
-                     pvoidflag = 1;
+                     (
+                        (var->statictype[j] == G__LOCALSTATIC) && // static, and
+                        var->constvar[j] && // const, and
+                        islower(var->type[j]) && // not a pointer, and
+                        (var->type[j] != 'u') && // not a class, enum, struct, or union, and
+                        var->p[j] // has allocated memory (is initialized???)
+                     )
+                  ) { // Is enumerator or unaddressable bool or const static fundamental.
+                     pvoidflag = 1; // Pass G__PVOID as the address to force G__malloc to allocate storage.
                   }
                   fprintf(fp, "   G__memvar_setup(");
                   //
                   //  Offset in object for a non-static data member, or
-                  //  the address of global variable for a static data
+                  //  the address of the member for a static data
                   //  member, or a namespace member.
                   //
-                  if ((var->access[j] == G__PUBLIC) && !var->bitfield[j]) {
-                     // -- Public member.
-                     if (!G__struct.name[i][0]) {
-                        // -- Unnamed class or namespace, we pass a null pointer.
-                        fprintf(fp, "(void*)0,");
+                  if ((var->access[j] == G__PUBLIC) && !var->bitfield[j]) { // Public member and not a bitfield.
+                     // Public member and not a bitfield.
+                     if (!G__struct.name[i][0]) { // Unnamed class or namespace.
+                        fprintf(fp, "(void*)0,"); // We pass a null pointer, which means no data allocation (unfortunate, but we have no way to take the address!).
                      }
-                     else if (
-                        // -- Static member or namespace member.
+                     else if ( // Static member or namespace member.
                         (var->statictype[j] == G__LOCALSTATIC) || // Static member, or
-                        (G__struct.type[i] == 'n') // Namespace member
-                     ) {
-                        // -- We pass the address of the global variable, or a null pointer.
-                        if (pvoidflag) {
-                           // -- Special case, is enumerator or unaddressable bool, pass G__PVOID (is -1).
-                           fprintf(fp, "(void*)G__PVOID,");
+                        (G__struct.type[i] == 'n') // Namespace member.
+                     ) { // Static member or namespace member.
+                        // We pass the special G__PVOID flag, or the address of the member.
+                        if (pvoidflag) { // Special case, is enumerator, unaddressable bool, or static.
+                           fprintf(fp, "(void*)G__PVOID,"); // Pass G__PVOID to force G__malloc to allocate storage.
                         }
                         else {
-                           // -- We pass the address of the global variable.
-                           fprintf(fp, "(void*)(&%s::%s),", G__fulltagname(i, 1), var->varnamebuf[j]);
+                           fprintf(fp, "(void*)(&%s::%s),", G__fulltagname(i, 1), var->varnamebuf[j]); // Pass the addr of the member.
                         }
                      }
                      else {
-                        // -- We pass the offset of the data member in the class.
-                        fprintf(fp, "(void*)((long)(&p->%s)-(long)(p)),", var->varnamebuf[j]);
+                        fprintf(fp, "(void*)((long)(&p->%s)-(long)(p)),", var->varnamebuf[j]); // Pass the offset of the member in the class.
                      }
                   }
-                  else if ((var->access[j] == G__PROTECTED) && G__struct.protectedaccess[i]) {
-                     // -- Protected member.
+                  else if ((var->access[j] == G__PROTECTED) && G__struct.protectedaccess[i]) { // Protected member, and enabled by pragma link.
+                     // Protected member, and enabled by pragma link.
                      fprintf(fp, "(void*)((%s_PR*)p)->G__OS_%s(),", G__get_link_tagname(i), var->varnamebuf[j]);
                   }
                   else {
-                     // -- Private or protected member, we pass a null pointer.
+                     // Private or protected member, we pass a null pointer, unfortunate,
+                     // but we have no way to take the address of these.
                      fprintf(fp, "(void*)0,");
                   }
                   //
@@ -9083,12 +9077,17 @@ void G__cpplink_memvar(FILE *fp)
                      fprintf(fp, "[%d]", var->varlabel[j][k+1]);
                   }
                   if (
-                     // -- Enumerator in a static enum.
+                     // -- Enumerator in a static enum or const static fundamental.
                      pvoidflag && // Is enumerator or unaddressable bool, and
-                     (var->statictype[j] == G__LOCALSTATIC) // is static
+                     (var->statictype[j] == G__LOCALSTATIC)// is static
+                     && (
 #ifdef G__UNADDRESSABLEBOOL
-                     && (var->type[j] != 'g') // and is unaddressable bool FIXME: Should be or here?
+                         var->type[j] != 'g' || // and is unaddressable bool FIXME: Should be or here?
 #endif // G__UNADDRESSABLEBOOL
+                         (var->constvar[j] && // const static
+                          islower(var->type[j]) && var->type[j] != 'u' && // of fundamental
+                          var->p[j]) // with initializer
+                      )
                      // --
                   ) {
                      // -- Enumerator in a static enum has a special initializer.
@@ -9096,7 +9095,20 @@ void G__cpplink_memvar(FILE *fp)
                      sprintf(ttt, "%s::%s", G__fulltagname(i, 1), var->varnamebuf[j]);
                      int store_var_type = G__var_type;
                      G__var_type = 'p';
-                     G__value buf = G__getitem(ttt);
+                     G__value buf;
+                     if (var->constvar[j] && // const static
+                         (isupper(var->type[j]) || var->type[j] != 'u') && // of fundamental
+                         var->p[j] // with initializer
+                         ) {
+                        // local static, can be private thus cannot call G__getitem.
+                        // Take the value from var->p instead.
+                        sprintf(value, "*(%s*)0x%lx",
+                                G__type2string(var->type[j], var->p_tagtable[j], var->p_typetable[j], 0, 0),
+                                var->p[j]);
+                        buf = G__calc_internal(value);
+                     } else {
+                        buf = G__getitem(ttt);
+                     }
                      G__var_type = store_var_type;
                      G__string(buf, value);
                      G__quotedstring(value, ttt);
@@ -10000,6 +10012,9 @@ void G__cpplink_global(FILE *fp)
 #ifdef G__UNADDRESSABLEBOOL
            || 'g'==var->type[j]
 #endif
+           || (var->statictype[j] == G__LOCALSTATIC && var->constvar[j] && // const static
+               islower(var->type[j]) && var->type[j] != 'u' && // of fundamental
+               var->p[j]) // with initializer
            )
           pvoidflag=1;
         else
