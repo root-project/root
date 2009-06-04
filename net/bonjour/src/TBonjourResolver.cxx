@@ -67,7 +67,8 @@ Int_t TBonjourResolver::ResolveBonjourRecord(const TBonjourRecord &record)
                                                record.GetServiceName(),
                                                record.GetRegisteredType(),
                                                record.GetReplyDomain(),
-                                               BonjourResolveReply, this);
+                                               (DNSServiceResolveReply)BonjourResolveReply,
+                                               this);
    if (err != kDNSServiceErr_NoError) {
       Error("ResolveBonjourRecord", "error in DNSServiceResolve (%d)", err);
       return -1;
