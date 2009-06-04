@@ -540,7 +540,7 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
       }
       // Create the instance now
       if (!pl)
-         pl = new TProofLog(tag, purl, this);
+         pl = new TProofLog(tag, GetUrl(), this);
 
       // Per-node info
       TString to;
