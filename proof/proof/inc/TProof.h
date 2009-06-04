@@ -413,6 +413,8 @@ private:
    TList          *fLoadedMacros;    // List of loaded macros (just file names)
    static TList   *fgProofEnvList;   // List of TNameds defining environment
                                      // variables to pass to proofserv
+   static TPluginHandler *fgLogViewer;  // Log dialog box plugin
+
 protected:
    enum ESlaves { kAll, kActive, kUnique, kAllUnique };
 
@@ -821,6 +823,7 @@ public:
    // Opening and managing PROOF connections
    static TProof       *Open(const char *url = 0, const char *conffile = 0,
                              const char *confdir = 0, Int_t loglevel = 0);
+   static void          LogViewer(const char *url = 0, Int_t sessionidx = 0);
    static TProofMgr    *Mgr(const char *url);
    static void          Reset(const char *url, Bool_t hard = kFALSE);
 

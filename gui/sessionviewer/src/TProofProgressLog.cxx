@@ -45,6 +45,30 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    // Create a window frame for log messages.
 
    fDialog = d;
+   if (fDialog) fSessionUrl = fDialog->fSessionUrl;
+   fSessionIdx = 0;
+
+   Init(w, h);
+}
+
+//____________________________________________________________________________
+TProofProgressLog::TProofProgressLog(const char *url, Int_t idx, Int_t w, Int_t h) :
+   TGTransientFrame(gClient->GetRoot(), gClient->GetRoot(), w, h)
+{
+   // Create a window frame for log messages.
+
+   fDialog = 0;
+   fSessionUrl = url;
+   fSessionIdx = (idx > 0) ? -idx : idx;
+
+   Init(w, h);
+}
+
+//____________________________________________________________________________
+void TProofProgressLog::Init(Int_t w, Int_t h)
+{
+   // Init window frame for log messages.
+
    fProofLog = 0;
    fFullText = kFALSE;
    fTextType = kStd;
@@ -59,43 +83,63 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    vtextbox->AddFrame(fText, new TGLayoutHints(kLHintsTop | kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3));
 
    //The frame for choosing workers
-   TGVerticalFrame *vworkers = new TGVerticalFrame(htotal);
-   TGLabel *label1 = new TGLabel(vworkers,"Choose workers:");
+   fVworkers = new TGVerticalFrame(htotal);
+   // URL choice
+   TGLabel *laburl = new TGLabel(fVworkers, "Enter cluster URL:");
+   fVworkers->AddFrame(laburl, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 2, 2, 2));
+   fUrlText = new TGTextEntry(fVworkers);
+   fUrlText->SetText(fSessionUrl.Data());
+   fVworkers->AddFrame(fUrlText, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 0, 0, 0));
+   //The lower row of number entries and buttons
+   TGHorizontalFrame *hfurlbox = new TGHorizontalFrame(fVworkers, 20, 20);
+   TGLabel *labsess = new TGLabel(hfurlbox, "Enter session:");
+   hfurlbox->AddFrame(labsess, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 5, 2, 2, 2));
+   fSessNum = new TGNumberEntry(hfurlbox, 0, 5, -1, TGNumberFormat::kNESInteger);
+   fSessNum->SetLimits(TGNumberFormat::kNELLimitMax, 0., 0.);
+   fSessNum->SetIntNumber(0);
+   fSessNum->GetNumberEntry()->SetToolTipText("Use 0 for the last known one,"
+                                              " negative numbers for the previous ones, e.g. -1 for the last-but-one");
+   hfurlbox->AddFrame(fSessNum, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 0, 0, 0));
+   fUrlButton = new TGTextButton(hfurlbox, "Get logs info");
+   fUrlButton->Connect("Clicked()", "TProofProgressLog", this, "Rebuild()");
+   hfurlbox->AddFrame(fUrlButton, new TGLayoutHints(kLHintsCenterY | kLHintsRight, 4, 0, 0, 0));
+   fVworkers->AddFrame(hfurlbox, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
+
+   TGNumberEntry *nent = new TGNumberEntry(hfurlbox);
+   fVworkers->AddFrame(nent, new TGLayoutHints(kLHintsTop | kLHintsLeft, 4, 0, 0, 0));
 
    //The list of workers
-   if (!(fLogList = BuildLogList(vworkers))) {
-      SetBit(TObject::kInvalidObject);
-      return;
-   }
+   fLogList = 0;
+   BuildLogList(kTRUE);
    fLogList->Resize(102,52);
    fLogList->SetMultipleSelections(kTRUE); 
 
-   //The SelectAll/ClearAll button
-   TGPopupMenu *pm = new TGPopupMenu(gClient->GetRoot());
-   pm->AddEntry("Select All", 0);
-   pm->AddEntry("Clear All", 1);
-
-   fAllWorkers = new TGSplitButton(vworkers, new TGHotString("Select ...            "), pm);
-   fAllWorkers->Connect("ItemClicked(Int_t)", "TProofProgressLog", this, 
-                     "Select(Int_t)");
-   fAllWorkers->SetSplit(kFALSE);
+   //The SelectAll/ClearAll buttons
+   TGHorizontalFrame *hfselbox = new TGHorizontalFrame(fVworkers, 20, 20);
+   TGLabel *label1 = new TGLabel(hfselbox,"Choose workers:");
+   hfselbox->AddFrame(label1, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 0, 0, 0, 0));
+   TGTextButton *selall = new TGTextButton(hfselbox,   "     &All      ");
+   selall->Connect("Clicked()", "TProofProgressLog", this, "Select(=0)");
+   hfselbox->AddFrame(selall, new TGLayoutHints(kLHintsCenterY | kLHintsRight, 10, 0, 0, 0));
+   TGTextButton *clearall = new TGTextButton(hfselbox, "     &Clear    ");
+   clearall->Connect("Clicked()", "TProofProgressLog", this, "Select(=1)");
+   hfselbox->AddFrame(clearall, new TGLayoutHints(kLHintsCenterY | kLHintsRight, 10, 0, 0, 0));
 
    //select the defaut actives to start with
    Select(0, kFALSE);
 
    //Display button
-   fLogNew = new TGTextButton(vworkers, "&Display");
+   fLogNew = new TGTextButton(fVworkers, "&Display");
    fLogNew->Connect("Clicked()", "TProofProgressLog", this, "DoLog(=kFALSE)");
    //fLogNew->Resize(102, 20);
    // fLogNew->SetMargins(1, 1, 0, 1);
    fLogNew->SetTextColor(0xffffff, kFALSE);
    fLogNew->SetBackgroundColor(0x000044);
-   vworkers->AddFrame(label1, new TGLayoutHints(kLHintsLeft | kLHintsTop, 7, 2, 5, 2));
-   vworkers->AddFrame(fAllWorkers, new TGLayoutHints(kLHintsExpandX | kLHintsTop, 5, 2, 2, 2));
-   vworkers->AddFrame(fLogList, new TGLayoutHints(kLHintsExpandX | kLHintsTop | kLHintsExpandY, 2, 2, 5, 2));
-   vworkers->AddFrame(fLogNew, new TGLayoutHints(kLHintsExpandX | kLHintsTop , 2, 2, 1, 5));
+   fVworkers->AddFrame(hfselbox, new TGLayoutHints(kLHintsExpandX | kLHintsTop, 5, 2, 2, 2));
+   fVworkers->AddFrame(fLogList, new TGLayoutHints(kLHintsExpandX | kLHintsTop | kLHintsExpandY, 2, 2, 5, 2));
+   fVworkers->AddFrame(fLogNew, new TGLayoutHints(kLHintsExpandX | kLHintsTop , 2, 2, 1, 5));
 
-   htotal->AddFrame(vworkers, new TGLayoutHints(kLHintsCenterY | kLHintsLeft | kLHintsExpandY, 2, 2, 2, 2));
+   htotal->AddFrame(fVworkers, new TGLayoutHints(kLHintsCenterY | kLHintsLeft | kLHintsExpandY, 2, 2, 2, 2));
 
    //The lower row of number entries and buttons
    TGHorizontalFrame *hflogbox = new TGHorizontalFrame(vtextbox, 550, 20);
@@ -162,13 +206,6 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    htotal->AddFrame(vtextbox, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY | kLHintsRight, 3, 3, 3, 3));
    AddFrame(htotal, new TGLayoutHints(kLHintsExpandX |
                                         kLHintsExpandY, 3, 3, 3, 3));
-
-   char title[256] = {0};
-   strcpy(title,Form("PROOF Processing Logs: %s",
-                     (fDialog->fProof ? fDialog->fProof->GetMaster() : "<dummy>")));
-   SetWindowName(title);
-   SetIconName(title);
-
    MapSubwindows();
    Resize();
    CenterOnParent();
@@ -184,9 +221,11 @@ TProofProgressLog::~TProofProgressLog()
    SafeDelete(fProofLog);
 
    // Detach from owner dialog
-   fDialog->fLogWindow = 0;
-   fDialog->fProof->Disconnect("LogMessage(const char*,Bool_t)", this,
-                               "LogMessage(const char*,Bool_t)");
+   if (fDialog) {
+      fDialog->fLogWindow = 0;
+      fDialog->fProof->Disconnect("LogMessage(const char*,Bool_t)", this,
+                                 "LogMessage(const char*,Bool_t)");
+   }
 }
 
 //____________________________________________________________________________
@@ -245,29 +284,50 @@ void TProofProgressLog::CloseWindow()
 }
 
 //______________________________________________________________________________
-TGListBox* TProofProgressLog::BuildLogList(TGFrame *parent)
+void TProofProgressLog::BuildLogList(Bool_t create)
 {
    // Build the list of workers. For this, extract the logs and take the names
    // of TProofLogElements
 
-   TGListBox *c = 0;
-   if (!fDialog) {
-      Warning("BuildLogList", "dialog instance undefined - do nothing");
-      return c;
+   // Set title
+   TString title;
+   title.Form("PROOF - Processing logs for session 'undefined'");
+   SetWindowName(title.Data());
+   SetIconName(title.Data());
+
+   // Create the list-box now
+   if (create) {
+      if (fLogList) delete fLogList;
+      fLogList = new TGListBox(fVworkers);
+   } else {
+      // Reset
+      Int_t nent = fLogList->GetNumberOfEntries();
+      fLogList->RemoveEntries(0,nent);
+      fLogList->Layout();
    }
-   TProofMgr *mgr = TProof::Mgr(fDialog->fSessionUrl.Data());
+
+   if (fSessionUrl.IsNull()) {
+      if (gDebug > 0)
+         Info("BuildLogList", "sesssion URL undefined - do nothing");
+      return;
+   }
+   TProofMgr *mgr = TProof::Mgr(fSessionUrl.Data());
    if (!mgr || !mgr->IsValid()) {
       Warning("BuildLogList", "unable open a manager connection to %s",
-                              fDialog->fSessionUrl.Data());
-      return c;
+                              fSessionUrl.Data());
+      return;
    }
-   if (!(fProofLog = mgr->GetSessionLogs(0,"NR"))) {
+   if (!(fProofLog = mgr->GetSessionLogs(fSessionIdx,"NR"))) {
       Warning("BuildLogList", "unable to get logs from %s",
-                              fDialog->fSessionUrl.Data());
-      return c;
+                              fSessionUrl.Data());
+      return;
    }
-   // Create the list-box now
-   c = new TGListBox(parent);
+   // Set title
+   title.Form("PROOF - Processing logs for session '%s', started on %s at %s",
+              fProofLog->GetName(), fProofLog->StartTime().AsString(),
+              fProofLog->GetTitle());
+   SetWindowName(title.Data());
+   SetIconName(title.Data());
 
    TList *elem = fProofLog->GetListOfLogs();
    TIter next(elem);
@@ -275,11 +335,16 @@ TGListBox* TProofProgressLog::BuildLogList(TGFrame *parent)
 
    Int_t is = 0;
    TGLBEntry *ent = 0;
+   TString buf;
    while ((pe=(TProofLogElem*)next())){
       TUrl url(pe->GetTitle());
-      TString buf = TString::Format("%s %s", pe->GetName(), url.GetHost());
-      c->AddEntry(buf.Data(), is);
-      if ((ent = c->FindEntry(buf.Data()))) {
+      if (TString(url.GetFile()).Contains(".valgrind")) {
+         buf.Form("%s %s valgrind", pe->GetName(), url.GetHost());
+      } else {
+         buf.Form("%s %s", pe->GetName(), url.GetHost());
+      }
+      fLogList->AddEntry(buf.Data(), is);
+      if ((ent = fLogList->FindEntry(buf.Data()))) {
          ent->ResetBit(kLogElemFilled);
          ent->ResetBit(kDefaultActive);
          if (!(pe->IsWorker())) ent->SetBit(kDefaultActive);
@@ -287,8 +352,8 @@ TGListBox* TProofProgressLog::BuildLogList(TGFrame *parent)
       is++;
    }
 
-   return c;
-
+   // Done
+   return;
 }
 
 //______________________________________________________________________________
@@ -297,6 +362,11 @@ void TProofProgressLog::DoLog(Bool_t grep)
    // Display the logs
 
    Clear();
+
+   if (!fGrepText) {
+      Warning("DoLog", "no text: do nothing!");
+      return;
+   }
 
    TString greptext = fGrepText->GetText();
    Int_t from, to;
@@ -311,14 +381,14 @@ void TProofProgressLog::DoLog(Bool_t grep)
    // Create the TProofLog instance
    if (!fProofLog) {
       TProofMgr *mgr = 0;
-      if ((mgr = TProof::Mgr(fDialog->fSessionUrl.Data()))) {
-         if (!(fProofLog = mgr->GetSessionLogs(0, "NR"))) {
+      if ((mgr = TProof::Mgr(fSessionUrl.Data()))) {
+         if (!(fProofLog = mgr->GetSessionLogs(fSessionIdx, "NR"))) {
             Warning("DoLog", "unable to instantiate TProofLog for %s",
-                             fDialog->fSessionUrl.Data());
+                             fSessionUrl.Data());
          }
       } else {
          Warning("DoLog", "unable to instantiate a TProofMgr for %s",
-                          fDialog->fSessionUrl.Data());
+                          fSessionUrl.Data());
       }
    }
 
@@ -328,20 +398,20 @@ void TProofProgressLog::DoLog(Bool_t grep)
       if (!fFullText ||
           ((fTextType != kRaw && fRawLines->IsOn())   ||
            (fTextType != kStd && !fRawLines->IsOn())) ||
-          fDialog->fStatus==TProofProgressDialog::kRunning) {
+          (fDialog && fDialog->fStatus==TProofProgressDialog::kRunning)) {
          retrieve = kTRUE;
          if (fRawLines->IsOn()) {
             fTextType = kRaw;
          } else {
             fTextType = kStd;
          }
-         if (fDialog->fStatus != TProofProgressDialog::kRunning)
+         if (fDialog && fDialog->fStatus != TProofProgressDialog::kRunning)
             fFullText = kTRUE;
       }
    } else {
       retrieve = kTRUE;
       fTextType = kGrep;
-      if (fDialog->fStatus != TProofProgressDialog::kRunning)
+      if (fDialog && fDialog->fStatus != TProofProgressDialog::kRunning)
          fFullText = kTRUE;
    }
 
@@ -466,3 +536,47 @@ void TProofProgressLog::Select(Int_t id, Bool_t all)
    }
 }
 
+
+//______________________________________________________________________________
+void TProofProgressLog::Rebuild()
+{
+   // Rebuild the log info for a new entered session
+
+   // Check if we need to remake the TProofLog object
+   Bool_t sameurl = kFALSE;
+   TUrl url(fUrlText->GetText());
+   TUrl urlref(fSessionUrl.Data());
+   if (!strcmp(url.GetHostFQDN(), urlref.GetHostFQDN())) {
+      if (url.GetPort() == urlref.GetPort()) {
+         if (!strcmp(url.GetUser(), urlref.GetUser())) {
+            sameurl = kTRUE;
+         }
+      }
+   }
+   Int_t idx = 0;
+   if (sameurl) {
+      idx = fSessNum->GetIntNumber();
+      if (idx == fSessionIdx) {
+         Info("Rebuild", "same paremeters {%s, %s}, {%d, %d}: no need to rebuild TProofLog",
+                         url.GetUrl(), urlref.GetUrl(), idx, fSessionIdx);
+         return;
+      }
+   }
+   // Cleanup current TProofLog
+   if (fProofLog) delete fProofLog;
+
+   // Set new parameters
+   fSessionUrl = fUrlText->GetText();
+   fSessionIdx = idx;
+
+   // Rebuild the list now
+   BuildLogList(kFALSE);
+
+   // Select the defaut actives to start with
+   Select(0, kFALSE);
+   // Redraw
+   fLogList->Layout();
+
+   // Done
+   return;
+}

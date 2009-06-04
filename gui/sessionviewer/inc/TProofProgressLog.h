@@ -25,6 +25,9 @@
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
 
 class TGTextView;
 class TGTextButton;
@@ -34,11 +37,15 @@ class TGTextEntry;
 class TGNumberEntry;
 class TGListBox;
 class TGSplitButton;
+class TGVerticalFrame;
 
 class TProofProgressLog : public TGTransientFrame {
 
 private:
    enum ETextType { kRaw = 0, kStd = 1, kGrep = 2 };
+
+   TString               fSessionUrl;
+   Int_t                 fSessionIdx;
 
    TGTextView           *fText;      // text widget
    TGTextButton         *fClose;     // close button
@@ -49,23 +56,31 @@ private:
    TGNumberEntry        *fLinesFrom; // starting line
    TGNumberEntry        *fLinesTo;   // ending line
    TGTextEntry          *fGrepText;  // text to grep for in the logs
+   TGTextEntry          *fUrlText;   // url to connect to
+   TGNumberEntry        *fSessNum;   // relative index of the session to get
    TGTextEntry          *fFileName;  // file to save to
    TGTextButton         *fSave;      // save button
    TGTextButton         *fGrepButton; //grep button
+   TGTextButton         *fUrlButton; //rebuild button
    TGCheckButton        *fAllLines;  // display all lines button
    TGCheckButton        *fRawLines;  // display raw lines button
    TGSplitButton        *fAllWorkers; // display all workers button
+   TGVerticalFrame      *fVworkers;  // Vertical frame
 
    Bool_t                fFullText;    // 0 - when grep was called
    Int_t                 fTextType;   // Type of retrieval
 
+   void  Init(Int_t w = 700, Int_t h = 300);
+
 public:
    TProofProgressLog(TProofProgressDialog *d, Int_t w = 700, Int_t h = 300);
+   TProofProgressLog(const char *url = 0, Int_t sessionidx = 0, Int_t w = 700, Int_t h = 300);
    virtual ~TProofProgressLog();
 
-   TGListBox* BuildLogList(TGFrame *parent);
-   void       DoLog(Bool_t grep=kFALSE);
-   void       LogMessage(const char *msg, Bool_t all);
+   void   BuildLogList(Bool_t create = kFALSE);
+   void   DoLog(Bool_t grep=kFALSE);
+   void   LogMessage(const char *msg, Bool_t all);
+   void   Rebuild();
 
    void   LoadBuffer(const char *buffer);
    void   AddBuffer(const char *buffer);
@@ -77,6 +92,8 @@ public:
    void   SaveToFile();
    void   NoLineEntry();
    void   Select(Int_t id, Bool_t all = kTRUE);
+
+   void   SetUrl(const char *url) { fSessionUrl = url; }
    // slots
    void   CloseWindow();
 

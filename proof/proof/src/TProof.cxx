@@ -80,6 +80,7 @@ TProof *gProof = 0;
 TVirtualMutex *gProofMutex = 0;
 
 TList   *TProof::fgProofEnvList = 0;  // List of env vars for proofserv
+TPluginHandler *TProof::fgLogViewer = 0;      // Log viewer handler
 
 ClassImp(TProof)
 
@@ -9044,3 +9045,38 @@ Int_t TProof::GetInputData(TList *input, const char *cachedir, TString &emsg)
    // Done
    return 0;
 }
+
+//______________________________________________________________________________
+void TProof::LogViewer(const char *url, Int_t idx)
+{
+   // Start the log viewer window usign the plugin manager
+
+   if (!gROOT->IsBatch()) {
+      // Get the handler, if not yet done
+      if (!fgLogViewer) {
+         if ((fgLogViewer =
+            gROOT->GetPluginManager()->FindHandler("TProofProgressLog"))) {
+            if (fgLogViewer->LoadPlugin() == -1) {
+               fgLogViewer = 0;
+               ::Error("TProof::LogViewer", "cannot load the relevant plug-in");
+               return;
+            }
+         }
+      }
+      if (fgLogViewer) {
+         // Execute the plug-in
+         fgLogViewer->ExecPlugin(2, url, idx);
+      }
+   } else {
+      if (url && strlen(url) > 0) {
+         ::Info("TProof::LogViewer",
+                "batch mode: use TProofLog *pl = TProof::Mgr(\"%s\")->GetSessionLogs(%d)", url, idx);
+      } else {
+         ::Info("TProof::LogViewer",
+                "batch mode: use TProofLog *pl = TProof::Mgr(\"<master>\")->GetSessionLogs(%d)", idx);
+      }
+   }
+   // Done
+   return;
+}
+
