@@ -352,6 +352,7 @@ public:
    virtual TSQLResult     *Query(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual Long64_t        ReadFile(const char* filename, const char* branchDescriptor = "");
    virtual void            Refresh();
+   virtual void            RecursiveRemove(TObject *obj);
    virtual void            RemoveFriend(TTree*);
    virtual void            Reset(Option_t* option = "");
    virtual void            ResetBranchAddress(TBranch *);

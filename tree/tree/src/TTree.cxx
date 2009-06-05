@@ -688,12 +688,15 @@ TTree::~TTree()
       // Note: fClones does not own its content.
       delete fClones;
       fClones = 0;
+   }
    if (fEntryList){
-      if (fEntryList->TestBit(kCanDelete)){
+      if (fEntryList->TestBit(kCanDelete) && fEntryList->GetDirectory()==0){
+         // Delete the entry list if it is marked to be deleted and it is not also 
+         // owned by a directory.  (Otherwise we would need to make sure that a 
+         // TDirectoryFile that has a TTree in it does a 'slow' TList::Delete.
          delete fEntryList;
          fEntryList=0;
       }
-   }
    }
    delete fTreeIndex;
    fTreeIndex = 0;
@@ -4172,6 +4175,7 @@ TEntryList* TTree::GetEntryList()
    //creating an entry list.
    if (fEntryList->TestBit(kCanDelete) == kTRUE){
       fEntryList->SetBit(kCanDelete, kFALSE);
+      fEntryList->SetDirectory(fDirectory ? fDirectory : gROOT); // Transfer ownsership
    }
    return fEntryList;
 }
@@ -5472,6 +5476,34 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    return nlines;
 }
 
+void TTree::RecursiveRemove(TObject *obj)
+{
+   // Make sure that obj (which is being deleted or will soon be) is no
+   // longer referenced by this TTree.
+   
+   if (obj == fEventList) {
+      fEventList = 0;
+   }
+   if (obj == fEntryList) {
+      fEntryList = 0;
+   }
+   if (fUserInfo) {
+      fUserInfo->RecursiveRemove(obj);
+   }
+   if (fPlayer == obj) {
+      fPlayer = 0;
+   }
+   if (fTreeIndex) {
+      fTreeIndex = 0;
+   }
+   if (fAliases) {
+      fAliases->RecursiveRemove(obj);
+   }
+   if (fFriends) {
+      fFriends->RecursiveRemove(obj);
+   }
+}
+
 //______________________________________________________________________________
 void TTree::Refresh()
 {
@@ -6146,6 +6178,7 @@ void TTree::SetEventList(TEventList *evlist)
    char enlistname[100];
    sprintf(enlistname, "%s_%s", evlist->GetName(), "entrylist");
    fEntryList = new TEntryList(enlistname, evlist->GetTitle());
+   fEntryList->SetDirectory(0); // We own this.
    Int_t nsel = evlist->GetN();
    fEntryList->SetTree(this);
    Long64_t entry;
