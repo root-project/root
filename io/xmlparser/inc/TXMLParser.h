@@ -23,8 +23,8 @@
 // The libxml library provides two interfaces to the parser, a DOM      //
 // style tree interface and a SAX style event based interface.          //
 //                                                                      //
-// TXMLParser is the parent class of TSAXParser, which is               //
-// a SAX interface of libxml  and TDOMParser, a DOM interface of libxml.//
+// TXMLParser is parent class of TSAXParser and TDOMParser, which are   //
+// a SAX interface and DOM interface of libxml.                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -92,4 +92,3 @@ public:
 };
 
 #endif
-

@@ -20,8 +20,8 @@
 // The libxml library provides two interfaces to the parser, a DOM      //
 // style tree interface and a SAX style event based interface.          //
 //                                                                      //
-// TXMLParser is parent class of TSAXParser, which is a SAX interface   //
-// of libxml.                                                           //
+// TXMLParser is parent class of TSAXParser and TDOMParser, which are   //
+// a SAX interface and DOM interface of libxml.                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -47,6 +47,8 @@ TXMLParser::TXMLParser()
   : fContext(0), fValidate(kTRUE), fReplaceEntities(kFALSE), fParseCode(0)
 {
    // Initializes parser variables.
+
+   xmlInitParser();
 }
 
 //______________________________________________________________________________
@@ -84,6 +86,7 @@ void TXMLParser::ReleaseUnderlying()
       xmlFreeParserCtxt(fContext);
       fContext = 0;
    }
+   xmlCleanupParser();
 }
 
 //______________________________________________________________________________

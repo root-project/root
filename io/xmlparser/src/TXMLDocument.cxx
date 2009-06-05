@@ -46,7 +46,6 @@ TXMLDocument::~TXMLDocument()
 
    delete fRootNode;
    xmlFreeDoc(fXMLDoc);
-   xmlCleanupParser();
 }
 
 //______________________________________________________________________________
