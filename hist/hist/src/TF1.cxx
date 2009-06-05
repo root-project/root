@@ -1910,22 +1910,44 @@ Double_t TF1::GetRandom()
    //     - Look in which bin in the normalized integral r1 corresponds to
    //     - Evaluate the parabolic curve in the selected bin to find
    //       the corresponding X value.
+   //   if the ratio fXmax/fXmin > fNpx the integral is tabulated in log scale in x
    //   The parabolic approximation is very good as soon as the number
    //   of bins is greater than 50.
 
    //  Check if integral array must be build
    if (fIntegral == 0) {
-      Double_t dx = (fXmax-fXmin)/fNpx;
       fIntegral = new Double_t[fNpx+1];
-      fAlpha    = new Double_t[fNpx];
+      fAlpha    = new Double_t[fNpx+1];
       fBeta     = new Double_t[fNpx];
       fGamma    = new Double_t[fNpx];
       fIntegral[0] = 0;
+      fAlpha[fNpx] = 0;
       Double_t integ;
       Int_t intNegative = 0;
       Int_t i;
+      Bool_t logbin = kFALSE;
+      Double_t dx;
+      Double_t xmin = fXmin;
+      Double_t xmax = fXmax;
+      if (xmin > 0 && xmax/xmin> fNpx) {
+         logbin =  kTRUE;
+         fAlpha[fNpx] = 1;
+         xmin = TMath::Log10(fXmin);
+         xmax = TMath::Log10(fXmax);
+      }
+      dx = (xmax-xmin)/fNpx;
+         
+      Double_t *xx = new Double_t[fNpx+1];
       for (i=0;i<fNpx;i++) {
-         integ = Integral(Double_t(fXmin+i*dx), Double_t(fXmin+i*dx+dx));
+            xx[i] = xmin +i*dx;
+      }
+      xx[fNpx] = xmax;
+      for (i=0;i<fNpx;i++) {
+         if (logbin) {
+            integ = Integral(TMath::Power(10,xx[i]), TMath::Power(10,xx[i+1]));
+         } else {
+            integ = Integral(xx[i],xx[i+1]);
+         }
          if (integ < 0) {intNegative++; integ = -integ;}
          fIntegral[i+1] = fIntegral[i] + integ;
       }
@@ -1945,9 +1967,10 @@ Double_t TF1::GetRandom()
       // compute the coefficients alpha, beta, gamma for each bin
       Double_t x0,r1,r2,r3;
       for (i=0;i<fNpx;i++) {
-         x0 = fXmin+i*dx;
+         x0 = xx[i];
          r2 = fIntegral[i+1] - fIntegral[i];
-         r1 = Integral(x0,x0+0.5*dx)/total;
+         if (logbin) r1 = Integral(TMath::Power(10,x0),TMath::Power(10,x0+0.5*dx))/total;
+         else        r1 = Integral(x0,x0+0.5*dx)/total;
          r3 = 2*r2 - 4*r1;
          if (TMath::Abs(r3) > 1e-8) fGamma[i] = r3/(dx*dx);
          else           fGamma[i] = 0;
@@ -1955,6 +1978,7 @@ Double_t TF1::GetRandom()
          fAlpha[i] = x0;
          fGamma[i] *= 2;
       }
+      delete [] xx;
    }
 
    // return random number
@@ -1962,12 +1986,13 @@ Double_t TF1::GetRandom()
    Int_t bin  = TMath::BinarySearch(fNpx,fIntegral,r);
    Double_t rr = r - fIntegral[bin];
 
-   Double_t xx;
+   Double_t yy;
    if(fGamma[bin] != 0)
-      xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin];
+      yy = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin];
    else
-      xx = rr/fBeta[bin];
-   Double_t x = fAlpha[bin] + xx;
+      yy = rr/fBeta[bin];
+   Double_t x = fAlpha[bin] + yy;
+   if (fAlpha[fNpx] > 0) return TMath::Power(10,x);
    return x;
 }
 
