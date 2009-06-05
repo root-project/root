@@ -1452,7 +1452,9 @@ class genDictionary(object) :
       if (attrs.get('volatile') == '1') : s += ' volatile'
     elif elem == 'ArrayType' :
       max = attrs['max'].rstrip('u')
-      arr = '[%s]' % str(int(max)+1)
+      arr = '[]'
+      if len(max):
+        arr = '[%s]' % str(int(max)+1)
       typ = self.genTypeName(attrs['type'], enum, const, colon)
       if typ[-1] == ']' :
         pos = typ.find('[')
