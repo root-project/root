@@ -6,7 +6,7 @@
 // This example will parse any xml file.
 // 
 // To run this program
-// .x domrecursive.C 
+// .x DOMRecursive.C+
 // 
 // Requires: person.xml 
 // 
@@ -16,6 +16,7 @@
 #include <TDOMParser.h>
 #include <TXMLNode.h>
 #include <TXMLAttr.h>
+#include <TList.h>
 
 
 void ParseContext(TXMLNode *node)

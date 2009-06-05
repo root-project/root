@@ -7,7 +7,7 @@
 // A DTD validation will be run on this example.                              
 //                                                                            
 // To run this program                                                        
-// .x DOMParsePerson.C                                                        
+// .x DOMParsePerson.C+                                                        
 //                                                                            
 // Requires: person.xml and person.dtd                                        
 //                                                                            
