@@ -5213,41 +5213,50 @@ void Cint::Internal::G__cpplink_memvar(FILE* fp)
                G__get_cint5_type_tuple(mbr_iter->TypeOf(), &type, &tagnum, &typenum, &reftype, &isconst);
                G__RflxVarProperties* prop = G__get_properties(*mbr_iter);
                int pvoidflag = 0;
-               if ( // Is enumerator or unaddressable bool.
+               if ( // Is enumerator or unaddressable bool or const static fundamental.
                   (
                      islower(type) && // not a pointer, and
                      isconst && // is const, and
                      (tagnum != -1) && // class tag is valid, and
                      mbr_iter->TypeOf().RawType().IsEnum() // data member of an enum
-                  )
+                  ) || // or,
 #ifdef G__UNADDRESSABLEBOOL
-                  || (type == 'g') // or, is an unaddressable bool
+                  (type == 'g') || // or, is an unaddressable bool
 #endif // G__UNADDRESSABLEBOOL
-                  // --
-               ) { // Is enumerator or unaddressable bool.
-                  pvoidflag = 1; // Pass a null pointer as the address of these things.
+                  (
+                     prop->statictype == G__LOCALSTATIC && // static, and
+                     isconst && // const, and
+                     islower(type) && // not a pointer, and
+                     (type != 'u') && // not a class, enum, struct, or union, and
+                     G__get_offset(*mbr_iter) // has allocated memory (is initialized???)
+                   )
+               ) { // Is enumerator or unaddressable bool or const static fundamental.
+                  pvoidflag = 1; // Pass G__PVOID as the address to force G__malloc to allocate storage.
                }
                fprintf(fp, "   G__memvar_setup(");
                //
                //  Offset in object for a non-static data member, or
-               //  the address of global variable for a static data
+               //  the address of a member for a static data
                //  member, or a namespace member.
                //
                if (mbr_iter->IsPublic() && !G__get_bitfield_width(*mbr_iter)) { // Public member, not a bitfield.
-                  if (!G__struct.name[i][0] || (G__struct.name[i][strlen(G__struct.name[i])-1] == '$')) { // Anonymous union or namespace, we pass a null pointer.
+                  if (!G__struct.name[i][0] || (G__struct.name[i][strlen(G__struct.name[i])-1] == '$')) {
+                     // Anonymous union or namespace, we pass a null pointer.
+                     // We pass a null pointer, which means no data allocation (unfortunate,
+                     // but we have no way to take the address!).
                      fprintf(fp, "(void*)0,");
                   }
                   else if ( // Static member or namespace member.
                      (prop->statictype == G__LOCALSTATIC) || // Static member, or
                      scope.IsNamespace() // Namespace member
                   ) { // Static member or namespace member.
-                     // We pass the address of the global variable, or a null pointer.
+                     // We pass the special G__PVOID flag, or the address of the member.
                      if (pvoidflag) {
-                        // Special case, is enumerator or unaddressable bool, pass G__PVOID (is -1).
-                        fprintf(fp, "(void*)G__PVOID,");
+                        // Special case, is enumerator, unaddressable bool, or static.
+                        fprintf(fp, "(void*)G__PVOID,"); // Pass G__PVOID to force G__malloc to allocate storage.
                      }
                      else {
-                        // We pass the address of the global variable.
+                        // We pass the address of the member.
                         fprintf(fp, "(void*)(&%s::%s),", G__fulltagname(i, 1), mbr_iter->Name().c_str());
                      }
                   }
@@ -5259,7 +5268,9 @@ void Cint::Internal::G__cpplink_memvar(FILE* fp)
                else if (mbr_iter->IsProtected() && G__struct.protectedaccess[i]) { // Protected member.
                   fprintf(fp, "(void*)((%s_PR*)p)->G__OS_%s(),", G__get_link_tagname(i), mbr_iter->Name().c_str());
                }
-               else { // Private or protected member, we pass a null pointer.
+               else {
+                  // Private or protected member, we pass a null pointer, unfortunate,
+                  // but we have no way to take the address of these.
                   fprintf(fp, "(void*)0,");
                }
                //
@@ -5314,12 +5325,18 @@ void Cint::Internal::G__cpplink_memvar(FILE* fp)
                for (int k = 1; k < G__get_paran(*mbr_iter); ++k) {
                   fprintf(fp, "[%d]", G__get_varlabel(*mbr_iter, k + 1));
                }
-               if ( // Enumerator in a static enum.
+               if ( // Enumerator in a static enum or const static fundamental.
                   pvoidflag && // Is enumerator or unaddressable bool, and
                   (prop->statictype == G__LOCALSTATIC) // is static
+                  && (
 #ifdef G__UNADDRESSABLEBOOL
-                  && (type != 'g') // and is unaddressable bool FIXME: Should be or here?
+                      type != 'g' || // and is unaddressable bool FIXME: Should be or here?
 #endif // G__UNADDRESSABLEBOOL
+                      (isconst && // const static
+                       islower(type) && type != 'u' && // of fundamental
+                       G__get_offset(*mbr_iter) // with initializer
+                      )
+                  )
                   // --
                ) { // Enumerator in a static enum.
                   // Enumerator in a static enum has a special initializer.
@@ -5329,10 +5346,23 @@ void Cint::Internal::G__cpplink_memvar(FILE* fp)
                   sprintf(ttt, "%s::%s", G__fulltagname(i, 1), mbr_iter->Name().c_str());
                   int store_var_type = G__var_type;
                   G__var_type = 'p';
-                  G__value buf = G__getitem(ttt);
-                  G__var_type = store_var_type;
+                  G__value buf;
                   G__StrBuf value_sb(G__MAXNAME*6);
                   char* value = value_sb;
+                  if (isconst && // const static
+                      (isupper(type) || type != 'u') && // of fundamental
+                      G__get_offset(*mbr_iter) // with initializer
+                      ) {
+                     // local static, can be private thus cannot call G__getitem.
+                     // Take the value from var->p instead.
+                     sprintf(value, "*(%s*)0x%lx",
+                             G__type2string(type, tagnum, typenum, 0, 0),
+                             G__get_offset(*mbr_iter));
+                     buf = G__calc_internal(value);
+                  } else {
+                     buf = G__getitem(ttt);
+                  }
+                  G__var_type = store_var_type;
                   G__string(buf, value);
                   G__quotedstring(value, ttt);
                   fprintf(fp, "=%s\"", ttt);
@@ -5930,6 +5960,9 @@ void Cint::Internal::G__cpplink_global(FILE* fp)
 #ifdef G__UNADDRESSABLEBOOL
             || (type == 'g') // or, is an unaddressable bool
 #endif // G__UNADDRESSABLEBOOL
+            || (prop->statictype == G__LOCALSTATIC && isconst && // const static
+                islower(type) && type != 'u' && // of fundamental
+                G__get_offset(*mbr_iter)) // with initializer
                // --
          ) { // Is enumerator or unaddressable bool.
             pvoidflag = 1; // Pass a null pointer as the address of these things.
