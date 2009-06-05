@@ -33,6 +33,7 @@
 #     include <QPaintEvent>
 #     include <QPaintDevice>
 #     include <QSize>
+#     include <QPoint>
 #  endif
 #  include <qpixmap.h>
 #else
@@ -53,6 +54,7 @@
   class QSizePolicy;
   class QContextMenuEvent;
   class QSize;
+  class QPoint;
 #endif
   class TApplication;
 //
@@ -151,6 +153,7 @@ protected:
    QWidget    *fWrapper;
    QString     fSaveFormat;
    bool        fInsidePaintEvent;
+   QPoint      fOldMousePos;
 
    void SetRootID(QWidget *wrapper);
    QWidget *GetRootID() const;
@@ -244,9 +247,7 @@ signals:
 #endif
 
 #ifndef Q_MOC_RUN
-//MOC_SKIP_BEGIN
    ClassDef(TQtWidget,0) // QWidget to back ROOT TCanvas (Can be used with Qt designer)
-//MOC_SKIP_END
 #endif
 };
 

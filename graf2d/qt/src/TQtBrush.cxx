@@ -21,7 +21,9 @@
 #include <stdlib.h>
 
 #include "TQtBrush.h"
+#include "TGQt.h"
 #include "qbitmap.h"
+#include <QDebug>
 
 //
 //*-*- data to create fill area interior style
@@ -137,25 +139,39 @@ static uchar *patter_bits[]= { p1_bits, p2_bits,   p3_bits,  p4_bits,  p5_bits,
 
 ClassImp(TQtBrush)
 //______________________________________________________________________________
-TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0)
+TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0),fAlpha(255)
 {}
 
 //______________________________________________________________________________
-void TQtBrush::SetColor(const QColor &col)
+ void TQtBrush::SetColor(Color_t cindex)
+ {
+   // Set color index for to fill shapes
+   //  cindex    : color index
+    if (cindex >= 0)  SetColor(gQt->ColorIndex(gQt->UpdateColor(cindex)));
+    else fAlpha = cindex;
+ }
+//______________________________________________________________________________
+void TQtBrush::SetColor(const QColor &color)
 {
-  fBackground = col;
-  if (fStyle == 4) {
-     // set alpha channel / (extra) transparency;
-     if (!fFasi) fBackground = Qt::transparent;
-     else {
-        int alpha = fBackground.alpha();
-        if (fFasi != 100) {
-           alpha = int(alpha*fFasi/100.);
-           fBackground.setAlpha(alpha);
-        }
-     }
+   // remember the user's alpha value and set the  brush color
+   fAlpha = color.alpha();
+	fBackground = color;
+   SetColorOwn();
+}
+
+//______________________________________________________________________________
+void TQtBrush::SetColorOwn()
+{
+  // Set the brush color and adjust its alpha value from fStyle
+  // Take in account the new transperency if needed
+
+  static const int opaqAlpha = QColor(0,0,0).alpha(); // Qt   alpha range is  [0:255]
+  static const float opaqFactor = opaqAlpha/100.;     // ROOT alpha range is  [0:100]
+  if (fAlpha >=0 ) {
+	  int alpha = ( fStyle == 4) ? int(opaqFactor*fFasi) : fAlpha;
+	  if (fBackground.alpha() != alpha) fBackground.setAlpha(alpha);
+	  setColor(fBackground);
   }
-  setColor(fBackground);
 }
 
 //______________________________________________________________________________
@@ -172,7 +188,8 @@ void TQtBrush::SetStyle(int sty, int fasi)
 
   case 0:
     setStyle(Qt::NoBrush);                          // hollow
-    SetColor(Qt::transparent);
+    fBackground = Qt::transparent;
+	 fAlpha = 0;
     break;
   case 1:                                           // solid
     setStyle(Qt::SolidPattern);
@@ -203,15 +220,14 @@ void TQtBrush::SetStyle(int sty, int fasi)
          default: setStyle(Qt::FDiagPattern);
                   break;
         }
-      break;
+     break;
   case 4:                                      // transparent
      if (!fasi)    setStyle(Qt::NoBrush);      // the window is transparent
-     if(fasi==100) setStyle(Qt::SolidPattern); // 100% opaque
-     ResetColor();
+	  else          setStyle(Qt::SolidPattern);
      break;
-
- default:                                          // solid  - default
+  default:                                          // solid  - default
       setStyle(Qt::SolidPattern);
       break;
- }
+  }
+  SetColorOwn();
 }

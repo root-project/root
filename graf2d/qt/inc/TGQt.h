@@ -30,26 +30,18 @@
 #include <map>
 
 #include <qobject.h>
-#include <qmap.h>
-#include <qcolor.h>
-#include <qcursor.h>
-#include <qpainter.h>
-#include <qrect.h>
-#include <qmap.h>
+#include <QMap>
+#include <QColor>
+#include <QCursor>
+#include <QPainter>
+#include <QRect>
 #include <qnamespace.h>
 
-#if (QT_VERSION > 0x039999)
-#  include <QPixmap>
-#  include <QEvent>
-#  include <QVector>
-#else
-#  include <qmemarray.h>
-#  include <qptrqueue.h>
-#  include <qptrlist.h>
-#  include <qptrvector.h>
-#endif /* QT_VERSION */
+#include <QtGui/QPixmap>
+#include <QtCore/QEvent>
+#include <QtCore/QVector>
 
-#include <qfontdatabase.h>
+#include <QtGui/QFontDatabase>
 
 #include "TQtClientGuard.h"
 
@@ -101,27 +93,23 @@ class TGQt  : public TVirtualX  {
    friend class TQtToggleFeedBack;
    friend class TQtColorSelect;
    friend class TQt16ColorSelector;
-   friend class TQtPen;
+   friend class TQtPen; 
+   friend class TQtBrush; 
+   friend class TQtPainter;
 
 protected:
    enum DEFWINDOWID { kDefault=1 };
    QPaintDevice *fSelectedWindow;      // Pointer to the current "paintdevice: PixMap, Widget etc"
-//   QPaintDevice *fSelectedBuffer;      // Pointer to the current "paintdevice buffer"
    QPaintDevice *fPrevWindow;          // Pointer to the previous "Window"
    Int_t         fDisplayOpened;
    TQtPainter     *fQPainter;
    TQtEmitter    fEmitter;             // object to emit Qt signals on behalf of TVirtualX
-   static TVirtualX     *fgTQt;        // The hiden poiner to fullish  ROOT TPluginManager
+   static TVirtualX     *fgTQt;        // The hiden poiner to foolish  ROOT TPluginManager
 
-   void        *fhEvent;                   // The event object to synch threads
+   void        *fhEvent;               // The event object to synch threads
 
-#if QT_VERSION < 0x40000
-   QPtrVector<QCursor>   fCursors;
-#else /* QT_VERSION */
    QVector<QCursor *>      fCursors;
-#endif /* QT_VERSION */
-//   Qt::CursorShape  fCursors[kNumCursors];  //List of cursors
-   ECursor         fCursor;                 // Current cursor number;
+   ECursor         fCursor;            // Current cursor number;
 
    Style_t      fMarkerStyle;
 
@@ -138,11 +126,7 @@ protected:
    TQtPen    *fQPen;
    TQtMarker *fQtMarker;
    TQtPadFont *fQFont;
-#if (QT_VERSION <0x40000)
-   Qt::RasterOp fDrawMode;
-#else
    QPainter::CompositionMode  fDrawMode;
-#endif
 
    typedef QMap<QPaintDevice *,QRect> TQTCLIPMAP;
    TQTCLIPMAP fClipMap;
@@ -165,8 +149,8 @@ protected:
     const char            *fSymbolFontFamily; // the name of the font to substiute the non-standard "Symbol"
     Int_t                 fQtEventHasBeenProcessed; // Flag whether the events were processed
     Bool_t                fFeedBackMode;      // TCanvas feedback mode 
-    TQtFeedBackWidget    *fFeedBackWidget;   // The dedicated widget for TCanvas feebback mode
-    Bool_t                fBlockRGB;         // Protect agaist color doubel setting
+    TQtFeedBackWidget    *fFeedBackWidget;    // The dedicated widget for TCanvas feebback mode
+    Bool_t                fBlockRGB;          // Protect agaist color doubel setting
 //
 //   Text management
 //
@@ -179,12 +163,6 @@ protected:
 
 //  Qt methods
    static QRect GetQRect(QPaintDevice &dev);
-   void Begin();
-   void End();
-   void UpdateFont();
-   void UpdatePen();
-   void UpdateBrush();
-   void UpdateClipRectangle();
    int  UpdateColor(int cindex);
    virtual const QColor&   ColorIndex(Color_t indx) const;
 
@@ -272,9 +250,7 @@ public:
 #endif
 
 #ifndef Q_MOC_RUN
-//MOC_SKIP_BEGIN
    ClassDef(TGQt,0)  //Interface to Qt GUI
-//MOC_SKIP_END
 #endif
 
 };

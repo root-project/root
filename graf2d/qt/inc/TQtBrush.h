@@ -33,8 +33,8 @@ protected:
   QColor fBackground;
   int fStyle;
   int fFasi;
-  // Reset the brush color to take in account the new transperency if needed
-  void ResetColor(){  SetColor(fBackground); } 
+  int fAlpha; // transparency
+  void SetColorOwn();
 
 public:
    TQtBrush();
@@ -46,9 +46,12 @@ public:
    }
    virtual ~TQtBrush(){;}
    Bool_t IsTransparent() const;
-   void SetStyle(int newStyle=1000){  SetStyle(newStyle/1000,newStyle%1000); };
+   void SetStyle(int newStyle=1000){ if (newStyle < 0) fStyle = fFasi = -1;
+                                     else  SetStyle(newStyle/1000,newStyle%1000); 
+                                   };
    void SetStyle(int style, int fasi);
    void SetColor(const QColor &color);
+   void SetColor(Color_t cindex);
    const QColor &GetColor() const { return fBackground;}
    int   GetStyle()         const { return 1000*fStyle + fFasi; }
    ClassDef(TQtBrush,0); // create QBrush object based on the ROOT "fill" attributes 

@@ -1746,7 +1746,6 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
    assert(qtcontext(gc).HasValid(QtGContext::kROp));
    // fprintf(stderr," TQt::CopyArea this=%p, fROp=%x\n", this, qtcontext(gc).fROp);
    if ( dest && src) {
-      End();
       // QtGContext qgc = qtcontext(gc);
       QPixmap *pix = dynamic_cast<QPixmap*>(iwid(src));
       QBitmap *mask = qtcontext(gc).fClipMask;
@@ -1793,7 +1792,6 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
             }
          }
       }
-      Begin();
    }
 }
 //______________________________________________________________________________

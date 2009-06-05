@@ -57,7 +57,11 @@ static float CalibrateFont()
 //  Nimbus Roman returns h = 18
 //  Qt4 XFT              h = 21
 
-          // qDebug() << " Font metric w = " << w <<" h = "<< h;
+          qDebug() << " Font metric w = " << w <<" h = "<< h
+                   << "points=" << pattern.pointSize()
+                   << "pixels=" << pattern.pixelSize()
+                   << pattern;
+
           float f;
           switch (h) {
              case 12: f = 1.10;  break;// it was  f = 1.13 :-(;
@@ -85,7 +89,7 @@ static inline float FontMagicFactor(float size)
 
 //______________________________________________________________________________
 TQtPadFont::TQtPadFont(): TAttText()
-{fTextFont = -1;}
+{fTextFont = -1;fTextSize = -1; }
 
 //______________________________________________________________________________
 void  TQtPadFont::SetTextFont(const char *fontname, int italic_, int bold_)
