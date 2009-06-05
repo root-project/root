@@ -5357,7 +5357,7 @@ void Cint::Internal::G__cpplink_memvar(FILE* fp)
                      // Take the value from var->p instead.
                      sprintf(value, "*(%s*)0x%lx",
                              G__type2string(type, tagnum, typenum, 0, 0),
-                             G__get_offset(*mbr_iter));
+                             (unsigned long)G__get_offset(*mbr_iter));
                      buf = G__calc_internal(value);
                   } else {
                      buf = G__getitem(ttt);
