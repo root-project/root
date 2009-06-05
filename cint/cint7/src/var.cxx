@@ -3167,10 +3167,11 @@ inline void G__alloc_var_ref(unsigned int SIZE, CONVFUNC f, const char* item, ::
             /*memset(G__get_offset(var), 0, SIZE);*/
          }
       }
+      int varlabel_1 = G__get_varlabel(var.TypeOf(), 1);
       /* Now do initialization. */
       if (
          /* Variable has storage to initialize */
-         G__get_offset(var) &&
+         (G__get_offset(var) || (varlabel_1 && G__funcheader) ) &&
          /* Not bytecode compiling */
          (G__asm_wholefunction == G__ASM_FUNC_NOP) &&
          (
@@ -3192,7 +3193,7 @@ inline void G__alloc_var_ref(unsigned int SIZE, CONVFUNC f, const char* item, ::
             G__get_type(G__value_typenum(result))
          )
       ) {
-         if (G__get_varlabel(var.TypeOf(), 1) /* number of elements */ == INT_MAX /* unspecified length flag */) {
+         if (varlabel_1 /* number of elements */ == INT_MAX /* unspecified length flag */) {
             /* -- We are initializing an unspecified length array. */
             if (G__funcheader) {
                /* -- In a function header, we point at our actual argument. */
@@ -3201,7 +3202,7 @@ inline void G__alloc_var_ref(unsigned int SIZE, CONVFUNC f, const char* item, ::
                /* -- Syntax errror. */
             }
          }
-         else if (G__get_varlabel(var.TypeOf(), 1) /* number of elements */) {
+         else if (varlabel_1 /* number of elements */) {
             /* -- We are initializing an array. */
             if (G__funcheader) {
                /* -- In a function header, we point at our actual argument. */
