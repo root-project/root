@@ -89,6 +89,8 @@ include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
 %.pyc: %.py;    python -c 'import py_compile; py_compile.compile( "$<" )'
 %.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
+ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
+# Avoid conflict with cintex/Module.mk
 $(CINTEXLIB):   $(CINTEXO) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO) \
                 $(ORDER_) $(subst $(CINTEXLIB),,$(MAINLIBS)) $(CINTEXLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
@@ -98,6 +100,7 @@ $(CINTEXLIB):   $(CINTEXO) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO) \
 $(CINTEXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(CINTEXL)
 		$(RLIBMAP) -o $(CINTEXMAP) -l $(CINTEXLIB) \
 		   -d $(CINTEXLIBDEPM) -c $(CINTEXL)
+endif
 
 all-$(MODNAME): $(CINTEXLIB) $(CINTEXMAP)
 
