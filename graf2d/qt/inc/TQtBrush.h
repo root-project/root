@@ -30,11 +30,11 @@
 class TQtBrush : public QBrush
 {
 protected:
-  QColor fBackground;
-  int fStyle;
-  int fFasi;
-  int fAlpha; // transparency
-  void SetColorOwn();
+   QColor fBackground;
+   int fStyle;
+   int fFasi;
+   int fAlpha; // transparency
+   void SetColorOwn();
 
 public:
    TQtBrush();
@@ -50,7 +50,7 @@ public:
                                      else  SetStyle(newStyle/1000,newStyle%1000); 
                                    };
    void SetStyle(int style, int fasi);
-   void SetColor(const QColor &color);
+   void SetColor(const QColor &qtcolor);
    void SetColor(Color_t cindex);
    const QColor &GetColor() const { return fBackground;}
    int   GetStyle()         const { return 1000*fStyle + fFasi; }

@@ -151,11 +151,11 @@ TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0),fAlpha(255)
     else fAlpha = cindex;
  }
 //______________________________________________________________________________
-void TQtBrush::SetColor(const QColor &color)
+void TQtBrush::SetColor(const QColor &qtcolor)
 {
    // remember the user's alpha value and set the  brush color
-   fAlpha = color.alpha();
-	fBackground = color;
+   fAlpha = qtcolor.alpha();
+	fBackground = qtcolor;
    SetColorOwn();
 }
 
