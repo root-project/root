@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include "Reflex/Builder/TypeBuilder.h"
+#include "Reflex/Member.h"
 
 using namespace Cint::Internal;
 
@@ -3109,6 +3110,7 @@ int Cint::Internal::G__fundamental_conversion_operator(int type, int tagnum, ::R
 template<class CASTTYPE, class CONVFUNC>
 inline void G__alloc_var_ref(unsigned int SIZE, CONVFUNC f, const char* item, ::Reflex::Member& var, G__value& result)
 {
+#ifdef PLEASE_FIXME
    if (islower(G__var_type)) {
       /* -- Not a pointer, may be an array. */
       /* Allocate memory */
@@ -3323,6 +3325,7 @@ inline void G__alloc_var_ref(unsigned int SIZE, CONVFUNC f, const char* item, ::
          }
       }
    }
+#endif
 }
 
 
