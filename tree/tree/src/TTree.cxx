@@ -5493,7 +5493,7 @@ void TTree::RecursiveRemove(TObject *obj)
    if (fPlayer == obj) {
       fPlayer = 0;
    }
-   if (fTreeIndex == 0) {
+   if (fTreeIndex == obj) {
       fTreeIndex = 0;
    }
    if (fAliases) {
