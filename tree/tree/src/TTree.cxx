@@ -5480,7 +5480,7 @@ void TTree::RecursiveRemove(TObject *obj)
 {
    // Make sure that obj (which is being deleted or will soon be) is no
    // longer referenced by this TTree.
-   
+
    if (obj == fEventList) {
       fEventList = 0;
    }
@@ -5493,7 +5493,7 @@ void TTree::RecursiveRemove(TObject *obj)
    if (fPlayer == obj) {
       fPlayer = 0;
    }
-   if (fTreeIndex) {
+   if (fTreeIndex == 0) {
       fTreeIndex = 0;
    }
    if (fAliases) {
