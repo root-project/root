@@ -180,12 +180,6 @@ TChain::~TChain()
    delete[] fTreeOffset;
    fTreeOffset = 0;
 
-   if (fEntryList){
-      if (fEntryList->TestBit(kCanDelete)){
-         delete fEntryList;
-         fEntryList = 0;
-      }
-   }
    gROOT->GetListOfSpecials()->Remove(this);
 
    // Remove from the global list
@@ -2219,10 +2213,13 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
       //check, if the chain is the owner of the previous entry list
       //(it happens, if the previous entry list was created from a user-defined
       //TEventList in SetEventList() function)
-      if (fEntryList->TestBit(kCanDelete)){
-         delete fEntryList;
+      if (fEntryList->TestBit(kCanDelete)) {
+         TEntryList *tmp = fEntryList;
+         fEntryList = 0; // Avoid problem with RecursiveRemove.
+         delete tmp;
+      } else {
+         fEntryList = 0;
       }
-      fEntryList = 0;
    }
    if (!elist){
       fEntryList = 0;
@@ -2309,10 +2306,13 @@ void TChain::SetEntryListFile(const char *filename, Option_t * /*opt*/)
       //check, if the chain is the owner of the previous entry list
       //(it happens, if the previous entry list was created from a user-defined
       //TEventList in SetEventList() function)
-      if (fEntryList->TestBit(kCanDelete)){
-         delete fEntryList;
+      if (fEntryList->TestBit(kCanDelete)) {
+         TEntryList *tmp = fEntryList;
+         fEntryList = 0; // Avoid problem with RecursiveRemove.
+         delete tmp;
+      } else {
+         fEntryList = 0;
       }
-      fEntryList = 0;
    }
 
    fEventList = 0;
@@ -2329,6 +2329,7 @@ void TChain::SetEntryListFile(const char *filename, Option_t * /*opt*/)
    }
    fEntryList = new TEntryListFromFile(basename.Data(), behind_dot_root.Data(), fNtrees);
    fEntryList->SetBit(kCanDelete, kTRUE);
+   fEntryList->SetDirectory(0);
    ((TEntryListFromFile*)fEntryList)->SetFileNames(fFiles);
 }
 
@@ -2348,10 +2349,14 @@ void TChain::SetEventList(TEventList *evlist)
 //any more and will not be deleted with it.
 
    fEventList = evlist;
-   if (fEntryList){
-      if (fEntryList->TestBit(kCanDelete))
-         delete fEntryList;
-      fEntryList=0;
+   if (fEntryList) {
+      if (fEntryList->TestBit(kCanDelete)) {
+         TEntryList *tmp = fEntryList;
+         fEntryList = 0; // Avoid problem with RecursiveRemove.
+         delete tmp;
+      } else {
+         fEntryList = 0;
+      }
    }
 
    if (!evlist) {
@@ -2367,14 +2372,20 @@ void TChain::SetEventList(TEventList *evlist)
          //(it happens, if the previous entry list was created from a user-defined
          //TEventList in SetEventList() function)
          if (fEntryList->TestBit(kCanDelete)){
-            delete fEntryList;
+            TEntryList *tmp = fEntryList;
+            fEntryList = 0; // Avoid problem with RecursiveRemove.
+            delete tmp;
+         } else {
+            fEntryList = 0;
          }
-         fEntryList = 0;
       }
       return;
    }
 
-   TEntryList *enlist = new TEntryList(evlist->GetName(), evlist->GetTitle());
+   char enlistname[100];
+   sprintf(enlistname, "%s_%s", evlist->GetName(), "entrylist");
+   TEntryList *enlist = new TEntryList(enlistname, evlist->GetTitle());
+   enlist->SetDirectory(0);
 
    Int_t nsel = evlist->GetN();
    Long64_t globalentry, localentry;

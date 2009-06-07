@@ -689,8 +689,8 @@ TTree::~TTree()
       delete fClones;
       fClones = 0;
    }
-   if (fEntryList){
-      if (fEntryList->TestBit(kCanDelete) && fEntryList->GetDirectory()==0){
+   if (fEntryList) {
+      if (fEntryList->TestBit(kCanDelete) && fEntryList->GetDirectory()==0) {
          // Delete the entry list if it is marked to be deleted and it is not also 
          // owned by a directory.  (Otherwise we would need to make sure that a 
          // TDirectoryFile that has a TTree in it does a 'slow' TList::Delete.
@@ -4164,19 +4164,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 TEntryList* TTree::GetEntryList()
 {
 //Returns the entry list, set to this tree
-//
-//The returned object is not owned by the tree, even if the entry list was created
-//by the SetEventList() function (see also comments of SetEventList())
 
-   if (!fEntryList) return 0;
-
-   //check, if the entry list is owned by the tree.
-   //This lack of "constness" is caused by the SetEventList() function
-   //creating an entry list.
-   if (fEntryList->TestBit(kCanDelete) == kTRUE){
-      fEntryList->SetBit(kCanDelete, kFALSE);
-      fEntryList->SetDirectory(fDirectory ? fDirectory : gROOT); // Transfer ownsership
-   }
    return fEntryList;
 }
 
@@ -6158,14 +6146,17 @@ void TTree::SetEventList(TEventList *evlist)
 {
 //This function transfroms the given TEventList into a TEntryList
 //The new TEntryList is owned by the TTree and gets deleted when the tree
-//is deleted. This TEntryList can be returned by GetEntryList() function, and after
-//GetEntryList() function is called, the TEntryList is not owned by the tree
-//any more.
+//is deleted. This TEntryList can be returned by GetEntryList() function.
 
    fEventList = evlist;
    if (fEntryList){
-      if (fEntryList->TestBit(kCanDelete))
-         delete fEntryList;
+      if (fEntryList->TestBit(kCanDelete)) {
+         TEntryList *tmp = fEntryList;
+         fEntryList = 0; // Avoid problem with RecursiveRemove.
+         delete tmp;
+      } else {
+         fEntryList = 0;
+      }
    }
 
    if (!evlist) {
