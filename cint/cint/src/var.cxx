@@ -3208,7 +3208,7 @@ inline void G__alloc_var_ref(int SIZE, CONVFUNC f, char* item, G__var_array* var
       /* Now do initialization. */
       if (
          /* Variable has storage to initialize */
-         var->p[ig15] &&
+         (var->p[ig15] != 0 || (var->varlabel[ig15][1] && G__funcheader)) &&
          (
             /* Not a class member and not bytecompiling. */
             (!G__def_struct_member && (G__asm_wholefunction == G__ASM_FUNC_NOP)) ||
