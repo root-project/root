@@ -9101,9 +9101,11 @@ void G__cpplink_memvar(FILE *fp)
                          var->p[j] // with initializer
                          ) {
                         // local static, can be private thus cannot call G__getitem.
-                        // Take the value from var->p instead.
+                        // Take the value from var->p instead. If var is an enum constant
+                        // it will be stored as an int, so convert it accordingly.
+                        bool isInt = var->type[j] == 'i';
                         sprintf(value, "*(%s*)0x%lx",
-                                G__type2string(var->type[j], var->p_tagtable[j], var->p_typetable[j], 0, 0),
+                                isInt ? "int" : G__type2string(var->type[j], var->p_tagtable[j], var->p_typetable[j], 0, 0),
                                 var->p[j]);
                         buf = G__calc_internal(value);
                      } else {

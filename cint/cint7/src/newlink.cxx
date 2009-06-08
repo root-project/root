@@ -5354,9 +5354,11 @@ void Cint::Internal::G__cpplink_memvar(FILE* fp)
                       G__get_offset(*mbr_iter) // with initializer
                       ) {
                      // local static, can be private thus cannot call G__getitem.
-                     // Take the value from var->p instead.
+                     // Take the value from var->p instead. If var is an enum constant
+                     // it will be stored as an int, so convert it accordingly.
+                     bool isInt = var->type[j] == 'i';
                      sprintf(value, "*(%s*)0x%lx",
-                             G__type2string(type, tagnum, typenum, 0, 0),
+                             isInt ? "int" : G__type2string(type, tagnum, typenum, 0, 0),
                              (unsigned long)G__get_offset(*mbr_iter));
                      buf = G__calc_internal(value);
                   } else {
