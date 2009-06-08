@@ -1353,6 +1353,8 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
             SessionSt.options |= kOptsAFSPwd;
          } else
             SessionSt.options |= kOptsCrypPwd;
+         // Reset the message
+         ClntMsg = "";
       }
       // Creds, if any, should be checked, unles we allow auto-registration
       savecreds = (entst != kPFE_allowed) ? 0 : 1;
