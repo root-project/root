@@ -26,7 +26,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   foam/% \
   html/% \
   math/Bessel math/LegendreAssoc math/Legendre math/mathmoreIntegration \
-  math/normalDist math/tStudent \
+  math/normalDist math/tStudent math/testUnfold2 \
   net/% \
   proof/% \
   pythia/% \
