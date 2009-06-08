@@ -1029,7 +1029,7 @@ Bool_t TUnfold::InvertMConditioned(TMatrixD &A) {
          A(i,j) *= A_diagonals[i]*A_diagonals[j];
       }
    }
-   delete A_diagonals;
+   delete [] A_diagonals;
 #endif
    return (det !=0.0);
 }
