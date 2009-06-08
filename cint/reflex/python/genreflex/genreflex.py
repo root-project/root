@@ -75,8 +75,8 @@ class genreflex:
          Generate minimal dictionary required for interpreter\n
       --deep
          Generate dictionary for all dependend classes\n
-      --split  (OBSOLETE)
-         Generate separate file for stub functions. Option sometimes needed on Windows.\n
+      --split=[classdef]
+         Generate a separate file for the given dictionary parts, currently supported part: classdef implementations.\n
       --reflex  (OBSOLETE)
          Generate Reflex dictionaries.\n
       --comments
@@ -127,7 +127,7 @@ class genreflex:
       opts, args = getopt.getopt(options, 'ho:s:c:I:U:D:PC', \
       ['help','debug=', 'output=','selection_file=','pool','dataonly','interpreteronly','deep','gccxmlpath=',
        'capabilities=','rootmap=','rootmap-lib=','comments','iocomments','no_membertypedefs',
-       'fail_on_warnings', 'quiet', 'gccxmlopt=', 'reflex', 'split','no_templatetypedefs','gccxmlpost='])
+       'fail_on_warnings', 'quiet', 'gccxmlopt=', 'reflex', 'split=','no_templatetypedefs','gccxmlpost='])
     except getopt.GetoptError, e:
       print "--->> genreflex: ERROR:",e
       self.usage(2)
@@ -157,7 +157,10 @@ class genreflex:
       if o in ('--deep',):
         self.deep = True
       if o in ('--split',):
-        print '--->> genreflex: WARNING: --split option is obsolete'
+        if self.opts.has_key('split') :
+          self.opts['split'] += ':' + a.lower()
+        else :
+          self.opts['split'] = a
       if o in ('--reflex',):
         print '--->> genreflex: WARNING: --reflex option is obsolete'
       if o in ('--comments',):

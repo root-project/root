@@ -51,6 +51,7 @@ class genDictionary(object) :
     self.globalNamespaceID = ''
     self.typedefs_for_usr = []
     self.gccxmlvers = gccxmlvers
+    self.split = opts.get('split', '')
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
     self.xref['_0'] = {'elem':'Unknown', 'attrs':{'id':'_0','name':''}, 'subelems':[]}
@@ -568,7 +569,20 @@ class genDictionary(object) :
     f_buffer = ''
     # Need to specialize templated class's functions (e.g. A<T>::Class())
     # before first instantiation (stubs), so classDefImpl before stubs.
-    f_buffer += classDefImpl
+    if self.split.find('classdef') >= 0:
+      posExt = file.rfind('.')
+      if posExt > 0:
+        cdFileName = file[0:posExt] + '_classdef' + file[posExt:]
+      else:
+        cdFileName = file + '_classdef.cpp'
+      cdFile = open(cdFileName, 'w')
+      cdFile.write(self.genHeaders(cppinfo))
+      cdFile.write('\n')
+      cdFile.write('namespace {' )
+      cdFile.write(classDefImpl)
+      cdFile.write('} // unnamed namespace\n')
+    else :
+      f_buffer += classDefImpl
 
     f_shadow =  '\n#ifndef __CINT__\n'
     f_shadow +=  '\n// Shadow classes to obtain the data member offsets \n'
@@ -2494,7 +2508,6 @@ def ClassDefImplementation(selclasses, self) :
   returnValue += '#include "TClass.h"\n'
   returnValue += '#include "TMemberInspector.h"\n'
   returnValue += '#include "RtypesImp.h"\n' # for GenericShowMembers etc
-  returnValue += '#include "Cintex/Cintex.h"\n'
   returnValue += '#include "TIsAProxy.h"\n'
   haveClassDef = 0
 
