@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <string.h>
+#include <typeinfo>
 
 #include "TFile.h"
 #include "TBufferFile.h"

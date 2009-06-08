@@ -16,6 +16,7 @@
 #include "TSystem.h"
 #include "TVirtualPad.h"
 #include "TVirtualMutex.h"
+#include <typeinfo>
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>

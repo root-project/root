@@ -4,6 +4,7 @@
 #ifndef ROOT_TSchemaRuleProcessor
 #define ROOT_TSchemaRuleProcessor
 
+#include <stdlib.h>
 #include <string>
 #include <list>
 #include <utility>

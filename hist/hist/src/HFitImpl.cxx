@@ -29,6 +29,7 @@
 
 #include "TBackCompFitter.h"
 
+#include <stdlib.h>
 #include <cmath>
 #include <memory>
 

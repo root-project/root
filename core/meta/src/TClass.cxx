@@ -67,6 +67,7 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include <typeinfo>
 #include <cmath>
 #include <assert.h>
 

@@ -48,9 +48,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef R__SOLARIS
+#include <stdlib.h>
 #include <typeinfo>
-#endif
 #include <algorithm>
 
 const Int_t kMaxLen     = 512;

@@ -1052,7 +1052,7 @@ Int_t TMapFile::GetBestBuffer()
    if (!fWritten) return TBuffer::kMinimalSize;
    Double_t mean = fSumBuffer/fWritten;
    Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer - mean*mean);
-   return (Int_t)(mean + sqrt(rms2));
+   return (Int_t)(mean + std::sqrt(rms2));
 }
 
 

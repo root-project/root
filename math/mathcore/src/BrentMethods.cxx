@@ -39,7 +39,7 @@ double MinimStep(const IGenFunction* function, int type, double &xmin, double &x
    else if (type < 4)
       yymin = -(*function)(xmin);
    else
-      yymin = fabs((*function)(xmin)-fy);
+      yymin = std::fabs((*function)(xmin)-fy);
 
    for (int i=1; i<=fNpx-1; i++) {
       x = xmin + i*dx;
@@ -48,7 +48,7 @@ double MinimStep(const IGenFunction* function, int type, double &xmin, double &x
       else if (type < 4)
          y = -(*function)(x);
       else
-         y = fabs((*function)(x)-fy);
+         y = std::fabs((*function)(x)-fy);
       if (y < yymin) {xxmin = x; yymin = y;}
    }
 
@@ -77,7 +77,7 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
    double t = 1e-8;
    int itermax = 100;
 
-   double c = (3.-sqrt(5.))/2.; //comes from golden section
+   double c = (3.-std::sqrt(5.))/2.; //comes from golden section
    double u, v, w, x, fv, fu, fw, fx, e, p, q, r, t2, d=0, m, tol;
    v = w = x = xmiddle;
    e=0;
@@ -89,13 +89,13 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
    else if (type < 4)
       fv = fw = fx = -(*function)(x);
    else
-      fv = fw = fx = fabs((*function)(x)-fy);
+      fv = fw = fx = std::fabs((*function)(x)-fy);
 
    for (int i=0; i<itermax; i++){
       m=0.5*(a + b);
-      tol = eps*(fabs(x))+t;
+      tol = eps*(std::fabs(x))+t;
       t2 = 2*tol;
-      if (fabs(x-m) <= (t2-0.5*(b-a))) {
+      if (std::fabs(x-m) <= (t2-0.5*(b-a))) {
          //converged, return x
          ok=true;
          if (type==1)
@@ -106,7 +106,7 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
             return x;
       }
 
-      if (fabs(e)>tol){
+      if (std::fabs(e)>tol){
          //fit parabola
          r = (x-w)*(fx-fv);
          q = (x-v)*(fx-fw);
@@ -117,13 +117,13 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
          r=e;
          e=d;
 
-         if (fabs(p) < fabs(0.5*q*r) || p < q*(a-x) || p < q*(b-x)) {
+         if (std::fabs(p) < std::fabs(0.5*q*r) || p < q*(a-x) || p < q*(b-x)) {
             //a parabolic interpolation step
             d = p/q;
             u = x+d;
             if (u-a < t2 || b-u < t2)
                //d=TMath::Sign(tol, m-x);
-               d=(m-x >= 0) ? fabs(tol) : -fabs(tol);
+               d=(m-x >= 0) ? std::fabs(tol) : -std::fabs(tol);
          } else {
             e=(x>=m ? a-x : b-x);
             d = c*e;
@@ -132,13 +132,13 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
          e=(x>=m ? a-x : b-x);
          d = c*e;
       }
-      u = (fabs(d)>=tol ? x+d : x+ ((d >= 0) ? fabs(tol) : -fabs(tol)) );
+      u = (std::fabs(d)>=tol ? x+d : x+ ((d >= 0) ? std::fabs(tol) : -std::fabs(tol)) );
       if (type < 2)
          fu = (*function)(u);
       else if (type < 4)
          fu = -(*function)(u);
       else
-         fu = fabs((*function)(u)-fy);
+         fu = std::fabs((*function)(u)-fy);
       //update a, b, v, w and x
       if (fu<=fx){
          if (u<x) b=x;

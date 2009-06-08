@@ -305,7 +305,7 @@ inline TGLVector3 TGLVector3::operator - () const
 //______________________________________________________________________________
 inline Double_t TGLVector3::Mag() const
 {
-   return sqrt(fVals[0]*fVals[0] + fVals[1]*fVals[1] + fVals[2]*fVals[2]);
+   return std::sqrt(fVals[0]*fVals[0] + fVals[1]*fVals[1] + fVals[2]*fVals[2]);
 }
 
 //______________________________________________________________________________
@@ -527,7 +527,7 @@ inline Int_t TGLRect::Diagonal() const
 {
    const Double_t w = static_cast<Double_t>(fWidth);
    const Double_t h = static_cast<Double_t>(fHeight);
-   return static_cast<Int_t>(sqrt(w*w + h*h));
+   return static_cast<Int_t>(std::sqrt(w*w + h*h));
 }
 
 //______________________________________________________________________________

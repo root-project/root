@@ -157,8 +157,8 @@ double ndtri( double y0 )
       x = x * s2pi; 
       return(x);
    }
-   x = sqrt( -2.0 * log(y) );
-   x0 = x - log(x)/x;
+   x = std::sqrt( -2.0 * std::log(y) );
+   x0 = x - std::log(x)/x;
    z = 1.0/x;
    if( x < 8.0 ) 
       x1 = z * Polynomialeval( z, P1, 8 )/ Polynomial1eval ( z, Q1, 8 );
@@ -252,7 +252,7 @@ double igami( double a, double y0 )
 
 /* approximation to inverse function */
    d = 1.0/(9.0*a);
-   y = ( 1.0 - d - ndtri(y0) * sqrt(d) );
+   y = ( 1.0 - d - ndtri(y0) * std::sqrt(d) );
    x = a * y * y * y;
 
    lgm = lgam(a);
@@ -275,13 +275,13 @@ double igami( double a, double y0 )
          yh = y;
       }
 /* compute the derivative of the function at this point */
-      d = (a - 1.0) * log(x) - x - lgm;
+      d = (a - 1.0) * std::log(x) - x - lgm;
       if( d < -kMAXLOG )
          goto ihalve;
-      d = -exp(d);
+      d = -std::exp(d);
 /* compute the step to the next approximation of x */
       d = (y - y0)/d;
-      if( fabs(d/x) < kMACHEP )
+      if( std::fabs(d/x) < kMACHEP )
          goto done;
       x = x - d;
    }
@@ -315,10 +315,10 @@ ihalve:
       x = x1  +  d * (x0 - x1);
       y = igamc( a, x );
       lgm = (x0 - x1)/(x1 + x0);
-      if( fabs(lgm) < dithresh )
+      if( std::fabs(lgm) < dithresh )
          break;
       lgm = (y - y0)/y0;
-      if( fabs(lgm) < dithresh )
+      if( std::fabs(lgm) < dithresh )
          break;
       if( x <= 0.0 )
          break;
@@ -472,7 +472,7 @@ double incbi( double aa, double bb, double yy0 )
 
    lgm = (yp * yp - 3.0)/6.0;
    x = 2.0/( 1.0/(2.0*a-1.0)  +  1.0/(2.0*b-1.0) );
-   d = yp * sqrt( x + lgm ) / x
+   d = yp * std::sqrt( x + lgm ) / x
       - ( 1.0/(2.0*b-1.0) - 1.0/(2.0*a-1.0) )
       * (lgm + 5.0/6.0 - 2.0/(3.0*x));
    d = 2.0 * d;
@@ -481,10 +481,10 @@ double incbi( double aa, double bb, double yy0 )
       x = 1.0;
       goto under;
    }
-   x = a/( a + b * exp(d) );
+   x = a/( a + b * std::exp(d) );
    y = incbet( a, b, x );
    yp = (y - y0)/y0;
-   if( fabs(yp) < 0.2 )
+   if( std::fabs(yp) < 0.2 )
       goto newt;
 
 /* Resort to interval halving if not close enough. */
@@ -508,10 +508,10 @@ ihalve:
          }
          y = incbet( a, b, x );
          yp = (x1 - x0)/(x1 + x0);
-         if( fabs(yp) < dithresh )
+         if( std::fabs(yp) < dithresh )
             goto newt;
          yp = (y-y0)/y0;
-         if( fabs(yp) < dithresh )
+         if( std::fabs(yp) < dithresh )
             goto newt;
       }
       if( y < y0 )
@@ -627,12 +627,12 @@ newt:
       if( x == 1.0 || x == 0.0 )
          break;
       /* Compute the derivative of the function at this point. */
-      d = (a - 1.0) * log(x) + (b - 1.0) * log(1.0-x) + lgm;
+      d = (a - 1.0) * std::log(x) + (b - 1.0) * std::log(1.0-x) + lgm;
       if( d < kMINLOG )
          goto done;
       if( d > kMAXLOG )
          break;
-      d = exp(d);
+      d = std::exp(d);
       /* Compute the step to the next approximation of x. */
       d = (y - y0)/d;
       xt = x - d;
@@ -651,7 +651,7 @@ newt:
             break;
       }
       x = xt;
-      if( fabs(d/x) < 128.0 * kMACHEP )
+      if( std::fabs(d/x) < 128.0 * kMACHEP )
          goto done;
    }
 /* Did not converge.  */

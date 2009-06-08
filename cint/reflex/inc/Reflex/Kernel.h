@@ -115,6 +115,8 @@
 
 
 // Include files
+#include <stdlib.h>
+#include <string.h>
 #include <string>
 #include <cstring>
 #include <vector>

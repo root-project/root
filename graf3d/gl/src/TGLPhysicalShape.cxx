@@ -21,6 +21,8 @@
 #include "TColor.h"
 #include "TROOT.h"
 
+#include <cmath>
+
 // For debug tracing
 #include "TClass.h"
 #include "TError.h"
@@ -497,7 +499,7 @@ void TGLPhysicalShape::CalculateShapeLOD(TGLRnrCtx& rnrCtx, Float_t& pixSize, Sh
       // TODO: Get real screen size - assuming 2000 pixel screen at present
       // Calculate a non-linear sizing hint for this shape based on diagonal.
       // Needs more experimenting with...
-      UInt_t lodApp = static_cast<UInt_t>(pow(largestDiagonal,0.4) * 100.0 / pow(2000.0,0.4));
+      UInt_t lodApp = static_cast<UInt_t>(std::pow(largestDiagonal,0.4) * 100.0 / std::pow(2000.0,0.4));
       if (lodApp > 1000) lodApp = 1000;
       shapeLOD = (Short_t) lodApp;
    }

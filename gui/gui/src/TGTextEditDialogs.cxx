@@ -586,11 +586,7 @@ Bool_t TGGotoDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                switch (parm1) {
                   case 1:
                      string = fBGoTo->GetString();
-#ifdef R__SOLARIS_CC50
-                     *fRetCode = (Long_t) std::atof(string);
-#else
                      *fRetCode = (Long_t) atof(string);
-#endif
                      CloseWindow();
                      break;
                   case 2:
@@ -616,11 +612,7 @@ Bool_t TGGotoDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                break;
             case kTE_ENTER:
                string = fBGoTo->GetString();
-#ifdef R__SOLARIS_CC50
-               *fRetCode = (Long_t) std::atof(string);
-#else
                *fRetCode = (Long_t) atof(string);
-#endif
                CloseWindow();
                break;
             default:

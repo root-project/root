@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string>
 #include <map>
+#include <typeinfo>
 #include "Riostream.h"
 
 #include "TClassTable.h"
