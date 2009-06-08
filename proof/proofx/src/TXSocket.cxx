@@ -1634,6 +1634,11 @@ oncemore:
    if (RecvProcessIDs(mess))
       goto oncemore;
 
+   if (mess->What() & kMESS_ACK) {
+      // Acknowledgement embedded: ignore ...
+      mess->SetWhat(mess->What() & ~kMESS_ACK);
+   }
+
    return n;
 }
 
