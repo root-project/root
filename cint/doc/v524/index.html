@@ -19,6 +19,7 @@ New web site for <a href="http://root.cern.ch/drupal/content/interpreter">ROOT's
       <li>Improve the casting from (free) function pointer to void* in dictionaries using a union.</li>
       <li>Support <tt>_attribute_</tt> in the parser (by ignoring it).</li>
       <li>Do not convert path names to lower case anymore.</li>
+      <li>Support const static data members with inline initialization: <tt>class A{static const int i=42;};</tt></li>
     </ul>
   </li>
   <li>CINT5
@@ -67,6 +68,7 @@ New web site for <a href="http://root.cern.ch/drupal/content/interpreter">ROOT's
       <li>Rename GCC_XML output file to *_gccxmlout.xml, so it is easier to distinguish it from selection.xml file.</li>
       <li>Improve the initialization and shutdown of Reflex; remove the memory leaks due to the reflection containers not beeing cleared at the end of the process.</li>
       <li>Modified the behavior of Reflex dictionary (namely ClassBuilder).  Rather than unconditionally erasing existing information, a 2nd ClassBuilder will either add new information or check that it is compatible with the existing information (and throwing an exception in case of problems).  To be able to over-ride an existing definition, unload the class before calling ClassBuilder.</li>
+      <li>Also create dictionaries for const static data members.</li>
     </ul>
   </li>
   <li><em>Cintex</em>
