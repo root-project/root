@@ -43,8 +43,8 @@ Generates the LCG dictionary file for each header file
       --deep
          Generate dictionary for all dependend classes
 
-      --split  (OBSOLETE)
-         Generate separate file for stub functions. Option sometimes needed on Windows.
+      --split=[classdef]
+         Generate separate a file for dictionary parts, currently supported part: classdef implementations.
 
       --reflex  (OBSOLETE)
          Generate Reflex dictionaries.
