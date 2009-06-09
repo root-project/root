@@ -61,14 +61,9 @@ TFileMerger::~TFileMerger()
 {
    // Cleanup.
 
-   if (fFileList)
-      delete fFileList;
-
-   if (fMergeList)
-      delete fMergeList;
-
-   if (fOutputFile)
-      delete fOutputFile;
+   SafeDelete(fFileList);
+   SafeDelete(fMergeList);
+   SafeDelete(fOutputFile);
 }
 
 //______________________________________________________________________________
@@ -85,14 +80,12 @@ Bool_t TFileMerger::AddFile(const char *url)
 {
    // Add file to file merger.
 
-   TFile *newfile;
-   TUUID uuid;
-   TString localcopy = Form("file:%s/", gSystem->TempDirectory());
-   localcopy += "ROOTMERGE-";
-   localcopy += uuid.AsString();
-   localcopy += ".root";
+   TFile *newfile = 0;
+   TString localcopy;
 
    if (fLocal) {
+      TUUID uuid;
+      localcopy.Form("file:%s/ROOTMERGE-%s.root", gSystem->TempDirectory(), uuid.AsString());
       if (!TFile::Cp(url, localcopy)) {
          Error("AddFile", "cannot get a local copy of file %s", url);
          return kFALSE;
@@ -126,22 +119,12 @@ Bool_t TFileMerger::OutputFile(const char *outputfile)
 {
    // Open merger output file.
 
-   if (fOutputFile)
-      delete fOutputFile;
+   SafeDelete(fOutputFile);
 
    fOutputFilename = outputfile;
 
-   TUUID uuid;
-   TString localcopy = Form("file:%s/", gSystem->TempDirectory());
-   localcopy += "ROOTMERGED-";
-   localcopy += uuid.AsString();
-   localcopy += ".root";
-
-   fOutputFile = TFile::Open(localcopy, "RECREATE");
-   fOutputFilename1 = localcopy;
-
-   if (!fOutputFile) {
-      Error("OutputFile", "cannot open the MERGER output file %s", localcopy.Data());
+   if (!(fOutputFile = TFile::Open(outputfile, "RECREATE"))) {
+      Error("OutputFile", "cannot open the MERGER output file %s", fOutputFilename.Data());
       return kFALSE;
    }
    return kTRUE;
@@ -156,7 +139,7 @@ void TFileMerger::PrintFiles(Option_t *options)
 }
 
 //______________________________________________________________________________
-Bool_t TFileMerger::Merge(Bool_t cp_progressbar)
+Bool_t TFileMerger::Merge()
 {
    // Merge the files. If no output file was specified it will write into
    // the file "FileMerger.root" in the working directory. Returns true
@@ -165,29 +148,28 @@ Bool_t TFileMerger::Merge(Bool_t cp_progressbar)
    // visual feedback on the progress of the copy.
 
    if (!fOutputFile) {
-      Info("Merge", "will merge the results to the file "
-           "FileMerger.root\nin your working directory, "
-           "since you didn't specify a merge filename");
-      if (!OutputFile("FileMerger.root")) {
+      TString outf(fOutputFilename);
+      if (outf.IsNull()) {
+         outf.Form("file:%s/FileMerger.root", gSystem->TempDirectory());
+         Info("Merge", "will merge the results to the file %s\n"
+                       "since you didn't specify a merge filename",
+                       TUrl(outf).GetFile());
+      }
+      if (!OutputFile(outf.Data())) {
          return kFALSE;
       }
    }
 
-   Bool_t result = MergeRecursive(fOutputFile, fFileList,0);
+   Bool_t result = MergeRecursive(fOutputFile, fFileList, 0);
    if (!result) {
       Error("Merge", "error during merge of your ROOT files");
    } else {
-      //fOutputFile->Write();  Not needed as already done in MergeRecursive() ... well actually it is SaveSelf which is a bit different.
-      fOutputFile->Close(); // But Close is required so the file is complete.
-      // copy the result file to the final destination
-      TFile::Cp(fOutputFilename1, fOutputFilename,cp_progressbar);
+      // But Close is required so the file is complete.
+      fOutputFile->Close();
    }
 
-   // Remove the temporary result file
-   TString path(fOutputFile->GetPath());
-   path = path(0, path.Index(':',0));
-   gSystem->Unlink(path);
-   fOutputFile = 0;
+   // Cleanup 
+   SafeDelete(fOutputFile);
 
    // Remove local copies if there are any
    TIter next(fFileList);
