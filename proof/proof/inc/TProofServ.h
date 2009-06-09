@@ -53,7 +53,7 @@ class THashList;
 class TList;
 class TDSetElement;
 class TMessage;
-class TTimer;
+class TShutdownTimer;
 class TReaperTimer;
 class TMutex;
 class TFileCollection;
@@ -130,10 +130,12 @@ private:
 
    Bool_t        fRealTimeLog;      //TRUE if log messages should be send back in real-time
 
-   TTimer       *fShutdownTimer;    // Timer used to shutdown out-of-control sessions
-   TReaperTimer *fReaperTimer;      // Timer used to control children state
+   TShutdownTimer *fShutdownTimer;  // Timer used to shutdown out-of-control sessions
+   TReaperTimer   *fReaperTimer;    // Timer used to control children state
 
    Int_t         fInflateFactor;    // Factor in 1/1000 to inflate the CPU time
+
+   Int_t         fCompressMsg;     // Compression level for messages
 
    TProofDataSetManager* fDataSetManager; // dataset manager
 
@@ -148,6 +150,9 @@ private:
    // Memory limits (-1 to disable) set by envs ROOTPROOFASSOFT and RPPTPROFOASHARD
    Long_t        fVirtMemHWM;       //Above this we terminate gently (in kB)
    Long_t        fVirtMemMax;       //Hard limit enforced by the system (in kB)
+
+   // In bytes; default is 1MB
+   Long64_t      fMsgSizeHWM;       //High-Water-Mark on the size of messages with results
 
    static FILE  *fgErrorHandlerFile; // File where to log
    static Int_t  fgRecursive;       // Keep track of recursive inputs during processing
@@ -164,6 +169,9 @@ private:
                                       TList *inl, Long64_t first, TDSet *dset,
                                       const char *selec, TObject *elist);
    void          SetQueryRunning(TProofQueryResult *pq);
+
+   // Results handling
+   void          SendResults(TSocket *sock, TList *outlist = 0, TQueryResult *pq = 0);
 
 protected:
    virtual void  HandleArchive(TMessage *mess);
@@ -217,6 +225,8 @@ public:
    Int_t          GetInflateFactor() const { return fInflateFactor; }
 
    Long_t         GetVirtMemHWM() const { return fVirtMemHWM; }
+
+   Long64_t       GetMsgSizeHWM() const { return fMsgSizeHWM; }
 
    const char    *GetPrefix()     const { return fPrefix; }
 

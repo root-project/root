@@ -235,6 +235,8 @@ Int_t TXProofServ::CreateServer()
       Error("CreateServer", "Failed to open connection to XrdProofd coordinator");
       return -1;
    }
+   // Set compression level, if any
+   fSocket->SetCompressionLevel(fCompressMsg);
 
    // Set the title for debugging
    TString tgt("client");

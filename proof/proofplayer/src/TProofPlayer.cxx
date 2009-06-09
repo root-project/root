@@ -1510,6 +1510,9 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          Warning("Process","entry lists not supported by the server");
    }
 
+   // Reset the merging progress information
+   fProof->ResetMergePrg();
+
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    fProof->Broadcast(mesg);
 
@@ -2354,9 +2357,22 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj)
          return (TObject *)0;
 
       } else {
-         // Histogram has already been projected and there is no list: just
-         // do normal merging in the output list
-         return obj;
+         // Histogram has already been projected
+         Int_t hsz = h->GetNbinsX() * h->GetNbinsY() * h->GetNbinsZ();
+         if (gProofServ && hsz > gProofServ->GetMsgSizeHWM()) {
+            // Large histo: merge one-by-one
+            return obj;
+         } else {
+            // Create the list to merge in one-go at the end (more efficient
+            // then merging one by one)
+            list = new TList;
+            list->SetName(h->GetName());
+            list->SetOwner();
+            fOutputLists->Add(list);
+            list->Add(h);
+            // Done
+            return (TObject *)0;
+         }
       }
    }
    PDB(kOutput,1) Info("HandleHistogram", "Leaving");

@@ -79,6 +79,9 @@
 TProof *gProof = 0;
 TVirtualMutex *gProofMutex = 0;
 
+// Rotating indicator
+char TProofMergePrg::fgCr[4] = {'-', '\\', '|', '/'};
+
 TList   *TProof::fgProofEnvList = 0;  // List of env vars for proofserv
 TPluginHandler *TProof::fgLogViewer = 0;      // Log viewer handler
 
@@ -1819,6 +1822,14 @@ Int_t TProof::BroadcastGroupPriority(const char *grp, Int_t priority, ESlaves li
 }
 
 //______________________________________________________________________________
+void TProof::ResetMergePrg()
+{
+   // Reset the merge progress notificator
+
+   fMergePrg.Reset(fActiveSlaves->GetSize());
+}
+
+//______________________________________________________________________________
 Int_t TProof::Broadcast(const TMessage &mess, TList *slaves)
 {
    // Broadcast a message to all slaves in the specified list. Returns
@@ -2518,48 +2529,62 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             PDB(kGlobal,2)
                Info("HandleInputMessage","kPROOF_OUTPUTOBJECT: enter");
             Int_t type = 0;
-            (*mess) >> type;
-            // If a query result header, add it to the player list
-            if (fPlayer) {
-               if (type == 0) {
-                  // Retrieve query result instance (output list not filled)
-                  TQueryResult *pq =
-                     (TQueryResult *) mess->ReadObject(TQueryResult::Class());
-                  if (pq) {
-                     // Add query to the result list in TProofPlayer
-                     fPlayer->AddQueryResult(pq);
-                     fPlayer->SetCurrentQuery(pq);
-                     // And clear the output list, as we start merging a new set of results
-                     if (fPlayer->GetOutputList())
-                        fPlayer->GetOutputList()->Clear();
-                     // Add the unique query tag as TNamed object to the input list
-                     // so that it is available in TSelectors for monitoring
-                     fPlayer->AddInput(new TNamed("PROOF_QueryTag",
-                                       Form("%s:%s",pq->GetTitle(),pq->GetName())));
-                  } else {
-                     Warning("HandleInputMessage","kPROOF_OUTPUTOBJECT: query result missing");
+
+            while ((mess->BufferSize() > mess->Length())) {
+               (*mess) >> type;
+               // If a query result header, add it to the player list
+               if (fPlayer) {
+                  if (type == 0) {
+                     // Retrieve query result instance (output list not filled)
+                     TQueryResult *pq =
+                        (TQueryResult *) mess->ReadObject(TQueryResult::Class());
+                     if (pq) {
+                        // Add query to the result list in TProofPlayer
+                        fPlayer->AddQueryResult(pq);
+                        fPlayer->SetCurrentQuery(pq);
+                        // And clear the output list, as we start merging a new set of results
+                        if (fPlayer->GetOutputList())
+                           fPlayer->GetOutputList()->Clear();
+                        // Add the unique query tag as TNamed object to the input list
+                        // so that it is available in TSelectors for monitoring
+                        fPlayer->AddInput(new TNamed("PROOF_QueryTag",
+                                          Form("%s:%s",pq->GetTitle(),pq->GetName())));
+                     } else {
+                        Warning("HandleInputMessage","kPROOF_OUTPUTOBJECT: query result missing");
+                     }
+                  } else if (type > 0) {
+                     // Read object
+                     TObject *o = mess->ReadObject(TObject::Class());
+                     // Increment counter on the client side
+                     if (gProofServ) {
+                        fMergePrg.IncreaseIdx();
+                        TString msg;
+                        msg.Form("%s: merging output objects ... %s", gProofServ->GetPrefix(), fMergePrg.Export());
+                        gProofServ->SendAsynMessage(msg.Data(), kFALSE);
+                     }
+                     // Add or merge it
+                     if ((fPlayer->AddOutputObject(o) == 1)) {
+                        // Remove the object if it has been merged
+                        SafeDelete(o);
+                     }
+                     if (type > 1) {
+                        // Update the merger progress info
+                        fMergePrg.DecreaseNWrks();
+                        if (TestBit(TProof::kIsClient) && !IsLite()) {
+                           // In PROOFLite this has to be done once only in TProofLite::Process
+                           TQueryResult *pq = fPlayer->GetCurrentQuery();
+                           pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
+                           pq->SetInputList(fPlayer->GetInputList(), kFALSE);
+                           // If the last object, notify the GUI that the result arrived
+                           QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
+                           // Processing is over
+                           UpdateDialog();
+                        }
+                     }
                   }
-               } else if (type > 0) {
-                  // Read object
-                  TObject *o = mess->ReadObject(TObject::Class());
-                  // Add or merge it
-                  if ((fPlayer->AddOutputObject(o) == 1)) {
-                     // Remove the object if it has been merged
-                     SafeDelete(o);
-                  }
-                  if (type > 1 && TestBit(TProof::kIsClient) && !IsLite()) {
-                     // In PROOFLite this has to be done once only in TProofLite::Process
-                     TQueryResult *pq = fPlayer->GetCurrentQuery();
-                     pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
-                     pq->SetInputList(fPlayer->GetInputList(), kFALSE);
-                     // If the last object, notify the GUI that the result arrived
-                     QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
-                     // Processing is over
-                     UpdateDialog();
-                  }
+               } else {
+                  Warning("HandleInputMessage", "kPROOF_OUTPUTOBJECT: player undefined!");
                }
-            } else {
-               Warning("HandleInputMessage", "kPROOF_OUTPUTOBJECT: player undefined!");
             }
          }
          break;

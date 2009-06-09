@@ -556,6 +556,12 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fMaxBoxSize      = -1;
    fHWMBoxSize      = -1;
 
+   // Max message size
+   fMsgSizeHWM = gEnv->GetValue("ProofServ.MsgSizeHWM", 1000000);
+
+   // Message compression
+   fCompressMsg     = gEnv->GetValue("ProofServ.CompressMessage", 0);
+
    gProofDebugLevel = gEnv->GetValue("Proof.DebugLevel",0);
    fLogLevel = gProofDebugLevel;
 
@@ -600,6 +606,9 @@ Int_t TProofServ::CreateServer()
       return -1;
    }
    fSocket = new TSocket(sock);
+
+   // Set compression level, if any
+   fSocket->SetCompressionLevel(fCompressMsg);
 
    // debug hooks
    if (IsMaster()) {
@@ -3211,28 +3220,11 @@ void TProofServ::HandleProcess(TMessage *mess)
 
       // Send back the results
       if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
-         if (fProtocol > 10) {
-            // Send objects one-by-one to optimize transfer and merging
-            // Messages for objects
-            TMessage mbuf(kPROOF_OUTPUTOBJECT);
-            // Objects in the output list
-            Int_t ns = 0;
-            Int_t olsz = fPlayer->GetOutputList()->GetSize();
-            TIter nxo(fPlayer->GetOutputList());
-            o = 0;
-            while ((o = nxo())) {
-               ns++;
-               mbuf.Reset();
-               mbuf << (Int_t) ((ns >= olsz) ? 2 : 1);
-               mbuf.WriteObject(o);
-               fSocket->Send(mbuf);
-            }
-         } else {
-            PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
-            fSocket->SendObject(fPlayer->GetOutputList(), kPROOF_OUTPUTLIST);
-         }
+         // Send results to the master
+         SendResults(fSocket, fPlayer->GetOutputList());
       } else {
-         fSocket->SendObject(0, kPROOF_OUTPUTLIST);
+         // Signal the failure
+         SendResults(fSocket);
       }
 
       // Cleanup the input data set info
@@ -3257,6 +3249,177 @@ void TProofServ::HandleProcess(TMessage *mess)
    PDB(kGlobal, 1) Info("HandleProcess", "Done");
 
    // Done
+   return;
+}
+
+//______________________________________________________________________________
+void TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
+{
+   // Sends all objects from the given list to the specified socket
+
+   PDB(kOutput, 2) Info("SendResults", "enter");
+
+   TString msg;
+   if (fProtocol > 23 && outlist) {
+      // Send objects in bunches of max fMsgSizeHWM bytes to optimize transfer
+      // Objects are merged one-by-one by the client
+      // Messages for objects
+      TMessage mbuf(kPROOF_OUTPUTOBJECT);
+      // Objects in the output list
+      Int_t olsz = outlist->GetSize();
+      if (IsTopMaster() && pq) {
+         msg.Form("%s: merging output objects ... done                                     ",
+                       fPrefix.Data());
+         SendAsynMessage(msg.Data());
+         // Message for the client
+         msg.Form("%s: objects merged; sending output: %d objs", fPrefix.Data(), olsz);
+         SendAsynMessage(msg.Data(), kFALSE);
+         // Send light query info
+         mbuf << (Int_t) 0;
+         mbuf.WriteObject(pq);
+         sock->Send(mbuf);
+      }
+      // Objects in the output list
+      Int_t ns = 0, np = 0;
+      TIter nxo(outlist);
+      TObject *o = 0;
+      Int_t totsz = 0, objsz = 0;
+      mbuf.Reset();
+      while ((o = nxo())) {
+         if (mbuf.Length() > fMsgSizeHWM) {
+            PDB(kOutput, 1)
+               Info("SendResults",
+                    "message has %lld bytes: limit of %lld bytes reached - sending ...",
+                    mbuf.Length(), fMsgSizeHWM);
+            // Compress the message, if required; for these messages we do it already
+            // here so we get the size; TXSocket does not do it twice.
+            if (fCompressMsg > 0) {
+               mbuf.SetCompressionLevel(fCompressMsg);
+               mbuf.Compress();
+               objsz = mbuf.CompLength();
+            } else {
+               objsz = mbuf.Length();
+            }
+            totsz += objsz;
+            if (IsTopMaster()) {
+               msg.Form("%s: objects merged; sending obj %d/%d (%d bytes)   ",
+                              fPrefix.Data(), ns, olsz, objsz);
+               SendAsynMessage(msg.Data(), kFALSE);
+            }
+            sock->Send(mbuf);
+            // Reset the message
+            mbuf.Reset();
+            np = 0;
+         }
+         ns++;
+         np++;
+         mbuf << (Int_t) ((ns >= olsz) ? 2 : 1);
+         mbuf << o;
+      }
+      if (np > 0) {
+         // Compress the message, if required; for these messages we do it already
+         // here so we get the size; TXSocket does not do it twice.
+         if (fCompressMsg > 0) {
+            mbuf.SetCompressionLevel(fCompressMsg);
+            mbuf.Compress();
+            objsz = mbuf.CompLength();
+         } else {
+            objsz = mbuf.Length();
+         }
+         totsz += objsz;
+         if (IsTopMaster()) {
+            msg.Form("%s: objects merged; sending obj %d/%d (%d bytes)     ",
+                           fPrefix.Data(), ns, olsz, objsz);
+            SendAsynMessage(msg.Data(), kFALSE);
+         }
+         sock->Send(mbuf);
+      }
+      if (IsTopMaster()) {
+         // Send total size
+         msg.Form("%s: grand total: sent %d objects, size: %d bytes       ",
+                                        fPrefix.Data(), olsz, totsz);
+         SendAsynMessage(msg.Data());
+      }
+   } else if (fProtocol > 10 && outlist) {
+
+      // Send objects one-by-one to optimize transfer and merging
+      // Messages for objects
+      TMessage mbuf(kPROOF_OUTPUTOBJECT);
+      // Objects in the output list
+      Int_t olsz = outlist->GetSize();
+      if (IsTopMaster() && pq) {
+         msg.Form("%s: merging output objects ... done                                     ",
+                       fPrefix.Data());
+         SendAsynMessage(msg.Data());
+         // Message for the client
+         msg.Form("%s: objects merged; sending output: %d objs", fPrefix.Data(), olsz);
+         SendAsynMessage(msg.Data(), kFALSE);
+         // Send light query info
+         mbuf << (Int_t) 0;
+         mbuf.WriteObject(pq);
+         sock->Send(mbuf);
+      }
+
+      Int_t ns = 0;
+      Int_t totsz = 0, objsz = 0;
+      TIter nxo(fPlayer->GetOutputList());
+      TObject *o = 0;
+      while ((o = nxo())) {
+         ns++;
+         mbuf.Reset();
+         Int_t type = (Int_t) ((ns >= olsz) ? 2 : 1);
+         mbuf << type;
+         mbuf.WriteObject(o);
+         // Compress the message, if required; for these messages we do it already
+         // here so we get the size; TXSocket does not do it twice.
+         if (fCompressMsg > 0) {
+            mbuf.SetCompressionLevel(fCompressMsg);
+            mbuf.Compress();
+            objsz = mbuf.CompLength();
+         } else {
+            objsz = mbuf.Length();
+         }
+         totsz += objsz;
+         if (IsTopMaster()) {
+            msg.Form("%s: objects merged; sending obj %d/%d (%d bytes)   ",
+                           fPrefix.Data(), ns, olsz, objsz);
+            SendAsynMessage(msg.Data(), kFALSE);
+         }
+         fSocket->Send(mbuf);
+      }
+      // Total size
+      if (IsTopMaster()) {
+         // Send total size
+         msg.Form("%s: grand total: sent %d objects, size: %d bytes       ",
+                                        fPrefix.Data(), olsz, totsz);
+         SendAsynMessage(msg.Data());
+      }
+
+   } else if (IsTopMaster() && fProtocol > 6 && outlist) {
+
+      // Buffer to be sent
+      TMessage mbuf(kPROOF_OUTPUTLIST);
+      mbuf.WriteObject(pq);
+      // Sizes
+      Int_t blen = mbuf.CompLength();
+      Int_t olsz = outlist->GetSize();
+      // Message for the client
+      msg.Form("%s: sending output: %d objs, %d bytes", fPrefix.Data(), olsz, blen);
+      SendAsynMessage(msg.Data(), kFALSE);
+      sock->Send(mbuf);
+
+   } else {
+      if (outlist) {
+         PDB(kGlobal, 2) Info("SendResults", "sending output list");
+      } else {
+         PDB(kGlobal, 2) Info("SendResults", "notifying failure or abort");
+      }
+      sock->SendObject(outlist, kPROOF_OUTPUTLIST);
+   }
+
+   // DeletePlayer();
+   PDB(kOutput,2) Info("SendResults", "done");
+
    return;
 }
 
@@ -3403,61 +3566,15 @@ void TProofServ::ProcessNext()
    // Send back the results
    TQueryResult *pqr = pq->CloneInfo();
    if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
+      PDB(kGlobal, 2)
+         Info("ProcessNext","Sending results");
+      TQueryResult *xpq = (fProtocol > 10) ? pqr : pq;
+      SendResults(fSocket, fPlayer->GetOutputList(), xpq);
 
-      PDB(kGlobal, 2) Info("ProcessNext","Sending results");
-      if (fProtocol > 10) {
-         // Send objects one-by-one to optimize transfer and merging
-         TMessage mbuf(kPROOF_OUTPUTOBJECT);
-         // Objects in the output list
-         Int_t olsz = fPlayer->GetOutputList()->GetSize();
-         // Message for the client
-         SendAsynMessage(Form("%s: sending output: %d objs",fPrefix.Data(), olsz), kFALSE);
-         // Send light query info
-         mbuf << (Int_t) 0;
-         mbuf.WriteObject(pqr);
-         fSocket->Send(mbuf);
-
-         Int_t ns = 0;
-         Int_t totsz = 0;
-         TIter nxo(fPlayer->GetOutputList());
-         o = 0;
-         while ((o = nxo())) {
-            ns++;
-            mbuf.Reset();
-            Int_t type = (Int_t) ((ns >= olsz) ? 2 : 1);
-            mbuf << type;
-
-            mbuf.WriteObject(o);
-            totsz += mbuf.Length();
-            SendAsynMessage(Form("%s: sending obj %d/%d (%d bytes)",fPrefix.Data(),
-                                 ns, olsz, mbuf.Length()), kFALSE);
-            fSocket->Send(mbuf);
-         }
-         // Total size
-         SendAsynMessage(Form("%s: grand total: sent %d objects, size: %d bytes",
-                              fPrefix.Data(), olsz, totsz));
-      } else if (fProtocol > 6) {
-
-         // Buffer to be sent
-         TMessage mbuf(kPROOF_OUTPUTLIST);
-         mbuf.WriteObject(pq);
-         // Sizes
-         Int_t blen = mbuf.Length();
-         Int_t olsz = fPlayer->GetOutputList()->GetSize();
-         // Message for the client
-         SendAsynMessage(Form("%s: sending output: %d objs, %d bytes",
-                              fPrefix.Data(), olsz, blen));
-         fSocket->Send(mbuf);
-
-      } else {
-         // TQueryResult unknow to client: send the output list only
-         PDB(kGlobal, 2) Info("ProcessNext","Sending output list");
-         fSocket->SendObject(fPlayer->GetOutputList(), kPROOF_OUTPUTLIST);
-      }
    } else {
       if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted)
          Warning("ProcessNext","The output list is empty!");
-      fSocket->SendObject(0, kPROOF_OUTPUTLIST);
+      SendResults(fSocket);
    }
 
    // Remove aborted queries from the list

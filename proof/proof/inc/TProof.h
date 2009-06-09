@@ -116,9 +116,10 @@ class TProofDataSetManager;
 // 20 -> 21: Add support for session queuing
 // 21 -> 22: Add support for switching from sync to async while running ('Ctrl-Z' functionality)
 // 22 -> 23: New dataset features (default tree name; classification per fileserver)
+// 23 -> 24: Merging optimization
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 23;            // protocol version number
+const Int_t       kPROOF_Protocol        = 24;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -209,6 +210,25 @@ public:
 
    ClassDef(TSlaveInfo,2) //basic info on slave
 };
+
+// Small auxilliary class for merging progress notification
+class TProofMergePrg {
+private:
+   TString      fExp;
+   Int_t        fIdx;
+   Int_t        fNWrks;
+   static char  fgCr[4];
+public:
+   TProofMergePrg() : fIdx(-1), fNWrks(-1) { }
+
+   const char  *Export() { fExp.Form("%c (%d workers still sending)   ", fgCr[fIdx], fNWrks);
+                           return fExp.Data(); }
+   void         DecreaseNWrks() { fNWrks--; }
+   void         IncreaseIdx() { fIdx++; if (fIdx == 4) fIdx = 0; }
+   void         Reset(Int_t n = -1) { fIdx = -1; SetNWrks(n); }
+   void         SetNWrks(Int_t n) { fNWrks = n; }
+};
+
 
 class TProof : public TNamed, public TQObject {
 
@@ -387,6 +407,8 @@ private:
    FILE           *fLogFileR;        //temp file to read redirected logs
    Bool_t          fLogToWindowOnly; //send log to window only
 
+   TProofMergePrg  fMergePrg;        //Merging progress
+
    TList          *fWaitingSlaves;   //stores a TPair of the slaves's TSocket and TMessage
    TList          *fQueries;         //list of TProofQuery objects
    Int_t           fOtherQueries;    //number of queries in list from previous sessions
@@ -534,6 +556,8 @@ private:
    Int_t    GetQueryReference(Int_t qry, TString &ref);
 
    void     PrintProgress(Long64_t total, Long64_t processed, Float_t procTime = -1.);
+
+   void     ResetMergePrg();
 
 protected:
    TProof(); // For derived classes to use
