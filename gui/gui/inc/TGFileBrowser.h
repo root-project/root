@@ -91,6 +91,7 @@ public:
    void        GetObjPicture(const TGPicture **pic, TObject *obj);
    void        GotoDir(const char *path);
    void        Selected(char *);
+   void        Update();
 
    ClassDef(TGFileBrowser, 0) // File browser.
 };

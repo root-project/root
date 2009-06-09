@@ -174,7 +174,7 @@ void TGFileBrowser::CreateBrowser()
    AddFrame(fBotFrame, new TGLayoutHints(kLHintsLeft | kLHintsTop |
             kLHintsExpandX, 2, 2, 2, 2));
 
-   fContextMenu = new TContextMenu("FileBrowserContextMenu") ;
+   fContextMenu = new TContextMenu("FileBrowserContextMenu");
    fFilter      = 0;
    fGroupSize   = 1000;
    fListLevel   = 0;
@@ -486,6 +486,7 @@ void TGFileBrowser::Refresh(Bool_t /*force*/)
 {
    // Refresh content of the list tree.
 
+   TTimer::SingleShot(200, "TGFileBrowser", this, "Update()");
    return; // disable refresh for the time being...
    TCursorSwitcher cursorSwitcher(this, fListTree);
    static UInt_t prev = 0;
@@ -499,6 +500,27 @@ void TGFileBrowser::Refresh(Bool_t /*force*/)
       fListLevel = sav;
       prev = curr;
    }
+}
+
+//______________________________________________________________________________
+void TGFileBrowser::Update()
+{
+   // Update content of the list tree.
+
+   TGListTreeItem *item = fCurrentDir;
+   if (!item) item = fRootDir;
+   //fListTree->DeleteChildren(item);
+   TGListTreeItem *curr = fListTree->GetSelected(); // GetCurrent() ??
+   if (curr) {
+      TObject *obj = (TObject *) curr->GetUserData();
+      if (obj && obj->InheritsFrom("TObjString")) {
+         TString fullpath = FullPathName(curr);
+         if (gSystem->AccessPathName(fullpath.Data())) {
+            fListTree->DeleteItem(curr);
+         }
+      }
+   }
+   DoubleClicked(item, 1);
 }
 
 /**************************************************************************/
@@ -707,7 +729,7 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
    CheckRemote(item);
    if (item && btn == kButton3) {
       TObject *obj = (TObject *) item->GetUserData();
-      if (obj) {
+      if (obj && !obj->InheritsFrom("TObjString")) {
          if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
             Chdir(item);
             const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", obj));
@@ -724,7 +746,7 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
              obj->InheritsFrom("TBranch")) {
             Chdir(item);
          }
-         fContextMenu->Popup(x, y, obj);
+         fContextMenu->Popup(x, y, obj, fBrowser);
       }
       else {
          fListTree->GetPathnameFromItem(item, path);
@@ -735,13 +757,13 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
                fCurrentDir = item;
                if (fDir) delete fDir;
                fDir = new TSystemDirectory(item->GetText(), fullpath.Data());
-               fContextMenu->Popup(x, y, fDir);
+               fContextMenu->Popup(x, y, fDir, fBrowser);
             }
             else {
                fCurrentDir = item->GetParent();
                if (fFile) delete fFile;
                fFile = new TSystemFile(item->GetText(), fullpath.Data());
-               fContextMenu->Popup(x, y, fFile);
+               fContextMenu->Popup(x, y, fFile, fBrowser);
             }
          }
       }
@@ -946,7 +968,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          TSystemFile *file;
          TString fname;
          // directories first
-         fListTree->DeleteChildren(item);
+         //fListTree->DeleteChildren(item);
          while ((file=(TSystemFile*)next())) {
             fname = file->GetName();
             if (file->IsDirectory()) {
