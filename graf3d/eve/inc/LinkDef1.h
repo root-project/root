@@ -95,6 +95,7 @@
 #pragma link C++ class TEveSceneInfo+;
 #pragma link C++ class TEveViewer+;
 #pragma link C++ class TEveViewerList+;
+#pragma link C++ class TEveViewerListEditor+;
 
 // TEvePad
 #pragma link C++ class TEvePad+;

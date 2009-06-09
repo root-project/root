@@ -81,6 +81,9 @@ private:
 protected:
    Bool_t       fShowTooltip;
 
+   Float_t     fBrightness;
+   Bool_t      fUseLightColorSet;
+
 public:
    TEveViewerList(const char* n="TEveViewerList", const char* t="");
    virtual ~TEveViewerList() {}
@@ -108,6 +111,12 @@ public:
 
    Bool_t GetShowTooltip()   const { return fShowTooltip; }
    void   SetShowTooltip(Bool_t x) { fShowTooltip = x; }
+
+   Float_t GetColorBrightness() const { return fBrightness; }
+   void     SetColorBrightness(Float_t b);
+  
+   Bool_t UseLightColorSet() const { return fUseLightColorSet; }
+   void    SwitchColorSet();
 
    ClassDef(TEveViewerList, 0); // List of Viewers providing common operations on TEveViewer collections.
 };

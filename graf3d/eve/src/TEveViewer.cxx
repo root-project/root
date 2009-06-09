@@ -253,7 +253,10 @@ ClassImp(TEveViewerList);
 //______________________________________________________________________________
 TEveViewerList::TEveViewerList(const char* n, const char* t) :
    TEveElementList(n, t),
-   fShowTooltip   (kTRUE)
+   fShowTooltip   (kTRUE),
+
+   fBrightness(0),
+  fUseLightColorSet(kFALSE)
 {
    // Constructor.
 
@@ -456,4 +459,30 @@ void TEveViewerList::OnClicked(TObject *obj, UInt_t button, UInt_t state)
    if (el && !el->IsPickable())
       el = 0;
    gEve->GetSelection()->UserPickedElement(el, state & kKeyControlMask);
+}
+
+//______________________________________________________________________________
+void TEveViewerList::SetColorBrightness(Float_t b)
+{
+   // Set color brightness.
+
+   TEveUtil::SetColorBrightness(b, 1);
+}
+
+//______________________________________________________________________________
+void TEveViewerList::SwitchColorSet()
+{
+   // Switch background color.
+
+   fUseLightColorSet = ! fUseLightColorSet;
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {  
+      TGLViewer* glv = ((TEveViewer*)*i)->GetGLViewer();
+      if ( fUseLightColorSet)
+         glv->UseLightColorSet();
+      else 
+         glv->UseDarkColorSet();
+
+      glv->RequestDraw(TGLRnrCtx::kLODHigh);
+   }
 }

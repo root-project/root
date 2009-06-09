@@ -277,17 +277,18 @@ Color_t* TEveUtil::FindColorVar(TObject* obj, const char* varname)
    return (Color_t*) (((char*)obj) + off);
 }
 
+//______________________________________________________________________________
 void TEveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
 {
    // Tweak all ROOT colors to become brighter (if value > 0) or
    // darker (value < 0). Reasonable values for the value argument are
-   // from -0.5 to 0.5 (error will be printed otherwise).
+   // from -2.5 to 2.5 (error will be printed otherwise).
    // If value is zero, the original colors are restored.
    //
    // You should call TEveManager::FullRedraw3D() afterwards or set
    // the argument full_redraw to true (default is false).
 
-   if (value < -0.5 || value > 0.5)
+   if (value < -2.5 || value > 2.5)
    {
       Error("TEveUtil::SetColorBrightness", "value '%f' out of range [-0.5, 0.5].", value);
       return;
@@ -323,13 +324,17 @@ void TEveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
          {
             cdef->Copy(*croot);
          }
+
          Float_t r, g, b;
          croot->GetRGB(r, g, b);
-         if (r < 0.01 && g < 0.01 && b < 0.01) continue; // skip black
-         if (r > 0.99 && g > 0.99 && b > 0.99) continue; // skip white
-         r = TMath::Min(r + value, 1.0f);
-         g = TMath::Min(g + value, 1.0f);
-         b = TMath::Min(b + value, 1.0f);
+         r = TMath::Power( r, (2.5 - value)/2.5);
+         g = TMath::Power(g, (2.5 - value)/2.5);
+         b = TMath::Power(b, (2.5 - value)/2.5);
+
+         r = TMath::Min(r, 1.0f);
+         g = TMath::Min(g, 1.0f);
+         b = TMath::Min(b, 1.0f);
+
          croot->SetRGB(r, g, b);
       }
       else
