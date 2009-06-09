@@ -298,7 +298,7 @@ TRecorderReplaying::TRecorderReplaying(const char *filename)
    // Allocates all necessary data structures used for replaying
    // What is allocated here is deleted in destructor
 
-   fFile       = new TFile(filename);
+   fFile       = TFile::Open(filename);
    fCmdEvent   = new TRecCmdEvent();
    fGuiEvent   = new TRecGuiEvent();
    fExtraEvent = new TRecExtraEvent();
@@ -397,8 +397,8 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor, TRec
 
    Info("TRecorderReplaying::Initialize", "Replaying of file %s started", fFile->GetName());
 
-   TFile f (fFile->GetName());
-   TIter nextkey(f.GetListOfKeys());
+   TFile *f = TFile::Open(fFile->GetName());
+   TIter nextkey(f->GetListOfKeys());
    TKey *key;
    while ((key = (TKey*)nextkey())) {
       fFilterStatusBar = kTRUE;
@@ -413,7 +413,7 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor, TRec
 
    fFilterStatusBar = kFALSE;
 
-   f.Close();
+   f->Close();
 
    fMutex->Lock();
    fMutex->UnLock();
@@ -863,7 +863,7 @@ void TRecorderInactive::ListCmd(const char *filename)
       return;
    }*/
 
-   TFile *file = new TFile(filename);
+   TFile *file = TFile::Open(filename);
    if (file->IsZombie() || !file->IsOpen()) {
       delete file;
       return;
@@ -902,7 +902,7 @@ void TRecorderInactive::ListGui(const char *filename)
       return;
    }*/
 
-   TFile *file = new TFile(filename);
+   TFile *file = TFile::Open(filename);
    if (file->IsZombie() || !file->IsOpen()) {
       delete file;
       return;
@@ -965,9 +965,9 @@ void TRecorderInactive::PrevCanvases(const char *filename, Option_t *option)
    // Save previous canvases in a .root file
 
    fCollect = gROOT->GetListOfCanvases();
-   TFile f (filename,option);
+   TFile *f = TFile::Open(filename, option);
    fCollect->Write();
-   f.Close();
+   f->Close();
 }
 
 //______________________________________________________________________________
@@ -1041,7 +1041,7 @@ TRecorderRecording::TRecorderRecording(TRecorder *r, const char *filename,
    fTimer      = new TTimer(25, kTRUE);
 
    // File where store recorded events
-   fFile       = new TFile(filename, option);
+   fFile       = TFile::Open(filename, option);
 
    // TTrees with windows, commandline events and GUi events
    fWinTree   = new TTree(kWindowsTree,    "Windows");
