@@ -155,9 +155,20 @@ public:
 //   class TQtFeedBackWidget to back the TCanvas FeedBack mode
 //______________________________________________________________________________
 class TQtFeedBackWidget : public QFrame {
-   QPixmap  *fPixBuffer;
-   QPixmap *fGrabBuffer;
+   QPixmap   *fPixBuffer;
+   QPixmap   *fGrabBuffer;
+   TQtWidget *fParentWidget;
 protected:
+   virtual void hideEvent (QHideEvent *ev) {
+      // hide the feedback widget and remove the buffer
+      delete fPixBuffer;  fPixBuffer  = 0;  
+      delete fGrabBuffer; fGrabBuffer = 0;
+      QFrame::hideEvent(ev);
+      if (fParentWidget) {
+         fParentWidget->SetIgnoreLeaveEnter(0);         
+         SetParent(0); // reparent
+      }
+   }
    virtual void paintEvent(QPaintEvent *ev) {
       if (fPixBuffer) {
          QRect rc = ev->rect();
@@ -177,7 +188,7 @@ protected:
    }
 public:
    TQtFeedBackWidget(QWidget *mother=0, Qt::WindowFlags f=0)  : QFrame(mother,f)
-      ,fPixBuffer(0),fGrabBuffer(0)
+      ,fPixBuffer(0),fGrabBuffer(0),fParentWidget(0)
    {
       // Create the feedback widget
       setAttribute(Qt::WA_NoSystemBackground); 
@@ -187,24 +198,29 @@ public:
       QPalette  p = palette();
       p.setBrush(QPalette::Window, Qt::transparent);
       setPalette(p);
+      setMouseTracking(true);
    }
    virtual ~TQtFeedBackWidget() 
    {
+      fParentWidget = 0;
       delete fPixBuffer; fPixBuffer = 0;
       delete fGrabBuffer; fGrabBuffer = 0;
    }
-   void hide() {
-      // hide the feedback widget and remove the buffer
-      delete fPixBuffer;  fPixBuffer  = 0;  
-      delete fGrabBuffer; fGrabBuffer = 0;
-      QFrame::hide();
+   void SetParent(TQtWidget *w) {
+      setParent(fParentWidget = w);
+   }
+   void Show() {
+      // Protect (Qt >= 4.5.x) TCanvas  against of 
+      // the confusing mouseMoveEvent
+      if (fParentWidget) fParentWidget->SetIgnoreLeaveEnter(2);
+      QFrame::show();
+      if (fParentWidget) fParentWidget->SetIgnoreLeaveEnter();
    }
    QPaintDevice *PixBuffer() { 
       // Create the feedback buffer if needed
-      QWidget *canvasWidget = parentWidget();
-      if (canvasWidget ) {
+      if (fParentWidget ) {
          // resize the feedback
-         QSize canvasSize = canvasWidget->size();
+         QSize canvasSize = fParentWidget->size();
          setGeometry(QRect(QPoint(0,0),canvasSize));
          if ( !fPixBuffer  || (fPixBuffer->size() != canvasSize) ) {
             delete fPixBuffer;
@@ -216,8 +232,7 @@ public:
    }
     QPaintDevice *GrabBuffer(QSize &s) { 
       // Create the feedback buffer to grab the parent TPad image
-      QWidget *canvasWidget = parentWidget();
-      if (canvasWidget ) {
+      if (fParentWidget ) {
          // resize the feedback
           if ( !fPixBuffer  || (fPixBuffer->size() != s) ) {
             delete fPixBuffer;
@@ -227,7 +242,7 @@ public:
       }
       return  fPixBuffer;
    }
-  void ClearBuffer() { 
+   void ClearBuffer() {
       // Fill the feedback buffer with the transparent background
       fPixBuffer->fill(Qt::transparent);
    }
@@ -243,10 +258,6 @@ public:
           }
        }
        setGeometry(xp,yp,w,h);
-   }
-   void mouseMoveEvent   ( QMouseEvent *e )
-   {
-     e->accept();  // workaround of Qt 4.5.x bug
    }
 };
 
@@ -264,15 +275,15 @@ public:
    {
       // activate temporary TQtFeedBackWidget widget buffer
       if (fGQt->fFeedBackMode && fGQt->fFeedBackWidget->isHidden()) {
-         fGQt->fFeedBackWidget->show();
+         fGQt->fFeedBackWidget->Show();
       }
    }
    ~TQtToggleFeedBack()
    {
       // Update the "feedback" widget
      if (fFeedBackPainter.isActive() ) fFeedBackPainter.end();
-     if (fGQt->fFeedBackMode && fGQt->fFeedBackWidget)
-        fGQt->fFeedBackWidget->update();
+     if (fGQt->fFeedBackMode && fGQt->fFeedBackWidget) 
+     {   fGQt->fFeedBackWidget->update();                   }
    }
    TQtPainter &painter() {
       // activate return  the "feedback" painter
@@ -1339,7 +1350,7 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    }
    if ( (fSelectedWindow->devType() ==  QInternal::Widget) && fFeedBackMode && fFeedBackWidget) {
       fFeedBackWidget->SetGeometry(x1,y2,x2-x1,y1-y2,(TQtWidget *)fSelectedWindow);
-      if (fFeedBackWidget->isHidden() ) fFeedBackWidget->show();
+      if (fFeedBackWidget->isHidden() ) fFeedBackWidget->Show();
       return;
    }
 
@@ -1353,7 +1364,7 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
       } else if (fQBrush->GetColor().alpha() ) {
          TQtPainter p(this);
          if (fQBrush->style() != Qt::SolidPattern) p.setPen(fQBrush->GetColor());
-         p.fillRect(x1,y2,x2-x1+1,y1-y2+1,*fQBrush);
+         p.fillRect(x1,y2,x2-x1,y1-y2,*fQBrush);
       }
    }
 }
@@ -2057,12 +2068,10 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
 	 // This makes no sense on X11 yet due the  
 	 // TQtWidget::setAttribute(Qt::WA_PaintOnScreen) flag
 	 // TQtWidget keeps painting itself over the feedback windows. Wierd !!!
-         fFeedBackWidget->setParent((TQtWidget *)fSelectedWindow);
          // reparent if needed
+         fFeedBackWidget->SetParent((TQtWidget *)fSelectedWindow);
       } else if (fFeedBackWidget) {
          fFeedBackWidget->hide();
-         // reparent
-         fFeedBackWidget->setParent(0);
       }
    }
 #if 0

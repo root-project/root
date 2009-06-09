@@ -186,6 +186,7 @@ TQtWidget::TQtWidget(QWidget* mother, const char* name, Qt::WFlags f,bool embedd
         ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0),fPixmapScreen(0)
         ,fPaint(TRUE),fSizeChanged(FALSE),fDoubleBufferOn(FALSE),fEmbedded(embedded)
         ,fWrapper(0),fSaveFormat("PNG"),fInsidePaintEvent(false),fOldMousePos(-1,-1)
+        ,fIgnoreLeaveEnter(0)
 {
    if (name && name[0]) setObjectName(name);
    Init() ;
@@ -436,23 +437,6 @@ void TQtWidget::SetCanvas(TCanvas *c)
 }
 
 //_____________________________________________________________________________
-void TQtWidget::Resize (int , int )
-{
-   // resize the widget and its double buffer
-   // fprintf(stderr,"TQtWidget::resize (int w=%d, int h=%d)\n",w,h);
-   assert(0);
-   // fPixmapID.fill();
-}
-
-//_____________________________________________________________________________
-void TQtWidget::Resize (const QSize &)
-{
-   // resize the widget and its double buffer
-   // fprintf(stderr,"TQtWidget::resize (int w=%d, int h=%d)\n",w,h);
-   assert(0);
-   // fPixmapID.fill();
-}
-//_____________________________________________________________________________
 void
 TQtWidget::customEvent(QEvent *e)
 {
@@ -486,6 +470,8 @@ TQtWidget::customEvent(QEvent *e)
  //_____________________________________________________________________________
 void TQtWidget::contextMenuEvent(QContextMenuEvent *e)
 {
+   // The custom response to the Qt QContextMenuEvent
+   // Map QContextMenuEvent to the ROOT kButton3Down = 3  event
    TCanvas *c = Canvas();
    if (e && c && (e->reason() != QContextMenuEvent::Mouse) ) {
       e->accept();
@@ -562,7 +548,7 @@ void TQtWidget::mouseMoveEvent (QMouseEvent * e)
    //  kMouseMotion   = 51,
    //  kButton1Motion = 21, kButton2Motion = 22, kButton3Motion = 23, kKeyPress = 24
    EEventType rootButton = kMouseMotion;
-   if ( fOldMousePos != e->pos() ) { // workaround of Qt 4.5.x bug
+   if ( fOldMousePos != e->pos() && fIgnoreLeaveEnter < 2  ) { // workaround of Qt 4.5.x bug
       fOldMousePos = e->pos(); 
       TCanvas *c = Canvas();
       if (c && !fWrapper){
@@ -660,7 +646,7 @@ void TQtWidget::enterEvent(QEvent *e)
    // Map the Qt mouse enters widget event to the ROOT TCanvas events
    // kMouseEnter    = 52
    TCanvas *c = Canvas();
-   if (c && !fWrapper){
+   if (c && !fIgnoreLeaveEnter && !fWrapper){
       c->HandleInput(kMouseEnter, 0, 0);
       EmitSignal(kEnterEvent);
    }
@@ -672,7 +658,7 @@ void TQtWidget::leaveEvent (QEvent *e)
    //  Map the Qt mouse leaves widget event to the ROOT TCanvas events
    // kMouseLeave    = 53
    TCanvas *c = Canvas();
-   if (c && !fWrapper){
+   if (c && !fIgnoreLeaveEnter && !fWrapper){
       c->HandleInput(kMouseLeave, 0, 0);
       EmitSignal(kLeaveEvent);
    }

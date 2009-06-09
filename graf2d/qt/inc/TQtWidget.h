@@ -133,8 +133,6 @@ public:
   QPixmap  *GetOffScreenBuffer()  const;
 
   // overloaded methods
-  void Resize (int w, int h);
-  void Resize (const QSize &size);
   virtual void Erase ();
   bool    IsDoubleBuffered() const { return fDoubleBufferOn; }
   void    SetDoubleBuffer(bool on=TRUE);
@@ -142,6 +140,7 @@ public:
 
 protected:
    friend class TGQt;
+   friend class TQtFeedBackWidget;
    TCanvas           *fCanvas;
    TQtWidgetBuffer   *fPixmapID;     // Double buffer of this widget
    TQtWidgetBuffer   *fPixmapScreen; // Double buffer for no-double buffer operation
@@ -154,6 +153,8 @@ protected:
    QString     fSaveFormat;
    bool        fInsidePaintEvent;
    QPoint      fOldMousePos;
+   int         fIgnoreLeaveEnter;
+
 
    void SetRootID(QWidget *wrapper);
    QWidget *GetRootID() const;
@@ -163,6 +164,8 @@ protected:
    void AdjustBufferSize();
 
    bool PaintingActive () const;
+   void SetIgnoreLeaveEnter(int ignore=1);
+
 
    virtual void enterEvent       ( QEvent *      );
 #if (QT_VERSION > 0x039999)
@@ -302,5 +305,6 @@ inline void   TQtWidget::EnableSignalEvents  (UInt_t f){ SetBit  (f); }
 inline void   TQtWidget::DisableSignalEvents (UInt_t f){ ResetBit(f); }
 inline Bool_t TQtWidget::IsSignalEventEnabled(UInt_t f) const { return TestBit (f); }
 inline void   TQtWidget::EmitSignal(UInt_t f)  {if (IsSignalEventEnabled(f)) EmitTestedSignal();}
+inline void   TQtWidget::SetIgnoreLeaveEnter(int ignore) { fIgnoreLeaveEnter = ignore; }
 
 #endif
