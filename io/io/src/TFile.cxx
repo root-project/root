@@ -1931,6 +1931,7 @@ void TFile::WriteFree()
       nbytes += afree->Sizeof();
    }
    if (!nbytes) return;
+
    TKey *key    = new TKey(fName,fTitle,IsA(),nbytes,this);
    if (key->GetSeekKey() == 0) {
       delete key;
