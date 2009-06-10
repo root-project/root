@@ -5,8 +5,13 @@
 #define 	CHAR_MIN (-128)
 #define 	INT_MAX (2147483647)
 #define 	INT_MIN (-2147483648)
+#if sizeof(long) == sizeof(int)
+#define 	LONG_MAX (2147483647)
+#define 	LONG_MIN (-2147483648)
+#else
 #define 	LONG_MAX (9223372036854775807)
 #define 	LONG_MIN (-9223372036854775808)
+#endif
 #define 	SCHAR_MAX (127)
 #define 	SCHAR_MIN (-128)
 #define 	SHRT_MAX (32767)
