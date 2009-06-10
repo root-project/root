@@ -422,6 +422,12 @@ public:
    // Set geometry from Root (built via TGeo)
    virtual void  SetRootGeometry() = 0;
 
+   // Activate the parameters defined in tracking media
+   // (DEEMAX, STMIN, STEMAX), which are, be default, ignored.
+   // In Geant4 case, only STEMAX is taken into account.
+   // In FLUKA, all tracking media parameters are ignored.
+   virtual void SetUserParameters(Bool_t isUserParameters);
+
    //
    // get methods
    // ------------------------------------------------
@@ -900,6 +906,16 @@ private:
 
    ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
+
+// new functions
+
+inline void TVirtualMC::SetUserParameters(Bool_t /*isUserParameters*/) {
+   // Activate the parameters defined in tracking media
+   // (DEEMAX, STMIN, STEMAX), which are, be default, ignored.
+   // In Geant4 case, only STEMAX is taken into account.
+   // In FLUKA, all tracking media parameters are ignored.
+   Warning("SetUserParameters", "New function - not yet implemented.");
+}
 
 R__EXTERN TVirtualMC *gMC;
 
