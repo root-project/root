@@ -73,6 +73,18 @@
      axis4->SetTitle("LG+"); axis4->Draw();
   }
   </pre>
+<li> <tt>gStyle.SetStripDecimals(kFALSE)</tt> did not work in cases like the
+  following one:
+  <pre>
+  {
+     gStyle.SetStripDecimals(kFALSE);
+     gStyle.SetPadLeftMargin(.15);
+     TGraph graph_freq;
+     graph_freq.SetPoint(0, 933., 40078879.);
+     graph_freq.SetPoint(1, 934., 40078966.);
+     graph_freq.Draw("A*");
+  }
+  </pre>
 </ul>
 
 <h4>TCrown</h4>
