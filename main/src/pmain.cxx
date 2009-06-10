@@ -21,13 +21,14 @@
 
 #ifdef WIN32
 #include <io.h>
+#else
+#include <sys/time.h>
+#include <sys/resource.h>
 #endif
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <sys/time.h>
-#include <sys/resource.h>
 
 #include "RConfig.h"
 #include "RConfigure.h"
@@ -135,6 +136,7 @@ static void SetMaxMemLimits(const char *prog)
 {
    // Set limits on the address space (virtual memory) if required.
 
+#ifndef WIN32
    const char *assoft = gSystem->Getenv("ROOTPROOFASSOFT");
    const char *ashard = gSystem->Getenv("ROOTPROOFASHARD");
 
@@ -169,6 +171,7 @@ static void SetMaxMemLimits(const char *prog)
          }
       }
    }
+#endif
 }
 
 #ifdef R__AFS

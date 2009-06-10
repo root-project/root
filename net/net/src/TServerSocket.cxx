@@ -85,7 +85,12 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 
    // If this is a local path, try announcing a UNIX socket service
    ResetBit(TSocket::kIsUnix);
-   if (service && (!gSystem->AccessPathName(service) || service[0] == '/')) {
+   if (service && (!gSystem->AccessPathName(service) || 
+#ifndef WIN32
+      service[0] == '/')) {
+#else
+      service[0] == '/' || (service[1] == ':' && service[2] == '/'))) {
+#endif
       SetBit(TSocket::kIsUnix);
       fService = "unix:";
       fService += service;

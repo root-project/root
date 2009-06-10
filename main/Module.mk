@@ -38,10 +38,10 @@ PROOFSERVEXE := bin/proofserv_exe.exe
 else
 PROOFSERVEXE := bin/proofserv.exe
 PROOFSERVSH  := bin/proofserv
-ifeq ($(PLATFORM),win32)
-PROOFSERVEXE :=
-PROOFSERVSH  :=
-endif
+#ifeq ($(PLATFORM),win32)
+#PROOFSERVEXE :=
+#PROOFSERVSH  :=
+#endif
 endif
 ifeq ($(PROOFLIB),)
 PROOFSERVEXE :=
