@@ -249,7 +249,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
          // operator[]/() returning a reference type will be used for __setitem__
             std::string cpd = Utility::Compound(
                method.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ) );
-            if ( cpd[ cpd.size() - 1 ] == '&' )
+            if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' )
                setupSetItem = kTRUE;
          } else if ( op == "*" ) {
          // dereference v.s. multiplication of two instances
