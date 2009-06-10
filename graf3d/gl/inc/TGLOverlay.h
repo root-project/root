@@ -21,12 +21,18 @@ class TGLOvlSelectRecord;
 
 class TGLOverlayElement
 {
+public:
+   enum ERole { kUser, kViewer, kAnnotation, kAll };
+
 private:
    TGLOverlayElement(const TGLOverlayElement&);            // Not implemented
    TGLOverlayElement& operator=(const TGLOverlayElement&); // Not implemented
 
+protected:
+   ERole   fRole;
+    
 public:
-   TGLOverlayElement() {}
+   TGLOverlayElement(ERole r = kUser):fRole(r) {}
    virtual ~TGLOverlayElement() {}
 
    virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
@@ -36,6 +42,9 @@ public:
    virtual void   MouseLeave();
 
    virtual void Render(TGLRnrCtx& rnrCtx) = 0;
+
+   ERole   GetRole() const { return fRole; }
+   void    SetRole(ERole r) { fRole = r; }
 
    ClassDef(TGLOverlayElement, 0) // Base class for GL overlay elements.
 };

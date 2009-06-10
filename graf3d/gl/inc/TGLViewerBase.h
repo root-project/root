@@ -16,6 +16,7 @@
 
 #include "TGLLockable.h"
 #include <TGLBoundingBox.h>
+#include "TGLOverlay.h"
 
 #include <list>
 #include <vector>
@@ -91,6 +92,7 @@ public:
    virtual void AddOverlayElement(TGLOverlayElement* el);
    virtual void RemoveOverlayElement(TGLOverlayElement* el);
    virtual void DeleteOverlayAnnotations();
+   virtual void DeleteOverlayElements(TGLOverlayElement::ERole r);
 
    TGLClip* Clip()         const { return fClip; }
    void     SetClip(TGLClip *p)  { fClip = p;    }

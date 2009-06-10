@@ -35,6 +35,7 @@
 ClassImp(TGLManipSet);
 
 TGLManipSet::TGLManipSet() :
+   TGLOverlayElement(kViewer),
    fType     (kTrans),
    fDrawBBox (kFALSE)
 {

@@ -37,7 +37,7 @@ ClassImp(TGLAnnotation);
 
 //______________________________________________________________________________
 TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy, TGLVector3 ref) :
-   TGLOverlayElement(),
+   TGLOverlayElement(TGLOverlayElement::kAnnotation),
    fMainFrame(0), fTextEdit(0),
    fParent(0),
    fText(text),

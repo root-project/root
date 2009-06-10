@@ -72,6 +72,8 @@ TGLViewerBase::~TGLViewerBase()
       delete *i;
    }
 
+   DeleteOverlayElements(TGLOverlayElement::kAll);
+
    delete fRnrCtx;
 }
 
@@ -203,18 +205,30 @@ void TGLViewerBase::DeleteOverlayAnnotations()
 {
    // Delete overlay elements that are annotations.
 
-   OverlayElmVec_t goners;
-   for (OverlayElmVec_i i = fOverlay.begin(); i != fOverlay.end(); ++i)
+   DeleteOverlayElements(TGLOverlayElement::kAnnotation);
+}
+
+//______________________________________________________________________
+void TGLViewerBase::DeleteOverlayElements(TGLOverlayElement::ERole role)
+{
+   // Delete overlay elements.
+
+   OverlayElmVec_i i = fOverlay.begin();
+   while (i != fOverlay.end())
    {
-      if (dynamic_cast<TGLAnnotation*>(*i))
-         goners.push_back(*i);
+      if (role == TGLOverlayElement::kAll || (*i)->GetRole() == role)
+      {
+         OverlayElmVec_i j = i++;
+         delete *j;
+         fOverlay.erase(j);
+      }
+      else
+      {
+         ++i;  
+      }
    }
-   if ( ! goners.empty())
-   {
-      for (OverlayElmVec_i i = goners.begin(); i != goners.end(); ++i)
-         delete *i;
-      Changed();
-   }
+
+   Changed();
 }
 
 /**************************************************************************/
