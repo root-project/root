@@ -305,17 +305,22 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                callEnv.InitWithPrototype(obj->IsA(), "Merge", "TCollection*");
             if (callEnv.IsValid()) {
                TList* tomerge = new TList;
+               callEnv.SetParam((Long_t) tomerge);
                TFile *nextsource = (TFile*)sourcelist->After(first_source);
                while (nextsource) {
                   nextsource->cd(path);
                   TObject *newobj = gDirectory->Get(obj->GetName());
                   if (newobj) {
                      tomerge->Add(newobj);
+                     callEnv.Execute(obj);
+                     if (newobj->IsA()->InheritsFrom("TCollection")) 
+                        ((TCollection*)newobj)->Delete();
+                     delete newobj;
+                     tomerge->Clear();
                   }
                   nextsource = (TFile*)sourcelist->After(nextsource);
                }
-               callEnv.SetParam((Long_t) tomerge);
-               callEnv.Execute(obj);
+               //callEnv.Execute(obj);
                delete tomerge;
             } else {
                target->cd();
@@ -359,6 +364,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             } else {
                obj->Write( key->GetName() );
             }
+            if (obj->IsA()->InheritsFrom("TCollection")) ((TCollection*)obj)->Delete();
             delete obj;
          }
          oldkey = key;
