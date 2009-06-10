@@ -44,7 +44,7 @@ Generates the LCG dictionary file for each header file
          Generate dictionary for all dependend classes
 
       --split=[classdef]
-         Generate separate a file for dictionary parts, currently supported part: classdef implementations.
+         Generate a separate file for the given dictionary parts, currently supported part: classdef implementations.
 
       --reflex  (OBSOLETE)
          Generate Reflex dictionaries.
