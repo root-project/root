@@ -139,7 +139,7 @@ void TFileMerger::PrintFiles(Option_t *options)
 }
 
 //______________________________________________________________________________
-Bool_t TFileMerger::Merge()
+Bool_t TFileMerger::Merge(Bool_t)
 {
    // Merge the files. If no output file was specified it will write into
    // the file "FileMerger.root" in the working directory. Returns true
