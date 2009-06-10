@@ -175,25 +175,30 @@ TEveTriangleSet* TEveTriangleSet::ReadTrivialFile(const char* file)
 {
    // Read a simple ascii input file describing vertices and triangles.
 
+   static const TEveException kEH("TEveTriangleSet::ReadTrivialFile ");
+
    FILE* f = fopen(file, "r");
    if (f == 0) {
-      ::Error("TEveTriangleSet::ReadTrivialFile", Form("file '%s' not found.", file));
+      ::Error(kEH, Form("file '%s' not found.", file));
       return 0;
    }
 
    Int_t nv, nt;
-   fscanf(f, "%d %d", &nv, &nt);
+   if (fscanf(f, "%d %d", &nv, &nt) != 2)
+      throw kEH + "Reading nv, nt failed.";
 
    TEveTriangleSet* ts = new TEveTriangleSet(nv, nt);
 
    Float_t *vtx = ts->Vertex(0);
    for (Int_t i=0; i<nv; ++i, vtx+=3) {
-      fscanf(f, "%f %f %f", &vtx[0], &vtx[1], &vtx[2]);
-   }
+      if (fscanf(f, "%f %f %f", &vtx[0], &vtx[1], &vtx[2]) != 3)
+         throw kEH + TString::Format("Reading vertex data %d failed.", i);
+    }
 
    Int_t *tngl = ts->Triangle(0);
    for (Int_t i=0; i<nt; ++i, tngl+=3) {
-      fscanf(f, "%d %d %d", &tngl[0], &tngl[1], &tngl[2]);
+      if (fscanf(f, "%d %d %d", &tngl[0], &tngl[1], &tngl[2]) != 3)
+         throw kEH + TString::Format("Reading triangle data %d failed.", i);
    }
 
    fclose(f);
