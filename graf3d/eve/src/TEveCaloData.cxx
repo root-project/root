@@ -90,6 +90,8 @@ TEveCaloData::TEveCaloData():
    fEtaAxis(0),
    fPhiAxis(0),
 
+   fWrapTwoPi(kTRUE),
+
    fMaxValEt(0),
    fMaxValE(0),
 
@@ -587,16 +589,26 @@ void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
    TH2   *h0  = fSliceInfos[0].fHist;
    Int_t  bin = 0;
 
+   Bool_t accept;
    for (Int_t ieta = 1; ieta <= nEta; ++ieta)
    {
       if (fEtaAxis->GetBinLowEdge(ieta) >= etaMin && fEtaAxis->GetBinUpEdge(ieta) <= etaMax)
       {
          for (Int_t iphi = 1; iphi <= nPhi; ++iphi)
          {
-            if (TEveUtil::IsU1IntervalContainedByMinMax
-                (phiMin, phiMax, fPhiAxis->GetBinLowEdge(iphi), fPhiAxis->GetBinUpEdge(iphi)))
+            if (fWrapTwoPi )
             {
-
+               accept = TEveUtil::IsU1IntervalContainedByMinMax
+                  (phiMin, phiMax, fPhiAxis->GetBinLowEdge(iphi), fPhiAxis->GetBinUpEdge(iphi));
+            }         
+            else
+            {
+               accept = fPhiAxis->GetBinLowEdge(iphi) >= phiMin &&  fPhiAxis->GetBinUpEdge(iphi) <= phiMax &&
+                  fPhiAxis->GetBinLowEdge(iphi) >= phiMin &&  fPhiAxis->GetBinUpEdge(iphi) <= phiMax;
+            }
+         
+            if (accept)
+            {
                bin = h0->GetBin(ieta, iphi);
                for (Int_t s = 0; s < nSlices; ++s)
                {

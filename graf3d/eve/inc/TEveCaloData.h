@@ -141,6 +141,8 @@ protected:
 
    TAxis*       fEtaAxis;
    TAxis*       fPhiAxis;
+   
+   Bool_t       fWrapTwoPi;
 
    Float_t      fMaxValEt; // cached
    Float_t      fMaxValE;  // cached
@@ -185,6 +187,9 @@ public:
 
    virtual Float_t GetEps()      const { return fEps; }
    virtual void    SetEps(Float_t eps) { fEps=eps; }
+   
+   Bool_t   GetWrapTwoPi() const { return fWrapTwoPi; }
+   void     SetWrapTwoPi(Bool_t w) { fWrapTwoPi=w; }
 
    static  Float_t EtaToTheta(Float_t eta);
 

@@ -95,17 +95,18 @@ public:
 //______________________________________________________________________________
 inline void TEveCaloLegoGL::WrapTwoPi(Float_t &min, Float_t &max) const
 {
-   //   static const Float_t pi  = TMath::Pi() + 1e-6;
-   if (fM->GetPhiMax()>TMath::Pi() && max<=fM->GetPhiMin())
+   if (fM->GetData()->GetWrapTwoPi())
    {
-      min += TMath::TwoPi();
-      max += TMath::TwoPi();
+      if (fM->GetPhiMax()>TMath::Pi() && max<=fM->GetPhiMin())
+      {
+         min += TMath::TwoPi();
+         max += TMath::TwoPi();
+      }
+      else if (fM->GetPhiMin()<-TMath::Pi() && min>=fM->GetPhiMax())
+      {
+         min -= TMath::TwoPi();
+         max -= TMath::TwoPi();
+      }
    }
-   else if (fM->GetPhiMin()<-TMath::Pi() && min>=fM->GetPhiMax())
-   {
-      min -= TMath::TwoPi();
-      max -= TMath::TwoPi();
-   }
-
 }
 #endif
