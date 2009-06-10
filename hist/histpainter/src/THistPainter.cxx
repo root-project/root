@@ -1097,6 +1097,11 @@ content.
 
 <p>The color table used is defined in the current style.
 
+<p>If the histogram's minimum and maximum are the same (flat histogram), the
+mapping on colors is not possible, therefore nothing is painted. To paint a
+flat histogram it is enough to set the histogram minimum
+(<tt>TH1::SetMinimum()</tt>) different from the bins' content.
+
 <p>The default number of color levels used to paint the cells is 20.
 It can be changed with <tt>TH1::SetContour()</tt> or
 <tt>TStyle::SetNumberContours()</tt>. The higher this number is, the smoother
