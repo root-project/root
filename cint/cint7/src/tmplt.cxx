@@ -4585,10 +4585,15 @@ static void G__settemplatealias(const char* scope_name, const char* template_id,
          //  Replace the final ',' with '>' temporarily.
          //
          char oldp = p[-1];
+         char oldp2 = *(p-2);
          if (oldp == '<') { // all template args have defaults
             p[-1] = 0;
          }
          else {
+            if (oldp2 == '>') {
+               *(p-1) = ' ';
+               ++p;
+            }
             p[-1] = '>';
             *p = 0;
          }
@@ -4617,6 +4622,9 @@ static void G__settemplatealias(const char* scope_name, const char* template_id,
             G__declare_typedef(short_name, 'u', tagnum, G__PARANORMAL, 0, G__globalcomp, parent_tagnum, false);
          }
          // Restore final ','.
+         if (oldp2 == '>') {
+            --p;
+         }
          p[-1] = oldp;
       }
       //
@@ -4630,6 +4638,11 @@ static void G__settemplatealias(const char* scope_name, const char* template_id,
       if (tmpl_arg_list->next) {
          *p = ',';
          ++p;
+      } else {
+         if (p[-1] == '>') {
+            *p = ' ';
+            ++p;
+         }
       }
    }
 }
