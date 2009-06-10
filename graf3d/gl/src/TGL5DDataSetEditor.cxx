@@ -134,7 +134,7 @@ void TGL5DDataSetEditor::DoLogScale()
 //______________________________________________________________________________
 void TGL5DDataSetEditor::DoPlanes()
 {
-   // Slot connected to the Number of Planes entry.
+   // Slot connected to the Apply Planes button.
 
    if (fPainter) {
       fApplyPlanes->SetState(kButtonDisabled);
@@ -168,12 +168,16 @@ void TGL5DDataSetEditor::DoSliderRangeMoved()
 //______________________________________________________________________________
 void TGL5DDataSetEditor::DoAlphaChanged()
 {
+   // Slot connected to the Alpha button.
+
    fApplyAlpha->SetState(kButtonUp);
 }
 
 //______________________________________________________________________________
 void TGL5DDataSetEditor::DoNContoursChanged()
 {
+   // Slot connected to the Number of Planes value-entry.
+
    fApplyPlanes->SetState(kButtonUp);
 }
 
