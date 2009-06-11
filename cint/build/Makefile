@@ -234,6 +234,8 @@ include build/deb.mk
 else
 deb :
 	$(MAKE) INCLUDE_DEB_MK=1 deb
+debinstall :
+	$(MAKE) INCLUDE_DEB_MK=1 debinstall
 endif
 
 ifeq ($(INCLUDE_RPM_MK),1)
@@ -241,5 +243,7 @@ include build/rpm.mk
 else
 rpm :
 	$(MAKE) INCLUDE_RPM_MK=1 rpm
+rpminstall :
+	$(MAKE) INCLUDE_RPM_MK=1 rpminstall
 endif
 

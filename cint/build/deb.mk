@@ -11,7 +11,7 @@
 
 .PHONY : deb debinstall
 
-ECHO = echo
+ECHO = /bin/echo
 
 cint_signature_file=~/.cint-signature
 cint_signature=`cat $(cint_signature_file)`
@@ -59,6 +59,12 @@ origtgz_deb = $(shell pwd | sed 's|/[^/]*$$||g')/cint_${G__CFG_CINTVERSION}.orig
 ignore = '(?:^|/).*~$$|(?:^|/)\.\#.*$$|(?:^|/)\..*\.swp$$|(?:^|/),,.*(?:$$|/.*$$)|(?:^|/)(?:DEADJOE|\.cvsignore|\.arch-inventory|\.bzrignore|\.gitignore)$$|(?:^|/)(?:CVS|RCS|\.deps|\{arch\}|\.arch-ids|\.svn|\.hg|_darcs|\.git|\.shelf|\.bzr(?:\.backup|tags)?)(?:$$|/.*$$)|.*\.png$$|.*\.o$$|.*\.exe$$|.*\.a$$|/config\..*$$|.*\.dvi$$|.*\.gz$$|.*\.deb$$|.*\.rpm$$|.*build-stamp$$|.*\.ps$$|rmkdepend|mktypes|.*\.dll$$|.*\.d'
 
 $(pkg) : $(origtgz_deb) debian/control debian/copyright debian/cint.dirs debian/cint.docs debian/changelog debian/rules debian/compat debian/cint.postinst debian/cint.prerm
+	@if [ "x$(G__CFG_PREFIX)" = "x" ] ; then \
+	  echo; \
+	  echo YOU MUST RUN ./configure WITH THE --with-prefix --prefix=/usr OPTIONS; \
+	  echo; \
+	  exit 1; \
+	fi
 	@$(ECHO) '###  Creating the package files'
 	rm -f config.status
 	make distclean
