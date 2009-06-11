@@ -90,32 +90,13 @@ $(cintspec) : Makefile $(rpmdirs)
 	@$(ECHO) make >> $@
 	@$(ECHO) %install >> $@
 	@$(ECHO) 'rm -rf $$RPM_BUILD_ROOT' >> $@
-	@$(ECHO) 'make DESTDIR=$$RPM_BUILD_ROOT ALTERNATIVENAME=.cint install' >> $@
+	@$(ECHO) 'make DESTDIR=$$RPM_BUILD_ROOT install' >> $@
 	@$(ECHO) %clean >> $@
 	@$(ECHO) 'rm -rf $$RPM_BUILD_ROOT' >> $@
 	@$(ECHO) %post >>$@
 	@$(ECHO) 'ldconfig' >>$@
-	@$(ECHO) 'if which update-alternatives >/dev/null; then' >> $@
-	@$(ECHO) ' update-alternatives --install /usr/bin/cint cint \' >> $@
-	@$(ECHO) '  $(G__CFG_BINDIR)/cint.cint 31 \' >> $@
-	@$(ECHO) '  --slave $(G__CFG_PREFIX)/share/man/man1/cint.1.gz \'  >> $@
-	@$(ECHO) '  cint.1.gz $(G__CFG_PREFIX)/share/man/man1/cint.cint.1.gz ' >> $@
-	@$(ECHO) ' update-alternatives --install /usr/bin/makecint makecint \'>>$@
-	@$(ECHO) '  $(G__CFG_BINDIR)/makecint.cint 31 \'>>$@
-	@$(ECHO) '  --slave $(G__CFG_PREFIX)/share/man/man1/makecint.1.gz \' >> $@
-	@$(ECHO) '  makecint.1.gz $(G__CFG_PREFIX)/share/man/man1/makecint.cint.1.gz' >> $@
-	@$(ECHO) 'else' >> $@
-	@$(ECHO) ' ln -s $(G__CFG_BINDIR)/cint.cint     /usr/bin/cint' >> $@
-	@$(ECHO) ' ln -s $(G__CFG_BINDIR)/makecint.cint /usr/bin/makecint' >> $@
-	@$(ECHO) 'fi' >> $@
-	@$(ECHO) %preun >>$@
-	@$(ECHO) 'if which update-alternatives >/dev/null; then' >> $@
-	@$(ECHO) ' update-alternatives --remove cint $(G__CFG_BINDIR)/cint.cint' >> $@
-	@$(ECHO) ' update-alternatives --remove makecint $(G__CFG_BINDIR)/makecint.cint' >> $@
-	@$(ECHO) 'else' >> $@
-	@$(ECHO) " if file /usr/bin/cint | grep 'symbolic link to .*cint\.cint' >/dev/null; then rm -f /usr/bin/cint; fi" >>$@
-	@$(ECHO) " if file /usr/bin/makecint | grep 'symbolic link to .*makecint\.cint' >/dev/null; then rm -f /usr/bin/makecint; fi" >>$@
-	@$(ECHO) 'fi' >> $@
+#	@$(ECHO) %preun >>$@
+#	@$(ECHO) '' >> $@
 	@$(ECHO) %files >> $@
 	@$(ECHO) "%defattr(-,root,root)"  >>$@
 	@$(ECHO) '$(G__CFG_BINDIR)'  >>$@

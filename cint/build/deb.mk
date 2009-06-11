@@ -1,12 +1,5 @@
 # Makefile to create all the files debian/* necessary for
 # debian package creation, and the package itself.
-# It uses the alternatives system of debian to make 
-# it possible to co-install standalone CINT with that cominb
-# from ROOT. It sets the ALTERNATIVENAME=.cint variable for the 
-# main Makefile, which will then install executables with this
-# appended to the filenames, i.e. /usr/bin/cint.cint and
-# /usr/bin/makecint.cint (to make the difference from ROOT's
-# filenames /usr/bin/cint.root and /usr/bin/makecint.root)
 
 
 .PHONY : deb debinstall
@@ -36,8 +29,9 @@ $(cint_signature_file) :
 	  $(ECHO) ; \
 	  sleep 5s
 
-deb : deb_arch = $(shell dpkg-architecture -qDEB_HOST_ARCH)
+deb_arch = $(shell dpkg-architecture -qDEB_HOST_ARCH)
 pkgfilename = cint_$(G__CFG_CINTVERSION)-1_$(deb_arch).deb 
+
 pkg  = debian/package-files/$(pkgfilename)
 
 CONFIGCMD = ./configure  --with-prefix --prefix=/usr 
@@ -114,10 +108,6 @@ debian/cint.prerm : build/deb.mk
 	@$(ECHO) '#! /bin/sh' > $@
 	@$(ECHO) '# prerm script for root-cint' >> $@
 	@$(ECHO) 'set -e' >> $@
-	@$(ECHO) 'if [ "$$1" != "upgrade" ] ; then' >> $@
-	@$(ECHO) '  update-alternatives --remove cint $(G__CFG_BINDIR)/cint.cint' >> $@
-	@$(ECHO) '  update-alternatives --remove makecint $(G__CFG_BINDIR)/makecint.cint' >> $@
-	@$(ECHO) 'fi' >> $@
 	@$(ECHO) 'exit 0' >> $@
 	@chmod +x $@
 
@@ -126,15 +116,7 @@ debian/cint.postinst : build/deb.mk
 	@$(ECHO) 'set -e' >> $@
 	@$(ECHO) 'case "$$1" in' >> $@
 	@$(ECHO) 'configure)' >> $@
-	@$(ECHO) '# Alternatives update ' >> $@
-	@$(ECHO) 'update-alternatives --install /usr/bin/cint cint \' >> $@
-	@$(ECHO) '  $(G__CFG_BINDIR)/cint.cint 31 \' >> $@
-	@$(ECHO) '  --slave $(G__CFG_PREFIX)/share/man/man1/cint.1.gz \'  >> $@
-	@$(ECHO) '  cint.1.gz $(G__CFG_PREFIX)/share/man/man1/cint.cint.1.gz ' >> $@
-	@$(ECHO) 'update-alternatives --install /usr/bin/makecint makecint \'>>$@
-	@$(ECHO) '  $(G__CFG_BINDIR)/makecint.cint 31 \'>>$@
-	@$(ECHO) '  --slave $(G__CFG_PREFIX)/share/man/man1/makecint.1.gz \' >> $@
-	@$(ECHO) '  makecint.1.gz $(G__CFG_PREFIX)/share/man/man1/makecint.cint.1.gz' >> $@
+	@$(ECHO) '# Nothing to be done here' >> $@
 	@$(ECHO) ';;' >> $@
 	@$(ECHO) 'abort-upgrade|abort-remove|abort-deconfigure)' >> $@
 	@$(ECHO) '# Nothing to be done here' >> $@
@@ -266,7 +248,7 @@ debian/rules : build/deb.mk
 	@$(ECHO) -e '\tdh_testroot' >> $@
 	@$(ECHO) -e '\tdh_clean -k' >> $@
 	@$(ECHO) -e '\tdh_installdirs' >> $@
-	@$(ECHO) -e '\t$$(MAKE) install DESTDIR=$$(CURDIR)/debian/cint ALTERNATIVENAME=.cint' >> $@
+	@$(ECHO) -e '\t$$(MAKE) install DESTDIR=$$(CURDIR)/debian/cint' >> $@
 	@$(ECHO) '' >> $@
 	@$(ECHO) 'binary-indep: build install' >> $@
 	@$(ECHO) 'binary-arch: build install' >> $@
