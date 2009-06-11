@@ -6,7 +6,7 @@
   
 include ../GNUmake.env
 
-BINLIBS = -L$(LIBDIR) -l XrdFrm -lXrdCms -lXrdOss -lXrdNet -lXrdOuc -lXrdSys $(TYPELIBSF)
+BINLIBS = -L$(LIBDIR) -lXrdFrm -lXrdCms -lXrdOss -lXrdNet -lXrdOuc -lXrdSys $(TYPELIBSF)
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
