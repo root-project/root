@@ -65,7 +65,7 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
 
    SetWindowAttributes_t wattr;
 
-   wattr.fMask = kWAOverrideRedirect | kWASaveUnder | 
+   wattr.fMask = kWAOverrideRedirect | kWASaveUnder |
                  kWABorderPixel      | kWABorderWidth;
    wattr.fOverrideRedirect = kTRUE;
    wattr.fSaveUnder = kTRUE;
@@ -121,8 +121,8 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    MapRaised();
 
 
-   gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask | 
-                              kPointerMotionMask, kNone, 
+   gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                              kPointerMotionMask, kNone,
                               fClient->GetResourcePool()->GetGrabCursor());
 
    if (fClient->IsEditable()) {
@@ -209,7 +209,7 @@ void TGComboBox::Init()
    fDDButton = new TGScrollBarElement(this, fBpic, kDefaultScrollBarWidth,
                                       kDefaultScrollBarWidth, kRaisedFrame);
 
-   AddFrame(fDDButton, fLhb = new TGLayoutHints(kLHintsRight | 
+   AddFrame(fDDButton, fLhb = new TGLayoutHints(kLHintsRight |
                                                 kLHintsExpandY));
 
    fComboFrame = new TGComboBoxPopup(fClient->GetDefaultRoot(), 100, 100, kVerticalFrame);
@@ -407,8 +407,8 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
 
 //______________________________________________________________________________
 void TGComboBox::RemoveEntry(Int_t id)
-{ 
-   // Remove entry. If id == -1, the currently selected entry is removed 
+{
+   // Remove entry. If id == -1, the currently selected entry is removed
 
    fListBox->RemoveEntry(id);
 
@@ -530,7 +530,7 @@ void TGComboBox::Selected(Int_t widgetId, Int_t id)
 void TGComboBox::SetEnabled(Bool_t on)
 {
    // Set state of combo box. If kTRUE=enabled, kFALSE=disabled.
-   
+
    fDDButton->SetEnabled(on);
    if (on) {
       SetFlags(kWidgetIsEnabled);
@@ -539,7 +539,7 @@ void TGComboBox::SetEnabled(Bool_t on)
       ClearFlags(kWidgetIsEnabled);
       fSelEntry->SetBackgroundColor(GetDefaultFrameBackground());
    }
-   fClient->NeedRedraw(fSelEntry);   
+   fClient->NeedRedraw(fSelEntry);
 }
 
 //______________________________________________________________________________
@@ -643,7 +643,7 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
 
    for (Int_t i = 1; i <= 10; i++)
-      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, 
+      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i,
                TString::Format("%d",i), 0, i),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
@@ -660,7 +660,7 @@ void TGLineStyleComboBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << endl << "   // line style combo box" << endl;
    out << "   TGLineStyleComboBox *";
 
-   out << GetName() << " = new TGLineStyleComboBox(" << fParent->GetName() 
+   out << GetName() << " = new TGLineStyleComboBox(" << fParent->GetName()
        << "," << fWidgetId << ");" << endl;
    out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
        << GetHeight() << ");" << endl;
@@ -685,7 +685,7 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
    }
 
    for (Int_t i = 1; i < 16; i++)
-      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, 
+      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i,
                TString::Format("%d",i), i, 0),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    Select(1, kFALSE);  // to have first entry selected
@@ -700,7 +700,7 @@ void TGLineWidthComboBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << endl << "   // line width combo box" << endl;
    out << "   TGLineWidthComboBox *";
 
-   out << GetName() << " = new TGLineWidthComboBox(" << fParent->GetName() 
+   out << GetName() << " = new TGLineWidthComboBox(" << fParent->GetName()
        << "," << fWidgetId << ");" << endl;
    out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
        << GetHeight() << ");" << endl;
@@ -754,7 +754,7 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
 
    if (noFonts < kMaxFonts - 1)
       fFonts[noFonts] = 0;
-      
+
    Select(1, kFALSE);  // to have first entry selected
    SetWindowName();
 }

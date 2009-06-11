@@ -143,7 +143,7 @@ void TGTextLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 
    if (fActive) {
       gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground );
-      gVirtualX->FillRectangle(id,fNormGC, x, y, fWidth, fHeight); 
+      gVirtualX->FillRectangle(id,fNormGC, x, y, fWidth, fHeight);
       gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
       fText->Draw(id, fNormGC, x + 3, y + max_ascent);
    } else {
@@ -185,7 +185,7 @@ void TGTextLBEntry::SetText(TGString *new_text)
 FontStruct_t TGTextLBEntry::GetDefaultFontStruct()
 {
    // Return default font structure in use for a text listbox entry.
-   
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
@@ -374,7 +374,7 @@ TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
       fTWidth += fPicture->GetWidth() + 4;
       ((TGPicture *)pic)->AddReference();
    }
-   else 
+   else
       fTWidth += 20;
    gVirtualX->GetFontProperties(GetDefaultFontStruct(),
                                 max_ascent, max_descent);
@@ -391,7 +391,7 @@ TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
 TGIconLBEntry::~TGIconLBEntry()
 {
    // Delete icon & text listbox entry.
-   
+
    fClient->FreePicture(fPicture);
 }
 
@@ -407,7 +407,7 @@ void  TGIconLBEntry::Update(TGLBEntry *e)
 void TGIconLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
    // Draw copy on window/pixmap.
-   
+
    Int_t off_x = 0;
    if (fPicture) {
       fPicture->Draw(id, fNormGC, x + 2, y);
@@ -654,7 +654,7 @@ void TGLBContainer::RemoveEntries(Int_t from_ID, Int_t to_ID)
 void TGLBContainer::RemoveAll()
 {
    // Remove all entries in this container.
- 
+
    TGLBEntry      *e;
    TGFrameElement *el;
    TGLayoutHints  *l;
@@ -672,7 +672,7 @@ void TGLBContainer::RemoveAll()
       delete l;
    }
    ClearViewPort();
-}  
+}
 
 //______________________________________________________________________________
 TGLBEntry *TGLBContainer::Select(Int_t id)
@@ -816,7 +816,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
    Int_t y = pos.fY + event->fY;
    Bool_t activate = kFALSE;
 
-   // do not handle "context menu button" during guibuilding 
+   // do not handle "context menu button" during guibuilding
    if (fClient->IsEditable() && (event->fCode == kButton3)) {
       return kTRUE;
    }
@@ -904,7 +904,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
       fScrolling = kFALSE;
       gSystem->RemoveTimer(fScrollTimer);
    }
-   if (fChangeStatus || (last != fLastActive)) 
+   if (fChangeStatus || (last != fLastActive))
       ClearViewPort();
    // trick to avoid mouse move events between the mouse click
    // and the unmapping...
@@ -1128,7 +1128,7 @@ void TGListBox::InitListBox()
 
    fVScrollbar->Associate(this);
 
-   fVScrollbar->AddInput(kButtonPressMask | kButtonReleaseMask | 
+   fVScrollbar->AddInput(kButtonPressMask | kButtonReleaseMask |
                          kPointerMotionMask);
    fLbc->RemoveInput(kPointerMotionMask);
    fLbc->AddInput(kButtonPressMask | kButtonReleaseMask | kButtonMotionMask);
@@ -1280,14 +1280,14 @@ void TGListBox::NewEntry(const char *s)
       InsertEntry(s, GetNumberOfEntries()+1, selected);
    }
    Layout();
-} 
+}
 
 //______________________________________________________________________________
 void TGListBox:: RemoveEntry(Int_t id)
 {
    // remove entry with id.
    // If id = -1 - the selected entry/entries is/are removed.
-   //                
+   //
 
    if (id >= 0) {
       fLbc->RemoveEntry(id);
@@ -1314,7 +1314,7 @@ void TGListBox:: RemoveEntry(Int_t id)
 void TGListBox::RemoveAll()
 {
    // Remove all entries.
-   
+
    fLbc->RemoveAll();
    Layout();
 }
@@ -1323,7 +1323,7 @@ void TGListBox::RemoveAll()
 void TGListBox::RemoveEntries(Int_t from_ID, Int_t to_ID)
 {
    // Remove a range of entries defined by from_ID and to_ID.
-   
+
    fLbc->RemoveEntries(from_ID, to_ID);
    Layout();
 }
@@ -1578,14 +1578,14 @@ TGLBEntry *TGListBox::FindEntry(const char *name) const
 {
    // Find entry by name.
 
-   TList *list = fLbc->GetList(); 
-   TGFrameElement *el = (TGFrameElement *)list->First(); 
-   while (el) { 
-      if (el->fFrame->GetTitle() == TString(name)) 
-         return (TGLBEntry *)el->fFrame; 
-      el = (TGFrameElement *)list->After(el); 
-   } 
-   return 0; 
+   TList *list = fLbc->GetList();
+   TGFrameElement *el = (TGFrameElement *)list->First();
+   while (el) {
+      if (el->fFrame->GetTitle() == TString(name))
+         return (TGLBEntry *)el->fFrame;
+      el = (TGFrameElement *)list->After(el);
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
