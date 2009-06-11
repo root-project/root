@@ -1204,3 +1204,12 @@ int XrdPosix_isMyPath(const char *path)
 {
     return (0 != XrootPath.URL(path, 0, 0));
 }
+
+/******************************************************************************/
+/*                          X r d P o s i x _ U R L                           */
+/******************************************************************************/
+  
+char *XrdPosix_URL(const char *path, char *buff, int blen)
+{
+   return XrootPath.URL(path, buff, blen);
+}

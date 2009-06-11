@@ -101,7 +101,7 @@ XrdCmsMeter::XrdCmsMeter() : myMeter(&Say)
     monpgm   = 0;
     monint   = 0;
     montid   = 0;
-    rep_tod  = 0;
+    rep_tod  = time(0);
     rep_todfs= 0;
     xeq_load = 0;
     cpu_load = 0;

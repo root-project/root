@@ -82,7 +82,7 @@ int XrdNetSocket::Accept(int timeout)
       {struct pollfd sfd = {SockFD,
                             POLLIN|POLLRDNORM|POLLRDBAND|POLLPRI|POLLHUP, 0};
        do {retc = poll(&sfd, 1, timeout);}
-                  while(retc < 0 && (errno = EAGAIN || errno == EINTR));
+                  while(retc < 0 && (errno == EAGAIN || errno == EINTR));
        if (!sfd.revents) return -1;
       }
 

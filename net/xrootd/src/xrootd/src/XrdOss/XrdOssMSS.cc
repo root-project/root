@@ -23,6 +23,7 @@ const char *XrdOssMSSCVSID = "$Id$";
 #include <sys/vnode.h>
 #include <sys/mode.h>
 #endif
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -99,7 +100,7 @@ void *XrdOssSys::MSS_Opendir(const char *dir_path, int &rc) {
 
      // Make sure the path is not too long.
      //
-     if (strlen(dir_path) > XrdOssMAX_PATH_LEN)
+     if (strlen(dir_path) > MAXPATHLEN)
         {OssEroute.Emsg(epname, "mss path too long - ", dir_path);
          rc = -ENAMETOOLONG;
          return (void *)0;
@@ -206,7 +207,7 @@ int XrdOssSys::MSS_Create(const char *path, mode_t file_mode, XrdOucEnv &env)
 
     // Make sure the path is not too long.
     //
-    if (strlen(path) > XrdOssMAX_PATH_LEN)
+    if (strlen(path) > MAXPATHLEN)
        {OssEroute.Emsg(epname, "mss path too long - ", path);
         return -ENAMETOOLONG;
        }
@@ -245,7 +246,7 @@ int XrdOssSys::MSS_Stat(const char *path, struct stat *buff)
 
     // Make sure the path is not too long.
     //
-    if (strlen(path) > XrdOssMAX_PATH_LEN)
+    if (strlen(path) > MAXPATHLEN)
        {OssEroute.Emsg(epname, "mss path too long - ", path);
         return -ENAMETOOLONG;
        }
@@ -318,7 +319,7 @@ int XrdOssSys::MSS_Unlink(const char *path) {
 
     // Make sure the path is not too long.
     //
-    if (strlen(path) > XrdOssMAX_PATH_LEN)
+    if (strlen(path) > MAXPATHLEN)
        {OssEroute.Emsg(epname, "mss path too long - ", path);
         return -ENAMETOOLONG;
        }
@@ -345,8 +346,8 @@ int XrdOssSys::MSS_Rename(const char *oldname, const char *newname) {
 
     // Make sure the path is not too long.
     //
-    if (strlen(oldname) > XrdOssMAX_PATH_LEN
-    ||  strlen(newname) > XrdOssMAX_PATH_LEN)
+    if (strlen(oldname) > MAXPATHLEN
+    ||  strlen(newname) > MAXPATHLEN)
        {OssEroute.Emsg(epname,"mss path too long - ", oldname, newname);
         return -ENAMETOOLONG;
        }

@@ -69,7 +69,7 @@ extern "C" {
 
 
 
-#define XRDCLI_VERSION            "(C) 2004 SLAC INFN $Revision: 1.21 $ - Xrootd version: "XrdVSTRING
+#define XRDCLI_VERSION            "(C) 2004 SLAC INFN $Revision: 1.22 $ - Xrootd version: "XrdVSTRING
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -91,11 +91,14 @@ XrdClient *genclient = 0;
 XrdClientAdmin *genadmin = 0;
 XrdOucString currentpath;
 
+XrdOucString  cmdline_cmd;
+
 ///////////////////////
 
 void PrintUsage() {
-   cerr << "usage: xrd [host] "
-     "[-DSparmname stringvalue] ... [-DIparmname intvalue]  [-O<opaque info>]" << endl;
+   cerr << "usage: xrd [host]"
+
+     "[-DSparmname stringvalue] ... [-DIparmname intvalue]  [-O<opaque info>] [command]" << endl;
    cerr << " -DSparmname stringvalue     :         override the default value of an internal"
       " XrdClient setting (of string type)" << endl;
    cerr << " -DIparmname intvalue        :         override the default value of an internal"
@@ -107,6 +110,9 @@ void PrintUsage() {
    cerr << "   parmname     is the name of an internal parameter" << endl;
    cerr << "   stringvalue  is a string to be assigned to an internal parameter" << endl;
    cerr << "   intvalue     is an int to be assigned to an internal parameter" << endl;
+   cerr << "   command      is a command line to be executed. in this case the host is mandatory." << endl;
+
+   cerr << endl;
 }
 
 void PrintPrompt(stringstream &s) {
@@ -308,11 +314,16 @@ int main(int argc, char**argv) {
       }
 
       if (!initialhost) initialhost = argv[i];
-
+      else {
+	cmdline_cmd += argv[i];
+	cmdline_cmd += " ";
+      }
    }
 
    DebugSetLevel(EnvGetLong(NAME_DEBUG));
-
+   
+   // if there's no command to execute from the cmdline...
+   if (cmdline_cmd.length() == 0)
    cout << XRDCLI_VERSION << endl << "Welcome to the xrootd command line interface." << endl <<
       "Type 'help' for a list of available commands." << endl;
 
@@ -336,16 +347,18 @@ int main(int argc, char**argv) {
       char *linebuf=0;
       XrdOucTokenizer tkzer(linebuf); // should add valid XrdOucTokenizer constructor()
 
-      
-      PrintPrompt(prompt);
-      linebuf = readline(prompt.str().c_str());
-      if(! linebuf || ! *linebuf) {
-        free(linebuf);
-	continue;
-      }
+      if (cmdline_cmd.length() == 0) {
+	PrintPrompt(prompt);
+	linebuf = readline(prompt.str().c_str());
+	if(! linebuf || ! *linebuf) {
+	  free(linebuf);
+	  continue;
+	}
 #ifdef HAVE_READLINE
-      add_history(linebuf);
+	add_history(linebuf);
 #endif
+      }
+      else linebuf = strdup(cmdline_cmd.c_str());
 
       // And the simple parsing starts
       tkzer.Attach(linebuf);
@@ -361,7 +374,7 @@ int main(int argc, char**argv) {
 
 	 if (!parmname || !strlen(parmname)) {
 	    cout << "A directory name is needed." << endl << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 // Quite trivial directory processing
@@ -371,17 +384,17 @@ int main(int argc, char**argv) {
 	    if (pos != STR_NPOS)
 	       currentpath.erase(pos);
 
-	    continue;
+	    retval = 1;
 	 }
 
 	 if (!strcmp(parmname, "."))
-	    continue;
+	    retval = 1;
 	    
 	 currentpath += "/";
 	 currentpath += parmname;
-	 continue;
-      }
 
+      }
+      else
 
       // -------------------------- envputint ---------------------------
       if (!strcmp(cmd, "envputint")) {
@@ -390,14 +403,14 @@ int main(int argc, char**argv) {
 
 	 if (!parmname || !val) {
 	    cout << "A parameter name and an integer value are needed." << endl << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 EnvPutInt(parmname, atoi(val));
 	 DebugSetLevel(EnvGetLong(NAME_DEBUG));
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- envputstring ---------------------------
       if (!strcmp(cmd, "envputstring")) {
 	 char *parmname = tkzer.GetToken(0, 0),
@@ -405,26 +418,26 @@ int main(int argc, char**argv) {
 
 	 if (!parmname || !val) {
 	    cout << "A parameter name and a string value are needed." << endl << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 EnvPutString(parmname, val);
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- help ---------------------------
       if (!strcmp(cmd, "help")) {
 	 PrintHelp();
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- exit ---------------------------
       if (!strcmp(cmd, "exit")) {
 	 cout << "Goodbye." << endl << endl;
 	 retval = 0;
 	 break;
       }
-
+      else
       // -------------------------- connect ---------------------------
       if (!strcmp(cmd, "connect")) {
 	 char *host = initialhost;
@@ -435,7 +448,7 @@ int main(int argc, char**argv) {
 	    host = tkzer.GetToken(0, 1);
 	    if (!host || !strlen(host)) {
 	       cout << "A hostname is needed to connect somewhere." << endl;
-	       continue;
+	       retval = 1;
 	    }
 
 	 }
@@ -454,15 +467,14 @@ int main(int argc, char**argv) {
 	    genadmin = 0;
 	 }
 
-	 continue;
       }
-
+      else
       // -------------------------- dirlist ---------------------------
       if (!strcmp(cmd, "dirlist")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *dirname = tkzer.GetToken(0, 0);
@@ -478,7 +490,7 @@ int main(int argc, char**argv) {
 
 	 if (!path.length()) {
 	    cout << "The current path is empty." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 // Now try to issue the request
@@ -487,21 +499,21 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
       
 	 for (int i = 0; i < vs.GetSize(); i++)
 	    cout << vs[i] << endl;
 
 	 cout << endl;
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- locatesingle ---------------------------
       if (!strcmp(cmd, "locatesingle")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -538,16 +550,15 @@ int main(int argc, char**argv) {
 
 
 	 cout << endl;
-	 continue;
+ 
       }
-
-
+      else
       // -------------------------- locateall ---------------------------
       if (!strcmp(cmd, "locateall")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -574,15 +585,15 @@ int main(int argc, char**argv) {
 	 }
 
 	 cout << endl;
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- stat ---------------------------
       if (!strcmp(cmd, "stat")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -603,20 +614,20 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
       
 	 cout << "Id: " << id << " Size: " << size << " Flags: " << flags << " Modtime: " << modtime << endl;
 
 	 cout << endl;
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- statvfs ---------------------------
       if (!strcmp(cmd, "statvfs")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -644,7 +655,7 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
       
 	 cout << "r/w nodes: " << rwservers <<
 	   " r/w free space: " << rwfree <<
@@ -654,15 +665,14 @@ int main(int argc, char**argv) {
 	   " staging utilization: " << rwutil << endl;
 
 	 cout << endl;
-	 continue;
       }
-
+      else
       // -------------------------- ExistFile ---------------------------
       if (!strcmp(cmd, "existfile")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -684,7 +694,7 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
       
 	 if (vb[0])
 	    cout << "The file exists." << endl;
@@ -692,15 +702,15 @@ int main(int argc, char**argv) {
 	    cout << "File not found." << endl;
 
 	 cout << endl;
-	 continue;
+	 
       }
-
+      else
       // -------------------------- ExistDir ---------------------------
       if (!strcmp(cmd, "existdir")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -722,7 +732,7 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
       
 	 if (vb[0])
 	    cout << "The directory exists." << endl;
@@ -730,16 +740,16 @@ int main(int argc, char**argv) {
 	    cout << "Directory not found." << endl;
 
 	 cout << endl;
-	 continue;
+	 
       }
-
+      else
 
       // -------------------------- getchecksum ---------------------------
       if (!strcmp(cmd, "getchecksum")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -753,7 +763,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 };
 
 	 // Now try to issue the request
@@ -763,22 +773,21 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
 
 	 cout << "Checksum: " << ans << endl;
 	 cout << endl;
 
 	 free(ans);
 
-	 continue;
       }
-
+      else
       // -------------------------- isfileonline ---------------------------
       if (!strcmp(cmd, "isfileonline")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -792,7 +801,7 @@ int main(int argc, char**argv) {
 	 }
 	  else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 // Now try to issue the request
@@ -803,7 +812,7 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
       
 	 if (vb[0])
 	    cout << "The file is online." << endl;
@@ -811,15 +820,15 @@ int main(int argc, char**argv) {
 	    cout << "The file is not online." << endl;
 
 	 cout << endl;
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- mv ---------------------------
       if (!strcmp(cmd, "mv")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname1 = tkzer.GetToken(0, 0);
@@ -834,7 +843,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Two parameters are mandatory." << endl;
-	    continue;
+	    retval = 1;
 	 }
 	 if (fname2) {
 	    if (fname2[0] == '/')
@@ -844,7 +853,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Two parameters are mandatory." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 // Now try to issue the request
@@ -852,18 +861,18 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
 
 	 cout << endl;
-	 continue;
+	
       }
-
+      else
       // -------------------------- mkdir ---------------------------
       if (!strcmp(cmd, "mkdir")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname1 = tkzer.GetToken(0, 0);
@@ -886,7 +895,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 
@@ -895,18 +904,18 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
 
 	 cout << endl;
-	 continue;
+	 
       }
-
+      else
       // -------------------------- chmod ---------------------------
       if (!strcmp(cmd, "chmod")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname1 = tkzer.GetToken(0, 0);
@@ -929,7 +938,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 
@@ -938,18 +947,18 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
 
 	 cout << endl;
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- truncate ---------------------------
       if (!strcmp(cmd, "truncate")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -959,12 +968,12 @@ int main(int argc, char**argv) {
 	 if (slen) len = atoll(slen);
          else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
          if (len <= 0) {
 	    cout << "Bad length." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 XrdOucString pathname1;
@@ -977,7 +986,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 
@@ -986,18 +995,18 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
 
 	 cout << endl;
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- rm ---------------------------
       if (!strcmp(cmd, "rm")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -1011,7 +1020,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 // Now try to issue the request
@@ -1019,18 +1028,18 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
 
 	 cout << endl;
-	 continue;
+ 
       }
-
+      else
       // -------------------------- rmdir ---------------------------
       if (!strcmp(cmd, "rmdir")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname = tkzer.GetToken(0, 0);
@@ -1044,7 +1053,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 // Now try to issue the request
@@ -1052,19 +1061,18 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
 
 	 cout << endl;
-	 continue;
+
       }
-
-
+      else
       // -------------------------- prepare ---------------------------
       if (!strcmp(cmd, "prepare")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname1 = tkzer.GetToken(0, 0);
@@ -1085,9 +1093,8 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
-
 
 	 // Now try to issue the request
 	 vecString vs;
@@ -1096,18 +1103,18 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	    retval = 1;
 
 	 cout << endl;
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- cat ---------------------------
       if (!strcmp(cmd, "cat")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname1 = tkzer.GetToken(0, 0);
@@ -1143,7 +1150,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 XrdOucString cmd;
@@ -1158,15 +1165,15 @@ int main(int argc, char**argv) {
 	 cout << "cat returned " << rt << endl;
 
 	 cout << endl;
-	 continue;
+	
       }
-
+      else
       // -------------------------- cp ---------------------------
       if (!strcmp(cmd, "cp")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *fname1 = tkzer.GetToken(0, 0);
@@ -1203,7 +1210,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
 	 if (fname2) {
 
@@ -1227,7 +1234,7 @@ int main(int argc, char**argv) {
 	 }
 	 else {
 	    cout << "Missing parameter." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 XrdOucString cmd;
@@ -1242,15 +1249,15 @@ int main(int argc, char**argv) {
 	 cout << "cp returned " << rt << endl;
 
 	 cout << endl;
-	 continue;
-      }
 
+      }
+      else
       // -------------------------- query ---------------------------
       if (!strcmp(cmd, "query")) {
 
 	 if (!genadmin) {
 	    cout << "Not connected to any server." << endl;
-	    continue;
+	    retval = 1;
 	 }
 
 	 char *reqcode = tkzer.GetToken(0, 0);
@@ -1261,23 +1268,27 @@ int main(int argc, char**argv) {
 
 	 // Now check the answer
 	 if (!CheckAnswer(genadmin))
-	    continue;
+	   retval = 1;
       
 	 cout << Resp << endl;
 
 	 cout << endl;
-	 continue;
+	
       }
+      else {
 
-
-      // ---------------------------------------------------------------------
-      // -------------------------- not recognized ---------------------------
-      cout << "Command not recognized." << endl <<
-	 "Type \"help\" for a list of commands." << endl << endl;
-      
+	// ---------------------------------------------------------------------
+	// -------------------------- not recognized ---------------------------
+	cout << "Command not recognized." << endl <<
+	  "Type \"help\" for a list of commands." << endl << endl;
+      }
 
       
       free(linebuf);
+
+      // if it was a cmd from the commandline...
+      if (cmdline_cmd.length() > 0) break;
+
    } // while (1)
 
 

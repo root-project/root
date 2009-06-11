@@ -82,16 +82,6 @@ int XrdSecProtocolsss::Authenticate(XrdSecCredentials *cred,
    if ((dLen = Decode(einfo, decKey, cred->buffer, &rrData, cred->size)) <= 0)
       return -1;
 
-// Check if we should just use the LID
-//
-   if (decKey.Data.Opts & XrdSecsssKT::ktEnt::useLID
-   ||  (rrData.Options == XrdSecsssRR_Data::UseLID
-        && decKey.Data.Opts & XrdSecsssKT::ktEnt::anyUSR))
-      {if (idBuff) free(idBuff);
-       idBuff = Entity.name = strdup(getLID(lidBuff, sizeof(lidBuff)));
-       return 0;
-      }
-
 // Check if we should echo back the LID
 //
    if (rrData.Options == XrdSecsssRR_Data::SndLID)
@@ -149,8 +139,6 @@ int XrdSecProtocolsss::Authenticate(XrdSecCredentials *cred,
 //
         if (decKey.Data.Opts & XrdSecsssKT::ktEnt::anyUSR)
            {if (!myID.name) myID.name = (char *)"nobody";}
-   else if (decKey.Data.Opts & XrdSecsssKT::ktEnt::useLID)
-           myID.name = getLID(lidBuff, sizeof(lidBuff));
    else myID.name = decKey.Data.User;
 
 // Set correct group
@@ -337,7 +325,7 @@ char *XrdSecProtocolsss::Load_Client(XrdOucErrInfo *erp, const char *parms)
    static const char *KTPath = XrdSecsssKT::genFN();
    static const int   rfrHR = 60*60;
    struct stat buf;
-   XrdSecsssID::authType aType;
+   XrdSecsssID::authType aType = XrdSecsssID::idStatic;
    const char *kP = 0;
 
 // Get our full host name
@@ -350,20 +338,12 @@ char *XrdSecProtocolsss::Load_Client(XrdOucErrInfo *erp, const char *parms)
 
 // Check for the presence of a registry object
 //
-   aType = XrdSecsssID::getObj(&idMap);
+   idMap = XrdSecsssID::getObj(aType, &staticID, staticIDsz);
    switch(aType)
-         {case XrdSecsssID::idLogin:                  idMap = 0; break;
-          case XrdSecsssID::idMutual:   isMutual = 1; idMap = 0; break;
-          case XrdSecsssID::idDynamic:  isMutual = 1;            break;
+         {case XrdSecsssID::idDynamic:  isMutual = 1; break;
           case XrdSecsssID::idStaticM:  isMutual = 1;
-          case XrdSecsssID::idStatic:   
-               if ((kP = XrdSecsssID::getID(staticIDsz)))
-                  {staticID = (char *)malloc(staticIDsz);
-                   memcpy(staticID, kP, staticIDsz);
-                   idMap = 0;
-                   break;
-                  }
-           default: idMap = 0; break;
+          case XrdSecsssID::idStatic:
+               default:                 idMap    = 0; break;
           }
 
 // We want to establish the default location of the keytable
@@ -683,18 +663,11 @@ int XrdSecProtocolsss::getCred(XrdOucErrInfo    *einfo,
        return XrdSecsssRR_Data_HdrLen;
       }
 
-// If we have a static ID then send it along
+// Send the static ID
 //
-   if (staticID)
-      {memcpy(rrData.Data, staticID, staticIDsz);
-       rrData.Options = 0;
-       return XrdSecsssRR_Data_HdrLen + staticIDsz;
-      }
-
-// At this point use the loginid
-//
-   rrData.Options = XrdSecsssRR_Data::UseLID;
-   return XrdSecsssRR_Data_HdrLen;
+   memcpy(rrData.Data, staticID, staticIDsz);
+   rrData.Options = 0;
+   return XrdSecsssRR_Data_HdrLen + staticIDsz;
 }
 
 /******************************************************************************/
@@ -743,9 +716,11 @@ int XrdSecProtocolsss::getCred(XrdOucErrInfo    *einfo,
 //
    if (!idMap)
       {if (staticID && staticIDsz < (int)sizeof(rrData.Data))
-          {memcpy(rrData.Data, staticID, staticIDsz); idSz = staticIDsz;}
-          else {rrData.Options = XrdSecsssRR_Data::UseLID; idSz = 0;}
-       return XrdSecsssRR_Data_HdrLen + idSz;
+          {memcpy(rrData.Data, staticID, staticIDsz); 
+           idSz = staticIDsz;
+           return XrdSecsssRR_Data_HdrLen + idSz;
+          }
+       return Fatal(einfo, "getCred", ENAMETOOLONG, "Authinfo too big.");
       }
 
 // Map the loginid

@@ -4,7 +4,7 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.13 2008/03/18 23:16:47 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.14 2009/06/03 08:17:38 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
@@ -18,7 +18,8 @@ xrootdofsinc_HEADERS = \
     XrdOfs.hh \
     XrdOfsEvr.hh  XrdOfsEvs.hh  XrdOfsHandle.hh \
     XrdOfsSecurity.hh  XrdOfsTrace.hh  XrdOfsConfig.hh \
-    XrdOfsConfig.cc XrdOfsEvs.cc XrdOfsEvr.cc XrdOfsHandle.cc XrdOfs.cc 
+    XrdOfsConfig.cc XrdOfsEvs.cc XrdOfsEvr.cc XrdOfsHandle.cc XrdOfs.cc \
+    XrdOfsPoscq.hh
 # Note: the source files above also get installed in the headers directory,
 # so that derived objects of the Ofs can be built. This was originally
 # needed for the ALICE tokenauthz extension.
@@ -28,7 +29,8 @@ libXrdOfs_la_SOURCES = \
         XrdOfsConfig.cc \
         XrdOfsEvr.cc XrdOfsEvr.hh   \
         XrdOfsEvs.cc XrdOfsEvs.hh   \
-        XrdOfsHandle.cc XrdOfsHandle.hh
+        XrdOfsHandle.cc XrdOfsHandle.hh \
+        XrdOfsPoscq.cc
 
 libXrdOfs_la_LIBTOOLFLAGS = --tag=disable-static
 libXrdOfs_la_LDFLAGS = -module

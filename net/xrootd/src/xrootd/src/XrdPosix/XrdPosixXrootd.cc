@@ -1481,6 +1481,7 @@ int XrdPosixXrootd::mapFlags(int flags)
       else if (flags & kXR_isDir) newflags |= S_IFDIR;
               else newflags |= S_IFREG;
    if (flags & kXR_offline) newflags |= S_ISVTX;
+   if (flags & kXR_poscpend)newflags |= S_ISUID;
 
    return newflags;
 }

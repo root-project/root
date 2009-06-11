@@ -65,6 +65,7 @@ const char *XrdOssLockCVSID = "$Id$";
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/file.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
@@ -114,7 +115,7 @@ extern XrdSysError OssEroute;
 
 int XrdOssLock::Serialize(const char *fn, int lkwant)
 {
-    char lkbuff[PATH_MAX+sizeof(XrdOssLKFNAME)];
+    char lkbuff[MAXPATHLEN+sizeof(XrdOssLKFNAME)];
     int rc;
 
 // Check if this object is already in use
@@ -182,7 +183,7 @@ int XrdOssLock::Serialize(const char *fn, int lkwant)
 
 int XrdOssLock::NoSerialize(const char *fn, int ftype)
 {
-    char lkbuff[PATH_MAX+sizeof(XrdOssLKFNAME)];
+    char lkbuff[MAXPATHLEN+sizeof(XrdOssLKFNAME)];
     int rc;
 
 // Verify that a lock filetype has been specified.
@@ -222,8 +223,8 @@ int XrdOssLock::NoSerialize(const char *fn, int ftype)
 int XrdOssLock::ReSerialize(const char *oldname, const char *newname)
 {
     int rc = 0;
-    char Path_Old[PATH_MAX+1];
-    char Path_New[PATH_MAX+1];
+    char Path_Old[MAXPATHLEN+1];
+    char Path_New[MAXPATHLEN+1];
 
 // Build old and new lock file names
 //

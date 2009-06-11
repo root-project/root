@@ -199,7 +199,7 @@ int XrdPssSys::Mkdir(const char *path, mode_t mode, int mkpath)
 
   Output:   Returns XrdOssOK upon success and -errno upon failure.
 */
-int XrdPssSys::Remdir(const char *path)
+int XrdPssSys::Remdir(const char *path, int Opts)
 {
 
 // We currently do not support remdir()
@@ -292,7 +292,7 @@ int XrdPssSys::Truncate(const char *path, unsigned long long flen)
 
   Output:   Returns XrdOssOK upon success and -errno upon failure.
 */
-int XrdPssSys::Unlink(const char *path)
+int XrdPssSys::Unlink(const char *path, int Opts)
 {
    char pbuff[PBsz];
 

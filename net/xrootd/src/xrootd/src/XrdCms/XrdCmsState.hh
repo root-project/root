@@ -41,14 +41,14 @@ void  Update(StateType StateT, int ActivVal, int StageVal=0);
 
       XrdCmsState();
      ~XrdCmsState() {}
-
-private:
-unsigned char Status(int Changes, int theState);
   
 static const char SRV_Suspend = 1;
 static const char FES_Suspend = 2;
 static const char All_Suspend = 3;
 static const char All_NoStage = 4;
+
+private:
+unsigned char Status(int Changes, int theState);
 
 XrdSysSemaphore mySemaphore;
 XrdSysMutex     myMutex;

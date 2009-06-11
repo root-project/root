@@ -113,6 +113,8 @@ extern XrdOucTrace     XrdTrace;
 
        const char     *XrdLinkScan::TraceID = "LinkScan";
        int             XrdLink::devNull = open("/dev/null", O_RDONLY);
+       short           XrdLink::killWait= 3;  // Kill then wait
+       short           XrdLink::waitKill= 4;  // Wait then kill
 
 // The following values are defined for LinkBat[]. We assume that FREE is 0
 //
@@ -163,6 +165,8 @@ void XrdLink::Reset()
   KeepFD   = 0;
   udpbuff  = 0;
   Instance = 0;
+  KillcvP  = 0;
+  KillCnt  = 0;
 }
 
 /******************************************************************************/
@@ -357,6 +361,12 @@ int XrdLink::Close(int defer)
    if (udpbuff)  {udpbuff->Recycle();  udpbuff  = 0;}
    if (Etext) {free(Etext); Etext = 0;}
    InUse    = 0;
+
+// At this point we can have no lock conflicts, so if someone is waiting for
+// us to terminate let them know about it. Note that we will get the condvar
+// mutex while we hold the opMutex. This is the required order!
+//
+   if (KillcvP) {KillcvP->Lock(); KillcvP->Signal(); KillcvP->UnLock();}
 
 // Remove ourselves from the poll table and then from the Link table. We may
 // not hold on to the opMutex when we acquire the LTMutex. However, the link
@@ -749,8 +759,8 @@ int XrdLink::Send(const struct sfVec *sfP, int sfN)
       }
 
 #ifdef __solaris__
-    sendfilevec_t vecSF[sfMax];
-    size_t xframt, bytes = 0;
+    sendfilevec_t vecSF[sfMax], *vecSFP = vecSF;
+    size_t xframt, totamt, bytes = 0;
     ssize_t retc;
     int i = 0;
 
@@ -768,6 +778,7 @@ int XrdLink::Send(const struct sfVec *sfP, int sfN)
         vecSF[i].sfv_len  = sfP->sendsz;
         bytes += sfP->sendsz;
        }
+   totamt = bytes;
 
 // Lock the link, issue sendfilev(), and unlock the link. The documentation
 // is very spotty and inconsistent. We can only retry this operation under
@@ -775,7 +786,7 @@ int XrdLink::Send(const struct sfVec *sfP, int sfN)
 //
    wrMutex.Lock();
    isIdle = 0;
-   do {retc = sendfilev(FD, vecSF, sfN, &xframt);}
+do{do {retc = sendfilev(FD, vecSFP, sfN, &xframt);}
       while ((retc < 0 && errno == EINTR) || !retc);
 
 // Check if all went well and return if so (usual case)
@@ -783,14 +794,25 @@ int XrdLink::Send(const struct sfVec *sfP, int sfN)
    if (retc == bytes)
       {BytesOut += bytes;
        wrMutex.UnLock();
-       return bytes;
+       return totamt;
       }
+
+// See if we can resume the transfer
+//
+   if (retc <= 0 || !sfN) break;
+   BytesOut += retc; bytes -= retc;
+   while(retc > 0 && sfN)
+       {if (retc < (ssize_t)vecSFP->sfv_len)
+           {vecSFP->sfv_off += retc; vecSFP->sfv_len -= retc; break;}
+        retc -= vecSFP->sfv_len; vecSFP++; sfN--;
+       }
+  } while(sfN > 0);
 
 // See if we can recover without destroying the connection
 //
+   retc = (retc < 0 ? errno : ECANCELED);
    wrMutex.UnLock();
-   if (retc >= 0) errno = ECANCELED;
-   XrdLog.Emsg("Link", errno, "send file to", ID);
+   XrdLog.Emsg("Link", retc, "send file to", ID);
    return -1;
 
 #elif defined(__linux__)
@@ -971,6 +993,16 @@ void XrdLink::Serialize()
 }
 
 /******************************************************************************/
+/*                                s e t K W T                                 */
+/******************************************************************************/
+  
+void XrdLink::setKWT(int wkSec, int kwSec)
+{
+   if (wkSec > 0) waitKill = static_cast<short>(wkSec);
+   if (kwSec > 0) killWait = static_cast<short>(kwSec);
+}
+  
+/******************************************************************************/
 /*                           s e t P r o t o c o l                            */
 /******************************************************************************/
   
@@ -1093,12 +1125,15 @@ void XrdLink::syncStats(int *ctime)
   
 int XrdLink::Terminate(const XrdLink *owner, int fdnum, unsigned int inst)
 {
+   XrdSysCondVar killDone(0);
    XrdLink *lp;
    char buff[1024], *cp;
+   int wTime, didKW = KillCnt & KillXwt;
 
 // Find the correspodning link
 //
-   if (!(lp = fd2link(fdnum, inst))) return ESRCH;
+   KillCnt = KillCnt & KillMsk;
+   if (!(lp = fd2link(fdnum, inst))) return (didKW ? -EPIPE : -ESRCH);
 
 // If this is self termination, then indicate that to the caller
 //
@@ -1112,9 +1147,10 @@ int XrdLink::Terminate(const XrdLink *owner, int fdnum, unsigned int inst)
 // If this link is now dead, simply ignore the request. Typically, this
 // indicates a race condition that the server won.
 //
-   if (lp->FD != fdnum || lp->Instance != inst || !(lp->Poller))
+   if ( lp->FD != fdnum ||   lp->Instance != inst
+   || !(lp->Poller)     || !(lp->Protocol))
       {lp->opMutex.UnLock();
-       return EPIPE;
+       return -EPIPE;
       }
 
 // Verify that the owner of this link is making the request
@@ -1124,25 +1160,46 @@ int XrdLink::Terminate(const XrdLink *owner, int fdnum, unsigned int inst)
       || strncmp(lp->ID, owner->ID, cp-(owner->ID))
       || strcmp(owner->Lname, lp->Lname)))
       {lp->opMutex.UnLock();
-       return EACCES;
+       return -EACCES;
       }
 
-// Make sure we can disable this link
+// Check if we have too many tries here
 //
-   if (!(lp->isEnabled) || lp->InUse > 1)
+   if (lp->KillCnt > KillMax)
       {lp->opMutex.UnLock();
-       return EBUSY;
+       return -ETIME;
+      }
+   wTime = lp->KillCnt++;
+
+// Make sure we can disable this link. Of not, then force the caller to wait
+// a tad more than the read timeout interval.
+//
+   if (!(lp->isEnabled) || lp->InUse > 1 || lp->KillcvP)
+      {wTime = wTime*2+waitKill;
+       KillCnt |= KillXwt;
+       lp->opMutex.UnLock();
+       return (wTime > 60 ? 60: wTime);
       }
 
-// We can now disable the link and close it
+// Set the pointer to our condvar. We are holding the opMutex to prevent a race.
+//
+   lp->KillcvP = &killDone;
+   killDone.Lock();
+
+// We can now disable the link and schedule a close
 //
    snprintf(buff, sizeof(buff), "ended by %s", ID);
    buff[sizeof(buff)-1] = '\0';
-   lp->Poller->Disable(lp);
+   lp->Poller->Disable(lp, buff);
    lp->opMutex.UnLock();
-   lp->setEtext(buff);
-   lp->Close();
-   return EPIPE;
+
+// Now wait for the link to shutdown. This avoids lock problems.
+//
+   if (killDone.Wait(int(killWait))) {wTime += killWait; KillCnt |= KillXwt;}
+      else wTime = -EPIPE;
+   killDone.UnLock();
+   TRACEI(DEBUG,"Terminate " << (wTime <= 0 ? "complete ":"timeout ") <<wTime);
+   return wTime;
 }
 
 /******************************************************************************/

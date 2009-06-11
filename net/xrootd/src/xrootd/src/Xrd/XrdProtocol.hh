@@ -67,6 +67,7 @@ char           **argv;         // Argument array (prescreened)
 char             DebugON;      // True if started with -d option
 int              WANPort;      // Port prefered for WAN connections (0 if none)
 int              WANWSize;     // Window size for the WANPort
+int              hailWait;     // Max milliseconds to wait for data after accept
 
                  XrdProtocol_Config(XrdProtocol_Config &rhs);
                  XrdProtocol_Config() {}

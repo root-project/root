@@ -125,6 +125,7 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    SI           = new XrdXrootdStats(pi->Stats);
    Sched        = pi->Sched;
    BPool        = pi->BPool;
+   hailWait     = pi->hailWait;
    readWait     = pi->readWait;
    Port         = pi->Port;
    myInst       = pi->myInst;

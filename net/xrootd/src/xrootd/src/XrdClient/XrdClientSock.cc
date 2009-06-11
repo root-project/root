@@ -385,9 +385,10 @@ int XrdClientSock::TryConnect_low(bool isUnix, int altport, int windowsz)
     
        // Connect to a remote host
        //
-       sock = s->Open(host.c_str(),
-		   port, EnvGetLong(NAME_CONNECTTIMEOUT),
-		   windowsz );
+       if (port)
+          sock = s->Open(host.c_str(),
+                         port, EnvGetLong(NAME_CONNECTTIMEOUT),
+                         windowsz );
     } else {
 	Info(XrdClientDebug::kHIDEBUG, "ClientSock::TryConnect_low",
 	     "Trying to UNIX connect to" << fHost.TcpHost.File <<

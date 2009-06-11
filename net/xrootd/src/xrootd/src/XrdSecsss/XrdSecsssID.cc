@@ -33,17 +33,14 @@ const char *XrdSecsssIDCVSID = "$Id$";
 
 XrdSysMutex         XrdSecsssID::InitMutex;
 
-XrdSecsssID::sssID *XrdSecsssID::defaultID = 0;
-
 /******************************************************************************/
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
   
-XrdSecsssID::XrdSecsssID(authType aType, XrdSecEntity *idP)
+XrdSecsssID::XrdSecsssID(authType aType, XrdSecEntity *idP) : defaultID(0)
 {
    static char buff[64];
    union {unsigned long val; XrdSecsssID *myP;} p2i;
-   int nID = 1;
 
 // Check if we have initialized already. If so, indicate warning
 //
@@ -57,30 +54,17 @@ XrdSecsssID::XrdSecsssID(authType aType, XrdSecEntity *idP)
 // Verify the authType
 //
    switch(aType)
-         {case idMutual:  idP = 0; break;
-          case idDynamic:          break;
-          case idStatic:  nID = 0; break;
-          case idStaticM: nID = 0; break;
-          default:        idP = 0; aType = idLogin; break;
+         {case idDynamic: break;
+          case idStatic:  break;
+          case idStaticM: break;
+          default:        idP = 0; aType = idStatic; break;
          }
    myAuth = aType;
 
-// Check if we need to generate default of fixed identity
+// Generate a default identity
 //
-
    if (!idP || !(defaultID = genID(idP)))
-      {if (nID) defaultID = 0;
-          else {XrdSecEntity myID;
-                struct passwd *pEnt;
-                struct group  *pGrp;
-                if (!(pEnt = getpwuid(geteuid()))) myID.name = (char *)"nobody";
-                   else myID.name = pEnt->pw_name;
-                if ((pGrp = getgrgid(getegid())))  myID.grps = (char *)"nogroup";
-                   else myID.grps = pGrp->gr_name;
-                defaultID = genID(&myID);
-               }
-      }
-
+      defaultID = genID(aType != idDynamic);
 
 // Establish a pointer to this object so that the shared library can use it
 // We only do this once!
@@ -106,7 +90,7 @@ int XrdSecsssID::Find(const char *lid, char *Buff, int Blen)
 // Lock the hash table and find the entry
 //
    myMutex.Lock();
-   if (!(fP = Registry.Find(lid)) && !(fP = defaultID)) fP = genID(lid);
+   if (!(fP = Registry.Find(lid))) fP = defaultID;
    if (!fP || fP->iLen > Blen) {myMutex.UnLock(); return 0;}
 
 // Return the data
@@ -116,26 +100,16 @@ int XrdSecsssID::Find(const char *lid, char *Buff, int Blen)
    myMutex.UnLock();
    return rc;
 }
-
-/******************************************************************************/
-/*                                 g e t I D                                  */
-/******************************************************************************/
-
-const char *XrdSecsssID::getID(int &idLen)
-{
-   if (defaultID) {idLen = defaultID->iLen; return defaultID->iData;}
-   idLen = 0;
-   return (const char *)0;
-}
   
 /******************************************************************************/
 /*                                g e t O b j                                 */
 /******************************************************************************/
   
-XrdSecsssID::authType XrdSecsssID::getObj(XrdSecsssID **objP)
+XrdSecsssID *XrdSecsssID::getObj(authType &aType, char **dID, int &dIDsz)
 {
+   int freeIDP = 0;
+   sssID *idP;
    char *eP, *xP;
-   authType aType = idLogin;
    union {long long llval; long lval; XrdSecsssID *idP;} i2p;
 
 // Prevent changes
@@ -144,18 +118,30 @@ XrdSecsssID::authType XrdSecsssID::getObj(XrdSecsssID **objP)
 
 // Convert to pointer
 //
+   aType = idStatic;
    if ((eP = getenv(XRDSECSSSID)) && *eP)
       {if (sizeof(XrdSecsssID *) > 4) i2p.llval = strtoll(eP, &xP, 16);
           else                        i2p.lval  = strtol (eP, &xP, 16);
        if (*xP)                       i2p.idP   = 0;
           else aType = i2p.idP->myAuth;
-      }
+      } else i2p.idP = 0;
+
+// Establish the default ID
+//
+   if (!i2p.idP || !(idP = i2p.idP->defaultID))
+      {idP = genID(aType == idDynamic); freeIDP = 1;}
+
+// Copy out the default id to the caller
+//
+   dIDsz = idP->iLen;
+  *dID = (char *)malloc(dIDsz);
+   memcpy(*dID, idP->iData, dIDsz);
 
 // Return result
 //
-   *objP = i2p.idP;
    InitMutex.UnLock();
-   return aType;
+   if (freeIDP) free(idP);
+   return i2p.idP;
 }
 
 /******************************************************************************/
@@ -188,18 +174,19 @@ int XrdSecsssID::Register(const char *lid, XrdSecEntity *eP, int doRep)
 /*                                 g e n I D                                  */
 /******************************************************************************/
   
-XrdSecsssID::sssID *XrdSecsssID::genID(const char *lid)
+XrdSecsssID::sssID *XrdSecsssID::genID(int Secure)
 {
    XrdSecEntity   myID;
    struct passwd *pEnt;
    struct group  *pGrp;
 
-// Construct entity corresponding to the loginid
+
+// Use either our own uid/gid or a generic
 //
-   if (!(pEnt = getpwnam(lid))
-   ||  !(pGrp = getgrgid(pEnt->pw_gid))) myID.grps = (char *)"nogroup";
-      else myID.grps = pGrp->gr_name;
-   myID.name = (char *)lid;
+   myID.name = (Secure || !(pEnt=getpwuid(geteuid())))
+             ? (char *)"nobody" : pEnt->pw_name;
+   myID.grps = (Secure || !(pGrp=getgrgid(getegid())))
+             ? (char *)"nogroup" : pGrp->gr_name;
 
 // Just return the sssID
 //

@@ -643,8 +643,6 @@ while((tp = kTab.GetToken()) && !Prob)
               ktNew->Data.Opts|=ktEnt::usrGRP;
    if (!strcmp(ktNew->Data.User, "anybody"))
       ktNew->Data.Opts|=ktEnt::anyUSR;
-      else if (!strcmp(ktNew->Data.User,"loginid"))
-              ktNew->Data.Opts =ktEnt::useLID;
 
 // All done
 //

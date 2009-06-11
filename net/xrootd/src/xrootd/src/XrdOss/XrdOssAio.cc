@@ -376,7 +376,7 @@ void *XrdOssAioWait(void *mySigarg)
            break;
           }
        if (numsig != mySignum || myInfo.si_code != SI_ASYNCIO)
-          {char buff[64];
+          {char buff[80];
            sprintf(buff, "%d %d", myInfo.si_code, numsig);
            OssEroute.Emsg("AioWait", "received unexpected signal", buff);
            continue;

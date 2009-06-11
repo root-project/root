@@ -102,11 +102,11 @@ virtual
 int       Create(const char *, const char *, mode_t, XrdOucEnv &, int opts=0);
 int       Init(XrdSysLogger *, const char *);
 int       Mkdir(const char *, mode_t mode, int mkpath=0);
-int       Remdir(const char *);
+int       Remdir(const char *, int Opts=0);
 int       Rename(const char *, const char *);
 int       Stat(const char *, struct stat *, int resonly=0);
 int       Truncate(const char *, unsigned long long);
-int       Unlink(const char *);
+int       Unlink(const char *, int Opts=0);
 
 static int P2URL(char *pbuff,int pblen,const char *path,XrdOucEnv *env=0);
 

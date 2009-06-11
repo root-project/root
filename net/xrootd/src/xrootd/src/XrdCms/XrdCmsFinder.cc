@@ -169,7 +169,7 @@ int XrdCmsFinderRMT::Forward(XrdOucErrInfo &Resp, const char *cmd,
 
    XrdCmsClientMan *Manp;
    XrdCmsRRData     Data;
-   int              iovcnt, is2way;
+   int              iovcnt, is2way, doAll = 0;
    char             Work[xNum*12];
    struct iovec     xmsg[xNum];
 
@@ -185,9 +185,9 @@ int XrdCmsFinderRMT::Forward(XrdOucErrInfo &Resp, const char *cmd,
         if (!strcmp("chmod", cmd)) Data.Request.rrCode = kYR_chmod;
    else if (!strcmp("mkdir", cmd)) Data.Request.rrCode = kYR_mkdir;
    else if (!strcmp("mkpath",cmd)) Data.Request.rrCode = kYR_mkpath;
-   else if (!strcmp("mv",    cmd)) Data.Request.rrCode = kYR_mv;
-   else if (!strcmp("rm",    cmd)) Data.Request.rrCode = kYR_rm;
-   else if (!strcmp("rmdir", cmd)) Data.Request.rrCode = kYR_rmdir;
+   else if (!strcmp("mv",    cmd)){Data.Request.rrCode = kYR_mv;    doAll=1;}
+   else if (!strcmp("rm",    cmd)){Data.Request.rrCode = kYR_rm;    doAll=1;}
+   else if (!strcmp("rmdir", cmd)){Data.Request.rrCode = kYR_rmdir; doAll=1;}
    else if (!strcmp("trunc", cmd)) Data.Request.rrCode = kYR_trunc;
    else {Say.Emsg("Finder", "Unable to forward '", cmd, "'.");
          Resp.setErrInfo(EINVAL, "Internal error processing file.");
@@ -228,12 +228,41 @@ int XrdCmsFinderRMT::Forward(XrdOucErrInfo &Resp, const char *cmd,
 
 // Send message and simply wait for the reply
 //
-   if (Manp->Send(xmsg, iovcnt+1)) return 0;
+   if (Manp->Send(xmsg, iovcnt+1))
+      {if (doAll && !is2way)
+          {Data.Request.modifier |= kYR_dnf;
+           Inform(Manp, xmsg, iovcnt+1);
+          }
+       return 0;
+      }
 
 // Indicate client should retry later
 //
    Resp.setErrInfo(RepDelay, "");
    return RepDelay;
+}
+  
+/******************************************************************************/
+/*                                I n f o r m                                 */
+/******************************************************************************/
+  
+void XrdCmsFinderRMT::Inform(XrdCmsClientMan *xman,
+                             struct iovec     xmsg[], int xnum)
+{
+   XrdCmsClientMan *Womp, *Manp;
+
+// Make sure we are configured
+//
+   if (!myManagers)
+      {Say.Emsg("Finder", "SelectManager() called prior to Configure().");
+       return;
+      }
+
+// Start at the beginning (we will avoid the previously selected one)
+//
+   Womp = Manp = myManagers;
+   do {if (Manp != xman && Manp->isActive()) Manp->Send(xmsg, xnum);
+      } while((Manp = Manp->nextManager()) != Womp);
 }
   
 /******************************************************************************/
@@ -696,7 +725,7 @@ XrdCmsFinderTRG::~XrdCmsFinderTRG()
 /*                                 A d d e d                                  */
 /******************************************************************************/
   
-void XrdCmsFinderTRG::Added(const char *path)
+void XrdCmsFinderTRG::Added(const char *path, int Pend)
 {
    char *data[4];
    int   dlen[4];
@@ -705,7 +734,10 @@ void XrdCmsFinderTRG::Added(const char *path)
 //
    data[0] = (char *)"newfn ";   dlen[0] = 6;
    data[1] = (char *)path;       dlen[1] = strlen(path);
-   data[2] = (char *)"\n";       dlen[2] = 1;
+   if (Pend)
+  {data[2] = (char *)" p\n";     dlen[2] = 3;}
+      else
+  {data[2] = (char *)"\n";       dlen[2] = 1;}
    data[3] = 0;                  dlen[3] = 0;
 
 // Now send the notification

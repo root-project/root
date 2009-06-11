@@ -51,6 +51,7 @@ XrdXrootdJob         *XrdXrootdProtocol::JobCKS   = 0;
 char                 *XrdXrootdProtocol::JobCKT   = 0;
 
 char                 *XrdXrootdProtocol::Notify = 0;
+int                   XrdXrootdProtocol::hailWait;
 int                   XrdXrootdProtocol::readWait;
 int                   XrdXrootdProtocol::Port;
 int                   XrdXrootdProtocol::Window;
@@ -218,7 +219,7 @@ int dlen;
 
 // Peek at the first 20 bytes of data
 //
-   if ((dlen = lp->Peek(hsbuff,sizeof(hsdata), readWait)) != sizeof(hsdata))
+   if ((dlen = lp->Peek(hsbuff,sizeof(hsdata), hailWait)) != sizeof(hsdata))
       {if (dlen <= 0) lp->setEtext("handshake not received");
        return (XrdProtocol *)0;
       }

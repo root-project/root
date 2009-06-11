@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.32 2008/09/07 04:32:23 abh Exp $
+#              $Id: GNUmakefile,v 1.33 2009/06/03 00:48:55 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -16,14 +16,16 @@ SOURCES  = \
         XrdOfsConfig.cc \
         XrdOfsEvr.cc    \
         XrdOfsEvs.cc    \
-        XrdOfsHandle.cc
+        XrdOfsHandle.cc \
+        XrdOfsPoscq.cc
 
 OBJECTS  = \
         $(OBJDIR)/XrdOfs.o \
         $(OBJDIR)/XrdOfsConfig.o  \
         $(OBJDIR)/XrdOfsEvr.o     \
         $(OBJDIR)/XrdOfsEvs.o     \
-        $(OBJDIR)/XrdOfsHandle.o  
+        $(OBJDIR)/XrdOfsHandle.o  \
+        $(OBJDIR)/XrdOfsPoscq.o
 
 OBJFS    = $(OBJDIR)/XrdOfsFS.o
 
@@ -102,7 +104,8 @@ $(OBJDIR)/XrdOfsFS.o:  XrdOfsFS.cc             XrdOfs.hh
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOfsFS.o XrdOfsFS.cc
 
 $(OBJDIR)/XrdOfsConfig.o:  XrdOfsConfig.cc \
-                           XrdOfs.hh         XrdOfsEvs.hh     XrdOfsTrace.hh  \
+                           XrdOfs.hh         XrdOfsEvs.hh     XrdOfsHandle.hh \
+                           XrdOfsPoscq.hh    XrdOfsTrace.hh  \
                            XrdOuca2x.hh      XrdSysError.hh   XrdOucStream.hh \
                            XrdOucTrace.hh    XrdOucUtils.hh   XrdNetDNS.hh   \
                            XrdSysHeaders.hh \
@@ -133,3 +136,8 @@ $(OBJDIR)/XrdOfsHandle.o: XrdOfsHandle.cc   XrdOfsHandle.hh   XrdOss.hh \
                           XrdSysPthread.hh  XrdSysTimer.hh
 	@echo Compiling XrdOfsHandle.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOfsHandle.o XrdOfsHandle.cc
+
+$(OBJDIR)/XrdOfsPoscq.o: XrdOfsPoscq.cc    XrdOfsPoscq.hh     XrdOss.hh \
+                         XrdSysError.hh    XrdSysPlatform.hh  XrdSysPthread.hh
+	@echo Compiling XrdOfsPoscq.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOfsPoscq.o XrdOfsPoscq.cc

@@ -20,7 +20,7 @@
 
 #include "XrdOuc/XrdOucCRC.hh"
 #include "XrdSys/XrdSysPthread.hh"
-  
+
 /******************************************************************************/
 /*                    C l a s s   X r d O f s H a n K e y                     */
 /******************************************************************************/
@@ -99,43 +99,60 @@ int              Threshold;
 /******************************************************************************/
   
 class XrdOssDF;
+class XrdOfsHanCB;
+class XrdOfsHanPsc;
 
 class XrdOfsHandle
 {
 friend class XrdOfsHanTab;
+friend class XrdOfsHanXpr;
 public:
 
 char                isPending;    // 1-> File  is pending sync()
 char                isChanged;    // 1-> File was modified
 char                isCompressed; // 1-> File  is compressed
-char                isRW;         // 1-> File  is open in r/w mode
+char                isRW;         // T-> File  is open in r/w mode
 
 void                Activate(XrdOssDF *ssP) {ssi = ssP;}
 
-static int          Alloc(const char *thePath,int isrw,XrdOfsHandle **Handle);
-static int          Alloc(                             XrdOfsHandle **Handle);
+static const int    opRW = 1;
+static const int    opPC = 3;
+static const int    opXQ = 4;
 
-static void         Hide(const char *thePath);
+static       int    Alloc(const char *thePath,int Opts,XrdOfsHandle **Handle);
+static       int    Alloc(                             XrdOfsHandle **Handle);
 
-int                 Inactive();
+static       void   Hide(const char *thePath);
+
+inline       int    Inactive() {return (ssi == ossDF);}
 
 inline const char  *Name() {return Path.Val;}
 
-int                 Retire(long long *retsz=0, char *buff=0, int blen=0);
+             int    PoscGet(short &Mode, int Done=0);
+
+             int    PoscSet(const char *User, int Unum, short Mode);
+
+       const char  *PoscUsr();
+
+             int    Retire(long long *retsz=0, char *buff=0, int blen=0);
+
+             int    Retire(XrdOfsHanCB *, int DSec);
 
 XrdOssDF           &Select(void) {return *ssi;}   // To allow for mt interfaces
 
-int                 Usage() {return Path.Links;}
+static       int    StartXpr(int Init=0);         // Internal use only!
 
-inline void         Lock()   {hMutex.Lock();}
-inline void         UnLock() {hMutex.UnLock();}
+             int    Usage() {return Path.Links;}
+
+inline       void   Lock()   {hMutex.Lock();}
+inline       void   UnLock() {hMutex.UnLock();}
 
           XrdOfsHandle() : Path(0,0) {}
 
          ~XrdOfsHandle() {Retire();}
 
 private:
-static int           Alloc(XrdOfsHanKey, int isrw, XrdOfsHandle **Handle);
+static int           Alloc(XrdOfsHanKey, int Opts, XrdOfsHandle **Handle);
        int           WaitLock(void);
 
 static const int     LockTries =   3; // Times to try for a lock
@@ -153,5 +170,20 @@ static XrdOfsHandle *Free;       // List of free handles
        XrdOssDF     *ssi;        // Storage System Interface
        XrdOfsHandle *Next;
        XrdOfsHanKey  Path;       // Path for this handle
+       XrdOfsHanPsc *Posc;       // -> Info for posc-type files
+};
+  
+/******************************************************************************/
+/*                     C l a s s   X r d O f s H a n C B                      */
+/******************************************************************************/
+  
+class XrdOfsHanCB
+{
+public:
+
+virtual void Retired(XrdOfsHandle *) = 0;
+
+             XrdOfsHanCB() {}
+virtual     ~XrdOfsHanCB() {}
 };
 #endif

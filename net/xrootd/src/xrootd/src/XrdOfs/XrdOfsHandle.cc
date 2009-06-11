@@ -12,6 +12,11 @@
 
 const char *XrdOfsHandleCVSID = "$Id$";
 
+#include <stdio.h>
+#include <time.h>
+#include <sys/errno.h>
+#include <sys/types.h>
+
 #include "XrdOfs/XrdOfsHandle.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdSys/XrdSysError.hh"
@@ -20,6 +25,9 @@ const char *XrdOfsHandleCVSID = "$Id$";
 
 /******************************************************************************/
 /*                         L o c a l   C l a s s e s                          */
+/******************************************************************************/
+/******************************************************************************/
+/*                          X r d O f s H a n O s s                           */
 /******************************************************************************/
 
 class XrdOfsHanOss : public XrdOssDF
@@ -54,6 +62,90 @@ inline  int     Handle() {return -1;}
 };
 
 /******************************************************************************/
+/*                          X r d O f s H a n X p r                           */
+/******************************************************************************/
+  
+class XrdOfsHanXpr
+{
+friend class XrdOfsHandle;
+public:
+
+       void          add2Q(int doLK=1);
+
+       void          Deref()
+                        {xqCV.Lock(); Handle=0; Call=0; xTNew=0; xqCV.UnLock();}
+
+static XrdOfsHanXpr *Get();
+
+       void          Set(XrdOfsHanCB *cbP, time_t xtm)
+                        {xqCV.Lock(); Call = cbP; xTNew = xtm; xqCV.UnLock();}
+
+       XrdOfsHanXpr(XrdOfsHandle *hP, XrdOfsHanCB *cbP, time_t xtm)
+                   : Next(0), Handle(hP), Call(cbP), xTime(xtm), xTNew(0) {}
+      ~XrdOfsHanXpr() {}
+
+private:
+       XrdOfsHanXpr *Next;
+       XrdOfsHandle *Handle;
+       XrdOfsHanCB  *Call;
+       time_t        xTime;
+       time_t        xTNew;
+
+static XrdSysCondVar xqCV;
+static XrdOfsHanXpr *xprQ;
+};
+
+XrdSysCondVar  XrdOfsHanXpr::xqCV(0, "HanXpr cv");
+XrdOfsHanXpr  *XrdOfsHanXpr::xprQ = 0;
+
+/******************************************************************************/
+/*                          X r d O f s H a n P s c                           */
+/******************************************************************************/
+  
+class XrdOfsHanPsc
+{
+public:
+
+union {
+XrdOfsHanPsc  *Next;
+char          *User;   // -> Owner for posc files (user.pid:fd@host)
+      };
+XrdOfsHanXpr  *xprP;   // -> Associate Xpr object if active
+int            Unum;   // -> Offset in poscq
+short          Ulen;   //    Length of user.pid
+short          Uhst;   // -> Host portion
+short          Mode;   //    Mode file is to have
+
+static
+XrdOfsHanPsc  *Alloc();
+
+void           Recycle();
+
+               XrdOfsHanPsc() : User(0), xprP(0), Unum(0), Ulen(0),
+                                Uhst(0), Mode(0)  {}
+              ~XrdOfsHanPsc() {}
+private:
+
+static XrdSysMutex    pscMutex;
+static XrdOfsHanPsc  *Free;
+};
+
+XrdSysMutex    XrdOfsHanPsc::pscMutex;
+XrdOfsHanPsc  *XrdOfsHanPsc::Free = 0;
+
+/******************************************************************************/
+/*                     E x t e r n a l   L i n k a g e s                      */
+/******************************************************************************/
+  
+void *XrdOfsHanXpire(void *pp)
+{
+     XrdOfsHandle::StartXpr();
+     return (void *)0;
+}
+
+extern XrdSysError OfsEroute;
+
+/******************************************************************************/
 /*                        S t a t i c   O b j e c t s                         */
 /******************************************************************************/
   
@@ -70,10 +162,10 @@ XrdOfsHandle *XrdOfsHandle::Free = 0;
 /* static public                A l l o c   # 1                               */
 /******************************************************************************/
   
-int XrdOfsHandle::Alloc(const char *thePath, int isrw, XrdOfsHandle **Handle)
+int XrdOfsHandle::Alloc(const char *thePath, int Opts, XrdOfsHandle **Handle)
 {
    XrdOfsHandle *hP;
-   XrdOfsHanTab *theTable = (isrw ? &rwTable : &roTable);
+   XrdOfsHanTab *theTable = (Opts & opRW ? &rwTable : &roTable);
    XrdOfsHanKey theKey(thePath, (int)strlen(thePath));
    int          retc;
 
@@ -94,7 +186,7 @@ int XrdOfsHandle::Alloc(const char *thePath, int isrw, XrdOfsHandle **Handle)
 
 // Get a new handle
 //
-   if (!(retc = Alloc(theKey, isrw, Handle))) theTable->Add(*Handle);
+   if (!(retc = Alloc(theKey, Opts, Handle))) theTable->Add(*Handle);
 
 // All done
 //
@@ -122,7 +214,7 @@ int XrdOfsHandle::Alloc(XrdOfsHandle **Handle)
 /* private                      A l l o c   # 3                               */
 /******************************************************************************/
   
-int XrdOfsHandle::Alloc(XrdOfsHanKey theKey, int isrw, XrdOfsHandle **Handle)
+int XrdOfsHandle::Alloc(XrdOfsHanKey theKey, int Opts, XrdOfsHandle **Handle)
 {
    static const int minAlloc = 4096/sizeof(XrdOfsHandle);
    XrdOfsHandle *hP;
@@ -141,15 +233,16 @@ int XrdOfsHandle::Alloc(XrdOfsHanKey theKey, int isrw, XrdOfsHandle **Handle)
        hP->isChanged    = 0;                       // File changed
        hP->isCompressed = 0;                       // Compression
        hP->isPending    = 0;                       // Pending output
-       hP->isRW         = isrw;                    // File mode
+       hP->isRW         = (Opts & opPC);           // File mode
        hP->ssi          = ossDF;                   // No storage system yet
+       hP->Posc         = 0;                       // No creator
        hP->Lock();                                 // Wait is not possible
        *Handle = hP;
        return 0;
       }
    return nomemDelay;                              // Delay client
 }
-
+  
 /******************************************************************************/
 /* static public                    H i d e                                   */
 /******************************************************************************/
@@ -169,12 +262,92 @@ void XrdOfsHandle::Hide(const char *thePath)
 }
 
 /******************************************************************************/
-/*                              I n a c t i v e                               */
+/* public                        P o s c G e t                                */
 /******************************************************************************/
+  
+// Warning: the handle must be locked!
 
-int XrdOfsHandle::Inactive()
+int XrdOfsHandle::PoscGet(short &Mode, int Done)
 {
-    return (ssi == ossDF);
+   XrdOfsHanPsc *pP;
+   int pnum;
+
+   if (Posc)
+      {pnum = Posc->Unum;
+       Mode = Posc->Mode;
+       if (Done)
+          {pP = Posc; Posc = 0;
+           if (pP->xprP) {myMutex.Lock(); Path.Links--; myMutex.UnLock();}
+           pP->Recycle();
+          }
+       return pnum;
+      }
+
+   Mode = 0;
+   return 0;
+}
+  
+/******************************************************************************/
+/* public                        P o s c S e t                                */
+/******************************************************************************/
+  
+// Warning: the handle must be locked!
+
+int XrdOfsHandle::PoscSet(const char *User, int Unum, short Umod)
+{
+   static const char *Who = "?:0.0@?", *Whc = Who+1, *Whh = Who+5;
+   const char *Col, *At;
+   int retval = 0;
+
+// If we have no posc object then we may just be able to return
+//
+   if (!Posc)
+      {if (Unum > 0) Posc = XrdOfsHanPsc::Alloc();
+          else return 0;
+      }
+
+// Find the markers in the incomming user
+//
+   if (!(Col = index(User, ':')) || !(At = index(User, '@')))
+      {User = Who; Col = Whc; At = Whh;}
+
+// If we already have a user check if it matches
+//
+   if (Posc->User)
+      {if (!Unum)
+          {if (!strncmp(User, Posc->User, Posc->Ulen)
+           &&  !strcmp(Posc->User + Posc->Uhst, At+1)) return 0;
+           return -ETXTBSY;
+          } else {
+           char buff[1024];
+           sprintf(buff, "%s to %s for", Posc->User, User);
+           OfsEroute.Emsg("Posc", "Creator changed from", buff, Path.Val);
+           if (Unum < 0) Unum = Posc->Unum;
+              else if (Unum !=  Posc->Unum) retval = Posc->Unum;
+          }
+       free(Posc->User);
+      }
+
+// Assign creation values
+//
+   Posc->User = strdup(User);
+   Posc->Ulen = Col - User + 1;
+   Posc->Uhst = At  - User + 1;
+   Posc->Unum = Unum;
+   Posc->Mode = Umod;
+   return retval;
+}
+  
+/******************************************************************************/
+/* public                        P o s c U s r                                */
+/******************************************************************************/
+  
+// Warning: the handle must be locked!
+
+const char *XrdOfsHandle::PoscUsr()
+{
+   if (Posc) return Posc->User;
+   return "?@?";
 }
   
 /******************************************************************************/
@@ -185,7 +358,6 @@ int XrdOfsHandle::Inactive()
 
 int XrdOfsHandle::Retire(long long *retsz, char *buff, int blen)
 {
-   extern XrdSysError OfsEroute;
    int numLeft;
 
 // Get the global lock as the links field can only be manipulated with it.
@@ -198,6 +370,7 @@ int XrdOfsHandle::Retire(long long *retsz, char *buff, int blen)
        numLeft = 0;
        if ( (isRW ? rwTable.Remove(this) : roTable.Remove(this)) )
          {Next = Free; Free = this;
+          if (Posc) {Posc->Recycle(); Posc = 0;}
           if (Path.Val) {free((void *)Path.Val); Path.Val = (char *)"";}
           Path.Len = 0;
           if (ssi && ssi != ossDF)
@@ -207,6 +380,96 @@ int XrdOfsHandle::Retire(long long *retsz, char *buff, int blen)
    UnLock();
    myMutex.UnLock();
    return numLeft;
+}
+
+/******************************************************************************/
+
+int XrdOfsHandle::Retire(XrdOfsHanCB *cbP, int hTime)
+{
+   static int allOK = StartXpr(1);
+   XrdOfsHanXpr *xP;
+
+// The handle can only be held by one reference and only if it's a POSC and
+// defered handling was properly set up.
+//
+   myMutex.Lock();
+   if (!Posc || !allOK)
+      {OfsEroute.Emsg("Retire", "ignoring deferred retire of", Path.Val);
+       if (Path.Links != 1 || !Posc || !cbP) myMutex.UnLock();
+          else {myMutex.UnLock(); cbP->Retired(this);}
+       return Retire();
+      }
+   myMutex.UnLock();
+
+// If this object already has an xpr object (happens for bouncing connections)
+// then reuse that object. Otherwise create a new one and put it on the queue.
+//
+   if (Posc->xprP) Posc->xprP->Set(cbP, hTime+time(0));
+      else {xP = Posc->xprP = new XrdOfsHanXpr(this, cbP, hTime+time(0));
+            xP->add2Q();
+           }
+   UnLock();
+   return 0;
+}
+
+/******************************************************************************/
+/* public                       S t a r t X p r                               */
+/******************************************************************************/
+  
+int XrdOfsHandle::StartXpr(int Init)
+{
+   static int InitDone = 0;
+   XrdOfsHanXpr *xP;
+   XrdOfsHandle *hP;
+
+// If this is the initial all and we have not been initialized do so
+//
+   if (Init)
+      {pthread_t tid;
+       int rc;
+       if (InitDone) return InitDone == 1;
+       if ((rc = XrdSysThread::Run(&tid, XrdOfsHanXpire, (void *)0,
+                                   0, "Handle Timeout")))
+          {OfsEroute.Emsg("StartXpr", rc, "create handle timeout thread");
+           InitDone = -1; return 0;
+          }
+       InitDone = 1; return 1;
+      }
+
+// Simply loop waiting for expired handles to become available. The Get() will
+// return an Xpr object with the associated handle locked. 
+//
+do{xP = XrdOfsHanXpr::Get(); hP = xP->Handle;
+
+// Perform validity check on the handle to catch instances where the handle
+// was closed while we were in the process of getting it. While this is safe
+// it should never happen, so issue a message so we know to fix it.
+//
+   if (hP->Posc && xP == hP->Posc->xprP) hP->Posc->xprP = 0;
+      else {OfsEroute.Emsg("StarXtpr", "Invalid xpr ref to", hP->Path.Val);
+            hP->UnLock(); delete xP; continue;
+           }
+
+// As the handle is locked we can get the global handle lock to prevent
+// additions and removals of handles as we need a stable reference count to
+// effect the callout, if any. Do so only if the reference count is one (for us)
+// and the handle is active. In all cases, drop the global lock.
+//
+   myMutex.Lock();
+   if (hP->Path.Links != 1 || !xP->Call) myMutex.UnLock();
+      else {myMutex.UnLock();
+            xP->Call->Retired(hP);
+           }
+
+// We can now officially retire the handle and delete the xpr object
+//
+   hP->Retire();
+   delete xP;
+  } while(1);
+
+// Keep the compiler happy
+//
+   return 0;
 }
 
 /******************************************************************************/
@@ -227,6 +490,50 @@ int XrdOfsHandle::WaitLock(void)
 // Indicate we could not get a lock
 //
    return 0;
+}
+
+/******************************************************************************/
+/*                    C l a s s   X r d O f s H a n P s c                     */
+/******************************************************************************/
+/******************************************************************************/
+/*                                 A l l o c                                  */
+/******************************************************************************/
+  
+XrdOfsHanPsc *XrdOfsHanPsc::Alloc()
+{
+   XrdOfsHanPsc *pP;
+
+// Grab or allocate an object
+//
+   pscMutex.Lock();
+   if ((pP = Free)) {Free = pP->Next; pP->Next = 0;}
+      else pP = new XrdOfsHanPsc;
+   pscMutex.UnLock();
+
+   return pP;
+}
+
+/******************************************************************************/
+/*                               R e c y c l e                                */
+/******************************************************************************/
+  
+void XrdOfsHanPsc::Recycle()
+{
+
+// Release any storgae appendages and clear other field
+//
+   if (xprP) {xprP->Deref(); xprP = 0;}
+   if (User) free(User);
+   Unum = 0;
+   Ulen = 0;
+   Uhst = 0;
+   Mode = 0;
+
+// Place element on free chain. We keep them all as there are never too many
+//
+   pscMutex.Lock();
+   Next = Free; Free = this;
+   pscMutex.UnLock();
 }
 
 /******************************************************************************/
@@ -357,4 +664,87 @@ int XrdOfsHanTab::Remove(XrdOfsHandle *rip)
        nashnum--;
       }
    return nip != 0;
+}
+
+/******************************************************************************/
+/*                    C l a s s   X r d O f s H a n x p r                     */
+/******************************************************************************/
+/******************************************************************************/
+/*                                 a d d 2 Q                                  */
+/******************************************************************************/
+
+void XrdOfsHanXpr::add2Q(int doLK)
+{
+   XrdOfsHanXpr *xPP, *xP;
+
+// Place this object on the defered queue
+//
+   if (doLK) xqCV.Lock();
+   xPP = 0; xP = xprQ;
+
+   while(xP && xP->xTime < xTime) {xPP = xP; xP = xP->Next;}
+
+   Next = xP;
+   if (xPP) {xPP->Next = this; if (doLK)  xqCV.UnLock();}
+      else  {     xprQ = this; if (doLK) {xqCV.Signal(); xqCV.UnLock();}}
+};
+
+/******************************************************************************/
+/* public                            G e t                                    */
+/******************************************************************************/
+
+XrdOfsHanXpr *XrdOfsHanXpr::Get()
+{
+   XrdOfsHanXpr *xP;
+   XrdOfsHandle *hP;
+   int waitTime = 2592000;
+
+// Obtain the xqCV lock as we need it to inspect/modify the queue and elements
+// This lock is automatically released when we wait on the associated condvar.
+//
+   xqCV.Lock();
+
+// Caculate the next wait time based on the first element, if any, in the queue.
+// If the wait time is positive then loop back to wait that amount of time. Note
+// that we have the xqCV lock that is needed to touch an inq Xpr object.
+//
+do{do{if (!(xP = xprQ)) waitTime = 2592000;
+         else waitTime = xP->xTime - time(0);
+      if (waitTime > 0) break;
+      xprQ = xP->Next;
+
+// Get the associated file handle. If none, simply delete the Xpr object.
+//
+      if (!(hP = xP->Handle)) {delete xP; continue;}
+
+// If a new wait time is indicated then reschedule this object
+//
+      if (xP->xTNew)
+         {xP->xTime = xP->xTNew; xP->xTNew = 0;
+          xP->add2Q(0);
+          continue;
+         }
+
+// Since we are still holding the xqCV lock we must get a conditional lock on
+// the handle. If we can't then reschedule this object for later.
+//
+      if (!(hP->WaitLock()))
+         {OfsEroute.Emsg("Retire", "defering retire of", hP->Path.Val);
+          xP->xTime = time(0)+30;
+          xP->add2Q(0);
+          continue;
+         }
+
+// Drop the xqCV lock prior to returning the Xpr object to the caller. The
+// caller will delete the object as needed.
+//
+   xqCV.UnLock();
+   return xP;
+
+     } while(1);
+
+// We have the xqCV lock so we can now wait for an event or a timeout
+//
+   xqCV.Wait(waitTime);
+  } while(1);
 }

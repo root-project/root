@@ -25,6 +25,7 @@
 #include "XrdCms/XrdCmsClient.hh"
 
 class XrdOfsEvs;
+class XrdOfsPocq;
 class XrdOss;
 class XrdOssDir;
 class XrdOucEnv;
@@ -121,7 +122,7 @@ virtual int          fctl(const int               cmd,
 
                        XrdOfsFile(const char *user);
 
-virtual               ~XrdOfsFile() {if (oh) close();}
+virtual               ~XrdOfsFile() {viaDel = 1; if (oh) close();}
 
 protected:
        const char   *tident;
@@ -132,6 +133,7 @@ void           GenFWEvent();
 
 XrdOfsHandle  *oh;
 int            dorawio;
+char           viaDel;
 };
 
 /******************************************************************************/
@@ -140,6 +142,7 @@ int            dorawio;
 
 class XrdAccAuthorize;
 class XrdCmsClient;
+class XrdOfsPoscq;
   
 class XrdOfs : public XrdSfsFileSystem
 {
@@ -296,9 +299,12 @@ XrdCmsClient *Finder;         // ->Cluster Management Service
 
 virtual int   ConfigXeq(char *var, XrdOucStream &, XrdSysError &);
 static  int   Emsg(const char *, XrdOucErrInfo  &, int, const char *x,
+                   XrdOfsHandle *hP);
+static  int   Emsg(const char *, XrdOucErrInfo  &, int, const char *x,
                    const char *y="");
 static  int   fsError(XrdOucErrInfo &myError, int rc);
         int   Stall(XrdOucErrInfo  &, int, const char *);
+        void  Unpersist(XrdOfsHandle *hP, int xcev=1);
         char *WaitTime(int, char *, int);
   
 /******************************************************************************/
@@ -316,6 +322,11 @@ XrdOfsEvs        *evsObject;      //    ->Event Notifier
 char             *locResp;        //    ->Locate Response
 int               locRlen;        //      Length of locResp;
 
+XrdOfsPoscq      *poscQ;          //    -> poscQ if  persist on close enabled
+char             *poscLog;        //    -> Directory for posc recovery log
+int               poscHold;       //       Seconds to hold a forced close
+int               poscAuto;       //  1 -> Automatic persist on close
+
 static XrdOfsHandle     *dummyHandle;
 XrdSysMutex              ocMutex; // Global mutex for open/close
 
@@ -332,6 +343,7 @@ XrdSysMutex              ocMutex; // Global mutex for open/close
 // Function used during Configuration
 //
 int           ConfigDispFwd(char *buff, struct fwdOpt &Fwd);
+int           ConfigPosc(XrdSysError &Eroute);
 int           ConfigRedir(XrdSysError &Eroute);
 const char   *Fname(const char *);
 int           Forward(int &Result, XrdOucErrInfo &Resp, struct fwdOpt &Fwd,
@@ -345,6 +357,7 @@ int           xmaxd(XrdOucStream &, XrdSysError &);
 int           xnmsg(XrdOucStream &, XrdSysError &);
 int           xnot(XrdOucStream &, XrdSysError &);
 int           xolib(XrdOucStream &, XrdSysError &);
+int           xpers(XrdOucStream &, XrdSysError &);
 int           xred(XrdOucStream &, XrdSysError &);
 int           xrole(XrdOucStream &, XrdSysError &);
 int           xtrace(XrdOucStream &, XrdSysError &);

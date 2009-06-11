@@ -27,7 +27,7 @@ XrdCpMthrQueue::~XrdCpMthrQueue() {
 
 }
 
-int XrdCpMthrQueue::PutBuffer(void *buf, int len) {
+int XrdCpMthrQueue::PutBuffer(void *buf, long long offs, int len) {
    XrdCpMessage *m;
    bool wantstowait = FALSE;
 
@@ -40,6 +40,7 @@ int XrdCpMthrQueue::PutBuffer(void *buf, int len) {
    if (wantstowait) fWriteCnd.Wait(60);
 
    m = new XrdCpMessage;
+   m->offs = offs;
    m->buf = buf;
    m->len = len;
 
@@ -56,7 +57,7 @@ int XrdCpMthrQueue::PutBuffer(void *buf, int len) {
    return 0;
 }
 
-int XrdCpMthrQueue::GetBuffer(void **buf, int &len) {
+int XrdCpMthrQueue::GetBuffer(void **buf, long long &offs, int &len) {
    XrdCpMessage *res;
 
    res = 0;
@@ -77,6 +78,7 @@ int XrdCpMthrQueue::GetBuffer(void **buf, int &len) {
    if (res) {
       *buf = res->buf;
       len = res->len;
+      offs = res->offs;
       delete res;
       fWriteCnd.Signal();
    }
@@ -88,8 +90,9 @@ int XrdCpMthrQueue::GetBuffer(void **buf, int &len) {
 void XrdCpMthrQueue::Clear() {
    void *buf;
    int len;
+   long long offs;
 
-   while (GetBuffer(&buf, len)) {
+   while (GetBuffer(&buf, offs, len)) {
       free(buf);
    }
 

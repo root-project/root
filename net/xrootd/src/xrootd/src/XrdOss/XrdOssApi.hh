@@ -68,6 +68,7 @@ public:
 virtual int     Close(long long *retsz=0);
 virtual int     Open(const char *, int, mode_t, XrdOucEnv &);
 
+int     Fchmod(mode_t mode);
 int     Fstat(struct stat *);
 int     Fsync();
 int     Fsync(XrdSfsAio *aiop);
@@ -113,7 +114,6 @@ class XrdOucName2Name;
 class XrdOucProg;
 class XrdOssSpace;
 class XrdOssStage_Req;
-class XrdOssCache_FSData;
 
 class XrdOssSys : public XrdOss
 {
@@ -124,7 +124,6 @@ virtual XrdOssDF *newFile(const char *tident)
                        {return (XrdOssDF *)new XrdOssFile(tident);}
 
 int       Chmod(const char *, mode_t mode);
-void     *CacheScan(void *carg);
 int       Configure(const char *, XrdSysError &);
 void      Config_Display(XrdSysError &);
 virtual
@@ -137,18 +136,21 @@ int       IsRemote(const char *path)
 int       Mkdir(const char *, mode_t mode, int mkpath=0);
 int       Mkpath(const char *, mode_t mode);
 unsigned long long PathOpts(const char *path) {return RPList.Find(path);}
-int       Remdir(const char *);  // In Unlink()
+int       Reloc(const char *tident, const char *path,
+                const char *cgName, const char *anchor=0);
+int       Remdir(const char *, int Opts=0);  // In Unlink()
 int       Rename(const char *, const char *);
 virtual 
-int       Stage(const char *, const char *, XrdOucEnv &, int, mode_t);
+int       Stage(const char *, const char *, XrdOucEnv &, int, mode_t, unsigned long long );
 void     *Stage_In(void *carg);
 int       Stat(const char *, struct stat *, int resonly=0);
 int       StatFS(const char *path, char *buff, int &blen);
 int       StatFS(const char *path, int &Opt, long long &fSize, long long &fSpace);
 int       StatLS(XrdOucEnv &env, const char *path, char *buff, int &blen);
 int       StatXA(const char *path, char *buff, int &blen);
+int       StatXP(const char *path, unsigned long long &attr);
 int       Truncate(const char *, unsigned long long Size);
-int       Unlink(const char *);
+int       Unlink(const char *, int Opts=0);
 
 static int   AioInit();
 static int   AioAllOk;
@@ -164,11 +166,6 @@ int       MSS_Remdir(const char *, const char *) {return -ENOTSUP;}
 int       MSS_Rename(const char *, const char *);
 int       MSS_Stat(const char *, struct stat *);
 int       MSS_Unlink(const char *);
-
-void            Adjust(XrdOssCache_FS *fsp, off_t size);
-XrdOssCache_FS *Find_Cache(const char *Path);
-XrdOssSpace    *Quotas;
-XrdOssSpace    *Space;
 
 static const int MaxArgs = 15;
 
@@ -200,6 +197,7 @@ int       FDFence;        //    Smallest file FD number allowed
 int       FDLimit;        //    Largest  file FD number allowed
 unsigned long long DirFlags;//  Default directory settings
 int       Trace;          //    Trace flags
+int       Solitary;       //    True if running in stand-alone mode
 char     *CompSuffix;     // -> Compressed file suffix or null for autodetect
 int       CompSuflen;     //    Length of suffix
 int       OptFlags;       //    General option flags
@@ -234,29 +232,14 @@ long long totbytes;          //    Total bytes were  staged (active+pending)
 int       totreqs;           //    Total   successful requests
 int       badreqs;           //    Total unsuccessful requests
 
-friend class XrdOssCache_FSData;
-friend class XrdOssCache_FS;
-friend class XrdOssCache_Group;
-
-XrdSysMutex     CacheContext; // Protects cache related objects
-long long           fsFree;   // Maximum contiguous free space
-long long           fsSize;   // Size of partition with fsFree
-XrdOssCache_FSData *fsdata;   // -> Filesystem data
-XrdOssCache_FS     *fsfirst;  // -> First  filesystem
-XrdOssCache_FS     *fslast;   // -> Last   filesystem
-XrdOssCache_FS     *fscurr;   // -> Curent filesystem (global allocation only)
-
 XrdOucProg     *StageProg;    //    Command or manager than handles staging
 XrdOucProg     *MSSgwProg;    //    Command for MSS meta-data operations
 
-char          **sfx;          // -> Valid filename suffixes
 char           *UDir;         // -> Usage logdir
 char           *QFile;        // -> Quota file
 
-void               Adjust(dev_t devid, off_t size);
-void               Adjust(const char *Path, off_t size, struct stat *buf=0);
-int                Alloc_Cache(const char *, int, mode_t, XrdOucEnv &);
-int                Alloc_Local(const char *, int, mode_t, XrdOucEnv &);
+int                Alloc_Cache(const char *, mode_t, XrdOucEnv &);
+int                Alloc_Local(const char *, mode_t, XrdOucEnv &);
 int                BreakLink(const char *local_path, struct stat &statbuff);
 int                CalcTime();
 int                CalcTime(XrdOssStage_Req *req);
@@ -266,10 +249,8 @@ int                getCname(const char *path, struct stat *sbuff, char *cgbuff);
 int                GetFile(XrdOssStage_Req *req);
 int                getID(const char *, XrdOucEnv &, char *, int);
 time_t             HasFile(const char *fn, const char *sfx);
-void               List_Cache(const char *lname, XrdSysError &Eroute);
-int                ReCache(const char *UDir, const char *Qfile);
 int                Stage_QT(const char *, const char *, XrdOucEnv &, int, mode_t);
-int                Stage_RT(const char *, const char *, XrdOucEnv &);
+int                Stage_RT(const char *, const char *, XrdOucEnv &, unsigned long long);
 
 // Configuration related methods
 //

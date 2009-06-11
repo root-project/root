@@ -27,7 +27,7 @@
 #endif
 
 
-#define READERCOUNT (xrdmin(50, EnvGetLong(NAME_MULTISTREAMCNT)*3+1))
+#define READERCOUNT (xrdmin(50, EnvGetLong(NAME_MULTISTREAMCNT)+1))
 
 //____________________________________________________________________________
 void *SocketReaderThread(void * arg, XrdClientThread *thr)

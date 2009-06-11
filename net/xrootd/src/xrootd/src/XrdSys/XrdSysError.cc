@@ -132,15 +132,19 @@ void XrdSysError::Emsg(const char *esfx, const char *txt1,
 /*                                   S a y                                    */
 /******************************************************************************/
   
-void XrdSysError::Say(const char *txt1, const char *txt2, const char *txt3)
+void XrdSysError::Say(const char *txt1, const char *txt2, const char *txt3,
+                      const char *txt4, const char *txt5, const char *txt6)
 {
-    struct iovec iov[5];
+    struct iovec iov[9];
     int iovpnt = 0;
     if (txt1)            Set_IOV_Buff(txt1)                          //  0
        else              Set_IOV_Item(0,0);
     if (txt2 && txt2[0]) Set_IOV_Buff(txt2);                         //  1
     if (txt3 && txt3[0]) Set_IOV_Buff(txt3);                         //  2
-                         Set_IOV_Item("\n", 1);                      //  3
+    if (txt4 && txt4[0]) Set_IOV_Buff(txt4);                         //  3
+    if (txt5 && txt5[0]) Set_IOV_Buff(txt5);                         //  4
+    if (txt6 && txt6[0]) Set_IOV_Buff(txt6);                         //  5
+                         Set_IOV_Item("\n", 1);                      //  6
     Logger->Put(iovpnt, iov);
 }
  

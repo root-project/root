@@ -1689,96 +1689,96 @@ XrdSecProtocol *XrdClientConn::DoAuthentication(char *plist, int plsiz)
    // Get a instance of XrdSecProtocol; the order of preference is the one
    // specified by the server; the env XRDSECPROTOCOL can be used to force
    // the choice.
-   if (!(protocol = (*getp)((char *)fUrl.Host.c_str(),
-                     (const struct sockaddr &)netaddr, Parms, 0))) {
+   while ((protocol = (*getp)((char *)fUrl.Host.c_str(),
+                      (const struct sockaddr &)netaddr, Parms, 0))) {
+      //
+      // Protocol name
+      XrdOucString protname = protocol->Entity.prot;
+      //
+      // Once we have the protocol, get the credentials
+      XrdOucErrInfo ei;
+      credentials = protocol->getCredentials(0, &ei);
+      if (!credentials) {
+         Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
+                                        "cannot obtain credentials (protocol: "<<
+                                        protname<<")");
+         // Set error, in case of need
+         fOpenError = kXR_NotAuthorized;
+         LastServerError.errnum = fOpenError;
+         strcpy(LastServerError.errmsg, "cannot obtain credentials for protocol: ");
+         strcat(LastServerError.errmsg, ei.getErrText());
+         protocol->Delete();
+         protocol = 0;
+         continue;
+      } else {
+         Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
+                                        "credentials size: "<< credentials->size);
+      }
+      //
+      // We fill the header struct containing the request for login
+      ClientRequest reqhdr;
+      memset(reqhdr.auth.reserved, 0, 12);
+      memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length());
+
+      LastServerResp.status = kXR_authmore;
+      char *srvans = 0;
+      while (LastServerResp.status == kXR_authmore) {
+         //
+         // Length of the credentials buffer
+         reqhdr.header.dlen = credentials->size;
+         SetSID(reqhdr.header.streamid);
+         reqhdr.header.requestid = kXR_auth;
+         SendGenCommand(&reqhdr, credentials->buffer, (void **)&srvans, 0, TRUE,
+                                (char *)"XrdClientConn::DoAuthentication");
+         SafeDelete(credentials);
+         Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
+                                        "server reply: status: "<<
+                                         LastServerResp.status <<
+                                        " dlen: "<< LastServerResp.dlen);
+         if (LastServerResp.status == kXR_authmore) {
+            //
+            // We are required to send additional information
+            // First assign the security token that we have received
+            // at the login request
+            secToken = new XrdSecParameters(srvans,LastServerResp.dlen);
+            //
+            // then get next part of the credentials
+            credentials = protocol->getCredentials(secToken, &ei);
+            SafeDelete(secToken); // nb: srvans is released here
+            srvans = 0;
+            if (!credentials) {
+               Info(XrdClientDebug::kUSERDEBUG, "DoAuthentication",
+                                                "cannot obtain credentials");
+               // Set error, in case of need
+               fOpenError = kXR_NotAuthorized;
+               LastServerError.errnum = fOpenError;
+               strcpy(LastServerError.errmsg, "cannot obtain credentials: ");
+               strcat(LastServerError.errmsg, ei.getErrText());
+               protocol->Delete();
+               protocol = 0;
+               break;
+            } else {
+               Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
+                                             "credentials size " << credentials->size);
+            }
+         } else if (LastServerResp.status != kXR_ok) {
+            // Unexpected reply: stop handshake and print error msg, if any
+            if (LastServerError.errmsg)
+               Error("DoAuthentication", LastServerError.errmsg);
+            protocol->Delete();
+            protocol = 0;
+         }
+      }
+      // If we are done
+      if (protocol) break;
+   }
+   if (!protocol) {
       Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
                                     "unable to get protocol object.");
       // Set error, in case of need
       fOpenError = kXR_NotAuthorized;
       LastServerError.errnum = fOpenError;
       strcpy(LastServerError.errmsg, "unable to get protocol object.");
-      return protocol;
-   }
-
-   //
-   // Protocol name
-   XrdOucString protname = protocol->Entity.prot;
-   //
-   // Once we have the protocol, get the credentials
-   XrdOucErrInfo ei;
-   credentials = protocol->getCredentials(0, &ei);
-   if (!credentials) {
-      Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
-                                    "cannot obtain credentials (protocol: "<<
-                                    protname<<")");
-      // Set error, in case of need
-      fOpenError = kXR_NotAuthorized;
-      LastServerError.errnum = fOpenError;
-      strcpy(LastServerError.errmsg, "cannot obtain credentials for protocol: ");
-      strcat(LastServerError.errmsg, ei.getErrText());
-      protocol->Delete();
-      protocol = 0;
-      return protocol;
-   } else {
-      Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
-                                    "credentials size: "<< credentials->size);
-   }
-   //
-   // We fill the header struct containing the request for login
-   ClientRequest reqhdr;
-   memset(reqhdr.auth.reserved, 0, 12);
-   memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length());
-
-   LastServerResp.status = kXR_authmore;
-   char *srvans = 0;
-
-   while (LastServerResp.status == kXR_authmore) {
-      //
-      // Length of the credentials buffer
-      reqhdr.header.dlen = credentials->size;
-      SetSID(reqhdr.header.streamid);
-      reqhdr.header.requestid = kXR_auth;
-      SendGenCommand(&reqhdr, credentials->buffer, (void **)&srvans, 0, TRUE,
-                    (char *)"XrdClientConn::DoAuthentication");
-      SafeDelete(credentials);
-      Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
-                                    "server reply: status: "<<
-                                       LastServerResp.status <<
-                                    " dlen: "<< LastServerResp.dlen);
-
-      if (LastServerResp.status == kXR_authmore) {
-         //
-         // We are required to send additional information
-         // First assign the security token that we have received
-         // at the login request
-         secToken = new XrdSecParameters(srvans,LastServerResp.dlen);
-         //
-         // then get next part of the credentials
-         credentials = protocol->getCredentials(secToken, &ei);
-         SafeDelete(secToken); // nb: srvans is released here
-         srvans = 0;
-         if (!credentials) {
-            Info(XrdClientDebug::kUSERDEBUG, "DoAuthentication",
-                                             "cannot obtain credentials");
-            // Set error, in case of need
-            fOpenError = kXR_NotAuthorized;
-            LastServerError.errnum = fOpenError;
-            strcpy(LastServerError.errmsg, "cannot obtain credentials: ");
-            strcat(LastServerError.errmsg, ei.getErrText());
-            protocol->Delete();
-            protocol = 0;
-            return protocol;
-         } else {
-            Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
-                                          "credentials size " << credentials->size);
-         }
-      } else if (LastServerResp.status != kXR_ok) {
-         // Unexpected reply: stop handshake and print error msg, if any
-         if (LastServerError.errmsg)
-            Error("DoAuthentication", LastServerError.errmsg);
-         protocol->Delete();
-         protocol = 0;
-      }
    }
 
    // Return the result of the negotiation

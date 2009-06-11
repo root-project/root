@@ -40,12 +40,13 @@ using namespace XrdCms;
 /*                        C o n s t r u c t o r   # 1                         */
 /******************************************************************************/
   
-XrdCmsReq::XrdCmsReq(XrdCmsNode *nP, unsigned int reqid)
+XrdCmsReq::XrdCmsReq(XrdCmsNode *nP, unsigned int reqid, char adv)
 {
    NodeP   = nP;
    ReqID   = reqid;
    ReqNnum = nP->getSlot();
    ReqNins = nP->Inst();
+   ReqAdv  = adv;
 }
 
 /******************************************************************************/

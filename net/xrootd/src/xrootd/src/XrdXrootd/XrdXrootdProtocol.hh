@@ -199,6 +199,7 @@ static XrdNetSocket         *AdminSock;
 
 // Processing configuration values
 //
+static int                 hailWait;
 static int                 readWait;
 static int                 Port;
 static int                 Window;

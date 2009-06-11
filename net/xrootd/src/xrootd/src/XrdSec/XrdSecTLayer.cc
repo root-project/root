@@ -14,7 +14,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <poll.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdSec/XrdSecTLayer.hh"
@@ -30,6 +33,21 @@ const char  XrdSecTLayer::TLayerRR::endData;
 const char  XrdSecTLayer::TLayerRR::xfrData;
   
 /******************************************************************************/
+/*                           C o n s t r u c t o r                            */
+/******************************************************************************/
+
+XrdSecTLayer::XrdSecTLayer(const char *pName, Initiator who1st)
+             : mySem(0), Starter(who1st), myFD(-1), urFD(-1),
+               Tmax(275), Tcur(0), eCode(0), eText(0)
+{
+
+// Do the standard stuff
+//
+   memset((void *)&Hdr, 0, sizeof(Hdr));
+   strncpy(Hdr.protName,pName,sizeof(Hdr.protName)-1);
+}
+  
+/******************************************************************************/
 /*               C l i e n t   O r i e n t e d   M e t h o d s                */
 /******************************************************************************/
 /******************************************************************************/
@@ -40,7 +58,7 @@ XrdSecCredentials *XrdSecTLayer::getCredentials(XrdSecParameters *parm,
                                                 XrdOucErrInfo    *einfo)
 {
    char Buff[dataSz];
-   int Blen = 0, rdLen = dataSz, wrLen = 0;
+   int Blen = 0, wrLen = 0;
    char *bP, Req = TLayerRR::xfrData;
 
 // If this is the first time call, perform boot-up sequence and start the flow
@@ -48,7 +66,12 @@ XrdSecCredentials *XrdSecTLayer::getCredentials(XrdSecParameters *parm,
    eDest = einfo;
    if (!parm)
       {if (!bootUp(isClient)) return 0;
-       if (Starter == isServer) rdLen = 0;
+       if (Starter == isServer)
+          {Hdr.protCode = TLayerRR::xfrData;
+           bP = (char *)malloc(hdrSz);
+           memcpy(bP, (char *)&Hdr, hdrSz);
+           return new XrdSecCredentials(bP, hdrSz);
+          }
       } else {
        if (parm->size < hdrSz) 
           {secError("Invalid parms length", EPROTO);
@@ -66,10 +89,9 @@ XrdSecCredentials *XrdSecTLayer::getCredentials(XrdSecParameters *parm,
          {case TLayerRR::xfrData:
                if (wrLen > 0 && write(myFD, parm->buffer+hdrSz, wrLen) < 0)
                   {secError("Socket write failed", errno); return 0;}
-               if (rdLen) do {Blen = read(myFD, Buff, rdLen);}
-                             while(Blen < 0 && errno == EINTR);
-               if (Blen < 0 && errno != EPIPE)
-                  {secError("Socket read failed", errno); return 0;}
+               Blen = Read(myFD, Buff, dataSz);
+               if (Blen < 0 && (Blen != -EPIPE) && (Blen != -ECONNRESET))
+                  {secError("Socket read failed", -Blen); return 0;}
                break;
           case TLayerRR::endData:
                if (myFD < 0) {secError("Protocol violation", EPROTO); return 0;}
@@ -80,10 +102,13 @@ XrdSecCredentials *XrdSecTLayer::getCredentials(XrdSecParameters *parm,
 
 // Set correct protocol code based on value in Blen. On the client side we
 // check for proper completion upon socket close or when we get endData.
+// Note that we apply self-pacing here as well since either side can pace,
 //
-   if (Blen > 0 || !rdLen)    Hdr.protCode = TLayerRR::xfrData;
-      else if (!secDone()) return 0;
-              else {Blen = 0; Hdr.protCode = TLayerRR::endData;}
+        if (Blen < 0)      {if (!secDone()) return 0;
+                            Blen = 0; Hdr.protCode = TLayerRR::endData;}
+   else if (Blen || wrLen) {Tcur = 0; Hdr.protCode = TLayerRR::xfrData;}
+   else if (++Tcur <= Tmax)           Hdr.protCode = TLayerRR::xfrData;
+   else                    {Tcur = 0; Hdr.protCode = TLayerRR::endData;}
 
 // Return the credentials
 //
@@ -124,19 +149,23 @@ int XrdSecTLayer::Authenticate  (XrdSecCredentials  *cred,
          {case TLayerRR::xfrData:
                if (wrLen > 0 && write(myFD, cred->buffer+hdrSz, wrLen) < 0)
                   {secError("Socket write failed", errno); return -1;}
-               do {Blen = read(myFD, Buff, dataSz);}
-                  while(Blen < 0 && errno == EINTR);
-               if (Blen < 0 && errno != EPIPE)
-                  {secError("Socket read failed", errno); return 0;}
+               Blen = Read(myFD, Buff, dataSz);
+               if (Blen < 0 && (Blen != -EPIPE) && (Blen != -ECONNRESET))
+                  {secError("Socket read failed", -Blen); return 0;}
                break;
           case TLayerRR::endData: return (secDone() ? 0 : -1);
           default: secError("Unknown parms request", EINVAL); return -1;
          }
 
-// Set correct protocol code based on value in Blen. On the server side, we
-// defer the socket drain until we receive a endData notification.
+// Set correct protocol code based on value in Blen and wrLen. Note that if
+// both are zero then we decrease the pace count and bail if it reaches zero.
+// Otherwise, we reset the pace count to it initial value. On the server side,
+// we defer the socket drain until we receive a endData notification.
 //
-   Hdr.protCode = (Blen <= 0 ? TLayerRR::endData : TLayerRR::xfrData);
+        if (Blen < 0)      {Blen = 0; Hdr.protCode = TLayerRR::endData;}
+   else if (Blen || wrLen) {Tcur = 0; Hdr.protCode = TLayerRR::xfrData;}
+   else if (++Tcur <= Tmax)           Hdr.protCode = TLayerRR::xfrData;
+   else                    {Tcur = 0; Hdr.protCode = TLayerRR::endData;}
 
 // Return the credentials
 //
@@ -173,6 +202,11 @@ int XrdSecTLayer::bootUp(Initiator whoami)
    myFD = sv[0]; urFD = sv[1];
    Responder = whoami;
 
+// Make sure these sockets don't persist
+//
+   fcntl(myFD, F_SETFD, FD_CLOEXEC);
+   fcntl(urFD, F_SETFD, FD_CLOEXEC);
+
 // Start a thread to handle the socket interaction
 //
    if (XrdSysThread::Run(&secTid,XrdSecTLayerBootUp,(void *)this))
@@ -186,6 +220,40 @@ int XrdSecTLayer::bootUp(Initiator whoami)
 // All done
 //
    return 1;
+}
+
+/******************************************************************************/
+/*                                  R e a d                                   */
+/******************************************************************************/
+  
+int XrdSecTLayer::Read(int FD, char *Buff, int rdLen)
+{
+   struct pollfd polltab = {FD, POLLIN|POLLRDNORM|POLLHUP, 0};
+   int retc, xWt, Tlen = 0;
+
+// Read the data. We will employ a self-pacing read schedule where the
+// assumptioon is that should a read produce zero bytes after a small amount
+// of time then the data supplier needs additional data (i.e., writes) before
+// it can supply data to be read. This occurs because certain transport layer
+// protocols issue several writes in a row to complete the client/server
+// interaction. We cannot use a fixed schedule for this because streams may
+// coalesce adjacent writes, sigh.
+
+// Compute the actual poll wait time
+//
+   if (Tcur) xWt = (Tcur+10)/10;
+      else   xWt = 1;
+
+// Now do the interaction
+//
+   do {do {retc = poll(&polltab, 1, xWt);} while(retc < 0 && errno == EINTR);
+       if (retc <= 0) return (retc ? -errno : Tlen);
+       do {retc = read(FD, Buff, rdLen);}  while(retc < 0 && errno == EINTR);
+       if (retc <= 0) return (retc ? -errno : (Tlen ? Tlen : -EPIPE));
+       Tlen += retc; Buff += retc; rdLen -= retc; xWt = 1;
+      } while(rdLen > 0);
+
+   return Tlen;
 }
 
 /******************************************************************************/

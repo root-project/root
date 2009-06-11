@@ -51,7 +51,8 @@ XrdCmsState::XrdCmsState() : mySemaphore(0)
    numStaging   = 0;
    currState    = All_NoStage | All_Suspend;
    prevState    = 0;
-   Suspended    = 1;
+   Suspended    = All_Suspend;
+   NoStaging    = All_NoStage;
    feOK         = 0;
    noSpace      = 0;
    adminNoStage = 0;

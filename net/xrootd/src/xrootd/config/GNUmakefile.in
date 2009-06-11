@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.31 2009/01/14 03:34:57 abh Exp $
+#              $Id: GNUmakefile.in,v 1.32 2009/03/18 21:02:53 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -20,7 +20,7 @@ XRDCLIENT = XrdClient
 
 XRDMON    = XrdMon
 
-XRDPOSIX  = XrdPosix XrdPss XrdCns
+XRDPOSIX  = XrdPosix XrdPss XrdCns XrdApps
 
 TARGETS = @targets@
 
@@ -90,6 +90,11 @@ XrdAcc: FORCE
 	$(ECHO)cd src/XrdAcc;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
+XrdApps: FORCE
+	@echo $(XMSG) apps $(XDBG) component...
+	$(ECHO)cd src/XrdApps;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
 XrdBwm: FORCE
 	@echo $(XMSG) bwm $(XDBG) component...
 	$(ECHO)cd src/XrdBwm;\
@@ -153,6 +158,11 @@ XrdOss: FORCE
 XrdOuc: FORCE
 	@echo $(XMSG) ouc $(XDBG) component...
 	$(ECHO)cd src/XrdOuc;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
+XrdMon:	FORCE
+	@echo $(XMSG) mon $(XDBG) component...
+	$(ECHO)cd src/XrdMon;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdPosix: FORCE
@@ -228,11 +238,6 @@ Xrd: FORCE
 XrdXrootd: FORCE
 	@echo $(XMSG) xrootd $(XDBG) component...
 	$(ECHO)cd src/XrdXrootd;\
-	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
-
-XrdMon:	FORCE
-	@echo $(XMSG) mon $(XDBG) component...
-	$(ECHO)cd src/XrdMon;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 FORCE: ;

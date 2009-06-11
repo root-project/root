@@ -64,6 +64,7 @@ int XrdCmsSupervisor::Init(const char *AdminPath, int AdminMode)
 
 // All done
 //
+   superOK = 1;
    return 1;
 }
   

@@ -18,15 +18,17 @@ const char *XrdOssRenameCVSID = "$Id$";
 #include <limits.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOss/XrdOssApi.hh"
+#include "XrdOss/XrdOssCache.hh"
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOss/XrdOssLock.hh"
-#include "XrdOss/XrdOssTrace.hh"
 #include "XrdOss/XrdOssPath.hh"
+#include "XrdOss/XrdOssTrace.hh"
 #include "XrdOuc/XrdOucExport.hh"
 #include "XrdOuc/XrdOucUtils.hh"
 
@@ -60,10 +62,10 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
     XrdOssLock old_file, new_file;
     struct stat statbuff;
     char  *slashPlus, sPChar;
-    char  local_path_Old[XrdOssMAX_PATH_LEN+1+8], *lpo;
-    char  local_path_New[XrdOssMAX_PATH_LEN+1+8], *lpn;
-    char remote_path_Old[XrdOssMAX_PATH_LEN+1];
-    char remote_path_New[XrdOssMAX_PATH_LEN+1];
+    char  local_path_Old[MAXPATHLEN+8], *lpo;
+    char  local_path_New[MAXPATHLEN+8], *lpn;
+    char remote_path_Old[MAXPATHLEN+1];
+    char remote_path_New[MAXPATHLEN+1];
 
 // Determine whether we can actually rename a file on this server.
 //
@@ -74,7 +76,7 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
 //
    if (remotefs_Old ^ remotefs_New
    || ((old_popts & XRDEXP_MIG) ^ (new_popts & XRDEXP_MIG)))
-      {char buff[PATH_MAX+128];
+      {char buff[MAXPATHLEN+128];
        snprintf(buff, sizeof(buff), "rename %s to ", oldname);
        return OssEroute.Emsg("XrdOssRename",-XRDOSS_E8011,buff,(char *)newname);
       }
@@ -129,8 +131,8 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
       {if ((!retc || retc == -ENOENT))
           {i = strlen(local_path_Old); lpo = &local_path_Old[i];
            i = strlen(local_path_New); lpn = &local_path_New[i];
-           for (i = 0; sfx[i]; i++)
-               {strcpy(lpo, sfx[i]); strcpy(lpn, sfx[i]);
+           for (i = 0;  i < XrdOssPath::sfxMigL; i++)
+               {strcpy(lpo,XrdOssPath::Sfx[i]); strcpy(lpn,XrdOssPath::Sfx[i]);
                 if (rename(local_path_Old,local_path_New) && ENOENT != errno)
                    DEBUG("sfx retc=" <<errno <<" op=" <<local_path_Old);
                }
@@ -167,18 +169,27 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
 int XrdOssSys::RenameLink(char *old_path, char *new_path)
 {
    struct stat statbuff;
-   char oldlnk[PATH_MAX+32], newlnk[PATH_MAX+32];
-   int lnklen, rc = 0;
+   char oldlnk[MAXPATHLEN+32], newlnk[MAXPATHLEN+32];
+   int lnklen, n, rc = 0;
 
 // Read the contents of the link
 //
    if ((lnklen = readlink(old_path,oldlnk,sizeof(oldlnk)-1)) < 0) return -errno;
    oldlnk[lnklen] = '\0';
 
-// Check if this is new or old style cache
+// Check if this is new or old style cache. Check if this is an offline rename
+// and if so, add the space to the usage to account for stage-ins
 //
    if (oldlnk[lnklen-1] == XrdOssPath::xChar)
-      return RenameLink2(lnklen, oldlnk, old_path, newlnk, new_path);
+      {if ((rc=RenameLink2(lnklen,oldlnk,old_path,newlnk,new_path))) return rc;
+       if (Solitary && UDir)
+          {n = strlen(old_path);
+           if (n < 6 || strcmp(old_path+n-5, ".anew")
+           ||  stat(new_path, &statbuff) || !statbuff.st_size) return 0;
+           XrdOssPath::Trim2Base(oldlnk+lnklen-1);
+           XrdOssCache::Adjust(oldlnk, statbuff.st_size);
+          }
+      }
 
 // Convert old name to the new name
 //

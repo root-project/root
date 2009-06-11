@@ -21,6 +21,7 @@ const char *XrdPollCVSID = "$Id$";
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "Xrd/XrdLink.hh"
+#include "Xrd/XrdProtocol.hh"
 #define  TRACELINK lp
 #include "Xrd/XrdTrace.hh"
 
@@ -31,6 +32,28 @@ const char *XrdPollCVSID = "$Id$";
 #else
 #include "Xrd/XrdPollPoll.hh"
 #endif
+
+/******************************************************************************/
+/*                         L o c a l   C l a s s e s                          */
+/******************************************************************************/
+
+class XrdPoll_End : public XrdProtocol
+{
+public:
+
+void          DoIt() {}
+
+XrdProtocol  *Match(XrdLink *lp) {return (XrdProtocol *)0;}
+
+int           Process(XrdLink *lp) {return -1;}
+
+void          Recycle(XrdLink *lp, int x, const char *y) {}
+
+int           Stats(char *buff, int blen, int do_sync=0) {return 0;}
+
+      XrdPoll_End() : XrdProtocol("link termination") {}
+     ~XrdPoll_End() {}
+};
 
 /******************************************************************************/
 /*                           G l o b a l   D a t a                            */
@@ -149,6 +172,34 @@ void XrdPoll::Detach(XrdLink *lp)
    TRACEI(POLL, "FD " <<lp->FD <<" detached from poller " <<pp->PID <<"; num=" <<pp->numAttached);
 }
 
+/******************************************************************************/
+/*                                F i n i s h                                 */
+/******************************************************************************/
+  
+int XrdPoll::Finish(XrdLink *lp, const char *etxt)
+{
+   static XrdPoll_End LinkEnd;
+
+// If this link is already scheduled for termination, ignore this call.
+//
+   if (lp->Protocol == &LinkEnd)
+      {TRACEI(POLL, "Link " <<lp->FD <<" already terminating; "
+                    <<(etxt ? etxt : "") <<" request ignored.");
+       return 0;
+      }
+
+// Set the protocol pointer to be link termination
+//
+   lp->ProtoAlt = lp->Protocol;
+   lp->Protocol = static_cast<XrdProtocol *>(&LinkEnd);
+   if (etxt)
+      {if (lp->Etext) free(lp->Etext);
+       lp->Etext = strdup(etxt);
+      } else etxt = "reason unknown";
+   TRACEI(POLL, "Link " <<lp->FD <<" terminating: " <<etxt);
+   return 1;
+}
+  
 /******************************************************************************/
 /*                            g e t R e q u e s t                             */
 /******************************************************************************/

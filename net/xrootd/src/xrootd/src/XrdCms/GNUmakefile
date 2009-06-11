@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.17 2008/12/18 02:53:35 abh Exp $
+#              $Id: GNUmakefile,v 1.18 2009/05/22 00:51:16 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -20,6 +20,7 @@ SRCCLNT = \
         XrdCmsClientMan.cc   \
         XrdCmsClientMsg.cc   \
         XrdCmsFinder.cc      \
+        XrdCmsNotify.cc      \
         XrdCmsResp.cc        \
 
 SRCBOTH = \
@@ -61,6 +62,7 @@ OBJCLNT = \
         $(OBJDIR)/XrdCmsClientMan.o   \
         $(OBJDIR)/XrdCmsClientMsg.o   \
         $(OBJDIR)/XrdCmsFinder.o      \
+        $(OBJDIR)/XrdCmsNotify.o      \
         $(OBJDIR)/XrdCmsResp.o
 
 OBJBOTH = \
@@ -341,6 +343,14 @@ $(OBJDIR)/XrdCmsNode.o:      XrdCmsNode.cc       XrdCmsNode.hh \
                              YProtocol.hh
 	@echo Compiling XrdCmsNode.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsNode.o XrdCmsNode.cc
+
+$(OBJDIR)/XrdCmsNotify.o:    XrdCmsNotify.cc       XrdCmsNotify.hh \
+                             XrdNetMsg.hh \
+                             XrdOucUtils.hh \
+                             XrdSysError.hh        XrdSysPthread.hh \
+                             XrdSysTimer.hh
+	@echo Compiling XrdCmsNotify.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsNotify.o XrdCmsNotify.cc
 
 $(OBJDIR)/XrdCmsParser.o:    XrdCmsParser.cc     XrdCmsParser.hh \
                              XrdCmsRRData.hh \

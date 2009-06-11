@@ -103,7 +103,8 @@ int XrdOucPup::Pack(char          **buff,
    char *bp = *buff;
 
    if (netData & PT_Mask)
-      {*bp = PT_int; memcpy(bp+1, &netData, sizeof(netData));
+      {*bp = static_cast<char>(PT_int);
+       memcpy(bp+1, &netData, sizeof(netData));
        *buff = bp + sizeof(netData)+1;
        return sizeof(netData)+1;
       }
@@ -159,21 +160,24 @@ int XrdOucPup::Pack(struct iovec *iovP, struct iovec *iovE, XrdOucPupArgs *pup,
 
               case PT_short:
                    n16 = htons(*Base.B16);
-                   *wP = PT_short;    memcpy(wP+1, &n16, sizeof(n16));
+                   *wP = static_cast<char>(PT_short);
+                   memcpy(wP+1, &n16, sizeof(n16));
                    vP->iov_base = wP; vP->iov_len = Sz16; vP++;
                    wP += Sz16; TotLen += Sz16; dlen = sizeof(n16);
                    break;
 
               case PT_int:
                    n32 = htonl(*Base.B32);
-                   *wP = PT_int;      memcpy(wP+1, &n32, sizeof(n32));
+                   *wP = static_cast<char>(PT_int);
+                   memcpy(wP+1, &n32, sizeof(n32));
                    vP->iov_base = wP; vP->iov_len = Sz32; vP++;
                    wP += Sz32; TotLen += Sz32; dlen = sizeof(n32);
                    break;
 
               case PT_longlong:
                          h2nll(*Base.B64, n64);
-                   *wP = PT_longlong; memcpy(wP+1, &n64, sizeof(n64));
+                   *wP = static_cast<char>(PT_longlong);
+                   memcpy(wP+1, &n64, sizeof(n64));
                    vP->iov_base = wP; vP->iov_len = Sz64; vP++;
                    wP += Sz64; TotLen += Sz64; dlen = sizeof(n64);
                    break;

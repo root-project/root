@@ -38,7 +38,6 @@ char      Pad[3];                    // Reserved
 char      Options;                   // One of the following:
 static const char UseData= 0x00;     // Use the ID data  as authenticated name
 static const char SndLID = 0x01;     // Server to send login ID
-static const char UseLID = 0x02;     // Use the login ID as authenticated name
 
 static const int  DataSz = 4040;
 char      Data[DataSz];              // Optional data, as follows:

@@ -18,6 +18,7 @@ const char *XrdOssStatCVSID = "$Id$";
 #include <stdio.h>
 #include <strings.h>
 #include <time.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -27,6 +28,7 @@ const char *XrdOssStatCVSID = "$Id$";
 #include "XrdOss/XrdOssConfig.hh"
 #include "XrdOss/XrdOssOpaque.hh"
 #include "XrdOss/XrdOssPath.hh"
+#include "XrdOss/XrdOssSpace.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucName2Name.hh"
 
@@ -47,7 +49,7 @@ const char *XrdOssStatCVSID = "$Id$";
 int XrdOssSys::Stat(const char *path, struct stat *buff, int resonly)
 {
     const int ro_Mode = ~(S_IWUSR | S_IWGRP | S_IWOTH);
-    char actual_path[XrdOssMAX_PATH_LEN+1], *local_path, *remote_path;
+    char actual_path[MAXPATHLEN+1], *local_path, *remote_path;
     unsigned long long popts;
     int retc;
 
@@ -153,7 +155,7 @@ int XrdOssSys::StatFS(const char *path,
 //
    if ((Opt & XRDEXP_REMOTE) || !(Opt & XRDEXP_NOTRW))
       if ((Opt & XRDEXP_INPLACE) || !XrdOssCache_Group::fsgroups)
-         {char lcl_path[XrdOssMAX_PATH_LEN+1];
+         {char lcl_path[MAXPATHLEN+1];
           if (lcl_N2N)
              if (lcl_N2N->lfn2pfn(path, lcl_path, sizeof(lcl_path)))
                 fSpace = -1;
@@ -188,7 +190,7 @@ int XrdOssSys::StatLS(XrdOucEnv &env, const char *path, char *buff, int &blen)
    XrdOssCache_Group  *fsg = XrdOssCache_Group::fsgroups;
    XrdOssCache_FS     *fsp;
    XrdOssCache_FSData *fsd;
-   char *cgrp, cgbuff[64];
+   char *cgrp, cgbuff[XrdOssSpace::minSNbsz];
    int retc;
 
 // We provide psuedo support whould be not have a cache
@@ -221,17 +223,17 @@ int XrdOssSys::StatLS(XrdOucEnv &env, const char *path, char *buff, int &blen)
 // Prepare to accumulate the stats
 //
    Tspace = Fspace = Mspace = 0;
-   CacheContext.Lock();
+   XrdOssCache::Mutex.Lock();
    Uspace = fsg->Usage; Quota = fsg->Quota;
-   if ((fsp = fsfirst)) do
+   if ((fsp = XrdOssCache::fsfirst)) do
       {if (fsp->fsgroup == fsg)
           {fsd = fsp->fsdata;
            Tspace += fsd->size;    Fspace += fsd->frsz;
            if (fsd->frsz > Mspace) Mspace  = fsd->frsz;
           }
        fsp = fsp->next;
-      } while(fsp != fsfirst);
-   CacheContext.UnLock();
+      } while(fsp != XrdOssCache::fsfirst);
+   XrdOssCache::Mutex.UnLock();
 
 // Format the result
 //
@@ -257,7 +259,7 @@ int XrdOssSys::StatLS(XrdOucEnv &env, const char *path, char *buff, int &blen)
 int XrdOssSys::StatXA(const char *path, char *buff, int &blen)
 {
    struct stat sbuff;
-   char cgbuff[64], fType;
+   char cgbuff[XrdOssSpace::minSNbsz], fType;
    long long Size, Mtime, Ctime, Atime;
    int retc;
 
@@ -281,13 +283,35 @@ int XrdOssSys::StatXA(const char *path, char *buff, int &blen)
 }
 
 /******************************************************************************/
+/*                                S t a t X P                                 */
+/******************************************************************************/
+
+/*
+  Function: Return export attributes for a path.
+
+  Input:    path        - Is the path whose export attributes are wanted.
+            attr        - reference to the are to receive the export attributes
+
+  Output:   Returns XrdOssOK upon success and -errno upon failure.
+*/
+
+int XrdOssSys::StatXP(const char *path, unsigned long long &attr)
+{
+
+// Construct the processing options for this path
+//
+   attr = PathOpts(path);
+   return XrdOssOK;
+}
+  
+/******************************************************************************/
 /*                              g e t C n a m e                               */
 /******************************************************************************/
   
 int XrdOssSys::getCname(const char *path, struct stat *sbuff, char *cgbuff)
 {
    const char *thePath;
-   char actual_path[XrdOssMAX_PATH_LEN+1];
+   char actual_path[MAXPATHLEN+1];
    int retc;
 
 // Get the pfn for this path
@@ -300,7 +324,7 @@ int XrdOssSys::getCname(const char *path, struct stat *sbuff, char *cgbuff)
 
 // Get regular stat informtion for this file
 //
-   if ((retc = Stat(thePath, sbuff))) return retc;
+   if ((retc = stat(thePath, sbuff))) return retc;
 
 // Now determine if we should get the cache group name. There is none
 // for offline files and it's always public for directories.

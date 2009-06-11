@@ -116,7 +116,8 @@ enum XStatRespFlags {
    kXR_other   = 4,
    kXR_offline = 8,
    kXR_readable=16,
-   kXR_writable=32
+   kXR_writable=32,
+   kXR_poscpend=64
 };
 
 enum XDirlistRequestOption {
@@ -136,8 +137,9 @@ enum XOpenRequestOption {
    kXR_open_apnd= 512,
    kXR_retstat  = 1024,
    kXR_replica  = 2048,
-   kXR_ulterior = 4096,
-   kXR_nowait   = 8192
+   kXR_posc     = 4096,
+   kXR_nowait   = 8192,
+   kXR_seqio    =16384
 };
 
 enum XQueryType {
@@ -416,7 +418,8 @@ struct ClientStatRequest {
    kXR_char  streamid[2];
    kXR_unt16 requestid;
    kXR_char  options;
-   kXR_char reserved[15];
+   kXR_char reserved[11];
+   kXR_char fhandle[4];
    kXR_int32  dlen;
 };
 struct ClientSyncRequest {

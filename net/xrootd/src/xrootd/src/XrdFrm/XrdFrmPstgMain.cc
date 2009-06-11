@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/*                     X r d F r m P r e S t a g e . c c                      */
+/*                     X r d F r m P s t g M a i n . c c                      */
 /*                                                                            */
 /* (c) 2009 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
@@ -10,9 +10,9 @@
 
 //           $Id$
 
-const char *XrdFrmPreStageCVSID = "$Id$";
+const char *XrdFrmPstgMainCVSID = "$Id$";
 
-/* This is the "main" part of the frm_PreStage command. Syntax is:
+/* This is the "main" part of the frm_pstga & frm_pstgd commands. Syntax is:
 */
 static const char *XrdFrmOpts  = ":c:dk:l:n:s";
 static const char *XrdFrmUsage =

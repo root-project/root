@@ -239,6 +239,13 @@ public:
             fConnModule->RemoveAllDataFromCache();
     }
 
+    // To remove pieces of data from the cache
+    void                        RemoveDataFromCache(long long begin_offs,
+                                                    long long end_offs, bool remove_overlapped = false) {
+       if (fConnModule)
+          fConnModule->RemoveDataFromCache(begin_offs, end_offs, remove_overlapped);
+    }
+
     // To set at run time the cache/readahead parameters for this instance only
     // If a parameter is < 0 then it's left untouched.
     // To simply enable/disable the caching, just use UseCache(), not this function

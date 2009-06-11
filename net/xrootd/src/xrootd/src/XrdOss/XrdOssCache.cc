@@ -18,29 +18,41 @@ const char *XrdOssCacheCVSID = "$Id$";
 #include <stdio.h>
 #include <strings.h>
 #include <time.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "XrdSys/XrdSysHeaders.hh"
-#include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssCache.hh"
+#include "XrdOss/XrdOssOpaque.hh"
 #include "XrdOss/XrdOssPath.hh"
 #include "XrdOss/XrdOssSpace.hh"
 #include "XrdOss/XrdOssTrace.hh"
+#include "XrdSys/XrdSysHeaders.hh"
+#include "XrdSys/XrdSysPlatform.hh"
   
 /******************************************************************************/
 /*            G l o b a l s   a n d   S t a t i c   M e m b e r s             */
 /******************************************************************************/
-  
-extern XrdOssSys *XrdOssSS;
 
-extern XrdSysError OssEroute;
+extern XrdSysError  OssEroute;
 
-extern XrdOucTrace OssTrace;
+extern XrdOucTrace  OssTrace;
 
-XrdOssCache_Group *XrdOssCache_Group::fsgroups = 0;
+XrdOssCache_Group  *XrdOssCache_Group::fsgroups = 0;
 
-long long          XrdOssCache_Group::PubQuota = -1;
+long long           XrdOssCache_Group::PubQuota = -1;
+
+XrdSysMutex         XrdOssCache::Mutex;
+long long           XrdOssCache::fsFree  = 0;
+long long           XrdOssCache::fsSize  = 0;
+XrdOssCache_FS     *XrdOssCache::fsfirst = 0;
+XrdOssCache_FS     *XrdOssCache::fslast  = 0;
+XrdOssCache_FSData *XrdOssCache::fsdata  = 0;
+double              XrdOssCache::fuzAlloc= 0.0;
+long long           XrdOssCache::minAlloc= 0;
+int                 XrdOssCache::ovhAlloc= 0;
+int                 XrdOssCache::Quotas  = 0;
+int                 XrdOssCache::Usage   = 0;
 
 /******************************************************************************/
 /*            X r d O s s C a c h e _ F S D a t a   M e t h o d s             */
@@ -56,7 +68,7 @@ XrdOssCache_FSData::XrdOssCache_FSData(const char *fsp,
           * static_cast<long long>(fsbuff.FS_BLKSZ);
      frsz = static_cast<long long>(fsbuff.f_bavail)
           * static_cast<long long>(fsbuff.FS_BLKSZ);
-     if (frsz > XrdOssSS->fsFree) XrdOssSS->fsFree = frsz;
+     if (frsz > XrdOssCache::fsFree) XrdOssCache::fsFree = frsz;
      fsid = fsID;
      updt = time(0);
      next = 0;
@@ -86,9 +98,9 @@ XrdOssCache_FS::XrdOssCache_FS(int &retc,
 
 // Verify that this is not a duplicate
 //
-   fsp = XrdOssSS->fsfirst;
+   fsp = XrdOssCache::fsfirst;
    while(fsp && (strcmp(fsp->path,fsPath)||strcmp(fsp->fsgroup->group,fsGrp)))
-        if ((fsp = fsp->next) == XrdOssSS->fsfirst) {fsp = 0; break;}
+        if ((fsp = fsp->next) == XrdOssCache::fsfirst) {fsp = 0; break;}
    if (fsp) {retc = EEXIST; return;}
 
 // Set the groupname and the path which is the supplied path/group name
@@ -109,14 +121,14 @@ XrdOssCache_FS::XrdOssCache_FS(int &retc,
 
 // Find the matching filesystem data
 //
-   fdp = XrdOssSS->fsdata;
+   fdp = XrdOssCache::fsdata;
    while(fdp) {if (fdp->fsid == sfbuff.st_dev) break; fdp = fdp->next;}
 
 // If we didn't find the filesystem, then create one
 //
    if (!fdp)
       {if (!(fdp = new XrdOssCache_FSData(fsPath,fsbuff,sfbuff.st_dev))) return;
-          else {fdp->next = XrdOssSS->fsdata; XrdOssSS->fsdata = fdp;}
+          else {fdp->next = XrdOssCache::fsdata; XrdOssCache::fsdata = fdp;}
       }
 
 // Complete the filesystem block (failure now is not an option)
@@ -126,11 +138,13 @@ XrdOssCache_FS::XrdOssCache_FS(int &retc,
 
 // Link this filesystem into the filesystem chain
 //
-   if (!XrdOssSS->fsfirst) {next = this;              XrdOssSS->fscurr = this;
-                            XrdOssSS->fsfirst = this; XrdOssSS->fslast = this;
-                           }
-      else {next = XrdOssSS->fslast->next; XrdOssSS->fslast->next = this;
-                   XrdOssSS->fslast = this;
+   if (!XrdOssCache::fsfirst) {next = this;
+                               XrdOssCache::fsfirst = this;
+                               XrdOssCache::fslast  = this;
+                              }
+      else {next = XrdOssCache::fslast->next;
+                   XrdOssCache::fslast->next = this;
+                   XrdOssCache::fslast       = this;
            }
 
 // Check if this is the first group allocation
@@ -164,10 +178,10 @@ long long XrdOssCache_FS::freeSpace(long long &Size, const char *path)
 
 // Free space for the whole system
 //
-   XrdOssSS->CacheContext.Lock();
-   fSpace = XrdOssSS->fsFree;
-   Size   = XrdOssSS->fsSize;
-   XrdOssSS->CacheContext.UnLock();
+   XrdOssCache::Mutex.Lock();
+   fSpace = XrdOssCache::fsFree;
+   Size   = XrdOssCache::fsSize;
+   XrdOssCache::Mutex.UnLock();
    return fSpace;
 }
 
@@ -175,7 +189,7 @@ long long XrdOssCache_FS::freeSpace(long long &Size, const char *path)
 /*                                A d j u s t                                 */
 /******************************************************************************/
   
-void  XrdOssSys::Adjust(dev_t devid, off_t size)
+void  XrdOssCache::Adjust(dev_t devid, off_t size)
 {
    EPNAME("Adjust")
    XrdOssCache_FSData *fsdp;
@@ -183,7 +197,7 @@ void  XrdOssSys::Adjust(dev_t devid, off_t size)
 
 // Search for matching filesystem
 //
-   fsdp = fsdata;
+   fsdp = XrdOssCache::fsdata;
    while(fsdp && fsdp->fsid != devid) fsdp = fsdp->next;
    if (!fsdp) {DEBUG("dev " <<devid <<" not found."); return;}
 
@@ -196,11 +210,11 @@ void  XrdOssSys::Adjust(dev_t devid, off_t size)
 //
    if (fsdp) 
       {DEBUG("free=" <<fsdp->frsz <<'-' <<size <<" path=" <<fsdp->path);
-       CacheContext.Lock();
+       Mutex.Lock();
        if (        (fsdp->frsz  -= size) < 0) fsdp->frsz = 0;
        fsdp->stat |= XrdOssFSData_ADJUSTED;
        if (fsgp && (fsgp->Usage += size) < 0) fsgp->Usage = 0;
-       CacheContext.UnLock();
+       Mutex.UnLock();
       } else {
        DEBUG("dev " <<devid <<" not found.");
       }
@@ -208,7 +222,7 @@ void  XrdOssSys::Adjust(dev_t devid, off_t size)
 
 /******************************************************************************/
   
-void XrdOssSys::Adjust(const char *Path, off_t size, struct stat *buf)
+void XrdOssCache::Adjust(const char *Path, off_t size, struct stat *buf)
 {
    EPNAME("Adjust")
    XrdOssCache_FS *fsp;
@@ -217,7 +231,7 @@ void XrdOssSys::Adjust(const char *Path, off_t size, struct stat *buf)
 //
    if (buf) 
       {if ((buf->st_mode & S_IFMT) != S_IFLNK) Adjust(buf->st_dev, size);
-          else {char lnkbuff[PATH_MAX+64];
+          else {char lnkbuff[MAXPATHLEN+64];
                 int  lnklen = readlink(Path, lnkbuff, sizeof(lnkbuff)-1);
                 if (lnklen > 0)
                    {XrdOssPath::Trim2Base(lnkbuff+lnklen-1);
@@ -241,42 +255,133 @@ void XrdOssSys::Adjust(const char *Path, off_t size, struct stat *buf)
 
 /******************************************************************************/
   
-void XrdOssSys::Adjust(XrdOssCache_FS *fsp, off_t size)
+void XrdOssCache::Adjust(XrdOssCache_FS *fsp, off_t size)
 {
    EPNAME("Adjust")
-   XrdOssCache_FSData *fsdp = fsp->fsdata;
+   XrdOssCache_FSData *fsdp;
 
 // Process the result
 //
    if (fsp) 
-      {DEBUG("used=" <<fsp->fsgroup->Usage <<'+' <<size <<" path=" <<fsp->path);
+      {fsdp = fsp->fsdata;
+       DEBUG("used=" <<fsp->fsgroup->Usage <<'+' <<size <<" path=" <<fsp->path);
        DEBUG("free=" <<fsdp->frsz <<'-' <<size <<" path=" <<fsdp->path);
-       CacheContext.Lock();
+       Mutex.Lock();
        if ((fsp->fsgroup->Usage += size) < 0) fsp->fsgroup->Usage = 0;
        if (        (fsdp->frsz  -= size) < 0) fsdp->frsz = 0;
        fsdp->stat |= XrdOssFSData_ADJUSTED;
-       if (XrdOssSS->Space) XrdOssSS->Space->Adjust(fsp->fsgroup->GRPid, size);
-       CacheContext.UnLock();
+       if (Usage) XrdOssSpace::Adjust(fsp->fsgroup->GRPid, size);
+       Mutex.UnLock();
       }
 }
 
 /******************************************************************************/
-/*                            F i n d _ C a c h e                             */
+/*                                 A l l o c                                  */
+/******************************************************************************/
+
+int XrdOssCache::Alloc(XrdOssCache::allocInfo &aInfo)
+{
+   EPNAME("Alloc");
+   static const mode_t theMode = S_IRWXU | S_IRWXG;
+   XrdSysMutexHelper myMutex(&Mutex);
+   double diffree;
+   XrdOssPath::fnInfo Info;
+   XrdOssCache_FS *fsp, *fspend, *fsp_sel;
+   XrdOssCache_Group *cgp = 0;
+   long long size, maxfree, curfree;
+   int rc, madeDir, datfd = 0;
+
+// Compute appropriate allocation size
+//
+   if (!aInfo.cgSize
+   ||  (size=aInfo.cgSize*ovhAlloc/100+aInfo.cgSize) < minAlloc)
+      aInfo.cgSize = size = minAlloc;
+
+// Find the corresponding cache group
+//
+   cgp = XrdOssCache_Group::fsgroups;
+   while(cgp && strcmp(aInfo.cgName, cgp->group)) cgp = cgp->next;
+   if (!cgp) return -ENOENT;
+   fsp = cgp->curr;
+
+// Find a cache that will fit this allocation request
+//
+   maxfree = fsp->fsdata->frsz; fsp_sel = 0; fspend = fsp = fsp->next;
+   do {
+       if (strcmp(aInfo.cgName, fsp->group)
+       || (aInfo.cgPath && (aInfo.cgPlen > fsp->plen
+                        ||  strncmp(aInfo.cgPath,fsp->path,aInfo.cgPlen)))) continue;
+       curfree = fsp->fsdata->frsz;
+       if (size > curfree) continue;
+
+             if (!fsp_sel)      {fsp_sel = fsp; maxfree = curfree;}
+       else  if (!fuzAlloc) {if (curfree > maxfree)
+                                {fsp_sel = fsp; maxfree = curfree;}}
+       else {diffree = (!(curfree + maxfree) ? 0.0
+                     : static_cast<double>(::llabs(maxfree - curfree)) /
+                       static_cast<double>(        maxfree + curfree));
+             if (diffree > fuzAlloc) {fsp_sel = fsp; maxfree = curfree;}
+            }
+      } while((fsp = fsp->next) != fspend);
+
+// Check if we can realy fit this file. If so, update current scan pointer
+//
+   if (!fsp_sel) return -ENOSPC;
+   cgp->curr = fsp_sel->next;
+
+// Construct the target filename
+//
+   Info.Path    = fsp_sel->path;
+   Info.Plen    = fsp_sel->plen;
+   Info.Sfx     = fsp_sel->suffix;
+   aInfo.cgPsfx = XrdOssPath::genPFN(Info, aInfo.cgPFbf, aInfo.cgPFsz,
+                  (fsp_sel->opts & XrdOssCache_FS::isXA ? 0 : aInfo.Path));
+
+// Verify that target name was constructed
+//
+   if (!(*aInfo.cgPFbf)) return -ENAMETOOLONG;
+
+// Simply open the file in the local filesystem, creating it if need be.
+//
+   if (aInfo.aMode)
+      {madeDir = 0;
+       do {do {datfd = open(aInfo.cgPFbf,O_CREAT|O_TRUNC|O_WRONLY,aInfo.aMode);}
+               while(datfd < 0 && errno == EINTR);
+           if (datfd >= 0 || errno != ENOENT || madeDir) break;
+           *Info.Slash='\0'; rc=mkdir(aInfo.cgPFbf,theMode); *Info.Slash='/';
+           madeDir = 1;
+          } while(!rc);
+       if (datfd < 0) return (errno ? -errno : -ENOSYS);
+      }
+
+// All done (temporarily adjust down the free space)x
+//
+   DEBUG("free=" <<fsp_sel->fsdata->frsz <<'-' <<size <<" path=" 
+                 <<fsp_sel->fsdata->path);
+   fsp_sel->fsdata->frsz -= size;
+   fsp_sel->fsdata->stat |= XrdOssFSData_REFRESH;
+   aInfo.cgFSp  = fsp_sel;
+   return datfd;
+}
+  
+/******************************************************************************/
+/*                                  F i n d                                   */
 /******************************************************************************/
   
-XrdOssCache_FS *XrdOssSys::Find_Cache(const char *Path)
+XrdOssCache_FS *XrdOssCache::Find(const char *Path, int lnklen)
 {
    XrdOssCache_FS *fsp;
-   char lnkbuff[PATH_MAX+64];
+   char lnkbuff[MAXPATHLEN+64];
    struct stat sfbuff;
-   int lnklen;
 
 // First see if this is a symlink that refers to a new style cache
 //
-   if (lstat(Path, &sfbuff)
-   ||  (sfbuff.st_mode & S_IFMT) != S_IFLNK
-   ||  (lnklen = readlink(Path, lnkbuff, sizeof(lnkbuff)-1)) <= 0
-   ||  lnkbuff[lnklen-1] != XrdOssPath::xChar) return 0;
+   if (lnklen) 
+      {if (strlcpy(lnkbuff,Path,sizeof(lnkbuff)) >= sizeof(lnkbuff)) return 0;}
+      else if (lstat(Path, &sfbuff)
+           ||  (sfbuff.st_mode & S_IFMT) != S_IFLNK
+           ||  (lnklen = readlink(Path,lnkbuff,sizeof(lnkbuff)-1)) <= 0)
+              return 0;
 
 // Trim the link to the base name
 //
@@ -291,10 +396,50 @@ XrdOssCache_FS *XrdOssSys::Find_Cache(const char *Path)
 }
 
 /******************************************************************************/
-/*                            L i s t _ C a c h e                             */
+/*                                  I n i t                                   */
+/******************************************************************************/
+
+// Init() is only called during configuration and no locks are needed.
+  
+int XrdOssCache::Init(const char *UPath, const char *Qfile, int isSOL)
+{
+     XrdOssCache_Group *cgp;
+     long long bytesUsed;
+
+// If usage directory or quota file was passed then we initialize space handling
+// We need to create a space object to track usage across failures.
+//
+   if ((UPath || Qfile) && !XrdOssSpace::Init(UPath, Qfile, isSOL)) return 1;
+   if (Qfile) Quotas = !isSOL;
+   if (UPath) Usage  = 1;
+
+// If we will be saving space information then we need to assign each group
+// to a save set. If there is no space object then skip all of this.
+//
+   if (UPath && (cgp = XrdOssCache_Group::fsgroups))
+      do {cgp->GRPid = XrdOssSpace::Assign(cgp->group, bytesUsed);
+          cgp->Usage = bytesUsed;
+         } while((cgp = cgp->next));
+   return 0;
+}
+
+/******************************************************************************/
+
+int XrdOssCache::Init(long long aMin, int ovhd, int aFuzz)
+{
+// Set values
+//
+   minAlloc = aMin;
+   ovhAlloc = ovhd;
+   fuzAlloc = static_cast<double>(aFuzz)/100.0;
+   return 0;
+}
+
+/******************************************************************************/
+/*                                  L i s t                                   */
 /******************************************************************************/
   
-void XrdOssSys::List_Cache(const char *lname, XrdSysError &Eroute)
+void XrdOssCache::List(const char *lname, XrdSysError &Eroute)
 {
      XrdOssCache_FS *fsp;
      const char *theOpt;
@@ -315,15 +460,44 @@ void XrdOssSys::List_Cache(const char *lname, XrdSysError &Eroute)
 }
  
 /******************************************************************************/
-/*                             C a c h e S c a n                              */
+/*                                 P a r s e                                  */
+/******************************************************************************/
+  
+char *XrdOssCache::Parse(const char *token, char *cbuff, int cblen)
+{
+   char *Path;
+
+// Check for default
+//
+   if (!token || *token == ':')
+      {strlcpy(cbuff, OSS_CGROUP_DEFAULT, cblen);
+       return 0;
+      }
+
+// Get the correct cache group and partition path
+//
+   if (!(Path = index(token, ':'))) strlcpy(cbuff, token, cblen);
+      else {int n = Path - token;
+            if (n >= cblen) n = cblen-1;
+            strncpy(cbuff, token, n); cbuff[n] = '\0';
+            Path++;
+           }
+
+// All done
+//
+   return Path;
+}
+
+/******************************************************************************/
+/*                                  S c a n                                   */
 /******************************************************************************/
 
-void *XrdOssSys::CacheScan(void *carg)
+void *XrdOssCache::Scan(int cscanint)
 {
    EPNAME("CacheScan")
    XrdOssCache_FSData *fsdp;
    STATFS_t fsbuff;
-   const struct timespec naptime = {XrdOssSS->cscanint, 0};
+   const struct timespec naptime = {cscanint, 0};
    long long llT; // A dummy temporary
    int retc;
 
@@ -334,13 +508,13 @@ void *XrdOssSys::CacheScan(void *carg)
 
         // Get the cache context lock
         //
-           XrdOssSS->CacheContext.Lock();
+           Mutex.Lock();
 
         // Scan through all filesystems skip filesystem that have been
         // recently adjusted to avoid fs statstics latency problems.
         //
-           XrdOssSS->fsSize =  0;
-           fsdp = XrdOssSS->fsdata;
+           fsSize =  0;
+           fsdp = fsdata;
            while(fsdp)
                 {retc = 0;
                  if ((fsdp->stat & XrdOssFSData_REFRESH)
@@ -354,52 +528,20 @@ void *XrdOssSys::CacheScan(void *carg)
                                DEBUG("New free=" <<fsdp->frsz <<" path=" <<fsdp->path);
                                }
                      } else fsdp->stat |= XrdOssFSData_REFRESH;
-                 if (!retc && fsdp->frsz > XrdOssSS->fsFree)
-                    {XrdOssSS->fsFree = fsdp->frsz;
-                     XrdOssSS->fsSize = fsdp->size;
+                 if (!retc && fsdp->frsz > fsFree)
+                    {fsFree = fsdp->frsz;
+                     fsSize = fsdp->size;
                     }
                  fsdp = fsdp->next;
                 }
 
          // Unlock the cache and if we have quotas check them out
          //
-            XrdOssSS->CacheContext.UnLock();
-            if (Quotas) Quotas->Quotas();
+            Mutex.UnLock();
+            if (Quotas) XrdOssSpace::Quotas();
          }
 
 // Keep the compiler happy
 //
    return (void *)0;
-}
-
-/******************************************************************************/
-/*                               R e C a c h e                                */
-/******************************************************************************/
-
-// Recache() is only called during configuration and no locks are needed.
-  
-int XrdOssSys::ReCache(const char *Path, const char *Qfile)
-{
-     XrdOssCache_Group *cgp;
-     XrdOssSpace *sP;
-     long long bytesUsed;
-
-// If usage directory or quota file was passed then we initialize space handling
-// We need to create a space object to track usage across failures.
-//
-   if (Path || Qfile)
-      {sP = new XrdOssSpace(Path, Qfile);
-       if (!sP->Init()) return 1;
-       if (Path)  Space = sP;
-       if (Qfile) Quotas = sP;
-      }
-
-// If we will be saving space information then we need to assign each group
-// to a save set. If there is no space object then skip all of this.
-//
-   if (Path && (cgp = XrdOssCache_Group::fsgroups))
-      do {cgp->GRPid = Space->Assign(cgp->group, bytesUsed);
-          cgp->Usage = bytesUsed;
-         } while((cgp = cgp->next));
-   return 0;
 }

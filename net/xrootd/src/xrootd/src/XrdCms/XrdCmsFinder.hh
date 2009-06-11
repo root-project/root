@@ -33,7 +33,7 @@ class  XrdSysLogger;
 class XrdCmsFinderRMT : public XrdCmsClient
 {
 public:
-        void   Added(const char *path) {}
+        void   Added(const char *path, int Pend=0) {}
 
         int    Configure(char *cfn);
 
@@ -59,6 +59,7 @@ static const int MaxMan = 16;
 
 private:
 int              Decode(char **resp);
+void             Inform(XrdCmsClientMan *xman, struct iovec xmsg[], int xnum);
 XrdCmsClientMan *SelectManager(XrdOucErrInfo &Resp, const char *path);
 void             SelectManFail(XrdOucErrInfo &Resp);
 int              send2Man(XrdOucErrInfo &, const char *, struct iovec *, int);
@@ -90,7 +91,7 @@ class XrdOucStream;
 class XrdCmsFinderTRG : public XrdCmsClient
 {
 public:
-        void   Added(const char *path);
+        void   Added(const char *path, int Pend=0);
 
         int    Configure(char *cfn);
 

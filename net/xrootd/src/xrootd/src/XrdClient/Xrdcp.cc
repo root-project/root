@@ -23,6 +23,7 @@
 #include <XrdCrypto/XrdCryptoMsgDigest.hh>
 
 #include "XrdClient/XrdClientAbsMonIntf.hh"
+#include "XrdClient/XrdcpXtremeRead.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -35,8 +36,12 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#ifdef HAVE_LIBZ
+#include <zlib.h>
+#endif
+
 extern "C" {
-   /////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 // function + macro to allow formatted print via cout,cerr
 /////////////////////////////////////////////////////////////////////
  void cout_print(const char *format, ...)
@@ -80,8 +85,8 @@ struct XrdCpInfo {
 } cpnfo;
 
 #define XRDCP_BLOCKSIZE          (4*1024*1024)
-#define XRDCP_XRDRASIZE          (10*XRDCP_BLOCKSIZE)
-#define XRDCP_VERSION            "(C) 2004 SLAC INFN $Revision: 1.86 $ - Xrootd version: "XrdVSTRING
+#define XRDCP_XRDRASIZE          (20*XRDCP_BLOCKSIZE)
+#define XRDCP_VERSION            "(C) 2004 SLAC INFN $Revision: 1.92 $ - Xrootd version: "XrdVSTRING
 
 ///////////////////////////////////////////////////////////////////////
 // Coming from parameters on the cmd line
@@ -89,6 +94,8 @@ struct XrdCpInfo {
 bool summary=false;            // print summary
 bool progbar=true;             // print progbar
 bool md5=false;                // print md5
+bool adlerchk=false;           // print adler32 chksum
+
 XrdOucString monlibname = "libXrdCpMonitorClient.so"; // Default name for the ext monitoring lib
 
 char *srcopaque=0,
@@ -105,6 +112,9 @@ bool recurse = false;
 
 char BWMHost[1024]; // The given bandwidth limiter on the local site. If not empty then a bwm has to be used
 
+bool doXtremeCp = false;
+XrdOucString XtremeCpRdr;
+
 ///////////////////////
 
 // To compute throughput etc
@@ -116,8 +126,10 @@ struct timezone tz;
 XrdCryptoMsgDigest *MD_5=0;    // md5 computation
 XrdCryptoFactory *gCryptoFactory = 0;
 
+// To calculate the adler32 cksum
+unsigned int adler = 0;
 
-void print_summary(const char* src, const char* dst, unsigned long long bytesread, XrdCryptoMsgDigest* _MD_5) {
+void print_summary(const char* src, const char* dst, unsigned long long bytesread, XrdCryptoMsgDigest* _MD_5, unsigned int adler ) {
    gettimeofday (&abs_stop_time, &tz);
    float abs_time=((float)((abs_stop_time.tv_sec - abs_start_time.tv_sec) *1000 +
 			   (abs_stop_time.tv_usec - abs_start_time.tv_usec) / 1000));
@@ -141,6 +153,10 @@ void print_summary(const char* src, const char* dst, unsigned long long bytesrea
      COUT(("[xrdcp] # md5                      : %s\n",_MD_5->AsHexString()));
    }
 #endif
+
+   if (adlerchk) {
+      COUT(("[xrdcp] # adler32                  : %x\n", adler));
+   }
    COUT(("[xrdcp] #################################################################\n"));
 }
 
@@ -161,14 +177,19 @@ void print_progbar(unsigned long long bytesread, unsigned long long size) {
 }
 
 
-void print_md5(const char* src, unsigned long long bytesread, XrdCryptoMsgDigest* _MD_5) {
-  if (_MD_5) {
+void print_chksum(const char* src, unsigned long long bytesread, XrdCryptoMsgDigest* _MD_5, unsigned adler) {
+  if (_MD_5 || adlerchk) {
     XrdOucString xsrc(src);
     xsrc.erase(xsrc.rfind('?'));
     //    printf("md5: %s\n",_MD_5->AsHexString());
 #ifndef WIN32
-    cout << "md5: " << _MD_5->AsHexString() << " " << xsrc << " " << bytesread << endl;
+    if (_MD_5)
+       cout << "md5: " << _MD_5->AsHexString() << " " << xsrc << " " << bytesread << endl;
 #endif
+
+    if (adlerchk)
+       cout << "adler32: " << hex << adler << " " << xsrc << bytesread << endl;
+
   }
 }
 
@@ -208,9 +229,10 @@ void *ReaderThread_xrd(void *)
       blksize = xrdmin(XRDCP_BLOCKSIZE, len-offs);
 
       if ( (nr = cpnfo.XrdCli->Read(buf, offs, blksize)) ) {
+         cpnfo.queue.PutBuffer(buf, offs, nr);
+         cpnfo.XrdCli->RemoveDataFromCache(offs, offs+nr-1, false);
 	 bread += nr;
 	 offs += nr;
-	 cpnfo.queue.PutBuffer(buf, nr);
       }
 
       pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, 0);
@@ -221,12 +243,115 @@ void *ReaderThread_xrd(void *)
    cpnfo.bread = bread;
 
    // This ends the transmission... bye bye
-   cpnfo.queue.PutBuffer(0, 0);
+   cpnfo.queue.PutBuffer(0, 0, 0);
 
    return 0;
 }
 
 
+
+
+// The body of a thread which reads from the global
+//  XrdClient and keeps the queue filled
+// This is the thread for extreme reads, in this case we may have multiple of these
+// threads, reading the same file from different server endpoints
+//____________________________________________________________________________
+struct xtreme_threadnfo {
+   XrdXtRdFile *xtrdhandler;
+
+   // The client used by this thread
+   XrdClient *cli;
+
+   // A unique integer identifying the client instance
+   int clientidx;
+
+   // The block from which to start prefetching/reading
+   int startfromblk;
+
+   // Max convenient number of outstanding blks
+   int maxoutstanding;
+}; 
+void *ReaderThread_xrd_xtreme(void *parm)
+{
+
+   Info(XrdClientDebug::kHIDEBUG,
+	"ReaderThread_xrd_xtreme",
+	"Reader Thread starting.");
+   
+   pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, 0);
+   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
+
+   void *buf;
+
+   int nr = 1;
+   int noutstanding = 0;
+
+
+   // Which block to read
+   XrdXtRdBlkInfo *blknfo = 0;
+   xtreme_threadnfo *thrnfo = (xtreme_threadnfo *)parm;
+
+   // Block to prefetch
+   int lastprefetched = thrnfo->startfromblk;
+   int lastread = lastprefetched;
+
+   thrnfo->cli->SetCacheParameters(XRDCP_BLOCKSIZE*4*thrnfo->maxoutstanding*2, 0, XrdClientReadCache::kRmBlk_FIFO);
+   if (thrnfo->cli->IsOpen_wait())
+   while (nr > 0) {
+
+      // Keep always some blocks outstanding from the point of view of this reader
+      while (noutstanding < thrnfo->maxoutstanding) {
+         int lp;
+         lp = thrnfo->xtrdhandler->GetBlkToPrefetch(lastprefetched, thrnfo->clientidx, blknfo);
+         if (lp >= 0) {
+            //cout << "cli: " << thrnfo->clientidx << " prefetch: " << lp << " offs: " << blknfo->offs << " len: " << blknfo->len << endl;
+            if ( thrnfo->cli->Read_Async(blknfo->offs, blknfo->len) == kOK ) {  
+               lastprefetched = lp;
+               noutstanding++;
+            }
+            else break;
+         }
+         else break;
+      }
+
+      int lr = thrnfo->xtrdhandler->GetBlkToRead(lastread, thrnfo->clientidx, blknfo);
+      if (lr >= 0) {
+
+         buf = malloc(blknfo->len);
+         if (!buf) {
+            cerr << "Out of memory." << endl;
+            abort();
+         }
+
+         //cout << "cli: " << thrnfo->clientidx << "     read: " << lr << " offs: " << blknfo->offs << " len: " << blknfo->len << endl;
+         nr = thrnfo->cli->Read(buf, blknfo->offs, blknfo->len);
+         if ( nr >= 0 ) {
+            thrnfo->cli->RemoveDataFromCache(blknfo->offs, blknfo->offs+blknfo->len-1, false);
+            lastread = lr;
+            noutstanding--;
+            cpnfo.queue.PutBuffer(buf, blknfo->offs, nr);
+            thrnfo->xtrdhandler->MarkBlkAsRead(lr);
+         }
+      }
+      else {
+
+         if (thrnfo->xtrdhandler->AllDone()) break;
+         pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, 0);
+         sleep(1);
+      }
+
+
+      pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, 0);
+      pthread_testcancel();
+      pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
+   }
+
+   // We get here if there are no more blocks to read or to steal from other readers
+   // This ends the transmission... bye bye
+   cpnfo.queue.PutBuffer(0, 0, 0);
+
+   return 0;
+}
 
 
 // The body of a thread which reads from the global filehandle
@@ -254,16 +379,16 @@ void *ReaderThread_loc(void *) {
       }
 
       if ( (nr = read(cpnfo.localfile, buf, XRDCP_BLOCKSIZE)) ) {
+         cpnfo.queue.PutBuffer(buf, offs, nr);
 	 bread += nr;
 	 offs += nr;
-	 cpnfo.queue.PutBuffer(buf, nr);
       }
    }
 
    cpnfo.bread = bread;
 
    // This ends the transmission... bye bye
-   cpnfo.queue.PutBuffer(0, 0);
+   cpnfo.queue.PutBuffer(0, 0, 0);
 
    return 0;
 }
@@ -376,6 +501,8 @@ int CreateDestPath_xrd(XrdOucString url, bool isdir) {
 int doCp_xrd2xrd(XrdClient **xrddest, const char *src, const char *dst) {
    // ----------- xrd to xrd affair
    pthread_t myTID;
+   XrdClientVector<pthread_t> myTIDVec;
+
    void *thret;
    XrdClientStatInfo stat;
    int retvalue = 0;
@@ -397,110 +524,162 @@ int doCp_xrd2xrd(XrdClient **xrddest, const char *src, const char *dst) {
       }
    }
 
-
-      cpnfo.XrdCli->Stat(&stat);
-      cpnfo.len = stat.size;
-
-      // if xrddest if nonzero, then the file is already opened for writing
-      if (!*xrddest) {
-	 *xrddest = new XrdClient(dst);
-
-         if (!PedanticOpen4Write(*xrddest, kXR_ur | kXR_uw | kXR_gw | kXR_gr | kXR_or,
+   
+   cpnfo.XrdCli->Stat(&stat);
+   cpnfo.len = stat.size;
+   
+   // if xrddest if nonzero, then the file is already opened for writing
+   if (!*xrddest) {
+      *xrddest = new XrdClient(dst);
+      
+      if (!PedanticOpen4Write(*xrddest, kXR_ur | kXR_uw | kXR_gw | kXR_gr | kXR_or,
                               xrd_wr_flags)) {
-            cerr << "Error opening remote destination file " << dst << endl;
-            PrintLastServerError(*xrddest);
-                  
-            delete cpnfo.XrdCli;
-            delete *xrddest;
-            *xrddest = 0;
-            cpnfo.XrdCli = 0;
-            return -1;
+         cerr << "Error opening remote destination file " << dst << endl;
+         PrintLastServerError(*xrddest);
+         
+         delete cpnfo.XrdCli;
+         delete *xrddest;
+         *xrddest = 0;
+         cpnfo.XrdCli = 0;
+         return -1;
+      }
+      
+   }
+   
+   // If the Extreme Copy flag is set, we try to find more sources for this file
+   // Each source gets assigned to a different reader thread
+   XrdClientVector<XrdClient *> xtremeclients;
+   XrdXtRdFile *xrdxtrdfile = 0;
+   
+   if (doXtremeCp) 
+      XrdXtRdFile::GetListOfSources(cpnfo.XrdCli, XtremeCpRdr, xtremeclients);
+   
+   // Start reader on xrdc
+   if (doXtremeCp && (xtremeclients.GetSize() > 1)) {
+      
+      // Beware... with the extreme copy the normal read ahead mechanism
+      // makes no sense at all.
+      //EnvPutInt(NAME_REMUSEDCACHEBLKS, 1);
+      xrdxtrdfile = new XrdXtRdFile(XRDCP_BLOCKSIZE*4, cpnfo.len);
+      
+      for (int iii = 0; iii < xtremeclients.GetSize(); iii++) {
+         xtreme_threadnfo *nfo = new(xtreme_threadnfo);
+         nfo->xtrdhandler = xrdxtrdfile;
+         nfo->cli = xtremeclients[iii];
+         nfo->clientidx = xrdxtrdfile->GimmeANewClientIdx();
+         nfo->startfromblk = iii*xrdxtrdfile->GetNBlks() / xtremeclients.GetSize();
+         nfo->maxoutstanding = xrdmin( 3, xrdxtrdfile->GetNBlks() / xtremeclients.GetSize() );
+
+         XrdSysThread::Run(&myTID, ReaderThread_xrd_xtreme, (void *)nfo);
+         myTIDVec.Push_back(myTID);
+      }
+      
+   }
+   else {
+      XrdSysThread::Run(&myTID, ReaderThread_xrd, (void *)&cpnfo);
+      myTIDVec.Push_back(myTID);
+   }
+   
+   
+   
+   
+   
+   int len = 1;
+   void *buf;
+   long long offs = 0;
+   long long bytesread=0;
+   long long size = cpnfo.len;
+   bool draining = false;
+   
+   // Loop to write until ended or timeout err
+   while (1) {
+      
+      if (xrdxtrdfile && xrdxtrdfile->AllDone()) draining = true;
+      if (draining && !cpnfo.queue.GetLength()) break;
+
+      if ( cpnfo.queue.GetBuffer(&buf, offs, len) ) {
+
+         if (len && buf) {
+
+            bytesread+=len;
+            if (progbar) {
+               gettimeofday(&abs_stop_time,&tz);
+               print_progbar(bytesread,size);
+            }
+
+            if (md5) {
+               MD_5->Update((const char*)buf,len);
+            }
+
+#ifdef HAVE_LIBZ
+            if (adlerchk) {
+               adler = adler32(adler, (const Bytef*)buf, len);
+            }
+#endif
+
+            if (!(*xrddest)->Write(buf, offs, len)) {
+               cerr << "Error writing to output server." << endl;
+               PrintLastServerError(*xrddest);
+               retvalue = 11;
+               break;
+            }
+
+            if (cpnfo.mon)
+               cpnfo.mon->PutProgressInfo(bytesread, cpnfo.len, (float)bytesread / cpnfo.len * 100.0);
+
+            free(buf);
          }
 
-      }
-
-      // Start reader on xrdc
-      XrdSysThread::Run(&myTID, ReaderThread_xrd, (void *)&cpnfo);
-
-      int len = 1;
-      void *buf;
-      long long offs = 0;
-      unsigned long long bytesread=0;
-      unsigned long long size = cpnfo.len;
-
-      // Loop to write until ended or timeout err
-      while (len > 0) {
-
-	 if ( cpnfo.queue.GetBuffer(&buf, len) ) {
-	    if (len && buf) {
-
-	       bytesread+=len;
-	       if (progbar) {
-		 gettimeofday(&abs_stop_time,&tz);
-		 print_progbar(bytesread,size);
-	       }
-
-	       if (md5) {
-		 MD_5->Update((const char*)buf,len);
-	       }
-
-	       if (!(*xrddest)->Write(buf, offs, len)) {
-		  cerr << "Error writing to output server." << endl;
-		  PrintLastServerError(*xrddest);
-		  retvalue = 11;
-		  break;
-	       }
-
-	       if (cpnfo.mon)
-		 cpnfo.mon->PutProgressInfo(bytesread, cpnfo.len, (float)bytesread / cpnfo.len * 100.0);
-
-	       offs += len;
-	       free(buf);
-	    }
-	    else {
-	       // If we get len == 0 then we have to stop
-	       if (buf) free(buf);
-	       break;
-	    }
-	 }
-	 else {
-	    cerr << endl << endl << 
-	      "Critical read timeout. Unable to read data from the source." << endl;
-            retvalue = -1;
+         if (!xrdxtrdfile && ((buf == 0) || (len == 0)) && (bytesread >= size)) {
+            if (buf) free(buf);
             break;
          }
 
-	 buf = 0;
+      }
+      else {
+         cerr << endl << endl << 
+            "Critical read timeout. Unable to read data from the source." << endl;
+         retvalue = -1;
+         break;
       }
 
-      if (cpnfo.mon)
-	cpnfo.mon->PutProgressInfo(bytesread, cpnfo.len, (float)bytesread / cpnfo.len * 100.0, 1);
+      buf = 0;
+   }
 
-      if(progbar) {
-	cout << endl;
-      }
+   if (cpnfo.mon)
+      cpnfo.mon->PutProgressInfo(bytesread, cpnfo.len, (float)bytesread / cpnfo.len * 100.0, 1);
 
-      if (md5) {
-	MD_5->Final();
-	print_md5(src,bytesread,MD_5);
-      }
+   if(progbar) {
+      cout << endl;
+   }
+
+   if ((unsigned)cpnfo.len != bytesread) retvalue = 13;
+
+   if (md5) MD_5->Final();
+   if (adlerchk || md5) {
+      print_chksum(src, bytesread, MD_5, adler);
+   }
       
-      if (summary) {        
-	print_summary(src,dst,bytesread,MD_5);
-      }
+   if (summary) {        
+      print_summary(src, dst, bytesread, MD_5, adler);
+   }
       
-      if (retvalue >= 0) {
-	 pthread_cancel(myTID);
-	 pthread_join(myTID, &thret);	 
+   if (retvalue >= 0) {
 
-	 delete cpnfo.XrdCli;
-	 cpnfo.XrdCli = 0;
+      for (int i = 0; i < myTIDVec.GetSize(); i++) {
+         pthread_cancel(myTIDVec[i]);
+         pthread_join(myTIDVec[i], &thret);	 
+
+         delete cpnfo.XrdCli;
+         cpnfo.XrdCli = 0;
       }
+   }
 
    delete *xrddest;
 
    return retvalue;
 }
+
 
 XrdClient *BWMToken_Init(const char *bwmhost, const char *srcurl, const char *dsturl) {
    // Initialize a special client in order to get a bandwidth manager token
@@ -565,6 +744,8 @@ bool BWMToken_WaitFor(XrdClient *cli) {
 int doCp_xrd2loc(const char *src, const char *dst) {
    // ----------- xrd to loc affair
    pthread_t myTID;
+   XrdClientVector<pthread_t> myTIDVec;
+
    void *thret;
    XrdClientStatInfo stat;
    int f;
@@ -590,11 +771,11 @@ int doCp_xrd2loc(const char *src, const char *dst) {
       if ( ( !cpnfo.XrdCli->Open(0, kXR_async) ||
 	     (cpnfo.XrdCli->LastServerResp()->status != kXR_ok) ) ) {
 
-	 delete cpnfo.XrdCli;
-	 cpnfo.XrdCli = 0;
-
 	 cerr << "Error opening remote source file " << src << endl;
 	 PrintLastServerError(cpnfo.XrdCli);
+
+	 delete cpnfo.XrdCli;
+	 cpnfo.XrdCli = 0;
 	 return 1;
       }
    }
@@ -623,18 +804,53 @@ int doCp_xrd2loc(const char *src, const char *dst) {
       // Copy to stdout
       f = STDOUT_FILENO;
 
+
+   // If the Extreme Copy flag is set, we try to find more sources for this file
+   // Each source gets assigned to a different reader thread
+   XrdClientVector<XrdClient *> xtremeclients;
+   XrdXtRdFile *xrdxtrdfile = 0;
+
+   if (doXtremeCp) 
+      XrdXtRdFile::GetListOfSources(cpnfo.XrdCli, XtremeCpRdr, xtremeclients);
+
    // Start reader on xrdc
-   XrdSysThread::Run(&myTID, ReaderThread_xrd, (void *)&cpnfo);
+   if (doXtremeCp && (xtremeclients.GetSize() > 1)) {
+
+      // Beware... with the extreme copy the normal read ahead mechanism
+      // makes no sense at all.
+
+      xrdxtrdfile = new XrdXtRdFile(XRDCP_BLOCKSIZE*4, cpnfo.len);
+
+      for (int iii = 0; iii < xtremeclients.GetSize(); iii++) {
+         xtreme_threadnfo *nfo = new(xtreme_threadnfo);
+         nfo->xtrdhandler = xrdxtrdfile;
+         nfo->cli = xtremeclients[iii];
+         nfo->clientidx = xrdxtrdfile->GimmeANewClientIdx();
+         nfo->startfromblk = iii*xrdxtrdfile->GetNBlks() / xtremeclients.GetSize();
+         nfo->maxoutstanding = xrdmin( 3, xrdxtrdfile->GetNBlks() / xtremeclients.GetSize() );
+
+         XrdSysThread::Run(&myTID, ReaderThread_xrd_xtreme, (void *)nfo);
+      }
+
+   }
+   else {
+      doXtremeCp = false;
+      XrdSysThread::Run(&myTID, ReaderThread_xrd, (void *)&cpnfo);
+   }
 
    int len = 1;
    void *buf;
-   unsigned long long bytesread=0;
-   unsigned long long size = cpnfo.len;
+   long long bytesread=0, offs = 0;
+   long long size = cpnfo.len;
+   bool draining = false;
 
    // Loop to write until ended or timeout err
-   while (len > 0) {
-	      
-      if ( cpnfo.queue.GetBuffer(&buf, len) ) {
+   while (1) {
+
+      if (xrdxtrdfile && xrdxtrdfile->AllDone()) draining = true;
+      if (draining && !cpnfo.queue.GetLength()) break;
+
+      if ( cpnfo.queue.GetBuffer(&buf, offs, len) ) {
 
 	 if (len && buf) {
 
@@ -648,6 +864,18 @@ int doCp_xrd2loc(const char *src, const char *dst) {
 	      MD_5->Update((const char*)buf,len);
 	    }
 
+#ifdef HAVE_LIBZ
+               if (adlerchk) {
+                  adler = adler32(adler, (const Bytef*)buf, len);
+               }
+#endif
+
+	    if (doXtremeCp && (f != STDOUT_FILENO) && lseek(f, offs, SEEK_SET) < 0) {
+	       cerr << "Error '" << strerror(errno) <<
+		  "' seeking to " << dst << endl;
+	       retvalue = 10;
+	       break;
+	    }
 	    if (write(f, buf, len) <= 0) {
 	       cerr << "Error '" << strerror(errno) <<
 		  "' writing to " << dst << endl;
@@ -660,11 +888,13 @@ int doCp_xrd2loc(const char *src, const char *dst) {
 
 	    free(buf);
 	 }
-	 else  {
-	    // If we get len == 0 then we have to stop
-	    if (buf) free(buf);
-	    break;
-	 }
+
+         if (!xrdxtrdfile && ((buf == 0) || (len == 0)) && (bytesread >= size)) {
+            if (buf) free(buf);
+            break;
+         }
+
+
       }
       else {
 	 cerr << endl << endl << "Critical read timeout. Unable to read data from the source." << endl;
@@ -683,22 +913,28 @@ int doCp_xrd2loc(const char *src, const char *dst) {
       cout << endl;
    }
 
-   if (md5) {
-     MD_5->Final();
-     print_md5(src,bytesread,MD_5);
+   if ((unsigned)cpnfo.len != bytesread) retvalue = 13;
+
+   if (md5) MD_5->Final();
+   if (md5 || adlerchk) {
+      print_chksum(src, bytesread, MD_5, adler);
    }
       
    if (summary) {        
-      print_summary(src,dst,bytesread,MD_5);
+      print_summary(src,dst,bytesread,MD_5, adler);
    }      
 
    int closeres = close(f);
    if (!retvalue) retvalue = closeres;
 
    if (retvalue >= 0) {
+      for (int i = 0; i < myTIDVec.GetSize(); i++) {
+         pthread_cancel(myTIDVec[i]);
+         pthread_join(myTIDVec[i], &thret);	 
 
-      pthread_cancel(myTID);
-      pthread_join(myTID, &thret);
+         delete cpnfo.XrdCli;
+         cpnfo.XrdCli = 0;
+      }
 
       delete cpnfo.XrdCli;
       cpnfo.XrdCli = 0;
@@ -762,7 +998,7 @@ int doCp_loc2xrd(XrdClient **xrddest, const char *src, const char * dst) {
    // Loop to write until ended or timeout err
    while (len > 0) {
 
-      if ( cpnfo.queue.GetBuffer(&buf, len) ) {
+      if ( cpnfo.queue.GetBuffer(&buf, offs, len) ) {
 	 if (len && buf) {
 
  	    bytesread+=len;
@@ -775,6 +1011,11 @@ int doCp_loc2xrd(XrdClient **xrddest, const char *src, const char * dst) {
 	      MD_5->Update((const char*)buf,len);
 	    }
 
+#ifdef HAVE_LIBZ
+            if (adlerchk) {
+               adler = adler32(adler, (const Bytef*)buf, len);
+            }
+#endif
 	    if ( !(*xrddest)->Write(buf, offs, len) ) {
 	       cerr << "Error writing to output server." << endl;
 	       PrintLastServerError(*xrddest);
@@ -785,7 +1026,6 @@ int doCp_loc2xrd(XrdClient **xrddest, const char *src, const char * dst) {
 	    if (cpnfo.mon)
 	      cpnfo.mon->PutProgressInfo(bytesread, cpnfo.len, (float)bytesread / cpnfo.len * 100.0);
 
-	    offs += len;
 	    free(buf);
 	 }
 	 else {
@@ -812,13 +1052,15 @@ int doCp_loc2xrd(XrdClient **xrddest, const char *src, const char * dst) {
      cout << endl;
    }
 
-   if (md5) {
-     MD_5->Final();
-     print_md5(src,bytesread,MD_5);
+   if (size != bytesread) retvalue = 13;
+
+   if (md5) MD_5->Final();
+   if (md5 || adlerchk) {
+      print_chksum(src, bytesread, MD_5, adler);
    }
    
    if (summary) {        
-     print_summary(src,dst,bytesread,MD_5);
+      print_summary(src, dst, bytesread, MD_5, adler);
    }	 
    
    pthread_cancel(myTID);
@@ -837,7 +1079,7 @@ int doCp_loc2xrd(XrdClient **xrddest, const char *src, const char * dst) {
 void PrintUsage() {
    cerr << "usage: xrdcp <source> <dest> "
      "[-d lvl] [-DSparmname stringvalue] ... [-DIparmname intvalue] [-s] [-ns] [-v]"
-     " [-OS<opaque info>] [-OD<opaque info>] [-force] [-md5] [-np] [-f] [-R] [-S]" << endl << endl;
+     " [-OS<opaque info>] [-OD<opaque info>] [-force] [-md5] [-adler] [-np] [-f] [-R] [-S]" << endl << endl;
 
    cerr << "<source> can be:" << endl <<
      "   a local file" << endl <<
@@ -871,15 +1113,21 @@ void PrintUsage() {
      " (ignore if file is already opened)" << endl;
    cerr << " -force :         set 1-min (re)connect attempts to retry for up to 1 week,"
      " to block until xrdcp is executed" << endl << endl;
-   cerr << " -md5   :         calculate the md5 sum during transfers\n" << endl; 
-   cerr << " -R     :         recurse subdirectories" << endl;
+   cerr << " -md5   :         calculate the md5 checksum during transfers\n" << endl; 
+#ifdef HAVE_LIBZ
+   cerr << " -adler :         calculate the adler32 checksum during transfers\n" << endl; 
+#endif
+   cerr << " -R     :         recurse subdirectories (where it can be applied)" << endl;
    cerr << " -S num :         use <num> additional parallel streams to do the xfer." << endl << 
            "                  The max value is 15. The default is 0 (i.e. use only the main stream)" << endl;
    cerr << " -MLlibname" << endl <<
            "        :         use <libname> as external monitoring reporting library." << endl <<
            "                  The default name if XrdCpMonitorClient.so . Make sure it is reachable." << endl;
-
-
+   cerr << " -X rdr :         Activate the Xtreme copy algorithm. Use 'rdr' as hostname where to query for " << endl <<
+           "                  additional sources." << endl;
+   cerr << " -x     :         Activate the Xtreme copy algorithm. Use the source hostname to query for " << endl <<
+           "                  additional sources." << endl;
+   cerr << " -P     :         request POSC (persist-on-successful-close) processing to create a new file." << endl;
    cerr << " where:" << endl;
    cerr << "   parmname     is the name of an internal parameter" << endl;
    cerr << "   stringvalue  is a string to be assigned to an internal parameter" << endl;
@@ -917,7 +1165,8 @@ int main(int argc, char**argv) {
    EnvPutString( NAME_CONNECTDOMAINDENY_RE, "" );
 
    EnvPutInt( NAME_READAHEADSIZE, XRDCP_XRDRASIZE);
-   EnvPutInt( NAME_READCACHESIZE, 2*XRDCP_XRDRASIZE );
+   EnvPutInt( NAME_READCACHESIZE, 3*XRDCP_XRDRASIZE );
+   EnvPutInt( NAME_READCACHEBLKREMPOLICY, XrdClientReadCache::kRmBlk_LeastOffs );
 //   EnvPutInt(NAME_REMUSEDCACHEBLKS, 1);
 
    EnvPutInt( NAME_DEBUG, -1);
@@ -957,6 +1206,11 @@ int main(int argc, char**argv) {
 
       if ( (strstr(argv[i], "-F") == argv[i])) {
 	 xrd_wr_flags |= kXR_force;
+	continue;
+      }
+
+      if ( (strstr(argv[i], "-P") == argv[i])) {
+	 xrd_wr_flags |= kXR_posc;
 	continue;
       }
 
@@ -1066,6 +1320,27 @@ int main(int argc, char**argv) {
          continue;
       }
 
+      if ( (strstr(argv[i], "-X") == argv[i]) &&
+           (argc >= i+2) ) {
+         doXtremeCp = true;
+         XtremeCpRdr = argv[i+1];
+
+	 cerr << "Extreme Copy enabled. XtremeCpRdr: " << XtremeCpRdr << endl;
+
+
+         i++;
+         continue;
+      }
+
+      if ( (strstr(argv[i], "-x") == argv[i]) ) {
+         doXtremeCp = true;
+         XtremeCpRdr = "";
+
+	 cerr << "Extreme Copy enabled. " << endl;
+
+         continue;
+      }
+
 #ifndef WIN32
       if ( (strstr(argv[i], "-md5") == argv[i])) {
 	md5=true;
@@ -1082,6 +1357,13 @@ int main(int argc, char**argv) {
 	}
 	continue;
       }
+#endif
+
+#ifdef HAVE_LIBZ
+     if ( (strstr(argv[i], "-adler") == argv[i])) {
+	adlerchk=true;
+	continue;
+     }
 #endif
 
       // Any other par is ignored
@@ -1102,6 +1384,7 @@ int main(int argc, char**argv) {
       exit(1);
    }
 
+   if (XtremeCpRdr == "") XtremeCpRdr = srcpath;
 
    DebugSetLevel(EnvGetLong(NAME_DEBUG));
 
@@ -1136,6 +1419,7 @@ int main(int argc, char**argv) {
       if (md5) {
 	MD_5->Reset("md5");
       }
+      adler = 0;
 
 
       // Initialize monitoring client, if a plugin is present

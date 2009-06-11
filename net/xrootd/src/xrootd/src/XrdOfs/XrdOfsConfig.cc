@@ -35,6 +35,7 @@ const char *XrdOfsConfigCVSID = "$Id$";
 
 #include "XrdOfs/XrdOfs.hh"
 #include "XrdOfs/XrdOfsEvs.hh"
+#include "XrdOfs/XrdOfsPoscq.hh"
 #include "XrdOfs/XrdOfsTrace.hh"
 
 #include "XrdNet/XrdNetDNS.hh"
@@ -209,6 +210,11 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
 //
    if (!NoGo && evsObject) NoGo = evsObject->Start(&Eroute);
 
+// If POSC processing is enabled (as by default) do it. Warning! This must be
+// the last item in the configuration list as we need a working filesystem.
+//
+   if (poscAuto != -1 && !NoGo) NoGo |= ConfigPosc(Eroute);
+
 // Display final configuration
 //
    if (!NoGo) Config_Display(Eroute);
@@ -228,18 +234,22 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
   
 void XrdOfs::Config_Display(XrdSysError &Eroute)
 {
-     const char *cloc;
+     const char *cloc, *pval;
      char buff[8192], fwbuff[512], *bp;
      int i;
 
      if (!ConfigFN || !ConfigFN[0]) cloc = "default";
         else cloc = ConfigFN;
+     if (!poscQ) pval = "off";
+        else     pval = (poscAuto ? "auto" : "manual");
+
      snprintf(buff, sizeof(buff), "Config effective %s ofs configuration:\n"
                                   "       ofs.role %s\n"
                                   "%s"
                                   "%s%s%s"
                                   "       ofs.maxdelay   %d\n"
                                   "%s%s%s"
+                                  "       ofs.persist    %s hold %d%s%s%s"
                                   "       ofs.trace      %x",
               cloc, myRole,
               (Options & Authorize ? "       ofs.authorize\n" : ""),
@@ -248,6 +258,8 @@ void XrdOfs::Config_Display(XrdSysError &Eroute)
                MaxDelay,
               (OssLib                    ? "       ofs.osslib " : ""),
               (OssLib ? OssLib : ""), (OssLib ? "\n" : ""),
+               pval, poscHold, (poscLog ? " logdir " : ""),
+               (poscLog ? poscLog    : ""), (poscLog ? "\n" : ""),
               OfsTrace.What);
 
      Eroute.Say(buff);
@@ -321,6 +333,78 @@ int XrdOfs::ConfigDispFwd(char *buff, struct fwdOpt &Fwd)
 }
 
 /******************************************************************************/
+/*                            C o n f i g P o s c                             */
+/******************************************************************************/
+  
+int XrdOfs::ConfigPosc(XrdSysError &Eroute)
+{
+   extern XrdOfs XrdOfsFS;
+   const int AMode = S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH; // 775
+   class  CloseFH : public XrdOfsHanCB
+         {public: void Retired(XrdOfsHandle *hP) {XrdOfsFS.Unpersist(hP);}};
+   static XrdOfsHanCB *hCB = static_cast<XrdOfsHanCB *>(new CloseFH);
+
+   XrdOfsPoscq::recEnt  *rP, *rPP;
+   XrdOfsPoscq::Request *qP;
+   XrdOfsHandle *hP;
+   char pBuff[MAXPATHLEN], *iName, *aPath;
+   int NoGo, rc;
+
+// Construct the proper path to the recovery file
+//
+   iName = getenv("XRDNAME");
+   if (poscLog) aPath = XrdOucUtils::genPath(poscLog, iName, ".ofs/posc.log");
+      else {if (!(aPath = getenv("XRDADMINPATH")))
+               XrdOucUtils::genPath(pBuff, MAXPATHLEN, "/tmp", iName);
+            aPath = XrdOucUtils::genPath(aPath, (char *)0, ".ofs/posc.log");
+           }
+   rc = strlen(aPath)-1;
+   if (aPath[rc] == '/') aPath[rc] = '\0';
+   free(poscLog); poscLog = aPath;
+
+// Make sure directory path exists
+//
+   if ((rc = XrdOucUtils::makePath(poscLog, AMode)))
+      {Eroute.Emsg("Config", rc, "create path for", poscLog);
+       return 1;
+      }
+
+// Create object then initialize it
+//
+   poscQ = new XrdOfsPoscq(&Eroute, XrdOfsOss, poscLog);
+   rP = poscQ->Init(rc);
+   if (!rc) return 1;
+
+// Get file handles and put then in pending delete for all recovered records
+//
+   NoGo = 0;
+   while(rP)
+        {qP = &(rP->reqData);
+         if (qP->addT && poscHold)
+            {if (XrdOfsHandle::Alloc(qP->LFN, XrdOfsHandle::opPC, &hP))
+                {Eroute.Emsg("Config", "Unable to persist", qP->User, qP->LFN);
+                 qP->addT = 0;
+                } else {
+                 hP->PoscSet(qP->User, rP->Offset, rP->Mode);
+                 hP->Retire(hCB, poscHold);
+                }
+            }
+         if (!(qP->addT) || !poscHold)
+            {if ((rc = XrdOfsOss->Unlink(qP->LFN)) && rc != -ENOENT)
+                {Eroute.Emsg("Config", rc, "unpersist", qP->LFN); NoGo = 1;}
+                else {Eroute.Emsg("Config", "Unpersisted", qP->User, qP->LFN);
+                      poscQ->Del(qP->LFN, rP->Offset);
+                     }
+            }
+         rPP = rP; rP = rP->Next; delete rPP;
+        }
+
+// All done
+//
+   return NoGo;
+}
+
+/******************************************************************************/
 /*                           C o n f i g R e d i r                            */
 /******************************************************************************/
   
@@ -377,6 +461,7 @@ int XrdOfs::ConfigXeq(char *var, XrdOucStream &Config,
     TS_Xeq("notify",        xnot);
     TS_Xeq("notifymsg",     xnmsg);
     TS_Xeq("osslib",        xolib);
+    TS_Xeq("persist",       xpers);
     TS_Xeq("redirect",      xred);     // Deprecated
     TS_Xeq("role",          xrole);
     TS_Xeq("trace",         xtrace);
@@ -785,6 +870,72 @@ int XrdOfs::xolib(XrdOucStream &Config, XrdSysError &Eroute)
 //
    if (OssLib) free(OssLib);
    OssLib = strdup(parms);
+   return 0;
+}
+
+/******************************************************************************/
+/*                                 x p e r s                                  */
+/******************************************************************************/
+  
+/* Function: xpers
+
+   Purpose:  To parse the directive: persist [auto | manual | off]
+                                             [hold <sec>] [logdir <dirp>]
+
+             auto      POSC processing always on for creation requests
+             manual    POSC processing must be requested (default)
+             off       POSC processing is disabled
+             <sec>     Seconds inclomplete files held (default 10m)
+             <dirp>    Directory to hold POSC recovery log (default adminpath)
+
+   Output: 0 upon success or !0 upon failure.
+*/
+
+int XrdOfs::xpers(XrdOucStream &Config, XrdSysError &Eroute)
+{
+   char *val;
+   int htime = -1, popt = -2;
+
+   if (!(val = Config.GetWord()))
+      {Eroute.Emsg("Config","persist option not specified");return 1;}
+
+// Check for valid option
+//
+        if (!strcmp(val, "auto"   )) popt =  1;
+   else if (!strcmp(val, "off"    )) popt = -1;
+   else if (!strcmp(val, "manual" )) popt =  0;
+
+// Check if we should get the next token
+//
+   if (popt > -2) val = Config.GetWord();
+
+// Check for hold or log
+//
+   while(val)
+        {     if (!strcmp(val, "hold"))
+                 {if (!(val = Config.GetWord()))
+                     {Eroute.Emsg("Config","persist hold value not specified");
+                      return 1;
+                     }
+                  if (XrdOuca2x::a2tm(Eroute,"persist hold",val,&htime,0))
+                      return 1;
+                 }
+         else if (!strcmp(val, "logdir"))
+                 {if (!(val = Config.GetWord()))
+                     {Eroute.Emsg("Config","persist logdir path not specified");
+                      return 1;
+                     }
+                  if (poscLog) free(poscLog);
+                  poscLog = strdup(val);
+                 }
+         else Eroute.Say("Config warning: ignoring invalid persist option '",val,"'.");
+         val = Config.GetWord();
+        }
+
+// Set values as needed
+//
+   if (htime >= 0) poscHold = htime;
+   if (popt  > -2) poscAuto = popt;
    return 0;
 }
 

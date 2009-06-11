@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include "XrdOuc/XrdOucDLlist.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysPthread.hh"
 
 /******************************************************************************/
 /*              O S   D e p e n d e n t   D e f i n i t i o n s               */
@@ -39,22 +40,14 @@
 #define FS_Stat(a,b) statfs(a,b)
 #define FS_BLKSZ f_bsize
 #endif
-#ifdef __macos__
+#if defined(__macos__) || defined(__FreeBSD__)
 #include <sys/param.h>
 #include <sys/mount.h>
 #define STATFS_t struct statfs
 #define FS_Stat(a,b) statfs(a,b)
 #define FS_BLKSZ f_bsize
 #endif
-#ifdef __FreeBSD__
-#include <sys/param.h>
-#include <sys/mount.h>
-#define STATFS_t struct statfs
-#define FS_Stat(a,b) statfs(a,b)
-/* XXX */
-#define FS_BLKSZ f_bsize
-#endif
-
+  
 /******************************************************************************/
 /*                    X r d O s s C a c h e _ F S D a t a                     */
 /******************************************************************************/
@@ -139,7 +132,69 @@ static XrdOssCache_Group *fsgroups;
       ~XrdOssCache_Group() {if (group) free((void *)group);}
 };
 
-// Suffixes to filenames that may exist in the cache
-//
-#define XRDOSS_SFX_LIST  (char *)".anew", (char *)".fail", (char *)".lock", (char *)".map", (char *)".stage"
+/******************************************************************************/
+/*                           X r d O s s C a c h e                            */
+/******************************************************************************/
+
+class XrdOssCache
+{
+public:
+
+static void            Adjust(dev_t devid, off_t size);
+
+static void            Adjust(const char *Path, off_t size, struct stat *buf=0);
+
+static void            Adjust(XrdOssCache_FS *fsp, off_t size);
+
+struct allocInfo
+      {const char     *Path;     // Req: Local file  name
+       const char     *cgName;   // Req: Cache group name
+       long long       cgSize;   // Opt: Estimated size
+       const char     *cgPath;   // Opt: Specific  partition path
+       int             cgPlen;   // Opt: Length of partition path
+       int             cgPFsz;   // Req: Size of buffer
+       char           *cgPFbf;   // Req: Buffer for cache pfn of size cgPFsz
+       char           *cgPsfx;   // Out: -> pfn suffix area. If 0, non-xa cache
+       XrdOssCache_FS *cgFSp;    // Out: -> Cache file system definition
+       mode_t          aMode;    // Opt: Create mode; if 0, pfn file not created
+
+       allocInfo(const char *pP, char *bP, int bL)
+                : Path(pP),   cgName(0), cgSize(0), cgPath(0), cgPlen(0),
+                  cgPFsz(bL), cgPFbf(bP), cgPsfx(0), cgFSp(0), aMode(0) {}
+      ~allocInfo() {}
+      };
+
+static int             Alloc(allocInfo &aInfo);
+
+static XrdOssCache_FS *Find(const char *Path, int lklen=0);
+
+static int             Init(const char *UDir, const char *Qfile, int isSOL);
+
+static int             Init(long long aMin, int ovhd, int aFuzz);
+
+static void            List(const char *lname, XrdSysError &Eroute);
+
+static char           *Parse(const char *token, char *cbuff, int cblen);
+
+static void           *Scan(int cscanint);
+
+                       XrdOssCache() {}
+                      ~XrdOssCache() {}
+
+static XrdSysMutex         Mutex;    // Cache context lock
+
+static long long           fsFree;   // Maximum contiguous free space
+static long long           fsSize;   // Size of partition with fsFree
+static XrdOssCache_FS     *fsfirst;  // -> First  filesystem
+static XrdOssCache_FS     *fslast;   // -> Last   filesystem
+static XrdOssCache_FSData *fsdata;   // -> Filesystem data
+
+private:
+
+static long long           minAlloc;
+static double              fuzAlloc;
+static int                 ovhAlloc;
+static int                 Quotas;
+static int                 Usage;
+};
 #endif

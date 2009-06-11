@@ -318,9 +318,9 @@ int XrdCmsClientConfig::xconw(XrdOucStream &Config)
 int XrdCmsClientConfig::xmang(XrdOucStream &Config)
 {
     struct sockaddr InetAddr[8];
-    XrdOucTList *tp = 0;
+    XrdOucTList *tp = 0, *tpp = 0, *tpnew;
     char *val, *bval = 0, *mval = 0;
-    int rc, i, port, xMeta = 0, isProxy = 0, smode = FailOver;
+    int rc, i, j, port, xMeta = 0, isProxy = 0, smode = FailOver;
 
 //  Process the optional "peer" or "proxy"
 //
@@ -392,20 +392,23 @@ int XrdCmsClientConfig::xmang(XrdOucStream &Config)
             mval = XrdNetDNS::getHostName(InetAddr[i]);
             Say.Emsg("Config", bval, "-> all.manager", mval);
            }
-        tp = (isProxy ? PanList : ManList);
+        tp = (isProxy ? PanList : ManList); tpp = 0; j = 1;
         while(tp) 
-             if (strcmp(tp->text, mval) || tp->val != port) tp = tp->next;
-                else {Say.Emsg("Config","Duplicate manager",mval);
+             if ((j = strcmp(tp->text, mval)) < 0 || tp->val != port)
+                {tpp = tp; tp = tp->next;}
+                else {if (!j) Say.Emsg("Config","Duplicate manager",mval);
                       break;
                      }
-        if (tp) break;
-        if (isProxy) PanList = new XrdOucTList(mval, port, PanList);
-           else      ManList = new XrdOucTList(mval, port, ManList);
+        if (j) {tpnew = new XrdOucTList(mval, port, tp);
+                if (tpp) tpp->next = tpnew;
+                   else if (isProxy) PanList = tpnew;
+                           else      ManList = tpnew;
+               }
        } while(i);
 
     if (bval) free(bval);
     free(mval);
-    return tp != 0;
+    return 0;
 }
   
 /******************************************************************************/

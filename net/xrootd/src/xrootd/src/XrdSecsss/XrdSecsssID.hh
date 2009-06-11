@@ -52,51 +52,45 @@ int      Register(const char *loginid, XrdSecEntity *Ident, int doReplace=0);
 // Find() is an internal look-up method that returns the identification
 //        string in the provided buffer corresponding to the loginid.
 //        If loginid is registered and the data will fit into the buffer the
-//        length moved into the buffer is returned. Otherwise, 0 is returned.
+//        length moved into the buffer is returned. Otherwise, the default ID
+//        is moved into the buffer and the length copied is returned. If that
+//        is not possible, 0 is returned.
 //
 int      Find(const char *loginid, char *Buff, int Blen);
-
-// getID() returns the static ID. If none, a null pointer is returned
-//
-static
-const char *getID(int &idLen);
 
 // A single instance of this class may be instantiated. The first parameter
 // indicates how authentication is to be handled. The second parameter provides
 // either a fixed or default authenticated identity under control of the aType
 // parameter, as follows:
 //
-enum authType {idLogin   = 0, // 1Sided: loginid used by server as identity
-                              //         Ident parameter is ignored.
-               idMutual  = 1, // Mutual: authentication loginid is the identity
-                              //         Ident parameter is ignored.
-               idDynamic = 3, // Mutual: Map loginid to registered identity
-                              //         Ident is default; if 0 loginid used
-               idStatic  = 4, // 1Sided: fixed identity sent to the server
+enum authType {idDynamic = 0, // Mutual: Map loginid to registered identity
+                              //         Ident is default; if 0 nobody/nogroup
+               idStatic  = 1, // 1Sided: fixed identity sent to the server
                               //         Ident as specified; if 0 process uid/gid
                               //         Default if XrdSecsssID not instantiated!
-               idStaticM = 5  // Mutual: fixed identity sent to the server
+               idStaticM = 2  // Mutual: fixed identity sent to the server
                               //         Ident as specified; if 0 process uid/gid
               };
 
-// getObj() gets the address of a previous created instance of this object or
-//          zero if no instance exists in objP and returns the authType.
+// getObj() returns the address of a previous created instance of this object or
+//          zero if no instance exists. It also returns authType and default ID
+//          to be used regardless of the return value.
 //
 static
-authType getObj(XrdSecsssID **objP);
+XrdSecsssID *getObj(authType &aType, char **dID, int &dIDsz);
 
        XrdSecsssID(authType aType=idStatic, XrdSecEntity *Ident=0);
 
-      ~XrdSecsssID() {}
+      ~XrdSecsssID() {if (defaultID) free(defaultID);}
 
 private:
 
 struct sssID {int iLen; char iData[1];}; // Sized appropriately
-static sssID *genID(const char *lid);
+static sssID *genID(int Secure);
 static sssID *genID(XrdSecEntity *eP);
 
 static XrdSysMutex InitMutex;
-static sssID      *defaultID;
+       sssID      *defaultID;
 XrdSysMutex        myMutex;
 XrdOucHash<sssID>  Registry;
 authType           myAuth;

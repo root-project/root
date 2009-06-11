@@ -19,7 +19,9 @@
   
 /* Function: ParseDefs
 
-   Purpose:  Parse: defaults [[no]check] [[no]compchk] [[no]dread] [forcero]
+   Purpose:  Parse: defaults [[no]check] [[no]compchk] [[no]dread]
+
+                             [[no]filter] [forcero]
 
                              [inplace] [local] [global] [globalro]
                               
@@ -55,6 +57,8 @@ unsigned long long XrdOucExport::ParseDefs(XrdOucStream      &Config,
         {"r/w",           XRDEXP_NOTRW,   0,              XRDEXP_ROW_X},
         {"inplace",       0,              XRDEXP_INPLACE, XRDEXP_INPLACE_X},
         {"outplace",      XRDEXP_INPLACE, 0,              XRDEXP_INPLACE_X},
+        {"nofilter",      XRDEXP_FILTER,  0,              XRDEXP_MKEEP_X},
+        {"filter",        0,              XRDEXP_FILTER,  XRDEXP_FILTER_X},
         {"nomig",         XRDEXP_MIG,     0,              XRDEXP_MIG_X},
         {"mig",           0,              XRDEXP_MIG,     XRDEXP_MIG_X},
         {"notmigratable", XRDEXP_MIG,     0,              XRDEXP_MIG_X},

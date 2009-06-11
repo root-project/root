@@ -28,7 +28,8 @@ const char *XrdOssStageCVSID = "$Id$";
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
-#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/stat.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 
@@ -91,11 +92,11 @@ int XrdOssFind_Req(XrdOssStage_Req *req, void *carg)
 /******************************************************************************/
   
 int XrdOssSys::Stage(const char *Tid, const char *fn, XrdOucEnv &env, 
-                     int Oflag, mode_t Mode)
+                     int Oflag, mode_t Mode, unsigned long long Popts)
 {
 // Use the appropriate method here: queued staging or real-time staging
 //
-   return (StageRealTime ? Stage_RT(Tid, fn, env)
+   return (StageRealTime ? Stage_RT(Tid, fn, env, Popts)
                          : Stage_QT(Tid, fn, env, Oflag, Mode));
 }
 
@@ -176,14 +177,15 @@ else  {pdlen[0] = getID(Tid,env,usrbuff,sizeof(usrbuff)); pdata[0] = usrbuff;}
 /*                              S t a g e _ R T                               */
 /******************************************************************************/
   
-int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env)
+int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env,
+                        unsigned long long Popts)
 {
     extern int XrdOssFind_Prty(XrdOssStage_Req *req, void *carg);
     XrdSysMutexHelper StageAccess(XrdOssStage_Req::StageMutex);
     XrdOssStage_Req req, *newreq, *oldreq;
     struct stat statbuff;
     extern int XrdOssFind_Req(XrdOssStage_Req *req, void *carg);
-    char actual_path[XrdOssMAX_PATH_LEN+1], *remote_path;
+    char actual_path[MAXPATHLEN+1], *remote_path;
     char *val;
     int rc, prty;
 
@@ -221,9 +223,11 @@ int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env)
 // that a request for the file may come in again before we have the size. This
 // is ok, it just means that we'll be off in our time estimate
 //
-   StageAccess.UnLock();
-   if ((rc = MSS_Stat(remote_path, &statbuff))) return rc;
-   StageAccess.Lock(&XrdOssStage_Req::StageMutex);
+   if (Popts & XRDEXP_NOCHECK) statbuff.st_size = 1024*1024*1024;
+      else {StageAccess.UnLock();
+            if ((rc = MSS_Stat(remote_path, &statbuff))) return rc;
+            StageAccess.Lock(&XrdOssStage_Req::StageMutex);
+           }
 
 // Create a new request
 //
@@ -402,8 +406,8 @@ int XrdOssSys::CalcTime(XrdOssStage_Req *req) // StageMutex lock held!
 
 int XrdOssSys::GetFile(XrdOssStage_Req *req)
 {
-   char rfs_fn[XrdOssMAX_PATH_LEN+1];
-   char lfs_fn[XrdOssMAX_PATH_LEN+1];
+   char rfs_fn[MAXPATHLEN+1];
+   char lfs_fn[MAXPATHLEN+1];
    int retc;
 
 // Convert the local filename and generate the corresponding remote name.
@@ -454,7 +458,7 @@ time_t XrdOssSys::HasFile(const char *fn, const char *fsfx)
 {
     struct stat statbuff;
     int fnlen;
-    char path[XrdOssMAX_PATH_LEN+1];
+    char path[MAXPATHLEN+1];
     char *pp = path;
 
 // Copy the path with possible conversion

@@ -17,11 +17,14 @@ const char *XrdOssUnlinkCVSID = "$Id$";
 #include <strings.h>
 #include <limits.h>
 #include <stdio.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOss/XrdOssApi.hh"
+#include "XrdOss/XrdOssCache.hh"
+#include "XrdOss/XrdOssConfig.hh"
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOss/XrdOssLock.hh"
 #include "XrdOss/XrdOssOpaque.hh"
@@ -47,20 +50,19 @@ extern XrdOucTrace OssTrace;
 
   Output:   Returns XrdOssOK upon success and -errno upon failure.
 */
-int XrdOssSys::Remdir(const char *path)
+int XrdOssSys::Remdir(const char *path, int Opts)
 {
     unsigned long long opts;
     int retc;
     struct stat statbuff;
-    char  local_path[XrdOssMAX_PATH_LEN+1+8];
-
-// Determine whether we can actually unlink a dir on this server.
-//
-   retc = Check_RO(Unlink, opts, path, "deleting ");
+    char  local_path[MAXPATHLEN+1+8];
 
 // Build the right local and remote paths.
 //
-   if ( (retc = GenLocalPath( path,  local_path))) return retc;
+   if (Opts & XRDOSS_isPFN) strcpy(local_path, path);
+      else {retc = Check_RO(Unlink, opts, path, "deleting ");
+            if ( (retc = GenLocalPath( path,  local_path))) return retc;
+           }
 
 // Check if this path is really a directory
 //
@@ -69,7 +71,7 @@ int XrdOssSys::Remdir(const char *path)
 
 // Complete by calling Unlink()
 //
-    return Unlink(path);
+    return Unlink(path, Opts);
 }
 
 /******************************************************************************/
@@ -83,7 +85,7 @@ int XrdOssSys::Remdir(const char *path)
 
   Output:   Returns XrdOssOK upon success and -errno upon failure.
 */
-int XrdOssSys::Unlink(const char *path) 
+int XrdOssSys::Unlink(const char *path, int Opts)
 {
     EPNAME("Unlink")
     unsigned long long ismig, remotefs;
@@ -91,18 +93,21 @@ int XrdOssSys::Unlink(const char *path)
     XrdOssLock un_file;
     struct stat statbuff;
     char *fnp;
-    char  local_path[XrdOssMAX_PATH_LEN+1+8];
-    char remote_path[XrdOssMAX_PATH_LEN+1];
-
-// Determine whether we can actually unlink a file on this server.
-//
-   remotefs = Check_RO(Unlink, ismig, path, "deleting ");
-   ismig &= (XRDEXP_REMOTE | XRDEXP_MIG);
+    char  local_path[MAXPATHLEN+1+8];
+    char remote_path[MAXPATHLEN+1];
 
 // Build the right local and remote paths.
 //
-   if ( (retc = GenLocalPath( path,  local_path))
-   ||   (retc = GenRemotePath(path, remote_path)) ) return retc;
+   if (Opts & XRDOSS_isPFN)
+      {strcpy(local_path, path),
+       *remote_path = '\0';
+       ismig = remotefs = 0;
+      } else {
+       remotefs = Check_RO(Unlink, ismig, path, "deleting ");
+       if ( (retc = GenLocalPath( path,  local_path))
+       ||   (retc = GenRemotePath(path, remote_path)) ) return retc;
+       ismig &= (XRDEXP_REMOTE | XRDEXP_MIG);
+      }
 
  // Serialize the directory.
  //
@@ -128,9 +133,9 @@ int XrdOssSys::Unlink(const char *path)
       {if (unlink(local_path)) retc = -errno;
           else {i = strlen(local_path); fnp = &local_path[i];
                 if (doAdjust && statbuff.st_size)
-                   Adjust(statbuff.st_dev, -statbuff.st_size);
-                if (ismig) for (i = 0; sfx[i]; i++)
-                   {strcpy(fnp, sfx[i]);
+                   XrdOssCache::Adjust(statbuff.st_dev, -statbuff.st_size);
+                if (ismig) for (i = 0; i < XrdOssPath::sfxMigL; i++)
+                   {strcpy(fnp, XrdOssPath::Sfx[i]);
                     if (unlink(local_path))
                        if (errno == ENOENT) continue;
                           else retc2 = errno;
@@ -143,7 +148,8 @@ int XrdOssSys::Unlink(const char *path)
 
 // If local copy effectively deleted. delete the remote copy if need be
 //
-   if (remotefs && (!retc || retc == -ENOENT) && MSSgwCmd)
+   if (remotefs && !(Opts & XRDOSS_Online) 
+   && (!retc || retc == -ENOENT) && MSSgwCmd)
       {if ((retc2 = MSS_Unlink(remote_path)) != -ENOENT) retc = retc2;
        DEBUG("rmt rc=" <<retc2 <<" path=" <<remote_path);
       }
@@ -164,7 +170,7 @@ int XrdOssSys::Unlink(const char *path)
 int XrdOssSys::BreakLink(const char *local_path, struct stat &statbuff)
 {
     EPNAME("BreakLink")
-    char *lP, lnkbuff[PATH_MAX+64];
+    char *lP, lnkbuff[MAXPATHLEN+64];
     int lnklen, retc = 0;
 
 // Read the contents of the link
@@ -189,9 +195,10 @@ int XrdOssSys::BreakLink(const char *local_path, struct stat &statbuff)
       {strcpy(lP+1, ".pfn"); unlink(lnkbuff);
        if (statbuff.st_size)
           {XrdOssPath::Trim2Base(lP);
-           Adjust(lnkbuff, -statbuff.st_size);
+           XrdOssCache::Adjust(lnkbuff, -statbuff.st_size);
           }
-      } else if (statbuff.st_size) Adjust(statbuff.st_dev, -statbuff.st_size);
+      } else if (statbuff.st_size)
+                XrdOssCache::Adjust(statbuff.st_dev, -statbuff.st_size);
 
 // All done
 //

@@ -12,6 +12,7 @@ const char *XrdOssMioCVSID = "$Id$";
   
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -62,7 +63,7 @@ extern XrdOucTrace OssTrace;
 
 void XrdOssMio::Display(XrdSysError &Eroute)
 {
-     char buff[1024];
+     char buff[1080];
      snprintf(buff, sizeof(buff), "       oss.memfile %s%s%s%s%s max %lld",
              (MM_on      ? ""            : "off "),
              (MM_preld   ? "preload"     : ""),
@@ -79,7 +80,7 @@ void XrdOssMio::Display(XrdSysError &Eroute)
 int XrdOssMio::getOpts(char *path, int popts)
 {
     struct stat statb;
-    char buff[1024+16], *bsfx = buff+strlen(path);
+    char buff[MAXPATHLEN+16], *bsfx = buff+strlen(path);
 
 // Generate new options, as needed
 //

@@ -14,6 +14,17 @@
 /*     globus_l_gfs_posix_stat()                                        */
 /*                                                                      */
 /************************************************************************/
+
+/* ChangeLog:
+
+   2009-03-16: Wei Yang  yangw@slac.stanford.edu
+      *  add Adler32 checksum. (need -lz when linking the .so)
+
+ */
+
+/* $Id$ */
+
+/************************************************************************/
 /* How to compile:                                                      */
 /*                                                                      */
 /* This file should be compiled along with the globus 4.0.x source code.*/
@@ -65,6 +76,7 @@
    while (pathname[0] == '/' && pathname[1] == '/') { pathname++; }
 */
 
+#include <zlib.h>
 #include "globus_gridftp_server.h"
 
 static
@@ -514,6 +526,50 @@ error_stat1:
 /*    GlobusGFSFileDebugExitWithError();  */
 }
 /*************************************************************************
+ * Adler23 checksum
+ ************************************************************************/
+globus_result_t 
+globus_l_gfs_posix_cksm_adler32(
+    char *                             filename,
+    char *                             cksm)
+{
+    int rc, fd, len;
+    char *ext_adler32, buf[65536], ext_cmd[1024], *pt;
+    FILE *F;
+    struct stat stbuf;
+    uLong adler;
+
+    ext_adler32 = NULL;
+    if ((ext_adler32 = getenv("GRIDFTP_CKSUM_EXT_ADLER32")) != NULL)
+    {
+        strcpy(ext_cmd, ext_adler32);
+        strcat(ext_cmd, " ");
+        strcat(ext_cmd, filename);
+        F = popen(ext_cmd, "r");
+        if (F == NULL) return GLOBUS_FAILURE;
+        fscanf(F, "%s", cksm);
+        pclose(F);
+
+        pt = strchr(cksm, ' ');
+        if (pt != NULL) pt[0] = '\0'; /* take the first string */ 
+    }
+    else /* calculate adler32 */
+    {
+        rc = stat(filename, &stbuf);
+        if (rc != 0 || ! S_ISREG(stbuf.st_mode) || (fd = open(filename,O_RDONLY)) < 0)
+            return GLOBUS_FAILURE;
+        adler = adler32(0L, Z_NULL, 0);
+        while ((len = read(fd, buf, 65536)) > 0)
+            adler = adler32(adler, buf, len);
+
+        close(fd);
+        sprintf(cksm, "%08x", adler);
+        cksm[8] = '\0';
+    }
+    return GLOBUS_SUCCESS;
+}
+
+/*************************************************************************
  *  command
  *  -------
  *  This interface function is called when the client sends a 'command'.
@@ -542,6 +598,7 @@ globus_l_gfs_posix_command(
     char *                              PathName;
     globus_l_gfs_posix_handle_t *      posix_handle;
     globus_result_t                     rc;
+    char                                cmd_data[128];
     GlobusGFSName(globus_l_gfs_posix_command);
 
     posix_handle = (globus_l_gfs_posix_handle_t *) user_arg;
@@ -583,7 +640,11 @@ globus_l_gfs_posix_command(
             (rc = GlobusGFSErrorGeneric("chmod() fail"));
         break;
       case GLOBUS_GFS_CMD_CKSM:
-        rc = GLOBUS_FAILURE;
+        if (!strcmp(cmd_info->cksm_alg, "adler32") || 
+            !strcmp(cmd_info->cksm_alg, "ADLER32"))
+            rc = globus_l_gfs_posix_cksm_adler32(PathName, cmd_data);
+        else
+            rc = GLOBUS_FAILURE;
         break;
 
       default:
@@ -591,7 +652,7 @@ globus_l_gfs_posix_command(
         break;
     }
 
-    globus_gridftp_server_finished_command(op, rc, NULL);
+    globus_gridftp_server_finished_command(op, rc, cmd_data);
 }
 
 /* receive file from client */

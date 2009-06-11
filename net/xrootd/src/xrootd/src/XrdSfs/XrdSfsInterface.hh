@@ -28,6 +28,7 @@
 #define SFS_O_RDWR             2         // open read/write
 #define SFS_O_CREAT        0x100         // used for file creation
 #define SFS_O_TRUNC        0x200         // used for file truncation
+#define SFS_O_POSC     0x0100000         // persist on successful close
 #define SFS_O_NOWAIT  0x01000000         // do not impose operational delays
 #define SFS_O_RAWIO   0x02000000         // allow client-side decompression
 #define SFS_O_RESET   0x04000000         // Reset any cached information

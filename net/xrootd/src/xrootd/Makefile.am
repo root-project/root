@@ -11,8 +11,8 @@
 ## Makefile/configure Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.12 2008/05/28 12:39:32 furano Exp $
-## Checked in by $Author: furano $
+## Version info: $Id: Makefile.am,v 1.13 2009/03/06 18:02:42 dfeich Exp $
+## Checked in by $Author: dfeich $
 ################################################################################
 
 # Tell GNU make >=3.79 not to run the top level in parallel since
@@ -116,4 +116,9 @@ TESTS = test/test1.sh test/test2.sh
 
 
 
-
+#### WARNING: this rpm target is put in for convenience. It makes
+####        the assumption that builds are done in the standard location
+####         Needs to be improved
+rpm:    dist
+	cp $(DIST_ARCHIVES) /usr/src/redhat/SOURCES/
+	rpmbuild -bb xrootd.spec

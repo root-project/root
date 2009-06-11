@@ -1079,14 +1079,14 @@ int XrdCmsCluster::Drop(int sent, int sinst, XrdCmsDrop *djp)
 
 int XrdCmsCluster::Multiple(SMask_t mVec)
 {
-   static const long long Left32  = 0xffffffff00000000LL;
-   static const long long Right32 = 0x00000000ffffffffLL;
-   static const long long Left16  = 0x00000000ffff0000LL;
-   static const long long Right16 = 0x000000000000ffffLL;
-   static const long long Left08  = 0x000000000000ff00LL;
-   static const long long Right08 = 0x00000000000000ffLL;
-   static const long long Left04  = 0x00000000000000f0LL;
-   static const long long Right04 = 0x000000000000000fLL;
+   static const unsigned long long Left32  = 0xffffffff00000000LL;
+   static const unsigned long long Right32 = 0x00000000ffffffffLL;
+   static const unsigned long long Left16  = 0x00000000ffff0000LL;
+   static const unsigned long long Right16 = 0x000000000000ffffLL;
+   static const unsigned long long Left08  = 0x000000000000ff00LL;
+   static const unsigned long long Right08 = 0x00000000000000ffLL;
+   static const unsigned long long Left04  = 0x00000000000000f0LL;
+   static const unsigned long long Right04 = 0x000000000000000fLL;
 //                                0 1 2 3 4 5 6 7 8 9 A B C D E F
    static const int isMult[16] = {0,0,0,1,0,1,1,1,0,1,1,1,1,1,1,1};
 

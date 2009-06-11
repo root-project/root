@@ -470,6 +470,12 @@ void XrdCmsConfig::DoIt()
    time_t          eTime = time(0);
    int             wTime;
 
+// Set doWait correctly. We only wait if we have to provide a data path. This
+// include server, supervisors, and managers who have a meta-manager, only.
+// Why? Because we never get a primary login if we are a mere manager.
+//
+   if (isManager && !isServer && !ManList) doWait = 0;
+
 // Start the notification thread if we need to
 //
    if (AnoteSock)
@@ -483,6 +489,16 @@ void XrdCmsConfig::DoIt()
                              (void *)0, 0, "Prep handler"))
       Say.Emsg("cmsd", errno, "start prep handler");
 
+// Start the supervisor subsystem
+//
+   if (XrdCmsSupervisor::superOK)
+      {if (XrdSysThread::Run(&tid,XrdCmsStartSupervising, 
+                             (void *)0, 0, "supervisor"))
+          {Say.Emsg("cmsd", errno, "start", myRole);
+          return;
+          }
+      }
+
 // Start the admin thread if we need to, we will not continue until told
 // to do so by the admin interface.
 //
@@ -492,16 +508,6 @@ void XrdCmsConfig::DoIt()
                              0, "Admin traffic"))
           Say.Emsg("cmsd", errno, "start admin handler");
        SyncUp.Wait();
-      }
-
-// Start the supervisor subsystem
-//
-   if (XrdCmsSupervisor::superOK)
-      {if (XrdSysThread::Run(&tid,XrdCmsStartSupervising, 
-                             (void *)0, 0, "supervisor"))
-          {Say.Emsg("cmsd", errno, "start", myRole);
-          return;
-          }
       }
 
 // Start the server subsystem. We check here to make sure we will not be

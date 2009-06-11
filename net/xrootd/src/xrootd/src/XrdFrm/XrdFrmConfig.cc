@@ -14,6 +14,7 @@ const char *XrdFrmConfigCVSID = "$Id$";
   
 #include <unistd.h>
 #include <ctype.h>
+#include <dirent.h>
 #include <string.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -22,15 +23,19 @@ const char *XrdFrmConfigCVSID = "$Id$";
 #include <sys/stat.h>
 
 #include "Xrd/XrdInfo.hh"
+#include "XrdCms/XrdCmsNotify.hh"
 #include "XrdFrm/XrdFrmConfig.hh"
 #include "XrdFrm/XrdFrmTrace.hh"
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdOss/XrdOss.hh"
+#include "XrdOss/XrdOssSpace.hh"
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucMsubs.hh"
 #include "XrdOuc/XrdOucName2Name.hh"
+#include "XrdOuc/XrdOucProg.hh"
 #include "XrdOuc/XrdOucStream.hh"
+#include "XrdOuc/XrdOucTList.hh"
 #include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysHeaders.hh"
@@ -44,8 +49,60 @@ const char *XrdFrmConfigCVSID = "$Id$";
 using namespace XrdFrm;
 
 /******************************************************************************/
+/*                         L o c a l   C l a s s e s                          */
+/******************************************************************************/
+  
+class XrdFrmConfigSE
+{
+public:
+
+XrdSysSemaphore mySem;
+int             myFD;
+int             seFD;
+int             BLen;
+char            Buff[32000];
+
+                XrdFrmConfigSE() : mySem(0), myFD(-1), seFD(-1), BLen(0) {}
+               ~XrdFrmConfigSE() {}
+};
+
+/******************************************************************************/
 /*                     T h r e a d   I n t e r f a c e s                      */
 /******************************************************************************/
+
+void *XrdFrmConfigMum(void *parg)
+{
+   XrdFrmConfigSE *theSE = (XrdFrmConfigSE *)parg;
+   char *bp = theSE->Buff;
+   int  n, bleft = sizeof(theSE->Buff)-2;
+
+// Let the calling thread continue at this point
+//
+   theSE->mySem.Post();
+
+// Read everything we can
+//
+   do {if ((n = read(theSE->myFD, bp, bleft)) <= 0)
+          {if (!n || (n < 0 && errno != EINTR)) break;}
+       bp += n;
+      } while ((bleft -= n));
+
+// Refalgomize everything
+//
+   dup2(theSE->seFD, STDERR_FILENO);
+   close(theSE->seFD);
+
+// Check if we should add a newline character
+//
+   if (theSE->Buff[bp-(theSE->Buff)-1] != '\n') *bp++ = '\n';
+   theSE->BLen = bp-(theSE->Buff);
+
+// All done
+//
+   theSE->mySem.Post();
+   pthread_exit((void *)0);
+   return (void *)0;
+}
 
 void *XrdLogWorker(void *parg)
 {
@@ -78,13 +135,20 @@ XrdFrmConfig::XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo)
    AdminMode= 0740;
    xfrMax   = 1;
    WaitTime = 300;
+   MSSCmd   = 0;
    xfrCmd   = strdup("/opt/xrootd/utils/frm_xfr -p $OFLAG $RFN $PFN");
    xfrVec   = 0;
    qPath    = 0;
    isAgent  = (getenv("XRDADMINPATH") ? 1 : 0);
    ossLib   = 0;
+   cmsPath  = 0;
    monStage = 0;
    sSpec    = 0;
+   Solitary = 0;
+   lockFN   = "DIR_LOCK";  // May be ".DIR_LOCK" if hidden
+
+   myUid    = geteuid();
+   myGid    = getegid();
 
    LocalRoot= RemoteRoot = 0;
    lcl_N2N  = rmt_N2N = the_N2N = 0;
@@ -103,16 +167,22 @@ XrdFrmConfig::XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo)
 
 // Establish directive postfix
 //
-   if (ss == ssMigr)                 {myFrmid = "migr"; myFrmID = "MIGR";}
-      else if (ss == ssPstg)         {myFrmid = "pstg"; myFrmID = "PSTG";}
-              else if (ss == ssPurg) {myFrmid = "purg"; myFrmID = "PURG";}
-                      else           {myFrmid = "frm";  myFrmID = "FRM";}
+        if (ss == ssAdmin) {myFrmid = "admin"; myFrmID = "ADMIN";}
+   else if (ss == ssMigr)  {myFrmid = "migr";  myFrmID = "MIGR";}
+   else if (ss == ssPstg)  {myFrmid = "pstg";  myFrmID = "PSTG";}
+   else if (ss == ssPurg)  {myFrmid = "purg";  myFrmID = "PURG";}
+   else                    {myFrmid = "frm";   myFrmID = "FRM";}
 
 // Set correct error prefix
 //
    strcpy(buff, myFrmid);
    strcat(buff, "_");
    Say.SetPrefix(strdup(buff));
+
+// Set correct oss type
+//
+   sprintf(buff, "XRDOSSTYPE=%s", myFrmid);
+   putenv(strdup(buff));
 
 // Set correct option prefix
 //
@@ -129,7 +199,8 @@ XrdFrmConfig::XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo)
 int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
 {
    extern XrdOss *XrdOssGetSS(XrdSysLogger *, const char *, const char *);
-   int n, retc, myXfrMax = -1, NoGo = 0;
+   XrdFrmConfigSE theSE;
+   int n, retc, isMum = 0, myXfrMax = -1, NoGo = 0, Verbose = 0;
    const char *temp;
    char c, buff[1024], *logfn = 0;
    long long logkeep = 0;
@@ -144,7 +215,7 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
 
 // Process the options
 //
-   opterr = 0;
+   opterr = 0; nextArg = 1;
    if (argc > 1 && '-' == *argv[1]) 
       while ((c = getopt(argc,argv,vOpts)) && ((unsigned char)c != 0xff))
      { switch(c)
@@ -173,6 +244,8 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
                  break;
        case 's': sSpec = 1;
                  break;
+       case 'v': Verbose = 1;
+                 break;
        case 'w': if (XrdOuca2x::a2tm(Say,"wait time",optarg,&WaitTime))
                     Usage(1);
                  break;
@@ -181,24 +254,27 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
                     else Say.Emsg("Config", buff, "option is invalid");
                  Usage(1);
        }
+     nextArg = optind;
      }
 
 // If we are an agent without a logfile and one is actually defined for the
 // underlying system, use the directory of the underlying system.
 //
-   if (!logfn)
-      {if (isAgent && (logfn = getenv("XRDLOGDIR")))
-          {sprintf(buff, "%s%s%clog", logfn, myFrmid, (isAgent ? 'a' : 'd'));
-           logfn = strdup(buff);
-          }
-      } else if (!(logfn=XrdOucUtils::subLogfn(Say,myInsName,logfn))) _exit(16);
+   if (ssID != ssAdmin)
+      {if (!logfn)
+          {if (isAgent && (logfn = getenv("XRDLOGDIR")))
+              {sprintf(buff, "%s%s%clog", logfn, myFrmid, (isAgent ? 'a' : 'd'));
+               logfn = strdup(buff);
+              }
+          } else if (!(logfn=XrdOucUtils::subLogfn(Say,myInsName,logfn))) _exit(16);
 
-// Bind the log file if we have one
-//
-   if (logfn)
-      {if (logkeep) Logger.setKeep(logkeep);
-       Logger.Bind(logfn, 24*60*60);
-      }
+   // Bind the log file if we have one
+   //
+       if (logfn)
+          {if (logkeep) Logger.setKeep(logkeep);
+           Logger.Bind(logfn, 24*60*60);
+          }
+       }
 
 // Get the full host name. In theory, we should always get some kind of name.
 //
@@ -218,6 +294,10 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
    if (myInsName)
       {sprintf(buff, "XRDNAME=%s", myInsName); putenv(strdup(buff));}
 
+// We need to divert the output if we are in admin mode with no logfile
+//
+   if (!logfn && ssID == ssAdmin && !Verbose) isMum = ConfigMum(theSE);
+
 // Put out the herald
 //
    sprintf(buff, "Scalla %s is starting. . .", myProg);
@@ -235,14 +315,20 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
 //
    if (!NoGo) NoGo = ConfigPaths();
 
-// Obtain and configure the oss (leightweight option only)
+// Obtain and configure the oss (lightweight option only)
 //
    if (!isAgent)
-      {putenv(strdup("XRDREDIRECT=R"));
+      {putenv(strdup("XRDREDIRECT=Q"));
+       Solitary = 1;
        if (!NoGo && !(ossFS=XrdOssGetSS(Say.logger(),ConfigFN,ossLib))) NoGo=1;
       }
 
-// Configure the pstg component
+// Configure the admin component
+//
+   if (!NoGo && ssID == ssAdmin
+   && (ConfigN2N() || ConfigMss())) NoGo = 1;
+
+// Configure the pstg  component
 //
    if (!NoGo && ssID == ssPstg && !isAgent
    && (ConfigN2N() || !XrdXrootdMonitor::Init(0,&Say)
@@ -261,10 +347,21 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
           {Say.Emsg("Config", retc, "create logger thread"); NoGo = 1;}
       }
 
-// All done
+// Print ending message
 //
    temp = (NoGo ? " initialization failed." : " initialization completed.");
    Say.Say("------ ", myInstance, temp);
+
+// Finish up mum processing
+//
+   if (isMum)
+      {close(STDERR_FILENO);
+       theSE.mySem.Wait();
+       if (NoGo) write(STDERR_FILENO, theSE.Buff, theSE.BLen);
+      }
+
+// All done
+//
    return !NoGo;
 }
 
@@ -303,6 +400,43 @@ int XrdFrmConfig::RemotePath(const char *oldp, char *newp, int newpsz)
 }
   
 /******************************************************************************/
+/*                                 S p a c e                                  */
+/******************************************************************************/
+  
+XrdOucTList *XrdFrmConfig::Space(const char *Name, const char *Path)
+{
+   static XrdOucTList nullEnt;
+   struct VPInfo *vP = VPList;
+          XrdOucTList *tP;
+   char buff[1032];
+   int n;
+
+// First find the space entry
+//
+   while(vP && strcmp(vP->Name, Name)) vP = vP->Next;
+   if (!vP) return 0;
+
+// Check if we should find a particular path
+//
+   if (!Path) return vP->Dir;
+
+// Make sure it nds with a slash (it usually does not)
+//
+   n = strlen(Path)-1;
+   if (Path[n] != '/')
+      {if (n >= (int)sizeof(buff)-2) return &nullEnt;
+       strcpy(buff, Path); buff[n+1] = '/'; buff[n+2] = '\0';
+       Path = buff;
+      }
+
+// Find the path
+//
+   tP = vP->Dir;
+   while(tP && strcmp(Path, tP->text)) tP = tP->next;
+   return (tP ? tP : &nullEnt);
+}
+
+/******************************************************************************/
 /*                     P r i v a t e   F u n c t i o n s                      */
 /******************************************************************************/
 /******************************************************************************/
@@ -329,6 +463,20 @@ XrdOucMsubs *XrdFrmConfig::ConfigCmd(const char *cname, char *cdata)
 
    return 0;  // We will exit no need to delete msubs
 }
+
+/******************************************************************************/
+/* Private:                    C o n f i g M s s                              */
+/******************************************************************************/
+  
+int XrdFrmConfig::ConfigMss()
+{
+   if (MSSCmd)
+      {MSSProg = new XrdOucProg(&Say);
+       if (MSSProg->Setup(MSSCmd)) return 1;
+      }
+   return 0;
+}
+
 /******************************************************************************/
 /* Private:                    C o n f i g N 2 N                              */
 /******************************************************************************/
@@ -368,20 +516,78 @@ int XrdFrmConfig::ConfigN2N()
 }
 
 /******************************************************************************/
+/*                             C o n f i g M u m                              */
+/******************************************************************************/
+
+int XrdFrmConfig::ConfigMum(XrdFrmConfigSE &theSE)
+{
+   class Recover
+        {public:
+         int fdvec[2];
+         int stdErr;
+             Recover() : stdErr(-1) {fdvec[0] = -1; fdvec[1] = -1;}
+            ~Recover() {if (fdvec[0] >= 0) close(fdvec[0]);
+                        if (fdvec[1] >= 0) close(fdvec[1]);
+                        if (stdErr >= 0)   {dup2(stdErr, STDERR_FILENO);
+                                            close(stdErr);
+                                           }
+                       }
+        };
+   Recover FD;
+   pthread_t tid;
+   int rc;
+
+// Create a pipe
+//
+   if (pipe(FD.fdvec) < 0) return 0;
+   fcntl(FD.fdvec[0], F_SETFD, FD_CLOEXEC);
+
+// Save the current standard error FD
+//
+   if ((FD.stdErr = dup(STDERR_FILENO)) < 0) return 0;
+
+// Now hook-up the pipe to standard error
+//
+   if (dup2(FD.fdvec[1], STDERR_FILENO) < 0) return 0;
+   close(FD.fdvec[1]); FD.fdvec[1] = -1;
+
+// Prepare arguments to the thread that will suck up the output
+//
+   theSE.myFD = FD.fdvec[0];
+   theSE.seFD = FD.stdErr;
+
+// Start a thread to read all of the output
+//
+    if ((rc = XrdSysThread::Run(&tid, XrdFrmConfigMum, (void *)&theSE,
+                                XRDSYSTHREAD_BIND, "Mumify"))) return 0;
+
+// Now fixup to return correctly
+//
+   theSE.mySem.Wait();
+   FD.fdvec[0] = -1;
+   FD.stdErr = -1;
+   return 1;
+}
+  
+/******************************************************************************/
 /*                           C o n f i g P a t h s                            */
 /******************************************************************************/
   
 int XrdFrmConfig::ConfigPaths()
 {
-   char *xPath, buff[1024];
+   char *xPath, *yPath, buff[MAXPATHLEN];
    int retc;
 
-// Get the directory where the meta information is to go
+// Establish the cmsd notification path
 //
-   if (!(xPath = AdminPath) && (xPath = getenv("XRDADMINPATH")))
-           xPath = XrdOucUtils::genPath( xPath, (char *)0, "frm");
-      else xPath = XrdOucUtils::genPath((xPath?xPath:"/tmp/"),myInsName,"frm");
-   if (AdminPath) free(AdminPath); AdminPath = xPath;
+   if (!(xPath = AdminPath) && !(xPath = getenv("XRDADMINPATH")))
+      xPath = (char *)"/tmp/";
+   cmsPath = new XrdCmsNotify(&Say, xPath, myInsName, XrdCmsNotify::isServ);
+
+// Set the directory where the meta information is to go
+//
+   yPath = XrdOucUtils::genPath(xPath, myInsName, "frm");
+   if (AdminPath) free(AdminPath); AdminPath = yPath;
 
 // Create the admin directory if it does not exists
 //
@@ -462,12 +668,21 @@ int XrdFrmConfig::ConfigXeq(char *var, int mbok)
 
 // Process directives specific to each subsystem
 //
-   if (ssID == ssPstg)
-      {
-       if (!strcmp(var, "ofs.osslib"    )) return Grab(var, &ossLib,    0);
+// if (ssID == ssAdmin)
+//    {if (!strcmp(var, "oss.mssgwcmd"  )) return Grab(var, &MSSCmd,    0);
+//     if (!strcmp(var, "oss.msscmd"    )) return Grab(var, &MSSCmd,    0);
+//    }
+
+   if (ssID == ssPstg || ssID == ssAdmin)
+      {if (!strcmp(var, "ofs.osslib"    )) return Grab(var, &ossLib,    0);
+       if (!strcmp(var, "oss.cache"     )) return xcache();
        if (!strcmp(var, "oss.localroot" )) return Grab(var, &LocalRoot, 0);
        if (!strcmp(var, "oss.namelib"   )) return xnml();
        if (!strcmp(var, "oss.remoteroot")) return Grab(var, &LocalRoot, 0);
+      }
+
+   if (ssID == ssPstg)
+      {
        if (!strcmp(var, "xrootd.monitor")) return xmon();
        if (!strcmp(var, "waittime"      )) return xwtm();
        if (!strcmp(var, "xfrmax"        )) return xmaxx();
@@ -491,7 +706,7 @@ int XrdFrmConfig::ConfigXeq(char *var, int mbok)
   
 int XrdFrmConfig::Grab(const char *var, char **Dest, int nosubs)
 {
-    char  myVar[64], buff[2048], *val;
+    char  myVar[80], buff[2048], *val;
     XrdOucEnv *myEnv = 0;
 
 // Copy the variable name as this may change because it points to an
@@ -538,6 +753,102 @@ void XrdFrmConfig::Usage(int rc)
      _exit(rc);
 }
 
+
+/******************************************************************************/
+/*                                x c a c h e                                 */
+/******************************************************************************/
+
+/* Function: xcache
+
+   Purpose:  To parse the directive: cache <group> <path> [xa]
+
+             <group>  logical group name for the cache filesystem.
+             <path>   path to the cache.
+             xa       support extended attributes
+
+   Output: 0 upon success or !0 upon failure.
+*/
+
+int XrdFrmConfig::xcache()
+{
+   char *val, *pfxdir, *sfxdir;
+   char grp[XrdOssSpace::minSNbsz], fn[MAXPATHLEN], dn[MAXNAMLEN];
+   int i, k, rc, pfxln, isxa = 0, cnum = 0;
+   struct dirent *dp;
+   struct stat buff;
+   DIR *DFD;
+
+   if (!(val = cFile->GetWord()))
+      {Say.Emsg("Config", "cache group not specified"); return 1;}
+   if (strlen(val) >= (int)sizeof(grp))
+      {Say.Emsg("Config","excessively long cache name - ",val); return 1;}
+   strcpy(grp, val);
+
+   if (!(val = cFile->GetWord()))
+      {Say.Emsg("Config", "cache path not specified"); return 1;}
+
+   k = strlen(val);
+   if (k >= (int)(sizeof(fn)-1) || val[0] != '/' || k < 2)
+      {Say.Emsg("Config", "invalid cache path - ", val); return 1;}
+   strcpy(fn, val);
+
+   if ((val = cFile->GetWord()))
+      {if (strcmp("xa", val))
+          {Say.Emsg("Config","invalid cache option - ",val); return 1;}
+          else isxa = 1;
+      }
+
+   if (fn[k-1] != '*')
+      {for (i = k-1; i; i--) if (fn[i] != '/') break;
+       fn[i+1] = '/'; fn[i+2] = '\0';
+       xcacheBuild(grp, fn, isxa);
+       return 0;
+      }
+
+   for (i = k-1; i; i--) if (fn[i] == '/') break;
+   i++; strcpy(dn, &fn[i]); fn[i] = '\0';
+   sfxdir = &fn[i]; pfxdir = dn; pfxln = strlen(dn)-1;
+   if (!(DFD = opendir(fn)))
+      {Say.Emsg("Config", errno, "open cache directory", fn); return 1;}
+
+   errno = 0;
+   while((dp = readdir(DFD)))
+        {if (!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..")
+         || (pfxln && strncmp(dp->d_name, pfxdir, pfxln)))
+            continue;
+         strcpy(sfxdir, dp->d_name);
+         if (stat(fn, &buff)) break;
+         if ((buff.st_mode & S_IFMT) == S_IFDIR)
+            {val = sfxdir + strlen(sfxdir) - 1;
+            if (*val++ != '/') {*val++ = '/'; *val = '\0';}
+            xcacheBuild(grp, fn, isxa);
+            cnum++;
+            }
+         errno = 0;
+        }
+
+   if ((rc = errno))
+      Say.Emsg("Config", errno, "process cache directory", fn);
+      else if (!cnum) Say.Say("Config warning: no cache directories found in ",val);
+
+   closedir(DFD);
+   return rc != 0;
+}
+
+void XrdFrmConfig::xcacheBuild(char *grp, char *fn, int isxa)
+{
+   struct VPInfo *nP = VPList;
+   XrdOucTList *tP;
+
+   while(nP && strcmp(nP->Name, grp)) nP = nP->Next;
+
+   if (!nP) VPList = nP = new VPInfo(grp, VPList);
+
+   tP = nP->Dir;
+   while(tP && strcmp(tP->text, fn)) tP = tP->next;
+   if (!tP) nP->Dir = new XrdOucTList(fn, isxa, nP->Dir);
+}
+
 /******************************************************************************/
 /* Private:                       x a p a t h                                 */
 /******************************************************************************/
@@ -549,8 +860,6 @@ void XrdFrmConfig::Usage(int rc)
              <path>    the path of the FIFO to use for admin requests.
 
              group     allows group access to the admin path
-
-   Note: A named socket is created <path>/<name>/.xrd/admin
 
    Output: 0 upon success or !0 upon failure.
 */

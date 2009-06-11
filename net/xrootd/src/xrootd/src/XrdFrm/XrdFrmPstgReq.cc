@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -494,7 +495,7 @@ int XrdFrmPstgReq::reqWrite(void *Buff, int Offs, int updthdr)
 int XrdFrmPstgReq::ReWrite(XrdFrmPstgReq::recEnt *rP)
 {
    static const int Mode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
-   char newFN[1024], *oldFN;
+   char newFN[MAXPATHLEN], *oldFN;
    int  newFD, oldFD, Offs = ReqSize, aOK = 1;
 
 // Construct new file and open it

@@ -204,8 +204,8 @@ int XrdCmsProtocol::Execute(XrdCmsRRData &Arg)
                  {DEBUGR(etxt+1 <<" delayed " <<Arg.waitVal <<" seconds");
                   return -EINPROGRESS;
                  } else Reply_Error(Arg, kYR_EINVAL, etxt);
-              else if (Arg.Routing & XrdCmsRouting::Forward
-                   &&  Cluster.NodeCnt) Reissue(Arg);
+              else if (Arg.Routing & XrdCmsRouting::Forward && Cluster.NodeCnt
+                   &&  !(Arg.Request.modifier & kYR_dnf)) Reissue(Arg);
    return 0;
 }
 
@@ -252,7 +252,7 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
    unsigned int Mode, Role = 0;
    int Lvl=0, Netopts=0, waits=6, tries=6, fails=0, xport=mport;
    int rc, fsUtil, KickedOut, myNID = ManTree.Register();
-   int chk4Suspend = 0, TimeOut = Config.AskPing*1000;
+   int chk4Suspend = XrdCmsState::All_Suspend, TimeOut = Config.AskPing*1000;
    char manbuff[256];
    const char *Reason = 0, *manp = manager;
    const int manblen = sizeof(manbuff);
@@ -289,14 +289,13 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
 // not able to stage any files.
 //
    if (Role == CmsLoginData::kYR_server)
-      {chk4Suspend = 1;
-       if (!Config.DiskSS) Role |=  CmsLoginData::kYR_nostage;
-      }
+      {if (!Config.DiskSS) Role |=  CmsLoginData::kYR_nostage;}
+      else chk4Suspend = XrdCmsState::FES_Suspend;
 
 // Keep connecting to our manager. If suspended, wait for a resumption first
 //
    do {if (Config.doWait && chk4Suspend)
-          while(CmsState.Suspended)
+          while(CmsState.Suspended & chk4Suspend)
                {if (!waits--)
                    {Say.Emsg("Pander", "Suspend state still active."); waits=6;}
                 XrdSysTimer::Snooze(12);

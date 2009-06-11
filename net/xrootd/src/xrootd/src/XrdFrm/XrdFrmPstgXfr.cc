@@ -482,5 +482,11 @@ void XrdFrmPstgXfr::Start()
             } while(tP);
 
          rQueue[xP->Slot]->Del(&(xP->reqData));
+
+         qMutex.Lock();
+         xP->Next = Free;
+         Free     = xP;
+         qMutex.UnLock();
+         qAvail.Post();
         }
 }

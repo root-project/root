@@ -4,7 +4,7 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.11 2008/10/12 10:25:46 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.13 2009/05/19 21:24:55 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
@@ -13,6 +13,8 @@
 #       XrdPosixPreload32.cc by compiling the latter with -fPIC, so compiler
 #       behavior somehow deals with the symbol clash. This is surely a source
 #       of portability problems. I do not yet know hot to best solve it here
+
+include $(top_srcdir)/src/Makefile_include
 
 # preprocessor flags
 AM_CPPFLAGS = -I$(top_srcdir)/src
@@ -44,17 +46,17 @@ libXrdPosix_la_LIBADD = ../XrdClient/libXrdClient.la \
                         ../XrdOuc/libXrdOuc.la \
                         ../XrdSys/libXrdSys.la
 
-libXrdPosixPreload_la_SOURCES = \
-         XrdPosixPreload32.cc \
-         XrdPosixPreload.cc  \
-         XrdPosixLinkage.cc \
-         XrdPosixXrootd.cc \
-         XrdPosix.cc
+#libXrdPosixPreload_la_SOURCES = \
+#         XrdPosixPreload32.cc \
+#         XrdPosixPreload.cc  \
+#         XrdPosixLinkage.cc \
+#         XrdPosixXrootd.cc \
+#         XrdPosix.cc
 
-libXrdPosixPreload_la_LIBADD = \
-                         ../XrdClient/libXrdClient.la \
-                         ../XrdNet/libXrdNet.la \
-                         ../XrdOuc/libXrdOuc.la \
-                         ../XrdSec/libXrdSec.la \
-                         ../XrdSys/libXrdSys.la
+#libXrdPosixPreload_la_LIBADD = \
+#                         ../XrdClient/libXrdClient.la \
+#                         ../XrdNet/libXrdNet.la \
+#                         ../XrdOuc/libXrdOuc.la \
+#                         ../XrdSec/libXrdSec.la \
+#                         ../XrdSys/libXrdSys.la
 

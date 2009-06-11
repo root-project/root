@@ -156,7 +156,7 @@ XrdSecProtocol *XrdSecPManager::Get(const char       *hname,
                        <<(pargs ? pargs : "") <<"'");
                  if ((pp = pl->ep('c', hname, netaddr, pargs, &erp)))
                     {if (nscan) {i = nscan - secbuff;
-                                 *secparm.buffer += i; secparm.size -= i;
+                                 secparm.buffer += i; secparm.size -= i;
                                 } else secparm.size = -1;
                      return pp;
                     }
