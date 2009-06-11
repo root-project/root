@@ -42,19 +42,23 @@ ReflexCMakeTest_Run?=no
 
 ReflexCMakeConfig:
 	$(CMDECHO)echo Configuring Reflex...
-	$(CMDECHO)mkdir -p cmake-build; cd cmake-build; \
-	cmake -DREFLEX_BUILD_TESTS=ON -DREFLEX_ENABLE_TESTS=ON -DCMAKE_COLOR_MAKEFILE=OFF $(ROOTSYS)/cint/reflex > /dev/null
+	$(CMDECHO)mkdir -p cmake-build && cd cmake-build && \
+	cmake -DREFLEX_BUILD_TESTS=ON -DREFLEX_ENABLE_TESTS=ON -DCMAKE_COLOR_MAKEFILE=OFF $(ROOTSYS)/cint/reflex > /dev/null || (echo 'Tests skipped.'; touch ../SKIP-CONFIG-ERROR)
 	$(CMDECHO)echo Done.
 
 ReflexCMakeBuild: ReflexCMakeConfig
-	$(CMDECHO)echo Building Reflex...
-	$(CMDECHO)cd cmake-build; $(MAKE) > /dev/null
-	$(CMDECHO)echo Done.
+	$(CMDECHO)if ! [ -e SKIP-CONFIG-ERROR ]; then \
+	echo Building Reflex... && \
+	cd cmake-build && $(MAKE) > /dev/null && \
+	echo Done.; \
+	fi
 
 ReflexCMakeTest.log: ReflexCMakeBuild
-	$(CMDECHO)echo Running Reflex Tests...
-	$(CMDECHO)cd cmake-build; ctest -Q -O ../$@ > /dev/null
-	$(CMDECHO)echo Done.
+	$(CMDECHO)if ! [ -f SKIP-CONFIG-ERROR ]; then \
+	echo Running Reflex Tests... && \
+	cd cmake-build && ctest -Q -O ../$@ > /dev/null && \
+	echo Done.; \
+	else rm SKIP-CONFIG-ERROR; fi
 
 ifeq ($(ReflexCMakeTest_Run),yes)
 ReflexCMakeTest: ReflexCMakeTest.log
