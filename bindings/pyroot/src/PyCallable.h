@@ -31,7 +31,8 @@ namespace PyROOT {
       virtual PyObject* GetScope() { return 0; }
 
    public:
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds ) = 0;
+      virtual PyObject* operator()(
+         ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user = 0 ) = 0;
    };
 
 } // namespace PyROOT

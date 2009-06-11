@@ -32,7 +32,7 @@ namespace PyROOT {
       virtual PyObject* GetDocString();
 
    public:
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds );
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t = 0 );
 
    protected:
       virtual Bool_t InitExecutor_( TExecutor*& );

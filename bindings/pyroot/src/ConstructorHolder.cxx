@@ -72,7 +72,7 @@ namespace PyROOT {
 #ifdef PYROOT_USE_REFLEX
 template<>
 PyObject* TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::operator()(
-      ObjectProxy* self, PyObject* args, PyObject* kwds )
+      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
 {
 // setup as necessary
    if ( ! this->Initialize() )
@@ -83,7 +83,7 @@ PyObject* TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::opera
       return 0;
 
 // translate the arguments
-   if ( ! this->SetMethodArgs( args ) ) {
+   if ( ! this->SetMethodArgs( args, user ) ) {
       Py_DECREF( args );
       return 0;
    }
@@ -117,7 +117,7 @@ PyObject* TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::opera
 
 template< class T, class M >
 PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
-      ObjectProxy* self, PyObject* args, PyObject* kwds )
+      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
 {
 // do not allow instantiation of abstract classes
    if ( this->GetClass().IsAbstract() ) {
@@ -135,7 +135,7 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
       return 0;
 
 // translate the arguments
-   if ( ! this->SetMethodArgs( args ) ) {
+   if ( ! this->SetMethodArgs( args, user ) ) {
       Py_DECREF( args );
       return 0;
    }

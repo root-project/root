@@ -17,14 +17,15 @@ PyROOT::TClassMethodHolder< T, M >::TClassMethodHolder( const T& klass, const M&
 
 //- public members --------------------------------------------------------------
 template< class T, class M >
-PyObject* PyROOT::TClassMethodHolder< T, M >::operator()( ObjectProxy*, PyObject* args, PyObject* )
+PyObject* PyROOT::TClassMethodHolder< T, M >::operator()(
+      ObjectProxy*, PyObject* args, PyObject*, Long_t user )
 {
 // setup as necessary
    if ( ! this->Initialize() )
       return 0;                              // important: 0, not Py_None
 
 // translate the arguments
-   if ( ! this->SetMethodArgs( args ) )
+   if ( ! this->SetMethodArgs( args, user ) )
       return 0;                              // important: 0, not Py_None
 
 // execute function

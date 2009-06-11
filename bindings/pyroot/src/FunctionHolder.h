@@ -24,7 +24,7 @@ namespace PyROOT {
       TFunctionHolder( const M& function );
 
       virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
-      virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds );
+      virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds, Long_t = 0 );
    };
 
 } // namespace PyROOT

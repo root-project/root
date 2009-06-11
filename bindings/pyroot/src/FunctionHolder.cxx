@@ -70,7 +70,7 @@ PyObject* PyROOT::TFunctionHolder< T, M >::FilterArgs(
 //____________________________________________________________________________
 template< class T, class M >
 PyObject* PyROOT::TFunctionHolder< T, M >::operator()(
-      ObjectProxy* self, PyObject* args, PyObject* kwds )
+      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
 {
 // setup as necessary
    if ( ! this->Initialize() )
@@ -81,7 +81,7 @@ PyObject* PyROOT::TFunctionHolder< T, M >::operator()(
       return 0;
 
 // translate the arguments
-   Bool_t bConvertOk = this->SetMethodArgs( args );
+   Bool_t bConvertOk = this->SetMethodArgs( args, user );
    Py_DECREF( args );
 
    if ( bConvertOk == kFALSE )

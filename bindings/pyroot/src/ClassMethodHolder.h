@@ -25,7 +25,7 @@ namespace PyROOT {
    public:
       TClassMethodHolder( const T& klass, const M& method );
 
-      virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds );
+      virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds, Long_t = 0 );
    };
 
 } // namespace PyROOT

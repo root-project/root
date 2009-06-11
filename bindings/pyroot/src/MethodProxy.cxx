@@ -330,6 +330,38 @@ namespace {
    }
 
 //____________________________________________________________________________
+   PyObject* mp_getmempolicy( MethodProxy* pymeth, void* )
+   {
+      if ( (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsHeuristics ) )
+         return PyInt_FromLong( Utility::kHeuristics );
+
+      if ( (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsStrict ) )
+         return PyInt_FromLong( Utility::kStrict );
+
+      return PyInt_FromLong( -1 );
+   }
+
+//____________________________________________________________________________
+   int mp_setmempolicy( MethodProxy* pymeth, PyObject* value, void* )
+   {
+      Long_t mempolicy = PyLong_AsLong( value );
+      if ( mempolicy == Utility::kHeuristics ) {
+         pymeth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsHeuristics;
+         pymeth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsStrict;
+      } else if ( mempolicy == Utility::kStrict ) {
+         pymeth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsStrict;
+         pymeth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsHeuristics;
+      } else {
+         PyErr_SetString( PyExc_ValueError,
+            "expected kMemoryStrict or kMemoryHeuristics as value for _mempolicy" );
+         return -1;
+      }
+
+      return 0;
+   }
+
+
+//____________________________________________________________________________
    PyGetSetDef mp_getset[] = {
       { (char*)"__name__",   (getter)mp_name,   NULL, NULL, NULL },
       { (char*)"__module__", (getter)mp_module, NULL, NULL, NULL },
@@ -351,6 +383,8 @@ namespace {
 
       { (char*)"_creates", (getter)mp_getcreates, (setter)mp_setcreates,
             (char*)"For ownership rules of result: if true, objects are python-owned", NULL },
+      { (char*)"_mempolicy", (getter)mp_getmempolicy, (setter)mp_setmempolicy,
+            (char*)"For argument ownership rules: like global, either heuristic or strict", NULL },
       { (char*)NULL, NULL, NULL, NULL, NULL }
    };
 
@@ -368,9 +402,17 @@ namespace {
 
       Int_t nMethods = methods.size();
 
+      Long_t user = 0;
+      if ( (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsHeuristics ) )
+         user = Utility::kHeuristics;
+      else if ( (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsStrict ) )
+         user = Utility::kStrict;
+      else
+         user = Utility::gMemoryPolicy;
+
    // simple case
       if ( nMethods == 1 )
-         return HandleReturn( pymeth, (*methods[0])( pymeth->fSelf, args, kwds ) );
+         return HandleReturn( pymeth, (*methods[0])( pymeth->fSelf, args, kwds, user ) );
 
    // otherwise, handle overloading
       Long_t sighash = HashSignature( args );
@@ -379,7 +421,9 @@ namespace {
       MethodProxy::DispatchMap_t::iterator m = dispatchMap.find( sighash );
       if ( m != dispatchMap.end() ) {
          Int_t index = m->second;
-         PyObject* result = HandleReturn( pymeth, (*methods[ index ])( pymeth->fSelf, args, kwds ) );
+         PyObject* result =
+            HandleReturn( pymeth, (*methods[ index ])( pymeth->fSelf, args, kwds, user ) );
+
          if ( result != 0 )
             return result;
 

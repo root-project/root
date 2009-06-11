@@ -60,11 +60,11 @@ namespace PyROOT {
       virtual PyObject* GetScope();
 
    public:
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds );
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t = 0 );
 
       virtual Bool_t Initialize();
       virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
-      virtual Bool_t SetMethodArgs( PyObject* args );
+      virtual Bool_t SetMethodArgs( PyObject* args, Long_t user );
       virtual PyObject* Execute( void* self );
 
    protected:

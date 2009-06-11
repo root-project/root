@@ -535,7 +535,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::FilterArgs( ObjectProxy*& self, PyObjec
 
 //____________________________________________________________________________
 template< class T, class M >
-Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args )
+Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args, Long_t user )
 {
 // clean slate
    if ( fMethodCall )
@@ -557,7 +557,8 @@ Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args )
 
 // convert the arguments to the method call array
    for ( int i = 0; i < argc; ++i ) {
-      if ( ! fConverters[ i ]->SetArg( PyTuple_GET_ITEM( args, i ), fParameters[i], fMethodCall ) ) {
+      if ( ! fConverters[ i ]->SetArg(
+              PyTuple_GET_ITEM( args, i ), fParameters[i], fMethodCall, user ) ) {
          SetPyError_( PyString_FromFormat( "could not convert argument %d", i+1 ) );
          return kFALSE;
       }
@@ -636,7 +637,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
 //____________________________________________________________________________
 template< class T, class M >
 PyObject* PyROOT::TMethodHolder< T, M >::operator()(
-      ObjectProxy* self, PyObject* args, PyObject* kwds )
+      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
 {
 // setup as necessary
    if ( ! Initialize() )
@@ -647,7 +648,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
       return 0;
 
 // translate the arguments
-   Bool_t bConvertOk = SetMethodArgs( args );
+   Bool_t bConvertOk = SetMethodArgs( args, user );
    Py_DECREF( args );
 
    if ( bConvertOk == kFALSE )

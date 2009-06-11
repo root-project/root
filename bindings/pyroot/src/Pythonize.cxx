@@ -1094,7 +1094,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTreeBranch( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t )
       {
       // acceptable signatures:
       //   ( const char*, void*, const char*, Int_t = 32000 )
@@ -1213,7 +1213,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          return PyString_FromString( "TBranch* TTree::SetBranchAddress( ... )" );
       }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t )
       {
       // acceptable signature:
       //   ( const char*, void* )
@@ -1406,7 +1406,7 @@ namespace {
             "Double_t xmin, Double_t xmax, Int_t npar = 0)" );
       }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* )
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
       {
       // expected signature: ( char* name, pyfunc, double xmin, double xmax, int npar = 0 )
          int argc = PyTuple_GET_SIZE( args );
@@ -1518,7 +1518,7 @@ namespace {
             "TMinuit::SetFCN(PyObject* callable)" );
       }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* )
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );

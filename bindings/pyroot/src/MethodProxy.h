@@ -36,7 +36,9 @@ namespace PyROOT {
          enum EMethodInfoFlags {
             kNone            = 0,
             kIsSorted        = 1,       // if method overload priority determined
-            kIsCreator       = 2        // if method creates new objects
+            kIsCreator       = 2,       // if method creates new objects
+            kIsHeuristics    = 4,       // if method requires heuristics memory policy
+            kIsStrict        = 8        // if method requires strict memory policy
          };
 
          std::string                 fName;
