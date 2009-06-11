@@ -109,8 +109,8 @@ void TGLSceneBase::RemoveViewer(TGLViewerBase* viewer)
 
    if (fViewers.empty() && fAutoDestruct)
    {
-      Info("TGLSceneBase::RemoveViewer", "scene '%s' not used - autodestructing.",
-           GetName());
+      if (gDebug > 0)
+         Info("TGLSceneBase::RemoveViewer", "scene '%s' not used - autodestructing.", GetName());
       delete this;
    }
 }
