@@ -330,11 +330,7 @@ TGLBEntry *TGComboBox::FindEntry(const char *s) const
    // Find entry by name.
 
    TGLBEntry *sel = 0;
-   Int_t act = fListBox->GetSelected();
-   ((TGContainer *)fListBox->GetContainer())->UnSelectAll();
    sel = fListBox->FindEntry(s);
-   if (act)
-      fListBox->Select(act, kTRUE);
    return sel;
 }
 

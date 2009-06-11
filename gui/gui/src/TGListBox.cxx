@@ -1578,9 +1578,14 @@ TGLBEntry *TGListBox::FindEntry(const char *name) const
 {
    // Find entry by name.
 
-   //fLbc->UnSelectAll(); // What for????
-   TGFrameElement *el = (TGFrameElement *)fLbc->FindItem(name);
-   return (TGLBEntry *)(el ? el->fFrame : 0);
+   TList *list = fLbc->GetList(); 
+   TGFrameElement *el = (TGFrameElement *)list->First(); 
+   while (el) { 
+      if (el->fFrame->GetTitle() == TString(name)) 
+         return (TGLBEntry *)el->fFrame; 
+      el = (TGFrameElement *)list->After(el); 
+   } 
+   return 0; 
 }
 
 //______________________________________________________________________________
