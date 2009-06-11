@@ -17,12 +17,25 @@
 #include "Minuit2/MinosError.h"
 #include "Minuit2/ContoursError.h"
 
-#include "Minuit2/MnPrint.h"
+#include "Minuit2/MnPrint.h" 
+
+
 
 namespace ROOT {
 
    namespace Minuit2 {
 
+
+void PrintContourPoint(const std::pair<double,double> & point)  { 
+#ifdef WARNINGMSG 
+#ifdef USE_ROOT_ERROR
+   std::string msg = "\tx = " + ROOT::Math::Util::ToString(point.first) + "\ty = " + ROOT::Math::Util::ToString(point.first);
+   MN_INFO_MSG(msg.c_str());
+#else
+   std::cout << " x  = " << point.first << "  y = " << point.second << std::endl;
+#endif
+#endif
+}
 
 std::vector<std::pair<double,double> > MnContours::operator()(unsigned int px, unsigned int py, unsigned int npoints) const {
    // get contour as a pair of (x,y) points passing the parameter index (px, py)  and the number of requested points (>=4)
@@ -40,7 +53,9 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    std::vector<std::pair<double,double> > result; result.reserve(npoints);
    std::vector<MnUserParameterState> states;
    //   double edmmax = 0.5*0.05*fFCN.Up()*1.e-3;    
-   double toler = 0.05;    
+
+   //double toler = 0.05;    
+   double toler = 0.01; // use same value as in Minos    
    
    //get first four points
    //   std::cout<<"MnContours: get first 4 params."<<std::endl;
@@ -52,7 +67,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    MinosError mex = minos.Minos(px);
    nfcn += mex.NFcn();
    if(!mex.IsValid()) {
-      std::cout<<"MnContours is unable to find first two points."<<std::endl;
+      MN_ERROR_MSG("MnContours is unable to find first two points.");
       return ContoursError(px, py, result, mex, mex, nfcn);
    }
    std::pair<double,double> ex = mex();
@@ -60,7 +75,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    MinosError mey = minos.Minos(py);
    nfcn += mey.NFcn();
    if(!mey.IsValid()) {
-      std::cout<<"MnContours is unable to find second two points."<<std::endl;
+      MN_ERROR_MSG("MnContours is unable to find second two points.");
       return ContoursError(px, py, result, mex, mey, nfcn);
    }
    std::pair<double,double> ey = mey();
@@ -72,7 +87,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    FunctionMinimum exy_up = migrad();
    nfcn += exy_up.NFcn();
    if(!exy_up.IsValid()) {
-      std::cout<<"MnContours is unable to find Upper y Value for x Parameter "<<px<<"."<<std::endl;
+      MN_ERROR_VAL2("MnContours: unable to find Upper y Value for x Parameter",px);
       return ContoursError(px, py, result, mex, mey, nfcn);
    }
    
@@ -80,7 +95,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    FunctionMinimum exy_lo = migrad();
    nfcn += exy_lo.NFcn();
    if(!exy_lo.IsValid()) {
-      std::cout<<"MnContours is unable to find Lower y Value for x Parameter "<<px<<"."<<std::endl;
+      MN_ERROR_VAL2("MnContours: unable to find Lower y Value for x Parameter",px);
       return ContoursError(px, py, result, mex, mey, nfcn);
    }
    
@@ -91,7 +106,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    FunctionMinimum eyx_up = migrad1();
    nfcn += eyx_up.NFcn();
    if(!eyx_up.IsValid()) {
-      std::cout<<"MnContours is unable to find Upper x Value for y Parameter "<<py<<"."<<std::endl;
+      MN_ERROR_VAL2("MnContours: unable to find Upper x Value for y Parameter",py);
       return ContoursError(px, py, result, mex, mey, nfcn);
    }
    
@@ -99,7 +114,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    FunctionMinimum eyx_lo = migrad1();
    nfcn += eyx_lo.NFcn();
    if(!eyx_lo.IsValid()) {
-      std::cout<<"MnContours is unable to find Lower x Value for y Parameter "<<py<<"."<<std::endl;
+      MN_ERROR_VAL2("MnContours: unable to find Lower x Value for y Parameter",py);
       return ContoursError(px, py, result, mex, mey, nfcn);
    }
    
@@ -110,9 +125,19 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    result.push_back(std::pair<double,double>(eyx_lo.UserState().Value(px), valy + ey.first));
    result.push_back(std::pair<double,double>(valx + ex.second, exy_up.UserState().Value(py)));
    result.push_back(std::pair<double,double>(eyx_up.UserState().Value(px), valy + ey.second));
+
+   
    
    //   std::cout<<"MnContours: first 4 params finished."<<std::endl;
-   
+#ifdef WARNINGMSG
+   MN_INFO_MSG("Minuit2::MnContour : List of  found points");
+   MN_INFO_VAL2("Minuit2::MnContour : parameter number x",px);
+   MN_INFO_VAL2("Minuit2::MnContour : parameter number y",py);
+#endif
+
+   for (unsigned int i = 0; i < 4; ++i)
+      PrintContourPoint(result[i] ); 
+ 
    MnUserParameterState upar = fMinimum.UserState();
    upar.Fix(px);
    upar.Fix(py);
@@ -146,7 +171,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
 L300:
          
       if(nfcn > maxcalls) {
-         std::cout<<"MnContours: maximum number of function calls exhausted."<<std::endl;
+         MN_ERROR_MSG("MnContours: maximum number of function calls exhausted.");
          return ContoursError(px, py, result, mex, mey, nfcn);
       }
       
@@ -165,8 +190,8 @@ L300:
       if(!opt.IsValid()) {
          //       if(a1 > 0.5) {
          if(sca < 0.) {
-            std::cout<<"MnContours is unable to find point "<<i+1<<" on Contour."<<std::endl;
-            std::cout<<"MnContours finds only "<<i<<" points."<<std::endl;
+            MN_ERROR_VAL2("MnContours : unable to find point on Contour",i+1);
+            MN_ERROR_VAL2("MnContours : found  only i points",i);
             return ContoursError(px, py, result, mex, mey, nfcn);
          }
          //       a1 = 0.75;
@@ -176,14 +201,18 @@ L300:
          goto L300;
          }
       double aopt = opt.Value();
-      if(idist2 == result.begin())
+      if(idist2 == result.begin()) { 
          result.push_back(std::pair<double,double>(xmidcr+(aopt)*xdircr, ymidcr + (aopt)*ydircr));
-      else 
-         result.insert(idist2, std::pair<double,double>(xmidcr+(aopt)*xdircr, ymidcr + (aopt)*ydircr));
+         PrintContourPoint( result.back() );
       }
-   
+      else {
+         result.insert(idist2, std::pair<double,double>(xmidcr+(aopt)*xdircr, ymidcr + (aopt)*ydircr));
+         PrintContourPoint( *idist2 );
+      }
+   }   
    return ContoursError(px, py, result, mex, mey, nfcn);
 }
+
 
    }  // namespace Minuit2
 

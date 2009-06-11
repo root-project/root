@@ -96,7 +96,7 @@ public:
    /** 
       Destructor (no operations)
    */ 
-   virtual ~OneDimMultiFunctionAdapter ()  { if (fOwn) delete [] fX; }  
+   virtual ~OneDimMultiFunctionAdapter ()  { if (fOwn && fX) delete [] fX; }  
 
    /**
       clone
@@ -111,23 +111,57 @@ public:
 public: 
 
    /** 
-       Set X values in case vector is own, iterator size must muched previous 
+       Set X values in case vector is own, iterator size must match previous 
        set dimension
    */ 
    template<class Iterator>
    void SetX(Iterator begin, Iterator end) { 
       if (fOwn) std::copy(begin, end, fX);
    }
+
+
    /**
       set pointer without copying the values
     */
    void SetX(double * x) { 
       if (!fOwn) fX = x; 
    }
+
+   /** 
+       set values 
+   */
+   void SetX(const double * x) { 
+      if (fOwn) std::copy(x, x+fDim, fX);
+      else 
+         SetX( const_cast<double *>(x) ); // wee need to modify x but then we restore it as before
+   }
+
+
    void SetCoord(int icoord) { fCoord=icoord;}
+
+   // copy constructor
+   OneDimMultiFunctionAdapter( const OneDimMultiFunctionAdapter & rhs) : 
+      fFunc(rhs.fFunc), 
+      fParams(rhs.fParams),
+      fCoord(rhs.fCoord),
+      fDim(rhs.fDim), 
+      fOwn(rhs.fOwn)
+   { 
+      if (fOwn) { 
+         fX = new double[fDim]; 
+         std::copy( rhs.fX, rhs.fX+fDim, fX);
+      }         
+      else fX = rhs.fX; 
+   }
+
 
 private: 
 
+   // dummy assignment (should never be called and clone must be used) 
+   OneDimMultiFunctionAdapter & operator= ( const OneDimMultiFunctionAdapter & rhs) { 
+      if (this == &rhs)  return *this;
+      assert(false); 
+   }
 
    /**
       evaluate function at the  values x[] given in the constructor and  
@@ -206,6 +240,8 @@ public:
    virtual OneDimParamFunctionAdapter * Clone( ) const { 
       return new OneDimParamFunctionAdapter(fFunc, fX, fParams, fIpar);
    }
+
+   // can use default copy constructor
 
 private: 
 

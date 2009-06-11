@@ -55,10 +55,22 @@ public:
    */ 
    FitConfig (unsigned int npar = 0); 
 
+
+   /*
+     Copy constructor 
+    */
+   FitConfig(const FitConfig & rhs);
+
    /** 
       Destructor 
    */ 
-   ~FitConfig ();    
+   ~FitConfig ();  
+
+   /*
+     Assignment operator 
+   */
+   FitConfig & operator= (const FitConfig & rhs);
+
 
    /**
       get the parameter settings for the i-th parameter (const method)
@@ -145,19 +157,30 @@ public:
    ///do analysis for parabolic errors
    bool ParabErrors() const { return fParabErrors; }
 
-   ///do minos errros analysis on all parameters
+   ///do minos errros analysis on the  parameters
    bool MinosErrors() const { return fMinosErrors; }
+
+   /// return vector of parameter indeces for which the Minos Error will be computed
+   const std::vector<unsigned int> & MinosParams() const { return fMinosParams; }
 
    /**
       set the option to normalize the error on the result  according to chi2/ndf
    */
-   void SetNormErrors(bool on) { fNormErrors= on; }
+   void SetNormErrors(bool on = true) { fNormErrors= on; }
 
    ///set parabolic erros
-   void SetParabErrors(bool on) { fParabErrors = on; } 
+   void SetParabErrors(bool on = true) { fParabErrors = on; } 
 
    ///set Minos erros
-   void SetMinosErrors(bool on) { fMinosErrors = on; } 
+   void SetMinosErrors(bool on = true) { fMinosErrors = on; } 
+
+   /// set parameter indeces for running Minos
+   /// this can be used for running Minos on a subset of parameters - otherwise is run on all of them 
+   /// if MinosErrors() is set 
+   void SetMinosErrors(const std::vector<unsigned int> & paramInd ) { 
+      fMinosErrors = true; 
+      fMinosParams = paramInd; 
+   }
 
 
 
@@ -178,6 +201,7 @@ private:
 
 
    std::vector<ROOT::Fit::ParameterSettings> fSettings;  // vector with the parameter settings
+   std::vector<unsigned int> fMinosParams;               // vector with the parameter indeces for running Minos
 
    std::string fMinimizerType;  // minimizer type (MINUIT, MINUIT2, etc..)
    std::string fMinimAlgoType;  // algorithm type (MIGRAD, SIMPLEX, etc..)

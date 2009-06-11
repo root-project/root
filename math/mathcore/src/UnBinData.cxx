@@ -35,8 +35,8 @@ UnBinData::UnBinData(unsigned int maxpoints, unsigned int dim ) :
       fDataVector = new DataVector(n);
 } 
 
-UnBinData::UnBinData (const DataOptions & opt,  unsigned int maxpoints , unsigned int dim ) : 
-   FitData( opt), 
+UnBinData::UnBinData (const DataRange & range,  unsigned int maxpoints , unsigned int dim ) : 
+   FitData(range), 
    fDim(dim),
    fNPoints(0), 
    fDataVector(0), 
@@ -79,7 +79,8 @@ UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY 
    FitData( ), 
    fDim(2), 
    fNPoints(n),
-   fDataVector(0)
+   fDataVector(0),
+   fDataWrapper(0)
 { 
    //    constructor for 2D external data
    fDataWrapper = new DataWrapper(dataX, dataY, 0, 0, 0, 0);
@@ -93,6 +94,72 @@ UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY,
 { 
    //   constructor for 3D external data
    fDataWrapper = new DataWrapper(dataX, dataY, dataZ, 0, 0, 0, 0, 0);
+} 
+
+UnBinData::UnBinData(unsigned int n, const double * dataX, const DataRange & range ) : 
+   FitData(range), 
+   fDim(1), 
+   fNPoints(0),
+   fDataVector(0),
+   fDataWrapper(0)
+{ 
+   // constructor for 1D array data using a range to select the data
+   if ( n > MaxSize() ) 
+      MATH_ERROR_MSGVAL("UnBinData","Invalid data size n - no allocation done", n )
+   else if (n > 0) {
+      fDataVector = new DataVector(n);
+
+      for (unsigned int i = 0; i < n; ++i)  
+          if ( range.IsInside(dataX[i]) ) Add(dataX[i] ); 
+      
+      if (fNPoints < n) (fDataVector->Data()).resize(fNPoints); 
+   } 
+}
+      
+UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY, const DataRange & range ) : 
+   FitData(range), 
+   fDim(2), 
+   fNPoints(0),
+   fDataVector(0),
+   fDataWrapper(0)
+{ 
+   // constructor for 2D array data using a range to select the data
+   if ( n > MaxSize() ) 
+      MATH_ERROR_MSGVAL("UnBinData","Invalid data size n - no allocation done", n )
+   else if (n > 0) {
+      fDataVector = new DataVector(2*n);
+
+      for (unsigned int i = 0; i < n; ++i)  
+         if ( range.IsInside(dataX[i],0) && 
+              range.IsInside(dataY[i],1) )
+            Add(dataX[i], dataY[i] ); 
+      
+      if (fNPoints < n) (fDataVector->Data()).resize(2*fNPoints); 
+   } 
+} 
+
+UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ, 
+                     const DataRange & range ) : 
+   FitData(range ), 
+   fDim(3), 
+   fNPoints(0),
+   fDataVector(0),
+   fDataWrapper(0)
+{ 
+   // constructor for 3D array data using a range to select the data
+   if ( n > MaxSize() ) 
+      MATH_ERROR_MSGVAL("UnBinData","Invalid data size n - no allocation done", n )
+   else if (n > 0) {
+      fDataVector = new DataVector(3*n);
+
+      for (unsigned int i = 0; i < n; ++i)  
+         if ( range.IsInside(dataX[i],0) && 
+              range.IsInside(dataY[i],1) &&
+              range.IsInside(dataZ[i],2) )
+            Add(dataX[i], dataY[i], dataZ[i] ); 
+      
+      if (fNPoints < n) (fDataVector->Data()).resize(3*fNPoints); 
+   } 
 } 
 
 void UnBinData::Initialize(unsigned int maxpoints, unsigned int dim ) { 

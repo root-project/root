@@ -163,7 +163,7 @@ public:
 
 
    template<class Function>
-   inline void SetFunction(Function f); 
+   inline void SetFunction(const Function & f); 
 
    /** 
        set one dimensional function for 1D integration
@@ -193,7 +193,7 @@ public:
        @param b upper value of the integration interval
     */
    template<class Function> 
-   double Integral(Function f, double a, double b); 
+   double Integral(const Function & f, double a, double b); 
 
 
     /**
@@ -213,7 +213,7 @@ public:
        @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
     */
    template<class Function> 
-   double Integral(Function f); 
+   double Integral(const Function & f); 
 
    /**
       evaluate the Integral of a function f over the infinite interval (-inf,+inf)
@@ -231,7 +231,7 @@ public:
       @param a lower value of the integration interval
     */
    template<class Function> 
-   double IntegralUp(Function f, double a);
+   double IntegralUp(const Function & f, double a);
 
    /**
       evaluate the Integral of a function f over the semi-infinite interval (a,+inf)
@@ -250,7 +250,7 @@ public:
       @param b upper value of the integration interval
     */
    template<class Function> 
-   double IntegralLow(Function f, double b);
+   double IntegralLow(const Function & f, double b);
 
    /**
       evaluate the Integral of a function f over the over the semi-infinite interval (-inf,b)
@@ -269,7 +269,7 @@ public:
 
    */
    template<class Function> 
-   double Integral(Function f, const std::vector<double> & pts );
+   double Integral(const Function & f, const std::vector<double> & pts );
 
    /**
       evaluate the Integral of a function f with known singular points over the defined Integral (a,b)
@@ -291,7 +291,7 @@ public:
       
    */
    template<class Function>
-   double IntegralCauchy(Function  f, double a, double b, double c); 
+   double IntegralCauchy(const Function & f, double a, double b, double c); 
 
    /**
       evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) with a singularity at c 
@@ -430,50 +430,50 @@ private:
 #endif
 
 template<class Function>
-void ROOT::Math::IntegratorOneDim::SetFunction(Function f) {
-  ROOT::Math::WrappedFunction<Function> wf(f); 
+void ROOT::Math::IntegratorOneDim::SetFunction(const Function & f) {
+  ROOT::Math::WrappedFunction<const Function &> wf(f); 
   // need to copy the wrapper function, the instance created here will be deleted after SetFunction()
   if (fIntegrator) fIntegrator->SetFunction(wf, true);
 }
 
 template<class Function> 
-double ROOT::Math::IntegratorOneDim::Integral(Function f, double a, double b) { 
-   ROOT::Math::WrappedFunction<Function> wf(f); 
+double ROOT::Math::IntegratorOneDim::Integral(const Function & f, double a, double b) { 
+   ROOT::Math::WrappedFunction<const Function &> wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return Integral(a,b);
 }
 
 template<class Function> 
-double ROOT::Math::IntegratorOneDim::Integral(Function f) { 
-   ROOT::Math::WrappedFunction<Function> wf(f); 
+double ROOT::Math::IntegratorOneDim::Integral(const Function & f) { 
+   ROOT::Math::WrappedFunction<const Function &> wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return Integral();
 }
 
 template<class Function> 
-double ROOT::Math::IntegratorOneDim::IntegralLow(Function f, double x) { 
-   ROOT::Math::WrappedFunction<Function> wf(f); 
+double ROOT::Math::IntegratorOneDim::IntegralLow(const Function  & f, double x) { 
+   ROOT::Math::WrappedFunction<const Function &> wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return IntegralLow(x);
 }
 
 template<class Function> 
-double ROOT::Math::IntegratorOneDim::IntegralUp(Function f, double x) { 
-   ROOT::Math::WrappedFunction<Function> wf(f); 
+double ROOT::Math::IntegratorOneDim::IntegralUp(const Function & f, double x) { 
+   ROOT::Math::WrappedFunction<const Function &> wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return IntegralUp(x);
 }
 
 template<class Function> 
-double ROOT::Math::IntegratorOneDim::Integral(Function f, const std::vector<double> & pts) { 
-   ROOT::Math::WrappedFunction<Function> wf(f); 
+double ROOT::Math::IntegratorOneDim::Integral(const Function & f, const std::vector<double> & pts) { 
+   ROOT::Math::WrappedFunction<const Function &> wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return Integral(pts);
 }
 
 template<class Function> 
-double ROOT::Math::IntegratorOneDim::IntegralCauchy(Function f, double a, double b, double c) { 
-   ROOT::Math::WrappedFunction<Function> wf(f); 
+double ROOT::Math::IntegratorOneDim::IntegralCauchy(const Function & f, double a, double b, double c) { 
+   ROOT::Math::WrappedFunction<const Function & > wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return IntegralCauchy(a,b,c);
 }

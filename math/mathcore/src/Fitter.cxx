@@ -367,13 +367,63 @@ bool Fitter::DoMinimization(const ObjFunc & objFunc, unsigned int dataSize, cons
    unsigned int ncalls =  ObjFuncTrait<ObjFunc>::NCalls(objFunc);
    int fitType =  ObjFuncTrait<ObjFunc>::Type(objFunc);
 
-   fResult = std::auto_ptr<FitResult> ( new FitResult(*fMinimizer,fConfig, fFunc, ret, dataSize, fBinFit, chi2func, fConfig.MinosErrors(), ncalls ) );
+   fResult = std::auto_ptr<FitResult> ( new FitResult(*fMinimizer,fConfig, fFunc, ret, dataSize, 
+                                                      fBinFit, chi2func, ncalls ) );
 
    if (fConfig.NormalizeErrors() && fitType == ROOT::Math::FitMethodFunction::kLeastSquare ) fResult->NormalizeErrors(); 
 
    return ret; 
 }
 
+bool Fitter::CalculateHessErrors() { 
+   // compute the Minos errors according to configuration
+   // set in the parameters and append value in fit result
+   if (!fMinimizer.get()  || !fResult.get()) { 
+       MATH_ERROR_MSG("Fitter::CalculateHessErrors","Need to do a fit before calculating the errors");
+       return false; 
+   }
+
+   //run Hesse
+   bool ret = fMinimizer->Hesse();
+
+   // update minimizer results with what comes out from Hesse
+   ret |= fResult->Update(*fMinimizer, ret); 
+   return ret; 
+}
+
+
+bool Fitter::CalculateMinosErrors() { 
+   // compute the Minos errors according to configuration
+   // set in the parameters and append value in fit result
+   
+   // in case it has not been set - set by default Minos on all parameters 
+   fConfig.SetMinosErrors(); 
+
+   if (!fMinimizer.get() ) { 
+       MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Minimizer does not exist - cannot calculate Minos errors");
+       return false; 
+   }
+
+   if (!fResult.get() || fResult->IsEmpty() ) { 
+       MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Invalid Fit Result - cannot calculate Minos errors");
+       return false; 
+   }
+
+   const std::vector<unsigned int> & ipars = fConfig.MinosParams(); 
+   unsigned int n = (ipars.size() > 0) ? ipars.size() : fResult->Parameters().size(); 
+   bool ok = false; 
+   for (unsigned int i = 0; i < n; ++i) {
+      double elow, eup;
+      unsigned int index = (ipars.size() > 0) ? ipars[i] : i; 
+      bool ret = fMinimizer->GetMinosError(index, elow, eup);
+      if (ret) fResult->SetMinosError(index, elow, eup); 
+      ok |= ret; 
+   }
+   if (!ok) 
+       MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Minos error calculation failed for all parameters");
+
+   return ok; 
+}
 
 
    } // end namespace Fit

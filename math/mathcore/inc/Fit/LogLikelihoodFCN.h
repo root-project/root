@@ -97,16 +97,16 @@ private:
 public: 
 
    /// clone the function (need to return Base for Windows)
-   BaseFunction * Clone() const { return  new LogLikelihoodFCN(fData,fFunc); }
+   virtual BaseFunction * Clone() const { return  new LogLikelihoodFCN(fData,fFunc); }
 
 
    //using BaseObjFunction::operator();
 
    // effective points used in the fit
-   unsigned int NFitPoints() const { return fNEffPoints; }
+   virtual unsigned int NFitPoints() const { return fNEffPoints; }
 
    /// i-th likelihood contribution and its gradient
-   double DataElement(const double * x, unsigned int i, double * g) const { 
+   virtual double DataElement(const double * x, unsigned int i, double * g) const { 
       return FitUtil::EvaluatePdf(fFunc, fData, x, i, g); 
    }
 
@@ -126,6 +126,7 @@ public:
    /// access to const reference to the model function
    virtual const IModelFunction & ModelFunction() const { return fFunc; }
 
+
 protected: 
 
 
@@ -134,7 +135,7 @@ private:
    /**
       Evaluation of the  function (required by interface)
     */
-   double DoEval (const double * x) const { 
+   virtual double DoEval (const double * x) const { 
       this->UpdateNCalls();
 
 #ifdef ROOT_FIT_PARALLEL

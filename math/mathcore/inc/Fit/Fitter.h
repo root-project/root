@@ -219,6 +219,25 @@ public:
    } 
 
    /**
+      perform an error analysis on the result using the Hessian
+      Errors are obtaied from the inverse of the Hessian matrix
+      To be called only after fitting and when a minimizer supporting the Hessian calculations is used 
+      otherwise an error (false) is returned.
+      A new  FitResult with the Hessian result will be produced
+    */
+   bool CalculateHessErrors();  
+
+   /**
+      perform an error analysis on the result using MINOS
+      To be called only after fitting and when a minimizer supporting MINOS is used 
+      otherwise an error (false) is returned.
+      The result will be appended in the fit result class 
+      Optionally a vector of parameter indeces can be passed for selecting 
+      the parameters to analyse using FitConfig::SetMinosErrors 
+    */
+   bool CalculateMinosErrors();  
+
+   /**
       access to the fit configuration (const method)
    */
    const FitConfig & Config() const { return fConfig; } 

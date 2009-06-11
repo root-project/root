@@ -36,7 +36,8 @@ namespace ROOT {
          kSimplex, 
          kCombined, 
          kMigradImproved, 
-         kScan
+         kScan, 
+         kSeek
       };
 
    }
@@ -110,10 +111,10 @@ public:
    virtual  bool Minimize(); 
 
    /// return minimum function value
-   virtual double MinValue() const { return fMinVal; } 
+   virtual double MinValue() const;  
 
    /// return expected distance reached from the minimum
-   virtual double Edm() const { return fEdm; }
+   virtual double Edm() const; 
 
    /// return  pointer to X values at the minimum 
    virtual const double *  X() const { return &fParams.front(); }
@@ -130,7 +131,7 @@ public:
 
    /// number of free variables (real dimension of the problem) 
    /// this is <= Function().NDim() which is the total 
-   virtual unsigned int NFree() const { return fNFree; }  
+   virtual unsigned int NFree() const; 
 
    /// minimizer provides error and error matrix
    virtual bool ProvidesError() const { return true; } 
@@ -143,11 +144,22 @@ public:
        The ordering of the variables is the same as in errors
    */ 
    virtual double CovMatrix(unsigned int i, unsigned int j) const { 
-      return fCovar[i + fDim* j]; 
-   }
+      return ( fCovar.size() > (i + fDim* j) ) ? fCovar[i + fDim* j] : 0; 
+ }
+
+   ///return status of covariance matrix 
+   virtual int CovMatrixStatus() const; 
+
+   ///global correlation coefficient for variable i
+   virtual double GlobalCC(unsigned int ) const; 
 
    /// minos error for variable i, return false if Minos failed
    virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp); 
+
+   /**
+      perform a full calculation of the Hessian matrix for error calculation
+    */
+   virtual bool Hesse(); 
 
    /**
       scan a parameter i around the minimum. A minimization must have been done before, 
@@ -178,15 +190,18 @@ protected:
    /// reset 
    void DoClear(); 
 
+   /// retrieve minimum parameters and errors from TMinuit
+   void RetrieveParams(); 
+
+   /// retrieve error matrix from TMinuit
+   void RetrieveErrorMatrix(); 
+
 private: 
 
    bool fUsed;
    bool fMinosRun; 
    unsigned int fDim; 
-   unsigned int fNFree;
    unsigned int fStrategy;
-   double fMinVal;
-   double fEdm; 
    std::vector<double> fParams;
    std::vector<double> fErrors;
    std::vector<double> fCovar; 

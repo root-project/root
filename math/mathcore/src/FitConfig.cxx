@@ -56,6 +56,29 @@ FitConfig::~FitConfig()
    // destructor implementation. No Op
 }
 
+FitConfig::FitConfig(const FitConfig &rhs) { 
+   // Implementation of copy constructor
+   (*this) = rhs; 
+}
+
+FitConfig & FitConfig::operator = (const FitConfig &rhs) { 
+   // Implementation of assignment operator.
+   if (this == &rhs) return *this;  // time saving self-test
+
+   fNormErrors = rhs.fNormErrors; 
+   fParabErrors = rhs.fParabErrors; 
+   fMinosErrors = rhs.fMinosErrors; 
+
+   fSettings = rhs.fSettings; 
+   fMinosParams = rhs.fMinosParams; 
+
+   fMinimizerType = rhs.fMinimizerType; 
+   fMinimAlgoType = rhs.fMinimAlgoType; 
+   fMinimizerOpts = rhs.fMinimizerOpts;
+
+   return *this;
+}
+
 void FitConfig::SetParamsSettings(unsigned int npar, const double *params, const double * vstep ) { 
    // initialize fit config from parameter values
    if (params == 0) { 

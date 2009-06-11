@@ -51,7 +51,8 @@ namespace ROOT {
               Specialized constructor exists for data up to 3 dimensions. 
 
               When the data are copying in the number of points can be set later (or re-set) using Initialize and 
-              the data are pushed in (one by one) using the Add method. 
+              the data are inserted one by one using the Add method. 
+              It is mandatory to set the size before using the Add method.  
 
              @ingroup  FitData  
 */ 

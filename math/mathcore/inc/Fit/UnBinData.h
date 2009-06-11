@@ -17,6 +17,9 @@
 #include "Fit/DataVector.h"
 #endif
 
+#ifndef ROOT_Math_Error
+#include "Math/Error.h"
+#endif
 
 
 
@@ -36,7 +39,8 @@ namespace ROOT {
               Specialized constructor exists for using external data up to 3 dimensions. 
 
               When the data are copying in the number of points can be set later (or re-set) using Initialize and 
-              the data are pushed in (one by one) using the Add method. 
+              the data are inserted one by one using the Add method. 
+              It is mandatory to set the size before using the Add method.  
 
              @ingroup  FitData  
 */ 
@@ -50,10 +54,11 @@ public :
 
    explicit UnBinData(unsigned int maxpoints = 0, unsigned int dim = 1 );
 
+
    /**
-      constructor from option and default range
+      constructor from range and default option
     */
-   explicit UnBinData (const DataOptions & opt,  unsigned int maxpoints = 0, unsigned int dim = 1);
+   explicit UnBinData (const DataRange & range,  unsigned int maxpoints = 0, unsigned int dim = 1);
 
    /**
       constructor from options and range
@@ -61,22 +66,22 @@ public :
    UnBinData (const DataOptions & opt, const DataRange & range,  unsigned int maxpoints = 0, unsigned int dim = 1 );
 
    /**
-      constructor for 1D external data
+      constructor for 1D external data (data are not copied inside)
     */
    UnBinData(unsigned int n, const double * dataX );
 
    /**
-      constructor for 2D external data
+      constructor for 2D external data (data are not copied inside)
     */
    UnBinData(unsigned int n, const double * dataX, const double * dataY );
 
    /**
-      constructor for 3D external data
+      constructor for 3D external data (data are not copied inside)
     */
    UnBinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ );
 
    /**
-      constructor for multi-dim external data
+      constructor for multi-dim external data (data are not copied inside)
       Uses as argument an iterator of a list (or vector) containing the const double * of the data
       An example could be the std::vector<const double *>::begin
     */
@@ -89,6 +94,54 @@ public :
    { 
       fDataWrapper = new DataWrapper(dim, dataItr);
    } 
+
+   /**
+      constructor for 1D data and a range (data are copied inside according to the given range)
+    */
+   UnBinData(unsigned int maxpoints, const double * dataX, const DataRange & range);
+
+   /**
+      constructor for 2D data and a range (data are copied inside according to the given range)
+    */
+   UnBinData(unsigned int maxpoints, const double * dataX, const double * dataY, const DataRange & range);
+
+   /**
+      constructor for 3D data and a range (data are copied inside according to the given range)
+    */
+   UnBinData(unsigned int maxpoints, const double * dataX, const double * dataY, const double * dataZ, const DataRange & range);
+
+   /**
+      constructor for multi-dim external data and a range (data are copied inside according to the range)
+      Uses as argument an iterator of a list (or vector) containing the const double * of the data
+      An example could be the std::vector<const double *>::begin
+    */
+   template<class Iterator> 
+   UnBinData(unsigned int maxpoints, unsigned int dim, Iterator dataItr, const DataRange & range ) : 
+      FitData( ), 
+      fDim(dim), 
+      fNPoints(0),
+      fDataVector(0),
+      fDataWrapper(0)
+   { 
+      unsigned int n = dim*maxpoints; 
+      if ( n > MaxSize() ) {
+         MATH_ERROR_MSGVAL("UnBinData","Invalid data size n - no allocation done", n );
+      }
+      else if (n > 0) { 
+         fDataVector = new DataVector(n);
+
+         // use data wrapper to get the data
+         ROOT::Fit::DataWrapper wdata(dim, dataItr); 
+         for (unsigned int i = 0; i < maxpoints; ++i) { 
+            bool isInside = true;
+            for (unsigned int icoord = 0; icoord < dim; ++icoord)  
+               isInside &= range.IsInside( wdata.Coords(i)[icoord], icoord ); 
+            if ( isInside ) Add(wdata.Coords(i)); 
+         }
+         if (fNPoints < maxpoints) (fDataVector->Data()).resize(fDim*fNPoints);
+      } 
+   }
+
 
 private: 
    /// copy constructor (private) 
@@ -150,6 +203,7 @@ public:
    void Add(double x) { 
       int index = fNPoints*PointSize(); 
       assert(fDataVector != 0);
+      assert(PointSize() == 1);
       assert (index + PointSize() <= DataSize() ); 
 
       (fDataVector->Data())[ index ] = x;
@@ -158,9 +212,40 @@ public:
    }
 
    /**
+      add 2-dim coordinate data
+   */
+   void Add(double x, double y) { 
+      int index = fNPoints*PointSize(); 
+      assert(fDataVector != 0);
+      assert(PointSize() == 2);
+      assert (index + PointSize() <= DataSize() ); 
+
+      (fDataVector->Data())[ index ] = x;
+      (fDataVector->Data())[ index+1 ] = y;
+
+      fNPoints++;
+   }
+
+   /**
+      add 3-dim coordinate data
+   */
+   void Add(double x, double y, double z) { 
+      int index = fNPoints*PointSize(); 
+      assert(fDataVector != 0);
+      assert(PointSize() == 3);
+      assert (index + PointSize() <= DataSize() ); 
+
+      (fDataVector->Data())[ index ] = x;
+      (fDataVector->Data())[ index+1 ] = y;
+      (fDataVector->Data())[ index+2 ] = z;
+
+      fNPoints++;
+   }
+
+   /**
       add multi-dim coordinate data
    */
-   void Add(double *x) { 
+   void Add(const double *x) { 
       int index = fNPoints*PointSize(); 
 
       assert(fDataVector != 0);

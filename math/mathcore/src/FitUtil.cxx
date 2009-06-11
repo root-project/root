@@ -947,7 +947,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
    if (nRejected != 0)  nPoints = n - nRejected;
 
 #ifdef DEBUG
-   std::cout << "Loglikelihood  = " << loglike << " np = " << nPoints << std::endl;
+   std::cout << "Loglikelihood  = " << loglike << std::endl;
 #endif
    
    return loglike;  

@@ -95,7 +95,7 @@ public:
     */
 #ifdef LATER
    template<class Function>
-   IntegratorMultiDim(Function &f, unsigned int dim, IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
+   IntegratorMultiDim(const Function & f, unsigned int dim, IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
       SetFunction(f, dim); 
    }
@@ -141,7 +141,7 @@ public:
        The dimension of the function is in this case required 
    */
    template <class Function> 
-   void SetFunction(Function f, unsigned int dim) { 
+   void SetFunction(const Function & f, unsigned int dim) { 
       ROOT::Math::WrappedMultiFunction<Function> wf(f, dim); 
       SetFunction(wf);
    }

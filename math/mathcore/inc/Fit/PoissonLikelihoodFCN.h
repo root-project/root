@@ -94,13 +94,13 @@ private:
 public: 
 
    /// clone the function (need to return Base for Windows)
-   BaseFunction * Clone() const { return new  PoissonLikelihoodFCN(fData,fFunc); }
+   virtual BaseFunction * Clone() const { return new  PoissonLikelihoodFCN(fData,fFunc); }
 
    // effective points used in the fit
-   unsigned int NFitPoints() const { return fNEffPoints; }
+   virtual unsigned int NFitPoints() const { return fNEffPoints; }
 
    /// i-th likelihood element and its gradient  
-   double DataElement(const double * x, unsigned int i, double * g) const { 
+   virtual double DataElement(const double * x, unsigned int i, double * g) const { 
       return FitUtil::EvaluatePoissonBinPdf(fFunc, fData, x, i, g); 
    }
 
@@ -128,7 +128,7 @@ private:
    /**
       Evaluation of the  function (required by interface)
     */
-   double DoEval (const double * x) const { 
+   virtual double DoEval (const double * x) const { 
       this->UpdateNCalls();
       return FitUtil::EvaluatePoissonLogL(fFunc, fData, x, fNEffPoints); 
    } 

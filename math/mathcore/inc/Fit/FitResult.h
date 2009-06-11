@@ -21,6 +21,7 @@
 #endif
 
 #include <vector>
+#include <map>
 #include <string>
 #include <cmath>
 #include <cassert>
@@ -58,9 +59,10 @@ public:
    FitResult (); 
 
    /**
-      Construct from a Minimizer instance 
+      Construct from a Minimizer instance after fitting
+      Run also Minos if requested from the configuration
     */
-   FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, const IModelFunction * f, bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction * chi2func = 0, bool minosErr = false, unsigned int ncalls = 0);
+   FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, const IModelFunction * f, bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction * chi2func = 0, unsigned int ncalls = 0);
 
    /** 
       Copy constructor. 
@@ -80,6 +82,13 @@ public:
 
 public: 
 
+   /**
+      Update the fit result with a new minimization status
+      To be run only if same fit is performed with same configuration 
+      Note that in this case MINOS is not re-run. If one wants to run also MINOS
+      a new result must be created 
+    */
+   bool Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned int ncalls = 0 );
 
    /** minimization quantities **/
 
@@ -139,18 +148,14 @@ public:
       return (i < fErrors.size() ) ? fErrors[i] : 0; 
    } 
 
-//    /// Minos  Errors 
-//    const std::vector<std::pair<double, double> > MinosErrors() const; 
+   /// set the Minos errors for parameter i (called by the Fitter class when running Minos)
+   void SetMinosError(unsigned int i, double elow, double eup);
 
    /// lower Minos error
-   double LowerError(unsigned int i) const { 
-      return (i < fMinosErrors.size() ) ? fMinosErrors[i].first : fErrors[i]; 
-   } 
+   double LowerError(unsigned int i) const;
 
    /// upper Minos error
-   double UpperError(unsigned int i) const { 
-      return (i < fMinosErrors.size() ) ? fMinosErrors[i].second : fErrors[i]; 
-   }
+   double UpperError(unsigned int i) const;
 
    /// parameter global correlation coefficient 
    double GlobalCC(unsigned int i) const { 
@@ -241,9 +246,6 @@ public:
    /// flag to chek if errors are normalized
    bool NormalizedErrors() { return fNormalized; }
 
-   /// get confidence level given an array of x data points
-
-
    /// print the result and optionaly covariance matrix and correlations
    void Print(std::ostream & os, bool covmat = false) const;
 
@@ -260,6 +262,7 @@ public:
    std::string GetParameterName(unsigned int ipar) const;
 
 protected: 
+
 
 
 private: 
@@ -289,7 +292,7 @@ private:
    std::vector<double>         fErrors;  // errors 
    std::vector<double>         fCovMatrix;  // covariance matrix (size is npar*(npar+1)/2) where npar is total parameters
    std::vector<double>         fGlobalCC;   // global Correlation coefficient
-   std::vector<std::pair<double,double> > fMinosErrors;   // vector contains the two Minos errors 
+   std::map<unsigned int, std::pair<double,double> > fMinosErrors;   // map contains the two Minos errors
    std::string fMinimType;              // string indicating type of minimizer
    std::vector<std::string> fParNames;  // parameter names (only with FCN only fites, when fFitFunc=0)
 

@@ -205,18 +205,22 @@ void MnUserParameterState::Add(const std::string & name, double val) {
 
 void MnUserParameterState::Fix(unsigned int e) {
    // fix parameter e (external index)
-   unsigned int i = IntOfExt(e);
-   if(fCovarianceValid) {
-      fCovariance = MnCovarianceSqueeze()(fCovariance, i);
-      fIntCovariance = MnCovarianceSqueeze()(fIntCovariance, i);
+   if(!Parameter(e).IsFixed() && !Parameter(e).IsConst()) {
+      unsigned int i = IntOfExt(e);
+      if(fCovarianceValid) {
+         fCovariance = MnCovarianceSqueeze()(fCovariance, i);
+         fIntCovariance = MnCovarianceSqueeze()(fIntCovariance, i);
+      }
+      fIntParameters.erase(fIntParameters.begin()+i, fIntParameters.begin()+i+1);  
    }
-   fIntParameters.erase(fIntParameters.begin()+i, fIntParameters.begin()+i+1);  
    fParameters.Fix(e);
    fGCCValid = false;
 }
 
 void MnUserParameterState::Release(unsigned int e) {
    // release parameter e (external index)
+   // no-op if parameter is const
+   if (Parameter(e).IsConst() ) return;
    fParameters.Release(e);
    fCovarianceValid = false;
    fGCCValid = false;

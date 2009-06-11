@@ -246,7 +246,6 @@ const MinuitParameter& MnUserTransformation::Parameter(unsigned int n) const {
 bool MnUserTransformation::Add(const std::string & name, double val, double err) {
    // add a new unlimited parameter giving name, value and err (step size)
    // return false if parameter already exists
-   // return false if parameter already exists
    if (std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name)) != fParameters.end() ) 
       return false; 
    fExtOfInt.push_back(fParameters.size());
@@ -272,6 +271,7 @@ bool MnUserTransformation::Add(const std::string & name, double val) {
    if (std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name)) != fParameters.end() ) 
       return false; 
    fCache.push_back(val);
+   // costant parameter - do not add in list of internals (fExtOfInt)
    fParameters.push_back(MinuitParameter(fParameters.size(), name, val));
    return true;
 }
@@ -280,8 +280,8 @@ void MnUserTransformation::Fix(unsigned int n) {
   // fix parameter n (external index)
    assert(n < fParameters.size()); 
    std::vector<unsigned int>::iterator iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), n);
-   assert(iind != fExtOfInt.end());
-   fExtOfInt.erase(iind, iind+1);
+   if (iind != fExtOfInt.end())
+      fExtOfInt.erase(iind, iind+1);
    fParameters[n].Fix();
 }
 
@@ -289,9 +289,10 @@ void MnUserTransformation::Release(unsigned int n) {
    // release parameter n (external index)
    assert(n < fParameters.size()); 
    std::vector<unsigned int>::const_iterator iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), n);
-   assert(iind == fExtOfInt.end());
-   fExtOfInt.push_back(n);
-   std::sort(fExtOfInt.begin(), fExtOfInt.end());
+   if (iind == fExtOfInt.end() ) { 
+      fExtOfInt.push_back(n);
+      std::sort(fExtOfInt.begin(), fExtOfInt.end());
+   }
    fParameters[n].Release();
 }
 

@@ -171,6 +171,10 @@ public:
    virtual double CovMatrix(unsigned int i, unsigned int j) const;  
 
    /**
+      return the status of the covariance matrix 
+    */
+   virtual int CovMatrixStatus() const;
+   /**
       return correlation coefficient between variable i and j.
       If the variable is fixed or const the return value is zero
     */
@@ -203,9 +207,16 @@ public:
    virtual bool Contour(unsigned int i, unsigned int j, unsigned int & npoints, double *xi, double *xj); 
 
    
+   /**
+      perform a full calculation of the Hessian matrix for error calculation
+      If a valid minimum exists the calculation is done on theminimum point otherwise is performed 
+      in the current set values of parameters
+    */
+   virtual bool Hesse();
+
+
    /// return reference to the objective function
    ///virtual const ROOT::Math::IGenFunction & Function() const; 
-
 
 protected: 
    
