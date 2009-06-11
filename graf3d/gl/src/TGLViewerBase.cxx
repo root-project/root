@@ -213,19 +213,15 @@ void TGLViewerBase::DeleteOverlayElements(TGLOverlayElement::ERole role)
 {
    // Delete overlay elements.
 
-   OverlayElmVec_i i = fOverlay.begin();
-   while (i != fOverlay.end())
+   OverlayElmVec_t ovl;
+   fOverlay.swap(ovl);
+
+   for (OverlayElmVec_i i = ovl.begin(); i != ovl.end(); ++i)
    {
       if (role == TGLOverlayElement::kAll || (*i)->GetRole() == role)
-      {
-         OverlayElmVec_i j = i++;
-         delete *j;
-         fOverlay.erase(j);
-      }
+         delete *i;
       else
-      {
-         ++i;  
-      }
+         fOverlay.push_back(*i);
    }
 
    Changed();

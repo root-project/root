@@ -219,10 +219,12 @@ void TGLViewer::InitSecondaryObjects()
    // Common initialization.
 
    fLightSet = new TGLLightSet;
-   fClipSet  = new TGLClipSet;  fOverlay.push_back(fClipSet);
+   fClipSet  = new TGLClipSet;
+   AddOverlayElement(fClipSet);
 
-   fSelectedPShapeRef = new TGLManipSet; fOverlay.push_back(fSelectedPShapeRef);
+   fSelectedPShapeRef = new TGLManipSet;
    fSelectedPShapeRef->SetDrawBBox(kTRUE);
+   AddOverlayElement(fSelectedPShapeRef);
 
    fLightColorSet.StdLightBackground();
    if (fgUseDefaultColorSetForNewViewers) {
@@ -249,9 +251,7 @@ TGLViewer::~TGLViewer()
    // Destroy viewer object.
 
    delete fLightSet;
-   delete fClipSet;
-   delete fSelectedPShapeRef;
-   delete fCameraOverlay;
+   // fClipSet, fSelectedPShapeRef and fCameraOverlay deleted via overlay.
 
    delete fContextMenu;
    delete fRedrawTimer;
