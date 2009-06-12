@@ -111,6 +111,19 @@ bool GSLMinimizer::SetVariable(unsigned int ivar, const std::string & name, doub
    return true; 
 }
 
+bool GSLMinimizer::SetLowerLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double ) { 
+   MATH_WARN_MSGVAL("GSLMinimizer::SetLowerLimitedVariable","Ignore lower limit on variable ",ivar);
+   return SetVariable(ivar, name, val, step); 
+}
+bool GSLMinimizer::SetUpperLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double ) { 
+   MATH_WARN_MSGVAL("GSLMinimizer::SetUpperLimitedVariable","Ignore upper limit on variable ",ivar);
+   return SetVariable(ivar, name, val, step); 
+}
+bool GSLMinimizer::SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double, double ) { 
+   MATH_WARN_MSGVAL("GSLMinimizer::SetLimitedVariable","Ignore bounds on variable ",ivar);
+   return SetVariable(ivar, name, val, step); 
+}
+
 bool GSLMinimizer::SetVariableValue(unsigned int ivar, double val) { 
    // set variable value in minimizer 
    // no transformation implemented - so far

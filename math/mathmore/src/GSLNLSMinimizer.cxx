@@ -70,6 +70,20 @@ bool GSLNLSMinimizer::SetVariable(unsigned int ivar, const std::string & name, d
    return true; 
 }
 
+bool GSLNLSMinimizer::SetLowerLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double ) { 
+   MATH_WARN_MSGVAL("GSLNLSMinimizer::SetLowerLimitedVariable","Ignore lower limit on variable ",ivar);
+   return SetVariable(ivar, name, val, step); 
+}
+bool GSLNLSMinimizer::SetUpperLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double ) { 
+   MATH_WARN_MSGVAL("GSLNLSMinimizer::SetUpperLimitedVariable","Ignore upper limit on variable ",ivar);
+   return SetVariable(ivar, name, val, step); 
+}
+bool GSLNLSMinimizer::SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double, double ) { 
+   MATH_WARN_MSGVAL("GSLNLSMinimizer::SetLimitedVariable","Ignore bounds on variable ",ivar);
+   return SetVariable(ivar, name, val, step); 
+}
+
+
 bool GSLNLSMinimizer::SetVariableValue(unsigned int ivar, double val) { 
    // set variable value in minimizer 
    // no transformation implemented - so far

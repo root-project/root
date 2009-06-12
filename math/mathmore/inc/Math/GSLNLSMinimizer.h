@@ -187,13 +187,13 @@ public:
    /// set free variable 
    virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step); 
 
-#ifdef LATER
    /// set lower limit variable  (override if minimizer supports them )
    virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower );
    /// set upper limit variable (override if minimizer supports them )
    virtual bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ); 
    /// set upper/lower limited variable (override if minimizer supports them )
    virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */); 
+#ifdef LATER
    /// set fixed variable (override if minimizer supports them )
    virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
 #endif

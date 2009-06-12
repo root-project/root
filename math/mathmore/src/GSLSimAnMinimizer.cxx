@@ -12,7 +12,7 @@
 
 #include "Math/GSLSimAnMinimizer.h"
 #include "Math/WrappedParamFunction.h"
-
+#include "Math/Error.h"
 
 #include <iostream> 
 #include <cassert>
@@ -67,6 +67,20 @@ bool GSLSimAnMinimizer::SetVariable(unsigned int ivar, const std::string & name,
    }
    return true; 
 }
+
+bool GSLSimAnMinimizer::SetLowerLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double ) { 
+   MATH_WARN_MSGVAL("GSLSimAnMinimizer::SetLowerLimitedVariable","Ignore lower limit on variable ",ivar);
+   return SetVariable(ivar, name, val, step); 
+}
+bool GSLSimAnMinimizer::SetUpperLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double ) { 
+   MATH_WARN_MSGVAL("GSLSimAnMinimizer::SetUpperLimitedVariable","Ignore upper limit on variable ",ivar);
+   return SetVariable(ivar, name, val, step); 
+}
+bool GSLSimAnMinimizer::SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double, double ) { 
+   MATH_WARN_MSGVAL("GSLSimAnMinimizer::SetLimitedVariable","Ignore bounds on variable ",ivar);
+   return SetVariable(ivar, name, val, step); 
+}
+
 
 
 bool GSLSimAnMinimizer::SetFixedVariable(unsigned int ivar, const std::string & name, double val) { 
