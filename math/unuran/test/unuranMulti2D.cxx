@@ -18,6 +18,8 @@
 #include "TApplication.h"
 #include "TError.h"
 
+#include "Math/Functor.h"
+
 // #include "Math/ProbFunc.h"
 // #include "Math/DistFunc.h"
 
@@ -174,6 +176,10 @@ int unuranMulti2D() {
 
    // create multi-dim distribution
    TUnuranMultiContDist dist(f); 
+
+   // use directly function interfaces
+   //ROOT::Math::Functor f2( *f, 2);
+   //TUnuranMultiContDist dist(f2); 
 
    TRandom3 r; 
  

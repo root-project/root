@@ -25,6 +25,7 @@
 #include "TGraph.h"
 #endif
 
+#include "Math/Functor.h"
 #include "Math/DistFunc.h"
 #include "Math/Util.h"
 
@@ -265,7 +266,13 @@ int testPoisson() {
      }
  
      f->SetParameter(0,mu);
+
+#ifdef USE_FUNCTOR
+     ROOT::Math::Functor1D f2(f);
+     TUnuranDiscrDist dist2 = TUnuranDiscrDist(f2);
+#else 
      TUnuranDiscrDist dist2 = TUnuranDiscrDist(f);
+#endif
 
      // dari method (needs mode and pdf sum)
      dist2.SetMode(int(mu) );

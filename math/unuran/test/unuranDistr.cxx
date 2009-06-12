@@ -149,7 +149,6 @@ int unuranDistr() {
    gErrorIgnoreLevel = 1001; 
 
 
-   gSystem->Load("libMathCore");
    gSystem->Load("libUnuran");
 
    // simple test of unuran
@@ -166,7 +165,7 @@ int unuranDistr() {
    TF1 * f = new TF1("n",norm,-10,10,1); 
    f->SetParameters(par); 
 
-   TF1 * fc = new TF1("c",cdf,-10,0,1); 
+   TF1 * fc = new TF1("c",cdf,0,1,1); 
    fc->SetParameters(par); 
 
    // tester class
@@ -224,6 +223,7 @@ int unuranDistr() {
    } 
    else 
       iret |= t.testUnuran(unr); 
+   
 
    // ninv (needs cdf, pdf is an option) 
    ret = unr.Init(dist,"ninv"); 

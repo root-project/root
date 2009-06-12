@@ -17,6 +17,11 @@
 #include "TUnuranBaseDist.h"
 #endif
 
+#ifndef ROOT_Math_IFunction
+#include "Math/IFunction.h"
+#endif
+
+
 
 #include <vector>
 
@@ -57,9 +62,14 @@ public:
 
 
    /** 
-      Destructor (no operations)
+      Constructor as before but from a generic function object interface for multi-dim functions
    */ 
-   virtual ~TUnuranMultiContDist () {}
+   TUnuranMultiContDist (const ROOT::Math::IMultiGenFunction & pdf, bool isLogPdf = false); 
+
+   /** 
+      Destructor 
+   */ 
+   virtual ~TUnuranMultiContDist ();
 
 
    /** 
@@ -75,14 +85,14 @@ public:
    /**
       Clone (required by base class)
     */
-   TUnuranMultiContDist * Clone() const { return new TUnuranMultiContDist(*this); } 
+   virtual TUnuranMultiContDist * Clone() const { return new TUnuranMultiContDist(*this); } 
 
 
    /**
       get number of dimension of the distribution
    */
    unsigned int NDim() const { 
-      return fDim;
+      return fPdf->NDim(); 
    }
 
    /**
@@ -94,15 +104,15 @@ public:
    */
    void SetDomain(const double *xmin, const double *xmax)  { 
       if (xmin == 0 || xmax == 0) return; 
-      fXmin = std::vector<double>(xmin,xmin+fDim); 
-      fXmax = std::vector<double>(xmax,xmax+fDim); 
+      fXmin = std::vector<double>(xmin,xmin+NDim()); 
+      fXmax = std::vector<double>(xmax,xmax+NDim()); 
    }
 
    /**
       set the mode of the distribution (coordinates of the distribution maximum values)
    */
    void SetMode(double * x) { 
-      fMode = std::vector<double>(x,x+fDim);
+      fMode = std::vector<double>(x,x+NDim());
    }
 
    /**
@@ -110,14 +120,14 @@ public:
    */
    const double * GetLowerDomain() const { 
       if (fXmin.size() == 0 || (  fXmin.size() != fXmax.size() )  ) return 0; 
-      return &fXmin[0];;
+      return &fXmin[0];
    }
    /**
       get the distribution upper domain values. Return a null pointer if domain is not defined 
    */
    const double * GetUpperDomain() const { 
       if (fXmax.size() == 0 || (  fXmin.size() != fXmax.size() )  ) return 0; 
-      return &fXmax[0];;
+      return &fXmax[0];
    }
 
 
@@ -155,14 +165,15 @@ public:
 
 private: 
 
-   mutable TF1 * fPdf;             //pointer to the pdf
-   unsigned int fDim;              //number of function dimension
+   const ROOT::Math::IMultiGenFunction  * fPdf;    //pointer to the pdf
 
    std::vector<double> fXmin;      //vector with lower x values of the domain
    std::vector<double> fXmax;      //vector with upper x values of the domain 
    std::vector<double> fMode;      //vector representing the x coordinates of the maximum of the pdf 
 
    bool fIsLogPdf;                 //flag to control if function pointer represent log of pdf
+   bool  fOwnFunc;                // flag to indicate if class manages the function pointers
+
 
    ClassDef(TUnuranMultiContDist,1)  //Wrapper class for multi dimensional continuous distribution
 

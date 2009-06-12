@@ -18,8 +18,12 @@
 #include "TUnuranBaseDist.h"
 #endif
 
+#ifndef ROOT_Math_IFunctionfwd
+#include "Math/IFunctionfwd.h"
+#endif
 
 class TF1;
+
 
 
 //______________________________________________________________
@@ -60,9 +64,15 @@ public:
    TUnuranContDist (TF1 * pdf = 0, TF1 * deriv = 0, bool isLogPdf = false );
 
    /** 
-      Destructor (no operations)
+      Constructor as before but from a generic function object interface for one-dim functions
    */ 
-   virtual ~TUnuranContDist () {}
+   TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * dpdf = 0, bool isLogPdf = false); 
+
+
+   /** 
+      Destructor 
+   */ 
+   virtual ~TUnuranContDist ();
 
 
    /** 
@@ -78,7 +88,7 @@ public:
    /**
       Clone (required by base class)
     */
-   TUnuranContDist * Clone() const { return new TUnuranContDist(*this); } 
+   virtual TUnuranContDist * Clone() const { return new TUnuranContDist(*this); } 
 
 
    /**
@@ -86,8 +96,12 @@ public:
       and is not set it is then estimated using numerical 
       integration from the pdf
    */
-   void SetCdf(TF1 *  cdf) { fCdf = cdf; }
+   void SetCdf(TF1 *  cdf); 
 
+   /**
+      set cdf distribution using a generic function interface
+   */
+   void SetCdf(const ROOT::Math::IGenFunction & cdf);
 
    /**
       Set the distribution domain. If min < max a domain is defined otherwise is undefined
@@ -173,19 +187,23 @@ protected:
 
 private: 
 
-   mutable TF1 * fPdf;        //pointer to the pdf
-   mutable TF1 * fDPdf;       //pointer to the derivative of the pdf
-   mutable TF1 * fCdf;        //pointer to the cdf
+
+   const ROOT::Math::IGenFunction * fPdf;         // pointer to the pdf 
+   const ROOT::Math::IGenFunction * fDPdf;       //pointer to the derivative of the pdf
+   const ROOT::Math::IGenFunction * fCdf;       //pointer to the cdf (cumulative dist.)
+
    double fXmin;            //lower value of the domain 
    double fXmax;            //upper value of the domain
    double fMode;            //mode of the distribution
    double fArea;            //area below pdf
+
    // flags
    bool  fIsLogPdf;         //flag to control if function pointer represent log of pdf
    bool  fHasDomain;        //flag to control if distribution has a defined domain (otherwise is [-inf,+inf]
    bool  fHasMode;          //flag to control if distribution has a pre-computed mode
    bool  fHasArea;          //flag to control if distribution has a pre-computed area below the pdf
-   mutable double fX[1];         //! cached vector for using TF1::EvalPar
+   bool  fOwnFunc;          // flag to indicate if class manages the function pointers
+   //mutable double fX[1];         //! cached vector for using TF1::EvalPar
 
    ClassDef(TUnuranContDist,1)  //Wrapper class for one dimensional continuous distribution
 
