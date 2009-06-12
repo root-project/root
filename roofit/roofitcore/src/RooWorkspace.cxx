@@ -1698,47 +1698,47 @@ void RooWorkspace::Streamer(TBuffer &R__b)
      map<RooAbsArg*,list<RooAbsArg*> > extClients, extValueClients, extShapeClients ;
 
      TIterator* iter = _allOwnedNodes.createIterator() ;
-     RooAbsArg* arg ;
-     while((arg=(RooAbsArg*)iter->Next())) {
+     RooAbsArg* tmparg ;
+     while((tmparg=(RooAbsArg*)iter->Next())) {
 
        // Loop over client list of this arg
-       TIterator* clientIter = arg->_clientList.MakeIterator() ;
+       TIterator* clientIter = tmparg->_clientList.MakeIterator() ;
        RooAbsArg* client ;
        while((client=(RooAbsArg*)clientIter->Next())) {
 	 if (!_allOwnedNodes.containsInstance(*client)) {
-	   while(arg->_clientList.refCount(client)>0) {
-	     arg->_clientList.Remove(client) ;
-	     extClients[arg].push_back(client) ;
+	   while(tmparg->_clientList.refCount(client)>0) {
+	     tmparg->_clientList.Remove(client) ;
+	     extClients[tmparg].push_back(client) ;
 	   }
 	 }
        }
        delete clientIter ;
 
        // Loop over value client list of this arg
-       TIterator* vclientIter = arg->_clientListValue.MakeIterator() ;
+       TIterator* vclientIter = tmparg->_clientListValue.MakeIterator() ;
        RooAbsArg* vclient ;
        while((vclient=(RooAbsArg*)vclientIter->Next())) {
 	 if (!_allOwnedNodes.containsInstance(*vclient)) {
-	   cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << arg->GetName() 
-				   << " has external value client link to " << vclient << " (" << vclient->GetName() << ") with ref count " << arg->_clientListValue.refCount(vclient) << endl ;
-	   while(arg->_clientListValue.refCount(vclient)>0) {
-	     arg->_clientListValue.Remove(vclient) ;
-	     extValueClients[arg].push_back(vclient) ;
+	   cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName() 
+				   << " has external value client link to " << vclient << " (" << vclient->GetName() << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl ;
+	   while(tmparg->_clientListValue.refCount(vclient)>0) {
+	     tmparg->_clientListValue.Remove(vclient) ;
+	     extValueClients[tmparg].push_back(vclient) ;
 	   }
 	 }
        }
        delete vclientIter ;
 
        // Loop over shape client list of this arg
-       TIterator* sclientIter = arg->_clientListShape.MakeIterator() ;
+       TIterator* sclientIter = tmparg->_clientListShape.MakeIterator() ;
        RooAbsArg* sclient ;
        while((sclient=(RooAbsArg*)sclientIter->Next())) {
 	 if (!_allOwnedNodes.containsInstance(*sclient)) {
-	   cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << arg->GetName() 
-				 << " has external shape client link to " << sclient << " (" << sclient->GetName() << ") with ref count " << arg->_clientListShape.refCount(sclient) << endl ;
-	   while(arg->_clientListShape.refCount(sclient)>0) {
-	     arg->_clientListShape.Remove(sclient) ;
-	     extShapeClients[arg].push_back(sclient) ;
+	   cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName() 
+				 << " has external shape client link to " << sclient << " (" << sclient->GetName() << ") with ref count " << tmparg->_clientListShape.refCount(sclient) << endl ;
+	   while(tmparg->_clientListShape.refCount(sclient)>0) {
+	     tmparg->_clientListShape.Remove(sclient) ;
+	     extShapeClients[tmparg].push_back(sclient) ;
 	   }
 	 }
        }
@@ -1751,21 +1751,22 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 
      // Reinstate clients here
 
-     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iter = extClients.begin() ; iter!=extClients.end() ; iter++) {
-       for (list<RooAbsArg*>::iterator citer = iter->second.begin() ; citer!=iter->second.end() ; citer++) {
-	 iter->first->_clientList.Add(*citer) ;
+     
+     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extClients.begin() ; iterx!=extClients.end() ; iterx++) {
+       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; citer++) {
+	 iterx->first->_clientList.Add(*citer) ;
        }
      }
 
-     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iter = extValueClients.begin() ; iter!=extValueClients.end() ; iter++) {
-       for (list<RooAbsArg*>::iterator citer = iter->second.begin() ; citer!=iter->second.end() ; citer++) {
-	 iter->first->_clientListValue.Add(*citer) ;
+     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extValueClients.begin() ; iterx!=extValueClients.end() ; iterx++) {
+       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; citer++) {
+	 iterx->first->_clientListValue.Add(*citer) ;
        }
      }
 
-     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iter = extShapeClients.begin() ; iter!=extShapeClients.end() ; iter++) {
-       for (list<RooAbsArg*>::iterator citer = iter->second.begin() ; citer!=iter->second.end() ; citer++) {
-	 iter->first->_clientListShape.Add(*citer) ;
+     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iterx = extShapeClients.begin() ; iterx!=extShapeClients.end() ; iterx++) {
+       for (list<RooAbsArg*>::iterator citer = iterx->second.begin() ; citer!=iterx->second.end() ; citer++) {
+	 iterx->first->_clientListShape.Add(*citer) ;
        }
      }
 

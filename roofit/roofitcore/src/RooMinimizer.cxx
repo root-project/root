@@ -596,11 +596,11 @@ RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
     std::vector<double> globalCC;
     TMatrixDSym corrs(_theFitter->Result().Parameters().size()) ;
     TMatrixDSym covs(_theFitter->Result().Parameters().size()) ;
-    for (UInt_t i=0; i<_theFitter->Result().Parameters().size(); i++) {
-      globalCC.push_back(_theFitter->Result().GlobalCC(i));
+    for (UInt_t ic=0; ic<_theFitter->Result().Parameters().size(); ic++) {
+      globalCC.push_back(_theFitter->Result().GlobalCC(ic));
       for (UInt_t ii=0; ii<_theFitter->Result().Parameters().size(); ii++) {
-	corrs(i,ii) = _theFitter->Result().Correlation(i,ii);
-	covs(i,ii) = _theFitter->Result().CovMatrix(i,ii);
+	corrs(ic,ii) = _theFitter->Result().Correlation(ic,ii);
+	covs(ic,ii) = _theFitter->Result().CovMatrix(ic,ii);
       }
     }
     fitRes->fillCorrMatrix(globalCC,corrs,covs) ;
@@ -829,11 +829,11 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
   std::vector<double> globalCC;
   TMatrixDSym corrs(_theFitter->Result().Parameters().size()) ;
   TMatrixDSym covs(_theFitter->Result().Parameters().size()) ;
-  for (UInt_t i=0; i<_theFitter->Result().Parameters().size(); i++) {
-    globalCC.push_back(_theFitter->Result().GlobalCC(i));
+  for (UInt_t ic=0; ic<_theFitter->Result().Parameters().size(); ic++) {
+    globalCC.push_back(_theFitter->Result().GlobalCC(ic));
     for (UInt_t ii=0; ii<_theFitter->Result().Parameters().size(); ii++) {
-      corrs(i,ii) = _theFitter->Result().Correlation(i,ii);
-      covs(i,ii) = _theFitter->Result().CovMatrix(i,ii);
+      corrs(ic,ii) = _theFitter->Result().Correlation(ic,ii);
+      covs(ic,ii) = _theFitter->Result().CovMatrix(ic,ii);
     }
   }
   res->fillCorrMatrix(globalCC,corrs,covs) ;

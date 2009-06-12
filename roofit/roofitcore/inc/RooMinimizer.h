@@ -66,7 +66,7 @@ public:
   void setPrintEvalErrors(Int_t numEvalErrors) { _fcn->SetPrintEvalErrors(numEvalErrors); }
   void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; _fcn->SetVerbose(flag); }
   void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
-  Bool_t setLogFile(const char* logfile=0) { return _fcn->SetLogFile(logfile); }
+  Bool_t setLogFile(const char* logf=0) { return _fcn->SetLogFile(logf); }
 
   void setMinimizerType(const char* type) ;
 
