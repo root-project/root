@@ -908,9 +908,24 @@ void TProfile2D::GetStats(Double_t *stats) const
       Double_t x,y;
       for (bin=0;bin<9;bin++) stats[bin] = 0;
       if (!fBinEntries.fArray) return;
-      for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
+      Int_t firstBinX = fXaxis.GetFirst();
+      Int_t lastBinX  = fXaxis.GetLast();
+      Int_t firstBinY = fYaxis.GetFirst();
+      Int_t lastBinY  = fYaxis.GetLast();
+      // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
+      if (fgStatOverflows) {
+        if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinX == 1) firstBinX = 0;
+            if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
+         }
+         if ( !fYaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinY == 1) firstBinY = 0;
+            if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
+         }
+      }
+      for (biny = firstBinY; biny <= lastBinY; biny++) {
          y = fYaxis.GetBinCenter(biny);
-         for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+         for (binx = firstBinX; binx <= lastBinX; binx++) {
             bin = GetBin(binx,biny);
             w         = fBinEntries.fArray[bin];
             w2        = (fBinSumw2.fN ? fBinSumw2.fArray[bin] : w*w );  

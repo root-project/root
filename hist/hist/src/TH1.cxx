@@ -2153,12 +2153,6 @@ void TH1::Divide(TF1 *f1, Double_t c1)
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
 
-//   - Add statistics
-   Double_t nEntries = fEntries;
-   Double_t s1[10];
-   Int_t i;
-   for (i=0;i<10;i++) {s1[i] = 0;}
-   PutStats(s1);
 
    SetMinimum();
    SetMaximum();
@@ -2196,7 +2190,8 @@ void TH1::Divide(TF1 *f1, Double_t c1)
          }
       }
    }
-   SetEntries(nEntries);
+   ResetStats(); 
+   SetEntries( GetEffectiveEntries() );
 }
 
 //______________________________________________________________________________
@@ -2246,9 +2241,6 @@ void TH1::Divide(const TH1 *h1)
 //    Create Sumw2 if h1 has Sumw2 set
    if (fSumw2.fN == 0 && h1->GetSumw2N() != 0) Sumw2();
 
-//   - Reset statistics
-   Double_t nEntries = fEntries;
-   fEntries = fTsumw = 0;
 
 //    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
 //    would resize the axis limits!
@@ -2266,7 +2258,6 @@ void TH1::Divide(const TH1 *h1)
             if (c1) w = c0/c1;
             else    w = 0;
             SetBinContent(bin,w);
-            fEntries++;
             if (fSumw2.fN) {
                Double_t e0 = GetBinError(bin);
                Double_t e1 = h1->GetBinError(bin);
@@ -2277,10 +2268,8 @@ void TH1::Divide(const TH1 *h1)
          }
       }
    }
-   Double_t s[kNstat];
-   GetStats(s);
-   PutStats(s);
-   SetEntries(nEntries);
+   ResetStats(); 
+   SetEntries( GetEffectiveEntries() );
 }
 
 
@@ -2354,10 +2343,6 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
 //    Create Sumw2 if h1 or h2 have Sumw2 set
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
 
-//   - Reset statistics
-   Double_t nEntries = fEntries;
-   fEntries = fTsumw = 0;
-
    SetMinimum();
    SetMaximum();
 
@@ -2379,7 +2364,6 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
             if (b2) w = c1*b1/(c2*b2);
             else    w = 0;
             SetBinContent(bin,w);
-            fEntries++;
             if (fSumw2.fN) {
                Double_t e1 = h1->GetBinError(bin);
                Double_t e2 = h2->GetBinError(bin);
@@ -2405,12 +2389,12 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
          }
       }
    }
-   Double_t s[kNstat];
-   GetStats(s);
-   PutStats(s);
-   if (nEntries == 0) nEntries = h1->GetEntries();
-   if (nEntries == 0) nEntries = 1;
-   SetEntries(nEntries);
+   ResetStats(); 
+   if (binomial)  
+      // in case of binomial division use denominator for number of entries
+      SetEntries ( h2->GetEntries() ); 
+   else 
+      SetEntries( GetEffectiveEntries() );
 }
 
 //______________________________________________________________________________
@@ -3117,15 +3101,28 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //      Note that option "I" gives better results but is slower.
 //
 //
-//      Changing the fitting function
+//      Changing the fitting objective function
 //      =============================
-//     By default the fitting function H1FitChisquare is used.
+//     By default a chi square function is used for fitting. When option "L" (or "LL") is used 
+//     a Poisson likelihood function (see note below) is used. 
+//     The functions are defined in the header Fit/Chi2Func.h or Fit/PoissonLikelihoodFCN and they are implemented 
+//     using the routines FitUtil::EvaluateChi2 or FitUtil::EvaluatePoissonLogL in the file math/mathcore/src/FitUtil.cxx.
 //     To specify a User defined fitting function, specify option "U" and
 //     call the following functions:
 //       TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction)
 //     where MyFittingFunction is of type:
 //     extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 //
+//     Likelihood Fits
+//     =================
+//     When using option "L" a likelihood fit is used instead of the default chi2 square fit.
+//     The likelihood is built assuming a Poisson probability density function for each bin.
+//     This method can then be used only when the bin content represents counts (i.e. errors are  = sqrt(N) ).
+//     The likelihood method has the advantage of treating correctly the empty bins and use them in the fit procedure.
+//     In the chi2 method the empty bins are skipped and not considered in the fit.
+//     The likelihood method, although a bit slower, it is the recommended method in case of low bin statistics, where 
+//     the chi2 method may give incorrect results. 
+//     
 //      Fitting a histogram of dimension N with a function of dimension N-1
 //      ===================================================================
 //     It is possible to fit a TH2 with a TF1 or a TH3 with a TF2.
@@ -3240,6 +3237,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+   // implementation of Fit method is in file hist/src/HFitImpl.cxx
    return DoFit( f1 , option , goption, xxmin, xxmax); 
 }
 
@@ -4830,13 +4828,7 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
 
-   //   - Add statistics
-   Double_t nEntries = fEntries;
-   Double_t s1[10];
-   Int_t i;
-   for (i=0;i<10;i++) {s1[i] = 0;}
-   PutStats(s1);
-
+   // reset min-maximum
    SetMinimum();
    SetMaximum();
 
@@ -4870,7 +4862,8 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
          }
       }
    }
-   SetEntries(nEntries);
+   ResetStats(); 
+   SetEntries( GetEffectiveEntries() );
 }
 
 //______________________________________________________________________________
@@ -4918,10 +4911,7 @@ void TH1::Multiply(const TH1 *h1)
    //    Create Sumw2 if h1 has Sumw2 set
    if (fSumw2.fN == 0 && h1->GetSumw2N() != 0) Sumw2();
 
-   //   - Reset statistics
-   Double_t nEntries = fEntries;
-   fEntries = fTsumw = 0;
-
+   //   - Reset min-  maximum
    SetMinimum();
    SetMaximum();
 
@@ -4940,7 +4930,6 @@ void TH1::Multiply(const TH1 *h1)
             c1  = h1->GetBinContent(bin);
             w   = c0*c1;
             SetBinContent(bin,w);
-            fEntries++;
             if (fSumw2.fN) {
                Double_t e0 = GetBinError(bin);
                Double_t e1 = h1->GetBinError(bin);
@@ -4949,10 +4938,8 @@ void TH1::Multiply(const TH1 *h1)
          }
       }
    }
-   Double_t s[kNstat];
-   GetStats(s);
-   PutStats(s);
-   SetEntries(nEntries);
+   ResetStats(); 
+   SetEntries( GetEffectiveEntries() );
 }
 
 
@@ -5013,9 +5000,7 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    //    Create Sumw2 if h1 or h2 have Sumw2 set
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
 
-   //   - Reset statistics
-   Double_t nEntries = fEntries;
-   fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
+   //   - Reset min - maximum
    SetMinimum();
    SetMaximum();
 
@@ -5036,7 +5021,6 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
             b2  = h2->GetBinContent(bin);
             w   = (c1*b1)*(c2*b2);
             SetBinContent(bin,w);
-            fEntries++;
             if (fSumw2.fN) {
                Double_t e1 = h1->GetBinError(bin);
                Double_t e2 = h2->GetBinError(bin);
@@ -5045,10 +5029,8 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
          }
       }
    }
-   Double_t s[kNstat];
-   GetStats(s);
-   PutStats(s);
-   SetEntries(nEntries);
+   ResetStats(); 
+   SetEntries( GetEffectiveEntries() );
 }
 
 //______________________________________________________________________________

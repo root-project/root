@@ -40,8 +40,6 @@ Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
 static Double_t gErrorTF1 = 0;
 
-double ROOT::Math::WrappedTF1::fgEps = 0.001; 
-
 
 ClassImp(TF1)
 

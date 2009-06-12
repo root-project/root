@@ -572,14 +572,18 @@ int ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t
    std::auto_ptr<ROOT::Fit::Fitter> fitter(new ROOT::Fit::Fitter() );
    ROOT::Fit::FitConfig & fitConfig = fitter->Config();
 
+   // dimension is given by data because TF1 pointer can have wrong one
+   unsigned int dim = fitdata->NDim();    
 
    // set the fit function
    // if option grad is specified use gradient (works only for 1D) 
    // need to create a wrapper for an automatic  normalized TF1 ???
-   if ( fitOption.Gradient  && fitfunc->GetNdim() == 1) 
+   if ( fitOption.Gradient  && dim == 1) {
+      assert ( (int) dim == fitfunc->GetNdim() );
       fitter->SetFunction(ROOT::Math::WrappedTF1(*fitfunc) );
+   }
    else 
-      fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*fitfunc) );
+      fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*fitfunc, dim) );
 
    // parameter setting is done automaticaly in the Fitter class 
    // need only to set limits

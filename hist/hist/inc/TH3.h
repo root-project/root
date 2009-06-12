@@ -29,6 +29,7 @@
 #include "TAtt3D.h"
 #endif
 
+class TH2; 
 class TProfile2D;
 
 class TH3 : public TH1, public TAtt3D {
@@ -99,6 +100,10 @@ public:
    virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual Long64_t Merge(TCollection *list);
+         TH1D      *ProjectionX(const char *name="_px", Int_t firstybin=0, Int_t lastybin=0, Int_t firstzbin=0,
+                                Int_t lastzbin=0, Option_t *option="") const; // *MENU*
+         TH1D      *ProjectionY(const char *name="_py", Int_t firstxbin=0, Int_t lastxbin=0, Int_t firstzbin=0,
+                                Int_t lastzbin=0, Option_t *option="") const; // *MENU*
          TH1D      *ProjectionZ(const char *name="_pz", Int_t firstxbin=0, Int_t lastxbin=0, Int_t firstybin=0,
                                 Int_t lastybin=0, Option_t *option="") const; // *MENU*
          TH1       *Project3D(Option_t *option="x") const; // *MENU*
@@ -106,6 +111,16 @@ public:
    virtual void     PutStats(Double_t *stats);
    virtual void     Reset(Option_t *option="");
    virtual void     SetShowProjection(const char *option="xy",Int_t nbins=1);   // *MENU*
+
+protected:
+   TH1        *DoProject1D(char* title, char* name, TAxis* projX, 
+                         bool computeErrors, bool originalRange,
+                         bool useUF, bool useOF) const;
+   TH2        *DoProject2D(char* title, char* name, TAxis* projX, TAxis* projY, 
+                        bool computeErrors, bool originalRange,
+                         bool useUF, bool useOF) const;
+   TProfile2D *DoProjectProfile2D(char* title, char* name,TAxis* projX, TAxis* projY, 
+                                        bool originalRange, bool useUF, bool useOF) const;
    
    ClassDef(TH3,5)  //3-Dim histogram base class
 };

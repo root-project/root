@@ -918,7 +918,14 @@ void TProfile::GetStats(Double_t *stats) const
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<6;bin++) stats[bin] = 0;
       if (!fBinEntries.fArray) return;
-      for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+      Int_t firstBinX = fXaxis.GetFirst();
+      Int_t lastBinX  = fXaxis.GetLast();
+      // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
+      if (fgStatOverflows && !fXaxis.TestBit(TAxis::kAxisRange)) {
+         if (firstBinX == 1) firstBinX = 0;
+         if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
+      }
+      for (binx = firstBinX; binx <= lastBinX; binx++) {
          Double_t w   = fBinEntries.fArray[binx];
          Double_t w2  = (fBinSumw2.fN ? fBinSumw2.fArray[binx] : w*w );  
          Double_t x   = fXaxis.GetBinCenter(binx);
@@ -1402,6 +1409,8 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    }
 
    // merge bin contents ignoring now underflow/overflows
+   if (fBinSumw2.fN) hnew->Sumw2();
+
    if (fBinSumw2.fN) hnew->Sumw2();
 
    Double_t *cu2 = hnew->GetW();
