@@ -230,11 +230,13 @@ bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned
    if (ncalls != 0)    fNCalls += min.NCalls(); 
    else fNCalls += ncalls; 
 
-   // copy parameter value and set also in fit model function 
+   // copy parameter value and errors 
    std::copy(min.X(), min.X() + npar, fParams.begin());
 
-   if (fFitFunc) 
-        fFitFunc->SetParameters(&fParams.front());
+   if (min.Errors() != 0)  std::copy(min.Errors(), min.Errors() + npar, fErrors.begin() ) ; 
+
+   // set parameters  in fit model function 
+   if (fFitFunc) fFitFunc->SetParameters(&fParams.front());
    
    if (fValid) { 
 
