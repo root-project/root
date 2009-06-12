@@ -5876,7 +5876,7 @@ void TH1::Reset(Option_t *option)
       SetMaximum();
    }
    if (opt.Contains("ICE")) return;
-   if (fBuffer) BufferEmpty();
+   if (fBuffer) {BufferEmpty(); fBuffer[0] = 0;}
    fTsumw       = 0;
    fTsumw2      = 0;
    fTsumwx      = 0;
