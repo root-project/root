@@ -26,6 +26,7 @@
 #include <string>
 #include <list>
 #include <iostream>
+#include <math.h>
 
 using namespace std ;
 using namespace RooFit ;
@@ -555,7 +556,7 @@ void RooFitTestUnit::setSilentMode()
 {
   RooMsgService::instance().setSilentMode(kTRUE) ;
   for (Int_t i=0 ; i<RooMsgService::instance().numStreams() ; i++) {
-    if (RooMsgService::instance().getStream(i).minLevel<RooMsgService::ERROR) {
+    if (RooMsgService::instance().getStream(i).minLevel<RooFit::ERROR) {
       RooMsgService::instance().setStreamStatus(i,kFALSE) ;
     }
   }
@@ -638,7 +639,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   }
 
   // Add dedicated logging stream for errors that will remain active in silent mode
-  RooMsgService::instance().addStream(RooMsgService::ERROR) ;
+  RooMsgService::instance().addStream(RooFit::ERROR) ;
 
   cout << "******************************************************************" <<endl;
   cout << "*  RooFit - S T R E S S suite                                    *" <<endl;

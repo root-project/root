@@ -106,6 +106,7 @@ public:
 #endif
 #include "RooRealVar.h"
 #include "RooDataSet.h"
+#include "RooDataHist.h"
 #include "RooGaussian.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
@@ -276,6 +277,7 @@ public:
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "TCanvas.h"
+#include "RooConstVar.h"
 #include "RooPlot.h"
 #include "RooFitResult.h"
 #include "RooGenericPdf.h"
@@ -3548,6 +3550,7 @@ public:
 #include "RooArgusBG.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
+#include "RooRealConstant.h"
 using namespace RooFit ;
 
 
