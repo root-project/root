@@ -1706,6 +1706,7 @@ TH1 *TH3::Project3D(Option_t *option) const
    // option = "zx" return the z versus x projection into a TH2D histogram
    // option = "yz" return the y versus z projection into a TH2D histogram
    // option = "zy" return the z versus y projection into a TH2D histogram
+   // NB: the notation "a vs b" means "a" vertical and "b" horizontal
    //
    // If option contains the string "e", errors are computed
    //
@@ -2242,6 +2243,7 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    // option = "zx" return the z versus x projection into a TProfile2D histogram
    // option = "yz" return the y versus z projection into a TProfile2D histogram
    // option = "zy" return the z versus y projection into a TProfile2D histogram
+   // NB: the notation "a vs b" means "a" vertical and "b" horizontal
    //
    // The projection is made for the selected bins only.
    // To select a bin range along an axis, use TAxis::SetRange, eg
@@ -2747,6 +2749,7 @@ void TH3::SetShowProjection(const char *option,Int_t nbins)
    // the xy projection using the draw option "box" do
    //   myhist.SetShowProjection("xy box");
    // This function is typically called from the context menu.
+   // NB: the notation "a vs b" means "a" vertical and "b" horizontal
 
    GetPainter();
 
