@@ -151,10 +151,10 @@ public:
    /// set the Minos errors for parameter i (called by the Fitter class when running Minos)
    void SetMinosError(unsigned int i, double elow, double eup);
 
-   /// lower Minos error
+   /// lower Minos error. If Minos has not run for parameter i return the parabolic error 
    double LowerError(unsigned int i) const;
 
-   /// upper Minos error
+   /// upper Minos error. If Minos has not run for parameter i return the parabolic error 
    double UpperError(unsigned int i) const;
 
    /// parameter global correlation coefficient 

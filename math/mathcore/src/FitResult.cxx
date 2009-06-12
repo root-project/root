@@ -283,16 +283,16 @@ double FitResult::Prob() const {
 
 double FitResult::LowerError(unsigned int i) const { 
    // return lower Minos error for parameter i 
-   //  return 0 if Minos error has not been calculated for the parameter i 
+   //  return the parabolic error if Minos error has not been calculated for the parameter i 
    std::map<unsigned int, std::pair<double,double> >::const_iterator itr = fMinosErrors.find(i); 
-   return ( itr != fMinosErrors.end() ) ? itr->second.first : 0. ;  
+   return ( itr != fMinosErrors.end() ) ? itr->second.first : Error(i) ;  
 }
 
 double FitResult::UpperError(unsigned int i) const { 
    // return upper Minos error for parameter i
-   //  return 0 if Minos error has not been calculated for the parameter i 
+   //  return the parabolic error if Minos error has not been calculated for the parameter i 
    std::map<unsigned int, std::pair<double,double> >::const_iterator itr = fMinosErrors.find(i); 
-   return ( itr != fMinosErrors.end() ) ? itr->second.second : 0. ;  
+   return ( itr != fMinosErrors.end() ) ? itr->second.second : Error(i) ;  
 }
 
 void FitResult::SetMinosError(unsigned int i, double elow, double eup) { 
