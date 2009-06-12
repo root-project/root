@@ -1209,7 +1209,8 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
          TRACE(XERR, "cannot obtain credentials (protocol: "<<protname<<")");
          // Set error, in case of need
          fLastErr = kXR_NotAuthorized;
-         fLastErrMsg = "cannot obtain credentials for protocol: ";
+         if (fLastErrMsg.length() > 0) fLastErrMsg += ":";
+         fLastErrMsg += "cannot obtain credentials for protocol: ";
          fLastErrMsg += ei.getErrText();
          protocol->Delete();
          protocol = 0;
@@ -1224,6 +1225,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
       memset(reqhdr.auth.credtype, 0, 4);
       memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length());
 
+      bool failed = 0;
       int status = kXR_authmore;
       int dlen = 0;
       char *srvans = 0;
@@ -1233,9 +1235,9 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
          // Length of the credentials buffer
          SetSID(reqhdr.header.streamid);
          reqhdr.header.requestid = kXP_auth;
-         reqhdr.header.dlen = credentials->size;
-         xrsp = SendReq(&reqhdr, credentials->buffer,
-                                 &srvans, "XrdProofConn::Authenticate");
+         reqhdr.header.dlen = (credentials) ? credentials->size : 0;
+         char *credbuf = (credentials) ? credentials->buffer : 0;
+         xrsp = SendReq(&reqhdr, credbuf, &srvans, "XrdProofConn::Authenticate");
          SafeDelete(credentials);
          status = (xrsp) ? xrsp->HeaderStatus() : kXR_error;
          dlen = (xrsp) ? xrsp->DataLen() : 0;
@@ -1256,10 +1258,16 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
                TRACE(XERR, "cannot obtain credentials");
                // Set error, in case of need
                fLastErr = kXR_NotAuthorized;
-               fLastErrMsg = "cannot obtain credentials: ";
+               if (fLastErrMsg.length() > 0) fLastErrMsg += ":";
+               fLastErrMsg += "cannot obtain credentials: ";
                fLastErrMsg += ei.getErrText();
                protocol->Delete();
                protocol = 0;
+               // Server does not implement yet full cycling, so we are
+               // allowed to try the handshake only for one protocol; we
+               // cleanup the message and fail;
+               SafeDelete(xrsp);
+               failed = 1;
                break;
             } else {
                TRACE(HDBG, "credentials size " << credentials->size);
@@ -1268,21 +1276,31 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
             // Unexpected reply; print error msg, if any
             if (GetLastErr())
                TRACE(XERR, fHost << ": "<< GetLastErr());
-            protocol->Delete();
-            protocol = 0;
+            if (protocol) {
+               protocol->Delete();
+               protocol = 0;
+            }
          }
          // Cleanup message
          SafeDelete(xrsp);
       }
 
       // If we are done
-      if (protocol) break;
+      if (protocol) {
+         fLastErr = kXR_Unsupported;
+         fLastErrMsg = "";
+         break;
+      }
+      // Server does not implement yet full cycling, so we are
+      // allowed to try the handshake only for one protocol; we
+      if (failed) break;
    }
    if (!protocol) {
       TRACE(XERR, "unable to get protocol object.");
       // Set error, in case of need
       fLastErr = kXR_NotAuthorized;
-      fLastErrMsg = "unable to get protocol object.";
+      if (fLastErrMsg.length() > 0) fLastErrMsg += ":";
+      fLastErrMsg += "unable to get protocol object.";
    }
 
    // Return the result of the negotiation
