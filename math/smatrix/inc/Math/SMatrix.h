@@ -368,7 +368,7 @@ public:
       read only access to matrix element, with indices starting from 0
    */ 
    const T& operator()(unsigned int i, unsigned int j) const;
-   /**
+    /**
       read/write access to matrix element with indices starting from 0
    */ 
    T& operator()(unsigned int i, unsigned int j);
@@ -383,6 +383,43 @@ public:
       Fuction will check index values and it will assert if they are wrong 
    */ 
    T& At(unsigned int i, unsigned int j);
+
+
+  // helper class for implementing the m[i][j] operator
+
+   class SMatrixRow {
+   public: 
+      SMatrixRow ( SMatrix<T,D1,D2,R> & rhs, unsigned int i ) : 
+         fMat(&rhs), fRow(i) 
+      {}
+      T & operator[](int j) { return (*fMat)(fRow,j); }
+   private:    
+      SMatrix<T,D1,D2,R> *  fMat;
+      unsigned int fRow;
+   };
+
+   class SMatrixRow_const {
+   public: 
+      SMatrixRow_const ( const SMatrix<T,D1,D2,R> & rhs, unsigned int i ) : 
+         fMat(&rhs), fRow(i) 
+      {}
+      
+      const T & operator[](int j) const { return (*fMat)(fRow, j); }
+
+   private: 
+      const SMatrix<T,D1,D2,R> *  fMat;
+      unsigned int fRow;
+   };
+ 
+  /**
+      read only access to matrix element, with indices starting from 0 : m[i][j] 
+   */ 
+   SMatrixRow_const  operator[](unsigned int i) const { return SMatrixRow_const(*this, i); }
+   /**
+      read/write access to matrix element with indices starting from 0 : m[i][j] 
+   */ 
+   SMatrixRow operator[](unsigned int i) { return SMatrixRow(*this, i); }
+
 
    /**
       addition with a scalar
@@ -482,9 +519,31 @@ public:
       Invert a square Matrix and  returns a new matrix. In case the inversion fails
       the current matrix is returned. 
       \param ifail . ifail will be set to 0 when inversion is successfull.  
-      See ROOT::Math::SMatrix::InverseFast for the inversion algorithm
+      See ROOT::Math::SMatrix::InvertFast for the inversion algorithm
    */
    SMatrix<T,D1,D2,R> InverseFast(int & ifail ) const;
+
+   /**
+      Invertion of a symmetric positive defined Matrix using Choleski decomposition. 
+      ( this method changes the current matrix).
+      Return true if inversion is successfull.
+      The method used is based on Choleski decomposition
+      A compile error is given if the matrix is not of type symmetric and a run-time failure if the 
+      matrix is not positive defined. 
+      For solving  a linear system, it is possible to use also the function 
+      ROOT::Math::SolveChol(matrix, vector) which will be faster than performing the inversion
+   */
+   bool InvertChol();
+
+   /**
+      Invert of a symmetric positive defined Matrix using Choleski decomposition.
+      A compile error is given if the matrix is not of type symmetric and a run-time failure if the 
+      matrix is not positive defined. 
+      In case the inversion fails the current matrix is returned. 
+      \param ifail . ifail will be set to 0 when inversion is successfull.  
+      See ROOT::Math::SMatrix::InvertChol for the inversion algorithm
+   */
+   SMatrix<T,D1,D2,R> InverseChol(int & ifail ) const;
 
    /**
       determinant of square Matrix via Dfact. 
@@ -633,6 +692,8 @@ public:
    /// Print: used by operator<<()
    std::ostream& Print(std::ostream& os) const;
 
+
+
    
 public:
 
@@ -644,6 +705,7 @@ public:
    R fRep;
   
 }; // end of class SMatrix
+
 
 
 

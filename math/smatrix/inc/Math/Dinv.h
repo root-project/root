@@ -35,6 +35,15 @@
 #include "Math/Dsinv.h"
 #endif
 
+#ifndef ROOT_Math_CholeskyDecomp
+#include "Math/CholeskyDecomp.h"
+#endif
+
+// #ifndef ROOT_Math_QRDecomposition
+// #include "Math/QRDecomposition.h"
+// #endif
+
+
  
 namespace ROOT { 
 
@@ -326,6 +335,25 @@ public:
 
 };
 
+// inverter for Cholesky
+// works only for symmetric matrices and will produce a 
+// compilation error otherwise 
+
+template <unsigned int idim>
+class CholInverter {
+public:
+  ///
+  template <class MatrixRep>
+  static bool Dinv(MatrixRep&) {
+     STATIC_CHECK( false, Error_cholesky_SMatrix_type_is_not_symmetric );
+     return false;
+  }
+  template <class T>
+  inline static bool Dinv(MatRepSym<T,idim> & rhs) {
+     CholeskyDecomp<T, idim> decomp(rhs); 
+     return decomp.Invert(rhs); 
+  }
+};
 
 
   }  // namespace Math

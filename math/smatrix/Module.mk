@@ -24,9 +24,9 @@ SMATRIXDH   := $(SMATRIXDS:.cxx=.h)
 SMATRIXDH32 := $(SMATRIXDS32:.cxx=.h)
 
 SMATRIXDH1  :=  $(MODDIRI)/Math/SMatrix.h \
-		$(MODDIRI)/Math/SVector.h
-#		$(MODDIRI)/Math/SMatrixDfwd.h \
-#		$(MODDIRI)/Math/SMatrixFfwd.h \
+		$(MODDIRI)/Math/SVector.h \
+		$(MODDIRI)/Math/SMatrixDfwd.h \
+		$(MODDIRI)/Math/SMatrixFfwd.h 
 #		$(MODDIRI)/Math/SMatrixD32fwd.h
 
 

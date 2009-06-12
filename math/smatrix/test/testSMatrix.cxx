@@ -22,20 +22,23 @@ template<class T>
 int compare( T a, T b, const std::string & s="",double tol = 1) { 
   if (a == b) return 0; 
   double eps = tol*8.*std::numeric_limits<T>::epsilon();
-  if (std::fabs(a-b) < a*eps) return 0; 
+
+  if (a == 0 && std::abs(b) < eps ) return 0; 
+  if (b == 0 && std::abs(a) < eps ) return 0; 
+  if (std::abs(a-b) < a*eps) return 0; 
   if ( s =="" ) 
-    std::cout << "\nFailure " << a << " diffent than " << b << std::endl;
+    std::cout << "\nFailure " << a << " different than " << b << std::endl;
   else 
-    std::cout << "\n" << s << " : Failure " << a << " diffent than " << b << std::endl;
+    std::cout << "\n" << s << " : Failure " << a << " different than " << b << std::endl;
   return 1;
 }
 
 int compare( int a, int b, const std::string & s="") { 
   if (a == b) return 0; 
   if ( s =="" ) 
-    std::cout << "\nFailure " << a << " diffent than " << b << std::endl;
+    std::cout << "\nFailure " << a << " different than " << b << std::endl;
   else 
-    std::cout << "\n" << s << " : Failure " << a << " diffent than " << b << std::endl;
+    std::cout << "\n" << s << " : Failure " << a << " different than " << b << std::endl;
   return 1;
 }
 int compare( bool a, bool b, const std::string & s="") { 
@@ -952,7 +955,13 @@ int test16() {
   // this fails on Windows (bad calculations)
   iret |= compare( Z==Y,true,"mult");
 #else 
-  for (int i = 0; i< 9; ++i) iret |= compare(Z.apply(i),Y.apply(i),"index");
+  for (int i = 0; i< 9; ++i) { 
+    // avoid small value of a 
+    double a = Z.apply(i); 
+    double eps = std::numeric_limits<double>::epsilon();
+    if (a < eps) a = 0; 
+    iret |= compare(a,Y.apply(i),"index");
+  }
 #endif
 
   Z = (A+W)*(B+Y); 
@@ -1312,6 +1321,7 @@ int test21() {
 
 }
 
+
 int test22() { 
 
    // test conversion to scalar for size 1 matrix and vectors 
@@ -1325,6 +1335,55 @@ int test22() {
   iret |= compare(m1(0,0),2.); 
 
   return iret; 
+}
+
+int test23() { 
+   // test cholesky inversion and solving 
+   int iret = 0; 
+
+   double m[] = { 100, .15, 2.3, 0.01, .01,  1.}; 
+   SMatrix<double, 3, 3, MatRepSym<double, 3> >  smat(m, m+6); 
+
+   //std::cout << "Perform inversion  of matrix \n" << smat << std::endl; 
+
+   int ifail = 0; 
+   SMatrix<double, 3, 3, MatRepSym<double, 3> > imat = smat.InverseChol(ifail); 
+   iret |= compare(ifail==0, true, "inversion");
+
+   // test max deviations from identity for m = imat * smat
+
+   SMatrix<double, 3> mid = imat * smat; 
+   int n = 3; 
+   double prod = 1; 
+   double vmax = 0; 
+   for (int i = 0; i < n; ++i) { 
+      for (int j = 0; j < n; ++j) { 
+         if (i == j) 
+            prod *= mid(i,i); 
+         else { 
+            if (std::abs (mid(i,j)) > vmax ) vmax = std::abs( mid(i,j) ); 
+         }
+      }
+   } 
+   iret |= compare(prod, 1., "max dev diagonal");
+   iret |= compare(vmax, 0., "max dev offdiag ",10);
+
+   // test now solving of linear system
+   SVector<double, 3> vec(1,2,3); 
+
+   SVector<double, 3> x = SolveChol( smat, vec, ifail); 
+
+   //std::cout << "linear system solution " << x << std::endl;
+
+   iret |= compare( (ifail==0), true, "solve chol"); 
+
+   SVector<double, 3> v2 = smat * x;  
+
+   for (int i = 0; i < 3; ++i) 
+      iret |= compare(v2[i], vec[i], "v2 ==vec"); 
+   
+   return iret; 
+
 }
 
 #define TEST(N)                                                                 \
@@ -1360,6 +1419,7 @@ int main() {
   TEST(20);
   TEST(21);
   TEST(22);
+  TEST(23);
 
 
   return 0;

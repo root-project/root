@@ -954,6 +954,27 @@ inline SMatrix<T,D1,D2  > TensorProd(const VecExpr<A,T,D1>& lhs, const VecExpr<B
 
 #endif
 
+// solving a positive defined symmetric linear system using Choleski decompositions
+// matrix will be decomposed and the returned vector will be overwritten in vec
+// If the user wants to pass const objects need to copy the matrices
+// It will work only for symmetric matrices
+template <class T, unsigned int D>
+bool SolveChol( SMatrix<T, D, D, MatRepSym<T, D>  > & mat,  SVector<T, D> & vec ) { 
+   CholeskyDecomp<T, D> decomp(mat);
+   return decomp.Solve(vec); 
+}
+
+/// same function as before but not overwriting the matrix and returning a copy of the vector
+/// (this is the slow version)
+template <class T, unsigned int D>
+SVector<T,D> SolveChol( const SMatrix<T, D, D, MatRepSym<T, D>  > & mat,  const SVector<T, D> & vec, int & ifail  ) { 
+   SMatrix<T, D, D, MatRepSym<T, D> > atmp(mat); 
+   SVector<T,D> vret(vec); 
+   bool ok = SolveChol( atmp, vret); 
+   ifail =  (ok) ? 0 : -1;
+   return vret; 
+}
+
 
 
   }  // namespace Math

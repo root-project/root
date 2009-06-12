@@ -63,6 +63,7 @@
 
 
 
+
 namespace ROOT { 
 
 namespace Math { 
@@ -433,11 +434,29 @@ inline bool SMatrix<T,D1,D2,R>::InvertFast() {
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D1,D2,R> SMatrix<T,D1,D2,R>::InverseFast(int & ifail) const {
    SMatrix<T,D1,D2,R> tmp(*this);
-   bool ok = tmp.Invert();
+   bool ok = tmp.InvertFast();
    ifail = 0; 
    if (!ok) ifail = 1;  
    return tmp;
 }
+
+// Choleski inversion for symmetric and positive defined matrices 
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline bool SMatrix<T,D1,D2, R>::InvertChol() {
+   STATIC_CHECK( D1 == D2,SMatrix_not_square); 
+   return CholInverter<D1>::Dinv((*this).fRep);
+}
+
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline SMatrix<T,D1,D2, R>  SMatrix<T,D1,D2, R>::InverseChol(int &ifail) const {
+   SMatrix<T,D1,D2,R > tmp(*this);
+   bool ok = tmp.InvertChol();
+   ifail = 0; 
+   if (!ok) ifail = 1;  
+   return tmp;
+}
+
+
 
 //==============================================================================
 // det
@@ -623,6 +642,7 @@ template <class T, unsigned int D1, unsigned int D2, class R>
 inline T& SMatrix<T,D1,D2,R>::operator()(unsigned int i, unsigned int j) {
    return fRep(i,j);
 }
+
  
 //==============================================================================
 // Element access with At()
