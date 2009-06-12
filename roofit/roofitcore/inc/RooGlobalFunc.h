@@ -41,6 +41,7 @@ class RooRealVar ;
 class RooAbsCategory ;
 class RooNumIntConfig ;
 class RooArgList ;
+class RooAbsCollection ;
 class TH1 ;
 class TF1 ;
 class TF2 ;
