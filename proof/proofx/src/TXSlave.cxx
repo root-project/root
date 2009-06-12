@@ -195,6 +195,11 @@ void TXSlave::Init(const char *host, Int_t stype)
    TString envlist;
    if (!fProof->GetManager() ||
         fProof->GetManager()->GetRemoteProtocol() > 1001) {
+         if (gSystem->Getenv("XrdSecPROTOCOL")) {
+            // The user forced locally a given authentication protocol:
+            // we need to do the same remotely to get the right ceredentials
+            TProof::AddEnvVar("XrdSecPROTOCOL", gSystem->Getenv("XrdSecPROTOCOL"));
+         }
          const TList *envs = TProof::GetEnvVars();
          if (envs != 0 ) {
             TIter next(envs);
