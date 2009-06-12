@@ -112,7 +112,14 @@
       </li>
 </ul>
 
-
+<h4>Unuran</h4>
+Add constructor of Tunuran distributions using function objects defined using the mathcore interfaces:
+<ul>
+  <li><tt>TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * dpdf, bool isLogPdf);</tt>
+  <li><tt>TUnuranMultiContDist (const ROOT::Math::IMultiGenFunction & pdf, bool isLogPdf );</tt>
+  <li><tt> TUnuranDiscrDist (const ROOT::Math::IGenFunction & func );</tt>
+  </li>
+  </ul>
 
 <h4>TRolke</h4>
 New version of TRolke from J. Lundberg.

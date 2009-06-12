@@ -67,28 +67,40 @@
 
 <h4>TH1</h4>
 <ul>
-  <li>Speed up <tt>TH1::GetStats, TH2::GetStats, TH3::GetStats</tt> in case the sum of weights is null and the number of entries is also null
+ <li>Speed up <tt>TH1::GetStats, TH2::GetStats, TH3::GetStats</tt> in case the sum of weights is null and the number of entries is also null
   <li>Optimize the way the function integral is computed in <tt>TH1::FillRandom</tt>
   <li>Add new functions <tt>TH1::IsBinUnderflow(bin)</tt> and <tt>TH1::IsBinOverflow(bin)</tt> which use the global bin number.
   <li>Add new functions <tt>Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis)</tt> and <tt>Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis)</tt> which find first (and last) bin with the content above the given threshold. Same function have been added in TH2 and TH3.  
   <li>Add a protection in TH1::Sumw2() to avoid calling GetBinContent when the histograms are empty.
   <li>In TH1::Copy reset temporarily the kCanRebin bit before calling SetBinContent.
   <li>Fix the bug <a href="https://savannah.cern.ch/bugs/?48649">#48649</a>in TH1::Add.
-  <li>Fix a bug when calling TH1::Sumw2() on a non-empty histogram with default sum2 (i.e when TH1::GetDefaultSumw2() is true). 
+  <li>Fix a bug when calling TH1::Sumw2() on a non-empty histogram with default sum2 (i.e when TH1::GetDefaultSumw2() is true).
+  <li>Add a method, <tt>TH1::ResetStats()</tt> to reset the internal statistics and force then the re-calculation suing the bin center first time is needed
+  <li>Fix some problem with the statistics (in particular the number of entries)  after some of the histogram operations
+ 
   </ul>
+
+<h4>TH2</h4>
+<ul>
+  <li>Consider in the projection of TH2 the axis range set by the user. This fix the issue https://savannah.cern.ch/bugs/index.php?47946 
+</ul>  
 
 <h4>TH3</h4>
 <ul>
  <li>Add implementation of <tt>TH3::Interpolate</tt> using a tri-linear interpolation method</li>
   <li>Fix a bug in TH3::Project3D (https://savannah.cern.ch/bugs/?46432) for the error calculation in case of weighted histogram (or when using option "E") and no axis range is set.
 </li>
-<li>In the projection to Profile's, when Sumw2 is set, have the correct projected errors now with the new TProfile data member. 
+<li>In the projection to Profile's, when Sumw2 is set, have the correct projected errors now with the new TProfile data member.
+<li>Add <tt>TH3::ProjectionX</tt> and TH3::ProjectionY</tt> to complement the already existing ProjectionZ. They are all impelmented using the Project3D method.
+<li>Re-implement the <tt>TH3::Project3D</tt> method using the internal methods  DoProject1D and DoProject2D depending on the option. This new implementation is faster in case sub-ranges are selected and fix this issue (https://savannah.cern.ch/bugs/index.php?45494).
+<li>A similar new implementation is done for <tt>TH3::ProjectProfile</tt>. 
 </ul>
 
 <h4>TProfile, TProfile2D, TProfile3D</h4>
 <ul>
   <li>Add a new data member (TArrayD fBinSumw2) for storing the sum of weight square per bin. This is needed for correct error calculation in case of profile filled with weights different than 1. The new structure is filled only when TProfile::Sumw2() is called or when TH1::SetDefaultSumw2() is set.
   <li>Add a new internal class, <tt>TProfileHelper</tt> for providing a common implementations for all TProfile classes for complex methods like Add and Merge.
+  <li>Fix a bug in  <tt>TProfile::GetStats</tt> method.
   </li>
   
 </ul>
