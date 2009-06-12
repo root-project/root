@@ -5,7 +5,8 @@
 
 <hr>
 <h4>MathCore</h4>
- Various fixes have been applied. mainly  in the fitting classes, in detail:
+<ul>
+  <li> Various fixes have been applied in the fitting classes:
 <ul>
   <li>Fix issue <a href="http://savannah.cern.ch/bugs/?46006">#46006</a> for normalization of error resulting from fitting a TGraph</li>
   <li>Fix a problem in Chi2 calculation in case of overflow</li>
@@ -13,14 +14,31 @@
    <li>Fix in the FitData classes the bug <href="http://savannah.cern.ch/bugs/?45909">#45909</a> occurring when setting a function range outside histogram range</li>
    <li>Fix default integration method to be Gauss algorithm of MathCore instead of the GSL method, when libMathmore is not built or when the plug-in manager fails to load it.
    <li>Add a protection against negative log when fitting using the Poisson log likelihood function
-   <li>Improve calculation of derivative in x for fitted function. This fixes some problem observed when fitting using the error on the coordinates.  
-  </ul>
-  <h5>TMath</h5>
+   <li>Improve calculation of derivative in x for fitted function. This fixes some problem observed when fitting using the error on the coordinates.
+   <li><tt>Fitter</tt> class: add new methods for calculating the error matrix after minimization,  <tt>Fitter::CalculateHessErrors()</tt> and for calculating the Minos errors   <tt>Fitter::CalculateMinosErrors</tt>
+   <li><tt>FitConfig</tt>: add in the configuration the possibility to select a sub-set of the parameters for calculating the Minos errors by using the method <tt>FitConfig::SetMinosErrors( listOfParameters )</tt>. If no list is passed, by default the Minos error will be computed on all parameters.
+   <li><tt>UnBinData</tt> class: add new constructor for creating a unbin data set passing a range to select the data and copy in the internal array
+   <li><tt>FitResult</tt>: the class now stores a map of the Minos error using as key the parameter index. If the Minos error has not been calculated for the parameter, <tt>FitResult::LowerError(i)</tt> and <tt>FitResult::UpperError(i)</tt> returns the parabolic error
+   </li>
+ </ul>
+ </li>
+ <br>
+  <li>Add two new method in <tt>ROOT::Math::Minimizer</tt> class:
+ <ul>
+   <li> <tt>int Minimizer::CovMatrixStatus() </tt>: returning the status of the covariance matrix. Implemented by Minuit and Minuit2 and follows original Minuit code meaning: code = 0 (not calculated), 1 (approximated), 2 (matrix was made pos def) , 3 (accurate)
+   </li>
+   <li><tt>bool Hesse()</tt>: to perform a full calculation of the Hessian matrix
+   </ul>
+   </li>
+  
+  <li><tt><b>TMath</b></tt>
   <ul>
     <li>
     Fix a numerical problem in <tt>TMath::ErfcInverse</tt> for small input values. Now the normal quantile function is used for implementing it.  
     </li>
-
+    </ul>
+    </li>
+</ul>
  <h4>MathMore</h4>
   <ul> 
     <li>Fix 2 bugs in the quartic equation solver (see issue <a href="https://savannah.cern.ch/bugs/?49031">#49031</a>).
@@ -36,7 +54,32 @@
   <ul> 
     <li>Remove an unneeded check on the element value in the factorization routines used for inverting the matrices (both for the LU and for the  Bunch-Kaufmann factorization). The check was preventing to inverting matrices when some of the matrix elements (like the diagonal) were smaller than an epsilon value set to ~ 10-15. This is not needed since it is enough to check that the values are not zero (i.e. when the matrix is singular). This bug was causing several failures in the CMS code when inverting matrices.  
     </li>
+    <li>Add the Cholesky decomposition method for symmetric positive defined matrices (thanks to Manuel Schiller). A class has been introduced,
+       <tt>ROOT::Math::CholeskyDecomp</tt> which provaids methods for decomposing or  inverting a matrix and also for  solving a linear system.
+    <ul>
+      <li>
+       New methods have also been added in SMatrix:   <tt>bool SMatrix::InvertChol()</tt> and <tt>SMatrix & SMatrix::InverseChol(ifail)</tt> for      the inversion of a symmetric positive defined matrix. New specialized implementation exists up to matrices with sizes 6x6. The speed is comparable to the Cramer method (SMatrix::InvertFast), but with much better accuracy. The new InvertChol method is in any case faster than the general inverter method for all symmetric matrices (SMatrix::Invert), which uses the Bunch-Kaufman decomposition.</li>
+    <li>Add also a new free function, <tt>ROOT::Math::SolveChol</tt> for solving a symmetric linear system. For users who need the solution, using this functions avoid for them performing the inversion and then a matrix multiplication.</li>
+  </ul>
+  </li>
+
+  <li>Add support in the SMatrix class for operator m[i][j]
+  <li>Add in the dictionary the typedefs for some square and symmetrix matrices based on double and floats (up to size 7) defined in the file Math/SMatrixDfwd and Math/SMatrixFfwd
+  </li>
+      
+       
  </ul>
+
+ <h4>Minuit</h4>
+ <ul>
+    <li>Apply varius improvements in the <tt>TMInuitMInimizer</tt> class thanks to the feedback of Alfio Lazzaro:
+   <ul>
+     <li>implement  Hess()  and CovMatrixStatus();
+     <li>add new method based on SEEK. The Tolerance() value can be used to specify the volume (in unit of sigma) for  searching for the global minimum
+     <li>fix some of the methods, like NCalls() and  GlobalCC()
+     </ul>
+     </li>
+     </ul>
 
 <h4>Minuit2</h4>
   <ul>
@@ -54,6 +97,19 @@
     <li>
     Fix a problem in building the parallel version of Minuit2. The parallel version is built if the environment variables USE_PARALLEL_MINUIT2 and USE_OPENMP are set before compiling Minuit2 on a compiler which supports openMP (for example gcc version >= 4.2) 
     </li>
+    <li>Use a tolerance of 0.01 instead of 0.05 in MnContours. The value of 0.01 is the same used in Minos. This is sufficient to get good quality contours. 
+    <li>Improve also the debug in MnContour. Add printing of points as info messages
+    <li>Remove some un-necessary asser() when defining the minimization parameters.
+    <li>Improvements in the  Minuit2Minimizer class:
+    <ul>
+      <li>
+        implement the new methods defined in the base class: Hess() using MnHess and CovMatrixStatus();
+      <li>
+          improve the switch-off of the info message according to the print level;
+      <li>
+         define the variables passed with zero step-size as constant (as is done in F77 Minuit)
+      </ul>
+      </li>
 </ul>
 
 
