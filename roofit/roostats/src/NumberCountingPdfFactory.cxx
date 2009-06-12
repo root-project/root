@@ -147,9 +147,9 @@ void NumberCountingPdfFactory::AddModel(Double_t* sig,
    // add this PDF to workspace.  
    // Need to do import into workspace now to get all the structure imported as well.
    // Just returning the WS will loose the rest of the structure b/c it will go out of scope
-   RooMsgService::instance().setGlobalKillBelow(RooMsgService::ERROR) ;
+   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
    ws->import(joint);
-   RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
+   RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 }
 
 //_______________________________________________________
@@ -286,9 +286,9 @@ void NumberCountingPdfFactory::AddData(Double_t* mainMeas,
 
 
    // import hypothetical data
-   RooMsgService::instance().setGlobalKillBelow(RooMsgService::FATAL) ;
+   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
    ws->import(*data);
-   RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
+   RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
 }
 
@@ -365,9 +365,9 @@ void NumberCountingPdfFactory::AddDataWithSideband(Double_t* mainMeas,
 
 
    // import hypothetical data
-   RooMsgService::instance().setGlobalKillBelow(RooMsgService::FATAL) ;
+   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
    ws->import(*data);
-   RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
+   RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
 }
 

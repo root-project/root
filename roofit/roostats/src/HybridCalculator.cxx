@@ -30,7 +30,7 @@ The basic idea is the following:
 The class allows the user to input models as RooAbsPdf or TH1 object 
 pointers (the pdfs must be "extended": for more information please refer to 
 http://roofit.sourceforge.net). The dataset can be entered as a 
-RooTreeData or TH1 object pointer.  
+RooAbsData or TH1 object pointer.  
 
 Unlike the TLimit Class a complete MC generation is performed at each step 
 and not a simple Poisson fluctuation of the contents of the bins.
@@ -57,7 +57,7 @@ see also the following interesting references:
 #include "RooGlobalFunc.h"
 #include "RooNLLVar.h"
 #include "RooRealVar.h"
-#include "RooTreeData.h"
+#include "RooAbsData.h"
 #include "RooWorkspace.h"
 
 #include "TH1.h"
@@ -271,7 +271,7 @@ HybridResult* HybridCalculator::Calculate(TH1& data, unsigned int nToys, bool us
 
 ///////////////////////////////////////////////////////////////////////////
 
-HybridResult* HybridCalculator::Calculate(RooTreeData& data, unsigned int nToys, bool usePriors) const
+HybridResult* HybridCalculator::Calculate(RooAbsData& data, unsigned int nToys, bool usePriors) const
 {
    /// first compute the test statistics for data and then prepare and run the toy-MC experiments
 
@@ -371,7 +371,7 @@ void HybridCalculator::RunToys(std::vector<double>& bVals, std::vector<double>& 
       }
 
       /// generate the dataset in the S+B hypothesis
-      RooTreeData* sbData = static_cast<RooTreeData*> (fSbModel->generate(*fObservables,RooFit::Extended()));
+      RooAbsData* sbData = static_cast<RooAbsData*> (fSbModel->generate(*fObservables,RooFit::Extended()));
 
       /// work-around in case of an empty dataset (TO DO: need a debug in RooFit?)
       bool sbIsEmpty = false;
@@ -379,12 +379,12 @@ void HybridCalculator::RunToys(std::vector<double>& bVals, std::vector<double>& 
          sbIsEmpty = true;
          // if ( _verbose ) std::cout << "empty S+B dataset!\n";
          RooDataSet* sbDataDummy=new RooDataSet("sbDataDummy","empty dataset",*fObservables);
-         sbData = static_cast<RooTreeData*>(new RooDataHist ("sbDataEmpty","",*fObservables,*sbDataDummy));
+         sbData = static_cast<RooAbsData*>(new RooDataHist ("sbDataEmpty","",*fObservables,*sbDataDummy));
          delete sbDataDummy;
       }
 
       /// generate the dataset in the B-only hypothesis
-      RooTreeData* bData = static_cast<RooTreeData*> (fBModel->generate(*fObservables,RooFit::Extended()));
+      RooAbsData* bData = static_cast<RooAbsData*> (fBModel->generate(*fObservables,RooFit::Extended()));
 
       /// work-around in case of an empty dataset (TO DO: need a debug in RooFit?)
       bool bIsEmpty = false;
@@ -392,7 +392,7 @@ void HybridCalculator::RunToys(std::vector<double>& bVals, std::vector<double>& 
          bIsEmpty = true;
          // if ( _verbose ) std::cout << "empty B-only dataset!\n";
          RooDataSet* bDataDummy=new RooDataSet("bDataDummy","empty dataset",*fObservables);
-         bData = static_cast<RooTreeData*>(new RooDataHist ("bDataEmpty","",*fObservables,*bDataDummy));
+         bData = static_cast<RooAbsData*>(new RooDataHist ("bDataEmpty","",*fObservables,*bDataDummy));
          delete bDataDummy;
       }
 
@@ -514,7 +514,7 @@ HybridResult* HybridCalculator::GetHypoTest() const {
    }
    // check first that everything needed is there 
    if (!DoCheckInputs()) return 0;  
-   RooTreeData * treeData = dynamic_cast<RooTreeData *> (fData); 
+   RooAbsData * treeData = dynamic_cast<RooAbsData *> (fData); 
    if (!treeData) { 
       std::cerr << "Error in HybridCalculator::GetHypoTest - invalid data type - return NULL" << std::endl;
       return 0; 

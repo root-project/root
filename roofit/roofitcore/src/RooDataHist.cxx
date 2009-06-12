@@ -43,6 +43,9 @@
 #include "RooHistError.h"
 #include "RooCategory.h"
 #include "RooCmdConfig.h"
+#include "RooTreeDataStore.h"
+#include "TTree.h"
+#include "RooTreeData.h"
 
 using namespace std ;
 
@@ -73,7 +76,7 @@ RooDataHist::RooDataHist() : _pbinvCacheMgr(0,10)
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const char* binningName) : 
-  RooTreeData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of an empty data hist from a RooArgSet defining the dimensions
   // of the data space. The range and number of bins in each dimensions are taken
@@ -90,6 +93,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   // construct a RooThresholdCategory of the real dimension to be binned variably.
   // Set the thresholds at the desired bin boundaries, and construct the
   // data hist as function of the threshold category instead of the real variable.
+
+  // Initialize datastore
+  _dstore = new RooTreeDataStore(name,title,_vars) ;
   
   initialize(binningName) ;
   appendToDir(this,kTRUE) ;
@@ -99,7 +105,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t wgt) :
-  RooTreeData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a data hist from an existing data collection (binned or unbinned)
   // The RooArgSet 'vars' defines the dimensions of the histogram. 
@@ -121,6 +127,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   // If the constructed data hist has less dimensions that in source data collection,
   // all missing dimensions will be projected.
 
+  // Initialize datastore
+  _dstore = new RooTreeDataStore(name,title,_vars) ;
+  
   initialize() ;
   add(data,(const RooFormulaVar*)0,wgt) ;
   appendToDir(this,kTRUE) ;
@@ -129,8 +138,10 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
 
 //_____________________________________________________________________________
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, map<string,TH1*> histMap, Double_t wgt) :
-  RooTreeData(name,title,RooArgSet(vars,&indexCat)), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, 
+			 map<string,TH1*> histMap, Double_t wgt) :
+  RooAbsData(name,title,RooArgSet(vars,&indexCat)), 
+  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a data hist from a map of TH1,TH2 or TH3 that are collated into a x+1 dimensional
   // RooDataHist where the added dimension is a category that labels the input source as defined
@@ -140,6 +151,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   // The RooArgList 'vars' defines the dimensions of the histogram. 
   // The ranges and number of bins are taken from the input histogram and must be the same in all histograms
 
+  // Initialize datastore
+  _dstore = new RooTreeDataStore(name,title,_vars) ; 
   
   importTH1Set(vars, indexCat, histMap, wgt) ;
 }
@@ -147,12 +160,15 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t wgt) :
-  RooTreeData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a data hist from an TH1,TH2 or TH3
   // The RooArgSet 'vars' defines the dimensions of the histogram. The ranges
   // and number of bins are taken from the input histogram, and the corresponding
   // values are set accordingly on the arguments in 'vars'
+
+  // Initialize datastore
+  _dstore = new RooTreeDataStore(name,title,_vars) ; 
 
   // Check consistency in number of dimensions
   if (vars.getSize() != hist->GetDimension()) {
@@ -169,7 +185,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3,
 			 RooCmdArg arg4,RooCmdArg arg5,RooCmdArg arg6,RooCmdArg arg7,RooCmdArg arg8) :
-  RooTreeData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8))), 
+  RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8))), 
   _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a binned dataset from a RooArgSet defining the dimensions
@@ -195,6 +211,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   //                              category it will be added on the fly. The import command can be specified
   //                              multiple times. 
   //                              
+
+  // Initialize datastore
+  _dstore = new RooTreeDataStore(name,title,_vars) ; 
 
   // Define configuration for this method
   RooCmdConfig pc(Form("RooDataHist::ctor(%s)",GetName())) ;
@@ -671,7 +690,7 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
       theBinVolume *= arglv->getBinWidth(idx) ;
     }
     _binv[ibin] = theBinVolume ;
-    Fill() ;
+    fill() ;
   }
 
 
@@ -681,16 +700,18 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
-  RooTreeData(other,newname), RooDirItem(), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(other._pbinvCacheMgr,0)
+  RooAbsData(other,newname), RooDirItem(), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(other._pbinvCacheMgr,0)
 {
   // Copy constructor
 
   Int_t i ;
 
   Int_t nVar = _vars.getSize() ;
-  _idxMult = new Int_t[nVar] ;
-  for (i=0 ; i<nVar ; i++) {
-    _idxMult[i] = other._idxMult[i] ;  
+  if (other._idxMult) {
+    _idxMult = new Int_t[nVar] ;
+    for (i=0 ; i<nVar ; i++) {
+      _idxMult[i] = other._idxMult[i] ;  
+    }
   }
 
   // Allocate and initialize weight array 
@@ -732,7 +753,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 			 const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) :
-  RooTreeData(name,title,h,varSubset,cutVar,cutRange,nStart,nStop,copyCache), 
+  RooAbsData(name,title,varSubset),
   _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a data hist from (part of) an existing data hist. The dimensions
@@ -744,6 +765,9 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
   // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
   // is the most convenient way to create a subset of an existing data  
 
+  // Initialize datastore
+  _dstore = new RooTreeDataStore(name,title,*h->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache) ;
+  
   initialize(kFALSE) ;
 
   // Copy weight array etc
@@ -764,6 +788,7 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
 RooAbsData* RooDataHist::cacheClone(const RooArgSet* newCacheVars, const char* newName) 
 {
   // Construct a clone of this dataset that contains only the cached variables
+  checkInit() ;
 
   RooDataHist* dhist = new RooDataHist(newName?newName:GetName(),GetTitle(),this,*get(),0,0,0,2000000000,kTRUE) ; 
 
@@ -783,7 +808,6 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
   // Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
   checkInit() ;
-
   RooArgSet* myVarSubset = (RooArgSet*) _vars.selectCommon(varSubset) ;
   RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), *myVarSubset) ;
   delete myVarSubset ;
@@ -860,6 +884,7 @@ RooDataHist::~RooDataHist()
 //_____________________________________________________________________________
 Int_t RooDataHist::getIndex(const RooArgSet& coord)
 {
+  checkInit() ;
   _vars = coord ;
   return calcTreeIndex() ;
 }
@@ -916,8 +941,8 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
   // frame in mode specified by plot options 'o'. The main purpose of
   // this function is to match the specified binning on 'o' to the
   // internal binning of the plot observable in this RooDataHist.
-
-  if (o.bins) return RooTreeData::plotOn(frame,o) ;
+  checkInit() ;
+  if (o.bins) return RooAbsData::plotOn(frame,o) ;
 
   if(0 == frame) {
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
@@ -939,7 +964,7 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
 
   o.bins = &dataVar->getBinning() ;
   o.correctForBinWidth = kFALSE ;
-  return RooTreeData::plotOn(frame,o) ;
+  return RooAbsData::plotOn(frame,o) ;
 }
 
 
@@ -954,13 +979,8 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   // contained in 'bin' is returned. For higher values,
   // the result is interpolated in the real dimensions 
   // of the dataset
-  // 
 
-  if (gDebug>0) {
-    cout << "RooDataHist::weight() bin = " << endl ;
-    bin.Print("v") ;
-    cout << " number of real dimensions = " << _realVars.getSize() << endl ;
-  }
+  checkInit() ;
 
   // Handle illegal intOrder values
   if (intOrder<0) {
@@ -1065,6 +1085,7 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
 void RooDataHist::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const 
 { 
   // Return the error on current weight
+  checkInit() ;
 
   switch (etype) {
 
@@ -1310,6 +1331,8 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize) const
   // is multiplied by the N-dimensional bin volume,
   // making the return value the integral over the function
   // represented by this histogram
+
+  checkInit() ;
     
   Int_t i ;
   Double_t total(0) ;
@@ -1336,6 +1359,8 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   // is multiplied by the M-dimensional bin volume, (M = N(sumSet)),
   // making the return value the integral over the function
   // represented by this histogram
+
+  checkInit() ;
 
   RooArgSet varSave ;
   varSave.addClone(_vars) ;
@@ -1461,7 +1486,7 @@ Int_t RooDataHist::numEntries() const
 {
   // Return the number of bins
 
-  return RooTreeData::numEntries() ;
+  return RooAbsData::numEntries() ;
 }
 
 
@@ -1472,7 +1497,7 @@ Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) cons
   // Return the sum of weights in all entries matching cutSpec (if specified)
   // and in named range cutRange (if specified)
   // Return the
-
+  checkInit() ;
   if (cutSpec==0 && cutRange==0) {
     Int_t i ;
     Double_t n(0) ;
@@ -1493,7 +1518,7 @@ Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) cons
     // Otherwise sum the weights in the event
     Double_t sumw(0) ;
     Int_t i ;
-    for (i=0 ; i<GetEntries() ; i++) {
+    for (i=0 ; i<numEntries() ; i++) {
       get(i) ;
       if (select && select->eval()==0.) continue ;
       if (cutRange && !_vars.allInRange(cutRange)) continue ;
@@ -1539,14 +1564,14 @@ const RooArgSet* RooDataHist::get(Int_t masterIdx) const
 {
   // Return an argset with the bin center coordinates for 
   // bin sequential number 'masterIdx'. For iterative use.
-
+  checkInit() ;
   _curWeight = _wgt[masterIdx] ;
   _curWgtErrLo = _errLo[masterIdx] ;
   _curWgtErrHi = _errHi[masterIdx] ;
   _curSumW2 = _sumw2[masterIdx] ;
   _curVolume = _binv[masterIdx] ; 
   _curIndex  = masterIdx ;
-  return RooTreeData::get(masterIdx) ;  
+  return RooAbsData::get(masterIdx) ;  
 }
 
 
@@ -1567,7 +1592,7 @@ const RooArgSet* RooDataHist::get(const RooArgSet& coord) const
 Double_t RooDataHist::binVolume(const RooArgSet& coord) 
 {
   // Return the volume of the bin enclosing coordinates 'coord'
-
+  checkInit() ;
   ((RooDataHist*)this)->_vars = coord ;
   return _binv[calcTreeIndex()] ;
 }
@@ -1577,7 +1602,6 @@ Double_t RooDataHist::binVolume(const RooArgSet& coord)
 void RooDataHist::setAllWeights(Double_t value) 
 {
   // Set all the event weight of all bins to the specified value
-
   for (Int_t i=0 ; i<_arrSize ; i++) {
     _wgt[i] = value ;
   }
@@ -1662,7 +1686,8 @@ void RooDataHist::printArgs(ostream& os) const
 void RooDataHist::cacheValidEntries() 
 {
   // Cache the datahist entries with bin centers that are inside/outside the
-  // current observable definition
+  // current observable definitio
+  checkInit() ;
 
   if (!_binValid) {
     _binValid = new Bool_t[_arrSize] ;
@@ -1733,13 +1758,81 @@ void RooDataHist::printMultiline(ostream& os, Int_t content, Bool_t verbose, TSt
     if (_cachedVars.getSize()>0) {
       os << indent << "  Caches " << _cachedVars << endl ;
     }
-    if(_truth.getSize() > 0) {
-      os << indent << "  Generated with ";
-      TString deeper(indent) ;
-      deeper += "   " ;
-      _truth.printStream(os,kName|kValue,kStandard,deeper) ;
-    }
   }
+}
+
+
+
+//______________________________________________________________________________
+void RooDataHist::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooDataHist.
+
+   if (R__b.IsReading()) {
+
+     UInt_t R__s, R__c;
+     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+     
+      if (R__v>1) {
+
+	R__b.ReadClassBuffer(RooDataHist::Class(),this,R__v,R__s,R__c);
+
+      } else {	
+
+	// Legacy dataset conversion happens here. Legacy RooDataHist inherits from RooTreeData
+	// which in turn inherits from RooAbsData. Manually stream RooTreeData contents on 
+	// file here and convert it into a RooTreeDataStore which is installed in the 
+	// new-style RooAbsData base class
+	
+	// --- This is the contents of the streamer code of RooTreeData version 1 ---
+	UInt_t R__s1, R__c1;
+	Version_t R__v1 = R__b.ReadVersion(&R__s1, &R__c1); if (R__v1) { }
+	
+	RooAbsData::Streamer(R__b);
+	TTree* X_tree(0) ; R__b >> X_tree;
+	RooArgSet X_truth ; X_truth.Streamer(R__b);
+	TString X_blindString ; X_blindString.Streamer(R__b);
+	R__b.CheckByteCount(R__s1, R__c1, RooTreeData::Class());
+	// --- End of RooTreeData-v1 streamer
+	
+	// Construct RooTreeDataStore from X_tree and complete initialization of new-style RooAbsData
+	_dstore = new RooTreeDataStore(X_tree,_vars) ;
+	_dstore->SetName(GetName()) ;
+	_dstore->SetTitle(GetTitle()) ;
+	_dstore->checkInit() ;       
+	
+	RooDirItem::Streamer(R__b);
+	R__b >> _arrSize;
+	delete [] _wgt;
+	_wgt = new Double_t[_arrSize];
+	R__b.ReadFastArray(_wgt,_arrSize);
+	delete [] _errLo;
+	_errLo = new Double_t[_arrSize];
+	R__b.ReadFastArray(_errLo,_arrSize);
+	delete [] _errHi;
+	_errHi = new Double_t[_arrSize];
+	R__b.ReadFastArray(_errHi,_arrSize);
+	delete [] _sumw2;
+	_sumw2 = new Double_t[_arrSize];
+	R__b.ReadFastArray(_sumw2,_arrSize);
+	delete [] _binv;
+	_binv = new Double_t[_arrSize];
+	R__b.ReadFastArray(_binv,_arrSize);
+	_realVars.Streamer(R__b);
+	R__b >> _curWeight;
+	R__b >> _curWgtErrLo;
+	R__b >> _curWgtErrHi;
+	R__b >> _curSumW2;
+	R__b >> _curVolume;
+	R__b >> _curIndex;
+	R__b.CheckByteCount(R__s, R__c, RooDataHist::IsA());
+
+      }
+      
+   } else {
+
+      R__b.WriteClassBuffer(RooDataHist::Class(),this);
+   }
 }
 
 

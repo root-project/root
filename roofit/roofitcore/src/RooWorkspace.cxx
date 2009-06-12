@@ -661,6 +661,76 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
 
 
 //_____________________________________________________________________________
+Bool_t RooWorkspace::defineSet(const char* name, const char* contentList) 
+{
+  // Define a named set in the work space through a comma separated list of
+  // names of objects already in the workspace
+
+  // Check if set was previously defined, if so print warning
+  map<string,RooArgSet>::iterator i = _namedSets.find(name) ;
+  if (i!=_namedSets.end()) {
+    coutW(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") WARNING redefining previously defined named set " << name << endl ;
+  }
+
+  RooArgSet wsargs ;
+
+  // Check all constituents of provided set
+  char buf[1024] ;
+  strcpy(buf,contentList) ;
+  char* token = strtok(buf,",") ;
+  while(token) {
+    // If missing, either import or report error
+    if (!arg(token)) {
+      coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent " << token
+			    << " is not in workspace" << endl ;
+      return kTRUE ;
+    }
+    wsargs.add(*arg(token)) ;    
+    token = strtok(0,",") ;
+  }
+
+  // Install named set
+  _namedSets[name].removeAll() ;
+  _namedSets[name].add(wsargs) ;
+   
+  return kFALSE ;
+}
+
+
+
+
+//_____________________________________________________________________________
+Bool_t RooWorkspace::extendSet(const char* name, const char* newContents) 
+{
+  // Define a named set in the work space through a comma separated list of
+  // names of objects already in the workspace
+
+  RooArgSet wsargs ;
+
+  // Check all constituents of provided set
+  char buf[1024] ;
+  strcpy(buf,newContents) ;
+  char* token = strtok(buf,",") ;
+  while(token) {
+    // If missing, either import or report error
+    if (!arg(token)) {
+      coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent " << token
+			    << " is not in workspace" << endl ;
+      return kTRUE ;
+    }
+    wsargs.add(*arg(token)) ;    
+    token = strtok(0,",") ;
+  }
+
+  // Extend named set
+  _namedSets[name].add(wsargs,kTRUE) ;
+   
+  return kFALSE ;
+}
+
+
+
+//_____________________________________________________________________________
 const RooArgSet* RooWorkspace::set(const char* name) 
 {
   // Return pointer to previously defined named set with given nmame
@@ -839,21 +909,34 @@ Bool_t RooWorkspace::loadSnapshot(const char* name)
 
 
 
-//_____________________________________________________________________________
-Bool_t RooWorkspace::merge(const RooWorkspace& /*other*/) 
-{
-  // Stub for merge function with another workspace (not implemented yet)
-  return kFALSE ;
-}
+// //_____________________________________________________________________________
+// RooAbsPdf* RooWorkspace::joinPdf(const char* jointPdfName, const char* indexName, const char* inputMapping) 
+// {
+//   // Join given list of p.d.f.s into a simultaneous p.d.f with given name. If the named index category
+//   // does not exist, it is created. 
+//   //
+//   //  Example : joinPdf("simPdf","expIndex","A=pdfA,B=pdfB") ;
+//   //
+//   //            will return a RooSimultaneous named 'simPdf' with index category 'expIndex' with
+//   //            state names A and B. Pdf 'pdfA' will be associated with state A and pdf 'pdfB'
+//   //            will be associated with state B
+//   //
+//   return 0 ;
+// }
 
-
-
-//_____________________________________________________________________________
-Bool_t RooWorkspace::join(const RooWorkspace& /*other*/) 
-{
-  // Stub for join function with another workspace (not implemented yet)
-  return kFALSE ;
-}
+// //_____________________________________________________________________________
+// RooAbsData* RooWorkspace::joinData(const char* jointDataName, const char* indexName, const char* inputMapping) 
+// {
+//   // Join given list of dataset into a joint dataset for use with a simultaneous pdf
+//   // (as e.g. created by joingPdf"
+//   //
+//   //  Example : joinData("simData","expIndex","A=dataA,B=dataB") ;
+//   //
+//   //            will return a RooDataSet named 'simData' that consist of the entries of both
+//   //            dataA and dataB. An extra category column 'expIndex' is added that labels
+//   //            each entry with state 'A' and 'B' to indicate the originating dataset
+//   return 0 ;
+// }
 
 
 //_____________________________________________________________________________
@@ -1370,8 +1453,8 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
   delete iter ;
 
 
-  RooMsgService::MsgLevel oldLevel = RooMsgService::instance().globalKillBelow() ;
-  RooMsgService::instance().setGlobalKillBelow(RooMsgService::WARNING) ;
+  RooFit::MsgLevel oldLevel = RooMsgService::instance().globalKillBelow() ;
+  RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING) ;
 
   if (varSet.getSize()>0) {
     varSet.sort() ;
@@ -1592,6 +1675,103 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
      
    }
 }
+
+
+//______________________________________________________________________________
+void RooWorkspace::Streamer(TBuffer &R__b)
+{
+  // Stream an object of class RooWorkspace. This is a standard ROOT streamer for the
+  // I/O part. This custom function exists to detach all external client links
+  // from the payload prior to writing the payload so that these client links
+  // are not persisted. (Client links occur if external function objects use 
+  // objects contained in the workspace as input)
+  // After the actual writing, these client links are restored.
+
+   if (R__b.IsReading()) {
+
+      R__b.ReadClassBuffer(RooWorkspace::Class(),this);
+
+   } else {
+
+     // Make lists of external clients of WS objects, and remove those links temporarily
+
+     map<RooAbsArg*,list<RooAbsArg*> > extClients, extValueClients, extShapeClients ;
+
+     TIterator* iter = _allOwnedNodes.createIterator() ;
+     RooAbsArg* arg ;
+     while((arg=(RooAbsArg*)iter->Next())) {
+
+       // Loop over client list of this arg
+       TIterator* clientIter = arg->_clientList.MakeIterator() ;
+       RooAbsArg* client ;
+       while((client=(RooAbsArg*)clientIter->Next())) {
+	 if (!_allOwnedNodes.containsInstance(*client)) {
+	   while(arg->_clientList.refCount(client)>0) {
+	     arg->_clientList.Remove(client) ;
+	     extClients[arg].push_back(client) ;
+	   }
+	 }
+       }
+       delete clientIter ;
+
+       // Loop over value client list of this arg
+       TIterator* vclientIter = arg->_clientListValue.MakeIterator() ;
+       RooAbsArg* vclient ;
+       while((vclient=(RooAbsArg*)vclientIter->Next())) {
+	 if (!_allOwnedNodes.containsInstance(*vclient)) {
+	   cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << arg->GetName() 
+				   << " has external value client link to " << vclient << " (" << vclient->GetName() << ") with ref count " << arg->_clientListValue.refCount(vclient) << endl ;
+	   while(arg->_clientListValue.refCount(vclient)>0) {
+	     arg->_clientListValue.Remove(vclient) ;
+	     extValueClients[arg].push_back(vclient) ;
+	   }
+	 }
+       }
+       delete vclientIter ;
+
+       // Loop over shape client list of this arg
+       TIterator* sclientIter = arg->_clientListShape.MakeIterator() ;
+       RooAbsArg* sclient ;
+       while((sclient=(RooAbsArg*)sclientIter->Next())) {
+	 if (!_allOwnedNodes.containsInstance(*sclient)) {
+	   cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << arg->GetName() 
+				 << " has external shape client link to " << sclient << " (" << sclient->GetName() << ") with ref count " << arg->_clientListShape.refCount(sclient) << endl ;
+	   while(arg->_clientListShape.refCount(sclient)>0) {
+	     arg->_clientListShape.Remove(sclient) ;
+	     extShapeClients[arg].push_back(sclient) ;
+	   }
+	 }
+       }
+       delete sclientIter ;
+
+     }
+     delete iter ;
+
+     R__b.WriteClassBuffer(RooWorkspace::Class(),this);
+
+     // Reinstate clients here
+
+     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iter = extClients.begin() ; iter!=extClients.end() ; iter++) {
+       for (list<RooAbsArg*>::iterator citer = iter->second.begin() ; citer!=iter->second.end() ; citer++) {
+	 iter->first->_clientList.Add(*citer) ;
+       }
+     }
+
+     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iter = extValueClients.begin() ; iter!=extValueClients.end() ; iter++) {
+       for (list<RooAbsArg*>::iterator citer = iter->second.begin() ; citer!=iter->second.end() ; citer++) {
+	 iter->first->_clientListValue.Add(*citer) ;
+       }
+     }
+
+     for (map<RooAbsArg*,list<RooAbsArg*> >::iterator iter = extShapeClients.begin() ; iter!=extShapeClients.end() ; iter++) {
+       for (list<RooAbsArg*>::iterator citer = iter->second.begin() ; citer!=iter->second.end() ; citer++) {
+	 iter->first->_clientListShape.Add(*citer) ;
+       }
+     }
+
+   }
+}
+
 
 
 

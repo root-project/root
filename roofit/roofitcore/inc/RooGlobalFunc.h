@@ -17,11 +17,19 @@
 #define ROO_GLOBAL_FUNC
 
 #include "RooCmdArg.h"
-#include "RooDataHist.h"
-#include "RooAbsPdf.h"
-#include "RooRealConstant.h"
-#include "RooMsgService.h"
+//#include "RooDataHist.h"
+//#include "RooAbsPdf.h"
+//#include "RooRealConstant.h"
+//#include "RooMsgService.h"
 
+class RooDataHist ;
+class RooDataSet ;
+class RooFitResult ;
+class RooAbsPdf ;
+class RooAbsRealLValue ;
+class RooRealConstant ;
+class RooMsgService ;
+class RooFormulaVar ;
 class RooAbsData ;
 class RooArgSet ;
 class RooCategory ;
@@ -31,11 +39,20 @@ class RooAbsPdf ;
 class RooConstVar ;
 class RooRealVar ;
 class RooAbsCategory ;
+class RooNumIntConfig ;
+class RooArgList ;
+class TH1 ;
 class TF1 ;
 class TF2 ;
 class TF3 ;
+class TTree ;
 
 namespace RooFit {
+
+enum MsgLevel { DEBUG=0, INFO=1, PROGRESS=2, WARNING=3, ERROR=4, FATAL=5 } ;
+enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration=16, LinkStateMgmt=32, 
+	 Eval=64, Caching=128, Optimization=256, ObjectHandling=512, InputArguments=1024, Tracing=2048, 
+	 Contents=4096, DataHandling=8192, NumIntegration=16384 } ;
 
 // RooAbsReal::plotOn arguments
 RooCmdArg DrawOption(const char* opt) ;
@@ -63,9 +80,12 @@ RooCmdArg Invisible() ;
 RooCmdArg AddTo(const char* name, double wgtSel=1.0, double wgtOther=1.0) ;
 RooCmdArg EvalErrorValue(Double_t value) ;
 RooCmdArg MoveToBack()  ;
+RooCmdArg VisualizeError(const RooDataSet& paramData, Double_t Z=1) ;
+RooCmdArg VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
+RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
 
 // RooAbsPdf::plotOn arguments
-RooCmdArg Normalization(Double_t scaleFactor, RooAbsPdf::ScaleType scaleType) ;
+RooCmdArg Normalization(Double_t scaleFactor, Int_t scaleType) ;
 RooCmdArg Components(const RooArgSet& compSet) ;
 RooCmdArg Components(const char* compSpec) ;
 
@@ -101,7 +121,7 @@ RooCmdArg StoreAsymError(const RooArgSet& aset) ;
 
 // RooChi2Var::ctor arguments
 RooCmdArg Extended(Bool_t flag=kTRUE) ;
-RooCmdArg DataError(RooDataHist::ErrorType) ;
+RooCmdArg DataError(Int_t) ;
 RooCmdArg NumCPU(Int_t nCPU, Bool_t interleave=kFALSE) ;
 
 // RooAbsPdf::printLatex arguments
@@ -153,6 +173,7 @@ RooCmdArg EvalErrorWall(Bool_t flag) ;
 RooCmdArg SumW2Error(Bool_t flag) ;
 RooCmdArg CloneData(Bool_t flag) ;
 RooCmdArg Integrate(Bool_t flag) ;
+RooCmdArg Minimizer(const char* type, const char* alg=0) ;
 
 // RooAbsPdf::paramOn arguments
 RooCmdArg Label(const char* str) ;
@@ -169,6 +190,8 @@ RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, Bool_t d
 // RooAbsPdf::generate arguments
 RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder=kFALSE, Bool_t resample=kFALSE) ;
 RooCmdArg NumEvents(Int_t numEvents) ;
+RooCmdArg ExpectedData(Bool_t flag=kTRUE) ; 
+RooCmdArg Asimov(Bool_t flag=kTRUE) ; 
 
 // RooAbsRealLValue::createHistogram arguments
 RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
@@ -238,6 +261,7 @@ RooCmdArg ScanAllCdf() ;
 RooCmdArg ScanNoCdf() ;
 
 RooConstVar& RooConst(Double_t val) ; 
+
 
 }
 

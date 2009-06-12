@@ -32,11 +32,11 @@ public:
 
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 	    Bool_t extended=kFALSE, const char* rangeName=0, const char* addCoefRangeName=0, 
-	    Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE) ;
+	    Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, Bool_t cloneData=kTRUE) ;
 
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 	    const RooArgSet& projDeps, Bool_t extended=kFALSE, const char* rangeName=0, 
-	    const char* addCoefRangeName=0, Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE) ;
+	    const char* addCoefRangeName=0, Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, Bool_t cloneData=kTRUE) ;
 
   RooNLLVar(const RooNLLVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }

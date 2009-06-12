@@ -45,11 +45,13 @@
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
+#include "RooDataHist.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooErrorHandler.h"
 #include "RooGlobalFunc.h"
 #include "RooBinning.h"
+#include "RooCategory.h"
 
 ClassImp(RooAbsOptTestStatistic)
 ;
@@ -166,7 +168,8 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     _ownData = kTRUE ;
   } else {
     if (cloneInputData) {
-      _dataClone = indata.reduce(RooFit::SelectVars(*indata.get())) ; //  ((RooAbsData&)data).reduce(RooFit::SelectVars(*realDepSet)) ;  
+      _dataClone = (RooAbsData*) indata.Clone() ;
+      //reduce(RooFit::SelectVars(*indata.get())) ; //  ((RooAbsData&)data).reduce(RooFit::SelectVars(*realDepSet)) ;  
       _ownData = kTRUE ;
     } else {
       _dataClone = &indata ;

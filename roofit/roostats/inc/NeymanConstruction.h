@@ -23,7 +23,7 @@
 #include "RooStats/TestStatSampler.h"
 #include "RooStats/ConfidenceBelt.h"
 
-#include "RooTreeData.h"
+#include "RooAbsData.h"
 #include "RooWorkspace.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
@@ -61,7 +61,7 @@ namespace RooStats {
       void SetLeftSideTailFraction(Double_t leftSideFraction = 0.) {fLeftSideFraction = leftSideFraction;} 
 
       // User-defined set of points to test
-      void SetParameterPointsToTest(RooTreeData& pointsToTest) {
+      void SetParameterPointsToTest(RooAbsData& pointsToTest) {
 	fPointsToTest = &pointsToTest;
         fConfBelt = new ConfidenceBelt("ConfBelt",pointsToTest);
       }
@@ -126,7 +126,7 @@ namespace RooStats {
       RooArgSet* fPOI; // RooArgSet specifying  parameters of interest for interval
       RooArgSet* fNuisParams;// RooArgSet specifying  nuisance parameters for interval
       TestStatSampler* fTestStatSampler;
-      RooTreeData* fPointsToTest;
+      RooAbsData* fPointsToTest;
       Double_t fLeftSideFraction;
       ConfidenceBelt* fConfBelt;
       bool fAdaptiveSampling; // controls use of adaptive sampling algorithm

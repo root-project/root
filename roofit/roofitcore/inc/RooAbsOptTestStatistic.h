@@ -19,6 +19,7 @@
 #include "Riosfwd.h"
 #include "RooAbsTestStatistic.h"
 #include "RooSetProxy.h"
+#include "RooCategoryProxy.h"
 
 class RooArgSet ;
 class RooAbsData ;

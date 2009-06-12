@@ -51,6 +51,7 @@
 #include "RooCmdConfig.h"
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
+#include "RooMsgService.h"
 #include <string>
 #include <sstream>
 using namespace std ;

@@ -23,7 +23,7 @@
 #include "RooStats/ToyMCSampler.h"
 #include "RooStats/ConfidenceBelt.h"
 
-#include "RooTreeData.h"
+#include "RooAbsData.h"
 #include "RooWorkspace.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
@@ -81,7 +81,7 @@ namespace RooStats {
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
       virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
 
-      RooTreeData* GetPointsToScan() {
+      RooAbsData* GetPointsToScan() {
 	if(!fPointsToTest) CreateParameterPoints();	  
 	return fPointsToTest;
       }
@@ -110,7 +110,7 @@ namespace RooStats {
       RooArgSet* fPOI; // RooArgSet specifying  parameters of interest for interval
       RooArgSet* fNuisParams;// RooArgSet specifying  nuisance parameters for interval
       mutable ToyMCSampler* fTestStatSampler; // the test statistic sampler
-      mutable RooTreeData* fPointsToTest; // points to perform the construction
+      mutable RooAbsData* fPointsToTest; // points to perform the construction
       mutable ConfidenceBelt* fConfBelt;
       bool fAdaptiveSampling; // controls use of adaptive sampling algorithm
       Int_t fNbins; // number of samples per variable

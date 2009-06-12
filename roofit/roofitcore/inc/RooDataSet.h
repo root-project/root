@@ -20,30 +20,38 @@ class TDirectory ;
 class RooAbsRealLValue ;
 class RooRealVar ;
 class RooDataHist ;
-#include "RooTreeData.h"
+#include "RooAbsData.h"
 #include "RooDirItem.h"
 
 
-class RooDataSet : public RooTreeData, public RooDirItem {
+class RooDataSet : public RooAbsData, public RooDirItem {
 public:
 
   // Constructors, factory methods etc.
   RooDataSet() ; 
 
-  RooDataSet(const char* name, const char* title, const RooArgSet& vars, RooCmdArg arg1, RooCmdArg arg2=RooCmdArg(), RooCmdArg arg3=RooCmdArg(),
-	     RooCmdArg arg4=RooCmdArg(),RooCmdArg arg5=RooCmdArg(),RooCmdArg arg6=RooCmdArg(),RooCmdArg arg7=RooCmdArg(),RooCmdArg arg8=RooCmdArg()) ;
-
+  // Empty constructor 
   RooDataSet(const char *name, const char *title, const RooArgSet& vars, const char* wgtVarName=0) ;
-  RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
-	     const RooArgSet& vars, const char *cuts=0, const char* wgtVarName=0);
-  RooDataSet(const char *name, const char *title, RooDataSet *t, 
-	     const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName=0) ;
-  RooDataSet(const char *name, const char *title, TTree *t, 
-	     const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName=0) ;
-  RooDataSet(const char *name, const char *title, TTree *ntuple, 
-	     const RooArgSet& vars, const char *cuts=0, const char* wgtVarName=0);
-  RooDataSet(const char *name, const char *filename, const char *treename, 
-	     const RooArgSet& vars, const char *cuts=0, const char* wgtVarName=0);  
+
+  // Universal constructor
+  RooDataSet(const char* name, const char* title, const RooArgSet& vars, RooCmdArg arg1, RooCmdArg arg2=RooCmdArg(), 
+	     RooCmdArg arg3=RooCmdArg(), RooCmdArg arg4=RooCmdArg(),RooCmdArg arg5=RooCmdArg(),
+	     RooCmdArg arg6=RooCmdArg(),RooCmdArg arg7=RooCmdArg(),RooCmdArg arg8=RooCmdArg()) ; 
+
+    // Constructor for subset of existing dataset
+  RooDataSet(const char *name, const char *title, RooDataSet *data, const RooArgSet& vars, 
+             const char *cuts=0, const char* wgtVarName=0);
+  RooDataSet(const char *name, const char *title, RooDataSet *data, const RooArgSet& vars,  
+	     const RooFormulaVar& cutVar, const char* wgtVarName=0) ;  
+
+
+  // Constructor importing data from external ROOT Tree
+  RooDataSet(const char *name, const char *title, TTree *ntuple, const RooArgSet& vars, 
+	     const char *cuts=0, const char* wgtVarName=0); 
+  RooDataSet(const char *name, const char *title, TTree *t, const RooArgSet& vars, 
+	     const RooFormulaVar& cutVar, const char* wgtVarName=0) ;  
+  
+
   RooDataSet(RooDataSet const & other, const char* newname=0) ;
   virtual TObject* Clone(const char* newname=0) const { return new RooDataSet(*this,newname?newname:GetName()) ; }
   virtual ~RooDataSet() ;
@@ -52,7 +60,6 @@ public:
 
   RooDataHist* binnedClone(const char* newName=0, const char* newTitle=0) const ;
 
-  virtual Int_t numEntries() const ;
   virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const ;
 
   virtual RooPlot* plotOnXY(RooPlot* frame, 
@@ -93,15 +100,16 @@ public:
 
   virtual void addFast(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0);
 
-  void append(RooTreeData& data) ;
-  Bool_t merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0, 
-	       RooDataSet* data4=0, RooDataSet* data5=0, RooDataSet* data6=0) ;
+  void append(RooDataSet& data) ;
+  Bool_t merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0,  
+ 	       RooDataSet* data4=0, RooDataSet* data5=0, RooDataSet* data6=0) ; 
+  Bool_t merge(std::list<RooDataSet*> dsetList) ;
 
   virtual RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) ;
   virtual RooArgSet* addColumns(const RooArgList& varList) ;
 
   // Plot the distribution of a real valued arg
-  using RooTreeData::createHistogram ;
+  using RooAbsData::createHistogram ;
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, const char* cuts="", 
 			const char *name= "hist") const;	 
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, Int_t nx, Int_t ny,
@@ -119,7 +127,6 @@ protected:
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
 
   friend class RooProdGenContext ;
-  Bool_t merge(const TList& data) ;
 
   void initialize(const char* wgtVarName) ;
   
@@ -134,7 +141,7 @@ protected:
   RooArgSet _varsNoWgt ;   // Vars without weight variable
   RooRealVar* _wgtVar ;    // Pointer to weight variable (if set)
 
-  ClassDef(RooDataSet,1) // Unbinned data set
+  ClassDef(RooDataSet,2) // Unbinned data set
 };
 
 #endif

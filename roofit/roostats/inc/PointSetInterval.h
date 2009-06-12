@@ -15,7 +15,7 @@
 #include "RooArgSet.h"
 #endif
 #ifndef ROO_TREE_DATA
-#include "RooTreeData.h"
+#include "RooAbsData.h"
 #endif
 #ifndef RooStats_ConfInterval
 #include "RooStats/ConfInterval.h"
@@ -27,15 +27,15 @@ namespace RooStats {
   private:
     //    RooArgSet* fParameters; // parameter of interest
     Double_t fConfidenceLevel; // confidence level
-    RooTreeData* fParameterPointsInInterval; // either a histogram (RooDataHist) or a tree (RooDataSet)
+    RooAbsData* fParameterPointsInInterval; // either a histogram (RooDataHist) or a tree (RooDataSet)
 
   public:
     // constructors,destructors
     PointSetInterval();
     PointSetInterval(const char* name);
     PointSetInterval(const char* name, const char* title);
-    PointSetInterval(const char* name, RooTreeData&);
-    PointSetInterval(const char* name, const char* title, RooTreeData&);
+    PointSetInterval(const char* name, RooAbsData&);
+    PointSetInterval(const char* name, const char* title, RooAbsData&);
     virtual ~PointSetInterval();
         
     virtual Bool_t IsInInterval(RooArgSet&);
@@ -50,7 +50,7 @@ namespace RooStats {
     virtual RooArgSet* GetParameters() const;
 
     // Accessor for making plots
-    RooTreeData* GetParameterPoints() const {return (RooTreeData*)fParameterPointsInInterval->Clone();}
+    RooAbsData* GetParameterPoints() const {return (RooAbsData*)fParameterPointsInInterval->Clone();}
 
     // check if parameters are correct. (dummy implementation to start)
     Bool_t CheckParameters(RooArgSet&) const ;

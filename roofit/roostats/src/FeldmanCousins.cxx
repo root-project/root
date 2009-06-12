@@ -48,6 +48,7 @@ END_HTML
 
 #include "RooDataSet.h"
 #include "RooGlobalFunc.h"
+#include "RooDataHist.h"
 #include "TFile.h"
 #include "TTree.h"
 

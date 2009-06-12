@@ -49,11 +49,7 @@ public:
   virtual Bool_t selfNormalized() const { return kTRUE ; }
   Bool_t addPdf(const RooAbsPdf& pdf, const char* catLabel) ;
 
-  virtual ExtendMode extendMode() const { 
-    if (_anyMustExtend) return MustBeExtended ;
-    if (_anyCanExtend) return CanBeExtended ;
-    return CanNotBeExtended ; 
-  }
+  virtual ExtendMode extendMode() const ;
 
   virtual Double_t expectedEvents(const RooArgSet* nset) const ;
   virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
@@ -107,10 +103,8 @@ protected:
   RooCategoryProxy _indexCat ; // Index category
   TList    _pdfProxyList ;     // List of PDF proxies (named after applicable category state)
   Int_t    _numPdf ;           // Number of registered PDFs
-  Bool_t   _anyCanExtend ;     // Flag set if all component PDFs are extendable
-  Bool_t   _anyMustExtend ;    // Flag set if all component PDFs are extendable
 
-  ClassDef(RooSimultaneous,1)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A
+  ClassDef(RooSimultaneous,2)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A
 };
 
 #endif

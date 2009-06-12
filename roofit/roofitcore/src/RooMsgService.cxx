@@ -121,9 +121,10 @@ RooMsgService::RooMsgService()
   _instance = this ;
   gMsgService = this ;
 
-  addStream(RooMsgService::PROGRESS) ;
-  addStream(RooMsgService::INFO,Topic(RooMsgService::Eval|RooMsgService::Plotting|RooMsgService::Fitting|RooMsgService::Minimization|RooMsgService::Caching|RooMsgService::ObjectHandling|RooMsgService::NumIntegration|RooMsgService::InputArguments|RooMsgService::DataHandling)) ;
-  addStream(RooMsgService::INFO,Topic(RooMsgService::NumIntegration)) ;
+  // Old-style streams
+  addStream(RooFit::PROGRESS) ;
+  addStream(RooFit::INFO,Topic(RooFit::Eval|RooFit::Plotting|RooFit::Fitting|RooFit::Minimization|RooFit::Caching|RooFit::ObjectHandling|RooFit::NumIntegration|RooFit::InputArguments|RooFit::DataHandling)) ;
+  addStream(RooFit::INFO,Topic(RooFit::NumIntegration|RooFit::Generation)) ;
 
 
 }
@@ -155,10 +156,10 @@ Bool_t RooMsgService::anyDebug()
 
 
 //_____________________________________________________________________________
-Int_t RooMsgService::addStream(MsgLevel level, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
+Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
     	      			               const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6) 
 {
-  // Add a message logging stream for message with given MsgLevel or higher (i.e. more severe)
+  // Add a message logging stream for message with given RooFit::MsgLevel or higher (i.e. more severe)
   // This method accepts the following arguments to configure the stream
   //
   // Output Style options
@@ -207,7 +208,7 @@ Int_t RooMsgService::addStream(MsgLevel level, const RooCmdArg& arg1, const RooC
   }
 
   // Extract values from named arguments
-  MsgTopic topic =  (MsgTopic) pc.getInt("topic") ;
+  RooFit::MsgTopic topic =  (RooFit::MsgTopic) pc.getInt("topic") ;
   const char* objName =  pc.getString("objName") ;
   const char* className =  pc.getString("className") ;
   const char* baseClassName =  pc.getString("baseClassName") ;
@@ -347,25 +348,25 @@ RooMsgService& RooMsgService::instance()
 
 
 //_____________________________________________________________________________
-Bool_t RooMsgService::isActive(const RooAbsArg* self, MsgTopic topic, MsgLevel level) 
+Bool_t RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level) 
 {
-  // Check if logging is active for given object/topic/MsgLevel combination
+  // Check if logging is active for given object/topic/RooFit::MsgLevel combination
 
   return (activeStream(self,topic,level)>=0) ;
 }
 
 
 //_____________________________________________________________________________
-Bool_t RooMsgService::isActive(const TObject* self, MsgTopic topic, MsgLevel level) 
+Bool_t RooMsgService::isActive(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level) 
 {
-  // Check if logging is active for given object/topic/MsgLevel combination
+  // Check if logging is active for given object/topic/RooFit::MsgLevel combination
 
   return (activeStream(self,topic,level)>=0) ;
 }
 
 
 //_____________________________________________________________________________
-Int_t RooMsgService::activeStream(const RooAbsArg* self, MsgTopic topic, MsgLevel level) 
+Int_t RooMsgService::activeStream(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level) 
 {
   // Find appropriate logging stream for message from given object with given topic and message level
 
@@ -380,7 +381,7 @@ Int_t RooMsgService::activeStream(const RooAbsArg* self, MsgTopic topic, MsgLeve
 
 
 //_____________________________________________________________________________
-Int_t RooMsgService::activeStream(const TObject* self, MsgTopic topic, MsgLevel level) 
+Int_t RooMsgService::activeStream(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level) 
 {
   // Find appropriate logging stream for message from given object with given topic and message level
 
@@ -395,7 +396,7 @@ Int_t RooMsgService::activeStream(const TObject* self, MsgTopic topic, MsgLevel 
 
 
 //_____________________________________________________________________________
-Bool_t RooMsgService::StreamConfig::match(MsgLevel level, MsgTopic top, const RooAbsArg* obj) 
+Bool_t RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic top, const RooAbsArg* obj) 
 {
   // Determine if message from given object at given level on given topic is logged
 
@@ -415,7 +416,7 @@ Bool_t RooMsgService::StreamConfig::match(MsgLevel level, MsgTopic top, const Ro
 
 
 //_____________________________________________________________________________
-Bool_t RooMsgService::StreamConfig::match(MsgLevel level, MsgTopic top, const TObject* obj) 
+Bool_t RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic top, const TObject* obj) 
 {
   // Determine if message from given object at given level on given topic is logged
 
@@ -435,7 +436,7 @@ Bool_t RooMsgService::StreamConfig::match(MsgLevel level, MsgTopic top, const TO
 
 
 //_____________________________________________________________________________
-ostream& RooMsgService::log(const RooAbsArg* self, MsgLevel level, MsgTopic topic, Bool_t skipPrefix) 
+ostream& RooMsgService::log(const RooAbsArg* self, RooFit::MsgLevel level, RooFit::MsgTopic topic, Bool_t skipPrefix) 
 {
   // Log error message associated with RooAbsArg object self at given level and topic. If skipPrefix
   // is true the standard RooMsgService prefix is not added.
@@ -471,7 +472,7 @@ ostream& RooMsgService::log(const RooAbsArg* self, MsgLevel level, MsgTopic topi
 
 
 //_____________________________________________________________________________
-ostream& RooMsgService::log(const TObject* self, MsgLevel level, MsgTopic topic, Bool_t skipPrefix) 
+ostream& RooMsgService::log(const TObject* self, RooFit::MsgLevel level, RooFit::MsgTopic topic, Bool_t skipPrefix) 
 {
   // Log error message associated with TObject object self at given level and topic. If skipPrefix
   // is true the standard RooMsgService prefix is not added.

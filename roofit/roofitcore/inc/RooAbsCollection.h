@@ -77,8 +77,12 @@ public:
   // List search methods
   RooAbsArg *find(const char *name) const ;
   Bool_t contains(const RooAbsArg& var) const { 
-    // Returns true if var is contained in this collection
+    // Returns true if object with same name as var is contained in this collection
     return (0 == find(var.GetName())) ? kFALSE:kTRUE; 
+  }
+  Bool_t containsInstance(const RooAbsArg& var) const { 
+    // Returns true if var is contained in this collection
+    return (0 == _list.FindObject(&var)) ? kFALSE:kTRUE; 
   }
   RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;

@@ -108,7 +108,7 @@ protected:
 
   void calcPulls() ;
     
-  RooDataSet*       _genSample ;       // Currently generated sample 
+  RooAbsData*       _genSample ;       // Currently generated sample 
   RooAbsPdf*        _genModel ;        // Generator model 
   RooAbsGenContext* _genContext ;      // Generator context 
   RooArgSet*        _genInitParams ;   // List of originalgenerator parameters

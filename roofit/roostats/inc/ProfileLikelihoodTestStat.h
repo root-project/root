@@ -65,7 +65,7 @@ namespace RooStats {
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest)  {       
        if(!&data){ cout << "problem with data" << endl;}
        
-       RooMsgService::instance().setGlobalKillBelow(RooMsgService::FATAL) ;
+       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
        bool needToRebuild = true; // try to avoid rebuilding if possible
 
        if(fLastData == &data) // simple pointer comparison for now (note NLL makes COPY of data)
@@ -152,7 +152,7 @@ namespace RooStats {
        SetParameters(&paramsOfInterest, fProfile->getParameters(data) );
 
        Double_t value = fProfile->getVal();
-       RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
+       RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
        /*
        // for debugging caching

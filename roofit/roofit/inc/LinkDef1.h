@@ -38,6 +38,10 @@
 #pragma link C++ class RooTFnPdfBinding+ ;
 #pragma link C++ class RooBernstein+ ;
 #pragma link C++ class RooChiSquarePdf+ ;
+#pragma link C++ class RooFunctorBinding+ ;
+#pragma link C++ class RooFunctor1DBinding+ ;
+#pragma link C++ class RooFunctorPdfBinding+ ;
+#pragma link C++ class RooFunctor1DPdfBinding+ ;
 //
 #pragma link C++ class RooCFunction1Binding<Double_t,Double_t>+ ;
 #pragma link C++ class RooCFunction1PdfBinding<Double_t,Double_t>+ ;

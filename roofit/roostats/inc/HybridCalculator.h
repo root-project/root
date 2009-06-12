@@ -150,7 +150,7 @@ namespace RooStats {
       void SetTestStatistics(int index);
 
       HybridResult* Calculate(TH1& data, unsigned int nToys, bool usePriors) const;
-      HybridResult* Calculate(RooTreeData& data, unsigned int nToys, bool usePriors) const;
+      HybridResult* Calculate(RooAbsData& data, unsigned int nToys, bool usePriors) const;
       HybridResult* Calculate(unsigned int nToys, bool usePriors) const;
       void PrintMore(const char* options) const;
 

@@ -112,6 +112,8 @@ public:
   void addObject(TObject* obj, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
   void addTH1(TH1 *hist, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
 
+  void remove(const char* name=0, Bool_t deleteToo=kTRUE) ;
+
   // ascii printing
   virtual void printName(ostream& os) const ;
   virtual void printTitle(ostream& os) const ;
@@ -145,6 +147,7 @@ public:
   // Convenient type-safe accessors
   RooCurve* getCurve(const char* name=0) const ;
   RooHist* getHist(const char* name=0) const ;
+
 
   // rearrange drawing order of contained objects
   Bool_t drawBefore(const char *before, const char *target);

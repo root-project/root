@@ -58,6 +58,7 @@
 #include "RooChi2Var.h"
 #include "RooNLLVar.h"
 #include "RooRealSumPdf.h"
+#include "RooConstVar.h"
 #include "TROOT.h"
 
 using namespace RooFit ;

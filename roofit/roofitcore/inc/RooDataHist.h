@@ -16,7 +16,7 @@
 #ifndef ROO_DATA_HIST
 #define ROO_DATA_HIST
 
-#include "RooTreeData.h"
+#include "RooAbsData.h"
 #include "RooDirItem.h"
 #include "RooArgSet.h"
 #include "RooNameSet.h"
@@ -36,7 +36,7 @@ class RooArgSet ;
 class RooLinkedList ;
 class RooAbsLValue ;
 
-class RooDataHist : public RooTreeData, public RooDirItem {
+class RooDataHist : public RooAbsData, public RooDirItem {
 public:
 
   // Constructors, factory methods etc.
@@ -108,7 +108,7 @@ public:
     return (lo+hi)/2 ;
   }
 
-  using RooTreeData::plotOn ;
+  using RooAbsData::plotOn ;
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;
   
   virtual void reset() ;
@@ -154,11 +154,13 @@ protected:
 
   Int_t       _arrSize ; //  Size of the weight array
   Int_t*      _idxMult ; //! Multiplier jump table for index calculation
+
   Double_t*       _wgt ; //[_arrSize] Weight array
   Double_t*     _errLo ; //[_arrSize] Low-side error on weight array
   Double_t*     _errHi ; //[_arrSize] High-side error on weight array
   Double_t*     _sumw2 ; //[_arrSize] Sum of weights^2
   Double_t*      _binv ; //[_arrSize] Bin volume array  
+
   RooArgSet  _realVars ; // Real dimensions of the dataset 
   TIterator* _realIter ; //! Iterator over realVars
   Bool_t*    _binValid ; //! Valid bins with current range definition

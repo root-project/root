@@ -71,9 +71,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   _plotCoefNormRange(0),
   _partIntMgr(this,10),
   _indexCat("indexCat","Index category",this,inIndexCat),
-  _numPdf(0),
-  _anyCanExtend(kFALSE),
-  _anyMustExtend(kFALSE)
+  _numPdf(0)
 {
   // Constructor with index category. PDFs associated with indexCat
   // states can be added after construction with the addPdf() function.
@@ -94,9 +92,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   _plotCoefNormRange(0),
   _partIntMgr(this,10),
   _indexCat("indexCat","Index category",this,inIndexCat),
-  _numPdf(0),
-  _anyCanExtend(kFALSE),
-  _anyMustExtend(kFALSE)
+  _numPdf(0)
 {
   // Constructor from index category and full list of PDFs. 
   // In this constructor form, a PDF must be supplied for each indexCat state
@@ -135,9 +131,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   _plotCoefNormRange(0),
   _partIntMgr(this,10),
   _indexCat("indexCat","Index category",this,inIndexCat),
-  _numPdf(0),
-  _anyCanExtend(kFALSE),
-  _anyMustExtend(kFALSE)
+  _numPdf(0)
 {
   initialize(inIndexCat,pdfMap) ;
 }
@@ -313,9 +307,7 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
   _plotCoefNormRange(other._plotCoefNormRange),
   _partIntMgr(other._partIntMgr,this),
   _indexCat("indexCat",this,other._indexCat), 
-  _numPdf(other._numPdf),
-  _anyCanExtend(other._anyCanExtend),
-  _anyMustExtend(other._anyMustExtend)
+  _numPdf(other._numPdf)
 {
   // Copy constructor
 
@@ -394,11 +386,34 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
     _numPdf += 1 ;
   }
 
-  if (pdf.canBeExtended()) _anyCanExtend = kTRUE ;
-  if (pdf.mustBeExtended()) _anyMustExtend = kTRUE ;
-
   return kFALSE ;
 }
+
+
+
+
+
+//_____________________________________________________________________________
+RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const 
+{ 
+  Bool_t allCanExtend(kTRUE) ;
+  Bool_t anyMustExtend(kFALSE) ;
+
+  for (Int_t i=0 ; i<_numPdf ; i++) {
+    RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.label()) ;
+    RooAbsPdf* pdf = (RooAbsPdf*) proxy->absArg() ;
+    if (!pdf->canBeExtended()) {
+      allCanExtend=kFALSE ;
+    }
+    if (pdf->mustBeExtended()) {
+      anyMustExtend=kTRUE;
+    }
+  }
+  if (anyMustExtend) return MustBeExtended ;
+  if (allCanExtend) return CanBeExtended ;
+  return CanNotBeExtended ; 
+}
+
 
 
 
@@ -414,8 +429,23 @@ Double_t RooSimultaneous::evaluate() const
   //assert(proxy!=0) ;
   if (proxy==0) return 0 ;
 
-  // Return the selected PDF value, normalized by the number of index states
-  return ((RooAbsPdf*)(proxy->absArg()))->getVal(_normSet) ; 
+  // Calculate relative weighting factor for sim-pdfs of all extendable components
+  Double_t catFrac(1) ;
+  if (canBeExtended()) {
+    Double_t nEvtCat = ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(_normSet) ; 
+    
+    Double_t nEvtTot(0) ;
+    TIterator* iter = _pdfProxyList.MakeIterator() ;
+    RooRealProxy* proxy2 ;
+    while((proxy2=(RooRealProxy*)iter->Next())) {      
+      nEvtTot += ((RooAbsPdf*)(proxy2->absArg()))->expectedEvents(_normSet) ;
+    }
+    delete iter ;
+    catFrac=nEvtCat/nEvtTot ;
+  }
+
+  // Return the selected PDF value, normalized by the number of index states  
+  return ((RooAbsPdf*)(proxy->absArg()))->getVal(_normSet)*catFrac ; 
 }
 
 

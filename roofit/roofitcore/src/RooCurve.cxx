@@ -45,6 +45,9 @@
 
 #include "Riostream.h"
 #include "TClass.h"
+#include "TMath.h"
+#include "TMatrixD.h"
+#include "TVectorD.h"
 #include <iomanip>
 #include <math.h>
 #include <assert.h>
@@ -683,6 +686,138 @@ Double_t RooCurve::interpolate(Double_t xvalue, Double_t tolerance) const
  
   return retVal ;
 }
+
+
+
+
+//_____________________________________________________________________________
+RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, Double_t Z) const
+{
+  // Construct filled RooCurve represented error band that captures alpha% of the variations
+  // of the curves passed through argument variations, where the percentage alpha corresponds to
+  // the central interval fraction of a significance Z
+  
+  RooCurve* band = new RooCurve ;
+  band->SetName(Form("%s_errorband",GetName())) ;
+  band->SetLineWidth(1) ;
+  band->SetFillColor(kCyan) ;
+  band->SetLineColor(kCyan) ;
+
+  vector<double> bandLo(GetN()) ;
+  vector<double> bandHi(GetN()) ;
+  for (int i=0 ; i<GetN() ; i++) {
+    calcBandInterval(variations,i,Z,bandLo[i],bandHi[i],kFALSE) ;
+  }
+  
+  for (int i=0 ; i<GetN() ; i++) {
+    band->addPoint(GetX()[i],bandLo[i]) ;
+  }
+  for (int i=GetN()-1 ; i>=0 ; i--) {
+    band->addPoint(GetX()[i],bandHi[i]) ;
+  }	   
+  
+  return band ;
+}
+
+
+
+
+//_____________________________________________________________________________
+RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector<RooCurve*>& minusVar, const TMatrixD& C, Double_t Z) const
+{
+  // Construct filled RooCurve represented error band represent the error added in quadrature defined by the curves arguments
+  // plusVar and minusVar corresponding to one-sigma variations of each parameter. The resulting error band, combined used the correlation matrix C
+  // is multiplied with the significance parameter Z to construct the equivalent of a Z sigma error band (in Gaussian approximation)
+  
+  RooCurve* band = new RooCurve ;
+  band->SetName(Form("%s_errorband",GetName())) ;
+  band->SetLineWidth(1) ;
+  band->SetFillColor(kCyan) ;
+  band->SetLineColor(kCyan) ;
+
+  vector<double> bandLo(GetN()) ;
+  vector<double> bandHi(GetN()) ;
+  for (int i=0 ; i<GetN() ; i++) {
+    calcBandInterval(plusVar,minusVar,i,C,Z,bandLo[i],bandHi[i]) ;
+  }
+  
+  for (int i=0 ; i<GetN() ; i++) {
+    band->addPoint(GetX()[i],bandLo[i]) ;
+  }
+  for (int i=GetN()-1 ; i>=0 ; i--) {
+    band->addPoint(GetX()[i],bandHi[i]) ;
+  }	   
+  
+  return band ;
+}
+
+
+
+
+
+//_____________________________________________________________________________
+void RooCurve::calcBandInterval(const vector<RooCurve*>& plusVar, const vector<RooCurve*>& minusVar,Int_t i, const TMatrixD& C, Double_t /*Z*/, Double_t& lo, Double_t& hi) const
+{
+  // Retrieve variation points from curves
+  vector<double> y_plus(plusVar.size()), y_minus(minusVar.size()) ;
+  Int_t j(0) ;
+  for (vector<RooCurve*>::const_iterator iter=plusVar.begin() ; iter!=plusVar.end() ; iter++) {
+    y_plus[j++] = (*iter)->interpolate(GetX()[i]) ;    
+  }
+  j=0 ;
+  for (vector<RooCurve*>::const_iterator iter=minusVar.begin() ; iter!=minusVar.end() ; iter++) {
+    y_minus[j++] = (*iter)->interpolate(GetX()[i]) ;
+  }
+  Double_t y_cen = GetY()[i] ;
+  Int_t n = j ;
+
+  // Make vector of variations
+  TVectorD F(plusVar.size()) ;
+  for (j=0 ; j<n ; j++) {
+    F[j] = (y_plus[j]-y_minus[j])/2 ;
+  }
+
+  // Calculate error in linear approximation from variations and correlation coefficient
+  Double_t sum = F*(C*F) ;
+
+  lo= y_cen + sqrt(sum) ;
+  hi= y_cen - sqrt(sum) ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooCurve::calcBandInterval(const vector<RooCurve*>& variations,Int_t i,Double_t Z, Double_t& lo, Double_t& hi, Bool_t approxGauss) const
+{
+  vector<double> y(variations.size()) ;
+  Int_t j(0) ;
+  for (vector<RooCurve*>::const_iterator iter=variations.begin() ; iter!=variations.end() ; iter++) {
+    y[j++] = (*iter)->interpolate(GetX()[i]) ;
+}
+
+  if (!approxGauss) {
+    // Construct central 68% interval from variations collected at each point
+    Double_t pvalue = TMath::Erfc(Z/sqrt(2.)) ;
+    Int_t delta = Int_t( y.size()*(pvalue)/2 + 0.5) ;
+    sort(y.begin(),y.end()) ;    
+    lo = y[delta] ;
+    hi = y[y.size()-delta] ;  
+  } else {
+    // Estimate R.M.S of variations at each point and use that as Gaussian sigma
+    Double_t sum_y(0), sum_ysq(0) ;
+    for (unsigned int k=0 ; k<y.size() ; k++) {
+      sum_y   += y[k] ;
+      sum_ysq += y[k]*y[k] ;
+    }
+    sum_y /= y.size() ;
+    sum_ysq /= y.size() ;
+
+    Double_t rms = sqrt(sum_ysq - (sum_y*sum_y)) ;
+    lo = GetY()[i] - Z*rms ;
+    hi = GetY()[i] + Z*rms ;    
+  }
+}
+
 
 
 

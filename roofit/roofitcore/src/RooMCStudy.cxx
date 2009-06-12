@@ -225,9 +225,13 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 				  << "                        the set of over/undersampled prototype events for each generation cycle." << endl ;
   }
   
-  _genContext = _genModel->genContext(_dependents,_genProtoData,0,_verboseGen) ;
   _genParams = _genModel->getParameters(&_dependents) ;
-  _genContext->attach(*_genParams) ;
+  if (!_binGenData) {
+    _genContext = _genModel->genContext(_dependents,_genProtoData,0,_verboseGen) ;
+    _genContext->attach(*_genParams) ;
+  } else {
+    _genContext = 0 ;
+  }
 
   _genInitParams = (RooArgSet*) _genParams->snapshot(kFALSE) ;
 
@@ -338,7 +342,11 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
 				  << "                        the set of over/undersampled prototype events for each generation cycle." << endl ;
   }
   
-  _genContext = genModel.genContext(dependents,genProtoData,0,_verboseGen) ;
+  if (!_binGenData) {
+    _genContext = genModel.genContext(dependents,genProtoData,0,_verboseGen) ;
+  } else {
+    _genContext = 0 ;
+  }
   _genParams = _genModel->getParameters(&_dependents) ;
   RooArgSet* tmp = genModel.getParameters(&dependents) ;
   _genInitParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
@@ -352,6 +360,9 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   
   // Place holder for NLL
   _nllVar = new RooRealVar("NLL","-log(Likelihood)",0) ;
+  
+  // Place holder for number of generated events
+  _ngenVar = new RooRealVar("ngen","number of generated events",0) ;
   
   // Create data set containing parameter values, errors and pulls
   RooArgSet tmp2(*_fitParams) ;
@@ -434,10 +445,10 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
   // pattern.
   //
 
-  RooMsgService::MsgLevel oldLevel(RooMsgService::FATAL) ;
+  RooFit::MsgLevel oldLevel(RooFit::FATAL) ;
   if (_silence) {
     oldLevel = RooMsgService::instance().globalKillBelow() ;
-    RooMsgService::instance().setGlobalKillBelow(RooMsgService::PROGRESS) ;
+    RooMsgService::instance().setGlobalKillBelow(RooFit::PROGRESS) ;
   }
 
   list<RooAbsMCStudyModule*>::iterator iter ;
@@ -484,23 +495,32 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 	(*iter2)->processBeforeGen(nSamples) ;
       }  
 
-      // Calculate the number of (extended) events for this run
-      if (_extendedGen) {
-	_nExpGen = _genModel->expectedEvents(&_dependents) ;
-	nEvt = RooRandom::randomGenerator()->Poisson(nEvtPerSample==0?_nExpGen:nEvtPerSample) ;
-      }
-      
-      // Optional randomization of protodata for this run
-      if (_randProto && _genProtoData && _genProtoData->numEntries()!=nEvt) {
-	oocoutI(_fitModel,Generation) << "RooMCStudy: (Re)randomizing event order in prototype dataset (Nevt=" << nEvt << ")" << endl ;
-	Int_t* newOrder = _genModel->randomizeProtoOrder(_genProtoData->numEntries(),nEvt) ;
-	_genContext->setProtoDataOrder(newOrder) ;
-	delete[] newOrder ;
-      }
+      if (_binGenData) {
 
-      // Actual generation of events
-      _genSample = _genContext->generate(nEvt) ;
-      
+	// Binned generation
+	_genSample = _genModel->generateBinned(_dependents,nEvtPerSample) ;
+
+      } else {
+
+	// Calculate the number of (extended) events for this run
+	if (_extendedGen) {
+	  _nExpGen = _genModel->expectedEvents(&_dependents) ;
+	  nEvt = RooRandom::randomGenerator()->Poisson(nEvtPerSample==0?_nExpGen:nEvtPerSample) ;
+	}
+	
+	// Optional randomization of protodata for this run
+	if (_randProto && _genProtoData && _genProtoData->numEntries()!=nEvt) {
+	  oocoutI(_fitModel,Generation) << "RooMCStudy: (Re)randomizing event order in prototype dataset (Nevt=" << nEvt << ")" << endl ;
+	  Int_t* newOrder = _genModel->randomizeProtoOrder(_genProtoData->numEntries(),nEvt) ;
+	  _genContext->setProtoDataOrder(newOrder) ;
+	  delete[] newOrder ;
+	}
+	
+	// Actual generation of events
+	_genSample = _genContext->generate(nEvt) ;
+      } 
+
+	
     //} else if (asciiFilePat && &asciiFilePat) { //warning: the address of 'asciiFilePat' will always evaluate as 'true'
     } else if (asciiFilePat) {
 
@@ -522,7 +542,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
     }
 
     // Save number of generated events
-    _ngenVar->setVal(_genSample->numEntries()) ;
+    _ngenVar->setVal(_genSample->sumEntries()) ;
 
     // Call module between generation and fitting hook
     list<RooAbsMCStudyModule*>::iterator iter3 ;
@@ -541,7 +561,12 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
     if (doGenerate && asciiFilePat && *asciiFilePat) {
       char asciiFile[1024] ;
       sprintf(asciiFile,asciiFilePat,nSamples) ;
-      _genSample->write(asciiFile) ;
+      RooDataSet* unbinnedData = dynamic_cast<RooDataSet*>(_genSample) ;
+      if (unbinnedData) {
+	unbinnedData->write(asciiFile) ;
+      } else {
+	coutE(InputArguments) << "RooMCStudy::run(" << GetName() << ") ERROR: ASCII writing of binned datasets is not supported" << endl ;
+      }
     }
     
     // Add to list or delete
@@ -571,7 +596,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
       _genParData->changeObservableName(arg->GetName(),Form("%s_gen",arg->GetName())) ;
     }
     delete iter2 ;
-   
+    
     _fitParData->merge(_genParData) ;
   }
 
@@ -1154,7 +1179,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
     // Add Gaussian fit if requested
     if (fitGauss) {
       RooRealVar pullMean("pullMean","Mean of pull",0,-100,100) ;
-      RooRealVar pullSigma("pullSigma","Width of pull",1,0,5) ;
+      RooRealVar pullSigma("pullSigma","Width of pull",1,0.1,5) ;
       RooGenericPdf pullGauss("pullGauss","Gaussian of pull",
 			      "exp(-0.5*(@0-@1)*(@0-@1)/(@2*@2))",
 			      RooArgSet(pvar,pullMean,pullSigma)) ;

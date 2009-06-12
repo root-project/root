@@ -11,7 +11,7 @@
 // END_HTML
 //
 
-const char* VTAG="2.98" ;
+const char* VTAG="3.00" ;
 
 Int_t doBanner()
 {

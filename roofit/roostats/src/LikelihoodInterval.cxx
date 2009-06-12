@@ -120,7 +120,7 @@ Bool_t LikelihoodInterval::IsInInterval(RooArgSet &parameterPoint)
   // This is the main method to satisfy the RooStats::ConfInterval interface.  
   // It returns true if the parameter point is in the interval.
 
-  RooMsgService::instance().setGlobalKillBelow(RooMsgService::FATAL) ;
+  RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
   // Method to determine if a parameter point is in the interval
   if( !this->CheckParameters(parameterPoint) ) {
     std::cout << "parameters don't match" << std::endl;
@@ -158,7 +158,7 @@ Bool_t LikelihoodInterval::IsInInterval(RooArgSet &parameterPoint)
     return false;
 
 
-  RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
+  RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
   return true;
   
 }

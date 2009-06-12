@@ -51,6 +51,7 @@
 #include "RooRealIntegral.h"
 #include "RooMsgService.h"
 #include "RooExpensiveObjectCache.h"
+#include "RooAbsDataStore.h"
 
 #include <string.h>
 #include <iomanip>
@@ -1407,6 +1408,26 @@ void RooAbsArg::attachDataSet(const RooAbsData &data)
 
 
 //_____________________________________________________________________________
+void RooAbsArg::attachDataStore(const RooAbsDataStore &dstore)
+{
+  // Replace server nodes with names matching the dataset variable names
+  // with those data set variables, making this PDF directly dependent on the dataset
+
+  const RooArgSet* set = dstore.get() ;
+  RooArgSet branches ;
+  branchNodeServerList(&branches,0,kTRUE) ;
+
+  TIterator* iter = branches.createIterator() ;
+  RooAbsArg* branch ;
+  while((branch=(RooAbsArg*)iter->Next())) {
+    branch->redirectServers(*set,kFALSE,kFALSE) ;
+  }
+  delete iter ;
+}
+
+
+
+//_____________________________________________________________________________
 Int_t RooAbsArg::Compare(const TObject* other) const
 {
   // Utility function used by TCollection::Sort to compare contained TObjects
@@ -1872,7 +1893,7 @@ RooLinkedList RooAbsArg::getCloningAncestors() const
 
 
 //_____________________________________________________________________________
-void RooAbsArg::graphVizTree(const char* fileName)
+void RooAbsArg::graphVizTree(const char* fileName, const char* delimiter, bool useTitle, bool useLatex)
 {
   // Create a GraphViz .dot file visualizing the expression tree headed by
   // this RooAbsArg object. Use the GraphViz tool suite to make e.g. a gif
@@ -1885,11 +1906,11 @@ void RooAbsArg::graphVizTree(const char* fileName)
     coutE(InputArguments) << "RooAbsArg::graphVizTree() ERROR: Cannot open graphViz output file with name " << fileName << endl ;
     return ;
   }
-  graphVizTree(ofs) ;
+  graphVizTree(ofs, delimiter, useTitle, useLatex) ;
 }
 
 //_____________________________________________________________________________
-void RooAbsArg::graphVizTree(ostream& os)
+void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, bool useLatex)
 {
   // Write the GraphViz representation of the expression tree headed by
   // this RooAbsArg object to the given ostream.
@@ -1908,8 +1929,24 @@ void RooAbsArg::graphVizTree(ostream& os)
   treeNodeServerList(&nodeSet) ;
   TIterator* iter = nodeSet.createIterator() ;
   RooAbsArg* node ;
+
+  // iterate over nodes
   while((node=(RooAbsArg*)iter->Next())) {
-    os << "\"" << node->GetName() << "\" [ color=" << (node->isFundamental()?"blue":"red") << ", label=\"" << node->IsA()->GetName() << "\\n" << node->GetName() << "\"];" << endl ;
+    string nodeName = node->GetName();
+    string nodeTitle = node->GetTitle();
+    string nodeLabel = (useTitle && !nodeTitle.empty()) ? nodeTitle : nodeName;
+
+    // if using latex, replace ROOT's # with normal latex backslash 
+    while(useLatex && nodeLabel.find("#")!=nodeLabel.npos){
+      nodeLabel.replace(nodeLabel.find("#"), 1, "\\");
+    }
+    
+    string typeFormat = "\\texttt{";
+    string nodeType = (useLatex) ? typeFormat+node->IsA()->GetName()+"}" : node->IsA()->GetName();
+
+    os << "\"" << nodeName << "\" [ color=" << (node->isFundamental()?"blue":"red") 
+       << ", label=\"" << nodeType << delimiter << nodeLabel << "\"];" << endl ;
+
   }
   delete iter ;
 

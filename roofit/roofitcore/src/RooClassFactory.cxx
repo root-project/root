@@ -36,6 +36,7 @@
 #include "TInterpreter.h"
 #include "RooWorkspace.h"
 #include "RooGlobalFunc.h"
+#include "RooAbsPdf.h"
 #include <fstream>
 #include <vector>
 #include <string>

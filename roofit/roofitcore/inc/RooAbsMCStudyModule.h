@@ -83,7 +83,7 @@ protected:
      if (_mcs) return _mcs->refit(inGenSample) ; else return 0 ; 
    }
 
-   RooDataSet* genSample() { 
+   RooAbsData* genSample() { 
      // Return generate sample
      return _mcs ? _mcs->_genSample : 0 ; 
    }

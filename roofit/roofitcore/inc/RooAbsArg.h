@@ -30,7 +30,9 @@ class TTree ;
 class RooArgSet ;
 class RooAbsCollection ;
 class RooTreeData ;
+class RooTreeDataStore ;
 class RooAbsData ;
+class RooAbsDataStore ;
 class RooAbsProxy ;
 class RooArgProxy ;
 class RooSetProxy ;
@@ -182,6 +184,7 @@ public:
   // --- End obsolete functions for backward compatibility
 
   void attachDataSet(const RooAbsData &set);
+  void attachDataStore(const RooAbsDataStore &set);
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
@@ -278,8 +281,8 @@ public:
   // constant term optimization
   virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
 
-  void graphVizTree(const char* fileName) ;
-  void graphVizTree(ostream& os) ;
+  void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
+  void graphVizTree(ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
 
   void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;
   void printCompactTree(ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
@@ -405,6 +408,7 @@ public:
   void printAttribList(ostream& os) const;
 
   // Hooks for RooTreeData interface
+  friend class RooTreeDataStore ;
   friend class RooTreeData ;
   friend class RooDataSet ;
   friend class RooRealMPFE ;

@@ -70,6 +70,7 @@
 #include "RooXYChi2Var.h"
 #include "RooMinuit.h"
 #include "RooChi2Var.h"
+#include "RooFitResult.h"
 
 #include "Riostream.h"
 
@@ -86,6 +87,8 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TF3.h"
+#include "TMatrixD.h"
+#include "TVector.h"
 
 #include <sstream>
 
@@ -1044,16 +1047,22 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
 
 //_____________________________________________________________________________
-RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSet, 
-				      Double_t scaleFactor, Bool_t correctForBinSize, Bool_t showProgress) const 
+RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSet, Double_t scaleFactor, 
+				      Bool_t correctForBinSize, Bool_t showProgress) const 
 {
   // Fill a RooDataHist with values sampled from this function at the
-  // bin centers.  Our value is calculated by first integrating out
-  // any variables in projectedVars and then scaling the result by
-  // scaleFactor. Returns a pointer to the input RooDataHist, or zero
-  // in case of an error. If correctForBinSize is true the RooDataHist
+  // bin centers.  If extendedMode is true, the p.d.f. values is multiplied
+  // by the number of expected events in each bin
+  // 
+  // An optional scaling by a given scaleFactor can be performed. 
+  // Returns a pointer to the input RooDataHist, or zero
+  // in case of an error. 
+  //
+  // If correctForBinSize is true the RooDataHist
   // is filled with the functions density (function value times the
-  // bin volume) rather than function value.  If showProgress is true
+  // bin volume) rather than function value.  
+  //
+  // If showProgress is true
   // a process indicator is printed on stdout in steps of one percent,
   // which is mostly useful for the sampling of expensive functions
   // such as likelihoods
@@ -1075,7 +1084,7 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
   RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
   RooAbsReal* theClone = (RooAbsReal*) cloneSet->find(GetName()) ;
   theClone->attachDataSet(*hist) ;
-
+  
   // Iterator over all bins of RooDataHist and fill weights
   Int_t onePct = hist->numEntries()/100 ;
   if (onePct==0) {
@@ -1341,7 +1350,35 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   //                                    will result in more and more densely spaced curve points
   //
   // Invisible(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
-
+  //
+  // VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE) 
+  //                                  -- Visualize the uncertainty on the parameters, as given in fitres, at 'Z' sigma'
+  //
+  // VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
+  //                                  -- Visualize the uncertainty on the subset of parameters 'param', as given in fitres, at 'Z' sigma'
+  //
+  //
+  // Details on error band visualization
+  // -----------------------------------
+  //
+  // By default (linMethod=kTRUE) a linearized error is shown which is calculated as follows
+  //                                    T            
+  // error(x) = Z* F_a(x) * Corr(a,a') F_a'(x)
+  //
+  // where     F_a(x) = [ f(x,a+da) - f(x,a-da) ] / 2, with f(x) the plotted curve and 'da' taken from the fit result
+  //       Corr(a,a') = the correlation matrix from the fit result
+  //                Z = requested significance 'Z sigma band'
+  //
+  // The linear method is fast (required 2*N evaluations of the curve, where N is the number of parameters), but may
+  // not be accurate in the presence of strong correlations (~>0.9) and at Z>2 due to linear and Gaussian approximations made
+  //
+  // Alternatively (linMethod=kFALSE), a more robust error is calculated using a sampling method. In this method a number of curves
+  // is calculated with variations of the parameter values, as drawn from a multi-variate Gaussian p.d.f. that is constructed
+  // from the fit results covariance matrix. The error(x) is determined by calculating a central interval that capture N% of the variations 
+  // for each valye of x, where N% is controlled by Z (i.e. Z=1 gives N=68%). The number of sampling curves is chosen to be such
+  // that at least 30 curves are expected to be outside the N% interval, and is minimally 100 (e.g. Z=1->Ncurve=100, Z=2->Ncurve=659, Z=3->Ncurve=11111)
+  // Intervals from the sampling method can be asymmetric, and may perform better in the presence of strong correlations, but may take (much)
+  // longer to calculate
 
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
@@ -1406,6 +1443,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineInt("shiftToZero","ShiftToZero",0,0) ;  
   pc.defineObject("projDataSet","ProjData",0) ;
   pc.defineObject("projData","ProjData",1) ;
+  pc.defineObject("errorFR","VisualizeError",0) ;
+  pc.defineDouble("errorZ","VisualizeError",0,1.) ;
+  pc.defineSet("errorPars","VisualizeError",0) ;
+  pc.defineInt("linearMethod","VisualizeError",0,0) ;
   pc.defineInt("binProjData","ProjData",0,0) ;
   pc.defineDouble("rangeLo","Range",0,-999.) ;
   pc.defineDouble("rangeHi","Range",1,-999.) ;
@@ -1431,6 +1472,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineMutex("SliceVars","Project") ;
   pc.defineMutex("AddTo","Asymmetry") ;
   pc.defineMutex("Range","RangeWithName") ;
+  pc.defineMutex("VisualizeError","VisualizeErrorData") ;
 
   // Process & check varargs 
   pc.process(argList) ;
@@ -1440,6 +1482,13 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
   PlotOpt o ;
 
+  RooFitResult* errFR = (RooFitResult*) pc.getObject("errorFR") ;
+  Double_t errZ = pc.getDouble("errorZ") ;
+  RooArgSet* errPars = pc.getSet("errorPars") ;
+  Bool_t linMethod = pc.getInt("linearMethod") ;
+  if (errFR) {
+    return plotOnWithErrorBand(frame,*errFR,errZ,errPars,argList,linMethod) ;
+  }
 
   // Extract values from named arguments
   o.numee       = pc.getInt("numee") ;
@@ -2259,6 +2308,214 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
   return frame;
 }
+
+
+
+
+
+//_____________________________________________________________________________
+RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, Double_t Z,const RooArgSet* params, const RooLinkedList& argList, Bool_t linMethod) const 
+{
+  // Plot function or p.d.f. on frame with support for visualization of the uncertainty encoded in the given fit result fr.
+  // If params is non-zero, only the subset of the parameters in fr that occur in params is considered for the error evaluation
+  // Argument argList can contain any RooCmdArg named argument that can be applied to a regular plotOn() operation
+  //
+  // By default (linMethod=kTRUE) a linearized error is shown which is calculated as follows
+  //                                    T            
+  // error(x) = Z* F_a(x) * Corr(a,a') F_a'(x)
+  //
+  // where     F_a(x) = [ f(x,a+da) - f(x,a-da) ] / 2, with f(x) the plotted curve and 'da' taken from the fit result
+  //       Corr(a,a') = the correlation matrix from the fit result
+  //                Z = requested signifance 'Z sigma band'
+  //
+  // The linear method is fast (required 2*N evaluations of the curve, where N is the number of parameters), but may
+  // not be accurate in the presence of strong correlations (~>0.9) and at Z>2 due to linear and Gaussian approximations made
+  //
+  // Alternatively, a more robust error is calculated using a sampling method. In this method a number of curves
+  // is calculated with variations of the parameter values, as drawn from a multi-variate Gaussian p.d.f. that is constructed
+  // from the fit results covariance matrix. The error(x) is determined by calculating a central interval that capture N% of the variations 
+  // for each valye of x, where N% is controlled by Z (i.e. Z=1 gives N=68%). The number of sampling curves is chosen to be such
+  // that at least 30 curves are expected to be outside the N% interval, and is minimally 100 (e.g. Z=1->Ncurve=100, Z=2->Ncurve=659, Z=3->Ncurve=11111)
+  // Intervals from the sampling method can be asymmetric, and may perform better in the presence of strong correlations
+
+  RooLinkedList plotArgList(argList) ;
+  RooCmdConfig pc(Form("RooAbsPdf::plotOn(%s)",GetName())) ;
+  pc.stripCmdList(plotArgList,"VisualizeError,MoveToBack") ;  
+
+
+  // Generate central value curve
+  RooLinkedList tmp(plotArgList) ;
+  plotOn(frame,tmp) ;
+  RooCurve* cenCurve = frame->getCurve() ;
+  frame->remove(0,kFALSE) ;
+
+  RooCurve* band(0) ;
+  if (!linMethod) {
+
+    // *** Interval method ***
+    //
+    // Make N variations of parameters samples from V and visualize N% central interval where N% is defined from Z
+
+    // Clone self for internal use
+    RooAbsReal* cloneFunc = (RooAbsReal*) cloneTree() ;
+    RooArgSet* cloneParams = cloneFunc->getObservables(fr.floatParsFinal()) ;
+    RooArgSet* errorParams = params?((RooArgSet*)cloneParams->selectCommon(*params)):cloneParams ;
+    
+    // Generate 100 random parameter points distributed according to fit result covariance matrix
+    RooAbsPdf* paramPdf = fr.createHessePdf(*errorParams) ;
+    Int_t n = Int_t(100./TMath::Erfc(Z/sqrt(2.))) ;
+    if (n<100) n=100 ;
+    
+    coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") INFO: visualizing " << Z << "-sigma uncertainties in parameters " 
+		  << *errorParams << " from fit result " << fr.GetName() << " using " << n << " samplings." << endl ;
+    
+    // Generate variation curves with above set of parameter values
+    RooDataSet* d = paramPdf->generate(*errorParams,n) ;
+    vector<RooCurve*> cvec ;
+    for (int i=0 ; i<d->numEntries() ; i++) {
+      *cloneParams = (*d->get(i)) ;
+      RooLinkedList tmp2(plotArgList) ;
+      cloneFunc->plotOn(frame,tmp2) ;
+      cvec.push_back(frame->getCurve()) ;
+      frame->remove(0,kFALSE) ;
+    }
+    
+    
+    // Generate upper and lower curve points from 68% interval around each point of central curve
+    band = cenCurve->makeErrorBand(cvec,Z) ;
+    
+    // Cleanup 
+    delete paramPdf ;
+    delete cloneFunc ;
+    for (vector<RooCurve*>::iterator i=cvec.begin() ; i!=cvec.end() ; i++) {
+      delete (*i) ;
+    }
+
+  } else {
+
+    // *** Linear Method ***
+    //
+    // Make a one-sigma up- and down fluctation for each parameter and visualize
+    // a from a linearized calculation as follows
+    //
+    //   error(x) = F(a) C_aa' F(a')
+    //
+    //   Where F(a) = (f(x,a+da) - f(x,a-da))/2
+    //   and C_aa' is the correlation matrix
+
+    const TMatrixDSym& C = fr.correlationMatrix() ;
+    // Clone self for internal use
+    RooAbsReal* cloneFunc = (RooAbsReal*) cloneTree() ;
+    RooArgSet* cloneParams = cloneFunc->getObservables(fr.floatParsFinal()) ;
+    RooArgSet* errorParams = params?((RooArgSet*)cloneParams->selectCommon(*params)):cloneParams ;    
+
+    // Make list of parameter instances of cloneFunc in order of error matrix
+    RooArgList paramList ;
+    const RooArgList& fpf = fr.floatParsFinal() ;
+    for (Int_t i=0 ; i<fpf.getSize() ; i++) {
+      RooAbsArg* par = errorParams->find(fpf[i].GetName()) ;
+      if (par) {
+	paramList.add(*par) ;
+      }
+    }
+    // Create vector of plus,minus variations for each parameter
+    
+    vector<RooCurve*> plusVar, minusVar ;    
+    for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
+
+      RooRealVar& rrv = (RooRealVar&)fpf[ivar] ;
+
+      Double_t cenVal = rrv.getVal() ;
+      Double_t errVal = rrv.getError() ;
+  
+      // Make Plus variation
+      ((RooRealVar*)paramList.at(ivar))->setVal(cenVal+Z*errVal) ;
+      RooLinkedList tmp2(plotArgList) ;
+      cloneFunc->plotOn(frame,tmp2) ;
+      plusVar.push_back(frame->getCurve()) ;
+      frame->remove(0,kFALSE) ;
+
+      // Make Minus variation
+      ((RooRealVar*)paramList.at(ivar))->setVal(cenVal-Z*errVal) ;
+      RooLinkedList tmp3(plotArgList) ;
+      cloneFunc->plotOn(frame,tmp3) ;
+      minusVar.push_back(frame->getCurve()) ;
+      frame->remove(0,kFALSE) ;
+
+      ((RooRealVar*)paramList.at(ivar))->setVal(cenVal) ;
+    }
+
+    //                                        T
+    // Generate error bands according to F*C*F   where F = (plusVar-minusVar)/2 
+    band = cenCurve->makeErrorBand(plusVar,minusVar,C,Z) ;
+    
+    // Cleanup 
+    delete cloneFunc ;
+    for (vector<RooCurve*>::iterator i=plusVar.begin() ; i!=plusVar.end() ; i++) {
+      delete (*i) ;
+    }
+    for (vector<RooCurve*>::iterator i=minusVar.begin() ; i!=minusVar.end() ; i++) {
+      delete (*i) ;
+    }
+
+  }
+
+  delete cenCurve ;
+  if (!band) return frame ;
+  
+  // Define configuration for this method
+  pc.defineString("drawOption","DrawOption",0,"F") ;
+  pc.defineString("curveNameSuffix","CurveNameSuffix",0,"") ;
+  pc.defineInt("lineColor","LineColor",0,-999) ;
+  pc.defineInt("lineStyle","LineStyle",0,-999) ;
+  pc.defineInt("lineWidth","LineWidth",0,-999) ;
+  pc.defineInt("fillColor","FillColor",0,-999) ;
+  pc.defineInt("fillStyle","FillStyle",0,-999) ;
+  pc.defineString("curveName","Name",0,"") ;
+  pc.defineInt("curveInvisible","Invisible",0,0) ;
+  pc.defineInt("moveToBack","MoveToBack",0,0) ;
+  pc.allowUndefined() ;
+
+  // Process & check varargs 
+  pc.process(argList) ;
+  if (!pc.ok(kTRUE)) {
+    return frame ;
+  }
+
+  // Insert error band in plot frame
+  frame->addPlotable(band,pc.getString("drawOption"),pc.getInt("curveInvisible")) ;
+
+
+  // Optionally adjust line/fill attributes
+  Int_t lineColor = pc.getInt("lineColor") ;
+  Int_t lineStyle = pc.getInt("lineStyle") ;
+  Int_t lineWidth = pc.getInt("lineWidth") ;
+  Int_t fillColor = pc.getInt("fillColor") ;
+  Int_t fillStyle = pc.getInt("fillStyle") ;
+  if (lineColor!=-999) frame->getAttLine()->SetLineColor(lineColor) ;
+  if (lineStyle!=-999) frame->getAttLine()->SetLineStyle(lineStyle) ;
+  if (lineWidth!=-999) frame->getAttLine()->SetLineWidth(lineWidth) ;
+  if (fillColor!=-999) frame->getAttFill()->SetFillColor(fillColor) ;
+  if (fillStyle!=-999) frame->getAttFill()->SetFillStyle(fillStyle) ;
+
+  // Adjust name if requested
+  if (pc.getString("curveName",0,kTRUE)) {
+    band->SetName(pc.getString("curveName",0,kTRUE)) ;
+  } else if (pc.getString("curveNameSuffix",0,kTRUE)) {
+    TString name(band->GetName()) ;
+    name.Append(pc.getString("curveNameSuffix",0,kTRUE)) ;
+    band->SetName(name.Data()) ;
+  }
+
+  // Move last inserted object to back to drawing stack if requested
+  if (pc.getInt("moveToBack") && frame->numItems()>1) {   
+    frame->drawBefore(frame->getObject(0)->GetName(), frame->getCurve()->GetName());    
+  }
+  
+  
+  return frame ;
+}
+
 
 
 
@@ -3240,7 +3497,7 @@ RooFunctor* RooAbsReal::functor(const RooArgList& obs, const RooArgList& pars, c
   }
   delete realObs ;
   delete realPars ;
-    
+
   return new RooFunctor(*this,obs,pars,nset) ;
 }
 

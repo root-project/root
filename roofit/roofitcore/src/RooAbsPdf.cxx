@@ -149,6 +149,7 @@
 #include "RooCachedReal.h"
 #include "RooXYChi2Var.h"
 #include "RooChi2Var.h"
+#include "RooMinimizer.h"
 #include <string>
 
 ClassImp(RooAbsPdf) 
@@ -658,6 +659,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg
   // Constrain(const RooArgSet&pars) -- Include constraints to listed parameters in likelihood using internal constrains in p.d.f
   // ExternalConstraints(const RooArgSet& ) -- Include given external constraints to likelihood
   // Verbose(Bool_t flag)           -- Constrols RooFit informational messages in likelihood construction
+  // CloneData(Bool flag)           -- Use clone of dataset in NLL (default is true)
   // 
   // 
   
@@ -696,6 +698,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("numcpu","NumCPU",0,1) ;
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("optConst","Optimize",0,1) ;
+  pc.defineInt("cloneData","CloneData",0,0) ;
   pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
   pc.defineObject("cPars","Constrain",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
@@ -715,6 +718,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t splitr   = pc.getInt("splitRange") ;
   Bool_t verbose = pc.getInt("verbose") ;
   Int_t optConst = pc.getInt("optConst") ;
+  Bool_t cloneData = pc.getInt("cloneData") ;
   const RooArgSet* cPars = static_cast<RooArgSet*>(pc.getObject("cPars")) ;
   const RooArgSet* extCons = pc.getSet("extCons") ;
 
@@ -754,7 +758,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   string baseName = Form("nll_%s_%s",GetName(),data.GetName()) ;
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: default range, or single restricted range
-    nll = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,kFALSE,verbose,splitr) ;
+    nll = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,kFALSE,verbose,splitr,cloneData) ;
 
   } else {
     // Composite case: multiple ranges
@@ -763,7 +767,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     strcpy(buf,rangeName) ;
     char* token = strtok(buf,",") ;
     while(token) {
-      RooAbsReal* nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token),"-log(likelihood)",*this,data,projDeps,ext,token,addCoefRangeName,numcpu,kFALSE,verbose,splitr) ;
+      RooAbsReal* nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token),"-log(likelihood)",*this,data,projDeps,ext,token,addCoefRangeName,numcpu,kFALSE,verbose,splitr,cloneData) ;
       nllList.add(*nllComp) ;
       token = strtok(0,",") ;
     }
@@ -835,6 +839,18 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   //
   // Options to control flow of fit procedure
   // ----------------------------------------
+  //
+  // Minimizer(type,algo)           -- Choose minimization package and algorithm to use. Default is MINUIT/MIGRAD through the RooMinuit
+  //                                   interface, but others can be specified (through RooMinimizer interface)
+  //
+  //                                          Type         Algorithm
+  //                                          ------       ---------
+  //                                          Minuit       migrad, simplex, minimize (=migrad+simplex), migradimproved (=migrad+improve)
+  //                                          Minuit2      migrad, simplex, minimize, scan
+  //                                          GSLMultiMin  conjugatefr, conjugatepr, bfgs, bfgs2, steepestdescent
+  //                                          GSLSimAn     -
+  //
+  // 
   // InitialHesse(Bool_t flag)      -- Flag controls if HESSE before MIGRAD as well, off by default
   // Hesse(Bool_t flag)             -- Flag controls if HESSE is run after MIGRAD, on by default
   // Minos(Bool_t flag)             -- Flag controls if MINOS is run after HESSE, on by default
@@ -843,6 +859,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   // Strategy(Int_t flag)           -- Set Minuit strategy (0 through 2, default is 1)
   // FitOptions(const char* optStr) -- Steer fit with classic options string (for backward compatibility). Use of this option
   //                                   excludes use of any of the new style steering options.
+  //
   // SumW2Error(Bool_t flag)        -- Apply correaction to errors and covariance matrix using sum-of-weights covariance matrix
   //                                   to obtain correct error for weighted likelihood fits. If this option is activated the
   //                                   corrected covariance matrix is calculated as Vcorr = V C-1 V, where V is the original 
@@ -889,7 +906,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,Optimize,SplitRange,Constrain,ExternalConstraints") ;
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,Optimize,SplitRange,Constrain,ExternalConstraints,CloneData") ;
 
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineInt("optConst","Optimize",0,1) ;
@@ -907,6 +924,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("doEEWall","EvalErrorWall",0,1) ;
   pc.defineInt("doWarn","Warnings",0,1) ;
   pc.defineInt("doSumW2","SumW2Error",0,-1) ;
+  pc.defineString("mintype","Minimizer",0,"") ;
+  pc.defineString("minalg","Minimizer",1,"") ;
   pc.defineObject("minosSet","Minos",0,0) ;
   pc.defineObject("cPars","Constrain",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
@@ -918,6 +937,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineMutex("FitOptions","Hesse") ;
   pc.defineMutex("FitOptions","Minos") ;
   pc.defineMutex("Range","RangeWithName") ;
+  pc.defineMutex("InitialHesse","Minimizer") ;
   
   // Process and check varargs 
   pc.process(fitCmdList) ;
@@ -941,6 +961,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t doWarn   = pc.getInt("doWarn") ;
   Int_t doSumW2  = pc.getInt("doSumW2") ;
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
+  const char* minType = pc.getString("mintype","",kTRUE) ;
+  const char* minAlg = pc.getString("minalg","",kTRUE) ;
 
   // Determine if the dataset has weights  
   Bool_t weightedData = data.isNonPoissonWeighted() ;
@@ -966,149 +988,299 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: sum-of-weights correction does not apply to MINOS errors" << endl ;
   }
     
-  RooAbsReal* nll = createNLL(data,nllCmdList) ;
+  RooAbsReal* nll = createNLL(data,nllCmdList) ;  
+
+  RooFitResult *ret = 0 ;    
 
   // Instantiate MINUIT
-  RooMinuit m(*nll) ;
+  if (minType) {
 
-  m.setEvalErrorWall(doEEWall) ;
-  if (doWarn==0) {
-    m.setNoWarn() ;
-  }
-  
-  m.setPrintEvalErrors(numee) ;
-  if (plevel!=1) {
-    m.setPrintLevel(plevel) ;
-  }
+    RooMinimizer m(*nll) ;
 
-  if (optConst) {
-    // Activate constant term optimization
-    m.optimizeConst(1) ;
-  }
-
-  RooFitResult *ret = 0 ;
-
-  if (fitOpt) {
-
-    // Play fit options as historically defined
-    ret = m.fit(fitOpt) ;
+    m.setMinimizerType(minType) ;
     
-  } else {
-
-    if (verbose) {
-      // Activate verbose options
-      m.setVerbose(1) ;
-    }
-    if (doTimer) {
-      // Activate timer options
-      m.setProfile(1) ;
+    m.setEvalErrorWall(doEEWall) ;
+    if (doWarn==0) {
+      // m.setNoWarn() ; WVE FIX THIS
     }
     
-    if (strat!=1) {
-      // Modify fit strategy
-      m.setStrategy(strat) ;
+    m.setPrintEvalErrors(numee) ;
+    if (plevel!=1) {
+      m.setPrintLevel(plevel) ;
     }
-
-    if (initHesse) {
-      // Initialize errors with hesse
-      m.hesse() ;
+    
+    if (optConst) {
+      // Activate constant term optimization
+      m.optimizeConst(1) ;
     }
-
-    // Minimize using migrad
-    m.migrad() ;
-
-    if (hesse) {
-      // Evaluate errors with Hesse
-      m.hesse() ;
-    }
-
-    if (doSumW2==1) {
-
-      // Make list of RooNLLVar components of FCN
-      list<RooNLLVar*> nllComponents ;
-      RooArgSet* comps = nll->getComponents() ;
-      RooAbsArg* arg ;
-      TIterator* citer = comps->createIterator() ;
-      while((arg=(RooAbsArg*)citer->Next())) {
-	RooNLLVar* nllComp = dynamic_cast<RooNLLVar*>(arg) ;
-	if (nllComp) {
-	  nllComponents.push_back(nllComp) ;
-	}
-      }
-      delete citer ;
-      delete comps ;  
-
-      // Calculated corrected errors for weighted likelihood fits
-      RooFitResult* rw = m.save() ;
-      for (list<RooNLLVar*>::iterator iter1=nllComponents.begin() ; iter1!=nllComponents.end() ; iter1++) {
-	(*iter1)->applyWeightSquared(kTRUE) ;
-      }
-      coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating sum-of-weights-squared correction matrix for covariance matrix" << endl ;
-      m.hesse() ;
-      RooFitResult* rw2 = m.save() ;
-      for (list<RooNLLVar*>::iterator iter2=nllComponents.begin() ; iter2!=nllComponents.end() ; iter2++) {
-	(*iter2)->applyWeightSquared(kFALSE) ;
-      }
-
-      // Apply correction matrix
-      const TMatrixDSym& V = rw->covarianceMatrix() ;
-      TMatrixDSym  C = rw2->covarianceMatrix() ;
+    
+    if (fitOpt) {
       
-      // Invert C
-      Double_t det(0) ;
-      C.Invert(&det) ;
-      if (det==0) {
-	coutE(Fitting) << "RooAbsPdf::fitTo(" << GetName() 
-		       << ") ERROR: Cannot apply sum-of-weights correction to covariance matrix: correction matrix calculated with weight-squared is singular" <<endl ;
-      } else {
-
-	// Calculate corrected covariance matrix = V C-1 V
-	TMatrixD VCV(V,TMatrixD::kMult,TMatrixD(C,TMatrixD::kMult,V)) ; 
+      // Play fit options as historically defined
+      ret = m.fit(fitOpt) ;
+      
+    } else {
+      
+      if (verbose) {
+	// Activate verbose options
+	m.setVerbose(1) ;
+      }
+      if (doTimer) {
+	// Activate timer options
+	m.setProfile(1) ;
+      }
+      
+      if (strat!=1) {
+	// Modify fit strategy
+	m.setStrategy(strat) ;
+      }
+      
+      if (initHesse) {
+	// Initialize errors with hesse
+	m.hesse() ;
+      }
+      
+      // Minimize using chosen algorithm
+      m.minimize(minType,minAlg) ;
+      
+      if (hesse) {
+	// Evaluate errors with Hesse
+	m.hesse() ;
+      }
+      
+      if (doSumW2==1) {
 	
-	// Make matrix explicitly symmetric
-	Int_t n = VCV.GetNrows() ;
-	TMatrixDSym VCVsym(n) ;
-	for (Int_t i=0 ; i<n ; i++) {
-	  for (Int_t j=i ; j<n ; j++) {
-	    if (i==j) {
-	      VCVsym(i,j) = VCV(i,j) ;
-	    }
-	    if (i!=j) {
-	      Double_t deltaRel = (VCV(i,j)-VCV(j,i))/sqrt(VCV(i,i)*VCV(j,j)) ;
-	      if (fabs(deltaRel)>1e-3) {
-		coutW(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: Corrected covariance matrix is not (completely) symmetric: V[" << i << "," << j << "] = " 
-			       << VCV(i,j) << " V[" << j << "," << i << "] = " << VCV(j,i) << " explicitly restoring symmetry by inserting average value" << endl ;
-	      }
-	      VCVsym(i,j) = (VCV(i,j)+VCV(j,i))/2 ;
-	    }
+	// Make list of RooNLLVar components of FCN
+	list<RooNLLVar*> nllComponents ;
+	RooArgSet* comps = nll->getComponents() ;
+	RooAbsArg* arg ;
+	TIterator* citer = comps->createIterator() ;
+	while((arg=(RooAbsArg*)citer->Next())) {
+	  RooNLLVar* nllComp = dynamic_cast<RooNLLVar*>(arg) ;
+	  if (nllComp) {
+	    nllComponents.push_back(nllComp) ;
 	  }
 	}
-
-	// Propagate corrected errors to parameters objects
-	m.applyCovarianceMatrix(VCVsym) ;
+	delete citer ;
+	delete comps ;  
+	
+	// Calculated corrected errors for weighted likelihood fits
+	RooFitResult* rw = m.save() ;
+	for (list<RooNLLVar*>::iterator iter1=nllComponents.begin() ; iter1!=nllComponents.end() ; iter1++) {
+	  (*iter1)->applyWeightSquared(kTRUE) ;
+	}
+	coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating sum-of-weights-squared correction matrix for covariance matrix" << endl ;
+	m.hesse() ;
+	RooFitResult* rw2 = m.save() ;
+	for (list<RooNLLVar*>::iterator iter2=nllComponents.begin() ; iter2!=nllComponents.end() ; iter2++) {
+	  (*iter2)->applyWeightSquared(kFALSE) ;
+	}
+	
+	// Apply correction matrix
+	const TMatrixDSym& V = rw->covarianceMatrix() ;
+	TMatrixDSym  C = rw2->covarianceMatrix() ;
+	
+	// Invert C
+	Double_t det(0) ;
+	C.Invert(&det) ;
+	if (det==0) {
+	  coutE(Fitting) << "RooAbsPdf::fitTo(" << GetName() 
+			 << ") ERROR: Cannot apply sum-of-weights correction to covariance matrix: correction matrix calculated with weight-squared is singular" <<endl ;
+	} else {
+	  
+	  // Calculate corrected covariance matrix = V C-1 V
+	  TMatrixD VCV(V,TMatrixD::kMult,TMatrixD(C,TMatrixD::kMult,V)) ; 
+	  
+	  // Make matrix explicitly symmetric
+	  Int_t n = VCV.GetNrows() ;
+	  TMatrixDSym VCVsym(n) ;
+	  for (Int_t i=0 ; i<n ; i++) {
+	    for (Int_t j=i ; j<n ; j++) {
+	      if (i==j) {
+		VCVsym(i,j) = VCV(i,j) ;
+	      }
+	      if (i!=j) {
+		Double_t deltaRel = (VCV(i,j)-VCV(j,i))/sqrt(VCV(i,i)*VCV(j,j)) ;
+		if (fabs(deltaRel)>1e-3) {
+		  coutW(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: Corrected covariance matrix is not (completely) symmetric: V[" << i << "," << j << "] = " 
+				 << VCV(i,j) << " V[" << j << "," << i << "] = " << VCV(j,i) << " explicitly restoring symmetry by inserting average value" << endl ;
+		}
+		VCVsym(i,j) = (VCV(i,j)+VCV(j,i))/2 ;
+	      }
+	    }
+	  }
+	  
+	  // Propagate corrected errors to parameters objects
+	  m.applyCovarianceMatrix(VCVsym) ;
+	}
+	
+	delete rw ;
+	delete rw2 ;
       }
-
-      delete rw ;
-      delete rw2 ;
-    }
-
-    if (minos) {
-      // Evaluate errs with Minos
-      if (minosSet) {
-	m.minos(*minosSet) ;
-      } else {
-	m.minos() ;
+      
+      if (minos) {
+	// Evaluate errs with Minos
+	if (minosSet) {
+	  m.minos(*minosSet) ;
+	} else {
+	  m.minos() ;
+	}
       }
+      
+      // Optionally return fit result
+      if (doSave) {
+	string name = Form("fitresult_%s_%s",GetName(),data.GetName()) ;
+	string title = Form("Result of fit of p.d.f. %s to dataset %s",GetName(),data.GetName()) ;
+	ret = m.save(name.c_str(),title.c_str()) ;
+      } 
+      
     }
+    
 
-    // Optionally return fit result
-    if (doSave) {
-      string name = Form("fitresult_%s_%s",GetName(),data.GetName()) ;
-      string title = Form("Result of fit of p.d.f. %s to dataset %s",GetName(),data.GetName()) ;
-      ret = m.save(name.c_str(),title.c_str()) ;
-    } 
+  } else {
 
+    RooMinuit m(*nll) ;
+    
+    m.setEvalErrorWall(doEEWall) ;
+    if (doWarn==0) {
+      m.setNoWarn() ;
+    }
+    
+    m.setPrintEvalErrors(numee) ;
+    if (plevel!=1) {
+      m.setPrintLevel(plevel) ;
+    }
+    
+    if (optConst) {
+      // Activate constant term optimization
+      m.optimizeConst(1) ;
+    }
+    
+    if (fitOpt) {
+      
+      // Play fit options as historically defined
+      ret = m.fit(fitOpt) ;
+      
+    } else {
+      
+      if (verbose) {
+	// Activate verbose options
+	m.setVerbose(1) ;
+      }
+      if (doTimer) {
+	// Activate timer options
+	m.setProfile(1) ;
+      }
+      
+      if (strat!=1) {
+	// Modify fit strategy
+	m.setStrategy(strat) ;
+      }
+      
+      if (initHesse) {
+	// Initialize errors with hesse
+	m.hesse() ;
+      }
+      
+      // Minimize using migrad
+      m.migrad() ;
+      
+      if (hesse) {
+	// Evaluate errors with Hesse
+	m.hesse() ;
+      }
+      
+      if (doSumW2==1) {
+	
+	// Make list of RooNLLVar components of FCN
+	list<RooNLLVar*> nllComponents ;
+	RooArgSet* comps = nll->getComponents() ;
+	RooAbsArg* arg ;
+	TIterator* citer = comps->createIterator() ;
+	while((arg=(RooAbsArg*)citer->Next())) {
+	  RooNLLVar* nllComp = dynamic_cast<RooNLLVar*>(arg) ;
+	  if (nllComp) {
+	    nllComponents.push_back(nllComp) ;
+	  }
+	}
+	delete citer ;
+	delete comps ;  
+	
+	// Calculated corrected errors for weighted likelihood fits
+	RooFitResult* rw = m.save() ;
+	for (list<RooNLLVar*>::iterator iter1=nllComponents.begin() ; iter1!=nllComponents.end() ; iter1++) {
+	  (*iter1)->applyWeightSquared(kTRUE) ;
+	}
+	coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating sum-of-weights-squared correction matrix for covariance matrix" << endl ;
+	m.hesse() ;
+	RooFitResult* rw2 = m.save() ;
+	for (list<RooNLLVar*>::iterator iter2=nllComponents.begin() ; iter2!=nllComponents.end() ; iter2++) {
+	  (*iter2)->applyWeightSquared(kFALSE) ;
+	}
+	
+	// Apply correction matrix
+	const TMatrixDSym& V = rw->covarianceMatrix() ;
+	TMatrixDSym  C = rw2->covarianceMatrix() ;
+	
+	// Invert C
+	Double_t det(0) ;
+	C.Invert(&det) ;
+	if (det==0) {
+	  coutE(Fitting) << "RooAbsPdf::fitTo(" << GetName() 
+			 << ") ERROR: Cannot apply sum-of-weights correction to covariance matrix: correction matrix calculated with weight-squared is singular" <<endl ;
+	} else {
+	  
+	  // Calculate corrected covariance matrix = V C-1 V
+	  TMatrixD VCV(V,TMatrixD::kMult,TMatrixD(C,TMatrixD::kMult,V)) ; 
+	  
+	  // Make matrix explicitly symmetric
+	  Int_t n = VCV.GetNrows() ;
+	  TMatrixDSym VCVsym(n) ;
+	  for (Int_t i=0 ; i<n ; i++) {
+	    for (Int_t j=i ; j<n ; j++) {
+	      if (i==j) {
+		VCVsym(i,j) = VCV(i,j) ;
+	      }
+	      if (i!=j) {
+		Double_t deltaRel = (VCV(i,j)-VCV(j,i))/sqrt(VCV(i,i)*VCV(j,j)) ;
+		if (fabs(deltaRel)>1e-3) {
+		  coutW(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: Corrected covariance matrix is not (completely) symmetric: V[" << i << "," << j << "] = " 
+				 << VCV(i,j) << " V[" << j << "," << i << "] = " << VCV(j,i) << " explicitly restoring symmetry by inserting average value" << endl ;
+		}
+		VCVsym(i,j) = (VCV(i,j)+VCV(j,i))/2 ;
+	      }
+	    }
+	  }
+	  
+	  // Propagate corrected errors to parameters objects
+	  m.applyCovarianceMatrix(VCVsym) ;
+	}
+	
+	delete rw ;
+	delete rw2 ;
+      }
+      
+      if (minos) {
+	// Evaluate errs with Minos
+	if (minosSet) {
+	  m.minos(*minosSet) ;
+	} else {
+	  m.minos() ;
+	}
+      }
+      
+      // Optionally return fit result
+      if (doSave) {
+	string name = Form("fitresult_%s_%s",GetName(),data.GetName()) ;
+	string title = Form("Result of fit of p.d.f. %s to dataset %s",GetName(),data.GetName()) ;
+	ret = m.save(name.c_str(),title.c_str()) ;
+      } 
+      
+    }
+    
   }
+
+
   
   // Cleanup
   delete nll ;
@@ -1552,6 +1724,216 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
 
 
 //_____________________________________________________________________________
+RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, Int_t nEvents, const RooCmdArg& arg1,
+				       const RooCmdArg& arg2, const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5) 
+{
+  // Generate a new dataset containing the specified variables with events sampled from our distribution. 
+  // Generate the specified number of events or expectedEvents() if not specified.
+  //
+  // Any variables of this PDF that are not in whatVars will use their
+  // current values and be treated as fixed parameters. Returns zero
+  // in case of an error. The caller takes ownership of the returned
+  // dataset.
+  //
+  // The following named arguments are supported
+  //
+  // Name(const char* name)             -- Name of the output dataset
+  // Verbose(Bool_t flag)               -- Print informational messages during event generation
+  // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
+  //                                       with mu=nevt. For use with extended maximum likelihood fits
+  // ExpectedData()                     -- Return a binned dataset _without_ statistical fluctuations (also aliased as Asimov())
+  return generateBinned(whatVars,RooFit::NumEvents(nEvents),arg1,arg2,arg3,arg4,arg5) ;
+}
+
+
+
+//_____________________________________________________________________________
+RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdArg& arg1,const RooCmdArg& arg2,
+				       const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6) 
+{
+  // Generate a new dataset containing the specified variables with events sampled from our distribution. 
+  // Generate the specified number of events or expectedEvents() if not specified.
+  //
+  // Any variables of this PDF that are not in whatVars will use their
+  // current values and be treated as fixed parameters. Returns zero
+  // in case of an error. The caller takes ownership of the returned
+  // dataset.
+  //
+  // The following named arguments are supported
+  //
+  // Name(const char* name)             -- Name of the output dataset
+  // Verbose(Bool_t flag)               -- Print informational messages during event generation
+  // NumEvent(int nevt)                 -- Generate specified number of events
+  // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
+  //                                       with mu=nevt. For use with extended maximum likelihood fits
+  // ExpectedData()                     -- Return a binned dataset _without_ statistical fluctuations (also aliased as Asimov())
+  
+
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::generate(%s)",GetName())) ;
+  pc.defineString("dsetName","Name",0,"") ;
+  pc.defineInt("verbose","Verbose",0,0) ;
+  pc.defineInt("extended","Extended",0,0) ;
+  pc.defineInt("nEvents","NumEvents",0,0) ;
+  pc.defineInt("expectedData","ExpectedData",0,0) ;
+  
+  // Process and check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Decode command line arguments
+  Int_t nEvents = pc.getInt("nEvents") ;
+  //Bool_t verbose = pc.getInt("verbose") ;
+  Bool_t extended = pc.getInt("extended") ;
+  Bool_t expectedData = pc.getInt("expectedData") ;
+  const char* dsetName = pc.getString("dsetName") ;
+
+  if (extended) {
+    nEvents = (nEvents==0?Int_t(expectedEvents(&whatVars)+0.5):nEvents) ;
+    cxcoutI(Generation) << " Extended mode active, number of events generated (" << nEvents << ") is Poisson fluctuation on " 
+			<< GetName() << "::expectedEvents() = " << nEvents << endl ;
+    // If Poisson fluctuation results in zero events, stop here
+    if (nEvents==0) {
+      return 0 ;
+    }
+  } else if (nEvents==0) {
+    cxcoutI(Generation) << "No number of events specified , number of events generated is " 
+			<< GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< endl ;
+  }
+
+  // Forward to appropiate implementation
+  RooDataHist* data = generateBinned(whatVars,nEvents,expectedData,extended) ;
+
+  // Rename dataset to given name if supplied
+  if (dsetName && strlen(dsetName)>0) {
+    data->SetName(dsetName) ;
+  }
+
+  return data ;
+}
+
+
+
+
+//_____________________________________________________________________________
+RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Int_t nEvents, Bool_t expectedData, Bool_t extended) const 
+{
+  // Generate a new dataset containing the specified variables with
+  // events sampled from our distribution. Generate the specified
+  // number of events or else try to use expectedEvents() if nEvents <= 0.
+  //
+  // If expectedData is kTRUE (it is kFALSE by default), the returned histogram returns the 'expected'
+  // data sample, i.e. no statistical fluctuations are present.
+  //
+  // Any variables of this PDF that are not in whatVars will use their
+  // current values and be treated as fixed parameters. Returns zero
+  // in case of an error. The caller takes ownership of the returned
+  // dataset.
+
+  // Create empty RooDataHist
+  RooDataHist* hist = new RooDataHist("genData","genData",whatVars) ;
+
+  // Scale to number of events and introduce Poisson fluctuations
+  if (nEvents<=0) {
+    if (!canBeExtended()) {
+      coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName() << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << endl ;
+      delete hist ;
+      return 0 ;
+    } else {
+      nEvents = Int_t(expectedEvents(&whatVars)+0.5) ;
+    }
+  } 
+  
+  // Sample p.d.f. distribution
+  fillDataHist(hist,&whatVars,1,kTRUE) ;  
+
+  vector<int> histOut(hist->numEntries()) ;
+  Double_t histMax(-1) ;
+  Int_t histOutSum(0) ;
+  for (int i=0 ; i<hist->numEntries() ; i++) {
+    hist->get(i) ;
+    if (expectedData) {
+
+      // Expected data, multiply p.d.f by nEvents
+      Double_t w=hist->weight()*nEvents ;
+      hist->set(w,sqrt(w)) ;
+
+    } else if (extended) {
+
+      // Extended mode, set contents to Poisson(pdf*nEvents)
+      Double_t w = RooRandom::randomGenerator()->Poisson(hist->weight()*nEvents) ;
+      hist->set(w,sqrt(w)) ;
+
+    } else {
+
+      // Regular mode, fill array of weights with Poisson(pdf*nEvents), but to not fill
+      // histogram yet.
+      if (hist->weight()>histMax) {
+	histMax = hist->weight() ;
+      }
+      histOut[i] = RooRandom::randomGenerator()->Poisson(hist->weight()*nEvents) ;
+      histOutSum += histOut[i] ;
+    }
+  }
+
+
+  if (!expectedData && !extended) {
+
+    // Second pass for regular mode - Trim/Extend dataset to exact number of entries
+
+    // Calculate difference between what is generated so far and what is requested
+    Int_t nEvtExtra = abs(nEvents-histOutSum) ;
+    Int_t wgt = (histOutSum>nEvents) ? -1 : 1 ;
+
+    // Perform simple binned accept/reject procedure to get to exact event count
+    while(nEvtExtra>0) {
+
+      Int_t ibinRand = RooRandom::randomGenerator()->Integer(hist->numEntries()) ;
+      hist->get(ibinRand) ;
+      Double_t ranY = RooRandom::randomGenerator()->Uniform(histMax) ;
+
+      if (ranY<hist->weight()) {
+	if (wgt==1) {
+	  histOut[ibinRand]++ ;
+	} else {
+	  // If weight is negative, prior bin content must be at least 1
+	  if (histOut[ibinRand]>0) {
+	    histOut[ibinRand]-- ;
+	  } else {
+	    continue ;
+	  }
+	}
+	nEvtExtra-- ;
+      }
+    }
+
+    // Transfer working array to histogram
+    for (int i=0 ; i<hist->numEntries() ; i++) {
+      hist->get(i) ;
+      hist->set(histOut[i],sqrt(1.0*histOut[i])) ;
+    }    
+
+  } else if (expectedData) {
+
+    // Second pass for expectedData mode -- Normalize to exact number of requested events
+    // Minor difference may be present in first round due to difference between 
+    // bin average and bin integral in sampling bins
+    Double_t corr = nEvents/hist->sumEntries() ;
+    for (int i=0 ; i<hist->numEntries() ; i++) {
+      hist->get(i) ;
+      hist->set(hist->weight()*corr,sqrt(hist->weight()*corr)) ;
+    }
+
+  }
+
+  return hist;
+}
+
+
+
+//_____________________________________________________________________________
 RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 {
   // Plot (project) PDF on specified frame. If a PDF is plotted in an empty frame, it
@@ -1640,7 +2022,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooAbsPdf::plotOn(%s)",GetName())) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
-  pc.defineInt("scaleType","Normalization",0,RooAbsPdf::Relative) ;  
+  pc.defineInt("scaleType","Normalization",0,Relative) ;  
   pc.defineObject("compSet","SelectCompSet",0) ;
   pc.defineString("compSpec","SelectCompSpec",0) ;
   pc.defineObject("asymCat","Asymmetry",0) ;

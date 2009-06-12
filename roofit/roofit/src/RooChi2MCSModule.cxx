@@ -140,8 +140,13 @@ Bool_t RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
 {
   // Bin dataset and calculate chi2 of p.d.f w.r.t binned dataset
 
-  RooDataSet* data = genSample() ;
-  RooDataHist* binnedData = data->binnedClone() ;
+  RooAbsData* data = genSample() ;
+  RooDataHist* binnedData = dynamic_cast<RooDataHist*>(data) ;
+  Bool_t deleteData(kFALSE) ;
+  if (!binnedData) {
+    deleteData = kTRUE ;
+    binnedData = ((RooDataSet*)data)->binnedClone() ;
+  }
 
   RooChi2Var chi2Var("chi2Var","chi2Var",*fitModel(),*binnedData,RooFit::Extended(extendedGen()),RooFit::DataError(RooAbsData::SumW2)) ;
 
@@ -154,7 +159,9 @@ Bool_t RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
 
   _data->add(RooArgSet(*_chi2,*_ndof,*_chi2red,*_prob)) ;
 
-  delete binnedData ;
+  if (deleteData) {
+    delete binnedData ;
+  }
   delete floatPars ;
 
   return kTRUE ;

@@ -19,6 +19,8 @@
 #include "TGraph.h"
 #include "RooPlotable.h"
 #include <list>
+#include <vector>
+#include "TMatrixDfwd.h"
 
 class RooAbsReal;
 class RooRealVar;
@@ -65,7 +67,15 @@ public:
 
   Bool_t isIdentical(const RooCurve& other, Double_t tol=1e-6) const ;
 
+  RooCurve* makeErrorBand(const std::vector<RooCurve*>& variations, Double_t Z=1) const ;
+  RooCurve* makeErrorBand(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, const TMatrixD& V, Double_t Z=1) const ;
+
 protected:
+
+  void calcBandInterval(const std::vector<RooCurve*>& variations,Int_t i,Double_t Z,Double_t& lo, Double_t& hi, Bool_t approxGauss) const ;
+  void calcBandInterval(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, Int_t i, const TMatrixD& V,
+			Double_t Z,Double_t& lo, Double_t& hi) const ;
+
   void initialize();
   void addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 		 Int_t minPoints, Double_t prec, Double_t resolution, WingMode wmode,

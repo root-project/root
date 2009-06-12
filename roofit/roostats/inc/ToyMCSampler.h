@@ -51,6 +51,7 @@ END_HTML
 #include "TRandom.h"
 
 #include "RooDataSet.h"
+#include "RooAbsPdf.h"
 
 namespace RooStats {
 
@@ -100,8 +101,8 @@ namespace RooStats {
       std::vector<Double_t> testStatVec;
       //       cout << " about to generate sampling dist " << endl;
 
-      RooMsgService::instance().setGlobalKillBelow(RooMsgService::ERROR) ;
-      RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
+      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+      RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
       for(Int_t i=0; i<fNtoys; ++i){
 	//cout << " on toy number " << i << endl;

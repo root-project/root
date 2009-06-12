@@ -721,6 +721,32 @@ RooHist* RooPlot::getHist(const char* name) const
 }
 
 
+
+//_____________________________________________________________________________
+void RooPlot::remove(const char* name, Bool_t deleteToo) 
+{
+  // Remove object with given name, or last object added if no name is given.
+  // If deleteToo is true (default), the object removed from the RooPlot is
+  // also deleted.
+
+  TObject* obj = findObject(name) ;
+  if (!obj) {
+    if (name) {
+      coutE(InputArguments) << "RooPlot::remove(" << GetName() << ") ERROR: no object found with name " << name << endl ;
+    } else {
+      coutE(InputArguments) << "RooPlot::remove(" << GetName() << ") ERROR: plot frame is empty, cannot remove last object" << endl ;
+    }
+    return ;
+  }
+
+  _items.Remove(obj) ;
+
+  if (deleteToo) {
+    delete obj ;
+  }
+}
+
+
 //_____________________________________________________________________________
 Bool_t RooPlot::drawBefore(const char *before, const char *target) 
 {

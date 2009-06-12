@@ -64,14 +64,14 @@ PointSetInterval::PointSetInterval(const char* name, const char* title) :
 }
 
 //____________________________________________________________________
-PointSetInterval::PointSetInterval(const char* name, RooTreeData& data) :
+PointSetInterval::PointSetInterval(const char* name, RooAbsData& data) :
    ConfInterval(name,name), fParameterPointsInInterval(&data)
 {
    // Alternate constructor
 }
 
 //____________________________________________________________________
-PointSetInterval::PointSetInterval(const char* name, const char* title, RooTreeData& data) :
+PointSetInterval::PointSetInterval(const char* name, const char* title, RooAbsData& data) :
    ConfInterval(name,title), fParameterPointsInInterval(&data)
 {
    // Alternate constructor

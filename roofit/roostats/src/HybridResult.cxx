@@ -30,7 +30,7 @@ TConfidenceLevel class (http://root.cern.ch/root/html/TConfidenceLevel.html).
 #include "RooGlobalFunc.h" // for RooFit::Extended()
 #include "RooNLLVar.h"
 #include "RooRealVar.h"
-#include "RooTreeData.h"
+#include "RooAbsData.h"
 
 #include "RooStats/HybridResult.h"
 #include "RooStats/HybridPlot.h"

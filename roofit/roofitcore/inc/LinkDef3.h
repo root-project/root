@@ -29,7 +29,6 @@
 #pragma link C++ class RooThresholdCategory+ ;
 #pragma link C++ class RooTObjWrap+ ;
 #pragma link C++ class RooTrace+ ;
-#pragma link C++ class RooTreeData+ ;
 #pragma link C++ class RooUniformBinning+ ;
 #pragma link C++ class RooSimultaneous+ ;
 #pragma link C++ class RooRealSumPdf+ ;
@@ -39,8 +38,9 @@
 #pragma link C++ class RooSimPdfBuilder+ ;
 #pragma link C++ class RooMCStudy+ ;
 #pragma link C++ class RooMsgService+ ;
+#pragma link C++ class RooMsgService::StreamConfig+ ;
 #pragma link C++ class RooProjectedPdf+ ;
-#pragma link C++ class RooWorkspace+ ;
+#pragma link C++ class RooWorkspace- ;
 #pragma link C++ class RooWorkspace::CodeRepo- ;
 #pragma link C++ class RooWorkspace::WSDir+ ;
 #pragma link C++ class RooProfileLL+ ;
@@ -93,6 +93,11 @@
 #pragma link C++ class RooNumGenFactory+ ;
 #pragma link C++ class RooMultiVarGaussian+ ;
 #pragma link C++ class RooXYChi2Var+ ;
+#pragma link C++ class RooAbsDataStore+ ;
+#pragma link C++ class RooTreeDataStore+ ;
+#pragma link C++ class RooTreeData+ ;
+#pragma link C++ class RooMinimizer+ ;
+#pragma link C++ class RooMinimizerFcn+ ;
 #pragma link C++ namespace RooCintUtils+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;

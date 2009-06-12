@@ -65,15 +65,19 @@ public:
 
   // Named set management
   Bool_t defineSet(const char* name, const RooArgSet& aset, Bool_t importMissing=kFALSE) ;
+  Bool_t defineSet(const char* name, const char* contentList) ;
+  Bool_t extendSet(const char* name, const char* newContents) ;
   const RooArgSet* set(const char* name) ;
 
   // Import, load and save parameter value snapshots
   Bool_t saveSnapshot(const char* name, const RooArgSet& params, Bool_t importValues=kFALSE) ;
   Bool_t loadSnapshot(const char* name) ;  
 
-  // Import other workspaces
-  Bool_t merge(const RooWorkspace& other) ;
-  Bool_t join(const RooWorkspace& other) ;
+  void merge(const RooWorkspace& /*other*/) {} ;
+
+  // Join p.d.f.s and datasets for simultaneous analysis
+  //   RooAbsPdf* joinPdf(const char* jointPdfName, const char* indexName, const char* inputMapping) ; 
+  //   RooAbsData* joinData(const char* jointDataName, const char* indexName, const char* inputMapping) ; 
 
   // Accessor functions 
   RooAbsPdf* pdf(const char* name) ;

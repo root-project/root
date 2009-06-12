@@ -51,7 +51,7 @@ namespace RooStats {
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*paramsOfInterest*/)  {       
        if(!&data){ cout << "problem with data" << endl;}
        
-       RooMsgService::instance().setGlobalKillBelow(RooMsgService::FATAL) ;
+       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
 
        return data.numEntries();
      }

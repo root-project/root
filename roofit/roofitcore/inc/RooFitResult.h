@@ -61,7 +61,7 @@ public:
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
   virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
 
-  RooAbsPdf* createPdf(const RooArgSet& params) const ;
+  RooAbsPdf* createHessePdf(const RooArgSet& params) const ;
 
   // Accessors
   inline Int_t status() const {
@@ -142,6 +142,7 @@ public:
 protected:
   
   friend class RooMinuit ;
+  friend class RooMinimizer ;
   friend class RooNag ;
   void setCovarianceMatrix(TMatrixDSym& V) ; 
   void setConstParList(const RooArgList& list) ;
@@ -153,6 +154,7 @@ protected:
   inline void setCovQual(Int_t val) { _covQual = val ; }
   inline void setNumInvalidNLL(Int_t val) { _numBadNLL=val ; }
   void fillCorrMatrix() ;
+  void fillCorrMatrix(const std::vector<double>& globalCC, const TMatrixDSym& corrs, const TMatrixDSym& covs) ;
 
   Double_t correlation(Int_t row, Int_t col) const;
   Double_t covariance(Int_t row, Int_t col) const;

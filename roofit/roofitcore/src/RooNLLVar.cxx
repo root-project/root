@@ -88,8 +88,8 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 //_____________________________________________________________________________
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
 		     Bool_t extended, const char* rangeName, const char* addCoefRangeName,
-		     Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitRange) : 
-  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange),
+		     Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitRange, Bool_t cloneData) : 
+  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
   _extended(extended),
   _weightSq(kFALSE)
 {
@@ -103,8 +103,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 //_____________________________________________________________________________
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
 		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,const char* addCoefRangeName, 
-		     Int_t nCPU,Bool_t interleave,Bool_t verbose, Bool_t splitRange) : 
-  RooAbsOptTestStatistic(name,title,pdf,indata,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange),
+		     Int_t nCPU,Bool_t interleave,Bool_t verbose, Bool_t splitRange, Bool_t cloneData) : 
+  RooAbsOptTestStatistic(name,title,pdf,indata,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
   _extended(extended),
   _weightSq(kFALSE)
 {
