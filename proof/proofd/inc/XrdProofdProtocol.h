@@ -93,7 +93,7 @@ public:
    inline void   SetClntCapVer(unsigned char c) { fClntCapVer = c; }
    inline void   SetCID(kXR_int32 cid) { fCID = cid; }
    inline void   SetConnType(int ct) { fConnType = ct; }
-   inline void   SetTraceID() { if (fLink) fTraceID.form("%s: ", fLink->ID); }
+   inline void   SetTraceID() { if (fLink) XPDFORM(fTraceID, "%s: ", fLink->ID); }
    inline void   SetPid(int pid) { fPid = pid; }
    inline void   SetProofProtocol(short int pp) { fProofProtocol = pp; }
    inline void   SetStatus(char s) { fStatus = s; }
