@@ -880,10 +880,13 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
       return DoDirectiveRole(val, cfg, rcf);
    } else if (d->fName == "multiuser") {
       return DoDirectiveMultiUser(val, cfg, rcf);
-   } else if (d->fName == "xrd.protocol" || d->fName == "port") {
+   } else if (d->fName == "port") {
       return DoDirectivePort(val, cfg, rcf);
    } else if (d->fName == "datasetsrc") {
       return DoDirectiveDataSetSrc(val, cfg, rcf);
+   } else if (d->fName == "xrd.protocol") {
+      val = cfg->GetToken();
+      return DoDirectivePort(val, cfg, rcf);
    }
    TRACE(XERR, "unknown directive: "<<d->fName);
    return -1;
