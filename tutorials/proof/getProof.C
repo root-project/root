@@ -15,7 +15,7 @@ Int_t getXrootdPid(Int_t port);
 const char *refloc = "proof://localhost:11093";
 
 TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, const char *dir = 0,
-                 const char *opt = "ask", Bool_t dyn = kFALSE)
+                 const char *opt = "ask", Bool_t dyn = kFALSE, Bool_t tutords = kFALSE)
 {
    // Arguments:
    //     'url'      URL of the master where to start/attach the PROOF session;
@@ -32,6 +32,7 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
    //                NB: for a change in 'nwrks' to be effective you need to specify opt = "force"
    //     'dyn'      This flag can be used to switch on dynamic, per-job worker setup scheduling
    //                [kFALSE].
+   //     'tutords'  This flag can be used to force a dataset dir under the tutorial dir [kFALSE]
    //
 
    TProof *p = 0;
@@ -72,6 +73,12 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
       p = 0;
    }
 
+#ifdef WIN32
+   // No support for local PROOF on Win32 (yet; the optimized local Proof will work there too)
+   Printf("getProof: local PROOF not yet supported on Windows, sorry!");
+   return p;
+#else
+
    // Temp dir for tutorial daemons
    TString tutdir = dir;
    if (tutdir.IsNull() || gSystem->AccessPathName(dir, kWritePermission)) {
@@ -94,12 +101,21 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
       Printf("getProof: tutorial dir: %s", tutdir.Data());
    }
 
-#ifdef WIN32
-   // No support for local PROOF on Win32 (yet; the optimized local Proof will work there too)
-   Printf("getProof: local PROOF not yet supported on Windows, sorry!");
-   return p;
-#else
-
+   // Dataset dir
+   TString datasetdir;
+   if (tutords) {
+      TString datasetdir = Form("%s/dataset", tutdir.Data());
+      if (gSystem->AccessPathName(datasetdir, kWritePermission)) {
+         gSystem->mkdir(datasetdir, kTRUE);
+         if (gSystem->AccessPathName(datasetdir, kWritePermission)) {
+            Printf("getProof: unable to get a writable dataset directory (tried: %s)"
+                   " - cannot continue", datasetdir.Data());
+            return p;
+         }
+         Printf("getProof: dataset dir: %s", datasetdir.Data());
+      }
+   }
+   
    // Local url (use a special port to try to not disturb running daemons)
    TUrl u(refloc);
    u.SetProtocol("proof");
@@ -151,10 +167,6 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
          cmd = Form("kill -9 %d", pid);
          if ((rc = gSystem->Exec(cmd)) != 0)
             Printf("getProof: problems stopping xrootd process %p (%d)", pid, rc);
-
-         // Remove the tutorial dir
-         cmd = Form("rm -fr %s/*", tutdir.Data());
-         gSystem->Exec(cmd);
       }
    }
 
@@ -166,6 +178,10 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
          return p;
       }
 
+      // Remove the tutorial dir
+      cmd = Form("rm -fr %s/*", tutdir.Data());
+      gSystem->Exec(cmd);
+
       // Try to start something locally; create the xrootd config file
       FILE *fcf = fopen(xpdcf.Data(), "w");
       if (!fcf) {
@@ -174,8 +190,11 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
       }
       fprintf(fcf,"### Use admin path at %s/admin to avoid interferences with other users\n", tutdir.Data());
       fprintf(fcf,"xrd.adminpath %s/admin\n", tutdir.Data());
+      fprintf(fcf,"### Run data serving on port %d\n", lportp+1);
+      fprintf(fcf,"xrd.port %d\n", lportp+1);
       fprintf(fcf,"### Load the XrdProofd protocol on port %d\n", lportp);
-      fprintf(fcf,"xrd.protocol xproofd:%d libXrdProofd.so\n", lportp);
+      fprintf(fcf,"xrd.protocol xproofd libXrdProofd.so\n");
+      fprintf(fcf,"xpd.port %d\n", lportp);
       if (nwrks > 0) {
          fprintf(fcf,"### Force number of local workers\n");
          fprintf(fcf,"xpd.localwrks %d\n", nwrks);
@@ -186,6 +205,10 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
       fprintf(fcf,"xpd.multiuser 1\n");
       fprintf(fcf,"### Limit the number of query results kept in the master sandbox\n");
       fprintf(fcf,"xpd.putrc ProofServ.UserQuotas: maxquerykept=10\n");
+      if (tutords) {
+         fprintf(fcf,"### Use dataset directory under the tutorial dir\n");
+         fprintf(fcf,"xpd.datasetsrc file url:%s opt:-Cq:Av:As:\n", datasetdir.Data());
+      }
       if (dyn) {
          fprintf(fcf,"### Use dynamic, per-job scheduling\n");
          fprintf(fcf,"xpd.putrc Proof.DynamicStartup 1\n");

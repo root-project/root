@@ -399,6 +399,10 @@ void stressProof(const char *url, Int_t nwrks,
       printf("******************************************************************\n");
    }
    //
+   // Reset dataset settings
+   gEnv->SetValue("Proof.DataSetManager","");
+
+   //
    // Register tests
    //
    TList *testList = new TList;
@@ -625,7 +629,7 @@ Int_t PT_Open(void *args)
 
    // Get the PROOF Session
    PutPoint();
-   TProof *p = getProof(PToa->url, PToa->nwrks, tutdir.Data(), "force", gDynamicStartup);
+   TProof *p = getProof(PToa->url, PToa->nwrks, tutdir.Data(), "force", gDynamicStartup, kTRUE);
    if (!p || !(p->IsValid())) {
       printf("\n >>> Test failure: could not start the session\n");
       return -1;
