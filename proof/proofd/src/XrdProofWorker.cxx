@@ -67,7 +67,7 @@ void XrdProofWorker::Reset(const char *str)
    fExport = "";
    fType = 'W';
    fHost = "";
-   fPort = -1;
+   fPort = XPD_DEF_PORT;
    fPerfIdx = 100;
    fImage = "";
    fWorkDir = "";
