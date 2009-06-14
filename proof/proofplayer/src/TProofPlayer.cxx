@@ -2239,7 +2239,8 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
    }
 
    // Special treatment for histograms in autobin mode
-   if (newobj->InheritsFrom("TH1")) {
+   Bool_t specialH = !fProof->TestBit(TProof::kIsClient) || fProof->IsLite();
+   if (specialH && newobj->InheritsFrom("TH1")) {
       if (!HandleHistogram(newobj)) {
          PDB(kOutput,1) Info("Incorporate", "histogram object '%s' added to the"
                              " appropriate list for delayed merging", newobj->GetName());
