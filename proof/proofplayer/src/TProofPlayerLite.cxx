@@ -435,6 +435,10 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
       return -1;
    }
 
+   // Some objects (e.g. histos in autobin) may not have been merged yet
+   // do it now
+   MergeOutput();
+
    // Merge the output files created on workers, if any
    MergeOutputFiles();
 

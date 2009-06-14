@@ -1637,10 +1637,9 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
                return fProof->Finalize(Form("%s:%s", fQuery->GetTitle(),
                                                      fQuery->GetName()), force);
       } else {
-         if (fProof->fProtocol < 11) {
-            PDB(kGlobal,1) Info("Finalize","Calling Merge Output");
-            MergeOutput();
-         }
+         // Make sure the all objects are in the output list
+         PDB(kGlobal,1) Info("Finalize","Calling Merge Output to finalize the output list");
+         MergeOutput();
       }
    }
 
