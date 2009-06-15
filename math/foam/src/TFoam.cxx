@@ -250,6 +250,16 @@ TFoam::~TFoam()
    }
    delete fMCMonit;
    delete fHistWt;
+
+   // delete histogram arrays
+   if (fHistEdg) { 
+      fHistEdg->Delete(); 
+      delete fHistEdg; 
+   }
+   if (fHistDbg) { 
+      fHistDbg->Delete(); 
+      delete fHistDbg; 
+   }
 }
 
 
