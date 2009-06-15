@@ -478,6 +478,7 @@ void TMinuitMinimizer::RetrieveErrorMatrix() {
 }
 
 unsigned int TMinuitMinimizer::NCalls() const { 
+   // return total number of function calls
    if (fMinuit == 0) return 0; 
    return fMinuit->fNfcn;
 }
@@ -532,7 +533,7 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // Perform Minos analysis for the given parameter  i 
 
    if (fMinuit == 0) { 
-      Error("SetVariable","invalid TMinuit pointer. Need to call first SetFunction and SetVariable"); 
+      Error("GetMinosError","invalid TMinuit pointer. Need to call first SetFunction and SetVariable"); 
       return false; 
    }
 
@@ -594,7 +595,7 @@ void TMinuitMinimizer::DoClear() {
 
 
 void TMinuitMinimizer::PrintResults() { 
-
+   // print-out results using classic Minuit format (mnprin)
    if (fMinuit == 0) return; 
 
    // print minimizer result
