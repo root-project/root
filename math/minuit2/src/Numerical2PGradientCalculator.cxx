@@ -31,6 +31,8 @@
 
 #include <math.h>
 
+#include "Minuit2/MPIProcess.h"
+
 namespace ROOT {
 
    namespace Minuit2 {
@@ -98,6 +100,10 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    MnAlgebraicVector g2 = Gradient.G2();
    MnAlgebraicVector gstep = Gradient.Gstep();
 
+#ifndef _OPENMP
+   MPIProcess mpiproc(n,0);
+#endif
+
 #ifdef DEBUG
    std::cout << "Calculating Gradient at x =   " << par.Vec() << std::endl;
 #endif
@@ -105,6 +111,12 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 #ifndef _OPENMP
    // for serial execution this can be outside the loop
    MnAlgebraicVector x = par.Vec();
+
+   unsigned int startElementIndex = mpiproc.StartElementIndex();
+   unsigned int endElementIndex = mpiproc.EndElementIndex();
+
+   for(unsigned int i = startElementIndex; i < endElementIndex; i++) {
+
 #else
 
  // parallelize this loop using OpenMP
@@ -113,9 +125,9 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 #pragma omp for 
 //#pragma omp for schedule (static, N_PARALLEL_PAR)
 
-#endif
-
    for(int i = 0; i < int(n); i++) {
+
+#endif
 
 #ifdef DEBUG_MP
       int ith = omp_get_thread_num();
@@ -195,6 +207,11 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 
    //   std::cout<<"final grd: "<<grd<<std::endl;
    //   std::cout<<"########### return from Numerical2PDerivative"<<std::endl;
+
+   mpiproc.SyncVector(grd);
+   mpiproc.SyncVector(g2);
+   mpiproc.SyncVector(gstep);
+
    return FunctionGradient(grd, g2, gstep);
 }
 

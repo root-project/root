@@ -24,6 +24,7 @@
 #include "Minuit2/MnPrint.h"
 #endif
 
+#include "Minuit2/MPIProcess.h"
 
 namespace ROOT {
 
@@ -84,8 +85,12 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
    unsigned int n = x.size();
    MnAlgebraicVector dgrd(n);
    
+   MPIProcess mpiproc(n,0);
    // initial starting values
-   for(unsigned int i = 0; i < n; i++) {
+   unsigned int startElementIndex = mpiproc.StartElementIndex();
+   unsigned int endElementIndex = mpiproc.EndElementIndex();
+
+   for(unsigned int i = startElementIndex; i < endElementIndex; i++) {
       double xtf = x(i);
       double dmin = 4.*Precision().Eps2()*(xtf + Precision().Eps2());
       double epspri = Precision().Eps2() + fabs(grd(i)*Precision().Eps2());
@@ -131,6 +136,10 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
 #endif
 
    }
+   
+   mpiproc.SyncVector(grd);
+   mpiproc.SyncVector(gstep);
+   mpiproc.SyncVector(dgrd);
    
    return std::pair<FunctionGradient, MnAlgebraicVector>(FunctionGradient(grd, g2, gstep), dgrd);
 }

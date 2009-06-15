@@ -25,6 +25,8 @@
 #include "Minuit2/MnPrint.h"
 #endif
 
+#include "Minuit2/MPIProcess.h"
+
 namespace ROOT {
 
    namespace Minuit2 {
@@ -232,18 +234,40 @@ L30:
    }
    
    //off-diagonal Elements  
-   for(unsigned int i = 0; i < n; i++) {
-      x(i) += dirin(i);
-      for(unsigned int j = i+1; j < n; j++) {
-         x(j) += dirin(j);
-         double fs1 = mfcn(x);
-         double elem = (fs1 + amin - yy(i) - yy(j))/(dirin(i)*dirin(j));
-         vhmat(i,j) = elem;
-         x(j) -= dirin(j);
-      }
-      x(i) -= dirin(i);
+   // initial starting values
+   MPIProcess mpiprocOffDiagonal(n*(n-1)/2,0);
+   unsigned int startParIndexOffDiagonal = mpiprocOffDiagonal.StartElementIndex();
+   unsigned int endParIndexOffDiagonal = mpiprocOffDiagonal.EndElementIndex();
+
+   unsigned int offsetVect = 0;
+   for (unsigned int in = 0; in<startParIndexOffDiagonal; in++)
+     if ((in+offsetVect)%(n-1)==0) offsetVect += (in+offsetVect)/(n-1);
+
+   for (unsigned int in = startParIndexOffDiagonal;
+        in<endParIndexOffDiagonal; in++) {
+
+     int i = (in+offsetVect)/(n-1);
+     if ((in+offsetVect)%(n-1)==0) offsetVect += i;
+     int j = (in+offsetVect)%(n-1)+1;
+
+     if ((i+1)==j || in==startParIndexOffDiagonal)
+       x(i) += dirin(i);
+
+     x(j) += dirin(j);
+
+     double fs1 = mfcn(x);
+     double elem = (fs1 + amin - yy(i) - yy(j))/(dirin(i)*dirin(j));
+     vhmat(i,j) = elem;
+
+     x(j) -= dirin(j);
+
+     if (j%(n-1)==0 || in==endParIndexOffDiagonal-1)
+       x(i) -= dirin(i);
+
    }
    
+   mpiprocOffDiagonal.SyncSymMatrixOffDiagonal(vhmat);
+
    //verify if matrix pos-def (still 2nd derivative)
 
 #ifdef DEBUG
