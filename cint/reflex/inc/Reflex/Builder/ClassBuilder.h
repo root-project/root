@@ -573,7 +573,7 @@ Reflex::ClassBuilderT<C>::AddProperty( const char * key,
 }
 
 
-//______________________________________________________________________________
+//-------------------------------------------------------------------------------
 template < class C >
 inline Reflex::ClassBuilderT<C> &
 Reflex::ClassBuilderT<C>::EnableCallback(bool enable /* = true */ )

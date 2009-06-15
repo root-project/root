@@ -55,13 +55,6 @@ namespace Reflex {
          const char * value );
 
 
-      /** 
-      * EnableCallback Enable or disable the callback call in the destructor
-      * @param  enable true to enable callback call, false to disable callback call
-      */
-      FunctionBuilder & EnableCallback( const bool enable = true );
-
-
       /**
       * ToMember will return the member currently being built
       * @return member currently being built
@@ -72,9 +65,6 @@ namespace Reflex {
 
       /** function member */
       Member fFunction;
-
-      /** flag, fire callback in destructor */
-      bool fCallbackEnabled;
 
    }; // class FunctionBuilder
 
@@ -113,13 +103,6 @@ namespace Reflex {
          const char * value );
 
 
-      /** 
-      * EnableCallback Enable or disable the callback call in the destructor
-      * @param  enable true to enable callback call, false to disable callback call
-      */
-      void EnableCallback( const bool enable = true );
-
-
       /**
       * ToMember will return the member currently being built
       * @return member currently being built
@@ -130,9 +113,6 @@ namespace Reflex {
 
       /** function member being built */
       Member fFunction;
-
-      /** flag, fire callback in destructor */
-      bool fCallbackEnabled;
 
    }; // class FunctionBuilderImpl
 
@@ -165,13 +145,6 @@ namespace Reflex {
       */
       template < typename P >
       FunctionBuilderT & AddProperty( const char * key, P value );
-
-
-      /** 
-      * EnableCallback Enable or disable the callback call in the destructor
-      * @param  enable true to enable callback call, false to disable callback call
-      */
-      FunctionBuilderT & EnableCallback( const bool enable = true );
 
 
       /**
@@ -215,16 +188,6 @@ Reflex::FunctionBuilderT<F>::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
 { 
    fFunctionBuilderImpl.AddProperty(key , value);
-   return * this;
-}
-
-
-//______________________________________________________________________________
-template < typename F >
-inline Reflex::FunctionBuilderT<F> &
-Reflex::FunctionBuilderT<F>::EnableCallback( const bool enable /* = true */ )
-{
-   fFunctionBuilderImpl.EnableCallback(enable);
    return * this;
 }
 

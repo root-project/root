@@ -26,7 +26,7 @@ Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
                                                         const Type & typ,
                                                         size_t offs,
                                                         unsigned int modifiers ) 
-   : fDataMember( Member() ), fCallbackEnabled( true ) {
+   : fDataMember(Member()) {
 //-------------------------------------------------------------------------------
 // Construct the info for a variable.
    std::string declScope = "";
@@ -56,9 +56,7 @@ Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
 Reflex::VariableBuilderImpl::~VariableBuilderImpl() {
 //-------------------------------------------------------------------------------
 // Destructor.
-   if ( fCallbackEnabled ) {
-      FireFunctionCallback( fDataMember );
-   }
+   FireFunctionCallback( fDataMember );
 }
 
 
@@ -81,15 +79,6 @@ void Reflex::VariableBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-void Reflex::VariableBuilderImpl::EnableCallback( const bool enable
-                                                             /* = true */ ) {
-//-------------------------------------------------------------------------------
-// Enable callback call in the destructor.
-   fCallbackEnabled = enable;
-}
-
-
-//-------------------------------------------------------------------------------
 Reflex::Member Reflex::VariableBuilderImpl::ToMember() {
 //-------------------------------------------------------------------------------
 // Return the member currently being built.
@@ -102,7 +91,7 @@ Reflex::VariableBuilder::VariableBuilder( const char * nam,
                                                 const Type & typ,
                                                 size_t offs,
                                                 unsigned int modifiers) 
-   : fDataMember( Member()), fCallbackEnabled(true) {
+   : fDataMember( Member()) {
 //-------------------------------------------------------------------------------
 // Construct the variable info.
    std::string declScope = Tools::GetScopeName(nam);
@@ -129,9 +118,7 @@ Reflex::VariableBuilder::VariableBuilder( const char * nam,
 Reflex::VariableBuilder::~VariableBuilder() {
 //-------------------------------------------------------------------------------
 // Destructor.  
-   if ( fCallbackEnabled ) {
-      FireFunctionCallback( fDataMember );
-   }
+   FireFunctionCallback( fDataMember );
 }
 
 
@@ -154,16 +141,6 @@ Reflex::VariableBuilder::AddProperty( const char * key,
 // Attach a property to this variable as Any object.
    fDataMember.Properties().AddProperty( key , value );
    return * this;
-}
-
-
-//-------------------------------------------------------------------------------
-Reflex::VariableBuilder &
-Reflex::VariableBuilder::EnableCallback( const bool enable /* = true */ ) {
-//-------------------------------------------------------------------------------
-// Enable callback call in destructor.
-   fCallbackEnabled = enable;
-   return *this;
 }
 
 
