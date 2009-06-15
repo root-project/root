@@ -10,8 +10,8 @@ int main(int argc, char **argv)
 
 // gSystem->ListLibraries();
 
-cout << "Now loading libXMLIO:" << endl;
-cout << "Loading library = " << gSystem->Load("libXMLIO.so") << endl;
+cout << "Now loading libTreePlayer:" << endl;
+cout << "Loading library = " << gSystem->Load("libTreePlayer") << endl;
 
 //cout << "\nListing libraries after loading RFIO:" << endl;
 //gSystem->ListLibraries();

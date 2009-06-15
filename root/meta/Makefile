@@ -90,6 +90,15 @@ missingInfo.log: missingInfo_C.$(DllSuf)
 missingInfo: missingInfo.log
 	$(TestDiff)
 
+ifeq ($(PLATFORM),win32)
+CXXFLAGS += -TP -GX 
+LIBSFORLINK = $(LIBS)
+CLDFLAGS := -link $(LDFLAGS)
+SYSLIBS += msvcprt.lib 
+else
+LIBSFORLINK = 
+endif
+
 loadernotapp$(ExeSuf): loadernotapp.cxx
 	$(CMDECHO)$(CXX)  $^ $(CFLAGS) $(CXXFLAGS) $(CLDFLAGS) $(ROOTLIBS) $(OutPutOpt)$@
 

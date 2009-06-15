@@ -63,5 +63,10 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 atlasaod.log: runatlasaod.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) > $@ 
 
+ifeq ($(ARCH)$(FAIL),win32)
+atlasaod:
+	$(WarnFailTest)
+else
 atlasaod: atlasaod.log
 	$(TestDiff)
+endif
