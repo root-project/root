@@ -122,7 +122,8 @@ ROOTSYS_SED=$(subst /,\\/,$(subst \,\\\\,$(ROOTSYS)))
 ifneq ($(MAKECMDGOALS),clean)
 $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
 	@cat $< | sed -e s/$(LIBDIR_SED2)// -e s/$*.o/$(LIBDIR_SED)$*_C.$(DllSuf)/ -e s/$*_C.$(DllSuf)/$(LIBDIR_SED)$*_C.$(DllSuf)/ \
-	   -e s,$(ROOTSYS_SED)\\\\include\\\\cintdictversion.h,$(ROOT_LOC)/include/cintdictversion.h, > $@
+	   -e s,$(ROOTSYS_SED)\\\\include\\\\cintdictversion.h,$(ROOT_LOC)/include/cintdictversion.h, \
+	   -e s,$(ROOTSYS_SED)\\\\include\\\\RVersion.h,$(ROOT_LOC)/include/RVersion.h, > $@
 endif
 
 $(HELPER_DLL) : TestHelpers.C 
