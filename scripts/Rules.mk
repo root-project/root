@@ -243,6 +243,7 @@ LD            = link -nologo
 #LDOPT         = -opt:ref
 #LDOPT         = -debug
 #LDFLAGS       = $(LDOPT) -nologo -nodefaultlib -incremental:no
+CLDFLAGS      = -link 
 SOFLAGS       = -DLL
 SYSLIBS       = kernel32.lib  ws2_32.lib mswsock.lib \
                 advapi32.lib  user32.lib gdi32.lib comdlg32.lib winspool.lib 
