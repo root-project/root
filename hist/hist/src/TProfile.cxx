@@ -1411,8 +1411,6 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    // merge bin contents ignoring now underflow/overflows
    if (fBinSumw2.fN) hnew->Sumw2();
 
-   if (fBinSumw2.fN) hnew->Sumw2();
-
    Double_t *cu2 = hnew->GetW();
    Double_t *er2 = hnew->GetW2();
    Double_t *en2 = hnew->GetB();
