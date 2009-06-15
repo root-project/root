@@ -82,6 +82,7 @@ namespace {
       PyObject* pymeta = PyType_Type.tp_new( &PyROOT::PyRootType_Type, args, NULL );
       Py_DECREF( args );
       if ( ! pymeta ) {
+         PyErr_Print();
          Py_DECREF( pybases );
          return 0;
       }
@@ -206,6 +207,10 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
    typedef std::map< std::string, Callables_t > CallableCache_t;
    CallableCache_t cache;
 
+// bypass custom __getattr__ for efficiency
+   getattrofunc oldgetattro = pyclass->ob_type->tp_getattro;
+   pyclass->ob_type->tp_getattro = PyType_Type.tp_getattro;
+
    const size_t nMethods = klass.FunctionMemberSize();
    for ( size_t inm = 0; inm < nMethods; ++inm ) {
       const M& method = klass.FunctionMemberAt( inm );
@@ -244,7 +249,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
          // operator[]/() returning a reference type will be used for __setitem__
             std::string cpd = Utility::Compound(
                method.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ) );
-            if ( cpd[ cpd.size() - 1 ] == '&' )
+            if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' )
                setupSetItem = kTRUE;
          } else if ( op == "*" ) {
          // dereference v.s. multiplication of two instances
@@ -376,6 +381,9 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
          Py_DECREF( property );
       }
    }
+
+// restore custom __getattr__
+   pyclass->ob_type->tp_getattro = oldgetattro;
 
 // all ok, done
    return 0;
@@ -614,7 +622,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    // fill the dictionary, if successful
       if ( pyclass != 0 ) {
       // get the class anew, to cover the case where it was updated by the autoloading mechanism
-         klass =  T::ByName( klass.Name( ROOT::Reflex::FINAL | ROOT::Reflex::SCOPED ) );
+         klass = T::ByName( klass.Name( ROOT::Reflex::FINAL | ROOT::Reflex::SCOPED ) );
          if ( BuildRootClassDict< T, B, M >( klass, pyclass ) != 0 ) {
          // something failed in building the dictionary
             Py_DECREF( pyclass );
@@ -739,11 +747,9 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isR
 //____________________________________________________________________________
 PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 {
-// for safety (None can't be used as NULL pointer)
-   if ( ! address ) {
-      Py_INCREF( Py_None );
-      return Py_None;
-   }
+// if the object is a null pointer, return a typed one (as needed for overloading)
+   if ( ! address )
+      return BindRootObjectNoCast( address, klass, kFALSE );
 
 // only known or knowable objects will be bound
    if ( ! klass ) {
@@ -782,8 +788,10 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 // actual binding
    ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( address, klass, isRef );
 
-// memory management, for TObject's only
-   if ( object )
+// memory management, for TObject's only (for referenced objects, it is assumed
+// that the (typically global) reference itself is zeroed out (or replaced) on
+// destruction; it can't thus be reliably zeroed out from the python side)
+   if ( object && ! ( pyobj->fFlags & ObjectProxy::kIsReference ) )
       TMemoryRegulator::RegisterObject( pyobj, object );
 
 // completion (returned object may be zero w/ a python exception set)
