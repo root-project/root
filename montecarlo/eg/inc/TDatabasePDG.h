@@ -20,13 +20,15 @@
 #endif
 
 class THashList;
+class TExMap;
 
 class TDatabasePDG: public TNamed {
 
 protected:
    static TDatabasePDG *fgInstance;        // protect against multiple instances
-   THashList* fParticleList;               // list of PDG particles
-   TObjArray* fListOfClasses;              // list of classes (leptons etc.)
+   THashList           *fParticleList;     // list of PDG particles
+   TObjArray           *fListOfClasses;    // list of classes (leptons etc.)
+   mutable TExMap      *fPdgMap;           //!hash-map from pdg-code to particle
 
    TDatabasePDG(const TDatabasePDG& db)
      : TNamed(db), fParticleList(db.fParticleList),
@@ -35,6 +37,8 @@ protected:
    TDatabasePDG& operator=(const TDatabasePDG& db)
      {if(this!=&db) {TNamed::operator=(db); fParticleList=db.fParticleList;
      fListOfClasses=db.fListOfClasses;} return *this;}
+
+   void BuildPdgMap() const;
 
 public:
 

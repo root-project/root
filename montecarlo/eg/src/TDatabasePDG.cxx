@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "TEnv.h"
 #include "THashList.h"
+#include "TExMap.h"
 #include "TSystem.h"
 #include "TDatabasePDG.h"
 #include "TDecayChannel.h"
@@ -57,6 +58,7 @@ TDatabasePDG::TDatabasePDG(): TNamed("PDGDB","The PDG particle data base")
   // call to ReadDataBasePDG (also done by GetParticle methods)
 
    fParticleList  = 0;
+   fPdgMap        = 0;
    fListOfClasses = 0;
       if (fgInstance) {
       Warning("TDatabasePDG", "object already instantiated");
@@ -74,6 +76,7 @@ TDatabasePDG::~TDatabasePDG()
    if (fParticleList) {
       fParticleList->Delete();
       delete fParticleList;
+      delete fPdgMap;
    }
                                 // classes do not own particles...
    if (fListOfClasses) delete fListOfClasses;
@@ -88,6 +91,18 @@ TDatabasePDG*  TDatabasePDG::Instance()
    return (fgInstance) ? (TDatabasePDG*) fgInstance : new TDatabasePDG();
 }
 
+//______________________________________________________________________________
+void TDatabasePDG::BuildPdgMap() const
+{
+   // Build fPdgMap mapping pdg-code to particle.
+
+   fPdgMap = new TExMap;
+   TIter next(fParticleList);
+   TParticlePDG *p;
+   while ((p = (TParticlePDG*)next())) {
+      fPdgMap->Add((Long_t)p->PdgCode(), (Long_t)p);
+   }
+}
 
 //______________________________________________________________________________
 TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
@@ -118,6 +133,8 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
                                      charge, ParticleClass, PDGcode, Anti,
                                      TrackingCode);
    fParticleList->Add(p);
+   if (fPdgMap)
+      fPdgMap->Add((Long_t)PDGcode, (Long_t)p);
 
    TParticleClassPDG* pclass = GetParticleClass(ParticleClass);
 
@@ -184,16 +201,9 @@ TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode) const
    //
 
    if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
+   if (fPdgMap       == 0)  BuildPdgMap();
 
-   TParticlePDG *p;
-   TObjLink *lnk = fParticleList->FirstLink();
-   while (lnk) {
-      p = (TParticlePDG*)lnk->GetObject();
-      if (p->PdgCode() == PDGcode) return p;
-      lnk = lnk->Next();
-   }
-   //   Error("GetParticle","No match for PDG code %d exists!",PDGcode);
-   return 0;
+   return (TParticlePDG*) fPdgMap->GetValue((Long_t)PDGcode);
 }
 
 //______________________________________________________________________________
