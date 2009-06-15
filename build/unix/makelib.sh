@@ -156,12 +156,15 @@ elif [ $LD = "KCC" ]; then
 elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
    EXPLLNKCORE=
    if [ $SONAME != "libCint.dll" ] \
+       && [ $SONAME != "libCint7.dll" ] \
        && [ $SONAME != "libReflex.dll" ] \
        && [ $SONAME != "libminicern.dll" ] ; then
-      if [ $SONAME != "libCore.dll" ]; then
-         EXPLLNKCORE="-Llib -lCore -lCint"
-      else
+      if [ $SONAME = "libCore.dll" ]; then
          EXPLLNKCORE="-Llib -lCint"
+      elif [ $SONAME = "libMetaTCint_7.dll" ]; then
+         EXPLLNKCORE="-Llib -lCore -lCint7"
+      else
+         EXPLLNKCORE="-Llib -lCore -lCint"
       fi
    fi
    if [ "x$MAJOR" != "x" ] ; then

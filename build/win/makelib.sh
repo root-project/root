@@ -82,6 +82,11 @@ if [ "$R__PLATFORM" = "win32" ]; then
       elif [ "$R__LIB" = "lib/libCint7.dll" ]; then
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
               $libdir/${name}.exp $R__EXTRA $syslibs"
+      elif [ "$R__LIB" = "lib/libMetaTCint_7.dll" ]; then
+         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
+              $libdir/${name}.exp $R__EXTRA \
+              lib/libCore.lib lib/libCint7.lib \
+              $syslibs"
       else
          if [ "$(bin/root-config --dicttype)" != "cint" ]; then
              needReflex="lib/libCintex.lib lib/libReflex.lib"

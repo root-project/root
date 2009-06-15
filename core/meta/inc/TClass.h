@@ -188,6 +188,7 @@ private:
 
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
+   static THashTable        *GetClassShortTypedefHash();
 
 public:
    TClass();

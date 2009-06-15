@@ -2135,6 +2135,12 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 }
 
 //______________________________________________________________________________
+THashTable *TClass::GetClassShortTypedefHash() {
+   // Return the class namesmassaged with TClassEdit::ShortType with kDropStlDefault.
+   return fgClassShortTypedefHash;
+}
+
+//______________________________________________________________________________
 TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silent */)
 {
    // Return pointer to class with name.
