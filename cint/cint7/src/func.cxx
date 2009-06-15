@@ -1913,7 +1913,7 @@ static G__value G__getfunction_libp(const char* item, char* funcname, G__param* 
    //       p2f();
    //
    ::Reflex::Member var = G__getvarentry(funcname, hash, ::Reflex::Scope::GlobalScope(), G__p_local);
-   if (var) {
+   if (var && G__get_type(var.TypeOf()) == '1') {
       sprintf(result7, "*%s", funcname);
       *known3 = 0;
       pfparam = strchr(item, '(');
@@ -3330,7 +3330,7 @@ extern "C" G__value G__getfunction(const char* item, int* known3, int memfunc_fl
    //       p2f();
    //
    ::Reflex::Member mem = G__getvarentry(funcname, hash, ::Reflex::Scope::GlobalScope(), G__p_local);
-   if (mem) {
+   if (mem && G__get_type(mem.TypeOf()) == '1') {
       sprintf(result7, "*%s", funcname);
       *known3 = 0;
       pfparam = strchr(item, '(');

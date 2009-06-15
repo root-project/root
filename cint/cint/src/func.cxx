@@ -1850,7 +1850,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
     * int (*p2f)(void);  p2f(); 
     ********************************************************************/
    var = G__getvarentry(funcname, hash, &ig15, &G__global, G__p_local);
-   if (var) {
+   if (var && var->type[ig15] == '1') {
       sprintf(result7, "*%s", funcname);
       *known3 = 0;
       pfparam = (char*)strchr(item, '(');
@@ -3186,7 +3186,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
     * int (*p2f)(void);  p2f(); 
     ********************************************************************/
    var = G__getvarentry(funcname, hash, &ig15, &G__global, G__p_local);
-   if (var) {
+   if (var && var->type[ig15] == '1') {
       sprintf(result7, "*%s", funcname);
       *known3 = 0;
       pfparam = (char*)strchr(item, '(');
