@@ -95,8 +95,12 @@ TDatabasePDG*  TDatabasePDG::Instance()
 void TDatabasePDG::BuildPdgMap() const
 {
    // Build fPdgMap mapping pdg-code to particle.
+   //
+   // Initial size is set so as to be able to hold at least 600
+   // particles: 521 in default table, ALICE adds 54 more.
+   // To be revisited after LHC discovers SUSY.
 
-   fPdgMap = new TExMap;
+   fPdgMap = new TExMap(4*TMath::Max(600, fParticleList->GetEntries())/3 + 3);
    TIter next(fParticleList);
    TParticlePDG *p;
    while ((p = (TParticlePDG*)next())) {
