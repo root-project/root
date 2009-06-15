@@ -258,7 +258,8 @@ class genreflex:
     p = subprocess.Popen('"' + self.gccxml + '" --print', shell=True,
                          bufsize=-1, stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, close_fds=True)
+                         stderr=subprocess.PIPE,
+                         close_fds = (sys.platform != 'win32'))
     (inp, out, err) = (p.stdin, p.stdout, p.stderr)
     sout = out.read()
     serr = err.read()
