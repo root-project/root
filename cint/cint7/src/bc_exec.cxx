@@ -4,6 +4,9 @@ using namespace ::Cint::Internal;
 namespace Cint {
 namespace Internal {
 int G__exec_asm(int start, int stack, G__value* presult, char* localmem);
+} // namespace Internal
+} // namespace Cint
+
 extern "C" int G__exec_bytecode(G__value* result7, G__CONST char* funcname, struct G__param* libp, int /*hash*/)
 {
    int i;
@@ -244,8 +247,6 @@ extern "C" int G__exec_bytecode(G__value* result7, G__CONST char* funcname, stru
    }
    return 0;
 }
-} // namespace Internal
-} // namespace Cint
 
 #include "bc_exec_asm.h"
 
