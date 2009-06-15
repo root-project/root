@@ -67,6 +67,7 @@
 
 #include "TClonesArray.h"
 #include "TParticle.h"
+#include "TDatabasePDG.h"
 #include "TLorentzVector.h"
 
 ClassImp(TPythia8)

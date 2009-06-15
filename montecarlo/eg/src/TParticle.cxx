@@ -41,9 +41,11 @@
 #include "TView.h"
 #include "TVirtualPad.h"
 #include "TPolyLine3D.h"
+#include "TParticlePDG.h"
 #include "TDatabasePDG.h"
 #include "TParticle.h"
 #include "TClass.h"
+#include "X3DBuffer.h"
 
 ClassImp(TParticle)
 
@@ -156,6 +158,34 @@ TParticle& TParticle::operator=(const TParticle &p)
 TParticle::~TParticle()
 {
    //destructor
+}
+
+//______________________________________________________________________________
+Double_t TParticle::GetMass()
+{
+   // Return nominal particle mass from PDG table.
+   return GetPDG()->Mass();
+}
+
+//______________________________________________________________________________
+Int_t TParticle::Beauty()
+{
+   // Return beauty quantum number.
+   return GetPDG()->Beauty();
+}
+
+//______________________________________________________________________________
+Int_t TParticle::Charm()
+{
+   // Return charm quantum number.
+   return GetPDG()->Charm();
+}
+
+//______________________________________________________________________________
+Int_t TParticle::Strangeness()
+{
+   // Return strangeness quantum number.
+   return GetPDG()->Strangeness();
 }
 
 //______________________________________________________________________________

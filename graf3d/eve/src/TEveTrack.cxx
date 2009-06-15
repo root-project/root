@@ -17,6 +17,7 @@
 #include "TMarker.h"
 #include "TPolyMarker3D.h"
 #include "TColor.h"
+#include "TParticlePDG.h"
 
 // Updates
 #include "TEveManager.h"

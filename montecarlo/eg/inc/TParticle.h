@@ -25,18 +25,11 @@
 #ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
 #endif
-#ifndef ROOT_X3DBuffer
-#include "X3DBuffer.h"
-#endif
 #ifndef ROOT_TLorentzVector
 #include "TLorentzVector.h"
 #endif
-#ifndef ROOT_TParticlePDG
-#include "TParticlePDG.h"
-#endif
-#ifndef ROOT_TDatabasePDG
-#include "TDatabasePDG.h"
-#endif
+
+class TParticlePDG;
 
 class TParticle : public TObject, public TAttLine, public TAtt3D {
 
@@ -106,14 +99,14 @@ public:
    Int_t          GetDaughter     (Int_t i)     const { return fDaughter[i];                                    }
    Int_t          GetLastDaughter ()            const { return fDaughter[1];                                    }
    Double_t       GetCalcMass     ()            const { return fCalcMass;                                       }
-   Double_t       GetMass         ()                  { return GetPDG()->Mass();                                }
+   Double_t       GetMass         ();
    Int_t          GetNDaughters   ()            const { return fDaughter[1]>0 ? fDaughter[1]-fDaughter[0]+1 : 0;}
    Float_t        GetWeight       ()            const { return fWeight;                                         }
    void           GetPolarisation(TVector3 &v);
    TParticlePDG*  GetPDG          (Int_t mode = 0);
-   Int_t          Beauty          ()                  { return GetPDG()->Beauty();                              }
-   Int_t          Charm           ()                  { return GetPDG()->Charm();                               }
-   Int_t          Strangeness     ()                  { return GetPDG()->Strangeness();                         }
+   Int_t          Beauty          ();
+   Int_t          Charm           ();
+   Int_t          Strangeness     ();
    void           Momentum(TLorentzVector &v)   const { v.SetPxPyPzE(fPx,fPy,fPz,fE);                           }
    void           ProductionVertex(TLorentzVector &v) const { v.SetXYZT(fVx,fVy,fVz,fVt);                       }
 
