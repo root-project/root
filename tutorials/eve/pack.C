@@ -19,9 +19,9 @@ void pack()
    b = new TGTextButton(hp, "Ailaaha");  hp->AddFrame(b);
 
    vp = new TGPack(hp, hp->GetWidth(), hp->GetHeight());
-   b = new TGTextButton(vp, "Blaaaaa");  vp->AddFrame(b);
-   b = new TGTextButton(vp, "Blooooo");  vp->AddFrame(b);
-   b = new TGTextButton(vp, "Bleeeee");  vp->AddFrame(b);
+   b = new TGTextButton(vp, "Blaaaaa");  vp->AddFrameWithWeight(b, 0, 5);
+   b = new TGTextButton(vp, "Blooooo");  vp->AddFrameWithWeight(b, 0, 3);
+   b = new TGTextButton(vp, "Bleeeee");  vp->AddFrameWithWeight(b, 0, 5);
    hp->AddFrame(vp, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    b = new TGTextButton(hp, "Cilnouk");  hp->AddFrame(b);

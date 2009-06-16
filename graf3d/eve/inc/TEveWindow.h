@@ -370,6 +370,7 @@ public:
    virtual TGFrame*        GetGUIFrame();
 
    virtual Bool_t          CanMakeNewSlots() const { return kTRUE; }
+   virtual TEveWindowSlot* NewSlotWithWeight(Float_t w);
    virtual TEveWindowSlot* NewSlot(); // *MENU*
 
    void FlipOrientation(); // *MENU*

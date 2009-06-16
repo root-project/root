@@ -137,6 +137,7 @@ void DetailTest()
 
 void TabsTest()
 {
+   TRandom r(0);
    TEveWindowSlot  *slot  = 0;
    TEveWindowFrame *frame = 0;
    TEveViewer *v = 0;
@@ -149,16 +150,17 @@ void TabsTest()
    // horizontal text views
    slot = tab1->NewSlot();
    TEveWindowPack* pack1 = slot->MakePack();
-   pack1->SetShowTitleBar(kFALSE);
    for(int i = 0; i<4;++i)
    {
-      slot = pack1->NewSlot();
+      Int_t weight = r.Uniform(3, 7);
+      slot = pack1->NewSlotWithWeight(weight);
       frame = slot->MakeFrame();
+      frame->SetElementName(Form("FrameInPack %d", i));
       TGCompositeFrame* cf = frame->GetGUICompositeFrame();
       TGTextView* text_view =  new TGTextView(cf, 200, 400);
       cf->AddFrame(text_view,  new TGLayoutHints(kLHintsLeft|kLHintsExpandX|kLHintsExpandY));
 
-      for(Int_t l =0; l<3; l++)
+      for(Int_t l =0; l<weight; l++)
       {
          text_view->AddLine(Form("slot[%d] add line %d here ", i, l));
       }

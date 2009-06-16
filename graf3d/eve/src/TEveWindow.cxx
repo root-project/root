@@ -487,6 +487,12 @@ void TEveCompositeFrameInMainFrame::MainFrameClosed()
    {
       if (fOriginalSlot)
       {
+         // if use pack, show hidden slot
+         TEveCompositeFrameInPack* packFrame = dynamic_cast<TEveCompositeFrameInPack*>(fOriginalSlot->GetEveFrame());
+         if (packFrame) {
+            TGPack* pack = (TGPack*)(packFrame->GetParent());
+            pack->ShowFrame(packFrame);
+         }
          TEveWindow::SwapWindows(fEveWindow, fOriginalSlot);
       }
       else if (fOriginalContainer)
@@ -802,6 +808,13 @@ void TEveWindow::UndockWindow()
    TEveWindow* return_cont = fEveFrame->GetEveParentAsWindow();
    if (return_cont && ! return_cont->CanMakeNewSlots())
       return_cont = 0;
+
+   // hide slot if in pack
+   TEveCompositeFrameInPack* packFrame = dynamic_cast<TEveCompositeFrameInPack*>(fEveFrame);
+   if (packFrame) {
+      TGPack* pack = (TGPack*)(packFrame->GetParent());
+      pack->HideFrame(fEveFrame);
+   }
 
    TEveWindowSlot* ew_slot = TEveWindow::CreateWindowMainFrame(0);
 
@@ -1347,12 +1360,20 @@ TEveWindowSlot* TEveWindowPack::NewSlot()
 {
    // Create a new frame-slot at the last position of the pack.
 
+   return NewSlotWithWeight(1.f);
+}
+
+//______________________________________________________________________________
+TEveWindowSlot* TEveWindowPack::NewSlotWithWeight(Float_t w)
+{
+   // Create a new weighted frame-slot at the last position of the pack.
+
    TEveCompositeFrame* slot = new TEveCompositeFrameInPack(fPack, this, fPack);
 
    TEveWindowSlot* ew_slot = TEveWindow::CreateDefaultWindowSlot();
    ew_slot->PopulateEmptyFrame(slot);
 
-   fPack->AddFrame(slot);
+   fPack->AddFrameWithWeight(slot, 0, w);
    slot->MapWindow();
 
    fPack->Layout();
