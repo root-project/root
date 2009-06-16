@@ -110,5 +110,6 @@
 #pragma link C++ class TGNumberEntry;
 #pragma link C++ class TGNumberEntryLayout;
 #pragma link C++ class TGPack;
+#pragma link C++ class TGFrameElementPack;
 
 #endif
