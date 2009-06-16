@@ -31,6 +31,7 @@
 
 class XrdProofdManager;
 class XrdScheduler;
+class XrdSysLogger;
 
 class XrdROOT {
 friend class XrdROOTMgr;
@@ -80,6 +81,8 @@ class XrdROOTMgr : public XrdProofdConfig {
 
    XrdProofdManager  *fMgr;
    XrdScheduler      *fSched;     // System scheduler
+   XrdSysLogger      *fLogger;    // Error logger
+   XrdOucString      fLogDir;     // Path to dir with validation logs
 
    std::list<XrdROOT *> fROOT;    // ROOT versions; the first is the default
 
@@ -99,6 +102,7 @@ public:
    XrdROOT          *DefaultVersion() const { return fROOT.front(); }
    XrdOucString      ExportVersions(XrdROOT *def);
    XrdROOT          *GetVersion(const char *tag);
+   void              SetLogDir(const char *d);
 };
 
 

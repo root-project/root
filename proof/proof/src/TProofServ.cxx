@@ -574,6 +574,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    // Default prefix in the form '<role>-<ordinal>'
    fPrefix = (IsMaster() ? "Mst-" : "Wrk-");
+   if (test) fPrefix = "Test";
    if (fOrdinal != "-1")
       fPrefix += fOrdinal;
    TProofServLogHandler::SetDefaultPrefix(fPrefix);

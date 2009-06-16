@@ -720,9 +720,12 @@ int XrdProofdManager::Config(bool rcf)
    }
 
    // Config the ROOT versions manager
-   if (fROOTMgr && fROOTMgr->Config(rcf) != 0) {
-      XPDERR("problems configuring the ROOT versions manager");
-      return -1;
+   if (fROOTMgr) {
+      fROOTMgr->SetLogDir(fAdminPath.c_str());
+      if (fROOTMgr && fROOTMgr->Config(rcf) != 0) {
+         XPDERR("problems configuring the ROOT versions manager");
+         return -1;
+      }
    }
 
    // Config the client manager
@@ -1182,7 +1185,7 @@ int XrdProofdManager::DoDirectivePort(char *val, XrdOucStream *, bool)
    if (port.beginswith("xproofd:")) {
       port.replace("xproofd:","");
    }
-   if (port.length() > 0) {
+   if (port.length() > 0 && port.isdigit()) {
       fPort = strtol(port.c_str(), 0, 10);
    }
    fPort = (fPort < 0) ? XPD_DEF_PORT : fPort;
