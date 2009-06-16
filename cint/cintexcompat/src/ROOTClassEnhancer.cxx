@@ -150,7 +150,7 @@ std::vector<ROOTClassEnhancerInfo*>& rootEnhancerInfos()
 ROOTClassEnhancer::ROOTClassEnhancer(const ROOT::Reflex::Type& cl)
 {
    fClass = CleanType(cl);
-   fName  = CintName(fClass);
+   fName  = TClassEdit::GetLong64_Name( CintName(fClass) );
 }
 
 //______________________________________________________________________________
