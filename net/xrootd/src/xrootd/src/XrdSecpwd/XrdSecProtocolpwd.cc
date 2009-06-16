@@ -1193,7 +1193,7 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
    XrdSutBuffer    *bmai = 0;  // Main buffer
    XrdSutBucket    *bck  = 0;  // Generic bucket
    // The local status info
-   pwdStatus_t      SessionSt;
+   pwdStatus_t      SessionSt = { 0, 0, 0};
 
    //
    // Unlocks automatically returning

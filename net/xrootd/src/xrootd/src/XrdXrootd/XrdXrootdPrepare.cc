@@ -98,7 +98,7 @@ int XrdXrootdPrepare::List(XrdXrootdPrepArgs &pargs, char *resp, int resplen)
 //
    errno = 0;
    while((dp = readdir(pargs.dirP)))
-        {if (!(up = index((const char *)dp->d_name, '_'))) continue;
+     {if (!(up = (char *) index((const char *)dp->d_name, '_'))) continue;
          if (pargs.reqlen && strncmp(dp->d_name, pargs.reqid, pargs.reqlen))
             continue;
          if (pargs.usrlen)
@@ -108,9 +108,9 @@ int XrdXrootdPrepare::List(XrdXrootdPrepArgs &pargs, char *resp, int resplen)
          strcpy(path+LogDirLen, (const char *)dp->d_name);
          if (stat((const char *)path, &buf)) continue;
          *up = ' ';
-         if ((up = index((const char *)(up+1), (int)'_'))) *up = ' ';
+         if ((up = (char *) index((const char *)(up+1), (int)'_'))) *up = ' ';
             else continue;
-         if ((up = index((const char *)(up+1), (int)'_'))) *up = ' ';
+         if ((up = (char *) index((const char *)(up+1), (int)'_'))) *up = ' ';
             else continue;
          return snprintf(resp, resplen-1, "%s %ld", dp->d_name, buf.st_mtime);
         }
@@ -279,7 +279,7 @@ void XrdXrootdPrepare::Scrub()
 //
    errno = 0;
    while((dp = readdir(prepD)))
-        {if (!(up = index((const char *)dp->d_name, '_'))) continue;
+     {if (!(up = (char *) index((const char *)dp->d_name, '_'))) continue;
          strcpy(fn, (const char *)dp->d_name);
          if (stat((const char *)path, &buf)) continue;
          if (buf.st_mtime <= stale)

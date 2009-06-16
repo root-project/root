@@ -162,7 +162,7 @@ char *XrdOssPath::genPFN(char *dst, int dln, const char *src)
 {
    char *pP;
 
-   if (!(pP = index(src, xChar))|| dln <= (int)strlen(pP)) return 0;
+   if (!(pP = (char *) index(src, xChar))|| dln <= (int)strlen(pP)) return 0;
 
    while(*pP) {*dst++ = (*pP == xChar ? '/' : *pP); pP++;}
 
@@ -232,7 +232,7 @@ XrdOssPath::theSfx XrdOssPath::pathType(const char *Path, int chkWhat)
 
 // Convert path to suffix number
 //
-   if ((Dot = rindex(Path, '.')))
+	if ((Dot = (char *) rindex(Path, '.')))
       for (i = iBeg; i < iEnd; i++) if (!strcmp(Dot,Sfx[i])) return theSfx(i+1);
    return isBase;
 }

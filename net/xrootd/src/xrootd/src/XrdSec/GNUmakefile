@@ -135,4 +135,4 @@ $(OBJDIR)/XrdSectestClient.o:   XrdSectestClient.cc XrdSecInterface.hh \
 $(OBJDIR)/XrdSectestServer.o: XrdSecInterface.hh XrdSecEntity.hh XrdSysLogger.hh \
                               XrdSysHeaders.hh   XrdSectestServer.cc
 	@echo Compiling XrdSectestServer.cc 
-	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSectestServer.o XrdSectestServer.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(OBJDIR)/XrdSectestServer.o XrdSectestServer.cc

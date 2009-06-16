@@ -476,7 +476,7 @@ char *XrdOssCache::Parse(const char *token, char *cbuff, int cblen)
 
 // Get the correct cache group and partition path
 //
-   if (!(Path = index(token, ':'))) strlcpy(cbuff, token, cblen);
+   if (!(Path = (char *) index(token, ':'))) strlcpy(cbuff, token, cblen);
       else {int n = Path - token;
             if (n >= cblen) n = cblen-1;
             strncpy(cbuff, token, n); cbuff[n] = '\0';

@@ -191,7 +191,7 @@ void XrdCmsReq::Reply_Redirect(const char *sname,
 
 // Find the port number in the host name
 //
-   if (!(colon = index(sname, ':'))) 
+   if (!(colon = (char *) index(sname, ':'))) 
       {Port = 0;
        hP = sname;
       } else {
