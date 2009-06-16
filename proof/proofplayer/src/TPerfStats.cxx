@@ -519,6 +519,7 @@ void TPerfStats::WriteQueryLog()
       values.Add(new TParameter<float>("cputime", fTotCpuTime));
       values.Add(new TParameter<Long64_t>("bytesread", fTotBytesRead));
       values.Add(new TParameter<Long64_t>("events", fTotEvents));
+      values.Add(new TParameter<int>("workers", fSlaves));
       if (!fMonitoringWriter->SendParameters(&values, identifier))
          Error("WriteQueryLog", "sending of monitoring info failed");
    }
