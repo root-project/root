@@ -293,7 +293,8 @@ class genreflex:
       return s
     p = subprocess.Popen('"%s" %s'%(compiler,vopt), shell=True, bufsize=-1,
                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, close_fds=True)
+                         stderr=subprocess.PIPE,
+                         close_fds=(sys.platform != 'win32'))
     (inp,out,err) = (p.stdin, p.stdout, p.stderr)
     serr = err.read()
     # cl puts its version into cerr!
