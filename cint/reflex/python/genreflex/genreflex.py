@@ -352,7 +352,16 @@ class genreflex:
         else :
           mapfile = os.path.join(self.outputDir, self.rootmap)
         if not self.rootmaplib :  self.rootmaplib = 'lib'+name+'.so'
-        cnames += [ td['fullname'] for td in dg.typedefs_for_usr ]
+        for td in dg.typedefs_for_usr:
+          # Autoload entries are classes by default. Only include non-free typedefs
+          # such that CINT gets notified that they are not classes when their enclosed
+          # scope's dictionary is set up.
+          # Scoped names have name != fullname; ensure that the typedef's scope is
+          # part of the dictionary, too.
+          if td['fullname'] != td['name'] \
+                and len(td['fullname']) > 3 \
+                and td['fullname'][0:-len(td['name']) - 2] in cnames:
+            cnames += [ td['fullname'] ]
         classes+= dg.typedefs_for_usr
         genrootmap.genRootMap(mapfile, name,  self.rootmaplib, cnames, classes)
     #------------Delete intermediate files------------------
