@@ -14,6 +14,9 @@
 #include "Math/WrappedParamFunction.h"
 #include "Math/Error.h"
 
+#include "Math/MinimTransformFunction.h"
+#include "Math/MultiNumGradFunction.h"   // needed to use transformation function
+
 #include <iostream> 
 #include <cassert>
 
@@ -27,7 +30,7 @@ namespace ROOT {
 
 GSLSimAnMinimizer::GSLSimAnMinimizer( int /* ROOT::Math::EGSLSimAnMinimizerType type */ ) : 
    fDim(0), 
-   fNFix(0),
+   fOwnFunc(false),
    fObjFunc(0)
 {
    // Constructor implementation : create GSLMultiFit wrapper object
@@ -35,16 +38,13 @@ GSLSimAnMinimizer::GSLSimAnMinimizer( int /* ROOT::Math::EGSLSimAnMinimizerType 
    fValues.reserve(10); 
    fNames.reserve(10); 
    fSteps.reserve(10); 
-   fVarFix.reserve(10); 
 
    SetMaxIterations(100);
-   SetPrintLevel(3);
+   SetPrintLevel(0);
 }
 
 GSLSimAnMinimizer::~GSLSimAnMinimizer () { 
-//   if (fObjFunc) delete fObjFunc; 
-   // if I have fixed variables need to delete
-   if ( fNFix   && fObjFunc) delete fObjFunc;
+   if ( fOwnFunc   && fObjFunc) delete fObjFunc;
 }
 
 bool GSLSimAnMinimizer::SetVariable(unsigned int ivar, const std::string & name, double val, double step) { 
@@ -55,52 +55,54 @@ bool GSLSimAnMinimizer::SetVariable(unsigned int ivar, const std::string & name,
       fValues.push_back(val); 
       fNames.push_back(name);
       // step is the simmulated annealing scale
-      fSteps.push_back( step   ); 
-      fVarFix.push_back( false);
-
+      fSteps.push_back( step ); 
+      fVarTypes.push_back(kDefault); 
    }
    else { 
       fValues[ivar] = val; 
       fNames[ivar] = name;
       fSteps[ivar] = step; 
-      fVarFix[ivar] = false; 
+      fVarTypes[ivar] = kDefault; 
+
+      // remove bounds if needed
+      std::map<unsigned  int, std::pair<double, double> >::iterator iter = fBounds.find(ivar); 
+      if ( iter !=  fBounds.end() ) fBounds.erase (iter); 
    }
    return true; 
+
 }
 
-bool GSLSimAnMinimizer::SetLowerLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double ) { 
-   MATH_WARN_MSGVAL("GSLSimAnMinimizer::SetLowerLimitedVariable","Ignore lower limit on variable ",ivar);
-   return SetVariable(ivar, name, val, step); 
+bool GSLSimAnMinimizer::SetLowerLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double lower ) { 
+   bool ret =  SetVariable(ivar, name, val, step); 
+   if (!ret) return false; 
+   fBounds[ivar] = std::make_pair( lower, lower);
+   fVarTypes[ivar] = kLowBound; 
+   return true;  
 }
-bool GSLSimAnMinimizer::SetUpperLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double ) { 
-   MATH_WARN_MSGVAL("GSLSimAnMinimizer::SetUpperLimitedVariable","Ignore upper limit on variable ",ivar);
-   return SetVariable(ivar, name, val, step); 
+bool GSLSimAnMinimizer::SetUpperLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double upper) { 
+   bool ret = SetVariable(ivar, name, val, step); 
+   if (!ret) return false; 
+   fBounds[ivar] = std::make_pair( upper, upper);
+   fVarTypes[ivar] = kUpBound; 
+   return true;  
 }
-bool GSLSimAnMinimizer::SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double, double ) { 
-   MATH_WARN_MSGVAL("GSLSimAnMinimizer::SetLimitedVariable","Ignore bounds on variable ",ivar);
-   return SetVariable(ivar, name, val, step); 
+bool GSLSimAnMinimizer::SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double lower, double upper ) { 
+   bool ret = SetVariable(ivar, name, val, step); 
+   if (!ret) return false; 
+   fBounds[ivar] = std::make_pair( lower, upper);
+   fVarTypes[ivar] = kBounds; 
+   return true;  
 }
 
 
 
 bool GSLSimAnMinimizer::SetFixedVariable(unsigned int ivar, const std::string & name, double val) { 
-   // set variable in minimizer - support only free variables 
-   // no transformation implemented - so far
-   if (ivar > fValues.size() ) return false; 
-   if (ivar == fValues.size() ) { 
-      fValues.push_back(val); 
-      fNames.push_back(name);
-      // step is the simmulated annealing scale
-      fSteps.push_back( 0   ); 
-      fVarFix.push_back( true);
-   }
-   else { 
-      fValues[ivar] = val; 
-      fNames[ivar] = name;
-      fSteps[ivar] = 0; 
-      fVarFix[ivar] = true; 
-   }
-   return true; 
+   /// set fixed variable (override if minimizer supports them )
+   // use zero step size 
+   bool ret = SetVariable(ivar, name, val, 0.); 
+   if (!ret) return false; 
+   fVarTypes[ivar] = kFix; 
+   return true;  
 }
 
 bool GSLSimAnMinimizer::SetVariableValue(unsigned int ivar, double val) { 
@@ -127,10 +129,10 @@ void GSLSimAnMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) 
    fDim = func.NDim();
 }
 
-void GSLSimAnMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & /* func */) { 
-   // set the function to minimizer (need to clone ??)
-   // not supported yet 
-   return; 
+void GSLSimAnMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func ) { 
+   // set the function to minimize
+   // use the other methods
+   SetFunction( static_cast<const ROOT::Math::IMultiGenFunction &>(func) ); 
 }
 
 
@@ -141,65 +143,65 @@ bool GSLSimAnMinimizer::Minimize() {
    if (debugLevel >=1 ) std::cout <<"Minimize using GSLSimAnMinimizer " << std::endl; 
 
 
-   // check for fixed variables
-   std::vector<unsigned int> fixedVars; 
-   std::vector<unsigned int> freeVars; 
-   std::vector<double> fixedValues; 
-
-   //std::cout << " fDim " << fDim << std::endl;
-   //std::cout << " fVarFix.size " << fVarFix.size() << std::endl;
-
-   assert ( fVarFix.size() == fDim);
-
-   for (unsigned int i = 0; i < fDim; ++i) { 
-      if (fVarFix[i]) { 
-         fixedVars.push_back(i); 
-         fixedValues.push_back(fValues[i] );
-      }
-      else 
-         freeVars.push_back(i);
-   }
-
-   fNFix = fixedVars.size(); 
-   // need to create an adapter 
-   if ( fNFix > 0) 
-      fObjFunc = new ROOT::Math::WrappedParamFunctionGen<const ROOT::Math::IMultiGenFunction *> (fObjFunc, fDim-fNFix, fNFix, &fixedValues.front(), &fixedVars.front() ); 
-
-
-
    // adapt  the steps (use largers) 
    for (unsigned int i = 0; i < fSteps.size() ; ++i) 
       fSteps[i] *= 10; 
 
-   // correct for free fariables
-   std::vector<double> xvar;
-   std::vector<double> steps;
+   // vector of internal values (copied by default) 
+   std::vector<double> xvar (fValues );
+   std::vector<double> steps (fSteps);
 
-   for (unsigned int i = 0; i < fDim; ++i) {
-      if (!fVarFix[i]) { 
-         xvar.push_back(fValues[i] );
-         steps.push_back( 10* fSteps[i] ); // adapt the steps
-      }
+
+   // check if a transformation is needed 
+   bool doTransform = (fBounds.size() > 0); 
+   unsigned int ivar = 0; 
+   while (!doTransform && ivar < fVarTypes.size() ) {
+      doTransform = (fVarTypes[ivar++] != kDefault );
    }
 
+   // if needed do transformation and wrap objective function in a new transformation function
+   // and transform from external variables (and steps)   to internals one 
+   MinimTransformFunction * trFunc  = 0; 
+   if (doTransform)   {   
+      // since objective funciton is gradient build a gradient function for the transformation
+      // although gradient is not needed
 
+      trFunc =  new MinimTransformFunction ( new MultiNumGradFunction( *fObjFunc), fVarTypes, fValues, fBounds ); 
 
+      trFunc->InvTransformation(&fValues.front(), &xvar[0]); 
 
-   std::vector<double> xmin(xvar.size() );
-   int iret = fSolver.Solve(*fObjFunc, &xvar.front(), &steps.front(), &xmin[0], debugLevel );
+      // need to transform also  the steps 
+      trFunc->InvStepTransformation(&fValues.front(), &fSteps.front(), &steps[0]); 
 
-   unsigned int j = 0; 
-   for (unsigned int i = 0; i < fDim; ++i) {
-      if (!fVarFix[i]) { 
-         fValues[i] = xmin[j];
-         j++;
-      }
+      xvar.resize( trFunc->NDim() );
+      steps.resize( trFunc->NDim() ); 
+
+      fObjFunc = trFunc; 
+      fOwnFunc = true; // flag to indicate we need to delete the function
    }
 
-   //fValues = xmin;
+   assert (xvar.size() == steps.size() );         
 
+   // output vector 
+   std::vector<double> xmin(xvar.size() ); 
+  
+   int iret = fSolver.Solve(*fObjFunc, &xvar.front(), &steps.front(), &xmin[0], (debugLevel > 1) );
 
    fMinVal = (*fObjFunc)(&xmin.front() );
+
+   // get the result (transform if needed) 
+   if (trFunc != 0) { 
+      const double * xtrans = trFunc->Transformation(&xmin.front());  
+      assert(fValues.size() == trFunc->NTot() ); 
+      assert( trFunc->NTot() == NDim() );
+      std::copy(xtrans, xtrans + trFunc->NTot(),  fValues.begin() ); 
+   }
+   else { 
+      // case of no transformation applied 
+      assert( fValues.size() == xmin.size() ); 
+      std::copy(xmin.begin(), xmin.end(),  fValues.begin() ); 
+   }
+
 
 
    if (debugLevel >=1 ) { 

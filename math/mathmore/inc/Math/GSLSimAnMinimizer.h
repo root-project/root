@@ -48,9 +48,20 @@
 #include "Math/GSLSimAnnealing.h"
 #endif
 
+#ifndef ROOT_Math_MinimizerVariable
+#include "Math/MinimizerVariable.h"
+#endif
+
+#include <vector>
+#include <map>
+
+
+
 namespace ROOT { 
 
    namespace Math { 
+
+      class  MinimTransformFunction;
 
 
 //_____________________________________________________________________________________
@@ -170,21 +181,20 @@ protected:
 
 private: 
    
-   // dimension of the function to be minimized 
-   unsigned int fDim; 
-   // number of fixed variables 
-   unsigned int fNFix; 
+   unsigned int fDim;     // dimension of the function to be minimized 
+   bool fOwnFunc;        // flag to indicate if objective function is managed 
 
    ROOT::Math::GSLSimAnnealing  fSolver; 
    const ROOT::Math::IMultiGenFunction * fObjFunc; 
    
-   double fMinVal; 
+   double fMinVal;                    // minimum values 
 
    mutable std::vector<double> fValues;
 
    std::vector<double> fSteps;
    std::vector<std::string> fNames;
-   std::vector<bool> fVarFix; 
+   std::vector<ROOT::Math::EMinimVariableType> fVarTypes;  // vector specifyng the type of variables
+   std::map< unsigned int, std::pair<double, double> > fBounds; // map specifying the bound using as key the parameter index
 
 }; 
 

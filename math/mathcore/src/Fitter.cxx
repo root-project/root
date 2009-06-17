@@ -364,8 +364,10 @@ bool Fitter::DoMinimization(const ObjFunc & objFunc, unsigned int dataSize, cons
    std::cout << "ROOT::Fit::Fitter::DoMinimization : ncalls = " << ObjFuncTrait<ObjFunc>::NCalls(objFunc) << " type of objfunc " << ObjFuncTrait<ObjFunc>::Type(objFunc) << "  typeid: " << typeid(objFunc).name() << " prov gradient " << ObjFuncTrait<ObjFunc>::IsGrad() << std::endl;
 #endif
    
-   unsigned int ncalls =  ObjFuncTrait<ObjFunc>::NCalls(objFunc);
+
+   unsigned int ncalls =  ObjFuncTrait<ObjFunc>::NCalls(*fcn);
    int fitType =  ObjFuncTrait<ObjFunc>::Type(objFunc);
+
 
    fResult = std::auto_ptr<FitResult> ( new FitResult(*fMinimizer,fConfig, fFunc, ret, dataSize, 
                                                       fBinFit, chi2func, ncalls ) );

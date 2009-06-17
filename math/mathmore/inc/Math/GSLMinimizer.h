@@ -41,8 +41,13 @@
 #include "Math/IParamFunctionfwd.h"
 #endif
 
+#ifndef ROOT_Math_MinimizerVariable
+#include "Math/MinimizerVariable.h"
+#endif
+
 
 #include <vector>
+#include <map>
 #include <string> 
 
 
@@ -67,9 +72,8 @@ namespace Math {
 
    class GSLMultiMinimizer; 
 
-}
+   class MinimTransformFunction;
 
-namespace Math { 
 
 //_____________________________________________________________________________________
 /** 
@@ -140,10 +144,8 @@ public:
    virtual bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ); 
    /// set upper/lower limited variable (override if minimizer supports them )
    virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */); 
-#ifdef LATER
    /// set fixed variable (override if minimizer supports them )
    virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
-#endif
    /// set the value of an existing variable 
    virtual bool SetVariableValue(unsigned int ivar, double val );
    /// set the values of all existing variables (array must be dimensioned to the size of existing parameters)
@@ -169,11 +171,11 @@ public:
 
    /// this is <= Function().NDim() which is the total 
    /// number of variables (free+ constrained ones) 
-   virtual unsigned int NDim() const { return fDim; }   
+   virtual unsigned int NDim() const { return fValues.size(); }   
 
    /// number of free variables (real dimension of the problem) 
-   /// this is <= Function().NDim() which is the total 
-   virtual unsigned int NFree() const { return fDim; }  
+   /// this is <= Function().NDim() which is the total number of free parameters
+   virtual unsigned int NFree() const { return fObjFunc->NDim(); }  
 
    /// minimizer provides error and error matrix
    virtual bool ProvidesError() const { return false; } 
@@ -195,6 +197,14 @@ public:
    /// return reference to the objective function
    ///virtual const ROOT::Math::IGenFunction & Function() const; 
 
+   // method of only GSL  minimizer (not inherited from interface)
+ 
+   /// return pointer to used objective gradient function 
+   const ROOT::Math::IMultiGradFunction * ObjFunction() const { return fObjFunc; }
+
+   /// return transformation function (NULL if not having a transformation) 
+   const ROOT::Math::MinimTransformFunction * TransformFunction() const; 
+
 
 protected: 
 
@@ -212,6 +222,8 @@ private:
    //mutable std::vector<double> fErrors;
    std::vector<double> fSteps;
    std::vector<std::string> fNames;
+   std::vector<ROOT::Math::EMinimVariableType> fVarTypes;  // vector specifyng the type of variables
+   std::map< unsigned int, std::pair<double, double> > fBounds; // map specifying the bound using as key the parameter index
 
 }; 
 

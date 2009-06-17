@@ -28,19 +28,19 @@ double SqrtLowParameterTransformation::Int2ext(double value, double lower) const
 }
 
 
-double SqrtLowParameterTransformation::Ext2int(double value, double lower, const MnMachinePrecision& prec) const {
+double SqrtLowParameterTransformation::Ext2int(double value, double lower, const MnMachinePrecision& ) const {
    // external to internal transformation
    double yy = value - lower + 1.; 
    double yy2 = yy*yy; 
-   if (yy2 < (1. + prec.Eps2()) ) 
-      return 8*sqrt(prec.Eps2()); 
+   if (yy2 < 1. ) 
+      return 0; 
    else 
       return sqrt( yy2 -1); 
 }
 
 
 double SqrtLowParameterTransformation::DInt2Ext(double value, double) const {
-   // derivative of internal to external transofrmation   :  d Ext / d Int  
+   // derivative of internal to external transofrmation   :  d (Int2Ext) / d Int  
    double val = value/( sqrt( value*value + 1.) );
    return val; 
 }

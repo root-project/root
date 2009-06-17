@@ -22,10 +22,10 @@
  *                                                                    *
  **********************************************************************/
 
-// Header file for class NumGradFunction
+// Header file for class MultiNumGradFunction
 
-#ifndef ROOT_Math_NumGradFunction
-#define ROOT_Math_NumGradFunction
+#ifndef ROOT_Math_MultiNumGradFunction
+#define ROOT_Math_MultiNumGradFunction
 
 
 #ifndef ROOT_Math_IFunction
@@ -36,9 +36,6 @@
 #include "Math/WrappedFunction.h"
 #endif
 
-#ifndef ROOT_Math_Derivator
-#include "Math/Derivator.h"
-#endif
 
 namespace ROOT { 
 
@@ -46,8 +43,9 @@ namespace ROOT {
 
 
 /** 
-   NumGradMultiFunction class to wrap a normal function in  a
-   gradient function using numerical gradient calculation
+   MultiNumGradFunction class to wrap a normal function in  a
+   gradient function using numerical gradient calculation 
+   provided by the class Derivator (based on GSL numerical derivation)
 
 
    @ingroup MultiMin
@@ -104,6 +102,14 @@ public:
    }
 
 
+   /// precision value used for calculating the derivative step-size 
+   /// h = eps * |x|. The default is 0.001, give a smaller in case function chanes rapidly
+   static void SetDerivPrecision(double eps); 
+
+   /// get precision value used for calculating the derivative step-size 
+   static double GetDerivPrecision();
+
+
 private: 
 
 
@@ -112,18 +118,15 @@ private:
    }
 
    // calculate derivative using mathcore derivator 
-   double DoDerivative (const double * x, unsigned int icoord  ) const { 
-      static double kEps = 1.E-6;
-      static double kPrecision = 1.E-8; // sqrt(epsilon)
-      double x0 = x[icoord];
-      double step = std::max( kEps* std::abs(x0), 8.0*kPrecision*(std::abs(x0) + kPrecision) );
-      return ROOT::Math::Derivator::Eval(*fFunc, x, icoord, step); 
-   }  
+   double DoDerivative (const double * x, unsigned int icoord  ) const;
 
    // adapat internal function type to IMultiGenFunction needed by derivative calculation
    const IMultiGenFunction * fFunc;  
    unsigned int fDim; 
    bool fOwner; 
+
+   static double fgEps;          // epsilon used in derivative calculation h ~ eps |x|
+
 }; 
 
    } // end namespace Math

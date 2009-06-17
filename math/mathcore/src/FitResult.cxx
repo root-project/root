@@ -57,6 +57,9 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
    fFitFunc(0), 
    fParams(std::vector<double>( min.NDim() ) )
 {
+   // replace ncalls if minimizer does not support it (they are taken then from the FitMethodFunction)
+   if (fNCalls == 0) fNCalls = ncalls;
+
    // Constructor from a minimizer, fill the data. ModelFunction  is passed as non const 
    // since it will be managed by the FitResult
    const unsigned int npar = fParams.size();
@@ -105,10 +108,6 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
          fChi2 = (*chi2func)(&fParams[0]); 
       }
    }
-
-   // replace ncalls if given (they are taken from the FitMethodFunction)
-   if (ncalls !=0) fNCalls = ncalls;
-
       
    // fill error matrix
    // cov matrix rank 
@@ -205,6 +204,7 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
 
 bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned int ncalls) { 
    // update fit result with new status from minimizer 
+   // nclass if is not zero is added to the total function calls
 
    const unsigned int npar = fParams.size();
    if (min.NDim() != npar ) { 
@@ -226,9 +226,10 @@ bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned
    fVal = min.MinValue(); 
    fEdm = min.Edm(); 
    fStatus = min.Status(); 
+
    // update number of function calls
-   if (ncalls != 0)    fNCalls += min.NCalls(); 
-   else fNCalls += ncalls; 
+   if ( min.NCalls() > 0)   fNCalls += min.NCalls();
+   else fNCalls += ncalls;
 
    // copy parameter value and errors 
    std::copy(min.X(), min.X() + npar, fParams.begin());

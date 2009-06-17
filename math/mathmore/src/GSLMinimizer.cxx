@@ -28,7 +28,9 @@
 
 #include "GSLMultiMinimizer.h"
 
-#include "Math/NumGradFunction.h"
+#include "Math/MultiNumGradFunction.h"
+
+#include "Math/MinimTransformFunction.h"
 
 #include <cassert>
 
@@ -37,6 +39,7 @@
 #include <algorithm>
 #include <functional>
 #include <ctype.h>   // need to use c version of tolower defined here
+#include <limits> 
 
 namespace ROOT { 
 
@@ -102,31 +105,61 @@ bool GSLMinimizer::SetVariable(unsigned int ivar, const std::string & name, doub
       fValues.push_back(val); 
       fNames.push_back(name);
       fSteps.push_back(step); 
+      fVarTypes.push_back(kDefault); 
    }
    else { 
       fValues[ivar] = val; 
       fNames[ivar] = name;
       fSteps[ivar] = step; 
+      fVarTypes[ivar] = kDefault; 
+
+      // remove bounds if needed
+      std::map<unsigned  int, std::pair<double, double> >::iterator iter = fBounds.find(ivar); 
+      if ( iter !=  fBounds.end() ) fBounds.erase (iter); 
+
    }
+
    return true; 
 }
 
-bool GSLMinimizer::SetLowerLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double ) { 
-   MATH_WARN_MSGVAL("GSLMinimizer::SetLowerLimitedVariable","Ignore lower limit on variable ",ivar);
-   return SetVariable(ivar, name, val, step); 
+bool GSLMinimizer::SetLowerLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double lower) { 
+   //MATH_WARN_MSGVAL("GSLMinimizer::SetLowerLimitedVariable","Ignore lower limit on variable ",ivar);
+   bool ret = SetVariable(ivar, name, val, step); 
+   if (!ret) return false; 
+   fBounds[ivar] = std::make_pair( lower, lower);
+   fVarTypes[ivar] = kLowBound; 
+   return true;  
 }
-bool GSLMinimizer::SetUpperLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double ) { 
-   MATH_WARN_MSGVAL("GSLMinimizer::SetUpperLimitedVariable","Ignore upper limit on variable ",ivar);
-   return SetVariable(ivar, name, val, step); 
+bool GSLMinimizer::SetUpperLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double upper ) { 
+   //MATH_WARN_MSGVAL("GSLMinimizer::SetUpperLimitedVariable","Ignore upper limit on variable ",ivar);
+   bool ret = SetVariable(ivar, name, val, step); 
+   if (!ret) return false; 
+   fBounds[ivar] = std::make_pair( upper, upper);
+   fVarTypes[ivar] = kUpBound; 
+   return true;  
 }
-bool GSLMinimizer::SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double, double ) { 
-   MATH_WARN_MSGVAL("GSLMinimizer::SetLimitedVariable","Ignore bounds on variable ",ivar);
-   return SetVariable(ivar, name, val, step); 
+
+bool GSLMinimizer::SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double lower, double upper) { 
+   //MATH_WARN_MSGVAL("GSLMinimizer::SetLimitedVariable","Ignore bounds on variable ",ivar);
+   bool ret = SetVariable(ivar, name, val, step); 
+   if (!ret) return false; 
+   fBounds[ivar] = std::make_pair( lower, upper);
+   fVarTypes[ivar] = kBounds; 
+   return true;  
 }
+
+bool GSLMinimizer::SetFixedVariable(unsigned int ivar , const std::string & name , double val ) {   
+   /// set fixed variable (override if minimizer supports them )
+   bool ret = SetVariable(ivar, name, val, 0.); 
+   if (!ret) return false; 
+   fVarTypes[ivar] = kFix; 
+   return true;  
+}
+
 
 bool GSLMinimizer::SetVariableValue(unsigned int ivar, double val) { 
    // set variable value in minimizer 
-   // no transformation implemented - so far
+   // no change to transformation or variable status
    if (ivar > fValues.size() ) return false; 
    fValues[ivar] = val; 
    return true; 
@@ -139,6 +172,7 @@ bool GSLMinimizer::SetVariableValues( const double * x) {
    return true; 
 }
       
+
 void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) { 
    // set the function to minimizer 
    // need to calculate numerical the derivatives since are not supported
@@ -147,11 +181,10 @@ void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
 }
 
 void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func) { 
-   // set the function to minimizer (need to clone ??)
+   // set the function to minimizer 
    fObjFunc = dynamic_cast< const ROOT::Math::IMultiGradFunction *>(func.Clone() ); 
-   fDim = func.NDim(); 
+   fDim = fObjFunc->NDim(); 
 }
-
 
 bool GSLMinimizer::Minimize() { 
    // set initial parameters of the minimizer
@@ -168,13 +201,49 @@ bool GSLMinimizer::Minimize() {
       return false;
    }
 
-   // use a global step size = min (step vectors) 
-   double stepSize = 1; 
-   for (unsigned int i = 0; i < fSteps.size(); ++i) 
-      //stepSize += fSteps[i]; 
-      if (fSteps[i] < stepSize) stepSize = fSteps[i]; 
+   // use a global step size = modules of  step vectors 
+   double stepSize = 0; 
+   for (unsigned int i = 0; i < fSteps.size(); ++i)  
+      stepSize += fSteps[i]*fSteps[i]; 
+   stepSize = std::sqrt(stepSize);
 
-   fGSLMultiMin->Set(*fObjFunc, &fValues.front(), stepSize, fLSTolerance ); 
+   const double eps = std::numeric_limits<double>::epsilon();  
+   if (stepSize < eps) {
+      MATH_ERROR_MSGVAL("GSLMinimizer::Minimize","Step size is too small",stepSize);
+      return false;
+   }
+
+   // check if a transformation is needed 
+   bool doTransform = (fBounds.size() > 0); 
+   unsigned int ivar = 0; 
+   while (!doTransform && ivar < fVarTypes.size() ) {
+      doTransform = (fVarTypes[ivar++] != kDefault );
+   }
+
+
+   std::vector<double> startValues(fValues.begin(), fValues.end() );
+
+   MinimTransformFunction * trFunc  = 0; 
+
+   // in case of transformation wrap objective function in a new transformation function
+   // and transform from external variables  to internals one
+   if (doTransform)   {   
+      trFunc =  new MinimTransformFunction ( fObjFunc, fVarTypes, fValues, fBounds ); 
+      trFunc->InvTransformation(&fValues.front(), &startValues[0]); 
+      startValues.resize( trFunc->NDim() );
+      fObjFunc = trFunc; 
+   }
+
+//    std::cout << " f has transform " << doTransform << "  " << fBounds.size() << "   " << startValues.size() <<  " ndim " << fObjFunc->NDim() << std::endl;   std::cout << "InitialValues external : "; 
+//    for (int i = 0; i < fValues.size(); ++i) std::cout << fValues[i] << "  "; 
+//    std::cout << "\n";
+//    std::cout << "InitialValues internal : "; 
+//    for (int i = 0; i < startValues.size(); ++i) std::cout << startValues[i] << "  "; 
+//    std::cout << "\n";
+
+
+   // set parameters in internal GSL minimization class 
+   fGSLMultiMin->Set(*fObjFunc, &startValues.front(), stepSize, fLSTolerance ); 
 
 
    int debugLevel = PrintLevel(); 
@@ -208,12 +277,22 @@ bool GSLMinimizer::Minimize() {
          std::cout << "            FVAL = " << fGSLMultiMin->Minimum() << std::endl; 
          std::cout.precision(pr);
          std::cout << "            X Values : "; 
-         double * x = fGSLMultiMin->X();
-         for (unsigned int i = 0; i < fDim; ++i) 
-            std::cout << " " << fNames[i] << " = " << x[i]; 
+         const double * xtmp = fGSLMultiMin->X();
+         std::cout << std::endl; 
+         if (trFunc != 0 ) { 
+            xtmp  = trFunc->Transformation(xtmp);  
+         }
+         for (unsigned int i = 0; i < NDim(); ++i) {
+            std::cout << " " << fNames[i] << " = " << xtmp[i];
+         // avoid nan
+         // if (std::isnan(xtmp[i])) status = -11;
+         }
          std::cout << std::endl; 
       }
+
+
       iter++;
+
 
    }
    while (status == GSL_CONTINUE && iter < MaxIterations() );
@@ -221,7 +300,20 @@ bool GSLMinimizer::Minimize() {
    // save state with values and function value
    double * x = fGSLMultiMin->X(); 
    if (x == 0) return false; 
-   std::copy(x, x +fDim, fValues.begin() ); 
+
+   // check to see if a transformation need to be applied 
+   if (trFunc != 0) { 
+      const double * xtrans = trFunc->Transformation(x);  
+      assert(fValues.size() == trFunc->NTot() ); 
+      assert( trFunc->NTot() == NDim() );
+      std::copy(xtrans, xtrans + trFunc->NTot(),  fValues.begin() ); 
+   }
+   else { 
+      // case of no transformation applied 
+      assert( fValues.size() == NDim() ); 
+      std::copy(x, x + NDim(),  fValues.begin() ); 
+   }
+
    fMinVal =  fGSLMultiMin->Minimum(); 
 
    fStatus = status; 
@@ -268,7 +360,12 @@ bool GSLMinimizer::Minimize() {
 }
 
 const double * GSLMinimizer::MinGradient() const {
+   // return gradient (internal values) 
    return fGSLMultiMin->Gradient(); 
+}
+
+const MinimTransformFunction * GSLMinimizer::TransformFunction() const { 
+   return dynamic_cast<const MinimTransformFunction *>(fObjFunc);
 }
 
    } // end namespace Math
