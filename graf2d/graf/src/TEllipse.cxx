@@ -119,8 +119,11 @@ Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
 {
    // Compute distance from point px,py to an ellipse.
    //
-   //  Compute the closest distance of approach from point px,py to this ellipse.
-   //  The distance is computed in pixels units.
+   // Compute the closest distance of approach from point px,py to this
+   // ellipse. The distance is computed in pixels units.
+   //
+   // In case of a filled ellipse the distance returned is 0 if the point
+   // (px,py) is inside the ellipse, and is huge if the point is outside.
 
    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));

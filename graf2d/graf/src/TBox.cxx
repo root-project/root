@@ -126,6 +126,9 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
    // Compute the closest distance of approach from point px,py to the
    // edges of this box.
    // The distance is computed in pixels units.
+   //
+   // In case of a filled box the distance returned is 0 if the point
+   // (px,py) is inside the box, and is huge if the point is outside.
 
    Int_t pxl, pyl, pxt, pyt;
    Int_t px1 = gPad->XtoAbsPixel(fX1);
