@@ -223,10 +223,17 @@ int MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
          if (oldkey && !strcmp(oldkey->GetName(),key->GetName())) continue;
          if (!strcmp(key->GetClassName(),"TProcessID")) {key->ReadObj(); continue;}
          if (allNames.FindObject(key->GetName())) continue;
+         TClass *cl = TClass::GetClass(key->GetClassName());
+         if (!cl || !cl->InheritsFrom(TObject::Class())) {
+            cout << "Cannot merge object type, name: " 
+                 << key->GetName() << " title: " << key->GetTitle() << endl;
+            continue;
+         }
          allNames.Add(new TObjString(key->GetName()));
          // read object from first source file
          //current_sourcedir->cd();
          TObject *obj = key->ReadObj();
+         //printf("keyname=%s, obj=%x\n",key->GetName(),obj);
 
          if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
       
