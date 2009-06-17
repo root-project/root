@@ -812,18 +812,18 @@ struct G__p2p {
 *
 **************************************************************************/
 #ifdef __cplusplus
-namespace Reflex {
-   class TypeName;
-}
-#endif
-struct G__REFLEXTYPE_C_PLACEHOLDER {
-#ifdef __cplusplus
-   Reflex::TypeName* fTypeName;
+} // extern "C"
+#include "Reflex/Type.h"
+
+   typedef Reflex::Type G__REFLEXTYPE_C_PLACEHOLDER;
+extern "C" {
 #else
+typedef struct {
    void* fTypeName;
-#endif
    unsigned int fModifiers;
-};
+} G__REFLEXTYPE_C_PLACEHOLDER;
+#endif
+
 struct G__DUMMY_FOR_CINT5 {
    // Stuff we removed from Cint5
    int type;
@@ -858,7 +858,7 @@ typedef struct {
   long ref;
 #endif
   struct G__DUMMY_FOR_CINT5 dummyFotCint5;
-  struct G__REFLEXTYPE_C_PLACEHOLDER buf_typenum;
+  G__REFLEXTYPE_C_PLACEHOLDER buf_typenum;
 }
 #ifdef __cplusplus
 
