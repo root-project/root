@@ -40,9 +40,7 @@ class XrdLink;
 class XrdProofdResponse
 {
  public:
-   XrdProofdResponse() { fLink = 0; *fTrsid = '\0'; fSID = 0;
-                         fRespIO[0].iov_base = (caddr_t)&fResp;
-                         fRespIO[0].iov_len  = sizeof(fResp); }
+   XrdProofdResponse() { fLink = 0; *fTrsid = '\0'; fSID = 0; }
    virtual ~XrdProofdResponse() {}
 
    inline const  char   *STRID() { return (const char *)fTrsid;}
@@ -55,7 +53,6 @@ class XrdProofdResponse
    int                   Send(void);
    int                   Send(const char *msg);
    int                   Send(void *data, int dlen);
-   int                   Send(struct iovec *, int iovcnt, int iolen=-1);
    int                   Send(XResponseType rcode);
    int                   Send(XResponseType rcode, void *data, int dlen);
    int                   Send(XErrorCode ecode, const char *msg);
@@ -77,6 +74,7 @@ class XrdProofdResponse
    void                  SetTraceID();
    void                  Set(unsigned char *stream);
    void                  Set(unsigned short streamid);
+   void                  Set(ServerResponseHeader *resp);
 
    void                  GetSID(unsigned short &sid);
    void                  SetTrsid();
@@ -88,8 +86,6 @@ class XrdProofdResponse
 
    ServerResponseHeader fResp;
    XrdLink             *fLink;
-   struct iovec         fRespIO[5];
-
    char                 fTrsid[8];  // sizeof() does not work here
 
    unsigned short       fSID;

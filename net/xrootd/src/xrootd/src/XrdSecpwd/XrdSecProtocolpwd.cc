@@ -1490,7 +1490,7 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
             }
          }
          // Export creds to a file, if required
-         if (FileExpCreds.length() >= 0) {
+         if (FileExpCreds.length() > 0) {
             if (ExportCreds(bck) != 0)
                DEBUG("WARNING: some problem exporting creds to file;"
                      " template is :"<<FileExpCreds);

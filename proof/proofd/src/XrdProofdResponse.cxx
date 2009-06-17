@@ -66,14 +66,13 @@ int XrdProofdResponse::Send()
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   resp.status = static_cast<kXR_unt16>(htons(kXR_ok));
+   resp.dlen   = 0;
+   // Send over
+   rc = LinkSend((char *)&resp, sizeof(resp), emsg);
 
-      fResp.status = static_cast<kXR_unt16>(htons(kXR_ok));
-      fResp.dlen   = 0;
-
-      // Send over
-      rc = LinkSend((char *)&fResp, sizeof(fResp), emsg);
-   }
    XPRNOTIFY("sending OK", emsg);
    return rc;
 }
@@ -88,15 +87,14 @@ int XrdProofdResponse::Send(XResponseType rcode)
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   resp.status        = static_cast<kXR_unt16>(htons(rcode));
+   resp.dlen          = 0;
+   // Send over
+   rc = LinkSend((char *)&resp, sizeof(resp), emsg);
+   if (XPRTRACING(rc)) XPDFORM(tmsg, "sending OK: status = %d", rcode);
 
-      fResp.status        = static_cast<kXR_unt16>(htons(rcode));
-      fResp.dlen          = 0;
-
-      // Send over
-      rc = LinkSend((char *)&fResp, sizeof(fResp), emsg);
-      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending OK: status = %d", rcode);
-   }
    XPRNOTIFY(tmsg, emsg);
    return rc;
 }
@@ -111,17 +109,19 @@ int XrdProofdResponse::Send(const char *msg)
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[2];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
+   resp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
+   respIO[1].iov_base = (caddr_t)msg;
+   respIO[1].iov_len  = strlen(msg)+1;
+   resp.dlen          = static_cast<kXR_int32>(htonl(respIO[1].iov_len));
+   // Send over
+   rc = LinkSend(respIO, 2, sizeof(resp) + respIO[1].iov_len, emsg);
+   if (XPRTRACING(rc)) XPDFORM(tmsg, "sending OK: %s", msg);
 
-      fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
-      fRespIO[1].iov_base = (caddr_t)msg;
-      fRespIO[1].iov_len  = strlen(msg)+1;
-      fResp.dlen          = static_cast<kXR_int32>(htonl(fRespIO[1].iov_len));
-
-      // Send over
-      rc = LinkSend(fRespIO, 2, sizeof(fResp) + fRespIO[1].iov_len, emsg);
-      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending OK: %s", msg);
-   }
    XPRNOTIFY(tmsg, emsg);
    return rc;
 }
@@ -136,17 +136,19 @@ int XrdProofdResponse::Send(XResponseType rcode, void *data, int dlen)
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[2];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
+   resp.status        = static_cast<kXR_unt16>(htons(rcode));
+   respIO[1].iov_base = (caddr_t)data;
+   respIO[1].iov_len  = dlen;
+   resp.dlen          = static_cast<kXR_int32>(htonl(dlen));
+   // Send over
+   rc = LinkSend(respIO, 2, sizeof(resp) + dlen, emsg);
 
-      fResp.status        = static_cast<kXR_unt16>(htons(rcode));
-      fRespIO[1].iov_base = (caddr_t)data;
-      fRespIO[1].iov_len  = dlen;
-      fResp.dlen          = static_cast<kXR_int32>(htonl(dlen));
-
-      // Send over
-      rc = LinkSend(fRespIO, 2, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending %d data bytes; status=%d", dlen, rcode);
-   }
+   if (XPRTRACING(rc)) XPDFORM(tmsg, "sending %d data bytes; status=%d", dlen, rcode);
    XPRNOTIFY(tmsg, emsg);
    return rc;
 }
@@ -161,30 +163,32 @@ int XrdProofdResponse::Send(XResponseType rcode, int info, char *data)
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[3];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
+   kXR_int32 xbuf = static_cast<kXR_int32>(htonl(info));
+   int dlen = 0;
+   int nn = 2;
+   resp.status        = static_cast<kXR_unt16>(htons(rcode));
+   respIO[1].iov_base = (caddr_t)(&xbuf);
+   respIO[1].iov_len  = sizeof(xbuf);
+   if (data) {
+      nn = 3;
+      respIO[2].iov_base = (caddr_t)data;
+      respIO[2].iov_len  = dlen = strlen(data);
+   }
+   resp.dlen          = static_cast<kXR_int32>(htonl((dlen+sizeof(xbuf))));
 
-      kXR_int32 xbuf = static_cast<kXR_int32>(htonl(info));
-      int dlen = 0;
-      int nn = 2;
+   // Send over
+   rc = LinkSend(respIO, nn, sizeof(resp) + dlen, emsg);
 
-      fResp.status        = static_cast<kXR_unt16>(htons(rcode));
-      fRespIO[1].iov_base = (caddr_t)(&xbuf);
-      fRespIO[1].iov_len  = sizeof(xbuf);
-      if (data) {
-         nn = 3;
-         fRespIO[2].iov_base = (caddr_t)data;
-         fRespIO[2].iov_len  = dlen = strlen(data);
-      }
-      fResp.dlen          = static_cast<kXR_int32>(htonl((dlen+sizeof(xbuf))));
-
-      // Send over
-      rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) {
-         if (data)
-            XPDFORM(tmsg, "sending %d data bytes; info=%d; status=%d", dlen, info, rcode);
-         else
-            XPDFORM(tmsg, "sending info=%d; status=%d", info, rcode);
-      }
+   if (XPRTRACING(rc)) {
+      if (data)
+	 XPDFORM(tmsg, "sending %d data bytes; info=%d; status=%d", dlen, info, rcode);
+      else
+	 XPDFORM(tmsg, "sending info=%d; status=%d", info, rcode);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -201,29 +205,30 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[3];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
+   kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
+   int nn = 2;
+   resp.status        = static_cast<kXR_unt16>(htons(rcode));
+   respIO[1].iov_base = (caddr_t)(&xbuf);
+   respIO[1].iov_len  = sizeof(xbuf);
+   if (data) {
+      nn = 3;
+      respIO[2].iov_base = (caddr_t)data;
+      respIO[2].iov_len  = dlen;
+   }
+   resp.dlen = static_cast<kXR_int32>(htonl((dlen+sizeof(xbuf))));
+   // Send over
+   rc = LinkSend(respIO, nn, sizeof(resp) + dlen, emsg);
 
-      kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
-      int nn = 2;
-
-      fResp.status        = static_cast<kXR_unt16>(htons(rcode));
-      fRespIO[1].iov_base = (caddr_t)(&xbuf);
-      fRespIO[1].iov_len  = sizeof(xbuf);
-      if (data) {
-         nn = 3;
-         fRespIO[2].iov_base = (caddr_t)data;
-         fRespIO[2].iov_len  = dlen;
-      }
-      fResp.dlen = static_cast<kXR_int32>(htonl((dlen+sizeof(xbuf))));
-
-      // Send over
-      rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) {
-         XPDFORM(tmsg, "sending %d data bytes; status=%d; action=%d",
-                       dlen, rcode, acode);
-      } else {
-         XPDFORM(tmsg, "sending status=%d; action=%d", rcode, acode);
-      }
+   if (XPRTRACING(rc)) {
+      XPDFORM(tmsg, "sending %d data bytes; status=%d; action=%d",
+		     dlen, rcode, acode);
+   } else {
+      XPDFORM(tmsg, "sending status=%d; action=%d", rcode, acode);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -240,33 +245,35 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[4];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
 
-      kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
-      kXR_int32 xcid = static_cast<kXR_int32>(htonl(cid));
-      int hlen = sizeof(xbuf) + sizeof(xcid);
-      int nn = 3;
+   kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
+   kXR_int32 xcid = static_cast<kXR_int32>(htonl(cid));
+   int hlen = sizeof(xbuf) + sizeof(xcid);
+   int nn = 3;
+   resp.status        = static_cast<kXR_unt16>(htons(rcode));
+   respIO[1].iov_base = (caddr_t)(&xbuf);
+   respIO[1].iov_len  = sizeof(xbuf);
+   respIO[2].iov_base = (caddr_t)(&xcid);
+   respIO[2].iov_len  = sizeof(xcid);
+   if (data) {
+      nn = 4;
+      respIO[3].iov_base = (caddr_t)data;
+      respIO[3].iov_len  = dlen;
+   }
+   resp.dlen = static_cast<kXR_int32>(htonl((dlen+hlen)));
+   // Send over
+   rc = LinkSend(respIO, nn, sizeof(resp) + dlen, emsg);
 
-      fResp.status        = static_cast<kXR_unt16>(htons(rcode));
-      fRespIO[1].iov_base = (caddr_t)(&xbuf);
-      fRespIO[1].iov_len  = sizeof(xbuf);
-      fRespIO[2].iov_base = (caddr_t)(&xcid);
-      fRespIO[2].iov_len  = sizeof(xcid);
-      if (data) {
-         nn = 4;
-         fRespIO[3].iov_base = (caddr_t)data;
-         fRespIO[3].iov_len  = dlen;
-      }
-      fResp.dlen = static_cast<kXR_int32>(htonl((dlen+hlen)));
-
-      // Send over
-      rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) {
-         XPDFORM(tmsg, "sending %d data bytes; status=%d; action=%d; cid=%d",
-                       dlen, rcode, acode, cid);
-      } else {
-         XPDFORM(tmsg, "sending status=%d; action=%d; cid=%d", rcode, acode, cid);
-      }
+   if (XPRTRACING(rc)) {
+      XPDFORM(tmsg, "sending %d data bytes; status=%d; action=%d; cid=%d",
+		     dlen, rcode, acode, cid);
+   } else {
+      XPDFORM(tmsg, "sending status=%d; action=%d; cid=%d", rcode, acode, cid);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -283,24 +290,25 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[3];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
+   kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
+   kXR_int32 xinf = static_cast<kXR_int32>(htonl(info));
+   int hlen = sizeof(xbuf) + sizeof(xinf);
+   resp.status        = static_cast<kXR_unt16>(htons(rcode));
+   respIO[1].iov_base = (caddr_t)(&xbuf);
+   respIO[1].iov_len  = sizeof(xbuf);
+   respIO[2].iov_base = (caddr_t)(&xinf);
+   respIO[2].iov_len  = sizeof(xinf);
+   resp.dlen = static_cast<kXR_int32>(htonl((hlen)));
+   // Send over
+   rc = LinkSend(respIO, 3, sizeof(resp), emsg);
 
-      kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
-      kXR_int32 xinf = static_cast<kXR_int32>(htonl(info));
-      int hlen = sizeof(xbuf) + sizeof(xinf);
-
-      fResp.status        = static_cast<kXR_unt16>(htons(rcode));
-      fRespIO[1].iov_base = (caddr_t)(&xbuf);
-      fRespIO[1].iov_len  = sizeof(xbuf);
-      fRespIO[2].iov_base = (caddr_t)(&xinf);
-      fRespIO[2].iov_len  = sizeof(xinf);
-      fResp.dlen = static_cast<kXR_int32>(htonl((hlen)));
-
-      // Send over
-      rc = LinkSend(fRespIO, 3, sizeof(fResp), emsg);
-      if (XPRTRACING(rc))
-         XPDFORM(tmsg, "sending info=%d; status=%d; action=%d", info, rcode, acode);
-   }
+   if (XPRTRACING(rc))
+      XPDFORM(tmsg, "sending info=%d; status=%d; action=%d", info, rcode, acode);
    XPRNOTIFY(tmsg, emsg);
    return rc;
 }
@@ -316,36 +324,37 @@ int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int16 int2, kXR_int16 int3,
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[5];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
+   kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
+   kXR_int16 i2 = static_cast<kXR_int16>(htons(int2));
+   kXR_int16 i3 = static_cast<kXR_int16>(htons(int3));
+   int ilen = sizeof(i1) + sizeof(i2) + sizeof(i3);
+   int nn = 4;
+   resp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
+   respIO[1].iov_base = (caddr_t)(&i1);
+   respIO[1].iov_len  = sizeof(i1);
+   respIO[2].iov_base = (caddr_t)(&i2);
+   respIO[2].iov_len  = sizeof(i2);
+   respIO[3].iov_base = (caddr_t)(&i3);
+   respIO[3].iov_len  = sizeof(i3);
+   if (data) {
+      nn = 5;
+      respIO[4].iov_base = (caddr_t)data;
+      respIO[4].iov_len  = dlen;
+   }
+   resp.dlen = static_cast<kXR_int32>(htonl((dlen+ilen)));
+   // Send over
+   rc = LinkSend(respIO, nn, sizeof(resp) + dlen, emsg);
 
-      kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
-      kXR_int16 i2 = static_cast<kXR_int16>(htons(int2));
-      kXR_int16 i3 = static_cast<kXR_int16>(htons(int3));
-      int ilen = sizeof(i1) + sizeof(i2) + sizeof(i3);
-      int nn = 4;
-
-      fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
-      fRespIO[1].iov_base = (caddr_t)(&i1);
-      fRespIO[1].iov_len  = sizeof(i1);
-      fRespIO[2].iov_base = (caddr_t)(&i2);
-      fRespIO[2].iov_len  = sizeof(i2);
-      fRespIO[3].iov_base = (caddr_t)(&i3);
-      fRespIO[3].iov_len  = sizeof(i3);
-      if (data) {
-         nn = 5;
-         fRespIO[4].iov_base = (caddr_t)data;
-         fRespIO[4].iov_len  = dlen;
-      }
-      fResp.dlen = static_cast<kXR_int32>(htonl((dlen+ilen)));
-
-      // Send over
-      rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) {
-         XPDFORM(tmsg, "sending %d data bytes; int1=%d; int2=%d; int3=%d",
-                       dlen, int1, int2, int3);
-      } else {
-         XPDFORM(tmsg, "sending int1=%d; int2=%d; int3=%d", int1, int2, int3);
-      }
+   if (XPRTRACING(rc)) {
+      XPDFORM(tmsg, "sending %d data bytes; int1=%d; int2=%d; int3=%d",
+		     dlen, int1, int2, int3);
+   } else {
+      XPDFORM(tmsg, "sending int1=%d; int2=%d; int3=%d", int1, int2, int3);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -361,33 +370,34 @@ int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int32 int2, void *data, int dle
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[4];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
+   kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
+   kXR_int32 i2 = static_cast<kXR_int32>(htonl(int2));
+   int ilen = sizeof(i1) + sizeof(i2);
+   int nn = 3;
+   resp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
+   respIO[1].iov_base = (caddr_t)(&i1);
+   respIO[1].iov_len  = sizeof(i1);
+   respIO[2].iov_base = (caddr_t)(&i2);
+   respIO[2].iov_len  = sizeof(i2);
+   if (data) {
+      nn = 4;
+      respIO[3].iov_base = (caddr_t)data;
+      respIO[3].iov_len  = dlen;
+   }
+   resp.dlen = static_cast<kXR_int32>(htonl((dlen+ilen)));
+   // Send over
+   rc = LinkSend(respIO, nn, sizeof(resp) + dlen, emsg);
 
-      kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
-      kXR_int32 i2 = static_cast<kXR_int32>(htonl(int2));
-      int ilen = sizeof(i1) + sizeof(i2);
-      int nn = 3;
-
-      fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
-      fRespIO[1].iov_base = (caddr_t)(&i1);
-      fRespIO[1].iov_len  = sizeof(i1);
-      fRespIO[2].iov_base = (caddr_t)(&i2);
-      fRespIO[2].iov_len  = sizeof(i2);
-      if (data) {
-         nn = 4;
-         fRespIO[3].iov_base = (caddr_t)data;
-         fRespIO[3].iov_len  = dlen;
-      }
-      fResp.dlen = static_cast<kXR_int32>(htonl((dlen+ilen)));
-
-      // Send over
-      rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) {
-         XPDFORM(tmsg, "sending %d data bytes; int1=%d; int2=%d",
-                       dlen, int1, int2);
-      } else {
-         XPDFORM(tmsg, "sending int1=%d; int2=%d", int1, int2);
-      }
+   if (XPRTRACING(rc)) {
+      XPDFORM(tmsg, "sending %d data bytes; int1=%d; int2=%d",
+		     dlen, int1, int2);
+   } else {
+      XPDFORM(tmsg, "sending int1=%d; int2=%d", int1, int2);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -403,29 +413,31 @@ int XrdProofdResponse::SendI(kXR_int32 int1, void *data, int dlen )
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[3];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
 
-      kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
-      int ilen = sizeof(i1);
-      int nn = 2;
+   kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
+   int ilen = sizeof(i1);
+   int nn = 2;
+   resp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
+   respIO[1].iov_base = (caddr_t)(&i1);
+   respIO[1].iov_len  = sizeof(i1);
+   if (data) {
+      nn = 3;
+      respIO[2].iov_base = (caddr_t)data;
+      respIO[2].iov_len  = dlen;
+   }
+   resp.dlen          = static_cast<kXR_int32>(htonl((dlen+ilen)));
+   // Send over
+   rc = LinkSend(respIO, nn, sizeof(resp) + dlen, emsg);
 
-      fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
-      fRespIO[1].iov_base = (caddr_t)(&i1);
-      fRespIO[1].iov_len  = sizeof(i1);
-      if (data) {
-         nn = 3;
-         fRespIO[2].iov_base = (caddr_t)data;
-         fRespIO[2].iov_len  = dlen;
-      }
-      fResp.dlen          = static_cast<kXR_int32>(htonl((dlen+ilen)));
-
-      // Send over
-      rc = LinkSend(fRespIO, nn, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) {
-         XPDFORM(tmsg, "sending %d data bytes; int1=%d", dlen, int1);
-      } else {
-         XPDFORM(tmsg, "sending int1=%d", int1);
-      }
+   if (XPRTRACING(rc)) {
+      XPDFORM(tmsg, "sending %d data bytes; int1=%d", dlen, int1);
+   } else {
+      XPDFORM(tmsg, "sending int1=%d", int1);
    }
    XPRNOTIFY(tmsg, emsg);
    return rc;
@@ -441,50 +453,19 @@ int XrdProofdResponse::Send(void *data, int dlen)
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[2];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
+   resp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
+   respIO[1].iov_base = (caddr_t)data;
+   respIO[1].iov_len  = dlen;
+   resp.dlen          = static_cast<kXR_int32>(htonl(dlen));
+   // Send over
+   rc = LinkSend(respIO, 2, sizeof(resp) + dlen, emsg);
 
-      fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
-      fRespIO[1].iov_base = (caddr_t)data;
-      fRespIO[1].iov_len  = dlen;
-      fResp.dlen          = static_cast<kXR_int32>(htonl(dlen));
-
-      // Send over
-      rc = LinkSend(fRespIO, 2, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending %d data bytes; status=0", dlen);
-   }
-   XPRNOTIFY(tmsg, emsg);
-   return rc;
-}
-
-//______________________________________________________________________________
-int XrdProofdResponse::Send(struct iovec *IOResp, int iornum, int iolen)
-{
-   // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send:10")
-
-   CHECKLINK;
-
-   int rc = 0;
-   XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
-
-      int i, dlen = 0;
-      if (iolen < 0) {
-         for (i = 1; i < iornum; i++)
-            dlen += IOResp[i].iov_len;
-      } else {
-         dlen = iolen;
-      }
-
-      fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
-      IOResp[0].iov_base = fRespIO[0].iov_base;
-      IOResp[0].iov_len  = fRespIO[0].iov_len;
-      fResp.dlen          = static_cast<kXR_int32>(htonl(dlen));
-
-      // Send over
-      rc = LinkSend(fRespIO, iornum, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending %d data bytes; status=0", dlen);
-   }
+   if (XPRTRACING(rc)) XPDFORM(tmsg, "sending %d data bytes; status=0", dlen);
    XPRNOTIFY(tmsg, emsg);
    return rc;
 }
@@ -499,23 +480,24 @@ int XrdProofdResponse::Send(XErrorCode ecode, const char *msg)
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[3];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
+   int dlen;
+   kXR_int32 erc = static_cast<kXR_int32>(htonl(ecode));
+   resp.status        = static_cast<kXR_unt16>(htons(kXR_error));
+   respIO[1].iov_base = (char *)&erc;
+   respIO[1].iov_len  = sizeof(erc);
+   respIO[2].iov_base = (caddr_t)msg;
+   respIO[2].iov_len  = strlen(msg)+1;
+   dlen   = sizeof(erc) + respIO[2].iov_len;
+   resp.dlen          = static_cast<kXR_int32>(htonl(dlen));
+   // Send over
+   rc = LinkSend(respIO, 3, sizeof(resp) + dlen, emsg);
 
-      int dlen;
-      kXR_int32 erc = static_cast<kXR_int32>(htonl(ecode));
-
-      fResp.status        = static_cast<kXR_unt16>(htons(kXR_error));
-      fRespIO[1].iov_base = (char *)&erc;
-      fRespIO[1].iov_len  = sizeof(erc);
-      fRespIO[2].iov_base = (caddr_t)msg;
-      fRespIO[2].iov_len  = strlen(msg)+1;
-      dlen   = sizeof(erc) + fRespIO[2].iov_len;
-      fResp.dlen          = static_cast<kXR_int32>(htonl(dlen));
-
-      // Send over
-      rc = LinkSend(fRespIO, 3, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending err %d: %s", ecode, msg);
-   }
+   if (XPRTRACING(rc)) XPDFORM(tmsg, "sending err %d: %s", ecode, msg);
    XPRNOTIFY(tmsg, emsg);
    return rc;
 }
@@ -530,23 +512,24 @@ int XrdProofdResponse::Send(XPErrorCode ecode, const char *msg)
 
    int rc = 0;
    XrdOucString tmsg, emsg;
-   {  XrdSysMutexHelper mh(fMutex);
+   ServerResponseHeader resp;
+   Set(&resp);
+   struct iovec         respIO[3];
+   respIO[0].iov_base = (caddr_t)&resp;
+   respIO[0].iov_len  = sizeof(resp);
+   int dlen;
+   kXR_int32 erc = static_cast<kXR_int32>(htonl(ecode));
+   resp.status        = static_cast<kXR_unt16>(htons(kXR_error));
+   respIO[1].iov_base = (char *)&erc;
+   respIO[1].iov_len  = sizeof(erc);
+   respIO[2].iov_base = (caddr_t)msg;
+   respIO[2].iov_len  = strlen(msg)+1;
+   dlen   = sizeof(erc) + respIO[2].iov_len;
+   resp.dlen          = static_cast<kXR_int32>(htonl(dlen));
+   // Send over
+   rc = LinkSend(respIO, 3, sizeof(resp) + dlen, emsg);
 
-      int dlen;
-      kXR_int32 erc = static_cast<kXR_int32>(htonl(ecode));
-
-      fResp.status        = static_cast<kXR_unt16>(htons(kXR_error));
-      fRespIO[1].iov_base = (char *)&erc;
-      fRespIO[1].iov_len  = sizeof(erc);
-      fRespIO[2].iov_base = (caddr_t)msg;
-      fRespIO[2].iov_len  = strlen(msg)+1;
-      dlen   = sizeof(erc) + fRespIO[2].iov_len;
-      fResp.dlen          = static_cast<kXR_int32>(htonl(dlen));
-
-      // Send over
-      rc = LinkSend(fRespIO, 3, sizeof(fResp) + dlen, emsg);
-      if (XPRTRACING(rc)) XPDFORM(tmsg, "sending err %d: %s", ecode, msg);
-   }
+   if (XPRTRACING(rc)) XPDFORM(tmsg, "sending err %d: %s", ecode, msg);
    XPRNOTIFY(tmsg, emsg);
    return rc;
 }
@@ -635,6 +618,18 @@ void XrdProofdResponse::GetSID(unsigned short &sid)
 }
 
 //______________________________________________________________________________
+void XrdProofdResponse::Set(ServerResponseHeader *resp)
+{
+   // Fill the stream id
+
+   if (resp) {
+      XrdSysMutexHelper mh(fMutex);
+      resp->streamid[0] = fResp.streamid[0];
+      resp->streamid[1] = fResp.streamid[1];
+   }
+}
+
+//______________________________________________________________________________
 void XrdProofdResponse::Set(XrdLink *l)
 {
    // Set the link to be used by this response
@@ -692,3 +687,4 @@ void XrdProofdResponse::SetTrsid()
    *outbuff++ = ' ';
    *outbuff = '\0';
 }
+

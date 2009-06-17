@@ -92,8 +92,7 @@ public:
                                  char *val, XrdOucStream *cfg, bool rcf);
    int               CheckClients();
 
-   XrdProofdClient  *GetClient(const char *usr, const char *grp = 0,
-                               const char *sock = 0, bool create = 1);
+   XrdProofdClient  *GetClient(const char *usr, const char *grp = 0, bool create = 1);
    int               GetNClients() const { XrdSysMutexHelper mh(fMutex);
                                            return fProofdClients.size(); }
 

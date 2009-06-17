@@ -47,6 +47,18 @@ class XrdSysLogger;
 #define PSMMAXCNTS  3
 #define PSMCNTOK(t) (t >= 0 && t < PSMMAXCNTS)
 
+// Aux structure for session set env inputs
+typedef struct {
+   XrdProofdProofServ *fPS;
+   int          fLogLevel;
+   XrdOucString fCfg;
+   XrdOucString fLogFile;
+   XrdOucString fSessionTag;
+   XrdOucString fTopSessionTag;
+   XrdOucString fSessionDir;
+   XrdOucString fWrkDir;
+} ProofServEnv_t;
+
 class XpdClientSessions {
 public:
    XrdSysRecMutex   fMutex;
@@ -140,6 +152,8 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    int                TouchSession(const char *fpid, const char *path = 0);
    int                VerifySession(const char *fpid, int to = -1, const char *path = 0);
 
+   void               ResolveKeywords(XrdOucString &s, ProofServEnv_t *in);
+
 public:
    XrdProofdProofServMgr(XrdProofdManager *mgr, XrdProtocol_Config *pi, XrdSysError *e);
    virtual ~XrdProofdProofServMgr() { }
@@ -200,7 +214,7 @@ public:
    int               SetProofServEnv(XrdProofdProtocol *p, void *in);
    int               SetProofServEnvOld(XrdProofdProtocol *p, void *in);
 
-   int               SaveAFSkey(XrdSecCredentials *c, const char *fn);
+   int               SaveAFSkey(XrdSecCredentials *c, const char *fn, XrdProofUI ui);
    int               SetUserEnvironment(XrdProofdProtocol *p);
 
    static int        SetProofServEnv(XrdProofdManager *m, XrdROOT *r);

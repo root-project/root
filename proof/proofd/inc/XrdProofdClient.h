@@ -85,7 +85,7 @@ class XrdProofdClient {
                                              const char *msg, XrdProofdPipe *pipe, bool changeown);
    bool                    VerifySession(XrdProofdProofServ *xps, XrdProofdResponse *r = 0);
 
-   void                    Reset();
+   void                    ResetSessions();
 
    void                    SetGroup(const char *g) { fUI.fGroup = g; }
    void                    SetROOT(XrdROOT *r) { fROOT = r; }
@@ -115,8 +115,6 @@ class XrdProofdClient {
 
    std::vector<XrdProofdProofServ *> fProofServs; // Allocated ProofServ sessions
    std::vector<XrdClientID *> fClients;    // Attached Client sessions
-
-   void                    PostSessionRemoval(int fd, int pid);
 };
 
 //////////////////////////////////////////////////////////////////////////

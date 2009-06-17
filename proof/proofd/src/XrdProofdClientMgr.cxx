@@ -570,12 +570,17 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
 
    TRACEP(p, HDBG, "all: "<< all);
 
+   // Attach to the client
+   XrdProofdClient *pc = p->Client();
+
    // Map the existing session, if found
-   if (!p->Client() || !p->Client()->IsValid()) {
-      if (p->Client()) {
-         // Remove from the list
-         fProofdClients.remove(p->Client());
-         delete p->Client();
+   if (!pc || !pc->IsValid()) {
+      if (pc) {
+         {  // Remove from the list
+            XrdSysMutexHelper mh(fMutex);
+            fProofdClients.remove(pc);
+         }
+         SafeDelete(pc);
          p->SetClient(0);
       }
       TRACEP(p, DBG, "cannot find valid instance of XrdProofdClient");
@@ -604,9 +609,9 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
    } else {
       // Cleanup the server vector, if not in recovering state
       int deadline = -1;
-      if (!fMgr->SessionMgr()->IsClientRecovering(p->Client()->User(),
-                                                  p->Client()->Group(), deadline))
-         p->Client()->CheckServerSlots();
+      if (!fMgr->SessionMgr()->IsClientRecovering(pc->User(),
+                                                  pc->Group(), deadline))
+         pc->CheckServerSlots();
       // Get PROOF version run by client
       memcpy(&clientvers, (const void *)&(p->Request()->login.reserved[0]), 2);
       TRACEP(p, DBG, "PROOF version run by client: " <<clientvers);
@@ -614,7 +619,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
 
    // If proofsrv, locate the target session
    if (proofsrv) {
-      XrdProofdProofServ *psrv = p->Client()->GetServer(psid);
+      XrdProofdProofServ *psrv = pc->GetServer(psid);
       if (!psrv) {
          TRACEP(p, XERR, "proofsrv callback: wrong target session: "<<psid<<" : protocol error");
          response->Send(kXP_nosession, "MapClient: proofsrv callback:"
@@ -637,7 +642,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
    } else {
 
       // Only one instance of this client can map at a time
-      XrdSysMutexHelper mhc(p->Client()->Mutex());
+      XrdSysMutexHelper mhc(pc->Mutex());
 
       // Make sure that the version is filled correctly (if an admin operation
       // was run before this may still be -1 on workers)
@@ -648,7 +653,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
       int cid = -1;
       if ((cid = CheckAdminPath(p, cpath, msg)) >= 0) {
          // Assign the slot
-         p->Client()->SetClientID(cid, p);
+         pc->SetClientID(cid, p);
          // The index of the next free slot will be the unique ID
          p->SetCID(cid);
          // Remove the file indicating that this client was still disconnected
@@ -663,13 +668,12 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
 
       } else {
          // The index of the next free slot will be the unique ID
-         p->SetCID(p->Client()->GetClientID(p));
+         p->SetCID(pc->GetClientID(p));
          // Create the client directory in the admin path
          if (CreateAdminPath(p, cpath, msg) != 0) {
             TRACEP(p, XERR, msg.c_str());
-            // Remove from the list
-            fProofdClients.remove(p->Client());
-            delete p->Client();
+            fProofdClients.remove(pc);
+            SafeDelete(pc);
             p->SetClient(0);
             response->Send(kXP_ServerError, msg.c_str());
          }
@@ -678,14 +682,14 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
       XPDFORM(msg, "client ID and admin paths created: %s", cpath.c_str());
       TRACEP(p, DBG, msg.c_str());
 
-      TRACEP(p, DBG, "CID: "<<p->CID()<<", size: "<<p->Client()->Size());
+      TRACEP(p, DBG, "CID: "<<p->CID()<<", size: "<<pc->Size());
    }
 
    // Document this login
    if (!(p->Status() & XPD_NEED_AUTH)) {
       const char *srvtype[6] = {"ANY", "MasterWorker", "MasterMaster",
                                 "ClientMaster", "Internal", "Admin"};
-      XPDFORM(msg, "user %s logged-in%s; type: %s", p->Client()->User(),
+      XPDFORM(msg, "user %s logged-in%s; type: %s", pc->User(),
                    p->SuperUser() ? " (privileged)" : "", srvtype[p->ConnType()+1]);
       TRACEP(p, LOGIN, msg);
    }
@@ -916,7 +920,7 @@ int XrdProofdClientMgr::CheckClients()
          // Find client instance
          XrdOucString usr, grp;
          XrdProofdAux::ParseUsrGrp(ent->d_name, usr, grp);
-         if (!(c = GetClient(usr.c_str(), grp.c_str(), 0, 0))) {
+         if (!(c = GetClient(usr.c_str(), grp.c_str(), 0))) {
             TRACE(XERR, "instance for client "<<ent->d_name<<" not found!");
             rm = 1;
          }
@@ -1274,7 +1278,7 @@ char *XrdProofdClientMgr::FilterSecConfig(int &nd)
 
 //______________________________________________________________________________
 XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
-                                               const char *sock, bool create)
+                                               bool create)
 {
    // Handle request for localizing a client instance for {usr, grp} from the list.
    // Create a new instance, if required; for new instances, use the path at 'sock'
@@ -1283,67 +1287,75 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
 
    TRACE(DBG, "usr: "<< (usr ? usr : "undef")<<", grp:"<<(grp ? grp : "undef"));
 
-   XrdOucString dmsg;
+   XrdOucString dmsg, emsg;
    XrdProofdClient *c = 0;
+   std::list<XrdProofdClient *>::iterator i;
 
    {  XrdSysMutexHelper mh(fMutex);
-
-      std::list<XrdProofdClient *>::iterator i;
       for (i = fProofdClients.begin(); i != fProofdClients.end(); ++i) {
-         if ((c = *i) && c->Match(usr,grp))
-            break;
+         if ((c = *i) && c->Match(usr,grp)) break;
          c = 0;
       }
+   }
 
-      if (!c && create) {
-         // Is this a potential user?
-         XrdProofUI ui;
-         XrdOucString emsg;
-         bool su;
-         if (fMgr->CheckUser(usr, ui, emsg, su) == 0) {
-            // Yes: create an (invalid) instance of XrdProofdClient:
-            // It would be validated on the first valid login
-            ui.fUser = usr;
-            ui.fGroup = grp;
-            bool full = (fMgr->SrvType() != kXPD_Worker)  ? 1 : 0;
-            XrdOucString tmp(fMgr->TMPdir());
-            if (sock)
-               // Use existing unix socket
-               XPDFORM(tmp, "sock:%s", sock);
-            c = new XrdProofdClient(ui, full, fMgr->ChangeOwn(), fEDest, fClntAdminPath.c_str());
-            if (c && c->IsValid()) {
-               // Locate and set the group, if any
-               if (fMgr->GroupsMgr() && fMgr->GroupsMgr()->Num() > 0) {
-                  XrdProofGroup *g = fMgr->GroupsMgr()->GetUserGroup(usr, grp);
-                  if (g)
-                     c->SetGroup(g->Name());
-                  else
-                     TRACE(XERR, "group = "<<grp<<" nor found");
+   if (!c && create) {
+      // Is this a potential user?
+      XrdProofUI ui;
+      bool su;
+      if (fMgr->CheckUser(usr, ui, emsg, su) == 0) {
+         // Yes: create an (invalid) instance of XrdProofdClient:
+         // It would be validated on the first valid login
+         ui.fUser = usr;
+         ui.fGroup = grp;
+         bool full = (fMgr->SrvType() != kXPD_Worker)  ? 1 : 0;
+         c = new XrdProofdClient(ui, full, fMgr->ChangeOwn(), fEDest, fClntAdminPath.c_str());
+         bool freeclient = 1;
+         if (c && c->IsValid()) {
+            // Locate and set the group, if any
+            if (fMgr->GroupsMgr() && fMgr->GroupsMgr()->Num() > 0) {
+               XrdProofGroup *g = fMgr->GroupsMgr()->GetUserGroup(usr, grp);
+               if (g) {
+                  c->SetGroup(g->Name());
+               } else if (TRACING(XERR)) {
+                  emsg = "group = "; emsg += grp; emsg += " nor found";
                }
-               // Add to the list
-               fProofdClients.push_back(c);
-               if (TRACING(DBG)) {
-                  XPDFORM(dmsg, "instance for {client, group} = {%s, %s} created"
-                                " and added to the list (%p)", usr, grp, c);
+            }
+            {  XrdSysMutexHelper mh(fMutex);
+               XrdProofdClient *nc = 0;
+               for (i = fProofdClients.begin(); i != fProofdClients.end(); ++i) {
+                  if ((nc = *i) && nc->Match(usr,grp)) break;
+                  nc = 0;
                }
-            } else {
-               if (TRACING(XERR)) {
-                  XPDFORM(dmsg, "instance for {client, group} = {%s, %s} is invalid", usr, grp);
+               if (!nc) {
+                  // Add to the list
+                  fProofdClients.push_back(c);
+                  freeclient = 0;
                }
-               SafeDelete(c);
+            }
+            if (freeclient) {
+               delete c;
+            } else if (TRACING(DBG)) {
+               XPDFORM(dmsg, "instance for {client, group} = {%s, %s} created"
+                             " and added to the list (%p)", usr, grp, c);
             }
          } else {
             if (TRACING(XERR)) {
-               XPDFORM(dmsg, "instance for {client, group} = {%s, %s} could not be created: %s",
-                             usr, grp, emsg.c_str());
+               XPDFORM(dmsg, "instance for {client, group} = {%s, %s} is invalid", usr, grp);
             }
+            SafeDelete(c);
+         }
+      } else {
+         if (TRACING(XERR)) {
+            XPDFORM(dmsg, "client '%s' unknown or unauthorized: %s", usr, emsg.c_str());
          }
       }
    }
+
    if (dmsg.length() > 0) {
       if (TRACING(DBG)) {
          TRACE(DBG, dmsg);
       } else {
+         if (emsg.length() > 0) TRACE(XERR, emsg);
          TRACE(XERR, dmsg);
       }
    }
@@ -1429,7 +1441,7 @@ void XrdProofdClientMgr::TerminateSessions(XrdProofdClient *clnt, const char *ms
    // Reset the client instances
    for (i = clnts->begin(); i != clnts->end(); ++i) {
       if ((c = *i))
-         c->Reset();
+         c->ResetSessions();
    }
 
    // Cleanup, if needed

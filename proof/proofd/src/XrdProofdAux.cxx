@@ -542,7 +542,8 @@ int XrdProofdAux::ChangeToDir(const char *dir, XrdProofUI ui, bool changeown)
 
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
       if (XpdBadPGuard(pGuard, ui.fUid)) {
-         TRACE(XERR, "could not get privileges");
+         TRACE(XERR, "could not get privileges; uid req:"<< ui.fUid <<
+                     ", euid: " << geteuid() <<". uid:"<<getuid());
          return -1;
       }
       if (chdir(dir) == -1) {
@@ -1599,7 +1600,6 @@ int XrdProofdPipe::Post(int type, const char *msg)
 
 
    if (IsValid()) {
-      XrdSysMutexHelper mh(fWrMtx);
       XrdOucString buf;
       if (msg && strlen(msg) > 0) {
          XPDFORM(buf, "%d %s", type, msg);
@@ -1608,6 +1608,7 @@ int XrdProofdPipe::Post(int type, const char *msg)
       }
       TRACE(HDBG, fPipe[1] << ": posting: type: "<<type<<", buf: "<<buf);
       int len = buf.length() + 1;
+      XrdSysMutexHelper mh(fWrMtx);
       if (write(fPipe[1], &len, sizeof(len)) !=  sizeof(len))
          return -errno;
       if (write(fPipe[1], buf.c_str(), len) !=  len)
@@ -1627,10 +1628,11 @@ int XrdProofdPipe::Recv(XpdMsg &msg)
    XPDLOC(AUX, "Pipe::Recv")
 
    if (IsValid()) {
-      XrdSysMutexHelper mh(fRdMtx);
       XrdOucString buf;
-      if (XrdProofdAux::ReadMsg(fPipe[0], buf) != 0)
-         return -1;
+      {  XrdSysMutexHelper mh(fRdMtx);
+         if (XrdProofdAux::ReadMsg(fPipe[0], buf) != 0)
+            return -1;
+      }
       TRACE(HDBG, fPipe[0] << ": receiving: msg: "<< buf);
       msg.Init(buf.c_str());
       // Done

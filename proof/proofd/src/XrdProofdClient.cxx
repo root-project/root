@@ -75,6 +75,8 @@ bool XrdProofdClient::Match(const char *usr, const char *grp)
 {
    // return TRUE if this instance matches 'id' (and 'grp', if defined) 
 
+   if (!fIsValid) return 0;
+
    bool rc = (usr && !strcmp(usr, User())) ? 1 : 0;
    if (rc && grp && strlen(grp) > 0)
       rc = (grp && Group() && !strcmp(grp, Group())) ? 1 : 0;
@@ -92,6 +94,7 @@ int XrdProofdClient::GetClientID(XrdProofdProtocol *p)
    XrdClientID *cid = 0;
    int ic = 0, sz = 0;
    {  XrdSysMutexHelper mh(fMutex);
+      if (!fIsValid) return -1;
       // Search for free places in the existing vector
       for (ic = 0; ic < (int)fClients.size() ; ic++) {
          if (fClients[ic] && !fClients[ic]->IsValid()) {
@@ -139,6 +142,7 @@ int XrdProofdClient::ReserveClientID(int cid)
 
    int sz = 0, newsz = 0;
    {  XrdSysMutexHelper mh(fMutex);
+      if (!fIsValid) return -1;
       if (cid >= (int)fClients.size()) {
 
          // We need to resize (double it)
@@ -173,6 +177,7 @@ XrdProofdProofServ *XrdProofdClient::GetFreeServObj()
    XrdProofdProofServ *xps = 0;
    XrdOucString msg;
    {  XrdSysMutexHelper mh(fMutex);
+      if (!fIsValid) return xps;
 
       // Search for free places in the existing vector
       for (ic = 0; ic < (int)fProofServs.size() ; ic++) {
@@ -226,36 +231,49 @@ XrdProofdProofServ *XrdProofdClient::GetServObj(int id)
       return (XrdProofdProofServ *)0;
    }
 
-   XrdSysMutexHelper mh(fMutex);
+   XrdOucString dmsg, emsg;
+   XrdProofdProofServ *xps = 0;
+   int siz = 0, cap = 0;
+   {  XrdSysMutexHelper mh(fMutex);
+      if (!fIsValid) return xps;
+      siz = fProofServs.size();
+      cap = fProofServs.capacity();
+   }
+   TRACE(DBG, "size = "<<siz<<"; capacity = "<<cap);
 
-   TRACE(DBG, "size = "<<fProofServs.size()<<"; capacity = "<<fProofServs.capacity());
-
-   if (id < (int)fProofServs.size()) {
-      if (fProofServs[id]) {
-         fProofServs[id]->SetValid();
-         return fProofServs[id];
+   bool newcap = 0;
+   {  XrdSysMutexHelper mh(fMutex);
+      if (!fIsValid) return xps;
+      if (id < (int)fProofServs.size()) {
+         if (!(xps = fProofServs[id])) {
+            emsg = "instance in use or undefined! protocol error";
+         }
       } else {
-         TRACE(XERR, "instance in use or undefined! protocol error");
-         return (XrdProofdProofServ *)0;
+         // If we did not find it, we first resize the vector if needed (double it)
+         if (id >= (int)fProofServs.capacity()) {
+            int newsz = 2 * fProofServs.capacity();
+            newsz = (id < newsz) ? newsz : id+1;
+            fProofServs.reserve(newsz);
+            cap = fProofServs.capacity();
+            newcap = 1;
+         }
+         int nnew = id - fProofServs.size() + 1;
+         while (nnew--)
+            fProofServs.push_back(new XrdProofdProofServ());
+         xps = fProofServs[id];
       }
    }
-
-   // If we did not find it, we first resize the vector if needed (double it)
-   if (id >= (int)fProofServs.capacity()) {
-      int newsz = 2 * fProofServs.capacity();
-      newsz = (id < newsz) ? newsz : id+1;
-      fProofServs.reserve(newsz);
-      TRACE(DBG, "new capacity = "<<fProofServs.capacity());
-   }
-   int nnew = id - fProofServs.size() + 1;
-   while (nnew--)
-      fProofServs.push_back(new XrdProofdProofServ());
-
-   XrdProofdProofServ *xps = fProofServs[id];
-   xps->SetValid();
    xps->SetID(id);
-
-   TRACE(DBG, "size = "<<fProofServs.size()<<"; id = "<<id);
+   xps->SetValid();
+   if (TRACING(DBG)) {
+      {  XrdSysMutexHelper mh(fMutex);
+         if (fIsValid) {
+            siz = fProofServs.size();
+            cap = fProofServs.capacity();
+         }
+      }
+      TRACE(DBG, "size = "<<siz<<" (capacity = "<<cap<<"); id = "<<id);
+   }
 
    // We are done
    return xps;
@@ -269,10 +287,11 @@ XrdProofdProofServ *XrdProofdClient::GetServer(XrdProofdProtocol *p)
 
    TRACE(DBG, "enter: p: " << p);
 
-   XrdSysMutexHelper mh(fMutex);
 
    XrdProofdProofServ *xps = 0;
    std::vector<XrdProofdProofServ *>::iterator ip;
+   XrdSysMutexHelper mh(fMutex);
+   if (!fIsValid) return xps;
    for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
       xps = (*ip);
       if (xps->SrvPID() == p->Pid())
@@ -289,7 +308,7 @@ XrdProofdProofServ *XrdProofdClient::GetServer(int psid)
    // Get from the vector server instance with ID psid
 
    XrdSysMutexHelper mh(fMutex);
-   if (psid > -1 && psid < (int) fProofServs.size())
+   if (fIsValid && psid > -1 && psid < (int) fProofServs.size())
       return fProofServs.at(psid);
    // Done
    return (XrdProofdProofServ *)0;
@@ -303,10 +322,11 @@ void XrdProofdClient::EraseServer(int psid)
 
    TRACE(DBG, "enter: psid: " << psid);
 
-   XrdSysMutexHelper mh(fMutex);
-
    XrdProofdProofServ *xps = 0;
    std::vector<XrdProofdProofServ *>::iterator ip;
+   XrdSysMutexHelper mh(fMutex);
+   if (!fIsValid) return;
+
    for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
       xps = *ip;
       if (xps && xps->Match(psid)) {
@@ -322,9 +342,10 @@ void XrdProofdClient::CheckServerSlots()
 {
    // Free slots corresponding to invalid server instances
 
-   XrdSysMutexHelper mh(fMutex);
-
    std::vector<XrdProofdProofServ *>::iterator ip;
+   XrdSysMutexHelper mh(fMutex);
+   if (!fIsValid) return;
+
    for (ip = fProofServs.begin(); ip != fProofServs.end();) {
       if (*ip && !(*ip)->IsValid()) {
          ip = fProofServs.erase(ip);
@@ -333,7 +354,6 @@ void XrdProofdClient::CheckServerSlots()
       }
    }
 }
-
 
 //______________________________________________________________________________
 int XrdProofdClient::GetTopServers()
@@ -345,6 +365,8 @@ int XrdProofdClient::GetTopServers()
 
    XrdProofdProofServ *xps = 0;
    std::vector<XrdProofdProofServ *>::iterator ip;
+   XrdSysMutexHelper mh(fMutex);
+   if (!fIsValid) return nv;
    for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
       if ((xps = *ip) && xps->IsValid() && (xps->SrvType() == kXPD_TopMaster)) {
          TRACE(DBG,"found potentially valid topmaster session: pid "<<xps->SrvPID());
@@ -365,10 +387,11 @@ int XrdProofdClient::ResetClientSlot(int ic)
    TRACE(DBG, "enter: ic: " << ic);
 
    XrdSysMutexHelper mh(fMutex);
-
-   if (ic >= 0 && ic < (int) fClients.size()) {
-      fClients[ic]->Reset();
-      return 0;
+   if (fIsValid) {
+      if (ic >= 0 && ic < (int) fClients.size()) {
+	 fClients[ic]->Reset();
+	 return 0;
+      }
    }
    // Done
    return -1;
@@ -385,9 +408,10 @@ XrdProofdProtocol *XrdProofdClient::GetProtocol(int ic)
    XrdProofdProtocol *p = 0;
 
    XrdSysMutexHelper mh(fMutex);
-
-   if (ic >= 0 && ic < (int) fClients.size()) {
-      p = fClients[ic]->P();
+   if (fIsValid) {
+      if (ic >= 0 && ic < (int) fClients.size()) {
+	 p = fClients[ic]->P();
+      }
    }
    // Done
    return p;
@@ -402,6 +426,7 @@ int XrdProofdClient::SetClientID(int cid, XrdProofdProtocol *p)
    TRACE(DBG, "cid: "<< cid <<", p: " << p);
 
    XrdSysMutexHelper mh(fMutex);
+   if (!fIsValid) return -1;
 
    if (cid >= 0 && cid < (int) fClients.size()) {
       if (fClients[cid] && (fClients[cid]->P() != p))
@@ -658,31 +683,8 @@ void XrdProofdClient::TerminateSessions(int srvtype, XrdProofdProofServ *ref,
    }
 }
 
-//___________________________________________________________________________
-void XrdProofdClient::PostSessionRemoval(int fd, int pid)
-{
-   // Post removal of session 'pid'
-   XPDLOC(CMGR, "Client::PostSessionRemoval")
-
-   TRACE(DBG, "posting session removal to socket "<<fd);
-
-   if (fd > 0) {
-      int type = 0;
-      if (write(fd, &type, sizeof(type)) !=  sizeof(type)) {
-         TRACE(XERR, "problem sending message type on the pipe");
-         return;
-      }
-      if (write(fd, &pid, sizeof(pid)) !=  sizeof(pid)) {
-         TRACE(XERR, "problem sending pid on the pipe: "<<pid);
-         return;
-      }
-   }
-   // Done
-   return;
-}
-
 //__________________________________________________________________________
-void XrdProofdClient::Reset()
+void XrdProofdClient::ResetSessions()
 {
    // Reset this instance
 
