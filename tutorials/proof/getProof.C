@@ -104,7 +104,7 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
    // Dataset dir
    TString datasetdir;
    if (tutords) {
-      TString datasetdir = Form("%s/dataset", tutdir.Data());
+      datasetdir = Form("%s/dataset", tutdir.Data());
       if (gSystem->AccessPathName(datasetdir, kWritePermission)) {
          gSystem->mkdir(datasetdir, kTRUE);
          if (gSystem->AccessPathName(datasetdir, kWritePermission)) {
