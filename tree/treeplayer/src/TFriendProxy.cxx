@@ -58,7 +58,9 @@ namespace ROOT {
    {
       // Refresh the cached read entry number from the original tree.
 
-      if (fDirector.GetTree()) fDirector.SetReadEntry(fDirector.GetTree()->GetReadEntry());
+      // The 2nd call to GetTree is to insure we get the 'local' tree's entry in the case of a
+      // chain.
+      if (fDirector.GetTree()) fDirector.SetReadEntry(fDirector.GetTree()->GetTree()->GetReadEntry());
    }
 
   //------------------------------------------------------------------------------------
