@@ -27,6 +27,7 @@
 #include "Math/MultiNumGradFunction.h"
 #include <limits>
 #include <cmath>
+#include <algorithm>    // needed for std::max on Solaris
 
 #ifndef ROOT_Math_Derivator
 #include "Math/Derivator.h"
