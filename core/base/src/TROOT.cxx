@@ -799,7 +799,7 @@ const char *TROOT::FindObjectPathName(const TObject *) const
 }
 
 //______________________________________________________________________________
-TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
+static TClass *R__FindSTLClass(const char *name, Bool_t load, const char *outername)
 {
    // return a TClass object corresponding to 'name' assuming it is an STL container.
    // In particular we looking for possible alternative name (default template
@@ -840,18 +840,18 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
       // Try the alternate name where all the typedefs are resolved:
 
       const char *altname = gInterpreter->GetInterpreterTypeName(name);
-      if (altname && strcmp(altname,name)!=0) {
+      if (altname && strcmp(altname,name)!=0 && strcmp(altname,outername)!=0) {
          cl = TClass::GetClass(altname,load);
       }
    }
    if (cl==0) {
       // Try with Long64_t instead of long long
       string long64name = TClassEdit::GetLong64_Name( name );
-      if ( long64name != name ) return FindSTLClass( long64name.c_str(), load);
+      if ( long64name != name && long64name != outername ) return R__FindSTLClass( long64name.c_str(), load, outername);
    }
    if (cl == 0) {
       TString resolvedName = TClassEdit::ResolveTypedef(name,kFALSE).c_str();
-      if (resolvedName != name) cl = TClass::GetClass(resolvedName,load);
+      if (resolvedName != name && resolvedName != outername) cl = TClass::GetClass(resolvedName,load);
    }
    if (cl == 0 && (strncmp(name,"std::",5)==0)) {
       // CINT sometime ignores the std namespace for stl containers,
@@ -866,6 +866,16 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
    }
 
    return cl;
+}
+
+//______________________________________________________________________________
+TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
+{
+   // return a TClass object corresponding to 'name' assuming it is an STL container.
+   // In particular we looking for possible alternative name (default template
+   // parameter, typedefs template arguments, typedefed name).
+   
+   return R__FindSTLClass(name,load,name);
 }
 
 //______________________________________________________________________________
