@@ -553,7 +553,8 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
                ord.Remove(ii);
             if ((ii = url.Index(" ")) != kNPOS)
                url.Remove(0, ii + 1);
-            // Add to the list
+            // Add to the list (special tag for valgrind outputs)
+            if (url.Contains(".valgrind")) ord += "-valgrind";
             pl->Add(ord, url);
             // Notify
             if (gDebug > 1)

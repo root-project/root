@@ -62,6 +62,8 @@ private:
    int                ReadPROOFcfg(bool reset = 1);
    int                FindUniqueNodes();
 
+   int                LocateLocalFile(XrdOucString &file);
+
    int                DoDirectiveAdminReqTO(char *, XrdOucStream *, bool);
    int                DoDirectiveResource(char *, XrdOucStream *, bool);
    int                DoDirectiveWorker(char *, XrdOucStream *, bool);

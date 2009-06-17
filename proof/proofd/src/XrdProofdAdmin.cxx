@@ -548,7 +548,6 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
             rmsg += fMgr->Port(); rmsg += '/';
             rmsg += sdir; rmsg += '/'; rmsg += ent->d_name;
             found = 1;
-            break;
          }
       }
    }

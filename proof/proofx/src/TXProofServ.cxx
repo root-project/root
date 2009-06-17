@@ -746,6 +746,19 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
          return kQueryEnqueued;
       }
 
+      // Honour a max number of workers request (typically when running in valgrind
+      Int_t nwrks = -1;
+      if (gSystem->Getenv("PROOF_NWORKERS")) {
+         TString s(gSystem->Getenv("PROOF_NWORKERS"));
+         if (s.IsDigit()) {
+            nwrks = s.Atoi();
+            // Notify
+            TString msg;
+            msg.Form("+++ Starting max %d workers following the setting of PROOF_NWORKERS", nwrks);
+            SendAsynMessage(msg);
+         }
+      }
+
       TString tok;
       Ssiz_t from = 0;
       if (fl.Tokenize(tok, from, "&")) {
@@ -761,12 +774,14 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
                SafeDelete(master);
             }
             // Now the workers
-            while (fl.Tokenize(tok, from, "&")) {
+            while (fl.Tokenize(tok, from, "&") && (nwrks == -1 || nwrks > 0)) {
                if (!tok.IsNull()) {
                   if (workers)
                      workers->Add(new TProofNodeInfo(tok));
                   // We have the minimal set of information to start
                   rc = kQueryOK;
+                  // Count down
+                  if (nwrks != -1) nwrks--;
                }
             }
          }

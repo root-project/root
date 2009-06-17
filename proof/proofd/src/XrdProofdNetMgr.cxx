@@ -622,21 +622,84 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
 }
 
 //______________________________________________________________________________
-char *XrdProofdNetMgr::ReadBufferLocal(const char *file, kXR_int64 ofs, int &len)
+int XrdProofdNetMgr::LocateLocalFile(XrdOucString &file)
 {
-   // Read a buffer of length 'len' at offset 'ofs' of local file 'file'; the
+   // Locate the exact file path allowing for wildcards '*' in the file name.
+   // In case of success, returns 0 and fills file wity the first matching instance.
+   // Return -1 if no matching pat is found.
+
+   XPDLOC(NMGR, "NetMgr::LocateLocalFile")
+
+   // If no wild cards or empty, nothing to do
+   if (file.length() <= 0 || file.find('*') == STR_NPOS) return 0;
+
+   // Locate the file name and the dir
+   XrdOucString fn, dn;
+   int isl = file.rfind('/');
+   if (isl != STR_NPOS) {
+      fn.assign(file, isl+1, -1);
+      dn.assign(file, 0, isl);
+   } else {
+      fn = file;
+      dn = "./";
+   }
+
+   XrdOucString emsg;
+   // Scan the dir
+   DIR *dirp = opendir(dn.c_str());
+   if (!dirp) {
+      XPDFORM(emsg, "cannot open '%s' - errno: %d", dn.c_str(), errno);
+      TRACE(XERR, emsg.c_str());
+      return -1;
+   }
+   struct dirent *ent = 0;
+   XrdOucString sent;
+   while ((ent = readdir(dirp))) {
+      if (!strncmp(ent->d_name, ".", 1) || !strncmp(ent->d_name, "..", 2))
+         continue;
+      // Check the match 
+      sent = ent->d_name;
+      if (sent.matches(fn.c_str()) > 0) break;
+      sent = "";
+   }
+   closedir(dirp);
+
+   // If found fill a new output
+   if (sent.length() > 0) {
+      XPDFORM(file,"%s%s", dn.c_str(), sent.c_str());
+      return 0;
+   }
+
+   // Not found
+   return -1;
+}
+
+//______________________________________________________________________________
+char *XrdProofdNetMgr::ReadBufferLocal(const char *path, kXR_int64 ofs, int &len)
+{
+   // Read a buffer of length 'len' at offset 'ofs' of local file 'path'; the
    // returned buffer must be freed by the caller.
+   // Wild cards '*' are allowed in the file name of 'path'; the first matching
+   // instance is taken.
    // Returns 0 in case of error.
    XPDLOC(NMGR, "NetMgr::ReadBufferLocal")
 
    XrdOucString emsg;
-   TRACE(REQ, "file: "<<file<<", ofs: "<<ofs<<", len: "<<len);
+   TRACE(REQ, "file: "<<path<<", ofs: "<<ofs<<", len: "<<len);
 
    // Check input
-   if (!file || strlen(file) <= 0) {
-      TRACE(XERR, "file path undefined!");
+   if (!path || strlen(path) <= 0) {
+      TRACE(XERR, "path undefined!");
       return (char *)0;
    }
+
+   // Locate the path resolving wild cards
+   XrdOucString spath(path);
+   if (LocateLocalFile(spath) != 0) {
+      TRACE(XERR, "path cannot be resolved! ("<<path<<")");
+      return (char *)0;
+   }
+   const char *file = spath.c_str();
 
    // Open the file in read mode
    int fd = open(file, O_RDONLY);
@@ -714,22 +777,32 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *file, kXR_int64 ofs, int &len
 }
 
 //______________________________________________________________________________
-char *XrdProofdNetMgr::ReadBufferLocal(const char *file,
-                                         const char *pat, int &len, int opt)
+char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
+                                       const char *pat, int &len, int opt)
 {
-   // Grep lines matching 'pat' form 'file'; the returned buffer (length in 'len')
+   // Grep lines matching 'pat' form 'path'; the returned buffer (length in 'len')
    // must be freed by the caller.
+   // Wild cards '*' are allowed in the file name of 'path'; the first matching
+   // instance is taken.
    // Returns 0 in case of error.
    XPDLOC(NMGR, "NetMgr::ReadBufferLocal")
 
    XrdOucString emsg;
-   TRACE(REQ, "file: "<<file<<", pat: "<<pat<<", len: "<<len);
+   TRACE(REQ, "file: "<<path<<", pat: "<<pat<<", len: "<<len);
 
    // Check input
-   if (!file || strlen(file) <= 0) {
+   if (!path || strlen(path) <= 0) {
       TRACE(XERR, "file path undefined!");
       return (char *)0;
    }
+
+   // Locate the path resolving wild cards
+   XrdOucString spath(path);
+   if (LocateLocalFile(spath) != 0) {
+      TRACE(XERR, "path cannot be resolved! ("<<path<<")");
+      return (char *)0;
+   }
+   const char *file = spath.c_str();
 
    // Size of the output
    struct stat st;

@@ -338,11 +338,7 @@ void TProofProgressLog::BuildLogList(Bool_t create)
    TString buf;
    while ((pe=(TProofLogElem*)next())){
       TUrl url(pe->GetTitle());
-      if (TString(url.GetFile()).Contains(".valgrind")) {
-         buf.Form("%s %s valgrind", pe->GetName(), url.GetHost());
-      } else {
-         buf.Form("%s %s", pe->GetName(), url.GetHost());
-      }
+      buf.Form("%s %s", pe->GetName(), url.GetHost());
       fLogList->AddEntry(buf.Data(), is);
       if ((ent = fLogList->FindEntry(buf.Data()))) {
          ent->ResetBit(kLogElemFilled);
@@ -392,7 +388,7 @@ void TProofProgressLog::DoLog(Bool_t grep)
       }
    }
 
-   // Defaulr is not retrieving
+   // Default is not retrieving
    Bool_t retrieve = kFALSE;
    if (!grep) {
       if (!fFullText ||
@@ -486,11 +482,9 @@ void TProofProgressLog::SaveToFile()
    const char *option;
    TString ord;
    while ((selentry=(TGTextLBEntry*)next())){
-      ord = "";
-      const char *name = selentry->GetText()->GetString();
-      Int_t i=0;
-      while (name[i]!=' ' && i<10) i++;
-      ord.Append(name, i);
+      ord = selentry->GetText()->GetString();
+      Int_t isp = ord.Index(' ');
+      if (isp != kNPOS) ord.Remove(isp);
       //open the file in "w" mode for the first time
       option = writemode ? "w" : "a";
       fProofLog->Save(ord.Data(), filename.Data(), option);

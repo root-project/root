@@ -468,10 +468,15 @@ void TProofLogElem::Display(Int_t from, Int_t to)
       Prt("\n");
    Prt(Form("// ------------------------------------------------\n"));
    // Write lines
-   for ( ; i < ie; i++) {
-      TObjString *os = (TObjString *) fMacro->GetListOfLines()->At(i);
-      if (os)
-         Prt(Form("%s", os->GetName()));
+   if (fMacro->GetListOfLines()) {
+      TIter nxl(fMacro->GetListOfLines());
+      TObjString *os = 0;
+      Int_t kk = 0;
+      while ((os = (TObjString *) nxl())) {
+         kk++;
+         if (kk > i) Prt(Form("%s", os->GetName()));
+         if (kk > ie) break;
+      }
    }
    // Write tail
    Prt(Form("// --------- End of element log -------------------\n\n"));

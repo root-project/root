@@ -1542,6 +1542,21 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    } else
       uenvs = "";
 
+   // Check if the user wants to wait more for the session startup
+   int intwait = fInternalWait;
+   if (uenvs.length() > 0) {
+      TRACEP(p, DBG, "user envs: "<<uenvs);
+      int iiw = STR_NPOS;
+      if ((iiw = uenvs.find("PROOF_INTWAIT=")) !=  STR_NPOS) {
+         XrdOucString s(uenvs, iiw + strlen("PROOF_INTWAIT="));
+         s.erase(s.find(','));
+         if (s.isdigit()) {
+            intwait = s.atoi();
+            TRACEP(p, ALL, "startup internal wait set by user to "<<intwait);
+         }
+      }
+   }
+
    // The ROOT version to be used
    xps->SetROOT(p->Client()->ROOT());
    XPDFORM(msg, "using ROOT version: %s", xps->ROOT()->Export());
@@ -1557,8 +1572,6 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    // Notify
    TRACEP(p, DBG, "{ord,cfg,psid,cid,log}: {"<<ord<<","<<cffile<<","<<psid
                                              <<","<<p->CID()<<","<<loglevel<<"}");
-   if (uenvs.length() > 0)
-      TRACEP(p, DBG, "user envs: "<<uenvs);
 
    // Here we fork: for some weird problem on SMP machines there is a
    // non-zero probability for a deadlock situation in system mutexes.
@@ -1848,7 +1861,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    xps->SetSrvPID(pid);
 
    // Wait for the call back
-   if (Accept(xps, fInternalWait, emsg) != 0) {
+   if (Accept(xps, intwait, emsg) != 0) {
       // Failure: kill the child process
       if (XrdProofdAux::KillProcess(pid, 0, p->Client()->UI(), fMgr->ChangeOwn()) != 0)
          emsg += ": process could not be killed";
@@ -2403,6 +2416,8 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
       int from = 0, ieq = -1;
       while ((from = ue.tokenize(env, from, ',')) != -1) {
          if (env.length() > 0 && (ieq = env.find('=')) != -1) {
+            // Resolve keywords
+            ResolveKeywords(env, in);
             ev = new char[env.length()+1];
             strncpy(ev, env.c_str(), env.length());
             ev[env.length()] = 0;
@@ -2909,6 +2924,8 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
       int from = 0, ieq = -1;
       while ((from = ue.tokenize(env, from, ',')) != -1) {
          if (env.length() > 0 && (ieq = env.find('=')) != -1) {
+            // Resolve keywords
+            ResolveKeywords(env, in);
             ev = new char[env.length()+1];
             strncpy(ev, env.c_str(), env.length());
             ev[env.length()] = 0;
@@ -3699,6 +3716,41 @@ int XrdProofdProofServMgr::CurrentSessions(bool recalculate)
 
    // Done
    return fCurrentSessions;
+}
+
+//__________________________________________________________________________
+void XrdProofdProofServMgr::ResolveKeywords(XrdOucString &s, ProofServEnv_t *in)
+{
+   // Resolve some keywords in 's'
+   //    <logfileroot>, <user>, <rootsys>
+
+   if (!in) return;
+
+   bool isWorker = 0;
+   if (in->fPS->SrvType() == kXPD_Worker) isWorker = 1;
+
+   // Log file
+   if (!isWorker && s.find("<logfilemst>") != STR_NPOS) {
+      XrdOucString lfr(in->fLogFile);
+      if (lfr.endswith(".log")) lfr.erase(lfr.rfind(".log"));
+      s.replace("<logfilemst>", lfr);
+   } else if (isWorker && s.find("<logfilewrk>") != STR_NPOS) {
+      XrdOucString lfr(in->fLogFile);
+      if (lfr.endswith(".log")) lfr.erase(lfr.rfind(".log"));
+      s.replace("<logfilewrk>", lfr);
+   }
+
+   // user
+   if (getenv("USER") && s.find("<user>") != STR_NPOS) {
+      XrdOucString usr(getenv("USER"));
+      s.replace("<user>", usr);
+   }
+
+   // rootsys
+   if (getenv("ROOTSYS") && s.find("<rootsys>") != STR_NPOS) {
+      XrdOucString rootsys(getenv("ROOTSYS"));
+      s.replace("<rootsys>", rootsys);
+   }
 }
 
 //

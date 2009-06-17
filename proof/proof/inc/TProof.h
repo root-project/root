@@ -559,6 +559,8 @@ private:
 
    void     ResetMergePrg();
 
+   void     ParseConfigField(const char *config);
+
 protected:
    TProof(); // For derived classes to use
    Int_t           Init(const char *masterurl, const char *conffile,
