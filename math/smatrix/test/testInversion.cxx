@@ -3,8 +3,6 @@
 #include "TMatrixTSym.h"
 #include "TDecompChol.h"
 #include "TDecompBK.h"
-#include "Minuit2/LASymMatrix.h"
-#include "Minuit2/MnPrint.h"
 
 #include "TRandom.h"
 #include <vector>
