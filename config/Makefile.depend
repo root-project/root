@@ -20,6 +20,7 @@ GUIHTMLLIBDEPM         = $(GUILIB) $(GRAFLIB) $(NETLIB)
 HISTPAINTERLIBDEPM     = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB) $(GPADLIB)
 SPECTRUMPAINTERLIBDEPM = $(GRAFLIB) $(HISTLIB)
 HTMLLIBDEPM            = $(GRAFLIB) $(THREADLIB)
+MATHMORELIBDEPM        = $(MATHCORELIB)
 MINUITLIBDEPM          = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB)
 MINUIT2LIBDEPM         = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB)
 FUMILILIBDEPM          = $(GRAFLIB) $(HISTLIB) $(MATHCORELIB)
@@ -134,6 +135,7 @@ SPECTRUMPAINTERLIBDEP  = $(SPECTRUMPAINTERLIBDEPM)
 HTMLLIBDEP             = $(HTMLLIBDEPM)
 MINUITLIBDEP           = $(MINUITLIBDEPM)
 MINUIT2LIBDEP          = $(MINUIT2LIBDEPM)
+MATHMORELIBDEP         = $(MATHMORELIBDEPM)
 FUMILILIBDEP           = $(FUMILILIBDEPM)
 TREELIBDEP             = $(TREELIBDEPM)
 TREEPLAYERLIBDEP       = $(TREEPLAYERLIBDEPM)
@@ -231,6 +233,7 @@ MINUITLIBEXTRA          = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libMathCore.lib
 MINUIT2LIBEXTRA         = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libMathCore.lib
+MATHMORELIBEXTRA        = lib/libMathCore.lib
 FUMILILIBEXTRA          = lib/libGraf.lib lib/libHist.lib lib/libMathCore.lib
 TREELIBEXTRA            = lib/libNet.lib lib/libRIO.lib lib/libThread.lib
 TREEPLAYERLIBEXTRA      = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
@@ -362,6 +365,7 @@ HTMLLIBEXTRA            = -Llib -lGraf -lThread
 MINUITLIBEXTRA          = -Llib -lGraf -lHist -lMatrix -lMathCore
 MINUIT2LIBEXTRA         = -Llib -lGraf -lHist -lMatrix -lMathCore
 FUMILILIBEXTRA          = -Llib -lGraf -lHist -lMathCore
+MATHMORELIBEXTRA        = -Llib -lMathCore
 TREELIBEXTRA            = -Llib -lNet -lRIO -lThread
 TREEPLAYERLIBEXTRA      = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO \
                           -lMathCore
