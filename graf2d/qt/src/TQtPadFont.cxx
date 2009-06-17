@@ -57,10 +57,12 @@ static float CalibrateFont()
 //  Nimbus Roman returns h = 18
 //  Qt4 XFT              h = 21
 
+#if 0
           qDebug() << " Font metric w = " << w <<" h = "<< h
                    << "points=" << pattern.pointSize()
                    << "pixels=" << pattern.pixelSize()
                    << pattern;
+#endif
 
           float f;
           switch (h) {
