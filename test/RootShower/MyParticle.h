@@ -25,6 +25,7 @@
 #include "TRef.h"
 #include "TPolyLine3D.h"
 #include "TParticle.h"
+#include "TParticlePDG.h"
 
 class MyParticle : public TParticle {
 
