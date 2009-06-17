@@ -37,6 +37,9 @@ public:
 
   void printMetaArgs(ostream& os) const ;
 
+  const RooArgList& list1() const { return _set1 ; }
+  const RooArgList& list2() const { return _set2 ; }
+
 protected:
 
   RooArgList   _ownedList ;       // List of owned components

@@ -583,7 +583,7 @@ RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
 
 
 //_____________________________________________________________________________
-RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList) const
+RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly) const
 {
   // Create a list of leaf nodes in the arg tree starting with
   // ourself as top node that match any of the names the args in the
@@ -598,14 +598,22 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList) const
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
-  treeNodeServerList(&leafList,0,kFALSE,kTRUE,kTRUE) ; 
+  treeNodeServerList(&leafList,0,kFALSE,kTRUE,valueOnly) ; 
   //leafNodeServerList(&leafList) ;
   TIterator *sIter = leafList.createIterator() ;
 
   RooAbsArg* arg ;
-  while ((arg=(RooAbsArg*)sIter->Next())) {
-    if (arg->dependsOnValue(*dataList) && arg->isLValue()) {
-      depList->add(*arg) ;
+  if (valueOnly) {
+    while ((arg=(RooAbsArg*)sIter->Next())) {
+      if (arg->dependsOnValue(*dataList) && arg->isLValue()) {
+	depList->add(*arg) ;
+      }
+    }
+  } else {
+    while ((arg=(RooAbsArg*)sIter->Next())) {
+      if (arg->dependsOn(*dataList) && arg->isLValue()) {
+	depList->add(*arg) ;
+      }
     }
   }
   delete sIter ;
@@ -1691,7 +1699,16 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* na
   // of the client-server links. It should be zero in calls initiated by users.
 
   if ( !namePat || TString(GetName()).Contains(namePat)) {
-    os << indent << this << " " << IsA()->GetName() << "::" << GetName() << " (" << GetTitle() << ") " ;
+    os << indent << this ;
+    if (client) {
+      os << "/" ;
+      if (isValueServer(*client)) os << "V" ; else os << "-" ;
+      if (isShapeServer(*client)) os << "S" ; else os << "-" ;
+    }
+    os << " " ;
+
+    os << IsA()->GetName() << "::" << GetName() <<  " = " ;
+    printValue(os) ;
 
     if (_serverList.GetSize()>0) {
       switch(operMode()) {
@@ -1699,10 +1716,6 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* na
       case AClean: os << " [ACLEAN] " ; break ;
       case ADirty: os << " [ADIRTY] " ; break ;
       }
-    }
-    if (client) {
-      if (isValueServer(*client)) os << "V" ;
-      if (isShapeServer(*client)) os << "S" ;
     }
     os << endl ;
 

@@ -142,7 +142,7 @@ Double_t RooProfileLL::evaluate() const
     _minuit = new RooMinuit(const_cast<RooAbsReal&>(_nll.arg())) ;
     _minuit->setPrintLevel(-999) ;
     _minuit->setNoWarn() ;
-    // _minuit->setVerbose(0) ;
+    //_minuit->setVerbose(1) ;
   }
 
   // Save current value of observables
@@ -161,7 +161,7 @@ Double_t RooProfileLL::evaluate() const
   }
 
   _minuit->migrad() ;
-
+  
   // Restore original values and constant status of observables
   TIterator* iter = obsSetOrig->createIterator() ;
   RooRealVar* var ;
@@ -241,3 +241,18 @@ void RooProfileLL::validateAbsMin() const
 
   }
 }
+
+
+
+//_____________________________________________________________________________
+Bool_t RooProfileLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
+					 Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
+{ 
+  if (_minuit) {
+    delete _minuit ;
+    _minuit = 0 ;
+  }
+  return kFALSE ;
+} 
+
+

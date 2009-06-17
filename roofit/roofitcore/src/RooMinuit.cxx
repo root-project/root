@@ -256,6 +256,8 @@ RooFitResult* RooMinuit::fit(const char* options)
   //  r - Save fit result
   //  0 - Run Migrad with strategy 0
 
+  _theFitter->SetObjectFit(this) ;
+
   TString opts(options) ;
   opts.ToLower() ;
   
@@ -286,6 +288,8 @@ Int_t RooMinuit::migrad()
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
 
+  _theFitter->SetObjectFit(this) ;
+
   Double_t arglist[2];
   arglist[0]= 500*_nPar; // maximum iterations
   arglist[1]= 1.0;       // tolerance
@@ -311,6 +315,7 @@ Int_t RooMinuit::hesse()
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
 
+  _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
   arglist[0]= 500*_nPar; // maximum iterations
@@ -336,6 +341,8 @@ Int_t RooMinuit::minos()
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
 
+  _theFitter->SetObjectFit(this) ;
+
   Double_t arglist[2];
   arglist[0]= 500*_nPar; // maximum iterations
 
@@ -360,6 +367,8 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
   // and calculated errors are automatically
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
+
+  _theFitter->SetObjectFit(this) ;
 
   Int_t nMinosPar(0) ;
   Double_t* arglist = new Double_t[_nPar+1];
@@ -402,6 +411,8 @@ Int_t RooMinuit::seek()
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
 
+  _theFitter->SetObjectFit(this) ;
+
   Double_t arglist[2];
   arglist[0]= 500*_nPar; // maximum iterations
 
@@ -425,6 +436,8 @@ Int_t RooMinuit::simplex()
   // and calculated errors are automatically
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
+
+  _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
   arglist[0]= 500*_nPar; // maximum iterations
@@ -450,6 +463,8 @@ Int_t RooMinuit::improve()
   // and calculated errors are automatically
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
+
+  _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
   arglist[0]= 500*_nPar; // maximum iterations
@@ -823,6 +838,8 @@ RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Dou
 {
   // Create and draw a TH2 with the error contours in parameters var1 and v2 at up to 6 'sigma' settings
   // where 'sigma' is calculated as n*n*errorLevel
+
+  _theFitter->SetObjectFit(this) ;
 
   // Verify that both variables are floating parameters of PDF
   Int_t index1= _floatParamList->index(&var1);

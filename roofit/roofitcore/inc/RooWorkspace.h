@@ -100,10 +100,9 @@ public:
   RooFactoryWSTool& factory() ;
   RooAbsArg* factory(const char* expr) ;
 
-  // View management
-//RooModelView* addView(const char* name, const RooArgSet& observables) ;
-//RooModelView* view(const char* name) ;
-//void removeView(const char* name) ;
+  // Generic objects
+  Bool_t import(TObject& object, Bool_t replaceExisting=kFALSE) ;
+  TObject* obj(const char* name) ;
 
   // Print function
   void Print(Option_t* opts=0) const ;
@@ -204,6 +203,7 @@ public:
   RooLinkedList _dataList ; // List of owned datasets
   RooLinkedList _views ; // List of model views  
   RooLinkedList _snapshots ; // List of parameter snapshots
+  RooLinkedList _genObjects ; // List of generic objects
   std::map<std::string,RooArgSet> _namedSets ; // Map of named RooArgSets
 
   WSDir* _dir ; //! Transient ROOT directory representation of workspace
@@ -218,7 +218,7 @@ public:
   Bool_t      _openTrans ;    //! Is there a transaction open?
   RooArgSet   _sandboxNodes ; //! Sandbox for incoming objects in a transaction
 
-  ClassDef(RooWorkspace,5)  // Persistable project container for (composite) pdfs, functions, variables and datasets
+  ClassDef(RooWorkspace,6)  // Persistable project container for (composite) pdfs, functions, variables and datasets
   
 } ;
 

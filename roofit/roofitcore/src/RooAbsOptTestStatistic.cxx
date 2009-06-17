@@ -438,8 +438,8 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
   if (operMode()!=Slave) return ;
   TString indent2(indent) ;
   indent2 += "opt >>" ;
-  _funcClone->printCompactTree(os,indent2) ;
-  os << "opt >> " ; _dataClone->get()->printStream(os,kName|kAddress,kStandard) ;
+  _funcClone->printCompactTree(os,indent2.Data()) ;
+  os << indent2 << " dataset clone = " << _dataClone << " first obs = " << _dataClone->get()->first() << endl ;
 }
 
 

@@ -40,6 +40,9 @@ ClassImp(RooNormSetCache)
 ;
 
 
+#include <iostream>
+using namespace std ;
+
 //_____________________________________________________________________________
 RooNormSetCache::RooNormSetCache(Int_t regSize) :
   _htable(0), _regSize(regSize), _nreg(0), _asArr(0), _set2RangeName(0)
@@ -98,6 +101,7 @@ void RooNormSetCache::initialize(const RooNormSetCache& other)
 
   _name1 = other._name1 ;
   _name2 = other._name2 ;
+
   _set2RangeName = other._set2RangeName ;
 }
 
@@ -183,14 +187,21 @@ Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, 
   // B - Check if dependents(set1/set2) are compatible with current cache
   RooNameSet nset1d,nset2d ;
 
+//   cout << "RooNormSetCache::autoCache set1 = " << (set1?*set1:RooArgSet()) << " set2 = " << (set2?*set2:RooArgSet()) << endl ;
+//   if (set1) set1->Print("v") ;
+//   if (set2) set2->Print("v") ;
+  //if (self) self->Print("v") ;
+
   RooArgSet *set1d, *set2d ;
   if (self) {
-    set1d = set1 ? self->getObservables(*set1) : new RooArgSet ;
-    set2d = set2 ? self->getObservables(*set2) : new RooArgSet ;
+    set1d = set1 ? self->getObservables(*set1,kFALSE) : new RooArgSet ;
+    set2d = set2 ? self->getObservables(*set2,kFALSE) : new RooArgSet ;
   } else {
     set1d = set1 ? (RooArgSet*)set1->snapshot() : new RooArgSet ;
     set2d = set2 ? (RooArgSet*)set2->snapshot() : new RooArgSet ;
   }
+
+//   cout << "RooNormSetCache::autoCache set1d = " << *set1d << " set2 = " << *set2d << endl ;
 
   nset1d.refill(*set1d) ;
   nset2d.refill(*set2d) ;
@@ -210,6 +221,8 @@ Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, 
     add(set1,set2) ;
     _name1.refill(*set1d) ;
     _name2.refill(*set2d) ;
+//     cout << "RooNormSetCache::autoCache() _name1 refilled from " << *set1d << " to " ; _name1.printValue(cout) ; cout << endl ;
+//     cout << "RooNormSetCache::autoCache() _name2 refilled from " << *set2d << " to " ; _name2.printValue(cout) ; cout << endl ;
     _set2RangeName = (TNamed*) set2RangeName ;
   }
   

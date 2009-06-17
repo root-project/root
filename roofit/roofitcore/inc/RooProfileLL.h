@@ -35,6 +35,8 @@ public:
   const RooArgSet& bestFitParams() const ;
 
   virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
+  
+  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
 
 
 protected:

@@ -157,16 +157,16 @@ public:
     return getParameters(&set) ; 
   }
   virtual RooArgSet* getParameters(const RooArgSet* depList) const ;
-  RooArgSet* getObservables(const RooArgSet& set) const { 
+  RooArgSet* getObservables(const RooArgSet& set, Bool_t valueOnly=kTRUE) const { 
     // Return the observables of _this_ pdf given a set of observables
-    return getObservables(&set) ; 
+    return getObservables(&set,valueOnly) ; 
   }
   RooArgSet* getObservables(const RooAbsData* data) const ;
   RooArgSet* getObservables(const RooAbsData& data) const { 
     // Return the observables of _this_ pdf given the observables defined by 'data'
     return getObservables(&data) ; 
   }
-  virtual RooArgSet* getObservables(const RooArgSet* depList) const ;
+  virtual RooArgSet* getObservables(const RooArgSet* depList, Bool_t valueOnly=kTRUE) const ;
   Bool_t observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
   Bool_t observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;

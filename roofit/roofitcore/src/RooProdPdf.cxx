@@ -462,7 +462,8 @@ Double_t RooProdPdf::evaluate() const
   RooLinkedList *nlist ;
   getPartIntList(_curNormSet,0,plist,nlist,code) ;
 
-  return calculate(plist,nlist) ;
+  Double_t ret =  calculate(plist,nlist) ;
+  return ret ;
 }
 
 
@@ -1046,7 +1047,7 @@ const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, con
   }
   delete pIter ;
 
-  pname.Append(integralNameSuffix(iset,&nset,isetRangeName)) ;  
+  pname.Append(integralNameSuffix(iset,&nset,isetRangeName,kTRUE)) ;  
 
   return pname.Data() ;
 }

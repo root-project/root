@@ -656,7 +656,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg
   // SplitRange(Bool_t flag)         -- Use separate fit ranges in a simultaneous fit. Actual range name for each
   //                                    subsample is assumed to by rangeName_{indexState} where indexState
   //                                    is the state of the master index category of the simultaneous fit
-  // Constrain(const RooArgSet&pars) -- Include constraints to listed parameters in likelihood using internal constrains in p.d.f
+  // Constrained()                   -- Apply all constrained contained in the p.d.f. in the likelihood 
+  // Constrain(const RooArgSet&pars) -- Apply constraints to listed parameters in likelihood using internal constrains in p.d.f
   // ExternalConstraints(const RooArgSet& ) -- Include given external constraints to likelihood
   // Verbose(Bool_t flag)           -- Constrols RooFit informational messages in likelihood construction
   // CloneData(Bool flag)           -- Use clone of dataset in NLL (default is true)
@@ -701,8 +702,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("cloneData","CloneData",0,0) ;
   pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
   pc.defineObject("cPars","Constrain",0,0) ;
+  pc.defineInt("constrAll","Constrained",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineMutex("Range","RangeWithName") ;
+  pc.defineMutex("Constrain","Constrained") ;
   
   // Process and check varargs 
   pc.process(cmdList) ;
@@ -720,6 +723,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t optConst = pc.getInt("optConst") ;
   Bool_t cloneData = pc.getInt("cloneData") ;
   const RooArgSet* cPars = static_cast<RooArgSet*>(pc.getObject("cPars")) ;
+  Bool_t constrAll = pc.getInt("constrAll") ;
+  if (constrAll) {
+    cPars = getParameters(data) ;
+  }
   const RooArgSet* extCons = pc.getSet("extCons") ;
 
   // Process automatic extended option
@@ -803,6 +810,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     nll->constOptimizeTestStatistic(RooAbsArg::Activate) ;
   }
 
+  if (constrAll) {
+    delete cPars ;
+  }
   return nll ;
 }
 
@@ -834,7 +844,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   // SplitRange(Bool_t flag)         -- Use separate fit ranges in a simultaneous fit. Actual range name for each
   //                                    subsample is assumed to by rangeName_{indexState} where indexState
   //                                    is the state of the master index category of the simultaneous fit
-  // Contrain(const RooArgSet&pars)  -- Include constraints to listed parameters in likelihood using internal constrains in p.d.f
+  // Constrained()                   -- Apply all constrained contained in the p.d.f. in the likelihood 
+  // Contrain(const RooArgSet&pars)  -- Apply constraints to listed parameters in likelihood using internal constrains in p.d.f
   // ExternalConstraints(const RooArgSet& ) -- Include given external constraints to likelihood
   //
   // Options to control flow of fit procedure
@@ -906,7 +917,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,Optimize,SplitRange,Constrain,ExternalConstraints,CloneData") ;
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,Optimize,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData") ;
 
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineInt("optConst","Optimize",0,1) ;
@@ -2662,9 +2673,9 @@ RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg arg1, co
   //
   // SupNormSet(const RooArgSet&)         -- Observables over which should be normalized _in_addition_ to the
   //                                         integration observables
-  // ScanNum()                            -- Apply scanning technique if cdf integral involves numeric integration [ default ] 
-  // ScanAll()                            -- Always apply scanning technique 
-  // ScanNone()                           -- Never apply scanning technique                  
+  // ScanNumCdf()                         -- Apply scanning technique if cdf integral involves numeric integration [ default ] 
+  // ScanAllCdf()                         -- Always apply scanning technique 
+  // ScanNoCdf()                          -- Never apply scanning technique                  
   // ScanParameters(Int_t nbins,          -- Parameters for scanning technique of making CDF: number
   //                Int_t intOrder)          of sampled bins and order of interpolation applied on numeric cdf
 

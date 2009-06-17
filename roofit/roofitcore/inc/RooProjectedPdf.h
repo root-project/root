@@ -67,7 +67,7 @@ protected:
   
   mutable RooArgSet* _curNormSet ; //!
 
-  const RooAbsReal* getProjection(const RooArgSet* iset, const RooArgSet* nset, int& code) const ;
+  const RooAbsReal* getProjection(const RooArgSet* iset, const RooArgSet* nset, const char* rangeName, int& code) const ;
   Double_t evaluate() const ;
 
 private:

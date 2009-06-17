@@ -89,7 +89,7 @@ Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
   Int_t ixmax = Int_t (xmax)+1 ;
 
   Double_t fracLoBin = 1-(xmin-ixmin) ;
-  Double_t fracHiBin = ixmax-xmax ;
+  Double_t fracHiBin = 1-(ixmax-xmax) ;
 
   Double_t sum(0) ;
   sum += TMath::Poisson(ixmin,mean)*fracLoBin ;

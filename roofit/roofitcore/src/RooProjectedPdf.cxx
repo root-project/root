@@ -35,7 +35,7 @@
 #include "RooMsgService.h"
 #include "RooAbsReal.h" 
 #include "RooRealVar.h"
-
+#include "RooNameReg.h"
 
 
  ClassImp(RooProjectedPdf) 
@@ -102,24 +102,27 @@ Double_t RooProjectedPdf::evaluate() const
 
   // Calculate current unnormalized value of object
   int code ;
-  const RooAbsReal* proj = getProjection(&intobs,_curNormSet,code) ;
+  const RooAbsReal* proj = getProjection(&intobs,_curNormSet,0,code) ;
+  
   return proj->getVal() ;
 }
 
 
 
 //_____________________________________________________________________________
-const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const RooArgSet* nset, int& code) const
+const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const RooArgSet* nset, const char* rangeName, int& code) const
 {
   // Retrieve object representing projection integral of input p.d.f
   // over observables iset, while normalizing over observables
   // nset. The code argument returned by reference is the unique code
   // defining this particular projection configuration
- 
+
+
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nset,&intobs,&sterileIdx,0) ;
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(iset,nset,&sterileIdx,RooNameReg::ptr(rangeName)) ;
   if (cache) {
+    code = _cacheMgr.lastIndex() ;
     return static_cast<const RooAbsReal*>(cache->_projection);
   }
 
@@ -128,13 +131,14 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
   if (iset) {
     nset2->add(*iset) ;
   }
-  RooAbsReal* proj = intpdf.arg().createIntegral(*iset,nset2) ;
+  RooAbsReal* proj = intpdf.arg().createIntegral(*iset,nset2,0,rangeName) ;
   delete nset2 ;
 
   cache = new CacheElem ;
   cache->_projection = proj ;
 
-  code = _cacheMgr.setObj(nset,iset,(RooAbsCacheElement*)cache,0) ;
+  code = _cacheMgr.setObj(iset,nset,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ;
+
   coutI(Integration) << "RooProjectedPdf::getProjection(" << GetName() << ") creating new projection " << proj->GetName() << " with code " << code << endl ;
 
   return proj ;
@@ -168,7 +172,7 @@ Bool_t RooProjectedPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const
 
 
 //_____________________________________________________________________________
-Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* /*rangeName*/) const 
+Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName) const 
 { 
   // Mark all requested variables as internally integrated
 
@@ -178,7 +182,7 @@ Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   int code ;
   RooArgSet allVars2(allVars) ;
   allVars2.add(intobs) ;
-  getProjection(&allVars2,normSet,code) ;
+  getProjection(&allVars2,normSet,rangeName,code) ;
   
   return code+1 ; 
 } 
@@ -186,14 +190,34 @@ Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 
 
 //_____________________________________________________________________________
-Double_t RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet*/, const char* /*rangeName*/) const 
- { 
-   // Return analytical integral represent by appropriate element of projection cache
-
-   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
-   
-   return cache->_projection->getVal() ;
- } 
+Double_t RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet*/, const char* rangeName) const 
+{ 
+  // Return analytical integral represent by appropriate element of projection cache
+  
+  CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
+  
+  if (cache) {
+    Double_t ret= cache->_projection->getVal() ;
+    return ret ;
+  } else {
+    
+    RooArgSet* vars = getParameters(RooArgSet()) ;
+    vars->add(intobs) ;
+    RooArgSet* iset = _cacheMgr.nameSet1ByIndex(code-1)->select(*vars) ;
+    RooArgSet* nset = _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) ;
+    
+    Int_t code2(-1) ;
+    const RooAbsReal* proj = getProjection(iset,nset,rangeName,code2) ;
+    
+    delete vars ;
+    delete nset ;
+    delete iset ;
+    
+    Double_t ret =  proj->getVal() ;
+    return ret ;
+  } 
+  
+} 
 
 
 
