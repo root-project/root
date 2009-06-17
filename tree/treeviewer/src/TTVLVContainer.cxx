@@ -606,6 +606,7 @@ void TTVLVContainer::RemoveNonStatic()
          RemoveItem(f);
       }
    }
+   fLastActive = 0;
 }
 
 //______________________________________________________________________________
