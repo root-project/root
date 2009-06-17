@@ -386,12 +386,18 @@ T* TProfileHelper::RebinAxis(T* p, Double_t x, TAxis *axis)
 template <typename T>
 void TProfileHelper::Scale(T* p, Double_t c1, Option_t *)
 {
-   Double_t ent = p->fEntries;
-   p->fScaling = kTRUE;
-   if (p->fBinSumw2.fN == 0) p->Sumw2();
-   p->Add(p,p,c1,0);
-   p->fScaling = kFALSE;
-   p->fEntries = ent;
+   Double_t ac1 = TMath::Abs(c1);
+
+   // Make the loop over the bins to calculate the Addition
+   Int_t bin;
+   Double_t *cu1 = p->GetW();
+   Double_t *er1 = p->GetW2();
+   Double_t *en1 = p->GetB();
+   for (bin=0;bin<p->fN;bin++) {
+      p->fArray[bin]             = c1*cu1[bin];
+      p->fSumw2.fArray[bin]      = ac1*ac1*er1[bin];
+      p->fBinEntries.fArray[bin] = en1[bin];
+   }
 }
 
 template <typename T>
