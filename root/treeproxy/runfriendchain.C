@@ -1,5 +1,7 @@
 #include "make_chains.cxx"
 
+// Test provided by Scott Fallows (fallows at physics.umn.edu)
+
 void runfriendchain() {
   // test script to illustrate use of MakeProxy with friend trees
   // usage:
