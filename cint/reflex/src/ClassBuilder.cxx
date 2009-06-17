@@ -74,11 +74,10 @@ Reflex::ClassBuilderImpl::ClassBuilderImpl(const char* nam, const std::type_info
       } else if (fClass->SizeOf() != size) {
          throw RuntimeError(std::string("Attempt to change the size of the class ")+std::string(nam));                  
       }
-      if ( 0==(strcmp(fClass->TypeInfo().name(),typeid(Reflex::UnnamedClass).name())) ) {
-         fClass->SetTypeInfo( ti );
-      } else if ( 0!= strcmp(ti.name(),typeid(Reflex::UnnamedClass).name())
-                 && 0!= strcmp(ti.name(),fClass->TypeInfo().name()) ) {
-         throw RuntimeError(std::string("Attempt to change the type_info of the class ")+std::string(nam));                           
+      if (!strcmp(fClass->TypeInfo().name(), typeid(Reflex::UnknownType).name())) {
+         fClass->SetTypeInfo(ti);
+      } else if (strcmp(fClass->TypeInfo().name(), ti.name())) {
+         throw RuntimeError(std::string("Attempt to change the type_info of the class ") + std::string(nam));
       }
       if (modifiers != 0) {
          if ( 0==fClass->Modifiers() ) {
