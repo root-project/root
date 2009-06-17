@@ -2,13 +2,13 @@
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log red.h generatedSel.h val3dimSel.h forproxy.root \
-	vec.root vectorintSel.h vectorintEmuSel.h *.rootmap make_tuple.root make_tuple_sel.h
+	vec.root vectorintSel.h vectorintEmuSel.h *.rootmap make_tuple.root make_tuple_sel.h 
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += reducedSpill leaflist valdim3 vectorint vectorintEmu make_tuple
+TEST_TARGETS += reducedSpill leaflist valdim3 vectorint vectorintEmu make_tuple friendchain
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -139,8 +139,14 @@ vectorintEmu.clog: vectorintEmuSel_h.$(DllSuf) $(CORELIBS) runvectorintEmu_C.$(D
 vectorintEmu: vectorintEmu.clog
 	$(TestDiff)
 
-make_tuple.log: runmake_tuple.C make_tuple.C make_tuple_draw.C
+make_tuple.log: runmake_tuple.C make_tuple.C make_tuple_draw.C  $(CORELIBS) 
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l runmake_tuple.C 2>&1 | $(hideLibraryCreation) > make_tuple.log
 
 make_tuple: make_tuple.log
+	$(TestDiff)
+
+friendchain.log: runfriendchain.C vertex.C make_chains.cxx  $(CORELIBS) 
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l runfriendchain.C 2>&1 | $(hideLibraryCreation) > friendchain.log
+
+friendchain: friendchain.log
 	$(TestDiff)
