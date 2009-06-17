@@ -131,8 +131,12 @@ template<> inline long long& G__value_ref<long long>(G__value& buf)
    return buf.obj.ll;
 };
 
-//______________________________________________________________________________
+#if defined(__GNUC__) && (__GNUC__ > 4 || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 1)))
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif // __GNUC__ && __GNUC__ > 3 && __GNUC_MINOR__ > 1
 #ifdef G__BOOL4BYTE
+
+//______________________________________________________________________________
 template<> inline bool& G__value_ref<bool>(G__value& buf)
 {
    return (bool&)buf.obj.i;
@@ -144,6 +148,10 @@ template<> inline bool& G__value_ref<bool>(G__value& buf)
 }
 #endif // G__BOOL4BYTE
 
+#if defined(__GNUC__) && (__GNUC__ > 4 || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 1)))
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif // __GNUC__ && __GNUC__ > 3 && __GNUC_MINOR__ > 1
+   
 
 //______________________________________________________________________________
 template<class T> inline void G__setvalue(G__value* pbuf, const T& value)

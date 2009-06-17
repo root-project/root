@@ -111,13 +111,13 @@ inline const char* directoryname(const dirent* e) {  return e->d_name;  }
 inline const char* dirnameEx(const std::string& path) {
   static std::string p, q;
   p = path.c_str();
-  q = dirname((char*)p.c_str());
+  q = dirname(const_cast<char*>(p.c_str()));
   return q.c_str();
 }
 inline const char* basenameEx(const std::string& path) {
   static std::string p, q;
   p = path.c_str();
-  q = basename((char*)p.c_str());
+  q = basename(const_cast<char*>(p.c_str()));
   return q.c_str();
 }
 

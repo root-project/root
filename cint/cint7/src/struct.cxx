@@ -653,7 +653,7 @@ void Cint::Internal::G__define_struct(char type)
    ::Reflex::Scope store_tagnum;
    int store_def_struct_member = 0;
    ::Reflex::Scope store_local;
-   G__value enumval;
+   G__value enumval = G__null;
    int store_access;
    G__StrBuf basename_sb(G__LONGLINE);
    char* basename = basename_sb;

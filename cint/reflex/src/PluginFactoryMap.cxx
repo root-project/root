@@ -98,7 +98,7 @@ Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv ) {
    dirent* e = 0;
    DIR* dir = 0;
    string path = ::getenv(pathenv.empty() ? PATHENV : pathenv.c_str());
-   for(char* t=strtok((char*)path.c_str(),PATHSEP); t; t=strtok(0,PATHSEP))  {
+   for(char* t=strtok(const_cast<char*>(path.c_str()),PATHSEP); t; t=strtok(0,PATHSEP))  {
       if ( 0 == ::stat(t,&buf) && S_ISDIR(buf.st_mode) )
          tokens.push_back(t);
    }
@@ -145,7 +145,7 @@ void Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
          string::size_type pv = line.substr(pc+1).find_first_not_of(' ');
          string vlibs = line.substr(pc+1+pv);
          Directive_t libs;
-         for(char* t=strtok((char*)vlibs.c_str()," "); t; t = strtok(0," "))
+         for(char* t=strtok(const_cast<char*>(vlibs.c_str())," "); t; t = strtok(0," "))
             libs.push_back(t);
 
          // Check whether cname already has a directive,

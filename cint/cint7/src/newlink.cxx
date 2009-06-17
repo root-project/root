@@ -6772,7 +6772,7 @@ extern "C" int G__memfunc_setup(const char* funcname, int /*hash*/, G__Interface
             if (base_memberfunc) {
                G__RflxFuncProperties* base_memberfunc_prop = G__get_funcproperties(base_memberfunc);
                G__RflxFuncProperties* newfunc_prop = G__get_funcproperties(newfunc);
-               G__value ptr;
+               G__value ptr = G__null;
                G__value_typenum(ptr) = Reflex::PointerBuilder(Reflex::Type(newfunc.DeclaringScope()));
                ptr.obj.i = 0;
                //{

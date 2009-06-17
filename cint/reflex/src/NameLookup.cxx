@@ -213,8 +213,8 @@ template<class T> T Reflex::NameLookup::LookupInScope()
    else {
       // if not global scope
 
-      int len = fCurrentScope.SubTypeSize();
-      int i = 0;
+      size_t len = fCurrentScope.SubTypeSize();
+      size_t i = 0;
       for (Type_Iterator it = fCurrentScope.SubType_Begin(); i < len; ++it, ++i) {
          const Type& type = *it;
          const TypeBase* base = type.ToTypeBase();

@@ -137,8 +137,8 @@ bool Reflex::DictionaryGenerator::Use_selection(const std::string & filename) {
       while (getline(infile, line)) {
          if (line.find("class name") != std::string::npos) {
 
-            unsigned start = line.find("\"");
-            unsigned end = line.rfind("\"/>");
+            size_t start = line.find("\"");
+            size_t end = line.rfind("\"/>");
             // cut the class name out of string
             line = line.substr(start + 1, end - start - 1);
             fSelections.push_back(line);
@@ -148,8 +148,8 @@ bool Reflex::DictionaryGenerator::Use_selection(const std::string & filename) {
          // <class pattern="Reflex::*"/>
          if (line.find("class pattern") != std::string::npos) {
 
-            unsigned start = line.find("=");
-            unsigned end = line.rfind("*");
+            size_t start = line.find("=");
+            size_t end = line.rfind("*");
             line = line.substr(start + 2, end - start - 2);
             fPattern_selections.push_back(line);
             std::cout << "searching for class pattern " << line << "\n";

@@ -156,17 +156,17 @@ void Tools::GetTemplateComponents(const std::string& name, std::string& template
    //       operator->,  operator->*,
    //       operator()
    //
-   int pos = GetBasePosition(name);
+   long pos = GetBasePosition(name);
    int bracket_depth = 0;
    int paren_depth = 0;
-   int args_pos = 0;
+   long args_pos = 0;
    bool have_template = false;
-   int len = name.size();
-   for (int i = pos; !have_template && (i < len); ++i) {
+   long len = name.size();
+   for (long i = pos; !have_template && (i < len); ++i) {
       char c = name[i];
       if (c == '(') { // check for operator()
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -190,7 +190,7 @@ void Tools::GetTemplateComponents(const std::string& name, std::string& template
       }
       else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -223,7 +223,7 @@ void Tools::GetTemplateComponents(const std::string& name, std::string& template
       }
       else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             bool have_arrow = false;
             if (name[j] == '-') { // allow for operator->, or operator->*
                have_arrow = true;
@@ -262,12 +262,12 @@ void Tools::GetTemplateComponents(const std::string& name, std::string& template
    if (!have_template) {
       return;
    }
-   int begin_arg = args_pos + 1;
-   for (int i = args_pos; i < len; ++i) {
+   long begin_arg = args_pos + 1;
+   for (long i = args_pos; i < len; ++i) {
       char c = name[i];
       if (c == '(') { // check for operator()
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -291,7 +291,7 @@ void Tools::GetTemplateComponents(const std::string& name, std::string& template
       }
       else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -318,7 +318,7 @@ void Tools::GetTemplateComponents(const std::string& name, std::string& template
       }
       else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             bool have_arrow = false;
             if (name[j] == '-') { // allow for operator->, or operator->*
                have_arrow = true;
@@ -391,11 +391,11 @@ size_t Tools::GetBasePosition(const std::string& name) {
    int ab = 0; // angle brace depth
    int rb = 0; // right brace depth, actually parenthesis depth
    size_t pos = 0;
-   for (int i = name.size() - 1; (i >= 0) && !pos; --i) {
+   for (long i = name.size() - 1; (i >= 0) && !pos; --i) {
       switch (name[i]) {
          case '>':
             {
-               int j = i - 1;
+               long j = i - 1;
                if (j > -1) {
                   if ((name[j] == '-') || (name[j] == '>')) {
                      --j;
@@ -414,7 +414,7 @@ size_t Tools::GetBasePosition(const std::string& name) {
             break;
          case '<':
             {
-               int j = i - 1;
+               long j = i - 1;
                if (j > -1) {
                   if (name[j] == '<') {
                      --j;
@@ -433,7 +433,7 @@ size_t Tools::GetBasePosition(const std::string& name) {
             break;
          case ')':
             {
-               int j = i - 1;
+               long j = i - 1;
                for ( ; (j > -1) && (name[j] == ' '); --j) {}
                if (j > -1) {
                   if (name[j] == '(') {
@@ -453,7 +453,7 @@ size_t Tools::GetBasePosition(const std::string& name) {
             break;
          case '(':
             {
-               int j = i - 1;
+               long j = i - 1;
                for ( ; (j > -1) && (name[j] == ' '); --j) {}
                if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
                   // -- We may have an operator name.
@@ -492,12 +492,12 @@ size_t Tools::GetFirstScopePosition(const std::string& name)
    //
    int bracket_depth = 0;
    int paren_depth = 0;
-   int len = name.size();
-   for (int i = 0; i < len; ++i) {
+   long len = name.size();
+   for (long i = 0; i < len; ++i) {
       char c = name[i];
       if (c == '(') { // check for operator()
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -521,7 +521,7 @@ size_t Tools::GetFirstScopePosition(const std::string& name)
       }
       else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -548,7 +548,7 @@ size_t Tools::GetFirstScopePosition(const std::string& name)
       }
       else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             bool have_arrow = false;
             if (name[j] == '-') { // allow for operator->, or operator->*
                have_arrow = true;
@@ -605,15 +605,15 @@ bool Tools::IsTemplated(const char* name)
    //       operator->,  operator->*,
    //       operator()
    //
-   int pos = GetBasePosition(std::string(name));
+   long pos = GetBasePosition(std::string(name));
    int bracket_depth = 0;
    int paren_depth = 0;
-   int len = std::strlen(name);
-   for (int i = pos; i < len; ++i) {
+   long len = std::strlen(name);
+   for (long i = pos; i < len; ++i) {
       char c = name[i];
       if (c == '(') { // check for operator()
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -637,7 +637,7 @@ bool Tools::IsTemplated(const char* name)
       }
       else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -667,7 +667,7 @@ bool Tools::IsTemplated(const char* name)
       }
       else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             bool have_arrow = false;
             if (name[j] == '-') { // allow for operator->, or operator->*
                have_arrow = true;
@@ -926,15 +926,15 @@ std::string Tools::GetTemplateArguments(const char* name)
    //       operator->,  operator->*,
    //       operator()
    //
-   int pos = GetBasePosition(std::string(name));
+   long pos = GetBasePosition(std::string(name));
    int bracket_depth = 0;
    int paren_depth = 0;
-   int len = std::strlen(name);
-   for (int i = pos; i < len; ++i) {
+   long len = std::strlen(name);
+   for (long i = pos; i < len; ++i) {
       char c = name[i];
       if (c == '(') { // check for operator()
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -958,7 +958,7 @@ std::string Tools::GetTemplateArguments(const char* name)
       }
       else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -988,7 +988,7 @@ std::string Tools::GetTemplateArguments(const char* name)
       }
       else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             bool have_arrow = false;
             if (name[j] == '-') { // allow for operator->, or operator->*
                have_arrow = true;
@@ -1042,15 +1042,15 @@ std::string Tools::GetTemplateName(const char* name)
    //       operator->,  operator->*,
    //       operator()
    //
-   int base_pos = GetBasePosition(std::string(name));
+   long base_pos = GetBasePosition(std::string(name));
    int bracket_depth = 0;
    int paren_depth = 0;
-   int len = std::strlen(name);
-   for (int i = base_pos; i < len; ++i) {
+   long len = std::strlen(name);
+   for (long i = base_pos; i < len; ++i) {
       char c = name[i];
       if (c == '(') { // check for operator()
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -1074,7 +1074,7 @@ std::string Tools::GetTemplateName(const char* name)
       }
       else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             while (j && isspace(name[j])) {
                --j;
             }
@@ -1099,7 +1099,7 @@ std::string Tools::GetTemplateName(const char* name)
          }
          if (!paren_depth && !bracket_depth) { // We found the opening '<' of a set of template arguments.
             // Remove any trailing spaces, we might be operator<< <int>
-            int j = i - 1;
+            long j = i - 1;
             while ((j >= base_pos) && isspace(name[j])) {
                --j;
             }
@@ -1109,7 +1109,7 @@ std::string Tools::GetTemplateName(const char* name)
       }
       else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
          if (i > 7) { // there is room for "operator"
-            int j = i - 1;
+            long j = i - 1;
             bool have_arrow = false;
             if (name[j] == '-') { // allow for operator->, or operator->*
                have_arrow = true;
