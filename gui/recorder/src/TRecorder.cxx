@@ -1851,6 +1851,10 @@ Event_t *TRecGuiEvent::CreateEvent(TRecGuiEvent *ge)
 
    for(Int_t i=0; i<5; ++i)
       e->fUser[i] = ge->fUser[i];
+#ifdef R__WIN32
+   if (e->fType == kGKeyPress)
+      e->fUser[1] = 1;
+#endif
 
    return e;
 }
