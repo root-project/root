@@ -9,24 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGLIncludes
-#define ROOT_TGLIncludes
+// Window-system specific GL includes.
+// Inclusion should only be necessary in in low-level system files.
 
-// GL includes - include this if you are calling OpenGL functions.
+#ifndef ROOT_TGLWSIncludes
+
+#include "TGLIncludes.h"
 
 #ifdef WIN32
-#include "Windows4Root.h"
-#endif
-
-#ifndef G__DICTIONARY
-
-#include <GL/glew.h>
-
+#include <GL/wglew.h>
 #else
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-
+#include <GL/glxew.h>
 #endif
 
 #endif

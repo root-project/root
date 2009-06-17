@@ -28,9 +28,9 @@ GLH          := $(filter-out $(MODDIRI)/TX11GL.h, $(GLH))
 endif
 
 # Excluded from rootcint
-GLH1         := $(MODDIRI)/gl2ps.h $(MODDIRI)/CsgOps.h $(MODDIRI)/TGLKernel.h \
-                $(MODDIRI)/TGLIncludes.h $(MODDIRI)/TRootGLU.h \
-                $(MODDIRI)/TRootGLX.h $(MODDIRI)/TGLContextPrivate.h
+GLH1         := $(MODDIRI)/gl2ps.h $(MODDIRI)/CsgOps.h \
+                $(MODDIRI)/TGLIncludes.h $(MODDIRI)/TGLWSIncludes.h \
+                $(MODDIRI)/TGLContextPrivate.h
 
 # Used by rootcint
 GLH2         := $(filter-out $(GLH1), $(GLH))

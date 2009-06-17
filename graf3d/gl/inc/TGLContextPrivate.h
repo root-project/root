@@ -6,12 +6,9 @@
 
 #include <map>
 
-#ifndef ROOT_TGLIncludes
 #include "TGLIncludes.h"
-#endif
-#ifndef ROOT_TGLContext
+#include "TGLWSIncludes.h"
 #include "TGLContext.h"
-#endif
 
 #ifdef WIN32
 

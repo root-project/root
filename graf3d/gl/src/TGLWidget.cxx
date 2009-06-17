@@ -19,6 +19,7 @@
 
 #include "TGLWidget.h"
 #include "TGLIncludes.h"
+#include "TGLWSIncludes.h"
 #include "TGLUtil.h"
 
 #include "TGLEventHandler.h"
