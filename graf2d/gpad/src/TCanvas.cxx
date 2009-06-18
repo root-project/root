@@ -124,7 +124,7 @@ End_Html */
 
 
 //______________________________________________________________________________
-TCanvas::TCanvas(Bool_t build) : TPad()
+TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
 {
    // Canvas default constructor.
 
@@ -178,7 +178,7 @@ void TCanvas::Constructor()
 
 
 //______________________________________________________________________________
-TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
+TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fDoubleBuffer(0)
 {
    // Create an embedded canvas, i.e. a canvas that is in a TGCanvas widget
    // which is placed in a TGFrame. This ctor is only called via the
@@ -218,7 +218,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
 
 
 //_____________________________________________________________________________
-TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad()
+TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad(), fDoubleBuffer(0)
 {
    //  Create a new canvas with a predefined size form.
    //  If form < 0  the menubar is not shown.
@@ -315,7 +315,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
 
 
 //_____________________________________________________________________________
-TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad()
+TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad(), fDoubleBuffer(0)
 {
    //  Create a new canvas at a random position.
    //
@@ -388,7 +388,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
 
 //_____________________________________________________________________________
 TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh)
-        : TPad()
+        : TPad(), fDoubleBuffer(0)
 {
    //  Create a new canvas.
    //
@@ -589,7 +589,7 @@ void TCanvas::Build()
 
 
 //______________________________________________________________________________
-TCanvas::TCanvas(const TCanvas &) : TPad()
+TCanvas::TCanvas(const TCanvas &) : TPad(), fDoubleBuffer(0)
 {
    // Intentionally not implemented
 
