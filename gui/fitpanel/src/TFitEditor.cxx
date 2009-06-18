@@ -2915,6 +2915,18 @@ TF1* TFitEditor::GetFitFunction()
          fitFunc = new TF2("lastFitFunc",fEnteredFunc->GetText(), xmin, xmax, ymin, ymax );
       else if ( fDim == 3 )
          fitFunc = new TF3("lastFitFunc",fEnteredFunc->GetText(), xmin, xmax, ymin, ymax, zmin, zmax );
+
+      // if the function is not a C defined
+      if ( fNone->GetState() != kButtonDisabled )
+      {
+         // and the formulas are the same
+         TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
+         TF1* tmpF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
+         if ( tmpF1 != 0 && fitFunc != 0 && 
+              strcmp(tmpF1->GetExpFormula(), fEnteredFunc->GetText()) == 0 )
+            // copy the parameters!
+              fitFunc->SetParameters(tmpF1->GetParameters());
+      }
    }
 
    return fitFunc;
