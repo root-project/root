@@ -320,8 +320,10 @@ TRecorderReplaying::~TRecorderReplaying()
    gClient->Disconnect(gClient, "RegisteredWindow(Window_t)", this, "WaitForWindow(Window_t)");
    gClient->Disconnect(gClient, "RegisteredWindow(Window_t)", this, "RegisterWindow(Window_t)");
 
-   fFile->Close();
-   delete fFile;
+   if (fFile) {
+      fFile->Close();
+      delete fFile;
+   }
 
    delete fWindowList;
    delete fCmdEvent;
@@ -356,8 +358,8 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor, TRec
    fRecorder = r;
    fShowMouseCursor = showMouseCursor;
 
-   if (fFile->IsZombie() || !fFile->IsOpen())
-      return false;
+   if (!fFile || fFile->IsZombie() || !fFile->IsOpen())
+      return kFALSE;
 
    fCmdTree   = (TTree*) fFile->Get(kCmdEventTree);
    fWinTree   = (TTree*) fFile->Get(kWindowsTree);
@@ -366,7 +368,7 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor, TRec
 
    if (!fCmdTree || !fWinTree || ! fGuiTree || ! fExtraTree) {
       Error("TRecorderReplaying::Initialize", "The ROOT file is not valid event logfile.");
-      return false;
+      return kFALSE;
    }
 
    try {
@@ -377,13 +379,13 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor, TRec
    }
    catch(...) {
       Error("TRecorderReplaying::Initialize", "The ROOT file is not valid event logfile");
-      return false;
+      return kFALSE;
    }
 
    // No event to replay in given ROOT file
    if (!PrepareNextEvent()) {
       Info("TRecorderReplaying::Initialize", "Log file empty. No event to replay.");
-      return false;
+      return kFALSE;
    }
 
    // Number of registered windows during recording
@@ -415,14 +417,11 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor, TRec
 
    f->Close();
 
-   fMutex->Lock();
-   fMutex->UnLock();
-
    // Starts replaying
    fTimer->Connect("Timeout()", "TRecorderReplaying", this, "ReplayRealtime()");
    fTimer->Start(0);
 
-   return true;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -826,9 +825,10 @@ void TRecorderInactive::Start(TRecorder *r, const char *filename, Option_t *opti
    // Int_t winCount        = number of IDs it this list [0 by default]
 
    TRecorderRecording *rec = new TRecorderRecording(r, filename, option, w, winCount);
-   rec->StartRecording();
-
-   r->ChangeState(rec);
+   if (rec->StartRecording())
+      r->ChangeState(rec);
+   else
+      delete rec;
 }
 
 //______________________________________________________________________________
@@ -1062,7 +1062,8 @@ TRecorderRecording::~TRecorderRecording()
 
    delete[] fFilteredIds;
 
-   delete fFile;
+   if (fFile)
+      delete fFile;
    delete fTimer;
    delete fCmdEvent;
    delete fGuiEvent;
@@ -1074,6 +1075,9 @@ Bool_t TRecorderRecording::StartRecording()
 {
    // Connects appropriate signals and slots in order to gain all registered windows and processed events in ROOT
    // Starts the recording
+
+   if (!fFile || fFile->IsZombie() || !fFile->IsOpen())
+      return kFALSE;
 
    // When user types something in the commandline, TRecorderRecording::RecordCmdEvent(const char* line) is called
    gApplication->Connect("LineProcessed(const char*)", "TRecorderRecording", this, "RecordCmdEvent(const char* line)");
@@ -1135,7 +1139,7 @@ Bool_t TRecorderRecording::StartRecording()
 
    Info("TRecorderRecording::StartRecording", "Recording started. Log file: %s", fFile->GetName());
 
-   return true;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -1392,6 +1396,13 @@ void TRecorderRecording::CopyEvent(Event_t *e, Window_t wid)
    for(Int_t i=0; i<5; ++i)
       fGuiEvent->fUser[i] = e->fUser[i];
 
+   if (e->fType == kGKeyPress || e->fType == kKeyRelease) {
+      char tmp[10] = {0};
+      UInt_t keysym = 0;
+      gVirtualX->LookupString(e, tmp, sizeof(tmp), keysym);
+      fGuiEvent->fCode = keysym;
+   }
+
    fGuiEvent->fMasked  = wid;
 }
 
@@ -1402,9 +1413,9 @@ Bool_t TRecorderRecording::IsFiltered(Window_t id)
 
    for(Int_t i=0; i < fFilteredIdsCount; ++i)
       if (id == fFilteredIds[i])
-         return true;
+         return kTRUE;
 
-   return false;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -1851,10 +1862,14 @@ Event_t *TRecGuiEvent::CreateEvent(TRecGuiEvent *ge)
 
    for(Int_t i=0; i<5; ++i)
       e->fUser[i] = ge->fUser[i];
+
+   if (ge->fType == kGKeyPress || ge->fType == kKeyRelease) {
+      e->fCode    = gVirtualX->KeysymToKeycode(ge->fCode);
 #ifdef R__WIN32
-   if (e->fType == kGKeyPress)
       e->fUser[1] = 1;
+      e->fUser[2] = e->fCode;
 #endif
+   }
 
    return e;
 }
