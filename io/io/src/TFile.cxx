@@ -1938,10 +1938,16 @@ void TFile::WriteFree()
       return;
    }
    char *buffer = key->GetBuffer();
+   char *start = buffer;
 
    next.Reset();
    while ((afree = (TFree*) next())) {
       afree->FillBuffer(buffer);
+   }
+   if ( (buffer-start)!=nbytes ) {
+      // Most likely one of the 'free' segment was used to store this
+      // TKey, so we had one less TFree to store than we planned.
+      memset(buffer,0,nbytes-(buffer-start));
    }
    fNbytesFree = key->GetNbytes();
    fSeekFree   = key->GetSeekKey();

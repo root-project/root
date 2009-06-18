@@ -181,7 +181,6 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
       Int_t nbuffers = fObjlen/kMAXBUF;
       Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
-      memset(fBuffer,0,buflen);
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       char *bufcur = &fBuffer[fKeylen];
       noutot = 0;
@@ -405,11 +404,9 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
    }
 //*-*----------------- Case where new object fills exactly a deleted gap
    fNbytes = nsize;
-
    if (fLeft == 0) {
       if (!fBuffer) {
          fBuffer = new char[nsize];
-         memset(fBuffer,0,nsize);
       }
       lfree->Remove(bestfree);
       delete bestfree;
@@ -418,7 +415,6 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
    if (fLeft > 0) {    // found a bigger segment
       if (!fBuffer) {
          fBuffer = new char[nsize+sizeof(Int_t)];
-         memset(fBuffer,0,nsize);
       }
       char *buffer  = fBuffer+nsize;
       Int_t nbytesleft = -fLeft;  // set header of remaining record
