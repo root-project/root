@@ -1179,7 +1179,7 @@ void TRecorderRecording::Stop(TRecorder *, Bool_t guiCommand)
    if (fCmdEventPending && guiCommand)
       fCmdTree->Fill();
 
-   fRecorder->Write();
+   fRecorder->Write("recorder");
    fFile->Write();
    fFile->Close();
    fTimer->TurnOff();
