@@ -2476,7 +2476,9 @@ def normalizeFragment(name,alltempl=False,_useCache=True,_cache={}) :
       # select only the template parameters different from default ones
       args = sargs
       sargs = []
-      for i in range(len(args)) :  
+      nargs = len(args)
+      if len(defargs) < len(args): nargs = len(defargs)
+      for i in range(nargs) :  
         if args[i].find(defargs[i]) == -1 : sargs.append(args[i])
     sargs = [normalizeClass(a, alltempl, _useCache=_useCache) for a in sargs]
 
