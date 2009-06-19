@@ -4716,6 +4716,7 @@ Long64_t TH1::Merge(TCollection *li)
                   same = kFALSE;
                }
             }
+            allLabels.ls();
          }
          allHaveLabels&=(labels && hasOneLabel);
          if (!allHaveLabels)
@@ -4754,7 +4755,7 @@ Long64_t TH1::Merge(TCollection *li)
    Int_t binx, ix, nx;
    Double_t cu;
    Bool_t canRebin=TestBit(kCanRebin);
-   ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
+   if (!allHaveLabels) ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
    while (TH1* h=(TH1*)next()) {
       // process only if the histogram has limits; otherwise it was processed before
       if (h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax()) {
