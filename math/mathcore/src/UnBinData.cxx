@@ -110,7 +110,7 @@ UnBinData::UnBinData(unsigned int n, const double * dataX, const DataRange & ran
       fDataVector = new DataVector(n);
 
       for (unsigned int i = 0; i < n; ++i)  
-          if ( range.IsInside(dataX[i]) ) Add(dataX[i] ); 
+         if ( range.IsInside(dataX[i]) ) Add(dataX[i] ); 
       
       if (fNPoints < n) (fDataVector->Data()).resize(fNPoints); 
    } 
