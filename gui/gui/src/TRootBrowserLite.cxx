@@ -2065,7 +2065,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         }
                      }
 
-                     fStatusBar->SetText(obj2->GetName(), 1);
+                     if (obj2) fStatusBar->SetText(obj2->GetName(), 1);
                   }
                }
                if (parm1 == kButton3) {
@@ -2090,7 +2090,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                  break;
                               }
                            }
-                           fBrowser->GetContextMenu()->Popup(x, y, obj2, fBrowser);
+                           if (obj2) fBrowser->GetContextMenu()->Popup(x, y, obj2, fBrowser);
                         }
                      }
                   }
@@ -2103,8 +2103,10 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      TGFileItem *item2;
                      if ((item2 = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
                         TObject *obj2 = (TObject *)item2->GetUserData();
-                        DoubleClicked(obj2);
-                        IconBoxAction(obj2);
+                        if (obj2) {
+                           DoubleClicked(obj2);
+                           IconBoxAction(obj2);
+                        }
                         return kTRUE; //
                      }
                   }
