@@ -168,6 +168,7 @@ TRecorder::TRecorder()
 {
    // Creates initial INACTIVE state for the recorder
 
+   fFilename = "";
    fRecorderState = new TRecorderInactive();
 }
 
@@ -179,6 +180,7 @@ TRecorder::TRecorder(const char *filename, Option_t *option)
    // READ will start replaying)
 
    TString opt(option);
+   fFilename = "";
    fRecorderState = new TRecorderInactive();
    if ((opt == "NEW") || (opt == "RECREATE"))
       Start(filename, option);
@@ -192,6 +194,15 @@ TRecorder::~TRecorder()
    // Destructor.
 
    delete fRecorderState;
+}
+
+//______________________________________________________________________________
+void TRecorder::Browse(TBrowser *)
+{
+   // Browse the recorder from a ROOT file. This allows to replay a 
+   // session from the browser.
+
+   Replay(fFilename);
 }
 
 //______________________________________________________________________________
@@ -391,9 +402,6 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor, TRec
    // Number of registered windows during recording
    fWinTreeEntries = fWinTree->GetEntries();
 
-   // TCanvas *c = new TCanvas();
-   // delete c;
-
    // When a window is registered during replaying, TRecorderReplaying::RegisterWindow(Window_t) is called
    gClient->Connect("RegisteredWindow(Window_t)", "TRecorderReplaying", this, "RegisterWindow(Window_t)");
 
@@ -402,9 +410,13 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor, TRec
    TFile *f = TFile::Open(fFile->GetName());
    TIter nextkey(f->GetListOfKeys());
    TKey *key;
+   TObject *obj;
    while ((key = (TKey*)nextkey())) {
       fFilterStatusBar = kTRUE;
-      fCanv = (TCanvas*) key->ReadObj();
+      obj = key->ReadObj();
+      if (!obj->InheritsFrom("TCanvas"))
+         continue;
+      fCanv = (TCanvas*) obj;
       fCanv->Draw();
    }
    TCanvas *canvas;
@@ -417,6 +429,7 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor, TRec
 
    f->Close();
 
+   gPad = 0;
    // Starts replaying
    fTimer->Connect("Timeout()", "TRecorderReplaying", this, "ReplayRealtime()");
    fTimer->Start(0);
@@ -825,8 +838,10 @@ void TRecorderInactive::Start(TRecorder *r, const char *filename, Option_t *opti
    // Int_t winCount        = number of IDs it this list [0 by default]
 
    TRecorderRecording *rec = new TRecorderRecording(r, filename, option, w, winCount);
-   if (rec->StartRecording())
+   if (rec->StartRecording()) {
       r->ChangeState(rec);
+      r->fFilename = gSystem->BaseName(filename);
+   }
    else
       delete rec;
 }
@@ -844,6 +859,7 @@ Bool_t TRecorderInactive::Replay(TRecorder *r, const char *filename, Bool_t show
 
    if (replay->Initialize(r, showMouseCursor, mode)) {
       r->ChangeState(replay);
+      r->fFilename = gSystem->BaseName(filename);
       return kTRUE;
    }
    else {
@@ -1161,6 +1177,7 @@ void TRecorderRecording::Stop(TRecorder *, Bool_t guiCommand)
    if (fCmdEventPending && guiCommand)
       fCmdTree->Fill();
 
+   fRecorder->Write();
    fFile->Write();
    fFile->Close();
    fTimer->TurnOff();

@@ -431,7 +431,7 @@ public:
 class TRecorder : public TObject
 {
 private:
-   TRecorderState *fRecorderState;   // Current state of recorder
+   TRecorderState *fRecorderState;   //! Current state of recorder
 
 protected:
    friend class TRecorderState;
@@ -440,6 +440,7 @@ protected:
    friend class TRecorderRecording;
    friend class TRecorderReplaying;
 
+   TString      fFilename;           // Events file name 
    // Changes state to the new one.
    // See class documentation for information about state changing.
    void  ChangeState(TRecorderState* newstate, Bool_t deletePreviousState = kTRUE);
@@ -465,6 +466,8 @@ public:
    // Deletes recorder together with its current state
    virtual ~TRecorder();
 
+   void Browse(TBrowser *);
+
    // Starts recording of events to the given file
    void Start(const char *filename, Option_t *option = "RECREATE", Window_t *w = 0, Int_t winCount = 0);
 
@@ -473,6 +476,9 @@ public:
 
    // Replays recorded events from given file
    Bool_t Replay(const char *filename, Bool_t showMouseCursor = kTRUE, TRecorder::EReplayModes mode = kRealtime);
+
+   // Replays recorded events from current file
+   void Replay() { Replay(fFilename); }   // *MENU*
 
    // Pauses replaying
    void Pause();
@@ -495,7 +501,7 @@ public:
    // Saves all the canvases previous to the TRecorder
    void PrevCanvases(const char *filename, Option_t *option);
 
-   ClassDef(TRecorder,1) // Class provides direct recorder/replayer interface for a user.
+   ClassDef(TRecorder,2) // Class provides direct recorder/replayer interface for a user.
 };
 
 //////////////////////////////////////////////////////////////////////////
