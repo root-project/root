@@ -26,21 +26,22 @@
 //  Recording                                                           //
 //  ==================================================================  //
 //                                                                      //
-//  1] Start recording                                                  //
+//  1] To start recording                                               //
 //                                                                      //
 //    TRecorder r(const char *filename, "NEW")                          //
 //    TRecorder r(const char *filename, "RECREATE")                     //
 //                                                                      //
 //    or:                                                               //
 //                                                                      //
-//    TRecorder::Start(const char *filename, ...)                       //
+//    TRecorder *recorder = new TRecorder;                              //
+//    recorder->Start(const char *filename, ...)                        //
 //                                                                      //
 //    -filename      Name of ROOT file in which to save                 //
 //                   recorded events.                                   //
 //                                                                      //
-//  2] Stop recording                                                   //
+//  2] To stop recording                                                //
 //                                                                      //
-//    TEventRecodrer::Stop()                                            //
+//    recorder->Stop()                                                  //
 //                                                                      //
 //                                                                      //
 //  IMPORTANT:                                                          //
@@ -67,14 +68,15 @@
 //  Replaying                                                           //
 //  =================================================================== //
 //                                                                      //
-//  1] Start replaying                                                  //
+//  1] To start replaying                                               //
 //                                                                      //
 //    TRecorder r(const char *filename)                                 //
 //    TRecorder r(const char *filename, "READ")                         //
 //                                                                      //
 //    or:                                                               //
 //                                                                      //
-//    TRecorder::Replay(const char *filename,                           //
+//    TRecorder *recorder = new TRecorder;                              //
+//    recorder->Replay(const char *filename,                            //
 //                      Bool_t showMouseCursor = kTRUE);                //
 //                                                                      //
 //    -filename         A name of file with recorded events             //
@@ -93,23 +95,23 @@
 //  Therefore it is strongly recommended to start both recording        //
 //  and replaying with empty ROOT environment.                          //
 //                                                                      //
-//  2] Pause replaying                                                  //
+//  2] To pause replaying                                               //
 //                                                                      //
-//    TRecorder::Pause()                                                //
+//    recorder->Pause()                                                 //
 //                                                                      //
-//    Replaying is stopped until TRecorder::Resume() is called.         //
+//    Replaying is stopped until recorder->Resume() is called.          //
 //                                                                      //
 //                                                                      //
-//  3] Resume paused replaying                                          //
+//  3] To resume paused replaying                                       //
 //                                                                      //
-//    TRecorder::Resume()                                               //
+//    recorder->Resume()                                                //
 //                                                                      //
 //    Resumes previously stopped replaying.                             //
 //                                                                      //
 //                                                                      //
-//  4] Stop replaying before its end                                    //
+//  4] To stop replaying before its end                                 //
 //                                                                      //
-//    TRecorder::Stop()                                                 //
+//    recorder->Stop()                                                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
