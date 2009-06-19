@@ -99,6 +99,10 @@ ConfInterval* NeymanConstruction::GetInterval() const {
   Int_t npass = 0;
   RooArgSet* point; 
 
+  RooDataSet* pointsInInterval = new RooDataSet("pointsInInterval", 
+						 "points in interval", 
+						*(fPointsToTest->get(0)) );
+
   // loop over points to test
   for(Int_t i=0; i<fPointsToTest->numEntries(); ++i){
      // get a parameter point from the list of points to test.
@@ -197,11 +201,12 @@ ConfInterval* NeymanConstruction::GetInterval() const {
 	samplingDist->InverseCDF( 1. - ((1.-fLeftSideFraction) * fSize) );
     }
     
+    /*
     // add acceptance region to ConfidenceBelt
     fConfBelt->AddAcceptanceRegion(*point, 
 				   lowerEdgeOfAcceptance, 
 				   upperEdgeOfAcceptance);
-
+    */
 
     // printout some debug info
     TIter      itr = point->createIterator();
@@ -209,7 +214,7 @@ ConfInterval* NeymanConstruction::GetInterval() const {
     while ((myarg = (RooRealVar *)itr.Next())) { 
       cout << myarg->GetName() << "=" << myarg->getVal() << " ";
     }
-    std::cout << "\tdbg: "<< i<<"/"<<fPointsToTest->numEntries()<<" : " << lowerEdgeOfAcceptance << ", " 
+    std::cout << "\tdbg: "<< i+1<<"/"<<fPointsToTest->numEntries()<<" : " << lowerEdgeOfAcceptance << ", " 
     	      << upperEdgeOfAcceptance << ", " << thisTestStatistic <<  " " <<
       (thisTestStatistic >= lowerEdgeOfAcceptance && thisTestStatistic <= upperEdgeOfAcceptance) 
 	      << std::endl << std::endl;
@@ -217,20 +222,21 @@ ConfInterval* NeymanConstruction::GetInterval() const {
     // Check if this data is in the acceptance region
     if(thisTestStatistic >= lowerEdgeOfAcceptance && thisTestStatistic <= upperEdgeOfAcceptance) {
       // if so, set this point to true
-      fPointsToTest->add(*point, 1.); 
+      //      fPointsToTest->add(*point, 1.);  // this behaves differently for Hist and DataSet
+      pointsInInterval->add(*point);
       ++npass;
     }
 
     //write to file
-    samplingDist->Write();
-    std::string tmpName = "hist_";
-    tmpName+=samplingDist->GetName();
-    TH1F* h = new TH1F(tmpName.c_str(),"",500,0.,5.);
-    for(int ii=0; ii<samplingDist->GetSize(); ++ii){
-      h->Fill(samplingDist->GetSamplingDistribution().at(ii) );
-    }
-    h->Write();
-    delete h;
+    //    samplingDist->Write();
+    //    std::string tmpName = "hist_";
+    //    tmpName+=samplingDist->GetName();
+    //    TH1F* h = new TH1F(tmpName.c_str(),"",500,0.,5.);
+    //    for(int ii=0; ii<samplingDist->GetSize(); ++ii){
+    //      h->Fill(samplingDist->GetSamplingDistribution().at(ii) );
+    //    }
+    //    h->Write();
+    //    delete h;
 
     delete samplingDist;
     delete point;
@@ -238,9 +244,16 @@ ConfInterval* NeymanConstruction::GetInterval() const {
   std::cout << npass << " points in interval" << std::endl;
 
   // create an interval based fPointsToTest
+  //  PointSetInterval* interval 
+  //    = new PointSetInterval("ClassicalConfidenceInterval", "ClassicalConfidenceInterval", *fPointsToTest);
+  // create an interval based pointsInInterval
   PointSetInterval* interval 
-    = new PointSetInterval("ClassicalConfidenceInterval", "ClassicalConfidenceInterval", *fPointsToTest);
+    = new PointSetInterval("ClassicalConfidenceInterval", "ClassicalConfidenceInterval", *pointsInInterval);
   
+  // write belt to file
+  //  fConfBelt->Write();
+
+
   f.Close();
 
   delete data;

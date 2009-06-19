@@ -39,6 +39,8 @@ namespace RooStats {
 
     virtual const RooAbsArg* GetTestStatistic()  const = 0;  
 
+    virtual const TString GetVarName() const = 0;
+
    protected:
       ClassDef(TestStatistic,1)   // Interface for tools setting limits (producing confidence intervals)
    };

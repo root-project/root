@@ -38,6 +38,7 @@
 #include "RooFit.h"
 #include "RooFitResult.h"
 #include "RooWorkspace.h"
+#include "RooConstVar.h"
 
 // use this order for safety on library loading
 using namespace RooFit ;
@@ -214,15 +215,44 @@ void DoSPlot(RooWorkspace* ws){
   sigmaZ->setConstant();
   qcdMassDecayConst->setConstant();
 
-  // now we use the SPlot class to make a new dataset with 
-  // sWeights.
-  RooDataSet* sData = (RooDataSet*) SPlot::AddSWeightToData(
-		(RooSimultaneous*) model,
-		RooArgList(*zYield,*qcdYield), *data);
+
+  RooMsgService::instance().setSilentMode(true);
+
+
+  // Now we use the SPlot class to add SWeights to our data set
+  // based on our model and our yield variables
+  RooStats::SPlot* sData = new RooStats::SPlot("sData","An SPlot",
+		            *data, model, RooArgList(*zYield,*qcdYield) );
+
+
+  // Check that our weights have the desired properties
+
+  std::cout << "Check SWeights:" << std::endl;
+
+
+  std::cout << std::endl <<  "Yield of Z is " 
+	    << zYield->getVal() << ".  From sWeights it is "
+	    << sData->GetYieldFromSWeight("zYield") << std::endl;
+
+
+  std::cout << "Yield of QCD is " 
+	    << qcdYield->getVal() << ".  From sWeights it is "
+	    << sData->GetYieldFromSWeight("qcdYield") << std::endl
+	    << std::endl;
+
+  for(Int_t i=0; i < 10; i++)
+    {
+      std::cout << "z Weight   " << sData->GetSWeight(i,"zYield") 
+		<< "   qcd Weight   " << sData->GetSWeight(i,"qcdYield") 
+		<< "  Total Weight   " << sData->GetSumOfEventSWeight(i) 
+		<< std::endl;
+    }
+
+  std::cout << std::endl;
 
   // import this new dataset with sWeights
  std::cout << "import new dataset with sWeights" << std::endl;
- ws->import(*sData, Rename("dataWithSWeights"));
+ ws->import(*data, Rename("dataWithSWeights"));
 
 
 }

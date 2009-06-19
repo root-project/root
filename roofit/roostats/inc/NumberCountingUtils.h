@@ -33,15 +33,15 @@ namespace RooStats{
       //////////////////////////////////
 
   
-      Double_t BinomialExpZ(Double_t, Double_t, Double_t);
-      Double_t BinomialWithTauExpZ(Double_t, Double_t, Double_t);   
-      Double_t BinomialObsZ(Double_t, Double_t, Double_t);
-      Double_t BinomialWithTauObsZ(Double_t, Double_t, Double_t);
+      Double_t BinomialExpZ(Double_t sExp, Double_t bExp, Double_t fractionalBUncertainty);
+      Double_t BinomialWithTauExpZ(Double_t sExp, Double_t bExp, Double_t tau);   
+      Double_t BinomialObsZ(Double_t nObs, Double_t bExp, Double_t fractionalBUncertainty);
+      Double_t BinomialWithTauObsZ(Double_t nObs, Double_t bExp, Double_t tau);
 
-      Double_t BinomialExpP(Double_t, Double_t, Double_t);
-      Double_t BinomialWithTauExpP(Double_t, Double_t, Double_t);
-      Double_t BinomialObsP(Double_t, Double_t, Double_t);
-      Double_t BinomialWithTauObsP(Double_t, Double_t, Double_t);
+      Double_t BinomialExpP(Double_t sExp, Double_t bExp, Double_t fractionalBUncertainty);
+      Double_t BinomialWithTauExpP(Double_t sExp, Double_t bExp, Double_t tau);
+      Double_t BinomialObsP(Double_t nObs, Double_t, Double_t fractionalBUncertainty);
+      Double_t BinomialWithTauObsP(Double_t nObs, Double_t bExp, Double_t tau);
       
 
    }

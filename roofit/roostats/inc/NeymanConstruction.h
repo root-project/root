@@ -84,7 +84,7 @@ namespace RooStats {
 	if(&data){
 	  fWS->import(data);
 	  fDataName = data.GetName();
-	  fWS->Print();
+	  //	  fWS->Print();
 	}
       }
       // Set the Pdf, add to the the workspace if not already there

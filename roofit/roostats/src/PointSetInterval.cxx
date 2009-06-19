@@ -36,6 +36,7 @@
 #include "RooStats/PointSetInterval.h"
 #endif
 
+#include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 
@@ -97,14 +98,9 @@ Bool_t PointSetInterval::IsInInterval(RooArgSet &parameterPoint)
   
   if( !this->CheckParameters(parameterPoint) ){
     //    std::cout << "problem with parameters" << std::endl;
-    //    return false; 
+    return false; 
   }
   
-  if(parameterPoint.getSize() != fParameterPointsInInterval->get()->getSize() ){
-    std::cout << "problem with parameters" << std::endl;
-    return false;
-  }
-
   if( hist ) {
     if ( hist->weight( parameterPoint , 0 ) > 0 ) // positive value indicates point is in interval
       return true; 
@@ -112,15 +108,25 @@ Bool_t PointSetInterval::IsInInterval(RooArgSet &parameterPoint)
       return false;
   }
   else if( tree ){
-    //RooArgSet* thisPoint = 0;
+    const RooArgSet* thisPoint = 0;
     // need to check if the parameter point is the same as any point in tree. 
     for(Int_t i = 0; i<tree->numEntries(); ++i){
       // This method is not complete
-      // thisPoint = tree->get(i); 
-      // if ( parameterPoint == *thisPoint)
-      //    return true; 
-      return false;
+      thisPoint = tree->get(i); 
+      bool samePoint = true;
+      TIter it = parameterPoint.createIterator();
+      RooRealVar *myarg; 
+      while ( samePoint && (myarg = (RooRealVar *)it.Next())) { 
+	if(!myarg) continue;
+	if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
+	  samePoint = false;
+      }
+      if(samePoint) 
+	return true;
+
+      //      delete thisPoint;
     }
+    return false; // didn't find a good point
   }
   else {
       std::cout << "dataset is not initialized properly" << std::endl;
@@ -140,14 +146,39 @@ RooArgSet* PointSetInterval::GetParameters() const
 //____________________________________________________________________
 Bool_t PointSetInterval::CheckParameters(RooArgSet &parameterPoint) const
 {  
-
    if (parameterPoint.getSize() != fParameterPointsInInterval->get()->getSize() ) {
-      std::cout << "size is wrong, parameters don't match" << std::endl;
+     std::cout << "PointSetInterval: argument size is wrong, parameters don't match: arg=" << parameterPoint
+	       << " interval=" << (*fParameterPointsInInterval->get()) << std::endl;
       return false;
    }
    if ( ! parameterPoint.equals( *(fParameterPointsInInterval->get() ) ) ) {
-      std::cout << "size is ok, but parameters don't match" << std::endl;
+      std::cout << "PointSetInterval: size is ok, but parameters don't match" << std::endl;
       return false;
    }
    return true;
+}
+
+
+//____________________________________________________________________
+Double_t PointSetInterval::UpperLimit(RooRealVar& param ) 
+{  
+  RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPointsInInterval );
+  Double_t low, high;
+  if( tree ){
+    tree->getRange(param, low, high);
+    return high;
+ }
+  return param.getMax();
+}
+
+//____________________________________________________________________
+Double_t PointSetInterval::LowerLimit(RooRealVar& param ) 
+{  
+  RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPointsInInterval );
+  Double_t low, high;
+  if( tree ){
+    tree->getRange(param, low, high);
+    return low;
+ }
+  return param.getMin();
 }

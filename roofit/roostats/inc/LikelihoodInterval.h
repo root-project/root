@@ -52,6 +52,7 @@ namespace RooStats {
       Double_t LowerLimit(RooRealVar& param) ;
       Double_t UpperLimit(RooRealVar& param) ;
     
+      RooAbsReal* GetLikelihoodRatio() {return fLikelihoodRatio;}
 
    private:
 

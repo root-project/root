@@ -33,7 +33,7 @@ using namespace std;
 namespace RooStats {
 
   ///////////////////////////
-  class SamplingSummaryLookup {
+  class SamplingSummaryLookup : public TObject {
 
     typedef pair<Double_t, Double_t> AcceptanceCriteria; // defined by Confidence level, leftside tail probability
     typedef map<Int_t, AcceptanceCriteria> LookupTable; // map ( Index, ( CL, leftside tail prob) )
@@ -99,7 +99,7 @@ namespace RooStats {
 
 
   ///////////////////////////
-  class AcceptanceRegion {
+  class AcceptanceRegion : public TObject{
   public:
     AcceptanceRegion() {}
     virtual ~AcceptanceRegion() {}
@@ -125,7 +125,7 @@ namespace RooStats {
 
 
   ///////////////////////////
-  class SamplingSummary {
+  class SamplingSummary : public TObject {
   public:
     SamplingSummary() {}
     virtual ~SamplingSummary() {}

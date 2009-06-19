@@ -58,6 +58,8 @@ namespace RooStats {
 
       // Get the TestStatistic
       virtual const RooAbsArg* GetTestStatistic()  const {return fPdf;}  
+
+      virtual const TString GetVarName() const {return "Number of events";}
     
       
    private:

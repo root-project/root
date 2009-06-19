@@ -60,6 +60,8 @@ namespace RooStats {
       virtual void SetParameters(RooArgSet&) = 0;
       // specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(RooArgSet&) = 0;
+      // specify the observables in the dataset (needed to evaluate the test statistic)
+      virtual void SetObservables(RooArgSet& ) = 0;
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) = 0;

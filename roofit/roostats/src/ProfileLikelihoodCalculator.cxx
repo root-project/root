@@ -102,17 +102,29 @@ ConfInterval* ProfileLikelihoodCalculator::GetInterval() const {
    RooAbsData* data = fWS->data(fDataName);
    if (!data || !pdf || !fPOI) return 0;
 
-   RooNLLVar* nll = new RooNLLVar("nll","",*pdf,*data, Extended());
+   RooArgSet* constrainedParams = pdf->getParameters(*data);
+   RemoveConstantParameters(constrainedParams);
+
+
+   /*
+   RooNLLVar* nll = new RooNLLVar("nll","",*pdf,*data, Extended(),Constrain(*constrainedParams));
    RooProfileLL* profile = new RooProfileLL("pll","",*nll, *fPOI);
    profile->addOwnedComponents(*nll) ;  // to avoid memory leak
+   */
+
+   RooAbsReal* nll = pdf->createNLL(*data, CloneData(kTRUE), Constrain(*constrainedParams));
+   RooAbsReal* profile = nll->createProfile(*fPOI);
+   profile->addOwnedComponents(*nll) ;  // to avoid memory leak
+
 
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
-   profile->getVal();
+   profile->getVal(); // do this so profile will cache the minimum
    RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
    LikelihoodInterval* interval 
       = new LikelihoodInterval("LikelihoodInterval", profile, fPOI);
    interval->SetConfidenceLevel(1.-fSize);
+   delete constrainedParams;
    return interval;
 }
 
@@ -130,7 +142,9 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    if (!data || !pdf) return 0;
 
    // calculate MLE
-   RooFitResult* fit = pdf->fitTo(*data,Extended(kFALSE),Strategy(0),Hesse(kFALSE),Save(kTRUE),PrintLevel(-1));
+   RooArgSet* constrainedParams = pdf->getParameters(*data);
+   RemoveConstantParameters(constrainedParams);
+   RooFitResult* fit = pdf->fitTo(*data,Extended(kFALSE), Constrain(*constrainedParams),Strategy(0),Hesse(kFALSE),Save(kTRUE),PrintLevel(-1));
   
 
    fit->Print();
@@ -152,7 +166,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       mytarget->Print();
    }
   
-   RooFitResult* fit2 = pdf->fitTo(*data,Extended(kFALSE),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1));
+   RooFitResult* fit2 = pdf->fitTo(*data,Extended(kFALSE),Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1));
 
    Double_t NLLatCondMLE= fit2->minNll();
    fit2->Print();
@@ -161,7 +175,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    HypoTestResult* htr = 
       new HypoTestResult("ProfileLRHypoTestResult",
                          SignificanceToPValue(sqrt( 2*(NLLatCondMLE-NLLatMLE))), 0 );
-  
+   delete constrainedParams;
    return htr;
 
 }

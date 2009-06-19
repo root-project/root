@@ -63,6 +63,13 @@ END_HTML
 
 #include <string>
 
+/*
+// for debugging
+#include "RooNLLVar.h"
+#include "RooProfileLL.h"
+#include "RooDataSet.h"
+#include "RooAbsData.h"
+*/
 
 ClassImp(RooStats::LikelihoodInterval) ;
 
@@ -93,8 +100,8 @@ LikelihoodInterval::LikelihoodInterval(const char* name, RooAbsReal* lr, RooArgS
    ConfInterval(name,name)
 {
    // Alternate constructor
-   fLikelihoodRatio = lr;
-   fParameters = params;
+  fLikelihoodRatio = lr;
+  fParameters = params;
 }
 
 //____________________________________________________________________
@@ -102,14 +109,15 @@ LikelihoodInterval::LikelihoodInterval(const char* name, const char* title, RooA
    ConfInterval(name,title)
 {
    // Alternate constructor
-   fLikelihoodRatio = lr;
-   fParameters = params;
+  fLikelihoodRatio = lr;
+  fParameters = params;
 }
 
 //____________________________________________________________________
 LikelihoodInterval::~LikelihoodInterval()
 {
    // Destructor
+  if(fLikelihoodRatio) delete fLikelihoodRatio;
 
 }
 
@@ -133,6 +141,29 @@ Bool_t LikelihoodInterval::IsInInterval(RooArgSet &parameterPoint)
     return false;
   }
 
+  
+  /*
+  ///////////////////////////
+  // Debugging
+  RooProfileLL* profile = (RooProfileLL*) fLikelihoodRatio;
+  profile->nll().Print();
+  //  profile->nll().printCompactTree();
+  RooNLLVar* nll = (RooNLLVar*) (profile->getComponents()->find("nll_modelWithConstraints_modelWithConstraintsData"));
+  RooDataSet* tmpData = (RooDataSet*) &(nll->data());
+  nll->Print();
+  std::cout << "nll = " << nll << " data = " << &(nll->data()) <<  " " << tmpData << std::endl;
+  tmpData->Print();
+  for(int i=0; i<tmpData->numEntries(); ++i)
+    tmpData->get(i)->Print("v");
+
+  std::cout<< "best fit params = " << std::endl;
+  profile->bestFitParams().Print("v");
+
+  SetParameters(&(profile->bestFitParams()), fLikelihoodRatio->getVariables() );
+  //////////////////////////
+  */
+
+
   // set parameters
   SetParameters(&parameterPoint, fLikelihoodRatio->getVariables() );
 
@@ -143,15 +174,21 @@ Bool_t LikelihoodInterval::IsInInterval(RooArgSet &parameterPoint)
     return true;
   }
 
-  /*
-  std::cout << "in likelihood interval: LR = " <<
-    fLikelihoodRatio->getVal() << 
+
+  /*  
+    std::cout << "in likelihood interval: LR = " <<
+      fLikelihoodRatio->getVal() << " " << 
     " ndof = " << parameterPoint.getSize() << 
     " alpha = " << 1.-fConfidenceLevel << " cl = " << fConfidenceLevel <<
     " with P = " <<
     TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.getSize())  <<
     " and CL = " << fConfidenceLevel << std::endl;
-  */
+
+    parameterPoint.Print("v");
+    fLikelihoodRatio->getVariables()->Print("v");
+    //    fLikelihoodRatio->printCompactTree();
+    */
+    
 
   // here we use Wilks' theorem.
   if ( TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.getSize()) < (1.-fConfidenceLevel) )
@@ -210,7 +247,7 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param )
   double step = thisArgVal - myarg->getMin();
   double lastDiff = newProfile->getVal() - target, diff=lastDiff;
   int nIterations = 0, maxIterations = 20;
-  std::cout << "about to do binary search" << std::endl;
+  //  std::cout << "about to do binary search" << std::endl;
   while(fabs(diff) > 0.01 && nIterations < maxIterations){
     nIterations++;
     if(diff<0)

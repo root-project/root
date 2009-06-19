@@ -6,6 +6,7 @@
 #include "RooAddPdf.h"
 #include "RooDataSet.h"
 #include "RooExtendPdf.h"
+#include "RooConstVar.h"
 
 #ifndef __CINT__  // problem including this file with CINT
 #include "RooGlobalFunc.h"
@@ -53,6 +54,7 @@ void rs201_hybridcalculator(int ntoys = 3000)
   /// build the prior PDF on the parameters to be integrated
   // gaussian contraint on the background yield ( N_B = 40 +/- 10  ie. 25% )
   RooGaussian bkg_yield_prior("bkg_yield_prior","",bkg_yield,RooConst(bkg_yield.getVal()),RooConst(10.));
+
   RooArgSet nuisance_parameters(bkg_yield); // variables to be integrated
 
   /// generate a data sample

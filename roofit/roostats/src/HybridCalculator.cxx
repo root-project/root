@@ -94,13 +94,13 @@ HybridCalculator::HybridCalculator( const char *name,
                                     RooAbsPdf& sbModel,
                                     RooAbsPdf& bModel,
                                     RooArgList& observables,
-                                    RooArgSet& nuisance_parameters,
-                                    RooAbsPdf& priorPdf ) :
+                                    RooArgSet* nuisance_parameters,
+                                    RooAbsPdf* priorPdf ) :
    TNamed(name,title),
    fSbModel(&sbModel),
    fBModel(&bModel),
-   fParameters(&nuisance_parameters),
-   fPriorPdf(&priorPdf),
+   fParameters(nuisance_parameters),
+   fPriorPdf(priorPdf),
    fData(0),
    fWS(0)   
 {
@@ -114,7 +114,7 @@ HybridCalculator::HybridCalculator( const char *name,
 
    SetTestStatistics(1); /// set to default
    SetNumberOfToys(1000); 
-   UseNuisance(true); 
+   if (priorPdf) UseNuisance(true); 
 
    // this->Print();
    /* if ( _verbose ) */ //this->PrintMore("v"); /// TO DO: add the verbose mode

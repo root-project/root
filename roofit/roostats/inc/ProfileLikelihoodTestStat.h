@@ -59,6 +59,9 @@ namespace RooStats {
      virtual ~ProfileLikelihoodTestStat() {
        //       delete fRand;
        //       delete fTestStatistic;
+       if(fProfile) delete fProfile;
+       if(fNll) delete fNll;
+       if(fCachedBestFitParams) delete fCachedBestFitParams;
      }
     
      // Main interface to evaluate the test statistic on a dataset
@@ -85,11 +88,21 @@ namespace RooStats {
 	 if(fProfile) delete fProfile; 
 	 if (fNll)    delete fNll;
 
+	 /*
 	 RooNLLVar* nll = new RooNLLVar("nll","",*fPdf,data, RooFit::Extended());
 	 fNll = nll;
 	 fProfile = new RooProfileLL("pll","",*nll, paramsOfInterest);
+	 */
+	 RooArgSet* constrainedParams = fPdf->getParameters(data);
+	 RemoveConstantParameters(constrainedParams);
 
+	 RooNLLVar* nll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*constrainedParams));
+	 fNll=nll;
+	 fProfile = (RooProfileLL*) nll->createProfile(paramsOfInterest);
+	 delete constrainedParams;
 
+	 //	 paramsOfInterest.Print("v");
+	 
 	 // set parameters to previous best fit params, to speed convergence
 	 // and to avoid local minima
 	 if(fCachedBestFitParams){
@@ -152,7 +165,6 @@ namespace RooStats {
        SetParameters(&paramsOfInterest, fProfile->getParameters(data) );
 
        Double_t value = fProfile->getVal();
-       RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
        /*
        // for debugging caching
@@ -172,22 +184,35 @@ namespace RooStats {
 	 //	      << " < 0, indicates false min.  Try again."<<endl;
 	 delete fNll;
 	 delete fProfile;
+	 /*
 	 RooNLLVar* nll = new RooNLLVar("nll","",*fPdf,data, RooFit::Extended());
 	 fNll = nll;
 	 fProfile = new RooProfileLL("pll","",*nll, paramsOfInterest);
+	 */
+
+	 RooArgSet* constrainedParams = fPdf->getParameters(data);
+	 RemoveConstantParameters(constrainedParams);
+
+	 RooNLLVar* nll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*constrainedParams));
+	 fNll=nll;
+	 fProfile = (RooProfileLL*) nll->createProfile(paramsOfInterest);
+	 delete constrainedParams;
 
 	 // set parameters to point being requested
 	 SetParameters(&paramsOfInterest, fProfile->getParameters(data) );
 
 	 value = fProfile->getVal();
-	 //	 cout << "now profileLL = " << value << endl;
+	 //cout << "now profileLL = " << value << endl;
        }
+       //       cout << "now profileLL = " << value << endl;
+       RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
        return value;
      }
 
       // Get the TestStatistic
       virtual const RooAbsArg* GetTestStatistic()  const {return fProfile;}  
     
+      virtual const TString GetVarName() const {return "Profile Likelihood Ratio";}
       
    private:
       RooProfileLL* fProfile;

@@ -45,8 +45,10 @@ END_HTML
 
 #include "RooStats/ProfileLikelihoodTestStat.h"
 #include "RooStats/NeymanConstruction.h"
+#include "RooStats/RooStatsUtils.h"
 
 #include "RooDataSet.h"
+#include "RooDataHist.h"
 #include "RooGlobalFunc.h"
 #include "RooDataHist.h"
 #include "TFile.h"
@@ -69,6 +71,15 @@ FeldmanCousins::FeldmanCousins() {
   fPointsToTest = 0;
   fNbins = 10;
   fFluctuateData=true;
+  fDoProfileConstruction=true;
+}
+
+//_______________________________________________________
+FeldmanCousins::~FeldmanCousins() {
+   // destructor
+  if(fOwnsWorkspace && fWS) delete fWS;
+  if(fPointsToTest) delete fPointsToTest;
+  if(fTestStatSampler) delete fTestStatSampler;
 }
 
 //_______________________________________________________
@@ -82,7 +93,8 @@ void FeldmanCousins::CreateTestStatSampler() const{
 
     // get parameters (params of interest + nuisance)
     RooArgSet* parameters = pdf->getParameters(data);
-    //RooArgSet* parameters = fPOI;
+    RemoveConstantParameters(parameters);
+   //RooArgSet* parameters = fPOI;
 
     // use the profile likelihood ratio as the test statistic
     ProfileLikelihoodTestStat* testStatistic = new ProfileLikelihoodTestStat(*pdf);
@@ -91,6 +103,7 @@ void FeldmanCousins::CreateTestStatSampler() const{
     fTestStatSampler = new ToyMCSampler(*testStatistic) ;
     fTestStatSampler->SetPdf(*pdf);
     fTestStatSampler->SetParameters(*parameters);
+    //    fTestStatSampler->SetNuisanceParameters(*parameters);
     fTestStatSampler->SetNEventsPerToy(data->numEntries());
     fTestStatSampler->SetNToys((int) (50./fSize)); // adjust nToys so that at least 50 events outside acceptance region
     fTestStatSampler->SetExtended(fFluctuateData);
@@ -100,7 +113,10 @@ void FeldmanCousins::CreateTestStatSampler() const{
     } else{
       cout << "ntoys per point: adaptive" << endl;
     }
-    cout << "nevents per toy taken from expectation" << endl;
+    if(fFluctuateData)
+      cout << "nEvents per toy will fluctuate about  expectation" << endl;
+    else
+      cout << "nEvents per toy will not fluctuate, will always be " << data->numEntries() << endl;
   }
 }
 
@@ -116,7 +132,8 @@ void FeldmanCousins::CreateParameterPoints() const{
 
     // get parameters (params of interest + nuisance)
     RooArgSet* parameters = pdf->getParameters(data);
-
+    RemoveConstantParameters(parameters);
+    
     TIter it = parameters->createIterator();
     RooRealVar *myarg; 
     while ((myarg = (RooRealVar *)it.Next())) { 
@@ -124,8 +141,62 @@ void FeldmanCousins::CreateParameterPoints() const{
       myarg->setBins(fNbins);
     }
 
-    fPointsToTest= new RooDataHist("parameterScan", "", *parameters);
-    cout << "# points to test = " << fPointsToTest->numEntries() << endl;
+    //    fPointsToTest= new RooDataHist("parameterScan", "", *fPOI);
+
+
+    if( ! fPOI->equals(*parameters) && fDoProfileConstruction ) {
+      // if parameters include nuisance parameters, do profile construction
+      cout << " nuisance parameters, will do profile construction" << endl;
+
+      TIter it = fPOI->createIterator();
+      RooRealVar *myarg; 
+      while ((myarg = (RooRealVar *)it.Next())) { 
+	if(!myarg) continue;
+	myarg->setBins(fNbins);
+      }
+
+      RooDataHist* parameterScan = new RooDataHist("parameterScan", "", *fPOI);
+      cout << "# points to test = " << parameterScan->numEntries() << endl;
+      // make profile construction
+      RooArgSet* tmpPoint;
+      // loop over points to test
+      RooFit::MsgLevel previous  = RooMsgService::instance().globalKillBelow();
+      RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
+      RooAbsReal* nll = pdf->createNLL(*data, Constrain(*parameters));
+      RooAbsReal* profile = nll->createProfile(*fPOI);
+      
+      RooDataSet* profileConstructionPoints = new RooDataSet("profileConstruction",
+							     "profileConstruction",
+							     *parameters);
+
+
+      for(Int_t i=0; i<parameterScan->numEntries(); ++i){
+	// get a parameter point from the list of points to test.
+	tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
+	
+	RooStats::SetParameters(tmpPoint, parameters);
+	profile->getVal();
+
+	profileConstructionPoints->add(*parameters);
+	
+	delete tmpPoint;
+      }   
+      RooMsgService::instance().setGlobalKillBelow(previous) ;
+      delete profile; 
+      delete nll;
+      fPointsToTest = profileConstructionPoints;
+      cout << "# points to test = " << fPointsToTest->numEntries() << endl;
+      delete parameterScan;
+    } else{
+      cout << " no nuisance parameters" << endl;
+      RooDataHist* parameterScan = new RooDataHist("parameterScan", "", *parameters);
+      cout << "# points to test = " << parameterScan->numEntries() << endl;
+
+      fPointsToTest = parameterScan;
+    }
+
+    delete parameters;
+
   }
 }
 

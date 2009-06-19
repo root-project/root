@@ -39,7 +39,7 @@ namespace RooStats {
 
    public:
      FeldmanCousins();
-     virtual ~FeldmanCousins() {}
+     virtual ~FeldmanCousins();
     
       // Main interface to get a ConfInterval (will be a PointSetInterval)
       virtual ConfInterval* GetInterval() const;
@@ -49,14 +49,18 @@ namespace RooStats {
       // Get the Confidence level for the test
       virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
       // set a workspace that owns all the necessary components for the analysis
-      virtual void SetWorkspace(RooWorkspace& ws) {fWS = &ws;}
+      virtual void SetWorkspace(RooWorkspace& ws) {
+	if(fOwnsWorkspace && fWS) delete fWS;
+	fOwnsWorkspace = false;
+	fWS = &ws;
+      }
 
       // Set the DataSet, add to the the workspace if not already there
       virtual void SetData(RooAbsData& data) {
 	if(&data){
 	  fWS->import(data);
 	  fDataName = data.GetName();
-	  fWS->Print();
+	  //	  fWS->Print();
 	}
       }
       // Set the Pdf, add to the the workspace if not already there
@@ -115,6 +119,7 @@ namespace RooStats {
       bool fAdaptiveSampling; // controls use of adaptive sampling algorithm
       Int_t fNbins; // number of samples per variable
       Bool_t fFluctuateData;  // tell ToyMCSampler to fluctuate number of entries in dataset
+      Bool_t fDoProfileConstruction; // instead of full construction over nuisance parametrs, do profile
    protected:
       ClassDef(FeldmanCousins,1)   // Interface for tools setting limits (producing confidence intervals)
    };

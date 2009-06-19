@@ -55,6 +55,9 @@ namespace RooStats {
     // check if parameters are correct. (dummy implementation to start)
     Bool_t CheckParameters(RooArgSet&) const ;
 
+    // Method to return lower limit on a given parameter 
+    Double_t LowerLimit(RooRealVar& param) ;
+    Double_t UpperLimit(RooRealVar& param) ;
 
     
   protected:

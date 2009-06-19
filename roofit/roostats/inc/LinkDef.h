@@ -33,10 +33,17 @@
 #pragma link C++ class RooStats::LikelihoodInterval+;
 #pragma link C++ class RooStats::PointSetInterval+;
 
+#pragma link C++ class RooStats::ModelConfig+;
+
 #pragma link C++ class RooStats::IntervalCalculator+; // interface, not concrete
 #pragma link C++ class RooStats::HypoTestCalculator+; // interface, not concrete
 #pragma link C++ class RooStats::CombinedCalculator+; // interface, not concrete
 #pragma link C++ class RooStats::ProfileLikelihoodCalculator+; 
+
+#pragma link C++ class RooStats::MCMCCalculator+; 
+#pragma link C++ class RooStats::MCMCInterval+; 
+#pragma link C++ class RooStats::ProposalFunction+; 
+#pragma link C++ class RooStats::UniformProposal+; 
 
 #pragma link C++ class RooStats::HybridCalculator+;
 #pragma link C++ class RooStats::HybridPlot+;
@@ -63,8 +70,10 @@
 
 #pragma link C++ class RooStats::BernsteinCorrection+;
 
+#pragma link C++ class RooStats::SamplingDistPlot+;
+#pragma link C++ class RooStats::LikelihoodIntervalPlot+;
 
-#pragma link C++ function RooStats::NumberCountingUtils::BinomialExpZ(Double_t,Double_t,Double_t);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialExpZ(Double_t , Double_t ,Double_t);
 #pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauExpZ(Double_t,Double_t,Double_t);
 #pragma link C++ function RooStats::NumberCountingUtils::BinomialObsZ(Double_t,Double_t,Double_t);
 #pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauObsZ(Double_t,Double_t,Double_t);
@@ -75,5 +84,7 @@
 
 #pragma link C++ function RooStats::PValueToSignificance(Double_t);
 #pragma link C++ function RooStats::SignificanceToPValue(Double_t);
+#pragma link C++ function RooStats::RemoveConstantParameters(RooArgSet* set);
+#pragma link C++ function RooStats::SetParameters(const RooArgSet* , RooArgSet* );
 
 #endif

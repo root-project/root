@@ -48,10 +48,11 @@ END_HTML
 
 #include "RooGlobalFunc.h"
 #include "RooWorkspace.h"
+#include "RooMsgService.h"
+#include "RooAbsPdf.h"
 #include "TRandom.h"
 
 #include "RooDataSet.h"
-#include "RooAbsPdf.h"
 
 namespace RooStats {
 
@@ -67,14 +68,18 @@ namespace RooStats {
       fPdfName = "";
       fPOI = 0;
       fNuisParams=0;
+      fObservables=0;
       fExtended = kTRUE;
       fRand = new TRandom();
       fCounter=0;
+      fVarName = fTestStat->GetVarName();
+      fLastDataSet = 0;
     }
 
     virtual ~ToyMCSampler() {
       if(fOwnsWorkspace) delete fWS;
       if(fRand) delete fRand;
+      if(fLastDataSet) delete fLastDataSet;
     }
     
     // Extended interface to append to sampling distribution more samples
@@ -96,13 +101,12 @@ namespace RooStats {
       return newSamples;
     }
 
-     // Main interface to get a SamplingDistribution
+    // Main interface to get a SamplingDistribution
     virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& allParameters) {
       std::vector<Double_t> testStatVec;
       //       cout << " about to generate sampling dist " << endl;
 
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
-      RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
       for(Int_t i=0; i<fNtoys; ++i){
 	//cout << " on toy number " << i << endl;
@@ -112,41 +116,58 @@ namespace RooStats {
 
 	RooDataSet* toydata = (RooDataSet*)GenerateToyData(allParameters);
 	testStatVec.push_back( fTestStat->Evaluate(*toydata, allParameters) );
-	delete toydata;
+
+	// want to clean up memory, but delete toydata causes problem with 
+	// nll->setData(data, noclone) because pointer to last data set is no longer valid
+	//	delete toydata; 
+
+	// instead, delete previous data set
+	if(fLastDataSet) delete fLastDataSet;
+	fLastDataSet = toydata;
       }
+     
 
       //      cout << " generated sampling dist " << endl;
-      return new SamplingDistribution( MakeName(allParameters),
-				      "Sampling Distribution of Test Statistic", testStatVec );
+      return new SamplingDistribution( "temp",//MakeName(allParameters).c_str(),
+				       "Sampling Distribution of Test Statistic", testStatVec, fVarName );
     } 
 
      virtual RooAbsData* GenerateToyData(RooArgSet& allParameters) const {
+       // This method generates a toy dataset for the given parameter point.
+
 
        //       cout << "fNevents = " << fNevents << endl;
        RooAbsPdf* pdf = fWS->pdf(fPdfName);
-       // need a nicer way to specify observables in the dataset
-       RooArgSet* observables = pdf->getVariables();
+       if(!fObservables){
+	 cout << "Observables not specified in ToyMCSampler, will try to determine.  "
+	      << "Will ignore all constant parameters, parameters of interest, and nuisance parameters." << endl;
+	 RooArgSet* observables = pdf->getVariables();
+	 RemoveConstantParameters(observables); // observables might be set constant, this is just a guess
 
-       // Set the parameters to desired values for generating toys
-       RooStats::SetParameters(&allParameters, observables);
 
-       if(fPOI) observables->remove(*fPOI, kFALSE, kTRUE);
-       if(fNuisParams) observables->remove(*fNuisParams, kFALSE, kTRUE);
-
-       // observables->Print("verbose");
+	 if(fPOI) observables->remove(*fPOI, kFALSE, kTRUE);
+	 if(fNuisParams) observables->remove(*fNuisParams, kFALSE, kTRUE);
+	 cout << "will use the following as observables when generating data" << endl;
+	 observables->Print();
+	 fObservables=observables;
+       }
 
        //fluctuate the number of events if fExtended is on.  
        // This is a bit slippery for number counting expts. where entry in data and
        // model is number of events, and so number of entries in data always =1.
        Int_t nEvents = fNevents;
        if(fExtended) {
-	 if( pdf->expectedEvents(*observables) > 0){
+	 if( pdf->expectedEvents(*fObservables) > 0){
 	   // if PDF knows expected events use it instead
-	   nEvents = fRand->Poisson(pdf->expectedEvents(*observables));
+	   nEvents = fRand->Poisson(pdf->expectedEvents(*fObservables));
 	 } else{
 	   nEvents = fRand->Poisson(fNevents);
 	 }
        }
+
+       // Set the parameters to desired values for generating toys
+       RooArgSet* parameters = pdf->getParameters(fObservables);
+       RooStats::SetParameters(&allParameters, parameters);
 
        /*       
 	 cout << "expected events = " <<  pdf->expectedEvents(*observables) 
@@ -155,33 +176,28 @@ namespace RooStats {
 	    << "generating" << nEvents << " events " << endl;
        */
        
+       RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
+       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
 
-       RooAbsData* data = (RooAbsData*)pdf->generate(*observables, nEvents);
-       delete observables;
-       //       delete pdf;
+       //       cout << "nEvents = " << nEvents << endl;
+       RooAbsData* data = (RooAbsData*)pdf->generate(*fObservables, nEvents);
+
+       RooMsgService::instance().setGlobalKillBelow(level) ;
+       delete parameters;
        return data;
      }
 
      // helper method to create meaningful names for sampling dist
-     const char* MakeName(RooArgSet& /*params*/){
-       /*
-       std::string name;
-       TIter      itr = params.createIterator();
-       RooRealVar* myarg;
-       while ((myarg = (RooRealVar *)itr.Next())) { 
-	 name += myarg->GetName();
-	 std::stringstream str;
-	 str<<"_"<< myarg->getVal() << "__";
-
-	 name += str.str();
-       }
-       */
-
+     string MakeName(RooArgSet& /*params*/){
        std::stringstream str;
        str<<"SamplingDist_"<< fCounter;
        fCounter++;
-       return str.str().c_str();
-       
+
+       // WVE -- Return pointer to static buffer
+       static char buf[1024] ;
+       strcpy(buf,str.str().c_str()) ;
+
+       return buf ;       
      }
 
       // Main interface to evaluate the test statistic on a dataset
@@ -240,6 +256,8 @@ namespace RooStats {
       virtual void SetParameters(RooArgSet& set) {fPOI = &set;}
       // specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(RooArgSet& set) {fNuisParams = &set;}
+      // specify the observables in the dataset (needed to evaluate the test statistic)
+      virtual void SetObservables(RooArgSet& set) {fObservables = &set;}
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
@@ -259,13 +277,17 @@ namespace RooStats {
       const char* fDataName; // name of data set in workspace
       RooArgSet* fPOI; // RooArgSet specifying  parameters of interest for interval
       RooArgSet* fNuisParams;// RooArgSet specifying  nuisance parameters for interval
-      TestStatistic* fTestStat;
-      Int_t fNtoys;
-      Int_t fNevents;
-      Bool_t fExtended;
-      TRandom* fRand;
-      
-      Int_t fCounter;
+      mutable RooArgSet* fObservables; // RooArgSet specifying the observables in the dataset (needed to evaluate the test statistic)
+      TestStatistic* fTestStat; // pointer to the test statistic that is being sampled
+      Int_t fNtoys; // number of toys to generate
+      Int_t fNevents; // number of events per toy (may be ignored depending on settings)
+      Bool_t fExtended; // if nEvents should fluctuate
+      TRandom* fRand; // random generator
+      TString fVarName; // name of test statistic
+
+      Int_t fCounter; // counter for naming sampling dist objects
+
+      RooDataSet* fLastDataSet; // work around for memory issues in nllvar->setData(data, noclone)
 
    protected:
       ClassDef(ToyMCSampler,1)   // A simple implementation of the TestStatSampler interface

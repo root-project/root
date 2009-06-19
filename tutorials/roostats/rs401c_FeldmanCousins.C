@@ -20,6 +20,8 @@
 #include "RooConstVar.h"
 #include "RooAddition.h"
 
+#include "RooDataHist.h"
+
 #include "RooPoisson.h"
 #include "RooPlot.h"
 
@@ -108,7 +110,7 @@ void rs401c_FeldmanCousins()
      // get a parameter point from the list of points to test.
     tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
 
-    if(false){
+    if(true){
       // use belt
       cout << "belt:" << tmpPoint->getRealValue("mu")
 	   << belt->GetAcceptanceRegionMin(*tmpPoint) 

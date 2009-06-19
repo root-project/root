@@ -46,15 +46,15 @@ namespace RooStats {
                        RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
                        RooArgList& observables,
-                       RooArgSet& nuisance_parameters,
-                       RooAbsPdf& prior_pdf);
+                       RooArgSet* nuisance_parameters = 0,
+                       RooAbsPdf* prior_pdf = 0);
 
       /// Constructor for HybridCalculator using  a data set and pdf instances
       HybridCalculator(RooAbsData& data, 
                        RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
-                       RooArgSet* nuisance_parameters,
-                       RooAbsPdf* prior_pdf);
+                       RooArgSet* nuisance_parameters = 0,
+                       RooAbsPdf* prior_pdf = 0);
 
       /// Constructor for HybridCalculator using name, title, a data set and pdf instances
       HybridCalculator(const char *name,
@@ -62,8 +62,8 @@ namespace RooStats {
                        RooAbsData& data, 
                        RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
-                       RooArgSet* nuisance_parameters,
-                       RooAbsPdf* prior_pdf);
+                       RooArgSet* nuisance_parameters = 0,
+                       RooAbsPdf* prior_pdf = 0);
 
 
    private: // not yet available 

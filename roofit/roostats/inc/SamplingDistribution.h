@@ -32,12 +32,12 @@ namespace RooStats {
    public:
 
     // Constructor for SamplingDistribution
-    SamplingDistribution(const char *name,const char *title, std::vector<Double_t>& samplingDist);
+    SamplingDistribution(const char *name,const char *title, std::vector<Double_t>& samplingDist, const TString varName = 0);
     SamplingDistribution(const char *name,const char *title,
-			 std::vector<Double_t>& samplingDist, std::vector<Double_t>& sampleWeights);
+			 std::vector<Double_t>& samplingDist, std::vector<Double_t>& sampleWeights, const TString varName = 0);
 
 
-    SamplingDistribution(const char *name,const char *title);
+    SamplingDistribution(const char *name,const char *title, const TString varName = 0);
 
     // Default constructor for SamplingDistribution
     SamplingDistribution();
@@ -62,14 +62,18 @@ namespace RooStats {
     Int_t GetSize() const{return fSamplingDist.size();}
 
     // Get test statistics values
-    std::vector<Double_t> GetSamplingDistribution(){return fSamplingDist;}
+    std::vector<Double_t> GetSamplingDistribution() const {return fSamplingDist;}
     // Get the sampling weights 
-    std::vector<Double_t> GetSampleWeights(){return fSampleWeights;}
+    std::vector<Double_t> GetSampleWeights() const {return fSampleWeights;}
+
+    const TString GetVarName() const {return fVarName;}
     
   private:
     std::vector<Double_t> fSamplingDist; // vector of points for the sampling distribution
     std::vector<Double_t> fSampleWeights; // vector of weights for the samples
     // store a RooRealVar that this distribution corresponds to?
+
+    TString fVarName;
     
   protected:
     

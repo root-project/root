@@ -20,7 +20,6 @@
  *     George H. Lewis, Kyle Cranmer: generalized for weighted events
  * 
  * Porting to RooStats (with permission) by Kyle Cranmer, July 2008
- *  documentation for the multiple versions of fillSplot are needed.
  *
  *****************************************************************************/
 
@@ -40,11 +39,11 @@
 //  so every event contributes to the distribution.
 //
 // [Usage]
-// To use this class, you first must perform your fit twice:  
-// The first time perform your nominal fit.
-// For the second fit, fix your parameters at the minimum, float only your yields 
-// (normalizations), and remove any PDFs correlated with the variable of interest.
-//  Be sure to save the RooFitResult.  
+// To use this class, you first must have a pdf that includes
+// yields for (possibly several) different species.
+// Create an instance of the class by supplying a data set,
+// the pdf, and a list of the yield variables.  The SPlot Class
+// will calculate SWeights and include these as columns in the RooDataSet.
 //END_HTML
 //
 
@@ -55,7 +54,10 @@
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h"
-#include "RooSimultaneous.h"
+#include "RooGlobalFunc.h"
+#include "TTree.h"
+#include "RooStats/RooStatsUtils.h" 
+
 
 #include "TMatrixD.h"
 
@@ -65,787 +67,558 @@ ClassImp(RooStats::SPlot) ;
 using namespace RooStats;
 
 
+
+//__________________________________________________________________
+SPlot::~SPlot()
+{
+  if(fSData)
+    delete fSData;
+
+}
+
 //____________________________________________________________________
-SPlot::SPlot() :
-  TH1F()
+SPlot::SPlot():
+  TNamed()
 {
   // Default constructor
+
+  RooArgList Args;
+
+  fSWeightVars = Args;
+
+  fSData = NULL;
+
 }
 
-//____________________________________________________________________
-SPlot::SPlot(const SPlot &other) :
-   TH1F(other)
+//_________________________________________________________________
+SPlot::SPlot(const char* name, const char* title):
+  TNamed(name, title)
 {
+
+  RooArgList Args;
+
+  fSWeightVars = Args;
+
+  fSData = NULL;
+
 }
 
-//____________________________________________________________________
-SPlot::SPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax) :
-   TH1F(name, title, nbins, xmin, xmax)
+//___________________________________________________________________
+SPlot::SPlot(const char* name, const char* title, const RooDataSet &data):
+  TNamed(name, title)
 {
-   // Constructor
+  //Constructor from a RooDataSet
+  //No sWeighted variables are present
+  
+  RooArgList Args;
+  
+  fSWeightVars = Args;
+
+  fSData = (RooDataSet*) &data;
 }
 
 
 //____________________________________________________________________
-RooDataSet* SPlot::AddSWeightToData(const RooSimultaneous* pdf,
-                                    const RooArgList &yieldsTmp,
-                                    RooDataSet &data, const RooArgSet &projDeps) 
+SPlot::SPlot(const SPlot &other):
+  TNamed(other)
+{
+  // Copy Constructor from another SPlot
+  
+  RooArgList Args = (RooArgList) other.GetSWeightVars();
+  
+  fSWeightVars.addClone(Args);
+
+  fSData = (RooDataSet*) other.GetSDataSet();
+  
+}
+
+
+//______________________________________________________________________
+SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* pdf, 
+	     const RooArgList &yieldsList, const RooArgSet &projDeps, 
+	     bool includeWeights, bool cloneData, const char* newName):
+  TNamed(name, title)
+{
+  if(cloneData == 1)
+    fSData = (RooDataSet*) data.Clone(newName);
+  else
+    fSData = (RooDataSet*) &data;
+
+  //Construct a new SPlot class,
+  //calculate sWeights, and include them
+  //in the RooDataSet of this class.
+
+  this->AddSWeight(pdf, yieldsList, projDeps, includeWeights);
+}
+
+
+//___________________________________________________________________________
+RooDataSet* SPlot::SetSData(RooDataSet* data)
+{
+  if(data)    {
+    fSData = (RooDataSet*) data;
+    return fSData;
+  }  else
+    return NULL;
+}
+
+//__________________________________________________________________________
+RooDataSet* SPlot::GetSDataSet() const
+{
+  return fSData;
+}  
+
+//____________________________________________________________________________
+Double_t SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
+{
+
+  if(numEvent > fSData->numEntries() )
+    {
+      coutE(InputArguments)  << "Invalid Entry Number" << endl;
+      return -1;
+    }
+
+  if(numEvent < 0)
+    {
+      coutE(InputArguments)  << "Invalid Entry Number" << endl;
+      return -1;    
+    }
+
+  Double_t totalYield = 0;
+
+  std::string varname(sVariable);
+  varname += "_sw";
+
+
+  if(fSWeightVars.find(sVariable) )
+    {
+      RooArgSet Row(*fSData->get(numEvent));
+      totalYield += Row.getRealValue(sVariable); 
+      
+      return totalYield;
+    }
+
+  if( fSWeightVars.find(varname.c_str())  )
+    {
+
+      RooArgSet Row(*fSData->get(numEvent));
+      totalYield += Row.getRealValue(varname.c_str() ); 
+      
+      return totalYield;
+    }
+  
+  else
+    coutE(InputArguments) << "InputVariable not in list of sWeighted variables" << endl;
+    
+  return -1;
+}
+
+
+//____________________________________________________________________
+Double_t SPlot::GetSumOfEventSWeight(Int_t numEvent) const
+{
+
+  //Sum the SWeights for a particular event.
+  //This sum should equal the total weight of that event.
+  //This method is intended to be used as a check.
+
+
+  if(numEvent > fSData->numEntries() )
+    {
+      coutE(InputArguments)  << "Invalid Entry Number" << endl;
+      return -1;
+    }
+
+  if(numEvent < 0)
+    {
+      coutE(InputArguments)  << "Invalid Entry Number" << endl;
+      return -1;    
+    }
+
+  Int_t numSWeightVars = this->GetNumSWeightVars();
+
+  Double_t eventSWeight = 0;
+
+  RooArgSet Row(*fSData->get(numEvent));
+  
+  for (Int_t i = 0; i < numSWeightVars; i++) 
+    eventSWeight += Row.getRealValue(fSWeightVars.at(i)->GetName() );
+ 
+  return  eventSWeight;
+}
+
+
+//_________________________________________________________________
+Double_t SPlot::GetYieldFromSWeight(const char* sVariable) const
+{
+
+
+  //Sum the SWeights for a particular specie over all events
+  //This should equal the total (weighted) yield of that specie
+  //This method is intended as a check.
+
+  Double_t totalYield = 0;
+
+  std::string varname(sVariable);
+  varname += "_sw";
+
+
+  if(fSWeightVars.find(sVariable) )
+    {
+      for(Int_t i=0; i < fSData->numEntries(); i++)
+	{
+	  RooArgSet Row(*fSData->get(i));
+	  totalYield += Row.getRealValue(sVariable); 
+	}
+      
+      return totalYield;
+    }
+
+  if( fSWeightVars.find(varname.c_str())  )
+    {
+      for(Int_t i=0; i < fSData->numEntries(); i++)
+	{
+	  RooArgSet Row(*fSData->get(i));
+	  totalYield += Row.getRealValue(varname.c_str() ); 
+	}
+      
+      return totalYield;
+    }
+  
+  else
+    coutE(InputArguments) << "InputVariable not in list of sWeighted variables" << endl;
+    
+  return -1;
+}
+
+
+//______________________________________________________________________
+RooArgList SPlot::GetSWeightVars() const
+{
+   
+  //Return a RooArgList containing the SWeights
+
+  RooArgList Args = fSWeightVars;
+   
+  return  Args;
+   
+}
+
+//__________________________________________________________________ 
+Int_t SPlot::GetNumSWeightVars() const
+{
+  //Return the number of SWeights
+  //In other words, return the number of
+  //species that we are trying to extract.
+  
+  RooArgList Args = fSWeightVars;
+  
+  return Args.getSize();
+}
+
+
+//____________________________________________________________________
+void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp, 
+			const RooArgSet &projDeps, bool includeWeights) 
 {  
 
-   // Method which adds the sWeights to the dataset.
-   // input is the PDF, a RooArgList of the yields (floating)
-   // the dataset to which the sWeights should be added,
-   // and a RooArgSet of the projDeps (needs better description).
+  //
+  // Method which adds the sWeights to the dataset.
+  // Input is the PDF, a RooArgList of the yields (floating)
+  // and a RooArgSet of the projDeps.
+  //
+  // The projDeps will not be normalized over when calculating the SWeights
+  // and will be considered parameters, not observables.
+  //
+  // The SPlot will contain two new variables for each specie of name "varname":
+  //
+  // L_varname is the value of the pdf for the variable "varname" at values of this event
+  // varname_sw is the value of the sWeight for the variable "varname" for this event
+  
+  // Find Parameters in the PDF to be considered fixed when calculating the SWeights
+  // and be sure to NOT include the yields in that list
+  //
 
-   Int_t nspec = yieldsTmp.getSize();
-   RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(kFALSE);
 
-   // The list of variables to normalize over when calculating PDF values.
-   RooArgSet vars(*data.get());
-   vars.remove(projDeps, kTRUE, kTRUE);
+  RooFit::MsgLevel currentLevel =  RooMsgService::instance().globalKillBelow();
+  
+  RooArgList* constParameters = (RooArgList*)pdf->getParameters(fSData) ;
+  constParameters->remove(yieldsTmp, kTRUE, kTRUE);
+  
 
-   // Attach data set
-   const_cast<RooSimultaneous*>(pdf)->attachDataSet(data);
-    
-   // first calculate the pdf values for all species and all events
-   std::vector<RooRealVar*> yieldvars ;
-   RooArgSet* parameters = pdf->getParameters(&data) ;
-   //parameters->Print("V") ;
+  // Set these parameters constant and store them so they can later
+  // be set to not constant
+  std::vector<RooRealVar*> constVarHolder;  
 
-   std::vector<Double_t> yieldvalues ;
-   for (Int_t k = 0; k < nspec; ++k) {
+  for(Int_t i = 0; i < constParameters->getSize(); i++) 
+    {
+      RooRealVar* varTemp = ( dynamic_cast<RooRealVar*>( constParameters->at(i) ) );
+      if( varTemp->isConstant() == 0 )
+	{
+	  varTemp->setConstant();
+	  constVarHolder.push_back(varTemp);
+	}
+    }
+  
+  // Fit yields to the data with all other variables held constant
+  // This is necessary because SPlot assumes the yields minimixe -Log(likelihood)
+
+  pdf->fitTo(*fSData, RooFit::Extended(kTRUE), RooFit::SumW2Error(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1) );
+
+  // Hold the value of the fitted yields
+  std::vector<double> yieldsHolder;
+  
+  for(Int_t i = 0; i < yieldsTmp.getSize(); i++)   
+    yieldsHolder.push_back( ((RooRealVar*) yieldsTmp.at(i))->getVal());
+  
+  Int_t nspec = yieldsTmp.getSize();
+  RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(kFALSE);
+  
+  if(currentLevel <= RooFit::DEBUG)
+    {
+      coutI(InputArguments) << "Printing Yields" << endl;
+      yields.Print();
+    }
+  
+  // The list of variables to normalize over when calculating PDF values.
+
+  RooArgSet vars(*fSData->get() );
+  vars.remove(projDeps, kTRUE, kTRUE);
+  
+  // Attach data set
+
+  // const_cast<RooAbsPdf*>(pdf)->attachDataSet(*fSData);
+
+  pdf->attachDataSet(*fSData);
+
+  // first calculate the pdf values for all species and all events
+  std::vector<RooRealVar*> yieldvars ;
+  RooArgSet* parameters = pdf->getParameters(fSData) ;
+
+  std::vector<Double_t> yieldvalues ;
+  for (Int_t k = 0; k < nspec; ++k) 
+    {
       RooRealVar* thisyield = dynamic_cast<RooRealVar*>(yields.at(k)) ;
       RooRealVar* yieldinpdf = dynamic_cast<RooRealVar*>(parameters->find(thisyield->GetName() )) ;
-      std::cout << "yield in pdf: " << yieldinpdf << " " << thisyield->getVal() << std::endl ;
+
+      coutI(InputArguments)<< "yield in pdf: " << yieldinpdf->GetName() << " " << thisyield->getVal() << endl;
+      
       yieldvars.push_back(yieldinpdf) ;
       yieldvalues.push_back(thisyield->getVal()) ;
-   }
-
-   Int_t numevents = data.numEntries() ;
- 
-   std::vector<std::vector<Double_t> > pdfvalues(numevents,std::vector<Double_t>(nspec,0)) ; 
+    }
   
-   // set all yield to zero
-   for(Int_t m=0; m<nspec; ++m) yieldvars[m]->setVal(0) ;
+  Int_t numevents = fSData->numEntries() ;
   
-   for (Int_t ievt = 0; ievt <numevents; ievt++) {
-      if (ievt % 100 == 0) {
-         std::cout << ".";
-         std::cout.flush();
-      }
-      RooArgSet row(*data.get(ievt));
-      for(Int_t k = 0; k < nspec; ++k) {
-         // set this yield to 1
-         yieldvars[k]->setVal( 1 ) ;
-         // evaluate the pdf
-         Double_t f_k = pdf->getVal(&vars) ;
-         pdfvalues[ievt][k] = f_k ;
-         if( !(f_k>1 || f_k<1) ) std::cout << "Strange pdf value: " << ievt << " " << k << " " << f_k << std::endl ;
-         yieldvars[k]->setVal( 0 ) ;
-      }
-   }
+  std::vector<std::vector<Double_t> > pdfvalues(numevents,std::vector<Double_t>(nspec,0)) ; 
 
-   // check that the likelihood normalization is fine
-   std::vector<Double_t> norm(nspec,0) ;
-   for (Int_t ievt = 0; ievt <numevents ; ievt++) {
+      
+  // set all yield to zero
+  for(Int_t m=0; m<nspec; ++m) yieldvars[m]->setVal(0) ;
+   
+
+  // For every event and for every specie,
+  // calculate the value of the component pdf for that specie
+  // by setting the yield of that specie to 1
+  // and all others to 0.  Evaluate the pdf for each event
+  // and store the values.
+
+  for (Int_t ievt = 0; ievt <numevents; ievt++) 
+    {
+      //   if (ievt % 100 == 0) 
+      //  coutP(Eval)  << ".";
+
+
+      //FIX THIS PART, EVALUATION PROGRESS!!
+
+      RooStats::SetParameters(fSData->get(ievt), pdf->getVariables()); 
+
+      //   RooArgSet row(*fSData->get(ievt));
+       
+      for(Int_t k = 0; k < nspec; ++k) 
+	{
+	  //Check that range of yields is at least (0,1), and fix otherwise
+	  if(yieldvars[k]->getMin() > 0) 
+	    {
+	      coutW(InputArguments)  << "Minimum Range for " << yieldvars[k]->GetName() << " must be 0.  ";
+	      coutW(InputArguments)  << "Setting min range to 0" << std::endl;
+	      yieldvars[k]->setMin(0);
+	    }
+
+	  if(yieldvars[k]->getMax() < 1) 
+	    {
+	      coutW(InputArguments)  << "Maximum Range for " << yieldvars[k]->GetName() << " must be 1.  ";
+	      coutW(InputArguments)  << "Setting max range to 1" << std::endl;
+	      yieldvars[k]->setMax(1);
+	    }
+
+	  // set this yield to 1
+	  yieldvars[k]->setVal( 1 ) ;
+	  // evaluate the pdf    
+	  Double_t f_k = pdf->getVal(&vars) ;
+	  pdfvalues[ievt][k] = f_k ;
+	  if( !(f_k>1 || f_k<1) ) 
+	    coutW(InputArguments) << "Strange pdf value: " << ievt << " " << k << " " << f_k << std::endl ;
+	  yieldvars[k]->setVal( 0 ) ;
+	}
+    }
+   
+  // check that the likelihood normalization is fine
+  std::vector<Double_t> norm(nspec,0) ;
+  for (Int_t ievt = 0; ievt <numevents ; ievt++) 
+    {
       Double_t dnorm(0) ;
       for(Int_t k=0; k<nspec; ++k) dnorm += yieldvalues[k] * pdfvalues[ievt][k] ;
       for(Int_t j=0; j<nspec; ++j) norm[j] += pdfvalues[ievt][j]/dnorm ;
-   }
-  
-   std::cout << "likelihood norms: "  ;
-   for(Int_t k=0; k<nspec; ++k) std::cout << norm[k] << " " ;
-   std::cout << std::endl ;
+    }
+   
+  coutI(Contents) << "likelihood norms: "  ;
 
-   // Make a TMatrixD to hold the covariance matrix.
-   TMatrixD covInv(nspec, nspec);
-   for (Int_t i = 0; i < nspec; i++) for (Int_t j = 0; j < nspec; j++) covInv(i,j) = 0;
+  for(Int_t k=0; k<nspec; ++k)  coutI(Contents) << norm[k] << " " ;
+  coutI(Contents) << std::endl ;
+   
+  // Make a TMatrixD to hold the covariance matrix.
+  TMatrixD covInv(nspec, nspec);
+  for (Int_t i = 0; i < nspec; i++) for (Int_t j = 0; j < nspec; j++) covInv(i,j) = 0;
+   
+  coutI(Contents) << "Calculating covariance matrix";
 
-   std::cout << "Calculating covariance matrix";
-   for (Int_t ievt = 0; ievt < numevents; ++ievt) {
 
+  // Calculate the inverse covariance matrix, using weights
+  for (Int_t ievt = 0; ievt < numevents; ++ievt) 
+    {
+      
+      fSData->get(ievt) ;
+     
       // Calculate contribution to the inverse of the covariance
       // matrix. See BAD 509 V2 eqn. 15
 
       // Sum for the denominator
-     data.get(ievt);
-
-
-     Double_t dsum(0);
+      Double_t dsum(0);
       for(Int_t k = 0; k < nspec; ++k) 
-         dsum += pdfvalues[ievt][k] * yieldvalues[k] ;
-
+	dsum += pdfvalues[ievt][k] * yieldvalues[k] ;
+       
       for(Int_t n=0; n<nspec; ++n)
-         for(Int_t j=0; j<nspec; ++j) 
-	   covInv(n,j) +=  pdfvalues[ievt][n]*pdfvalues[ievt][j]*(data.weight())/(dsum*dsum);
-   }
-   // Covariance inverse should now be computed!
-   covInv.Print();
-  
-   // Invert to get the covariance matrix
-   if (covInv.Determinant() <=0) {
-      std::cout << "SPlot Error: covariance matrix is singular; I can't invert it!" << std::endl;
+	for(Int_t j=0; j<nspec; ++j) 
+	  {
+	    if(includeWeights == kTRUE)
+	      covInv(n,j) +=  fSData->weight()*pdfvalues[ievt][n]*pdfvalues[ievt][j]/(dsum*dsum) ;
+	    else 
+	      covInv(n,j) +=  pdfvalues[ievt][n]*pdfvalues[ievt][j]/(dsum*dsum) ;
+	  }
+
+      //ADDED WEIGHT ABOVE
+
+    }
+   
+  // Covariance inverse should now be computed!
+   
+  // Invert to get the covariance matrix
+  if (covInv.Determinant() <=0) 
+    {
+      coutE(Eval) << "SPlot Error: covariance matrix is singular; I can't invert it!" << std::endl;
       covInv.Print();
-      return 0 ;
-   }
+      return;
+    }
+   
+  TMatrixD covMatrix(TMatrixD::kInverted,covInv);
+   
+  //check cov normalization
+  if(currentLevel <= RooFit::DEBUG)
+    {
+      coutI(Eval) << "Checking Likelihood normalization:  " << std::endl;
+      coutI(Eval) << "Yield of specie  Sum of Row in Matrix   Norm" << std::endl; 
+      for(Int_t k=0; k<nspec; ++k) 
+	{
+	  Double_t covnorm(0) ;
+	  for(Int_t m=0; m<nspec; ++m) covnorm += covInv[k][m]*yieldvalues[m] ;
+	  Double_t sumrow(0) ;
+	  for(Int_t m = 0; m < nspec; ++m) sumrow += covMatrix[k][m] ;
+	  coutI(Eval)  << yieldvalues[k] << " " << sumrow << " " << covnorm << endl ;
+	}
+    }
+  
+  // calculate for each event the sWeight (BAD 509 V2 eq. 21)
+  coutI(Eval) << "Calculating sWeight" << std::endl;
+  std::vector<RooRealVar*> sweightvec ;
+  std::vector<RooRealVar*> pdfvec ;  
+  RooArgSet sweightset ;
+   
+  char wname[256] ;
 
-   TMatrixD covMatrix(TMatrixD::kInverted,covInv);
-   covMatrix.Print() ;
+  // Create and label the variables
+  // used to store the SWeights
 
-   //check cov normalization
-   for(Int_t k=0; k<nspec; ++k) {
-      Double_t covnorm(0) ;
-      for(Int_t m=0; m<nspec; ++m) covnorm += covInv[k][m]*yieldvalues[m] ;
-      Double_t sumrow(0) ;
-      for(Int_t m = 0; m < nspec; ++m) sumrow += covMatrix[k][m] ;
-      std::cout << yieldvalues[k] << " " << sumrow << " " << covnorm << std::endl ;
-   }
+  fSWeightVars.Clear();
 
-   // calculate for each event the sWeight (BAD 509 V2 eq. 21)
-   std::cout << "Calculating sWeight";
-   std::vector<RooRealVar*> sweightvec ;
-   std::vector<RooRealVar*> pdfvec ;  
-   RooArgSet sweightset ;
-
-   char wname[256] ;
-   for(Int_t k=0; k<nspec; ++k) {
+  for(Int_t k=0; k<nspec; ++k) 
+    {
       sprintf(wname,"%s_sw", yieldvars[k]->GetName()) ;
       RooRealVar* var = new RooRealVar(wname,wname,0) ;
       sweightvec.push_back( var) ;
       sweightset.add(*var) ;
+      fSWeightVars.add(*var);
+    
       sprintf(wname,"L_%s", yieldvars[k]->GetName()) ;
       var = new RooRealVar(wname,wname,0) ;
       pdfvec.push_back( var) ;
       sweightset.add(*var) ;
-   }
-   sweightset.add(*data.get()) ;
-   RooDataSet* sWeightData = new RooDataSet("dataset", "dataset with sWeights", sweightset);
-  
-   for(Int_t ievt = 0; ievt < numevents; ++ievt) {
-    
-      data.get(ievt) ;
+    }
 
+  // Create and fill a RooDataSet
+  // with the SWeights
+ 
+  RooDataSet* sWeightData = new RooDataSet("dataset", "dataset with sWeights", sweightset);
+  
+  for(Int_t ievt = 0; ievt < numevents; ++ievt) 
+    {
+
+      fSData->get(ievt) ;
+       
       // sum for denominator
       Double_t dsum(0);
-      for(Int_t k = 0; k < nspec; ++k) dsum += pdfvalues[ievt][k] * yieldvalues[k] ;
-    
+      for(Int_t k = 0; k < nspec; ++k)   dsum +=  pdfvalues[ievt][k] * yieldvalues[k] ;
       // covariance weighted pdf for each specief
-      Double_t sweightsum(0) ;
-      for(Int_t n=0; n<nspec; ++n) {
-         Double_t nsum(0) ;
-         for(Int_t j=0; j<nspec; ++j) nsum += covMatrix(n,j) * pdfvalues[ievt][j] ;      
-         sweightvec[n]->setVal(nsum/dsum) ;
-         pdfvec[n]->setVal( pdfvalues[ievt][n] ) ;
-         sweightsum+=  nsum/dsum ;
-         if( !(fabs(nsum/dsum)>=0 ) ) {
-            std::cout << "error: " << nsum/dsum << std::endl ;
-            return 0 ;
-         }
+      for(Int_t n=0; n<nspec; ++n) 
+	{
+	  Double_t nsum(0) ;
+	  for(Int_t j=0; j<nspec; ++j) nsum += covMatrix(n,j) * pdfvalues[ievt][j] ;     
+	   
 
-         //std::cout << nsum/dsum << " " ;
-      }
+	  //Add the sWeights here!!
+	  //Include weights,
+	  //ie events weights are absorbed into sWeight
+
+
+	  if(includeWeights == kTRUE) sweightvec[n]->setVal(fSData->weight() * nsum/dsum) ;
+	  else  sweightvec[n]->setVal( nsum/dsum) ;
+
+	  pdfvec[n]->setVal( pdfvalues[ievt][n] ) ;
+
+	  if( !(fabs(nsum/dsum)>=0 ) ) 
+	    {
+	      coutE(Contents) << "error: " << nsum/dsum << endl ;
+	      return;
+	    }
+	}
+      
       sWeightData->add(sweightset) ;
-      //std::cout << "sum : " << sweightsum << std::endl ;
-   }
-   std::cout << "number of entries in new dataset: " << data.numEntries() << " " 
-             << sWeightData->numEntries() << std::endl ;
+    }
 
-   //RooDataSet mergeddata; 
-   //mergeddata.merge(&data,&sWeightData) ;
-   //data.merge(&sWeightData);
-   //std::cout << "number of entries in final dataset: " << data.numEntries() << std::endl ;
-   return sWeightData ;
+    
+  // Add the SWeights to the original data set
+
+  fSData->merge(sWeightData);
+
+  //Restore yield values
+
+  for(Int_t i = 0; i < yieldsTmp.getSize(); i++) 
+    ((RooRealVar*) yieldsTmp.at(i))->setVal(yieldsHolder.at(i));
+   
+  //Make any variables that were forced to constant no longer constant
+
+  for(Int_t i=0; i < (Int_t) constVarHolder.size(); i++) 
+    constVarHolder.at(i)->setConstant(kFALSE);
+
+  return;
+
 }
-
-//____________________________________________________________________
-void SPlot::FillSPlot(const RooDataSet &data, TString varname, TString weightname) 
-{
-   // Method to fill an SPlot for a given variable varname
-   if (data.get()->find(varname) == NULL) {
-      std::cout << "Can't find variable " << varname << " in data set!" << std::endl;
-      return;
-   }
-  
-   if (data.get()->find(weightname) == NULL){
-      std::cout << "Can't find weight " << weightname << " in data set!" << std::endl;
-      return;
-   }
-  
-  
-   for (Int_t ievt = 0; ievt < data.numEntries(); ievt++) {
-      RooArgList row(*data.get(ievt));
-      Double_t xval = ((RooAbsReal*)row.find(varname))->getVal();
-    
-      Double_t p = ((RooAbsReal*)row.find(weightname))->getVal();
-    
-      Fill(xval,p);
-   }
-  
-  
-}
-
-
-
-//____________________________________________________________________
-void SPlot::FillSPlot(const RooAbsReal &x, RooAbsReal &nstar, RooDataSet data, const RooFitResult &fitRes, const RooArgList &pdfListTmp, const RooArgList &yieldsTmp, RooAbsPdf &totalPdf, Bool_t doErrors, const RooArgSet &projDeps) 
-{
-   // Alternate method to fill an SPlot for the variable x.  Better description of this method is needed.
-
-   Bool_t verbose = kTRUE;
-   if (verbose) {
-      std::cout << "yieldsTmp:" << std::endl;
-      yieldsTmp.Print("V");
-      std::cout << "pdfListTmp:" << std::endl;
-      pdfListTmp.Print();
-   }
-  
-   // Size of bins...
-   Double_t xmin = GetXaxis()->GetXmin();
-   Double_t xmax = GetXaxis()->GetXmax();
-   Double_t nbins = GetNbinsX();
-   Double_t binSize = (xmax - xmin)/nbins;
-
-   if (verbose) {
-      std::cout << "Bins: " << xmin << " to " << xmax << " with " << nbins << " bins." << std::endl;
-      std::cout << "binSize = " << binSize << std::endl;
-   }
-  
-   // Number of species in this fit.
-   Int_t nspec = yieldsTmp.getSize();
-
-   // The list of parameters (with their final fit values)
-   RooArgList finalPars = fitRes.floatParsFinal();
-
-   // Number of parameters in the fit result.
-   Int_t npars = finalPars.getSize();
-
-   RooArgList pdfList = *(RooArgList*)pdfListTmp.snapshot();
-   RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(kFALSE);
-   //RooAbsPdf totalPdf = *(RooAbsPdf*)totalPdfTmp.Clone();
-  
-   if (verbose) {
-      std::cout << "Yields I will use in calculation:" << std::endl;
-      yields.Print("V");
-      std::cout << "pdfList:" << std::endl;
-      pdfList.Print();
-   }
-
-   // The list of variables to normalize over when calculating PDF values.
-   RooArgSet vars(*data.get());
-   vars.remove(projDeps, kTRUE, kTRUE);
-
-   // Make a TMatrixD to hold the covariance matrix.
-   TMatrixD covMatrix(npars, npars);
-  
-   // Loop over all the parameters to make the covariance matrix.
-   for (Int_t i = 0; i < npars; i++) {
-      for (Int_t j = 0; j < npars; j++) {
-         const RooRealVar *rowVar= (const RooRealVar*)finalPars.at(i);
-         const RooRealVar *colVar= (const RooRealVar*)finalPars.at(j);
-         assert(0 != rowVar && 0 != colVar);
-         covMatrix(i,j) = rowVar->getError()*colVar->getError()*fitRes.correlation(rowVar->GetName(),colVar->GetName());  
-      }
-   }
-  
-   // Get the inverse of the covariance matrix
-   // First check if it's singular
-   if (covMatrix.Determinant() == 0) {
-      std::cout << "SPlot Error: covariance matrix is singular;  I can't invert it!" << std::endl;
-      covMatrix.Print();
-      return;
-   }
-   TMatrixD covInv(TMatrixD::kInverted,covMatrix);
-
-   if (verbose) {
-      std::cout << "Covariance matrix:" << std::endl;
-      covMatrix.Print();
-      std::cout << "Inverse of covariance matrix:" << std::endl;
-      covInv.Print();
-   }
-  
-   // Make a matrix to hold V(i,j) inverse.
-   TMatrixD vinv(nspec, nspec);
-
-   // And fill it with the correct numbers...
-   Int_t istar(0);
-   Int_t vi = 0;
-   for (Int_t ci = 0; ci < npars; ci++) {
-      // If this parameter isn't a yield, move to the next row
-      if (yields.find(finalPars.at(ci)->GetName()) == 0) continue;
-
-      // If this parameter is the one of interest (nstar), then remember its index.
-      TString name = ((RooRealVar*)finalPars.at(ci))->GetName();
-      if (!name.CompareTo(nstar.GetName())) {
-         istar = vi;
-      }
-
-      Int_t vj = 0;
-      for (Int_t cj = 0; cj < npars; cj++) {
-
-         // If this parameter isn't a yield, move to the next column
-         if (!yields.contains(*finalPars.at(cj))) continue;
-
-         // This element's row and column correspond to yield parameters.  Put it in V inverse.
-         vinv(vi, vj) = covInv(ci, cj);
-         vj++;
-      }
-      vi++;
-   }
-
-   // Now invert V(i, j) inverse to get V(i, j)
-   if (vinv.Determinant() == 0) {
-      std::cout << "SPlot Error: Yield covariance matrix V inverse is singular and can't be inverted!" << std::endl;
-      vinv.Print();
-      return;
-   }
-  
-   TMatrixD v(TMatrixD::kInverted,vinv);
-
-   if (verbose) {
-      std::cout << "V inverse:" << std::endl;
-      vinv.Print();
-      std::cout << "V:" << std::endl;
-      v.Print();
-    
-      Double_t sum = 0;
-      for (Int_t j = 0; j < nspec; j++) {
-         sum += v(j,istar);
-      }
-      std::cout << "Sum of star column in V: " << sum << std::endl;
-    
-   }
-
-
-  
-   Double_t sum = 0;
-   //  Double_t sumtmp = 0;
-  
-   // This forces the error in a bin to be calculated as the sqrt of the sum of the squares of
-   // weights, as they should be.
-   if (doErrors) Sumw2();
-
-   totalPdf.attachDataSet(data);
-   for (Int_t ievt = 0; ievt < data.numEntries(); ievt++) {
-    
-      if (ievt % 100 == 0) std::cout << "Event: " << ievt << std::endl;
-      // Read this event and find the value of x for this event.
-      const RooArgSet *row = data.get(ievt);
-      Double_t xval = ((RooAbsReal*)row->find(x.GetName()))->getVal();
-    
-      // Loop over the species and calculate P.
-      Double_t numerator = 0;
-      Double_t denominator = 0;    
-      for (Int_t i = 0; i < nspec ; i++){
-
-         RooAbsPdf *pdf = (RooAbsPdf*)pdfList.at(i);
-         pdf->attachDataSet(data);
-         Double_t pdfval = pdf->getVal(&vars);
-         numerator += v(istar, i)*pdfval;
-      
-         //Double_t ni = ((RooAbsReal*)yields.at(i))->getVal();
-         //denominator += ni*pdfval;
-      }
-      denominator = totalPdf.getVal(&vars);
-
-      Double_t p = 1/nstar.getVal()*(numerator/denominator);
-      if (xval > xmin && xval < xmax) sum += p*nstar.getVal();
-    
-      Fill(xval, p*nstar.getVal());
-
-   }// end event loop
-
-   SetEntries(sum*Double_t(binSize));
-   if (verbose) std::cout << "Entries should be: " << sum*Double_t(binSize) << " (" << sum << " events)" << std::endl;
-  
-}
-
-//____________________________________________________________________
-void SPlot::FillSPlot(const RooAbsReal &x, RooAbsReal &nstar, RooDataSet data, const RooFitResult &fitRes, const RooArgList &pdfListTmp, const RooArgList &yieldsTmp, Bool_t doErrors, const RooArgSet &projDeps) 
-{
-   // Alternate method to fill an SPlot for the variable x.  Better description of this method is needed.
-
-   Bool_t verbose = kTRUE;
-   if (verbose) {
-      std::cout << "nstar: " << std::endl;
-      nstar.Print();
-      std::cout << "yieldsTmp:" << std::endl;
-      yieldsTmp.Print("V");
-      std::cout << "pdfListTmp:" << std::endl;
-      pdfListTmp.Print();
-   }
-  
-   // Size of bins...
-   Double_t xmin = GetXaxis()->GetXmin();
-   Double_t xmax = GetXaxis()->GetXmax();
-   Double_t nbins = GetNbinsX();
-   Double_t binSize = (xmax - xmin)/nbins;
-
-   if (verbose) {
-      std::cout << "Bins: " << xmin << " to " << xmax << " with " << nbins << " bins." << std::endl;
-      std::cout << "binSize = " << binSize << std::endl;
-   }
-  
-   // Number of species in this fit.
-   Int_t nspec = yieldsTmp.getSize();
-
-   // The list of parameters (with their final fit values)
-   RooArgList finalPars = fitRes.floatParsFinal();
-
-   // Number of parameters in the fit result.
-   Int_t npars = finalPars.getSize();
-
-   RooArgList pdfList = *(RooArgList*)pdfListTmp.snapshot();
-   RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(kFALSE);
-
-   if (verbose) {
-      std::cout << "Yields I will use in calculation:" << std::endl;
-      yields.Print("V");
-      std::cout << "pdfList:" << std::endl;
-      pdfList.Print();
-   }
-
-   // The list of variables to normalize over when calculating PDF values.
-   RooArgSet vars(*data.get());
-   vars.remove(projDeps, kTRUE, kTRUE);
-
-   // Make a TMatrixD to hold the covariance matrix.
-   TMatrixD covMatrix(npars, npars);
-  
-   // Loop over all the parameters to make the covariance matrix.
-   for (Int_t i = 0; i < npars; i++) {
-      for (Int_t j = 0; j < npars; j++) {
-         const RooRealVar *rowVar= (const RooRealVar*)finalPars.at(i);
-         const RooRealVar *colVar= (const RooRealVar*)finalPars.at(j);
-         assert(0 != rowVar && 0 != colVar);
-         covMatrix(i,j) = rowVar->getError()*colVar->getError()*fitRes.correlation(rowVar->GetName(),colVar->GetName());  
-      }
-   }
-  
-   // Get the inverse of the covariance matrix
-   // First check if it's singular
-   if (covMatrix.Determinant() == 0) {
-      std::cout << "SPlot Error: covariance matrix is singular;  I can't invert it!" << std::endl;
-      covMatrix.Print();
-      return;
-   }
-   TMatrixD covInv(TMatrixD::kInverted,covMatrix);
-
-   if (verbose) {
-      std::cout << "Covariance matrix:" << std::endl;
-      covMatrix.Print();
-      std::cout << "Inverse of covariance matrix:" << std::endl;
-      covInv.Print();
-   }
-  
-   // Make a matrix to hold V(i,j) inverse.
-   TMatrixD vinv(nspec, nspec);
-
-   // And fill it with the correct numbers...
-   Int_t istar(0);
-   Int_t vi = 0;
-   for (Int_t ci = 0; ci < npars; ci++) {
-      // If this parameter isn't a yield, move to the next row
-      if (yields.find(finalPars.at(ci)->GetName()) == 0) continue;
-
-      // If this parameter is the one of interest (nstar), then remember its index.
-      TString name = ((RooRealVar*)finalPars.at(ci))->GetName();
-      if (!name.CompareTo(nstar.GetName())) {
-         istar = vi;
-      }
-
-      Int_t vj = 0;
-      for (Int_t cj = 0; cj < npars; cj++) {
-
-         // If this parameter isn't a yield, move to the next column
-         if (!yields.contains(*finalPars.at(cj))) continue;
-
-         // This element's row and column correspond to yield parameters.  Put it in V inverse.
-         vinv(vi, vj) = covInv(ci, cj);
-         vj++;
-      }
-      vi++;
-   }
-
-   // Now invert V(i, j) inverse to get V(i, j)
-   if (vinv.Determinant() == 0) {
-      std::cout << "SPlot Error: Yield covariance matrix V inverse is singular and can't be inverted!" << std::endl;
-      vinv.Print();
-      return;
-   }
-  
-   TMatrixD v(TMatrixD::kInverted,vinv);
-
-   if (verbose) {
-      std::cout << "V inverse:" << std::endl;
-      vinv.Print();
-      std::cout << "V:" << std::endl;
-      v.Print();
-    
-      Double_t sum = 0;
-      for (Int_t j = 0; j < nspec; j++) {
-         sum += v(j,istar);
-      }
-      std::cout << "Sum of star column in V: " << sum << std::endl;
-    
-   }
-
-
-  
-   Double_t sum = 0;
-   Double_t sumtmp = 0;
-  
-   // This forces the error in a bin to be calculated as the sqrt of the sum of the squares of
-   // weights, as they should be.
-   if (doErrors) Sumw2();
-
-   for (Int_t i = 0; i < nspec; i++) {
-      RooAbsPdf *pdf = (RooAbsPdf*)pdfList.at(i);
-      pdf->attachDataSet(data);
-   }
-
-   for (Int_t ievt = 0; ievt < data.numEntries(); ievt++) {
-    
-      if (ievt % 100 == 0) std::cout << ".";
-      // Read this event and find the value of x for this event.
-      const RooArgSet *row = data.get(ievt);
-      Double_t xval = ((RooAbsReal*)row->find(x.GetName()))->getVal();
-    
-      // Loop over the species and calculate P.
-      Double_t numerator = 0;
-      Double_t denominator = 0;    
-      for (Int_t i = 0; i < nspec ; i++){
-
-         RooAbsPdf *pdf = (RooAbsPdf*)pdfList.at(i);
-         //pdf->attachDataSet(data);
-         Double_t pdfval = pdf->getVal(&vars);
-         numerator += v(istar, i)*pdfval;
-      
-         Double_t ni = ((RooAbsReal*)yields.at(i))->getVal();
-         denominator += ni*pdfval;
-      }
-    
-      Double_t p = 1/nstar.getVal()*(numerator/denominator);
-      sumtmp += ((RooAbsPdf*)pdfList.at(istar))->getVal(&vars)/denominator;
-
-      //if (xval > xmin && xval < xmax)
-      sum += p*nstar.getVal();
-    
-      Fill(xval, p*nstar.getVal());
-
-   }// end event loop
-
-   SetEntries(sum*Double_t(binSize));
-  
-   std::cout << std::endl;
-   if (verbose) std::cout << "Entries should be: " << sum*Double_t(binSize) << " (" << sum << " events)" << std::endl;
-   if (verbose) std::cout << "Sum of likelihood ratios for nstar: " << sumtmp << std::endl;
-  
-}
-
-
-//____________________________________________________________________
-void SPlot::FillSPlot(const RooAbsReal &x, RooAbsReal &nstar, RooDataSet data, const RooFitResult &fitRes, RooAbsPdf &totalPdf, RooArgList &yields, Bool_t doErrors, const RooArgSet &projDeps) 
-{
-   // Alternate method to fill an SPlot for the variable x.  Better description of this method is needed.
-
-   Bool_t verbose = kTRUE;
-   if (verbose) {
-      //std::cout << "yieldsTmp:" << std::endl;
-      //yieldsTmp.Print("V");
-      //std::cout << "pdfListTmp:" << std::endl;
-      //pdfListTmp.Print();
-   }
-  
-   // Size of bins...
-   Double_t xmin = GetXaxis()->GetXmin();
-   Double_t xmax = GetXaxis()->GetXmax();
-   Double_t nbins = GetNbinsX();
-   Double_t binSize = (xmax - xmin)/nbins;
-
-   if (verbose) {
-      std::cout << "Bins: " << xmin << " to " << xmax << " with " << nbins << " bins." << std::endl;
-      std::cout << "binSize = " << binSize << std::endl;
-   }
-  
-   // Number of species in this fit.
-   Int_t nspec = yields.getSize();
-
-   // The list of parameters (with their final fit values)
-   RooArgList finalPars = fitRes.floatParsFinal();
-
-   // Number of parameters in the fit result.
-   Int_t npars = finalPars.getSize();
-
-   //RooArgList pdfList = *(RooArgList*)pdfListTmp.snapshot();
-   //RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(kFALSE);
-   //RooAbsPdf totalPdf = *(RooAbsPdf*)totalPdfTmp.Clone();
-  
-   if (verbose) {
-      std::cout << "Yields I will use in calculation:" << std::endl;
-      yields.Print("V");
-      //std::cout << "pdfList:" << std::endl;
-      //pdfList.Print();
-   }
-
-   // The list of variables to normalize over when calculating PDF values.
-   RooArgSet vars(*data.get());
-   vars.remove(projDeps, kTRUE, kTRUE);
-
-   // Make a TMatrixD to hold the covariance matrix.
-   TMatrixD covMatrix(npars, npars);
-  
-   // Loop over all the parameters to make the covariance matrix.
-   for (Int_t i = 0; i < npars; i++) {
-      for (Int_t j = 0; j < npars; j++) {
-         const RooRealVar *rowVar= (const RooRealVar*)finalPars.at(i);
-         const RooRealVar *colVar= (const RooRealVar*)finalPars.at(j);
-         assert(0 != rowVar && 0 != colVar);
-         covMatrix(i,j) = rowVar->getError()*colVar->getError()*fitRes.correlation(rowVar->GetName(),colVar->GetName());  
-      }
-   }
-  
-   // Get the inverse of the covariance matrix
-   // First check if it's singular
-   if (covMatrix.Determinant() == 0) {
-      std::cout << "SPlot Error: covariance matrix is singular;  I can't invert it!" << std::endl;
-      covMatrix.Print();
-      return;
-   }
-   TMatrixD covInv(TMatrixD::kInverted,covMatrix);
-
-   if (verbose) {
-      std::cout << "Covariance matrix:" << std::endl;
-      covMatrix.Print();
-      std::cout << "Inverse of covariance matrix:" << std::endl;
-      covInv.Print();
-   }
-  
-   // Make a matrix to hold V(i,j) inverse.
-   TMatrixD vinv(nspec, nspec);
-
-   // And fill it with the correct numbers...
-   Int_t istar(0);
-   Int_t vi = 0;
-   for (Int_t ci = 0; ci < npars; ci++) {
-      // If this parameter isn't a yield, move to the next row
-      if (yields.find(finalPars.at(ci)->GetName()) == 0) continue;
-
-      // If this parameter is the one of interest (nstar), then remember its index.
-      TString name = ((RooRealVar*)finalPars.at(ci))->GetName();
-      if (!name.CompareTo(nstar.GetName())) {
-         istar = vi;
-      }
-
-      Int_t vj = 0;
-      for (Int_t cj = 0; cj < npars; cj++) {
-
-         // If this parameter isn't a yield, move to the next column
-         if (!yields.contains(*finalPars.at(cj))) continue;
-
-         // This element's row and column correspond to yield parameters.  Put it in V inverse.
-         vinv(vi, vj) = covInv(ci, cj);
-         vj++;
-      }
-      vi++;
-   }
-
-   // Now invert V(i, j) inverse to get V(i, j)
-   if (vinv.Determinant() == 0) {
-      std::cout << "SPlot Error: Yield covariance matrix V inverse is singular and can't be inverted!" << std::endl;
-      vinv.Print();
-      return;
-   }
-  
-   TMatrixD v(TMatrixD::kInverted,vinv);
-
-   if (verbose) {
-      std::cout << "V inverse:" << std::endl;
-      vinv.Print();
-      std::cout << "V:" << std::endl;
-      v.Print();
-    
-      Double_t sum = 0;
-      for (Int_t j = 0; j < nspec; j++) {
-         sum += v(j,istar);
-      }
-      std::cout << "Sum of star column in V: " << sum << std::endl;
-    
-   }
-
-
-  
-   Double_t sum = 0;
-   //Double_t sumtmp = 0;
-  
-   // This forces the error in a bin to be calculated as the sqrt of the sum of the squares of
-   // weights, as they should be.
-   if (doErrors) Sumw2();
-
-   totalPdf.attachDataSet(data);
-   for (Int_t ievt = 0; ievt < data.numEntries(); ievt++) {
-    
-      if (ievt % 100 == 0) std::cout << "Event: " << ievt << std::endl;
-      // Read this event and find the value of x for this event.
-      const RooArgSet *row = data.get(ievt);
-      Double_t xval = ((RooAbsReal*)row->find(x.GetName()))->getVal();
-    
-      // Loop over the species and calculate P.
-      Double_t numerator = 0;
-      Double_t denominator = 0;    
-      for (Int_t i = 0; i < nspec ; i++){
-
-         //RooAbsPdf *pdf = (RooAbsPdf*)pdfList.at(i);
-         //pdf->attachDataSet(data);
-         //Double_t pdfval = pdf->getVal(&vars);
-         Double_t pdfval = GetComponentValue(totalPdf, yields, i, vars);
-         numerator += v(istar, i)*pdfval;
-      
-         //Double_t ni = ((RooAbsReal*)yields.at(i))->getVal();
-         //denominator += ni*pdfval;
-      }
-      denominator = totalPdf.getVal(&vars);
-
-      Double_t p = 1/nstar.getVal()*(numerator/denominator);
-      if (xval > xmin && xval < xmax) sum += p*nstar.getVal();
-    
-      Fill(xval, p*nstar.getVal());
-
-   }// end event loop
-
-   SetEntries(sum*Double_t(binSize));
-   if (verbose) std::cout << "Entries should be: " << sum*Double_t(binSize) << " (" << sum << " events)" << std::endl;
-  
-}
-
-
-//____________________________________________________________________
-Double_t SPlot::GetComponentValue(RooAbsPdf &pdf, RooArgList &yieldsTmp, Int_t igood, RooArgSet &normSet) 
-{
-   // Alternate method to fill an SPlot for the variable x.  Better description of this method is needed.
-
-   Int_t i=0;
-   Int_t nspec = yieldsTmp.getSize();
-   std::vector<Double_t> yields(nspec);
-   //  std::cout << "Before: " << pdf.getVal(&normSet) << std::endl;
-   for (i=0; i < nspec; i++) {
-      yields[i] = ((RooRealVar*)yieldsTmp.at(i))->getVal();
-      ((RooRealVar*)yieldsTmp.at(i))->setVal(0);
-   }
-  
-   ((RooRealVar*)yieldsTmp.at(igood))->setVal(1);
-  
-   Double_t result = pdf.getVal(&normSet);
-   //  std::cout << "During: " << result << std::endl;
-
-   for (i=0; i < nspec; i++) {
-      ((RooRealVar*)yieldsTmp.at(i))->setVal(yields[i]);
-   }
-   //  std::cout << "After: " << pdf.getVal(&normSet) << std::endl;
-   return result;
-  
-}
-
-
-
-
-
