@@ -82,11 +82,20 @@ public:
    /// result is cached also inside the class
    const double * Transformation( const double * x) const;
 
+
    /// inverse transformation (external -> internal)
    void  InvTransformation(const double * xext,  double * xint) const;
 
    /// inverse transformation for steps (external -> internal) at external point x
    void  InvStepTransformation(const double * x, const double * sext,  double * sint) const;
+
+   ///transform gradient vector (external -> internal) at internal point x
+   void GradientTransformation(const double * x, const double *gExt, double * gInt) const;  
+
+   ///transform covariance matrix (internal -> external) at internal point x
+   /// use row storages for matrices  m(i,j) = rep[ i * dim + j]
+   void MatrixTransformation(const double * x, const double *covInt, double * covExt) const;  
+
 
 private: 
 

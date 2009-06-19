@@ -117,6 +117,43 @@ void  MinimTransformFunction::InvStepTransformation(const double * x, const doub
    }
 }
 
+void  MinimTransformFunction::GradientTransformation(const double * x, const double *gExt, double * gInt) const { 
+   //transform gradient vector (external -> internal) at internal point x
+   unsigned int nfree = fIndex.size(); 
+   for (unsigned int i = 0; i < nfree; ++i ) { 
+      unsigned int extIndex = fIndex[i]; 
+      const MinimizerVariable & var = fVariables[ extIndex ];
+      assert (!var.IsFixed() );
+      if (var.IsLimited() )  
+         gInt[i] = gExt[ extIndex ] * var.DerivativeIntToExt( x[i] ); 
+      else
+         gInt[i] = gExt[ extIndex ];   
+   }
+}
+
+
+void  MinimTransformFunction::MatrixTransformation(const double * x, const double *covInt, double * covExt) const { 
+   //transform covariance matrix (internal -> external) at internal point x
+   // use row storages for matrices  m(i,j) = rep[ i * dim + j]
+   // ignore fixed points 
+   unsigned int nfree = fIndex.size(); 
+   unsigned int ntot = NTot(); 
+   for (unsigned int i = 0; i < nfree; ++i ) { 
+      unsigned int iext = fIndex[i]; 
+      const MinimizerVariable & ivar = fVariables[ iext ];
+      assert (!ivar.IsFixed()); 
+      double ddi = ( ivar.IsLimited() ) ? ivar.DerivativeIntToExt( x[i] ) : 1.0; 
+      // loop on j  variables  for not fixed i variables (forget that matrix is symmetric) - could be optimized 
+      for (unsigned int j = 0; j < nfree; ++j ) { 
+         unsigned int jext = fIndex[j]; 
+         const MinimizerVariable & jvar = fVariables[ jext ];
+         double ddj = ( jvar.IsLimited() ) ? jvar.DerivativeIntToExt( x[j] ) : 1.0; 
+         assert (!jvar.IsFixed() );
+         covExt[ iext * ntot + jext] =  ddi * ddj * covInt[ i * nfree + j];
+      }      
+   }
+}
+
 
    } // end namespace Math
 

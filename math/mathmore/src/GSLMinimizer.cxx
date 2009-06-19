@@ -71,7 +71,9 @@ GSLMinimizer::GSLMinimizer( const char *  type) :
    std::string algoname(type);
    std::transform(algoname.begin(), algoname.end(), algoname.begin(), (int(*)(int)) tolower ); 
 
-   ROOT::Math::EGSLMinimizerType algo =  kConjugateFR;   // default value 
+   ROOT::Math::EGSLMinimizerType algo =   kVectorBFGS2; // default value
+
+   if (algoname == "conjugatefr") algo = kConjugateFR;   
    if (algoname == "conjugatepr") algo = kConjugatePR; 
    if (algoname == "bfgs") algo = kVectorBFGS; 
    if (algoname == "bfgs2") algo = kVectorBFGS2; 

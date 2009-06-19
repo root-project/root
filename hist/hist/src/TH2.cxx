@@ -1972,6 +1972,9 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
    //
    //   if option "d" is specified, the profile is drawn in the current pad.
    //
+   //   if option "o" original axis range of the taget axes will be
+   //   kept, but only bins inside the selected range will be filled.
+   //
    //   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
    //   One must create a graphical cut (mouse or C++) and specify the name
    //   of the cut between [] in the option.
@@ -2008,6 +2011,9 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    //   the number of entries is incremented by 1 for all non empty cells.
    //
    //   if option "d" is specified, the profile is drawn in the current pad.
+   //
+   //   if option "o" original axis range of the taget axes will be
+   //   kept, but only bins inside the selected range will be filled.
    //
    //   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
    //   One must create a graphical cut (mouse or C++) and specify the name
@@ -2236,6 +2242,8 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
+   //   if option "o" original axis range of the taget axes will be
+   //   kept, but only bins inside the selected range will be filled.
    //
    //   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
    //   One must create a graphical cut (mouse or C++) and specify the name
@@ -2272,6 +2280,8 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
+   //   if option "o" original axis range of the taget axes will be
+   //   kept, but only bins inside the selected range will be filled.
    //
    //   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
    //   One must create a graphical cut (mouse or C++) and specify the name

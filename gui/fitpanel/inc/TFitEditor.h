@@ -134,11 +134,8 @@ protected:
    TGRadioButton       *fLibMinuit;        // set default minimization library (Minuit)
    TGRadioButton       *fLibMinuit2;       // set Minuit2 as minimization library
    TGRadioButton       *fLibFumili;        // set Fumili as minimization library
-   TGRadioButton       *fMigrad;           // set default minimization method (MIGRAD)
-   TGRadioButton       *fSimplex;          // set Simplex as minimization method
-   TGRadioButton       *fFumili;           // set Fumili as minimization method
-   TGRadioButton       *fCombination;      // set Combination as minimization method
-   TGRadioButton       *fScan;             // set Scan as minimization method
+   TGRadioButton       *fLibGSL;           // set Fumili as minimization library
+   TGComboBox          *fMinMethodList;    // set the minimization method
    TGNumberEntryField  *fErrorScale;       // contains error scale set for minimization
    TGNumberEntryField  *fTolerance;        // contains tolerance set for minimization
    TGNumberEntryField  *fIterations;       // contains maximum number of iterations
@@ -196,6 +193,7 @@ public:
 
    // slot methods 'General' tab
    void           FillFunctionList(Int_t selected = -1);
+   void           FillMinMethodList(Int_t selected = -1);
    virtual void   DoAddition(Bool_t on);
    virtual void   DoAdvancedOptions();
    virtual void   DoAllWeights1();
@@ -222,7 +220,7 @@ public:
 
    // slot methods 'Minimization' tab
    virtual void   DoLibrary(Bool_t on);
-   virtual void   DoMinMethod(Bool_t on);
+   virtual void   DoMinMethod(Int_t );
    virtual void   DoPrintOpt(Bool_t on);
    
 public:

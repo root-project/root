@@ -356,12 +356,12 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
    }
    for (unsigned int i = 0; i < npar; ++i) { 
       os << std::setw(nw) << std::left << GetParameterName(i); 
-      os << " =\t" << fParams[i]; 
+      os << " =\t" << std::setw(12) << fParams[i]; 
       if (IsParameterFixed(i) ) 
          os << " \t(fixed)";
       else {
          if (fErrors.size() != 0)
-            os << " \t+/-\t" << fErrors[i]; 
+            os << " \t+/-\t" << std::setw(12) << fErrors[i]; 
          if (IsParameterBound(i) ) 
             os << " \t (limited)"; 
       }

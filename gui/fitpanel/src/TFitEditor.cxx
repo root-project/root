@@ -155,6 +155,7 @@
 #include "TTree.h"
 #include "TTreeInput.h"
 #include "TAdvancedGraphicsDialog.h"
+#include "RConfigure.h"
 
 #include <sstream>
 #include <vector>
@@ -174,7 +175,9 @@ enum EFitPanel {
    kFP_DSAME, kFP_DNONE, kFP_DADVB, kFP_DNOST, kFP_PDEF,  kFP_PVER,  kFP_PQET,
    kFP_XMIN,  kFP_XMAX,  kFP_YMIN,  kFP_YMAX,  kFP_ZMIN,  kFP_ZMAX,
    
-   kFP_LMIN,  kFP_LMIN2, kFP_LFUM,  kFP_MIGRAD,kFP_SIMPLX,kFP_FUMILI, kFP_COMBINATION,
+   kFP_LMIN,  kFP_LMIN2, kFP_LFUM,  kFP_LGSL,  kFP_MIGRAD,kFP_SIMPLX,kFP_FUMILI, 
+   kFP_COMBINATION, kFP_MINMETHOD, 
+   kFP_GSLFR, kFP_GSLPR, kFP_BFGS,  kFP_GSLLM, kFP_GSLSA,
    kFP_SCAN,  kFP_MERR,  kFP_MTOL,  kFP_MITR,
    
    kFP_FIT,   kFP_RESET, kFP_CLOSE,
@@ -416,6 +419,9 @@ TFitEditor::~TFitEditor()
    delete fLayoutAdd;
    delete fLayoutConv;
    fgFitDialog = 0;
+   #ifndef R__HAS_MATHMORE
+   delete fLibGSL;
+   #endif
 }
 
 //______________________________________________________________________________
@@ -776,81 +782,59 @@ void TFitEditor::CreateMinimizationTab()
                                                             5, 5, 2, 2));
    MakeTitle(fMinimization, "Library");
 
+   bool withGSL = false;
+   #ifdef R__HAS_MATHMORE
+   withGSL = true;
+   #endif
+
    TGHorizontalFrame *hl = new TGHorizontalFrame(fMinimization);
    fLibMinuit = new TGRadioButton(hl, "Minuit", kFP_LMIN);
    fLibMinuit->Associate(this);
    fLibMinuit->SetToolTipText("Use minimization from libMinuit (default)");
-   hl->AddFrame(fLibMinuit, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
+   hl->AddFrame(fLibMinuit, new TGLayoutHints(kLHintsNormal, withGSL?40:35, 0, 0, 1));
    fStatusBar->SetText("LIB Minuit",1);
 
    fLibMinuit2 = new TGRadioButton(hl, "Minuit2", kFP_LMIN2);
    fLibMinuit2->Associate(this);
    fLibMinuit2->SetToolTipText("New C++ version of Minuit");
-   hl->AddFrame(fLibMinuit2, new TGLayoutHints(kLHintsNormal, 35, 0, 0, 1));
+   hl->AddFrame(fLibMinuit2, new TGLayoutHints(kLHintsNormal, withGSL?25:30, 0, 0, 1));
 
    fLibFumili = new TGRadioButton(hl, "Fumili", kFP_LFUM);
    fLibFumili->Associate(this);
    fLibFumili->SetToolTipText("Use minimization from libFumili");
-   hl->AddFrame(fLibFumili, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
+   hl->AddFrame(fLibFumili, new TGLayoutHints(kLHintsNormal, withGSL?20:15, 0, 0, 1));
+
+   fLibGSL = new TGRadioButton(withGSL?hl:0, "GSL", kFP_LGSL);
+   #ifdef R__HAS_MATHMORE
+   fLibGSL->Associate(this);
+   fLibGSL->SetToolTipText("Use minimization from libGSL");
+   hl->AddFrame(fLibGSL, new TGLayoutHints(kLHintsNormal, 15, 0, 0, 1));
+   #endif
    fMinimization->AddFrame(hl, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
 
    MakeTitle(fMinimization, "Method");
 
-   TGHorizontalFrame *hm = new TGHorizontalFrame(fMinimization);
-   fMigrad = new TGRadioButton(hm, "MIGRAD", kFP_MIGRAD);
-   fMigrad->Associate(this);
-   fMigrad->SetToolTipText("Use MIGRAD as minimization method");
-   hm->AddFrame(fMigrad, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
-   fStatusBar->SetText("MIGRAD",2);
+   TGHorizontalFrame *hm0 = new TGHorizontalFrame(fMinimization);
+   fMinMethodList = new TGComboBox(hm0, kFP_MINMETHOD);
+   fMinMethodList->Resize(290, 20);
+   fMinMethodList->Select(kFP_GAUS, kFALSE);
 
-   fSimplex = new TGRadioButton(hm, "SIMPLEX", kFP_SIMPLX);
-   fSimplex->Associate(this);
-   fSimplex->SetToolTipText("Use SIMPLEX as minimization method");
-   hm->AddFrame(fSimplex, new TGLayoutHints(kLHintsNormal, 20, 0, 0, 1));
+   TGListBox *lb = fMinMethodList->GetListBox();
+   lb->Resize(lb->GetWidth(), 500);
+   fMinMethodList->Associate(this);
 
-   fFumili = new TGRadioButton(hm, "FUMILI", kFP_FUMILI);
-   fFumili->Associate(this);
-   fFumili->SetToolTipText("Use FUMILI as minimization method");
-   hm->AddFrame(fFumili, new TGLayoutHints(kLHintsNormal, 18, 0, 0, 1));
-   fMinimization->AddFrame(hm, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
-
-   TGHorizontalFrame *hm2 = new TGHorizontalFrame(fMinimization);
-   fScan = new TGRadioButton(hm2, "SCAN", kFP_SCAN);
-   fScan->Associate(this);
-   fScan->SetToolTipText("Use SCAN as minimization method");
-   hm2->AddFrame(fScan, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
-
-   fCombination = new TGRadioButton(hm2, "Combination", kFP_COMBINATION);
-   fCombination->Associate(this);
-   fCombination->SetToolTipText("Use Combination as minimization method");
-   hm2->AddFrame(fCombination, new TGLayoutHints(kLHintsNormal, 34, 0, 0, 1));
-   fMinimization->AddFrame(hm2, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
+   hm0->AddFrame(fMinMethodList, new TGLayoutHints(kLHintsNormal));
+   fMinimization->AddFrame(hm0, new TGLayoutHints(kLHintsExpandX, 60, 0, 5, 1));
 
    // Set the status to the default minimization options!
    if ( ROOT::Math::MinimizerOptions::DefaultMinimizerType() == "Fumili" ) {
       fLibFumili->SetState(kButtonDown);
-      fMigrad->SetState(kButtonDisabled);
-      fScan->SetState(kButtonDisabled);
-      fCombination->SetState(kButtonDisabled);
-      fSimplex->SetState(kButtonDisabled);
-      fFumili->SetState(kButtonDown);
    } else if ( ROOT::Math::MinimizerOptions::DefaultMinimizerType() == "Minuit" ) {
       fLibMinuit->SetState(kButtonDown);
-      fFumili->SetState(kButtonDisabled);
    } else {
       fLibMinuit2->SetState(kButtonDown);
    }
-
-   if ( ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Fumili" )
-      fFumili->SetState(kButtonDown);
-   else if ( ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Migrad" )
-      fMigrad->SetState(kButtonDown);
-   else if ( ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Simplex" )
-      fSimplex->SetState(kButtonDown);
-   else if ( ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Minimize" )
-      fCombination->SetState(kButtonDown);
-   else if ( ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Scan" )
-      fScan->SetState(kButtonDown);
+   FillMinMethodList();
 
    MakeTitle(fMinimization, "Settings");
    TGLabel *hslabel1 = new TGLabel(fMinimization,"Use ENTER key to validate a new value or click");
@@ -982,14 +966,10 @@ void TFitEditor::ConnectSlots()
    fLibMinuit->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLibrary(Bool_t)");
    fLibMinuit2->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLibrary(Bool_t)");
    fLibFumili->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLibrary(Bool_t)");
+   fLibGSL->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLibrary(Bool_t)");
 
    // minimization method
-   fMigrad->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
-   // Simplex functionality will come with the new fitter design
-   fSimplex->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
-   fFumili->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
-   fCombination->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
-   fScan->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
+   fMinMethodList->Connect("Selected(Int_t)", "TFitEditor", this, "DoMinMethod(Int_t)");
 
    // fitter settings
    fIterations->Connect("ReturnPressed()", "TFitEditor", this, "DoMaxIterations()");
@@ -1050,14 +1030,10 @@ void TFitEditor::DisconnectSlots()
    fLibMinuit->Disconnect("Toggled(Bool_t)");
    fLibMinuit2->Disconnect("Toggled(Bool_t)");
    fLibFumili->Disconnect("Toggled(Bool_t)");
+   fLibGSL->Disconnect("Toggled(Bool_t)");
 
    // minimization method
-   fMigrad->Disconnect("Toggled(Bool_t)");
-   // Simplex functionality will come with the new fitter design
-   fSimplex->Disconnect("Toggled(Bool_t)");
-   fFumili->Disconnect("Toggled(Bool_t)");
-   fCombination->Disconnect("Toggled(Bool_t)");
-   fScan->Disconnect("Toggled(Bool_t)");
+   fMinMethodList->Disconnect("Selected(Int_t)");
    
    // fitter settings
    fIterations->Disconnect("ReturnPressed()");
@@ -1533,6 +1509,48 @@ void TFitEditor::FillFunctionList(Int_t)
       }
       else
          fFuncList->Select(newid-1, kTRUE);
+   }
+}
+
+//______________________________________________________________________________
+void TFitEditor::FillMinMethodList(Int_t)
+{
+   // Fills the list of methods depending on the minimization library
+   // selected
+
+   fMinMethodList->RemoveAll();
+   
+   if ( fLibMinuit->GetState() == kButtonDown ) 
+   {
+      fMinMethodList->AddEntry("MIGRAD" ,       kFP_MIGRAD);
+      fMinMethodList->AddEntry("SIMPLEX" ,      kFP_SIMPLX);
+      fMinMethodList->AddEntry("SCAN" ,         kFP_SCAN);
+      fMinMethodList->AddEntry("Combination" ,  kFP_COMBINATION);
+      fMinMethodList->Select(kFP_MIGRAD, kFALSE);
+      fStatusBar->SetText("MIGRAD",2);
+   } else if ( fLibFumili->GetState() == kButtonDown ) 
+   {
+      fMinMethodList->AddEntry("FUMILI" , kFP_FUMILI);
+      fMinMethodList->Select(kFP_FUMILI, kFALSE);
+      fStatusBar->SetText("FUMILI",2);
+   } else if ( fLibGSL->GetState() == kButtonDown ) 
+   {
+      fMinMethodList->AddEntry("Fletcher-Reeves conjugate gradient" , kFP_GSLFR);
+      fMinMethodList->AddEntry("Polak-Ribiere conjugate gradient" ,   kFP_GSLPR);
+      fMinMethodList->AddEntry("BFGS conjugate gradient" ,            kFP_BFGS);
+      fMinMethodList->AddEntry("Levenberg-Marquardt" ,                kFP_GSLLM);
+      fMinMethodList->AddEntry("Simulated Annealing" ,                kFP_GSLSA);
+      fMinMethodList->Select(kFP_GSLFR, kFALSE);
+      fStatusBar->SetText("CONJFR",2);
+   } else // if ( fLibMinuit2->GetState() == kButtonDown )
+   {
+      fMinMethodList->AddEntry("MIGRAD" ,       kFP_MIGRAD);
+      fMinMethodList->AddEntry("SIMPLEX" ,      kFP_SIMPLX);
+      fMinMethodList->AddEntry("FUMILI" ,       kFP_FUMILI);
+      fMinMethodList->AddEntry("SCAN" ,         kFP_SCAN);
+      fMinMethodList->AddEntry("Combination" ,  kFP_COMBINATION);
+      fMinMethodList->Select(kFP_MIGRAD, kFALSE);
+      fStatusBar->SetText("MIGRAD",2);
    }
 }
 
@@ -2145,8 +2163,7 @@ void TFitEditor::DoReset()
    // minimization tab
    if (fLibMinuit->GetState() != kButtonDown)
       fLibMinuit->SetState(kButtonDown, kTRUE);
-   if (fMigrad->GetState() != kButtonDown)
-      fMigrad->SetState(kButtonDown, kTRUE);
+   FillMinMethodList();
    if (fOptDefault->GetState() != kButtonDown)
       fOptDefault->SetState(kButtonDown, kTRUE);
    if (fErrorScale->GetNumber() != ROOT::Math::MinimizerOptions::DefaultErrorDef()) {
@@ -2534,14 +2551,7 @@ void TFitEditor::DoLibrary(Bool_t on)
                fLibMinuit->SetState(kButtonDown);
                fLibMinuit2->SetState(kButtonUp);
                fLibFumili->SetState(kButtonUp);
-               if (fFumili->GetState() != kButtonDisabled) {
-                  fFumili->SetDisabledAndSelected(kFALSE);
-               }
-               fMigrad->SetState(kButtonDown);
-               fStatusBar->SetText("MIGRAD", 2);
-               fSimplex->SetState(kButtonUp);
-               fCombination->SetState(kButtonUp);
-               fScan->SetState(kButtonUp);
+               fLibGSL->SetState(kButtonUp);
                fStatusBar->SetText("LIB Minuit", 1);
             }
             
@@ -2554,16 +2564,7 @@ void TFitEditor::DoLibrary(Bool_t on)
                fLibMinuit->SetState(kButtonUp);
                fLibMinuit2->SetState(kButtonDown);
                fLibFumili->SetState(kButtonUp);
-               if (fSimplex->GetState() == kButtonDisabled)
-                  fSimplex->SetState(kButtonUp);
-               if (fMigrad->GetState() == kButtonDisabled)
-                  fMigrad->SetState(kButtonUp);
-               if (fFumili->GetState() == kButtonDisabled)
-                  fFumili->SetState(kButtonUp);
-               if (fCombination->GetState() == kButtonDisabled)
-                  fCombination->SetState(kButtonUp);
-               if (fScan->GetState() == kButtonDisabled)
-                  fScan->SetState(kButtonUp);
+               fLibGSL->SetState(kButtonUp);
                fStatusBar->SetText("LIB Minuit2", 1);
             }
          }
@@ -2575,111 +2576,53 @@ void TFitEditor::DoLibrary(Bool_t on)
                fLibMinuit->SetState(kButtonUp);
                fLibMinuit2->SetState(kButtonUp);
                fLibFumili->SetState(kButtonDown);
-
-               if (fFumili->GetState() != kButtonDown) {
-                  fFumili->SetState(kButtonDown);
-                  fStatusBar->SetText("FUMILI", 2);
-               }
-               fMigrad->SetDisabledAndSelected(kFALSE);
-               fSimplex->SetState(kButtonDisabled);
-               fCombination->SetState(kButtonDisabled);
-               fScan->SetState(kButtonDisabled);
+               fLibGSL->SetState(kButtonUp);
                fStatusBar->SetText("LIB Fumili", 1);
             }
          }
+         break;
+      case kFP_LGSL:
+      {
+         if (on) {
+            fLibMinuit->SetState(kButtonUp);
+            fLibMinuit2->SetState(kButtonUp);
+            fLibFumili->SetState(kButtonUp);
+            fLibGSL->SetState(kButtonDown);
+            fStatusBar->SetText("LIB Mathmore", 1);
+         }
+      }
       default:
          break;
    }
+   FillMinMethodList();
 }
 
 //______________________________________________________________________________
-void TFitEditor::DoMinMethod(Bool_t on)
+void TFitEditor::DoMinMethod(Int_t )
 {
    // Set selected minimization method in use.
 
-   TGButton *bt = (TGButton *)gTQSender;
-   Int_t id = bt->WidgetId(); 
+   if ( fMinMethodList->GetSelected() == kFP_MIGRAD )
+      fStatusBar->SetText("MIGRAD",2);
+   else if ( fMinMethodList->GetSelected() == kFP_FUMILI)
+      fStatusBar->SetText("FUMILI",2);
+   else if ( fMinMethodList->GetSelected() == kFP_SIMPLX )
+      fStatusBar->SetText("SIMPLEX",2);
+   else if ( fMinMethodList->GetSelected() == kFP_SCAN )
+      fStatusBar->SetText("SCAN",2);
+   else if ( fMinMethodList->GetSelected() == kFP_COMBINATION )
+      fStatusBar->SetText("Combination",2);
+   else if ( fMinMethodList->GetSelected() == kFP_GSLFR )
+      fStatusBar->SetText("CONJFR",2);
+   else if ( fMinMethodList->GetSelected() == kFP_GSLPR )
+      fStatusBar->SetText("CONJPR",2);
+   else if ( fMinMethodList->GetSelected() == kFP_BFGS )
+      fStatusBar->SetText("BFGS2",2);
+   else if ( fMinMethodList->GetSelected() == kFP_GSLLM )
+      fStatusBar->SetText("GSLLM",2);
+   else if ( fMinMethodList->GetSelected() == kFP_GSLSA)
+      fStatusBar->SetText("SimAn",2);
 
-   switch (id) {
-
-   case kFP_MIGRAD:
-   {
-      if (on) {
-         fSimplex->SetState(kButtonUp);
-         fCombination->SetState(kButtonUp);
-         fScan->SetState(kButtonUp);
-         if (fLibMinuit->GetState() == kButtonDown)
-            fFumili->SetState(kButtonDisabled);
-         else
-            fFumili->SetState(kButtonUp);
-         fMigrad->SetState(kButtonDown);
-         fStatusBar->SetText("MIGRAD",2);
-      }
-   }
-   break;
-   
-   case kFP_SIMPLX:
-   {
-      if (on) {
-         fMigrad->SetState(kButtonUp);
-         fCombination->SetState(kButtonUp);
-         fScan->SetState(kButtonUp);
-         if (fLibMinuit->GetState() == kButtonDown)
-            fFumili->SetState(kButtonDisabled);
-         else
-            fFumili->SetState(kButtonUp);
-         fSimplex->SetState(kButtonDown);
-         fStatusBar->SetText("SIMPLEX",2);
-      }
-   }
-   break;
-   
-   case kFP_COMBINATION:
-   {
-      if (on) {
-         fMigrad->SetState(kButtonUp);
-         fSimplex->SetState(kButtonUp);
-         fScan->SetState(kButtonUp);
-         if (fLibMinuit->GetState() == kButtonDown)
-            fFumili->SetState(kButtonDisabled);
-         else
-            fFumili->SetState(kButtonUp);    
-         fCombination->SetState(kButtonDown);
-         fStatusBar->SetText("Combination",2);
-      }
-   }
-   break;
-
-   case kFP_SCAN:
-   {
-      if (on) {
-         fMigrad->SetState(kButtonUp);
-         fSimplex->SetState(kButtonUp);
-         fCombination->SetState(kButtonUp);
-         if (fLibMinuit->GetState() == kButtonDown)
-            fFumili->SetState(kButtonDisabled);
-         else
-            fFumili->SetState(kButtonUp);    
-         fScan->SetState(kButtonDown);
-         fStatusBar->SetText("SCAN",2);
-      }
-   }
-   break;
-
-   case kFP_FUMILI:
-   {
-      if (on) {
-         fMigrad->SetState(kButtonUp);
-         fSimplex->SetState(kButtonUp);
-         fCombination->SetState(kButtonUp);
-         fScan->SetState(kButtonUp);
-         fFumili->SetState(kButtonDown);
-         fStatusBar->SetText("FUMILI",2);
-      }
-   }
-   break;
-   
-   }
 }
 
 //______________________________________________________________________________
@@ -2789,20 +2732,36 @@ void TFitEditor::RetrieveOptions(Foption_t& fitOpts, TString& drawOpts, ROOT::Ma
       minOpts.SetMinimizerType ( "Minuit2" );
    else if ( fLibFumili->GetState() == kButtonDown )
       minOpts.SetMinimizerType ("Fumili" );
+   else if ( fLibGSL->GetState() == kButtonDown )
+      minOpts.SetMinimizerType ("GSLMultiMin" );
 
-   if ( fMigrad->GetState() == kButtonDown )
+   if ( fMinMethodList->GetSelected() == kFP_MIGRAD )
       minOpts.SetMinimizerAlgorithm( "Migrad" );
-   else if ( fFumili->GetState() == kButtonDown )
+   else if ( fMinMethodList->GetSelected() == kFP_FUMILI)
       if ( fLibMinuit2->GetState() == kButtonDown )
          minOpts.SetMinimizerAlgorithm( "Fumili2" );
       else 
          minOpts.SetMinimizerAlgorithm( "Fumili" );
-   else if ( fSimplex->GetState() == kButtonDown )
+   else if ( fMinMethodList->GetSelected() == kFP_SIMPLX )
       minOpts.SetMinimizerAlgorithm( "Simplex" );
-   else if ( fScan->GetState() == kButtonDown )
+   else if ( fMinMethodList->GetSelected() == kFP_SCAN )
       minOpts.SetMinimizerAlgorithm( "Scan" );
-   else if ( fCombination->GetState() == kButtonDown )
+   else if ( fMinMethodList->GetSelected() == kFP_COMBINATION )
       minOpts.SetMinimizerAlgorithm( "Minimize" );
+   else if ( fMinMethodList->GetSelected() == kFP_GSLFR )
+      minOpts.SetMinimizerAlgorithm( "conjugatefr" );
+   else if ( fMinMethodList->GetSelected() == kFP_GSLPR )
+      minOpts.SetMinimizerAlgorithm( "conjugatepr" );
+   else if ( fMinMethodList->GetSelected() == kFP_BFGS )
+      minOpts.SetMinimizerAlgorithm( "bfgs2" );
+   else if ( fMinMethodList->GetSelected() == kFP_GSLLM ) {
+      minOpts.SetMinimizerType ("GSLMultiFit" );
+      minOpts.SetMinimizerAlgorithm( "" );
+   }
+   else if ( fMinMethodList->GetSelected() == kFP_GSLSA) {
+      minOpts.SetMinimizerType ("GSLSimAn" );
+      minOpts.SetMinimizerAlgorithm( "" );
+   }
 
    minOpts.SetErrorDef ( fErrorScale->GetNumber() );
    minOpts.SetTolerance( fTolerance->GetNumber() );

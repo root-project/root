@@ -42,11 +42,18 @@
 #include "Math/IParamFunctionfwd.h"
 #endif
 
-
+#ifndef ROOT_Math_FitMethodFunction
 #include "Math/FitMethodFunction.h"
-//#include "Math/Derivator.h"
+#endif
+
+#ifndef ROOT_Math_MinimizerVariable
+#include "Math/MinimizerVariable.h"
+#endif
 
 
+#include <vector>
+#include <map>
+#include <string>
 
 namespace ROOT { 
 
@@ -187,16 +194,14 @@ public:
    /// set free variable 
    virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step); 
 
-   /// set lower limit variable  (override if minimizer supports them )
+   /// set lower limited variable 
    virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower );
-   /// set upper limit variable (override if minimizer supports them )
+   /// set upper limited variable
    virtual bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ); 
-   /// set upper/lower limited variable (override if minimizer supports them )
-   virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */); 
-#ifdef LATER
-   /// set fixed variable (override if minimizer supports them )
-   virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
-#endif
+   /// set upper/lower limited variable 
+   virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double lower , double upper ); 
+   /// set fixed variable
+   virtual bool SetFixedVariable(unsigned int ivar , const std::string & name , double val );  
 
    /// set the value of an existing variable 
    virtual bool SetVariableValue(unsigned int ivar, double val );
@@ -210,7 +215,7 @@ public:
    virtual double MinValue() const { return fMinVal; } 
 
    /// return expected distance reached from the minimum
-   virtual double Edm() const { return 0; } // not impl. }
+   virtual double Edm() const { return fEdm; } // not impl. }
 
    /// return  pointer to X values at the minimum 
    virtual const double *  X() const { return &fValues.front(); } 
@@ -227,7 +232,7 @@ public:
 
    /// number of free variables (real dimension of the problem) 
    /// this is <= Function().NDim() which is the total 
-   virtual unsigned int NFree() const { return fDim; }  
+   virtual unsigned int NFree() const { return fNFree; }  
 
    /// minimizer provides error and error matrix
    virtual bool ProvidesError() const { return true; } 
@@ -257,22 +262,28 @@ protected:
 
 private: 
    
-   // dimension of the function to be minimized 
-   unsigned int fDim; 
-   // number of fit points (residuals)
-   unsigned int fSize; 
+
+   unsigned int fDim;        // dimension of the function to be minimized 
+   unsigned int fNFree;      // dimension of the internal function to be minimized 
+   unsigned int fSize;        // number of fit points (residuals)
+ 
 
    ROOT::Math::GSLMultiFit * fGSLMultiFit;        // pointer to GSL multi fit solver 
-   const ROOT::Math::IMultiGenFunction * fObjFunc;      // pointer to Least square function
+   const ROOT::Math::FitMethodFunction * fObjFunc;      // pointer to Least square function
    
    double fMinVal;                                // minimum function value
+   double fEdm;                                   // edm value
    double fLSTolerance;                           // Line Search Tolerance
    std::vector<double> fValues;           
    std::vector<double> fErrors;
-   const double * fCovMatrix;         // pointer to cov matrix (stored in fGSLMultiFit)
+   std::vector<double> fCovMatrix;              //  cov matrix (stored as cov[ i * dim + j] 
    std::vector<double> fSteps;
    std::vector<std::string> fNames;
    std::vector<LSResidualFunc> fResiduals;   //! transient Vector of the residual functions
+
+   std::vector<ROOT::Math::EMinimVariableType> fVarTypes;  // vector specifyng the type of variables
+   std::map< unsigned int, std::pair<double, double> > fBounds; // map specifying the bound using as key the parameter index
+
 
 }; 
 

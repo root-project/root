@@ -2167,6 +2167,9 @@ TH1 *TH3::Project3D(Option_t *option) const
    // option = "zy" return the z versus y projection into a TH2D histogram
    // NB: the notation "a vs b" means "a" vertical and "b" horizontal
    //
+   // option = "o" original axis range of the taget axes will be
+   //   kept, but only bins inside the selected range will be filled.
+   //
    // If option contains the string "e", errors are computed
    //
    // The projection is made for the selected bins only.
@@ -2463,6 +2466,9 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    // option = "yz" return the y versus z projection into a TProfile2D histogram
    // option = "zy" return the z versus y projection into a TProfile2D histogram
    // NB: the notation "a vs b" means "a" vertical and "b" horizontal
+   //
+   // option = "o" original axis range of the taget axes will be
+   //   kept, but only bins inside the selected range will be filled.
    //
    // The projection is made for the selected bins only.
    // To select a bin range along an axis, use TAxis::SetRange, eg
