@@ -754,7 +754,7 @@ const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, con
 
 //_____________________________________________________________________________
 const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
-					       RooArgSet *&cloneSet, const char* rangeName) const 
+						   RooArgSet *&cloneSet, const char* rangeName, const RooArgSet* condObs) const 
 {
   // Utility function for plotOn() that creates a projection of a function or p.d.f 
   // to be plotted on a RooPlot. 
@@ -855,7 +855,10 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   // Create the set of normalization variables to use in the projection integrand
   RooArgSet normSet(dependentVars);
   if(0 != projectedVars) normSet.add(*projectedVars);
-
+  if(0 != condObs) {
+    normSet.remove(*condObs,kTRUE,kTRUE) ;
+  }
+  
   // Try to create a valid projection integral. If no variables are to be projected,
   // create a null projection anyway to bind our normalization over the dependents
   // consistently with the way they would be bound with a non-trivial projection.
@@ -893,7 +896,8 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 
 //_____________________________________________________________________________
 TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
-			       Double_t scaleFactor, const RooArgSet *projectedVars, Bool_t scaleForDensity) const 
+			       Double_t scaleFactor, const RooArgSet *projectedVars, Bool_t scaleForDensity,
+			       const RooArgSet* condObs) const 
 {
   // Fill the ROOT histogram 'hist' with values sampled from this
   // function at the bin centers.  Our value is calculated by first
@@ -953,7 +957,9 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
   // Call checkObservables
   RooArgSet allDeps(plotClones) ;
-  if (projectedVars) allDeps.add(*projectedVars) ;
+  if (projectedVars) {
+    allDeps.add(*projectedVars) ;
+  }
   if (checkObservables(&allDeps)) {
     coutE(InputArguments) << "RooAbsReal::fillHistogram(" << GetName() << ") error in checkObservables, abort" << endl ;
     return hist ;
@@ -961,9 +967,8 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
   // Create a standalone projection object to use for calculating bin contents
   RooArgSet *cloneSet = 0;
-  const RooAbsReal *projected= createPlotProjection(plotClones,projectedVars,cloneSet);
+  const RooAbsReal *projected= createPlotProjection(plotClones,projectedVars,cloneSet,0,condObs);
   cxcoutD(Plotting) << "RooAbsReal::fillHistogram(" << GetName() << ") plot projection object is " << projected->GetName() << endl ;
-
 
   // Prepare to loop over the histogram bins
   Int_t xbins(0),ybins(1),zbins(1);
@@ -1236,19 +1241,15 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   }
 
   RooArgSet* projObs = static_cast<RooArgSet*>(pc.getObject("projObs")) ;
+  RooArgSet* intObs = 0 ;
 
   Bool_t doScaling = pc.getInt("scaling") ;
 
-  // Strip any 'Scaling' commands from list forwarded to createHistogram
-  RooLinkedList l2 ;
-  for (Int_t i=0 ; i<argList.GetSize() ; i++) {
-    if (TString(argList.At(i)->GetName()).CompareTo("Scaling")) {
-      l2.Add(argList.At(i)) ;
-    }
-  }
+  RooLinkedList argListCreate(argList) ;
+  pc.stripCmdList(argListCreate,"Scaling,ProjectedObservables") ;
 
-  TH1* histo = xvar.createHistogram(name,l2) ;
-  fillHistogram(histo,vars,1.0,projObs,doScaling) ;
+  TH1* histo = xvar.createHistogram(name,argListCreate) ;
+  fillHistogram(histo,vars,1.0,intObs,doScaling,projObs) ;
 
   return histo ;
 }
@@ -3093,6 +3094,41 @@ Double_t RooAbsReal::maxVal(Int_t /*code*/) const
 
 
 //_____________________________________________________________________________
+void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString) 
+{
+  // Interface to insert remote error logging messages received by RooRealMPFE into current error loggin stream
+
+  static Bool_t inLogEvalError = kFALSE ;  
+
+  if (inLogEvalError) {
+    return ;
+  }
+  inLogEvalError = kTRUE ;
+
+  EvalError ee ;
+  ee.setMessage(message) ;
+
+  if (serverValueString) {
+    ee.setServerValues(serverValueString) ;
+  } 
+
+  if (!_doLogEvalError) {
+   oocoutE((TObject*)0,Eval) << "RooAbsReal::logEvalError(" << "<STATIC>" << ") evaluation error, " << endl 
+		   << " origin       : " << origName << endl 
+		   << " message      : " << ee._msg << endl
+		   << " server values: " << ee._srvval << endl ;
+  } else {
+    _evalErrorList[originator].first = origName ;
+    _evalErrorList[originator].second.push_back(ee) ;
+  }
+
+
+  inLogEvalError = kFALSE ;
+}
+
+
+
+//_____________________________________________________________________________
 void RooAbsReal::logEvalError(const char* message, const char* serverValueString) const
 {
   // Log evaluation error message. Evaluation errors may be routed through a different
@@ -3107,6 +3143,13 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
   // reported through this method are passed for immediate printing through RooMsgService.
   // A string with server names and values is constructed automatically for error logging
   // purposes, unless a custom string with similar information is passed as argument.
+
+  static Bool_t inLogEvalError = kFALSE ;  
+
+  if (inLogEvalError) {
+    return ;
+  }
+  inLogEvalError = kTRUE ;
 
   EvalError ee ;
   ee.setMessage(message) ;
@@ -3142,9 +3185,11 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
     _evalErrorList[this].first = oss2.str().c_str() ;
     _evalErrorList[this].second.push_back(ee) ;
   }
-    
+
+  inLogEvalError = kFALSE ;
   //coutE(Tracing) << "RooAbsReal::logEvalError(" << GetName() << ") message = " << message << endl ;
 }
+
 
 
 

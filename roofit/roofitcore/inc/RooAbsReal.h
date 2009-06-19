@@ -204,7 +204,8 @@ public:
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
-		     Double_t scaleFactor= 1, const RooArgSet *projectedVars= 0, Bool_t scaling=kTRUE) const;
+		     Double_t scaleFactor= 1, const RooArgSet *projectedVars= 0, Bool_t scaling=kTRUE,
+		     const RooArgSet* condObs=0) const;
 
   // Create 1,2, and 3D histograms from and fill it
   TH1 *createHistogram(const char* varNameList, Int_t xbins=0, Int_t ybins=0, Int_t zbins=0) const ;
@@ -242,6 +243,7 @@ public:
   static Bool_t evalErrorLoggingEnabled() { return _doLogEvalError ; }
   static void enableEvalErrorLogging(Bool_t flag) { _doLogEvalError = flag ; }
   void logEvalError(const char* message, const char* serverValueString=0) const ;
+  static void logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString=0) ;
   static void printEvalErrors(ostream&os=std::cout, Int_t maxPerNode=10000000) ;
   static Int_t numEvalErrors() ;
   static Int_t numEvalErrorItems() { return _evalErrorList.size() ; }
@@ -291,7 +293,7 @@ protected:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
-				         RooArgSet *&cloneSet, const char* rangeName=0) const;
+				         RooArgSet *&cloneSet, const char* rangeName=0, const RooArgSet* condObs=0) const;
  protected:
 
   RooFitResult* chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList) ;

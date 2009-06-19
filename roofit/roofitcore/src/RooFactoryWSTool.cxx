@@ -1956,7 +1956,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
 
     // PROJ::name[pdf,intobs]
     if (pargv.size()!=2) {
-      throw string(Form("PROJ::%s, requires 2 argumentss, have %d arguments",instName,pargv.size())) ;
+      throw string(Form("PROJ::%s, requires 2 arguments, have %d arguments",instName,pargv.size())) ;
     }
 
     RooAbsPdf& pdf = ft.asPDF(pargv[0].c_str()) ;

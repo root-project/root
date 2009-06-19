@@ -177,6 +177,10 @@ namespace RooFit {
   RooCmdArg NumEvents(Int_t numEvents)   { return RooCmdArg("NumEvents",numEvents,0,0,0,0,0,0,0) ; }
   RooCmdArg ExpectedData(Bool_t flag)    { return RooCmdArg("ExpectedData",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Asimov(Bool_t flag)          { return ExpectedData(flag) ; }
+
+
+  // RooAbsReal::fillHistogram arguments
+  RooCmdArg IntegratedObservables(const RooArgSet& intObs) {  return RooCmdArg("IntObs",0,0,0,0,0,0,0,0,0,0,&intObs,0) ; } ;  
   
   // RooAbsRealLValue::createHistogram arguments
   RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg)       { return RooCmdArg("YVar",0,0,0,0,0,0,&var,0,&arg) ; }

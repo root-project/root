@@ -136,6 +136,9 @@ RooCmdArg Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), cons
                  const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
 RooCmdArg Sibling(const RooAbsCollection& sibling) ;
 
+// RooAbsReal::fillHistogram arguments
+RooCmdArg IntegratedObservables(const RooArgSet& intObs) ;
+
 // RooAbsRealLValue::frame arguments
 RooCmdArg Title(const char* name) ;
 RooCmdArg Bins(Int_t nbin) ;

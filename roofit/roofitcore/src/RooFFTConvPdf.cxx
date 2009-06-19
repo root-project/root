@@ -683,6 +683,21 @@ RooArgSet* RooFFTConvPdf::actualObservables(const RooArgSet& nset) const
     
   } else {
 
+    // If cacheObs was filled, cache only observables in there
+    if (_cacheObs.getSize()>0) {
+      TIterator* iter = obs1->createIterator() ;
+      RooAbsArg* arg ;
+      RooArgSet killList ;
+      while((arg=(RooAbsArg*)iter->Next())) {
+	if (arg->IsA()->InheritsFrom(RooAbsReal::Class()) && !_cacheObs.find(arg->GetName())) {
+	  killList.add(*arg) ;
+	}
+      }
+      delete iter ;
+      obs1->remove(killList) ;
+    }
+
+
     // Make sure convolution observable is always in there
     obs1->add(_x.arg(),kTRUE) ; 
     delete obs2 ;
