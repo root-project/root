@@ -32,7 +32,7 @@ protected:
 
    TDatabasePDG(const TDatabasePDG& db)
      : TNamed(db), fParticleList(db.fParticleList),
-     fListOfClasses(db.fListOfClasses) { }
+     fListOfClasses(db.fListOfClasses), fPdgMap(0) { }
 
    TDatabasePDG& operator=(const TDatabasePDG& db)
      {if(this!=&db) {TNamed::operator=(db); fParticleList=db.fParticleList;
