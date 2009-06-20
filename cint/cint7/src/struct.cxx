@@ -2412,7 +2412,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
       G__struct.name[i] = (char*) malloc((size_t)(len + 1));
       strcpy(G__struct.name[i], atom_tagname);
       G__struct.hash[i] = len;
-      G__struct.size[i] = (type=='e') ? 4 : 0; // For consistency with Reflex (Need for cintexcompat)
+      G__struct.size[i] = 0; // (type=='e') ? 4 : 0; // For consistency with Reflex (Need for cintexcompat)
       G__struct.type[i] = type; // 'c' class, 'e' enum, 'n', namespace, 's' struct, 'u' union
       G__struct.baseclass[i] = new G__inheritance();
       G__struct.virtual_offset[i] = G__PVOID; // -1 means no virtual function

@@ -243,7 +243,7 @@ void Cintex::Enable()
          p = (G__RflxProperties*) tb->Properties().PropertyValue(pid).Address();
          // If we have a properties, this type has been seen by CINT but possibly
          // only has a forward declaration like operation.
-         if (p && p->filenum == -1 && ty.SizeOf()>0 && p->tagnum!=-1 && Cint::Internal::G__struct.size[p->tagnum]==0) {
+         if (p && p->filenum == -1 && ty.SizeOf()>0 && p->tagnum!=-1 && (Cint::Internal::G__struct.size[p->tagnum]==0 &&  Cint::Internal::G__struct.type[p->tagnum]!='e')) {
             // Force the update
             p = 0;
             //fprintf(stderr,"The type %s has been only partially setup %d %d \n",ty.Name(Reflex::SCOPED).c_str(),ty.SizeOf(),Cint::Internal::G__struct.size[p->tagnum]);
