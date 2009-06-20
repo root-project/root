@@ -138,6 +138,9 @@ extern "C" int G__call_setup_funcs()
       // Don't do anything until G__struct (at least) is initialized
       return 0;
    }
+   if (Reflex::Instance::HasShutdown()) {
+      return 0;
+   }
 
    int init_counter = 0; // Number of initializers run.
    ::Reflex::Scope store_p_local = G__p_local; // changed by setupfuncs

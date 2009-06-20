@@ -221,11 +221,15 @@ namespace Reflex {
       /** destructor */
       ~Instance();
 
+      /** return true if Reflex has shutdown (end of process) */
+      static bool HasShutdown();
+
    private:
       Instance(Instance* createSingleton);
       static Instance& CreateReflexInstance();
 
       static Instance* fgSingleton;
+      static bool fgHasShutdown;
       void Shutdown();
       /** default constructor */
    }; // struct Reflex

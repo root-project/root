@@ -671,7 +671,7 @@ int G__sizeof_deref(const G__value*);
 ::Reflex::Member G__update_array_dimension(::Reflex::Member member, size_t nelem );
 ::Reflex::Type G__get_from_type(int type, int createpointer, int isconst = 0);
 ::Reflex::Type G__find_type(const char *type_name, int errorflag, int templateflag);
-::Reflex::Type G__find_typedef(const char*);
+::Reflex::Type G__find_typedef(const char*,int noerror = 0);
 ::Reflex::Scope G__findInScope(const ::Reflex::Scope scope, const char* name);
 ::Reflex::Type G__declare_typedef(const char *typenamein,
                                         int typein,int tagnum,int reftype,

@@ -29,6 +29,9 @@
 // Cint
 #include "G__ci.h"
 
+// Internal CINT
+#include "../../cint7/src/common.h"
+
 #include <iostream>
 
 using namespace ROOT::Reflex;
@@ -235,9 +238,16 @@ void Cintex::Enable()
          continue;
       }
       const TypeBase* tb = ty.ToTypeBase();
-      void* p = 0;
+      G__RflxProperties* p = 0;
       if (tb) {
-         p = tb->Properties().PropertyValue(pid).Address();
+         p = (G__RflxProperties*) tb->Properties().PropertyValue(pid).Address();
+         // If we have a properties, this type has been seen by CINT but possibly
+         // only has a forward declaration like operation.
+         if (p && p->filenum == -1 && ty.SizeOf()>0 && p->tagnum!=-1 && Cint::Internal::G__struct.size[p->tagnum]==0) {
+            // Force the update
+            p = 0;
+            //fprintf(stderr,"The type %s has been only partially setup %d %d \n",ty.Name(Reflex::SCOPED).c_str(),ty.SizeOf(),Cint::Internal::G__struct.size[p->tagnum]);
+         }
       }
       if (!p) { // No cint properties, only reflex knows this type, inform cint.
          (*Instance().fCallback)(Type::TypeAt(i));
@@ -348,8 +358,8 @@ void Callback::operator()(const Type& t)
 {
    ArtificialSourceFile asf;
    int autoload = G__set_class_autoloading(0); // To avoid recursive loads
+   //cerr << "Callback::operator()(const Type&): " << "class: " << t.Name(SCOPED) << " with " << t.IsClass() << endl;
    if (t.IsClass()) {
-      //cerr << "Callback::operator()(const Type&): " << "class: " << t.Name(SCOPED) << endl;
       ROOTClassEnhancer enhancer(t);
       enhancer.Setup();
       CINTClassBuilder::Get(t).Setup();

@@ -927,8 +927,10 @@ int G__defined_typename(const char* type_name)
 }
 
 //______________________________________________________________________________
-::Reflex::Type Cint::Internal::G__find_typedef(const char* type_name)
+::Reflex::Type Cint::Internal::G__find_typedef(const char* type_name,int noerror)
 {
+   // noerror is passed to G__defined_tagname (see its documentation for details).
+
    G__StrBuf buf_sb(G__LONGLINE);
    char* buf = buf_sb;
    G__StrBuf buf2_sb(G__LONGLINE);
@@ -955,12 +957,12 @@ int G__defined_typename(const char* type_name)
       }
       else {
          int tagnum = -1;
-         Reflex::Type env_typenum = G__find_typedef(skipconst);
+         Reflex::Type env_typenum = G__find_typedef(skipconst, noerror);
          if (env_typenum) {
             tagnum = G__get_tagnum(env_typenum.FinalType());
          }
          else {
-            tagnum = G__defined_tagname(skipconst, 0); // Lookup the given scope, starting from the current scope, this may cause a template instantiation if the given scope has a template id in it.
+            tagnum = G__defined_tagname(skipconst, noerror); // Lookup the given scope, starting from the current scope, this may cause a template instantiation if the given scope has a template id in it.
          }
          if (tagnum != -1) {
             scope = G__Dict::GetDict().GetScope(tagnum);
