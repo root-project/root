@@ -931,8 +931,8 @@ int main(int argc, char** argv)
    ret += ci(kLangCXX, "t1124.cxx", difffile);
    ret += ci(kLangCXX, "t1125.cxx", difffile);
    ret += ci(kLangCXX, "t1126.cxx", difffile);
-#if !defined(G__APPLE) && G__CINTVERSION > 70000000
-   // This not work on macos because of var_arg
+#if !defined(G__APPLE)
+   // This not work on macos and on 64bit linux because of var_arg
    if (sizeof(void*)<8 || (G__CINTVERSION > 70000000) ) {
       ret += ci(kLangCXX, "t1127.cxx", difffile);
       ret += mkci(kLangCXX, "t1127.cxx", "t1127.h", difffile);  //
