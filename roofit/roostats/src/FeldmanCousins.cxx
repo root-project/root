@@ -148,11 +148,11 @@ void FeldmanCousins::CreateParameterPoints() const{
       // if parameters include nuisance parameters, do profile construction
       cout << " nuisance parameters, will do profile construction" << endl;
 
-      TIter it = fPOI->createIterator();
-      RooRealVar *myarg; 
-      while ((myarg = (RooRealVar *)it.Next())) { 
-	if(!myarg) continue;
-	myarg->setBins(fNbins);
+      TIter it2 = fPOI->createIterator();
+      RooRealVar *myarg2; 
+      while ((myarg2 = (RooRealVar *)it2.Next())) { 
+	if(!myarg2) continue;
+	myarg2->setBins(fNbins);
       }
 
       RooDataHist* parameterScan = new RooDataHist("parameterScan", "", *fPOI);

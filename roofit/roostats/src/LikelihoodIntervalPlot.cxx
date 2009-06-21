@@ -127,7 +127,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
     frame->SetMaximum(fMaximum);
     frame->SetMinimum(0.);
 
-    Double_t debug_var= newProfile->getVal();
+    // Double_t debug_var= newProfile->getVal();
     myarg->setVal(xcont_min);
     //const Double_t Yat_Xmin = newProfile->getVal();
 

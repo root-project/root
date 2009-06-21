@@ -158,7 +158,7 @@ void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions)
 }
 
 //_____________________________________________________________________________
-void SamplingDistPlot::Draw(const Option_t *options) 
+void SamplingDistPlot::Draw(const Option_t * /*options */ ) 
 {
   // Draw this plot and all of the elements it contains. The specified options
   // only apply to the drawing of our frame. The options specified in our add...()
