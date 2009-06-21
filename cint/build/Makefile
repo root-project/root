@@ -123,9 +123,9 @@ endif
 
 test debugtest cintreflextest:
 	(cd test && \
-	PATH=$$PWD/../bin:.:$$PATH; \
-	LD_LIBRARY_PATH=$$PWD/../lib:.:$$LD_LIBRARY_PATH; \
-	DYLD_LIBRARY_PATH=$$PWD/../lib:.:$$DYLD_LIBRARY_PATH; \
+	PATH=$$PWD/../bin:.:$$PATH \
+	LD_LIBRARY_PATH=$$PWD/../lib:.:$$LD_LIBRARY_PATH \
+	DYLD_LIBRARY_PATH=$$PWD/../lib:.:$$DYLD_LIBRARY_PATH \
 	cint$(G__CFG_EXEEXT) $(TESTDEBUG) testall.cxx $(TEST) $(TESTFLAGS) $(REFLEXTESTFLAGS) )
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
