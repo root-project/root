@@ -97,7 +97,7 @@
 
 static const char *urldef = "proof://localhost:11093";
 static Int_t gverbose = 0;
-static TString glogfile = 0;
+static TString glogfile;
 static Int_t gpoints = 0;
 static Int_t totpoints = 53;
 static RedirectHandle_t gRH;

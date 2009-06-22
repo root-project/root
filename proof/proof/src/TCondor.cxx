@@ -441,7 +441,7 @@ TString TCondor::GetImage(const char *host) const
 
    if (!pipe) {
       SysError("GetImage","cannot run command: %s", cmd.Data());
-      return 0;
+      return "";
    }
 
    TString image;
@@ -457,7 +457,7 @@ TString TCondor::GetImage(const char *host) const
    Int_t r = gSystem->ClosePipe(pipe);
    if (r) {
       Error("GetImage","command: %s returned %d", cmd.Data(), r);
-      return 0;
+      return "";
    } else {
       PDB(kCondor,1) Info("GetImage","command: %s returned %d", cmd.Data(), r);
    }
@@ -476,4 +476,3 @@ void TCondorSlave::Print(Option_t * /*opt*/ ) const
       << "  Perf: " << fPerfIdx
       << "  Image: " << fImage << endl;
 }
-

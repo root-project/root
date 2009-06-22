@@ -522,7 +522,7 @@ UInt_t TString::Hash(ECaseCompare cmp) const
 }
 
 //______________________________________________________________________________
-ULong_t TString::Hash(const void *txt, Int_t ntxt)
+UInt_t TString::Hash(const void *txt, Int_t ntxt)
 {
    // Calculates hash index from any char string. (static function)
    // Based on precalculated table of 256 specially selected numbers.
@@ -541,7 +541,7 @@ ULong_t TString::Hash(const void *txt, Int_t ntxt)
    //
    //              V.Perev
 
-   static const ULong_t utab[] = {
+   static const UInt_t utab[] = {
       0xdd367647,0x9caf993f,0x3f3cc5ff,0xfde25082,0x4c764b21,0x89affca7,0x5431965c,0xce22eeec,
       0xc61ab4dc,0x59cc93bd,0xed3107e3,0x0b0a287a,0x4712475a,0xce4a4c71,0x352c8403,0x94cb3cee,
       0xc3ac509b,0x09f827a2,0xce02e37e,0x7b20bbba,0x76adcedc,0x18c52663,0x19f74103,0x6f30e47b,
@@ -576,12 +576,12 @@ ULong_t TString::Hash(const void *txt, Int_t ntxt)
       0x7b562475,0xe4b4bc83,0xf3db0c3a,0x70a65e48,0x6016b302,0xdebd5046,0x707e786a,0x6f10200c
    };
 
-   static const ULong_t msk[] = { 0x11111111, 0x33333333, 0x77777777, 0xffffffff };
+   static const UInt_t msk[] = { 0x11111111, 0x33333333, 0x77777777, 0xffffffff };
 
    const UChar_t *uc = (const UChar_t *) txt;
-   ULong_t uu = 0;
+   UInt_t uu = 0;
    union {
-      ULong_t  u;
+      UInt_t   u;
       UShort_t s[2];
    } u;
    u.u = 0;

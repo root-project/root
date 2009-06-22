@@ -221,7 +221,7 @@ public:
    enum ECaseCompare { kExact, kIgnoreCase };
 
    TString();                       // Null string
-   TString(Ssiz_t ic);              // Suggested capacity
+   explicit TString(Ssiz_t ic);     // Suggested capacity
    TString(const TString &s) :      // Copy constructor
       fData(s.fData) { Pref()->AddReference(); }
 
@@ -380,7 +380,7 @@ public:
    Bool_t       Tokenize(TString &tok, Ssiz_t &from, const char *delim = " ") const;
 
    // Static member functions
-   static ULong_t Hash(const void *txt, Int_t ntxt);    // Calculates hash index from any char string.
+   static UInt_t  Hash(const void *txt, Int_t ntxt);    // Calculates hash index from any char string.
    static Ssiz_t  InitialCapacity(Ssiz_t ic = 15);      // Initial allocation capacity
    static Ssiz_t  MaxWaste(Ssiz_t mw = 15);             // Max empty space before reclaim
    static Ssiz_t  ResizeIncrement(Ssiz_t ri = 16);      // Resizing increment
