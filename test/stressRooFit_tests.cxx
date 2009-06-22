@@ -3088,6 +3088,10 @@ public:
     modelx->plotOn(frame) ;
     
     regPlot(frame,"rf315_frame") ;
+
+    delete data ;
+    delete modelx ;
+
     return kTRUE ;
   }
 } ;
