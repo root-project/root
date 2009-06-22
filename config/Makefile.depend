@@ -37,6 +37,7 @@ PROOFDRAWLIBDEPM       = $(TREEPLAYERLIB) $(G3DLIB) $(GRAFLIB) $(GPADLIB) \
 PROOFXLIBDEPM          = $(NETLIB) $(PROOFLIB) $(THREADLIB)
 SESSIONVIEWERLIBDEPM   = $(PROOFLIB) $(GUILIB) $(HISTLIB) $(GPADLIB) $(GRAFLIB) \
                          $(TREELIB) $(MATHCORELIB)
+X3DLIBDEPM             = $(G3DLIB) $(GUILIB)
 PEACLIBDEPM            = $(PROOFLIB) $(CLARENSLIB)
 PEACGUILIBDEPM         = $(GUILIB)
 EGLIBDEPM              = $(G3DLIB) $(GRAFLIB) $(GPADLIB) $(MATHCORELIB)
@@ -44,6 +45,7 @@ VMCLIBDEPM             = $(EGLIB) $(GEOMLIB) $(MATHCORELIB)
 PHYSICSLIBDEPM         = $(MATRIXLIB) $(MATHCORELIB)
 PYTHIA6LIBDEPM         = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
 PYTHIA8LIBDEPM         = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
+XMLLIBDEPM             = $(IOLIB)
 TABLELIBDEPM           = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
                          $(IOLIB) $(MATHCORELIB)
 MLPLIBDEPM             = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
@@ -51,7 +53,7 @@ MLPLIBDEPM             = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
 SPECTRUMLIBDEPM        = $(HISTLIB) $(MATRIXLIB)
 TMVALIBDEPM            = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) \
                          $(GRAFLIB) $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB) \
-                         $(MINUITLIB) $(MATHCORELIB)
+                         $(MINUITLIB) $(MATHCORELIB) $(XMLIOLIB)
 SPLOTLIBDEPM           = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(G3DLIB) $(GRAFLIB) $(MATHCORELIB)
 QUADPLIBDEPM           = $(MATRIXLIB) 
@@ -67,7 +69,6 @@ QTROOTLIBDEPM          = $(GUILIB) $(GQTLIB)
 GQTLIBDEPM             = $(GUILIB) $(GPADLIB) $(GRAFLIB) $(RINTLIB)
 RUBYLIBDEPM            = $(HISTLIB) $(MATHCORELIB)
 GUIBLDLIBDEPM          = $(GUILIB) $(GRAFLIB) $(MATHCORELIB)
-XMLLIBDEPM             = $(IOLIB)
 FOAMLIBDEPM            = $(HISTLIB)
 ALIENLIBDEPM           = $(XMLLIB) $(NETXLIB) $(TREELIB) $(PROOFPLAYERLIB) \
                          $(NETLIB) $(IOLIB)
@@ -102,7 +103,6 @@ GDMLLIBDEPM            = $(GEOMLIB) $(XMLLIB) $(HISTLIB) $(IOLIB)
 UNURANLIBDEPM          = $(HISTLIB) $(MATHCORELIB)
 WIN32GDKLIBDEPM        = $(GRAFLIB)
 X11TTFLIBDEPM          = $(X11LIB) $(GRAFLIB)
-X3DLIBDEPM             = $(G3DLIB) $(GUILIB)
 MONALISALIBDEPM        = $(NETLIB) $(IOLIB)
 THREADLIBDEPM          = $(IOLIB)
 EVELIBDEPM             = $(GEOMLIB) $(GEOMPAINTERLIB) $(G3DLIB) $(GUILIB) \
@@ -275,7 +275,7 @@ SPECTRUMLIBEXTRA        = lib/libHist.lib lib/libMatrix.lib
 TMVALIBEXTRA            = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGraf.lib lib/libGpad.lib \
                           lib/libTreePlayer.lib lib/libMLP.lib \
-                          lib/libMinuit.lib lib/libMathCore.lib
+                          lib/libMinuit.lib lib/libMathCore.lib lib/libXMLIO.lib
 SPLOTLIBEXTRA           = lib/libMatrix.lib lib/libHist.lib lib/libTree.lib \
                           lib/libTreePlayer.lib lib/libGraf3d.lib \
                           lib/libGraf.lib lib/libMathCore.lib
@@ -407,7 +407,7 @@ MLPLIBEXTRA             = -Llib -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMathCore
 SPECTRUMLIBEXTRA        = -Llib -lHist -lMatrix
 TMVALIBEXTRA            = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
-                          -lTreePlayer -lMLP -lMinuit -lMathCore
+                          -lTreePlayer -lMLP -lMinuit -lMathCore -lXMLIO
 SPLOTLIBEXTRA           = -Llib -lMatrix -lHist -lTree -lTreePlayer -lGraf3d \
                           -lGraf -lMathCore
 QTROOTLIBEXTRA          = -Llib -lGui -lGQt
