@@ -31,16 +31,15 @@
 #ifndef ROOT_TMVA_Rule
 #define ROOT_TMVA_Rule
 
+#ifndef ROOT_TMath
 #include "TMath.h"
+#endif
 
 #ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
 #endif
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
 #endif
 #ifndef ROOT_TMVA_RuleCut
 #include "TMVA/RuleCut.h"
@@ -49,7 +48,7 @@
 namespace TMVA {
 
    class RuleEnsemble;
-
+   class MsgLogger;
    class Rule;
 
    ostream& operator<<( ostream& os, const Rule & rule );
@@ -76,7 +75,7 @@ namespace TMVA {
       virtual ~Rule();
 
       // set message type
-      void SetMsgType( EMsgType t ) { fLogger.SetMinType(t); }
+      void SetMsgType( EMsgType t );
 
       // set RuleEnsemble ptr
       void SetRuleEnsemble( const RuleEnsemble *re ) { fRuleEnsemble = re; }
@@ -156,11 +155,14 @@ namespace TMVA {
       void PrintLogger( const char *title=0 ) const;
 
       // print just the raw info, used for weight file generation
-      void PrintRaw( ostream& os ) const;
+      void  PrintRaw   ( ostream& os  ) const; // obsolete
+      void* AddXMLTo   ( void* parent ) const;
 
-      void ReadRaw( istream& os );
+      void  ReadRaw    ( istream& os    ); // obsolete
+      void  ReadFromXML( void* wghtnode );
 
    private:
+
       // set sigma - don't use this as non private!
       void SetSigma(Double_t v)         { fSigma=v; }
 
@@ -184,25 +186,12 @@ namespace TMVA {
       Double_t             fSSB;           // S/(S+B) for rule
       Double_t             fSSBNeve;       // N(events) reaching the last node in reevaluation
 
-      mutable MsgLogger    fLogger;        // message logger
+      mutable MsgLogger*   fLogger;        //! message logger
+      MsgLogger& log() const { return *fLogger; }                       
 
    };
 
 } // end of TMVA namespace
-
-//_______________________________________________________________________
-/* inline Double_t TMVA::Rule::EvalEvent( const TMVA::Event& e, Bool_t norm ) const */
-/* { */
-/*    // */
-/*    // Evaluates the event for the given rule. */
-/*    // It will return the value scaled with the coefficient and */
-/*    // if requested, also normalized. */
-/*    // */
-/*    if (fCoefficient==0) return 0.0; */
-/*    Double_t rval = TMVA::Rule::EvalEvent(e); */
-/*    rval *= (norm ? fNorm : 1.0 ); */
-/*    return rval*fCoefficient; */
-//}
 
 //_______________________________________________________________________
 inline Bool_t TMVA::Rule::EvalEvent( const TMVA::Event& e ) const

@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -20,7 +19,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -38,13 +36,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//#include <iosfwd>
-#include <iostream>
-
+#include <iosfwd>
+#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
 #endif
 
 namespace TMVA {
@@ -53,8 +47,8 @@ namespace TMVA {
    class Event;
    class BinaryTree;
 
-   ostream& operator<<( ostream& os, const Node& node );
-   ostream& operator<<( ostream& os, const Node* node );
+   std::ostream& operator<<( std::ostream& os, const Node& node );
+   std::ostream& operator<<( std::ostream& os, const Node* node );
 
    // a class used to identify a Node; (needed for recursive reading from text file)
    // (currently it is NOT UNIQUE... but could eventually made it
@@ -62,9 +56,9 @@ namespace TMVA {
    class Node {
 
       // output operator for a node
-      friend ostream& operator << (ostream& os, const Node& node);
+      friend std::ostream& operator << (std::ostream& os, const Node& node);
       // output operator with a pointer to the node (which still prints the node itself)
-      friend ostream& operator << (ostream& os, const Node* node);
+      friend std::ostream& operator << (std::ostream& os, const Node* node);
     
    public:
 
@@ -79,7 +73,9 @@ namespace TMVA {
 
       // destructor
       virtual ~Node();
-      
+
+      virtual Node* createNode() const = 0;
+
       // test event if i{ decends the tree at this node to the right  
       virtual Bool_t GoesRight( const Event& ) const = 0;
       // test event if it decends the tree at this node to the left 
@@ -105,11 +101,16 @@ namespace TMVA {
       Int_t  CountMeAndAllDaughters() const;
     
       // printout of the node
-      virtual void Print( ostream& os ) const = 0;
+      virtual void Print( std::ostream& os ) const = 0;
 
       // recursive printout of the node and it daughters 
-      virtual void PrintRec ( ostream& os ) const = 0;
-      
+      virtual void PrintRec ( std::ostream& os ) const = 0;
+
+      void* AddXMLTo(void* parent) const;
+      void  ReadXML(void* node);
+      virtual void AddAttributesToNode(void* node) const = 0;
+      virtual void AddContentToNode(std::stringstream& s) const = 0;
+
       // Set depth, layer of the where the node is within the tree, seen from the top (root)
       void SetDepth(UInt_t d){fDepth=d;}
       
@@ -131,6 +132,8 @@ namespace TMVA {
       int GetCount(){return fgCount;}
 
       virtual Bool_t ReadDataRecord( std::istream& ) = 0;
+      virtual void ReadAttributes(void* node) = 0;
+      virtual void ReadContent(std::stringstream& s) =0;
 
    private: 
 

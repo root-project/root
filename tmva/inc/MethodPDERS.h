@@ -21,6 +21,7 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Yair Mahalalel  <Yair.Mahalalel@cern.ch> - CERN, Switzerland              *
+ *      Peter Speckmayer <peter.speckmayer@cern.ch>  - CERN, Switzerland          *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -53,7 +54,9 @@
 #include "TMVA/BinarySearchTree.h"
 #endif
 #ifndef ROOT_TMVA_TVector
+#ifndef ROOT_TVector
 #include "TVector.h"
+#endif
 #endif
 
 namespace TMVA {
@@ -67,15 +70,18 @@ namespace TMVA {
 
       MethodPDERS( const TString& jobName,
                    const TString& methodTitle, 
-                   DataSet& theData,
+                   DataSetInfo& theData,
                    const TString& theOption,
                    TDirectory* theTargetDir = 0 );
 
-      MethodPDERS( DataSet& theData,
+      MethodPDERS( DataSetInfo& theData,
                    const TString& theWeightFile,
                    TDirectory* theTargetDir = NULL );
 
       virtual ~MethodPDERS( void );
+
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+
 
       // training method
       void Train( void );
@@ -83,14 +89,18 @@ namespace TMVA {
       // write weights to file
       void WriteWeightsToStream( ostream& o ) const;
       void WriteWeightsToStream( TFile& rf ) const;
+      void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
       void ReadWeightsFromStream( istream& istr );
       void ReadWeightsFromStream( TFile& istr );
+      void ReadWeightsFromXML( void* wghtnode );
 
       // calculate the MVA value
-      Double_t GetMvaValue();
+      Double_t GetMvaValue( Double_t* err = 0 );
 
+      // calculate the MVA value
+      const std::vector<Float_t>& GetRegressionValues();
    public:
 
       // for root finder
@@ -112,10 +122,11 @@ namespace TMVA {
       Int_t        fFcnCall;    // number of external function calls (RootFinder)
 
       // accessors
-      BinarySearchTree* GetBinaryTreeSig( void ) const { return fBinaryTreeS; }
-      BinarySearchTree* GetBinaryTreeBkg( void ) const { return fBinaryTreeB; }
+      BinarySearchTree* GetBinaryTree( void ) const { return fBinaryTree; }
 
-      Double_t KernelEstimate( const Event&, std::vector<const BinarySearchTreeNode*>&, Volume& );
+      Double_t             CKernelEstimate( const Event&, std::vector<const BinarySearchTreeNode*>&, Volume& );
+      void                 RKernelEstimate( const Event&, std::vector<const BinarySearchTreeNode*>&, Volume&, std::vector<Float_t> *pdfSum );
+
       Double_t ApplyKernelFunction( Double_t normalized_distance );
       Double_t KernelNormalization( Double_t pdf );
       Double_t GetNormalizedDistance( const TMVA::Event &base_event, 
@@ -137,11 +148,14 @@ namespace TMVA {
       void CalcAverages();
 
       // create binary search trees for signal and background
-      void CreateBinarySearchTrees( TTree* tree );
+      void CreateBinarySearchTree( Types::ETreeType type );
+      
+      // get sample of training events
+      void GetSample( const Event &e, std::vector<const BinarySearchTreeNode*>& events, Volume *volume);
 
       // option
-      TString fVolumeRange;   // option volume range
-      TString fKernelString;  // option kernel estimator
+      TString fVolumeRange;    // option volume range
+      TString fKernelString;   // option kernel estimator
 
       enum EVolumeRangeMode {
          kUnsupported = 0,
@@ -166,15 +180,14 @@ namespace TMVA {
          kLanczos3,
          kLanczos5,
          kLanczos8,
-   kTrim
+         kTrim
       } fKernelEstimator;
 
-      BinarySearchTree*  fBinaryTreeS;   // binary tree for signal
-      BinarySearchTree*  fBinaryTreeB;   // binary tree for background
+      BinarySearchTree*  fBinaryTree;   // binary tree
 
-      vector<Float_t>*   fDelta;         // size of volume
-      vector<Float_t>*   fShift;         // volume center
-      vector<Float_t>    fAverageRMS;    // average RMS of signal and background
+      std::vector<Float_t>*   fDelta;         // size of volume
+      std::vector<Float_t>*   fShift;         // volume center
+      std::vector<Float_t>    fAverageRMS;    // average RMS of signal and background
 
       Float_t            fScaleS;        // weight for signal events
       Float_t            fScaleB;        // weight for background events
@@ -182,6 +195,7 @@ namespace TMVA {
       Double_t           fGaussSigma;    // size of Gauss in adaptive volume 
       Double_t           fGaussSigmaNorm;// size of Gauss in adaptive volume (normalised to dimensions)
 
+      Double_t           fNRegOut;       // number of output dimensions for regression
 
       // input for adaptive volume adjustment
       Float_t            fNEventsMin;    // minimum number of events in adaptive volume
@@ -192,15 +206,17 @@ namespace TMVA {
       Bool_t             fInitializedVolumeEle; // is volume element initialized ?
       
       Int_t              fkNNMin;        // min number of events in kNN tree
-      Int_t              fkNNMax;       // max number of events in kNN tree
-      Int_t               fkNNTests;      // maximum number of iterations to adapt volume size
+      Int_t              fkNNMax;        // max number of events in kNN tree
       
       Double_t           fMax_distance;  // maximum distance
-      Bool_t            fPrinted;       // print
+      Bool_t             fPrinted;       // print
       Bool_t             fNormTree;      // binary-search tree is normalised
 
       void    SetVolumeElement ( void );
-      Float_t RScalc           ( const Event& );
+
+      Double_t              CRScalc           ( const Event& );
+      void                  RRScalc           ( const Event&, std::vector<Float_t>* count );
+
       Float_t GetError         ( Float_t countS, Float_t countB,
                                  Float_t sumW2S, Float_t sumW2B ) const;
 
@@ -208,7 +224,7 @@ namespace TMVA {
       static MethodPDERS* fgThisPDERS; // this pointer (required by root finder)
       void UpdateThis() { fgThisPDERS = this; }
 
-      void InitPDERS( void );
+      void Init( void );
 
       ClassDef(MethodPDERS,0) // Multi-dimensional probability density estimator range search (PDERS) method
    };

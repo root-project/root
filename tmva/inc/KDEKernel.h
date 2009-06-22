@@ -37,15 +37,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
-
 class TH1;
 class TH1F;
 class TF1;
 
 namespace TMVA {
+
+   class MsgLogger;
 
    class KDEKernel {
 
@@ -85,7 +83,8 @@ namespace TMVA {
       Bool_t        fHiddenIteration;   // Defines if whats currently running is the 
                                      // (first) hidden iteration when doing adaptive KDE
 
-      mutable MsgLogger fLogger;     //! message logger
+      mutable MsgLogger* fLogger;   // message logger
+      MsgLogger& log() const { return *fLogger; }    
       
       ClassDef(KDEKernel,0) // Kernel density estimator for PDF smoothing
       

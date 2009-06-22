@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -20,7 +19,6 @@
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -28,18 +26,22 @@
  **********************************************************************************/
 
 #include <algorithm>
-#include "Riostream.h"
+#include <cstdlib>
+
 #include "TObjString.h"
 #include "TMath.h"
+#include "TString.h"
 #include "TTree.h"
 #include "TLeaf.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TList.h"
 #include "TSpline.h"
 #include "TVector.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
 #include "TTreeFormula.h"
+#include "TXMLEngine.h"
 #include "TROOT.h"
 
 #ifndef ROOT_TMVA_Tools
@@ -57,30 +59,34 @@
 #ifndef ROOT_TMVA_PDF
 #include "TMVA/PDF.h"
 #endif
+#ifndef ROOT_TMVA_MsgLogger
+#include "TMVA/MsgLogger.h"
+#endif
+
+using namespace std;
 
 TMVA::Tools * TMVA::Tools::fgTools = 0;
 
 TMVA::Tools& TMVA::gTools() { return TMVA::Tools::Instance(); }
 
-TMVA::Tools::Tools() 
-  : fRegexp("!%^&()'<>?= "),
-    fLogger(new MsgLogger("Tools"))
+//_______________________________________________________________________
+TMVA::Tools::Tools() :
+   fRegexp("$&|!%^&()'<>?= "),
+   fLogger(new MsgLogger("Tools")),
+   fXMLEngine(new TXMLEngine())
 {
    // constructor   
 }
 
+//_______________________________________________________________________
 TMVA::Tools::~Tools() 
 {
    // destructor
    delete fLogger;
+   delete fXMLEngine;
 }
 
-TMVA::MsgLogger& TMVA::Tools::Logger() const
-{
-   // access to a common MsgLogger
-   return *fLogger;
-}
-
+//_______________________________________________________________________
 Double_t TMVA::Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax )
 {
    // normalise to output range: [-1, 1]
@@ -88,7 +94,7 @@ Double_t TMVA::Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Tools::GetSeparation( const TH1& S, const TH1& B ) const
+Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
 {
    // compute "separation" defined as
    // <s2> = (1/2) Int_-oo..+oo { (S^2(x) - B^2(x))/(S(x) + B(x)) dx }
@@ -97,38 +103,39 @@ Double_t TMVA::Tools::GetSeparation( const TH1& S, const TH1& B ) const
    // sanity checks
    // signal and background histograms must have same number of bins and 
    // same limits
-   if ((S.GetNbinsX() != B.GetNbinsX()) || (S.GetNbinsX() <= 0)) {
-      Logger() << kFATAL << "<GetSeparation> signal and background"
-               << " histograms have different number of bins: " 
-               << S.GetNbinsX() << " : " << B.GetNbinsX() << Endl;
+   if ((S->GetNbinsX() != B->GetNbinsX()) || (S->GetNbinsX() <= 0)) {
+      log() << kFATAL << "<GetSeparation> signal and background"
+            << " histograms have different number of bins: " 
+            << S->GetNbinsX() << " : " << B->GetNbinsX() << Endl;
    }
 
-   if (S.GetXaxis()->GetXmin() != B.GetXaxis()->GetXmin() || 
-       S.GetXaxis()->GetXmax() != B.GetXaxis()->GetXmax() || 
-       S.GetXaxis()->GetXmax() <= S.GetXaxis()->GetXmin()) {
-      Logger() << kINFO << S.GetXaxis()->GetXmin() << " " << B.GetXaxis()->GetXmin() 
-               << " " << S.GetXaxis()->GetXmax() << " " << B.GetXaxis()->GetXmax() 
-               << " " << S.GetXaxis()->GetXmax() << " " << S.GetXaxis()->GetXmin() << Endl;
-      Logger() << kFATAL << "<GetSeparation> signal and background"
-               << " histograms have different or invalid dimensions:" << Endl;
+   if (S->GetXaxis()->GetXmin() != B->GetXaxis()->GetXmin() || 
+       S->GetXaxis()->GetXmax() != B->GetXaxis()->GetXmax() || 
+       S->GetXaxis()->GetXmax() <= S->GetXaxis()->GetXmin()) {
+      log() << kINFO << S->GetXaxis()->GetXmin() << " " << B->GetXaxis()->GetXmin() 
+            << " " << S->GetXaxis()->GetXmax() << " " << B->GetXaxis()->GetXmax() 
+            << " " << S->GetXaxis()->GetXmax() << " " << S->GetXaxis()->GetXmin() << Endl;
+      log() << kFATAL << "<GetSeparation> signal and background"
+            << " histograms have different or invalid dimensions:" << Endl;
    }
 
-   Int_t    nbins = S.GetNbinsX();
-   Double_t nS    = S.Integral( 0, nbins+1, "width" ); // include under/overflow bins
-   Double_t nB    = B.Integral( 0, nbins+1, "width" );
+   Int_t    nstep  = S->GetNbinsX();
+   Double_t intBin = (S->GetXaxis()->GetXmax() - S->GetXaxis()->GetXmin())/nstep;
+   Double_t nS     = S->GetSumOfWeights()*intBin;
+   Double_t nB     = B->GetSumOfWeights()*intBin;
    if (nS > 0 && nB > 0) {
-      // include under/overflow bins
-      for (Int_t ibin=0; ibin<=nbins+1; ibin++) {
-         Double_t s = S.GetBinContent( ibin )/nS;
-         Double_t b = B.GetBinContent( ibin )/nB;
+      for (Int_t bin=0; bin<nstep; bin++) {
+         Double_t s = S->GetBinContent( bin )/Double_t(nS);
+         Double_t b = B->GetBinContent( bin )/Double_t(nB);
          // separation
-         if (s + b > 0) separation += 0.5*(s - b)*(s - b)/(s + b)*S.GetXaxis()->GetBinWidth(ibin);
+         if (s + b > 0) separation += 0.5*(s - b)*(s - b)/(s + b);
       }
+      separation *= intBin;
    }
    else {
-      Logger() << kWARNING << "<GetSeparation> histograms with zero entries: " 
-               << nS << " : " << nB << " cannot compute separation"
-               << Endl;
+      log() << kWARNING << "<GetSeparation> histograms with zero entries: " 
+            << nS << " : " << nB << " cannot compute separation"
+            << Endl;
       separation = 0;
    }
 
@@ -136,7 +143,7 @@ Double_t TMVA::Tools::GetSeparation( const TH1& S, const TH1& B ) const
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Tools::GetSeparation( const PDF& pdfS, const PDF& pdfB ) const 
+Double_t TMVA::Tools::GetSeparation( const PDF& pdfS, const PDF& pdfB ) const
 {
    // compute "separation" defined as
    // <s2> = (1/2) Int_-oo..+oo { (S(x)2 - B(x)2)/(S(x) + B(x)) dx }
@@ -145,13 +152,13 @@ Double_t TMVA::Tools::GetSeparation( const PDF& pdfS, const PDF& pdfB ) const
    Double_t xmax = pdfS.GetXmax();
    // sanity check
    if (xmin != pdfB.GetXmin() || xmax != pdfB.GetXmax()) {
-      Logger() << kFATAL << "<GetSeparation> Mismatch in PDF limits: "
-               << xmin << " " << pdfB.GetXmin() << xmax << " " << pdfB.GetXmax()  << Endl;
+      log() << kFATAL << "<GetSeparation> Mismatch in PDF limits: "
+            << xmin << " " << pdfB.GetXmin() << xmax << " " << pdfB.GetXmax()  << Endl;
    }
 
    Double_t separation = 0;
    Int_t    nstep      = 100;
-   Double_t intBin     = (xmax - xmin)/nstep;
+   Double_t intBin     = (xmax - xmin)/Double_t(nstep);
    for (Int_t bin=0; bin<nstep; bin++) {
       Double_t x = (bin + 0.5)*intBin + xmin;
       Double_t s = pdfS.GetVal( x );
@@ -165,75 +172,46 @@ Double_t TMVA::Tools::GetSeparation( const PDF& pdfS, const PDF& pdfB ) const
 }
 
 //_______________________________________________________________________
-void TMVA::Tools::ComputeStat( TTree* theTree, const TString theVarName,
+void TMVA::Tools::ComputeStat( const std::vector<TMVA::Event*>& events, std::vector<Float_t>* valVec,
                                Double_t& meanS, Double_t& meanB,
                                Double_t& rmsS,  Double_t& rmsB,
                                Double_t& xmin,  Double_t& xmax,
-                               Bool_t    norm )
+                               Int_t signalClass, Bool_t  norm )
 {
    // sanity check
-   if (0 == theTree) Logger() << kFATAL << "<ComputeStat> tree is zero pointer" << Endl;
+   if (0 == valVec) 
+      log() << kFATAL << "<Tools::ComputeStat> value vector is zero pointer" << Endl;
+   
+   if ( events.size() != valVec->size() ) 
+      log() << kFATAL << "<Tools::ComputeStat> event and value vector have different lengths " 
+            << events.size() << "!=" << valVec->size() << Endl;
 
-   // does variable exist in tree?
-   if (0 == theTree->FindBranch( theVarName )) 
-      Logger() << kFATAL << "<ComputeStat> variable: " << theVarName << " is not member of tree" << Endl;
-
-   const Long64_t entries = theTree->GetEntries();
+   Long64_t entries = valVec->size();
 
    // first fill signal and background in arrays before analysis
    Double_t* varVecS  = new Double_t[entries];
    Double_t* varVecB  = new Double_t[entries];
-   xmin               = +1e20;
-   xmax               = -1e20;
+   xmin               = +DBL_MAX;
+   xmax               = -DBL_MAX;
    Long64_t nEventsS  = -1;
    Long64_t nEventsB  = -1;
    Double_t xmin_ = 0, xmax_ = 0;
 
    if (norm) {
-      xmin_ = theTree->GetMinimum( theVarName.Data() );
-      xmax_ = theTree->GetMaximum( theVarName.Data() );
-   }
-
-   Int_t    theType;
-   TBranch * br1 = theTree->GetBranch("type" );
-   br1->SetAddress( &theType );
-
-   Double_t theVarD = 0;
-   Float_t  theVarF = 0;
-   Int_t    theVarI = 0;
-
-   TBranch * br2 = theTree->GetBranch( theVarName );
-   TString leafType = ((TLeaf*)br2->GetListOfLeaves()->At(0))->GetTypeName();
-   Int_t tIdx = -1;
-   if (leafType=="Double_t") {
-      tIdx=0;
-      br2->SetAddress( &theVarD );
-   } 
-   else if (leafType=="Float_t") {
-      tIdx=1;
-      br2->SetAddress( &theVarF );
-   } 
-   else if (leafType=="Int_t") {
-      tIdx=2;
-      br2->SetAddress( &theVarI );
-   } 
-   else {
-      Logger() << kFATAL << "<ComputeStat> unknown Variable Type " << leafType << Endl;
+      xmin_ = *std::min( valVec->begin(), valVec->end() );
+      xmax_ = *std::max( valVec->begin(), valVec->end() );
    }
 
    for (Int_t ievt=0; ievt<entries; ievt++) {
-      br1->GetEntry(ievt);
-      br2->GetEntry(ievt);
-      Double_t theVar = 0;
-      switch (tIdx) {
-      case 0: theVar = theVarD; break;
-      case 1: theVar = theVarF; break;
-      case 2: theVar = theVarI; break;
-      }
+      Double_t theVar = (*valVec)[ievt];
       if (norm) theVar = Tools::NormVariable( theVar, xmin_, xmax_ );
 
-      if (theType == 1) varVecS[++nEventsS] = theVar; // this is signal
-      else              varVecB[++nEventsB] = theVar; // this is background
+      if (Int_t(events[ievt]->GetClass()) == signalClass ){
+         varVecS[++nEventsS] = theVar; // this is signal
+      }
+      else {
+         varVecB[++nEventsB] = theVar; // this is background
+      }
 
       if (theVar > xmax) xmax = theVar;
       if (theVar < xmin) xmin = theVar;
@@ -247,12 +225,11 @@ void TMVA::Tools::ComputeStat( TTree* theTree, const TString theVarName,
    rmsS  = TMath::RMS ( nEventsS, varVecS );
    rmsB  = TMath::RMS ( nEventsB, varVecB );
 
-   theTree->ResetBranchAddresses();
-   
    delete [] varVecS;
    delete [] varVecB;
 }
 
+//_______________________________________________________________________
 TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
 {
    // square-root of symmetric matrix
@@ -280,7 +257,7 @@ TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
          if ((i != j && TMath::Abs((*d)(i,j))/TMath::Sqrt((*d)(i,i)*(*d)(j,j)) > epsilon) ||
              (i == j && (*d)(i,i) < 0)) {
             //d->Print();
-            Logger() << kWARNING << "<GetSQRootMatrix> error in matrix diagonalization; printed S and B" << Endl;
+            log() << kWARNING << "<GetSQRootMatrix> error in matrix diagonalization; printed S and B" << Endl;
          }
       }
    }
@@ -306,6 +283,7 @@ TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
    return sqrtMat;
 }
 
+//_______________________________________________________________________
 const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
 {
    // turns covariance into correlation matrix   
@@ -314,7 +292,7 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
    // sanity check
    Int_t nvar = covMat->GetNrows();
    if (nvar != covMat->GetNcols()) 
-      Logger() << kFATAL << "<GetCorrelationMatrix> input matrix not quadratic" << Endl;
+      log() << kFATAL << "<GetCorrelationMatrix> input matrix not quadratic" << Endl;
    
    TMatrixD* corrMat = new TMatrixD( nvar, nvar );
 
@@ -324,8 +302,8 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
             Double_t d = (*covMat)(ivar, ivar)*(*covMat)(jvar, jvar);
             if (d > 0) (*corrMat)(ivar, jvar) = (*covMat)(ivar, jvar)/TMath::Sqrt(d);
             else {
-               Logger() << kWARNING << "<GetCorrelationMatrix> zero variances for variables "
-                       << "(" << ivar << ", " << jvar << ")" << Endl;
+               log() << kWARNING << "<GetCorrelationMatrix> zero variances for variables "
+                     << "(" << ivar << ", " << jvar << ")" << Endl;
                (*corrMat)(ivar, jvar) = 0;
             }
          }
@@ -336,9 +314,10 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
    return corrMat;
 }
 
-TH1* TMVA::Tools::ProjNormTH1F( TTree* theTree, TString theVarName,
-                                TString name, Int_t nbins,
-                                Double_t xmin, Double_t xmax, TString cut )
+//_______________________________________________________________________
+TH1* TMVA::Tools::projNormTH1F( TTree* theTree, const TString& theVarName,
+                                const TString& name, Int_t nbins,
+                                Double_t xmin, Double_t xmax, const TString& cut )
 {
    // projects variable from tree into normalised histogram
  
@@ -352,19 +331,24 @@ TH1* TMVA::Tools::ProjNormTH1F( TTree* theTree, TString theVarName,
    return hist;
 }
 
+//_______________________________________________________________________
 Double_t TMVA::Tools::NormHist( TH1* theHist, Double_t norm )
 {
    // normalises histogram
-   return 1;
-   if (NULL == theHist) Logger() << kFATAL << "<NormHist> null TH1 pointer" << Endl;
+   if (!theHist) return 0;
 
-   TAxis* tx  = theHist->GetXaxis();
-   Double_t w = ((theHist->GetSumOfWeights() > 0 ? theHist->GetSumOfWeights() : 1)
-                 * (tx->GetXmax() - tx->GetXmin())/tx->GetNbins());
-   theHist->Scale( (w > 0) ? norm/w : norm );
-   return w;
+   if (theHist->GetSumw2N() == 0) theHist->Sumw2();
+   if (theHist->GetSumOfWeights() != 0) {
+      Double_t   w  = ( theHist->GetSumOfWeights()
+                        *(theHist->GetXaxis()->GetXmax() - theHist->GetXaxis()->GetXmin())/theHist->GetNbinsX() );
+      if (w > 0) theHist->Scale( norm/w );
+      return w;
+   }
+
+   return 1.0;
 }
 
+//_______________________________________________________________________
 TList* TMVA::Tools::ParseFormatLine( TString formatString, const char* sep )
 {
    // Parse the string and cut into labels separated by ":"
@@ -383,12 +367,13 @@ TList* TMVA::Tools::ParseFormatLine( TString formatString, const char* sep )
       labelList->Add(new TObjString(TString(formatString(0,posSep)).Data()));
       formatString.Remove(0,posSep+1);
       
-      while(formatString.First(sep)==0) formatString.Remove(0,1); // // remove additional separators
+      while (formatString.First(sep)==0) formatString.Remove(0,1); // remove additional separators
       
    }
    return labelList;                                                 
 }
 
+//_______________________________________________________________________
 vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar,
                                                   vector<Int_t>* nodes )
 {
@@ -413,7 +398,7 @@ vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar
 
    // sanity check
    if (list->GetSize() < 1) {
-      Logger() << kFATAL << "<ParseANNOptionString> unrecognized option string: " << theOptions << Endl;
+      log() << kFATAL << "<ParseANNOptionString> unrecognized option string: " << theOptions << Endl;
    }
 
    // add number of cycles
@@ -430,7 +415,7 @@ vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar
          }
          else if ((a = atoi( s )) > 0) nodes->push_back( atoi(s ) );
          else {
-            Logger() << kFATAL << "<ParseANNOptionString> unrecognized option string: " << theOptions << Endl;
+            log() << kFATAL << "<ParseANNOptionString> unrecognized option string: " << theOptions << Endl;
          }
       }
    }
@@ -452,9 +437,9 @@ Bool_t TMVA::Tools::CheckSplines( const TH1* theHist, const TSpline* theSpline )
       if (ys + yh > 0) {
          Double_t dev = 0.5*(ys - yh)/(ys + yh);
          if (TMath::Abs(dev) > sanityCrit) {
-            Logger() << kFATAL << "<CheckSplines> Spline failed sanity criterion; "
-                     << " relative deviation from histogram: " << dev
-                     << " in (bin, value): (" << ibin << ", " << x << ")" << Endl;
+            log() << kFATAL << "<CheckSplines> Spline failed sanity criterion; "
+                  << " relative deviation from histogram: " << dev
+                  << " in (bin, value): (" << ibin << ", " << x << ")" << Endl;
             retval = kFALSE;
          }
       }
@@ -463,6 +448,7 @@ Bool_t TMVA::Tools::CheckSplines( const TH1* theHist, const TSpline* theSpline )
    return retval;
 }
 
+//_______________________________________________________________________
 std::vector<Double_t> TMVA::Tools::MVADiff( std::vector<Double_t>& a, std::vector<Double_t>& b )
 {
    // computes difference between two vectors
@@ -474,21 +460,26 @@ std::vector<Double_t> TMVA::Tools::MVADiff( std::vector<Double_t>& a, std::vecto
    return result;
 }
 
+//_______________________________________________________________________
 void TMVA::Tools::Scale( std::vector<Double_t>& v, Double_t f )
 {
    // scales double vector
    for (UInt_t i=0; i<v.size();i++) v[i]*=f;
 }
 
+//_______________________________________________________________________
 void TMVA::Tools::Scale( std::vector<Float_t>& v, Float_t f )
 {
    // scales float vector
    for (UInt_t i=0; i<v.size();i++) v[i]*=f;
 }
 
-void TMVA::Tools::UsefulSortAscending( std::vector<vector<Double_t> >& v )
-{
-   // sort 2D vector
+//_______________________________________________________________________
+void TMVA::Tools::UsefulSortAscending( std::vector<vector<Double_t> >& v, std::vector<TString>* vs ){
+   // sort 2D vector (AND in parallel a TString vector) in such a way 
+   // that the "first vector is sorted" and the other vectors are reshuffled
+   // in the same way as necessary to have the first vector sorted. 
+   // I.e. the correlation between the elements is kept.
    UInt_t nArrays=v.size();
    Double_t temp;
    if (nArrays > 0) {
@@ -497,7 +488,10 @@ void TMVA::Tools::UsefulSortAscending( std::vector<vector<Double_t> >& v )
          for (UInt_t j=sizeofarray-1; j>i; j--) {
             if (v[0][j-1] > v[0][j]) {
                for (UInt_t k=0; k< nArrays; k++) {
-                  temp = v[k][j-1];v[k][j-1] = v[k][j]; v[k][j] = temp;
+                  temp = v[k][j-1]; v[k][j-1] = v[k][j]; v[k][j] = temp;
+               }
+               if (NULL != vs) {
+                  TString temps = (*vs)[j-1]; (*vs)[j-1] = (*vs)[j]; (*vs)[j] = temps;
                }
             }
          }
@@ -505,9 +499,13 @@ void TMVA::Tools::UsefulSortAscending( std::vector<vector<Double_t> >& v )
    }
 }
 
+//_______________________________________________________________________
 void TMVA::Tools::UsefulSortDescending( std::vector<std::vector<Double_t> >& v, std::vector<TString>* vs )
 {
-   // sort 2D vector AND (in parallel) TString vector
+   // sort 2D vector (AND in parallel a TString vector) in such a way 
+   // that the "first vector is sorted" and the other vectors are reshuffled
+   // in the same way as necessary to have the first vector sorted. 
+   // I.e. the correlation between the elements is kept.
    UInt_t nArrays=v.size();
    Double_t temp;
    if (nArrays > 0) {
@@ -527,6 +525,128 @@ void TMVA::Tools::UsefulSortDescending( std::vector<std::vector<Double_t> >& v, 
    }
 }
 
+//_______________________________________________________________________
+Double_t TMVA::Tools::GetMutualInformation( const TH2F& h_ )
+{
+   // Mutual Information method for non-linear correlations estimates in 2D histogram
+   // Author: Moritz Backes, Geneva (2009)
+
+   Double_t hi = h_.Integral();
+   if (hi == 0) return -1; 
+
+   // copy histogram and rebin to speed up procedure
+   TH2F h( h_ );
+   h.RebinX(2);
+   h.RebinY(2);
+   
+   Double_t mutualInfo = 0.;
+   Int_t maxBinX = h.GetNbinsX();
+   Int_t maxBinY = h.GetNbinsY();
+   for (Int_t x = 1; x <= maxBinX; x++) {
+      for (Int_t y = 1; y <= maxBinY; y++) {
+         Double_t p_xy = h.GetBinContent(x,y)/hi;
+         Double_t p_x  = h.Integral(x,x,1,maxBinY)/hi;
+         Double_t p_y  = h.Integral(1,maxBinX,y,y)/hi;
+         if (p_x > 0. && p_y > 0. && p_xy > 0.){
+            mutualInfo += p_xy*TMath::Log(p_xy / (p_x * p_y));
+         }
+      }
+   }
+
+   return mutualInfo;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::Tools::GetCorrelationRatio( const TH2F& h_ )
+{
+   // Compute Correlation Ratio of 2D histogram to estimate functional dependency between two variables
+   // Author: Moritz Backes, Geneva (2009)
+
+   Double_t hi = h_.Integral();
+   if (hi == 0.) return -1; 
+
+   // copy histogram and rebin to speed up procedure
+   TH2F h( h_ );
+   h.RebinX(2);
+   h.RebinY(2);
+
+   Double_t corrRatio = 0.;    
+   Double_t y_mean = h.ProjectionY()->GetMean();
+   for (Int_t ix=1; ix<=h.GetNbinsX(); ix++) {
+      corrRatio += (h.Integral(ix,ix,1,h.GetNbinsY())/hi)*pow((GetYMean_binX(h,ix)-y_mean),2);
+   }
+   corrRatio /= pow(h.ProjectionY()->GetRMS(),2);
+   return corrRatio;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::Tools::GetYMean_binX( const TH2& h, Int_t bin_x )
+{
+   // Compute the mean in Y for a given bin X of a 2D histogram
+ 
+   if (h.Integral(bin_x,bin_x,1,h.GetNbinsY()) == 0.) {return 0;}
+   Double_t y_bin_mean = 0.;
+   TH1* py = h.ProjectionY();
+   for (Int_t y = 1; y <= h.GetNbinsY(); y++){
+      y_bin_mean += h.GetBinContent(bin_x,y)*py->GetBinCenter(y);
+   }
+   y_bin_mean /= h.Integral(bin_x,bin_x,1,h.GetNbinsY());
+   return y_bin_mean;
+}
+
+//_______________________________________________________________________
+TH2F* TMVA::Tools::TransposeHist( const TH2F& h )
+{
+   // Transpose quadratic histogram
+
+   // sanity check
+   if (h.GetNbinsX() != h.GetNbinsY()) {
+      log() << kFATAL << "<TransposeHist> cannot transpose non-quadratic histogram" << endl;
+   }
+   
+   TH2F *transposedHisto = new TH2F( h ); 
+   for (Int_t ix=1; ix <= h.GetNbinsX(); ix++){
+      for (Int_t iy=1; iy <= h.GetNbinsY(); iy++){
+         transposedHisto->SetBinContent(iy,ix,h.GetBinContent(ix,iy));
+      }
+   }
+   return transposedHisto; // ownership returned
+}
+
+//_______________________________________________________________________
+Bool_t TMVA::Tools::CheckForSilentOption( const TString& cs ) const
+{
+   // check for "silence" option in configuration option string
+   Bool_t isSilent = kFALSE;
+
+   TString s( cs ); 
+   s.ToLower(); 
+   s.ReplaceAll(" ","");
+   if (s.Contains("silent") && !s.Contains("silent=f")) {
+      if (!s.Contains("!silent") || s.Contains("silent=t")) isSilent = kTRUE;
+   }
+
+   return isSilent;
+}
+
+//_______________________________________________________________________
+Bool_t TMVA::Tools::CheckForVerboseOption( const TString& cs ) const
+{
+   // check if verbosity "V" set in option
+   Bool_t isVerbose = kFALSE;
+
+   TString s( cs ); 
+   s.ToLower(); 
+   s.ReplaceAll(" ","");
+   std::vector<TString> v = SplitString( s, ':' );
+   for (std::vector<TString>::iterator it = v.begin(); it != v.end(); it++) {
+      if ((*it == "v" || *it == "verbose") && !it->Contains("!")) isVerbose = kTRUE;
+   }
+
+   return isVerbose;
+}
+
+//_______________________________________________________________________
 void TMVA::Tools::UsefulSortDescending( std::vector<Double_t>& v )
 {
    // sort vector
@@ -536,15 +656,17 @@ void TMVA::Tools::UsefulSortDescending( std::vector<Double_t>& v )
    v = vtemp[0];
 }
 
+//_______________________________________________________________________
 void TMVA::Tools::UsefulSortAscending( std::vector<Double_t>& v )
 {
    // sort vector
    vector<vector<Double_t> > vtemp;
    vtemp.push_back(v);
    UsefulSortAscending(vtemp);
-   v=vtemp[0];
+   v = vtemp[0];
 }
 
+//_______________________________________________________________________
 Int_t TMVA::Tools::GetIndexMaxElement( std::vector<Double_t>& v )
 {
    // find index of maximum entry in vector
@@ -560,6 +682,7 @@ Int_t TMVA::Tools::GetIndexMaxElement( std::vector<Double_t>& v )
    return pos;
 }
 
+//_______________________________________________________________________
 Int_t TMVA::Tools::GetIndexMinElement( std::vector<Double_t>& v )
 {
    // find index of minimum entry in vector
@@ -575,10 +698,12 @@ Int_t TMVA::Tools::GetIndexMinElement( std::vector<Double_t>& v )
    return pos;
 }
 
-// check if regular expression
+
+//_______________________________________________________________________
 Bool_t TMVA::Tools::ContainsRegularExpression( const TString& s )  
 {
-   // helper function to search for "!%^&()'<>?= " in a string
+   // check if regular expression
+   // helper function to search for "$!%^&()'<>?= " in a string
 
    Bool_t  regular = kFALSE;
    for (Int_t i = 0; i < Tools::fRegexp.Length(); i++) 
@@ -587,17 +712,22 @@ Bool_t TMVA::Tools::ContainsRegularExpression( const TString& s )
    return regular;
 }
 
-// replace regular expressions
+//_______________________________________________________________________
 TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, const TString& r )  
 {
-   // helper function to remove all occurences "!%^&()'<>?= " from a string
-   // and replace all ::,*,/,+,- with _M_,_T_,_D_,_P_,_M_ respectively
+   // replace regular expressions
+   // helper function to remove all occurences "$!%^&()'<>?= " from a string
+   // and replace all ::,$,*,/,+,- with _M_,_S_,_T_,_D_,_P_,_M_ respectively
 
    TString snew = s;
    for (Int_t i = 0; i < Tools::fRegexp.Length(); i++) 
       snew.ReplaceAll( Tools::fRegexp[i], r );
 
    snew.ReplaceAll( "::", r );
+   snew.ReplaceAll( "$", "_S_" );
+   snew.ReplaceAll( "&", "_A_" );
+   snew.ReplaceAll( "%", "_MOD_" );
+   snew.ReplaceAll( "|", "_O_" );
    snew.ReplaceAll( "*", "_T_" );
    snew.ReplaceAll( "/", "_D_" );
    snew.ReplaceAll( "+", "_P_" );
@@ -605,6 +735,11 @@ TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, const TString&
    snew.ReplaceAll( " ", "_" );
    snew.ReplaceAll( "[", "_" );
    snew.ReplaceAll( "]", "_" );
+   snew.ReplaceAll( "=", "_E_" );
+   snew.ReplaceAll( ">", "_GT_" );
+   snew.ReplaceAll( "<", "_LT_" );
+   snew.ReplaceAll( "(", "_" );
+   snew.ReplaceAll( ")", "_" );
 
    return snew;
 }
@@ -626,6 +761,7 @@ const TString& TMVA::Tools::Color( const TString& c )
    static TString gClr_bold         = "\033[1m"    ; // bold 
    static TString gClr_black_b      = "\033[30m"   ; // bold black
    static TString gClr_lblue_b      = "\033[1;34m" ; // bold light blue
+   static TString gClr_cyan_b       = "\033[0;36m" ; // bold cyan
    static TString gClr_lgreen_b     = "\033[1;32m";  // bold light green
                                     
    static TString gClr_blue_bg      = "\033[44m";    // blue background
@@ -641,7 +777,7 @@ const TString& TMVA::Tools::Color( const TString& c )
    if (c == "white" )         return gClr_white; 
    if (c == "blue"  )         return gClr_blue; 
    if (c == "black"  )        return gClr_black; 
-   if (c == "lightblue")      return gClr_lblue_b;
+   if (c == "lightblue")      return gClr_cyan_b;
    if (c == "yellow")         return gClr_yellow; 
    if (c == "red"   )         return gClr_red; 
    if (c == "dred"  )         return gClr_darkred; 
@@ -666,6 +802,7 @@ const TString& TMVA::Tools::Color( const TString& c )
    return gClr_none;
 }
 
+//_______________________________________________________________________
 void TMVA::Tools::FormattedOutput( const std::vector<Double_t>& values, const std::vector<TString>& V, 
                                    const TString titleVars, const TString titleValues, MsgLogger& logger,
                                    TString format )
@@ -715,6 +852,7 @@ void TMVA::Tools::FormattedOutput( const std::vector<Double_t>& values, const st
    logger << Endl;
 }
 
+//_______________________________________________________________________
 void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>& V, MsgLogger& logger )
 {
    // formatted output of matrix (with labels)
@@ -762,19 +900,92 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>
    logger << Endl;
 }
 
+//_______________________________________________________________________
+void TMVA::Tools::FormattedOutput( const TMatrixD& M, 
+                                   const std::vector<TString>& vert, const std::vector<TString>& horiz, 
+                                   MsgLogger& logger )
+{
+   // formatted output of matrix (with labels)
+
+   // sanity check: matrix must be quadratic
+   UInt_t nvvar = vert.size();   
+   UInt_t nhvar = horiz.size();
+
+   // get length of each variable, and maximum length  
+   UInt_t minL = 7;
+   UInt_t maxL = minL;
+   std::vector<UInt_t> vLengths;
+   for (UInt_t ivar=0; ivar<nvvar; ivar++) {
+      vLengths.push_back(TMath::Max( (UInt_t)vert[ivar].Length(), minL ));
+      maxL = TMath::Max( vLengths.back(), maxL );
+   }
+   
+   // count column length
+   UInt_t minLh = 7;
+   UInt_t maxLh = minLh;
+   std::vector<UInt_t> hLengths;
+   for (UInt_t ivar=0; ivar<nhvar; ivar++) {
+      hLengths.push_back(TMath::Max( (UInt_t)horiz[ivar].Length(), minL ));
+      maxLh = TMath::Max( hLengths.back(), maxLh );
+   }
+
+   UInt_t clen = maxLh+1;
+   for (UInt_t icol=0; icol<nhvar; icol++) clen += hLengths[icol]+1;
+
+   // bar line
+   for (UInt_t i=0; i<clen; i++) logger << "-";
+   logger << Endl;
+
+   // title bar   
+   logger << setw(maxL+1) << " ";
+   for (UInt_t icol=0; icol<nhvar; icol++) logger << setw(hLengths[icol]+1) << horiz[icol];
+   logger << Endl;
+
+   // the numbers
+   for (UInt_t irow=0; irow<nvvar; irow++) {
+      logger << setw(maxL) << vert[irow] << ":";
+      for (UInt_t icol=0; icol<nhvar; icol++) {
+         logger << setw(hLengths[icol]+1) << Form( "%+1.3f", M(irow,icol) );
+      }      
+      logger << Endl;
+   }
+
+   // bar line
+   for (UInt_t i=0; i<clen; i++) logger << "-";
+   logger << Endl;
+}
+
+//_______________________________________________________________________
+TString TMVA::Tools::GetXTitleWithUnit( const TString& title, const TString& unit )
+{
+   // histogramming utility
+   return ( unit == "" ? title : ( title + "  [" + unit + "]" ) );
+}
+
+//_______________________________________________________________________
+TString TMVA::Tools::GetYTitleWithUnit( const TH1& h, const TString& unit, Bool_t normalised )
+{
+   // histogramming utility
+   TString retval = ( normalised ? "(1/N) " : "" );
+   retval += Form( "dN_{ }/^{ }%.3g %s", h.GetXaxis()->GetBinWidth(1), unit.Data() );
+   return retval;
+}
+
+//_______________________________________________________________________
 void TMVA::Tools::WriteFloatArbitraryPrecision( Float_t val, ostream& os ) 
 {
    // writes a float value with the available precision to a stream
    os << val << " :: ";
    void * c = &val;
-   for(int i=0; i<4; i++) {
+   for (int i=0; i<4; i++) {
       Int_t ic = *((char*)c+i)-'\0';
-      if(ic<0) ic+=256;
+      if (ic<0) ic+=256;
       os << ic << " ";
    }
    os << ":: ";
 }
 
+//_______________________________________________________________________
 void TMVA::Tools::ReadFloatArbitraryPrecision( Float_t& val, istream& is ) 
 {
    // reads a float value with the available precision from a stream
@@ -784,7 +995,7 @@ void TMVA::Tools::ReadFloatArbitraryPrecision( Float_t& val, istream& is )
    is >> dn;
    Int_t c[4];
    void * ap = &a;
-   for(int i=0; i<4; i++) {
+   for (int i=0; i<4; i++) {
       is >> c[i];
       *((char*)ap+i) = '\0'+c[i];
    }
@@ -792,24 +1003,160 @@ void TMVA::Tools::ReadFloatArbitraryPrecision( Float_t& val, istream& is )
    val = a;
 }
 
+//_______________________________________________________________________
+void* TMVA::Tools::AddChild( void* parent, const char* childname, const char* content ) {
+   return gTools().xmlengine().NewChild(parent, 0, childname, content);
+}
+
+
+//_______________________________________________________________________
+void* TMVA::Tools::GetChild( void* parent, const char* childname ) 
+{
+   void* ch = xmlengine().GetChild(parent);
+   if (childname != 0) {
+      while (ch!=0 && strcmp(xmlengine().GetNodeName(ch),childname) != 0) ch = xmlengine().GetNext(ch);
+   }
+   return ch;
+}
+
+//_______________________________________________________________________
+void* TMVA::Tools::GetNextChild( void* prevchild, const char* childname ) 
+{
+   // XML helpers
+   void* ch = xmlengine().GetNext(prevchild);
+   if (childname != 0) {
+      while (ch!=0 && strcmp(xmlengine().GetNodeName(ch),childname)!=0) ch = xmlengine().GetNext(ch);
+   }
+   return ch;
+}
+
+//_______________________________________________________________________
+const char* TMVA::Tools::GetContent( void* node ) 
+{
+   // XML helpers
+   return xmlengine().GetNodeContent(node);
+}
+
+//_______________________________________________________________________
+std::vector<TString> TMVA::Tools::SplitString(const TString& theOpt, const char separator ) const
+{
+   // splits the option string at 'separator' and fills the list
+   // 'splitV' with the primitive strings
+   std::vector<TString> splitV;
+   TString splitOpt(theOpt);
+   splitOpt.ReplaceAll("\n"," ");
+   splitOpt = splitOpt.Strip(TString::kBoth,separator);
+   while (splitOpt.Length()>0) {
+      if ( !splitOpt.Contains(separator) ) {
+         splitV.push_back(splitOpt);
+         break;
+      } 
+      else {
+         TString toSave = splitOpt(0,splitOpt.First(separator));
+         splitV.push_back(toSave);
+         splitOpt = splitOpt(splitOpt.First(separator),splitOpt.Length());
+      }
+      splitOpt = splitOpt.Strip(TString::kLeading,separator);
+   }
+   return splitV;
+}
+
+//_______________________________________________________________________
+TString TMVA::Tools::StringFromInt( Long_t i ) 
+{
+   // string tools
+   std::stringstream s;
+   s << i;
+   return TString(s.str().c_str());
+}
+
+//_______________________________________________________________________
+TString TMVA::Tools::StringFromDouble( Double_t d ) 
+{
+   // string tools
+   std::stringstream s;
+   s << d;
+   return TString(s.str().c_str());
+}
+
+//_______________________________________________________________________
+void TMVA::Tools::WriteTMatrixDToXML(void* node, const char* name, TMatrixD* mat)
+{
+   // XML helpers
+   void* matnode = xmlengine().NewChild(node, 0, name);
+   xmlengine().NewAttr(matnode,0,"Rows", StringFromInt(mat->GetNrows()) );
+   xmlengine().NewAttr(matnode,0,"Columns", StringFromInt(mat->GetNcols()) );
+   std::stringstream s;
+   for (Int_t row = 0; row<mat->GetNrows(); row++) {
+      for (Int_t col = 0; col<mat->GetNcols(); col++) {
+         s << (*mat)[row][col] << " ";
+      }
+   }
+   xmlengine().AddRawLine( matnode, s.str().c_str() );
+}
+
+//_______________________________________________________________________
+void TMVA::Tools::WriteTVectorDToXML(void* node, const char* name, TVectorD* vec)
+{
+   TMatrixD mat(1,vec->GetNoElements(),&((*vec)[0]));
+   WriteTMatrixDToXML(node, name, &mat);
+}
+
+//_______________________________________________________________________
+void TMVA::Tools::ReadTVectorDFromXML(void* node, const char* name, TVectorD* vec)
+{
+   TMatrixD mat(1,vec->GetNoElements(),&((*vec)[0]));
+   ReadTMatrixDFromXML(node,name,&mat);
+   for (int i=0;i<vec->GetNoElements();++i){
+      (*vec)[i]=mat[0][i];
+   }
+}
+
+//_______________________________________________________________________
+void TMVA::Tools::ReadTMatrixDFromXML(void* node, const char* name, TMatrixD* mat)
+{
+   if (strcmp(xmlengine().GetNodeName(node),name)!=0){
+      log() << kWARNING << "Possible Error: Name of matrix in weight file"
+            << " does not match name of matrix passed as argument!" << Endl;
+   }
+   Int_t nrows, ncols;
+   ReadAttr(node, "Rows", nrows);
+   ReadAttr(node, "Columns", ncols);
+   if (mat->GetNrows() != nrows || mat->GetNcols() != ncols){
+      log() << kWARNING << "Possible Error: Dimension of matrix in weight file"
+            << " does not match dimension of matrix passed as argument!" << Endl;
+      mat->ResizeTo(nrows,ncols);
+   }
+   const char* content = xmlengine().GetNodeContent(node);
+   std::stringstream s(content);
+   for (Int_t row = 0; row<nrows; row++) {
+      for (Int_t col = 0; col<ncols; col++) {
+         s >> (*mat)[row][col];
+      }
+   }
+}
+
+//_______________________________________________________________________
 void TMVA::Tools::TMVAWelcomeMessage()
 {
    // direct output, eg, when starting ROOT session -> no use of Logger here
    cout << endl;
    cout << Color("bold") << "TMVA -- Toolkit for Multivariate Data Analysis" << Color("reset") << endl;
    cout << "        " << "Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE << endl;
-   cout << "        " << "Copyright (C) 2005-2008 CERN, MPI-K Heidelberg and Victoria U." << endl;
+   cout << "        " << "Copyright (C) 2005-2009 CERN, MPI-K Heidelberg, Us of Bonn and Victoria" << endl;
    cout << "        " << "Home page http://tmva.sourceforge.net" << endl;
    cout << "        " << "All rights reserved, please read http://tmva.sf.net/license.txt" << endl << endl;
 }
 
+//_______________________________________________________________________
 void TMVA::Tools::TMVAVersionMessage( MsgLogger& logger )
 {
    // prints the TMVA release number and date
-   logger << "__________TMVA Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE 
+   logger << "___________TMVA Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE 
           << "" << Endl;
 }
 
+//_______________________________________________________________________
 void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
 {
    // prints the ROOT release number and date
@@ -825,6 +1172,7 @@ void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
    logger << "You are running ROOT Version: " << gROOT->GetVersion() << ", " << versionDate << Endl;
 }
 
+//_______________________________________________________________________
 void TMVA::Tools::TMVAWelcomeMessage( MsgLogger& logger, EWelcomeMessage msgType )
 {
    // various kinds of welcome messages
@@ -920,5 +1268,11 @@ void TMVA::Tools::TMVAWelcomeMessage( MsgLogger& logger, EWelcomeMessage msgType
    default:
       logger << kFATAL << "unknown message type: " << msgType << Endl;
    }
+}
+
+//_______________________________________________________________________
+Bool_t TMVA::Tools::HistoHasEquidistantBins(const TH1& h)
+{
+   return !(h.GetXaxis()->GetXbins()->fN);
 }
 

@@ -32,68 +32,47 @@
 #include <list>
 
 #include "Riostream.h"
-#include "TRandom.h"
+#include "TRandom3.h"
 #include "TMath.h"
 #include "TMatrix.h"
 #include "TDirectory.h"
 
+#include "TMVA/ClassifierFactory.h"
+#include "TMVA/GiniIndex.h"
+#include "TMVA/CrossEntropy.h"
+#include "TMVA/SdivSqrtSplusB.h"
+#include "TMVA/SeparationBase.h"
+#include "TMVA/MisClassificationError.h"
 #include "TMVA/MethodRuleFit.h"
 #include "TMVA/RuleFitAPI.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Config.h"
+#include "TMVA/MsgLogger.h"
+
+REGISTER_METHOD(RuleFit)
 
 ClassImp(TMVA::MethodRuleFit)
  
 //_______________________________________________________________________
-TMVA::MethodRuleFit::MethodRuleFit( const TString& jobName, const TString& methodTitle, DataSet& theData, 
-                                    const TString& theOption, TDirectory* theTargetDir )
-   : MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+TMVA::MethodRuleFit::MethodRuleFit( const TString& jobName,
+                                    const TString& methodTitle,
+                                    DataSetInfo& theData, 
+                                    const TString& theOption,
+                                    TDirectory* theTargetDir ) :
+   MethodBase( jobName, Types::kRuleFit, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor
-   //
-
-   InitRuleFit();
-
-   // interpretation of configuration option string
-   SetConfigName( TString("Method") + GetMethodName() );
-   DeclareOptions();
-   ParseOptions();
-   ProcessOptions();
-
-   // Select what weight to use in the 'importance' rule visualisation plots.
-   // Note that if UseCoefficientsVisHists() is selected, the following weight is used:
-   //    w = rule coefficient * rule support
-   // The support is a positive number which is 0 if no events are accepted by the rule.
-   // Normally the importance gives more useful information.
-   //
-   //fRuleFit.UseCoefficientsVisHists();
-   fRuleFit.UseImportanceVisHists();
-
-   fRuleFit.SetMsgType( fLogger.GetMinType() );
-
-   if (HasTrainingTree()) {
-      // fill the STL Vector with the event sample
-      this->InitEventSample();
-   }
-   else {
-      fLogger << kWARNING << "No training Tree given: you will not be allowed to call ::Train etc." << Endl;
-   }
-
-   InitMonitorNtuple();
 }
 
 //_______________________________________________________________________
-TMVA::MethodRuleFit::MethodRuleFit( DataSet& theData,
+TMVA::MethodRuleFit::MethodRuleFit( DataSetInfo& theData,
                                     const TString& theWeightFile,
-                                    TDirectory* theTargetDir )
-   : MethodBase( theData, theWeightFile, theTargetDir )
+                                    TDirectory* theTargetDir ) :
+   MethodBase( Types::kRuleFit, theData, theWeightFile, theTargetDir )
 {
    // constructor from weight file
-   InitRuleFit();
-
-   DeclareOptions();
 }
 
 //_______________________________________________________________________
@@ -102,6 +81,14 @@ TMVA::MethodRuleFit::~MethodRuleFit( void )
    // destructor
    for (UInt_t i=0; i<fEventSample.size(); i++) delete fEventSample[i];
    for (UInt_t i=0; i<fForest.size(); i++)      delete fForest[i];
+}
+
+//_______________________________________________________________________
+Bool_t TMVA::MethodRuleFit::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
+{
+   // RuleFit can handle classification with 2 classes 
+   if (type == Types::kClassification && numberClasses == 2) return kTRUE;
+   return kFALSE;
 }
 
 //_______________________________________________________________________
@@ -150,18 +137,19 @@ void TMVA::MethodRuleFit::DeclareOptions()
    // RFNrules       <int>        maximum number of rules allowed
    // RFNendnodes    <int>        average number of end nodes in the forest of trees
    //
-   DeclareOptionRef(fGDTau=-1,             "GDTau",          "Gradient-directed path: default fit cut-off");
-   DeclareOptionRef(fGDTauPrec=0.01,       "GDTauPrec",      "Gradient-directed path: precision of tau");
-   DeclareOptionRef(fGDPathStep=0.01,      "GDStep",         "Gradient-directed path: step size");
-   DeclareOptionRef(fGDNPathSteps=10000,   "GDNSteps",       "Gradient-directed path: number of steps");
-   DeclareOptionRef(fGDErrScale=1.1,       "GDErrScale",     "Stop scan when error>scale*errmin");
+   DeclareOptionRef(fGDTau=-1,             "GDTau",          "Gradient-directed (GD) path: default fit cut-off");
+   DeclareOptionRef(fGDTauPrec=0.01,       "GDTauPrec",      "GD path: precision of tau");
+   DeclareOptionRef(fGDPathStep=0.01,      "GDStep",         "GD path: step size");
+   DeclareOptionRef(fGDNPathSteps=10000,   "GDNSteps",       "GD path: number of steps");
+   DeclareOptionRef(fGDErrScale=1.1,       "GDErrScale",     "Stop scan when error > scale*errmin");
+   DeclareOptionRef(fLinQuantile,           "LinQuantile",  "Quantile of linear terms (removes outliers)");
    DeclareOptionRef(fGDPathEveFrac=0.5,    "GDPathEveFrac",  "Fraction of events used for the path search");
    DeclareOptionRef(fGDValidEveFrac=0.5,   "GDValidEveFrac", "Fraction of events used for the validation");
    // tree options
    DeclareOptionRef(fMinFracNEve=0.1,      "fEventsMin",     "Minimum fraction of events in a splittable node");
    DeclareOptionRef(fMaxFracNEve=0.9,      "fEventsMax",     "Maximum fraction of events in a splittable node");
    DeclareOptionRef(fNTrees=20,            "nTrees",         "Number of trees in forest.");
-
+   
    DeclareOptionRef(fForestTypeS="AdaBoost",  "ForestType",   "Method to use for forest generation");
    AddPreDefVal(TString("AdaBoost"));
    AddPreDefVal(TString("Random"));
@@ -173,21 +161,26 @@ void TMVA::MethodRuleFit::DeclareOptions()
    AddPreDefVal(TString("ModRule"));
    AddPreDefVal(TString("ModRuleLinear"));
    AddPreDefVal(TString("ModLinear"));
-
    DeclareOptionRef(fRuleFitModuleS="RFTMVA",  "RuleFitModule","Which RuleFit module to use");
    AddPreDefVal(TString("RFTMVA"));
    AddPreDefVal(TString("RFFriedman"));
 
-   DeclareOptionRef(fRFWorkDir="./rulefit", "RFWorkDir",    "Friedmans RuleFit module: working dir");
-   DeclareOptionRef(fRFNrules=2000,         "RFNrules",     "Friedmans RuleFit module: maximum number of rules");
-   DeclareOptionRef(fRFNendnodes=4,         "RFNendnodes",  "Friedmans RuleFit module: average number of end nodes");
+   DeclareOptionRef(fRFWorkDir="./rulefit", "RFWorkDir",    "Friedman\'s RuleFit module (RFF): working dir");
+   DeclareOptionRef(fRFNrules=2000,         "RFNrules",     "RFF: Mximum number of rules");
+   DeclareOptionRef(fRFNendnodes=4,         "RFNendnodes",  "RFF: Average number of end nodes");
 }
 
 //_______________________________________________________________________
 void TMVA::MethodRuleFit::ProcessOptions() 
 {
    // process the options specified by the user   
-   MethodBase::ProcessOptions();
+
+   if (IgnoreEventsWithNegWeightsInTraining()) {
+      log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
+            << GetMethodTypeName() 
+            << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
+            << Endl;
+   }
 
    fRuleFitModuleS.ToLower();
    if      (fRuleFitModuleS == "rftmva")     fUseRuleFitJF = kFALSE;
@@ -223,22 +216,22 @@ void TMVA::MethodRuleFit::ProcessOptions()
    // check event fraction for tree generation
    // if <0 set to automatic number
    if (fTreeEveFrac<=0) {
-      Int_t nevents = Data().GetNEvtTrain();
+      Int_t nevents = Data()->GetNTrainingEvents();
       Double_t n = static_cast<Double_t>(nevents);
       fTreeEveFrac = min( 0.5, (100.0 +6.0*sqrt(n))/n);
    }
    // verify ranges of options
-   gTools().VerifyRange(fLogger, "nTrees",        fNTrees,0,100000,20);
-   gTools().VerifyRange(fLogger, "MinImp",        fMinimp,0.0,1.0,0.0);
-   gTools().VerifyRange(fLogger, "GDTauPrec",     fGDTauPrec,1e-5,5e-1);
-   gTools().VerifyRange(fLogger, "GDTauMin",      fGDTauMin,0.0,1.0);
-   gTools().VerifyRange(fLogger, "GDTauMax",      fGDTauMax,fGDTauMin,1.0);
-   gTools().VerifyRange(fLogger, "GDPathStep",    fGDPathStep,0.0,100.0,0.01);
-   gTools().VerifyRange(fLogger, "GDErrScale",    fGDErrScale,1.0,100.0,1.1);
-   gTools().VerifyRange(fLogger, "GDPathEveFrac", fGDPathEveFrac,0.01,0.9,0.5);
-   gTools().VerifyRange(fLogger, "GDValidEveFrac",fGDValidEveFrac,0.01,1.0-fGDPathEveFrac,1.0-fGDPathEveFrac);
-   gTools().VerifyRange(fLogger, "fEventsMin",    fMinFracNEve,0.0,1.0);
-   gTools().VerifyRange(fLogger, "fEventsMax",    fMaxFracNEve,fMinFracNEve,1.0);
+   VerifyRange(log(), "nTrees",        fNTrees,0,100000,20);
+   VerifyRange(log(), "MinImp",        fMinimp,0.0,1.0,0.0);
+   VerifyRange(log(), "GDTauPrec",     fGDTauPrec,1e-5,5e-1);
+   VerifyRange(log(), "GDTauMin",      fGDTauMin,0.0,1.0);
+   VerifyRange(log(), "GDTauMax",      fGDTauMax,fGDTauMin,1.0);
+   VerifyRange(log(), "GDPathStep",    fGDPathStep,0.0,100.0,0.01);
+   VerifyRange(log(), "GDErrScale",    fGDErrScale,1.0,100.0,1.1);
+   VerifyRange(log(), "GDPathEveFrac", fGDPathEveFrac,0.01,0.9,0.5);
+   VerifyRange(log(), "GDValidEveFrac",fGDValidEveFrac,0.01,1.0-fGDPathEveFrac,1.0-fGDPathEveFrac);
+   VerifyRange(log(), "fEventsMin",    fMinFracNEve,0.0,1.0);
+   VerifyRange(log(), "fEventsMax",    fMaxFracNEve,fMinFracNEve,1.0);
 
    fRuleFit.GetRuleEnsemblePtr()->SetLinQuantile(fLinQuantile);
    fRuleFit.GetRuleFitParamsPtr()->SetGDTauRange(fGDTauMin,fGDTauMax);
@@ -255,21 +248,37 @@ void TMVA::MethodRuleFit::ProcessOptions()
    // check if Friedmans module is used.
    // print a message concerning the options.
    if (fUseRuleFitJF) {
-      fLogger << kINFO << "" << Endl;
-      fLogger << kINFO << "--------------------------------------" <<Endl;
-      fLogger << kINFO << "Friedmans RuleFit module is selected." << Endl;
-      fLogger << kINFO << "Only the following options are used:" << Endl;
-      fLogger << kINFO <<  Endl;
-      fLogger << kINFO << gTools().Color("bold") << "   Model"        << gTools().Color("reset") << Endl;
-      fLogger << kINFO << gTools().Color("bold") << "   RFWorkDir"    << gTools().Color("reset") << Endl;
-      fLogger << kINFO << gTools().Color("bold") << "   RFNrules"     << gTools().Color("reset") << Endl;
-      fLogger << kINFO << gTools().Color("bold") << "   RFNendnodes"  << gTools().Color("reset") << Endl;
-      fLogger << kINFO << gTools().Color("bold") << "   GDNPathSteps" << gTools().Color("reset") << Endl;
-      fLogger << kINFO << gTools().Color("bold") << "   GDPathStep"   << gTools().Color("reset") << Endl;
-      fLogger << kINFO << gTools().Color("bold") << "   GDErrScale"   << gTools().Color("reset") << Endl;
-      fLogger << kINFO << "--------------------------------------" <<Endl;
-      fLogger << kINFO << Endl;
+      log() << kINFO << "" << Endl;
+      log() << kINFO << "--------------------------------------" <<Endl;
+      log() << kINFO << "Friedmans RuleFit module is selected." << Endl;
+      log() << kINFO << "Only the following options are used:" << Endl;
+      log() << kINFO <<  Endl;
+      log() << kINFO << gTools().Color("bold") << "   Model"        << gTools().Color("reset") << Endl;
+      log() << kINFO << gTools().Color("bold") << "   RFWorkDir"    << gTools().Color("reset") << Endl;
+      log() << kINFO << gTools().Color("bold") << "   RFNrules"     << gTools().Color("reset") << Endl;
+      log() << kINFO << gTools().Color("bold") << "   RFNendnodes"  << gTools().Color("reset") << Endl;
+      log() << kINFO << gTools().Color("bold") << "   GDNPathSteps" << gTools().Color("reset") << Endl;
+      log() << kINFO << gTools().Color("bold") << "   GDPathStep"   << gTools().Color("reset") << Endl;
+      log() << kINFO << gTools().Color("bold") << "   GDErrScale"   << gTools().Color("reset") << Endl;
+      log() << kINFO << "--------------------------------------" <<Endl;
+      log() << kINFO << Endl;
    }
+
+   // Select what weight to use in the 'importance' rule visualisation plots.
+   // Note that if UseCoefficientsVisHists() is selected, the following weight is used:
+   //    w = rule coefficient * rule support
+   // The support is a positive number which is 0 if no events are accepted by the rule.
+   // Normally the importance gives more useful information.
+   //
+   //fRuleFit.UseCoefficientsVisHists();
+   fRuleFit.UseImportanceVisHists();
+
+   fRuleFit.SetMsgType( log().GetMinType() );
+
+   if (HasTrainingTree()) InitEventSample();
+
+   InitMonitorNtuple();
+
 }
 
 //_______________________________________________________________________
@@ -293,12 +302,9 @@ void TMVA::MethodRuleFit::InitMonitorNtuple()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodRuleFit::InitRuleFit()
+void TMVA::MethodRuleFit::Init()
 {
    // default initialization
-   SetMethodName( "RuleFit" );
-   SetMethodType( TMVA::Types::kRuleFit );
-   SetTestvarName();
 
    // the minimum requirement to declare an event signal-like
    SetSignalReferenceCut( 0.0 );
@@ -324,12 +330,12 @@ void TMVA::MethodRuleFit::InitEventSample( void )
    // more easily manipulated.
    // This method should never be called without existing trainingTree, as it
    // the vector of events from the ROOT training tree
-   if (!HasTrainingTree()) fLogger << kFATAL << "<Init> Data().TrainingTree() is zero pointer" << Endl;
+   if (Data()->GetNEvents()==0) log() << kFATAL << "<Init> Data().TrainingTree() is zero pointer" << Endl;
 
-   Int_t nevents = Data().GetNEvtTrain();
+   Int_t nevents = Data()->GetNEvents();
    for (Int_t ievt=0; ievt<nevents; ievt++){
-      ReadTrainingEvent(ievt);
-      fEventSample.push_back( new Event(GetEvent()) );
+      const Event * ev = GetEvent(ievt);
+      fEventSample.push_back( new Event(*ev));
    }
    if (fTreeEveFrac<=0) {
       Double_t n = static_cast<Double_t>(nevents);
@@ -339,13 +345,16 @@ void TMVA::MethodRuleFit::InitEventSample( void )
    //
    std::random_shuffle(fEventSample.begin(), fEventSample.end());
    //
-   fLogger << kVERBOSE << "Set sub-sample fraction to " << fTreeEveFrac << Endl;
+   log() << kDEBUG << "Set sub-sample fraction to " << fTreeEveFrac << Endl;
 }
 
 //_______________________________________________________________________
 void TMVA::MethodRuleFit::Train( void )
 {
    // training of rules
+
+   // fill the STL Vector with the event sample
+   this->InitEventSample();
 
    if (fUseRuleFitJF) {
       TrainJFRuleFit();
@@ -361,9 +370,7 @@ void TMVA::MethodRuleFit::TrainTMVARuleFit( void )
 {
    // training of rules using TMVA implementation
 
-   // default sanity checks
-   if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
-   if (IsNormalised()) fLogger << kFATAL << "\"Normalise\" option cannot be used with RuleFit; " 
+   if (IsNormalised()) log() << kFATAL << "\"Normalise\" option cannot be used with RuleFit; " 
                                << "please remove the optoin from the configuration string, or "
                                << "use \"!Normalise\""
                                << Endl;
@@ -387,20 +394,17 @@ void TMVA::MethodRuleFit::TrainTMVARuleFit( void )
    //   if (fRuleFit.GetRuleEnsemble().DoRules()) fRuleFit.MakeForest();
 
    // Fit the rules
-   fLogger << kVERBOSE << "Fitting rule coefficients ..." << Endl;
+   log() << kDEBUG << "Fitting rule coefficients ..." << Endl;
    fRuleFit.FitCoefficients();
 
-   // print timing info
-   fLogger << kINFO << "Elapsed time: " << timer.GetElapsedTime() << Endl;
-
    // Calculate importance
-   fLogger << kVERBOSE << "Computing rule and variable importance" << Endl;
+   log() << kDEBUG << "Computing rule and variable importance" << Endl;
    fRuleFit.CalcImportance();
 
    // Output results and fill monitor ntuple
    fRuleFit.GetRuleEnsemblePtr()->Print();
    //
-   fLogger << kVERBOSE << "Filling rule ntuple" << Endl;
+   log() << kDEBUG << "Filling rule ntuple" << Endl;
    UInt_t nrules = fRuleFit.GetRuleEnsemble().GetRulesConst().size();
    const Rule *rule;
    for (UInt_t i=0; i<nrules; i++ ) {
@@ -419,7 +423,7 @@ void TMVA::MethodRuleFit::TrainTMVARuleFit( void )
       fNTSSB          = rule->GetSSB();
       fMonitorNtuple->Fill();
    }
-   fLogger << kVERBOSE << "Training done" << Endl;
+   log() << kDEBUG << "Training done" << Endl;
 
    fRuleFit.MakeVisHists();
 
@@ -431,29 +435,25 @@ void TMVA::MethodRuleFit::TrainJFRuleFit( void )
 {
    // training of rules using Jerome Friedmans implementation
 
-   // default sanity checks
-   if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
-
    fRuleFit.InitPtrs( this );
    fRuleFit.SetTrainingEvents( GetTrainingEvents() );
 
-   RuleFitAPI *rfAPI = new RuleFitAPI( this, &fRuleFit, fLogger.GetMinType() );
+   RuleFitAPI *rfAPI = new RuleFitAPI( this, &fRuleFit, log().GetMinType() );
 
    rfAPI->WelcomeMessage();
 
    // timer
    Timer timer( 1, GetName() );
 
-   fLogger << kINFO << "Training ..." << Endl;
+   log() << kINFO << "Training ..." << Endl;
    rfAPI->TrainRuleFit();
-   fLogger << kINFO << "Elapsed time: " << timer.GetElapsedTime() << Endl;
 
-   fLogger << kVERBOSE << "reading model summary from rf_go.exe output" << Endl;
+   log() << kDEBUG << "reading model summary from rf_go.exe output" << Endl;
    rfAPI->ReadModelSum();
 
    //   fRuleFit.GetRuleEnsemblePtr()->MakeRuleMap();
 
-   fLogger << kVERBOSE << "calculating rule and variable importance" << Endl;
+   log() << kDEBUG << "calculating rule and variable importance" << Endl;
    fRuleFit.CalcImportance();
 
    // Output results and fill monitor ntuple
@@ -463,7 +463,7 @@ void TMVA::MethodRuleFit::TrainJFRuleFit( void )
 
    delete rfAPI;
 
-   fLogger << kVERBOSE << "done training" << Endl;
+   log() << kDEBUG << "done training" << Endl;
 }
 
 //_______________________________________________________________________
@@ -474,33 +474,51 @@ const TMVA::Ranking* TMVA::MethodRuleFit::CreateRanking()
    // create the ranking object
    fRanking = new Ranking( GetName(), "Importance" );
 
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      fRanking->AddRank( *new Rank( GetInputExp(ivar), fRuleFit.GetRuleEnsemble().GetVarImportance(ivar) ) );
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
+      fRanking->AddRank( Rank( GetInputLabel(ivar), fRuleFit.GetRuleEnsemble().GetVarImportance(ivar) ) );
    }
 
    return fRanking;
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodRuleFit::WriteWeightsToStream( ostream & o ) const
+void TMVA::MethodRuleFit::WriteWeightsToStream( ostream & o ) const
 {  
    // write the rules to an ostream
-   fRuleFit.GetRuleEnsemble().PrintRaw(o);
+   fRuleFit.GetRuleEnsemble().PrintRaw( o );
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodRuleFit::ReadWeightsFromStream( istream & istr )
+void TMVA::MethodRuleFit::AddWeightsXMLTo( void* parent ) const 
+{
+   // add the rules to XML node
+   fRuleFit.GetRuleEnsemble().AddXMLTo( parent );
+}
+
+//_______________________________________________________________________
+void TMVA::MethodRuleFit::ReadWeightsFromStream( istream & istr )
 {
    // read rules from an istream
 
-   fRuleFit.GetRuleEnsemblePtr()->ReadRaw(istr);
+   fRuleFit.GetRuleEnsemblePtr()->ReadRaw( istr );
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodRuleFit::GetMvaValue()
+void TMVA::MethodRuleFit::ReadWeightsFromXML( void* wghtnode )
+{
+   // read rules from XML node
+   fRuleFit.GetRuleEnsemblePtr()->ReadFromXML( wghtnode );
+}
+
+//_______________________________________________________________________
+Double_t TMVA::MethodRuleFit::GetMvaValue( Double_t* err )
 {
    // returns MVA value for given event
-   return fRuleFit.EvalEvent( GetEvent() );
+
+   // cannot determine error
+   if (err != 0) *err = -1;
+
+   return fRuleFit.EvalEvent( *GetEvent() );
 }
 
 //_______________________________________________________________________
@@ -508,7 +526,7 @@ void  TMVA::MethodRuleFit::WriteMonitoringHistosToFile( void ) const
 {
    // write special monitoring histograms to file (here ntuple)
    BaseDir()->cd();
-   fLogger << kINFO << "write monitoring ntuple to file: " << BaseDir()->GetPath() << Endl;
+   log() << kINFO << "Write monitoring ntuple to file: " << BaseDir()->GetPath() << Endl;
    fMonitorNtuple->Write();
 }
 
@@ -605,6 +623,8 @@ void TMVA::MethodRuleFit::MakeClassLinear( std::ostream& fout ) const
          Double_t norm = rens->GetLinNorm(il);
          Double_t imp  = rens->GetLinImportance(il)/rens->GetImportanceRef();
          fout << "   rval+="
+   //           << setprecision(10) << rens->GetLinCoefficients(il)*norm << "*std::min(" << setprecision(10) << rens->GetLinDP(il)
+   //           << ", std::max( inputValues[" << il << "]," << setprecision(10) << rens->GetLinDM(il) << "));"
               << setprecision(10) << rens->GetLinCoefficients(il)*norm 
               << "*std::min( double(" << setprecision(10) << rens->GetLinDP(il)
               << "), std::max( double(inputValues[" << il << "]), double(" << setprecision(10) << rens->GetLinDM(il) << ")));"
@@ -625,140 +645,140 @@ void TMVA::MethodRuleFit::GetHelpMessage() const
    TString colres = gConfig().WriteOptionsReference() ? "" : gTools().Color("reset");
    TString brk    = gConfig().WriteOptionsReference() ? "<br>" : "";
 
-   fLogger << Endl;
-   fLogger << col << "--- Short description:" << colres << Endl;
-   fLogger << Endl;
-   fLogger << "This method uses a collection of so called rules to create a" << Endl;
-   fLogger << "discriminating scoring function. Each rule consists of a series" << Endl;
-   fLogger << "of cuts in parameter space. The ensemble of rules are created" << Endl;
-   fLogger << "from a forest of decision trees, trained using the training data." << Endl;
-   fLogger << "Each node (apart from the root) corresponds to one rule." << Endl;
-   fLogger << "The scoring function is then obtained by linearly combining" << Endl;
-   fLogger << "the rules. A fitting procedure is applied to find the optimum" << Endl;
-   fLogger << "set of coefficients. The goal is to find a model with few rules" << Endl;
-   fLogger << "but with a strong discriminating power." << Endl;
-   fLogger << Endl;
-   fLogger << col << "--- Performance optimisation:" << colres << Endl;
-   fLogger << Endl;
-   fLogger << "There are two important considerations to make when optimising:" << Endl;
-   fLogger << Endl;
-   fLogger << "  1. Topology of the decision tree forest" << brk << Endl;
-   fLogger << "  2. Fitting of the coefficients" << Endl;
-   fLogger << Endl;
-   fLogger << "The maximum complexity of the rules is defined by the size of" << Endl;
-   fLogger << "the trees. Large trees will yield many complex rules and capture" << Endl;
-   fLogger << "higher order correlations. On the other hand, small trees will" << Endl;
-   fLogger << "lead to a smaller ensemble with simple rules, only capable of" << Endl;
-   fLogger << "modeling simple structures." << Endl;
-   fLogger << "Several parameters exists for controlling the complexity of the" << Endl;
-   fLogger << "rule ensemble." << Endl;
-   fLogger << Endl;
-   fLogger << "The fitting procedure searches for a minimum using a gradient" << Endl;
-   fLogger << "directed path. Apart from step size and number of steps, the" << Endl;
-   fLogger << "evolution of the path is defined by a cut-off parameter, tau." << Endl;
-   fLogger << "This parameter is unknown and depends on the training data." << Endl;
-   fLogger << "A large value will tend to give large weights to a few rules." << Endl;
-   fLogger << "Similarily, a small value will lead to a large set of rules" << Endl;
-   fLogger << "with similar weights." << Endl;
-   fLogger << Endl;
-   fLogger << "A final point is the model used; rules and/or linear terms." << Endl;
-   fLogger << "For a given training sample, the result may improve by adding" << Endl;
-   fLogger << "linear terms. If best performance is optained using only linear" << Endl;
-   fLogger << "terms, it is very likely that the Fisher discriminant would be" << Endl;
-   fLogger << "a better choice. Ideally the fitting procedure should be able to" << Endl;
-   fLogger << "make this choice by giving appropriate weights for either terms." << Endl;
-   fLogger << Endl;
-   fLogger << col << "--- Performance tuning via configuration options:" << colres << Endl;
-   fLogger << Endl;
-   fLogger << "I.  TUNING OF RULE ENSEMBLE:" << Endl;
-   fLogger << Endl;
-   fLogger << "   " << col << "ForestType  " << colres
+   log() << Endl;
+   log() << col << "--- Short description:" << colres << Endl;
+   log() << Endl;
+   log() << "This method uses a collection of so called rules to create a" << Endl;
+   log() << "discriminating scoring function. Each rule consists of a series" << Endl;
+   log() << "of cuts in parameter space. The ensemble of rules are created" << Endl;
+   log() << "from a forest of decision trees, trained using the training data." << Endl;
+   log() << "Each node (apart from the root) corresponds to one rule." << Endl;
+   log() << "The scoring function is then obtained by linearly combining" << Endl;
+   log() << "the rules. A fitting procedure is applied to find the optimum" << Endl;
+   log() << "set of coefficients. The goal is to find a model with few rules" << Endl;
+   log() << "but with a strong discriminating power." << Endl;
+   log() << Endl;
+   log() << col << "--- Performance optimisation:" << colres << Endl;
+   log() << Endl;
+   log() << "There are two important considerations to make when optimising:" << Endl;
+   log() << Endl;
+   log() << "  1. Topology of the decision tree forest" << brk << Endl;
+   log() << "  2. Fitting of the coefficients" << Endl;
+   log() << Endl;
+   log() << "The maximum complexity of the rules is defined by the size of" << Endl;
+   log() << "the trees. Large trees will yield many complex rules and capture" << Endl;
+   log() << "higher order correlations. On the other hand, small trees will" << Endl;
+   log() << "lead to a smaller ensemble with simple rules, only capable of" << Endl;
+   log() << "modeling simple structures." << Endl;
+   log() << "Several parameters exists for controlling the complexity of the" << Endl;
+   log() << "rule ensemble." << Endl;
+   log() << Endl;
+   log() << "The fitting procedure searches for a minimum using a gradient" << Endl;
+   log() << "directed path. Apart from step size and number of steps, the" << Endl;
+   log() << "evolution of the path is defined by a cut-off parameter, tau." << Endl;
+   log() << "This parameter is unknown and depends on the training data." << Endl;
+   log() << "A large value will tend to give large weights to a few rules." << Endl;
+   log() << "Similarily, a small value will lead to a large set of rules" << Endl;
+   log() << "with similar weights." << Endl;
+   log() << Endl;
+   log() << "A final point is the model used; rules and/or linear terms." << Endl;
+   log() << "For a given training sample, the result may improve by adding" << Endl;
+   log() << "linear terms. If best performance is optained using only linear" << Endl;
+   log() << "terms, it is very likely that the Fisher discriminant would be" << Endl;
+   log() << "a better choice. Ideally the fitting procedure should be able to" << Endl;
+   log() << "make this choice by giving appropriate weights for either terms." << Endl;
+   log() << Endl;
+   log() << col << "--- Performance tuning via configuration options:" << colres << Endl;
+   log() << Endl;
+   log() << "I.  TUNING OF RULE ENSEMBLE:" << Endl;
+   log() << Endl;
+   log() << "   " << col << "ForestType  " << colres
            << ": Recomended is to use the default \"AdaBoost\"." << brk << Endl;
-   fLogger << "   " << col << "nTrees      " << colres
+   log() << "   " << col << "nTrees      " << colres
            << ": More trees leads to more rules but also slow" << Endl;
-   fLogger << "                 performance. With too few trees the risk is" << Endl;
-   fLogger << "                 that the rule ensemble becomes too simple." << brk << Endl;
-   fLogger << "   " << col << "fEventsMin  " << colres << brk << Endl;
-   fLogger << "   " << col << "fEventsMax  " << colres
+   log() << "                 performance. With too few trees the risk is" << Endl;
+   log() << "                 that the rule ensemble becomes too simple." << brk << Endl;
+   log() << "   " << col << "fEventsMin  " << colres << brk << Endl;
+   log() << "   " << col << "fEventsMax  " << colres
            << ": With a lower min, more large trees will be generated" << Endl;
-   fLogger << "                 leading to more complex rules." << Endl;
-   fLogger << "                 With a higher max, more small trees will be" << Endl;
-   fLogger << "                 generated leading to more simple rules." << Endl;
-   fLogger << "                 By changing this range, the average complexity" << Endl;
-   fLogger << "                 of the rule ensemble can be controlled." << brk << Endl;
-   fLogger << "   " << col << "RuleMinDist " << colres
+   log() << "                 leading to more complex rules." << Endl;
+   log() << "                 With a higher max, more small trees will be" << Endl;
+   log() << "                 generated leading to more simple rules." << Endl;
+   log() << "                 By changing this range, the average complexity" << Endl;
+   log() << "                 of the rule ensemble can be controlled." << brk << Endl;
+   log() << "   " << col << "RuleMinDist " << colres
            << ": By increasing the minimum distance between" << Endl;
-   fLogger << "                 rules, fewer and more diverse rules will remain." << Endl;
-   fLogger << "                 Initially it is a good idea to keep this small" << Endl;
-   fLogger << "                 or zero and let the fitting do the selection of" << Endl;
-   fLogger << "                 rules. In order to reduce the ensemble size," << Endl;
-   fLogger << "                 the value can then be increased." << Endl;
-   fLogger << Endl;
+   log() << "                 rules, fewer and more diverse rules will remain." << Endl;
+   log() << "                 Initially it is a good idea to keep this small" << Endl;
+   log() << "                 or zero and let the fitting do the selection of" << Endl;
+   log() << "                 rules. In order to reduce the ensemble size," << Endl;
+   log() << "                 the value can then be increased." << Endl;
+   log() << Endl;
    //         "|--------------------------------------------------------------|"
-   fLogger << "II. TUNING OF THE FITTING:" << Endl;
-   fLogger << Endl;
-   fLogger << "   " << col << "GDPathEveFrac " << colres
+   log() << "II. TUNING OF THE FITTING:" << Endl;
+   log() << Endl;
+   log() << "   " << col << "GDPathEveFrac " << colres
            << ": fraction of events in path evaluation" << Endl;
-   fLogger << "                 Increasing this fraction will improve the path" << Endl;
-   fLogger << "                 finding. However, a too high value will give few" << Endl;
-   fLogger << "                 unique events available for error estimation." << Endl;
-   fLogger << "                 It is recomended to usethe default = 0.5." << brk << Endl;
-   fLogger << "   " << col << "GDTau         " << colres
+   log() << "                 Increasing this fraction will improve the path" << Endl;
+   log() << "                 finding. However, a too high value will give few" << Endl;
+   log() << "                 unique events available for error estimation." << Endl;
+   log() << "                 It is recomended to usethe default = 0.5." << brk << Endl;
+   log() << "   " << col << "GDTau         " << colres
            << ": cutoff parameter tau" << Endl;
-   fLogger << "                 By default this value is set to -1.0." << Endl;
+   log() << "                 By default this value is set to -1.0." << Endl;
    //         "|----------------|---------------------------------------------|"
-   fLogger << "                 This means that the cut off parameter is" << Endl;
-   fLogger << "                 automatically estimated. In most cases" << Endl;
-   fLogger << "                 this should be fine. However, you may want" << Endl;
-   fLogger << "                 to fix this value if you already know it" << Endl;
-   fLogger << "                 and want to reduce on training time." << brk << Endl;
-   fLogger << "   " << col << "GDTauPrec     " << colres
+   log() << "                 This means that the cut off parameter is" << Endl;
+   log() << "                 automatically estimated. In most cases" << Endl;
+   log() << "                 this should be fine. However, you may want" << Endl;
+   log() << "                 to fix this value if you already know it" << Endl;
+   log() << "                 and want to reduce on training time." << brk << Endl;
+   log() << "   " << col << "GDTauPrec     " << colres
            << ": precision of estimated tau" << Endl;
-   fLogger << "                 Increase this precision to find a more" << Endl;
-   fLogger << "                 optimum cut-off parameter." << brk << Endl;
-   fLogger << "   " << col << "GDNStep       " << colres
+   log() << "                 Increase this precision to find a more" << Endl;
+   log() << "                 optimum cut-off parameter." << brk << Endl;
+   log() << "   " << col << "GDNStep       " << colres
            << ": number of steps in path search" << Endl;
-   fLogger << "                 If the number of steps is too small, then" << Endl;
-   fLogger << "                 the program will give a warning message." << Endl;
-   fLogger << Endl;
-   fLogger << "III. WARNING MESSAGES" << Endl;
-   fLogger << Endl;
-   fLogger << col << "Risk(i+1)>=Risk(i) in path" << colres << brk << Endl;
-   fLogger << col << "Chaotic behaviour of risk evolution." << colres << Endl;
+   log() << "                 If the number of steps is too small, then" << Endl;
+   log() << "                 the program will give a warning message." << Endl;
+   log() << Endl;
+   log() << "III. WARNING MESSAGES" << Endl;
+   log() << Endl;
+   log() << col << "Risk(i+1)>=Risk(i) in path" << colres << brk << Endl;
+   log() << col << "Chaotic behaviour of risk evolution." << colres << Endl;
    //         "|----------------|---------------------------------------------|"
-   fLogger << "                 The error rate was still decreasing at the end" << Endl;
-   fLogger << "                 By construction the Risk should always decrease." << Endl;
-   fLogger << "                 However, if the training sample is too small or" << Endl;
-   fLogger << "                 the model is overtrained, such warnings can" << Endl;
-   fLogger << "                 occur." << Endl;
-   fLogger << "                 The warnings can safely be ignored if only a" << Endl;
-   fLogger << "                 few (<3) occur. If more warnings are generated," << Endl;
-   fLogger << "                 the fitting fails." << Endl;
-   fLogger << "                 A remedy may be to increase the value" << brk << Endl;
-   fLogger << "                 "
+   log() << "                 The error rate was still decreasing at the end" << Endl;
+   log() << "                 By construction the Risk should always decrease." << Endl;
+   log() << "                 However, if the training sample is too small or" << Endl;
+   log() << "                 the model is overtrained, such warnings can" << Endl;
+   log() << "                 occur." << Endl;
+   log() << "                 The warnings can safely be ignored if only a" << Endl;
+   log() << "                 few (<3) occur. If more warnings are generated," << Endl;
+   log() << "                 the fitting fails." << Endl;
+   log() << "                 A remedy may be to increase the value" << brk << Endl;
+   log() << "                 "
            << col << "GDValidEveFrac" << colres
            << " to 1.0 (or a larger value)." << brk << Endl;
-   fLogger << "                 In addition, if "
+   log() << "                 In addition, if "
            << col << "GDPathEveFrac" << colres
            << " is too high" << Endl;
-   fLogger << "                 the same warnings may occur since the events" << Endl;
-   fLogger << "                 used for error estimation are also used for" << Endl;
-   fLogger << "                 path estimation." << Endl;
-   fLogger << "                 Another possibility is to modify the model - " << Endl;
-   fLogger << "                 See above on tuning the rule ensemble." << Endl;
-   fLogger << Endl;
-   fLogger << col << "The error rate was still decreasing at the end of the path"
+   log() << "                 the same warnings may occur since the events" << Endl;
+   log() << "                 used for error estimation are also used for" << Endl;
+   log() << "                 path estimation." << Endl;
+   log() << "                 Another possibility is to modify the model - " << Endl;
+   log() << "                 See above on tuning the rule ensemble." << Endl;
+   log() << Endl;
+   log() << col << "The error rate was still decreasing at the end of the path"
            << colres << Endl;
-   fLogger << "                 Too few steps in path! Increase "
+   log() << "                 Too few steps in path! Increase "
            << col << "GDNSteps" <<  colres << "." << Endl;
-   fLogger << Endl;
-   fLogger << col << "Reached minimum early in the search" << colres << Endl;
+   log() << Endl;
+   log() << col << "Reached minimum early in the search" << colres << Endl;
 
-   fLogger << "                 Minimum was found early in the fitting. This" << Endl;
-   fLogger << "                 may indicate that the used step size "
+   log() << "                 Minimum was found early in the fitting. This" << Endl;
+   log() << "                 may indicate that the used step size "
            << col << "GDStep" <<  colres << "." << Endl;
-   fLogger << "                 was too large. Reduce it and rerun." << Endl;
-   fLogger << "                 If the results still are not OK, modify the" << Endl;
-   fLogger << "                 model either by modifying the rule ensemble" << Endl;
-   fLogger << "                 or add/remove linear terms" << Endl;
+   log() << "                 was too large. Reduce it and rerun." << Endl;
+   log() << "                 If the results still are not OK, modify the" << Endl;
+   log() << "                 model either by modifying the rule ensemble" << Endl;
+   log() << "                 or add/remove linear terms" << Endl;
 }

@@ -27,9 +27,11 @@
 //                                                                      
 //_______________________________________________________________________
 
-#include "Riostream.h"
 #include "TH1D.h"
 
+#ifndef ROOT_TMVA_MsgLogger
+#include "TMVA/MsgLogger.h"
+#endif
 #ifndef ROOT_TMVA_TNeuron
 #include "TMVA/TNeuron.h"
 #endif
@@ -49,14 +51,9 @@ using std::vector;
 
 ClassImp(TMVA::TNeuron)
 
-#ifdef _WIN32
-/*Disable warning C4355: 'this' : used in base member initializer list*/
-#pragma warning ( disable : 4355 )
-#endif
-
 //______________________________________________________________________________
 TMVA::TNeuron::TNeuron()
-   : fLogger( this, kDEBUG )
+   : fLogger( new MsgLogger(this, kDEBUG) )
 {
    // standard constructor
    InitNeuron();
@@ -67,6 +64,7 @@ TMVA::TNeuron::~TNeuron()
    // destructor
    if (fLinksIn != NULL)  delete fLinksIn;
    if (fLinksOut != NULL) delete fLinksOut;
+   delete fLogger;
 }
 
 void TMVA::TNeuron::InitNeuron()
@@ -109,7 +107,6 @@ void TMVA::TNeuron::CalculateActivationValue()
       fActivationValue = UNINITIALIZED;
       return;
    }
-
    fActivationValue = fActivation->Eval(fValue);
 }
 
@@ -303,7 +300,7 @@ void TMVA::TNeuron::PrintLinks(TObjArray* links)
    // print an array of TSynapses, for debugging
 
    if (links == NULL) {
-      fLogger << kDEBUG << "\t\t\t<none>" << Endl;
+      log() << kDEBUG << "\t\t\t<none>" << Endl;
       return;
    }
 
@@ -312,7 +309,7 @@ void TMVA::TNeuron::PrintLinks(TObjArray* links)
    Int_t numLinks = links->GetEntriesFast();
    for  (Int_t i = 0; i < numLinks; i++) {
       synapse = (TSynapse*)links->At(i);
-      fLogger << kDEBUG <<  
+      log() << kDEBUG <<  
          "\t\t\tweighta: " << synapse->GetWeight()
            << "\t\tw-value: " << synapse->GetWeightedValue()
            << "\t\tw-delta: " << synapse->GetWeightedDelta()
@@ -325,13 +322,13 @@ void TMVA::TNeuron::PrintLinks(TObjArray* links)
 void TMVA::TNeuron::PrintActivationEqn()
 {
    // print activation equation, for debugging
-   if (fActivation != NULL) fLogger << kDEBUG << fActivation->GetExpression() << Endl;
-   else                     fLogger << kDEBUG << "<none>" << Endl;
+   if (fActivation != NULL) log() << kDEBUG << fActivation->GetExpression() << Endl;
+   else                     log() << kDEBUG << "<none>" << Endl;
 }
 
 //______________________________________________________________________________
 void TMVA::TNeuron::PrintMessage( EMsgType type, TString message)
 {
    // print message, for debugging
-   fLogger << type << message << Endl;
+   log() << type << message << Endl;
 }

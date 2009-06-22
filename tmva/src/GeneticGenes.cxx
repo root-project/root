@@ -24,7 +24,6 @@
 
 #include "TMVA/GeneticGenes.h"
 #include "TMVA/GeneticPopulation.h"
-#include "Riostream.h"
 
 //_______________________________________________________________________
 //                                                                      
@@ -39,20 +38,10 @@ TMVA::GeneticGenes::GeneticGenes( std::vector<Double_t> & f  )
    // Constructor:
    // set the factors of this individual
    fFactors = f;
+   fFitness = 0;
 }
 
-//_______________________________________________________________________
-void TMVA::GeneticGenes::Clear() 
+Bool_t TMVA::operator <(const TMVA::GeneticGenes& first, const TMVA::GeneticGenes& second)
 {
-   // clear the factors (coefficients) of this individual
-   // clear the fitness-results obtained by this individual
-   fFactors.clear();
-   fResults.clear();
-}
-  
-//_______________________________________________________________________
-void TMVA::GeneticGenes::ClearResults() 
-{
-   // clear the fitness-results obtained by this individual
-   fResults.clear();
+   return first.fFitness < second.fFitness;
 }

@@ -9,11 +9,16 @@
  *                                                                                *
  * Description:                                                                   *
  *      ANN Multilayer Perceptron  class for the discrimination of signal         *
- *      from background.                                                          *
+ *      from background.  BFGS implementation based on TMultiLayerPerceptron      *
+ *      class from ROOT (http://root.cern.ch).                                    *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker  <Andreas.Hocker@cern.ch> - CERN, Switzerland             *
- *      Matt Jachowski   <jachowski@stanford.edu> - Stanford University, USA      *
+ *      Krzysztof Danielowski <danielow@cern.ch>       - IFJ & AGH, Poland        *
+ *      Andreas Hoecker       <Andreas.Hocker@cern.ch> - CERN, Switzerland        *
+ *      Peter Speckmayer      <peter.speckmayer@cern.ch> - CERN, Switzerland      *
+ *      Matt Jachowski        <jachowski@stanford.edu> - Stanford University, USA *
+ *      Kamil Kraszewski      <kalq@cern.ch>           - IFJ & UJ, Poland         *
+ *      Maciej Kruk           <mkruk@cern.ch>          - IFJ & AGH, Poland        *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland                                                         *
@@ -35,11 +40,24 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
+#ifndef ROOT_TTree
 #include "TTree.h"
+#endif
+#ifndef ROOT_TObjArray
 #include "TObjArray.h"
+#endif
+#ifndef ROOT_TRandom3
 #include "TRandom3.h"
+#endif
+#ifndef ROOT_TH1F
 #include "TH1F.h"
+#endif
+#ifndef ROOT_TMatrixDfwd
+#include "TMatrixDfwd.h"
+#endif
 
 #ifndef ROOT_TMVA_IFitterTarget
 #include "TMVA/IFitterTarget.h"
@@ -56,28 +74,33 @@
 #ifndef ROOT_TMVA_TActivation
 #include "TMVA/TActivation.h"
 #endif
+#ifndef ROOT_TMVA_ConvergenceTest
+#include "TMVA/ConvergenceTest.h"
+#endif
 
 #define MethodMLP_UseMinuit__
 #undef  MethodMLP_UseMinuit__
 
 namespace TMVA {
 
-   class MethodMLP : public MethodANNBase, public IFitterTarget {
+   class MethodMLP : public MethodANNBase, public IFitterTarget, public ConvergenceTest {
 
    public:
 
       // standard constructors
       MethodMLP( const TString& jobName, 
                  const TString&  methodTitle,
-                 DataSet& theData,
+                 DataSetInfo& theData,
                  const TString& theOption, 
                  TDirectory* theTargetDir = 0 );
 
-      MethodMLP( DataSet& theData, 
+      MethodMLP( DataSetInfo& theData, 
                  const TString& theWeightFile, 
                  TDirectory* theTargetDir = 0 );
 
       virtual ~MethodMLP();
+
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
       void Train() { Train(NumCycles()); }
 
@@ -85,7 +108,7 @@ namespace TMVA {
       Double_t ComputeEstimator ( std::vector<Double_t>& parameters );
       Double_t EstimatorFunction( std::vector<Double_t>& parameters );
 
-      enum ETrainingMethod { kBP=0, kGA };
+      enum ETrainingMethod { kBP=0, kBFGS, kGA };
       enum EBPTrainingMode { kSequential=0, kBatch };
 
    protected:
@@ -96,6 +119,7 @@ namespace TMVA {
       // get help message text
       void GetHelpMessage() const;
 
+
    private:
 
       // the option handling methods
@@ -104,11 +128,25 @@ namespace TMVA {
 
       // general helper functions
       void     Train( Int_t nEpochs );
-      void     InitMLP();
+      void     Init();
       void     InitializeLearningRates(); // although this is only needed by backprop
 
       // used as a measure of success in all minimization techniques
       Double_t CalculateEstimator( Types::ETreeType treeType = Types::kTraining );
+
+      // BFGS functions
+      void     BFGSMinimize( Int_t nEpochs );
+      void     SetGammaDelta( TMatrixD &Gamma, TMatrixD &Delta, std::vector<Double_t> &Buffer );
+      void     SteepestDir( TMatrixD &Dir );
+      Bool_t   GetHessian( TMatrixD &Hessian, TMatrixD &Gamma, TMatrixD &Delta );
+      void     SetDir( TMatrixD &Hessian, TMatrixD &Dir );
+      Double_t DerivDir( TMatrixD &Dir );
+      Bool_t   LineSearch( TMatrixD &Dir, std::vector<Double_t> &Buffer );
+      void     ComputeDEDw();
+      void     SimulateEvent( const Event* ev );
+      void     SetDirWeights( std::vector<Double_t> &Origin, TMatrixD &Dir, Double_t alpha );
+      Double_t GetError();
+      Double_t GetSqrErr( const Event* ev, UInt_t index = 0 );
 
       // backpropagation functions
       void     BackPropagationMinimize( Int_t nEpochs );
@@ -116,8 +154,9 @@ namespace TMVA {
       void     Shuffle( Int_t* index, Int_t n );
       void     DecaySynapseWeights(Bool_t lateEpoch );
       void     TrainOneEvent( Int_t ievt);
-      Double_t GetDesiredOutput();
+      Double_t GetDesiredOutput( const Event* ev );
       void     UpdateNetwork( Double_t desired, Double_t eventWeight=1.0 );
+      void     UpdateNetwork(std::vector<Float_t>& desired, Double_t eventWeight=1.0);
       void     CalculateNeuronDeltas();
       void     UpdateSynapses();
       void     AdjustSynapseWeights();
@@ -127,6 +166,10 @@ namespace TMVA {
 
       // genetic algorithm functions
       void GeneticMinimize();
+
+      // the neuronal network can be initialized after the analysis type has been set.
+      void   SetAnalysisType( Types::EAnalysisType type );
+      
 
 #ifdef MethodMLP_UseMinuit__
       // minuit functions -- commented out because they rely on a static pointer
@@ -140,7 +183,18 @@ namespace TMVA {
       ETrainingMethod fTrainingMethod; // method of training, BP or GA
       TString         fTrainMethodS;   // training method option param
 
-      // backpropagation variables
+      Float_t         fSamplingFraction;  // fraction of events which is sampled for training
+      Float_t         fSamplingEpoch;     // fraction of epochs where sampling is used
+      Float_t         fSamplingWeight;    // changing factor for event weights when sampling is turned on
+      Bool_t          fSamplingTraining;  // The training sample is sampled
+      Bool_t          fSamplingTesting;   // The testing sample is sampled
+
+      // BFGS variables
+      Double_t        fLastAlpha;      // line search variable
+      Double_t        fTau;            // line search variable
+      Int_t           fResetStep;      // reset time (how often we clear hessian matrix)
+
+      // backpropagation variable
       Double_t        fLearnRate;      // learning rate for synapse weight adjustments
       Double_t        fDecayRate;      // decay rate for above learning rate
       EBPTrainingMode fBPMode;         // backprop learning mode (sequential or batch)

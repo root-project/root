@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -20,7 +19,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -38,16 +36,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <iosfwd>
+#ifndef ROOT_TROOT
 #include "TROOT.h"
+#endif
 
 #ifndef ROOT_TMVA_Node
 #include "TMVA/Node.h"
-#endif
-#ifndef ROOT_TMVA_Event
-#include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
 #endif
 
 // -----------------------------------------------------------------------------
@@ -59,6 +54,8 @@
 namespace TMVA {
    
    class BinaryTree;
+   class MsgLogger;
+
    ostream& operator<< ( ostream& os, const BinaryTree& tree );
    istream& operator>> ( istream& istr,     BinaryTree& tree );
    
@@ -74,7 +71,10 @@ namespace TMVA {
 
       virtual ~BinaryTree();
 
-      virtual Node* CreateNode() = 0;
+      virtual Node* CreateNode(UInt_t size=0) const = 0;
+      virtual BinaryTree* CreateTree() const = 0;
+      static  BinaryTree* CreateFromXML(void* node);
+      virtual const char* ClassName() const = 0;
 
       // set the root node of the tree
       void SetRoot( Node* r ) { fRoot = r; }
@@ -92,15 +92,16 @@ namespace TMVA {
 
       UInt_t GetTotalTreeDepth() const { return fDepth; }
 
-      void SetTotalTreeDepth( Int_t depth ) { fDepth = depth;};
-
+      void SetTotalTreeDepth( Int_t depth ) { fDepth = depth; }
       void SetTotalTreeDepth( Node* n = NULL );
 
       Node* GetLeftDaughter ( Node* n);    
       Node* GetRightDaughter( Node* n);
 
-      void Print( ostream& os ) const;
-      void Read ( istream& istr );
+      virtual void Print( ostream& os ) const;
+      virtual void Read ( istream& istr );
+      virtual void* AddXMLTo(void* parent) const;
+      virtual void  ReadXML(void* node);
 
    private:
   
@@ -113,10 +114,11 @@ namespace TMVA {
       // delete a node (and the corresponding event if owned by the tree)
       void       DeleteNode( Node* );
 
-      Int_t      fNNodes;           // total number of nodes in the tree (counted)
+      UInt_t     fNNodes;           // total number of nodes in the tree (counted)
       UInt_t     fDepth;            // maximal depth in tree reached
 
-      mutable MsgLogger  fLogger;   // message loggera    
+      mutable MsgLogger* fLogger;   // message loggera    
+      MsgLogger& log() const { return *fLogger; }
 
       ClassDef(BinaryTree,0) // Base class for BinarySearch and Decision Trees
    };  

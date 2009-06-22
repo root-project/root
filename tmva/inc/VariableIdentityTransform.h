@@ -32,6 +32,8 @@
 //                                                                      //
 // VariableIdentityTransform                                            //
 //                                                                      //
+// Linear interpolation class                                           //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TMVA_VariableTransformBase
@@ -41,25 +43,26 @@
 namespace TMVA {
 
    class VariableIdentityTransform : public VariableTransformBase {
-
+      
    public:
-  
-      VariableIdentityTransform( std::vector<TMVA::VariableInfo>& );
+      
+      VariableIdentityTransform( DataSetInfo& dsi );
       virtual ~VariableIdentityTransform( void ) {}
 
-      void   ApplyTransformation( Types::ESBType type = Types::kMaxSBType ) const;
-      Bool_t PrepareTransformation( TTree* inputTree );
+      void   Initialize();
+      Bool_t PrepareTransformation( const std::vector<Event*>& );
 
       void WriteTransformationToStream ( std::ostream& ) const {}
       void ReadTransformationFromStream( std::istream& ) { SetCreated(); }
 
-      virtual TMVA::Event& GetEvent()  const { return GetEventRaw(); }
+      virtual void AttachXMLTo(void* parent);
+      virtual void ReadFromXML( void* trfnode );
 
-      // provides string vector describing explicit transformation
-      std::vector<TString>* GetTransformationStrings( Types::ESBType ) const;
+      virtual const Event* Transform(const Event* const, Int_t cls ) const;
+      virtual const Event* InverseTransform(const Event* ev, Int_t cls ) const { return Transform( ev, cls ); }
 
       // writer of function code
-      virtual void MakeFunction(std::ostream& fout, const TString& fncName, Int_t part);
+      virtual void MakeFunction(std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls );
 
       ClassDef(VariableIdentityTransform,0) // Variable transformation: identity
    };
@@ -67,5 +70,3 @@ namespace TMVA {
 } // namespace TMVA
 
 #endif 
-
-

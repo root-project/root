@@ -23,17 +23,18 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#ifndef ROOT_TMVA_KNN_Node
-#define ROOT_TMVA_KNN_Node
+#ifndef ROOT_TMVA_NodekNN
+#define ROOT_TMVA_NodekNN
 
 // C++
 #include <list>
-#include <iosfwd>
 #include <string>
 #include <iostream>
 
 // ROOT
+#ifndef ROOT_Rtypes
 #include "Rtypes.h"
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -125,6 +126,12 @@ namespace TMVA
       template<class T>
       UInt_t Find(std::list<std::pair<const Node<T> *, Float_t> > &nlist,
                         const Node<T> *node, const T &event, UInt_t nfind);
+
+      // recursive search for k-nearest neighbor
+      // find k events with sum of event weights >= nfind
+      template<class T>
+      UInt_t Find(std::list<std::pair<const Node<T> *, Float_t> > &nlist,
+		  const Node<T> *node, const T &event, Double_t nfind, Double_t ncurr);
 
       // recursively travel upward until root node is reached
       template <class T>
@@ -312,7 +319,7 @@ void TMVA::kNN::Node<T>::Print(std::ostream& os, const std::string &offset) cons
    if (!fNodeL && !fNodeR) {
       os << std::endl;
    }
-}      
+}
 
 //-------------------------------------------------------------------------------------------
 template<class T>
@@ -336,8 +343,11 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const TMVA::kNN::Node<T> *, Float_t> 
    const Float_t value = event.GetVar(node->GetMod());     
 
    if (node->GetWeight() > 0.0) {
+
       Float_t max_dist = 0.0;
+
       if (!nlist.empty()) {
+
          max_dist = nlist.back().second;
          
          if (nlist.size() == nfind) {
@@ -358,12 +368,12 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const TMVA::kNN::Node<T> *, Float_t> 
       Bool_t remove_back = kFALSE;
       
       if (nlist.size() < nfind) {
-         insert_this = true;
+         insert_this = kTRUE;
       }
       else if (nlist.size() == nfind) {
          if (distance < max_dist) {
-            insert_this = true;
-            remove_back = true;
+            insert_this = kTRUE;
+            remove_back = kTRUE;
          }
       }
       else {
@@ -381,10 +391,9 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const TMVA::kNN::Node<T> *, Float_t> 
             if (distance < lit->second) {
                break;
             }
-            else
-               {
-                  continue;
-               }
+            else {
+	       continue;
+	    }
          }
          
          nlist.insert(lit, std::pair<const Node<T> *, Float_t>(node, distance));
@@ -401,7 +410,7 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const TMVA::kNN::Node<T> *, Float_t> 
          count += Find(nlist, node->GetNodeL(), event, nfind);
          count += Find(nlist, node->GetNodeR(), event, nfind);
       }
-      else {   
+      else {	 
          count += Find(nlist, node->GetNodeR(), event, nfind);
          count += Find(nlist, node->GetNodeL(), event, nfind);
       }
@@ -412,6 +421,125 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const TMVA::kNN::Node<T> *, Float_t> 
       }
       if (node->GetNodeR()) {
          count += Find(nlist, node->GetNodeR(), event, nfind);
+      }
+   }
+   
+   return count;
+}
+
+
+//-------------------------------------------------------------------------------------------
+template<class T>
+UInt_t TMVA::kNN::Find(std::list<std::pair<const TMVA::kNN::Node<T> *, Float_t> > &nlist,
+                       const TMVA::kNN::Node<T> *node, const T &event, const Double_t nfind, Double_t ncurr)
+{
+   // This is a global templated function that searches for k-nearest neighbors.
+   // list contains all nodes that are closest to event 
+   // and have sum of event weights >= nfind.
+   // Only nodes with positive weights are added to list.
+   // Requirement for used classes:
+   //  - each node contains maximum and minimum values of splitting variable
+   //    for all its children
+   //  - min and max range is checked to avoid descending into
+   //    nodes that are defintely outside current minimum neighbourhood.
+   //
+   // This function should be modified with care.
+   //
+
+   if (!node || !(nfind < 0.0)) {
+      return 0;
+   }
+
+   const Float_t value = event.GetVar(node->GetMod());     
+
+   if (node->GetWeight() > 0.0) {
+
+      Float_t max_dist = 0.0;
+
+      if (!nlist.empty()) {
+
+         max_dist = nlist.back().second;
+         
+         if (!(ncurr < nfind)) {
+            if (value > node->GetVarMax() && 
+                event.GetDist(node->GetVarMax(), node->GetMod()) > max_dist) {
+               return 0;
+            }  
+            if (value < node->GetVarMin() && 
+                event.GetDist(node->GetVarMin(), node->GetMod()) > max_dist) {
+               return 0;
+            }
+         }      
+      }
+
+      const Float_t distance = event.GetDist(node->GetEvent());
+      
+      Bool_t insert_this = kFALSE;
+      
+      if (ncurr < nfind) {
+         insert_this = kTRUE;
+      }
+      else if (!nlist.empty()) {
+         if (distance < max_dist) {
+            insert_this = kTRUE;
+         }
+      }
+      else {
+         std::cerr << "TMVA::kNN::Find() - logic error in recursive procedure" << std::endl;
+         return 1;
+      }
+      
+      if (insert_this) {
+	 // (re)compute total current weight when inserting a new node
+	 ncurr = 0;
+
+         // need typename keyword because qualified dependent names 
+         // are not valid types unless preceded by 'typename'.
+         typename std::list<std::pair<const Node<T> *, Float_t> >::iterator lit = nlist.begin();
+	 
+         // find a place where current node should be inserted
+         for (; lit != nlist.end(); ++lit) {
+            if (distance < lit->second) {
+               break;
+            }
+	    
+	    ncurr += lit -> first -> GetWeight();
+         }
+         
+         lit = nlist.insert(lit, std::pair<const Node<T> *, Float_t>(node, distance));
+         
+         for (; lit != nlist.end(); ++lit) {
+	    ncurr += lit -> first -> GetWeight();
+	    if (!(ncurr < nfind)) {
+	       ++lit;
+	       break;
+	    }
+	 }
+	 
+	 if(lit != nlist.end())
+	 {
+	    nlist.erase(lit, nlist.end());
+	 }
+      }
+   }   
+   
+   UInt_t count = 1;
+   if (node->GetNodeL() && node->GetNodeR()) {
+      if (value < node->GetVarDis()) {
+         count += Find(nlist, node->GetNodeL(), event, nfind, ncurr);
+         count += Find(nlist, node->GetNodeR(), event, nfind, ncurr);
+      }
+      else {	 
+         count += Find(nlist, node->GetNodeR(), event, nfind, ncurr);
+         count += Find(nlist, node->GetNodeL(), event, nfind, ncurr);
+      }
+   }
+   else {
+      if (node->GetNodeL()) {
+         count += Find(nlist, node->GetNodeL(), event, nfind, ncurr);
+      }
+      if (node->GetNodeR()) {
+         count += Find(nlist, node->GetNodeR(), event, nfind, ncurr);
       }
    }
    

@@ -34,9 +34,12 @@
 
 //_______________________________________________________________________
 CCPruner::CCPruner( DecisionTree* t_max, const EventList* validationSample,
-		    SeparationBase* qualityIndex ) : fAlpha(-1.0), 
-						     fValidationSample(validationSample),
-						     fOptimalK(-1) {
+                    SeparationBase* qualityIndex ) : 
+   fAlpha(-1.0), 
+   fValidationSample(validationSample),
+   fValidationDataSet(NULL),
+   fOptimalK(-1)
+{
    // constructor
    fTree = t_max;
    
@@ -48,17 +51,42 @@ CCPruner::CCPruner( DecisionTree* t_max, const EventList* validationSample,
       fOwnQIndex = false;
       fQualityIndex = qualityIndex;
    }
-   fDebug = kFALSE;
+   fDebug = kTRUE;
 }
 
 //_______________________________________________________________________
-CCPruner::~CCPruner( ) {
+CCPruner::CCPruner( DecisionTree* t_max, const DataSet* validationSample,
+                    SeparationBase* qualityIndex ) : 
+   fAlpha(-1.0), 
+   fValidationSample(NULL),
+   fValidationDataSet(validationSample),
+   fOptimalK(-1)
+{
+   // constructor
+   fTree = t_max;
+   
+   if(qualityIndex == NULL) {
+      fOwnQIndex = true;
+      fQualityIndex = new MisClassificationError();
+   }
+   else {
+      fOwnQIndex = false;
+      fQualityIndex = qualityIndex;
+   }
+   fDebug = kTRUE;
+}
+
+
+//_______________________________________________________________________
+CCPruner::~CCPruner( )
+{
    if(fOwnQIndex) delete fQualityIndex;
    // destructor
 }
 
 //_______________________________________________________________________
-void CCPruner::Optimize( ) {
+void CCPruner::Optimize( )
+{
    // determine the pruning sequence
 
    Bool_t HaveStopCondition = fAlpha > 0; // keep pruning the tree until reach the limit fAlpha
@@ -72,7 +100,7 @@ void CCPruner::Optimize( ) {
 
    ofstream outfile;
    if (fDebug) outfile.open("costcomplexity.log");
-   if(!HaveStopCondition && fValidationSample == NULL) {
+   if(!HaveStopCondition && (fValidationSample == NULL && fValidationDataSet == NULL) ) {
       if (fDebug) outfile << "ERROR: no validation sample, so cannot optimize pruning!" << std::endl;
       delete dTWrapper;
       if (fDebug) outfile.close();
@@ -126,7 +154,9 @@ void CCPruner::Optimize( ) {
       }
       k += 1;
       if(!HaveStopCondition) {
-         Double_t q = dTWrapper->TestTreeQuality(fValidationSample);
+         Double_t q;
+         if (fValidationDataSet != NULL) q = dTWrapper->TestTreeQuality(fValidationDataSet);
+         else q = dTWrapper->TestTreeQuality(fValidationSample);
          fQualityIndexList.push_back(q);
       }
       else { 
@@ -171,8 +201,9 @@ void CCPruner::Optimize( ) {
 }
 
 //_______________________________________________________________________
-std::vector<DecisionTreeNode*> CCPruner::GetOptimalPruneSequence( ) const {
-    // return the prune strength (=alpha) corresponding to the prune sequence
+std::vector<DecisionTreeNode*> CCPruner::GetOptimalPruneSequence( ) const
+{
+   // return the prune strength (=alpha) corresponding to the prune sequence
    std::vector<DecisionTreeNode*> optimalSequence;
    if( fOptimalK >= 0 ) {
       for( Int_t i = 0; i < fOptimalK; i++ ) {
@@ -181,4 +212,5 @@ std::vector<DecisionTreeNode*> CCPruner::GetOptimalPruneSequence( ) const {
    }
    return optimalSequence;
 }
+
 

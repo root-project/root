@@ -34,10 +34,12 @@ End_Html */
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
+#include <cstdlib>
+#include <vector>
 
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TString.h"
 #include "TObjString.h"
 #include "TQObject.h"
 #include "TSpline.h"
@@ -45,11 +47,11 @@ End_Html */
 #include "TMath.h"
 #include "TFile.h"
 #include "TKey.h" 
+#include "TXMLEngine.h" 
 
 #include "TMVA/Configurable.h"
 #include "TMVA/Config.h"
-
-using std::endl;
+#include "TMVA/Tools.h"
 
 // don't change this flag without a good reason ! The FitterBase code won't work anymore !!!
 // #define TMVA_Configurable_SanctionUnknownOption kTRUE 
@@ -69,16 +71,20 @@ TMVA::Configurable::Configurable( const TString& theOption)
      fConfigName                 ( "Configurable" ), // must be replaced by name of class that uses the configurable
      fConfigDescription          ( "No description" ), 
      fReferenceFile              ( "None" ),
-     fLogger                     ( this )
+     fLogger                     ( new MsgLogger(this) )
 {
    // constructor
    fListOfOptions.SetOwner();   
+
+   // check if verbosity "V" set in option
+   if (gTools().CheckForVerboseOption( theOption )) log().SetMinType( kVERBOSE );
 }
 
 //_______________________________________________________________________
 TMVA::Configurable::~Configurable()
 {
    // default destructur
+   delete fLogger;
 }
 
 //_______________________________________________________________________
@@ -88,7 +94,7 @@ void TMVA::Configurable::SplitOptions(const TString& theOpt, TList& loo) const
    TString splitOpt(theOpt);
    loo.SetOwner();
    while (splitOpt.Length()>0) {
-      if ( ! splitOpt.Contains(':') ) {
+      if (!splitOpt.Contains(':')) {
          loo.Add(new TObjString(splitOpt));
          splitOpt = "";
       } 
@@ -113,15 +119,13 @@ void TMVA::Configurable::ResetSetFlag()
 }
 
 //_______________________________________________________________________
-void TMVA::Configurable::ParseOptions( Bool_t verbose ) 
+void TMVA::Configurable::ParseOptions() 
 {
    // options parser
-   if (verbose) {
-      fLogger << kINFO << "Parsing option string: " << Endl;
-      TString optionsWithoutTilde(fOptions);
-      optionsWithoutTilde.ReplaceAll(TString("~"),TString(""));
-      fLogger << kINFO << "\"" << optionsWithoutTilde << "\"" << Endl;
-   }
+   log() << kVERBOSE << "Parsing option string: " << Endl;
+   TString optionsWithoutTilde(fOptions);
+   optionsWithoutTilde.ReplaceAll(TString("~"),TString(""));
+   log() << kVERBOSE << "... \"" << optionsWithoutTilde << "\"" << Endl;
    
    TList loo; // the List Of Options in the parsed string
    
@@ -139,6 +143,7 @@ void TMVA::Configurable::ParseOptions( Bool_t verbose )
    while (TObjString * os = (TObjString*) setOptIt()) { // loop over parsed options
 
       TString s = os->GetString();
+
       // the tilde in the beginning is an indication that the option
       // has been accepted during previous parsing
       //
@@ -155,24 +160,30 @@ void TMVA::Configurable::ParseOptions( Bool_t verbose )
          TString optval = s(s.First('=')+1,s.Length());
          Int_t idx = -1;
 
-         // deal with array specification
-         if (optname.Contains('[')) {
-            TString sp = optname(optname.First('[')+1,100);
-            sp.Remove(sp.First(']'));
-            std::stringstream str(sp.Data());
+         // First check if the optname exists in the list of the
+         // objects. This does not depend on the existence of a [] in
+         // the optname. Sometimes the [] is part of the optname and
+         // does not describe an array
+         OptionBase* decOpt = (OptionBase *)fListOfOptions.FindObject(optname);
+         if (decOpt==0 && optname.Contains('[')) {
+            // now we see if there is an [] and if the optname exists
+            // after removing the [idx]
+            TString st = optname(optname.First('[')+1,100);
+            st.Remove(st.First(']'));
+            std::stringstream str(st.Data());
             str >> idx;                              // save the array index
             optname.Remove(optname.First('['));      // and remove [idx] from the option name
+            decOpt = (OptionBase *)fListOfOptions.FindObject(optname);
          }
 
-         OptionBase * decOpt = (OptionBase *)fListOfOptions.FindObject(optname);
          TListIter optIt(&fListOfOptions);
          if (decOpt!=0) {
             if (decOpt->IsSet())
-               fLogger << kWARNING << "Value for option " << decOpt->GetName() 
+               log() << kWARNING << "Value for option " << decOpt->GetName() 
                        << " was previously set to " << decOpt->GetValue() << Endl;
 
             if (!decOpt->HasPreDefinedVal() || (decOpt->HasPreDefinedVal() && decOpt->IsPreDefinedVal(optval)) ) {
-               if (decOpt->IsArrayOpt()) {
+               if (decOpt->IsArrayOpt()) { // arrays
                   // if no index was found then we assume the value is to be set for the entire array
                   if (idx==-1) {
                      decOpt->SetValue(optval);
@@ -180,19 +191,19 @@ void TMVA::Configurable::ParseOptions( Bool_t verbose )
                   else {
                      // since we don't know what else is comming we just put everthing into a map
                      if (!decOpt->SetValue(optval, idx))
-                        fLogger << kFATAL << "Index " << idx << " too large for option " << decOpt->TheName()
+                        log() << kFATAL << "Index " << idx << " too large for option " << decOpt->TheName()
                                 << ", allowed range is [0," << decOpt->GetArraySize()-1 << "]" << Endl;
                   }
                } 
-               else {
-                  if (idx!=-1) 
-                     fLogger << kFATAL << "Option " << decOpt->TheName()
+               else { // no arrays
+                  if (idx!=-1)
+                     log() << kFATAL << "Option " << decOpt->TheName()
                              << " is not an array, but you specified an index" << Endl;
                   decOpt->SetValue(optval);
                }
                paramParsed = kTRUE;
             }
-            else fLogger << kFATAL << "Option " << decOpt->TheName() 
+            else log() << kFATAL << "Option " << decOpt->TheName() 
                          << " does not have predefined value: \"" << optval << "\"" << Endl;               
          }
       }
@@ -207,25 +218,27 @@ void TMVA::Configurable::ParseOptions( Bool_t verbose )
          OptionBase* decOpt = 0;
          Bool_t optionExists = kFALSE;
          TListIter optIt(&fListOfOptions);
-         while ( (decOpt = (OptionBase*)optIt()) !=0) {
+         while ((decOpt = (OptionBase*)optIt()) !=0) {
             TString predOptName(decOpt->GetName());
             predOptName.ToLower();
             if (predOptName == optname) optionExists = kTRUE;
             if (dynamic_cast<Option<bool>*>(decOpt)==0) continue; // not a boolean option
             if (predOptName == optname) break;
          }
-        
+
+         
          if (decOpt != 0) {
             decOpt->SetValue( hasNotSign ? "0" : "1" );
             paramParsed = kTRUE;
          } 
          else {
             if (optionExists && hasNotSign) {
-               fLogger << kFATAL << "Negating a non-boolean variable " << optname
-                       << ", please check the opions for method " << GetName() << Endl;
+               log() << kFATAL << "Negating a non-boolean variable " << optname
+                       << ", please check the opions for method: " << GetName() << Endl;
             }
          }
       }
+
 
       if (!paramParsed && LooseOptionCheckingEnabled()) {
          // loose options specification, loops through the possible string 
@@ -241,13 +254,14 @@ void TMVA::Configurable::ParseOptions( Bool_t verbose )
    
       if (fOptions!="") fOptions += ":";
       if (paramParsed || preserveTilde) fOptions += '~';
-      if (paramParsed || preserveNotSign) fOptions += '!';
-      fOptions += s;
+      if (preserveNotSign) fOptions += '!';
+      fOptions += s;      
    }
 
    // print options summary
-   if (verbose)                           PrintOptions();
+   PrintOptions();
    if (gConfig().WriteOptionsReference()) WriteOptionsReferenceToFile();
+
 }
 
 //______________________________________________________________________
@@ -266,15 +280,16 @@ void TMVA::Configurable::CheckForUnusedOptions() const
    while (TObjString * os = (TObjString*) setOptIt()) { // loop over parsed options
 
       TString s = os->GetString();
-      if ( !s.BeginsWith('~') ) {
-         if (unusedOptions!="") unusedOptions += ':';
+      if (!s.BeginsWith('~')) {
+         if (unusedOptions != "") unusedOptions += ':';
          unusedOptions += s;
       }
    }
-   if (unusedOptions!="")
-      fLogger << kFATAL
+   if (unusedOptions != "") {
+      log() << kFATAL
               << "The following options were specified, but could not be interpreted: \'"
               << unusedOptions << "\', please check!" << Endl;
+   }
 }
 
 //______________________________________________________________________
@@ -282,23 +297,23 @@ void TMVA::Configurable::PrintOptions() const
 {
    // prints out the options set in the options string and the defaults
 
-   fLogger << kINFO << "The following options are set:" << Endl;
+   log() << kVERBOSE << "The following options are set:" << Endl;
 
    TListIter optIt( &fListOfOptions );
-   fLogger << kINFO << "- By User:" << Endl;
+   log() << kVERBOSE << "- By User:" << Endl;
    Bool_t found = kFALSE;
    while (OptionBase* opt = (OptionBase *) optIt()) {
-      if (opt->IsSet()) { fLogger << kINFO << "    "; opt->Print(fLogger); fLogger << Endl; found = kTRUE; }
+      if (opt->IsSet()) { log() << kVERBOSE << "    "; opt->Print(log()); log() << Endl; found = kTRUE; }
    }
-   if (!found) fLogger << kINFO << "    <none>" << Endl;
+   if (!found) log() << kVERBOSE << "    <none>" << Endl;
 
    optIt.Reset();
-   fLogger << kINFO << "- Default:" << Endl;
+   log() << kVERBOSE << "- Default:" << Endl;
    found = kFALSE;
    while (OptionBase* opt = (OptionBase *) optIt()) {
-      if (!opt->IsSet()) { fLogger << kINFO << "    "; opt->Print(fLogger); fLogger << Endl; found = kTRUE; }
+      if (!opt->IsSet()) { log() << kVERBOSE << "    "; opt->Print(log()); log() << Endl; found = kTRUE; }
    }
-   if (!found) fLogger << kINFO << "    <none>" << Endl;
+   if (!found) log() << kVERBOSE << "    <none>" << Endl;
 }
 
 //______________________________________________________________________
@@ -307,14 +322,72 @@ void TMVA::Configurable::WriteOptionsToStream( ostream& o, const TString& prefix
    // write options to output stream (e.g. in writing the MVA weight files
 
    TListIter optIt( &fListOfOptions );
-   o << prefix << "# Set by User:" << endl;
+   o << prefix << "# Set by User:" << std::endl;
    while (OptionBase * opt = (OptionBase *) optIt()) 
-      if (opt->IsSet()) { o << prefix; opt->Print(o); o << endl; }
+      if (opt->IsSet()) { o << prefix; opt->Print(o); o << std::endl; }
    optIt.Reset();
-   o << prefix << "# Default:" << endl;
+   o << prefix << "# Default:" << std::endl;
    while (OptionBase * opt = (OptionBase *) optIt()) 
-      if (!opt->IsSet()) { o << prefix; opt->Print(o); o << endl; }
-   o << prefix << "##" << endl;
+      if (!opt->IsSet()) { o << prefix; opt->Print(o); o << std::endl; }
+   o << prefix << "##" << std::endl;
+}
+
+//______________________________________________________________________
+void TMVA::Configurable::AddOptionsXMLTo( void* parent ) const 
+{
+   // write options to XML file
+   if (!parent) return;
+   void* opts = gTools().xmlengine().NewChild(parent, 0, "Options");
+   TListIter optIt( &fListOfOptions );
+   while (OptionBase * opt = (OptionBase *) optIt()) {
+      void* optnode = 0;
+      if (opt->IsArrayOpt()) {
+         std::stringstream s("");
+         s.precision( 16 );
+         for(Int_t i=0; i<opt->GetArraySize(); i++) {
+            if(i>0) s << " ";
+            s << std::scientific << opt->GetValue(i);
+         }
+         optnode = gTools().xmlengine().NewChild(opts,0,"Option",s.str().c_str());
+      } 
+      else {
+         optnode = gTools().xmlengine().NewChild(opts,0,"Option", opt->GetValue());
+      }
+      gTools().AddAttr(optnode, "name", opt->TheName());
+      if (opt->IsArrayOpt()) {
+         gTools().AddAttr(optnode, "size", opt->GetArraySize());
+      }
+      gTools().AddAttr(optnode, "modified", (opt->IsSet()?"Yes":"No") );
+   }
+}
+
+//______________________________________________________________________
+void TMVA::Configurable::ReadOptionsFromXML( void* node ) 
+{
+   void* opt = gTools().xmlengine().GetChild(node);
+   TString optName, optValue;
+   fOptions="";
+   while (opt != 0) {
+      if (fOptions.Length()!=0) fOptions += ":";
+      gTools().ReadAttr(opt, "name", optName);
+      optValue = TString( gTools().xmlengine().GetNodeContent(opt) );
+      std::stringstream s("");
+      s.precision( 16 );
+      if (gTools().xmlengine().HasAttr(opt, "size")) {
+         UInt_t size;
+         gTools().ReadAttr(opt, "size", size);
+         std::vector<TString> values = gTools().SplitString(optValue, ' ');
+         for(UInt_t i=0; i<size; i++) {
+            if(i!=0) s << ":";
+            s << std::scientific << optName << "[" << i << "]=" << values[i];
+         }
+      } 
+      else {
+         s << std::scientific << optName << "=" << optValue;
+      }
+      fOptions += s.str().c_str();
+      opt = gTools().xmlengine().GetNext(opt);
+   }
 }
 
 //______________________________________________________________________
@@ -327,20 +400,20 @@ void TMVA::Configurable::WriteOptionsReferenceToFile()
    fReferenceFile = dir + "/" + GetConfigName() + "_optionsRef.txt";
    std::ofstream o( fReferenceFile );
    if (!o.good()) { // file could not be opened --> Error
-      fLogger << kFATAL << "<WriteOptionsToInfoFile> Unable to open output file: " << fReferenceFile << Endl;
+      log() << kFATAL << "<WriteOptionsToInfoFile> Unable to open output file: " << fReferenceFile << Endl;
    }
 
    TListIter optIt( &fListOfOptions );   
-   o << "# List of options:" << endl;
-   o << "# Configurable: " << GetConfigName() << endl;
-   o << "# Description: " << GetConfigDescription() << endl;
+   o << "# List of options:" << std::endl;
+   o << "# Configurable: " << GetConfigName() << std::endl;
+   o << "# Description: " << GetConfigDescription() << std::endl;
    while (OptionBase * opt = (OptionBase *) optIt()) {
       opt->Print( o, 1 ); 
-      o << endl << "# ------------------------------------------------" << endl; 
+      o << std::endl << "# ------------------------------------------------" << std::endl; 
    }
 
    o.close();
-   fLogger << kINFO << "Wrote options reference file: \"" << fReferenceFile << "\"" << Endl;
+   log() << kVERBOSE << "Wrote options reference file: \"" << fReferenceFile << "\"" << Endl;
 }
 
 //______________________________________________________________________
@@ -352,7 +425,6 @@ void TMVA::Configurable::ReadOptionsFromStream(istream& istr)
    // that is only necessary in our factory, when we test right
    // after the training
    ResetSetFlag();
-
    fOptions = "";
    char buf[512];
    istr.getline(buf,512);

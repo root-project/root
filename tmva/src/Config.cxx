@@ -26,15 +26,8 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Config                                                               //
-//                                                                      //
-// Singleton class for global configuration settings used by TMVA       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TMVA/Config.h"
+#include "TMVA/MsgLogger.h"
 
 ClassImp(TMVA::Config)
 
@@ -47,7 +40,8 @@ TMVA::Config::Config() :
    fUseColoredConsole    ( kTRUE  ),
    fSilent               ( kFALSE ),
    fWriteOptionsReference( kFALSE ),
-   fLogger( "Config" )
+   fDrawProgressBar      ( kTRUE ),
+   fLogger               ( new MsgLogger("Config") )
 {
    // constructor - set defaults
    
@@ -56,7 +50,8 @@ TMVA::Config::Config() :
    fVariablePlotting.fNbins1D  = 60;
    fVariablePlotting.fNbins2D  = 300;
    fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots = 20;
-   fVariablePlotting.fNbinsXOfROCCurve                        = 100;
+   
+   fVariablePlotting.fNbinsXOfROCCurve = 100;
 
    // IO names
    fIONames.fWeightFileDir           = "weights";
@@ -68,4 +63,6 @@ TMVA::Config::Config() :
 TMVA::Config::~Config()
 {
    // destructor
+   delete fLogger;
 }
+

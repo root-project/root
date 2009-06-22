@@ -13,7 +13,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -21,7 +20,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -40,13 +38,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TObject
 #include "TObject.h"
-
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
 #endif
 
 namespace TMVA {
+
+   class MsgLogger;
 
    class RootFinder : public TObject {
 
@@ -71,7 +69,8 @@ namespace TMVA {
       // function pointer
       Double_t (*fGetRootVal)( Double_t );
 
-      mutable MsgLogger fLogger; // message logger
+      mutable MsgLogger* fLogger;   //! message logger
+      MsgLogger& log() const { return *fLogger; }                       
 
       ClassDef(RootFinder,0) // Root finding using Brents algorithm
    };

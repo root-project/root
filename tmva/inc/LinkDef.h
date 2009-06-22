@@ -9,7 +9,6 @@
 
 #pragma link C++ namespace TMVA;
 
-#pragma link C++ class TMVA::DataSet+; 
 #pragma link C++ class TMVA::Configurable+; 
 #pragma link C++ class TMVA::Event+; 
 #pragma link C++ class TMVA::kNN::Event+; 
@@ -17,6 +16,7 @@
 
 // the classifiers
 #pragma link C++ class TMVA::MethodBase+; 
+#pragma link C++ class TMVA::MethodCompositeBase+; 
 #pragma link C++ class TMVA::MethodANNBase+; 
 #pragma link C++ class TMVA::MethodTMlpANN+; 
 #pragma link C++ class TMVA::MethodRuleFit+; 
@@ -26,17 +26,19 @@
 #pragma link C++ class TMVA::MethodCFMlpANN+; 
 #pragma link C++ class TMVA::MethodCFMlpANN_Utils+; 
 #pragma link C++ class TMVA::MethodLikelihood+; 
-#pragma link C++ class TMVA::MethodVariable+; 
 #pragma link C++ class TMVA::MethodHMatrix+; 
 #pragma link C++ class TMVA::MethodPDERS+; 
-#pragma link C++ class TMVA::MethodBDT+; 
+#pragma link C++ class TMVA::MethodBDT+;
+#pragma link C++ class TMVA::MethodDT+;  
 #pragma link C++ class TMVA::MethodSVM+;
 #pragma link C++ class TMVA::MethodBayesClassifier+;
 #pragma link C++ class TMVA::MethodFDA+;
 #pragma link C++ class TMVA::MethodMLP+;
 #pragma link C++ class TMVA::MethodCommittee+;
 #pragma link C++ class TMVA::MethodSeedDistance+;
-
+#pragma link C++ class TMVA::MethodBoost+; 
+#pragma link C++ class TMVA::MethodPDEFoam+; 
+#pragma link C++ class TMVA::MethodLD+; 
 // other classes
 #pragma link C++ class TMVA::TSpline2+; 
 #pragma link C++ class TMVA::TSpline1+; 
@@ -53,6 +55,7 @@
 #pragma link C++ class TMVA::Node+; 
 #pragma link C++ class TMVA::SdivSqrtSplusB+; 
 #pragma link C++ class TMVA::SeparationBase+; 
+#pragma link C++ class TMVA::RegressionVariance+; 
 #pragma link C++ class TMVA::Tools+; 
 #pragma link C++ class TMVA::Reader+; 
 #pragma link C++ class TMVA::GeneticAlgorithm+; 
@@ -60,6 +63,7 @@
 #pragma link C++ class TMVA::GeneticPopulation+; 
 #pragma link C++ class TMVA::GeneticRange+; 
 #pragma link C++ class TMVA::GiniIndex+; 
+#pragma link C++ class TMVA::GiniIndexWithLaplace+; 
 #pragma link C++ class TMVA::SimulatedAnnealing+;
 #pragma link C++ class TMVA::TNeuron+;
 #pragma link C++ class TMVA::TSynapse+;
@@ -84,7 +88,9 @@
 #pragma link C++ class TMVA::VariableIdentityTransform+;
 #pragma link C++ class TMVA::VariableDecorrTransform+;
 #pragma link C++ class TMVA::VariablePCATransform+;
-#pragma link C++ class TMVA::VariableGaussDecorr+;
+#pragma link C++ class TMVA::VariableGaussTransform+;
+#pragma link C++ class TMVA::VariableNormalizeTransform+;
+
 #pragma link C++ class TMVA::Config+;
 #pragma link C++ class TMVA::Config::VariablePlotting+;
 #pragma link C++ class TMVA::Config::IONames+;
@@ -101,10 +107,16 @@
 #pragma link C++ class TMVA::MetricEuler+;
 #pragma link C++ class TMVA::MetricManhattan+;
 #pragma link C++ class TMVA::SeedDistance+;
+#pragma link C++ class TMVA::PDEFoam+;
+#pragma link C++ class TMVA::PDEFoamIntegrand+;
+#pragma link C++ class TMVA::PDEFoamVect+;
+#pragma link C++ class TMVA::PDEFoamCell+;
+#pragma link C++ class TMVA::PDEFoamMaxwt+;
+#pragma link C++ class TMVA::TFDISTR+;
 #pragma link C++ class TMVA::BDTEventWrapper+;
 #pragma link C++ class TMVA::CCTreeWrapper+;
 #pragma link C++ class TMVA::CCPruner+;
-
-#pragma link C++ function TMVA::gTools;
+#pragma link C++ class TMVA::CostComplexityPruneTool+;
+#pragma link C++ class TMVA::SVEvent+;
 
 #endif

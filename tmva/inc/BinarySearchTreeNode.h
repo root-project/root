@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -38,9 +37,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <iosfwd>
 #include <vector>
-
+#ifndef ROOT_Rtypes
 #include "Rtypes.h"
+#endif
 
 #ifndef ROOT_TMVA_Node
 #include "TMVA/Node.h"
@@ -49,7 +50,6 @@
 namespace TMVA {
 
    class Event;
-   class MsgLogger;
 
    // a class used to identify a Node; (needed for recursive reading from text file)
    // (currently it is NOT UNIQUE... but could eventually made it
@@ -71,6 +71,8 @@ namespace TMVA {
       // destructor
       virtual ~BinarySearchTreeNode ();
 
+      virtual Node* createNode() const { return new BinarySearchTreeNode(); }
+
       // test event if it decends the tree at this node to the right  
       virtual Bool_t GoesRight( const Event& ) const;
       // test event if it decends the tree at this node to the left 
@@ -87,21 +89,31 @@ namespace TMVA {
 
       const std::vector<Float_t> & GetEventV() const { return fEventV; }
       Float_t                      GetWeight() const { return fWeight; }
-      Bool_t                       IsSignal()  const { return fIsSignal; }
+      Bool_t                       IsSignal()  const { return (fClass == 0); }
+
+      const std::vector<Float_t> & GetTargets() const { return fTargets; }
+
 
       // printout of the node
-      virtual void Print( ostream& os ) const;
+      virtual void Print( std::ostream& os ) const;
 
       // recursive printout of the node and it daughters 
-      virtual void PrintRec( ostream& os ) const;
+      virtual void PrintRec( std::ostream& os ) const;
+
+      virtual void AddAttributesToNode(void* node) const;
+      virtual void AddContentToNode(std::stringstream& s) const;
 
    private: 
       // Read the data block
-      virtual Bool_t ReadDataRecord( istream& is );
-
+      virtual void ReadAttributes(void* node);
+      virtual Bool_t ReadDataRecord( std::istream& is );
+      virtual void ReadContent(std::stringstream& s);
       std::vector<Float_t> fEventV;
+      std::vector<Float_t> fTargets;
+
       Float_t     fWeight;
-      Bool_t      fIsSignal;
+      // Float_t     fIsSignal;
+      Int_t       fClass;
 
       Short_t     fSelector;       // index of variable used in node selection (decision tree) 
 
@@ -111,4 +123,3 @@ namespace TMVA {
 } // namespace TMVA
 
 #endif
-

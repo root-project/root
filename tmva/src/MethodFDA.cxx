@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$    
-// Author: Andreas Hoecker, Peter Speckmayer
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -13,6 +13,8 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker  <Andreas.Hocker@cern.ch> - CERN, Switzerland             *
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
+ *      Joerg Stelzer    <stelzer@cern.ch>        - DESY, Germany                 *
+ *      Maciej Kruk      <mkruk@cern.ch>          - IFJ PAN & AGH, Poland         *
  *                                                                                *
  * Copyright (c) 2005-2006:                                                       *
  *      CERN, Switzerland                                                         *
@@ -31,6 +33,8 @@
 // (background) events. The parameter fitting is done via the abstract  //
 // class FitterBase, featuring Monte Carlo sampling, Genetic            //
 // Algorithm, Simulated Annealing, MINUIT and combinations of these.    //
+//                                                                      //
+// Can compute regression value for one dimensional output              //
 //_______________________________________________________________________
 
 #include "Riostream.h"
@@ -38,8 +42,11 @@
 #include "TFormula.h"
 #include "TString.h"
 #include "TObjString.h"
-#include "TRandom.h"
+#include "TRandom3.h"
+#include "TMath.h"
+#include <sstream>
 
+#include "TMVA/ClassifierFactory.h"
 #include "TMVA/MethodFDA.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Interval.h"
@@ -50,57 +57,57 @@
 #include "TMVA/MCFitter.h"
 #include "TMVA/Config.h"
 
-#include <stdlib.h>
+REGISTER_METHOD(FDA)
 
 ClassImp(TMVA::MethodFDA)
 
 //_______________________________________________________________________
-TMVA::MethodFDA::MethodFDA( const TString& jobName, const TString& methodTitle, DataSet& theData, 
-                            const TString& theOption, TDirectory* theTargetDir )
-   : MethodBase( jobName, methodTitle, theData, theOption, theTargetDir ), 
-     IFitterTarget()
-   , fFitter(0)
-   , fConvergerFitter(0)
+TMVA::MethodFDA::MethodFDA( const TString& jobName,
+                            const TString& methodTitle,
+                            DataSetInfo& theData, 
+                            const TString& theOption,
+                            TDirectory* theTargetDir )
+   : MethodBase( jobName, Types::kFDA, methodTitle, theData, theOption, theTargetDir ), 
+     IFitterTarget   (),
+     fFormula        ( 0 ),
+     fFitter         ( 0 ),
+     fConvergerFitter( 0 )
 {
    // standard constructor
-   InitFDA();
-
-   // interpretation of configuration option string
-   SetConfigName( TString("Method") + GetMethodName() );
-   DeclareOptions();
-   ParseOptions();
-   ProcessOptions();
 }
 
 //_______________________________________________________________________
-TMVA::MethodFDA::MethodFDA( DataSet& theData, 
+TMVA::MethodFDA::MethodFDA( DataSetInfo& theData, 
                             const TString& theWeightFile,  
                             TDirectory* theTargetDir )
-   : MethodBase( theData, theWeightFile, theTargetDir ) 
+   : MethodBase( Types::kFDA, theData, theWeightFile, theTargetDir ), 
+     IFitterTarget   (),
+     fFormula        ( 0 ),
+     fFitter         ( 0 ),
+     fConvergerFitter( 0 )
 {
    // constructor from weight file
-   InitFDA();
-
-   DeclareOptions();
 }
 
 //_______________________________________________________________________
-void TMVA::MethodFDA::InitFDA( void )
+void TMVA::MethodFDA::Init( void )
 {
-   // default initialisation
-   SetMethodName( "FDA" );
-   SetMethodType( Types::kFDA );
-   SetTestvarName();
-
+   // default initialisation	
    fNPars    = 0;
-   fFormula  = 0;
+
    fBestPars.clear();
 
-   fEventsSig.clear();
-   fEventsBkg.clear();
-
+   fSumOfWeights    = 0;
    fSumOfWeightsSig = 0;
    fSumOfWeightsBkg = 0;
+
+   fFormulaStringP  = "";
+   fParRangeStringP = "";
+   fFormulaStringT  = "";
+   fParRangeStringT = "";
+
+   fFitMethod       = "";
+   fConverger       = "";
 }
 
 //_______________________________________________________________________
@@ -117,8 +124,8 @@ void TMVA::MethodFDA::DeclareOptions()
    // where the numbers in "(a,b)" correspond to the a=min, b=max parameter ranges;
    // each parameter defined in the function string must have a corresponding range
    //
-   DeclareOptionRef( fFormulaStringP  = "", "Formula",   "The discrimination formula" );
-   DeclareOptionRef( fParRangeStringP = "", "ParRanges", "Parameter ranges" );
+   DeclareOptionRef( fFormulaStringP  = "(0)", "Formula",   "The discrimination formula" );
+   DeclareOptionRef( fParRangeStringP = "()", "ParRanges", "Parameter ranges" );
 
    // fitter
    DeclareOptionRef( fFitMethod = "MINUIT", "FitMethod", "Optimisation Method");
@@ -133,16 +140,72 @@ void TMVA::MethodFDA::DeclareOptions()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodFDA::ProcessOptions() 
+void TMVA::MethodFDA::CreateFormula() 
 {
-   // the option string is decoded, for availabel options see "DeclareOptions"
-   MethodBase::ProcessOptions();
-
-   // clean up first
-   ClearAll();
+   // translate formula string into TFormula, and parameter string into par ranges
 
    // process transient strings
    fFormulaStringT  = fFormulaStringP;
+
+   // intepret formula string
+
+   // replace the parameters "(i)" by the TFormula style "[i]"
+   for (Int_t ipar=0; ipar<fNPars; ipar++) {
+      fFormulaStringT.ReplaceAll( Form("(%i)",ipar), Form("[%i]",ipar) );
+   }
+
+   // sanity check, there should be no "(i)", with 'i' a number anymore
+   for (Int_t ipar=fNPars; ipar<1000; ipar++) {
+      if (fFormulaStringT.Contains( Form("(%i)",ipar) ))
+         log() << kFATAL 
+                 << "<CreateFormula> Formula contains expression: \"" << Form("(%i)",ipar) << "\", "
+                 << "which cannot be attributed to a parameter; " 
+                 << "it may be that the number of variable ranges given via \"ParRanges\" "
+                 << "does not match the number of parameters in the formula expression, please verify!"
+                 << Endl;
+   }
+
+   // write the variables "xi" as additional parameters "[npar+i]"
+   for (Int_t ivar=GetNvar()-1; ivar >= 0; ivar--) {
+      fFormulaStringT.ReplaceAll( Form("x%i",ivar), Form("[%i]",ivar+fNPars) );
+   }
+
+   // sanity check, there should be no "xi", with 'i' a number anymore
+   for (UInt_t ivar=GetNvar(); ivar<1000; ivar++) {
+      if (fFormulaStringT.Contains( Form("x%i",ivar) ))
+         log() << kFATAL 
+                 << "<CreateFormula> Formula contains expression: \"" << Form("x%i",ivar) << "\", "
+                 << "which cannot be attributed to an input variable" << Endl;
+   }
+   
+   log() << "User-defined formula string       : \"" << fFormulaStringP << "\"" << Endl;
+   log() << "TFormula-compatible formula string: \"" << fFormulaStringT << "\"" << Endl;
+   log() << "Creating and compiling formula" << Endl;
+   
+   // create TF1
+   if (fFormula) delete fFormula;
+   fFormula = new TFormula( "FDA_Formula", fFormulaStringT );
+   
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,2,0)
+   fFormula->Optimize();
+#endif
+
+   // is formula correct ?
+   if (fFormula->Compile() != 0)
+      log() << kFATAL << "<ProcessOptions> Formula expression could not be properly compiled" << Endl;
+
+   // other sanity checks
+   if (fFormula->GetNpar() > fNPars + (Int_t)GetNvar())
+      log() << kFATAL << "<ProcessOptions> Dubious number of parameters in formula expression: " 
+              << fFormula->GetNpar() << " - compared to maximum allowed: " << fNPars + GetNvar() << Endl;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodFDA::ProcessOptions() 
+{
+   // the option string is decoded, for availabel options see "DeclareOptions"
+
+   // process transient strings
    fParRangeStringT = fParRangeStringP;
 
    // interpret parameter string   
@@ -151,7 +214,7 @@ void TMVA::MethodFDA::ProcessOptions()
 
    TList* parList = gTools().ParseFormatLine( fParRangeStringT, ";" );
    if (parList->GetSize() != fNPars) {
-      fLogger << kFATAL << "<ProcessOptions> Mismatch in parameter string: " 
+      log() << kFATAL << "<ProcessOptions> Mismatch in parameter string: " 
               << "the number of parameters: " << fNPars << " != ranges defined: " 
               << parList->GetSize() << "; the format of the \"ParRanges\" string "
               << "must be: \"(-1.2,3.4);(-2.3,4.55);...\", "
@@ -169,69 +232,22 @@ void TMVA::MethodFDA::ProcessOptions()
       Ssiz_t istr = str.First( ',' );
       TString pminS(str(1,istr-1));
       TString pmaxS(str(istr+1,str.Length()-2-istr));
-      Float_t pmin = atof(pminS.Data());
-      Float_t pmax = atof(pmaxS.Data());
+
+      stringstream stmin; Float_t pmin; stmin << pminS.Data(); stmin >> pmin;       
+      stringstream stmax; Float_t pmax; stmax << pmaxS.Data(); stmax >> pmax;
 
       // sanity check
-      if (pmin > pmax) fLogger << kFATAL << "<ProcessOptions> max > min in interval for parameter: [" 
+      if (pmin > pmax) log() << kFATAL << "<ProcessOptions> max > min in interval for parameter: [" 
                                << ipar << "] : [" << pmin  << ", " << pmax << "] " << Endl;
 
       fParRange[ipar] = new Interval( pmin, pmax );
    }
-   
    delete parList;
-   
-   // intepret formula string
 
-   // replace the parameters "(i)" by the TFormula style "[i]"
-   for (Int_t ipar=0; ipar<fNPars; ipar++) {
-      fFormulaStringT.ReplaceAll( Form("(%i)",ipar), Form("[%i]",ipar) );
-   }
+   // create formula
+   CreateFormula();
 
-   // sanity check, there should be no "(i)", with 'i' a number anymore
-   for (Int_t ipar=fNPars; ipar<1000; ipar++) {
-      if (fFormulaStringT.Contains( Form("(%i)",ipar) ))
-         fLogger << kFATAL 
-                 << "<ProcessOptions> Formula contains expression: \"" << Form("(%i)",ipar) << "\", "
-                 << "which cannot be attributed to a parameter; " 
-                 << "it may be that the number of variable ranges given via \"ParRanges\" "
-                 << "does not match the number of parameters in the formula expression, please verify!"
-                 << Endl;
-   }
-
-   // write the variables "xi" as additional parameters "[npar+i]"
-   for (Int_t ivar=GetNvar()-1; ivar >= 0; ivar--) {
-      fFormulaStringT.ReplaceAll( Form("x%i",ivar), Form("[%i]",ivar+fNPars) );
-   }
-
-   // sanity check, there should be no "xi", with 'i' a number anymore
-   for (Int_t ivar=GetNvar(); ivar<1000; ivar++) {
-      if (fFormulaStringT.Contains( Form("x%i",ivar) ))
-         fLogger << kFATAL 
-                 << "<ProcessOptions> Formula contains expression: \"" << Form("x%i",ivar) << "\", "
-                 << "which cannot be attributed to an input variable" << Endl;
-   }
-   
-   fLogger << "User-defined formula string       : \"" << fFormulaStringP << "\"" << Endl;
-   fLogger << "TFormula-compatible formula string: \"" << fFormulaStringT << "\"" << Endl;
-   fLogger << "Creating and compiling formula" << Endl;
-   
-   // create TF1
-   fFormula = new TFormula( "FDA_Formula", fFormulaStringT );
-   
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,2,0)
-   fFormula->Optimize();
-#endif
-
-   // is formula correct ?
-   if (fFormula->Compile() != 0)
-      fLogger << kFATAL << "<ProcessOptions> Formula expression could not be properly compiled" << Endl;
-
-   // other sanity checks
-   if (fFormula->GetNpar() > fNPars + GetNvar())
-      fLogger << kFATAL << "<ProcessOptions> Dubious number of parameters in formula expression: " 
-              << fFormula->GetNpar() << " - compared to maximum allowed: " << fNPars + GetNvar() << Endl;
-
+   // create minimiser
    fConvergerFitter = (IFitterTarget*)this;
    if (fConverger == "MINUIT") {
       fConvergerFitter = new MinuitFitter( *this, Form("%s_Converger_Minuit", GetName()), fParRange, GetOptions() );
@@ -247,7 +263,7 @@ void TMVA::MethodFDA::ProcessOptions()
    else if (fFitMethod == "MINUIT") 
       fFitter = new MinuitFitter( *fConvergerFitter, Form("%s_Fitter_Minuit", GetName()), fParRange, GetOptions() );
    else {
-      fLogger << kFATAL << "<Train> Do not understand fit method:" << fFitMethod << Endl;
+      log() << kFATAL << "<Train> Do not understand fit method:" << fFitMethod << Endl;
    }
    
    fFitter->CheckForUnusedOptions();
@@ -258,11 +274,17 @@ TMVA::MethodFDA::~MethodFDA( void )
 {
    // destructor
    ClearAll();
-
-   if(fFitter) delete fFitter;
-   if(fConvergerFitter!=0 && fConvergerFitter!=this) delete fConvergerFitter;
-
 }
+
+//_______________________________________________________________________
+Bool_t TMVA::MethodFDA::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets )
+{
+   // FDA can handle classification with 2 classes and regression with one regression-target
+   if (type == Types::kClassification && numberClasses == 2) return kTRUE;
+   if (type == Types::kRegression     && numberTargets == 1) return kTRUE;
+   return kFALSE;
+}
+
 
 //_______________________________________________________________________
 void TMVA::MethodFDA::ClearAll( void )
@@ -282,30 +304,37 @@ void TMVA::MethodFDA::Train( void )
 {
    // FDA training 
 
-   // default sanity checks
-   if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
-
    // cache training events
+   fSumOfWeights    = 0;
    fSumOfWeightsSig = 0;
    fSumOfWeightsBkg = 0;
 
-   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
+   for (UInt_t ievt=0; ievt<GetNEvents(); ievt++) {
 
       // read the training event 
-      ReadTrainingEvent(ievt);
+      const Event* ev = GetEvent(ievt);
 
       // true event copy
-      Event*  ev = new Event( GetEvent() );
-      Float_t w  = ev->GetWeight();
-
-      if (ev->IsSignal()) { fEventsSig.push_back( ev ); fSumOfWeightsSig += w; }
-      else                { fEventsBkg.push_back( ev ); fSumOfWeightsBkg += w; }
+      Float_t w  = GetTWeight(ev);
+	
+      if (!DoRegression()) {
+         if (ev->IsSignal()) { fSumOfWeightsSig += w; }
+         else                { fSumOfWeightsBkg += w; }
+      }
+      fSumOfWeights += w;
+	
    }
 
    // sanity check
-   if (fSumOfWeightsSig <= 0 || fSumOfWeightsBkg <= 0) {
-      fLogger << kFATAL << "<Train> Troubles in sum of weights: " 
-              << fSumOfWeightsSig << " (S) : " << fSumOfWeightsBkg << " (B)" << Endl;
+   if (!DoRegression()) {
+      if (fSumOfWeightsSig <= 0 || fSumOfWeightsBkg <= 0) {
+         log() << kFATAL << "<Train> Troubles in sum of weights: " 
+                 << fSumOfWeightsSig << " (S) : " << fSumOfWeightsBkg << " (B)" << Endl;
+      }
+   }
+   else if (fSumOfWeights <= 0) {
+      log() << kFATAL << "<Train> Troubles in sum of weights: " 
+              << fSumOfWeights << Endl;
    }
 
    // starting values (not used by all fitters)
@@ -320,16 +349,11 @@ void TMVA::MethodFDA::Train( void )
    // print results
    PrintResults( fFitMethod, fBestPars, estimator );
 
-   // free cache 
-   std::vector<const Event*>::const_iterator itev;
-   for (itev = fEventsSig.begin(); itev != fEventsSig.end(); itev++) delete *itev;
-   for (itev = fEventsBkg.begin(); itev != fEventsBkg.end(); itev++) delete *itev;
-
-   fEventsSig.clear();
-   fEventsBkg.clear();
-
-   if (fConverger == "MINUIT") delete fConvergerFitter;
    delete fFitter; fFitter = 0;
+   if (fConvergerFitter!=0 && fConvergerFitter!=(IFitterTarget*)this) {
+      delete fConvergerFitter;
+      fConvergerFitter = 0;
+   }
 }
 
 //_______________________________________________________________________
@@ -337,61 +361,90 @@ void TMVA::MethodFDA::PrintResults( const TString& fitter, std::vector<Double_t>
 {
    // display fit parameters
    // check maximum length of variable name
-   fLogger << kINFO;
-   fLogger << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
+   log() << kINFO;
+   log() << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
    vector<TString>  parNames;
    for (UInt_t ipar=0; ipar<pars.size(); ipar++) parNames.push_back( Form("Par(%i)",ipar ) );
-   gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", fLogger, "%g" );   
-   fLogger << "Discriminator expression: \"" << fFormulaStringP << "\"" << Endl;
-   fLogger << "Value of estimator at minimum: " << estimator << Endl;
+   gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", log(), "%g" );   
+   log() << "Discriminator expression: \"" << fFormulaStringP << "\"" << Endl;
+   log() << "Value of estimator at minimum: " << estimator << Endl;
 }
+
 
 //_______________________________________________________________________
 Double_t TMVA::MethodFDA::EstimatorFunction( std::vector<Double_t>& pars )
 {
    // compute estimator for given parameter set (to be minimised)
+   //   const Double_t sumOfWeights[]                = { fSumOfWeightsSig, fSumOfWeightsBkg, fSumOfWeights };
+   const Double_t sumOfWeights[]                = { fSumOfWeightsBkg, fSumOfWeightsSig, fSumOfWeights };
+   Double_t estimator[]                         = { 0, 0, 0 };
 
-   // species-specific stuff
-   const std::vector<const Event*>* eventVecs[] = { &fEventsSig, &fEventsBkg };
-   const Double_t sumOfWeights[]                = { fSumOfWeightsSig, fSumOfWeightsBkg };
-   const Double_t desiredVal[]                  = { 1, 0 };
-   Double_t estimator[]                         = { 0, 0 };
-   std::vector<const Event*>::const_iterator itev;
+   Double_t result, deviation;
+   Double_t desired = 0.0;
+   for (UInt_t ievt=0; ievt<GetNEvents(); ievt++) {
 
-   // loop over species
-   for (Int_t itype=0; itype<2; itype++) {
+      // read the training event 
+      const Event* ev = GetEvent(ievt);
 
-      // loop over specific events
-      for (itev = eventVecs[itype]->begin(); itev != eventVecs[itype]->end(); itev++) {
+      // calculate the deviation from the desired value
 
-         // read the training event 
-         Double_t result    = InterpretFormula( **itev, pars );
-         Double_t deviation = (result - desiredVal[itype])*(result - desiredVal[itype]);
+      if (!DoRegression()) desired = (ev->IsSignal() ? 1.0 : 0.0);
+      else                 desired = ev->GetTarget( 0 );
 
-         estimator[itype] += deviation * (*itev)->GetWeight();
-      }
-      estimator[itype] /= sumOfWeights[itype];
+      result    = InterpretFormula( ev, pars );
+      deviation = TMath::Power(result - desired, 2);
+
+      if (!DoRegression())  estimator[Int_t(desired)] += deviation * ev->GetWeight();
+      else                  estimator[2]              += deviation * ev->GetWeight();
+
    }
-
+   estimator[0] /= sumOfWeights[0];
+   estimator[1] /= sumOfWeights[1];
+   if (DoRegression()) estimator[2] /= sumOfWeights[2];
    // return value is sum over normalised signal and background contributions
-   return estimator[0] + estimator[1];
+
+   if (!DoRegression()) return estimator[0] + estimator[1];
+   else                 return estimator[2];
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodFDA::InterpretFormula( const Event& event, std::vector<Double_t>& pars )
+Double_t TMVA::MethodFDA::InterpretFormula( const Event* event, std::vector<Double_t>& pars )
 {
    // formula interpretation
    for (UInt_t ipar=0; ipar<pars.size(); ipar++) fFormula->SetParameter( ipar, pars[ipar] );
-   for (Int_t ivar=0;  ivar<GetNvar();   ivar++) fFormula->SetParameter( fNPars+ivar, event.GetVal(ivar) );
+   for (UInt_t ivar=0;  ivar<GetNvar();  ivar++) fFormula->SetParameter( fNPars+ivar, event->GetVal(ivar) );
 
    return fFormula->Eval( 0 );
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodFDA::GetMvaValue()
+Double_t TMVA::MethodFDA::GetMvaValue( Double_t* err )
 {
    // returns MVA value for given event
-   return InterpretFormula( GetEvent(), fBestPars );
+   const Event* ev = GetEvent();
+
+   // cannot determine error
+   if (err != 0) *err = -1;
+   
+   return InterpretFormula( ev, fBestPars );
+}
+
+//_______________________________________________________________________
+std::vector<Float_t>& TMVA::MethodFDA::GetRegressionValues()
+{
+   if (fRegressionReturnVal == NULL) fRegressionReturnVal = new std::vector<Float_t>();
+   fRegressionReturnVal->clear();
+
+   const Event* ev = GetEvent();
+
+   Event* evT = new Event(*ev);
+   evT->SetTarget(0,InterpretFormula( ev, fBestPars ));
+   const Event* evT2 = GetTransformationHandler().InverseTransform( evT );
+   fRegressionReturnVal->push_back(evT2->GetTarget(0));
+
+   delete evT;
+
+   return (*fRegressionReturnVal);
 }
 
 //_______________________________________________________________________
@@ -411,9 +464,59 @@ void  TMVA::MethodFDA::ReadWeightsFromStream( istream& istr )
 
    // retrieve best function parameters
    istr >> fNPars;
+
    fBestPars.clear();
    fBestPars.resize( fNPars );
    for (Int_t ipar=0; ipar<fNPars; ipar++) istr >> fBestPars[ipar];
+}
+
+//_______________________________________________________________________
+void TMVA::MethodFDA::AddWeightsXMLTo( void* parent ) const 
+{
+   // create XML description for LD classification and regression 
+   // (for arbitrary number of output classes/targets)
+
+   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   gTools().AddAttr( wght, "NPars",  fNPars );
+   for (Int_t ipar=0; ipar<fNPars; ipar++) {
+      void* coeffxml = gTools().xmlengine().NewChild( wght, 0, "Parameter" );
+      gTools().AddAttr( coeffxml, "Index", ipar   );
+      gTools().AddAttr( coeffxml, "Value", fBestPars[ipar] );
+   }
+
+   // write formula
+   gTools().AddAttr( wght, "Formula", fFormulaStringP );
+}
+  
+//_______________________________________________________________________
+void TMVA::MethodFDA::ReadWeightsFromXML( void* wghtnode ) 
+{
+   // read coefficients from xml weight file
+   gTools().ReadAttr( wghtnode, "NPars", fNPars );
+
+   fBestPars.clear();
+   fBestPars.resize( fNPars );
+   
+   void* ch = gTools().xmlengine().GetChild(wghtnode);
+   Double_t par;
+   Int_t    ipar;
+   while (ch) {
+      gTools().ReadAttr( ch, "Index", ipar );
+      gTools().ReadAttr( ch, "Value", par  );
+
+      // sanity check
+      if (ipar >= fNPars) log() << kFATAL << "<ReadWeightsFromXML> index out of range: "
+                                  << ipar << " >= " << fNPars << Endl;
+      fBestPars[ipar] = par;
+
+      ch = gTools().xmlengine().GetNext(ch);
+   }
+
+   // read formula
+   gTools().ReadAttr( wghtnode, "Formula", fFormulaStringP );
+
+   // create the TFormula
+   CreateFormula();
 }
 
 //_______________________________________________________________________
@@ -441,7 +544,7 @@ void TMVA::MethodFDA::MakeClassSpecific( std::ostream& fout, const TString& clas
    }
    
    // replace input variables
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       str.ReplaceAll( Form("[%i]", ivar+fNPars), Form("inputValues[%i]", ivar) );
    }
 
@@ -464,51 +567,51 @@ void TMVA::MethodFDA::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "The function discriminant analysis (FDA) is a classifier suitable " << Endl;
-   fLogger << "to solve linear or simple nonlinear discrimination problems." << Endl; 
-   fLogger << Endl;
-   fLogger << "The user provides the desired function with adjustable parameters" << Endl;
-   fLogger << "via the configuration option string, and FDA fits the parameters to" << Endl;
-   fLogger << "it, requiring the signal (background) function value to be as close" << Endl;
-   fLogger << "as possible to 1 (0). Its advantage over the more involved and" << Endl;
-   fLogger << "automatic nonlinear discriminators is the simplicity and transparency " << Endl;
-   fLogger << "of the discrimination expression. A shortcoming is that FDA will" << Endl;
-   fLogger << "underperform for involved problems with complicated, phase space" << Endl;
-   fLogger << "dependent nonlinear correlations." << Endl;
-   fLogger << Endl;
-   fLogger << "Please consult the Users Guide for the format of the formula string" << Endl;
-   fLogger << "and the allowed parameter ranges:" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "The function discriminant analysis (FDA) is a classifier suitable " << Endl;
+   log() << "to solve linear or simple nonlinear discrimination problems." << Endl; 
+   log() << Endl;
+   log() << "The user provides the desired function with adjustable parameters" << Endl;
+   log() << "via the configuration option string, and FDA fits the parameters to" << Endl;
+   log() << "it, requiring the signal (background) function value to be as close" << Endl;
+   log() << "as possible to 1 (0). Its advantage over the more involved and" << Endl;
+   log() << "automatic nonlinear discriminators is the simplicity and transparency " << Endl;
+   log() << "of the discrimination expression. A shortcoming is that FDA will" << Endl;
+   log() << "underperform for involved problems with complicated, phase space" << Endl;
+   log() << "dependent nonlinear correlations." << Endl;
+   log() << Endl;
+   log() << "Please consult the Users Guide for the format of the formula string" << Endl;
+   log() << "and the allowed parameter ranges:" << Endl;
    if (gConfig().WriteOptionsReference()) {
-      fLogger << "<a href=\"http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf\">" 
+      log() << "<a href=\"http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf\">" 
               << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf</a>" << Endl;
    }
-   else fLogger << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf" << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "The FDA performance depends on the complexity and fidelity of the" << Endl;
-   fLogger << "user-defined discriminator function. As a general rule, it should" << Endl;
-   fLogger << "be able to reproduce the discrimination power of any linear" << Endl;
-   fLogger << "discriminant analysis. To reach into the nonlinear domain, it is" << Endl;
-   fLogger << "useful to inspect the correlation profiles of the input variables," << Endl;
-   fLogger << "and add quadratic and higher polynomial terms between variables as" << Endl;
-   fLogger << "necessary. Comparison with more involved nonlinear classifiers can" << Endl;
-   fLogger << "be used as a guide." << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "Depending on the function used, the choice of \"FitMethod\" is" << Endl;
-   fLogger << "crucial for getting valuable solutions with FDA. As a guideline it" << Endl;
-   fLogger << "is recommended to start with \"FitMethod=MINUIT\". When more complex" << Endl;
-   fLogger << "functions are used where MINUIT does not converge to reasonable" << Endl;
-   fLogger << "results, the user should switch to non-gradient FitMethods such" << Endl;
-   fLogger << "as GeneticAlgorithm (GA) or Monte Carlo (MC). It might prove to be" << Endl;
-   fLogger << "useful to combine GA (or MC) with MINUIT by setting the option" << Endl;
-   fLogger << "\"Converger=MINUIT\". GA (MC) will then set the starting parameters" << Endl;
-   fLogger << "for MINUIT such that the basic quality of GA (MC) of finding global" << Endl;
-   fLogger << "minima is combined with the efficacy of MINUIT of finding local" << Endl;
-   fLogger << "minima." << Endl;
+   else log() << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "The FDA performance depends on the complexity and fidelity of the" << Endl;
+   log() << "user-defined discriminator function. As a general rule, it should" << Endl;
+   log() << "be able to reproduce the discrimination power of any linear" << Endl;
+   log() << "discriminant analysis. To reach into the nonlinear domain, it is" << Endl;
+   log() << "useful to inspect the correlation profiles of the input variables," << Endl;
+   log() << "and add quadratic and higher polynomial terms between variables as" << Endl;
+   log() << "necessary. Comparison with more involved nonlinear classifiers can" << Endl;
+   log() << "be used as a guide." << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "Depending on the function used, the choice of \"FitMethod\" is" << Endl;
+   log() << "crucial for getting valuable solutions with FDA. As a guideline it" << Endl;
+   log() << "is recommended to start with \"FitMethod=MINUIT\". When more complex" << Endl;
+   log() << "functions are used where MINUIT does not converge to reasonable" << Endl;
+   log() << "results, the user should switch to non-gradient FitMethods such" << Endl;
+   log() << "as GeneticAlgorithm (GA) or Monte Carlo (MC). It might prove to be" << Endl;
+   log() << "useful to combine GA (or MC) with MINUIT by setting the option" << Endl;
+   log() << "\"Converger=MINUIT\". GA (MC) will then set the starting parameters" << Endl;
+   log() << "for MINUIT such that the basic quality of GA (MC) of finding global" << Endl;
+   log() << "minima is combined with the efficacy of MINUIT of finding local" << Endl;
+   log() << "minima." << Endl;
 }

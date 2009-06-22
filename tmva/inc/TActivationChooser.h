@@ -34,44 +34,17 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
+#ifndef ROOT_TString
 #include "TString.h"
-
-#ifndef ROOT_TMVA_TActivation
-#include "TActivation.h"
-#endif
-#ifndef ROOT_TMVA_TActivationIdentity
-#include "TActivationIdentity.h"
-#endif
-#ifndef ROOT_TMVA_TActivationSigmoid
-#include "TActivationSigmoid.h"
-#endif
-#ifndef ROOT_TMVA_TActivationTanh
-#include "TActivationTanh.h"
-#endif
-#ifndef ROOT_TMVA_TActivationRadial
-#include "TActivationRadial.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
 #endif
 
 namespace TMVA {
-  
+
+   class TActivation;
+   class MsgLogger;
+   
    class TActivationChooser {
-    
    public:
-
-      TActivationChooser()
-         : fLogger( "TActivationChooser" )
-      {
-        // defaut constructor 
-
-         fLINEAR  = "linear";
-         fSIGMOID = "sigmoid";
-         fTANH    = "tanh";
-         fRADIAL  = "radial";
-      }
-      virtual ~TActivationChooser() {}
 
       enum EActivationType { kLinear = 0,
                              kSigmoid,
@@ -79,49 +52,12 @@ namespace TMVA {
                              kRadial
       };
 
-      TActivation* CreateActivation(EActivationType type) const
-      {
-        // instantiate the correct activation object according to the
-        // type choosen (given as the enumeration type)
+      TActivationChooser();
+      virtual ~TActivationChooser();
 
-         switch (type) {
-         case kLinear:  return new TActivationIdentity();
-         case kSigmoid: return new TActivationSigmoid(); 
-         case kTanh:    return new TActivationTanh();    
-         case kRadial:  return new TActivationRadial();  
-         default:
-            fLogger << kFATAL << "no Activation function of type " << type << " found" << Endl;
-            return 0; 
-         }
-         return NULL;
-      }
-      
-      TActivation* CreateActivation(const TString type) const
-      {
-        // instantiate the correct activation object according to the
-        // type choosen (given by a TString)
-
-         if      (type == fLINEAR)  return CreateActivation(kLinear);
-         else if (type == fSIGMOID) return CreateActivation(kSigmoid);
-         else if (type == fTANH)    return CreateActivation(kTanh);
-         else if (type == fRADIAL)  return CreateActivation(kRadial);
-         else {
-            fLogger << kFATAL << "no Activation function of type " << type << " found" << Endl;
-            return 0;
-         }
-      }
-      
-      vector<TString>* GetAllActivationNames() const
-      {
-        // retuns the names of all know activation functions
-
-         vector<TString>* names = new vector<TString>();
-         names->push_back(fLINEAR);
-         names->push_back(fSIGMOID);
-         names->push_back(fTANH);
-         names->push_back(fRADIAL);
-         return names;
-      }
+      TActivation* CreateActivation(EActivationType type) const;
+      TActivation* CreateActivation(const TString& type) const;
+      std::vector<TString>* GetAllActivationNames() const;
 
    private:
 
@@ -130,7 +66,8 @@ namespace TMVA {
       TString fTANH;    // activation function name
       TString fRADIAL;  // activation function name
 
-      mutable MsgLogger fLogger; // message logger
+      mutable MsgLogger* fLogger;                     //! message logger
+      MsgLogger& log() const { return *fLogger; }                       
 
       ClassDef(TActivationChooser,0) // Class for choosing activation functions
    };

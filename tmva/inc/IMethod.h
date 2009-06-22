@@ -38,30 +38,41 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TObject
 #include "TObject.h"
-
-#ifndef ROOT_TMVA_Types
-#include "TMVA/Types.h"
 #endif
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
+#include <iosfwd>
+
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
+class TString;
 
 namespace TMVA {
 
    class Ranking;
-   
-   class IMethod : public virtual TObject {
+   class MethodBoost;
+
+   class IMethod {
       
    public:
       
       // default constructur
-      IMethod() : TObject() {}
+      IMethod() {}
       
       // default destructur
       virtual ~IMethod() {}
 
       // ------- virtual member functions to be implemented by each MVA method
+      // the name of the method
+      virtual const char *GetName() const = 0;
 
-      // calculate the MVA value
-      virtual Double_t GetMvaValue() = 0;
+      // calculate the MVA value - some methods may return a per-event error estimate (unless: *err = -1)
+      virtual Double_t GetMvaValue( Double_t* err = 0 ) = 0;
 
       // training method
       virtual void Train( void ) = 0;
@@ -76,7 +87,7 @@ namespace TMVA {
       virtual void WriteMonitoringHistosToFile( void ) const = 0;
 
       // make ROOT-independent C++ class for classifier response
-      virtual void MakeClass( const TString& classFileName = "" ) const = 0;
+      virtual void MakeClass( const TString& classFileName = TString("") ) const = 0;
 
       // create ranking
       virtual const Ranking* CreateRanking() = 0;
@@ -84,13 +95,20 @@ namespace TMVA {
       // print help message
       virtual void PrintHelpMessage() const = 0;
 
-      // get specific help message from classifer
-      virtual void GetHelpMessage() const = 0;
+      // perfrom extra actions during the boosting at different stages
+      virtual Bool_t MonitorBoost( MethodBoost* boost) = 0;
+
+      virtual void Init() = 0;
+      virtual void DeclareOptions() = 0;
+      virtual void ProcessOptions() = 0;
 
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
       virtual void MakeClassSpecific( std::ostream&, const TString& ) const = 0;
+
+      // get specific help message from classifer
+      virtual void GetHelpMessage() const = 0;
 
       ClassDef(IMethod,0) // Method Interface
 

@@ -2,9 +2,17 @@
 
 enum HistType { MVAType = 0, ProbaType = 1, RarityType = 2 };
 
+#define CheckDerivedPlots 0
+//TString DerivedPlotName = "Proba";
+TString DerivedPlotName = "Rarity";
+
 void compareanapp( TString finAn = "TMVA.root", TString finApp = "TMVApp.root", 
                    HistType htype = MVAType, bool useTMVAStyle=kTRUE )
 {
+   cout << "=== Compare histograms of two files ===" << endl;
+   cout << "    File-1: " << finAn << endl;
+   cout << "    File-2: " << finApp << endl;
+
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
 
@@ -54,6 +62,7 @@ void compareanapp( TString finAn = "TMVA.root", TString finApp = "TMVApp.root",
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,titDir);
          TString hname = "MVA_" + methodTitle;
+         if (CheckDerivedPlots) hname += TString("_") + DerivedPlotName;
 
          TH1* sig = dynamic_cast<TH1*>(titDir->Get( hname + "_S" ));
          TH1* bgd = dynamic_cast<TH1*>(titDir->Get( hname + "_B" ));

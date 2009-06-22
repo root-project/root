@@ -11,7 +11,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -19,7 +18,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -48,75 +46,84 @@ End_Html */
 //
 //_______________________________________________________________________
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <iostream>
 #include <fstream>
 
+#include "Riostream.h"
 #include "TLeaf.h"
 #include "TEventList.h"
 #include "TObjString.h"
 #include "TROOT.h"
 #include "TMultiLayerPerceptron.h"
-#include "TMVA/Config.h"
 
+#include "TMVA/Config.h"
 #include "TMVA/MethodTMlpANN.h"
 
+#include "TMVA/ClassifierFactory.h"
 #ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
 #endif
 
 // some additional TMlpANN options
 const Bool_t EnforceNormalization__=kTRUE;
+#if ROOT_VERSION_CODE > ROOT_VERSION(5,13,06)
+const TMultiLayerPerceptron::ELearningMethod LearningMethod__= TMultiLayerPerceptron::kStochastic;
+// const TMultiLayerPerceptron::ELearningMethod LearningMethod__= TMultiLayerPerceptron::kBatch;
+#else
+const TMultiLayerPerceptron::LearningMethod LearningMethod__= TMultiLayerPerceptron::kStochastic;
+#endif
+
+REGISTER_METHOD(TMlpANN)
 
 ClassImp(TMVA::MethodTMlpANN)
 
 //_______________________________________________________________________
-TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName, const TString& methodTitle, DataSet& theData, 
-                                    const TString& theOption, TDirectory* theTargetDir)
-   : TMVA::MethodBase(jobName, methodTitle, theData, theOption, theTargetDir  ),
-     fMLP(0),
-     fLearningMethod( "" )
+TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
+                                    const TString& methodTitle,
+                                    DataSetInfo& theData, 
+                                    const TString& theOption,
+                                    TDirectory* theTargetDir) :
+   TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption, theTargetDir ),
+   fMLP(0),
+   fLearningMethod( "" )
 {
    // standard constructor 
-   InitTMlpANN();
-   
-   // interpretation of configuration option string
-   SetConfigName( TString("Method") + GetMethodName() );
-   DeclareOptions();
-   ParseOptions();
-   ProcessOptions();  
 }
 
 //_______________________________________________________________________
-TMVA::MethodTMlpANN::MethodTMlpANN( DataSet& theData, 
+TMVA::MethodTMlpANN::MethodTMlpANN( DataSetInfo& theData, 
                                     const TString& theWeightFile,  
-                                    TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ),
-     fMLP(0),
-     fLearningMethod( "" )
+                                    TDirectory* theTargetDir ) :
+   TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile, theTargetDir ),
+   fMLP(0),
+   fLearningMethod( "" )
 {
-   // constructor to calculate the TMlpANN-MVA from previously generatad 
-   // weigths (weight file)
-   InitTMlpANN();
-
-   DeclareOptions();
+   // constructor from weight file
 }
 
 //_______________________________________________________________________
-void TMVA::MethodTMlpANN::InitTMlpANN( void )
+Bool_t TMVA::MethodTMlpANN::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, 
+                                             UInt_t /*numberTargets*/ )
+{
+   // TMlpANN can handle classification with 2 classes 
+   if (type == Types::kClassification && numberClasses == 2) return kTRUE;
+   return kFALSE;
+}
+
+
+//_______________________________________________________________________
+void TMVA::MethodTMlpANN::Init( void )
 {
    // default initialisations
-   SetMethodName( "TMlpANN" );
-   SetMethodType( TMVA::Types::kTMlpANN );
-   SetTestvarName();
 }
 
 //_______________________________________________________________________
 TMVA::MethodTMlpANN::~MethodTMlpANN( void )
 {
    // destructor
-   if (fMLP != 0) delete fMLP;
 }
-
+ 
 //_______________________________________________________________________
 void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
 {
@@ -156,8 +163,8 @@ void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
    fMLPBuildOptions += fHiddenLayer;
    fMLPBuildOptions += "type";
 
-   fLogger << kINFO << "Use " << fNcycles << " training cycles" << Endl;
-   fLogger << kINFO << "Use configuration (nodes per hidden layer): " << fHiddenLayer << Endl;  
+   log() << kINFO << "Use " << fNcycles << " training cycles" << Endl;
+   log() << kINFO << "Use configuration (nodes per hidden layer): " << fHiddenLayer << Endl;  
 }
 
 //_______________________________________________________________________
@@ -173,8 +180,8 @@ void TMVA::MethodTMlpANN::DeclareOptions()
    //   * there is always a single node in the output layer 
    //   example: a net with 6 input nodes and "Hiddenlayers=N-1,N-2" has 6,5,4,1 nodes in the 
    //   layers 1,2,3,4, repectively 
-   DeclareOptionRef( fNcycles    = 3000,      "NCycles",      "Number of training cycles" );
-   DeclareOptionRef( fLayerSpec  = "N-1,N-2", "HiddenLayers", "Specification of hidden layer architecture (N stands for number of variables; any integers may also be used)" );
+   DeclareOptionRef( fNcycles    = 200,       "NCycles",      "Number of training cycles" );
+   DeclareOptionRef( fLayerSpec  = "N,N-1",   "HiddenLayers", "Specification of hidden layer architecture (N stands for number of variables; any integers may also be used)" );
    
    DeclareOptionRef( fValidationFraction = 0.5, "ValidationFraction", 
                      "Fraction of events in training tree used for cross validation" );
@@ -192,38 +199,31 @@ void TMVA::MethodTMlpANN::DeclareOptions()
 void TMVA::MethodTMlpANN::ProcessOptions() 
 {
    // builds the neural network as specified by the user
-
-   MethodBase::ProcessOptions();
-   
    CreateMLPOptions(fLayerSpec);
 
-   // Here we create a dummy tree necessary to create 
-   // a minimal NN
-   // this NN gets recreated before training
-   // but can be used for testing (see method GetMvaVal() )
-   static Double_t* d = new Double_t[Data().GetNVariables()] ;
-   static Int_t   type;
-
-   gROOT->cd();
-   TTree* dummyTree = new TTree("dummy","Empty dummy tree", 1);
-   for (UInt_t ivar = 0; ivar<Data().GetNVariables(); ivar++) {
-      TString vn = Data().GetInternalVarName(ivar);
-      dummyTree->Branch(Form("%s",vn.Data()), d+ivar, Form("%s/D",vn.Data()));
+   if (IgnoreEventsWithNegWeightsInTraining()) {
+      log() << kFATAL << "Mechanism to ignore events with negative weights in training not available for method"
+            << GetMethodTypeName() 
+            << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
+            << Endl;
    }
-   dummyTree->Branch("type", &type, "type/I");
-
-   if (fMLP != 0) delete fMLP;
-   fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), dummyTree );
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodTMlpANN::GetMvaValue()
+Double_t TMVA::MethodTMlpANN::GetMvaValue( Double_t* err )
 {
    // calculate the value of the neural net for the current event 
-   static Double_t* d = new Double_t[Data().GetNVariables()];
-   for (UInt_t ivar = 0; ivar<Data().GetNVariables(); ivar++) d[ivar] = (Double_t)GetEventVal(ivar);
+   const Event* ev = GetEvent();
+   static Double_t* d = new Double_t[Data()->GetNVariables()];
+   for (UInt_t ivar = 0; ivar<Data()->GetNVariables(); ivar++) {
+      d[ivar] = (Double_t)ev->GetVal(ivar);
+   }
+   Double_t mvaVal = fMLP->Evaluate(0,d);
 
-   return fMLP->Evaluate( 0, d );
+   // cannot determine error
+   if (err != 0) *err = -1;
+
+   return mvaVal;
 }
 
 //_______________________________________________________________________
@@ -239,16 +239,33 @@ void TMVA::MethodTMlpANN::Train( void )
    //       TMultiLayerPerceptron::kFletcherReeves  
    //       TMultiLayerPerceptron::kBFGS            
    //
-   if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
-  
-   fLogger << kVERBOSE << "Option string: " << GetOptions() << Endl;
-
    // TMultiLayerPerceptron wants test and training tree at once
    // so merge the training and testing trees from the MVA factory first:
 
-   TTree* trainingTree = Data().GetTrainingTree(); 
-   //   trainingTree->CopyEntries(GetTestTree());
-  
+   Int_t type;
+   Float_t weight;
+   const Long_t basketsize = 128000;
+   Float_t* vArr = new Float_t[GetNvar()];
+
+   TTree *localTrainingTree = new TTree( "TMLPtrain", "Local training tree for TMlpANN" );
+   localTrainingTree->Branch( "type",       &type,        "type/I",        basketsize );
+   localTrainingTree->Branch( "weight",     &weight,      "weight/F",      basketsize );
+   
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
+      const char* myVar = GetInternalVarName(ivar).Data();
+      localTrainingTree->Branch( myVar, &vArr[ivar], Form("Var%02i/F", ivar), basketsize );
+   }
+   
+   for (UInt_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
+      const Event *ev = GetEvent(ievt);
+      for (UInt_t i=0; i<GetNvar(); i++) {
+         vArr[i] = ev->GetVal( i );
+      }
+      type   = DataInfo().IsSignal( ev ) ? 1 : 0;
+      weight = ev->GetWeight();
+      localTrainingTree->Fill();
+   }
+
    // These are the event lists for the mlp train method
    // first events in the tree are for training
    // the rest for internal testing (cross validation)...
@@ -256,25 +273,28 @@ void TMVA::MethodTMlpANN::Train( void )
    TString trainList = "Entry$<";
    trainList += 1.0-fValidationFraction;
    trainList += "*";
-   trainList += (Int_t)Data().GetNEvtSigTrain();
+   trainList += (Int_t)Data()->GetNEvtSigTrain();
    trainList += " || (Entry$>";
-   trainList += (Int_t)Data().GetNEvtSigTrain();
+   trainList += (Int_t)Data()->GetNEvtSigTrain();
    trainList += " && Entry$<";
-   trainList += (Int_t)(Data().GetNEvtSigTrain() + (1.0 - fValidationFraction)*Data().GetNEvtBkgdTrain());
+   trainList += (Int_t)(Data()->GetNEvtSigTrain() + (1.0 - fValidationFraction)*Data()->GetNEvtBkgdTrain());
    trainList += ")";
    TString testList  = TString("!(") + trainList + ")";
 
    // print the requirements
-   fLogger << kINFO << "Requirement for training   events: \"" << trainList << "\"" << Endl;
-   fLogger << kINFO << "Requirement for validation events: \"" << testList << "\"" << Endl;
+   log() << kINFO << "Requirement for training   events: \"" << trainList << "\"" << Endl;
+   log() << kINFO << "Requirement for validation events: \"" << testList << "\"" << Endl;
+
+   // localTrainingTree->Print();
 
    // create NN 
-   if (fMLP != 0) delete fMLP;
+   if (fMLP != 0) { delete fMLP; fMLP = 0; }
    fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), 
-                                     trainingTree,
+                                     localTrainingTree,
                                      trainList,
                                      testList );
-  
+   fMLP->SetEventWeight( "weight" );
+
    // set learning method
 #if ROOT_VERSION_CODE > ROOT_VERSION(5,13,06)
    TMultiLayerPerceptron::ELearningMethod learningMethod = TMultiLayerPerceptron::kStochastic; 
@@ -290,12 +310,17 @@ void TMVA::MethodTMlpANN::Train( void )
    else if (fLearningMethod == "fletcherreeves"  ) learningMethod = TMultiLayerPerceptron::kFletcherReeves;
    else if (fLearningMethod == "bfgs"            ) learningMethod = TMultiLayerPerceptron::kBFGS;
    else {
-      fLogger << kFATAL << "Unknown Learning Method: \"" << fLearningMethod << "\"" << Endl;
+      log() << kFATAL << "Unknown Learning Method: \"" << fLearningMethod << "\"" << Endl;
    }
    fMLP->SetLearningMethod( learningMethod );
 
    // train NN
-   fMLP->Train( fNcycles, "text,update=50" );
+   fMLP->Train(fNcycles, "text,update=50" );
+
+   // write weights to File;
+   // this is not nice, but fMLP gets deleted at the end of Train()
+   delete localTrainingTree;
+
 }
 
 //_______________________________________________________________________
@@ -315,9 +340,102 @@ void  TMVA::MethodTMlpANN::WriteWeightsToStream( ostream & o ) const
    // here we can delete the temporary file
    // how?
 }
-  
+ 
 //_______________________________________________________________________
-void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream & istr )
+void TMVA::MethodTMlpANN::AddWeightsXMLTo( void* parent ) const 
+{
+   // write weights to xml file
+   
+   // first the architecture
+   void *wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* arch = gTools().xmlengine().NewChild( wght, 0, "Architecture" );
+   gTools().AddAttr( arch, "BuildOptions", fMLPBuildOptions.Data() );
+
+   // dump weights first in temporary txt file, read from there into xml
+   fMLP->DumpWeights( "weights/TMlp.nn.weights.temp" );
+   std::ifstream inf( "weights/TMlp.nn.weights.temp" );
+   char temp[256];
+   TString data("");
+   void *ch=NULL;
+   while (inf.getline(temp,256)) {
+      TString dummy(temp);
+      if (dummy.BeginsWith('#')) {
+         if (ch!=0) gTools().xmlengine().AddRawLine( ch, data.Data() );
+         dummy = dummy.Strip(TString::kLeading, '#');
+         dummy = dummy(0,dummy.First(' '));
+         ch = gTools().xmlengine().NewChild(wght, 0, dummy);
+         data.Resize(0);
+         continue;
+      }
+      data += (dummy + " ");
+   }
+   if (ch != 0) gTools().xmlengine().AddRawLine( ch, data.Data() );
+   inf.close();
+}
+
+//_______________________________________________________________________
+void  TMVA::MethodTMlpANN::ReadWeightsFromXML( void* wghtnode )
+{
+   // rebuild temporary textfile from xml weightfile and load this
+   // file into MLP
+   void* ch = gTools().xmlengine().GetChild(wghtnode);
+   gTools().ReadAttr( ch, "BuildOptions", fMLPBuildOptions );
+
+   ch = gTools().xmlengine().GetNext(ch);
+   const char* fname = "weights/TMlp.nn.weights.temp";
+   std::ofstream fout( fname );
+   double temp1=0,temp2=0;
+   while (ch) {
+      const char* nodecontent = gTools().xmlengine().GetNodeContent(ch);
+      std::stringstream content(nodecontent);
+      if (strcmp(gTools().xmlengine().GetNodeName(ch),"input")==0) {
+         fout << "#input normalization" << std::endl;         
+         while ((content >> temp1) &&(content >> temp2)) {
+            fout << temp1 << " " << temp2 << std::endl;
+         }
+      }
+      if (strcmp(gTools().xmlengine().GetNodeName(ch),"output")==0) {
+         fout << "#output normalization" << std::endl;         
+         while ((content >> temp1) &&(content >> temp2)) {
+            fout << temp1 << " " << temp2 << std::endl;
+         }
+      }
+      if (strcmp(gTools().xmlengine().GetNodeName(ch),"neurons")==0) {
+         fout << "#neurons weights" << std::endl;         
+         while (content >> temp1) {
+            fout << temp1 << std::endl;
+         }
+      }
+      if (strcmp(gTools().xmlengine().GetNodeName(ch),"synapses")==0) {
+         fout << "#synapses weights" ;         
+         while (content >> temp1) {
+            fout << std::endl << temp1 ;                
+         }
+      }
+      ch = gTools().xmlengine().GetNext(ch);
+   }
+   fout.close();;
+
+   // Here we create a dummy tree necessary to create a minimal NN
+   // to be used for testing, evaluation and application
+   static Double_t* d = new Double_t[Data()->GetNVariables()] ;
+   static Int_t type;
+
+   gROOT->cd();
+   TTree * dummyTree = new TTree("dummy","Empty dummy tree", 1);
+   for (UInt_t ivar = 0; ivar<Data()->GetNVariables(); ivar++) {
+      TString vn = DataInfo().GetVariableInfo(ivar).GetInternalName();
+      dummyTree->Branch(Form("%s",vn.Data()), d+ivar, Form("%s/D",vn.Data()));
+   }
+   dummyTree->Branch("type", &type, "type/I");
+
+   if (fMLP != 0) { delete fMLP; fMLP = 0; }
+   fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), dummyTree );
+   fMLP->LoadWeights( fname );
+}
+ 
+//_______________________________________________________________________
+void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream& istr )
 {
    // read weights from stream
    // since the MLP can not read from the stream, we
@@ -327,18 +445,34 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream & istr )
    fout.close();
    // 2nd: load the weights from the temporary file into the MLP
    // the MLP is already build
-   fLogger << kINFO << "Load TMLP weights" << Endl;
+   log() << kINFO << "Load TMLP weights" << Endl;
    fMLP->LoadWeights( "weights/TMlp.nn.weights.temp" );
    // here we can delete the temporary file
    // how?
 }
 
 //_______________________________________________________________________
-void TMVA::MethodTMlpANN::MakeClassSpecific( std::ostream& fout, const TString& className ) const
+void TMVA::MethodTMlpANN::MakeClass( const TString& theClassFileName ) const
+{
+   // create reader class for classifier -> overwrites base class function
+   // create specific class for TMultiLayerPerceptron
+
+   // the default consists of
+   TString classFileName = "";
+   if (theClassFileName == "")
+      classFileName = GetWeightFileDir() + "/" + GetJobName() + "_" + GetMethodName() + ".class";
+   else
+      classFileName = theClassFileName;
+
+   log() << kINFO << "Creating specific (TMultiLayerPerceptron) standalone response class: " << Endl;
+   fMLP->Export( classFileName.Data() );
+}
+
+//_______________________________________________________________________
+void TMVA::MethodTMlpANN::MakeClassSpecific( std::ostream& /*fout*/, const TString& /*className*/ ) const
 {
    // write specific classifier response
-   fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
-   fout << "};" << std::endl;
+   // nothing to do here - all taken care of by TMultiLayerPerceptron
 }
 
 //_______________________________________________________________________
@@ -348,17 +482,17 @@ void TMVA::MethodTMlpANN::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "This feed-forward multilayer perceptron neural network is the " << Endl;
-   fLogger << "standard impementation distributed with ROOT (class TMultiLayerPerceptron)." << Endl;
-   fLogger << Endl;
-   fLogger << "Detailed information is available here:" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "This feed-forward multilayer perceptron neural network is the " << Endl;
+   log() << "standard implementation distributed with ROOT (class TMultiLayerPerceptron)." << Endl;
+   log() << Endl;
+   log() << "Detailed information is available here:" << Endl;
    if (gConfig().WriteOptionsReference()) {
-      fLogger << "<a href=\"http://root.cern.ch/root/html/TMultiLayerPerceptron.html\">";
-      fLogger << "http://root.cern.ch/root/html/TMultiLayerPerceptron.html</a>" << Endl;
+      log() << "<a href=\"http://root.cern.ch/root/html/TMultiLayerPerceptron.html\">";
+      log() << "http://root.cern.ch/root/html/TMultiLayerPerceptron.html</a>" << Endl;
    }
-   else fLogger << "http://root.cern.ch/root/html/TMultiLayerPerceptron.html" << Endl;
-   fLogger << Endl;
+   else log() << "http://root.cern.ch/root/html/TMultiLayerPerceptron.html" << Endl;
+   log() << Endl;
 }

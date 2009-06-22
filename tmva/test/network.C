@@ -51,7 +51,10 @@ void draw_network(TDirectory* d)
    Int_t canvasColor = TMVAStyle->GetCanvasColor(); // backup
    TMVAStyle->SetCanvasColor( c_DarkBackground );
 
-   TCanvas* c = new TCanvas( "c", "Neural Network Layout", 100, 0, 1000, 650 );
+   static icanvas = -1;
+   icanvas++;
+   TCanvas* c = new TCanvas( Form( "c%i", icanvas ), Form("Neural Network Layout for: %s", d->GetName()), 
+                             100 + (icanvas)*40, 0 + (icanvas+1)*20, 1000, 650  );
 
    TIter next = d->GetListOfKeys();
    TKey *key;
@@ -170,7 +173,7 @@ void draw_input_labels(Int_t nInputs, Double_t* cy,
       p->SetFillColor(gStyle->GetTitleFillColor());
       p->SetFillStyle(1001);
       p->Draw();
-      if (i == nInputs-1) p->SetTextColor(9);
+      if (i == nInputs-1) p->SetTextColor( TMVAGlob::c_NovelBlue );
    }
 
    delete[] varNames;
@@ -178,12 +181,15 @@ void draw_input_labels(Int_t nInputs, Double_t* cy,
 
 TString* get_var_names( Int_t nVars )
 {
-   const TString directories[3] = { "InputVariables_NoTransform",
+   const TString directories[6] = { "InputVariables_NoTransform",
                                     "InputVariables_DecorrTransform",
-                                    "InputVariables_PCATransform" };
+                                    "InputVariables_PCATransform",
+				    "InputVariables_Id",
+				    "InputVariables_Norm",
+				    "InputVariables_Deco"};
 
    TDirectory* dir = 0;
-   for (Int_t i=0; i<3; i++) {
+   for (Int_t i=0; i<6; i++) {
       dir = (TDirectory*)Network_GFile->Get( directories[i] );
       if (dir != 0) break;
    }
@@ -204,7 +210,8 @@ TString* get_var_names( Int_t nVars )
    while ((key = (TKey*)next())) {
       if (key->GetCycle() != 1) continue;
 
-      if(!TString(key->GetName()).Contains("__S")) continue;
+      if(!TString(key->GetName()).Contains("__S") &&
+	 !TString(key->GetName()).Contains("__r")) continue;
 
       // make sure, that we only look at histograms
       TClass *cl = gROOT->GetClass(key->GetClassName());

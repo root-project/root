@@ -23,14 +23,6 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// KDEKernel                                                            //
-//                                                                      //
-// KDE Kernel for 'smoothing' the PDFs                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TH1.h"
 #include "TH1F.h"
 #include "TF1.h"
@@ -46,6 +38,7 @@
 #endif
 
 #include "TMVA/KDEKernel.h"
+#include "TMVA/MsgLogger.h"
 
 ClassImp(TMVA::KDEKernel)
 
@@ -59,12 +52,12 @@ TMVA::KDEKernel::KDEKernel( EKernelIter kiter, const TH1 *hist, Float_t lower_ed
      fFineFactor ( FineFactor ),
      fKernel_integ ( 0 ),
      fKDEborder ( kborder ),
-     fLogger( "KDEKernel" )
+     fLogger( new MsgLogger("KDEKernel") )
 {
    // constructor
    // sanity check
    if (hist == NULL) {
-      fLogger << kFATAL << "Called without valid histogram pointer (hist)!" << Endl;
+      log() << kFATAL << "Called without valid histogram pointer (hist)!" << Endl;
    } 
 
    fHist          = (TH1F*)hist->Clone();
@@ -84,6 +77,7 @@ TMVA::KDEKernel::~KDEKernel()
    if (fFirstIterHist  != NULL) delete fFirstIterHist;
    if (fSigmaHist      != NULL) delete fSigmaHist;
    if (fKernel_integ   != NULL) delete fKernel_integ;
+   delete fLogger;
 }
 
 //_______________________________________________________________________
@@ -130,7 +124,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
       // formula found in:
       // Multivariate Density Estimation, Theory, Practice and Visualization D. W. SCOTT, 1992 New York, Wiley
       if (fSigma <= 0 ) {
-         fLogger << kFATAL << "<SetKernelType> KDE sigma has invalid value ( <=0 ) !" << Endl;
+         log() << kFATAL << "<SetKernelType> KDE sigma has invalid value ( <=0 ) !" << Endl;
       }
    }
 
@@ -202,7 +196,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
       for (Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
          // loop over the bins of the PDF histo and fill fSigmaHist
          if (fSigma*TMath::Sqrt(1.0/fFirstIterHist->GetBinContent(j)) <= 0 ) {
-            fLogger << kFATAL << "<SetKernelType> KDE sigma has invalid value ( <=0 ) !" << Endl;
+            log() << kFATAL << "<SetKernelType> KDE sigma has invalid value ( <=0 ) !" << Endl;
          }
          
          fSigmaHist->SetBinContent(j,fFineFactor*fSigma/TMath::Sqrt(fFirstIterHist->GetBinContent(j)));
@@ -210,7 +204,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
    }
 
    if (fKernel_integ ==0 ) {
-      fLogger << kFATAL << "KDE kernel not correctly initialized!" << Endl;
+      log() << kFATAL << "KDE kernel not correctly initialized!" << Endl;
    }
 }
 

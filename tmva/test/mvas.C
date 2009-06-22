@@ -42,7 +42,7 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
    while ((key = (TKey*)next())) {
 
       if (!TString(key->GetName()).BeginsWith("Method_")) continue;
-      if( ! gROOT->GetClass(key->GetClassName())->InheritsFrom("TDirectory") ) continue;
+      if (!gROOT->GetClass(key->GetClassName())->InheritsFrom("TDirectory")) continue;
 
       TString methodName;
       TMVAGlob::GetMethodName(methodName,key);
@@ -139,7 +139,7 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
          frame->GetXaxis()->SetTitle( methodTitle + ((htype == MVAType || htype == CompareType) ? " response" : "") );
          if      (htype == ProbaType  ) frame->GetXaxis()->SetTitle( "Signal probability" );
          else if (htype == RarityType ) frame->GetXaxis()->SetTitle( "Signal rarity" );
-         frame->GetYaxis()->SetTitle("Normalized");
+         frame->GetYaxis()->SetTitle("(1/N) dN^{ }/^{ }dx");
          TMVAGlob::SetFrameStyle( frame );
    
          // eventually: draw the frame
@@ -186,6 +186,9 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
                legend2->SetMargin( 0.1 );
                legend2->Draw("same");
             }
+            // normalise both signal and background
+            TMVAGlob::NormalizeHists( sigOv, bgdOv );
+
             Int_t col = sig->GetLineColor();
             sigOv->SetMarkerColor( col );
             sigOv->SetMarkerSize( 0.7 );

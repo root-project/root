@@ -12,20 +12,15 @@ void ClassApplication( TString myMethodList = "Fisher" )
 {
    cout << endl;
    cout << "==> start ClassApplication" << endl;
+   const int Nmvas = 16;
 
-   const int Nmvas = 17;
-   const char* bulkname[Nmvas] = { "Likelihood", "LikelihoodD", "LikelihoodPCA", "LikelihoodMIX", 
-                                   "HMatrix", "FisherD", "Fisher",
-                                   "MLP", 
-                                   "BDT", "BDTD", "RuleFit", 
-                                   "SVM_Gauss", "SVM_Poly", "SVM_Lin",
-                                   "FDA_MT", "FDA_MC", "FDA_GA" };
+   const char* bulkname[Nmvas] = { "MLP","MLPBFGS","Fisher","FisherG","Likelihood","LikelihoodD","LikelihoodPCA","LD","HMatrix","FDA_MT","FDA_MC","FDA_GA","BDT","BDTD","BDTG","BDTB"};
 
    bool iuse[Nmvas] = { Nmvas*kFALSE };
 
    // interpret input list
    if (myMethodList != "") {
-      TList* mlist = TMVA::Tools::ParseFormatLine( myMethodList, " :," );
+      TList* mlist = TMVA::gTools().ParseFormatLine( myMethodList, " :," );
       for (int imva=0; imva<Nmvas; imva++) if (mlist->FindObject( bulkname[imva] )) iuse[imva] = kTRUE;
       delete mlist;
    }
@@ -41,7 +36,7 @@ void ClassApplication( TString myMethodList = "Fisher" )
       
    // preload standalone class(es)
    string dir    = "weights/";
-   string prefix = "TMVAnalysis";
+   string prefix = "TMVAClassification";
 
    for (int imva=0; imva<Nmvas; imva++) {
       if (iuse[imva]) {
@@ -89,38 +84,14 @@ void ClassApplication( TString myMethodList = "Fisher" )
             classReader[imva] = new ReadFisher       ( inputVars );
             hist[imva] = new TH1F( "MVA_Fisher",        "MVA_Fisher",        nbin, -4, 4 );
          }
-         if (bulkname[imva] == "FisherD"       ) {
-            classReader[imva] = new ReadFisherD       ( inputVars );
-            hist[imva] = new TH1F( "MVA_FisherD",        "MVA_FisherD",        nbin, -4, 4 );
+         if (bulkname[imva] == "FisherG"       ) {
+            classReader[imva] = new ReadFisherG       ( inputVars );
+            hist[imva] = new TH1F( "MVA_FisherG",        "MVA_FisherG",        nbin, -4, 4 );
          }
-         if (bulkname[imva] == "MLP"          ) {
-            classReader[imva] = new ReadMLP          ( inputVars );
-            hist[imva] = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -1.3, 1.3 );
-         }
-         if (bulkname[imva] == "BDT"          ) {
-            classReader[imva] = new ReadBDT          ( inputVars );
-            hist[imva] = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -0.8, 0.8 );
-         }
-         if (bulkname[imva] == "BDTD"          ) {
-            classReader[imva] = new ReadBDTD          ( inputVars );
-            hist[imva] = new TH1F( "MVA_BDTD",           "MVA_BDTD",         nbin, -0.8, 0.8 );
-         }
-         if (bulkname[imva] == "RuleFit"      ) {
-            classReader[imva] = new ReadRuleFit      ( inputVars );
-            hist[imva] = new TH1F( "MVA_RuleFit",       "MVA_RuleFit",       nbin, -2.0, 2.0 );
-         }
-         if (bulkname[imva] == "SVM_Gauss"    ) {
-            classReader[imva] = new ReadSVM_Gauss    ( inputVars );
-            hist[imva] = new TH1F( "MVA_SVM_Gauss",     "MVA_SVM_Gauss",     nbin, 0.0, 1.0 );
-         }
-         if (bulkname[imva] == "SVM_Lin"      ) {
-            classReader[imva] = new ReadSVM_Lin      ( inputVars );
-            hist[imva] = new TH1F( "MVA_SVM_Lin",       "MVA_SVM_Lin",       nbin, 0.0, 1.0 );
-         }
-         if (bulkname[imva] == "SVM_Poly"     ) {
-            classReader[imva] = new ReadSVM_Poly     ( inputVars );
-            hist[imva] = new TH1F( "MVA_SVM_Poly",      "MVA_SVM_Poly",      nbin, 0.0, 1.0 );
-         }
+	 if (bulkname[imva] == "LD"   ) {
+            classReader[imva] = new ReadLD   ( inputVars );            
+            hist[imva] = new TH1F( "MVA_LD",    "MVA_LD",    nbin,  -1., 1 );
+         }	 
          if (bulkname[imva] == "FDA_MT"       ) {
             classReader[imva] = new ReadFDA_MT       ( inputVars );
             hist[imva] = new TH1F( "MVA_FDA_MT",        "MVA_FDA_MT",        nbin, -2.0, 3.0 );
@@ -132,6 +103,30 @@ void ClassApplication( TString myMethodList = "Fisher" )
          if (bulkname[imva] == "FDA_GA"       ) {
             classReader[imva] = new ReadFDA_GA       ( inputVars );
             hist[imva] = new TH1F( "MVA_FDA_GA",        "MVA_FDA_GA",        nbin, -2.0, 3.0 );
+         }
+         if (bulkname[imva] == "MLP"          ) {
+            classReader[imva] = new ReadMLP          ( inputVars );
+            hist[imva] = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -1.2, 1.2 );
+         }
+         if (bulkname[imva] == "MLPBFGS"          ) {
+            classReader[imva] = new ReadMLPBFGS          ( inputVars );
+            hist[imva] = new TH1F( "MVA_MLPBFGS",           "MVA_MLPBFGS",           nbin, -1.5, 1.5 );
+         }
+         if (bulkname[imva] == "BDT"          ) {
+            classReader[imva] = new ReadBDT          ( inputVars );
+            hist[imva] = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -1, 1 );
+         }
+         if (bulkname[imva] == "BDTD"          ) {
+            classReader[imva] = new ReadBDTD          ( inputVars );
+            hist[imva] = new TH1F( "MVA_BDTD",           "MVA_BDTD",         nbin, -1, 1 );
+         }
+         if (bulkname[imva] == "BDTG"          ) {
+            classReader[imva] = new ReadBDTG          ( inputVars );
+            hist[imva] = new TH1F( "MVA_BDTG",           "MVA_BDTG",         nbin, -1, 1 );
+         }
+         if (bulkname[imva] == "BDTB"          ) {
+            classReader[imva] = new ReadBDTB          ( inputVars );
+            hist[imva] = new TH1F( "MVA_BDTB",           "MVA_BDTB",         nbin, -1, 1 );
          }
       }
    }
@@ -147,13 +142,6 @@ void ClassApplication( TString myMethodList = "Fisher" )
       cout << "=== Macro        : Accessing ./tmva_example.root" << endl;
       input = TFile::Open("tmva_example.root");
    } 
-   else { 
-      // second we try accessing the file via the web from
-      // http://root.cern.ch/files/tmva_example.root
-      cout << "=== Macro        : Accessing tmva_example.root file from http://root.cern.ch/files" << endl;
-      cout << "=== Macro        : For faster startup you may consider downloading it into you local directory" << endl;
-      input = TFile::Open("http://root.cern.ch/files/tmva_example.root");
-   }
    
    if (!input) {
       cout << "ERROR: could not open data file" << endl;

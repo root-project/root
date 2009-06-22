@@ -60,6 +60,8 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
       TIter nextTitle(&titles);
       TKey *instkey;
       TDirectory *instDir;
+      
+      // iterate over all classifiers
       while ((instkey = (TKey *)nextTitle())) {
          instDir = (TDirectory *)instkey->ReadObj();
          TString instName = instkey->GetName();

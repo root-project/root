@@ -8,55 +8,51 @@
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
 void correlationscatters( TString fin = "TMVA.root", TString var= "var3", 
-                          TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal, Bool_t useTMVAStyle = kTRUE )
+                          TString dirName_ = "InputVariables_Id", TString title = "TMVA Input Variable",
+                          Bool_t isRegression = kFALSE,
+                          Bool_t useTMVAStyle = kTRUE )
 {
-
-   const TString directories[4] = { "InputVariables_NoTransform",
-                                    "InputVariables_DecorrTransform",
-                                    "InputVariables_PCATransform",
-                                    "InputVariables_GaussDecorr"
-   }; 
-
-   const TString titles[4] = { "TMVA Input Variable",
-                               "Decorrelated TMVA Input Variables",
-                               "Principal Component Transformed TMVA Input Variables",
-                               "Gaussianized and Decorrelated TMVA Input Variable"
-   };
-  
-   const TString extensions[4] = { "_NoTransform",
-                                   "_DecorrTransform",
-                                   "_PCATransform",
-                                   "_GaussDecorr"
-   };
-
-   cout << "Called macro \"correlationscatters\" with type: " << type << endl;
-
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
+
+   TString extension = dirName_;
+   extension.ReplaceAll( "InputVariables", "" );
+   extension.ReplaceAll( " ", "" );
+   if (extension == "") extension = "_Id"; // use 'Id' for 'idendtity transform'
+
+   var.ReplaceAll( extension, "" );
+   cout << "Called macro \"correlationscatters\" for variable: \"" << var 
+        << "\", transformation type \"" << dirName_ 
+        << "\" (extension: \"" << extension << "\")" << endl;
 
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
 
-   TString dirName = directories[type] + "/CorrelationPlots";
+   TString dirName = dirName_ + "/CorrelationPlots";
   
+   // find out number of input variables   
+   TDirectory* vardir = (TDirectory*)gDirectory->Get( "InputVariables_Id" );
+   if (!vardir) {
+      cout << "ERROR: no such directory: \"InputVariables\"" << endl;
+      return;
+   }
+   Int_t noVars = TMVAGlob::GetNumberOfInputVariables( vardir ) - 1; // subtract target
+
    TDirectory* dir = (TDirectory*)gDirectory->Get( dirName );
    if (dir==0) {
-      cout << "No information about " << titles[type] << " available in " << fin << endl;
+      cout << "No information about " << extension << " available in " << fin << endl;
       return;
    }
    dir->cd();
 
    TListIter keyIt(dir->GetListOfKeys());
-   Int_t noPlots = 0;
    TKey* key = 0;
-   // how many plots are in the directory?
-   Int_t    noPlots = (TMVAGlob::UsePaperStyle) ? 1 : ((dir->GetListOfKeys())->GetEntries())/4;
-   Double_t noVars  = noPlots == 1 ? 0 : (1 + TMath::Sqrt(1.0 + 8.0*noPlots))/2.0;
+   Int_t noPlots = noVars - 1;
+   
    cout << "noPlots: " << noPlots << " --> noVars: " << noVars << endl;
    if (noVars != Int_t(noVars)) {
       cout << "*** Warning: problem in inferred number of variables ... not an integer *** " << endl;
    }
-   noPlots = noVars;
 
    // define Canvas layout here!
    // default setting
@@ -70,7 +66,7 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3",
    case 2:
       xPad = 2; yPad = 1; width = 700; height = 0.55*width; break;
    case 3:
-      xPad = 3; yPad = 1; width = 800; height = 0.5*width; break;
+      xPad = 3; yPad = 1; width = 800; height = 0.4*width; break;
    case 4:
       xPad = 2; yPad = 2; width = 600; height = width; break;
    default:
@@ -82,7 +78,9 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3",
    Int_t countCanvas = 0;
 
    // loop over all objects in "input_variables" directory
-   TString thename[2] = { "_sig", "_bgd" };
+   Int_t ncls = (isRegression ? 1 : 2);
+   TString thename[2] = { "_Signal", "_Background" };
+   if (isRegression) thename[0] = "_Regression";
    for (UInt_t itype = 0; itype < 2; itype++) {
 
       TIter next(gDirectory->GetListOfKeys());
@@ -99,19 +97,22 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3",
          TClass *cl = gROOT->GetClass(key->GetClassName());
          if (!cl->InheritsFrom("TH1")) continue;
          TH1 *scat = (TH1*)key->ReadObj();
-         TString hname= scat->GetName();
-         
+         TString hname = scat->GetName();
+
          // check for all signal histograms
-         if (! (hname.EndsWith( thename[itype] + extensions[type] ) && 
-                hname.Contains( "_"+var+"_" ) && hname.BeginsWith("scat_")) ) continue; 
-                  
+         if (! (hname.EndsWith( thename[itype] + extension ) && 
+                hname.Contains( TString("_") + var + "_" ) && hname.BeginsWith("scat_")) ) continue; 
+
+
          // found a new signal plot
             
          // create new canvas
          if (countPad%noPadPerCanv==0) {
             ++countCanvas;
+            TString ext = extension; ext.Remove( 0, 1 );
             canv = new TCanvas( Form("canvas%d", countCanvas), 
-                                Form("Correlation Profiles for %s", (itype==0) ? "Signal" : "Background"),
+                                Form("Correlation profiles for '%s'-transformed %s variables", 
+                                     ext.Data(), (isRegression ? "" : (itype==0) ? "signal" : "background")),
                                 countCanvas*50+200, countCanvas*20, width, height ); 
             canv->Divide(xPad,yPad);
          }
@@ -125,7 +126,7 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3",
          bgname.ReplaceAll("scat_","prof_");
          TH1 *prof = (TH1*)gDirectory->Get(bgname);
          if (prof == NULL) {
-            cout << "ERROR!!! couldn't find backgroung histo for" << hname << endl;
+            cout << "ERROR!!! couldn't find background histo for" << hname << endl;
             exit;
          }
          // this is set but not stored during plot creation in MVA_Factory
@@ -156,7 +157,7 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3",
          if (countPad%noPadPerCanv==0) {
             canv->Update();
 
-            TString fname = Form( "plots/correlationscatter_%s_%s_c%i",var.Data(), extensions[type].Data(), countCanvas );
+            TString fname = Form( "plots/correlationscatter_%s_%s_c%i",var.Data(), extension.Data(), countCanvas );
             TMVAGlob::plot_logo();
             TMVAGlob::imgconv( canv, fname );
          }
@@ -164,7 +165,7 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3",
       if (countPad%noPadPerCanv!=0) {
          canv->Update();
 
-         TString fname = Form( "plots/correlationscatter_%s_%s_c%i",var.Data(), extensions[type].Data(), countCanvas );
+         TString fname = Form( "plots/correlationscatter_%s_%s_c%i",var.Data(), extension.Data(), countCanvas );
          TMVAGlob::plot_logo();
          TMVAGlob::imgconv( canv, fname );
       }

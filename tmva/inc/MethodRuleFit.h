@@ -37,35 +37,22 @@
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
-#ifndef ROOT_TMVA_TMatrixD
-#include "TMatrixD.h"
+#ifndef ROOT_TMatrixDfwd
+#include "TMatrixDfwd.h"
 #endif
-#ifndef ROOT_TMVA_TVectorD
+#ifndef ROOT_TVectorD
 #include "TVectorD.h"
 #endif
 #ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
 #endif
-#ifndef ROOT_TMVA_SeparationBase
-#include "TMVA/SeparationBase.h"
-#endif
-#ifndef ROOT_TMVA_GiniIndex
-#include "TMVA/GiniIndex.h"
-#endif
-#ifndef ROOT_TMVA_CrossEntropy
-#include "TMVA/CrossEntropy.h"
-#endif
-#ifndef ROOT_TMVA_MisClassificationError
-#include "TMVA/MisClassificationError.h"
-#endif
-#ifndef ROOT_TMVA_SdivSqrtSplusB
-#include "TMVA/SdivSqrtSplusB.h"
-#endif
-#ifndef ROOT_TMVA_RULEFIT_H
+#ifndef ROOT_TMVA_RuleFit
 #include "TMVA/RuleFit.h"
 #endif
 
 namespace TMVA {
+
+   class SeparationBase;
 
    class MethodRuleFit : public MethodBase {
 
@@ -73,15 +60,17 @@ namespace TMVA {
 
       MethodRuleFit( const TString& jobName,
                      const TString& methodTitle, 
-                     DataSet& theData,
+                     DataSetInfo& theData,
                      const TString& theOption = "",
                      TDirectory* theTargetDir = 0 );
 
-      MethodRuleFit( DataSet& theData,
+      MethodRuleFit( DataSetInfo& theData,
                      const TString& theWeightFile,
                      TDirectory* theTargetDir = NULL );
 
       virtual ~MethodRuleFit( void );
+
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ );
 
       // training method
       void Train( void );
@@ -90,14 +79,15 @@ namespace TMVA {
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( ostream& o   ) const;
+      void AddWeightsXMLTo     ( void* parent ) const;
 
       // read weights from file
       void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromXML   ( void* wghtnode );
 
       // calculate the MVA value
-      //      Double_t GetMvaValue(Event *e);
-      Double_t GetMvaValue();
+      Double_t GetMvaValue( Double_t* err = 0 );
 
       // write method specific histos to target file
       void WriteMonitoringHistosToFile( void ) const;
@@ -105,36 +95,35 @@ namespace TMVA {
       // ranking of input variables
       const Ranking* CreateRanking();
 
-      Bool_t                                   UseBoost() const { return fUseBoost; }
+      Bool_t                                   UseBoost()           const   { return fUseBoost; }
 
       // accessors
-      RuleFit                                 *GetRuleFitPtr() { return &fRuleFit; }
-      const RuleFit                           *GetRuleFitConstPtr() const { return &fRuleFit; }
-      TDirectory*                              GetMethodBaseDir() const     { return BaseDir(); }
-      const std::vector<TMVA::Event*>         &GetTrainingEvents() const    { return fEventSample; }
-      const std::vector<TMVA::DecisionTree*>  &GetForest() const            { return fForest; }
-      Int_t                                    GetNTrees() const            { return fNTrees; }
-      Double_t                                 GetTreeEveFrac() const       { return fTreeEveFrac; }
-      //      Double_t                                 GetSubSampleFraction() const { return fSubSampleFraction; }
-      const SeparationBase                    *GetSeparationBaseConst() const { return fSepType; }
-      SeparationBase                          *GetSeparationBase() const { return fSepType; }
-      TMVA::DecisionTree::EPruneMethod         GetPruneMethod() const       { return fPruneMethod; }
-      Double_t                                 GetPruneStrength() const     { return fPruneStrength; }
-      Double_t                                 GetMinFracNEve() const       { return fMinFracNEve; }
-      Double_t                                 GetMaxFracNEve() const       { return fMaxFracNEve; }
-      Int_t                                    GetNCuts() const             { return fNCuts; }
+      RuleFit*                                 GetRuleFitPtr()              { return &fRuleFit; }
+      const RuleFit*                           GetRuleFitConstPtr() const   { return &fRuleFit; }
+      TDirectory*                              GetMethodBaseDir()   const   { return BaseDir(); }
+      const std::vector<TMVA::Event*>&         GetTrainingEvents()  const   { return fEventSample; }
+      const std::vector<TMVA::DecisionTree*>&  GetForest()          const   { return fForest; }
+      Int_t                                    GetNTrees()          const   { return fNTrees; }
+      Double_t                                 GetTreeEveFrac()     const   { return fTreeEveFrac; }
+      const SeparationBase*                    GetSeparationBaseConst() const { return fSepType; }
+      SeparationBase*                          GetSeparationBase()  const   { return fSepType; }
+      TMVA::DecisionTree::EPruneMethod         GetPruneMethod()     const   { return fPruneMethod; }
+      Double_t                                 GetPruneStrength()   const   { return fPruneStrength; }
+      Double_t                                 GetMinFracNEve()     const   { return fMinFracNEve; }
+      Double_t                                 GetMaxFracNEve()     const   { return fMaxFracNEve; }
+      Int_t                                    GetNCuts()           const   { return fNCuts; }
       //
-      Int_t                                    GetGDNPathSteps() const      { return fGDNPathSteps; }
-      Double_t                                 GetGDPathStep() const        { return fGDPathStep; }
-      Double_t                                 GetGDErrScale() const        { return fGDErrScale; }
-      Double_t                                 GetGDPathEveFrac() const     { return fGDPathEveFrac; }
-      Double_t                                 GetGDValidEveFrac() const    { return fGDValidEveFrac; }
+      Int_t                                    GetGDNPathSteps()    const   { return fGDNPathSteps; }
+      Double_t                                 GetGDPathStep()      const   { return fGDPathStep; }
+      Double_t                                 GetGDErrScale()      const   { return fGDErrScale; }
+      Double_t                                 GetGDPathEveFrac()   const   { return fGDPathEveFrac; }
+      Double_t                                 GetGDValidEveFrac()  const   { return fGDValidEveFrac; }
       //
-      Double_t                                 GetLinQuantile() const       { return fLinQuantile; }
+      Double_t                                 GetLinQuantile()     const   { return fLinQuantile; }
 
-      const TString                            GetRFWorkDir() const         { return fRFWorkDir; }
-      Int_t                                    GetRFNrules() const          { return fRFNrules; }
-      Int_t                                    GetRFNendnodes() const       { return fRFNendnodes; }
+      const TString                            GetRFWorkDir()       const   { return fRFWorkDir; }
+      Int_t                                    GetRFNrules()        const   { return fRFNrules; }
+      Int_t                                    GetRFNendnodes()     const   { return fRFNendnodes; }
 
    protected:
 
@@ -149,7 +138,7 @@ namespace TMVA {
       void GetHelpMessage() const;
 
       // initialize rulefit
-      void InitRuleFit( void );
+      void Init( void );
 
       // copy all training events into a stl::vector
       void InitEventSample( void );
@@ -162,12 +151,22 @@ namespace TMVA {
 
    private:
 
+      // check variable range and set var to lower or upper if out of range
+      template<typename T>
+      inline Bool_t VerifyRange( MsgLogger& mlog, const char *varstr, T& var, const T& vmin, const T& vmax );
+
+      template<typename T>
+      inline Bool_t VerifyRange( MsgLogger& mlog, const char *varstr, T& var, const T& vmin, const T& vmax, const T& vdef );
+
+      template<typename T>
+      inline Int_t VerifyRange( const T& var, const T& vmin, const T& vmax );
+
       // the option handling methods
       void DeclareOptions();
       void ProcessOptions();
 
       RuleFit                      fRuleFit;        // RuleFit instance
-      std::vector< Event *>        fEventSample;    // the complete training sample
+      std::vector<TMVA::Event *>   fEventSample;    // the complete training sample
       Double_t                     fSignalFraction; // scalefactor for bkg events to modify initial s/b fraction in training data
 
       // ntuple
@@ -225,5 +224,57 @@ namespace TMVA {
    };
 
 } // namespace TMVA
+
+
+//_______________________________________________________________________
+template<typename T>
+inline Int_t TMVA::MethodRuleFit::VerifyRange( const T& var, const T& vmin, const T& vmax )
+{
+   // check range and return +1 if above, -1 if below or 0 if inside
+   if (var>vmax) return  1;
+   if (var<vmin) return -1;
+   return 0;
+}
+
+//_______________________________________________________________________
+template<typename T>
+inline Bool_t TMVA::MethodRuleFit::VerifyRange( TMVA::MsgLogger& mlog, const char *varstr, T& var, const T& vmin, const T& vmax )
+{
+   // verify range and print out message
+   // if outside range, set to closest limit
+   Int_t dir = TMVA::MethodRuleFit::VerifyRange(var,vmin,vmax);
+   Bool_t modif=kFALSE;
+   if (dir==1) {
+      modif = kTRUE;
+      var=vmax;
+   }
+   if (dir==-1) {
+      modif = kTRUE;
+      var=vmin;
+   }
+   if (modif) {
+      mlog << kWARNING << "Option <" << varstr << "> " << (dir==1 ? "above":"below") << " allowed range. Reset to new value = " << var << Endl;
+   }
+   return modif;
+}
+
+//_______________________________________________________________________
+template<typename T>
+inline Bool_t TMVA::MethodRuleFit::VerifyRange( TMVA::MsgLogger& mlog, const char *varstr, T& var, const T& vmin, const T& vmax, const T& vdef )
+{
+   // verify range and print out message
+   // if outside range, set to given default value
+   Int_t dir = TMVA::MethodRuleFit::VerifyRange(var,vmin,vmax);
+   Bool_t modif=kFALSE;
+   if (dir!=0) {
+      modif = kTRUE;
+      var=vdef;
+   }
+   if (modif) {
+      mlog << kWARNING << "Option <" << varstr << "> " << (dir==1 ? "above":"below") << " allowed range. Reset to default value = " << var << Endl;
+   }
+   return modif;
+}
+
 
 #endif // MethodRuleFit_H

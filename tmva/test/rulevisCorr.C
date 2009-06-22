@@ -8,7 +8,7 @@
 // input: - Input file (result from TMVA),
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
-void rulevisCorr( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal, bool useTMVAStyle=kTRUE )
+void rulevisCorr( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob::kNorm, bool useTMVAStyle=kTRUE )
 {
 
    // set style and remove existing canvas'
@@ -17,25 +17,40 @@ void rulevisCorr( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlo
    // checks if file with name "fin" is already open, and if not opens one
    TFile *file = TMVAGlob::OpenFile( fin );
 
+   // get top dir containing all hists of the variables
+//    TDirectory* vardir = (TDirectory*)file->Get( "InputVariables_Id" );
+//    TDirectory* vardir = TMVAGlob::GetInputVariablesDir( type );
+//    if (vardir==0) return;
+   
+//    TDirectory* corrdir = TMVAGlob::GetCorrelationPlotsDir( type, vardir );
+//    if (corrdir==0) return;
+
    // get all titles of the method rulefit
    TList titles;
    UInt_t ninst = TMVAGlob::GetListOfTitles("Method_RuleFit",titles);
    if (ninst==0) return;
 
-   // get top dir containing all hists of the variables
-   TDirectory* vardir = TMVAGlob::GetInputVariablesDir( type );
-   if (vardir==0) return;
+   TDirectory* dir = (TDirectory*)file->Get( "Method_RuleFit" );
 
-   TDirectory* corrdir = TMVAGlob::GetCorrelationPlotsDir( type, vardir );
-   if (corrdir==0) return;
+   // loop over rulefit methods 
+   TIter next(dir->GetListOfKeys());
+   TKey *key(0);   
+   while ((key = (TKey*)next())) {
 
-   // loop over all titles
-   TIter keyIter(&titles);
-   TDirectory *rfdir;
-   TKey *rfkey;
-   while ((rfkey = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
-      rfdir = (TDirectory *)rfkey->ReadObj();
-      rulevisCorr( rfdir, vardir, corrdir, type );
+      if (!gROOT->GetClass(key->GetClassName())->InheritsFrom("TDirectory")) continue;
+
+      TDirectory* rfdir   = (TDirectory*)key->ReadObj();      
+      TDirectory* vardir  = rfdir;
+      TDirectory* corrdir = rfdir;
+      
+      // loop over all titles
+      TIter keyIter(&titles);
+      TDirectory *rfdir;
+      TKey *rfkey;
+      //      while ((rfkey = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
+      //         rfdir = (TDirectory *)rfkey->ReadObj();
+         rulevisCorr( rfdir, vardir, corrdir, type );
+         //      }
    }
 }
 
@@ -56,8 +71,8 @@ void rulevisCorr( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrdir, TM
    //
    TIter rfnext(rfdir->GetListOfKeys());
    TKey *rfkey;
-   Double_t rfmax;
-   Double_t rfmin;
+   Double_t rfmax = -1;
+   Double_t rfmin = -1;
    Bool_t allEmpty=kTRUE;
    Bool_t first=kTRUE;
    TH2F *hrf;
@@ -147,7 +162,7 @@ void rulevisCorr( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrdir, TM
       TString hname= sig->GetName();
       // check for all signal histograms
       if (hname.Contains("_sig_")){ // found a new signal plot
-         //         sigCpy = new TH2F(*sig);
+
          // create new canvas
          if ((c[countCanvas]==NULL) || (countPad>noPad)) {
             char cn[20];

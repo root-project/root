@@ -36,13 +36,12 @@
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
 
-class TRandom;
+class TRandom3;
 
 namespace TMVA {
+
+   class MsgLogger;
    
    class Interval {
 
@@ -58,7 +57,7 @@ namespace TMVA {
       Double_t GetWidth() const { return fMax - fMin; }
       Int_t    GetNbins() const { return fNbins; }
       Double_t GetMean()  const { return (fMax + fMin)/2; }
-      Double_t GetRndm( TRandom& )  const;
+      Double_t GetRndm( TRandom3& )  const;
       Double_t GetElement( Int_t position ) const;      
 
       void SetMax( Double_t m ) { fMax = m; }
@@ -66,10 +65,11 @@ namespace TMVA {
 
    private:
 
-      mutable MsgLogger fLogger;   // message logger
-      
       Double_t fMin, fMax;    // the constraints of the Interval
       Int_t    fNbins;        // when >0 : number of bins (discrete interval); when =0 continuous interval
+
+      mutable MsgLogger* fLogger;   // message logger
+      MsgLogger& log() const { return *fLogger; }          
 
       ClassDef(Interval,0)    // Interval definition, continous and discrete
    };

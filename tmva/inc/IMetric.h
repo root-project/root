@@ -27,14 +27,15 @@
 
 #include <vector>
 
+#ifndef ROOT_Rtypes
 #include "Rtypes.h"
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// IMetric                                                              //
+// IMetric                                                               //
 //                                                                      //
-// Interface for a metric, depending on the implementation the meaning  //
-// of distance in space changes.                                        //
+// distance between two points in parameter space                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

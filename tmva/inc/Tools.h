@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -20,7 +19,6 @@
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -39,28 +37,42 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include <string>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
 
+#ifndef ROOT_TMVA_TXMLEngine
+#ifndef ROOT_TXMLEngine
+#include "TXMLEngine.h"
+#endif
+#endif
 #ifndef ROOT_TMVA_TMatrixDSymEigen
+#ifndef ROOT_TMatrixDSymEigen
 #include "TMatrixDSymEigen.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
+#endif
+#ifndef ROOT_TMVA_Types
+#include "TMVA/Types.h"
 #endif
 
 class TList;
 class TTree;
 class TString;
 class TH1;
+class TH2;
+class TH2F;
 class TSpline;
 
 namespace TMVA {
 
    class Event;
    class PDF;
+   class MsgLogger;
    
    class Tools {
+
    private:
+
       Tools();
 
    public:
@@ -70,19 +82,20 @@ namespace TMVA {
 
       // accessor to single instance
       static Tools& Instance() { return fgTools?*(fgTools): *(fgTools = new Tools()); }
+      static void   DestroyInstance() { if (fgTools != 0) { delete fgTools; fgTools=0; } }
 
       // simple statistics operations on tree entries
-      void  ComputeStat( TTree* theTree, const TString theVarName,
-                                Double_t&, Double_t&, Double_t&, 
-                                Double_t&, Double_t&, Double_t&, Bool_t norm = kFALSE );
+      void  ComputeStat( const std::vector<TMVA::Event*>&, std::vector<Float_t>*,
+                         Double_t&, Double_t&, Double_t&, 
+                         Double_t&, Double_t&, Double_t&, Int_t signalClass, Bool_t norm = kFALSE );
 
       // compute variance from sums
       inline Double_t ComputeVariance( Double_t sumx2, Double_t sumx, Int_t nx );
 
       // creates histograms normalized to one
-      TH1* ProjNormTH1F( TTree* theTree, TString theVarName,
-                                TString name, Int_t nbins, 
-                                Double_t xmin, Double_t xmax, TString cut );
+      TH1* projNormTH1F( TTree* theTree, const TString& theVarName,
+                         const TString& name, Int_t nbins, 
+                         Double_t xmin, Double_t xmax, const TString& cut );
 
       // normalize histogram by its integral
       Double_t NormHist( TH1* theHist, Double_t norm = 1.0 );
@@ -106,8 +119,8 @@ namespace TMVA {
       // normalization of variable output
       Double_t NormVariable( Double_t x, Double_t xmin, Double_t xmax );
 
-      // return separation of two histograms or PDFs
-      Double_t GetSeparation( const TH1& S, const TH1& B ) const;
+      // return separation of two histograms
+      Double_t GetSeparation( TH1* S, TH1* B ) const;
       Double_t GetSeparation( const PDF& pdfS, const PDF& pdfB ) const;
 
       // vector rescaling
@@ -118,7 +131,7 @@ namespace TMVA {
       // re-arrange a vector of arrays (vectors) in a way such that the first array
       // is ordered, and the other arrays reshuffeld accordingly
       void UsefulSortDescending( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = 0 );
-      void UsefulSortAscending ( std::vector< std::vector<Double_t> >& );
+      void UsefulSortAscending ( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = 0 );
     
       void UsefulSortDescending( std::vector<Double_t>& );
       void UsefulSortAscending ( std::vector<Double_t>& );
@@ -135,23 +148,30 @@ namespace TMVA {
                             const TString titleVars, const TString titleValues, MsgLogger& logger,
                             TString format = "%+1.3f" );
       void FormattedOutput( const TMatrixD&, const std::vector<TString>&, MsgLogger& logger );
+      void FormattedOutput( const TMatrixD&, const std::vector<TString>& vert, const std::vector<TString>& horiz, 
+                            MsgLogger& logger );
 
       void WriteFloatArbitraryPrecision( Float_t  val, ostream& os );
       void ReadFloatArbitraryPrecision ( Float_t& val, istream& is );
 
-      // check variable range and set var to lower or upper if out of range
-      template<typename T>
-      inline Bool_t VerifyRange( MsgLogger& mlog, const char *varstr, T& var, T vmin, T vmax );
+      // for histogramming
+      TString GetXTitleWithUnit( const TString& title, const TString& unit );
+      TString GetYTitleWithUnit( const TH1& h, const TString& unit, Bool_t normalised );
 
-      template<typename T>
-      inline Bool_t VerifyRange( MsgLogger& mlog, const char *varstr, T& var, T vmin, T vmax, T vdef );
+      // Mutual Information method for non-linear correlations estimates in 2D histogram
+      // Author: Moritz Backes, Geneva (2009)
+      Double_t GetMutualInformation( const TH2F& );
 
-      template<typename T>
-      inline Int_t VerifyRange( T& var, T vmin, T vmax );
+      // Correlation Ratio method for non-linear correlations estimates in 2D histogram
+      // Author: Moritz Backes, Geneva (2009)
+      Double_t GetCorrelationRatio( const TH2F& );
+      TH2F*    TransposeHist      ( const TH2F& );
 
-      // output logger
-      MsgLogger& Logger() const;
+      // check if "silent" or "verbose" option in configuration string
+      Bool_t CheckForSilentOption ( const TString& ) const;
+      Bool_t CheckForVerboseOption( const TString& ) const;
 
+      // color information
       const TString& Color( const TString& );
 
       // print welcome message (to be called from, eg, .TMVAlogon)
@@ -170,17 +190,69 @@ namespace TMVA {
       void TMVAVersionMessage( MsgLogger& logger );
       void ROOTVersionMessage( MsgLogger& logger );
 
-      const   TString    fRegexp;
-      mutable MsgLogger* fLogger;
-      static  Tools*     fgTools;
+      // string tools
+
+      std::vector<TString> SplitString( const TString& theOpt, const char separator ) const;
+
+      // variables
+      const TString fRegexp;
+      mutable MsgLogger*    fLogger;
+      MsgLogger& log() const { return *fLogger; }                       
+      static Tools* fgTools;
+
+      // xml tools
+
+      TString     StringFromInt      ( Long_t i   );
+      TString     StringFromDouble   ( Double_t d );
+      void        WriteTMatrixDToXML ( void* node, const char* name, TMatrixD* mat );
+      void        WriteTVectorDToXML ( void* node, const char* name, TVectorD* vec );
+      void        ReadTMatrixDFromXML( void* node, const char* name, TMatrixD* mat );
+      void        ReadTVectorDFromXML( void* node, const char* name, TVectorD* vec );
+      Bool_t      HistoHasEquidistantBins(const TH1& h);
+
+      template<typename T>
+      void        ReadAttr    ( void* node, const char* , T& value );
+      template<typename T>
+      void        AddAttr     ( void* node, const char* , const T& value, Int_t precision = 16 );
+      void*       AddChild    ( void* parent, const char* childname, const char* content = 0 );
+      void*       GetChild    ( void* parent, const char* childname=0 );
+      void*       GetNextChild( void* prevchild, const char* childname=0 );
+      const char* GetContent  ( void* node );
+
+      TXMLEngine& xmlengine() { return *fXMLEngine; }
+      TXMLEngine* fXMLEngine;
+
+   private:
+
+      // utilities for correlation ratio
+      Double_t GetYMean_binX( const TH2& , Int_t bin_x );
 
    }; // Common tools
 
-#if !defined(__CINT__) || defined(__MAKECINT__)
    Tools& gTools(); // global accessor
-#endif
 
 } // namespace TMVA
+
+//_______________________________________________________________________
+template<typename T>
+void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value ) 
+{
+   // add attribute from xml
+   const char* val = xmlengine().GetAttr(node, attrname);
+   std::stringstream s(val);
+   s >> value;
+}
+
+//_______________________________________________________________________
+template<typename T> 
+void TMVA::Tools::AddAttr( void* node, const char* attrname, const T& value, Int_t precision ) 
+{
+   // add attribute to xml
+   std::stringstream s;
+   s.precision( precision );
+   s << std::scientific << value;
+   gTools().xmlengine().NewAttr(node, 0, attrname, s.str().c_str());
+}
 
 //_______________________________________________________________________
 inline Double_t TMVA::Tools::ComputeVariance( Double_t sumx2, Double_t sumx, Int_t nx )
@@ -190,54 +262,6 @@ inline Double_t TMVA::Tools::ComputeVariance( Double_t sumx2, Double_t sumx, Int
    return (sumx2 - ((sumx*sumx)/static_cast<Double_t>(nx)))/static_cast<Double_t>(nx-1);
 }
 
-//_______________________________________________________________________
-template<typename T>
-inline Int_t TMVA::Tools::VerifyRange( T& var, T vmin, T vmax )
-{
-   // check range and return +1 if above, -1 if below or 0 if inside
-   if (var>vmax) return  1;
-   if (var<vmin) return -1;
-   return 0;
-}
-//_______________________________________________________________________
-template<typename T>
-inline Bool_t TMVA::Tools::VerifyRange( TMVA::MsgLogger& mlog, const char *varstr, T& var, T vmin, T vmax )
-{
-   // verify range and print out message
-   // if outside range, set to closest limit
-   Int_t dir = TMVA::Tools::VerifyRange(var,vmin,vmax);
-   Bool_t modif=kFALSE;
-   if (dir==1) {
-      modif = kTRUE;
-      var=vmax;
-   }
-   if (dir==-1) {
-      modif = kTRUE;
-      var=vmin;
-   }
-   if (modif) {
-      mlog << kWARNING << "Option <" << varstr << "> " << (dir==1 ? "above":"below") << " allowed range. Reset to new value = " << var << Endl;
-   }
-   return modif;
-}
-
-//_______________________________________________________________________
-template<typename T>
-inline Bool_t TMVA::Tools::VerifyRange( TMVA::MsgLogger& mlog, const char *varstr, T& var, T vmin, T vmax, T vdef )
-{
-   // verify range and print out message
-   // if outside range, set to given default value
-   Int_t dir = TMVA::Tools::VerifyRange(var,vmin,vmax);
-   Bool_t modif=kFALSE;
-   if (dir!=0) {
-      modif = kTRUE;
-      var=vdef;
-   }
-   if (modif) {
-      mlog << kWARNING << "Option <" << varstr << "> " << (dir==1 ? "above":"below") << " allowed range. Reset to default value = " << var << Endl;
-   }
-   return modif;
-}
 
 #endif
 

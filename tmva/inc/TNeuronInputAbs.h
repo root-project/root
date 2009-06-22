@@ -33,10 +33,6 @@
 // TNeuron input calculator -- calculates the sum of the absolute       //
 // values of the weighted inputs                                        //
 //                                                                      //
-// Begin_Latex
-// NeuronInput = #sum_{i} |y_{i}|
-// End_Latex
-//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 // ROOT_VERSION(5,15,02) = (5<<16)+(15<<8)+2 = 364802
@@ -54,8 +50,12 @@
 #endif
 #endif
 
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
 
 #ifndef ROOT_TMVA_TNeuronInput
 #include "TMVA/TNeuronInput.h"

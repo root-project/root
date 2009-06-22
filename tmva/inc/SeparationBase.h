@@ -29,7 +29,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -37,7 +36,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      Heidelberg U., Germany                                                    * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -49,13 +47,35 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// SeparationBase                                                       //
+//                                                                      //
 // An interface to calculate the "SeparationGain" for different         //
 // separation critiera used in various training algorithms              //
 //                                                                      //
+// There are two things: the Separation Index, and the Separation Gain  //
+// Separation Index:                                                    //
+// Measure of the "purity" of a sample. If all elements (events) in the //
+// sample belong to the same class (e.g. signal or backgr), than the    //
+// separation index is 0 (meaning 100% purity (or 0% purity as it is    //
+// symmetric. The index becomes maximal, for perfectly mixed samples    //
+// eg. purity=50% , N_signal = N_bkg                                    //
+//                                                                      //
+// Separation Gain:                                                     //
+// the measure of how the quality of separation of the sample increases //
+// by splitting the sample e.g. into a "left-node" and a "right-node"   //
+// (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) //
+// this is then the quality crition which is optimized for when trying  //
+// to increase the information in the system (making the best selection //            
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_Rtypes
 #include "Rtypes.h"
+#endif
+
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
 
 namespace TMVA {
 
@@ -64,7 +84,7 @@ namespace TMVA {
    public:
 
       //default constructor
-      SeparationBase(){}
+      SeparationBase();
 
       //copy constructor
       SeparationBase( const SeparationBase& s ): fName ( s.fName ) {}
@@ -81,11 +101,13 @@ namespace TMVA {
       virtual Double_t GetSeparationIndex( const Double_t &s, const Double_t &b ) = 0;
 
       // Return the name of the concrete Index implementation
-      TString GetName() { return fName; }
+      const TString& GetName() { return fName; }
 
    protected:
 
       TString fName;  // name of the concrete Separation Index impementation
+
+      Double_t fPrecisionCut;
  
       ClassDef(SeparationBase,0) // Interface to different separation critiera used in training algorithms
    };

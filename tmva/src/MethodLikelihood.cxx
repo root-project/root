@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -20,7 +19,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -113,234 +111,145 @@ End_Html */
 #include "TKey.h"
 #include "TH1.h"
 #include "TClass.h"
+#include "Riostream.h"
 
+#include "TMVA/ClassifierFactory.h"
 #include "TMVA/MethodLikelihood.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Ranking.h"
 
+REGISTER_METHOD(Likelihood)
+
 ClassImp(TMVA::MethodLikelihood)
 
-using std::endl;
-
 //_______________________________________________________________________
-TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName, const TString& methodTitle, DataSet& theData, 
-                                          const TString& theOption, TDirectory* theTargetDir )
-      : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName,
+                                          const TString& methodTitle,
+                                          DataSetInfo& theData, 
+                                          const TString& theOption,
+                                          TDirectory* theTargetDir ) :
+   TMVA::MethodBase( jobName, Types::kLikelihood, methodTitle, theData, theOption, theTargetDir ),
+   fEpsilon       ( 1e-300 ),
+   fTransformLikelihoodOutput( kFALSE ),
+   fDropVariable  ( 0 ),
+   fHistSig       ( 0 ),
+   fHistBgd       ( 0 ),
+   fHistSig_smooth( 0 ),
+   fHistBgd_smooth( 0 ),
+   fDefaultPDFLik ( 0 ),
+   fPDFSig        ( 0 ),
+   fPDFBgd        ( 0 )
 {
    // standard constructor
-   //
-   // MethodLikelihood options:
-   // format and syntax of option string: "Spline2:0:25:D"
-   //
-   // where:
-   //  SplineI [I=0,12,3,5] - which spline is used for smoothing the pdfs
-   //                    0  - how often the input histos are smoothed
-   //                    25 - average num of events per PDF bin 
-   //                    D  - use square-root-matrix to decorrelate variable space 
-   // 
-   InitLik();
-
-   // interpretation of configuration option string
-   SetConfigName( TString("Method") + GetMethodName() );
-   DeclareOptions();
-   ParseOptions();
-   ProcessOptions();
 }
 
 //_______________________________________________________________________
-TMVA::MethodLikelihood::MethodLikelihood( DataSet& theData, 
+TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData, 
                                           const TString& theWeightFile,  
-                                          TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
+                                          TDirectory* theTargetDir ) :
+   TMVA::MethodBase( Types::kLikelihood, theData, theWeightFile, theTargetDir ),
+   fEpsilon       ( 1e-300 ),
+   fTransformLikelihoodOutput( kFALSE ),
+   fDropVariable  ( 0 ),
+   fHistSig       ( 0 ),
+   fHistBgd       ( 0 ),
+   fHistSig_smooth( 0 ),
+   fHistBgd_smooth( 0 ),
+   fDefaultPDFLik ( 0 ),
+   fPDFSig        ( 0 ),
+   fPDFBgd        ( 0 )
 {  
    // construct likelihood references from file
-   InitLik();
-
-   DeclareOptions();
 }
 
 //_______________________________________________________________________
 TMVA::MethodLikelihood::~MethodLikelihood( void )
 {
    // destructor  
+   if (NULL != fDefaultPDFLik)  delete fDefaultPDFLik;
    if (NULL != fHistSig)        delete fHistSig;
    if (NULL != fHistBgd)        delete fHistBgd;
    if (NULL != fHistSig_smooth) delete fHistSig_smooth;
    if (NULL != fHistBgd_smooth) delete fHistBgd_smooth;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++){
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
       if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
    }
    if (NULL != fPDFSig)         delete fPDFSig;
    if (NULL != fPDFBgd)         delete fPDFBgd;
-
-   delete[] fNsmoothVarS;
-   delete[] fNsmoothVarB;
-
-   delete[] fAverageEvtPerBinVarS;
-   delete[] fAverageEvtPerBinVarB;
-
-   delete[] fInterpolateString;
-   delete[] fInterpolateMethod;
 }
 
 //_______________________________________________________________________
-void TMVA::MethodLikelihood::InitLik( void )
+Bool_t TMVA::MethodLikelihood::HasAnalysisType( Types::EAnalysisType type, 
+                                                UInt_t numberClasses, UInt_t /*numberTargets*/ )
+{
+   // FDA can handle classification with 2 classes
+   if (type == Types::kClassification && numberClasses == 2) return kTRUE;
+   return kFALSE;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodLikelihood::Init( void )
 {
    // default initialisation called by all constructors
-   fHistBgd        = NULL; 
-   fHistSig_smooth = NULL; 
-   fHistBgd_smooth = NULL;
-   fPDFSig         = NULL;
-   fPDFBgd         = NULL;
   
    // no ranking test
    fDropVariable   = -1;
-
-   SetMethodName( "Likelihood" );
-   SetMethodType( TMVA::Types::kLikelihood );
-   SetTestvarName();
-
-   fEpsilon        = 1e-8;
-
    fHistSig        = new std::vector<TH1*>      ( GetNvar(), (TH1*)0 ); 
    fHistBgd        = new std::vector<TH1*>      ( GetNvar(), (TH1*)0 ); 
    fHistSig_smooth = new std::vector<TH1*>      ( GetNvar(), (TH1*)0 ); 
    fHistBgd_smooth = new std::vector<TH1*>      ( GetNvar(), (TH1*)0 );
    fPDFSig         = new std::vector<TMVA::PDF*>( GetNvar(), (TMVA::PDF*)0 );
    fPDFBgd         = new std::vector<TMVA::PDF*>( GetNvar(), (TMVA::PDF*)0 );
-   fSpline         = -1;
 }
 
 //_______________________________________________________________________
 void TMVA::MethodLikelihood::DeclareOptions() 
 {
    // define the options (their key words) that can be set in the option string 
-   // know options:
-   // PDFInterpol[ivar] <string>   Spline0, Spline1, Spline2 <default>, Spline3, Spline5, KDE  used to interpolate reference histograms
-   //             if no variable index is given, it is valid for ALL the variables
-   //
-   // NSmooth           <int>    how often the input histos are smoothed
-   // NAvEvtPerBin      <int>    minimum average number of events per PDF bin 
    // TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
-   // fKDEtype          <KernelType>   type of the Kernel to use (1 is Gaussian)
-   // fKDEiter          <KerneIter>    number of iterations (1 --> "static KDE", 2 --> "adaptive KDE")
-   // fBorderMethod     <KernelBorder> the method to take care about "border" effects (1=no treatment , 2=kernel renormalization, 3=sample mirroring)
-   
 
-   // initialize 
-   DeclareOptionRef( fNsmooth = 1, "NSmooth",
-                     "Number of smoothing iterations for the input histograms");
-
-   fNsmoothVarS = new Int_t[GetNvar()];
-   fNsmoothVarB = new Int_t[GetNvar()];
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++)
-      fNsmoothVarS[ivar] = fNsmoothVarB[ivar] = -1;
-   DeclareOptionRef(fNsmoothVarS, GetNvar(), "NSmoothSig",
-                    "Number of smoothing iterations for the input histograms");
-   DeclareOptionRef(fNsmoothVarB, GetNvar(), "NSmoothBkg",
-                    "Number of smoothing iterations for the input histograms");
-
-   DeclareOptionRef( fAverageEvtPerBin = 50, "NAvEvtPerBin",
-                     "Average number of events per PDF bin");
-
-   fAverageEvtPerBinVarS = new Int_t[GetNvar()];
-   fAverageEvtPerBinVarB = new Int_t[GetNvar()];
-   for (int ivar=0; ivar<GetNvar(); ivar++)
-      fAverageEvtPerBinVarS[ivar] = fAverageEvtPerBinVarB[ivar] = -1;
-   DeclareOptionRef( fAverageEvtPerBinVarS, GetNvar(), "NAvEvtPerBinSig",
-                     "Average num of events per PDF bin and variable (signal)");   
-   DeclareOptionRef( fAverageEvtPerBinVarB, GetNvar(), "NAvEvtPerBinBkg",
-                     "Average num of events per PDF bin and variable (background)");   
-   
-   DeclareOptionRef( fTransformLikelihoodOutput = kFALSE, "TransformOutput", 
+   DeclareOptionRef( fTransformLikelihoodOutput = kFALSE, "TransformOutput", 	 
                      "Transform likelihood output by inverse sigmoid function" );
 
+   // initialize 
 
-   fInterpolateString = new TString[GetNvar()];
-   fInterpolateMethod = new TMVA::PDF::EInterpolateMethod[GetNvar()];
+   // reading every PDF's definition and passing the option string to the next one to be read and marked
+   TString updatedOptions = GetOptions();
+   fDefaultPDFLik = new PDF( TString(GetName()) + " PDF", updatedOptions );
+   fDefaultPDFLik->DeclareOptions();
+   fDefaultPDFLik->ParseOptions();
+   updatedOptions = fDefaultPDFLik->GetOptions();
+   for (UInt_t ivar = 0; ivar< DataInfo().GetNVariables(); ivar++) {
+      (*fPDFSig)[ivar] = new PDF( Form("%s PDF Sig[%d]", GetName(), ivar), updatedOptions, 
+                                  Form("Sig[%d]",ivar), fDefaultPDFLik );
+      (*fPDFSig)[ivar]->DeclareOptions();
+      (*fPDFSig)[ivar]->ParseOptions();
+      updatedOptions = (*fPDFSig)[ivar]->GetOptions();
+      (*fPDFBgd)[ivar] = new PDF( Form("%s PDF Bkg[%d]", GetName(), ivar), updatedOptions, 
+                                  Form("Bkg[%d]",ivar), fDefaultPDFLik );
+      (*fPDFBgd)[ivar]->DeclareOptions();
+      (*fPDFBgd)[ivar]->ParseOptions();
+      updatedOptions = (*fPDFBgd)[ivar]->GetOptions();
+   }
 
-   for (int i=0; i<GetNvar(); i++) fInterpolateString[i] = "Spline2";
-
-   DeclareOptionRef(fInterpolateString, GetNvar(), "PDFInterpol", "Method of interpolating reference histograms (e.g. Spline2 or KDE)");
-   AddPreDefVal(TString("Spline0")); // take histogram                    
-   AddPreDefVal(TString("Spline1")); // linear interpolation between bins 
-   AddPreDefVal(TString("Spline2")); // quadratic interpolation           
-   AddPreDefVal(TString("Spline3")); // cubic interpolation               
-   AddPreDefVal(TString("Spline5")); // fifth order polynome interpolation
-   AddPreDefVal(TString("KDE"));     // use kernel density estimator
-
-   DeclareOptionRef( fKDEtypeString = "Gauss",       "KDEtype", "KDE kernel type (1=Gauss)" );
-   AddPreDefVal(TString("Gauss"));
-
-   DeclareOptionRef( fKDEiterString = "Nonadaptive", "KDEiter", "Number of iterations (1=non-adaptive, 2=adaptive)" );
-   AddPreDefVal(TString("Nonadaptive"));
-   AddPreDefVal(TString("Adaptive"));
-
-   DeclareOptionRef( fKDEfineFactor =1. , "KDEFineFactor", 
-                     "Fine tuning factor for Adaptive KDE: Factor to multyply the width of the kernel");
-
-   DeclareOptionRef( fBorderMethodString = "None", "KDEborder", 
-                     "Border effects treatment (1=no treatment , 2=kernel renormalization, 3=sample mirroring)" );
-   AddPreDefVal(TString("None"));
-   AddPreDefVal(TString("Renorm"));
-   AddPreDefVal(TString("Mirror"));
+   // the final marked option string is written back to the original likelihood
+   SetOptions( updatedOptions );
 }
 
 //_______________________________________________________________________
 void TMVA::MethodLikelihood::ProcessOptions() 
 {
+
    // process user options
-   MethodBase::ProcessOptions();
-  
-   // test if to use kernel density estimation, if not fall back to splines
-   // individual options
-
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      if (     fInterpolateString[ivar] == "Spline0") fInterpolateMethod[ivar] = TMVA::PDF::kSpline0;
-      else if (fInterpolateString[ivar] == "Spline1") fInterpolateMethod[ivar] = TMVA::PDF::kSpline1;
-      else if (fInterpolateString[ivar] == "" || 
-               fInterpolateString[ivar] == "Spline2") fInterpolateMethod[ivar] = TMVA::PDF::kSpline2;
-      else if (fInterpolateString[ivar] == "Spline3") fInterpolateMethod[ivar] = TMVA::PDF::kSpline3;
-      else if (fInterpolateString[ivar] == "Spline5") fInterpolateMethod[ivar] = TMVA::PDF::kSpline5;
-      else if (fInterpolateString[ivar] == "KDE"    ) fInterpolateMethod[ivar] = TMVA::PDF::kKDE;
-      else {
-         fLogger << kFATAL << "Unknown value \'" << fInterpolateString[ivar]
-                 << "\' for reference histogram interpolation" << Form("PDFInterpol[%i]",ivar+1) << Endl;
-      }
-   }
-   
-   // set variable-specific options
-   for (int ivar=0; ivar<GetNvar(); ivar++) {
-      if (fNsmoothVarS[ivar]          == -1) fNsmoothVarS[ivar]          = fNsmooth;
-      if (fNsmoothVarB[ivar]          == -1) fNsmoothVarB[ivar]          = fNsmooth;
-      if (fAverageEvtPerBinVarS[ivar] == -1) fAverageEvtPerBinVarS[ivar] = fAverageEvtPerBin;
-      if (fAverageEvtPerBinVarB[ivar] == -1) fAverageEvtPerBinVarB[ivar] = fAverageEvtPerBin;
-   }
-
-   // init KDE options
-   if      (fKDEtypeString == "Gauss"      ) fKDEtype = KDEKernel::kGauss;
-   else // nothing more known
-      fLogger << kFATAL << "Unknown setting for option 'KDEtype': " << fKDEtypeString << Endl;
-   if      (fKDEiterString == "Nonadaptive") fKDEiter = KDEKernel::kNonadaptiveKDE;
-   else if (fKDEiterString == "Adaptive"   ) fKDEiter = KDEKernel::kAdaptiveKDE;
-   else // nothing more known
-      fLogger << kFATAL << "Unknown setting for option 'KDEiter': " << fKDEiterString << Endl;
-   
-   if       ( fBorderMethodString == "None"   ) fBorderMethod= KDEKernel::kNoTreatment;
-   else if  ( fBorderMethodString == "Renorm" ) fBorderMethod= KDEKernel::kKernelRenorm;
-   else if  ( fBorderMethodString == "Mirror" ) fBorderMethod= KDEKernel::kSampleMirror;
-   else // nothing more known
-      fLogger << kFATAL << "Unknown setting for option 'KDEborder': " << fKDEiterString << Endl;
-   
-   // decorrelate option will be last option, if it is specified
-   if      (GetVariableTransform() == Types::kDecorrelated)
-      fLogger << kINFO << "Use decorrelated variable set" << Endl;
-   else if (GetVariableTransform() == Types::kPCA)
-      fLogger << kINFO << "Use principal component transformation" << Endl;
-
    // reference cut value to distingiush signal-like from background-like events   
    SetSignalReferenceCut( TransformLikelihoodOutput( 0.5, 0.5 ) );
+
+   fDefaultPDFLik->ProcessOptions();
+   for (UInt_t ivar = 0; ivar< DataInfo().GetNVariables(); ivar++) {
+      (*fPDFBgd)[ivar]->ProcessOptions();
+      (*fPDFSig)[ivar]->ProcessOptions();
+   }
 }
 
 //_______________________________________________________________________
@@ -350,169 +259,121 @@ void TMVA::MethodLikelihood::Train( void )
    // fill histograms and smooth them; if decorrelation is required, compute 
    // corresponding square-root matrices
 
-   // default sanity checks
-   if (!CheckSanity()) fLogger << kFATAL << "Sanity check failed" << Endl;
-
    // create reference histograms
-
-   // fine binned histos needed for the KDE smoothing
-   std::vector<TH1*>* sigFineBinKDE = new std::vector<TH1*>( GetNvar() );
-   std::vector<TH1*>* bgdFineBinKDE = new std::vector<TH1*>( GetNvar() );   
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-
+   // (KDE smoothing requires very finely binned reference histograms)
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       TString var = (*fInputVars)[ivar];
 
-      // special treatment for discrete variables
-      if (Data().GetVarType(ivar) == 'I') {
-         // special treatment for integer variables
-         Int_t xmin = TMath::Nint( GetXmin(ivar) );
-         Int_t xmax = TMath::Nint( GetXmax(ivar) + 1 );
-         Int_t nbins = xmax - xmin;
+      // the reference histograms require the correct boundaries. Since in Likelihood classification
+      // the transformations are applied using both classes, also the corresponding boundaries
+      // need to take this into account
+      Double_t xmin(+1e30), xmax(-1e30);      
+      for (UInt_t iclass=0; iclass<DataInfo().GetNClasses(); iclass++) {
+         // transform variables using the transformation belonging to class 'iclass'
+         GetTransformationHandler().SetTransformationReferenceClass( iclass );
+         xmin = TMath::Min(xmin, GetXmin(ivar));
+         xmax = TMath::Max(xmax, GetXmax(ivar));
+      }
 
-         (*fHistSig)[ivar] = new TH1F( var + "_sig", var + " signal training",     nbins, xmin, xmax );
-         (*fHistBgd)[ivar] = new TH1F( var + "_bgd", var + " background training", nbins, xmin, xmax );
+      // special treatment for discrete variables
+      if (DataInfo().GetVariableInfo(ivar).GetVarType() == 'I') {
+         // special treatment for integer variables
+         Int_t ixmin = TMath::Nint( xmin );
+         Int_t ixmax = TMath::Nint( xmax + 1 );
+         Int_t nbins = ixmax - ixmin;
+
+         (*fHistSig)[ivar] = new TH1F( var + "_sig", var + " signal training",     nbins, ixmin, ixmax );
+         (*fHistBgd)[ivar] = new TH1F( var + "_bgd", var + " background training", nbins, ixmin, ixmax );
       }
       else {
+         UInt_t minNEvt = TMath::Min(Data()->GetNEvtSigTrain(),Data()->GetNEvtBkgdTrain());
+         Int_t nbinsS = (*fPDFSig)[ivar]->GetHistNBins( minNEvt );
+         Int_t nbinsB = (*fPDFBgd)[ivar]->GetHistNBins( minNEvt );
 
-         UInt_t minNEvt = TMath::Min(Data().GetNEvtSigTrain(),Data().GetNEvtBkgdTrain());
-         UInt_t nbinsS = minNEvt/fAverageEvtPerBinVarS[ivar];
-         UInt_t nbinsB = minNEvt/fAverageEvtPerBinVarB[ivar];
-
-         (*fHistSig)[ivar] = new TH1F( var + "_sig", var + " signal training",     
-                                       nbinsS, GetXmin(ivar), GetXmax(ivar));
-         (*fHistBgd)[ivar] = new TH1F( var + "_bgd", var + " background training", 
-                                       nbinsB, GetXmin(ivar), GetXmax(ivar));
-      }
-
-      // book the fine binned histos needed for the KDE smoothing
-      if (fInterpolateMethod[ivar] == TMVA::PDF::kKDE) {
-         UInt_t minNEvt = TMath::Min(Data().GetNEvtSigTrain(),Data().GetNEvtBkgdTrain());
-         UInt_t nbinsS = minNEvt/fAverageEvtPerBinVarS[ivar];
-         UInt_t nbinsB = minNEvt/fAverageEvtPerBinVarB[ivar];
-
-         (*sigFineBinKDE)[ivar] = new TH1F( var + "_sig_KDE", var + " signal training KDE",     
-                                            5*nbinsS, GetXmin(ivar), GetXmax(ivar));
-         (*bgdFineBinKDE)[ivar] = new TH1F( var + "_bgd_KDE", var + " background training KDE", 
-                                            5*nbinsB, GetXmin(ivar), GetXmax(ivar));
+         (*fHistSig)[ivar] = new TH1F( Form("%s_sig",var.Data()),
+                                       Form("%s signal training",var.Data()), nbinsS, xmin, xmax );
+         (*fHistBgd)[ivar] = new TH1F( Form("%s_bgd",var.Data()),
+                                       Form("%s background training",var.Data()), nbinsB, xmin, xmax );
       }
    }
 
    // ----- fill the reference histograms
+   log() << kINFO << "Filling reference histograms" << Endl;
 
-   fLogger << kINFO << "Filling reference histograms" << Endl;
-
-   // event loop
-   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
+   // event loop   
+   for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
 
       // use the true-event-type's transformation
-      ReadTrainingEvent( ievt, Types::kTrueType ); 
+      // set the event true event types transformation
+      const Event* origEv = Data()->GetEvent(ievt);
+      if (IgnoreEventsWithNegWeightsInTraining() && origEv->GetWeight()<=0) continue;
+      GetTransformationHandler().SetTransformationReferenceClass( origEv->GetClass() );
+      const Event* ev = GetTransformationHandler().Transform( origEv );
 
       // the event weight
-      Float_t weight = GetEventWeight();
+      Float_t weight = ev->GetWeight();
 
       // fill variable vector
-      for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-         Float_t value  = GetEventVal(ivar);
-         if (IsSignalEvent()) {
-            (*fHistSig)[ivar]->Fill( value, weight );
-            // fill the fine binned signal histos needed for the KDE smoothing
-            if (fInterpolateMethod[ivar] == TMVA::PDF::kKDE) (*sigFineBinKDE)[ivar]->Fill( value, weight );
-         } 
-         else {
-            (*fHistBgd)[ivar]->Fill( value, weight );
-            // fill the fine binned signal histos needed for the KDE smoothing
-            if (fInterpolateMethod[ivar] == TMVA::PDF::kKDE) (*bgdFineBinKDE)[ivar]->Fill( value, weight );
-         }
+      for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
+         Float_t value  = ev->GetVal(ivar);
+         if (ev->IsSignal()) (*fHistSig)[ivar]->Fill( value, weight );
+         else                (*fHistBgd)[ivar]->Fill( value, weight );
       }
    }
 
-   // apply smoothing, and create PDFs
-   for (UInt_t itype=0; itype < 2; itype++) { // signal and background
+   // building the pdfs
+   log() << kINFO << "Building PDF out of reference histograms" << Endl;
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
 
-      std::vector<TH1*>& histV    = itype==0 ? *fHistSig : *fHistBgd;
-      std::vector<TH1*>& histVKDE = itype==0 ? *sigFineBinKDE : *bgdFineBinKDE;
+      // the PDF is built from (binned) reference histograms
+      // in case of KDE, this has a large number of bins, which makes it quasi-unbinned
+      (*fPDFSig)[ivar]->BuildPDF( (*fHistSig)[ivar] );
+      (*fPDFBgd)[ivar]->BuildPDF( (*fHistBgd)[ivar] );
 
-      std::vector<TH1*>& vHistSmo = itype==0 ? *fHistSig_smooth : *fHistBgd_smooth;
-      std::vector<PDF*>& vPDF     = itype==0 ? *fPDFSig : *fPDFBgd;
-      
-      for (Int_t ivar=0; ivar<GetNvar(); ivar++) { 
+      (*fPDFSig)[ivar]->ValidatePDF( (*fHistSig)[ivar] );
+      (*fPDFBgd)[ivar]->ValidatePDF( (*fHistBgd)[ivar] );
 
-         Int_t nsmooth = (itype==0) ? fNsmoothVarS[ivar] : fNsmoothVarB[ivar];
-         TH1*  htmp    = (TH1*)histV[ivar]->Clone( Form("%s_smooth", histV[ivar]->GetName()) );
-         htmp->SetTitle( Form("%s smoothed %i times",htmp->GetTitle(), nsmooth) );
-
-         // --- smooth histogram and create PDF
-
-         // if the variable is discrete, use histogram (=kSpline0) as reference 
-         // (and no smoothing is applied!)
-         TMVA::PDF* ptmp = 0;
-         if (Data().GetVarType(ivar) == 'I') {
-            ptmp =  new TMVA::PDF( htmp, PDF::kSpline0, 0 );
-         } 
-         else {
-            if (htmp->GetNbinsX() <= 2 && nsmooth > 0) {
-               fLogger << kWARNING << "Histogram \""<< htmp->GetName() 
-                       << "\" has too few bins (" << htmp->GetNbinsX() << ") for smoothing" 
-                       << "\n-> use histogram"
-                       << "\nPlease check if the option variable \"NAvEvtPerBin\" requires "
-                       << "too many events per bin for the given "
-                       << (itype == 0 ? "signal" : "background") << " statistics"
-                       << Endl;
-               ptmp =  new TMVA::PDF( htmp, PDF::kSpline0, 0 );
-            }
-            else if (fInterpolateMethod[ivar] == TMVA::PDF::kKDE) {
-               ptmp = new TMVA::PDF( histVKDE[ivar], fKDEtype, fKDEiter, fBorderMethod, fKDEfineFactor );
-            } 
-            else {
-               ptmp = new TMVA::PDF( htmp, fInterpolateMethod[ivar], nsmooth );  
-            }
-         }
-         vPDF[ivar]     = ptmp;
-         vHistSmo[ivar] = ptmp->GetSmoothedHist();
-          
-         // validate histogram
-         ptmp->ValidatePDF( histV[ivar] );
-
-         // temporary histogram can be deleted
-         delete htmp;
-      }
+      // saving the smoothed histograms
+      if ((*fPDFSig)[ivar]->GetSmoothedHist() != 0) (*fHistSig_smooth)[ivar] = (*fPDFSig)[ivar]->GetSmoothedHist();
+      if ((*fPDFBgd)[ivar]->GetSmoothedHist() != 0) (*fHistBgd_smooth)[ivar] = (*fPDFBgd)[ivar]->GetSmoothedHist();
    }
-
-   // clean up the mess
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      delete (*sigFineBinKDE)[ivar];
-      delete (*bgdFineBinKDE)[ivar];
-   }
-   delete sigFineBinKDE;
-   delete bgdFineBinKDE;
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodLikelihood::GetMvaValue()
+Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err )
 {
    // returns the likelihood estimator for signal
-
    // fill a new Likelihood branch into the testTree
-   Int_t ivar;
-    
+   UInt_t ivar;
+
+   // cannot determine error
+   if (err != 0) *err = -1;
+
    // retrieve variables, and transform, if required
    TVector vs( GetNvar() );
    TVector vb( GetNvar() );
 
    // need to distinguish signal and background in case of variable transformation
    // signal first
-   GetVarTransform().ApplyTransformation(Types::kSignal);
-   for (ivar=0; ivar<GetNvar(); ivar++) vs(ivar) = GetEventVal(ivar);
 
-   GetVarTransform().ApplyTransformation(Types::kBackground);
-   for (ivar=0; ivar<GetNvar(); ivar++) vb(ivar) = GetEventVal(ivar);
+   //GetTransformationHandler().SetTransformationReferenceClass( DataInfo().GetClassInfo("Signal")->GetNumber() );
+   // temporary: JS  --> FIX
+   GetTransformationHandler().SetTransformationReferenceClass( 0 );
+   const Event* ev = GetTransformationHandler().Transform(Data()->GetEvent());
+   for (ivar=0; ivar<GetNvar(); ivar++) vs(ivar) = ev->GetVal(ivar);
+
+   //GetTransformationHandler().SetTransformationReferenceClass( DataInfo().GetClassInfo("Background")->GetNumber() );
+   // temporary: JS  --> FIX
+   GetTransformationHandler().SetTransformationReferenceClass( 1 );
+   ev = GetTransformationHandler().Transform(Data()->GetEvent());
+   for (ivar=0; ivar<GetNvar(); ivar++) vb(ivar) = ev->GetVal(ivar);
    
    // compute the likelihood (signal)
    Double_t ps(1), pb(1), p(0);
    for (ivar=0; ivar<GetNvar(); ivar++) {
 
       // drop one variable (this is ONLY used for internal variable ranking !)
-      if (ivar == fDropVariable) continue;
+      if ((Int_t)ivar == fDropVariable) continue;
 
       Double_t x[2] = { vs(ivar), vb(ivar) };
     
@@ -524,7 +385,7 @@ Double_t TMVA::MethodLikelihood::GetMvaValue()
 
          // find corresponding histogram from cached indices                 
          PDF* pdf = (itype == 0) ? (*fPDFSig)[ivar] : (*fPDFBgd)[ivar];
-         if (pdf == 0) fLogger << kFATAL << "<GetMvaValue> Reference histograms don't exist" << Endl;
+         if (pdf == 0) log() << kFATAL << "<GetMvaValue> Reference histograms don't exist" << Endl;
          TH1* hist = pdf->GetPDFHist();
 
          // interpolate linearly between adjacent bins
@@ -533,7 +394,8 @@ Double_t TMVA::MethodLikelihood::GetMvaValue()
 
          // **** POTENTIAL BUG: PREFORMANCE IS WORSE WHEN USING TRUE TYPE ***
          // ==> commented out at present
-         if (fInterpolateMethod[ivar] == TMVA::PDF::kSpline0 || Data().GetVarType(ivar) == 'N') { 
+         if ((*fPDFSig)[ivar]->GetInterpolMethod() == TMVA::PDF::kSpline0 || 
+             DataInfo().GetVariableInfo(ivar).GetVarType() == 'N') { 
             p = TMath::Max( hist->GetBinContent(bin), fEpsilon );
          }
          else { // splined PDF
@@ -565,15 +427,17 @@ Double_t TMVA::MethodLikelihood::GetMvaValue()
 Double_t TMVA::MethodLikelihood::TransformLikelihoodOutput( Double_t ps, Double_t pb ) const
 {
    // returns transformed or non-transformed output
-   if (ps + pb < fEpsilon) pb = fEpsilon;
+   if (ps < fEpsilon) ps = fEpsilon;
+   if (pb < fEpsilon) pb = fEpsilon;
    Double_t r = ps/(ps + pb);
+   if (r >= 1.0) r = 1. - 1.e-15;
 
    if (fTransformLikelihoodOutput) {
       // inverse Fermi function
 
       // sanity check
       if      (r <= 0.0) r = fEpsilon;
-      else if (r >= 1.0) r = 1.0 - fEpsilon;
+      else if (r >= 1.0) r = 1. - 1.e-15;
 
       Double_t tau = 15.0;
       r = - TMath::Log(1.0/r - 1.0)/tau;
@@ -582,17 +446,63 @@ Double_t TMVA::MethodLikelihood::TransformLikelihoodOutput( Double_t ps, Double_
    return r;
 }
 
+//______________________________________________________________________
+void TMVA::MethodLikelihood::WriteOptionsToStream( ostream& o, const TString& prefix ) const 
+{
+   // write options to stream
+   Configurable::WriteOptionsToStream( o, prefix);
+
+   // writing the options defined for the different pdfs
+   if (fDefaultPDFLik != 0) {
+      o << prefix << endl << prefix << "#Default Likelihood PDF Options:" << endl << prefix << endl;
+      fDefaultPDFLik->WriteOptionsToStream( o, prefix );
+   }
+   for (UInt_t ivar = 0; ivar < fPDFSig->size(); ivar++) {
+      if ((*fPDFSig)[ivar] != 0) {
+         o << prefix << endl << prefix << Form("#Signal[%d] Likelihood PDF Options:",ivar) << endl << prefix << endl;
+         (*fPDFSig)[ivar]->WriteOptionsToStream( o, prefix );
+      }
+      if ((*fPDFBgd)[ivar] != 0) {
+         o << prefix << endl << prefix << "#Background[%d] Likelihood PDF Options:" << endl << prefix << endl;
+         (*fPDFBgd)[ivar]->WriteOptionsToStream( o, prefix );
+      }
+   }
+}
+
+//_______________________________________________________________________
+void TMVA::MethodLikelihood::AddWeightsXMLTo( void* parent ) const 
+{
+   // write weights to XML
+   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   gTools().AddAttr(wght, "NVariables", GetNvar());
+   gTools().AddAttr(wght, "NClasses", 2);
+   void* pdfwrap;
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {      
+      if ( (*fPDFSig)[ivar]==0 || (*fPDFBgd)[ivar]==0 )
+         log() << kFATAL << "Reference histograms for variable " << ivar 
+               << " don't exist, can't write it to weight file" << Endl;
+      pdfwrap = gTools().xmlengine().NewChild(wght, 0, "PDFDescriptor");
+      gTools().AddAttr(pdfwrap, "VarIndex", ivar);
+      gTools().AddAttr(pdfwrap, "ClassIndex", 0);
+      (*fPDFSig)[ivar]->AddXMLTo(pdfwrap);
+      pdfwrap = gTools().xmlengine().NewChild(wght, 0, "PDFDescriptor");
+      gTools().AddAttr(pdfwrap, "VarIndex", ivar);
+      gTools().AddAttr(pdfwrap, "ClassIndex", 1);
+      (*fPDFBgd)[ivar]->AddXMLTo(pdfwrap);
+   }
+}
+
 //_______________________________________________________________________
 const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking() 
 {
    // computes ranking of input variables
 
    // create the ranking object
-   if(fRanking) delete fRanking;
+   if (fRanking) delete fRanking;
    fRanking = new Ranking( GetName(), "Delta Separation" );
 
    Double_t sepRef = -1, sep = -1;
-   for (Int_t ivar=-1; ivar<GetNvar(); ivar++) {
+   for (Int_t ivar=-1; ivar<(Int_t)GetNvar(); ivar++) {
 
       // this variable should not be used
       fDropVariable = ivar;
@@ -603,14 +513,16 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
       TH1* rB = new TH1F( nameB, nameB, 80, 0, 1 );
 
       // the event loop
-      for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
-         
-         ReadTrainingEvent( ievt, Types::kTrueType ); 
+      for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
+
+         const Event* origEv = Data()->GetEvent(ievt);
+         GetTransformationHandler().SetTransformationReferenceClass( origEv->GetClass() );
+         const Event* ev = GetTransformationHandler().Transform(Data()->GetEvent(ievt));
 
          Double_t lk = this->GetMvaValue();
-         Double_t w  = this->GetEventWeight();
-         if (IsSignalEvent()) rS->Fill( lk, w );
-         else                 rB->Fill( lk, w );
+         Double_t w  = ev->GetWeight();
+         if (ev->IsSignal()) rS->Fill( lk, w );
+         else                rB->Fill( lk, w );
       }
 
       // compute separation
@@ -622,7 +534,7 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
       delete rS;
       delete rB;
 
-      if (ivar >= 0) fRanking->AddRank( Rank( GetInputExp(ivar), sep ) );
+      if (ivar >= 0) fRanking->AddRank( Rank( DataInfo().GetVariableInfo(ivar).GetInternalName(), sep ) );
    }
 
    fDropVariable = -1;
@@ -636,9 +548,10 @@ void  TMVA::MethodLikelihood::WriteWeightsToStream( ostream& o ) const
    // write weights to stream 
 
    if (TxtWeightsOnly()) {
-      for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+      for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          if ( (*fPDFSig)[ivar]==0 || (*fPDFBgd)[ivar]==0 )
-            fLogger << kFATAL << "Reference histograms for variable " << ivar << " don't exist, can't write it to weight file" << Endl;
+            log() << kFATAL << "Reference histograms for variable " << ivar 
+                  << " don't exist, can't write it to weight file" << Endl;
          o << *(*fPDFSig)[ivar];
          o << *(*fPDFBgd)[ivar];
       }
@@ -654,12 +567,37 @@ void  TMVA::MethodLikelihood::WriteWeightsToStream( TFile& ) const
 {
    // write reference PDFs to ROOT file
    TString pname = "PDF_";
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++){ 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){ 
       (*fPDFSig)[ivar]->Write( pname + GetInputVar( ivar ) + "_S" );
       (*fPDFBgd)[ivar]->Write( pname + GetInputVar( ivar ) + "_B" );
-   }                  
+   }
 }
-  
+//_______________________________________________________________________
+void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
+{
+   // read weights from XML
+   TString pname = "PDF_";
+
+   TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
+   UInt_t nvars=0;
+   gTools().ReadAttr(wghtnode, "NVariables",nvars);
+   void* descnode = gTools().xmlengine().GetChild(wghtnode);
+   for (UInt_t ivar=0; ivar<nvars; ivar++){
+      void* pdfnode = gTools().xmlengine().GetChild(descnode);
+      log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
+      if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
+      if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
+      (*fPDFSig)[ivar] = new PDF( GetInputVar( ivar ) + " PDF Sig" );
+      (*fPDFBgd)[ivar] = new PDF( GetInputVar( ivar ) + " PDF Bkg" );
+      (*fPDFSig)[ivar]->SetReadingVersion( GetTrainingTMVAVersionCode() );
+      (*fPDFBgd)[ivar]->SetReadingVersion( GetTrainingTMVAVersionCode() );
+      (*(*fPDFSig)[ivar]).ReadXML(pdfnode);
+      descnode = gTools().xmlengine().GetNext(descnode);
+      pdfnode  = gTools().xmlengine().GetChild(descnode);
+      (*(*fPDFBgd)[ivar]).ReadXML(pdfnode);
+      descnode = gTools().xmlengine().GetNext(descnode);
+   }
+}  
 //_______________________________________________________________________
 void  TMVA::MethodLikelihood::ReadWeightsFromStream( istream & istr )
 {
@@ -668,11 +606,12 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( istream & istr )
    TString pname = "PDF_";
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++){ 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){ 
+      log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
       if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
-      (*fPDFSig)[ivar] = new PDF();
-      (*fPDFBgd)[ivar] = new PDF();
+      (*fPDFSig)[ivar] = new PDF(GetInputVar( ivar ) + " PDF Sig" );
+      (*fPDFBgd)[ivar] = new PDF(GetInputVar( ivar ) + " PDF Bkg");
       (*fPDFSig)[ivar]->SetReadingVersion( GetTrainingTMVAVersionCode() );
       (*fPDFBgd)[ivar]->SetReadingVersion( GetTrainingTMVAVersionCode() );
       istr >> *(*fPDFSig)[ivar];
@@ -688,28 +627,32 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( TFile& rf )
    TString pname = "PDF_";
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++){ 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){ 
       (*fPDFSig)[ivar] = (TMVA::PDF*)rf.Get( Form( "PDF_%s_S", GetInputVar( ivar ).Data() ) );
       (*fPDFBgd)[ivar] = (TMVA::PDF*)rf.Get( Form( "PDF_%s_B", GetInputVar( ivar ).Data() ) );
-   }                     
+   }
    TH1::AddDirectory(addDirStatus);
-
 }
 
 //_______________________________________________________________________
 void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
 {
    // write histograms and PDFs to file for monitoring purposes
-   fLogger << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
-  
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) { 
-      (*fHistSig)[ivar]->Write();    
+
+   log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
+   BaseDir()->cd();
+
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) { 
+      (*fHistSig)[ivar]->Write();
       (*fHistBgd)[ivar]->Write();
-      (*fHistSig_smooth)[ivar]->Write();    
-      (*fHistBgd_smooth)[ivar]->Write();
+      if ((*fHistSig_smooth)[ivar] != 0) (*fHistSig_smooth)[ivar]->Write();
+      if ((*fHistBgd_smooth)[ivar] != 0) (*fHistBgd_smooth)[ivar]->Write();
       (*fPDFSig)[ivar]->GetPDFHist()->Write();
       (*fPDFBgd)[ivar]->GetPDFHist()->Write();
-  
+
+      if ((*fPDFSig)[ivar]->GetNSmoothHist() != 0) (*fPDFSig)[ivar]->GetNSmoothHist()->Write();
+      if ((*fPDFBgd)[ivar]->GetNSmoothHist() != 0) (*fPDFBgd)[ivar]->GetNSmoothHist()->Write();
+
       // add special plots to check the smoothing in the GetVal method
       Float_t xmin=((*fPDFSig)[ivar]->GetPDFHist()->GetXaxis())->GetXmin();
       Float_t xmax=((*fPDFSig)[ivar]->GetPDFHist()->GetXaxis())->GetXmax();
@@ -721,9 +664,25 @@ void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
          mm->SetBinContent(bin+1 ,(*fPDFSig)[ivar]->GetVal(x));
       }
       mm->Write();
+
+      // ---------- create cloned low-binned histogram for comparison in macros (mainly necessary for KDE)
+      TH1* h[2] = { (*fHistSig)[ivar], (*fHistBgd)[ivar] };
+      for (UInt_t i=0; i<2; i++) {
+         TH1* hclone = (TH1F*)h[i]->Clone( TString(h[i]->GetName()) + "_nice" );
+         hclone->SetName ( TString(h[i]->GetName()) + "_nice" );
+         hclone->SetTitle( TString(h[i]->GetTitle()) + "" );
+         if (hclone->GetNbinsX() > 100) {
+            Int_t resFactor = 5;
+            hclone->Rebin( resFactor );
+            hclone->Scale( 1.0/resFactor );
+         }
+         hclone->Write();
+      }
+      // ----------
    }
 }
 
+//_______________________________________________________________________
 void TMVA::MethodLikelihood::MakeClassSpecificHeader( std::ostream& fout, const TString& ) const
 {
    // write specific header of the classifier (mostly include files)
@@ -739,7 +698,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    Int_t * nbin = new Int_t[GetNvar()];
 
    Int_t nbinMax=-1;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       nbin[ivar]=(*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX();
       if (nbin[ivar] > nbinMax) nbinMax=nbin[ivar];
    }
@@ -749,7 +708,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << "   static float fRefB[][" << nbinMax << "]; "
         << "// backgr reference vector [nvars][max_nbins]" << endl << endl;
    fout << "// if a variable has its PDF encoded as a spline0 --> treat it like an Integer valued one" <<endl;
-   fout << "   bool    fHasDiscretPDF[" << GetNvar() <<"]; "<< endl;
+   fout << "   Bool_t    fHasDiscretPDF[" << GetNvar() <<"]; "<< endl;
    fout << "   int    fNbin[" << GetNvar() << "]; "
         << "// number of bins (discrete variables may have less bins)" << endl;
    fout << "   double TransformLikelihoodOutput( double, double ) const;" << endl;
@@ -758,25 +717,24 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << "inline void " << className << "::Initialize() " << endl;
    fout << "{" << endl;
    fout << "   fEpsilon = " << fEpsilon << ";" << endl;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       fout << "   fNbin[" << ivar << "] = " << (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() << ";" << endl;
       // sanity check (for previous code lines)
       if ((((*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() != nbin[ivar] ||
             (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX() != nbin[ivar]) 
-           //           && Data().GetVarType(ivar) != 'I' 
-          ) ||
+           ) ||
           (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() != (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX()) {
-         fLogger << kFATAL << "<MakeClassSpecific> Mismatch in binning of variable " 
-                 << "\"" << GetOriginalVarName(ivar) << "\" of type: \'" << Data().GetVarType(ivar)
-                 << "\' : " 
-                 << "nxS = " << (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() << ", "
-                 << "nxB = " << (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX() 
-                 << " while we expect " << nbin[ivar]
-                 << Endl;
+         log() << kFATAL << "<MakeClassSpecific> Mismatch in binning of variable " 
+               << "\"" << GetOriginalVarName(ivar) << "\" of type: \'" << DataInfo().GetVariableInfo(ivar).GetVarType()
+               << "\' : " 
+               << "nxS = " << (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() << ", "
+               << "nxB = " << (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX() 
+               << " while we expect " << nbin[ivar]
+               << Endl;
       }
    }
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++){ 
-      if (fInterpolateMethod[ivar] == TMVA::PDF::kSpline0) 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){ 
+      if ((*fPDFSig)[ivar]->GetInterpolMethod() == TMVA::PDF::kSpline0) 
          fout << "   fHasDiscretPDF[" << ivar <<"] = true;  " << endl;
       else
          fout << "   fHasDiscretPDF[" << ivar <<"] = false; " << endl;
@@ -788,13 +746,9 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
         << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
    fout << "{" << endl;
    fout << "   double ps(1), pb(1);" << endl;
-   if (GetVariableTransform() == Types::kNone) {
-      fout << "   const std::vector<double>& inputValuesSig = inputValues;" << endl;
-      fout << "   const std::vector<double>& inputValuesBgd = inputValues;" << endl;      
-   } 
-   else {
-      fout << "   std::vector<double> inputValuesSig = inputValues;" << endl;
-      fout << "   std::vector<double> inputValuesBgd = inputValues;" << endl;
+   fout << "   std::vector<double> inputValuesSig = inputValues;" << endl;
+   fout << "   std::vector<double> inputValuesBgd = inputValues;" << endl;
+   if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
       fout << "   Transform(inputValuesSig,0);" << endl;
       fout << "   Transform(inputValuesBgd,1);" << endl;
    }
@@ -862,15 +816,17 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << "inline double " << className << "::TransformLikelihoodOutput( double ps, double pb ) const" << endl;
    fout << "{" << endl;
    fout << "   // returns transformed or non-transformed output" << endl;
-   fout << "   if (ps + pb < fEpsilon) pb = fEpsilon;" << endl;
+   fout << "   if (ps < fEpsilon) ps = fEpsilon;" << endl;
+   fout << "   if (pb < fEpsilon) pb = fEpsilon;" << endl;
    fout << "   double r = ps/(ps + pb);" << endl;
-   fout << endl;
+   fout << "   if (r >= 1.0) r = 1. - 1.e-15;" << endl;
+   fout << endl;   
    fout << "   if (" << (fTransformLikelihoodOutput ? "true" : "false") << ") {" << endl;
    fout << "      // inverse Fermi function" << endl;
    fout << endl;
    fout << "      // sanity check" << endl;
    fout << "      if      (r <= 0.0) r = fEpsilon;" << endl;
-   fout << "      else if (r >= 1.0) r = 1.0 - fEpsilon;" << endl;
+   fout << "      else if (r >= 1.0) r = 1. - 1.e-15;" << endl;
    fout << endl;
    fout << "      double tau = 15.0;" << endl;
    fout << "      r = - log(1.0/r - 1.0)/tau;" << endl;
@@ -889,7 +845,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << "// signal map" << endl;
    fout << "float " << className << "::fRefS[][" << nbinMax << "] = " << endl;
    fout << "{ " << endl;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       fout << "   { ";
       for (Int_t ibin=1; ibin<=nbinMax; ibin++) {
          if (ibin-1 < nbin[ivar])
@@ -907,7 +863,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << "// background map" << endl;
    fout << "float " << className << "::fRefB[][" << nbinMax << "] = " << endl;
    fout << "{ " << endl;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       fout << "   { ";
       fout << std::setprecision(8);
       for (Int_t ibin=1; ibin<=nbinMax; ibin++) {
@@ -933,34 +889,34 @@ void TMVA::MethodLikelihood::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "The maximum-likelihood classifier models the data with probability " << Endl;
-   fLogger << "density functions (PDF) reproducing the signal and background" << Endl;
-   fLogger << "distributions of the input variables. Correlations among the " << Endl;
-   fLogger << "variables are ignored." << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "Required for good performance are decorrelated input variables" << Endl;
-   fLogger << "(PCA transformation via the option \"VarTransform=Decorrelate\"" << Endl;
-   fLogger << "may be tried). Irreducible non-linear correlations may be reduced" << Endl;
-   fLogger << "by precombining strongly correlated input variables, or by simply" << Endl;
-   fLogger << "removing one of the variables." << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "High fidelity PDF estimates are mandatory, i.e., sufficient training " << Endl;
-   fLogger << "statistics is required to populate the tails of the distributions" << Endl;
-   fLogger << "It would be a surprise if the default Spline or KDE kernel parameters" << Endl;
-   fLogger << "provide a satisfying fit to the data. The user is advised to properly" << Endl;
-   fLogger << "tune the events per bin and smooth options in the spline cases" << Endl;
-   fLogger << "individually per variable. If the KDE kernel is used, the adaptive" << Endl;
-   fLogger << "Gaussian kernel may lead to artefacts, so please always also try" << Endl;
-   fLogger << "the non-adaptive one." << Endl;
-   fLogger << "" << Endl;
-   fLogger << "All tuning parameters must be adjusted individually for each input" << Endl;
-   fLogger << "variable!" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "The maximum-likelihood classifier models the data with probability " << Endl;
+   log() << "density functions (PDF) reproducing the signal and background" << Endl;
+   log() << "distributions of the input variables. Correlations among the " << Endl;
+   log() << "variables are ignored." << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "Required for good performance are decorrelated input variables" << Endl;
+   log() << "(PCA transformation via the option \"VarTransform=Decorrelate\"" << Endl;
+   log() << "may be tried). Irreducible non-linear correlations may be reduced" << Endl;
+   log() << "by precombining strongly correlated input variables, or by simply" << Endl;
+   log() << "removing one of the variables." << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "High fidelity PDF estimates are mandatory, i.e., sufficient training " << Endl;
+   log() << "statistics is required to populate the tails of the distributions" << Endl;
+   log() << "It would be a surprise if the default Spline or KDE kernel parameters" << Endl;
+   log() << "provide a satisfying fit to the data. The user is advised to properly" << Endl;
+   log() << "tune the events per bin and smooth options in the spline cases" << Endl;
+   log() << "individually per variable. If the KDE kernel is used, the adaptive" << Endl;
+   log() << "Gaussian kernel may lead to artefacts, so please always also try" << Endl;
+   log() << "the non-adaptive one." << Endl;
+   log() << "" << Endl;
+   log() << "All tuning parameters must be adjusted individually for each input" << Endl;
+   log() << "variable!" << Endl;
 }
 

@@ -13,7 +13,8 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
+ *      Joerg Stelzer   <stelzer@cern.ch>        - DESY, Germany                  *
+ *      Peter Speckmayer <peter.speckmayer@cern.ch> - CERN, Switzerland           *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -21,7 +22,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -44,7 +44,9 @@
 #include <string>
 #include <vector>
 #include <map>
+#ifndef ROOT_TCut
 #include "TCut.h"
+#endif
 
 #ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
@@ -55,23 +57,23 @@
 #ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
 
 class TFile;
 class TTree;
-class TNtuple;
-class TTreeFormula;
 class TDirectory;
 
 namespace TMVA {
 
    class IMethod;
+   class MethodBase;
+   class DataInputHandler;
+   class DataSetInfo;
+   class VariableTransformBase;
 
    class Factory : public Configurable {
-
    public:
+
+      typedef std::vector<IMethod*> MVector;
 
       // no default  constructor
       Factory( TString theJobName, TFile* theTargetFile, TString theOption = "" );
@@ -80,85 +82,114 @@ namespace TMVA {
       virtual ~Factory();
 
       virtual const char*  GetName() const { return "Factory"; }
-      /* 
-       * Create signal and background trees from individual ascii files
-       * note that the format of the file must be the following:
-       *
-       *    myVar1/D:myVar2[2]/F:myVar3/I:myString/S
-       *    3.1415  6.24   56.14   18   UmmmYeah
-       *    4.31534 7.4555 9.1466  8    OhWell
-       *    ...
-       * The first line says to make a tree with 4 branches.
-       * The 1st branch will be called "myVar1"   and will contain a Double_t.
-       * The 2nd branch will be called "myVar2"   and will contain a TArrayF.
-       * The 3rd branch will be called "myVar3"   and will contain an Int_t.
-       * The 4th branch will be called "myString" and will contain a TObjString. 
-       */
-      Bool_t SetInputTrees( TString signalFileName, TString backgroundFileName, 
-                            Double_t signalWeight=1.0, Double_t backgroundWeight=1.0 );
-      Bool_t SetInputTrees( TTree* inputTree, TCut SigCut, TCut BgCut = "" );
 
       // add events to training and testing trees
-      void AddSignalTrainingEvent    ( std::vector<Double_t>& event, Double_t weight = 1.0 );
-      void AddBackgroundTrainingEvent( std::vector<Double_t>& event, Double_t weight = 1.0 );
-      void AddSignalTestEvent        ( std::vector<Double_t>& event, Double_t weight = 1.0 );
-      void AddBackgroundTestEvent    ( std::vector<Double_t>& event, Double_t weight = 1.0 );
+      void AddSignalTrainingEvent    ( const std::vector<Double_t>& event, Double_t weight = 1.0 );
+      void AddBackgroundTrainingEvent( const std::vector<Double_t>& event, Double_t weight = 1.0 );
+      void AddSignalTestEvent        ( const std::vector<Double_t>& event, Double_t weight = 1.0 );
+      void AddBackgroundTestEvent    ( const std::vector<Double_t>& event, Double_t weight = 1.0 );
+      void AddTrainingEvent( const TString& className, const std::vector<Double_t>& event, Double_t weight );
+      void AddTestEvent    ( const TString& className, const std::vector<Double_t>& event, Double_t weight );
+      void AddEvent        ( const TString& className, Types::ETreeType tt, const std::vector<Double_t>& event, Double_t weight );
+      Bool_t UserAssignEvents(UInt_t clIndex);
+      TTree* CreateEventAssignTrees( const TString& name );
 
-      // Set input trees at once
-      Bool_t SetInputTrees( TTree* signal, TTree* background, 
-                            Double_t signalWeight=1.0, Double_t backgroundWeight=1.0 );
+      DataSetInfo& AddDataSet( DataSetInfo& );
+      DataSetInfo& AddDataSet( const TString&  );
 
-      // set signal tree
-      void AddSignalTree( TTree* signal, Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
+      // special case: signal/background
+
+      // Data input related
+      void SetInputTrees( const TString& signalFileName, const TString& backgroundFileName, 
+                          Double_t signalWeight=1.0, Double_t backgroundWeight=1.0 );
+      void SetInputTrees( TTree* inputTree, const TCut& SigCut, const TCut& BgCut );
+      // Set input trees  at once
+      void SetInputTrees( TTree* signal, TTree* background, 
+                          Double_t signalWeight=1.0, Double_t backgroundWeight=1.0) ;
+
+      void AddSignalTree( TTree* signal,    Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
+      void AddSignalTree( TString datFileS, Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
       void AddSignalTree( TTree* signal, Double_t weight, const TString& treetype );      
-      // ... depreciated, kept for backwards compatibility
-      void SetSignalTree( TTree* signal, Double_t weight=1.0 ); 
 
-      // set background tree
+      // ... depreciated, kept for backwards compatibility
+      void SetSignalTree( TTree* signal, Double_t weight=1.0);
+
       void AddBackgroundTree( TTree* background, Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
+      void AddBackgroundTree( TString datFileB,  Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
       void AddBackgroundTree( TTree* background, Double_t weight, const TString & treetype );
+
       // ... depreciated, kept for backwards compatibility
       void SetBackgroundTree( TTree* background, Double_t weight=1.0 );
 
+      void SetSignalWeightExpression( const TString& variable );
+      void SetBackgroundWeightExpression( const TString& variable );
+
+      // special case: regression
+      void AddRegressionTree( TTree* tree, Double_t weight = 1.0,  
+                              Types::ETreeType treetype = Types::kMaxTreeType ) { 
+         AddTree( tree, "Regression", weight, "", treetype ); 
+      }
+
+      // general
+
+      // Data input related
+      void SetTree( TTree* tree, const TString& className, Double_t weight ); // depreciated
+      void AddTree( TTree* tree, const TString& className, Double_t weight=1.0,
+                    const TCut& cut = "",
+                    Types::ETreeType tt = Types::kMaxTreeType );
+      void AddTree( TTree* tree, const TString& className, Double_t weight, const TCut& cut, const TString& treeType );
+
       // set input variable
-      void SetInputVariables( std::vector<TString>* theVariables );
-      void AddVariable( const TString& expression, char type='F',
-                        Double_t min = 0, Double_t max = 0 ) { 
-         Data().AddVariable( expression, min, max, type ); 
+      void SetInputVariables  ( std::vector<TString>* theVariables ); // depreciated
+      void AddVariable        ( const TString& expression, const TString& title, const TString& unit,
+                                char type='F', Double_t min = 0, Double_t max = 0 );
+      void AddVariable        ( const TString& expression, char type='F',
+                                Double_t min = 0, Double_t max = 0 );
+      void AddTarget          ( const TString& expression, const TString& title = "", const TString& unit = "",
+                                Double_t min = 0, Double_t max = 0 );
+      void AddRegressionTarget( const TString& expression, const TString& title = "", const TString& unit = "",
+                                Double_t min = 0, Double_t max = 0 )
+      {
+         AddTarget( expression, title, unit, min, max );
       }
-      void SetWeightExpression( const TString& variable )  { 
-         SetSignalWeightExpression    ( variable );
-         SetBackgroundWeightExpression( variable );
-      }
-      void SetSignalWeightExpression( const TString& variable )  { 
-         Data().SetSignalWeightExpression(variable);
-      }
-      void SetBackgroundWeightExpression( const TString& variable ) {
-         Data().SetBackgroundWeightExpression(variable);
-      }
+      void AddSpectator         ( const TString& expression, const TString& title = "", const TString& unit = "",
+                                Double_t min = 0, Double_t max = 0 );
+
+      // set weight for class
+      void SetWeightExpression( const TString& variable, const TString& className = "" );
+
+      // set cut for class
+      void SetCut( const TString& cut, const TString& className = "" );
+      void SetCut( const TCut& cut, const TString& className = "" );
+      void AddCut( const TString& cut, const TString& className = "" );
+      void AddCut( const TCut& cut, const TString& className = "" );
 
 
-      // prepare input tree for training
-      void PrepareTrainingAndTestTree( const TCut& cut, 
-                                       Int_t Ntrain, Int_t Ntest = -1 );
-
-      void PrepareTrainingAndTestTree( const TCut& cut,
-                                       Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest, 
-                                       const TString& otherOpt );
-
+      //  prepare input tree for training
       void PrepareTrainingAndTestTree( const TCut& cut, const TString& splitOpt );
-      void PrepareTrainingAndTestTree( const TCut& sigcut, const TCut& bkgcut, const TString& splitOpt );
+      void PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, const TString& splitOpt );
 
-      Bool_t BookMethod( TString theMethodName, TString methodTitle, TString theOption = "" );
-      Bool_t BookMethod( Types::EMVA theMethod,  TString methodTitle, TString theOption = "" );
-      Bool_t BookMethod( TMVA::Types::EMVA theMethod, TString methodTitle, TString methodOption,
-                         TMVA::Types::EMVA theCommittee, TString committeeOption = "" ); 
+      // ... deprecated, kept for backwards compatibility 
+      void PrepareTrainingAndTestTree( const TCut& cut, Int_t Ntrain, Int_t Ntest = -1 );
+
+      void PrepareTrainingAndTestTree( const TCut& cut, Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest, 
+                                       const TString& otherOpt="SplitMode=Random:!V" );
+
+      MethodBase* BookMethod( TString theMethodName, TString methodTitle, TString theOption = "" );
+      MethodBase* BookMethod( Types::EMVA theMethod,  TString methodTitle, TString theOption = "" );
+      MethodBase* BookMethod( TMVA::Types::EMVA /*theMethod*/, 
+                              TString /*methodTitle*/, 
+                              TString /*methodOption*/, 
+                              TMVA::Types::EMVA /*theCommittee*/, 
+                              TString /*committeeOption = ""*/ ) { return 0; } 
 
       // training for all booked methods
-      void TrainAllMethods( void );
+      void TrainAllMethods                 ( TString what = "Classification" );
+      void TrainAllMethodsForClassification( void ) { TrainAllMethods( "Classification" ); }
+      void TrainAllMethodsForRegression    ( void ) { TrainAllMethods( "Regression"     ); }
 
       // testing
-      void TestAllMethods( void );
+      void TestAllMethods();
 
       // performance evaluation
       void EvaluateAllMethods( void );
@@ -171,7 +202,7 @@ namespace TMVA {
       IMethod* GetMethod( const TString& title ) const;
 
       Bool_t Verbose( void ) const { return fVerbose; }
-      void SetVerbose( Bool_t v=kTRUE ) { fVerbose = v; Data().SetVerbose(Verbose()); }
+      void SetVerbose( Bool_t v=kTRUE );
 
       // make ROOT-independent C++ class for classifier response 
       // (classifier-specific implementation)
@@ -184,50 +215,50 @@ namespace TMVA {
       // If no classifier name is given, help messages for all booked 
       // classifiers are printed
       void PrintHelpMessage( const TString& methodTitle = "" ) const;
-    
-   protected:
 
-      //      TString GetDefaultName() const { return TString("default"); } CHGFT
-      //      void CheckMethodTitle( TString & title ) { if (title.Length()==0) title=GetDefaultName(); } CHGFT
+      static TDirectory* RootBaseDir() { return (TDirectory*)fgTargetFile; }
 
-      DataSet& Data() const { return *fDataSet; }
-      DataSet& Data()       { return *fDataSet; }
-    
    private:
 
       // the beautiful greeting message
       void Greetings();
 
-      // cd to local directory
-      DataSet*         fDataSet;            // the dataset
-      TFile*           fTargetFile;         // ROOT output file
-      TString          fOptions;            // option string given by construction (presently only "V")
-      Bool_t           fVerbose;            // verbose mode
+      void WriteDataInformation();
 
-      std::vector<TTreeFormula*> fInputVarFormulas; // local forulas of the same
-      std::vector<IMethod*>      fMethods;          // all MVA methods
-      TString                    fJobName;          // jobname, used as extension in weight file names
+      DataInputHandler&        DataInput() { return *fDataInputHandler; }
+      DataSetInfo&             DefaultDataSetInfo();
+      void                     SetInputTreesFromEventAssignTrees();
+
+
+   private:
+
+      // data members
+
+      static TFile*                             fgTargetFile;     //! ROOT output file
+
+      DataInputHandler*                         fDataInputHandler;
+
+      std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;     //! list of transformations on default DataSet
+
+      // cd to local directory
+      TString                                   fOptions;         //! option string given by construction (presently only "V")
+      TString                                   fTransformations; //! List of transformations to test
+      Bool_t                                    fVerbose;         //! verbose mode
+
+      MVector                                   fMethods;         //! all MVA methods
+      TString                                   fJobName;         //! jobname, used as extension in weight file names
 
       // flag determining the way training and test data are assigned to Factory
-      enum DataAssignType { kUndefined = 0, kAssignTrees, kAssignEvents };
-      DataAssignType             fDataAssignType;         // flags for data assigning
-      Bool_t                     fSuspendDATVerification; // do not temporarily verify
+      enum DataAssignType { kUndefined = 0, 
+                            kAssignTrees,
+                            kAssignEvents };
+      DataAssignType                            fDataAssignType;  //! flags for data assigning
+      std::vector<TTree*>                       fTrainAssignTree; //! for each class: tmp tree if user wants to assign the events directly
+      std::vector<TTree*>                       fTestAssignTree;  //! for each class: tmp tree if user wants to assign the events directly
 
-      // AssignType can only be event-wise OR tree-wise
-      Bool_t VerifyDataAssignType  ( DataAssignType ); 
-      void   CreateEventAssignTrees( TTree*&, const TString& name  );
-      void   SetInputTreesFromEventAssignTrees();
-      TTree*                     fTrainSigAssignTree; // tree for training events
-      TTree*                     fTrainBkgAssignTree; // tree for training events
-      TTree*                     fTestSigAssignTree;  // tree for test events
-      TTree*                     fTestBkgAssignTree;  // tree for test events
-      Int_t                      fATreeType;          // type of event (sig = 1, background = 0)
-      Float_t                    fATreeWeight;        // weight of the event
-      Float_t*                   fATreeEvent;         // event variables
-
-      // local directory for each MVA in output target, used to store 
-      // specific monitoring histograms (e.g., reference distributions of likelihood method)
-      TDirectory* fLocalTDir;
+      Int_t                                     fATreeType;          // type of event (=classIndex)
+      Float_t                                   fATreeWeight;        // weight of the event
+      Float_t*                                  fATreeEvent;         // event variables
 
    protected:
 

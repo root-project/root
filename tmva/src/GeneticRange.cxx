@@ -29,13 +29,14 @@
 // Range definition for genetic algorithm                               
 //_______________________________________________________________________
 
+#include "TRandom3.h"
+
 #include "TMVA/GeneticRange.h"
-#include "Riostream.h"
 
 ClassImp(TMVA::GeneticRange)
 
 //_______________________________________________________________________
-TMVA::GeneticRange::GeneticRange( TRandom *rnd, Interval *interval )
+TMVA::GeneticRange::GeneticRange( TRandom3*rnd, Interval *interval )
 {
    // defines the "f" (from) and "t" (to) of the coefficient
    // and takes a randomgenerator
@@ -64,10 +65,10 @@ Double_t TMVA::GeneticRange::Random( Bool_t near, Double_t value, Double_t sprea
 {
    // creates a new random value for the coefficient
    // Parameters:
-   //        bool near     : takes a random value near the current value
+   //        Bool_t near     : takes a random value near the current value
    //        double value  : this is the current value
    //        double spread : the sigma of the gaussian which is taken to calculate the new value
-   //        bool mirror   : if the new value would be outside of the range, mirror = false
+   //        Bool_t mirror   : if the new value would be outside of the range, mirror = false
    //                        maps the value between the constraints by periodic boundary conditions.
    //                        With mirror = true, the value gets "reflected" on the boundaries.
    //

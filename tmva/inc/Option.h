@@ -37,6 +37,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
 #include <sstream>
 #include <vector>
 
@@ -63,10 +64,7 @@ namespace TMVA {
 
       friend class Configurable;
 
-      OptionBase( const TString& name, const TString& desc ) 
-         : TObject(), fName(name), fNameAllLower(name), fDescription(desc), fIsSet(kFALSE), fLogger("OptionBase") {
-         fNameAllLower.ToLower();
-      }
+      OptionBase( const TString& name, const TString& desc );
       virtual ~OptionBase() {}
          
       virtual const char* GetName() const { return fNameAllLower.Data(); }
@@ -147,7 +145,7 @@ namespace TMVA {
 
       TString GetValue( Int_t i ) const {
          std::stringstream str;
-         str << Value(i);
+         str << std::scientific << Value(i);
          return str.str();
       }
       const T& Value( Int_t i ) const { return (*fVRefPtr)[i]; }
@@ -182,8 +180,8 @@ namespace TMVA {
 
    template<class T>
    inline TString TMVA::Option<T>::GetValue( Int_t ) const {
-      std::stringstream str;
-      str << this->Value();
+      std::stringstream str;      
+      str << std::scientific << this->Value();
       return str.str();
    }
 

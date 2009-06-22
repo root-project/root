@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Krzysztof Danielowski, Kamil Kraszewski, Maciej Kruk
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -42,9 +42,6 @@
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
 
 class TRandom;
 
@@ -52,6 +49,7 @@ namespace TMVA {
 
    class IFitterTarget;
    class Interval;
+   class MsgLogger;
 
    class SimulatedAnnealing {
 
@@ -115,7 +113,8 @@ namespace TMVA {
       Bool_t                        fUseDefaultScale;        // if TRUE, SA calculates its own TemperatureScale
       Bool_t                        fUseDefaultTemperature;  // if TRUE, SA calculates its own InitialTemperature (MinTemperautre)
 
-      mutable MsgLogger             fLogger;                 // message logger
+      mutable MsgLogger*            fLogger;   // message logger
+      MsgLogger& log() const { return *fLogger; }
 
       Double_t fProgress;
 

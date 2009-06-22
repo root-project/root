@@ -6,44 +6,33 @@
 // input: - Input file (result from TMVA),
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
-void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal, 
-                Bool_t useTMVAStyle = kTRUE )
+void variables( TString fin = "TMVA.root", TString dirName = "InputVariables_Id", TString title = "TMVA Input Variables",
+                Bool_t isRegression = kFALSE, Bool_t useTMVAStyle = kTRUE )
 {
-
-   const TString directories[4] = { "InputVariables_NoTransform",
-                                    "InputVariables_DecorrTransform",
-                                    "InputVariables_PCATransform",
-                                    "InputVariables_GaussDecorr"
-   };
-
-   const TString titles[4] = { "TMVA Input Variable",
-                               "Decorrelated TMVA Input Variables",
-                               "Principal Component Transformed TMVA Input Variables",
-                               "Gaussianized and Decorrelated TMVA Input Variable"
-   };
-
-   const TString outfname[4] = { "variables",
-                                 "variables_decorr",
-                                 "variables_pca",
-                                 "variables_gaussdecorr"
-   };
-
+   TString outfname = dirName;
+   outfname.ToLower(); outfname.ReplaceAll( "input", ""  );
 
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
 
+   // obtain shorter histogram title 
+   TString htitle = title; 
+   htitle.ReplaceAll("variables ","variable");
+   htitle.ReplaceAll("and target(s)","");
+   htitle.ReplaceAll("(training sample)","");
+
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );
 
-   TDirectory* dir = (TDirectory*)file->Get( directories[type] );
+   TDirectory* dir = (TDirectory*)file->Get( dirName );
    if (dir==0) {
-      cout << "No information about " << titles[type] << " available in " << fin << endl;
+      cout << "No information about " << title << " available in directory " << dirName << " of file " << fin << endl;
       return;
    }
    dir->cd();
 
    // how many plots are in the directory?
-   Int_t noPlots = ((dir->GetListOfKeys())->GetEntries()) / 2;
+   Int_t noPlots = TMVAGlob::GetNumberOfInputVariables( dir );
 
    // define Canvas layout here!
    // default setting
@@ -70,14 +59,15 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
    Int_t countPad    = 0;
 
    // loop over all objects in directory
-   TIter next(dir->GetListOfKeys());
-   TKey   * key  = 0;
    TCanvas* canv = 0;
+   TKey*    key  = 0;
    Bool_t   createNewFig = kFALSE;
+   TIter next(dir->GetListOfKeys());
    while ((key = (TKey*)next())) {
       if (key->GetCycle() != 1) continue;
 
-      if(! TString(key->GetName()).Contains("__S")) continue;
+      if (!TString(key->GetName()).Contains("__Signal") && 
+          !(isRegression && TString(key->GetName()).Contains("__Regression"))) continue;
 
       // make sure, that we only look at histograms
       TClass *cl = gROOT->GetClass(key->GetClassName());
@@ -88,7 +78,7 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
       // create new canvas
       if (countPad%noPadPerCanv==0) {
          ++countCanvas;
-         canv = new TCanvas( Form("canvas%d", countCanvas), titles[type],
+         canv = new TCanvas( Form("canvas%d", countCanvas), title,
                              countCanvas*50+50, countCanvas*20, width, height );
          canv->Divide(xPad,yPad);
          canv->Draw();
@@ -98,24 +88,29 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
       
       // find the corredponding backgrouns histo
       TString bgname = hname;
-      bgname.ReplaceAll("__S","__B");
+      bgname.ReplaceAll("__Signal","__Background");
       TH1 *bgd = (TH1*)dir->Get(bgname);
       if (bgd == NULL) {
-         cout << "ERROR!!! couldn't find backgroung histo for" << hname << endl;
+         cout << "ERROR!!! couldn't find background histo for" << hname << endl;
          exit;
       }
 
       // this is set but not stored during plot creation in MVA_Factory
-      TMVAGlob::SetSignalAndBackgroundStyle( sig, bgd );
+      TMVAGlob::SetSignalAndBackgroundStyle( sig, (isRegression ? 0 : bgd) );            
 
-      // chop off "signal"
-      TString title(sig->GetTitle());
-      title.ReplaceAll("signal","");
-      sig->SetTitle( TString( titles[type] ) + ": " + title );
+      sig->SetTitle( TString( htitle ) + ": " + sig->GetTitle() );
       TMVAGlob::SetFrameStyle( sig, 1.2 );
 
       // normalise both signal and background
-      TMVAGlob::NormalizeHists( sig, bgd );
+      if (!isRegression) TMVAGlob::NormalizeHists( sig, bgd );
+      else {
+         // change histogram title for target
+         TString nme = sig->GetName();
+         if (nme.Contains( "_target" )) {
+            TString tit = sig->GetTitle();
+            sig->SetTitle( tit.ReplaceAll("Input variable", "Regression target" ) );
+         }
+      }
 
       // finally plot and overlay
       Float_t sc = 1.1;
@@ -124,13 +119,15 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
       sig->Draw( "hist" );
       cPad->SetLeftMargin( 0.17 );
 
-      bgd->Draw("histsame");
-      sig->GetXaxis()->SetTitle( title );
-      sig->GetYaxis()->SetTitleOffset( 1.80 );
-      sig->GetYaxis()->SetTitle("Normalised");
+      sig->GetYaxis()->SetTitleOffset( 1.70 );
+      if (!isRegression) {
+         bgd->Draw("histsame");
+         TString ytit = TString("(1/N) ") + sig->GetYaxis()->GetTitle();
+         sig->GetYaxis()->SetTitle( ytit ); // histograms are normalised
+      }
 
       // Draw legend
-      if (countPad == 1) {
+      if (countPad == 1 && !isRegression) {
          TLegend *legend= new TLegend( cPad->GetLeftMargin(), 
                                        1-cPad->GetTopMargin()-.15, 
                                        cPad->GetLeftMargin()+.4, 
@@ -138,9 +135,9 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
          legend->SetFillStyle(1);
          legend->AddEntry(sig,"Signal","F");
          legend->AddEntry(bgd,"Background","F");
-         legend->Draw("same");
          legend->SetBorderSize(1);
          legend->SetMargin( 0.3 );
+         legend->Draw("same");
       } 
 
       // redraw axes
@@ -150,9 +147,17 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
       Int_t    nbin = sig->GetNbinsX();
       Double_t dxu  = sig->GetBinWidth(0);
       Double_t dxo  = sig->GetBinWidth(nbin+1);
-      TString uoflow = Form( "U/O-flow (S,B): (%.1f, %.1f)%% / (%.1f, %.1f)%%", 
-                             sig->GetBinContent(0)*dxu*100, bgd->GetBinContent(0)*dxu*100,
-                             sig->GetBinContent(nbin+1)*dxo*100, bgd->GetBinContent(nbin+1)*dxo*100 );
+      TString uoflow = "";
+      if (isRegression) {
+         uoflow = Form( "U/O-flow: %.1f%% / %.1f%%", 
+                        sig->GetBinContent(0)*dxu*100, sig->GetBinContent(nbin+1)*dxo*100 );
+      }
+      else {
+         uoflow = Form( "U/O-flow (S,B): (%.1f, %.1f)%% / (%.1f, %.1f)%%", 
+                        sig->GetBinContent(0)*dxu*100, bgd->GetBinContent(0)*dxu*100,
+                        sig->GetBinContent(nbin+1)*dxo*100, bgd->GetBinContent(nbin+1)*dxo*100 );
+      }
+  
       TText* t = new TText( 0.98, 0.14, uoflow );
       t->SetNDC();
       t->SetTextSize( 0.040 );
@@ -161,7 +166,7 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
 
       // save canvas to file
       if (countPad%noPadPerCanv==0) {
-         TString fname = Form( "plots/%s_c%i", outfname[type].Data(), countCanvas );
+         TString fname = Form( "plots/%s_c%i", outfname.Data(), countCanvas );
          TMVAGlob::plot_logo();
          TMVAGlob::imgconv( canv, fname );
          createNewFig = kFALSE;
@@ -172,7 +177,7 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
    }
    
    if (createNewFig) {
-      TString fname = Form( "plots/%s_c%i", outfname[type].Data(), countCanvas );
+      TString fname = Form( "plots/%s_c%i", outfname.Data(), countCanvas );
       TMVAGlob::plot_logo();
       TMVAGlob::imgconv( canv, fname );
       createNewFig = kFALSE;

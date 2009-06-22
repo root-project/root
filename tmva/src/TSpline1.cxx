@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -20,7 +19,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -32,14 +30,14 @@
 // Linear interpolation of TGraph
 //_______________________________________________________________________
 
-#include "TMVA/TSpline1.h"
-#include "Riostream.h"
 #include "TMath.h"
+
+#include "TMVA/TSpline1.h"
 
 ClassImp(TMVA::TSpline1)
 
 //_______________________________________________________________________
-TMVA::TSpline1::TSpline1( TString title, TGraph* theGraph )
+TMVA::TSpline1::TSpline1( const TString& title, TGraph* theGraph )
    : fGraph( theGraph )
 {
    // constructor from TGraph
@@ -51,7 +49,7 @@ TMVA::TSpline1::TSpline1( TString title, TGraph* theGraph )
 TMVA::TSpline1::~TSpline1( void )
 {
    // destructor
-   //if (NULL != fGraph) delete fGraph; // we don't own this graph
+   if (fGraph) delete fGraph; // ROOT's spline classes also own the TGraph
 }
 
 //_______________________________________________________________________

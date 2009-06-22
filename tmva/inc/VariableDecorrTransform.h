@@ -30,11 +30,15 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// Decorrelation transformation of input variables                      //
+// VariableDecorrTransform                                              //
+//                                                                      //
+// Linear interpolation class                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TMatrixD.h"
+#ifndef ROOT_TMatrixDfwd
+#include "TMatrixDfwd.h"
+#endif
 
 #ifndef ROOT_TMVA_VariableTransformBase
 #include "TMVA/VariableTransformBase.h"
@@ -46,29 +50,37 @@ namespace TMVA {
 
    public:
   
-      VariableDecorrTransform( std::vector<TMVA::VariableInfo>& );
+      VariableDecorrTransform( DataSetInfo& dsi );
       virtual ~VariableDecorrTransform( void );
 
-      void   ApplyTransformation( Types::ESBType type = Types::kMaxSBType ) const;
-      Bool_t PrepareTransformation( TTree* inputTree );
+      void   Initialize();
+      Bool_t PrepareTransformation( const std::vector<Event*>& );
+
+      //      virtual const Event* Transform(const Event* const, Types::ESBType type = Types::kMaxSBType) const;
+      virtual const Event* Transform(const Event* const, Int_t cls ) const;
+      virtual const Event* InverseTransform(const Event* const, Int_t cls ) const;
 
       void WriteTransformationToStream ( std::ostream& ) const;
       void ReadTransformationFromStream( std::istream& );
 
+      virtual void AttachXMLTo(void* parent);
+      virtual void ReadFromXML( void* trfnode );
+
       virtual void PrintTransformation( ostream & o );
 
-      // provides string vector describing explicit transformation
-      std::vector<TString>* GetTransformationStrings( Types::ESBType type ) const;
-
       // writer of function code
-      virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part );
+      virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls );
+
+      // provides string vector giving explicit transformation
+      std::vector<TString>* GetTransformationStrings( Int_t cls ) const;
 
    private:
 
-      TMatrixD* fDecorrMatrix[2];     //! Decorrelation matrix [signal/background]
+      //      mutable Event*          fTransformedEvent;   //! local event copy
+      std::vector<TMatrixD*>  fDecorrMatrices;     //! Decorrelation matrix [class0/class1/.../all classes]
 
-      void GetSQRMats( TTree* tr );
-      void GetCovarianceMatrix( TTree* tr, Bool_t isSignal, TMatrixDBase* mat );
+      void CalcSQRMats( const std::vector<Event*>&, Int_t maxCls );
+      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls );
 
       ClassDef(VariableDecorrTransform,0) // Variable transformation: decorrelation
    };
@@ -76,5 +88,4 @@ namespace TMVA {
 } // namespace TMVA
 
 #endif 
-
 

@@ -24,10 +24,7 @@
 
 //_______________________________________________________________________
 //                                                                      
-// IMetric
-//                                                                      
-// Interface for a metric, depending on the implementation the meaning
-// of distance in space changes.
+// interface for a metric
 //
 //_______________________________________________________________________
 

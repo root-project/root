@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 
 #include "tmvaglob.C"
 
@@ -22,6 +23,8 @@
 #include "TGNumberEntry.h"
 
 #include "TMVA/DecisionTree.h"
+#include "TMVA/Tools.h"
+#include "TXMLEngine.h"
 
 // Uncomment this only if the link problem is solved. The include statement tends
 // to use the ROOT classes rather than the local TMVA release
@@ -46,7 +49,7 @@ class StatDialogBDT {
 
  public:
 
-   StatDialogBDT( const TGWindow* p, TString wfile = "weights/TMVAnalysis_BDT.weights.txt", 
+   StatDialogBDT( const TGWindow* p, TString wfile = "weights/TMVAClassification_BDT.weights.txt", 
                   TString methName = "BDT", Int_t itree = 0 );
    virtual ~StatDialogBDT() {
       fThis = 0;
@@ -180,33 +183,48 @@ void StatDialogBDT::UpdateCanvases()
 
 void StatDialogBDT::GetNtrees()
 {
-   ifstream fin( fWfile );
-   if (!fin.good( )) { // file not found --> Error
-      cout << "*** ERROR: Weight file: " << fWfile << " does not exist" << endl;
-      return;
-   }
+   if(!fWfile.EndsWith(".xml") ){
+      ifstream fin( fWfile );
+      if (!fin.good( )) { // file not found --> Error
+         cout << "*** ERROR: Weight file: " << fWfile << " does not exist" << endl;
+         return;
+      }
    
-   TString dummy = "";
-   
-   // read total number of trees, and check whether requested tree is in range
-   Int_t nc = 0;
-   while (!dummy.Contains("NTrees")) { 
+      TString dummy = "";
+      
+      // read total number of trees, and check whether requested tree is in range
+      Int_t nc = 0;
+      while (!dummy.Contains("NTrees")) { 
+         fin >> dummy; 
+         nc++; 
+         if (nc > 200) {
+            cout << endl;
+            cout << "*** Huge problem: could not locate term \"NTrees\" in BDT weight file: " 
+                 << fWfile << endl;
+            cout << "==> panic abort (please contact the TMVA authors)" << endl;
+            cout << endl;
+            exit(1);
+         }
+      }
       fin >> dummy; 
-      nc++; 
-      if (nc > 200) {
-         cout << endl;
-         cout << "*** Huge problem: could not locate term \"NTrees\" in BDT weight file: " 
-              << fWfile << endl;
-         cout << "==> panic abort (please contact the TMVA authors)" << endl;
-         cout << endl;
-         exit(1);
+      fNtrees = dummy.ReplaceAll("\"","").Atoi();
+      fin.close();
+   }
+   else{
+      void* doc = TMVA::gTools().xmlengine().ParseFile(fWfile);
+      void* rootnode = TMVA::gTools().xmlengine().DocGetRootElement(doc);
+      void* ch = TMVA::gTools().xmlengine().GetChild(rootnode);
+      while(ch){
+         TString nodeName = TString( TMVA::gTools().xmlengine().GetNodeName(ch) );
+         if(nodeName=="Weights") {
+            TMVA::gTools().ReadAttr( ch, "NTrees", fNtrees );
+            break;
+         }
+         ch = TMVA::gTools().xmlengine().GetNext(ch);
       }
    }
-   fin >> dummy; 
-   fNtrees = dummy.ReplaceAll("\"","").Atoi();
    cout << "--- Found " << fNtrees << " decision trees in weight file" << endl;
-   
-   fin.close();
+
 }
 
 //_______________________________________________________________________
@@ -264,46 +282,75 @@ void StatDialogBDT::DrawNode( TMVA::DecisionTreeNode *n,
 TMVA::DecisionTree* StatDialogBDT::ReadTree( TString* &vars, Int_t itree )
 {
    cout << "--- Reading Tree " << itree << " from weight file: " << fWfile << endl;
-   ifstream fin( fWfile );
-   if (!fin.good( )) { // file not found --> Error
-      cout << "*** ERROR: Weight file: " << fWfile << " does not exist" << endl;
-      return 0;
-   }
-   
-   TString dummy = "";
-   
-   if (itree >= fNtrees) {
-      cout << "*** ERROR: requested decision tree: " << itree 
-           << ", but number of trained trees only: " << fNtrees << endl;
-      return 0;
-   }
-
-   // file header with name
-   while (!dummy.Contains("#VAR")) fin >> dummy;
-   fin >> dummy >> dummy >> dummy; // the rest of header line
-   
-   // number of variables
-   Int_t nVars;
-   fin >> dummy >> nVars;
-
-   // variable mins and maxes
-   vars = new TString[nVars];
-   for (Int_t i = 0; i < nVars; i++) fin >> vars[i] >> dummy >> dummy >> dummy;
-
-   char buffer[20];
-   char line[256];
-   sprintf(buffer,"Tree %d",itree);
-
-   while (!dummy.Contains(buffer)) {
-      fin.getline(line,256);
-      dummy = TString(line);
-   }
-   
    TMVA::DecisionTree *d = new TMVA::DecisionTree();
-   d->Read(fin);
+   if(!fWfile.EndsWith(".xml") ){
+      ifstream fin( fWfile );
+      if (!fin.good( )) { // file not found --> Error
+         cout << "*** ERROR: Weight file: " << fWfile << " does not exist" << endl;
+         return 0;
+      }
+      
+      TString dummy = "";
+      
+      if (itree >= fNtrees) {
+         cout << "*** ERROR: requested decision tree: " << itree 
+              << ", but number of trained trees only: " << fNtrees << endl;
+         return 0;
+      }
+      
+      // file header with name
+      while (!dummy.Contains("#VAR")) fin >> dummy;
+      fin >> dummy >> dummy >> dummy; // the rest of header line
+      
+      // number of variables
+      Int_t nVars;
+      fin >> dummy >> nVars;
+      
+      // variable mins and maxes
+      vars = new TString[nVars];
+      for (Int_t i = 0; i < nVars; i++) fin >> vars[i] >> dummy >> dummy >> dummy >> dummy;
+      
+      char buffer[20];
+      char line[256];
+      sprintf(buffer,"Tree %d",itree);
 
-   fin.close();
-   
+      while (!dummy.Contains(buffer)) {
+         fin.getline(line,256);
+         dummy = TString(line);
+      }
+
+      d->Read(fin);
+      
+      fin.close();
+   }
+   else{
+     if (itree >= fNtrees) {
+         cout << "*** ERROR: requested decision tree: " << itree 
+              << ", but number of trained trees only: " << fNtrees << endl;
+         return 0;
+      }
+     Int_t nVars;
+      void* doc = TMVA::gTools().xmlengine().ParseFile(fWfile);
+      void* rootnode = TMVA::gTools().xmlengine().DocGetRootElement(doc);
+      void* ch = TMVA::gTools().xmlengine().GetChild(rootnode);
+      while(ch){
+         TString nodeName = TString( TMVA::gTools().xmlengine().GetNodeName(ch) );
+         if(nodeName=="Variables"){
+            TMVA::gTools().ReadAttr( ch, "NVar", nVars);
+            vars = new TString[nVars]; 
+            void* varnode =  TMVA::gTools().xmlengine().GetChild(ch);
+            for (Int_t i = 0; i < nVars; i++){
+               TMVA::gTools().ReadAttr( varnode, "Expression", vars[i]);
+               varnode =  TMVA::gTools().xmlengine().GetNext(varnode);
+            }
+         }
+         if(nodeName=="Weights") break;
+         ch = TMVA::gTools().xmlengine().GetNext(ch);
+      }
+      ch = TMVA::gTools().xmlengine().GetChild(ch);
+      for (int i=0; i<itree; i++) ch = TMVA::gTools().xmlengine().GetNext(ch);
+      d->ReadXML(ch);
+   }
    return d;
 }
 
@@ -472,12 +519,14 @@ void BDT( Int_t itree, TString wfile = "weights/TMVAnalysis_test_BDT.weights.txt
    TMVAGlob::DestroyCanvases(); 
 
    // quick check if weight file exist
-   ifstream fin( wfile );
-   if (!fin.good( )) { // file not found --> Error
-      cout << "*** ERROR: Weight file: " << wfile << " does not exist" << endl;
-      return;
+   if(!wfile.EndsWith(".xml") ){
+      ifstream fin( wfile );
+      if (!fin.good( )) { // file not found --> Error
+         cout << "*** ERROR: Weight file: " << wfile << " does not exist" << endl;
+         return;
+      }
    }
-
+   std::cout << "test1";
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
 

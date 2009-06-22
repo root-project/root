@@ -39,7 +39,7 @@ BDTEventWrapper::~BDTEventWrapper() {
    // destructor
 }
 
-void BDTEventWrapper::SetCumulativeWeight(bool type, Double_t weight) {
+void BDTEventWrapper::SetCumulativeWeight(Bool_t type, Double_t weight) {
    // Set the accumulated weight, for sorted signal/background events
    /**
     * @param fType - true for signal, false for background
@@ -50,7 +50,7 @@ void BDTEventWrapper::SetCumulativeWeight(bool type, Double_t weight) {
    else fBkgWeight = weight;
 }
 
-Double_t BDTEventWrapper::GetCumulativeWeight(bool type) const {
+Double_t BDTEventWrapper::GetCumulativeWeight(Bool_t type) const {
    // Get the accumulated weight
    
    if(type) return fSigWeight;

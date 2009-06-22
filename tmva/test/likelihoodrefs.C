@@ -62,7 +62,7 @@ void likelihoodrefs( TDirectory *lhdir ) {
       if (!found) {
 
          // draw original plots
-         if (hname.EndsWith("_sig")) {
+         if (hname.EndsWith("_sig_nice")) {
 
             if (newCanvas) {
                char cn[20];
@@ -80,7 +80,7 @@ void likelihoodrefs( TDirectory *lhdir ) {
             Int_t color = 4; 
             TPad * cPad = (TPad*)c[ic]->cd(1);
             TString plotname = hname;
-            //            h->Sumw2();
+
             h->SetMaximum(h->GetMaximum()*1.3);
             h->SetMinimum( 0 );
             h->SetMarkerColor(color);
@@ -128,8 +128,9 @@ void likelihoodrefs( TDirectory *lhdir ) {
             // check for splines
             h = 0;
             b = 0;
+            TString pname = hname; pname.ReplaceAll("_nice","");            
             for (int i=0; i<= 5; i++) {
-               TString hspline = hname + Form( "_smooth_smoothed_hist_from_spline%i", i );
+               TString hspline = pname + Form( "_smoothed_hist_from_spline%i", i );
                h = (TH1F*)lhdir->Get( hspline );
                if (h) {
                   b = (TH1F*)lhdir->Get( hspline.ReplaceAll("_sig","_bgd") );
@@ -139,17 +140,16 @@ void likelihoodrefs( TDirectory *lhdir ) {
 
             // check for KDE
             if (h == 0 && b == 0) {
-               TString hspline = hname + Form( "_KDE_smoothed_hist_from_KDE", i );
+               TString hspline = pname + Form( "_smoothed_hist_from_KDE", i );
                h = (TH1F*)lhdir->Get( hspline );
                if (h) {
-                  cout << "found KDE histogram: " << h->GetTitle() << endl;
                   b = (TH1F*)lhdir->Get( hspline.ReplaceAll("_sig","_bgd") );
                }
             }
                
             // found something ?
             if (h == 0 || b == 0) {
-               cout << "--- likelihoodrefs.C: did not find spline for histogram: " << hname.Data() << endl;
+               cout << "--- likelihoodrefs.C: did not find spline for histogram: " << pname.Data() << endl;
             }
             else {
                
@@ -175,7 +175,7 @@ void likelihoodrefs( TDirectory *lhdir ) {
                // draw the legends
                legB->Draw();
 	  
-               hasBeenUsed.push_back( hname.Data() );
+               hasBeenUsed.push_back( pname.Data() );
             }	  
 
             c[ic]->Update();

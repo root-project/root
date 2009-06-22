@@ -3,10 +3,6 @@
 #include "tmvaglob.C"
 
 
-// this macro plots the reference distribuions for the Likelihood
-// methods for the various input variables used in TMVA (e.g. running
-// TMVAnalysis.C).  Signal and Background are plotted separately
-
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
 void BDTControlPlots( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )

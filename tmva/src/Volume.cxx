@@ -25,10 +25,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include <stdexcept>
+
 #include "TMVA/Volume.h"
 #include "TMVA/Tools.h"
-#include "Riostream.h"
-#include <stdexcept>
 
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
@@ -74,7 +74,7 @@ TMVA::Volume::Volume( Double_t* l, Double_t* u, Int_t nvar )
    for (int ivar=0; ivar<nvar; ivar++) {
       (*fLower)[ivar] = l[ivar];
       (*fUpper)[ivar] = u[ivar];
-   }
+   }  
 }
 
 TMVA::Volume::Volume( Float_t* l, Float_t* u, Int_t nvar ) 

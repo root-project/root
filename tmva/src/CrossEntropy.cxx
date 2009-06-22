@@ -13,7 +13,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -21,22 +20,17 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      Heidelberg U., Germany                                                    * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//________________________________________________________________________
-//
+//_______________________________________________________________________
+//                                                                      
 // Implementation of the CrossEntropy as separation criterion           
-//
-// Begin_Latex                                                             
-// -p log(p) - (1-p) log(1-p)   p=purity                        
-// End_Latex
-//________________________________________________________________________
-
+//             -p log (p) - (1-p)log(1-p);     p=purity                        
+//_______________________________________________________________________
 
 #include <math.h>
 #include "TMVA/CrossEntropy.h"
@@ -48,7 +42,7 @@ Double_t  TMVA::CrossEntropy::GetSeparationIndex( const Double_t &s, const Doubl
 {
    //  Cross Entropy defined as
    //  -p log (p) - (1-p)log(1-p);     p=purity = s/(s+b)                       
-   if (s+b <= 0 || s < 0) return 0.5;
+   if (s+b <= 0) return 0;
    Double_t p = s/(s+b);
    if (p<=0 || p >=1) return 0;
    return - ( p * log (p) + (1-p)*log(1-p) );

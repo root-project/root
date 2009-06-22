@@ -12,15 +12,15 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
+ *      Joerg Stelzer   <stelzer@cern.ch>        - DESY, Germany                  *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland                                                         * 
+ *      DESY, Germany                                                             * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -38,10 +38,12 @@
 #include <string>
 #include <stdexcept>
 
-#include "Riostream.h"
-
 #include "TMVA/BinaryTree.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/Event.h"
+#include "TMVA/Tools.h"
+#include "TMVA/DecisionTree.h"
+#include "TMVA/BinarySearchTree.h"
 
 ClassImp(TMVA::BinaryTree)
 
@@ -50,7 +52,7 @@ TMVA::BinaryTree::BinaryTree( void )
    : fRoot  ( NULL ), 
      fNNodes( 0 ),
      fDepth ( 0 ),
-     fLogger( "BinaryTree" )
+     fLogger( new MsgLogger("BinaryTree") )
 {
    // constructor for a yet "empty" tree. Needs to be filled afterwards
 }
@@ -59,8 +61,8 @@ TMVA::BinaryTree::BinaryTree( void )
 TMVA::BinaryTree::~BinaryTree( void ) 
 {
    //destructor (deletes the nodes and "events" if owned by the tree
-
    this->DeleteNode( fRoot );
+   delete fLogger;
    fRoot=0;
 }
 
@@ -117,7 +119,40 @@ void TMVA::BinaryTree::Print(ostream & os) const
 {
    // recursively print the tree
    this->GetRoot()->PrintRec(os);
-   os << "-1" << endl;
+   os << "-1" << std::endl;
+}
+
+//_______________________________________________________________________
+void* TMVA::BinaryTree::AddXMLTo(void* parent) const {
+   void* bdt = gTools().xmlengine().NewChild(parent, 0, "BinaryTree");
+   gTools().AddAttr( bdt, "type" , ClassName() );
+   this->GetRoot()->AddXMLTo(bdt);
+   return bdt;
+}
+
+//_______________________________________________________________________
+void TMVA::BinaryTree::ReadXML(void* node) {
+   this->DeleteNode( fRoot );
+   fRoot= CreateNode();
+   void* trnode = gTools().xmlengine().GetChild(node);
+   fRoot->ReadXML(trnode);
+   this->SetTotalTreeDepth();
+}
+
+//_______________________________________________________________________
+TMVA::BinaryTree* TMVA::BinaryTree::CreateFromXML(void* node) {
+   std::string type("");
+   gTools().ReadAttr(node,"type", type);
+   BinaryTree* bt = 0;
+   if(type == "DecisionTree") {
+      bt = new DecisionTree();
+   } else if(type == "BinarySearchTree") {
+      bt = new BinarySearchTree();
+   } else {
+      gTools().log() << kFATAL << "Can't read binary tree of type '" << type << "'" << Endl;
+   }
+   bt->ReadXML( node );
+   return bt;
 }
 
 //_______________________________________________________________________
@@ -181,7 +216,7 @@ void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
    if (n == NULL){ //default, start at the tree top, then descend recursively
       n = (Node*) this->GetRoot();
       if (n == NULL) {
-         fLogger << kFATAL << "SetTotalTreeDepth: started with undefined ROOT node" <<Endl;
+         log() << kFATAL << "SetTotalTreeDepth: started with undefined ROOT node" <<Endl;
          return ;
       }
    } 
@@ -192,5 +227,6 @@ void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
       this->SetTotalTreeDepth( this->GetRightDaughter(n) );
    }
    if (n->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(n->GetDepth());
+
    return;
 }

@@ -83,14 +83,18 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <iosfwd>
+
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
 #ifndef ROOT_TMVA_MethodCFMlpANN_Utils
 #include "TMVA/MethodCFMlpANN_Utils.h"
 #endif
-#ifndef ROOT_TMVA_TMatrix
-#include "TMatrix.h"
+#ifndef ROOT_TMVA_TMatrixFfwd
+#ifndef ROOT_TMatrixFfwd
+#include "TMatrixFfwd.h"
+#endif
 #endif
 
 namespace TMVA {
@@ -101,16 +105,18 @@ namespace TMVA {
 
       MethodCFMlpANN( const TString& jobName,
                       const TString& methodTitle, 
-                      DataSet& theData,
+                      DataSetInfo& theData,
                       const TString& theOption = "3000:N-1:N-2",
                       TDirectory* theTargetDir = 0 );
 
-      MethodCFMlpANN( DataSet& theData, 
+      MethodCFMlpANN( DataSetInfo& theData, 
                       const TString& theWeightFile,  
                       TDirectory* theTargetDir = NULL );
 
       virtual ~MethodCFMlpANN( void );
     
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ );
+
       // training method
       void Train( void );
 
@@ -119,12 +125,13 @@ namespace TMVA {
 
       // write weights to file
       void WriteWeightsToStream( ostream& o ) const;
+      void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
       void ReadWeightsFromStream( istream& istr );
-
+      void ReadWeightsFromXML( void* wghtnode );
       // calculate the MVA value
-      Double_t GetMvaValue();
+      Double_t GetMvaValue( Double_t* err = 0 );
 
       // data accessors for external functions
       Double_t GetData ( Int_t isel, Int_t ivar ) const { return (*fData)(isel, ivar); }
@@ -161,8 +168,8 @@ namespace TMVA {
       static MethodCFMlpANN* fgThis; // this carrier
 
       // LUTs
-      TMatrix       *fData;     // the (data,var) string
-      vector<Int_t> *fClass;    // the event class (1=signal, 2=background)
+      TMatrixF       *fData;     // the (data,var) string
+      std::vector<Int_t> *fClass;    // the event class (1=signal, 2=background)
 
       Int_t         fNlayers;   // number of layers (including input and output layers)
       Int_t         fNcycles;   // number of training cycles
@@ -173,12 +180,12 @@ namespace TMVA {
       TString       fLayerSpec; // the hidden layer specification string
 
       // auxiliary member functions
-      Double_t EvalANN( vector<Double_t>&, Bool_t& isOK );
+      Double_t EvalANN( std::vector<Double_t>&, Bool_t& isOK );
       void     NN_ava ( Double_t* );
       Double_t NN_fonc( Int_t, Double_t ) const;
 
       // default initialisation 
-      void InitCFMlpANN( void );
+      void Init( void );
 
       ClassDef(MethodCFMlpANN,0) // Interface for Clermond-Ferrand artificial neural network
    };

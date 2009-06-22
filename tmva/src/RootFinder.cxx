@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -20,23 +19,16 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-/*
- Root finding using Brents algorithm (translated from CERNLIB function
- RZERO)
-*/
-//////////////////////////////////////////////////////////////////////////
+#include "TMath.h"
 
 #include "TMVA/RootFinder.h"
-#include "Riostream.h"
-#include "TMath.h"
+#include "TMVA/MsgLogger.h"
 
 ClassImp(TMVA::RootFinder)
 
@@ -50,7 +42,7 @@ TMVA::RootFinder::RootFinder( Double_t (*rootVal)( Double_t ),
      fRootMax( rootMax ),
      fMaxIter( maxIterations ),
      fAbsTol ( absTolerance  ),
-     fLogger ( "RootFinder" )
+     fLogger ( new MsgLogger("RootFinder") )
 {
    // constructor
    fGetRootVal = rootVal;
@@ -60,6 +52,7 @@ TMVA::RootFinder::RootFinder( Double_t (*rootVal)( Double_t ),
 TMVA::RootFinder::~RootFinder( void )
 {
    // destructor
+   delete fLogger;
 }
 
 //_______________________________________________________________________
@@ -70,7 +63,7 @@ Double_t TMVA::RootFinder::Root( Double_t refValue  )
    Double_t fa = (*fGetRootVal)( a ) - refValue;
    Double_t fb = (*fGetRootVal)( b ) - refValue;
    if (fb*fa > 0) {
-      fLogger << kWARNING << "<Root> initial interval w/o root: "
+      log() << kWARNING << "<Root> initial interval w/o root: "
               << "(a=" << a << ", b=" << b << "),"
               << " (Eff_a=" << (*fGetRootVal)( a ) 
               << ", Eff_b=" << (*fGetRootVal)( b ) << "), "
@@ -137,7 +130,7 @@ Double_t TMVA::RootFinder::Root( Double_t refValue  )
    }
 
    // Return our best guess if we run out of iterations
-   fLogger << kWARNING << "<Root> maximum iterations (" << fMaxIter 
+   log() << kWARNING << "<Root> maximum iterations (" << fMaxIter 
            << ") reached before convergence" << Endl;
 
    return b;

@@ -28,13 +28,16 @@
 #include <vector>
 
 #ifndef ROOT_TMVA_IMetric
+#ifndef ROOT_IMetric
 #include "IMetric.h"
+#endif
 #endif
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// SeedDistance                                                         //
+// SeedDistance                                                          //
+//                                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +63,7 @@ namespace TMVA {
 
    private:
 
-      ClassDef(SeedDistance,0) // Seed and metric storage 
+      ClassDef(SeedDistance,0) // 
    };
 
 } // namespace TMVA

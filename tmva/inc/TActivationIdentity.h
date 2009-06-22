@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Matt Jachowski
+// Author: Matt Jachowski 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -32,8 +32,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TFormula
 #include "TFormula.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
 
 #ifndef ROOT_TMVA_TActivation
 #include "TMVA/TActivation.h"

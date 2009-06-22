@@ -38,13 +38,17 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
+#include <iosfwd>
+#ifndef ROOT_TH2
+#include "TH2.h"
+#endif
+#ifndef ROOT_TTree
+#include "TTree.h"
+#endif
 
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
-
-class TTree;
-class TH2;
 
 namespace TMVA {
 
@@ -53,21 +57,21 @@ namespace TMVA {
    public:
 
       // constructor for training and reading
-      MethodCommittee( const TString& jobName, 
-                       const TString& committeeTitle,                        
-                       DataSet& theData,
-                       const TString& committeeOptions,
-                       Types::EMVA method,
-                       const TString& methodOptions,
+      MethodCommittee( const TString& jobName,
+                       const TString& methodTitle,
+                       DataSetInfo& dsi, 
+                       const TString& theOption,
                        TDirectory* theTargetDir = 0 );
 
       // constructor for calculating Committee-MVA using previously generatad members
-      MethodCommittee( DataSet& theData, 
+      MethodCommittee( DataSetInfo& theData, 
                        const TString& theWeightFile,  
-                       TDirectory* theTargetDir = NULL );
+                       TDirectory* theTargetDir = 0 );
   
       virtual ~MethodCommittee( void );
     
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+
       // overloaded members from MethodBase
       void WriteStateToFile() const;
 
@@ -79,18 +83,20 @@ namespace TMVA {
 
       // write weights to file
       void WriteWeightsToStream( ostream& o ) const;
+      void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
       void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromXML   ( void* /*wghtnode*/ ) {}
 
       // write method specific histos to target file
       void WriteMonitoringHistosToFile( void ) const;
 
       // calculate the MVA value
-      Double_t GetMvaValue();
+      Double_t GetMvaValue( Double_t* err = 0 );
 
       // apply the boost algorithm to a member in the committee
-      Double_t Boost(  TMVA::IMethod*, UInt_t imember );
+      Double_t Boost(  TMVA::MethodBase*, UInt_t imember );
 
       // ranking of input variables
       const Ranking* CreateRanking();
@@ -122,7 +128,7 @@ namespace TMVA {
       std::vector<Double_t>& GetBoostWeights() { return fBoostWeights; }
 
       // boosting algorithm (adaptive boosting)
-      Double_t AdaBoost( IMethod* );
+      Double_t AdaBoost( MethodBase* );
  
       // boosting as a random re-weighting
       Double_t Bagging( UInt_t imember);
@@ -143,7 +149,7 @@ namespace TMVA {
     
 
       // Init used in the various constructors
-      void InitCommittee( void );
+      void Init( void );
 
       //some histograms for monitoring
       TH1F*                           fBoostFactorHist; // weights applied in boosting

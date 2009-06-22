@@ -24,11 +24,7 @@
 
 //_______________________________________________________________________
 //                                                                      
-// Euler metric. The distance d between two points x and y is defined as 
-//
-// Begin_Latex
-// d = #sqrt{#sum_{i} (x_{i}-y_{i})^{2}}
-// End_Latex
+// interface for a metric
 //
 //_______________________________________________________________________
 
@@ -60,7 +56,7 @@ Double_t TMVA::MetricEuler::Distance( std::vector<Double_t>& pointA, std::vector
             break;
          }
          val = (*itA)-(*itB);
-         distance += TMath::Power( val, 2 );
+         distance += pow( val, 2 );
          itA++;
       }
    }else{
@@ -75,12 +71,12 @@ Double_t TMVA::MetricEuler::Distance( std::vector<Double_t>& pointA, std::vector
             break;
          }
          val = (*itPar)*( (*itA)-(*itB) );
-         distance += TMath::Power( val, 2 );
+         distance += pow( val, 2 );
          itA++;
          itPar++;
       }
       if( itA != pointA.end() ){
-         distance *= TMath::Power( (*itA),2 );
+         distance *= pow( (*itA),2 );
       }
    }
    return sqrt( distance );

@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker
+// Author: Andreas Hoecker, Krzysztof Danielowski, Kamil Kraszewski, Maciej Kruk
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *

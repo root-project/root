@@ -19,17 +19,21 @@
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
- **********************************************************************************/   
+ **********************************************************************************/
+   
 //_______________________________________________________________________
 //                                                                      
 // Synapse class used by TMVA artificial neural network methods      
 //_______________________________________________________________________
 
-#ifndef ROOT_TMVA_TSynapse
 #include "TMVA/TSynapse.h"
-#endif
+
 #ifndef ROOT_TMVA_TNeuron
 #include "TMVA/TNeuron.h"
+#endif
+
+#ifndef ROOT_TMVA_MsgLogger
+#include "TMVA/MsgLogger.h"
 #endif
 
 static const Int_t fgUNINITIALIZED = -1;
@@ -45,10 +49,16 @@ TMVA::TSynapse::TSynapse()
     fCount( 0 ),
     fPreNeuron( NULL ),
     fPostNeuron( NULL ),
-    fLogger( "TSynapse" )
+    fLogger( new MsgLogger("TSynapse") )
 {
    // constructor
    fWeight     = fgUNINITIALIZED;
+}
+
+
+//______________________________________________________________________________
+TMVA::TSynapse::~TSynapse() {
+   delete fLogger;
 }
 
 //______________________________________________________________________________
@@ -63,7 +73,7 @@ Double_t TMVA::TSynapse::GetWeightedValue()
 {
    // get output of pre-neuron weighted by synapse weight
    if (fPreNeuron == NULL) 
-      fLogger << kFATAL << "<GetWeightedValue> synapse not connected to neuron" << Endl;
+      log() << kFATAL << "<GetWeightedValue> synapse not connected to neuron" << Endl;
 
    return (fWeight * fPreNeuron->GetActivationValue());
 }
@@ -74,7 +84,7 @@ Double_t TMVA::TSynapse::GetWeightedDelta()
    // get error field of post-neuron weighted by synapse weight
 
    if (fPostNeuron == NULL) 
-      fLogger << kFATAL << "<GetWeightedDelta> synapse not connected to neuron" << Endl;
+      log() << kFATAL << "<GetWeightedDelta> synapse not connected to neuron" << Endl;
 
    return fWeight * fPostNeuron->GetDelta();
 }

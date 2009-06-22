@@ -52,17 +52,19 @@ namespace TMVA {
    public:
 
       MethodSeedDistance( const TString& jobName, 
-                 const TString& methodTitle, 
-                 DataSet& theData,
-                 const TString& theOption = "",
-                 TDirectory* theTargetDir = 0 );
+                          const TString& methodTitle,
+                          DataSetInfo& theData,
+                          const TString& theOption = "",
+                          TDirectory* theTargetDir = 0 );
       
-      MethodSeedDistance( DataSet& theData, 
-                 const TString& theWeightFile,  
-                 TDirectory* theTargetDir = NULL );
+      MethodSeedDistance( DataSetInfo& theData,
+                          const TString& theWeightFile,
+                          TDirectory* theTargetDir = NULL );
       
       virtual ~MethodSeedDistance( void );
     
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+
       // training method
       virtual void Train( void );
 
@@ -70,15 +72,17 @@ namespace TMVA {
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( ostream& o ) const;
+      void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromXML   ( void* /*wghtnode*/ ) {}
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      virtual Double_t GetMvaValue( Double_t* err = 0 );
 
-      void InitSeedDistance( void );
+      void Init( void );
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
@@ -113,8 +117,8 @@ namespace TMVA {
       void PrintResults( const TString&, std::vector<Double_t>&, const Double_t ) const;
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
 
       TString                fSeedRangeStringP;    // string with ranges of parameters      
       TString                fSeedRangeStringT;    // string with ranges of parameters      

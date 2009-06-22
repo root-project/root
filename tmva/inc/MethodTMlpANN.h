@@ -15,7 +15,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -23,7 +22,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -56,16 +54,18 @@ namespace TMVA {
 
       MethodTMlpANN( const TString& jobName, 
                      const TString& methodTitle, 
-                     DataSet& theData,
+                     DataSetInfo& theData,
                      const TString& theOption = "3000:N-1:N-2", 
                      TDirectory* theTargetDir = 0 );
 
-      MethodTMlpANN( DataSet& theData, 
+      MethodTMlpANN( DataSetInfo& theData, 
                      const TString& theWeightFile,  
                      TDirectory* theTargetDir = NULL );
 
       virtual ~MethodTMlpANN( void );
     
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+
       // training method
       void Train( void );
 
@@ -74,20 +74,25 @@ namespace TMVA {
 
       // write weights to file
       void WriteWeightsToStream( ostream& o ) const;
+      void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
       void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromXML(void* wghtnode);
 
       // calculate the MVA value ...
       // - here it is just a dummy, as it is done in the overwritten
       // - PrepareEvaluationtree... ugly but necessary due to the strucure 
       //   of TMultiLayerPercepton in ROOT grr... :-(
-      Double_t GetMvaValue();
+      Double_t GetMvaValue( Double_t* err = 0 );
 
       void SetHiddenLayer(TString hiddenlayer = "" ) { fHiddenLayer=hiddenlayer; }
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
+
+      // make ROOT-independent C++ class
+      void MakeClass( const TString& classFileName = TString("") ) const;
 
    protected:
 
@@ -118,7 +123,8 @@ namespace TMVA {
 
       TString  fLearningMethod;     // the learning method (given via option string)
 
-      void InitTMlpANN( void );
+      // default initialisation called by all constructors
+      void Init( void );
 
       ClassDef(MethodTMlpANN,0) // Implementation of interface for TMultiLayerPerceptron
    };

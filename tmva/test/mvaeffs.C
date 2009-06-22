@@ -392,7 +392,7 @@ void StatDialogMVAEffs::ReadHistograms(TFile* file)
         info->bgd = dynamic_cast<TH1*>(titDir->Get( hname + "_B" ));
         info->origSigE = dynamic_cast<TH1*>(titDir->Get( hname + "_effS" ));
         info->origBgdE = dynamic_cast<TH1*>(titDir->Get( hname + "_effB" ));      
-        if (info->sig==0 || info->bgd==0) { delete info; continue; }
+        if (info->origSigE==0 || info->origBgdE==0) { delete info; continue; }
 
         info->SetResultHists();
         fInfoList->Add(info);
@@ -433,7 +433,12 @@ void StatDialogMVAEffs::DrawHistograms()
       
       // and the signal purity and quality
       info->effpurS->SetTitle("Cut efficiencies and optimal cut value");
-      info->effpurS->GetXaxis()->SetTitle( info->methodTitle + " output" );
+      if (info->methodTitle.Contains("Cuts")){
+	info->effpurS->GetXaxis()->SetTitle( "Signal Efficiency" );
+      }
+      else {
+	info->effpurS->GetXaxis()->SetTitle( info->methodTitle + " output" );
+      }
       info->effpurS->GetYaxis()->SetTitle( "Efficiency (Purity)" );
       TMVAGlob::SetFrameStyle( info->effpurS );
 
@@ -491,7 +496,11 @@ void StatDialogMVAEffs::DrawHistograms()
       info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%3.4f when cutting at %3.4f",
                                              info->maxSignificance, 
                                              info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
-
+      // add comment for Method cuts
+      if (info->methodTitle.Contains("Cuts")){
+	tl.DrawLatex( 0.13, 0.77, "Method Cuts provides a bundle of cut selections, each tuned to a");
+	tl.DrawLatex(0.13, 0.74, "different signal efficiency. Shown is the purity for each cut selection.");
+      }
       // save canvas to file
       c->Update();
 

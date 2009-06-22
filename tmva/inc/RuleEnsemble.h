@@ -48,8 +48,8 @@
 #ifndef ROOT_TMVA_Rule
 #include "TMVA/Rule.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
+#ifndef ROOT_TMVA_Types
+#include "TMVA/Types.h"
 #endif
 
 class TH1F;
@@ -57,9 +57,11 @@ class TH1F;
 namespace TMVA {
 
    class TBits;
+   class MethodBase;
    class MethodRuleFit;
    class RuleFit;
    class RuleEnsemble;
+   class MsgLogger;
 
    ostream& operator<<( ostream& os, const RuleEnsemble& event );
 
@@ -70,7 +72,7 @@ namespace TMVA {
       
    public:
 
-      enum ELearningModel { kFull, kRules, kLinear };
+      enum ELearningModel { kFull=0, kRules=1, kLinear=2 };
 
       // main constructor
       RuleEnsemble( RuleFit* rf );
@@ -88,7 +90,7 @@ namespace TMVA {
       void Initialize( const RuleFit* rf );
 
       // set message type
-      void SetMsgType( EMsgType t ) { fLogger.SetMinType(t); }
+      void SetMsgType( EMsgType t );
 
       // makes the model - calls MakeRules() and MakeLinearTerms()
       void MakeModel();
@@ -154,7 +156,7 @@ namespace TMVA {
       void SetEvent( const Event & e ) { fEvent = &e; fEventCacheOK = kFALSE; }
 
       // fill cached values of rule/linear respons
-      inline void UpdateEventVal();
+      void UpdateEventVal();
 
       // fill binary rule respons for all events (or selected subset)
       void MakeRuleMap(const std::vector<TMVA::Event *> *events=0, UInt_t ifirst=0, UInt_t ilast=0);
@@ -164,39 +166,39 @@ namespace TMVA {
 
       // evaluates the event using the ensemble of rules
       // the following uses fEventCache, that is per event saved in cache
-      inline Double_t EvalEvent() const;
-      inline Double_t EvalEvent( const Event & e );
+      Double_t EvalEvent() const;
+      Double_t EvalEvent( const Event & e );
 
       // same as previous but using other model coefficients
-      inline Double_t EvalEvent( Double_t ofs,
-                                 const std::vector<Double_t> & coefs,
-                                 const std::vector<Double_t> & lincoefs) const;
-      inline Double_t EvalEvent( const Event & e,
-                                 Double_t ofs,
-                                 const std::vector<Double_t> & coefs,
-                                 const std::vector<Double_t> & lincoefs);
+      Double_t EvalEvent( Double_t ofs,
+                          const std::vector<Double_t> & coefs,
+                          const std::vector<Double_t> & lincoefs) const;
+      Double_t EvalEvent( const Event & e,
+                          Double_t ofs,
+                          const std::vector<Double_t> & coefs,
+                          const std::vector<Double_t> & lincoefs);
 
       // same as above but using the event index
       // these will use fRuleMap - MUST call MakeRuleMap() before - no check...
-      inline Double_t EvalEvent( UInt_t evtidx ) const;
-      inline Double_t EvalEvent( UInt_t evtidx,
-                                 Double_t ofs,
-                                 const std::vector<Double_t> & coefs,
-                                 const std::vector<Double_t> & lincoefs) const;
+      Double_t EvalEvent( UInt_t evtidx ) const;
+      Double_t EvalEvent( UInt_t evtidx,
+                          Double_t ofs,
+                          const std::vector<Double_t> & coefs,
+                          const std::vector<Double_t> & lincoefs) const;
 
       // evaluate the linear term using event by reference
-      //      inline Double_t EvalLinEvent( UInt_t vind ) const;
-      inline Double_t EvalLinEvent() const;
-      inline Double_t EvalLinEvent( const std::vector<Double_t> & coefs ) const;
-      inline Double_t EvalLinEvent( const Event &e );
-      inline Double_t EvalLinEvent( const Event &e, UInt_t vind );
-      inline Double_t EvalLinEvent( const Event &e, const std::vector<Double_t> & coefs );
+      //      Double_t EvalLinEvent( UInt_t vind ) const;
+      Double_t EvalLinEvent() const;
+      Double_t EvalLinEvent( const std::vector<Double_t> & coefs ) const;
+      Double_t EvalLinEvent( const Event &e );
+      Double_t EvalLinEvent( const Event &e, UInt_t vind );
+      Double_t EvalLinEvent( const Event &e, const std::vector<Double_t> & coefs );
 
       // idem but using evtidx - must call MakeRuleMap() first
-      inline Double_t EvalLinEvent( UInt_t evtidx ) const;
-      inline Double_t EvalLinEvent( UInt_t evtidx, const std::vector<Double_t> & coefs ) const;
-      inline Double_t EvalLinEvent( UInt_t evtidx, UInt_t vind ) const;
-      inline Double_t EvalLinEvent( UInt_t evtidx, UInt_t vind, Double_t coefs ) const;
+      Double_t EvalLinEvent( UInt_t evtidx ) const;
+      Double_t EvalLinEvent( UInt_t evtidx, const std::vector<Double_t> & coefs ) const;
+      Double_t EvalLinEvent( UInt_t evtidx, UInt_t vind ) const;
+      Double_t EvalLinEvent( UInt_t evtidx, UInt_t vind, Double_t coefs ) const;
 
       // evaluate linear terms used to fill fEventLinearVal
       Double_t EvalLinEventRaw( UInt_t vind, const Event &e, Bool_t norm ) const;
@@ -318,10 +320,13 @@ namespace TMVA {
       void  Print() const;
 
       // print the model in a cryptic way
-      void  PrintRaw( ostream& os ) const;
-
+      void  PrintRaw   ( ostream& os  ) const; // obsolete
+      void* AddXMLTo   ( void* parent ) const;
+   
       // read the model from input stream
-      void  ReadRaw( istream& istr );
+      void  ReadRaw    ( istream& istr ); // obsolete
+      void  ReadFromXML( void* wghtnode ); 
+
 
    private:
 
@@ -349,7 +354,7 @@ namespace TMVA {
       Double_t                      fLinQuantile;       // quantile cut to remove outliers
       Double_t                      fOffset;            // offset in discriminator function
       std::vector< TMVA::Rule* >    fRules;             // vector of rules
-      std::vector< Bool_t >         fLinTermOK;         // flags linear terms with sufficient strong importance
+      std::vector< Char_t >         fLinTermOK;         // flags linear terms with sufficient strong importance <-- stores boolean
       std::vector< Double_t >       fLinDP;             // delta+ in eq 24, ref 2
       std::vector< Double_t >       fLinDM;             // delta-
       std::vector< Double_t >       fLinCoefficients;   // linear coefficients, one per variable
@@ -377,7 +382,7 @@ namespace TMVA {
       //
       const Event*                  fEvent;             // current event.
       Bool_t                        fEventCacheOK;      // true if rule/linear respons are updated
-      std::vector<Bool_t>           fEventRuleVal;      // the rule respons of current event
+      std::vector<Char_t>           fEventRuleVal;      // the rule respons of current event <----- stores boolean
       std::vector<Double_t>         fEventLinearVal;    // linear respons
       //
       Bool_t                        fRuleMapOK;         // true if MakeRuleMap() has been called
@@ -388,7 +393,8 @@ namespace TMVA {
       //
       const RuleFit*                fRuleFit;           // pointer to rule fit object 
 
-      mutable MsgLogger             fLogger;            // message logger
+      mutable MsgLogger*            fLogger;            //! message logger
+      MsgLogger& log() const { return *fLogger; }                       
    };
 }
 

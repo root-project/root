@@ -39,6 +39,9 @@
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
+#ifndef ROOT_TMVA_Types
+#include "TMVA/Types.h"
+#endif
 
 namespace TMVA {
 
@@ -48,16 +51,18 @@ namespace TMVA {
 
       MethodBayesClassifier( const TString& jobName, 
                              const TString& methodTitle, 
-                             DataSet& theData,
+                             DataSetInfo& theData,
                              const TString& theOption = "",
                              TDirectory* theTargetDir = 0 );
       
-      MethodBayesClassifier( DataSet& theData, 
+      MethodBayesClassifier( DataSetInfo& theData, 
                              const TString& theWeightFile,  
                              TDirectory* theTargetDir = NULL );
       
       virtual ~MethodBayesClassifier( void );
     
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+
       // training method
       void Train( void );
 
@@ -66,14 +71,16 @@ namespace TMVA {
 
       // write weights to file
       void WriteWeightsToStream( ostream& o ) const;
+      void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
       void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromXML   ( void* /*wghtnode*/ ) {}
 
       // calculate the MVA value
-      Double_t GetMvaValue();
+      Double_t GetMvaValue( Double_t* err = 0 );
 
-      void InitBayesClassifier( void );
+      void Init( void );
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }

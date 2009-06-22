@@ -28,7 +28,9 @@
 #include <vector>
 
 #ifndef ROOT_TMVA_IMetric
+#ifndef ROOT_IMetric
 #include "IMetric.h"
+#endif
 #endif
 
 //////////////////////////////////////////////////////////////////////////

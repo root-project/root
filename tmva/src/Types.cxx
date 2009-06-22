@@ -26,42 +26,39 @@
  **********************************************************************************/
 
 #include <map>
+#include <iostream>
 
 #include "TMVA/Types.h"
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Singleton class for TMVA typedefs and enums                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+#include "TMVA/MsgLogger.h"
 
 TMVA::Types* TMVA::Types::fgTypesPtr = 0;
 
 //_______________________________________________________________________
 TMVA::Types::Types()
-   : fLogger( "Types" )
+   : fLogger( new MsgLogger("Types") )
 {
    // constructor
-   // fill map that links method names and enums
+}
 
-   fStr2type["Variable"]        = Types::kVariable;
-   fStr2type["Cuts"]            = Types::kCuts;
-   fStr2type["Likelihood"]      = Types::kLikelihood;
-   fStr2type["PDERS"]           = Types::kPDERS;
-   fStr2type["KNN"]             = Types::kKNN;
-   fStr2type["HMatrix"]         = Types::kHMatrix;
-   fStr2type["Fisher"]          = Types::kFisher;
-   fStr2type["MLP"]             = Types::kMLP;
-   fStr2type["CFMlpANN"]        = Types::kCFMlpANN;
-   fStr2type["TMlpANN"]         = Types::kTMlpANN;
-   fStr2type["BDT"]             = Types::kBDT;
-   fStr2type["RuleFit"]         = Types::kRuleFit;
-   fStr2type["SVM"]             = Types::kSVM;
-   fStr2type["FDA"]             = Types::kFDA;
-   fStr2type["BayesClassifier"] = Types::kBayesClassifier;
-   fStr2type["Committee"]       = Types::kCommittee;
-   fStr2type["SeedDistance"]    = Types::kSeedDistance;
-   fStr2type["Plugins"]         = Types::kPlugins;
+TMVA::Types::~Types() 
+{
+   // destructor
+   delete fLogger;
+}
+
+//_______________________________________________________________________
+Bool_t TMVA::Types::AddTypeMapping( Types::EMVA method, const TString& methodname ) 
+{
+   std::map<TString, EMVA>::const_iterator it = fStr2type.find( methodname );
+   if (it != fStr2type.end()) {
+      log() << kFATAL 
+            << "Cannot add method " << methodname 
+            << " to the name->type map because it exists already" << Endl;
+      return kFALSE;
+   }
+
+   fStr2type[methodname] = method;
+   return kTRUE;
 }
 
 //_______________________________________________________________________
@@ -70,8 +67,17 @@ TMVA::Types::EMVA TMVA::Types::GetMethodType( const TString& method ) const
    // returns the method type (enum) for a given method (string)
    std::map<TString, EMVA>::const_iterator it = fStr2type.find( method );
    if (it == fStr2type.end()) {
-      fLogger << kINFO << "unknown method " << method << Endl;
-      return kMaxMethod; // Inserted to get rid of GCC warning...
+      log() << kFATAL << "Unknown method in map: " << method << Endl;
+      return kVariable; // Inserted to get rid of GCC warning...
    }
    else return it->second;
+}
+
+//_______________________________________________________________________
+TString TMVA::Types::GetMethodName( TMVA::Types::EMVA method ) const 
+{
+   std::map<TString, EMVA>::const_iterator it = fStr2type.begin();
+   for (; it!=fStr2type.end(); it++) if (it->second == method) return it->first;
+   log() << kFATAL << "Unknown method index in map: " << method << Endl;
+   return "";
 }

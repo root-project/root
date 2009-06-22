@@ -30,24 +30,43 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// Singleton class for TMVA typedefs and enums                          //
+// Types                                                                //
+//                                                                      //
+// Singleton class for Global types used by TMVA                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Rtypes.h"
-#include "TString.h"
+#include <map>
 
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 namespace TMVA {
+
+   class MsgLogger;
+
+   // message types for MsgLogger
+   // define outside of Types class to facilite access
+   enum EMsgType { 
+      kDEBUG   = 1,
+      kVERBOSE = 2, 
+      kINFO    = 3,
+      kWARNING = 4,
+      kERROR   = 5,
+      kFATAL   = 6,
+      kSILENT  = 7
+   };
 
    class Types {
       
    public:
          
-      // available MVA methods in TMVA
+      // available MVA methods
       enum EMVA {
          kVariable    = 0,
          kCuts           ,     
@@ -59,24 +78,37 @@ namespace TMVA {
          kKNN            ,
          kCFMlpANN       ,
          kTMlpANN        , 
-         kBDT            ,     
+         kBDT            ,
+         kDT             ,
          kRuleFit        ,
          kSVM            ,
          kMLP            ,
          kBayesClassifier,
          kFDA            ,
          kCommittee      ,
-         kMaxMethod      ,
-         kPlugins
-
+         kBoost          ,
+         kPDEFoam        ,
+         kLD             ,
+         kPlugins        ,
+         kMaxMethod      
       };
 
+      // available variable transformations
       enum EVariableTransform {
-         kNone = 0,
+         kIdentity = 0,
          kDecorrelated,
+         kNormalized,
          kPCA,
-         kMaxVariableTransform,
-         kGaussDecorr
+         kGaussDecorr,
+         kMaxVariableTransform
+      };
+
+      // type of analysis
+      enum EAnalysisType { 
+         kClassification = 0, 
+         kRegression,
+         kNoAnalysisType,
+         kMaxAnalysisType         
       };
 
       enum ESBType { 
@@ -87,14 +119,33 @@ namespace TMVA {
          kTrueType
       };
 
-      enum ETreeType { kTraining = 0, kTesting, kMaxTreeType };
+      enum ETreeType { 
+         kTraining = 0, 
+         kTesting, 
+         kMaxTreeType, 
+         kValidation, 
+         kTrainingOriginal 
+      };
+
+      enum EBoostStage { 
+         kBoostProcBegin=0, 
+         kBeforeTraining, 
+         kBeforeBoosting, 
+         kAfterBoosting, 
+         kBoostValidation, 
+         kBoostProcEnd 
+      };
 
    public:
 
       static Types& Instance() { return fgTypesPtr ? *fgTypesPtr : *(fgTypesPtr = new Types()); }
-      ~Types() {}
+      static void   DestroyInstance() { if (fgTypesPtr != 0) { delete fgTypesPtr; fgTypesPtr = 0; } }
+      ~Types();
 
-      TMVA::Types::EMVA GetMethodType( const TString& method ) const;
+      Types::EMVA   GetMethodType( const TString& method ) const;
+      TString       GetMethodName( Types::EMVA    method ) const;
+
+      Bool_t        AddTypeMapping(Types::EMVA method, const TString& methodname);
 
    private:
 
@@ -104,7 +155,8 @@ namespace TMVA {
    private:
          
       std::map<TString, TMVA::Types::EMVA> fStr2type; // types-to-text map
-      mutable MsgLogger       fLogger;   // message logger
+      mutable MsgLogger* fLogger;   // message logger
+      MsgLogger& log() const { return *fLogger; }
          
    };
 }

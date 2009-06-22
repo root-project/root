@@ -32,9 +32,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
+#ifndef ROOT_TObjArray
 #include "TObjArray.h"
+#endif
+#ifndef ROOT_TFormula
 #include "TFormula.h"
+#endif
 
 #ifndef ROOT_TMVA_TSynapse
 #include "TMVA/TSynapse.h"
@@ -42,8 +48,8 @@
 #ifndef ROOT_TMVA_TActivation
 #include "TMVA/TActivation.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
+#ifndef ROOT_TMVA_Types
+#include "TMVA/Types.h"
 #endif
 
 namespace TMVA {
@@ -108,6 +114,7 @@ namespace TMVA {
       Double_t  GetValue() const                { return fValue;                          }
       Double_t  GetActivationValue() const      { return fActivationValue;                }
       Double_t  GetDelta() const                { return fDelta;                          }
+      Double_t  GetDEDw() const                 { return fDEDw;                           }
       Int_t     NumPreLinks() const             { return NumLinks(fLinksIn);              }
       Int_t     NumPostLinks() const            { return NumLinks(fLinksOut);             }
       TSynapse* PreLinkAt ( Int_t index ) const { return (TSynapse*)fLinksIn->At(index);  }
@@ -115,6 +122,7 @@ namespace TMVA {
       void      SetInputNeuron()                { NullifyLinks(fLinksIn);                 }
       void      SetOutputNeuron()               { NullifyLinks(fLinksOut);                }
       void      SetBiasNeuron()                 { NullifyLinks(fLinksIn);                 }
+      void      SetDEDw( Double_t DEDw )        { fDEDw = DEDw;                           }
       Bool_t    IsInputNeuron() const           { return fLinksIn == NULL;                }
       Bool_t    IsOutputNeuron() const          { return fLinksOut == NULL;               }
       void      PrintPreLinks()                 { PrintLinks(fLinksIn); return;           }
@@ -142,12 +150,14 @@ namespace TMVA {
       Double_t      fValue;                   // input value
       Double_t      fActivationValue;         // activation/output value
       Double_t      fDelta;                   // error field of neuron
+      Double_t      fDEDw;                    // sum of all deltas
       Double_t      fError;                   // error, only set for output neurons
       Bool_t        fForcedValue;             // flag for forced input value
       TActivation*  fActivation;              // activation equation
       TNeuronInput* fInputCalculator;         // input calculator
 
-      mutable MsgLogger fLogger;              // message logger
+      mutable MsgLogger* fLogger;                     //! message logger
+      MsgLogger& log() const { return *fLogger; }                       
 
       ClassDef(TNeuron,0) // Neuron class used by MethodANNBase derivative ANNs
    };

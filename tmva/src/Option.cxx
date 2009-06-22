@@ -26,13 +26,22 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
-#include "Riostream.h"
-#include <iomanip>
 #include "TMVA/Option.h"
-#include "TString.h"
 
 //______________________________________________________________________
-Bool_t TMVA::OptionBase::SetValue(const TString& vs, Int_t) 
+TMVA::OptionBase::OptionBase( const TString& name, const TString& desc ) 
+   : TObject(), 
+     fName        ( name ), 
+     fNameAllLower( name ), 
+     fDescription ( desc ), 
+     fIsSet       ( kFALSE ), 
+     fLogger      ("OptionBase") 
+{
+   fNameAllLower.ToLower();
+}
+
+//______________________________________________________________________
+Bool_t TMVA::OptionBase::SetValue( const TString& vs, Int_t ) 
 {
    // set value for option
    fIsSet = kTRUE;

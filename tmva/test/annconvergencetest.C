@@ -35,7 +35,11 @@ void annconvergencetest( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE 
 
 void annconvergencetest( TDirectory *lhdir )
 {
-   TCanvas* c = new TCanvas( "MLPConvergenceTest", "MLP Convergence Test", 150, 0, 600, 580*0.8 ); 
+   TString jobName = lhdir->GetName();
+   static icanvas = -1;
+   icanvas++;
+   TCanvas* c = new TCanvas( Form("MLPConvergenceTest_%s",jobName.Data()), Form("MLP Convergence Test, %s",jobName.Data()), 
+                             100 + (icanvas)*40, 0 + (icanvas+1)*20, 600, 580*0.8  );
   
    TH1* estimatorHistTrain = (TH1*)lhdir->Get( "estimatorHistTrain" );
    TH1* estimatorHistTest  = (TH1*)lhdir->Get( "estimatorHistTest"  );

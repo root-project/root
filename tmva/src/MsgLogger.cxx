@@ -29,7 +29,7 @@
 // STL include(s):
 #include <iomanip>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 // this is the hardcoded prefix
 #define PREFIX "--- "
@@ -41,17 +41,19 @@
 ClassImp(TMVA::MsgLogger)
 
 // this is the hard-coded maximum length of the source names
-UInt_t TMVA::MsgLogger::fgMaxSourceSize = 15;
-
+UInt_t TMVA::MsgLogger::fgMaxSourceSize = 25;
+Bool_t TMVA::MsgLogger::fInhibitOutput = kFALSE;
+void   TMVA::MsgLogger::InhibitOutput() { fInhibitOutput = kTRUE;  }	 
+void   TMVA::MsgLogger::EnableOutput()  { fInhibitOutput = kFALSE; }
 
 //_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
-   : fObjSource( source ), 
-     fStrSource( "" ), 
-     fPrefix( PREFIX ), 
-     fSuffix( SUFFIX ), 
+   : fObjSource ( source ), 
+     fStrSource ( "" ), 
+     fPrefix    ( PREFIX ), 
+     fSuffix    ( SUFFIX ), 
      fActiveType( kINFO ), 
-     fMinType( minType )
+     fMinType   ( minType )
 {
    // constructor
    InitMaps();
@@ -59,12 +61,12 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
 
 //_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
-   : fObjSource( 0 ),
-     fStrSource( source ), 
-     fPrefix( PREFIX ), 
-     fSuffix( SUFFIX ), 
+   : fObjSource ( 0 ),
+     fStrSource ( source ), 
+     fPrefix    ( PREFIX ), 
+     fSuffix    ( SUFFIX ), 
      fActiveType( kINFO ), 
-     fMinType( minType )
+     fMinType   ( minType )
 {
    // constructor
    InitMaps();
@@ -72,25 +74,24 @@ TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
 
 //_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( EMsgType minType )
-   : fObjSource( 0 ), 
-     fStrSource( "Unknown" ), 
-     fPrefix( PREFIX ), 
-     fSuffix( SUFFIX ), 
+   : fObjSource ( 0 ), 
+     fStrSource ( "Unknown" ), 
+     fPrefix    ( PREFIX ), 
+     fSuffix    ( SUFFIX ), 
      fActiveType( kINFO ), 
-     fMinType( minType )
+     fMinType   ( minType )
 {
    // constructor
    InitMaps();
 }
 
 //_______________________________________________________________________
-TMVA::MsgLogger::MsgLogger( const MsgLogger& parent ) :
-   //   basic_ios< MsgLogger::char_type, MsgLogger::traits_type >( new MsgLogger::__stringbuf_type() ),
-   std::basic_ios< MsgLogger::char_type, MsgLogger::traits_type >(),
-   std::ostringstream(),
-   TObject(),
-   fPrefix( PREFIX ), 
-   fSuffix( SUFFIX )
+TMVA::MsgLogger::MsgLogger( const MsgLogger& parent )
+   : std::basic_ios<MsgLogger::char_type, MsgLogger::traits_type>(),
+     std::ostringstream(),
+     TObject(),
+     fPrefix( PREFIX ), 
+     fSuffix( SUFFIX )
 {
    // copy constructor
    InitMaps();
@@ -173,6 +174,7 @@ void TMVA::MsgLogger::Send()
 
    // reset the stream buffer:
    this->str( "" );
+   fActiveType = kINFO; // To always print messages that have no level specified...
    return;
 }
 
@@ -182,15 +184,18 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    // putting the output string, the message type, and the color
    // switcher together into a single string
 
-   if (type < fMinType) return;
+   if (type < fMinType || fInhibitOutput) return; // no output
+
    std::map<EMsgType, std::string>::const_iterator stype;
    if ((stype = fTypeMap.find( type )) == fTypeMap.end()) return;
    if (!gConfig().IsSilent()) {
       if (gConfig().UseColor()) {
-         // no text for INFO
-         if (type == kINFO) std::cout << fPrefix << line << std::endl; // no color for info
-         else               std::cout << fColorMap.find( type )->second << fPrefix << "<" 
-                                      << stype->second << "> " << line  << "\033[0m" << std::endl;
+         // no text for INFO or VERBOSE
+         if (type == kINFO || type == kVERBOSE) 
+            std::cout << fPrefix << line << std::endl; // no color for info
+         else               
+            std::cout << fColorMap.find( type )->second << fPrefix << "<" 
+                      << stype->second << "> " << line  << "\033[0m" << std::endl;
       } 
       else {
          if (type == kINFO) std::cout << fPrefix << line << std::endl;
@@ -224,7 +229,7 @@ void TMVA::MsgLogger::InitMaps()
    fTypeMap[kFATAL]    = std::string("FATAL");
    fTypeMap[kSILENT]   = std::string("SILENT");
 
-   fColorMap[kVERBOSE] = std::string("\033[1;34m");
+   fColorMap[kVERBOSE] = std::string("");
    fColorMap[kDEBUG]   = std::string("\033[34m");
    fColorMap[kINFO]    = std::string("");
    fColorMap[kWARNING] = std::string("\033[1;31m");

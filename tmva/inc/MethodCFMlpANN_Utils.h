@@ -39,8 +39,8 @@
 #include "TMVA/MethodCFMlpANN_def.h"
 #endif
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
 
 //////////////////////////////////////////////////////////////////////////
@@ -76,30 +76,31 @@ namespace TMVA {
       Double_t Fdecroi(Int_t *i__);
       Double_t Sen3a(void);
 
-      void  Wini();
-      void  En_avant(Int_t *ievent);
-      void  En_avant2(Int_t *ievent);
+      void  Wini      ();
+      void  En_avant  (Int_t *ievent);
+      void  En_avant2 (Int_t *ievent);
       void  En_arriere(Int_t *ievent);
-      void  Leclearn(Int_t *ktest, Double_t *tout2, Double_t *tin2);
-      void  Out(Int_t *iii, Int_t *maxcycle);
-      void  Cout(Int_t *, Double_t *xxx);
-      void  Innit(char *det, Double_t *tout2, Double_t *tin2, Int_t );
-      void  TestNN();
-      void  Inl();
-      void  GraphNN(Int_t *ilearn, Double_t *, Double_t *, char *, Int_t);
-      void  Foncf(Int_t *i__, Double_t *u, Double_t *f);
-      void  Cout2(Int_t * /*i1*/, Double_t *yyy);
-      void  Lecev2(Int_t *ktest, Double_t *tout2, Double_t *tin2);
-      void  Arret(const char* mot );
+      void  Leclearn  (Int_t *ktest, Double_t *tout2, Double_t *tin2);
+      void  Out       (Int_t *iii, Int_t *maxcycle);
+      void  Cout      (Int_t *, Double_t *xxx);
+      void  Innit     (char *det, Double_t *tout2, Double_t *tin2, Int_t );
+      void  TestNN    ();
+      void  Inl       ();
+      void  GraphNN   (Int_t *ilearn, Double_t *, Double_t *, char *, Int_t);
+      void  Foncf     (Int_t *i__, Double_t *u, Double_t *f);
+      void  Cout2     (Int_t * /*i1*/, Double_t *yyy);
+      void  Lecev2    (Int_t *ktest, Double_t *tout2, Double_t *tin2);
+      void  Arret     (const char* mot );
       void  CollectVar(Int_t *nvar, Int_t *class__, Double_t *xpg);
 
    protected:
 
-      static Int_t fg_100;          // constant
-      static Int_t fg_0;            // constant
-      static Int_t fg_max_nVar_;    // static maximum number of input variables
-      static Int_t fg_max_nNodes_;  // maximum number of nodes per variable
-      static Int_t fg_999;          // constant
+      static Int_t       fg_100;          // constant
+      static Int_t       fg_0;            // constant
+      static Int_t       fg_max_nVar_;    // static maximum number of input variables
+      static Int_t       fg_max_nNodes_;  // maximum number of nodes per variable
+      static Int_t       fg_999;          // constant
+      static const char* fg_MethodName;   // method name for print
 
       Double_t W_ref(const Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) const {
          return wNN [(a_3*max_nNodes_ + a_2)*max_nLayers_ + a_1 - 187];
@@ -164,10 +165,10 @@ namespace TMVA {
 
       // ANN weights
       struct {
-         Double_t x [max_nLayers_*max_nNodes_];
-         Double_t y [max_nLayers_*max_nNodes_];             
-         Double_t o [max_nNodes_];
-         Double_t w [max_nLayers_*max_nNodes_*max_nNodes_]; 
+         Double_t x[max_nLayers_*max_nNodes_];
+         Double_t y[max_nLayers_*max_nNodes_];             
+         Double_t o[max_nNodes_];
+         Double_t w[max_nLayers_*max_nNodes_*max_nNodes_]; 
          Double_t ww[max_nLayers_*max_nNodes_];            
          Double_t cut[max_nNodes_];
          Double_t deltaww[max_nLayers_*max_nNodes_]; 
@@ -176,9 +177,9 @@ namespace TMVA {
 
       // ANN weights
       struct {
-         Double_t coef [max_nNodes_], temp[max_nLayers_], demin, demax;
-         Double_t del  [max_nLayers_*max_nNodes_];                
-         Double_t delw [max_nLayers_*max_nNodes_*max_nNodes_];  
+         Double_t coef[max_nNodes_], temp[max_nLayers_], demin, demax;
+         Double_t del[max_nLayers_*max_nNodes_];                
+         Double_t delw[max_nLayers_*max_nNodes_*max_nNodes_];  
          Double_t delta[max_nLayers_*max_nNodes_*max_nNodes_]; 
          Double_t delww[max_nLayers_*max_nNodes_];                
          Int_t idde;

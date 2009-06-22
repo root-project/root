@@ -46,14 +46,12 @@
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
 
 namespace TMVA {
      
    class IFitterTarget;
    class Interval;
+   class MsgLogger;
 
    class GeneticAlgorithm {
 
@@ -61,7 +59,7 @@ namespace TMVA {
     
       GeneticAlgorithm( IFitterTarget& target, Int_t populationSize, 
                         const std::vector<TMVA::Interval*>& ranges, UInt_t seed = 0 );
-      virtual ~GeneticAlgorithm() {}
+      virtual ~GeneticAlgorithm();
 
       void Init();
 
@@ -70,23 +68,21 @@ namespace TMVA {
                                      Double_t factor);
       virtual Double_t NewFitness(Double_t oldValue, Double_t newValue);
       virtual Double_t CalculateFitness();
-      Double_t         DoRenewFitness();
-      virtual Double_t RenewFitness(std::vector < Double_t > factors,
-                                    std::vector < Double_t > results);
       virtual void Evolution();
-      void Finalize();
       
       GeneticPopulation& GetGeneticPopulation() { return fPopulation; } 
-      Double_t GetSpread() const { return fSpread; }
 
-      void SetSpread(Double_t s) { fSpread = s; }
+      Double_t GetSpread() const { return fSpread; }
+      void     SetSpread(Double_t s) { fSpread = s; }
+
+      void   SetMakeCopies(Bool_t s) { fMakeCopies = s; }
+      Bool_t GetMakeCopies() { return fMakeCopies; }
 
       Int_t    fConvCounter;              // converging? ... keeps track of the number of improvements
 
    protected:
    
       IFitterTarget&    fFitterTarget;    // the fitter target
-      GeneticPopulation fPopulation;      // contains and controls the "individual"
       
       Double_t fConvValue;                // keeps track of the quantity of improvement
 
@@ -98,14 +94,19 @@ namespace TMVA {
 
       Double_t          fSpread;          // regulates the spread of the value change at mutation (sigma)
       Bool_t            fMirror;          // new values for mutation are mirror-mapped if outside of constraints
-      Bool_t            fSexual;          // allow sexual recombination of individual
       Bool_t            fFirstTime;       // if true its the first time, so no evolution yet
+      Bool_t            fMakeCopies;      // if true, the population will make copies of the first individuals
+                                          // avoid for speed performance.
       Int_t             fPopulationSize;  // the size of the population
 
       const std::vector<TMVA::Interval*>& fRanges; // parameter ranges
 
-      mutable MsgLogger fLogger;          // message logger
-      
+      GeneticPopulation fPopulation;      // contains and controls the "individual"
+      Double_t fBestFitness;
+
+      mutable MsgLogger* fLogger;         // message logger
+      MsgLogger& log() const { return *fLogger; }          
+
       ClassDef(GeneticAlgorithm, 0)  // Genetic algorithm controller
    };
    

@@ -17,7 +17,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -25,7 +24,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -64,36 +62,42 @@ namespace TMVA {
 
       MethodLikelihood( const TString& jobName, 
                         const TString& methodTitle, 
-                        DataSet& theData,
+                        DataSetInfo& theData,
                         const TString& theOption = "",
                         TDirectory* theTargetDir = 0 );
   
-      MethodLikelihood( DataSet& theData, 
+      MethodLikelihood( DataSetInfo& theData, 
                         const TString& theWeightFile,  
                         TDirectory* theTargetDir = NULL );
 
-      virtual ~MethodLikelihood( void );
+      virtual ~MethodLikelihood();
     
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, 
+                                      UInt_t numberClasses, UInt_t numberTargets );
+
       // training method
-      void Train( void );
+      void Train();
 
       // write weights to file
       void WriteWeightsToStream( ostream& o ) const;
       void WriteWeightsToStream( TFile& rf ) const;
+      void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
       void ReadWeightsFromStream( istream& istr );
       void ReadWeightsFromStream( TFile& istr );
-
+      void ReadWeightsFromXML( void* wghtnode );
       // calculate the MVA value
       // the argument is used for internal ranking tests
-      Double_t GetMvaValue( void );
+      Double_t GetMvaValue( Double_t* err = 0 );
 
       // write method specific histos to target file
-      void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile() const;
 
       // ranking of input variables
       const Ranking* CreateRanking();
+
+      virtual void WriteOptionsToStream ( ostream& o, const TString& prefix ) const;
 
    protected:
 
@@ -112,48 +116,28 @@ namespace TMVA {
       Double_t TransformLikelihoodOutput( Double_t ps, Double_t pb ) const;
 
       // the option handling methods
+      void Init();
       void DeclareOptions();
       void ProcessOptions();
       
       // options
-      Int_t     fAverageEvtPerBin;        // average events per bin; used to calculate fNbins
-      Int_t*    fAverageEvtPerBinVarS;    // average events per bin; used to calculate fNbins
-      Int_t*    fAverageEvtPerBinVarB;    // average events per bin; used to calculate fNbins
+      Double_t             fEpsilon;                   // minimum number of likelihood (to avoid zero)
+      Bool_t               fTransformLikelihoodOutput; // likelihood output is sigmoid-transformed
 
-      Int_t            fNsmooth;        // number of smooth passes
-      Int_t*           fNsmoothVarS;    // number of smooth passes
-      Int_t*           fNsmoothVarB;    // number of smooth passes
-      Double_t         fEpsilon;        // minimum number of likelihood (to avoid zero)
-      Bool_t           fTransformLikelihoodOutput; // likelihood output is sigmoid-transformed
-
-
-      // type of Splines (or Kernel) used to smooth PDFs
-      TString*           fInterpolateString;  // which interpolation method used for reference histograms (individual for each variable)
-      PDF::EInterpolateMethod *fInterpolateMethod; //enumerators encoding the interpolation method
-
-      Int_t                    fSpline;        // Spline order to smooth histograms (if spline is selected for interpolation)
-
-      TString                  fKDEtypeString; // Kernel type to use for KDE (string) (if KDE is selected for interpolation) 
-      TString                  fKDEiterString; // Number of iterations (string)
-      KDEKernel::EKernelType   fKDEtype;       // Kernel type to use for KDE
-      KDEKernel::EKernelIter   fKDEiter;       // Number of iterations
-      Float_t                  fKDEfineFactor; // fine tuning factor for Adaptive KDE: factor to multiply the "width" of the Kernel function
-      KDEKernel::EKernelBorder fBorderMethod;  // the method to take care about "border" effects
-      TString                  fBorderMethodString; // the method to take care about "border" effects (string)
-      Int_t                    fDropVariable;  // for ranking test
+      Int_t                fDropVariable;              //  for ranking test
       
-      std::vector<TH1*>* fHistSig;        // signal PDFs (histograms)
-      std::vector<TH1*>* fHistBgd;        // background PDFs (histograms)
-      std::vector<TH1*>* fHistSig_smooth; // signal PDFs (smoothed histograms)
-      std::vector<TH1*>* fHistBgd_smooth; // background PDFs (smoothed histograms)
+      std::vector<TH1*>*   fHistSig;                   // signal PDFs (histograms)
+      std::vector<TH1*>*   fHistBgd;                   // background PDFs (histograms)
+      std::vector<TH1*>*   fHistSig_smooth;            // signal PDFs (smoothed histograms)
+      std::vector<TH1*>*   fHistBgd_smooth;            // background PDFs (smoothed histograms)
   
-      std::vector<PDF*>* fPDFSig;  // list of PDFs (signal)    
-      std::vector<PDF*>* fPDFBgd;  // list of PDFs (background)
+      PDF*                 fDefaultPDFLik;             // pdf that contains default definitions
+      std::vector<PDF*>*   fPDFSig;                    // list of PDFs (signal)    
+      std::vector<PDF*>*   fPDFBgd;                    // list of PDFs (background)
 
       // default initialisation called by all constructors
-      void InitLik( void );
    
-      ClassDef(MethodLikelihood,0) // Likelihood analysis A ("non-parametric approach") 
+      ClassDef(MethodLikelihood,0) // Likelihood analysis ("non-parametric approach") 
    };
 
 } // namespace TMVA

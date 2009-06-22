@@ -17,7 +17,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -25,7 +24,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -48,11 +46,15 @@
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
-#ifndef ROOT_TMVA_TMatrixD
-#include "TMatrixD.h"
+#ifndef ROOT_TMVA_TMatrixDfwd
+#ifndef ROOT_TMatrixDfwd
+#include "TMatrixDfwd.h"
+#endif
 #endif
 #ifndef ROOT_TMVA_TVectorD
+#ifndef ROOT_TVectorD
 #include "TVectorD.h"
+#endif
 #endif
 
 namespace TMVA {
@@ -63,30 +65,33 @@ namespace TMVA {
 
       MethodHMatrix( const TString& jobName, 
                      const TString& methodTitle, 
-                     DataSet& theData,
+                     DataSetInfo& theData,
                      const TString& theOption = "",
                      TDirectory* theTargetDir = 0 );
 
-      MethodHMatrix( DataSet& theData, 
+      MethodHMatrix( DataSetInfo& theData, 
                      const TString& theWeightFile,  
                      TDirectory* theTargetDir = NULL );
 
-      virtual ~MethodHMatrix( void );
+      virtual ~MethodHMatrix();
     
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+
       // training method
-      void Train( void );
+      void Train();
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
       void WriteWeightsToStream( ostream& o ) const;
+      void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
       void ReadWeightsFromStream( istream& istr );
-
+      void ReadWeightsFromXML( void* wghtnode );
       // calculate the MVA value
-      Double_t GetMvaValue();
+      Double_t GetMvaValue( Double_t* err = 0 );
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
@@ -119,7 +124,7 @@ namespace TMVA {
       TVectorD* fVecMeanB;    // vector of mean values (background)
 
       // default initialisation method called by all constructors
-      void InitHMatrix( void ); 
+      void Init(); 
 
       ClassDef(MethodHMatrix,0) // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
    }; 

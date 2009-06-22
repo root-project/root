@@ -33,7 +33,6 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TMath.h"
-#include "Riostream.h"
 
 #include "TMVA/MethodRuleFit.h"
 #include "TMVA/RuleFitAPI.h"
@@ -43,19 +42,22 @@
 
 ClassImp(TMVA::RuleFitAPI)
 
-TMVA::RuleFitAPI::RuleFitAPI( const MethodRuleFit *rfbase,
-                              RuleFit *rulefit,
-                              EMsgType minType = kINFO ) 
-   : fMethodRuleFit( rfbase ),
-     fRuleFit      ( rulefit ),
-     fLogger       ( "RuleFitAPI", minType )
+   TMVA::RuleFitAPI::RuleFitAPI( const MethodRuleFit *rfbase,
+                                 RuleFit *rulefit,
+                                 EMsgType minType = kINFO ) :
+   fMethodRuleFit(rfbase),
+   fRuleFit(rulefit),
+   fLogger("RuleFitAPI",minType)
 {
    // standard constructor
-   if (rfbase) SetRFWorkDir(rfbase->GetRFWorkDir());
-   else        SetRFWorkDir("./rulefit");
-
+   if (rfbase) {
+      SetRFWorkDir(rfbase->GetRFWorkDir());
+   } else {
+      SetRFWorkDir("./rulefit");
+   }
    InitRuleFit();
 }
+
 
 //_______________________________________________________________________
 TMVA::RuleFitAPI::~RuleFitAPI()
@@ -120,7 +122,7 @@ void TMVA::RuleFitAPI::InitRuleFit()
 void TMVA::RuleFitAPI::ImportSetup()
 {
    // import setup from MethodRuleFit
-   fRFIntParms.p            = fMethodRuleFit->Data().GetNVariables();
+   fRFIntParms.p            = fMethodRuleFit->DataInfo().GetNVariables();
    fRFIntParms.max_rules    = fMethodRuleFit->GetRFNrules();
    fRFIntParms.tree_size    = fMethodRuleFit->GetRFNendnodes();
    fRFIntParms.path_steps   = fMethodRuleFit->GetGDNPathSteps();
@@ -175,7 +177,7 @@ void TMVA::RuleFitAPI::SetTrainParms()
    // set the training parameters
    ImportSetup();
    //
-   Int_t    n    = fMethodRuleFit->Data().GetNEvtTrain();
+   Int_t    n    = fMethodRuleFit->Data()->GetNTrainingEvents();
    //   Double_t neff = Double_t(n); // When weights are added: should be sum(wt)^2/sum(wt^2)
    fRFIntParms.n = n; // number of data points in tree
    fRFProgram    = kRfTrain;
@@ -186,7 +188,7 @@ void TMVA::RuleFitAPI::SetTestParms()
 {
    // set the test params
    ImportSetup();
-   Int_t    n    = fMethodRuleFit->Data().GetNEvtTest();
+   Int_t    n    = fMethodRuleFit->Data()->GetNTestEvents();
    //   Double_t neff = Double_t(n); // When weights are added: should be sum(wt)^2/sum(wt^2)
    fRFIntParms.n = n; // number of data points in tree
    fRFProgram    = kRfPredict;
@@ -270,7 +272,7 @@ Bool_t TMVA::RuleFitAPI::WriteLx()
    // NOTE: Always set all to 1
    //  if (fRFLx.size() != m_inputVars->size()) {
    fRFLx.clear();
-   fRFLx.resize(fMethodRuleFit->Data().GetNVariables(),1);
+   fRFLx.resize(fMethodRuleFit->DataInfo().GetNVariables(),1);
    //  }
    std::ofstream f;
    if (!OpenRFile("lx",f)) return kFALSE;
@@ -367,20 +369,20 @@ Bool_t TMVA::RuleFitAPI::WriteTrain()
    // The loop order cannot be changed.
    // The data is stored <var1(eve1), var1(eve2), ...var1(eveN), var2(eve1),....
    //
-   for (UInt_t ivar=0; ivar<fMethodRuleFit->Data().GetNVariables(); ivar++) {
-      for (Int_t ievt=0;ievt<fMethodRuleFit->Data().GetNEvtTrain(); ievt++) {
-         fMethodRuleFit->ReadTrainingEvent(ievt);
-         x = fMethodRuleFit->GetEventVal(ivar);
+   for (UInt_t ivar=0; ivar<fMethodRuleFit->DataInfo().GetNVariables(); ivar++) {
+      for (Int_t ievt=0;ievt<fMethodRuleFit->Data()->GetNTrainingEvents(); ievt++) {
+         const Event * ev = fMethodRuleFit->GetTrainingEvent(ievt);
+         x = ev->GetVal(ivar);
          WriteFloat(fx,&x,1);
          if (ivar==0) {
-            w = fMethodRuleFit->GetEventWeight();
-            y = fMethodRuleFit->IsSignalEvent() ? 1.0 : -1.0;
+            w = ev->GetWeight();
+            y = ev->IsSignal() ? 1.0 : -1.0;
             WriteFloat(fy,&y,1);
             WriteFloat(fw,&w,1);
          }
       }
    }
-   fLogger << kINFO << "Number of training data written: " << fMethodRuleFit->Data().GetNEvtTrain() << Endl;
+   fLogger << kINFO << "Number of training data written: " << fMethodRuleFit->Data()->GetNTrainingEvents() << Endl;
    return kTRUE;
 }
 
@@ -388,6 +390,9 @@ Bool_t TMVA::RuleFitAPI::WriteTrain()
 Bool_t TMVA::RuleFitAPI::WriteTest()
 {
    // Write test data
+
+   fMethodRuleFit->Data()->SetCurrentType(Types::kTesting);
+
    std::ofstream f;
    //
    if (!OpenRFile("test.x",f)) return kFALSE;
@@ -395,21 +400,20 @@ Bool_t TMVA::RuleFitAPI::WriteTest()
    Float_t vf;
    Float_t neve;
    //
-   neve = static_cast<Float_t>(fMethodRuleFit->Data().GetNEvtTest());
+   neve = static_cast<Float_t>(fMethodRuleFit->Data()->GetNEvents());
    WriteFloat(f,&neve,1);
    // Test data is saved as:
    // 0      : <N> num of events, type float, 4 bytes
    // 1-N    : First variable for all events
    // N+1-2N : Second variable...
    // ...
-   for (UInt_t ivar=0; ivar<fMethodRuleFit->Data().GetNVariables(); ivar++) {
-      for (Int_t ievt=0;ievt<fMethodRuleFit->Data().GetNEvtTest(); ievt++) {
-         fMethodRuleFit->ReadTestEvent(ievt);
-         vf =   fMethodRuleFit->GetEventVal(ivar);
+   for (UInt_t ivar=0; ivar<fMethodRuleFit->DataInfo().GetNVariables(); ivar++) {
+      for (Int_t ievt=0;ievt<fMethodRuleFit->Data()->GetNEvents(); ievt++) {
+         vf =   fMethodRuleFit->GetEvent(ievt)->GetVal(ivar);
          WriteFloat(f,&vf,1);
       }
    }
-   fLogger << kINFO << "Number of test data written: " << fMethodRuleFit->Data().GetNEvtTest() << Endl;
+   fLogger << kINFO << "Number of test data written: " << fMethodRuleFit->Data()->GetNEvents() << Endl;
    //
    return kTRUE;
 }
@@ -420,14 +424,15 @@ Bool_t TMVA::RuleFitAPI::WriteVarNames()
    // write variable names, ascii
    std::ofstream f;
    if (!OpenRFile("varnames",f)) return kFALSE;
-   for (UInt_t ivar=0; ivar<fMethodRuleFit->Data().GetNVariables(); ivar++) {
-      f << fMethodRuleFit->Data().GetExpression(ivar) << '\n';
+   for (UInt_t ivar=0; ivar<fMethodRuleFit->DataInfo().GetNVariables(); ivar++) {
+      f << fMethodRuleFit->DataInfo().GetVariableInfo(ivar).GetExpression() << '\n';
    }
    return kTRUE;
 }
 
 //_______________________________________________________________________
 Bool_t TMVA::RuleFitAPI::WriteVarImp()
+
 {
    // written by rf_go.exe
    fLogger << kWARNING << "WriteVarImp is not yet implemented" << Endl;
@@ -454,12 +459,12 @@ Bool_t TMVA::RuleFitAPI::ReadYhat()
    Float_t xval;
    ReadFloat(f,&xval,1);
    neve = static_cast<Int_t>(xval);
-   if (neve!=fMethodRuleFit->Data().GetNEvtTest()) {
+   if (neve!=fMethodRuleFit->Data()->GetNTestEvents()) {
       fLogger << kWARNING << "Inconsistent size of yhat file and test tree!" << Endl;
-      fLogger << kWARNING << "neve = " << neve << " , tree = " << fMethodRuleFit->Data().GetNEvtTest() << Endl;
+      fLogger << kWARNING << "neve = " << neve << " , tree = " << fMethodRuleFit->Data()->GetNTestEvents() << Endl;
       return kFALSE;
    }
-   for (Int_t ievt=0; ievt<fMethodRuleFit->Data().GetNEvtTest(); ievt++) {
+   for (Int_t ievt=0; ievt<fMethodRuleFit->Data()->GetNTestEvents(); ievt++) {
       ReadFloat(f,&xval,1);
       fRFYhat.push_back(xval);
    }
@@ -477,7 +482,7 @@ Bool_t TMVA::RuleFitAPI::ReadVarImp()
    UInt_t   nvars;
    Float_t xval;
    Float_t xmax=1.0;
-   nvars=fMethodRuleFit->Data().GetNVariables();
+   nvars=fMethodRuleFit->DataInfo().GetNVariables();
    //
    // First read all importances
    //

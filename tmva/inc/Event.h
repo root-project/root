@@ -26,95 +26,133 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// Event
-//
-// Storage class for an event. It is used by all TMVA methods
-// during the training. Events are collected in Dataset
-//
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TMVA_Event
 #define ROOT_TMVA_Event
 
+#include <iosfwd>
 #include <vector>
+
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-#ifndef ROOT_TMVA_VariableInfo
-#include "TMVA/VariableInfo.h"
+#ifndef ROOT_TMVA_Types
+#include "TMVA/Types.h"
 #endif
-
-class TTree;
-class TBranch;
 
 namespace TMVA {
 
    class Event;
 
-   ostream& operator<<( ostream& os, const Event& event );
-   ostream& operator<<( ostream& os, const Event* event );
+   std::ostream& operator<<( std::ostream& os, const Event& event );
+   std::ostream& operator<<( std::ostream& os, const Event* event );
 
    class Event {
 
-      friend ostream& operator<<( ostream& os, const Event& event );
-      friend ostream& operator<<( ostream& os, const Event* event );
+      friend std::ostream& operator<<( std::ostream& os, const Event& event );
+      friend std::ostream& operator<<( std::ostream& os, const Event* event );
 
    public:
 
-      Event( const std::vector<TMVA:: VariableInfo>&, Bool_t AllowExternalLinks = kTRUE );
+      // constructors
+      Event();
       Event( const Event& );
+      explicit Event( const std::vector<Float_t>&, 
+                      const std::vector<Float_t>& targetValues, 
+                      const std::vector<Float_t>& spectatorValues, 
+                      UInt_t theClass = 0, Float_t weight = 1.0, Float_t boostweight = 1.0 );
+      explicit Event( const std::vector<Float_t>&, 
+                      const std::vector<Float_t>& targetValues, 
+                      UInt_t theClass = 0, Float_t weight = 1.0, Float_t boostweight = 1.0 );
+      explicit Event( const std::vector<Float_t>&, 
+                      UInt_t theClass, Float_t weight = 1.0, Float_t boostweight = 1.0 );
+      explicit Event( const std::vector<Float_t*>*& );
+
       ~Event();
+
+      // accessors
+      Bool_t  IsSignal()          const { return (fClass==fSignalClass); } // deprecated: use <DataSetInfo>.IsSignal( Event* )
+
+      Float_t GetWeight()         const { return fWeight*fBoostWeight; }
+      Float_t GetOriginalWeight() const { return fWeight; }
+      Float_t GetBoostWeight()    const { return TMath::Max(Float_t(0.0001),fBoostWeight); }
+      UInt_t  GetType()           const { return GetClass(); }  // better use GetClass()
+      UInt_t  GetClass()          const { return fClass; }  
+      UInt_t  Type()              const { return fClass; }  // backward compatible -> to be removed
+
+      UInt_t  GetNVariables()     const { return fValues.size(); }
+      UInt_t  GetNTargets()       const { return fTargets.size(); }
+      UInt_t  GetNSpectators()      const { return fSpectators.size(); }
+      UInt_t  GetNVars()          const { return fValues.size(); }  // backward compatible -> to be removed
+
+      Float_t GetVal(UInt_t ivar) const { return ( fDynamic ?( *(*fValuesDynamic)[ivar] ) : fValues[ivar] ); }
+      Int_t   GetSignalClass()    const { return fSignalClass; } // intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
       
-      void SetBranchAddresses(TTree* tr);
-      std::vector<TBranch*>& Branches() { return fBranches; }
+      const std::vector<Float_t>& GetValues() const {  
+         if (fDynamic) {
+            fValues.clear();
+            for (std::vector<Float_t*>::const_iterator it = fValuesDynamic->begin(); 
+                 it != fValuesDynamic->end(); it++) { Float_t val = *(*it); fValues.push_back( val ); }
+         }
+         return fValues;
+      }
 
-      Bool_t  IsSignal()       const { return (fType==1); }
-      Float_t GetWeight()      const { return fWeight*fBoostWeight; }
-      Float_t GetBoostWeight() const { return fBoostWeight; }
-      Int_t   Type()           const { return fType; }
-      void    SetWeight(Float_t w)      { fWeight=w; }
-      void    SetBoostWeight(Float_t w) { fBoostWeight=w; }
-      void    SetType(Int_t t)          { fType=t; }
-      void    SetType(Types::ESBType t) { fType=(t==Types::kSignal)?1:0; }
-      void    SetVal(UInt_t ivar, Float_t val);
-      void    SetValFloatNoCheck(UInt_t ivar, Float_t val) { *((Float_t*)fVarPtr[ivar]) = val; }
+      Float_t GetValue          ( UInt_t ivar) const { return GetVal( ivar ); }
 
+      void    ScaleWeight       ( Float_t s ) { fWeight*=s; }
+      void    SetWeight         ( Float_t w ) { fWeight=w; }
+      void    SetBoostWeight    ( Float_t w ) { fBoostWeight=w; }
+      void    ScaleBoostWeight  ( Float_t s ) { fBoostWeight *= s; }
+      void    SetType           ( Int_t t  )  { SetClass(t); }
+      void    SetClass          ( UInt_t t )  { fClass=t; }
+      void    SetType           ( Types::ESBType t ) { fClass=(t==Types::kSignal) ? 1 : 0; }
+      void    SetVal            ( UInt_t ivar, Float_t val );
+      void    SetValFloatNoCheck( UInt_t ivar, Float_t val ) { fValues[ivar] = val; }
+
+      void    SetSignalClass    ( UInt_t cls ){ fSignalClass = cls; } // intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
+
+      void    SetTarget( UInt_t itgt, Float_t value ) { 
+         if (fTargets.size() <= itgt) fTargets.resize( itgt+1 );
+         fTargets.at(itgt) = value;
+      }
+      std::vector<Float_t>& GetTargets()             const { return fTargets; }
+      Float_t               GetTarget( UInt_t itgt ) const { return fTargets.at(itgt); }
+
+      void    SetSpectator( UInt_t ivar, Float_t value ) { 
+         if (fSpectators.size() <= ivar) fSpectators.resize( ivar+1 );
+         fSpectators.at(ivar) = value;
+      }
+      std::vector<Float_t>& GetSpectators()            const { return fSpectators; }
+      Float_t               GetSpectator( UInt_t ivar) const { return fSpectators.at(ivar); }
+
+      static void ClearDynamicVariables() { 
+         if (fValuesDynamic != 0) { 
+            fValuesDynamic->clear();
+            delete fValuesDynamic;
+            fValuesDynamic = 0;
+         }
+      } 
 
       void    CopyVarValues( const Event& other );
-
-      Char_t  GetVarType (UInt_t ivar)        const { return fVariables[ivar].GetVarType(); }
-      Bool_t  IsInt      (UInt_t ivar)        const { return (fVariables[ivar].GetVarType()=='I'); }
-      Bool_t  IsFloat    (UInt_t ivar)        const { return (fVariables[ivar].GetVarType()=='F'); }
-      Float_t GetVal     (UInt_t ivar)        const;
-      Float_t GetValFloat(UInt_t ivar)        const { return *((Float_t*)fVarPtr[ivar]); }
-      UInt_t  GetNVars()                      const { return fVariables.size(); }
-      Float_t GetValueNormalized(UInt_t ivar) const;
-      void*   GetExternalLink(UInt_t ivar)    const { return fVariables[ivar].GetExternalLink(); }
-
-      void Print(std::ostream & o) const;
+      void    Print        ( std::ostream & o ) const;
 
    private:
 
-      void InitPointers(bool AllowExternalLink = kTRUE);
-   
-      const std::vector<TMVA::VariableInfo>& fVariables; // the variables
-      void **   fVarPtr;          // array containing values
-      //    Int_t *   fVarPtrI;         // integer value
-      Float_t*  fVarPtrF;         // float value
-      Int_t     fType;            // signal or background type
-      Float_t   fWeight;          // event weight (product of global and individual weights)
-      Float_t   fBoostWeight;     // internal weight to be set by boosting algorithm
-      UInt_t    fCountI;          // the number of Integer variables
-      UInt_t    fCountF;          // the number of Float variables
+      mutable std::vector<Float_t>   fValues;          // the event values
+      static  std::vector<Float_t*>* fValuesDynamic;   // the event values
+      mutable std::vector<Float_t>   fTargets;         // target values for regression
 
-      std::vector<TBranch*> fBranches; // TTree branches
+      mutable std::vector<Float_t>   fSpectators;        // "visisting" variables which are never used for any calculation
 
-      static Int_t fgCount;       // count instances of Event
 
+      UInt_t                         fClass;           // signal or background type: signal=1, background=0
+      Float_t                        fWeight;          // event weight (product of global and individual weights)
+      Float_t                        fBoostWeight;     // internal weight to be set by boosting algorithm
+      Bool_t                         fDynamic;         // is set when the dynamic values are taken
+
+      UInt_t                         fSignalClass;     // intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
+      
+      static Int_t                   fgCount;          // count instances of Event
    };
-
 }
 
 #endif

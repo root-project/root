@@ -37,12 +37,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include<vector>
+#ifndef ROOT_TObject
 #include "TObject.h"
-#include "TString.h"
-
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
 #endif
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
+
 #ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
 #endif
@@ -51,6 +52,7 @@ namespace TMVA {
 
    class Interval;
    class IFitterTarget;
+   class MsgLogger;
 
    class FitterBase : public Configurable {
 
@@ -82,7 +84,9 @@ namespace TMVA {
       const std::vector<TMVA::Interval*>  fRanges;       // allowed intervals
       Int_t                               fNpars;        // number of parameters
 
-      mutable MsgLogger                   fLogger;       // message logger
+      mutable MsgLogger*                  fLogger;       // message logger
+      MsgLogger& log() const { return *fLogger; }    
+
       TString                             fClassName;    // remove TMVA:: from TObject name
 
       ClassDef(FitterBase,0) // Baseclass for fitters

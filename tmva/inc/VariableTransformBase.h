@@ -32,38 +32,48 @@
 //                                                                      //
 // VariableTransformBase                                                //
 //                                                                      //
+// Linear interpolation class                                           //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include "TTree.h"
-#include "TH1.h"
-#include "TDirectory.h"
-#include "TString.h"
 
+#ifndef ROOT_TH1
+#include "TH1.h"
+#endif
+#ifndef ROOT_TDirectory
+#include "TDirectory.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
+
+#ifndef ROOT_TMVA_Types
+#include "TMVA/Types.h"
+#endif
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif
 #ifndef ROOT_TMVA_VariableInfo
 #include "TMVA/VariableInfo.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
+#ifndef ROOT_TMVA_DataSetInfo
+#include "TMVA/DataSetInfo.h"
 #endif
 
 namespace TMVA {
-
-   class Ranking;
 
    class VariableTransformBase : public TObject {
 
    public:
   
-      VariableTransformBase( std::vector<TMVA::VariableInfo>&, Types::EVariableTransform tf );
+      VariableTransformBase( DataSetInfo& dsi, Types::EVariableTransform tf, const TString& trfName );
       virtual ~VariableTransformBase( void );
 
-      virtual void   ApplyTransformation( Types::ESBType type = Types::kMaxSBType ) const = 0;
-      virtual Bool_t PrepareTransformation( TTree* inputTree ) = 0;
-      void PlotVariables( TTree* theTree );
+      virtual void         Initialize() = 0;
+      virtual Bool_t       PrepareTransformation( const std::vector<Event*>&  ) = 0;
+      virtual const Event* Transform       ( const Event* const, Int_t cls ) const = 0;
+      virtual const Event* InverseTransform( const Event* const, Int_t cls ) const = 0;
 
       // accessors
       void   SetEnabled  ( Bool_t e ) { fEnabled = e; }
@@ -72,98 +82,72 @@ namespace TMVA {
       Bool_t IsCreated()    const { return fCreated; }
       Bool_t IsNormalised() const { return fNormalise; }
 
-      void CreateEvent() const;
-
-      virtual TMVA::Event& GetEvent() const { 
-         if (fEvent==0) CreateEvent();
-         return *fEvent; 
-      }
-      TMVA::Event& GetEventRaw()      const { 
-         if (fEventRaw==0) fEventRaw = new TMVA::Event(fVariables); 
-         return *fEventRaw; 
-      }
-
-      // provides string vector describing explicit transformation
-      virtual std::vector<TString>* GetTransformationStrings( Types::ESBType type = Types::kMaxSBType ) const = 0;
-
       void SetUseSignalTransform( Bool_t e=kTRUE) { fUseSignalTransform = e; }
+      Bool_t UseSignalTransform() const { return fUseSignalTransform; }
 
-      virtual const char* GetName() const { return fTransformName; }
+      virtual const char* GetName() const { return fTransformName.Data(); }
+      TString GetShortName() const { TString a(fTransformName); a.ReplaceAll("Transform",""); return a; }
 
-      UInt_t GetNVariables() const { return fVariables.size(); }
-
-      void SetRootOutputBaseDir(TDirectory * dir) { fOutputBaseDir = dir; }
-
-      Bool_t ReadEvent( TTree* tr, UInt_t evidx, Types::ESBType type ) const;
-
-      const std::vector<TMVA::VariableInfo>& Variables() const { return fVariables; }
-
-      const VariableInfo& Variable(Int_t ivar) const { return fVariables[ivar]; }
-      VariableInfo&       Variable(Int_t ivar) { return fVariables[ivar]; }
-
-      const VariableInfo& Variable(const TString& var) const { return fVariables[FindVar(var)]; }
-      VariableInfo&       Variable(const TString& var) { return fVariables[FindVar(var)]; }
-      Int_t               FindVar(const TString& var) const { // don't use in loops, it is slow
-         for (UInt_t ivar=0; ivar<GetNVariables(); ivar++) 
-            if (var == fVariables[ivar].GetInternalVarName()) return ivar;
-         return -1;
-      }
-
-      void         WriteVarsToStream           ( std::ostream& o, const TString& prefix = "" ) const;
-      void         ReadVarsFromStream          ( std::istream& istr );
       virtual void WriteTransformationToStream ( std::ostream& o ) const = 0;
       virtual void ReadTransformationFromStream( std::istream& istr ) = 0;
 
-      // variable ranking
-      Ranking* GetVariableRanking()   const { return fRanking; }
-      void     PrintVariableRanking() const;
+      virtual void AttachXMLTo(void* parent) = 0;
+      virtual void ReadFromXML( void* trfnode ) = 0;
 
       Types::EVariableTransform GetVariableTransform() const { return fVariableTransform; }
 
-      virtual void PrintTransformation(ostream &) {};
-
       // writer of function code
-      virtual void MakeFunction(std::ostream& fout, const TString& fncName, Int_t part) = 0;
+      virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part, 
+                                 UInt_t trCounter, Int_t cls ) = 0;
 
+      // provides string vector giving explicit transformation
+      virtual std::vector<TString>* GetTransformationStrings( Int_t cls ) const;
+      virtual void PrintTransformation( ostream & ) {}
+
+      const std::vector<TMVA::VariableInfo>& Variables() const { return fVariables; }
+      const std::vector<TMVA::VariableInfo>& Targets()   const { return fTargets;   }
+
+      MsgLogger& log() const { return *fLogger; }                       
 
    protected:
 
-      void CalcNorm( TTree * );
+      void CalcNorm( const std::vector<Event*>& );
 
       void SetCreated( Bool_t c = kTRUE ) { fCreated = c; }
+      void SetNVariables( UInt_t i )      { fNVars = i; }
       void SetName( const TString& c )    { fTransformName = c; }
 
-      void ResetBranchAddresses( TTree* tree ) const;
+      UInt_t GetNVariables() const { return fDsi.GetNVariables(); }
+      UInt_t GetNTargets()   const { return fDsi.GetNTargets(); }
 
-      Bool_t                  fUseSignalTransform; // true if transformation bases on signal data
-      mutable TMVA::Event*    fEvent;     // this is the event
-      mutable TMVA::Event*    fEventRaw;  // this is the untransformed event
+      DataSetInfo& fDsi;
 
-      TDirectory*             GetOutputBaseDir() const { return fOutputBaseDir; }
+      std::vector<TMVA::VariableInfo>& Variables() { return fVariables; }
+      std::vector<TMVA::VariableInfo>& Targets() { return fTargets; }
+      Int_t GetNClasses() const { return fDsi.GetNClasses(); }
+
+
+      mutable Event*           fTransformedEvent;     // holds the current transformed event
+      mutable Event*           fBackTransformedEvent; // holds the current back-transformed event
 
    private:
 
       Types::EVariableTransform fVariableTransform;  // Decorrelation, PCA, etc.
 
-      void           UpdateNorm( Int_t ivar, Double_t x );
+      void UpdateNorm( Int_t ivar, Double_t x );
 
-      Bool_t         fEnabled;            // has been enabled
-      Bool_t         fCreated;            // has been created
-      Bool_t         fNormalise;          // normalise input variables
-
-      TString        fTransformName;
-      
-      std::vector<TMVA::VariableInfo>  fVariables; // event variables [saved to weight file]
-      
-      mutable TTree* fCurrentTree;        // pointer to tree
-      mutable Size_t fCurrentEvtIdx;      // current event index
-      TDirectory*    fOutputBaseDir;      // directory
-
-      Ranking*       fRanking;            // ranking object
+      Bool_t                           fUseSignalTransform; // true if transformation bases on signal data
+      Bool_t                           fEnabled;            // has been enabled
+      Bool_t                           fCreated;            // has been created
+      Bool_t                           fNormalise;          // normalise input variables
+      UInt_t                           fNVars;              // number of variables
+      TString                          fTransformName;      // name of transformation
+      std::vector<TMVA::VariableInfo>  fVariables;          // event variables [saved to weight file]
+      std::vector<TMVA::VariableInfo>  fTargets;            // event targets [saved to weight file --> TODO ]
 
    protected:
 
-      mutable MsgLogger  fLogger;         // message logger
+      mutable MsgLogger* fLogger;                     //! message logger      
 
       ClassDef(VariableTransformBase,0)   //  Base class for variable transformations
    };
@@ -171,5 +155,3 @@ namespace TMVA {
 } // namespace TMVA
 
 #endif 
-
-

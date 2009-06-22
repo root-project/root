@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -20,7 +19,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -32,27 +30,26 @@
 // Quadratic interpolation of TGraph
 //_______________________________________________________________________
 
-#include "TMVA/TSpline2.h"
-#include "Riostream.h"
 #include "TMath.h"
+
+#include "TMVA/TSpline2.h"
 
 ClassImp(TMVA::TSpline2)
 
 //_______________________________________________________________________
-TMVA::TSpline2::TSpline2( TString title, TGraph* theGraph )
+TMVA::TSpline2::TSpline2( const TString& title, TGraph* theGraph )
    : fGraph( theGraph ) // not owned by TSpline2
 {
    // constructor from TGraph
    // TSpline is a TNamed object
-   SetNameTitle( title, title );  
+   SetNameTitle( title, title );
 }
 
 //_______________________________________________________________________
 TMVA::TSpline2::~TSpline2( void )
 {
    // destructor
-   // if (NULL != fGraph) delete fGraph; // ROOT's spline classes don't own the TGraph either
-   // so we will do the same
+   if (fGraph) delete fGraph; // ROOT's spline classes also own the TGraph
 }
 
 //_______________________________________________________________________
@@ -127,8 +124,8 @@ void TMVA::TSpline2::GetKnot( Int_t  /*i*/, Double_t& /*x*/, Double_t& /*y*/ ) c
 }
 
 //_______________________________________________________________________
-Double_t TMVA::TSpline2::Quadrax(const Float_t dm,const Float_t dm1,const Float_t dm2,const Float_t dm3,
-                                 const Float_t cos1, const Float_t cos2, const Float_t cos3 ) const
+Double_t TMVA::TSpline2::Quadrax( const Float_t dm,const Float_t dm1,const Float_t dm2,const Float_t dm3,
+                                  const Float_t cos1, const Float_t cos2, const Float_t cos3 ) const
 {  
    // quadratic interpolation
    // Revised and checked by Francois Nov, 16th, 2000

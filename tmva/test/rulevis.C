@@ -10,8 +10,8 @@
 // input: - Input file (result from TMVA),
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
-void rulevis( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal, bool useTMVAStyle=kTRUE )
+void rulevis( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob::kNorm, bool useTMVAStyle=kTRUE )
 {
-   rulevisHists(fin,type,useTMVAStyle);
+   //rulevisHists(fin,type,useTMVAStyle);
    rulevisCorr(fin,type,useTMVAStyle);
 }

@@ -47,9 +47,6 @@
 #include "TMVA/Event.h"
 #endif
 
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
 
 class TTree;
 
@@ -57,6 +54,7 @@ namespace TMVA {
 
    class RuleEnsemble;
    class RuleFit;
+   class MsgLogger;
 
    class RuleFitParams {
 
@@ -68,7 +66,7 @@ namespace TMVA {
       void Init();
 
       // set message type
-      void SetMsgType( EMsgType t ) { fLogger.SetMinType(t); }
+      void SetMsgType( EMsgType t );
 
       // set RuleFit ptr
       void SetRuleFit( RuleFit *rf )    { fRuleFit = rf; }
@@ -225,7 +223,7 @@ namespace TMVA {
       std::vector< std::vector<Double_t> > fGradVecLinTst; // gradient vector, linear terms - one per tau
       //
       std::vector<Double_t> fGDErrTst;     // error rates per tau
-      std::vector<Bool_t>   fGDErrTstOK;   // error rate is sufficiently low
+      std::vector<Char_t>   fGDErrTstOK;   // error rate is sufficiently low <--- stores boolean
       std::vector< std::vector<Double_t> > fGDCoefTst;    // rule coeffs - one per tau
       std::vector< std::vector<Double_t> > fGDCoefLinTst; // linear coeffs - one per tau
       std::vector<Double_t> fGDOfsTst;       // offset per tau
@@ -262,7 +260,9 @@ namespace TMVA {
 
    private:
 
-      mutable MsgLogger     fLogger;         // message logger
+      mutable MsgLogger*    fLogger;         //! message logger
+      MsgLogger& log() const { return *fLogger; }                       
+
    };
 
    // --------------------------------------------------------

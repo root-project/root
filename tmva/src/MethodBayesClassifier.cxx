@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$
-// Author: Marcin ....
+// @(#)root/tmva $Id$    
+// Author: Marcin .... 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -30,37 +30,48 @@
 // ... description of bayesian classifiers ...
 //_______________________________________________________________________
 
+#include "TMVA/ClassifierFactory.h"
 #include "TMVA/MethodBayesClassifier.h"
+#include "TMVA/Tools.h"
 #include "Riostream.h"
+
+REGISTER_METHOD(BayesClassifier)
 
 ClassImp(TMVA::MethodBayesClassifier)
 
 //_______________________________________________________________________
-TMVA::MethodBayesClassifier::MethodBayesClassifier( const TString& jobName, const TString& methodTitle, DataSet& theData, 
-                                                    const TString& theOption, TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+TMVA::MethodBayesClassifier::MethodBayesClassifier( const TString& jobName,
+                                                    const TString& methodTitle,
+                                                    DataSetInfo& theData, 
+                                                    const TString& theOption,
+                                                    TDirectory* theTargetDir ) :
+   TMVA::MethodBase( jobName, Types::kBayesClassifier, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor
-   InitBayesClassifier();
 }
 
 //_______________________________________________________________________
-TMVA::MethodBayesClassifier::MethodBayesClassifier( DataSet& theData, 
+TMVA::MethodBayesClassifier::MethodBayesClassifier( DataSetInfo& theData, 
                                                     const TString& theWeightFile,  
-                                                    TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
+                                                    TDirectory* theTargetDir ) :
+   TMVA::MethodBase( Types::kBayesClassifier, theData, theWeightFile, theTargetDir ) 
 {
    // constructor from weight file
-   InitBayesClassifier();
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBayesClassifier::InitBayesClassifier( void )
+Bool_t TMVA::MethodBayesClassifier::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
+{
+   // Variable can handle classification with 2 classes 
+   if( type == Types::kClassification && numberClasses == 2 ) return kTRUE;
+   return kFALSE;
+}
+
+
+//_______________________________________________________________________
+void TMVA::MethodBayesClassifier::Init( void )
 {
    // default initialisation
-   SetMethodName( "BayesClassifier" );
-   SetMethodType( TMVA::Types::kBayesClassifier );
-   SetTestvarName();
 }
 
 //_______________________________________________________________________
@@ -73,7 +84,6 @@ void TMVA::MethodBayesClassifier::DeclareOptions()
 void TMVA::MethodBayesClassifier::ProcessOptions() 
 {
    // the option string is decoded, for availabel options see "DeclareOptions"
-   MethodBase::ProcessOptions();
 }
 
 //_______________________________________________________________________
@@ -86,9 +96,6 @@ TMVA::MethodBayesClassifier::~MethodBayesClassifier( void )
 void TMVA::MethodBayesClassifier::Train( void )
 {
    // some training 
-
-   // default sanity checks
-   if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
 }
 
 //_______________________________________________________________________
@@ -97,19 +104,26 @@ void  TMVA::MethodBayesClassifier::WriteWeightsToStream( ostream & o ) const
    // write the weight from the training to a file (stream)
    o << "whatever" << endl;
 }
+
+//_______________________________________________________________________
+void TMVA::MethodBayesClassifier::AddWeightsXMLTo( void* /*parent*/ ) const {
+   log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+}
   
 //_______________________________________________________________________
-void  TMVA::MethodBayesClassifier::ReadWeightsFromStream( istream & istr )
+void  TMVA::MethodBayesClassifier::ReadWeightsFromStream( istream & )
 {
    // read back the training results from a file (stream)
-   if (istr.eof()) {}
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBayesClassifier::GetMvaValue()
+Double_t TMVA::MethodBayesClassifier::GetMvaValue( Double_t* err )
 {
    // returns MVA value for given event
    Double_t myMVA = 0;
+
+   // cannot determine error
+   if (err != 0) *err = -1;
 
    return myMVA;
 }
@@ -129,16 +143,16 @@ void TMVA::MethodBayesClassifier::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "<None>" << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "<None>" << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "<None>" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "<None>" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "<None>" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "<None>" << Endl;
 }

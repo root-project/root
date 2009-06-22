@@ -15,8 +15,8 @@ Overview
 
   An MV analysis is executed in two steps, the training of the MVA
   methods, and the application of the best suited MVA method to your
-  dataset. These two steps are shown in the files TMVAnalysis.C and
-  TMVApplication.C, respectively.
+  dataset. These two steps are shown in the files TMVAClassification.C and
+  TMVAClassificationApplication.C, respectively.
 
   The example uses some toy data (tmva_example.root) that comes with
   the sourceforge distribution or is available on the ROOT web. The
@@ -24,10 +24,10 @@ Overview
   variables.
 
 
-  TMVAnalysis.C
+  TMVAClassification.C
   -------------
 
-  TMVAnalysis.C explains the usage of the TMVA::Factory class, which
+  TMVAClassification.C explains the usage of the TMVA::Factory class, which
   is the framework for the whole training process. The following steps
   are taken:
 
@@ -61,10 +61,10 @@ Overview
   performance results are stored in the root file (see last step)
 
 
-  TMVApplication.C 
+  TMVAClassificationApplication.C 
   ----------------
 
-  TMVApplication.C explains the usage of the TMVA::Reader class, which
+  TMVAClassificationApplication.C explains the usage of the TMVA::Reader class, which
   is to be used to evaluate your data with the trained MVA
   methods. The following steps are taken:
 
@@ -86,11 +86,11 @@ Overview
 How to run the example
 ======================
 
-  First, TMVAnalysis.C needs to be run to perform the training. You
-  can edit TMVAnalysis.C (boolean flags at the head of the file) to
+  First, TMVAClassification.C needs to be run to perform the training. You
+  can edit TMVAClassification.C (boolean flags at the head of the file) to
   enable (disable) the methods you would (not) like to use. Then run
 
-  > root TMVAnalysis.C
+  > root TMVAClassification.C
 
   Add the end a file TMVA.root is written, and a GUI opens. Once
   TMVA.root exists, the GUI can also be started via
@@ -99,13 +99,12 @@ How to run the example
 
   You can also run
 
-  > root TMVApplication.C 
+  > root TMVAClassificationApplication.C 
 
   which evaluates the methods on the signal data from the toy
   tmva_example.root and writes the result to TMVApp.root. However,
-  TMVApplication is more of a pedagogical example for the usage of
-  TMVA inside your own analysis framework.
-
+  TMVAClassificationApplication is more of a pedagogical example for 
+  the usage of TMVA inside your own analysis framework.
 
 The TMVA GUI
 ============
@@ -120,7 +119,7 @@ The TMVA GUI
 
   or
 
-  > root TMVA\(\"MyTMVA.root\"\)
+  > root TMVAGui.C\(\"MyTMVA.root\"\)
 
   in case you had directed your training output to a different root
   file (2nd argument of the TMVA::Factory constructor)

@@ -57,23 +57,27 @@
 //                 Universite de Blaise Pascal, IN2P3/CNRS    
 //_______________________________________________________________________
 
-#include <iostream>
 #include <string>
-#include <stdlib.h>
+#include <iostream>
+#include <cstdlib>
 
 #include "TMath.h"
+#include "TString.h"
 
 #include "TMVA/MethodCFMlpANN_Utils.h"
 #include "TMVA/Timer.h"
-#include "TMVA/MsgLogger.h"
+
+using std::cout;
+using std::endl;
 
 ClassImp(TMVA::MethodCFMlpANN_Utils)
    
-Int_t TMVA::MethodCFMlpANN_Utils::fg_100         = 100;
-Int_t TMVA::MethodCFMlpANN_Utils::fg_0           = 0;
-Int_t TMVA::MethodCFMlpANN_Utils::fg_max_nVar_   = max_nVar_;
-Int_t TMVA::MethodCFMlpANN_Utils::fg_max_nNodes_ = max_nNodes_;
-Int_t TMVA::MethodCFMlpANN_Utils::fg_999         = 999;
+Int_t       TMVA::MethodCFMlpANN_Utils::fg_100         = 100;
+Int_t       TMVA::MethodCFMlpANN_Utils::fg_0           = 0;
+Int_t       TMVA::MethodCFMlpANN_Utils::fg_max_nVar_   = max_nVar_;
+Int_t       TMVA::MethodCFMlpANN_Utils::fg_max_nNodes_ = max_nNodes_;
+Int_t       TMVA::MethodCFMlpANN_Utils::fg_999         = 999;
+const char* TMVA::MethodCFMlpANN_Utils::fg_MethodName  = "--- CFMlpANN                 ";
 
 TMVA::MethodCFMlpANN_Utils::MethodCFMlpANN_Utils()  
 {
@@ -184,11 +188,9 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
    fParam_1.nunisor = 30;
    fParam_1.nunishort = 48;
    fParam_1.nunap = 40;
-   std::string stmp = "--- CFMlpANN";   
-   for (int i=0; i<(int)TMVA::MsgLogger::GetMaxSourceSize()-(int)strlen("CFMlpANN"); i++) stmp += " ";
-   printf("%s: Total number of events for training: %i\n", stmp.c_str(), fParam_1.nevl);
-   printf("%s: Total number of events for testing : %i\n", stmp.c_str(), fParam_1.nevt);
-   printf("%s: Total number of training cycles    : %i\n", stmp.c_str(), fParam_1.nblearn);
+   
+   printf("%s: Total number of events for training: %i\n", fg_MethodName, fParam_1.nevl);
+   printf("%s: Total number of training cycles    : %i\n", fg_MethodName, fParam_1.nblearn);
    if (fParam_1.nevl > max_Events_) {
       printf("Error: number of learning events exceeds maximum: %i, %i ==> abort", 
              fParam_1.nevl, max_Events_ );
@@ -212,7 +214,7 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
    }
    i__1 = fParam_1.layerm;
    for (j = 1; j <= i__1; ++j) {
-      printf("%s: Number of layers for neuron(%2i): %i\n",stmp.c_str(), j, fNeur_1.neuron[j - 1]);
+      printf("%s: Number of layers for neuron(%2i): %i\n",fg_MethodName, j, fNeur_1.neuron[j - 1]);
    }
    if (fNeur_1.neuron[fParam_1.layerm - 1] != 2) {
       printf("Error: wrong number of classes at ouput layer: %i != 2 ==> abort\n",
@@ -235,10 +237,10 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
       Arret("new training or continued one !");
    }
    if (fParam_1.ichoi == 0) {
-      printf("%s: New training will be performed\n", stmp.c_str());
+      printf("%s: New training will be performed\n", fg_MethodName);
    } 
    else {
-      printf("%s: New training will be continued from a weight file\n", stmp.c_str());
+      printf("%s: New training will be continued from a weight file\n", fg_MethodName);
    }
    ncoef = 0;
    ntemp = 0;
@@ -562,7 +564,7 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
 
    for (i1 = 1; i1 <= i__3; ++i1) {
 
-      if ( (num>0 && (i1-1)%num==0) || i1==i__3) timer.DrawProgressBar( i1-1 );
+      if ( ( num>0 && (i1-1)%num == 0) || (i1 == i__3) ) timer.DrawProgressBar( i1-1 );
 
       i__2 = fParam_1.nevl;
       for (i__ = 1; i__ <= i__2; ++i__) {
@@ -610,11 +612,6 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
          break;
       }
    }
-   std::string stmp = "--- CFMlpANN";   
-   for (int i=0; i<(int)TMVA::MsgLogger::GetMaxSourceSize()-(int)strlen("CFMlpANN"); i++) stmp += " ";
-
-   printf( "%s: Elapsed time: %s                            \n", 
-           stmp.c_str(), (const char*)timer.GetElapsedTime() );
 }
 
 #undef deltaww_ref
@@ -1010,7 +1007,7 @@ void TMVA::MethodCFMlpANN_Utils::En_avant2( Int_t *ievent )
 void TMVA::MethodCFMlpANN_Utils::Arret( const char* mot )
 {
    // fatal error occurred: stop execution
-   printf("CFMlpANN: %s",mot);
+   printf("%s: %s",fg_MethodName, mot);
    exit(1);
 }
 

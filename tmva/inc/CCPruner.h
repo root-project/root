@@ -58,49 +58,55 @@
 #endif
 
 namespace TMVA {
-  class DecisionTreeNode;
-  class SeparationBase;
+   class DecisionTreeNode;
+   class SeparationBase;
 
-  class CCPruner{
-  public: 
-    typedef std::vector<Event*> EventList;
+   class CCPruner {
+   public: 
+      typedef std::vector<Event*> EventList;
 
-    CCPruner( DecisionTree* t_max, 
-	      const EventList* validationSample = NULL,
-	      SeparationBase* qualityIndex = NULL );
-    ~CCPruner( );
+      CCPruner( DecisionTree* t_max, 
+                const EventList* validationSample,
+                SeparationBase* qualityIndex = NULL );
 
-    // set the pruning strength parameter alpha (if alpha < 0, the optimal alpha is calculated)
-    void SetPruneStrength( Float_t alpha = -1.0 );
+      CCPruner( DecisionTree* t_max, 
+                const DataSet* validationSample,
+                SeparationBase* qualityIndex = NULL );
 
-    void Optimize( );
+      ~CCPruner( );
 
-    // return the list of pruning locations to define the optimal subtree T' of T_max
-    std::vector<TMVA::DecisionTreeNode*> GetOptimalPruneSequence( ) const; 
+      // set the pruning strength parameter alpha (if alpha < 0, the optimal alpha is calculated)
+      void SetPruneStrength( Float_t alpha = -1.0 );
 
-    // return the quality index from the validation sample for the optimal subtree T'
-    inline Float_t GetOptimalQualityIndex( ) const { return (fOptimalK >= 0 && fQualityIndexList.size() > 0 ?
-						      fQualityIndexList[fOptimalK] : -1.0); }
+      void Optimize( );
 
-    // return the prune strength (=alpha) corresponding to the prune sequence
-    inline Float_t GetOptimalPruneStrength( ) const { return (fOptimalK >= 0 && fPruneStrengthList.size() > 0 ?
-						       fPruneStrengthList[fOptimalK] : -1.0); }
+      // return the list of pruning locations to define the optimal subtree T' of T_max
+      std::vector<TMVA::DecisionTreeNode*> GetOptimalPruneSequence( ) const; 
+
+      // return the quality index from the validation sample for the optimal subtree T'
+      inline Float_t GetOptimalQualityIndex( ) const { return (fOptimalK >= 0 && fQualityIndexList.size() > 0 ?
+                                                               fQualityIndexList[fOptimalK] : -1.0); }
+
+      // return the prune strength (=alpha) corresponding to the prune sequence
+      inline Float_t GetOptimalPruneStrength( ) const { return (fOptimalK >= 0 && fPruneStrengthList.size() > 0 ?
+                                                                fPruneStrengthList[fOptimalK] : -1.0); }
    
-  private:
-    Float_t              fAlpha; //! regularization parameter in CC pruning
-    const EventList*     fValidationSample; //! the event sample to select the optimally-pruned tree
-    SeparationBase*      fQualityIndex; //! the quality index used to calculate R(t), R(T) = sum[t in ~T]{ R(t) }
-    Bool_t               fOwnQIndex; //! flag indicates if fQualityIndex is owned by this
+   private:
+      Float_t              fAlpha; //! regularization parameter in CC pruning
+      const EventList*     fValidationSample; //! the event sample to select the optimally-pruned tree
+      const DataSet*       fValidationDataSet; //! the event sample to select the optimally-pruned tree
+      SeparationBase*      fQualityIndex; //! the quality index used to calculate R(t), R(T) = sum[t in ~T]{ R(t) }
+      Bool_t               fOwnQIndex; //! flag indicates if fQualityIndex is owned by this
 
-    DecisionTree*        fTree; //! (pruned) decision tree
+      DecisionTree*        fTree; //! (pruned) decision tree
 
-    std::vector<TMVA::DecisionTreeNode*> fPruneSequence; //! map of weakest links (i.e., branches to prune) -> pruning index
-    std::vector<Float_t> fPruneStrengthList;  //! map of alpha -> pruning index
-    std::vector<Float_t> fQualityIndexList;   //! map of R(T) -> pruning index
+      std::vector<TMVA::DecisionTreeNode*> fPruneSequence; //! map of weakest links (i.e., branches to prune) -> pruning index
+      std::vector<Float_t> fPruneStrengthList;  //! map of alpha -> pruning index
+      std::vector<Float_t> fQualityIndexList;   //! map of R(T) -> pruning index
 
-    Int_t                fOptimalK;           //! index of the optimal tree in the pruned tree sequence
-    Bool_t               fDebug;              //! debug flag
-  };
+      Int_t                fOptimalK;           //! index of the optimal tree in the pruned tree sequence
+      Bool_t               fDebug;              //! debug flag
+   };
 }
 
 inline void TMVA::CCPruner::SetPruneStrength( Float_t alpha ) {
@@ -109,4 +115,5 @@ inline void TMVA::CCPruner::SetPruneStrength( Float_t alpha ) {
     
 
 #endif
+
 

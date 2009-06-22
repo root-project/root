@@ -30,15 +30,15 @@
 // TNeuronInputSum                                                      //
 //                                                                      //
 // TNeuron input calculator -- calculates the weighted sum of inputs    //
-//
-// Begin_Latex
-// NeuronInput = #sum_{i} y_{i}
-// End_Latex
-//
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
 
 #ifndef ROOT_TMVA_TNeuronInput
 #include "TMVA/TNeuronInput.h"
@@ -60,7 +60,8 @@ namespace TMVA {
       Double_t GetInput( const TNeuron* neuron ) const {
          if (neuron->IsInputNeuron()) return 0;
          Double_t result = 0;
-         for (Int_t i=0; i < neuron->NumPreLinks(); i++) {
+	 Int_t npl = neuron->NumPreLinks();
+         for (Int_t i=0; i < npl; i++) {
             result += neuron->PreLinkAt(i)->GetWeightedValue();
          }
          return result;

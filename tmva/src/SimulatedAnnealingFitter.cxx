@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$ 
-// Author: Andraes Hoecker
+// Author: Andraes Hoecker, Kamil Kraszewski, Maciej Kruk
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -73,23 +73,23 @@ void TMVA::SimulatedAnnealingFitter::DeclareOptions()
    fTemperatureScale        = 1.0;
    fAdaptiveSpeed           = 1.0;
    fTemperatureAdaptiveStep = 0.009875;
-   fKernelTemperatureS      = "IncreasingAdaptive";
+   fKernelTemperatureS      = "IncAdaptive";
    fUseDefaultScale         = kFALSE;
    fUseDefaultTemperature   = kFALSE;
 
-   DeclareOptionRef(fMaxCalls,               "MaxCalls",               "Maximum number of minimisation calls");
-   DeclareOptionRef(fInitialTemperature,     "InitialTemperature",     "Initial temperature");  
-   DeclareOptionRef(fMinTemperature,         "MinTemperature",         "Mimimum temperature");
-   DeclareOptionRef(fEps,                    "Eps",                    "Epsilon");  
-   DeclareOptionRef(fTemperatureScale,       "TemperatureScale",       "Temperature scale");
-   DeclareOptionRef(fAdaptiveSpeed,          "AdaptiveSpeed",          "Adaptive speed");
-   DeclareOptionRef(fTemperatureAdaptiveStep,"TemperatureAdaptiveStep","Step made in each generation temperature adaptive");
-   DeclareOptionRef(fUseDefaultScale,        "UseDefaultScale",        "Use default temperature scale for temperature minimisation algorithm");
-   DeclareOptionRef(fUseDefaultTemperature,  "UseDefaultTemperature",  "Use default initial temperature");
+   DeclareOptionRef(fMaxCalls,               "MaxCalls",              "Maximum number of minimisation calls");
+   DeclareOptionRef(fInitialTemperature,     "InitialTemp",           "Initial temperature");  
+   DeclareOptionRef(fMinTemperature,         "MinTemp",               "Mimimum temperature");
+   DeclareOptionRef(fEps,                    "Eps",                   "Epsilon");  
+   DeclareOptionRef(fTemperatureScale,       "TempScale",             "Temperature scale");
+   DeclareOptionRef(fAdaptiveSpeed,          "AdaptiveSpeed",         "Adaptive speed");
+   DeclareOptionRef(fTemperatureAdaptiveStep,"TempAdaptiveStep",      "Step made in each generation temperature adaptive");
+   DeclareOptionRef(fUseDefaultScale,        "UseDefaultScale",       "Use default temperature scale for temperature minimisation algorithm");
+   DeclareOptionRef(fUseDefaultTemperature,  "UseDefaultTemp",        "Use default initial temperature");
 
-   DeclareOptionRef(fKernelTemperatureS,     "KernelTemperature",      "Temperature minimisation algorithm");
-   AddPreDefVal(TString("IncreasingAdaptive"));
-   AddPreDefVal(TString("DecreasingAdaptive"));
+   DeclareOptionRef(fKernelTemperatureS,     "KernelTemp",            "Temperature minimisation algorithm");
+   AddPreDefVal(TString("IncAdaptive"));
+   AddPreDefVal(TString("DecAdaptive"));
    AddPreDefVal(TString("Sqrt"));
    AddPreDefVal(TString("Log"));
    AddPreDefVal(TString("Sin"));
@@ -124,8 +124,8 @@ void TMVA::SimulatedAnnealingFitter::SetParameters( Int_t    maxCalls,
 Double_t TMVA::SimulatedAnnealingFitter::Run( std::vector<Double_t>& pars )
 {
    // Execute fitting
-   fLogger << kINFO << "<SimulatedAnnealingFitter> Optimisation, please be patient ... " << Endl;
-   fLogger << kINFO << "(progress timing may be inaccurate for SA)" << Endl;
+   log() << kINFO << "<SimulatedAnnealingFitter> Optimisation, please be patient ... " << Endl;
+   log() << kINFO << "(progress timing may be inaccurate for SA)" << Endl;
 
    SimulatedAnnealing sa( GetFitterTarget(), fRanges );
 

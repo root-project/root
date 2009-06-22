@@ -45,65 +45,59 @@
 // stochasitc re-sampling of the initial training event sample.
 //_______________________________________________________________________
 
-#include <algorithm>
-
-#include "Riostream.h"
-#include "TRandom.h"
-#include "TObjString.h"
-#include "TDirectory.h"
-#include "TTree.h"
-#include "TH2.h"
-
+#include "TMVA/ClassifierFactory.h"
 #include "TMVA/MethodCommittee.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
+#include "Riostream.h"
+#include "TMath.h"
+#include "TRandom3.h"
+#include <algorithm>
+#include "TObjString.h"
+#include "TDirectory.h"
 #include "TMVA/Ranking.h"
-#include "TMVA/Methods.h"
+#include "TMVA/IMethod.h"
 
 using std::vector;
+
+REGISTER_METHOD(Committee)
 
 ClassImp(TMVA::MethodCommittee)
  
 //_______________________________________________________________________
-TMVA::MethodCommittee::MethodCommittee( const TString& jobName, const TString& committeeTitle, DataSet& theData, 
-                                        const TString& committeeOptions,
-                                        Types::EMVA method, const TString& methodOptions,
-                                        TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, committeeTitle, theData, committeeOptions, theTargetDir ),
-     fMemberType( method ),
-     fMemberOption( methodOptions )
+TMVA::MethodCommittee::MethodCommittee( const TString& jobName,
+                                        const TString& methodTitle,
+                                        DataSetInfo& dsi, 
+                                        const TString& theOption,
+                                        TDirectory* theTargetDir ) :
+   TMVA::MethodBase( jobName, Types::kCommittee, methodTitle, dsi, theOption, theTargetDir ),
+   fNMembers(100),
+   fBoostType("AdaBoost")
 {
    // constructor
-   InitCommittee(); // sets default values
-
-   SetConfigName( TString("Method") + GetMethodName() );
-   DeclareOptions();
-   ParseOptions();
-   ProcessOptions();
-
-   // book monitoring histograms (currently for AdaBost, only)
-   fBoostFactorHist = new TH1F("fBoostFactor","Ada Boost weights",100,1,100);
-   fErrFractHist    = new TH2F("fErrFractHist","error fraction vs tree number",
-                               fNMembers,0,fNMembers,50,0,0.5);
-   fMonitorNtuple   = new TTree("fMonitorNtuple","Committee variables");
-   fMonitorNtuple->Branch("iTree",&fITree,"iTree/I");
-   fMonitorNtuple->Branch("boostFactor",&fBoostFactor,"boostFactor/D");
-   fMonitorNtuple->Branch("errorFraction",&fErrorFraction,"errorFraction/D");
 }
 
 //_______________________________________________________________________
-TMVA::MethodCommittee::MethodCommittee( DataSet& theData, 
+TMVA::MethodCommittee::MethodCommittee( DataSetInfo& theData, 
                                         const TString& theWeightFile,  
-                                        TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
+                                        TDirectory* theTargetDir ) :
+   TMVA::MethodBase( Types::kCommittee, theData, theWeightFile, theTargetDir ),
+   fNMembers(100),
+   fBoostType("AdaBoost")
 {
    // constructor for calculating Committee-MVA using previously generatad decision trees
    // the result of the previous training (the decision trees) are read in via the
    // weightfile. Make sure the "theVariables" correspond to the ones used in 
    // creating the "weight"-file
-   InitCommittee();
-  
-   DeclareOptions();
+}
+
+//_______________________________________________________________________
+Bool_t TMVA::MethodCommittee::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets )
+{
+   // FDA can handle classification with 2 classes and regression with one regression-target
+   if( type == Types::kClassification && numberClasses == 2 ) return kTRUE;
+   if( type == Types::kRegression && numberTargets == 1 ) return kTRUE;
+   return kFALSE;
 }
 
 //_______________________________________________________________________
@@ -132,16 +126,21 @@ void TMVA::MethodCommittee::DeclareOptions()
 void TMVA::MethodCommittee::ProcessOptions() 
 {
    // process user options
-   MethodBase::ProcessOptions();
+
+   // book monitoring histograms (currently for AdaBost, only)
+   fBoostFactorHist = new TH1F("fBoostFactor","Ada Boost weights",100,1,100);
+   fErrFractHist    = new TH2F("fErrFractHist","error fraction vs tree number",
+                               fNMembers,0,fNMembers,50,0,0.5);
+   fMonitorNtuple   = new TTree("fMonitorNtuple","Committee variables");
+   fMonitorNtuple->Branch("iTree",&fITree,"iTree/I");
+   fMonitorNtuple->Branch("boostFactor",&fBoostFactor,"boostFactor/D");
+   fMonitorNtuple->Branch("errorFraction",&fErrorFraction,"errorFraction/D");
 }
 
 //_______________________________________________________________________
-void TMVA::MethodCommittee::InitCommittee( void )
+void TMVA::MethodCommittee::Init( void )
 {
    // common initialisation with defaults for the Committee-Method
-   SetMethodName( "Committee" );
-   SetMethodType( TMVA::Types::kCommittee );
-   SetTestvarName();
 
    fNMembers  = 100;
    fBoostType = "AdaBoost";   
@@ -165,66 +164,41 @@ void TMVA::MethodCommittee::WriteStateToFile() const
 
    // get the filename
    TString fname(GetWeightFileName());
-   fLogger << kINFO << "creating weight file: " << fname << Endl;
+   log() << kINFO << "creating weight file: " << fname << Endl;
    
    std::ofstream* fout = new std::ofstream( fname );
    if (!fout->good()) { // file not found --> Error
-      fLogger << kFATAL << "<WriteStateToFile> "
-              << "unable to open output  weight file: " << fname << Endl;
+      log() << kFATAL << "<WriteStateToFile> "
+              << "unable to open output  weight file: " << fname << endl;
    }
    
    WriteStateToStream( *fout );
 }
 
+
 //_______________________________________________________________________
 void TMVA::MethodCommittee::Train( void )
 {  
-   // default sanity checks
-   if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
+   // training
 
-   fLogger << kINFO << "will train "<< fNMembers << " committee members ... patience please" << Endl;
+   log() << kINFO << "will train "<< fNMembers << " committee members ... patience please" << Endl;
+
    Timer timer( fNMembers, GetName() ); 
    for (UInt_t imember=0; imember<fNMembers; imember++){
       timer.DrawProgressBar( imember );
 
-      TMVA::IMethod *method = 0;
-      
-      // initialize methods
-      switch(fMemberType) {
-      case TMVA::Types::kCuts:       
-         method = new TMVA::MethodCuts           ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kFisher:     
-         method = new TMVA::MethodFisher         ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kKNN:     
-         method = new TMVA::MethodKNN            ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kMLP:        
-         method = new TMVA::MethodMLP            ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kTMlpANN:    
-         method = new TMVA::MethodTMlpANN        ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kCFMlpANN:   
-         method = new TMVA::MethodCFMlpANN       ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kLikelihood: 
-         method = new TMVA::MethodLikelihood     ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kHMatrix:    
-         method = new TMVA::MethodHMatrix        ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kPDERS:      
-         method = new TMVA::MethodPDERS          ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kBDT:        
-         method = new TMVA::MethodBDT            ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kSVM:        
-         method = new TMVA::MethodSVM            ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kRuleFit:    
-         method = new TMVA::MethodRuleFit        ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::kBayesClassifier:    
-         method = new TMVA::MethodBayesClassifier( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      default:
-         fLogger << kFATAL << "method: " << fMemberType << " does not exist" << Endl;
-      }
+      IMethod* method = ClassifierFactory::Instance().Create(std::string(Types::Instance().GetMethodName( fMemberType )), 
+                                                             GetJobName(),
+                                                             GetMethodName(),
+                                                             DataInfo(),
+                                                             fMemberOption );
+
+
       
       // train each of the member methods
       method->Train();
 
-      GetBoostWeights().push_back( this->Boost( method, imember ) );
+      GetBoostWeights().push_back( this->Boost( dynamic_cast<MethodBase*>(method), imember ) );
 
       GetCommittee().push_back( method );
 
@@ -232,12 +206,12 @@ void TMVA::MethodCommittee::Train( void )
    }
 
    // get elapsed time
-   fLogger << kINFO << "elapsed time: " << timer.GetElapsedTime()    
+   log() << kINFO << "elapsed time: " << timer.GetElapsedTime()    
            << "                              " << Endl;    
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodCommittee::Boost( TMVA::IMethod* method, UInt_t imember )
+Double_t TMVA::MethodCommittee::Boost( TMVA::MethodBase* method, UInt_t imember )
 {
    // apply the boosting alogrithim (the algorithm is selecte via the the "option" given
    // in the constructor. The return value is the boosting weight 
@@ -245,14 +219,14 @@ Double_t TMVA::MethodCommittee::Boost( TMVA::IMethod* method, UInt_t imember )
    if      (fBoostType=="AdaBoost") return this->AdaBoost( method );
    else if (fBoostType=="Bagging")  return this->Bagging( imember );
    else {
-      fLogger << kINFO << GetOptions() << Endl;
-      fLogger << kFATAL << "<Boost> unknown boost option called" << Endl;
+      log() << kINFO << GetOptions() << Endl;
+      log() << kFATAL << "<Boost> unknown boost option called" << Endl;
    }
    return 1.0;
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodCommittee::AdaBoost( TMVA::IMethod* method )
+Double_t TMVA::MethodCommittee::AdaBoost( TMVA::MethodBase* method )
 {
    // the AdaBoost implementation.
    // a new training sample is generated by weighting 
@@ -267,38 +241,35 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::IMethod* method )
    Double_t adaBoostBeta = 1.;   // that's apparently the standard value :)
 
    // should never be called without existing trainingTree
-   if (!HasTrainingTree()) fLogger << kFATAL << "<AdaBoost> Data().TrainingTree() is zero pointer" << Endl;
-
-   // give reference to event
-   Event& event = GetEvent();
+   if (Data()->GetNTrainingEvents()) log() << kFATAL << "<AdaBoost> Data().TrainingTree() is zero pointer" << Endl;
 
    Double_t err=0, sumw=0, sumwfalse=0, count=0;
-   vector<Bool_t> correctSelected;
+   vector<Char_t> correctSelected;
 
    // loop over all events in training tree
    MethodBase* mbase = (MethodBase*)method;
-   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
+   for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
 
-      // read the Training Event into "event"
-      ReadTrainingEvent(ievt);
+      Event* ev = Data()->GetEvent(ievt);
 
       // total sum of event weights
-      sumw += event.GetBoostWeight();
+      sumw += ev->GetBoostWeight();
 
       // decide whether it is signal or background-like
       Bool_t isSignalType = mbase->IsSignalLike();
       
       // to prevent code duplication
-      if (isSignalType == event.IsSignal()) correctSelected.push_back( kTRUE );
+      if (isSignalType == ev->IsSignal())
+         correctSelected.push_back( kTRUE );
       else {
-         sumwfalse += event.GetBoostWeight();
+         sumwfalse += ev->GetBoostWeight();
          count += 1;
          correctSelected.push_back( kFALSE );
-      }    
+      }
    }
 
    if (0 == sumw) {
-      fLogger << kFATAL << "<AdaBoost> fatal error sum of event boostweights is zero" << Endl;
+      log() << kFATAL << "<AdaBoost> fatal error sum of event boostweights is zero" << Endl;
    }
 
    // compute the boost factor
@@ -320,20 +291,21 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::IMethod* method )
    }
 
    // now fill new boostweights
-   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
+   for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
+
+      Event *ev = Data()->GetEvent(ievt);
 
       // read the Training Event into "event"
-      ReadTrainingEvent(ievt);
+      if (!correctSelected[ievt]) ev->SetBoostWeight( ev->GetBoostWeight() * boostFactor);
 
-      if (!correctSelected[ievt]) event.SetBoostWeight( event.GetBoostWeight() * boostFactor);
-
-      newSumw += event.GetBoostWeight();    
+      newSumw += ev->GetBoostWeight();    
       i++;
    }
 
    // re-normalise the boostweights
-   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
-      event.SetBoostWeight( event.GetBoostWeight() * sumw / newSumw );      
+   for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
+      Event *ev = Data()->GetEvent(ievt);
+      ev->SetBoostWeight( ev->GetBoostWeight() * sumw / newSumw );      
    }
 
    fBoostFactorHist->Fill(boostFactor);
@@ -344,7 +316,7 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::IMethod* method )
    fErrorFraction = err;
   
    // return weight factor for this committee member
-   return log(boostFactor);
+   return TMath::Log(boostFactor);
 }
 
 //_______________________________________________________________________
@@ -353,25 +325,22 @@ Double_t TMVA::MethodCommittee::Bagging( UInt_t imember )
    // call it Bootstrapping, re-sampling or whatever you like, in the end it is nothing
    // else but applying "random boostweights" to each event.
    Double_t newSumw = 0;
-   TRandom *trandom   = new TRandom( imember );
-
-   // give reference to event
-   Event& event = GetEvent();
+   TRandom3* trandom   = new TRandom3( imember );
 
    // loop over all events in training tree
-   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
+   for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
+      Event* ev = Data()->GetEvent(ievt);
 
       // read the Training Event into "event"
-      ReadTrainingEvent(ievt);
-
       Double_t newWeight = trandom->Rndm();
-      event.SetBoostWeight( newWeight );
+      ev->SetBoostWeight( newWeight );
       newSumw += newWeight;
    }
 
    // re-normalise the boostweights
-   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
-      event.SetBoostWeight( event.GetBoostWeight() * Data().GetNEvtTrain() / newSumw );      
+   for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
+      Event* ev = Data()->GetEvent(ievt);
+      ev->SetBoostWeight( ev->GetBoostWeight() * Data()->GetNTrainingEvents() / newSumw );      
    }
 
    // return weight factor for this committee member
@@ -386,8 +355,13 @@ void TMVA::MethodCommittee::WriteWeightsToStream( ostream& o ) const
       o << endl;
       o << "------------------------------ new member: " << imember << " ---------------" << endl;
       o << "boost weight: " << GetBoostWeights()[imember] << endl;
-      ((MethodBase*)GetCommittee()[imember])->WriteStateToStream( o );
+      (dynamic_cast<MethodBase*>(GetCommittee()[imember]))->WriteStateToStream( o );
    }   
+}
+
+//_______________________________________________________________________
+void TMVA::MethodCommittee::AddWeightsXMLTo( void* /*parent*/ ) const {
+   log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
   
 //_______________________________________________________________________
@@ -405,6 +379,8 @@ void  TMVA::MethodCommittee::ReadWeightsFromStream( istream& istr )
    TString  dummy;
    UInt_t   imember;
    Double_t boostWeight;
+
+   DataSetInfo & dsi = DataInfo(); // this needs to be changed for the different kind of committee methods
    
    // loop over all members in committee
    for (UInt_t i=0; i<fNMembers; i++) {
@@ -413,54 +389,22 @@ void  TMVA::MethodCommittee::ReadWeightsFromStream( istream& istr )
       istr >> dummy >> dummy >> boostWeight;
 
       if (imember != i) {
-         fLogger << kFATAL << "<ReadWeightsFromStream> fatal error while reading Weight file \n "
+         log() << kFATAL << "<ReadWeightsFromStream> fatal error while reading Weight file \n "
                  << ": mismatch imember: " << imember << " != i: " << i << Endl;
       }
 
-      TMVA::IMethod *method = 0;
-      
       // initialize methods
-      switch(fMemberType) {
-      case TMVA::Types::kCuts:       
-         method = new TMVA::MethodCuts           ( Data(), "" ); break;
-      case TMVA::Types::kFisher:     
-         method = new TMVA::MethodFisher         ( Data(), "" ); break;
-      case TMVA::Types::kKNN:     
-         method = new TMVA::MethodKNN            ( Data(), "" ); break;
-      case TMVA::Types::kMLP:        
-         method = new TMVA::MethodMLP            ( Data(), "" ); break;
-      case TMVA::Types::kTMlpANN:    
-         method = new TMVA::MethodTMlpANN        ( Data(), "" ); break;
-      case TMVA::Types::kCFMlpANN:   
-         method = new TMVA::MethodCFMlpANN       ( Data(), "" ); break;
-      case TMVA::Types::kLikelihood: 
-         method = new TMVA::MethodLikelihood     ( Data(), "" ); break;
-      case TMVA::Types::kHMatrix:    
-         method = new TMVA::MethodHMatrix        ( Data(), "" ); break;
-      case TMVA::Types::kPDERS:      
-         method = new TMVA::MethodPDERS          ( Data(), "" ); break;
-      case TMVA::Types::kBDT:        
-         method = new TMVA::MethodBDT            ( Data(), "" ); break;
-      case TMVA::Types::kSVM:        
-         method = new TMVA::MethodSVM            ( Data(), "" ); break;
-      case TMVA::Types::kRuleFit:    
-         method = new TMVA::MethodRuleFit        ( Data(), "" ); break;
-      case TMVA::Types::kBayesClassifier:    
-         method = new TMVA::MethodBayesClassifier( Data(), "" ); break;
-      default:
-         fLogger << kFATAL << "<ReadWeightsFromStream> fatal error: method: " 
-                 << fMemberType << " does not exist" << Endl;
-      }
+      IMethod* method = ClassifierFactory::Instance().Create(std::string(Types::Instance().GetMethodName( fMemberType )), dsi, "" );
 
       // read weight file
-      ((MethodBase*)method)->ReadStateFromStream(istr);
+      (dynamic_cast<MethodBase*>(method))->ReadStateFromStream(istr);
       GetCommittee().push_back(method);
       GetBoostWeights().push_back(boostWeight);
    }
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodCommittee::GetMvaValue()
+Double_t TMVA::MethodCommittee::GetMvaValue( Double_t* err )
 {
    // return the MVA value (range [-1;1]) that classifies the
    // event.according to the majority vote from the total number of
@@ -470,11 +414,14 @@ Double_t TMVA::MethodCommittee::GetMvaValue()
    // did not see any improvement in doing so :(  
    // --> this is currently switched off
 
+   // cannot determine error
+   if (err != 0) *err = -1;
+
    Double_t myMVA = 0;
    Double_t norm  = 0;
    for (UInt_t itree=0; itree<GetCommittee().size(); itree++) {
 
-      Double_t tmpMVA = ( fUseMemberDecision ? ( ((MethodBase*)GetCommittee()[itree])->IsSignalLike() ? 1.0 : -1.0 ) 
+      Double_t tmpMVA = ( fUseMemberDecision ? ( (dynamic_cast<MethodBase*>(GetCommittee()[itree]))->IsSignalLike() ? 1.0 : -1.0 ) 
                           : GetCommittee()[itree]->GetMvaValue() );
 
       if (fUseWeightedMembers){ 
@@ -494,7 +441,7 @@ void  TMVA::MethodCommittee::WriteMonitoringHistosToFile( void ) const
 {
    // here we could write some histograms created during the processing
    // to the output file.
-   fLogger << kINFO << "write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
+   log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
 
    fBoostFactorHist->Write();
    fErrFractHist->Write();
@@ -532,7 +479,7 @@ Double_t TMVA::MethodCommittee::GetVariableImportance(UInt_t ivar)
    // return the variable importance
    vector<Double_t> relativeImportance = this->GetVariableImportance();
    if (ivar < (UInt_t)relativeImportance.size()) return relativeImportance[ivar];
-   else  fLogger << kFATAL << "<GetVariableImportance> ivar = " << ivar << " is out of range " << Endl;
+   else  log() << kFATAL << "<GetVariableImportance> ivar = " << ivar << " is out of range " << Endl;
 
    return -1;
 }
@@ -546,8 +493,8 @@ const TMVA::Ranking* TMVA::MethodCommittee::CreateRanking()
    fRanking = new Ranking( GetName(), "Variable Importance" );
    vector< Double_t> importance(this->GetVariableImportance());
 
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      fRanking->AddRank( *new Rank( GetInputExp(ivar), importance[ivar] ) );
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
+      fRanking->AddRank( Rank( GetInputLabel(ivar), importance[ivar] ) );
    }
 
    return fRanking;
@@ -568,16 +515,16 @@ void TMVA::MethodCommittee::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "<None>" << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "<None>" << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "<None>" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "<None>" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "<None>" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "<None>" << Endl;
 }

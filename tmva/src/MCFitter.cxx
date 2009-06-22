@@ -78,11 +78,11 @@ void TMVA::MCFitter::SetParameters( Int_t samples )
 Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 {
    // Execute fitting
-   fLogger << kINFO << "<MCFitter> Sampling, please be patient ..." << Endl;
+   log() << kINFO << "<MCFitter> Sampling, please be patient ..." << Endl;
    
    // sanity check
    if ((Int_t)pars.size() != GetNpars())
-      fLogger << kFATAL << "<Run> Mismatch in number of parameters: "
+      log() << kFATAL << "<Run> Mismatch in number of parameters: "
               << GetNpars() << " != " << pars.size() << Endl;
 
    // timing of MC
@@ -91,7 +91,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
    std::vector<Double_t> parameters;
    std::vector<Double_t> bestParameters;
 
-   TRandom *rnd = new TRandom3( fSeed );
+   TRandom3*rnd = new TRandom3( fSeed );
    rnd->Uniform(0.,1.);
       
    std::vector<TMVA::GeneticRange*> rndRanges;
@@ -120,7 +120,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
       if (fSigma > 0.0) {
          parBestIt = bestParameters.begin();
          for (std::vector<TMVA::GeneticRange*>::iterator rndIt = rndRanges.begin(); rndIt<rndRanges.end(); rndIt++) {
-            (*parIt) = (*rndIt)->Random( kTRUE, fSigma, (*parBestIt) );
+            (*parIt) = (*rndIt)->Random( kTRUE, (*parBestIt), fSigma );
             parIt++;
             parBestIt++;
          }
@@ -147,7 +147,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
    pars.swap( bestParameters ); // return best parameters found
 
    // get elapsed time
-   fLogger << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
+   log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
            << "                           " << Endl;  
    
    return bestFit;

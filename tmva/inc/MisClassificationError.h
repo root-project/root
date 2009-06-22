@@ -14,7 +14,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -22,7 +21,6 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      Heidelberg U., Germany                                                    * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -41,7 +39,7 @@
 //       criterion: 1-max(p, 1-p)                                       //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_
+#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
 #endif
 

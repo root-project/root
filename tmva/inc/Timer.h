@@ -36,12 +36,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_time
 #include "time.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
+#ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
-
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
 #endif
 
 // ensure that clock_t is always defined
@@ -54,6 +56,8 @@ typedef long clock_t; // relative time in a specified resolution
 #endif // SUN and XOPENSOURCE=500
 
 namespace TMVA {
+
+   class MsgLogger;
 
    class Timer : public TStopwatch {
   
@@ -68,15 +72,15 @@ namespace TMVA {
 
       // when the "Scientific" flag set, time is returned with subdecimals
       // for algorithm timing measurement
-      TString GetElapsedTime  ( Bool_t Scientific = kTRUE  );
-      TString GetLeftTime     ( Int_t icounts );
-      void    DrawProgressBar ( Int_t );
-      void    DrawProgressBar ( TString );
-      void    DrawProgressBar ( void );
+      TString   GetElapsedTime ( Bool_t Scientific = kTRUE  );
+      Double_t  ElapsedSeconds ( void );
+      TString   GetLeftTime     ( Int_t icounts );
+      void      DrawProgressBar( Int_t );
+      void      DrawProgressBar( TString );
+      void      DrawProgressBar( void );
                           
    private:
 
-      Double_t  ElapsedSeconds( void );
       TString   SecToText     ( Double_t, Bool_t ) const;
 
       Int_t     fNcounts;               // reference number of "counts" 
@@ -86,7 +90,8 @@ namespace TMVA {
       static const TString fgClassName; // used for output
       static const Int_t   fgNbins;     // number of bins in progress bar
 
-      MsgLogger*           fLogger;     // the output logger
+      mutable MsgLogger*   fLogger;     // the output logger
+      MsgLogger& log() const { return *fLogger; }                       
 
       ClassDef(Timer,0) // Timing information for training and evaluation of MVA methods
    };

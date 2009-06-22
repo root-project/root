@@ -12,6 +12,7 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
+ *      Joerg Stelzer   <stelzer@cern.ch>        - DESY, Germany                  *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -35,6 +36,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <stdexcept>
+#include <cstdlib>
+#include <queue>
+#include <algorithm>
+
 #if ROOT_VERSION_CODE >= 364802
 #ifndef ROOT_TMathBase
 #include "TMathBase.h"
@@ -47,10 +53,10 @@
 #include "TMatrixDBase.h"
 #include "TObjString.h"
 #include "TTree.h"
-#include "Riostream.h"
-#include <stdexcept>
-#include <stdlib.h>
 
+#ifndef ROOT_TMVA_MsgLogger
+#include "TMVA/MsgLogger.h"
+#endif
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
@@ -79,7 +85,7 @@ TMVA::BinarySearchTree::BinarySearchTree( void ) :
    fCanNormalize( kFALSE )
 {
    // default constructor
-   fLogger.SetSource( "BinarySearchTree" );
+   fLogger->SetSource( "BinarySearchTree" );
 }
 
 //_______________________________________________________________________
@@ -92,8 +98,8 @@ TMVA::BinarySearchTree::BinarySearchTree( const BinarySearchTree &b)
      fCanNormalize( kFALSE )
 {
    // copy constructor that creates a true copy, i.e. a completely independent tree 
-   fLogger.SetSource( "BinarySearchTree" );
-   fLogger << kFATAL << " Copy constructor not implemented yet " << Endl;
+   fLogger->SetSource( "BinarySearchTree" );
+   log() << kFATAL << " Copy constructor not implemented yet " << Endl;
 }
 
 //_______________________________________________________________________
@@ -101,7 +107,7 @@ TMVA::BinarySearchTree::~BinarySearchTree( void )
 {
    // destructor
 
-   for(std::vector< pair<Double_t, const TMVA::Event*> >::iterator pIt = fNormalizeTreeTable.begin();
+   for(std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator pIt = fNormalizeTreeTable.begin();
        pIt != fNormalizeTreeTable.end(); pIt++) {
       delete pIt->second;
    }
@@ -127,16 +133,16 @@ void TMVA::BinarySearchTree::Insert( const Event* event )
    else {
       // sanity check:
       if (event->GetNVars() != (UInt_t)this->GetPeriode()) {
-         fLogger << kFATAL << "<Insert> event vector length != Periode specified in Binary Tree" << Endl
-                 << "--- event size: " << event->GetNVars() << " Periode: " << this->GetPeriode() << Endl
-                 << "--- and all this when trying filling the "<<fNNodes+1<<"th Node" << Endl;
+         log() << kFATAL << "<Insert> event vector length != Periode specified in Binary Tree" << Endl
+               << "--- event size: " << event->GetNVars() << " Periode: " << this->GetPeriode() << Endl
+               << "--- and all this when trying filling the "<<fNNodes+1<<"th Node" << Endl;
       }
       // insert a new node at the propper position  
       this->Insert(event, this->GetRoot()); 
    }
 
    // normalise the tree to speed up searches
-   if (fCanNormalize) fNormalizeTreeTable.push_back( make_pair(0.0,new const Event(*event)) );
+   if (fCanNormalize) fNormalizeTreeTable.push_back( std::make_pair(0.0,new const Event(*event)) );
 }
 
 //_______________________________________________________________________
@@ -181,7 +187,7 @@ void TMVA::BinarySearchTree::Insert( const Event *event,
          node->SetRight(current);               // Make it the left node of the current one.
       }
    } 
-   else fLogger << kFATAL << "<Insert> neither left nor right :)" << Endl;
+   else log() << kFATAL << "<Insert> neither left nor right :)" << Endl;
 }
 
 //_______________________________________________________________________
@@ -212,114 +218,59 @@ Double_t TMVA::BinarySearchTree::GetSumOfWeights( void ) const
 {
    //return the sum of event (node) weights
    if (fSumOfWeights <= 0) {
-      fLogger << kWARNING << "you asked for the SumOfWeights, which is not filled yet"
+      log() << kWARNING << "you asked for the SumOfWeights, which is not filled yet"
+            << " I call CalcStatistics which hopefully fixes things" 
+            << Endl;
+   }
+   if (fSumOfWeights <= 0) log() << kFATAL << " Zero events in your Search Tree" <<Endl;
+
+   return fSumOfWeights;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::BinarySearchTree::GetSumOfWeights( Int_t theType ) const
+{
+   //return the sum of event (node) weights
+   if (fSumOfWeights <= 0) {
+      log() << kWARNING << "you asked for the SumOfWeights, which is not filled yet"
               << " I call CalcStatistics which hopefully fixes things" 
               << Endl;
    }
-   if (fSumOfWeights <= 0) fLogger << kFATAL << " Zero events in your Search Tree" <<Endl;
+   if (fSumOfWeights <= 0) log() << kFATAL << " Zero events in your Search Tree" <<Endl;
 
-   return fSumOfWeights;
+   return fNEventsW[ ( theType == Types::kSignal) ? 0 : 1  ];
 }
 
 //_______________________________________________________________________
-Double_t TMVA::BinarySearchTree::Fill( const MethodBase& callingMethod, TTree* theTree, Int_t theType )
-{
-   // create the search tree from the events in the DataSet
-   // NOTE: the tree given as argument MUST NOT contain transformed variables, 
-   // otherwise double transformation would occur
-   Int_t nevents=0;
-   if (fSumOfWeights != 0) {
-      fLogger << kWARNING 
-              << "You are filling a search three that is not empty.. "
-              << " do you know what you are doing?"
-              << Endl;
-   }
-   fPeriod = callingMethod.GetVarTransform().GetNVariables();
-
-   // get the event: this implicitly takes into account variable transformation
-   const Event& event = callingMethod.GetEvent(); 
-
-   // insert all events into the tree
-   for (Int_t ievt=0; ievt<theTree->GetEntries(); ievt++) {
-
-      callingMethod.ReadEvent(theTree, ievt);
-      // insert event into binary tree
-      if (theType==-1 || event.Type()==theType) {
-         // create new event with pointer to event vector, and with a weight
-         this->Insert( &event );
-         nevents++;
-         fSumOfWeights += event.GetWeight();
-      }
-   } // end of event loop
-
-   // sanity check
-   if (nevents == 0) {
-      fLogger << kFATAL << "<Fill> number of events in tree is zero: " << nevents << Endl;
-   }
-   CalcStatistics();
-
-   return fSumOfWeights;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::BinarySearchTree::Fill( std::vector<Event*> theTree, std::vector<Int_t> theVars, 
+Double_t TMVA::BinarySearchTree::Fill( const std::vector<Event*>& events, const std::vector<Int_t>& theVars, 
                                        Int_t theType )
 {
    // create the search tree from the event collection 
    // using ONLY the variables specified in "theVars"
-   fPeriod = (theVars).size();
-   // the event loop
-   Int_t nevents = 0;
-   Int_t n=theTree.size();
-
-   if (fSumOfWeights != 0) {
-      fLogger << kWARNING 
-              << "You are filling a search three that is not empty.. "
-              << " do you know what you are doing?"
-              << Endl;
-   }
-
-   for (Int_t ievt=0; ievt<n; ievt++) {
-      // insert event into binary tree
-      if (theType == -1 || theTree[ievt]->Type() == theType) {
-         // create new event with pointer to event vector, and with a weight
-         Event *e = new Event(*theTree[ievt]);
-         this->Insert( e );
-         nevents++;
-         fSumOfWeights += e->GetWeight();
-      }
-   } // end of event loop
-
-   // sanity check
-   if (nevents == 0) {
-      fLogger << kFATAL << "<Fill> number of events "
-              << "that got filled into the tree is <= zero: " << nevents << Endl;
-   }
-   CalcStatistics();
-
-   return fSumOfWeights;
+   fPeriod = theVars.size();
+   return Fill(events, theType);
 }
 
 //_______________________________________________________________________
-Double_t TMVA::BinarySearchTree::Fill( std::vector<Event*> theTree, Int_t theType )
+Double_t TMVA::BinarySearchTree::Fill( const std::vector<Event*>& events, Int_t theType )
 {
    // create the search tree from the events in a TTree
    // using ALL the variables specified included in the Event
-   Int_t n=theTree.size();
+   UInt_t n=events.size();
   
-   Int_t nevents = 0;
+   UInt_t nevents = 0;
    if (fSumOfWeights != 0) {
-      fLogger << kWARNING 
+      log() << kWARNING 
               << "You are filling a search three that is not empty.. "
               << " do you know what you are doing?"
               << Endl;
    }
-   for (Int_t ievt=0; ievt<n; ievt++) {
+   for (UInt_t ievt=0; ievt<n; ievt++) {
       // insert event into binary tree
-      if (theType == -1 || theTree[ievt]->Type() == theType) {
-         this->Insert( theTree[ievt] );
+      if (theType == -1 || (Int_t(events[ievt]->GetClass()) == theType) ) {
+         this->Insert( events[ievt] );
          nevents++;
-         fSumOfWeights += theTree[ievt]->GetWeight();
+         fSumOfWeights += events[ievt]->GetWeight();
       }
    } // end of event loop
    CalcStatistics();
@@ -328,39 +279,39 @@ Double_t TMVA::BinarySearchTree::Fill( std::vector<Event*> theTree, Int_t theTyp
 }
 
 //_______________________________________________________________________
-void TMVA::BinarySearchTree::NormalizeTree ( std::vector< pair<Double_t, const TMVA::Event*> >::iterator leftBound, 
-                                             std::vector< pair<Double_t, const TMVA::Event*> >::iterator rightBound, 
+void TMVA::BinarySearchTree::NormalizeTree ( std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator leftBound, 
+                                             std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator rightBound, 
                                              UInt_t actDim )
 {
 
    // normalises the binary-search tree to reduce the branch length and hence speed up the 
-   // search procedure (in average)
+   // search procedure (on average)
    if (leftBound == rightBound) return;
    
    if (actDim == fPeriod)  actDim = 0;
-   
-   for (std::vector< pair<Double_t, const TMVA::Event*> >::iterator i=leftBound; i!=rightBound; i++) {
+   for (std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator i=leftBound; i!=rightBound; i++) {
       i->first = i->second->GetVal( actDim );
    }
    
    std::sort( leftBound, rightBound );
    
-   std::vector< pair<Double_t, const TMVA::Event*> >::iterator leftTemp  = leftBound;
-   std::vector< pair<Double_t, const TMVA::Event*> >::iterator rightTemp = rightBound;
+   std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator leftTemp  = leftBound;
+   std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator rightTemp = rightBound;
   
    // meet in the middle
    while (true) {
-      rightTemp--; if (rightTemp == leftTemp ) break;
-      leftTemp++;  if (leftTemp  == rightTemp) break;
+      rightTemp--; 
+      if (rightTemp == leftTemp ) {
+	 break;
+      }
+      leftTemp++;  
+      if (leftTemp  == rightTemp) {
+	 break;
+      }
    }
   
-   std::vector< pair<Double_t, const TMVA::Event*> >::iterator mid     = leftTemp;
-   std::vector< pair<Double_t, const TMVA::Event*> >::iterator midTemp = mid;
-
-   //    int i=0;
-   //    for(std::vector< pair<Double_t, const TMVA::Event*> >::iterator tmpIter = leftBound; tmpIter != rightBound; tmpIter++)
-   //       cout << "...    " << i++ <<": " << mid->first << "   ->  " << mid->second->GetVal( actDim ) << endl;
-
+   std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator mid     = leftTemp;
+   std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator midTemp = mid;
 
    if (mid!=leftBound) midTemp--;
 
@@ -441,7 +392,7 @@ Double_t TMVA::BinarySearchTree::SearchVolume( Node* t, Volume* volume, Int_t de
    Bool_t tl, tr;
    Int_t  d = depth%this->GetPeriode();
    if (d != st->GetSelector()) {
-      fLogger << kFATAL << "<SearchVolume> selector in Searchvolume " 
+      log() << kFATAL << "<SearchVolume> selector in Searchvolume " 
               << d << " != " << "node "<< st->GetSelector() << Endl;
    }
    tl = (*(volume->fLower))[d] <  st->GetEventV()[d];  // Should we descend left?
@@ -470,7 +421,6 @@ Bool_t TMVA::BinarySearchTree::InVolume(const std::vector<Float_t>& event, Volum
 void TMVA::BinarySearchTree::CalcStatistics( Node* n )
 {
    // calculate basic statistics (mean, rms for each variable)
-
    if (fStatisticsIsValid) return;
 
    BinarySearchTreeNode * currentNode = (BinarySearchTreeNode*)n;
@@ -488,8 +438,8 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
          fSumSq[sb]     = std::vector<Double_t>(fPeriod);
          for (UInt_t j=0; j<fPeriod; j++) {
             fMeans[sb][j] = fRMS[sb][j] = fSum[sb][j] = fSumSq[sb][j] = 0;
-            fMin[sb][j] =  1.e25;
-            fMax[sb][j] = -1.e25; 
+            fMin[sb][j] =  DBL_MAX;
+            fMax[sb][j] = -DBL_MAX; 
          }
       }
       currentNode = (BinarySearchTreeNode*) this->GetRoot();
@@ -498,7 +448,8 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
       
    const std::vector<Float_t> & evtVec = currentNode->GetEventV();
    Double_t                     weight = currentNode->GetWeight();
-   Int_t                        type   = currentNode->IsSignal() ? 0 : 1;
+//    Int_t                        type   = currentNode->IsSignal(); 
+   Int_t                        type   = currentNode->IsSignal() ? 0 : 1; 
    fNEventsW[type] += weight;
    fSumOfWeights   += weight;
 
@@ -510,8 +461,8 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
       if (val > fMax[type][j]) fMax[type][j] = val; 
    }
 
-   if (currentNode->GetLeft()  != 0) CalcStatistics( currentNode->GetLeft()  );
-   if (currentNode->GetRight() != 0) CalcStatistics( currentNode->GetRight() );
+   if ( (currentNode->GetLeft()  != NULL) ) CalcStatistics( currentNode->GetLeft()  ); 
+   if ( (currentNode->GetRight() != NULL) ) CalcStatistics( currentNode->GetRight() ); 
 
    if (n == NULL) { // i.e. the root node
       for (Int_t sb=0; sb<2; sb++) {
@@ -534,9 +485,8 @@ Int_t TMVA::BinarySearchTree::SearchVolumeWithMaxLimit( Volume *volume, std::vec
    // lie within the given volume a maximum number of events can be given
    if (this->GetRoot() == NULL) return 0;  // Are we at an outer leave?
 
-   std::queue< pair< const BinarySearchTreeNode*, Int_t > > queue;
-   std::pair< const BinarySearchTreeNode*, Int_t > st = make_pair( (const BinarySearchTreeNode*)this->GetRoot(), 0 );
-   //   std::pair< const BinarySearchTreeNode*, Int_t > st = make_pair( (BinarySearchTreeNode*)this->GetRoot(), 0 );
+   std::queue< std::pair< const BinarySearchTreeNode*, Int_t > > queue;
+   std::pair< const BinarySearchTreeNode*, Int_t > st = std::make_pair( (const BinarySearchTreeNode*)this->GetRoot(), 0 );
    queue.push( st );
 
    Int_t count = 0;
@@ -557,17 +507,16 @@ Int_t TMVA::BinarySearchTree::SearchVolumeWithMaxLimit( Volume *volume, std::vec
       if ( d == Int_t(this->GetPeriode()) ) d = 0;
 
       if (d != st.first->GetSelector()) {
-         fLogger << kFATAL << "<SearchVolume> selector in Searchvolume "
+         log() << kFATAL << "<SearchVolume> selector in Searchvolume "
                  << d << " != " << "node "<< st.first->GetSelector() << Endl;
       }
 
       tl = (*(volume->fLower))[d] <  st.first->GetEventV()[d] && st.first->GetLeft()  != NULL;  // Should we descend left?
       tr = (*(volume->fUpper))[d] >= st.first->GetEventV()[d] && st.first->GetRight() != NULL;  // Should we descend right?
 
-      if (tl) queue.push( make_pair( (const BinarySearchTreeNode*)st.first->GetLeft(), d+1 ) );
-      if (tr) queue.push( make_pair( (const BinarySearchTreeNode*)st.first->GetRight(), d+1 ) );
+      if (tl) queue.push( std::make_pair( (const BinarySearchTreeNode*)st.first->GetLeft(), d+1 ) );
+      if (tr) queue.push( std::make_pair( (const BinarySearchTreeNode*)st.first->GetRight(), d+1 ) );
    }
 
    return count;
 }
-

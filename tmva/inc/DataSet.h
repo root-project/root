@@ -36,13 +36,31 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <vector>
+#include <map>
+#include <string>
+
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
+#ifndef ROOT_TTree
 #include "TTree.h"
+#endif
+#ifndef ROOT_TCut
 #include "TCut.h"
-#include "TTreeFormula.h"
-#include "TMatrixD.h"
+#endif
+#ifndef ROOT_TMatrixDfwd
+#include "TMatrixDfwd.h"
+#endif
+#ifndef ROOT_TPrincipal
 #include "TPrincipal.h"
+#endif
+#ifndef ROOT_TRandom3
+#include "TRandom3.h"
+#endif
 
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
@@ -50,196 +68,164 @@
 #ifndef ROOT_TMVA_VariableInfo
 #include "TMVA/VariableInfo.h"
 #endif
-#ifndef ROOT_TMVA_Event
-#include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_VariableTransformBase
-#include "TMVA/VariableTransformBase.h"
-#endif
 
 namespace TMVA {
    
-   class TreeInfo {
-
-   public:
-
-      TreeInfo( TTree* tr, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType ) 
-         : fTree(tr), fWeight(weight), fTreeType(tt) {}
-      ~TreeInfo() {}
-      
-      TTree*   GetTree()   const { return fTree; }
-      Double_t GetWeight() const { return fWeight; }
-      Types::ETreeType GettreeType() const { return fTreeType; }
-
-   private:
-
-      TTree*   fTree;    //! pointer to the tree
-      Double_t fWeight;  //! weight for the tree
-      Types::ETreeType fTreeType; //! tree is for training/testing/both
-   };
+   class Event;
+   class DataSetInfo;
+   class MsgLogger;
+   class Results;
 
    class DataSet {
 
    public:
 
-      DataSet();
+      DataSet(const DataSetInfo&);
       virtual ~DataSet();
 
-      const char* GetName() const { return "DataSet"; }
+      void      AddEvent( Event *, Types::ETreeType );
 
-      // the tree data
-      void     AddSignalTree    ( TTree* tr, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType );
-      void     AddBackgroundTree( TTree* tr, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType );
-      UInt_t   NSignalTrees()                const { return fTreeCollection[Types::kSignal].size(); }
-      UInt_t   NBackgroundTrees()            const { return fTreeCollection[Types::kBackground].size(); }
-      const TreeInfo&  SignalTreeInfo(Int_t i)     const { return fTreeCollection[Types::kSignal][i]; }
-      const TreeInfo&  BackgroundTreeInfo(Int_t i) const { return fTreeCollection[Types::kBackground][i]; }
-      void     ClearSignalTreeList()     { fTreeCollection[Types::kSignal].clear(); }
-      void     ClearBackgroundTreeList() { fTreeCollection[Types::kBackground].clear(); }
+      Long64_t  GetNEvents( Types::ETreeType type = Types::kMaxTreeType ) const;
+      Long64_t  GetNTrainingEvents()              const { return GetNEvents(Types::kTraining); }
+      Long64_t  GetNTestEvents()                  const { return GetNEvents(Types::kTesting); }
+      Event*    GetEvent()                        const;
+      Event*    GetEvent        ( Long64_t ievt ) const { fCurrentEventIdx = ievt; return GetEvent(); }
+      Event*    GetTrainingEvent( Long64_t ievt ) const { return GetEvent(ievt, Types::kTraining); }
+      Event*    GetTestEvent    ( Long64_t ievt ) const { return GetEvent(ievt, Types::kTesting); }
+      Event*    GetEvent        ( Long64_t ievt, Types::ETreeType type ) const { 
+         fCurrentTreeIdx = TreeIndex(type); fCurrentEventIdx = ievt; return GetEvent(); 
+      }
 
-      // the variable data
-      void     AddVariable( const TString& expression, char varType='F', void* external = 0 );
-      void     AddVariable( const TString& expression, Double_t min, Double_t max, char varType, void* external = 0 );
-      std::vector<VariableInfo>& GetVariableInfos() { return fVariables; }
-      UInt_t   GetNVariables()                const { return fVariables.size(); }
-      char     GetVarType(Int_t i)            const { return fVariables[i].GetVarType(); }
-      Int_t    FindVar(const TString& var)    const;
+      UInt_t    GetNVariables() const;
+      UInt_t    GetNTargets()   const;
+      UInt_t    GetNSpectators()  const;
 
-      const TString& GetExpression(Int_t i)      const { return fVariables[i].GetExpression(); }
-      const TString& GetInternalVarName(Int_t i) const { return fVariables[i].GetInternalVarName(); }
+      void      SetCurrentEvent( Long64_t ievt         ) const { fCurrentEventIdx = ievt; }
+      void      SetCurrentType ( Types::ETreeType type ) const { fCurrentTreeIdx = TreeIndex(type); }
+      Types::ETreeType GetCurrentType() const;
 
-      // the cut
-      void SetCuts( const TString& scut, const TString& bcut ) { SetCuts(TCut(scut), TCut(bcut)); }
-      void SetCuts( const TCut&    scut, const TCut&    bcut ) { fCutSig = scut; fCutBkg = bcut;  }
-      void SetMultiCut( const TString& cut ) { SetMultiCut(TCut(cut)); }
-      void SetMultiCut( const TCut& cut )    { fMultiCut = cut; }
-      const TCut& CutSig()  const { return fCutSig; }
-      const TCut& CutBkg()  const { return fCutBkg; }
-      const char* CutSigS() const { return fCutSig.GetTitle(); }
-      const char* CutBkgS() const { return fCutBkg.GetTitle(); }
-      Bool_t      HasCuts() const { return TString(CutSig()) != "" || TString(CutBkg()) != ""; }
+      void                       SetEventCollection( std::vector<Event*>*, Types::ETreeType );
+      const std::vector<Event*>& GetEventCollection( Types::ETreeType type = Types::kMaxTreeType ) const;
+      const TTree*               GetEventCollectionAsTree();
 
-      // the internal trees
-      TTree* GetTrainingTree()     const { return fTrainingTree; }
-      TTree* GetTestTree()         const { return fTestTree; }
-      TTree* GetMultiCutTestTree() const { return fMultiCutTestTree; }
+      Long64_t  GetNEvtSigTest();
+      Long64_t  GetNEvtBkgdTest();
+      Long64_t  GetNEvtSigTrain();
+      Long64_t  GetNEvtBkgdTrain();
 
-      void SetTrainingTree    (TTree* tr) { fTrainingTree = tr; }
-      void SetTestTree        (TTree* tr) { fTestTree = tr; }
-      void SetMultiCutTestTree(TTree* tr) { fMultiCutTestTree = tr; }
+      Bool_t    HasNegativeEventWeights() const { return fHasNegativeEventWeights; }
 
-      // ROOT stuff
-      TDirectory* LocalRootDir()      const { return fLocalRootDir; }
-      TDirectory* BaseRootDir()       const { return fBaseRootDir; }
-      void SetBaseRootDir(TDirectory* dir)  { fBaseRootDir = dir; }
-      void SetLocalRootDir(TDirectory* dir) { fLocalRootDir = dir; }
+      Results*  GetResults   ( const TString &, 
+                               Types::ETreeType type,
+                               Types::EAnalysisType analysistype );
 
-      // data preparation
-      // prepare input tree for training
-      void PrepareForTrainingAndTesting( const TString & splitOpt );
+      void      SetVerbose( Bool_t ) {}
 
-      // auxiliary functions to compute correlations
-      void GetCorrelationMatrix( Bool_t isSignal, TMatrixDBase* mat );
-      void GetCovarianceMatrix ( Bool_t isSignal, TMatrixDBase*, Bool_t norm = kFALSE );
+      // sets the number of blocks to which the training set is divided, 
+      // some of which are given to the Validation sample. As default they belong all to Training set.
+      void      DivideTrainingSet( UInt_t blockNum );
 
-      void SetVerbose( Bool_t v=kTRUE ) { fVerbose = v; }
-      
-      // finds transformation in map
-      VariableTransformBase* FindTransform( Types::EVariableTransform transform ) const;
+      // sets a certrain block from the origin training set to belong to either Training or Validation set
+      void      MoveTrainingBlock( Int_t blockInd,Types::ETreeType dest, Bool_t applyChanges = kTRUE );
 
-      // finds transformation in map or creates new one
-      VariableTransformBase* GetTransform( Types::EVariableTransform transform );
+      void      IncrementNClassEvents( Int_t type, UInt_t classNumber );
+      Long64_t  GetNClassEvents      ( Int_t type, UInt_t classNumber );
+      void      ClearNClassEvents    ( Int_t type );
 
-      // event reading
-      Bool_t ReadEvent        ( TTree* tr, Long64_t evidx ) const;
-      Bool_t ReadTrainingEvent( Long64_t evidx ) const { return ReadEvent(GetTrainingTree(), evidx ); }
-      Bool_t ReadTestEvent    ( Long64_t evidx ) const { return ReadEvent(GetTestTree(), evidx ); }
+      TTree*    GetTree( Types::ETreeType type );
 
-      TMVA::Event& GetEvent() { if (fEvent==0) fEvent = new TMVA::Event(fVariables); return *fEvent; }
+      // accessors for random and importance sampling
+      void      InitSampling( Float_t fraction, Float_t weight, UInt_t seed = 0 );
+      void      EventResult( Bool_t successful, Long64_t evtNumber = -1 );
+      void      CreateSampling() const;
 
-      UInt_t GetCurrentEvtIdx() const { return fCurrentEvtIdx; } // the current event (to avoid reading of the same event)
-
-      const TMVA::Event& GetEvent() const { return *fEvent; } // Warning, this requires an existing event object
-
-      // correlation matrix 
-      const TMatrixD* CorrelationMatrix( Types::ESBType sigbgd ) const { return fDecorrMatrix[sigbgd]; }
-
-      // the weight 
-      void SetSignalWeightExpression    ( const TString& expr ) { fWeightExp[Types::kSignal]     = expr; }
-      void SetBackgroundWeightExpression( const TString& expr ) { fWeightExp[Types::kBackground] = expr; }
-      Bool_t HasNegativeEventWeights() const { return fHasNegativeEventWeights; }
-
-      // some dataset stats
-      Int_t GetNEvtTrain()     const { return fDataStats[Types::kTraining][Types::kSBBoth]; }
-      Int_t GetNEvtSigTrain()  const { return fDataStats[Types::kTraining][Types::kSignal]; }
-      Int_t GetNEvtBkgdTrain() const { return fDataStats[Types::kTraining][Types::kBackground]; }
-      Int_t GetNEvtTest()      const { return fDataStats[Types::kTesting][Types::kSBBoth]; }
-      Int_t GetNEvtSigTest()   const { return fDataStats[Types::kTesting][Types::kSignal]; }
-      Int_t GetNEvtBkgdTest()  const { return fDataStats[Types::kTesting][Types::kBackground]; }
-
-      // resets branch addresses to current event
-      void ResetBranchAndEventAddresses( TTree* );
-      void ResetCurrentTree() { fCurrentTree = 0; }
+      UInt_t    TreeIndex(Types::ETreeType type) const;
 
    private:
 
-      void ChangeToNewTree( TTree* tr, Int_t sb );
-      void PrintCorrelationMatrix( TTree* theTree );
-
-      // verbosity
-      Bool_t Verbose() { return fVerbose; }
-
       // data members
+      DataSet();
+      void DestroyCollection( Types::ETreeType type, Bool_t deleteEvents );
 
-      // ROOT stuff
-      TDirectory*                fLocalRootDir;     //! the current directory, where things are created
-      TDirectory*                fBaseRootDir;      //! the base directory, usually the root dir of a ROOT-file
+      const DataSetInfo&         fdsi;                //! datasetinfo that created this dataset
 
-      // input trees
-      std::vector<TMVA::TreeInfo>      fTreeCollection[2]; //! list of signal and background trees/weights
+      std::vector<Event*>::iterator        fEvtCollIt;
+      std::vector< std::vector<Event*>*  > fEventCollection; //! list of events for training/testing/...
 
-      // expressions/formulas
-      std::vector<TMVA::VariableInfo>  fVariables;        //! list of variable expressions/internal names
-      std::vector<TString>       fVariableStrings;  //! list of variable expressions
-      std::vector<TTreeFormula*> fInputVarFormulas; // local formulas of the same
-      TCut                       fCutSig;           // the pretraining cut
-      TCut                       fCutBkg;           // the pretraining cut
-      TCut                       fMultiCut;         // phase-space cut
-      TTreeFormula*              fCutSigF;          // the pretraining cut as formula
-      TTreeFormula*              fCutBkgF;          // the pretraining cut as formula
+      std::vector< std::map< TString, Results* > > fResults;         //!  [train/test/...][method-identifier]
 
-      TTree*                     fTrainingTree;     //! tree used for training
-      TTree*                     fTestTree;         //! tree used for testing 
-      TTree*                     fMultiCutTestTree; //! tree used for testing of multicut method
+      mutable UInt_t             fCurrentTreeIdx;
+      mutable Long64_t           fCurrentEventIdx;
 
-      // data stats
-      UInt_t                     fDataStats[Types::kMaxTreeType][Types::kMaxSBType]; //! statistics of the dataset for training/test tree
+      // event sampling
+      std::vector<Char_t>        fSampling;                    // random or importance sampling (not all events are taken) !! Bool_t are stored ( no vector<bool> taken for speed (performance) issues )
+      std::vector<Int_t>         fSamplingNEvents;            // number of events which should be sampled
+      std::vector<Float_t>       fSamplingWeight;              // weight change factor [weight is indicating if sampling is random (1.0) or importance (<1.0)] 
+      mutable std::vector< std::vector< std::pair< Float_t, Long64_t >* > > fSamplingEventList;  // weights and indices for sampling
+      mutable std::vector< std::vector< std::pair< Float_t, Long64_t >* > > fSamplingSelected;   // selected events
+      TRandom3                   *fSamplingRandom;             // random generator for sampling
 
-      TMatrixD*                  fDecorrMatrix[2];     //! Decorrelation matrix [signal/background]
 
-      std::map<TMVA::Types::EVariableTransform,TMVA::VariableTransformBase*> fVarTransforms; //! Registered variable transformations
-      
-      // verbosity
-      Bool_t                    fVerbose;           //! Verbosity
+      // further things
+      std::vector< std::vector<Long64_t> > fClassEvents;       //! number of events of class 0,1,2,... in training[0] 
+                                                               // and testing[1] (+validation, trainingoriginal)
 
-      // the event 
-      mutable TMVA::Event*      fEvent;             //! the event
-      mutable TTree*            fCurrentTree;       //! the tree, events are currently read from
-      mutable UInt_t            fCurrentEvtIdx;     //! the current event (to avoid reading of the same event)
+      Bool_t                     fHasNegativeEventWeights;     // true if at least one signal or bkg event has negative weight
 
-      // the weight
-      TString                   fWeightExp[2];      //! the input formula string that is the weight
-      TTreeFormula*             fWeightFormula[2];  //! local weight formula
+      mutable MsgLogger*         fLogger;   // message logger
+      MsgLogger& log() const { return *fLogger; }
+      std::vector<Char_t>        fBlockBelongToTraining;       // when dividing the dataset to blocks, sets whether 
+                                                               // the certain block is in the Training set or else 
+                                                               // in the validation set 
+                                                               // boolean are stored, taken vector<Char_t> for performance reasons (instead of vector<Bool_t>)
+      Long64_t                   fTrainingBlockSize;           // block size into which the training dataset is divided
 
-      Bool_t                    fExplicitTrainTest[2]; //! if set to true the user has specified training and testing data explicitly
-      Bool_t                    fHasNegativeEventWeights; // true if at least one signal or bkg event has negative weight
-      
-      mutable MsgLogger         fLogger;           //! message logger
-
+      void  ApplyTrainingBlockDivision();
+      void  ApplyTrainingSetDivision();
    };
 }
+
+
+//_______________________________________________________________________
+inline UInt_t TMVA::DataSet::TreeIndex(Types::ETreeType type) const
+{
+   switch (type) {
+   case Types::kMaxTreeType : return fCurrentTreeIdx;
+   case Types::kTraining : return 0;
+   case Types::kTesting : return 1;
+   case Types::kValidation : return 2;
+   case Types::kTrainingOriginal : return 3;
+   default : return fCurrentTreeIdx;
+   }
+}
+
+//_______________________________________________________________________
+inline TMVA::Types::ETreeType TMVA::DataSet::GetCurrentType() const
+{
+   switch (fCurrentTreeIdx) {
+   case 0: return Types::kTraining;
+   case 1: return Types::kTesting;
+   case 2: return Types::kValidation;
+   case 3: return Types::kTrainingOriginal;
+   }
+   return Types::kMaxTreeType;
+}
+
+//_______________________________________________________________________
+inline Long64_t TMVA::DataSet::GetNEvents(Types::ETreeType type) const 
+{
+   Int_t treeIdx = TreeIndex(type);
+   if (fSampling.size() > UInt_t(treeIdx) && fSampling.at(treeIdx)) {
+      return fSamplingSelected.at(treeIdx).size();
+   }
+   return GetEventCollection(type).size();
+}
+
+//_______________________________________________________________________
+inline const std::vector<TMVA::Event*>& TMVA::DataSet::GetEventCollection( TMVA::Types::ETreeType type ) const
+{
+   return *(fEventCollection.at(TreeIndex(type)));
+}
+
 
 #endif

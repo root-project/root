@@ -16,6 +16,7 @@
 #include "TFile.h"
 #include "TDirectory.h"
 
+
 #include "RVersion.h"
 
 using std::cout;
@@ -27,7 +28,8 @@ namespace TMVAGlob {
    static Bool_t UsePaperStyle = 0;
    // -----------------------------------------------
 
-   enum TypeOfPlot { kNormal = 0,
+   enum TypeOfPlot { kId = 0,
+                     kNorm,
                      kDecorrelated,
                      kPCA,
                      kGaussDecorr,
@@ -40,6 +42,7 @@ namespace TMVAGlob {
    static Int_t c_SignalFill     = TColor::GetColor( "#7d99d1" );
    static Int_t c_BackgroundLine = TColor::GetColor( "#ff0000" );
    static Int_t c_BackgroundFill = TColor::GetColor( "#ff0000" );
+   static Int_t c_NovelBlue      = TColor::GetColor( "#2244a5" );
 
    // set the style
    void SetSignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* all = 0 ) 
@@ -120,7 +123,7 @@ namespace TMVAGlob {
       TMVAStyle->SetLineStyleString( 7, "[22 10 7 10]" );
 
       // the pretty color palette of old
-      TMVAStyle->SetPalette(1,0);
+      TMVAStyle->SetPalette((UsePaperStyle ? 18 : 1),0);
 
       // use plain black on white colors
       TMVAStyle->SetFrameBorderMode(0);
@@ -241,7 +244,7 @@ namespace TMVAGlob {
             cout << "--- the corresponding lines (line no. 239-241) in tmvaglob.C" << endl;
             cout << "--- --------------------------------------------------------------------" << endl;
             c->Print(epsName);
-             c->Print(pngName);
+            c->Print(pngName);
             // c->Print(gifName);
          }
       }
@@ -274,7 +277,7 @@ namespace TMVAGlob {
       return img;
    }
 
-   void plot_logo( Float_t v_scale = 1.0 )
+   void plot_logo( Float_t v_scale = 1.0, Float_t skew = 1.0 )
    {
 
       TImage *img = findImage("tmva_logo.gif");
@@ -297,8 +300,8 @@ namespace TMVAGlob {
       Float_t x1R = 1 - gStyle->GetPadRightMargin(); 
       Float_t y1B = 1 - gStyle->GetPadTopMargin()+.01; // we like the logo to sit a bit above the histo 
 
-      Float_t x1L = x1R - d*r;
-      Float_t y1T = y1B + d*v_scale;
+      Float_t x1L = x1R - d*r/skew;
+      Float_t y1T = y1B + d*v_scale*skew;
       if (y1T>0.99) y1T = 0.99;
 
       TPad *p1 = new TPad("imgpad", "imgpad", x1L, y1B, x1R, y1T );
@@ -319,6 +322,15 @@ namespace TMVAGlob {
       img->Draw();
    } 
 
+   void NormalizeHist( TH1* h ) 
+   {
+      if (h==0) return;
+      if (h->GetSumw2N() == 0) h->Sumw2();
+      if(h->GetSumOfWeights()!=0) {
+         Float_t dx = (h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin())/h->GetNbinsX();
+         h->Scale( 1.0/h->GetSumOfWeights()/dx );
+      }
+   }
    void NormalizeHists( TH1* sig, TH1* bkg = 0 ) 
    {
       if (sig->GetSumw2N() == 0) sig->Sumw2();
@@ -377,7 +389,7 @@ namespace TMVAGlob {
       return rkey;
    }
 
-   UInt_t GetListOfKeys( TList & keys, TString inherits, TDirectory *dir=0 )
+   UInt_t GetListOfKeys( TList& keys, TString inherits, TDirectory *dir=0 )
    {
       // get a list of keys with a given inheritance
       // the list contains TKey objects
@@ -398,7 +410,36 @@ namespace TMVAGlob {
       return ni;
    }
 
-   TKey *FindMethod( TString name, TDirectory *dir=0 )
+   Int_t GetNumberOfTargets( TDirectory *dir )
+   {
+      TIter next(dir->GetListOfKeys());
+      TKey* key    = 0;
+      Int_t noTrgts = 0;
+         
+      while ((key = (TKey*)next())) {
+         if (key->GetCycle() != 1) continue;        
+         if (TString(key->GetName()).Contains("train_Quadr_Deviation_target")) noTrgts++;
+      }
+      return noTrgts;
+   }
+
+   Int_t GetNumberOfInputVariables( TDirectory *dir )
+   {
+      TIter next(dir->GetListOfKeys());
+      TKey* key    = 0;
+      Int_t noVars = 0;
+         
+      while ((key = (TKey*)next())) {
+         if (key->GetCycle() != 1) continue;
+         
+         // count number of variables (signal is sufficient)
+         if (TString(key->GetName()).Contains("__Signal") || TString(key->GetName()).Contains("__Regression")) noVars++;
+      }
+      
+      return noVars;
+   }
+
+   TKey* FindMethod( TString name, TDirectory *dir=0 )
    {
       // find the key for a method
       if (dir==0) dir = gDirectory;
@@ -406,19 +447,67 @@ namespace TMVAGlob {
       TKey *mkey;
       TKey *retkey=0;
       Bool_t loop=kTRUE;
-      TString tname("Method_"+name);  // target name
       while (loop) {
          mkey = (TKey*)mnext();
          if (mkey==0) {
             loop = kFALSE;
-         } else {
+         } 
+         else {
             TString clname = mkey->GetClassName();
             TClass *cl = gROOT->GetClass(clname);
-            if(cl->InheritsFrom("TDirectory") && tname == mkey->GetName()) // target found!
-               return mkey;
+            if (cl->InheritsFrom("TDirectory")) {
+               TString mname = mkey->GetName(); // method name
+               TString tname = "Method_"+name;  // target name
+               if (mname==tname) { // target found!
+                  loop = kFALSE;
+                  retkey = mkey;
+               }
+            }
          }
       }
       return retkey;
+   }
+
+   Bool_t ExistMethodName( TString name, TDirectory *dir=0 )
+   {
+      // find the key for a method
+      if (dir==0) dir = gDirectory;
+      TIter mnext(dir->GetListOfKeys());
+      TKey *mkey;
+      Bool_t loop=kTRUE;
+      while (loop) {
+         mkey = (TKey*)mnext();
+         if (mkey==0) {
+            loop = kFALSE;
+         } 
+         else {
+            TString clname  = mkey->GetClassName();
+            TString keyname = mkey->GetName();
+            TClass *cl = gROOT->GetClass(clname);
+            if (keyname.Contains("Method") && cl->InheritsFrom("TDirectory")) {
+
+               TDirectory* d_ = (TDirectory*)dir->Get( keyname );
+               if (!d_) {
+                  cout << "HUUUGE TROUBLES IN TMVAGlob::ExistMethodName() --> contact authors" << endl;
+                  return kFALSE;
+               }
+
+               TIter mnext_(d_->GetListOfKeys());
+               TKey *mkey_;
+               while ((mkey_ = (TKey*)mnext_())) {
+                  TString clname_ = mkey_->GetClassName();
+                  TClass *cl_ = gROOT->GetClass(clname_);
+                  if (cl_->InheritsFrom("TDirectory")) {
+                     TString mname = mkey_->GetName(); // method name
+                     if (mname==name) { // target found!                  
+                        return kTRUE;
+                     }
+                  }
+               }
+            }
+         }
+      }
+      return kFALSE;
    }
 
    UInt_t GetListOfMethods( TList & methods, TDirectory *dir=0 )
@@ -444,6 +533,34 @@ namespace TMVAGlob {
       }
       cout << "--- Found " << ni << " classifier types" << endl;
       return ni;
+   }
+
+   UInt_t GetListOfJobs( TFile* file, TList& jobdirs)
+   {
+      // get a list of all jobs in all method directories
+      // based on ideas by Peter and Joerg found in macro deviations.C
+      TIter next(file->GetListOfKeys());
+      TKey *key(0);   
+      while ((key = (TKey*)next())) {
+         
+         if (TString(key->GetName()).BeginsWith("Method_")) {
+            if (gROOT->GetClass(key->GetClassName())->InheritsFrom("TDirectory")) {
+
+               TDirectory* mDir = (TDirectory*)key->ReadObj();
+               
+               TIter keyIt(mDir->GetListOfKeys());
+               TKey *jobkey;
+               while ((jobkey = (TKey*)keyIt())) {
+                  if (!gROOT->GetClass(jobkey->GetClassName())->InheritsFrom("TDirectory")) continue;
+                  
+                  TDirectory *jobDir = (TDirectory *)jobkey->ReadObj();
+                  cout << "jobdir name  " << jobDir->GetName() << endl;
+                  jobdirs.Add(jobDir);
+               }
+            }
+         }
+      }
+      return jobdirs.GetSize();
    }
 
    UInt_t GetListOfTitles( TDirectory *rfdir, TList & titles )
@@ -510,14 +627,13 @@ namespace TMVAGlob {
       return ni;
    }
 
-
    TDirectory *GetInputVariablesDir( TMVAGlob::TypeOfPlot type, TDirectory *dir=0 )
    {
       // get the InputVariables directory
-      const TString directories[TMVAGlob::kNumOfMethods] = { "InputVariables_NoTransform",
-                                                             "InputVariables_DecorrTransform",
-                                                             "InputVariables_PCATransform",
-                                                             "InputVariables_GaussDecorr" };
+      const TString directories[TMVAGlob::kNumOfMethods] = { "InputVariables_Id",
+                                                             "InputVariables_Deco",
+                                                             "InputVariables_PCA",
+                                                             "InputVariables_Gauss_Deco" };
       if (dir==0) dir = gDirectory;
 
       // get top dir containing all hists of the variables

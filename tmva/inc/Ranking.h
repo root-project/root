@@ -38,17 +38,13 @@
 
 #include <vector>
 
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
 
-class TString;
-
 namespace TMVA {
 
+   class MsgLogger;
    class Rank;
 
    class Ranking {
@@ -62,16 +58,17 @@ namespace TMVA {
       virtual void AddRank( const Rank& rank );
       virtual void Print() const;
 
-      void SetContext  ( const TString context   ) { fContext = context; fLogger.SetSource( fContext.Data() ); }
-      void SetDiscrName( const TString discrName ) { fRankingDiscriminatorName = discrName; }
+      void SetContext  ( const TString& context   );
+      void SetDiscrName( const TString& discrName ) { fRankingDiscriminatorName = discrName; }
 
    private:
                   
-      std::vector<TMVA::Rank*> fRanking;                  // vector of ranks
+      std::vector<TMVA::Rank> fRanking;                  // vector of ranks
       TString                 fContext;                  // the ranking context
       TString                 fRankingDiscriminatorName; // the name of the ranking discriminator
 
-      mutable MsgLogger       fLogger;                   // message logger
+      mutable MsgLogger*      fLogger;                   //! message logger
+      MsgLogger& log() const { return *fLogger; }                       
 
       ClassDef(Ranking,0) // Method-specific ranking for input variables 
    };
@@ -82,7 +79,7 @@ namespace TMVA {
 
    public:
 
-      Rank( TString variable, Double_t rankValue );
+      Rank( const TString& variable, Double_t rankValue );
       virtual ~Rank();
 
       // comparison between rank

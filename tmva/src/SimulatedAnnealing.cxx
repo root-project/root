@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Krzysztof Danielowski, Kamil Kraszewski, Maciej Kruk
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -29,15 +29,16 @@
 //                                                                      
 // Implementation of Simulated Annealing fitter  
 //_______________________________________________________________________
+#include "TMVA/SimulatedAnnealing.h"
 
 #include "TRandom3.h"
 #include "TMath.h"
 
-#include "TMVA/SimulatedAnnealing.h"
 #include "TMVA/Interval.h"
 #include "TMVA/IFitterTarget.h"
 #include "TMVA/GeneticRange.h"
 #include "TMVA/Timer.h"
+#include "TMVA/MsgLogger.h"
 
 ClassImp(TMVA::SimulatedAnnealing)
 
@@ -52,7 +53,7 @@ TMVA::SimulatedAnnealing::SimulatedAnnealing( IFitterTarget& target, const std::
      fEps                   ( 1e-10 ),
      fTemperatureScale      ( 0.06 ),
      fUseDefaultScale       ( kFALSE ),
-     fLogger( "SimulatedAnnealing" )
+     fLogger( new MsgLogger("SimulatedAnnealing") )
 {
    // constructor
    fAdaptiveSpeed = 1.0;
@@ -80,27 +81,27 @@ void TMVA::SimulatedAnnealing::SetOptions( Int_t    maxCalls,
 
    if      (kernelTemperatureS == "IncreasingAdaptive") {
       fKernelTemperature = kIncreasingAdaptive; 
-      fLogger << kINFO << "Using increasing adaptive algorithm" << Endl;
+      log() << kINFO << "Using increasing adaptive algorithm" << Endl;
    }
    else if (kernelTemperatureS == "DecreasingAdaptive") {
       fKernelTemperature = kDecreasingAdaptive; 
-      fLogger << kINFO << "Using decreasing adaptive algorithm" << Endl;
+      log() << kINFO << "Using decreasing adaptive algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Sqrt") {
       fKernelTemperature = kSqrt; 
-      fLogger << kINFO << "Using \"Sqrt\" algorithm" << Endl;
+      log() << kINFO << "Using \"Sqrt\" algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Homo") {
       fKernelTemperature = kHomo; 
-      fLogger << kINFO << "Using \"Homo\" algorithm" << Endl;
+      log() << kINFO << "Using \"Homo\" algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Log") {
       fKernelTemperature = kLog;  
-      fLogger << kINFO << "Using \"Log\" algorithm" << Endl;
+      log() << kINFO << "Using \"Log\" algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Sin") {
       fKernelTemperature = kSin;
-      fLogger << kINFO << "Using \"Sin\" algorithm" << Endl;
+      log() << kINFO << "Using \"Sin\" algorithm" << Endl;
    }
 
    fTemperatureScale        = temperatureScale;
@@ -195,7 +196,7 @@ void TMVA::SimulatedAnnealing::GenerateNewTemperature( Double_t& currentTemperat
    else if (fKernelTemperature == kDecreasingAdaptive) {
       currentTemperature = currentTemperature*fTemperatureScale;
    }
-   else fLogger << kFATAL << "No such kernel!" << Endl;
+   else log() << kFATAL << "No such kernel!" << Endl;
 }
 
 //________________________________________________________________________
@@ -225,7 +226,7 @@ void TMVA::SimulatedAnnealing::SetDefaultScale()
       }
    }
    else if (fKernelTemperature == kIncreasingAdaptive) fTemperatureScale = 0.15*( 1.0 / (Double_t)(fRanges.size() ) );
-   else fLogger << kFATAL << "No such kernel!" << Endl;
+   else log() << kFATAL << "No such kernel!" << Endl;
 }
 
 //_______________________________________________________________________
@@ -317,7 +318,7 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
    
    if (fUseDefaultScale) SetDefaultScale();
 
-   fLogger << kINFO 
+   log() << kINFO 
            << "Temperatur scale = "      << fTemperatureScale  
            << ", current temperature = " << currentTemperature  << Endl;
 
@@ -328,7 +329,7 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
    generalCalls  = fMaxCalls - optimizeCalls; //and 99% calls to found that one
    fProgress = 0.0;
 
-   Timer timer( fMaxCalls, fLogger.GetSource().c_str() );
+   Timer timer( fMaxCalls, fLogger->GetSource().c_str() );
 
    for (Int_t sample = 0; sample < generalCalls; sample++) {
       GenerateNeighbour( parameters, oldParameters, currentTemperature );
@@ -368,7 +369,7 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
    }
 
    // get elapsed time   
-   fLogger << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
+   log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
            << "                            " << Endl;  
    
    // supose this minimum is the best one, now just try to improve it

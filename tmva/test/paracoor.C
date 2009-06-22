@@ -23,17 +23,22 @@ void paracoor( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
       TLeaf* leaf = (TLeaf*)leafList->At(iar);
       if (leaf != 0) {
          TString leafName = leaf->GetName();
-         if (leafName != "type" && leafName != "weight"  && leafName != "boostweight") {
-            if (leafName.Contains("MVA_")) {
-               if (!leafName.Contains("_Proba")) mvas.push_back( leafName );
+         if (leafName != "type" && leafName != "weight"  && leafName != "boostweight" &&
+             leafName != "class" && leafName != "className" && !leafName.Contains("prob_")) {
+            // is MVA ?
+            if (TMVAGlob::ExistMethodName( leafName )) {
+               mvas.push_back( leafName );
             }
-            else (!leafName.Contains("MVA_")) vars.push_back( leafName );
+            else {
+               vars.push_back( leafName );
+            }
          }
       }
    }
 
    cout << "--- Found: " << vars.size() << " variables" << endl;
    cout << "--- Found: " << mvas.size() << " MVA(s)" << endl;
+   
 
    TString type[2] = { "Signal", "Background" };
    const Int_t nmva = mvas.size();
@@ -56,7 +61,7 @@ void paracoor( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                            Form( "Parallel coordinate representation for %s and input variables (%s events)", 
                                  mvashort.Data(), type[itype].Data() ), 
                            50*(itype), 50*(itype), 750, 500 );      
-         tree->Draw( varstr.Data(), Form("type==%i",1-itype) , "para" );
+         tree->Draw( varstr.Data(), Form("class==%i",1-itype) , "para" );
          c1->ToggleEditor();
          gStyle->SetOptTitle(0);
 

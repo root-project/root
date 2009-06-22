@@ -44,20 +44,13 @@
 #include "TObject.h"
 #endif
 
+#ifndef ROOT_TMVA_Types
+#include "TMVA/Types.h"
+#endif
+
 // Local include(s):
 
 namespace TMVA {
-
-   // define outside of class to facilite access
-   enum EMsgType { 
-      kDEBUG   = 1,
-      kVERBOSE = 2, 
-      kINFO    = 3,
-      kWARNING = 4,
-      kERROR   = 5,
-      kFATAL   = 6,
-      kSILENT  = 7
-   };
 
    class MsgLogger : public std::ostringstream, public TObject {
 
@@ -99,6 +92,10 @@ namespace TMVA {
          return *this;
       }
 
+      // Temporaly disables all the loggers (Caution! Use with care !)
+      static void  InhibitOutput();	 
+      static void  EnableOutput();
+
    private:
 
       // private utility routines
@@ -112,10 +109,13 @@ namespace TMVA {
       const std::string               fSuffix;         // suffix following source name
       EMsgType                        fActiveType;     // active type
       static UInt_t                   fgMaxSourceSize; // maximum length of source name
+      static Bool_t                   fgOutputSupressed; // disable the output globaly (used by generic booster)
 
       std::map<EMsgType, std::string> fTypeMap;        // matches output types with strings
       std::map<EMsgType, std::string> fColorMap;       // matches output types with terminal colors
       EMsgType                        fMinType;        // minimum type for output
+
+      static Bool_t                   fInhibitOutput;    // flag to suppress all output
 
       ClassDef(MsgLogger,0) // Ostringstream derivative to redirect and format logging output  
    }; // class MsgLogger
@@ -147,9 +147,8 @@ namespace TMVA {
    // would be nicer C++-wise, it introduces some "unused variable"
    // warnings so let's use the #define definition after all...
    //   static MsgLogger& ( *Endl )( MsgLogger& ) = &MsgLogger::Endmsg;
-#ifndef __CINT__
 #define Endl MsgLogger::Endmsg
-#endif
+
 }
 
 #endif // TMVA_MsgLogger

@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -20,23 +19,26 @@
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include "TMVA/ClassifierFactory.h"
 #include "TMVA/MethodHMatrix.h"
 #include "TMVA/Tools.h"
 #include "TMatrix.h"
 #include "Riostream.h"
 #include <algorithm>
 
+REGISTER_METHOD(HMatrix)
+
 ClassImp(TMVA::MethodHMatrix)
 
 //_______________________________________________________________________
-/* Begin_Html                                                                      
+//Begin_Html                                                                      
+/*
   H-Matrix method, which is implemented as a simple comparison of      
   chi-squared estimators for signal and background, taking into        
   account the linear correlations between the input variables          
@@ -56,46 +58,37 @@ ClassImp(TMVA::MethodHMatrix)
   TMVA then uses as normalised analyser for event (<i>i</i>) the ratio:
   (<i>&chi;<sub>S</sub>(i)<sup>2</sup> &minus; &chi;<sub>B</sub><sup>2</sup>(i)</i>)
   (<i>&chi;<sub>S</sub><sup>2</sup>(i) + &chi;<sub>B</sub><sup>2</sup>(i)</i>).
-
-End_Html */
+*/
+//End_Html
 //_______________________________________________________________________
  
 
 //_______________________________________________________________________
-TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName, const TString& methodTitle, DataSet& theData, 
-                                    const TString& theOption, TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
+                                    const TString& methodTitle,
+                                    DataSetInfo& theData, 
+                                    const TString& theOption,
+                                    TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, Types::kHMatrix, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor for the H-Matrix method
-   InitHMatrix();
-
-   // HMatrix options: none ... process base class option
-   SetConfigName( TString("Method") + GetMethodName() );
-   DeclareOptions();
-   ParseOptions();
-   ProcessOptions();
 }
 
 //_______________________________________________________________________
-TMVA::MethodHMatrix::MethodHMatrix( DataSet & theData, 
+TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData, 
                                     const TString& theWeightFile,  
                                     TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
+   : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile, theTargetDir ) 
 {
-   // constructor to calculate the H-Matrix from the weight file
-   InitHMatrix();
+   // constructor from weight file
 }
 
 //_______________________________________________________________________
-void TMVA::MethodHMatrix::InitHMatrix( void )
+void TMVA::MethodHMatrix::Init( void )
 {
    // default initialization called by all constructors
-   SetMethodName( "HMatrix" );
-   SetMethodType( TMVA::Types::kHMatrix );
-   SetTestvarName();
 
-   // HMatrix prefers normalised input variables
-   SetNormalised( kTRUE );
+   //SetNormalised( kFALSE ); obsolete!
 
    fInvHMatrixS = new TMatrixD( GetNvar(), GetNvar() );
    fInvHMatrixB = new TMatrixD( GetNvar(), GetNvar() );
@@ -117,6 +110,15 @@ TMVA::MethodHMatrix::~MethodHMatrix( void )
 }
 
 //_______________________________________________________________________
+Bool_t TMVA::MethodHMatrix::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
+{
+   // FDA can handle classification with 2 classes and regression with one regression-target
+   if( type == Types::kClassification && numberClasses == 2 ) return kTRUE;
+   return kFALSE;
+}
+
+
+//_______________________________________________________________________
 void TMVA::MethodHMatrix::DeclareOptions() 
 {
    // MethodHMatrix options: none (apart from those implemented in MethodBase)
@@ -126,8 +128,6 @@ void TMVA::MethodHMatrix::DeclareOptions()
 void TMVA::MethodHMatrix::ProcessOptions() 
 {
    // process user options
-   MethodBase::ProcessOptions();
-   CheckForUnusedOptions();
 }
 
 //_______________________________________________________________________
@@ -135,35 +135,32 @@ void TMVA::MethodHMatrix::Train( void )
 {
    // computes H-matrices for signal and background samples
 
-   // default sanity checks
-   if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
-
    // covariance matrices for signal and background
    ComputeCovariance( kTRUE,  fInvHMatrixS );
    ComputeCovariance( kFALSE, fInvHMatrixB );
 
    // sanity checks
    if (TMath::Abs(fInvHMatrixS->Determinant()) < 10E-24) {
-      fLogger << kWARNING << "<Train> H-matrix  S is almost singular with deterinant= "
+      log() << kWARNING << "<Train> H-matrix  S is almost singular with deterinant= "
               << TMath::Abs(fInvHMatrixS->Determinant())
               << " did you use the variables that are linear combinations or highly correlated ???" 
               << Endl;
    }
    if (TMath::Abs(fInvHMatrixB->Determinant()) < 10E-24) {
-      fLogger << kWARNING << "<Train> H-matrix  B is almost singular with deterinant= "
+      log() << kWARNING << "<Train> H-matrix  B is almost singular with deterinant= "
               << TMath::Abs(fInvHMatrixB->Determinant())
               << " did you use the variables that are linear combinations or highly correlated ???" 
               << Endl;
    }
 
     if (TMath::Abs(fInvHMatrixS->Determinant()) < 10E-120) {
-       fLogger << kFATAL << "<Train> H-matrix  S is singular with deterinant= "
+       log() << kFATAL << "<Train> H-matrix  S is singular with deterinant= "
                << TMath::Abs(fInvHMatrixS->Determinant())
                << " did you use the variables that are linear combinations ???" 
                << Endl;
     }
     if (TMath::Abs(fInvHMatrixB->Determinant()) < 10E-120) {
-       fLogger << kFATAL << "<Train> H-matrix  B is singular with deterinant= "
+       log() << kFATAL << "<Train> H-matrix  B is singular with deterinant= "
                << TMath::Abs(fInvHMatrixB->Determinant())
                << " did you use the variables that are linear combinations ???" 
                << Endl;
@@ -178,8 +175,10 @@ void TMVA::MethodHMatrix::Train( void )
 void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
 {
    // compute covariance matrix
+   
+   Data()->SetCurrentType(Types::kTraining);
 
-   const UInt_t nvar = GetNvar();
+   const UInt_t nvar = DataInfo().GetNVariables();
    UInt_t ivar, jvar;
 
    // init matrices
@@ -191,18 +190,22 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
    Double_t *xval = new Double_t[nvar];
 
    // perform event loop
-   for (Int_t i=0; i<Data().GetNEvtTrain(); i++) {
+   for (Int_t i=0; i<Data()->GetNEvents(); i++) {
 
-      // fill the event
-      ReadTrainingEvent(i);      
-      if (IsSignalEvent() != isSignal) continue;
+      // retrieve the event
+      const Event* ev = GetEvent(i);      
+      Double_t weight = ev->GetWeight();
+
+      // in case event with neg weights are to be ignored
+      if (IgnoreEventsWithNegWeightsInTraining() && weight <= 0) continue;
+
+      if (ev->IsSignal() != isSignal) continue;
 
       // event is of good type
-      Double_t weight = GetEventWeight();
       sumOfWeights += weight;
 
       // mean values
-      for (ivar=0; ivar<nvar; ivar++) xval[ivar] = GetEventVal(ivar);
+      for (ivar=0; ivar<nvar; ivar++) xval[ivar] = ev->GetVal(ivar);
 
       // covariance matrix         
       for (ivar=0; ivar<nvar; ivar++) {
@@ -232,13 +235,16 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodHMatrix::GetMvaValue()
+Double_t TMVA::MethodHMatrix::GetMvaValue( Double_t* err )
 {
    // returns the H-matrix signal estimator
    Double_t s = GetChi2( Types::kSignal     );
    Double_t b = GetChi2( Types::kBackground );
   
-   if (s+b < 0) fLogger << kFATAL << "big trouble: s+b: " << s+b << Endl;
+   if (s+b < 0) log() << kFATAL << "big trouble: s+b: " << s+b << Endl;
+
+   // cannot determine error
+   if (err != 0) *err = -1;
 
    return (b - s)/(s + b);
 }
@@ -249,7 +255,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event* e,  Types::ESBType type ) co
    // compute chi2-estimator for event according to type (signal/background)
 
    // loop over variables
-   Int_t ivar,jvar;
+   UInt_t ivar,jvar;
    vector<Double_t> val( GetNvar() );
    for (ivar=0; ivar<GetNvar(); ivar++) {
       val[ivar] = e->GetVal(ivar);
@@ -269,7 +275,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event* e,  Types::ESBType type ) co
    }
 
    // sanity check
-   if (chi2 < 0) fLogger << kFATAL << "<GetChi2> negative chi2: " << chi2 << Endl;
+   if (chi2 < 0) log() << kFATAL << "<GetChi2> negative chi2: " << chi2 << Endl;
 
    return chi2;
 }
@@ -279,10 +285,12 @@ Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) const
 {
    // compute chi2-estimator for event according to type (signal/background)
 
+   const Event * ev = GetEvent();
+
    // loop over variables
-   Int_t ivar,jvar;
+   UInt_t ivar,jvar;
    vector<Double_t> val( GetNvar() );
-   for (ivar=0; ivar<GetNvar(); ivar++) val[ivar] = GetEventVal( ivar );
+   for (ivar=0; ivar<GetNvar(); ivar++) val[ivar] = ev->GetVal( ivar );
 
    Double_t chi2 = 0;
    for (ivar=0; ivar<GetNvar(); ivar++) {
@@ -297,7 +305,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) const
    }
 
    // sanity check
-   if (chi2 < 0) fLogger << kFATAL << "<GetChi2> negative chi2: " << chi2 << Endl;
+   if (chi2 < 0) log() << kFATAL << "<GetChi2> negative chi2: " << chi2 << Endl;
 
    return chi2;
 }
@@ -308,8 +316,8 @@ void  TMVA::MethodHMatrix::WriteWeightsToStream( ostream& o ) const
    // write variable names and min/max 
    // NOTE: the latter values are mandatory for the normalisation 
    // in the reader application !!!
-   Int_t ivar,jvar;
-   o << this->GetMethodName() <<endl;
+   UInt_t ivar,jvar;
+   o << this->GetMethodTypeName() <<endl;
 
    // mean vectors
    for (ivar=0; ivar<GetNvar(); ivar++) {
@@ -334,15 +342,36 @@ void  TMVA::MethodHMatrix::WriteWeightsToStream( ostream& o ) const
 }
 
 //_______________________________________________________________________
+void TMVA::MethodHMatrix::AddWeightsXMLTo( void* parent ) const {
+   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   gTools().WriteTVectorDToXML(wght,"VecMeanS",fVecMeanS); 
+   gTools().WriteTVectorDToXML(wght,"VecMeanB", fVecMeanB);
+   gTools().WriteTMatrixDToXML(wght,"InvHMatS",fInvHMatrixS); 
+   gTools().WriteTMatrixDToXML(wght,"InvHMatB",fInvHMatrixB);
+   //log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+}
+
+void TMVA::MethodHMatrix::ReadWeightsFromXML( void* wghtnode ){
+   void* descnode = gTools().xmlengine().GetChild(wghtnode);
+   gTools().ReadTVectorDFromXML(descnode,"VecMeanS",fVecMeanS);
+   descnode = gTools().xmlengine().GetNext(descnode);
+   gTools().ReadTVectorDFromXML(descnode,"VecMeanB", fVecMeanB);
+   descnode = gTools().xmlengine().GetNext(descnode);
+   gTools().ReadTMatrixDFromXML(descnode,"InvHMatS",fInvHMatrixS); 
+   descnode = gTools().xmlengine().GetNext(descnode);
+   gTools().ReadTMatrixDFromXML(descnode,"InvHMatB",fInvHMatrixB);
+}
+
+//_______________________________________________________________________
 void  TMVA::MethodHMatrix::ReadWeightsFromStream( istream& istr )
 {
    // read variable names and min/max
    // NOTE: the latter values are mandatory for the normalisation 
    // in the reader application !!!
-   Int_t ivar,jvar;
+   UInt_t ivar,jvar;
    TString var, dummy;
    istr >> dummy;
-   this->SetMethodName(dummy);
+   //this->SetMethodName(dummy);
 
    // mean vectors
    for (ivar=0; ivar<GetNvar(); ivar++) 
@@ -375,14 +404,14 @@ void TMVA::MethodHMatrix::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << "void " << className << "::Initialize() " << endl;
    fout << "{" << endl;
    fout << "   // init vectors with mean values" << endl;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       fout << "   fVecMeanS[" << ivar << "] = " << (*fVecMeanS)(ivar) << ";" << endl;
       fout << "   fVecMeanB[" << ivar << "] = " << (*fVecMeanB)(ivar) << ";" << endl;
    }
    fout << "   " << endl;
    fout << "   // init H-matrices" << endl;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      for (Int_t jvar=0; jvar<GetNvar(); jvar++) {
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
+      for (UInt_t jvar=0; jvar<GetNvar(); jvar++) {
          fout << "   fInvHMatrixS[" << ivar << "][" << jvar << "] = " 
               << (*fInvHMatrixS)(ivar,jvar) << ";" << endl;
          fout << "   fInvHMatrixB[" << ivar << "][" << jvar << "] = " 
@@ -441,27 +470,27 @@ void TMVA::MethodHMatrix::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "The H-Matrix classifier discriminates one class (signal) of a feature" << Endl;
-   fLogger << "vector from another (background). The correlated elements of the" << Endl;
-   fLogger << "vector are assumed to be Gaussian distributed, and the inverse of" << Endl;
-   fLogger << "the covariance matrix is the H-Matrix. A multivariate chi-squared" << Endl;
-   fLogger << "estimator is built that exploits differences in the mean values of" << Endl;
-   fLogger << "the vector elements between the two classes for the purpose of" << Endl;
-   fLogger << "discrimination." << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "The TMVA implementation of the H-Matrix classifier has been shown" << Endl;
-   fLogger << "to underperform in comparison with the corresponding Fisher discriminant," << Endl;
-   fLogger << "when using similar assumptions and complexity. Its use is therefore" << Endl;
-   fLogger << "depreciated. Only in cases where the background model is strongly" << Endl;
-   fLogger << "non-Gaussian, H-Matrix may perform better than Fisher. In such" << Endl;
-   fLogger << "occurrences the user is advised to employ non-linear classifiers. " << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "None" << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "The H-Matrix classifier discriminates one class (signal) of a feature" << Endl;
+   log() << "vector from another (background). The correlated elements of the" << Endl;
+   log() << "vector are assumed to be Gaussian distributed, and the inverse of" << Endl;
+   log() << "the covariance matrix is the H-Matrix. A multivariate chi-squared" << Endl;
+   log() << "estimator is built that exploits differences in the mean values of" << Endl;
+   log() << "the vector elements between the two classes for the purpose of" << Endl;
+   log() << "discrimination." << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "The TMVA implementation of the H-Matrix classifier has been shown" << Endl;
+   log() << "to underperform in comparison with the corresponding Fisher discriminant," << Endl;
+   log() << "when using similar assumptions and complexity. Its use is therefore" << Endl;
+   log() << "depreciated. Only in cases where the background model is strongly" << Endl;
+   log() << "non-Gaussian, H-Matrix may perform better than Fisher. In such" << Endl;
+   log() << "occurrences the user is advised to employ non-linear classifiers. " << Endl;
+   log() << Endl;
+   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   log() << Endl;
+   log() << "None" << Endl;
 }

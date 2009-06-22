@@ -37,11 +37,17 @@
 #include <vector>
 #include <map>
 
+// Local
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
-#ifndef ROOT_TMVA_KNN_ModulekNN
+#ifndef ROOT_TMVA_ModulekNN
 #include "TMVA/ModulekNN.h"
+#endif
+
+// SVD and linear discriminat code
+#ifndef ROOT_TMVA_LDA
+#include "TMVA/LDA.h"
 #endif
 
 namespace TMVA
@@ -57,25 +63,30 @@ namespace TMVA
 
       MethodKNN(const TString& jobName, 
                 const TString& methodTitle, 
-                DataSet& theData,
+                DataSetInfo& theData,
                 const TString& theOption = "KNN",
                 TDirectory* theTargetDir = NULL);
 
-      MethodKNN(DataSet& theData, 
+      MethodKNN(DataSetInfo& theData, 
                 const TString& theWeightFile,  
                 TDirectory* theTargetDir = NULL);
       
       virtual ~MethodKNN( void );
     
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+
       void Train( void );
 
-      Double_t GetMvaValue();
+      Double_t GetMvaValue( Double_t* err = 0 );
+      const std::vector<Float_t>& GetRegressionValues();
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       void WriteWeightsToStream(std::ostream& o) const;
       void WriteWeightsToStream(TFile& rf) const;
+      void AddWeightsXMLTo( void* parent ) const;
+      void ReadWeightsFromXML( void* wghtnode );
 
       void ReadWeightsFromStream(std::istream& istr);
       void ReadWeightsFromStream(TFile &rf);
@@ -97,13 +108,19 @@ namespace TMVA
       void ProcessOptions();
 
       // default initialisation called by all constructors
-      void InitKNN( void );
+      void Init( void );
 
       // create kd-tree (binary tree) structure
       void MakeKNN( void );
 
-      // polynomial kernel weight function
-      double PolKernel(double value) const;
+      // polynomial and Gaussian kernel weight function
+      Double_t PolnKernel(Double_t value) const;
+      Double_t GausKernel(const kNN::Event &event_knn, const kNN::Event &event, const std::vector<Double_t> &svec) const;
+
+      Double_t getKernelRadius(const kNN::List &rlist) const;
+      const std::vector<Double_t> getRMS(const kNN::List &rlist, const kNN::Event &event_knn) const;
+      
+      double getLDAValue(const kNN::List &rlist, const kNN::Event &event_knn);
 
    private:
 
@@ -114,14 +131,21 @@ namespace TMVA
       kNN::ModulekNN *fModule;        //! module where all work is done
 
       Int_t fnkNN;            // number of k-nearest neighbors 
-      Int_t fTreeOptDepth;    // number of binary tree levels used for optimization
+      Int_t fBalanceDepth;    // number of binary tree levels used for balancing tree
 
-      Float_t fScaleFrac;     // fraction of events used for scaling
+      Float_t fScaleFrac;     // fraction of events used to compute variable width
+      Float_t fSigmaFact;     // scale factor for Gaussian sigma in Gaus. kernel
 
-      Bool_t fUseKernel;      // use polynomial kernel weight function
+      TString fKernel;        // ="Gaus","Poln" - kernel type for smoothing
+
       Bool_t fTrim;           // set equal number of signal and background events
+      Bool_t fUseKernel;      // use polynomial kernel weight function
+      Bool_t fUseWeight;      // use weights to count kNN
+      Bool_t fUseLDA;         // use local linear discriminat analysis to compute MVA
 
-      kNN::EventVec fEvent;   // (untouched) events used for learning
+      kNN::EventVec fEvent;   //! (untouched) events used for learning
+
+      LDA fLDA;               //! Experimental feature for local knn analysis
 
       ClassDef(MethodKNN,0) // k Nearest Neighbour classifier
    };

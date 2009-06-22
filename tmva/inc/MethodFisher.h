@@ -29,7 +29,6 @@
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
- *                                                                                *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodFisher
@@ -48,11 +47,8 @@
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
-#ifndef ROOT_TMVA_TMatrix
-#include "TMatrix.h"
-#endif
-#ifndef ROOT_TMatrixD
-#include "TMatrixD.h"
+#ifndef ROOT_TMatrixDfwd
+#include "TMatrixDfwd.h"
 #endif
 
 class TH1D;
@@ -62,18 +58,21 @@ namespace TMVA {
    class MethodFisher : public MethodBase {
 
    public:
-
+      
       MethodFisher( const TString& jobName, 
                     const TString& methodTitle, 
-                    DataSet& theData,
+                    DataSetInfo& dsi,
                     const TString& theOption = "Fisher",
                     TDirectory* theTargetDir = 0 );
 
-      MethodFisher( DataSet& theData, 
+      MethodFisher( DataSetInfo& dsi, 
                     const TString& theWeightFile,  
                     TDirectory* theTargetDir = NULL );
 
       virtual ~MethodFisher( void );
+
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+
     
       // training method
       void Train( void );
@@ -83,12 +82,14 @@ namespace TMVA {
 
       // write weights to stream
       void WriteWeightsToStream( std::ostream & o) const;
+      void AddWeightsXMLTo     ( void* parent ) const;
 
       // read weights from stream
       void ReadWeightsFromStream( std::istream & i );
+      void ReadWeightsFromXML   ( void* wghtnode );
 
       // calculate the MVA value
-      Double_t GetMvaValue();
+      Double_t GetMvaValue( Double_t* err = 0 );
 
       enum EFisherMethod { kFisher, kMahalanobis };
       EFisherMethod GetFisherMethod( void ) { return fFisherMethod; }
@@ -150,13 +151,12 @@ namespace TMVA {
       Double_t fSumOfWeightsS;        // sum-of-weights for signal training events
       Double_t fSumOfWeightsB;        // sum-of-weights for background training events
       
-      std::vector<Double_t> *fDiscrimPow;  // discriminating power
-      std::vector<Double_t> *fFisherCoeff; // Fisher coefficients
+      std::vector<Double_t>* fDiscrimPow;  // discriminating power
+      std::vector<Double_t>* fFisherCoeff; // Fisher coefficients
       Double_t fF0;                   // offset
 
-
       // default initialisation called by all constructors
-      void InitFisher( void );
+      void Init( void );
 
       ClassDef(MethodFisher,0) // Analysis of Fisher discriminant (Fisher or Mahalanobis approach) 
    };

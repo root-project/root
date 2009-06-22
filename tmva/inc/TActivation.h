@@ -32,7 +32,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TString;
+#include <iosfwd>
+
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
 
 namespace TMVA {
   
@@ -62,7 +69,7 @@ namespace TMVA {
       virtual void MakeFunction(std::ostream& fout, const TString& fncName) = 0;
 
       ClassDef(TActivation,0) // Interface for TNeuron activation function classes
-         ;
+
    };
 
 } // namespace TMVA

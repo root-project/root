@@ -41,15 +41,13 @@
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
 
 namespace TMVA {
 
 
    class MethodBase;
    class MethodRuleFit;
+   class MsgLogger;
 
    class RuleFit {
 
@@ -160,7 +158,7 @@ namespace TMVA {
       RuleFit( const RuleFit & other );
 
       // copy method
-      //void Copy( const RuleFit & other );
+      void Copy( const RuleFit & other );
 
       std::vector<TMVA::Event *>          fTrainingEvents;      // all training events
       std::vector<TMVA::Event *>          fTrainingEventsRndm;  // idem, but randomly shuffled
@@ -175,7 +173,10 @@ namespace TMVA {
       const MethodBase                   *fMethodBase;      // pointer the method base which initialized this RuleFit instance
       Bool_t                              fVisHistsUseImp;  // if true, use importance as weight; else coef in vis hists
 
-      mutable MsgLogger                   fLogger;          // message logger
+      mutable MsgLogger*                  fLogger;   // message logger
+      MsgLogger& log() const { return *fLogger; }    
+
+      static const Int_t randSEED = 0; // set to 1 for debugging purposes or to zero for random seeds
 
       ClassDef(RuleFit,0)  // Calculations for Friedman's RuleFit method
    };

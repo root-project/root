@@ -29,84 +29,107 @@
 // Ranking for variables in method (implementation)
 //_______________________________________________________________________
 
-#include "Riostream.h"
-#include "TMVA/Ranking.h"
+#include <iomanip>
+
 #include "TString.h"
+
+#include "TMVA/Ranking.h"
+#include "TMVA/MsgLogger.h"
 
 ClassImp(TMVA::Ranking)
 
-TMVA::Ranking::Ranking()
-  : fLogger( "" )
+//_______________________________________________________________________
+TMVA::Ranking::Ranking() 
+   : fRanking(),
+     fContext(""),
+     fRankingDiscriminatorName( "" ),
+     fLogger( new MsgLogger("", kINFO) )
 {
    // default constructor
-   fRanking.clear();
 }
 
+//_______________________________________________________________________
 TMVA::Ranking::Ranking( const TString& context, const TString& rankingDiscriminatorName ) 
-   : fContext( context ),
+   : fRanking(),
+     fContext( context ),
      fRankingDiscriminatorName( rankingDiscriminatorName ),
-     fLogger( fContext.Data() )
+     fLogger( new MsgLogger(fContext.Data(), kINFO) )
 {
    // constructor
 }
 
+//_______________________________________________________________________
 TMVA::Ranking::~Ranking() 
 {
    // destructor
-   for (std::vector<Rank*>::iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ )
-      delete *ir;
    fRanking.clear();
+   delete fLogger;
 }
 
+//_______________________________________________________________________
+void TMVA::Ranking::SetContext( const TString& context) 
+{
+   fContext = context;
+   fLogger->SetSource( fContext.Data() );
+}
+
+//_______________________________________________________________________
 void TMVA::Ranking::AddRank( const Rank& rank )
 {
    // Add a new rank
+   // take ownership of it
+
    // sort according to rank value (descending)
    // Who the hell knows why this does not compile on windos.. write the sorting 
    // reversing myself... (means sorting in "descending" order)
    //   --> std::sort   ( fRanking.begin(), fRanking.end() );
    //   --> std::reverse( fRanking.begin(), fRanking.end() );
-   fRanking.push_back( new Rank(rank) );
+   fRanking.push_back( rank );
       
    UInt_t sizeofarray=fRanking.size();
+   Rank  temp(fRanking[0]);
    for (UInt_t i=0; i<sizeofarray; i++) {
       for (UInt_t j=sizeofarray-1; j>i; j--) {
-         if (*fRanking[j-1] < *fRanking[j]) {
-            Rank * temp = fRanking[j-1];fRanking[j-1] = fRanking[j]; fRanking[j] = temp;
+         if (fRanking[j-1] < fRanking[j]) {
+            temp = fRanking[j-1];fRanking[j-1] = fRanking[j]; fRanking[j] = temp;
          }
       }
    }
    
-   for (UInt_t i=0; i<fRanking.size(); i++) fRanking[i]->SetRank( i+1 );
+   for (UInt_t i=0; i<fRanking.size(); i++) fRanking[i].SetRank( i+1 );
 }
 
+//_______________________________________________________________________
 void TMVA::Ranking::Print() const
 {
    // get maximum length of variable names
    Int_t maxL = 0; 
-   for (std::vector<Rank*>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) 
-      if ((*ir)->GetVariable().Length() > maxL) maxL = (*ir)->GetVariable().Length();
+   for (std::vector<Rank>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) 
+      if ((*ir).GetVariable().Length() > maxL) maxL = (*ir).GetVariable().Length();
    
-   fLogger << kINFO << "Ranking result (top variable is best ranked)" << Endl;
-   fLogger << kINFO << "----------------------------------------------------------------" << Endl;
-   fLogger << kINFO << setiosflags(ios::left) 
-           << setw(5) << "Rank : "
-           << setw(maxL+0) << "Variable "
-           << resetiosflags(ios::right) 
-           << " : " << fRankingDiscriminatorName << Endl;
-   fLogger << kINFO << "----------------------------------------------------------------" << Endl;
-   for (std::vector<Rank*>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) {
-      fLogger << kINFO 
-              << Form( "%4i : ",(*ir)->GetRank() )
-              << setw(TMath::Max(maxL+0,9)) << (*ir)->GetVariable().Data()
-              << Form( " : %3.3e", (*ir)->GetRankValue() ) << Endl;
+   TString hline = "";
+   for (Int_t i=0; i<maxL+15+fRankingDiscriminatorName.Length(); i++) hline += "-";
+   log() << kINFO << "Ranking result (top variable is best ranked)" << Endl;
+   log() << kINFO << hline << Endl;
+   log() << kINFO << std::setiosflags(std::ios::left) 
+         << std::setw(5) << "Rank : "
+         << std::setw(maxL+0) << "Variable "
+         << std::resetiosflags(std::ios::right) 
+         << " : " << fRankingDiscriminatorName << Endl;
+   log() << kINFO << hline << Endl;
+   for (std::vector<Rank>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) {
+      log() << kINFO 
+            << Form( "%4i : ",(*ir).GetRank() )
+            << std::setw(TMath::Max(maxL+0,9)) << (*ir).GetVariable().Data()
+            << Form( " : %3.3e", (*ir).GetRankValue() ) << Endl;
    }
-   fLogger << kINFO << "----------------------------------------------------------------" << Endl;
+   log() << kINFO << hline << Endl;
 }
 
-// -------------------------------------------------------------------------
+// ===============================================================================================
 
-TMVA::Rank::Rank( TString variable, Double_t rankValue ) 
+//_______________________________________________________________________
+TMVA::Rank::Rank( const TString& variable, Double_t rankValue ) 
    : fVariable( variable ),
      fRankValue( rankValue ),
      fRank( -1 ) 
@@ -114,17 +137,21 @@ TMVA::Rank::Rank( TString variable, Double_t rankValue )
    // constructor
 }
 
+//_______________________________________________________________________
 TMVA::Rank::~Rank() 
 {
    // destructor
 }
 
+//_______________________________________________________________________
 Bool_t TMVA::Rank::operator< ( const Rank& other ) const
 { 
    // comparison operator <
    if (fRankValue < other.fRankValue) return true;
    else                               return false;
 }
+
+//_______________________________________________________________________
 Bool_t TMVA::Rank::operator> ( const Rank& other ) const
 { 
    // comparison operator >

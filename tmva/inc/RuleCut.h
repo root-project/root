@@ -27,13 +27,12 @@
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
 
 namespace TMVA {
 
    class Node;
+   class MsgLogger;
+
    class RuleCut {
 
    public:
@@ -48,7 +47,7 @@ namespace TMVA {
       RuleCut();
 
       // destructor
-      virtual ~RuleCut() {}
+      virtual ~RuleCut();
 
       // evaluate an event
       inline Bool_t EvalEvent( const Event &eve );
@@ -74,8 +73,8 @@ namespace TMVA {
       UInt_t   GetSelector(Int_t is)   const { return fSelector[is]; }
       Double_t GetCutMin(Int_t is)     const { return fCutMin[is]; }
       Double_t GetCutMax(Int_t is)     const { return fCutMax[is]; }
-      Double_t GetCutDoMin(Int_t is)   const { return fCutDoMin[is]; }
-      Double_t GetCutDoMax(Int_t is)   const { return fCutDoMax[is]; }
+      Char_t   GetCutDoMin(Int_t is)   const { return fCutDoMin[is]; }
+      Char_t   GetCutDoMax(Int_t is)   const { return fCutDoMax[is]; }
       Double_t GetCutNeve()            const { return fCutNeve; }
       Double_t GetPurity()             const { return fPurity; }
 
@@ -89,13 +88,14 @@ namespace TMVA {
       std::vector<UInt_t>   fSelector; // array of selectors (expressions)
       std::vector<Double_t> fCutMin;   // array of lower limits
       std::vector<Double_t> fCutMax;   // array of upper limits
-      std::vector<Bool_t>   fCutDoMin; // array of usage flags for lower limits
-      std::vector<Bool_t>   fCutDoMax; // array of usage flags for upper limits
+      std::vector<Char_t>   fCutDoMin; // array of usage flags for lower limits <--- stores boolean
+      std::vector<Char_t>   fCutDoMax; // array of usage flags for upper limits <--- stores boolean
       Double_t              fCutNeve;  // N(events) after cut (possibly weighted)
       Double_t              fPurity;  // S/(S+B) on training data
 
 
-      mutable MsgLogger     fLogger;   // message logger
+      mutable MsgLogger*    fLogger;   // message logger
+      MsgLogger& log() const { return *fLogger; }    
    };
 }
 

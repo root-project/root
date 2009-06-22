@@ -29,30 +29,43 @@
 #ifndef ROOT_TMVA_Config
 #define ROOT_TMVA_Config
 
-#include "Rtypes.h"
-#include "TString.h"
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// Config                                                               //
+//                                                                      //
+// Singleton class for global configuration settings used by TMVA       //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 namespace TMVA {
+
+   class MsgLogger;
 
    class Config {
                
    public:
 
       static Config& Instance() { return fgConfigPtr ? *fgConfigPtr : *(fgConfigPtr = new Config()); }
-      virtual ~Config();
+      static void    DestroyInstance() { if (fgConfigPtr != 0) { delete fgConfigPtr; fgConfigPtr = 0; } }
 
-      Bool_t UseColor() { return fUseColoredConsole; }
+      Bool_t UseColor() const { return fUseColoredConsole; }
       void   SetUseColor( Bool_t uc ) { fUseColoredConsole = uc; }
 
-      Bool_t IsSilent() { return fSilent; }
+      Bool_t IsSilent() const { return fSilent; }
       void   SetSilent( Bool_t s ) { fSilent = s; }
 
-      Bool_t WriteOptionsReference() { return fWriteOptionsReference; }
+      Bool_t WriteOptionsReference() const { return fWriteOptionsReference; }
       void   SetWriteOptionsReference( Bool_t w ) { fWriteOptionsReference = w; }
+
+      Bool_t DrawProgressBar() const { return fDrawProgressBar; }
+      void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
 
    public:
 
@@ -66,6 +79,7 @@ namespace TMVA {
       class VariablePlotting {
          // data collection class to configure plotting of variables
       public:
+
          Float_t fTimesRMS;
          Int_t   fNbins1D;
          Int_t   fNbins2D;
@@ -75,7 +89,9 @@ namespace TMVA {
 
       // for file names and similar
       class IONames {
+
       public:
+
          TString fWeightFileDir;
          TString fWeightFileExtension;
          TString fOptionsReferenceFileDir;
@@ -86,6 +102,7 @@ namespace TMVA {
 
       // private constructor
       Config();
+      virtual ~Config();
       static Config* fgConfigPtr;
                   
    private:
@@ -93,8 +110,10 @@ namespace TMVA {
       Bool_t fUseColoredConsole;     // coloured standard output
       Bool_t fSilent;                // no output at all
       Bool_t fWriteOptionsReference; // if set true: Configurable objects write file with option reference
+      Bool_t fDrawProgressBar;       // draw progress bar to indicate training evolution
 
-      mutable MsgLogger fLogger;   // message logger
+      mutable MsgLogger* fLogger;   // message logger
+      MsgLogger& log() const { return *fLogger; }
          
       ClassDef(Config,0) // Singleton class for global configuration settings
    };

@@ -24,182 +24,206 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//______________________________________________________________________
-/*
-  PCA transformation of input variables (uses Root's principal
-  component analysis TPrincipal)
-*/
-//______________________________________________________________________
+#include <iostream>
+#include <iomanip>
 
-#include <cassert>
-
-#include "Riostream.h"
 #include "TVectorF.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
 #include "TMatrixDBase.h"
+#include "TXMLEngine.h"
 
 #include "TMVA/VariablePCATransform.h"
-#include "TMVA/Tools.h"
 
-using std::endl;
+#ifndef ROOT_TMVA_MsgLogger
+#include "TMVA/MsgLogger.h"
+#endif
+#include "TMVA/DataSet.h"
+#include "TMVA/Tools.h"
 
 ClassImp(TMVA::VariablePCATransform)
 
 //_______________________________________________________________________
-TMVA::VariablePCATransform::VariablePCATransform( std::vector<VariableInfo>& varinfo )
-   : VariableTransformBase( varinfo, Types::kPCA )
+TMVA::VariablePCATransform::VariablePCATransform( DataSetInfo& dsi )
+   : VariableTransformBase( dsi, Types::kPCA, "PCA" )
 { 
    // constructor
-   SetName("PCATransform");
-   fPCA[0] = fPCA[1] = 0;
-
-   // sanity check --> ROOT bug: TPrincipal crashes if dimension <=1
-   if (varinfo.size() <= 1) {
-      fLogger << kFATAL << "More than one input variables required for PCA to work ... sorry :-("
-              << Endl;
-   }
-
-   for (Int_t i=0; i<2; i++) { fMeanValues[i] = 0; fEigenVectors[i] = 0; }
 }
 
 //_______________________________________________________________________
 TMVA::VariablePCATransform::~VariablePCATransform() 
 {
    // destructor
-   for (Int_t i=0; i<2; i++)
-      if (fPCA[i]) delete fPCA[i];
+   for (UInt_t i=0; i<fMeanValues.size(); i++) {
+      if (fMeanValues.at(i)   != 0) delete fMeanValues.at(i);
+      if (fEigenVectors.at(i) != 0) delete fEigenVectors.at(i);
+   }
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::VariablePCATransform::PrepareTransformation( TTree* inputTree )
+void TMVA::VariablePCATransform::Initialize()
+{
+   // initialization of the transformation. 
+   // Has to be called in the preparation and not in the constructor, 
+   // since the number of classes it not known at construction, but
+   // only after the creation of the DataSet which might be later. 
+}
+
+//_______________________________________________________________________
+Bool_t TMVA::VariablePCATransform::PrepareTransformation( const std::vector<Event*>& events )
 {
    // calculate the principal components using the ROOT class TPrincipal
    // and the normalization
+   Initialize();
+
    if (!IsEnabled() || IsCreated()) return kTRUE;
 
-   if (inputTree == 0) return kFALSE;
+   log() << kINFO << "Preparing the Principle Component (PCA) transformation..." << Endl;
+
+   SetNVariables(events[0]->GetNVariables());
+
+   // TPrincipal doesn't support PCA transformation for 1 or less variables
+   if (GetNVariables() <= 1) {
+      log() << kINFO << "Cannot perform PCA transformation for " << GetNVariables() << " variable only" << Endl;
+      return kFALSE;
+   }
 
    if (GetNVariables() > 200) { 
-      fLogger << kINFO << "----------------------------------------------------------------------------" 
+      log() << kINFO << "----------------------------------------------------------------------------" 
               << Endl;
-      fLogger << kINFO 
-              << ": More than 200 variables, will not calculate PCA "
-              << inputTree->GetName() << "!" << Endl;
-      fLogger << kINFO << "----------------------------------------------------------------------------" 
+      log() << kINFO 
+              << ": More than 200 variables, will not calculate PCA!" << Endl;
+      log() << kINFO << "----------------------------------------------------------------------------" 
               << Endl;
       return kFALSE;
    }   
 
-   CalculatePrincipalComponents( inputTree );
+   CalculatePrincipalComponents( events );
 
    SetCreated( kTRUE );
-
-   CalcNorm( inputTree );
 
    return kTRUE;
 }
 
 //_______________________________________________________________________
-void TMVA::VariablePCATransform::ApplyTransformation( Types::ESBType type ) const
+const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev, Int_t cls ) const
 {
    // apply the principal component analysis
-   if (!IsCreated()) return;
-   const Int_t nvar = GetNVariables();
+   if (!IsCreated()) return 0;
+   const Int_t nvar = ev->GetNVariables();
 
-   Double_t *dv = new Double_t[nvar];
-   Double_t *rv = new Double_t[nvar];
-   for (Int_t ivar=0; ivar<nvar; ivar++) dv[ivar] = GetEventRaw().GetVal(ivar);
-      
+   // if we have more than one class, take the last PCA analysis where all classes are combined if 
+   // the cls parameter is outside the defined classes
+   // If there is only one class, then no extra class for all events of all classes has to be created
+   if (cls < 0 || cls > GetNClasses()) cls = (fMeanValues.size()==1?0:2);//( GetNClasses() == 1 ? 0 : 1 );  ;
    // Perform PCA and put it into PCAed events tree
-   this->X2P( dv, rv, type==Types::kSignal ? 0 : 1 );
-   for (Int_t ivar=0; ivar<nvar; ivar++) GetEvent().SetVal(ivar, rv[ivar]);
-   GetEvent().SetType       ( GetEventRaw().Type() );
-   GetEvent().SetWeight     ( GetEventRaw().GetWeight() );
-   GetEvent().SetBoostWeight( GetEventRaw().GetBoostWeight() );
+   std::vector<Double_t> rv = X2P( ev->GetValues(), cls );
 
-   delete [] dv;
-   delete [] rv;
+   if (fTransformedEvent==0 || fTransformedEvent->GetNVariables()!=ev->GetNVariables()) {
+      if(fTransformedEvent!=0) delete fTransformedEvent;
+      fTransformedEvent = new Event();
+   }
+   for (UInt_t itgt=0; itgt<ev->GetNTargets(); itgt++) fTransformedEvent->SetTarget( itgt, ev->GetTarget(itgt) );
+   for (Int_t ivar=0; ivar<nvar; ivar++) fTransformedEvent->SetVal(ivar, rv[ivar]);
+   fTransformedEvent->SetType       ( ev->Type() );
+   fTransformedEvent->SetWeight     ( ev->GetWeight() );
+   fTransformedEvent->SetBoostWeight( ev->GetBoostWeight() );
+   fTransformedEvent->SetClass      ( ev->GetClass() );
+   fTransformedEvent->SetSignalClass( ev->GetSignalClass() );
+   return fTransformedEvent;
 }
 
 //_______________________________________________________________________
-void TMVA::VariablePCATransform::CalculatePrincipalComponents( TTree* tr )
+const TMVA::Event* TMVA::VariablePCATransform::InverseTransform( const Event* const ev, Int_t cls ) const
+{
+   // apply the principal component analysis
+   // TODO: implementation of inverse transformation
+   log() << kFATAL << "Inverse transformation for PCA transformation not yet implemented. Hence, this transformation cannot be applied together with regression. Please contact the authors if necessary." << Endl;
+
+   if (!IsCreated()) return 0;
+   const Int_t nvar = ev->GetNVariables();
+
+   // if we have more than one class, take the last PCA analysis where all classes are combined if 
+   // the cls parameter is outside the defined classes
+   // If there is only one class, then no extra class for all events of all classes has to be created
+   if (cls < 0 || cls > GetNClasses()) cls = ( GetNClasses() == 1 ? 0 : 1 );  
+
+
+   // Perform PCA and put it into PCAed events tree
+   std::vector<Double_t> rv = X2P( ev->GetValues(), cls );
+
+   if (fBackTransformedEvent==0 || fBackTransformedEvent->GetNVariables()!=ev->GetNVariables()) {
+      if(fBackTransformedEvent!=0) delete fBackTransformedEvent;
+      fBackTransformedEvent = new Event( *ev );
+   }
+   for (Int_t ivar=0; ivar<nvar; ivar++) fBackTransformedEvent->SetVal(ivar, rv[ivar]);
+   fBackTransformedEvent->SetType       ( ev->Type() );
+   fBackTransformedEvent->SetWeight     ( ev->GetWeight() );
+   fBackTransformedEvent->SetBoostWeight( ev->GetBoostWeight() );
+
+   return fBackTransformedEvent;
+}
+
+//_______________________________________________________________________
+void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector<Event*>& events )
 {
    // calculate the principal components for the signal and the background data
    // it uses the MakePrincipal method of ROOT's TPrincipal class
 
    const Int_t nvar = GetNVariables();
 
-   for (Int_t i=0; i<2; i++ ) {
-      if (fPCA[i] != NULL) delete fPCA[i];
-      fPCA[i] = new TPrincipal( nvar, "" ); // note: following code assumes that option "N" is NOT set !
-   }
+   // if we have more than one class, add another PCA analysis which combines all classes
+   const UInt_t maxPCA = (GetNClasses()<=1) ? GetNClasses() : GetNClasses()+1;
+
+   // PCA [signal/background/class x/class y/... /all classes]
+   std::vector<TPrincipal*> pca(maxPCA);
+   for (UInt_t i=0; i<maxPCA; i++) pca[i] = new TPrincipal(nvar,"");
+
    // !! Not normalizing and not storing input data, for performance reasons. Should perhaps restore normalization.
 
-   ResetBranchAddresses( tr );
-
-   Long64_t ievt, entries = tr->GetEntries();
+   Long64_t ievt, entries = events.size();
    Double_t *dvec = new Double_t[nvar];
 
    for (ievt=0; ievt<entries; ievt++) {
-      ReadEvent(tr, ievt, Types::kSignal);
-      for (Int_t i = 0; i < nvar; i++) dvec[i] = (Double_t) GetEventRaw().GetVal(i);
-      fPCA[GetEventRaw().IsSignal()?0:1]->AddRow( dvec );
+      Event* ev = events[ievt];
+      for (Int_t i = 0; i < nvar; i++) dvec[i] = (Double_t) ev->GetVal(i);
+      pca.at(ev->GetClass())->AddRow( dvec );
+      if (GetNClasses() > 1) pca.at(maxPCA-1)->AddRow( dvec );
    }
 
-   for (Int_t i=0; i<2; i++ ) {
-      fPCA[i]->MakePrincipals();
+   // delete possible leftovers
+   for (UInt_t i=0; i<fMeanValues.size(); i++)   if (fMeanValues[i]   != 0) delete fMeanValues[i];
+   for (UInt_t i=0; i<fEigenVectors.size(); i++) if (fEigenVectors[i] != 0) delete fEigenVectors[i];
+   fMeanValues.resize(maxPCA,0);
+   fEigenVectors.resize(maxPCA,0);
 
+   for (UInt_t i=0; i<maxPCA; i++ ) {
+      pca.at(i)->MakePrincipals();
+      
       // retrieve mean values, eigenvectors and sigmas
-      fMeanValues[i]   = const_cast<TVectorD*>( fPCA[i]->GetMeanValues() );
-      fEigenVectors[i] = const_cast<TMatrixD*>( fPCA[i]->GetEigenVectors() );
+      fMeanValues[i]   = new TVectorD( *(pca.at(i)->GetMeanValues()) ); // need to copy since we want to own
+      fEigenVectors[i] = new TMatrixD( *(pca.at(i)->GetEigenVectors()) );
    }
+
+   for (UInt_t i=0; i<maxPCA; i++) delete pca.at(i);
    delete [] dvec;
 }
 
 //_______________________________________________________________________
-std::vector<TString>* TMVA::VariablePCATransform::GetTransformationStrings( Types::ESBType type ) const
-{
-   // creates string with variable transformations applied
-
-   const Int_t nvar = GetNVariables();
-   std::vector<TString>* strVec = new std::vector<TString>;
-
-   // index
-   const Int_t index = (type==Types::kSignal) ? 0 : 1;
-   
-   // fill vector
-   for (Int_t ivar=0; ivar<nvar; ivar++) {
-      TString str( "" );
-      for (Int_t jvar=0; jvar<nvar; jvar++) {
-         if (jvar > 0) str += " + ";
-         str += Form( "(%s", (TString("[") + Variable(jvar).GetExpression() + "]").Data() );
-         str += ((*fMeanValues[index])(jvar) > 0) ? " + " : " - ";
-         str += Form( "%10.5g)", TMath::Abs((*fMeanValues[index])(jvar)) );
-         str += Form( "*(%10.5g)", (*fEigenVectors[index])(jvar,ivar) );
-      }
-      strVec->push_back( str );
-   }      
-
-   return strVec;
-}
-
-//_______________________________________________________________________
-void TMVA::VariablePCATransform::X2P( const Double_t* x, Double_t* p, Int_t index ) const
+std::vector<Double_t> TMVA::VariablePCATransform::X2P( const std::vector<Float_t>& x, Int_t cls ) const
 {
    // Calculate the principal components from the original data vector
    // x, and return it in p (function extracted from TPrincipal::X2P)
    // It's the users responsibility to make sure that both x and p are
    // of the right size (i.e., memory must be allocated for p).
-   const Int_t nvar = GetNVariables();
-
-   // need this assert
-   assert( index >= 0 && index < 2 );   
+   const Int_t nvar = x.size();
+   std::vector<Double_t> p(nvar);
 
    for (Int_t i = 0; i < nvar; i++) {
       p[i] = 0;
-      for (Int_t j = 0; j < nvar; j++) p[i] += (x[j] - (*fMeanValues[index])(j)) * (*fEigenVectors[index])(j,i);
+      for (Int_t j = 0; j < nvar; j++) p.at(i) += (((Double_t)x.at(j)) - (*fMeanValues.at(cls))(j)) * (*fEigenVectors.at(cls))(j,i);
    }
+   return p;
 }
 
 //_______________________________________________________________________
@@ -207,29 +231,116 @@ void TMVA::VariablePCATransform::WriteTransformationToStream( std::ostream& o ) 
 {
    // write mean values to stream
    for (Int_t sbType=0; sbType<2; sbType++) {
-      o << "# PCA mean values " << endl;
+      o << "# PCA mean values " << std::endl;
       const TVectorD* means = fMeanValues[sbType];
-      o << (sbType==0 ? "signal" : "background") << " " << means->GetNrows() << endl;
+      o << (sbType==0 ? "Signal" : "Background") << " " << means->GetNrows() << std::endl;
       for (Int_t row = 0; row<means->GetNrows(); row++) {
-         o << setprecision(12) << setw(20) << (*means)[row];
+         o << std::setprecision(12) << std::setw(20) << (*means)[row];
       }
-      o << endl;
+      o << std::endl;
    }
-   o << "##" << endl;
+   o << "##" << std::endl;
 
    // write eigenvectors to stream
    for (Int_t sbType=0; sbType<2; sbType++) {
-      o << "# PCA eigenvectors " << endl;
+      o << "# PCA eigenvectors " << std::endl;
       const TMatrixD* mat = fEigenVectors[sbType];
-      o << (sbType==0 ? "signal" : "background") << " " << mat->GetNrows() << " x " << mat->GetNcols() << endl;
+      o << (sbType==0 ? "Signal" : "Background") << " " << mat->GetNrows() << " x " << mat->GetNcols() << std::endl;
       for (Int_t row = 0; row<mat->GetNrows(); row++) {
          for (Int_t col = 0; col<mat->GetNcols(); col++) {
-            o << setprecision(12) << setw(20) << (*mat)[row][col] << " ";
+            o << std::setprecision(12) << std::setw(20) << (*mat)[row][col] << " ";
          }
-         o << endl;
+         o << std::endl;
       }
    }
-   o << "##" << endl;
+   o << "##" << std::endl;
+}
+
+//_______________________________________________________________________
+void TMVA::VariablePCATransform::AttachXMLTo(void* parent) {
+   // create XML description of PCA transformation
+
+   void* trfxml = gTools().xmlengine().NewChild(parent, 0, "Transform");
+   gTools().xmlengine().NewAttr(trfxml, 0, "Name", "PCA");
+
+   // write mean values to stream
+   for (UInt_t sbType=0; sbType<fMeanValues.size(); sbType++) {
+      void* meanxml = gTools().xmlengine().NewChild( trfxml, 0, "Statistics");
+      const TVectorD* means = fMeanValues[sbType];
+      gTools().AddAttr( meanxml, "Class",     (sbType==0 ? "Signal" :(sbType==1 ? "Background":"Combined")) );
+      gTools().AddAttr( meanxml, "ClassIndex", sbType );
+      gTools().AddAttr( meanxml, "NRows",      means->GetNrows() );
+      TString meansdef = "";
+      for (Int_t row = 0; row<means->GetNrows(); row++)
+         meansdef += gTools().StringFromDouble((*means)[row]) + " ";
+      gTools().xmlengine().AddRawLine( meanxml, meansdef );      
+   }
+
+   // write eigenvectors to stream
+   for (UInt_t sbType=0; sbType<fEigenVectors.size(); sbType++) {
+      void* evxml = gTools().xmlengine().NewChild( trfxml, 0, "Eigenvectors");
+      const TMatrixD* mat = fEigenVectors[sbType];
+      gTools().AddAttr( evxml, "Class",      (sbType==0 ? "Signal" :(sbType==1 ? "Background":"Combined") ) );
+      gTools().AddAttr( evxml, "ClassIndex", sbType );
+      gTools().AddAttr( evxml, "NRows",      mat->GetNrows() );
+      gTools().AddAttr( evxml, "NCols",      mat->GetNcols() );
+      TString evdef = "";
+      for (Int_t row = 0; row<mat->GetNrows(); row++)
+         for (Int_t col = 0; col<mat->GetNcols(); col++)
+            evdef += gTools().StringFromDouble((*mat)[row][col]) + " ";
+      gTools().xmlengine().AddRawLine( evxml, evdef );
+   }
+}
+
+//_______________________________________________________________________
+void TMVA::VariablePCATransform::ReadFromXML( void* trfnode ) 
+{
+   // Read the transformation matrices from the xml node
+
+   Int_t nrows, ncols;
+   UInt_t clsIdx;
+   TString classtype;
+   TString nodeName;
+
+   void* ch = gTools().xmlengine().GetChild(trfnode);
+   while (ch) {
+      nodeName = gTools().xmlengine().GetNodeName(ch);
+      if (nodeName == "Statistics") {
+         // read mean values
+         gTools().ReadAttr(ch, "Class",      classtype);
+         gTools().ReadAttr(ch, "ClassIndex", clsIdx);
+         gTools().ReadAttr(ch, "NRows",      nrows);
+
+         // set the correct size
+         if (fMeanValues.size()<=clsIdx) fMeanValues.resize(clsIdx+1,0);
+         if (fMeanValues[clsIdx]==0) fMeanValues[clsIdx] = new TVectorD( nrows );
+         fMeanValues[clsIdx]->ResizeTo( nrows );
+         
+         // now read vector entries
+         std::stringstream s(gTools().xmlengine().GetNodeContent(ch));
+         for (Int_t row = 0; row<nrows; row++) s >> (*fMeanValues[clsIdx])(row);
+      } 
+      else if ( nodeName == "Eigenvectors" ) {
+         // Read eigenvectors
+         gTools().ReadAttr(ch, "Class",      classtype);
+         gTools().ReadAttr(ch, "ClassIndex", clsIdx);
+         gTools().ReadAttr(ch, "NRows",      nrows);
+         gTools().ReadAttr(ch, "NCols",      ncols);
+
+         if (fEigenVectors.size()<=clsIdx) fEigenVectors.resize(clsIdx+1,0);
+         if (fEigenVectors[clsIdx]==0) fEigenVectors[clsIdx] = new TMatrixD( nrows, ncols );
+         fEigenVectors[clsIdx]->ResizeTo( nrows, ncols );
+
+         // now read matrix entries
+         std::stringstream s(gTools().xmlengine().GetNodeContent(ch));
+         for (Int_t row = 0; row<nrows; row++)
+            for (Int_t col = 0; col<ncols; col++)
+               s >> (*fEigenVectors[clsIdx])[row][col];
+      } // done reading eigenvectors
+      ch = gTools().xmlengine().GetNext(ch);
+   }
+
+   SetCreated();
 }
 
 //_______________________________________________________________________
@@ -250,10 +361,10 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
       }
       std::stringstream sstr(buf);
       sstr >> strvar;
-      if (strvar=="signal" || strvar=="background") {
+      if (strvar=="Signal" || strvar=="Background") {
 
          sstr >> nrows;
-         Int_t sbType = (strvar=="signal" ? 0 : 1);
+         Int_t sbType = (strvar=="Signal" ? 0 : 1);
         
          if (fMeanValues[sbType] == 0) fMeanValues[sbType] = new TVectorD( nrows );
          else                          fMeanValues[sbType]->ResizeTo( nrows );
@@ -277,10 +388,10 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
       }
       std::stringstream sstr(buf);
       sstr >> strvar;
-      if (strvar=="signal" || strvar=="background") {
+      if (strvar=="Signal" || strvar=="Background") {
 
          sstr >> nrows >> dummy >> ncols;
-         Int_t sbType = (strvar=="signal" ? 0 : 1);
+         Int_t sbType = (strvar=="Signal" ? 0 : 1);
 
          if (fEigenVectors[sbType] == 0) fEigenVectors[sbType] = new TMatrixD( nrows, ncols );
          else                            fEigenVectors[sbType]->ResizeTo( nrows, ncols );
@@ -300,81 +411,96 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
 }
 
 //_______________________________________________________________________
-void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString& fcncName, Int_t part ) 
+void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString& fcncName, 
+                                               Int_t part, UInt_t trCounter, Int_t /*cls*/  ) 
 {
+
+   UInt_t nvar = fEigenVectors[0]->GetNrows();
+
    // creates a PCA transformation function
+   UInt_t numC = fMeanValues.size();
    if (part==1) {
-      fout << endl;
-      fout << "   void X2P( const double*, double*, int ) const;" << endl;
-      fout << "   double fMeanValues[2]["   
-           << fMeanValues[0]->GetNrows()   << "];" << endl;   // mean values
-      fout << "   double fEigenVectors[2][" 
-           << fEigenVectors[0]->GetNrows() << "][" 
-           << fEigenVectors[0]->GetNcols() <<"];" << endl;   // eigenvectors
-      fout << endl;
+      fout << std::endl;
+      fout << "   void X2P_"<<trCounter<<"( const double*, double*, int ) const;" << std::endl;
+      fout << "   double fMeanValues_"<<trCounter<<"["<<numC<<"]["
+           << fMeanValues[0]->GetNrows()   << "];" << std::endl;   // mean values
+      fout << "   double fEigenVectors_"<<trCounter<<"["<<numC<<"]["
+           << fEigenVectors[0]->GetNrows() << "]["
+           << fEigenVectors[0]->GetNcols() <<"];" << std::endl;   // eigenvectors
+      fout << std::endl;
    }
 
    // sanity check
-   if (fMeanValues[0]->GetNrows()   != fMeanValues[1]->GetNrows() ||
-       fEigenVectors[0]->GetNrows() != fEigenVectors[1]->GetNrows() ||
-       fEigenVectors[0]->GetNcols() != fEigenVectors[1]->GetNcols()) {
-      fLogger << kFATAL << "<MakeFunction> Mismatch in vector/matrix dimensions" << Endl;
+   if (numC>1){
+      if (fMeanValues[0]->GetNrows()   != fMeanValues[1]->GetNrows() ||
+	  fEigenVectors[0]->GetNrows() != fEigenVectors[1]->GetNrows() ||
+	  fEigenVectors[0]->GetNcols() != fEigenVectors[1]->GetNcols()) {
+	 log() << kFATAL << "<MakeFunction> Mismatch in vector/matrix dimensions" << Endl;
+      }
    }
 
    if (part==2) {
 
-      fout << "inline void " << fcncName << "::X2P( const double* x, double* p, int index ) const" << endl;
-      fout << "{" << endl;
-      fout << "   // Calculate the principal components from the original data vector" << endl;
-      fout << "   // x, and return it in p (function extracted from TPrincipal::X2P)" << endl;
-      fout << "   // It's the users responsibility to make sure that both x and p are" << endl;
-      fout << "   // of the right size (i.e., memory must be allocated for p)." << endl;
-      fout << "   const int nvar = " << GetNVariables() << ";" << endl;
-      fout << endl;
-      fout << "   for (int i = 0; i < nvar; i++) {" << endl;
-      fout << "      p[i] = 0;" << endl;
-      fout << "      for (int j = 0; j < nvar; j++) p[i] += (x[j] - fMeanValues[index][j]) * fEigenVectors[index][j][i];" << endl;
-      fout << "   }" << endl;
-      fout << "}" << endl;
-      fout << endl;
-      fout << "inline void " << fcncName << "::InitTransform()" << endl;
-      fout << "{" << endl;
+      fout << std::endl;
+      fout << "//_______________________________________________________________________" << std::endl;
+      fout << "inline void " << fcncName << "::X2P_"<<trCounter<<"( const double* x, double* p, int index ) const" << std::endl;
+      fout << "{" << std::endl;
+      fout << "   // Calculate the principal components from the original data vector" << std::endl;
+      fout << "   // x, and return it in p (function extracted from TPrincipal::X2P)" << std::endl;
+      fout << "   // It's the users responsibility to make sure that both x and p are" << std::endl;
+      fout << "   // of the right size (i.e., memory must be allocated for p)." << std::endl;
+      fout << "   const int nvar = " << nvar << ";" << std::endl;
+      fout << std::endl;
+      fout << "   for (int i = 0; i < nvar; i++) {" << std::endl;
+      fout << "      p[i] = 0;" << std::endl;
+      fout << "      for (int j = 0; j < nvar; j++) p[i] += (x[j] - fMeanValues_"<<trCounter<<"[index][j]) * fEigenVectors_"<<trCounter<<"[index][j][i];" << std::endl;
+      fout << "   }" << std::endl;
+      fout << "}" << std::endl;
+      fout << std::endl;
+      fout << "//_______________________________________________________________________" << std::endl;
+      fout << "inline void " << fcncName << "::InitTransform_"<<trCounter<<"()" << std::endl;
+      fout << "{" << std::endl;
 
       // fill vector of mean values
-      fout << "   // initialise vector of mean values" << endl;
-      for (int index=0; index<2; index++) {
+      fout << "   // initialise vector of mean values" << std::endl;
+      for (UInt_t index=0; index<numC; index++) {
          for (int i=0; i<fMeanValues[index]->GetNrows(); i++) {
-            fout << "   fMeanValues["<<index<<"]["<<i<<"] = " << std::setprecision(12) 
-                 << (*fMeanValues[index])(i) << ";" << endl;
+            fout << "   fMeanValues_"<<trCounter<<"["<<index<<"]["<<i<<"] = " << std::setprecision(12) 
+                 << (*fMeanValues[index])(i) << ";" << std::endl;
          }
       }
 
       // fill matrix of eigenvectors
-      fout << endl;
-      fout << "   // initialise matrix of eigenvectors" << endl;
-      for (int index=0; index<2; index++) {
+      fout << std::endl;
+      fout << "   // initialise matrix of eigenvectors" << std::endl;
+      for (UInt_t index=0; index<numC; index++) {
          for (int i=0; i<fEigenVectors[index]->GetNrows(); i++) {
             for (int j=0; j<fEigenVectors[index]->GetNcols(); j++) {
-               fout << "   fEigenVectors["<<index<<"]["<<i<<"]["<<j<<"] = " << std::setprecision(12) 
-                    << (*fEigenVectors[index])(i,j) << ";" << endl;
+               fout << "   fEigenVectors_"<<trCounter<<"["<<index<<"]["<<i<<"]["<<j<<"] = " << std::setprecision(12) 
+                    << (*fEigenVectors[index])(i,j) << ";" << std::endl;
             }
          }
       }
-      fout << "}" << endl;
-      fout << endl;
-      fout << "inline void " << fcncName << "::Transform( std::vector<double>& iv, int sigOrBgd ) const" << endl;
-      fout << "{" << endl;      
-      fout << "   const int nvar = " << GetNVariables() << ";" << endl;
-      fout << "   double *dv = new double[nvar];" << endl;
-      fout << "   double *rv = new double[nvar];" << endl;
-      fout << "   for (int ivar=0; ivar<nvar; ivar++) dv[ivar] = iv[ivar];" << endl;
-      fout << endl;
-      fout << "   // Perform PCA and put it into PCAed events tree" << endl;
-      fout << "   this->X2P( dv, rv, (sigOrBgd==0 ? 0 : 1 ) );" << endl;
-      fout << "   for (int ivar=0; ivar<nvar; ivar++) iv[ivar] = rv[ivar];" << endl;
-      fout << endl;
-      fout << "   delete [] dv;" << endl;
-      fout << "   delete [] rv;" << endl;
-      fout << "}" << endl;
+      fout << "}" << std::endl;
+      fout << std::endl;
+      fout << "//_______________________________________________________________________" << std::endl;
+      fout << "inline void " << fcncName << "::Transform_"<<trCounter<<"( std::vector<double>& iv, int cls ) const" << std::endl;
+      fout << "{" << std::endl;      
+      fout << "   const int nvar = " << nvar << ";" << std::endl;
+      fout << "   double *dv = new double[nvar];" << std::endl;
+      fout << "   double *rv = new double[nvar];" << std::endl;
+      fout << "   if (cls < 0 || cls > "<<GetNClasses()<<") {"<< std::endl;
+      fout << "       if ("<<GetNClasses()<<" > 1 ) cls = "<<GetNClasses()<<";"<< std::endl;
+      fout << "       else cls = "<<(numC==1?0:2)<<";"<< std::endl;
+      fout << "   }"<< std::endl;
+      fout << "   for (int ivar=0; ivar<nvar; ivar++) dv[ivar] = iv[ivar];" << std::endl;
+      fout << std::endl;
+      fout << "   // Perform PCA and put it into PCAed events tree" << std::endl;
+      fout << "   this->X2P_"<<trCounter<<"( dv, rv, cls );" << std::endl;
+      fout << "   for (int ivar=0; ivar<nvar; ivar++) iv[ivar] = rv[ivar];" << std::endl;
+      fout << std::endl;
+      fout << "   delete [] dv;" << std::endl;
+      fout << "   delete [] rv;" << std::endl;
+      fout << "}" << std::endl;
    }
 }
