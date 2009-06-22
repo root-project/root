@@ -5385,8 +5385,8 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    TBranch *branch;
    Int_t nbranches = fBranches.GetEntries();
    if (nbranches == 0) {
-      char *bdname = new char[1000];
-      char *bd = new char[10000];
+      char *bdname = new char[4000];
+      char *bd = new char[100000];
       Int_t nch = 0;
       if (branchDescriptor) nch = strlen(branchDescriptor);
       // branch Descriptor is null, read its definition from the first line in the file
@@ -5404,7 +5404,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
 
       //parse the branch descriptor and create a branch for each element
       //separated by ":"
-      void *address = &bd[9000];
+      void *address = &bd[90000];
       char *bdcur = bd;
       TString desc="", olddesc="F";
       while (bdcur) {
