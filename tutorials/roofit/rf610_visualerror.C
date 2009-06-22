@@ -97,7 +97,7 @@ void rf610_visualerror()
   model.plotOn(frame,Components("bkg"),LineStyle(kDashed)) ;
   d->plotOn(frame) ;
   frame->SetMinimum(0) ;
-
+  frame->GetYaxis()->SetTitleOffset(1.4);
 
 
   // V i s u a l i z e   p a r t i a l   f i t   e r r o r 
@@ -123,6 +123,7 @@ void rf610_visualerror()
   model.plotOn(frame2) ;
   model.plotOn(frame2,Components("bkg"),LineStyle(kDashed)) ;
   frame2->SetMinimum(0) ;
+  frame2->GetYaxis()->SetTitleOffset(1.8);
  
 
   // Make plot frame
@@ -135,6 +136,7 @@ void rf610_visualerror()
   model.plotOn(frame3) ;
   model.plotOn(frame3,Components("bkg"),LineStyle(kDashed)) ;
   frame3->SetMinimum(0) ;
+  frame3->GetYaxis()->SetTitleOffset(1.8);
 
 
   // Make plot frame
@@ -147,13 +149,14 @@ void rf610_visualerror()
   model.plotOn(frame4) ;
   model.plotOn(frame4,Components("bkg"),LineStyle(kDashed)) ;
   frame4->SetMinimum(0) ;
+  frame4->GetYaxis()->SetTitleOffset(1.8);
 
 
   
   TCanvas* c = new TCanvas("rf610_visualerror","rf610_visualerror",800,800) ;
   c->Divide(2,2) ;
-  c->cd(1) ; frame->Draw() ;
-  c->cd(2) ; frame2->Draw() ;
-  c->cd(3) ; frame3->Draw() ;
-  c->cd(4) ; frame4->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->Draw() ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame3->Draw() ;
+  c->cd(4) ; gPad->SetLeftMargin(0.15) ; frame4->Draw() ;
 }
