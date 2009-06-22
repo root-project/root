@@ -195,12 +195,12 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
   }
 
   // Copy generic objects
-  TIterator* iter3 = other._genObjects.MakeIterator() ;
+  TIterator* iter4 = other._genObjects.MakeIterator() ;
   TObject* gobj ;
-  while((gobj=iter3->Next())) {
+  while((gobj=iter4->Next())) {
     _genObjects.Add(gobj->Clone()) ;
   }
-  delete iter3 ;
+  delete iter4 ;
   
 }
 
