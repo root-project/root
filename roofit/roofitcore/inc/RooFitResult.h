@@ -113,6 +113,7 @@ public:
 
   
   const TMatrixDSym& covarianceMatrix() const ;
+  TMatrixDSym reducedCovarianceMatrix(const RooArgSet& params) const ;
   const TMatrixDSym& correlationMatrix() const ;
 
 

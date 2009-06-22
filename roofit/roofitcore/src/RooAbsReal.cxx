@@ -2371,6 +2371,8 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
 		  << *errorParams << " from fit result " << fr.GetName() << " using " << n << " samplings." << endl ;
     
     // Generate variation curves with above set of parameter values
+    Double_t ymin = frame->GetMinimum() ;
+    Double_t ymax = frame->GetMaximum() ;
     RooDataSet* d = paramPdf->generate(*errorParams,n) ;
     vector<RooCurve*> cvec ;
     for (int i=0 ; i<d->numEntries() ; i++) {
@@ -2380,6 +2382,8 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
       cvec.push_back(frame->getCurve()) ;
       frame->remove(0,kFALSE) ;
     }
+    frame->SetMinimum(ymin) ;
+    frame->SetMaximum(ymax) ;
     
     
     // Generate upper and lower curve points from 68% interval around each point of central curve
@@ -2404,51 +2408,102 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     //   Where F(a) = (f(x,a+da) - f(x,a-da))/2
     //   and C_aa' is the correlation matrix
 
-    const TMatrixDSym& C = fr.correlationMatrix() ;
     // Clone self for internal use
     RooAbsReal* cloneFunc = (RooAbsReal*) cloneTree() ;
     RooArgSet* cloneParams = cloneFunc->getObservables(fr.floatParsFinal()) ;
     RooArgSet* errorParams = params?((RooArgSet*)cloneParams->selectCommon(*params)):cloneParams ;    
+    
 
     // Make list of parameter instances of cloneFunc in order of error matrix
     RooArgList paramList ;
     const RooArgList& fpf = fr.floatParsFinal() ;
+    vector<int> fpf_idx ;
     for (Int_t i=0 ; i<fpf.getSize() ; i++) {
       RooAbsArg* par = errorParams->find(fpf[i].GetName()) ;
       if (par) {
 	paramList.add(*par) ;
+	fpf_idx.push_back(i) ;
       }
     }
-    // Create vector of plus,minus variations for each parameter
-    
+
     vector<RooCurve*> plusVar, minusVar ;    
-    for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
 
-      RooRealVar& rrv = (RooRealVar&)fpf[ivar] ;
+    if (!params) {
+      
+      // Create vector of plus,minus variations for each parameter
 
-      Double_t cenVal = rrv.getVal() ;
-      Double_t errVal = rrv.getError() ;
-  
-      // Make Plus variation
-      ((RooRealVar*)paramList.at(ivar))->setVal(cenVal+Z*errVal) ;
-      RooLinkedList tmp2(plotArgList) ;
-      cloneFunc->plotOn(frame,tmp2) ;
-      plusVar.push_back(frame->getCurve()) ;
-      frame->remove(0,kFALSE) ;
+      const TMatrixDSym& V = fr.covarianceMatrix() ;
+      
+      for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
+	
+	RooRealVar& rrv = (RooRealVar&)fpf[ivar] ;
+	
+	Double_t cenVal = rrv.getVal() ;
+	Double_t errVal = sqrt(V(ivar,ivar)) ;
 
-      // Make Minus variation
-      ((RooRealVar*)paramList.at(ivar))->setVal(cenVal-Z*errVal) ;
-      RooLinkedList tmp3(plotArgList) ;
-      cloneFunc->plotOn(frame,tmp3) ;
-      minusVar.push_back(frame->getCurve()) ;
-      frame->remove(0,kFALSE) ;
+	// Make Plus variation
+	((RooRealVar*)paramList.at(ivar))->setVal(cenVal+Z*errVal) ;
+	RooLinkedList tmp2(plotArgList) ;
+	cloneFunc->plotOn(frame,tmp2) ;
+	plusVar.push_back(frame->getCurve()) ;
+	frame->remove(0,kFALSE) ;
+	
+	// Make Minus variation
+	((RooRealVar*)paramList.at(ivar))->setVal(cenVal-Z*errVal) ;
+	RooLinkedList tmp3(plotArgList) ;
+	cloneFunc->plotOn(frame,tmp3) ;
+	minusVar.push_back(frame->getCurve()) ;
+	frame->remove(0,kFALSE) ;
+	
+	((RooRealVar*)paramList.at(ivar))->setVal(cenVal) ;
+      }
+      
+      const TMatrixDSym& C = fr.correlationMatrix() ;
+      band = cenCurve->makeErrorBand(plusVar,minusVar,C,Z) ;    
+      
+    } else {
+      
+      // Create vector of plus,minus variations for each parameter
+      
+      TMatrixDSym Vred(fr.reducedCovarianceMatrix(paramList)) ;
+      TMatrixDSym Cred(paramList.getSize()) ;
+      
+      vector<double> errVec(paramList.getSize()) ;
+      for (int i=0 ; i<paramList.getSize() ; i++) {
+	errVec[i] = sqrt(Vred(i,i)) ;
+	for (int j=i ; j<paramList.getSize() ; j++) {
+	  Cred(i,j) = Vred(i,j)/sqrt(Vred(i,i)*Vred(j,j)) ;
+	  Cred(j,i) = Cred(i,j) ;
+	}
+      }
 
-      ((RooRealVar*)paramList.at(ivar))->setVal(cenVal) ;
+      for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
+	
+	RooRealVar& rrv = (RooRealVar&)fpf[fpf_idx[ivar]] ;
+
+	Double_t cenVal = rrv.getVal() ;
+	Double_t errVal = errVec[ivar] ;
+	
+	// Make Plus variation
+	((RooRealVar*)paramList.at(ivar))->setVal(cenVal+Z*errVal) ;
+	RooLinkedList tmp2(plotArgList) ;
+	cloneFunc->plotOn(frame,tmp2) ;
+	plusVar.push_back(frame->getCurve()) ;
+	frame->remove(0,kFALSE) ;
+	
+	// Make Minus variation
+	((RooRealVar*)paramList.at(ivar))->setVal(cenVal-Z*errVal) ;
+	RooLinkedList tmp3(plotArgList) ;
+	cloneFunc->plotOn(frame,tmp3) ;
+	minusVar.push_back(frame->getCurve()) ;
+	frame->remove(0,kFALSE) ;
+	
+	((RooRealVar*)paramList.at(ivar))->setVal(cenVal) ;
+      }
+
+     band = cenCurve->makeErrorBand(plusVar,minusVar,Cred,Z) ;    
+     
     }
-
-    //                                        T
-    // Generate error bands according to F*C*F   where F = (plusVar-minusVar)/2 
-    band = cenCurve->makeErrorBand(plusVar,minusVar,C,Z) ;
     
     // Cleanup 
     delete cloneFunc ;

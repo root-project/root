@@ -210,6 +210,7 @@ RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, cons
     }
     last = *iter ;
   }
+
 }
 
 
@@ -435,6 +436,7 @@ void RooCurve::addPoint(Double_t x, Double_t y)
   // cout << "RooCurve("<< GetName() << ") adding point at (" << x << "," << y << ")" << endl ;
   Int_t next= GetN();
   SetPoint(next, x, y);
+  updateYAxisLimits(y) ;
 }
 
 

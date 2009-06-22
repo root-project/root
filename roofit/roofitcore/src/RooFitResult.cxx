@@ -1011,6 +1011,96 @@ const TMatrixDSym& RooFitResult::covarianceMatrix() const
 
 
 
+
+//_____________________________________________________________________________
+TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgSet& params) const 
+{
+  // Return a reduced covariance matrix, which is calculated as
+  //        ___                   -1
+  // Vred = V22  = V11 - V12 * V22   * V21
+  //
+  // Where V11,V12,V21,V22 represent a block decomposition of the covariance matrix into observables that
+  // are propagated (labeled by index '1') and that are not propagated (labeled by index '2'), and V22bar
+  // is the Shur complement of V22, calculated as shown above  
+  //
+  // (Note that Vred is _not_ a simple sub-matrix of V)
+
+  const TMatrixDSym& V = covarianceMatrix() ;
+  Double_t det = V.Determinant() ;
+
+  if (det<=0) {
+    coutE(Eval) << "RooFitResult::reducedCovarianceMatrix(" << GetName() << ") ERROR: covariance matrix is not positive definite (|V|=" 
+		<< det << ") cannot reduce it" << endl ;
+    throw string("RooFitResult::reducedCovarianceMatrix() ERROR, input covariance matrix is not positive definite") ;
+  }
+
+  // Make sure that all given params were floating parameters in the represented fit
+  RooArgList params2 ;
+  TIterator* iter = params.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (_finalPars->find(arg->GetName())) {
+      params2.add(*arg) ;
+    } else {
+      coutW(InputArguments) << "RooFitResult::reducedCovarianceMatrix(" << GetName() << ") WARNING input variable " 
+			    << arg->GetName() << " was not a floating parameters in fit result and is ignored" << endl ;
+    }
+  }
+  delete iter ;
+
+  // Need to order params in vector in same order as in covariance matrix
+  RooArgList params3 ;
+  iter = _finalPars->createIterator() ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (params2.find(arg->GetName())) {
+      params3.add(*arg) ;
+    }
+  }
+  delete iter ;
+
+  // Find (subset) of parameters that are stored in the covariance matrix
+  vector<int> map1, map2 ;
+  for (int i=0 ; i<_finalPars->getSize() ; i++) {
+    if (params3.find(_finalPars->at(i)->GetName())) {
+      map1.push_back(i) ;
+    } else {
+      map2.push_back(i) ;
+    }
+  }
+
+  // Rearrange matrix in block form with 'params' first and 'others' last
+  // (preserving relative order) 
+  TMatrixDSym S11, S22 ;
+  TMatrixD S12, S21 ;
+  RooMultiVarGaussian::blockDecompose(V,map1,map2,S11,S12,S21,S22) ;
+
+  // Calculate offset vectors mu1 and mu2
+  TVectorD mu1(map1.size())  ;
+  for (UInt_t i=0 ; i<map1.size() ; i++) {
+    mu1(i) = ((RooAbsReal*)_finalPars->at(map1[i]))->getVal() ;
+  }
+
+  // Constructed conditional matrix form         -1
+  // F(X1|X2) --> CovI --> S22bar = S11 - S12 S22  S21
+  
+  // Do eigenvalue decomposition
+  TMatrixD S22Inv(TMatrixD::kInverted,S22) ;
+  TMatrixD S22bar =  S11 - S12 * (S22Inv * S21) ;
+
+  // Convert explicitly to symmetric form
+  TMatrixDSym Vred(S22bar.GetNcols()) ;
+  for (int i=0 ; i<Vred.GetNcols() ; i++) {
+    for (int j=i ; j<Vred.GetNcols() ; j++) {
+      Vred(i,j) = (S22bar(i,j) + S22bar(j,i))/2 ;
+      Vred(j,i) = Vred(i,j) ;
+    }
+  }
+
+  return Vred ;
+}
+
+
+
 //_____________________________________________________________________________
 const TMatrixDSym& RooFitResult::correlationMatrix() const 
 {
