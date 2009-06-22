@@ -253,8 +253,7 @@ TCanvas* TEveManager::AddCanvasTab(const char* name)
 
    fBrowser->StartEmbedding(1, -1);
    TCanvas* c = new TCanvas;
-   fBrowser->StopEmbedding();
-   fBrowser->SetTabTitle(name, 1, -1);
+   fBrowser->StopEmbedding(name);
 
    return c;
 }
