@@ -36,7 +36,7 @@
 #include "TMonitor.h"
 #include "TObjString.h"
 #include "TPluginManager.h"
-#include "TProofDataSetManager.h"
+#include "TDataSetManager.h"
 #include "TProofQueryResult.h"
 #include "TProofServ.h"
 #include "TQueryResultManager.h"
@@ -1172,14 +1172,14 @@ Int_t TProofLite::InitDataSetManager()
    TPluginHandler *h = 0;
    TString dsm = gEnv->GetValue("Proof.DataSetManager", "");
    if (!dsm.IsNull()) {
-      // Get plugin manager to load the appropriate TProofDataSetManager
+      // Get plugin manager to load the appropriate TDataSetManager
       if (gROOT->GetPluginManager()) {
          // Find the appropriate handler
-         h = gROOT->GetPluginManager()->FindHandler("TProofDataSetManager", dsm);
+         h = gROOT->GetPluginManager()->FindHandler("TDataSetManager", dsm);
          if (h && h->LoadPlugin() != -1) {
             // make instance of the dataset manager
             fDataSetManager =
-               reinterpret_cast<TProofDataSetManager*>(h->ExecPlugin(3, group.Data(),
+               reinterpret_cast<TDataSetManager*>(h->ExecPlugin(3, group.Data(),
                                                          user.Data(), dsm.Data()));
          }
       }
@@ -1200,12 +1200,12 @@ Int_t TProofLite::InitDataSetManager()
       }
       // Find the appropriate handler
       if (!h) {
-         h = gROOT->GetPluginManager()->FindHandler("TProofDataSetManager", "file");
+         h = gROOT->GetPluginManager()->FindHandler("TDataSetManager", "file");
          if (h && h->LoadPlugin() == -1) h = 0;
       }
       if (h) {
          // make instance of the dataset manager
-         fDataSetManager = reinterpret_cast<TProofDataSetManager*>(h->ExecPlugin(3,
+         fDataSetManager = reinterpret_cast<TDataSetManager*>(h->ExecPlugin(3,
                            group.Data(), user.Data(),
                            Form("dir:%s opt:%s", dsetdir.Data(), opts.Data())));
       }
@@ -1217,11 +1217,11 @@ Int_t TProofLite::InitDataSetManager()
 
    if (gDebug > 0 && fDataSetManager) {
       Info("InitDataSetManager", "datasetmgr Cq: %d, Ar: %d, Av: %d, As: %d, Sb: %d",
-            fDataSetManager->TestBit(TProofDataSetManager::kCheckQuota),
-            fDataSetManager->TestBit(TProofDataSetManager::kAllowRegister),
-            fDataSetManager->TestBit(TProofDataSetManager::kAllowVerify),
-            fDataSetManager->TestBit(TProofDataSetManager::kAllowStaging),
-            fDataSetManager->TestBit(TProofDataSetManager::kIsSandbox));
+            fDataSetManager->TestBit(TDataSetManager::kCheckQuota),
+            fDataSetManager->TestBit(TDataSetManager::kAllowRegister),
+            fDataSetManager->TestBit(TDataSetManager::kAllowVerify),
+            fDataSetManager->TestBit(TDataSetManager::kAllowStaging),
+            fDataSetManager->TestBit(TDataSetManager::kIsSandbox));
    }
 
    // Done
@@ -1390,7 +1390,7 @@ Bool_t TProofLite::RegisterDataSet(const char *uri,
    }
 
    Bool_t result = kTRUE;
-   if (fDataSetManager->TestBit(TProofDataSetManager::kAllowRegister)) {
+   if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
       // Check the list
       if (!dataSet || dataSet->GetList()->GetSize() == 0) {
          Error("RegisterDataSet", "can not save an empty list.");
@@ -1439,7 +1439,7 @@ Int_t TProofLite::SetDataSetTreeName(const char *dataset, const char *treename)
    uri.SetFragment(fragment);
 
    return fDataSetManager->ScanDataSet(uri.GetUri().Data(),
-                                      (UInt_t)TProofDataSetManager::kSetDefaultTree);
+                                      (UInt_t)TDataSetManager::kSetDefaultTree);
 }
 
 //______________________________________________________________________________
@@ -1475,7 +1475,7 @@ TMap *TProofLite::GetDataSets(const char *uri, const char *srvex)
    if (srvex && strlen(srvex) > 0) {
       return fDataSetManager->GetSubDataSets(uri, srvex);
    } else {
-      UInt_t opt = (UInt_t)TProofDataSetManager::kExport;
+      UInt_t opt = (UInt_t)TDataSetManager::kExport;
       return fDataSetManager->GetDataSets(uri, opt);
    }
 }
@@ -1525,7 +1525,7 @@ Int_t TProofLite::RemoveDataSet(const char *uri, const char *)
       return -1;
    }
 
-   if (fDataSetManager->TestBit(TProofDataSetManager::kAllowRegister)) {
+   if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
       if (!fDataSetManager->RemoveDataSet(uri)) {
          // Failure
          return -1;
@@ -1551,7 +1551,7 @@ Int_t TProofLite::VerifyDataSet(const char *uri, const char *)
    }
 
    Int_t rc = -1;
-   if (fDataSetManager->TestBit(TProofDataSetManager::kAllowVerify)) {
+   if (fDataSetManager->TestBit(TDataSetManager::kAllowVerify)) {
       rc = fDataSetManager->ScanDataSet(uri);
    } else {
       Info("VerifyDataSet", "dataset verification not allowed");

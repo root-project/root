@@ -31,7 +31,7 @@
 class TDSet;
 class TList;
 class TQueryResultManager;
-class TProofDataSetManager;
+class TDataSetManager;
 class TProofLockPath;
 class TProofMgr;
 class TProofQueryResult;
@@ -54,7 +54,7 @@ private:
    TProofLockPath *fQueryLock; // Query dir locker
    TQueryResultManager *fQMgr; // Query-result manager
 
-   TProofDataSetManager* fDataSetManager; // dataset manager
+   TDataSetManager* fDataSetManager; // dataset manager
 
    TProofLite(const TProofLite &);        // not implemented
    void operator=(const TProofLite &);   // idem

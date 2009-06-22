@@ -57,7 +57,7 @@ class TShutdownTimer;
 class TReaperTimer;
 class TMutex;
 class TFileCollection;
-class TProofDataSetManager;
+class TDataSetManager;
 class TFileHandler;
 
 // Hook to external function setting up authentication related stuff
@@ -137,7 +137,7 @@ private:
 
    Int_t         fCompressMsg;     // Compression level for messages
 
-   TProofDataSetManager* fDataSetManager; // dataset manager
+   TDataSetManager* fDataSetManager; // dataset manager
 
    Bool_t        fLogToSysLog;     //true if logs should be sent to syslog too
    Bool_t        fSendLogToMaster; // On workers, controls logs sending to master

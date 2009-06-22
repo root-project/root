@@ -95,7 +95,7 @@
 #include "TParameter.h"
 #include "TFileCollection.h"
 #include "TLockFile.h"
-#include "TProofDataSetManagerFile.h"
+#include "TDataSetManagerFile.h"
 #include "TProofProgressStatus.h"
 
 // global proofserv handle
@@ -2585,14 +2585,14 @@ Int_t TProofServ::SetupCommon()
          TString dsm;
          Int_t from  = 0;
          dsms.Tokenize(dsm, from, ",");
-         // Get plugin manager to load the appropriate TProofDataSetManager
+         // Get plugin manager to load the appropriate TDataSetManager
          if (gROOT->GetPluginManager()) {
             // Find the appropriate handler
-            h = gROOT->GetPluginManager()->FindHandler("TProofDataSetManager", dsm);
+            h = gROOT->GetPluginManager()->FindHandler("TDataSetManager", dsm);
             if (h && h->LoadPlugin() != -1) {
                // make instance of the dataset manager
                fDataSetManager =
-                  reinterpret_cast<TProofDataSetManager*>(h->ExecPlugin(3, fGroup.Data(),
+                  reinterpret_cast<TDataSetManager*>(h->ExecPlugin(3, fGroup.Data(),
                                                           fUser.Data(), dsm.Data()));
             }
          }
@@ -2615,12 +2615,12 @@ Int_t TProofServ::SetupCommon()
          }
          // Find the appropriate handler
          if (!h) {
-            h = gROOT->GetPluginManager()->FindHandler("TProofDataSetManager", "file");
+            h = gROOT->GetPluginManager()->FindHandler("TDataSetManager", "file");
             if (h && h->LoadPlugin() == -1) h = 0;
          }
          if (h) {
             // make instance of the dataset manager
-            fDataSetManager = reinterpret_cast<TProofDataSetManager*>(h->ExecPlugin(3,
+            fDataSetManager = reinterpret_cast<TDataSetManager*>(h->ExecPlugin(3,
                               fGroup.Data(), fUser.Data(),
                               Form("dir:%s opt:%s", dsetdir.Data(), opts.Data())));
          }
@@ -5283,7 +5283,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
       case TProof::kRegisterDataSet:
          // list size must be above 0
          {
-            if (fDataSetManager->TestBit(TProofDataSetManager::kAllowRegister)) {
+            if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
                (*mess) >> uri;
                (*mess) >> opt;
                // Extract the list
@@ -5316,7 +5316,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          {
             (*mess) >> uri >> opt;
             // Get the datasets and fill a map
-            TMap *returnMap = fDataSetManager->GetDataSets(uri, (UInt_t)TProofDataSetManager::kExport);
+            TMap *returnMap = fDataSetManager->GetDataSets(uri, (UInt_t)TDataSetManager::kExport);
             // If defines, option gives the name of a server for which to extract the information
             if (returnMap && !opt.IsNull()) {
                // The return map will be in the form   </group/user/datasetname> --> <dataset> 
@@ -5365,7 +5365,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          break;
       case TProof::kRemoveDataSet:
          {
-            if (fDataSetManager->TestBit(TProofDataSetManager::kAllowRegister)) {
+            if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
                (*mess) >> uri;
                if (!fDataSetManager->RemoveDataSet(uri)) {
                   // Failure
@@ -5379,7 +5379,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          break;
       case TProof::kVerifyDataSet:
          {
-            if (fDataSetManager->TestBit(TProofDataSetManager::kAllowVerify)) {
+            if (fDataSetManager->TestBit(TDataSetManager::kAllowVerify)) {
                (*mess) >> uri;
                TProofServLogHandlerGuard hg(fLogFile,  fSocket);
                rc = fDataSetManager->ScanDataSet(uri);
@@ -5391,7 +5391,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          break;
       case TProof::kGetQuota:
          {
-            if (fDataSetManager->TestBit(TProofDataSetManager::kCheckQuota)) {
+            if (fDataSetManager->TestBit(TDataSetManager::kCheckQuota)) {
                TMap *groupQuotaMap = fDataSetManager->GetGroupQuotaMap();
                if (groupQuotaMap) {
                   // Send result
@@ -5407,7 +5407,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          break;
       case TProof::kShowQuota:
          {
-            if (fDataSetManager->TestBit(TProofDataSetManager::kCheckQuota)) {
+            if (fDataSetManager->TestBit(TDataSetManager::kCheckQuota)) {
                (*mess) >> opt;
                // Display quota information
                fDataSetManager->ShowQuota(opt);
@@ -5418,9 +5418,9 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          break;
       case TProof::kSetDefaultTreeName:
          {
-            if (fDataSetManager->TestBit(TProofDataSetManager::kAllowRegister)) {
+            if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
                (*mess) >> uri;
-               rc = fDataSetManager->ScanDataSet(uri, (UInt_t)TProofDataSetManager::kSetDefaultTree);
+               rc = fDataSetManager->ScanDataSet(uri, (UInt_t)TDataSetManager::kSetDefaultTree);
             } else {
                Info("HandleDataSets", "kSetDefaultTreeName: modification of dataset info not allowed");
                return -1;

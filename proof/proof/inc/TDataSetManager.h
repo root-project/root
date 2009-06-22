@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TProofDataSetManager
-#define ROOT_TProofDataSetManager
+#ifndef ROOT_TDataSetManager
+#define ROOT_TDataSetManager
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofDataSetManager                                                 //
+// TDataSetManager                                                 //
 //                                                                      //
 // This class contains functions to handle datasets in PROOF            //
 // It is the layer between TProofServ and the file system that stores   //
@@ -41,11 +41,11 @@ class TMD5;
 class TVirtualMonitoringWriter;
 
 
-class TProofDataSetManager : public TObject {
+class TDataSetManager : public TObject {
 
 private:
-   TProofDataSetManager(const TProofDataSetManager&);             // not implemented
-   TProofDataSetManager& operator=(const TProofDataSetManager&);  // not implemented
+   TDataSetManager(const TDataSetManager&);             // not implemented
+   TDataSetManager& operator=(const TDataSetManager&);  // not implemented
 
 protected:
    TString  fGroup;         // Group to which the owner of this session belongs
@@ -99,8 +99,8 @@ public:
                            kReopen = 256, kTouch = 512, kMaxFiles = 1024, kReadShort = 2048,
                            kFileMustExist = 4096};
 
-   TProofDataSetManager(const char *group = 0, const char *user = 0, const char *options = 0);
-   virtual ~TProofDataSetManager();
+   TDataSetManager(const char *group = 0, const char *user = 0, const char *options = 0);
+   virtual ~TDataSetManager();
 
    virtual TFileCollection *GetDataSet(const char *uri, const char *server = 0);
    virtual TMap            *GetDataSets(const char *uri, UInt_t /*option*/ = 0);
@@ -125,7 +125,7 @@ public:
    static TString           CreateUri(const char *dsGroup = 0, const char *dsUser = 0,
                                       const char *dsName = 0, const char *dsTree = 0);
 
-   ClassDef(TProofDataSetManager, 0)  // Abstract data set manager class
+   ClassDef(TDataSetManager, 0)  // Abstract data set manager class
 };
 
 #endif

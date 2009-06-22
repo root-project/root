@@ -90,7 +90,7 @@ class TTree;
 class TVirtualMutex;
 class TFileCollection;
 class TMap;
-class TProofDataSetManager;
+class TDataSetManager;
 
 // protocol changes:
 // 1 -> 2: new arguments for Process() command, option added
@@ -236,7 +236,7 @@ friend class TPacketizer;
 friend class TPacketizerDev;
 friend class TPacketizerAdaptive;
 friend class TProofLite;
-friend class TProofDataSetManager;
+friend class TDataSetManager;
 friend class TProofServ;
 friend class TProofInputHandler;
 friend class TProofInterruptHandler;
@@ -602,7 +602,7 @@ protected:
    static void *SlaveStartupThread(void *arg);
 
    static Int_t AssertDataSet(TDSet *dset, TList *input,
-                              TProofDataSetManager *mgr, TString &emsg);
+                              TDataSetManager *mgr, TString &emsg);
    // Input data handling
    static Int_t GetInputData(TList *input, const char *cachedir, TString &emsg);
    static Int_t SaveInputData(TQueryResult *qr, const char *cachedir, TString &emsg);

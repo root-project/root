@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofDataSetManager                                                 //
+// TDataSetManager                                                 //
 //                                                                      //
 // This class contains functions to handle datasets in PROOF            //
 // It is the layer between TProofServ and the file system that stores   //
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include "TProofDataSetManager.h"
+#include "TDataSetManager.h"
 
 #include "Riostream.h"
 
@@ -41,12 +41,12 @@
 #define DSM_ONE_GB (1073741824)
 
 // Name for common datasets
-TString TProofDataSetManager::fgCommonDataSetTag = "COMMON";
+TString TDataSetManager::fgCommonDataSetTag = "COMMON";
 
-ClassImp(TProofDataSetManager)
+ClassImp(TDataSetManager)
 
 //_____________________________________________________________________________
-TProofDataSetManager::TProofDataSetManager(const char *group, const char *user,
+TDataSetManager::TDataSetManager(const char *group, const char *user,
                                            const char *options)
                      : fGroup(group),
                        fUser(user), fCommonUser(), fCommonGroup(),
@@ -91,7 +91,7 @@ TProofDataSetManager::TProofDataSetManager(const char *group, const char *user,
 
       // If not in sandbox, construct the base URI using session defaults
       // (group, user) (syntax: /group/user/dsname[#[subdir/]objname])
-      if (!TestBit(TProofDataSetManager::kIsSandbox))
+      if (!TestBit(TDataSetManager::kIsSandbox))
          fBase.SetUri(TString(Form("/%s/%s/", fGroup.Data(), fUser.Data())));
 
    }
@@ -101,7 +101,7 @@ TProofDataSetManager::TProofDataSetManager(const char *group, const char *user,
 }
 
 //______________________________________________________________________________
-TProofDataSetManager::~TProofDataSetManager()
+TDataSetManager::~TDataSetManager()
 {
    // Destructor
 
@@ -112,7 +112,7 @@ TProofDataSetManager::~TProofDataSetManager()
 }
 
 //______________________________________________________________________________
-void TProofDataSetManager::ParseInitOpts(const char *opts)
+void TDataSetManager::ParseInitOpts(const char *opts)
 {
    // Parse the opts string and set the init bits accordingly
    // Available options:
@@ -127,11 +127,11 @@ void TProofDataSetManager::ParseInitOpts(const char *opts)
    // "Cq:-Ar:" will be parsed .
 
    // Default option bits
-   ResetBit(TProofDataSetManager::kCheckQuota);
-   SetBit(TProofDataSetManager::kAllowRegister);
-   SetBit(TProofDataSetManager::kAllowVerify);
-   ResetBit(TProofDataSetManager::kAllowStaging);
-   ResetBit(TProofDataSetManager::kIsSandbox);
+   ResetBit(TDataSetManager::kCheckQuota);
+   SetBit(TDataSetManager::kAllowRegister);
+   SetBit(TDataSetManager::kAllowVerify);
+   ResetBit(TDataSetManager::kAllowStaging);
+   ResetBit(TDataSetManager::kIsSandbox);
 
    if (opts && strlen(opts) > 0) {
       TString opt(opts);
@@ -142,30 +142,30 @@ void TProofDataSetManager::ParseInitOpts(const char *opts)
       if (ip != kNPOS) opt.Remove(ip);
       // Check the content, now
       if (opt.Contains("Cq:") && !opt.Contains("-Cq:"))
-         SetBit(TProofDataSetManager::kCheckQuota);
+         SetBit(TDataSetManager::kCheckQuota);
       if (opt.Contains("-Ar:"))
-         ResetBit(TProofDataSetManager::kAllowRegister);
+         ResetBit(TDataSetManager::kAllowRegister);
       if (opt.Contains("-Av:"))
-         ResetBit(TProofDataSetManager::kAllowVerify);
+         ResetBit(TDataSetManager::kAllowVerify);
       if (opt.Contains("As:") && !opt.Contains("-As:"))
-         SetBit(TProofDataSetManager::kAllowStaging);
+         SetBit(TDataSetManager::kAllowStaging);
       if (opt.Contains("Sb:") && !opt.Contains("-Sb:"))
-         SetBit(TProofDataSetManager::kIsSandbox);
+         SetBit(TDataSetManager::kIsSandbox);
    }
 
    // Check dependencies
-   if (TestBit(TProofDataSetManager::kAllowStaging)) {
+   if (TestBit(TDataSetManager::kAllowStaging)) {
       // Staging of missing files requires verification permition
-      SetBit(TProofDataSetManager::kAllowVerify);
+      SetBit(TDataSetManager::kAllowVerify);
    }
-   if (TestBit(TProofDataSetManager::kAllowVerify)) {
+   if (TestBit(TDataSetManager::kAllowVerify)) {
       // Dataset verification requires registration permition
-      SetBit(TProofDataSetManager::kAllowRegister);
+      SetBit(TDataSetManager::kAllowRegister);
    }
 }
 
 //______________________________________________________________________________
-Bool_t TProofDataSetManager::ReadGroupConfig(const char *cf)
+Bool_t TDataSetManager::ReadGroupConfig(const char *cf)
 {
    // Read group config file 'cf'.
    // If cf == 0 re-read, if changed, the file pointed by fGroupConfigFile .
@@ -302,9 +302,9 @@ Bool_t TProofDataSetManager::ReadGroupConfig(const char *cf)
             if (!line.Tokenize(on, from, " ")) // No token
                continue;
             if (on == "on") {
-               SetBit(TProofDataSetManager::kCheckQuota);
+               SetBit(TDataSetManager::kCheckQuota);
             } else if (on == "off") {
-               ResetBit(TProofDataSetManager::kCheckQuota);
+               ResetBit(TDataSetManager::kCheckQuota);
             }
          }
 
@@ -333,7 +333,7 @@ Bool_t TProofDataSetManager::ReadGroupConfig(const char *cf)
 }
 
 //______________________________________________________________________________
-Long64_t TProofDataSetManager::ToBytes(const char *size)
+Long64_t TDataSetManager::ToBytes(const char *size)
 {
    // Static utility function to gt the number of bytes from a string
    // representation in the form "<digit><sfx>" with <sfx> = {"", "k", "M", "G",
@@ -370,7 +370,7 @@ Long64_t TProofDataSetManager::ToBytes(const char *size)
 }
 
 //______________________________________________________________________________
-TFileCollection *TProofDataSetManager::GetDataSet(const char *, const char *)
+TFileCollection *TDataSetManager::GetDataSet(const char *, const char *)
 {
    // Utility function used in various methods for user dataset upload.
 
@@ -379,7 +379,7 @@ TFileCollection *TProofDataSetManager::GetDataSet(const char *, const char *)
 }
 
 //______________________________________________________________________________
-Bool_t TProofDataSetManager::RemoveDataSet(const char *)
+Bool_t TDataSetManager::RemoveDataSet(const char *)
 {
    // Removes the indicated dataset
 
@@ -388,7 +388,7 @@ Bool_t TProofDataSetManager::RemoveDataSet(const char *)
 }
 
 //______________________________________________________________________________
-Bool_t TProofDataSetManager::ExistsDataSet(const char *)
+Bool_t TDataSetManager::ExistsDataSet(const char *)
 {
    // Checks if the indicated dataset exits
 
@@ -397,7 +397,7 @@ Bool_t TProofDataSetManager::ExistsDataSet(const char *)
 }
 
 //______________________________________________________________________________
-TMap *TProofDataSetManager::GetDataSets(const char *, UInt_t)
+TMap *TDataSetManager::GetDataSets(const char *, UInt_t)
 {
    //
    // Returns all datasets for the <group> and <user> specified by <uri>.
@@ -423,7 +423,7 @@ TMap *TProofDataSetManager::GetDataSets(const char *, UInt_t)
 }
 
 //______________________________________________________________________________
-Int_t TProofDataSetManager::ScanDataSet(const char *, UInt_t)
+Int_t TDataSetManager::ScanDataSet(const char *, UInt_t)
 {
    // Scans the dataset indicated by <uri> and returns the number of missing files.
    // Returns -1 if any failure occurs.
@@ -436,7 +436,7 @@ Int_t TProofDataSetManager::ScanDataSet(const char *, UInt_t)
 }
 
 //______________________________________________________________________________
-void TProofDataSetManager::GetQuota(const char *group, const char *user,
+void TDataSetManager::GetQuota(const char *group, const char *user,
                                     const char *dsName, TFileCollection *dataset)
 {
    //
@@ -472,7 +472,7 @@ void TProofDataSetManager::GetQuota(const char *group, const char *user,
 }
 
 //______________________________________________________________________________
-void TProofDataSetManager::ShowQuota(const char *opt)
+void TDataSetManager::ShowQuota(const char *opt)
 {
    // Display quota information
 
@@ -524,7 +524,7 @@ void TProofDataSetManager::ShowQuota(const char *opt)
 }
 
 //______________________________________________________________________________
-void TProofDataSetManager::PrintUsedSpace()
+void TDataSetManager::PrintUsedSpace()
 {
    //
    // Prints the quota
@@ -559,7 +559,7 @@ void TProofDataSetManager::PrintUsedSpace()
 }
 
 //______________________________________________________________________________
-void TProofDataSetManager::MonitorUsedSpace(TVirtualMonitoringWriter *monitoring)
+void TDataSetManager::MonitorUsedSpace(TVirtualMonitoringWriter *monitoring)
 {
    //
    // Log info to the monitoring server
@@ -599,7 +599,7 @@ void TProofDataSetManager::MonitorUsedSpace(TVirtualMonitoringWriter *monitoring
 }
 
 //______________________________________________________________________________
-Long64_t TProofDataSetManager::GetGroupUsed(const char *group)
+Long64_t TDataSetManager::GetGroupUsed(const char *group)
 {
    //
    // Returns the used space of that group
@@ -619,7 +619,7 @@ Long64_t TProofDataSetManager::GetGroupUsed(const char *group)
 }
 
 //______________________________________________________________________________
-Long64_t TProofDataSetManager::GetGroupQuota(const char *group)
+Long64_t TDataSetManager::GetGroupQuota(const char *group)
 {
    //
    // returns the quota a group is allowed to have
@@ -638,7 +638,7 @@ Long64_t TProofDataSetManager::GetGroupQuota(const char *group)
 }
 
 //______________________________________________________________________________
-void TProofDataSetManager::UpdateUsedSpace()
+void TDataSetManager::UpdateUsedSpace()
 {
    // updates the used space maps
 
@@ -646,7 +646,7 @@ void TProofDataSetManager::UpdateUsedSpace()
 }
 
 //______________________________________________________________________________
-Int_t TProofDataSetManager::RegisterDataSet(const char *,
+Int_t TDataSetManager::RegisterDataSet(const char *,
                                             TFileCollection *,
                                             const char *)
 {
@@ -658,7 +658,7 @@ Int_t TProofDataSetManager::RegisterDataSet(const char *,
 }
 
 //______________________________________________________________________________
-TString TProofDataSetManager::CreateUri(const char *dsGroup, const char *dsUser,
+TString TDataSetManager::CreateUri(const char *dsGroup, const char *dsUser,
                                         const char *dsName, const char *dsObjPath)
 {
    // Creates URI for the dataset manger in the form '[[/dsGroup/]dsUser/]dsName[#dsObjPath]',
@@ -685,7 +685,7 @@ TString TProofDataSetManager::CreateUri(const char *dsGroup, const char *dsUser,
 }
 
 //______________________________________________________________________________
-Bool_t TProofDataSetManager::ParseUri(const char *uri,
+Bool_t TDataSetManager::ParseUri(const char *uri,
                                       TString *dsGroup, TString *dsUser,
                                       TString *dsName, TString *dsTree,
                                       Bool_t onlyCurrent, Bool_t wildcards)
@@ -717,7 +717,7 @@ Bool_t TProofDataSetManager::ParseUri(const char *uri,
    // Must be in the form /group/user/dsname
    Int_t pc = path.CountChar('/');
    if (pc != 3) {
-      if (!TestBit(TProofDataSetManager::kIsSandbox)) {
+      if (!TestBit(TDataSetManager::kIsSandbox)) {
          Error ("ParseUri", "illegal dataset path: %s", uri);
          return kFALSE;
       } else if (pc >= 0 && pc < 3) {
@@ -808,7 +808,7 @@ Bool_t TProofDataSetManager::ParseUri(const char *uri,
 }
 
 //______________________________________________________________________________
-TMap *TProofDataSetManager::GetSubDataSets(const char *ds, const char *exclude)
+TMap *TDataSetManager::GetSubDataSets(const char *ds, const char *exclude)
 {
    // Partition dataset 'ds' accordingly to the servers.
    // The returned TMap contains:
@@ -847,7 +847,7 @@ TMap *TProofDataSetManager::GetSubDataSets(const char *ds, const char *exclude)
 }
 
 //______________________________________________________________________________
-void TProofDataSetManager::PrintDataSet(TFileCollection *fc, Int_t popt)
+void TDataSetManager::PrintDataSet(TFileCollection *fc, Int_t popt)
 {
    // Formatted printout of the content of TFileCollection 'fc'.
    // Options in the form
@@ -884,7 +884,7 @@ void TProofDataSetManager::PrintDataSet(TFileCollection *fc, Int_t popt)
 }
 
 //______________________________________________________________________________
-void TProofDataSetManager::ShowDataSets(const char *uri, const char *opt)
+void TDataSetManager::ShowDataSets(const char *uri, const char *opt)
 {
    // Prints formatted information about the dataset 'uri'.
    // The type and format of output is driven by 'opt':
@@ -942,7 +942,7 @@ void TProofDataSetManager::ShowDataSets(const char *uri, const char *opt)
          // Support for "*" or "/*"
          if (u == "" || u == "*" || u == "/*" || u == "/*/" || u == "/*/*") u = "/*/*/";
          // Scan the existing datasets and print the content
-         GetDataSets(u.Data(), (UInt_t)TProofDataSetManager::kPrint);
+         GetDataSets(u.Data(), (UInt_t)TDataSetManager::kPrint);
       }
    }
 

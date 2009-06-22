@@ -74,7 +74,7 @@
 #include "TTree.h"
 #include "TUrl.h"
 #include "TFileCollection.h"
-#include "TProofDataSetManager.h"
+#include "TDataSetManager.h"
 
 TProof *gProof = 0;
 TVirtualMutex *gProofMutex = 0;
@@ -8909,7 +8909,7 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Double_t &value)
 
 //______________________________________________________________________________
 Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
-                            TProofDataSetManager *mgr, TString &emsg)
+                            TDataSetManager *mgr, TString &emsg)
 {
    // Make sure that dataset is in the form to be processed. This may mean
    // retrieving the relevant info from the dataset manager or from the

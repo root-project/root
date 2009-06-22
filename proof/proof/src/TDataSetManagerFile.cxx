@@ -11,14 +11,14 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofDataSetManagerFile                                             //
+// TDataSetManagerFile                                             //
 //                                                                      //
-// Implementation of TProofDataSetManager handling datasets from root   //
+// Implementation of TDataSetManager handling datasets from root   //
 // files under a specific directory path                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TProofDataSetManagerFile.h"
+#include "TDataSetManagerFile.h"
 
 #include "Riostream.h"
 #include "TEnv.h"
@@ -41,13 +41,13 @@
 #include "TTree.h"
 #include "TParameter.h"
 
-ClassImp(TProofDataSetManagerFile)
+ClassImp(TDataSetManagerFile)
 
 //_____________________________________________________________________________
-TProofDataSetManagerFile::TProofDataSetManagerFile(const char *group,
+TDataSetManagerFile::TDataSetManagerFile(const char *group,
                                                    const char *user,
                                                    const char *ins)
-                         : TProofDataSetManager(group, user, ins)
+                         : TDataSetManager(group, user, ins)
 {
    //
    // Main constructor
@@ -66,16 +66,16 @@ TProofDataSetManagerFile::TProofDataSetManagerFile(const char *group,
             // Read only dataset info system: switch to COMMON
 	    fUser = fCommonUser;
 	    fGroup = fCommonGroup;
-            ResetBit(TProofDataSetManager::kCheckQuota);
-            ResetBit(TProofDataSetManager::kAllowRegister);
-            ResetBit(TProofDataSetManager::kAllowVerify);
-            ResetBit(TProofDataSetManager::kAllowStaging);
+            ResetBit(TDataSetManager::kCheckQuota);
+            ResetBit(TDataSetManager::kAllowRegister);
+            ResetBit(TDataSetManager::kAllowVerify);
+            ResetBit(TDataSetManager::kAllowStaging);
             dir.Form("%s/%s/%s", fDataSetDir.Data(), fGroup.Data(), fUser.Data());
 	    if (gSystem->AccessPathName(dir)) {
-		Error("TProofDataSetManagerFile",
+		Error("TDataSetManagerFile",
                       "could not attach to a valid the dataset dir; paths tried:");
-		Error("TProofDataSetManagerFile", "    %s", emsg.Data());
-		Error("TProofDataSetManagerFile", "    %s", dir.Data());
+		Error("TDataSetManagerFile", "    %s", emsg.Data());
+		Error("TDataSetManagerFile", "    %s", dir.Data());
 		SetBit(TObject::kInvalidObject);
 		return;
 	    }
@@ -84,7 +84,7 @@ TProofDataSetManagerFile::TProofDataSetManagerFile(const char *group,
 
       // If not in sandbox, construct the base URI using session defaults
       // (group, user) (syntax: /group/user/dsname[#[subdir/]objname])
-      if (!TestBit(TProofDataSetManager::kIsSandbox))
+      if (!TestBit(TDataSetManager::kIsSandbox))
          fBase.SetUri(TString(Form("/%s/%s/", fGroup.Data(), fUser.Data())));
 
       // Fill locking path
@@ -103,13 +103,13 @@ TProofDataSetManagerFile::TProofDataSetManagerFile(const char *group,
 }
 
 //______________________________________________________________________________
-void TProofDataSetManagerFile::ParseInitOpts(const char *ins)
+void TDataSetManagerFile::ParseInitOpts(const char *ins)
 {
    // Parse the input string and set the init bits accordingly
    // Format is
    //    dir:<datasetdir> [mss:<mss-url>] [opt:<base-options>]
    // The <datasetdir> is mandatory.
-   // See TProofDataSetManager::ParseInitOpts for the available
+   // See TDataSetManager::ParseInitOpts for the available
    // base options.
    // The base options are laready initialized by the base constructor
 
@@ -136,7 +136,7 @@ void TProofDataSetManagerFile::ParseInitOpts(const char *ins)
 }
 
 //______________________________________________________________________________
-const char *TProofDataSetManagerFile::GetDataSetPath(const char *group,
+const char *TDataSetManagerFile::GetDataSetPath(const char *group,
                                                      const char *user,
                                                      const char *dsName)
 {
@@ -158,7 +158,7 @@ const char *TProofDataSetManagerFile::GetDataSetPath(const char *group,
 }
 
 //______________________________________________________________________________
-Bool_t TProofDataSetManagerFile::BrowseDataSets(const char *group,
+Bool_t TDataSetManagerFile::BrowseDataSets(const char *group,
                                                 const char *user,
                                                 UInt_t option, TObject *target)
 {
@@ -286,7 +286,7 @@ Bool_t TProofDataSetManagerFile::BrowseDataSets(const char *group,
 }
 
 //______________________________________________________________________________
-TMap *TProofDataSetManagerFile::GetDataSets(const char *group, const char *user,
+TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
                                             UInt_t option)
 {
    // General purpose call to go through the existing datasets.
@@ -413,7 +413,7 @@ TMap *TProofDataSetManagerFile::GetDataSets(const char *group, const char *user,
 }
 
 //______________________________________________________________________________
-TFileCollection *TProofDataSetManagerFile::GetDataSet(const char *group,
+TFileCollection *TDataSetManagerFile::GetDataSet(const char *group,
                                                       const char *user,
                                                       const char *dsName,
                                                       UInt_t option,
@@ -469,7 +469,7 @@ TFileCollection *TProofDataSetManagerFile::GetDataSet(const char *group,
 }
 
 //______________________________________________________________________________
-Int_t TProofDataSetManagerFile::WriteDataSet(const char *group, const char *user,
+Int_t TDataSetManagerFile::WriteDataSet(const char *group, const char *user,
                                          const char *dsName, TFileCollection *dataset,
                                          UInt_t option, TMD5 *checksum)
 {
@@ -555,7 +555,7 @@ Int_t TProofDataSetManagerFile::WriteDataSet(const char *group, const char *user
 }
 
 //______________________________________________________________________________
-Bool_t TProofDataSetManagerFile::RemoveDataSet(const char *group, const char *user,
+Bool_t TDataSetManagerFile::RemoveDataSet(const char *group, const char *user,
                                                const char *dsName)
 {
    // Removes the indicated dataset
@@ -568,7 +568,7 @@ Bool_t TProofDataSetManagerFile::RemoveDataSet(const char *group, const char *us
 }
 
 //______________________________________________________________________________
-Bool_t TProofDataSetManagerFile::ExistsDataSet(const char *group, const char *user,
+Bool_t TDataSetManagerFile::ExistsDataSet(const char *group, const char *user,
                                                const char *dsName)
 {
    // Checks if the indicated dataset exits
@@ -581,7 +581,7 @@ Bool_t TProofDataSetManagerFile::ExistsDataSet(const char *group, const char *us
 }
 
 //______________________________________________________________________________
-Int_t TProofDataSetManagerFile::RegisterDataSet(const char *uri,
+Int_t TDataSetManagerFile::RegisterDataSet(const char *uri,
                                                 TFileCollection *dataSet,
                                                 const char *opts)
 {
@@ -592,7 +592,7 @@ Int_t TProofDataSetManagerFile::RegisterDataSet(const char *uri,
    // By default the dataset is not verified.
    // Returns 0 on success, -1 on failure
 
-   if (!TestBit(TProofDataSetManager::kAllowRegister))
+   if (!TestBit(TDataSetManager::kAllowRegister))
       return -1;
 
    // Get the dataset name
@@ -654,7 +654,7 @@ Int_t TProofDataSetManagerFile::RegisterDataSet(const char *uri,
    // Update accumulated information
    dataSet->Update(fAvgFileSize);
 
-   if (TestBit(TProofDataSetManager::kCheckQuota)) {
+   if (TestBit(TDataSetManager::kCheckQuota)) {
       if (dataSet->GetTotalSize() <= 0) {
          Error("RegisterDataSet", "datasets without size information are not accepted:");
          if (fAvgFileSize < 0) {
@@ -686,7 +686,7 @@ Int_t TProofDataSetManagerFile::RegisterDataSet(const char *uri,
    return ((success) ? 0 : -1);
 }
 //______________________________________________________________________________
-Int_t TProofDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
+Int_t TDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
 {
    // Scans the dataset indicated by <uri> and returns the number of missing files.
    // Returns -1 if any failure occurs, >= 0 on success.
@@ -695,7 +695,7 @@ Int_t TProofDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
 
    TString dsName, dsTree;
    if ((opt & kSetDefaultTree)) {
-      if (TestBit(TProofDataSetManager::kAllowRegister)) {
+      if (TestBit(TDataSetManager::kAllowRegister)) {
          if (ParseUri(uri, 0, 0, &dsName, &dsTree, kTRUE)) {
             TFileCollection *dataset = GetDataSet(fGroup, fUser, dsName);
             if (!dataset) return -1;
@@ -706,7 +706,7 @@ Int_t TProofDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
          }
       }
    } else {
-      if (TestBit(TProofDataSetManager::kAllowVerify)) {
+      if (TestBit(TDataSetManager::kAllowVerify)) {
          if (ParseUri(uri, 0, 0, &dsName, 0, kTRUE)) {
             if (ScanDataSet(fGroup, fUser, dsName, (UInt_t)(kReopen | kDebug)) > 0)
                return GetNDisapparedFiles();
@@ -717,12 +717,12 @@ Int_t TProofDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
 }
 
 //______________________________________________________________________________
-Int_t TProofDataSetManagerFile::ScanDataSet(const char *group, const char *user,
+Int_t TDataSetManagerFile::ScanDataSet(const char *group, const char *user,
                                             const char *dsName, UInt_t option)
 {
    // See documentation of ScanDataSet(TFileCollection *dataset, UInt_t option)
 
-   if (!TestBit(TProofDataSetManager::kAllowVerify))
+   if (!TestBit(TDataSetManager::kAllowVerify))
       return -1;
 
    TFileCollection *dataset = GetDataSet(group, user, dsName);
@@ -743,7 +743,7 @@ Int_t TProofDataSetManagerFile::ScanDataSet(const char *group, const char *user,
 }
 
 //______________________________________________________________________________
-Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
+Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
                                             UInt_t option, Int_t filesmax)
 {
    // Updates the information in a dataset by opening all files that are not yet
@@ -766,7 +766,7 @@ Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
    // The number of opened, touched, disappeared files can be retrieved by
    // GetNTouchedFiles(), GetNOpenedFiles(), GetNDisapparedFiles()
 
-   if (!TestBit(TProofDataSetManager::kAllowVerify))
+   if (!TestBit(TDataSetManager::kAllowVerify))
       return -1;
 
    // Parse options
@@ -850,7 +850,7 @@ Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
       }
 
       // Staging must be allowed
-      if (!TestBit(TProofDataSetManager::kAllowStaging)) continue;
+      if (!TestBit(TDataSetManager::kAllowStaging)) continue;
 
       // Only open maximum number of 'new' files
       if (maxFiles > 0 && newStagedFiles.GetEntries() >= maxFiles)
@@ -1006,7 +1006,7 @@ Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
 }
 
 //______________________________________________________________________________
-TMap *TProofDataSetManagerFile::GetDataSets(const char *uri, UInt_t option)
+TMap *TDataSetManagerFile::GetDataSets(const char *uri, UInt_t option)
 {
    //
    // Returns all datasets for the <group> and <user> specified by <uri>.
@@ -1037,7 +1037,7 @@ TMap *TProofDataSetManagerFile::GetDataSets(const char *uri, UInt_t option)
 }
 
 //______________________________________________________________________________
-TFileCollection *TProofDataSetManagerFile::GetDataSet(const char *uri, const char *srv)
+TFileCollection *TDataSetManagerFile::GetDataSet(const char *uri, const char *srv)
 {
    // Utility function used in various methods for user dataset upload.
 
@@ -1072,13 +1072,13 @@ TFileCollection *TProofDataSetManagerFile::GetDataSet(const char *uri, const cha
 }
 
 //______________________________________________________________________________
-Bool_t TProofDataSetManagerFile::RemoveDataSet(const char *uri)
+Bool_t TDataSetManagerFile::RemoveDataSet(const char *uri)
 {
    // Removes the indicated dataset
 
    TString dsName;
 
-   if (TestBit(TProofDataSetManager::kAllowRegister)) {
+   if (TestBit(TDataSetManager::kAllowRegister)) {
       if (ParseUri(uri, 0, 0, &dsName, 0, kTRUE)) {
          Bool_t rc = RemoveDataSet(fGroup, fUser, dsName);
          if (rc) return kTRUE;
@@ -1089,7 +1089,7 @@ Bool_t TProofDataSetManagerFile::RemoveDataSet(const char *uri)
 }
 
 //______________________________________________________________________________
-Bool_t TProofDataSetManagerFile::ExistsDataSet(const char *uri)
+Bool_t TDataSetManagerFile::ExistsDataSet(const char *uri)
 {
    // Checks if the indicated dataset exits
 
@@ -1101,7 +1101,7 @@ Bool_t TProofDataSetManagerFile::ExistsDataSet(const char *uri)
 }
 
 //______________________________________________________________________________
-void TProofDataSetManagerFile::UpdateUsedSpace()
+void TDataSetManagerFile::UpdateUsedSpace()
 {
    // updates the used space maps
 

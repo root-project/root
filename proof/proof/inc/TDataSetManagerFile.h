@@ -9,24 +9,24 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TProofDataSetManagerFile
-#define ROOT_TProofDataSetManagerFile
+#ifndef ROOT_TDataSetManagerFile
+#define ROOT_TDataSetManagerFile
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofDataSetManagerFile                                             //
+// TDataSetManagerFile                                             //
 //                                                                      //
-// Implementation of TProofDataSetManager handling datasets from root   //
+// Implementation of TDataSetManager handling datasets from root   //
 // files under a specific directory path                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProofDataSetManager
-#include "TProofDataSetManager.h"
+#ifndef ROOT_TDataSetManager
+#include "TDataSetManager.h"
 #endif
 
 
-class TProofDataSetManagerFile : public TProofDataSetManager {
+class TDataSetManagerFile : public TDataSetManager {
 
 private:
    TString fDataSetDir;        // Location of datasets
@@ -46,8 +46,8 @@ protected:
    void UpdateUsedSpace();
 
 public:
-   TProofDataSetManagerFile(const char *group = 0, const char *user = 0, const char *ins = 0);
-   virtual ~TProofDataSetManagerFile() { }
+   TDataSetManagerFile(const char *group = 0, const char *user = 0, const char *ins = 0);
+   virtual ~TDataSetManagerFile() { }
 
    void ParseInitOpts(const char *opts);
 
@@ -67,7 +67,7 @@ public:
    Int_t WriteDataSet(const char *group, const char *user, const char *dsName,
                       TFileCollection *dataset, UInt_t option = 0, TMD5 *checksum = 0);
 
-   ClassDef(TProofDataSetManagerFile, 0) // DataSet manager for files
+   ClassDef(TDataSetManagerFile, 0) // DataSet manager for files
 };
 
 #endif
