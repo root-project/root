@@ -50,7 +50,7 @@ protected:
   // Function evaluation and error tracing
   const char* traceEval() const ;
   virtual Bool_t traceEvalHook(const char* value) const ;
-  virtual TString evaluate() const { return 0 ; }
+  virtual TString evaluate() const { return "" ; }
 
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;
