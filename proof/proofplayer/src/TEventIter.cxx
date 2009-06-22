@@ -372,8 +372,8 @@ Long64_t TEventIterObj::GetNextEvent()
 //------------------------------------------------------------------------
 
 //______________________________________________________________________________
-TEventIterTree::TFileTree::TFileTree(const char *name, TFile *f)
-               : TNamed(name, ""), fUsed(kFALSE), fFile(f)
+TEventIterTree::TFileTree::TFileTree(const char *name, TFile *f, Bool_t islocal)
+               : TNamed(name, ""), fUsed(kFALSE), fIsLocal(islocal), fFile(f)
 {
    // Default ctor.
 
@@ -439,11 +439,12 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    while ((ft = (TFileTree *)nxft()))
       ft->fUsed = kFALSE;
 
-   TTree* main = Load(elem);
+   Bool_t localfile = kFALSE;
+   TTree* main = Load(elem, localfile);
 
    if (main && main != fTree) {
       // Set the file cache
-      if (fUseTreeCache) {
+      if (fUseTreeCache && !localfile) {
          TFile *curfile = main->GetCurrentFile();
          if (!fTreeCache) {
             main->SetCacheSize(fCacheSize);
@@ -452,7 +453,11 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
             curfile->SetCacheRead(fTreeCache);
             fTreeCache->UpdateBranches(main, kTRUE);
          }
+      } else {
+         fTreeCache = 0;
       }
+
+      Bool_t loc = kFALSE;
       // Also the friends
       TList *friends = elem->GetListOfFriends();
       if (friends) {
@@ -461,7 +466,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
          while ((p = (TPair *) nxf())) {
             TDSetElement *dse = (TDSetElement *) p->Key();
             TObjString *str = (TObjString *) p->Value();
-            TTree* friendTree = Load(dse);
+            TTree* friendTree = Load(dse, loc);
             if (friendTree) {
                main->AddFriend(friendTree, str->GetName());
             } else {
@@ -485,7 +490,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
 }
 
 //______________________________________________________________________________
-TTree* TEventIterTree::Load(TDSetElement *e)
+TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
 {
    // Load a tree from s TDSetElement
 
@@ -519,8 +524,11 @@ TTree* TEventIterTree::Load(TDSetElement *e)
       TString fname = gEnv->GetValue("Path.Localroot","");
       if (!fname.IsNull())
          typ = TFile::GetType(fn, "", &fname);
-      if (typ != TFile::kLocal)
+      if (typ != TFile::kLocal) {
          fname = fn;
+      } else {
+         localfile = kTRUE;
+      }
 
       // Open the file
       f = TFile::Open(fname);
@@ -530,8 +538,11 @@ TTree* TEventIterTree::Load(TDSetElement *e)
       }
 
       // Create TFileTree instance in the list
-      ft = new TFileTree(TUrl(f->GetName()).GetFileAndOptions(), f);
+      ft = new TFileTree(TUrl(f->GetName()).GetFileAndOptions(), f, localfile);
       fFileTrees->Add(ft);
+   } else {
+      // Fill locality boolean
+      localfile = (ft) ? ft->fIsLocal : localfile;
    }
 
    // Check if the tree is already loaded

@@ -141,13 +141,14 @@ private:
    class TFileTree : public TNamed {
    public:
       Bool_t    fUsed;
+      Bool_t    fIsLocal;
       TFile    *fFile;
       TList    *fTrees;
-      TFileTree(const char *name, TFile *f);
+      TFileTree(const char *name, TFile *f, Bool_t islocal);
       virtual ~TFileTree();
    };
 
-   TTree* Load(TDSetElement *elem);
+   TTree* Load(TDSetElement *elem, Bool_t &localfile);
    TTree* GetTrees(TDSetElement *elem);
 public:
    TEventIterTree();
