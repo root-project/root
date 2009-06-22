@@ -677,6 +677,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   testList.push_back(new TestBasic311(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic312(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic313(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic315(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic314(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic316(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic402(fref,writeRef,doVerbose)) ;
@@ -692,6 +693,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   testList.push_back(new TestBasic605(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic606(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic607(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic609(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic701(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic702(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic703(fref,writeRef,doVerbose)) ;

@@ -2999,6 +2999,103 @@ public:
   return kTRUE;
   }
 } ;
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #315
+// 
+// Marginizalization of multi-dimensional p.d.f.s through integration
+//
+//
+//
+// 07/2008 - Wouter Verkerke 
+// 
+/////////////////////////////////////////////////////////////////////////
+
+#ifndef __CINT__
+#include "RooGlobalFunc.h"
+#endif
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooGaussian.h"
+#include "RooProdPdf.h"
+#include "RooPolyVar.h"
+#include "TH1.h"
+#include "TCanvas.h"
+#include "RooPlot.h"
+#include "RooNumIntConfig.h"
+#include "RooConstVar.h"
+using namespace RooFit ;
+
+
+
+class TestBasic315 : public RooFitTestUnit
+{
+public: 
+  TestBasic315(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("P.d.f. marginalization through integration",refFile,writeRef,verbose) {} ;
+  Bool_t testCode() {
+
+    // C r e a t e   p d f   m ( x , y )  =  g x ( x | y ) * g ( y )
+    // --------------------------------------------------------------
+    
+    // Increase default precision of numeric integration
+    // as this exercise has high sensitivity to numeric integration precision
+    RooAbsPdf::defaultIntegratorConfig()->setEpsRel(1e-8) ;
+    RooAbsPdf::defaultIntegratorConfig()->setEpsAbs(1e-8) ;
+    
+    // Create observables
+    RooRealVar x("x","x",-5,5) ;
+    RooRealVar y("y","y",-2,2) ;
+    
+    // Create function f(y) = a0 + a1*y
+    RooRealVar a0("a0","a0",0) ;
+    RooRealVar a1("a1","a1",-1.5,-3,1) ;
+    RooPolyVar fy("fy","fy",y,RooArgSet(a0,a1)) ;
+    
+    // Create gaussx(x,f(y),sx)
+    RooRealVar sigmax("sigmax","width of gaussian",0.5) ;
+    RooGaussian gaussx("gaussx","Gaussian in x with shifting mean in y",x,fy,sigmax) ;  
+    
+    // Create gaussy(y,0,2)
+    RooGaussian gaussy("gaussy","Gaussian in y",y,RooConst(0),RooConst(2)) ;
+    
+    // Create gaussx(x,sx|y) * gaussy(y)
+    RooProdPdf model("model","gaussx(x|y)*gaussy(y)",gaussy,Conditional(gaussx,x)) ;
+    
+    
+    
+    // M a r g i n a l i z e   m ( x , y )   t o   m ( x ) 
+    // ----------------------------------------------------
+    
+    // modelx(x) = Int model(x,y) dy
+    RooAbsPdf* modelx = model.createProjection(y) ;
+    
+    
+    
+    // U s e   m a r g i n a l i z e d   p . d . f .   a s   r e g u l a r   1 - D   p . d . f .
+    // ------------------------------------------------------------------------------------------
+    
+    // Sample 1000 events from modelx
+    RooAbsData* data = modelx->generateBinned(x,1000) ;
+    
+    // Fit modelx to toy data
+    modelx->fitTo(*data) ;
+    
+    // Plot modelx over data
+    RooPlot* frame = x.frame(40) ;
+    data->plotOn(frame) ;
+    modelx->plotOn(frame) ;
+    
+    regPlot(frame,"rf315_frame") ;
+    return kTRUE ;
+  }
+} ;
+
+
+
+
+
 //////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #316
@@ -4767,6 +4864,105 @@ public:
 
   }
 } ;
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #609
+// 
+// Setting up a chi^2 fit to an unbinned dataset with X,Y,err(Y)
+// values (and optionally err(X) values)
+//
+//
+//
+// 07/2008 - Wouter Verkerke 
+// 
+/////////////////////////////////////////////////////////////////////////
+
+
+#ifndef __CINT__
+#include "RooGlobalFunc.h"
+#endif
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooPolyVar.h"
+#include "RooChi2Var.h"
+#include "RooMinuit.h"
+#include "TCanvas.h"
+#include "RooPlot.h"
+#include "TRandom.h"
+
+using namespace RooFit ;
+
+class TestBasic609 : public RooFitTestUnit
+{
+public: 
+  TestBasic609(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Chi^2 fit to X-Y dataset",refFile,writeRef,verbose) {} ;
+  Bool_t testCode() {
+
+  // C r e a t e   d a t a s e t   w i t h   X   a n d   Y   v a l u e s
+  // -------------------------------------------------------------------
+
+  // Make weighted XY dataset with asymmetric errors stored
+  // The StoreError() argument is essential as it makes
+  // the dataset store the error in addition to the values
+  // of the observables. If errors on one or more observables
+  // are asymmetric, one can store the asymmetric error
+  // using the StoreAsymError() argument
+
+  RooRealVar x("x","x",-11,11) ;
+  RooRealVar y("y","y",-10,200) ;
+  RooDataSet dxy("dxy","dxy",RooArgSet(x,y),StoreError(RooArgSet(x,y))) ;
+
+  // Fill an example dataset with X,err(X),Y,err(Y) values
+  for (int i=0 ; i<=10 ; i++) {
+
+    // Set X value and error
+    x = -10 + 2*i;
+    x.setError( i<5 ? 0.5/1. : 1.0/1. ) ;
+    
+    // Set Y value and error 
+    y = x.getVal() * x.getVal() + 4*fabs(RooRandom::randomGenerator()->Gaus()) ;
+    y.setError(sqrt(y.getVal())) ;
+
+    dxy.add(RooArgSet(x,y)) ;    
+  }
+
+
+
+  // P e r f o r m   c h i 2   f i t   t o   X + / - d x   a n d   Y + / - d Y   v a l u e s
+  // ---------------------------------------------------------------------------------------
+
+  // Make fit function
+  RooRealVar a("a","a",0.0,-10,10) ;
+  RooRealVar b("b","b",0.0,-100,100) ;
+  RooPolyVar f("f","f",x,RooArgList(b,a,RooConst(1))) ;
+
+  // Plot dataset in X-Y interpretation
+  RooPlot* frame = x.frame(Title("Chi^2 fit of function set of (X#pmdX,Y#pmdY) values")) ;
+  dxy.plotOnXY(frame,YVar(y)) ;
+
+  // Fit chi^2 using X and Y errors 
+  f.chi2FitTo(dxy,YVar(y)) ;
+
+  // Overlay fitted function
+  f.plotOn(frame) ;
+  
+  // Alternative: fit chi^2 integrating f(x) over ranges defined by X errors, rather
+  // than taking point at center of bin
+  f.chi2FitTo(dxy,YVar(y),Integrate(kTRUE)) ;
+
+  // Overlay alternate fit result
+  f.plotOn(frame,LineStyle(kDashed),LineColor(kRed),Name("alternate")) ;  
+
+  regPlot(frame,"rf609_frame") ;  
+
+  return kTRUE ;
+  }
+} ;
+
+
+
 //////////////////////////////////////////////////////////////////////////
 //
 // 'SPECIAL PDFS' RooFit tutorial macro #701
