@@ -237,6 +237,7 @@ TFoam::~TFoam()
       for(i=0; i<fNCells; i++) delete fCells[i]; // TFoamCell*[]
       delete [] fCells;
    }
+   if (fCellsAct) delete fCellsAct ; // WVE FIX LEAK
    delete [] fRvec;    //double[]
    delete [] fAlpha;   //double[]
    delete [] fMCvect;  //double[]
