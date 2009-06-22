@@ -416,17 +416,21 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
    // don't do it if the user has specified the branches.
    if(fIsManual)
       return;
-   
+
    fEntryMin  = emin;
    fEntryMax  = emax;
    fEntryNext  = fEntryMin + fgLearnEntries;
-   if (gDebug > 0) printf("SetEntryRange: fEntryMin=%lld, fEntryMax=%lld, fEntryNext=%lld\n",fEntryMin,fEntryMax,fEntryNext);
-   fIsLearning = kTRUE;
-   fIsManual = kFALSE;
-   fNbranches  = 0;
-   fZipBytes   = 0;
-   if (fBrNames) fBrNames->Delete();
-
+   if (gDebug > 0)
+      Info("SetEntryRange", "fEntryMin=%lld, fEntryMax=%lld, fEntryNext=%lld",
+                             fEntryMin, fEntryMax, fEntryNext);
+   if (fIsLearning) {
+      // Restart learning
+      fIsLearning = kTRUE;
+      fIsManual = kFALSE;
+      fNbranches  = 0;
+      fZipBytes   = 0;
+      if (fBrNames) fBrNames->Delete();
+   }
 }
 
 //_____________________________________________________________________________
