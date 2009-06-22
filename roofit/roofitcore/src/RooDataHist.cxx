@@ -742,7 +742,8 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   RooAbsArg* rvarg ;
   while((rvarg=(RooAbsArg*)_iterator->Next())) {
     _lvvars.push_back(dynamic_cast<RooAbsLValue*>(rvarg)) ;
-    _lvbins.push_back(dynamic_cast<RooAbsLValue*>(rvarg)->getBinningPtr(0)) ;
+    const RooAbsBinning *binning = dynamic_cast<RooAbsLValue*>(rvarg)->getBinningPtr(0) ;
+    _lvbins.push_back(binning ? binning->clone() : 0) ;    
   }
 
  appendToDir(this,kTRUE) ;
@@ -874,8 +875,12 @@ RooDataHist::~RooDataHist()
   if (_idxMult) delete[] _idxMult ;
   if (_realIter) delete _realIter ;
   if (_binValid) delete[] _binValid ;
-
-   removeFromDir(this) ;
+  
+  for (list<const RooAbsBinning*>::iterator iter = _lvbins.begin() ;iter!=_lvbins.end() ; ++iter) {
+    delete (*iter) ;
+  }
+  
+  removeFromDir(this) ;
 }
 
 

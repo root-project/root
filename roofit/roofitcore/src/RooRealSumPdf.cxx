@@ -184,6 +184,8 @@ RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
 RooRealSumPdf::~RooRealSumPdf()
 {
   // Destructor
+  delete _funcIter ;
+  delete _coefIter ;
 }
 
 
@@ -324,6 +326,10 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   // Store cache element
   Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,0) ;
+
+  if (normSet) {
+    delete normSet ;
+  }
 
   return code+1 ; 
 }

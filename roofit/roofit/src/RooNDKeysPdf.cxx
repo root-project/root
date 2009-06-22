@@ -657,6 +657,7 @@ RooNDKeysPdf::loadWeightSet() const
       _wMap[i] = _weight; 
     }
   }
+  delete weightObs ;
 
   coutI(Contents) << "RooNDKeysPdf::loadWeightSet(" << this << ") : Number of weighted events : " << _wMap.size() << endl;
 }

@@ -121,9 +121,9 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 //_____________________________________________________________________________
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& hdata,
 		       Bool_t extended, const char* cutRange, const char* addCoefRange,
-		       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
+		       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange, RooDataHist::ErrorType etype) : 
   RooAbsOptTestStatistic(name,title,pdf,hdata,RooArgSet(),cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
-   _etype(RooAbsData::SumW2), _funcMode(extended?ExtendedPdf:Pdf)
+   _etype(etype), _funcMode(extended?ExtendedPdf:Pdf)
 {
   // Constructor of a chi2 for given p.d.f. with respect given binned
   // dataset. If cutRange is specified the calculation of the chi2 is
@@ -146,9 +146,9 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 //_____________________________________________________________________________
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& hdata,
 		       const RooArgSet& projDeps, RooChi2Var::FuncMode fmode, const char* cutRange, const char* addCoefRange, 
-		       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
+		       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange, RooDataHist::ErrorType etype) : 
   RooAbsOptTestStatistic(name,title,func,hdata,projDeps,cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
-  _etype(RooAbsData::SumW2), _funcMode(fmode)
+  _etype(etype), _funcMode(fmode)
 {
   // Constructor of a chi2 for given p.d.f. with respect given binned
   // dataset taking the observables specified in projDeps as projected

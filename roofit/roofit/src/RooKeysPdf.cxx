@@ -163,7 +163,6 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
   Double_t hmin=h*sigma*sqrt(2.)/10;
   Double_t norm=h*sqrt(sigma)/(2.0*sqrt(3.0));
 
-  _weights=new Double_t[_nEvents];
   for(Int_t j=0;j<_nEvents;++j) {
     _weights[j]=norm/sqrt(g(_dataPts[j],h*sigma));
     if (_weights[j]<hmin) _weights[j]=hmin;

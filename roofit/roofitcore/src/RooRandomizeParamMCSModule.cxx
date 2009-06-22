@@ -310,6 +310,7 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
       RooRealVar* par_gen = new RooRealVar(parName.Data(),parTitle.Data(),0) ;    
       _genParSet.addOwned(*par_gen) ;          
     }
+    delete iter ;
   }
   
   // Loop over all gaussian smearing set of parameters

@@ -25,7 +25,7 @@ class RooCurve ;
 
 class RooHist : public TGraphAsymmErrors, public RooPlotable {
 public:
-  RooHist() {} ;
+  RooHist() ;
   RooHist(Double_t nominalBinWidth, Double_t nSigma= 1, Double_t xErrorFrac=1.0, Double_t scaleFactor=1.0);
   RooHist(const TH1 &data, Double_t nominalBinWidth= 0, Double_t nSigma= 1, RooAbsData::ErrorType=RooAbsData::Poisson, 
 	  Double_t xErrorFrac=1.0, Bool_t correctForBinWidth=kTRUE, Double_t scaleFactor=1.);

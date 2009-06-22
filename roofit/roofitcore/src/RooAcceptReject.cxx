@@ -89,6 +89,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   while((cat=(RooAbsCategory*)iter->Next())) {
     _catSampleMult *=  cat->numTypes() ;
   }
+  delete iter ;
 
 
   // calculate the minimum number of trials needed to estimate our integral and max value

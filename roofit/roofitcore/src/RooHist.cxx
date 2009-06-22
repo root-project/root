@@ -39,6 +39,19 @@
 #include <math.h>
 
 ClassImp(RooHist)
+  ;
+
+
+//_____________________________________________________________________________
+RooHist::RooHist() :
+  _nominalBinWidth(1),
+  _nSigma(1),
+  _entries(0),
+  _rawEntries(0)
+{
+  // Default constructor
+}
+
 
 
 //_____________________________________________________________________________

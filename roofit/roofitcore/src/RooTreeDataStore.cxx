@@ -160,7 +160,6 @@ RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, RooAbsDa
   createTree(name,title) ;
 
   // Deep clone cutVar and attach clone to this dataset
-  RooArgSet* cloneVarSet = 0;
   RooFormulaVar* cloneVar = 0;
   if (cutVar) {    
     cloneVar = (RooFormulaVar*) cutVar->cloneTree() ;
@@ -175,7 +174,7 @@ RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, RooAbsDa
 
   // WVE copy values of cached variables here!!!
 
-  if (cloneVarSet) delete cloneVarSet ;
+  if (cloneVar) delete cloneVar ;
 }
 
 
@@ -234,6 +233,12 @@ RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const RooArgSe
 RooTreeDataStore::~RooTreeDataStore()
 {
   // Destructor
+  if (_tree) {
+    delete _tree ;
+  }
+  if (_cacheTree) {
+    delete _cacheTree ;
+  }
 }
 
 
