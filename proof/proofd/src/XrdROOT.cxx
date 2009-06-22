@@ -338,7 +338,7 @@ int XrdROOTMgr::DoDirectiveRootSys(char *val, XrdOucStream *cfg, bool)
 
    // Two tokens may be meaningful
    XrdOucString dir = val;
-   val = cfg->GetToken();
+   val = cfg->GetWord();
    XrdOucString tag = val;
    bool ok = 1;
    if (tag == "if") {
@@ -351,7 +351,7 @@ int XrdROOTMgr::DoDirectiveRootSys(char *val, XrdOucStream *cfg, bool)
       // Check for additional info in the form: bindir incdir libdir datadir
       XrdOucString a[4];
       int i = 0;
-      while ((val = cfg->GetToken())) { a[i++] = val; }
+      while ((val = cfg->GetWord())) { a[i++] = val; }
       XrdROOT *rootc = new XrdROOT(dir.c_str(), tag.c_str(), a[0].c_str(),
                                    a[1].c_str(), a[2].c_str(), a[3].c_str());
       // Check if already validated

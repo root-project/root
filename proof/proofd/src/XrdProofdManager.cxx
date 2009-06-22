@@ -33,6 +33,7 @@
 #  include "XrdSys/XrdSysTimer.hh"
 #endif
 #include "XrdNet/XrdNetDNS.hh"
+#include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"
 
 #include "XrdProofdAdmin.h"
@@ -355,7 +356,8 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
 
    // Locate first the relevant directives in the config file
    if (cfn && strlen(cfn) > 0) {
-      XrdOucStream cfg(fEDest, getenv("XRDINSTANCE"));
+      XrdOucEnv myEnv;
+      XrdOucStream cfg(fEDest, getenv("XRDINSTANCE"), &myEnv);
       // Open and attach the config file
       int cfgFD;
       if ((cfgFD = open(cfn, O_RDONLY, 0)) >= 0) {
@@ -365,11 +367,11 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
          while ((var = cfg.GetMyFirstWord())) {
             if (!(strcmp("xpd.sched", var))) {
                // Get the name
-               val = cfg.GetToken();
+               val = cfg.GetWord();
                if (val && val[0]) {
                   name = val;
                   // Get the lib
-                  val = cfg.GetToken();
+                  val = cfg.GetWord();
                   if (val && val[0])
                      lib = val;
                   // We are done
@@ -888,7 +890,7 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
    } else if (d->fName == "datasetsrc") {
       return DoDirectiveDataSetSrc(val, cfg, rcf);
    } else if (d->fName == "xrd.protocol") {
-      val = cfg->GetToken();
+      val = cfg->GetWord();
       return DoDirectivePort(val, cfg, rcf);
    }
    TRACE(XERR, "unknown directive: "<<d->fName);
@@ -986,7 +988,7 @@ int XrdProofdManager::DoDirectiveTrace(char *val, XrdOucStream *cfg, bool)
       }
 
       // Next
-      val = cfg->GetToken();
+      val = cfg->GetWord();
    }
 
    return 0;
@@ -1227,7 +1229,7 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
    XrdOucString type(val), url, opts;
    bool rw = 0, local = 0, goodsrc = 1;
    char *nxt = 0;
-   while ((nxt = cfg->GetToken())) {
+   while ((nxt = cfg->GetWord())) {
       XPDPRT("tok: " << nxt);
       if (!strcmp(nxt, "rw=1")) {
          rw = 1;

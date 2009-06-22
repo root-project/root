@@ -228,7 +228,7 @@ int XrdProofdClientMgr::DoDirectiveClientMgr(char *val, XrdOucStream *cfg, bool)
          activityto = strtol(tok.c_str(), 0, 10);
       }
       // Get next
-      val = cfg->GetToken();
+      val = cfg->GetWord();
    }
 
    // Check deprecated 'if' directive
@@ -954,7 +954,7 @@ int XrdProofdClientMgr::CheckClients()
                      if (fActivityTimeOut > 0 &&
                          (int)(time(0) - st.st_atime) > fActivityTimeOut) {
                         if (c->Touch() == 1) {
-                           // The client was aredy asked to proof its vitality
+                           // The client was already asked to proof its vitality
                            // during last cycle and it did not do it, so we close
                            // the link
                            xclose = 1;
@@ -1222,7 +1222,7 @@ char *XrdProofdClientMgr::FilterSecConfig(int &nd)
    // to release the memory allocated for the path.
    XPDLOC(CMGR, "ClientMgr::FilterSecConfig")
 
-   static const char *pfx[] = { "xpd.sec.", "sec.protparm", "sec.protocol" };
+   static const char *pfx[] = { "xpd.sec.", "sec.protparm", "sec.protocol", "set" };
    char *rcfn = 0;
 
    TRACE(REQ, "enter");
@@ -1244,7 +1244,8 @@ char *XrdProofdClientMgr::FilterSecConfig(int &nd)
    while (fgets(lin,sizeof(lin),fin)) {
       if (!strncmp(lin, pfx[0], strlen(pfx[0])) ||
           !strncmp(lin, pfx[1], strlen(pfx[1])) ||
-          !strncmp(lin, pfx[2], strlen(pfx[2]))) {
+          !strncmp(lin, pfx[2], strlen(pfx[2])) ||
+          !strncmp(lin, pfx[3], strlen(pfx[3]))) {
          // Target directive found
          nd++;
          // Create the output file, if not yet done
@@ -1261,7 +1262,7 @@ char *XrdProofdClientMgr::FilterSecConfig(int &nd)
          }
          XrdOucString slin = lin;
          // Strip the prefix "xpd."
-         slin.replace("xpd.","");
+         if (slin.beginswith("xpd.")) slin.replace("xpd.","");
          // Make keyword substitution
          fMgr->ResolveKeywords(slin, 0);
          // Write the line to the output file

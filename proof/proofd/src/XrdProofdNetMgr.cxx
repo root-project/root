@@ -51,6 +51,7 @@ XrdProofdNetMgr::XrdProofdNetMgr(XrdProofdManager *mgr,
    fPROOFcfg.fName = "";
    fPROOFcfg.fMtime = 0;
    fReloadPROOFcfg = 1;
+   fDfltFallback = 0;
    fWorkers.clear();
    fNodes.clear();
    fNumLocalWrks = XrdProofdAux::GetNumCPUs();
@@ -120,18 +121,27 @@ int XrdProofdNetMgr::Config(bool rcf)
       if (fResourceType == kRTStatic) {
          // Initialize the list of workers if a static config has been required
          // Default file path, if none specified
-         if (fPROOFcfg.fName.length() <= 0) {
-            CreateDefaultPROOFcfg();
-         } else {
+         bool dodefault = 1;
+         if (fPROOFcfg.fName.length() > 0) {
             // Load file content in memory
-            if (ReadPROOFcfg() != 0) {
-               XPDERR("unable to find valid information in PROOF config file "<<
-                      fPROOFcfg.fName);
-               fPROOFcfg.fMtime = 0;
-               return 0;
+            if (ReadPROOFcfg() == 0) {
+               TRACE(ALL, "PROOF config file will " <<
+                          ((fReloadPROOFcfg) ? "" : "not ") <<"be reloaded upon change");
+               dodefault = 0;
+            } else {
+               if (!fDfltFallback) {
+                  XPDERR("unable to find valid information in PROOF config file "<<
+                        fPROOFcfg.fName);
+                  fPROOFcfg.fMtime = 0;
+                  return 0;
+               } else {
+                  TRACE(ALL, "file "<<fPROOFcfg.fName<<" cannot be parsed: use default configuration to start with");
+               }
             }
-            TRACE(ALL, "PROOF config file will " <<
-                      ((fReloadPROOFcfg) ? "" : "not ") <<"be reloaded upon change");
+         }
+         if (dodefault) {
+            // Use default
+            CreateDefaultPROOFcfg();
          }
       } else if (fResourceType == kRTNone && fWorkers.size() <= 1) {
          // Nothing defined: use default
@@ -207,12 +217,14 @@ int XrdProofdNetMgr::DoDirectiveResource(char *val, XrdOucStream *cfg, bool)
       // We just take the path of the config file here; the
       // rest is used by the static scheduler
       fResourceType = kRTStatic;
-      while ((val = cfg->GetToken()) && val[0]) {
+      while ((val = cfg->GetWord()) && val[0]) {
          XrdOucString s(val);
          if (s.beginswith("ucfg:")) {
             fWorkerUsrCfg = s.endswith("yes") ? 1 : 0;
          } else if (s.beginswith("reload:")) {
             fReloadPROOFcfg = (s.endswith("1") || s.endswith("yes")) ? 1 : 0;
+         } else if (s.beginswith("dfltfallback:")) {
+            fDfltFallback = (s.endswith("1") || s.endswith("yes")) ? 1 : 0;
          } else if (s.beginswith("wmx:")) {
          } else if (s.beginswith("selopt:")) {
          } else {
@@ -224,10 +236,13 @@ int XrdProofdNetMgr::DoDirectiveResource(char *val, XrdOucStream *cfg, bool)
             XrdProofdAux::Expand(fPROOFcfg.fName);
             // Make sure it exists and can be read
             if (access(fPROOFcfg.fName.c_str(), R_OK)) {
-               TRACE(XERR,"configuration file cannot be read: "<<
-                          fPROOFcfg.fName);
-               fPROOFcfg.fName = "";
-               fPROOFcfg.fMtime = 0;
+               if (errno == ENOENT) {
+                  TRACE(ALL,"WARNING: configuration file does not exists: "<< fPROOFcfg.fName);
+               } else {
+                  TRACE(XERR,"configuration file cannot be read: "<< fPROOFcfg.fName);
+                  fPROOFcfg.fName = "";
+                  fPROOFcfg.fMtime = 0;
+               }
             }
          }
       }
@@ -247,14 +262,15 @@ int XrdProofdNetMgr::DoDirectiveWorker(char *val, XrdOucStream *cfg, bool)
 
    // Get the full line (w/o heading keyword)
    cfg->RetToken();
-   char *rest = 0;
-   val = cfg->GetToken(&rest);
-   if (val) {
+   XrdOucString wrd(cfg->GetWord());
+   if (wrd.length() > 0) {
       // Build the line
       XrdOucString line;
-      XPDFORM(line, "%s %s", val, rest);
+      char rest[2048] = {0};
+      cfg->GetRest((char *)&rest[0], 2048);
+      XPDFORM(line, "%s %s", wrd.c_str(), rest);
       // Parse it now
-      if (!strcmp(val, "master") || !strcmp(val, "node")) {
+      if (wrd == "master" || wrd == "node") {
          // Init a master instance
          XrdProofWorker *pw = new XrdProofWorker(line.c_str());
          if (pw->fHost == "localhost" ||
@@ -1020,7 +1036,16 @@ void XrdProofdNetMgr::CreateDefaultPROOFcfg()
 
    TRACE(DBG, "enter: local workers: "<< fNumLocalWrks);
 
-   XrdOucString mm;
+   // Cleanup the worker list
+   std::list<XrdProofWorker *>::iterator w = fWorkers.begin();
+   while (w != fWorkers.end()) {
+      delete *w;
+      w = fWorkers.erase(w);
+   }
+   // Create a default master line
+   XrdOucString mm("master ",128);
+   mm += fMgr->Host();
+   fWorkers.push_back(new XrdProofWorker(mm.c_str()));
 
    // Create 'localhost' lines for each worker
    int nwrk = fNumLocalWrks;
@@ -1034,6 +1059,9 @@ void XrdProofdNetMgr::CreateDefaultPROOFcfg()
    }
 
    TRACE(DBG, "done: "<<fWorkers.size()-1<<" workers");
+
+   // Find unique nodes
+   FindUniqueNodes();
 
    // We are done
    return;
@@ -1051,8 +1079,14 @@ std::list<XrdProofWorker *> *XrdProofdNetMgr::GetActiveWorkers()
    if (fResourceType == kRTStatic && fPROOFcfg.fName.length() > 0) {
       // Check if there were any changes in the config file
       if (fReloadPROOFcfg && ReadPROOFcfg(1) != 0) {
-         TRACE(XERR, "unable to read the configuration file");
-         return (std::list<XrdProofWorker *> *)0;
+         if (fDfltFallback) {
+            // Use default settings
+            CreateDefaultPROOFcfg();
+            TRACE(DBG, "parsing of "<<fPROOFcfg.fName<<" failed: use default settings");
+         } else {
+            TRACE(XERR, "unable to read the configuration file");
+            return (std::list<XrdProofWorker *> *)0;
+         }
       }
    }
    TRACE(DBG,  "returning list with "<<fWorkers.size()<<" entries");
@@ -1096,8 +1130,14 @@ std::list<XrdProofWorker *> *XrdProofdNetMgr::GetNodes()
    if (fResourceType == kRTStatic && fPROOFcfg.fName.length() > 0) {
       // Check if there were any changes in the config file
       if (fReloadPROOFcfg && ReadPROOFcfg(1) != 0) {
-         TRACE(XERR, "unable to read the configuration file");
-         return (std::list<XrdProofWorker *> *)0;
+         if (fDfltFallback) {
+            // Use default settings
+            CreateDefaultPROOFcfg();
+            TRACE(DBG, "parsing of "<<fPROOFcfg.fName<<" failed: use default settings");
+         } else {
+            TRACE(XERR, "unable to read the configuration file");
+            return (std::list<XrdProofWorker *> *)0;
+         }
       }
    }
    TRACE(DBG, "returning list with "<<fNodes.size()<<" entries");
@@ -1122,13 +1162,15 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
    // Get the modification time
    struct stat st;
    if (stat(fPROOFcfg.fName.c_str(), &st) != 0) {
-      if (fWorkers.size() > 1) {
-        TRACE(XERR, "unable to stat file: "<<fPROOFcfg.fName<<" - errno: "<<errno);
-        TRACE(XERR, "continuing with existing list of workers.");
-        return 0;
+      // If the file disappeared, reset the modification time so that we are sure
+      // to reload it if it comes back
+      if (errno == ENOENT) fPROOFcfg.fMtime = 0;
+      if (!fDfltFallback) {
+         TRACE(XERR, "unable to stat file: "<<fPROOFcfg.fName<<" - errno: "<<errno);
       } else {
-        return -1;
+         TRACE(ALL, "file "<<fPROOFcfg.fName<<" cannot be parsed: use default configuration");
       }
+      return -1;
    }
    TRACE(DBG, "time of last modification: " << st.st_mtime);
 

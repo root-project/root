@@ -52,6 +52,7 @@ private:
    int                fResourceType;   // resource type
    XrdProofdFile      fPROOFcfg;       // PROOF static configuration
    bool               fReloadPROOFcfg; // Whether the file should regurarl checked for updates
+   bool               fDfltFallback;   // Whether to fallback to default if file cannot be read
    bool               fWorkerUsrCfg;   // user cfg files enabled / disabled
    int                fRequestTO;      // Timeout on broadcast request
 

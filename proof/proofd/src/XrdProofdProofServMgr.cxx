@@ -1174,7 +1174,7 @@ int XrdProofdProofServMgr::DoDirectiveProofServMgr(char *val, XrdOucStream *cfg,
          checklost = strtol(tok.c_str(), 0, 10);
       }
       // Get next
-      val = cfg->GetToken();
+      val = cfg->GetWord();
    }
 
    // Check deprecated 'if' directive
@@ -1228,7 +1228,7 @@ int XrdProofdProofServMgr::DoDirectivePutRc(char *val, XrdOucStream *cfg, bool)
    if (fProofServRCs.length() > 0)
       fProofServRCs += ',';
    fProofServRCs += val;
-   while ((val = cfg->GetToken()) && val[0]) {
+   while ((val = cfg->GetWord()) && val[0]) {
       fProofServRCs += ' ';
       fProofServRCs += val;
    }
@@ -1253,7 +1253,7 @@ int XrdProofdProofServMgr::DoDirectiveShutdown(char *val, XrdOucStream *cfg, boo
    if (dp >= 0 && dp <= 2)
       opt = dp;
    // Shutdown delay
-   if ((val = cfg->GetToken())) {
+   if ((val = cfg->GetWord())) {
       int l = strlen(val);
       int f = 1;
       XrdOucString tval = val;

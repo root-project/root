@@ -29,6 +29,7 @@
 #  include "XrdSys/XrdSysLogger.hh"
 #endif
 #include "XrdNet/XrdNetDNS.hh"
+#include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucString.hh"
 
@@ -130,7 +131,8 @@ int XrdProofdConfig::ParseFile(bool rcf)
    }
 
    // Create the stream and attach to the file
-   XrdOucStream cfg(fEDest, getenv("XRDINSTANCE"));
+   XrdOucEnv myEnv;
+   XrdOucStream cfg(fEDest, getenv("XRDINSTANCE"),  &myEnv);
    cfg.Attach(cfgFD);
 
    // Process items
@@ -139,13 +141,13 @@ int XrdProofdConfig::ParseFile(bool rcf)
       if (!(strncmp("xpd.", var, 4)) && var[4]) {
          // xpd directive: process it
          var += 4;
-         // Get the value
-         val = cfg.GetToken();
          // Get the directive
          XrdProofdDirective *d = fDirectives.Find(var);
-         if (d)
+         if (d) {
             // Process it
+            val = cfg.GetWord();
             d->DoDirective(val, &cfg, rcf);
+         }
       } else if (var[0]) {
          // Check if we are interested in this non-xpd directive
          XrdProofdDirective *d = fDirectives.Find(var);

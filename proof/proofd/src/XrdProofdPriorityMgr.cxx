@@ -422,8 +422,8 @@ int XrdProofdPriorityMgr::DoDirectivePriority(char *val, XrdOucStream *cfg, bool
    int dp = strtol(val,0,10);
    XrdProofdPriority *p = new XrdProofdPriority("*", dp);
    // Check if an 'if' condition is present
-   if ((val = cfg->GetToken()) && !strncmp(val,"if",2)) {
-      if ((val = cfg->GetToken()) && val[0]) {
+   if ((val = cfg->GetWord()) && !strncmp(val,"if",2)) {
+      if ((val = cfg->GetWord()) && val[0]) {
          p->fUser = val;
       }
    }
@@ -467,7 +467,7 @@ int XrdProofdPriorityMgr::DoDirectiveSchedOpt(char *val, XrdOucStream *cfg, bool
          if (XrdProofdAux::CheckIf(cfg, fMgr->Host()) == 0)
             return 0;
       // Next
-      val = cfg->GetToken();
+      val = cfg->GetWord();
    }
 
    // Set the values (we need to do it here to avoid setting wrong values

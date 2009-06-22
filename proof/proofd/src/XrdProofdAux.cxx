@@ -598,7 +598,7 @@ int XrdProofdAux::CheckIf(XrdOucStream *s, const char *host)
    XPDLOC(AUX, "")
 
    // There must be an 'if'
-   char *val = s ? s->GetToken() : 0;
+   char *val = s ? s->GetWord() : 0;
    if (!val || strncmp(val,"if",2)) {
       if (val)
          // allow the analysis of the token
@@ -607,7 +607,7 @@ int XrdProofdAux::CheckIf(XrdOucStream *s, const char *host)
    }
 
    // check value if any
-   val = s->GetToken();
+   val = s->GetWord();
    if (!val)
       return -1;
 

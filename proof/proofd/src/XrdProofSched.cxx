@@ -839,7 +839,7 @@ int XrdProofSched::DoDirectiveSchedParam(char *val, XrdOucStream *cfg, bool)
          ResetParameters();
          break;
       }
-      val = cfg->GetToken();
+      val = cfg->GetWord();
    }
 
    // If the max number of sessions is limited then there is no lower bound
@@ -873,7 +873,7 @@ int XrdProofSched::DoDirectiveResource(char *val, XrdOucStream *cfg, bool)
    if (strncmp(val, "static", 6) && strncmp(val, "default", 7))
       return 0;
    // Get the values
-   while ((val = cfg->GetToken()) && val[0]) {
+   while ((val = cfg->GetWord()) && val[0]) {
       XrdOucString s(val);
       if (s.beginswith("wmx:")) {
          s.replace("wmx:","");

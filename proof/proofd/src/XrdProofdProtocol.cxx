@@ -150,7 +150,7 @@ int XrdProofdProtCfg::DoDirective(XrdProofdDirective *d,
 
    XrdOucString port(val);
    if (d->fName == "xrd.protocol") {
-      port = cfg->GetToken();
+      port = cfg->GetWord();
       port.replace("xproofd:", "");
    } else if (d->fName != "port") {
       return -1;
