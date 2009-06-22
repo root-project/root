@@ -59,7 +59,7 @@ protected:
    void           SetFrameLength  (TGFrame* f, Int_t len);
    void           SetFramePosition(TGFrame* f, Int_t pos);
 
-   void           FindFrames(TGFrame* splitter, TGFrame*& f0, TGFrame*& f1) const;
+   void           FindFrames(TGFrame* splitter, TGFrameElementPack*& f0, TGFrameElementPack*& f1) const;
 
    void           CheckSplitterVisibility();
    void           ResizeExistingFrames();

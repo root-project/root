@@ -199,21 +199,20 @@ void TGPack::RefitFramesToPack()
 }
 
 //______________________________________________________________________________
-void TGPack::FindFrames(TGFrame* splitter, TGFrame*& f0, TGFrame*& f1) const
+void TGPack::FindFrames(TGFrame* splitter, TGFrameElementPack*& f0, TGFrameElementPack*& f1) const
 {
    // Find frames around splitter and return them f0 (previous) and f1 (next).
 
-   TGFrameElement *el;
+   TGFrameElementPack *el;
    TIter next(fList);
 
-   while ((el = (TGFrameElement *) next()))
+   while ((el = (TGFrameElementPack *) next()))
    {
       if (el->fFrame == splitter)
          break;
-      f0 = el->fFrame;
+      f0 = el;
    }
-   el = (TGFrameElement *) next();
-   f1 = el->fFrame;
+   f1 = (TGFrameElementPack *) next();
 }
 
 
@@ -520,13 +519,14 @@ void TGPack::HandleSplitterResize(Int_t delta)
 {
    // Handle resize events from splitters.
 
-   Int_t min_dec = - (GetAvailableLength() + fNVisible*2 -1);
+   Int_t available = GetAvailableLength();
+   Int_t min_dec = - (available + fNVisible*2 -1);
    if (delta <  min_dec)
       delta = min_dec;
 
    TGSplitter *s = dynamic_cast<TGSplitter*>((TGFrame*) gTQSender);
 
-   TGFrame *f0=0, *f1=0;
+   TGFrameElementPack *f0=0, *f1=0;
    FindFrames(s, f0, f1);
 
    if (fDragOverflow < 0)
@@ -550,28 +550,34 @@ void TGPack::HandleSplitterResize(Int_t delta)
       }
    }
 
+   Int_t l0 = GetFrameLength(f0->fFrame);
+   Int_t l1 = GetFrameLength(f1->fFrame);
    if (delta < 0)
    {
-      Int_t l = GetFrameLength(f0);
-      if (l - 1 < -delta)
+      if (l0 - 1 < -delta)
       {
-         fDragOverflow += delta + l - 1;
-         delta = -l + 1;
+         fDragOverflow += delta + l0 - 1;
+         delta = -l0 + 1;
       }
-      SetFrameLength(f0, l + delta);
-      SetFrameLength(f1, GetFrameLength(f1) - delta);
    }
    else
    {
-      Int_t l = GetFrameLength(f1);
-      if (l - 1 < delta)
+      if (l1 - 1 < delta)
       {
-         fDragOverflow += delta - l + 1;
-         delta = l - 1;
+         fDragOverflow += delta - l1 + 1;
+         delta = l1 - 1;
       }
-      SetFrameLength(f0, GetFrameLength(f0) + delta);
-      SetFrameLength(f1, l - delta);
    }
+   l0 += delta;
+   l1 -= delta;
+   SetFrameLength(f0->fFrame, l0);
+   SetFrameLength(f1->fFrame, l1);
+   Float_t weightDelta = Float_t(delta)/available;
+   weightDelta *= fWeightSum;
+   f0->fWeight += weightDelta;
+   f1->fWeight -= weightDelta;
+
+   ResizeExistingFrames();
    Layout();
 }
 
