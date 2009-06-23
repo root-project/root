@@ -61,7 +61,7 @@ $(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVAL)
 all-$(MODNAME): $(TMVALIB) $(TMVAMAP)
 
 clean-$(MODNAME):
-		@rm -f $(TMVAO) $(TMVADO)
+		@rm -f $(TMVADIRS)/*.o
 
 clean::         clean-tmva
 
