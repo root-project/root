@@ -46,7 +46,10 @@ END_HTML
 #include "RooStats/TestStatistic.h"
 #include "RooStats/RooStatsUtils.h"
 
+#ifndef __CINT__
 #include "RooGlobalFunc.h"
+#endif
+
 #include "RooWorkspace.h"
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"
