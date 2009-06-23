@@ -45,9 +45,8 @@ ClassImp(TDataSetManagerFile)
 
 //_____________________________________________________________________________
 TDataSetManagerFile::TDataSetManagerFile(const char *group,
-                                                   const char *user,
-                                                   const char *ins)
-                         : TDataSetManager(group, user, ins)
+                                         const char *user, const char *ins)
+                    : TDataSetManager(group, user, ins)
 {
    //
    // Main constructor
@@ -64,21 +63,21 @@ TDataSetManagerFile::TDataSetManagerFile(const char *group,
          if (gSystem->mkdir(dir, kTRUE) != 0) {
             TString emsg = dir;
             // Read only dataset info system: switch to COMMON
-	    fUser = fCommonUser;
-	    fGroup = fCommonGroup;
+            fUser = fCommonUser;
+            fGroup = fCommonGroup;
             ResetBit(TDataSetManager::kCheckQuota);
             ResetBit(TDataSetManager::kAllowRegister);
             ResetBit(TDataSetManager::kAllowVerify);
             ResetBit(TDataSetManager::kAllowStaging);
             dir.Form("%s/%s/%s", fDataSetDir.Data(), fGroup.Data(), fUser.Data());
-	    if (gSystem->AccessPathName(dir)) {
-		Error("TDataSetManagerFile",
-                      "could not attach to a valid the dataset dir; paths tried:");
-		Error("TDataSetManagerFile", "    %s", emsg.Data());
-		Error("TDataSetManagerFile", "    %s", dir.Data());
-		SetBit(TObject::kInvalidObject);
-		return;
-	    }
+            if (gSystem->AccessPathName(dir)) {
+               Error("TDataSetManagerFile",
+                     "could not attach to a valid the dataset dir; paths tried:");
+               Error("TDataSetManagerFile", "    %s", emsg.Data());
+               Error("TDataSetManagerFile", "    %s", dir.Data());
+               SetBit(TObject::kInvalidObject);
+               return;
+            }
          }
       }
 

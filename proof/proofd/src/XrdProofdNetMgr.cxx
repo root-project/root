@@ -49,9 +49,11 @@ XrdProofdNetMgr::XrdProofdNetMgr(XrdProofdManager *mgr,
    fMgr = mgr;
    fResourceType = kRTNone;
    fPROOFcfg.fName = "";
-   fPROOFcfg.fMtime = 0;
+   fPROOFcfg.fMtime = -1;
    fReloadPROOFcfg = 1;
    fDfltFallback = 0;
+   fDfltWorkers.clear();
+   fRegWorkers.clear();
    fWorkers.clear();
    fNodes.clear();
    fNumLocalWrks = XrdProofdAux::GetNumCPUs();
@@ -78,13 +80,19 @@ XrdProofdNetMgr::~XrdProofdNetMgr()
 {
    // Destructor
 
-   // Cleanup the worker list
+   // Cleanup the worker lists
    // (the nodes list points to the same object, no cleanup is needed)
-   std::list<XrdProofWorker *>::iterator w = fWorkers.begin();
-   while (w != fWorkers.end()) {
+   std::list<XrdProofWorker *>::iterator w = fRegWorkers.begin();
+   while (w != fRegWorkers.end()) {
       delete *w;
-      w = fWorkers.erase(w);
+      w = fRegWorkers.erase(w);
    }
+   w = fDfltWorkers.begin();
+   while (w != fDfltWorkers.end()) {
+      delete *w;
+      w = fDfltWorkers.erase(w);
+   }
+   fWorkers.clear();
 }
 
 //__________________________________________________________________________
@@ -132,7 +140,7 @@ int XrdProofdNetMgr::Config(bool rcf)
                if (!fDfltFallback) {
                   XPDERR("unable to find valid information in PROOF config file "<<
                         fPROOFcfg.fName);
-                  fPROOFcfg.fMtime = 0;
+                  fPROOFcfg.fMtime = -1;
                   return 0;
                } else {
                   TRACE(ALL, "file "<<fPROOFcfg.fName<<" cannot be parsed: use default configuration to start with");
@@ -241,7 +249,7 @@ int XrdProofdNetMgr::DoDirectiveResource(char *val, XrdOucStream *cfg, bool)
                } else {
                   TRACE(XERR,"configuration file cannot be read: "<< fPROOFcfg.fName);
                   fPROOFcfg.fName = "";
-                  fPROOFcfg.fMtime = 0;
+                  fPROOFcfg.fMtime = -1;
                }
             }
          }
@@ -1037,25 +1045,30 @@ void XrdProofdNetMgr::CreateDefaultPROOFcfg()
    TRACE(DBG, "enter: local workers: "<< fNumLocalWrks);
 
    // Cleanup the worker list
-   std::list<XrdProofWorker *>::iterator w = fWorkers.begin();
-   while (w != fWorkers.end()) {
-      delete *w;
-      w = fWorkers.erase(w);
-   }
-   // Create a default master line
-   XrdOucString mm("master ",128);
-   mm += fMgr->Host();
-   fWorkers.push_back(new XrdProofWorker(mm.c_str()));
+   fWorkers.clear();
+   // The first time we need to create the default workers
+   if (fDfltWorkers.size() < 1) {
+      // Create a default master line
+      XrdOucString mm("master ",128);
+      mm += fMgr->Host();
+      fDfltWorkers.push_back(new XrdProofWorker(mm.c_str()));
 
-   // Create 'localhost' lines for each worker
-   int nwrk = fNumLocalWrks;
-   if (nwrk > 0) {
-      mm = "worker localhost port=";
-      mm += fMgr->Port();
-      while (nwrk--) {
-         fWorkers.push_back(new XrdProofWorker(mm.c_str()));
-         TRACE(DBG, "added line: " << mm);
+      // Create 'localhost' lines for each worker
+      int nwrk = fNumLocalWrks;
+      if (nwrk > 0) {
+         mm = "worker localhost port=";
+         mm += fMgr->Port();
+         while (nwrk--) {
+            fDfltWorkers.push_back(new XrdProofWorker(mm.c_str()));
+            TRACE(DBG, "added line: " << mm);
+         }
       }
+   }
+
+   // Copy the list
+   std::list<XrdProofWorker *>::iterator w = fDfltWorkers.begin();
+   for ( ; w != fDfltWorkers.end(); w++) {
+      fWorkers.push_back(*w);
    }
 
    TRACE(DBG, "done: "<<fWorkers.size()-1<<" workers");
@@ -1164,7 +1177,7 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
    if (stat(fPROOFcfg.fName.c_str(), &st) != 0) {
       // If the file disappeared, reset the modification time so that we are sure
       // to reload it if it comes back
-      if (errno == ENOENT) fPROOFcfg.fMtime = 0;
+      if (errno == ENOENT) fPROOFcfg.fMtime = -1;
       if (!fDfltFallback) {
          TRACE(XERR, "unable to stat file: "<<fPROOFcfg.fName<<" - errno: "<<errno);
       } else {
@@ -1195,19 +1208,26 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
 
    if (reset) {
       // Cleanup the worker list
-      std::list<XrdProofWorker *>::iterator w = fWorkers.begin();
-      while (w != fWorkers.end()) {
-         delete *w;
-         w = fWorkers.erase(w);
-      }
-      // Create a default master line
+      fWorkers.clear();
+   }
+
+   // Add default a master line if not yet there
+   if (fRegWorkers.size() < 1) {
       XrdOucString mm("master ",128);
       mm += fMgr->Host();
-      fWorkers.push_back(new XrdProofWorker(mm.c_str()));
+      fRegWorkers.push_back(new XrdProofWorker(mm.c_str()));
+   } else {
+      // Deactivate all current active workers
+      std::list<XrdProofWorker *>::iterator w = fRegWorkers.begin();
+      // Skip the master line
+      w++;
+      for ( ; w != fRegWorkers.end(); w++) {
+         (*w)->fActive = 0;
+      }
    }
 
    // Read now the directives
-   int nw = 1;
+   int nw = 0;
    char lin[2048];
    while (fgets(lin,sizeof(lin),fin)) {
       // Skip empty lines
@@ -1226,23 +1246,57 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
 
       TRACE(DBG, "found line: " << lin);
 
+      // Parse the line
+      XrdProofWorker *pw = new XrdProofWorker(lin);
+
       const char *pfx[2] = { "master", "node" };
       if (!strncmp(lin, pfx[0], strlen(pfx[0])) ||
           !strncmp(lin, pfx[1], strlen(pfx[1]))) {
          // Init a master instance
-         XrdProofWorker *pw = new XrdProofWorker(lin);
          if (pw->fHost == "localhost" ||
              pw->Matches(fMgr->Host())) {
             // Replace the default line (the first with what found in the file)
-            XrdProofWorker *fw = fWorkers.front();
+            XrdProofWorker *fw = fRegWorkers.front();
             fw->Reset(lin);
          }
+         // Ignore it
          SafeDelete(pw);
       } else {
-         // Build the worker object
-         fWorkers.push_back(new XrdProofWorker(lin));
+         // Check if we have already it 
+         std::list<XrdProofWorker *>::iterator w = fRegWorkers.begin();
+         // Skip the master line
+         w++;
+         bool haveit = 0;
+         while (w != fRegWorkers.end()) {
+            if (!((*w)->fActive)) {
+               if ((*w)->fHost == pw->fHost && (*w)->fPort == pw->fPort) {
+                  (*w)->fActive = 1;
+                  haveit = 1;
+                  break;
+               }
+            }
+            // Go to next
+            w++;
+         }
+         // If we do not have it, build a new worker object
+         if (!haveit) {
+            // Keep it
+            fRegWorkers.push_back(pw);
+         } else {
+            // Drop it
+            SafeDelete(pw);
+         }
+      }
+   }
+
+   // Copy the active workers 
+   std::list<XrdProofWorker *>::iterator w = fRegWorkers.begin();
+   while (w != fRegWorkers.end()) {
+      if ((*w)->fActive) {
+         fWorkers.push_back(*w);
          nw++;
       }
+      w++;
    }
 
    // Close files

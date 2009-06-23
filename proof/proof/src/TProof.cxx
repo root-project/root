@@ -614,7 +614,7 @@ Int_t TProof::Init(const char *, const char *conffile,
    // Status of cluster
    fNotIdle = 0;
    // Query type
-   fSync = kTRUE;
+   fSync = (attach) ? kFALSE : kTRUE;
    // Not enqueued
    fIsWaiting = kFALSE;
 
@@ -865,7 +865,7 @@ void TProof::ParseConfigField(const char *config)
       Printf(" ---> Starting a debug run with valgrind (master:%s, workers:%s)", mstlab.Data(), wrklab.Data());
       Printf(" ---> Please be patient: startup may be VERY slow ...");
       Printf(" ---> Logs will be available as special tags in the log window (from the progress dialog or TProof::LogViewer()) ");
-      Printf(" ---> (Reminder: this debug run make sense only if you are running a debug version of ROOT)");
+      Printf(" ---> (Reminder: this debug run makes sense only if you are running a debug version of ROOT)");
       Printf(" ");
    }
 }
@@ -1187,7 +1187,7 @@ Bool_t TProof::StartSlaves(Bool_t attach)
    } else {
 
       // create master server
-      Printf("Starting master: opening connection ... ");
+      Printf("Starting master: opening connection ...");
       TSlave *slave = CreateSubmaster(fUrl.GetUrl(), "0", "master", 0);
 
       if (slave->IsValid()) {
@@ -1282,8 +1282,6 @@ Bool_t TProof::StartSlaves(Bool_t attach)
             }
 
             fSlaves->Add(slave);
-            fAllMonitor->Add(slave->GetSocket());
-
             fIntHandler = new TProofInterruptHandler(this);
          }
 
@@ -2849,6 +2847,9 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                fIsWaiting = kFALSE;
             }
 
+            // Redirect the output, if needed
+            fRedirLog = (fSync) ? fRedirLog : kTRUE;
+
             // The signal is used on masters by XrdProofdProtocol to catch
             // the start of processing; on clients it allows to update the
             // progress dialog
@@ -3034,6 +3035,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                         fPlayer->GetPacketizer()->AddProcessed(sl, status, 0, &listOfMissingFiles);
                      if (ret > 0)
                         fPlayer->GetPacketizer()->MarkBad(sl, status, &listOfMissingFiles);
+                     // This object is now owned by the packetizer
+                     status = 0;
                   }
                } else {
                   fPlayer->AddEventsProcessed(events);

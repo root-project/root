@@ -73,6 +73,8 @@ class XrdProofWorker {
    XrdOucString            fMsd;         // mass storage domain
    XrdOucString            fId;          // ID string
 
+   bool                    fActive;      // TRUE if available        
+
 private:
    XrdSysRecMutex         *fMutex;       // Local mutex
 };

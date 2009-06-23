@@ -111,7 +111,11 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
          } else {
             Info("TProofProgressDialog", "could not find svn revision run by the master");
          }
+      } else if (gDebug) {
+         Info("TProofProgressDialog", "non-standard master version string:'%s'", vrs.Data());
       }
+   } else {
+      Warning("TProofProgressDialog", "list of active workers is empty!");
    }
 
    if (PPD_SRV_NEWER(11))
@@ -188,7 +192,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    UInt_t  nb1 = 0, width1 = 0, height1 = 0;
 
    fAsyn = new TGTextButton(hf3, "&Run in background");
-   if (fProof->GetRemoteProtocol() >= 22) {
+   if (fProof->GetRemoteProtocol() >= 22 && fProof->IsSync()) {
       fAsyn->SetToolTipText("Continue running in the background (asynchronous mode), releasing the ROOT prompt");
    } else {
       fAsyn->SetToolTipText("Switch to asynchronous mode disabled: functionality not supported by the server");
@@ -253,10 +257,10 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fDialog->AddFrame(hf5, new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 5, 5, 10, 5));
 
    // Only enable if master supports it
-   if (!PPD_SRV_NEWER_REV(gSVNMemPlot)) {
+   if (!PPD_SRV_NEWER(18)) {
       fMemPlot->SetState(kButtonDisabled);
-      TString tip = TString::Format("Not supported by the master: required SVN revision %d > %d",
-                                    gSVNMemPlot, fSVNRev);
+      TString tip = TString::Format("Not supported by the master: required protocol 19 > %d",
+                                    (fProof ? fProof->GetRemoteProtocol() : -1));
       fMemPlot->SetToolTipText(tip.Data());
    } else {
       fMemPlot->SetToolTipText("Show memory consumption");

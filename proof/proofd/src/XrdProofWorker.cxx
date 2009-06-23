@@ -35,7 +35,7 @@
 
 //______________________________________________________________________________
 XrdProofWorker::XrdProofWorker(const char *str)
-               : fExport(256), fType('W'), fPort(-1), fPerfIdx(100)
+               : fExport(256), fType('W'), fPort(-1), fPerfIdx(100), fActive(1)
 {
    // Constructor from a config file-like string
 

@@ -650,10 +650,10 @@ void TProofDrawHist::SlaveBegin(TTree *tree)
       TH1 *hist = dynamic_cast<TH1*> (fInput->FindObject(objname));
       if (hist) {
          fHistogram = (TH1 *) hist->Clone();
-         PDB(kDraw,1) Info("SlaveBegin","Original histogram found");
+         PDB(kDraw,1) Info("SlaveBegin","original histogram found");
       } else {
-         Error("SlaveBegin",
-               "Original object '%s' not found or it is not a histogram", objname);
+         PDB(kDraw,1) Info("SlaveBegin", "original object '%s' not found"
+                                         " or it is not a histogram", objname);
       }
    }
 

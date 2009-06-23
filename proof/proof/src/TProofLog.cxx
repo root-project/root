@@ -99,6 +99,7 @@ Int_t TProofLog::Retrieve(const char *ord, TProofLog::ERetrieveOpt opt,
    TIter nxe(fElem);
    TProofLogElem *ple = 0;
    Int_t nd = 0, nb = 0;
+   TString msg;
    while ((ple = (TProofLogElem *) nxe())) {
       if (ord[0] == '*' || !strcmp(ord, ple->GetName())) {
          if (ple->Retrieve(opt, pattern) != 0) {
@@ -107,7 +108,8 @@ Int_t TProofLog::Retrieve(const char *ord, TProofLog::ERetrieveOpt opt,
             nd++;
          }
          Int_t frac = (nd + nb) / nel * 100;
-         Prt(Form("Retrieving logs: %d ok, %d not ok (%d %% processed) \r", nd, nb, frac));
+         msg.Form("Retrieving logs: %d ok, %d not ok (%d %% processed) \r", nd, nb, frac);
+         Prt(msg.Data());
       }
    }
    Prt("\n");
@@ -129,14 +131,15 @@ void TProofLog::Display(const char *ord, Int_t from, Int_t to)
    // is ignored in such a case.
    // If 'ord' is "*" (default), all the workers are displayed.
 
+   TString msg;
    if (ord[0] == '*') {
       Int_t nel = (fElem) ? fElem->GetSize() : 0;
       // Write global header
-      Prt(Form("\n// --------- Displaying PROOF Session logs --------\n"));
-      Prt(Form("// Server: %s \n", GetTitle()));
-      Prt(Form("// Session: %s \n", GetName()));
-      Prt(Form("// # of elements: %d \n", nel));
-      Prt(Form("// ------------------------------------------------\n\n"));
+      msg.Form("\n// --------- Displaying PROOF Session logs --------\n"
+               "// Server: %s \n// Session: %s \n// # of elements: %d \n"
+               "// ------------------------------------------------\n\n",
+               GetTitle(), GetName(), nel);
+      Prt(msg.Data());
    }
    // Iterate over the elements
    TIter nxe(fElem);
@@ -147,7 +150,7 @@ void TProofLog::Display(const char *ord, Int_t from, Int_t to)
    }
    if (ord[0] == '*')
       // Write global tail
-      Prt(Form("// --------- End of PROOF Session logs ---------\n"));
+      Prt("// --------- End of PROOF Session logs ---------\n");
 }
 
 //________________________________________________________________________
@@ -219,14 +222,15 @@ Int_t TProofLog::Save(const char *ord, const char *fname, Option_t *opt)
    }
    fFILE = (void *) fout;
 
+   TString msg;
    if (ord[0] == '*') {
       Int_t nel = (fElem) ? fElem->GetSize() : 0;
       // Write global header
-      Prt(Form("\n// --------- Displaying PROOF Session logs --------\n"));
-      Prt(Form("// Server: %s \n", GetTitle()));
-      Prt(Form("// Session: %s \n", GetName()));
-      Prt(Form("// # of elements: %d \n", nel));
-      Prt(Form("// ------------------------------------------------\n\n"));
+      msg.Form("\n// --------- Displaying PROOF Session logs --------\n"
+               "// Server: %s \n// Session: %s \n// # of elements: %d \n"
+               "// ------------------------------------------------\n\n",
+               GetTitle(), GetName(), nel);
+      Prt(msg.Data());
    }
 
    // Iterate over the elements
@@ -239,7 +243,7 @@ Int_t TProofLog::Save(const char *ord, const char *fname, Option_t *opt)
 
    if (ord[0] == '*') {
       // Write global tail
-      Prt(Form("// --------- End of PROOF Session logs ---------\n"));
+      Prt("// --------- End of PROOF Session logs ---------\n");
    }
 
    // Close file
@@ -263,16 +267,18 @@ Int_t TProofLog::Grep(const char *txt, Int_t from)
 
    Int_t nel = (fElem) ? fElem->GetSize() : 0;
    // Write global header
-   Prt(Form("\n// --------- Search in PROOF Session logs --------\n"));
-   Prt(Form("// Server: %s \n", GetTitle()));
-   Prt(Form("// Session: %s \n", GetName()));
-   Prt(Form("// # of elements: %d \n", nel));
-   Prt(Form("// Text searched for: \"%s\"", txt));
-   if (from > 1)
-      Prt(Form("// starting from line %d \n", from));
-   else
-      Prt("\n");
-   Prt(Form("// ------------------------------------------------\n"));
+   TString msg;
+   msg.Form("\n// --------- Search in PROOF Session logs --------\n"
+            "// Server: %s \n// Session: %s \n// # of elements: %d \n"
+            "// Text searched for: \"%s\"", GetTitle(), GetName(), nel, txt);
+   Prt(msg.Data());
+   if (from > 1) {
+      msg.Form("// starting from line %d \n", from);
+   } else {
+      msg = "\n";
+   }
+   Prt(msg.Data());
+   Prt("// ------------------------------------------------\n");
 
    // Iterate over the elements
    TIter nxe(fElem);
@@ -280,11 +286,13 @@ Int_t TProofLog::Grep(const char *txt, Int_t from)
    while ((ple = (TProofLogElem *) nxe())) {
       TString res;
       Int_t nf = ple->Grep(txt, res, from);
-      if (nf > 0)
-         Prt(Form("// Ord: %s - line(s): %s\n", ple->GetName(), res.Data()));
+      if (nf > 0) {
+         msg.Form("// Ord: %s - line(s): %s\n", ple->GetName(), res.Data());
+         Prt(msg.Data());
+      }
    }
 
-   Prt(Form("// ------------------------------------------------\n"));
+   Prt("// ------------------------------------------------\n");
 
    // Done
    return 0;
@@ -449,8 +457,10 @@ void TProofLogElem::Display(Int_t from, Int_t to)
       ie = nls;
    }
    // Write header
-   Prt(Form("// --------- Start of element log -----------------\n"));
-   Prt(Form("// Ordinal: %s (role: %s)\n", GetName(), fRole.Data()));
+   TString msg;
+   Prt("// --------- Start of element log -----------------\n");
+   msg.Form("// Ordinal: %s (role: %s)\n", GetName(), fRole.Data());
+   Prt(msg.Data());
    // Separate out the submaster path, if any
    TString path(GetTitle());
    Int_t ic = path.Index(",");
@@ -458,28 +468,41 @@ void TProofLogElem::Display(Int_t from, Int_t to)
       TString subm(path);
       path.Remove(0, ic+1);
       subm.Remove(ic);
-      Prt(Form("// Submaster: %s \n", subm.Data()));
+      msg.Form("// Submaster: %s \n", subm.Data());
+      Prt(msg.Data());
    }
-   Prt(Form("// Path: %s \n", path.Data()));
-   Prt(Form("// # of retrieved lines: %d ", nls));
-   if (i > 0 || ie < nls)
-      Prt(Form("(displaying lines: %d -> %d)\n", i+1, ie));
-   else
-      Prt("\n");
-   Prt(Form("// ------------------------------------------------\n"));
+   msg.Form("// Path: %s \n// # of retrieved lines: %d ", path.Data(), nls);
+   Prt(msg.Data());
+   if (i > 0 || ie < nls) {
+      msg.Form("(displaying lines: %d -> %d)\n", i+1, ie);
+   } else {
+      msg = "\n";
+   }
+   Prt(msg.Data());
+   Prt("// ------------------------------------------------\n");
    // Write lines
+   msg = "";
    if (fMacro->GetListOfLines()) {
       TIter nxl(fMacro->GetListOfLines());
       TObjString *os = 0;
       Int_t kk = 0;
       while ((os = (TObjString *) nxl())) {
          kk++;
-         if (kk > i) Prt(Form("%s", os->GetName()));
+         if (kk > i) {
+            if (msg.Length() < 100000) {
+               if (msg.Length() > 0) msg += "\n";
+               msg += os->GetName();
+            } else {
+               Prt(msg.Data());
+               msg = "";
+            }
+         }
          if (kk > ie) break;
       }
    }
+   if (msg.Length() > 0) Prt(msg.Data());
    // Write tail
-   Prt(Form("// --------- End of element log -------------------\n\n"));
+   Prt("// --------- End of element log -------------------\n\n");
 }
 
 //________________________________________________________________________

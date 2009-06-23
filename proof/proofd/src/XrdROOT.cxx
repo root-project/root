@@ -442,16 +442,18 @@ int XrdROOTMgr::Validate(XrdROOT *r, XrdScheduler *sched)
          char *ev = new char[strlen("ROOTPROOFLOGFILE=") + logfile.length() + 2];
          sprintf(ev, "ROOTPROOFLOGFILE=%s", logfile.c_str());
          putenv(ev);
-         // Create .rootrc
-         FILE *frc = fopen(rootrc.c_str(),"w");
-         if (frc) {
-            fprintf(frc, "Proof.DebugLevel: 1\n");
-            fclose(frc);
+         if (debug && rootrc.length() > 0) {
+            // Create .rootrc
+            FILE *frc = fopen(rootrc.c_str(),"w");
+            if (frc) {
+               fprintf(frc, "Proof.DebugLevel: 1\n");
+               fclose(frc);
+            }
+            // Transfer the info to proofserv
+            ev = new char[strlen("ROOTRCFILE=") + rootrc.length() + 2];
+            sprintf(ev, "ROOTRCFILE=%s", rootrc.c_str());
+            putenv(ev);
          }
-         // Transfer the info to proofserv
-         ev = new char[strlen("ROOTRCFILE=") + rootrc.length() + 2];
-         sprintf(ev, "ROOTRCFILE=%s", rootrc.c_str());
-         putenv(ev);
       }
 
       char *argvv[6] = {0};
@@ -554,7 +556,7 @@ int XrdROOTMgr::Validate(XrdROOT *r, XrdScheduler *sched)
          TRACE(XERR, "problems unlinking "<<logfile<<"; errno: "<<errno);
       }
    }
-   if (unlink(rootrc.c_str()) != 0) {
+   if (debug && rootrc.length() > 0 && unlink(rootrc.c_str()) != 0) {
       TRACE(XERR, "problems unlinking "<<rootrc<<"; errno: "<<errno);
    }
 

@@ -4897,16 +4897,28 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
    if (!locked) fCacheLock->Lock();
 
    // Get source from the cache
-   TString srcname = name;
+   Bool_t assertfile = kFALSE;
+   TString srcname;
+   srcname.Form("%s/%s", fCacheDir.Data(), name.Data());
    Int_t dot = srcname.Last('.');
    if (dot != kNPOS) {
       srcname.Remove(dot);
       srcname += ".*";
+   } else {
+      assertfile = kTRUE;
+   }
+   // Assert the file if asked (to silence warnings from 'cp')
+   if (assertfile) {
+      if (gSystem->AccessPathName(srcname)) {
+         PDB(kCache,1)
+            Info("CopyFromCache", "file %s not in cache", srcname.Data());
+         if (!locked) fCacheLock->Unlock();
+         return 0;
+      }
    }
    PDB(kCache,1)
-      Info("CopyFromCache",
-           "retrieving %s/%s from cache", fCacheDir.Data(), srcname.Data());
-   gSystem->Exec(Form("%s %s/%s .", kCP, fCacheDir.Data(), srcname.Data()));
+      Info("CopyFromCache", "retrieving %s from cache", srcname.Data());
+   gSystem->Exec(Form("%s %s .", kCP, srcname.Data()));
 
    // Check if we are done
    if (!cpbin) {

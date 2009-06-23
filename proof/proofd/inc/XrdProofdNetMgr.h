@@ -56,8 +56,10 @@ private:
    bool               fWorkerUsrCfg;   // user cfg files enabled / disabled
    int                fRequestTO;      // Timeout on broadcast request
 
-   std::list<XrdProofWorker *> fWorkers;               // List of possible workers
-   std::list<XrdProofWorker *> fNodes;                 // List of worker unique nodes
+   std::list<XrdProofWorker *> fDfltWorkers; // List of possible default workers
+   std::list<XrdProofWorker *> fRegWorkers;  // List of all workers registered
+   std::list<XrdProofWorker *> fWorkers;     // List of currently available workers
+   std::list<XrdProofWorker *> fNodes;       // List of worker unique nodes
 
    void               CreateDefaultPROOFcfg();
    int                ReadPROOFcfg(bool reset = 1);
