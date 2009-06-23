@@ -1049,7 +1049,7 @@ enable/disable options, prefix with either --enable- or --disable-
   pythia6            Pythia6 EG support, requires libPythia6
   pythia8            Pythia8 EG support, requires libPythia8
   python             Python ROOT bindings, requires python >= 2.2
-  qt                 Qt graphics backend, requires libqt >= 3
+  qt                 Qt graphics backend, requires libqt >= 4.x
   qtgsi              GSI's Qt integration, requires libqt >= 3
   reflex             Build the libReflex dictionary library
   rfio               RFIO support, requires libshift from CASTOR >= 1.5.2
