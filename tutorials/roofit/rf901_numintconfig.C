@@ -17,7 +17,9 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "RooNumIntConfig.h"
 #include "RooLandau.h"
@@ -59,7 +61,7 @@ void rf901_numintconfig()
   
 
   // Activate debug-level messages for topic integration to be able to follow actions below
-  RooMsgService::instance().addStream(RooMsgService::DEBUG,Topic(RooMsgService::Integration)) ;
+  RooMsgService::instance().addStream(DEBUG,Topic(Integration)) ;
 
 
   // Calculate integral over landau with default choice of numeric integrator

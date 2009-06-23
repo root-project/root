@@ -20,6 +20,7 @@
 #include "RooBMixDecay.h"
 #include "RooCategory.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -94,9 +95,9 @@ void rf310_sliceplot()
 
   TCanvas* c = new TCanvas("rf310_sliceplot","rf310_sliceplot",1200,400) ;
   c->Divide(3) ;
-  c->cd(1) ; gPad->SetLogy() ; frame->Draw() ;
-  c->cd(2) ; gPad->SetLogy() ; frame2->Draw() ;
-  c->cd(3) ; gPad->SetLogy() ; frame3->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; gPad->SetLogy() ; frame->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; gPad->SetLogy() ; frame2->Draw() ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame3->GetYaxis()->SetTitleOffset(1.4) ; gPad->SetLogy() ; frame3->Draw() ;
 
 
 }

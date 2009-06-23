@@ -16,11 +16,13 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooKeysPdf.h"
 #include "RooNDKeysPdf.h"
 #include "RooProdPdf.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 #include "RooPlot.h"
 using namespace RooFit ;
@@ -105,10 +107,10 @@ void rf707_kernelestimation()
 
   TCanvas* c = new TCanvas("rf707_kernelestimation","rf707_kernelestimation",800,800) ;
   c->Divide(2,2) ;
-  c->cd(1) ; frame->Draw() ;
-  c->cd(2) ; frame2->Draw() ;
-  c->cd(3) ; hh_data->Draw("lego") ;
-  c->cd(4) ; hh_pdf->Draw("surf") ; hh_pdf2->Draw("surfsame") ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.8) ; frame2->Draw() ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; hh_data->GetZaxis()->SetTitleOffset(1.4) ; hh_data->Draw("lego") ;
+  c->cd(4) ; gPad->SetLeftMargin(0.20) ; hh_pdf->GetZaxis()->SetTitleOffset(2.4) ; hh_pdf->Draw("surf") ; hh_pdf2->Draw("surfsame") ;
 	        
 
 }

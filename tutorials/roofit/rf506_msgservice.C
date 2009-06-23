@@ -16,9 +16,11 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "RooMsgService.h"
 
@@ -57,32 +59,27 @@ void rf506_msgservice()
 
 
 
-  // A d d i n g   I N F O   s t r e a m   i n   i n t e g r a t i o n
-  // -----------------------------------------------------------------
-
-  // Add stream printing INFO level message in the 'Integration' Topic
-  Int_t streamID = RooMsgService::instance().addStream(RooMsgService::INFO,Topic(RooMsgService::Integration)) ;
-
+  // A d d i n g   I n t e g r a t i o n   t o p i c   t o   e x i s t i n g   I N F O   s t r e a m
+  // -----------------------------------------------------------------------------------------------
 
   // Print streams configuration
   RooMsgService::instance().Print() ;
   cout << endl ;
 
+  // Add Integration topic to existing INFO stream
+  RooMsgService::instance().getStream(1).addTopic(Integration) ;
 
   // Construct integral over gauss to demonstrate new message stream
   RooAbsReal* igauss = gauss.createIntegral(x) ;
   igauss->Print() ;
 
-  // Disable new stream 
-  RooMsgService::instance().setStreamStatus(streamID,kFALSE) ;
-
   // Print streams configuration in verbose, which also shows inactive streams
   cout << endl ;
-  RooMsgService::instance().Print("v") ;
+  RooMsgService::instance().Print() ;
   cout << endl ;
 
   // Remove stream
-  RooMsgService::instance().deleteStream(streamID) ;
+  RooMsgService::instance().getStream(1).removeTopic(Integration) ;
 
 
 
@@ -90,7 +87,7 @@ void rf506_msgservice()
   // -----------------------------------------------------------------------
   
   // Show DEBUG level message on function tracing, trace RooGaussian only
-  RooMsgService::instance().addStream(RooMsgService::DEBUG,Topic(RooMsgService::Tracing),ClassName("RooGaussian")) ;
+  RooMsgService::instance().addStream(DEBUG,Topic(Tracing),ClassName("RooGaussian")) ;
 
   // Perform a fit to generate some tracing messages
   model.fitTo(*data,Verbose(kTRUE)) ;
@@ -101,7 +98,7 @@ void rf506_msgservice()
 
 
   // Show DEBUG level message on function tracing on all objects, redirect output to file
-  RooMsgService::instance().addStream(RooMsgService::DEBUG,Topic(RooMsgService::Tracing),OutputFile("rf506_debug.log")) ;
+  RooMsgService::instance().addStream(DEBUG,Topic(Tracing),OutputFile("rf506_debug.log")) ;
 
   // Perform a fit to generate some tracing messages
   model.fitTo(*data,Verbose(kTRUE)) ;
@@ -115,7 +112,7 @@ void rf506_msgservice()
   // ---------------------------------------------------------------------
 
   // Show DEBUG level messages on client/server link state management
-  RooMsgService::instance().addStream(RooMsgService::DEBUG,Topic(RooMsgService::LinkStateMgmt)) ;
+  RooMsgService::instance().addStream(DEBUG,Topic(LinkStateMgmt)) ;
   RooMsgService::instance().Print("v") ;
 
   // Clone composite pdf g to trigger some link state management activity

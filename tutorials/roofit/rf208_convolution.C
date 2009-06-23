@@ -22,6 +22,7 @@
 #include "RooFFTConvPdf.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 using namespace RooFit ;
 
@@ -75,7 +76,7 @@ void rf208_convolution()
 
   // Draw frame on canvas
   new TCanvas("rf208_convolution","rf208_convolution",600,600) ;
-  frame->Draw() ;
+  gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
 
 }
 

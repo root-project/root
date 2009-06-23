@@ -25,6 +25,7 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "RooClassFactory.h"
 #include "TROOT.h"
@@ -122,7 +123,7 @@ void rf104_classfactory()
   // Draw all frames on a canvas
   TCanvas* c = new TCanvas("rf104_classfactory","rf104_classfactory",800,400) ;
   c->Divide(2) ;
-  c->cd(1) ; frame1->Draw() ;
-  c->cd(2) ; frame2->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame1->GetYaxis()->SetTitleOffset(1.4) ; frame1->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
 
 }

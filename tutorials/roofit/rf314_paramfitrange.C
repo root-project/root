@@ -19,8 +19,10 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooExponential.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "RooFitResult.h"
 
@@ -81,7 +83,7 @@ void rf314_paramfitrange()
 
 
   new TCanvas("rf314_paramranges","rf314_paramranges",600,600) ;
-  frame->Draw() ;
+  gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.6) ; frame->Draw() ;
 
   return ;
 }

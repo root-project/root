@@ -15,12 +15,14 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
 #include "RooMCStudy.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 using namespace RooFit ;
 
@@ -79,9 +81,9 @@ void rf804_mcstudy_constr()
 
   TCanvas* c = new TCanvas("rf804_mcstudy_constr","rf804_mcstudy_constr",1200,400) ;
   c->Divide(3) ;
-  c->cd(1) ; h_f_gen->Draw() ;
-  c->cd(2) ; frame1->Draw() ;
-  c->cd(3) ; frame2->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; h_f_gen->GetYaxis()->SetTitleOffset(1.4) ; h_f_gen->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame1->GetYaxis()->SetTitleOffset(1.4) ; frame1->Draw() ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
 
 }
 

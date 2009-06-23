@@ -16,12 +16,14 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooFormulaVar.h"
 #include "RooProdPdf.h"
 #include "RooEfficiency.h"
 #include "RooPolynomial.h"
 #include "RooCategory.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -94,8 +96,8 @@ void rf701_efficiencyfit()
   // Draw all frames on a canvas
   TCanvas* ca = new TCanvas("rf701_efficiency","rf701_efficiency",800,400) ;
   ca->Divide(2) ;
-  ca->cd(1) ; frame1->Draw() ;
-  ca->cd(2) ; frame2->Draw() ;
+  ca->cd(1) ; gPad->SetLeftMargin(0.15) ; frame1->GetYaxis()->SetTitleOffset(1.6) ; frame1->Draw() ;
+  ca->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
   
  
 }

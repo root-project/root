@@ -15,9 +15,11 @@
 #endif
 #include "RooRealVar.h"
 #include "RooDataSet.h"
+#include "RooConstVar.h"
 #include "RooGaussian.h"
 #include "RooProdPdf.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 #include "RooPlot.h"
 using namespace RooFit ;
@@ -87,14 +89,14 @@ void rf309_ndimplot()
 
   TCanvas* c1 = new TCanvas("rf309_2dimplot","rf309_2dimplot",800,800) ;
   c1->Divide(2,2) ;
-  c1->cd(1) ; hh_data->Draw("lego") ; 
-  c1->cd(2) ; hh_pdf->Draw("surf") ;
-  c1->cd(3) ; hh_data->Draw("box") ; 
-  c1->cd(4) ; hh_pdf->Draw("cont3") ;
+  c1->cd(1) ; gPad->SetLeftMargin(0.15) ; hh_data->GetZaxis()->SetTitleOffset(1.4) ; hh_data->Draw("lego") ; 
+  c1->cd(2) ; gPad->SetLeftMargin(0.20) ; hh_pdf->GetZaxis()->SetTitleOffset(2.5) ; hh_pdf->Draw("surf") ;
+  c1->cd(3) ; gPad->SetLeftMargin(0.15) ; hh_data->GetZaxis()->SetTitleOffset(1.4) ; hh_data->Draw("box") ; 
+  c1->cd(4) ; gPad->SetLeftMargin(0.15) ; hh_pdf->GetZaxis()->SetTitleOffset(2.5) ; hh_pdf->Draw("cont3") ;
   
   TCanvas* c2 = new TCanvas("rf309_3dimplot","rf309_3dimplot",800,400) ;
   c2->Divide(2) ;
-  c2->cd(1) ; hh_data3->Draw("lego") ;
-  c2->cd(2) ; hh_pdf3->Draw("iso") ;
+  c2->cd(1) ; gPad->SetLeftMargin(0.15) ; hh_data3->GetZaxis()->SetTitleOffset(1.4) ; hh_data3->Draw("lego") ;
+  c2->cd(2) ; gPad->SetLeftMargin(0.15) ; hh_pdf3->GetZaxis()->SetTitleOffset(1.4) ; hh_pdf3->Draw("iso") ;
   
 }

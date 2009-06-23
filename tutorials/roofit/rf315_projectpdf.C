@@ -20,6 +20,7 @@
 #include "RooPolyVar.h"
 #include "TH1.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "RooNumIntConfig.h"
 #include "RooConstVar.h"
@@ -86,7 +87,7 @@ void rf315_projectpdf()
 
   TCanvas* c = new TCanvas("rf315_projectpdf","rf315_projectpdf",800,400) ;
   c->Divide(2) ;
-  c->cd(1) ; frame->Draw() ;
-  c->cd(2) ; hh->Draw("surf") ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.20) ; hh->GetZaxis()->SetTitleOffset(2.5) ; hh->Draw("surf") ;
   
 }

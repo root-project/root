@@ -18,6 +18,7 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -84,8 +85,8 @@ void rf111_derivatives()
   // Draw all frames on a canvas
   TCanvas* c = new TCanvas("rf111_derivatives","rf111_derivatives",800,400) ;
   c->Divide(2) ;
-  c->cd(1) ; xframe->Draw() ;
-  c->cd(2) ; sframe->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; xframe->GetYaxis()->SetTitleOffset(1.6) ; xframe->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; sframe->GetYaxis()->SetTitleOffset(1.6) ; sframe->Draw() ;
   
  
 }

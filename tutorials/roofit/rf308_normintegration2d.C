@@ -16,10 +16,12 @@
 #endif
 #include "RooRealVar.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooProdPdf.h"
 #include "RooAbsReal.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 using namespace RooFit ;
 
@@ -97,6 +99,7 @@ void rf308_normintegration2d()
   hh_cdf->SetLineColor(kBlue) ;
 
   new TCanvas("rf308_normintegration2d","rf308_normintegration2d",600,600) ;
+  gPad->SetLeftMargin(0.15) ; hh_cdf->GetZaxis()->SetTitleOffset(1.8) ; 
   hh_cdf->Draw("surf") ;
 
 }

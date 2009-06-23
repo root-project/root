@@ -16,10 +16,12 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -95,6 +97,6 @@ void rf603_multicpu()
 
 
   new TCanvas("rf603_multicpu","rf603_multicpu",600,600) ;
-  frame->Draw() ;
+  gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.6) ; frame->Draw() ;
 
 }

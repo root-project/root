@@ -16,6 +16,7 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooTruthModel.h"
 #include "RooFormulaVar.h"
 #include "RooRealSumPdf.h"
@@ -23,6 +24,7 @@
 #include "RooProduct.h"
 #include "TH1.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -80,7 +82,7 @@ void rf704_amplitudefit()
   TH1* hh_cos = ampl1.createHistogram("hh_cos",t,Binning(50),YVar(cosa,Binning(50))) ;
   TH1* hh_sin = ampl2.createHistogram("hh_sin",t,Binning(50),YVar(cosa,Binning(50))) ;
   hh_cos->SetLineColor(kBlue) ;
-  hh_sin->SetLineColor(kBlue) ;
+  hh_sin->SetLineColor(kRed) ;
 
   
   // Make projection on t, plot data, pdf and its components
@@ -103,10 +105,10 @@ void rf704_amplitudefit()
   
   TCanvas* c = new TCanvas("rf704_amplitudefit","rf704_amplitudefit",800,800) ;
   c->Divide(2,2) ;
-  c->cd(1) ; frame1->Draw();
-  c->cd(2) ; frame2->Draw();
-  c->cd(3) ; hh_cos->Draw("surf") ;
-  c->cd(4) ; hh_sin->Draw("surf") ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame1->GetYaxis()->SetTitleOffset(1.4) ; frame1->Draw();
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw();
+  c->cd(3) ; gPad->SetLeftMargin(0.20) ; hh_cos->GetZaxis()->SetTitleOffset(2.3) ; hh_cos->Draw("surf") ;
+  c->cd(4) ; gPad->SetLeftMargin(0.20) ; hh_sin->GetZaxis()->SetTitleOffset(2.3) ; hh_sin->Draw("surf") ;
   
   
 }

@@ -16,10 +16,12 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
 #include "RooPolynomial.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -87,8 +89,8 @@ void rf311_rangeplot()
 
   TCanvas* c = new TCanvas("rf311_rangeplot","rf310_rangeplot",800,400) ;
   c->Divide(2) ;
-  c->cd(1) ; frame->Draw() ;
-  c->cd(2) ; frame2->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
 
 
 }

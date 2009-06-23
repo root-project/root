@@ -15,12 +15,14 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 using namespace RooFit ;
 

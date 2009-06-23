@@ -21,6 +21,7 @@
 #include "RooBinning.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 using namespace RooFit ;
 
@@ -121,7 +122,7 @@ void rf108_plotbinning()
   // Draw plots on canvas
   TCanvas* c = new TCanvas("rf108_plotbinning","rf108_plotbinning",800,400) ;
   c->Divide(2) ;
-  c->cd(1) ; dtframe->Draw() ;
-  c->cd(2) ; aframe->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; dtframe->GetYaxis()->SetTitleOffset(1.6) ; dtframe->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; aframe->GetYaxis()->SetTitleOffset(1.6) ; aframe->Draw() ;
   
 }

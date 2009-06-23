@@ -18,6 +18,7 @@
 #include "RooArgusBG.h"
 #include "RooNLLVar.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -96,7 +97,9 @@ void rf606_nllerrorhandling()
   // of the curve can be erratic in these regions.
 
   RooPlot* frame2 = m0.frame(Range(5.288,5.293),Title("-log(L) scan vs m0")) ;
-  nll.plotOn(frame2,PrintEvalErrors(0),ShiftToZero(),LineColor(kRed),Precision(1e-4)) ; 
+  nll.plotOn(frame2,PrintEvalErrors(0),ShiftToZero(),LineColor(kRed),Precision(1e-4)) ;
+  frame2->SetMaximum(15) ;
+  frame2->SetMinimum(0) ;
 
 
   // Plot likelihood in m0 in range that includes problematic values
@@ -106,13 +109,14 @@ void rf606_nllerrorhandling()
 
   RooPlot* frame3 = m0.frame(Range(5.288,5.293),Title("-log(L) scan vs m0, problematic regions masked")) ;
   nll.plotOn(frame3,PrintEvalErrors(-1),ShiftToZero(),EvalErrorValue(nll.getVal()+10),LineColor(kRed)) ; 
-
+  frame3->SetMaximum(15) ;
+  frame3->SetMinimum(0) ;
 
 
   TCanvas* c = new TCanvas("rf606_nllerrorhandling","rf606_nllerrorhandling",1200,400) ;
   c->Divide(3) ;
-  c->cd(1) ; frame1->Draw() ;
-  c->cd(2) ; frame2->Draw() ;
-  c->cd(3) ; frame3->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame1->GetYaxis()->SetTitleOffset(1.4) ; frame1->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame3->GetYaxis()->SetTitleOffset(1.4) ; frame3->Draw() ;
 
 }

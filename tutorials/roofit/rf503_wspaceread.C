@@ -17,11 +17,13 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "RooWorkspace.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TFile.h"
 #include "TH1.h"
 using namespace RooFit ;
@@ -73,7 +75,7 @@ void rf503_wspaceread()
 
   // Draw the frame on the canvas
   new TCanvas("rf503_wspaceread","rf503_wspaceread",600,600) ;
-  xframe->Draw() ;
+  gPad->SetLeftMargin(0.15) ; xframe->GetYaxis()->SetTitleOffset(1.4) ; xframe->Draw() ;
 
 
 }

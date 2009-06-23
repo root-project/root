@@ -17,8 +17,10 @@
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooCategory.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "TFile.h"
 using namespace RooFit ;
@@ -173,6 +175,6 @@ void rf402_datahandling()
 
 
   new TCanvas("rf402_datahandling","rf402_datahandling",600,600) ;
-  yframe->Draw() ;
+  gPad->SetLeftMargin(0.15) ; yframe->GetYaxis()->SetTitleOffset(1.4) ; yframe->Draw() ;
 
 }

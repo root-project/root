@@ -14,11 +14,13 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "RooMCStudy.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH2.h"
 #include "RooFitResult.h"
 #include "TStyle.h"
@@ -117,15 +119,15 @@ void rf801_mcstudy()
   gStyle->SetOptStat(0) ;
   TCanvas* c = new TCanvas("rf801_mcstudy","rf801_mcstudy",900,900) ;
   c->Divide(3,3) ;
-  c->cd(1) ; frame1->Draw() ;
-  c->cd(2) ; frame2->Draw() ;
-  c->cd(3) ; frame3->Draw() ;
-  c->cd(4) ; frame4->Draw() ;
-  c->cd(5) ; hh_cor_a0_s1f->Draw("box") ;
-  c->cd(6) ; hh_cor_a0_a1->Draw("box") ;
-  c->cd(7) ; corrHist000->Draw("colz") ;
-  c->cd(8) ; corrHist127->Draw("colz") ;
-  c->cd(9) ; corrHist953->Draw("colz") ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame1->GetYaxis()->SetTitleOffset(1.4) ; frame1->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame3->GetYaxis()->SetTitleOffset(1.4) ; frame3->Draw() ;
+  c->cd(4) ; gPad->SetLeftMargin(0.15) ; frame4->GetYaxis()->SetTitleOffset(1.4) ; frame4->Draw() ;
+  c->cd(5) ; gPad->SetLeftMargin(0.15) ; hh_cor_a0_s1f->GetYaxis()->SetTitleOffset(1.4) ; hh_cor_a0_s1f->Draw("box") ;
+  c->cd(6) ; gPad->SetLeftMargin(0.15) ; hh_cor_a0_a1->GetYaxis()->SetTitleOffset(1.4) ; hh_cor_a0_a1->Draw("box") ;
+  c->cd(7) ; gPad->SetLeftMargin(0.15) ; corrHist000->GetYaxis()->SetTitleOffset(1.4) ; corrHist000->Draw("colz") ;
+  c->cd(8) ; gPad->SetLeftMargin(0.15) ; corrHist127->GetYaxis()->SetTitleOffset(1.4) ; corrHist127->Draw("colz") ;
+  c->cd(9) ; gPad->SetLeftMargin(0.15) ; corrHist953->GetYaxis()->SetTitleOffset(1.4) ; corrHist953->Draw("colz") ;
 
   // Make RooMCStudy object available on command line after
   // macro finishes

@@ -17,6 +17,7 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "TText.h"
 #include "TArrow.h"
@@ -97,7 +98,6 @@ void rf106_plotdecoration()
   // root>  xframe->Draw() ;
 
   new TCanvas("rf106_plotdecoration","rf106_plotdecoration",600,600) ;
-  frame->Draw() ;
-
+  gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.6) ; frame->Draw() ;
   
 }

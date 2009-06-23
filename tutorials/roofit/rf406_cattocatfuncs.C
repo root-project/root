@@ -22,6 +22,7 @@
 #include "RooSuperCategory.h"
 #include "Roo1DTable.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 

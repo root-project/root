@@ -20,6 +20,7 @@
 #include "RooAddPdf.h"
 #include "RooExponential.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 

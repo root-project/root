@@ -16,6 +16,7 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooCategory.h"
 #include "RooBMixDecay.h"
 #include "RooBCPEffDecay.h"
@@ -23,6 +24,7 @@
 #include "RooFormulaVar.h"
 #include "RooTruthModel.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -202,11 +204,11 @@ void rf708_bphysics()
 
   TCanvas* c = new TCanvas("rf708_bphysics","rf708_bphysics",1200,800) ;
   c->Divide(3,2) ;
-  c->cd(1) ; frame1->Draw() ;
-  c->cd(2) ; frame2->Draw() ;
-  c->cd(3) ; frame3->Draw() ;
-  c->cd(4) ; frame4->Draw() ;
-  c->cd(5) ; frame5->Draw() ;
-  c->cd(6) ; frame6->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame1->GetYaxis()->SetTitleOffset(1.6) ; frame1->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.6) ; frame2->Draw() ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame3->GetYaxis()->SetTitleOffset(1.6) ; frame3->Draw() ;
+  c->cd(4) ; gPad->SetLeftMargin(0.15) ; frame4->GetYaxis()->SetTitleOffset(1.6) ; frame4->Draw() ;
+  c->cd(5) ; gPad->SetLeftMargin(0.15) ; frame5->GetYaxis()->SetTitleOffset(1.6) ; frame5->Draw() ;
+  c->cd(6) ; gPad->SetLeftMargin(0.15) ; frame6->GetYaxis()->SetTitleOffset(1.6) ; frame6->Draw() ;
   
 }

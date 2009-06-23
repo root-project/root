@@ -16,6 +16,7 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -66,7 +67,7 @@ void rf107_plotstyles()
   data->plotOn(frame3,MarkerColor(kBlue),LineColor(kBlue)) ;
 
   // Filled bar chart
-  data->plotOn(frame4,DrawOption("B"),DataError(RooAbsData::None),XErrorSize(0),FillColor(kCyan)) ;
+  data->plotOn(frame4,DrawOption("B"),DataError(RooAbsData::None),XErrorSize(0),FillColor(kGray)) ;
 
 
 
@@ -80,19 +81,19 @@ void rf107_plotstyles()
   gauss.plotOn(frame2,LineStyle(kDashed)) ;
 
   // Filled shapes in green color
-  gauss.plotOn(frame3,DrawOption("F"),FillColor(kGreen),MoveToBack()) ;
+  gauss.plotOn(frame3,DrawOption("F"),FillColor(kOrange),MoveToBack()) ;
 
   //
-  gauss.plotOn(frame4,Range(-8,3)) ;
+  gauss.plotOn(frame4,Range(-8,3),LineColor(kMagenta)) ;
 
 
 
   TCanvas* c = new TCanvas("rf107_plotstyles","rf107_plotstyles",800,800) ;
   c->Divide(2,2) ;
-  c->cd(1) ; frame1->Draw() ;
-  c->cd(2) ; frame2->Draw() ;
-  c->cd(3) ; frame3->Draw() ;
-  c->cd(4) ; frame4->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame1->GetYaxis()->SetTitleOffset(1.6) ; frame1->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.6) ; frame2->Draw() ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame3->GetYaxis()->SetTitleOffset(1.6) ; frame3->Draw() ;
+  c->cd(4) ; gPad->SetLeftMargin(0.15) ; frame4->GetYaxis()->SetTitleOffset(1.6) ; frame4->Draw() ;
 
   
 }

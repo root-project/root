@@ -14,8 +14,11 @@
 #endif
 #include "RooRealVar.h"
 #include "RooDataSet.h"
+#include "RooDataHist.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "RooWorkspace.h"
 #include "RooExpensiveObjectCache.h"

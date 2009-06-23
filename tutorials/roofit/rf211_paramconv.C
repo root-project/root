@@ -23,6 +23,7 @@
 #include "RooFFTConvPdf.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH2.h"
 using namespace RooFit ;
 
@@ -68,13 +69,14 @@ void rf211_paramconv()
   projModel->plotOn(frame) ;
 
   // Make 2d histogram of model(x;mean)
-  TH1* hh = model.createHistogram("hh",x,YVar(mean),ConditionalObservables(mean)) ;
+  TH1* hh = model.createHistogram("hh",x,Binning(50),YVar(mean,Binning(50)),ConditionalObservables(mean)) ;
   hh->SetTitle("histogram of model(x|mean)") ;
+  hh->SetLineColor(kBlue) ;
 
   // Draw frame on canvas
   TCanvas* c = new TCanvas("rf211_paramconv","rf211_paramconv",800,400) ;
   c->Divide(2) ;
-  c->cd(1) ; frame->Draw() ;
-  c->cd(2) ; hh->Draw("surf") ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.20) ; hh->GetZaxis()->SetTitleOffset(2.5) ; hh->Draw("surf") ;
 
 }

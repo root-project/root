@@ -15,12 +15,14 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "RooMCStudy.h"
 #include "RooChi2MCSModule.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 #include "TDirectory.h"
 
@@ -94,8 +96,8 @@ void rf802_mcstudy_addons()
 
   TCanvas* c = new TCanvas("rf802_mcstudy_addons","rf802_mcstudy_addons",800,400) ;
   c->Divide(2) ;
-  c->cd(1) ; hist_chi2->Draw() ; hist2_chi2->Draw("esame") ;
-  c->cd(2) ; hist_prob->Draw() ; hist2_prob->Draw("esame") ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; hist_chi2->GetYaxis()->SetTitleOffset(1.4) ; hist_chi2->Draw() ; hist2_chi2->Draw("esame") ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; hist_prob->GetYaxis()->SetTitleOffset(1.4) ; hist_prob->Draw() ; hist2_prob->Draw("esame") ;
 
 
   

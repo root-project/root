@@ -15,12 +15,14 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
 #include "RooMinuit.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 using namespace RooFit ;
 
@@ -127,6 +129,6 @@ void rf601_intminuit()
 
 
   new TCanvas("rf601_intminuit","rf601_intminuit",600,600) ;
-  frame->Draw() ;
+  gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
 
 }

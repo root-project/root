@@ -16,10 +16,12 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooAddPdf.h"
 #include "RooChebychev.h"
 #include "RooFitResult.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "TFile.h"
 #include "TStyle.h"
@@ -61,7 +63,7 @@ void rf608_fitresultaspdf()
   // C r e a t e M V   G a u s s i a n   p d f   o f   f i t t e d    p a r a m e t e r s
   // ------------------------------------------------------------------------------------
 
-  RooAbsPdf* parabPdf = r->createPdf(RooArgSet(frac,mean,sigma_g2)) ;
+  RooAbsPdf* parabPdf = r->createHessePdf(RooArgSet(frac,mean,sigma_g2)) ;
 
 
   // S o m e   e x e c e r c i s e s   w i t h   t h e   p a r a m e t e r   p d f 
@@ -102,14 +104,18 @@ void rf608_fitresultaspdf()
   // Draw the 2D projections of the 3D p.d.f.
   TCanvas* c2 = new TCanvas("rf608_fitresultaspdf_2","rf608_fitresultaspdf_2",900,600) ;
   c2->Divide(3,2) ;
-  c2->cd(1) ; hh_mean_sigmag2->Draw("surf3") ; 
-  c2->cd(2) ; hh_sigmag2_frac->Draw("surf3") ; 
-  c2->cd(3) ; hh_mean_frac->Draw("surf3") ; 
+  c2->cd(1) ; gPad->SetLeftMargin(0.15) ; hh_mean_sigmag2->GetZaxis()->SetTitleOffset(1.4) ; hh_mean_sigmag2->Draw("surf3") ; 
+  c2->cd(2) ; gPad->SetLeftMargin(0.15) ; hh_sigmag2_frac->GetZaxis()->SetTitleOffset(1.4) ; hh_sigmag2_frac->Draw("surf3") ; 
+  c2->cd(3) ; gPad->SetLeftMargin(0.15) ; hh_mean_frac->GetZaxis()->SetTitleOffset(1.4) ; hh_mean_frac->Draw("surf3") ; 
 
   // Draw the distributions of parameter points sampled from the p.d.f.
-  c2->cd(4) ; d->createHistogram("mean,sigma_g2",50,50)->Draw("lego3") ;
-  c2->cd(5) ; d->createHistogram("sigma_g2,frac",50,50)->Draw("lego3") ;
-  c2->cd(6) ; d->createHistogram("mean,frac",50,50)->Draw("lego3") ;
+  TH1* tmp1 = d->createHistogram("mean,sigma_g2",50,50) ;
+  TH1* tmp2 = d->createHistogram("sigma_g2,frac",50,50) ;
+  TH1* tmp3 = d->createHistogram("mean,frac",50,50) ;
+
+  c2->cd(4) ; gPad->SetLeftMargin(0.15) ; tmp1->GetZaxis()->SetTitleOffset(1.4) ; tmp1->Draw("lego3") ;
+  c2->cd(5) ; gPad->SetLeftMargin(0.15) ; tmp2->GetZaxis()->SetTitleOffset(1.4) ; tmp2->Draw("lego3") ;
+  c2->cd(6) ; gPad->SetLeftMargin(0.15) ; tmp3->GetZaxis()->SetTitleOffset(1.4) ; tmp3->Draw("lego3") ;
 
 }
 

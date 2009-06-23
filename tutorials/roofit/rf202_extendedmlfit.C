@@ -20,6 +20,7 @@
 #include "RooAddPdf.h"
 #include "RooExtendPdf.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -113,7 +114,7 @@ void rf202_extendedmlfit()
 
   // Draw the frame on the canvas
   new TCanvas("rf202_composite","rf202_composite",600,600) ;
-  xframe->Draw() ;
+  gPad->SetLeftMargin(0.15) ; xframe->GetYaxis()->SetTitleOffset(1.4) ; xframe->Draw() ;
 
   
 }

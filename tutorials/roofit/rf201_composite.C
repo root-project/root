@@ -20,6 +20,7 @@
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -118,7 +119,7 @@ void rf201_composite()
   
   // Draw the frame on the canvas
   new TCanvas("rf201_composite","rf201_composite",600,600) ;
-  xframe->Draw() ;
+  gPad->SetLeftMargin(0.15) ; xframe->GetYaxis()->SetTitleOffset(1.4) ; xframe->Draw() ;
 
 
 }

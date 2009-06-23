@@ -16,10 +16,12 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooAddPdf.h"
 #include "RooChebychev.h"
 #include "RooFitResult.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "TFile.h"
 #include "TStyle.h"
@@ -119,7 +121,9 @@ void rf607_fitresult()
   const TMatrixDSym& cov = r->covarianceMatrix() ;
 
   // Print correlation, covariance matrix
+  cout << "correlation matrix" << endl ;
   cor.Print() ;
+  cout << "covariance matrix" << endl ;
   cov.Print() ;
   
 
@@ -137,7 +141,7 @@ void rf607_fitresult()
 
   TCanvas* c = new TCanvas("rf607_fitresult","rf607_fitresult",800,400) ;
   c->Divide(2) ;
-  c->cd(1) ; hcorr->Draw("colz") ;
-  c->cd(2) ; frame->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; hcorr->GetYaxis()->SetTitleOffset(1.4) ; hcorr->Draw("colz") ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.6) ; frame->Draw() ;
 
 }

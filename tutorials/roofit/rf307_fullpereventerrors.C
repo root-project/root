@@ -17,12 +17,14 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "RooGaussModel.h"
+#include "RooConstVar.h"
 #include "RooDecay.h"
 #include "RooLandau.h"
 #include "RooProdPdf.h"
 #include "RooHistPdf.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 using namespace RooFit ;
 
@@ -104,8 +106,8 @@ void rf307_fullpereventerrors()
   // Draw all frames on canvas
   TCanvas* c = new TCanvas("rf307_fullpereventerrors","rf307_fullperventerrors",800, 400);
   c->Divide(2) ;
-  c->cd(1) ; hh_model->Draw("surf") ;
-  c->cd(2) ; frame->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.20) ; hh_model->GetZaxis()->SetTitleOffset(2.5) ; hh_model->Draw("surf") ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.6) ; frame->Draw() ;
 
 
 

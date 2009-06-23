@@ -17,12 +17,14 @@
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooFormulaVar.h"
 #include "RooGenericPdf.h"
 #include "RooPolynomial.h"
 #include "RooChi2Var.h"
 #include "RooMinuit.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "RooFitResult.h"
 using namespace RooFit ;
@@ -174,7 +176,7 @@ void rf403_weightedevts()
 
 
   new TCanvas("rf403_weightedevts","rf403_weightedevts",600,600) ;
-  frame->Draw() ;
+  gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.8) ; frame->Draw() ;
 
 
 }

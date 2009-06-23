@@ -16,9 +16,11 @@
 #endif
 #include "RooRealVar.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooAbsReal.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 using namespace RooFit ;
 
 
@@ -79,6 +81,7 @@ void rf110_normintegration()
 
   // Draw plot on canvas
   new TCanvas("rf110_normintegration","rf110_normintegration",600,600) ;
+  gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.6) ;
   frame->Draw() ;
 
 

@@ -21,6 +21,7 @@
 #include "RooPlot.h"
 #include "RooCustomizer.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 using namespace RooFit ;
 

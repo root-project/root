@@ -16,12 +16,14 @@
 #endif
 #include "RooRealVar.h"
 #include "RooDataSet.h"
+#include "RooDataHist.h"
 #include "RooGaussian.h"
 #include "RooPolyVar.h"
 #include "RooProdPdf.h"
 #include "RooPlot.h"
 #include "TRandom.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 using namespace RooFit ;
 
@@ -93,7 +95,7 @@ void rf303_conditional()
 
   // Make canvas and draw RooPlots
   new TCanvas("rf303_conditional","rf303_conditional",600, 460);
-  xframe->Draw() ;
+  gPad->SetLeftMargin(0.15) ; xframe->GetYaxis()->SetTitleOffset(1.2) ; xframe->Draw() ;
 }
 
 

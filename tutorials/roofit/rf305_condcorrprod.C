@@ -17,10 +17,12 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooPolyVar.h"
 #include "RooProdPdf.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 using namespace RooFit ;
 
@@ -87,9 +89,9 @@ void rf305_condcorrprod()
   // Make canvas and draw RooPlots
   TCanvas *c = new TCanvas("rf305_condcorrprod","rf05_condcorrprod",1200, 400);
   c->Divide(3);
-  c->cd(1) ; xframe->Draw() ;
-  c->cd(2) ; yframe->Draw() ;
-  c->cd(3) ; hh_model->Draw("surf") ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; xframe->GetYaxis()->SetTitleOffset(1.6) ; xframe->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; yframe->GetYaxis()->SetTitleOffset(1.6) ; yframe->Draw() ;
+  c->cd(3) ; gPad->SetLeftMargin(0.20) ; hh_model->GetZaxis()->SetTitleOffset(2.5) ; hh_model->Draw("surf") ;
 
 }
 

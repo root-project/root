@@ -15,6 +15,7 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "RooMCStudy.h"
@@ -22,6 +23,7 @@
 #include "RooDLLSignificanceMCSModule.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 #include "TDirectory.h"
 
@@ -112,10 +114,10 @@ void rf803_mcstudy_addons2()
   // Draw plots on canvas
   TCanvas* c = new TCanvas("rf803_mcstudy_addons2","rf802_mcstudy_addons2",800,800) ;
   c->Divide(2,2) ;
-  c->cd(1) ; dll_vs_ngen->Draw("box") ;
-  c->cd(2) ; z_vs_ngen->Draw("box") ;
-  c->cd(3) ; errnsig_vs_ngen->Draw("box") ;
-  c->cd(4) ; errnsig_vs_nsig->Draw("box") ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; dll_vs_ngen->GetYaxis()->SetTitleOffset(1.6) ; dll_vs_ngen->Draw("box") ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; z_vs_ngen->GetYaxis()->SetTitleOffset(1.6) ; z_vs_ngen->Draw("box") ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; errnsig_vs_ngen->GetYaxis()->SetTitleOffset(1.6) ; errnsig_vs_ngen->Draw("box") ;
+  c->cd(4) ; gPad->SetLeftMargin(0.15) ; errnsig_vs_nsig->GetYaxis()->SetTitleOffset(1.6) ; errnsig_vs_nsig->Draw("box") ;
 
  
   // Make RooMCStudy object available on command line after

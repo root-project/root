@@ -15,6 +15,7 @@
 #endif
 #include "RooRealVar.h"
 #include "RooDataSet.h"
+#include "RooDataHist.h"
 #include "RooGaussian.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
@@ -118,10 +119,10 @@ void rf102_dataimport()
   // Draw all frames on a canvas
   TCanvas* c = new TCanvas("rf102_dataimport","rf102_dataimport",800,800) ;
   c->Divide(2,2) ;
-  c->cd(1) ; frame->Draw() ;
-  c->cd(2) ; frame2->Draw() ;
-  c->cd(3) ; frame3->Draw() ;
-  c->cd(4) ; frame4->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame3->GetYaxis()->SetTitleOffset(1.4) ; frame3->Draw() ;
+  c->cd(4) ; gPad->SetLeftMargin(0.15) ; frame4->GetYaxis()->SetTitleOffset(1.4) ; frame4->Draw() ;
   
 }
 

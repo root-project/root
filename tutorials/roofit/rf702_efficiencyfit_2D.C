@@ -15,12 +15,14 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooCategory.h"
 #include "RooEfficiency.h"
 #include "RooPolynomial.h"
 #include "RooProdPdf.h"
 #include "RooFormulaVar.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 #include "RooPlot.h"
 using namespace RooFit ;
@@ -103,9 +105,9 @@ void rf702_efficiencyfit_2D(Bool_t flat=kFALSE)
   // Draw all frames on a canvas
   TCanvas* ca = new TCanvas("rf702_efficiency_2D","rf702_efficiency_2D",1200,400) ;
   ca->Divide(3) ;
-  ca->cd(1) ; hh_data_all->Draw("lego") ;
-  ca->cd(2) ; hh_data_sel->Draw("lego") ;
-  ca->cd(3) ; hh_eff->Draw("surf") ;
+  ca->cd(1) ; gPad->SetLeftMargin(0.15) ; hh_data_all->GetZaxis()->SetTitleOffset(1.8) ; hh_data_all->Draw("lego") ;
+  ca->cd(2) ; gPad->SetLeftMargin(0.15) ; hh_data_sel->GetZaxis()->SetTitleOffset(1.8) ; hh_data_sel->Draw("lego") ;
+  ca->cd(3) ; gPad->SetLeftMargin(0.15) ; hh_eff->GetZaxis()->SetTitleOffset(1.8) ; hh_eff->Draw("surf") ;
 
   return ;
 

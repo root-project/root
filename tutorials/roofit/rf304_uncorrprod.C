@@ -19,6 +19,7 @@
 #include "RooGaussian.h"
 #include "RooProdPdf.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -73,8 +74,8 @@ void rf304_uncorrprod()
   // Make canvas and draw RooPlots
   TCanvas *c = new TCanvas("rf304_uncorrprod","rf304_uncorrprod",800, 400);
   c->Divide(2);
-  c->cd(1) ; xframe->Draw() ;
-  c->cd(2) ; yframe->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; xframe->GetYaxis()->SetTitleOffset(1.4) ; xframe->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.15) ; yframe->GetYaxis()->SetTitleOffset(1.4) ; yframe->Draw() ;
 
 }
 

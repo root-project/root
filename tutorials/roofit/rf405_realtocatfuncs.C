@@ -16,12 +16,14 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooCategory.h"
 #include "RooThresholdCategory.h"
 #include "RooBinningCategory.h"
 #include "Roo1DTable.h"
 #include "RooArgusBG.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 using namespace RooFit ;
 
@@ -35,7 +37,7 @@ void rf405_realtocatfuncs()
 
   // Define a dummy PDF in x 
   RooRealVar x("x","x",0,10) ;
-  RooArgusBG a("a","argus(x)",x,RooRealConstant::value(10),RooRealConstant::value(-1)) ;
+  RooArgusBG a("a","argus(x)",x,RooConst(10),RooConst(-1)) ;
 
   // Generate a dummy dataset 
   RooDataSet *data = a.generate(x,10000) ;
@@ -115,7 +117,7 @@ void rf405_realtocatfuncs()
 
   new TCanvas("rf405_realtocatfuncs","rf405_realtocatfuncs",600,600) ;
   xframe->SetMinimum(0.01) ;
-  xframe->Draw() ;
+  gPad->SetLeftMargin(0.15) ; xframe->GetYaxis()->SetTitleOffset(1.4) ; xframe->Draw() ;
 
 
 }

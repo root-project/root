@@ -16,10 +16,12 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooLinearMorph.h"
 #include "RooNLLVar.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "TH1.h"
 using namespace RooFit ;
@@ -127,10 +129,10 @@ void rf705_linearmorph()
 
   TCanvas* c = new TCanvas("rf705_linearmorph","rf705_linearmorph",800,800) ;
   c->Divide(2,2) ;
-  c->cd(1) ; frame1->Draw() ;
-  c->cd(2) ; hh->Draw("surf") ;
-  c->cd(3) ; frame3->Draw() ;
-  c->cd(4) ; frame2->Draw() ;
+  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame1->GetYaxis()->SetTitleOffset(1.6) ; frame1->Draw() ;
+  c->cd(2) ; gPad->SetLeftMargin(0.20) ; hh->GetZaxis()->SetTitleOffset(2.5) ; hh->Draw("surf") ;
+  c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame3->GetYaxis()->SetTitleOffset(1.4) ; frame3->Draw() ;
+  c->cd(4) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
   
   
   return ;

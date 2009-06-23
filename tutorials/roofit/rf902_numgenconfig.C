@@ -16,8 +16,10 @@
 #endif
 #include "RooRealVar.h"
 #include "RooDataSet.h"
+#include "RooConstVar.h"
 #include "RooChebychev.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "RooNumGenConfig.h"
 #include "RooArgSet.h"

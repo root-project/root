@@ -15,11 +15,13 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooConstVar.h"
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "RooWorkspace.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TFile.h"
 #include "TH1.h"
 using namespace RooFit ;
@@ -59,7 +61,7 @@ void rf510_wsnamedsets()
 
   // Draw the frame on the canvas
   new TCanvas("rf510_wsnamedsets","rf503_wsnamedsets",600,600) ;
-  frame->Draw() ;
+  gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
 
 
   // Print workspace contents

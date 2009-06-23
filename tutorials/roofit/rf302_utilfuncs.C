@@ -17,12 +17,14 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "RooFormulaVar.h"
 #include "RooAddition.h"
 #include "RooProduct.h"
 #include "RooPolyVar.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "TH1.h"
 
 using namespace RooFit ;
@@ -103,9 +105,9 @@ void rf302_utilfuncs()
   // Make canvas and draw RooPlots
   TCanvas *c = new TCanvas("rf302_utilfuncs","rf302_utilfuncs",800, 800);
   c->Divide(2,2);
-  c->cd(1) ; hh_model_1->Draw("surf") ;
-  c->cd(2) ; hh_model_2->Draw("surf") ;
-  c->cd(3) ; hh_model_3->Draw("surf") ;
-  c->cd(4) ; hh_model_4->Draw("surf") ;
+  c->cd(1) ; gPad->SetLeftMargin(0.20) ; hh_model_1->GetZaxis()->SetTitleOffset(2.5) ; hh_model_1->Draw("surf") ;
+  c->cd(2) ; gPad->SetLeftMargin(0.20) ; hh_model_2->GetZaxis()->SetTitleOffset(2.5) ; hh_model_2->Draw("surf") ;
+  c->cd(3) ; gPad->SetLeftMargin(0.20) ; hh_model_3->GetZaxis()->SetTitleOffset(2.5) ; hh_model_3->Draw("surf") ;
+  c->cd(4) ; gPad->SetLeftMargin(0.20) ; hh_model_4->GetZaxis()->SetTitleOffset(2.5) ; hh_model_4->Draw("surf") ;
     
 }

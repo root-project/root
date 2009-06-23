@@ -17,9 +17,11 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooPolyVar.h"
+#include "RooConstVar.h"
 #include "RooChi2Var.h"
 #include "RooMinuit.h"
 #include "TCanvas.h"
+#include "TAxis.h"
 #include "RooPlot.h"
 #include "TRandom.h"
 
@@ -86,7 +88,7 @@ void rf609_xychi2fit()
 
   // Draw the plot on a canvas
   new TCanvas("rf609_xychi2fit","rf609_xychi2fit",600,600) ;
-  frame->Draw() ;
+  gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
   
 
 }
