@@ -18,6 +18,7 @@
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
 #include "RooArgSet.h"
+#include "RooArgList.h"
 #include "RooWorkspace.h"
 #include "RooStats/ProposalFunction.h"
 #include "RooStats/IntervalCalculator.h"
@@ -28,15 +29,18 @@ namespace RooStats {
    class MCMCCalculator : public IntervalCalculator {
 
    public:
+      // default constructor
       MCMCCalculator();
 
+      // alternate constructor
       MCMCCalculator(RooWorkspace& ws, RooAbsData& data, RooAbsPdf& pdf,
          RooArgSet& paramsOfInterest, ProposalFunction& proposalFunction,
-         Int_t numIters, Double_t size = 0.05);
+         Int_t numIters, RooArgList* axes = NULL, Double_t size = 0.05);
 
+      // alternate constructor
       MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
          RooArgSet& paramsOfInterest, ProposalFunction& proposalFunction,
-         Int_t numIters, Double_t size = 0.05);
+         Int_t numIters, RooArgList* axes = NULL, Double_t size = 0.05);
 
       virtual ~MCMCCalculator()
       {
@@ -58,29 +62,31 @@ namespace RooStats {
          if (!fWS)
             fWS = &ws;
          else {
-            //RooMsgService::instance().setGlobalKillBelow(RooMsgService::ERROR) ;
+	   //RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
             fWS->merge(ws);
-            //RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
+	    //RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
          }
       }
 
+      // set the name of the data set
       virtual void SetData(const char* data) { fDataName = data; }
 
       // Set the DataSet, add to the the workspace if not already there
       virtual void SetData(RooAbsData& data)
-      {      
+      {
          if (!fWS) {
             fWS = new RooWorkspace();
             fOwnsWorkspace = true; 
          }
          if (! fWS->data(data.GetName()) ) {
-            //RooMsgService::instance().setGlobalKillBelow(RooMsgService::ERROR) ;
+	   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
             fWS->import(data);
-            //RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
+	    RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
          }
          SetData(data.GetName());
       }
 
+      // set the name of the pdf
       virtual void SetPdf(const char* name) { fPdfName = name; }
 
       // Set the Pdf, add to the the workspace if not already there
@@ -90,9 +96,9 @@ namespace RooStats {
             fWS = new RooWorkspace();
          if (! fWS->pdf( pdf.GetName() ))
          {
-            //RooMsgService::instance().setGlobalKillBelow(RooMsgService::ERROR) ;
+            RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
             fWS->import(pdf);
-            //RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
+            RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
          }
          SetPdf(pdf.GetName());
       }
@@ -111,6 +117,12 @@ namespace RooStats {
       // set the number of iterations to run the metropolis algorithm
       virtual void SetNumIters(Int_t numIters)
       { fNumIters = numIters; }
+      // set the number of bins to create for each axis when constructing the interval
+      virtual void SetNumBins(Int_t numBins)
+      { fNumBins = numBins; }
+      // set which variables to put on each axis
+      virtual void SetAxes(RooArgList& axes)
+      { fAxes = &axes; }
 
    protected:
       Double_t fSize; // size of the test (eg. specified rate of Type I error)
@@ -122,6 +134,9 @@ namespace RooStats {
       const char* fPdfName; // name of common PDF in workspace
       const char* fDataName; // name of data set in workspace
       Int_t fNumIters; // number of iterations to run metropolis algorithm
+      Int_t fNumBins; // set the number of bins to create for each
+                      // axis when constructing the interval
+      RooArgList* fAxes; // which variables to put on each axis
 
       ClassDef(MCMCCalculator,1) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
    };

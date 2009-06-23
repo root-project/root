@@ -16,6 +16,8 @@
 #include "RooGlobalFunc.h"
 #endif
 #include "RooStats/ProfileLikelihoodCalculator.h"
+#include "RooStats/MCMCCalculator.h"
+#include "RooStats/UniformProposal.h"
 #include "RooStats/FeldmanCousins.h"
 #include "RooStats/NumberCountingPdfFactory.h"
 #include "RooStats/ConfInterval.h"
@@ -75,6 +77,7 @@ void rs101_limitexample()
   RooDataSet* data = new RooDataSet("exampleData", "exampleData", RooArgSet(*obs));
   data->add(*obs);
 
+  RooArgSet all(*s, *ratioBkgEff, *ratioSigEff);
 
   // not necessary
   modelWithConstraints->fitTo(*data, RooFit::Constrain(RooArgSet(*ratioSigEff, *ratioBkgEff)));
@@ -84,17 +87,14 @@ void rs101_limitexample()
 
   // First, let's use a Calculator based on the Profile Likelihood Ratio
   ProfileLikelihoodCalculator plc;
-  //  plc.SetWorkspace(*wspace);
   plc.SetPdf(*modelWithConstraints);
   plc.SetData(*data); 
   plc.SetParameters( paramOfInterest );
   plc.SetTestSize(.1);
   ConfInterval* lrint = plc.GetInterval();  // that was easy.
 
-
   // Second, use a Calculator based on the Feldman Cousins technique
   FeldmanCousins fc;
-  //  fc.SetWorkspace(*wspace);
   fc.SetPdf(*modelWithConstraints);
   fc.SetData(*data); 
   fc.SetParameters( paramOfInterest );
@@ -102,18 +102,37 @@ void rs101_limitexample()
   fc.FluctuateNumDataEntries(false); // number counting analysis: dataset always has 1 entry with N events observed
   fc.SetNBins(100); // number of points to test per parameter
   fc.SetTestSize(.1);
-  ConfInterval* fcint = 0;
+  ConfInterval* fcint = NULL;
   fcint = fc.GetInterval();  // that was easy.
 
+
+  // Third, use a Calculator based on Markov Chain monte carlo
+  UniformProposal up;
+  MCMCCalculator mc;
+  mc.SetPdf(*modelWithConstraints);
+  mc.SetData(*data);
+  mc.SetParameters(paramOfInterest);
+  mc.SetProposalFunction(up);
+  mc.SetNumIters(100000);
+  mc.SetTestSize(.1);
+  mc.SetNumBins(100);
+  ConfInterval* mcmcint = NULL;
+  mcmcint = mc.GetInterval();
 
   // Let's make a plot
   TCanvas* dataCanvas = new TCanvas("dataCanvas");
   dataCanvas->Divide(2,1);
 
+
   dataCanvas->cd(1);
   LikelihoodIntervalPlot plotInt((LikelihoodInterval*)lrint);
-  plotInt.SetTitle("Parameters contour plot");
+  plotInt.SetTitle("Profile Likelihood Ratio and Posterior for S");
   plotInt.Draw();
+
+  // draw posterior
+  TH1* posterior = ((MCMCInterval*)mcmcint)->GetPosteriorHist();  
+  posterior->Scale(1/posterior->GetBinContent(posterior->GetMaximumBin())); // scale so highest bin has y=1.
+  posterior->Draw("c,same");
 
 
   // Get Lower and Upper limits from Profile Calculator
@@ -121,28 +140,50 @@ void rs101_limitexample()
   cout << "Profile upper limit on s = " << ((LikelihoodInterval*) lrint)->UpperLimit(*s) << endl;
 
   // Get Lower and Upper limits from FeldmanCousins with profile construction
-  double fcul = ((PointSetInterval*) fcint)->UpperLimit(*s);
-  double fcll = ((PointSetInterval*) fcint)->LowerLimit(*s);
-  cout << "FC lower limit on s = " << fcll << endl;
-  cout << "FC upper limit on s = " << fcul << endl;
-  TLine* fcllLine = new TLine(fcll, 0, fcll, 1);
-  TLine* fculLine = new TLine(fcul, 0, fcul, 1);
-  fcllLine->SetLineColor(kRed);
-  fculLine->SetLineColor(kRed);
-  fcllLine->Draw("same");
-  fculLine->Draw("same");
+  if (fcint != NULL) {
+     double fcul = ((PointSetInterval*) fcint)->UpperLimit(*s);
+     double fcll = ((PointSetInterval*) fcint)->LowerLimit(*s);
+     cout << "FC lower limit on s = " << fcll << endl;
+     cout << "FC upper limit on s = " << fcul << endl;
+     TLine* fcllLine = new TLine(fcll, 0, fcll, 1);
+     TLine* fculLine = new TLine(fcul, 0, fcul, 1);
+     fcllLine->SetLineColor(kRed);
+     fculLine->SetLineColor(kRed);
+     fcllLine->Draw("same");
+     fculLine->Draw("same");
+     dataCanvas->Update();
+  }
+
+  // Get Lower and Upper limits from MCMC
+  double mcul = ((MCMCInterval*) mcmcint)->UpperLimit(*s);
+  double mcll = ((MCMCInterval*) mcmcint)->LowerLimit(*s);
+  cout << "MCMC lower limit on s = " << mcll << endl;
+  cout << "MCMC upper limit on s = " << mcul << endl;
+  TLine* mcllLine = new TLine(mcll, 0, mcll, 1);
+  TLine* mculLine = new TLine(mcul, 0, mcul, 1);
+  mcllLine->SetLineColor(kMagenta);
+  mculLine->SetLineColor(kMagenta);
+  mcllLine->Draw("same");
+  mculLine->Draw("same");
   dataCanvas->Update();
 
-  // plot the points used in the profile construction
+  // 3-d plot of the parameter points
   dataCanvas->cd(2);
+  // also plot the points in the markov chain
+  TTree& chain =  ((RooTreeDataStore*) ((MCMCInterval*)mcmcint)->GetChain()->store())->tree();
+  chain.SetMarkerStyle(6);
+  chain.SetMarkerColor(kRed);
+  chain.Draw("s:ratioSigEff:ratioBkgEff","w","box"); // 3-d box proporional to posterior
+
+  // the points used in the profile construction
   TTree& parameterScan =  ((RooTreeDataStore*) fc.GetPointsToScan()->store())->tree();
-  parameterScan.SetMarkerStyle(20);
-  parameterScan.Draw("s:ratioSigEff:ratioBkgEff","","");
+  parameterScan.SetMarkerStyle(24);
+  parameterScan.Draw("s:ratioSigEff:ratioBkgEff","","same");
 
 
   delete wspace;
   delete lrint;
-  delete fcint;
+  if (fcint != NULL) delete fcint;
   delete data;
 
   /// print timing info

@@ -20,7 +20,7 @@ ToyMCSampler is a simple implementation of the TestStatSampler interface.
 It generates Toy Monte Carlo for a given parameter point, and evaluates a 
 test statistic that the user specifies (passed via the RooStats::TestStatistic interface).
 
-We need to provide a nice way for the user to:
+Development notes: We need to provide a nice way for the user to:
 <ul>
   <li>specify the number of toy experiments (needed to probe a given confidence level)</li>
   <li>specify if the number of events per toy experiment should be fixed (conditioning) or floating (unconditional)</li>

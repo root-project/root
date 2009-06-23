@@ -13,7 +13,7 @@
 /*
 BEGIN_HTML
 <p>
-NeymanConstruction is a concrete implementation of teh NeymanConstruction interface that, as the name suggests,
+NeymanConstruction is a concrete implementation of the NeymanConstruction interface that, as the name suggests,
 performs a NeymanConstruction.  
 It produces a RooStats::PointSetInterval, which is a concrete implementation of the ConfInterval interface.  
 </p>

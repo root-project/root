@@ -56,19 +56,30 @@ namespace RooStats {
       }
 
       // Set the DataSet, add to the the workspace if not already there
-      virtual void SetData(RooAbsData& data) {
-	if(&data){
-	  fWS->import(data);
-	  fDataName = data.GetName();
-	  //	  fWS->Print();
-	}
+      virtual void SetData(RooAbsData& data) {      
+         if (!fWS) {
+            fWS = new RooWorkspace();
+            fOwnsWorkspace = true; 
+         }
+         if (! fWS->data(data.GetName()) ) {
+	   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+            fWS->import(data);
+	    RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+         }
+         SetData(data.GetName());
       }
+
       // Set the Pdf, add to the the workspace if not already there
-      virtual void SetPdf(RooAbsPdf& pdf) { 
-	if(&pdf){
-	  fWS->import(pdf);
-	  fPdfName = pdf.GetName();
-	}
+      virtual void SetPdf(RooAbsPdf& pdf) { 	
+         if (!fWS) 
+            fWS = new RooWorkspace();
+         if (! fWS->pdf( pdf.GetName() ))
+         {
+            RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+            fWS->import(pdf);
+            RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+         }
+         SetPdf(pdf.GetName());
       }
 
       // specify the name of the dataset in the workspace to be used

@@ -71,7 +71,7 @@ namespace RooStats {
       TRandom* fRand;
 
    protected:
-      ClassDef(DebuggingTestStat,1)   
+      ClassDef(DebuggingTestStat,1)   // A concrete implementation of the TestStatistic interface, useful for debugging.
    };
 
 }

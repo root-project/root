@@ -9,19 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/////////////////////////////////////////
-// NumberCountingUtils
-//
-// Encapsulates common number counting utilities
-/////////////////////////////////////////
-  ///////////////////////////////////
-  // Standalone Functions.
-  // Naming conventions:
-  //  Exp = Expected
-  //  Obs = Observed
-  //  P   = p-value
-  //  Z   = Z-value or significance in Sigma (one-sided convention)
-  //////////////////////////////////
 
 #ifndef RooStats_NumberCountingUtils
 #include "RooStats/NumberCountingUtils.h"
@@ -47,23 +34,6 @@ Double_t RooStats::NumberCountingUtils::BinomialExpP(Double_t signalExp, Double_
   // Normally one would know tau directly, but here it is determiend from
   // the background uncertainty.  This is not strictly correct, but a useful 
   // approximation.
-  //
-  //
-  // This is based on code and comments from Bob Cousins 
-  //  based on the following papers:
-  //
-  // Statistical Challenges for Searches for New Physics at the LHC
-  // Authors: Kyle Cranmer
-  // http://arxiv.org/abs/physics/0511028
-  //
-  //  Measures of Significance in HEP and Astrophysics
-  //  Authors: J. T. Linnemann
-  //  http://arxiv.org/abs/physics/0312059
-  //
-  // In short, this is the exact frequentist solution to the problem of
-  // a main measurement x distributed as a Poisson around s+b and a sideband or 
-  // auxiliary measurement y distributed as a Poisson around \taub.  Eg. 
-  // L(x,y|s,b,\tau) = Pois(x|s+b)Pois(y|\tau b)
 
 
   //SIDE BAND EXAMPLE
@@ -165,11 +135,11 @@ Double_t RooStats::NumberCountingUtils::BinomialWithTauExpZ(Double_t signalExp, 
 
 
 Double_t RooStats::NumberCountingUtils::BinomialObsZ(Double_t mainObs, Double_t backgroundObs, Double_t relativeBkgUncert){
-  // See BinomialObsZ
+  // See BinomialObsP
   return RooStats::PValueToSignificance( BinomialObsP(mainObs,backgroundObs,relativeBkgUncert) ) ;
 }
 
 Double_t RooStats::NumberCountingUtils::BinomialWithTauObsZ(Double_t mainObs, Double_t auxiliaryObs, Double_t tau){
-  // See BinomialWithTauObsZ
+  // See BinomialWithTauObsP
   return RooStats::PValueToSignificance( BinomialWithTauObsP(mainObs,auxiliaryObs,tau) ) ;  
 }

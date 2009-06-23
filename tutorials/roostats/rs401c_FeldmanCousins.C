@@ -89,19 +89,10 @@ void rs401c_FeldmanCousins()
   std::cout << "is this point in the interval? " << 
     interval->IsInInterval(parameters) << std::endl;
   
-  // make a plot
-  //  RooPlot plot(param1, param2);
-  //  parameterScan.plotOn(&plot);
-  //  plot.Draw();
-
-  //  TTree* tree = const_cast<TTree*> (&parameterScan.tree());
-  //  tree->Print();
-  //  tree->Draw("param1:param2 >> hist");
-  //  TH2F* hist = (TH2F*) gROOT->Get("hist");
-  //  hist->Draw();
 
   RooDataHist* parameterScan = (RooDataHist*) fc.GetPointsToScan();
-  //  parameterScan->Draw("mu");
+  TH1F* hist = (TH1F*) parameterScan->createHistogram("mu",30);
+  hist->Draw();
 
  
   RooArgSet* tmpPoint;

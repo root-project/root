@@ -63,7 +63,7 @@ using namespace RooStats;
 //_______________________________________________________
 FeldmanCousins::FeldmanCousins() {
    // default constructor
-  fWS = new RooWorkspace();
+  fWS = new RooWorkspace("FeldmanCousinsWS");
   fOwnsWorkspace = true;
   fDataName = "";
   fPdfName = "";

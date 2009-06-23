@@ -1,5 +1,6 @@
 // @(#)root/roostats:$Id: ProposalFunction.h 26805 2009-06-17 14:31:02Z kbelasco $
-// Author: Kevin Belasco        17/06/2009
+// Authors: Kevin Belasco        17/06/2009
+// Authors: Kyle Cranmer         17/06/2009
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -86,8 +87,7 @@ namespace RooStats {
       // Assuming all values in coll are RooRealVars, randomize their values.
       virtual void randomizeCollection(RooAbsCollection& coll);
 
-      // Interface for tools setting limits (producing confidence intervals)
-      ClassDef(ProposalFunction,1)
+      ClassDef(ProposalFunction,1) // Interface for the proposal function used with Markov Chain Monte Carlo
    };
 }
 

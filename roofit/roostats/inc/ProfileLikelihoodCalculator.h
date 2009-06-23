@@ -15,6 +15,7 @@
 #include "RooStats/CombinedCalculator.h"
 #endif
 
+#include "RooStats/LikelihoodInterval.h"
 
 namespace RooStats {
 
@@ -34,6 +35,7 @@ namespace RooStats {
     
       // main interface, implemented
       virtual ConfInterval* GetInterval() const ; 
+
       // main interface, implemented
       virtual HypoTestResult* GetHypoTest() const;   
     

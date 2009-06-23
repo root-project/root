@@ -42,7 +42,7 @@ namespace RooStats {
     Double_t fTolerance; // probability to add an unecessary term
 
    protected:
-      ClassDef(BernsteinCorrection,1) 
+    ClassDef(BernsteinCorrection,1) // A utility to add polynomial corrrection terms to a model to improve the description of data.
    };
 }
 

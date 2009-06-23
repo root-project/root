@@ -1,3 +1,26 @@
+// @(#)root/roostats:$Id: UniformProposal.cxx 26805 2009-06-17 14:31:02Z kbelasco $
+// Authors: Kevin Belasco        17/06/2009
+// Authors: Kyle Cranmer         17/06/2009
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//_________________________________________________
+/*
+BEGIN_HTML
+<p>
+UniformProposal is a concrete implementation of the ProposalFunction interface for use with a Markov Chain Monte Carlo algorithm.  
+This proposal function is a uniformly random distribution over the parameter space.  The proposal ignores the current point 
+when it proposes a new point.  The proposal function is symmetric, though it may not be very efficient. 
+</p>
+END_HTML
+*/
+//
+
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif

@@ -54,6 +54,7 @@ END_HTML
 #include "RooGlobalFunc.h"
 #include "RooCmdArg.h"
 #include "RooWorkspace.h"
+#include "RooMsgService.h"
 #include "TTree.h"
 #include <sstream>
 
@@ -247,11 +248,13 @@ void NumberCountingPdfFactory::AddData(Double_t* mainMeas,
       Double_t _tau = 1./back[i]/back_syst[i]/back_syst[i];
       RooRealVar*  tau = SafeObservableCreation(ws,  ("tau"+str.str()).c_str(), _tau );
 
-      cout << "\nWARNING: changed value of " << tau->GetName() << " to " << tau->getVal() << 
+      oocoutW(ws,ObjectHandling) << "NumberCountingPdfFactory: changed value of " << tau->GetName() << " to " << tau->getVal() << 
          " to be consistent with background and its uncertainty. " <<
          " Also stored these values of tau into workspace with name . " << (string(tau->GetName())+string(dsName)).c_str() <<
          " if you test with a different dataset, you should adjust tau appropriately.\n"<< endl;
+      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
       ws->import(*((RooRealVar*) tau->clone( (string(tau->GetName())+string(dsName)).c_str() ) ) );
+      RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
       // need to be careful
       RooRealVar* x = SafeObservableCreation(ws, ("x"+str.str()).c_str(), mainMeas[i]);
@@ -325,11 +328,13 @@ void NumberCountingPdfFactory::AddDataWithSideband(Double_t* mainMeas,
 
       RooRealVar*  tau = SafeObservableCreation(ws,  ("tau"+str.str()).c_str(), _tau );
 
-      cout << "\nWARNING: changed value of " << tau->GetName() << " to " << tau->getVal() << 
+      oocoutW(ws,ObjectHandling) << "NumberCountingPdfFactory: changed value of " << tau->GetName() << " to " << tau->getVal() << 
          " to be consistent with background and its uncertainty. " <<
          " Also stored these values of tau into workspace with name . " << (string(tau->GetName())+string(dsName)).c_str() <<
          " if you test with a different dataset, you should adjust tau appropriately.\n"<< endl;
+      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
       ws->import(*((RooRealVar*) tau->clone( (string(tau->GetName())+string(dsName)).c_str() ) ) );
+      RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
       // need to be careful
       RooRealVar* x = SafeObservableCreation(ws, ("x"+str.str()).c_str(), mainMeas[i]);

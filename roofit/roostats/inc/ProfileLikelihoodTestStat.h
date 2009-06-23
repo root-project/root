@@ -223,7 +223,7 @@ namespace RooStats {
       //      Double_t fLastMLE;
 
    protected:
-      ClassDef(ProfileLikelihoodTestStat,1)   
+      ClassDef(ProfileLikelihoodTestStat,1)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 
 }

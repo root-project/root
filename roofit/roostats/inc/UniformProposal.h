@@ -1,3 +1,14 @@
+// @(#)root/roostats:$Id: UniformProposal.h 26805 2009-06-17 14:31:02Z kbelasco $
+// Authors: Kevin Belasco        17/06/2009
+// Authors: Kyle Cranmer         17/06/2009
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOSTATS_UniformProposal
 #define ROOSTATS_UniformProposal
 
@@ -40,8 +51,7 @@ namespace RooStats {
 
       virtual ~UniformProposal() {}
 
-      // Interface for tools setting limits (producing confidence intervals)
-      ClassDef(UniformProposal,1)
+      ClassDef(UniformProposal,1) // A concrete implementation of ProposalFunction, that uniformly samples the parameter space.
    };
 }
 

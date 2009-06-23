@@ -1,6 +1,6 @@
 // @(#)root/roostats:$Id: MCMCCalculator.cxx 28978 2009-06-17 14:33:31Z kbelasco $
-// Author: Kevin Belasco        17/06/2009
-
+// Authors: Kevin Belasco        17/06/2009
+// Authors: Kyle Cranmer         17/06/2009
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -8,6 +8,41 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+//_________________________________________________
+/*
+BEGIN_HTML
+<p>
+MCMCCalculator is a concrete implementation of IntervalCalculator.
+It creates a Markov Chain of data points using Monte Carlo, implementing the
+Metropolis algorithm.  From this Markov Chain, this class can generate a
+MCMCInterval as per user specification.
+</p>
+
+<p>
+Note: Currently the Markov Chain is created within this class, but this
+feature will be factored out in future implementations so that Markov
+Chains can be generated for other purposes.
+</p>
+
+<p>
+In the main algorithm, new points in the space of parameters
+are proposed and then visited based on their relative likelihoods.
+This class can accept any implementation of the ProposalFunction interface,
+including non-symmetric proposal functions, and still maintain detailed balance.
+</p>
+
+<p>
+The interface allows one to pass the model, data, and parameters via a workspace and
+then specify them with names.
+</p>
+<p>
+After configuring the calculator, one only needs to ask GetInterval(), which will
+return an ConfInterval (MCMCInterval in this case) pointer.
+</p>
+END_HTML
+*/
+//_________________________________________________
 
 #ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
@@ -21,6 +56,8 @@
 #include "RooNLLVar.h"
 #include "RooGlobalFunc.h"
 #include "RooDataSet.h"
+#include "RooArgSet.h"
+#include "RooArgList.h"
 #include "TRandom.h"
 #include "TH1.h"
 #include "TMath.h"
@@ -44,12 +81,14 @@ MCMCCalculator::MCMCCalculator()
    fPdfName = NULL;
    fDataName = NULL;
    fNumIters = 0;
+   fNumBins = 50;
+   fAxes = NULL;
 }
 
 MCMCCalculator::MCMCCalculator(RooWorkspace& ws, RooAbsData& data,
                 RooAbsPdf& pdf, RooArgSet& paramsOfInterest,
                 ProposalFunction& proposalFunction, Int_t numIters,
-                Double_t size)
+                RooArgList* axes, Double_t size)
 {
    fOwnsWorkspace = false;
    SetWorkspace(ws);
@@ -59,11 +98,13 @@ MCMCCalculator::MCMCCalculator(RooWorkspace& ws, RooAbsData& data,
    SetTestSize(size);
    SetProposalFunction(proposalFunction);
    fNumIters = numIters;
+   fNumBins = 50;
+   fAxes = axes;
 }
 
 MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
                 RooArgSet& paramsOfInterest, ProposalFunction& proposalFunction,
-                Int_t numIters, Double_t size)
+                Int_t numIters, RooArgList* axes, Double_t size)
 {
    // alternate constructor
    fWS = new RooWorkspace();
@@ -74,6 +115,8 @@ MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
    SetTestSize(size);
    SetProposalFunction(proposalFunction);
    fNumIters = numIters;
+   fNumBins = 50;
+   fAxes = axes;
 }
 
 MCMCInterval* MCMCCalculator::GetInterval() const
@@ -100,7 +143,9 @@ MCMCInterval* MCMCCalculator::GetInterval() const
    RooAbsReal* nll = pdf->createNLL(*data, Constrain(*constrainedParams));
    delete constrainedParams;
 
+   RooArgSet* nllParams = nll->getParameters(*data);
    Int_t weight = 0;
+
    for (int i = 0; i < fNumIters; i++) {
      //       cout << "Iteration # " << i << endl;
      if (i % 100 == 0){
@@ -110,9 +155,9 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 
       fPropFunc->Propose(xPrime);
 
-      RooStats::SetParameters(&xPrime, nll->getParameters(*data));
+      RooStats::SetParameters(&xPrime, nllParams);
       Double_t xPrimeNLL = nll->getVal();
-      RooStats::SetParameters(&x, nll->getParameters(*data));
+      RooStats::SetParameters(&x, nllParams);
       Double_t xNLL = nll->getVal();
       Double_t diff = xPrimeNLL - xNLL;
 
@@ -149,6 +194,8 @@ MCMCInterval* MCMCCalculator::GetInterval() const
          }
       }
    }
+   delete nllParams;
+   printf("\n");
    // make sure to add the last point
    points->addFast(x, (Double_t)weight);
 
@@ -158,6 +205,9 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 
    MCMCInterval* interval = new MCMCInterval("mcmcinterval", "MCMCInterval",
                                              *fPOI, *points);
+   if (fAxes != NULL)
+      interval->SetAxes(*fAxes);
+   interval->SetNumBins(fNumBins);
    interval->SetConfidenceLevel(1.0 - fSize);
    return interval;
 }

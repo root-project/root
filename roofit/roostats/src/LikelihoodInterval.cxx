@@ -230,6 +230,7 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param )
 {  
 // A binary search to get lower/upper limit for a given parameter.  Slow.
 
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
   RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
   RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(param.GetName());
 
@@ -268,6 +269,7 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param )
   }
   
 
+  RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
   // put the parameters back to the way they were
   //  (*fParameters) = (*snapshot);
@@ -284,6 +286,8 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param )
 {  
 
   // A binary search to get lower/upper limit for a given parameter.  Slow.
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+
   RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
   RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(param.GetName());
 
@@ -322,6 +326,8 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param )
   
 
   // delete newProfile;
+
+  RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
   // put the parameters back to the way they were
   //  (*fParameters) = (*snapshot);
