@@ -1744,6 +1744,8 @@ void TFitEditor::DoFit()
 
    switch (fType) {
       case kObjectHisto: {
+         
+         cout << "P0: " << fitFunc->GetParameter(0) << endl;
 
          TH1 *hist = dynamic_cast<TH1*>(fFitObject);
          ROOT::Fit::FitObject(hist, fitFunc, fitOpts, mopts, strDrawOpts, drange);
@@ -2882,9 +2884,11 @@ TF1* TFitEditor::GetFitFunction()
          TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
          TF1* tmpF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
          if ( tmpF1 != 0 && fitFunc != 0 && 
-              strcmp(tmpF1->GetExpFormula(), fEnteredFunc->GetText()) == 0 )
+              strcmp(tmpF1->GetExpFormula(), fEnteredFunc->GetText()) == 0 ) {
             // copy the parameters!
-              fitFunc->SetParameters(tmpF1->GetParameters());
+            fitFunc->SetParameters(tmpF1->GetParameters());
+            GetParameters(fFuncPars, fitFunc);
+         }
       }
    }
 
