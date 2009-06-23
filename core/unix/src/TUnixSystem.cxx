@@ -386,11 +386,12 @@ static void SetRootSys()
    if (dladdr(addr, &info) && info.dli_fname && info.dli_fname[0]) {
       char respath[kMAXPATHLEN];
       if (!realpath(info.dli_fname, respath)) {
-         ::SysError("TUnixSystem::SetRootSys", "error getting realpath of libCore");
-         strcpy(respath, info.dli_fname);
+         if (!gSystem->Getenv("ROOTSYS"))
+            ::SysError("TUnixSystem::SetRootSys", "error getting realpath of libCore, please set ROOTSYS in the shell");
+      } else {
+         TString rs = gSystem->DirName(respath);
+         gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
       }
-      TString rs = gSystem->DirName(respath);
-      gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
    }
 #else
    return;

@@ -30,7 +30,7 @@ excl="main proof/proofd net/rootd net/xrootd rootx montecarlo/pythia6 \
       roofit/roostats sql/oracle net/netx net/auth net/rpdutils math/mathmore \
       math/minuit2 io/gfal net/monalisa proof/proofx math/fftw gui/qtgsi \
       sql/odbc io/castor math/unuran geom/gdml cint/cint7 montecarlo/g4root \
-      graf3d/eve net/glite misc/minicern misc/memstat"
+      graf3d/eve net/glite misc/minicern misc/memstat net/bonjour"
 
 objs=""
 gobjs=""
