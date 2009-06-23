@@ -252,8 +252,8 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
    Float_t suw=0, buw=0;
    Float_t target=0, target2=0;
    const UInt_t cNvars = fNvars;
-   Float_t xmin[cNvars]; 
-   Float_t xmax[cNvars]; 
+   Float_t *xmin = new Float_t[Int_t(cNvars)]; 
+   Float_t *xmax = new Float_t[Int_t(cNvars)]; 
    for (UInt_t iev=0; iev<eventSample.size(); iev++) {
       const TMVA::Event* evt = eventSample[iev];
       const Float_t weight = evt->GetWeight();
@@ -311,6 +311,8 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
       node->SetSampleMin(ivar,xmin[ivar]);
       node->SetSampleMax(ivar,xmax[ivar]);
    }
+   delete[] xmin;
+   delete[] xmax;
   
    // I now demand the minimum number of events for both daughter nodes. Hence if the number
    // of events in the parent node is not at least two times as big, I don't even need to try

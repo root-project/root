@@ -233,9 +233,9 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector<Event*>&
 
 
    // perform event loop
-   Float_t sumOfWeights[numDist]; 
-   Float_t minWeight[numDist]; 
-   Float_t maxWeight[numDist]; 
+   Float_t *sumOfWeights = new Float_t[numDist]; 
+   Float_t *minWeight = new Float_t[numDist]; 
+   Float_t *maxWeight = new Float_t[numDist]; 
    for (UInt_t i=0; i<numDist; i++) {
       sumOfWeights[i]=0;
       minWeight[i]=10E10;
@@ -290,6 +290,10 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector<Event*>&
          nbins[icl][ivar] = vsForBinning[icl][ivar].size();
       }
    }
+
+   delete[] sumOfWeights;
+   delete[] minWeight;
+   delete[] maxWeight;
 
    // create histogram for the cumulative distribution.
    fCumulativeDist.resize(nvar);

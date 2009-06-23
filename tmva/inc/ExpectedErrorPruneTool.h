@@ -78,7 +78,7 @@ namespace TMVA {
       Double_t fDeltaPruneStrength; //! the stepsize for optimizing the pruning strength parameter
       Double_t fNodePurityLimit; //! the purity limit for labelling a terminal node as signal
       std::vector<DecisionTreeNode*> fPruneSequence; //! the (optimal) prune sequence
-      std::multimap<Double_t, Double_t> fQualityMap; //! map of tree quality <=> prune strength
+      std::multimap<const Double_t, Double_t> fQualityMap; //! map of tree quality <=> prune strength
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& log() const { return *fLogger; }
    };

@@ -80,7 +80,7 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
             fPruneSequence[i]->SetTerminal(); // prune all the nodes from the sequence
          // test the quality of the pruned tree
          Double_t quality = 1.0 - dt->TestPrunedTreeQuality()/weights;
-         fQualityMap.insert(std::pair<Double_t,Double_t>(quality,fPruneStrength));
+         fQualityMap.insert(std::make_pair<const Double_t,Double_t>(quality,fPruneStrength));
 
          nnodes = CountNodes((DecisionTreeNode*)dt->GetRoot()); // count the number of nodes in the pruned tree
 

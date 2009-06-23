@@ -597,7 +597,7 @@ TMVA::DataSet* TMVA::DataSetFactory::MixEvents( TMVA::DataSetInfo& dsi,
          // the index array
          std::vector<EVTVSIZE> idxArray(size);
          std::vector<Char_t>   allPickedIdxArray(size);
-         allPickedIdxArray.assign( size, kFALSE );
+         allPickedIdxArray.assign( size, Char_t(kFALSE) );
 
          // search for all events of which the trees have been defined as training or testing by the user
          std::vector< std::pair< Long64_t, Types::ETreeType > >::iterator it = userDefinedEventTypes[cl].begin();
@@ -619,7 +619,7 @@ TMVA::DataSet* TMVA::DataSetFactory::MixEvents( TMVA::DataSetInfo& dsi,
                Int_t tp = (currentType == Types::kTraining?0:1);
                evtList[cl][tp]->Enter(Long64_t(i));       // add the eventnumber of the picked event to the TEventList
                (userDefN[cl][tp])++;                      // one more has been picked
-               allPickedIdxArray[i] = kTRUE;              // mark as picked
+               allPickedIdxArray[i] = Char_t(kTRUE);              // mark as picked
 
                if (finalNEvents.at(cl).at(0) < userDefN[cl][tp]) 
                   log() << kFATAL << "More " << (currentType == Types::kTraining?"training":"testing")  << " events [" << userDefN[cl][tp] << "] requested than available for the "
@@ -635,7 +635,7 @@ TMVA::DataSet* TMVA::DataSetFactory::MixEvents( TMVA::DataSetInfo& dsi,
 
             // the selected events
             std::vector<Char_t> thisPickedIdxArray(size);
-            thisPickedIdxArray.assign( size, kFALSE );
+            thisPickedIdxArray.assign( size, Char_t(kFALSE) );
 
 
             EVTVSIZE pos = 0;
@@ -643,13 +643,13 @@ TMVA::DataSet* TMVA::DataSetFactory::MixEvents( TMVA::DataSetInfo& dsi,
                // throw random positions until one is found where the event hasn't been picked yet
                do { 
                   pos = EVTVSIZE(size * rndm.Rndm()); 
-               } while (allPickedIdxArray.at(idxArray.at(pos)));
+               } while (allPickedIdxArray.at(idxArray.at(pos)) == Char_t(kTRUE) );
                // pick the found event
-               thisPickedIdxArray.at(idxArray.at(pos)) = kTRUE;
-               allPickedIdxArray .at(idxArray.at(pos)) = kTRUE;
+               thisPickedIdxArray.at(idxArray.at(pos)) = Char_t(kTRUE);
+               allPickedIdxArray .at(idxArray.at(pos)) = Char_t(kTRUE);
             }
             // write all for this class and this event type picked events into the according TEventList
-            for (EVTVSIZE i=0; i<size; i++) if (thisPickedIdxArray.at(i)==kTRUE) evtList.at(cl).at(itype)->Enter(Long64_t(i)); 
+            for (EVTVSIZE i=0; i<size; i++) if (thisPickedIdxArray.at(i)==Char_t(kTRUE)) evtList.at(cl).at(itype)->Enter(Long64_t(i)); 
          }
       } 
       else if (splitMode == "ALTERNATE") {

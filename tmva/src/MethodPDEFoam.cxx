@@ -200,7 +200,8 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
    if (fMultiTargetRegression)
       kDim += tDim;
 
-   Double_t xmin[kDim], xmax[kDim];
+   Double_t *xmin = new Double_t[kDim];
+   Double_t *xmax = new Double_t[kDim];
 
    // set default values
    for (UInt_t dim=0; dim<kDim; dim++) {
@@ -235,7 +236,7 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
 
    // Create and fill histograms for each dimension (with same events as before), to determine range 
    // based on number of events outside the range
-   TH1F *range_h[kDim]; 
+   TH1F **range_h = new TH1F*[kDim]; 
    char text[200];
    for (UInt_t dim=0; dim<kDim; dim++) {
       sprintf(text, "range%i", dim);
@@ -282,10 +283,14 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
       Xmax.push_back(xmax[dim]);
    }
 
+
+   delete[] xmin;
+   delete[] xmax;
+
    // delete histos
-   for (UInt_t dim=0; dim<kDim; dim++) {
+   for (UInt_t dim=0; dim<kDim; dim++)
       delete range_h[dim];
-   }
+   delete[] range_h;
 
    return;
 }

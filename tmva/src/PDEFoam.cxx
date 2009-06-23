@@ -504,13 +504,16 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
    // use new routine that fills edge histograms directly from the 
    // input distributions, w/o MC sampling
    if (fNSampl==0) {
-      Double_t cellPosiarr[fDim], cellSizearr[fDim];
+      Double_t *cellPosiarr = new Double_t[Int_t(fDim)];
+      Double_t *cellSizearr = new Double_t[Int_t(fDim)];
       for (Int_t idim=0; idim<fDim; idim++) {
          cellPosiarr[idim]=cellPosi[idim];
          cellSizearr[idim]=cellSize[idim];
       }
       // not jet implemented:
       // fRho->FillEdgeHist(fDim, fHistEdg, cellPosiarr, cellSizearr, ceSum, dx);
+      delete[] cellPosiarr;
+      delete[] cellSizearr;
    }   
    else {
       // ||||||||||||||||||||||||||BEGIN MC LOOP|||||||||||||||||||||||||||||
@@ -3378,7 +3381,7 @@ void TMVA::TFDISTR::FillEdgeHist( Int_t nDim, TObjArray *myfHistEdg,
    Double_t wt;
    std::vector<Double_t> lb(nDim+1);
    std::vector<Double_t> ub(nDim+1);
-   Double_t valuesarr[nDim];
+   Double_t *valuesarr = new Double_t[Int_t(nDim)];
   
    for (Int_t idim=0; idim<nDim; idim++){
       lb[idim]=fXmin[idim]+(fXmax[idim]-fXmin[idim])*cellPosi[idim];
@@ -3409,6 +3412,8 @@ void TMVA::TFDISTR::FillEdgeHist( Int_t nDim, TObjArray *myfHistEdg,
       if (ceSum[3]>wt) ceSum[3]=wt;  // minimum weight;
       if (ceSum[4]<wt) ceSum[4]=wt;  // maximum weight
    }
+
+   delete[] valuesarr;
 }
 
 //________________________________________________________________________________________________

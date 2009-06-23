@@ -103,11 +103,11 @@ TMVA::DataSet::~DataSet()
    // delete sampling
    if (fSamplingRandom != 0 ) delete fSamplingRandom;
 
-   std::vector< std::pair< Float_t, Long64_t >* >::iterator it;
+   std::vector< std::pair< Float_t, Long64_t >* >::iterator itEv;
    std::vector< std::vector<std::pair< Float_t, Long64_t >* > >::iterator treeIt;
    for (treeIt = fSamplingEventList.begin(); treeIt != fSamplingEventList.end(); treeIt++ ) {
-      for (it = (*treeIt).begin(); it != (*treeIt).end(); it++) {
-         delete (*it);
+      for (itEv = (*treeIt).begin(); itEv != (*treeIt).end(); itEv++) {
+         delete (*itEv);
       }
    }
 
@@ -384,7 +384,7 @@ void TMVA::DataSet::InitSampling( Float_t fraction, Float_t weight, UInt_t seed 
    fSamplingEventList.at( treeIdx ).reserve( nEvts );
    fSamplingSelected.at( treeIdx ).reserve( fSamplingNEvents.at(treeIdx) );
    for (Long64_t ievt=0; ievt<nEvts; ievt++) {
-      std::pair<Float_t,Long64_t> *p = new std::pair<Float_t,Long64_t>(std::make_pair(1.0,ievt));
+      std::pair<Float_t,Long64_t> *p = new std::pair<Float_t,Long64_t>(std::make_pair<Float_t,Long64_t>(1.0,ievt));
       fSamplingEventList.at( treeIdx ).push_back( p );
    }
 
@@ -514,9 +514,9 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
    TString treeName( (type == Types::kTraining ? "TrainTree" : "TestTree" ) );
    TTree *tree = new TTree(treeName,treeName);
 
-   Float_t varVals[fdsi.GetNVariables()];
-   Float_t tgtVals[fdsi.GetNTargets()  ];
-   Float_t visVals[fdsi.GetNSpectators() ];
+   Float_t *varVals = new Float_t[fdsi.GetNVariables()];
+   Float_t *tgtVals = new Float_t[fdsi.GetNTargets()];
+   Float_t *visVals = new Float_t[fdsi.GetNSpectators()];
 
    UInt_t cls;
    Float_t weight;
@@ -524,11 +524,16 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
    char *className = new char[40];
    TBranch *classNameBranch;
 
-   Float_t metVals[fResults.at(t).size()][fdsi.GetNTargets()+1];
+
+   //Float_t metVals[fResults.at(t).size()][Int_t(fdsi.GetNTargets()+1)];
+   // replace by:  [Joerg]
+   Float_t **metVals = new Float_t*[fResults.at(t).size()];
+   for(UInt_t i=0; i<fResults.at(t).size(); i++ )
+      metVals[i] = new Float_t[fdsi.GetNTargets()+1];
 
    // create branches for event-variables
    tree->Branch( "class", &cls, "class/I" ); 
-   classNameBranch = tree->Branch( "className",className, "className/C" ); 
+   classNameBranch = tree->Branch( "className",(void*)className, "className/C" ); 
 
 
    // create all branches for the variables
@@ -635,6 +640,14 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
    log() << kINFO << "Created tree '" << tree->GetName() << "' with " << tree->GetEntries() << " events" << std::endl;
 
    SetCurrentType(savedType);
+
+   delete[] varVals;
+   delete[] tgtVals;
+   delete[] visVals;
+
+   for(UInt_t i=0; i<fResults.at(t).size(); i++ )
+      delete[] metVals[i];
+   delete[] metVals;
 
    delete[] className;
 
