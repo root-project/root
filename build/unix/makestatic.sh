@@ -32,6 +32,11 @@ excl="main proof/proofd net/rootd net/xrootd rootx montecarlo/pythia6 \
       sql/odbc io/castor math/unuran geom/gdml cint/cint7 montecarlo/g4root \
       graf3d/eve net/glite misc/minicern misc/memstat net/bonjour"
 
+if test -f core/meta/src/TCint_7.o ; then
+   mv core/meta/src/TCint_7.o core/meta/src/TCint_7.o-
+   mv core/meta/src/G__TCint_7.o core/meta/src/G__TCint_7.o-
+fi
+
 objs=""
 gobjs=""
 for i in * ; do
@@ -41,8 +46,8 @@ for i in * ; do
          continue 2
       fi
    done
-   ls $inc/src/*.o > /dev/null 2>&1 && objs="$objs $inc/src/*.o"
-   ls $inc/src/G__*.o > /dev/null 2>&1 && gobjs="$gobjs $inc/src/G__*.o"
+   ls $inc/src/*.o > /dev/null 2>&1 && objs="$objs `ls $inc/src/*.o`"
+   ls $inc/src/G__*.o > /dev/null 2>&1 && gobjs="$gobjs `ls $inc/src/G__*.o`"
    if [ -d $i ]; then
       for k in $i/* ; do
          inc=$k
@@ -51,8 +56,8 @@ for i in * ; do
                continue 2
             fi
          done
-         ls $inc/src/*.o > /dev/null 2>&1 && objs="$objs $inc/src/*.o"
-         ls $inc/src/G__*.o > /dev/null 2>&1 && gobjs="$gobjs $inc/src/G__*.o"
+         ls $inc/src/*.o > /dev/null 2>&1 && objs="$objs `ls $inc/src/*.o`"
+         ls $inc/src/G__*.o > /dev/null 2>&1 && gobjs="$gobjs `ls $inc/src/G__*.o`"
       done
    fi
 done
@@ -60,6 +65,11 @@ done
 echo "Making $ROOTALIB..."
 echo ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o $objs
 ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o $objs > /dev/null 2>&1
+
+if test -f core/meta/src/TCint_7.o- ; then
+   mv core/meta/src/TCint_7.o- core/meta/src/TCint_7.o
+   mv core/meta/src/G__TCint_7.o- core/meta/src/G__TCint_7.o
+fi
 
 arstat=$?
 if [ $arstat -ne 0 ]; then
