@@ -367,6 +367,9 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
       "foam",
       "Qt",
       "TableTest",
+      "rs401c_FeldmanCousins",
+      "rs401d_FeldmanCousins",
+      "graph_edit_playback",
       0
    };
 
