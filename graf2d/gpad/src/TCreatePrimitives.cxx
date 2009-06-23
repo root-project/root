@@ -524,14 +524,14 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
          lentext--;
       }
       if (!lentext) break;
+      TLatex copytext(x, y, atext);
+      gSystem->ProcessEvents();
+      ((TPad *)gPad)->RecordLatex(&copytext);
       newtext->DrawLatex(x, y, atext);
       gPad->Modified(kTRUE);
       gPad->GetCanvas()->Selected((TPad*)gPad, newtext, event);
       gROOT->SetEditorMode();
       gPad->Update();
-      TLatex copytext(x, y, atext);
-      gSystem->ProcessEvents();
-      ((TPad *)gPad)->RecordLatex(&copytext);
       break;
    }
 }

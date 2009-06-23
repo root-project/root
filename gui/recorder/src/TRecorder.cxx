@@ -1356,6 +1356,8 @@ void TRecorderRecording::RecordText(const TObject* obj)
    cad += "); l->SetTextSize(";
    cad += texto->GetTextSize();
    cad += "); gPad->Modified(); gPad->Update();";
+   cad += " TVirtualPad *spad = gPad->GetCanvas()->GetSelectedPad();";
+   cad += " gPad->GetCanvas()->Selected(spad, l, kButton1Down);";
    extratime += interval;
    RecordExtraEvent(cad, extratime);
 }
