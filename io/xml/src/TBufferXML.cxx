@@ -53,6 +53,9 @@ extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigne
 
 ClassImp(TBufferXML);
 
+
+const char* TBufferXML::fgFloatFmt = "%e";
+
 //______________________________________________________________________________
 TBufferXML::TBufferXML() :
    TBufferFile(),
@@ -2661,7 +2664,7 @@ XMLNodePointer_t  TBufferXML::XmlWriteBasic(Float_t value)
    // converts Float_t to string and add xml node to buffer
 
    char buf[200];
-   sprintf(buf,"%f", value);
+   sprintf(buf, fgFloatFmt, value);
    return XmlWriteValue(buf, xmlio::Float);
 }
 
@@ -2671,7 +2674,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Double_t value)
    // converts Double_t to string and add xml node to buffer
 
    char buf[1000];
-   sprintf(buf,"%f", value);
+   sprintf(buf, fgFloatFmt, value);
    return XmlWriteValue(buf, xmlio::Double);
 }
 
@@ -2821,7 +2824,7 @@ void TBufferXML::XmlReadBasic(Float_t& value)
 
    const char* res = XmlReadValue(xmlio::Float);
    if (res)
-      sscanf(res,"%f", &value);
+      sscanf(res, "%f", &value);
    else
       value = 0.;
 }
@@ -2833,7 +2836,7 @@ void TBufferXML::XmlReadBasic(Double_t& value)
 
    const char* res = XmlReadValue(xmlio::Double);
    if (res)
-      sscanf(res,"%lf", &value);
+      sscanf(res, "%lf", &value);
    else
       value = 0.;
 }
@@ -2941,4 +2944,18 @@ const char* TBufferXML::XmlReadValue(const char* name)
       ShiftStack("readvalue");
 
    return fValueBuf.Data();
+}
+
+void TBufferXML::SetFloatFormat(const char* fmt)
+{
+   // set printf format for float/double members, default "%e"
+   
+   fgFloatFmt = fmt;
+}
+    
+const char* TBufferXML::GetFloatFormat()
+{
+   // return current printf format for float/double members, default "%e"
+
+   return fgFloatFmt;
 }

@@ -209,6 +209,10 @@ public:
    virtual   void     WriteTString(const TString  &s);
 
    // end of redefined virtual functions
+   
+   static    void     SetFloatFormat(const char* fmt = "%e");
+   static const char* GetFloatFormat();
+   
 
 protected:
    TBufferXML();
@@ -312,6 +316,8 @@ protected:
    Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
    TClass*          fExpectedBaseClass;    //!   pointer to class, which should be stored as parent of current
    Int_t            fCompressLevel;        //!   compress level used to minimize size of file 
+
+   static const char* fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
 ClassDef(TBufferXML,1) //a specialized TBuffer to read/write to XML files
 };

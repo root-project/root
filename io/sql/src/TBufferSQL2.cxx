@@ -55,6 +55,8 @@
 #define FULong64   "%llu"
 #endif
 
+const char* TBufferSQL2::fgFloatFmt = "%e";
+
 ClassImp(TBufferSQL2);
 
 //______________________________________________________________________________
@@ -2321,7 +2323,7 @@ Bool_t  TBufferSQL2::SqlWriteBasic(Float_t value)
    // converts Float_t to string and creates correspondent sql structure
 
    char buf[200];
-   sprintf(buf,"%f", value);
+   sprintf(buf, fgFloatFmt, value);
    return SqlWriteValue(buf, sqlio::Float);
 }
 
@@ -2331,7 +2333,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(Double_t value)
    // converts Double_t to string and creates correspondent sql structure
 
    char buf[1000];
-   sprintf(buf,"%f", value);
+   sprintf(buf, fgFloatFmt, value);
    return SqlWriteValue(buf, sqlio::Double);
 }
 
@@ -2473,7 +2475,7 @@ void TBufferSQL2::SqlReadBasic(Float_t& value)
 
    const char* res = SqlReadValue(sqlio::Float);
    if (res)
-      sscanf(res,"%f", &value);
+      sscanf(res, "%f", &value);
    else
       value = 0.;
 }
@@ -2485,7 +2487,7 @@ void TBufferSQL2::SqlReadBasic(Double_t& value)
 
    const char* res = SqlReadValue(sqlio::Double);
    if (res)
-      sscanf(res,"%lf", &value);
+      sscanf(res, "%lf", &value);
    else
       value = 0.;
 }
@@ -2645,4 +2647,21 @@ TSQLStructure* TBufferSQL2::Stack(Int_t depth)
    TSQLStructure* curr = fStk;
    while ((depth-->0) && (curr!=0)) curr = curr->GetParent();
    return curr;
+}
+
+
+//______________________________________________________________________________
+void TBufferSQL2::SetFloatFormat(const char* fmt)
+{
+   // set printf format for float/double members, default "%e"
+   
+   fgFloatFmt = fmt;
+}
+    
+//______________________________________________________________________________
+const char* TBufferSQL2::GetFloatFormat()
+{
+   // return current printf format for float/double members, default "%e"
+
+   return fgFloatFmt;
 }
