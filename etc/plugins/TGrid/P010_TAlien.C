@@ -1,3 +1,5 @@
+#include <iostream>
+
 void SetAliEnSettings()
 {
    // Routine to load settings from an AliEn environment file.
