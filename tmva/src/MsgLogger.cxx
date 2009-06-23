@@ -205,7 +205,7 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    // take decision to stop if fatal error
    if (type == kFATAL) { 
       if (!gConfig().IsSilent()) std::cout << "***> abort program execution" << std::endl;
-      exit(1);
+      std::exit(1);
    }
 }
 

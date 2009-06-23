@@ -50,7 +50,7 @@ TMVA::RuleFit::RuleFit( const MethodBase *rfbase )
 {
    // constructor
    Initialize( rfbase );
-   srand( randSEED );  // initialize random number generator used by std::random_shuffle
+   std::srand( randSEED );  // initialize random number generator used by std::random_shuffle
 }
 
 //_______________________________________________________________________
@@ -59,7 +59,7 @@ TMVA::RuleFit::RuleFit()
      fLogger( new MsgLogger("RuleFit") )
 {
    // default constructor
-   srand( randSEED ); // initialize random number generator used by std::random_shuffle
+   std::srand( randSEED ); // initialize random number generator used by std::random_shuffle
 }
 
 //_______________________________________________________________________

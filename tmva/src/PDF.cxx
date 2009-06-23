@@ -335,7 +335,7 @@ void TMVA::PDF::BuildSplinePDF()
       log() << kWARNING << "No valid interpolation method given! Use Spline2" << Endl;
       fSpline = new TMVA::TSpline2( "spline2", new TGraph(*fGraph) );
       log() << kFATAL << " Well.. .thinking about it, I better quit so you notice you are forced to fix the mistake " << Endl;
-      exit(1);
+      std::exit(1);
    }
    // fill into histogram 
    FillSplineToHist();

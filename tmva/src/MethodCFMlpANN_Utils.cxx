@@ -105,7 +105,7 @@ void TMVA::MethodCFMlpANN_Utils::Train_nn( Double_t *tin2, Double_t *tout2, Int_
    if (*nvar2 > max_nVar_) {
       printf( "*** CFMlpANN_f2c: ERROR in Train_nn: number of variables" \
               " exceeds hardcoded maximum ==> abort");
-      exit(1);
+      std::exit(1);
    }
    if (*nlayer > max_nLayers_) {
       printf( "*** CFMlpANN_f2c: Warning in Train_nn: number of layers" \
@@ -538,7 +538,7 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
    Lecev2(&ktest, tout2, tin2);
    if (ktest == 1) {
       printf( " .... strange to be here (1) ... \n");
-      exit(1);
+      std::exit(1);
    }
    i__1 = fParam_1.layerm - 1;
    for (layer = 1; layer <= i__1; ++layer) {
@@ -665,7 +665,7 @@ void TMVA::MethodCFMlpANN_Utils::TestNN()
    }
    if (ktest == 1) {
       printf( " .... strange to be here (2) ... \n");
-      exit(1);
+      std::exit(1);
    }
 }
 
@@ -1008,7 +1008,7 @@ void TMVA::MethodCFMlpANN_Utils::Arret( const char* mot )
 {
    // fatal error occurred: stop execution
    printf("%s: %s",fg_MethodName, mot);
-   exit(1);
+   std::exit(1);
 }
 
 void TMVA::MethodCFMlpANN_Utils::CollectVar( Int_t *nvar, Int_t *class__, Double_t *xpg )
