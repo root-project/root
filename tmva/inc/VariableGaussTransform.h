@@ -70,9 +70,9 @@ namespace TMVA {
    public:
 
       TMVAGaussPair( Float_t f, Float_t w ): fF(f), fW(w) {}
-      Bool_t  operator >  ( const TMVAGaussPair &p ) { return fF >  p.fF; }
-      Bool_t  operator <  ( const TMVAGaussPair &p ) { return fF <  p.fF; }
-      Bool_t  operator == ( const TMVAGaussPair &p ) { return fF == p.fF; }
+      Bool_t  operator >  ( const TMVAGaussPair &p ) const { return fF >  p.fF; }
+      Bool_t  operator <  ( const TMVAGaussPair &p ) const { return fF <  p.fF; }
+      Bool_t  operator == ( const TMVAGaussPair &p ) const { return fF == p.fF; }
       Float_t GetValue() const { return fF; }
       Float_t GetWeight() const { return fW; }
 
