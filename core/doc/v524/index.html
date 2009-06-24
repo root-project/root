@@ -23,6 +23,7 @@ Multi-line output is separated by \n's.
 has to be re-used.</li>
 <li>Insure that ROOT's autoloader is always enabled whenever loading rootmap files.</li>
 <li>Add function void <pre>TAttAxis::SetNdivisions(Int_t n1, Int_t n2, Int_t n3, Bool_t optim);</pre> </li>
+<li>Enable autoloading of typedef.</li>
 </ul>
 
 <h3>Meta</h3>
@@ -34,7 +35,7 @@ has to be re-used.</li>
 <h3>ACLiC</h3>
 <ul>
 <li>Implement TClassEdit::InsertStd() which puts "std::" in front of all STL classes.</li>
-<li>The generated library now always depends on RVersion.h</li>
+<li>The generated library now always checks with which version of ROOT the library was build and rebuilt the library if the running version of ROOT is different.</li>
 <li>Add support for '+' character embedded in the script's name or directory name.</li>
 <li>The dependency tracking file (script_C.d) is now always created when the library is built.  
 The dependency tracking file now records with which version of ROOT the library was built and the library is now rebuilt if it is loaded in a different version of ROOT.</li>
