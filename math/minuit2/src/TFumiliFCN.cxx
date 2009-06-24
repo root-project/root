@@ -190,7 +190,7 @@ void TFumiliFCN::Calculate_numerical_gradient( const std::vector<double> & x, do
    for (int ipar = 0; ipar < n ; ++ipar) { 
       double p0 = fParamCache[ipar]; 
       // use 0.001 of par 
-      double h = std::max( 0.001* fabs(p0), 8.0*kPrecision*(fabs(p0) + kPrecision) );  
+      double h = std::max( 0.001* std::fabs(p0), 8.0*kPrecision*(std::fabs(p0) + kPrecision) );  
       fParamCache[ipar] = p0 + h;  
       double f2 =  fFunc->EvalPar( &x.front(), &fParamCache.front() ); 
       
@@ -235,7 +235,7 @@ void TFumiliFCN::Calculate_numerical_gradient_of_integral( const std::vector<dou
    for (int ipar = 0; ipar < n ; ++ipar) { 
       double p0 = fParamCache[ipar]; 
       // use 0.001 of par 
-      double h = std::max( 0.001* fabs(p0), 8.0*kPrecision*(fabs(p0) + kPrecision) );  
+      double h = std::max( 0.001* std::fabs(p0), 8.0*kPrecision*(std::fabs(p0) + kPrecision) );  
       fParamCache[ipar] = p0 + h;  
       double f2 =   FitterUtil::EvalIntegral(fFunc,x1,x2,fParamCache);
       
@@ -320,7 +320,7 @@ void TFumiliBinLikelihoodFCN::Calculate_element(int i, const FumiliFitData & poi
    for (unsigned int j = 0; j < npar; ++j) {
       
       double fj; 
-      if ( fval < kPrecision &&  fabs(fFunctionGradient[j]) < kPrecision ) 
+      if ( fval < kPrecision &&  std::fabs(fFunctionGradient[j]) < kPrecision ) 
          fj = 2.0; 
       else 
          fj =  2.* fFunctionGradient[j] * ( 1.0 - value*invFval); 
@@ -338,7 +338,7 @@ void TFumiliBinLikelihoodFCN::Calculate_element(int i, const FumiliFitData & poi
       for (unsigned int k = j; k < npar; ++ k) { 
          int idx =  j + k*(k+1)/2; 
          double fk; 
-         if ( fval < kPrecision &&  fabs(fFunctionGradient[k]) < kPrecision ) 
+         if ( fval < kPrecision &&  std::fabs(fFunctionGradient[k]) < kPrecision ) 
             fk = 1.0; 
          else 
             fk =  fFunctionGradient[k]* ( 1.0 - value*invFval); 
@@ -372,7 +372,7 @@ void TFumiliUnbinLikelihoodFCN::Calculate_element(int , const FumiliFitData &, d
    for (unsigned int j = 0; j < npar; ++j) {
       
       double fj; 
-      if ( fval < kPrecision &&  fabs(fFunctionGradient[j]) < kPrecision ) 
+      if ( fval < kPrecision &&  std::fabs(fFunctionGradient[j]) < kPrecision ) 
          fj = 2.0; 
       else 
          fj =  2.* invFval * fFunctionGradient[j]; 
@@ -382,7 +382,7 @@ void TFumiliUnbinLikelihoodFCN::Calculate_element(int , const FumiliFitData &, d
       for (unsigned int k = j; k < npar; ++ k) { 
          int idx =  j + k*(k+1)/2; 
          double fk; 
-         if ( fval < kPrecision &&  fabs(fFunctionGradient[k]) < kPrecision ) 
+         if ( fval < kPrecision &&  std::fabs(fFunctionGradient[k]) < kPrecision ) 
             fk = 1.0; 
          else 
             fk =  invFval * fFunctionGradient[k]; 

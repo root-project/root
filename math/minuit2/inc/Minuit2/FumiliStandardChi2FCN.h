@@ -84,7 +84,7 @@ public:
       if (mvar[i] == 0) 
 	fInvErrors[i] = 1; 
       else 
-	fInvErrors[i] = 1.0/sqrt(mvar[i]); 
+	fInvErrors[i] = 1.0/std::sqrt(mvar[i]); 
     }
 
   }
@@ -126,7 +126,7 @@ public:
       if (mvar[i] == 0) 
 	fInvErrors[i] = 1; 
       else 
-	fInvErrors[i] = 1.0/sqrt(mvar[i]); 
+	fInvErrors[i] = 1.0/std::sqrt(mvar[i]); 
     }
 
   }

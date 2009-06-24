@@ -69,7 +69,7 @@ void  FumiliStandardMaximumLikelihoodFCN::EvaluateAll( const std::vector<double>
    // Evaluate in one loop likelihood value, gradient and hessian 
    
    static double minDouble = 8.0*DBL_MIN; 
-   static double minDouble2 = sqrt(8.0*DBL_MIN); 
+   static double minDouble2 = std::sqrt(8.0*DBL_MIN); 
    static double maxDouble2 = 1.0/minDouble2;
    // loop on the measurements 
    
@@ -100,7 +100,7 @@ void  FumiliStandardMaximumLikelihoodFCN::EvaluateAll( const std::vector<double>
       // calc derivatives 
       
       for (int j = 0; j < npar; ++j) { 
-         if ( fabs(mfg[j]) < minDouble ) {
+         if ( std::fabs(mfg[j]) < minDouble ) {
             // 	std::cout << "SMALL values: grad =  " << mfg[j] << "  "  << minDouble << " f(x) = " << fval 
             // 		  << " params " << j << " p0 = " << par[0] << " p1 = " << par[1] <<  std::endl;
             if (mfg[j] < 0)  
@@ -111,7 +111,7 @@ void  FumiliStandardMaximumLikelihoodFCN::EvaluateAll( const std::vector<double>
          
          double dfj = invFval * mfg[j]; 
          // to avoid summing infinite and nan later when calculating the Hessian
-         if ( fabs(dfj) > maxDouble2 ) { 
+         if ( std::fabs(dfj) > maxDouble2 ) { 
             if (dfj > 0) 
                dfj = maxDouble2; 
             else 
@@ -129,7 +129,7 @@ void  FumiliStandardMaximumLikelihoodFCN::EvaluateAll( const std::vector<double>
          // second derivatives of the model function
          for (int k = j; k < npar; ++ k) { 
             int idx =  j + k*(k+1)/2; 
-            if (fabs( mfg[k]) < minDouble ) { 
+            if (std::fabs( mfg[k]) < minDouble ) { 
                if (mfg[k] < 0)  
                   mfg[k] =  -minDouble;
                else 
@@ -139,7 +139,7 @@ void  FumiliStandardMaximumLikelihoodFCN::EvaluateAll( const std::vector<double>
             double dfk =  invFval * mfg[k]; 
             // avoid that dfk*dfj are one small and one huge so I get a nan 
             // to avoid summing infinite and nan later when calculating the Hessian
-            if ( fabs(dfk) > maxDouble2 ) { 
+            if ( std::fabs(dfk) > maxDouble2 ) { 
                if (dfk > 0) 
                   dfk = maxDouble2; 
                else 
