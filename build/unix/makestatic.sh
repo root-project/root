@@ -35,6 +35,9 @@ excl="main proof/proofd net/rootd net/xrootd rootx montecarlo/pythia6 \
 if test -f core/meta/src/TCint_7.o ; then
    mv core/meta/src/TCint_7.o core/meta/src/TCint_7.o-
    mv core/meta/src/G__TCint_7.o core/meta/src/G__TCint_7.o-
+   mv core/utils/src/RStl7.o core/utils/src/RStl7.o-
+   mv core/metautils/src/RConversionRuleParser7.o core/metautils/src/RConversionRuleParser7.o-
+   mv core/metautils/src/TClassEdit7.o core/metautils/src/TClassEdit7.o-
 fi
 
 objs=""
@@ -69,6 +72,9 @@ ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o $objs > /dev/nu
 if test -f core/meta/src/TCint_7.o- ; then
    mv core/meta/src/TCint_7.o- core/meta/src/TCint_7.o
    mv core/meta/src/G__TCint_7.o- core/meta/src/G__TCint_7.o
+   mv core/utils/src/RStl7.o- core/utils/src/RStl7.o
+   mv core/metautils/src/RConversionRuleParser7.o- core/metautils/src/RConversionRuleParser7.o
+   mv core/metautils/src/TClassEdit7.o- core/metautils/src/TClassEdit7.o
 fi
 
 arstat=$?
