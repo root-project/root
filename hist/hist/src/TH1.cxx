@@ -4716,7 +4716,6 @@ Long64_t TH1::Merge(TCollection *li)
                   same = kFALSE;
                }
             }
-            allLabels.ls();
          }
          allHaveLabels&=(labels && hasOneLabel);
          if (!allHaveLabels)
