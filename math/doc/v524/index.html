@@ -20,6 +20,10 @@
    <li><tt>UnBinData</tt> class: add new constructor for creating a unbin data set passing a range to select the data and copy in the internal array
    <li><tt>FitResult</tt>: the class now stores a map of the Minos error using as key the parameter index. If the Minos error has not been calculated for the parameter, <tt>FitResult::LowerError(i)</tt> and <tt>FitResult::UpperError(i)</tt> returns the parabolic error
    </li>
+   <li>Add a new class, <tt>MinimTransformFunction</tt> to perform a transformation of the function object to deal with limited and fixed variables.
+     This class uses the same transformation which are also used inside Minuit, a sin transformation for double bounded variables and a sqrt transformation for single bound variable defined in the class <tt>MinimizerVariableTransformation</tt>.
+     These classes can be used by minimizer which do not support internally the bounds (like the GSL minimizers).
+   </li>
  </ul>
  </li>
  <br>
@@ -47,6 +51,8 @@
       <li>
    A wrong statement (coming from the original CERNLIB code but not applicable in this case)  has been removed.
       </ul>
+    </li>
+    <li>Add support for limited and fixed variables for all the GSL minimizers ("GSLMultiMin"), including the simulated annealing ("GSLSimAn") and the non-linear least square fit methods ("GSLMultiFit").
     </li>
  </ul>
 

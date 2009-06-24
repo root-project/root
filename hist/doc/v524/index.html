@@ -82,7 +82,9 @@
 
 <h4>TH2</h4>
 <ul>
-  <li>Consider in the projection of TH2 the axis range set by the user. This fix the issue https://savannah.cern.ch/bugs/index.php?47946 
+  <li>Consider in the projection of TH2 the axis range set by the user. This fix the issue https://savannah.cern.ch/bugs/index.php?47946
+  <li>Add a new option,  option "o", in the projection methods: <tt>TH2::ProjectionX</tt>, <tt>TH2::ProjectionY</tt>, <tt>TH2::ProfileX</tt> and <tt>TH2::ProfileY</tt>. When an axis range is set, using option "o", the original axis range of the taget axes will be
+   kept, but only the bins inside the selected range will be filled, while bins outside the range will be empty. 
 </ul>  
 
 <h4>TH3</h4>
@@ -93,7 +95,8 @@
 <li>In the projection to Profile's, when Sumw2 is set, have the correct projected errors now with the new TProfile data member.
 <li>Add <tt>TH3::ProjectionX</tt> and TH3::ProjectionY</tt> to complement the already existing ProjectionZ. They are all impelmented using the Project3D method.
 <li>Re-implement the <tt>TH3::Project3D</tt> method using the internal methods  DoProject1D and DoProject2D depending on the option. This new implementation is faster in case sub-ranges are selected and fix this issue (https://savannah.cern.ch/bugs/index.php?45494).
-<li>A similar new implementation is done for <tt>TH3::ProjectProfile</tt>. 
+<li>A similar new implementation is done for <tt>TH3::ProjectProfile</tt>.
+<li>Add the new option "o", as in <tt>TH2</tt> for the histogram and profile projections.
 </ul>
 
 <h4>TProfile, TProfile2D, TProfile3D</h4>
@@ -202,5 +205,6 @@
   <ul>
     <li>Add support for drawing the fit function confidence levels.
     <li>Make gaus the default function when fitting 1D objects.
+    <li>Add GSL minimizer and use now a new widget for showing and selecting the list of available algorithms according to the minimizer.
  </ul>
     
