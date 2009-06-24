@@ -27,17 +27,17 @@ END_HTML
 
 #include "RooRealVar.h"
 #include "TIterator.h"
-#include "RooAbsCollection.h"
+#include "RooArgSet.h"
 
 ClassImp(RooStats::ProposalFunction);
 
 using namespace RooFit;
 using namespace RooStats;
 
-// Assuming all values in coll are RooRealVars, randomize their values.
-void ProposalFunction::randomizeCollection(RooAbsCollection& coll)
+// Assuming all values in set are RooRealVars, randomize their values.
+void ProposalFunction::randomizeSet(RooArgSet& set)
 {
-   TIterator* it = coll.createIterator();
+   TIterator* it = set.createIterator();
    RooRealVar* var;
 
    while ((var = (RooRealVar*)it->Next()) != NULL)

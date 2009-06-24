@@ -81,7 +81,8 @@ MCMCCalculator::MCMCCalculator()
    fPdfName = NULL;
    fDataName = NULL;
    fNumIters = 0;
-   fNumBins = 50;
+   fNumBurnInSteps = 0;
+   fNumBins = 0;
    fAxes = NULL;
 }
 
@@ -98,7 +99,8 @@ MCMCCalculator::MCMCCalculator(RooWorkspace& ws, RooAbsData& data,
    SetTestSize(size);
    SetProposalFunction(proposalFunction);
    fNumIters = numIters;
-   fNumBins = 50;
+   fNumBurnInSteps = 0;
+   fNumBins = 0;
    fAxes = axes;
 }
 
@@ -115,7 +117,8 @@ MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
    SetTestSize(size);
    SetProposalFunction(proposalFunction);
    fNumIters = numIters;
-   fNumBins = 50;
+   fNumBurnInSteps = 0;
+   fNumBins = 0;
    fAxes = axes;
 }
 
@@ -153,7 +156,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
        fflush(NULL);
      }
 
-      fPropFunc->Propose(xPrime);
+      fPropFunc->Propose(xPrime, x);
 
       RooStats::SetParameters(&xPrime, nllParams);
       Double_t xPrimeNLL = nll->getVal();
@@ -207,7 +210,10 @@ MCMCInterval* MCMCCalculator::GetInterval() const
                                              *fPOI, *points);
    if (fAxes != NULL)
       interval->SetAxes(*fAxes);
-   interval->SetNumBins(fNumBins);
+   if (fNumBins > 0)
+      interval->SetNumBins(fNumBins);
+   if (fNumBurnInSteps > 0)
+      interval->SetNumBurnInSteps(fNumBurnInSteps);
    interval->SetConfidenceLevel(1.0 - fSize);
    return interval;
 }

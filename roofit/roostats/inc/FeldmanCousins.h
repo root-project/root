@@ -108,6 +108,12 @@ namespace RooStats {
       void SetNBins(Int_t bins) {fNbins = bins;}
 
       void FluctuateNumDataEntries(bool flag=true){fFluctuateData = flag;}
+
+      void SaveBeltToFile(bool flag=true){
+	fSaveBeltToFile = flag;
+	if(flag) fCreateBelt = true;
+      }
+      void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
       
    private:
 
@@ -131,6 +137,9 @@ namespace RooStats {
       Int_t fNbins; // number of samples per variable
       Bool_t fFluctuateData;  // tell ToyMCSampler to fluctuate number of entries in dataset
       Bool_t fDoProfileConstruction; // instead of full construction over nuisance parametrs, do profile
+      bool fSaveBeltToFile; // controls use if ConfidenceBelt should be saved to a TFile
+      bool fCreateBelt; // controls use if ConfidenceBelt should be saved to a TFile
+
    protected:
       ClassDef(FeldmanCousins,1)   // Interface for tools setting limits (producing confidence intervals)
    };

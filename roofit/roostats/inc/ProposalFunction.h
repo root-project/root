@@ -16,7 +16,7 @@
 #include "Rtypes.h"
 #endif
 
-#include "RooAbsCollection.h"
+#include "RooArgSet.h"
 #include "RooMsgService.h"
 #include "TIterator.h"
 #include "RooRealVar.h"
@@ -29,63 +29,46 @@ namespace RooStats {
 
    public:
       //Default constructor
-      ProposalFunction()
-      {
-         fParams = NULL;
-      }
-
-      // It is a checked runtime error for params to contain anything
-      // other than RooRealVar objects.
-      // Note: This constructor uniformly randomizes the values of params
-      ProposalFunction(RooAbsCollection& params)
-      {
-         SetParameters(params);
-      }
+      ProposalFunction() {}
 
       virtual ~ProposalFunction() {}
 
-      // Populate xPrime with the new proposed point
-      virtual void Propose(RooAbsCollection& xPrime) = 0;
+      // Populate xPrime with the new proposed point,
+      // possibly based on the current point x
+      virtual void Propose(RooArgSet& xPrime, RooArgSet& x) = 0;
       
       // Determine whether or not the proposal density is symmetric for
       // points x1 and x2 - that is, whether the probabilty of reaching x2
       // from x1 is equal to the probability of reaching x1 from x2
-      virtual Bool_t IsSymmetric(RooAbsCollection& x1,
-                                 RooAbsCollection& x2) = 0;
+      virtual Bool_t IsSymmetric(RooArgSet& x1, RooArgSet& x2) = 0;
 
       // Return the probability of reaching the point xPrime given the starting
       // point x
-      virtual Double_t GetProposalDensity(RooAbsCollection& xPrime,
-                                          RooAbsCollection& x) = 0;
+      virtual Double_t GetProposalDensity(RooArgSet& xPrime, RooArgSet& x) = 0;
 
-      // Set the parameters for which the ProposalFunction will
-      // propose values, and randomize their values.
-      virtual void SetParameters(RooAbsCollection& params)
+      // Check the parameters for which the ProposalFunction will
+      // propose values to make sure they are all RooRealVars
+      // Return true if all objects are RooRealVars, false otherwise
+      virtual bool CheckParameters(RooArgSet& params)
       {
-         fParams = &params;
          TIterator* it = params.createIterator();
          TObject* obj;
          while ((obj = it->Next()) != NULL) {
             if (!dynamic_cast<RooRealVar*>(obj)) {
-               coutE(Eval) << "Error when setting parameters in"
+               coutE(Eval) << "Error when checking parameters in"
                            << "ProposalFunction: "
                            << "Object \"" << obj->GetName() << "\" not of type "
                            << "RooRealVar" << endl;
-               coutE(Eval) << "Using NULL parameters list" << endl;
-               fParams = NULL;
-               return;
+               return false;
             }
          }
          // Made it here, so all parameters are RooRealVars
-         fParams = &params;
-         randomizeCollection(*fParams);
+         return true;
       }
 
    protected:
-      RooAbsCollection* fParams;
-
       // Assuming all values in coll are RooRealVars, randomize their values.
-      virtual void randomizeCollection(RooAbsCollection& coll);
+      virtual void randomizeSet(RooArgSet& set);
 
       ClassDef(ProposalFunction,1) // Interface for the proposal function used with Markov Chain Monte Carlo
    };

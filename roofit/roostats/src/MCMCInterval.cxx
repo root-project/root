@@ -49,6 +49,9 @@ END_HTML
 #include "RooDataSet.h"
 #include "TIterator.h"
 #include "TH1.h"
+#include "TH1F.h"
+#include "TH2F.h"
+#include "TH3F.h"
 #include "RooMsgService.h"
 #include "RooMsgService.h"
 #include "TObject.h"
@@ -67,12 +70,13 @@ using namespace std;
 
 MCMCInterval::MCMCInterval() : ConfInterval()
 {
-  fPreferredNumBins = 50;
+   fPreferredNumBins = DEFAULT_NUM_BINS;
    fConfidenceLevel = 0.0;
    fData = NULL;
    fAxes = NULL;
    fHist = NULL;
    fNumBins = NULL;
+   fNumBurnInSteps = 0;
    fCutoff = 0;
    fDimension = 1;
    fIsStrict = true;
@@ -81,12 +85,13 @@ MCMCInterval::MCMCInterval() : ConfInterval()
 
 MCMCInterval::MCMCInterval(const char* name) : ConfInterval(name, name)
 {
-   fPreferredNumBins = 50;
+   fPreferredNumBins = DEFAULT_NUM_BINS;
    fConfidenceLevel = 0.0;
    fData = NULL;
    fAxes = NULL;
    fHist = NULL;
    fNumBins = NULL;
+   fNumBurnInSteps = 0;
    fCutoff = 0;
    fDimension = 1;
    fIsStrict = true;
@@ -96,12 +101,13 @@ MCMCInterval::MCMCInterval(const char* name) : ConfInterval(name, name)
 MCMCInterval::MCMCInterval(const char* name, const char* title)
    : ConfInterval(name, title)
 {
-   fPreferredNumBins = 50;
+   fPreferredNumBins = DEFAULT_NUM_BINS;
    fConfidenceLevel = 0.0;
    fData = NULL;
    fAxes = NULL;
    fHist = NULL;
    fNumBins = NULL;
+   fNumBurnInSteps = 0;
    fCutoff = 0;
    fDimension = 1;
    fIsStrict = true;
@@ -111,8 +117,9 @@ MCMCInterval::MCMCInterval(const char* name, const char* title)
 MCMCInterval::MCMCInterval(const char* name, const char* title,
         RooArgSet& parameters, RooDataSet& chain) : ConfInterval(name, title)
 {
-   fPreferredNumBins = 50;
+   fPreferredNumBins = DEFAULT_NUM_BINS;
    fNumBins = NULL;
+   fNumBurnInSteps = 0;
    fConfidenceLevel = 0.0;
    fAxes = NULL;
    fData = &chain;
@@ -209,23 +216,44 @@ void MCMCInterval::CreateHistogram()
    }
 
    if (fDimension == 1)
-      fHist = fData->createHistogram("hist", *fAxes[0],
-              Binning(fNumBins[0]), RooFit::Scaling(kFALSE));
+      fHist = new TH1F("posterior", "MCMC Posterior Histogram", fNumBins[0],
+                       fAxes[0]->getMin(), fAxes[0]->getMax());
 
    else if (fDimension == 2)
-      fHist = fData->createHistogram("hist", *fAxes[0],
-            Binning(fNumBins[0]), YVar(*fAxes[1], Binning(fNumBins[1])),
-            RooFit::Scaling(kFALSE));
+      fHist = new TH2F("posterior", "MCMC Posterior Histogram",
+                       fNumBins[0], fAxes[0]->getMin(), fAxes[0]->getMax(),
+                       fNumBins[1], fAxes[1]->getMin(), fAxes[1]->getMax());
 
    else if (fDimension == 3) 
-      fHist = fData->createHistogram("hist", *fAxes[0],
-              Binning(fNumBins[0]), YVar(*fAxes[1], Binning(fNumBins[1])),
-              ZVar(*fAxes[2], Binning(fNumBins[2])), RooFit::Scaling(kFALSE));
+      fHist = new TH3F("posterior", "MCMC Posterior Histogram",
+                       fNumBins[0], fAxes[0]->getMin(), fAxes[0]->getMax(),
+                       fNumBins[1], fAxes[1]->getMin(), fAxes[1]->getMax(),
+                       fNumBins[2], fAxes[2]->getMin(), fAxes[2]->getMax());
 
-   else
+   else {
       coutE(Eval) << "* Error in MCMCInterval::DetermineInterval: " <<
                      "Couldn't handle dimension: " << fDimension << endl;
+      return;
+   }
 
+   // Fill histogram
+   Int_t size = fData->numEntries();
+   const RooArgSet* entry;
+   for (Int_t i = fNumBurnInSteps; i < size; i++) {
+      entry = fData->get(i);
+      if (fDimension == 1)
+         ((TH1F*)fHist)->Fill(entry->getRealValue(fAxes[0]->GetName()),
+                              fData->weight());
+      else if (fDimension == 2)
+         ((TH2F*)fHist)->Fill(entry->getRealValue(fAxes[0]->GetName()),
+                              entry->getRealValue(fAxes[1]->GetName()),
+                              fData->weight());
+      else
+         ((TH3F*)fHist)->Fill(entry->getRealValue(fAxes[0]->GetName()),
+                              entry->getRealValue(fAxes[1]->GetName()),
+                              entry->getRealValue(fAxes[2]->GetName()),
+                              fData->weight());
+   }
 }
 
 void MCMCInterval::SetParameters(RooArgSet& parameters)

@@ -179,7 +179,7 @@ namespace RooStats {
     void AddAcceptanceRegion(RooArgSet&, AcceptanceRegion region, Double_t cl=-1., Double_t leftside=-1.);
 
     // add without creating a region, more useful for clients
-    void AddAcceptanceRegion(RooArgSet&, Double_t lower, Double_t upper, Double_t cl=-1., Double_t leftside=-1.);
+    void AddAcceptanceRegion(RooArgSet& point, Int_t dataSetIndex, Double_t lower, Double_t upper, Double_t cl=-1., Double_t leftside=-1.);
 
     AcceptanceRegion* GetAcceptanceRegion(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
     Double_t GetAcceptanceRegionMin(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);

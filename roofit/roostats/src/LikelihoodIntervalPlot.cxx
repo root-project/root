@@ -134,7 +134,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
     myarg->setVal(xcont_max);
     const Double_t Yat_Xmax = newProfile->getVal();
 
-    TLine *Yline_cutoff = new TLine(myarg->getMin(),Yat_Xmax,xcont_max,Yat_Xmax);
+    TLine *Yline_cutoff = new TLine(myarg->getMin(),Yat_Xmax,myarg->getMax(),Yat_Xmax);
     TLine *Yline_min = new TLine(xcont_min,0.,xcont_min,Yat_Xmax);
     TLine *Yline_max = new TLine(xcont_max,0.,xcont_max,Yat_Xmax);
 

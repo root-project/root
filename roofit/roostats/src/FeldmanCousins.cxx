@@ -228,7 +228,8 @@ ConfInterval* FeldmanCousins::GetInterval() const {
   nc.SetLeftSideTailFraction(0.); // part of definition of Feldman-Cousins
   nc.SetData(*data);
   nc.UseAdaptiveSampling(fAdaptiveSampling);
-
+  nc.SaveBeltToFile(fSaveBeltToFile);
+  nc.CreateConfBelt(fCreateBelt);
   fConfBelt = nc.GetConfidenceBelt();
   // use it
   return nc.GetInterval();

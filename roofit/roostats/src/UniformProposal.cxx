@@ -26,7 +26,7 @@ END_HTML
 #endif
 
 #include "RooStats/UniformProposal.h"
-#include "RooAbsCollection.h"
+#include "RooArgSet.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 #include "TIterator.h"
@@ -37,26 +37,25 @@ using namespace RooFit;
 using namespace RooStats;
 
 // Populate xPrime with a new proposed point
-void UniformProposal::Propose(RooAbsCollection& xPrime)
+void UniformProposal::Propose(RooArgSet& xPrime, RooArgSet& /* x */)
 {
-   // kbelasco: remember xPrime has not been checked for containing
+   // kbelasco: remember xPrime and x have not been checked for containing
    // only RooRealVars
-   randomizeCollection(xPrime);
+   randomizeSet(xPrime);
 }
 
 // Determine whether or not the proposal density is symmetric for
 // points x1 and x2 - that is, whether the probabilty of reaching x2
 // from x1 is equal to the probability of reaching x1 from x2
-Bool_t UniformProposal::IsSymmetric(RooAbsCollection& /* x1 */ ,
-                                    RooAbsCollection& /* x2 */)
+Bool_t UniformProposal::IsSymmetric(RooArgSet& /* x1 */ , RooArgSet& /* x2 */)
 {
    return true;
 }
 
 // Return the probability of proposing the point xPrime given the starting
 // point x
-Double_t UniformProposal::GetProposalDensity(RooAbsCollection& /* xPrime */,
-                                              RooAbsCollection& x)
+Double_t UniformProposal::GetProposalDensity(RooArgSet& /* xPrime */,
+                                              RooArgSet& x)
 {
    // For a uniform proposal, all points have equal probability and the
    // value of the proposal density function is:

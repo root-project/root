@@ -117,6 +117,10 @@ namespace RooStats {
       // set the number of iterations to run the metropolis algorithm
       virtual void SetNumIters(Int_t numIters)
       { fNumIters = numIters; }
+      // set the number of steps in the chain to discard as burn-in,
+      // starting from the first
+      virtual void SetNumBurnInSteps(Int_t numBurnInSteps)
+      { fNumBurnInSteps = numBurnInSteps; }
       // set the number of bins to create for each axis when constructing the interval
       virtual void SetNumBins(Int_t numBins)
       { fNumBins = numBins; }
@@ -134,6 +138,7 @@ namespace RooStats {
       const char* fPdfName; // name of common PDF in workspace
       const char* fDataName; // name of data set in workspace
       Int_t fNumIters; // number of iterations to run metropolis algorithm
+      Int_t fNumBurnInSteps; // number of iterations to discard as burn-in, starting from the first
       Int_t fNumBins; // set the number of bins to create for each
                       // axis when constructing the interval
       RooArgList* fAxes; // which variables to put on each axis

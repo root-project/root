@@ -49,7 +49,6 @@ END_HTML
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
 #endif
-
 #include "RooWorkspace.h"
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"

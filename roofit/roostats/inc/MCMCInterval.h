@@ -42,6 +42,8 @@ namespace RooStats {
       MCMCInterval(const char* name, const char* title, RooArgSet& parameters,
                    RooDataSet& chain);
 
+      enum {DEFAULT_NUM_BINS = 50};
+
       virtual ~MCMCInterval()
       {
          delete[] fAxes;
@@ -105,6 +107,11 @@ namespace RooStats {
       // one maximum) than others, and sometimes has little value.
       virtual Double_t UpperLimit(RooRealVar& param);
 
+      // set the number of steps in the chain to discard as burn-in,
+      // starting from the first
+      virtual void SetNumBurnInSteps(Int_t numBurnInSteps)
+      { fNumBurnInSteps = numBurnInSteps; }
+
       // set the number of bins to use (same for all axes, for now)
       virtual void SetNumBins(Int_t numBins);
 
@@ -125,6 +132,7 @@ namespace RooStats {
                         // for the actual confidence level (strict), or a 
                         // ceiling (not strict)
       Int_t fDimension; // number of variables
+      Int_t fNumBurnInSteps; // number of steps to discard as burn in, starting from the first
       Int_t* fNumBins; // number of bins for each dimension
       Double_t fIntervalSum; // sum of heights of bins in the interval
       RooRealVar** fAxes; // array of pointers to RooRealVars representing

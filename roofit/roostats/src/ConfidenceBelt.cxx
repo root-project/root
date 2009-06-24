@@ -67,14 +67,14 @@ ConfidenceBelt::ConfidenceBelt(const char* name, const char* title) :
 
 //____________________________________________________________________
 ConfidenceBelt::ConfidenceBelt(const char* name, RooAbsData& data) :
-   TNamed(name,name), fParameterPoints(&data)
+  TNamed(name,name), fParameterPoints((RooAbsData*)data.Clone("PointsToTestForBelt"))
 {
    // Alternate constructor
 }
 
 //____________________________________________________________________
 ConfidenceBelt::ConfidenceBelt(const char* name, const char* title, RooAbsData& data) :
-   TNamed(name,title), fParameterPoints(&data)
+   TNamed(name,title), fParameterPoints((RooAbsData*)data.Clone("PointsToTestForBelt"))
 {
    // Alternate constructor
 }
@@ -109,14 +109,16 @@ vector<Double_t> ConfidenceBelt::ConfidenceLevels() const {
 }
 
 //____________________________________________________________________
-void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, 
+void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsIndex,
 					 Double_t lower, Double_t upper,
 					 Double_t cl, Double_t leftside){
   
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
-  RooDataHist* hist = dynamic_cast<RooDataHist*>( fParameterPoints );
+  RooDataHist* hist = dynamic_cast<RooDataHist*>( fParameterPoints );  
+
+  //  cout << "add: " << tree << " " << hist << endl;
 
   if( !this->CheckParameters(parameterPoint) )
     std::cout << "problem with parameters" << std::endl;
@@ -126,7 +128,7 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint,
   if(luIndex <0 ) {
     fSamplingSummaryLookup.Add(cl,leftside);
     luIndex = fSamplingSummaryLookup.GetLookupIndex(cl, leftside);
-    //    cout << "lookup index = " << luIndex << endl;
+    cout << "lookup index = " << luIndex << endl;
   }
   AcceptanceRegion* thisRegion = new AcceptanceRegion(luIndex, lower, upper);
   
@@ -137,7 +139,7 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint,
     //    RooStats::SetParameters(&parameterPoint, const_cast<RooArgSet*>(hist->get())); 
     //    int index = hist->calcTreeIndex(); // get index
     int index = hist->getIndex(parameterPoint); // get index
-    cout << "hist index = " << index << endl;
+    //    cout << "hist index = " << index << endl;
 
     // allocate memory if necessary.  numEntries is overkill?
     if((Int_t)fSamplingSummaries.size() <= index) {
@@ -149,13 +151,15 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint,
     fSamplingSummaries.at(index) = *thisRegion;
   }
   else if( tree ){
-
-    tree->add( parameterPoint ); // assume it's unique for now
-    int index = tree->numEntries() - 1; //check that last point added has index nEntries -1
+    //    int index = tree->getIndex(parameterPoint); 
+    int index = dsIndex;
     //    cout << "tree index = " << index << endl;
 
     // allocate memory if necessary.  numEntries is overkill?
-    if((Int_t)fSamplingSummaries.size() < index) fSamplingSummaries.reserve( tree->numEntries()  ); 
+    if((Int_t)fSamplingSummaries.size() <= index){
+      fSamplingSummaries.reserve( tree->numEntries()  ); 
+      fSamplingSummaries.resize( tree->numEntries() ); 
+    }
 
     // set the region for this point (check for duplicate?)
     fSamplingSummaries.at( index ) = *thisRegion;
