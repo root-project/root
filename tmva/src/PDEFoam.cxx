@@ -74,8 +74,8 @@
 
 ClassImp(TMVA::PDEFoam)
 
-static const Float_t gHigh= FLT_MAX;
-static const Float_t gVlow=-FLT_MAX;
+static const Float_t gHigh= 1.0e150;
+static const Float_t gVlow=-1.0e150;
 
 using namespace std;
 
@@ -1779,7 +1779,6 @@ Double_t TMVA::PDEFoam::GetCellDiscr( std::vector<Float_t> xvec, EKernel kernel 
    // (unified foams).
 
    Double_t result = 0.;
-   const Double_t xoffset = 1.e-6; 
 
    // transform xvec
    std::vector<Float_t> txvec = VarTransform(xvec);
@@ -1807,29 +1806,7 @@ Double_t TMVA::PDEFoam::GetCellDiscr( std::vector<Float_t> xvec, EKernel kernel 
       result /= norm;
    } 
    else if (kernel == kLinN) {
-     PDEFoamVect cellSize(GetTotDim());
-     PDEFoamVect cellPosi(GetTotDim());
-     cell->GetHcub(cellPosi, cellSize);
-     for (Int_t dim=0; dim<fDim; dim++) {
-       std::vector<Float_t> ntxvec = txvec;
-       Double_t mindist;
-       PDEFoamCell *mindistcell;
-       mindist = (txvec[dim]-cellPosi[dim])/cellSize[dim];
-       if (mindist<0.5) { // left neighbour 
-	 ntxvec[dim] = cellPosi[dim]-xoffset;
-	 mindistcell = FindCell(ntxvec);
-       } else { // right neighbour
-	 mindist=1-mindist;
-	 ntxvec[dim] = cellPosi[dim]+cellSize[dim]+xoffset;
-	 mindistcell = FindCell(ntxvec);	 
-       }
-       result+=GetCellDiscr(cell) * (0.5 + mindist);
-       result+=GetCellDiscr(mindistcell) * (0.5 - mindist);
-     }
-     //     result+=GetCellDiscr(cell) * (1 - sumofweights/fDim);
-     //     sumofweights+= 1 - sumofweights/fDim;
-     //     result/=sumofweights;
-     result/=fDim;
+      result = WeightLinNeighbors(txvec, kDiscriminator);
    }
    else {
       Log() << kFATAL << "GetCellDiscr: ERROR: wrong kernel!" << Endl;
@@ -1945,7 +1922,6 @@ Double_t TMVA::PDEFoam::GetCellRegValue0( std::vector<Float_t> xvec, EKernel ker
    // This function is used when the MultiTargetRegression==False option is set.
 
    Double_t result = 0.;
-   const Double_t xoffset = 1.e-6; 
 
    std::vector<Float_t> txvec = VarTransform(xvec);
    PDEFoamCell *cell          = FindCell(txvec);
@@ -1975,29 +1951,7 @@ Double_t TMVA::PDEFoam::GetCellRegValue0( std::vector<Float_t> xvec, EKernel ker
       result /= norm;
    }
    else if (kernel == kLinN) {
-     for (Int_t dim=0; dim<fDim; dim++) {
-       PDEFoamVect cellSize(GetTotDim());
-       PDEFoamVect cellPosi(GetTotDim());
-       cell->GetHcub(cellPosi, cellSize);
-       std::vector<Float_t> ntxvec = txvec;
-       Double_t mindist;
-       PDEFoamCell *mindistcell;
-       mindist = (txvec[dim]-cellPosi[dim])/cellSize[dim];
-       if (mindist<0.5) { // left neighbour 
-	 ntxvec[dim] = cellPosi[dim]-xoffset;
-	 mindistcell = FindCell(ntxvec);
-       } else { // right neighbour
-	 mindist=1-mindist;
-	 ntxvec[dim] = cellPosi[dim]+cellSize[dim]+xoffset;
-	 mindistcell = FindCell(ntxvec);	 
-       }
-       result+=GetCellRegValue0(cell) * (0.5 + mindist);
-       result+=GetCellRegValue0(mindistcell) * (0.5 - mindist);
-     }
-     //     result+=GetCellDiscr(cell) * (1 - sumofweights/fDim);
-     //     sumofweights+= 1 - sumofweights/fDim;
-     //     result/=sumofweights;
-     result/=fDim;
+      result = WeightLinNeighbors(txvec, kTarget0);
    }
    else {
       Log() << kFATAL << "ERROR: unknown kernel!" << Endl; 
@@ -2121,7 +2075,6 @@ Double_t TMVA::PDEFoam::GetProjectedRegValue( UInt_t target_number, std::vector<
 
    // result value and norm
    Double_t result = 0.;
-   Double_t xoffset = 1e-6;
 
    // choose kernel
    /////////////////// no kernel //////////////////
@@ -2161,35 +2114,6 @@ Double_t TMVA::PDEFoam::GetProjectedRegValue( UInt_t target_number, std::vector<
       result /= norm; // this variable now contains gaus weighted average target value
       
    } // end gaus kernel
-   else if (kernel == kLinN) {
-     PDEFoamCell *cell= FindCell(txvec);
-     PDEFoamVect cellSize(GetTotDim());
-     PDEFoamVect cellPosi(GetTotDim());
-     cell->GetHcub(cellPosi, cellSize);
-     for (Int_t dim=0; dim<fDim; dim++) {
-       std::vector<Float_t> ntxvec = txvec;
-       Double_t mindist;
-       //       PDEFoamCell *mindistcell;
-       mindist = (txvec[dim]-cellPosi[dim])/cellSize[dim];
-       if (mindist<0.5) { // left neighbour 
-	 ntxvec[dim] = cellPosi[dim]-xoffset;
-	 if (ntxvec[dim]<0) ntxvec[dim]=0.;   // we are already at the leftmost cell
-	 //	 mindistcell = FindCell(ntxvec);
-       } else { // right neighbour
-	 mindist=1-mindist;
-	 ntxvec[dim] = cellPosi[dim]+cellSize[dim]+xoffset;
-	 if (ntxvec[dim]>1.) ntxvec[dim]=1.;   // we are already at the rightmost cell
-	 //	 mindistcell = FindCell(ntxvec);	 
-       }
-       result+=GetCellTarget(target_number, txvec, ts) * (0.5 + mindist);
-       result+=GetCellTarget(target_number, ntxvec, ts) * (0.5 - mindist);
-     }
-     //     result+=GetCellDiscr(cell) * (1 - sumofweights/fDim);
-     //     sumofweights+= 1 - sumofweights/fDim;
-     //     result/=sumofweights;
-     result/=fDim;
-  
-   }
    else {
       Log() << kFATAL << "<GetProjectedRegValue> ERROR: unsupported kernel!" << Endl;
       result = 0.;
@@ -2280,6 +2204,9 @@ Double_t TMVA::PDEFoam::GetCellDensity( std::vector<Float_t> xvec, EKernel kerne
 
       result /= norm;
    }
+   else if (kernel == kLinN){
+      result = WeightLinNeighbors(txvec, kDensity);
+   }
    else {
       Log() << kFATAL << "<GetCellDensity(event)> ERROR: unknown kernel!" << Endl; 
       return -999.;
@@ -2356,6 +2283,72 @@ Double_t TMVA::PDEFoam::GetCellEvents( PDEFoamCell* cell )
 }
 
 //_______________________________________________________________________________________________
+Double_t TMVA::PDEFoam::WeightLinNeighbors( std::vector<Float_t> txvec, ECellValue cv )
+{ 
+   // results the cell value, corresponding to txvec, weighted by the
+   // neighor cells via a linear function
+   //
+   // Parameters
+   //  - txvec - event vector, transformed to interval [0,1]
+   //  - cv - cell value to be weighted
+
+   Double_t result = 0.;
+   const Double_t xoffset = 1.e-6; 
+
+   if (txvec.size() != UInt_t(GetTotDim()))
+      Log() << kFATAL << "Wrong dimension of event variable!" << Endl;
+
+   PDEFoamCell *cell= FindCell(txvec);
+   PDEFoamVect cellSize(GetTotDim());
+   PDEFoamVect cellPosi(GetTotDim());
+   cell->GetHcub(cellPosi, cellSize);
+
+   for (Int_t dim=0; dim<GetTotDim(); dim++) {
+      std::vector<Float_t> ntxvec = txvec;
+      Double_t mindist;
+      PDEFoamCell *mindistcell = 0;
+      mindist = (txvec[dim]-cellPosi[dim])/cellSize[dim];
+      if (mindist<0.5) { // left neighbour 
+	 ntxvec[dim] = cellPosi[dim]-xoffset;
+	 mindistcell = FindCell(ntxvec);
+      } else { // right neighbour
+	 mindist=1-mindist;
+	 ntxvec[dim] = cellPosi[dim]+cellSize[dim]+xoffset;
+	 mindistcell = FindCell(ntxvec);	 
+      }
+      Double_t cellval = 0;
+      Double_t mindistcellval = 0;
+      if (cv==kDiscriminator){
+	 cellval        = GetCellDiscr(cell);
+	 mindistcellval = GetCellDiscr(mindistcell);
+      } else if (cv==kTarget0){
+	 cellval        = GetCellRegValue0(cell);
+	 mindistcellval = GetCellRegValue0(mindistcell);
+      } else if (cv==kDensity){
+	 cellval        = GetCellDensity(cell);
+	 mindistcellval = GetCellDensity(mindistcell);
+      } else if (cv==kNev){
+	 cellval        = GetCellEntries(cell);
+	 mindistcellval = GetCellEntries(mindistcell);
+      } else if (cv==kMeanValue){
+	 cellval        = GetCellMean(cell);
+	 mindistcellval = GetCellMean(mindistcell);
+      } else if (cv==kRms){
+	 cellval        = GetCellRMS(cell);
+	 mindistcellval = GetCellRMS(mindistcell);
+      } else if (cv==kRmsOvMean){
+	 cellval        = GetCellRMSovMean(cell);
+	 mindistcellval = GetCellRMSovMean(mindistcell);
+      } else {
+	 Log() << kFATAL << "<WeightLinNeighbors>: unsupported option" << Endl;
+      }
+      result += cellval        * (0.5 + mindist);
+      result += mindistcellval * (0.5 - mindist);
+   }
+   return result/GetTotDim();
+}
+
+//_______________________________________________________________________________________________
 Double_t TMVA::PDEFoam::WeightGaus( PDEFoamCell* cell, std::vector<Float_t> txvec, UInt_t dim )
 { 
    // Returns the gauss weight between the 'cell' and a given coordinate 'txvec'.
@@ -2427,32 +2420,12 @@ TMVA::PDEFoamCell* TMVA::PDEFoam::FindCell( std::vector<Float_t> xvec )
    // DD 10.12.2007 
    // cleaned up a bit and improved performance
 
-   PDEFoamVect  cellPosi (GetTotDim()), cellSize (GetTotDim());
    PDEFoamVect  cellPosi0(GetTotDim()), cellSize0(GetTotDim());
-
    PDEFoamCell *cell, *cell0;
-
-   //    for (UInt_t i=0; i<xvec.size(); i++)
-   //       Log() << "xvec["<<i<<"]=" << xvec.at(i) << Endl;
-   //    Log() << "<FindCell> root-cell at " << fCells[0] << Endl;
 
    cell=fCells[0]; // start with root cell
    Int_t idim=0;
-   while (true) { //go down binary tree until cell is found
-
-      cell->GetHcub(cellPosi,cellSize);
-      Int_t incell=0;
-
-      if (cell->GetStat()==1) { // cell is active
-         //to avoid rounding errors in cell position caluclation
-         const Double_t xsmall=1.e-10; 
-         for (Long_t i=0; i<GetTotDim(); i++) {
-            if (xvec.at(i) > cellPosi[i]-xsmall && xvec.at(i) <= cellPosi[i]+cellSize[i]+xsmall) incell++;
-            else
-               break;
-         }
-         break;
-      }
+   while (cell->GetStat()!=1) { //go down binary tree until cell is found
       idim=cell->GetBest();  // dimension that changed
       cell0=cell->GetDau0(); 
       cell0->GetHcub(cellPosi0,cellSize0);

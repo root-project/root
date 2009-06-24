@@ -163,7 +163,7 @@ void TMVA::DataInputHandler::ClearTreeList( const TString& className ) {
    try{
       fInputTrees.find(className)->second.clear();
    }
-   catch(int) {
+   catch(int e) {
       Log() << kINFO << "   Clear treelist for class " << className << " failed, since class does not exist." << Endl;
    }
 }

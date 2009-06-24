@@ -482,6 +482,9 @@ void TMVA::MethodPDEFoam::TrainMultiTargetRegression()
    Log() << kDEBUG << "Number of variables: " << Data()->GetNVariables() << Endl;
    Log() << kDEBUG << "Number of Targets:   " << Data()->GetNTargets()   << Endl;
    Log() << kDEBUG << "Dimension of foam:   " << Data()->GetNVariables()+Data()->GetNTargets() << Endl;
+   if (fKernel==kLinN)
+      Log() << kFATAL << "LinNeighbors kernel currently not supported" 
+	    << " for multi target regression" << Endl;
 
    TString foamcaption = "MultiTargetRegressionFoam";
    foam[0] = new PDEFoam(foamcaption);

@@ -95,7 +95,7 @@ namespace TMVA
       const Int_t   	fTypeFlag;    // is sig or bkg - svm requieres 1 for sig and -1 for bkg
       Int_t         	fIdx;         // index flag
       UInt_t        	fNs;          // documentation
-      Int_t 		fIsShrinked;  // shrinking flag, see documentation
+      Int_t          fIsShrinked;  // shrinking flag, see documentation
       Float_t*      	fLine;        // pointer to column of kerenl matrix 
       const Float_t 	fTarget;      // regression target
       

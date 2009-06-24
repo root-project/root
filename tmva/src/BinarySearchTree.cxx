@@ -438,8 +438,8 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
          fSumSq[sb]     = std::vector<Double_t>(fPeriod);
          for (UInt_t j=0; j<fPeriod; j++) {
             fMeans[sb][j] = fRMS[sb][j] = fSum[sb][j] = fSumSq[sb][j] = 0;
-            fMin[sb][j] =  FLT_MAX;
-            fMax[sb][j] = -FLT_MAX; 
+            fMin[sb][j] =  DBL_MAX;
+            fMax[sb][j] = -DBL_MAX; 
          }
       }
       currentNode = (BinarySearchTreeNode*) this->GetRoot();

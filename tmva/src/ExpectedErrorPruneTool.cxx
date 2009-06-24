@@ -120,7 +120,7 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
          fPruneSequence.clear();
       }
       // from the set of pruned trees, find the one with the optimal quality index
-      std::multimap<const Double_t,Double_t>::reverse_iterator it = fQualityMap.rend(); ++it;
+      std::multimap<Double_t,Double_t>::reverse_iterator it = fQualityMap.rend(); ++it;
       fPruneStrength = it->second;
       FindListOfNodes((DecisionTreeNode*)dt->GetRoot());
 

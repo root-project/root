@@ -85,6 +85,15 @@ namespace TMVA {
    enum ETargetSelection { kMean, kMpv };
    enum ECellType { kAll, kActive, kInActive };
    enum EFoamType { kSeparate, kDiscr, kMonoTarget, kMultiTarget };
+   // possible values, saved in foam cells
+   // kNev           : number of events (saved in cell element 0)
+   // kDiscriminator : discriminator (saved in cell element 0)
+   // kTarget0       : target 0 (saved in cell element 0)
+   // kMeanValue     : mean sampling value (saved in fIntegral)
+   // kRms           : rms of sampling distribution (saved in fDriver)
+   // kRmsOvMean     : rms/mean of sampling distribution (saved in fDriver and fIntegral)
+   // kDensity       : number of events/cell volume
+   enum ECellValue { kNev, kDiscriminator, kTarget0, kMeanValue, kRms, kRmsOvMean, kDensity };
    // options for filling density (used in Density() to build up foam)
    // kEVENT_DENSITY : use event density for foam buildup
    // kDISCRIMINATOR : use N_sig/(N_sig + N_bg) for foam buildup
@@ -311,8 +320,9 @@ namespace TMVA {
       // override  PDEFoam::OutputGrow(Bool_t) for nicer TMVA output
       virtual void OutputGrow(Bool_t finished = false ); 
 
-      // weight result from function with gaus kernel
+      // weight result from function with kernel
       Double_t WeightGaus(PDEFoamCell*, std::vector<Float_t>, UInt_t dim=0); 
+      Double_t WeightLinNeighbors( std::vector<Float_t> txvec, ECellValue cv );
 
    public:
       PDEFoam();                  // Default constructor (used only by ROOT streamer)

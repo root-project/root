@@ -81,20 +81,13 @@ namespace TMVA {
 
       UInt_t  GetNVariables()     const { return fValues.size(); }
       UInt_t  GetNTargets()       const { return fTargets.size(); }
-      UInt_t  GetNSpectators()      const { return fSpectators.size(); }
+      UInt_t  GetNSpectators()    const { return fSpectators.size(); }
       UInt_t  GetNVars()          const { return fValues.size(); }  // backward compatible -> to be removed
 
-      Float_t GetVal(UInt_t ivar) const { return ( fDynamic ?( *(*fgValuesDynamic)[ivar] ) : fValues[ivar] ); }
-      Int_t   GetSignalClass()    const { return fSignalClass; } // intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
+      Float_t GetVal(UInt_t ivar) const;
+      Int_t   GetSignalClass()    const { return fSignalClass; } // intermediate solution to keep IsSignal() of Event working
       
-      const std::vector<Float_t>& GetValues() const {  
-         if (fDynamic) {
-            fValues.clear();
-            for (std::vector<Float_t*>::const_iterator it = fgValuesDynamic->begin(); 
-                 it != fgValuesDynamic->end(); it++) { Float_t val = *(*it); fValues.push_back( val ); }
-         }
-         return fValues;
-      }
+      const std::vector<Float_t>& GetValues() const;
 
       Float_t GetValue          ( UInt_t ivar) const { return GetVal( ivar ); }
 
@@ -124,13 +117,7 @@ namespace TMVA {
       std::vector<Float_t>& GetSpectators()            const { return fSpectators; }
       Float_t               GetSpectator( UInt_t ivar) const { return fSpectators.at(ivar); }
 
-      static void ClearDynamicVariables() { 
-         if (fgValuesDynamic != 0) { 
-            fgValuesDynamic->clear();
-            delete fgValuesDynamic;
-            fgValuesDynamic = 0;
-         }
-      } 
+      static void ClearDynamicVariables();
 
       void    CopyVarValues( const Event& other );
       void    Print        ( std::ostream & o ) const;

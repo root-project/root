@@ -63,6 +63,7 @@ TMVA::SVEvent::SVEvent( const Event* event, const Float_t C_par )
      fLine(0),
      fTarget((event->GetNTargets() > 0 ? event->GetTarget(0) : 0))
 {
+   // constructor
 }
 
 //_______________________________________________________________________
@@ -80,7 +81,9 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, cons
      fLine(0),
      fTarget(0)
 {
+   // constructor
 }
+
 //_______________________________________________________________________
 TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Float_t alpha_p,const Int_t typeFlag)
    : fDataVector(*svector),
@@ -96,7 +99,9 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Floa
      fLine(0),
      fTarget(0)
 {
+   // constructor
 }
+
 //_______________________________________________________________________
 TMVA::SVEvent::~SVEvent()
 {
@@ -110,6 +115,7 @@ TMVA::SVEvent::~SVEvent()
 //_______________________________________________________________________
 void TMVA::SVEvent::Print( std::ostream& os ) const
 {
+   // printout 
   os << "type::" << fTypeFlag <<" target::"<< fTarget << " alpha::" << fAlpha <<" alpha_p::"<< fAlpha_p<< " values::" ;
   for (UInt_t j =0; j < fDataVector.size();j++) os<<fDataVector.at(j)<<" ";
   os << std::endl;
@@ -118,6 +124,7 @@ void TMVA::SVEvent::Print( std::ostream& os ) const
 //_______________________________________________________________________
 void TMVA::SVEvent::PrintData()
 {
+   // printout 
    for (UInt_t i = 0; i < fNVar; i++) std::cout<<fDataVector.at(i)<<" ";
    std::cout<<std::endl;
 }

@@ -54,9 +54,9 @@ namespace TMVA {
    public:
 
       // singleton class
-      static DataSetManager& Instance() { return *fgDSManager; }      
-      static void            CreateInstance( DataInputHandler& dataInput ) { fgDSManager = new DataSetManager(dataInput); }
-      static void            DestroyInstance() { if (fgDSManager) { delete fgDSManager; fgDSManager=0; } }
+      static DataSetManager& Instance();
+      static void            CreateInstance( DataInputHandler& dataInput );
+      static void            DestroyInstance();
 
       // ownership stays with this handler
       DataSet*     CreateDataSet ( const TString& dsiName );

@@ -45,6 +45,9 @@ using std::endl;
 #endif
 
 TMVA::DataSetManager* TMVA::DataSetManager::fgDSManager = 0;
+TMVA::DataSetManager& TMVA::DataSetManager::Instance() { return *fgDSManager; }      
+void TMVA::DataSetManager::CreateInstance( DataInputHandler& dataInput ) { fgDSManager = new DataSetManager(dataInput); }
+void TMVA::DataSetManager::DestroyInstance() { if (fgDSManager) { delete fgDSManager; fgDSManager=0; } }
 
 //_______________________________________________________________________
 TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput ) 

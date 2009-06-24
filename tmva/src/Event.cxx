@@ -147,6 +147,17 @@ TMVA::Event::~Event()
 }
  
 //____________________________________________________________
+void TMVA::Event::ClearDynamicVariables() 
+{ 
+   // clear global variable
+   if (fgValuesDynamic != 0) { 
+      fgValuesDynamic->clear();
+      delete fgValuesDynamic;
+      fgValuesDynamic = 0;
+   }
+} 
+
+//____________________________________________________________
 void TMVA::Event::CopyVarValues( const Event& other )
 {
    // copies only the variable values
@@ -155,6 +166,28 @@ void TMVA::Event::CopyVarValues( const Event& other )
    fWeight      = other.fWeight;
    fBoostWeight = other.fBoostWeight;
    fSignalClass = other.fSignalClass;      // TODO: remove this.. see "IsSignal"
+}
+
+//____________________________________________________________
+Float_t TMVA::Event::GetVal( UInt_t ivar ) const 
+{ 
+   // return value of i'th variable
+   return ( fDynamic ?( *(*fgValuesDynamic)[ivar] ) : fValues[ivar] ); 
+}
+
+//____________________________________________________________
+const std::vector<Float_t>& TMVA::Event::GetValues() const 
+{  
+   // return va;lue vector
+   if (fDynamic) {
+      fValues.clear();
+      for (std::vector<Float_t*>::const_iterator it = fgValuesDynamic->begin(); 
+           it != fgValuesDynamic->end(); it++) { 
+         Float_t val = *(*it); 
+         fValues.push_back( val ); 
+      }
+   }
+   return fValues;
 }
 
 //____________________________________________________________
