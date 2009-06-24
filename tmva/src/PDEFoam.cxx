@@ -74,8 +74,8 @@
 
 ClassImp(TMVA::PDEFoam)
 
-static const Float_t gHigh= 1.0e150;
-static const Float_t gVlow=-1.0e150;
+static const Float_t gHigh= FLT_MAX;
+static const Float_t gVlow=-FLT_MAX;
 
 using namespace std;
 

@@ -59,7 +59,7 @@ namespace TMVA {
       virtual void ReadFromXML( void* trfnode );
 
       virtual const Event* Transform(const Event* const, Int_t cls ) const;
-      virtual const Event* InverseTransform(const Event* ev, Int_t cls ) const { return Transform( ev, cls ); }
+      virtual const Event* InverseTransform(const Event* const ev, Int_t cls ) const { return Transform( ev, cls ); }
 
       // writer of function code
       virtual void MakeFunction(std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls );

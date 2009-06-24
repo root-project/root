@@ -208,8 +208,8 @@ void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vecto
 
    for (UInt_t ivar=0; ivar<nvars+ntgts; ivar++) {
       for (Int_t ic = 0; ic < numC; ic++) {
-         fMin.at(ic).at(ivar) = DBL_MAX;
-         fMax.at(ic).at(ivar) = -DBL_MAX;
+         fMin.at(ic).at(ivar) = FLT_MAX;
+         fMax.at(ic).at(ivar) = -FLT_MAX;
       }
    }
 
@@ -452,8 +452,8 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
       fout << "inline void " << fcncName << "::InitTransform_"<<trCounter<<"()" << std::endl;
       fout << "{" << std::endl;
       for (UInt_t ivar=0; ivar<GetNVariables(); ivar++) {
-         Float_t min = 1e100;
-         Float_t max = -1e100;
+         Float_t min = FLT_MAX;
+         Float_t max = -FLT_MAX;
          for (UInt_t icls = 0; icls < numC; icls++) {
             min = TMath::Min(min, fMin.at(icls).at(ivar) );
             max = TMath::Max(max, fMax.at(icls).at(ivar) );
