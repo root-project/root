@@ -112,21 +112,21 @@ void TMVA::MethodKNN::ProcessOptions()
    // process the options specified by the user
    if (!(fnkNN > 0)) {      
       fnkNN = 10;
-      log() << kWARNING << "kNN must be a positive integer: set kNN = " << fnkNN << Endl;
+      Log() << kWARNING << "kNN must be a positive integer: set kNN = " << fnkNN << Endl;
    }
    if (fScaleFrac < 0.0) {      
       fScaleFrac = 0.0;
-      log() << kWARNING << "ScaleFrac can not be negative: set ScaleFrac = " << fScaleFrac << Endl;
+      Log() << kWARNING << "ScaleFrac can not be negative: set ScaleFrac = " << fScaleFrac << Endl;
    }
    if (fScaleFrac > 1.0) {
       fScaleFrac = 1.0;
    }
    if (!(fBalanceDepth > 0)) {
       fBalanceDepth = 6;
-      log() << kWARNING << "Optimize must be a positive integer: set Optimize = " << fBalanceDepth << Endl;      
+      Log() << kWARNING << "Optimize must be a positive integer: set Optimize = " << fBalanceDepth << Endl;      
    }
 
-   log() << kVERBOSE
+   Log() << kVERBOSE
          << "kNN options: \n" 
          << "  kNN = \n" << fnkNN
          << "  UseKernel = \n" << fUseKernel
@@ -164,7 +164,7 @@ void TMVA::MethodKNN::MakeKNN()
 {
    // create kNN
    if (!fModule) {
-      log() << kFATAL << "ModulekNN is not created" << Endl;
+      Log() << kFATAL << "ModulekNN is not created" << Endl;
    }
 
    fModule->Clear();
@@ -177,7 +177,7 @@ void TMVA::MethodKNN::MakeKNN()
       option += "trim";
    }
 
-   log() << kINFO << "Creating kd-tree with " << fEvent.size() << " events" << Endl;
+   Log() << kINFO << "Creating kd-tree with " << fEvent.size() << " events" << Endl;
 
    for (kNN::EventVec::const_iterator event = fEvent.begin(); event != fEvent.end(); ++event) {
       fModule->Add(*event);
@@ -193,22 +193,22 @@ void TMVA::MethodKNN::MakeKNN()
 void TMVA::MethodKNN::Train()
 {
    // kNN training
-   log() << kINFO << "<Train> start..." << Endl;
+   Log() << kINFO << "<Train> start..." << Endl;
 
    if (IsNormalised()) {
-      log() << kINFO << "Input events are normalized - setting ScaleFrac to 0" << Endl;
+      Log() << kINFO << "Input events are normalized - setting ScaleFrac to 0" << Endl;
       fScaleFrac = 0.0;
    }
    
    if (!fEvent.empty()) {
-      log() << kINFO << "Erasing " << fEvent.size() << " previously stored events" << Endl;
+      Log() << kINFO << "Erasing " << fEvent.size() << " previously stored events" << Endl;
       fEvent.clear();
    }
    if (GetNVariables() < 1)
-      log() << kFATAL << "MethodKNN::Train() - mismatched or wrong number of event variables" << Endl;
+      Log() << kFATAL << "MethodKNN::Train() - mismatched or wrong number of event variables" << Endl;
  
 
-   log() << kINFO << "Reading " << GetNEvents() << " events" << Endl;
+   Log() << kINFO << "Reading " << GetNEvents() << " events" << Endl;
 
    for (UInt_t ievt = 0; ievt < GetNEvents(); ++ievt) {
       // read the training event
@@ -240,7 +240,7 @@ void TMVA::MethodKNN::Train()
       fEvent.push_back(event_knn);
       
    }
-   log() << kINFO 
+   Log() << kINFO 
          << "Number of signal events " << fSumOfWeightsS << Endl
          << "Number of background events " << fSumOfWeightsB << Endl;
 
@@ -278,7 +278,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err )
 
    const kNN::List &rlist = fModule->GetkNNList();
    if (rlist.size() != knn + 2) {
-      log() << kFATAL << "kNN result list is empty" << Endl;
+      Log() << kFATAL << "kNN result list is empty" << Endl;
       return -100.0;  
    }
    
@@ -301,7 +301,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err )
       kradius = MethodKNN::getKernelRadius(rlist);
 
       if (!(kradius > 0.0)) {
-         log() << kFATAL << "kNN radius is not positive" << Endl;
+         Log() << kFATAL << "kNN radius is not positive" << Endl;
          return -100.0; 
       }
       
@@ -316,7 +316,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err )
       rms_vec = TMVA::MethodKNN::getRMS(rlist, event_knn);
 
       if (rms_vec.empty() || rms_vec.size() != event_knn.GetNVar()) {
-         log() << kFATAL << "Failed to compute RMS vector" << Endl;
+         Log() << kFATAL << "Failed to compute RMS vector" << Endl;
          return -100.0; 
       }            
    }
@@ -332,10 +332,10 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err )
       // Warn about Monte-Carlo event with zero distance
       // this happens when this query event is also in learning sample
       if (lit->second < 0.0) {
-         log() << kFATAL << "A neighbor has negative distance to query event" << Endl;
+         Log() << kFATAL << "A neighbor has negative distance to query event" << Endl;
       }
       else if (!(lit->second > 0.0)) {
-         log() << kVERBOSE << "A neighbor has zero distance to query event" << Endl;
+         Log() << kVERBOSE << "A neighbor has zero distance to query event" << Endl;
       }
       
       // get event weight and scale weight by kernel function
@@ -355,7 +355,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err )
          else          ++weight_bac;
       }
       else {
-         log() << kFATAL << "Unknown type for training event" << Endl;
+         Log() << kFATAL << "Unknown type for training event" << Endl;
       }
       
       // use only fnkNN events
@@ -368,18 +368,18 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err )
 
    // check that total number of events or total weight sum is positive
    if (!(count_all > 0)) {
-      log() << kFATAL << "Size kNN result list is not positive" << Endl;
+      Log() << kFATAL << "Size kNN result list is not positive" << Endl;
       return -100.0;
    }
    
    // check that number of events matches number of k in knn 
    if (count_all < knn) {
-      log() << kDEBUG << "count_all and kNN have different size: " << count_all << " < " << knn << Endl;
+      Log() << kDEBUG << "count_all and kNN have different size: " << count_all << " < " << knn << Endl;
    }
    
    // Check that total weight is positive
    if (!(weight_all > 0.0)) {
-      log() << kFATAL << "kNN result total weight is not positive" << Endl;
+      Log() << kFATAL << "kNN result total weight is not positive" << Endl;
       return -100.0;
    }
    
@@ -420,7 +420,7 @@ const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
 
    const kNN::List &rlist = fModule->GetkNNList();
    if (rlist.size() != knn + 2) {
-      log() << kFATAL << "kNN result list is empty" << Endl;
+      Log() << kFATAL << "kNN result list is empty" << Endl;
       return *fRegressionReturnVal;
    }
 
@@ -457,7 +457,7 @@ const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
 
    // check that number of events matches number of k in knn 
    if (!(weight_all > 0.0)) {
-      log() << kFATAL << "Total weight sum is not positive: " << weight_all << Endl;
+      Log() << kFATAL << "Total weight sum is not positive: " << weight_all << Endl;
       return *fRegressionReturnVal;
    }
 
@@ -482,10 +482,10 @@ const TMVA::Ranking* TMVA::MethodKNN::CreateRanking()
 void TMVA::MethodKNN::WriteWeightsToStream(ostream& os) const
 {
    // save the weights   
-   log() << kINFO << "Starting WriteWeightsToStream(ostream& os) function..." << Endl;
+   Log() << kINFO << "Starting WriteWeightsToStream(ostream& os) function..." << Endl;
    
    if (fEvent.empty()) {
-      log() << kWARNING << "MethodKNN contains no events " << Endl;
+      Log() << kWARNING << "MethodKNN contains no events " << Endl;
       return;
    }
  
@@ -581,10 +581,10 @@ void TMVA::MethodKNN::ReadWeightsFromXML( void* wghtnode ) {
 void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
 {
    // read the weights
-   log() << kINFO << "Starting ReadWeightsFromStream(istream& is) function..." << Endl;
+   Log() << kINFO << "Starting ReadWeightsFromStream(istream& is) function..." << Endl;
 
    if (!fEvent.empty()) {
-      log() << kINFO << "Erasing " << fEvent.size() << " previously stored events" << Endl;
+      Log() << kINFO << "Erasing " << fEvent.size() << " previously stored events" << Endl;
       fEvent.clear();
    }
 
@@ -606,7 +606,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
          nvar = count - 2;
       }
       if (count < 3 || nvar != count - 2) {
-         log() << kFATAL << "Missing comma delimeter(s)" << Endl;
+         Log() << kFATAL << "Missing comma delimeter(s)" << Endl;
       }
 
       Int_t ievent = -1, type = -1;
@@ -623,7 +623,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
          }
          
          if (!(ipos > prev)) {
-            log() << kFATAL << "Wrong substring limits" << Endl;
+            Log() << kFATAL << "Wrong substring limits" << Endl;
          }
          
          std::string vstring = line.substr(prev, ipos - prev);
@@ -632,7 +632,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
          }
          
          if (vstring.empty()) {	    
-            log() << kFATAL << "Failed to parse string" << Endl;
+            Log() << kFATAL << "Failed to parse string" << Endl;
          }
          
          if (vcount == 0) {
@@ -648,7 +648,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
             vvec[vcount - 3] = std::atof(vstring.c_str());
          }
          else {
-            log() << kFATAL << "Wrong variable count" << Endl;
+            Log() << kFATAL << "Wrong variable count" << Endl;
          }
          
          prev = ipos + 1;
@@ -658,7 +658,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
       fEvent.push_back(kNN::Event(vvec, weight, type));
    }
    
-   log() << kINFO << "Read " << fEvent.size() << " events from text file" << Endl;   
+   Log() << kINFO << "Read " << fEvent.size() << " events from text file" << Endl;   
 
    // create kd-tree (binary tree) structure
    MakeKNN();
@@ -668,10 +668,10 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
 void TMVA::MethodKNN::WriteWeightsToStream(TFile &rf) const
 { 
    // save weights to ROOT file
-   log() << kINFO << "Starting WriteWeightsToStream(TFile &rf) function..." << Endl;
+   Log() << kINFO << "Starting WriteWeightsToStream(TFile &rf) function..." << Endl;
    
    if (fEvent.empty()) {
-      log() << kWARNING << "MethodKNN contains no events " << Endl;
+      Log() << kWARNING << "MethodKNN contains no events " << Endl;
       return;
    }
 
@@ -692,7 +692,7 @@ void TMVA::MethodKNN::WriteWeightsToStream(TFile &rf) const
    // scale to MegaBytes
    size /= 1048576.0;
 
-   log() << kINFO << "Wrote " << size << "MB and "  << fEvent.size() 
+   Log() << kINFO << "Wrote " << size << "MB and "  << fEvent.size() 
          << " events to ROOT file" << Endl;
    
    delete tree;
@@ -703,17 +703,17 @@ void TMVA::MethodKNN::WriteWeightsToStream(TFile &rf) const
 void TMVA::MethodKNN::ReadWeightsFromStream(TFile &rf)
 { 
    // read weights from ROOT file
-   log() << kINFO << "Starting ReadWeightsFromStream(TFile &rf) function..." << Endl;
+   Log() << kINFO << "Starting ReadWeightsFromStream(TFile &rf) function..." << Endl;
 
    if (!fEvent.empty()) {
-      log() << kINFO << "Erasing " << fEvent.size() << " previously stored events" << Endl;
+      Log() << kINFO << "Erasing " << fEvent.size() << " previously stored events" << Endl;
       fEvent.clear();
    }
 
    // !!! hard coded tree name !!!
    TTree *tree = dynamic_cast<TTree *>(rf.Get("knn"));
    if (!tree) {
-      log() << kFATAL << "Failed to find knn tree" << Endl;
+      Log() << kFATAL << "Failed to find knn tree" << Endl;
       return;
    }
 
@@ -731,7 +731,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(TFile &rf)
    // scale to MegaBytes
    size /= 1048576.0;
 
-   log() << kINFO << "Read " << size << "MB and "  << fEvent.size() 
+   Log() << kINFO << "Read " << size << "MB and "  << fEvent.size() 
          << " events from ROOT file" << Endl;
 
    delete event;
@@ -755,10 +755,10 @@ void TMVA::MethodKNN::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The k-nearest neighbor (k-NN) algorithm is a multi-dimensional classification" << Endl
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The k-nearest neighbor (k-NN) algorithm is a multi-dimensional classification" << Endl
          << "and regression algorithm. Similarly to other TMVA algorithms, k-NN uses a set of" << Endl
          << "training events for which a classification category/regression target is known. " << Endl
          << "The k-NN method compares a test event to all training events using a distance " << Endl
@@ -769,11 +769,11 @@ void TMVA::MethodKNN::GetHelpMessage() const
          << "that a histogram which stores the k-NN decision variable is binned with k+1 bins" << Endl
          << "between 0 and 1." << Endl;
 
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options: " 
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options: " 
          << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The k-NN method estimates a density of signal and background events in a "<< Endl
+   Log() << Endl;
+   Log() << "The k-NN method estimates a density of signal and background events in a "<< Endl
          << "neighborhood around the test event. The method assumes that the density of the " << Endl
          << "signal and background events is uniform and constant within the neighborhood. " << Endl
          << "k is an adjustable parameter and it determines an average size of the " << Endl
@@ -781,17 +781,17 @@ void TMVA::MethodKNN::GetHelpMessage() const
          << "fluctuations and large (greater than 100) values might not sufficiently capture  " << Endl
          << "local differences between events in the training set. The speed of the k-NN" << Endl
          << "method also increases with larger values of k. " << Endl;   
-   log() << Endl;
-   log() << "The k-NN method assigns equal weight to all input variables. Different scales " << Endl
+   Log() << Endl;
+   Log() << "The k-NN method assigns equal weight to all input variables. Different scales " << Endl
          << "among the input variables is compensated using ScaleFrac parameter: the input " << Endl
          << "variables are scaled so that the widths for central ScaleFrac*100% events are " << Endl
          << "equal among all the input variables." << Endl;
 
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Additional configuration options: " 
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Additional configuration options: " 
          << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The method inclues an option to use a Gaussian kernel to smooth out the k-NN" << Endl
+   Log() << Endl;
+   Log() << "The method inclues an option to use a Gaussian kernel to smooth out the k-NN" << Endl
          << "response. The kernel re-weights events using a distance to the test event." << Endl;
 }
 
@@ -817,7 +817,7 @@ Double_t TMVA::MethodKNN::GausKernel(const kNN::Event &event_knn,
    // Gaussian kernel
 
    if (event_knn.GetNVar() != event.GetNVar() || event_knn.GetNVar() != svec.size()) {
-      log() << kFATAL << "Mismatched vectors in Gaussian kernel function" << Endl;
+      Log() << kFATAL << "Mismatched vectors in Gaussian kernel function" << Endl;
       return 0.0;
    }
 
@@ -831,7 +831,7 @@ Double_t TMVA::MethodKNN::GausKernel(const kNN::Event &event_knn,
       const Double_t diff_ = event.GetVar(ivar) - event_knn.GetVar(ivar);
       const Double_t sigm_ = svec[ivar];
       if (!(sigm_ > 0.0)) {
-         log() << kFATAL << "Bad sigma value = " << sigm_ << Endl;
+         Log() << kFATAL << "Bad sigma value = " << sigm_ << Endl;
          return 0.0;
       }
 
@@ -890,7 +890,7 @@ const std::vector<Double_t> TMVA::MethodKNN::getRMS(const kNN::List &rlist, cons
             rvec.insert(rvec.end(), event_.GetNVar(), 0.0);
          }
          else if (rvec.size() != event_.GetNVar()) {	 
-            log() << kFATAL << "Wrong number of variables, should never happen!" << Endl;
+            Log() << kFATAL << "Wrong number of variables, should never happen!" << Endl;
             rvec.clear();
             return rvec;
          }
@@ -905,14 +905,14 @@ const std::vector<Double_t> TMVA::MethodKNN::getRMS(const kNN::List &rlist, cons
       }
 
    if (kcount < 1) {
-      log() << kFATAL << "Bad event kcount = " << kcount << Endl;
+      Log() << kFATAL << "Bad event kcount = " << kcount << Endl;
       rvec.clear();
       return rvec;
    }
 
    for(unsigned int ivar = 0; ivar < rvec.size(); ++ivar) {
       if (!(rvec[ivar] > 0.0)) {
-         log() << kFATAL << "Bad RMS value = " << rvec[ivar] << Endl;
+         Log() << kFATAL << "Bad RMS value = " << rvec[ivar] << Endl;
          rvec.clear();
          return rvec;
       }
@@ -941,7 +941,7 @@ Double_t TMVA::MethodKNN::getLDAValue(const kNN::List &rlist, const kNN::Event &
          bac_vec.push_back(tvec);
       }
       else {
-         log() << kFATAL << "Unknown type for training event" << Endl;
+         Log() << kFATAL << "Unknown type for training event" << Endl;
       }       
    }
 

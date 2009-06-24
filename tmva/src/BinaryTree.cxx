@@ -124,6 +124,7 @@ void TMVA::BinaryTree::Print(ostream & os) const
 
 //_______________________________________________________________________
 void* TMVA::BinaryTree::AddXMLTo(void* parent) const {
+   // add attributes to XML
    void* bdt = gTools().xmlengine().NewChild(parent, 0, "BinaryTree");
    gTools().AddAttr( bdt, "type" , ClassName() );
    this->GetRoot()->AddXMLTo(bdt);
@@ -132,6 +133,7 @@ void* TMVA::BinaryTree::AddXMLTo(void* parent) const {
 
 //_______________________________________________________________________
 void TMVA::BinaryTree::ReadXML(void* node) {
+   // read attributes from XML
    this->DeleteNode( fRoot );
    fRoot= CreateNode();
    void* trnode = gTools().xmlengine().GetChild(node);
@@ -141,6 +143,7 @@ void TMVA::BinaryTree::ReadXML(void* node) {
 
 //_______________________________________________________________________
 TMVA::BinaryTree* TMVA::BinaryTree::CreateFromXML(void* node) {
+   // re-create a new tree (decision tree or search tree) from XML
    std::string type("");
    gTools().ReadAttr(node,"type", type);
    BinaryTree* bt = 0;
@@ -149,7 +152,7 @@ TMVA::BinaryTree* TMVA::BinaryTree::CreateFromXML(void* node) {
    } else if(type == "BinarySearchTree") {
       bt = new BinarySearchTree();
    } else {
-      gTools().log() << kFATAL << "Can't read binary tree of type '" << type << "'" << Endl;
+      gTools().Log() << kFATAL << "Can't read binary tree of type '" << type << "'" << Endl;
    }
    bt->ReadXML( node );
    return bt;
@@ -216,7 +219,7 @@ void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
    if (n == NULL){ //default, start at the tree top, then descend recursively
       n = (Node*) this->GetRoot();
       if (n == NULL) {
-         log() << kFATAL << "SetTotalTreeDepth: started with undefined ROOT node" <<Endl;
+         Log() << kFATAL << "SetTotalTreeDepth: started with undefined ROOT node" <<Endl;
          return ;
       }
    } 

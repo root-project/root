@@ -51,7 +51,6 @@
 #include "TMVA/Timer.h"
 #endif
 
-//new impl
 #ifndef ROOT_TMVA_SVWorkingSet
 #include "TMVA/SVWorkingSet.h"
 #endif
@@ -67,7 +66,6 @@
 #include <string>
 
 const Int_t basketsize__ = 1280000;
-const std::string dbg = "==> SVM::DEBUG>> ";
 REGISTER_METHOD(SVM)
 
 ClassImp(TMVA::MethodSVM)
@@ -148,7 +146,7 @@ void TMVA::MethodSVM::ProcessOptions()
 {
    // option post processing (if necessary)
    if (IgnoreEventsWithNegWeightsInTraining()) {
-      log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
+      Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
             << GetMethodTypeName() 
             << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
             << Endl;
@@ -162,24 +160,24 @@ void TMVA::MethodSVM::Train()
    Data()->SetCurrentType(Types::kTraining);
 
    for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++){
-      log() << kDEBUG << "Create event vector"<< Endl;
+      Log() << kDEBUG << "Create event vector"<< Endl;
       fInputData->at(ievt) = new SVEvent(GetEvent(ievt), fCost);
   }
    
    fSVKernelFunction = new SVKernelFunction(fGamma); 
    
-   log()<< kINFO << "Building SVM Working Set..."<< Endl;
+   Log()<< kINFO << "Building SVM Working Set..."<< Endl;
    Timer bldwstime( GetName());
    fWgSet = new SVWorkingSet( fInputData, fSVKernelFunction,fTolerance, DoRegression() );
-   log() << kINFO <<"Elapsed time for Working Set build: "<< bldwstime.GetElapsedTime()<<Endl;
+   Log() << kINFO <<"Elapsed time for Working Set build: "<< bldwstime.GetElapsedTime()<<Endl;
    
    // timing
    Timer timer( GetName() );
-   log() << kINFO << "Sorry, no computing time forecast available for SVM, please wait ..." << Endl;
+   Log() << kINFO << "Sorry, no computing time forecast available for SVM, please wait ..." << Endl;
    
    fWgSet->Train();
 
-   log() << kINFO << "Elapsed time: " << timer.GetElapsedTime()    
+   Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime()    
          << "                                          " << Endl;
     
    fBparm          = fWgSet->GetBpar();
@@ -281,7 +279,7 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
       for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
          (*svector)[ivar]=temp[ivar+4];
          
-      fSupportVectors->push_back(new SVEvent(svector,alpha,alpha_p));
+      fSupportVectors->push_back(new SVEvent(svector,alpha,alpha_p,typeFlag));
       supportvectornode = gTools().xmlengine().GetNext(supportvectornode);
    }
    
@@ -532,34 +530,34 @@ void TMVA::MethodSVM::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The Support Vector Machine (SVM) builds a hyperplance separating" << Endl;
-   log() << "signal and background events (vectors) using the minimal subset of " << Endl;
-   log() << "all vectors used for training (support vectors). The extension to" << Endl;
-   log() << "the non-linear case is performed by mapping input vectors into a " << Endl;
-   log() << "higher-dimensional feature space in which linear separation is " << Endl;
-   log() << "possible. The use of the kernel functions thereby eliminates the " << Endl;
-   log() << "explicit transformation to the feature space. The implemented SVM " << Endl;
-   log() << "algorithm performs the classification tasks using linear, polynomial, " << Endl;
-   log() << "Gaussian and sigmoidal kernel functions. The Gaussian kernel allows " << Endl;
-   log() << "to apply any discriminant shape in the input space." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "SVM is a general purpose non-linear classification method, which " << Endl;
-   log() << "does not require data preprocessing like decorrelation or Principal " << Endl;
-   log() << "Component Analysis. It generalises quite well and can handle analyses " << Endl;
-   log() << "with large numbers of input variables." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "Optimal performance requires primarily a proper choice of the kernel " << Endl;
-   log() << "parameters (the width \"Sigma\" in case of Gaussian kernel) and the" << Endl;
-   log() << "cost parameter \"C\". The user must optimise them empirically by running" << Endl;
-   log() << "SVM several times with different parameter sets. The time needed for " << Endl;
-   log() << "each evaluation scales like the square of the number of training " << Endl;
-   log() << "events so that a coarse preliminary tuning should be performed on " << Endl;
-   log() << "reduced data sets." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The Support Vector Machine (SVM) builds a hyperplance separating" << Endl;
+   Log() << "signal and background events (vectors) using the minimal subset of " << Endl;
+   Log() << "all vectors used for training (support vectors). The extension to" << Endl;
+   Log() << "the non-linear case is performed by mapping input vectors into a " << Endl;
+   Log() << "higher-dimensional feature space in which linear separation is " << Endl;
+   Log() << "possible. The use of the kernel functions thereby eliminates the " << Endl;
+   Log() << "explicit transformation to the feature space. The implemented SVM " << Endl;
+   Log() << "algorithm performs the classification tasks using linear, polynomial, " << Endl;
+   Log() << "Gaussian and sigmoidal kernel functions. The Gaussian kernel allows " << Endl;
+   Log() << "to apply any discriminant shape in the input space." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "SVM is a general purpose non-linear classification method, which " << Endl;
+   Log() << "does not require data preprocessing like decorrelation or Principal " << Endl;
+   Log() << "Component Analysis. It generalises quite well and can handle analyses " << Endl;
+   Log() << "with large numbers of input variables." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "Optimal performance requires primarily a proper choice of the kernel " << Endl;
+   Log() << "parameters (the width \"Sigma\" in case of Gaussian kernel) and the" << Endl;
+   Log() << "cost parameter \"C\". The user must optimise them empirically by running" << Endl;
+   Log() << "SVM several times with different parameter sets. The time needed for " << Endl;
+   Log() << "each evaluation scales like the square of the number of training " << Endl;
+   Log() << "events so that a coarse preliminary tuning should be performed on " << Endl;
+   Log() << "reduced data sets." << Endl;
 }

@@ -32,7 +32,7 @@
 #include <iomanip>
  
 Int_t TMVA::Event::fgCount = 0;
-std::vector<Float_t*>* TMVA::Event::fValuesDynamic = 0;
+std::vector<Float_t*>* TMVA::Event::fgValuesDynamic = 0;
 
 //____________________________________________________________
 TMVA::Event::Event() 
@@ -118,7 +118,7 @@ TMVA::Event::Event( const std::vector<Float_t*>*& evdyn )
      fSignalClass( 100 ) // TODO: remove this.. see "IsSignal" ... !!!!!! NOT CLEAR TO ME WHAT VALUE TO SET HERE...
 {
 
-   fValuesDynamic = (std::vector<Float_t*>*) evdyn;
+   fgValuesDynamic = (std::vector<Float_t*>*) evdyn;
    // constructor for single events
    fgCount++;
 }
@@ -161,9 +161,9 @@ void TMVA::Event::CopyVarValues( const Event& other )
 void TMVA::Event::SetVal( UInt_t ivar, Float_t val ) 
 {
    // set variable ivar to val
-   if ((fDynamic ?( (*fValuesDynamic).size() ) : fValues.size())<=ivar)
-      (fDynamic ?( (*fValuesDynamic).resize(ivar+1) ) : fValues.resize(ivar+1));
-   (fDynamic ?( *(*fValuesDynamic)[ivar] ) : fValues[ivar])=val;
+   if ((fDynamic ?( (*fgValuesDynamic).size() ) : fValues.size())<=ivar)
+      (fDynamic ?( (*fgValuesDynamic).resize(ivar+1) ) : fValues.resize(ivar+1));
+   (fDynamic ?( *(*fgValuesDynamic)[ivar] ) : fValues[ivar])=val;
 }
 
 //____________________________________________________________

@@ -99,7 +99,7 @@ namespace TMVA {
    protected:
     
 //       mutable MsgLogger* fLogger; //! output stream to save logging information
-//       MsgLogger& log() const { return *fLogger; }
+//       MsgLogger& Log() const { return *fLogger; }
       Double_t fPruneStrength; //! regularization parameter in pruning
     
     

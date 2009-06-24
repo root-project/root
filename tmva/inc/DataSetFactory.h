@@ -144,7 +144,7 @@ namespace TMVA {
       std::vector<TTreeFormula*> fSpectatorFormulas; //! spectators
 
       mutable MsgLogger*         fLogger;          //! message logger
-      MsgLogger& log() const { return *fLogger; }
+      MsgLogger& Log() const { return *fLogger; }
    };
 }
 

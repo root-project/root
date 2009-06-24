@@ -195,7 +195,7 @@ namespace TMVA {
 
       TString                  fSuffix;               //! the suffix for options
       mutable MsgLogger*       fLogger;               //! message logger
-      MsgLogger&               log() const { return *fLogger; }    
+      MsgLogger&               Log() const { return *fLogger; }    
 
       // static pointer to this object
       static PDF*              fgThisPDF;             // this PDF pointer

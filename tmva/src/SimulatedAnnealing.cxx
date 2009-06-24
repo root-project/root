@@ -81,27 +81,27 @@ void TMVA::SimulatedAnnealing::SetOptions( Int_t    maxCalls,
 
    if      (kernelTemperatureS == "IncreasingAdaptive") {
       fKernelTemperature = kIncreasingAdaptive; 
-      log() << kINFO << "Using increasing adaptive algorithm" << Endl;
+      Log() << kINFO << "Using increasing adaptive algorithm" << Endl;
    }
    else if (kernelTemperatureS == "DecreasingAdaptive") {
       fKernelTemperature = kDecreasingAdaptive; 
-      log() << kINFO << "Using decreasing adaptive algorithm" << Endl;
+      Log() << kINFO << "Using decreasing adaptive algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Sqrt") {
       fKernelTemperature = kSqrt; 
-      log() << kINFO << "Using \"Sqrt\" algorithm" << Endl;
+      Log() << kINFO << "Using \"Sqrt\" algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Homo") {
       fKernelTemperature = kHomo; 
-      log() << kINFO << "Using \"Homo\" algorithm" << Endl;
+      Log() << kINFO << "Using \"Homo\" algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Log") {
       fKernelTemperature = kLog;  
-      log() << kINFO << "Using \"Log\" algorithm" << Endl;
+      Log() << kINFO << "Using \"Log\" algorithm" << Endl;
    }
    else if (kernelTemperatureS == "Sin") {
       fKernelTemperature = kSin;
-      log() << kINFO << "Using \"Sin\" algorithm" << Endl;
+      Log() << kINFO << "Using \"Sin\" algorithm" << Endl;
    }
 
    fTemperatureScale        = temperatureScale;
@@ -196,7 +196,7 @@ void TMVA::SimulatedAnnealing::GenerateNewTemperature( Double_t& currentTemperat
    else if (fKernelTemperature == kDecreasingAdaptive) {
       currentTemperature = currentTemperature*fTemperatureScale;
    }
-   else log() << kFATAL << "No such kernel!" << Endl;
+   else Log() << kFATAL << "No such kernel!" << Endl;
 }
 
 //________________________________________________________________________
@@ -226,7 +226,7 @@ void TMVA::SimulatedAnnealing::SetDefaultScale()
       }
    }
    else if (fKernelTemperature == kIncreasingAdaptive) fTemperatureScale = 0.15*( 1.0 / (Double_t)(fRanges.size() ) );
-   else log() << kFATAL << "No such kernel!" << Endl;
+   else Log() << kFATAL << "No such kernel!" << Endl;
 }
 
 //_______________________________________________________________________
@@ -318,7 +318,7 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
    
    if (fUseDefaultScale) SetDefaultScale();
 
-   log() << kINFO 
+   Log() << kINFO 
            << "Temperatur scale = "      << fTemperatureScale  
            << ", current temperature = " << currentTemperature  << Endl;
 
@@ -369,7 +369,7 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
    }
 
    // get elapsed time   
-   log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
+   Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
            << "                            " << Endl;  
    
    // supose this minimum is the best one, now just try to improve it

@@ -67,7 +67,7 @@ namespace TMVA {
       TString fRADIAL;  // activation function name
 
       mutable MsgLogger* fLogger;                     //! message logger
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
 
       ClassDef(TActivationChooser,0) // Class for choosing activation functions
    };

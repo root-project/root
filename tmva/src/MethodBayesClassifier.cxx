@@ -107,7 +107,7 @@ void  TMVA::MethodBayesClassifier::WriteWeightsToStream( ostream & o ) const
 
 //_______________________________________________________________________
 void TMVA::MethodBayesClassifier::AddWeightsXMLTo( void* /*parent*/ ) const {
-   log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+   Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
   
 //_______________________________________________________________________
@@ -143,16 +143,16 @@ void TMVA::MethodBayesClassifier::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "<None>" << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "<None>" << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "<None>" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "<None>" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "<None>" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "<None>" << Endl;
 }

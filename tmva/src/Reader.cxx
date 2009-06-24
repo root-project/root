@@ -232,7 +232,7 @@ TMVA::Reader::Reader( const TString& varNames, const TString& theOption, Bool_t 
 void TMVA::Reader::DeclareOptions()
 {
    // declaration of configuration options
-   if (gTools().CheckForSilentOption( GetOptions() )) log().InhibitOutput(); // make sure is silent if wanted to
+   if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
 
    DeclareOptionRef( fVerbose, "V",      "Verbose flag" );
    DeclareOptionRef( fColor,   "Color",  "Color flag (default True)" );
@@ -277,10 +277,10 @@ TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& w
    // read method name from weight file
    std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
    if (it != fMethodMap.end()) {
-      log() << kFATAL << "<BookMVA> method tag \"" << methodTag << "\" already exists!" << Endl;
+      Log() << kFATAL << "<BookMVA> method tag \"" << methodTag << "\" already exists!" << Endl;
    }
 
-   log() << kINFO << "Booking \"" << methodTag << "\" [" << weightfile << "]" << Endl;
+   Log() << kINFO << "Booking \"" << methodTag << "\" [" << weightfile << "]" << Endl;
 
    // read the method type
    TString fullMethodName("");
@@ -292,7 +292,7 @@ TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& w
    else {
       ifstream fin( weightfile );
       if (!fin.good()) { // file not found --> Error
-         log() << kFATAL << "<BookMVA> fatal error: "
+         Log() << kFATAL << "<BookMVA> fatal error: "
                  << "unable to open input weight file: " << weightfile << Endl;
       }
       char buf[512];
@@ -324,7 +324,7 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TStrin
    // read weight file
    method->ReadStateFromFile();
 
-   log() << kINFO << "Booked classifier \"" << method->GetMethodName()
+   Log() << kINFO << "Booked classifier \"" << method->GetMethodName()
            << "\" of type: \"" << method->GetMethodTypeName() << "\"" << Endl;
 
 #ifdef TMVA_Reader_TestIO__
@@ -363,10 +363,10 @@ Double_t TMVA::Reader::EvaluateMVA( const TString& methodTag, Double_t aux )
 
    std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
    if (it == fMethodMap.end()) {
-      log() << kINFO << "<EvaluateMVA> unknown classifier in map; "
+      Log() << kINFO << "<EvaluateMVA> unknown classifier in map; "
               << "you looked for \"" << methodTag << "\" within available methods: " << Endl;
-      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) log() << " --> " << it->first << Endl;
-      log() << "Check calling string" << kFATAL << Endl;
+      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) Log() << " --> " << it->first << Endl;
+      Log() << "Check calling string" << kFATAL << Endl;
    }
 
    else method = it->second;
@@ -394,10 +394,10 @@ const std::vector< Float_t >& TMVA::Reader::EvaluateRegression( const TString& m
 
    std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
    if (it == fMethodMap.end()) {
-      log() << kINFO << "<EvaluateMVA> unknown method in map; "
+      Log() << kINFO << "<EvaluateMVA> unknown method in map; "
               << "you looked for \"" << methodTag << "\" within available methods: " << Endl;
-      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) log() << " --> " << it->first << Endl;
-      log() << "Check calling string" << kFATAL << Endl;
+      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) Log() << " --> " << it->first << Endl;
+      Log() << "Check calling string" << kFATAL << Endl;
    }
 
    else method = it->second;
@@ -420,7 +420,7 @@ Float_t TMVA::Reader::EvaluateRegression( UInt_t tgtNumber, const TString& metho
       return EvaluateRegression(methodTag, aux).at(tgtNumber); 
    }
    catch (std::out_of_range e) {
-      log() << kWARNING << "Regression could not be evaluated for target-number " << tgtNumber << Endl;
+      Log() << kWARNING << "Regression could not be evaluated for target-number " << tgtNumber << Endl;
       return 0;
    }
 }
@@ -431,7 +431,7 @@ TMVA::IMethod* TMVA::Reader::FindMVA( const TString& methodTag )
    // return pointer to method with tag "methodTag"
    std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
    if (it != fMethodMap.end()) return it->second;
-   log() << kERROR << "Method " << methodTag << " not found!" << Endl;
+   Log() << kERROR << "Method " << methodTag << " not found!" << Endl;
    return 0;
 }
 
@@ -450,8 +450,8 @@ Double_t TMVA::Reader::GetProba( const TString& methodTag,  Double_t ap_sig, Dou
    IMethod* method = 0;
    std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
    if (it == fMethodMap.end()) {
-      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) log() << "M" << it->first << Endl;
-      log() << kFATAL << "<EvaluateMVA> unknown classifier in map: " << method << "; "
+      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) Log() << "M" << it->first << Endl;
+      Log() << kFATAL << "<EvaluateMVA> unknown classifier in map: " << method << "; "
               << "you looked for " << methodTag<< " while the available methods are : " << Endl;
    }
    else method = it->second;
@@ -469,8 +469,8 @@ Double_t TMVA::Reader::GetRarity( const TString& methodTag, Double_t mvaVal )
    IMethod* method = 0;
    std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
    if (it == fMethodMap.end()) {
-      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) log() << "M" << it->first << Endl;
-      log() << kFATAL << "<EvaluateMVA> unknown classifier in map: \"" << method << "\"; "
+      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) Log() << "M" << it->first << Endl;
+      Log() << kFATAL << "<EvaluateMVA> unknown classifier in map: \"" << method << "\"; "
               << "you looked for \"" << methodTag<< "\" while the available methods are : " << Endl;
    }
    else method = it->second;

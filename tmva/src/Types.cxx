@@ -51,7 +51,7 @@ Bool_t TMVA::Types::AddTypeMapping( Types::EMVA method, const TString& methodnam
 {
    std::map<TString, EMVA>::const_iterator it = fStr2type.find( methodname );
    if (it != fStr2type.end()) {
-      log() << kFATAL 
+      Log() << kFATAL 
             << "Cannot add method " << methodname 
             << " to the name->type map because it exists already" << Endl;
       return kFALSE;
@@ -67,7 +67,7 @@ TMVA::Types::EMVA TMVA::Types::GetMethodType( const TString& method ) const
    // returns the method type (enum) for a given method (string)
    std::map<TString, EMVA>::const_iterator it = fStr2type.find( method );
    if (it == fStr2type.end()) {
-      log() << kFATAL << "Unknown method in map: " << method << Endl;
+      Log() << kFATAL << "Unknown method in map: " << method << Endl;
       return kVariable; // Inserted to get rid of GCC warning...
    }
    else return it->second;
@@ -78,6 +78,6 @@ TString TMVA::Types::GetMethodName( TMVA::Types::EMVA method ) const
 {
    std::map<TString, EMVA>::const_iterator it = fStr2type.begin();
    for (; it!=fStr2type.end(); it++) if (it->second == method) return it->first;
-   log() << kFATAL << "Unknown method index in map: " << method << Endl;
+   Log() << kFATAL << "Unknown method index in map: " << method << Endl;
    return "";
 }

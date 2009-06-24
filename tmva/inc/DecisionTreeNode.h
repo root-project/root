@@ -61,7 +61,7 @@ namespace TMVA {
     
       virtual ~DecisionTreeNode(){}
 
-      virtual Node* createNode() const { return new DecisionTreeNode(); }
+      virtual Node* CreateNode() const { return new DecisionTreeNode(); }
     
       // test event if it decends the tree at this node to the right  
       virtual Bool_t GoesRight( const Event & ) const;

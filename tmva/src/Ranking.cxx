@@ -109,21 +109,21 @@ void TMVA::Ranking::Print() const
    
    TString hline = "";
    for (Int_t i=0; i<maxL+15+fRankingDiscriminatorName.Length(); i++) hline += "-";
-   log() << kINFO << "Ranking result (top variable is best ranked)" << Endl;
-   log() << kINFO << hline << Endl;
-   log() << kINFO << std::setiosflags(std::ios::left) 
+   Log() << kINFO << "Ranking result (top variable is best ranked)" << Endl;
+   Log() << kINFO << hline << Endl;
+   Log() << kINFO << std::setiosflags(std::ios::left) 
          << std::setw(5) << "Rank : "
          << std::setw(maxL+0) << "Variable "
          << std::resetiosflags(std::ios::right) 
          << " : " << fRankingDiscriminatorName << Endl;
-   log() << kINFO << hline << Endl;
+   Log() << kINFO << hline << Endl;
    for (std::vector<Rank>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) {
-      log() << kINFO 
+      Log() << kINFO 
             << Form( "%4i : ",(*ir).GetRank() )
             << std::setw(TMath::Max(maxL+0,9)) << (*ir).GetVariable().Data()
             << Form( " : %3.3e", (*ir).GetRankValue() ) << Endl;
    }
-   log() << kINFO << hline << Endl;
+   Log() << kINFO << hline << Endl;
 }
 
 // ===============================================================================================

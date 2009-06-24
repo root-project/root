@@ -104,7 +104,6 @@ TMVA::SVWorkingSet::SVWorkingSet(std::vector<TMVA::SVEvent*>*inputVectors, SVKer
    }
    fTEventUp ->SetErrorCache(fTEventUp->GetTarget());
    fTEventLow->SetErrorCache(fTEventUp->GetTarget());
-   
 }
 
 //_______________________________________________________________________
@@ -112,7 +111,6 @@ TMVA::SVWorkingSet::~SVWorkingSet()
 {
    // destructor
    if (fKMatrix   != 0) {delete fKMatrix; fKMatrix = 0;}
-   //          if(fSupVec    != 0) {delete fSupVec;  fSupVec  = 0;}
    delete fLogger;
 }
 
@@ -176,7 +174,7 @@ Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
 {
    if (ievt == jevt) return kFALSE;
    std::vector<TMVA::SVEvent*>::iterator fIDIter;
-   const Float_t epsilon = 1e-6; //make it 1-e6 or 1-e5 to make it faster
+   const Float_t epsilon = 1e-8; //make it 1-e6 or 1-e5 to make it faster
    
    Float_t type_I,  type_J;
    Float_t errorC_I,  errorC_J;
@@ -198,15 +196,11 @@ Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
     
    s = Int_t( type_I * type_J );
 
-   //TODO wczytywanie poprawnego C
    Float_t c_i = ievt->GetCweight();
    
    Float_t c_j =  jevt->GetCweight(); 
-
-
-   // *************************************
-
-   // compute l, h
+   
+   // compute l, h objective function
 
    if (type_I == type_J) {
       Float_t gamma = alpha_I + alpha_J;
@@ -380,9 +374,6 @@ void TMVA::SVWorkingSet::Train()
    
    Int_t numChanged  = 0;
    Int_t examineAll  = 1;
-/*
-   fB_low =  1;
-   fB_up  = -1;*/
 
    Float_t numChangedOld = 0;
    Int_t deltaChanges = 0;
@@ -400,10 +391,7 @@ void TMVA::SVWorkingSet::Train()
       }
       else {
          for (fIDIter = fInputData->begin(); fIDIter!=fInputData->end(); fIDIter++) {
-            //TODO Need to be consistent for Classification & Regression
-            
             if ((*fIDIter)->IsInI0()) {
-               
                if(!fdoRegression) numChanged += (UInt_t)ExamineExample(*fIDIter);
                else numChanged += (UInt_t)ExamineExampleReg(*fIDIter);
                if (Terminated()) {

@@ -67,13 +67,13 @@ namespace TMVA {
    private:
 
       Bool_t fdoRegression;                      //TODO temporary, find nicer solution 
-      std::vector<TMVA::SVEvent*> *fInputData;  // documentation
-      std::vector<TMVA::SVEvent*> *fSupVec;     // documentation
-      SVKernelFunction            *fKFunction;  // documentation
-      SVKernelMatrix              *fKMatrix;    // documentation
+      std::vector<TMVA::SVEvent*> *fInputData;  // input events
+      std::vector<TMVA::SVEvent*> *fSupVec;     // output events - support vectors
+      SVKernelFunction            *fKFunction;  // kernel function
+      SVKernelMatrix              *fKMatrix;    // kernel matrix
 
-      SVEvent                     *fTEventUp;   // documentation
-      SVEvent                     *fTEventLow;  // documentation
+      SVEvent                     *fTEventUp;   // last optimized event
+      SVEvent                     *fTEventLow;  // last optimized event
          	
       Float_t                     fB_low;       // documentation
       Float_t                     fB_up;        // documentation

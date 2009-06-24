@@ -101,7 +101,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    DataSetManager::CreateInstance(*fDataInputHandler);
 
    // render silent
-   if (gTools().CheckForSilentOption( GetOptions() )) log().InhibitOutput(); // make sure is silent if wanted to
+   if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput(); // make sure is silent if wanted to
    
 
    // init configurable
@@ -124,7 +124,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    ParseOptions();
    CheckForUnusedOptions();
 
-   if (Verbose()) log().SetMinType( kVERBOSE );
+   if (Verbose()) Log().SetMinType( kVERBOSE );
 
    // global settings
    gConfig().SetUseColor( color );
@@ -140,9 +140,9 @@ void TMVA::Factory::Greetings()
    // print welcome message
    // options are: kLogoWelcomeMsg, kIsometricWelcomeMsg, kLeanWelcomeMsg
 
-   gTools().ROOTVersionMessage( log() ); 
-   gTools().TMVAWelcomeMessage( log(), gTools().kLogoWelcomeMsg );
-   gTools().TMVAVersionMessage( log() ); log() << Endl;
+   gTools().ROOTVersionMessage( Log() ); 
+   gTools().TMVAWelcomeMessage( Log(), gTools().kLogoWelcomeMsg );
+   gTools().TMVAVersionMessage( Log() ); Log() << Endl;
 }
 
 //_______________________________________________________________________
@@ -170,7 +170,7 @@ void TMVA::Factory::DeleteAllMethods( void )
    // delete methods
    MVector::iterator itrMethod = fMethods.begin();
    for (; itrMethod != fMethods.end(); itrMethod++) {
-      log() << kDEBUG << "Delete method: " << (*itrMethod)->GetName() << Endl;    
+      Log() << kDEBUG << "Delete method: " << (*itrMethod)->GetName() << Endl;    
       delete (*itrMethod);
    }
    fMethods.clear();
@@ -323,7 +323,7 @@ void TMVA::Factory::AddTree( TTree* tree, const TString& className, Double_t wei
    else if (tmpTreeType.Contains( "train" ))                                   tt = Types::kTraining;
    else if (tmpTreeType.Contains( "test" ))                                    tt = Types::kTesting;
    else {
-      log() << kFATAL << "<AddTree> cannot interpret tree type: \"" << treetype 
+      Log() << kFATAL << "<AddTree> cannot interpret tree type: \"" << treetype 
               << "\" should be \"Training\" or \"Test\" or \"Training and Testing\"" << Endl;
    }
    AddTree(tree, className, weight, cut, tt );
@@ -353,7 +353,7 @@ void TMVA::Factory::AddSignalTree( TString datFileS, Double_t weight, Types::ETr
    TTree* signalTree = new TTree( "TreeS", "Tree (S)" );
    signalTree->ReadFile( datFileS );
  
-   log() << kINFO << "Create TTree objects from ASCII input files ... \n- Signal file    : \""
+   Log() << kINFO << "Create TTree objects from ASCII input files ... \n- Signal file    : \""
          << datFileS << Endl;
   
    // number of signal events (used to compute significance)
@@ -381,7 +381,7 @@ void TMVA::Factory::AddBackgroundTree( TString datFileB, Double_t weight, Types:
    TTree* bkgTree = new TTree( "TreeB", "Tree (B)" );
    bkgTree->ReadFile( datFileB );
  
-   log() << kINFO << "Create TTree objects from ASCII input files ... \n- Background file    : \""
+   Log() << kINFO << "Create TTree objects from ASCII input files ... \n- Background file    : \""
          << datFileB << Endl;
   
    // number of signal events (used to compute significance)
@@ -502,7 +502,7 @@ void TMVA::Factory::SetBackgroundWeightExpression( const TString& variable)
 //_______________________________________________________________________
 void TMVA::Factory::SetWeightExpression( const TString& variable, const TString& className )  
 {
-   //log() << kWarning << DefaultDataSetInfo().GetNClasses() /*fClasses.size()*/ << Endl;
+   //Log() << kWarning << DefaultDataSetInfo().GetNClasses() /*fClasses.size()*/ << Endl;
    if (className=="") {
       SetSignalWeightExpression(variable);
       SetBackgroundWeightExpression(variable);
@@ -583,7 +583,7 @@ void TMVA::Factory::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, const 
    // if event-wise data assignment, add local trees to dataset first
    SetInputTreesFromEventAssignTrees();
 
-   log() << kINFO << "Preparing trees for training and testing..." << Endl;
+   Log() << kINFO << "Preparing trees for training and testing..." << Endl;
    AddCut( sigcut, "Signal"  );
    AddCut( bkgcut, "Background" );
 
@@ -598,12 +598,12 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TString theMethodName, TString meth
    // booking via name; the names are translated into enums and the 
    // corresponding overloaded BookMethod is called
    if (GetMethod( methodTitle ) != 0) {
-      log() << kFATAL << "Booking failed since method with title <"
+      Log() << kFATAL << "Booking failed since method with title <"
               << methodTitle <<"> already exists"
               << Endl;
    }
 
-   log() << kINFO << "Booking method: " << methodTitle << Endl;
+   Log() << kINFO << "Booking method: " << methodTitle << Endl;
 
    // interpret option string with respect to a request for boosting (i.e., BostNum > 0)
    Int_t    boostNum = 0;
@@ -624,7 +624,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TString theMethodName, TString meth
    }
    else {
       // boosted classifier, requires a specific definition, making it transparent for the user
-      log() << "Boost Number is " << boostNum << " > 0: train boosted classifier" << Endl; 
+      Log() << "Boost Number is " << boostNum << " > 0: train boosted classifier" << Endl; 
       im = ClassifierFactory::Instance().Create( std::string("Boost"), 
                                                  fJobName,
                                                  methodTitle,
@@ -751,7 +751,7 @@ void TMVA::Factory::WriteDataInformation()
             else {
                ci = DefaultDataSetInfo().GetClassInfo( trCls );
                if (ci == NULL) {
-                  log() << kFATAL << "Class " << trCls << " not known for variable transformation " << trName << ", please check." << Endl;
+                  Log() << kFATAL << "Class " << trCls << " not known for variable transformation " << trName << ", please check." << Endl;
                }
                else {
                   idxCls = ci->GetNumber();
@@ -777,7 +777,7 @@ void TMVA::Factory::WriteDataInformation()
             trfs.back()->AddTransformation( new VariableNormalizeTransform( DefaultDataSetInfo() ), idxCls );
          } 
          else {
-            log() << kINFO << "The transformation " << *trfsDefIt << " definition is not valid, the \n"
+            Log() << kINFO << "The transformation " << *trfsDefIt << " definition is not valid, the \n"
                     << "transformation " << trName << " is not known!" << Endl;
          }
       }
@@ -813,12 +813,12 @@ void TMVA::Factory::TrainAllMethods( TString what )
    WriteDataInformation();
 
    // here the training starts
-   log() << kINFO << "Train all methods for " 
+   Log() << kINFO << "Train all methods for " 
          << (analysisType == Types::kRegression ? "Regression" : "Classification") << " ..." << Endl;
 
    // don't do anything if no method booked
    if (fMethods.size() == 0) {
-      log() << kINFO << "...nothing found to train" << Endl;
+      Log() << kINFO << "...nothing found to train" << Endl;
       return;
    }
    
@@ -830,12 +830,12 @@ void TMVA::Factory::TrainAllMethods( TString what )
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if (!mva->HasAnalysisType( analysisType, 
                                  DefaultDataSetInfo().GetNClasses(), DefaultDataSetInfo().GetNTargets() )) {
-         log() << kWARNING << "Method " << mva->GetMethodTypeName() << " is not capable of handling " ;
+         Log() << kWARNING << "Method " << mva->GetMethodTypeName() << " is not capable of handling " ;
          if (analysisType == Types::kRegression) {
-            log() << "regression with " << DefaultDataSetInfo().GetNTargets() << " targets." << Endl;
+            Log() << "regression with " << DefaultDataSetInfo().GetNTargets() << " targets." << Endl;
          }
          else {
-            log() << "classification with " << DefaultDataSetInfo().GetNClasses() << " classes." << Endl;
+            Log() << "classification with " << DefaultDataSetInfo().GetNClasses() << " classes." << Endl;
          }
          itrMethod = fMethods.erase( itrMethod );
          continue;
@@ -843,13 +843,13 @@ void TMVA::Factory::TrainAllMethods( TString what )
       mva->SetAnalysisType( analysisType );
       //      mva->Init();
       if (mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
-         log() << kINFO << "Train method: " << mva->GetMethodName() << " for " 
+         Log() << kINFO << "Train method: " << mva->GetMethodName() << " for " 
                  << (analysisType == Types::kRegression ? "Regression" : "Classification") << Endl;
          mva->TrainMethod();
-         log() << kINFO << "Training finished" << Endl;
+         Log() << kINFO << "Training finished" << Endl;
       }
       else {
-         log() << kWARNING << "Method " << mva->GetMethodName() 
+         Log() << kWARNING << "Method " << mva->GetMethodName() 
                  << " not trained (training tree has less entries ["
                  << mva->Data()->GetNTrainingEvents() 
                  << "] than required [" << MinNoTrainingEvents << "]" << Endl; 
@@ -860,8 +860,8 @@ void TMVA::Factory::TrainAllMethods( TString what )
    if (analysisType != Types::kRegression) {
 
       // variable ranking 
-      log() << Endl;
-      log() << kINFO << "Begin ranking of input variables..." << Endl;
+      Log() << Endl;
+      Log() << kINFO << "Begin ranking of input variables..." << Endl;
       for (itrMethod = fMethods.begin(); itrMethod != fMethods.end(); itrMethod++) {
          MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
          if (mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
@@ -869,7 +869,7 @@ void TMVA::Factory::TrainAllMethods( TString what )
             // create and print ranking
             const Ranking* ranking = (*itrMethod)->CreateRanking();
             if (ranking != 0) ranking->Print();
-            else log() << kINFO << "No variable ranking supplied by classifier: " 
+            else Log() << kINFO << "No variable ranking supplied by classifier: " 
                          << dynamic_cast<MethodBase*>(*itrMethod)->GetMethodName() << Endl;
          }
       }
@@ -878,10 +878,10 @@ void TMVA::Factory::TrainAllMethods( TString what )
    // delete all methods and recreate them from weight file - this ensures that the application 
    // of the methods (in TMVAClassificationApplication) is consistent with the results obtained
    // in the testing
-   log() << Endl;
+   Log() << Endl;
    if (RECREATE_METHODS) {
 
-      log() << kINFO << "=== Destroy and recreate all methods via weight files for testing ===" << Endl << Endl;;
+      Log() << kINFO << "=== Destroy and recreate all methods via weight files for testing ===" << Endl << Endl;;
       // iterate through all booked methods
       for (UInt_t i=0; i<fMethods.size(); i++) {
 
@@ -916,11 +916,11 @@ void TMVA::Factory::TrainAllMethods( TString what )
 //_______________________________________________________________________
 void TMVA::Factory::TestAllMethods()
 {
-   log() << kINFO << "Test all methods..." << Endl;
+   Log() << kINFO << "Test all methods..." << Endl;
 
    // don't do anything if no method booked
    if (fMethods.size() == 0) {
-      log() << kINFO << "...nothing found to test" << Endl;
+      Log() << kINFO << "...nothing found to test" << Endl;
       return;
    }
 
@@ -931,7 +931,7 @@ void TMVA::Factory::TestAllMethods()
    for (; itrMethod != itrMethodEnd; itrMethod++) {
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       Types::EAnalysisType analysisType = mva->GetAnalysisType();
-      log() << kINFO << "Test method: " << mva->GetMethodName() << " for " 
+      Log() << kINFO << "Test method: " << mva->GetMethodName() << " for " 
               << (analysisType == Types::kRegression ? "Regression" : "Classification") << " performance" << Endl;
       mva->AddOutput( Types::kTesting, analysisType );
    }
@@ -946,7 +946,7 @@ void TMVA::Factory::MakeClass( const TString& methodTitle ) const
       IMethod* method = GetMethod( methodTitle );
       if (method) method->MakeClass();
       else {
-         log() << kWARNING << "<MakeClass> Could not find classifier \"" << methodTitle 
+         Log() << kWARNING << "<MakeClass> Could not find classifier \"" << methodTitle 
                  << "\" in list" << Endl;
       }
    }
@@ -957,7 +957,7 @@ void TMVA::Factory::MakeClass( const TString& methodTitle ) const
       MVector::const_iterator itrMethodEnd = fMethods.end();
       for (; itrMethod != itrMethodEnd; itrMethod++) {
          MethodBase* method = dynamic_cast<MethodBase*>(*itrMethod);
-         log() << kINFO << "Make response class for classifier: " << method->GetMethodName() << Endl;
+         Log() << kINFO << "Make response class for classifier: " << method->GetMethodName() << Endl;
          method->MakeClass();
       }
    }
@@ -972,7 +972,7 @@ void TMVA::Factory::PrintHelpMessage( const TString& methodTitle ) const
       IMethod* method = GetMethod( methodTitle );
       if (method) method->PrintHelpMessage();
       else {
-         log() << kWARNING << "<PrintHelpMessage> Could not find classifier \"" << methodTitle 
+         Log() << kWARNING << "<PrintHelpMessage> Could not find classifier \"" << methodTitle 
                  << "\" in list" << Endl;
       }
    }
@@ -983,7 +983,7 @@ void TMVA::Factory::PrintHelpMessage( const TString& methodTitle ) const
       MVector::const_iterator itrMethodEnd = fMethods.end();
       for (; itrMethod != itrMethodEnd; itrMethod++) {
          MethodBase* method = dynamic_cast<MethodBase*>(*itrMethod);
-         log() << kINFO << "Print help message for classifier: " << method->GetMethodName() << Endl;
+         Log() << kINFO << "Print help message for classifier: " << method->GetMethodName() << Endl;
          method->PrintHelpMessage();
       }
    }
@@ -993,7 +993,7 @@ void TMVA::Factory::PrintHelpMessage( const TString& methodTitle ) const
 void TMVA::Factory::EvaluateAllVariables( TString options )
 {
    // iterates over all MVA input varables and evaluates them
-   log() << kINFO << "Evaluating all variables..." << Endl;
+   Log() << kINFO << "Evaluating all variables..." << Endl;
 
    for (UInt_t i=0; i<DefaultDataSetInfo().GetNVariables(); i++) {
       TString s = DefaultDataSetInfo().GetVariableInfo(i).GetLabel();
@@ -1006,11 +1006,11 @@ void TMVA::Factory::EvaluateAllVariables( TString options )
 void TMVA::Factory::EvaluateAllMethods( void )
 {
    // iterates over all MVAs that have been booked, and calls their evaluation methods
-   log() << kINFO << "Evaluate all methods..." << Endl;
+   Log() << kINFO << "Evaluate all methods..." << Endl;
 
    // don't do anything if no method booked
    if (fMethods.size() == 0) {
-      log() << kINFO << "...nothing found to evaluate" << Endl;
+      Log() << kINFO << "...nothing found to evaluate" << Endl;
       return;
    }
 
@@ -1066,7 +1066,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
       if (theMethod->DoRegression()) {
          doRegression = kTRUE;
 
-         log() << kINFO << "Evaluate regression method: " << theMethod->GetMethodName() << Endl;         
+         Log() << kINFO << "Evaluate regression method: " << theMethod->GetMethodName() << Endl;         
          Double_t bias, dev, rms, mInf;
          Double_t biasT, devT, rmsT, mInfT;
          Double_t rho;
@@ -1096,12 +1096,12 @@ void TMVA::Factory::EvaluateAllMethods( void )
          mname[0].push_back( theMethod->GetMethodName() );
          nmeth_used[0]++;
 
-         log() << kINFO << "Write Evaluation Histos to file" << Endl;
+         Log() << kINFO << "Write Evaluation Histos to file" << Endl;
          theMethod->WriteEvaluationHistosToFile();
       }
       else {
          
-         log() << kINFO << "Evaluate classifier: " << theMethod->GetMethodName() << Endl;
+         Log() << kINFO << "Evaluate classifier: " << theMethod->GetMethodName() << Endl;
          isel = (theMethod->GetMethodTypeName().Contains("Variable")) ? 1 : 0;
       
          // perform the evaluation
@@ -1128,7 +1128,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
          nmeth_used[isel]++;
 
-         log() << kINFO << "Write Evaluation Histos to file" << Endl;
+         Log() << kINFO << "Write Evaluation Histos to file" << Endl;
          theMethod->WriteEvaluationHistosToFile();
       }
    }
@@ -1315,45 +1315,45 @@ void TMVA::Factory::EvaluateAllMethods( void )
             }
 
             if (nmeth > 1) {
-               log() << kINFO << Endl;
-               log() << kINFO << "Inter-MVA correlation matrix (signal):" << Endl;
-               gTools().FormattedOutput( mvaMatS, *theVars, log() );
-               log() << kINFO << Endl;
+               Log() << kINFO << Endl;
+               Log() << kINFO << "Inter-MVA correlation matrix (signal):" << Endl;
+               gTools().FormattedOutput( mvaMatS, *theVars, Log() );
+               Log() << kINFO << Endl;
 
-               log() << kINFO << "Inter-MVA correlation matrix (background):" << Endl;
-               gTools().FormattedOutput( mvaMatB, *theVars, log() );
-               log() << kINFO << Endl;   
+               Log() << kINFO << "Inter-MVA correlation matrix (background):" << Endl;
+               gTools().FormattedOutput( mvaMatB, *theVars, Log() );
+               Log() << kINFO << Endl;   
             }
 
-            log() << kINFO << "Correlations between input variables and MVA response (signal):" << Endl;
-            gTools().FormattedOutput( varmvaMatS, theInputVars, *theVars, log() );
-            log() << kINFO << Endl;
+            Log() << kINFO << "Correlations between input variables and MVA response (signal):" << Endl;
+            gTools().FormattedOutput( varmvaMatS, theInputVars, *theVars, Log() );
+            Log() << kINFO << Endl;
 
-            log() << kINFO << "Correlations between input variables and MVA response (background):" << Endl;
-            gTools().FormattedOutput( varmvaMatB, theInputVars, *theVars, log() );
-            log() << kINFO << Endl;
+            Log() << kINFO << "Correlations between input variables and MVA response (background):" << Endl;
+            gTools().FormattedOutput( varmvaMatB, theInputVars, *theVars, Log() );
+            Log() << kINFO << Endl;
          }
-         else log() << kWARNING << "<TestAllMethods> cannot compute correlation matrices" << Endl;
+         else Log() << kWARNING << "<TestAllMethods> cannot compute correlation matrices" << Endl;
 
          // print overlap matrices
-         log() << kINFO << "The following \"overlap\" matrices contain the fraction of events for which " << Endl;
-         log() << kINFO << "the MVAs 'i' and 'j' have returned conform answers about \"signal-likeness\"" << Endl;
-         log() << kINFO << "An event is signal-like, if its MVA output exceeds the following value:" << Endl;
-         gTools().FormattedOutput( rvec, *theVars, "Method" , "Cut value", log() );
-         log() << kINFO << "which correspond to the working point: eff(signal) = 1 - eff(background)" << Endl;
+         Log() << kINFO << "The following \"overlap\" matrices contain the fraction of events for which " << Endl;
+         Log() << kINFO << "the MVAs 'i' and 'j' have returned conform answers about \"signal-likeness\"" << Endl;
+         Log() << kINFO << "An event is signal-like, if its MVA output exceeds the following value:" << Endl;
+         gTools().FormattedOutput( rvec, *theVars, "Method" , "Cut value", Log() );
+         Log() << kINFO << "which correspond to the working point: eff(signal) = 1 - eff(background)" << Endl;
 
          // give notice that cut method has been excluded from this test
          if (nmeth != (Int_t)fMethods.size()) 
-            log() << kINFO << "Note: no correlations and overlap with cut method are provided at present" << Endl;
+            Log() << kINFO << "Note: no correlations and overlap with cut method are provided at present" << Endl;
 
          if (nmeth > 1) {
-            log() << kINFO << Endl;
-            log() << kINFO << "Inter-MVA overlap matrix (signal):" << Endl;
-            gTools().FormattedOutput( *overlapS, *theVars, log() );
-            log() << kINFO << Endl;
+            Log() << kINFO << Endl;
+            Log() << kINFO << "Inter-MVA overlap matrix (signal):" << Endl;
+            gTools().FormattedOutput( *overlapS, *theVars, Log() );
+            Log() << kINFO << Endl;
       
-            log() << kINFO << "Inter-MVA overlap matrix (background):" << Endl;
-            gTools().FormattedOutput( *overlapB, *theVars, log() );
+            Log() << kINFO << "Inter-MVA overlap matrix (background):" << Endl;
+            gTools().FormattedOutput( *overlapB, *theVars, Log() );
          }
 
          // cleanup
@@ -1375,62 +1375,62 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
    if (doRegression) {
 
-      log() << kINFO << Endl;
+      Log() << kINFO << Endl;
       TString hLine = "-------------------------------------------------------------------------";
-      log() << kINFO << "Evaluation results ranked by smallest RMS on test sample:" << Endl;
-      log() << kINFO << "(\"Bias\" quotes the mean deviation of the regression from true target." << Endl;
-      log() << kINFO << " \"MutInf\" is the \"Mutual Information\" between regression and target." << Endl;
-      log() << kINFO << " Indicated by \"_T\" are the corresponding \"truncated\" quantities ob-" << Endl;
-      log() << kINFO << " tained when removing events deviating more than 2sigma from average.)" << Endl;
-      log() << kINFO << hLine << Endl;
-      log() << kINFO << "MVA Method:        <Bias>   <Bias_T>    RMS    RMS_T  |  MutInf MutInf_T" << Endl;
-      log() << kINFO << hLine << Endl;
+      Log() << kINFO << "Evaluation results ranked by smallest RMS on test sample:" << Endl;
+      Log() << kINFO << "(\"Bias\" quotes the mean deviation of the regression from true target." << Endl;
+      Log() << kINFO << " \"MutInf\" is the \"Mutual Information\" between regression and target." << Endl;
+      Log() << kINFO << " Indicated by \"_T\" are the corresponding \"truncated\" quantities ob-" << Endl;
+      Log() << kINFO << " tained when removing events deviating more than 2sigma from average.)" << Endl;
+      Log() << kINFO << hLine << Endl;
+      Log() << kINFO << "MVA Method:        <Bias>   <Bias_T>    RMS    RMS_T  |  MutInf MutInf_T" << Endl;
+      Log() << kINFO << hLine << Endl;
 
       for (Int_t i=0; i<nmeth_used[0]; i++) {
-         log() << kINFO << Form("%-15s:%#9.3g%#9.3g%#9.3g%#9.3g  |  %#5.3f  %#5.3f",
+         Log() << kINFO << Form("%-15s:%#9.3g%#9.3g%#9.3g%#9.3g  |  %#5.3f  %#5.3f",
                                 (const char*)mname[0][i], 
                                 biastest[0][i], biastestT[0][i], 
                                 rmstest[0][i], rmstestT[0][i], 
                                 minftest[0][i], minftestT[0][i] )
                << Endl;
       }
-      log() << kINFO << hLine << Endl;
-      log() << kINFO << Endl;
-      log() << kINFO << "Evaluation results ranked by smallest RMS on training sample:" << Endl;
-      log() << kINFO << "(overtraining check)" << Endl;
-      log() << kINFO << hLine << Endl;
-      log() << kINFO << "MVA Method:        <Bias>   <Bias_T>    RMS    RMS_T  |  MutInf MutInf_T" << Endl;
-      log() << kINFO << hLine << Endl;
+      Log() << kINFO << hLine << Endl;
+      Log() << kINFO << Endl;
+      Log() << kINFO << "Evaluation results ranked by smallest RMS on training sample:" << Endl;
+      Log() << kINFO << "(overtraining check)" << Endl;
+      Log() << kINFO << hLine << Endl;
+      Log() << kINFO << "MVA Method:        <Bias>   <Bias_T>    RMS    RMS_T  |  MutInf MutInf_T" << Endl;
+      Log() << kINFO << hLine << Endl;
 
       for (Int_t i=0; i<nmeth_used[0]; i++) {
-         log() << kINFO << Form("%-15s:%#9.3g%#9.3g%#9.3g%#9.3g  |  %#5.3f  %#5.3f",
+         Log() << kINFO << Form("%-15s:%#9.3g%#9.3g%#9.3g%#9.3g  |  %#5.3f  %#5.3f",
                                 (const char*)mname[0][i], 
                                 biastrain[0][i], biastrainT[0][i], 
                                 rmstrain[0][i], rmstrainT[0][i], 
                                 minftrain[0][i], minftrainT[0][i] )
                << Endl;
       }
-      log() << kINFO << hLine << Endl;
-      log() << kINFO << Endl;
+      Log() << kINFO << hLine << Endl;
+      Log() << kINFO << Endl;
    }
    else {
-      log() << Endl;
+      Log() << Endl;
       TString hLine = "--------------------------------------------------------------------------------";
-      log() << kINFO << "Evaluation results ranked by best signal efficiency and purity (area)" << Endl;
-      log() << kINFO << hLine << Endl;
-      log() << kINFO << "MVA              Signal efficiency at bkg eff.(error):       | Sepa-    Signifi- "   << Endl;
-      log() << kINFO << "Method:          @B=0.01    @B=0.10    @B=0.30    ROC-integ. | ration:  cance:   "   << Endl;
-      log() << kINFO << hLine << Endl;
+      Log() << kINFO << "Evaluation results ranked by best signal efficiency and purity (area)" << Endl;
+      Log() << kINFO << hLine << Endl;
+      Log() << kINFO << "MVA              Signal efficiency at bkg eff.(error):       | Sepa-    Signifi- "   << Endl;
+      Log() << kINFO << "Method:          @B=0.01    @B=0.10    @B=0.30    ROC-integ. | ration:  cance:   "   << Endl;
+      Log() << kINFO << hLine << Endl;
       for (Int_t k=0; k<2; k++) {
          if (k == 1 && nmeth_used[k] > 0) {
-            log() << kINFO << hLine << Endl;
-            log() << kINFO << "Input Variables: " << Endl << hLine << Endl;
+            Log() << kINFO << hLine << Endl;
+            Log() << kINFO << "Input Variables: " << Endl << hLine << Endl;
          }
          for (Int_t i=0; i<nmeth_used[k]; i++) {
             if (k == 1) mname[k][i].ReplaceAll( "Variable_", "" );
             if (sep[k][i] < 0 || sig[k][i] < 0) {
                // cannot compute separation/significance -> no MVA (usually for Cuts)
-               log() << kINFO << Form("%-15s: %#1.3f(%#02i)  %#1.3f(%#02i)  %#1.3f(%#02i)    %#1.3f    | --       --",
+               Log() << kINFO << Form("%-15s: %#1.3f(%#02i)  %#1.3f(%#02i)  %#1.3f(%#02i)    %#1.3f    | --       --",
                                       (const char*)mname[k][i], 
                                       eff01[k][i], Int_t(1000*eff01err[k][i]), 
                                       eff10[k][i], Int_t(1000*eff10err[k][i]), 
@@ -1438,7 +1438,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
                                       effArea[k][i]) << Endl;
             }
             else {
-               log() << kINFO << Form("%-15s: %#1.3f(%#02i)  %#1.3f(%#02i)  %#1.3f(%#02i)    %#1.3f    | %#1.3f    %#1.3f",
+               Log() << kINFO << Form("%-15s: %#1.3f(%#02i)  %#1.3f(%#02i)  %#1.3f(%#02i)    %#1.3f    | %#1.3f    %#1.3f",
                                       (const char*)mname[k][i], 
                                       eff01[k][i], Int_t(1000*eff01err[k][i]), 
                                       eff10[k][i], Int_t(1000*eff10err[k][i]), 
@@ -1448,29 +1448,29 @@ void TMVA::Factory::EvaluateAllMethods( void )
             }
          }
       }
-      log() << kINFO << hLine << Endl;
-      log() << kINFO << Endl;
-      log() << kINFO << "Testing efficiency compared to training efficiency (overtraining check)" << Endl;
-      log() << kINFO << hLine << Endl;
-      log() << kINFO << "MVA              Signal efficiency: from test sample (from training sample) "   << Endl;
-      log() << kINFO << "Method:          @B=0.01             @B=0.10            @B=0.30   "   << Endl;
-      log() << kINFO << hLine << Endl;
+      Log() << kINFO << hLine << Endl;
+      Log() << kINFO << Endl;
+      Log() << kINFO << "Testing efficiency compared to training efficiency (overtraining check)" << Endl;
+      Log() << kINFO << hLine << Endl;
+      Log() << kINFO << "MVA              Signal efficiency: from test sample (from training sample) "   << Endl;
+      Log() << kINFO << "Method:          @B=0.01             @B=0.10            @B=0.30   "   << Endl;
+      Log() << kINFO << hLine << Endl;
       for (Int_t k=0; k<2; k++) {
          if (k == 1 && nmeth_used[k] > 0) {
-            log() << kINFO << hLine << Endl;
-            log() << kINFO << "Input Variables: " << Endl << hLine << Endl;
+            Log() << kINFO << hLine << Endl;
+            Log() << kINFO << "Input Variables: " << Endl << hLine << Endl;
          }
          for (Int_t i=0; i<nmeth_used[k]; i++) {
             if (k == 1) mname[k][i].ReplaceAll( "Variable_", "" );
-            log() << kINFO << Form("%-15s: %#1.3f (%#1.3f)       %#1.3f (%#1.3f)      %#1.3f (%#1.3f)",
+            Log() << kINFO << Form("%-15s: %#1.3f (%#1.3f)       %#1.3f (%#1.3f)      %#1.3f (%#1.3f)",
                                    (const char*)mname[k][i], 
                                    eff01[k][i],trainEff01[k][i], 
                                    eff10[k][i],trainEff10[k][i],
                                    eff30[k][i],trainEff30[k][i]) << Endl;
          }
       }
-      log() << kINFO << hLine << Endl;
-      log() << kINFO << Endl; 
+      Log() << kINFO << hLine << Endl;
+      Log() << kINFO << Endl; 
    }
 
    // write test tree

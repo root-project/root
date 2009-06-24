@@ -179,7 +179,7 @@ void TMVA::MethodSeedDistance::ProcessOptions()
    ClearAll();
 
    if (IgnoreEventsWithNegWeightsInTraining()) {
-      log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
+      Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
             << GetMethodTypeName() 
             << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
             << Endl;
@@ -194,12 +194,12 @@ void TMVA::MethodSeedDistance::ProcessOptions()
    fNPars = fSeedRangeStringT.CountChar( ')' );
    //   fNPars = 4;
 
-   //   log() << kINFO << "rangestring " << fSeedRangeStringT << Endl;
-   //   log() << kINFO << "rangestring number ) " << fNPars << Endl;
+   //   Log() << kINFO << "rangestring " << fSeedRangeStringT << Endl;
+   //   Log() << kINFO << "rangestring number ) " << fNPars << Endl;
 
    TList* parList = gTools().ParseFormatLine( fSeedRangeStringT, ";" );
    //   if (parList->GetSize()*2 != fNPars) {
-   //      log() << kFATAL << "<ProcessOptions> Mismatch in parameter string: " 
+   //      Log() << kFATAL << "<ProcessOptions> Mismatch in parameter string: " 
    //              << "the number of parameters: " << fNPars << " != ranges defined: " 
    //              << parList->GetSize() << "; the format of the \"SeedRanges\" string "
    //              << "must be: \"(-1.2,3.4);(-2.3,4.55);...\", "
@@ -227,7 +227,7 @@ void TMVA::MethodSeedDistance::ProcessOptions()
       st >> pmax;
 
       // sanity check
-      if (pmin > pmax) log() << kFATAL << "<ProcessOptions> max > min in interval for parameter: [" 
+      if (pmin > pmax) Log() << kFATAL << "<ProcessOptions> max > min in interval for parameter: [" 
                                << ipar << "] : [" << pmin  << ", " << pmax << "] " << Endl;
 
       fParRange[ipar] = new Interval( pmin, pmax );
@@ -278,7 +278,7 @@ void TMVA::MethodSeedDistance::ProcessOptions()
    else if (fFitMethod == "SA")     fFitter = new TMVA::SimulatedAnnealingFitter( *fIntermediateFitter, Form("%sFitter_SA", GetName()), fParRange, GetOptions() );
    else if (fFitMethod == "MINUIT") fFitter = new TMVA::MinuitFitter            ( *fIntermediateFitter, Form("%sFitter_MINUIT", GetName()), fParRange, GetOptions() );
    else {
-      log() << kFATAL << "<Train> Do not understand fit method: " << fFitMethod << Endl;
+      Log() << kFATAL << "<Train> Do not understand fit method: " << fFitMethod << Endl;
    }
    
    fFitter->CheckForUnusedOptions();
@@ -332,7 +332,7 @@ void TMVA::MethodSeedDistance::Train( void )
 
    // sanity check
    if (fSumOfWeightsSig <= 0 || fSumOfWeightsBkg <= 0) {
-      log() << kFATAL << "<Train> Troubles in sum of weights: " 
+      Log() << kFATAL << "<Train> Troubles in sum of weights: " 
               << fSumOfWeightsSig << " (S) : " << fSumOfWeightsBkg << " (B)" << Endl;
    }
 
@@ -369,32 +369,32 @@ void TMVA::MethodSeedDistance::PrintResults( const TString& fitter, std::vector<
 
    // display fit parameters
    // check maximum length of variable name
-   log() << kINFO;
-   log() << "Results for distance to seed method using fitter: \"" << fitter << Endl;
-   log() << "Value of estimator at minimum: " << estimator << Endl;
+   Log() << kINFO;
+   Log() << "Results for distance to seed method using fitter: \"" << fitter << Endl;
+   Log() << "Value of estimator at minimum: " << estimator << Endl;
 
    // print seeds
-   log() << kINFO << "Number of Seeds: " << fSeeds.size() << Endl;
+   Log() << kINFO << "Number of Seeds: " << fSeeds.size() << Endl;
    for( Int_t i = 0; i< (Int_t)fSeeds.size(); i++ ){
       if( i < fDataSeeds ){
-         log() << kINFO << "Seed " << i << " -- DATA" << Endl;
+         Log() << kINFO << "Seed " << i << " -- DATA" << Endl;
       }else{
-         log() << kINFO << "Seed " << i << " -- BACKGROUND" << Endl;
+         Log() << kINFO << "Seed " << i << " -- BACKGROUND" << Endl;
       }
       for( Int_t j = 0; j< (Int_t)fSeeds[i].size(); j++ ){
          if( fScalingFactor && j >= (Int_t)fSeeds[i].size()-1 ){
-            log() << kINFO << "   scaling factor " << ": " << fSeeds[i][j] << Endl;
+            Log() << kINFO << "   scaling factor " << ": " << fSeeds[i][j] << Endl;
          }else{
-            log() << kINFO << "   dimension " << j << ": " << fSeeds[i][j] << Endl;
+            Log() << kINFO << "   dimension " << j << ": " << fSeeds[i][j] << Endl;
          }
       }
    }
    
    // print metric parameters
-   log() << kINFO << Endl;
-   log() << kINFO << "Metric: " << fMetricType << " with " << fMetricPars.size() << " parameters" << Endl;
+   Log() << kINFO << Endl;
+   Log() << kINFO << "Metric: " << fMetricType << " with " << fMetricPars.size() << " parameters" << Endl;
    for( Int_t i = 0; i< (Int_t)fMetricPars.size(); i++ ){
-      log() << kINFO << "   par " << i << ": " << fMetricPars[i] << Endl;
+      Log() << kINFO << "   par " << i << ": " << fMetricPars[i] << Endl;
    }
 
 }
@@ -487,7 +487,7 @@ Double_t TMVA::MethodSeedDistance::GetMvaValue( Double_t* err )
    
 
    if( distData+distBack == 0 ){
-      log() << kINFO << "backgroundseed=dataseed";
+      Log() << kINFO << "backgroundseed=dataseed";
       return 0.0;
    }
    Double_t looksLike = distBack/(distData+distBack);
@@ -502,13 +502,13 @@ void  TMVA::MethodSeedDistance::WriteWeightsToStream( ostream& o ) const
 
    // save seeds
    o << fSeeds.size() << std::endl;
-//   log() << kINFO << fSeeds.size() << " ";
+//   Log() << kINFO << fSeeds.size() << " ";
    for( unsigned int i = 0; i< fSeeds.size(); i++ ){
       o << fSeeds[i].size() << std::endl;
-//      log() << kINFO << fSeeds[i].size() << " ";
+//      Log() << kINFO << fSeeds[i].size() << " ";
       for( unsigned int j = 0; j< fSeeds[i].size(); j++ ){
          o << fSeeds[i][j] << std::endl;
-//         log() << kINFO << fSeeds[i][j] << " ";
+//         Log() << kINFO << fSeeds[i][j] << " ";
       }
    }
    o << fDataSeeds << std::endl;
@@ -518,17 +518,17 @@ void  TMVA::MethodSeedDistance::WriteWeightsToStream( ostream& o ) const
    // save metric parameters
    o << fMetricType << std::endl;
    o << fMetricPars.size() << std::endl;
-//   log() << kINFO << fMetricPars.size() << " ";
+//   Log() << kINFO << fMetricPars.size() << " ";
    for( unsigned int i = 0; i< fMetricPars.size(); i++ ){
       o << fMetricPars[i] << std::endl;
-//      log() << kINFO << fMetricPars[i] << " ";
+//      Log() << kINFO << fMetricPars[i] << " ";
    }
 }
  
 //_______________________________________________________________________
 void TMVA::MethodSeedDistance::AddWeightsXMLTo( void* /*parent*/ ) const 
 {
-   log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+   Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
  
 //_______________________________________________________________________
@@ -539,16 +539,16 @@ void  TMVA::MethodSeedDistance::ReadWeightsFromStream( istream& istr )
    Int_t size;
    Double_t val;
    istr >> size;
-//   log() << kINFO << size << " ";
+//   Log() << kINFO << size << " ";
    fSeeds.clear();
    for( Int_t i = 0; i<size; i++ ){
       fSeeds.push_back( std::vector< Double_t >() );
       Int_t subSize;
       istr >> subSize;
-//      log() << kINFO << subSize << " ";
+//      Log() << kINFO << subSize << " ";
       for( Int_t j = 0; j<subSize; j++ ){
          istr >> val;
-//         log() << kINFO << val << " ";
+//         Log() << kINFO << val << " ";
          fSeeds[i].push_back( val );
       }
    }
@@ -559,18 +559,18 @@ void  TMVA::MethodSeedDistance::ReadWeightsFromStream( istream& istr )
 
    istr >> fMetricType;
    istr >> size;
-//   log() << kINFO << size << " ";
+//   Log() << kINFO << size << " ";
    fMetricPars.clear();
    for( Int_t i = 0; i<size; i++ ){
       istr >> val;
-//      log() << kINFO << val << " ";
+//      Log() << kINFO << val << " ";
       fMetricPars.push_back( val );
    }
 
    if( fMetricType == "Euler" ) fMetric = new MetricEuler();
    else if( fMetricType == "Manhattan" ) fMetric = new MetricManhattan();
    else{
-      log() << kFATAL << "unknown metric" << Endl;
+      Log() << kFATAL << "unknown metric" << Endl;
    }
    fMetric->SetParameters( &fMetricPars );
    fSeedDistance = new SeedDistance( *fMetric, fSeeds );
@@ -632,12 +632,12 @@ void TMVA::MethodSeedDistance::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
 }

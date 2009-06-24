@@ -107,7 +107,7 @@ namespace TMVA {
       const std::vector<TMVA::VariableInfo>& Variables() const { return fVariables; }
       const std::vector<TMVA::VariableInfo>& Targets()   const { return fTargets;   }
 
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
 
    protected:
 

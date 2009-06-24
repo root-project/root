@@ -105,7 +105,7 @@ namespace TMVA {
       Double_t fBestFitness;
 
       mutable MsgLogger* fLogger;         // message logger
-      MsgLogger& log() const { return *fLogger; }          
+      MsgLogger& Log() const { return *fLogger; }          
 
       ClassDef(GeneticAlgorithm, 0)  // Genetic algorithm controller
    };

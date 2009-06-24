@@ -184,7 +184,7 @@ void TMVA::MethodMLP::ProcessOptions()
    MethodANNBase::ProcessOptions();
 
    if (IgnoreEventsWithNegWeightsInTraining()) {
-      log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
+      Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
             << GetMethodTypeName() 
             << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
             << Endl;
@@ -210,7 +210,7 @@ void TMVA::MethodMLP::ProcessOptions()
 void TMVA::MethodMLP::InitializeLearningRates()
 {
    // initialize learning rates of synapses, used only by backpropagation
-   log() << kDEBUG << "Initialize learning rates" << Endl;
+   Log() << kDEBUG << "Initialize learning rates" << Endl;
    TSynapse *synapse;
    Int_t numSynapses = fSynapses->GetEntriesFast();
    for (Int_t i = 0; i < numSynapses; i++) {
@@ -226,7 +226,7 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType )
 
    // sanity check
    if (treeType!=Types::kTraining && treeType!=Types::kTesting)
-      log() << kFATAL << "<CalculateEstimator> fatal error: wrong tree type: " << treeType << Endl;
+      Log() << kFATAL << "<CalculateEstimator> fatal error: wrong tree type: " << treeType << Endl;
 
    Types::ETreeType saveType = Data()->GetCurrentType();
    Data()->SetCurrentType(treeType);
@@ -270,10 +270,10 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType )
 void TMVA::MethodMLP::Train(Int_t nEpochs)
 {
    if (fNetwork == 0){
-      log() <<kERROR <<"ANN Network is not initialized, doing it now!"<< Endl;
+      Log() <<kERROR <<"ANN Network is not initialized, doing it now!"<< Endl;
       SetAnalysisType(GetAnalysisType());
    }
-   log() << kDEBUG << "reinitalize learning rates" << Endl;
+   Log() << kDEBUG << "reinitalize learning rates" << Endl;
    InitializeLearningRates();
    PrintMessage("Training Network");
 #ifdef MethodMLP_UseMinuit__  
@@ -318,7 +318,7 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
 
    fLastAlpha = 0.;
 
-   if (fSteps > 0) log() << kINFO << "Inaccurate progress timing for MLP... " << Endl;
+   if (fSteps > 0) Log() << kINFO << "Inaccurate progress timing for MLP... " << Endl;
    timer.DrawProgressBar( 0 );
 
    // start training cycles (epochs)
@@ -369,7 +369,7 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
          SteepestDir( Dir );
          if (LineSearch(Dir, buffer)) {
             i = nEpochs;
-            log() << kFATAL << "Line search failed! Huge troubles somewhere..." << Endl;
+            Log() << kFATAL << "Line search failed! Huge troubles somewhere..." << Endl;
          }
       }
 
@@ -617,7 +617,7 @@ Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer)
       for (Int_t i=0;i<100;i++) {
          alpha2 /= fTau;
          if (i==50){
-            log() << kWARNING << "linesearch, starting to investigate direction opposite of steepestDIR" << Endl;
+            Log() << kWARNING << "linesearch, starting to investigate direction opposite of steepestDIR" << Endl;
             alpha2 = -alpha_original;
          }
          SetDirWeights(Origin, Dir, alpha2);
@@ -655,7 +655,7 @@ Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer)
    //    
    Double_t finalError = GetError();
    if (finalError > err1) {
-      log() << kWARNING << "Line search increased error! Something is wrong."
+      Log() << kWARNING << "Line search increased error! Something is wrong."
             << "fLastAlpha=" << fLastAlpha << "al123=" << alpha1 << " " 
             << alpha2 << " " << alpha3 << " err1="<< err1 << " errfinal=" << finalError << Endl;	
    } 
@@ -741,7 +741,7 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
    fEstimatorHistTest  = new TH1F( "estimatorHistTest", "test estimator", 
                                    nbinTest, Int_t(fTestRate/2), nbinTest*fTestRate+Int_t(fTestRate/2) );
 
-   if (fSteps > 0) log() << kINFO << "Inaccurate progress timing for MLP... " << Endl;
+   if (fSteps > 0) Log() << kINFO << "Inaccurate progress timing for MLP... " << Endl;
    timer.DrawProgressBar(0);
 
    // start training cycles (epochs)
@@ -1033,11 +1033,11 @@ void TMVA::MethodMLP::GeneticMinimize()
       ranges.push_back( new Interval( 0, GetXmax(ivar) - GetXmin(ivar) ));
    }
 
-   FitterBase *gf = new GeneticFitter( *this, log().GetPrintedSource(), ranges, GetOptions() );
+   FitterBase *gf = new GeneticFitter( *this, Log().GetPrintedSource(), ranges, GetOptions() );
    gf->Run();
 
    Double_t estimator = CalculateEstimator();
-   log() << kINFO << "GA: estimator after optimization: " << estimator << Endl;
+   Log() << kINFO << "GA: estimator after optimization: " << estimator << Endl;
 }
 
 //______________________________________________________________________________
@@ -1194,9 +1194,9 @@ void TMVA::MethodMLP::FCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* 
 
    nc++;
    if (f < minf) minf = f;
-   for (Int_t ipar=0; ipar<fNumberOfWeights; ipar++) log() << kDEBUG << fitPars[ipar] << " ";
-   log() << kDEBUG << Endl;
-   log() << kDEBUG << "***** New estimator: " << f << "  min: " << minf << " --> ncalls: " << nc << Endl;
+   for (Int_t ipar=0; ipar<fNumberOfWeights; ipar++) Log() << kDEBUG << fitPars[ipar] << " ";
+   Log() << kDEBUG << Endl;
+   Log() << kDEBUG << "***** New estimator: " << f << "  min: " << minf << " --> ncalls: " << nc << Endl;
 }
 
 #endif
@@ -1218,53 +1218,53 @@ void TMVA::MethodMLP::GetHelpMessage() const
    TString col    = gConfig().WriteOptionsReference() ? "" : gTools().Color("bold");
    TString colres = gConfig().WriteOptionsReference() ? "" : gTools().Color("reset");
 
-   log() << Endl;
-   log() << col << "--- Short description:" << colres << Endl;
-   log() << Endl;
-   log() << "The MLP artificial neural network (ANN) is a traditional feed-" << Endl;
-   log() << "forward multilayer perceptron impementation. The MLP has a user-" << Endl;
-   log() << "defined hidden layer architecture, while the number of input (output)" << Endl;
-   log() << "nodes is determined by the input variables (output classes, i.e., " << Endl;
-   log() << "signal and one background). " << Endl;
-   log() << Endl;
-   log() << col << "--- Performance optimisation:" << colres << Endl;
-   log() << Endl;
-   log() << "Neural networks are stable and performing for a large variety of " << Endl;
-   log() << "linear and non-linear classification problems. However, in contrast" << Endl;
-   log() << "to (e.g.) boosted decision trees, the user is advised to reduce the " << Endl;
-   log() << "number of input variables that have only little discrimination power. " << Endl;
-   log() << "" << Endl;
-   log() << "In the tests we have carried out so far, the MLP and ROOT networks" << Endl;
-   log() << "(TMlpANN, interfaced via TMVA) performed equally well, with however" << Endl;
-   log() << "a clear speed advantage for the MLP. The Clermont-Ferrand neural " << Endl;
-   log() << "net (CFMlpANN) exhibited worse classification performance in these" << Endl;
-   log() << "tests, which is partly due to the slow convergence of its training" << Endl;
-   log() << "(at least 10k training cycles are required to achieve approximately" << Endl;
-   log() << "competitive results)." << Endl;
-   log() << Endl;
-   log() << col << "Overtraining: " << colres
+   Log() << Endl;
+   Log() << col << "--- Short description:" << colres << Endl;
+   Log() << Endl;
+   Log() << "The MLP artificial neural network (ANN) is a traditional feed-" << Endl;
+   Log() << "forward multilayer perceptron impementation. The MLP has a user-" << Endl;
+   Log() << "defined hidden layer architecture, while the number of input (output)" << Endl;
+   Log() << "nodes is determined by the input variables (output classes, i.e., " << Endl;
+   Log() << "signal and one background). " << Endl;
+   Log() << Endl;
+   Log() << col << "--- Performance optimisation:" << colres << Endl;
+   Log() << Endl;
+   Log() << "Neural networks are stable and performing for a large variety of " << Endl;
+   Log() << "linear and non-linear classification problems. However, in contrast" << Endl;
+   Log() << "to (e.g.) boosted decision trees, the user is advised to reduce the " << Endl;
+   Log() << "number of input variables that have only little discrimination power. " << Endl;
+   Log() << "" << Endl;
+   Log() << "In the tests we have carried out so far, the MLP and ROOT networks" << Endl;
+   Log() << "(TMlpANN, interfaced via TMVA) performed equally well, with however" << Endl;
+   Log() << "a clear speed advantage for the MLP. The Clermont-Ferrand neural " << Endl;
+   Log() << "net (CFMlpANN) exhibited worse classification performance in these" << Endl;
+   Log() << "tests, which is partly due to the slow convergence of its training" << Endl;
+   Log() << "(at least 10k training cycles are required to achieve approximately" << Endl;
+   Log() << "competitive results)." << Endl;
+   Log() << Endl;
+   Log() << col << "Overtraining: " << colres
          << "only the TMlpANN performs an explicit separation of the" << Endl;
-   log() << "full training sample into independent training and validation samples." << Endl;
-   log() << "We have found that in most high-energy physics applications the " << Endl;
-   log() << "avaliable degrees of freedom (training events) are sufficient to " << Endl;
-   log() << "constrain the weights of the relatively simple architectures required" << Endl;
-   log() << "to achieve good performance. Hence no overtraining should occur, and " << Endl;
-   log() << "the use of validation samples would only reduce the available training" << Endl;
-   log() << "information. However, if the perrormance on the training sample is " << Endl;
-   log() << "found to be significantly better than the one found with the inde-" << Endl;
-   log() << "pendent test sample, caution is needed. The results for these samples " << Endl;
-   log() << "are printed to standard output at the end of each training job." << Endl;
-   log() << Endl;
-   log() << col << "--- Performance tuning via configuration options:" << colres << Endl;
-   log() << Endl;
-   log() << "The hidden layer architecture for all ANNs is defined by the option" << Endl;
-   log() << "\"HiddenLayers=N+1,N,...\", where here the first hidden layer has N+1" << Endl;
-   log() << "neurons and the second N neurons (and so on), and where N is the number  " << Endl;
-   log() << "of input variables. Excessive numbers of hidden layers should be avoided," << Endl;
-   log() << "in favour of more neurons in the first hidden layer." << Endl;
-   log() << "" << Endl;
-   log() << "The number of cycles should be above 500. As said, if the number of" << Endl;
-   log() << "adjustable weights is small compared to the training sample size," << Endl;
-   log() << "using a large number of training samples should not lead to overtraining." << Endl;
+   Log() << "full training sample into independent training and validation samples." << Endl;
+   Log() << "We have found that in most high-energy physics applications the " << Endl;
+   Log() << "avaliable degrees of freedom (training events) are sufficient to " << Endl;
+   Log() << "constrain the weights of the relatively simple architectures required" << Endl;
+   Log() << "to achieve good performance. Hence no overtraining should occur, and " << Endl;
+   Log() << "the use of validation samples would only reduce the available training" << Endl;
+   Log() << "information. However, if the perrormance on the training sample is " << Endl;
+   Log() << "found to be significantly better than the one found with the inde-" << Endl;
+   Log() << "pendent test sample, caution is needed. The results for these samples " << Endl;
+   Log() << "are printed to standard output at the end of each training job." << Endl;
+   Log() << Endl;
+   Log() << col << "--- Performance tuning via configuration options:" << colres << Endl;
+   Log() << Endl;
+   Log() << "The hidden layer architecture for all ANNs is defined by the option" << Endl;
+   Log() << "\"HiddenLayers=N+1,N,...\", where here the first hidden layer has N+1" << Endl;
+   Log() << "neurons and the second N neurons (and so on), and where N is the number  " << Endl;
+   Log() << "of input variables. Excessive numbers of hidden layers should be avoided," << Endl;
+   Log() << "in favour of more neurons in the first hidden layer." << Endl;
+   Log() << "" << Endl;
+   Log() << "The number of cycles should be above 500. As said, if the number of" << Endl;
+   Log() << "adjustable weights is small compared to the training sample size," << Endl;
+   Log() << "using a large number of training samples should not lead to overtraining." << Endl;
 }
 

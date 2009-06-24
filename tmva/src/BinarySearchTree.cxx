@@ -99,7 +99,7 @@ TMVA::BinarySearchTree::BinarySearchTree( const BinarySearchTree &b)
 {
    // copy constructor that creates a true copy, i.e. a completely independent tree 
    fLogger->SetSource( "BinarySearchTree" );
-   log() << kFATAL << " Copy constructor not implemented yet " << Endl;
+   Log() << kFATAL << " Copy constructor not implemented yet " << Endl;
 }
 
 //_______________________________________________________________________
@@ -133,7 +133,7 @@ void TMVA::BinarySearchTree::Insert( const Event* event )
    else {
       // sanity check:
       if (event->GetNVars() != (UInt_t)this->GetPeriode()) {
-         log() << kFATAL << "<Insert> event vector length != Periode specified in Binary Tree" << Endl
+         Log() << kFATAL << "<Insert> event vector length != Periode specified in Binary Tree" << Endl
                << "--- event size: " << event->GetNVars() << " Periode: " << this->GetPeriode() << Endl
                << "--- and all this when trying filling the "<<fNNodes+1<<"th Node" << Endl;
       }
@@ -187,7 +187,7 @@ void TMVA::BinarySearchTree::Insert( const Event *event,
          node->SetRight(current);               // Make it the left node of the current one.
       }
    } 
-   else log() << kFATAL << "<Insert> neither left nor right :)" << Endl;
+   else Log() << kFATAL << "<Insert> neither left nor right :)" << Endl;
 }
 
 //_______________________________________________________________________
@@ -218,11 +218,11 @@ Double_t TMVA::BinarySearchTree::GetSumOfWeights( void ) const
 {
    //return the sum of event (node) weights
    if (fSumOfWeights <= 0) {
-      log() << kWARNING << "you asked for the SumOfWeights, which is not filled yet"
+      Log() << kWARNING << "you asked for the SumOfWeights, which is not filled yet"
             << " I call CalcStatistics which hopefully fixes things" 
             << Endl;
    }
-   if (fSumOfWeights <= 0) log() << kFATAL << " Zero events in your Search Tree" <<Endl;
+   if (fSumOfWeights <= 0) Log() << kFATAL << " Zero events in your Search Tree" <<Endl;
 
    return fSumOfWeights;
 }
@@ -232,11 +232,11 @@ Double_t TMVA::BinarySearchTree::GetSumOfWeights( Int_t theType ) const
 {
    //return the sum of event (node) weights
    if (fSumOfWeights <= 0) {
-      log() << kWARNING << "you asked for the SumOfWeights, which is not filled yet"
+      Log() << kWARNING << "you asked for the SumOfWeights, which is not filled yet"
               << " I call CalcStatistics which hopefully fixes things" 
               << Endl;
    }
-   if (fSumOfWeights <= 0) log() << kFATAL << " Zero events in your Search Tree" <<Endl;
+   if (fSumOfWeights <= 0) Log() << kFATAL << " Zero events in your Search Tree" <<Endl;
 
    return fNEventsW[ ( theType == Types::kSignal) ? 0 : 1  ];
 }
@@ -260,7 +260,7 @@ Double_t TMVA::BinarySearchTree::Fill( const std::vector<Event*>& events, Int_t 
   
    UInt_t nevents = 0;
    if (fSumOfWeights != 0) {
-      log() << kWARNING 
+      Log() << kWARNING 
               << "You are filling a search three that is not empty.. "
               << " do you know what you are doing?"
               << Endl;
@@ -392,7 +392,7 @@ Double_t TMVA::BinarySearchTree::SearchVolume( Node* t, Volume* volume, Int_t de
    Bool_t tl, tr;
    Int_t  d = depth%this->GetPeriode();
    if (d != st->GetSelector()) {
-      log() << kFATAL << "<SearchVolume> selector in Searchvolume " 
+      Log() << kFATAL << "<SearchVolume> selector in Searchvolume " 
               << d << " != " << "node "<< st->GetSelector() << Endl;
    }
    tl = (*(volume->fLower))[d] <  st->GetEventV()[d];  // Should we descend left?
@@ -507,7 +507,7 @@ Int_t TMVA::BinarySearchTree::SearchVolumeWithMaxLimit( Volume *volume, std::vec
       if ( d == Int_t(this->GetPeriode()) ) d = 0;
 
       if (d != st.first->GetSelector()) {
-         log() << kFATAL << "<SearchVolume> selector in Searchvolume "
+         Log() << kFATAL << "<SearchVolume> selector in Searchvolume "
                  << d << " != " << "node "<< st.first->GetSelector() << Endl;
       }
 

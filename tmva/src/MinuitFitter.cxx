@@ -82,7 +82,7 @@ void TMVA::MinuitFitter::Init()
    Double_t args[10];
 
    // Execute fitting
-   if (!fBatch) log() << kINFO << "<MinuitFitter> Init " << Endl;
+   if (!fBatch) Log() << kINFO << "<MinuitFitter> Init " << Endl;
 
    // timing of MC   
    Timer timer;
@@ -124,11 +124,11 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
    Double_t args[10];
 
    // Execute fitting
-   if ( !fBatch ) log() << kINFO << "<MinuitFitter> Fitting, please be patient ... " << Endl;
+   if ( !fBatch ) Log() << kINFO << "<MinuitFitter> Fitting, please be patient ... " << Endl;
 
    // sanity check
    if ((Int_t)pars.size() != GetNpars())
-      log() << kFATAL << "<Run> Mismatch in number of parameters: (a)"
+      Log() << kFATAL << "<Run> Mismatch in number of parameters: (a)"
               << GetNpars() << " != " << pars.size() << Endl;
 
    // timing of MC   
@@ -171,7 +171,7 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
 
    // sanity check
    if (GetNpars() != nparx) {
-      log() << kFATAL << "<Run> Mismatch in number of parameters: "
+      Log() << kFATAL << "<Run> Mismatch in number of parameters: "
               << GetNpars() << " != " << nparx << Endl;
    }
 
@@ -187,7 +187,7 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
 
    // get elapsed time   
    if (!fBatch) { 
-      log() << kINFO << "Elapsed time: " << timer->GetElapsedTime() 
+      Log() << kINFO << "Elapsed time: " << timer->GetElapsedTime() 
            << "                            " << Endl;  
       delete timer;
    }

@@ -71,7 +71,7 @@ TMVA::DataSet* TMVA::DataSetManager::CreateDataSet( const TString& dsiName )
 {
    // Creates the singleton dataset 
    DataSetInfo* dsi = GetDataSetInfo( dsiName );
-   if (!dsi) log() << kFATAL << "DataSetInfo object '" << dsiName << "' not found" << Endl;
+   if (!dsi) Log() << kFATAL << "DataSetInfo object '" << dsiName << "' not found" << Endl;
 
    // factory to create dataset from datasetinfo and datainput
    return TMVA::DataSetFactory::Instance().CreateDataSet( *dsi, fDataInput );

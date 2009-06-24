@@ -160,7 +160,7 @@ namespace TMVA {
          VarMap   fVar;   // sorted map of variables in each dimension for all event types
 
          mutable MsgLogger* fLogger;   // message logger
-         MsgLogger& log() const { return *fLogger; }
+         MsgLogger& Log() const { return *fLogger; }
       };
 
       //

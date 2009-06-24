@@ -141,26 +141,26 @@ void TMVA::MethodHMatrix::Train( void )
 
    // sanity checks
    if (TMath::Abs(fInvHMatrixS->Determinant()) < 10E-24) {
-      log() << kWARNING << "<Train> H-matrix  S is almost singular with deterinant= "
+      Log() << kWARNING << "<Train> H-matrix  S is almost singular with deterinant= "
               << TMath::Abs(fInvHMatrixS->Determinant())
               << " did you use the variables that are linear combinations or highly correlated ???" 
               << Endl;
    }
    if (TMath::Abs(fInvHMatrixB->Determinant()) < 10E-24) {
-      log() << kWARNING << "<Train> H-matrix  B is almost singular with deterinant= "
+      Log() << kWARNING << "<Train> H-matrix  B is almost singular with deterinant= "
               << TMath::Abs(fInvHMatrixB->Determinant())
               << " did you use the variables that are linear combinations or highly correlated ???" 
               << Endl;
    }
 
     if (TMath::Abs(fInvHMatrixS->Determinant()) < 10E-120) {
-       log() << kFATAL << "<Train> H-matrix  S is singular with deterinant= "
+       Log() << kFATAL << "<Train> H-matrix  S is singular with deterinant= "
                << TMath::Abs(fInvHMatrixS->Determinant())
                << " did you use the variables that are linear combinations ???" 
                << Endl;
     }
     if (TMath::Abs(fInvHMatrixB->Determinant()) < 10E-120) {
-       log() << kFATAL << "<Train> H-matrix  B is singular with deterinant= "
+       Log() << kFATAL << "<Train> H-matrix  B is singular with deterinant= "
                << TMath::Abs(fInvHMatrixB->Determinant())
                << " did you use the variables that are linear combinations ???" 
                << Endl;
@@ -241,7 +241,7 @@ Double_t TMVA::MethodHMatrix::GetMvaValue( Double_t* err )
    Double_t s = GetChi2( Types::kSignal     );
    Double_t b = GetChi2( Types::kBackground );
   
-   if (s+b < 0) log() << kFATAL << "big trouble: s+b: " << s+b << Endl;
+   if (s+b < 0) Log() << kFATAL << "big trouble: s+b: " << s+b << Endl;
 
    // cannot determine error
    if (err != 0) *err = -1;
@@ -275,7 +275,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event* e,  Types::ESBType type ) co
    }
 
    // sanity check
-   if (chi2 < 0) log() << kFATAL << "<GetChi2> negative chi2: " << chi2 << Endl;
+   if (chi2 < 0) Log() << kFATAL << "<GetChi2> negative chi2: " << chi2 << Endl;
 
    return chi2;
 }
@@ -305,7 +305,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) const
    }
 
    // sanity check
-   if (chi2 < 0) log() << kFATAL << "<GetChi2> negative chi2: " << chi2 << Endl;
+   if (chi2 < 0) Log() << kFATAL << "<GetChi2> negative chi2: " << chi2 << Endl;
 
    return chi2;
 }
@@ -348,7 +348,7 @@ void TMVA::MethodHMatrix::AddWeightsXMLTo( void* parent ) const {
    gTools().WriteTVectorDToXML(wght,"VecMeanB", fVecMeanB);
    gTools().WriteTMatrixDToXML(wght,"InvHMatS",fInvHMatrixS); 
    gTools().WriteTMatrixDToXML(wght,"InvHMatB",fInvHMatrixB);
-   //log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+   //Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
 
 void TMVA::MethodHMatrix::ReadWeightsFromXML( void* wghtnode ){
@@ -470,27 +470,27 @@ void TMVA::MethodHMatrix::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The H-Matrix classifier discriminates one class (signal) of a feature" << Endl;
-   log() << "vector from another (background). The correlated elements of the" << Endl;
-   log() << "vector are assumed to be Gaussian distributed, and the inverse of" << Endl;
-   log() << "the covariance matrix is the H-Matrix. A multivariate chi-squared" << Endl;
-   log() << "estimator is built that exploits differences in the mean values of" << Endl;
-   log() << "the vector elements between the two classes for the purpose of" << Endl;
-   log() << "discrimination." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The TMVA implementation of the H-Matrix classifier has been shown" << Endl;
-   log() << "to underperform in comparison with the corresponding Fisher discriminant," << Endl;
-   log() << "when using similar assumptions and complexity. Its use is therefore" << Endl;
-   log() << "depreciated. Only in cases where the background model is strongly" << Endl;
-   log() << "non-Gaussian, H-Matrix may perform better than Fisher. In such" << Endl;
-   log() << "occurrences the user is advised to employ non-linear classifiers. " << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "None" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The H-Matrix classifier discriminates one class (signal) of a feature" << Endl;
+   Log() << "vector from another (background). The correlated elements of the" << Endl;
+   Log() << "vector are assumed to be Gaussian distributed, and the inverse of" << Endl;
+   Log() << "the covariance matrix is the H-Matrix. A multivariate chi-squared" << Endl;
+   Log() << "estimator is built that exploits differences in the mean values of" << Endl;
+   Log() << "the vector elements between the two classes for the purpose of" << Endl;
+   Log() << "discrimination." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The TMVA implementation of the H-Matrix classifier has been shown" << Endl;
+   Log() << "to underperform in comparison with the corresponding Fisher discriminant," << Endl;
+   Log() << "when using similar assumptions and complexity. Its use is therefore" << Endl;
+   Log() << "depreciated. Only in cases where the background model is strongly" << Endl;
+   Log() << "non-Gaussian, H-Matrix may perform better than Fisher. In such" << Endl;
+   Log() << "occurrences the user is advised to employ non-linear classifiers. " << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "None" << Endl;
 }

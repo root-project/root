@@ -75,7 +75,9 @@ TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populatio
    fPopulation.SetRandomSeed( seed );
 }
 
-TMVA::GeneticAlgorithm::~GeneticAlgorithm() {
+TMVA::GeneticAlgorithm::~GeneticAlgorithm() 
+{
+   // destructor; deletes fLogger
    delete fLogger;
 }
 
@@ -219,14 +221,14 @@ Double_t TMVA::GeneticAlgorithm::SpreadControl( Int_t ofSteps, Int_t successStep
       fSuccessList.pop_back();
       if ( sum > successSteps ) { // too much success
          fSpread /= factor;
-         if (GeneticAlgorithm__DEBUG__) log() << kINFO << ">" << std::flush;
+         if (GeneticAlgorithm__DEBUG__) Log() << kINFO << ">" << std::flush;
       }
       else if ( sum == successSteps ) { // on the optimal path
-         if (GeneticAlgorithm__DEBUG__) log() << "=" << std::flush;
+         if (GeneticAlgorithm__DEBUG__) Log() << "=" << std::flush;
       }
       else {        // not very successful
          fSpread *= factor;
-         if (GeneticAlgorithm__DEBUG__) log() << "<" << std::flush;
+         if (GeneticAlgorithm__DEBUG__) Log() << "<" << std::flush;
       }
    }
 
@@ -252,7 +254,7 @@ Bool_t TMVA::GeneticAlgorithm::HasConverged( Int_t steps, Double_t improvement )
       fConvCounter = 0;
       fConvValue = fBestFitness;
    }
-   if (GeneticAlgorithm__DEBUG__) log() << "." << std::flush;
+   if (GeneticAlgorithm__DEBUG__) Log() << "." << std::flush;
    if (fConvCounter < steps) return kFALSE;
    return kTRUE;
 }

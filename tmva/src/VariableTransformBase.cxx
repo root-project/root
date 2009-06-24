@@ -137,17 +137,17 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<Event*>& events )
       Targets().at(itgt).SetRMS( TMath::Sqrt( x2(nvars+itgt)/sumOfWeights - mean*mean) );
    }
 
-   log() << kVERBOSE << "Set minNorm/maxNorm for variables to: " << Endl;
-   log() << std::setprecision(3);
+   Log() << kVERBOSE << "Set minNorm/maxNorm for variables to: " << Endl;
+   Log() << std::setprecision(3);
    for (UInt_t ivar=0; ivar<GetNVariables(); ivar++)
-      log() << "    " << Variables().at(ivar).GetInternalName()
+      Log() << "    " << Variables().at(ivar).GetInternalName()
               << "\t: [" << Variables().at(ivar).GetMin() << "\t, " << Variables().at(ivar).GetMax() << "\t] " << Endl;
-   log() << kVERBOSE << "Set minNorm/maxNorm for targets to: " << Endl;
-   log() << std::setprecision(3);
+   Log() << kVERBOSE << "Set minNorm/maxNorm for targets to: " << Endl;
+   Log() << std::setprecision(3);
    for (UInt_t itgt=0; itgt<GetNTargets(); itgt++)
-      log() << "    " << Targets().at(itgt).GetInternalName()
+      Log() << "    " << Targets().at(itgt).GetInternalName()
               << "\t: [" << Targets().at(itgt).GetMin() << "\t, " << Targets().at(itgt).GetMax() << "\t] " << Endl;
-   log() << std::setprecision(5); // reset to better value       
+   Log() << std::setprecision(5); // reset to better value       
 }
 
 //_______________________________________________________________________
@@ -201,7 +201,7 @@ void TMVA::VariableTransformBase::UpdateNorm ( Int_t ivar,  Double_t x )
 //    istr >> dummy >> readNVar;
 
 //    if (readNVar!=Variables().size()) {
-//       log() << kFATAL << "You declared "<< Variables().size() << " variables in the Reader"
+//       Log() << kFATAL << "You declared "<< Variables().size() << " variables in the Reader"
 //               << " while there are " << readNVar << " variables declared in the file"
 //               << Endl;
 //    }
@@ -217,12 +217,12 @@ void TMVA::VariableTransformBase::UpdateNorm ( Int_t ivar,  Double_t x )
 //          (*varIt) = varInfo;
 //       } 
 //       else {
-//          log() << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
-//          log() << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
-//          log() << kINFO << "the correct working of the classifier):" << Endl;
-//          log() << kINFO << "   var #" << varIdx <<" declared in Reader: " << varIt->GetExpression() << Endl;
-//          log() << kINFO << "   var #" << varIdx <<" declared in file  : " << varInfo.GetExpression() << Endl;
-//          log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
+//          Log() << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
+//          Log() << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
+//          Log() << kINFO << "the correct working of the classifier):" << Endl;
+//          Log() << kINFO << "   var #" << varIdx <<" declared in Reader: " << varIt->GetExpression() << Endl;
+//          Log() << kINFO << "   var #" << varIdx <<" declared in file  : " << varInfo.GetExpression() << Endl;
+//          Log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
 //       }
 //    }
 // }

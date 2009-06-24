@@ -200,8 +200,8 @@ void TMVA::MethodDT::ProcessOptions()
    else if (fSepTypeS == "crossentropy")           fSepType = new CrossEntropy();
    else if (fSepTypeS == "sdivsqrtsplusb")         fSepType = new SdivSqrtSplusB();
    else {
-      log() << kINFO << GetOptions() << Endl;
-      log() << kFATAL << "<ProcessOptions> unknown Separation Index option called" << Endl;
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<ProcessOptions> unknown Separation Index option called" << Endl;
    }     
 
    //   std::cout << "fSeptypes " << fSepTypeS << "  fseptype " << fSepType << std::endl;
@@ -211,15 +211,20 @@ void TMVA::MethodDT::ProcessOptions()
    else if (fPruneMethodS == "costcomplexity" )  fPruneMethod = DecisionTree::kCostComplexityPruning;
    else if (fPruneMethodS == "nopruning" )       fPruneMethod = DecisionTree::kNoPruning;
    else {
-      log() << kINFO << GetOptions() << Endl;
-      log() << kFATAL << "<ProcessOptions> unknown PruneMethod option called" << Endl;
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<ProcessOptions> unknown PruneMethod option called" << Endl;
    }
 
    if (fPruneStrength < 0) fAutomatic = kTRUE;
    else fAutomatic = kFALSE;
+   if (fAutomatic && fPruneMethod==!DecisionTree::kCostComplexityPruning){
+      Log() << kFATAL 
+            <<  "Sorry autmoatic pruning strength determination is not implemented yet for ExpectedErrorPruning" << Endl;
+   }
+
 
    if (this->Data()->HasNegativeEventWeights()){
-      log() << kINFO << " You are using a Monte Carlo that has also negative weights. "
+      Log() << kINFO << " You are using a Monte Carlo that has also negative weights. "
               << "That should in principle be fine as long as on average you end up with "
               << "something positive. For this you have to make sure that the minimal number "
               << "of (unweighted) events demanded for a tree node (currently you use: nEventsMin="
@@ -231,7 +236,7 @@ void TMVA::MethodDT::ProcessOptions()
    }
    
    if (fRandomisedTrees){
-      log() << kINFO << " Randomised trees should use *bagging* as *boost* method. Did you set this in the *MethodBoost* ? . Here I can enforce only the *no pruning*" << Endl;
+      Log() << kINFO << " Randomised trees should use *bagging* as *boost* method. Did you set this in the *MethodBoost* ? . Here I can enforce only the *no pruning*" << Endl;
       fPruneMethod = DecisionTree::kNoPruning;
       //      fBoostType   = "Bagging";
    }
@@ -267,7 +272,7 @@ void TMVA::MethodDT::Train( void )
    SeparationBase *qualitySepType = new GiniIndex();
    fTree = new DecisionTree( fSepType, fNodeMinEvents, fNCuts, qualitySepType,
                              fRandomisedTrees, fUseNvars, 0 );
-   if (fRandomisedTrees) log()<<kWARNING<<" randomised Trees do not work yet in this framework," 
+   if (fRandomisedTrees) Log()<<kWARNING<<" randomised Trees do not work yet in this framework," 
                                 << " as I do not know how to give each tree a new random seed, now they"
                                 << " will be all the same and that is not good " << Endl;
    fTree->SetAnalysisType( GetAnalysisType() );
@@ -308,7 +313,7 @@ Bool_t TMVA::MethodDT::MonitorBoost( MethodBoost* booster )
       {
          if (methodIndex==0 && fPruneBeforeBoost == kFALSE)
             {
-               log() << kINFO << "Pruning "<< booster->GetBoostNum() << " Decision Trees ... patience please" << Endl;
+               Log() << kINFO << "Pruning "<< booster->GetBoostNum() << " Decision Trees ... patience please" << Endl;
             }
          //reading the previous value
          if (fAutomatic && methodIndex > 0)
@@ -324,12 +329,12 @@ Bool_t TMVA::MethodDT::MonitorBoost( MethodBoost* booster )
    if (booster->GetBoostStage() == Types::kBoostProcEnd)
       {
          if (fPruneMethod == DecisionTree::kNoPruning) {
-            log() << kINFO << "<Train> average number of nodes (w/o pruning) : "
+            Log() << kINFO << "<Train> average number of nodes (w/o pruning) : "
                     <<  booster->GetMonitoringHist(0)->GetMean() << Endl;
          }
          else
             {
-               log() << kINFO << "<Train> average number of nodes before/after pruning : " 
+               Log() << kINFO << "<Train> average number of nodes before/after pruning : " 
                        << booster->GetMonitoringHist(0)->GetMean() << " / " 
                        << booster->GetMonitoringHist(1)->GetMean()
                        << Endl;
@@ -353,6 +358,9 @@ Double_t TMVA::MethodDT::PruneTree(const Int_t methodIndex)
       delete pruneTool;
    } 
    else if (fAutomatic &&  fPruneMethod != DecisionTree::kCostComplexityPruning){
+      Int_t bla; 
+      bla = methodIndex; //make the compiler quiet
+      /*
       Double_t alpha = 0;
       Double_t delta = fDeltaPruneStrength;
       
@@ -383,7 +391,7 @@ Double_t TMVA::MethodDT::PruneTree(const Int_t methodIndex)
          if (troubleCount > 20) {
             if (methodIndex == 0 && fPruneStrength <=0) {//maybe you need larger stepsize ??
                fDeltaPruneStrength *= 5;
-               log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
+               Log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
                        << " for Tree " << methodIndex
                        << " --> first try to increase the step size"
                        << " currently Prunestrenght= " << alpha 
@@ -392,7 +400,7 @@ Double_t TMVA::MethodDT::PruneTree(const Int_t methodIndex)
                fPruneStrength = 1; // if it was for the first time.. 
             } else if (methodIndex == 0 && fPruneStrength <=2) {//maybe you need much larger stepsize ??
                fDeltaPruneStrength *= 5;
-               log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
+               Log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
                        << " for Tree " << methodIndex
                        << " -->  try to increase the step size even more.. "
                        << " if that still didn't work, TRY IT BY HAND"  
@@ -402,12 +410,12 @@ Double_t TMVA::MethodDT::PruneTree(const Int_t methodIndex)
                fPruneStrength = 3; // if it was for the first time.. 
             } else {
                forceStop=kTRUE;
-               log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
+               Log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
                        << " for Tree " << methodIndex << " at tested prune strength: " << alpha << " --> abort forced, use same strength as for previous tree:"
                        << fPruneStrength << Endl;
             }
          }
-         if (fgDebugLevel==1) log() << kINFO << "Pruneed with ("<<alpha
+         if (fgDebugLevel==1) Log() << kINFO << "Pruneed with ("<<alpha
                                       << ") give quality: " << q.back()
                                       << " and #nodes: " << nnodes  
                                       << Endl;
@@ -424,6 +432,7 @@ Double_t TMVA::MethodDT::PruneTree(const Int_t methodIndex)
 
       fTree->SetPruneStrength(fPruneStrength);
       fTree->PruneTree();
+      */
    } 
    else {
       fTree->SetPruneStrength(fPruneStrength);
@@ -458,7 +467,7 @@ void TMVA::MethodDT::WriteWeightsToStream( ostream& o) const
 //_______________________________________________________________________
 void TMVA::MethodDT::AddWeightsXMLTo( void* /*parent*/ ) const 
 {
-   log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+   Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
 
 //_______________________________________________________________________

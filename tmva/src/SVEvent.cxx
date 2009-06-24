@@ -82,16 +82,16 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, cons
 {
 }
 //_______________________________________________________________________
-TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Float_t alpha_p)
+TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Float_t alpha_p,const Int_t typeFlag)
    : fDataVector(*svector),
      fCweight(-1.),
      fAlpha(alpha),
      fAlpha_p(alpha_p),
      fErrorCache(-1.),
      fNVar(svector->size()),
-     fTypeFlag(-1),
+     fTypeFlag(typeFlag),
      fIdx(-1),
-     fNs(-1),
+     fNs(0),
      fIsShrinked(0),
      fLine(0),
      fTarget(0)

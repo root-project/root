@@ -157,7 +157,7 @@ namespace TMVA {
       TNeuronInput* fInputCalculator;         // input calculator
 
       mutable MsgLogger* fLogger;                     //! message logger
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
 
       ClassDef(TNeuron,0) // Neuron class used by MethodANNBase derivative ANNs
    };

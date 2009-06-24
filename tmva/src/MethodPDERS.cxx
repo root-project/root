@@ -240,7 +240,7 @@ void TMVA::MethodPDERS::ProcessOptions()
    // process the options specified by the user
    
    if (IgnoreEventsWithNegWeightsInTraining()) {
-      log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
+      Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
             << GetMethodTypeName() 
             << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
             << Endl;
@@ -256,7 +256,7 @@ void TMVA::MethodPDERS::ProcessOptions()
    else if (fVolumeRange == "Unscaled"  ) fVRangeMode = kUnscaled;
    else if (fVolumeRange == "kNN"   ) fVRangeMode = kkNN;
    else {
-      log() << kFATAL << "VolumeRangeMode parameter '" << fVolumeRange << "' unknown" << Endl;
+      Log() << kFATAL << "VolumeRangeMode parameter '" << fVolumeRange << "' unknown" << Endl;
    }
 
    if      (fKernelString == "Box"      ) fKernelEstimator = kBox;
@@ -274,22 +274,22 @@ void TMVA::MethodPDERS::ProcessOptions()
    else if (fKernelString == "Lanczos8" ) fKernelEstimator = kLanczos8;
    else if (fKernelString == "Trim"     ) fKernelEstimator = kTrim;
    else {
-      log() << kFATAL << "KernelEstimator parameter '" << fKernelString << "' unknown" << Endl;
+      Log() << kFATAL << "KernelEstimator parameter '" << fKernelString << "' unknown" << Endl;
    }
 
    // TODO: Add parameter validation
 
-   log() << kVERBOSE << "interpreted option string: vRangeMethod: '"
+   Log() << kVERBOSE << "interpreted option string: vRangeMethod: '"
            << (const char*)((fVRangeMode == kMinMax) ? "MinMax" :
                             (fVRangeMode == kUnscaled) ? "Unscaled" :
                             (fVRangeMode == kRMS   ) ? "RMS" : "Adaptive") << "'" << Endl;
    if (fVRangeMode == kMinMax || fVRangeMode == kRMS)
-      log() << kVERBOSE << "deltaFrac: " << fDeltaFrac << Endl;
+      Log() << kVERBOSE << "deltaFrac: " << fDeltaFrac << Endl;
    else
-      log() << kVERBOSE << "nEventsMin/Max, maxVIterations, initialScale: "
+      Log() << kVERBOSE << "nEventsMin/Max, maxVIterations, initialScale: "
               << fNEventsMin << "  " << fNEventsMax
               << "  " << fMaxVIterations << "  " << fInitialScale << Endl;
-   log() << kVERBOSE << "KernelEstimator = " << fKernelString << Endl;
+   Log() << kVERBOSE << "KernelEstimator = " << fKernelString << Endl;
 }
 
 //_______________________________________________________________________
@@ -300,7 +300,7 @@ void TMVA::MethodPDERS::Train( void )
    // trainingTree in the weight file, and to rebuild the binary tree in the
    // test phase from scratch
 
-   if (IsNormalised()) log() << kFATAL << "\"Normalise\" option cannot be used with PDERS; " 
+   if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with PDERS; " 
                                << "please remove the option from the configuration string, or "
                                << "use \"!Normalise\""
                                << Endl;
@@ -417,7 +417,7 @@ void TMVA::MethodPDERS::CreateBinarySearchTree( Types::ETreeType type )
       fScaleS = 1.0/fBinaryTree->GetSumOfWeights( Types::kSignal );
       fScaleB = 1.0/fBinaryTree->GetSumOfWeights( Types::kBackground );
 
-      log() << kVERBOSE << "Signal and background scales: " << fScaleS << " " << fScaleB << Endl;
+      Log() << kVERBOSE << "Signal and background scales: " << fScaleS << " " << fScaleB << Endl;
    }
 }
 
@@ -426,7 +426,7 @@ void TMVA::MethodPDERS::SetVolumeElement( void ) {
    // defines volume dimensions
 
    if (GetNvar()==0) {
-      log() << kFATAL << "GetNvar() == 0" << Endl;
+      Log() << kFATAL << "GetNvar() == 0" << Endl;
       return;
    }
 
@@ -447,9 +447,9 @@ void TMVA::MethodPDERS::SetVolumeElement( void ) {
       case kAdaptive:
          // sanity check
          if (fAverageRMS.size() != GetNvar())
-            log() << kFATAL << "<SetVolumeElement> RMS not computed: " << fAverageRMS.size() << Endl;
+            Log() << kFATAL << "<SetVolumeElement> RMS not computed: " << fAverageRMS.size() << Endl;
          (*fDelta)[ivar] = fAverageRMS[ivar]*fDeltaFrac;
-         log() << kVERBOSE << "delta of var[" << (*fInputVars)[ivar]
+         Log() << kVERBOSE << "delta of var[" << (*fInputVars)[ivar]
                  << "\t]: " << fAverageRMS[ivar]
                  << "\t  |  comp with |max - min|: " << (GetXmax( ivar ) - GetXmin( ivar ))
                  << Endl;
@@ -461,7 +461,7 @@ void TMVA::MethodPDERS::SetVolumeElement( void ) {
          (*fDelta)[ivar] = fDeltaFrac;
          break;
       default:
-         log() << kFATAL << "<SetVolumeElement> unknown range-set mode: "
+         Log() << kFATAL << "<SetVolumeElement> unknown range-set mode: "
                  << fVRangeMode << Endl;
       }
       (*fShift)[ivar] = 0.5; // volume is centered around test value
@@ -522,8 +522,8 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
          in++;
       }
    }
-   log() << kVERBOSE << "debug: my test: " << in << Endl;// <- ***********tree
-   log() << kVERBOSE << "debug: binTree: " << count << Endl << Endl;// <- ***********tree
+   Log() << kVERBOSE << "debug: my test: " << in << Endl;// <- ***********tree
+   Log() << kVERBOSE << "debug: binTree: " << count << Endl << Endl;// <- ***********tree
 
 #endif
 
@@ -580,7 +580,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
             nEventsO = count;
             i_++;
          }
-         if (i_ > 50) log() << kWARNING << "warning in event: " << e
+         if (i_ > 50) Log() << kWARNING << "warning in event: " << e
                               << ": adaptive volume pre-adjustment reached "
                               << ">50 iterations in while loop (" << i_ << ")" << Endl;
 
@@ -629,7 +629,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
          nEventsN = nEventsBest;
          // include "1" to cover float precision
          if (nEventsN < fNEventsMin-1 || nEventsN > fNEventsMax+1)
-            log() << kWARNING << "warning in event " << e
+            Log() << kWARNING << "warning in event " << e
                     << ": adaptive volume adjustment reached "
                     << "max. #iterations (" << fMaxVIterations << ")"
                     << "[ nEvents: " << nEventsN << "  " << fNEventsMin << "  " << fNEventsMax << "]"
@@ -669,7 +669,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
             t_times++;
          
             if (t_times == fMaxVIterations) {
-               log() << kWARNING << "warining in event" << e
+               Log() << kWARNING << "warining in event" << e
                        << ": kNN volume adjustment reached "
                        << "max. #iterations (" << fMaxVIterations << ")"
                        << "[ kNN: " << fkNNMin << " " << fkNNMax << Endl;
@@ -713,7 +713,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
    else {
 
       // troubles ahead...
-      log() << kFATAL << "<GetSample> unknown RangeMode: " << fVRangeMode << Endl;
+      Log() << kFATAL << "<GetSample> unknown RangeMode: " << fVRangeMode << Endl;
    }
    // -----------------------------------------------------------------------
 }
@@ -896,7 +896,7 @@ Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
    }
       break;
    default:
-      log() << kFATAL << "Kernel estimation function unsupported. Enumerator is " << fKernelEstimator << Endl;
+      Log() << kFATAL << "Kernel estimation function unsupported. Enumerator is " << fKernelEstimator << Endl;
       break;
    }
 
@@ -942,7 +942,7 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
       ret = 1 / TMath::Power ( 2., (Double_t) GetNvar() );
       break;
    default:
-      log() << kFATAL << "Kernel estimation function unsupported. Enumerator is " << fKernelEstimator << Endl;
+      Log() << kFATAL << "Kernel estimation function unsupported. Enumerator is " << fKernelEstimator << Endl;
    }
 
    // Normalizing by the full volume
@@ -1034,7 +1034,7 @@ void TMVA::MethodPDERS::WriteWeightsToStream( ostream& o ) const
       if (fBinaryTree)
          o << *fBinaryTree;
       else
-         log() << kFATAL << "Signal and background binary search tree not available" << Endl; 
+         Log() << kFATAL << "Signal and background binary search tree not available" << Endl; 
    } 
    else {
       TString rfname( GetWeightFileName() ); rfname.ReplaceAll( ".txt", ".root" );
@@ -1050,8 +1050,8 @@ void TMVA::MethodPDERS::AddWeightsXMLTo( void* parent ) const
    if (fBinaryTree)
       fBinaryTree->AddXMLTo(wght);
    else
-      log() << kFATAL << "Signal and background binary search tree not available" << Endl; 
-   //log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+      Log() << kFATAL << "Signal and background binary search tree not available" << Endl; 
+   //Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
 
 //_______________________________________________________________________
@@ -1065,7 +1065,7 @@ void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
    fBinaryTree->CountNodes();
    fScaleS = 1.0/fBinaryTree->GetSumOfWeights( Types::kSignal );
    fScaleB = 1.0/fBinaryTree->GetSumOfWeights( Types::kBackground );
-   log() << kINFO << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
+   Log() << kINFO << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
    CalcAverages();
    SetVolumeElement();
    fInitializedVolumeEle = kTRUE;
@@ -1092,7 +1092,7 @@ void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr)
       fScaleS = 1.0/fBinaryTree->GetSumOfWeights( Types::kSignal );
       fScaleB = 1.0/fBinaryTree->GetSumOfWeights( Types::kBackground );
 
-      log() << kINFO << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
+      Log() << kINFO << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
 
       CalcAverages();
 
@@ -1129,41 +1129,41 @@ void TMVA::MethodPDERS::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "PDERS is a generalization of the projective likelihood classifier " << Endl;
-   log() << "to N dimensions, where N is the number of input variables used." << Endl;
-   log() << "In its adaptive form it is mostly equivalent to k-Nearest-Neighbor" << Endl;
-   log() << "(k-NN) methods. If the multidimensional PDF for signal and background" << Endl;
-   log() << "were known, this classifier would exploit the full information" << Endl;
-   log() << "contained in the input variables, and would hence be optimal. In " << Endl;
-   log() << "practice however, huge training samples are necessary to sufficiently " << Endl;
-   log() << "populate the multidimensional phase space. " << Endl;
-   log() << Endl;
-   log() << "The simplest implementation of PDERS counts the number of signal" << Endl;
-   log() << "and background events in the vicinity of a test event, and returns" << Endl;
-   log() << "a weight according to the majority species of the neighboring events." << Endl;
-   log() << "A more involved version of PDERS (selected by the option \"KernelEstimator\")" << Endl;
-   log() << "uses Kernel estimation methods to approximate the shape of the PDF." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "PDERS can be very powerful in case of strongly non-linear problems, " << Endl;
-   log() << "e.g., distinct islands of signal and background regions. Because of " << Endl;
-   log() << "the exponential growth of the phase space, it is important to restrict" << Endl;
-   log() << "the number of input variables (dimension) to the strictly necessary." << Endl;
-   log() << Endl;
-   log() << "Note that PDERS is a slowly responding classifier. Moreover, the necessity" << Endl;
-   log() << "to store the entire binary tree in memory, to avoid accessing virtual " << Endl;
-   log() << "memory, limits the number of training events that can effectively be " << Endl;
-   log() << "used to model the multidimensional PDF." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "If the PDERS response is found too slow when using the adaptive volume " << Endl;
-   log() << "size (option \"VolumeRangeMode=Adaptive\"), it might be found beneficial" << Endl;
-   log() << "to reduce the number of events required in the volume, and/or to enlarge" << Endl;
-   log() << "the allowed range (\"NeventsMin/Max\"). PDERS is relatively insensitive" << Endl;
-   log() << "to the width (\"GaussSigma\") of the Gaussian kernel (if used)." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "PDERS is a generalization of the projective likelihood classifier " << Endl;
+   Log() << "to N dimensions, where N is the number of input variables used." << Endl;
+   Log() << "In its adaptive form it is mostly equivalent to k-Nearest-Neighbor" << Endl;
+   Log() << "(k-NN) methods. If the multidimensional PDF for signal and background" << Endl;
+   Log() << "were known, this classifier would exploit the full information" << Endl;
+   Log() << "contained in the input variables, and would hence be optimal. In " << Endl;
+   Log() << "practice however, huge training samples are necessary to sufficiently " << Endl;
+   Log() << "populate the multidimensional phase space. " << Endl;
+   Log() << Endl;
+   Log() << "The simplest implementation of PDERS counts the number of signal" << Endl;
+   Log() << "and background events in the vicinity of a test event, and returns" << Endl;
+   Log() << "a weight according to the majority species of the neighboring events." << Endl;
+   Log() << "A more involved version of PDERS (selected by the option \"KernelEstimator\")" << Endl;
+   Log() << "uses Kernel estimation methods to approximate the shape of the PDF." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "PDERS can be very powerful in case of strongly non-linear problems, " << Endl;
+   Log() << "e.g., distinct islands of signal and background regions. Because of " << Endl;
+   Log() << "the exponential growth of the phase space, it is important to restrict" << Endl;
+   Log() << "the number of input variables (dimension) to the strictly necessary." << Endl;
+   Log() << Endl;
+   Log() << "Note that PDERS is a slowly responding classifier. Moreover, the necessity" << Endl;
+   Log() << "to store the entire binary tree in memory, to avoid accessing virtual " << Endl;
+   Log() << "memory, limits the number of training events that can effectively be " << Endl;
+   Log() << "used to model the multidimensional PDF." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "If the PDERS response is found too slow when using the adaptive volume " << Endl;
+   Log() << "size (option \"VolumeRangeMode=Adaptive\"), it might be found beneficial" << Endl;
+   Log() << "to reduce the number of events required in the volume, and/or to enlarge" << Endl;
+   Log() << "the allowed range (\"NeventsMin/Max\"). PDERS is relatively insensitive" << Endl;
+   Log() << "to the width (\"GaussSigma\") of the Gaussian kernel (if used)." << Endl;
 }

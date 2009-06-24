@@ -213,6 +213,7 @@ Bool_t TMVA::BinarySearchTreeNode::ReadDataRecord( istream& is )
 //_______________________________________________________________________
 void TMVA::BinarySearchTreeNode::ReadAttributes(void* node)
 {
+   // read attributes from XML
    gTools().ReadAttr(node, "selector", fSelector );
    gTools().ReadAttr(node, "weight",   fWeight );
    std::string sb;

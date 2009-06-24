@@ -42,9 +42,9 @@ ClassImp(TMVA::MsgLogger)
 
 // this is the hard-coded maximum length of the source names
 UInt_t TMVA::MsgLogger::fgMaxSourceSize = 25;
-Bool_t TMVA::MsgLogger::fInhibitOutput = kFALSE;
-void   TMVA::MsgLogger::InhibitOutput() { fInhibitOutput = kTRUE;  }	 
-void   TMVA::MsgLogger::EnableOutput()  { fInhibitOutput = kFALSE; }
+Bool_t TMVA::MsgLogger::fgInhibitOutput = kFALSE;
+void   TMVA::MsgLogger::InhibitOutput() { fgInhibitOutput = kTRUE;  }	 
+void   TMVA::MsgLogger::EnableOutput()  { fgInhibitOutput = kFALSE; }
 
 //_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
@@ -184,7 +184,7 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    // putting the output string, the message type, and the color
    // switcher together into a single string
 
-   if (type < fMinType || fInhibitOutput) return; // no output
+   if (type < fMinType || fgInhibitOutput) return; // no output
 
    std::map<EMsgType, std::string>::const_iterator stype;
    if ((stype = fTypeMap.find( type )) == fTypeMap.end()) return;

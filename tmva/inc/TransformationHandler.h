@@ -137,7 +137,7 @@ namespace TMVA {
       TDirectory*           fRootBaseDir;        //! if set put input var hists
       TString               fCallerName;         //! name of the caller for output 
       mutable MsgLogger*    fLogger;             //! message logger
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
    };
 }
 

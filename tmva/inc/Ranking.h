@@ -68,7 +68,7 @@ namespace TMVA {
       TString                 fRankingDiscriminatorName; // the name of the ranking discriminator
 
       mutable MsgLogger*      fLogger;                   //! message logger
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
 
       ClassDef(Ranking,0) // Method-specific ranking for input variables 
    };

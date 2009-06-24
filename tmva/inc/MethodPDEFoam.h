@@ -131,8 +131,10 @@ namespace TMVA {
             return 0;
          else if (ker == kGaus)
             return 1;
+         else if (ker == kLinN)
+            return 2;
          else {
-            std::cout << "Error: unknown kernel!" << std::endl;
+            Log() << kFATAL << "Error: unknown kernel!" << Endl;
             return 0;
          }
       }
@@ -141,8 +143,10 @@ namespace TMVA {
             return kNone;
          else if (iker == 1)
             return kGaus;
+         else if (iker == 2)
+            return kLinN;
          else {
-            std::cout << "Error: unknown kernel number: " << iker << std::endl;
+            Log() << kFATAL << "Error: unknown kernel number: " << iker << Endl;
             return kNone;
          }
       }

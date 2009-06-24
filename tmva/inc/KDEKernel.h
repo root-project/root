@@ -84,7 +84,7 @@ namespace TMVA {
                                      // (first) hidden iteration when doing adaptive KDE
 
       mutable MsgLogger* fLogger;   // message logger
-      MsgLogger& log() const { return *fLogger; }    
+      MsgLogger& Log() const { return *fLogger; }    
       
       ClassDef(KDEKernel,0) // Kernel density estimator for PDF smoothing
       

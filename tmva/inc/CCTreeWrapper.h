@@ -41,19 +41,24 @@
 namespace TMVA {
 
    class CCTreeWrapper {
+
    public:
+
       typedef std::vector<Event*> EventList;
 
       /////////////////////////////////////////////////////////////
       // CCTreeNode - a light wrapper of a decision tree node    //
       //                                                         //
       /////////////////////////////////////////////////////////////
+
       class CCTreeNode : virtual public Node {
+
       public:
+
          CCTreeNode( DecisionTreeNode* n = NULL );
          virtual ~CCTreeNode( );
       
-         virtual Node* createNode() const { return new CCTreeNode(); }
+         virtual Node* CreateNode() const { return new CCTreeNode(); }
 
          // set |~T_t|, the number of terminal descendants of node t 
          inline void SetNLeafDaughters( Int_t N ) { fNLeafDaughters = (N > 0 ? N : 0); }

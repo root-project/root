@@ -307,29 +307,29 @@ void TMVA::Rule::PrintLogger(const char *title) const
 {
    // print function
    const UInt_t nvars = fCut->GetNvars();
-   if (nvars<1) log() << kWARNING << "BUG TRAP: EMPTY RULE!!!" << Endl;
+   if (nvars<1) Log() << kWARNING << "BUG TRAP: EMPTY RULE!!!" << Endl;
    //
    Int_t sel;
    Double_t valmin, valmax;
    //
-   if (title) log() << kINFO << title;
-   log() << kINFO
+   if (title) Log() << kINFO << title;
+   Log() << kINFO
            << "Importance  = " << Form("%1.4f", fImportance/fImportanceRef) << Endl;
 
    for ( UInt_t i=0; i<nvars; i++) {
       
-      log() << kINFO << "            ";
+      Log() << kINFO << "            ";
       sel    = fCut->GetSelector(i);
       valmin = fCut->GetCutMin(i);
       valmax = fCut->GetCutMax(i);
       //
-      log() << kINFO << Form("Cut %2d",i+1) << " : ";
-      if (fCut->GetCutDoMin(i)) log() << kINFO << Form("%10.3g",valmin) << " < ";
-      else                      log() << kINFO << "             ";
-      log() << kINFO << GetVarName(sel);
-      if (fCut->GetCutDoMax(i)) log() << kINFO << " < " << Form("%10.3g",valmax);
-      else                      log() << kINFO << "             ";
-      log() << Endl;
+      Log() << kINFO << Form("Cut %2d",i+1) << " : ";
+      if (fCut->GetCutDoMin(i)) Log() << kINFO << Form("%10.3g",valmin) << " < ";
+      else                      Log() << kINFO << "             ";
+      Log() << kINFO << GetVarName(sel);
+      if (fCut->GetCutDoMax(i)) Log() << kINFO << " < " << Form("%10.3g",valmax);
+      else                      Log() << kINFO << "             ";
+      Log() << Endl;
    }
 }
 
@@ -395,7 +395,7 @@ void TMVA::Rule::ReadFromXML( void* wghtnode )
 {
    // read rule from XML
    TString nodeName = TString( gTools().xmlengine().GetNodeName(wghtnode) );
-   if (nodeName != "Rule") log() << kFATAL << "<ReadFromXML> Unexpected node name: " << nodeName << Endl;
+   if (nodeName != "Rule") Log() << kFATAL << "<ReadFromXML> Unexpected node name: " << nodeName << Endl;
 
    gTools().ReadAttr( wghtnode, "Importance", fImportance    );
    gTools().ReadAttr( wghtnode, "Ref",        fImportanceRef );
@@ -435,7 +435,7 @@ void TMVA::Rule::ReadFromXML( void* wghtnode )
    }   
 
    // sanity check
-   if (i != nvars) log() << kFATAL << "<ReadFromXML> Mismatch in number of cuts: " << i << " != " << nvars << Endl;
+   if (i != nvars) Log() << kFATAL << "<ReadFromXML> Mismatch in number of cuts: " << i << " != " << nvars << Endl;
 }
 
 //_______________________________________________________________________

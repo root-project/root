@@ -85,7 +85,7 @@ namespace TMVA {
 
       mutable std::vector<std::vector< Float_t> >  fRegValues;        //! mva values (Results)
       mutable MsgLogger* fLogger;                     //! message logger
-      MsgLogger& log() const { return *fLogger; }
+      MsgLogger& Log() const { return *fLogger; }
    };
 }
 

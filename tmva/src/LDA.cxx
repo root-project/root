@@ -69,8 +69,8 @@ TMVA::LDA::~LDA()
 void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& inputBackgroundEvents)
 {
    // Create LDA matrix using local events found by knn method
-   log() << kDEBUG << "There are: " << inputSignalEvents.size() << " input signal events " << Endl;
-   log() << kDEBUG << "There are: " << inputBackgroundEvents.size() << " input background events " << Endl;
+   Log() << kDEBUG << "There are: " << inputSignalEvents.size() << " input signal events " << Endl;
+   Log() << kDEBUG << "There are: " << inputBackgroundEvents.size() << " input background events " << Endl;
 
    fNumParams = inputSignalEvents[0].size();
   
@@ -96,12 +96,12 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
    fMu[1] = m_muSignal;
 
    if (fDebug) {
-      log() << kDEBUG << "the signal means" << Endl;
+      Log() << kDEBUG << "the signal means" << Endl;
       for (UInt_t param=0; param < fNumParams; ++param)
-         log() << kDEBUG << m_muSignal[param] << Endl;
-      log() << kDEBUG << "the background means" << Endl;
+         Log() << kDEBUG << m_muSignal[param] << Endl;
+      Log() << kDEBUG << "the background means" << Endl;
       for (UInt_t param=0; param < inputBackgroundEvents[0].size(); ++param)
-         log() << kDEBUG << m_muBackground[param] << Endl;
+         Log() << kDEBUG << m_muBackground[param] << Endl;
    }
   
    // sigma is a sum of two symmetric matrices, one for the background and one for signal
@@ -141,11 +141,11 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
    *fSigma *= 1.0/(numTotalEvents - K);
   
    if (fDebug) {
-      log() << "after filling sigmaSignal" <<Endl;
+      Log() << "after filling sigmaSignal" <<Endl;
       sigmaSignal.Print();
-      log() << "after filling sigmaBack" <<Endl;
+      Log() << "after filling sigmaBack" <<Endl;
       sigmaBack.Print();
-      log() << "after filling total Sigma" <<Endl;
+      Log() << "after filling total Sigma" <<Endl;
       fSigma->Print();
    }
 
@@ -163,7 +163,7 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
       }
 
       if (fDebug) {
-         log() << "the diagonal" <<Endl;
+         Log() << "the diagonal" <<Endl;
          diag.Print();
       }
 
@@ -172,7 +172,7 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
       decomposed *= solutionSVD.GetU();
     
       if (fDebug) {
-         log() << "the decomposition " <<Endl;
+         Log() << "the decomposition " <<Endl;
          decomposed.Print();
       }
     
@@ -181,10 +181,10 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
       *fSigmaInverse *= vTrans.Transpose(solutionSVD.GetV());
 
       if (fDebug) {
-         log() << "the SigmaInverse " <<Endl;
+         Log() << "the SigmaInverse " <<Endl;
          fSigmaInverse->Print();
         
-         log() << "the real " <<Endl;
+         Log() << "the real " <<Endl;
          fSigma->Invert();
          fSigma->Print();
       
@@ -192,14 +192,14 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
          for (UInt_t i =0; i< fNumParams; ++i) {
             for (UInt_t j =0; j< fNumParams; ++j) {
                if (TMath::Abs((Float_t)(*fSigma)(i,j) - (Float_t)(*fSigmaInverse)(i,j)) > 0.01) {
-                  log() << "problem, i= "<< i << " j= " << j << Endl; 
-                  log() << "Sigma(i,j)= "<< (*fSigma)(i,j) << " SigmaInverse(i,j)= " << (*fSigmaInverse)(i,j) <<Endl; 
-                  log() << "The difference is : " << TMath::Abs((Float_t)(*fSigma)(i,j) - (Float_t)(*fSigmaInverse)(i,j)) <<Endl;
+                  Log() << "problem, i= "<< i << " j= " << j << Endl; 
+                  Log() << "Sigma(i,j)= "<< (*fSigma)(i,j) << " SigmaInverse(i,j)= " << (*fSigmaInverse)(i,j) <<Endl; 
+                  Log() << "The difference is : " << TMath::Abs((Float_t)(*fSigma)(i,j) - (Float_t)(*fSigmaInverse)(i,j)) <<Endl;
                   problem = true;
                }
             }
          }
-         if (problem) log() << kWARNING << "Problem with the inversion!" << Endl;
+         if (problem) Log() << kWARNING << "Problem with the inversion!" << Endl;
          
       }    
    }

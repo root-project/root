@@ -333,6 +333,8 @@ void TMVA::DecisionTreeNode::ClearNodeAndAllDaughters()
 
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::ResetValidationData( ) {
+   // temporary stored node values (number of events, etc.) that originate
+   // not from the training but from the validation data (used in pruning)
    SetNBValidation( 0.0 );
    SetNSValidation( 0.0 );
    SetSumTarget( 0 );
@@ -369,6 +371,8 @@ void TMVA::DecisionTreeNode::PrintRecPrune( ostream& os ) const {
 
 //_______________________________________________________________________
 Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
+   // return the minimum of variable ivar from the training sample 
+   // that pass/end up in this node 
    if (ivar < fSampleMin.size()) return fSampleMin[ivar];
    else *fgLogger << kFATAL << "You asked for Min of the event sample in node for variable " 
                  << ivar << " that is out of range" << Endl;
@@ -377,6 +381,8 @@ Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
 
 //_______________________________________________________________________
 Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
+   // return the maximum of variable ivar from the training sample 
+   // that pass/end up in this node 
    if (ivar < fSampleMin.size()) return fSampleMax[ivar];
    else *fgLogger << kFATAL << "You asked for Max of the event sample in node for variable " 
                  << ivar << " that is out of range" << Endl;
@@ -385,18 +391,24 @@ Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
 
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::SetSampleMin(UInt_t ivar, Float_t xmin){
+   // set the minimum of variable ivar from the training sample 
+   // that pass/end up in this node 
    if ( ivar >= fSampleMin.size()) fSampleMin.resize(ivar+1);
    fSampleMin[ivar]=xmin;
 }
 
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::SetSampleMax(UInt_t ivar, Float_t xmax){
+   // set the maximum of variable ivar from the training sample 
+   // that pass/end up in this node 
    if ( ivar >= fSampleMax.size()) fSampleMax.resize(ivar+1);
    fSampleMax[ivar]=xmax;
 }
 
 //_______________________________________________________________________
-void TMVA::DecisionTreeNode::ReadAttributes(void* node) {
+void TMVA::DecisionTreeNode::ReadAttributes(void* node) 
+{   
+   // read attribute from xml
    gTools().ReadAttr(node, "Seq",   fSequence               );
    gTools().ReadAttr(node, "IVar",  fSelector               );
    gTools().ReadAttr(node, "Cut",   fCutValue               );
@@ -419,6 +431,7 @@ void TMVA::DecisionTreeNode::ReadAttributes(void* node) {
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::AddAttributesToNode(void* node) const
 {
+   // add attribute to xml
    gTools().AddAttr(node, "Seq",   GetSequence());
    gTools().AddAttr(node, "IVar",  GetSelector());
    gTools().AddAttr(node, "Cut",   GetCutValue());
@@ -439,8 +452,16 @@ void TMVA::DecisionTreeNode::AddAttributesToNode(void* node) const
 
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::AddContentToNode( std::stringstream& /*s*/ ) const
-{}
+{   
+   // adding attributes to tree node  (well, was used in BinarySearchTree,
+   // and somehow I guess someone programmed it such that we need this in
+   // this tree too, although we don't..)
+}
 
 //_______________________________________________________________________ 
 void TMVA::DecisionTreeNode::ReadContent( std::stringstream& /*s*/ )
-{}
+{
+   // reading attributes from tree node  (well, was used in BinarySearchTree,
+   // and somehow I guess someone programmed it such that we need this in
+   // this tree too, although we don't..)
+}

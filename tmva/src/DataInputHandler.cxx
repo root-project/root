@@ -75,7 +75,7 @@ void TMVA::DataInputHandler::AddTree( TTree* tree,
                                       const TCut& cut, 
                                       Types::ETreeType tt ) 
 {
-   if (!tree) log() << kFATAL << "Zero pointer for tree of class " << className.Data() << Endl;
+   if (!tree) Log() << kFATAL << "Zero pointer for tree of class " << className.Data() << Endl;
    if (fInputTrees[className.Data()].size() == 0) {
       // on the first tree (of the class) check if explicit treetype is given
       fExplicitTrainTest[className.Data()] = ( tt != Types::kMaxTreeType);
@@ -84,7 +84,7 @@ void TMVA::DataInputHandler::AddTree( TTree* tree,
       // if the first tree has a specific type, all later tree's must also have one
       if (fExplicitTrainTest[className.Data()] != (tt!=Types::kMaxTreeType)) {
          if (tt==Types::kMaxTreeType)
-            log() << kFATAL << "For the tree " << tree->GetName() << " of class " << className.Data()
+            Log() << kFATAL << "For the tree " << tree->GetName() << " of class " << className.Data()
                   << " you did "<< (tt==Types::kMaxTreeType?"not ":"") << "specify a type,"
                   << " while you did "<< (tt==Types::kMaxTreeType?"":"not ") << "for the first tree " 
                   << fInputTrees[className.Data()][0].GetTree()->GetName() << "of class " << className.Data()
@@ -137,7 +137,7 @@ TTree* TMVA::DataInputHandler::ReadInputTree( const TString& dataFile )
   
    ifstream in(dataFile);
    if (!in.good())
-      log() << kFATAL << "Could not open file: " << dataFile << Endl;
+      Log() << kFATAL << "Could not open file: " << dataFile << Endl;
    in.close();
 
    tr->ReadFile( dataFile );
@@ -151,7 +151,7 @@ void TMVA::DataInputHandler::AddInputTrees(TTree* inputTree, const TCut& SigCut,
    // define the input trees for signal and background from single input tree,
    // containing both signal and background events distinguished by the type 
    // identifiers: SigCut and BgCut
-   if (!inputTree) log() << kFATAL << "Zero pointer for input tree: " << inputTree << Endl;
+   if (!inputTree) Log() << kFATAL << "Zero pointer for input tree: " << inputTree << Endl;
 
    AddTree( inputTree, "Signal",     1.0, SigCut );
    AddTree( inputTree, "Background", 1.0, BgCut  );
@@ -164,7 +164,7 @@ void TMVA::DataInputHandler::ClearTreeList( const TString& className ) {
       fInputTrees.find(className)->second.clear();
    }
    catch(int e) {
-      log() << kINFO << "   Clear treelist for class " << className << " failed, since class does not exist." << Endl;
+      Log() << kINFO << "   Clear treelist for class " << className << " failed, since class does not exist." << Endl;
    }
 }
 

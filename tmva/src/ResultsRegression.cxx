@@ -182,7 +182,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
 //_______________________________________________________________________
 void  TMVA::ResultsRegression::CreateDeviationHistograms( TString prefix )
 {
-   log() << kINFO << "Create variable histograms" << Endl;
+   Log() << kINFO << "Create variable histograms" << Endl;
    const DataSetInfo* dsi = GetDataSetInfo();
 
    for (UInt_t ivar = 0; ivar < dsi->GetNVariables(); ivar++) {
@@ -194,7 +194,7 @@ void  TMVA::ResultsRegression::CreateDeviationHistograms( TString prefix )
          Store( h );
       }
    }
-   log() << kINFO << "Create regression target histograms" << Endl;
+   Log() << kINFO << "Create regression target histograms" << Endl;
    for (UInt_t ivar = 0; ivar < dsi->GetNTargets(); ivar++) {
       for (UInt_t itgt = 0; itgt < dsi->GetNTargets(); itgt++) {
          TH2F* h = DeviationAsAFunctionOf( dsi->GetNVariables()+ivar, itgt );
@@ -205,7 +205,7 @@ void  TMVA::ResultsRegression::CreateDeviationHistograms( TString prefix )
       }
    }
 
-   log() << kINFO << "Create regression average deviation" << Endl;
+   Log() << kINFO << "Create regression average deviation" << Endl;
    for (UInt_t itgt = 0; itgt < dsi->GetNTargets(); itgt++) {
      TH1F* h =  QuadraticDeviation(itgt);
      TString name( Form("%s_Quadr_Deviation_target_%d_",prefix.Data(),itgt) );
@@ -221,5 +221,5 @@ void  TMVA::ResultsRegression::CreateDeviationHistograms( TString prefix )
      htrunc->SetTitle( name2 );
      Store( htrunc );
    }
-   log() << kINFO << "Results created" << Endl;
+   Log() << kINFO << "Results created" << Endl;
 }

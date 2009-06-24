@@ -298,7 +298,7 @@ void TMVA::MethodLikelihood::Train( void )
    }
 
    // ----- fill the reference histograms
-   log() << kINFO << "Filling reference histograms" << Endl;
+   Log() << kINFO << "Filling reference histograms" << Endl;
 
    // event loop   
    for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
@@ -322,7 +322,7 @@ void TMVA::MethodLikelihood::Train( void )
    }
 
    // building the pdfs
-   log() << kINFO << "Building PDF out of reference histograms" << Endl;
+   Log() << kINFO << "Building PDF out of reference histograms" << Endl;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
 
       // the PDF is built from (binned) reference histograms
@@ -385,7 +385,7 @@ Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err )
 
          // find corresponding histogram from cached indices                 
          PDF* pdf = (itype == 0) ? (*fPDFSig)[ivar] : (*fPDFBgd)[ivar];
-         if (pdf == 0) log() << kFATAL << "<GetMvaValue> Reference histograms don't exist" << Endl;
+         if (pdf == 0) Log() << kFATAL << "<GetMvaValue> Reference histograms don't exist" << Endl;
          TH1* hist = pdf->GetPDFHist();
 
          // interpolate linearly between adjacent bins
@@ -479,7 +479,7 @@ void TMVA::MethodLikelihood::AddWeightsXMLTo( void* parent ) const
    void* pdfwrap;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {      
       if ( (*fPDFSig)[ivar]==0 || (*fPDFBgd)[ivar]==0 )
-         log() << kFATAL << "Reference histograms for variable " << ivar 
+         Log() << kFATAL << "Reference histograms for variable " << ivar 
                << " don't exist, can't write it to weight file" << Endl;
       pdfwrap = gTools().xmlengine().NewChild(wght, 0, "PDFDescriptor");
       gTools().AddAttr(pdfwrap, "VarIndex", ivar);
@@ -550,7 +550,7 @@ void  TMVA::MethodLikelihood::WriteWeightsToStream( ostream& o ) const
    if (TxtWeightsOnly()) {
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          if ( (*fPDFSig)[ivar]==0 || (*fPDFBgd)[ivar]==0 )
-            log() << kFATAL << "Reference histograms for variable " << ivar 
+            Log() << kFATAL << "Reference histograms for variable " << ivar 
                   << " don't exist, can't write it to weight file" << Endl;
          o << *(*fPDFSig)[ivar];
          o << *(*fPDFBgd)[ivar];
@@ -584,7 +584,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
    void* descnode = gTools().xmlengine().GetChild(wghtnode);
    for (UInt_t ivar=0; ivar<nvars; ivar++){
       void* pdfnode = gTools().xmlengine().GetChild(descnode);
-      log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
+      Log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
       if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
       (*fPDFSig)[ivar] = new PDF( GetInputVar( ivar ) + " PDF Sig" );
@@ -607,7 +607,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( istream & istr )
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){ 
-      log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
+      Log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
       if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
       (*fPDFSig)[ivar] = new PDF(GetInputVar( ivar ) + " PDF Sig" );
@@ -639,7 +639,7 @@ void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
 {
    // write histograms and PDFs to file for monitoring purposes
 
-   log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
+   Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
    BaseDir()->cd();
 
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) { 
@@ -724,7 +724,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
             (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX() != nbin[ivar]) 
            ) ||
           (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() != (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX()) {
-         log() << kFATAL << "<MakeClassSpecific> Mismatch in binning of variable " 
+         Log() << kFATAL << "<MakeClassSpecific> Mismatch in binning of variable " 
                << "\"" << GetOriginalVarName(ivar) << "\" of type: \'" << DataInfo().GetVariableInfo(ivar).GetVarType()
                << "\' : " 
                << "nxS = " << (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() << ", "
@@ -889,34 +889,34 @@ void TMVA::MethodLikelihood::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The maximum-likelihood classifier models the data with probability " << Endl;
-   log() << "density functions (PDF) reproducing the signal and background" << Endl;
-   log() << "distributions of the input variables. Correlations among the " << Endl;
-   log() << "variables are ignored." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "Required for good performance are decorrelated input variables" << Endl;
-   log() << "(PCA transformation via the option \"VarTransform=Decorrelate\"" << Endl;
-   log() << "may be tried). Irreducible non-linear correlations may be reduced" << Endl;
-   log() << "by precombining strongly correlated input variables, or by simply" << Endl;
-   log() << "removing one of the variables." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "High fidelity PDF estimates are mandatory, i.e., sufficient training " << Endl;
-   log() << "statistics is required to populate the tails of the distributions" << Endl;
-   log() << "It would be a surprise if the default Spline or KDE kernel parameters" << Endl;
-   log() << "provide a satisfying fit to the data. The user is advised to properly" << Endl;
-   log() << "tune the events per bin and smooth options in the spline cases" << Endl;
-   log() << "individually per variable. If the KDE kernel is used, the adaptive" << Endl;
-   log() << "Gaussian kernel may lead to artefacts, so please always also try" << Endl;
-   log() << "the non-adaptive one." << Endl;
-   log() << "" << Endl;
-   log() << "All tuning parameters must be adjusted individually for each input" << Endl;
-   log() << "variable!" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The maximum-likelihood classifier models the data with probability " << Endl;
+   Log() << "density functions (PDF) reproducing the signal and background" << Endl;
+   Log() << "distributions of the input variables. Correlations among the " << Endl;
+   Log() << "variables are ignored." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "Required for good performance are decorrelated input variables" << Endl;
+   Log() << "(PCA transformation via the option \"VarTransform=Decorrelate\"" << Endl;
+   Log() << "may be tried). Irreducible non-linear correlations may be reduced" << Endl;
+   Log() << "by precombining strongly correlated input variables, or by simply" << Endl;
+   Log() << "removing one of the variables." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "High fidelity PDF estimates are mandatory, i.e., sufficient training " << Endl;
+   Log() << "statistics is required to populate the tails of the distributions" << Endl;
+   Log() << "It would be a surprise if the default Spline or KDE kernel parameters" << Endl;
+   Log() << "provide a satisfying fit to the data. The user is advised to properly" << Endl;
+   Log() << "tune the events per bin and smooth options in the spline cases" << Endl;
+   Log() << "individually per variable. If the KDE kernel is used, the adaptive" << Endl;
+   Log() << "Gaussian kernel may lead to artefacts, so please always also try" << Endl;
+   Log() << "the non-adaptive one." << Endl;
+   Log() << "" << Endl;
+   Log() << "All tuning parameters must be adjusted individually for each input" << Endl;
+   Log() << "variable!" << Endl;
 }
 

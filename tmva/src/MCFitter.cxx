@@ -78,11 +78,11 @@ void TMVA::MCFitter::SetParameters( Int_t samples )
 Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 {
    // Execute fitting
-   log() << kINFO << "<MCFitter> Sampling, please be patient ..." << Endl;
+   Log() << kINFO << "<MCFitter> Sampling, please be patient ..." << Endl;
    
    // sanity check
    if ((Int_t)pars.size() != GetNpars())
-      log() << kFATAL << "<Run> Mismatch in number of parameters: "
+      Log() << kFATAL << "<Run> Mismatch in number of parameters: "
               << GetNpars() << " != " << pars.size() << Endl;
 
    // timing of MC
@@ -147,7 +147,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
    pars.swap( bestParameters ); // return best parameters found
 
    // get elapsed time
-   log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
+   Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
            << "                           " << Endl;  
    
    return bestFit;

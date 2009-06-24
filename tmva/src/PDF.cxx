@@ -240,14 +240,14 @@ void TMVA::PDF::BuildPDF( const TH1* hist )
    fgThisPDF = this;
 
    // sanity check
-   if (hist == NULL) log() << kFATAL << "Called without valid histogram pointer!" << Endl;
+   if (hist == NULL) Log() << kFATAL << "Called without valid histogram pointer!" << Endl;
 
    // histogram should be non empty
    if (hist->GetEntries() <= 0) 
-      log() << kFATAL << "Number of entries <= 0 in histogram: " << hist->GetTitle() << Endl;
+      Log() << kFATAL << "Number of entries <= 0 in histogram: " << hist->GetTitle() << Endl;
 
    if (fInterpolMethod == PDF::kKDE) {
-      log() << "Create " 
+      Log() << "Create " 
             << ((fKDEiter == KDEKernel::kNonadaptiveKDE) ? "nonadaptive " : 
                 (fKDEiter == KDEKernel::kAdaptiveKDE)    ? "adaptive "    : "??? ") 
             << ((fKDEtype == KDEKernel::kGauss)          ? "Gauss "       : "??? ")
@@ -257,11 +257,11 @@ void TMVA::PDF::BuildPDF( const TH1* hist )
    else {
       // another sanity check (nsmooth<0 indicated build with KDE)
       if (fMinNsmooth<0) 
-         log() << kFATAL << "PDF construction called with minnsmooth<0" << Endl;
+         Log() << kFATAL << "PDF construction called with minnsmooth<0" << Endl;
       else if (fMaxNsmooth<=0)
          fMaxNsmooth = fMinNsmooth;
       else if (fMaxNsmooth<fMinNsmooth)
-         log() << kFATAL << "PDF construction called with maxnsmooth<minnsmooth" << Endl;
+         Log() << kFATAL << "PDF construction called with maxnsmooth<minnsmooth" << Endl;
    }
 
    fHistOriginal = (TH1F*)hist->Clone( TString(hist->GetName()) + "_original" );
@@ -283,13 +283,13 @@ Int_t TMVA::PDF::GetHistNBins ( Int_t evtNum )
 {
    Int_t ResolutionFactor = (fInterpolMethod == PDF::kKDE) ? 5 : 1;
    if (evtNum == 0 && fHistDefinedNBins == 0)
-      log() << kFATAL << "No number of bins set for PDF" << Endl;
+      Log() << kFATAL << "No number of bins set for PDF" << Endl;
    else if (fHistDefinedNBins > 0)
       return fHistDefinedNBins * ResolutionFactor;
    else if ( evtNum > 0 && fHistAvgEvtPerBin > 0 )
       return evtNum / fHistAvgEvtPerBin * ResolutionFactor;
    else 
-      log() << kFATAL << "No number of bins or average event per bin set for PDF" << fHistAvgEvtPerBin << Endl;
+      Log() << kFATAL << "No number of bins or average event per bin set for PDF" << fHistAvgEvtPerBin << Endl;
    return 0;
 }
 //_______________________________________________________________________
@@ -332,9 +332,9 @@ void TMVA::PDF::BuildSplinePDF()
       break;
 
    default:
-      log() << kWARNING << "No valid interpolation method given! Use Spline2" << Endl;
+      Log() << kWARNING << "No valid interpolation method given! Use Spline2" << Endl;
       fSpline = new TMVA::TSpline2( "spline2", new TGraph(*fGraph) );
-      log() << kFATAL << " Well.. .thinking about it, I better quit so you notice you are forced to fix the mistake " << Endl;
+      Log() << kFATAL << " Well.. .thinking about it, I better quit so you notice you are forced to fix the mistake " << Endl;
       std::exit(1);
    }
    // fill into histogram 
@@ -347,7 +347,7 @@ void TMVA::PDF::BuildSplinePDF()
 
    // sanity check
    Double_t integral = GetIntegral();
-   if (integral < 0) log() << kFATAL << "Integral: " << integral << " <= 0" << Endl;
+   if (integral < 0) Log() << kFATAL << "Integral: " << integral << " <= 0" << Endl;
 
    // normalize
    if (fNormalize)
@@ -417,7 +417,7 @@ void TMVA::PDF::BuildKDEPDF()
  
    // sanity check
    Double_t integral = GetIntegral();
-   if (integral < 0) log() << kFATAL << "Integral: " << integral << " <= 0" << Endl; 
+   if (integral < 0) Log() << kFATAL << "Integral: " << integral << " <= 0" << Endl; 
 
    // normalize 
    if (fNormalize)
@@ -535,7 +535,7 @@ void TMVA::PDF::CheckHist() const
 {
    // sanity check: compare PDF with original histogram
    if (fHist == NULL) {
-      log() << kFATAL << "<CheckHist> Called without valid histogram pointer!" << Endl;
+      Log() << kFATAL << "<CheckHist> Called without valid histogram pointer!" << Endl;
    }
 
    Int_t nbins = fHist->GetNbinsX();
@@ -546,10 +546,10 @@ void TMVA::PDF::CheckHist() const
       if (fHist->GetBinContent(bin) == 0) emptyBins++;
 
    if (((Float_t)emptyBins/(Float_t)nbins) > 0.5) {
-      log() << kWARNING << "More than 50% (" << (((Float_t)emptyBins/(Float_t)nbins)*100)
+      Log() << kWARNING << "More than 50% (" << (((Float_t)emptyBins/(Float_t)nbins)*100)
             <<"%) of the bins in hist '" 
             << fHist->GetName() << "' are empty!" << Endl;
-      log() << kWARNING << "X_min=" << GetXmin() 
+      Log() << kWARNING << "X_min=" << GetXmin() 
             << " mean=" << fHist->GetMean() << " X_max= " << GetXmax() << Endl;  
    }
 }
@@ -594,10 +594,10 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
       }
    }
    
-   log() << "Validation result for PDF \"" << originalHist->GetTitle() << "\"" << ": " << Endl;
-   log() << Form( "    chi2/ndof(!=0) = %.1f/%i = %.2f (Prob = %.2f)", 
+   Log() << "Validation result for PDF \"" << originalHist->GetTitle() << "\"" << ": " << Endl;
+   Log() << Form( "    chi2/ndof(!=0) = %.1f/%i = %.2f (Prob = %.2f)", 
                   chi2, ndof, chi2/ndof, TMath::Prob( chi2, ndof ) ) << Endl;
-   log() << Form( "    #bins-found(#expected-bins) deviating > [1,2,3,6] sigmas: " \
+   Log() << Form( "    #bins-found(#expected-bins) deviating > [1,2,3,6] sigmas: " \
                   "[%i(%i),%i(%i),%i(%i),%i(%i)]", 
                   nc1, Int_t(TMath::Prob(1.0,1)*ndof), nc2, Int_t(TMath::Prob(4.0,1)*ndof),
                   nc3, Int_t(TMath::Prob(9.0,1)*ndof), nc6, Int_t(TMath::Prob(36.0,1)*ndof) ) << Endl;
@@ -642,7 +642,7 @@ Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax )
          else if (bini == imax) dx = xmax - fPDFHist->GetBinLowEdge(bini);         
          if (dx < 0 && dx > -1.0e-8) dx = 0; // protect against float->double numerical effects
          if (dx<0) {
-            log() << kWARNING
+            Log() << kWARNING
                   << "dx   = " << dx   << std::endl
                   << "bini = " << bini << std::endl
                   << "xmin = " << xmin << std::endl
@@ -651,7 +651,7 @@ Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax )
                   << "imax = " << imax << std::endl
                   << "low edge of imin" << fPDFHist->GetBinLowEdge(imin) << std::endl
                   << "low edge of imin+1" << fPDFHist->GetBinLowEdge(imin+1) << Endl;
-            log() << kFATAL << "<GetIntegral> dx = " << dx << " < 0" << Endl;
+            Log() << kFATAL << "<GetIntegral> dx = " << dx << " < 0" << Endl;
          }
          integral += fPDFHist->GetBinContent(bini)*dx;
       }
@@ -774,12 +774,12 @@ void TMVA::PDF::ProcessOptions()
    }
 
    if (fMaxNsmooth < fMinNsmooth && fMinNsmooth >= 0) { // sanity check
-      log() << kFATAL << "ERROR: MaxNsmooth = " 
+      Log() << kFATAL << "ERROR: MaxNsmooth = " 
             << fMaxNsmooth << " < MinNsmooth = " << fMinNsmooth << Endl;
    }
 
    if (fMaxNsmooth < 0 || fMinNsmooth < 0) {
-      log() << kFATAL << "ERROR: MaxNsmooth = " 
+      Log() << kFATAL << "ERROR: MaxNsmooth = " 
             << fMaxNsmooth << " or MinNsmooth = " << fMinNsmooth << " smaller than zero" << Endl;
    }
 
@@ -791,23 +791,23 @@ void TMVA::PDF::ProcessOptions()
    else if (fInterpolateString == "Spline5") fInterpolMethod = TMVA::PDF::kSpline5;
    else if (fInterpolateString == "KDE"    ) fInterpolMethod = TMVA::PDF::kKDE;
    else if (fInterpolateString != ""       ) {
-      log() << kFATAL << "unknown setting for option 'InterpolateMethod': " << fKDEtypeString << ((fSuffix=="")?"":Form(" for pdf with suffix %s",fSuffix.Data())) << Endl;
+      Log() << kFATAL << "unknown setting for option 'InterpolateMethod': " << fKDEtypeString << ((fSuffix=="")?"":Form(" for pdf with suffix %s",fSuffix.Data())) << Endl;
    }
 
    // init KDE options
    if      (fKDEtypeString == "Gauss"      ) fKDEtype = KDEKernel::kGauss;
    else if (fKDEtypeString != ""           )
-      log() << kFATAL << "unknown setting for option 'KDEtype': " << fKDEtypeString << ((fSuffix=="")?"":Form(" for pdf with suffix %s",fSuffix.Data())) << Endl;
+      Log() << kFATAL << "unknown setting for option 'KDEtype': " << fKDEtypeString << ((fSuffix=="")?"":Form(" for pdf with suffix %s",fSuffix.Data())) << Endl;
    if      (fKDEiterString == "Nonadaptive") fKDEiter = KDEKernel::kNonadaptiveKDE;
    else if (fKDEiterString == "Adaptive"   ) fKDEiter = KDEKernel::kAdaptiveKDE;
    else if (fKDEiterString != ""           )// nothing more known
-      log() << kFATAL << "unknown setting for option 'KDEiter': " << fKDEtypeString << ((fSuffix=="")?"":Form(" for pdf with suffix %s",fSuffix.Data())) << Endl;
+      Log() << kFATAL << "unknown setting for option 'KDEiter': " << fKDEtypeString << ((fSuffix=="")?"":Form(" for pdf with suffix %s",fSuffix.Data())) << Endl;
    
    if       ( fBorderMethodString == "None"   ) fKDEborder= KDEKernel::kNoTreatment;
    else if  ( fBorderMethodString == "Renorm" ) fKDEborder= KDEKernel::kKernelRenorm;
    else if  ( fBorderMethodString == "Mirror" ) fKDEborder= KDEKernel::kSampleMirror;
    else if  ( fKDEiterString != ""            ) { // nothing more known
-      log() << kFATAL << "unknown setting for option 'KDEBorder': " << fKDEtypeString << ((fSuffix=="")?"":Form(" for pdf with suffix %s",fSuffix.Data())) << Endl;
+      Log() << kFATAL << "unknown setting for option 'KDEBorder': " << fKDEtypeString << ((fSuffix=="")?"":Form(" for pdf with suffix %s",fSuffix.Data())) << Endl;
    }
 }
 
@@ -900,7 +900,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
       gTools().ReadAttr( binch, "NBins", nbinning );
       TVectorD binns(nbinning+1);
       if (nbinning != nbins) {
-         log() << kFATAL << "Number of bins in content and binning array differs"<<Endl;
+         Log() << kFATAL << "Number of bins in content and binning array differs"<<Endl;
       } 
       const char* binString = gTools().xmlengine().GetNodeContent(binch);
       std::stringstream sb(binString);

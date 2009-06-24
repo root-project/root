@@ -62,7 +62,7 @@ void TMVA::RuleCut::MakeCuts( const std::vector<const Node*> & nodes )
    // Atleast 2 nodes are required
    UInt_t nnodes = nodes.size();
    if (nnodes<2) {
-      log() << kWARNING << "<MakeCuts()> Empty cut created." << Endl;
+      Log() << kWARNING << "<MakeCuts()> Empty cut created." << Endl;
       return;
    }
 
@@ -99,7 +99,7 @@ void TMVA::RuleCut::MakeCuts( const std::vector<const Node*> & nodes )
          dir = -1;
       } 
       else {
-         log() << kFATAL << "<MakeTheRule> BUG! Should not be here - an end-node before the end!" << Endl;
+         Log() << kFATAL << "<MakeTheRule> BUG! Should not be here - an end-node before the end!" << Endl;
          dir = 0;
       }
       allsel.push_back(SelCut_t(sel,CutDir_t(val,dir)));

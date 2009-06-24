@@ -81,7 +81,7 @@ namespace TMVA {
       DataInputHandler&          fDataInput;             //! source of input data
       TList                      fDataSetInfoCollection; //! all registered dataset definitions
       mutable MsgLogger*         fLogger;   // message logger
-      MsgLogger& log() const { return *fLogger; }    
+      MsgLogger& Log() const { return *fLogger; }    
    };
 }
 

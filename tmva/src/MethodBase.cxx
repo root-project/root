@@ -231,7 +231,7 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
 TMVA::MethodBase::~MethodBase( void ) 
 {
    // destructor
-   if (!fSetupCompleted) log() << kFATAL << "Calling destructor of method which got never setup" << Endl;
+   if (!fSetupCompleted) Log() << kFATAL << "Calling destructor of method which got never setup" << Endl;
 
    // destructor
    if (fInputVars != 0)  { fInputVars->clear(); delete fInputVars; }
@@ -269,7 +269,7 @@ void TMVA::MethodBase::SetupMethod()
 {
    // setup of methods
    
-   if (fSetupCompleted) log() << kFATAL << "Calling SetupMethod for the second time" << Endl;
+   if (fSetupCompleted) Log() << kFATAL << "Calling SetupMethod for the second time" << Endl;
    InitBase();
    DeclareBaseOptions();
    
@@ -399,7 +399,7 @@ void TMVA::MethodBase::ProcessBaseOptions()
 
    if (HasMVAPdfs()) {
       // setting the default bin num... maybe should be static ? ==> Please no static (JS)
-      // You can't use the logger in the constructor!!! log() << kINFO << "Create PDFs" << Endl;
+      // You can't use the logger in the constructor!!! Log() << kINFO << "Create PDFs" << Endl;
       // reading every PDF's definition and passing the option string to the next one to be read and marked
       fDefaultPDF = new PDF( TString(GetName())+"_PDF", GetOptions(), "MVAPdf" );
       fDefaultPDF->DeclareOptions();
@@ -438,7 +438,7 @@ void TMVA::MethodBase::ProcessBaseOptions()
             else {
                ci = DataInfo().GetClassInfo( trCls );
                if (ci == NULL)
-                  log() << kFATAL << "Class " << trCls << " not known for variable transformation "
+                  Log() << kFATAL << "Class " << trCls << " not known for variable transformation "
                         << trName << ", please check." << Endl;
                else
                   idxCls = ci->GetNumber();
@@ -454,7 +454,7 @@ void TMVA::MethodBase::ProcessBaseOptions()
          else if (trName == "N" || trName == "Norm" || trName == "Normalise" || trName == "Normalize")
             GetTransformationHandler().AddTransformation( new VariableNormalizeTransform( DataInfo()), idxCls );
          else
-            log() << kFATAL << "<ProcessOptions> Variable transform '"
+            Log() << kFATAL << "<ProcessOptions> Variable transform '"
                   << trName << "' unknown." << Endl;
       }
    }
@@ -467,16 +467,16 @@ void TMVA::MethodBase::ProcessBaseOptions()
 
    if (fVerbose) { // overwrites other settings
       fVerbosityLevelString = TString("Verbose");
-      log().SetMinType( kVERBOSE );
+      Log().SetMinType( kVERBOSE );
    }
-   else if (fVerbosityLevelString == "Debug"   ) log().SetMinType( kDEBUG );
-   else if (fVerbosityLevelString == "Verbose" ) log().SetMinType( kVERBOSE );
-   else if (fVerbosityLevelString == "Info"    ) log().SetMinType( kINFO );
-   else if (fVerbosityLevelString == "Warning" ) log().SetMinType( kWARNING );
-   else if (fVerbosityLevelString == "Error"   ) log().SetMinType( kERROR );
-   else if (fVerbosityLevelString == "Fatal"   ) log().SetMinType( kFATAL );
+   else if (fVerbosityLevelString == "Debug"   ) Log().SetMinType( kDEBUG );
+   else if (fVerbosityLevelString == "Verbose" ) Log().SetMinType( kVERBOSE );
+   else if (fVerbosityLevelString == "Info"    ) Log().SetMinType( kINFO );
+   else if (fVerbosityLevelString == "Warning" ) Log().SetMinType( kWARNING );
+   else if (fVerbosityLevelString == "Error"   ) Log().SetMinType( kERROR );
+   else if (fVerbosityLevelString == "Fatal"   ) Log().SetMinType( kFATAL );
    else if (fVerbosityLevelString != "Default" ) {
-      log() << kFATAL << "<ProcessOptions> Verbosity level type '"
+      Log() << kFATAL << "<ProcessOptions> Verbosity level type '"
             << fVerbosityLevelString << "' unknown." << Endl;
    }
 }
@@ -495,21 +495,21 @@ void TMVA::MethodBase::TrainMethod()
    GetTransformationHandler().CalcTransformations(Data()->GetEventCollection());
 
    // call training of derived MVA
-   log() << kINFO << "Begin training" << Endl;
+   Log() << kINFO << "Begin training" << Endl;
    Long64_t nEvents = Data()->GetNEvents();
    // use timer
    Timer traintimer( nEvents, GetName(), kTRUE );
    Train();
-   log() << kINFO << "End of training                                              " << Endl;
+   Log() << kINFO << "End of training                                              " << Endl;
    SetTrainTime(traintimer.ElapsedSeconds());
-   log() << kINFO << "Elapsed time for training with " << nEvents <<  " events: "
+   Log() << kINFO << "Elapsed time for training with " << nEvents <<  " events: "
          << traintimer.GetElapsedTime() << "         " << Endl;
 
-   log() << kINFO << "Create MVA output for ";
+   Log() << kINFO << "Create MVA output for ";
 
    // create PDFs for the signal and background MVA distributions (if required)
    if (!DoRegression()) {
-      log() << "classification on training sample" << Endl;
+      Log() << "classification on training sample" << Endl;
       AddClassifierOutput(Types::kTraining);
       if (HasMVAPdfs()) {
          CreateMVAPdfs();
@@ -517,11 +517,11 @@ void TMVA::MethodBase::TrainMethod()
       }
    }
    else {
-      log() << "regression on training sample" << Endl;
+      Log() << "regression on training sample" << Endl;
       AddRegressionOutput( Types::kTraining );
 
       if (HasMVAPdfs() ) {
-         log() << "Create PDFs" << Endl;
+         Log() << "Create PDFs" << Endl;
          CreateMVAPdfs();
       }
    }
@@ -546,7 +546,7 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
 
    Data()->SetCurrentType(type);
 
-   log() << kINFO << "Create results for " << (type==Types::kTraining?"training":"testing") << Endl;
+   Log() << kINFO << "Create results for " << (type==Types::kTraining?"training":"testing") << Endl;
 
    ResultsRegression* regRes = (ResultsRegression*)Data()->GetResults(GetMethodName(), type, Types::kRegression);
 
@@ -555,7 +555,7 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
 
-   log() << kINFO << "Evaluation of " << GetMethodName() << " on "
+   Log() << kINFO << "Evaluation of " << GetMethodName() << " on "
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    regRes->Resize( nEvents );
@@ -566,7 +566,7 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
       timer.DrawProgressBar( ievt );
    }
 
-   log() << kINFO << "Elapsed time for evaluation of " << nEvents <<  " events: "
+   Log() << kINFO << "Elapsed time for evaluation of " << nEvents <<  " events: "
          << timer.GetElapsedTime() << "       " << Endl;
 
    // store time used for testing
@@ -594,7 +594,7 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
 
-   log() << kINFO << "Evaluation of " << GetMethodName() << " on "
+   Log() << kINFO << "Evaluation of " << GetMethodName() << " on "
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    clRes->Resize( nEvents );
@@ -608,7 +608,7 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
       if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
-   log() << kINFO << "Elapsed time for evaluation of " << nEvents <<  " events: "
+   Log() << kINFO << "Elapsed time for evaluation of " << nEvents <<  " events: "
          << timer.GetElapsedTime() << "       " << Endl;
 
    // store time used for testing
@@ -632,7 +632,7 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
 
-   log() << kINFO << "Evaluation of " << GetMethodName() << " on "
+   Log() << kINFO << "Evaluation of " << GetMethodName() << " on "
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    mvaProb->Resize( nEvents );
@@ -648,7 +648,7 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
       if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
-   log() << kINFO << "Elapsed time for evaluation of " << nEvents <<  " events: "
+   Log() << kINFO << "Elapsed time for evaluation of " << nEvents <<  " events: "
          << timer.GetElapsedTime() << "       " << Endl;
 }
 
@@ -768,9 +768,9 @@ void TMVA::MethodBase::TestClassification()
    
    // sanity checks: tree must exist, and theVar must be in tree
    if (0==mvaRes && !(GetMethodTypeName().Contains("Cuts"))) {
-      log() << "mvaRes " << mvaRes << " GetMethodTypeName " << GetMethodTypeName()
+      Log() << "mvaRes " << mvaRes << " GetMethodTypeName " << GetMethodTypeName()
             << " contains " << !(GetMethodTypeName().Contains("Cuts")) << Endl;
-      log() << kFATAL << "<TestInit> Test variable " << GetTestvarName()
+      Log() << kFATAL << "<TestInit> Test variable " << GetTestvarName()
             << " not found in tree" << Endl;
    }
    
@@ -834,8 +834,8 @@ void TMVA::MethodBase::TestClassification()
    ResultsClassification* mvaProb = dynamic_cast<ResultsClassification*>
       (Data()->GetResults( TString("prob_")+GetMethodName(), Types::kTesting, Types::kMaxAnalysisType ) );
    
-   log() << kINFO << "Loop over test events and fill histograms with classifier response..." << Endl;
-   if (mvaProb) log() << kINFO << "Also filling probability and rarity histograms (on request)..." << Endl;
+   Log() << kINFO << "Loop over test events and fill histograms with classifier response..." << Endl;
+   if (mvaProb) Log() << kINFO << "Also filling probability and rarity histograms (on request)..." << Endl;
    for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
       
       const Event* ev = GetEvent(ievt);
@@ -1039,13 +1039,13 @@ void TMVA::MethodBase::WriteStateToFile() const
    TString tfname( GetWeightFileName() );
 
    if (WRITETXT) {
-      log() << kINFO << "Creating weight file in text format: "
+      Log() << kINFO << "Creating weight file in text format: "
             << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
 
 
       ofstream tfile( tfname );
       if (!tfile.good()) { // file could not be opened --> Error
-         log() << kFATAL << "<WriteStateToFile> "
+         Log() << kFATAL << "<WriteStateToFile> "
                << "Unable to open output weight file: " << tfname << Endl;
       }
       
@@ -1057,7 +1057,7 @@ void TMVA::MethodBase::WriteStateToFile() const
    if (!fTxtWeightsOnly) {
       // ---- create the ROOT file
       TString rfname( tfname ); rfname.ReplaceAll( ".txt", ".root" );
-      log() << kINFO << "Creating weight file in root format: "
+      Log() << kINFO << "Creating weight file in root format: "
             << gTools().Color("lightblue") << rfname << gTools().Color("reset") << Endl;
       TFile* rfile = TFile::Open( rfname, "RECREATE" );
       WriteStateToStream( *rfile );
@@ -1067,7 +1067,7 @@ void TMVA::MethodBase::WriteStateToFile() const
    // writing xml file
    if (WRITEXML) {
       TString xmlfname( tfname ); xmlfname.ReplaceAll( ".txt", ".xml" );
-      log() << kINFO << "Creating weight file in xml format: "
+      Log() << kINFO << "Creating weight file in xml format: "
             << gTools().Color("lightblue") << xmlfname << gTools().Color("reset") << Endl;
       void* doc      = gTools().xmlengine().NewDoc();
       void* rootnode = gTools().xmlengine().NewChild(0,0,"MethodSetup");
@@ -1087,7 +1087,7 @@ void TMVA::MethodBase::ReadStateFromFile()
 
    TString tfname(GetWeightFileName());
 
-   log() << kINFO << "Reading weight file: "
+   Log() << kINFO << "Reading weight file: "
          << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
 
    if (tfname.EndsWith(".xml") ) {
@@ -1099,7 +1099,7 @@ void TMVA::MethodBase::ReadStateFromFile()
       filebuf fb;
       fb.open(tfname.Data(),ios::in);
       if (!fb.is_open()) { // file not found --> Error
-         log() << kFATAL << "<ReadStateFromFile> "
+         Log() << kFATAL << "<ReadStateFromFile> "
                << "Unable to open input weight file: " << tfname << Endl;
       }      
       istream fin(&fb);
@@ -1109,7 +1109,7 @@ void TMVA::MethodBase::ReadStateFromFile()
    if (!fTxtWeightsOnly) {
       // ---- read the ROOT file
       TString rfname( tfname ); rfname.ReplaceAll( ".txt", ".root" );
-      log() << kINFO << "Reading root weight file: "
+      Log() << kINFO << "Reading root weight file: "
             << gTools().Color("lightblue") << rfname << gTools().Color("reset") << Endl;
       TFile* rfile = TFile::Open( rfname, "READ" );
       ReadStateFromStream( *rfile );
@@ -1129,8 +1129,8 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
    fMethodName = fullMethodName(fullMethodName.Index("::")+2,fullMethodName.Length());
 
    // update logger
-   log().SetSource( GetName() );
-   log() << kINFO << "Read method \"" << GetMethodName() << "\" of type \"" << GetMethodTypeName() << "\"" << Endl;
+   Log().SetSource( GetName() );
+   Log() << kINFO << "Read method \"" << GetMethodName() << "\" of type \"" << GetMethodTypeName() << "\"" << Endl;
 
    void* ch = 0;
    TString nodeName("");
@@ -1163,7 +1163,7 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
          readAnalysisType.ToLower();
          if      (readAnalysisType == "regression" )     SetAnalysisType( Types::kRegression );
          else if (readAnalysisType == "classification" ) SetAnalysisType( Types::kClassification );
-         else log() << kFATAL << "Analysis type " << readAnalysisType << " is not known." << Endl;
+         else Log() << kFATAL << "Analysis type " << readAnalysisType << " is not known." << Endl;
       } 
       else if (nodeName=="Options") {
          ReadOptionsFromXML(ch);
@@ -1225,10 +1225,10 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    if (methodName == "") methodName = methodType;
    fMethodName  = methodName;
 
-   log() << kINFO << "Read method \"" << GetMethodName() << "\" of type \"" << GetMethodTypeName() << "\"" << Endl;
+   Log() << kINFO << "Read method \"" << GetMethodName() << "\" of type \"" << GetMethodTypeName() << "\"" << Endl;
 
    // update logger
-   log().SetSource( GetName() );
+   Log().SetSource( GetName() );
 
    // now the question is whether to read the variables first or the options (well, of course the order
    // of writing them needs to agree)
@@ -1251,7 +1251,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    while (!TString(buf).BeginsWith("#VAR")) fin.getline(buf,512);
    ReadVarsFromStream(fin);
 
-   log() << kINFO << "Create VariableTransformation \"" << fVarTransformString << "\"" << Endl;
+   Log() << kINFO << "Create VariableTransformation \"" << fVarTransformString << "\"" << Endl;
    TList* trList = gTools().ParseFormatLine( fVarTransformString, "," );
    TListIter trIt(trList);
 
@@ -1273,7 +1273,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
       }
       else {
          if (s != "None")
-            log() << kFATAL << "<ProcessOptions> Variable transform '"
+            Log() << kFATAL << "<ProcessOptions> Variable transform '"
                   << s << "' unknown." << Endl;
       }
    }
@@ -1330,7 +1330,7 @@ void TMVA::MethodBase::ReadVarsFromStream( std::istream& istr )
    istr >> dummy >> readNVar;
 
    if (readNVar!=DataInfo().GetNVariables()) {
-      log() << kFATAL << "You declared "<< DataInfo().GetNVariables() << " variables in the Reader"
+      Log() << kFATAL << "You declared "<< DataInfo().GetNVariables() << " variables in the Reader"
             << " while there are " << readNVar << " variables declared in the file"
             << Endl;
    }
@@ -1346,13 +1346,13 @@ void TMVA::MethodBase::ReadVarsFromStream( std::istream& istr )
          (*varIt) = varInfo;
       }
       else {
-         log() << kINFO << "ERROR in <ReadVarsFromStream>" << Endl;
-         log() << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
-         log() << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
-         log() << kINFO << "the correct working of the method):" << Endl;
-         log() << kINFO << "   var #" << varIdx <<" declared in Reader: " << varIt->GetExpression() << Endl;
-         log() << kINFO << "   var #" << varIdx <<" declared in file  : " << varInfo.GetExpression() << Endl;
-         log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
+         Log() << kINFO << "ERROR in <ReadVarsFromStream>" << Endl;
+         Log() << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
+         Log() << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
+         Log() << kINFO << "the correct working of the method):" << Endl;
+         Log() << kINFO << "   var #" << varIdx <<" declared in Reader: " << varIt->GetExpression() << Endl;
+         Log() << kINFO << "   var #" << varIdx <<" declared in file  : " << varInfo.GetExpression() << Endl;
+         Log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
       }
    }
 }
@@ -1395,7 +1395,7 @@ void TMVA::MethodBase::ReadVariablesFromXML( void* varnode )
    gTools().ReadAttr( varnode, "NVar", readNVar);
 
    if (readNVar!=DataInfo().GetNVariables()) {
-      log() << kFATAL << "You declared "<< DataInfo().GetNVariables() << " variables in the Reader"
+      Log() << kFATAL << "You declared "<< DataInfo().GetNVariables() << " variables in the Reader"
             << " while there are " << readNVar << " variables declared in the file"
             << Endl;
    }
@@ -1414,13 +1414,13 @@ void TMVA::MethodBase::ReadVariablesFromXML( void* varnode )
          existingVarInfo = readVarInfo;
       } 
       else {
-         log() << kINFO << "ERROR in <ReadVariablesFromXML>" << Endl;
-         log() << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
-         log() << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
-         log() << kINFO << "the correct working of the method):" << Endl;
-         log() << kINFO << "   var #" << varIdx <<" declared in Reader: " << existingVarInfo.GetExpression() << Endl;
-         log() << kINFO << "   var #" << varIdx <<" declared in file  : " << readVarInfo.GetExpression() << Endl;
-         log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
+         Log() << kINFO << "ERROR in <ReadVariablesFromXML>" << Endl;
+         Log() << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
+         Log() << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
+         Log() << kINFO << "the correct working of the method):" << Endl;
+         Log() << kINFO << "   var #" << varIdx <<" declared in Reader: " << existingVarInfo.GetExpression() << Endl;
+         Log() << kINFO << "   var #" << varIdx <<" declared in file  : " << readVarInfo.GetExpression() << Endl;
+         Log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
       }
       ch = gTools().xmlengine().GetNext(ch);
    }
@@ -1455,7 +1455,7 @@ TDirectory* TMVA::MethodBase::BaseDir() const
 
    TDirectory* methodDir = MethodBaseDir();
    if (methodDir==0)
-      log() << kFATAL << "MethodBase::BaseDir() - MethodBaseDir() return a NULL pointer!" << Endl;
+      Log() << kFATAL << "MethodBase::BaseDir() - MethodBaseDir() return a NULL pointer!" << Endl;
 
    TDirectory* dir = 0;
 
@@ -1543,22 +1543,23 @@ void TMVA::MethodBase::WriteEvaluationHistosToFile()
       fMVAPdfB->GetPDFHist()->Write();
    }
 
-   log() << kINFO << "Write Results Histos to File" << Endl;
+   Log() << kINFO << "Write Results Histos to File" << Endl;
 
    // write result-histograms
    Results* results = Data()->GetResults( GetMethodName(), Types::kTesting, Types::kMaxAnalysisType );
-   if (!results) log() << kFATAL << "<WriteEvaluationHistosToFile> Unknown result: "
+   if (!results) Log() << kFATAL << "<WriteEvaluationHistosToFile> Unknown result: "
                        << GetTestvarName()+TString("_testing")
                        << endl;
    results->GetStorage()->Write();
 
    results = Data()->GetResults( GetMethodName(), Types::kTraining, Types::kMaxAnalysisType );
-   if (!results) log() << kFATAL << "<WriteEvaluationHistosToFile> Unknown result: "
+   if (!results) Log() << kFATAL << "<WriteEvaluationHistosToFile> Unknown result: "
                        << GetTestvarName()+TString("_training")
                        << endl;
    results->GetStorage()->Write();
 
    GetTransformationHandler().PlotVariables( GetEventCollection( Types::kTesting ), BaseDir() );
+
 }
 
 //_______________________________________________________________________
@@ -1582,7 +1583,7 @@ Bool_t TMVA::MethodBase::GetLine(std::istream& fin, char* buf )
       TString code = line(start,length);
       std::stringstream s(code.Data());
       s >> fTMVATrainingVersion;
-      log() << kINFO << "MVA method was trained with TMVA Version: " << GetTrainingTMVAVersionString() << Endl;
+      Log() << kINFO << "MVA method was trained with TMVA Version: " << GetTrainingTMVAVersionString() << Endl;
    }
    if (line.BeginsWith("ROOT Release")) {
       Ssiz_t start = line.First('[')+1;
@@ -1590,7 +1591,7 @@ Bool_t TMVA::MethodBase::GetLine(std::istream& fin, char* buf )
       TString code = line(start,length);
       std::stringstream s(code.Data());
       s >> fROOTTrainingVersion;
-      log() << kINFO << "MVA method was trained with ROOT Version: " << GetTrainingROOTVersionString() << Endl;
+      Log() << kINFO << "MVA method was trained with ROOT Version: " << GetTrainingROOTVersionString() << Endl;
    }
    if (line.BeginsWith("Analysis type")) {
       Ssiz_t start = line.First('[')+1;
@@ -1601,9 +1602,9 @@ Bool_t TMVA::MethodBase::GetLine(std::istream& fin, char* buf )
       s >> analysisType;
       if      (analysisType == "regression"     || analysisType == "Regression")     SetAnalysisType( Types::kRegression );
       else if (analysisType == "classification" || analysisType == "Classification") SetAnalysisType( Types::kClassification );
-      else log() << kFATAL << "Analysis type " << analysisType << " from weight-file not known!" << std::endl;
+      else Log() << kFATAL << "Analysis type " << analysisType << " from weight-file not known!" << std::endl;
 
-      log() << kINFO << "Method was trained for " 
+      Log() << kINFO << "Method was trained for " 
             << (GetAnalysisType() == Types::kRegression ? "Regression" : "Classification") << Endl;
    }
 
@@ -1621,7 +1622,7 @@ void TMVA::MethodBase::CreateMVAPdfs()
       ( Data()->GetResults(GetMethodName(), Types::kTraining, Types::kClassification) );
 
    if (mvaRes==0 || mvaRes->GetSize()==0) {
-      log() << kFATAL << "<CreateMVAPdfs> No result of classifier testing available" << Endl;
+      Log() << kFATAL << "<CreateMVAPdfs> No result of classifier testing available" << Endl;
    }
 
    Double_t minVal = *std::min_element(mvaRes->GetValueVector()->begin(),mvaRes->GetValueVector()->end());
@@ -1664,7 +1665,7 @@ void TMVA::MethodBase::CreateMVAPdfs()
    fMVAPdfB->ValidatePDF( histMVAPdfB );
 
    if (DataInfo().GetNClasses() == 2) { // TODO: this is an ugly hack.. adapt this to new framework
-      log() << kINFO
+      Log() << kINFO
             << Form( "<CreateMVAPdfs> Separation from histogram (PDF): %1.3f (%1.3f)",
                      GetSeparation( histMVAPdfS, histMVAPdfB ), GetSeparation( fMVAPdfS, fMVAPdfB ) )
             << Endl;
@@ -1679,7 +1680,7 @@ Double_t TMVA::MethodBase::GetProba( Double_t mvaVal, Double_t ap_sig )
 {
    // compute likelihood ratio
    if (!fMVAPdfS || !fMVAPdfB) {
-      log() << kWARNING << "<GetProba> MVA PDFs for Signal and Background don't exist" << Endl;
+      Log() << kWARNING << "<GetProba> MVA PDFs for Signal and Background don't exist" << Endl;
       return -1.0;
    }
    Double_t p_s = fMVAPdfS->GetVal( mvaVal );
@@ -1698,7 +1699,7 @@ Double_t TMVA::MethodBase::GetRarity( Double_t mvaVal, Types::ESBType reftype ) 
    // where PDF(x) is the PDF of the classifier's signal or background distribution
 
    if ((reftype == Types::kSignal && !fMVAPdfS) || (reftype == Types::kBackground && !fMVAPdfB)) {
-      log() << kWARNING << "<GetRarity> Required MVA PDF for Signal or Backgroud does not exist: "
+      Log() << kWARNING << "<GetRarity> Required MVA PDF for Signal or Backgroud does not exist: "
             << "select option \"CreateMVAPdfs\"" << Endl;
       return 0.0;
    }
@@ -1725,7 +1726,7 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
    Bool_t computeArea = kFALSE;
    if      (!list || list->GetSize() < 2) computeArea = kTRUE; // the area is computed
    else if (list->GetSize() > 2) {
-      log() << kFATAL << "<GetEfficiency> Wrong number of arguments"
+      Log() << kFATAL << "<GetEfficiency> Wrong number of arguments"
             << " in string: " << theString
             << " | required format, e.g., Efficiency:0.05, or empty string" << Endl;
       delete list;
@@ -1735,7 +1736,7 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
    // sanity check
    if ( results->GetHist("MVA_S")->GetNbinsX() != results->GetHist("MVA_B")->GetNbinsX() ||
         results->GetHist("MVA_HIGHBIN_S")->GetNbinsX() != results->GetHist("MVA_HIGHBIN_B")->GetNbinsX() ) {
-      log() << kFATAL << "<GetEfficiency> Binning mismatch between signal and background histos" << Endl;
+      Log() << kFATAL << "<GetEfficiency> Binning mismatch between signal and background histos" << Endl;
       delete list;
       return -1.0;
    }
@@ -1788,7 +1789,7 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
          else if (sign < 0)
             for (Int_t ibin=maxbin+1; ibin<=fNbinsH; ibin++) theHist->AddBinContent( ibin , theWeight );
          else
-            log() << kFATAL << "<GetEfficiency> Mismatch in sign" << Endl;
+            Log() << kFATAL << "<GetEfficiency> Mismatch in sign" << Endl;
       }
 
       // renormalise maximum to <=1
@@ -1950,7 +1951,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
    // sanity check
 
    if (list->GetSize() != 2) {
-      log() << kFATAL << "<GetTrainingEfficiency> Wrong number of arguments"
+      Log() << kFATAL << "<GetTrainingEfficiency> Wrong number of arguments"
             << " in string: " << theString
             << " | required format, e.g., Efficiency:0.05" << Endl;
       delete list;
@@ -1965,7 +1966,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
    // sanity check
    if (results->GetHist("MVA_S")->GetNbinsX() != results->GetHist("MVA_B")->GetNbinsX() ||
        results->GetHist("MVA_HIGHBIN_S")->GetNbinsX() != results->GetHist("MVA_HIGHBIN_B")->GetNbinsX() ) {
-      log() << kFATAL << "<GetTrainingEfficiency> Binning mismatch between signal and background histos"
+      Log() << kFATAL << "<GetTrainingEfficiency> Binning mismatch between signal and background histos"
             << Endl;
       return -1.0;
    }
@@ -2136,7 +2137,7 @@ Double_t TMVA::MethodBase::GetSeparation( PDF* pdfS, PDF* pdfB ) const
    // note, if zero pointers given, use internal pdf
    // sanity check first
    if ((!pdfS && pdfB) || (pdfS && !pdfB))
-      log() << kFATAL << "<GetSeparation> Mismatch in pdfs" << Endl;
+      Log() << kFATAL << "<GetSeparation> Mismatch in pdfs" << Endl;
    if (!pdfS) pdfS = fSplS;
    if (!pdfB) pdfB = fSplB;
 
@@ -2152,7 +2153,7 @@ Double_t TMVA::MethodBase::GetROCIntegral(PDF *pdfS, PDF *pdfB) const
    // note, if zero pointers given, use internal pdf
    // sanity check first
    if ((!pdfS && pdfB) || (pdfS && !pdfB))
-      log() << kFATAL << "<GetSeparation> Mismatch in pdfs" << Endl;
+      Log() << kFATAL << "<GetSeparation> Mismatch in pdfs" << Endl;
    if (!pdfS) pdfS = fSplS;
    if (!pdfB) pdfB = fSplB;
 
@@ -2188,20 +2189,20 @@ Double_t TMVA::MethodBase::GetMaximumSignificance( Double_t SignalEvents,
    TH1F *temp_histogram = new TH1F("temp", "temp", fNbinsH, fXmin, fXmax );
 
    if (SignalEvents <= 0 || BackgroundEvents <= 0) {
-      log() << kFATAL << "<GetMaximumSignificance> "
+      Log() << kFATAL << "<GetMaximumSignificance> "
             << "Number of signal or background events is <= 0 ==> abort"
             << Endl;
    }
 
-   log() << kINFO << "Using ratio SignalEvents/BackgroundEvents = "
+   Log() << kINFO << "Using ratio SignalEvents/BackgroundEvents = "
          << SignalEvents/BackgroundEvents << Endl;
 
    TH1* eff_s = results->GetHist("MVA_EFF_S");
    TH1* eff_b = results->GetHist("MVA_EFF_B");
 
    if ( (eff_s==0) || (eff_b==0) ) {
-      log() << kWARNING << "Efficiency histograms empty !" << Endl;
-      log() << kWARNING << "no maximum cut found, return 0" << Endl;
+      Log() << kWARNING << "Efficiency histograms empty !" << Endl;
+      Log() << kWARNING << "no maximum cut found, return 0" << Endl;
       return 0;
    }
 
@@ -2222,8 +2223,8 @@ Double_t TMVA::MethodBase::GetMaximumSignificance( Double_t SignalEvents,
    // delete
    delete temp_histogram;
 
-   log() << kINFO << "Optimal cut at      : " << max_significance << Endl;
-   log() << kINFO << "Maximum significance: " << max_significance_value << Endl;
+   Log() << kINFO << "Optimal cut at      : " << max_significance << Endl;
+   Log() << kINFO << "Maximum significance: " << max_significance_value << Endl;
 
    return max_significance;
 }
@@ -2245,7 +2246,7 @@ void TMVA::MethodBase::Statistics( Types::ETreeType treeType, const TString& the
 
    // sanity check
    if (entries <=0)
-      log() << kFATAL << "<CalculateEstimator> Wrong tree type: " << treeType << Endl;
+      Log() << kFATAL << "<CalculateEstimator> Wrong tree type: " << treeType << Endl;
 
    // index of the wanted variable
    UInt_t varIndex = DataInfo().FindVarIndex( theVarName );
@@ -2310,12 +2311,12 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    TString className = TString("Read") + GetMethodName();
 
    TString tfname( classFileName );
-   log() << kINFO << "Creating standalone response class: "
+   Log() << kINFO << "Creating standalone response class: "
          << gTools().Color("lightblue") << classFileName << gTools().Color("reset") << Endl;
 
    ofstream fout( classFileName );
    if (!fout.good()) { // file could not be opened --> Error
-      log() << kFATAL << "<MakeClass> Unable to open file: " << classFileName << Endl;
+      Log() << kFATAL << "<MakeClass> Unable to open file: " << classFileName << Endl;
    }
 
    // now create the class
@@ -2537,45 +2538,45 @@ void TMVA::MethodBase::PrintHelpMessage() const
    std::streambuf* cout_sbuf = std::cout.rdbuf(); // save original sbuf
    std::ofstream* o = 0;
    if (gConfig().WriteOptionsReference()) {
-      log() << kINFO << "Print Help message for class " << GetName() << " into file: " << GetReferenceFile() << Endl;
+      Log() << kINFO << "Print Help message for class " << GetName() << " into file: " << GetReferenceFile() << Endl;
       o = new std::ofstream( GetReferenceFile(), std::ios::app );
       if (!o->good()) { // file could not be opened --> Error
-         log() << kFATAL << "<PrintHelpMessage> Unable to append to output file: " << GetReferenceFile() << Endl;
+         Log() << kFATAL << "<PrintHelpMessage> Unable to append to output file: " << GetReferenceFile() << Endl;
       }
       std::cout.rdbuf( o->rdbuf() ); // redirect 'cout' to file
    }
 
    //         "|--------------------------------------------------------------|"
    if (!o) {
-      log() << kINFO << Endl;
-      log() << gTools().Color("bold")
+      Log() << kINFO << Endl;
+      Log() << gTools().Color("bold")
             << "================================================================"
             << gTools().Color( "reset" )
             << Endl;
-      log() << gTools().Color("bold")
+      Log() << gTools().Color("bold")
             << "H e l p   f o r   M V A   m e t h o d   [ " << GetName() << " ] :"
             << gTools().Color( "reset" )
             << Endl;
    }
    else {
-      log() << "Help for MVA method [ " << GetName() << " ] :" << Endl;
+      Log() << "Help for MVA method [ " << GetName() << " ] :" << Endl;
    }
 
    // print method-specific help message
    GetHelpMessage();
 
    if (!o) {
-      log() << Endl;
-      log() << "<Suppress this message by specifying \"!H\" in the booking option>" << Endl;
-      log() << gTools().Color("bold")
+      Log() << Endl;
+      Log() << "<Suppress this message by specifying \"!H\" in the booking option>" << Endl;
+      Log() << gTools().Color("bold")
             << "================================================================"
             << gTools().Color( "reset" )
             << Endl;
-      log() << Endl;
+      Log() << Endl;
    }
    else {
       // indicate END
-      log() << "# End of Message___" << Endl;
+      Log() << "# End of Message___" << Endl;
    }
 
    std::cout.rdbuf( cout_sbuf ); // restore the original stream buffer

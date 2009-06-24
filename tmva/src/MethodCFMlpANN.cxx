@@ -184,18 +184,18 @@ void TMVA::MethodCFMlpANN::ProcessOptions()
    fNodes[fNlayers-1] = 2;         // number of output nodes
 
    if (IgnoreEventsWithNegWeightsInTraining()) {
-      log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
+      Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
             << GetMethodTypeName() 
             << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
             << Endl;
    }
 
-   log() << kINFO << "Use configuration (nodes per layer): in=";
-   for (Int_t i=0; i<fNlayers-1; i++) log() << kINFO << fNodes[i] << ":";
-   log() << kINFO << fNodes[fNlayers-1] << "=out" << Endl;   
+   Log() << kINFO << "Use configuration (nodes per layer): in=";
+   for (Int_t i=0; i<fNlayers-1; i++) Log() << kINFO << fNodes[i] << ":";
+   Log() << kINFO << fNodes[fNlayers-1] << "=out" << Endl;   
 
    // some info
-   log() << "Use " << fNcycles << " training cycles" << Endl;
+   Log() << "Use " << fNcycles << " training cycles" << Endl;
 
    Int_t nEvtTrain = Data()->GetNTrainingEvents();
 
@@ -221,7 +221,7 @@ void TMVA::MethodCFMlpANN::ProcessOptions()
          }
       }
 
-      //log() << kVERBOSE << Data()->GetNEvtSigTrain() << " Signal and " 
+      //Log() << kVERBOSE << Data()->GetNEvtSigTrain() << " Signal and " 
       //        << Data()->GetNEvtBkgdTrain() << " background" << " events in trainingTree" << Endl;
    }
 
@@ -285,7 +285,7 @@ void TMVA::MethodCFMlpANN::Train( void )
 #ifndef R__WIN32
    Train_nn( &dumDat, &dumDat, &ntrain, &ntest, &nvar, &nlayers, nodes, &ncycles );
 #else
-   log() << kWARNING << "<Train> sorry CFMlpANN does not run on Windows" << Endl;
+   Log() << kWARNING << "<Train> sorry CFMlpANN does not run on Windows" << Endl;
 #endif  
 
    delete [] nodes;
@@ -304,7 +304,7 @@ Double_t TMVA::MethodCFMlpANN::GetMvaValue( Double_t* err )
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) inputVec[ivar] = ev->GetVal(ivar);
 
    Double_t myMVA = EvalANN( inputVec, isOK );
-   if (!isOK) log() << kFATAL << "EvalANN returns (!isOK) for event " << Endl;
+   if (!isOK) Log() << kFATAL << "EvalANN returns (!isOK) for event " << Endl;
 
    // cannot determine error
    if (err != 0) *err = -1;
@@ -392,15 +392,15 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
    istr >> nva >> lclass;
 
    if (GetNvar() != nva) // wrong file
-      log() << kFATAL << "<ReadWeightsFromFile> mismatch in number of variables" << Endl;
+      Log() << kFATAL << "<ReadWeightsFromFile> mismatch in number of variables" << Endl;
 
    // number of output classes must be 2
    if (lclass != 2) // wrong file
-      log() << kFATAL << "<ReadWeightsFromFile> mismatch in number of classes" << Endl;
+      Log() << kFATAL << "<ReadWeightsFromFile> mismatch in number of classes" << Endl;
           
    // check that we are not at the end of the file
    if (istr.eof( ))
-      log() << kFATAL << "<ReadWeightsFromStream> reached EOF prematurely " << Endl;
+      Log() << kFATAL << "<ReadWeightsFromStream> reached EOF prematurely " << Endl;
 
    // read extrema of input variables
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) 
@@ -463,7 +463,7 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
 
    // sanity check
    if ((Int_t)GetNvar() != fNeur_1.neuron[0]) {
-      log() << kFATAL << "<ReadWeightsFromFile> mismatch in zeroth layer:"
+      Log() << kFATAL << "<ReadWeightsFromFile> mismatch in zeroth layer:"
               << GetNvar() << " " << fNeur_1.neuron[0] << Endl;
    }
 
@@ -486,10 +486,10 @@ Int_t TMVA::MethodCFMlpANN::DataInterface( Double_t* /*tout2*/, Double_t*  /*tin
 
    // sanity checks
    if (0 == xpg) {
-      log() << kFATAL << "ERROR in MethodCFMlpANN_DataInterface zero pointer xpg" << Endl;
+      Log() << kFATAL << "ERROR in MethodCFMlpANN_DataInterface zero pointer xpg" << Endl;
    }
    if (*nvar != (Int_t)opt->GetNvar()) {
-      log() << kFATAL << "ERROR in MethodCFMlpANN_DataInterface mismatch in num of variables: "
+      Log() << kFATAL << "ERROR in MethodCFMlpANN_DataInterface mismatch in num of variables: "
               << *nvar << " " << opt->GetNvar() << Endl;
    }
 
@@ -511,7 +511,7 @@ void TMVA::MethodCFMlpANN::WriteWeightsToStream( std::ostream& o ) const
    
    // number of output classes must be 2
    if (fParam_1.lclass != 2) // wrong file
-      log() << kFATAL << "<WriteWeightsToStream> mismatch in number of classes" << Endl;
+      Log() << kFATAL << "<WriteWeightsToStream> mismatch in number of classes" << Endl;
 
 
    // write extrema of input variables
@@ -739,16 +739,16 @@ void TMVA::MethodCFMlpANN::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "<None>" << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "<None>" << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "<None>" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "<None>" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "<None>" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "<None>" << Endl;
 }

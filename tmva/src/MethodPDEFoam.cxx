@@ -138,7 +138,7 @@ void TMVA::MethodPDEFoam::DeclareOptions()
    DeclareOptionRef( fKernelStr = "None",     "Kernel",   "Kernel type used");
    AddPreDefVal(TString("None"));
    AddPreDefVal(TString("Gauss"));
-
+   AddPreDefVal(TString("LinNeighbors"));
    DeclareOptionRef( fTargetSelectionStr = "Mean", "TargetSelection", "Target selection method");
    AddPreDefVal(TString("Mean"));
    AddPreDefVal(TString("Mpv"));
@@ -149,7 +149,7 @@ void TMVA::MethodPDEFoam::ProcessOptions()
 {
    // process user options
    if (!(fFrac>0. && fFrac<=1.)) {
-      log() << kWARNING << "TailCut not in [0.,1] ==> using 0.001 instead" << Endl;
+      Log() << kWARNING << "TailCut not in [0.,1] ==> using 0.001 instead" << Endl;
       fFrac = 0.001;
    }
 
@@ -158,7 +158,7 @@ void TMVA::MethodPDEFoam::ProcessOptions()
    fVolFrac = Int_t(1./fVolFracInv + 0.5); // round
 
    if (fCutRMSmin && fRMSmin>1.0) {
-      log() << kWARNING << "RMSmin > 1.0 ==> using 1.0 instead" << Endl;
+      Log() << kWARNING << "RMSmin > 1.0 ==> using 1.0 instead" << Endl;
       fRMSmin = 1.0;
    }
    
@@ -166,7 +166,8 @@ void TMVA::MethodPDEFoam::ProcessOptions()
       fCutNmin = false;
 
    if (fKernelStr == "None" ) fKernel = kNone;
-   else                       fKernel = kGaus;
+   else if (fKernelStr == "Gauss" ) fKernel = kGaus;
+   else if (fKernelStr == "LinNeighbors") fKernel = kLinN;
 
    if (fTargetSelectionStr == "Mean" ) fTargetSelection = kMean;
    else                                fTargetSelection = kMpv;
@@ -209,7 +210,7 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
       xmax[dim] = -1.e100;
    }
 
-   log() << kDEBUG << "Number of training events: " << Data()->GetNTrainingEvents() << Endl;
+   Log() << kDEBUG << "Number of training events: " << Data()->GetNTrainingEvents() << Endl;
    Int_t nevoutside = (Int_t)((Data()->GetNTrainingEvents())*(fFrac)); // number of events that are outside the range
    Int_t rangehistbins = 10000;                               // number of bins in histos
   
@@ -298,7 +299,7 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
 //_______________________________________________________________________
 void TMVA::MethodPDEFoam::Train( void )
 {
-   log() << kDEBUG << "Calculate Xmin and Xmax for every dimension" << Endl;
+   Log() << kDEBUG << "Calculate Xmin and Xmax for every dimension" << Endl;
    CalcXminXmax();
 
 
@@ -315,10 +316,10 @@ void TMVA::MethodPDEFoam::Train( void )
          fNSigBgRatio = 1.*(Data()->GetNEvtSigTrain())/(Data()->GetNEvtBkgdTrain());
       }
 
-      log() << kDEBUG << "N_sig for training events: " << Data()->GetNEvtSigTrain() << Endl;
-      log() << kDEBUG << "N_bg for training events:  " << Data()->GetNEvtBkgdTrain() << Endl;
-      log() << kDEBUG << "ratio N_sig/N_bg for training events: " << fNSigBgRatio << Endl;
-      log() << kDEBUG << "User normalization: " << DataInfo().GetNormalization().Data() << Endl;
+      Log() << kDEBUG << "N_sig for training events: " << Data()->GetNEvtSigTrain() << Endl;
+      Log() << kDEBUG << "N_bg for training events:  " << Data()->GetNEvtBkgdTrain() << Endl;
+      Log() << kDEBUG << "ratio N_sig/N_bg for training events: " << fNSigBgRatio << Endl;
+      Log() << kDEBUG << "User normalization: " << DataInfo().GetNormalization().Data() << Endl;
 
       if (fSigBgSeparated)
          TrainSeparatedClassification();
@@ -345,7 +346,7 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
       foam[i] = new PDEFoam(foamcaption[i]);
       InitFoam(foam[i], kSeparate);
 
-      log() << kINFO << "Filling binary search tree of " << foamcaption[i] 
+      Log() << kINFO << "Filling binary search tree of " << foamcaption[i] 
             << " with events" << Endl;
       // insert event to BinarySearchTree
       for (Long64_t k=0; k<GetNEvents(); k++) {
@@ -356,7 +357,7 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
             foam[i]->FillBinarySearchTree(ev, fNSigBgRatio, kSeparate, IgnoreEventsWithNegWeightsInTraining());
       }
 
-      log() << kINFO << "Build " << foamcaption[i] << Endl;
+      Log() << kINFO << "Build " << foamcaption[i] << Endl;
       // build foam
       foam[i]->SetNElements(1);  // init space for 1 variable on every cell (number of events in cell)
       foam[i]->Create(fCutNmin);
@@ -365,7 +366,7 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
       foam[i]->SetNElements(2);  // init space for 2 variables on every cell (N_ev, RMS)
       foam[i]->ResetCellElements();
 
-      log() << "Filling foam cells with events" << Endl;
+      Log() << "Filling foam cells with events" << Endl;
       // loop over all events -> fill foam cells
       for (Long64_t k=0; k<GetNEvents(); k++) {
          const Event* ev = GetEvent(k); 
@@ -375,7 +376,7 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
             foam[i]->FillFoamCells(ev, fNSigBgRatio, kSeparate, IgnoreEventsWithNegWeightsInTraining());
       }
 
-      log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
+      Log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
       foam[i]->CheckCells(true);
    }
 }
@@ -391,31 +392,31 @@ void TMVA::MethodPDEFoam::TrainUnifiedClassification()
    foam[0] = new PDEFoam("DiscrFoam");
    InitFoam(foam[0], kDiscr);
 
-   log() << kINFO << "Filling binary search tree of discriminator foam with events" << Endl;
+   Log() << kINFO << "Filling binary search tree of discriminator foam with events" << Endl;
    // insert event to BinarySearchTree
    for (Long64_t k=0; k<GetNEvents(); k++)
       foam[0]->FillBinarySearchTree(GetEvent(k), fNSigBgRatio, kDiscr, IgnoreEventsWithNegWeightsInTraining());
 
-   log() << kINFO << "Build up discriminator foam" << Endl;
+   Log() << kINFO << "Build up discriminator foam" << Endl;
    // build foam with 1 cell element
    foam[0]->SetNElements(1);     // init space for 1 variable on every cell (number of events in cell)
    foam[0]->Create(fCutNmin);    // build foam and create cell elements if Nmin-cut is activated
 
-   log() << kDEBUG << "Resetting cell integrals" << Endl;
+   Log() << kDEBUG << "Resetting cell integrals" << Endl;
    // Reset cell elements, used after foam build-up
    foam[0]->SetNElements(2);     // init space for 2 variables on every cell
    foam[0]->ResetCellElements();
 
-   log() << "Filling foam cells with events" << Endl;
+   Log() << "Filling foam cells with events" << Endl;
    // loop over all training events -> fill foam cells with N_sig and N_Bg
    for (UInt_t k=0; k<GetNEvents(); k++)
       foam[0]->FillFoamCells(GetEvent(k), fNSigBgRatio, kDiscr, IgnoreEventsWithNegWeightsInTraining());
 
-   log() << "Calculate cell discriminator"<< Endl;
+   Log() << "Calculate cell discriminator"<< Endl;
    // calc discriminator (and it's error) for each cell
    foam[0]->CalcCellDiscr();
 
-   log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
+   Log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
    foam[0]->CheckCells(true);
 }
 
@@ -428,45 +429,45 @@ void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
    // - cell content = average target 0
 
    if (Data()->GetNTargets() < 1) {
-      log() << kFATAL << "Error: number of targets = " << Data()->GetNTargets() << Endl;
+      Log() << kFATAL << "Error: number of targets = " << Data()->GetNTargets() << Endl;
       return;
    }
    else if (Data()->GetNTargets() > 1) {
-      log() << kWARNING << "Warning: number of targets = " << Data()->GetNTargets()
+      Log() << kWARNING << "Warning: number of targets = " << Data()->GetNTargets()
             << "  --> using only first target" << Endl;
    }
    else 
-      log() << kDEBUG << "MethodPDEFoam: number of Targets: " << Data()->GetNTargets() << Endl;
+      Log() << kDEBUG << "MethodPDEFoam: number of Targets: " << Data()->GetNTargets() << Endl;
 
    TString foamcaption = "MonoTargetRegressionFoam";
    foam[0] = new PDEFoam(foamcaption);
    InitFoam(foam[0], kMonoTarget);
 
-   log() << kINFO << "Filling binary search tree with events" << Endl;
+   Log() << kINFO << "Filling binary search tree with events" << Endl;
    // insert event to BinarySearchTree
    for (Long64_t k=0; k<GetNEvents(); k++)
       foam[0]->FillBinarySearchTree(GetEvent(k), 1, kMonoTarget, IgnoreEventsWithNegWeightsInTraining());
 
-   log() << kINFO << "Build mono target regression foam" << Endl;
+   Log() << kINFO << "Build mono target regression foam" << Endl;
    // build foam
    foam[0]->SetNElements(1);        // to save N_ev during foam build-up
    foam[0]->Create(fCutNmin);
 
-   log() << kDEBUG << "Resetting cell elements" << Endl;
+   Log() << kDEBUG << "Resetting cell elements" << Endl;
    // Reset Cell Integrals
    foam[0]->SetNElements(2);        // to save N_ev and Target(0)
    foam[0]->ResetCellElements();
 
-   log() << "Filling foam cells with events" << Endl;
+   Log() << "Filling foam cells with events" << Endl;
    // loop over all events -> fill foam cells with target
    for (UInt_t k=0; k<GetNEvents(); k++)
       foam[0]->FillFoamCells(GetEvent(k), 1, kMonoTarget, IgnoreEventsWithNegWeightsInTraining());
 
-   log() << kDEBUG << "Calculate cell average targets"<< Endl;
+   Log() << kDEBUG << "Calculate cell average targets"<< Endl;
    // calc weight (and it's error) for each cell
    foam[0]->CalcCellTarget();
 
-   log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
+   Log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
    foam[0]->CheckCells(true);
 }
 
@@ -478,36 +479,36 @@ void TMVA::MethodPDEFoam::TrainMultiTargetRegression()
    // - dimension of foam = number of non-targets + number of targets
    // - cell content = event density
 
-   log() << kDEBUG << "Number of variables: " << Data()->GetNVariables() << Endl;
-   log() << kDEBUG << "Number of Targets:   " << Data()->GetNTargets()   << Endl;
-   log() << kDEBUG << "Dimension of foam:   " << Data()->GetNVariables()+Data()->GetNTargets() << Endl;
+   Log() << kDEBUG << "Number of variables: " << Data()->GetNVariables() << Endl;
+   Log() << kDEBUG << "Number of Targets:   " << Data()->GetNTargets()   << Endl;
+   Log() << kDEBUG << "Dimension of foam:   " << Data()->GetNVariables()+Data()->GetNTargets() << Endl;
 
    TString foamcaption = "MultiTargetRegressionFoam";
    foam[0] = new PDEFoam(foamcaption);
    InitFoam(foam[0], kMultiTarget);
 
-   log() << kINFO << "Filling binary search tree of multi target regression foam with events" 
+   Log() << kINFO << "Filling binary search tree of multi target regression foam with events" 
          << Endl;
    // insert event to BinarySearchTree
    for (Long64_t k=0; k<GetNEvents(); k++)
       foam[0]->FillBinarySearchTree(GetEvent(k), 1, kMultiTarget, IgnoreEventsWithNegWeightsInTraining());
 
-   log() << kINFO << "Build multi target regression foam" << Endl;
+   Log() << kINFO << "Build multi target regression foam" << Endl;
    // build foam
    foam[0]->SetNElements(1);          // to save N_ev during build-up
    foam[0]->Create(fCutNmin);
 
-   log() << kDEBUG << "Resetting cell elements" << Endl;
+   Log() << kDEBUG << "Resetting cell elements" << Endl;
    // Reset Cell values
    foam[0]->SetNElements(2);          // to save N_ev and RMS
    foam[0]->ResetCellElements();
 
-   log() << kINFO << "Filling foam cells with events" << Endl;
+   Log() << kINFO << "Filling foam cells with events" << Endl;
    // loop over all events -> fill foam cells with number of events
    for (UInt_t k=0; k<GetNEvents(); k++)
       foam[0]->FillFoamCells(GetEvent(k), 1, kMultiTarget, IgnoreEventsWithNegWeightsInTraining());
 
-   log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
+   Log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
    foam[0]->CheckCells(true);
 }
 
@@ -590,7 +591,7 @@ void TMVA::MethodPDEFoam::SetXminXmax( TMVA::PDEFoam *pdefoam )
    // Set Xmin, Xmax in every dimension to pdefoam
 
    if (!pdefoam){
-      log() << kFATAL << "Null pointer given!" << Endl;
+      Log() << kFATAL << "Null pointer given!" << Endl;
       return;
    }
 
@@ -599,8 +600,8 @@ void TMVA::MethodPDEFoam::SetXminXmax( TMVA::PDEFoam *pdefoam )
       num_vars += Data()->GetNTargets();
 
    for (UInt_t idim=0; idim<num_vars; idim++) { // set upper/ lower limit in foam
-      log()<< kDEBUG << "foam: SetXmin[dim="<<idim<<"]: " << Xmin.at(idim) << Endl;
-      log()<< kDEBUG << "foam: SetXmax[dim="<<idim<<"]: " << Xmax.at(idim) << Endl;
+      Log()<< kDEBUG << "foam: SetXmin[dim="<<idim<<"]: " << Xmin.at(idim) << Endl;
+      Log()<< kDEBUG << "foam: SetXmax[dim="<<idim<<"]: " << Xmax.at(idim) << Endl;
       pdefoam->SetXmin(idim, Xmin.at(idim));
       pdefoam->SetXmax(idim, Xmax.at(idim));
    }
@@ -611,7 +612,7 @@ void TMVA::MethodPDEFoam::InitFoam(TMVA::PDEFoam *pdefoam, EFoamType ft){
    // Set foam options and initialize foam
 
    if (!pdefoam){
-      log() << kFATAL << "Null pointer given!" << Endl;
+      Log() << kFATAL << "Null pointer given!" << Endl;
       return;
    }
 
@@ -667,7 +668,7 @@ const std::vector<Float_t>& TMVA::MethodPDEFoam::GetRegressionValues()
    std::vector<Float_t> vals = ev->GetValues(); // get array of event variables (non-targets)   
 
    if (vals.size() == 0) {
-      log() << kWARNING << "<GetRegressionValues> value vector has size 0. " << Endl;
+      Log() << kWARNING << "<GetRegressionValues> value vector has size 0. " << Endl;
    }
 
    if (fMultiTargetRegression) {
@@ -823,7 +824,7 @@ void TMVA::MethodPDEFoam::WriteFoamsToXMLFile() const
    if (!DoRegression() && fSigBgSeparated) 
       foam[1]->Write(foam[1]->GetFoamName().Data());
    rootFile->Close();
-   log() << kINFO << "Foams written to XML file: " 
+   Log() << kINFO << "Foams written to XML file: " 
          << gTools().Color("lightblue") << rfname << gTools().Color("reset") << Endl;
 };
 
@@ -961,7 +962,7 @@ void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
       UInt_t i=0;
       gTools().ReadAttr( xmin_wrap , "Index", i );
       if (i>=kDim)
-         log() << kFATAL << "dimension index out of range:" << i << Endl;
+         Log() << kFATAL << "dimension index out of range:" << i << Endl;
       gTools().ReadAttr( xmin_wrap , "Value", Xmin.at(i) );
       xmin_wrap = gTools().xmlengine().GetNext( xmin_wrap );
    }
@@ -971,7 +972,7 @@ void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
       UInt_t i=0;
       gTools().ReadAttr( xmax_wrap , "Index", i );
       if (i>=kDim)
-         log() << kFATAL << "dimension index out of range:" << i << Endl;
+         Log() << kFATAL << "dimension index out of range:" << i << Endl;
       gTools().ReadAttr( xmax_wrap , "Value", Xmax.at(i) );
       xmax_wrap = gTools().xmlengine().GetNext( xmax_wrap );
    }
@@ -1028,9 +1029,9 @@ void TMVA::MethodPDEFoam::ReadFoamsFromXMLFile()
    // add foam indicator to distinguish from main weight file
    rfname.ReplaceAll( ".xml", "_foams.xml" );
 
-   log() << kINFO << "Read foams from XML file: " << rfname << Endl;
+   Log() << kINFO << "Read foams from XML file: " << rfname << Endl;
    TXMLFile *rootFile = new TXMLFile( rfname, "READ" );
-   if (rootFile->IsZombie()) log() << kFATAL << "Cannot open XML file \"" << rfname << "\"" << Endl;
+   if (rootFile->IsZombie()) Log() << kFATAL << "Cannot open XML file \"" << rfname << "\"" << Endl;
 
    // read foams from xml file
    if (DoRegression()) {
@@ -1048,7 +1049,7 @@ void TMVA::MethodPDEFoam::ReadFoamsFromXMLFile()
 	 foam[0] = dynamic_cast<PDEFoam*>(rootFile->Get("DiscrFoam"));
    }
    if (!foam[0] || (!DoRegression() && fSigBgSeparated && !foam[1]))
-      log() << kFATAL << "Could not load foam!" << Endl;
+      Log() << kFATAL << "Could not load foam!" << Endl;
 }
 
 //_______________________________________________________________________
@@ -1076,86 +1077,88 @@ void TMVA::MethodPDEFoam::MakeClassSpecific( std::ostream& /*fout*/, const TStri
 void TMVA::MethodPDEFoam::GetHelpMessage() const
 {
    // provide help message
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "PDE-Foam is a variation of the PDE-RS method using a self-adapting" << Endl;
-   log() << "binning method to divide the multi-dimensional variable space into a" << Endl;
-   log() << "finite number of hyper-rectangles (cells). The binning algorithm " << Endl;
-   log() << "adjusts the size and position of a predefined number of cells such" << Endl;
-   log() << "that the variance of the signal and background densities inside the " << Endl;
-   log() << "cells reaches a minimum" << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Booking options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The PDEFoam classifier supports two different algorithms: " << Endl;
-   log() << Endl;
-   log() << "  (1) Create one foam, which stores the signal over background" << Endl;
-   log() << "      probability density.  During foam buildup the variance of the" << Endl;
-   log() << "      discriminant inside the cells is minimised." << Endl;
-   log() << Endl;
-   log() << "      Booking option:   SigBgSeparated=F" << Endl;
-   log() << Endl;
-   log() << "  (2) Create two separate foams, one for the signal events and one for" << Endl;
-   log() << "      background events.  During foam buildup the variance of the" << Endl;
-   log() << "      event density inside the cells is minimised separately for" << Endl;
-   log() << "      signal and background." << Endl;
-   log() << Endl;
-   log() << "      Booking option:   SigBgSeparated=T" << Endl;
-   log() << Endl;
-   log() << "The following options can be set (the listed values are found to be a" << Endl;
-   log() << "good starting point for most applications):" << Endl;
-   log() << Endl;
-   log() << "        SigBgSeparate   False   Separate Signal and Background" << Endl;
-   log() << "              TailCut   0.001   Fraction of outlier events that excluded" << Endl;
-   log() << "                                from the foam in each dimension " << Endl;
-   log() << "              VolFrac  0.0333   Volume fraction (used for density calculation" << Endl;
-   log() << "                                during foam build-up) " << Endl;
-   log() << "         nActiveCells     500   Maximal number of active cells in final foam " << Endl;
-   log() << "               nSampl    2000   Number of MC events per cell in foam build-up " << Endl;
-   log() << "                 nBin       5   Number of bins used in foam build-up " << Endl;
-   log() << "              CutNmin    True   Requirement for minimal number of events in cell " << Endl;
-   log() << "                 Nmin     100   Number of events in cell required to split cell" << Endl;
-   log() << "               Kernel    None   Kernel type used (possible valuses are: None," << Endl;
-   log() << "                                Gauss)" << Endl;
-   log() << "             Compress    True   Compress XML file " << Endl;
-   log() << Endl;
-   log() << "   Additional regression options:" << Endl;
-   log() << Endl;
-   log() << "MultiTargetRegression   False   Do regression with multiple targets " << Endl;
-   log() << "      TargetSelection    Mean   Target selection method (possible valuses are: " << Endl;
-   log() << "                                Mean, Mpv)" << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The performance of the two implementations was found to be similar for" << Endl;
-   log() << "most examples studied. For the same number of cells per foam, the two-" << Endl;
-   log() << "foam option approximately doubles the amount of computer memory needed" << Endl;
-   log() << "during classification. For special cases where the event-density" << Endl;
-   log() << "distribution of signal and background events is very different, the" << Endl;
-   log() << "two-foam option was found to perform significantly better than the" << Endl;
-   log() << "option with only one foam." << Endl;
-   log() << Endl;
-   log() << "In order to gain better classification performance we recommend to set" << Endl;
-   log() << "the parameter 'nActiveCells' to a high value." << Endl;
-   log() << Endl;
-   log() << "The parameter 'VolFrac' specifies the size of the sampling volume" << Endl;
-   log() << "during foam buildup and should be tuned in order to achieve optimal" << Endl;
-   log() << "performance.  A larger box leads to a reduced statistical uncertainty" << Endl;
-   log() << "for small training samples and to smoother sampling. A smaller box on" << Endl;
-   log() << "the other hand increases the sensitivity to statistical fluctuations" << Endl;
-   log() << "in the training samples, but for sufficiently large training samples" << Endl;
-   log() << "it will result in a more precise local estimate of the sampled" << Endl;
-   log() << "density. In general, higher dimensional problems require larger box" << Endl;
-   log() << "sizes, due to the reduced average number of events per box volume. The" << Endl;
-   log() << "default value of 0.0333 was optimised for an example with 5" << Endl;
-   log() << "observables and training samples of the order of 50000 signal and" << Endl;
-   log() << "background events each." << Endl;
-   log() << Endl;
-   log() << "Furthermore kernel weighting can be activated, which will lead to an" << Endl;
-   log() << "additional performance improvement.  Note, that this will significantly" << Endl;
-   log() << "increase the response time of the method." << Endl;
-   log() << Endl;
-   log() << "The classification results were found to be rather insensitive to the" << Endl;
-   log() << "values of the parameters 'nActiveCells', 'nSamples' and 'nBin'." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "PDE-Foam is a variation of the PDE-RS method using a self-adapting" << Endl;
+   Log() << "binning method to divide the multi-dimensional variable space into a" << Endl;
+   Log() << "finite number of hyper-rectangles (cells). The binning algorithm " << Endl;
+   Log() << "adjusts the size and position of a predefined number of cells such" << Endl;
+   Log() << "that the variance of the signal and background densities inside the " << Endl;
+   Log() << "cells reaches a minimum" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Booking options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The PDEFoam classifier supports two different algorithms: " << Endl;
+   Log() << Endl;
+   Log() << "  (1) Create one foam, which stores the signal over background" << Endl;
+   Log() << "      probability density.  During foam buildup the variance of the" << Endl;
+   Log() << "      discriminant inside the cells is minimised." << Endl;
+   Log() << Endl;
+   Log() << "      Booking option:   SigBgSeparated=F" << Endl;
+   Log() << Endl;
+   Log() << "  (2) Create two separate foams, one for the signal events and one for" << Endl;
+   Log() << "      background events.  During foam buildup the variance of the" << Endl;
+   Log() << "      event density inside the cells is minimised separately for" << Endl;
+   Log() << "      signal and background." << Endl;
+   Log() << Endl;
+   Log() << "      Booking option:   SigBgSeparated=T" << Endl;
+   Log() << Endl;
+   Log() << "The following options can be set (the listed values are found to be a" << Endl;
+   Log() << "good starting point for most applications):" << Endl;
+   Log() << Endl;
+   Log() << "        SigBgSeparate   False   Separate Signal and Background" << Endl;
+   Log() << "              TailCut   0.001   Fraction of outlier events that excluded" << Endl;
+   Log() << "                                from the foam in each dimension " << Endl;
+   Log() << "              VolFrac  0.0333   Volume fraction (used for density calculation" << Endl;
+   Log() << "                                during foam build-up) " << Endl;
+   Log() << "         nActiveCells     500   Maximal number of active cells in final foam " << Endl;
+   Log() << "               nSampl    2000   Number of MC events per cell in foam build-up " << Endl;
+   Log() << "                 nBin       5   Number of bins used in foam build-up " << Endl;
+   Log() << "              CutNmin    True   Requirement for minimal number of events in cell " << Endl;
+   Log() << "                 Nmin     100   Number of events in cell required to split cell" << Endl;
+   Log() << "               Kernel    None   Kernel type used (possible valuses are: None," << Endl;
+   Log() << "                                Gauss)" << Endl;
+   Log() << "             Compress    True   Compress XML file " << Endl;
+   Log() << Endl;
+   Log() << "   Additional regression options:" << Endl;
+   Log() << Endl;
+   Log() << "MultiTargetRegression   False   Do regression with multiple targets " << Endl;
+   Log() << "      TargetSelection    Mean   Target selection method (possible valuses are: " << Endl;
+   Log() << "                                Mean, Mpv)" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The performance of the two implementations was found to be similar for" << Endl;
+   Log() << "most examples studied. For the same number of cells per foam, the two-" << Endl;
+   Log() << "foam option approximately doubles the amount of computer memory needed" << Endl;
+   Log() << "during classification. For special cases where the event-density" << Endl;
+   Log() << "distribution of signal and background events is very different, the" << Endl;
+   Log() << "two-foam option was found to perform significantly better than the" << Endl;
+   Log() << "option with only one foam." << Endl;
+   Log() << Endl;
+   Log() << "In order to gain better classification performance we recommend to set" << Endl;
+   Log() << "the parameter 'nActiveCells' to a high value." << Endl;
+   Log() << Endl;
+   Log() << "The parameter 'VolFrac' specifies the size of the sampling volume" << Endl;
+   Log() << "during foam buildup and should be tuned in order to achieve optimal" << Endl;
+   Log() << "performance.  A larger box leads to a reduced statistical uncertainty" << Endl;
+   Log() << "for small training samples and to smoother sampling. A smaller box on" << Endl;
+   Log() << "the other hand increases the sensitivity to statistical fluctuations" << Endl;
+   Log() << "in the training samples, but for sufficiently large training samples" << Endl;
+   Log() << "it will result in a more precise local estimate of the sampled" << Endl;
+   Log() << "density. In general, higher dimensional problems require larger box" << Endl;
+   Log() << "sizes, due to the reduced average number of events per box volume. The" << Endl;
+   Log() << "default value of 0.0333 was optimised for an example with 5" << Endl;
+   Log() << "observables and training samples of the order of 50000 signal and" << Endl;
+   Log() << "background events each." << Endl;
+   Log() << Endl;
+   Log() << "Furthermore kernel weighting can be activated, which will lead to an" << Endl;
+   Log() << "additional performance improvement. Note that Gauss weighting will" << Endl;
+   Log() << "significantly increase the response time of the method. LinNeighbors" << Endl;
+   Log() << "weighting performs a linear interpolation with direct neighbor cells" << Endl;
+   Log() << "for each dimension and is much faster than Gauss weighting." << Endl;
+   Log() << Endl;
+   Log() << "The classification results were found to be rather insensitive to the" << Endl;
+   Log() << "values of the parameters 'nSamples' and 'nBin'." << Endl;
 }

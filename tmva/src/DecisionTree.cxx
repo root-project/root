@@ -140,7 +140,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize, I
       fRegType = new RegressionVariance();
       if ( nCuts <=0 ) {
          fNCuts = 200;
-         log() << kWarning << " You had choosen the training mode using optimal cuts, not\n"
+         Log() << kWarning << " You had choosen the training mode using optimal cuts, not\n"
                << " based on a grid of " << fNCuts << " by setting the option NCuts < 0\n"
                << " as this doesn't exist yet, I set it to " << fNCuts << " and use the grid"
                << Endl;
@@ -195,16 +195,16 @@ void TMVA::DecisionTree::SetParentTreeInNodes( DecisionTreeNode *n )
    if (n == NULL) { //default, start at the tree top, then descend recursively
       n = (DecisionTreeNode*) this->GetRoot();
       if (n == NULL) {
-         log() << kFATAL << "SetParentTreeNodes: started with undefined ROOT node" <<Endl;
+         Log() << kFATAL << "SetParentTreeNodes: started with undefined ROOT node" <<Endl;
          return ;
       }
    } 
   
    if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) != NULL) ) {
-      log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
+      Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
    }  else if ((this->GetLeftDaughter(n) != NULL) && (this->GetRightDaughter(n) == NULL) ) {
-      log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
+      Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
    } 
    else { 
@@ -246,7 +246,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
       fNvars = eventSample[0]->GetNVars();
       fVariableImportance.resize(fNvars);
    }
-   else log() << kFATAL << ":<BuildTree> eventsample Size == 0 " << Endl;
+   else Log() << kFATAL << ":<BuildTree> eventsample Size == 0 " << Endl;
   
    Float_t s=0, b=0;
    Float_t suw=0, buw=0;
@@ -280,7 +280,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
    }
   
    if (s+b < 0) {
-      log() << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. " 
+      Log() << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. " 
             << "(Nsig="<<s<<" Nbkg="<<b<<" Probaby you use a Monte Carlo with negative weights. That should in principle " 
             << "be fine as long as on average you end up with something positive. For this you have to make sure that the "
             << "minimul number of (unweighted) events demanded for a tree node (currently you use: nEventsMin="<<fMinSize
@@ -363,7 +363,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
       
          // sanity check
          if (leftSample.size() == 0 || rightSample.size() == 0) {
-            log() << kFATAL << "<TrainNode> all events went to the same branch" << Endl
+            Log() << kFATAL << "<TrainNode> all events went to the same branch" << Endl
                   << "---                       Hence new node == old node ... check" << Endl
                   << "---                         left:" << leftSample.size()
                   << " right:" << rightSample.size() << Endl
@@ -522,7 +522,7 @@ Double_t TMVA::DecisionTree::PruneTree( vector<Event*>* validationSample )
          tool = new CostComplexityPruneTool();
       }
    else {
-      log() << kFATAL << "Selected pruning method not yet implemented "
+      Log() << kFATAL << "Selected pruning method not yet implemented "
             << Endl;
    }
    if(!tool) return 0.0;
@@ -530,22 +530,22 @@ Double_t TMVA::DecisionTree::PruneTree( vector<Event*>* validationSample )
    tool->SetPruneStrength(GetPruneStrength());
    if(tool->IsAutomatic()) {
       if(validationSample == NULL) 
-         log() << kFATAL << "Cannot automate the pruning algorithm without an "
+         Log() << kFATAL << "Cannot automate the pruning algorithm without an "
                << "independent validation sample!" << Endl;
       if(validationSample->size() == 0) 
-         log() << kFATAL << "Cannot automate the pruning algorithm without an "
+         Log() << kFATAL << "Cannot automate the pruning algorithm without an "
                << "independent validation sample!" << Endl;
    }
 
    info = tool->CalculatePruningInfo(this,validationSample);
    if(!info) {
       delete tool;
-      log() << kFATAL << "Error pruning tree! Check prune.log for more information." 
+      Log() << kFATAL << "Error pruning tree! Check prune.log for more information." 
             << Endl;
    }
    Double_t pruneStrength = info->PruneStrength;
 
-   //   log() << kDEBUG << "Optimal prune strength (alpha): " << pruneStrength
+   //   Log() << kDEBUG << "Optimal prune strength (alpha): " << pruneStrength
    //           << " has quality index " << info->QualityIndex << Endl;
    
 
@@ -591,7 +591,7 @@ Double_t TMVA::DecisionTree::TestPrunedTreeQuality( const DecisionTreeNode* n, I
    if (n == NULL) { // default, start at the tree top, then descend recursively
       n = (DecisionTreeNode*) this->GetRoot();
       if (n == NULL) {
-         log() << kFATAL << "TestPrunedTreeQuality: started with undefined ROOT node" <<Endl;
+         Log() << kFATAL << "TestPrunedTreeQuality: started with undefined ROOT node" <<Endl;
          return 0;
       }
    } 
@@ -632,7 +632,7 @@ void TMVA::DecisionTree::CheckEventWithPrunedTree( const Event& e ) const
 
    DecisionTreeNode* current = (DecisionTreeNode*) this->GetRoot();
    if (current == NULL) {
-      log() << kFATAL << "CheckEventWithPrunedTree: started with undefined ROOT node" <<Endl;
+      Log() << kFATAL << "CheckEventWithPrunedTree: started with undefined ROOT node" <<Endl;
    }
 
    while(current != NULL) {
@@ -680,7 +680,7 @@ UInt_t TMVA::DecisionTree::CountLeafNodes( TMVA::DecisionTreeNode *n )
    if (n == NULL) { // default, start at the tree top, then descend recursively
       n = (DecisionTreeNode*) this->GetRoot();
       if (n == NULL) {
-         log() << kFATAL << "CountLeafNodes: started with undefined ROOT node" <<Endl;
+         Log() << kFATAL << "CountLeafNodes: started with undefined ROOT node" <<Endl;
          return 0;
       }
    } 
@@ -709,7 +709,7 @@ void TMVA::DecisionTree::DescendTree( DecisionTreeNode* n )
    if (n == NULL) { // default, start at the tree top, then descend recursively
       n = (DecisionTreeNode*) this->GetRoot();
       if (n == NULL) {
-         log() << kFATAL << "DescendTree: started with undefined ROOT node" <<Endl;
+         Log() << kFATAL << "DescendTree: started with undefined ROOT node" <<Endl;
          return ;
       }
    } 
@@ -718,11 +718,11 @@ void TMVA::DecisionTree::DescendTree( DecisionTreeNode* n )
       // do nothing
    } 
    else if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) != NULL) ) {
-      log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
+      Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
    }  
    else if ((this->GetLeftDaughter(n) != NULL) && (this->GetRightDaughter(n) == NULL) ) {
-      log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
+      Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
    } 
    else { 
@@ -954,7 +954,7 @@ Float_t TMVA::DecisionTree::TrainNodeFast( const vector<TMVA::Event*> & eventSam
             }
          }
          if (nSelS_unWeighted[ivar][nBins-1] +nSelB_unWeighted[ivar][nBins-1] != eventSample.size()) {
-            log() << kFATAL << "Helge, you have a bug ....nSelS_unw..+nSelB_unw..= "
+            Log() << kFATAL << "Helge, you have a bug ....nSelS_unw..+nSelB_unw..= "
                   << nSelS_unWeighted[ivar][nBins-1] +nSelB_unWeighted[ivar][nBins-1] 
                   << " while eventsample size = " << eventSample.size()
                   << Endl;
@@ -962,7 +962,7 @@ Float_t TMVA::DecisionTree::TrainNodeFast( const vector<TMVA::Event*> & eventSam
          double lastBins=nSelS[ivar][nBins-1] +nSelB[ivar][nBins-1];
          double totalSum=nTotS+nTotB;
          if (TMath::Abs(lastBins-totalSum)/totalSum>0.01) {
-            log() << kFATAL << "Helge, you have another bug ....nSelS+nSelB= "
+            Log() << kFATAL << "Helge, you have another bug ....nSelS+nSelB= "
                   << lastBins
                   << " while total number of events = " << totalSum
                   << Endl;
@@ -1006,7 +1006,7 @@ Float_t TMVA::DecisionTree::TrainNodeFast( const vector<TMVA::Event*> & eventSam
                   separationGain = sepTmp;
                   mxVar = ivar;
                   cutIndex = iBin;
-                  if (cutIndex >= fNCuts) log()<<kFATAL<<"ibin for cut " << iBin << Endl; 
+                  if (cutIndex >= fNCuts) Log()<<kFATAL<<"ibin for cut " << iBin << Endl; 
                }
             }
          }
@@ -1145,7 +1145,7 @@ Float_t TMVA::DecisionTree::TrainNodeFull( const vector<TMVA::Event*> & eventSam
       for( it = bdtEventSample.begin(); it != it_end; ++it ) {
          if( index == 0 ) { ++index; continue; }
          if( *(*it) == NULL ) {
-            log() << kFATAL << "In TrainNodeFull(): have a null event! Where index=" 
+            Log() << kFATAL << "In TrainNodeFull(): have a null event! Where index=" 
                   << index << ", and parent node=" << node->GetParent() << Endl;
             break;
          }
@@ -1222,14 +1222,14 @@ Double_t TMVA::DecisionTree::CheckEvent( const TMVA::Event & e, Bool_t UseYesNoL
   
    TMVA::DecisionTreeNode *current = (TMVA::DecisionTreeNode*)this->GetRoot();
    if (!current)
-      log() << kFATAL << "CheckEvent: started with undefined ROOT node" <<Endl;
+      Log() << kFATAL << "CheckEvent: started with undefined ROOT node" <<Endl;
 
    while (current->GetNodeType() == 0) { // intermediate node in a (pruned) tree
       current = (current->GoesRight(e)) ? 
          (TMVA::DecisionTreeNode*)current->GetRight() :
          (TMVA::DecisionTreeNode*)current->GetLeft();
       if (!current) {
-         log() << kFATAL << "DT::CheckEvent: inconsistent tree structure" <<Endl;
+         Log() << kFATAL << "DT::CheckEvent: inconsistent tree structure" <<Endl;
       }
 
    }
@@ -1256,7 +1256,7 @@ Float_t  TMVA::DecisionTree::SamplePurity( vector<TMVA::Event*> eventSample )
    }
    // sanity check
    if (sumtot!= (sumsig+sumbkg)){
-      log() << kFATAL << "<SamplePurity> sumtot != sumsig+sumbkg"
+      Log() << kFATAL << "<SamplePurity> sumtot != sumsig+sumbkg"
             << sumtot << " " << sumsig << " " << sumbkg << Endl;
    }
    if (sumtot>0) return sumsig/(sumsig + sumbkg);
@@ -1295,7 +1295,7 @@ Double_t  TMVA::DecisionTree::GetVariableImportance( UInt_t ivar )
    vector<Double_t> relativeImportance = this->GetVariableImportance();
    if (ivar < fNvars) return relativeImportance[ivar];
    else {
-      log() << kFATAL << "<GetVariableImportance>" << Endl
+      Log() << kFATAL << "<GetVariableImportance>" << Endl
             << "---                     ivar = " << ivar << " is out of range " << Endl;
    }
   

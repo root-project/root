@@ -257,8 +257,8 @@ void TMVA::MethodBDT::ProcessOptions()
    else if (fSepTypeS == "sdivsqrtsplusb")         fSepType = new SdivSqrtSplusB();
    else if (fSepTypeS == "regressionvariance")     fSepType = NULL;
    else {
-      log() << kINFO << GetOptions() << Endl;
-      log() << kFATAL << "<ProcessOptions> unknown Separation Index option called" << Endl;
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<ProcessOptions> unknown Separation Index option called" << Endl;
    }
 
    fPruneMethodS.ToLower();
@@ -266,19 +266,22 @@ void TMVA::MethodBDT::ProcessOptions()
    else if (fPruneMethodS == "costcomplexity") fPruneMethod = DecisionTree::kCostComplexityPruning;
    else if (fPruneMethodS == "nopruning")      fPruneMethod = DecisionTree::kNoPruning;
    else {
-      log() << kINFO << GetOptions() << Endl;
-      log() << kFATAL << "<ProcessOptions> unknown PruneMethod option called" << Endl;
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<ProcessOptions> unknown PruneMethod option called" << Endl;
    }
    if (fPruneStrength < 0 && (fPruneMethod != DecisionTree::kNoPruning) && fBoostType!="Grad") fAutomatic = kTRUE;
    else fAutomatic = kFALSE;
-
+   if (fAutomatic && fPruneMethod==DecisionTree::kExpectedErrorPruning){
+      Log() << kFATAL 
+            <<  "Sorry autmoatic pruning strength determination is not implemented yet for ExpectedErrorPruning" << Endl;
+   }
    fAdaBoostR2Loss.ToLower();
    
    if (fBoostType!="Grad") fBaggedGradBoost=kFALSE;
    else fPruneMethod = DecisionTree::kNoPruning;
    if (fFValidationEvents < 0.0) fFValidationEvents = 0.0;
    if (fAutomatic && fFValidationEvents > 0.5) {
-      log() << kWARNING << "You have chosen to use more than half of your training sample "
+      Log() << kWARNING << "You have chosen to use more than half of your training sample "
             << "to optimize the automatic pruning algorithm. This is probably wasteful "
             << "and your overall results will be degraded. Are you sure you want this?"
             << Endl;
@@ -286,7 +289,7 @@ void TMVA::MethodBDT::ProcessOptions()
 
 
    if (this->Data()->HasNegativeEventWeights()){
-      log() << kINFO << " You are using a Monte Carlo that has also negative weights. "
+      Log() << kINFO << " You are using a Monte Carlo that has also negative weights. "
             << "That should in principle be fine as long as on average you end up with "
             << "something positive. For this you have to make sure that the minimal number "
             << "of (un-weighted) events demanded for a tree node (currently you use: nEventsMin="
@@ -299,23 +302,23 @@ void TMVA::MethodBDT::ProcessOptions()
 
    if (DoRegression()) {
       if (fUseYesNoLeaf && !IsConstructedFromWeightFile()){
-         log() << kWARNING << "Regression Trees do not work with fUseYesNoLeaf=TRUE --> I will set it to FALSE" << Endl;
+         Log() << kWARNING << "Regression Trees do not work with fUseYesNoLeaf=TRUE --> I will set it to FALSE" << Endl;
          fUseYesNoLeaf = kFALSE;
       }
 
       if (fSepType != NULL){
-         log() << kWARNING << "Regression Trees do not work with Separation type other than <RegressionVariance> --> I will use it instead" << Endl;
+         Log() << kWARNING << "Regression Trees do not work with Separation type other than <RegressionVariance> --> I will use it instead" << Endl;
          fSepType = NULL;
       }
    }
    if (fRandomisedTrees){
-      log() << kINFO << " Randomised trees use *bagging* as *boost* method and no pruning" << Endl;
+      Log() << kINFO << " Randomised trees use *bagging* as *boost* method and no pruning" << Endl;
       fPruneMethod = DecisionTree::kNoPruning;
       fBoostType   = "Bagging";
    }
 
    //    if (2*fNodeMinEvents >  Data()->GetNTrainingEvents()) {
-   //       log() << kFATAL << "you've demanded a minimun number of events in a leaf node " 
+   //       Log() << kFATAL << "you've demanded a minimun number of events in a leaf node " 
    //             << " that is larger than 1/2 the total number of events in the training sample."
    //             << " Hence I cannot make any split at all... this will not work!" << Endl;
    //    }
@@ -362,7 +365,7 @@ void TMVA::MethodBDT::InitEventSample( void )
    // Write all Events from the Tree into a vector of Events, that are
    // more easily manipulated. This method should never be called without
    // existing trainingTree, as it the vector of events from the ROOT training tree
-   if (!HasTrainingTree()) log() << kFATAL << "<Init> Data().TrainingTree() is zero pointer" << Endl;
+   if (!HasTrainingTree()) Log() << kFATAL << "<Init> Data().TrainingTree() is zero pointer" << Endl;
 
    UInt_t nevents = Data()->GetNTrainingEvents();
    Bool_t first=kTRUE;
@@ -374,7 +377,7 @@ void TMVA::MethodBDT::InitEventSample( void )
       if (!IgnoreEventsWithNegWeightsInTraining() || event->GetWeight() > 0) {
          if (first && event->GetWeight() < 0) {
             first = kFALSE;
-            log() << kINFO << "Events with negative event weights are ignored during "
+            Log() << kINFO << "Events with negative event weights are ignored during "
                   << "the BDT training (option NoNegWeightsInTraining=" 
                   << IgnoreEventsWithNegWeightsInTraining() <<  ")" << Endl;
          }
@@ -391,7 +394,7 @@ void TMVA::MethodBDT::InitEventSample( void )
       }
    }
    if (fAutomatic) {
-      log() << kINFO << "<InitEventSample> Internally I use " << fEventSample.size()
+      Log() << kINFO << "<InitEventSample> Internally I use " << fEventSample.size()
             << " for Training  and " << fValidationSample.size()
             << " for Pruning Validation (" << ((Float_t)fValidationSample.size())/((Float_t)fEventSample.size()+fValidationSample.size())*100.0
             << "% of training used for validation)" << Endl;
@@ -406,12 +409,12 @@ void TMVA::MethodBDT::Train()
    // fill the STL Vector with the event sample
    InitEventSample();
 
-   if (IsNormalised()) log() << kFATAL << "\"Normalise\" option cannot be used with BDT; "
+   if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with BDT; "
                              << "please remove the option from the configuration string, or "
                              << "use \"!Normalise\""
                              << Endl;
 
-   log() << kINFO << "Training "<< fNTrees << " Decision Trees ... patience please" << Endl;
+   Log() << kINFO << "Training "<< fNTrees << " Decision Trees ... patience please" << Endl;
 
    Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
 
@@ -537,14 +540,14 @@ void TMVA::MethodBDT::Train()
    alpha->Write();
 
    // get elapsed time
-   log() << kINFO << "<Train> elapsed time: " << timer.GetElapsedTime()
+   Log() << kINFO << "<Train> elapsed time: " << timer.GetElapsedTime()
          << "                              " << Endl;
    if (fPruneMethod == DecisionTree::kNoPruning) {
-      log() << kINFO << "<Train> average number of nodes (w/o pruning) : "
+      Log() << kINFO << "<Train> average number of nodes (w/o pruning) : "
             << nNodesBeforePruningCount/fNTrees << Endl;
    }
    else {
-      log() << kINFO << "<Train> average number of nodes before/after pruning : "
+      Log() << kINFO << "<Train> average number of nodes before/after pruning : "
             << nNodesBeforePruningCount/fNTrees << " / "
             << nNodesAfterPruningCount/fNTrees
             << Endl;
@@ -668,8 +671,8 @@ Double_t TMVA::MethodBDT::Boost( vector<TMVA::Event*> eventSample, DecisionTree 
    else if (fBoostType=="AdaBoostR2")  return this->AdaBoostR2(eventSample, dt);
    else if (fBoostType=="Grad")        return this->GradBoost (eventSample, dt);
    else {
-      log() << kINFO << GetOptions() << Endl;
-      log() << kFATAL << "<Boost> unknown boost option called" << Endl;
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<Boost> unknown boost option called" << Endl;
    }
 
    return -1;
@@ -725,7 +728,7 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
          
       }
       else {
-         log() << kFATAL << " you've chosen a Loss type for Adaboost other than linear, quadratic or exponential " 
+         Log() << kFATAL << " you've chosen a Loss type for Adaboost other than linear, quadratic or exponential " 
                << " namely " << fAdaBoostR2Loss << "\n" 
                << "and this is not implemented... a typo in the options ??" <<Endl;
       }
@@ -736,12 +739,12 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
    if (err >= 0.5) { // sanity check ... should never happen as otherwise there is apparently
       // something odd with the assignement of the leaf nodes (rem: you use the training
       // events for this determination of the error rate)
-      log() << kWARNING << " The error rate in the BDT boosting is > 0.5. ("<< err
+      Log() << kWARNING << " The error rate in the BDT boosting is > 0.5. ("<< err
             << ") That should not happen, please check your code (i.e... the BDT code), I "
             << " set it to 0.5.. just to continue.." <<  Endl;
       err = 0.5;
    } else if (err < 0) {
-      log() << kWARNING << " The error rate in the BDT boosting is < 0. That can happen"
+      Log() << kWARNING << " The error rate in the BDT boosting is < 0. That can happen"
             << " due to improper treatment of negative weights in a Monte Carlo.. (if you have"
             << " an idea on how to do it in a better way, please let me know (Helge.Voss@cern.ch)"
             << " for the time being I set it to its absolute value.. just to continue.." <<  Endl;
@@ -821,7 +824,7 @@ Double_t TMVA::MethodBDT::AdaBoostR2( vector<TMVA::Event*> eventSample, Decision
 {
    // adaption of the AdaBoost to regression problems (see H.Drucker 1997)
 
-   if ( !DoRegression() ) log() << kFATAL << "Somehow you chose a regression boost method for a classification job" << Endl;
+   if ( !DoRegression() ) Log() << kFATAL << "Somehow you chose a regression boost method for a classification job" << Endl;
 
    Double_t err=0, sumw=0, sumwfalse=0, sumwfalse2=0;
    Double_t maxDev=0;
@@ -852,7 +855,7 @@ Double_t TMVA::MethodBDT::AdaBoostR2( vector<TMVA::Event*> eventSample, Decision
       
    }
    else {
-      log() << kFATAL << " you've chosen a Loss type for Adaboost other than linear, quadratic or exponential " 
+      Log() << kFATAL << " you've chosen a Loss type for Adaboost other than linear, quadratic or exponential " 
             << " namely " << fAdaBoostR2Loss << "\n" 
             << "and this is not implemented... a typo in the options ??" <<Endl;
    }
@@ -860,11 +863,11 @@ Double_t TMVA::MethodBDT::AdaBoostR2( vector<TMVA::Event*> eventSample, Decision
 
 
    if (err >= 0.5) {
-      log() << kFATAL << " The error rate in the BDT boosting is > 0.5. "
+      Log() << kFATAL << " The error rate in the BDT boosting is > 0.5. "
             << " i.e. " << err 
             << " That should induce a stop condition of the boosting " << Endl;
    } else if (err < 0) {
-      log() << kWARNING << " The error rate in the BDT boosting is < 0. That can happen"
+      Log() << kWARNING << " The error rate in the BDT boosting is < 0. That can happen"
             << " due to improper treatment of negative weights in a Monte Carlo.. (if you have"
             << " an idea on how to do it in a better way, please let me know (Helge.Voss@cern.ch)"
             << " for the time being I set it to its absolute value.. just to continue.." <<  Endl;
@@ -980,7 +983,7 @@ void  TMVA::MethodBDT::ReadWeightsFromStream( istream& istr )
    Int_t analysisType;
 
    istr >> dummy >> fNTrees >> dummy >> dummy >> analysisType;
-   log() << kINFO << "Read " << fNTrees << " Decision trees" << Endl;
+   Log() << kINFO << "Read " << fNTrees << " Decision trees" << Endl;
 
    for (UInt_t i=0;i<fForest.size();i++) delete fForest[i];
    fForest.clear();
@@ -991,7 +994,7 @@ void  TMVA::MethodBDT::ReadWeightsFromStream( istream& istr )
       istr >> dummy >> iTree >> dummy >> boostWeight;
       if (iTree != i) {
          fForest.back()->Print( cout );
-         log() << kFATAL << "Error while reading weight file; mismatch iTree="
+         Log() << kFATAL << "Error while reading weight file; mismatch iTree="
                << iTree << " i=" << i
                << " dummy " << dummy
                << " boostweight " << boostWeight
@@ -1116,7 +1119,7 @@ void  TMVA::MethodBDT::WriteMonitoringHistosToFile( void ) const
 {
    // Here we could write some histograms created during the processing
    // to the output file.
-   log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
+   Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
 
    Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, Types::kMaxAnalysisType);
    results->GetStorage()->Write();
@@ -1154,7 +1157,7 @@ Double_t TMVA::MethodBDT::GetVariableImportance( UInt_t ivar )
 
    vector<Double_t> relativeImportance = this->GetVariableImportance();
    if (ivar < (UInt_t)relativeImportance.size()) return relativeImportance[ivar];
-   else log() << kFATAL << "<GetVariableImportance> ivar = " << ivar << " is out of range " << Endl;
+   else Log() << kFATAL << "<GetVariableImportance> ivar = " << ivar << " is out of range " << Endl;
 
    return -1;
 }
@@ -1183,56 +1186,56 @@ void TMVA::MethodBDT::GetHelpMessage() const
    //
    // typical length of text line:
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "Boosted Decision Trees are a collection of individual decision" << Endl;
-   log() << "trees which form a multivariate classifier by (weighted) majority " << Endl;
-   log() << "vote of the individual trees. Consecutive decision trees are  " << Endl;
-   log() << "trained using the original training data set with re-weighted " << Endl;
-   log() << "events. By default, the AdaBoost method is employed, which gives " << Endl;
-   log() << "events that were misclassified in the previous tree a larger " << Endl;
-   log() << "weight in the training of the following tree." << Endl;
-   log() << Endl;
-   log() << "Decision trees are a sequence of binary splits of the data sample" << Endl;
-   log() << "using a single descriminant variable at a time. A test event " << Endl;
-   log() << "ending up after the sequence of left-right splits in a final " << Endl;
-   log() << "(\"leaf\") node is classified as either signal or background" << Endl;
-   log() << "depending on the majority type of training events in that node." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "By the nature of the binary splits performed on the individual" << Endl;
-   log() << "variables, decision trees do not deal well with linear correlations" << Endl;
-   log() << "between variables (they need to approximate the linear split in" << Endl;
-   log() << "the two dimensional space by a sequence of splits on the two " << Endl;
-   log() << "variables individually). Hence decorrelation could be useful " << Endl;
-   log() << "to optimise the BDT performance." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The two most important parameters in the configuration are the  " << Endl;
-   log() << "minimal number of events requested by a leaf node (option " << Endl;
-   log() << "\"nEventsMin\"). If this number is too large, detailed features " << Endl;
-   log() << "in the parameter space cannot be modelled. If it is too small, " << Endl;
-   log() << "the risk to overtrain rises." << Endl;
-   log() << "   (Imagine the decision tree is split until the leaf node contains" << Endl;
-   log() << "    only a single event. In such a case, no training event is  " << Endl;
-   log() << "    misclassified, while the situation will look very different" << Endl;
-   log() << "    for the test sample.)" << Endl;
-   log() << Endl;
-   log() << "The default minimal number is currently set to " << Endl;
-   log() << "   max(20, (N_training_events / N_variables^2 / 10)) " << Endl;
-   log() << "and can be changed by the user." << Endl;
-   log() << Endl;
-   log() << "The other crucial parameter, the pruning strength (\"PruneStrength\")," << Endl;
-   log() << "is also related to overtraining. It is a regularisation parameter " << Endl;
-   log() << "that is used when determining after the training which splits " << Endl;
-   log() << "are considered statistically insignificant and are removed. The" << Endl;
-   log() << "user is advised to carefully watch the BDT screen output for" << Endl;
-   log() << "the comparison between efficiencies obtained on the training and" << Endl;
-   log() << "the independent test sample. They should be equal within statistical" << Endl;
-   log() << "errors, in order to minimize statistical fluctuations in different samples." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "Boosted Decision Trees are a collection of individual decision" << Endl;
+   Log() << "trees which form a multivariate classifier by (weighted) majority " << Endl;
+   Log() << "vote of the individual trees. Consecutive decision trees are  " << Endl;
+   Log() << "trained using the original training data set with re-weighted " << Endl;
+   Log() << "events. By default, the AdaBoost method is employed, which gives " << Endl;
+   Log() << "events that were misclassified in the previous tree a larger " << Endl;
+   Log() << "weight in the training of the following tree." << Endl;
+   Log() << Endl;
+   Log() << "Decision trees are a sequence of binary splits of the data sample" << Endl;
+   Log() << "using a single descriminant variable at a time. A test event " << Endl;
+   Log() << "ending up after the sequence of left-right splits in a final " << Endl;
+   Log() << "(\"leaf\") node is classified as either signal or background" << Endl;
+   Log() << "depending on the majority type of training events in that node." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "By the nature of the binary splits performed on the individual" << Endl;
+   Log() << "variables, decision trees do not deal well with linear correlations" << Endl;
+   Log() << "between variables (they need to approximate the linear split in" << Endl;
+   Log() << "the two dimensional space by a sequence of splits on the two " << Endl;
+   Log() << "variables individually). Hence decorrelation could be useful " << Endl;
+   Log() << "to optimise the BDT performance." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The two most important parameters in the configuration are the  " << Endl;
+   Log() << "minimal number of events requested by a leaf node (option " << Endl;
+   Log() << "\"nEventsMin\"). If this number is too large, detailed features " << Endl;
+   Log() << "in the parameter space cannot be modelled. If it is too small, " << Endl;
+   Log() << "the risk to overtrain rises." << Endl;
+   Log() << "   (Imagine the decision tree is split until the leaf node contains" << Endl;
+   Log() << "    only a single event. In such a case, no training event is  " << Endl;
+   Log() << "    misclassified, while the situation will look very different" << Endl;
+   Log() << "    for the test sample.)" << Endl;
+   Log() << Endl;
+   Log() << "The default minimal number is currently set to " << Endl;
+   Log() << "   max(20, (N_training_events / N_variables^2 / 10)) " << Endl;
+   Log() << "and can be changed by the user." << Endl;
+   Log() << Endl;
+   Log() << "The other crucial parameter, the pruning strength (\"PruneStrength\")," << Endl;
+   Log() << "is also related to overtraining. It is a regularisation parameter " << Endl;
+   Log() << "that is used when determining after the training which splits " << Endl;
+   Log() << "are considered statistically insignificant and are removed. The" << Endl;
+   Log() << "user is advised to carefully watch the BDT screen output for" << Endl;
+   Log() << "the comparison between efficiencies obtained on the training and" << Endl;
+   Log() << "the independent test sample. They should be equal within statistical" << Endl;
+   Log() << "errors, in order to minimize statistical fluctuations in different samples." << Endl;
 }
 
 //_______________________________________________________________________
@@ -1379,7 +1382,7 @@ void TMVA::MethodBDT::MakeClassInstantiateNode( DecisionTreeNode *n, std::ostrea
 {
    // recursively descends a tree and writes the node instance to the output streem
    if (n == NULL) {
-      log() << kFATAL << "MakeClassInstantiateNode: started with undefined node" <<Endl;
+      Log() << kFATAL << "MakeClassInstantiateNode: started with undefined node" <<Endl;
       return ;
    }
    fout << "NN("<<endl;

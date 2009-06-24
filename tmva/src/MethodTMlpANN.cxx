@@ -163,8 +163,8 @@ void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
    fMLPBuildOptions += fHiddenLayer;
    fMLPBuildOptions += "type";
 
-   log() << kINFO << "Use " << fNcycles << " training cycles" << Endl;
-   log() << kINFO << "Use configuration (nodes per hidden layer): " << fHiddenLayer << Endl;  
+   Log() << kINFO << "Use " << fNcycles << " training cycles" << Endl;
+   Log() << kINFO << "Use configuration (nodes per hidden layer): " << fHiddenLayer << Endl;  
 }
 
 //_______________________________________________________________________
@@ -202,7 +202,7 @@ void TMVA::MethodTMlpANN::ProcessOptions()
    CreateMLPOptions(fLayerSpec);
 
    if (IgnoreEventsWithNegWeightsInTraining()) {
-      log() << kFATAL << "Mechanism to ignore events with negative weights in training not available for method"
+      Log() << kFATAL << "Mechanism to ignore events with negative weights in training not available for method"
             << GetMethodTypeName() 
             << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
             << Endl;
@@ -282,8 +282,8 @@ void TMVA::MethodTMlpANN::Train( void )
    TString testList  = TString("!(") + trainList + ")";
 
    // print the requirements
-   log() << kINFO << "Requirement for training   events: \"" << trainList << "\"" << Endl;
-   log() << kINFO << "Requirement for validation events: \"" << testList << "\"" << Endl;
+   Log() << kINFO << "Requirement for training   events: \"" << trainList << "\"" << Endl;
+   Log() << kINFO << "Requirement for validation events: \"" << testList << "\"" << Endl;
 
    // localTrainingTree->Print();
 
@@ -310,7 +310,7 @@ void TMVA::MethodTMlpANN::Train( void )
    else if (fLearningMethod == "fletcherreeves"  ) learningMethod = TMultiLayerPerceptron::kFletcherReeves;
    else if (fLearningMethod == "bfgs"            ) learningMethod = TMultiLayerPerceptron::kBFGS;
    else {
-      log() << kFATAL << "Unknown Learning Method: \"" << fLearningMethod << "\"" << Endl;
+      Log() << kFATAL << "Unknown Learning Method: \"" << fLearningMethod << "\"" << Endl;
    }
    fMLP->SetLearningMethod( learningMethod );
 
@@ -445,7 +445,7 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream& istr )
    fout.close();
    // 2nd: load the weights from the temporary file into the MLP
    // the MLP is already build
-   log() << kINFO << "Load TMLP weights" << Endl;
+   Log() << kINFO << "Load TMLP weights" << Endl;
    fMLP->LoadWeights( "weights/TMlp.nn.weights.temp" );
    // here we can delete the temporary file
    // how?
@@ -464,7 +464,7 @@ void TMVA::MethodTMlpANN::MakeClass( const TString& theClassFileName ) const
    else
       classFileName = theClassFileName;
 
-   log() << kINFO << "Creating specific (TMultiLayerPerceptron) standalone response class: " << Endl;
+   Log() << kINFO << "Creating specific (TMultiLayerPerceptron) standalone response class: " << Endl;
    fMLP->Export( classFileName.Data() );
 }
 
@@ -482,17 +482,17 @@ void TMVA::MethodTMlpANN::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "This feed-forward multilayer perceptron neural network is the " << Endl;
-   log() << "standard implementation distributed with ROOT (class TMultiLayerPerceptron)." << Endl;
-   log() << Endl;
-   log() << "Detailed information is available here:" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "This feed-forward multilayer perceptron neural network is the " << Endl;
+   Log() << "standard implementation distributed with ROOT (class TMultiLayerPerceptron)." << Endl;
+   Log() << Endl;
+   Log() << "Detailed information is available here:" << Endl;
    if (gConfig().WriteOptionsReference()) {
-      log() << "<a href=\"http://root.cern.ch/root/html/TMultiLayerPerceptron.html\">";
-      log() << "http://root.cern.ch/root/html/TMultiLayerPerceptron.html</a>" << Endl;
+      Log() << "<a href=\"http://root.cern.ch/root/html/TMultiLayerPerceptron.html\">";
+      Log() << "http://root.cern.ch/root/html/TMultiLayerPerceptron.html</a>" << Endl;
    }
-   else log() << "http://root.cern.ch/root/html/TMultiLayerPerceptron.html" << Endl;
-   log() << Endl;
+   else Log() << "http://root.cern.ch/root/html/TMultiLayerPerceptron.html" << Endl;
+   Log() << Endl;
 }

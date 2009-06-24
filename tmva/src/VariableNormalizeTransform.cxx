@@ -86,7 +86,7 @@ Bool_t TMVA::VariableNormalizeTransform::PrepareTransformation( const std::vecto
    // prepare transformation
    if (!IsEnabled() || IsCreated()) return kTRUE;
 
-   log() << kINFO << "Preparing the transformation." << Endl;
+   Log() << kINFO << "Preparing the transformation." << Endl;
 
    Initialize();
 
@@ -101,7 +101,7 @@ Bool_t TMVA::VariableNormalizeTransform::PrepareTransformation( const std::vecto
 const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Event* const ev, Int_t cls ) const
 {
    // apply the decorrelation transformation
-   if (!IsCreated()) log() << kFATAL << "Transformation not yet created" << Endl;
+   if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
    // if cls (the class chosen by the user) not existing, 
    // assume that he wants to have the matrix for all classes together. 
@@ -112,8 +112,8 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
    const UInt_t nvars = GetNVariables();
    const UInt_t ntgts = ev->GetNTargets();
    if (nvars != ev->GetNVariables()) {
-      log() << kFATAL << "Transformation defined for a different number of variables " << GetNVariables() 
-              << "  " << ev->GetNVariables() << Endl;
+      Log() << kFATAL << "Transformation defined for a different number of variables " << GetNVariables() 
+            << "  " << ev->GetNVariables() << Endl;
    }
 
    if (fTransformedEvent==0) fTransformedEvent = new Event();
@@ -150,7 +150,7 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
 const TMVA::Event* TMVA::VariableNormalizeTransform::InverseTransform( const TMVA::Event* const ev, Int_t cls ) const
 {
    // apply the inverse transformation
-   if (!IsCreated()) log() << kFATAL << "Transformation not yet created" << Endl;
+   if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
    // if cls (the class chosen by the user) not existing, 
    // assume that user wants to have the matrix for all classes together. 
@@ -162,8 +162,8 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::InverseTransform( const TMV
    const UInt_t nvars = GetNVariables();
    const UInt_t ntgts = GetNTargets();
    if (nvars != ev->GetNVariables()) {
-      log() << kFATAL << "Transformation defined for a different number of variables " << GetNVariables() << "  " << ev->GetNVariables() 
-              << Endl;
+      Log() << kFATAL << "Transformation defined for a different number of variables " << GetNVariables() << "  " << ev->GetNVariables() 
+            << Endl;
    }
 
    if (fBackTransformedEvent==0) fBackTransformedEvent = new Event( *ev );
@@ -198,7 +198,7 @@ void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vecto
 {
    // compute offset and scale from min and max
    if (events.size() <= 1) 
-      log() << kFATAL << "Not enough events (found " << events.size() << ") to calculate the normalization" << Endl;
+      Log() << kFATAL << "Not enough events (found " << events.size() << ") to calculate the normalization" << Endl;
    
    UInt_t nvars = GetNVariables();
    UInt_t ntgts = GetNTargets();
@@ -395,8 +395,8 @@ void TMVA::VariableNormalizeTransform::ReadTransformationFromStream( std::istrea
          istr.getline(buf,512);
          continue; // if comment or empty line, read the next line
       }
-     std::stringstream sstr(buf);
-     sstr >> icls;
+      std::stringstream sstr(buf);
+      sstr >> icls;
       for (UInt_t ivar=0;ivar<nvars;ivar++) {
          istr.getline(buf2,512); // reading the next line
          std::stringstream sstr2(buf2);
@@ -423,11 +423,11 @@ void TMVA::VariableNormalizeTransform::PrintTransformation( ostream& o )
    UInt_t nvars = GetNVariables();
    UInt_t ntgts = GetNTargets();
    for (Int_t icls = 0; icls < numC; icls++ ) {
-      log() << kINFO << "Transformation for class " << icls << " based on these ranges:" << Endl;
-      log() << kINFO << "Variables:" << Endl;
+      Log() << kINFO << "Transformation for class " << icls << " based on these ranges:" << Endl;
+      Log() << kINFO << "Variables:" << Endl;
       for (UInt_t ivar=0; ivar<nvars; ivar++)
          o << std::setw(20) << fMin[icls][ivar] << std::setw(20) << fMax[icls][ivar] << std::endl;
-      log() << kINFO << "Targets:" << Endl;
+      Log() << kINFO << "Targets:" << Endl;
       for (UInt_t itgt=0; itgt<ntgts; itgt++)
          o << std::setw(20) << fMin[icls][nvars+itgt] << std::setw(20) << fMax[icls][nvars+itgt] << std::endl;
    }
@@ -435,7 +435,7 @@ void TMVA::VariableNormalizeTransform::PrintTransformation( ostream& o )
 
 //_______________________________________________________________________
 void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const TString& fcncName, 
-                                                     Int_t part, UInt_t trCounter, Int_t /*cls*/ ) 
+                                                     Int_t part, UInt_t trCounter, Int_t ) 
 {
    // creates a normalizing function
    // TODO include target-transformation into makefunction
@@ -457,11 +457,11 @@ void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const T
          for (UInt_t icls = 0; icls < numC; icls++) {
             min = TMath::Min(min, fMin.at(icls).at(ivar) );
             max = TMath::Max(max, fMax.at(icls).at(ivar) );
-	    fout << "   fMin_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = " << std::setprecision(12)
-		 << min << ";" << std::endl;
-	    fout << "   fMax_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = " << std::setprecision(12)
-		 << max << ";" << std::endl;
-	 }
+            fout << "   fMin_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = " << std::setprecision(12)
+                 << min << ";" << std::endl;
+            fout << "   fMax_"<<trCounter<<"["<<icls<<"]["<<ivar<<"] = " << std::setprecision(12)
+                 << max << ";" << std::endl;
+         }
       }
       fout << "}" << std::endl;
       fout << std::endl;

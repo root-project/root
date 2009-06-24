@@ -164,11 +164,11 @@ void TMVA::MethodCommittee::WriteStateToFile() const
 
    // get the filename
    TString fname(GetWeightFileName());
-   log() << kINFO << "creating weight file: " << fname << Endl;
+   Log() << kINFO << "creating weight file: " << fname << Endl;
    
    std::ofstream* fout = new std::ofstream( fname );
    if (!fout->good()) { // file not found --> Error
-      log() << kFATAL << "<WriteStateToFile> "
+      Log() << kFATAL << "<WriteStateToFile> "
               << "unable to open output  weight file: " << fname << endl;
    }
    
@@ -181,7 +181,7 @@ void TMVA::MethodCommittee::Train( void )
 {  
    // training
 
-   log() << kINFO << "will train "<< fNMembers << " committee members ... patience please" << Endl;
+   Log() << kINFO << "will train "<< fNMembers << " committee members ... patience please" << Endl;
 
    Timer timer( fNMembers, GetName() ); 
    for (UInt_t imember=0; imember<fNMembers; imember++){
@@ -206,7 +206,7 @@ void TMVA::MethodCommittee::Train( void )
    }
 
    // get elapsed time
-   log() << kINFO << "elapsed time: " << timer.GetElapsedTime()    
+   Log() << kINFO << "elapsed time: " << timer.GetElapsedTime()    
            << "                              " << Endl;    
 }
 
@@ -219,8 +219,8 @@ Double_t TMVA::MethodCommittee::Boost( TMVA::MethodBase* method, UInt_t imember 
    if      (fBoostType=="AdaBoost") return this->AdaBoost( method );
    else if (fBoostType=="Bagging")  return this->Bagging( imember );
    else {
-      log() << kINFO << GetOptions() << Endl;
-      log() << kFATAL << "<Boost> unknown boost option called" << Endl;
+      Log() << kINFO << GetOptions() << Endl;
+      Log() << kFATAL << "<Boost> unknown boost option called" << Endl;
    }
    return 1.0;
 }
@@ -241,7 +241,7 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::MethodBase* method )
    Double_t adaBoostBeta = 1.;   // that's apparently the standard value :)
 
    // should never be called without existing trainingTree
-   if (Data()->GetNTrainingEvents()) log() << kFATAL << "<AdaBoost> Data().TrainingTree() is zero pointer" << Endl;
+   if (Data()->GetNTrainingEvents()) Log() << kFATAL << "<AdaBoost> Data().TrainingTree() is zero pointer" << Endl;
 
    Double_t err=0, sumw=0, sumwfalse=0, count=0;
    vector<Char_t> correctSelected;
@@ -269,7 +269,7 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::MethodBase* method )
    }
 
    if (0 == sumw) {
-      log() << kFATAL << "<AdaBoost> fatal error sum of event boostweights is zero" << Endl;
+      Log() << kFATAL << "<AdaBoost> fatal error sum of event boostweights is zero" << Endl;
    }
 
    // compute the boost factor
@@ -361,7 +361,7 @@ void TMVA::MethodCommittee::WriteWeightsToStream( ostream& o ) const
 
 //_______________________________________________________________________
 void TMVA::MethodCommittee::AddWeightsXMLTo( void* /*parent*/ ) const {
-   log() << kFATAL << "Please implement writing of weights as XML" << Endl;
+   Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
   
 //_______________________________________________________________________
@@ -389,7 +389,7 @@ void  TMVA::MethodCommittee::ReadWeightsFromStream( istream& istr )
       istr >> dummy >> dummy >> boostWeight;
 
       if (imember != i) {
-         log() << kFATAL << "<ReadWeightsFromStream> fatal error while reading Weight file \n "
+         Log() << kFATAL << "<ReadWeightsFromStream> fatal error while reading Weight file \n "
                  << ": mismatch imember: " << imember << " != i: " << i << Endl;
       }
 
@@ -441,7 +441,7 @@ void  TMVA::MethodCommittee::WriteMonitoringHistosToFile( void ) const
 {
    // here we could write some histograms created during the processing
    // to the output file.
-   log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
+   Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
 
    fBoostFactorHist->Write();
    fErrFractHist->Write();
@@ -479,7 +479,7 @@ Double_t TMVA::MethodCommittee::GetVariableImportance(UInt_t ivar)
    // return the variable importance
    vector<Double_t> relativeImportance = this->GetVariableImportance();
    if (ivar < (UInt_t)relativeImportance.size()) return relativeImportance[ivar];
-   else  log() << kFATAL << "<GetVariableImportance> ivar = " << ivar << " is out of range " << Endl;
+   else  Log() << kFATAL << "<GetVariableImportance> ivar = " << ivar << " is out of range " << Endl;
 
    return -1;
 }
@@ -515,16 +515,16 @@ void TMVA::MethodCommittee::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "<None>" << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "<None>" << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "<None>" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "<None>" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "<None>" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "<None>" << Endl;
 }

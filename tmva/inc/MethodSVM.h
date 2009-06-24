@@ -114,21 +114,21 @@ namespace TMVA
       void ProcessOptions();
 
       
-      Float_t 		            fCost; 		      // cost value
-      Float_t 		            fTolerance;       // tolerance parameter
-      UInt_t 		            fMaxIter; 	      // max number of iteration
-      UShort_t 	            fNSubSets; 	      // nr of subsets, default 1
-      Float_t                 fBparm;           // documentation
+      Float_t 		      fCost; 		// cost value
+      Float_t 		      fTolerance;       // tolerance parameter
+      UInt_t 		      fMaxIter; 	// max number of iteration
+      UShort_t 	              fNSubSets; 	// nr of subsets, default 1
+      Float_t                 fBparm;           // free plane coefficient 
       
       Float_t                 fGamma;           // RBF Kernel parameter
       
-      SVWorkingSet*           fWgSet;           // documentation 
-      std::vector<TMVA::SVEvent*>*  fInputData;       // documentation 
-      std::vector<TMVA::SVEvent*>*  fSupportVectors;  // documentation 
-      SVKernelFunction*       fSVKernelFunction;  // documentation 
+      SVWorkingSet*           fWgSet;           	// svm working set 
+      std::vector<TMVA::SVEvent*>*  fInputData;       	// vector of training data in SVM format
+      std::vector<TMVA::SVEvent*>*  fSupportVectors; 	// contains support vectors
+      SVKernelFunction*       fSVKernelFunction;  	// kernel function
 
-      TVectorD*               fMinVars;         // documentation 
-      TVectorD*               fMaxVars;         // documentation 
+      TVectorD*               fMinVars;         	// for normalization //is it still needed?? 
+      TVectorD*               fMaxVars;         	// for normalization //is it still needed?? 
       
       ClassDef(MethodSVM,0)  // Support Vector Machine
    };

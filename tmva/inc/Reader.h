@@ -148,7 +148,7 @@ namespace TMVA {
       std::map<TString, IMethod*> fMethodMap; // map of methods
 
       mutable MsgLogger* fLogger;   // message logger
-      MsgLogger& log() const { return *fLogger; }    
+      MsgLogger& Log() const { return *fLogger; }    
 
       ClassDef(Reader,0) // Interpret the trained MVAs in an analysis context
    };

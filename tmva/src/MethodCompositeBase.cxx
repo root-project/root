@@ -144,7 +144,7 @@ TMVA::MethodCompositeBase::~MethodCompositeBase( void )
    // delete methods
    vector<IMethod*>::iterator itrMethod = fMethods.begin();
    for (; itrMethod != fMethods.end(); itrMethod++) {
-      log() << kVERBOSE << "Delete method: " << (*itrMethod)->GetName() << Endl;    
+      Log() << kVERBOSE << "Delete method: " << (*itrMethod)->GetName() << Endl;    
       delete (*itrMethod);
    }
    fMethods.clear();
@@ -193,7 +193,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
 
       ch = gTools().xmlengine().GetNext(ch);
    }
-   //log() << kINFO << "Reading methods from XML done " << Endl;
+   //Log() << kINFO << "Reading methods from XML done " << Endl;
 }
 
 //_______________________________________________________________________
@@ -206,14 +206,14 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( istream& istr )
    UInt_t methodNum; Double_t methodWeight;
    // and read the Weights (BDT coefficients)  
    istr >> dummy >> methodNum;
-   log() << kINFO << "Read " << methodNum << " Classifiers" << Endl;
+   Log() << kINFO << "Read " << methodNum << " Classifiers" << Endl;
    for (UInt_t i=0;i<fMethods.size();i++) delete fMethods[i];
    fMethods.clear();
    fMethodWeight.clear();
    for (UInt_t i=0; i<methodNum; i++) {
       istr >> dummy >> methodName >>  dummy >> fMethodIndex >> dummy >> methodWeight;
       if ((UInt_t)fMethodIndex != i) {
-         log() << kFATAL << "Error while reading weight file; mismatch MethodIndex=" 
+         Log() << kFATAL << "Error while reading weight file; mismatch MethodIndex=" 
                << fMethodIndex << " i=" << i 
                << " MethodName " << methodName
                << " dummy " << dummy

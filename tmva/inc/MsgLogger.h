@@ -115,7 +115,7 @@ namespace TMVA {
       std::map<EMsgType, std::string> fColorMap;       // matches output types with terminal colors
       EMsgType                        fMinType;        // minimum type for output
 
-      static Bool_t                   fInhibitOutput;    // flag to suppress all output
+      static Bool_t                   fgInhibitOutput; // flag to suppress all output
 
       ClassDef(MsgLogger,0) // Ostringstream derivative to redirect and format logging output  
    }; // class MsgLogger

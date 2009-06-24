@@ -113,7 +113,7 @@ namespace TMVA {
       Bool_t fDrawProgressBar;       // draw progress bar to indicate training evolution
 
       mutable MsgLogger* fLogger;   // message logger
-      MsgLogger& log() const { return *fLogger; }
+      MsgLogger& Log() const { return *fLogger; }
          
       ClassDef(Config,0) // Singleton class for global configuration settings
    };

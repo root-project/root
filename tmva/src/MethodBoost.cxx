@@ -188,25 +188,25 @@ void TMVA::MethodBoost::InitHistos()
 //_______________________________________________________________________
 void TMVA::MethodBoost::CheckSetup()
 {
-   log() << kDEBUG << "CheckSetup: fBoostType="<<fBoostType<<" fMethodWeightType=" << fMethodWeightType << Endl;
-   log() << kDEBUG << "CheckSetup: fADABoostBeta="<<fADABoostBeta<<Endl;
-   log() << kDEBUG << "CheckSetup: fBoostWeight="<<fBoostWeight<<Endl;
-   log() << kDEBUG << "CheckSetup: fMethodError="<<fMethodError<<Endl;
-   log() << kDEBUG << "CheckSetup: fOrigMethodError="<<fOrigMethodError<<Endl;
-   log() << kDEBUG << "CheckSetup: fBoostNum="<<fBoostNum<< " fMonitorHist="<< fMonitorHist<< Endl;              
-   log() << kDEBUG << "CheckSetup: fDefaultHistNum=" << fDefaultHistNum << " fRecalculateMVACut=" << (fRecalculateMVACut? "true" : "false") << Endl;
-   log() << kDEBUG << "CheckSetup: fTrainSigMVAHist.size()="<<fTrainSigMVAHist.size()<<Endl;
-   log() << kDEBUG << "CheckSetup: fTestSigMVAHist.size()="<<fTestSigMVAHist.size()<<Endl;
-   log() << kDEBUG << "CheckSetup: fMonitorBoostedMethod=" << (fMonitorBoostedMethod? "true" : "false") << Endl;
-   log() << kDEBUG << "CheckSetup: MName=" << fBoostedMethodName << " Title="<< fBoostedMethodTitle<< Endl;
-   log() << kDEBUG << "CheckSetup: MOptions="<< fBoostedMethodOptions << Endl;
-   log() << kDEBUG << "CheckSetup: fBoostStage=" << fBoostStage<<Endl;
-   log() << kDEBUG << "CheckSetup: fMonitorTree" << fMonitorTree<<Endl;
-   log() << kDEBUG << "CheckSetup: fMethodIndex=" <<fMethodIndex << Endl;
-   if (fMethods.size()>0) log() << kDEBUG << "CheckSetup: fMethods[0]" <<fMethods[0]<<Endl;
-   log() << kDEBUG << "CheckSetup: fMethodWeight.size()" << fMethodWeight.size() << Endl;
-   if (fMethodWeight.size()>0) log() << kDEBUG << "CheckSetup: fMethodWeight[0]="<<fMethodWeight[0]<<Endl;
-   log() << kDEBUG << "CheckSetup: gtrying to repair things" << Endl;
+   Log() << kDEBUG << "CheckSetup: fBoostType="<<fBoostType<<" fMethodWeightType=" << fMethodWeightType << Endl;
+   Log() << kDEBUG << "CheckSetup: fADABoostBeta="<<fADABoostBeta<<Endl;
+   Log() << kDEBUG << "CheckSetup: fBoostWeight="<<fBoostWeight<<Endl;
+   Log() << kDEBUG << "CheckSetup: fMethodError="<<fMethodError<<Endl;
+   Log() << kDEBUG << "CheckSetup: fOrigMethodError="<<fOrigMethodError<<Endl;
+   Log() << kDEBUG << "CheckSetup: fBoostNum="<<fBoostNum<< " fMonitorHist="<< fMonitorHist<< Endl;              
+   Log() << kDEBUG << "CheckSetup: fDefaultHistNum=" << fDefaultHistNum << " fRecalculateMVACut=" << (fRecalculateMVACut? "true" : "false") << Endl;
+   Log() << kDEBUG << "CheckSetup: fTrainSigMVAHist.size()="<<fTrainSigMVAHist.size()<<Endl;
+   Log() << kDEBUG << "CheckSetup: fTestSigMVAHist.size()="<<fTestSigMVAHist.size()<<Endl;
+   Log() << kDEBUG << "CheckSetup: fMonitorBoostedMethod=" << (fMonitorBoostedMethod? "true" : "false") << Endl;
+   Log() << kDEBUG << "CheckSetup: MName=" << fBoostedMethodName << " Title="<< fBoostedMethodTitle<< Endl;
+   Log() << kDEBUG << "CheckSetup: MOptions="<< fBoostedMethodOptions << Endl;
+   Log() << kDEBUG << "CheckSetup: fBoostStage=" << fBoostStage<<Endl;
+   Log() << kDEBUG << "CheckSetup: fMonitorTree" << fMonitorTree<<Endl;
+   Log() << kDEBUG << "CheckSetup: fMethodIndex=" <<fMethodIndex << Endl;
+   if (fMethods.size()>0) Log() << kDEBUG << "CheckSetup: fMethods[0]" <<fMethods[0]<<Endl;
+   Log() << kDEBUG << "CheckSetup: fMethodWeight.size()" << fMethodWeight.size() << Endl;
+   if (fMethodWeight.size()>0) Log() << kDEBUG << "CheckSetup: fMethodWeight[0]="<<fMethodWeight[0]<<Endl;
+   Log() << kDEBUG << "CheckSetup: gtrying to repair things" << Endl;
 
    //TMVA::MethodBase::CheckSetup();
    if (fMonitorHist == 0){
@@ -222,12 +222,12 @@ void TMVA::MethodBoost::Train()
    TString     dirName,dirTitle;
    Int_t       StopCounter=0;
 
-   if (Data()->GetNTrainingEvents()==0) log() << kFATAL << "<Train> Data() has zero events" << Endl;
+   if (Data()->GetNTrainingEvents()==0) Log() << kFATAL << "<Train> Data() has zero events" << Endl;
    Data()->SetCurrentType(Types::kTraining);
 
    if (fMethods.size() > 0) fMethods.clear();
 
-   log() << kINFO << "Training "<< fBoostNum << " " << fBoostedMethodName << " Classifiers ... patience please" << Endl;
+   Log() << kINFO << "Training "<< fBoostNum << " " << fBoostedMethodName << " Classifiers ... patience please" << Endl;
    Timer timer( fBoostNum, GetName() );
 
    ResetBoostWeights();
@@ -295,9 +295,9 @@ void TMVA::MethodBoost::Train()
             {
                timer.DrawProgressBar( fBoostNum );
                fBoostNum = fMethodIndex+1; 
-               log() << kINFO << "Error rate has reached 0.5, boosting process stopped at #" << fBoostNum << " classifier" << Endl;
+               Log() << kINFO << "Error rate has reached 0.5, boosting process stopped at #" << fBoostNum << " classifier" << Endl;
                if (fBoostNum < 5)
-                  log() << kINFO << "The classifier might be too strong to boost with Beta = " << fADABoostBeta << ", try reducing it." <<Endl;
+                  Log() << kINFO << "The classifier might be too strong to boost with Beta = " << fADABoostBeta << ", try reducing it." <<Endl;
                for (Int_t i=0;i<fDefaultHistNum;i++)
                   (*fMonitorHist)[i]->SetBins(fBoostNum,0,fBoostNum);
                break;
@@ -316,7 +316,7 @@ void TMVA::MethodBoost::Train()
          timer1->DrawProgressBar( fMethodIndex );
 
          if (fMethodIndex==fBoostNum) {
-            log() << kINFO << "Elapsed time: " << timer1->GetElapsedTime() 
+            Log() << kINFO << "Elapsed time: " << timer1->GetElapsedTime() 
                   << "                              " << Endl;
          }
       }
@@ -337,7 +337,7 @@ void TMVA::MethodBoost::CleanBoostOptions()
 //_______________________________________________________________________
 void TMVA::MethodBoost::CreateMVAHistorgrams()
 {
-   if (fBoostNum <=0) log() << kFATAL << "CreateHistorgrams called before fBoostNum is initialized" << Endl;
+   if (fBoostNum <=0) Log() << kFATAL << "CreateHistorgrams called before fBoostNum is initialized" << Endl;
    // calculating histograms boundries and creating histograms..
    // nrms = number of rms around the average to use for outline (of the 0 classifier)
    Double_t meanS, meanB, rmsS, rmsB, xmin, xmax, nrms = 10;
@@ -476,7 +476,7 @@ void TMVA::MethodBoost::SingleTrain()
 //_______________________________________________________________________
 void TMVA::MethodBoost::FindMVACut()
 {
-   //log() << kINFO << "FindMVACut "<<Endl;
+   //Log() << kINFO << "FindMVACut "<<Endl;
    MethodBase* method=dynamic_cast<MethodBase*>(fMethods.back());
    if (method->GetMethodType() == Types::kDT ){ return;}
    if (!fRecalculateMVACut && fMethodIndex>0) {
@@ -567,7 +567,7 @@ void TMVA::MethodBoost::SingleBoost()
    Double_t alphaWeight = TMath::Log(fBoostWeight);
    if (alphaWeight>5.) alphaWeight = 5.;
    if (alphaWeight<0.){
-      //log()<<kWARNING<<"alphaWeight is too small in AdaBoost alpha=" << alphaWeight<< Endl;
+      //Log()<<kWARNING<<"alphaWeight is too small in AdaBoost alpha=" << alphaWeight<< Endl;
       alphaWeight = -alphaWeight;
    }
    if (fBoostType == "AdaBoost") {
@@ -620,38 +620,38 @@ void TMVA::MethodBoost::GetHelpMessage() const
    //
    // typical length of text line:
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "This method combines several classifier of one species in a "<<Endl;
-   log() << "single multivariate quantity via the boost algorithm." << Endl;
-   log() << "the output is a weighted sum over all individual classifiers" <<Endl;
-   log() << "By default, the AdaBoost method is employed, which gives " << Endl;
-   log() << "events that were misclassified in the previous tree a larger " << Endl;
-   log() << "weight in the training of the following classifier."<<Endl;
-   log() << "Optionally, Bagged boosting can also be applied." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The most important parameter in the configuration is the "<<Endl;
-   log() << "number of boosts applied (Boost_Num) and the choice of boosting"<<Endl;
-   log() << "(Boost_Type), which can be set to either AdaBoost or Bagging." << Endl;
-   log() << "AdaBoosting: The most important parameters in this configuration" <<Endl;
-   log() << "is the beta parameter (Boost_AdaBoostBeta)  " << Endl;
-   log() << "When boosting a linear classifier, it is sometimes advantageous"<<Endl; 
-   log() << "to transform the MVA output non-linearly. The following options" <<Endl;
-   log() << "are available: step, log, and minmax, the default is no transform."<<Endl;
-   log() <<Endl;
-   log() << "Some classifiers are hard to boost and do not improve much in"<<Endl; 
-   log() << "their performance by boosting them, some even slightly deteriorate"<< Endl;
-   log() << "due to the boosting." <<Endl;
-   log() << "The booking of the boost method is special since it requires"<<Endl;
-   log() << "the booing of the method to be boosted and the boost itself."<<Endl;
-   log() << "This is solved by booking the method to be boosted and to add"<<Endl;
-   log() << "all Boost parameters, which all begin with \"Boost_\" to the"<<Endl;
-   log() << "options string. The factory separates the options and initiates"<<Endl;
-   log() << "the boost process. The TMVA macro directory contains the example"<<Endl;
-   log() << "macro \"Boost.C\"" <<Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "This method combines several classifier of one species in a "<<Endl;
+   Log() << "single multivariate quantity via the boost algorithm." << Endl;
+   Log() << "the output is a weighted sum over all individual classifiers" <<Endl;
+   Log() << "By default, the AdaBoost method is employed, which gives " << Endl;
+   Log() << "events that were misclassified in the previous tree a larger " << Endl;
+   Log() << "weight in the training of the following classifier."<<Endl;
+   Log() << "Optionally, Bagged boosting can also be applied." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The most important parameter in the configuration is the "<<Endl;
+   Log() << "number of boosts applied (Boost_Num) and the choice of boosting"<<Endl;
+   Log() << "(Boost_Type), which can be set to either AdaBoost or Bagging." << Endl;
+   Log() << "AdaBoosting: The most important parameters in this configuration" <<Endl;
+   Log() << "is the beta parameter (Boost_AdaBoostBeta)  " << Endl;
+   Log() << "When boosting a linear classifier, it is sometimes advantageous"<<Endl; 
+   Log() << "to transform the MVA output non-linearly. The following options" <<Endl;
+   Log() << "are available: step, log, and minmax, the default is no transform."<<Endl;
+   Log() <<Endl;
+   Log() << "Some classifiers are hard to boost and do not improve much in"<<Endl; 
+   Log() << "their performance by boosting them, some even slightly deteriorate"<< Endl;
+   Log() << "due to the boosting." <<Endl;
+   Log() << "The booking of the boost method is special since it requires"<<Endl;
+   Log() << "the booing of the method to be boosted and the boost itself."<<Endl;
+   Log() << "This is solved by booking the method to be boosted and to add"<<Endl;
+   Log() << "all Boost parameters, which all begin with \"Boost_\" to the"<<Endl;
+   Log() << "options string. The factory separates the options and initiates"<<Endl;
+   Log() << "the boost process. The TMVA macro directory contains the example"<<Endl;
+   Log() << "macro \"Boost.C\"" <<Endl;
 }
 
 //_______________________________________________________________________
@@ -684,7 +684,7 @@ Double_t TMVA::MethodBoost::GetMvaValue( Double_t* err )
          else val = 1.;
       }
       else {
-         log() << kFATAL << "error unknown transformation " << fTransformString<<Endl;
+         Log() << kFATAL << "error unknown transformation " << fTransformString<<Endl;
       }
       mvaValue+=val*fMethodWeight[i];
    }

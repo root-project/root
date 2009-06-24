@@ -104,7 +104,7 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
    // signal and background histograms must have same number of bins and 
    // same limits
    if ((S->GetNbinsX() != B->GetNbinsX()) || (S->GetNbinsX() <= 0)) {
-      log() << kFATAL << "<GetSeparation> signal and background"
+      Log() << kFATAL << "<GetSeparation> signal and background"
             << " histograms have different number of bins: " 
             << S->GetNbinsX() << " : " << B->GetNbinsX() << Endl;
    }
@@ -112,10 +112,10 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
    if (S->GetXaxis()->GetXmin() != B->GetXaxis()->GetXmin() || 
        S->GetXaxis()->GetXmax() != B->GetXaxis()->GetXmax() || 
        S->GetXaxis()->GetXmax() <= S->GetXaxis()->GetXmin()) {
-      log() << kINFO << S->GetXaxis()->GetXmin() << " " << B->GetXaxis()->GetXmin() 
+      Log() << kINFO << S->GetXaxis()->GetXmin() << " " << B->GetXaxis()->GetXmin() 
             << " " << S->GetXaxis()->GetXmax() << " " << B->GetXaxis()->GetXmax() 
             << " " << S->GetXaxis()->GetXmax() << " " << S->GetXaxis()->GetXmin() << Endl;
-      log() << kFATAL << "<GetSeparation> signal and background"
+      Log() << kFATAL << "<GetSeparation> signal and background"
             << " histograms have different or invalid dimensions:" << Endl;
    }
 
@@ -133,7 +133,7 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
       separation *= intBin;
    }
    else {
-      log() << kWARNING << "<GetSeparation> histograms with zero entries: " 
+      Log() << kWARNING << "<GetSeparation> histograms with zero entries: " 
             << nS << " : " << nB << " cannot compute separation"
             << Endl;
       separation = 0;
@@ -152,7 +152,7 @@ Double_t TMVA::Tools::GetSeparation( const PDF& pdfS, const PDF& pdfB ) const
    Double_t xmax = pdfS.GetXmax();
    // sanity check
    if (xmin != pdfB.GetXmin() || xmax != pdfB.GetXmax()) {
-      log() << kFATAL << "<GetSeparation> Mismatch in PDF limits: "
+      Log() << kFATAL << "<GetSeparation> Mismatch in PDF limits: "
             << xmin << " " << pdfB.GetXmin() << xmax << " " << pdfB.GetXmax()  << Endl;
    }
 
@@ -180,10 +180,10 @@ void TMVA::Tools::ComputeStat( const std::vector<TMVA::Event*>& events, std::vec
 {
    // sanity check
    if (0 == valVec) 
-      log() << kFATAL << "<Tools::ComputeStat> value vector is zero pointer" << Endl;
+      Log() << kFATAL << "<Tools::ComputeStat> value vector is zero pointer" << Endl;
    
    if ( events.size() != valVec->size() ) 
-      log() << kFATAL << "<Tools::ComputeStat> event and value vector have different lengths " 
+      Log() << kFATAL << "<Tools::ComputeStat> event and value vector have different lengths " 
             << events.size() << "!=" << valVec->size() << Endl;
 
    Long64_t entries = valVec->size();
@@ -257,7 +257,7 @@ TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
          if ((i != j && TMath::Abs((*d)(i,j))/TMath::Sqrt((*d)(i,i)*(*d)(j,j)) > epsilon) ||
              (i == j && (*d)(i,i) < 0)) {
             //d->Print();
-            log() << kWARNING << "<GetSQRootMatrix> error in matrix diagonalization; printed S and B" << Endl;
+            Log() << kWARNING << "<GetSQRootMatrix> error in matrix diagonalization; printed S and B" << Endl;
          }
       }
    }
@@ -292,7 +292,7 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
    // sanity check
    Int_t nvar = covMat->GetNrows();
    if (nvar != covMat->GetNcols()) 
-      log() << kFATAL << "<GetCorrelationMatrix> input matrix not quadratic" << Endl;
+      Log() << kFATAL << "<GetCorrelationMatrix> input matrix not quadratic" << Endl;
    
    TMatrixD* corrMat = new TMatrixD( nvar, nvar );
 
@@ -302,7 +302,7 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
             Double_t d = (*covMat)(ivar, ivar)*(*covMat)(jvar, jvar);
             if (d > 0) (*corrMat)(ivar, jvar) = (*covMat)(ivar, jvar)/TMath::Sqrt(d);
             else {
-               log() << kWARNING << "<GetCorrelationMatrix> zero variances for variables "
+               Log() << kWARNING << "<GetCorrelationMatrix> zero variances for variables "
                      << "(" << ivar << ", " << jvar << ")" << Endl;
                (*corrMat)(ivar, jvar) = 0;
             }
@@ -398,7 +398,7 @@ vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar
 
    // sanity check
    if (list->GetSize() < 1) {
-      log() << kFATAL << "<ParseANNOptionString> unrecognized option string: " << theOptions << Endl;
+      Log() << kFATAL << "<ParseANNOptionString> unrecognized option string: " << theOptions << Endl;
    }
 
    // add number of cycles
@@ -415,7 +415,7 @@ vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar
          }
          else if ((a = atoi( s )) > 0) nodes->push_back( atoi(s ) );
          else {
-            log() << kFATAL << "<ParseANNOptionString> unrecognized option string: " << theOptions << Endl;
+            Log() << kFATAL << "<ParseANNOptionString> unrecognized option string: " << theOptions << Endl;
          }
       }
    }
@@ -437,7 +437,7 @@ Bool_t TMVA::Tools::CheckSplines( const TH1* theHist, const TSpline* theSpline )
       if (ys + yh > 0) {
          Double_t dev = 0.5*(ys - yh)/(ys + yh);
          if (TMath::Abs(dev) > sanityCrit) {
-            log() << kFATAL << "<CheckSplines> Spline failed sanity criterion; "
+            Log() << kFATAL << "<CheckSplines> Spline failed sanity criterion; "
                   << " relative deviation from histogram: " << dev
                   << " in (bin, value): (" << ibin << ", " << x << ")" << Endl;
             retval = kFALSE;
@@ -601,7 +601,7 @@ TH2F* TMVA::Tools::TransposeHist( const TH2F& h )
 
    // sanity check
    if (h.GetNbinsX() != h.GetNbinsY()) {
-      log() << kFATAL << "<TransposeHist> cannot transpose non-quadratic histogram" << endl;
+      Log() << kFATAL << "<TransposeHist> cannot transpose non-quadratic histogram" << endl;
    }
    
    TH2F *transposedHisto = new TH2F( h ); 
@@ -1116,14 +1116,14 @@ void TMVA::Tools::ReadTVectorDFromXML(void* node, const char* name, TVectorD* ve
 void TMVA::Tools::ReadTMatrixDFromXML(void* node, const char* name, TMatrixD* mat)
 {
    if (strcmp(xmlengine().GetNodeName(node),name)!=0){
-      log() << kWARNING << "Possible Error: Name of matrix in weight file"
+      Log() << kWARNING << "Possible Error: Name of matrix in weight file"
             << " does not match name of matrix passed as argument!" << Endl;
    }
    Int_t nrows, ncols;
    ReadAttr(node, "Rows", nrows);
    ReadAttr(node, "Columns", ncols);
    if (mat->GetNrows() != nrows || mat->GetNcols() != ncols){
-      log() << kWARNING << "Possible Error: Dimension of matrix in weight file"
+      Log() << kWARNING << "Possible Error: Dimension of matrix in weight file"
             << " does not match dimension of matrix passed as argument!" << Endl;
       mat->ResizeTo(nrows,ncols);
    }

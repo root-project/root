@@ -335,16 +335,16 @@ void TMVA::MethodCuts::ProcessOptions()
    // sanity check, do not allow the input variables to be normalised, because this 
    // only creates problems when interpreting the cuts
    if (IsNormalised()) {
-      log() << kWARNING << "Normalisation of the input variables for cut optimisation is not" << Endl;
-      log() << kWARNING << "supported because this provides intransparent cut values, and no" << Endl;
-      log() << kWARNING << "improvement in the performance of the algorithm." << Endl;
-      log() << kWARNING << "Please remove \"Normalise\" option from booking option string" << Endl;
-      log() << kWARNING << "==> Will reset normalisation flag to \"False\"" << Endl;
+      Log() << kWARNING << "Normalisation of the input variables for cut optimisation is not" << Endl;
+      Log() << kWARNING << "supported because this provides intransparent cut values, and no" << Endl;
+      Log() << kWARNING << "improvement in the performance of the algorithm." << Endl;
+      Log() << kWARNING << "Please remove \"Normalise\" option from booking option string" << Endl;
+      Log() << kWARNING << "==> Will reset normalisation flag to \"False\"" << Endl;
       SetNormalised( kFALSE );
    }
 
    if (IgnoreEventsWithNegWeightsInTraining()) {
-      log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
+      Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
             << GetMethodTypeName() 
             << " --> Please remove \"IgnoreNegWeightsInTraining\" option from booking string."
             << Endl;
@@ -356,22 +356,22 @@ void TMVA::MethodCuts::ProcessOptions()
    else if (fFitMethodS == "SA"      ) fFitMethod = kUseSimulatedAnnealing;
    else if (fFitMethodS == "MINUIT"  ) {
       fFitMethod = kUseMinuit;
-      log() << kWARNING << "poor performance of MINUIT in MethodCuts; preferred fit method: GA" << Endl;
+      Log() << kWARNING << "poor performance of MINUIT in MethodCuts; preferred fit method: GA" << Endl;
    }
    else if (fFitMethodS == "EventScan" ) fFitMethod = kUseEventScan;
-   else log() << kFATAL << "unknown minimisation method: " << fFitMethodS << Endl;
+   else Log() << kFATAL << "unknown minimisation method: " << fFitMethodS << Endl;
 
    if      (fEffMethodS == "EFFSEL" ) fEffMethod = kUseEventSelection; // highly recommended
    else if (fEffMethodS == "EFFPDF" ) fEffMethod = kUsePDFs;
    else                               fEffMethod = kUseEventSelection;
 
    // options output
-   log() << kINFO << Form("Use optimization method: \"%s\"", 
+   Log() << kINFO << Form("Use optimization method: \"%s\"", 
                             (fFitMethod == kUseMonteCarlo) ? "Monte Carlo" : 
                             (fFitMethod == kUseMonteCarlo) ? "Monte-Carlo-Event sampling" : 
                             (fFitMethod == kUseEventScan)  ? "Full Event Scan (slow)" :
                             (fFitMethod == kUseMinuit)     ? "MINUIT" : "Genetic Algorithm" ) << Endl;
-   log() << kINFO << Form("Use efficiency computation method: \"%s\"", 
+   Log() << kINFO << Form("Use efficiency computation method: \"%s\"", 
                             (fEffMethod == kUseEventSelection) ? "Event Selection" : "PDF" ) << Endl;
 
    // cut ranges
@@ -388,13 +388,13 @@ void TMVA::MethodCuts::ProcessOptions()
       else if (fAllVarsI[ivar] == "FSmart" )                         theFitP = kForceSmart;
       else if (fAllVarsI[ivar] == "FVerySmart" )                     theFitP = kForceVerySmart;
       else {
-         log() << kFATAL << "unknown value \'" << fAllVarsI[ivar]
+         Log() << kFATAL << "unknown value \'" << fAllVarsI[ivar]
                  << "\' for fit parameter option " << Form("VarProp[%i]",ivar) << Endl;
       }
       (*fFitParams)[ivar] = theFitP;
       
       if (theFitP != kNotEnforced) 
-         log() << kINFO << "Use \"" << fAllVarsI[ivar] 
+         Log() << kINFO << "Use \"" << fAllVarsI[ivar] 
                  << "\" cuts for variable: " << "'" << (*fInputVars)[ivar] << "'" << Endl;
    }
 }
@@ -409,7 +409,7 @@ Double_t TMVA::MethodCuts::GetMvaValue( Double_t* err )
 
    // sanity check
    if (fCutMin == NULL || fCutMax == NULL || fNbins == 0) {
-      log() << kFATAL << "<Eval_Cuts> fCutMin/Max have zero pointer. "
+      Log() << kFATAL << "<Eval_Cuts> fCutMin/Max have zero pointer. "
               << "Did you book Cuts ?" << Endl;
    }
 
@@ -470,25 +470,25 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
    }
    UInt_t maxLine = 20+maxL+16;
 
-   for (UInt_t i=0; i<maxLine; i++) log() << "-";
-   log() << Endl;
-   log() << kINFO << "Cut values for requested signal efficiency: " << trueEffS << Endl;
-   log() << kINFO << "Corresponding background efficiency       : " << fEffBvsSLocal->GetBinContent( ibin ) << Endl;
+   for (UInt_t i=0; i<maxLine; i++) Log() << "-";
+   Log() << Endl;
+   Log() << kINFO << "Cut values for requested signal efficiency: " << trueEffS << Endl;
+   Log() << kINFO << "Corresponding background efficiency       : " << fEffBvsSLocal->GetBinContent( ibin ) << Endl;
    if (GetTransformationHandler().GetNumOfTransformations() == 1) {
-      log() << kINFO << "Transformation applied to input variables : \"" 
+      Log() << kINFO << "Transformation applied to input variables : \"" 
               << GetTransformationHandler().GetNameOfLastTransform() << "\"" << Endl;
    }
    else if (GetTransformationHandler().GetNumOfTransformations() > 1) {
-      log() << kINFO << "[ More than one (=" << GetTransformationHandler().GetNumOfTransformations() << ") "
+      Log() << kINFO << "[ More than one (=" << GetTransformationHandler().GetNumOfTransformations() << ") "
               << " transformations applied in transformation chain; cuts applied on transformed quantities ] " << Endl;
    }
    else {
-      log() << kINFO << "Transformation applied to input variables : None"  << Endl;
+      Log() << kINFO << "Transformation applied to input variables : None"  << Endl;
    }
-   for (UInt_t i=0; i<maxLine; i++) log() << "-";
-   log() << Endl;
+   for (UInt_t i=0; i<maxLine; i++) Log() << "-";
+   Log() << Endl;
    for (UInt_t ivar=0; ivar<cutsMin.size(); ivar++) {
-      log() << kINFO 
+      Log() << kINFO 
               << "Cut[" << setw(2) << ivar << "]: " 
               << setw(10) << cutsMin[ivar] 
               << " < " 
@@ -496,8 +496,8 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
               << " <= " 
               << setw(10) << cutsMax[ivar] << Endl;
    }
-   for (UInt_t i=0; i<maxLine; i++) log() << "-";
-   log() << Endl;
+   for (UInt_t i=0; i<maxLine; i++) Log() << "-";
+   Log() << Endl;
 
    delete varVec; // yes, ownership has been given to us 
 }
@@ -652,7 +652,7 @@ void  TMVA::MethodCuts::Train( void )
          fitter = new SimulatedAnnealingFitter( *this, Form("%sFitter_SA", GetName()), ranges, GetOptions() );
          break;
       default:
-         log() << kFATAL << "Wrong fit method: " << fFitMethod << Endl;
+         Log() << kFATAL << "Wrong fit method: " << fFitMethod << Endl;
       }
 
       fitter->CheckForUnusedOptions();
@@ -673,7 +673,7 @@ void  TMVA::MethodCuts::Train( void )
       Int_t nsamples = Int_t(0.5*nevents*(nevents - 1));
       Timer timer( nsamples, GetName() ); 
 
-      log() << kINFO << "Running full event scan: " << Endl;
+      Log() << kINFO << "Running full event scan: " << Endl;
       for (Int_t ievt1=0; ievt1<nevents; ievt1++) {
          for (Int_t ievt2=ievt1+1; ievt2<nevents; ievt2++) {
 
@@ -703,7 +703,7 @@ void  TMVA::MethodCuts::Train( void )
       // random generator
       TRandom3*rnd = new TRandom3( seed );
 
-      log() << kINFO << "Running Monte-Carlo-Event sampling over " << nsamples << " events" << Endl;
+      Log() << kINFO << "Running Monte-Carlo-Event sampling over " << nsamples << " events" << Endl;
       std::vector<Double_t> pars( 2*GetNvar() );
       
       for (Int_t itoy=0; itoy<nsamples; itoy++) {
@@ -729,7 +729,7 @@ void  TMVA::MethodCuts::Train( void )
                isSignal &= DataInfo().IsSignal(ev2);
                evt2 = ev2->GetVal( ivar );
                
-               if (nbreak++ > 10000) log() << kFATAL << "<MCEvents>: could not find signal events" 
+               if (nbreak++ > 10000) Log() << kFATAL << "<MCEvents>: could not find signal events" 
                                              << " after 10000 trials - do you have signal events in your sample ?" 
                                              << Endl;
                isSignal = 1;
@@ -752,7 +752,7 @@ void  TMVA::MethodCuts::Train( void )
       delete rnd;
    }
    // --------------------------------------------------------------------------
-   else log() << kFATAL << "Unknown minimisation method: " << fFitMethod << Endl;
+   else Log() << kFATAL << "Unknown minimisation method: " << fFitMethod << Endl;
 
    if (fBinaryTreeS != 0) { delete fBinaryTreeS; fBinaryTreeS = 0; }
    if (fBinaryTreeB != 0) { delete fBinaryTreeB; fBinaryTreeB = 0; }
@@ -914,7 +914,7 @@ void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& pars,
                                         Double_t** cutMinAll, Double_t** cutMaxAll, Int_t ibin )
 {
    // translate the cuts into parameters (obsolete function)
-   if (ibin < 1 || ibin > fNbins) log() << kFATAL << "::MatchCutsToPars: bin error: "
+   if (ibin < 1 || ibin > fNbins) Log() << kFATAL << "::MatchCutsToPars: bin error: "
                                           << ibin << Endl;
    
    const UInt_t nvar = GetNvar();
@@ -979,7 +979,7 @@ void TMVA::MethodCuts::GetEffsfromSelection( Double_t* cutMin, Double_t* cutMax,
    
    // sanity check
    if (nTotS == 0 && nTotB == 0) {
-      log() << kFATAL << "<GetEffsfromSelection> fatal error in zero total number of events:"
+      Log() << kFATAL << "<GetEffsfromSelection> fatal error in zero total number of events:"
               << " nTotS, nTotB: " << nTotS << " " << nTotB << " ***" << Endl;
    }
 
@@ -987,12 +987,12 @@ void TMVA::MethodCuts::GetEffsfromSelection( Double_t* cutMin, Double_t* cutMax,
    if (nTotS == 0 ) {
       effS = 0;
       effB = nSelB/nTotB;
-      log() << kWARNING << "<ComputeEstimator> zero number of signal events" << Endl;
+      Log() << kWARNING << "<ComputeEstimator> zero number of signal events" << Endl;
    }
    else if (nTotB == 0) {
       effB = 0;
       effS = nSelS/nTotS;
-      log() << kWARNING << "<ComputeEstimator> zero number of background events" << Endl;
+      Log() << kWARNING << "<ComputeEstimator> zero number of background events" << Endl;
    }
    else {
       effS = nSelS/nTotS;
@@ -1165,31 +1165,31 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( istream& istr )
    
    // sanity check
    if (dummyInt != Data()->GetNVariables()) {
-      log() << kFATAL << "<ReadWeightsFromStream> fatal error: mismatch "
+      Log() << kFATAL << "<ReadWeightsFromStream> fatal error: mismatch "
               << "in number of variables: " << dummyInt << " != " << Data()->GetNVariables() << Endl;
    }
    //SetNvar(dummyInt);
 
    // print some information
    if (fFitMethod == kUseMonteCarlo) {
-      log() << kINFO << "Read cuts optimised using sample of MC events" << Endl;
+      Log() << kINFO << "Read cuts optimised using sample of MC events" << Endl;
    }
    else if (fFitMethod == kUseMonteCarloEvents) {
-      log() << kINFO << "Read cuts optimised using sample of MC events" << Endl;
+      Log() << kINFO << "Read cuts optimised using sample of MC events" << Endl;
    }
    else if (fFitMethod == kUseGeneticAlgorithm) {
-      log() << kINFO << "Read cuts optimised using Genetic Algorithm" << Endl;
+      Log() << kINFO << "Read cuts optimised using Genetic Algorithm" << Endl;
    }
    else if (fFitMethod == kUseSimulatedAnnealing) {
-      log() << kINFO << "Read cuts optimised using Simulated Annealing algorithm" << Endl;
+      Log() << kINFO << "Read cuts optimised using Simulated Annealing algorithm" << Endl;
    }
    else if (fFitMethod == kUseEventScan) {
-      log() << kINFO << "Read cuts optimised using Full Event Scan" << Endl;
+      Log() << kINFO << "Read cuts optimised using Full Event Scan" << Endl;
    }
    else {
-      log() << kWARNING << "unknown method: " << fFitMethod << Endl;
+      Log() << kWARNING << "unknown method: " << fFitMethod << Endl;
    }
-   log() << kINFO << "in " << fNbins << " signal efficiency bins and for " << GetNvar() << " variables" << Endl;
+   Log() << kINFO << "in " << fNbins << " signal efficiency bins and for " << GetNvar() << " variables" << Endl;
    
    // now read the cuts
    char buffer[200];
@@ -1279,24 +1279,24 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
 
    // print some information
    if (fFitMethod == kUseMonteCarlo) {
-      log() << kINFO << "Read cuts optimised using sample of MC events" << Endl;
+      Log() << kINFO << "Read cuts optimised using sample of MC events" << Endl;
    }
    else if (fFitMethod == kUseMonteCarloEvents) {
-      log() << kINFO << "Read cuts optimised using sample of MC-Event events" << Endl;
+      Log() << kINFO << "Read cuts optimised using sample of MC-Event events" << Endl;
    }
    else if (fFitMethod == kUseGeneticAlgorithm) {
-      log() << kINFO << "Read cuts optimised using Genetic Algorithm" << Endl;
+      Log() << kINFO << "Read cuts optimised using Genetic Algorithm" << Endl;
    }
    else if (fFitMethod == kUseSimulatedAnnealing) {
-      log() << kINFO << "Read cuts optimised using Simulated Annealing algorithm" << Endl;
+      Log() << kINFO << "Read cuts optimised using Simulated Annealing algorithm" << Endl;
    }
    else if (fFitMethod == kUseEventScan) {
-      log() << kINFO << "Read cuts optimised using Full Event Scan" << Endl;
+      Log() << kINFO << "Read cuts optimised using Full Event Scan" << Endl;
    }
    else {
-      log() << kWARNING << "unknown method: " << fFitMethod << Endl;
+      Log() << kWARNING << "unknown method: " << fFitMethod << Endl;
    }
-   log() << kINFO << "Reading " << fNbins << " signal efficiency bins for " << GetNvar() << " variables" << Endl;
+   Log() << kINFO << "Reading " << fNbins << " signal efficiency bins for " << GetNvar() << " variables" << Endl;
 
    if (fEffBvsSLocal != 0) delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal", 
@@ -1326,7 +1326,7 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
 
       // sanity check
       if (tmpbin-1 >= fNbins || tmpbin-1 < 0) {
-         log() << kFATAL << "Mismatch in bins: " << tmpbin-1 << " >= " << fNbins << Endl;
+         Log() << kFATAL << "Mismatch in bins: " << tmpbin-1 << " >= " << fNbins << Endl;
       }
 
       fEffBvsSLocal->SetBinContent( tmpbin, tmpeffB );
@@ -1344,7 +1344,7 @@ void TMVA::MethodCuts::WriteMonitoringHistosToFile( void ) const
 {
    // write histograms and PDFs to file for monitoring purposes
 
-   log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
+   Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
   
    fEffBvsSLocal->Write();
 
@@ -1378,7 +1378,7 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
    TList* list  = gTools().ParseFormatLine( theString );
    // sanity check
    if (list->GetSize() != 2) {
-      log() << kFATAL << "<GetTrainingEfficiency> wrong number of arguments"
+      Log() << kFATAL << "<GetTrainingEfficiency> wrong number of arguments"
               << " in string: " << theString
               << " | required format, e.g., Efficiency:0.05" << Endl;
       return -1;
@@ -1433,7 +1433,7 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
          // check that effS matches bini
          Int_t effBin = eff_bvss_tr->GetXaxis()->FindBin(effS);
          if (effBin != bini){
-            log()<< kVERBOSE << "unable to fill efficiency bin " << bini<< " " << effBin <<Endl; 
+            Log()<< kVERBOSE << "unable to fill efficiency bin " << bini<< " " << effBin <<Endl; 
             nFailedBins++;
          }
          else{
@@ -1442,7 +1442,7 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
             rej_bvss_tr->SetBinContent( bini, 1.0-effB ); 
          }
       }
-      if (nFailedBins>0) log()<< kWARNING << " unable to fill "<< nFailedBins <<" efficiency bins " <<Endl;  
+      if (nFailedBins>0) Log()<< kWARNING << " unable to fill "<< nFailedBins <<" efficiency bins " <<Endl;  
 
       delete [] tmpCutMin;
       delete [] tmpCutMax;
@@ -1495,7 +1495,7 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
 
    if (list->GetSize() > 2) {
       delete list;
-      log() << kFATAL << "<GetEfficiency> wrong number of arguments"
+      Log() << kFATAL << "<GetEfficiency> wrong number of arguments"
               << " in string: " << theString
               << " | required format, e.g., Efficiency:0.05, or empty string" << Endl;
       return -1;
@@ -1653,99 +1653,99 @@ void TMVA::MethodCuts::GetHelpMessage() const
    TString resbold = gConfig().WriteOptionsReference() ? "</b>" : "";
    TString brk     = gConfig().WriteOptionsReference() ? "<br>" : "";
 
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The optimisation of rectangular cuts performed by TMVA maximises " << Endl;
-   log() << "the background rejection at given signal efficiency, and scans " << Endl;
-   log() << "over the full range of the latter quantity. Three optimisation" << Endl;
-   log() << "methods are optional: Monte Carlo sampling (MC), a Genetics" << Endl;
-   log() << "Algorithm (GA), and Simulated Annealing (SA). GA and SA are"  << Endl;
-   log() << "expected to perform best." << Endl;
-   log() << Endl;
-   log() << "The difficulty to find the optimal cuts strongly increases with" << Endl;
-   log() << "the dimensionality (number of input variables) of the problem." << Endl;
-   log() << "This behavior is due to the non-uniqueness of the solution space."<<  Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "If the dimensionality exceeds, say, 4 input variables, it is " << Endl;
-   log() << "advisable to scrutinize the separation power of the variables," << Endl;
-   log() << "and to remove the weakest ones. If some among the input variables" << Endl;
-   log() << "can be described by a single cut (e.g., because signal tends to be" << Endl;
-   log() << "larger than background), this can be indicated to MethodCuts via" << Endl;
-   log() << "the \"Fsmart\" options (see option string). Choosing this option" << Endl;
-   log() << "reduces the number of requirements for the variable from 2 (min/max)" << Endl;
-   log() << "to a single one (TMVA finds out whether it is to be interpreted as" << Endl;
-   log() << "min or max)." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << "" << Endl;
-   log() << bold << "Monte Carlo sampling:" << resbold << Endl;
-   log() << "" << Endl;
-   log() << "Apart form the \"Fsmart\" option for the variables, the only way" << Endl;
-   log() << "to improve the MC sampling is to increase the sampling rate. This" << Endl;
-   log() << "is done via the configuration option \"MC_NRandCuts\". The execution" << Endl;
-   log() << "time scales linearly with the sampling rate." << Endl;
-   log() << "" << Endl;
-   log() << bold << "Genetic Algorithm:" << resbold << Endl;
-   log() << "" << Endl;
-   log() << "The algorithm terminates if no significant fitness increase has" << Endl;
-   log() << "been achieved within the last \"nsteps\" steps of the calculation." << Endl;
-   log() << "Wiggles in the ROC curve or constant background rejection of 1" << Endl;
-   log() << "indicate that the GA failed to always converge at the true maximum" << Endl;
-   log() << "fitness. In such a case, it is recommended to broaden the search " << Endl;
-   log() << "by increasing the population size (\"popSize\") and to give the GA " << Endl;
-   log() << "more time to find improvements by increasing the number of steps" << Endl;
-   log() << "(\"nsteps\")" << Endl;
-   log() << "  -> increase \"popSize\" (at least >10 * number of variables)" << Endl;
-   log() << "  -> increase \"nsteps\"" << Endl;
-   log() << "" << Endl;
-   log() << bold << "Simulated Annealing (SA) algorithm:" << resbold << Endl;
-   log() << "" << Endl;
-   log() << "\"Increasing Adaptive\" approach:" << Endl;
-   log() << "" << Endl;
-   log() << "The algorithm seeks local minima and explores their neighborhood, while" << Endl;
-   log() << "changing the ambient temperature depending on the number of failures" << Endl;
-   log() << "in the previous steps. The performance can be improved by increasing" << Endl;
-   log() << "the number of iteration steps (\"MaxCalls\"), or by adjusting the" << Endl;
-   log() << "minimal temperature (\"MinTemperature\"). Manual adjustments of the" << Endl;
-   log() << "speed of the temperature increase (\"TemperatureScale\" and \"AdaptiveSpeed\")" << Endl;
-   log() << "to individual data sets should also help. Summary:" << brk << Endl;
-   log() << "  -> increase \"MaxCalls\"" << brk << Endl;
-   log() << "  -> adjust   \"MinTemperature\"" << brk << Endl;
-   log() << "  -> adjust   \"TemperatureScale\"" << brk << Endl;
-   log() << "  -> adjust   \"AdaptiveSpeed\"" << Endl;
-   log() << "" << Endl;   
-   log() << "\"Decreasing Adaptive\" approach:" << Endl;
-   log() << "" << Endl;
-   log() << "The algorithm calculates the initial temperature (based on the effect-" << Endl;
-   log() << "iveness of large steps) and the multiplier that ensures to reach the" << Endl;
-   log() << "minimal temperature with the requested number of iteration steps." << Endl;
-   log() << "The performance can be improved by adjusting the minimal temperature" << Endl;
-   log() << " (\"MinTemperature\") and by increasing number of steps (\"MaxCalls\"):" << brk << Endl;
-   log() << "  -> increase \"MaxCalls\"" << brk << Endl;
-   log() << "  -> adjust   \"MinTemperature\"" << Endl;
-   log() << " " << Endl;
-   log() << "Other kernels:" << Endl;
-   log() << "" << Endl;
-   log() << "Alternative ways of counting the temperature change are implemented. " << Endl;
-   log() << "Each of them starts with the maximum temperature (\"MaxTemperature\")" << Endl;
-   log() << "and descreases while changing the temperature according to a given" << Endl;
-   log() << "prescription:" << brk << Endl;
-   log() << "CurrentTemperature =" << brk << Endl;
-   log() << "  - Sqrt: InitialTemperature / Sqrt(StepNumber+2) * TemperatureScale" << brk << Endl;
-   log() << "  - Log:  InitialTemperature / Log(StepNumber+2) * TemperatureScale" << brk << Endl;
-   log() << "  - Homo: InitialTemperature / (StepNumber+2) * TemperatureScale" << brk << Endl;
-   log() << "  - Sin:  ( Sin( StepNumber / TemperatureScale ) + 1 ) / (StepNumber + 1) * InitialTemperature + Eps" << brk << Endl;
-   log() << "  - Geo:  CurrentTemperature * TemperatureScale" << Endl;
-   log() << "" << Endl;
-   log() << "Their performance can be improved by adjusting initial temperature" << Endl;
-   log() << "(\"InitialTemperature\"), the number of iteration steps (\"MaxCalls\")," << Endl;
-   log() << "and the multiplier that scales the termperature descrease" << Endl;
-   log() << "(\"TemperatureScale\")" << brk << Endl;
-   log() << "  -> increase \"MaxCalls\"" << brk << Endl;
-   log() << "  -> adjust   \"InitialTemperature\"" << brk << Endl;
-   log() << "  -> adjust   \"TemperatureScale\"" << brk << Endl;
-   log() << "  -> adjust   \"KernelTemperature\"" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The optimisation of rectangular cuts performed by TMVA maximises " << Endl;
+   Log() << "the background rejection at given signal efficiency, and scans " << Endl;
+   Log() << "over the full range of the latter quantity. Three optimisation" << Endl;
+   Log() << "methods are optional: Monte Carlo sampling (MC), a Genetics" << Endl;
+   Log() << "Algorithm (GA), and Simulated Annealing (SA). GA and SA are"  << Endl;
+   Log() << "expected to perform best." << Endl;
+   Log() << Endl;
+   Log() << "The difficulty to find the optimal cuts strongly increases with" << Endl;
+   Log() << "the dimensionality (number of input variables) of the problem." << Endl;
+   Log() << "This behavior is due to the non-uniqueness of the solution space."<<  Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "If the dimensionality exceeds, say, 4 input variables, it is " << Endl;
+   Log() << "advisable to scrutinize the separation power of the variables," << Endl;
+   Log() << "and to remove the weakest ones. If some among the input variables" << Endl;
+   Log() << "can be described by a single cut (e.g., because signal tends to be" << Endl;
+   Log() << "larger than background), this can be indicated to MethodCuts via" << Endl;
+   Log() << "the \"Fsmart\" options (see option string). Choosing this option" << Endl;
+   Log() << "reduces the number of requirements for the variable from 2 (min/max)" << Endl;
+   Log() << "to a single one (TMVA finds out whether it is to be interpreted as" << Endl;
+   Log() << "min or max)." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << "" << Endl;
+   Log() << bold << "Monte Carlo sampling:" << resbold << Endl;
+   Log() << "" << Endl;
+   Log() << "Apart form the \"Fsmart\" option for the variables, the only way" << Endl;
+   Log() << "to improve the MC sampling is to increase the sampling rate. This" << Endl;
+   Log() << "is done via the configuration option \"MC_NRandCuts\". The execution" << Endl;
+   Log() << "time scales linearly with the sampling rate." << Endl;
+   Log() << "" << Endl;
+   Log() << bold << "Genetic Algorithm:" << resbold << Endl;
+   Log() << "" << Endl;
+   Log() << "The algorithm terminates if no significant fitness increase has" << Endl;
+   Log() << "been achieved within the last \"nsteps\" steps of the calculation." << Endl;
+   Log() << "Wiggles in the ROC curve or constant background rejection of 1" << Endl;
+   Log() << "indicate that the GA failed to always converge at the true maximum" << Endl;
+   Log() << "fitness. In such a case, it is recommended to broaden the search " << Endl;
+   Log() << "by increasing the population size (\"popSize\") and to give the GA " << Endl;
+   Log() << "more time to find improvements by increasing the number of steps" << Endl;
+   Log() << "(\"nsteps\")" << Endl;
+   Log() << "  -> increase \"popSize\" (at least >10 * number of variables)" << Endl;
+   Log() << "  -> increase \"nsteps\"" << Endl;
+   Log() << "" << Endl;
+   Log() << bold << "Simulated Annealing (SA) algorithm:" << resbold << Endl;
+   Log() << "" << Endl;
+   Log() << "\"Increasing Adaptive\" approach:" << Endl;
+   Log() << "" << Endl;
+   Log() << "The algorithm seeks local minima and explores their neighborhood, while" << Endl;
+   Log() << "changing the ambient temperature depending on the number of failures" << Endl;
+   Log() << "in the previous steps. The performance can be improved by increasing" << Endl;
+   Log() << "the number of iteration steps (\"MaxCalls\"), or by adjusting the" << Endl;
+   Log() << "minimal temperature (\"MinTemperature\"). Manual adjustments of the" << Endl;
+   Log() << "speed of the temperature increase (\"TemperatureScale\" and \"AdaptiveSpeed\")" << Endl;
+   Log() << "to individual data sets should also help. Summary:" << brk << Endl;
+   Log() << "  -> increase \"MaxCalls\"" << brk << Endl;
+   Log() << "  -> adjust   \"MinTemperature\"" << brk << Endl;
+   Log() << "  -> adjust   \"TemperatureScale\"" << brk << Endl;
+   Log() << "  -> adjust   \"AdaptiveSpeed\"" << Endl;
+   Log() << "" << Endl;   
+   Log() << "\"Decreasing Adaptive\" approach:" << Endl;
+   Log() << "" << Endl;
+   Log() << "The algorithm calculates the initial temperature (based on the effect-" << Endl;
+   Log() << "iveness of large steps) and the multiplier that ensures to reach the" << Endl;
+   Log() << "minimal temperature with the requested number of iteration steps." << Endl;
+   Log() << "The performance can be improved by adjusting the minimal temperature" << Endl;
+   Log() << " (\"MinTemperature\") and by increasing number of steps (\"MaxCalls\"):" << brk << Endl;
+   Log() << "  -> increase \"MaxCalls\"" << brk << Endl;
+   Log() << "  -> adjust   \"MinTemperature\"" << Endl;
+   Log() << " " << Endl;
+   Log() << "Other kernels:" << Endl;
+   Log() << "" << Endl;
+   Log() << "Alternative ways of counting the temperature change are implemented. " << Endl;
+   Log() << "Each of them starts with the maximum temperature (\"MaxTemperature\")" << Endl;
+   Log() << "and descreases while changing the temperature according to a given" << Endl;
+   Log() << "prescription:" << brk << Endl;
+   Log() << "CurrentTemperature =" << brk << Endl;
+   Log() << "  - Sqrt: InitialTemperature / Sqrt(StepNumber+2) * TemperatureScale" << brk << Endl;
+   Log() << "  - Log:  InitialTemperature / Log(StepNumber+2) * TemperatureScale" << brk << Endl;
+   Log() << "  - Homo: InitialTemperature / (StepNumber+2) * TemperatureScale" << brk << Endl;
+   Log() << "  - Sin:  ( Sin( StepNumber / TemperatureScale ) + 1 ) / (StepNumber + 1) * InitialTemperature + Eps" << brk << Endl;
+   Log() << "  - Geo:  CurrentTemperature * TemperatureScale" << Endl;
+   Log() << "" << Endl;
+   Log() << "Their performance can be improved by adjusting initial temperature" << Endl;
+   Log() << "(\"InitialTemperature\"), the number of iteration steps (\"MaxCalls\")," << Endl;
+   Log() << "and the multiplier that scales the termperature descrease" << Endl;
+   Log() << "(\"TemperatureScale\")" << brk << Endl;
+   Log() << "  -> increase \"MaxCalls\"" << brk << Endl;
+   Log() << "  -> adjust   \"InitialTemperature\"" << brk << Endl;
+   Log() << "  -> adjust   \"TemperatureScale\"" << brk << Endl;
+   Log() << "  -> adjust   \"KernelTemperature\"" << Endl;
 }

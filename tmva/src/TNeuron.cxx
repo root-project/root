@@ -300,7 +300,7 @@ void TMVA::TNeuron::PrintLinks(TObjArray* links)
    // print an array of TSynapses, for debugging
 
    if (links == NULL) {
-      log() << kDEBUG << "\t\t\t<none>" << Endl;
+      Log() << kDEBUG << "\t\t\t<none>" << Endl;
       return;
    }
 
@@ -309,7 +309,7 @@ void TMVA::TNeuron::PrintLinks(TObjArray* links)
    Int_t numLinks = links->GetEntriesFast();
    for  (Int_t i = 0; i < numLinks; i++) {
       synapse = (TSynapse*)links->At(i);
-      log() << kDEBUG <<  
+      Log() << kDEBUG <<  
          "\t\t\tweighta: " << synapse->GetWeight()
            << "\t\tw-value: " << synapse->GetWeightedValue()
            << "\t\tw-delta: " << synapse->GetWeightedDelta()
@@ -322,13 +322,13 @@ void TMVA::TNeuron::PrintLinks(TObjArray* links)
 void TMVA::TNeuron::PrintActivationEqn()
 {
    // print activation equation, for debugging
-   if (fActivation != NULL) log() << kDEBUG << fActivation->GetExpression() << Endl;
-   else                     log() << kDEBUG << "<none>" << Endl;
+   if (fActivation != NULL) Log() << kDEBUG << fActivation->GetExpression() << Endl;
+   else                     Log() << kDEBUG << "<none>" << Endl;
 }
 
 //______________________________________________________________________________
 void TMVA::TNeuron::PrintMessage( EMsgType type, TString message)
 {
    // print message, for debugging
-   log() << type << message << Endl;
+   Log() << type << message << Endl;
 }

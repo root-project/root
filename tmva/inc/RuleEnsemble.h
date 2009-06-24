@@ -394,7 +394,7 @@ namespace TMVA {
       const RuleFit*                fRuleFit;           // pointer to rule fit object 
 
       mutable MsgLogger*            fLogger;            //! message logger
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
    };
 }
 

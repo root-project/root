@@ -259,7 +259,7 @@ void TMVA::MethodANNBase::BuildNetwork( vector<Int_t>* layout, vector<Double_t>*
    // build network given a layout (number of neurons in each layer)
    // and optional weights array
 
-   log() << kINFO << "Building Network" << Endl;
+   Log() << kINFO << "Building Network" << Endl;
 
    DeleteNetwork();
    InitANNBase();
@@ -465,7 +465,7 @@ void TMVA::MethodANNBase::ForceNetworkCalculations()
 void TMVA::MethodANNBase::PrintMessage(TString message, Bool_t force) const
 {
    // print messages, turn off printing by setting verbose and debug flag appropriately
-   if (Verbose() || Debug() || force) log() << kINFO << message << Endl;
+   if (Verbose() || Debug() || force) Log() << kINFO << message << Endl;
 }
 
 //______________________________________________________________________________
@@ -473,7 +473,7 @@ void TMVA::MethodANNBase::WaitForKeyboard()
 {
    // wait for keyboard input, for debugging
    string dummy;
-   log() << kINFO << "***Type anything to continue (q to quit): ";
+   Log() << kINFO << "***Type anything to continue (q to quit): ";
    getline(cin, dummy);
    if (dummy == "q" || dummy == "Q") {
       PrintMessage( "quit" );
@@ -488,9 +488,9 @@ void TMVA::MethodANNBase::PrintNetwork() const
    // print network representation, for debugging
    if (!Debug()) return;
 
-   log() << Endl;
+   Log() << Endl;
    PrintMessage( "printing network " );
-   log() << kINFO << "-------------------------------------------------------------------" << Endl;
+   Log() << kINFO << "-------------------------------------------------------------------" << Endl;
 
    TObjArray* curLayer;
    Int_t numLayers = fNetwork->GetEntriesFast();
@@ -500,7 +500,7 @@ void TMVA::MethodANNBase::PrintNetwork() const
       curLayer = (TObjArray*)fNetwork->At(i);
       Int_t numNeurons = curLayer->GetEntriesFast();
 
-      log() << kINFO << "Layer #" << i << " (" << numNeurons << " neurons):" << Endl;
+      Log() << kINFO << "Layer #" << i << " (" << numNeurons << " neurons):" << Endl;
       PrintLayer( curLayer );
    }
 }
@@ -515,7 +515,7 @@ void TMVA::MethodANNBase::PrintLayer(TObjArray* layer) const
   
    for (Int_t j = 0; j < numNeurons; j++) {
       neuron = (TNeuron*) layer->At(j);
-      log() << kINFO << "\tNeuron #" << j << " (LinksIn: " << neuron->NumPreLinks() 
+      Log() << kINFO << "\tNeuron #" << j << " (LinksIn: " << neuron->NumPreLinks() 
               << " , LinksOut: " << neuron->NumPostLinks() << ")" << Endl;
       PrintNeuron( neuron );
    }
@@ -525,15 +525,15 @@ void TMVA::MethodANNBase::PrintLayer(TObjArray* layer) const
 void TMVA::MethodANNBase::PrintNeuron(TNeuron* neuron) const
 {
    // print a neuron, for debugging
-   log() << kINFO 
+   Log() << kINFO 
            << "\t\tValue:\t"     << neuron->GetValue()
            << "\t\tActivation: " << neuron->GetActivationValue()
            << "\t\tDelta: "      << neuron->GetDelta() << Endl;
-   log() << kINFO << "\t\tActivationEquation:\t";
+   Log() << kINFO << "\t\tActivationEquation:\t";
    neuron->PrintActivationEqn();
-   log() << kINFO << "\t\tLinksIn:" << Endl;
+   Log() << kINFO << "\t\tLinksIn:" << Endl;
    neuron->PrintPreLinks();
-   log() << kINFO << "\t\tLinksOut:" << Endl;
+   Log() << kINFO << "\t\tLinksOut:" << Endl;
    neuron->PrintPostLinks();
 }
 
@@ -701,7 +701,7 @@ void TMVA::MethodANNBase::ReadWeightsFromXML( void* wghtnode )
                
                TSynapse* synapse = neuron->PostLinkAt(iSyn);
                s >> weight;
-               //log() << kWARNING << neuron << " " << weight <<  Endl;
+               //Log() << kWARNING << neuron << " " << weight <<  Endl;
                synapse->SetWeight(weight);
             }
          }

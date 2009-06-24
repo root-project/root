@@ -91,7 +91,7 @@ namespace TMVA {
       static const Int_t   fgNbins;     // number of bins in progress bar
 
       mutable MsgLogger*   fLogger;     // the output logger
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
 
       ClassDef(Timer,0) // Timing information for training and evaluation of MVA methods
    };

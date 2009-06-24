@@ -81,16 +81,16 @@ Bool_t TMVA::VariableGaussTransform::PrepareTransformation( const std::vector<Ev
 
    if (!IsEnabled() || IsCreated()) return kTRUE;
 
-   log() << kINFO << "Preparing the Gaussian transformation..." << Endl;
+   Log() << kINFO << "Preparing the Gaussian transformation..." << Endl;
 
    SetNVariables(events[0]->GetNVariables());
 
    if (GetNVariables() > 200) { 
-      log() << kWARNING << "----------------------------------------------------------------------------" 
+      Log() << kWARNING << "----------------------------------------------------------------------------" 
               << Endl;
-      log() << kWARNING 
+      Log() << kWARNING 
               << ": More than 200 variables, I hope you have enough memory!!!!" << Endl;
-      log() << kWARNING << "----------------------------------------------------------------------------" 
+      Log() << kWARNING << "----------------------------------------------------------------------------" 
               << Endl;
       //      return kFALSE;
    }   
@@ -107,7 +107,7 @@ const TMVA::Event* TMVA::VariableGaussTransform::Transform(const Event* const ev
 {
    // apply the Gauss transformation
 
-   if (!IsCreated()) log() << kFATAL << "Transformation not yet created" << Endl;
+   if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
    if (cls <0 || cls >= GetNClasses() ) {
       cls = GetNClasses();
@@ -159,10 +159,10 @@ const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform( const Event* 
 {
    // apply the Gauss transformation
    // TODO: implementation of inverse transformation
-   log() << kFATAL << "Inverse transformation for Gauss transformation not yet implemented. Hence, this transformation cannot be applied together with regression. Please contact the authors if necessary." << Endl;
+   Log() << kFATAL << "Inverse transformation for Gauss transformation not yet implemented. Hence, this transformation cannot be applied together with regression. Please contact the authors if necessary." << Endl;
 
    if (!IsCreated())
-      log() << kFATAL << "Transformation not yet created" 
+      Log() << kFATAL << "Transformation not yet created" 
               << Endl;
 
    if (cls <0 || cls >= GetNClasses() ) cls = GetNClasses();
@@ -369,7 +369,7 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector<Event*>&
 //_______________________________________________________________________
 void TMVA::VariableGaussTransform::WriteTransformationToStream( std::ostream& ) const
 {
-   log() << kFATAL << "VariableGaussTransform::WriteTransformationToStream is obsolete" << Endl; 
+   Log() << kFATAL << "VariableGaussTransform::WriteTransformationToStream is obsolete" << Endl; 
 }
 
 //_______________________________________________________________________
@@ -405,7 +405,7 @@ void TMVA::VariableGaussTransform::AttachXMLTo(void* parent) {
       gTools().AddAttr( varxml, "VarIndex", ivar );
          
       if ( fCumulativePDF[ivar][0]==0 || fCumulativePDF[ivar][1]==0 )
-         log() << kFATAL << "Cumulative histograms for variable " << ivar << " don't exist, can't write it to weight file" << Endl;
+         Log() << kFATAL << "Cumulative histograms for variable " << ivar << " don't exist, can't write it to weight file" << Endl;
       
       for (UInt_t icls=0; icls<fCumulativePDF[ivar].size(); icls++){
          void* pdfxml = gTools().xmlengine().NewChild( varxml, 0, Form("CumulativePDF_cls%d",icls));
@@ -452,7 +452,7 @@ void TMVA::VariableGaussTransform::ReadFromXML( void* trfnode ) {
 //_______________________________________________________________________
 void TMVA::VariableGaussTransform::ReadTransformationFromStream( std::istream& istr )
 {
-   log() << kFATAL << "VariableGaussTransform::ReadTransformationFromStream: reading text files is obsolete" << Endl;
+   Log() << kFATAL << "VariableGaussTransform::ReadTransformationFromStream: reading text files is obsolete" << Endl;
    // Read the cumulative distribution
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
@@ -511,13 +511,13 @@ void TMVA::VariableGaussTransform::PrintTransformation( ostream& )
 {
    // prints the transformation 
    Int_t cls = 0;
-   log() << kINFO << "I do not know yet how to print this... look in the weight file " << cls << ":" << Endl;
+   Log() << kINFO << "I do not know yet how to print this... look in the weight file " << cls << ":" << Endl;
    cls++;
 }
 
 //_______________________________________________________________________
 void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TString& fcncName, 
-                                                 Int_t part, UInt_t trCounter, Int_t /*cls*/  ) 
+                                                 Int_t part, UInt_t trCounter, Int_t ) 
 {
    // creates the transformation function
    //

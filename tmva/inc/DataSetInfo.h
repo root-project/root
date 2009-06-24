@@ -194,7 +194,7 @@ namespace TMVA {
       UInt_t                     fSignalClass;       //! index of the class with the name signal
       
       mutable MsgLogger*         fLogger;            //! message logger
-      MsgLogger& log() const { return *fLogger; }
+      MsgLogger& Log() const { return *fLogger; }
 
    };
 }

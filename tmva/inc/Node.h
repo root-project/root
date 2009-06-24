@@ -74,7 +74,7 @@ namespace TMVA {
       // destructor
       virtual ~Node();
 
-      virtual Node* createNode() const = 0;
+      virtual Node* CreateNode() const = 0;
 
       // test event if i{ decends the tree at this node to the right  
       virtual Bool_t GoesRight( const Event& ) const = 0;

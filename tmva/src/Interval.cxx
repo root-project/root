@@ -48,13 +48,13 @@ TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) :
    // when nbins == 0, interval describes a discrete distribution (equally distributed in the interval)
    // when nbins > 0, interval describes a continous interval
    //
-   if (fMax - fMin < 0) log() << kFATAL << "maximum lower than minimum" << Endl;
+   if (fMax - fMin < 0) Log() << kFATAL << "maximum lower than minimum" << Endl;
    if (nbins < 0) {
-      log() << kFATAL << "nbins < 0" << Endl;
+      Log() << kFATAL << "nbins < 0" << Endl;
       return;
    }
    else if (nbins == 1) {
-      log() << kFATAL << "interval has to have at least 2 bins if discrete" << Endl;
+      Log() << kFATAL << "interval has to have at least 2 bins if discrete" << Endl;
       return;
    }
 }
@@ -81,11 +81,11 @@ Double_t TMVA::Interval::GetElement( Int_t bin ) const
    //        Double_t position 
    //
    if (fNbins <= 0) {
-      log() << kFATAL << "GetElement only possible for discrete values" << Endl;
+      Log() << kFATAL << "GetElement only possible for discrete values" << Endl;
       return 0.0;
    }
    else if (bin < 0 || bin >= fNbins) {
-      log() << kFATAL << "bin " << bin << " out of interval [0," << fNbins << ")" << Endl;
+      Log() << kFATAL << "bin " << bin << " out of interval [0," << fNbins << ")" << Endl;
       return 0.0;
    }
    

@@ -81,7 +81,7 @@ namespace TMVA {
    class PDEFoamMaxwt;
    class MsgLogger;
 
-   enum EKernel { kNone, kGaus };
+   enum EKernel { kNone, kGaus, kLinN };
    enum ETargetSelection { kMean, kMpv };
    enum ECellType { kAll, kActive, kInActive };
    enum EFoamType { kSeparate, kDiscr, kMonoTarget, kMultiTarget };
@@ -141,7 +141,7 @@ namespace TMVA {
       Int_t fBackgroundClass;  // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
 
       mutable MsgLogger* fLogger;                     //! message logger
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
 
    public:
       TFDISTR();
@@ -299,7 +299,7 @@ namespace TMVA {
       Int_t fSignalClass;      // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
       Int_t fBackgroundClass;  // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
       mutable MsgLogger* fLogger;                     //! message logger
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
 
       //////////////////////////////////////////////////////////////////////////////////////////////
       //                                     METHODS                                              //
@@ -659,7 +659,7 @@ namespace TMVA {
 
    protected:
       mutable MsgLogger* fLogger;                     //! message logger
-      MsgLogger& log() const { return *fLogger; }                          
+      MsgLogger& Log() const { return *fLogger; }                          
    
    public:
 
@@ -703,7 +703,7 @@ namespace TMVA {
 
    protected:
       mutable MsgLogger* fLogger;                     //! message logger
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
 
    public:
       // constructor

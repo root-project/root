@@ -122,7 +122,7 @@ namespace TMVA {
    protected:
 
       // the mutable declaration is needed to use the logger in const methods
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
 
    public:
 
@@ -184,7 +184,7 @@ void TMVA::Configurable::AssignOpt(const TString& name, T& valAssign) const
    TObject* opt = fListOfOptions.FindObject(name);
    if (opt!=0) valAssign = ((Option<T>*)opt)->Value();
    else 
-      log() << kFATAL << "Option \"" << name 
+      Log() << kFATAL << "Option \"" << name 
             << "\" not declared, please check the syntax of your option string" << Endl;
 }
 

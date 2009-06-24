@@ -156,7 +156,7 @@ namespace TMVA {
          
       std::map<TString, TMVA::Types::EMVA> fStr2type; // types-to-text map
       mutable MsgLogger* fLogger;   // message logger
-      MsgLogger& log() const { return *fLogger; }
+      MsgLogger& Log() const { return *fLogger; }
          
    };
 }

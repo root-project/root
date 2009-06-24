@@ -45,7 +45,7 @@ ClassImp(TMVA::VariablePCATransform)
 
 //_______________________________________________________________________
 TMVA::VariablePCATransform::VariablePCATransform( DataSetInfo& dsi )
-   : VariableTransformBase( dsi, Types::kPCA, "PCA" )
+: VariableTransformBase( dsi, Types::kPCA, "PCA" )
 { 
    // constructor
 }
@@ -78,23 +78,23 @@ Bool_t TMVA::VariablePCATransform::PrepareTransformation( const std::vector<Even
 
    if (!IsEnabled() || IsCreated()) return kTRUE;
 
-   log() << kINFO << "Preparing the Principle Component (PCA) transformation..." << Endl;
+   Log() << kINFO << "Preparing the Principle Component (PCA) transformation..." << Endl;
 
    SetNVariables(events[0]->GetNVariables());
 
    // TPrincipal doesn't support PCA transformation for 1 or less variables
    if (GetNVariables() <= 1) {
-      log() << kINFO << "Cannot perform PCA transformation for " << GetNVariables() << " variable only" << Endl;
+      Log() << kINFO << "Cannot perform PCA transformation for " << GetNVariables() << " variable only" << Endl;
       return kFALSE;
    }
 
    if (GetNVariables() > 200) { 
-      log() << kINFO << "----------------------------------------------------------------------------" 
-              << Endl;
-      log() << kINFO 
-              << ": More than 200 variables, will not calculate PCA!" << Endl;
-      log() << kINFO << "----------------------------------------------------------------------------" 
-              << Endl;
+      Log() << kINFO << "----------------------------------------------------------------------------" 
+            << Endl;
+      Log() << kINFO 
+            << ": More than 200 variables, will not calculate PCA!" << Endl;
+      Log() << kINFO << "----------------------------------------------------------------------------" 
+            << Endl;
       return kFALSE;
    }   
 
@@ -138,7 +138,7 @@ const TMVA::Event* TMVA::VariablePCATransform::InverseTransform( const Event* co
 {
    // apply the principal component analysis
    // TODO: implementation of inverse transformation
-   log() << kFATAL << "Inverse transformation for PCA transformation not yet implemented. Hence, this transformation cannot be applied together with regression. Please contact the authors if necessary." << Endl;
+   Log() << kFATAL << "Inverse transformation for PCA transformation not yet implemented. Hence, this transformation cannot be applied together with regression. Please contact the authors if necessary." << Endl;
 
    if (!IsCreated()) return 0;
    const Int_t nvar = ev->GetNVariables();
@@ -412,7 +412,7 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
 
 //_______________________________________________________________________
 void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString& fcncName, 
-                                               Int_t part, UInt_t trCounter, Int_t /*cls*/  ) 
+                                               Int_t part, UInt_t trCounter, Int_t ) 
 {
 
    UInt_t nvar = fEigenVectors[0]->GetNrows();
@@ -433,9 +433,9 @@ void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString
    // sanity check
    if (numC>1){
       if (fMeanValues[0]->GetNrows()   != fMeanValues[1]->GetNrows() ||
-	  fEigenVectors[0]->GetNrows() != fEigenVectors[1]->GetNrows() ||
-	  fEigenVectors[0]->GetNcols() != fEigenVectors[1]->GetNcols()) {
-	 log() << kFATAL << "<MakeFunction> Mismatch in vector/matrix dimensions" << Endl;
+          fEigenVectors[0]->GetNrows() != fEigenVectors[1]->GetNrows() ||
+          fEigenVectors[0]->GetNcols() != fEigenVectors[1]->GetNcols()) {
+         Log() << kFATAL << "<MakeFunction> Mismatch in vector/matrix dimensions" << Endl;
       }
    }
 

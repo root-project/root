@@ -96,13 +96,13 @@ void TMVA::GeneticFitter::SetParameters(  Int_t cycles,
 Double_t TMVA::GeneticFitter::Run( std::vector<Double_t>& pars )
 {
    // Execute fitting
-   log() << kINFO << "<GeneticFitter> Optimisation, please be patient "
-           << "... (inaccurate progress timing for GA)" << Endl;
+   Log() << kINFO << "<GeneticFitter> Optimisation, please be patient "
+         << "... (inaccurate progress timing for GA)" << Endl;
 
    GetFitterTarget().ProgressNotifier( "GA", "init" );
 
    GeneticAlgorithm gstore( GetFitterTarget(),  fPopSize, fRanges);
-//   gstore.SetMakeCopies(kTRUE);  // commented out, because it reduces speed
+   //   gstore.SetMakeCopies(kTRUE);  // commented out, because it reduces speed
 
    // timing of GA
    Timer timer( 100*(fCycles), GetName() ); 
@@ -116,13 +116,13 @@ Double_t TMVA::GeneticFitter::Run( std::vector<Double_t>& pars )
          
       // "m_ga_spread" times the number of variables
       GeneticAlgorithm ga( GetFitterTarget(), fPopSize, fRanges, fSeed ); 
-//      ga.SetMakeCopies(kTRUE);  // commented out, because it reduces speed
+      //      ga.SetMakeCopies(kTRUE);  // commented out, because it reduces speed
 
       if ( pars.size() == fRanges.size() ){
-          ga.GetGeneticPopulation().GiveHint( pars, 0.0 );
+         ga.GetGeneticPopulation().GiveHint( pars, 0.0 );
       }
       if (cycle==fCycles-1) {
-	 GetFitterTarget().ProgressNotifier( "GA", "last" );
+         GetFitterTarget().ProgressNotifier( "GA", "last" );
          ga.GetGeneticPopulation().AddPopulation( gstore.GetGeneticPopulation() );
       }
 
@@ -133,7 +133,7 @@ Double_t TMVA::GeneticFitter::Run( std::vector<Double_t>& pars )
 
       Double_t n=0.;
       do {
-	 GetFitterTarget().ProgressNotifier( "GA", "iteration" );
+         GetFitterTarget().ProgressNotifier( "GA", "iteration" );
          ga.Init();
          ga.CalculateFitness();
          if ( fTrim ) ga.GetGeneticPopulation().TrimPopulation();
@@ -163,8 +163,8 @@ Double_t TMVA::GeneticFitter::Run( std::vector<Double_t>& pars )
    }
 
    // get elapsed time   
-   log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
-           << "                            " << Endl;  
+   Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
+         << "                            " << Endl;  
 
    Double_t fitness = gstore.CalculateFitness();
    gstore.GetGeneticPopulation().Sort();

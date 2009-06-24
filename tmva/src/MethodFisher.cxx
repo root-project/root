@@ -438,18 +438,18 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
       theMat = fCov;
       break;
    default:
-      log() << kFATAL << "<GetFisherCoeff> undefined method" << GetFisherMethod() << Endl;
+      Log() << kFATAL << "<GetFisherCoeff> undefined method" << GetFisherMethod() << Endl;
    }
 
    TMatrixD invCov( *theMat );
    if ( TMath::Abs(invCov.Determinant()) < 10E-24 ) {
-      log() << kWARNING << "<GetFisherCoeff> matrix is almost singular with deterninant="
+      Log() << kWARNING << "<GetFisherCoeff> matrix is almost singular with deterninant="
               << TMath::Abs(invCov.Determinant()) 
               << " did you use the variables that are linear combinations or highly correlated?" 
               << Endl;
    }
    if ( TMath::Abs(invCov.Determinant()) < 10E-120 ) {
-      log() << kFATAL << "<GetFisherCoeff> matrix is singular with determinant="
+      Log() << kFATAL << "<GetFisherCoeff> matrix is singular with determinant="
               << TMath::Abs(invCov.Determinant())  
               << " did you use the variables that are linear combinations?" 
               << Endl;
@@ -520,14 +520,14 @@ void TMVA::MethodFisher::PrintCoefficients( void )
 {
    // display Fisher coefficients and discriminating power for each variable
    // check maximum length of variable name
-   log() << kINFO << "Results for Fisher coefficients:" << Endl;
+   Log() << kINFO << "Results for Fisher coefficients:" << Endl;
 
    if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
-      log() << kINFO << "NOTE: The coefficients must be applied to TRANFORMED variables" << Endl;
-      log() << kINFO << "  List of the transformation: " << Endl;
+      Log() << kINFO << "NOTE: The coefficients must be applied to TRANFORMED variables" << Endl;
+      Log() << kINFO << "  List of the transformation: " << Endl;
       TListIter trIt(&GetTransformationHandler().GetTransformationList());
       while (VariableTransformBase *trf = (VariableTransformBase*) trIt()) {
-         log() << kINFO << "  -- " << trf->GetName() << Endl;
+         Log() << kINFO << "  -- " << trf->GetName() << Endl;
       }
    }
    std::vector<TString>  vars;
@@ -538,17 +538,17 @@ void TMVA::MethodFisher::PrintCoefficients( void )
    }
    vars  .push_back( "(offset)" );
    coeffs.push_back( fF0 );
-   TMVA::gTools().FormattedOutput( coeffs, vars, "Variable" , "Coefficient", log() );   
+   TMVA::gTools().FormattedOutput( coeffs, vars, "Variable" , "Coefficient", Log() );   
 
    if (IsNormalised()) {
-      log() << kINFO << "NOTE: You have chosen to use the \"Normalise\" booking option. Hence, the" << Endl;
-      log() << kINFO << "      coefficients must be applied to NORMALISED (') variables as follows:" << Endl;
+      Log() << kINFO << "NOTE: You have chosen to use the \"Normalise\" booking option. Hence, the" << Endl;
+      Log() << kINFO << "      coefficients must be applied to NORMALISED (') variables as follows:" << Endl;
       Int_t maxL = 0;
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) if (GetInputLabel(ivar).Length() > maxL) maxL = GetInputLabel(ivar).Length();
 
       // Print normalisation expression (see Tools.cxx): "2*(x - xmin)/(xmax - xmin) - 1.0"
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-         log() << kINFO 
+         Log() << kINFO 
                  << setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*(" 
                  << setw(maxL+2) << TString("[") + GetInputLabel(ivar) + "]"
                  << setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
@@ -557,10 +557,10 @@ void TMVA::MethodFisher::PrintCoefficients( void )
                  << setw(3) << " - 1"
                  << Endl;
       }
-      log() << kINFO << "The TMVA Reader will properly account for this normalisation, but if the" << Endl;
-      log() << kINFO << "Fisher classifier is applied outside the Reader, the transformation must be" << Endl;
-      log() << kINFO << "implemented -- or the \"Normalise\" option is removed and Fisher retrained." << Endl;
-      log() << kINFO << Endl;
+      Log() << kINFO << "The TMVA Reader will properly account for this normalisation, but if the" << Endl;
+      Log() << kINFO << "Fisher classifier is applied outside the Reader, the transformation must be" << Endl;
+      Log() << kINFO << "implemented -- or the \"Normalise\" option is removed and Fisher retrained." << Endl;
+      Log() << kINFO << Endl;
    }   
 }
   
@@ -664,40 +664,40 @@ void TMVA::MethodFisher::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "Fisher discriminants select events by distinguishing the mean " << Endl;
-   log() << "values of the signal and background distributions in a trans- " << Endl;
-   log() << "formed variable space where linear correlations are removed." << Endl;
-   log() << Endl;
-   log() << "   (More precisely: the \"linear discriminator\" determines" << Endl;
-   log() << "    an axis in the (correlated) hyperspace of the input " << Endl;
-   log() << "    variables such that, when projecting the output classes " << Endl;
-   log() << "    (signal and background) upon this axis, they are pushed " << Endl;
-   log() << "    as far as possible away from each other, while events" << Endl;
-   log() << "    of a same class are confined in a close vicinity. The  " << Endl;
-   log() << "    linearity property of this classifier is reflected in the " << Endl;
-   log() << "    metric with which \"far apart\" and \"close vicinity\" are " << Endl;
-   log() << "    determined: the covariance matrix of the discriminating" << Endl;
-   log() << "    variable space.)" << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "Optimal performance for Fisher discriminants is obtained for " << Endl;
-   log() << "linearly correlated Gaussian-distributed variables. Any deviation" << Endl;
-   log() << "from this ideal reduces the achievable separation power. In " << Endl;
-   log() << "particular, no discrimination at all is achieved for a variable" << Endl;
-   log() << "that has the same sample mean for signal and background, even if " << Endl;
-   log() << "the shapes of the distributions are very different. Thus, Fisher " << Endl;
-   log() << "discriminants often benefit from suitable transformations of the " << Endl;
-   log() << "input variables. For example, if a variable x in [-1,1] has a " << Endl;
-   log() << "a parabolic signal distributions, and a uniform background" << Endl;
-   log() << "distributions, their mean value is zero in both cases, leading " << Endl;
-   log() << "to no separation. The simple transformation x -> |x| renders this " << Endl;
-   log() << "variable powerful for the use in a Fisher discriminant." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "<None>" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "Fisher discriminants select events by distinguishing the mean " << Endl;
+   Log() << "values of the signal and background distributions in a trans- " << Endl;
+   Log() << "formed variable space where linear correlations are removed." << Endl;
+   Log() << Endl;
+   Log() << "   (More precisely: the \"linear discriminator\" determines" << Endl;
+   Log() << "    an axis in the (correlated) hyperspace of the input " << Endl;
+   Log() << "    variables such that, when projecting the output classes " << Endl;
+   Log() << "    (signal and background) upon this axis, they are pushed " << Endl;
+   Log() << "    as far as possible away from each other, while events" << Endl;
+   Log() << "    of a same class are confined in a close vicinity. The  " << Endl;
+   Log() << "    linearity property of this classifier is reflected in the " << Endl;
+   Log() << "    metric with which \"far apart\" and \"close vicinity\" are " << Endl;
+   Log() << "    determined: the covariance matrix of the discriminating" << Endl;
+   Log() << "    variable space.)" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "Optimal performance for Fisher discriminants is obtained for " << Endl;
+   Log() << "linearly correlated Gaussian-distributed variables. Any deviation" << Endl;
+   Log() << "from this ideal reduces the achievable separation power. In " << Endl;
+   Log() << "particular, no discrimination at all is achieved for a variable" << Endl;
+   Log() << "that has the same sample mean for signal and background, even if " << Endl;
+   Log() << "the shapes of the distributions are very different. Thus, Fisher " << Endl;
+   Log() << "discriminants often benefit from suitable transformations of the " << Endl;
+   Log() << "input variables. For example, if a variable x in [-1,1] has a " << Endl;
+   Log() << "a parabolic signal distributions, and a uniform background" << Endl;
+   Log() << "distributions, their mean value is zero in both cases, leading " << Endl;
+   Log() << "to no separation. The simple transformation x -> |x| renders this " << Endl;
+   Log() << "variable powerful for the use in a Fisher discriminant." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "<None>" << Endl;
 }

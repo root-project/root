@@ -118,7 +118,7 @@ namespace TMVA {
       UInt_t     fDepth;            // maximal depth in tree reached
 
       mutable MsgLogger* fLogger;   // message loggera    
-      MsgLogger& log() const { return *fLogger; }
+      MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(BinaryTree,0) // Base class for BinarySearch and Decision Trees
    };  

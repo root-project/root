@@ -49,7 +49,11 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
                                                     const IPruneTool::EventSample* validationSample,
                                                     Bool_t isAutomatic )
 {
-   if( isAutomatic ) SetAutomatic( );
+   if( isAutomatic ) {
+      //SetAutomatic( );
+      isAutomatic = kFALSE;
+      Log() << kWARNING << "Sorry autmoatic pruning strength determination is not implemented yet" << Endl;
+   }
    if( dt == NULL || (IsAutomatic() && validationSample == NULL) ) {
       // must have a valid decision tree to prune, and if the prune strength
       // is to be chosen automatically, must have a test sample from
@@ -58,7 +62,9 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
    }
    fNodePurityLimit = dt->GetNodePurityLimit();
 
-   if(IsAutomatic()) {
+   if(IsAutomatic()) { 
+      Log() << kFATAL << "Sorry autmoatic pruning strength determination is not implemented yet" << Endl;
+      /*
       dt->ApplyValidationSample(validationSample);
       Double_t weights = dt->GetSumWeights(validationSample);
       // set the initial prune strength
@@ -72,9 +78,10 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
          lastNodeCount = nnodes;
 
       // find the maxiumum prune strength that still leaves the root's daughter nodes
+      
       while ( nnodes > 1 && !forceStop ) {
          fPruneStrength += fDeltaPruneStrength;
-         log() << "----------------------------------------------------" << Endl;
+         Log() << "----------------------------------------------------" << Endl;
          FindListOfNodes((DecisionTreeNode*)dt->GetRoot());
          for( UInt_t i = 0; i < fPruneSequence.size(); i++ )
             fPruneSequence[i]->SetTerminal(); // prune all the nodes from the sequence
@@ -84,27 +91,27 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
 
          nnodes = CountNodes((DecisionTreeNode*)dt->GetRoot()); // count the number of nodes in the pruned tree
 
-         log() << "Prune strength : " << fPruneStrength << Endl;
-         log() << "Had " << lastNodeCount << " nodes, now have " << nnodes << Endl;
-         log() << "Quality index is: " << quality << Endl;
+         Log() << "Prune strength : " << fPruneStrength << Endl;
+         Log() << "Had " << lastNodeCount << " nodes, now have " << nnodes << Endl;
+         Log() << "Quality index is: " << quality << Endl;
 
          if (lastNodeCount == nnodes) errCount++;
          else {
             errCount=0; // reset counter
             if ( nnodes < lastNodeCount / 2 ) {
-               log() << "Decreasing fDeltaPruneStrength to " << fDeltaPruneStrength/2.0
+               Log() << "Decreasing fDeltaPruneStrength to " << fDeltaPruneStrength/2.0
                      << " because the number of nodes in the tree decreased by a factor of 2." << Endl;
                fDeltaPruneStrength /= 2.;
             }
          }
          lastNodeCount = nnodes;
          if (errCount > 20) {
-            log() << "Increasing fDeltaPruneStrength to " << fDeltaPruneStrength*2.0
+            Log() << "Increasing fDeltaPruneStrength to " << fDeltaPruneStrength*2.0
                   << " because the number of nodes in the tree didn't change." << Endl;
             fDeltaPruneStrength *= 2.0;
          }
          if (errCount > 40) {
-            log() << "Having difficulty determining the optimal prune strength, bailing out!" << Endl;
+            Log() << "Having difficulty determining the optimal prune strength, bailing out!" << Endl;
             forceStop = kTRUE;
          }
          // reset the tree for the next iteration
@@ -122,6 +129,8 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
       fDeltaPruneStrength = (fPruneStrength - 1.0)/(Double_t)fQualityMap.size();
 
       return new PruningInfo(it->first, it->second, fPruneSequence);
+      */
+      return NULL;
    }
    else { // no automatic pruning - just use the provided prune strength parameter
       FindListOfNodes( (DecisionTreeNode*)dt->GetRoot() );
@@ -139,7 +148,7 @@ void TMVA::ExpectedErrorPruneTool::FindListOfNodes( DecisionTreeNode* node )
       this->FindListOfNodes(l);
       this->FindListOfNodes(r);
       if (this->GetSubTreeError(node) >= this->GetNodeError(node)) {
-         node->Print(log());
+         //node->Print(Log());
          fPruneSequence.push_back(node);
       }
    }

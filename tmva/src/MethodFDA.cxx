@@ -157,7 +157,7 @@ void TMVA::MethodFDA::CreateFormula()
    // sanity check, there should be no "(i)", with 'i' a number anymore
    for (Int_t ipar=fNPars; ipar<1000; ipar++) {
       if (fFormulaStringT.Contains( Form("(%i)",ipar) ))
-         log() << kFATAL 
+         Log() << kFATAL 
                  << "<CreateFormula> Formula contains expression: \"" << Form("(%i)",ipar) << "\", "
                  << "which cannot be attributed to a parameter; " 
                  << "it may be that the number of variable ranges given via \"ParRanges\" "
@@ -173,14 +173,14 @@ void TMVA::MethodFDA::CreateFormula()
    // sanity check, there should be no "xi", with 'i' a number anymore
    for (UInt_t ivar=GetNvar(); ivar<1000; ivar++) {
       if (fFormulaStringT.Contains( Form("x%i",ivar) ))
-         log() << kFATAL 
+         Log() << kFATAL 
                  << "<CreateFormula> Formula contains expression: \"" << Form("x%i",ivar) << "\", "
                  << "which cannot be attributed to an input variable" << Endl;
    }
    
-   log() << "User-defined formula string       : \"" << fFormulaStringP << "\"" << Endl;
-   log() << "TFormula-compatible formula string: \"" << fFormulaStringT << "\"" << Endl;
-   log() << "Creating and compiling formula" << Endl;
+   Log() << "User-defined formula string       : \"" << fFormulaStringP << "\"" << Endl;
+   Log() << "TFormula-compatible formula string: \"" << fFormulaStringT << "\"" << Endl;
+   Log() << "Creating and compiling formula" << Endl;
    
    // create TF1
    if (fFormula) delete fFormula;
@@ -192,11 +192,11 @@ void TMVA::MethodFDA::CreateFormula()
 
    // is formula correct ?
    if (fFormula->Compile() != 0)
-      log() << kFATAL << "<ProcessOptions> Formula expression could not be properly compiled" << Endl;
+      Log() << kFATAL << "<ProcessOptions> Formula expression could not be properly compiled" << Endl;
 
    // other sanity checks
    if (fFormula->GetNpar() > fNPars + (Int_t)GetNvar())
-      log() << kFATAL << "<ProcessOptions> Dubious number of parameters in formula expression: " 
+      Log() << kFATAL << "<ProcessOptions> Dubious number of parameters in formula expression: " 
               << fFormula->GetNpar() << " - compared to maximum allowed: " << fNPars + GetNvar() << Endl;
 }
 
@@ -214,7 +214,7 @@ void TMVA::MethodFDA::ProcessOptions()
 
    TList* parList = gTools().ParseFormatLine( fParRangeStringT, ";" );
    if (parList->GetSize() != fNPars) {
-      log() << kFATAL << "<ProcessOptions> Mismatch in parameter string: " 
+      Log() << kFATAL << "<ProcessOptions> Mismatch in parameter string: " 
               << "the number of parameters: " << fNPars << " != ranges defined: " 
               << parList->GetSize() << "; the format of the \"ParRanges\" string "
               << "must be: \"(-1.2,3.4);(-2.3,4.55);...\", "
@@ -237,7 +237,7 @@ void TMVA::MethodFDA::ProcessOptions()
       stringstream stmax; Float_t pmax; stmax << pmaxS.Data(); stmax >> pmax;
 
       // sanity check
-      if (pmin > pmax) log() << kFATAL << "<ProcessOptions> max > min in interval for parameter: [" 
+      if (pmin > pmax) Log() << kFATAL << "<ProcessOptions> max > min in interval for parameter: [" 
                                << ipar << "] : [" << pmin  << ", " << pmax << "] " << Endl;
 
       fParRange[ipar] = new Interval( pmin, pmax );
@@ -263,7 +263,7 @@ void TMVA::MethodFDA::ProcessOptions()
    else if (fFitMethod == "MINUIT") 
       fFitter = new MinuitFitter( *fConvergerFitter, Form("%s_Fitter_Minuit", GetName()), fParRange, GetOptions() );
    else {
-      log() << kFATAL << "<Train> Do not understand fit method:" << fFitMethod << Endl;
+      Log() << kFATAL << "<Train> Do not understand fit method:" << fFitMethod << Endl;
    }
    
    fFitter->CheckForUnusedOptions();
@@ -328,12 +328,12 @@ void TMVA::MethodFDA::Train( void )
    // sanity check
    if (!DoRegression()) {
       if (fSumOfWeightsSig <= 0 || fSumOfWeightsBkg <= 0) {
-         log() << kFATAL << "<Train> Troubles in sum of weights: " 
+         Log() << kFATAL << "<Train> Troubles in sum of weights: " 
                  << fSumOfWeightsSig << " (S) : " << fSumOfWeightsBkg << " (B)" << Endl;
       }
    }
    else if (fSumOfWeights <= 0) {
-      log() << kFATAL << "<Train> Troubles in sum of weights: " 
+      Log() << kFATAL << "<Train> Troubles in sum of weights: " 
               << fSumOfWeights << Endl;
    }
 
@@ -361,13 +361,13 @@ void TMVA::MethodFDA::PrintResults( const TString& fitter, std::vector<Double_t>
 {
    // display fit parameters
    // check maximum length of variable name
-   log() << kINFO;
-   log() << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
+   Log() << kINFO;
+   Log() << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
    vector<TString>  parNames;
    for (UInt_t ipar=0; ipar<pars.size(); ipar++) parNames.push_back( Form("Par(%i)",ipar ) );
-   gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", log(), "%g" );   
-   log() << "Discriminator expression: \"" << fFormulaStringP << "\"" << Endl;
-   log() << "Value of estimator at minimum: " << estimator << Endl;
+   gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", Log(), "%g" );   
+   Log() << "Discriminator expression: \"" << fFormulaStringP << "\"" << Endl;
+   Log() << "Value of estimator at minimum: " << estimator << Endl;
 }
 
 
@@ -505,7 +505,7 @@ void TMVA::MethodFDA::ReadWeightsFromXML( void* wghtnode )
       gTools().ReadAttr( ch, "Value", par  );
 
       // sanity check
-      if (ipar >= fNPars) log() << kFATAL << "<ReadWeightsFromXML> index out of range: "
+      if (ipar >= fNPars) Log() << kFATAL << "<ReadWeightsFromXML> index out of range: "
                                   << ipar << " >= " << fNPars << Endl;
       fBestPars[ipar] = par;
 
@@ -567,51 +567,51 @@ void TMVA::MethodFDA::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The function discriminant analysis (FDA) is a classifier suitable " << Endl;
-   log() << "to solve linear or simple nonlinear discrimination problems." << Endl; 
-   log() << Endl;
-   log() << "The user provides the desired function with adjustable parameters" << Endl;
-   log() << "via the configuration option string, and FDA fits the parameters to" << Endl;
-   log() << "it, requiring the signal (background) function value to be as close" << Endl;
-   log() << "as possible to 1 (0). Its advantage over the more involved and" << Endl;
-   log() << "automatic nonlinear discriminators is the simplicity and transparency " << Endl;
-   log() << "of the discrimination expression. A shortcoming is that FDA will" << Endl;
-   log() << "underperform for involved problems with complicated, phase space" << Endl;
-   log() << "dependent nonlinear correlations." << Endl;
-   log() << Endl;
-   log() << "Please consult the Users Guide for the format of the formula string" << Endl;
-   log() << "and the allowed parameter ranges:" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The function discriminant analysis (FDA) is a classifier suitable " << Endl;
+   Log() << "to solve linear or simple nonlinear discrimination problems." << Endl; 
+   Log() << Endl;
+   Log() << "The user provides the desired function with adjustable parameters" << Endl;
+   Log() << "via the configuration option string, and FDA fits the parameters to" << Endl;
+   Log() << "it, requiring the signal (background) function value to be as close" << Endl;
+   Log() << "as possible to 1 (0). Its advantage over the more involved and" << Endl;
+   Log() << "automatic nonlinear discriminators is the simplicity and transparency " << Endl;
+   Log() << "of the discrimination expression. A shortcoming is that FDA will" << Endl;
+   Log() << "underperform for involved problems with complicated, phase space" << Endl;
+   Log() << "dependent nonlinear correlations." << Endl;
+   Log() << Endl;
+   Log() << "Please consult the Users Guide for the format of the formula string" << Endl;
+   Log() << "and the allowed parameter ranges:" << Endl;
    if (gConfig().WriteOptionsReference()) {
-      log() << "<a href=\"http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf\">" 
+      Log() << "<a href=\"http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf\">" 
               << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf</a>" << Endl;
    }
-   else log() << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf" << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "The FDA performance depends on the complexity and fidelity of the" << Endl;
-   log() << "user-defined discriminator function. As a general rule, it should" << Endl;
-   log() << "be able to reproduce the discrimination power of any linear" << Endl;
-   log() << "discriminant analysis. To reach into the nonlinear domain, it is" << Endl;
-   log() << "useful to inspect the correlation profiles of the input variables," << Endl;
-   log() << "and add quadratic and higher polynomial terms between variables as" << Endl;
-   log() << "necessary. Comparison with more involved nonlinear classifiers can" << Endl;
-   log() << "be used as a guide." << Endl;
-   log() << Endl;
-   log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   log() << Endl;
-   log() << "Depending on the function used, the choice of \"FitMethod\" is" << Endl;
-   log() << "crucial for getting valuable solutions with FDA. As a guideline it" << Endl;
-   log() << "is recommended to start with \"FitMethod=MINUIT\". When more complex" << Endl;
-   log() << "functions are used where MINUIT does not converge to reasonable" << Endl;
-   log() << "results, the user should switch to non-gradient FitMethods such" << Endl;
-   log() << "as GeneticAlgorithm (GA) or Monte Carlo (MC). It might prove to be" << Endl;
-   log() << "useful to combine GA (or MC) with MINUIT by setting the option" << Endl;
-   log() << "\"Converger=MINUIT\". GA (MC) will then set the starting parameters" << Endl;
-   log() << "for MINUIT such that the basic quality of GA (MC) of finding global" << Endl;
-   log() << "minima is combined with the efficacy of MINUIT of finding local" << Endl;
-   log() << "minima." << Endl;
+   else Log() << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf" << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "The FDA performance depends on the complexity and fidelity of the" << Endl;
+   Log() << "user-defined discriminator function. As a general rule, it should" << Endl;
+   Log() << "be able to reproduce the discrimination power of any linear" << Endl;
+   Log() << "discriminant analysis. To reach into the nonlinear domain, it is" << Endl;
+   Log() << "useful to inspect the correlation profiles of the input variables," << Endl;
+   Log() << "and add quadratic and higher polynomial terms between variables as" << Endl;
+   Log() << "necessary. Comparison with more involved nonlinear classifiers can" << Endl;
+   Log() << "be used as a guide." << Endl;
+   Log() << Endl;
+   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
+   Log() << Endl;
+   Log() << "Depending on the function used, the choice of \"FitMethod\" is" << Endl;
+   Log() << "crucial for getting valuable solutions with FDA. As a guideline it" << Endl;
+   Log() << "is recommended to start with \"FitMethod=MINUIT\". When more complex" << Endl;
+   Log() << "functions are used where MINUIT does not converge to reasonable" << Endl;
+   Log() << "results, the user should switch to non-gradient FitMethods such" << Endl;
+   Log() << "as GeneticAlgorithm (GA) or Monte Carlo (MC). It might prove to be" << Endl;
+   Log() << "useful to combine GA (or MC) with MINUIT by setting the option" << Endl;
+   Log() << "\"Converger=MINUIT\". GA (MC) will then set the starting parameters" << Endl;
+   Log() << "for MINUIT such that the basic quality of GA (MC) of finding global" << Endl;
+   Log() << "minima is combined with the efficacy of MINUIT of finding local" << Endl;
+   Log() << "minima." << Endl;
 }

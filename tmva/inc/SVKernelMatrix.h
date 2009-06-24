@@ -58,12 +58,12 @@ namespace TMVA {
 
    private:
 
-      UInt_t    				fSize;              // documentation
-      SVKernelFunction*    fKernelFunction;    // documentation
-      Float_t**            fSVKernelMatrix;    // documentation
+      UInt_t    	   fSize;              // matrix size
+      SVKernelFunction*    fKernelFunction;    // kernel function
+      Float_t**            fSVKernelMatrix;    // kernel matrix
 
       mutable MsgLogger* fLogger;                     //! message logger
-      MsgLogger& log() const { return *fLogger; }
+      MsgLogger& Log() const { return *fLogger; }
 
    };
 }

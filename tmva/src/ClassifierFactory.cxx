@@ -41,7 +41,7 @@ TMVA::ClassifierFactory& TMVA::ClassifierFactory::Instance()
 {
    if (!fgInstance) fgInstance = new TMVA::ClassifierFactory();
 
-  return *fgInstance;
+   return *fgInstance;
 }
 
 //_______________________________________________________________________
@@ -54,10 +54,10 @@ void TMVA::ClassifierFactory::DestroyInstance()
 Bool_t TMVA::ClassifierFactory::Register( const std::string &name, Creator creator ) 
 { 
    if(fCalls.find(name) != fCalls.end())
-   {
-      std::cerr << "ClassifierFactory<>::Register - " << name << " already exists" << std::endl;
-      return false;
-   }
+      {
+         std::cerr << "ClassifierFactory<>::Register - " << name << " already exists" << std::endl;
+         return false;
+      }
 
    return fCalls.insert(CallMap::value_type(name, creator)).second;
 }
@@ -65,7 +65,7 @@ Bool_t TMVA::ClassifierFactory::Register( const std::string &name, Creator creat
 //_______________________________________________________________________
 Bool_t TMVA::ClassifierFactory::Unregister( const std::string &name ) 
 { 
-    return fCalls.erase(name) == 1; 
+   return fCalls.erase(name) == 1; 
 }
 
 //_______________________________________________________________________

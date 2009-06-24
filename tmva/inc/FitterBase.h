@@ -85,7 +85,7 @@ namespace TMVA {
       Int_t                               fNpars;        // number of parameters
 
       mutable MsgLogger*                  fLogger;       // message logger
-      MsgLogger& log() const { return *fLogger; }    
+      MsgLogger& Log() const { return *fLogger; }    
 
       TString                             fClassName;    // remove TMVA:: from TObject name
 

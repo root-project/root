@@ -162,7 +162,7 @@ void TMVA::RuleFit::BuildTree( DecisionTree *dt )
    // build the decision tree using fNTreeSample events from fTrainingEventsRndm
    if (dt==0) return;
    if (fMethodRuleFit==0) {
-      log() << kFATAL << "RuleFit::BuildTree() - Attempting to build a tree NOT from a MethodRuleFit" << Endl;
+      Log() << kFATAL << "RuleFit::BuildTree() - Attempting to build a tree NOT from a MethodRuleFit" << Endl;
    }
    std::vector<Event *> evevec;
    for (UInt_t ie=0; ie<fNTreeSample; ie++) {
@@ -181,10 +181,10 @@ void TMVA::RuleFit::MakeForest()
 {
    // make a forest of decisiontrees
    if (fMethodRuleFit==0) {
-      log() << kFATAL << "RuleFit::BuildTree() - Attempting to build a tree NOT from a MethodRuleFit" << Endl;
+      Log() << kFATAL << "RuleFit::BuildTree() - Attempting to build a tree NOT from a MethodRuleFit" << Endl;
    }
-   log() << kDEBUG << "Creating a forest with " << fMethodRuleFit->GetNTrees() << " decision trees" << Endl;
-   log() << kDEBUG << "Each tree is built using a random subsample with " << fNTreeSample << " events" << Endl;
+   Log() << kDEBUG << "Creating a forest with " << fMethodRuleFit->GetNTrees() << " decision trees" << Endl;
+   Log() << kDEBUG << "Each tree is built using a random subsample with " << fNTreeSample << " events" << Endl;
    //
    Timer timer( fMethodRuleFit->GetNTrees(), "RuleFit" );
 
@@ -238,17 +238,17 @@ void TMVA::RuleFit::MakeForest()
          if (useBoost) Boost(dt);
       } 
       else {
-         log() << kWARNING << "------------------------------------------------------------------" << Endl;
-         log() << kWARNING << " Failed growing a tree even after " << ntriesMax << " trials" << Endl;
-         log() << kWARNING << " Possible solutions: " << Endl;
-         log() << kWARNING << "   1. increase the number of training events" << Endl;
-         log() << kWARNING << "   2. set a lower min fraction cut (fEventsMin)" << Endl;
-         log() << kWARNING << "   3. maybe also decrease the max fraction cut (fEventsMax)" << Endl;
-         log() << kWARNING << " If the above warning occurs rarely only, it can be ignored" << Endl;
-         log() << kWARNING << "------------------------------------------------------------------" << Endl;
+         Log() << kWARNING << "------------------------------------------------------------------" << Endl;
+         Log() << kWARNING << " Failed growing a tree even after " << ntriesMax << " trials" << Endl;
+         Log() << kWARNING << " Possible solutions: " << Endl;
+         Log() << kWARNING << "   1. increase the number of training events" << Endl;
+         Log() << kWARNING << "   2. set a lower min fraction cut (fEventsMin)" << Endl;
+         Log() << kWARNING << "   3. maybe also decrease the max fraction cut (fEventsMax)" << Endl;
+         Log() << kWARNING << " If the above warning occurs rarely only, it can be ignored" << Endl;
+         Log() << kWARNING << "------------------------------------------------------------------" << Endl;
       }
 
-      log() << kDEBUG << "Built tree with minimum cut at N = " << nminRnd
+      Log() << kDEBUG << "Built tree with minimum cut at N = " << nminRnd
               << " => N(nodes) = " << fForest.back()->GetNNodes()
               << " ; n(tries) = " << ntries
               << Endl;
@@ -278,7 +278,7 @@ void TMVA::RuleFit::RestoreEventWeights()
    // save event weights - must be done before making the forest
    UInt_t ie=0;
    if (fEventWeights.size() != fTrainingEvents.size()) {
-      log() << kERROR << "RuleFit::RestoreEventWeights() called without having called SaveEventWeights() before!" << Endl;
+      Log() << kERROR << "RuleFit::RestoreEventWeights() called without having called SaveEventWeights() before!" << Endl;
       return;
    }
    for (std::vector<Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); e++) {
@@ -331,7 +331,7 @@ void TMVA::RuleFit::Boost( DecisionTree *dt )
    for (std::vector<Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); e++) {
       (*e)->SetWeight( (*e)->GetWeight() * scale);
    }
-   log() << kDEBUG << "boostWeight = " << boostWeight << "    scale = " << scale << Endl;
+   Log() << kDEBUG << "boostWeight = " << boostWeight << "    scale = " << scale << Endl;
 }
 
 //_______________________________________________________________________
@@ -352,7 +352,7 @@ void TMVA::RuleFit::ForestStatistics()
       sumn2 += nd*nd;
    }
    Double_t sig = TMath::Sqrt( gTools().ComputeVariance( sumn2, sumn, ntrees ));
-   log() << kVERBOSE << "Nodes in trees: average & std dev = " << sumn/ntrees << " , " << sig << Endl;
+   Log() << kVERBOSE << "Nodes in trees: average & std dev = " << sumn/ntrees << " , " << sig << Endl;
 }
 
 //_______________________________________________________________________
@@ -361,7 +361,7 @@ void TMVA::RuleFit::FitCoefficients()
    //
    // Fit the coefficients for the rule ensemble
    //
-   log() << kVERBOSE << "Fitting rule/linear terms" << Endl;
+   Log() << kVERBOSE << "Fitting rule/linear terms" << Endl;
    fRuleFitParams.MakeGDPath();
 }
 
@@ -370,12 +370,12 @@ void TMVA::RuleFit::CalcImportance()
 {
    // calculates the importance of each rule
 
-   log() << kVERBOSE << "Calculating importance" << Endl;
+   Log() << kVERBOSE << "Calculating importance" << Endl;
    fRuleEnsemble.CalcImportance();
    fRuleEnsemble.CleanupRules();
    fRuleEnsemble.CleanupLinear();
    fRuleEnsemble.CalcVarImportance();
-   log() << kVERBOSE << "Filling rule statistics" << Endl;
+   Log() << kVERBOSE << "Filling rule statistics" << Endl;
    fRuleEnsemble.RuleResponseStats();
 }
 
@@ -391,9 +391,9 @@ Double_t TMVA::RuleFit::EvalEvent( const Event& e )
 void TMVA::RuleFit::SetTrainingEvents( const std::vector<Event *>& el )
 {
    // set the training events randomly
-   if (fMethodRuleFit==0) log() << kFATAL << "RuleFit::SetTrainingEvents - MethodRuleFit not initialized" << Endl;
+   if (fMethodRuleFit==0) Log() << kFATAL << "RuleFit::SetTrainingEvents - MethodRuleFit not initialized" << Endl;
    UInt_t neve = el.size();
-   if (neve==0) log() << kWARNING << "An empty sample of training events was given" << Endl;
+   if (neve==0) Log() << kWARNING << "An empty sample of training events was given" << Endl;
 
    // copy vector
    fTrainingEvents.clear();
@@ -408,7 +408,7 @@ void TMVA::RuleFit::SetTrainingEvents( const std::vector<Event *>& el )
 
    // fraction events per tree
    fNTreeSample = static_cast<UInt_t>(neve*fMethodRuleFit->GetTreeEveFrac());
-   log() << kDEBUG << "Number of events per tree : " << fNTreeSample
+   Log() << kDEBUG << "Number of events per tree : " << fNTreeSample
            << " ( N(events) = " << neve << " )"
            << " randomly drawn without replacement" << Endl;
 }
@@ -425,7 +425,7 @@ void TMVA::RuleFit::GetRndmSampleEvents(std::vector< const Event * > & evevec, U
       }
    } 
    else {
-      log() << kWARNING << "GetRndmSampleEvents() : requested sub sample size larger than total size (BUG!).";
+      Log() << kWARNING << "GetRndmSampleEvents() : requested sub sample size larger than total size (BUG!).";
    }
 }
 //_______________________________________________________________________
@@ -632,7 +632,7 @@ void TMVA::RuleFit::FillVisHistCut(const Rule* rule, std::vector<TH2F *> & hlist
    // help routine to MakeVisHists() - fills for all variables
    Int_t nhists = hlist.size();
    Int_t nvar   = fMethodBase->GetNvar();
-   if (nhists!=nvar) log() << kFATAL << "BUG TRAP: number of hists is not equal the number of variables!" << Endl;
+   if (nhists!=nvar) Log() << kFATAL << "BUG TRAP: number of hists is not equal the number of variables!" << Endl;
    //
    std::vector<Int_t> vindex;
    TString hstr;
@@ -668,7 +668,7 @@ void TMVA::RuleFit::FillVisHistCorr(const Rule * rule, std::vector<TH2F *> & hli
    Int_t nhists = hlist.size();
    Int_t nvar   = fMethodBase->GetNvar();
    Int_t ncorr  = (nvar*(nvar+1)/2)-nvar;
-   if (nhists!=ncorr) log() << kERROR << "BUG TRAP: number of corr hists is not correct! ncorr = "
+   if (nhists!=ncorr) Log() << kERROR << "BUG TRAP: number of corr hists is not correct! ncorr = "
                             << ncorr << " nvar = " << nvar << " nhists = " << nhists << Endl;
    //
    std::vector< std::pair<Int_t,Int_t> > vindex;
@@ -683,7 +683,7 @@ void TMVA::RuleFit::FillVisHistCorr(const Rule * rule, std::vector<TH2F *> & hli
          vindex.push_back( std::pair<Int_t,Int_t>(iv2,iv1) ); // pair X, Y
       } 
       else {
-         log() << kERROR << "BUG TRAP: should not be here - failed getting var1 and var2" << Endl;
+         Log() << kERROR << "BUG TRAP: should not be here - failed getting var1 and var2" << Endl;
       }
    }
    //
@@ -739,7 +739,7 @@ void TMVA::RuleFit::MakeVisHists()
    Bool_t done=(rootDir==0);
    Int_t type=0;
    if (done) {
-      log() << kWARNING << "No basedir - BUG??" << Endl;
+      Log() << kWARNING << "No basedir - BUG??" << Endl;
       return;
    }
    while (!done) {
@@ -748,16 +748,16 @@ void TMVA::RuleFit::MakeVisHists()
       done = ((varDir!=0) || (type>4));
    }
    if (varDir==0) {
-      log() << kWARNING << "No input variable directory found - BUG?" << Endl;
+      Log() << kWARNING << "No input variable directory found - BUG?" << Endl;
       return;
    }   
    corrDir = (TDirectory*)varDir->Get( corrDirName );
    if (methodDir==0) {
-      log() << kWARNING << "No correlation directory found - BUG?" << Endl;
+      Log() << kWARNING << "No correlation directory found - BUG?" << Endl;
       return;
    }
    if (methodDir==0) {
-      log() << kWARNING << "No rulefit method directory found - BUG?" << Endl;
+      Log() << kWARNING << "No rulefit method directory found - BUG?" << Endl;
       return;
    }
 
@@ -766,10 +766,10 @@ void TMVA::RuleFit::MakeVisHists()
    //
    // get correlation plot directory
    corrDir = (TDirectory *)varDir->Get(corrDirName);
-   if (corrDir==0) log() << kWARNING << "No correlation directory found : " << corrDirName << Endl;
+   if (corrDir==0) Log() << kWARNING << "No correlation directory found : " << corrDirName << Endl;
    // how many plots are in the var directory?
    Int_t noPlots = ((varDir->GetListOfKeys())->GetEntries()) / 2;
-   log() << kDEBUG << "Got number of plots = " << noPlots << Endl;
+   Log() << kDEBUG << "Got number of plots = " << noPlots << Endl;
  
    // loop over all objects in directory
    std::vector<TH2F *> h1Vector;
@@ -782,7 +782,7 @@ void TMVA::RuleFit::MakeVisHists()
       if (!cl->InheritsFrom("TH1F")) continue;
       TH1F *sig = (TH1F*)key->ReadObj();
       TString hname= sig->GetName();
-      log() << kDEBUG << "Got histogram : " << hname << Endl;
+      Log() << kDEBUG << "Got histogram : " << hname << Endl;
 
       // check for all signal histograms
       if (hname.Contains("__S")){ // found a new signal plot
@@ -812,7 +812,7 @@ void TMVA::RuleFit::MakeVisHists()
 
       // check for all signal histograms
       if ((hname.Contains("scat_")) && (hname.Contains("_Signal"))) {
-         log() << kDEBUG << "Got histogram (2D) : " << hname << Endl;
+         Log() << kDEBUG << "Got histogram (2D) : " << hname << Endl;
          TString htitle = sig->GetTitle();
          htitle.ReplaceAll("(Signal)","");
          TString newname = hname;
@@ -879,7 +879,7 @@ void TMVA::RuleFit::MakeDebugHists()
 
    TDirectory* methodDir = fMethodBase->BaseDir();
    if (methodDir==0) {
-      log() << kWARNING << "<MakeDebugHists> No rulefit method directory found - bug?" << Endl;
+      Log() << kWARNING << "<MakeDebugHists> No rulefit method directory found - bug?" << Endl;
       return;
    }
    //

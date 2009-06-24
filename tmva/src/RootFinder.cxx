@@ -63,7 +63,7 @@ Double_t TMVA::RootFinder::Root( Double_t refValue  )
    Double_t fa = (*fGetRootVal)( a ) - refValue;
    Double_t fb = (*fGetRootVal)( b ) - refValue;
    if (fb*fa > 0) {
-      log() << kWARNING << "<Root> initial interval w/o root: "
+      Log() << kWARNING << "<Root> initial interval w/o root: "
               << "(a=" << a << ", b=" << b << "),"
               << " (Eff_a=" << (*fGetRootVal)( a ) 
               << ", Eff_b=" << (*fGetRootVal)( b ) << "), "
@@ -130,7 +130,7 @@ Double_t TMVA::RootFinder::Root( Double_t refValue  )
    }
 
    // Return our best guess if we run out of iterations
-   log() << kWARNING << "<Root> maximum iterations (" << fMaxIter 
+   Log() << kWARNING << "<Root> maximum iterations (" << fMaxIter 
            << ") reached before convergence" << Endl;
 
    return b;

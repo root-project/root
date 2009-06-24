@@ -105,7 +105,7 @@ TMVA::ClassInfo* TMVA::DataSetInfo::AddClass( const TString& className )
    fClasses.push_back( new ClassInfo(className) );
    fClasses.back()->SetNumber(fClasses.size()-1);
 
-   log() << kINFO << "Added class \"" << className << "\"\t with internal class number " 
+   Log() << kINFO << "Added class \"" << className << "\"\t with internal class number " 
          << fClasses.back()->GetNumber() << Endl;
 
    if (className == "Signal") fSignalClass = fClasses.size()-1;  // store the signal class index ( for comparison reasons )
@@ -137,7 +137,7 @@ TMVA::ClassInfo* TMVA::DataSetInfo::GetClassInfo( Int_t cls ) const
 void TMVA::DataSetInfo::PrintClasses() const 
 {
    for (UInt_t cls = 0; cls < GetNClasses() ; cls++) {
-      log() << kINFO << "Class index : " << cls << "  name : " << GetClassInfo(cls)->GetName() << Endl;
+      Log() << kINFO << "Class index : " << cls << "  name : " << GetClassInfo(cls)->GetName() << Endl;
    }
 }
 
@@ -221,9 +221,9 @@ Int_t TMVA::DataSetInfo::FindVarIndex(const TString& var) const
       if (var == GetVariableInfo(ivar).GetInternalName()) return ivar;
    
    for (UInt_t ivar=0; ivar<GetNVariables(); ivar++) 
-      log() << kINFO  <<  GetVariableInfo(ivar).GetInternalName() << Endl;
+      Log() << kINFO  <<  GetVariableInfo(ivar).GetInternalName() << Endl;
    
-   log() << kFATAL << "<FindVarIndex> Variable \'" << var << "\' not found." << Endl;
+   Log() << kFATAL << "<FindVarIndex> Variable \'" << var << "\' not found." << Endl;
  
    return -1;
 }
@@ -242,7 +242,7 @@ void TMVA::DataSetInfo::SetWeightExpression( const TString& expr, const TString&
    else {
       // no class name specified, set weight for all classes
       if (fClasses.size()==0) {
-         log() << kWARNING << "No classes registered yet, cannot specify weight expression!" << Endl;
+         Log() << kWARNING << "No classes registered yet, cannot specify weight expression!" << Endl;
       }
       for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
          (*it)->SetWeight( expr );
@@ -303,8 +303,8 @@ void TMVA::DataSetInfo::PrintCorrelationMatrix( const TString& className )
 { 
    // calculates the correlation matrices for signal and background, 
    // prints them to standard output, and fills 2D histograms
-   log() << kINFO << "Correlation matrix (" << className << "):" << Endl;
-   gTools().FormattedOutput( *CorrelationMatrix( className ), GetListOfVariables(), log() );
+   Log() << kINFO << "Correlation matrix (" << className << "):" << Endl;
+   gTools().FormattedOutput( *CorrelationMatrix( className ), GetListOfVariables(), Log() );
 }
 
 //_______________________________________________________________________
@@ -364,7 +364,7 @@ TH2* TMVA::DataSetInfo::CreateCorrelationMatrixHist( const TMatrixD* m,
    //                   = (TPaletteAxis*)h2->GetListOfFunctions()->FindObject( "palette" );
    // -------------------------------------------------------------------------------------
    
-   log() << kDEBUG << "Created correlation matrix as 2D histogram: " << h2->GetName() << Endl;
+   Log() << kDEBUG << "Created correlation matrix as 2D histogram: " << h2->GetName() << Endl;
    
    return h2;
 }

@@ -197,7 +197,7 @@ namespace TMVA {
       // variables
       const TString fRegexp;
       mutable MsgLogger*    fLogger;
-      MsgLogger& log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }                       
       static Tools* fgTools;
 
       // xml tools

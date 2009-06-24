@@ -66,7 +66,7 @@ namespace TMVA {
       // Probability value using Gaussian approximation
       Float_t FSub(const std::vector<Float_t>& x, Int_t k);
 
-      MsgLogger& log() const { return *fLogger; }
+      MsgLogger& Log() const { return *fLogger; }
 
    private:
 

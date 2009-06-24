@@ -45,10 +45,10 @@ using namespace std;
 //_______________________________________________________________________
 
 //_______________________________________________________________________
-TMVA::GeneticPopulation::GeneticPopulation(const std::vector<Interval*>& ranges, Int_t size, UInt_t seed) :
-   fGenePool(size),
-   fRanges(ranges.size()),
-   fLogger( new MsgLogger("GeneticPopulation") )
+TMVA::GeneticPopulation::GeneticPopulation(const std::vector<Interval*>& ranges, Int_t size, UInt_t seed) 
+   : fGenePool(size),
+     fRanges(ranges.size()),
+     fLogger( new MsgLogger("GeneticPopulation") )
 {
    // Constructor
    
@@ -64,11 +64,11 @@ TMVA::GeneticPopulation::GeneticPopulation(const std::vector<Interval*>& ranges,
 
    vector<Double_t> newEntry( fRanges.size() );
    for ( int i = 0; i < size; ++i )
-   {
-      for ( unsigned int rIt = 0; rIt < fRanges.size(); ++rIt )
-         newEntry[rIt] = fRanges[rIt]->Random();
-      fGenePool[i] = TMVA::GeneticGenes( newEntry);
-   }
+      {
+         for ( unsigned int rIt = 0; rIt < fRanges.size(); ++rIt )
+            newEntry[rIt] = fRanges[rIt]->Random();
+         fGenePool[i] = TMVA::GeneticGenes( newEntry);
+      }
 
    fPopulationSizeLimit = size;
 }
@@ -123,10 +123,10 @@ void TMVA::GeneticPopulation::MakeChildren()
 #pragma omp for
 #endif
    for ( int it = 0; it < (int) (fGenePool.size() / 2); ++it )
-   {
-      Int_t pos = (Int_t)fRandomGenerator->Integer( fGenePool.size()/2 );
-      fGenePool[(fGenePool.size() / 2) + it] = MakeSex( fGenePool[it], fGenePool[pos] );
-   }
+      {
+         Int_t pos = (Int_t)fRandomGenerator->Integer( fGenePool.size()/2 );
+         fGenePool[(fGenePool.size() / 2) + it] = MakeSex( fGenePool[it], fGenePool[pos] );
+      }
 }
 
 //_______________________________________________________________________
@@ -170,11 +170,11 @@ void TMVA::GeneticPopulation::Mutate( Double_t probability , Int_t startIndex,
    vector< Double_t>::iterator vec;
    vector< TMVA::GeneticRange* >::iterator vecRange;
 
-//#ifdef _GLIBCXX_PARALLEL
-// #pragma omp parallel
-// #pragma omp for
-//#endif
-// The range methods are not thread safe!
+   //#ifdef _GLIBCXX_PARALLEL
+   // #pragma omp parallel
+   // #pragma omp for
+   //#endif
+   // The range methods are not thread safe!
    for (int it = startIndex; it < (int) fGenePool.size(); ++it) {
       vecRange = fRanges.begin();
       for (vec = (fGenePool[it].GetFactors()).begin(); vec < (fGenePool[it].GetFactors()).end(); ++vec) {
@@ -203,19 +203,19 @@ void TMVA::GeneticPopulation::Print( Int_t untilIndex )
    //
 
    for ( unsigned int it = 0; it < fGenePool.size(); ++it )
-   {
-      Int_t n=0;
-      if (untilIndex >= -1 ) {
-         if (untilIndex == -1 ) return;
-         untilIndex--;
+      {
+         Int_t n=0;
+         if (untilIndex >= -1 ) {
+            if (untilIndex == -1 ) return;
+            untilIndex--;
+         }
+         Log() << "fitness: " << fGenePool[it].GetFitness() << "    ";
+         for (vector< Double_t >::iterator vec = fGenePool[it].GetFactors().begin(); 
+              vec < fGenePool[it].GetFactors().end(); vec++ ) {
+            Log() << "f_" << n++ << ": " << (*vec) << "     ";
+         }
+         Log() << Endl;
       }
-      log() << "fitness: " << fGenePool[it].GetFitness() << "    ";
-      for (vector< Double_t >::iterator vec = fGenePool[it].GetFactors().begin(); 
-           vec < fGenePool[it].GetFactors().end(); vec++ ) {
-         log() << "f_" << n++ << ": " << (*vec) << "     ";
-      }
-      log() << Endl;
-   }
 }
 
 //_______________________________________________________________________
@@ -259,7 +259,7 @@ TH1F* TMVA::GeneticPopulation::VariableDistribution( Int_t varNumber, Int_t bins
    histName << varNumber;
    TH1F *hist = new TH1F( histName.str().c_str(),histName.str().c_str(), bins,min,max );
 
-    return hist;
+   return hist;
 }
 
 //_______________________________________________________________________
@@ -278,6 +278,7 @@ vector<Double_t> TMVA::GeneticPopulation::VariableDistribution( Int_t /*varNumbe
 //_______________________________________________________________________
 void TMVA::GeneticPopulation::AddPopulation( GeneticPopulation *strangers )
 {
+   // add another population (strangers) to the one of this GeneticPopulation
    for (std::vector<TMVA::GeneticGenes>::iterator it = strangers->fGenePool.begin(); 
         it != strangers->fGenePool.end(); it++ ) {
       GiveHint( it->GetFactors(), it->GetFitness() );
@@ -287,12 +288,14 @@ void TMVA::GeneticPopulation::AddPopulation( GeneticPopulation *strangers )
 //_______________________________________________________________________
 void TMVA::GeneticPopulation::AddPopulation( GeneticPopulation &strangers )
 {
+   // add another population (strangers) to the one of this GeneticPopulation
    AddPopulation(&strangers);
 }
 
 //_______________________________________________________________________
 void TMVA::GeneticPopulation::TrimPopulation()
 {
+   // trim the population to the predefined size
    std::sort(fGenePool.begin(), fGenePool.end());
    while ( fGenePool.size() > (unsigned int) fPopulationSizeLimit )
       fGenePool.pop_back();
@@ -301,6 +304,8 @@ void TMVA::GeneticPopulation::TrimPopulation()
 //_______________________________________________________________________
 void TMVA::GeneticPopulation::GiveHint( std::vector< Double_t >& hint, Double_t fitness )
 {
+   // add an individual (a set of variables) to the population
+   // if there is a set of variables which is known to perform good, they can be given as a hint to the population
    TMVA::GeneticGenes g(hint);
    g.SetFitness(fitness);
 
@@ -310,6 +315,7 @@ void TMVA::GeneticPopulation::GiveHint( std::vector< Double_t >& hint, Double_t 
 //_______________________________________________________________________
 void TMVA::GeneticPopulation::Sort()
 {
+   // sort the genepool according to the fitness of the individuals
    std::sort(fGenePool.begin(), fGenePool.end());
 }
 

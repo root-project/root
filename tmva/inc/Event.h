@@ -84,14 +84,14 @@ namespace TMVA {
       UInt_t  GetNSpectators()      const { return fSpectators.size(); }
       UInt_t  GetNVars()          const { return fValues.size(); }  // backward compatible -> to be removed
 
-      Float_t GetVal(UInt_t ivar) const { return ( fDynamic ?( *(*fValuesDynamic)[ivar] ) : fValues[ivar] ); }
+      Float_t GetVal(UInt_t ivar) const { return ( fDynamic ?( *(*fgValuesDynamic)[ivar] ) : fValues[ivar] ); }
       Int_t   GetSignalClass()    const { return fSignalClass; } // intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
       
       const std::vector<Float_t>& GetValues() const {  
          if (fDynamic) {
             fValues.clear();
-            for (std::vector<Float_t*>::const_iterator it = fValuesDynamic->begin(); 
-                 it != fValuesDynamic->end(); it++) { Float_t val = *(*it); fValues.push_back( val ); }
+            for (std::vector<Float_t*>::const_iterator it = fgValuesDynamic->begin(); 
+                 it != fgValuesDynamic->end(); it++) { Float_t val = *(*it); fValues.push_back( val ); }
          }
          return fValues;
       }
@@ -125,10 +125,10 @@ namespace TMVA {
       Float_t               GetSpectator( UInt_t ivar) const { return fSpectators.at(ivar); }
 
       static void ClearDynamicVariables() { 
-         if (fValuesDynamic != 0) { 
-            fValuesDynamic->clear();
-            delete fValuesDynamic;
-            fValuesDynamic = 0;
+         if (fgValuesDynamic != 0) { 
+            fgValuesDynamic->clear();
+            delete fgValuesDynamic;
+            fgValuesDynamic = 0;
          }
       } 
 
@@ -138,7 +138,7 @@ namespace TMVA {
    private:
 
       mutable std::vector<Float_t>   fValues;          // the event values
-      static  std::vector<Float_t*>* fValuesDynamic;   // the event values
+      static  std::vector<Float_t*>* fgValuesDynamic;  // the event values
       mutable std::vector<Float_t>   fTargets;         // target values for regression
 
       mutable std::vector<Float_t>   fSpectators;        // "visisting" variables which are never used for any calculation

@@ -114,7 +114,7 @@ namespace TMVA {
       Bool_t                        fUseDefaultTemperature;  // if TRUE, SA calculates its own InitialTemperature (MinTemperautre)
 
       mutable MsgLogger*            fLogger;   // message logger
-      MsgLogger& log() const { return *fLogger; }
+      MsgLogger& Log() const { return *fLogger; }
 
       Double_t fProgress;
 

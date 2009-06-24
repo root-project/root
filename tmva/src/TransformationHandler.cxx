@@ -103,8 +103,8 @@ void TMVA::TransformationHandler::SetCallerName( const TString& name )
 //_______________________________________________________________________
 void TMVA::TransformationHandler::AddTransformation( VariableTransformBase *trf, Int_t cls ) 
 {
-   TString tfname = trf->log().GetName();
-   trf->log().SetSource(TString(fCallerName+"_"+tfname+"_TF").Data());
+   TString tfname = trf->Log().GetName();
+   trf->Log().SetSource(TString(fCallerName+"_"+tfname+"_TF").Data());
    fTransformations.Add(trf);
    fTransformationsReferenceClasses.push_back( cls );
 }
@@ -113,7 +113,7 @@ void TMVA::TransformationHandler::AddTransformation( VariableTransformBase *trf,
 void TMVA::TransformationHandler::AddStats( Int_t k, UInt_t ivar, Double_t mean, Double_t rms, Double_t min, Double_t max ) 
 {
    if (rms <= 0) {
-      log() << kWARNING << "Variable \"" << Variable(ivar).GetExpression() 
+      Log() << kWARNING << "Variable \"" << Variable(ivar).GetExpression() 
             << "\" has zero or negative RMS^2 " 
             << "==> set to zero. Please check the variable content" << Endl;
       rms = 0;
@@ -235,7 +235,7 @@ void TMVA::TransformationHandler::CalcStats( const std::vector<Event*>& events )
    UInt_t nevts = events.size();
 
    if (nevts==0)
-      log() << kFATAL << "No events available to find min, max, mean and rms" << Endl;
+      Log() << kFATAL << "No events available to find min, max, mean and rms" << Endl;
 
    // if transformation has not been succeeded, the tree may be empty
    const UInt_t nvar = events[0]->GetNVariables();
@@ -315,32 +315,32 @@ void TMVA::TransformationHandler::CalcStats( const std::vector<Event*>& events )
    maxV = maxL + 2;
    // full column length
    UInt_t clen = maxL + 4*maxV + 11;
-   for (UInt_t i=0; i<clen; i++) log() << "-";
-   log() << Endl;
+   for (UInt_t i=0; i<clen; i++) Log() << "-";
+   Log() << Endl;
    // full column length
-   log() << std::setw(maxL) << "Variable";
-   log() << "  " << std::setw(maxV) << "Mean";
-   log() << " " << std::setw(maxV) << "RMS";
-   log() << "   " << std::setw(maxV) << "[        Min ";
-   log() << "  " << std::setw(maxV) << "    Max ]" << Endl;;
-   for (UInt_t i=0; i<clen; i++) log() << "-";
-   log() << Endl;
+   Log() << std::setw(maxL) << "Variable";
+   Log() << "  " << std::setw(maxV) << "Mean";
+   Log() << " " << std::setw(maxV) << "RMS";
+   Log() << "   " << std::setw(maxV) << "[        Min ";
+   Log() << "  " << std::setw(maxV) << "    Max ]" << Endl;;
+   for (UInt_t i=0; i<clen; i++) Log() << "-";
+   Log() << Endl;
 
    // the numbers
    TString format = "%#11.5g";
    for (UInt_t ivar=0; ivar<nvar+ntgt; ivar++) {
       if( ivar < nvar )
-	 log() << std::setw(maxL) << Variable(ivar).GetLabel() << ":";
+	 Log() << std::setw(maxL) << Variable(ivar).GetLabel() << ":";
       else
-	 log() << std::setw(maxL) << Target(ivar-nvar).GetLabel() << ":";
-      log() << std::setw(maxV) << Form( format.Data(), GetMean(ivar) );
-      log() << std::setw(maxV) << Form( format.Data(), GetRMS(ivar) );
-      log() << "   [" << std::setw(maxV) << Form( format.Data(), GetMin(ivar) );
-      log() << std::setw(maxV) << Form( format.Data(), GetMax(ivar) ) << " ]";
-      log() << Endl;
+	 Log() << std::setw(maxL) << Target(ivar-nvar).GetLabel() << ":";
+      Log() << std::setw(maxV) << Form( format.Data(), GetMean(ivar) );
+      Log() << std::setw(maxV) << Form( format.Data(), GetRMS(ivar) );
+      Log() << "   [" << std::setw(maxV) << Form( format.Data(), GetMin(ivar) );
+      Log() << std::setw(maxV) << Form( format.Data(), GetMax(ivar) ) << " ]";
+      Log() << Endl;
    }
-   for (UInt_t i=0; i<clen; i++) log() << "-";
-   log() << Endl;
+   for (UInt_t i=0; i<clen; i++) Log() << "-";
+   Log() << Endl;
    // ------------------------------------------------------------------------
    
    delete[] sumOfWeights;
@@ -466,25 +466,25 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
    // --> avoid above critical number (which can be user defined)
    if (nvar+ntgt > (UInt_t)gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots) {
       Int_t nhists = (nvar+ntgt)*(nvar+ntgt - 1)/2;
-      log() << kINFO << gTools().Color("dgreen") << Endl;
-      log() << kINFO << "<PlotVariables> Will not produce scatter plots ==> " << Endl;
-      log() << kINFO
+      Log() << kINFO << gTools().Color("dgreen") << Endl;
+      Log() << kINFO << "<PlotVariables> Will not produce scatter plots ==> " << Endl;
+      Log() << kINFO
             << "|  The number of " << nvar << " input variables and " << ntgt << " target values would require " 
             << nhists << " two-dimensional" << Endl;
-      log() << kINFO
+      Log() << kINFO
             << "|  histograms, which would occupy the computer's memory. Note that this" << Endl;
-      log() << kINFO
+      Log() << kINFO
             << "|  suppression does not have any consequences for your analysis, other" << Endl;
-      log() << kINFO
+      Log() << kINFO
             << "|  than not disposing of these scatter plots. You can modify the maximum" << Endl;
-      log() << kINFO
+      Log() << kINFO
             << "|  number of input variables allowed to generate scatter plots in your" << Endl; 
-      log() << "|  script via the command line:" << Endl;
-      log() << kINFO
+      Log() << "|  script via the command line:" << Endl;
+      Log() << kINFO
             << "|  \"(TMVA::gConfig().GetVariablePlotting()).fMaxNumOfAllowedVariablesForScatterPlots = <some int>;\""
             << gTools().Color("reset") << Endl;
-      log() << Endl;
-      log() << kINFO << "Some more output" << Endl;
+      Log() << Endl;
+      Log() << kINFO << "Some more output" << Endl;
    }
 
    Double_t timesRMS = gConfig().GetVariablePlotting().fTimesRMS;
@@ -700,13 +700,13 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
 
       TObject* o = fRootBaseDir->FindObject(outputDir);
       if (o != 0) {
-         log() << kFATAL << "A " << o->ClassName() << " with name " << o->GetName() << " already exists in " 
+         Log() << kFATAL << "A " << o->ClassName() << " with name " << o->GetName() << " already exists in " 
                << fRootBaseDir->GetPath() << "("<<outputDir<<")" << Endl;
       }
       localDir = fRootBaseDir->mkdir( outputDir );
       localDir->cd();
    
-      log() << kVERBOSE << "Create and switch to directory " << localDir->GetPath() << Endl;
+      Log() << kVERBOSE << "Create and switch to directory " << localDir->GetPath() << Endl;
    }
    else {
       theDirectory->cd();
@@ -727,8 +727,8 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
 
       localDir = localDir->mkdir( "CorrelationPlots" );
       localDir ->cd();
-      log() << kINFO << "Create scatter and profile plots in target-file directory: " << Endl;
-      log() << kINFO << localDir->GetPath() << Endl;
+      Log() << kINFO << "Create scatter and profile plots in target-file directory: " << Endl;
+      Log() << kINFO << localDir->GetPath() << Endl;
    
       
       for (UInt_t i=0; i<nvar+ntgt; i++) {
@@ -811,7 +811,7 @@ void TMVA::TransformationHandler::ReadFromStream( std::istream& )
 {
    //VariableTransformBase* trf = ((VariableTransformBase*)GetTransformationList().Last());
    //trf->ReadTransformationFromStream(fin);
-   log() << kFATAL << "Read transformations not implemented" << Endl;
+   Log() << kFATAL << "Read transformations not implemented" << Endl;
    // TODO
 }
 
@@ -839,7 +839,7 @@ void TMVA::TransformationHandler::ReadFromXML( void* trfsnode )
          newtrf = new VariableNormalizeTransform(fDataSetInfo);
       } 
       else if (trfname != "None") {
-         log() << kFATAL << "<ReadFromXML> Variable transform '"
+         Log() << kFATAL << "<ReadFromXML> Variable transform '"
                << trfname << "' unknown." << Endl;
       }
       newtrf->ReadFromXML( ch );
@@ -852,7 +852,7 @@ void TMVA::TransformationHandler::ReadFromXML( void* trfsnode )
 void TMVA::TransformationHandler::PrintVariableRanking() const
 {
    // prints ranking of input variables   
-   log() << kINFO << "Ranking input variables..." << Endl;
+   Log() << kINFO << "Ranking input variables..." << Endl;
    std::vector<Ranking*>::const_iterator it = fRanking.begin();
    for (; it != fRanking.end(); it++) (*it)->Print();
 }
@@ -868,10 +868,10 @@ Double_t TMVA::TransformationHandler::GetMean( Int_t ivar, Int_t cls ) const
          return fVariableStats.at(fNumC-1).at(ivar).fMean;
       }
       catch(...) {
-         log() << kWARNING << "Inconsistent variable state when reading the mean value. " << Endl;
+         Log() << kWARNING << "Inconsistent variable state when reading the mean value. " << Endl;
       }
    }
-   log() << kWARNING << "Inconsistent variable state when reading the mean value. Value 0 given back" << Endl;
+   Log() << kWARNING << "Inconsistent variable state when reading the mean value. Value 0 given back" << Endl;
    return 0;
 }
 
@@ -887,10 +887,10 @@ Double_t TMVA::TransformationHandler::GetRMS( Int_t ivar, Int_t cls ) const
          return fVariableStats.at(fNumC-1).at(ivar).fRMS;
       }
       catch(...) {
-         log() << kWARNING << "Inconsistent variable state when reading the RMS value. " << Endl;
+         Log() << kWARNING << "Inconsistent variable state when reading the RMS value. " << Endl;
       }
    }
-   log() << kWARNING << "Inconsistent variable state when reading the RMS value. Value 0 given back" << Endl;
+   Log() << kWARNING << "Inconsistent variable state when reading the RMS value. Value 0 given back" << Endl;
    return 0;
 }
 
@@ -905,10 +905,10 @@ Double_t TMVA::TransformationHandler::GetMin( Int_t ivar, Int_t cls ) const
          return fVariableStats.at(fNumC-1).at(ivar).fMin;
       }
       catch(...) {
-         log() << kWARNING << "Inconsistent variable state when reading the minimum value. " << Endl;
+         Log() << kWARNING << "Inconsistent variable state when reading the minimum value. " << Endl;
       }
    }
-   log() << kWARNING << "Inconsistent variable state when reading the minimum value. Value 0 given back" << Endl;
+   Log() << kWARNING << "Inconsistent variable state when reading the minimum value. Value 0 given back" << Endl;
    return 0;
 }
 
@@ -923,9 +923,9 @@ Double_t TMVA::TransformationHandler::GetMax( Int_t ivar, Int_t cls ) const
          return fVariableStats.at(fNumC-1).at(ivar).fMax;
       }
       catch(...) {
-         log() << kWARNING << "Inconsistent variable state when reading the maximum value. " << Endl;
+         Log() << kWARNING << "Inconsistent variable state when reading the maximum value. " << Endl;
       }
    }
-   log() << kWARNING << "Inconsistent variable state when reading the maximum value. Value 0 given back" << Endl;
+   Log() << kWARNING << "Inconsistent variable state when reading the maximum value. Value 0 given back" << Endl;
    return 0;
 }

@@ -93,7 +93,7 @@ void TMVA::RuleFitParams::Init()
    // Initializes all parameters using the RuleEnsemble and the training tree
    if (fRuleFit==0) return;
    if (fRuleFit->GetMethodRuleFit()==0) {
-      log() << kFATAL << "RuleFitParams::Init() - MethodRuleFit ptr is null" << Endl;
+      Log() << kFATAL << "RuleFitParams::Init() - MethodRuleFit ptr is null" << Endl;
    }
    UInt_t neve = fRuleFit->GetTrainingEvents().size();
    //
@@ -141,20 +141,20 @@ void TMVA::RuleFitParams::Init()
       fNEveEffPerf += fRuleFit->GetTrainingEventWeight(ie);
    }
    //
-   log() << kVERBOSE << "Path constr. - event index range = [ " << fPathIdx1 << ", " << fPathIdx2 << " ]"
+   Log() << kVERBOSE << "Path constr. - event index range = [ " << fPathIdx1 << ", " << fPathIdx2 << " ]"
            << ", effective N(events) = " << fNEveEffPath << Endl;
-   log() << kVERBOSE << "Error estim. - event index range = [ " << fPerfIdx1 << ", " << fPerfIdx2 << " ]"
+   Log() << kVERBOSE << "Error estim. - event index range = [ " << fPerfIdx1 << ", " << fPerfIdx2 << " ]"
            << ", effective N(events) = " << fNEveEffPerf << Endl;
    //
    if (fRuleEnsemble->DoRules()) 
-      log() << kDEBUG << "Number of rules in ensemble: " << fNRules << Endl;
+      Log() << kDEBUG << "Number of rules in ensemble: " << fNRules << Endl;
    else 
-      log() << kDEBUG << "Rules are disabled " << Endl;
+      Log() << kDEBUG << "Rules are disabled " << Endl;
 
    if (fRuleEnsemble->DoLinear())
-      log() << kDEBUG << "Number of linear terms: " << fNLinear << Endl;
+      Log() << kDEBUG << "Number of linear terms: " << fNLinear << Endl;
    else
-      log() << kDEBUG << "Linear terms are disabled " << Endl;
+      Log() << kDEBUG << "Linear terms are disabled " << Endl;
 }
 
 //_______________________________________________________________________
@@ -188,7 +188,7 @@ void TMVA::RuleFitParams::EvaluateAverage( UInt_t ind1, UInt_t ind2,
    // evaluate the average of each variable and f(x) in the given range
    UInt_t neve = ind2-ind1+1;
    if (neve<1) {
-      log() << kFATAL << "<EvaluateAverage> - no events selected for path search -> BUG!" << Endl;
+      Log() << kFATAL << "<EvaluateAverage> - no events selected for path search -> BUG!" << Endl;
    }
    //
    avsel.clear();
@@ -288,7 +288,7 @@ Double_t TMVA::RuleFitParams::Risk(UInt_t ind1,UInt_t ind2, Double_t neff) const
    // risk asessment
    UInt_t neve = ind2-ind1+1;
    if (neve<1) {
-      log() << kFATAL << "<Risk> Invalid start/end indices! BUG!!!" << Endl;
+      Log() << kFATAL << "<Risk> Invalid start/end indices! BUG!!!" << Endl;
    }
    Double_t rval=0;
    //
@@ -307,7 +307,7 @@ Double_t TMVA::RuleFitParams::Risk(UInt_t ind1,UInt_t ind2, Double_t neff, UInt_
    // risk asessment for tau model <itau>
    UInt_t neve = ind2-ind1+1;
    if (neve<1) {
-      log() << kFATAL << "<Risk> Invalid start/end indices! BUG!!!" << Endl;
+      Log() << kFATAL << "<Risk> Invalid start/end indices! BUG!!!" << Endl;
    }
    Double_t rval=0;
    //
@@ -326,7 +326,7 @@ Double_t TMVA::RuleFitParams::Penalty() const
    // This is the "lasso" penalty
    // To be used for regression.
    // --- NOT USED ---
-   log() << kWARNING << "<Penalty> Using unverified code! Check!" << Endl;
+   Log() << kWARNING << "<Penalty> Using unverified code! Check!" << Endl;
    Double_t rval=0;
    const std::vector<Double_t> *lincoeff = & (fRuleEnsemble->GetLinCoefficients());
    for (UInt_t i=0; i<fNRules; i++) {
@@ -421,9 +421,9 @@ Int_t TMVA::RuleFitParams::FindGDTau()
    if (fGDTauScan==0) return 0;
 
    if (fGDOfsTst.size()<1)
-      log() << kFATAL << "BUG! FindGDTau() has been called BEFORE InitGD()." << Endl;
+      Log() << kFATAL << "BUG! FindGDTau() has been called BEFORE InitGD()." << Endl;
   //
-   log() << kINFO << "Estimating the cutoff parameter tau. The estimated time is a pessimistic maximum." << Endl;
+   Log() << kINFO << "Estimating the cutoff parameter tau. The estimated time is a pessimistic maximum." << Endl;
    //
    // Find how many points to scan and how often to calculate the error
    UInt_t nscan = fGDTauScan; //std::min(static_cast<Int_t>(fGDTauScan),fGDNPathSteps);
@@ -455,13 +455,13 @@ Int_t TMVA::RuleFitParams::FindGDTau()
       if ( (ip==0) || ((ip+1)%netst==0) ) {
          //         ErrorRateRocTst( );
          itauMin = RiskPerfTst();
-         log() << kVERBOSE << Form("%4d",ip+1) << ". tau = " << Form("%4.4f",fGDTauVec[itauMin])
+         Log() << kVERBOSE << Form("%4d",ip+1) << ". tau = " << Form("%4.4f",fGDTauVec[itauMin])
                  << " => error rate = " << fGDErrTst[itauMin] << Endl;
       }
       ip++;
       doloop = ((ip<nscan) && (fGDNTauTstOK>3));
       gFIRSTTST=kFALSE;
-      if (log().GetMinType()>kVERBOSE)
+      if (Log().GetMinType()>kVERBOSE)
          timer.DrawProgressBar(ip);
    }
    //
@@ -469,13 +469,13 @@ Int_t TMVA::RuleFitParams::FindGDTau()
    // Downscale tau slightly in order to avoid numerical problems
    //
    if (nscanned==0) {
-      log() << kERROR << "<FindGDTau> number of scanned loops is zero! Should NOT see this message." << Endl;
+      Log() << kERROR << "<FindGDTau> number of scanned loops is zero! Should NOT see this message." << Endl;
    }
    fGDTau = fGDTauVec[itauMin];
    fRuleEnsemble->SetCoefficients( fGDCoefTst[itauMin] );
    fRuleEnsemble->SetLinCoefficients( fGDCoefLinTst[itauMin] );
    fRuleEnsemble->SetOffset( fGDOfsTst[itauMin] );
-   log() << kINFO << "Best path found with tau = " << Form("%4.4f",fGDTau)
+   Log() << kINFO << "Best path found with tau = " << Form("%4.4f",fGDTau)
            << " after " << timer.GetElapsedTime() << "      " << Endl;
 
    return nscan;
@@ -505,14 +505,14 @@ void TMVA::RuleFitParams::MakeGDPath()
    // III. DEBUG: risk > previous risk -> entered caotic region (regularization is too small)
    //
 
-   log() << kINFO << "GD path scan - the scan stops when the max num. of steps is reached or a min is found"
+   Log() << kINFO << "GD path scan - the scan stops when the max num. of steps is reached or a min is found"
            << Endl;
-   log() << kVERBOSE << "Number of events used per path step = " << fPathIdx2-fPathIdx1+1 << Endl;
-   log() << kVERBOSE << "Number of events used for error estimation = " << fPerfIdx2-fPerfIdx1+1 << Endl;
+   Log() << kVERBOSE << "Number of events used per path step = " << fPathIdx2-fPathIdx1+1 << Endl;
+   Log() << kVERBOSE << "Number of events used for error estimation = " << fPerfIdx2-fPerfIdx1+1 << Endl;
 
    // check if debug mode
-   const Bool_t isVerbose = (log().GetMinType()<=kVERBOSE);
-   const Bool_t isDebug   = (log().GetMinType()<=kDEBUG);
+   const Bool_t isVerbose = (Log().GetMinType()<=kVERBOSE);
+   const Bool_t isDebug   = (Log().GetMinType()<=kDEBUG);
 
    // init GD parameters and clear coeff vectors
    InitGD();
@@ -522,12 +522,12 @@ void TMVA::RuleFitParams::MakeGDPath()
    EvaluateAveragePerf();
 
    // initial estimate; all other a(i) are zero
-   log() << kVERBOSE << "Creating GD path"  << Endl;
-   log() << kVERBOSE << "  N(steps)     = "   << fGDNPathSteps << Endl;
-   log() << kVERBOSE << "  step         = "   << fGDPathStep   << Endl;
-   log() << kVERBOSE << "  N(tau)       = "   << fGDNTau       << Endl;
-   log() << kVERBOSE << "  N(tau steps) = "   << fGDTauScan    << Endl;
-   log() << kVERBOSE << "  tau range    = [ " << fGDTauVec[0]  << " , " << fGDTauVec[fGDNTau-1] << " ]" << Endl;
+   Log() << kVERBOSE << "Creating GD path"  << Endl;
+   Log() << kVERBOSE << "  N(steps)     = "   << fGDNPathSteps << Endl;
+   Log() << kVERBOSE << "  step         = "   << fGDPathStep   << Endl;
+   Log() << kVERBOSE << "  N(tau)       = "   << fGDNTau       << Endl;
+   Log() << kVERBOSE << "  N(tau steps) = "   << fGDTauScan    << Endl;
+   Log() << kVERBOSE << "  tau range    = [ " << fGDTauVec[0]  << " , " << fGDTauVec[fGDNTau-1] << " ]" << Endl;
 
    // init ntuple
    if (isDebug) InitNtuple();
@@ -583,7 +583,7 @@ void TMVA::RuleFitParams::MakeGDPath()
    for (UInt_t i=0; i<fGDOfsTst.size(); i++) {
       fGDOfsTst[i] = offsetMin;
    }
-   log() << kVERBOSE << "Obtained initial offset = " << offsetMin << Endl;
+   Log() << kVERBOSE << "Obtained initial offset = " << offsetMin << Endl;
 
    // find the best tau - returns the number of steps performed in scan
    Int_t nprescan = FindGDTau();
@@ -603,7 +603,7 @@ void TMVA::RuleFitParams::MakeGDPath()
    // a local flag indicating for what reason the search was stopped
    Int_t stopCondition=0;
 
-   log() << kINFO << "Fitting model..." << Endl;
+   Log() << kINFO << "Fitting model..." << Endl;
    // start loop with timer
    Timer timer( fGDNPathSteps, "RuleFit" );
    while (!done) {
@@ -651,12 +651,12 @@ void TMVA::RuleFitParams::MakeGDPath()
          if (fNTRisk>=rprev) {
             if (fNTRisk>rprev) {
                nbadrisk++;
-               log() << kWARNING << "Risk(i+1)>=Risk(i) in path" << Endl;
+               Log() << kWARNING << "Risk(i+1)>=Risk(i) in path" << Endl;
                riskFlat=(nbadrisk>3);
                if (riskFlat) {
-                  log() << kWARNING << "Chaotic behaviour of risk evolution" << Endl;
-                  log() << kWARNING << "--- STOPPING MINIMISATION ---" << Endl;
-                  log() << kWARNING << "This may be OK if minimum is already found" << Endl;
+                  Log() << kWARNING << "Chaotic behaviour of risk evolution" << Endl;
+                  Log() << kWARNING << "--- STOPPING MINIMISATION ---" << Endl;
+                  Log() << kWARNING << "This may be OK if minimum is already found" << Endl;
                }
             }
          }
@@ -712,7 +712,7 @@ void TMVA::RuleFitParams::MakeGDPath()
          //
          if (isDebug) fGDNtuple->Fill();
          if (isVerbose) {
-            log() << kVERBOSE << "ParamsIRE : "
+            Log() << kVERBOSE << "ParamsIRE : "
                     << std::setw(10)
                     << Form("%8d",iloop+1) << " "
                     << Form("%4.4f",fNTRisk) << " "
@@ -742,7 +742,7 @@ void TMVA::RuleFitParams::MakeGDPath()
             stopCondition = 2;
          }
          if (indMin<0) {
-            log() << kWARNING << "BUG TRAP: should not be here - still, this bug is harmless;)" << Endl;
+            Log() << kWARNING << "BUG TRAP: should not be here - still, this bug is harmless;)" << Endl;
             errmin  = fNTErrorRate;
             riskMin = fNTRisk;
             indMin  = iloop;
@@ -754,31 +754,31 @@ void TMVA::RuleFitParams::MakeGDPath()
       }
       done = (found);
    }
-   log() << kINFO << "Minimisation elapsed time : " << timer.GetElapsedTime() << "                      " << Endl;
-   log() << kINFO << "----------------------------------------------------------------"  << Endl;
-   log() << kINFO << "Found minimum at step " << indMin+1 << " with error = " << errmin << Endl;
-   log() << kINFO << "Reason for ending loop: ";
+   Log() << kINFO << "Minimisation elapsed time : " << timer.GetElapsedTime() << "                      " << Endl;
+   Log() << kINFO << "----------------------------------------------------------------"  << Endl;
+   Log() << kINFO << "Found minimum at step " << indMin+1 << " with error = " << errmin << Endl;
+   Log() << kINFO << "Reason for ending loop: ";
    switch (stopCondition) {
    case 0:
-      log() << kINFO << "clear minima found";
+      Log() << kINFO << "clear minima found";
       break;
    case 1:
-      log() << kINFO << "chaotic behaviour of risk";
+      Log() << kINFO << "chaotic behaviour of risk";
       break;
    case 2:
-      log() << kINFO << "end of loop reached";
+      Log() << kINFO << "end of loop reached";
       break;
    default:
-      log() << kINFO << "unknown!";
+      Log() << kINFO << "unknown!";
       break;
    }
-   log() << Endl;
-   log() << kINFO << "----------------------------------------------------------------"  << Endl;
+   Log() << Endl;
+   Log() << kINFO << "----------------------------------------------------------------"  << Endl;
 
    // check if early minima - might be an indication of too large stepsize
    if ( Double_t(indMin)/Double_t(nprescan+fGDNPathSteps) < 0.05 ) {
-      log() << kWARNING << "Reached minimum early in the search" << Endl;
-      log() << kWARNING << "Check results and maybe decrease GDStep size" << Endl;
+      Log() << kWARNING << "Reached minimum early in the search" << Endl;
+      Log() << kWARNING << "Check results and maybe decrease GDStep size" << Endl;
    }
    //
    // quick check of the sign of the slope for the last npreg points
@@ -788,8 +788,8 @@ void TMVA::RuleFitParams::MakeGDPath()
    Double_t sumy  = std::accumulate( valy.begin(), valy.end(), Double_t() );
    Double_t slope = Double_t(valx.size())*sumxy - sumx*sumy;
    if (slope<0) {
-      log() << kINFO << "The error rate was still decreasing at the end of the path" << Endl;
-      log() << kINFO << "Increase number of steps (GDNSteps)." << Endl;
+      Log() << kINFO << "The error rate was still decreasing at the end of the path" << Endl;
+      Log() << kINFO << "Increase number of steps (GDNSteps)." << Endl;
    }
    //
    // set coefficients
@@ -800,7 +800,7 @@ void TMVA::RuleFitParams::MakeGDPath()
       fRuleEnsemble->SetOffset( offsetMin );
    } 
    else {
-      log() << kFATAL << "BUG TRAP: minimum not found in MakeGDPath()" << Endl;
+      Log() << kFATAL << "BUG TRAP: minimum not found in MakeGDPath()" << Endl;
    }
 
    //
@@ -808,20 +808,20 @@ void TMVA::RuleFitParams::MakeGDPath()
    //
    if (isVerbose) {
       Double_t stloop  = strisk +stupgrade + stgradvec + stperf;
-      log() << kVERBOSE << "Timing per loop (ms):" << Endl;
-      log() << kVERBOSE << "   gradvec = " << 1000*stgradvec/iloop << Endl;
-      log() << kVERBOSE << "   upgrade = " << 1000*stupgrade/iloop << Endl;
-      log() << kVERBOSE << "   risk    = " << 1000*strisk/iloop    << Endl;
-      log() << kVERBOSE << "   perf    = " << 1000*stperf/iloop    << Endl;
-      log() << kVERBOSE << "   loop    = " << 1000*stloop/iloop    << Endl;
+      Log() << kVERBOSE << "Timing per loop (ms):" << Endl;
+      Log() << kVERBOSE << "   gradvec = " << 1000*stgradvec/iloop << Endl;
+      Log() << kVERBOSE << "   upgrade = " << 1000*stupgrade/iloop << Endl;
+      Log() << kVERBOSE << "   risk    = " << 1000*strisk/iloop    << Endl;
+      Log() << kVERBOSE << "   perf    = " << 1000*stperf/iloop    << Endl;
+      Log() << kVERBOSE << "   loop    = " << 1000*stloop/iloop    << Endl;
       //
-      log() << kVERBOSE << "   GDInit      = " << 1000*gGDInit/iloop    << Endl;
-      log() << kVERBOSE << "   GDPtr       = " << 1000*gGDPtr/iloop    << Endl;
-      log() << kVERBOSE << "   GDEval      = " << 1000*gGDEval/iloop    << Endl;
-      log() << kVERBOSE << "   GDEvalRule  = " << 1000*gGDEvalRule/iloop    << Endl;
-      log() << kVERBOSE << "   GDNorm      = " << 1000*gGDNorm/iloop    << Endl;
-      log() << kVERBOSE << "   GDRuleLoop  = " << 1000*gGDRuleLoop/iloop    << Endl;
-      log() << kVERBOSE << "   GDLinLoop   = " << 1000*gGDLinLoop/iloop    << Endl;
+      Log() << kVERBOSE << "   GDInit      = " << 1000*gGDInit/iloop    << Endl;
+      Log() << kVERBOSE << "   GDPtr       = " << 1000*gGDPtr/iloop    << Endl;
+      Log() << kVERBOSE << "   GDEval      = " << 1000*gGDEval/iloop    << Endl;
+      Log() << kVERBOSE << "   GDEvalRule  = " << 1000*gGDEvalRule/iloop    << Endl;
+      Log() << kVERBOSE << "   GDNorm      = " << 1000*gGDNorm/iloop    << Endl;
+      Log() << kVERBOSE << "   GDRuleLoop  = " << 1000*gGDRuleLoop/iloop    << Endl;
+      Log() << kVERBOSE << "   GDLinLoop   = " << 1000*gGDLinLoop/iloop    << Endl;
    }
    //
    // write ntuple (DEBUG)
@@ -850,10 +850,10 @@ void TMVA::RuleFitParams::CalcFStar()
    // The result is used in ErrorRateReg().
    // --- NOT USED ---
    //
-   log() << kWARNING << "<CalcFStar> Using unverified code! Check!" << Endl;
+   Log() << kWARNING << "<CalcFStar> Using unverified code! Check!" << Endl;
    UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      log() << kFATAL << "<CalcFStar> Invalid start/end indices!" << Endl;
+      Log() << kFATAL << "<CalcFStar> Invalid start/end indices!" << Endl;
       return;
    }
    //
@@ -868,7 +868,7 @@ void TMVA::RuleFitParams::CalcFStar()
       fstarVal = fRuleEnsemble->FStar(e);
       fFstar.push_back(fstarVal);
       fstarSorted.push_back(fstarVal);
-      if (isnan(fstarVal)) log() << kFATAL << "F* is NAN!" << Endl;
+      if (isnan(fstarVal)) Log() << kFATAL << "F* is NAN!" << Endl;
    }
    // sort F* and find median
    std::sort( fstarSorted.begin(), fstarSorted.end() );
@@ -890,10 +890,10 @@ Double_t TMVA::RuleFitParams::Optimism()
    // NOT REALLY SURE IF THIS IS CORRECT!
    // --- THIS IS NOT USED ---
    //
-   log() << kWARNING << "<Optimism> Using unverified code! Check!" << Endl;
+   Log() << kWARNING << "<Optimism> Using unverified code! Check!" << Endl;
    UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      log() << kFATAL << "<Optimism> Invalid start/end indices!" << Endl;
+      Log() << kFATAL << "<Optimism> Invalid start/end indices!" << Endl;
    }
    //
    const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
@@ -931,13 +931,13 @@ Double_t TMVA::RuleFitParams::ErrorRateReg()
    // Cleanup is needed.
    // -- NOT USED ---
    //
-   log() << kWARNING << "<ErrorRateReg> Using unverified code! Check!" << Endl;
+   Log() << kWARNING << "<ErrorRateReg> Using unverified code! Check!" << Endl;
    UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      log() << kFATAL << "<ErrorRateReg> Invalid start/end indices!" << Endl;
+      Log() << kFATAL << "<ErrorRateReg> Invalid start/end indices!" << Endl;
    }
    if (fFstar.size()!=neve) {
-      log() << kFATAL << "--- RuleFitParams::ErrorRateReg() - F* not initialized! BUG!!!"
+      Log() << kFATAL << "--- RuleFitParams::ErrorRateReg() - F* not initialized! BUG!!!"
               << " Fstar.size() = " << fFstar.size() << " , N(events) = " << neve << Endl;
    }
    //
@@ -975,10 +975,10 @@ Double_t TMVA::RuleFitParams::ErrorRateBin()
    // y = {+1 if event is signal, -1 otherwise}
    // --- NOT USED ---
    //
-   log() << kWARNING << "<ErrorRateBin> Using unverified code! Check!" << Endl;
+   Log() << kWARNING << "<ErrorRateBin> Using unverified code! Check!" << Endl;
    UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      log() << kFATAL << "<ErrorRateBin> Invalid start/end indices!" << Endl;
+      Log() << kFATAL << "<ErrorRateBin> Invalid start/end indices!" << Endl;
    }
    //
    const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
@@ -1076,10 +1076,10 @@ Double_t TMVA::RuleFitParams::ErrorRateRoc()
    // The value returned is 1-area.
    // This works but is less efficient than calculating the Risk using RiskPerf().
    //
-   log() << kWARNING << "<ErrorRateRoc> Should not be used in the current version! Check!" << Endl;
+   Log() << kWARNING << "<ErrorRateRoc> Should not be used in the current version! Check!" << Endl;
    UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      log() << kFATAL << "<ErrorRateRoc> Invalid start/end indices!" << Endl;
+      Log() << kFATAL << "<ErrorRateRoc> Invalid start/end indices!" << Endl;
    }
    //
    const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
@@ -1125,10 +1125,10 @@ void TMVA::RuleFitParams::ErrorRateRocTst()
    //
    // See comment under ErrorRateRoc().
    //
-   log() << kWARNING << "<ErrorRateRocTst> Should not be used in the current version! Check!" << Endl;
+   Log() << kWARNING << "<ErrorRateRocTst> Should not be used in the current version! Check!" << Endl;
    UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      log() << kFATAL << "<ErrorRateRocTst> Invalid start/end indices!" << Endl;
+      Log() << kFATAL << "<ErrorRateRocTst> Invalid start/end indices!" << Endl;
       return;
    }
    //
@@ -1174,7 +1174,7 @@ UInt_t TMVA::RuleFitParams::RiskPerfTst()
    //
    UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      log() << kFATAL << "<ErrorRateRocTst> Invalid start/end indices!" << Endl;
+      Log() << kFATAL << "<ErrorRateRocTst> Invalid start/end indices!" << Endl;
       return 0;
    }
    //
@@ -1214,7 +1214,7 @@ UInt_t TMVA::RuleFitParams::RiskPerfTst()
       }
    }
    fGDNTauTstOK = nok;
-   log() << kVERBOSE << "TAU: "
+   Log() << kVERBOSE << "TAU: "
            << itaumin << "   "
            << nok     << "   "
            << minx    << "   "
@@ -1231,7 +1231,7 @@ void TMVA::RuleFitParams::MakeTstGradientVector()
    // same algorithm as MakeGradientVector()
    UInt_t neve = fPathIdx1-fPathIdx2+1;
    if (neve<1) {
-      log() << kFATAL << "<MakeTstGradientVector> Invalid start/end indices!" << Endl;
+      Log() << kFATAL << "<MakeTstGradientVector> Invalid start/end indices!" << Endl;
       return;
    }
    //
@@ -1353,7 +1353,7 @@ void TMVA::RuleFitParams::MakeGradientVector()
    //
    UInt_t neve = fPathIdx2-fPathIdx1+1;
    if (neve<1) {
-      log() << kFATAL << "<MakeGradientVector> Invalid start/end indices!" << Endl;
+      Log() << kFATAL << "<MakeGradientVector> Invalid start/end indices!" << Endl;
       return;
    }
    //
@@ -1499,7 +1499,7 @@ Double_t TMVA::RuleFitParams::CalcAverageTruth()
    // calulate the average truth
 
    if (fPathIdx2<=fPathIdx1) {
-      log() << kFATAL << "<CalcAverageTruth> Invalid start/end indices!" << Endl;
+      Log() << kFATAL << "<CalcAverageTruth> Invalid start/end indices!" << Endl;
       return 0;
    }
    Double_t sum=0;
@@ -1512,7 +1512,7 @@ Double_t TMVA::RuleFitParams::CalcAverageTruth()
       else                          enbkg += ew;
       sum += ew*((*events)[i]->IsSignal()?1.0:-1.0);
    }
-   log() << kVERBOSE << "Effective number of signal / background = " << ensig << " / " << enbkg << Endl;
+   Log() << kVERBOSE << "Effective number of signal / background = " << ensig << " / " << enbkg << Endl;
 
    return sum/fNEveEffPath;
 }

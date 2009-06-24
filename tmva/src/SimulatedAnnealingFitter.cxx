@@ -124,8 +124,8 @@ void TMVA::SimulatedAnnealingFitter::SetParameters( Int_t    maxCalls,
 Double_t TMVA::SimulatedAnnealingFitter::Run( std::vector<Double_t>& pars )
 {
    // Execute fitting
-   log() << kINFO << "<SimulatedAnnealingFitter> Optimisation, please be patient ... " << Endl;
-   log() << kINFO << "(progress timing may be inaccurate for SA)" << Endl;
+   Log() << kINFO << "<SimulatedAnnealingFitter> Optimisation, please be patient ... " << Endl;
+   Log() << kINFO << "(progress timing may be inaccurate for SA)" << Endl;
 
    SimulatedAnnealing sa( GetFitterTarget(), fRanges );
 

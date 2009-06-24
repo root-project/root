@@ -91,9 +91,9 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
       // calculate the quality of the tree in the unpruned case
       Q = dt->TestPrunedTreeQuality();
 
-      log() << kDEBUG << "Node purity limit is: " << dt->GetNodePurityLimit() << Endl;
-      log() << kDEBUG << "Sum of weights in pruning validation sample: " << W << Endl;
-      log() << kDEBUG << "Quality of tree prior to any pruning is " << Q/W << Endl;
+      Log() << kDEBUG << "Node purity limit is: " << dt->GetNodePurityLimit() << Endl;
+      Log() << kDEBUG << "Sum of weights in pruning validation sample: " << W << Endl;
+      Log() << kDEBUG << "Quality of tree prior to any pruning is " << Q/W << Endl;
    }
 
    // store the cost complexity metadata for the decision tree at each node
@@ -101,23 +101,23 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
       InitTreePruningMetaData((DecisionTreeNode*)dt->GetRoot());
    }
    catch(std::string error) {
-      log() << kERROR << "Couldn't initialize the tree meta data because of error ("
+      Log() << kERROR << "Couldn't initialize the tree meta data because of error ("
               << error << ")" << Endl;
       return NULL;
    }
 
-   log() << kDEBUG << "Automatic cost complexity pruning is " << (IsAutomatic()?"on":"off") << "." << Endl;
+   Log() << kDEBUG << "Automatic cost complexity pruning is " << (IsAutomatic()?"on":"off") << "." << Endl;
 
    try {
       Optimize( dt, W );  // run the cost complexity pruning algorithm
    }
    catch(std::string error) {
-      log() << kERROR << "Error optimzing pruning sequence ("
+      Log() << kERROR << "Error optimzing pruning sequence ("
               << error << ")" << Endl;
       return NULL;
    }
 
-   log() << kDEBUG << "Index of pruning sequence to stop at: " << fOptimalK << Endl;
+   Log() << kDEBUG << "Index of pruning sequence to stop at: " << fOptimalK << Endl;
 
    PruningInfo* info = new PruningInfo();
 
@@ -127,13 +127,13 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
       info->PruneStrength = 0;
       info->QualityIndex = Q/W;
       info->PruneSequence.clear();
-      log() << kINFO << "no proper pruning could be calulated. Tree "   
+      Log() << kINFO << "no proper pruning could be calulated. Tree "   
             <<  dt->GetTreeID() << " will not be pruned. Do not worry if this " 
             << " happens for a few trees " << Endl;
       return info;
    }
    info->QualityIndex = fQualityIndexList[fOptimalK]/W;
-   log() << kDEBUG << " prune until k=" << fOptimalK << " with alpha="<<fPruneStrengthList[fOptimalK]<< Endl;
+   Log() << kDEBUG << " prune until k=" << fOptimalK << " with alpha="<<fPruneStrengthList[fOptimalK]<< Endl;
    for( Int_t i = 0; i < fOptimalK; i++ ){
       info->PruneSequence.push_back(fPruneSequence[i]);
    }
@@ -192,7 +192,7 @@ void CostComplexityPruneTool::InitTreePruningMetaData( DecisionTreeNode* n ) {
 
 //    DecisionTreeNode* R = (DecisionTreeNode*)mdt->GetRoot();
 //    Double_t x = R->GetAlphaMinSubtree();
-//    log() << "alphaMin(Root) = " << x << Endl;
+//    Log() << "alphaMin(Root) = " << x << Endl;
 }
 
 
@@ -237,7 +237,7 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
       alpha = TMath::Max(R->GetAlphaMinSubtree(), alpha);
 
       if( R->GetAlphaMinSubtree() >= R->GetAlpha() ) {
-         log() << kDEBUG << "\nCaught trying to prune the root node!" << Endl;
+         Log() << kDEBUG << "\nCaught trying to prune the root node!" << Endl;
          break;
       }
 
@@ -258,18 +258,18 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
       }
 
       if( t == R ) {
-         log() << kDEBUG << "\nCaught trying to prune the root node!" << Endl;
+         Log() << kDEBUG << "\nCaught trying to prune the root node!" << Endl;
          break;
       }
 
       DecisionTreeNode* n = t;
 
-//       log() << kDEBUG  << "alpha[" << k << "]: " << alpha << Endl;
-//       log() << kDEBUG  << "===========================" << Endl
+//       Log() << kDEBUG  << "alpha[" << k << "]: " << alpha << Endl;
+//       Log() << kDEBUG  << "===========================" << Endl
 //               << "Pruning branch listed below the node" << Endl;
-//       t->Print( log() );
-//       log() << kDEBUG << "===========================" << Endl;
-//       t->PrintRecPrune( log() );
+//       t->Print( Log() );
+//       Log() << kDEBUG << "===========================" << Endl;
+//       t->PrintRecPrune( Log() );
 
       dt->PruneNodeInPlace(t); // prune the branch rooted at node t
 
@@ -284,7 +284,7 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
       }
       k += 1;
    
-      log() << kDEBUG << "after this pruning step I would have " << R->GetNTerminal() << " remaining terminal nodes " << Endl;
+      Log() << kDEBUG << "after this pruning step I would have " << R->GetNTerminal() << " remaining terminal nodes " << Endl;
 
       if(IsAutomatic()) {
          Double_t q = dt->TestPrunedTreeQuality()/weights;
@@ -315,25 +315,25 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
    else {
       // regularize the prune strength relative to this tree
       fOptimalK = int(fPruneStrength/100.0 * fPruneSequence.size() );
-      log() << kDEBUG << "SequenzeSize="<<fPruneSequence.size()
+      Log() << kDEBUG << "SequenzeSize="<<fPruneSequence.size()
             << "  fOptimalK " << fOptimalK << Endl;
 
    }
 
-   log() << kDEBUG  << "\n************ Summary for Tree " << dt->GetTreeID() << " *******"  << Endl
+   Log() << kDEBUG  << "\n************ Summary for Tree " << dt->GetTreeID() << " *******"  << Endl
          << "Number of trees in the sequence: " << fPruneSequence.size() << Endl;
 
-   log() << kDEBUG  << "Pruning strength parameters: [";
+   Log() << kDEBUG  << "Pruning strength parameters: [";
    for(UInt_t i = 0; i < fPruneStrengthList.size()-1; i++)
-      log() << kDEBUG << fPruneStrengthList[i] << ", ";
-   log() << kDEBUG << fPruneStrengthList[fPruneStrengthList.size()-1] << "]" << Endl;
+      Log() << kDEBUG << fPruneStrengthList[i] << ", ";
+   Log() << kDEBUG << fPruneStrengthList[fPruneStrengthList.size()-1] << "]" << Endl;
 
-   log() << kDEBUG  << "Misclassification rates: [";
+   Log() << kDEBUG  << "Misclassification rates: [";
    for(UInt_t i = 0; i < fQualityIndexList.size()-1; i++)
-      log() << kDEBUG  << fQualityIndexList[i] << ", ";
-   log() << kDEBUG  << fQualityIndexList[fQualityIndexList.size()-1] << "]"  << Endl;
+      Log() << kDEBUG  << fQualityIndexList[i] << ", ";
+   Log() << kDEBUG  << fQualityIndexList[fQualityIndexList.size()-1] << "]"  << Endl;
 
-   log() << kDEBUG  << "Prune index: " << fOptimalK+1 << Endl;
+   Log() << kDEBUG  << "Prune index: " << fOptimalK+1 << Endl;
 
 }
 

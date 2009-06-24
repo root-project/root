@@ -78,7 +78,7 @@ TMVA::Node::Node( Node* p, char pos )
 }
 
 //_______________________________________________________________________
-TMVA::Node::Node (const Node &n ) 
+TMVA::Node::Node ( const Node &n ) 
    : fParent( NULL ), 
      fLeft  ( NULL), 
      fRight ( NULL ), 
@@ -93,14 +93,14 @@ TMVA::Node::Node (const Node &n )
 }
 
 //_______________________________________________________________________
-TMVA::Node::~Node( void )
+TMVA::Node::~Node()
 {
    // node destructor
-    fgCount--;
- }
+   fgCount--;
+}
 
 //_______________________________________________________________________
-Int_t TMVA::Node::CountMeAndAllDaughters( void ) const 
+Int_t TMVA::Node::CountMeAndAllDaughters() const 
 {
    //recursively go through the part of the tree below this node and count all daughters
    Int_t n=1;
@@ -114,7 +114,7 @@ Int_t TMVA::Node::CountMeAndAllDaughters( void ) const
 
 // print a node
 //_______________________________________________________________________
-ostream& TMVA::operator<<(ostream& os, const TMVA::Node& node)
+ostream& TMVA::operator<<( ostream& os, const TMVA::Node& node )
 { 
    // output operator for a node  
    node.Print(os);
@@ -122,7 +122,7 @@ ostream& TMVA::operator<<(ostream& os, const TMVA::Node& node)
 }
 
 //_______________________________________________________________________
-ostream& TMVA::operator<<(ostream& os, const TMVA::Node* node)
+ostream& TMVA::operator<<( ostream& os, const TMVA::Node* node )
 { 
    // output operator with a pointer to the node (which still prints the node itself)
    if (node!=NULL) node->Print(os);
@@ -130,8 +130,9 @@ ostream& TMVA::operator<<(ostream& os, const TMVA::Node* node)
 }
 
 //_______________________________________________________________________
-void* TMVA::Node::AddXMLTo(void* parent) const
+void* TMVA::Node::AddXMLTo( void* parent ) const
 {
+   // add attributes to XML
    std::stringstream s("");
    AddContentToNode(s);
    void* node = gTools().AddChild(parent, "Node", s.str().c_str());
@@ -144,8 +145,9 @@ void* TMVA::Node::AddXMLTo(void* parent) const
 }
 
 //_______________________________________________________________________
-void TMVA::Node::ReadXML(void* node)
+void TMVA::Node::ReadXML( void* node )
 {
+   // read attributes from XML
    ReadAttributes(node);
    const char* content = gTools().xmlengine().GetNodeContent(node);
    if (content) {
@@ -157,7 +159,7 @@ void TMVA::Node::ReadXML(void* node)
 
    void* ch = gTools().xmlengine().GetChild(node);
    while (ch) {
-      Node* n = createNode();
+      Node* n = CreateNode();
       n->ReadXML(ch);
       if (n->GetPos()=='l') { fLeft  = n; }
       else if(n->GetPos()=='r') { fRight = n; }

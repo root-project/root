@@ -71,7 +71,7 @@ namespace TMVA {
       // destructor
       virtual ~BinarySearchTreeNode ();
 
-      virtual Node* createNode() const { return new BinarySearchTreeNode(); }
+      virtual Node* CreateNode() const { return new BinarySearchTreeNode(); }
 
       // test event if it decends the tree at this node to the right  
       virtual Bool_t GoesRight( const Event& ) const;

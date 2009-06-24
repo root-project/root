@@ -57,7 +57,7 @@ TMVA::KDEKernel::KDEKernel( EKernelIter kiter, const TH1 *hist, Float_t lower_ed
    // constructor
    // sanity check
    if (hist == NULL) {
-      log() << kFATAL << "Called without valid histogram pointer (hist)!" << Endl;
+      Log() << kFATAL << "Called without valid histogram pointer (hist)!" << Endl;
    } 
 
    fHist          = (TH1F*)hist->Clone();
@@ -124,7 +124,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
       // formula found in:
       // Multivariate Density Estimation, Theory, Practice and Visualization D. W. SCOTT, 1992 New York, Wiley
       if (fSigma <= 0 ) {
-         log() << kFATAL << "<SetKernelType> KDE sigma has invalid value ( <=0 ) !" << Endl;
+         Log() << kFATAL << "<SetKernelType> KDE sigma has invalid value ( <=0 ) !" << Endl;
       }
    }
 
@@ -196,7 +196,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
       for (Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
          // loop over the bins of the PDF histo and fill fSigmaHist
          if (fSigma*TMath::Sqrt(1.0/fFirstIterHist->GetBinContent(j)) <= 0 ) {
-            log() << kFATAL << "<SetKernelType> KDE sigma has invalid value ( <=0 ) !" << Endl;
+            Log() << kFATAL << "<SetKernelType> KDE sigma has invalid value ( <=0 ) !" << Endl;
          }
          
          fSigmaHist->SetBinContent(j,fFineFactor*fSigma/TMath::Sqrt(fFirstIterHist->GetBinContent(j)));
@@ -204,7 +204,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
    }
 
    if (fKernel_integ ==0 ) {
-      log() << kFATAL << "KDE kernel not correctly initialized!" << Endl;
+      Log() << kFATAL << "KDE kernel not correctly initialized!" << Endl;
    }
 }
 
