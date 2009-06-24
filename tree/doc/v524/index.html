@@ -12,7 +12,7 @@
 <li>TTree::CloneTree and TChain::Merge in fast mode now can recover from some mismatch errors between
 the input and output TTrees by falling back to using the 'slow' mode.  In particular this allow
 a 'fast cloning' to handle files that requires schema evolution (albeit it is of course much slower).</li>
-<li>Make sure that the TTreeCache is not attempting to cache (wrongly) the content of branches that are in an auxiliary files.<li>
+<li>Make sure that the TTreeCache is not attempting to cache (wrongly) the content of branches that are in an auxiliary files.</li>
 <li>Make sure that FillBuffer does it work when the learning phase is over even if the entry number is 'low' for the 'current' file of a chain.</li>
 <li>If TTree::SetEventList is called, TTree::GetEntryList no longer relinquish ownership of the automatically created TEntryList</li>
 <li>Add the ability to see the TTree UserInfo list from the TBrowser</li>

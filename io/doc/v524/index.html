@@ -33,5 +33,13 @@ memory.  If the TBuffer does not own the memory __and__ no custom memory
 reallocator has been set, a Fatal error will be issued:
 <pre>Fatal in <TBufferFile::Expand>: Failed to expand the data buffer because TBuffer does not own it and no custom memory reallocator was provided.</pre></li>
 <li>Re-allow reading empty vector&lt; long double &gt;, however long double is <b>still</b> not supported.</li>
-<li>Upgrade TSQLFile to properly work with MySQL on MacOS.<li>
+<li>Upgrade TSQLFile to properly work with MySQL on MacOS.</li>
+<li>Update to the CollectionProxyInfo interface to insure the proper creation of iterator over std containers on all platforms.</li>
+<li>In XML and SQL output, use %e format to write float and double:
+  <ul>
+  <li>Conversion from float/double to string per default performed with "%e" (exponential) format.</li>
+  <li>Format can be configured with SetFloatFormat methods that one can specify precision, width arguments of printf call.</li>
+  <li>sscanf works as before - "%f" accpet both exponential and decimal format.</li>
+  </ul>
+</li>
 </ul>
