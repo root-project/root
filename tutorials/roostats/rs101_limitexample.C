@@ -15,6 +15,7 @@
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
 #endif
+
 #include "RooStats/ProfileLikelihoodCalculator.h"
 #include "RooStats/MCMCCalculator.h"
 #include "RooStats/UniformProposal.h"
@@ -57,7 +58,7 @@ void rs101_limitexample()
   // The Model building stage
   /////////////////////////////////////////
   RooWorkspace* wspace = new RooWorkspace();
-  wspace->factory("Poisson::countingModel(obs[150,0,300], sum(s[50,0,100]*ratioSigEff[1.,0,2.],b[100,0,300]*ratioBkgEff[1.,0.,2.]))"); // counting model
+  wspace->factory("Poisson::countingModel(obs[150,0,300], sum(s[50,0,120]*ratioSigEff[1.,0,2.],b[100,0,300]*ratioBkgEff[1.,0.,2.]))"); // counting model
   wspace->factory("Gaussian::sigConstraint(ratioSigEff,1,0.05)"); // 5% signal efficiency uncertainty
   wspace->factory("Gaussian::bkgConstraint(ratioBkgEff,1,0.1)"); // 10% background efficiency uncertainty
   wspace->factory("PROD::modelWithConstraints(countingModel,sigConstraint,bkgConstraint)"); // product of terms
@@ -102,6 +103,7 @@ void rs101_limitexample()
   fc.FluctuateNumDataEntries(false); // number counting analysis: dataset always has 1 entry with N events observed
   fc.SetNBins(100); // number of points to test per parameter
   fc.SetTestSize(.1);
+  //  fc.SaveBeltToFile(true); // optional
   ConfInterval* fcint = NULL;
   fcint = fc.GetInterval();  // that was easy.
 
@@ -113,9 +115,10 @@ void rs101_limitexample()
   mc.SetData(*data);
   mc.SetParameters(paramOfInterest);
   mc.SetProposalFunction(up);
-  mc.SetNumIters(100000);
-  mc.SetTestSize(.1);
-  mc.SetNumBins(100);
+  mc.SetNumIters(100000); // steps in the chain
+  mc.SetTestSize(.1); // 90% CL
+  mc.SetNumBins(50); // used in posterior histogram
+  mc.SetNumBurnInSteps(40); // ignore first steps in chain due to "burn in"
   ConfInterval* mcmcint = NULL;
   mcmcint = mc.GetInterval();
 
@@ -132,8 +135,7 @@ void rs101_limitexample()
   // draw posterior
   TH1* posterior = ((MCMCInterval*)mcmcint)->GetPosteriorHist();  
   posterior->Scale(1/posterior->GetBinContent(posterior->GetMaximumBin())); // scale so highest bin has y=1.
-  posterior->Draw("c,same");
-
+  posterior->Draw("same");
 
   // Get Lower and Upper limits from Profile Calculator
   cout << "Profile lower limit on s = " << ((LikelihoodInterval*) lrint)->LowerLimit(*s) << endl;

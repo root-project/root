@@ -27,6 +27,7 @@
 
 #include "TCanvas.h"
 #include "TTree.h"
+#include "TH1F.h"
 #include "TMarker.h"
 #include "TStopwatch.h"
 
@@ -39,7 +40,6 @@ using namespace RooStats ;
 
 void rs401c_FeldmanCousins()
 {
-  
   // to time the macro
   TStopwatch t;
   t.Start();

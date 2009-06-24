@@ -50,9 +50,6 @@
 
 #include <iostream>
 
-// debugging
-//#include "RooStats/ProfileLikelihoodTestStat.h"
-
 // PDF class created for this macro
 #include "NuMuToNuE_Oscillation.h"
 #include "NuMuToNuE_Oscillation.cxx" // so that it can be executed directly
@@ -64,7 +61,7 @@ using namespace RooStats ;
 
 void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
 {
-  
+
   // to time the macro
   TStopwatch t;
   t.Start();
@@ -262,8 +259,6 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
   plotInt.Draw();
   dataCanvas->Update();
 
-
-  
   // first plot a small dot for every point tested
   RooDataHist* parameterScan = (RooDataHist*) fc.GetPointsToScan();
   TH2F* hist = (TH2F*) parameterScan->createHistogram("sinSq2theta:deltaMSq",30,30);
