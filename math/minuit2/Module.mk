@@ -122,4 +122,9 @@ $(MINUIT2O):CXXFLAGS +=  -D_GLIBCXX_PARALLEL -fopenmp
 $(MINUIT2DO):CXXFLAGS +=  -D_GLIBCXX_PARALLEL -fopenmp 
 $(MINUIT2LIB):LDFLAGS += -fopenmp
 endif
+ifneq ($(USE_MPI),)
+$(MINUIT2O): CXX=mpic++ -DMPIPROC
+$(MINUIT2DO): CXX=mpic++ 
+$(MINUIT2LIB): LD=mpic++
+endif
 endif

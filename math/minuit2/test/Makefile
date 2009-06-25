@@ -19,7 +19,7 @@ CXXFLAGS += -g
 endif
 
 # for using with MPI
-ifneq ($(USE_OPENMPI),)
+ifneq ($(USE_MPI),)
 CXX=mpic++
 LD=mpic++
 endif

@@ -8,8 +8,8 @@
  * Copyright: (C) 2008 by Universita' and INFN, Milan                      *
  ***************************************************************************/
 
-#ifndef MPIPROCESS
-#define MPIPROCESS
+#ifndef ROOT_Minuit2_MPIProcess
+#define ROOT_Minuit2_MPIProcess
 
 // disable MPI calls
 //#define MPIPROC
@@ -22,6 +22,8 @@
 
 
 namespace ROOT {
+
+namespace Minuit2 {
 
    class MPITerminate {
    public:
@@ -64,8 +66,8 @@ namespace ROOT {
       bool SyncVector(ROOT::Minuit2::MnAlgebraicVector &mnvector);  
       bool SyncSymMatrixOffDiagonal(ROOT::Minuit2::MnAlgebraicSymMatrix &mnmatrix);  
 
-      static unsigned int GetMPIGlobalRank() { StartMPI(); return fGlobalRank; }
-      static unsigned int GetMPIGlobalSize() { StartMPI(); return fGlobalSize; }
+      static unsigned int GetMPIGlobalRank() { StartMPI(); return fgGlobalRank; }
+      static unsigned int GetMPIGlobalSize() { StartMPI(); return fgGlobalSize; }
       static inline void StartMPI() {
 #ifdef MPIPROC  
          if (!(MPI::Is_initialized())) {    
@@ -74,19 +76,19 @@ namespace ROOT {
                       << MPI::COMM_WORLD.Get_rank() << " processor"
                       << std::endl;
          }
-         fGlobalSize = MPI::COMM_WORLD.Get_size();
-         fGlobalRank = MPI::COMM_WORLD.Get_rank();
+         fgGlobalSize = MPI::COMM_WORLD.Get_size();
+         fgGlobalRank = MPI::COMM_WORLD.Get_rank();
 #endif
       }
 
       static void TerminateMPI() { 
 #ifdef MPIPROC
-         if (fCommunicators[0]!=0 && fCommunicators[1]!=0) {
-            delete fCommunicators[0]; fCommunicators[0] = 0; fIndecesComm[0] = 0;
-            delete fCommunicators[1]; fCommunicators[1] = 0; fIndecesComm[1] = 0;
+         if (fgCommunicators[0]!=0 && fgCommunicators[1]!=0) {
+            delete fgCommunicators[0]; fgCommunicators[0] = 0; fgIndecesComm[0] = 0;
+            delete fgCommunicators[1]; fgCommunicators[1] = 0; fgIndecesComm[1] = 0;
          }
       
-         MPITerminate terminate; 
+         MPITerminate();
 
 #endif
       }
@@ -99,7 +101,7 @@ namespace ROOT {
 
 #ifdef MPIPROC
          if (fSize>1) {
-            fCommunicator->Allreduce(&sub,&total,1,MPI::DOUBLE,MPI::SUM);
+            fgCommunicator->Allreduce(&sub,&total,1,MPI::DOUBLE,MPI::SUM);
          }
 #endif
       }
@@ -115,26 +117,27 @@ namespace ROOT {
       unsigned int fSize;
       unsigned int fRank;  
 
-      static unsigned int fGlobalSize;
-      static unsigned int fGlobalRank;  
+      static unsigned int fgGlobalSize;
+      static unsigned int fgGlobalRank;  
 
-      static unsigned int fCartSizeX;
-      static unsigned int fCartSizeY;
-      static unsigned int fCartDimension;
-      static bool fNewCart;
+      static unsigned int fgCartSizeX;
+      static unsigned int fgCartSizeY;
+      static unsigned int fgCartDimension;
+      static bool fgNewCart;
 
       unsigned int fNumElements4JobIn;
       unsigned int fNumElements4JobOut;
 
 #ifdef MPIPROC
-      static MPI::Intracomm *fCommunicator;
-      static int fIndexComm; // maximum 2 communicators, so index can be 0 and 1
-      static MPI::Intracomm *fCommunicators[2]; // maximum 2 communicators
-      static unsigned int fIndecesComm[2];
+      static MPI::Intracomm *fgCommunicator;
+      static int fgIndexComm; // maximum 2 communicators, so index can be 0 and 1
+      static MPI::Intracomm *fgCommunicators[2]; // maximum 2 communicators
+      static unsigned int fgIndecesComm[2];
 #endif
 
    };
 
+} // namespace Minuit2
 } // namespace ROOT
 
 #endif

@@ -14,20 +14,22 @@
 
 namespace ROOT {
 
-   unsigned int MPIProcess::fGlobalSize = 1;
-   unsigned int MPIProcess::fGlobalRank = 0;
+namespace Minuit2 {
+
+   unsigned int MPIProcess::fgGlobalSize = 1;
+   unsigned int MPIProcess::fgGlobalRank = 0;
 
    // By default all procs are for X
-   unsigned int MPIProcess::fCartSizeX = 0;
-   unsigned int MPIProcess::fCartSizeY = 0;
-   unsigned int MPIProcess::fCartDimension = 0;
-   bool MPIProcess::fNewCart = true;
+   unsigned int MPIProcess::fgCartSizeX = 0;
+   unsigned int MPIProcess::fgCartSizeY = 0;
+   unsigned int MPIProcess::fgCartDimension = 0;
+   bool MPIProcess::fgNewCart = true;
 
 #ifdef MPIPROC
-   MPI::Intracomm* MPIProcess::fCommunicator = 0;
-   int MPIProcess::fIndexComm = -1; // -1 for no-initialization
-   MPI::Intracomm* MPIProcess::fCommunicators[2] = {0};
-   unsigned int MPIProcess::fIndecesComm[2] = {0};
+   MPI::Intracomm* MPIProcess::fgCommunicator = 0;
+   int MPIProcess::fgIndexComm = -1; // -1 for no-initialization
+   MPI::Intracomm* MPIProcess::fgCommunicators[2] = {0};
+   unsigned int MPIProcess::fgIndecesComm[2] = {0};
 #endif
 
    MPIProcess::MPIProcess(unsigned int nelements, unsigned int indexComm) :
@@ -41,87 +43,87 @@ namespace ROOT {
 
       StartMPI();
 
-      if (fGlobalSize==fCartDimension && 
-          fCartSizeX!=fCartDimension && fCartSizeY!=fCartDimension) {
+      if (fgGlobalSize==fgCartDimension && 
+          fgCartSizeX!=fgCartDimension && fgCartSizeY!=fgCartDimension) {
          //declare the cartesian topology
 
-         if (fCommunicator==0 && fIndexComm<0 && fNewCart) {
+         if (fgCommunicator==0 && fgIndexComm<0 && fgNewCart) {
             // first call, declare the topology
             std::cout << "Info --> MPIProcess::MPIProcess: Declare cartesian Topology (" 
-                      << fCartSizeX << "x" << fCartSizeY << ")" << std::endl;
+                      << fgCartSizeX << "x" << fgCartSizeY << ")" << std::endl;
       
-            int color = fGlobalRank / fCartSizeY;
-            int key = fGlobalRank % fCartSizeY;
+            int color = fgGlobalRank / fgCartSizeY;
+            int key = fgGlobalRank % fgCartSizeY;
 
-            fCommunicators[0] = new MPI::Intracomm(MPI::COMM_WORLD.Split(key,color)); // rows for Minuit
-            fCommunicators[1] = new MPI::Intracomm(MPI::COMM_WORLD.Split(color,key)); // columns for NLL
+            fgCommunicators[0] = new MPI::Intracomm(MPI::COMM_WORLD.Split(key,color)); // rows for Minuit
+            fgCommunicators[1] = new MPI::Intracomm(MPI::COMM_WORLD.Split(color,key)); // columns for NLL
 
-            fNewCart = false;
+            fgNewCart = false;
 
          }
 
-         fIndexComm++;
+         fgIndexComm++;
 
-         if (fIndexComm>1 || fCommunicator==(&(MPI::COMM_WORLD))) { // Remember, no more than 2 dimensions in the topology!
+         if (fgIndexComm>1 || fgCommunicator==(&(MPI::COMM_WORLD))) { // Remember, no more than 2 dimensions in the topology!
             std::cerr << "Error --> MPIProcess::MPIProcess: Requiring more than 2 dimensions in the topology!" << std::endl;
             MPI::COMM_WORLD.Abort(-1);
          } 
 
          // requiring columns as first call. In this case use all nodes
-         if (((unsigned int)fIndexComm)<indexComm)
-            fCommunicator = &(MPI::COMM_WORLD);
+         if (((unsigned int)fgIndexComm)<indexComm)
+            fgCommunicator = &(MPI::COMM_WORLD);
          else {
-            fIndecesComm[fIndexComm] = indexComm;
-            fCommunicator = fCommunicators[fIndecesComm[fIndexComm]];
+            fgIndecesComm[fgIndexComm] = indexComm;
+            fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
          }
 
       }
       else {
          // no cartesian topology
-         if (fCartDimension!=0 && fGlobalSize!=fCartDimension) {
+         if (fgCartDimension!=0 && fgGlobalSize!=fgCartDimension) {
             std::cout << "Warning --> MPIProcess::MPIProcess: Cartesian dimension doesn't correspond to # total procs!" << std::endl;
             std::cout << "Warning --> MPIProcess::MPIProcess: Ignoring topology, use all procs for X." << std::endl;
             std::cout << "Warning --> MPIProcess::MPIProcess: Resetting topology..." << std::endl;
-            fCartSizeX = fGlobalSize;
-            fCartSizeY = 1;
-            fCartDimension = fGlobalSize;
+            fgCartSizeX = fgGlobalSize;
+            fgCartSizeY = 1;
+            fgCartDimension = fgGlobalSize;
          }
 
-         if (fIndexComm<0) {
-            if (fCartSizeX==fCartDimension) {
-               fCommunicators[0] = &(MPI::COMM_WORLD);
-               fCommunicators[1] = 0;
+         if (fgIndexComm<0) {
+            if (fgCartSizeX==fgCartDimension) {
+               fgCommunicators[0] = &(MPI::COMM_WORLD);
+               fgCommunicators[1] = 0;
             }
             else {
-               fCommunicators[0] = 0;
-               fCommunicators[1] = &(MPI::COMM_WORLD);
+               fgCommunicators[0] = 0;
+               fgCommunicators[1] = &(MPI::COMM_WORLD);
             }
          }
 
-         fIndexComm++;
+         fgIndexComm++;
 
-         if (fIndexComm>1) { // Remember, no more than 2 nested MPI calls!
+         if (fgIndexComm>1) { // Remember, no more than 2 nested MPI calls!
             std::cerr << "Error --> MPIProcess::MPIProcess: More than 2 nested MPI calls!" << std::endl;
             MPI::COMM_WORLD.Abort(-1);
          }
 
-         fIndecesComm[fIndexComm] = indexComm;
+         fgIndecesComm[fgIndexComm] = indexComm;
 
          // require 2 nested communicators
-         if (fCommunicator!=0 && fCommunicators[indexComm]!=0) {
+         if (fgCommunicator!=0 && fgCommunicators[indexComm]!=0) {
             std::cout << "Warning --> MPIProcess::MPIProcess: Requiring 2 nested MPI calls!" << std::endl;
             std::cout << "Warning --> MPIProcess::MPIProcess: Ignoring second call." << std::endl;
-            fIndecesComm[fIndexComm] = (indexComm==0) ? 1 : 0;
+            fgIndecesComm[fgIndexComm] = (indexComm==0) ? 1 : 0;
          } 
 
-         fCommunicator = fCommunicators[fIndecesComm[fIndexComm]];
+         fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
 
       }
 
       // set size and rank
-      if (fCommunicator!=0) {
-         fSize = fCommunicator->Get_size();
-         fRank = fCommunicator->Get_rank();
+      if (fgCommunicator!=0) {
+         fSize = fgCommunicator->Get_size();
+         fRank = fgCommunicator->Get_rank();
       }
       else {
          // no MPI calls
@@ -144,11 +146,12 @@ namespace ROOT {
 
    MPIProcess::~MPIProcess()
    {
+      // destructor
 #ifdef MPIPROC  
-      fCommunicator = 0;
-      fIndexComm--; 
-      if (fIndexComm==0)
-         fCommunicator = fCommunicators[fIndecesComm[fIndexComm]];
+      fgCommunicator = 0;
+      fgIndexComm--; 
+      if (fgIndexComm==0)
+         fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
     
 #endif
 
@@ -266,14 +269,14 @@ namespace ROOT {
          offsets[i] = nconts[i-1] + offsets[i-1];
       }
 
-      fCommunicator->Allgatherv(ivector,svector,MPI::DOUBLE,
+      fgCommunicator->Allgatherv(ivector,svector,MPI::DOUBLE,
                                 ovector,nconts,offsets,MPI::DOUBLE); 
     
    }
 
    bool MPIProcess::SetCartDimension(unsigned int dimX, unsigned int dimY)  
    {
-      if (fCommunicator!=0 || fIndexComm>=0) {
+      if (fgCommunicator!=0 || fgIndexComm>=0) {
          std::cout << "Warning --> MPIProcess::SetCartDimension: MPIProcess already declared! Ignoring command..." << std::endl;
          return false;
       }
@@ -284,20 +287,20 @@ namespace ROOT {
 
       StartMPI();
 
-      if (fGlobalSize!=dimX*dimY) {
+      if (fgGlobalSize!=dimX*dimY) {
          std::cout << "Warning --> MPIProcess::SetCartDimension: Cartesian dimension doesn't correspond to # total procs!" << std::endl;
          std::cout << "Warning --> MPIProcess::SetCartDimension: Ignoring command..." << std::endl;
          return false;
       }
 
-      if (fCartSizeX!=dimX || fCartSizeY!=dimY) {
-         fCartSizeX = dimX; fCartSizeY = dimY; 
-         fCartDimension = fCartSizeX * fCartSizeY;
-         fNewCart = true;
+      if (fgCartSizeX!=dimX || fgCartSizeY!=dimY) {
+         fgCartSizeX = dimX; fgCartSizeY = dimY; 
+         fgCartDimension = fgCartSizeX * fgCartSizeY;
+         fgNewCart = true;
 
-         if (fCommunicators[0]!=0 && fCommunicators[1]!=0) {
-            delete fCommunicators[0]; fCommunicators[0] = 0; fIndecesComm[0] = 0;
-            delete fCommunicators[1]; fCommunicators[1] = 0; fIndecesComm[1] = 0;
+         if (fgCommunicators[0]!=0 && fgCommunicators[1]!=0) {
+            delete fgCommunicators[0]; fgCommunicators[0] = 0; fgIndecesComm[0] = 0;
+            delete fgCommunicators[1]; fgCommunicators[1] = 0; fgIndecesComm[1] = 0;
          }
       }
 
@@ -312,9 +315,9 @@ namespace ROOT {
 
       bool ret;
       if (doFirstMPICall)
-         ret = SetCartDimension(fGlobalSize,1);
+         ret = SetCartDimension(fgGlobalSize,1);
       else
-         ret = SetCartDimension(1,fGlobalSize);
+         ret = SetCartDimension(1,fgGlobalSize);
 
       return ret;
 
@@ -325,5 +328,7 @@ namespace ROOT {
 #ifdef MPIPROC
    MPITerminate dummyMPITerminate = MPITerminate();
 #endif
+
+} // namespace Minuit2
 
 } // namespace ROOT

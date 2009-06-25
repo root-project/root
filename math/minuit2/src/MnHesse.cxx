@@ -241,29 +241,29 @@ L30:
 
    unsigned int offsetVect = 0;
    for (unsigned int in = 0; in<startParIndexOffDiagonal; in++)
-     if ((in+offsetVect)%(n-1)==0) offsetVect += (in+offsetVect)/(n-1);
+      if ((in+offsetVect)%(n-1)==0) offsetVect += (in+offsetVect)/(n-1);
 
    for (unsigned int in = startParIndexOffDiagonal;
         in<endParIndexOffDiagonal; in++) {
 
-     int i = (in+offsetVect)/(n-1);
-     if ((in+offsetVect)%(n-1)==0) offsetVect += i;
-     int j = (in+offsetVect)%(n-1)+1;
+      int i = (in+offsetVect)/(n-1);
+      if ((in+offsetVect)%(n-1)==0) offsetVect += i;
+      int j = (in+offsetVect)%(n-1)+1;
 
-     if ((i+1)==j || in==startParIndexOffDiagonal)
-       x(i) += dirin(i);
-
-     x(j) += dirin(j);
-
-     double fs1 = mfcn(x);
-     double elem = (fs1 + amin - yy(i) - yy(j))/(dirin(i)*dirin(j));
-     vhmat(i,j) = elem;
-
-     x(j) -= dirin(j);
-
-     if (j%(n-1)==0 || in==endParIndexOffDiagonal-1)
-       x(i) -= dirin(i);
-
+      if ((i+1)==j || in==startParIndexOffDiagonal)
+         x(i) += dirin(i);
+      
+      x(j) += dirin(j);
+      
+      double fs1 = mfcn(x);
+      double elem = (fs1 + amin - yy(i) - yy(j))/(dirin(i)*dirin(j));
+      vhmat(i,j) = elem;
+      
+      x(j) -= dirin(j);
+      
+      if (j%(n-1)==0 || in==endParIndexOffDiagonal-1)
+         x(i) -= dirin(i);
+      
    }
    
    mpiprocOffDiagonal.SyncSymMatrixOffDiagonal(vhmat);
