@@ -158,6 +158,10 @@ N: Ben Cowan
 E: benc@SLAC.Stanford.EDU
 D: port to MacOS X
 
+N: Kyle Cranmer
+E: cranmer@cern.ch
+D: contribution in RooStats
+
 N: Bastien Dallapiazza
 E: bastien.dallapiazza@epfl.ch
 D: TSpider, TParallelCoord classes
@@ -549,6 +553,10 @@ N: Katerina Opocenska
 E: opocenska@gmail.com
 D: Event Recorder
 
+N: Juan Palacios
+E: Juan.Palacios@cern.ch
+D: Contribution to symmetric representation of SMatrix classes
+
 N: Suzanne Panacek
 E: spanacek@fnal.gov
 D: editor of the User's Guide
@@ -627,6 +635,14 @@ N: Heiko Scheit
 E: Heiko.Scheit@mpi-hd.mpg.de
 D: improvements in TTreePlayer::DrawSelect()
 
+N: Manuel Schiller
+E: schiller@physi.uni-heidelberg.de
+D: contribution on the Cholesly decomposition in SMatrix
+
+N: Gregory Schoot
+E: Gregory.Schott@cern.ch
+D: Contributions in RooStats
+
 N: Jason Seely
 E: seely@mit.edu
 D: contribution to TH1::GetAsymmetry()
@@ -638,6 +654,10 @@ D: TGNumberEntry GUI widget
 N: Evgenia Smirnova
 E: Evgenia.Smirnova@gsi.de
 D: OpenLDAP interface
+
+N: Stefan Schmitt
+E: sschmitt@mail.desy.de
+D: contribution to TUnfold class
 
 N: Abdelhalim Ssadik
 E: abdelhalim.ssadik@cern.ch
