@@ -57,6 +57,9 @@ void TMVARegression( TString myMethodList = "" )
    // mylinux~> root -l TMVARegression.C\(\"myMethod1,myMethod2,myMethod3\"\)
    //
 
+   // this loads the library
+   TMVA::Tools::Instance();
+
    //---------------------------------------------------------------
    // default MVA methods to be trained + tested
    std::map<std::string,int> Use;

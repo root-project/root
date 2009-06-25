@@ -37,6 +37,7 @@ TMVA::OptionBase::OptionBase( const TString& name, const TString& desc )
      fIsSet       ( kFALSE ), 
      fLogger      ("OptionBase") 
 {
+   // constructor
    fNameAllLower.ToLower();
 }
 
