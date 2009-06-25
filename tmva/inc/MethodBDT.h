@@ -117,7 +117,7 @@ namespace TMVA {
       void ProcessOptions();
 
       // get the forest
-      inline const std::vector<DecisionTree*> & GetForest() const;
+      inline const std::vector<TMVA::DecisionTree*> & GetForest() const;
 
       // get the forest
       inline const std::vector<Event*> & GetTrainingEvents() const;
