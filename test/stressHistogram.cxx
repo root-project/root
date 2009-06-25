@@ -68,6 +68,7 @@
 #include "TMath.h"
 #include "TRandom2.h"
 #include "TFile.h"
+#include "TClass.h"
 
 #include "TROOT.h"
 #include <algorithm>
@@ -5796,6 +5797,16 @@ public:
 
 int stressHistogram()
 {
+#ifdef R__WIN32
+   // On windows there is an order of initialization problem that lead to 
+   // 'Int_t not being in the list of types when TProfile's TClass is 
+   // initialized (via a call to IsA()->InheritsFrom(); on linux this is
+   // not a problem because G__Base1 is initialized early; on windows with
+   // root.exe this is not a problem because GetListOfType(kTRUE) is called
+   // via a call to TClass::GetClass induces by the initialization of the 
+   // plugin manager.
+   gROOT->GetListOfTypes(kTRUE);
+#endif
    r.SetSeed(initialSeed);
 
    int GlobalStatus = false;
