@@ -100,9 +100,6 @@
     </li>
     <li>Fix a bug in the sign of the derivative for sine transformation which are used with double bound parameters. The bug could affect the minimization of function with user provided gradient and bound parameters and bound parameters. It could also affected Fumili2. Furthermore, a wrong sign for the correlation matrix could also have been obtained in some cases with bound parameters.
     </li>
-    <li>
-    Fix a problem in building the parallel version of Minuit2. The parallel version is built if the environment variables USE_PARALLEL_MINUIT2 and USE_OPENMP are set before compiling Minuit2 on a compiler which supports openMP (for example gcc version >= 4.2) 
-    </li>
     <li>Use a tolerance of 0.01 instead of 0.05 in MnContours. The value of 0.01 is the same used in Minos. This is sufficient to get good quality contours. 
     <li>Improve also the debug in MnContour. Add printing of points as info messages
     <li>Remove some un-necessary asser() when defining the minimization parameters.
@@ -116,6 +113,12 @@
          define the variables passed with zero step-size as constant (as is done in F77 Minuit)
       </ul>
       </li>
+    <li>
+    Fix a problem in building the parallel version of Minuit2. The parallel version is built if the environment variables USE_PARALLEL_MINUIT2 and USE_OPENMP are set before compiling Minuit2 on a compiler which supports openMP (for example gcc version >= 4.2) 
+    </li>
+    <li>Add, thanks to Alfio Lazzaro, support for running Minuit2 using multi-process by using MPI. A new class MPIProcess deals with starting and terminating the MPI process. Each process calculates independently the derivatives for a given set of parameters. 
+      A Minuit2 library with MPI support can be built by defining before compilation the environment variables USE_PARALLEL_MINUIT2 and USE_MPI.
+</li>
 </ul>
 
 <h4>Unuran</h4>
