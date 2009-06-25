@@ -193,7 +193,8 @@ public:
     * @version 1.0
     * @date    10/10/2004
     */
-   struct Method  {
+   class Method  {
+   public:
       typedef void* (*Call_t)(void*);
       Call_t call;
       Method() : call(0)                       {      }
@@ -211,7 +212,8 @@ public:
     * @version 1.0
     * @date    10/10/2004
     */
-   struct Method0  {
+   class Method0  {
+   public:
       typedef void* (*Call_t)();
       Call_t call;
       Method0() : call(0)                       {      }

@@ -1507,7 +1507,8 @@ void TStreamerInfo::Clear(Option_t *option)
 }
 
 namespace {
-   struct TMemberInfo {
+   class TMemberInfo {
+   public:
       TString fName;
       TString fClassName;
       TString fComment;
