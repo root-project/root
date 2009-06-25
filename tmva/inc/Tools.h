@@ -81,8 +81,8 @@ namespace TMVA {
       ~Tools();
 
       // accessor to single instance
-      static Tools& Instance() { return fgTools?*(fgTools): *(fgTools = new Tools()); }
-      static void   DestroyInstance() { if (fgTools != 0) { delete fgTools; fgTools=0; } }
+      static Tools& Instance();
+      static void   DestroyInstance();
 
       // simple statistics operations on tree entries
       void  ComputeStat( const std::vector<TMVA::Event*>&, std::vector<Float_t>*,

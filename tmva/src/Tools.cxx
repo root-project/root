@@ -65,9 +65,10 @@
 
 using namespace std;
 
-TMVA::Tools * TMVA::Tools::fgTools = 0;
-
-TMVA::Tools& TMVA::gTools() { return TMVA::Tools::Instance(); }
+TMVA::Tools* TMVA::Tools::fgTools = 0;
+TMVA::Tools& TMVA::gTools()                 { return TMVA::Tools::Instance(); }
+TMVA::Tools& TMVA::Tools::Instance()        { return fgTools?*(fgTools): *(fgTools = new Tools()); }
+void         TMVA::Tools::DestroyInstance() { if (fgTools != 0) { delete fgTools; fgTools=0; } }
 
 //_______________________________________________________________________
 TMVA::Tools::Tools() :
