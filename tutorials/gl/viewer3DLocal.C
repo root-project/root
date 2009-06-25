@@ -1,8 +1,8 @@
-// Demonstrates 3D viewer architecture TVirtualViewer3D and TBuffer3D in the local frame.
+//+ Demonstrates 3D viewer architecture TVirtualViewer3D and TBuffer3D in the local frame.
 //
 // Here each shape is described in a TBuffer3D class, 
-// with a suitible translation matrix to place each
-// instance c.f. viewer3DLocal.C
+// with a suitible translation matrix to place each instance
+// NOTE: to be executed via .x viewer3DLocal.C+
 //
 // NOTE: We don't implement raw tesselation of sphere - hence this will 
 // not appear in viewers which don't support directly (non-OpenGL)
@@ -14,12 +14,12 @@
 // As we overload TObject::Paint which is called directly from compiled
 // code, this script must also be compiled to work correctly.
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   gSystem->CompileMacro("viewer3DLocal.C");
-   viewer3DLocal();
-}
-#else
+//#if defined(__CINT__) && !defined(__MAKECINT__)
+//{
+//   gSystem->CompileMacro("viewer3DLocal.C");
+//   viewer3DLocal();
+//}
+//#else
 
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
@@ -434,4 +434,4 @@ void viewer3DLocal()
    myGeom->Draw("ogl");
 }
 
-#endif
+//#endif
