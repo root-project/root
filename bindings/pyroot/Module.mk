@@ -51,14 +51,6 @@ endif
 ROOTPYC      := $(ROOTPY:.py=.pyc)
 ROOTPYO      := $(ROOTPY:.py=.pyo)
 
-ifneq ($(BUILDBOTHCINT),)
-ifeq ($(ARCH),win32)
-PYROOTEXTRALIB   := $(LPATH)/libCint.lib
-else
-PYROOTEXTRALIB   := -lMetaTCint
-endif
-endif
-
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
 ALLLIBS      += $(PYROOTLIB)
@@ -80,11 +72,11 @@ include/%.h:    $(PYROOTDIRI)/%.h
 %.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
 $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTPY) $(ROOTPYC) $(ROOTPYO) \
-                $(ROOTLIBSDEP)
+                $(ROOTLIBSDEP) $(PYTHONLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		  "$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		  "$(PYROOTO) $(PYROOTDO)" \
-		  "$(ROOTULIBS) $(RPATH) $(ROOTLIBS) $(PYROOTEXTRALIB) \
+		  "$(ROOTULIBS) $(RPATH) $(ROOTLIBS) $(PYROOTLIBEXTRA) \
 		   $(PYTHONLIBDIR) $(PYTHONLIB)" "$(PYTHONLIBFLAGS)"
 ifeq ($(ARCH),win32)
 	link /dll /nologo /IGNORE:4001 /machine:ix86 /export:initlibPyROOT \

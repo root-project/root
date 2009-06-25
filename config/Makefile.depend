@@ -53,7 +53,7 @@ MLPLIBDEPM             = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
 SPECTRUMLIBDEPM        = $(HISTLIB) $(MATRIXLIB)
 TMVALIBDEPM            = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) \
                          $(GRAFLIB) $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB) \
-                         $(MINUITLIB) $(MATHCORELIB) $(XMLIOLIB)
+                         $(MINUITLIB) $(MATHCORELIB) $(XMLLIB)
 SPLOTLIBDEPM           = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(G3DLIB) $(GRAFLIB) $(MATHCORELIB)
 QUADPLIBDEPM           = $(MATRIXLIB) 
@@ -78,6 +78,9 @@ ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(MATRIXLIB) \
                          $(MATHCORELIB) 
 ROOSTATSLIBDEPM        = $(ROOFITLIB) $(ROOFITCORELIB) $(TREELIB) $(IOLIB) \
                          $(MATRIXLIB) $(HISTLIB) $(MATHCORELIB) $(GRAFLIB) $(GPADLIB)
+ifneq ($(BUILDBOTHCINT),)
+PYTHONLIBDEPM          = $(METATCINTLIB)
+endif
 CINT7LIBDEPM           = $(REFLEXLIB)
 METATCINT7LIBDEPM      = $(REFLEXLIB)
 CINTEXLIBDEPM          = $(REFLEXLIB)
@@ -173,6 +176,9 @@ ALIENLIBDEP            = $(ALIENLIBDEPM)
 ROOFITCORELIBDEP       = $(ROOFITCORELIBDEPM)
 ROOFITLIBDEP           = $(ROOFITLIBDEPM)
 ROOSTATSLIBDEP         = $(ROOSTATSLIBDEPM)
+ifneq ($(BUILDBOTHCINT),)
+PYTHONLIBDEP           = $(PYTHONLIBDEPM)
+endif
 CINT7LIBDEP            = $(CINT7LIBDEPM)
 METATCINT7LIBDEP       = $(METATCINT7LIBDEPM)
 CINTEXLIBDEP           = $(CINTEXLIBDEPM)
@@ -311,6 +317,9 @@ ROOSTATSLIBEXTRA        = lib/libRooFit.lib lib/libRooFitCore.lib \
                           lib/libTree.lib lib/libRIO.lib lib/libHist.lib \
                           lib/libMatrix.lib lib/libMathCore.lib \
                           lib/libGraf.lib lib/libGpad.lib
+ifneq ($(BUILDBOTHCINT),)
+PYTHONLIBEXTRA          = lib/libMetaTCint.lib
+endif
 CINT7LIBEXTRA           = lib/libReflex.lib
 METATCINT7LIBEXTRA      = lib/libReflex.lib
 CINTEXLIBEXTRA          = lib/libReflex.lib
@@ -424,6 +433,9 @@ ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lRIO \
 ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lMatrix -lMathCore
 ROOSTATSLIBEXTRA        = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lMatrix \
                           -lHist -lMathCore -lGraf -lGpad
+ifneq ($(BUILDBOTHCINT),)
+PYTHONLIBEXTRA          = -Llib -lMetaTCint
+endif
 CINT7LIBEXTRA           = -Llib -lReflex
 METATCINT7LIBEXTRA      = -Llib -lReflex
 CINTEXLIBEXTRA          = -Llib -lReflex
