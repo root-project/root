@@ -1,14 +1,15 @@
+// Draws the Klein bottle.
+// Klein bottle is closed nonorientable surface that has no inside or
+// outside. TF3 can be drawn in several styles:
+//   default - like surface4
+//   kMaple0 - very nice colours
+//   kMaple1 - nice colours and outlines
+//   kMaple2 - nice colour outlines.
+// To switch between them, you can press 's' key.
+// Author: Timur Pocheptsov
+
 void gltf3()
 {
-   // Draw the Klein bottle(closed nonorientable surface that has no
-   // inside or outside).
-   // TF3 can be drawn in several styles,
-   // default // (like surface4)
-   // kMaple0 (very nice colours)
-   // kMaple1 (nice colours and outlines)
-   // kMaple2 (nice colour outlines).
-   // To switch between them, you can press 's' key.
-   // Author: Timur Pocheptsov
    gStyle->SetCanvasPreferGL(1);
    TCanvas *cnv = new TCanvas("glc", "TF3: Klein bottle", 200, 10, 600, 600);
    // TCanvas *cnv = new TCanvas("glc", "TF3: Torus", 200, 10, 600, 600);

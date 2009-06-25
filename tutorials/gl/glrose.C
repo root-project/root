@@ -1,4 +1,5 @@
-//Author: Timur Pocheptsov
+// Render a TF2 looking like a rose.
+// Author: Timur Pocheptsov
 void glrose()
 {
   //Define and set user's palette,

@@ -1,3 +1,6 @@
+// Multi-view (3d, rphi, rhoz) service class using EVE Window Manager.
+// Author: Matevz Tadel 2009
+
 #include <TEveManager.h>
 
 #include <TEveViewer.h>

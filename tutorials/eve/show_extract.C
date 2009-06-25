@@ -1,4 +1,7 @@
-void show_extract(const char* file)
+// Helper script for showing of extracted / simplified geometries.
+// By default shows a simplified ALICE geometry.
+
+void show_extract(const char* file="http://root.cern.ch/files/alice_ESDgeometry.root")
 {
   TEveManager::Create();
 

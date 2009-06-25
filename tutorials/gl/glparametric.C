@@ -1,4 +1,5 @@
-//Author: Timur Pocheptsov
+// Show rendering of parametric surfaces.
+// Author: Timur Pocheptsov
 void glparametric()
 {
    // A parametric surface is defined by three functions:

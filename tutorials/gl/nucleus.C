@@ -1,4 +1,4 @@
-// use TGeo classes to draw a model of a nucleus
+// Model of a nucleus built from TGeo classes.
 // 
 // Author: Otto Schaile
 

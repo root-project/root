@@ -1,4 +1,5 @@
-//Author: Timur Pocheptsov
+// Menu for running GL demos.
+// Author: Timur Pocheptsov
 void gldemos()
 {
    TControlBar *bar = new TControlBar("vertical", "GL painter demo",20,20);
