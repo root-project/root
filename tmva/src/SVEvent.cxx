@@ -50,7 +50,7 @@ TMVA::SVEvent::SVEvent()
 
 //_______________________________________________________________________	 
 TMVA::SVEvent::SVEvent( const Event* event, const Float_t C_par )
-	: fDataVector(event->GetValues()),
+   : fDataVector(event->GetValues()),
      fCweight(C_par*event->GetWeight()),
      fAlpha(0),
      fAlpha_p(0),
@@ -107,18 +107,18 @@ TMVA::SVEvent::~SVEvent()
 {
    // destructor
    if (fLine != 0) {
-       delete fLine; 
-       fLine = 0;
-    }
+      delete fLine; 
+      fLine = 0;
+   }
 }
 
 //_______________________________________________________________________
 void TMVA::SVEvent::Print( std::ostream& os ) const
 {
    // printout 
-  os << "type::" << fTypeFlag <<" target::"<< fTarget << " alpha::" << fAlpha <<" alpha_p::"<< fAlpha_p<< " values::" ;
-  for (UInt_t j =0; j < fDataVector.size();j++) os<<fDataVector.at(j)<<" ";
-  os << std::endl;
+   os << "type::" << fTypeFlag <<" target::"<< fTarget << " alpha::" << fAlpha <<" alpha_p::"<< fAlpha_p<< " values::" ;
+   for (UInt_t j =0; j < fDataVector.size();j++) os<<fDataVector.at(j)<<" ";
+   os << std::endl;
 }
 
 //_______________________________________________________________________

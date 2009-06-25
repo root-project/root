@@ -67,6 +67,7 @@ TMVA::TActivationChooser::TActivationChooser() :
 
 TMVA::TActivationChooser::~TActivationChooser()
 {
+   // destructor
    delete fLogger;
 }
 

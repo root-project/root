@@ -414,6 +414,7 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
 void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString& fcncName, 
                                                Int_t part, UInt_t trCounter, Int_t ) 
 {
+   // creates C++ code fragment of the PCA transform for inclusion in standalone C++ class
 
    UInt_t nvar = fEigenVectors[0]->GetNrows();
 

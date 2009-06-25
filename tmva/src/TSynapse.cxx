@@ -57,7 +57,9 @@ TMVA::TSynapse::TSynapse()
 
 
 //______________________________________________________________________________
-TMVA::TSynapse::~TSynapse() {
+TMVA::TSynapse::~TSynapse()
+{
+   // destructor
    delete fLogger;
 }
 

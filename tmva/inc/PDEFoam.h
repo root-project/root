@@ -469,7 +469,7 @@ namespace TMVA {
       }
       
       // projection method
-      virtual TH2D* Project2(Int_t idim1, Int_t idim2, const char *opt="mean", const char *ker="kNone", UInt_t maxbins=0);
+      virtual TH2D* Project2(Int_t idim1, Int_t idim2, const char *opt="nev", const char *ker="kNone", UInt_t maxbins=0);
 
       // Project foam by creating MC events
       virtual TH2D* ProjectMC(Int_t idim1, Int_t idim2, Int_t nevents, Int_t nbin);  

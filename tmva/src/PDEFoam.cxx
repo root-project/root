@@ -1456,7 +1456,7 @@ void TMVA::PDEFoam::LinkCells()
 //_______________________________________________________________________________________________
 Double_t TMVA::PDEFoam::GetSumCellElements(UInt_t i)
 {
-   // returns the sum of all cell elements with index i of all avtive cells
+   // returns the sum of all cell elements with index i of all active cells
    Double_t intg = 0;
    for (Long_t iCell=0; iCell<=fLastCe; iCell++) {
       if (fCells[iCell]->GetStat())
@@ -1468,7 +1468,7 @@ Double_t TMVA::PDEFoam::GetSumCellElements(UInt_t i)
 //_______________________________________________________________________________________________
 Double_t TMVA::PDEFoam::GetSumCellIntg()
 {
-   // returns the sum of all cell integrals of all avtive cells
+   // returns the sum of all cell integrals of all active cells
    Double_t intg = 0;
    for (Long_t iCell=0; iCell<=fLastCe; iCell++) {
       if (fCells[iCell]->GetStat())
@@ -1480,7 +1480,7 @@ Double_t TMVA::PDEFoam::GetSumCellIntg()
 //_______________________________________________________________________________________________
 UInt_t TMVA::PDEFoam::GetNActiveCells()
 {
-   // returns number of actice cells
+   // returns number of active cells
    UInt_t count = 0;
    for (Long_t iCell=0; iCell<=fLastCe; iCell++) {
       if (fCells[iCell]->GetStat())
@@ -1623,7 +1623,7 @@ Int_t TMVA::PDEFoam::GetSumCellMemory( ECellType ct )
 //_______________________________________________________________________________________________
 TMVA::PDEFoamCell* TMVA::PDEFoam::GetRootCell()
 {
-   // returns the number of foam cells
+   // returns pointer to root cell
    return fCells[0];
 }
 
@@ -1874,7 +1874,8 @@ void TMVA::PDEFoam::FillFoamCells(const Event* ev, Float_t SigBgRatio, EFoamType
       SetCellElement(cell, 0, GetCellElement(cell, 0) + weight);
       SetCellElement(cell, 1, GetCellElement(cell, 1) + weight*weight);
    } else if (ft == kDiscr){
-      // 0. Element: Number of signal or background events
+      // 0. Element: Number of signal events
+      // 1. Element: Number of background events times normalization
       if (ev->IsSignal())
 	 SetCellElement(cell, 0, GetCellElement(cell, 0) + weight);
       else
@@ -2085,7 +2086,7 @@ Double_t TMVA::PDEFoam::GetProjectedRegValue( UInt_t target_number, std::vector<
 
       Double_t norm = 0.;
 
-      // loop over all avcive cells to calc gaus weighted target values
+      // loop over all active cells to calc gaus weighted target values
       for (Long_t ice=0; ice<=fLastCe; ice++) {
          if (!(fCells[ice]->GetStat())) continue;
 

@@ -78,6 +78,8 @@ TMVA::SVKernelMatrix::~SVKernelMatrix()
 //_______________________________________________________________________
 Float_t* TMVA::SVKernelMatrix::GetLine( UInt_t line )
 {
+   // returns a row of the kernel matrix
+
    Float_t* fLine = NULL;
    if (line >= fSize) {
       return NULL;
@@ -95,6 +97,8 @@ Float_t* TMVA::SVKernelMatrix::GetLine( UInt_t line )
 //_______________________________________________________________________
 Float_t TMVA::SVKernelMatrix::GetElement(UInt_t i, UInt_t j)
 { 
+   // returns an element of the kernel matrix
+
    if (i > j) return fSVKernelMatrix[i][j]; 
    else       return fSVKernelMatrix[j][i]; // it's symmetric, ;)
 }

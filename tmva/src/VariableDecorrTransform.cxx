@@ -483,6 +483,8 @@ void TMVA::VariableDecorrTransform::PrintTransformation( ostream& )
 //_______________________________________________________________________
 void TMVA::VariableDecorrTransform::MakeFunction( std::ostream& fout, const TString& fcncName, Int_t part, UInt_t trCounter, Int_t )
 {
+   // creates C++ code fragment of the decorrelation transform for inclusion in standalone C++ class
+
    UInt_t numC = fDecorrMatrices.size();
    // creates a decorrelation function
    if (part==1) {

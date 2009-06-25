@@ -34,6 +34,10 @@ void TMVAClassificationApplication( TString myMethodList = "" )
 {   
    //---------------------------------------------------------------
    // default MVA methods to be trained + tested
+
+   // this loads the library
+   TMVA::Tools::Instance();
+
    std::map<std::string,int> Use;
 
    Use["CutsGA"]          = 1; // other "Cuts" methods work identically

@@ -39,6 +39,9 @@ TMVA::ClassifierFactory* TMVA::ClassifierFactory::fgInstance = 0;
 //_______________________________________________________________________
 TMVA::ClassifierFactory& TMVA::ClassifierFactory::Instance()
 {
+   // access to the ClassifierFactory singleton
+   // creates the instance if needed
+
    if (!fgInstance) fgInstance = new TMVA::ClassifierFactory();
 
    return *fgInstance;
@@ -47,12 +50,16 @@ TMVA::ClassifierFactory& TMVA::ClassifierFactory::Instance()
 //_______________________________________________________________________
 void TMVA::ClassifierFactory::DestroyInstance() 
 {
+   // destroy the singleton instance
+
    if (fgInstance!=0) delete fgInstance;
 }
 
 //_______________________________________________________________________
 Bool_t TMVA::ClassifierFactory::Register( const std::string &name, Creator creator ) 
 { 
+   // registers a classifier creator function under the method type name
+
    if(fCalls.find(name) != fCalls.end())
       {
          std::cerr << "ClassifierFactory<>::Register - " << name << " already exists" << std::endl;
@@ -65,6 +72,8 @@ Bool_t TMVA::ClassifierFactory::Register( const std::string &name, Creator creat
 //_______________________________________________________________________
 Bool_t TMVA::ClassifierFactory::Unregister( const std::string &name ) 
 { 
+   // unregisters a classifier type name
+
    return fCalls.erase(name) == 1; 
 }
 
@@ -75,6 +84,12 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
                                                 DataSetInfo& dsi,
                                                 const TString& option ) 
 {
+   // creates the method if needed based on the method name using the
+   // creator function the factory has stored
+
+   // additional options are passed to the creator function (the
+   // method constructor)
+
    CallMap::const_iterator it = fCalls.find(name);
    
    // handle unknown algorithm request
@@ -91,6 +106,12 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
                                                 DataSetInfo& dsi,
                                                 const TString& weightfile )
 {
+   // creates the method if needed based on the method name using the
+   // creator function the factory has stored
+
+   // additional options are passed to the creator function (the
+   // second method constructor)
+
    CallMap::const_iterator it = fCalls.find(name);
    
    // handle unknown algorithm request
@@ -105,6 +126,8 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
 //_______________________________________________________________________
 const std::vector<std::string> TMVA::ClassifierFactory::List() const
 {
+   // returns a vector of the method type names of registered methods
+   
    std::vector<std::string> svec;
 
    CallMap::const_iterator it = fCalls.begin();
@@ -116,6 +139,8 @@ const std::vector<std::string> TMVA::ClassifierFactory::List() const
 //_______________________________________________________________________
 void TMVA::ClassifierFactory::Print() const
 {
+   // prints the registered method type names
+
    std::cout << "Print: ClassifierFactory<> knows about " << fCalls.size() << " objects" << std::endl;  
 
    CallMap::const_iterator it = fCalls.begin();

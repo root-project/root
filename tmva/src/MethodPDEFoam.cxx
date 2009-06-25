@@ -98,7 +98,6 @@ void TMVA::MethodPDEFoam::Init( void )
    fOptDrive       = 1;       // use variance reduction
    fEvPerBin       = 10000;
    fChat           = 0;
-   fNSigBgRatio    = 1.;      // Ratio of number of signal events / bg events
    fCutNmin        = true; 
    fNmin           = 100;
    fCutRMSmin      = false;   // default TFoam method
@@ -310,15 +309,15 @@ void TMVA::MethodPDEFoam::Train( void )
          TrainMonoTargetRegression();
    }
    else {
-      fNSigBgRatio = 1.;
-      if (DataInfo().GetNormalization() == "NONE") {
-         // norm discriminator by hand
-         fNSigBgRatio = 1.*(Data()->GetNEvtSigTrain())/(Data()->GetNEvtBkgdTrain());
+      if (DataInfo().GetNormalization() != "EQUALNUMEVENTS" ) { 
+	 Log() << kWARNING << "NormMode=" << DataInfo().GetNormalization() 
+	       << " chosen. Note that only NormMode=EqualNumEvents" 
+	       << " ensures that Discriminant values correspond to"
+	       << " signal probabilities." << Endl;
       }
 
       Log() << kDEBUG << "N_sig for training events: " << Data()->GetNEvtSigTrain() << Endl;
       Log() << kDEBUG << "N_bg for training events:  " << Data()->GetNEvtBkgdTrain() << Endl;
-      Log() << kDEBUG << "ratio N_sig/N_bg for training events: " << fNSigBgRatio << Endl;
       Log() << kDEBUG << "User normalization: " << DataInfo().GetNormalization().Data() << Endl;
 
       if (fSigBgSeparated)
@@ -354,7 +353,7 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
          if (i==0 && ev->IsSignal()) 
             foam[i]->FillBinarySearchTree(ev, 1, kSeparate, IgnoreEventsWithNegWeightsInTraining());
          else if (i==1 && !ev->IsSignal())
-            foam[i]->FillBinarySearchTree(ev, fNSigBgRatio, kSeparate, IgnoreEventsWithNegWeightsInTraining());
+            foam[i]->FillBinarySearchTree(ev, 1, kSeparate, IgnoreEventsWithNegWeightsInTraining());
       }
 
       Log() << kINFO << "Build " << foamcaption[i] << Endl;
@@ -373,7 +372,7 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
          if (i==0 && ev->IsSignal())
             foam[i]->FillFoamCells(ev, 1, kSeparate, IgnoreEventsWithNegWeightsInTraining());
          else if (i==1 && !ev->IsSignal())
-            foam[i]->FillFoamCells(ev, fNSigBgRatio, kSeparate, IgnoreEventsWithNegWeightsInTraining());
+            foam[i]->FillFoamCells(ev, 1, kSeparate, IgnoreEventsWithNegWeightsInTraining());
       }
 
       Log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
@@ -395,7 +394,7 @@ void TMVA::MethodPDEFoam::TrainUnifiedClassification()
    Log() << kINFO << "Filling binary search tree of discriminator foam with events" << Endl;
    // insert event to BinarySearchTree
    for (Long64_t k=0; k<GetNEvents(); k++)
-      foam[0]->FillBinarySearchTree(GetEvent(k), fNSigBgRatio, kDiscr, IgnoreEventsWithNegWeightsInTraining());
+      foam[0]->FillBinarySearchTree(GetEvent(k), 1, kDiscr, IgnoreEventsWithNegWeightsInTraining());
 
    Log() << kINFO << "Build up discriminator foam" << Endl;
    // build foam with 1 cell element
@@ -410,7 +409,7 @@ void TMVA::MethodPDEFoam::TrainUnifiedClassification()
    Log() << "Filling foam cells with events" << Endl;
    // loop over all training events -> fill foam cells with N_sig and N_Bg
    for (UInt_t k=0; k<GetNEvents(); k++)
-      foam[0]->FillFoamCells(GetEvent(k), fNSigBgRatio, kDiscr, IgnoreEventsWithNegWeightsInTraining());
+      foam[0]->FillFoamCells(GetEvent(k), 1, kDiscr, IgnoreEventsWithNegWeightsInTraining());
 
    Log() << "Calculate cell discriminator"<< Endl;
    // calc discriminator (and it's error) for each cell
@@ -725,7 +724,6 @@ void  TMVA::MethodPDEFoam::WriteWeightsToStream( std::ostream& o ) const
    o << fRMSmin << endl;                         // min RMS in cell
    o << KernelToUInt(fKernel) << endl;           // used kernel for GetMvaValue()
    o << TargetSelectionToUInt(fTargetSelection) << endl; // used method for target selection
-   o << fNSigBgRatio << endl;                    // ratio of number of signal events / bg events (training)
 
    // save range
    for (UInt_t i=0; i<Xmin.size(); i++) 
@@ -774,7 +772,6 @@ void TMVA::MethodPDEFoam::AddWeightsXMLTo( void* parent ) const
    gTools().AddAttr( wght, "RMSmin",          fRMSmin );
    gTools().AddAttr( wght, "Kernel",          KernelToUInt(fKernel) );
    gTools().AddAttr( wght, "TargetSelection", TargetSelectionToUInt(fTargetSelection) );
-   gTools().AddAttr( wght, "NSigBgRatio",     fNSigBgRatio );
    
    // save foam borders Xmin[i], Xmax[i]
    void *xmin_wrap;
@@ -866,7 +863,6 @@ void  TMVA::MethodPDEFoam::ReadWeightsFromStream( istream& istr )
    istr >> ts;                             // used method for target selection
    fTargetSelection = UIntToTargetSelection(ts);
 
-   istr >> fNSigBgRatio;                   // ratio of number of signal events / bg events (training)
 
    // clear old range and prepare new range
    Xmin.clear();
@@ -945,7 +941,6 @@ void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
    UInt_t ts = 0;
    gTools().ReadAttr( wghtnode, "TargetSelection", ts );
    fTargetSelection = UIntToTargetSelection(ts);
-   gTools().ReadAttr( wghtnode, "NSigBgRatio",     fNSigBgRatio );
    
    // clear old range [Xmin, Xmax] and prepare new range for reading
    Xmin.clear();
