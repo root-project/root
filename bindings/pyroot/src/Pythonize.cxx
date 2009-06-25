@@ -750,7 +750,7 @@ namespace {
       if ( ObjectProxy_Check( iter ) ) {
          PyObject* end = CallPyObjMethod( self, "end" );
          if ( ObjectProxy_Check( end ) ) {
-            if ( *(void**)((ObjectProxy*)iter)->GetObject() != *(void**)((ObjectProxy*)end)->GetObject() ) {
+            if ( ! PyObject_RichCompareBool( iter, end, Py_EQ ) ) {
                Py_INCREF( Py_True );
                result = Py_True;
             }
@@ -898,15 +898,6 @@ namespace {
 
 
 //- STL iterator behavior ------------------------------------------------------
-   PyObject* StlIterCompare( ObjectProxy* self, ObjectProxy* pyobj )
-   {
-      if ( ! ObjectProxy_Check( pyobj ) )
-         return PyInt_FromLong( -1l );
-
-      return PyInt_FromLong( *(void**)self->GetObject() == *(void**)pyobj->GetObject() ? 0l : 1l );
-   }
-
-//____________________________________________________________________________
    PyObject* StlIterNext( PyObject* self )
    {
       PyObject* next = 0;
@@ -914,14 +905,14 @@ namespace {
 
       if ( last != 0 ) {
       // handle special case of empty container (i.e. self is end)
-         if ( *(void**)((ObjectProxy*)last)->fObject == *(void**)((ObjectProxy*)self)->fObject ) {
+         if ( PyObject_RichCompareBool( last, self, Py_EQ ) ) {
             PyErr_SetString( PyExc_StopIteration, "" );
          } else {
             PyObject* dummy = PyInt_FromLong( 1l );
             PyObject* iter = CallPyObjMethod( self, "__postinc__", dummy );
             Py_DECREF( dummy );
             if ( iter != 0 ) {
-               if ( *(void**)((ObjectProxy*)last)->fObject == *(void**)((ObjectProxy*)iter)->fObject )
+               if ( PyObject_RichCompareBool( last, iter, Py_EQ ) )
                   PyErr_SetString( PyExc_StopIteration, "" );
                else
                   next = CallPyObjMethod( iter, "__deref__" );
@@ -1723,8 +1714,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( name.find( "iterator" ) != std::string::npos ) {
-      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) StlIterCompare, METH_O );
-
       Utility::AddToClass( pyclass, "next", (PyCFunction) StlIterNext, METH_NOARGS );
 
       return kTRUE;
