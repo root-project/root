@@ -91,6 +91,8 @@ void TTF::Cleanup()
    }
    if (fgRotMatrix) delete fgRotMatrix;
    FT_Done_FreeType(fgLibrary);
+
+   fgInit = kFALSE;
 }
 
 //______________________________________________________________________________
