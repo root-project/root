@@ -15,6 +15,11 @@ cd $EXPDIR
 #svn co http://root.cern.ch/svn/root/tags/$CURVERS root
 svn co http://root.cern.ch/svn/root/trunk root
 
+# generate etc/svninfo.txt
+cd root
+build/unix/svninfo.sh
+cd ..
+
 # remove .svn directories containing extra copy of the code
 find root -depth -name .svn -exec rm -rf {} \;
 
