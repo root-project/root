@@ -65,7 +65,6 @@ public:
    void          HandleTermination();
 
    void          ReleaseWorker(const char *ord);
-   void          SetInputSocket(Bool_t on = kTRUE);
    void          Terminate(Int_t status);
 
    ClassDef(TXProofServ,0)  //XRD PROOF Server Application Interface
