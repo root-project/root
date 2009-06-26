@@ -538,8 +538,8 @@ void SetRootSys()
 
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
-      char *ep = new char[PATH_MAX];
 #if !defined(_WIN32)
+      char *ep = new char[PATH_MAX];
       if (!realpath(exepath, ep)) {
          if (getenv("ROOTSYS")) {
             delete [] ep;
@@ -550,6 +550,7 @@ void SetRootSys()
          }
       }
 #else
+      char *ep = new char[strlen(exepath)+1];
       strcpy(ep, exepath);
 #endif
       char *s;
