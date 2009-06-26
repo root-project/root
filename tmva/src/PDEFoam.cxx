@@ -1831,7 +1831,7 @@ Double_t TMVA::PDEFoam::GetCellDiscrError( std::vector<Float_t> xvec )
 }
 
 //_______________________________________________________________________________________________
-void TMVA::PDEFoam::FillFoamCells(const Event* ev, Float_t SigBgRatio, EFoamType ft, Bool_t NoNegWeights)
+void TMVA::PDEFoam::FillFoamCells(const Event* ev, EFoamType ft, Bool_t NoNegWeights)
 {
    // This function fills an event into the foam.
    //
@@ -1841,9 +1841,6 @@ void TMVA::PDEFoam::FillFoamCells(const Event* ev, Float_t SigBgRatio, EFoamType
    //
    // In case of ft==kDiscr this function prepares the calculation of
    // the cell discriminator in every cell.
-   // 
-   // The parameter 'SigBgRatio' is only used during classification
-   // (ft==kSeparate or ft==kDiscr)
    //
    // If 'NoNegWeights' is true, an event with negative weight will
    // not be filled into the foam.  (Default value: false)
@@ -1869,8 +1866,6 @@ void TMVA::PDEFoam::FillFoamCells(const Event* ev, Float_t SigBgRatio, EFoamType
    if (ft == kSeparate || ft == kMultiTarget){
       // 0. Element: Number of events
       // 1. Element: RMS
-      if (ft == kSeparate && !ev->IsSignal())
-	 weight *= SigBgRatio;
       SetCellElement(cell, 0, GetCellElement(cell, 0) + weight);
       SetCellElement(cell, 1, GetCellElement(cell, 1) + weight*weight);
    } else if (ft == kDiscr){
@@ -1879,7 +1874,7 @@ void TMVA::PDEFoam::FillFoamCells(const Event* ev, Float_t SigBgRatio, EFoamType
       if (ev->IsSignal())
 	 SetCellElement(cell, 0, GetCellElement(cell, 0) + weight);
       else
-	 SetCellElement(cell, 1, GetCellElement(cell, 1) + weight*SigBgRatio);
+	 SetCellElement(cell, 1, GetCellElement(cell, 1) + weight);
    } else if (ft == kMonoTarget){
       // 0. Element: Number of events
       // 1. Element: Target 0
@@ -2356,7 +2351,7 @@ Double_t TMVA::PDEFoam::WeightGaus( PDEFoamCell* cell, std::vector<Float_t> txve
    //
    // Parameters:
    // - cell - the cell
-   // - txvec - the transformed event variables (in [0,1])
+   // - txvec - the transformed event variables (in [0,1]) (coordinates <0 are set to 0, >1 are set to 1)
    // - dim - number of dimensions for the calculation of the euclidean distance.
    //   If dim=0, all dimensions of the foam are taken.  Else only the first 'dim'
    //   coordinates of 'txvec' are used for the calculation of the euclidean distance.
@@ -2387,6 +2382,8 @@ Double_t TMVA::PDEFoam::WeightGaus( PDEFoamCell* cell, std::vector<Float_t> txve
    // calc position of nearest edge of cell
    std::vector<Float_t> cell_center;
    for (UInt_t i=0; i<dims; i++){
+     if (txvec[i]<0.) txvec[i]=0.;
+     if (txvec[i]>1.) txvec[i]=1.;
       //cell_center.push_back(cellPosi[i] + (0.5*cellSize[i]));
       if (cellPosi[i] > txvec.at(i))
          cell_center.push_back(cellPosi[i]);
@@ -2593,7 +2590,6 @@ TH2D* TMVA::PDEFoam::Project2( Int_t idim1, Int_t idim2, const char *opt, const 
       Log() << kWARNING << "Warning: number of bins too big: " << nbin 
               << "! Using 1000 bins for each dimension instead." << Endl;
       nbin = 1000;
-      bin_width = Int_t(1./nbin);
    }
    
    // create result histogram
@@ -3131,10 +3127,10 @@ void TMVA::PDEFoam::SetVolumeFraction( Double_t vfr )
 }
 
 //________________________________________________________________________________________________
-void TMVA::PDEFoam::FillBinarySearchTree( const Event* ev, Float_t SigBgRatio, EFoamType ft, Bool_t NoNegWeights )
+void TMVA::PDEFoam::FillBinarySearchTree( const Event* ev, EFoamType ft, Bool_t NoNegWeights )
 {
    // Insert event to internal foam density TFDISTR.
-   fDistr->FillBinarySearchTree(ev, SigBgRatio, ft, NoNegWeights);
+   fDistr->FillBinarySearchTree(ev, ft, NoNegWeights);
 }
 
 //________________________________________________________________________________________________
@@ -3404,16 +3400,10 @@ void TMVA::TFDISTR::Initialize( Int_t ndim )
 }
 
 //________________________________________________________________________________________________
-void TMVA::TFDISTR::FillBinarySearchTree( const Event* ev, Float_t SigBgRatio, EFoamType ft, Bool_t NoNegWeights )
+void TMVA::TFDISTR::FillBinarySearchTree( const Event* ev, EFoamType ft, Bool_t NoNegWeights )
 {
    // This method creates an TMVA::Event and inserts it into the
    // binary search tree.
-   // 
-   // In case of ft==kSeparate or ft==kDiscr and 'ev' is a background
-   // event, than the event is weighted with 'SigBgRatio' in addition,
-   // in order to normalize the number of signal and background
-   // events.  'SigBgRatio' here means the ratio (nuber of signal
-   // events)/(number of background events).
    //
    // If 'NoNegWeights' is true, an event with negative weight will
    // not be filled into the foam.  (Default value: false)
@@ -3427,11 +3417,6 @@ void TMVA::TFDISTR::FillBinarySearchTree( const Event* ev, Float_t SigBgRatio, E
    // set event class and normalization
    if (ft==kSeparate || ft==kDiscr){
       event->SetClass(ev->IsSignal() ? fSignalClass : fBackgroundClass);
-      if (!ev->IsSignal()){
-	 // normalization of background events
-	 event->SetWeight(      ev->GetOriginalWeight()*SigBgRatio);
-	 event->SetBoostWeight( ev->GetBoostWeight()*SigBgRatio);
-      }
    } else if (ft==kMultiTarget){
       // since in multi target regression targets are handled like
       // variables, remove targets and add them to the event variabels

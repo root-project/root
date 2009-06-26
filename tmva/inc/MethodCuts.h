@@ -228,6 +228,10 @@ namespace TMVA {
       std::vector<PDF*>*      fVarPdfS;            // reference PDFs (signal)
       std::vector<PDF*>*      fVarPdfB;            // reference PDFs (background)
 
+      // negative efficiencies
+      Bool_t                  fNegEffWarning;      // flag risen in case of negative efficiency warning
+
+
       // the definition of fit parameters can be different from the actual 
       // cut requirements; these functions provide the matching
       void     MatchParsToCuts( const std::vector<Double_t>&, Double_t*, Double_t* );

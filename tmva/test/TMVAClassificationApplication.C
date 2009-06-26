@@ -23,7 +23,7 @@
 
 #include "TMVAGui.C"
 
-#ifndef __CINT__
+#if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
 #endif

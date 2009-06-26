@@ -49,6 +49,7 @@
 #include "TMatrixDSym.h"
 #include "TPaletteAxis.h"
 #include "TPrincipal.h"
+#include "TMath.h"
 
 #include "TMVA/Factory.h"
 #include "TMVA/ClassifierFactory.h"
@@ -1260,7 +1261,16 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
             // for correlations
             TMatrixD* theMat = 0;
-            for (Int_t im=0; im<nmeth; im++) dvec[im]        = (Double_t)(*mvaRes[im])[ievt];
+            for (Int_t im=0; im<nmeth; im++) {
+               // check for NaN value
+               Double_t retval = (Double_t)(*mvaRes[im])[ievt];               
+               if (TMath::IsNaN(retval)) {
+                  Log() << kWARNING << "Found NaN return value in event: " << ievt 
+                        << " for method \"" << methodsNoCuts[im]->GetName() << "\"" << Endl;
+                  dvec[im] = 0;
+               }
+               else dvec[im] = retval;
+            }
             for (Int_t iv=0; iv<nvar;  iv++) dvec[iv+nmeth]  = (Double_t)ev->GetVal(iv);
             if (DefaultDataSetInfo().IsSignal(ev)) { tpSig->AddRow( dvec ); theMat = overlapS; }
             else                                   { tpBkg->AddRow( dvec ); theMat = overlapB; }
@@ -1279,7 +1289,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
          // renormalise overlap matrix
          (*overlapS) *= (1.0/defDs->GetNEvtSigTest());  // init...
          (*overlapB) *= (1.0/defDs->GetNEvtBkgdTest()); // init...
-   
+
          tpSig->MakePrincipals();
          tpBkg->MakePrincipals();
 

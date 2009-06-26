@@ -147,7 +147,8 @@ TMVA::MethodCuts::MethodCuts( const TString& jobName,
    fVarHistS_smooth( 0 ),
    fVarHistB_smooth( 0 ),
    fVarPdfS    ( 0 ),
-   fVarPdfB    ( 0 )
+   fVarPdfB    ( 0 ),
+   fNegEffWarning( kFALSE )
 { 
    // standard constructor
 }
@@ -177,7 +178,8 @@ TMVA::MethodCuts::MethodCuts( DataSetInfo& theData,
    fVarHistS_smooth( 0 ),
    fVarHistB_smooth( 0 ),
    fVarPdfS    ( 0 ),
-   fVarPdfB    ( 0 )
+   fVarPdfB    ( 0 ),
+   fNegEffWarning( kFALSE )
 {
    // construction from weight file
 }
@@ -954,6 +956,18 @@ void TMVA::MethodCuts::GetEffsfromPDFs( Double_t* cutMin, Double_t* cutMax,
       effS *= (*fVarPdfS)[ivar]->GetIntegral( cutMin[ivar], cutMax[ivar] );
       effB *= (*fVarPdfB)[ivar]->GetIntegral( cutMin[ivar], cutMax[ivar] );
    }
+
+   // quick fix to prevent from efficiencies < 0
+   if( effS < 0.0 ) {
+      effS = 0.0;
+      if( !fNegEffWarning ) Log() << kWARNING << "Negative signal efficiency found and set to 0. This is probably due to many events with negative weights in a certain cut-region." << Endl;
+      fNegEffWarning = kTRUE;
+   }
+   if( effB < 0.0 ) {
+      effB = 0.0;
+      if( !fNegEffWarning ) Log() << kWARNING << "Negative background efficiency found and set to 0. This is probably due to many events with negative weights in a certain cut-region." << Endl;
+      fNegEffWarning = kTRUE;
+   }
 }
 
 //_______________________________________________________________________
@@ -998,6 +1012,18 @@ void TMVA::MethodCuts::GetEffsfromSelection( Double_t* cutMin, Double_t* cutMax,
       effS = nSelS/nTotS;
       effB = nSelB/nTotB;
    }  
+
+   // quick fix to prevent from efficiencies < 0
+   if( effS < 0.0 ) {
+      effS = 0.0;
+      if( !fNegEffWarning ) Log() << kWARNING << "Negative signal efficiency found and set to 0. This is probably due to many events with negative weights in a certain cut-region." << Endl;
+      fNegEffWarning = kTRUE;
+   }
+   if( effB < 0.0 ) {
+      effB = 0.0;
+      if( !fNegEffWarning ) Log() << kWARNING << "Negative background efficiency found and set to 0. This is probably due to many events with negative weights in a certain cut-region." << Endl;
+      fNegEffWarning = kTRUE;
+   }
 }
 
 //_______________________________________________________________________

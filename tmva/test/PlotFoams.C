@@ -4,7 +4,7 @@
 #include <string>
 
 
-typedef enum { kNEV, kDISCR, kMONO, kMULTI, kRMS, kRMSOVMEAN } EPlotType;
+typedef enum { kNEV, kDISCR, kMONO, kRMS, kRMSOVMEAN } EPlotType;
 typedef enum { kSEPARATE, kUNIFIED, kMONOTARGET, kMULTITARGET } EFoamType;
 
 void PlotFoams(	TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.xml", 
@@ -74,10 +74,6 @@ void Plot( TString fin = "weights/TMVAClassification_PDEFoam.xml", EPlotType pt 
    else if (pt == kMONO){
       cellval      = "MonoTargetRegression";
       cellval_long = "Target";
-   }
-   else if (pt == kMULTI){
-      cellval      = "MultiTargetRegression";
-      cellval_long = "Event density";
    }
    else if (pt == kRMS){
       cellval      = "rms";

@@ -310,7 +310,7 @@ void TMVA::MethodPDEFoam::Train( void )
    }
    else {
       if (DataInfo().GetNormalization() != "EQUALNUMEVENTS" ) { 
-	 Log() << kWARNING << "NormMode=" << DataInfo().GetNormalization() 
+	 Log() << kINFO << "NormMode=" << DataInfo().GetNormalization() 
 	       << " chosen. Note that only NormMode=EqualNumEvents" 
 	       << " ensures that Discriminant values correspond to"
 	       << " signal probabilities." << Endl;
@@ -350,10 +350,8 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
       // insert event to BinarySearchTree
       for (Long64_t k=0; k<GetNEvents(); k++) {
          const Event* ev = GetEvent(k);
-         if (i==0 && ev->IsSignal()) 
-            foam[i]->FillBinarySearchTree(ev, 1, kSeparate, IgnoreEventsWithNegWeightsInTraining());
-         else if (i==1 && !ev->IsSignal())
-            foam[i]->FillBinarySearchTree(ev, 1, kSeparate, IgnoreEventsWithNegWeightsInTraining());
+         if ((i==0 && ev->IsSignal()) || (i==1 && !ev->IsSignal()))
+            foam[i]->FillBinarySearchTree(ev, kSeparate, IgnoreEventsWithNegWeightsInTraining());
       }
 
       Log() << kINFO << "Build " << foamcaption[i] << Endl;
@@ -369,10 +367,8 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
       // loop over all events -> fill foam cells
       for (Long64_t k=0; k<GetNEvents(); k++) {
          const Event* ev = GetEvent(k); 
-         if (i==0 && ev->IsSignal())
-            foam[i]->FillFoamCells(ev, 1, kSeparate, IgnoreEventsWithNegWeightsInTraining());
-         else if (i==1 && !ev->IsSignal())
-            foam[i]->FillFoamCells(ev, 1, kSeparate, IgnoreEventsWithNegWeightsInTraining());
+         if ((i==0 && ev->IsSignal()) || (i==1 && !ev->IsSignal()))
+            foam[i]->FillFoamCells(ev, kSeparate, IgnoreEventsWithNegWeightsInTraining());
       }
 
       Log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
@@ -394,7 +390,7 @@ void TMVA::MethodPDEFoam::TrainUnifiedClassification()
    Log() << kINFO << "Filling binary search tree of discriminator foam with events" << Endl;
    // insert event to BinarySearchTree
    for (Long64_t k=0; k<GetNEvents(); k++)
-      foam[0]->FillBinarySearchTree(GetEvent(k), 1, kDiscr, IgnoreEventsWithNegWeightsInTraining());
+      foam[0]->FillBinarySearchTree(GetEvent(k), kDiscr, IgnoreEventsWithNegWeightsInTraining());
 
    Log() << kINFO << "Build up discriminator foam" << Endl;
    // build foam with 1 cell element
@@ -409,7 +405,7 @@ void TMVA::MethodPDEFoam::TrainUnifiedClassification()
    Log() << "Filling foam cells with events" << Endl;
    // loop over all training events -> fill foam cells with N_sig and N_Bg
    for (UInt_t k=0; k<GetNEvents(); k++)
-      foam[0]->FillFoamCells(GetEvent(k), 1, kDiscr, IgnoreEventsWithNegWeightsInTraining());
+      foam[0]->FillFoamCells(GetEvent(k), kDiscr, IgnoreEventsWithNegWeightsInTraining());
 
    Log() << "Calculate cell discriminator"<< Endl;
    // calc discriminator (and it's error) for each cell
@@ -445,7 +441,7 @@ void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
    Log() << kINFO << "Filling binary search tree with events" << Endl;
    // insert event to BinarySearchTree
    for (Long64_t k=0; k<GetNEvents(); k++)
-      foam[0]->FillBinarySearchTree(GetEvent(k), 1, kMonoTarget, IgnoreEventsWithNegWeightsInTraining());
+      foam[0]->FillBinarySearchTree(GetEvent(k), kMonoTarget, IgnoreEventsWithNegWeightsInTraining());
 
    Log() << kINFO << "Build mono target regression foam" << Endl;
    // build foam
@@ -460,7 +456,7 @@ void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
    Log() << "Filling foam cells with events" << Endl;
    // loop over all events -> fill foam cells with target
    for (UInt_t k=0; k<GetNEvents(); k++)
-      foam[0]->FillFoamCells(GetEvent(k), 1, kMonoTarget, IgnoreEventsWithNegWeightsInTraining());
+      foam[0]->FillFoamCells(GetEvent(k), kMonoTarget, IgnoreEventsWithNegWeightsInTraining());
 
    Log() << kDEBUG << "Calculate cell average targets"<< Endl;
    // calc weight (and it's error) for each cell
@@ -493,7 +489,7 @@ void TMVA::MethodPDEFoam::TrainMultiTargetRegression()
          << Endl;
    // insert event to BinarySearchTree
    for (Long64_t k=0; k<GetNEvents(); k++)
-      foam[0]->FillBinarySearchTree(GetEvent(k), 1, kMultiTarget, IgnoreEventsWithNegWeightsInTraining());
+      foam[0]->FillBinarySearchTree(GetEvent(k), kMultiTarget, IgnoreEventsWithNegWeightsInTraining());
 
    Log() << kINFO << "Build multi target regression foam" << Endl;
    // build foam
@@ -508,7 +504,7 @@ void TMVA::MethodPDEFoam::TrainMultiTargetRegression()
    Log() << kINFO << "Filling foam cells with events" << Endl;
    // loop over all events -> fill foam cells with number of events
    for (UInt_t k=0; k<GetNEvents(); k++)
-      foam[0]->FillFoamCells(GetEvent(k), 1, kMultiTarget, IgnoreEventsWithNegWeightsInTraining());
+      foam[0]->FillFoamCells(GetEvent(k), kMultiTarget, IgnoreEventsWithNegWeightsInTraining());
 
    Log() << kDEBUG << "Check all cells and remove cells with volume 0" << Endl;
    foam[0]->CheckCells(true);

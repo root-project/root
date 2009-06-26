@@ -21,11 +21,10 @@
 #include "TPluginManager.h"
 #include "TStopwatch.h"
 
-#ifndef __CINT__
+#if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
 #endif
-
 
 using namespace TMVA;
 

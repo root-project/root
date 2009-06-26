@@ -10,8 +10,7 @@
  * As input data is used a toy-MC sample consisting of four Gaussian-distributed  *
  * and linearly correlated input variables.                                       *
  *                                                                                *
- * The methods to be 
-#include "TMVAGui.C"used can be switched on and off by means of booleans, or     *
+ * The methods to be used can be switched on and off by means of booleans, or     *
  * via the prompt command, for example:                                           *
  *                                                                                *
  *    root -l TMVAClassification.C\(\"Fisher,Likelihood\"\)                       *
@@ -40,12 +39,11 @@
 
 #include "TMVAGui.C"
 
-#ifndef __CINT__
-#include "TMVA/Tools.h"
+#if not defined(__CINT__) || defined(__MAKECINT__)
+// needs to be included when makecint runs (ACLIC)
 #include "TMVA/Factory.h"
+#include "TMVA/Tools.h"
 #endif
-
-using namespace TMVA;
 
 // read input data file with ascii format (otherwise ROOT) ?
 Bool_t ReadDataFromAsciiIFormat = kFALSE;
@@ -121,7 +119,7 @@ void TMVAClassification( TString myMethodList = "" )
    // ---
    Use["RuleFit"]         = 1;
    // ---
-   Use["Plugin"]          = 1;
+   Use["Plugin"]          = 0;
    // ---------------------------------------------------------------
 
    std::cout << std::endl;
@@ -130,7 +128,7 @@ void TMVAClassification( TString myMethodList = "" )
    if (myMethodList != "") {
       for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) it->second = 0;
 
-      std::vector<TString> mlist = gTools().SplitString( myMethodList, ',' );
+      std::vector<TString> mlist = TMVA::gTools().SplitString( myMethodList, ',' );
       for (UInt_t i=0; i<mlist.size(); i++) {
          std::string regMethod(mlist[i]);
 

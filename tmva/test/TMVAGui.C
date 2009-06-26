@@ -1,8 +1,13 @@
 #include <iostream>
 #include <vector>
 
+#include "TList.h"
 #include "TROOT.h"
+#include "TKey.h"
+#include "TString.h"
 #include "TControlBar.h"
+#include "TObjString.h"
+
 #include "tmvaglob.C"
 
 // some global lists
@@ -14,6 +19,7 @@ TList* GetKeyList( const TString& pattern )
    TList* list = new TList();
 
    TIter next( TMVAGui_keyContent );
+   TKey* key(0);
    while ((key = (TKey*)next())) {         
       if (TString(key->GetName()).Contains( pattern )) { list->Add( new TObjString( key->GetName() ) ); }
    }
@@ -31,6 +37,7 @@ void ActionButton( TControlBar* cbar,
    if (requiredKey != "") {
       Bool_t found = kFALSE;
       TIter next( TMVAGui_keyContent );
+      TKey* key(0);
       while ((key = (TKey*)next())) {         
          if (TString(key->GetName()).Contains( requiredKey )) { found = kTRUE; break; }
       }
@@ -90,7 +97,7 @@ void TMVAGui( const char* fName = "TMVA.root" )
    TListIter it( keylist );
    TObjString* str = 0;
    char ch = 'a';
-   while (str = (TObjString*)it()) {
+   while ((str = (TObjString*)it())) {
       TString tmp   = str->GetString();
       TString title = Form( "Input variables '%s'-transformed (training sample)", 
                             tmp.ReplaceAll("InputVariables_","").Data() );
@@ -105,7 +112,7 @@ void TMVAGui( const char* fName = "TMVA.root" )
 
    // correlation scatter plots 
    it.Reset(); ch = 'a';
-   while (str = (TObjString*)it()) {
+   while ((str = (TObjString*)it())) {
       TString tmp   = str->GetString();
       TString title = Form( "Input variable correlations '%s'-transformed (scatter profiles)", 
                             tmp.ReplaceAll("InputVariables_","").Data() );
@@ -246,7 +253,7 @@ void TMVAGui( const char* fName = "TMVA.root" )
    cbar->Show();
 
    // indicate inactive buttons
-   for (Int_t i=0; i<TMVAGui_inactiveButtons.size(); i++) cbar->SetButtonState( TMVAGui_inactiveButtons[i], 3 );
+   for (UInt_t i=0; i<TMVAGui_inactiveButtons.size(); i++) cbar->SetButtonState( TMVAGui_inactiveButtons[i], 3 );
    if (TMVAGui_inactiveButtons.size() > 0) {
       cout << "=== Note: inactive buttons indicate that the corresponding classifiers were not trained ===" << endl;
    }

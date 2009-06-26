@@ -39,7 +39,7 @@
 
 #include "TMVARegGui.C"
 
-#ifndef __CINT__
+#if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
 #include "TMVA/Factory.h"
 #endif

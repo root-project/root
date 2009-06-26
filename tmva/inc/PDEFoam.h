@@ -190,7 +190,7 @@ namespace TMVA {
      
       // density build-up functions
       void Initialize(Int_t ndim = 2);
-      void FillBinarySearchTree( const Event* ev, Float_t SigBgRatio, EFoamType ft, Bool_t NoNegWeights=kFALSE );
+      void FillBinarySearchTree( const Event* ev, EFoamType ft, Bool_t NoNegWeights=kFALSE );
      
       // Dominik Dannheim 10.Jan.2008
       // new method to fill edge histograms directly, without MC sampling
@@ -494,7 +494,7 @@ namespace TMVA {
       void DisplayCellContent(void); // debug function
 
       // functions to fill created cells with certain values
-      void FillFoamCells(const Event* ev, Float_t SigBgRatio, EFoamType ft, Bool_t NoNegWeights=kFALSE);
+      void FillFoamCells(const Event* ev, EFoamType ft, Bool_t NoNegWeights=kFALSE);
       
       // functions to calc discriminators/ mean targets for every cell
       // using filled cell values
@@ -546,7 +546,7 @@ namespace TMVA {
       // get VolFrac from PDEFoam
       Double_t GetPDEFoamVolumeFraction() const { return fVolFrac; }
       void SetVolumeFraction(Double_t);    // set VolFrac to TFDISTR
-      void FillBinarySearchTree( const Event* ev, Float_t SigBgRatio, EFoamType ft, Bool_t NoNegWeights=kFALSE );
+      void FillBinarySearchTree( const Event* ev, EFoamType ft, Bool_t NoNegWeights=kFALSE );
       void Create(Bool_t CreateCellElements=false); // create PDEFoam
       void Init();                    // initialize TFDISTR
       void PrintDensity();            // debug output
