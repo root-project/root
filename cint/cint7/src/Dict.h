@@ -20,6 +20,11 @@
 #include "Api.h"
 #include <vector>
 
+#ifdef _WIN32
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+
 namespace Cint {
    namespace Internal {
 
@@ -85,5 +90,9 @@ namespace Cint {
 
    }
 }
+
+#ifdef _WIN32
+#pragma warning( pop )
+#endif
 
 #endif

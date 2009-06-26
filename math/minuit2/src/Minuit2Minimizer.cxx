@@ -447,7 +447,7 @@ double Minuit2Minimizer::GlobalCC(unsigned int i) const {
 
    if ( i >= fDim || i >= fDim) return 0;  
     // no info available when minimization has failed or has some problems
-   if ( Status()  || !fState.HasGlobalCC()    ) return 0; 
+   if ( !fState.HasGlobalCC()    ) return 0; 
    if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0; 
    unsigned int k = fState.IntOfExt(i); 
    return fState.GlobalCC().GlobalCC()[k]; 
@@ -653,8 +653,8 @@ bool Minuit2Minimizer::Hesse( ) {
 
    ROOT::Minuit2::MnHesse hesse( strategy );
 
-   // case when function minimum is valid and given param value is zero 
-   if (fMinimum && fMinimum->IsValid() ) { 
+   // case when function minimum exists
+   if (fMinimum  ) { 
       // run hesse and function minimum will be updated with Hesse result
       hesse( *fMinuitFCN, *fMinimum, maxfcn ); 
       fState = fMinimum->UserState(); 

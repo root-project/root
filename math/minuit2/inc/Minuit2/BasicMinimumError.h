@@ -56,7 +56,7 @@ public:
     fMatrix(mat), fDCovar(1.), fValid(false), fPosDef(false), fMadePosDef(false), fHesseFailed(true), fInvertFailed(false), fAvailable(true) {}
 
   BasicMinimumError(const MnAlgebraicSymMatrix& mat, MnMadePosDef) : 
-    fMatrix(mat), fDCovar(1.), fValid(false), fPosDef(false), fMadePosDef(true), fHesseFailed(false), fInvertFailed(false), fAvailable(true) {}
+    fMatrix(mat), fDCovar(1.), fValid(true), fPosDef(false), fMadePosDef(true), fHesseFailed(false), fInvertFailed(false), fAvailable(true) {}
 
   BasicMinimumError(const MnAlgebraicSymMatrix& mat, MnInvertFailed) : 
     fMatrix(mat), fDCovar(1.), fValid(false), fPosDef(true), fMadePosDef(false), fHesseFailed(false), fInvertFailed(true), fAvailable(true) {}

@@ -305,18 +305,18 @@ L30:
    }
    
    FunctionGradient gr(grd, g2, gst);
-   
-   // needed this ? (if posdef and inversion ok continue. it is like this in the Fortran version
-   //   if(tmp.IsMadePosDef()) {
-   //     std::cout<<"MnHesse: matrix is invalid!"<<std::endl;
-   //     std::cout<<"MnHesse: matrix is not pos. def.!"<<std::endl;
-   //     std::cout<<"MnHesse: matrix was forced pos. def."<<std::endl;
-   //     return MinimumState(st.Parameters(), MinimumError(vhmat, MinimumError::MnMadePosDef()), gr, st.Edm(), mfcn.NumOfCalls());    
-   //   }
-   
-   //calculate edm
-   MinimumError err(vhmat, 0.);
    VariableMetricEDMEstimator estim;
+   
+   // if matrix is made pos def returns anyway edm
+   if(tmpErr.IsMadePosDef()) {
+      MinimumError err(vhmat, MinimumError::MnMadePosDef() );
+      double edm = estim.Estimate(gr, err);
+      MN_INFO_MSG("MnHesse: matrix was forced pos. def. ");
+      return MinimumState(st.Parameters(), err, gr, edm, mfcn.NumOfCalls());
+   }
+   
+   //calculate edm for good errors
+   MinimumError err(vhmat, 0.);
    double edm = estim.Estimate(gr, err);
 
 #ifdef DEBUG

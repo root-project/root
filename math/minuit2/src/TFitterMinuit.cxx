@@ -765,7 +765,7 @@ void TFitterMinuit::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_
 
 
 //______________________________________________________________________________
-void InteractiveFCNm2(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+void Minuit2InteractiveFCN(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
    //*-*-*-*-*-*-*Static function called when SetFCN is called in interactive mode
    //*-*          ===============================================
@@ -800,7 +800,7 @@ void TFitterMinuit::SetFCN(void *fcn)
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
    }
-   fFCN = InteractiveFCNm2;
+   fFCN = Minuit2InteractiveFCN;
    gMinuit2 = this; //required by InteractiveFCNm
    
    if (fMinuitFCN) delete fMinuitFCN;
