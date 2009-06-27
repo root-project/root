@@ -538,8 +538,21 @@ void SetRootSys()
 
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
+#if !defined(_WIN32)
+      char *ep = new char[PATH_MAX];
+      if (!realpath(exepath, ep)) {
+         if (getenv("ROOTSYS")) {
+            delete [] ep;
+            return;
+         } else {
+            fprintf(stderr, "rootcint: error getting realpath of rootcint, please set ROOTSYS in the shell");
+            strcpy(ep, exepath);
+         }
+      }
+#else
       char *ep = new char[strlen(exepath)+1];
       strcpy(ep, exepath);
+#endif
       char *s;
       if ((s = strrchr(ep, '/'))) {
          // $ROOTSYS/bin/rootcint
@@ -553,8 +566,8 @@ void SetRootSys()
          }
          if (s) *s = 0;
       } else {
-	 // There was no slashes at all let now change ROOTSYS
-	 return; 
+         // There was no slashes at all let now change ROOTSYS
+         return;
       }
       char *env = new char[strlen(ep) + 10];
       sprintf(env, "ROOTSYS=%s", ep);
