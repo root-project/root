@@ -6,7 +6,14 @@ int runvectorInVector() {
    TFile *file = TFile::Open("CaloTowers.root");
    TTree *Events; file->GetObject("Events",Events);
    Events->SetScanField(0);
-   Long64_t n = Events->Scan("CaloTowerCollection.obj.e");
+
+   //TBranch *b = Events->GetBranch("obj.layers");
+   //b->GetEntry(0);
+   //gDebug = 8;
+   //b->GetEntry(1);
+
+   Long64_t n;
+   n = Events->Scan("CaloTowerCollection.obj.e");
    if (n!=4207) { return 1; }
    n = Events->Scan("CaloTowerCollection.obj.layers.e");
    return (n!=3128);

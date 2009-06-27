@@ -77,8 +77,13 @@ vectorOfvector: vectorOfvector.clog
 indexLoad: indexLoad.clog
 	$(TestDiff)
 
+ifeq ($(ARCH)$(FAIL),win32)
+vectorInVector:
+	$(WarnFailTest)
+else
 vectorInVector: vectorInVector.log
 	$(TestDiff)
+endif
 
 nestedind: nestedind.log
 	$(TestDiff)
