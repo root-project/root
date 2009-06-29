@@ -178,9 +178,10 @@ const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
 
    const Event* evT2 = GetTransformationHandler().InverseTransform( evT );
    fRegressionReturnVal->clear();
-   for (Int_t iout = 0; iout<fNRegOut; iout++) {fRegressionReturnVal->push_back(evT2->GetTarget(iout));
-
-   std::cout<< "==LD :: ["<< iout<<"]\t"<< evT2->GetTarget(iout)<<std::endl;}
+   for (Int_t iout = 0; iout<fNRegOut; iout++) {
+      fRegressionReturnVal->push_back(evT2->GetTarget(iout));
+      //std::cout<< "==LD :: ["<< iout<<"]\t"<< evT2->GetTarget(iout)<<std::endl;
+   }
    delete evT;
    return (*fRegressionReturnVal);
 }
