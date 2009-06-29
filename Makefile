@@ -208,7 +208,7 @@ endif
 ifeq ($(BUILDCINTEX),yes)
    ifeq ($(BUILDCINT5),yes)
    MODULES      += cint/cintex
-   else 
+   else
      ifneq ($(BUILDBOTH),yes)
      MODULES      += cint/cintexcompat
      endif
@@ -1036,6 +1036,8 @@ uninstall:
 	inode2=`ls -id $$PWD/bin | awk '{ print $$1 }'`; \
 	if [ -d $(DESTDIR)$(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]; then \
 	   $(MAKE) distclean ; \
+	elif [ "$(USECONFIG)" = "FALSE" ]; then \
+	   echo "To uninstall ROOT just delete directory $$PWD"; \
 	else \
 	   rm -f $(DESTDIR)$(BINDIR)/`basename $(CINT)`; \
 	   rm -f $(DESTDIR)$(BINDIR)/`basename $(MAKECINT)`; \
@@ -1054,10 +1056,10 @@ uninstall:
 	   if test -d $(DESTDIR)$(BINDIR) && \
 	      test "x`ls $(DESTDIR)$(BINDIR)`" = "x" ; then \
 	      rm -rf $(DESTDIR)$(BINDIR); \
-	   fi ; \
+	   fi; \
 	   for lib in $(ALLLIBS) $(CINTLIB) $(ALLMAPS); do \
 	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`* ; \
-	   done ; \
+	   done; \
 	   if test "x$(RFLX_GRFLXPY)" != "x"; then \
 	      rm -f $(DESTDIR)$(LIBDIR)/$(RFLX_GRFLXPY); \
 	   fi; \
