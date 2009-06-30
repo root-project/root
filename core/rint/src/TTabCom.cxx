@@ -1548,7 +1548,6 @@ TString TTabCom::DeterminePath(const TString & fileName,
       TString newBase;
       TString extendedPath;
       if (fileName.Contains("/")) {
-         newBase = gSystem->DirName(fileName);
 	 Int_t n = fileName.Length();
          if (fileName[n-1] != '/' && fileName[n-1] != '\\') {
 	    newBase = gSystem->DirName(fileName);
