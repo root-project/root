@@ -164,6 +164,7 @@
 #include "RConfigure.h"
 #include "RConfig.h"
 #include <iostream>
+#include <memory>
 #ifndef R__BUILDING_CINT7
 #include "Shadow.h"
 #include "cintdictversion.h"
@@ -505,8 +506,8 @@ const char *GetExePath()
       exepath = _dyld_get_image_name(0);
 #endif
 #ifdef __linux
-      char linkname[64];  // /proc/<pid>/exe
-      char buf[1024];     // exe path name
+      char linkname[PATH_MAX];  // /proc/<pid>/exe
+      char buf[PATH_MAX];     // exe path name
       pid_t pid;
 
       // get our pid and build the name of the link in /proc
@@ -1437,7 +1438,9 @@ bool IsTemplateFloat16(G__ClassInfo &cl)
    if (!cl.IsTmplt()) return false;
 
    static G__TypeInfo ti;
-   char arg[2048], *current, *next;
+   char *arg, *current, *next;
+   arg = new char[strlen(cl.Name()) + 1];
+   auto_ptr<char> ap_arg(arg);
 
    strcpy(arg, cl.Name());
    // arg is now is the name of class template instantiation.
@@ -1496,7 +1499,9 @@ bool IsTemplateDouble32(G__ClassInfo &cl)
    if (!cl.IsTmplt()) return false;
 
    static G__TypeInfo ti;
-   char arg[2048], *current, *next;
+   char *arg, *current, *next;
+   arg = new char[strlen(cl.Name()) + 1];
+   auto_ptr<char> ap_arg(arg);
 
    strcpy(arg, cl.Name());
    // arg is now is the name of class template instantiation.
@@ -1641,7 +1646,9 @@ G__TypeInfo &TemplateArg(G__DataMemberInfo &m, int count = 0)
    // 1 second, etc.
 
    static G__TypeInfo ti;
-   char arg[2048], *current, *next;
+   char *arg, *current, *next;
+   arg = new char[strlen(m.Type()->TmpltArg()) + 1];
+   auto_ptr<char> ap_arg(arg);
 
    strcpy(arg, m.Type()->TmpltArg());
    // arg is now a comma separated list of type names, and we want
@@ -1679,7 +1686,9 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
    // 1 second, etc.
 
    static G__TypeInfo ti;
-   char arg[2048], *current, *next;
+   char *arg, *current, *next;
+   arg = new char[strlen(m.Name()) + 1];
+   auto_ptr<char> ap_arg(arg);
 
    strcpy(arg, m.Name());
    // arg is now is the name of class template instantiation.
@@ -2814,7 +2823,7 @@ const char *ShortTypeName(const char *typeDesc)
    // we remove * and const keywords. (we do not want to remove & ).
    // You need to use the result immediately before it is being overwritten.
 
-   static char t[1024];
+   static char t[4096];
    static const char* constwd = "const ";
    static const char* constwdend = "const";
 
@@ -2831,6 +2840,12 @@ const char *ShortTypeName(const char *typeDesc)
          continue;
       }
       if (lev==0 && *s==' ' && *(s+1)!='*') { p = t; continue;}
+      if (p - t > (long)sizeof(t)) {
+         printf("ERROR (rootcint): type name too long for StortTypeName: %s\n",
+                typeDesc);
+         p[0] = 0;
+         return t;
+      }
       *p++ = *s;
    }
    p[0]=0;
@@ -3578,7 +3593,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 
    // Inspect data members
    G__DataMemberInfo m(cl);
-   char cdim[24], cvar[128];
+   char cdim[1024], cvar[4096];
    char clName[G__LONGLINE];
    string fun;
    strcpy(clName,G__map_cpp_name((char *)cl.Fullname()));
@@ -4478,27 +4493,26 @@ int main(int argc, char **argv)
 
 #ifndef __CINT__
    int   argcc, iv, il;
-   char  path[16][1024];
+   std::vector<std::string> path;
    char *argvv[500];
-
-   for (i = 0; i < 16; i++)
-      path[i][0] = 0;
 
 #ifndef ROOTBUILD
 # ifndef ROOTINCDIR
    SetRootSys();
    if (getenv("ROOTSYS")) {
-      sprintf(path[0], "-I%s/include", getenv("ROOTSYS"));
-      sprintf(path[1], "-I%s/src", getenv("ROOTSYS"));
+      path.push_back(std::string("-I") + getenv("ROOTSYS"));
+      path.push_back(path[0]);
+      path[0] += "/include";
+      path[1] += "/src";
    } else {
       Error(0, "%s: environment variable ROOTSYS not defined\n", argv[0]);
       return 1;
    }
 # else
-   sprintf(path[0], "-I%s", ROOTINCDIR);
+   path.push_back(std::string("-I") + ROOTINCDIR);
 # endif
 #else
-   sprintf(path[0], "-Iinclude");
+   path.push_back("-Iinclude");
 #endif
 
    argvv[0] = argv[0];
@@ -4570,8 +4584,8 @@ int main(int argc, char **argv)
             }
          }
 
-         for (i = 0; path[i][0]; i++)
-            argvv[argcc++] = path[i];
+         for (i = 0; i < (int)path.size(); i++)
+            argvv[argcc++] = (char*)path[i].c_str();
 
 #ifdef __hpux
          argvv[argcc++] = (char *)"-I/usr/include/X11R5";
@@ -4761,8 +4775,8 @@ int main(int argc, char **argv)
    for (i = ic; i < argc; i++) {
       if (!iv && *argv[i] != '-' && *argv[i] != '+') {
          if (!icc) {
-            for (j = 0; path[j][0]; j++) {
-               argvv[argcc++] = (char*)path[j];
+            for (j = 0; j < (int)path.size(); j++) {
+               argvv[argcc++] = (char*)path[j].c_str();
             }
             argvv[argcc++] = (char *)"+V";
          }
@@ -4895,9 +4909,9 @@ int main(int argc, char **argv)
          gccxml_rootcint_call+=argv[iarg];
 
          if (!strcmp(argv[iarg], "-c")) {
-            for (i = 0; path[i][0]; i++) {
+            for (i = 0; i < (int)path.size(); i++) {
                gccxml_rootcint_call+=" ";
-               gccxml_rootcint_call+=path[i];
+               gccxml_rootcint_call+=path[i].c_str();
             }
             gccxml_rootcint_call+=" -DR__GCCXML";
 #ifdef ROOTBUILD
