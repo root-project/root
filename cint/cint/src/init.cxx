@@ -139,12 +139,6 @@ int G__call_setup_funcs()
       G__initpermanentsl = new std::list<G__DLLINIT>;
    }
 #endif //G__SHAREDLIB
-
-   if (!G__struct.namerange)
-      G__struct.namerange = new NameMap;
-   if (!G__newtype.namerange)
-      G__newtype.namerange = new NameMap;
-
    // Call G__RegisterLibrary() again, after it got called already
    // in G__init_setup_funcs(), because G__scratchall might have been
    // called in between.

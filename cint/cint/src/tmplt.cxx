@@ -250,7 +250,6 @@ int G__settemplatealias(const char *tagnamein,char *tagname,int tagnum
         G__newtype.tagnum[typenum] = tagnum;
         G__newtype.name[typenum]=(char*)malloc(strlen(tagname)+1);
         strcpy(G__newtype.name[typenum],tagname);
-        G__newtype.namerange->Insert(G__newtype.name[typenum], typenum);
         G__newtype.hash[typenum] = strlen(tagname);
         G__newtype.globalcomp[typenum] = G__globalcomp;
         G__newtype.reftype[typenum] = G__PARANORMAL;
@@ -2381,7 +2380,6 @@ int G__instantiate_templateclass(const char *tagnamein, int noerror)
       G__newtype.type[typenum]='u';
       G__newtype.name[typenum]=(char*)malloc(strlen(tagname)+1);
       strcpy(G__newtype.name[typenum],tagname);
-      G__newtype.namerange->Insert(G__newtype.name[typenum], typenum);
       G__newtype.hash[typenum] = strlen(tagname);
       G__newtype.globalcomp[typenum] = G__globalcomp;
       G__newtype.reftype[typenum] = G__PARANORMAL;
@@ -2481,11 +2479,9 @@ int G__instantiate_templateclass(const char *tagnamein, int noerror)
     char *p2 = strchr(G__struct.name[tagnum],'<');
     if(p1 && p2 && (p1-tagname)==(p2-G__struct.name[tagnum]) &&
        0==strncmp(tagname,G__struct.name[tagnum],p1-tagname)) {
-      G__struct.namerange->Remove(G__struct.name[tagnum], tagnum);
       free((void*)G__struct.name[tagnum]);
       G__struct.name[tagnum] = (char*)malloc(strlen(tagname)+1);
       strcpy(G__struct.name[tagnum],tagname);
-      G__struct.namerange->Insert(G__struct.name[tagnum], tagnum);
       G__struct.hash[tagnum] = strlen(tagname);
     }
   }

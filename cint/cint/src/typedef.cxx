@@ -98,21 +98,16 @@ static int G__defined_typename_exact(char* type_name)
       ispointer = 'A' - 'a';
    }
 
-   NameMap::Range nameRange = G__newtype.namerange->Find(temp);
-   if (nameRange) {
-      for (i = nameRange.First();i <= nameRange.Last(); i++) {
-         if (len == G__newtype.hash[i] && strcmp(G__newtype.name[i], temp) == 0 && (
-                  env_tagnum == G__newtype.parent_tagnum[i]
-               )) {
-            flag = 1;
-            /* This must be a bad manner. Somebody needs to reset G__var_type
-             * especially when typein is 0. */
-            G__var_type = G__newtype.type[i] + ispointer ;
-            break;
-         }
+   for (i = 0;i < G__newtype.alltype;i++) {
+      if (len == G__newtype.hash[i] && strcmp(G__newtype.name[i], temp) == 0 && (
+               env_tagnum == G__newtype.parent_tagnum[i]
+            )) {
+         flag = 1;
+         /* This must be a bad manner. Somebody needs to reset G__var_type
+          * especially when typein is 0. */
+         G__var_type = G__newtype.type[i] + ispointer ;
+         break;
       }
-   } else {
-      i = G__newtype.alltype;
    }
 
    if (flag == 0) return(-1);
@@ -940,7 +935,6 @@ void G__define_type()
       len = strlen(type_name);
       G__newtype.name[typenum] = (char*) malloc(len + 2);
       strcpy(G__newtype.name[typenum], type_name);
-      G__newtype.namerange->Insert(G__newtype.name[typenum], typenum);
       G__newtype.iscpplink[typenum] = G__NOLINK;
       G__newtype.comment[typenum].p.com = 0;
       G__newtype.comment[typenum].filenum = -1;
@@ -1249,62 +1243,57 @@ int G__defined_typename_noerror(const char* type_name, int noerror)
       ispointer = 'A' - 'a';
    }
 
-   NameMap::Range nameRange = G__newtype.namerange->Find(temp);
-   if (nameRange) {
-      for (i = nameRange.First(); i <= nameRange.Last(); ++i) {
-         if ((len == G__newtype.hash[i]) && !strcmp(G__newtype.name[i], temp)) {
-            thisflag = 0;
-            // global scope
-            if (
-                (G__newtype.parent_tagnum[i] == -1)
+   for (i = 0; i < G__newtype.alltype; ++i) {
+      if ((len == G__newtype.hash[i]) && !strcmp(G__newtype.name[i], temp)) {
+         thisflag = 0;
+         // global scope
+         if (
+            (G__newtype.parent_tagnum[i] == -1)
 #if !defined(G__OLDIMPLEMTATION2100)
-                && (!p || ((skipconst == p) || !strcmp("std", skipconst)))
+               && (!p || ((skipconst == p) || !strcmp("std", skipconst)))
 #elif !defined(G__OLDIMPLEMTATION1890)
-                && (!p || (skipconst == p))
+               && (!p || (skipconst == p))
 #endif
-                ) {
-               thisflag = 0x1;
-            }
-            // enclosing tag scope
-            if (G__isenclosingclass(G__newtype.parent_tagnum[i], env_tagnum)) {
-               thisflag = 0x2;
-            }
-            // template definition enclosing class scope
-            if (G__isenclosingclass(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum)) {
-               thisflag = 0x4;
-            }
-            // baseclass tag scope
-            if (-1 != G__isanybase(G__newtype.parent_tagnum[i], env_tagnum, G__STATICRESOLUTION)) {
-               thisflag = 0x8;
-            }
-            // template definition base class scope
-            if (-1 != G__isanybase(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum, G__STATICRESOLUTION)) {
-               thisflag = 0x10;
-            }
-            if (!thisflag && G__isenclosingclassbase(G__newtype.parent_tagnum[i], env_tagnum)) {
-               thisflag = 0x02;
-            }
-            if (!thisflag && G__isenclosingclassbase(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum)) {
-               thisflag = 0x04;
-            }
-            // exact template definition scope
-            if ((G__tmplt_def_tagnum > -1) && (G__tmplt_def_tagnum == G__newtype.parent_tagnum[i])) {
-               thisflag = 0x20;
-            }
-            // exact tag scope
-            if ((env_tagnum > -1) && (env_tagnum == G__newtype.parent_tagnum[i])) {
-               thisflag = 0x40;
-            }
+         ) {
+            thisflag = 0x1;
+         }
+         // enclosing tag scope
+         if (G__isenclosingclass(G__newtype.parent_tagnum[i], env_tagnum)) {
+            thisflag = 0x2;
+         }
+         // template definition enclosing class scope
+         if (G__isenclosingclass(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum)) {
+            thisflag = 0x4;
+         }
+         // baseclass tag scope
+         if (-1 != G__isanybase(G__newtype.parent_tagnum[i], env_tagnum, G__STATICRESOLUTION)) {
+            thisflag = 0x8;
+         }
+         // template definition base class scope
+         if (-1 != G__isanybase(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum, G__STATICRESOLUTION)) {
+            thisflag = 0x10;
+         }
+         if (!thisflag && G__isenclosingclassbase(G__newtype.parent_tagnum[i], env_tagnum)) {
+            thisflag = 0x02;
+         }
+         if (!thisflag && G__isenclosingclassbase(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum)) {
+            thisflag = 0x04;
+         }
+         // exact template definition scope
+         if ((G__tmplt_def_tagnum > -1) && (G__tmplt_def_tagnum == G__newtype.parent_tagnum[i])) {
+            thisflag = 0x20;
+         }
+         // exact tag scope
+         if ((env_tagnum > -1) && (env_tagnum == G__newtype.parent_tagnum[i])) {
+            thisflag = 0x40;
+         }
 
-            if (thisflag && (thisflag >= matchflag)) {
-               matchflag = thisflag;
-               typenum = i;
-               G__var_type = G__newtype.type[i] + ispointer;
-            }
+         if (thisflag && (thisflag >= matchflag)) {
+            matchflag = thisflag;
+            typenum = i;
+            G__var_type = G__newtype.type[i] + ispointer;
          }
       }
-   } else {
-      i = G__newtype.alltype;
    }
 #ifndef G__OLDIMPLEMENTATION1823
    if (temp != buf) {
@@ -1357,19 +1346,14 @@ int G__search_typename(const char* typenamein, int typein, int tagnum, int refty
       type_name[--len] = '\0';
       ispointer = 'A' - 'a';
    }
-   NameMap::Range nameRange = G__newtype.namerange->Find(type_name);
-   if (nameRange) {
-      for (i = nameRange.First();i <= nameRange.Last();i++) {
-         if (len == G__newtype.hash[i] && strcmp(G__newtype.name[i], type_name) == 0 &&
-             (G__static_parent_tagnum == -1 ||
-              G__newtype.parent_tagnum[i] == G__static_parent_tagnum)) {
-            flag = 1;
-            G__var_type = G__newtype.type[i] + ispointer ;
-            break;
-         }
+   for (i = 0;i < G__newtype.alltype;i++) {
+      if (len == G__newtype.hash[i] && strcmp(G__newtype.name[i], type_name) == 0 &&
+            (G__static_parent_tagnum == -1 ||
+             G__newtype.parent_tagnum[i] == G__static_parent_tagnum)) {
+         flag = 1;
+         G__var_type = G__newtype.type[i] + ispointer ;
+         break;
       }
-   } else {
-      i = G__newtype.alltype;
    }
    /* Above is same as G__defined_typename() */
 
@@ -1386,7 +1370,6 @@ int G__search_typename(const char* typenamein, int typein, int tagnum, int refty
       G__newtype.hash[G__newtype.alltype] = len;
       G__newtype.name[G__newtype.alltype] = (char*)malloc((size_t)(len + 1));
       strcpy(G__newtype.name[G__newtype.alltype], type_name);
-      G__newtype.namerange->Insert(G__newtype.name[G__newtype.alltype], G__newtype.alltype);
       G__newtype.nindex[G__newtype.alltype] = 0;
       G__newtype.parent_tagnum[G__newtype.alltype] = G__static_parent_tagnum;
       G__newtype.isconst[G__newtype.alltype] = G__static_isconst;
