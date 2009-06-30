@@ -4478,7 +4478,7 @@ int main(int argc, char **argv)
 
 #ifndef __CINT__
    int   argcc, iv, il;
-   char  path[16][128];
+   char  path[16][1024];
    char *argvv[500];
 
    for (i = 0; i < 16; i++)
