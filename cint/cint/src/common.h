@@ -1367,7 +1367,7 @@ public:
    
 private:
    struct G__charptr_less {
-      bool operator() (const char* a, const char* b) {
+      bool operator() (const char* a, const char* b) const {
          return !a || (b && (-1 == strcmp(a, b)));
       }
    };
