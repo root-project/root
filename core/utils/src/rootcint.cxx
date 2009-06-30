@@ -4500,10 +4500,9 @@ int main(int argc, char **argv)
 # ifndef ROOTINCDIR
    SetRootSys();
    if (getenv("ROOTSYS")) {
-      path.push_back(std::string("-I") + getenv("ROOTSYS"));
-      path.push_back(path[0]);
-      path[0] += "/include";
-      path[1] += "/src";
+      std::string incl_rootsys = std::string("-I") + getenv("ROOTSYS");
+      path.push_back(incl_rootsys + "/include");
+      path.push_back(incl_rootsys + "/src");
    } else {
       Error(0, "%s: environment variable ROOTSYS not defined\n", argv[0]);
       return 1;
