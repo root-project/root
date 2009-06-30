@@ -99,6 +99,7 @@ minuit_HEADERS =	\
          MnUserParameterState.h        \
          MnUserTransformation.h        \
          MnVectorTransform.h           \
+	 MPIProcess.h                  \
          ModularFunctionMinimizer.h    \
          NegativeG2LineSearch.h        \
          Numerical2PGradientCalculator.h\
