@@ -1,4 +1,23 @@
 <br> 
 <hr> 
 <a name="graf2d"></a> 
-<h3>xxx</h3>
+
+
+<h3>Graphical Output</h3>
+
+<h4>PostScript and PDF</h4>
+<ul>
+<li> In the following macro the minus sign was not correct:
+   <pre>
+   {
+      TCanvas *c = new TCanvas;
+      TLatex *l = new TLatex(0.5, 0.5, "#font[122]{a = b + c - d #pm e}");
+      l->Draw();
+      c->SaveAs("c.eps");
+    }
+    </pre>
+    The font 122 is the greek one. With a such TLatex "a" becomes "alpha", 
+    "b" becomes " beta" etc ... It is not the recommended way to do greek
+    characters with TLatex, but it should work anyway.
+</ul>
+
