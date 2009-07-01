@@ -32,8 +32,8 @@ ClassImp(TLatex)
 /* Begin_Html
 <center><h2>TLatex : to draw Mathematical Formula</h2></center>
 
-TLatex's purpose is to write mathematical equations
-The syntax is very similar to the Latex one. 
+TLatex's purpose is to write mathematical equations.
+The syntax is very similar to the Latex one.
 It provides several functionalities:
 <ul>
 <li><a href="#L1">  Subscripts and Superscripts</a></li>
@@ -49,11 +49,11 @@ It provides several functionalities:
 <li><a href="#L11"> Examples</a></li>
 </ul>
 
-When the font precision (see <tt>TAttText</tt>) is low (ie 0), TLatex is 
+When the font precision (see <tt>TAttText</tt>) is low (ie 0), TLatex is
 painted as a normal TText, the control characters are not interpreted.
 
 <a name="L1"></a><h3>Subscripts and Superscripts</h3>
-Subscripts and superscripts are made with the <tt>_</tt> and <tt>^</tt> 
+Subscripts and superscripts are made with the <tt>_</tt> and <tt>^</tt>
 commands. These commands can be combined to make complicated subscript and
 superscript expressions. You may choose how to display subscripts and
 superscripts using the 2 functions <tt>SetIndiceSize(Double_t)</tt> and
@@ -67,7 +67,7 @@ End_Html
 Begin_Html
 <a name="L2"></a><h3>Fractions</h3>
 Fractions denoted by the <tt>/</tt> symbol are made in the obvious way.
-The <tt>#frac</tt> command is used for large fractions in displayed formula; 
+The <tt>#frac</tt> command is used for large fractions in displayed formula;
 it has two arguments: the numerator and the denominator.
 <p>Examples:
 End_Html
@@ -82,7 +82,7 @@ End_Html
 
 Begin_Html
 <a name="L4"></a><h3>Roots</h3>
-The <tt>#sqrt</tt> command produces the square root of its argument; it has 
+The <tt>#sqrt</tt> command produces the square root of its argument; it has
 an optional first argument for other roots.
 <p>Examples:
 End_Html
@@ -91,7 +91,7 @@ End_Html
 Begin_Html
 <a name="L5"></a><h3>Mathematical Symbols</h3>
 TLatex can display dozens of special mathematical symbols. A few of them, such
-as <tt>+</tt> and <tt>></tt> , are produced by typing the corresponding 
+as <tt>+</tt> and <tt>></tt> , are produced by typing the corresponding
 keyboard character. Others are obtained with the commands in the following
 table:
 End_Html
@@ -110,7 +110,7 @@ TLatex provides 4 kinds of proportional delimiters:
 </pre>
 
 <a name="L7"></a><h3>Greek Letters</h3>
-The command to produce a lowercase Greek letter is obtained by adding a 
+The command to produce a lowercase Greek letter is obtained by adding a
 <tt>#</tt> to the name of the letter. For an uppercase Greek letter, just
 capitalize the first letter of the command name. Some letter have two
 representations. The name of the second one (the "variation") starts with "var".
@@ -709,6 +709,135 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       }
       result = fs1+fs2;
    }
+   else if (opBox) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+4,length-4);
+      } else {
+         fs1 = Analyse(x+square,y,spec,text+4,length-4);
+         Double_t adjust = GetHeight()*spec.fSize/20;
+         Double_t x1 = x+adjust ;
+         Double_t x2 = x-adjust+square ;
+         Double_t y1 = y;
+         Double_t y2 = y-square+adjust;
+         DrawLine(x1,y1,x2,y1,spec);
+         DrawLine(x2,y1,x2,y2,spec);
+         DrawLine(x2,y2,x1,y2,spec);
+         DrawLine(x1,y2,x1,y1,spec);
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opOdot) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+5,length-5);
+      } else {
+         fs1 = Analyse(x+1.3*square,y,spec,text+5,length-5);
+         Double_t adjust = GetHeight()*spec.fSize/20;
+         Double_t r1 = 0.62*square;
+         Double_t y1 = y-0.3*square-adjust;
+         DrawCircle(x+0.6*square,y1,r1,spec) ;
+         DrawCircle(x+0.6*square,y1,r1/100,spec) ;
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opHbar) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+5,length-5);
+      } else {
+         fs1 = Analyse(x+square,y,spec,text+5,length-5);
+         TText hbar;
+         hbar.SetTextFont(12);
+         hbar.SetTextColor(fTextColor);
+         hbar.SetTextSize(spec.fSize);
+         hbar.SetTextAngle(fTextAngle);
+         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t angle   = kPI*spec.fAngle/180.;
+         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         hbar.PaintText(xx,yy,"h");
+         DrawLine(x,y-0.8*square,x+0.75*square,y-square,spec);
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opPerp) {
+      Double_t square = GetHeight()*spec.fSize/1.4;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+5,length-5);
+      } else {
+         fs1 = Analyse(x+0.5*square,y,spec,text+5,length-5);
+         Double_t x0 = x  + 0.50*square;
+         Double_t x1 = x0 - 0.48*square;
+         Double_t x2 = x0 + 0.48*square;
+         Double_t y1 = y  + 0.6*square;
+         Double_t y2 = y1 - 1.3*square;
+         DrawLine(x1,y1,x2,y1,spec);
+         DrawLine(x0,y1,x0,y2,spec);
+      }
+      result = fs1;
+   }
+   else if (opParallel) {
+      Double_t square = GetHeight()*spec.fSize/1.4;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+9,length-9);
+      } else {
+         fs1 = Analyse(x+0.5*square,y,spec,text+9,length-9);
+         Double_t x1 = x + 0.15*square;
+         Double_t x2 = x + 0.45*square;
+         Double_t y1 = y + 0.3*square;
+         Double_t y2 = y1- 1.3*square;
+         DrawLine(x1,y1,x1,y2,spec);
+         DrawLine(x2,y1,x2,y2,spec);
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opGreek>-1) {
+      TextSpec_t newSpec = spec;
+      newSpec.fFont = 122;
+      char letter = 97 + opGreek;
+      Double_t yoffset = 0.; // Greek letter too low
+      if (opGreek>25) letter -= 58;
+      if (opGreek == 52) letter = '\241'; //varUpsilon
+      if (opGreek == 53) letter = '\316'; //epsilon
+      if (!fShow) {
+         fs1 = Anal1(newSpec,&letter,1);
+         fs2 = Anal1(spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
+         Savefs(&fs1);
+         Savefs(&fs2);
+      } else {
+         fs2 = Readfs();
+         fs1 = Readfs();
+         Analyse(x+fs1.Width(),y,spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
+         Analyse(x,y-yoffset,newSpec,&letter,1);
+      }
+      fs1.AddOver(TLatexFormSize(0,yoffset,0)) ;
+      result = fs1+fs2;
+   }
+
+   else if ((opSpec>-1) && (opSpec != 66) && (opSpec != 79)) { // special character found, but not #sum nor #int
+      TextSpec_t newSpec = spec;
+      newSpec.fFont = 122;
+      char letter = '\243' + opSpec;
+      if(opSpec == 75 || opSpec == 76) {
+         newSpec.fFont = GetTextFont();
+         if (opSpec == 75) letter = '\305'; // AA Angstroem
+         if (opSpec == 76) letter = '\345'; // aa Angstroem
+      }
+      if (!fShow) {
+         fs1 = Anal1(newSpec,&letter,1);
+         fs2 = Anal1(spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
+         Savefs(&fs1);
+         Savefs(&fs2);
+      } else {
+         fs2 = Readfs();
+         fs1 = Readfs();
+         Analyse(x+fs1.Width(),y,spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
+         Analyse(x,y,newSpec,&letter,1);
+      }
+      result = fs1+fs2;
+   }
 
    else if (opPower>-1 && opUnder>-1) { // ^ and _ found
       min = TMath::Min(opPower,opUnder);
@@ -904,144 +1033,23 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       else
          result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Over(),fs1.Under()*prop+fs2.Height());
    }
-   else if (opBox) {
-      Double_t square = GetHeight()*spec.fSize/2;
-      if (!fShow) {
-         fs1 = Anal1(spec,text+4,length-4);
-      } else {
-         fs1 = Analyse(x+square,y,spec,text+4,length-4);
-         Double_t adjust = GetHeight()*spec.fSize/20;
-         Double_t x1 = x+adjust ;
-         Double_t x2 = x-adjust+square ;
-         Double_t y1 = y;
-         Double_t y2 = y-square+adjust;
-         DrawLine(x1,y1,x2,y1,spec);
-         DrawLine(x2,y1,x2,y2,spec);
-         DrawLine(x2,y2,x1,y2,spec);
-         DrawLine(x1,y2,x1,y1,spec);
-      }
-      result = fs1 + TLatexFormSize(square,square,0);
-   }
-   else if (opOdot) {
-      Double_t square = GetHeight()*spec.fSize/2;
-      if (!fShow) {
-         fs1 = Anal1(spec,text+5,length-5);
-      } else {
-         fs1 = Analyse(x+1.3*square,y,spec,text+5,length-5);
-         Double_t adjust = GetHeight()*spec.fSize/20;
-         Double_t r1 = 0.62*square;
-         Double_t y1 = y-0.3*square-adjust;
-         DrawCircle(x+0.6*square,y1,r1,spec) ;
-         DrawCircle(x+0.6*square,y1,r1/100,spec) ;
-      }
-      result = fs1 + TLatexFormSize(square,square,0);
-   }
-   else if (opHbar) {
-      Double_t square = GetHeight()*spec.fSize/2;
-      if (!fShow) {
-         fs1 = Anal1(spec,text+5,length-5);
-      } else {
-         fs1 = Analyse(x+square,y,spec,text+5,length-5);
-         TText hbar;
-         hbar.SetTextFont(12);
-         hbar.SetTextColor(fTextColor);
-         hbar.SetTextSize(spec.fSize);
-         hbar.SetTextAngle(fTextAngle);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-         Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
-         hbar.PaintText(xx,yy,"h");
-         DrawLine(x,y-0.8*square,x+0.75*square,y-square,spec);
-      }
-      result = fs1 + TLatexFormSize(square,square,0);
-   }
-   else if (opPerp) {
-      Double_t square = GetHeight()*spec.fSize/1.4;
-      if (!fShow) {
-         fs1 = Anal1(spec,text+5,length-5);
-      } else {
-         fs1 = Analyse(x+0.5*square,y,spec,text+5,length-5);
-         Double_t x0 = x  + 0.50*square;
-         Double_t x1 = x0 - 0.48*square;
-         Double_t x2 = x0 + 0.48*square;
-         Double_t y1 = y  + 0.6*square;
-         Double_t y2 = y1 - 1.3*square;
-         DrawLine(x1,y1,x2,y1,spec);
-         DrawLine(x0,y1,x0,y2,spec);
-      }
-      result = fs1;
-   }
-   else if (opParallel) {
-      Double_t square = GetHeight()*spec.fSize/1.4;
-      if (!fShow) {
-         fs1 = Anal1(spec,text+9,length-9);
-      } else {
-         fs1 = Analyse(x+0.5*square,y,spec,text+9,length-9);
-         Double_t x1 = x + 0.15*square;
-         Double_t x2 = x + 0.45*square;
-         Double_t y1 = y + 0.3*square;
-         Double_t y2 = y1- 1.3*square;
-         DrawLine(x1,y1,x1,y2,spec);
-         DrawLine(x2,y1,x2,y2,spec);
-      }
-      result = fs1 + TLatexFormSize(square,square,0);
-   }
-   else if (opGreek>-1) {
-      TextSpec_t newSpec = spec;
-      newSpec.fFont = 122;
-      char letter = 97 + opGreek;
-      Double_t yoffset = 0.; // Greek letter too low
-      if (opGreek>25) letter -= 58;
-      if (opGreek == 52) letter = '\241'; //varUpsilon
-      if (opGreek == 53) letter = '\316'; //epsilon
-      if (!fShow) {
-         fs1 = Anal1(newSpec,&letter,1);
-         fs2 = Anal1(spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
-         Savefs(&fs1);
-      } else {
-         fs1 = Readfs();
-         Analyse(x+fs1.Width(),y,spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
-         Analyse(x,y-yoffset,newSpec,&letter,1);
-      }
-      fs1.AddOver(TLatexFormSize(0,yoffset,0)) ;
-      result = fs1+fs2;
-   }
-
-   else if (opSpec>-1) {
+   else if ((opSpec>-1) && ((opSpec == 66) || (opSpec == 79))) { // special character found, either #sum or #int
       TextSpec_t newSpec = spec;
       newSpec.fFont = 122;
       char letter = '\243' + opSpec;
-      if(opSpec == 75 || opSpec == 76) {
-         newSpec.fFont = GetTextFont();
-         if (opSpec == 75) letter = '\305'; // AA Angstroem
-         if (opSpec == 76) letter = '\345'; // aa Angstroem
-      }
-      Double_t props, propi;
-      props = 1.8 ; // scale factor for #sum(66)
-      propi = 2.3 ; // scale factor for  #int(79)
-
-      if (opSpec==66 ) {
-         newSpec.fSize = spec.fSize*props;
-      } else if (opSpec==79) {
-         newSpec.fSize = spec.fSize*propi;
-      }
+      if (opSpec==66) newSpec.fSize = spec.fSize*1.8; // scaling for #sum
+      if (opSpec==79) newSpec.fSize = spec.fSize*2.3; // scaling for #int
       if (!fShow) {
          fs1 = Anal1(newSpec,&letter,1);
-         if (opSpec == 79 || opSpec == 66)
-            fs1.Set(fs1.Width(),fs1.Over()*0.45,fs1.Over()*0.45);
-
+         fs1.Set(fs1.Width(),fs1.Over()*0.45,fs1.Over()*0.45);
          fs2 = Anal1(spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
          Savefs(&fs1);
+         Savefs(&fs2);
       } else {
+         fs2 = Readfs();
          fs1 = Readfs();
          Analyse(x+fs1.Width(),y,spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
-         if (opSpec!=66 && opSpec!=79)
-            Analyse(x,y,newSpec,&letter,1);
-         else {
-               Analyse(x,y+fs1.Under()/2.,newSpec,&letter,1);
-         }
+         Analyse(x,y+fs1.Under()/2.,newSpec,&letter,1);
       }
       result = fs1+fs2;
    }
@@ -1431,7 +1439,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       } else {
          Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
-   } 
+   }
    else { // no operators found, it is a character string
       SetTextSize(spec.fSize);
       SetTextAngle(spec.fAngle);
