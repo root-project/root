@@ -910,7 +910,7 @@ void GlobusGetDetails(Int_t localEnv, Int_t opt, TString &details)
       // User defaults
       if (strlen(TAuthenticate::GetDefaultUser()) > 0) {
          TString dets = TAuthenticate::GetDefaultUser();
-         TString t = 0;
+         TString t;
          Int_t from = 0;
          while (dets.Tokenize(t,from," ")) {
             if (t.BeginsWith("cd:"))
@@ -936,7 +936,7 @@ void GlobusGetDetails(Int_t localEnv, Int_t opt, TString &details)
             // get rid of \n
             indet.Remove(TString::kTrailing, '\n');
             if (indet.Length() > 0) {
-               TString t = 0;
+               TString t;
                Int_t from = 0;
                while (indet.Tokenize(t,from," ")) {
                   if (t.BeginsWith("cd:"))
