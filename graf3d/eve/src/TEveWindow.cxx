@@ -736,7 +736,7 @@ void TEveWindow::PreUndock()
 //______________________________________________________________________________
 void TEveWindow::PostDock()
 {
-   // Virtual function called before a window is undocked.
+   // Virtual function called after a window is docked.
 
    for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {

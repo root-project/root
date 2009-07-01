@@ -86,13 +86,13 @@ void TEveViewer::PreUndock()
 //______________________________________________________________________________
 void TEveViewer::PostDock()
 {
-   // Virtual function called before a window is undocked.
+   // Virtual function called after a window is docked.
    // On mac we have to force recreation of gl-context.
 
 #ifdef R__MACOSX
    fGLViewer->CreateGLWidget();
 #endif
-   TEveWindowFrame::PreUndock();
+   TEveWindowFrame::PostDock();
 }
 
 /******************************************************************************/
