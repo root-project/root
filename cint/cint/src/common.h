@@ -43,6 +43,8 @@
 #include "G__ci.h"
 
 #ifdef __cplusplus
+#include <set>
+#include <map>
 extern "C"
 #else
 extern 
@@ -1331,6 +1333,49 @@ struct G__var_array {
 
 #ifdef __cplusplus
 
+class NameMap {
+public:
+   class Range {
+   public:
+      Range(): fFirst(-1), fLast(-1) {}
+      Range(const std::set<int>& s): fFirst(*s.begin()), fLast(*s.rbegin()) {}
+      int First() const { return fFirst; }
+      int Last() const { return fLast; }
+      bool Empty() const { return fFirst == -1; }
+      operator bool() const { return fFirst != -1; }
+   private:
+      int fFirst;
+      int fLast;
+   };
+
+   NameMap() {}
+   void Insert(const char* name, int idx) { fMap[name].insert(idx); }
+   void Remove(const char* name, int idx) {
+      NameMap_t::iterator iMap = fMap.find(name);
+      if (iMap != fMap.end()) {
+         iMap->second.erase(idx);
+         if (iMap->second.empty())
+            fMap.erase(iMap);
+      }
+   }
+   Range Find(const char* name) {
+      NameMap_t::const_iterator iMap = fMap.find(name);
+      if (iMap != fMap.end() && !iMap->second.empty())
+         return Range(iMap->second);
+      return Range();
+   }
+   
+private:
+   struct G__charptr_less {
+      bool operator() (const char* a, const char* b) const {
+         return !a || (b && (strcmp(a, b) < 0));
+      }
+   };
+
+   typedef std::map<const char*, std::set<int>, G__charptr_less> NameMap_t;
+   NameMap_t fMap;
+};
+
 struct G__tagtable {
   /* tag entry information */
   char type[G__MAXSTRUCT]; /* struct,union,enum,class */
@@ -1380,9 +1425,10 @@ struct G__tagtable {
   char* libname[G__MAXSTRUCT];
   void* vtable[G__MAXSTRUCT];
   /* short vtabledepth[G__MAXSTRUCT]; */
+  NameMap* namerange;
 };
 
-#else /* ifdef __cpluspluc */
+#else /* ifdef __cplusplus */
 
 struct G__tagtable;
 
@@ -1413,6 +1459,11 @@ struct G__typedef {
 #endif
   int alltype;
   G__SIGNEDCHAR_T isconst[G__MAXTYPEDEF];
+#ifdef __cplusplus
+  NameMap* namerange;
+#else
+  void* namerange;
+#endif
 };
 
 /**************************************************************************
