@@ -421,15 +421,26 @@ void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& li)
    TList allClasses;
    allClasses.Add(cl);
    
-   for(TObjLink* lnk=allClasses.FirstLink();
-       lnk; lnk=lnk->Next()){
-      cl=(TClass*)lnk->GetObject();
-      TList* bases=cl->GetListOfBases();
-      TBaseClass* base;
-      TIter iB(bases);
-      while ((base=(TBaseClass*)iB())) {
-         TClass* bc=base->GetClassPointer();
-         if (bc) allClasses.Add(bc);
+   if (cl->IsLoaded()) {
+      for(TObjLink* lnk=allClasses.FirstLink();
+          lnk; lnk=lnk->Next()) {
+         cl=(TClass*)lnk->GetObject();
+         TList* bases=cl->GetListOfBases();
+         TBaseClass* base;
+         TIter iB(bases);
+         while ((base=(TBaseClass*)iB())) {
+            TClass* bc=base->GetClassPointer();
+            if (bc) allClasses.Add(bc);
+         }
+      }
+   } else {
+      TVirtualStreamerInfo *info = cl->GetStreamerInfo();
+      for(int el = 0; el < info->GetElements()->GetEntries(); ++el) {
+         TStreamerElement *element = (TStreamerElement *)info->GetElements()->UncheckedAt(el);
+         if (element->IsBase()) {
+            TClass *bc = element->GetClassPointer();
+            if (bc) allClasses.Add(bc);
+         }
       }
    }
 
