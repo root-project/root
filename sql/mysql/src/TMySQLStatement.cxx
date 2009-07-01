@@ -335,8 +335,8 @@ const char* TMySQLStatement::ConvertToString(Int_t npar)
 
    switch(fBind[npar].buffer_type) {
       case MYSQL_TYPE_LONG:
-         if (sig) snprintf(buf,100,"%ld",*((long*) addr));
-             else snprintf(buf,100,"%lu",*((unsigned long*) addr));
+         if (sig) snprintf(buf,100,"%d",*((int*) addr));
+             else snprintf(buf,100,"%u",*((unsigned int*) addr));
          break;
       case MYSQL_TYPE_LONGLONG:
          if (sig) snprintf(buf,100,"%lld",*((long long*) addr)); else
