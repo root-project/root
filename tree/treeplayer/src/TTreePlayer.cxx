@@ -3528,10 +3528,29 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    Long64_t nent = fTree->GetEntriesFriend();
    fTree->SetEstimate(TMath::Min(nent,nentries));
 
-   Long64_t nsel = DrawSelect(varexp, selection, "goff para", nentries, firstentry);
+   // build FitOptions
+   TString opt = option;
+   opt.ToUpper();
+   Foption_t fitOption;
+   if (opt.Contains("Q")) fitOption.Quiet   = 1;
+   if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
+   if (opt.Contains("E")) fitOption.Errors  = 1;
+   if (opt.Contains("M")) fitOption.More    = 1;
+   if (!opt.Contains("D")) fitOption.Nograph    = 1;  // what about 0
+   // could add range and automatic normalization of functions and gradient
 
+   TString drawOpt = "goff para";
+   if (!fitOption.Nograph) drawOpt = "";
+   Long64_t nsel = DrawSelect(varexp, selection,drawOpt, nentries, firstentry);
+
+   if (!fitOption.Nograph  && GetSelectedRows() <= 0 && GetDimension() > 4) { 
+      Info("UnbinnedFit","Ignore option D with more than 4 variables");
+      nsel = DrawSelect(varexp, selection,"goff para", nentries, firstentry);
+   }
+   
    //if no selected entries return
    Long64_t nrows = GetSelectedRows();
+
    if (nrows <= 0) {
       Error("UnbinnedFit", "Cannot fit: no entries selected");
       return -1;
@@ -3551,16 +3570,6 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    // fill the data 
    ROOT::Fit::UnBinData * fitdata = new ROOT::Fit::UnBinData(nrows, ndim, vlist.begin());
 
-   // build FitOptions
-   TString opt = option;
-   opt.ToUpper();
-   Foption_t fitOption;
-   if (opt.Contains("Q")) fitOption.Quiet   = 1;
-   if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
-   if (opt.Contains("E")) fitOption.Errors  = 1;
-   if (opt.Contains("M")) fitOption.More    = 1;
-   if (!opt.Contains("D")) fitOption.Nograph    = 1;  // what about 0
-   // could add range and automatic normalization of functions and gradient
    
 
    ROOT::Math::MinimizerOptions minOption;
@@ -3572,7 +3581,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    //if option "D" is specified, draw the projected histogram
    //with the fitted function normalized to the number of selected rows
    //and multiplied by the bin width
-   if (!fitOption.Nograph) {
+   if (!fitOption.Nograph && fHistogram) {
       if (fHistogram->GetDimension() < 2) {
          TH1 *hf = (TH1*)fHistogram->Clone("unbinnedFit");
          hf->SetLineWidth(3);
