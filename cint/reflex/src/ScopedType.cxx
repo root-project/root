@@ -10,19 +10,19 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "ScopedType.h"
 
 //-------------------------------------------------------------------------------
-Reflex::ScopedType::ScopedType( const char * name, size_t size,
-                                TYPE typeType, const std::type_info & ti,
-                                const Type& finalType, unsigned int modifiers,
-                                REPRESTYPE represType)
+Reflex::ScopedType::ScopedType(const char* name, size_t size,
+                               TYPE typeType, const std::type_info& ti,
+                               const Type& finalType, unsigned int modifiers,
+                               REPRESTYPE represType)
 //-------------------------------------------------------------------------------
 // Construct the dictionary information for an enum
-   : TypeBase( name, size, typeType, ti, finalType, represType ),
-     ScopeBase( name, typeType),
-     fModifiers(modifiers)
-     {}
+   : TypeBase(name, size, typeType, ti, finalType, represType),
+   ScopeBase(name, typeType),
+   fModifiers(modifiers) {
+}

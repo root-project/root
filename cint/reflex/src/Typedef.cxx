@@ -10,7 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "Typedef.h"
@@ -19,19 +19,23 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-Reflex::Typedef::Typedef( const char * typ,
-                                const Type & typedefType,
-                                TYPE typeTyp,
-                                const Type & finalType,
-                                REPRESTYPE represType )
+Reflex::Typedef::Typedef(const char* typ,
+                         const Type& typedefType,
+                         TYPE typeTyp,
+                         const Type& finalType,
+                         REPRESTYPE represType)
 //-------------------------------------------------------------------------------
-      : TypeBase(typ, typedefType.SizeOf(), typeTyp, typeid(UnknownType), finalType, represType ? represType : (REPRESTYPE)(((typedefType.RepresType() == 'y') && typ && strchr(typ, '(')) ? (REPRESTYPE)'1' : typedefType.RepresType())), fTypedefType(typedefType)
-{ 
+   : TypeBase(typ, typedefType.SizeOf(), typeTyp, typeid(UnknownType), finalType, represType ? represType: (REPRESTYPE)(((typedefType.RepresType() == 'y') && typ && strchr(typ, '(')) ? (REPRESTYPE) '1': typedefType.RepresType())), fTypedefType(typedefType) {
    // Construct typedef info.
 
    Type current = typedefType;
-   while ( current.IsTypedef() ) current = current.ToType();
-   if ( current.TypeInfo() != typeid(UnknownType)) fTypeInfo = & current.TypeInfo();
+
+   while (current.IsTypedef())
+      current = current.ToType();
+
+   if (current.TypeInfo() != typeid(UnknownType)) {
+      fTypeInfo = &current.TypeInfo();
+   }
 }
 
 

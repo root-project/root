@@ -10,20 +10,20 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "Reflex/Base.h"
 #include "Class.h"
 
 //-------------------------------------------------------------------------------
-Reflex::Base::Base( const Type &    baseType,
-                          OffsetFunction  offsetfp,
-                          unsigned int    modifiers )
-   : fOffsetFP( offsetfp ),
-     fModifiers( modifiers ),
-     fBaseType( Type() ),
-     fBaseClass( 0 ) {
+Reflex::Base::Base(const Type& baseType,
+                   OffsetFunction offsetfp,
+                   unsigned int modifiers):
+   fOffsetFP(offsetfp),
+   fModifiers(modifiers),
+   fBaseType(Type()),
+   fBaseClass(0) {
 //-------------------------------------------------------------------------------
 // Construct the information for a base. The pointer to the base class (type Class)
 // is set to 0 initially and set on first access.
@@ -32,12 +32,16 @@ Reflex::Base::Base( const Type &    baseType,
 
 
 //-------------------------------------------------------------------------------
-const Reflex::Class * Reflex::Base::BaseClass() const {
+const Reflex::Class*
+Reflex::Base::BaseClass() const {
 //-------------------------------------------------------------------------------
 // Return the pointer to the base class. Set on first access.
-   if ( fBaseClass ) return fBaseClass;
-   if ( fBaseType ) {
-      fBaseClass = dynamic_cast< const Class * >(fBaseType.ToTypeBase());
+   if (fBaseClass) {
+      return fBaseClass;
+   }
+
+   if (fBaseType) {
+      fBaseClass = dynamic_cast<const Class*>(fBaseType.ToTypeBase());
       return fBaseClass;
    }
    return 0;
@@ -45,16 +49,29 @@ const Reflex::Class * Reflex::Base::BaseClass() const {
 
 
 //-------------------------------------------------------------------------------
-std::string Reflex::Base::Name( unsigned int mod ) const {
+std::string
+Reflex::Base::Name(unsigned int mod) const {
 //-------------------------------------------------------------------------------
 // Construct the name of the base. Qualify if requested.
    std::string s;
-   if ( 0 != ( mod & ( QUALIFIED | Q ))) {
-      if ( IsPublic())    { s += "public "; }
-      if ( IsProtected()) { s += "protected "; }
-      if ( IsPrivate())   { s += "private "; }
-      if ( IsVirtual())   { s += "virtual "; }
+
+   if (0 != (mod & (QUALIFIED | Q))) {
+      if (IsPublic()) {
+         s += "public ";
+      }
+
+      if (IsProtected()) {
+         s += "protected ";
+      }
+
+      if (IsPrivate()) {
+         s += "private ";
+      }
+
+      if (IsVirtual()) {
+         s += "virtual ";
+      }
    }
-   s += fBaseType.Name( mod );
+   s += fBaseType.Name(mod);
    return s;
-}
+} // Name

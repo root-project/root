@@ -10,7 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "Enum.h"
@@ -23,13 +23,13 @@
 
 
 //-------------------------------------------------------------------------------
-Reflex::Enum::Enum( const char * enumType,
-                    const std::type_info & ti,
-                    unsigned int modifiers )
+Reflex::Enum::Enum(const char* enumType,
+                   const std::type_info& ti,
+                   unsigned int modifiers)
 //-------------------------------------------------------------------------------
 // Construct the dictionary information for an enum
-   : ScopedType( enumType, sizeof(int), ENUM, ti, Type(),modifiers, REPRES_ENUM )
-     {}
+   : ScopedType(enumType, sizeof(int), ENUM, ti, Type(), modifiers, REPRES_ENUM) {
+}
 
 
 //-------------------------------------------------------------------------------
@@ -39,35 +39,41 @@ Reflex::Enum::~Enum() {
 }
 
 
-
-
 //-------------------------------------------------------------------------------
-void Reflex::Enum::GenerateDict( DictionaryGenerator & generator ) const {
+void
+Reflex::Enum::GenerateDict(DictionaryGenerator& generator) const {
 //-------------------------------------------------------------------------------
 // Generate Dictionary information about itself.
-         
-   size_t lastMember = DataMemberSize()-1;
 
-   if( !(DeclaringScope().IsNamespace()) ) {  
+   size_t lastMember = DataMemberSize() - 1;
 
+   if (!(DeclaringScope().IsNamespace())) {
       generator.AddIntoFree("\n.AddEnum(\"" + Name() + "\", \"");
 
-      for ( size_t i = 0; i < DataMemberSize(); ++i ) {
+      for (size_t i = 0; i < DataMemberSize(); ++i) {
          DataMemberAt(i).GenerateDict(generator);
-         if ( i < lastMember ) generator.AddIntoFree(";");
+
+         if (i < lastMember) {
+            generator.AddIntoFree(";");
+         }
       }
 
       generator.AddIntoFree("\",");
-      if      ( IsPublic())    generator.AddIntoFree("typeid(" + Name(SCOPED) + "), PUBLIC)");
-      else if ( IsProtected()) generator.AddIntoFree("typeid(Reflex::ProtectedEnum), PROTECTED)");
-      else if ( IsPrivate())   generator.AddIntoFree("typeid(Reflex::PrivateEnum), PRIVATE)");
-   }
-   else {
 
+      if (IsPublic()) {
+         generator.AddIntoFree("typeid(" + Name(SCOPED) + "), PUBLIC)");
+      } else if (IsProtected()) {
+         generator.AddIntoFree("typeid(Reflex::ProtectedEnum), PROTECTED)");
+      } else if (IsPrivate()) {
+         generator.AddIntoFree("typeid(Reflex::PrivateEnum), PRIVATE)");
+      }
+   } else {
       generator.AddIntoInstances("      EnumBuilder(\"" + Name(SCOPED) + "\", typeid(" + Name(SCOPED) + "), PUBLIC)");
-      for ( size_t i = 0; i < DataMemberSize(); ++i ) DataMemberAt(i).GenerateDict(generator);
+
+      for (size_t i = 0; i < DataMemberSize(); ++i) {
+         DataMemberAt(i).GenerateDict(generator);
+      }
       generator.AddIntoInstances(";\n");
 
-   }   
-}
-
+   }
+} // GenerateDict

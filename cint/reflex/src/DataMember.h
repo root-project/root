@@ -16,84 +16,83 @@
 #include "Reflex/internal/MemberBase.h"
 
 namespace Reflex {
+// forward declarations
+class TypeBase;
+class Type;
+class DictionaryGenerator;
 
-   // forward declarations
-   class TypeBase;
-   class Type;
-   class DictionaryGenerator;
+
+/**
+ * @class DataMember DataMember.h Reflex/DataMember.h
+ * @author Stefan Roiser
+ * @date 24/11/2003
+ * @ingroup Ref
+ */
+class DataMember: public MemberBase {
+public:
+   /** default constructor */
+   DataMember(const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0, char* interpreterOffset = 0);
+
+
+   /** destructor */
+   virtual ~DataMember();
+
+
+   /** return Name of data MemberAt */
+   std::string Name(unsigned int mod = 0) const;
+
+
+   /** Get the MemberAt value (as void*) */
+   Object Get(const Object& obj) const;
 
 
    /**
-   * @class DataMember DataMember.h Reflex/DataMember.h
-   * @author Stefan Roiser
-   * @date 24/11/2003
-   * @ingroup Ref
-   */
-   class DataMember : public MemberBase {
-
-   public:
-
-      /** default constructor */
-      DataMember(const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0, char* interpreterOffset = 0);
+    * GenerateDict will produce the dictionary information of this type
+    * @param generator a reference to the dictionary generator instance
+    */
+   virtual void GenerateDict(DictionaryGenerator& generator) const;
 
 
-      /** destructor */
-      virtual ~DataMember();
+   /** return the Offset of the MemberAt */
+   size_t Offset() const;
+   void InterpreterOffset(char*);
+   char*& InterpreterOffset() const;
 
 
-      /** return Name of data MemberAt */
-      std::string Name( unsigned int mod = 0 ) const;
+   /** Set the MemberAt value */
 
-
-      /** Get the MemberAt value (as void*) */
-      Object Get( const Object & obj ) const;
-
-
-      /**
-      * GenerateDict will produce the dictionary information of this type
-      * @param generator a reference to the dictionary generator instance
-      */
-      virtual void GenerateDict(DictionaryGenerator &generator) const;
-
-
-      /** return the Offset of the MemberAt */
-      size_t Offset() const;
-      void InterpreterOffset(char*);
-      char*& InterpreterOffset() const;
-
-
-      /** Set the MemberAt value */
-      /*void Set( const Object & instance,
+   /*void Set( const Object & instance,
       const Object & value ) const;*/
-      void Set( const Object & instance,
-         const void * value ) const;
+   void Set(const Object& instance,
+            const void* value) const;
 
-   private:
+private:
+   /** Offset of the MemberAt */
+   size_t fOffset;
+   char* fInterpreterOffset;
 
-      /** Offset of the MemberAt */
-      size_t fOffset;
-      char* fInterpreterOffset;
-
-   }; // class DataMember
+};    // class DataMember
 } //namespace Reflex
 
 
-inline size_t Reflex::DataMember::Offset() const
-{
+inline size_t
+Reflex::DataMember::Offset() const {
    return fOffset;
 }
 
-inline void Reflex::DataMember::InterpreterOffset(char* offset)
-{
+
+inline void
+Reflex::DataMember::InterpreterOffset(char* offset) {
    //fOffset = reinterpret_cast<size_t>(offset);
    fInterpreterOffset = offset;
 }
 
-inline char*& Reflex::DataMember::InterpreterOffset() const
-{
+
+inline char*&
+Reflex::DataMember::InterpreterOffset() const {
    //return *reinterpret_cast<char**>(const_cast<size_t*>(&fOffset));
    return *const_cast<char**>(&fInterpreterOffset);
 }
 
-#endif // Reflex_DataMember
 
+#endif // Reflex_DataMember

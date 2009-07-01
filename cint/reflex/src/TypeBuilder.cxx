@@ -10,7 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "Reflex/Builder/TypeBuilder.h"
@@ -28,1058 +28,1199 @@
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::TypeBuilder( const char * n, 
-                                              unsigned int modifiers ) {
+Reflex::Type
+Reflex::TypeBuilder(const char* n,
+                    unsigned int modifiers) {
 //-------------------------------------------------------------------------------
 // Construct the type information for a type.
    Reflex::Instance initialize_reflex;
-   const Type & ret = Type::ByName(n);
-   if ( ret.Id() ) return Type(ret, modifiers);
-   else {
+   const Type& ret = Type::ByName(n);
+
+   if (ret.Id()) {
+      return Type(ret, modifiers);
+   } else {
       TypeName* tname = new TypeName(n, 0);
       std::string sname = Tools::GetScopeName(n);
-      if ( ! Scope::ByName( sname ).Id() )  new ScopeName( sname.c_str(), 0 );
+
+      if (!Scope::ByName(sname).Id()) {
+         new ScopeName(sname.c_str(), 0);
+      }
       return Type(tname, modifiers);
    }
-}
+} // TypeBuilder
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::ConstBuilder(const Type & t) {
+Reflex::Type
+Reflex::ConstBuilder(const Type& t) {
 //-------------------------------------------------------------------------------
 // Construct a const qualified type.
    unsigned int mod = CONST;
-   if ( t.IsVolatile() ) mod |= VOLATILE;
-   return Type(t,mod);    
+
+   if (t.IsVolatile()) {
+      mod |= VOLATILE;
+   }
+   return Type(t, mod);
 }
 
+
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::VolatileBuilder(const Type & t) {
+Reflex::Type
+Reflex::VolatileBuilder(const Type& t) {
 //-------------------------------------------------------------------------------
 // Construct a volatile qualified type.
    unsigned int mod = VOLATILE;
-   if ( t.IsConst() )    mod |= CONST;
-   return Type(t,mod);    
+
+   if (t.IsConst()) {
+      mod |= CONST;
+   }
+   return Type(t, mod);
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::PointerBuilder( const Type & t,
-                                                 const std::type_info & ti ) {
+Reflex::Type
+Reflex::PointerBuilder(const Type& t,
+                       const std::type_info& ti) {
 //-------------------------------------------------------------------------------
 // Construct a pointer type.
-   const Type & ret = Type::ByName( Pointer::BuildTypeName(t));
-   if ( ret ) return ret;
-   else       return (new Pointer(t, ti))->ThisType();
+   const Type& ret = Type::ByName(Pointer::BuildTypeName(t));
+
+   if (ret) {
+      return ret;
+   } else { return (new Pointer(t, ti))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::PointerToMemberBuilder( const Type & t,
-                                                         const Scope & s,
-                                                         const std::type_info & ti ) {
+Reflex::Type
+Reflex::PointerToMemberBuilder(const Type& t,
+                               const Scope& s,
+                               const std::type_info& ti) {
 //-------------------------------------------------------------------------------
 // Construct a pointer type.
-   const Type & ret = Type::ByName( PointerToMember::BuildTypeName(t,s));
-   if ( ret ) return ret;
-   else       return (new PointerToMember(t, s, ti))->ThisType();
+   const Type& ret = Type::ByName(PointerToMember::BuildTypeName(t, s));
+
+   if (ret) {
+      return ret;
+   } else { return (new PointerToMember(t, s, ti))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::ReferenceBuilder(const Type & t) {
+Reflex::Type
+Reflex::ReferenceBuilder(const Type& t) {
 //-------------------------------------------------------------------------------
 // Construct a "reference qualified" type.
    unsigned int mod = REFERENCE;
-   if ( t.IsConst() )    mod |= CONST;
-   if ( t.IsVolatile() ) mod |= VOLATILE;
-   return Type(t,mod);    
+
+   if (t.IsConst()) {
+      mod |= CONST;
+   }
+
+   if (t.IsVolatile()) {
+      mod |= VOLATILE;
+   }
+   return Type(t, mod);
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::ArrayBuilder( const Type & t, 
-                                               size_t n,
-                                               const std::type_info & ti ) {
+Reflex::Type
+Reflex::ArrayBuilder(const Type& t,
+                     size_t n,
+                     const std::type_info& ti) {
 //-------------------------------------------------------------------------------
 // Construct an array type.
-   const Type & ret = Type::ByName(Array::BuildTypeName(t,n));
-   if ( ret ) return ret;
-   else       return (new Array(t, n, ti))->ThisType();
+   const Type& ret = Type::ByName(Array::BuildTypeName(t, n));
+
+   if (ret) {
+      return ret;
+   } else { return (new Array(t, n, ti))->ThisType(); }
 }
 
+
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::EnumTypeBuilder( const char * nam, 
-                                                  const char * values,
-                                                  const std::type_info & ti,
-                                                  unsigned int modifiers ) {
+Reflex::Type
+Reflex::EnumTypeBuilder(const char* nam,
+                        const char* values,
+                        const std::type_info& ti,
+                        unsigned int modifiers) {
 //-------------------------------------------------------------------------------
 // Construct an enum type.
 
    std::string nam2(nam);
 
-   const Type & ret = Type::ByName(nam2);
-   if ( ret ) {
-      if ( ret.IsTypedef() ) nam2 += " @HIDDEN@";
-      else return ret;
+   const Type& ret = Type::ByName(nam2);
+
+   if (ret) {
+      if (ret.IsTypedef()) {
+         nam2 += " @HIDDEN@";
+      } else { return ret; }
    }
 
-   Enum * e = new Enum(nam2.c_str(), ti, modifiers );
+   Enum* e = new Enum(nam2.c_str(), ti, modifiers);
 
    std::vector<std::string> valVec;
    Tools::StringSplit(valVec, values, ";");
 
-   const Type & int_t = Type::ByName("int");
-   for (std::vector<std::string>::const_iterator it = valVec.begin(); 
-        it != valVec.end(); ++it ) {
+   const Type& int_t = Type::ByName("int");
+
+   for (std::vector<std::string>::const_iterator it = valVec.begin();
+        it != valVec.end(); ++it) {
       std::string iname, ivalue;
       Tools::StringSplitPair(iname, ivalue, *it, "=");
       long val = atol(ivalue.c_str());
-      e->AddDataMember( iname.c_str(), int_t, val, 0);
-   }  
+      e->AddDataMember(iname.c_str(), int_t, val, 0);
+   }
    return e->ThisType();
-}
+} // EnumTypeBuilder
+
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::TypedefTypeBuilder(const char * nam, 
-                                        const Type & t,
-                                        REPRESTYPE represType) {
+Reflex::Type
+Reflex::TypedefTypeBuilder(const char* nam,
+                           const Type& t,
+                           REPRESTYPE represType) {
 //-------------------------------------------------------------------------------
 // Construct a typedef type.
    Type ret = Type::ByName(nam);
+
    // Check for typedef AA AA;
-   if ( ret == t && ! t.IsTypedef() ) 
-      if ( t ) t.ToTypeBase()->HideName();
-      else ((TypeName*)t.Id())->HideName();
+   if (ret == t && !t.IsTypedef()) {
+      if (t) {
+         t.ToTypeBase()->HideName();
+      } else { ((TypeName*) t.Id())->HideName(); }
+   }
    // We found the typedef type
-   else if ( ret ) return ret;
+   else if (ret) {
+      return ret;
+   }
    // Create a new typedef
-   return (new Typedef(nam , t, Reflex::TYPEDEF, Reflex::Dummy::Type(), represType))->ThisType();        
-}
+   return (new Typedef(nam, t, Reflex::TYPEDEF, Reflex::Dummy::Type(), represType))->ThisType();
+} // TypedefTypeBuilder
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder( const Type & r,
-                                          const std::vector<Type> & p,
-                                          const std::type_info & ti ) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const std::vector<Type>& p,
+                            const std::type_info& ti) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,p));
-   if ( ret && ret.TypeInfo() == ti ) {
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, p));
+
+   if (ret && ret.TypeInfo() == ti) {
       return ret;
    } else {
-      return (new Function( r, p, ti))->ThisType();
+      return (new Function(r, p, ti))->ThisType();
    }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
-   std::vector< Type > v;
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   std::vector<Type> v;
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
- 
+
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
- 
+
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
- 
+
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
-   std::vector< Type > v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12);
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
- 
+
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14) {
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
- 
+
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21,
-                                                     const Type & t22) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21,
+                            const Type& t22) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21,
-                                                     const Type & t22,
-                                                     const Type & t23) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21,
+                            const Type& t22,
+                            const Type& t23) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21,
-                                                     const Type & t22,
-                                                     const Type & t23,
-                                                     const Type & t24) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21,
+                            const Type& t22,
+                            const Type& t23,
+                            const Type& t24) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21,
-                                                     const Type & t22,
-                                                     const Type & t23,
-                                                     const Type & t24,
-                                                     const Type & t25) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21,
+                            const Type& t22,
+                            const Type& t23,
+                            const Type& t24,
+                            const Type& t25) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21,
-                                                     const Type & t22,
-                                                     const Type & t23,
-                                                     const Type & t24,
-                                                     const Type & t25,
-                                                     const Type & t26) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21,
+                            const Type& t22,
+                            const Type& t23,
+                            const Type& t24,
+                            const Type& t25,
+                            const Type& t26) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21,
-                                                     const Type & t22,
-                                                     const Type & t23,
-                                                     const Type & t24,
-                                                     const Type & t25,
-                                                     const Type & t26,
-                                                     const Type & t27) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21,
+                            const Type& t22,
+                            const Type& t23,
+                            const Type& t24,
+                            const Type& t25,
+                            const Type& t26,
+                            const Type& t27) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21,
-                                                     const Type & t22,
-                                                     const Type & t23,
-                                                     const Type & t24,
-                                                     const Type & t25,
-                                                     const Type & t26,
-                                                     const Type & t27,
-                                                     const Type & t28) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21,
+                            const Type& t22,
+                            const Type& t23,
+                            const Type& t24,
+                            const Type& t25,
+                            const Type& t26,
+                            const Type& t27,
+                            const Type& t28) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21,
-                                                     const Type & t22,
-                                                     const Type & t23,
-                                                     const Type & t24,
-                                                     const Type & t25,
-                                                     const Type & t26,
-                                                     const Type & t27,
-                                                     const Type & t28,
-                                                     const Type & t29) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21,
+                            const Type& t22,
+                            const Type& t23,
+                            const Type& t24,
+                            const Type& t25,
+                            const Type& t26,
+                            const Type& t27,
+                            const Type& t28,
+                            const Type& t29) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21,
-                                                     const Type & t22,
-                                                     const Type & t23,
-                                                     const Type & t24,
-                                                     const Type & t25,
-                                                     const Type & t26,
-                                                     const Type & t27,
-                                                     const Type & t28,
-                                                     const Type & t29,
-                                                     const Type & t30) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21,
+                            const Type& t22,
+                            const Type& t23,
+                            const Type& t24,
+                            const Type& t25,
+                            const Type& t26,
+                            const Type& t27,
+                            const Type& t28,
+                            const Type& t29,
+                            const Type& t30) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29,
                                            t30);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
-                                                     const Type & t0, 
-                                                     const Type & t1,
-                                                     const Type & t2,
-                                                     const Type & t3,
-                                                     const Type & t4,
-                                                     const Type & t5,
-                                                     const Type & t6,
-                                                     const Type & t7,
-                                                     const Type & t8,
-                                                     const Type & t9,
-                                                     const Type & t10,
-                                                     const Type & t11,
-                                                     const Type & t12,
-                                                     const Type & t13,
-                                                     const Type & t14,
-                                                     const Type & t15,
-                                                     const Type & t16,
-                                                     const Type & t17,
-                                                     const Type & t18,
-                                                     const Type & t19,
-                                                     const Type & t20,
-                                                     const Type & t21,
-                                                     const Type & t22,
-                                                     const Type & t23,
-                                                     const Type & t24,
-                                                     const Type & t25,
-                                                     const Type & t26,
-                                                     const Type & t27,
-                                                     const Type & t28,
-                                                     const Type & t29,
-                                                     const Type & t30,
-                                                     const Type & t31) { 
+Reflex::Type
+Reflex::FunctionTypeBuilder(const Type& r,
+                            const Type& t0,
+                            const Type& t1,
+                            const Type& t2,
+                            const Type& t3,
+                            const Type& t4,
+                            const Type& t5,
+                            const Type& t6,
+                            const Type& t7,
+                            const Type& t8,
+                            const Type& t9,
+                            const Type& t10,
+                            const Type& t11,
+                            const Type& t12,
+                            const Type& t13,
+                            const Type& t14,
+                            const Type& t15,
+                            const Type& t16,
+                            const Type& t17,
+                            const Type& t18,
+                            const Type& t19,
+                            const Type& t20,
+                            const Type& t21,
+                            const Type& t22,
+                            const Type& t23,
+                            const Type& t24,
+                            const Type& t25,
+                            const Type& t26,
+                            const Type& t27,
+                            const Type& t28,
+                            const Type& t29,
+                            const Type& t30,
+                            const Type& t31) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector<Type> v = Tools::MakeVector(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
                                            t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29,
                                            t30, t31);
-   const Type & ret = Type::ByName(Function::BuildTypeName(r,v));
-   if ( ret ) return ret;
-   else       return (new Function(r, v, typeid(UnknownType)))->ThisType();
+   const Type& ret = Type::ByName(Function::BuildTypeName(r, v));
+
+   if (ret) {
+      return ret;
+   } else { return (new Function(r, v, typeid(UnknownType)))->ThisType(); }
 }
-
-
-

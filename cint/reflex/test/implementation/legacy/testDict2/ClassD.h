@@ -3,14 +3,20 @@
 
 #include "ClassB.h"
 
-class ClassD : virtual public ClassB {
- public:
-  ClassD() : fD('d') {}
-  virtual ~ClassD() {}
-  int d() { return fD; }
-  void setD(int v) { fD = v; }
- private:
-  int fD;
+class ClassD: virtual public ClassB {
+public:
+   ClassD(): fD('d') {}
+
+   virtual ~ClassD() {}
+
+   int
+   d() { return fD; }
+
+   void
+   setD(int v) { fD = v; }
+
+private:
+   int fD;
 };
 
 

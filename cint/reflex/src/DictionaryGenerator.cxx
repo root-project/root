@@ -10,7 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 
@@ -23,11 +23,11 @@
 #include "Class.h"
 
 // For adding the XML parser
-//#include "TDOMParser.h"   
+//#include "TDOMParser.h"
 //#include "TXMLNode.h"
 
 // USAGE:
-// 
+//
 // 1. Create a new generator                        :  Dictgen generator
 // 2. Set recursive parsing, optional (default:on)  :  generator.Use_recursive(true/false)
 // 3. Set selection file,    optional               :  generator.Use_selection("filename")
@@ -39,8 +39,9 @@
 using namespace std;
 
 //-------------------------------------------------------------------------------
-std::ostream & Reflex::operator << ( std::ostream & s,
-                                           const Reflex::DictionaryGenerator & obj ) {
+std::ostream&
+Reflex::operator <<(std::ostream& s,
+                    const Reflex::DictionaryGenerator& obj) {
 //-------------------------------------------------------------------------------
 
    time_t rawtime;
@@ -51,8 +52,8 @@ std::ostream & Reflex::operator << ( std::ostream & s,
    s << "#include <typeinfo>" << endl;
    s << "using namespace Reflex;" << endl << endl;
    s << obj.fStr_header.str();
-   
-   s <<"namespace {" << endl;
+
+   s << "namespace {" << endl;
    s << obj.fStr_namespaces.str();
    s << "}" << endl << endl;
 
@@ -60,7 +61,7 @@ std::ostream & Reflex::operator << ( std::ostream & s,
    s << "namespace __shadow__ {" << endl;
    s << obj.fStr_shadow.str() << endl;
    s << "}" << endl << endl;
-   
+
    s << "// ---------------------- Stub functions -----------------------------------" << endl;
    s << "namespace {" << endl;
    s << obj.fStr_classes.str();
@@ -69,7 +70,7 @@ std::ostream & Reflex::operator << ( std::ostream & s,
    s << "// -------------------- Class dictionaries ---------------------------------" << endl;
    s << obj.fStr_frees.str();
 
-   s << "// --------------------- Dictionary instances ------------------------------" << endl; 
+   s << "// --------------------- Dictionary instances ------------------------------" << endl;
    s << "namespace {" << endl;
    s << "  struct Dictionaries {" << endl;
    s << "    Dictionaries() {" << endl;
@@ -85,16 +86,17 @@ std::ostream & Reflex::operator << ( std::ostream & s,
 
    return s;
 
-}
-
+} // <<
 
 
 //-------------------------------------------------------------------------------
-std::string Reflex::DictionaryGenerator::Replace_colon(std::string scoped_name) {
+std::string
+Reflex::DictionaryGenerator::Replace_colon(std::string scoped_name) {
 //-------------------------------------------------------------------------------
 // Replaces :: with __ , in a string
    std::string lname = scoped_name;
-   for( unsigned i=0; i<lname.size(); ++i) {
+
+   for (unsigned i = 0; i < lname.size(); ++i) {
       switch (lname[i]) {
       case '<':
       case '>':
@@ -113,18 +115,19 @@ std::string Reflex::DictionaryGenerator::Replace_colon(std::string scoped_name) 
       }
    }
    return lname;
-}
+} // Replace_colon
 
 
 //-------------------------------------------------------------------------------
-bool Reflex::DictionaryGenerator::Use_selection(const std::string & filename) {
+bool
+Reflex::DictionaryGenerator::Use_selection(const std::string& filename) {
 //-------------------------------------------------------------------------------
 // User defined selection file for classes to include
    std::ifstream infile;
 
    if (filename != "") {
-
       infile.open(filename.c_str());
+
       if (!infile.is_open()) {
          std::cout << "Error: Selection file not found!\n";
          infile.clear();
@@ -136,7 +139,6 @@ bool Reflex::DictionaryGenerator::Use_selection(const std::string & filename) {
 
       while (getline(infile, line)) {
          if (line.find("class name") != std::string::npos) {
-
             size_t start = line.find("\"");
             size_t end = line.rfind("\"/>");
             // cut the class name out of string
@@ -147,7 +149,6 @@ bool Reflex::DictionaryGenerator::Use_selection(const std::string & filename) {
 
          // <class pattern="Reflex::*"/>
          if (line.find("class pattern") != std::string::npos) {
-
             size_t start = line.find("=");
             size_t end = line.rfind("*");
             line = line.substr(start + 2, end - start - 2);
@@ -156,66 +157,67 @@ bool Reflex::DictionaryGenerator::Use_selection(const std::string & filename) {
          }
 
       }
-   
-      
+
+
       /*   THIS IS HOWTO USE THE EXISTING XML-PARSER IN ROOT, TESTING
 
-       TDOMParser parseri; 
-       parseri.SetValidate(kFALSE);
-  
-       if( parseri.ParseFile("/home/ahahto/root2/test_selection.xml") !=0)
-       {
-       std::cerr<< "Error: no valid lcgdict XML file.\n";
-       // return EXIT_FAILURE;
-       }
+         TDOMParser parseri;
+         parseri.SetValidate(kFALSE);
 
-       TXMLDocument *document = parseri.GetXMLDocument();
-       TXMLNode *rootnode = document->GetRootNode();
-      
-       std::string rootnodename =  rootnode->GetNodeName();
-       std::cout<<"Rootnode: ["<< rootnodename <<"]\n";
+         if( parseri.ParseFile("/home/ahahto/root2/test_selection.xml") !=0)
+         {
+         std::cerr<< "Error: no valid lcgdict XML file.\n";
+         // return EXIT_FAILURE;
+         }
 
-       if( rootnodename != "lcgdict")
-       {
-       std::cerr<< "Error: no valid lcgdict XML file.\n";
-       // return EXIT_FAILURE;
-       }
+         TXMLDocument *document = parseri.GetXMLDocument();
+         TXMLNode *rootnode = document->GetRootNode();
 
-       //  TXMLNode *childnode = node->GetChildren();
-       
-       for ( TXMLNode *childnode = rootnode->GetChildren(); childnode !=0;  childnode = childnode ->GetNextNode())
-       {  
-       std::cout<< "\n* " << childnode->GetNodeName(); 
+         std::string rootnodename =  rootnode->GetNodeName();
+         std::cout<<"Rootnode: ["<< rootnodename <<"]\n";
 
-       if(childnode !=0) 
-       {
+         if( rootnodename != "lcgdict")
+         {
+         std::cerr<< "Error: no valid lcgdict XML file.\n";
+         // return EXIT_FAILURE;
+         }
 
-       TList* lista =  childnode->GetAttributes();
-       if(lista!=0) 
-       {
-       //TObject* objekti = lista -> First();
-       for(TObject* objekti = lista -> First(); objekti !=0; objekti = lista -> After(objekti) )
-       {
-       if(objekti!=0) 
-       {
-       std::cout<< " [" << objekti ->GetName() <<"]";
-       }
-       }
-       }
-       }
+         //  TXMLNode *childnode = node->GetChildren();
 
-       }
-   */
+         for ( TXMLNode *childnode = rootnode->GetChildren(); childnode !=0;  childnode = childnode ->GetNextNode())
+         {
+         std::cout<< "\n* " << childnode->GetNodeName();
+
+         if(childnode !=0)
+         {
+
+         TList* lista =  childnode->GetAttributes();
+         if(lista!=0)
+         {
+         //TObject* objekti = lista -> First();
+         for(TObject* objekti = lista -> First(); objekti !=0; objekti = lista -> After(objekti) )
+         {
+         if(objekti!=0)
+         {
+         std::cout<< " [" << objekti ->GetName() <<"]";
+         }
+         }
+         }
+         }
+
+         }
+       */
 
 
    }
 
    return true;
-}
+} // Use_selection
 
 
 //-------------------------------------------------------------------------------
-bool Reflex::DictionaryGenerator::Use_recursive(bool recursive) {
+bool
+Reflex::DictionaryGenerator::Use_recursive(bool recursive) {
 //-------------------------------------------------------------------------------
 // Set the usage of recursive selection
 
@@ -232,7 +234,8 @@ bool Reflex::DictionaryGenerator::Use_recursive(bool recursive) {
 
 
 //-------------------------------------------------------------------------------
-bool Reflex::DictionaryGenerator::Use_recursive() {
+bool
+Reflex::DictionaryGenerator::Use_recursive() {
 //-------------------------------------------------------------------------------
 // Returns, if selected recursive selection
 
@@ -242,9 +245,11 @@ bool Reflex::DictionaryGenerator::Use_recursive() {
 
 
 //-------------------------------------------------------------------------------
-bool Reflex::DictionaryGenerator::IsNewType2(const Type & searchtype) {
+bool
+Reflex::DictionaryGenerator::IsNewType2(const Type& searchtype) {
 //-------------------------------------------------------------------------------
 // An optimized IsNewType, TESTING
+
 /*   std::list < mydata >::iterator i =
       std::find_if(types2.begin(), types2.end(),
                    MatchItemNum(searchtype));
@@ -258,18 +263,18 @@ bool Reflex::DictionaryGenerator::IsNewType2(const Type & searchtype) {
       //found
       return false;
    }
-*/
+ */
 
 // dummy return
-   
+
    return searchtype;
 
 }
 
 
-
 //-------------------------------------------------------------------------------
-bool Reflex::DictionaryGenerator::IsNewType(const Type & searchtype) {
+bool
+Reflex::DictionaryGenerator::IsNewType(const Type& searchtype) {
 //-------------------------------------------------------------------------------
 // Is the type already used somewhere
 // This is used by GetTypeNumber
@@ -296,10 +301,9 @@ bool Reflex::DictionaryGenerator::IsNewType(const Type & searchtype) {
        //found
        return false;
        }
-   */
+    */
 
    for (unsigned k = 0; k < fTypes.size(); ++k) {
-
       if (fTypes.at(k) == searchtype) {
          return false;
       }
@@ -309,12 +313,12 @@ bool Reflex::DictionaryGenerator::IsNewType(const Type & searchtype) {
 } // IsNewType
 
 
-
 //-------------------------------------------------------------------------------
-std::string Reflex::DictionaryGenerator::GetParams(const Type & membertype) {
+std::string
+Reflex::DictionaryGenerator::GetParams(const Type& membertype) {
 //-------------------------------------------------------------------------------
 // Get params for the functions
-   // Recursive, if it's a reference or a pointer
+// Recursive, if it's a reference or a pointer
    if (membertype.IsReference()) {
       GetParams(membertype.ToType());
    }
@@ -331,7 +335,6 @@ std::string Reflex::DictionaryGenerator::GetParams(const Type & membertype) {
 
       //      types2.push_back(membertype);  //TESTING
 
-
       if (!membertype.IsFunction()) {
          // adding into NS this way
          GetTypeNumber(membertype);
@@ -339,12 +342,12 @@ std::string Reflex::DictionaryGenerator::GetParams(const Type & membertype) {
    }
 
    return membertype.Name();
-}
-
+} // GetParams
 
 
 //-------------------------------------------------------------------------------
-std::string Reflex::DictionaryGenerator::GetTypeNumber(const Type & membertype) {
+std::string
+Reflex::DictionaryGenerator::GetTypeNumber(const Type& membertype) {
 //-------------------------------------------------------------------------------
 // If a type is registered (eg.used) before,
 // it has an unique ID-number returned as a string
@@ -362,7 +365,6 @@ std::string Reflex::DictionaryGenerator::GetTypeNumber(const Type & membertype) 
 
    // get number
    for (unsigned k = 0; k < fTypes.size(); ++k) {
-
       if (fTypes.at(k) == membertype) {
          numberstr << k;
       }
@@ -375,15 +377,16 @@ std::string Reflex::DictionaryGenerator::GetTypeNumber(const Type & membertype) 
    }
 
    return numberstr.str();
-}
+} // GetTypeNumber
+
 
 // GetTypeNumber
 
 
-
 //-------------------------------------------------------------------------------
-void Reflex::DictionaryGenerator::AddIntoNS( const std::string & typenumber,
-                                                   const Type & membertype ) {
+void
+Reflex::DictionaryGenerator::AddIntoNS(const std::string& typenumber,
+                                       const Type& membertype) {
 //-------------------------------------------------------------------------------
 // Namespaces field of the generated file
 
@@ -407,48 +410,40 @@ void Reflex::DictionaryGenerator::AddIntoNS( const std::string & typenumber,
    // if type is also a const, add that extra line
    // No references are supported by the original genreflex.py for datamembers!
    if (membertype.IsReference()) {
-      if (membertype.IsConst())     mod |= CONST;
-      if (membertype.IsVolatile())  mod |= VOLATILE;
-      
-      fStr_namespaces << "Type type_" + typenumber + " = ReferenceBuilder(type_" +
-         GetTypeNumber(Type(membertype, mod)) + ");\n";
-   }
+      if (membertype.IsConst()) {
+         mod |= CONST;
+      }
 
-   else if (membertype.IsConst()) {
-      if (membertype.IsVolatile())   mod |= VOLATILE;
+      if (membertype.IsVolatile()) {
+         mod |= VOLATILE;
+      }
+
+      fStr_namespaces << "Type type_" + typenumber + " = ReferenceBuilder(type_" +
+      GetTypeNumber(Type(membertype, mod)) + ");\n";
+   } else if (membertype.IsConst()) {
+      if (membertype.IsVolatile()) {
+         mod |= VOLATILE;
+      }
 
       fStr_namespaces << "Type type_" + typenumber +
-         " = ConstBuilder(type_" + GetTypeNumber(Type(membertype, mod)) + ");\n";
+      " = ConstBuilder(type_" + GetTypeNumber(Type(membertype, mod)) + ");\n";
 
-   }
-
-
-   else if (membertype.IsVolatile()) {
-
+   } else if (membertype.IsVolatile()) {
       fStr_namespaces << "Type type_" + typenumber + " = VolatileBuilder(type_" +
-         GetTypeNumber(Type(membertype, mod)) + ");\n";
+      GetTypeNumber(Type(membertype, mod)) + ");\n";
 
-   }
-
-
-   else if (membertype.TypeType() == CLASS) {
-
+   } else if (membertype.TypeType() == CLASS) {
       fStr_namespaces << "Type type_" + typenumber + " = TypeBuilder(\"" + membertype.Name(SCOPED) + "\"); //class\n";
       //membertype
       fStr_instances2 << ("    type_" + typenumber + ".Unload(); //class " + (membertype).Name(SCOPED) + "\n");
 
-   }
-
-   else if (membertype.IsPointer()) {
+   } else if (membertype.IsPointer()) {
       fStr_namespaces << "Type type_" + typenumber +
-         " = PointerBuilder(type_" + GetTypeNumber(membertype.ToType()) + ");\n";
+      " = PointerBuilder(type_" + GetTypeNumber(membertype.ToType()) + ");\n";
    }
-
    // void type
    else if (membertype.Name(SCOPED) == "") {
-   }
-
-   else {
+   } else {
       fStr_namespaces << "Type type_" + typenumber + " = TypeBuilder(\"" + membertype.Name(SCOPED) + "\");\n";
 
    }
@@ -457,38 +452,28 @@ void Reflex::DictionaryGenerator::AddIntoNS( const std::string & typenumber,
 } //AddIntoNS
 
 
-
-
-
-
-
 //-------------------------------------------------------------------------------
-void Reflex::DictionaryGenerator::Print(const std::string & filename) {
+void
+Reflex::DictionaryGenerator::Print(const std::string& filename) {
 //-------------------------------------------------------------------------------
 // Outputs the results into standard stream / file
 
-   if ( filename.length() ) {
-
+   if (filename.length()) {
       std::ofstream outfile(filename.c_str(), std::ios_base::out);
 
       if (!outfile.is_open()) {
          std::cout << "Error: Unable to write file!\n";
          outfile.clear();
-      }
-      else {
+      } else {
          outfile << *this;
          outfile.close();
       }
 
 
    } else {
-
       std::cout << "\n\n";
-      std::cout << * this;
+      std::cout << *this;
 
    }
 
-} 
-
-
-
+} // Print

@@ -44,7 +44,7 @@
  *    }
  *  }
  *
- @endcode
+   @endcode
  *
  * If, however, we're dealing with a template class, @c C\<T>, then
  * things are trickier, since one needs to be sure that the
@@ -57,7 +57,7 @@
  *
  * template <class T>
  * class C { ... };
- * 
+ *
  *  namespace Reflex {
  *    namespace selection {
  *      template <class T>
@@ -69,7 +69,7 @@
  *
  * // Without this, the selection class won't be fully instantiated.
  * struct foo_selection { Reflex::selection::C<int> x; }
- @endcode
+   @endcode
  *
  * What one would really like is a way to ensure that the selection class
  * gets instantiated whenever the class its describing does.  That does
@@ -79,7 +79,7 @@
  * @code
  *
  * template <class T> class Reflex::selection::C; // forward declaration
- * 
+ *
  * template <class T>
  * class C
  * {
@@ -98,7 +98,7 @@
  *       }
  *     }
  *
- @endcode
+   @endcode
  *
  * Note that if you instead use
  *
@@ -106,7 +106,7 @@
  *
  *   typedef Reflex::selection::C<T> DictSelection;
  *
- @endcode
+   @endcode
  *
  * then @c Reflex::selection::C\<T> will not be fully instantiated.
  *
@@ -115,11 +115,11 @@
  *
  * @Reflex::selection::AUTOSELECT
  *
- *   This can be useful for automatically including classes which @c C depends upon.  
+ *   This can be useful for automatically including classes which @c C depends upon.
  *
  *   @code
  *   template <class T> class Reflex::selection::C; // forward declaration
- * 
+ *
  *   // class C<T> depends on std::vector<T>.
  *   template <class T>
  *   class C
@@ -145,7 +145,7 @@
  * // will be emitted wherever it's needed --- no need to list them
  * // in selection.xml.
  *
- @endcode
+   @endcode
  *
  * @Reflex::selection::TRANSIENT
  *
@@ -156,7 +156,7 @@
  *   is a template class).  Example:
  *
  *   @code
- * 
+ *
  *   class C
  *   {
  *   public:
@@ -173,7 +173,7 @@
  *       }
  *     }
  *
- @endcode
+   @endcode
  *
  * @Reflex::selection::TEMPLATE_DEFAULTS<T1, T2, ...>
  *
@@ -191,7 +191,7 @@
  *
  *   @code
  *   template <class T, class U> class Reflex::selection::C; // forward declaration
- * 
+ *
  *   template <class T, class U=int>
  *   class C
  *   {
@@ -214,99 +214,95 @@
  * // With the above, then C<T,int> will be represented externally
  * // as just `C<T>'.
  *
- @endcode
-*/
-
+   @endcode
+ */
 
 
 namespace Reflex {
-
-   namespace Selection {
-
-      /*
-      * @brief turn of autoselection of the class
-      * 
-      * By default classes which appear in the Selection namespace will be selected
-      * for dictionary generation. If a class has a member of type NO_SELF_AUTOSELECT
-      * no dictionary information for this class will be generated. 
-      */
-      class RFLX_API NO_SELF_AUTOSELECT {};
+namespace Selection {
+/*
+ * @brief turn of autoselection of the class
+ *
+ * By default classes which appear in the Selection namespace will be selected
+ * for dictionary generation. If a class has a member of type NO_SELF_AUTOSELECT
+ * no dictionary information for this class will be generated.
+ */
+class RFLX_API NO_SELF_AUTOSELECT {};
 
 
-      /*
-      * @brief Mark a MemberAt as being transient.
-      *
-      * This should be used in a selection class.  This marks the corresponding
-      * MemberAt as being transient.  See the header comments for examples.
-      */
-      class RFLX_API TRANSIENT {};
+/*
+ * @brief Mark a MemberAt as being transient.
+ *
+ * This should be used in a selection class.  This marks the corresponding
+ * MemberAt as being transient.  See the header comments for examples.
+ */
+class RFLX_API TRANSIENT {};
 
 
-      /*
-      * @brief Mark the At of a (data)MemberAt as autoselected.
-      *
-      * This should be used in a selection class. The Name of the MemberAt shall be the same
-      * as the MemberAt in the original class and will be automatically
-      * selected to have dictionary information generated wherever it's
-      * needed.  See the header comments for examples.
-      */
-      class RFLX_API AUTOSELECT{};
+/*
+ * @brief Mark the At of a (data)MemberAt as autoselected.
+ *
+ * This should be used in a selection class. The Name of the MemberAt shall be the same
+ * as the MemberAt in the original class and will be automatically
+ * selected to have dictionary information generated wherever it's
+ * needed.  See the header comments for examples.
+ */
+class RFLX_API AUTOSELECT {};
 
 
-      /*
-      * @brief Placeholder for @c TEMPLATE_DEFAULTS.
-      *
-      * This is used in the @c TEMPLATE_DEFAULTS template argument list
-      * for positions where template arguments cannot be defaulted.
-      */
-      struct RFLX_API  NODEFAULT {};
+/*
+ * @brief Placeholder for @c TEMPLATE_DEFAULTS.
+ *
+ * This is used in the @c TEMPLATE_DEFAULTS template argument list
+ * for positions where template arguments cannot be defaulted.
+ */
+struct RFLX_API NODEFAULT {};
 
 
-      /*
-      * @brief Declare template argument defaults.
-      *
-      * This should be used in a selection class.  The template arguments
-      * of this class give the template argument defaults for the class
-      * being described.  If the class is used with defaulted template
-      * arguments, then these arguments will be omitted from external
-      * representations.  See the header comments for examples.
-      */
-      template <class T1  = NODEFAULT,
-      class T2  = NODEFAULT,
-      class T3  = NODEFAULT,
-      class T4  = NODEFAULT,
-      class T5  = NODEFAULT,
-      class T6  = NODEFAULT,
-      class T7  = NODEFAULT,
-      class T8  = NODEFAULT,
-      class T9  = NODEFAULT,
-      class T10 = NODEFAULT,
-      class T11 = NODEFAULT,
-      class T12 = NODEFAULT,
-      class T13 = NODEFAULT,
-      class T14 = NODEFAULT,
-      class T15 = NODEFAULT>
-      struct TEMPLATE_DEFAULTS
-      {
-         typedef NODEFAULT nodefault;
-         typedef T1  t1;
-         typedef T2  t2;
-         typedef T3  t3;
-         typedef T4  t4;
-         typedef T5  t5;
-         typedef T6  t6;
-         typedef T7  t7;
-         typedef T8  t8;
-         typedef T9  t9;
-         typedef T10 t10;
-         typedef T11 t11;
-         typedef T12 t12;
-         typedef T13 t13;
-         typedef T14 t14;
-         typedef T15 t15;
-      };
+/*
+ * @brief Declare template argument defaults.
+ *
+ * This should be used in a selection class.  The template arguments
+ * of this class give the template argument defaults for the class
+ * being described.  If the class is used with defaulted template
+ * arguments, then these arguments will be omitted from external
+ * representations.  See the header comments for examples.
+ */
+template <class T1 = NODEFAULT,
+          class T2 = NODEFAULT,
+          class T3 = NODEFAULT,
+          class T4 = NODEFAULT,
+          class T5 = NODEFAULT,
+          class T6 = NODEFAULT,
+          class T7 = NODEFAULT,
+          class T8 = NODEFAULT,
+          class T9 = NODEFAULT,
+          class T10 = NODEFAULT,
+          class T11 = NODEFAULT,
+          class T12 = NODEFAULT,
+          class T13 = NODEFAULT,
+          class T14 = NODEFAULT,
+          class T15 = NODEFAULT>
+struct TEMPLATE_DEFAULTS {
+   typedef NODEFAULT nodefault;
+   typedef T1 t1;
+   typedef T2 t2;
+   typedef T3 t3;
+   typedef T4 t4;
+   typedef T5 t5;
+   typedef T6 t6;
+   typedef T7 t7;
+   typedef T8 t8;
+   typedef T9 t9;
+   typedef T10 t10;
+   typedef T11 t11;
+   typedef T12 t12;
+   typedef T13 t13;
+   typedef T14 t14;
+   typedef T15 t15;
+};
 
-   } // namespace Selection
+}    // namespace Selection
 
 } // namespace Reflex
 

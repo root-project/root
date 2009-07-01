@@ -17,36 +17,35 @@
 #include "Reflex/MemberTemplate.h"
 
 namespace Reflex {
+// forward declarations
+class MemberTemplateImpl;
 
-   // forward declarations
-   class MemberTemplateImpl;
-
-   /**
-   * @class OwnedMemberTemplate OwnedMemberTemplate.h OwnedMemberTemplate.h
-   * @author Stefan Roiser
-   * @date 21/07/2006
-   * @ingroup Ref
-   */
-   class RFLX_API OwnedMemberTemplate : public MemberTemplate {
-
-   public:
-
-      /** constructor */
-      OwnedMemberTemplate( const MemberTemplateName * memberTemplateName )
-         : MemberTemplate( memberTemplateName ) {}
+/**
+ * @class OwnedMemberTemplate OwnedMemberTemplate.h OwnedMemberTemplate.h
+ * @author Stefan Roiser
+ * @date 21/07/2006
+ * @ingroup Ref
+ */
+class RFLX_API OwnedMemberTemplate: public MemberTemplate {
+public:
+   /** constructor */
+   OwnedMemberTemplate(const MemberTemplateName * memberTemplateName):
+      MemberTemplate(memberTemplateName) {}
 
 
-      /** take ownership */
-      OwnedMemberTemplate( const MemberTemplate & rh )
-         : MemberTemplate( rh ) {}
+   /** take ownership */
+   OwnedMemberTemplate(const MemberTemplate &rh):
+      MemberTemplate(rh) {}
 
 
-      /** delete info */
-      void Delete() {
-         fMemberTemplateName->DeleteMemberTemplate();
-      }
+   /** delete info */
+   void
+   Delete() {
+      fMemberTemplateName->DeleteMemberTemplate();
+   }
 
-   }; // class OwnedMemberTemplate
+
+};    // class OwnedMemberTemplate
 
 } // namespace Reflex
 

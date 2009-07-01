@@ -10,7 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "Namespace.h"
@@ -19,21 +19,22 @@
 
 
 //-------------------------------------------------------------------------------
-Reflex::Namespace::Namespace( const char * scop ) 
+Reflex::Namespace::Namespace(const char* scop)
 //-------------------------------------------------------------------------------
-   : ScopeBase( scop, NAMESPACE ),
-     fPropertyList( OwnedPropertyList( new PropertyListImpl())) {
+   : ScopeBase(scop, NAMESPACE),
+   fPropertyList(OwnedPropertyList(new PropertyListImpl())) {
    // Create dictionary info for a namespace scope.
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Namespace::Namespace() 
+Reflex::Namespace::Namespace()
 //-------------------------------------------------------------------------------
    : ScopeBase(),
-     fPropertyList( OwnedPropertyList( new PropertyListImpl())) {
+   fPropertyList(OwnedPropertyList(new PropertyListImpl())) {
    // Default Constructore (for the global namespace)
 }
+
 
 //-------------------------------------------------------------------------------
 Reflex::Namespace::~Namespace() {
@@ -42,8 +43,10 @@ Reflex::Namespace::~Namespace() {
    fPropertyList.Delete();
 }
 
+
 //-------------------------------------------------------------------------------
-const Reflex::Scope & Reflex::Namespace::GlobalScope() {
+const Reflex::Scope&
+Reflex::Namespace::GlobalScope() {
 //-------------------------------------------------------------------------------
 // Initialise the global namespace at startup.
    static Scope s = (new Namespace())->ThisScope();
@@ -51,34 +54,27 @@ const Reflex::Scope & Reflex::Namespace::GlobalScope() {
 }
 
 
-
-
 //-------------------------------------------------------------------------------
-void Reflex::Namespace::GenerateDict( DictionaryGenerator & generator ) const {
+void
+Reflex::Namespace::GenerateDict(DictionaryGenerator& generator) const {
 //-------------------------------------------------------------------------------
 // Generate Dictionary information about itself.
 
-   
- 
-   if( (*this).Name()!="" && generator.IsNewType((*this)) )
-      {
-         std::stringstream tempcounter;
-         tempcounter << generator.fMethodCounter;
-         
-         generator.fStr_namespaces<<"NamespaceBuilder nsb" + tempcounter.str() + 
-            " (\"" << (*this).Name(SCOPED) << "\");\n" ;
-         
-         ++generator.fMethodCounter;
-      }
-      
-   
-   for (Member_Iterator mi = (*this).Member_Begin(); mi != (*this).Member_End(); ++mi) 
-      {
-         (*mi).GenerateDict(generator); // call Members' own gendict
-      }
-      
-   this->ScopeBase::GenerateDict(generator);
-   
-   
-}
+   if ((*this).Name() != "" && generator.IsNewType((*this))) {
+      std::stringstream tempcounter;
+      tempcounter << generator.fMethodCounter;
 
+      generator.fStr_namespaces << "NamespaceBuilder nsb" + tempcounter.str() +
+      " (\"" << (*this).Name(SCOPED) << "\");\n";
+
+      ++generator.fMethodCounter;
+   }
+
+   for (Member_Iterator mi = (*this).Member_Begin(); mi != (*this).Member_End(); ++mi) {
+      (*mi).GenerateDict(generator);    // call Members' own gendict
+   }
+
+   this->ScopeBase::GenerateDict(generator);
+
+
+} // GenerateDict

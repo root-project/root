@@ -3,19 +3,26 @@
 
 
 struct MyClass {
-  void something(bool) {}
-  int  data;
+   void
+   something(bool) {}
+
+   int data;
 };
 
 struct MemberPointerTest {
+   void
+   setMemberPointer(int MyClass::* p) { fPtr = p; }
 
-  void setMemberPointer(int MyClass::* p) {fPtr = p;}
-  int MyClass::* getMemberPointer() { return fPtr; }
-  int MyClass::* fPtr;
+   int MyClass::*
+   getMemberPointer() { return fPtr; }
 
-  void setFunctionMemberPointer( void (MyClass::* p)(bool) ) { fFptr = p; }
-  void (MyClass::* getFunctionMemberPointer()) (bool) { return fFptr; }
-  void (MyClass::* fFptr)(bool);
+   int MyClass::* fPtr;
+
+   void
+   setFunctionMemberPointer(void (MyClass::* p)(bool)) { fFptr = p; }
+
+   void(MyClass::* getFunctionMemberPointer()) (bool) { return fFptr; }
+   void (MyClass::* fFptr)(bool);
 };
 
 #endif // DICT2_FUNCTIONS_H

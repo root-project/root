@@ -4,13 +4,19 @@
 #include "ClassF.h"
 
 class ClassG: public ClassF {
- public:
-  ClassG() : fG('g') {}
-  virtual ~ClassG() {}
-  int g() { return fG; }
-  void setG(int v = 11) { fG = v; }
- private:
-  int fG;
+public:
+   ClassG(): fG('g') {}
+
+   virtual ~ClassG() {}
+
+   int
+   g() { return fG; }
+
+   void
+   setG(int v = 11) { fG = v; }
+
+private:
+   int fG;
 };
 
 

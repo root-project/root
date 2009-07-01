@@ -19,41 +19,37 @@
 
 
 namespace Reflex {
+/**
+ * @class ValueObject ValueObject.h Reflex/ValueObject.h
+ * @author Pere Mato
+ * @date 01/09/2006
+ * @ingroup Ref
+ */
+class RFLX_API ValueObject: public Object {
+public:
+   /** constructor */
+   ValueObject();
 
-   /** 
-   * @class ValueObject ValueObject.h Reflex/ValueObject.h
-   * @author Pere Mato
-   * @date 01/09/2006
-   * @ingroup Ref
-   */
-   class RFLX_API ValueObject : public Object {
+   /** constructor */
+   template <typename T>
+   static ValueObject Create(const T& v);
 
-   public:
+   /** constructor */
+   ValueObject(const ValueObject &o);
 
-      /** constructor */
-      ValueObject();
+   /** destructor */
+   ~ValueObject();
 
-      /** constructor */
-      template <typename T>
-      static ValueObject Create(const T& v);
+   /** get the actual value */
+   template <typename T> const T& Value();
 
-      /** constructor */
-      ValueObject( const ValueObject& o);
+   template <typename T> ValueObject& Assign(const T&);
 
-      /** destructor */
-      ~ValueObject();
+private:
+   /** the value of the generic object by value */
+   Any fValue;
 
-      /** get the actual value */
-      template<typename T> const T& Value();
-
-      template<typename T> ValueObject& Assign(const T&);
-
-   private:
-
-      /** the value of the generic object by value */
-      Any fValue;
-
-   }; // class ValueObject
+};    // class ValueObject
 } // namespace Reflex
 
 
@@ -62,9 +58,11 @@ inline Reflex::ValueObject::ValueObject() {
 //-------------------------------------------------------------------------------
 }
 
+
 //-------------------------------------------------------------------------------
-template <typename T> 
-inline Reflex::ValueObject Reflex::ValueObject::Create(const T& v) {
+template <typename T>
+inline Reflex::ValueObject
+Reflex::ValueObject::Create(const T& v) {
 //-------------------------------------------------------------------------------
    ValueObject ret;
    ret.Assign(v);
@@ -73,23 +71,28 @@ inline Reflex::ValueObject Reflex::ValueObject::Create(const T& v) {
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::ValueObject::ValueObject( const ValueObject& o) 
-   : Object( o.TypeOf(), 0 ), 
-     fValue(o.fValue)  {
+inline Reflex::ValueObject::ValueObject(const ValueObject& o):
+   Object(o.TypeOf(), 0),
+   fValue(o.fValue) {
 //-------------------------------------------------------------------------------
-   if ( TypeOf().IsPointer() ) fAddress = *(void**)fValue.Address();
-   else                        fAddress = fValue.Address();
+   if (TypeOf().IsPointer()) {
+      fAddress = *(void**) fValue.Address();
+   } else { fAddress = fValue.Address(); }
 }
 
+
 //-------------------------------------------------------------------------------
-template < typename T >
-inline Reflex::ValueObject& Reflex::ValueObject::Assign(const T& v)  {
+template <typename T>
+inline Reflex::ValueObject&
+Reflex::ValueObject::Assign(const T& v) {
 //-------------------------------------------------------------------------------
-  fValue = Any(v);
-  fType = GetType<T>();
-  if ( TypeOf().IsPointer() ) fAddress = *(void**)fValue.Address();
-  else                        fAddress = fValue.Address();
-  return *this;
+   fValue = Any(v);
+   fType = GetType<T>();
+
+   if (TypeOf().IsPointer()) {
+      fAddress = *(void**) fValue.Address();
+   } else { fAddress = fValue.Address(); }
+   return *this;
 }
 
 
@@ -100,10 +103,11 @@ inline Reflex::ValueObject::~ValueObject() {
 
 
 //-------------------------------------------------------------------------------
-template<typename T> 
-inline const T& Reflex::ValueObject::Value() { 
+template <typename T>
+inline const T&
+Reflex::ValueObject::Value() {
 //-------------------------------------------------------------------------------
-   return *(T*)fAddress; 
+   return *(T*) fAddress;
 }
 
 

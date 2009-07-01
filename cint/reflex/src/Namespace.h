@@ -16,68 +16,63 @@
 #include "Reflex/Scope.h"
 
 namespace Reflex {
+// forward declarations
+class Member;
+class Scope;
+class DictionaryGenerator;
 
-   // forward declarations
-   class Member;
-   class Scope;
-   class DictionaryGenerator;
+
+/**
+ * @class Namespace Namespace.h Reflex/Namespace.h
+ * @author Stefan Roiser
+ * @date 24/11/2003
+ * @ingroup Ref
+ */
+class Namespace: public ScopeBase {
+public:
+   /** default constructor */
+   Namespace(const char* scop);
+
+
+   /** destructor */
+   virtual ~Namespace();
 
 
    /**
-   * @class Namespace Namespace.h Reflex/Namespace.h
-   * @author Stefan Roiser
-   * @date 24/11/2003
-   * @ingroup Ref
-   */
-   class Namespace : public ScopeBase {
-
-   public:
-
-      /** default constructor */
-      Namespace( const char * scop );
+    * GenerateDict will produce the dictionary information of this type
+    * @param generator a reference to the dictionary generator instance
+    */
+   virtual void GenerateDict(DictionaryGenerator& generator) const;
 
 
-      /** destructor */
-      virtual ~Namespace();
+   /**
+    * function for initialisation of the global namespace
+    */
+   static const Scope& GlobalScope();
 
 
-      /**
-      * GenerateDict will produce the dictionary information of this type
-      * @param generator a reference to the dictionary generator instance
-      */
-      virtual void GenerateDict(DictionaryGenerator &generator) const;
+   /**
+    * Properties will return a pointer to the PropertyNth list attached
+    * to this item
+    * @return pointer to PropertyNth list
+    */
+   virtual PropertyList Properties() const;
 
+private:
+   /** constructor for initialisation of the global namespace */
+   Namespace();
 
-      /**
-      * function for initialisation of the global namespace
-      */
-      static const Scope & GlobalScope();
+private:
+   /**
+    * pointer to the property list
+    * @label propertylist
+    * @link aggregationByValue
+    * @clientCardinality 1
+    * @supplierCardinality 1
+    */
+   OwnedPropertyList fPropertyList;
 
-
-      /**
-      * Properties will return a pointer to the PropertyNth list attached
-      * to this item
-      * @return pointer to PropertyNth list
-      */
-      virtual PropertyList Properties() const;
-
-
-   private:
-
-      /** constructor for initialisation of the global namespace */
-      Namespace();
-
-   private:
-      /**
-      * pointer to the property list
-      * @label propertylist
-      * @link aggregationByValue
-      * @clientCardinality 1
-      * @supplierCardinality 1
-      */
-      OwnedPropertyList fPropertyList;
-
-   }; // class Namespace
+};    // class Namespace
 } //namespace Reflex
 
 //-------------------------------------------------------------------------------

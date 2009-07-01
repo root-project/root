@@ -14,16 +14,16 @@ REFLEX_TEST(test001)
    CPPUNIT_ASSERT(tA.MemberByName("a"));
    CPPUNIT_ASSERT(tA.DataMemberByName("a"));
 
-   CPPUNIT_ASSERT_EQUAL((size_t)1, tA.DataMemberSize(INHERITEDMEMBERS_NO));
-   CPPUNIT_ASSERT_EQUAL((size_t)1, tA.DataMemberSize());
+   CPPUNIT_ASSERT_EQUAL((size_t) 1, tA.DataMemberSize(INHERITEDMEMBERS_NO));
+   CPPUNIT_ASSERT_EQUAL((size_t) 1, tA.DataMemberSize());
 
    // triggers tA.UpdateMembers():
-   CPPUNIT_ASSERT_EQUAL((size_t)1, tA.DataMemberSize(INHERITEDMEMBERS_ALSO));
+   CPPUNIT_ASSERT_EQUAL((size_t) 1, tA.DataMemberSize(INHERITEDMEMBERS_ALSO));
 
    CPPUNIT_ASSERT(tA);
    CPPUNIT_ASSERT(tA.MemberByName("a"));
    CPPUNIT_ASSERT(tA.DataMemberByName("a"));
-   CPPUNIT_ASSERT_EQUAL((size_t)1, tA.DataMemberSize(INHERITEDMEMBERS_DEFAULT));
+   CPPUNIT_ASSERT_EQUAL((size_t) 1, tA.DataMemberSize(INHERITEDMEMBERS_DEFAULT));
 }
 
 REFLEX_TEST(test002)

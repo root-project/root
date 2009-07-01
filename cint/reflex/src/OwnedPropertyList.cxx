@@ -10,17 +10,18 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "Reflex/internal/OwnedPropertyList.h"
 
 //-------------------------------------------------------------------------------
-void Reflex::OwnedPropertyList::Delete() {
+void
+Reflex::OwnedPropertyList::Delete() {
 //-------------------------------------------------------------------------------
 // Delete the list of properties. We can do it because we own it.
 // Must be outlined to match the new() within Reflex.
-   if ( fPropertyListImpl ) {
+   if (fPropertyListImpl) {
       delete fPropertyListImpl;
       fPropertyListImpl = 0;
    }

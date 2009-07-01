@@ -19,25 +19,34 @@ using namespace ROOT::Reflex;
 
 class mapGenerator {
    fstream m_out;
-   string  m_lib;
+   string m_lib;
+
 public:
-   mapGenerator(const string& file, const string& lib )
-      : m_out(file.c_str(),std::ios_base::out|std::ios_base::trunc), m_lib(lib) {}
-   bool good() const { return m_out.good(); } 
+   mapGenerator(const string& file, const string& lib):
+      m_out(file.c_str(), std::ios_base::out | std::ios_base::trunc),
+      m_lib(lib) {}
+
+   bool
+   good() const { return m_out.good(); }
+
    void genHeader();
-   void genFactory(const string& name, const string& type );
+   void genFactory(const string& name,
+                   const string& type);
    void genTrailer();
 };
 
-static string currpath(string lib) {
+static string
+currpath(string lib) {
    char buff[PATH_MAX];
-   ::getcwd(buff,sizeof(buff));
+   ::getcwd(buff, sizeof(buff));
    string tmp = buff;
    tmp += "/" + lib;
    return tmp;
 }
 
-static int help(const char* cmd)  {
+
+static int
+help(const char* cmd) {
    cout << cmd << ":  Allowed options" << endl
         << "  -help            produce this help message" << endl
         << "  -debug           increase verbosity level" << endl
@@ -46,19 +55,26 @@ static int help(const char* cmd)  {
    return 1;
 }
 
+
 //--- Command main program------------------------------------------------------
-int main ( int argc, char** argv )    {
+int
+main(int argc,
+     char** argv) {
    struct stat buf;
    bool deb = false;
    string rootmap, lib, err, out;
    string::size_type idx;
 
-   for(int i=1; i<argc; ++i)  {
-      const char *opt = argv[i], *val = 0;
-      if ( *opt == '/' || *opt == '-' )  {
-         if ( *++opt == '/' || *opt == '-' ) ++opt;
-         val = (opt[1] != '=') ? ++i<argc ? argv[i] : 0 : opt+2;
-         switch(::toupper(opt[0])) {
+   for (int i = 1; i < argc; ++i) {
+      const char* opt = argv[i], * val = 0;
+
+      if (*opt == '/' || *opt == '-') {
+         if (*++opt == '/' || *opt == '-') {
+            ++opt;
+         }
+         val = (opt[1] != '=') ? ++i < argc ? argv[i] : 0 : opt + 2;
+
+         switch (::toupper(opt[0])) {
          case 'D':
             deb = true;
             --i;
@@ -74,73 +90,90 @@ int main ( int argc, char** argv )    {
          }
       }
    }
-   if( lib.empty() )  {
+
+   if (lib.empty()) {
       cout << "ERROR occurred: input library required" << endl;
       return help(argv[0]);
    }
-   if ( rootmap.empty() ) {
+
+   if (rootmap.empty()) {
       string flib = lib;
-      while( (idx=flib.find("\\")) != string::npos ) flib.replace(idx,1,"/");
+
+      while ((idx = flib.find("\\")) != string::npos)
+         flib.replace(idx, 1, "/");
 #ifdef _WIN32
-      if ( flib[1] != ':' && flib[0] != '/' ) {
+
+      if (flib[1] != ':' && flib[0] != '/') {
 #else
-      if ( !(flib[0] == '/' || flib.find('/') != string::npos) ) {
+
+      if (!(flib[0] == '/' || flib.find('/') != string::npos)) {
 #endif
          flib = currpath(flib);
       }
       rootmap = ::dirnameEx(flib);
       rootmap += "/";
       string tmp = ::basenameEx(lib);
-      if ( tmp.rfind('.') == std::string::npos )
+
+      if (tmp.rfind('.') == std::string::npos) {
          rootmap += tmp + ".rootmap";
-      else if ( tmp.find("/") != std::string::npos && tmp.rfind(".")<tmp.rfind("/") )
+      } else if (tmp.find("/") != std::string::npos && tmp.rfind(".") < tmp.rfind("/")) {
          rootmap += tmp + ".rootmap";
-      else
-         rootmap += tmp.substr(0,tmp.rfind('.')) + ".rootmap";
+      } else {
+         rootmap += tmp.substr(0, tmp.rfind('.')) + ".rootmap";
+      }
    }
-   if ( deb ) {
+
+   if (deb) {
       cout << "Input Library: '" << lib << "'" << endl;
       cout << "ROOT Map file: '" << rootmap << "'" << endl;
    }
-   if ( ::stat(rootmap.c_str(), &buf) == -1 && errno == ENOENT )  {
+
+   if (::stat(rootmap.c_str(), &buf) == -1 && errno == ENOENT) {
       string dir = ::dirnameEx(rootmap);
-      if ( deb ) {
+
+      if (deb) {
          cout << "Output directory:" << dir << "'" << endl;
       }
-      if ( !dir.empty() && ::stat(dir.c_str(), &buf) == -1 && errno == ENOENT )  {
-         if ( ::mkdir(dir.c_str(),S_IRWXU|S_IRGRP|S_IROTH) != 0 && errno != EEXIST )  {
+
+      if (!dir.empty() && ::stat(dir.c_str(), &buf) == -1 && errno == ENOENT) {
+         if (::mkdir(dir.c_str(), S_IRWXU | S_IRGRP | S_IROTH) != 0 && errno != EEXIST) {
             cout << "ERR0R: error creating directory: '" << dir << "'" << endl;
             return 1;
          }
       }
    }
    out = rootmap;
-   
+
    //--- Load the library -------------------------------------------------
    SharedLibrary sl(lib);
-   if ( ! sl.Load() ) {
+
+   if (!sl.Load()) {
       cout << "ERR0R: error loading library: '" << lib << "'" << endl
            << sl.Error() << endl;
       return 1;
    }
-   
+
    mapGenerator map_gen(rootmap.c_str(), lib);
-   if ( ! map_gen.good() ) {
+
+   if (!map_gen.good()) {
       cout << "ERR0R: cannot open output file: '" << rootmap << "'" << endl
-           << sl.Error() << endl;  
+           << sl.Error() << endl;
       return 1;
-   }  
+   }
    //--- Iterate over component factories ---------------------------------------
    Scope factories = Scope::ByName(PLUGINSVC_FACTORY_NS);
-   if ( factories ) {
+
+   if (factories) {
       map_gen.genHeader();
       set<string> used_names;
-      for (Member_Iterator it = factories.FunctionMember_Begin(); 
-           it != factories.FunctionMember_End(); ++it ) {
+
+      for (Member_Iterator it = factories.FunctionMember_Begin();
+           it != factories.FunctionMember_End(); ++it) {
          //string cname = it->Properties().PropertyAsString("name");
          string cname = it->Name();
-         if ( used_names.insert(cname).second ) {
-            map_gen.genFactory(cname,"");
+
+         if (used_names.insert(cname).second) {
+            map_gen.genFactory(cname, "");
          }
       }
       map_gen.genTrailer();
@@ -148,40 +181,39 @@ int main ( int argc, char** argv )    {
    }
    cout << "library does not contain plugin factories" << endl;
    return 0;
-}
-
+} // main
 
 
 //------------------------------------------------------------------------------
-void mapGenerator::genHeader()
+void
+mapGenerator::genHeader() {
 //------------------------------------------------------------------------------
-{  
    time_t rawtime;
-   time( &rawtime );
+   time(&rawtime);
    m_out << "# ROOT map file generated automatically by genmap on " << ctime(&rawtime) << endl;
 }
 
 
 //------------------------------------------------------------------------------
-void mapGenerator::genFactory(const string& name, const string& /* type */ )
+void
+mapGenerator::genFactory(const string& name,
+                         const string& /* type */) {
 //------------------------------------------------------------------------------
-{ 
    string mapname = string(PLUGINSVC_FACTORY_NS) + "@@" + PluginService::FactoryName(name);
-  
+
    //  for ( string::const_iterator i = name.begin(); i != name.end(); i++) {
-   //  	switch(*i) {
-   //  	  case ':': { newname += '@'; break; }
-   //  	  case ' ': { break; }
-   //  	  default:  { newname += *i; break; }
-   //  	}
+   //   switch(*i) {
+   //     case ':': { newname += '@'; break; }
+   //     case ' ': { break; }
+   //     default:  { newname += *i; break; }
+   //   }
    //  }
    m_out << "Library." << mapname << ": " << m_lib << endl;
 }
 
 
 //------------------------------------------------------------------------------
-void mapGenerator::genTrailer()
+void
+mapGenerator::genTrailer() {
 //------------------------------------------------------------------------------
-{
 }
-

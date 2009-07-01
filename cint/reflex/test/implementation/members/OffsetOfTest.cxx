@@ -16,16 +16,16 @@ REFLEX_TEST(test001)
 
    CPPUNIT_ASSERT(t);
    CPPUNIT_ASSERT(t.IsClass());
-   CPPUNIT_ASSERT(((Type)t).IsComplete());
-   CPPUNIT_ASSERT_EQUAL((size_t)2, t.DataMemberSize());
+   CPPUNIT_ASSERT(((Type) t).IsComplete());
+   CPPUNIT_ASSERT_EQUAL((size_t) 2, t.DataMemberSize());
 
    Member_Iterator im = t.DataMember_Begin();
-   CPPUNIT_ASSERT_EQUAL((size_t)0, im->Offset());
-   
+   CPPUNIT_ASSERT_EQUAL((size_t) 0, im->Offset());
+
    ++im;
    UnNamedMember um;
-   size_t unnamed_member_offset = (size_t)( ((const char*)&um.fUnNamed)
-                                            -((const char*)&um));
+   size_t unnamed_member_offset = (size_t) (((const char*) &um.fUnNamed)
+                                            - ((const char*) &um));
    CPPUNIT_ASSERT_EQUAL(unnamed_member_offset, im->Offset());
 }
 
@@ -39,13 +39,12 @@ REFLEX_TEST(test002)
 
    CPPUNIT_ASSERT(t);
    CPPUNIT_ASSERT(t.IsClass());
-   CPPUNIT_ASSERT(((Type)t).IsComplete());
-   CPPUNIT_ASSERT_EQUAL((size_t)2, t.DataMemberSize());
+   CPPUNIT_ASSERT(((Type) t).IsComplete());
+   CPPUNIT_ASSERT_EQUAL((size_t) 2, t.DataMemberSize());
 
    Member_Iterator im = t.DataMember_Begin();
-   CPPUNIT_ASSERT_EQUAL((size_t)0, im->Offset());
+   CPPUNIT_ASSERT_EQUAL((size_t) 0, im->Offset());
 
    ++im;
    CPPUNIT_ASSERT(im->Offset() > 0 && im->Offset() < 16);
 }
-

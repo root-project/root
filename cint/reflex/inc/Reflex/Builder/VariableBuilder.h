@@ -18,176 +18,171 @@
 
 
 namespace Reflex {
+// forward declarations
 
-   // forward declarations
-
-   /** @class VariableBuilder VariableBuilder.h Reflex/Builder/VariableBuilder.h
-   *  @author Stefan Roiser
-   *  @date 6/4/2005
-   *  @ingroup RefBld
-   */
-   class RFLX_API VariableBuilder {
-
-   public:
-
-      /** constructor */
-      VariableBuilder( const char * nam,
-         const Type & typ,
-         size_t offs,
-         unsigned int modifiers = 0 );
+/** @class VariableBuilder VariableBuilder.h Reflex/Builder/VariableBuilder.h
+ *  @author Stefan Roiser
+ *  @date 6/4/2005
+ *  @ingroup RefBld
+ */
+class RFLX_API VariableBuilder {
+public:
+   /** constructor */
+   VariableBuilder(const char* nam,
+                   const Type &typ,
+                   size_t offs,
+                   unsigned int modifiers = 0);
 
 
-      /** destructor */
-      virtual ~VariableBuilder();
+   /** destructor */
+   virtual ~VariableBuilder();
 
 
-      /** 
-      * AddProperty will add a property
-      * @param  key the property key
-      * @param  value the value of the property
-      * @return a reference to the building class
-      */
-      VariableBuilder & AddProperty( const char * key, 
-         Any value );
-      VariableBuilder & AddProperty( const char * key,
-         const char * value );
+   /**
+    * AddProperty will add a property
+    * @param  key the property key
+    * @param  value the value of the property
+    * @return a reference to the building class
+    */
+   VariableBuilder& AddProperty(const char* key,
+                                Any value);
+   VariableBuilder& AddProperty(const char* key,
+                                const char* value);
 
 
-      /**
-      * ToMember will return the member currently being built
-      * @return member currently being built
-      */
-      Member ToMember();
+   /**
+    * ToMember will return the member currently being built
+    * @return member currently being built
+    */
+   Member ToMember();
 
-   private:
+private:
+   /** function member */
+   Member fDataMember;
 
-      /** function member */
-      Member fDataMember;
-
-   }; // class VariableBuilder
-
-
-   /** 
-   * @class VariableBuilderImpl VariableBuilder.h Reflex/Builder/VariableBuilder.h
-   * @author Stefan Roiser
-   * @date 6/4/2005
-   * @ingroup RefBld
-   */
-   class RFLX_API VariableBuilderImpl {
-
-   public:
-
-      /** constructor */
-      VariableBuilderImpl( const char * nam,
-         const Type & typ,
-         size_t offs,
-         unsigned int modifiers = 0 );
+};    // class VariableBuilder
 
 
-      /** destructor */
-      ~VariableBuilderImpl();
+/**
+ * @class VariableBuilderImpl VariableBuilder.h Reflex/Builder/VariableBuilder.h
+ * @author Stefan Roiser
+ * @date 6/4/2005
+ * @ingroup RefBld
+ */
+class RFLX_API VariableBuilderImpl {
+public:
+   /** constructor */
+   VariableBuilderImpl(const char* nam,
+                       const Type &typ,
+                       size_t offs,
+                       unsigned int modifiers = 0);
 
 
-      /** AddProperty will add a property 
-      * @param  key the property key
-      * @param  value the value of the property
-      * @return a reference to the building class
-      */
-      void AddProperty( const char * key, 
-         Any value );
-      void AddProperty( const char * key, 
-         const char * value );
+   /** destructor */
+   ~VariableBuilderImpl();
 
 
-      /**
-      * ToMember will return the member currently being built
-      * @return member currently being built
-      */
-      Member ToMember();
-
-   private:
-
-      /** member being built */
-      Member fDataMember;
-
-   }; // class VariableBuilderImpl
+   /** AddProperty will add a property
+    * @param  key the property key
+    * @param  value the value of the property
+    * @return a reference to the building class
+    */
+   void AddProperty(const char* key,
+                    Any value);
+   void AddProperty(const char* key,
+                    const char* value);
 
 
-   /** 
-   * @class VariableBuilderT VariableBuilder.h Reflex/Builder/VariableBuilder.h
-   * @author Stefan Roiser
-   * @date 6/4/2005
-   * @ingroup RefBld
-   */
-   template < typename D > class VariableBuilderT {
+   /**
+    * ToMember will return the member currently being built
+    * @return member currently being built
+    */
+   Member ToMember();
 
-   public:
+private:
+   /** member being built */
+   Member fDataMember;
 
-      /** constructor */
-      VariableBuilderT( const char * nam,
-         size_t offs,
-         unsigned int modifiers = 0 );
+};    // class VariableBuilderImpl
 
 
-      /** destructor */
-      virtual ~VariableBuilderT() {}
+/**
+ * @class VariableBuilderT VariableBuilder.h Reflex/Builder/VariableBuilder.h
+ * @author Stefan Roiser
+ * @date 6/4/2005
+ * @ingroup RefBld
+ */
+template <typename D> class VariableBuilderT {
+public:
+   /** constructor */
+   VariableBuilderT(const char* nam,
+                    size_t offs,
+                    unsigned int modifiers = 0);
 
 
-      /** 
-      * AddProperty will add a property 
-      * @param  key the property key
-      * @param  value the value of the property
-      * @return a reference to the building class
-      */
-      template < typename P >
-      VariableBuilderT & AddProperty( const char * key, P value );
+   /** destructor */
+   virtual ~VariableBuilderT() {}
 
 
-      /**
-      * ToMember will return the member currently being built
-      * @return member currently being built
-      */
-      Member ToMember();
+   /**
+    * AddProperty will add a property
+    * @param  key the property key
+    * @param  value the value of the property
+    * @return a reference to the building class
+    */
+   template <typename P>
+   VariableBuilderT& AddProperty(const char* key,
+                                 P value);
 
-   private:
 
-      /** data member builder implementation */
-      VariableBuilderImpl fDataMemberBuilderImpl;
+   /**
+    * ToMember will return the member currently being built
+    * @return member currently being built
+    */
+   Member ToMember();
 
-   }; // class VariableBuilderT
+private:
+   /** data member builder implementation */
+   VariableBuilderImpl fDataMemberBuilderImpl;
+
+};    // class VariableBuilderT
 
 
 } // namespace Reflex
 
 
 //-------------------------------------------------------------------------------
-template < typename D > 
-inline Reflex::VariableBuilderT<D>::VariableBuilderT( const char * nam,
-                                                            size_t offs,
-                                                            unsigned int modifiers ) 
+template <typename D>
+inline Reflex::VariableBuilderT<D>::VariableBuilderT(const char* nam,
+                                                     size_t offs,
+                                                     unsigned int modifiers)
 //-------------------------------------------------------------------------------
-   : fDataMemberBuilderImpl( nam,
-                             TypeDistiller<D>::Get(),
-                             offs,
-                             modifiers ) {}
-
-
-//-------------------------------------------------------------------------------
-template < typename D > template < typename P >
-inline Reflex::VariableBuilderT<D> &
-Reflex::VariableBuilderT<D>::AddProperty( const char * key, 
-                                                P value ) {
-//-------------------------------------------------------------------------------
-   fDataMemberBuilderImpl.AddProperty(key, value);
-   return * this;
+   : fDataMemberBuilderImpl(nam,
+                            TypeDistiller<D>::Get(),
+                            offs,
+                            modifiers) {
 }
 
 
 //-------------------------------------------------------------------------------
-template < typename D > inline Reflex::Member
-Reflex::VariableBuilderT<D>::ToMember() {
+template <typename D> template <typename P>
+inline Reflex::VariableBuilderT<D>&
+Reflex::VariableBuilderT<D
+>::AddProperty(const char* key,
+               P value) {
+//-------------------------------------------------------------------------------
+   fDataMemberBuilderImpl.AddProperty(key, value);
+   return *this;
+}
+
+
+//-------------------------------------------------------------------------------
+template <typename D> inline Reflex::Member
+Reflex::VariableBuilderT<D
+>::ToMember() {
 //-------------------------------------------------------------------------------
    return fDataMemberBuilderImpl.ToMember();
 }
+
 
 #endif // Reflex_VariableBuilder

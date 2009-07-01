@@ -3,9 +3,9 @@
 #include "Reflex/internal/OwnedMember.h"
 
 #if 0
-#include "../src/Class.h"
+# include "../src/Class.h"
 
 namespace __shadow__ {
-   class ROOT__Reflex__Any__Placeholder {};
+class ROOT__Reflex__Any__Placeholder {};
 }
 #endif

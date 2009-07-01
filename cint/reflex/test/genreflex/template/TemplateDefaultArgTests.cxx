@@ -13,10 +13,10 @@ REFLEX_TEST(TemplateDefaultArg)
 
    CPPUNIT_ASSERT(t);
    CPPUNIT_ASSERT(t.IsClass());
-   CPPUNIT_ASSERT(((Type)t).IsComplete());
+   CPPUNIT_ASSERT(((Type) t).IsComplete());
 
    Type_Iterator it = t.SubType_Begin();
    CPPUNIT_ASSERT(*it);
-   
+
    CPPUNIT_ASSERT_EQUAL(std::string(it->Name(0)), std::string("self"));
 }

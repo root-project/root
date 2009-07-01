@@ -17,29 +17,26 @@
 #include "Reflex/PropertyList.h"
 
 namespace Reflex {
+// forward declarations
+class PropertyListImpl;
 
-   // forward declarations
-   class PropertyListImpl;
-
-   /**
-   * @class OwnedPropertyList OwnedPropertyList.h OwnedPropertyList.h
-   * @author Stefan Roiser
-   * @date 21/07/2006
-   * @ingroup Ref
-   */
-   class RFLX_API OwnedPropertyList : public PropertyList {
-
-   public:
-
-      /** constructor */
-      OwnedPropertyList( PropertyListImpl * propertyListImpl = 0 )
-         : PropertyList( propertyListImpl ) {}
+/**
+ * @class OwnedPropertyList OwnedPropertyList.h OwnedPropertyList.h
+ * @author Stefan Roiser
+ * @date 21/07/2006
+ * @ingroup Ref
+ */
+class RFLX_API OwnedPropertyList: public PropertyList {
+public:
+   /** constructor */
+   OwnedPropertyList(PropertyListImpl * propertyListImpl = 0):
+      PropertyList(propertyListImpl) {}
 
 
-      /** delete */
-      void Delete();
+   /** delete */
+   void Delete();
 
-   }; // class OwnedPropertyList
+};    // class OwnedPropertyList
 
 } // namespace Reflex
 

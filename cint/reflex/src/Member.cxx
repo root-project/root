@@ -10,7 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "Reflex/Member.h"
@@ -27,18 +27,17 @@
 
 
 //-------------------------------------------------------------------------------
-Reflex::Member::Member( const MemberBase * memberBase )
+Reflex::Member::Member(const MemberBase* memberBase)
 //-------------------------------------------------------------------------------
-   : fMemberBase( const_cast<MemberBase*>(memberBase) ) {
+   : fMemberBase(const_cast<MemberBase*>(memberBase)) {
    // Construct a member, attaching it to MemberBase.
 }
 
 
-
 //-------------------------------------------------------------------------------
-Reflex::Member::Member( const Member & rh )
+Reflex::Member::Member(const Member& rh)
 //-------------------------------------------------------------------------------
-   : fMemberBase( rh.fMemberBase ) {
+   : fMemberBase(rh.fMemberBase) {
    // Member copy constructor.
 }
 
@@ -51,7 +50,8 @@ Reflex::Member::~Member() {
 
 
 //-------------------------------------------------------------------------------
-void Reflex::Member::Delete() {
+void
+Reflex::Member::Delete() {
 //-------------------------------------------------------------------------------
 // delete the MemberBase
    delete fMemberBase;
@@ -60,99 +60,130 @@ void Reflex::Member::Delete() {
 
 
 //-------------------------------------------------------------------------------
-Reflex::Object Reflex::Member::Get() const {
+Reflex::Object
+Reflex::Member::Get() const {
 //-------------------------------------------------------------------------------
 // Get the value of a static member.
-   if ( fMemberBase ) return fMemberBase->Get( Object());
+   if (fMemberBase) {
+      return fMemberBase->Get(Object());
+   }
    return Object();
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::Object Reflex::Member::Get( const Object & obj) const {
+Reflex::Object
+Reflex::Member::Get(const Object& obj) const {
 //-------------------------------------------------------------------------------
 // Get the value of a non static data member.
-   if ( fMemberBase ) return fMemberBase->Get( obj );
+   if (fMemberBase) {
+      return fMemberBase->Get(obj);
+   }
    return Object();
 }
 
 
 /*//-------------------------------------------------------------------------------
-  Reflex::Object 
-  Reflex::Member::Invoke( const Object & obj,
-  const std::vector < Object > & paramList ) const {
-//-------------------------------------------------------------------------------
-  if ( fMemberBase ) return fMemberBase->Invoke( obj, paramList );
-  return Object();
-  }
-*/
+   Reflex::Object
+   Reflex::Member::Invoke( const Object & obj,
+   const std::vector < Object > & paramList ) const {
+   //-------------------------------------------------------------------------------
+   if ( fMemberBase ) return fMemberBase->Invoke( obj, paramList );
+   return Object();
+   }
+ */
 
 
 //-------------------------------------------------------------------------------
 void
-Reflex::Member::Invoke( const Object & obj, Object* ret,
-                        const std::vector < void * > & paramList ) const {
+Reflex::Member::Invoke(const Object& obj,
+                       Object* ret,
+                       const std::vector<void*>& paramList) const {
 //-------------------------------------------------------------------------------
 // Invoke a non static data member. Put return value (if not void) into ret.
-   if ( fMemberBase ) fMemberBase->Invoke( obj, ret, paramList );
+   if (fMemberBase) {
+      fMemberBase->Invoke(obj, ret, paramList);
+   }
 }
 
 
 /*/-------------------------------------------------------------------------------
-  Reflex::Object 
-  Reflex::Member::Invoke( const std::vector < Object > & paramList ) const {
-//-------------------------------------------------------------------------------
-  if ( fMemberBase ) return fMemberBase->Invoke( paramList );
-  return Object();
-  }
-*/
+   Reflex::Object
+   Reflex::Member::Invoke( const std::vector < Object > & paramList ) const {
+   //-------------------------------------------------------------------------------
+   if ( fMemberBase ) return fMemberBase->Invoke( paramList );
+   return Object();
+   }
+ */
 
 
 //-------------------------------------------------------------------------------
 void
-Reflex::Member::Invoke( Object* ret, const std::vector < void * > & paramList ) const {
+Reflex::Member::Invoke(Object* ret,
+                       const std::vector<void*>& paramList) const {
 //-------------------------------------------------------------------------------
 // Invoke a static data member. Put return value (if not void) into ret.
-   if ( fMemberBase ) fMemberBase->Invoke( ret, paramList );
+   if (fMemberBase) {
+      fMemberBase->Invoke(ret, paramList);
+   }
 }
 
 
 /*/-------------------------------------------------------------------------------
-  void Reflex::Member::Set( const Object & instance,
-  const Object & value ) const {
-//--------------------------------------------------------------------------------
-  if (fMemberBase ) fMemberBase->Set( instance, value );
-  }
-*/
+   void Reflex::Member::Set( const Object & instance,
+   const Object & value ) const {
+   //--------------------------------------------------------------------------------
+   if (fMemberBase ) fMemberBase->Set( instance, value );
+   }
+ */
 
 
 //-------------------------------------------------------------------------------
-void Reflex::Member::Set( const Object & instance,
-                                const void * value ) const {
+void
+Reflex::Member::Set(const Object& instance,
+                    const void* value) const {
 //-------------------------------------------------------------------------------
 // Set a non static data member.
-   if (fMemberBase ) fMemberBase->Set( instance, value );
+   if (fMemberBase) {
+      fMemberBase->Set(instance, value);
+   }
 }
 
 
 //-------------------------------------------------------------------------------
-void Reflex::Member::GenerateDict( DictionaryGenerator & generator) const {
+void
+Reflex::Member::GenerateDict(DictionaryGenerator& generator) const {
 //-------------------------------------------------------------------------------
 // Generate Dictionary information about itself.
-   if ( * this ) fMemberBase->GenerateDict( generator );
+   if (*this) {
+      fMemberBase->GenerateDict(generator);
+   }
 }
-                           
+
+
 #ifdef REFLEX_CINT_MERGE
-bool Reflex::Member::operator&&(const Scope &right) const
-{ return operator bool() && (bool)right; }
-bool Reflex::Member::operator&&(const Type &right) const 
-{ return operator bool() && (bool)right; }
-bool Reflex::Member::operator&&(const Member &right) const 
-{ return operator bool() && (bool)right; }
-bool Reflex::Member::operator||(const Scope &right) const 
-{ return operator bool() && (bool)right; }
-bool Reflex::Member::operator||(const Type &right) const 
-{ return operator bool() && (bool)right; }
-bool Reflex::Member::operator||(const Member &right) const 
-{ return operator bool() && (bool)right; }
+bool
+Reflex::Member::operator &&(const Scope& right) const
+{ return operator bool() && (bool) right; }
+
+bool
+Reflex::Member::operator &&(const Type& right) const
+{ return operator bool() && (bool) right; }
+
+bool
+Reflex::Member::operator &&(const Member& right) const
+{ return operator bool() && (bool) right; }
+
+bool
+Reflex::Member::operator ||(const Scope& right) const
+{ return operator bool() && (bool) right; }
+
+bool
+Reflex::Member::operator ||(const Type& right) const
+{ return operator bool() && (bool) right; }
+
+bool
+Reflex::Member::operator ||(const Member& right) const
+{ return operator bool() && (bool) right; }
+
 #endif

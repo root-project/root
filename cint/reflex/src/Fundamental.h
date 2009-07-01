@@ -16,27 +16,23 @@
 #include "Reflex/internal/TypeBase.h"
 
 namespace Reflex {
+/**
+ * @class Fundamental Fundamental.h Reflex/Fundamental.h
+ *  @author Stefan Roiser
+ *  @date 24/11/2003
+ */
+class Fundamental: public TypeBase {
+public:
+   /** default constructor */
+   Fundamental(const char* typ,
+               size_t size,
+               const std::type_info& ti);
 
 
-   /**
-   * @class Fundamental Fundamental.h Reflex/Fundamental.h
-   *  @author Stefan Roiser
-   *  @date 24/11/2003
-   */
-   class Fundamental : public TypeBase {
-   public:
+   /** destructor */
+   virtual ~Fundamental() {}
 
-      /** default constructor */
-      Fundamental( const char * typ,
-         size_t size,
-         const std::type_info & ti ) ;
-
-
-      /** destructor */
-      virtual ~Fundamental() {}
-
-   }; // class Fundamental
+};    // class Fundamental
 } //namespace Reflex
 
 #endif // Reflex_Fundamental
-

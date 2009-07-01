@@ -5,13 +5,19 @@
 #include "ClassL.h"
 
 class ClassN: /* public ClassI, */ public ClassL {
- public:
-  ClassN() : fN('n') {}
-  virtual ~ClassN() {}
-  int n() { return fN; }
-  void setN(int v) { fN = v; }
- private:
-  int fN;
+public:
+   ClassN(): fN('n') {}
+
+   virtual ~ClassN() {}
+
+   int
+   n() { return fN; }
+
+   void
+   setN(int v) { fN = v; }
+
+private:
+   int fN;
 };
 
 

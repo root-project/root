@@ -18,38 +18,37 @@
 #include <vector>
 
 namespace Reflex {
+// forward declarations
+class MemberBase;
 
-   // forward declarations
-   class MemberBase;
+/**
+ * @class OwnedMember OwnedMember.h OwnedMember.h
+ * @author Stefan Roiser
+ * @date 21/07/2006
+ * @ingroup Ref
+ */
+class RFLX_API OwnedMember: public Member {
+public:
+   /** constructor */
+   OwnedMember(const MemberBase * memberBase = 0):
+      Member(memberBase) {
+   }
 
-   /**
-   * @class OwnedMember OwnedMember.h OwnedMember.h
-   * @author Stefan Roiser
-   * @date 21/07/2006
-   * @ingroup Ref
-   */
-   class RFLX_API OwnedMember : public Member {
-
-   public:
-
-      /** constructor */
-      OwnedMember( const MemberBase * memberBase = 0 ) 
-         : Member ( memberBase ) {
-      }
-
-      /** take ownership */
-      OwnedMember( const Member & rh ) 
-         : Member ( rh ) {}
+   /** take ownership */
+   OwnedMember(const Member &rh):
+      Member(rh) {}
 
 
-      /** delete info */
-      void Delete() {
-         Member::Delete();
-         /*             delete fMemberBase; */
-         /*             fMemberBase = 0; */
-      }
+   /** delete info */
+   void
+   Delete() {
+      Member::Delete();
+      /*             delete fMemberBase; */
+      /*             fMemberBase = 0; */
+   }
 
-   }; // class OwnedMember
+
+};    // class OwnedMember
 
 } // namespace Reflex
 

@@ -10,7 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "PluginFactoryMap.h"
@@ -28,69 +28,94 @@ using namespace std;
 #include "dir_manip.h"
 
 #if defined(_WIN32)      /* Windows  */
-#define PATHENV "PATH"
-#define PATHSEP ";"
+# define PATHENV "PATH"
+# define PATHSEP ";"
 #elif defined(__APPLE__) /* MacOS */
-#define PATHENV "DYLD_LIBRARY_PATH"
-#define PATHSEP ":"
+# define PATHENV "DYLD_LIBRARY_PATH"
+# define PATHSEP ":"
 #else                    /* Linux */
-#define PATHENV "LD_LIBRARY_PATH"
-#define PATHSEP ":"
+# define PATHENV "LD_LIBRARY_PATH"
+# define PATHSEP ":"
 #endif
 
 typedef std::list<std::string> Directive_t;
 typedef std::map<std::string, Directive_t> Map_t;
 
 //-------------------------------------------------------------------------------
-static Map_t & sMap() {
+static Map_t&
+sMap() {
 //-------------------------------------------------------------------------------
 // Static wrapper for the map.
    static Map_t* s_map = 0;
-   if (!s_map) s_map = new Map_t;
+
+   if (!s_map) {
+      s_map = new Map_t;
+   }
    return *s_map;
 }
 
+
 //-------------------------------------------------------------------------------
-static void DumpFactoryDirective(std::ostream& out, 
-                                 const Directive_t& directive) {
+static void
+DumpFactoryDirective(std::ostream& out,
+                     const Directive_t& directive) {
 //-------------------------------------------------------------------------------
 // Dump a directive to out.
    bool first = true;
+
    for (Directive_t::const_iterator iLib = directive.begin();
         iLib != directive.end(); ++iLib) {
-      if (!first) 
+      if (!first) {
          out << ", ";
-      else first = false;
+      } else { first = false; }
       out << *iLib;
    }
 }
 
+
 //-------------------------------------------------------------------------------
-bool ConflictingDirective(const Directive_t& lhs, const Directive_t& rhs) {
+bool
+ConflictingDirective(const Directive_t& lhs,
+                     const Directive_t& rhs) {
 //-------------------------------------------------------------------------------
 // Check for inequality of directives, disregarding order of all but first.
-   if (*lhs.begin() != *rhs.begin()) return true;
-   if (lhs.size() < 2 || lhs.size() < 2) return false; // first entry equal, and it's all we have
+   if (*lhs.begin() != *rhs.begin()) {
+      return true;
+   }
 
+   if (lhs.size() < 2 || lhs.size() < 2) {
+      return false;                                    // first entry equal, and it's all we have
+
+   }
    set<string> setLHS, setRHS;
+
    // can't use insert(iter, iter) because of solaris :-/
-   for (Directive_t::const_iterator iLHS = ++lhs.begin(); iLHS != lhs.end(); ++iLHS)
+   for (Directive_t::const_iterator iLHS = ++lhs.begin(); iLHS != lhs.end(); ++iLHS) {
       setLHS.insert(*iLHS);
-   for (Directive_t::const_iterator iRHS = ++rhs.begin(); iRHS != rhs.end(); ++iRHS)
+   }
+
+   for (Directive_t::const_iterator iRHS = ++rhs.begin(); iRHS != rhs.end(); ++iRHS) {
       setRHS.insert(*iRHS);
-   if (setLHS.size() != setRHS.size()) return true;
+   }
+
+   if (setLHS.size() != setRHS.size()) {
+      return true;
+   }
 
    for (set<string>::const_iterator iSetLHS = setLHS.begin();
-        iSetLHS != setLHS.end(); ++iSetLHS)
-      if (setRHS.find(*iSetLHS) == setRHS.end()) return true;
+        iSetLHS != setLHS.end(); ++iSetLHS) {
+      if (setRHS.find(*iSetLHS) == setRHS.end()) {
+         return true;
+      }
+   }
    return false;
-}
+} // ConflictingDirective
 
 
 int Reflex::PluginFactoryMap::fgDebugLevel = 0;
 
 //-------------------------------------------------------------------------------
-Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv ) {
+Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv) {
 //-------------------------------------------------------------------------------
 // Constructor.
    vector<char*> tokens;
@@ -98,14 +123,17 @@ Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv ) {
    dirent* e = 0;
    DIR* dir = 0;
    string path = ::getenv(pathenv.empty() ? PATHENV : pathenv.c_str());
-   for(char* t=strtok(const_cast<char*>(path.c_str()),PATHSEP); t; t=strtok(0,PATHSEP))  {
-      if ( 0 == ::stat(t,&buf) && S_ISDIR(buf.st_mode) )
+
+   for (char* t = strtok(const_cast<char*>(path.c_str()), PATHSEP); t; t = strtok(0, PATHSEP)) {
+      if (0 == ::stat(t, &buf) && S_ISDIR(buf.st_mode)) {
          tokens.push_back(t);
+      }
    }
-   for(vector<char*>::iterator i=tokens.begin();i != tokens.end(); ++i) {
-      if ( 0 != (dir=::opendir(*i)) )  {
-         while ( 0 != (e=::readdir(dir)) )  {
-            if ( strstr(::directoryname(e),"rootmap") != 0 )  {
+
+   for (vector<char*>::iterator i = tokens.begin(); i != tokens.end(); ++i) {
+      if (0 != (dir = ::opendir(*i))) {
+         while (0 != (e = ::readdir(dir))) {
+            if (strstr(::directoryname(e), "rootmap") != 0) {
                std::string fn = *i;
                fn += "/";
                fn += ::directoryname(e);
@@ -126,31 +154,43 @@ Reflex::PluginFactoryMap::~PluginFactoryMap() {
 
 
 //-------------------------------------------------------------------------------
-void Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
+void
+Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
 //-------------------------------------------------------------------------------
 // Fill the map from the content of the map files.
    fstream file;
    string rawline;
-   file.open(filename.c_str(),ios::in);
-   if ( Debug() ) cout << "FactoryMap: Processing file " << filename << endl; 
-   while( ! getline(file, rawline).eof() && file.good() ) {
+   file.open(filename.c_str(), ios::in);
+
+   if (Debug()) {
+      cout << "FactoryMap: Processing file " << filename << endl;
+   }
+
+   while (!getline(file, rawline).eof() && file.good()) {
       string::size_type p1 = rawline.find_first_not_of(' ');
       string::size_type p2 = rawline.find_last_not_of(' ');
-      string line = rawline.substr(p1 == string::npos ? 0 : p1, 
+      string line = rawline.substr(p1 == string::npos ? 0 : p1,
                                    p2 == string::npos ? rawline.length() - 1 : p2 - p1 + 1);
-      if ( line.size() == 0 || line[0] == '#' ) continue;
-      if ( line.substr(0,8) == "Library." ) {
+
+      if (line.size() == 0 || line[0] == '#') {
+         continue;
+      }
+
+      if (line.substr(0, 8) == "Library.") {
          string::size_type pc = line.find_first_of(':');
-         string cname = line.substr(8,pc-8);
-         string::size_type pv = line.substr(pc+1).find_first_not_of(' ');
-         string vlibs = line.substr(pc+1+pv);
+         string cname = line.substr(8, pc - 8);
+         string::size_type pv = line.substr(pc + 1).find_first_not_of(' ');
+         string vlibs = line.substr(pc + 1 + pv);
          Directive_t libs;
-         for(char* t=strtok(const_cast<char*>(vlibs.c_str())," "); t; t = strtok(0," "))
+
+         for (char* t = strtok(const_cast<char*>(vlibs.c_str()), " "); t; t = strtok(0, " ")) {
             libs.push_back(t);
+         }
 
          // Check whether cname already has a directive,
          // warn and ignore this one if it's conflicting
          Map_t::const_iterator iPreviousDirective = sMap().find(cname);
+
          if (iPreviousDirective != sMap().end()) {
             if (ConflictingDirective(libs, iPreviousDirective->second)) {
                if (Debug()) {
@@ -164,17 +204,16 @@ void Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
                   cerr << "\"" << endl
                        << "  Previous takes precedence." << endl;
                }
-            } else 
-               if ( Debug() > 1 ) {
-                  cout << "FactoryMap: copy of directive detected for Name " << cname << ": ";
-                  DumpFactoryDirective(cout, libs);
-                  cout << endl;
-               }
+            } else if (Debug() > 1) {
+               cout << "FactoryMap: copy of directive detected for Name " << cname << ": ";
+               DumpFactoryDirective(cout, libs);
+               cout << endl;
+            }
          } else {
-            // Inserting name in map 
+            // Inserting name in map
             sMap()[cname] = libs;
 
-            if ( Debug() > 1 ) {
+            if (Debug() > 1) {
                cout << "FactoryMap:    Name " << cname << ": ";
                DumpFactoryDirective(cout, libs);
                cout << endl;
@@ -183,11 +222,12 @@ void Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
       }
    }
    file.close();
-}
-        
+} // FillMap
+
 
 //-------------------------------------------------------------------------------
-std::list<std::string> Reflex::PluginFactoryMap::GetLibraries(const std::string& name) const {
+std::list<std::string>
+Reflex::PluginFactoryMap::GetLibraries(const std::string& name) const {
 //-------------------------------------------------------------------------------
 // Return all libs currently present.
    return sMap()[name];
@@ -195,7 +235,8 @@ std::list<std::string> Reflex::PluginFactoryMap::GetLibraries(const std::string&
 
 
 //-------------------------------------------------------------------------------
-void Reflex::PluginFactoryMap::SetDebug(int l) {
+void
+Reflex::PluginFactoryMap::SetDebug(int l) {
 //-------------------------------------------------------------------------------
 // Set debug level.
    fgDebugLevel = l;
@@ -203,7 +244,8 @@ void Reflex::PluginFactoryMap::SetDebug(int l) {
 
 
 //-------------------------------------------------------------------------------
-int Reflex::PluginFactoryMap::Debug() {
+int
+Reflex::PluginFactoryMap::Debug() {
 //-------------------------------------------------------------------------------
 // Get debug level.
    return fgDebugLevel;

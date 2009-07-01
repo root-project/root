@@ -16,36 +16,40 @@
 #define Reflex_InternalTools
 
 namespace Reflex {
+namespace OTools {
+template <typename TO> class ToIter {
+public:
+   template <typename CONT>
+   static typename std::vector<TO>::iterator
+   Begin(const CONT& cont) {
+      return ((typename std::vector<TO> &) const_cast<CONT&>(cont)).begin();
+   }
 
-   namespace OTools {
 
-      template< typename TO > class ToIter {
+   template <typename CONT>
+   static typename std::vector<TO>::iterator
+   End(const CONT& cont) {
+      return ((typename std::vector<TO> &) const_cast<CONT&>(cont)).end();
+   }
 
-      public:
 
-         template < typename CONT > 
-         static typename std::vector<TO>::iterator Begin( const CONT & cont ) {
-            return ((typename std::vector<TO> &)const_cast<CONT &>(cont)).begin();
-         }
+   template <typename CONT>
+   static typename std::vector<TO>::const_reverse_iterator
+   RBegin(const CONT& cont) {
+      return ((const typename std::vector<TO> &)cont).rbegin();
+   }
 
-         template < typename CONT >
-         static typename std::vector<TO>::iterator End( const CONT & cont ) {
-            return ((typename std::vector<TO> &)const_cast<CONT &>(cont)).end();
-         }
 
-         template < typename CONT > 
-         static typename std::vector<TO>::const_reverse_iterator RBegin( const CONT & cont ) {
-            return ((const typename std::vector<TO> &)cont).rbegin();
-         }
+   template <typename CONT>
+   static typename std::vector<TO>::const_reverse_iterator
+   REnd(const CONT& cont) {
+      return ((const typename std::vector<TO> &)cont).rend();
+   }
 
-         template < typename CONT >
-         static typename std::vector<TO>::const_reverse_iterator REnd( const CONT & cont ) {
-            return ((const typename std::vector<TO> &)cont).rend();
-         }
 
-      };
+};
 
-   } // namespace OTools
+}    // namespace OTools
 } // namespace Reflex
 
 #endif // Reflex_InternalTools

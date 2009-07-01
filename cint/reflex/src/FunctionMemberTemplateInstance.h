@@ -17,128 +17,134 @@
 #include "TemplateInstance.h"
 
 namespace Reflex {
+// forward declarations
+class Type;
 
-   // forward declarations
-   class Type;
+/**
+ * @class FunctionMemberTemplateInstance FunctionMemberTemplateInstance.h Reflex/FunctionMemberTemplateInstance.h
+ * @author Stefan Roiser
+ * @date 13/1/2004
+ * @ingroup Ref
+ */
+class FunctionMemberTemplateInstance: public FunctionMember,
+   public TemplateInstance {
+public:
+   /** default constructor */
+   FunctionMemberTemplateInstance(const char* nam,
+                                  const Type& typ,
+                                  StubFunction stubFP,
+                                  void* stubCtx = 0,
+                                  const char* params = 0,
+                                  unsigned int modifiers = 0,
+                                  const Scope& scop = Scope());
+
+
+   /** destructor */
+   virtual ~FunctionMemberTemplateInstance();
+
 
    /**
-   * @class FunctionMemberTemplateInstance FunctionMemberTemplateInstance.h Reflex/FunctionMemberTemplateInstance.h
-   * @author Stefan Roiser
-   * @date 13/1/2004
-   * @ingroup Ref
-   */
-   class FunctionMemberTemplateInstance : public FunctionMember, public TemplateInstance {
-
-   public:
-
-      /** default constructor */
-      FunctionMemberTemplateInstance( const char * nam,
-         const Type & typ,
-         StubFunction stubFP,
-         void * stubCtx = 0,
-         const char * params = 0, 
-         unsigned int modifiers = 0,
-         const Scope & scop = Scope());
+    * Name returns the fully qualified Name of the
+    * templated function
+    * @param  typedefexp expand typedefs or not
+    * @return fully qualified Name of templated function
+    */
+   std::string Name(unsigned int mod = 0) const;
 
 
-      /** destructor */
-      virtual ~FunctionMemberTemplateInstance();
+   /**
+    * TemplateArgumentAt will return a pointer to the nth template argument
+    * @param  nth nth template argument
+    * @return pointer to nth template argument
+    */
+   Type TemplateArgumentAt(size_t nth) const;
 
 
-      /**
-      * Name returns the fully qualified Name of the
-      * templated function
-      * @param  typedefexp expand typedefs or not
-      * @return fully qualified Name of templated function
-      */
-      std::string Name( unsigned int mod = 0 ) const;
+   /**
+    * templateArgSize will return the number of template arguments
+    * @return number of template arguments
+    */
+   size_t TemplateArgumentSize() const;
 
 
-      /**
-      * TemplateArgumentAt will return a pointer to the nth template argument
-      * @param  nth nth template argument
-      * @return pointer to nth template argument
-      */
-      Type TemplateArgumentAt( size_t nth ) const;
+   virtual Type_Iterator TemplateArgument_Begin() const;
+   virtual Type_Iterator TemplateArgument_End() const;
+   virtual Reverse_Type_Iterator TemplateArgument_RBegin() const;
+   virtual Reverse_Type_Iterator TemplateArgument_REnd() const;
 
 
-      /**
-      * templateArgSize will return the number of template arguments
-      * @return number of template arguments
-      */
-      size_t TemplateArgumentSize() const;
+   /**
+    * TemplateFamily returns the corresponding MemberTemplate if any
+    * @return corresponding MemberTemplate
+    */
+   MemberTemplate TemplateFamily() const;
 
+private:
+   /**
+    * The template type (family)
+    * @label template family
+    * @link aggregation
+    * @clientCardinality 1
+    * @supplierCardinality 1
+    */
+   MemberTemplate fTemplateFamily;
 
-      virtual Type_Iterator TemplateArgument_Begin() const;
-      virtual Type_Iterator TemplateArgument_End() const;
-      virtual Reverse_Type_Iterator TemplateArgument_RBegin() const;
-      virtual Reverse_Type_Iterator TemplateArgument_REnd() const;
-
-
-      /**
-      * TemplateFamily returns the corresponding MemberTemplate if any
-      * @return corresponding MemberTemplate
-      */
-      MemberTemplate TemplateFamily() const;
-
-   private:
-
-      /** 
-      * The template type (family)
-      * @label template family
-      * @link aggregation
-      * @clientCardinality 1
-      * @supplierCardinality 1
-      */
-      MemberTemplate fTemplateFamily;      
-
-   }; // class FunctionMemberTemplateInstance
+};    // class FunctionMemberTemplateInstance
 } // namespace Reflex
 
 //-------------------------------------------------------------------------------
-inline Reflex::FunctionMemberTemplateInstance::~FunctionMemberTemplateInstance() {}
+inline Reflex::FunctionMemberTemplateInstance::~FunctionMemberTemplateInstance() {
+}
+
 //-------------------------------------------------------------------------------
 
 
 //-------------------------------------------------------------------------------
-inline size_t Reflex::FunctionMemberTemplateInstance::TemplateArgumentSize() const {
+inline size_t
+Reflex::FunctionMemberTemplateInstance::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
    return TemplateInstance::TemplateArgumentSize();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Type_Iterator Reflex::FunctionMemberTemplateInstance::TemplateArgument_Begin() const {
+inline Reflex::Type_Iterator
+Reflex::FunctionMemberTemplateInstance::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
    return TemplateInstance::TemplateArgument_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Type_Iterator Reflex::FunctionMemberTemplateInstance::TemplateArgument_End() const {
+inline Reflex::Type_Iterator
+Reflex::FunctionMemberTemplateInstance::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
    return TemplateInstance::TemplateArgument_End();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Reverse_Type_Iterator Reflex::FunctionMemberTemplateInstance::TemplateArgument_RBegin() const {
+inline Reflex::Reverse_Type_Iterator
+Reflex::FunctionMemberTemplateInstance::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
    return TemplateInstance::TemplateArgument_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Reverse_Type_Iterator Reflex::FunctionMemberTemplateInstance::TemplateArgument_REnd() const {
+inline Reflex::Reverse_Type_Iterator
+Reflex::FunctionMemberTemplateInstance::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
    return TemplateInstance::TemplateArgument_REnd();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::MemberTemplate Reflex::FunctionMemberTemplateInstance::TemplateFamily() const {
+inline Reflex::MemberTemplate
+Reflex::FunctionMemberTemplateInstance::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    return fTemplateFamily;
 }
+
 
 #endif // Reflex_FunctionMemberTemplateInstance

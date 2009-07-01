@@ -16,35 +16,31 @@
 #include <list>
 #include <map>
 
-namespace Reflex {  
+namespace Reflex {
+/**
+ * @class PluginFactoryMap PluginFactoryMap.h PluginFactoryMap.h
+ * @author Pere Mato
+ * @date 01/09/2006
+ * @ingroup Ref
+ */
+class PluginFactoryMap {
+public:
+   PluginFactoryMap(const std::string& path = "");
 
-   /** 
-   * @class PluginFactoryMap PluginFactoryMap.h PluginFactoryMap.h
-   * @author Pere Mato
-   * @date 01/09/2006
-   * @ingroup Ref
-   */
-   class PluginFactoryMap {
+   ~PluginFactoryMap();
 
-   public:
+   std::list<std::string> GetLibraries(const std::string& name) const;
 
-      PluginFactoryMap(const std::string& path = "");
+   void FillMap(const std::string& filename);
 
-      ~PluginFactoryMap();
+   static void SetDebug(int);
 
-      std::list<std::string> GetLibraries(const std::string& name) const;
+   static int Debug();
 
-      void FillMap(const std::string& filename);
+private:
+   static int fgDebugLevel;
 
-      static void SetDebug( int );
-
-      static int Debug();
-
-   private:
-
-      static int fgDebugLevel;
-
-   }; // class PluginFactoryMap
+};    // class PluginFactoryMap
 
 }  // namespace Reflex
 

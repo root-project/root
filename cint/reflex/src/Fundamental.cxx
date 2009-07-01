@@ -10,7 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "Fundamental.h"
@@ -19,11 +19,10 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-Reflex::Fundamental::Fundamental( const char * typ,
-                                        size_t size,
-                                        const std::type_info & ti ) 
+Reflex::Fundamental::Fundamental(const char* typ,
+                                 size_t size,
+                                 const std::type_info& ti)
 //-------------------------------------------------------------------------------
-   : TypeBase( typ, size, FUNDAMENTAL, ti ) {
+   : TypeBase(typ, size, FUNDAMENTAL, ti) {
    // Create dictionary info for this fundamental type.
 }
-

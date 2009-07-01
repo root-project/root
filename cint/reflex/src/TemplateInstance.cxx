@@ -10,7 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "TemplateInstance.h"
@@ -25,28 +25,32 @@
 
 
 //-------------------------------------------------------------------------------
-Reflex::TemplateInstance::TemplateInstance( const std::string & templateArguments ) {
+Reflex::TemplateInstance::TemplateInstance(const std::string& templateArguments) {
 //-------------------------------------------------------------------------------
 // Create the dictionary info for a template instance.
    std::vector<std::string> templArgStrVec = Tools::GenTemplateArgVec(templateArguments);
+
    for (std::vector<std::string>::const_iterator it = templArgStrVec.begin();
-        it != templArgStrVec.end(); ++it ) {
+        it != templArgStrVec.end(); ++it) {
       fTemplateArguments.push_back(TypeBuilder(it->c_str()));
    }
 }
 
 
 //-------------------------------------------------------------------------------
-std::string Reflex::TemplateInstance::Name( unsigned int mod ) const {
+std::string
+Reflex::TemplateInstance::Name(unsigned int mod) const {
 //-------------------------------------------------------------------------------
 // Return the name of the template instance.
    std::string s = "<";
-   for ( size_t i = 0; i < fTemplateArguments.size(); ++i ) {
-      s += fTemplateArguments[ i ].Name( mod );
-      if ( i < ( fTemplateArguments.size() - 1 ) ) { s += ","; }
+
+   for (size_t i = 0; i < fTemplateArguments.size(); ++i) {
+      s += fTemplateArguments[i].Name(mod);
+
+      if (i < (fTemplateArguments.size() - 1)) {
+         s += ",";
+      }
    }
    s += ">";
    return s;
 }
-
-

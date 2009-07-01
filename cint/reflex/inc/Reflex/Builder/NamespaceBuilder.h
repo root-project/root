@@ -16,45 +16,43 @@
 #include "Reflex/Scope.h"
 
 
-namespace Reflex{
-
-   /** 
-   * @class NamespaceBuilder NamespaceBuilder.h Reflex/Builder/NamespaceBuilder.h
-   * @author Stefan Roiser
-   * @ingroup RefBld
-   * @date 30/3/2004
-   */
-   class RFLX_API NamespaceBuilder  {
-
-   public:            
-
-      /** constructor */
-      NamespaceBuilder( const char * nam );
+namespace Reflex {
+/**
+ * @class NamespaceBuilder NamespaceBuilder.h Reflex/Builder/NamespaceBuilder.h
+ * @author Stefan Roiser
+ * @ingroup RefBld
+ * @date 30/3/2004
+ */
+class RFLX_API NamespaceBuilder  {
+public:
+   /** constructor */
+   NamespaceBuilder(const char* nam);
 
 
-      /** destructor */
-      virtual ~NamespaceBuilder() {}
+   /** destructor */
+   virtual ~NamespaceBuilder() {}
 
-      /** AddProperty will add a PropertyNth 
-      * @param  key the PropertyNth key
-      * @param  value the value of the PropertyNth
-      * @return a reference to the building class
-      */
-      NamespaceBuilder & AddProperty( const char * key, Any value );
-      NamespaceBuilder & AddProperty( const char * key, const char * value );
+   /** AddProperty will add a PropertyNth
+    * @param  key the PropertyNth key
+    * @param  value the value of the PropertyNth
+    * @return a reference to the building class
+    */
+   NamespaceBuilder& AddProperty(const char* key,
+                                 Any value);
+   NamespaceBuilder& AddProperty(const char* key,
+                                 const char* value);
 
-      /**
-      * ToScope will return the currently being built namespace
-      * @return namespace currently being built
-      */
-      Scope ToScope();
+   /**
+    * ToScope will return the currently being built namespace
+    * @return namespace currently being built
+    */
+   Scope ToScope();
 
-   private:
+private:
+   /** the namespace */
+   Scope fNamespace;
 
-      /** the namespace */
-      Scope fNamespace;
-
-   }; // class NamespaceBuilder
+};    // class NamespaceBuilder
 
 } // namespace Reflex
 

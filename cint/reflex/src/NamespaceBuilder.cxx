@@ -10,7 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #ifndef REFLEX_BUILD
-#define REFLEX_BUILD
+# define REFLEX_BUILD
 #endif
 
 #include "Reflex/Builder/NamespaceBuilder.h"
@@ -23,43 +23,44 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-Reflex::NamespaceBuilder::NamespaceBuilder( const char * nam ) {
+Reflex::NamespaceBuilder::NamespaceBuilder(const char* nam) {
 //-------------------------------------------------------------------------------
 // Create dictionary info for a namespace.
-   Scope sc = Scope::ByName( nam );
-   if ( sc && sc.IsNamespace() ) {
-      fNamespace       = sc;
-   }
-   else {
-      fNamespace       = (new Namespace( nam ))->ThisScope();
+   Scope sc = Scope::ByName(nam);
+
+   if (sc && sc.IsNamespace()) {
+      fNamespace = sc;
+   } else {
+      fNamespace = (new Namespace(nam))->ThisScope();
    }
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::NamespaceBuilder & 
-Reflex::NamespaceBuilder::AddProperty( const char * key, 
-                                             const char * value ) {
+Reflex::NamespaceBuilder&
+Reflex::NamespaceBuilder::AddProperty(const char* key,
+                                      const char* value) {
 //-------------------------------------------------------------------------------
 // Add property to this namespace as string.
-   fNamespace.Properties().AddProperty( key , value );
-   return * this;
+   fNamespace.Properties().AddProperty(key, value);
+   return *this;
 }
 
 
 //-------------------------------------------------------------------------------
-Reflex::NamespaceBuilder & 
-Reflex::NamespaceBuilder::AddProperty( const char * key, 
-                                             Any value ) {
+Reflex::NamespaceBuilder&
+Reflex::NamespaceBuilder::AddProperty(const char* key,
+                                      Any value) {
 //-------------------------------------------------------------------------------
 // Add property to this namespace as Any object.
-   fNamespace.Properties().AddProperty( key , value );
-   return * this;
+   fNamespace.Properties().AddProperty(key, value);
+   return *this;
 }
-    
+
 
 //-------------------------------------------------------------------------------
-Reflex::Scope Reflex::NamespaceBuilder::ToScope() {
+Reflex::Scope
+Reflex::NamespaceBuilder::ToScope() {
 //-------------------------------------------------------------------------------
 // Return the scope currently being built.
    return fNamespace;

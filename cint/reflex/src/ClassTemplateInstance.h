@@ -20,136 +20,141 @@
 
 
 namespace Reflex {
+/**
+ * @class ClassTemplateInstance ClassTemplateInstance.h Reflex/ClassTemplateInstance.h
+ * @author Stefan Roiser
+ * @date 13/1/2004
+ * @ingroup Ref
+ */
+class ClassTemplateInstance: public Class,
+   public TemplateInstance {
+public:
+   /** default constructor */
+   ClassTemplateInstance(const char* typ,
+                         size_t size,
+                         const std::type_info& ti,
+                         unsigned int modifiers);
+
+
+   /** destructor */
+   virtual ~ClassTemplateInstance();
 
 
    /**
-   * @class ClassTemplateInstance ClassTemplateInstance.h Reflex/ClassTemplateInstance.h
-   * @author Stefan Roiser
-   * @date 13/1/2004
-   * @ingroup Ref
-   */
-   class ClassTemplateInstance : public Class, public TemplateInstance {
-
-   public:
-
-      /** default constructor */
-      ClassTemplateInstance( const char * typ, 
-         size_t size, 
-         const std::type_info & ti, 
-         unsigned int modifiers );
+    * Name returns the fully qualified Name of the templated class
+    * @param  typedefexp expand typedefs or not
+    * @return fully qualified Name of templated class
+    */
+   std::string Name(unsigned int mod = 0) const;
 
 
-      /** destructor */
-      virtual ~ClassTemplateInstance();
+   /**
+    * SimpleName returns the name of the type as a reference. It provides a
+    * simplified but faster generation of a type name. Attention currently it
+    * is not guaranteed that Name() and SimpleName() return the same character
+    * layout of a name (ie. spacing, commas, etc. )
+    * @param pos will indicate where in the returned reference the requested name starts
+    * @param mod The only 'mod' support is SCOPED
+    * @return name of type
+    */
+   virtual const std::string& SimpleName(size_t& pos,
+                                         unsigned int mod = 0) const;
 
 
-      /**
-      * Name returns the fully qualified Name of the templated class
-      * @param  typedefexp expand typedefs or not
-      * @return fully qualified Name of templated class
-      */
-      std::string Name( unsigned int mod = 0 ) const;
+   /**
+    * TemplateArgumentAt will return a pointer to the nth template argument
+    * @param  nth nth template argument
+    * @return pointer to nth template argument
+    */
+   Type TemplateArgumentAt(size_t nth) const;
 
 
-      /**
-      * SimpleName returns the name of the type as a reference. It provides a 
-      * simplified but faster generation of a type name. Attention currently it
-      * is not guaranteed that Name() and SimpleName() return the same character 
-      * layout of a name (ie. spacing, commas, etc. )
-      * @param pos will indicate where in the returned reference the requested name starts
-      * @param mod The only 'mod' support is SCOPED
-      * @return name of type
-      */
-      virtual const std::string & SimpleName( size_t & pos, 
-         unsigned int mod = 0 ) const;
+   /**
+    * templateArgSize will return the number of template arguments
+    * @return number of template arguments
+    */
+   size_t TemplateArgumentSize() const;
 
 
-      /**
-      * TemplateArgumentAt will return a pointer to the nth template argument
-      * @param  nth nth template argument
-      * @return pointer to nth template argument
-      */
-      Type TemplateArgumentAt( size_t nth ) const;
+   virtual Type_Iterator TemplateArgument_Begin() const;
+   virtual Type_Iterator TemplateArgument_End() const;
+   virtual Reverse_Type_Iterator TemplateArgument_RBegin() const;
+   virtual Reverse_Type_Iterator TemplateArgument_REnd() const;
 
 
-      /**
-      * templateArgSize will return the number of template arguments
-      * @return number of template arguments
-      */
-      size_t TemplateArgumentSize() const;
+   /**
+    * TemplateFamily returns the corresponding TypeTemplate if any
+    * @return corresponding TypeTemplate
+    */
+   TypeTemplate TemplateFamily() const;
 
+private:
+   /**
+    * The template type (family)
+    * @label template type
+    * @link aggregation
+    * @clientCardinality 1
+    * @supplierCardinality 1
+    */
+   TypeTemplate fTemplateFamily;
 
-      virtual Type_Iterator TemplateArgument_Begin() const;
-      virtual Type_Iterator TemplateArgument_End() const;
-      virtual Reverse_Type_Iterator TemplateArgument_RBegin() const;
-      virtual Reverse_Type_Iterator TemplateArgument_REnd() const;
-
-
-      /**
-      * TemplateFamily returns the corresponding TypeTemplate if any
-      * @return corresponding TypeTemplate
-      */
-      TypeTemplate TemplateFamily() const;
-
-   private:
-
-      /** 
-      * The template type (family)
-      * @label template type
-      * @link aggregation
-      * @clientCardinality 1
-      * @supplierCardinality 1
-      */
-      TypeTemplate fTemplateFamily;      
-
-   }; // class ClassTemplateInstance
+};    // class ClassTemplateInstance
 } // namespace Reflex
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::ClassTemplateInstance::~ClassTemplateInstance() {}
+inline Reflex::ClassTemplateInstance::~ClassTemplateInstance() {
+}
+
 //-------------------------------------------------------------------------------
 
 
 //-------------------------------------------------------------------------------
-inline size_t Reflex::ClassTemplateInstance::TemplateArgumentSize() const {
+inline size_t
+Reflex::ClassTemplateInstance::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
    return TemplateInstance::TemplateArgumentSize();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Type_Iterator Reflex::ClassTemplateInstance::TemplateArgument_Begin() const {
+inline Reflex::Type_Iterator
+Reflex::ClassTemplateInstance::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
    return TemplateInstance::TemplateArgument_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Type_Iterator Reflex::ClassTemplateInstance::TemplateArgument_End() const {
+inline Reflex::Type_Iterator
+Reflex::ClassTemplateInstance::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
    return TemplateInstance::TemplateArgument_End();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Reverse_Type_Iterator Reflex::ClassTemplateInstance::TemplateArgument_RBegin() const {
+inline Reflex::Reverse_Type_Iterator
+Reflex::ClassTemplateInstance::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
    return TemplateInstance::TemplateArgument_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Reverse_Type_Iterator Reflex::ClassTemplateInstance::TemplateArgument_REnd() const {
+inline Reflex::Reverse_Type_Iterator
+Reflex::ClassTemplateInstance::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
    return TemplateInstance::TemplateArgument_REnd();
 }
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::TypeTemplate Reflex::ClassTemplateInstance::TemplateFamily() const {
+inline Reflex::TypeTemplate
+Reflex::ClassTemplateInstance::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    return fTemplateFamily;
 }
+
 
 #endif // Reflex_ClassTemplateInstance
