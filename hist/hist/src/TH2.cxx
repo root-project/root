@@ -2186,6 +2186,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       if (fTsumw != 0 && TMath::Abs( fTsumw - totcont) <  TMath::Abs(fTsumw) * eps) 
          reuseStats = true; 
    }
+   if (ncuts) reuseStats = false; 
    // retrieve  the statistics and set in projected histogram if we can re-use it 
    if (reuseStats) { 
       Double_t stats[kNstat];
