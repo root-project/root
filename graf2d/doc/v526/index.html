@@ -21,3 +21,33 @@
     characters with TLatex, but it should work anyway.
 </ul>
 
+
+<h3>Graphics Primitives</h3>
+
+<h4>TLatex</h4>
+<ul>
+<li> In the following macro the <tt>#int</tt> and <tt>#sum</tt> symbols had 
+     wrong limits placement if the character just before started with "#".
+   <pre>
+   {
+      TCanvas *c1 = new TCanvas("c1","c1",500,500);
+      TLatex l;
+      l.SetTextSize(0.1);
+
+      l.DrawLatex(0.1,0.6,"#nu#int^{1-x}_{2#pi}");
+      l.DrawLatex(0.1,0.2,"a#int^{1-x}_{2#pi}");
+
+      l.DrawLatex(0.5,0.6,"#nu#sum^{1-x}_{2#pi}");
+      l.DrawLatex(0.5,0.2,"a#sum^{1-x}_{2#pi}");
+   }
+   </pre>
+
+   This problem is there since the 1st version of TLatex. It is fixed by:
+   <ol>
+   <li>Giving "^" and "_" a lower precedence than special and greek characters.
+   <li>Making a special case for #int and #sum and giving them even
+      lower precedence than "^" and "_". 
+   </ol>
+   Oleksandr Grebenyuk <tt><ogrebenyuk@lbl.gov></tt> helped a lot solving this 
+   issue.
+</ul>
