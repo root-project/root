@@ -933,36 +933,38 @@ Begin_Macro(source)
 {
    int i;
    const Int_t nx = 8;
-   char *os_X[nx] = {"8","32","128","512","2048","8192","32768","131072"};
-   float d_35_0[]= {0.75, -3.30, -0.92, 0.10, 0.08, -1.69, -1.29, -2.37};
-   float d_35_1[]= {1.01, -3.02, -0.65, 0.37, 0.34, -1.42, -1.02, -2.10};
+   char *os_X[nx]   = {"8","32","128","512","2048","8192","32768","131072"};
+   float d_35_0[nx] = {0.75, -3.30, -0.92, 0.10, 0.08, -1.69, -1.29, -2.37};
+   float d_35_1[nx] = {1.01, -3.02, -0.65, 0.37, 0.34, -1.42, -1.02, -2.10};
 
    TCanvas *cb = new TCanvas("cb","cb",600,400);
    cb->SetGrid();
 
    gStyle->SetHistMinimumZero();
 
-   TH1F *h = new TH1F("h","",nx,0,nx);
-   h->SetFillColor(4);
-   h->SetBarWidth(0.4); h->SetBarOffset(0.1); h->SetStats(0);
-   h->SetMinimum(-5);
-   h->SetMaximum(5);
+   TH1F *h1b = new TH1F("h1b","Option B example",nx,0,nx);
+   h1b->SetFillColor(4);
+   h1b->SetBarWidth(0.4); 
+   h1b->SetBarOffset(0.1); 
+   h1b->SetStats(0);
+   h1b->SetMinimum(-5);
+   h1b->SetMaximum(5);
 
-   for (i=1;i<=nx;i++) {
-      h->Fill(os_X[i-1], d_35_0[i-1]);
-      h->GetXaxis()->SetBinLabel(i,os_X[i-1]);
+   for (i=1; i<=nx; i++) {
+      h1b->Fill(os_X[i-1], d_35_0[i-1]);
+      h1b->GetXaxis()->SetBinLabel(i,os_X[i-1]);
    }
 
-   h->Draw("b");
+   h1b->Draw("b");
 
-   TH1F *h2 = new TH1F("h2","test",nx,0,nx);
-   h2->SetFillColor(38);
-   h2->SetBarWidth(0.4);
-   h2->SetBarOffset(0.5);
-   h2->SetStats(0);
-   for (i=1;i<=nx;i++) h2->Fill(os_X[i-1], d_35_1[i-1]);
+   TH1F *h2b = new TH1F("h2b","h2b",nx,0,nx);
+   h2b->SetFillColor(38);
+   h2b->SetBarWidth(0.4);
+   h2b->SetBarOffset(0.5);
+   h2b->SetStats(0);
+   for (i=1;i<=nx;i++) h2b->Fill(os_X[i-1], d_35_1[i-1]);
 
-   h2->Draw("b same");
+   h2b->Draw("b same");
 
    return cb;
 }
