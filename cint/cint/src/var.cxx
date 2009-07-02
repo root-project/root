@@ -14,7 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
-//--
+#include "DataMemberHandle.h"
 
 #include <cctype>
 #include <cstdio>
@@ -22,11 +22,14 @@
 #include <cstring>
 #include <sstream>
 
+using namespace Cint;
+
+static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, char* item, char* varname, int parameter00, G__DataMemberHandle &member);
+
 extern "C" {
 
 
 int G__filescopeaccess(int filenum, int statictype);
-static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, char* item, char* varname, int parameter00);
 static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_array* var, const char* item, long store_struct_offset, int var_type, G__value* presult);
 //--
 //--
@@ -506,8 +509,17 @@ static void G__getpointer2pointer(G__value* presult, G__var_array* var, int ig15
          break; \
    }
 
+} // extern "C"
+
 //______________________________________________________________________________
 G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal, G__var_array* varlocal)
+{
+   static G__DataMemberHandle member;
+   return G__letvariable(item,expression,varglobal,varlocal,member);
+}
+
+//______________________________________________________________________________
+G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal, G__var_array* varlocal, G__DataMemberHandle &member)
 {
    // -- FIXME: Describe me!
    struct G__var_array* var = 0;
@@ -726,7 +738,7 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
    double_quote = 0;
    paren = 0;
    if (flag) {
-      result = G__letstructmem(store_var_type, varname, membername, tagname, varglobal, expression, flag);
+      result = G__letstructmem(store_var_type, varname, membername, tagname, varglobal, expression, flag, member);
       if (varname != vv) {
          free(varname);
       }
@@ -946,6 +958,7 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
    //
    if (var) {
       // -- We have found a variable.
+      member.Set(var,ig15);
       //
       //  Block duplicate declaration.
       //
@@ -1738,7 +1751,7 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
    //
    if (!done) {
       // -- No old variable, allocate new variable.
-      result = G__allocvariable(result, para, varglobal, varlocal, paran, varhash, item, varname, parameter[0][0]);
+      result = G__allocvariable(result, para, varglobal, varlocal, paran, varhash, item, varname, parameter[0][0], member);
    }
    G__var_type = 'p';
    if (vv != varname) {
@@ -1749,6 +1762,8 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
 
 #undef G__ASSIGN_VAR
 #undef G__ASSIGN_PVAR
+
+extern "C" {
 
 //______________________________________________________________________________
 void G__letpointer2memfunc(G__var_array* var, int paran, int ig15, const char* item, int linear_index, G__value* presult, long G__struct_offset)
@@ -1789,8 +1804,10 @@ void G__letautomatic(G__var_array* var, int ig15, long G__struct_offset, int lin
    }
 }
 
+} // extern "C"
+
 //______________________________________________________________________________
-G__value G__letstructmem(int store_var_type, char* varname, char* membername, char* tagname, G__var_array* varglobal, G__value expression, int objptr  /* 1: object, 2: pointer */)
+G__value G__letstructmem(int store_var_type, char* varname, char* membername, char* tagname, G__var_array* varglobal, G__value expression, int objptr  /* 1: object, 2: pointer */, Cint::G__DataMemberHandle &member)
 {
    // -- FIXME: Describe me!
    G__value result;
@@ -1991,7 +2008,7 @@ G__value G__letstructmem(int store_var_type, char* varname, char* membername, ch
    store_do_setmemfuncenv = G__do_setmemfuncenv;
    G__do_setmemfuncenv = 1;
    G__incsetup_memvar(G__tagnum);
-   result = G__letvariable(membername, expression, 0, G__struct.memvar[G__tagnum]);
+   result = G__letvariable(membername, expression, 0, G__struct.memvar[G__tagnum], member);
    G__do_setmemfuncenv = store_do_setmemfuncenv;
    G__tagnum = store_tagnum;
    G__store_struct_offset = store_struct_offset;
@@ -2012,6 +2029,8 @@ G__value G__letstructmem(int store_var_type, char* varname, char* membername, ch
 #endif // G__ASM
    return result;
 }
+
+extern "C" {
 
 //______________________________________________________________________________
 void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig15, const char* item, int paran, long G__struct_offset)
@@ -3257,8 +3276,10 @@ inline void G__alloc_var_ref(int SIZE, CONVFUNC f, char* item, G__var_array* var
 
 #endif // G__ASM_WHOLEFUNC
 
+} // extern "C"
+
 //______________________________________________________________________________
-static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, char* item, char* varname, int parameter00)
+static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, char* item, char* varname, int parameter00, G__DataMemberHandle &member)
 {
    // -- Allocate memory for a variable and initialize it.
    //
@@ -3901,6 +3922,8 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    //  Take ownership of the variable chain entry.
    //
    var->allvar++;
+   //  Pass the handle back to the caller
+   member.Set(var,ig15);
    // FIXME: Why?  This is bizzare.
    var->varlabel[var->allvar][0] = var->varlabel[var->allvar-1][0] + 1;
    //--  1
@@ -4762,6 +4785,8 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
 }
 
 #undef G__ALLOC_VAR_REF
+
+extern "C" {
 
 //______________________________________________________________________________
 static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_array* var, const char*
@@ -7606,10 +7631,12 @@ struct G__var_array* G__searchvariable(char* varname, int varhash, G__var_array*
       G__var_type = 'Z';
       G__value para[1];
       //--
-      G__allocvariable(G__null, para, varglobal, 0, 0, varhash, varname, varname, 0);
+      G__DataMemberHandle member;
+      G__allocvariable(G__null, para, varglobal, 0, 0, varhash, varname, varname, 0, member);
       G__var_type = store_var_type;
       G__p_local = store_local;
-      var = G__searchvariable(varname, varhash, varlocal, varglobal, pG__struct_offset, pstore_struct_offset, pig15, isdecl);
+      var = member.GetVarArray();
+      *pig15 = member.GetIndex();
       if (var) {
          G__gettingspecial = 0;
          return var;

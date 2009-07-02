@@ -14,12 +14,17 @@
  ************************************************************************/
 
 #include "common.h"
+#include "DataMemberHandle.h"
 
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+
+using namespace Cint;
+
+static int G__setvariablecomment(char* new_name, Cint::G__DataMemberHandle &member);
 
 extern "C" {
 
@@ -28,8 +33,6 @@ int G__dynconst = 0;
 
 // Static functions.
 static int G__get_newname(char* new_name);
-static int G__setvariablecomment(char* new_name);
-static struct G__var_array* G__rawvarentry(char* name, int hash, int* pig15, G__var_array* var);
 static void G__removespacetemplate(char* name);
 static int G__initstruct(char* new_name);
 static int G__initary(char* new_name);
@@ -481,71 +484,30 @@ static int G__get_newname(char* new_name)
    return cin;
 }
 
-//______________________________________________________________________________
-static int G__setvariablecomment(char* new_name)
-{
-   struct G__var_array *var;
-   int ig15;
-   int i;
-   int hash;
-   char name[G__MAXNAME];
-   char *p;
-   unsigned int j,nest,scope;
-
-   if('\0'==new_name[0]) return(0);
-
-   strcpy(name,new_name);
-   p=strchr(name,'[');
-   if(p) *p='\0';
-
-   /* Check to see if we were passed a qualified name or name */
-   for(j=0,nest=0,scope=0;j<strlen(name);++j) {
-      switch(name[j]) {
-         case '<': ++nest; break;
-         case '>': --nest; break;
-         case ':':
-                   if (nest==0 && name[j+1]==':') {
-                      scope = j;
-                   }; break;
-      };
-   }
-
-   if (scope==0) {
-      /* If scope is not null, this means that we are not really inside the
-         the class declaration.  This might actually be an instantiation inside
-         a namespace */
-
-      G__hash(name,hash,i)
-         /* only interpretation. no need to check for cpplink memvar setup */
-         var = G__rawvarentry(name,hash,&ig15,G__struct.memvar[G__tagdefining]);
-      if(var) {
-         var->comment[ig15].filenum = -1;
-         var->comment[ig15].p.com = (char*)NULL;
-         G__fsetcomment(&var->comment[ig15]);
-      }
-      else {
-         G__fprinterr(G__serr,"Internal warning: %s comment can not set",new_name);
-         G__printlinenum();
-      }
-   }
-   return(0);
-}
+} // Extern "C"
 
 //______________________________________________________________________________
-static struct G__var_array* G__rawvarentry(char* name, int hash, int* pig15, G__var_array* var)
+static int G__setvariablecomment(char* new_name, Cint::G__DataMemberHandle &member)
 {
-   int ig15=0;
-   while(var) {
-      for(ig15=0;ig15<var->allvar;ig15++) {
-         if(hash == var->hash[ig15] && strcmp(name,var->varnamebuf[ig15])==0) {
-            *pig15 = ig15;
-            return(var);
-         }
-      }
-      var = var->next;
+   // Set the variable comment.
+   
+   G__var_array *var = member.GetVarArray();
+   int ig15 = member.GetIndex();
+   
+   if (var) {
+      var->comment[ig15].filenum = -1;
+      var->comment[ig15].p.com = (char*)NULL;
+      G__fsetcomment(&var->comment[ig15]);
+      return 1;
    }
-   return(var);
+   else if (new_name && new_name[0] && 0==strchr(new_name,':')) {
+      G__fprinterr(G__serr, "Internal warning: %s comment can not set", new_name);
+      G__printlinenum();
+   }
+   return 0;
 }
+
+extern "C" {
 
 //______________________________________________________________________________
 static void G__removespacetemplate(char* name)
@@ -1396,6 +1358,7 @@ static void G__initstructary(char* new_name, int tagnum)
    long store_struct_offset = G__store_struct_offset;
    long store_globalvarpointer = G__globalvarpointer;
    char buf[G__ONELINE];
+   G__DataMemberHandle member;
 #ifdef G__ASM
    G__abortbytecode();
 #endif // G__ASM
@@ -1430,7 +1393,7 @@ static void G__initstructary(char* new_name, int tagnum)
    // Allocate memory.
    G__value reg = G__null;
    G__decl_obj = 2;
-   long adr = G__int(G__letvariable(new_name, reg, &G__global, G__p_local));
+   long adr = G__int(G__letvariable(new_name, reg, &G__global, G__p_local, member));
    G__decl_obj = 0;
    // Read and initalize each element.
    std::strcpy(buf, G__struct.name[tagnum]);
@@ -1665,6 +1628,7 @@ void G__define_var(int tagnum, int typenum)
    G__typenum = typenum;
    store_decl = G__decl;
    G__decl = 1;
+   G__DataMemberHandle member;
    //fprintf(stderr, "\nG__define_var: Begin.\n");
    //
    // We have:
@@ -1909,21 +1873,21 @@ void G__define_var(int tagnum, int typenum)
                }
                G__globalvarpointer = G__int(reg);
                G__cppconstruct = 1;
-               G__letvariable(new_name, G__null, &G__global, G__p_local);
+               G__letvariable(new_name, G__null, &G__global, G__p_local, member);
                G__cppconstruct = 0;
                G__globalvarpointer = G__PVOID;
             }
             else {
                // -- The struct is interpreted.
                // Create object.
-               G__letvariable(new_name, G__null, &G__global, G__p_local);
+               G__letvariable(new_name, G__null, &G__global, G__p_local, member);
                // And initialize it.
-               G__letvariable(new_name, reg, &G__global, G__p_local);
+               G__letvariable(new_name, reg, &G__global, G__p_local, member);
             }
          }
          else {
             // -- The parameter is of fundamental type.
-            G__letvariable(new_name, reg, &G__global, G__p_local);
+            G__letvariable(new_name, reg, &G__global, G__p_local, member);
          }
          G__ansiheader = 1;
          G__globalvarpointer = G__PVOID;
@@ -2135,7 +2099,7 @@ void G__define_var(int tagnum, int typenum)
                // Perform the initialization.
                G__var_type = var_type;
                G__value reg = G__null;
-               G__letvariable(new_name, reg, &G__global, G__p_local);
+               G__letvariable(new_name, reg, &G__global, G__p_local, member);
                // Continue scanning.
                goto readnext;
             }
@@ -2212,7 +2176,7 @@ void G__define_var(int tagnum, int typenum)
             store_struct_offset = G__store_struct_offset;
             if (G__struct.iscpplink[tagnum] != G__CPPLINK) {
                G__prerun = store_prerun;
-               G__value val = G__letvariable(new_name, G__null, &G__global, G__p_local);
+               G__value val = G__letvariable(new_name, G__null, &G__global, G__p_local, member);
                G__store_struct_offset = G__int(val);
                if (G__return > G__RETURN_NORMAL) {
                   G__decl = store_decl;
@@ -2261,7 +2225,7 @@ void G__define_var(int tagnum, int typenum)
                if (G__globalvarpointer || G__no_exec_compile) {
                   int store_constvar2 = G__constvar;
                   G__constvar = store_constvar;
-                  G__letvariable(new_name, G__null, &G__global, G__p_local);
+                  G__letvariable(new_name, G__null, &G__global, G__p_local, member);
                   G__constvar = store_constvar2;
                }
                else if (G__asm_wholefunction) {
@@ -2712,7 +2676,7 @@ void G__define_var(int tagnum, int typenum)
                }
                // Perform the initialization.
                G__var_type = var_type;
-               G__letvariable(new_name, reg, &G__global, G__p_local);
+               G__letvariable(new_name, reg, &G__global, G__p_local, member);
                // Continue scanning.
                goto readnext;
             }
@@ -2740,7 +2704,7 @@ void G__define_var(int tagnum, int typenum)
                // -- Interpreted class, allocate memory now.
                G__var_type = var_type;
                G__decl_obj = 1;
-               G__value val = G__letvariable(new_name, reg, &G__global, G__p_local);
+               G__value val = G__letvariable(new_name, reg, &G__global, G__p_local, member);
                G__store_struct_offset = G__int(val);
                G__decl_obj = 0;
 #ifndef G__OLDIMPLEMENTATION1073
@@ -2804,7 +2768,7 @@ void G__define_var(int tagnum, int typenum)
                         G__globalvarpointer = G__int(reg);
                         G__cppconstruct = 1;
                         G__var_type = var_type;
-                        G__letvariable(new_name, G__null, &G__global, G__p_local);
+                        G__letvariable(new_name, G__null, &G__global, G__p_local, member);
                         G__cppconstruct = 0;
 #ifdef G__ASM
                         if (G__asm_noverflow && (p_inc > 1)) {
@@ -2914,7 +2878,7 @@ void G__define_var(int tagnum, int typenum)
                            G__xrefflag // we are generating a variable cross-reference
                         ) {
                            // -- Create a variable in the local or global variable chain.
-                           G__letvariable(new_name, G__null, &G__global, G__p_local);
+                           G__letvariable(new_name, G__null, &G__global, G__p_local, member);
                         }
                         else if (!G__xrefflag) {
                            // -- Could not find the default constructor,
@@ -3065,7 +3029,7 @@ void G__define_var(int tagnum, int typenum)
                         G__globalvarpointer = G__int(reg);
                         G__cppconstruct = 1;
                         if (G__globalvarpointer) {
-                           G__letvariable(new_name, G__null, &G__global, G__p_local);
+                           G__letvariable(new_name, G__null, &G__global, G__p_local, member);
                         }
                         G__cppconstruct = 0;
                         G__globalvarpointer = G__PVOID;
@@ -3174,7 +3138,7 @@ void G__define_var(int tagnum, int typenum)
                         }
                         G__globalvarpointer = G__int(reg);
                         G__cppconstruct = 1;
-                        G__letvariable(new_name, G__null, &G__global, G__p_local);
+                        G__letvariable(new_name, G__null, &G__global, G__p_local, member);
                         G__cppconstruct = 0;
                         G__globalvarpointer = G__PVOID;
                         G__oprovld = 0;
@@ -3201,7 +3165,7 @@ void G__define_var(int tagnum, int typenum)
                            G__oprovld = 1;
                         }
 #endif // G__OLDIMPLEMENTATION1073
-                        G__letvariable(new_name, reg, &G__global, G__p_local);
+                        G__letvariable(new_name, reg, &G__global, G__p_local, member);
 #ifndef G__OLDIMPLEMENTATION1073
                         if (G__asm_wholefunction) {
                            G__oprovld = 0;
@@ -3286,7 +3250,7 @@ void G__define_var(int tagnum, int typenum)
               G__globalvarpointer = G__PINVALID;
             }
             // FIXME: Static data members of class type do not get their constructors run!
-            G__letvariable(new_name, reg, &G__global, G__p_local);
+            G__letvariable(new_name, reg, &G__global, G__p_local, member);
             if (G__return > G__RETURN_NORMAL) {
                G__decl = store_decl;
                G__tagnum = store_tagnum;
@@ -3332,7 +3296,7 @@ void G__define_var(int tagnum, int typenum)
          G__typenum = store_typenum;
          G__reftype = G__PARANORMAL;
          if (G__fons_comment && G__def_struct_member) {
-            G__setvariablecomment(new_name);
+            G__setvariablecomment(new_name, member);
          }
 #ifdef G__ASM
          if (G__asm_noverflow) {

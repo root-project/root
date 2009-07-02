@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include "DataMemberHandle.h"
 
 extern "C" {
 
@@ -1046,7 +1047,8 @@ void G__define_type()
                      G__def_struct_member = 0;
                      G__static_alloc = 1;
                   }
-                  G__letvariable(memname, enumval, &G__global , G__p_local);
+                  Cint::G__DataMemberHandle member;
+                  G__letvariable(memname, enumval, &G__global , G__p_local, member);
                   if (store_tagnum != -1) {
                      G__def_struct_member = store_def_struct_member;
                      G__static_alloc = 0;

@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include "Api.h"
+#include "DataMemberHandle.h"
 #include <string>
 
 extern "C" {
@@ -278,15 +279,13 @@ int G__using_namespace()
          // Allocate a variable array entry which shares value storage with the found variable.
          int store_globalvarpointer = G__globalvarpointer;
          G__globalvarpointer = var->p[ig15];
-         G__letvariable(varname, G__null, &G__global, G__p_local);
+         Cint::G__DataMemberHandle member;
+         G__letvariable(varname, G__null, &G__global, G__p_local, member);
          G__globalvarpointer = store_globalvarpointer;
          // Now find the variable array entry we just created.
-         int ahash = 0;
          int aig15 = 0;
-         G__hash(varname, ahash, aig15);
-         long astruct_offset = 0;
-         long astore_struct_offset = 0;
-         struct G__var_array* avar = G__searchvariable(varname, ahash, G__p_local, &G__global, &astruct_offset, &astore_struct_offset, &aig15, 0);
+         struct G__var_array* avar = member.GetVarArray();
+         aig15 = member.GetIndex();
          // copy variable information
          if (avar && ((avar != var) || (aig15 != ig15))) {
             G__savestring(&avar->varnamebuf[aig15], var->varnamebuf[ig15]);
@@ -1117,7 +1116,8 @@ void G__define_struct(char type)
                   store_decl = G__decl;
                   G__decl = 1;
                }
-               G__letvariable(memname, enumval, &G__global , G__p_local);
+               G__DataMemberHandle member;
+               G__letvariable(memname, enumval, &G__global , G__p_local, member);
                if (-1 != store_tagnum) {
                   G__def_struct_member = store_def_struct_member;
                   G__static_alloc = 0;
