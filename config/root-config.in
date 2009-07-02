@@ -409,6 +409,7 @@ win32)
    else
       auxcflags="$auxcflags -GR -GX -G5"
    fi
+   auxldflags="-STACK:0x400000"
    auxlibs=
    forcelibs=$rootulibs
    forceglibs=$rootuglibs
