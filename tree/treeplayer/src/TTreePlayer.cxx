@@ -1071,7 +1071,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    if (!drawflag && !opt.Contains("goff")) draw = kTRUE;
    if (!optcandle && !optpara) fHistogram = (TH1*)fSelector->GetObject();
 
-   if (!nrows && drawflag && !opt.Contains("same")) {
+   if (!nrows && draw && drawflag && !opt.Contains("same")) {
       if (gPad) gPad->Clear();
       return 0;
    }
