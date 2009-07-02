@@ -25,10 +25,10 @@ class TEveCaloData: public TEveRefBackPtr
 public:
    struct SliceInfo_t
    {
-      TString  fName;
-      Float_t  fThreshold;
-      Int_t    fID;
-      Color_t  fColor;
+      TString  fName;      // Name of the slice, eg. ECAL, HCAL.
+      Float_t  fThreshold; // Only display towers with higher energy.
+      Int_t    fID;        // Unique identification of the slice.
+      Color_t  fColor;     // Color used to draw this longitudinal slice.
       TH2F    *fHist;
 
       SliceInfo_t(): fName(""), fThreshold(0), fID(-1), fColor(Color_t(4)), fHist(0){}
