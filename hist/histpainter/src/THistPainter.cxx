@@ -84,6 +84,7 @@
 <li><a href="#HP07">Statistics Display</li></a>
 <li><a href="#HP08">Fit Statistics</li></a>
 <li><a href="#HP09">The error bars options</li></a>
+<li><a href="#HP100">The bar chart option</li></a>
 <li><a href="#HP10">The "BAR" and "HBAR" options</li></a>
 <li><a href="#HP11">The SCATter plot option (default for 2D histograms)</li></a>
 <li><a href="#HP12">The ARRow option</li></a>
@@ -331,6 +332,14 @@ are not drawn.
 
 <tr><th valign=top>"B"</th><td>
 Bar chart option.
+</td></tr>
+
+<tr><th valign=top>"BAR"</th><td>
+Like option "B", but bars can be drawn with a 3D effect.
+</td></tr>
+
+<tr><th valign=top>"HBAR"</th><td>
+Like option "BAR", but bars are drawn horizontally.
 </td></tr>
 
 <tr><th valign=top>"C"</th><td>
@@ -905,6 +914,57 @@ Begin_Macro(source)
    TH1F *he3 = he4->DrawClone("E3");
    he3->SetTitle("Distribution drawn option E3");
    return ce4;
+}
+End_Macro
+Begin_Html
+
+
+<a name="HP100"></a><h3>The bar chart option</h3>
+
+
+The option "B" allows to draw simple vertical bar charts.
+The bar width is controlled with <tt>TH1::SetBarWidth()</tt>,
+and the bar offset wihtin the bin, with <tt>TH1::SetBarOffset()</tt>.
+These two settings are useful to draw several histograms on the
+same plot as shown in the following example:
+
+End_Html
+Begin_Macro(source)
+{
+   int i;
+   const Int_t nx = 8;
+   char *os_X[nx] = {"8","32","128","512","2048","8192","32768","131072"};
+   float d_35_0[]= {0.75, -3.30, -0.92, 0.10, 0.08, -1.69, -1.29, -2.37};
+   float d_35_1[]= {1.01, -3.02, -0.65, 0.37, 0.34, -1.42, -1.02, -2.10};
+
+   TCanvas *cb = new TCanvas("cb","cb",600,400);
+   cb->SetGrid();
+
+   gStyle->SetHistMinimumZero();
+
+   TH1F *h = new TH1F("h","",nx,0,nx);
+   h->SetFillColor(4);
+   h->SetBarWidth(0.4); h->SetBarOffset(0.1); h->SetStats(0);
+   h->SetMinimum(-5);
+   h->SetMaximum(5);
+
+   for (i=1;i<=nx;i++) {
+      h->Fill(os_X[i-1], d_35_0[i-1]);
+      h->GetXaxis()->SetBinLabel(i,os_X[i-1]);
+   }
+
+   h->Draw("b");
+
+   TH1F *h2 = new TH1F("h2","test",nx,0,nx);
+   h2->SetFillColor(38);
+   h2->SetBarWidth(0.4);
+   h2->SetBarOffset(0.5);
+   h2->SetStats(0);
+   for (i=1;i<=nx;i++) h2->Fill(os_X[i-1], d_35_1[i-1]);
+
+   h2->Draw("b same");
+
+   return cb;
 }
 End_Macro
 Begin_Html
