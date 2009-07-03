@@ -37,6 +37,7 @@
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
 #include "Riostream.h"
+#include "snprintf.h"
 #include <stdlib.h>
 
 #include "TSQLServer.h"
@@ -54,8 +55,6 @@
 #define FLong64    "%lld"
 #define FULong64   "%llu"
 #endif
-
-const char* TBufferSQL2::fgFloatFmt = "%e";
 
 ClassImp(TBufferSQL2);
 
@@ -2273,7 +2272,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(Char_t value)
    // converts Char_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf,"%d",value);
+   snprintf(buf, sizeof(buf), "%d", value);
    return SqlWriteValue(buf, sqlio::Char);
 }
 
@@ -2283,7 +2282,7 @@ Bool_t  TBufferSQL2::SqlWriteBasic(Short_t value)
    // converts Short_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf,"%hd", value);
+   snprintf(buf, sizeof(buf), "%hd", value);
    return SqlWriteValue(buf, sqlio::Short);
 }
 
@@ -2293,7 +2292,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(Int_t value)
    // converts Int_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf,"%d", value);
+   snprintf(buf, sizeof(buf), "%d", value);
    return SqlWriteValue(buf, sqlio::Int);
 }
 
@@ -2303,7 +2302,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(Long_t value)
    // converts Long_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf,"%ld", value);
+   snprintf(buf, sizeof(buf), "%ld", value);
    return SqlWriteValue(buf, sqlio::Long);
 }
 
@@ -2313,7 +2312,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(Long64_t value)
    // converts Long64_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf,"%lld", value);
+   snprintf(buf, sizeof(buf), "%lld", value);
    return SqlWriteValue(buf, sqlio::Long64);
 }
 
@@ -2323,7 +2322,7 @@ Bool_t  TBufferSQL2::SqlWriteBasic(Float_t value)
    // converts Float_t to string and creates correspondent sql structure
 
    char buf[200];
-   sprintf(buf, fgFloatFmt, value);
+   snprintf(buf, sizeof(buf), TSQLServer::GetFloatFormat(), value);
    return SqlWriteValue(buf, sqlio::Float);
 }
 
@@ -2332,8 +2331,8 @@ Bool_t TBufferSQL2::SqlWriteBasic(Double_t value)
 {
    // converts Double_t to string and creates correspondent sql structure
 
-   char buf[1000];
-   sprintf(buf, fgFloatFmt, value);
+   char buf[128];
+   snprintf(buf, sizeof(buf), TSQLServer::GetFloatFormat(), value);
    return SqlWriteValue(buf, sqlio::Double);
 }
 
@@ -2351,7 +2350,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(UChar_t value)
    // converts UChar_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf,"%u", value);
+   snprintf(buf, sizeof(buf), "%u", value);
    return SqlWriteValue(buf, sqlio::UChar);
 }
 
@@ -2361,7 +2360,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(UShort_t value)
    // converts UShort_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf,"%hu", value);
+   snprintf(buf, sizeof(buf), "%hu", value);
    return SqlWriteValue(buf, sqlio::UShort);
 }
 
@@ -2371,7 +2370,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(UInt_t value)
    // converts UInt_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf,"%u", value);
+   snprintf(buf, sizeof(buf), "%u", value);
    return SqlWriteValue(buf, sqlio::UInt);
 }
 
@@ -2381,7 +2380,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(ULong_t value)
    // converts ULong_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf,"%lu", value);
+   snprintf(buf, sizeof(buf), "%lu", value);
    return SqlWriteValue(buf, sqlio::ULong);
 }
 
@@ -2391,7 +2390,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(ULong64_t value)
    // converts ULong64_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf, FULong64, value);
+   snprintf(buf, sizeof(buf), FULong64, value);
    return SqlWriteValue(buf, sqlio::ULong64);
 }
 
@@ -2654,14 +2653,16 @@ TSQLStructure* TBufferSQL2::Stack(Int_t depth)
 void TBufferSQL2::SetFloatFormat(const char* fmt)
 {
    // set printf format for float/double members, default "%e"
+   // changes global TSQLServer variable
    
-   fgFloatFmt = fmt;
+   TSQLServer::SetFloatFormat(fmt);
 }
     
 //______________________________________________________________________________
 const char* TBufferSQL2::GetFloatFormat()
 {
    // return current printf format for float/double members, default "%e"
+   // return format, hold by TSQLServer
 
-   return fgFloatFmt;
+   return TSQLServer::GetFloatFormat();
 }

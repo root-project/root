@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMySQLStatement.h"
+#include "TMySQLServer.h"
 #include "TDataType.h"
 #include "TDatime.h"
 #include "snprintf.h"
@@ -353,10 +354,10 @@ const char* TMySQLStatement::ConvertToString(Int_t npar)
                   snprintf(buf,100,"%u",*((unsigned char*) addr));
          break;
       case MYSQL_TYPE_FLOAT:
-         snprintf(buf,100,"%f",*((float*) addr));
+         snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((float*) addr));
          break;
       case MYSQL_TYPE_DOUBLE:
-         snprintf(buf,100,"%f",*((double*) addr));
+         snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((double*) addr));
          break;
       case MYSQL_TYPE_DATETIME:
       case MYSQL_TYPE_TIMESTAMP: {

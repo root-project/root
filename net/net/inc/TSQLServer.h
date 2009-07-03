@@ -59,6 +59,8 @@ protected:
 
    void                ClearError();
    void                SetError(Int_t code, const char* msg, const char* method = 0);
+   
+   static const char* fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
 public:
    enum ESQLDataTypes {  // data types, recognised by TSQLServer and other classes, extrction from ODBC
@@ -113,6 +115,9 @@ public:
    virtual Int_t       Ping() { return -9999; }
 
    static TSQLServer *Connect(const char *db, const char *uid, const char *pw);
+
+   static    void     SetFloatFormat(const char* fmt = "%e");
+   static const char* GetFloatFormat();
 
    ClassDef(TSQLServer,0)  // Connection to SQL server
 };

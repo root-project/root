@@ -61,6 +61,9 @@
 
 ClassImp(TOracleServer)
 
+const char* TOracleServer::fgDatimeFormat = "MM/DD/YYYY, HH24:MI:SS";
+
+
 // Reset error and check that server connected
 #define CheckConnect(method, res)                       \
       ClearError();                                     \
@@ -572,4 +575,22 @@ Bool_t TOracleServer::Rollback()
    } CatchError("Rollback")
 
    return kFALSE;
+}
+
+//______________________________________________________________________________
+void TOracleServer::SetDatimeFormat(const char* fmt)
+{
+   // set format for converting timestamps or date field into string
+   // default value is "MM/DD/YYYY, HH24:MI:SS"
+
+   if (fmt==0) fmt = "MM/DD/YYYY, HH24:MI:SS";    
+   fgDatimeFormat = fmt;
+}
+
+//______________________________________________________________________________
+const char* TOracleServer::GetDatimeFormat()
+{
+   // return value of actul convertion format from timestamps or date to string    
+   
+   return fgDatimeFormat;   
 }

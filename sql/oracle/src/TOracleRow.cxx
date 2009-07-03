@@ -10,10 +10,9 @@
  *************************************************************************/
 
 #include "TOracleRow.h"
-#include "Riostream.h"
+#include "TOracleServer.h"
 #include <string.h>
-
-using namespace std;
+#include "snprintf.h"
 
 ClassImp(TOracleRow);
 
@@ -37,7 +36,6 @@ TOracleRow::~TOracleRow()
    // Destroy row object.
 
    Close();
-   
 }
 
 //______________________________________________________________________________
@@ -128,7 +126,7 @@ void TOracleRow::GetRowData()
               res = fResult->getString(field+1);
            } else {
               double_val = fResult->getDouble(field+1);  
-              sprintf(str_number, "%lf", double_val);
+              snprintf(str_number, sizeof(str_number), TSQLServer::GetFloatFormat(), double_val);
               res = str_number;
            }
            break;
@@ -140,12 +138,12 @@ void TOracleRow::GetRowData()
            res = fResult->getString(field+1);
            break;
         case SQLT_DAT:  // Oracle native DATE type
-           res = (fResult->getDate(field+1)).toText("MM/DD/YYYY, HH24:MI:SS");
+           res = (fResult->getDate(field+1)).toText(TOracleServer::GetDatimeFormat());
            break;
         case SQLT_TIMESTAMP:     // TIMESTAMP
         case SQLT_TIMESTAMP_TZ:  // TIMESTAMP WITH TIMEZONE
         case SQLT_TIMESTAMP_LTZ: // TIMESTAMP WITH LOCAL TIMEZONE
-           res = (fResult->getTimestamp(field+1)).toText("MM/DD/YYYY, HH24:MI:SS",0);
+           res = (fResult->getTimestamp(field+1)).toText(TOracleServer::GetDatimeFormat(), 0);
            break;
         default:
            Error("GetRowData()","Oracle type %d not supported.", fDataType);

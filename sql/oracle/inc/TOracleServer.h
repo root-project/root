@@ -38,6 +38,8 @@ private:
    Environment  *fEnv;    // environment of Oracle access
    Connection   *fConn;   // connection to Oracle server
    TString       fInfo;  // info string with Oracle version information
+   
+   static const char* fgDatimeFormat; //! format for converting date and time stamps into string 
 
 public:
    TOracleServer(const char *db, const char *uid, const char *pw);
@@ -65,6 +67,9 @@ public:
    Bool_t      StartTransaction();
    Bool_t      Commit();
    Bool_t      Rollback();
+
+   static    void     SetDatimeFormat(const char* fmt = "MM/DD/YYYY, HH24:MI:SS");
+   static const char* GetDatimeFormat();
 
    ClassDef(TOracleServer,0)  // Connection to Oracle server
 };

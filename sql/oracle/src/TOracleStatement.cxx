@@ -19,8 +19,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TOracleStatement.h"
+#include "TOracleServer.h"
 #include "TDataType.h"
 #include <stdlib.h>
+#include "snprintf.h"
 
 ClassImp(TOracleStatement)
 
@@ -37,7 +39,7 @@ TOracleStatement::TOracleStatement(Environment* env, Connection* conn, Statement
    fNumIterations(niter),
    fIterCounter(0),
    fWorkingMode(0),
-   fTimeFmt("MM/DD/YYYY, HH24:MI:SS")
+   fTimeFmt(TOracleServer::GetDatimeFormat())
 {
    // Normal constructor of TOracleStatement class
    // On creation time specifies buffer length, which should be
@@ -873,7 +875,7 @@ const char* TOracleStatement::GetString(Int_t npar)
            } else {
               double double_val = fResult->getDouble(npar+1);
               char str_number[50];
-              sprintf(str_number, "%lf", double_val);
+              snprintf(str_number, sizeof(str_number), TSQLServer::GetFloatFormat(), double_val);
               res = str_number;
            }
            break;

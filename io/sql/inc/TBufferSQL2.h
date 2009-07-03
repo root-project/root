@@ -122,8 +122,6 @@ protected:
    Int_t            SqlWriteObject(const void* obj, const TClass* objClass, TMemberStreamer *streamer = 0, Int_t streamer_index = 0);
    void*            SqlReadObject(void* obj, TClass** cl = 0, TMemberStreamer *streamer = 0, Int_t streamer_index = 0, const TClass *onFileClass=0);
    void*            SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, TMemberStreamer *streamer = 0, Int_t streamer_index = 0, const TClass *onFileClass = 0);
-
-   static const char* fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
  
 public:
 

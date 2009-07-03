@@ -39,6 +39,10 @@
 
 ClassImp(TSQLServer)
 
+
+const char* TSQLServer::fgFloatFmt = "%e";
+
+
 //______________________________________________________________________________
 TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 {
@@ -244,3 +248,19 @@ TSQLTableInfo* TSQLServer::GetTableInfo(const char* tablename)
    return new TSQLTableInfo(tablename, lst);
 }
 
+//______________________________________________________________________________
+void TSQLServer::SetFloatFormat(const char* fmt)
+{
+   // set printf format for float/double members, default "%e"
+   
+   if (fmt==0) fmt = "%e";
+   fgFloatFmt = fmt;
+}
+    
+//______________________________________________________________________________
+const char* TSQLServer::GetFloatFormat()
+{
+   // return current printf format for float/double members, default "%e"
+
+   return fgFloatFmt;
+}

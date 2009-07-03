@@ -20,6 +20,7 @@
 
 
 #include "TODBCStatement.h"
+#include "TODBCServer.h"
 #include "TDataType.h"
 #include "snprintf.h"
 #include "Riostream.h"
@@ -629,16 +630,16 @@ const char* TODBCStatement::ConvertToString(Int_t npar)
    char* buf = fBuffer[npar].fBstrbuffer;
 
    switch(fBuffer[npar].fBsqlctype) {
-      case SQL_C_SLONG:   snprintf(buf,100,"%ld",*((long*) addr)); break;
-      case SQL_C_ULONG:   snprintf(buf,100,"%lu",*((unsigned long*) addr)); break;
-      case SQL_C_SBIGINT: snprintf(buf,100,"%lld",*((long long*) addr)); break;
-      case SQL_C_UBIGINT: snprintf(buf,100,"%llu",*((unsigned long long*) addr)); break;
-      case SQL_C_SSHORT:  snprintf(buf,100,"%hd",*((short*) addr)); break;
-      case SQL_C_USHORT:  snprintf(buf,100,"%hu",*((unsigned short*) addr)); break;
-      case SQL_C_STINYINT:snprintf(buf,100,"%d",*((char*) addr)); break;
-      case SQL_C_UTINYINT:snprintf(buf,100,"%u",*((unsigned char*) addr)); break;
-      case SQL_C_FLOAT:   snprintf(buf,100,"%f",*((float*) addr)); break;
-      case SQL_C_DOUBLE:  snprintf(buf,100,"%f",*((double*) addr)); break;
+      case SQL_C_SLONG:   snprintf(buf, 100, "%ld", *((long*) addr)); break;
+      case SQL_C_ULONG:   snprintf(buf, 100, "%lu", *((unsigned long*) addr)); break;
+      case SQL_C_SBIGINT: snprintf(buf, 100, "%lld", *((long long*) addr)); break;
+      case SQL_C_UBIGINT: snprintf(buf, 100, "%llu", *((unsigned long long*) addr)); break;
+      case SQL_C_SSHORT:  snprintf(buf, 100, "%hd", *((short*) addr)); break;
+      case SQL_C_USHORT:  snprintf(buf, 100, "%hu", *((unsigned short*) addr)); break;
+      case SQL_C_STINYINT:snprintf(buf, 100, "%d", *((char*) addr)); break;
+      case SQL_C_UTINYINT:snprintf(buf, 100, "%u", *((unsigned char*) addr)); break;
+      case SQL_C_FLOAT:   snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((float*) addr)); break;
+      case SQL_C_DOUBLE:  snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((double*) addr)); break;
       case SQL_C_TYPE_DATE: {
          DATE_STRUCT* dt = (DATE_STRUCT*) addr;
          snprintf(buf,100,"%4.4d-%2.2d-%2.2d", 
