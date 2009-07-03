@@ -217,8 +217,8 @@ namespace ROOT { namespace Cintex {
    CINTClassBuilder::Bases* CINTClassBuilder::GetBases() {
       // Get base class info.
       if ( fBases ) return fBases;
-      Member getbases = fClass.MemberByName("__getBasesTable", Reflex::Type(), INHERITEDMEMBERS_NO);
-      if ( !getbases ) getbases = fClass.MemberByName("getBasesTable", Reflex::Type(), INHERITEDMEMBERS_NO);
+      Member getbases = fClass.FunctionMemberByName("__getBasesTable", Reflex::Type(), INHERITEDMEMBERS_NO);
+      if ( !getbases ) getbases = fClass.FunctionMemberByName("getBasesTable", Reflex::Type(), INHERITEDMEMBERS_NO);
       if( getbases ) {
          static Type tBases = Type::ByTypeInfo(typeid(Bases));
          Object ret(tBases, &fBases);

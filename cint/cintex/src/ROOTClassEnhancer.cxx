@@ -260,7 +260,7 @@ namespace ROOT { namespace Cintex {
 
       if (info) info->SetImplFile("", 1);
       //----Fill the New and Deletete functions
-      Member getfuncs = TypeGet().MemberByName("__getNewDelFunctions", Reflex::Type(), INHERITEDMEMBERS_NO);
+      Member getfuncs = TypeGet().FunctionMemberByName("__getNewDelFunctions", Reflex::Type(), INHERITEDMEMBERS_NO);
       if( getfuncs ) {
          NewDelFunctions_t* newdelfunc = 0;
          getfuncs.Invoke(newdelfunc);
@@ -422,7 +422,7 @@ namespace ROOT { namespace Cintex {
          case TClassEdit::kMultiSet:
          case TClassEdit::kBitSet:
             {
-               Member method = typ.MemberByName("createCollFuncTable", Reflex::Type(), INHERITEDMEMBERS_NO);
+               Member method = typ.FunctionMemberByName("createCollFuncTable", Reflex::Type(), INHERITEDMEMBERS_NO);
                if ( !method )   {
                   if ( Cintex::Debug() )  {
                      cout << "Cintex: " << Name << "' Setup failed to create this class! "
