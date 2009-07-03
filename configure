@@ -1952,19 +1952,20 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
         enable_builtin_glew="no"
     else
         check_header "GL/glew.h" "$glewincdir" $openglincdirs
-        glewinc=$found_hdr
-        glewincdir=$found_dir
+        glewinc="$found_hdr"
+        glewincdir="$found_dir"
 
         check_library "libGLEW" "$enable_shared" "$keep" $opengllibdirs
-        glewlib=$found_lib
+        glewlib="$found_lib"
         glewlibdir=$found_dir
+        glewlibs="$glewlib"
 
         if test "x$glewincdir" = "x" || test "x$glewlib" = "x" ||
            test "x$enable_builtin_glew_explicit" = "xyes" ; then
             enable_builtin_glew="yes"
-            glewincdir=include
-            glewlibdir=-Llib
-            glewlibs=-lGLEW
+            glewincdir="include"
+            glewlibdir="-Llib"
+            glewlibs="-lGLEW"
         fi
         message "Checking whether to build included GLEW"
         result "$enable_builtin_glew"
