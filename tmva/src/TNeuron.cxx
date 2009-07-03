@@ -53,9 +53,10 @@ ClassImp(TMVA::TNeuron)
 
 //______________________________________________________________________________
 TMVA::TNeuron::TNeuron()
-   : fLogger( new MsgLogger(this, kDEBUG) )
+   : fLogger( 0 )
 {
    // standard constructor
+   fLogger = new MsgLogger(this, kDEBUG);
    InitNeuron();
 }
 

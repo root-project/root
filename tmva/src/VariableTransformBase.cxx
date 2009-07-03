@@ -56,10 +56,11 @@ TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
      fCreated( kFALSE ),
      fNormalise( kFALSE ),
      fTransformName(trfName),
-     fLogger( new MsgLogger(this, kINFO) )
+     fLogger( 0 )
 {
    // standard constructor
 
+   fLogger = new MsgLogger(this, kINFO);
    for (UInt_t ivar = 0; ivar < fDsi.GetNVariables(); ivar++) {
       fVariables.push_back( VariableInfo( fDsi.GetVariableInfo(ivar) ) );
    }

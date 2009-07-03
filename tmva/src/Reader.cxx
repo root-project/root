@@ -124,10 +124,11 @@ TMVA::Reader::Reader( const TString& theOption, Bool_t verbose )
      fSilent ( kFALSE ),
      fColor  ( kFALSE ),
      fMvaEventError( -1 ),
-     fLogger ( new MsgLogger(this) )
+     fLogger ( 0 )
 {
    // constructor
 
+   fLogger = new MsgLogger(this);
    DataSetManager::CreateInstance(fDataInputHandler);
    DataSetManager::Instance().AddDataSetInfo(fDataSetInfo);
 
@@ -146,9 +147,10 @@ TMVA::Reader::Reader( std::vector<TString>& inputVars, const TString& theOption,
      fSilent ( kFALSE ),
      fColor  ( kFALSE ),
      fMvaEventError( -1 ),
-     fLogger ( new MsgLogger(this) )
+     fLogger ( 0 )
 {
    // constructor
+   fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
@@ -170,9 +172,10 @@ TMVA::Reader::Reader( std::vector<std::string>& inputVars, const TString& theOpt
      fSilent ( kFALSE ),
      fColor  ( kFALSE ),
      fMvaEventError( -1 ),
-     fLogger ( new MsgLogger(this) )
+     fLogger ( 0 )
 {
    // constructor
+   fLogger = new MsgLogger(this);
    SetConfigName( GetName() );   
    DeclareOptions();
    ParseOptions();
@@ -194,9 +197,10 @@ TMVA::Reader::Reader( const std::string& varNames, const TString& theOption, Boo
      fSilent ( kFALSE ),
      fColor  ( kFALSE ),
      fMvaEventError( -1 ),
-     fLogger ( new MsgLogger(this) )
+     fLogger ( 0 )
 {
    // constructor
+   fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
@@ -215,9 +219,10 @@ TMVA::Reader::Reader( const TString& varNames, const TString& theOption, Bool_t 
      fSilent ( kFALSE ),
      fColor  ( kFALSE ),
      fMvaEventError( -1 ),
-     fLogger ( new MsgLogger(this) )
+     fLogger ( 0 )
 {
    // constructor
+   fLogger = new MsgLogger(this);
    SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();

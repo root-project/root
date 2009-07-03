@@ -80,9 +80,10 @@ TMVA::PDF::PDF( const TString& name, Bool_t norm )
      fCheckHist     ( kFALSE ),
      fNormalize     ( norm ),
      fSuffix        ( "" ),
-     fLogger        ( new MsgLogger(this) )
+     fLogger        ( 0 )
 {
    // default constructor needed for ROOT I/O
+   fLogger = new MsgLogger(this);
    fgThisPDF = this;
 }
 
@@ -121,9 +122,10 @@ TMVA::PDF::PDF( const TString& name,
    fCheckHist     ( checkHist ),
    fNormalize     ( norm ),
    fSuffix        ( "" ),
-   fLogger        ( new MsgLogger(this) )
+   fLogger        ( 0 )
 {  
    // constructor of spline based PDF: 
+   fLogger = new MsgLogger(this);
    BuildPDF( hist );
 }
 
@@ -163,9 +165,10 @@ TMVA::PDF::PDF( const TString& name,
    fCheckHist     ( kFALSE ),
    fNormalize     ( norm ),
    fSuffix        ( "" ),
-   fLogger        ( new MsgLogger(this) )
+   fLogger        ( 0 )
 {
    // constructor of kernel based PDF:
+   fLogger = new MsgLogger(this);
    BuildPDF( hist );
 }
 
@@ -203,8 +206,9 @@ TMVA::PDF::PDF( const TString& name,
    fCheckHist     ( kFALSE ),
    fNormalize     ( norm ),
    fSuffix        ( suffix ),
-   fLogger        ( new MsgLogger(this) )
+   fLogger        ( 0 )
 {
+   fLogger = new MsgLogger(this);
    if (defaultPDF != 0) {
       fNsmooth            = defaultPDF->fNsmooth;
       fMinNsmooth         = defaultPDF->fMinNsmooth;
