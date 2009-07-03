@@ -736,6 +736,7 @@ void TCanvas::Close(Option_t *option)
 
    FeedbackMode(kFALSE);
 
+   cd();
    TPad::Close(option);
 
    if (!IsBatch()) {
