@@ -35,8 +35,12 @@ private:
    TEveViewer& operator=(const TEveViewer&); // Not implemented
 
 protected:
-   TGLViewer *fGLViewer;
-   TGFrame   *fGLViewerFrame;
+   TGLViewer    *fGLViewer;
+   TGFrame      *fGLViewerFrame;
+
+   static Bool_t fgInitInternal;
+   static Bool_t fgRecreateGlOnDockOps;
+   static void   InitInternal();
 
 public:
    TEveViewer(const char* n="TEveViewer", const char* t="");
@@ -79,10 +83,10 @@ private:
    TEveViewerList& operator=(const TEveViewerList&); // Not implemented
 
 protected:
-   Bool_t       fShowTooltip;
+   Bool_t        fShowTooltip;
 
-   Float_t     fBrightness;
-   Bool_t      fUseLightColorSet;
+   Float_t       fBrightness;
+   Bool_t        fUseLightColorSet;
 
 public:
    TEveViewerList(const char* n="TEveViewerList", const char* t="");
@@ -109,13 +113,13 @@ public:
 
    // --------------------------------
 
-   Bool_t GetShowTooltip()   const { return fShowTooltip; }
-   void   SetShowTooltip(Bool_t x) { fShowTooltip = x; }
+   Bool_t  GetShowTooltip()     const { return fShowTooltip; }
+   void    SetShowTooltip(Bool_t x)   { fShowTooltip = x; }
 
    Float_t GetColorBrightness() const { return fBrightness; }
-   void     SetColorBrightness(Float_t b);
+   void    SetColorBrightness(Float_t b);
   
-   Bool_t UseLightColorSet() const { return fUseLightColorSet; }
+   Bool_t  UseLightColorSet()   const { return fUseLightColorSet; }
    void    SwitchColorSet();
 
    ClassDef(TEveViewerList, 0); // List of Viewers providing common operations on TEveViewer collections.

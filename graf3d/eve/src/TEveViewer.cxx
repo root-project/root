@@ -24,6 +24,8 @@
 #include "TGLLogicalShape.h"  // For handling OnMouseIdle signal
 #include "TGLEventHandler.h"
 
+#include "TSystem.h"
+
 //==============================================================================
 //==============================================================================
 // TEveViewer
@@ -42,6 +44,9 @@
 
 ClassImp(TEveViewer);
 
+Bool_t TEveViewer::fgInitInternal        = kFALSE;
+Bool_t TEveViewer::fgRecreateGlOnDockOps = kFALSE;
+
 //______________________________________________________________________________
 TEveViewer::TEveViewer(const char* n, const char* t) :
    TEveWindowFrame(0, n, t),
@@ -56,6 +61,11 @@ TEveViewer::TEveViewer(const char* n, const char* t) :
 
    SetChildClass(TEveSceneInfo::Class());
    fGUIFrame->SetCleanup(kNoCleanup); // the gl-viewer's frame deleted elsewhere.
+
+   if (!fgInitInternal)
+   {
+      InitInternal();
+   }
 }
 
 //______________________________________________________________________________
@@ -72,15 +82,33 @@ TEveViewer::~TEveViewer()
 /******************************************************************************/
 
 //______________________________________________________________________________
+void TEveViewer::InitInternal()
+{
+   // Initialize static data-members according to running conditions.
+
+   // Determine if display is running on a mac.
+   // This is also works for ssh connection mac->linux.
+#ifndef WIN32
+   TString s = gSystem->GetFromPipe("xdpyinfo");
+   if (s.Index("Apple-WM") != kNPOS)
+   {
+      fgRecreateGlOnDockOps = kTRUE;
+   }
+#endif
+
+   fgInitInternal = kTRUE;
+}
+
+//______________________________________________________________________________
 void TEveViewer::PreUndock()
 {
    // Virtual function called before a window is undocked.
    // On mac we have to force recreation of gl-context.
 
    TEveWindowFrame::PreUndock();
-#ifdef R__MACOSX
-   fGLViewer->DestroyGLWidget();
-#endif
+   if (fgRecreateGlOnDockOps) {
+      fGLViewer->DestroyGLWidget();
+   }
 }
 
 //______________________________________________________________________________
@@ -89,9 +117,9 @@ void TEveViewer::PostDock()
    // Virtual function called after a window is docked.
    // On mac we have to force recreation of gl-context.
 
-#ifdef R__MACOSX
-   fGLViewer->CreateGLWidget();
-#endif
+   if (fgRecreateGlOnDockOps) {
+      fGLViewer->CreateGLWidget();
+   }
    TEveWindowFrame::PostDock();
 }
 
