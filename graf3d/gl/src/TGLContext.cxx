@@ -36,6 +36,8 @@
 
 ClassImp(TGLContext);
 
+Bool_t TGLContext::fgGlewInitDone = kFALSE;
+
 //______________________________________________________________________________
 TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
                        const TGLContext *shareList)
@@ -57,8 +59,9 @@ TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContext((TGLWidget *)0x%lx, (TGLContext *)0x%lx)",
                                   this, wid, shareList));
-   } else
+   } else {
       SetContext(wid, shareList);
+   }
 
    if (shareDefault)
       fIdentity = TGLContextIdentity::GetDefaultIdentity();
@@ -71,23 +74,18 @@ TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
 }
 
 //______________________________________________________________________________
-/*
-TGLContext::TGLContext(TGLPBuffer *pbuff, const TGLContext *shareList)
-               : fDevice(pbuff),
-                 fPimpl(0),
-                 fFromCtor(kTRUE),
-                 fValid(kFALSE)
+void TGLContext::GlewInit()
 {
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContextPB((TGLPBuffer *)0x%lx, (TGLContext *)0x%lx)",
-                                  this, pbuff, shareList));
-   } else
-      SetContextPB(pbuff, shareList);
+   // Initialize GLEW - static private function.
+   // Called immediately after creation of the firs GL context.
 
-   fFromCtor = kFALSE;
-   fValid = kTRUE;
+   GLenum status = glewInit();
+   if (status != GLEW_OK)
+      Warning("TGLContext::GlewInit", "GLEW initalization failed.");
+   else
+      Info("TGLContext::GlewInit", "GLEW initalization successful.");
+   fgGlewInitDone = kTRUE;
 }
-*/
 
 //==============================================================================
 #ifdef WIN32
@@ -155,28 +153,6 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    safe_ptr.release();
 }
 
-/*
-//______________________________________________________________________________
-void TGLContext::SetContextPB(TGLPBuffer *pbuff, const TGLContext *shareList)
-{
-   if (!fFromCtor) {
-      Error("TGLContext::SetContextPB", "SetContextPB must be called only from ctor");
-      return;
-   }
-
-   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
-   fPimpl->fHDC = pbuff->fPimpl->fHDC;
-   fPimpl->fGLContext = pbuff->fPimpl->fGLRC;
-
-   if (shareList && !wglShareLists(shareList->fPimpl->fGLContext, fPimpl->fGLContext))
-      Error("TGLContext::SetContextPV", "Cannot share lists");
-
-   fDevice->AddContext(this);
-
-   safe_ptr.release();
-}
-*/
-
 //______________________________________________________________________________
 Bool_t TGLContext::MakeCurrent()
 {
@@ -191,8 +167,11 @@ Bool_t TGLContext::MakeCurrent()
       return Bool_t(gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->MakeCurrent()", this)));
    else {
       Bool_t rez = wglMakeCurrent(fPimpl->fHDC, fPimpl->fGLContext);
-      if (rez)
+      if (rez) {
+         if (!fgGlewInitDone)
+            GlewInit();
          fIdentity->DeleteGLResources();
+      }
       return rez;
    }
 }
@@ -282,20 +261,6 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    safe_ptr.release();
 }
 
-/*
-//______________________________________________________________________________
-void TGLContext::SetContextPB(TGLPBuffer *pbuff, const TGLContext *shareList)
-{
-   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
-   fPimpl->fDpy = pbuff->fPimpl->fDpy;
-   fPimpl->fGLContext = pbuff->fPimpl->fPBRC;
-   fPimpl->fPBDC = pbuff->fPimpl->fPBDC;
-
-   fDevice->AddContext(this);
-   safe_ptr.release();
-}
-*/
-
 //______________________________________________________________________________
 Bool_t TGLContext::MakeCurrent()
 {
@@ -310,13 +275,15 @@ Bool_t TGLContext::MakeCurrent()
    if (fPimpl->fWindowID != 0) {
       const Bool_t rez = glXMakeCurrent(fPimpl->fDpy, fPimpl->fWindowID,
                                         fPimpl->fGLContext);
-      if (rez)
+      if (rez) {
+         if (!fgGlewInitDone)
+            GlewInit();
          fIdentity->DeleteGLResources();
+      }
       return rez;
    }
 
-   return kFALSE;//NO pbuffer part yet.
-   //return glXMakeCurrent(fPimpl->fDpy, fPimpl->fPBDC, fPimpl->fGLContext);
+   return kFALSE;
 }
 
 //______________________________________________________________________________
