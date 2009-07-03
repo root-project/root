@@ -485,6 +485,7 @@ void TEveCompositeFrameInMainFrame::MainFrameClosed()
 
    if (fEveWindow != 0)
    {
+      TEveWindow* swapCandidate = 0;
       if (fOriginalSlot)
       {
          // if use pack, show hidden slot
@@ -493,16 +494,23 @@ void TEveCompositeFrameInMainFrame::MainFrameClosed()
             TGPack* pack = (TGPack*)(packFrame->GetParent());
             pack->ShowFrame(packFrame);
          }
-         TEveWindow::SwapWindows(fEveWindow, fOriginalSlot);
+         swapCandidate = fOriginalSlot;
       }
       else if (fOriginalContainer)
       {
-         TEveWindow::SwapWindows(fEveWindow, fOriginalContainer->NewSlot());
+         swapCandidate = fOriginalContainer->NewSlot();
       }
       else if (gEve->GetWindowManager()->HasDefaultContainer())
       {
-         TEveWindow::SwapWindows(fEveWindow, gEve->GetWindowManager()->GetDefaultContainer()->NewSlot());
+         swapCandidate =  gEve->GetWindowManager()->GetDefaultContainer()->NewSlot();
       }
+
+      if( swapCandidate )
+      {
+         TEveWindow::SwapWindows(fEveWindow, swapCandidate);
+         gEve->GetWindowManager()->WindowDocked(fEveWindow );
+      }
+
    }
 
    fMainFrame->DontCallClose();
@@ -822,6 +830,8 @@ void TEveWindow::UndockWindow()
 
    ((TEveCompositeFrameInMainFrame*) fEveFrame)->
       SetOriginalSlotAndContainer(ew_slot, return_cont);
+
+   gEve->GetWindowManager()->WindowUndocked(this );
 }
 
 //______________________________________________________________________________
@@ -842,6 +852,8 @@ void TEveWindow::UndockWindowDestroySlot()
       SetOriginalSlotAndContainer(0, return_cont);
 
    ew_slot->DestroyWindowAndSlot();
+
+   gEve->GetWindowManager()->WindowUndocked(this);
 }
 
 //______________________________________________________________________________

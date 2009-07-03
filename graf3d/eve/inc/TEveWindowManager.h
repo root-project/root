@@ -38,6 +38,8 @@ public:
    void SelectWindow(TEveWindow* w);
    void DeleteWindow(TEveWindow* w);
 
+   void WindowDocked(TEveWindow* window); // *SIGNAL*
+   void WindowUndocked (TEveWindow* window); // *SIGNAL*
    void WindowSelected(TEveWindow* window); // *SIGNAL*
    void WindowDeleted (TEveWindow* window); // *SIGNAL*
 
