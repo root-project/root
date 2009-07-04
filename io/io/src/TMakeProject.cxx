@@ -22,6 +22,7 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TROOT.h"
+#include "TMD5.h"
 
 //______________________________________________________________________________
 void TMakeProject::AddUniqueStatement(FILE *fp, const char *statement, char *inclist)
@@ -47,6 +48,30 @@ void TMakeProject::AddInclude(FILE *fp, const char *header, Bool_t system, char 
    }
    AddUniqueStatement(fp, what.Data(), inclist);
 }
+
+//______________________________________________________________________________
+static void R__ChopFileName(TString &name, Int_t limit)
+{
+   // Chop the name by replacing the ending (before a potential extension) with
+   // a md5 summary of the name.
+   
+   if (name.Length() >= limit) {
+      bool has_extension = (strcmp(name.Data() + name.Length() - 2, ".h") == 0);
+      if (has_extension) {
+         name.Remove(name.Length()-2);
+      }
+      TMD5 md;
+      md.Update((const UChar_t*)name.Data(),name.Length());
+      md.Final();
+      name.Remove( limit - 32 - 5); // Chop the part longer than 255 and keep space for the md5 and leave space for an extension
+      name.Append( md.AsString() );
+      if (has_extension) {
+         name.Append( ".h" );
+      }
+   }
+
+}
+   
 
 //______________________________________________________________________________
 TString TMakeProject::GetHeaderName(const char *name, Bool_t includeNested)
@@ -77,6 +102,7 @@ TString TMakeProject::GetHeaderName(const char *name, Bool_t includeNested)
                   if (strcmp(name + strlen(name) - 2, ".h") == 0) {
                      result.Append(".h");
                   }
+                  R__ChopFileName(result,255);
                   return result;
                }
             }
@@ -97,6 +123,7 @@ TString TMakeProject::GetHeaderName(const char *name, Bool_t includeNested)
             result.Append(name[i]);
       }
    }
+   R__ChopFileName(result,255);
    return result;
 }
 
@@ -231,6 +258,8 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
             // yes this is too aggressive, this needs to be fixed properly by moving the #pragma out of band.
             fprintf(fp, "%s", Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", fullname));
          }
+         fprintf(fp, "#else\n");
+         fprintf(fp, "enum %s;\n", clname, clname);
          fprintf(fp, "#endif\n");
       }
    } else {
@@ -359,7 +388,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                   // Not a class name, nothing to do.
                } else if ((stlType = TClassEdit::IsSTLCont(incName))) {
                   const char *what = "";
-                  switch (stlType)  {
+                  switch (TMath::Abs(stlType))  {
                      case TClassEdit::kVector:
                         what = "vector";
                         break;
@@ -381,12 +410,21 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                      case TClassEdit::kMultiSet:
                         what = "set";
                         break;
+                     case TClassEdit::kBitSet:
+                        what = "bitset";
+                        break;
+                     default:
+                        what = "undetermined_stl_container";
+                        break;
                   }
                   AddInclude(fp, what, kTRUE, inclist);
                   fprintf(fp, "namespace std {} using namespace std;\n");
                   ninc += GenerateIncludeForTemplate(fp, incName, inclist, forward);
                } else if (strncmp(incName.Data(), "pair<", strlen("pair<")) == 0) {
                   AddInclude(fp, "utility", kTRUE, inclist);
+                  ninc += GenerateIncludeForTemplate(fp, incName, inclist, forward);
+               } else if (strncmp(incName.Data(), "auto_ptr<", strlen("auto_ptr<")) == 0) {
+                  AddInclude(fp, "memory", kTRUE, inclist);
                   ninc += GenerateIncludeForTemplate(fp, incName, inclist, forward);
                } else if (TClassEdit::IsStdClass(incName)) {
                   // Do nothing.

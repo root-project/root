@@ -2333,6 +2333,8 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist)
       }
       if (strncmp(element->GetTypeName(),"pair<",strlen("pair<"))==0) {
          TMakeProject::AddInclude( fp, "utility", kTRUE, inclist);
+      } else if (strncmp(element->GetTypeName(),"auto_ptr<",strlen("auto_ptr<"))==0) {
+         TMakeProject::AddInclude( fp, "memory", kTRUE, inclist);
       } else {
          TString incName( include, strlen(include)-1 );
          incName = TMakeProject::GetHeaderName(incName);
@@ -2358,6 +2360,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
 
    if (TClassEdit::IsSTLCont(GetName())) return 0;
    if (strncmp(GetName(),"pair<",strlen("pair<"))==0) return 0;
+   if (strncmp(GetName(),"auto_ptr<",strlen("auto_ptr<"))==0) return 0;
 
    TClass *cl = TClass::GetClass(GetName());
    if (cl) {
