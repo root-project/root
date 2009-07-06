@@ -15,9 +15,9 @@
 // Include files
 #include "Reflex/Kernel.h"
 #include "Reflex/Tools.h"
-#include "Reflex/Builder/TypeBuilder.h"
 #include "Reflex/Member.h"
 #include "Reflex/Callback.h"
+#include "Reflex/Builder/TypeBuilder.h"
 
 // Forward declaration for 'friendship' purpose.
 namespace Cint { namespace Internal {} }
@@ -26,6 +26,8 @@ namespace Reflex {
 // forward declarations
 class Class;
 class ClassBuilder;
+class OnDemandBuilderForScope;
+
 template <typename C> class ClassBuilderT;
 
 /**
@@ -38,6 +40,7 @@ class RFLX_API ClassBuilderImpl {
 public:
    /** constructor */
    ClassBuilderImpl(const char* nam, const std::type_info & ti, size_t size, unsigned int modifiers = 0, TYPE typ = CLASS);
+   ClassBuilderImpl(Class* cl);
 
    /** destructor */
    virtual ~ClassBuilderImpl();
@@ -107,6 +110,16 @@ public:
                     const char* value);
 
 
+   /**
+    * Register an on demand builder for data members with this class.
+    */
+   void AddOnDemandDataMemberBuilder(OnDemandBuilderForScope* odb);
+
+   /**
+    * Register an on demand builder for function members with this class.
+    */
+   void AddOnDemandFunctionMemberBuilder(OnDemandBuilderForScope* odb);
+
    /** SetSizeOf will set the SizeOf property for this class.
     * It currently ignore all actual content.
     * @size Size of the class
@@ -155,6 +168,7 @@ class RFLX_API ClassBuilder {
 public:
    /** constructor */
    ClassBuilder(const char* nam, const std::type_info & ti, size_t size, unsigned int modifiers = 0, TYPE typ = CLASS);
+   ClassBuilder(Class* cl);
 
    /** destructor */
    virtual ~ClassBuilder();
@@ -235,6 +249,16 @@ public:
     */
    template <typename P> ClassBuilder& AddProperty(const char* key,
                                                    P value);
+
+   /**
+    * Register an on demand data member builder with this class.
+    */
+   ClassBuilder& AddOnDemandDataMemberBuilder(OnDemandBuilderForScope* odb);
+
+   /**
+    * Register an on demand function member builder with this class.
+    */
+   ClassBuilder& AddOnDemandFunctionMemberBuilder(OnDemandBuilderForScope* odb);
 
    /** SetSizeOf will set the SizeOf property for this class.
     * It currently ignore all actual content.
@@ -373,6 +397,18 @@ public:
                               P value);
 
 
+   /**
+    * Register an on demand data member builder with this class.
+    */
+   void AddOnDemandDataMemberBuilder(OnDemandBuilderForScope* odb);
+
+
+   /**
+    * Register an on demand function member builder with this class.
+    */
+   void AddOnDemandFunctionMemberBuilder(OnDemandBuilderForScope* odb);
+
+
    /** SetSizeOf will set the SizeOf property for this class.
     * It currently ignore all actual content.
     * @size Size of the class
@@ -456,28 +492,32 @@ Reflex::ClassBuilder::AddProperty(const char* key,
 
 
 //______________________________________________________________________________
-template <typename C> inline Reflex::ClassBuilderT<C>::ClassBuilderT(unsigned int modifiers, TYPE typ):
+template <typename C> inline
+Reflex::ClassBuilderT<C>::ClassBuilderT(unsigned int modifiers, TYPE typ):
    fClassBuilderImpl(Tools::Demangle(typeid(C)).c_str(), typeid(C), sizeof(C), modifiers, typ) {
 }
 
 
 //______________________________________________________________________________
-template <class C> inline Reflex::ClassBuilderT<C>::ClassBuilderT(const char* nam, unsigned int modifiers, TYPE typ):
+template <class C> inline
+Reflex::ClassBuilderT<C>::ClassBuilderT(const char* nam, unsigned int modifiers, TYPE typ):
    fClassBuilderImpl(nam, typeid(C), sizeof(C), modifiers, typ) {
 }
 
 
 //______________________________________________________________________________
-template <typename C> template <typename B> inline Reflex::ClassBuilderT<C>& Reflex::ClassBuilderT<C
->::AddBase(unsigned int modifiers) {
+template <typename C> template <typename B> inline
+Reflex::ClassBuilderT<C>&
+Reflex::ClassBuilderT<C>::AddBase(unsigned int modifiers) {
    fClassBuilderImpl.AddBase(GetType<B>(), BaseOffset<C, B>::Get(), modifiers);
    return *this;
 }
 
 
 //______________________________________________________________________________
-template <class C> inline Reflex::ClassBuilderT<C>& Reflex::ClassBuilderT<C
->::AddBase(const Type& bas,
+template <class C> inline
+Reflex::ClassBuilderT<C>&
+Reflex::ClassBuilderT<C>::AddBase(const Type& bas,
            OffsetFunction offsFP,
            unsigned int modifiers) {
    fClassBuilderImpl.AddBase(bas, offsFP, modifiers);
@@ -486,8 +526,9 @@ template <class C> inline Reflex::ClassBuilderT<C>& Reflex::ClassBuilderT<C
 
 
 //______________________________________________________________________________
-template <class C> template <class T> inline Reflex::ClassBuilderT<C>& Reflex::ClassBuilderT<C
->::AddDataMember(const char* nam,
+template <class C> template <class T> inline
+Reflex::ClassBuilderT<C>&
+Reflex::ClassBuilderT<C>::AddDataMember(const char* nam,
                  size_t offs,
                  unsigned int modifiers) {
    fClassBuilderImpl.AddDataMember(nam, TypeDistiller<T>::Get(), offs, modifiers);
@@ -496,8 +537,9 @@ template <class C> template <class T> inline Reflex::ClassBuilderT<C>& Reflex::C
 
 
 //-------------------------------------------------------------------------------
-template <class C> inline Reflex::ClassBuilderT<C>& Reflex::ClassBuilderT<C
->::AddDataMember(const Type& typ,
+template <class C> inline
+Reflex::ClassBuilderT<C>&
+Reflex::ClassBuilderT<C>::AddDataMember(const Type& typ,
                  const char* nam,
                  size_t offs,
                  unsigned int modifiers) {
@@ -507,8 +549,9 @@ template <class C> inline Reflex::ClassBuilderT<C>& Reflex::ClassBuilderT<C
 
 
 //______________________________________________________________________________
-template <typename C> template <typename F> inline Reflex::ClassBuilderT<C>& Reflex::ClassBuilderT<C
->::AddFunctionMember(const char* nam,
+template <typename C> template <typename F> inline 
+Reflex::ClassBuilderT<C>&
+Reflex::ClassBuilderT<C>::AddFunctionMember(const char* nam,
                      StubFunction stubFP,
                      void* stubCtx,
                      const char* params,
@@ -521,8 +564,7 @@ template <typename C> template <typename F> inline Reflex::ClassBuilderT<C>& Ref
 //-------------------------------------------------------------------------------
 template <class C>
 inline Reflex::ClassBuilderT<C>&
-Reflex::ClassBuilderT<C
->::AddFunctionMember(const Type& typ,
+Reflex::ClassBuilderT<C>::AddFunctionMember(const Type& typ,
                      const char* nam,
                      StubFunction stubFP,
                      void* stubCtx,
@@ -542,8 +584,7 @@ Reflex::ClassBuilderT<C
 //-------------------------------------------------------------------------------
 template <class C> template <typename TD>
 inline Reflex::ClassBuilderT<C>&
-Reflex::ClassBuilderT<C
->::AddTypedef(const char* def) {
+Reflex::ClassBuilderT<C>::AddTypedef(const char* def) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.AddTypedef(TypeDistiller<TD>::Get(),
                                 def);
@@ -554,8 +595,7 @@ Reflex::ClassBuilderT<C
 //-------------------------------------------------------------------------------
 template <class C>
 inline Reflex::ClassBuilderT<C>&
-Reflex::ClassBuilderT<C
->::AddTypedef(const char* typ,
+Reflex::ClassBuilderT<C>::AddTypedef(const char* typ,
               const char* def) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.AddTypedef(TypeBuilder(typ),
@@ -567,8 +607,7 @@ Reflex::ClassBuilderT<C
 //-------------------------------------------------------------------------------
 template <class C>
 inline Reflex::ClassBuilderT<C>&
-Reflex::ClassBuilderT<C
->::AddTypedef(const Type& typ,
+Reflex::ClassBuilderT<C>::AddTypedef(const Type& typ,
               const char* def) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.AddTypedef(typ,
@@ -580,8 +619,7 @@ Reflex::ClassBuilderT<C
 //-------------------------------------------------------------------------------
 template <class C> template <typename E>
 inline Reflex::ClassBuilderT<C>&
-Reflex::ClassBuilderT<C
->::AddEnum(const char* values,
+Reflex::ClassBuilderT<C>::AddEnum(const char* values,
            unsigned int modifiers) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.AddEnum(Tools::Demangle(typeid(E)).c_str(),
@@ -595,8 +633,7 @@ Reflex::ClassBuilderT<C
 //-------------------------------------------------------------------------------
 template <class C>
 inline Reflex::ClassBuilderT<C>&
-Reflex::ClassBuilderT<C
->::AddEnum(const char* nam,
+Reflex::ClassBuilderT<C>::AddEnum(const char* nam,
            const char* values,
            const std::type_info* ti,
            unsigned int modifiers) {
@@ -625,8 +662,7 @@ Reflex::ClassBuilderT<C
 //-------------------------------------------------------------------------------
 template <class C> template <class P>
 inline Reflex::ClassBuilderT<C>&
-Reflex::ClassBuilderT<C
->::AddProperty(const char* key,
+Reflex::ClassBuilderT<C>::AddProperty(const char* key,
                P value) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.AddProperty(key, value);
@@ -637,8 +673,7 @@ Reflex::ClassBuilderT<C
 //-------------------------------------------------------------------------------
 template <class C>
 inline Reflex::ClassBuilderT<C>&
-Reflex::ClassBuilderT<C
->::EnableCallback(bool enable /* = true */) {
+Reflex::ClassBuilderT<C>::EnableCallback(bool enable /* = true */) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.EnableCallback(enable);
    return *this;
@@ -648,8 +683,7 @@ Reflex::ClassBuilderT<C
 //-------------------------------------------------------------------------------
 template <class C>
 inline Reflex::ClassBuilderT<C>&
-Reflex::ClassBuilderT<C
->::SetSizeOf(size_t size) {
+Reflex::ClassBuilderT<C>::SetSizeOf(size_t size) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.SetSizeOf(size);
    return *this;
@@ -658,11 +692,26 @@ Reflex::ClassBuilderT<C
 
 //-------------------------------------------------------------------------------
 template <class C> inline Reflex::Type
-Reflex::ClassBuilderT<C
->::ToType() {
+Reflex::ClassBuilderT<C>::ToType() {
 //-------------------------------------------------------------------------------
    return fClassBuilderImpl.ToType();
 }
 
+
+//-------------------------------------------------------------------------------
+template <class C> inline void
+Reflex::ClassBuilderT<C>::AddOnDemandDataMemberBuilder(OnDemandBuilderForScope* odb) {
+//-------------------------------------------------------------------------------
+// Register an on demand builder with this class.
+   fClassBuilderImpl.AddOnDemandDataMemberBuilder(odb);
+}
+
+//-------------------------------------------------------------------------------
+template <class C> inline void
+Reflex::ClassBuilderT<C>::AddOnDemandFunctionMemberBuilder(OnDemandBuilderForScope* odb) {
+//-------------------------------------------------------------------------------
+// Register an on demand builder with this class.
+   fClassBuilderImpl.AddOnDemandFunctionMemberBuilder(odb);
+}
 
 #endif // Reflex_ClassBuilder

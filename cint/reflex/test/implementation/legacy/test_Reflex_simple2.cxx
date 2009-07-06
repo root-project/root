@@ -1038,7 +1038,7 @@ ReflexSimple2Test::testDiamond() {
 
    std::vector<void*> values;
 
-   Member m = b.MemberAt(0);
+   Member m = b.DataMemberAt(0);
    CPPUNIT_ASSERT(m);
 
    Object o = d.Construct(s, values);

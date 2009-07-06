@@ -25,5 +25,6 @@
 #include "Reflex/Builder/CollectionProxy.h"
 #include "Reflex/Builder/DictSelection.h"
 #include "Reflex/Builder/NewDelFunctions.h"
+#include "Reflex/Builder/GenreflexMemberBuilder.h"
 
 #endif // Reflex_ReflexBuilder

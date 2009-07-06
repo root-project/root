@@ -355,6 +355,11 @@ enum EMEMBERQUERY {
    INHERITEDMEMBERS_ALSO
 };
 
+enum EDELAYEDLOADSETTING {
+   DELAYEDLOAD_OFF,
+   DELAYEDLOAD_ON
+};
+
 // Note TYPE and REPRESTYPE are 'small' enums and could be stored as 'char' to save space
 
 /** the max unsigned int */

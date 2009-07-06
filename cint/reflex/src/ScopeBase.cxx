@@ -174,6 +174,7 @@ Reflex::ScopeBase::DataMemberAt(size_t nth,
                                 EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return nth data member info.
+   ExecuteDataMemberDelayLoad();
    if (nth < fDataMembers.size()) {
       return fDataMembers[nth];
    }
@@ -187,6 +188,7 @@ Reflex::ScopeBase::DataMemberByName(const std::string& nam,
                                     EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return function member by name and signature including the return type.
+   ExecuteDataMemberDelayLoad();
    return MemberByName2(fDataMembers, nam);
 }
 
@@ -196,6 +198,7 @@ size_t
 Reflex::ScopeBase::DataMemberSize(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return number of data members.
+   ExecuteDataMemberDelayLoad();
    return fDataMembers.size();
 }
 
@@ -206,6 +209,7 @@ Reflex::ScopeBase::FunctionMemberAt(size_t nth,
                                     EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return nth function member.
+   ExecuteFunctionMemberDelayLoad();
    if (nth < fFunctionMembers.size()) {
       return fFunctionMembers[nth];
    }
@@ -218,9 +222,12 @@ Reflex::Member
 Reflex::ScopeBase::FunctionMemberByName(const std::string& name,
                                         const Type& signature,
                                         unsigned int modifiers_mask,
-                                        EMEMBERQUERY) const {
+                                        EMEMBERQUERY,
+                                        EDELAYEDLOADSETTING allowDelayedLoad) const {
 //-------------------------------------------------------------------------------
 // Return function member by name and signature including the return type.
+   if (allowDelayedLoad == DELAYEDLOAD_ON)
+      ExecuteFunctionMemberDelayLoad();
    return MemberByName2(fFunctionMembers, name, &signature, modifiers_mask, true);
 }
 
@@ -269,9 +276,12 @@ Reflex::Member
 Reflex::ScopeBase::FunctionMemberByNameAndSignature(const std::string& name,
                                                     const Type& signature,
                                                     unsigned int modifiers_mask,
-                                                    EMEMBERQUERY) const {
+                                                    EMEMBERQUERY,
+                                                    EDELAYEDLOADSETTING allowDelayedLoad) const {
 //-------------------------------------------------------------------------------
 // Return function member by name and signature excluding the return type.
+   if (allowDelayedLoad == DELAYEDLOAD_ON)
+      ExecuteFunctionMemberDelayLoad();
    return MemberByName2(fFunctionMembers, name, &signature, modifiers_mask, false);
 }
 
@@ -281,6 +291,7 @@ size_t
 Reflex::ScopeBase::FunctionMemberSize(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return number of function members.
+   ExecuteFunctionMemberDelayLoad();
    return fFunctionMembers.size();
 }
 
@@ -330,6 +341,8 @@ Reflex::ScopeBase::LookupMember(const std::string& nam,
                                 const Scope& current) const {
 //-------------------------------------------------------------------------------
 // Lookup a member name from this scope.
+   ExecuteDataMemberDelayLoad();
+   ExecuteFunctionMemberDelayLoad();
    return NameLookup::LookupMember(nam, current);
 }
 
@@ -359,6 +372,8 @@ Reflex::Member_Iterator
 Reflex::ScopeBase::Member_Begin(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return the begin iterator for members.
+   ExecuteDataMemberDelayLoad();
+   ExecuteFunctionMemberDelayLoad();
    return OTools::ToIter<Member>::Begin(fMembers);
 }
 
@@ -368,6 +383,8 @@ Reflex::Member_Iterator
 Reflex::ScopeBase::Member_End(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return the end iterator for members.
+   ExecuteDataMemberDelayLoad();
+   ExecuteFunctionMemberDelayLoad();
    return OTools::ToIter<Member>::End(fMembers);
 }
 
@@ -377,6 +394,8 @@ Reflex::Reverse_Member_Iterator
 Reflex::ScopeBase::Member_RBegin(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return the rbegin iterator for members.
+   ExecuteDataMemberDelayLoad();
+   ExecuteFunctionMemberDelayLoad();
    return OTools::ToIter<Member>::RBegin(fMembers);
 }
 
@@ -386,6 +405,8 @@ Reflex::Reverse_Member_Iterator
 Reflex::ScopeBase::Member_REnd(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return the rend iterator for members.
+   ExecuteDataMemberDelayLoad();
+   ExecuteFunctionMemberDelayLoad();
    return OTools::ToIter<Member>::REnd(fMembers);
 }
 
@@ -396,6 +417,8 @@ Reflex::ScopeBase::MemberAt(size_t nth,
                             EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return the nth member of this scope.
+   ExecuteDataMemberDelayLoad();
+   ExecuteFunctionMemberDelayLoad();
    if (nth < fMembers.size()) {
       return fMembers[nth];
    }
@@ -408,6 +431,8 @@ size_t
 Reflex::ScopeBase::MemberSize(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
 // Return the number of members.
+   ExecuteDataMemberDelayLoad();
+   ExecuteFunctionMemberDelayLoad();
    return fMembers.size();
 }
 
@@ -420,6 +445,8 @@ Reflex::ScopeBase::MemberByName(const std::string& name,
 //-------------------------------------------------------------------------------
 // Return member by name and signature.
 
+   ExecuteDataMemberDelayLoad();
+   ExecuteFunctionMemberDelayLoad();
    // The class Members and OwnedMembers are the exact same size.  The only
    // difference is the constructor and the destructor.  Since MemberByName2 does
    // insert or remove element from the vector, it is alright to cast one vector
@@ -1001,4 +1028,15 @@ Reflex::ScopeBase::GenerateDict(DictionaryGenerator& generator) const {
          (*subScopes).GenerateDict(generator);
       }
    }
+}
+
+//-------------------------------------------------------------------------------
+void
+Reflex::ScopeBase::RegisterOnDemandBuilder(OnDemandBuilder* builder,
+                                           EBuilderKind kind) {
+//-------------------------------------------------------------------------------
+// Add a on demand builder that can expand this scope's reflection data; see
+// OnDemandBuilder. kind defines what the builder might modify.
+   if (kind < kNumBuilderKinds)
+      fOnDemandBuilder[kind].Insert(builder);
 }

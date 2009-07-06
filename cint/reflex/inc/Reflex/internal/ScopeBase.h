@@ -17,6 +17,7 @@
 
 #include "Reflex/Scope.h"
 #include "Reflex/internal/OwnedPropertyList.h"
+#include "Reflex/internal/BuilderContainer.h"
 #include <vector>
 
 #ifdef _WIN32
@@ -37,7 +38,7 @@ class MemberTemplate;
 class OwnedMemberTemplate;
 class Type;
 class DictionaryGenerator;
-
+class OnDemandBuilder;
 
 /**
  * @class ScopeBase ScopeBase.h Reflex/ScopeBase.h
@@ -47,6 +48,13 @@ class DictionaryGenerator;
  */
 class RFLX_API ScopeBase {
 public:
+   enum EBuilderKind {
+      kBuildDataMembers,
+      kBuildFunctionMembers,
+
+      kNumBuilderKinds
+   };
+
    /** constructor within a At*/
    ScopeBase(const char* scope,
              TYPE scopeType);
@@ -149,7 +157,8 @@ public:
    virtual Member FunctionMemberByName(const std::string& name,
                                        const Type& signature,
                                        unsigned int modifiers_mask = 0,
-                                       EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+                                       EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT,
+                                       EDELAYEDLOADSETTING allowDelayedLoad = DELAYEDLOAD_ON) const;
 
 
    /**
@@ -163,7 +172,8 @@ public:
    virtual Member FunctionMemberByNameAndSignature(const std::string& name,
                                                    const Type& signature,
                                                    unsigned int modifiers_mask = 0,
-                                                   EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+                                                   EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT,
+                                                   EDELAYEDLOADSETTING allowDelayedLoad = DELAYEDLOAD_ON) const;
 
 
    /**
@@ -642,6 +652,9 @@ public:
        Returns false if one of the bases is not complete. */
    virtual bool UpdateMembers() const;
 
+   void RegisterOnDemandBuilder(OnDemandBuilder* builder,
+                                EBuilderKind kind);
+
 protected:
    /** The MemberByName work-horse: find a member called name in members,
        if signature also compare its signature, and if matchReturnType
@@ -651,6 +664,17 @@ protected:
                         const Type* signature = 0,
                         unsigned int modifiers_mask = 0,
                         bool matchReturnType = true) const;
+
+
+   void ExecuteFunctionMemberDelayLoad() const {
+      if (!fOnDemandBuilder[kBuildFunctionMembers].Empty())
+         fOnDemandBuilder[kBuildFunctionMembers].BuildAll();
+   }
+
+   void ExecuteDataMemberDelayLoad() const {
+      if (!fOnDemandBuilder[kBuildDataMembers].Empty())
+         fOnDemandBuilder[kBuildDataMembers].BuildAll();
+   }
 
 private:
    /* no copying */
@@ -785,6 +809,12 @@ private:
     */
    size_t fBasePosition;
 
+   /**
+    * Containers for on-demand builders of function and data members.
+    */
+   mutable
+   BuilderContainer fOnDemandBuilder[kNumBuilderKinds];
+
 };    // class ScopeBase
 } //namespace Reflex
 
@@ -841,6 +871,7 @@ Reflex::ScopeBase::DeclaringScope() const {
 inline Reflex::Member_Iterator
 Reflex::ScopeBase::DataMember_Begin(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
+   ExecuteDataMemberDelayLoad();
    return fDataMembers.begin();
 }
 
@@ -849,6 +880,7 @@ Reflex::ScopeBase::DataMember_Begin(EMEMBERQUERY) const {
 inline Reflex::Member_Iterator
 Reflex::ScopeBase::DataMember_End(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
+   ExecuteDataMemberDelayLoad();
    return fDataMembers.end();
 }
 
@@ -857,6 +889,7 @@ Reflex::ScopeBase::DataMember_End(EMEMBERQUERY) const {
 inline Reflex::Reverse_Member_Iterator
 Reflex::ScopeBase::DataMember_RBegin(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
+   ExecuteDataMemberDelayLoad();
    return ((const std::vector<Member> &)fDataMembers).rbegin();
 }
 
@@ -865,6 +898,7 @@ Reflex::ScopeBase::DataMember_RBegin(EMEMBERQUERY) const {
 inline Reflex::Reverse_Member_Iterator
 Reflex::ScopeBase::DataMember_REnd(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
+   ExecuteDataMemberDelayLoad();
    return ((const std::vector<Member> &)fDataMembers).rend();
 }
 
@@ -873,6 +907,7 @@ Reflex::ScopeBase::DataMember_REnd(EMEMBERQUERY) const {
 inline Reflex::Member_Iterator
 Reflex::ScopeBase::FunctionMember_Begin(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
+   ExecuteFunctionMemberDelayLoad();
    return fFunctionMembers.begin();
 }
 
@@ -881,6 +916,7 @@ Reflex::ScopeBase::FunctionMember_Begin(EMEMBERQUERY) const {
 inline Reflex::Member_Iterator
 Reflex::ScopeBase::FunctionMember_End(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
+   ExecuteFunctionMemberDelayLoad();
    return fFunctionMembers.end();
 }
 
@@ -889,6 +925,7 @@ Reflex::ScopeBase::FunctionMember_End(EMEMBERQUERY) const {
 inline Reflex::Reverse_Member_Iterator
 Reflex::ScopeBase::FunctionMember_RBegin(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
+   ExecuteFunctionMemberDelayLoad();
    return ((const std::vector<Member> &)fFunctionMembers).rbegin();
 }
 
@@ -897,6 +934,7 @@ Reflex::ScopeBase::FunctionMember_RBegin(EMEMBERQUERY) const {
 inline Reflex::Reverse_Member_Iterator
 Reflex::ScopeBase::FunctionMember_REnd(EMEMBERQUERY) const {
 //-------------------------------------------------------------------------------
+   ExecuteFunctionMemberDelayLoad();
    return ((const std::vector<Member> &)fFunctionMembers).rend();
 }
 

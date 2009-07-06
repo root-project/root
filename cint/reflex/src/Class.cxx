@@ -163,6 +163,9 @@ Reflex::Class::Construct(const Type& sig,
 // can be given as the first argument. Furhter arguments are a vector of memory
 // addresses for non default constructors and a memory address for in place construction.
    static Type defSignature = Type::ByName("void (void)");
+
+   // trigger setup of function members for constructor
+   ExecuteFunctionMemberDelayLoad();
    Type signature = (!sig && fConstructors.size() > 1) ? defSignature : sig;
 
    for (size_t i = 0; i < fConstructors.size(); ++i) {
@@ -190,6 +193,9 @@ Reflex::Class::Destruct(void* instance,
 //-------------------------------------------------------------------------------
 // Call the destructor for this class type on a memory address (instance). Deallocate
 // memory if dealloc = true (i.e. default).
+
+   // trigger setup of function members for constructor
+   ExecuteFunctionMemberDelayLoad();
    if (!fDestructor.TypeOf()) {
       // destructor for this class not yet revealed
       for (size_t i = 0; i < ScopeBase::FunctionMemberSize(); ++i) {

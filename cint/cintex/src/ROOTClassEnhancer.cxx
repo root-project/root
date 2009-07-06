@@ -214,20 +214,26 @@ namespace ROOT { namespace Cintex {
          Type signature;
          void* ctxt = this;
 
-         //--- adding TClass* IsA()
-         signature = FunctionTypeBuilder( PointerBuilder(TypeBuilder("TClass")));
-         AddFunction("IsA", signature, Stub_IsA, ctxt, 0);
-         //--- adding void Data_ShowMembers(void *, TMemberInspector&, char*)
-         signature = FunctionTypeBuilder( void_t,
-                                          ReferenceBuilder(TypeBuilder("TMemberInspector")),
-                                          PointerBuilder(char_t));
-         AddFunction("ShowMembers", signature, Stub_ShowMembers, ctxt, VIRTUAL);
          signature = FunctionTypeBuilder( void_t, ReferenceBuilder(TypeBuilder("TBuffer")));
-         AddFunction("Streamer", signature, Stub_Streamer, ctxt, VIRTUAL);
-         AddFunction("StreamerNVirtual", signature, Stub_StreamerNVirtual, ctxt, 0);
+         Member exists = fType.FunctionMemberByName("StreamerNVirtual", signature,
+                                                    0, INHERITEDMEMBERS_NO, DELAYEDLOAD_OFF);
+         if (!exists) {
+            AddFunction("Streamer", signature, Stub_Streamer, ctxt, VIRTUAL);
+            AddFunction("StreamerNVirtual", signature, Stub_StreamerNVirtual, ctxt, 0);
+
+            //--- adding TClass* IsA()
+            signature = FunctionTypeBuilder( PointerBuilder(TypeBuilder("TClass")));
+            AddFunction("IsA", signature, Stub_IsA, ctxt, 0);
+            //--- adding void Data_ShowMembers(void *, TMemberInspector&, char*)
+            signature = FunctionTypeBuilder( void_t,
+                                             ReferenceBuilder(TypeBuilder("TMemberInspector")),
+                                             PointerBuilder(char_t));
+            AddFunction("ShowMembers", signature, Stub_ShowMembers, ctxt, VIRTUAL);
+
+            //--- create TGenericClassInfo Instance
+            //createInfo();
+         }
       }
-      //--- create TGenericClassInfo Instance
-      //createInfo();
    }
 
    void ROOTClassEnhancerInfo::CreateInfo() {
@@ -260,7 +266,8 @@ namespace ROOT { namespace Cintex {
 
       if (info) info->SetImplFile("", 1);
       //----Fill the New and Deletete functions
-      Member getfuncs = TypeGet().FunctionMemberByName("__getNewDelFunctions", Reflex::Type(), INHERITEDMEMBERS_NO);
+      Member getfuncs = TypeGet().FunctionMemberByName("__getNewDelFunctions", Reflex::Type(),
+                                                       0, INHERITEDMEMBERS_NO, DELAYEDLOAD_OFF);
       if( getfuncs ) {
          NewDelFunctions_t* newdelfunc = 0;
          getfuncs.Invoke(newdelfunc);
@@ -422,7 +429,8 @@ namespace ROOT { namespace Cintex {
          case TClassEdit::kMultiSet:
          case TClassEdit::kBitSet:
             {
-               Member method = typ.FunctionMemberByName("createCollFuncTable", Reflex::Type(), INHERITEDMEMBERS_NO);
+               Member method = typ.FunctionMemberByName("createCollFuncTable", Reflex::Type(), 0,
+                                                        INHERITEDMEMBERS_NO, DELAYEDLOAD_OFF);
                if ( !method )   {
                   if ( Cintex::Debug() )  {
                      cout << "Cintex: " << Name << "' Setup failed to create this class! "

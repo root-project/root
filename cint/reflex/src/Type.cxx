@@ -187,10 +187,11 @@ Reflex::Member
 Reflex::Type::FunctionMemberByName(const std::string& nam,
                                    const Type& signature,
                                    unsigned int modifiers_mask /*= 0*/,
-                                   EMEMBERQUERY inh) const {
+                                   EMEMBERQUERY inh,
+                                   EDELAYEDLOADSETTING allowDelayedLoad) const {
 //-------------------------------------------------------------------------------
 // Return a function member by name. Signature can be used for overloaded functions.
-   return operator Scope().FunctionMemberByName(nam, signature, modifiers_mask, inh);
+   return operator Scope().FunctionMemberByName(nam, signature, modifiers_mask, inh, allowDelayedLoad);
 }
 
 

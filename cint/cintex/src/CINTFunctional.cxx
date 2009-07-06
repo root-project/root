@@ -53,7 +53,8 @@ namespace ROOT { namespace Cintex {
       
       // for constructor or destructor locate newdelfunctions pointers
       if ( mem.IsConstructor() || mem.IsDestructor() ) {
-         Member getnewdelfuncs = fClass.FunctionMemberByName("__getNewDelFunctions", Reflex::Type(), INHERITEDMEMBERS_NO);
+         Member getnewdelfuncs = fClass.FunctionMemberByName("__getNewDelFunctions", Reflex::Type(),
+                                                             0, INHERITEDMEMBERS_NO, DELAYEDLOAD_OFF);
          if( getnewdelfuncs ) {
             static Type tNewdelfuncs = Type::ByTypeInfo(typeid(fNewdelfuncs));
             Object ret( tNewdelfuncs, (void*)&fNewdelfuncs);

@@ -134,11 +134,12 @@ Reflex::Scope::FunctionMemberAt(size_t nth,
 //-------------------------------------------------------------------------------
 Reflex::Member
 Reflex::Scope::FunctionMemberByName(const std::string& name,
-                                    EMEMBERQUERY inh) const {
+                                    EMEMBERQUERY inh,
+                                    EDELAYEDLOADSETTING allowDelayedLoad) const {
 //-------------------------------------------------------------------------------
 // Return a function member by it's name.
    if (*this) {
-      return fScopeName->fScopeBase->FunctionMemberByName(name, Type(), 0, inh);
+      return fScopeName->fScopeBase->FunctionMemberByName(name, Type(), 0, inh, allowDelayedLoad);
    }
    return Dummy::Member();
 }
@@ -149,11 +150,12 @@ Reflex::Member
 Reflex::Scope::FunctionMemberByName(const std::string& name,
                                     const Type& signature,
                                     unsigned int modifiers_mask,
-                                    EMEMBERQUERY inh) const {
+                                    EMEMBERQUERY inh,
+                                    EDELAYEDLOADSETTING allowDelayedLoad) const {
 //-------------------------------------------------------------------------------
 // Return a function member by it's name, qualified by it's signature type.
    if (*this) {
-      return fScopeName->fScopeBase->FunctionMemberByName(name, signature, modifiers_mask, inh);
+      return fScopeName->fScopeBase->FunctionMemberByName(name, signature, modifiers_mask, inh, allowDelayedLoad);
    }
    return Dummy::Member();
 }
@@ -164,11 +166,12 @@ Reflex::Member
 Reflex::Scope::FunctionMemberByNameAndSignature(const std::string& name,
                                                 const Type& signature,
                                                 unsigned int modifiers_mask,
-                                                EMEMBERQUERY inh) const {
+                                                EMEMBERQUERY inh,
+                                                EDELAYEDLOADSETTING allowDelayedLoad) const {
 //-------------------------------------------------------------------------------
 // Return a function member by it's name, qualified by it's signature type.
    if (*this) {
-      return fScopeName->fScopeBase->FunctionMemberByNameAndSignature(name, signature, modifiers_mask, inh);
+      return fScopeName->fScopeBase->FunctionMemberByNameAndSignature(name, signature, modifiers_mask, inh, allowDelayedLoad);
    }
    return Dummy::Member();
 }

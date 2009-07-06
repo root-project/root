@@ -184,6 +184,20 @@ ReflexSimple1Test::testMembers() {
 
    m = *iM++;
    CPPUNIT_ASSERT(m);
+   CPPUNIT_ASSERT_EQUAL(std::string("PropertyList"), m.Name());
+   CPPUNIT_ASSERT_EQUAL(std::string("Reflex::PropertyList::PropertyList"), m.Name(SCOPED));
+   CPPUNIT_ASSERT(m.IsConstructor());
+   CPPUNIT_ASSERT(!m.IsDestructor());
+
+   m = *iM++;
+   CPPUNIT_ASSERT(m);
+   CPPUNIT_ASSERT_EQUAL(std::string("__getNewDelFunctions"), m.Name());
+   CPPUNIT_ASSERT_EQUAL(std::string("Reflex::PropertyList::__getNewDelFunctions"), m.Name(SCOPED));
+   CPPUNIT_ASSERT(!m.IsConstructor());
+   CPPUNIT_ASSERT(!m.IsDestructor());
+
+   m = *iM++;
+   CPPUNIT_ASSERT(m);
    CPPUNIT_ASSERT_EQUAL(std::string("operator bool"), m.Name());
    CPPUNIT_ASSERT_EQUAL(std::string("Reflex::PropertyList::operator bool"), m.Name(SCOPED));
    CPPUNIT_ASSERT(!m.IsConstructor());

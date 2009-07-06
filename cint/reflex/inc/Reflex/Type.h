@@ -366,7 +366,8 @@ public:
    Member FunctionMemberByName(const std::string& nam,
                                const Type& signature = Type(0, 0),
                                unsigned int modifiers_mask = 0,
-                               EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT) const;
+                               EMEMBERQUERY inh = INHERITEDMEMBERS_DEFAULT,
+                               EDELAYEDLOADSETTING allowDelayedLoad = DELAYEDLOAD_ON) const;
 
 
    /**
