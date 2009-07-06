@@ -327,14 +327,14 @@ void TTreeCloner::CopyStreamerInfos()
                curInfo = matchInfo;
             }
          }
-         curInfo->TagFile(toFile);
+         curInfo->ForceWriteInfo(toFile);
       } else {
          // If there is no default constructor the GetStreamerInfo
          // will not work. It also means (hopefully) that an
          // inheriting class has a streamerInfo in the list (which
          // will induces the setting of this streamerInfo)
 
-         oldInfo->TagFile(toFile);
+         oldInfo->ForceWriteInfo(toFile);
       }
    }
    delete l;
