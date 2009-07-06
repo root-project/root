@@ -44,7 +44,8 @@ TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
 
    fInterpolate(0),
    fShowDefValue(0),
-   fDefaultColor(0)
+   fDefaultColor(0),
+   fFixColorRange(0)
 {
    // Constructor.
 
@@ -70,11 +71,22 @@ TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
                              "TEveRGBAPaletteSubEditor", this, "DoShowDefValue()");
 
       fDefaultColor = new TGColorSelect(f, 0, -1);
-      f->AddFrame(fDefaultColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 2));
+      f->AddFrame(fDefaultColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 0, 0, 0, 0));
       fDefaultColor->Connect("ColorSelected(Pixel_t)",
                              "TEveRGBAPaletteSubEditor", this, "DoDefaultColor(Pixel_t)");
 
-      AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
+      AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 2, 0));
+   }
+
+   {
+      TGHorizontalFrame* f = new TGHorizontalFrame(this);
+
+      fFixColorRange = new TGCheckButton(f, "Fix color range");
+      f->AddFrame(fFixColorRange, new TGLayoutHints(kLHintsLeft, 3, 1, 0, 0));
+      fFixColorRange->Connect("Toggled(Bool_t)",
+                              "TEveRGBAPaletteSubEditor", this, "DoFixColorRange()");
+
+      AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 0, 2));
    }
 
    { // Underflow
@@ -149,15 +161,16 @@ void TEveRGBAPaletteSubEditor::SetModel(TEveRGBAPalette* p)
    fMinMax->SetValues(fM->fMinVal, fM->fMaxVal);
    fMinMax->SetLimits(fM->fLowLimit, fM->fHighLimit);
 
-   fInterpolate->SetState(fM->fInterpolate ? kButtonDown : kButtonUp);
-   fShowDefValue->SetState(fM->fShowDefValue ? kButtonDown : kButtonUp);
-   fDefaultColor->SetColor(TColor::Number2Pixel(fM->GetDefaultColor()), kFALSE);
+   fInterpolate  ->SetState(fM->fInterpolate ? kButtonDown : kButtonUp);
+   fShowDefValue ->SetState(fM->fShowDefValue ? kButtonDown : kButtonUp);
+   fDefaultColor ->SetColor(TColor::Number2Pixel(fM->GetDefaultColor()), kFALSE);
+   fFixColorRange->SetState(fM->fFixColorRange ? kButtonDown : kButtonUp);
 
    fUnderColor->SetColor(TColor::Number2Pixel(fM->GetUnderColor()), kFALSE);
-   fOverColor->SetColor(TColor::Number2Pixel(fM->GetOverColor()), kFALSE);
+   fOverColor ->SetColor(TColor::Number2Pixel(fM->GetOverColor()), kFALSE);
 
    fUnderflowAction->Select(fM->fUnderflowAction, kFALSE);
-   fOverflowAction->Select(fM->fOverflowAction, kFALSE);
+   fOverflowAction ->Select(fM->fOverflowAction, kFALSE);
 }
 
 /******************************************************************************/
@@ -206,7 +219,16 @@ void TEveRGBAPaletteSubEditor::DoDefaultColor(Pixel_t color)
 {
    // Slot for DefaultColor.
 
-   fM->SetDefaultColor(color);
+   fM->SetDefaultColorPixel(color);
+   Changed();
+}
+
+//______________________________________________________________________________
+void TEveRGBAPaletteSubEditor::DoFixColorRange()
+{
+   // Slot for FixColorRange.
+
+   fM->SetFixColorRange(fFixColorRange->IsOn());
    Changed();
 }
 
@@ -215,7 +237,7 @@ void TEveRGBAPaletteSubEditor::DoUnderColor(Pixel_t color)
 {
    // Slot for UnderColor.
 
-   fM->SetUnderColor(color);
+   fM->SetUnderColorPixel(color);
    Changed();
 }
 
@@ -224,7 +246,7 @@ void TEveRGBAPaletteSubEditor::DoOverColor(Pixel_t color)
 {
    // Slot for OverColor.
 
-   fM->SetOverColor(color);
+   fM->SetOverColorPixel(color);
    Changed();
 }
 

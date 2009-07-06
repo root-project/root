@@ -33,10 +33,10 @@ protected:
    Int_t     fHighLimit; // High limit for Min/Max values (used by editor)
    Int_t     fMinVal;
    Int_t     fMaxVal;
-   Int_t     fNBins;
 
-   Bool_t    fInterpolate;
-   Bool_t    fShowDefValue;
+   Bool_t    fInterpolate;    // Interpolate colors for signal values.
+   Bool_t    fShowDefValue;   // Flags whether signals with default value should be shown.
+   Bool_t    fFixColorRange;  // If true, map palette to low/high limit otherwise to min/max value.
    Int_t     fUnderflowAction;
    Int_t     fOverflowAction;
 
@@ -47,6 +47,9 @@ protected:
    Color_t   fOverColor;      // Overflow color
    UChar_t   fOverRGBA[4];
 
+   mutable Int_t    fNBins;      // Number of signal-color entries.
+   mutable Int_t    fCAMin;      // Minimal signal in color-array.
+   mutable Int_t    fCAMax;      // Maximal signal in color-array.
    mutable UChar_t* fColorArray; //[4*fNBins]
 
    void SetupColor(Int_t val, UChar_t* pix) const;
@@ -55,7 +58,8 @@ protected:
 
 public:
    TEveRGBAPalette();
-   TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp=kFALSE, Bool_t showdef=kTRUE);
+   TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp=kTRUE,
+                   Bool_t showdef=kTRUE, Bool_t fixcolrng=kFALSE);
    virtual ~TEveRGBAPalette();
 
    void SetupColorArray() const;
@@ -86,6 +90,9 @@ public:
    Bool_t GetShowDefValue() const { return fShowDefValue; }
    void   SetShowDefValue(Bool_t v) { fShowDefValue = v; }
 
+   Bool_t GetFixColorRange() const { return fFixColorRange; }
+   void   SetFixColorRange(Bool_t v);
+
    Int_t GetUnderflowAction() const  { return fUnderflowAction; }
    Int_t GetOverflowAction()  const  { return fOverflowAction;  }
    void  SetUnderflowAction(Int_t a) { fUnderflowAction = a;    }
@@ -99,8 +106,8 @@ public:
    const UChar_t* GetDefaultRGBA() const { return fDefaultRGBA;  }
 
    void   SetDefaultColor(Color_t ci);
-   void   SetDefaultColor(Pixel_t pix);
-   void   SetDefaultColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
+   void   SetDefaultColorPixel(Pixel_t pix);
+   void   SetDefaultColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
 
    // ----------------------------------------------------------------
 
@@ -110,8 +117,8 @@ public:
    const UChar_t* GetUnderRGBA() const { return fUnderRGBA;  }
 
    void   SetUnderColor(Color_t ci);
-   void   SetUnderColor(Pixel_t pix);
-   void   SetUnderColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
+   void   SetUnderColorPixel(Pixel_t pix);
+   void   SetUnderColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
 
    // ----------------------------------------------------------------
 
@@ -121,8 +128,8 @@ public:
    const UChar_t* GetOverRGBA() const { return fOverRGBA;  }
 
    void   SetOverColor(Color_t ci);
-   void   SetOverColor(Pixel_t pix);
-   void   SetOverColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
+   void   SetOverColorPixel(Pixel_t pix);
+   void   SetOverColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
 
    // ================================================================
 
@@ -154,23 +161,27 @@ inline const UChar_t* TEveRGBAPalette::ColorFromValue(Int_t val) const
    // for kLA_Wrap and kLA_Clip otherwise we proceed as for kLA_Mark.
 
    if (!fColorArray)  SetupColorArray();
-   if (val < fMinVal) {
+
+   if (val < fMinVal)
+   {
       if (fUnderflowAction == kLA_Wrap)
-         val = (val+1-fMinVal)%fNBins + fMaxVal;
+         val = (val+1-fCAMin)%fNBins + fCAMax;
       else if (fUnderflowAction == kLA_Clip)
          val = fMinVal;
       else
          return fUnderRGBA;
    }
-   else if(val > fMaxVal) {
+   else if(val > fMaxVal)
+   {
       if (fOverflowAction == kLA_Wrap)
-         val = (val-1-fMaxVal)%fNBins + fMinVal;
+         val = (val-1-fCAMax)%fNBins + fCAMin;
       else if (fOverflowAction == kLA_Clip)
          val = fMaxVal;
       else
          return fOverRGBA;
    }
-   return fColorArray + 4 * (val - fMinVal);
+
+   return fColorArray + 4 * (val - fCAMin);
 }
 
 //______________________________________________________________________________

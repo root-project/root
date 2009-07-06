@@ -29,18 +29,19 @@ private:
    TEveRGBAPaletteSubEditor& operator=(const TEveRGBAPaletteSubEditor&); // Not implemented
 
 protected:
-   TEveRGBAPalette*      fM;
+   TEveRGBAPalette      *fM;
 
-   TGComboBox*       fUnderflowAction;
-   TGColorSelect*    fUnderColor;
-   TGComboBox*       fOverflowAction;
-   TGColorSelect*    fOverColor;
+   TGComboBox           *fUnderflowAction;
+   TGColorSelect        *fUnderColor;
+   TGComboBox           *fOverflowAction;
+   TGColorSelect        *fOverColor;
 
-   TEveGDoubleValuator* fMinMax;
+   TEveGDoubleValuator  *fMinMax;
 
-   TGCheckButton*    fInterpolate;
-   TGCheckButton*    fShowDefValue;
-   TGColorSelect*    fDefaultColor;
+   TGCheckButton        *fInterpolate;
+   TGCheckButton        *fShowDefValue;
+   TGColorSelect        *fDefaultColor;
+   TGCheckButton        *fFixColorRange;
 
 public:
    TEveRGBAPaletteSubEditor(const TGWindow* p);
@@ -55,6 +56,7 @@ public:
    void DoInterpolate();
    void DoShowDefValue();
    void DoDefaultColor(Pixel_t color);
+   void DoFixColorRange();
    void DoUnderColor(Pixel_t color);
    void DoOverColor(Pixel_t color);
    void DoUnderflowAction(Int_t mode);
@@ -74,8 +76,8 @@ private:
    TEveRGBAPaletteEditor& operator=(const TEveRGBAPaletteEditor&); // Not implemented
 
 protected:
-   TEveRGBAPalette*          fM;
-   TEveRGBAPaletteSubEditor* fSE;
+   TEveRGBAPalette           *fM;
+   TEveRGBAPaletteSubEditor  *fSE;
 
 public:
    TEveRGBAPaletteEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
