@@ -49,6 +49,7 @@
 #endif
 
 #pragma link C++ class vector<TString>;
+#ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class vector<TString>::iterator; 
 #pragma link C++ class vector<TString>::reverse_iterator; 
 #pragma link C++ function operator!=(vector<TString>,vector<TString>); 
@@ -73,6 +74,7 @@
 //#pragma link C++ function operator>(vector<TString>::reverse_iterator,vector<TString>::reverse_iterator); 
 //#pragma link C++ function operator+(long,vector<TString>::reverse_iterator); 
 //#pragma link C++ function operator-(vector<TString>::reverse_iterator,vector<TString>::reverse_iterator); 
+#endif
 
 #include <vector>
 
