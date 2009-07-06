@@ -926,7 +926,7 @@ namespace {
             // All is good.
             newClass->GetStreamerInfos()->AddAtAndExpand(info,oldv);
          } else {
-            // We verify that we are consitent and that
+            // We verify that we are consistent and that
             //   newcl->GetStreamerInfos()->UncheckedAt(info->GetClassVersion)
             // is already the same as info.
             if (strcmp(newClass->GetStreamerInfos()->At(oldv)->GetName(),
@@ -1916,7 +1916,14 @@ void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
    }
    // We do not want to write streamer info to the file
    // for STL containers.
-   if (fClass->GetCollectionProxy()) { // We are an STL collection.
+   if (fClass==0) {
+      // Build or BuildCheck has not been called yet.
+      // Let's use another means of checking.
+      if (fElements && fElements->GetEntries()==1 && strcmp("This",fElements->UncheckedAt(0)->GetName())==0) {
+         // We are an STL collection.
+         return;
+      }
+   } else if (fClass->GetCollectionProxy()) { // We are an STL collection.
       return;
    }
    // Mark ourselves for output, and block
