@@ -259,7 +259,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
             fprintf(fp, "%s", Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", fullname));
          }
          fprintf(fp, "#else\n");
-         fprintf(fp, "enum %s;\n", clname, clname);
+         fprintf(fp, "enum %s;\n", clname);
          fprintf(fp, "#endif\n");
       }
    } else {
