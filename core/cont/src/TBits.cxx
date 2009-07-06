@@ -608,12 +608,14 @@ void TBits::Get(Long64_t *array) const
 
 Bool_t TBits::operator==(const TBits &other) const
 {
-   // Copy object.
+   // Compare object.
 
-   if (fNbits != other.fNbits) {
-      return kFALSE;
+   if (fNbits == other.fNbits) {
+      return !memcmp(fAllBits, other.fAllBits, (fNbits+7)>>3);
+   } else if (fNbits <  other.fNbits) {
+      return !memcmp(fAllBits, other.fAllBits, (fNbits+7)>>3) && other.FirstSetBit(fNbits) == other.fNbits;
+   } else {
+      return !memcmp(fAllBits, other.fAllBits, (other.fNbits+7)>>3) && FirstSetBit(other.fNbits) == fNbits;
    }
-
-   return !memcmp(fAllBits, other.fAllBits, (fNbits+7)>>3);
 }
 
