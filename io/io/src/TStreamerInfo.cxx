@@ -2041,8 +2041,60 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
 {
    // Write the Declaration of class.
 
+   if (fClassVersion == -3) {
+      return;
+   }
+   
+   bool needGenericTemplate = fElements==0 || fElements->GetEntries() == 0;
+   Bool_t isTemplate = kFALSE;
+   const char *clname = GetName();
+   TString template_protoname;
+   if (strchr(clname, ':')) {
+      // We might have a namespace in front of the classname.
+      Int_t len = strlen(clname);
+      const char *name = clname;
+      UInt_t nest = 0;
+      UInt_t pr_pos = 0;
+      for (Int_t cur = 0; cur < len; ++cur) {
+         switch (clname[cur]) {
+            case '<':
+               ++nest;
+               pr_pos = cur;
+               isTemplate = kTRUE;
+               break;
+            case '>':
+               --nest;
+               break;
+            case ':': {
+               if (nest == 0 && clname[cur+1] == ':') {
+                  // We have a scope
+                  isTemplate = kFALSE;
+                  name = clname + cur + 2;
+               }
+               break;
+            }
+         }
+      }
+      if (isTemplate) {
+         template_protoname.Append(clname,pr_pos);
+      }
+      clname = name;
+   } else {
+      const char *where = strstr(clname, "<");
+      isTemplate = where != 0;
+      if (isTemplate) {
+         template_protoname.Append(clname,where-clname);
+      }
+   }
+   
+   if (needGenericTemplate && isTemplate) {
+      TString templateName(TMakeProject::GetHeaderName("template "+template_protoname));
+      fprintf(fp, "#ifndef %s_h\n", templateName.Data());
+      fprintf(fp, "#define %s_h\n", templateName.Data());
+   }
+
    TString protoname;
-   UInt_t numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, GetName(), top, protoname, 0);
+   UInt_t numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, GetName(), top, protoname, 0, kFALSE, needGenericTemplate);
 
    // Generate class statement with base classes.
    TStreamerElement *element;
@@ -2074,7 +2126,12 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                }
                TString sub_protoname;
                UInt_t sub_numberOfClasses = 0;
-               UInt_t sub_numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, subinfo->GetName() + len+2, kFALSE, sub_protoname, &sub_numberOfClasses, kFALSE);
+               UInt_t sub_numberOfNamespaces;
+               if (subinfo->GetClassVersion() == -3) {
+                  sub_numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, subinfo->GetName() + len+2, kFALSE, sub_protoname, &sub_numberOfClasses, 3);                  
+               } else {
+                  sub_numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, subinfo->GetName() + len+2, kFALSE, sub_protoname, &sub_numberOfClasses, kFALSE);
+               }
 
                fprintf(fp, ";\n");
                for (UInt_t i = 0;i < sub_numberOfClasses;++i) {
@@ -2105,16 +2162,6 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       }
    }
 
-   // Now checks if any of the parameter of data member which are of templated type
-   // are nested __and__ not in the list of subclasses (hence empty).
-   next.Reset();
-   while ((element = (TStreamerElement*)next())) {
-      const char *eclname = element->GetTypeName();
-      if (strchr(eclname,'<')==0) continue;
-      
-      TMakeProject::GenerateEmptyNestedClass(fp, GetName(), eclname);
-   }
-   
    fprintf(fp,"\npublic:\n");
    fprintf(fp,"// Data Members.\n");
    
@@ -2156,32 +2203,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
             case TStreamerElement::kSTLset:
             case TStreamerElement::kSTLmultiset:
                {
-                  std::vector<std::string> inside;
-                  int nestedLoc;
-                  TClassEdit::GetSplit( enamebasic, inside, nestedLoc );
-                  Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
-                  TClass *key = TClass::GetClass(inside[1].c_str());
-                  if (key) {
-                     std::string what;
-                     switch ( stlkind )  {
-                        case TClassEdit::kMap:
-                        case TClassEdit::kMultiMap: {
-                           what = "pair<";
-                           what += inside[1];
-                           what += ",";
-                           what += inside[2];
-                           what += " >";
-                           break;
-                        }
-                        case TClassEdit::kSet:
-                        case TClassEdit::kMultiSet:
-                           what = inside[1];
-                           break;
-                     }
-                     enamebasic = "vector< ";
-                     enamebasic.Append( what );
-                     enamebasic.Append( " >");
-                  }
+                  enamebasic = TMakeProject::UpdateAssociativeToVector(enamebasic);
                }
             default:
                // nothing to do.
@@ -2202,11 +2224,16 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       fprintf(fp,"%s\n",line);
    }
 
-   // Generate default functions, ClassDef and trailer.
-   fprintf(fp,"\n   %s();\n",protoname.Data());
-   fprintf(fp,"   virtual ~%s();\n\n",protoname.Data());
-
-   { 
+   if (needGenericTemplate && isTemplate) {
+      // Generate default functions, ClassDef and trailer.
+      fprintf(fp,"\n   %s() {};\n",protoname.Data());
+      fprintf(fp,"   virtual ~%s() {};\n\n",protoname.Data());
+      
+   } else {
+      // Generate default functions, ClassDef and trailer.
+      fprintf(fp,"\n   %s();\n",protoname.Data());
+      fprintf(fp,"   virtual ~%s();\n\n",protoname.Data());
+      
       // Add the implementations to the source.cxx file.
       TString guard( TMakeProject::GetHeaderName( GetName(), kTRUE ) );
       fprintf(sfp,"#ifndef %s_cxx\n",guard.Data());
@@ -2267,11 +2294,15 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       fprintf(fp,"   ClassDef(%s,%d); // Generated by MakeProject.\n",protoname.Data(),fClassVersion + 1);
    }
    fprintf(fp,"};\n");
-
+   
    for(UInt_t i=0;i<numberOfNamespaces;++i) {
       fprintf(fp,"} // namespace\n");
    }
-
+   
+   if (needGenericTemplate && isTemplate) {
+      fprintf(fp,"#endif // generic template declaration\n");
+   }
+      
    delete [] line;
 }
 
@@ -2358,6 +2389,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    // Generate header file for the class described by this TStreamerInfo
    // the function is called by TFile::MakeProject for each class in the file
 
+   // if (fClassVersion == -4) return 0;
    if (TClassEdit::IsSTLCont(GetName())) return 0;
    if (strncmp(GetName(),"pair<",strlen("pair<"))==0) return 0;
    if (strncmp(GetName(),"auto_ptr<",strlen("auto_ptr<"))==0) return 0;
@@ -2366,27 +2398,31 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    if (cl) {
       if (cl->GetClassInfo()) return 0; // skip known classes
    }
+   Bool_t isTemplate = kFALSE;
    if (strchr(GetName(),':')) {
       UInt_t len = strlen(GetName());
       UInt_t nest = 0;
+      UInt_t scope = 0;
       for(UInt_t i=len; i>0; --i) {
          switch(GetName()[i]) {
-            case '>': ++nest; break;
+            case '>': ++nest; if (scope==0) { isTemplate = kTRUE; } break;
             case '<': --nest; break;
             case ':': 
                if (nest==0 && GetName()[i-1]==':') {
                   // We have a scope
                   TString nsname(GetName(), i-1);
                   cl = gROOT->GetClass(nsname);
-                  if (cl && cl->Size()!=0) {
+                  if (cl && (cl->Size()!=0 || (cl->Size()==0 && cl->GetClassInfo()==0 /*empty 'base' class on file*/))) {
                      // This class is actually nested.
                      return 0;
                   }
+                  ++scope;
                }
                break;
          }
       }
    }
+   Bool_t needGenericTemplate = isTemplate && (fElements==0 || fElements->GetEntries()==0); 
 
    if (gDebug) printf("generating code for class %s\n",GetName());
 
@@ -2425,7 +2461,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    fprintf(fp,"\n");
    fprintf(fp,"#ifndef %s_h\n",headername.Data());
    fprintf(fp,"#define %s_h\n",headername.Data());
-   TMakeProject::GenerateForwardDeclaration(fp, GetName(), inclist);
+   TMakeProject::GenerateForwardDeclaration(fp, GetName(), inclist, kFALSE, needGenericTemplate);
    fprintf(fp,"\n");
 
    UInt_t ninc = 0;

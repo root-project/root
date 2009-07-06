@@ -85,6 +85,7 @@
 #include "TFree.h"
 #include "TInterpreter.h"
 #include "TKey.h"
+#include "TMakeProject.h"
 #include "TPluginManager.h"
 #include "TProcessUUID.h"
 #include "TRegexp.h"
@@ -2044,6 +2045,8 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    //   - a shared lib dirname.so will be created.
    // If the option "++" is specified, the generated shared lib is dynamically
    // linked with the current executable module.
+   // If the option "+" and "nocompile" are specified, the utility files are generated
+   // as in the option "+" but they are not executed.
    // Example:
    //  file.MakeProject("demo","*","recreate++");
    //  - creates a new directory demo unless it already exist
@@ -2133,18 +2136,42 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    fprintf(sfp, "#include \"%sProjectDict.cxx\"\n\n",dirname );
    fclose( sfp );
 
-   // loop on all TStreamerInfo classes
+   // loop on all TStreamerInfo classes to check for empty classes
+   // and enums listed either as data member or template parameters.
    TStreamerInfo *info;
    TIter next(list);
+   TList extrainfos;
+   while ((info = (TStreamerInfo*)next())) {
+      TClass *cl = TClass::GetClass(info->GetName());
+      if (cl) {
+         if (cl->GetClassInfo()) continue; // skip known classes
+      }
+      TMakeProject::GenerateMissingStreamerInfos(&extrainfos, info->GetName() );
+      TIter enext( info->GetElements() );
+      TStreamerElement *el;
+      while( (el=(TStreamerElement*)enext()) ) {
+         TMakeProject::GenerateMissingStreamerInfos(&extrainfos, el);         
+      }
+   }
+   // Now transfer the new StreamerInfo onto the main list.
+   TIter nextextra(&extrainfos);
+   while ((info = (TStreamerInfo*)nextextra())) {
+      list->Add(info);
+   }
+   
+   // loop on all TStreamerInfo classes
+   next.Reset();
    Int_t ngener = 0;
    while ((info = (TStreamerInfo*)next())) {
-      fprintf(stdout,"RUNNING: %s\n",info->GetName());
+      if (info->GetClassVersion()==-4) continue; // Skip outer level namespace
       TIter subnext(list);
       TStreamerInfo *subinfo;
       TList subClasses;
       Int_t len = strlen(info->GetName());
       while ((subinfo = (TStreamerInfo*)subnext())) {
          if (strncmp(info->GetName(),subinfo->GetName(),len)==0) {
+            // The 'sub' StreamerInfo start with the main StreamerInfo name,
+            // it subinfo is likely to be a nested class.
             const Int_t sublen = strlen(subinfo->GetName());
             if ( (sublen > len) && subinfo->GetName()[len+1]==':') {
                subClasses.Add(subinfo);
@@ -2219,9 +2246,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
             case TClassEdit::kMultiMap:
                {
                   what = "pair<";
-                  what += inside[1];
+                  what += TMakeProject::UpdateAssociativeToVector( inside[1].c_str() );
                   what += ",";
-                  what += inside[2];
+                  what += TMakeProject::UpdateAssociativeToVector( inside[2].c_str() );
                   what += " >";
                   fprintf(fp,"#pragma link C++ class %s+;\n",what.c_str());
                   break;
@@ -2269,26 +2296,29 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    fclose(fpMAKE);
    printf("%s/MAKEP file has been generated\n",dirname);
 
-   // now execute the generated script compiling and generating the shared lib
-   strcpy(path,gSystem->WorkingDirectory());
-   gSystem->ChangeDirectory(dirname);
+   if (!opt.Contains("nocompilation")) {
+      // now execute the generated script compiling and generating the shared lib
+      strcpy(path,gSystem->WorkingDirectory());
+      gSystem->ChangeDirectory(dirname);
 #ifndef WIN32
-   gSystem->Exec("chmod +x MAKEP");
-   int res = !gSystem->Exec("./MAKEP");
+      gSystem->Exec("chmod +x MAKEP");
+      int res = !gSystem->Exec("./MAKEP");
 #else
-   // not really needed for Windows but it would work both both Unix and NT
-   chmod("makep.cmd",00700);
-   int res = !gSystem->Exec("MAKEP");
+      // not really needed for Windows but it would work both both Unix and NT
+      chmod("makep.cmd",00700);
+      int res = !gSystem->Exec("MAKEP");
 #endif
-   gSystem->ChangeDirectory(path);
-   sprintf(path,"%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
-   if (res) printf("Shared lib %s has been generated\n",path);
-
-   //dynamically link the generated shared lib
-   if (opt.Contains("++")) {
-      res = !gSystem->Load(path);
-      if (res) printf("Shared lib %s has been dynamically linked\n",path);
+      gSystem->ChangeDirectory(path);
+      sprintf(path,"%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
+      if (res) printf("Shared lib %s has been generated\n",path);
+   
+      //dynamically link the generated shared lib
+      if (opt.Contains("++")) {
+         int res = !gSystem->Load(path);
+         if (res) printf("Shared lib %s has been dynamically linked\n",path);
+      }
    }
+   
    list->Delete();
    delete list;
    delete [] path;

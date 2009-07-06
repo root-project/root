@@ -23,6 +23,8 @@
 #include "TClassEdit.h"
 #include "TROOT.h"
 #include "TMD5.h"
+#include "TStreamerInfo.h"
+#include "TStreamerElement.h"
 
 //______________________________________________________________________________
 void TMakeProject::AddUniqueStatement(FILE *fp, const char *statement, char *inclist)
@@ -50,7 +52,7 @@ void TMakeProject::AddInclude(FILE *fp, const char *header, Bool_t system, char 
 }
 
 //______________________________________________________________________________
-static void R__ChopFileName(TString &name, Int_t limit)
+void TMakeProject::ChopFileName(TString &name, Int_t limit)
 {
    // Chop the name by replacing the ending (before a potential extension) with
    // a md5 summary of the name.
@@ -71,7 +73,6 @@ static void R__ChopFileName(TString &name, Int_t limit)
    }
 
 }
-   
 
 //______________________________________________________________________________
 TString TMakeProject::GetHeaderName(const char *name, Bool_t includeNested)
@@ -94,7 +95,7 @@ TString TMakeProject::GetHeaderName(const char *name, Bool_t includeNested)
             if (nest == 0 && name[i+1] == ':') {
                TString nsname(name, i);
                TClass *cl = gROOT->GetClass(nsname);
-               if (!includeNested && cl && cl->Size() != 0) {
+               if (!includeNested && cl && (cl->Size() != 0 || (cl->Size()==0 && cl->GetClassInfo()==0 /*empty 'base' class on file*/))) {
                   // The requested class is actually nested inside
                   // the class whose name we already 'copied' to
                   // result.  The declaration will be in the same
@@ -102,7 +103,7 @@ TString TMakeProject::GetHeaderName(const char *name, Bool_t includeNested)
                   if (strcmp(name + strlen(name) - 2, ".h") == 0) {
                      result.Append(".h");
                   }
-                  R__ChopFileName(result,255);
+                  ChopFileName(result,255);
                   return result;
                }
             }
@@ -123,14 +124,16 @@ TString TMakeProject::GetHeaderName(const char *name, Bool_t includeNested)
             result.Append(name[i]);
       }
    }
-   R__ChopFileName(result,255);
+   ChopFileName(result,255);
    return result;
 }
 
 //______________________________________________________________________________
 UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t top, TString &protoname,
-      UInt_t *numberOfClasses, Bool_t implementEmptyClass)
+      UInt_t *numberOfClasses, Int_t implementEmptyClass, Bool_t needGenericTemplate)
 {
+   // Write the start of the class (forward) declaration.
+   // if 'implementEmptyClass' is 3 then never add a #pragma
 
    // First open the namespace (if any)
    Int_t numberOfNamespaces = 0;
@@ -190,7 +193,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
 
    protoname = clname;
 
-   if (implementEmptyClass) {
+   if (implementEmptyClass==1) {
       TString headername(GetHeaderName(fullname));
       fprintf(fp, "#ifndef %s_h\n", headername.Data());
       fprintf(fp, "#define %s_h\n", headername.Data());
@@ -229,6 +232,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
          }
          protoname.Remove(pos);
       }
+      
       // Forward declaration of template.
       fprintf(fp, "template <");
       for (UInt_t p = 0; p < nparam; ++p) {
@@ -239,13 +243,19 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
          }
          if (p != (nparam - 1)) fprintf(fp, ", ");
       }
-      fprintf(fp, "> class %s;\n", protoname.Data());
-      fprintf(fp, "template <> ");
+      if (needGenericTemplate) {
+         fprintf(fp, "> class %s", protoname.Data());
+      } else {
+         fprintf(fp, "> class %s;\n", protoname.Data());
+         fprintf(fp, "template <> ");
+      }
    }
 
    if (implementEmptyClass) {
       if (istemplate) {
-         fprintf(fp, "class %s", clname);
+         if (!needGenericTemplate) {
+            fprintf(fp, "class %s", clname);
+         }
          fprintf(fp, " {\n");
          if (numberOfClasses) ++(*numberOfClasses);
          fprintf(fp, "public:\n");
@@ -254,86 +264,110 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
          fprintf(fp, "enum %s { kDefault_%s };\n", clname, clname);
          // The nesting space of this class may not be #pragma declared (and without
          // the dictionary is broken), so for now skip those
-         if (strchr(fullname, ':') == 0) {
-            // yes this is too aggressive, this needs to be fixed properly by moving the #pragma out of band.
-            fprintf(fp, "%s", Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", fullname));
+         if (implementEmptyClass==1) {
+            if (strchr(fullname, ':') == 0) {
+               // yes this is too aggressive, this needs to be fixed properly by moving the #pragma out of band.
+               fprintf(fp, "%s", Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", fullname));
+            }
+            fprintf(fp, "#endif\n");
          }
-         fprintf(fp, "#else\n");
-         fprintf(fp, "enum %s;\n", clname);
-         fprintf(fp, "#endif\n");
       }
    } else {
-      fprintf(fp, "class %s", clname);
+      if (!(istemplate && needGenericTemplate)) {
+          fprintf(fp, "class %s", clname);
+      }
    }
    return numberOfNamespaces;
 }
 
 //______________________________________________________________________________
-UInt_t TMakeProject::GenerateEmptyNestedClass(FILE *fp, const char *topclass, const char *clname)
+void TMakeProject::GenerateMissingStreamerInfo(TList *extrainfos, const char *clname, Bool_t iscope)
 {
-   // Look at clname and generate any 'empty' nested classes that might be used
-   // as template parameter.
+   // Generate an empty StreamerInfo for the given type (no recursion) if it is not
+   // not known in the list of class.   If the type itself is a template,
+   // we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
 
-   UInt_t tlen = strlen(topclass);
-   UInt_t len = strlen(clname);
-   UInt_t nest = 0;
-   UInt_t last = 0;
+   if (!TClassEdit::IsStdClass(clname) && !TClass::GetClass(clname) && gROOT->GetType(clname) == 0 && !extrainfos->FindObject(clname)) {
 
-   for (UInt_t i = 0; i < len; ++i) {
-      switch (clname[i]) {
-            case '<':
-               ++nest;
-               if (nest == 1) last = i + 1;
-               break;
-            case '>':
-               --nest; /* intentional fall throught to the next case */
-            case ',':
-               if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
-                  TString incName(clname + last, i - last);
-                  incName = TClassEdit::ShortType(incName.Data(), 1);
-                  if (clname[i] == '>' && nest == 1) incName.Append(">");
-                  Int_t stlType;
-                  if (isdigit(incName[0])) {
-                     // Not a class name, nothing to do.
-                  } else if ((stlType = TClassEdit::IsSTLCont(incName))) {
-                     TMakeProject::GenerateEmptyNestedClass( fp, topclass, incName );
-                  } else if (TClassEdit::IsStdClass(incName)) {
-                     // Do nothing.
-                  } else {
-                     TClass *cl = gROOT->GetClass(incName);
-                     if (cl) {
-                        // We have a cl (and hence a streamerInfo and hence we are not empty,
-                        // so we have nothing to do.
-                        //if (cl->GetClassInfo()) {
-                        //} else {
-                        //}
-                     } else if (incName.Length() && incName[0] != ' ' && gROOT->GetType(incName) == 0) {
-                        if (strchr(incName,'<')) {
-                           TMakeProject::GenerateEmptyNestedClass( fp, topclass, incName );
-                        }
-                        if (strncmp(topclass,incName,tlen)==0 && incName[(Ssiz_t)tlen+1]==':' && strchr(incName.Data()+tlen+2,':')==0) {
-                           Bool_t istemplate = kFALSE;
-                           if (istemplate) {
-                              fprintf(fp, "   class %s", incName.Data()+tlen+3);
-                              fprintf(fp, " {\n");
-                              fprintf(fp, "public:\n");
-                              fprintf(fp, "operator int() { return 0; };\n");
-                              fprintf(fp, "};\n");
-                           } else {
-                              fprintf(fp, "   enum %s { kDefault_%s };\n", incName.Data()+tlen+2, incName.Data()+tlen+2);
-                           }
-                        }
-                     }
-                  }
-                  last = i + 1;
-               }
+      // The class does not exist, let's create it
+      TStreamerInfo *newinfo = new TStreamerInfo();
+      newinfo->SetName(clname);
+      if (clname[strlen(clname)-1]=='>') {
+         newinfo->SetTitle("Generated by MakeProject as an empty class");
+         newinfo->SetClassVersion(1);
+      } else if (iscope) {
+         newinfo->SetTitle("Generated by MakeProject as a class/namespace");
+         newinfo->SetClassVersion(-4 /*namespace*/);
+      } else {
+         newinfo->SetTitle("Generated by MakeProject as an enum");
+         newinfo->SetClassVersion(-3 /*enum*/);
       }
+      extrainfos->Add(newinfo);
    }
-   return 0;
 }
 
 //______________________________________________________________________________
-UInt_t TMakeProject::GenerateForwardDeclaration(FILE *fp, const char *clname, char *inclist, Bool_t implementEmptyClass)
+void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *clname)
+{
+   // Generate an empty StreamerInfo for types that are used in templates parameters
+   // but are not known in the list of class.   If the type itself is a template,
+   // we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
+   
+   UInt_t len = strlen(clname);
+   UInt_t nest = 0;
+   UInt_t last = 0;
+   Bool_t istemplate = kFALSE; // mark whether the current right most entity is a class template.
+   
+   for (UInt_t i = 0; i < len; ++i) {
+      switch (clname[i]) {
+         case ':':
+            if (nest == 0 && clname[i+1] == ':') {
+               TString incName(clname, i);
+               GenerateMissingStreamerInfo(extrainfos, incName.Data(), kTRUE);
+               istemplate = kFALSE;
+            }
+            break;
+         case '<':
+            ++nest;
+            if (nest == 1) last = i + 1;
+            break;
+         case '>':
+            --nest; /* intentional fall throught to the next case */
+         case ',':
+            if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
+               TString incName(clname + last, i - last);
+               incName = TClassEdit::ShortType(incName.Data(), 1);
+               if (clname[i] == '>' && nest == 1) incName.Append(">");
+
+               if (isdigit(incName[0])) {
+                  // Not a class name, nothing to do.
+               } else {
+                  GenerateMissingStreamerInfos(extrainfos,incName.Data());
+               }
+               last = i + 1;
+            }
+      }
+   }
+   GenerateMissingStreamerInfo(extrainfos,TClassEdit::ShortType(clname, 1).c_str(),kFALSE);
+}
+
+//______________________________________________________________________________
+void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, TStreamerElement *element)
+{
+   // Generate an empty StreamerInfo for types that are used in templates parameters
+   // but are not known in the list of class.   If the type itself is a template,
+   // we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
+   
+   if (element->IsBase()) {
+      GenerateMissingStreamerInfos(extrainfos,element->GetClassPointer()->GetName());
+   } else {
+      GenerateMissingStreamerInfos(extrainfos,element->GetTypeName());
+   }
+
+}
+
+//______________________________________________________________________________
+UInt_t TMakeProject::GenerateForwardDeclaration(FILE *fp, const char *clname, char *inclist, Bool_t implementEmptyClass, Bool_t needGenericTemplate)
 {
    // Insert a (complete) forward declaration for the class 'clname'
 
@@ -344,7 +378,7 @@ UInt_t TMakeProject::GenerateForwardDeclaration(FILE *fp, const char *clname, ch
    }
    TString protoname;
    UInt_t numberOfClasses = 0;
-   UInt_t numberOfNamespaces = GenerateClassPrefix(fp, clname, kTRUE, protoname, &numberOfClasses, implementEmptyClass);
+   UInt_t numberOfNamespaces = GenerateClassPrefix(fp, clname, kTRUE, protoname, &numberOfClasses, implementEmptyClass, needGenericTemplate);
 
    fprintf(fp, ";\n");
    for (UInt_t i = 0;i < numberOfClasses;++i) {
@@ -473,9 +507,9 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
             case TClassEdit::kMap:
             case TClassEdit::kMultiMap: {
                   what = "pair<";
-                  what += inside[1];
+                  what += UpdateAssociativeToVector( inside[1].c_str() );
                   what += ",";
-                  what += inside[2];
+                  what += UpdateAssociativeToVector( inside[2].c_str() );
                   what += " >";
                   AddUniqueStatement(fp, Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", what.c_str()), inclist);
                   break;
@@ -487,3 +521,63 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
    return ninc;
 }
 
+
+//______________________________________________________________________________
+TString TMakeProject::UpdateAssociativeToVector(const char *name)
+{
+   // If we have a map, multimap, set or multiset,
+   // and the key is a class, we need to replace the
+   // container by a vector since we don't have the
+   // comparator function.
+   // The 'name' is modified to return the change in the name,
+   // if any.
+   TString newname( name );
+   
+   if (strchr(name,'<')!=0) {
+      std::vector<std::string> inside;
+      int nestedLoc;
+      TClassEdit::GetSplit( name, inside, nestedLoc );
+      for(unsigned int i = 1; i<inside.size(); ++i) {
+         inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
+      }
+      Int_t stlkind =  TMath::Abs(TClassEdit::STLKind(inside[0].c_str()));
+      if (stlkind!=0) {
+         TClass *key = TClass::GetClass(inside[1].c_str());
+      
+         if (key) {
+            std::string what;
+            switch ( stlkind )  {
+               case TClassEdit::kMap:
+               case TClassEdit::kMultiMap: {
+                  what = "pair<";
+                  what += inside[1];
+                  what += ",";
+                  what += inside[2];
+                  what += " >";
+                  inside.clear();
+                  inside.push_back("vector");
+                  inside.push_back(what);
+                  break;
+               }
+               case TClassEdit::kSet:
+               case TClassEdit::kMultiSet:
+                  inside[0] = "vector";
+                  break;
+            }
+         }
+      }
+      newname = inside[0];
+      newname.Append("<");
+      newname.Append(inside[1]);
+      for(unsigned int j=2; j<inside.size(); ++j) {
+         newname.Append(",");
+         newname.Append(inside[j]);
+      }
+      if (newname[newname.Length()-1]=='>') {
+         newname.Append(" >");
+      } else {
+         newname.Append(">");
+      }
+   }
+   return newname;
+}
