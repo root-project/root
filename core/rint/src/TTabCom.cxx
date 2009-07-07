@@ -1540,7 +1540,8 @@ TString TTabCom::DeterminePath(const TString & fileName,
    if (PathIsSpecifiedInFileName(fileName)) {
       TString path = fileName;
       gSystem->ExpandPathName(path);
-      if (path.Length()>0 && path[path.Length()-1]!='/' && path[path.Length()-1]!='\\') {
+      Int_t end = path.Length()-1;
+      if (end>0 && path[end]!='/' && path[end]!='\\') {
          path = gSystem->DirName(path);
       }
       return path;
@@ -1548,10 +1549,9 @@ TString TTabCom::DeterminePath(const TString & fileName,
       TString newBase;
       TString extendedPath;
       if (fileName.Contains("/")) {
-         newBase = gSystem->DirName(fileName);
-	 Int_t n = fileName.Length();
-         if (fileName[n-1] != '/' && fileName[n-1] != '\\') {
-	    newBase = gSystem->DirName(fileName);
+         Int_t end = fileName.Length()-1;
+         if (fileName[end] != '/' && fileName[end] != '\\') {
+            newBase = gSystem->DirName(fileName);
          } else {
             newBase = fileName;
          }
