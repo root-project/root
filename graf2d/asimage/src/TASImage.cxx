@@ -5628,22 +5628,14 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 //______________________________________________________________________________
 void TASImage::DrawText(TText *text, Int_t x, Int_t y)
 {
-   // Draw text in poosition (x, y), where x,y - in pixels
+   // Draw text at the pixel position (x,y).
 
-   if (!text) {
-      return;
-   }
+   if (!text)   return;
+   if (!fImage) return;
+   if (!gPad)   return;
 
    if (!InitVisual()) {
       Warning("DrawText", "Visual not initiated");
-      return;
-   }
-
-   if (!fImage) {
-      return;
-   }
-
-   if (!gPad) {
       return;
    }
 
@@ -5661,12 +5653,11 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
 
    // set text size in pixels
    Int_t ttfsize;
-   Float_t  scale = 1.044;
 
    if (wh < hh) {
-      ttfsize = (Int_t)(text->GetTextSize()*wh*scale);
+      ttfsize = (Int_t)(text->GetTextSize()*wh);
    } else {
-      ttfsize = (Int_t)(text->GetTextSize()*hh*scale);
+      ttfsize = (Int_t)(text->GetTextSize()*hh);
    }
    TTF::SetTextSize(ttfsize);
 
