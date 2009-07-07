@@ -21,6 +21,18 @@
     characters with TLatex, but it should work anyway.
 </ul>
 
+<h4>TASImage</h4>
+<ul> The text size adjustment applied <tt>TASImage::DrawText</tt>
+  was not valid (scale factor of 1.044). The text size was wrong and the 
+  following macro produced a wrong title when ran in batch:
+  <pre>
+  {
+     TCanvas *canvas = new TCanvas("c5","c5",900,900);
+     TH1F *histo = new TH1F("Histo","123456x_{i}abcdefy^{2}",100,0,20);
+     canvas->Print("drawing.gif");
+  }
+  </pre>
+</ul>
 
 <h3>Graphics Primitives</h3>
 
