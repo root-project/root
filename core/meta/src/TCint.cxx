@@ -790,6 +790,12 @@ Bool_t TCint::CheckClassInfo(const char *name)
    // In case of templates the idea is that everything between the outer
    // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
 
+#if defined(R__BUILDING_CINT7) || defined(R__BUILDING_ONLYCINT7)
+   if (Reflex::Instance::HasShutdown()) {
+      return kFALSE;
+   }
+#endif
+
    R__LOCKGUARD(gCINTMutex);
 
    char *classname = new char[strlen(name)*2];
