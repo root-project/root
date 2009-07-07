@@ -2464,8 +2464,10 @@ void TFile::WriteStreamerInfo()
 
    while ((info = (TStreamerInfo*)next())) {
       Int_t uid = info->GetNumber();
-      if (fClassIndex->fArray[uid]) list.Add(info);
-      if (gDebug > 0) printf(" -class: %s info number %d saved\n",info->GetName(),uid);
+      if (fClassIndex->fArray[uid]) {
+         list.Add(info);
+         if (gDebug > 0) printf(" -class: %s info number %d saved\n",info->GetName(),uid);
+      }
    }
    if (list.GetSize() == 0) return;
    fClassIndex->fArray[0] = 2; //to prevent adding classes in TStreamerInfo::TagFile
