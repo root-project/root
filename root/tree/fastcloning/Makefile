@@ -156,3 +156,14 @@ filemergererror: filemergererror.log
 badmix: badmix.log
 	$(TestDiff)
 
+abstract.root: abstract_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -l -q 'abstract.C+(0)' > abstract_root.log 2>&1
+
+copy-abstract.root: abstract_C.$(DllSuf) abstract.root
+	$(CMDECHO) root.exe -b -l -q 'abstract.C+(1)' > abstract_root.log 2>&1
+
+abstract.log: copy-abstract.root
+
+abstract: abstract.log
+	$(TestDiff)
+
