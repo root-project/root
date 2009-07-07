@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += atlasaod mytest
+TEST_TARGETS += atlasaod cms310
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -68,5 +68,16 @@ atlasaod:
 	$(WarnFailTest)
 else
 atlasaod: atlasaod.log
+	$(TestDiff)
+endif
+
+cms310.log: runcms310.C
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) > $@ 
+
+ifeq ($(ARCH)$(FAIL),win32)
+cms310:
+	$(WarnFailTest)
+else
+cms310: cms310.log
 	$(TestDiff)
 endif
