@@ -232,7 +232,7 @@ int G__compile_bytecode(G__ifunc_table* iref, int iexist)
    int store_asm_noverflow = G__asm_noverflow;
    int funcstatus;
    long store_globalvarpointer = G__globalvarpointer;
-   G__StrBuf funcname_sb(G__ONELINE);
+   G__FastAllocString funcname_sb(G__ONELINE);
    char *funcname = funcname_sb;
    int store_dispsource = G__dispsource;
    if (G__step || G__stepover) {
@@ -494,7 +494,7 @@ void G__make_ifunctable(char* funcheader)
    //
    int iin = 0;
    int cin = '\0';
-   G__StrBuf paraname_sb(G__LONGLINE);
+   G__FastAllocString paraname_sb(G__LONGLINE);
    char *paraname = paraname_sb;
    int func_now;
    int iexist;
@@ -942,7 +942,7 @@ void G__make_ifunctable(char* funcheader)
       * we have a namespace followed by '::' in which case we have
       * to grab more before stopping! */
       int namespace_tagnum;
-      G__StrBuf more_sb(G__LONGLINE);
+      G__FastAllocString more_sb(G__LONGLINE);
       char *more = more_sb;
 
       namespace_tagnum = G__defined_tagname(paraname, 2);
@@ -1716,7 +1716,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
       }
       G__paramfunc* param = ifunc->param[func_now][iin];
       param->isconst = G__VARIABLE;
-      G__StrBuf buf_sb(G__LONGLINE);
+      G__FastAllocString buf_sb(G__LONGLINE);
       char *buf = buf_sb; // Parsing I/O buffer.
       buf[0] = '\0';
       // Get first keyword, id, or separator of the type specification.
@@ -1734,7 +1734,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                !strcmp("std", buf)
             )
          ) {
-            G__StrBuf more_sb(G__LONGLINE);
+            G__FastAllocString more_sb(G__LONGLINE);
             char *more = more_sb;
             c = G__fgetname(more, "&*[(=,)");
             strcat(buf, more);
@@ -1956,7 +1956,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
       //
       int is_a_reference = 0;
       int has_a_default = 0;
-      G__StrBuf param_name_sb(G__LONGLINE);
+      G__FastAllocString param_name_sb(G__LONGLINE);
       char *param_name = param_name_sb; // Parameter name.
       param_name[0] = '\0';
       {
@@ -2230,7 +2230,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
             G__value* val = ifunc->param[func_now][iin]->pdefault;
             if (is_a_reference && !ptrcnt && ((toupper(val->type) != toupper(type)) || (val->tagnum != tagnum))) {
                // -- If binding a reference to default rvalue and the types do not match, do a cast.
-               G__StrBuf tmp_sb(G__ONELINE);
+               G__FastAllocString tmp_sb(G__ONELINE);
                char *tmp = tmp_sb;
                sprintf(tmp, "%s(%s)", G__type2string(type, tagnum, -1, 0, 0), buf);
                *val = G__getexpr(tmp);
@@ -2325,9 +2325,9 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
    int match = 0;
    int rewindflag = 0;
    G__value reg;
-   G__StrBuf conv_sb(G__ONELINE);
+   G__FastAllocString conv_sb(G__ONELINE);
    char *conv = conv_sb;
-   G__StrBuf arg1_sb(G__ONELINE);
+   G__FastAllocString arg1_sb(G__ONELINE);
    char *arg1 = arg1_sb;
 
    if (default_parameter && (param_type == '\0')) {
@@ -3469,7 +3469,7 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
             struct G__ifunc_table_internal *ifunc2;
             int ifn2;
             int hash2;
-            G__StrBuf funcname2_sb(G__ONELINE);
+            G__FastAllocString funcname2_sb(G__ONELINE);
             char *funcname2 = funcname2_sb;
             struct G__param para;
             G__incsetup_memfunc(formal_tagnum);
@@ -3499,7 +3499,7 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
             struct G__ifunc_table_internal *ifunc2;
             int ifn2 = -1;
             int hash2;
-            G__StrBuf funcname2_sb(G__ONELINE);
+            G__FastAllocString funcname2_sb(G__ONELINE);
             char *funcname2 = funcname2_sb;
             struct G__param para;
             G__incsetup_memfunc(param_tagnum);
@@ -3585,11 +3585,11 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
    int formal_reftype;
    int formal_isconst;
    G__value* param;
-   G__StrBuf conv_sb(G__ONELINE);
+   G__FastAllocString conv_sb(G__ONELINE);
    char *conv = conv_sb;
-   G__StrBuf arg1_sb(G__ONELINE);
+   G__FastAllocString arg1_sb(G__ONELINE);
    char *arg1 = arg1_sb;
-   G__StrBuf parameter_sb(G__ONELINE);
+   G__FastAllocString parameter_sb(G__ONELINE);
    char *parameter = parameter_sb;
    long store_struct_offset;
    int store_tagnum;
@@ -4489,7 +4489,7 @@ struct G__funclist* G__add_templatefunc(const char* funcnamein, G__param* libp, 
          int itmp = 0;
          int ip = 1;
          int c;
-         G__StrBuf buf_sb(G__ONELINE);
+         G__FastAllocString buf_sb(G__ONELINE);
          char *buf = buf_sb;
          do {
             c = G__getstream_template(ptmplt, &ip, buf, ",>");
@@ -4887,7 +4887,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    FILE *prev_fp;
    fpos_t prev_pos;
    // paraname[][] is used only for K&R func param. length should be OK.
-   G__StrBuf paraname_buf(G__MAXFUNCPARA * G__MAXNAME);
+   G__FastAllocString paraname_buf(G__MAXFUNCPARA * G__MAXNAME);
    typedef char namearray_t[G__MAXNAME];
    namearray_t *paraname = (namearray_t*) paraname_buf.data();
    int ipara = 0;
@@ -4911,11 +4911,11 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    int store_exec_memberfunc;
    G__UINT32 store_security;
 #ifdef G__ASM_IFUNC
-   G__StrBuf asm_inst_g_sb(G__MAXINST * sizeof(long));
+   G__FastAllocString asm_inst_g_sb(G__MAXINST * sizeof(long));
    long *asm_inst_g = (long*) asm_inst_g_sb.data(); // p-code instruction buffer.
-   G__StrBuf asm_stack_g_sb(G__MAXSTACK * sizeof(G__value));
+   G__FastAllocString asm_stack_g_sb(G__MAXSTACK * sizeof(G__value));
    G__value *asm_stack_g = (G__value*) asm_stack_g_sb.data(); // data stack 
-   G__StrBuf asm_name_sb(G__ASM_FUNCNAMEBUF);
+   G__FastAllocString asm_name_sb(G__ASM_FUNCNAMEBUF);
    char *asm_name = asm_name_sb;
    long *store_asm_inst;
    int store_asm_instsize;
@@ -5875,7 +5875,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
       // -- K&R C.
       ipara = 0;
       while (cin != ')') {
-         G__StrBuf temp_sb(G__ONELINE);
+         G__FastAllocString temp_sb(G__ONELINE);
          char *temp = temp_sb;
          cin = G__fgetstream(temp, ",)");
          if (temp[0] != '\0') {
@@ -6216,7 +6216,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
             if (
                1
             ) {
-               G__StrBuf temp_sb(G__ONELINE);
+               G__FastAllocString temp_sb(G__ONELINE);
                char *temp = temp_sb;
                /* don't call copy constructor if returning reference type */
                if (G__PARANORMAL != p_ifunc->reftype[ifn]) {
@@ -6253,7 +6253,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
                              , G__fulltagname(result7->tagnum, 1) , result7->obj.i);
                }
                else {
-                  G__StrBuf buf2_sb(G__ONELINE);
+                  G__FastAllocString buf2_sb(G__ONELINE);
                   char *buf2 = buf2_sb;
                   G__valuemonitor(*result7, buf2);
                   sprintf(temp, "%s(%s)", G__struct.name[p_ifunc->p_tagtable[ifn]]
@@ -6956,7 +6956,7 @@ struct G__ifunc_table_internal* G__get_ifunchandle_base(const char* funcname, G_
 void G__argtype2param(const char* argtype, G__param* libp, int noerror, int* error)
 {
    // -- FIXME: Describe this function!
-   G__StrBuf typenam_sb(G__MAXNAME*2);
+   G__FastAllocString typenam_sb(G__MAXNAME*2);
    char *typenam = typenam_sb;
    int p = 0;
    int c;

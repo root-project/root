@@ -33,7 +33,7 @@
 
 #include "common.h"
 #include "Api.h"
-#include "strbuf.h"
+#include "FastAllocString.h"
 
 #ifndef G__TESTMAIN
 #include <sys/stat.h>
@@ -2640,7 +2640,7 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
     }
 #endif
 
-    G__StrBuf temp(G__LARGEBUF);
+    G__FastAllocString temp(G__LARGEBUF);
 #if defined(G__SYMANTEC)
     /**************************************************************
      * preprocessor statement for Symantec C++

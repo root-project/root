@@ -2153,7 +2153,7 @@ void* G__RegisterLibrary(void (*func)()) {
    const char *libname = G__dladdr( func );
    if (libname && libname[0]) {
       size_t lenLibName = strlen(libname);
-      G__StrBuf sbLibName(lenLibName);
+      G__FastAllocString sbLibName(lenLibName);
       strcpy(sbLibName, libname);
       // remove soversion at the end: .12.34
       size_t cutat = lenLibName - 1;

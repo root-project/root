@@ -11092,7 +11092,7 @@ int G__memfunc_setup_imp(const char *funcname,int hash
       isTemplate = 0;
 
    if (isTemplate) {
-      G__StrBuf funcname_notmplt(strlen(funcname));
+      G__FastAllocString funcname_notmplt(strlen(funcname));
       strcpy(funcname_notmplt, funcname);
       *(funcname_notmplt + (isTemplate - funcname)) = 0; // cut at template arg
       isTemplate = funcname_notmplt;

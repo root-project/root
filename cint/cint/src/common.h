@@ -1490,7 +1490,7 @@ struct G__tempobject_list {
 #include "global.h"
 
 #ifdef __cplusplus
-#include "strbuf.h"
+#include "FastAllocString.h"
 using namespace Cint::Internal;
 #endif
 

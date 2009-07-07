@@ -14,7 +14,7 @@
  ************************************************************************/
 
 
-#include "strbuf.h"
+#include "FastAllocString.h"
 #include "math.h"
 #include "stdio.h"
 #include <map>
@@ -138,7 +138,9 @@ namespace Cint {
    } // Internal
 } // Cint
 
-Cint::Internal::G__StrBuf::~G__StrBuf()
+using namespace Cint::Internal;
+
+G__FastAllocString::~G__FastAllocString()
 {
    // Give our buffer back to the BufMap, i.e. make it available again.
    if (fBucket < 0 || !GetReservoir().push(fBucket, fBuf)) {
@@ -146,7 +148,7 @@ Cint::Internal::G__StrBuf::~G__StrBuf()
    }
 }
 
-char* Cint::Internal::G__StrBuf::GetBuf(int &size_then_bucket_index)
+char* G__FastAllocString::GetBuf(int &size_then_bucket_index)
 {
    // Return a buffer of given size (or larger).
    // If there is one in the map, return that one, otherwise allocatea new one.
@@ -162,14 +164,14 @@ char* Cint::Internal::G__StrBuf::GetBuf(int &size_then_bucket_index)
    return buf;
 }
 
-Cint::Internal::G__BufferReservoir& Cint::Internal::G__StrBuf::GetReservoir()
+Cint::Internal::G__BufferReservoir& G__FastAllocString::GetReservoir()
 {
    // Return the static BufferReservoir
    static G__BufferReservoir sReservoir;
    return sReservoir;
 }
 
-int Cint::Internal::G__StrBuf::FormatArgList(const char *fmt, va_list args)
+int G__FastAllocString::FormatArgList(const char *fmt, va_list args)
 {
    if (!fmt) {
       fBuf[0] = 0;
@@ -194,7 +196,7 @@ int Cint::Internal::G__StrBuf::FormatArgList(const char *fmt, va_list args)
    return result;
 }
 
-int Cint::Internal::G__StrBuf::Format(const char *fmt, ...)
+int G__FastAllocString::Format(const char *fmt, ...)
 {
    va_list args;
    va_start(args, fmt);
@@ -203,7 +205,7 @@ int Cint::Internal::G__StrBuf::Format(const char *fmt, ...)
    return res;
 }
 
-void Cint::Internal::G__StrBuf::ResizeNoCopy(int newbucket)
+void G__FastAllocString::ResizeNoCopy(int newbucket)
 {
    // Extend the size used by this buffer to at least newsize.
    // This does NOT copy the content.
