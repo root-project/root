@@ -45,6 +45,7 @@ public:
   RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t initWgt=1.0) ;
   RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t initWgt=1.0) ;
   RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> histMap, Double_t initWgt=1.0) ;
+  RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dhistMap, Double_t wgt=1.0) ;
   //RooDataHist(const char *name, const char *title, const RooArgList& vars, Double_t initWgt=1.0) ;
   RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCmdArg arg1, RooCmdArg arg2=RooCmdArg(), RooCmdArg arg3=RooCmdArg(),
 	      RooCmdArg arg4=RooCmdArg(),RooCmdArg arg5=RooCmdArg(),RooCmdArg arg6=RooCmdArg(),RooCmdArg arg7=RooCmdArg(),RooCmdArg arg8=RooCmdArg()) ;
@@ -148,6 +149,7 @@ protected:
   void adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset=0) ;
   void importTH1(const RooArgList& vars, TH1& histo, Double_t initWgt) ;
   void importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> hmap, Double_t initWgt) ;
+  void importDHistSet(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dmap, Double_t initWgt) ;
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
 
@@ -179,7 +181,7 @@ protected:
 
 private:
 
-  ClassDef(RooDataHist,2) // Binned data set
+  ClassDef(RooDataHist,3) // Binned data set
 };
 
 #endif
