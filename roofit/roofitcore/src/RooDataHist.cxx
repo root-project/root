@@ -158,6 +158,29 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 }
 
 
+
+//_____________________________________________________________________________
+RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, 
+			 map<string,RooDataHist*> dhistMap, Double_t wgt) :
+  RooAbsData(name,title,RooArgSet(vars,&indexCat)), 
+  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+{
+  // Constructor of a data hist from a map of RooDataHists that are collated into a x+1 dimensional
+  // RooDataHist where the added dimension is a category that labels the input source as defined
+  // in the histMap argument. The state names used in histMap must correspond to predefined states
+  // 'indexCat'
+  //
+  // The RooArgList 'vars' defines the dimensions of the histogram. 
+  // The ranges and number of bins are taken from the input histogram and must be the same in all histograms
+
+  // Initialize datastore
+  _dstore = new RooTreeDataStore(name,title,_vars) ; 
+  
+  importDHistSet(vars, indexCat, dhistMap, wgt) ;
+}
+
+
+
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t wgt) :
   RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
@@ -221,9 +244,12 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   pc.defineObject("indexCat","IndexCat",0) ;
   pc.defineObject("impSliceHist","ImportHistoSlice",0,0,kTRUE) ; // array
   pc.defineString("impSliceState","ImportHistoSlice",0,"",kTRUE) ; // array
+  pc.defineObject("impSliceDHist","ImportDataHistSlice",0,0,kTRUE) ; // array
+  pc.defineString("impSliceDState","ImportDataHistSlice",0,"",kTRUE) ; // array
   pc.defineDouble("weight","Weight",0,1) ; 
-  pc.defineMutex("ImportHisto","ImportHistoSlice") ;
+  pc.defineMutex("ImportHisto","ImportHistoSlice","ImportDataHistSlice") ;
   pc.defineDependency("ImportHistoSlice","IndexCat") ;
+  pc.defineDependency("ImportDataHistSlice","IndexCat") ;
 
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
@@ -243,6 +269,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   const char* impSliceNames = pc.getString("impSliceState","",kTRUE) ;
   const RooLinkedList& impSliceHistos = pc.getObjectList("impSliceHist") ;
   RooCategory* indexCat = static_cast<RooCategory*>(pc.getObject("indexCat")) ;
+  const char* impSliceDNames = pc.getString("impSliceDState","",kTRUE) ;
+  const RooLinkedList& impSliceDHistos = pc.getObjectList("impSliceDHist") ;
+
 
   if (impHist) {
     
@@ -251,17 +280,36 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
   } else if (indexCat) {
 
-    // Initialize importing mapped set of TH1s
-    map<string,TH1*> hmap ;
-    char tmp[1024] ;
-    strcpy(tmp,impSliceNames) ;
-    char* token = strtok(tmp,",") ;
-    TIterator* hiter = impSliceHistos.MakeIterator() ;
-    while(token) {
-      hmap[token] = (TH1*) hiter->Next() ;
-      token = strtok(0,",") ;
+
+    if (impSliceHistos.GetSize()>0) {
+
+      // Initialize importing mapped set of TH1s
+      map<string,TH1*> hmap ;
+      char tmp[1024] ;
+      strcpy(tmp,impSliceNames) ;
+      char* token = strtok(tmp,",") ;
+      TIterator* hiter = impSliceHistos.MakeIterator() ;
+      while(token) {
+	hmap[token] = (TH1*) hiter->Next() ;
+	token = strtok(0,",") ;
+      }
+      importTH1Set(vars,*indexCat,hmap,initWgt) ;
+    } else {
+
+      // Initialize importing mapped set of RooDataHists
+      map<string,RooDataHist*> dmap ;
+      char tmp[1024] ;
+      strcpy(tmp,impSliceDNames) ;
+      char* token = strtok(tmp,",") ;
+      TIterator* hiter = impSliceDHistos.MakeIterator() ;
+      while(token) {
+	dmap[token] = (RooDataHist*) hiter->Next() ;
+	token = strtok(0,",") ;
+      }
+      importDHistSet(vars,*indexCat,dmap,initWgt) ;
+
     }
-    importTH1Set(vars,*indexCat,hmap,initWgt) ;
+
 
   } else {
 
@@ -345,6 +393,7 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, ma
   RooCategory* icat = (RooCategory*) _vars.find(indexCat.GetName()) ;
 
   TH1* histo(0) ;  
+  Bool_t init(kFALSE) ;
   for (map<string,TH1*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
     // Store pointer to first histogram from which binning specification will be taken
     if (!histo) {
@@ -368,11 +417,15 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, ma
   }
   
   // Copy bins and ranges from THx to dimension observables
-  adjustBinning(vars,*histo) ;
+  Int_t offset[3] ;
+  adjustBinning(vars,*histo,offset) ;
   
   // Initialize internal data structure
-  initialize() ;
-  appendToDir(this,kTRUE) ;
+  if (!init) {
+    initialize() ;
+    appendToDir(this,kTRUE) ;
+    init = kTRUE ;
+  }
 
   // Define x,y,z as 1st, 2nd and 3rd observable
   RooRealVar* xvar = (RooRealVar*) _vars.find(vars.at(0)->GetName()) ;
@@ -382,15 +435,15 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, ma
   // Transfer contents
   Int_t xmin(0),ymin(0),zmin(0) ;
   RooArgSet vset(*xvar) ;
-  xmin = xvar->getBinning().rawBinNumber(xvar->getMin()+1e-6) ;
+  xmin = offset[0] ;
 
   if (yvar) {
     vset.add(*yvar) ;
-    ymin = yvar->getBinning().rawBinNumber(yvar->getMin()+1e-6) ;
+    ymin = offset[1] ;
   }
   if (zvar) {
     vset.add(*zvar) ;
-    zmin = zvar->getBinning().rawBinNumber(zvar->getMin()+1e-6) ;
+    zmin = offset[2] ;
   }
 
   
@@ -420,8 +473,47 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, ma
 
 }
 
-  
 
+
+//_____________________________________________________________________________
+void RooDataHist::importDHistSet(const RooArgList& /*vars*/, RooCategory& indexCat, std::map<std::string,RooDataHist*> dmap, Double_t initWgt) 
+{
+  // Import data from given set of TH1/2/3 into this RooDataHist. The category indexCat labels the sources
+  // in the constructed RooDataHist. The stl map provides the mapping between the indexCat state labels
+  // and the import source
+
+  RooCategory* icat = (RooCategory*) _vars.find(indexCat.GetName()) ;
+
+  for (map<string,RooDataHist*>::iterator diter = dmap.begin() ; diter!=dmap.end() ; ++diter) {
+
+    // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
+    if (!indexCat.lookupType(diter->first.c_str())) {
+      indexCat.defineType(diter->first.c_str()) ;
+      coutI(InputArguments) << "RooDataHist::importDHistSet(" << GetName() << ") defining state \"" << diter->first << "\" in index category " << indexCat.GetName() << endl ;
+    }
+    if (!icat->lookupType(diter->first.c_str())) {	
+      icat->defineType(diter->first.c_str()) ;
+    }
+  }
+
+  initialize() ;
+  appendToDir(this,kTRUE) ;  
+
+
+  for (map<string,RooDataHist*>::iterator diter = dmap.begin() ; diter!=dmap.end() ; ++diter) {
+
+    RooDataHist* dhist = diter->second ;
+
+    icat->setLabel(diter->first.c_str()) ;
+
+    // Transfer contents
+    for (Int_t i=0 ; i<dhist->numEntries() ; i++) {
+      _vars = *dhist->get(i) ;
+      add(_vars,dhist->weight()*initWgt, pow(dhist->weightError(SumW2),2) ) ;
+    }
+
+  }
+}
 
 //_____________________________________________________________________________
 void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset) 
@@ -742,8 +834,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   RooAbsArg* rvarg ;
   while((rvarg=(RooAbsArg*)_iterator->Next())) {
     _lvvars.push_back(dynamic_cast<RooAbsLValue*>(rvarg)) ;
-    const RooAbsBinning *binning = dynamic_cast<RooAbsLValue*>(rvarg)->getBinningPtr(0) ;
-    _lvbins.push_back(binning ? binning->clone() : 0) ;    
+    _lvbins.push_back(dynamic_cast<RooAbsLValue*>(rvarg)->getBinningPtr(0)) ;
   }
 
  appendToDir(this,kTRUE) ;
@@ -875,12 +966,8 @@ RooDataHist::~RooDataHist()
   if (_idxMult) delete[] _idxMult ;
   if (_realIter) delete _realIter ;
   if (_binValid) delete[] _binValid ;
-  
-  for (list<const RooAbsBinning*>::iterator iter = _lvbins.begin() ;iter!=_lvbins.end() ; ++iter) {
-    delete (*iter) ;
-  }
-  
-  removeFromDir(this) ;
+
+   removeFromDir(this) ;
 }
 
 
@@ -929,11 +1016,7 @@ void RooDataHist::dump2()
   Int_t i ;
   cout << "_arrSize = " << _arrSize << endl ;
   for (i=0 ; i<_arrSize ; i++) {
-    if (_wgt[i]!=0) {
-      cout << "wgt[" << i << "] = " << _wgt[i] << "err[" << i << "] = " << _errLo[i] << " vol[" << i << "] = " << _binv[i] << endl ;
-    } else {
-      cout << "wgt[" << i << "] = 0 !!!" << endl ;
-    }
+    cout << "wgt[" << i << "] = " << _wgt[i] << "sumw2[" << i << "] = " << _sumw2[i] << " vol[" << i << "] = " << _binv[i] << endl ;
   }
 }
 
@@ -1778,7 +1861,7 @@ void RooDataHist::Streamer(TBuffer &R__b)
      UInt_t R__s, R__c;
      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
      
-      if (R__v>1) {
+      if (R__v>2) {
 
 	R__b.ReadClassBuffer(RooDataHist::Class(),this,R__v,R__s,R__c);
 
@@ -1789,7 +1872,7 @@ void RooDataHist::Streamer(TBuffer &R__b)
 	// file here and convert it into a RooTreeDataStore which is installed in the 
 	// new-style RooAbsData base class
 	
-	// --- This is the contents of the streamer code of RooTreeData version 1 ---
+	// --- This is the contents of the streamer code of RooTreeData version 2 ---
 	UInt_t R__s1, R__c1;
 	Version_t R__v1 = R__b.ReadVersion(&R__s1, &R__c1); if (R__v1) { }
 	

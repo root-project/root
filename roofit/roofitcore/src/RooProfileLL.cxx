@@ -205,7 +205,8 @@ void RooProfileLL::validateAbsMin() const
   if (!_absMinValid) {
     
     cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
-    
+    // Save current values of non-marginalized parameters
+    RooArgSet* obsStart = (RooArgSet*) _obs.snapshot(kFALSE) ;
 
     // Find minimum with all observables floating
     const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kFALSE) ;  
@@ -238,6 +239,10 @@ void RooProfileLL::validateAbsMin() const
       }      
       ccxcoutI(Minimization) << ")" << endl ;            
     }
+
+    // Restore original parameter values
+    const_cast<RooSetProxy&>(_obs) = *obsStart ;
+    delete obsStart ;
 
   }
 }
