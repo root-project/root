@@ -855,10 +855,7 @@ Bool_t TStreamerInfo::BuildFor( const TClass *in_memory_cl )
 
    const TObjArray* rules;
 
-   if( fOnFileClassVersion >= 2 )
-      rules = in_memory_cl->GetSchemaRules()->FindRules( GetName(), fOnFileClassVersion );
-   else
-      rules = in_memory_cl->GetSchemaRules()->FindRules( GetName(), fCheckSum );
+   rules = in_memory_cl->GetSchemaRules()->FindRules( GetName(), fOnFileClassVersion, fCheckSum );
 
    if( !rules && !TClassEdit::IsSTLCont( in_memory_cl->GetName() ) ) {
       Warning( "BuildFor", "The build of %s streamer info for %s has been requested, but no matching conversion rules were specified", GetName(), in_memory_cl->GetName() );
@@ -1073,10 +1070,7 @@ void TStreamerInfo::BuildOld()
    const ROOT::TSchemaMatch*   rules   = 0;
    const ROOT::TSchemaRuleSet* ruleSet = fClass->GetSchemaRules();
    
-   if( fOnFileClassVersion >= 2 )
-      rules = (ruleSet ? ruleSet->FindRules( GetName(), fOnFileClassVersion ) : 0);
-   else
-      rules = (ruleSet ? ruleSet->FindRules( GetName(), fCheckSum ) : 0);
+   rules = (ruleSet ? ruleSet->FindRules( GetName(), fOnFileClassVersion, fCheckSum ) : 0);
 
    while ((element = (TStreamerElement*) next())) {
       if (element->IsA()==TStreamerArtificial::Class() 
