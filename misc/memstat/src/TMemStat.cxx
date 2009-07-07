@@ -102,13 +102,13 @@ END_MACRO */
 #include "TArrayI.h"
 #include "TBits.h"
 #include "TDirectory.h"
-//#include "TCanvas.h"
+#include "TCanvas.h"
 //#include "TPad.h"
 #include "TAxis.h"
 #include "TGraph.h"
 #include "TLegend.h"
 #include "TText.h"
-//#include "TLine.h"
+#include "TLine.h"
 #include "THStack.h"
 #include "TSystem.h"
 // Memstat
@@ -242,13 +242,13 @@ void TMemStat::AddStamp(const char*stampName)
 }
 
 //______________________________________________________________________________
-void TMemStat::Draw(Option_t * /*option*/)
+void TMemStat::Draw(Option_t *option)
 {
    // Draw the memory statistic
    // call ::Report("?") to see possible options and meaning
 
    // TODO: fix the draw method. Don't use the ROOT graphics
-   /*  if (!gPad) {
+     if (!gPad) {
         new TCanvas;
         gPad->SetTopMargin(0.2);
         gPad->SetRightMargin(0.3);
@@ -275,7 +275,7 @@ void TMemStat::Draw(Option_t * /*option*/)
 
      MakeStampsText();
      if (gPad) {
-        fArray->At(0)->Draw("alp");
+        if (fArray->At(0)) fArray->At(0)->Draw("alp");
         gPad->Update();
 
         TLegend * legend = new TLegend(0.75, 0.1, 0.99, 0.9, "Memory statistic");
@@ -287,7 +287,10 @@ void TMemStat::Draw(Option_t * /*option*/)
         }
         legend->Draw();
         fArray->AddLast(legend);
-        for (Int_t i = 0; i < fArrayGraphics->GetEntries(); i++) {
+        Int_t ng = 0;
+        if (fArrayGraphics) ng = fArrayGraphics->GetEntries();
+        
+        for (Int_t i = 0; i < ng; i++) {
            TText *ptext = dynamic_cast<TText*>(fArrayGraphics->At(i));
            if (ptext) {
               ptext->SetY(gPad->GetUymax());
@@ -304,7 +307,7 @@ void TMemStat::Draw(Option_t * /*option*/)
            }
         }
      }
-     AppendPad();*/
+     AppendPad(); //*/
 }
 
 //______________________________________________________________________________
@@ -882,7 +885,7 @@ Int_t TMemStat::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
      }
      if (mindist > kMinDist)
         fSelected = -1;*/
-   return -1;
+   return 999;
 }
 
 //______________________________________________________________________________
