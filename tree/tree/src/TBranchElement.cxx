@@ -2536,8 +2536,7 @@ void TBranchElement::InitializeOffsets()
                offset = rd->GetThisOffset();
             } else {
                // -- No dictionary meta info for this data member, it must no longer exist.
-               // FIXME: Enable this warning!
-               //Warning("InitializeOffsets", "Class '%s' version %d checksum %08x has no data member named '%s', assuming offset is zero!", pClass->GetName(), pClass->GetClassVersion(), pClass->GetCheckSum(), dataName.Data());
+               localOffset = TStreamerInfo::kMissing;
             }
          } else {
             // -- We have no data member name, ok for a base class, not good otherwise.
