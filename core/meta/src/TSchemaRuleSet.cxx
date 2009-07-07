@@ -116,6 +116,7 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
 //------------------------------------------------------------------------------
 const TObjArray* TSchemaRuleSet::FindRules( const TString &source ) const
 {
+   // Return all the rules that are about the given 'source' class.
    // User has to delete the returned array
    TObject*      obj;
    TObjArrayIter it( fAllRules );
@@ -133,6 +134,7 @@ const TObjArray* TSchemaRuleSet::FindRules( const TString &source ) const
 //------------------------------------------------------------------------------
 const TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, Int_t version ) const
 {
+   // Return all the rules that applies to the specified version of the given 'source' class.
    // User has to delete the returned array
 
    TObject*      obj;
@@ -157,6 +159,7 @@ const TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, Int_t vers
 //------------------------------------------------------------------------------
 const TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, UInt_t checksum ) const
 {
+   // Return all the rules that applies to the specified checksum of the given 'source' class.
    // User has to delete the returned array
 
    TObject*      obj;
@@ -170,6 +173,30 @@ const TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, UInt_t che
          arr->Add( rule );
    }
 
+   if( arr->GetEntriesFast() )
+      return arr;
+   else {
+      delete arr;
+      return 0;
+   }
+}
+
+//------------------------------------------------------------------------------
+const TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, Int_t version, UInt_t checksum ) const
+{
+   // Return all the rules that applies to the specified version OR checksum of the given 'source' class.
+   // User has to delete the returned array
+
+   TObject*      obj;
+   TObjArrayIter it( fAllRules );
+   TSchemaMatch* arr = new TSchemaMatch();
+   arr->SetOwner( kFALSE );
+
+   while( (obj = it.Next()) ) {
+      TSchemaRule* rule = (TSchemaRule*)obj;
+      if( rule->GetSourceClass() == source && ( rule->TestVersion( version ) || rule->TestChecksum( checksum ) ) )
+         arr->Add( rule );
+   }
 
    if( arr->GetEntriesFast() )
       return arr;

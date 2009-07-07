@@ -38,6 +38,7 @@ namespace ROOT {
          const TObjArray*    FindRules( const TString &source ) const;
          const TSchemaMatch* FindRules( const TString &source, Int_t version ) const;
          const TSchemaMatch* FindRules( const TString &source, UInt_t checksum ) const;
+         const TSchemaMatch* FindRules( const TString &source, Int_t version, UInt_t checksum ) const;
          TClass*             GetClass();
          UInt_t              GetClassCheckSum() const;
          TString             GetClassName() const;
