@@ -175,6 +175,9 @@ void TGLClipPlane::Setup(const TGLBoundingBox & bbox)
    Double_t extents = bbox.Extents().Mag();
    TGLClipPlaneLogical* cpl = (TGLClipPlaneLogical*) GetLogical();
    cpl->Resize(extents);
+   if (!fValid) {
+      SetTransform(TGLMatrix(bbox.Center(), BoundingBox().GetNearPlane().Norm()));
+   }
    IncTimeStamp();
    fValid = kTRUE;
 }
