@@ -106,6 +106,9 @@ void TBonjourResolver::BonjourSocketReadyRead()
    // information on the socket, this will invoke the BonjourResolveReply
    // callback. This is a private slot, used in ResolveBonjourRecord.
 
+   // in case the resolver has already been deleted
+   if (!fDNSRef) return;
+
    DNSServiceErrorType err = DNSServiceProcessResult(fDNSRef);
    if (err != kDNSServiceErr_NoError)
       Error("BonjourSocketReadyRead", "error in DNSServiceProcessResult");

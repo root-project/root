@@ -20,6 +20,14 @@
 // macro to make sure that the callback has the correct calling         //
 // convention on Windows.                                               //
 //                                                                      //
+// Bonjour works out-of-the-box on MacOS X. On Linux you have to        //
+// install the Avahi package and run the avahi-daemon. To compile       //
+// these classes and run Avahi on Linux you need to install the:        //
+//    avahi                                                             //
+//    avahi-compat-libdns_sd-devel                                      //
+//    nss-mdns                                                          //
+// packages. After installation make sure the avahi-daemon is started.  //      
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TBonjourBrowser.h"
@@ -27,6 +35,7 @@
 #include "TSysEvtHandler.h"
 #include "TList.h"
 #include "TError.h"
+#include "TSystem.h"
 
 
 ClassImp(TBonjourBrowser)
@@ -38,6 +47,9 @@ TBonjourBrowser::TBonjourBrowser() : fDNSRef(0), fBonjourSocketHandler(0)
 
    fBonjourRecords = new TList;
    fBonjourRecords->SetOwner();
+
+   // silence Avahi about using Bonjour compat layer
+   gSystem->Setenv("AVAHI_COMPAT_NOWARN", "1");
 }
 
 //______________________________________________________________________________
@@ -95,6 +107,9 @@ void TBonjourBrowser::BonjourSocketReadyRead()
    // The Bonjour socket is ready for reading. Tell Bonjour to process the
    // information on the socket, this will invoke the BonjourBrowseReply
    // callback. This is a private slot, used in BrowseForServiceType.
+
+   // in case the browser has already been deleted
+   if (!fDNSRef) return;
 
    DNSServiceErrorType err = DNSServiceProcessResult(fDNSRef);
    if (err != kDNSServiceErr_NoError)

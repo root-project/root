@@ -24,6 +24,14 @@
 // is marked with the DNSSD_API macro to make sure that the callback    //
 // has the correct calling convention on Windows.                       //
 //                                                                      //
+// Bonjour works out-of-the-box on MacOS X. On Linux you have to        //
+// install the Avahi package and run the avahi-daemon. To compile       //
+// these classes and run Avahi on Linux you need to install the:        //
+//    avahi                                                             //
+//    avahi-compat-libdns_sd-devel                                      //
+//    nss-mdns                                                          //
+// packages. After installation make sure the avahi-daemon is started.  //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TObject
