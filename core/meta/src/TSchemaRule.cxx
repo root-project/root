@@ -108,7 +108,7 @@ Bool_t TSchemaRule::SetChecksum( const TString& checksum )
    fChecksum = "";
    Bool_t ret = ProcessChecksum( checksum );
    if( ret )
-      fVersion = "";
+      fChecksum = checksum;
    return ret;
 }
 
