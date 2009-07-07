@@ -1660,7 +1660,8 @@ static void G__OP1_minus(G__value* pbuf)
          G__OP1_minus_T<float>(pbuf);
          break;
       case 'm':
-         G__OP1_minus_T<G__uint64>(pbuf);
+         // -unsigned still unsigned
+         //G__OP1_minus_T<G__uint64>(pbuf);
          break;
       case 'n':
          G__OP1_minus_T<G__int64>(pbuf);
@@ -1669,7 +1670,8 @@ static void G__OP1_minus(G__value* pbuf)
       case 'r':
       case 'h':
       case 'k':
-         G__OP1_minus_T<unsigned long>(pbuf);
+         // -unsigned still unsigned
+         //G__OP1_minus_T<unsigned long>(pbuf);
          break;
       default:
          G__OP1_minus_T<long>(pbuf);

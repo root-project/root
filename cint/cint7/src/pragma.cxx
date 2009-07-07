@@ -637,7 +637,7 @@ int Cint::Internal::G__autocc()
   G__StrBuf temp_sb(G__LONGLINE);
   char *temp = temp_sb;
   char ansi[10],cpp[10];
-#if defined(G__VISUAL)
+#if defined(G__VISUAL) && !defined(G__HAVE_CONFIG)
   FILE *fp;
 #endif
 
