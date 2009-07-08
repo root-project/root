@@ -92,6 +92,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <cstdio>
 #include <iostream>
 
 const char* gFilename = "Event.root";
