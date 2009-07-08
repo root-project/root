@@ -1632,7 +1632,9 @@ int G__loadfile(const char *filenamein)
   /**********************************************
   * Get actual open file name.
   **********************************************/
-  int pres= G__preprocessor(prepname,filename,G__cpp,G__macros,G__undeflist
+  std::string macros(G__macros);
+  macros += " -DG__EXTERNAL_CPP ";
+  int pres= G__preprocessor(prepname,filename,G__cpp,macros.c_str(),G__undeflist
                             ,G__ppopt,G__allincludepath);
   if (pres!=0) {
      G__fprinterr(G__serr,"Error: external preprocessing failed.");
