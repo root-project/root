@@ -2408,13 +2408,19 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          }
       }
 
+      TClass *pclass;
       // Can be "." or "->"
-      if (varName[cut] == '.') memberName = varName+cut+1;
-      else memberName = varName+cut+2;
-
-      if (0) printf("Member/method is [%s]\n", memberName.Data());
-
-      TClass *pclass = MakeClassFromVarName(parentName.Data(), context, iter+1);
+      if (varName[cut] == '.') {
+         memberName = varName+cut+1;
+         if (0) printf("Member/method is [%s]\n", memberName.Data());
+         EContext_t subcontext = kCXX_DirectMember;
+         pclass = MakeClassFromVarName(parentName.Data(), subcontext, iter+1);
+      } else {
+         memberName = varName+cut+2;
+         if (0) printf("Member/method is [%s]\n", memberName.Data());         
+         EContext_t subcontext = kCXX_IndirectMember;
+         pclass = MakeClassFromVarName(parentName.Data(), subcontext, iter+1);
+      }
 
       if (0) printf("I got [%s] from MakeClassFromVarName()\n", pclass->GetName());
 
