@@ -985,6 +985,7 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
             }
          }
       }
+      if (vol->IsAssembly()) ((TGeoVolumeAssembly*)vol)->SetNextNodeIndex(idaughter);
       return nodefound;
    }
    // if current volume is voxelized, first get current voxel
@@ -1033,6 +1034,7 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
          }
       }
    }
+   if (vol->IsAssembly()) ((TGeoVolumeAssembly*)vol)->SetNextNodeIndex(idaughter);
    return nodefound;
 }
 

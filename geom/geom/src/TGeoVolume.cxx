@@ -1962,7 +1962,7 @@ void TGeoVolume::SetVisibility(Bool_t vis)
 {
 // set visibility of this volume
    if (IsAssembly()) {
-      Info("SetVisibility", "Volume assemblies do not have visibility");
+      Info("SetVisibility", "Volume %s: assemblies do not have visibility", GetName());
       return;
    }   
    TGeoAtt::SetVisibility(vis);
