@@ -221,6 +221,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
          if (oldkey && !strcmp(oldkey->GetName(),key->GetName())) continue;
          if (!strcmp(key->GetClassName(),"TProcessID")) {key->ReadObj(); continue;}
          if (allNames.FindObject(key->GetName())) continue;
+         TClass *cl = TClass::GetClass(key->GetClassName());
+         if (!cl || !cl->InheritsFrom(TObject::Class())) {
+            cout << "Cannot merge object type, name: " 
+                 << key->GetName() << " title: " << key->GetTitle() << endl;
+            continue;
+         }
          allNames.Add(new TObjString(key->GetName()));
 
          // read object from first source file
@@ -323,8 +329,6 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                //callEnv.Execute(obj);
                delete tomerge;
             } else {
-               target->cd();
-               obj->Write();
                TFile *nextsource = (TFile*)sourcelist->After(first_source);
                while (nextsource) {
                   nextsource->cd(path);
@@ -332,13 +336,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   if (newobj) {
                      target->cd();
                      newobj->Write();
+                     delete newobj;
                   }
                   nextsource = (TFile*)sourcelist->After(nextsource);
                }
                Warning("MergeRecursive", "object type without Merge function will be added unmerged, name: %s title: %s",
                        obj->GetName(), obj->GetTitle());
-               TH1::AddDirectory(addDirStat);
-               return kTRUE;
             }
          }
 
@@ -365,9 +368,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                obj->Write( key->GetName() );
             }
             if (obj->IsA()->InheritsFrom("TCollection")) ((TCollection*)obj)->Delete();
-            delete obj;
          }
          oldkey = key;
+         delete obj;
       } // while ( ( TKey *key = (TKey*)nextkey() ) )
       first_source = (TDirectory*)sourcelist->After(first_source);
    }
