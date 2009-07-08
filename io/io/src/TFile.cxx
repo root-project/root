@@ -2314,7 +2314,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    
       //dynamically link the generated shared lib
       if (opt.Contains("++")) {
-         int res = !gSystem->Load(path);
+         res = !gSystem->Load(path);
          if (res) printf("Shared lib %s has been dynamically linked\n",path);
       }
    }
