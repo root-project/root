@@ -384,12 +384,15 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
          if (!gOptionK) gSystem->Unlink(filename.Data());
       } else {
          cout << gLine;
-         for (Int_t i = nch; i < 63; i++) cout << ".";
-         cout << " FAILED" << endl;
+	 Int_t ndots = 60;
+	 Int_t w = 3;
+	 if (gTestNum < 10) { ndots++; w--;}
+         for (Int_t i = nch; i < ndots; i++) cout << ".";
+         cout << setw(w) << gTestNum << " FAILED" << endl;
          cout << "         Result    = "  << res << endl;
          cout << "         Reference = "  << ref << endl;
          cout << "         Error     = "  << TMath::Abs(res-ref)
-                                           << " (was " << err << ")"<< endl;
+                                          << " (was " << err << ")"<< endl;
          return 1;
       }
    } else {
