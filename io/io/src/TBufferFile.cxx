@@ -870,7 +870,7 @@ Int_t TBufferFile::ReadArrayFloat16(Float_t *&f, TStreamerElement *ele)
    Int_t n;
    *this >> n;
 
-   if (n <= 0 || 4*n > fBufSize) return 0;
+   if (n <= 0 || 3*n > fBufSize) return 0;
 
    if (!f) f = new Float_t[n];
 
@@ -892,7 +892,7 @@ Int_t TBufferFile::ReadArrayDouble32(Double_t *&d, TStreamerElement *ele)
    Int_t n;
    *this >> n;
 
-   if (n <= 0 || 4*n > fBufSize) return 0;
+   if (n <= 0 || 3*n > fBufSize) return 0;
 
    if (!d) d = new Double_t[n];
 
@@ -1137,7 +1137,7 @@ Int_t TBufferFile::ReadStaticArrayFloat16(Float_t *f, TStreamerElement *ele)
    Int_t n;
    *this >> n;
 
-   if (n <= 0 || 4*n > fBufSize) return 0;
+   if (n <= 0 || 3*n > fBufSize) return 0;
 
    if (!f) return 0;
 
@@ -1158,7 +1158,7 @@ Int_t TBufferFile::ReadStaticArrayDouble32(Double_t *d, TStreamerElement *ele)
    Int_t n;
    *this >> n;
 
-   if (n <= 0 || 4*n > fBufSize) return 0;
+   if (n <= 0 || 3*n > fBufSize) return 0;
 
    if (!d) return 0;
 
@@ -1346,7 +1346,7 @@ void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *el
    // Read array of n floats (written as truncated float) from the I/O buffer.
    // see comments about Float16_t encoding at TBufferFile::WriteFloat16
 
-   if (n <= 0 || 4*n > fBufSize) return;
+   if (n <= 0 || 3*n > fBufSize) return;
 
    if (ele && ele->GetFactor() != 0) {
       //a range was specified. We read an integer and convert it back to a float
@@ -1386,7 +1386,7 @@ void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *
    // Read array of n doubles (written as float) from the I/O buffer.
    // see comments about Double32_t encoding at TBufferFile::WriteDouble32
 
-   if (n <= 0 || 4*n > fBufSize) return;
+   if (n <= 0 || 3*n > fBufSize) return;
 
    if (ele && ele->GetFactor() != 0) {
       //a range was specified. We read an integer and convert it back to a double.
