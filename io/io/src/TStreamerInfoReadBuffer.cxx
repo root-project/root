@@ -133,7 +133,8 @@
          Char_t isArray;                                                  \
          DOLOOP {                                                         \
             b >> isArray;                                                 \
-            Int_t *l = (addCounter==-1) ? (Int_t*)(arr[k]+imethod) : &addCounter;  \
+            char *arr_k = arr[k];                                         \
+            Int_t *l = (addCounter==-1 && arr_k) ? (Int_t*)(arr_k+imethod) : &addCounter;  \
             if (*l>0) {                                                   \
                name* readbuf = new name[*l];                              \
                for (int j=0;j<len;j++)                                    \
