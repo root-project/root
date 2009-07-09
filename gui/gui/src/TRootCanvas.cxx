@@ -1354,16 +1354,25 @@ void TRootCanvas::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
        event != kMouseMotion || fButton != 0)
       return;
    TString tipInfo;
-   const char *title = selected->GetTitle();
-   tipInfo += TString::Format("%s::%s\n", selected->ClassName(),
-                              selected->GetName());
-   if (title && strlen(title))
-      tipInfo += TString::Format("%s\n", selected->GetTitle());
-   if (event == kKeyPress)
-      tipInfo += TString::Format("%c\n", (char) px);
-   else
-      tipInfo += TString::Format("%d, %d\n", px, py);
-   tipInfo += selected->GetObjectInfo(px, py);
+   TString objInfo = selected->GetObjectInfo(px, py);
+   if (objInfo.BeginsWith("-")) {
+      // if the string begins with '-', display only the object info
+      objInfo.Remove(TString::kLeading, '-');
+      tipInfo = objInfo;
+   }
+   else {
+      const char *title = selected->GetTitle();
+      tipInfo += TString::Format("%s::%s", selected->ClassName(),
+                                 selected->GetName());
+      if (title && strlen(title))
+         tipInfo += TString::Format("\n%s", selected->GetTitle());
+      if (event == kKeyPress)
+         tipInfo += TString::Format("\n%c", (char) px);
+      else
+         tipInfo += TString::Format("\n%d, %d", px, py);
+      if (!objInfo.IsNull())
+         tipInfo += TString::Format("\n%s", objInfo.Data());
+   }      
    fToolTip->SetText(tipInfo.Data());
    fToolTip->SetPosition(px+15, py+15);
    fToolTip->Reset();
