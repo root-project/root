@@ -1330,14 +1330,19 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
    <p>
    <table border=0>
    <tr><th valign=top>"R"</th><td>
-   Graph is drawn horizontaly, parallel to X axis.
-   //               (default is vertically, parallel to Y axis)
-   //               If option R is selected the user must give:
-   //                 2 values for Y (y[0]=YMIN and y[1]=YMAX)
-   //                 N values for X, one for each channel.
-   //               Otherwise the user must give:
-   //                 N values for Y, one for each channel.
-   //                 2 values for X (x[0]=XMIN and x[1]=XMAX)
+   Graph is drawn horizontaly, parallel to X axis. (default is vertically,
+   parallel to Y axis)
+   <br>
+   If option R is selected the user must give:
+   <ul>
+   <li> 2 values for Y (y[0]=YMIN and y[1]=YMAX)
+   <li> N values for X, one for each channel.
+   </ul>
+   Otherwise the user must give:
+   <ul>
+   <li> N values for Y, one for each channel.
+   <li> 2 values for X (x[0]=XMIN and x[1]=XMAX)
+   </ul>
    </td></tr>
 
    <tr><th valign=top>"L"</th><td>
