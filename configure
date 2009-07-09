@@ -2649,14 +2649,16 @@ check_explicit "$enable_monalisa" "$enable_monalisa_explicit" \
 if test ! "x$enable_fftw3" = "xno"; then
     # Check for FFTW3 include and library
     check_header "fftw3.h" "$fftw3incdir" $FFTW3 $FFTW3/include \
-	$FFTW3/api /usr/local/include /usr/include /opt/fftw3/include \
+        $FFTW3/api /usr/local/include /usr/include /opt/fftw3/include \
         $finkdir/include
     fftw3inc=$found_hdr
     fftw3incdir=$found_dir
 
-    check_library "libfftw3 libfftw3-3" "$enable_shared" "$fftw3libdir" \
-	$FFTW3 $FFTW3/lib $FFTW3/.libs /usr/local/lib /usr/lib /opt/fftw3/lib \
-        $finkdir/lib
+    # At this time, libfftw3.a should always be prefered over .so,
+    # to avoid forcing users to install fftw3.
+    check_library "libfftw3 libfftw3-3" "no" "$fftw3libdir" \
+        $FFTW3 $FFTW3/lib $FFTW3/.libs /usr/local/lib /usr/lib \
+        /opt/fftw3/lib $finkdir/lib
     fftw3lib=$found_lib
     fftw3libdir=$found_dir
 
@@ -4857,6 +4859,7 @@ fi
 rm -f lib/libRXML* bin/libRXML* bin/xproofd etc/system.rootmap
 rm -f lib/libProofGui* bin/libProofGui* bin/xrdgsiproxy
 rm -f lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld*
+rm -f lib/libSQL.* bin/libSQL.*
 rm -f lib/libASPluginGS.* bin/g2rootold*
 rm -f math/mathcore/src/G__MathCore32.*
 rm -f xrootd/src/headers.d

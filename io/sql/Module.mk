@@ -24,7 +24,7 @@ SQLO         := $(SQLS:.cxx=.o)
 
 SQLDEP       := $(SQLO:.o=.d) $(SQLDO:.o=.d)
 
-SQLLIB       := $(LPATH)/libSQL.$(SOEXT)
+SQLLIB       := $(LPATH)/libSQLIO.$(SOEXT)
 SQLMAP       := $(SQLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
@@ -43,7 +43,7 @@ include/%.h:    $(SQLDIRI)/%.h
 
 $(SQLLIB):      $(SQLO) $(SQLDO) $(ORDER_) $(MAINLIBS) $(SQLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libSQL.$(SOEXT) $@ "$(SQLO) $(SQLDO)" \
+		   "$(SOFLAGS)" libSQLIO.$(SOEXT) $@ "$(SQLO) $(SQLDO)" \
 		   "$(SQLLIBEXTRA)"
 
 $(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPDEP)
