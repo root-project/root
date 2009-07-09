@@ -17,6 +17,7 @@
 #include "configcint.h"
 #include <stack>
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -551,8 +552,34 @@ static int G__exec_throw(char* statement)
       //  instead of by pointer.
       //
       G__exceptionbuffer.ref = G__exceptionbuffer.obj.i;
-      if (G__exceptionbuffer.type == 'U') {
-         G__exceptionbuffer.type = 'u';
+      if (isupper(G__exceptionbuffer.type)) {
+         G__exceptionbuffer.type += 'u' - 'U';
+#define G__DEREF_EXC(TYPE, MEM)                                          \
+         G__exceptionbuffer.obj.MEM = *(TYPE*)G__exceptionbuffer.ref; break
+
+         switch (G__exceptionbuffer.type) {
+         case 'd': G__DEREF_EXC(double,d);
+         case 'i':
+         case 'l': G__DEREF_EXC(long, i);
+         case 'c': G__DEREF_EXC(char, ch);
+         case 's': G__DEREF_EXC(short, sh);
+         case 'f': G__DEREF_EXC(float, fl);
+         case 'b': G__DEREF_EXC(unsigned char, uch);
+         case 'r': G__DEREF_EXC(unsigned short, ush);
+         case 'h': G__DEREF_EXC(unsigned int, uin);
+         case 'k': G__DEREF_EXC(unsigned long, ulo);
+         case 'n': G__DEREF_EXC(G__int64, ll);
+         case 'm': G__DEREF_EXC(G__uint64, ull);
+         case 'q': G__DEREF_EXC(long double, ld);
+#ifdef G__BOOL4BYTE
+         case 'g': G__exceptionbuffer.type = 'i'; G__DEREF_EXC(int, i);
+#else // G__BOOL4BYTE
+         case 'g': G__exceptionbuffer.type = 'i'; G__DEREF_EXC(unsigned char, i);
+#endif // G__BOOL4BYTE
+         default: G__DEREF_EXC(long, i);
+#undef G__DEREF_EXC
+         }
+         
       }
    }
    if (!G__no_exec_compile) {
@@ -4933,12 +4960,19 @@ int G__exec_catch(char* statement)
          break;
       }
       else {
-         int tagnum;
-         tagnum = G__defined_tagname(statement, 2);
-         if (
-            (G__exceptionbuffer.tagnum == tagnum) ||
-            (G__ispublicbase(tagnum, G__exceptionbuffer.tagnum, G__exceptionbuffer.obj.i) != -1)
-         ) {
+         std::string excType(statement);
+         if (excType == "const") {
+            c = G__fgetname_template(statement, ")&*");
+            excType += " ";
+            excType += statement;
+         }
+         G__value sType = G__string2type(excType.c_str());
+         if (G__exceptionbuffer.type == sType.type &&
+             ((G__exceptionbuffer.tagnum == sType.tagnum &&
+              G__exceptionbuffer.typenum == sType.typenum) ||
+             (G__exceptionbuffer.type == 'u' &&
+              G__ispublicbase(sType.tagnum, G__exceptionbuffer.tagnum, G__exceptionbuffer.obj.i) != -1)
+              )) {
             // catch(ehclass& obj) { match }
             G__value store_ansipara = G__ansipara;
             G__ansipara = G__exceptionbuffer;
