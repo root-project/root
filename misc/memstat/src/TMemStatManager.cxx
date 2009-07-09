@@ -27,7 +27,6 @@
 #include <cstdio>
 #include <string>
 
-#include <malloc.h>
 // ROOT
 #include "TSystem.h"
 #include "TEnv.h"
