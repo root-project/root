@@ -612,6 +612,52 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                nsprefixOriginal = "";
             }
 
+            // convert T<A> into T< ::A> to ensure that we pick up a non-shadow A.
+            // Major problem here: "::int" doesn't exist, so revert those.
+            size_t posArg = typenameOriginal.find_first_of("<,");
+            size_t lenType = typenameOriginal.length();
+            while (posArg != std::string::npos) {
+               ++posArg;
+               while (isspace(typenameOriginal[posArg]))
+                  ++posArg;
+               size_t lenArg = 0;
+               while (lenType > posArg + lenArg) {
+                  char c = typenameOriginal[posArg + lenArg];
+                  if ((lenArg && isalnum(c))
+                      || (!lenArg
+                          && ((c >= 'A' && c <= 'Z')
+                              || (c >= 'a' && c <= 'z'))
+                          )
+                      || c == '_')
+                     ++lenArg;
+                  else break;
+               }
+               bool builtinType = false;
+               if (lenArg) {
+                  switch (lenArg) {
+                  case 3: builtinType = !typenameOriginal.compare(posArg, lenArg, "int");
+                     break;
+                  case 4: builtinType = !typenameOriginal.compare(posArg, lenArg, "long")
+                        || !typenameOriginal.compare(posArg, lenArg, "char");
+                     break;
+                  case 5: builtinType = !typenameOriginal.compare(posArg, lenArg, "short")
+                        || !typenameOriginal.compare(posArg, lenArg, "float");
+                     break;
+                  case 6: builtinType = !typenameOriginal.compare(posArg, lenArg, "double");
+                     break;
+                  case 8: builtinType = !typenameOriginal.compare(posArg, lenArg, "unsigned");
+                     break;
+                  default:;
+                  }
+                  if (!builtinType) {
+                     typenameOriginal.insert(posArg, " ::");
+                     lenArg += 3;
+                     lenType += 3;
+                  }
+               }
+               posArg = typenameOriginal.find_first_of("<,", posArg + lenArg + 1);
+            }
+
             fOut << indent << "         typedef "
             << nsprefixOriginal << typenameOriginal << " "
             << typedefedTypename << ";" << std::endl;
