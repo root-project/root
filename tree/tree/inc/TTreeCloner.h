@@ -67,21 +67,24 @@ class TTreeCloner {
       kSortBasketsByOffset = 2,
       kSortBasketsByEntry  = 3
    };
-   
+
    class CompareSeek {
       TTreeCloner *fObject;
    public:
       CompareSeek(TTreeCloner *obj) : fObject(obj) {}
       bool operator()(UInt_t i1, UInt_t i2);
    };
-   
+
    class CompareEntry {
       TTreeCloner *fObject;
    public:
       CompareEntry(TTreeCloner *obj) : fObject(obj) {}
       bool operator()(UInt_t i1, UInt_t i2);
    };
-   
+
+   friend class CompareSeek;
+   friend class CompareEntry;
+
 public:
    enum EClonerOptions {
       kNone       = 0,
