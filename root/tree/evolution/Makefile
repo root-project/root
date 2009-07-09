@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += cloning mytest SimpleTest containerEvolution
+TEST_TARGETS += cloning mytest SimpleTest containerEvolution missingArray
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -121,3 +121,13 @@ ifeq ($(FAIL),)
 else
 	$(TestDiff)
 endif
+
+missingArray.root: missingArray1_cc.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'missingArray1.cc+' > missingArray.root_root.log
+
+missingArray.clog: missingArray.root missingArray2_cc.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'missingArray2.cc+' > missingArray.clog
+
+missingArray: missingArray.clog
+	$(TestDiff)
+
