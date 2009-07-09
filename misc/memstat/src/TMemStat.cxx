@@ -56,9 +56,9 @@ The various format options to draw a Graph  can be accessed calling
 
 Supported options for TMemStat::Report:
 <ul>
-    <li> order     : 0 - increasing 1 - decreasing</li>
-    <li> sortstat  : 0 - TotalAllocCount 1 -  TotalAlocSize  2 - AllocCount 3 - AllocSize</li>
-    <li> sortstamp : 0 - Current 1 -  MaxSize  2 - MaxCount</li>
+    <li> order     : 0=increasing,  1=decreasing</li>
+    <li> sortstat  : 0=TotalAllocCount, 1=TotalAlocSize,  2=AllocCount, 3=AllocSize</li>
+    <li> sortstamp : 0=Current, 1=MaxSize,  2=MaxCount</li>
     <li> sortdeep  : (0-inf) number of info to print</li>
     <li> stackdeep : (0-inf) deepness of stack</li>
     <li> Example   : order 0 sortstat 3 sortstamp 0 sortdeep 10 stackdeep 5 maxlength 50 </li>
@@ -103,7 +103,6 @@ END_MACRO */
 #include "TBits.h"
 #include "TDirectory.h"
 #include "TCanvas.h"
-//#include "TPad.h"
 #include "TAxis.h"
 #include "TGraph.h"
 #include "TLegend.h"
@@ -111,7 +110,7 @@ END_MACRO */
 #include "TLine.h"
 #include "THStack.h"
 #include "TSystem.h"
-// Memstat
+
 #include "TMemStat.h"
 #include "TMemStatInfo.h"
 #include "TMemStatManager.h"
@@ -122,6 +121,8 @@ ClassImp(TMemStat)
 
 using namespace std;
 using namespace Memstat;
+
+static char *ginfo = 0;
 
 typedef vector<Long64_t> Long64Vector_t;
 typedef vector<Double_t> DoubleVector_t;
@@ -155,6 +156,7 @@ TMemStat::TMemStat(Option_t* option):
       TObject(),
       fSortStat(kAllocSize),
       fSortStamp(kCurrent),
+      fMaximum(0),
       fSortDeep(10),
       fStackDeep(20),
       fMaxStringLength(50),
@@ -242,26 +244,46 @@ void TMemStat::AddStamp(const char*stampName)
 }
 
 //______________________________________________________________________________
+Int_t TMemStat::DistancetoPrimitive(Int_t px, Int_t py)
+{
+   // Return distance of the mouse to the TMemStat object
+   
+   const Int_t big = 9999;
+   if (!fArray) return big;
+
+   Int_t mindist = big;
+   for (Int_t i = 0; i < fArray->GetSize(); ++i) {
+      TObject *obj = fArray->At(i);
+      if (!obj) continue;
+      Int_t dist = obj->DistancetoPrimitive(px, py);
+      if (dist < mindist) mindist = dist;
+   }
+   return mindist;
+}
+
+//______________________________________________________________________________
 void TMemStat::Draw(Option_t *option)
 {
    // Draw the memory statistic
    // call ::Report("?") to see possible options and meaning
 
-   // TODO: fix the draw method. Don't use the ROOT graphics
-     if (!gPad) {
-        new TCanvas;
-        gPad->SetTopMargin(0.2);
-        gPad->SetRightMargin(0.3);
-        gPad->SetLeftMargin(0.10);
-     } else {
-        gPad->Clear();
-     }
-
-     ProcessOption(option);
      TString opt(option);
      opt.ToLower();
      if (opt.Contains("?"))
         return;
+     
+     if (!gPad) {
+        TCanvas *c = new TCanvas;
+        c->ToggleToolTips();
+        c->SetTopMargin(0.2);
+        c->SetRightMargin(0.3);
+        c->SetLeftMargin(0.10);
+     } else {
+        gPad->GetListOfPrimitives()->Remove(this);
+        gPad->Clear();
+     }
+
+     ProcessOption(option);
 
      RefreshSelect();
 
@@ -275,16 +297,21 @@ void TMemStat::Draw(Option_t *option)
 
      MakeStampsText();
      if (gPad) {
-        if (fArray->At(0)) fArray->At(0)->Draw("alp");
-        gPad->Update();
-
-        TLegend * legend = new TLegend(0.75, 0.1, 0.99, 0.9, "Memory statistic");
+        TLegend * legend = 0;
         for (Int_t i = 0;i < fArray->GetEntries();i++) {
-           fArray->At(i)->Draw("lp");
-           cout << i << '\t' << fArray->At(i)->GetName() << endl;
-           legend->AddEntry(fArray->At(i), fArray->At(i)->GetName());
-           gPad->Update();
+           TObject *obj = fArray->At(i);
+           if (!obj) continue;
+           if (!legend) {
+              obj->Draw("alp");
+              ((TGraph*)obj)->SetMaximum(1.1*fMaximum);
+              legend = new TLegend(0.75, 0.1, 0.99, 0.9, "Memory statistic");
+           } else {
+              obj->Draw("lp");
+           }
+           cout << i << '\t' << obj->GetName() << endl;
+           legend->AddEntry(obj, obj->GetName());
         }
+        gPad->Update();
         legend->Draw();
         fArray->AddLast(legend);
         Int_t ng = 0;
@@ -307,7 +334,63 @@ void TMemStat::Draw(Option_t *option)
            }
         }
      }
-     AppendPad(); //*/
+     AppendPad();
+}
+
+//______________________________________________________________________________
+Bool_t TMemStat::EnabledCode(const TMemStatCodeInfo &info) const
+{
+   // Private function
+   // disable printing of the predefined code sequence
+   if (info.fLib.Contains("libMemStat.so"))
+      return kFALSE;
+   if (info.fFunction.Contains("operator new"))
+      return kFALSE;
+   if (info.fFunction.Contains("TMethodCall::Execute"))
+      return kFALSE;
+   if (info.fFunction.Contains("Cint::G__CallFunc::Exec"))
+      return kFALSE;
+   if (info.fFunction.Contains("Cint::G__ExceptionWrapper"))
+      return kFALSE;
+   if (info.fFunction.Sizeof() <= 1)
+      return kFALSE;
+
+   for (Int_t i = 0; i < fDisablePrintLib.GetEntries(); ++i) {
+      TObjString * str = (TObjString*)fDisablePrintLib.At(i);
+      if (str && info.fLib.Contains(str->String().Data()))
+         return kFALSE;
+   }
+
+   for (Int_t i = 0; i < fDisablePrintCode.GetEntries(); ++i) {
+      TObjString * str = (TObjString*)fDisablePrintCode.At(i);
+      if (str && info.fFunction.Contains(str->String().Data()))
+         return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TMemStat::ExecuteEvent(Int_t /*event*/, Int_t /* px*/, Int_t /*py*/)
+{
+   // function called when clicking with the mouse on a TMemStat object
+
+   // TODO: this method needs to be revised
+   /* switch (event) {
+    case kButton1Down:
+       if (fArray && fSelected >= 0) {
+          const Int_t uid = fArrayIndexes[fSelected];
+          cout << endl;
+          (uid >= 0) ? PrintStackWithID(uid) : PrintCodeWithID(-uid);
+       }
+       break;
+    case kMouseMotion:
+       break;
+    case kButton1Motion:
+       break;
+    case kButton1Up:
+       break;
+    }*/
 }
 
 //______________________________________________________________________________
@@ -322,6 +405,67 @@ void TMemStat::GetFillSelection(Selection_t *_Container, ESelection _Selection) 
               fManager->fCodeInfoArray.end(),
               inserter(*_Container, _Container->begin()),
               bind2nd(SFillSelection(), _Selection) );
+}
+
+//______________________________________________________________________________
+Bool_t TMemStat::GetMemStat(const char * fname, Int_t entry)
+{
+   // Get memstat from tree
+
+   if (fname != 0) {
+      fFile.reset(TFile::Open(fname));
+      if (!fFile.get() || fFile->IsZombie())
+         return kFALSE;
+
+      fTree = dynamic_cast<TTree*>(fFile->Get("MemStat"));
+      if (!fTree)
+         return kFALSE;
+
+      fTreeSys = dynamic_cast<TTree*>(fFile->Get("MemSys"));
+      if (!fTreeSys)
+         return kFALSE;
+   }
+
+   TMemStatManager *man(NULL);
+   // TODO: needs to be investigated.
+   // There was a crash, happens when user reselect stamps list after TMemStat Draw has been called.
+   // The crash (SEGFAULT) happens in fTree->GetEntry(entry) in access of its buffer.
+   // ResetBranchAddresses helped, but it is not clear whether this fix correct or not.
+   fTree->ResetBranchAddresses();
+   fTree->SetBranchAddress("Manager", &man);
+
+   if ( (entry < 0) || (entry >= fTree->GetEntries()) )
+      entry = fTree->GetEntries() - 1;
+
+   fTree->GetEntry(entry);
+   fManager = man;
+   return kTRUE;
+}
+
+
+//______________________________________________________________________________
+char *TMemStat::GetObjectInfo(Int_t px, Int_t py) const
+{
+   //Display the stack trace info corresponding to the graph at cursor position px,py.
+
+   if (!gPad || !fArray) return (char*)"";
+   if (!ginfo) ginfo = new char[10000];
+   const Int_t big = 9999;
+
+   Int_t mindist = big;
+   TObject *objmin = 0;
+   for (Int_t i = 0; i < fArray->GetSize(); ++i) {
+      TObject *obj = fArray->At(i);
+      if (!obj) continue;
+      Int_t dist = obj->DistancetoPrimitive(px, py);
+      if (dist < mindist) {mindist = dist; objmin = obj;}
+   }
+
+   if (objmin) {
+      sprintf(ginfo,"-TMemStat:%s",objmin->GetName());
+      return ginfo;
+   }
+   return (char*)"";
 }
 
 //______________________________________________________________________________
@@ -346,29 +490,206 @@ TObjArray* TMemStat::GetStampList()
 }
 
 //______________________________________________________________________________
-void TMemStat::MakeReport(const char * lib, const char *fun, Option_t* option, const char *fileName)
+void TMemStat::MakeCodeArray()
 {
-   // make report for library
+   //   PRIVATE: make code index accoring tbit mask
 
-   // reset selection
-   SelectCode(NULL, NULL, TMemStat::kOR);
-   SelectStack(TMemStat::kOR);
-   //
-   SelectCode(lib, fun, TMemStat::kAND);
-   SelectStack(TMemStat::kAND);
-   if (option)
-      ProcessOption(option);
-   SortCode(fSortStat, fSortStamp);
-   SortStack(fSortStat, fSortStamp);
+   if (!fManager)
+      return;
 
-   // Redirecting the output if needed
-   if (strlen(fileName) > 0)
-      gSystem->RedirectOutput(fileName, "w");
+   Int_t nselected = 0;
+   size_t csize = fManager->fCodeInfoArray.size();
 
-   Report();
+   for (UInt_t i = 0; i < csize; ++i)
+      if (fSelectedCodeBitmap->TestBitNumber(i))
+         ++nselected;
 
-   if (strlen(fileName) > 0)
-      gSystem->RedirectOutput(0);
+   fSelectedCodeIndex.clear();
+   fSelectedCodeIndex.reserve(nselected);
+   for (UInt_t i = 0; i < csize; ++i) {
+      if (fSelectedCodeBitmap->TestBitNumber(i))
+         fSelectedCodeIndex.push_back(i);
+   }
+}
+
+//______________________________________________________________________________
+void TMemStat::MakeStackArray()
+{
+   //   PRIVATE: make code index according tbit mask
+
+   if (!fManager)
+      return;
+
+   delete fStackSummary;
+   fStackSummary = new TMemStatInfoStamp();
+
+   fSelectedStackIndex.clear();
+
+   const size_t csize = fManager->fStackVector.size();
+   for (size_t i = 0; i < csize; ++i) {
+      if (fSelectedStackBitmap->TestBitNumber(i)) {
+         fSelectedStackIndex.push_back(i);
+         const TMemStatStackInfo &info = fManager->fStackVector[i];
+         fStackSummary->fTotalAllocCount += info.fCurrentStamp.fTotalAllocCount;
+         fStackSummary->fTotalAllocSize += info.fCurrentStamp.fTotalAllocSize;
+         fStackSummary->fAllocCount += info.fCurrentStamp.fAllocCount;
+         fStackSummary->fAllocSize += info.fCurrentStamp.fAllocSize;
+      }
+   }
+}
+
+
+
+//______________________________________________________________________________
+TObjArray *TMemStat::MakeGraphCode(StatType statType, Int_t nentries)
+{
+   // make array of graphs
+
+   if (fArray) {
+      fArray->Delete();
+      delete fArray;
+   }
+   fArray  = new TObjArray(nentries);
+
+   fArrayIndexes.clear();
+   fArrayIndexes.resize(nentries);
+
+   Int_t count = 0;
+   Int_t first = TMath::Max(static_cast<Int_t>(fSelectedCodeIndex.size()) - nentries, 0);
+   Double_t cxmax, cymax;
+   for (Int_t i = fSelectedCodeIndex.size() - 1; i > first; --i) {
+      TGraph * gr = MakeGraph(statType, fSelectedCodeIndex[i], TMemStatInfoStamp::kCode, cxmax, cymax);
+      if (!gr)
+         continue;
+      TMemStatCodeInfo  &cinfo =  fManager->fCodeInfoArray[fSelectedCodeIndex[i]];
+      if (cinfo.fFunction.Length() > 0) {
+         TString str(cinfo.fFunction);
+         if ((UInt_t)(str.Length()) > fMaxStringLength)
+            str.Resize(fMaxStringLength);
+         gr->SetName(str);
+      }
+      ++count;
+      gr->SetLineColor(count % 5 + 1);
+
+      fArrayIndexes[fArray->GetEntries()] = -fSelectedCodeIndex[i];
+      fArray->AddLast(gr);
+   }
+   return fArray;
+}
+
+//______________________________________________________________________________
+TObjArray *TMemStat::MakeGraphStack(StatType statType, Int_t nentries)
+{
+   // make array of graphs
+
+   if (fArray) {
+      fArray->Delete();
+      delete fArray;
+   }
+   fArray = new TObjArray(nentries);
+
+   fArrayIndexes.clear();
+   fArrayIndexes.resize(nentries);
+
+   Int_t count = 0;
+   const Int_t first = TMath::Max(static_cast<int>(fSelectedStackIndex.size()) - nentries, 0);
+   Double_t cxmax(0);
+   Double_t cymax(0);
+   fMaximum = 0;
+   for (Int_t i = fSelectedStackIndex.size() - 1; i > first; --i) {
+      TGraph * gr = MakeGraph(statType, fSelectedStackIndex[i], TMemStatInfoStamp::kStack, cxmax, cymax);
+      if (!gr)
+         continue;
+      if (cymax > fMaximum) fMaximum = cymax;
+      TMemStatStackInfo &infoStack = fManager->fStackVector[(fSelectedStackIndex[i])];
+      for (UInt_t icode = 0; icode < infoStack.fSize; icode++) {
+         TMemStatCodeInfo &infoCode = fManager->fCodeInfoArray[infoStack.fSymbolIndexes[icode]];
+         if (EnabledCode(infoCode)) {
+            if (infoCode.fFunction) {
+               TString str(infoCode.fFunction);
+               if ((UInt_t)(str.Length()) > fMaxStringLength) str.Resize(fMaxStringLength);
+               gr->SetName(str);
+               gr->SetUniqueID(fSelectedStackIndex[i]);
+            }
+            break;
+         }
+      }
+      ++count;
+      gr->SetLineColor(count % 5 + 1);
+      gr->SetMarkerColor(count % 5 + 1);
+      gr->SetMarkerStyle(20 + count % 5);
+      gr->SetMarkerSize(0.15);
+      fArrayIndexes[fArray->GetEntries()] = fSelectedStackIndex[i];
+      fArray->AddLast(gr);
+   }
+
+   return fArray;
+}
+
+//______________________________________________________________________________
+TGraph *TMemStat::MakeGraph(StatType statType, Int_t id, Int_t type, Double_t &xmax, Double_t &ymax)
+{
+   // Make graph
+
+   if (!fTree)
+      return 0;
+
+   string sWhat;
+   string sWhatName;
+   switch (statType) {
+   case kTotalAllocCount:
+      sWhat = "fStampVector.fTotalAllocCount:fStampVector.fStampNumber";
+      sWhatName = "TotalAllocCount";
+      break;
+   case kAllocCount:
+      sWhat = "fStampVector.fAllocCount:fStampVector.fStampNumber";
+      sWhatName = "AllocCount";
+      break;
+   case kTotalAllocSize:
+      sWhat = "fStampVector.fTotalAllocSize/1000000.:fStampVector.fStampNumber";
+      sWhatName = "TotalAllocSize (MBy)";
+      break;
+   case kAllocSize:
+      sWhat = "fStampVector.fAllocSize/1000000.:fStampVector.fStampNumber";
+      sWhatName = "AllocSize (MBy)";
+      break;
+   case kUndef:
+      // TODO: check this case; in original code it wasn't handled
+      break;
+   }
+   ostringstream ssWhere;
+   ssWhere << "fStampVector.fID==" << id << "&&fStampVector.fStampType==" << type;
+
+   const Int_t entries = fTree->Draw(sWhat.c_str(), ssWhere.str().c_str(), "goff");
+   if (entries <= 0)
+      return 0;
+
+   const Int_t maxStamp = fManager->fStampNumber;
+
+   Float_t *x = new Float_t[maxStamp];
+   Float_t *y = new Float_t[maxStamp];
+   xmax = 0;
+   ymax = 0;
+   Float_t last = 0;
+   for (Int_t i = 0, counter = 0; i < maxStamp; ++i) {
+      x[i] = i;
+      y[i] = last;
+      if (y[i] > ymax) ymax = y[i];
+      if (x[i] > xmax) xmax = x[i];
+      if (counter >= entries)
+         continue;
+      if (fTree->GetV2()[counter] > i) {
+         y[i] = last;
+      } else {
+         y[i] = fTree->GetV1()[counter];
+         last = y[i];
+         ++counter;
+      }
+   }
+   TGraph * graph  = new TGraph(maxStamp, x, y);
+   graph->GetXaxis()->SetTitle("StampNumber");
+   graph->GetYaxis()->SetTitle(sWhatName.c_str());
+   return graph;
 }
 
 //______________________________________________________________________________
@@ -422,6 +743,67 @@ void TMemStat::MakeHisMemoryTime()
    his3->Draw();
    his2->Draw("same");
    hism->Draw("same");
+}
+
+//______________________________________________________________________________
+void TMemStat::MakeReport(const char * lib, const char *fun, Option_t* option, const char *fileName)
+{
+   // make report for library
+
+   // reset selection
+   SelectCode(NULL, NULL, TMemStat::kOR);
+   SelectStack(TMemStat::kOR);
+   //
+   SelectCode(lib, fun, TMemStat::kAND);
+   SelectStack(TMemStat::kAND);
+   if (option)
+      ProcessOption(option);
+   SortCode(fSortStat, fSortStamp);
+   SortStack(fSortStat, fSortStamp);
+
+   // Redirecting the output if needed
+   if (strlen(fileName) > 0)
+      gSystem->RedirectOutput(fileName, "w");
+
+   Report();
+
+   if (strlen(fileName) > 0)
+      gSystem->RedirectOutput(0);
+}
+
+//______________________________________________________________________________
+void TMemStat::MakeStampsText()
+{
+   // Make a text description of the stamps
+   // create a array of TText objects
+
+   // TODO: see TMemStat::Draw
+   /*if (!fArrayGraphics)
+       fArrayGraphics = new TObjArray();
+
+    const Int_t nentries = fTree->GetEntries();
+    Int_t stampNumber(0);
+    TObjString *pnameStamp(NULL);
+    TTimeStamp *ptimeStamp(NULL);
+    fTree->SetBranchAddress("StampTime.", &ptimeStamp);
+    fTree->SetBranchAddress("StampName.", &pnameStamp);
+    fTree->SetBranchAddress("StampNumber", &stampNumber);
+
+    for (Int_t i = 0; i < nentries; ++i) {
+       fTree->GetBranch("StampTime.")->GetEntry(i);
+       fTree->GetBranch("StampName.")->GetEntry(i);
+       fTree->GetBranch("StampNumber")->GetEntry(i);
+       char chname[1000];
+       if (pnameStamp->GetString().Contains("autoStamp")) {
+          sprintf(chname, " ");
+       } else {
+          sprintf(chname, "%s  %d", pnameStamp->GetString().Data(), ptimeStamp->GetTime());
+       }
+       TText *ptext = new TText(stampNumber, 0, chname);
+       fArrayGraphics->AddLast(ptext);
+       TLine * pline = new TLine(stampNumber, 0, stampNumber, 1);
+       fArrayGraphics->AddLast(pline);
+    }*/
 }
 
 //______________________________________________________________________________
@@ -506,6 +888,84 @@ void TMemStat::PrintStackWithID(UInt_t _id, UInt_t _deep) const
          break;
    }
    cout.flags(old_flags);
+}
+
+//______________________________________________________________________________
+void TMemStat::ProcessOption(Option_t *option)
+{
+   // PRIVATE function
+   // process user option string for printing
+
+   TString str(option);
+   TString delim(" ");
+   TObjArray *tokens = str.Tokenize(delim);
+   for (Int_t i = 0; i < tokens->GetEntriesFast() - 1; ++i) {
+      TObjString *strTok = (TObjString*)tokens->At(i);
+      TObjString *strNum = (i < tokens->GetEntriesFast()) ? (TObjString*)tokens->At(i + 1) : 0;
+
+      if (strNum && strNum->String().IsDigit()) {
+         if (strTok->String().Contains("sortstat")) {
+            Int_t val = strNum->String().Atoi();
+            if (val > 3) {
+               Error("SetOption", Form("Invalid value for sortstat %d", val));
+               val = 3;
+            }
+            fSortStat = (TMemStat::StatType)val;
+         }
+         if (strTok->String().Contains("sortstamp")) {
+            Int_t val = strNum->String().Atoi();
+            if (val > 2) {
+               Error("SetOption", Form("Invalid value for sortstamp %d", val));
+               val = 0;
+            }
+            fSortStamp = (TMemStat::StampType)val;
+         }
+
+         if (strTok->String().Contains("order")) {
+            Int_t val = strNum->String().Atoi();
+            if (val > 1) {
+               Error("SetOption", Form("Invalid sorting value", val));
+               val = 0;
+            }
+            fOrder = (val > 0);
+         }
+         if (strTok->String().Contains("sortdeep")) {
+            fSortDeep = strNum->String().Atoi();
+         }
+         if (strTok->String().Contains("stackdeep")) {
+            fStackDeep  = strNum->String().Atoi();
+         }
+         if (strTok->String().Contains("maxlength")) {
+            fMaxStringLength  = strNum->String().Atoi();
+         }
+      }
+   }
+   char currentOption[1000];
+   sprintf(currentOption, "order %d sortstat %d sortstamp %d sortdeep %d stackdeep %d maxlength %d",
+           fOrder, fSortStat, fSortStamp, fSortDeep, fStackDeep, fMaxStringLength);
+   fOption = currentOption;
+   if (str.Contains("?")) {
+      printf("Options   : %s\n", fOption.Data());
+      printf("order     : 0 - increasing 1 - decreasing\n");
+      printf("sortstat  : 0 - TotalAllocCount 1 -  TotalAlocSize  2 - AllocCount 3 - AllocSize\n");
+      printf("sortstamp : 0 - Current 1 -  MaxSize  2 - MaxCount\n");
+      printf("sortdeep  : (0-inf) number of info to print\n");
+      printf("stackdeep : (0-inf) deepnes of stack\n");
+      printf("maxlength : (0-inf) maximal length of function (truncation after maxlength)");
+   }
+
+   delete tokens;
+}
+
+//______________________________________________________________________________
+void TMemStat::RefreshSelect()
+{
+   // TODO: Comment me
+   if (fSelectedCodeIndex.empty())
+      SelectCode(NULL, NULL, TMemStat::kOR);
+
+   if (fSelectedStackIndex.empty())
+      SelectStack(TMemStat::kOR);
 }
 
 //______________________________________________________________________________
@@ -843,487 +1303,4 @@ void TMemStat::SortStack(StatType sortType, StampType stampType)
          fSelectedStackIndex.push_back(indexes[indexS]);
       }
    }
-}
-
-//______________________________________________________________________________
-Int_t TMemStat::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
-{
-   // Return distance of the mouse to the TMemStat object
-
-   // TODO: Why we need this method here???
-   /*  const Int_t kMinDist = 10;
-     if (!fArray)
-        return -1;
-
-     const Int_t big = 9999;
-     const Int_t kBoundary = 6;
-     Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
-     Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
-     Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
-     Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
-
-     // return if point is not in the graph area
-     if (px <= puxmin + kBoundary)
-        return big;
-     if (py >= puymin - kBoundary)
-        return big;
-     if (px >= puxmax - kBoundary)
-        return big;
-     if (py <= puymax + kBoundary)
-        return big;
-
-     fSelected = -1;
-     Int_t mindist = 9999;
-     for (Int_t i = 0; i < fArray->GetSize(); ++i) {
-        if (!fArray->At(i))
-           continue;
-        const Int_t dist = fArray->At(i)->DistancetoPrimitive(px, py);
-        if (dist < mindist) {
-           mindist = dist;
-           fSelected = i;
-        }
-     }
-     if (mindist > kMinDist)
-        fSelected = -1;*/
-   return 999;
-}
-
-//______________________________________________________________________________
-Bool_t TMemStat::GetMemStat(const char * fname, Int_t entry)
-{
-   // Get memstat from tree
-
-   if (fname != 0) {
-      fFile.reset(TFile::Open(fname));
-      if (!fFile.get() || fFile->IsZombie())
-         return kFALSE;
-
-      fTree = dynamic_cast<TTree*>(fFile->Get("MemStat"));
-      if (!fTree)
-         return kFALSE;
-
-      fTreeSys = dynamic_cast<TTree*>(fFile->Get("MemSys"));
-      if (!fTreeSys)
-         return kFALSE;
-   }
-
-   TMemStatManager *man(NULL);
-   // TODO: needs to be investigated.
-   // There was a crash, happens when user reselect stamps list after TMemStat Draw has been called.
-   // The crash (SEGFAULT) happens in fTree->GetEntry(entry) in access of its buffer.
-   // ResetBranchAddresses helped, but it is not clear whether this fix correct or not.
-   fTree->ResetBranchAddresses();
-   fTree->SetBranchAddress("Manager", &man);
-
-   if ( (entry < 0) || (entry >= fTree->GetEntries()) )
-      entry = fTree->GetEntries() - 1;
-
-   fTree->GetEntry(entry);
-   fManager = man;
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TMemStat::EnabledCode(const TMemStatCodeInfo &info) const
-{
-   // Private function
-   // disable printing of the predefined code sequence
-   if (info.fLib.Contains("libMemStat.so"))
-      return kFALSE;
-   if (info.fFunction.Contains("operator new"))
-      return kFALSE;
-   if (info.fFunction.Contains("TMethodCall::Execute"))
-      return kFALSE;
-   if (info.fFunction.Contains("Cint::G__CallFunc::Exec"))
-      return kFALSE;
-   if (info.fFunction.Contains("Cint::G__ExceptionWrapper"))
-      return kFALSE;
-   if (info.fFunction.Sizeof() <= 1)
-      return kFALSE;
-
-   for (Int_t i = 0; i < fDisablePrintLib.GetEntries(); ++i) {
-      TObjString * str = (TObjString*)fDisablePrintLib.At(i);
-      if (str && info.fLib.Contains(str->String().Data()))
-         return kFALSE;
-   }
-
-   for (Int_t i = 0; i < fDisablePrintCode.GetEntries(); ++i) {
-      TObjString * str = (TObjString*)fDisablePrintCode.At(i);
-      if (str && info.fFunction.Contains(str->String().Data()))
-         return kFALSE;
-   }
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TMemStat::ExecuteEvent(Int_t /*event*/, Int_t /* px*/, Int_t /*py*/)
-{
-   // function called when clicking with the mouse on a TMemStat object
-
-   // TODO: this method needs to be revised
-   /* switch (event) {
-    case kButton1Down:
-       if (fArray && fSelected >= 0) {
-          const Int_t uid = fArrayIndexes[fSelected];
-          cout << endl;
-          (uid >= 0) ? PrintStackWithID(uid) : PrintCodeWithID(-uid);
-       }
-       break;
-    case kMouseMotion:
-       break;
-    case kButton1Motion:
-       break;
-    case kButton1Up:
-       break;
-    }*/
-}
-
-//______________________________________________________________________________
-void TMemStat::MakeCodeArray()
-{
-   //   PRIVATE: make code index accoring tbit mask
-
-   if (!fManager)
-      return;
-
-   Int_t nselected = 0;
-   size_t csize = fManager->fCodeInfoArray.size();
-
-   for (UInt_t i = 0; i < csize; ++i)
-      if (fSelectedCodeBitmap->TestBitNumber(i))
-         ++nselected;
-
-   fSelectedCodeIndex.clear();
-   fSelectedCodeIndex.reserve(nselected);
-   for (UInt_t i = 0; i < csize; ++i) {
-      if (fSelectedCodeBitmap->TestBitNumber(i))
-         fSelectedCodeIndex.push_back(i);
-   }
-}
-
-//______________________________________________________________________________
-void TMemStat::MakeStackArray()
-{
-   //   PRIVATE: make code index according tbit mask
-
-   if (!fManager)
-      return;
-
-   delete fStackSummary;
-   fStackSummary = new TMemStatInfoStamp();
-
-   fSelectedStackIndex.clear();
-
-   const size_t csize = fManager->fStackVector.size();
-   for (size_t i = 0; i < csize; ++i) {
-      if (fSelectedStackBitmap->TestBitNumber(i)) {
-         fSelectedStackIndex.push_back(i);
-         const TMemStatStackInfo &info = fManager->fStackVector[i];
-         fStackSummary->fTotalAllocCount += info.fCurrentStamp.fTotalAllocCount;
-         fStackSummary->fTotalAllocSize += info.fCurrentStamp.fTotalAllocSize;
-         fStackSummary->fAllocCount += info.fCurrentStamp.fAllocCount;
-         fStackSummary->fAllocSize += info.fCurrentStamp.fAllocSize;
-      }
-   }
-}
-
-
-
-//______________________________________________________________________________
-TObjArray *TMemStat::MakeGraphCode(StatType statType, Int_t nentries)
-{
-   // make array of graphs
-
-   if (fArray) {
-      fArray->Delete();
-      delete fArray;
-   }
-   fArray  = new TObjArray(nentries);
-
-   fArrayIndexes.clear();
-   fArrayIndexes.resize(nentries);
-
-   Int_t count = 0;
-   Double_t xmin = 0, xmax = 0, ymin = 0, ymax = 0;
-   Int_t first = TMath::Max(static_cast<Int_t>(fSelectedCodeIndex.size()) - nentries, 0);
-   Double_t cxmax, cymax;
-   for (Int_t i = fSelectedCodeIndex.size() - 1; i > first; --i) {
-      TGraph * gr = MakeGraph(statType, fSelectedCodeIndex[i], TMemStatInfoStamp::kCode, cxmax, cymax);
-      if (!gr)
-         continue;
-      TMemStatCodeInfo  &cinfo =  fManager->fCodeInfoArray[fSelectedCodeIndex[i]];
-      if (cinfo.fFunction.Length() > 0) {
-         TString str(cinfo.fFunction);
-         if ((UInt_t)(str.Length()) > fMaxStringLength)
-            str.Resize(fMaxStringLength);
-         gr->SetName(str);
-      }
-      ++count;
-      gr->SetLineColor(count % 5 + 1);
-
-      fArrayIndexes[fArray->GetEntries()] = -fSelectedCodeIndex[i];
-      fArray->AddLast(gr);
-      if (xmin == xmax) {
-         xmin = gr->GetXaxis()->GetXmin();
-         xmax = cxmax;
-         ymin = gr->GetYaxis()->GetXmin();
-         ymax = cymax;
-      } else {
-         xmin = min(xmin, gr->GetXaxis()->GetXmin());
-         xmax = max(xmax, cxmax);
-         ymin = min(ymin, gr->GetYaxis()->GetXmin());
-         ymax = max(ymax, cymax);
-      }
-   }
-   for (Int_t i = 0;i < fArray->GetEntries(); ++i) {
-      TGraph * gr = (TGraph*)fArray->At(i);
-      gr->GetXaxis()->SetLimits(xmin, xmax);
-      gr->GetYaxis()->SetLimits(ymin, ymax);
-   }
-   return fArray;
-}
-
-//______________________________________________________________________________
-TObjArray *TMemStat::MakeGraphStack(StatType statType, Int_t nentries)
-{
-   // make array of graphs
-
-   if (fArray) {
-      fArray->Delete();
-      delete fArray;
-   }
-   fArray = new TObjArray(nentries);
-
-   fArrayIndexes.clear();
-   fArrayIndexes.resize(nentries);
-
-   Int_t count = 0;
-   Double_t xmin = 0, xmax = 0, ymin = 0, ymax = 0;
-   const Int_t first = TMath::Max(static_cast<int>(fSelectedStackIndex.size()) - nentries, 0);
-   Double_t cxmax(0);
-   Double_t cymax(0);
-   for (Int_t i = fSelectedStackIndex.size() - 1; i > first; --i) {
-      TGraph * gr = MakeGraph(statType, fSelectedStackIndex[i], TMemStatInfoStamp::kStack, cxmax, cymax);
-      if (!gr)
-         continue;
-      TMemStatStackInfo &infoStack = fManager->fStackVector[(fSelectedStackIndex[i])];
-      for (UInt_t icode = 0; icode < infoStack.fSize; icode++) {
-         TMemStatCodeInfo &infoCode = fManager->fCodeInfoArray[infoStack.fSymbolIndexes[icode]];
-         if (EnabledCode(infoCode)) {
-            if (infoCode.fFunction) {
-               TString str(infoCode.fFunction);
-               if ((UInt_t)(str.Length()) > fMaxStringLength) str.Resize(fMaxStringLength);
-               gr->SetName(str);
-               gr->SetUniqueID(fSelectedStackIndex[i]);
-            }
-            break;
-         }
-      }
-      ++count;
-      gr->SetLineColor(count % 5 + 1);
-      gr->SetMarkerColor(count % 5 + 1);
-      gr->SetMarkerStyle(20 + count % 5);
-      gr->SetMarkerSize(0.15);
-      fArrayIndexes[fArray->GetEntries()] = fSelectedStackIndex[i];
-      fArray->AddLast(gr);
-      if (xmin == xmax) {
-         xmin = gr->GetXaxis()->GetXmin();
-         xmax = cxmax;
-         ymin = gr->GetYaxis()->GetXmin();
-         ymax = cymax;
-      } else {
-         xmin = min(xmin, gr->GetXaxis()->GetXmin());
-         xmax = max(xmax, cxmax);
-         ymin = min(ymin, gr->GetYaxis()->GetXmin());
-         ymax = max(ymax, cymax);
-      }
-   }
-
-   for (Int_t i = 0; i < fArray->GetEntries(); ++i) {
-      TGraph * gr = (TGraph*)fArray->At(i);
-      gr->GetXaxis()->SetLimits(xmin, xmax);
-      gr->GetYaxis()->SetLimits(ymin, ymax);
-   }
-
-   return fArray;
-}
-
-//______________________________________________________________________________
-TGraph *TMemStat::MakeGraph(StatType statType, Int_t id, Int_t type, Double_t &xmax, Double_t &ymax)
-{
-   // Make graph
-
-   if (!fTree)
-      return 0;
-
-   string sWhat;
-   string sWhatName;
-   switch (statType) {
-   case kTotalAllocCount:
-      sWhat = "fStampVector.fTotalAllocCount:fStampVector.fStampNumber";
-      sWhatName = "TotalAllocCount";
-      break;
-   case kAllocCount:
-      sWhat = "fStampVector.fAllocCount:fStampVector.fStampNumber";
-      sWhatName = "AllocCount";
-      break;
-   case kTotalAllocSize:
-      sWhat = "fStampVector.fTotalAllocSize/1000000.:fStampVector.fStampNumber";
-      sWhatName = "TotalAllocSize (MBy)";
-      break;
-   case kAllocSize:
-      sWhat = "fStampVector.fAllocSize/1000000.:fStampVector.fStampNumber";
-      sWhatName = "AllocSize (MBy)";
-      break;
-   case kUndef:
-      // TODO: check this case; in original code it wasn't handled
-      break;
-   }
-   ostringstream ssWhere;
-   ssWhere << "fStampVector.fID==" << id << "&&fStampVector.fStampType==" << type;
-
-   const Int_t entries = fTree->Draw(sWhat.c_str(), ssWhere.str().c_str(), "goff");
-   if (entries <= 0)
-      return 0;
-
-   const Int_t maxStamp = fManager->fStampNumber;
-
-   Float_t *x = new Float_t[maxStamp];
-   Float_t *y = new Float_t[maxStamp];
-   xmax = 0;
-   ymax = 0;
-   Float_t last = 0;
-   for (Int_t i = 0, counter = 0; i < maxStamp; ++i) {
-      x[i] = i;
-      y[i] = last;
-      if (y[i] > ymax) ymax = y[i];
-      if (x[i] > xmax) xmax = x[i];
-      if (counter >= entries)
-         continue;
-      if (fTree->GetV2()[counter] > i) {
-         y[i] = last;
-      } else {
-         y[i] = fTree->GetV1()[counter];
-         last = y[i];
-         ++counter;
-      }
-   }
-   TGraph * graph  = new TGraph(maxStamp, x, y);
-   graph->GetXaxis()->SetTitle("StampNumber");
-   graph->GetYaxis()->SetTitle(sWhatName.c_str());
-   return graph;
-}
-
-//______________________________________________________________________________
-void TMemStat::MakeStampsText()
-{
-   // Make a text description of the stamps
-   // create a array of TText objects
-
-   // TODO: see TMemStat::Draw
-   /*if (!fArrayGraphics)
-       fArrayGraphics = new TObjArray();
-
-    const Int_t nentries = fTree->GetEntries();
-    Int_t stampNumber(0);
-    TObjString *pnameStamp(NULL);
-    TTimeStamp *ptimeStamp(NULL);
-    fTree->SetBranchAddress("StampTime.", &ptimeStamp);
-    fTree->SetBranchAddress("StampName.", &pnameStamp);
-    fTree->SetBranchAddress("StampNumber", &stampNumber);
-
-    for (Int_t i = 0; i < nentries; ++i) {
-       fTree->GetBranch("StampTime.")->GetEntry(i);
-       fTree->GetBranch("StampName.")->GetEntry(i);
-       fTree->GetBranch("StampNumber")->GetEntry(i);
-       char chname[1000];
-       if (pnameStamp->GetString().Contains("autoStamp")) {
-          sprintf(chname, " ");
-       } else {
-          sprintf(chname, "%s  %d", pnameStamp->GetString().Data(), ptimeStamp->GetTime());
-       }
-       TText *ptext = new TText(stampNumber, 0, chname);
-       fArrayGraphics->AddLast(ptext);
-       TLine * pline = new TLine(stampNumber, 0, stampNumber, 1);
-       fArrayGraphics->AddLast(pline);
-    }*/
-}
-
-//______________________________________________________________________________
-void TMemStat::ProcessOption(Option_t *option)
-{
-   // PRIVATE function
-   // process user option string for printing
-
-   TString str(option);
-   TString delim(" ");
-   TObjArray *tokens = str.Tokenize(delim);
-   for (Int_t i = 0; i < tokens->GetEntriesFast() - 1; ++i) {
-      TObjString *strTok = (TObjString*)tokens->At(i);
-      TObjString *strNum = (i < tokens->GetEntriesFast()) ? (TObjString*)tokens->At(i + 1) : 0;
-
-      if (strNum && strNum->String().IsDigit()) {
-         if (strTok->String().Contains("sortstat")) {
-            Int_t val = strNum->String().Atoi();
-            if (val > 3) {
-               Error("SetOption", Form("Invalid value for sortstat %d", val));
-               val = 3;
-            }
-            fSortStat = (TMemStat::StatType)val;
-         }
-         if (strTok->String().Contains("sortstamp")) {
-            Int_t val = strNum->String().Atoi();
-            if (val > 2) {
-               Error("SetOption", Form("Invalid value for sortstamp %d", val));
-               val = 0;
-            }
-            fSortStamp = (TMemStat::StampType)val;
-         }
-
-         if (strTok->String().Contains("order")) {
-            Int_t val = strNum->String().Atoi();
-            if (val > 1) {
-               Error("SetOption", Form("Invalid sorting value", val));
-               val = 0;
-            }
-            fOrder = (val > 0);
-         }
-         if (strTok->String().Contains("sortdeep")) {
-            fSortDeep = strNum->String().Atoi();
-         }
-         if (strTok->String().Contains("stackdeep")) {
-            fStackDeep  = strNum->String().Atoi();
-         }
-         if (strTok->String().Contains("maxlength")) {
-            fMaxStringLength  = strNum->String().Atoi();
-         }
-      }
-   }
-   char currentOption[1000];
-   sprintf(currentOption, "order %d sortstat %d sortstamp %d sortdeep %d stackdeep %d maxlength %d",
-           fOrder, fSortStat, fSortStamp, fSortDeep, fStackDeep, fMaxStringLength);
-   fOption = currentOption;
-   if (str.Contains("?")) {
-      printf("Options   : %s\n", fOption.Data());
-      printf("order     : 0 - increasing 1 - decreasing\n");
-      printf("sortstat  : 0 - TotalAllocCount 1 -  TotalAlocSize  2 - AllocCount 3 - AllocSize\n");
-      printf("sortstamp : 0 - Current 1 -  MaxSize  2 - MaxCount\n");
-      printf("sortdeep  : (0-inf) number of info to print\n");
-      printf("stackdeep : (0-inf) deepnes of stack\n");
-      printf("maxlength : (0-inf) maximal length of function (truncation after maxlength)");
-   }
-
-   delete tokens;
-}
-
-//______________________________________________________________________________
-void TMemStat::RefreshSelect()
-{
-   // TODO: Comment me
-   if (fSelectedCodeIndex.empty())
-      SelectCode(NULL, NULL, TMemStat::kOR);
-
-   if (fSelectedStackIndex.empty())
-      SelectStack(TMemStat::kOR);
 }

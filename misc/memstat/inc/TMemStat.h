@@ -46,6 +46,7 @@ public:
 private:
    StatType           fSortStat;              // sorting statistic type
    StampType          fSortStamp;             // sorting stamp type
+   Double_t           fMaximum;               // maximum value of all graphs
    UInt_t             fSortDeep;              // Deepness of the information to be print - draw
    UInt_t             fStackDeep;             // Deepness of the stack information
    UInt_t             fMaxStringLength;       // max length of information string
@@ -107,6 +108,7 @@ public:
    {
       return fMaxStringLength;
    }
+   virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
    void             MakeReport(const char * lib = "", const char *fun = "",
                                Option_t* option = NULL, const char *fileName = "");
    void             MakeHisMemoryStamp(Int_t topDiff);
