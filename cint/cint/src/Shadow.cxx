@@ -618,20 +618,24 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
             size_t lenType = typenameOriginal.length();
             while (posArg != std::string::npos) {
                ++posArg;
-               while (isspace(typenameOriginal[posArg]))
-                  ++posArg;
                size_t lenArg = 0;
-               while (lenType > posArg + lenArg) {
-                  char c = typenameOriginal[posArg + lenArg];
-                  if ((lenArg && isalnum(c))
-                      || (!lenArg
-                          && ((c >= 'A' && c <= 'Z')
-                              || (c >= 'a' && c <= 'z'))
-                          )
-                      || c == '_')
-                     ++lenArg;
-                  else break;
-               }
+               do {
+                  while (isspace(typenameOriginal[posArg]))
+                     ++posArg;
+                  while (lenType > posArg + lenArg) {
+                     char c = typenameOriginal[posArg + lenArg];
+                     if ((lenArg && isalnum(c))
+                         || (!lenArg
+                             && ((c >= 'A' && c <= 'Z')
+                                 || (c >= 'a' && c <= 'z'))
+                             )
+                         || c == '_')
+                        ++lenArg;
+                     else break;
+                  }
+               } while (lenArg == 5
+                        && !typenameOriginal.compare(posArg, lenArg, "const")
+                        && lenType > (posArg += 5) );
                bool builtinType = false;
                if (lenArg) {
                   switch (lenArg) {
