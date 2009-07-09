@@ -31,11 +31,11 @@ typedef Q3HBox QHBox;
 ClassImp(TQRootDialog)
 
 //______________________________________________________________________________
-TQRootDialog::TQRootDialog(QWidget *parent, const char *name, WFlags f,
+TQRootDialog::TQRootDialog(QWidget *wparent, const char *wname, WFlags f,
                          TObject* obj, TMethod *method ) :
-   QVBox(parent,name, f | WType_Modal | WStyle_Dialog   ),
+   QVBox(wparent,wname, f | WType_Modal | WStyle_Dialog   ),
    fLineEdit(0),
-   fParent(parent)
+   fParent(wparent)
 {
    // ctor
    fCurObj=obj;
@@ -141,11 +141,11 @@ void TQRootDialog::Add(const char* argname, const char* value, const char* /*typ
    QString s;
    s = value;
    new QLabel(argname,fArgBox);
-   QLineEdit* fLineEdit = new  QLineEdit(fArgBox);
+   QLineEdit* lineEdit = new  QLineEdit(fArgBox);
    fLineEdit->setGeometry(10,10, 130, 30);
    fLineEdit->setFocus();
    fLineEdit->setText(s);
-   fList.append( fLineEdit );
+   fList.append( lineEdit );
 }
 
 //______________________________________________________________________________
