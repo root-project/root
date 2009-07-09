@@ -354,6 +354,18 @@ void TGFileBrowser::BrowseObj(TObject *obj)
 
    if (fNewBrowser)
       fNewBrowser->SetActBrowser(this);
+   if (obj != gROOT) {
+      if (!fListTree->FindItemByObj(fListTree->GetFirstItem(), obj)) {
+         fListLevel = 0;
+         Add(obj);
+         fListLevel = fListTree->FindItemByObj(fListTree->GetFirstItem(), obj);
+         fListTree->HighlightItem(fListLevel);
+         if (obj->IsFolder())
+            fListTree->OpenItem(fListLevel);
+         fListTree->ClearViewPort();
+         fListTree->AdjustPosition(fListLevel);
+      }
+   }
    obj->Browse(fBrowser);
    if (obj == gROOT) {
       TList *volumes = gSystem->GetVolumes("all");

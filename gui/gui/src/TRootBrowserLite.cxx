@@ -1463,6 +1463,19 @@ void TRootBrowserLite::BrowseObj(TObject *obj)
    TGPosition pos = fIconBox->GetPagePosition();
    Emit("BrowseObj(TObject*)", (Long_t)obj);
 
+   if (obj != gROOT) {
+      if (!fLt->FindItemByObj(fLt->GetFirstItem(), obj)) {
+         fListLevel = 0;
+         Add(obj);
+         fListLevel = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
+         fLt->HighlightItem(fListLevel);
+         if (obj->IsFolder())
+            fLt->OpenItem(fListLevel);
+         fLt->ClearViewPort();
+         fLt->AdjustPosition(fListLevel);
+      }
+   }
+
    if (obj->IsFolder()) fIconBox->RemoveAll();
    obj->Browse(fBrowser);
    if ((fListLevel && obj->IsFolder()) || (!fListLevel && (obj == gROOT))) {
