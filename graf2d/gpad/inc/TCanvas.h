@@ -115,7 +115,8 @@ public:
       kShowEditor       = BIT(19),
       kMoveOpaque       = BIT(20),
       kResizeOpaque     = BIT(21),
-      kIsGrayscale      = BIT(22)
+      kIsGrayscale      = BIT(22),
+      kShowToolTips     = BIT(23)
    };
 
    TCanvas(Bool_t build=kTRUE);
@@ -169,6 +170,7 @@ public:
    Bool_t            GetShowEventStatus() const { return TestBit(kShowEventStatus); }
    Bool_t            GetShowToolBar() const { return TestBit(kShowToolBar); }
    Bool_t            GetShowEditor() const { return TestBit(kShowEditor); }
+   Bool_t            GetShowToolTips() const { return TestBit(kShowToolTips); }
    Bool_t            GetAutoExec() const { return TestBit(kAutoExec); }
    Size_t            GetXsizeUser() const {return fXsizeUser;}
    Size_t            GetYsizeUser() const {return fYsizeUser;}
@@ -231,6 +233,7 @@ public:
    virtual void      ToggleAutoExec();
    virtual void      ToggleToolBar();
    virtual void      ToggleEditor();
+   virtual void      ToggleToolTips();
    virtual void      Update();
    //Still need this.
    Bool_t            UseGL() const { return fUseGL; }
@@ -243,7 +246,7 @@ public:
    
    static TCanvas   *MakeDefCanvas();
 
-   ClassDef(TCanvas,6)  //Graphics canvas
+   ClassDef(TCanvas,7)  //Graphics canvas
 };
 
 #endif

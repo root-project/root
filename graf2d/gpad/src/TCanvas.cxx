@@ -479,6 +479,7 @@ void TCanvas::Init()
    SetBit(kMoveOpaque,   gEnv->GetValue("Canvas.MoveOpaque", 0));
    SetBit(kResizeOpaque, gEnv->GetValue("Canvas.ResizeOpaque", 0));
    if (gEnv->GetValue("Canvas.ShowEventStatus", kFALSE)) SetBit(kShowEventStatus);
+   if (gEnv->GetValue("Canvas.ShowToolTips", kFALSE)) SetBit(kShowToolTips);
    if (gEnv->GetValue("Canvas.ShowToolBar", kFALSE)) SetBit(kShowToolBar);
    if (gEnv->GetValue("Canvas.ShowEditor", kFALSE)) SetBit(kShowEditor);
    if (gEnv->GetValue("Canvas.AutoExec", kTRUE)) SetBit(kAutoExec);
@@ -584,6 +585,7 @@ void TCanvas::Build()
       // ... and toolbar + editor
       if (TestBit(kShowToolBar))     fCanvasImp->ShowToolBar(kTRUE);
       if (TestBit(kShowEditor))      fCanvasImp->ShowEditor(kTRUE);
+      if (TestBit(kShowToolTips))    fCanvasImp->ShowToolTips(kTRUE);
    }
 }
 
@@ -1632,6 +1634,9 @@ void TCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (GetShowEventStatus()) {
       out<<"   "<<GetName()<<"->ToggleEventStatus();"<<endl;
    }
+   if (GetShowToolTips()) {
+      out<<"   "<<GetName()<<"->ToggleToolTips();"<<endl;
+   }
    if (GetShowToolBar()) {
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
    }
@@ -1754,6 +1759,9 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    }
    if (GetShowEventStatus()) {
       out<<"   "<<GetName()<<"->ToggleEventStatus();"<<endl;
+   }
+   if (GetShowToolTips()) {
+      out<<"   "<<GetName()<<"->ToggleToolTips();"<<endl;
    }
    if (GetHighLightColor() != 5) {
       if (GetHighLightColor() > 228) {
@@ -2082,6 +2090,16 @@ void TCanvas::ToggleEditor()
    if (fCanvasImp) fCanvasImp->ShowEditor(showEditor);
 }
 
+//______________________________________________________________________________
+void TCanvas::ToggleToolTips()
+{
+   // Toggle tooltip display.
+
+   Bool_t showToolTips = !TestBit(kShowToolTips);
+   SetBit(kShowToolTips, showToolTips);
+
+   if (fCanvasImp) fCanvasImp->ShowToolTips(showToolTips);
+}
 
 //______________________________________________________________________________
 void TCanvas::Update()

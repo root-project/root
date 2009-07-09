@@ -51,6 +51,7 @@
 
 #include "TG3DLine.h"
 #include "TGToolBar.h"
+#include "TGToolTip.h"
 #include "TVirtualPadEditor.h"
 #include "TRootControlBar.h"
 #include "TGLabel.h"
@@ -99,6 +100,7 @@ enum ERootCanvasCommands {
    kViewEditor,
    kViewToolbar,
    kViewEventStatus,
+   kViewToolTips,
    kViewColors,
    kViewFonts,
    kViewMarkers,
@@ -392,6 +394,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fViewMenu->AddEntry("&Editor",       kViewEditor);
    fViewMenu->AddEntry("&Toolbar",      kViewToolbar);
    fViewMenu->AddEntry("Event &Statusbar", kViewEventStatus);
+   fViewMenu->AddEntry("T&oolTip Info", kViewToolTips);
    fViewMenu->AddSeparator();
    fViewMenu->AddEntry("&Colors",       kViewColors);
    fViewMenu->AddEntry("&Fonts",        kViewFonts);
@@ -554,6 +557,13 @@ void TRootCanvas::CreateCanvas(const char *name)
    fMainFrame->AddFrame(fCanvasWindow, fCanvasLayout);
    AddFrame(fMainFrame, fMainFrameLayout);
 
+   // create the tooltip with a timeout of 250 ms
+   fToolTip = new TGToolTip(fClient->GetDefaultRoot(), fCanvasWindow, "", 250);
+   
+   fCanvas->Connect("ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
+                    "TRootCanvas", this, 
+                    "EventInfo(Int_t, Int_t, Int_t, TObject*)");
+
    // Create status bar
    int parts[] = { 33, 10, 10, 47 };
    fStatusBar = new TGStatusBar(this, 10, 10);
@@ -594,6 +604,7 @@ TRootCanvas::~TRootCanvas()
    // Delete ROOT basic canvas. Order is significant. Delete in reverse
    // order of creation.
 
+   delete fToolTip;
    if (fIconPic) gClient->FreePicture(fIconPic);
    if (fEditor) delete fEditor;
    if (fToolBar) {
@@ -657,6 +668,10 @@ void TRootCanvas::ReallyDelete()
    TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
    if(gged && gged->GetCanvas() == fCanvas)
       gged->Hide();
+
+   fToolTip->Hide();
+   Disconnect(fCanvas, "ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
+              this, "EventInfo(Int_t, Int_t, Int_t, TObject*)");
 
    TVirtualPad *savepad = gPad;
    gPad = 0;        // hide gPad from CINT
@@ -929,6 +944,9 @@ again:
                      break;
                   case kViewEventStatus:
                      fCanvas->ToggleEventStatus();
+                     break;
+                  case kViewToolTips:
+                     fCanvas->ToggleToolTips();
                      break;
                   case kViewColors:
                      {
@@ -1327,6 +1345,31 @@ void TRootCanvas::PrintCanvas()
 }
 
 //______________________________________________________________________________
+void TRootCanvas::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
+{
+   // Display a tooltip with infos about the primitive below the cursor.
+
+   fToolTip->Hide();
+   if (!fCanvas->GetShowToolTips() || selected == 0 || 
+       event != kMouseMotion || fButton != 0)
+      return;
+   TString tipInfo;
+   const char *title = selected->GetTitle();
+   tipInfo += TString::Format("%s::%s\n", selected->ClassName(),
+                              selected->GetName());
+   if (title && strlen(title))
+      tipInfo += TString::Format("%s\n", selected->GetTitle());
+   if (event == kKeyPress)
+      tipInfo += TString::Format("%c\n", (char) px);
+   else
+      tipInfo += TString::Format("%d, %d\n", px, py);
+   tipInfo += selected->GetObjectInfo(px, py);
+   fToolTip->SetText(tipInfo.Data());
+   fToolTip->SetPosition(px+15, py+15);
+   fToolTip->Reset();
+}
+
+//______________________________________________________________________________
 void TRootCanvas::ShowMenuBar(Bool_t show)
 {
    // Show or hide menubar.
@@ -1499,6 +1542,17 @@ void TRootCanvas::ShowToolBar(Bool_t show)
 }
 
 //______________________________________________________________________________
+void TRootCanvas::ShowToolTips(Bool_t show)
+{
+   // Enable or disable tooltip info.
+
+   if (show)
+      fViewMenu->CheckEntry(kViewToolTips);
+   else
+      fViewMenu->UnCheckEntry(kViewToolTips);
+}
+
+//______________________________________________________________________________
 Bool_t TRootCanvas::HasEditor() const
 {
    // Returns kTRUE if the editor is shown.
@@ -1528,6 +1582,14 @@ Bool_t TRootCanvas::HasToolBar() const
    // Returns kTRUE if the tool bar is shown.
 
    return (fToolBar) && fToolBar->IsMapped();
+}
+
+//______________________________________________________________________________
+Bool_t TRootCanvas::HasToolTips() const
+{
+   // Returns kTRUE if the tooltips are enabled.
+
+   return (fCanvas) && fCanvas->GetShowToolTips();
 }
 
 //______________________________________________________________________________
@@ -1567,6 +1629,11 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
    Int_t y = event->fY;
 
    if (event->fType == kButtonPress) {
+      if (fToolTip && fCanvas->GetShowToolTips()) {
+         fToolTip->Hide();
+         gVirtualX->UpdateWindow(0);
+         gSystem->ProcessEvents();
+      }
       fButton = button;
       if (button == kButton1) {
          if (event->fState & kKeyShiftMask)

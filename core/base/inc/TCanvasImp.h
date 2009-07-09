@@ -69,11 +69,13 @@ public:
 
    virtual void   ShowEditor(Bool_t show = kTRUE);
    virtual void   ShowToolBar(Bool_t show = kTRUE);
+   virtual void   ShowToolTips(Bool_t show = kTRUE);
 
    virtual Bool_t HasEditor() const { return kFALSE; }
    virtual Bool_t HasMenuBar() const { return kFALSE; }
    virtual Bool_t HasStatusBar() const { return kFALSE; }
    virtual Bool_t HasToolBar() const { return kFALSE; }
+   virtual Bool_t HasToolTips() const { return kFALSE; }
 
    ClassDef(TCanvasImp,0)  //ABC describing main window protocol
 };
@@ -94,5 +96,6 @@ inline void TCanvasImp::ReallyDelete() { }
 
 inline void TCanvasImp::ShowEditor(Bool_t) { }
 inline void TCanvasImp::ShowToolBar(Bool_t) { }
+inline void TCanvasImp::ShowToolTips(Bool_t) { }
 
 #endif

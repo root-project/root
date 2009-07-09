@@ -97,6 +97,7 @@ Canvas.ResizeOpaque:        false
 Canvas.UseScreenFactor:     false
 Canvas.HighLightColor:      2
 Canvas.ShowEventStatus:     false
+Canvas.ShowToolTips:        false
 Canvas.ShowToolBar:         false
 Canvas.ShowEditor:          false
 Canvas.AutoExec:            true

@@ -41,6 +41,7 @@ class TGVertical3DLine;
 class TVirtualPadEditor;
 class TGDockableFrame;
 class TGDNDManager;
+class TGToolTip;
 
 class TRootCanvas : public TGMainFrame, public TCanvasImp {
 
@@ -82,12 +83,13 @@ private:
    TGDockableFrame     *fToolDock;           // dockable frame holding the toolbar
    TGLayoutHints       *fDockLayout;         // layout hints for dockable frame widget
    const TGPicture     *fIconPic;            // icon picture
-   
+   TGToolTip           *fToolTip;            // tooltip for object info
+
    TVirtualPadEditor   *fEditor;     // pointer to currently loaded pad editor
    Int_t                fCanvasID;   // index in fWindows array of TGX11
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
    Int_t                fButton;     // currently pressed button
-   
+
    TRootCanvas(const TRootCanvas&); // Not implemented
    TRootCanvas& operator=(const TRootCanvas&); // Not implemented
    void     CreateCanvas(const char *name);
@@ -116,6 +118,7 @@ public:
    void     Close();
    void     ForceUpdate() { Layout(); }
    void     FitCanvas();
+   void     EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
    UInt_t   GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    UInt_t   GetCwidth() const;
    UInt_t   GetCheight() const;
@@ -134,17 +137,19 @@ public:
    void     ShowStatusBar(Bool_t show = kTRUE);
    void     ShowEditor(Bool_t show = kTRUE);
    void     ShowToolBar(Bool_t show = kTRUE);
+   void     ShowToolTips(Bool_t show = kTRUE);
 
    Bool_t   HasEditor() const;
    Bool_t   HasMenuBar() const;
    Bool_t   HasStatusBar() const;
    Bool_t   HasToolBar() const;
+   Bool_t   HasToolTips() const;
 
    TGMenuBar     *GetMenuBar() const { return fMenuBar; }
    TGLayoutHints *GetMenuBarItemLayout() const { return fMenuBarItemLayout; }
    TGStatusBar   *GetStatusBar() const { return fStatusBar; }
    TGDockableFrame *GetToolDock() const { return fToolDock; }
-   
+
    // overridden from TGMainFrame
    void     CloseWindow();
    Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
