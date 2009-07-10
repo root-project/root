@@ -620,6 +620,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                ++posArg;
                size_t lenArg = 0;
                do {
+                  lenArg = 0;
                   while (isspace(typenameOriginal[posArg]))
                      ++posArg;
                   while (lenType > posArg + lenArg) {
