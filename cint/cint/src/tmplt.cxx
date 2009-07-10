@@ -1395,7 +1395,7 @@ void G__declare_template()
         c=G__fgetname_template(temp,"(<");
      }
   } while(strcmp(temp,"inline")==0||strcmp(temp,"const")==0
-     || strcmp(temp,"typename")==0
+     || strcmp(temp,"typename")==0 || strcmp(temp,"static") == 0
      ) ;
 
   /* template class */
