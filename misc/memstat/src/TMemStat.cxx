@@ -272,12 +272,18 @@ void TMemStat::Draw(Option_t *option)
      if (opt.Contains("?"))
         return;
      
+     TLegend *legend = 0;
      if (!gPad) {
         TCanvas *c = new TCanvas;
-        c->ToggleToolTips();
-        c->SetTopMargin(0.2);
-        c->SetRightMargin(0.3);
-        c->SetLeftMargin(0.10);
+        c->SetGrid();
+        if (gROOT->IsBatch()) {
+           c->SetTopMargin(0.2);
+           c->SetRightMargin(0.3);
+           c->SetLeftMargin(0.10);
+           legend = new TLegend(0.75, 0.1, 0.99, 0.9, "Memory statistic");
+        } else {
+           c->ToggleToolTips();
+        }   
      } else {
         gPad->GetListOfPrimitives()->Remove(this);
         gPad->Clear();
@@ -295,24 +301,27 @@ void TMemStat::Draw(Option_t *option)
         fArray = MakeGraphCode(fSortStat, fSortDeep);
      }
 
+     
+     Bool_t gDone = kFALSE;
      MakeStampsText();
      if (gPad) {
-        TLegend * legend = 0;
         for (Int_t i = 0;i < fArray->GetEntries();i++) {
            TObject *obj = fArray->At(i);
            if (!obj) continue;
-           if (!legend) {
+           if (!gDone) {
               obj->Draw("alp");
               ((TGraph*)obj)->SetMaximum(1.1*fMaximum);
-              legend = new TLegend(0.75, 0.1, 0.99, 0.9, "Memory statistic");
+              gDone = kTRUE;
            } else {
               obj->Draw("lp");
            }
            cout << i << '\t' << obj->GetName() << endl;
-           legend->AddEntry(obj, obj->GetName());
+           if (legend) legend->AddEntry(obj, obj->GetName());
         }
+        if (!gROOT->IsBatch()) {AppendPad(); gPad->Update(); return;}
+        
         gPad->Update();
-        legend->Draw();
+        if (legend) legend->Draw();
         fArray->AddLast(legend);
         Int_t ng = 0;
         if (fArrayGraphics) ng = fArrayGraphics->GetEntries();
@@ -454,15 +463,24 @@ char *TMemStat::GetObjectInfo(Int_t px, Int_t py) const
 
    Int_t mindist = big;
    TObject *objmin = 0;
+   Int_t imin = 0;
    for (Int_t i = 0; i < fArray->GetSize(); ++i) {
       TObject *obj = fArray->At(i);
       if (!obj) continue;
       Int_t dist = obj->DistancetoPrimitive(px, py);
-      if (dist < mindist) {mindist = dist; objmin = obj;}
+      if (dist < mindist) {mindist = dist; objmin = obj;imin=i;}
    }
 
    if (objmin) {
-      sprintf(ginfo,"-TMemStat:%s",objmin->GetName());
+      sprintf(ginfo,"-");
+      const TMemStatStackInfo &infoStack = fManager->fStackVector[objmin->GetUniqueID()];
+      for (UInt_t icode = 0, counter = 0; icode < infoStack.fSize; ++icode) {
+         const TMemStatCodeInfo &infoCode(fManager->fCodeInfoArray[infoStack.fSymbolIndexes[icode]]);
+         if (!EnabledCode(infoCode)) continue;
+         strcat(ginfo,infoCode.fFunction.Data()); strcat(ginfo,"\n");
+         ++counter;
+         if (counter >= 5) break;
+      }
       return ginfo;
    }
    return (char*)"";
