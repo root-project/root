@@ -1961,36 +1961,35 @@ TH2 *TH3::DoProject2D(char* title, char* name, TAxis* projX, TAxis* projY,
    // creating one from scratch.
    if (h1obj && h1obj->InheritsFrom("TH2D")) {
       delete h1obj;
-   } else {
-      const TArrayD *xbins = projX->GetXbins();
-      const TArrayD *ybins = projY->GetXbins();
-      if ( originalRange )
-      {
-         if (xbins->fN == 0 && ybins->fN == 0) {
-            h2 = new TH2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
-                          ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
-         } else if (ybins->fN == 0) {
-            h2 = new TH2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
-                          ,projX->GetNbins(),&xbins->fArray[ixmin-1]);
-         } else if (xbins->fN == 0) {
-            h2 = new TH2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1]
-                          ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
-         } else {
-            h2 = new TH2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1],projX->GetNbins(),&xbins->fArray[ixmin-1]);
-         }
+   }
+   const TArrayD *xbins = projX->GetXbins();
+   const TArrayD *ybins = projY->GetXbins();
+   if ( originalRange )
+   {
+      if (xbins->fN == 0 && ybins->fN == 0) {
+         h2 = new TH2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
+                       ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
+      } else if (ybins->fN == 0) {
+         h2 = new TH2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
+                       ,projX->GetNbins(),&xbins->fArray[ixmin-1]);
+      } else if (xbins->fN == 0) {
+         h2 = new TH2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1]
+                       ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
       } else {
-         if (xbins->fN == 0 && ybins->fN == 0) {
-            h2 = new TH2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
-                          ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
-         } else if (ybins->fN == 0) {
-            h2 = new TH2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
-                          ,nx,&xbins->fArray[ixmin-1]);
-         } else if (xbins->fN == 0) {
-            h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]
-                          ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
-         } else {
-            h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
-         }
+         h2 = new TH2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1],projX->GetNbins(),&xbins->fArray[ixmin-1]);
+      }
+   } else {
+      if (xbins->fN == 0 && ybins->fN == 0) {
+         h2 = new TH2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
+                       ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+      } else if (ybins->fN == 0) {
+         h2 = new TH2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
+                       ,nx,&xbins->fArray[ixmin-1]);
+      } else if (xbins->fN == 0) {
+         h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]
+                       ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+      } else {
+         h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
       }
    }
 
