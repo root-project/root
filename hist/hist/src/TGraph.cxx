@@ -1467,8 +1467,8 @@ Int_t TGraph::InsertPoint()
 Double_t TGraph::Integral(Int_t first, Int_t last) const
 {
    // Integrate the TGraph data within a given (index) range
-   // NB: if first=last=0 (default) take the full range from 0 to fNpoints-1
-   //     if (first >= last) the function returns 0.
+   // NB: if last=-1 (default) last is set to the last point.
+   //     if (first <0) the first point (0) is taken.
    //   : The graph segments should not intersect.
    //Method:
    // There are many ways to calculate the surface of a polygon. It all depends on what kind of data 
@@ -1487,7 +1487,7 @@ Double_t TGraph::Integral(Int_t first, Int_t last) const
    //      http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
          
    if (first < 0) first = 0;
-   if (last <= 0) last = fNpoints-1;
+   if (last < 0) last = fNpoints-1;
    if(last >= fNpoints) last = fNpoints-1;
    if (first >= last) return 0;
    Int_t np = last-first+1;
