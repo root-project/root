@@ -1463,11 +1463,48 @@ Int_t TGraph::InsertPoint()
    return ipoint;
 }
 
+//______________________________________________________________________________
+Double_t TGraph::Integral(Int_t first, Int_t last) const
+{
+   // Integrate the TGraph data within a given (index) range
+   // NB: if first=last=0 (default) take the full range from 0 to fNpoints-1
+   //     if (first >= last) the function returns 0.
+   //   : The graph segments should not intersect.
+   //Method:
+   // There are many ways to calculate the surface of a polygon. It all depends on what kind of data 
+   // you have to deal with. The most evident solution would be to divide the polygon in triangles and 
+   // calculate the surface of them. But this can quickly become complicated as you will have to test 
+   // every segment of every triangle and check if they are intersecting with a current polygon’s 
+   // segment or if it goes outside the polygone. Many calculations that would lead to many problems…
+   //      The solution (implemented by R.Brun)
+   // Fortunately for us, there is a simple way to solve this problem, as long as the polygon’s 
+   // segments don’t intersect.   
+   // It takes the x coordinate of the current vertex and multiply it by the y coordinate of the next 
+   // vertex. Then it subtracts from it the result of the y coordinate of the current vertex multiplied
+   // by the x coordinate of the next vertex. Then divide the result by 2 to get the surface/area.
+   //      Sources
+   //      http://forums.wolfram.com/mathgroup/archive/1998/Mar/msg00462.html
+   //      http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
+         
+   if (first < 0) first = 0;
+   if (last <= 0) last = fNpoints-1;
+   if(last >= fNpoints) last = fNpoints-1;
+   if (first >= last) return 0;
+   Int_t np = last-first+1;
+   Double_t sum = 0.0;
+   for(Int_t i=first;i<=last;i++) {
+      Int_t j = first + (i-first+1)%np;
+      sum += TMath::Abs(fX[i]*fY[j]);
+      sum -= TMath::Abs(fY[i]*fX[j]);
+   }
+   return 0.5*sum;
+}
+
 
 //______________________________________________________________________________
 void TGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax)
 {
-   // Least squares lpolynomial fitting without weights.
+   // Least squares polynomial fitting without weights.
    //
    //  m     number of parameters
    //  a     array of parameters
