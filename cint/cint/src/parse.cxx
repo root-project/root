@@ -558,6 +558,7 @@ static int G__exec_throw(char* statement)
          G__exceptionbuffer.obj.MEM = *(TYPE*)G__exceptionbuffer.ref; break
 
          switch (G__exceptionbuffer.type) {
+         case 'u': break;
          case 'd': G__DEREF_EXC(double,d);
          case 'i':
          case 'l': G__DEREF_EXC(long, i);
@@ -4508,31 +4509,34 @@ G__value G__alloc_exceptionbuffer(int tagnum)
 int G__free_exceptionbuffer()
 {
    // -- FIXME: Describe this function!
-   if ('u' == G__exceptionbuffer.type && G__exceptionbuffer.obj.i &&
-         -1 != G__exceptionbuffer.tagnum) {
-      char destruct[G__ONELINE];
-      int store_tagnum = G__tagnum;
+   if (G__exceptionbuffer.ref) {
       int store_struct_offset = G__store_struct_offset;
-      int dmy = 0;
-      G__tagnum = G__exceptionbuffer.tagnum;
-      G__store_struct_offset = G__exceptionbuffer.obj.i;
-      if (G__CPPLINK == G__struct.iscpplink[G__tagnum]) {
-         G__globalvarpointer = G__store_struct_offset;
+      G__store_struct_offset = G__exceptionbuffer.ref;
+      if ('u' == G__exceptionbuffer.type && G__exceptionbuffer.obj.i &&
+          -1 != G__exceptionbuffer.tagnum) {
+         // destruct before free
+         char destruct[G__ONELINE];
+         int store_tagnum = G__tagnum;
+         int dmy = 0;
+         G__tagnum = G__exceptionbuffer.tagnum;
+         if (G__CPPLINK == G__struct.iscpplink[G__tagnum]) {
+            G__globalvarpointer = G__store_struct_offset;
+         }
+         else G__globalvarpointer = G__PVOID;
+         sprintf(destruct, "~%s()", G__fulltagname(G__tagnum, 1));
+         if (G__dispsource) {
+            G__fprinterr(G__serr, "!!!Destructing exception buffer %s %lx"
+                         , destruct, G__exceptionbuffer.obj.i);
+            G__printlinenum();
+         }
+         G__getfunction(destruct, &dmy , G__TRYDESTRUCTOR);
+         /* do nothing here, exception object shouldn't be stored in legacy temp buf */
+         G__tagnum = store_tagnum;
+         G__globalvarpointer = G__PVOID;
       }
-      else G__globalvarpointer = G__PVOID;
-      sprintf(destruct, "~%s()", G__fulltagname(G__tagnum, 1));
-      if (G__dispsource) {
-         G__fprinterr(G__serr, "!!!Destructing exception buffer %s %lx"
-                      , destruct, G__exceptionbuffer.obj.i);
-         G__printlinenum();
-      }
-      G__getfunction(destruct, &dmy , G__TRYDESTRUCTOR);
       if (G__CPPLINK != G__struct.iscpplink[G__tagnum])
          free((void*)G__store_struct_offset);
-      /* do nothing here, exception object shouldn't be stored in legacy temp buf */
-      G__tagnum = store_tagnum;
       G__store_struct_offset = store_struct_offset;
-      G__globalvarpointer = G__PVOID;
    }
    G__exceptionbuffer = G__null;
    return(0);
