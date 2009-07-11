@@ -243,7 +243,7 @@ TCutG::~TCutG()
 
 
 //______________________________________________________________________________
-Double_t TCutG::Integral(TH2 *h, Option_t *option) const
+Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const
 {
    // Compute the integral of 2-d histogram h for all bins inside the cut
    // if option "width" is specified, the integral is the sum of
