@@ -11,6 +11,10 @@
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
+#else
+// Refer to a class implemented in libRooFit to force its loading
+// via the autoloader.
+class Roo2DKeysPdf;
 #endif
 #include "RooRealVar.h"
 #include "RooDataSet.h"
@@ -21,11 +25,13 @@
 #include "TMath.h"
 #include "TF1.h"
 #include "Math/DistFunc.h"
+#ifndef __CINT__
 #include "RooCFunction1Binding.h" 
-#include "RooCFunction3Binding.h" 
+#include "RooCFunction3Binding.h"
+#endif
 #include "RooTFnBinding.h" 
 
-using namespace RooFit ;
+using namespace RooFit;
 
 
 void rf105_funcbinding()
