@@ -132,11 +132,15 @@ $(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
 		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=$(PWD)/$(CINTEXTESTDICT).rootmap --rootmap-lib=$(CINTEXTESTDICT) --comments
 
 ##### extra rules ######
-$(CINTEXO): CXXFLAGS += -Iinclude/cint
 ifeq ($(PLATFORM),macosx)
 ifeq ($(ICC_MAJOR),9)
 ifeq ($(ICC_MINOR),1)
 $(CINTEXDIRS)/ROOTClassEnhancer.o: OPT = $(NOOPT)
 endif
 endif
+endif
+
+ifneq ($(subst -ftest-coverage,,$(OPT)),$(OPT))
+# we have coverage on - not good for Cintex's trampolines
+$(CINTEXDIRS)/CINTFunctional.o : override OPT:= $(subst -fprofile-arcs,,$(subst -ftest-coverage,,$(OPT)))
 endif
