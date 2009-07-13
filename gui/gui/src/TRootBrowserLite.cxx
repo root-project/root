@@ -978,13 +978,13 @@ void TRootBrowserLite::CreateBrowser(const char *name)
    // Create menus
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fFileMenu->AddEntry("&New Browser",        kFileNewBrowser);
-   fFileMenu->AddEntry("New Old &Browser",    kFileNewBrowserLite);
+   fFileMenu->AddEntry("New Browser &Lite",   kFileNewBrowserLite);
    fFileMenu->AddEntry("New Canvas",          kFileNewCanvas);
    fFileMenu->AddEntry("&Gui Builder",        kFileNewBuilder);
    fFileMenu->AddEntry("&Open...",            kFileOpen);
    fFileMenu->AddSeparator();
    fFileMenu->AddEntry("&Save",               kFileSave);
-   fFileMenu->AddEntry("Save As...",          kFileSaveAs);
+   fFileMenu->AddEntry("Save &As...",         kFileSaveAs);
    fFileMenu->AddSeparator();
    fFileMenu->AddEntry("&Print...",           kFilePrint);
    fFileMenu->AddSeparator();
