@@ -106,14 +106,14 @@ void G__shminit()
    /* printf("myshmid=%x\n",G__myshmid); */
    if (-1 == G__myshmid) {
       fprintf(stderr, "shmget failed\n");
-      exit(1);
+      throw std::runtime_error("CINT: shmget failed")
    }
 
    G__shmbuffer = shmat(G__myshmid, 0, 0);
    /* printf("shmbuffer=%p\n",G__shmbuffer); */
    if ((void*)(~0) == G__shmbuffer) {
       fprintf(stderr, "shmat failed\n");
-      exit(1);
+      throw std::runtime_error("CINT: shmat failed")
    }
 
    /* set offset address */

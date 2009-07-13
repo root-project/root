@@ -18,6 +18,7 @@
 
 #include "bc_eh.h"
 #include <string>
+#include <stdexcept>
 
 /*********************************************************************
 * $xxx object resolution function Generic form
@@ -453,7 +454,7 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
   catch(...) {
     if(2==G__catchexception) {
       G__fprinterr(G__serr,"Error: Exception caught in compiled code\n");
-      exit(EXIT_FAILURE);
+      throw std::runtime_error("CINT: Exception caught in compiled code");
     }
     //G__genericerror("Error: C++ exception caught");
     char buf[G__LONGLINE];

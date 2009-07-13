@@ -26,6 +26,7 @@
 #include <cstring>
 #include <stack>
 #include <string>
+#include <stdexcept>
 
 #ifdef G__NOSTUBS
 # include <ext/hash_map>
@@ -406,7 +407,9 @@ and creates %d\n\n\
               ,G__ACCEPTDLLREV_UPTO
               ,G__CREATEDLLREV
               );
-      exit(1);
+      std::string errmsg("CINT: dictionary ");
+      errmsg += std::string(func) + " was built with incompatible CINT version!";
+      throw std::runtime_error(errmsg);
    }
    G__store_asm_noverflow = G__asm_noverflow;
    G__store_no_exec_compile = G__no_exec_compile;
@@ -424,7 +427,7 @@ static void G__fileerror(char *fname)
   char *buf = (char*)malloc(strlen(fname)+80);
   sprintf(buf,"Error opening %s",fname);
   perror(buf);
-  exit(2);
+  throw std::runtime_error(std::string("CINT: error opening ") + fname);
 }
 
 /**************************************************************************

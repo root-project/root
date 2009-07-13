@@ -1706,7 +1706,6 @@ try_again:
          G__genericerror(0);
          G__fprinterr(G__serr, "Add following line in header for making dictionary\n");
          G__fprinterr(G__serr, "   #pragma link C++ class %s;\n", tagname);
-         G__exit(EXIT_FAILURE);
          return -1;
       }
       // CAUTION: tagname may be modified in following function.
