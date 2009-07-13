@@ -403,46 +403,47 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
       G__fprinterr(G__serr,"Exception %s: %s\n", buf2, x.what());
     }
     else {
-      // why buf2?!
-      sprintf(buf,"new G__exception(\"%s\",\"%s\")",x.what(),buf2);
+       G__getexpr("#include <exception>");
+       sprintf(buf,"new G__exception(\"%s\",\"CINT forwarded std::exception\")",x.what());
     }
 #endif
     G__exceptionbuffer = G__getexpr(buf);
     G__exceptionbuffer.ref = G__exceptionbuffer.obj.i;
     G__return = G__RETURN_TRY;
     G__no_exec = 1;
+
+    // change from pointer to reference
+    if (isupper(G__exceptionbuffer.type)) {
+       G__exceptionbuffer.type = tolower(G__exceptionbuffer.type);
+    }
   }
-#endif 
-  catch(int x) {
-    G__letint(&G__exceptionbuffer,'i',(long)x);
-    G__exceptionbuffer.ref = (long)(&x);
-    G__return = G__RETURN_TRY;
-    G__no_exec = 1;
+#endif
+
+#define G__SETEXCPBUF_INT(TYPE, CTYPE)          \
+  catch(TYPE x) { \
+    TYPE* exc_x = new TYPE(x); \
+    G__letint(&G__exceptionbuffer,CTYPE,(long)x);     \
+    G__exceptionbuffer.ref = (long)(exc_x); \
+    G__return = G__RETURN_TRY; \
+    G__no_exec = 1; \
   }
-  catch(long x) {
-    G__letint(&G__exceptionbuffer,'l',(long)x);
-    G__exceptionbuffer.ref = (long)(&x);
-    G__return = G__RETURN_TRY;
-    G__no_exec = 1;
+  G__SETEXCPBUF_INT(int,   'i')
+  G__SETEXCPBUF_INT(long,  'l')
+  G__SETEXCPBUF_INT(void*, 'Y')
+#undef G__SETEXCPBUF_INT
+
+#define G__SETEXCPBUF_DBL(TYPE, CTYPE)          \
+  catch(TYPE x) { \
+    TYPE* exc_x = new TYPE(x); \
+    G__letdouble(&G__exceptionbuffer,CTYPE,x);     \
+    G__exceptionbuffer.ref = (long)(exc_x); \
+    G__return = G__RETURN_TRY; \
+    G__no_exec = 1; \
   }
-  catch(void *x) {
-    G__letint(&G__exceptionbuffer,'Y',(long)x);
-    G__exceptionbuffer.ref = (long)(&x);
-    G__return = G__RETURN_TRY;
-    G__no_exec = 1;
-  }
-  catch(float x) {
-    G__letdouble(&G__exceptionbuffer,'f',(double)x);
-    G__exceptionbuffer.ref = (long)(&x);
-    G__return = G__RETURN_TRY;
-    G__no_exec = 1;
-  }
-  catch(double x) {
-    G__letdouble(&G__exceptionbuffer,'d',x);
-    G__exceptionbuffer.ref = (long)(&x);
-    G__return = G__RETURN_TRY;
-    G__no_exec = 1;
-  }
+  G__SETEXCPBUF_DBL(float,  'f')
+  G__SETEXCPBUF_DBL(double, 'd')
+#undef G__SETEXCPBUF_DBL
+
   catch(std::string x) {
     G__fprinterr(G__serr,"Exception: %s\n",x.c_str());
     G__genericerror((char*)NULL);
@@ -454,7 +455,14 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
       G__fprinterr(G__serr,"Error: Exception caught in compiled code\n");
       exit(EXIT_FAILURE);
     }
-    G__genericerror("Error: C++ exception caught");
+    //G__genericerror("Error: C++ exception caught");
+    char buf[G__LONGLINE];
+    G__getexpr("#include <exception>");
+    sprintf(buf,"new G__exception(\"G__exception\",\"CINT forwarded exception in compiled code\")");
+    G__exceptionbuffer = G__getexpr(buf);
+    G__exceptionbuffer.ref = G__exceptionbuffer.obj.i;
+    G__return = G__RETURN_TRY;
+    G__no_exec = 1;
   }
  return 0;
 #endif //ENABLE_CPP_EXCEPTIONS

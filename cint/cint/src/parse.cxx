@@ -4970,6 +4970,11 @@ int G__exec_catch(char* statement)
             excType += " ";
             excType += statement;
          }
+         while (c == '*' || c == '&') {
+            excType += c;
+            c = G__fgetname_template(statement, ")&*");
+         }
+         
          G__value sType = G__string2type(excType.c_str());
          if (G__exceptionbuffer.type == sType.type &&
              ((G__exceptionbuffer.tagnum == sType.tagnum &&

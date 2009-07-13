@@ -89,7 +89,7 @@ void throw_int(void) throw(int) {throw 1234;}
 void throw_long(void) throw(long) {throw 5678L;}
 static int xxx=999;
 void throw_void(void) throw(void*) {throw((void*)(&xxx));}
-void throw_float(void) throw(float) {throw 1.23;}
+void throw_float(void) throw(float) {throw (float)1.23;}
 void throw_double(void) throw(double) {throw 3.14;}
 
 #ifdef __MAKECINT__
