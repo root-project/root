@@ -673,7 +673,7 @@ int XrdConfig::Setup(char *dfltp)
          if ((cp->port = XrdProtLoad::Port(cp->libpath, cp->proname,
                                            cp->parms, &ProtInfo)) < 0) return 1;
          pp = 0; po = POrder; Firstcp = cp->Next;
-         while(po && po->port > ProtInfo.Port) {pp = po; po = po->Next;}
+         while(po && po->port > cp->port) {pp = po; po = po->Next;}
          if (pp) {pp->Next = cp;   cp->Next = po;}
             else {cp->Next = POrder; POrder = cp;}
         }
