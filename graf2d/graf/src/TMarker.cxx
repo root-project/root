@@ -124,7 +124,6 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
    //  Compute the closest distance of approach from point px,py to this marker.
    //  The distance is computed in pixels units.
 
-   const Int_t kMaxDiff = 10;
    Int_t pxm, pym;
    if (TestBit(kMarkerNDC)) {
       pxm = gPad->UtoPixel(fX);
@@ -133,9 +132,12 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
       pxm  = gPad->XtoAbsPixel(gPad->XtoPad(fX));
       pym  = gPad->YtoAbsPixel(gPad->YtoPad(fY));
    }
-   Int_t dist = (px-pxm)*(px-pxm) + (py-pym)*(py-pym);
+   Int_t dist = (Int_t)TMath::Sqrt((px-pxm)*(px-pxm) + (py-pym)*(py-pym));
 
-   if (dist > kMaxDiff) return 9999;
+   //marker size = 1 is about 8 pixels
+   Int_t markerRadius = Int_t(4*fMarkerSize);
+   if (dist <= markerRadius)   return 0;
+   if (dist >  markerRadius+3) return 999;
    return dist;
 }
 
