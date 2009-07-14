@@ -202,6 +202,7 @@ class THnSparse: public TNamed {
    void SetBinError(const Int_t* x, Double_t e);
    void AddBinContent(const Int_t* x, Double_t v = 1.);
    void SetEntries(Double_t entries) { fEntries = entries; }
+   void SetTitle(const char *title);
 
    Double_t GetBinContent(const Int_t *idx) const;
    Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const;

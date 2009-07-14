@@ -364,12 +364,9 @@ THnSparse::THnSparse(const char* name, const char* title, Int_t dim,
 
    for (Int_t i = 0; i < fNdimensions; ++i) {
       TAxis* axis = new TAxis(nbins[i], xmin ? xmin[i] : 0., xmax ? xmax[i] : 1.);
-      TString aname("axis");
-      aname += i;
-      axis->SetName(aname);
-      axis->SetTitle(aname);
       fAxes.AddAtAndExpand(axis, i);
    }
+   SetTitle(title);
    fAxes.SetOwner();
 
    fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
@@ -482,6 +479,7 @@ TH1* THnSparse::CreateHist(const char* name, const char* title,
    TAxis* hax[3] = {hist->GetXaxis(), hist->GetYaxis(), hist->GetZaxis()};
    for (Int_t d = 0; d < ndim; ++d) {
       TAxis* reqaxis = (TAxis*)(*axes)[d];
+      hax[d]->SetTitle(reqaxis->GetTitle());
       if (!keepTargetAxis && reqaxis->TestBit(TAxis::kAxisRange)) {
          Int_t binFirst = reqaxis->GetFirst();
          if (binFirst == 0) binFirst = 1;
@@ -851,9 +849,12 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
    //                          will be filled.
 
    TString name(GetName());
-   name += "_";
-   for (Int_t d = 0; d < ndim; ++d)
-      name += GetAxis(dim[d])->GetName();
+   name +="_proj";
+   
+   for (Int_t d = 0; d < ndim; ++d) {
+     name += "_";
+     name += dim[d];
+   }
 
    TString title(GetTitle());
    Ssiz_t posInsert = title.First(';');
@@ -1367,6 +1368,45 @@ THnSparse* THnSparse::Rebin(Int_t group) const
    return ret;
 }
 
+//______________________________________________________________________________
+void THnSparse::SetTitle(const char *title)
+{
+   // Change (i.e. set) the title.
+   //
+   // If title is in the form "stringt;string0;string1;string2 ..."
+   // the histogram title is set to stringt, the title of axis0 to string0,
+   // of axis1 to string1, of axis2 to string2, etc, just like it is done
+   // for TH1/TH2/TH3.
+   // To insert the character ";" in one of the titles, one should use "#;"
+   // or "#semicolon".
+
+  fTitle = title;
+  fTitle.ReplaceAll("#;",2,"#semicolon",10);
+  
+  Int_t endHistTitle = fTitle.First(';');
+  if (endHistTitle >= 0) {
+     // title contains a ';' so parse the axis titles
+     Int_t posTitle = endHistTitle + 1;
+     Int_t lenTitle = fTitle.Length();
+     Int_t dim = 0;
+     while (posTitle > 0 && posTitle < lenTitle && dim < fNdimensions){
+        Int_t endTitle = fTitle.Index(";", posTitle);
+        TString axisTitle = fTitle(posTitle, endTitle - posTitle);
+        axisTitle.ReplaceAll("#semicolon", 10, ";", 1);
+        GetAxis(dim)->SetTitle(axisTitle);
+        dim++;
+        if (endTitle > 0)
+           posTitle = endTitle + 1;
+        else
+           posTitle = -1;
+     }
+     // Remove axis titles from histogram title
+     fTitle.Remove(endHistTitle, lenTitle - endHistTitle);
+  }
+  
+  fTitle.ReplaceAll("#semicolon", 10, ";", 1);
+
+}
 //______________________________________________________________________________
 THnSparse* THnSparse::Rebin(const Int_t* group) const
 {
