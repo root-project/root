@@ -56,6 +56,13 @@
 #include "NetErrors.h"
 #include "Getline.h"
 
+#if defined(R__KRB5_NEED_VCST_DEFINE)
+#define krb5_c_valid_cksumtype valid_cksumtype
+#endif
+#if defined(R__KRB5_NEED_VCST_PROTO)
+krb5_boolean krb5_c_valid_cksumtype(krb5_cksumtype ctype);
+#endif
+
 Int_t Krb5Authenticate(TAuthenticate *, TString &, TString &, Int_t);
 
 static Int_t Krb5InitCred(const char *clientPrincipal, Bool_t promptPrinc = kFALSE);
