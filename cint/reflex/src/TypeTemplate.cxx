@@ -160,7 +160,7 @@ void
 Reflex::TypeTemplate::Unload() const {
 //-------------------------------------------------------------------------------
 //  Unload a type template, i.e. delete the TypeTemplateName's TypeTemaplteImpl object.
-   if (*this) {
+   if (!Reflex::Instance::HasShutdown() && *this) {
       delete fTypeTemplateName->fTypeTemplateImpl;
    }
 }

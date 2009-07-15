@@ -736,7 +736,7 @@ void
 Reflex::Scope::Unload() const {
 //-------------------------------------------------------------------------------
 // Unload a scope, i.e. delete the ScopeName's ScopeBase object.
-   if (*this) {
+   if (!Reflex::Instance::HasShutdown() && *this) {
       delete fScopeName->fScopeBase;
    }
 }

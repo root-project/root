@@ -558,7 +558,7 @@ void
 Reflex::Type::Unload() const {
 //-------------------------------------------------------------------------------
 //  Unload a type, i.e. delete the TypeName's TypeBase object.
-   if (*this) {
+   if (!Reflex::Instance::HasShutdown() && *this) {
       delete fTypeName->fTypeBase;
    }
 }
