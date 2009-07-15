@@ -2566,7 +2566,11 @@ void TBranchElement::InitializeOffsets()
             // the beginning of the data member described by the current branch.
             //
             // Compensate for the i/o routines adding our local offset later.
-            subBranch->fOffset = offset - localOffset;
+            if (subBranch->fObject == 0 && localOffset == TStreamerInfo::kMissing) {
+               subBranch->fOffset = TStreamerInfo::kMissing;
+            } else {
+               subBranch->fOffset = offset - localOffset;
+            }
          } else {
             // -- Set fBranchOffset for sub-branch.
             Int_t numOfSubSubBranches = subBranch->GetListOfBranches()->GetEntriesFast();
