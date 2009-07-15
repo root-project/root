@@ -63,6 +63,8 @@ public:
       { if (fMgr) fMgr->DisableRedraw(); }
       ~TRedrawDisabler()
       { if (fMgr) fMgr->EnableRedraw(); }
+
+      ClassDef(TRedrawDisabler, 0); // Exception-safe EVE redraw-disabler.
    };
 
    class TExceptionHandler : public TStdExceptionHandler

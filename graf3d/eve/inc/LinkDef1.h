@@ -28,6 +28,7 @@
 // TEveManager
 #pragma link C++ class TEveManager+;
 #pragma link C++ global gEve;
+#pragma link C++ class TEveManager::TRedrawDisabler+;
 #pragma link C++ class TEveManager::TExceptionHandler+;
 
 // TEveVSD
