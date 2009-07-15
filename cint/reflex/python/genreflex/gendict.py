@@ -2594,15 +2594,35 @@ def ClassDefImplementation(selclasses, self) :
       if attrs.has_key('extra') : attrs['extra']['ClassDef'] = extraval
       else                      : attrs['extra'] = {'ClassDef': extraval}
       id = attrs['id']
-      template = ""
-      if clname.find('<') != -1: template = "template<> "
+      template = ''
+      namespacelevel = 0
+      if clname.find('<') != -1:
+        template = 'template<> '
+        # specialization of A::B::f() needs namespace A { template<> B<...>::f(){} }
+        specclname = attrs['name']
+        enclattrs = attrs
+        while 'context' in enclattrs:
+          if self.xref[enclattrs['id']]['elem'] == 'Namespace' :
+            namespname = ''
+            if 'fullname' in enclattrs :
+              namespname = enclattrs['fullname']
+            else :
+              namespname = self.genTypeName(enclattrs['id'])
+            namespacelevel = namespname.count('::') + 1
+            returnValue += 'namespace ' + namespname.replace('::', ' { namespace ')
+            returnValue += ' { \n'
+            break
+          specclname = enclattrs['name'] + '::' + specclname
+          enclattrs = self.xref[enclattrs['context']]['attrs']
+      else :
+        specclname = clname
 
-      returnValue += template + 'TClass* ' + clname + '::Class() {\n'
+      returnValue += template + 'TClass* ' + specclname + '::Class() {\n'
       returnValue += '   if (!fgIsA)\n'
       returnValue += '      fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
       returnValue += '   return fgIsA;\n'
       returnValue += '}\n'
-      returnValue += template + 'const char * ' + clname + '::Class_Name() {return "' + clname[2:]  + '";}\n'
+      returnValue += template + 'const char * ' + specclname + '::Class_Name() {return "' + clname[2:]  + '";}\n'
       haveNewDel = 0
       if 'GetNewDelFunctions' in listOfMembers:
         haveNewDel = 1
@@ -2610,12 +2630,12 @@ def ClassDefImplementation(selclasses, self) :
         returnValue += 'namespace {\n'
         returnValue += '   static void method_newdel' + id + '(void*, void*, const std::vector<void*>&, void*);\n'
         returnValue += '}\n'
-      returnValue += template + 'void ' + clname + '::Dictionary() {}\n'
-      returnValue += template + 'const char *' + clname  + '::ImplFileName() {return "";}\n'
+      returnValue += template + 'void ' + specclname + '::Dictionary() {}\n'
+      returnValue += template + 'const char *' + specclname  + '::ImplFileName() {return "";}\n'
 
-      returnValue += template + 'int ' + clname + '::ImplFileLine() {return 1;}\n'
+      returnValue += template + 'int ' + specclname + '::ImplFileLine() {return 1;}\n'
 
-      returnValue += template + 'void '+ clname  +'::ShowMembers(TMemberInspector &R__insp, char *R__parent) {\n'
+      returnValue += template + 'void '+ specclname  +'::ShowMembers(TMemberInspector &R__insp, char *R__parent) {\n'
       returnValue += '   TClass *R__cl = ' + clname  + '::IsA();\n'
       returnValue += '   Int_t R__ncp = strlen(R__parent);\n'
       returnValue += '   if (R__ncp || R__cl || R__insp.IsA()) { }\n'
@@ -2683,13 +2703,14 @@ def ClassDefImplementation(selclasses, self) :
 
       returnValue += '}\n'
 
-      returnValue += template + 'void '+ clname  +'::Streamer(TBuffer &b) {\n   if (b.IsReading()) {\n'
+      returnValue += template + 'void '+ specclname  +'::Streamer(TBuffer &b) {\n   if (b.IsReading()) {\n'
       returnValue += '      b.ReadClassBuffer(' + clname + '::Class(),this);\n'
       returnValue += '   } else {\n'
       returnValue += '      b.WriteClassBuffer(' + clname  + '::Class(),this);\n'
       returnValue += '   }\n'
       returnValue += '}\n'
-      returnValue += template + 'TClass* ' + clname + '::fgIsA = 0;\n'
+      returnValue += template + 'TClass* ' + specclname + '::fgIsA = 0;\n'
+      returnValue += namespacelevel * '}' + '\n'
     elif derivesFromTObject :
       # no fgIsA etc members but derives from TObject!
       print '--->> genreflex: ERROR: class %s derives from TObject but does not use ClassDef!' % attrs['fullname']
