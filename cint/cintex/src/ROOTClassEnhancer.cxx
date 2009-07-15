@@ -548,7 +548,7 @@ namespace ROOT { namespace Cintex {
                if ( tmcl ) {
                   ::strcat(par,nam.c_str());
                   ::strcat(par,".");
-                  Stub_ShowMembers(tmcl, typ, add, insp, par);
+                  tmcl->CallShowMembers(add, insp, par);
                   par[ncp] = 0;
                }
             }
