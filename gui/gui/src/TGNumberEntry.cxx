@@ -500,7 +500,7 @@ static void GetNumbers(const char *s, Int_t & Sign,
       Sign = -1;
       s++;
    }
-   if (!isdigit(*s)) {
+   if (!isdigit(*s) && !strchr(Delimiters, *s)) {
       return;
    }
    while ((*s != 0) && ((strchr(Delimiters, *s) == 0) || (maxd2 == 0))) {
