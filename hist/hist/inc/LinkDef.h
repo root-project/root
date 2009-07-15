@@ -34,6 +34,7 @@
 #pragma link C++ class TGraph2DErrors-;
 #pragma link C++ class TGraphDelaunay+;
 #pragma link C++ class TGraphSmooth+;
+#pragma link C++ class TGraphTime+;
 #pragma link C++ class TH1-;
 #pragma link C++ class TH1C+;
 #pragma link C++ class TH1D+;
