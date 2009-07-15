@@ -13,7 +13,7 @@
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TH1.h"
-#include "TText.h"
+//#include "TText.h"
 #include "TObjArray.h"
 #include "TSystem.h"
 
@@ -144,13 +144,13 @@ void TGraphTime::Paint(Option_t *option)
    opt.ToLower();
    TObject *frame = gPad->GetPrimitive("frame");
    TList *list = 0;
-   TText *text = 0;
-   if (opt.Contains("time")) {
-      text = new TText();
-      text->SetNDC();
-      text->SetTextSize(0.05);
-      text->SetTextAlign(23);
-   }
+   //TText *text = 0;
+   //if (opt.Contains("time")) {
+   //   text = new TText();
+   //   text->SetNDC();
+   //   text->SetTextSize(0.05);
+   //   text->SetTextAlign(23);
+   //}
 
    for (Int_t s=0;s<fNsteps;s++) {
       list = (TList*)fSteps->UncheckedAt(s);
@@ -159,10 +159,10 @@ void TGraphTime::Paint(Option_t *option)
          gPad->GetListOfPrimitives()->Clear();
          if (frame) gPad->GetListOfPrimitives()->Add(frame);
          list->Draw("");
-         if (text) text->DrawText(.94,.98,Form("%d",s));
+         //if (text) text->DrawText(.94,.98,Form("%d",s));
          gPad->Update();
          if (fSleepTime > 0) gSystem->Sleep(fSleepTime);
       }
    }
-   delete text;
+   //delete text;
 }
