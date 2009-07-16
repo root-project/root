@@ -32,11 +32,11 @@
 ClassImp(TProofOutputFile)
 
 //________________________________________________________________________________
-TProofOutputFile::TProofOutputFile(const char* path,
-                                   const char* location, const char* mode)
+TProofOutputFile::TProofOutputFile(const char *path, const char *location, const char *)
                  : TNamed(path,"")
 {
-   // Main conctructor
+   // Main conctructor.
+   // The last argument is not used and is kept for compatibility with old versions.
 
    fMerged = kFALSE;
    fMerger = 0;
@@ -55,18 +55,18 @@ TProofOutputFile::TProofOutputFile(const char* path,
 
    if (fDir == "file:") {
       fIsLocal = kTRUE;
-      // The directory for the file will be the sandbox
-      TString dirPath = gSystem->WorkingDirectory();
+      // The directory for the file will be the sandbox unless differently specified
+      TString dirPath = gSystem->DirName(fFileName);
+      if (dirPath.IsNull() || dirPath == "." || dirPath == "~")
+         dirPath = gSystem->WorkingDirectory();
+      // Remove prefix, if any
       TString pfx  = gEnv->GetValue("Path.Localroot","");
       if (!pfx.IsNull()) dirPath.Remove(0, pfx.Length());
       // Check if a local data server has been specified
       if (gSystem->Getenv("LOCALDATASERVER")) {
          fDir = gSystem->Getenv("LOCALDATASERVER");
-      } else {
-         // Default is a local XROODT server on default port
-         fDir = Form("root://%s",TUrl(gSystem->HostName()).GetHostFQDN());
+         if (!fDir.EndsWith("/")) fDir += "/";
       }
-      if (!fDir.EndsWith("/")) fDir += "/";
       fDir += Form("%s", dirPath.Data());
    }
    // Notify
@@ -84,28 +84,8 @@ TProofOutputFile::TProofOutputFile(const char* path,
    ResolveKeywords(fOutputFileName);
    Info("TProofOutputFile", "output file url: %s", fOutputFileName.Data());
 
-   // Location
-   fLocation = "REMOTE";
-   if (location && strlen(location) > 0) {
-      fLocation = location;
-      if (fLocation.CompareTo("LOCAL", TString::kIgnoreCase) &&
-          fLocation.CompareTo("REMOTE", TString::kIgnoreCase)) {
-         Warning("TProofOutputFile","unknown location %s: ignore (use: \"REMOTE\")", location);
-         fLocation = "REMOTE";
-      }
-      fLocation.ToUpper();
-   }
-   // Mode
-   fMode = "CENTRAL";
-   if (mode && strlen(mode) > 0) {
-      fMode = mode;
-      if (fMode.CompareTo("CENTRAL", TString::kIgnoreCase) &&
-          fMode.CompareTo("SEQUENTIAL", TString::kIgnoreCase)) {
-         Warning("TProofOutputFile","unknown mode %s: ignore (use: \"CENTRAL\")", mode);
-         fMode = "CENTRAL";
-      }
-      fMode.ToUpper();
-   }
+   // Copy files locally before merging?
+   if (location && !strcmp(location, "LOCAL")) fLocalMerge = kTRUE;
 }
 
 //________________________________________________________________________________
@@ -221,6 +201,13 @@ Int_t TProofOutputFile::AdoptFile(TFile *f)
    fFileName = fFileName1;
    fDir.ReplaceAll(fFileName1, "");
 
+   // Include the local data server info, if any
+   if (gSystem->Getenv("LOCALDATASERVER")) {
+      TString localDS(gSystem->Getenv("LOCALDATASERVER"));
+      if (!localDS.EndsWith("/")) localDS += "/";
+      fDir.Insert(0, localDS);
+   }
+
    return 0;
 }
 
@@ -229,202 +216,37 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
 {
    // Merge objects from the list into this object
 
-   if(!list || list->IsEmpty())
-      return 0; 
+   // Needs domethign to merge
+   if(!list || list->IsEmpty()) return 0;
 
    TString fileLoc;
    TString outputFileLoc = (fOutputFileName.IsNull()) ? fFileName : fOutputFileName;
 
-   if (fMode == "SEQUENTIAL") {
-      TFileMerger* merger = new TFileMerger;
-      if (fLocation == "LOCAL") {
-         merger->OutputFile(outputFileLoc);
-         if (!fMerged) {
-            fileLoc = Form("%s/%s", fDir.Data(), GetFileName());
-            AddFile(merger, fileLoc);
-            Unlink(outputFileLoc);
-         } else {
-            AddFile(merger, outputFileLoc);
-            Unlink(outputFileLoc);
-         }
+   // Get the file merger instance
+   TFileMerger *merger = GetFileMerger(fLocalMerge);
+   if (!merger) {
+      Error("Merge", "could not instantiate the file merger");
+      return -1;
+   }
 
-         TList* elist = new TList;
-         elist->AddAll(list); 
-         TIter next(elist);
-         TProofOutputFile* pFile = 0;
+   if (!fMerged) {
 
-         while ((pFile = (TProofOutputFile*)next())) {
-            fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
-            AddFile(merger, fileLoc);
-         }
+      merger->OutputFile(outputFileLoc);
 
-         Bool_t result = merger->Merge();
-         if (!result) {
-            NotifyError("TProofOutputFile::Merge: error from TFileMerger::Merge()");
-            return -1;
-         }
+      fileLoc = Form("%s/%s", fDir.Data(), GetFileName());
+      AddFile(merger, fileLoc);
 
-         if (!fMerged) {
-            fileLoc = Form("%s/%s", fDir.Data(), GetFileName());
-            Unlink(fileLoc);
-            fMerged = kTRUE;
-         }
+      fMerged = kTRUE;
+   }
 
-         next.Reset();
-         while ((pFile = (TProofOutputFile*)next())) {
-            fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
-            Unlink(fileLoc);
-         }
-      } else if (fLocation == "REMOTE") {
-
-         TString outputFileLoc2 = GetTmpName(fOutputFileName);
-         TString tmpOutputLoc = (outputFileLoc.BeginsWith("root://")) ? GetTmpName(fFileName) : "";
-         TList* fileList = new TList;
-
-         if (!fMerged) {
-            fileLoc = Form("%s/%s", fDir.Data(), GetFileName());
-            TFile* fCurrFile = TFile::Open(fileLoc,"READ");
-            if (!fCurrFile) {
-               Warning("Merge","Cannot open file: %s", fileLoc.Data());
-            } else {
-               fileList->Add(fCurrFile);
-               Info("Merge", "now adding file :%s\n", fCurrFile->GetPath());
-            }
-            Unlink(outputFileLoc);
-         } else {
-            if (tmpOutputLoc.IsNull()) {
-               gSystem->Rename(outputFileLoc,outputFileLoc2);
-            } else {
-               TFile::Cp(outputFileLoc, outputFileLoc2);
-               Unlink(outputFileLoc);
-            }
-
-            TFile* fCurrOutputFile = TFile::Open(outputFileLoc2,"READ");
-            if (!fCurrOutputFile) {
-               Warning("Merge","Cannot open tmp output file: %s", outputFileLoc2.Data());
-            } else {
-               fileList->Add(fCurrOutputFile);
-            }
-         }
-
-         TList* elist = new TList;
-         elist->AddAll(list);
-         TIter next(elist);
-         TProofOutputFile* pFile = 0;
-
-         while ((pFile = (TProofOutputFile*)next())) {
-            fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
-
-            TFile* fCurrFile = TFile::Open(fileLoc.Data(),"READ");
-            if (!fCurrFile) {
-               Warning("Merge","Cannot open file: %s", fileLoc.Data());
-               continue;
-            } else {
-               fileList->Add(fCurrFile);
-            }
-         }
-
-         TFile* outputFile;
-         if (tmpOutputLoc.IsNull()) {
-            outputFile = TFile::Open(outputFileLoc, "RECREATE");
-         } else {
-            outputFile = TFile::Open(tmpOutputLoc,"RECREATE");
-         }
-
-         if (!outputFile) {
-            Error("Merge","cannot open output file %s",outputFileLoc.Data());
-            return -1;
-         }
-         Bool_t result =  merger->MergeRecursive(outputFile, fileList, 0);
-         if (!result) {
-            NotifyError("TProofOutputFile::Merge: error from TFileMerger::MergeRecursive()");
-
-            TIter fnext(fileList);
-            TFile *fCurrFile = 0;
-            while ((fCurrFile = (TFile*)fnext())) {
-               fCurrFile->Close();
-            }
-            return -1;
-         } else {
-            outputFile->Write();
-            outputFile->Close();
-
-            TIter fnext(fileList);
-            TFile *fCurrFile = 0;
-            while ((fCurrFile = (TFile*)fnext())) {
-               fCurrFile->Close();
-            }
-
-            if (!fMerged) {
-               fileLoc = Form("%s/%s", fDir.Data(), GetFileName());
-               Unlink(fileLoc);
-               fMerged = kTRUE;
-            }
-
-            next.Reset();
-            while ((pFile = (TProofOutputFile *)next())) {
-               fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
-               Unlink(fileLoc);
-            }
-
-            Unlink(outputFileLoc2); 
-            if (!tmpOutputLoc.IsNull()) {
-               TFile::Cp(tmpOutputLoc,outputFileLoc);
-               Unlink(tmpOutputLoc);
-            }
-         } //end else
-      } else {   // end fLocation = "Remote"
-         // the given merging location is not valid
-         Error("Merge", "invalid location value: %s", fLocation.Data());
-         return -1;
-      }
-      SafeDelete(merger);
-
-      // end fMode = "SEQUENTIAL"
-
-   } else if (fMode == "CENTRAL") {
-
-      // if we merge the outputfiles centrally
-
-      if (fLocation != "REMOTE" && fLocation != "LOCAL") {
-         Error("Merge", "invalid location value: %s", fLocation.Data());
-         return -1;
-      }
-
-      // Get the file merger instance
-      Bool_t isLocal = (fLocation == "REMOTE") ? kFALSE : kTRUE;
-      TFileMerger *merger = GetFileMerger(isLocal);
-      if (!merger) {
-         Error("Merge", "could not instantiate the file merger");
-         return -1;
-      }
-
-      if (!fMerged) {
-
-         merger->OutputFile(outputFileLoc);
-         Unlink(outputFileLoc);
-
-         fileLoc = Form("%s/%s", fDir.Data(), GetFileName());
-         AddFile(merger, fileLoc);
-
-         fMerged = kTRUE;
-      }
-
-      TList* elist = new TList;
-      elist->AddAll(list); 
-      TIter next(elist);
-      TProofOutputFile* pFile = 0;
-
-      while((pFile = (TProofOutputFile*)next())) {
+   TIter next(list);
+   TObject *o = 0;
+   while((o = next())) {
+      TProofOutputFile *pFile = dynamic_cast<TProofOutputFile *>(o);
+      if (pFile) {
          fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
          AddFile(merger, fileLoc);
       }
-
-      // end fMode = "CENTRAL"
-
-   } else {
-      Error("Merge", "invalid mode value: %s", fMode.Data());
-      return -1;
    }
 
    // Done
@@ -439,8 +261,7 @@ void TProofOutputFile::Print(Option_t *) const
    Info("Print","-------------- %s : start ------------", GetName());
    Info("Print"," dir:              %s", fDir.Data());
    Info("Print"," file name:        %s", fFileName.Data());
-   Info("Print"," location:         %s", fLocation.Data());
-   Info("Print"," mode:             %s", fMode.Data());
+   Info("Print"," merging option:   %s", (fLocalMerge ? "local copy" : "keep remote"));
    Info("Print"," output file name: %s", fOutputFileName.Data());
    Info("Print"," ordinal:          %s", fWorkerOrdinal.Data());
    Info("Print","-------------- %s : done -------------", GetName());
