@@ -145,6 +145,7 @@ void TGraphTime::Paint(Option_t *option)
    opt.ToLower();
    TObject *frame = gPad->GetPrimitive("frame");
    TList *list = 0;
+   TObjLink *lnk;
 
    for (Int_t s=0;s<fNsteps;s++) {
       list = (TList*)fSteps->UncheckedAt(s);
@@ -152,7 +153,12 @@ void TGraphTime::Paint(Option_t *option)
          gPad->GetListOfPrimitives()->Remove(frame);
          gPad->GetListOfPrimitives()->Clear();
          if (frame) gPad->GetListOfPrimitives()->Add(frame);
-         list->Draw("");
+         lnk = list->FirstLink();
+         while(lnk) {
+            TObject *obj = lnk->GetObject();
+            obj->Draw(lnk->GetAddOption());
+            lnk = lnk->Next();
+         }
          gPad->Update();
          if (fSleepTime > 0) gSystem->Sleep(fSleepTime);
       }
