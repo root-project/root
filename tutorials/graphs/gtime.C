@@ -49,7 +49,7 @@ void gtime(Int_t nsteps = 500, Int_t np=100) {
    g->Write("g");
    //to view this object in another session do
    //  TFile f("gtime.root");
-   //  g.Draw("time");
+   //  g.Draw();
 }
    
    
