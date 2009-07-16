@@ -34,6 +34,9 @@ protected:
 
    Bool_t       fChanged;
    Bool_t       fSmartRefresh;
+   Bool_t       fHierarchical;
+
+   void RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& tp);
 
 public:
    TEveScene(const char* n="TEveScene", const char* t="");
@@ -41,9 +44,16 @@ public:
 
    virtual void CollectSceneParents(List_t& scenes);
 
+   virtual Bool_t SingleRnrState() const { return kTRUE; }
+
    void   Changed()         { fChanged = kTRUE; }
    Bool_t IsChanged() const { return fChanged;  }
+
+   void   SetHierarchical(Bool_t h) { fHierarchical = h;    }
+   Bool_t GetHierarchical()   const { return fHierarchical; }
+
    void   Repaint(Bool_t dropLogicals=kFALSE);
+   void   RetransHierarchically();
 
    TGLScenePad* GetGLScene() const { return fGLScene; }
    void SetGLScene(TGLScenePad* s) { fGLScene = s; }

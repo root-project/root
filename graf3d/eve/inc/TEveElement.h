@@ -238,6 +238,7 @@ public:
    virtual Bool_t GetRnrSelf()     const { return fRnrSelf; }
    virtual Bool_t GetRnrChildren() const { return fRnrChildren; }
    virtual Bool_t GetRnrState()    const { return fRnrSelf && fRnrChildren; }
+   virtual Bool_t GetRnrAnything() const { return fRnrSelf || (fRnrChildren && HasChildren()); }
    virtual Bool_t SetRnrSelf(Bool_t rnr);
    virtual Bool_t SetRnrChildren(Bool_t rnr);
    virtual Bool_t SetRnrSelfChildren(Bool_t rnr_self, Bool_t rnr_children);
