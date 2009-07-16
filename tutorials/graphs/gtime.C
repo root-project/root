@@ -16,6 +16,7 @@ void gtime(Int_t nsteps = 500, Int_t np=100) {
    TRandom3 r;
    Double_t xmin = -10, xmax = 10, ymin = -10, ymax = 10;
    TGraphTime *g = new TGraphTime(nsteps,xmin,ymin,xmax,ymax);
+   g->SetTitle("TGraphTime demo;X domain;Y domain");
    Int_t i,s;
    for (i=0;i<np;i++) { //calculate some object parameters
       rr[i]  = r.Uniform(0.1*xmax,0.2*xmax);
