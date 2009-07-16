@@ -5,6 +5,7 @@
 #include "TRandom3.h"
 #include "TMath.h"
 #include "TMarker.h"
+#include "TPaveLabel.h"
 #include "TArrow.h"
 #include "TGraphTime.h"
    
@@ -19,7 +20,7 @@ void gtime2(Int_t nsteps = 200, Int_t np=5000) {
    Int_t i,s;
    Double_t phi,fact = xmax/Double_t(nsteps);
    for (i=0;i<np;i++) { //calculate some object parameters
-      speed[i]  = r.Uniform(0.6,1);
+      speed[i]  = r.Uniform(0.5,1);
       phi       = r.Gaus(0,TMath::Pi()/6.);
       cosphi[i] = fact*speed[i]*TMath::Cos(phi);
       sinphi[i] = fact*speed[i]*TMath::Sin(phi);
@@ -33,11 +34,12 @@ void gtime2(Int_t nsteps = 200, Int_t np=5000) {
          Double_t xx = s*cosphi[i];
          if (xx < xmin) continue;
          Double_t yy = s*sinphi[i];
-         TMarker *m = new TMarker(xx,yy,20);
+         TMarker *m = new TMarker(xx,yy,25);
          m->SetMarkerColor(color[i]);
          m->SetMarkerSize(1.5 -s/(speed[i]*nsteps));
          g->Add(m,s);
       }
+      g->Add(new TPaveLabel(.70,.92,.98,.99,Form("shower at %5.3f nsec",3.*s/nsteps),"brNDC"),s);
    }
    g->Draw();
 }
