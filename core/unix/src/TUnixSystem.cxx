@@ -4896,14 +4896,18 @@ static void GetLinuxProcInfo(ProcInfo_t *procinfo)
                            ((Float_t)(ru.ru_stime.tv_usec) / 1000000.);
    }
 
+   procinfo->fMemVirtual  = -1;
+   procinfo->fMemResident = -1;
    TString s;
    FILE *f = fopen(TString::Format("/proc/%d/statm", gSystem->GetPid()), "r");
-   s.Gets(f);
-   Long_t total, rss;
-   sscanf(s.Data(), "%ld %ld", &total, &rss);
-   procinfo->fMemVirtual  = total * (getpagesize() / 1024);
-   procinfo->fMemResident = rss * (getpagesize() / 1024);
-   fclose(f);
+   if (f) {
+      s.Gets(f);
+      fclose(f);
+      Long_t total, rss;
+      sscanf(s.Data(), "%ld %ld", &total, &rss);
+      procinfo->fMemVirtual  = total * (getpagesize() / 1024);
+      procinfo->fMemResident = rss * (getpagesize() / 1024);
+   }
 }
 #endif
 
