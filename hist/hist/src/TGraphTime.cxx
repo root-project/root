@@ -95,10 +95,11 @@ TGraphTime::TGraphTime(const TGraphTime &gtime) : TNamed(gtime)
 }
 
 //______________________________________________________________________________
-Int_t TGraphTime::Add(const TObject *obj, Int_t slot)
+Int_t TGraphTime::Add(const TObject *obj, Int_t slot, Option_t *option)
 {
    // Add one object to a time slot. 
    // TGraphTime becomes the owner of this object.
+   // object will be drawn with option
    
    if (!fSteps) {
       fNsteps = 100;
@@ -110,7 +111,7 @@ Int_t TGraphTime::Add(const TObject *obj, Int_t slot)
       list = new TList();
       fSteps->AddAt(list,slot);
    }
-   list->Add((TObject*)obj);
+   list->Add((TObject*)obj, option);
    return slot;
 }
 
@@ -127,7 +128,10 @@ void TGraphTime::Draw(Option_t *option)
       gPad->SetFrameFillColor(19);
       gPad->SetGrid();
    }
-   if (fFrame) fFrame->Draw();
+   if (fFrame) {
+      fFrame->SetTitle(GetTitle());
+      fFrame->Draw();
+   }
    Paint(option);
 
 }

@@ -48,7 +48,7 @@ public:
    TGraphTime(const TGraphTime &gr);
    virtual ~TGraphTime();
 
-   virtual Int_t         Add(const TObject *obj, Int_t slot);
+   virtual Int_t         Add(const TObject *obj, Int_t slot, Option_t *option="");
    virtual void          Draw(Option_t *chopt="");
    TObjArray            *GetSteps() const {return fSteps;}
    virtual void          Paint(Option_t *chopt="");
