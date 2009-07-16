@@ -1654,9 +1654,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
    case kCINT_stderr:
    case kCINT_stdin:
       {
-         TString fileName = s3("[^ ><]*$");
-         gSystem->ExpandPathName(fileName);
-         const TString filePath = gSystem->DirName(fileName);
+         const TString fileName = s3("[^ ><]*$");
+         const TString filePath = DeterminePath(fileName,0);
          const TSeqCollection *pListOfFiles =
              GetListOfFilesInPath(filePath.Data());
 
@@ -1726,11 +1725,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
       {
          const TString fileName = s3("[^\"]*$");
 //             const TString  dynamicPath  = DeterminePath( fileName, TROOT::GetDynamicPath() ); /* should use this one */
-         const TString dynamicPath = DeterminePath(fileName,
-                                                   gEnv->
-                                                   GetValue
-                                                   ("Root.DynamicPath",
-                                                    (char *) 0));
+         const TString dynamicPath = DeterminePath(fileName,gEnv->GetValue("Root.DynamicPath",(char *) 0));
          const TSeqCollection *pListOfFiles = GetListOfFilesInPath(dynamicPath);
 
 //             pos = Complete( "[^\"/]*$", pListOfFiles, "\");" );
@@ -1740,13 +1735,10 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
    case kSYS_FileName:
       {
-         TString fileName = s3("[^ \"]*$");
-         gSystem->ExpandPathName(fileName);
-         const TString filePath = gSystem->DirName(fileName);
-         const TSeqCollection *pListOfFiles =
-             GetListOfFilesInPath(filePath.Data());
+         const TString fileName = s3("[^ \"]*$");
+         const TString filePath = DeterminePath(fileName,0);
+         const TSeqCollection *pListOfFiles = GetListOfFilesInPath(filePath.Data());
 
-//             pos = Complete( "[^\" /]*$", pListOfFiles, "\"" );
          pos = Complete("[^\" /]*$", pListOfFiles, "filename\"");
       }
       break;
