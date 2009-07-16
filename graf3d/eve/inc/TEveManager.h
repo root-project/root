@@ -61,7 +61,7 @@ public:
    public:
       TRedrawDisabler(TEveManager* m) : fMgr(m)
       { if (fMgr) fMgr->DisableRedraw(); }
-      ~TRedrawDisabler()
+      virtual ~TRedrawDisabler()
       { if (fMgr) fMgr->EnableRedraw(); }
 
       ClassDef(TRedrawDisabler, 0); // Exception-safe EVE redraw-disabler.
