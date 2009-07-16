@@ -10,15 +10,13 @@
  *************************************************************************/
 
 #include "TGraphTime.h"
-#include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TH1.h"
-//#include "TText.h"
+#include "TROOT.h"
 #include "TObjArray.h"
 #include "TSystem.h"
 
 ClassImp(TGraphTime)
-
 
 //______________________________________________________________________________
 //
@@ -30,7 +28,7 @@ ClassImp(TGraphTime)
 //______________________________________________________________________________
 TGraphTime::TGraphTime(): TNamed()
 {
-   // Marker default constructor.
+   // default constructor.
 
    fSleepTime = 0;
    fNsteps    = 0;
@@ -120,10 +118,9 @@ Int_t TGraphTime::Add(const TObject *obj, Int_t slot)
 //______________________________________________________________________________
 void TGraphTime::Draw(Option_t *option)
 {
-   // Draw this TGraphTime with its current attributes.
-   // if option "time" is specified the current time value is drawn at 
-   //  the top right corner
-
+   // Draw this TGraphTime.
+   // for each time step the list of objects added to this step are drawn.
+   
    if (!gPad) {
       gROOT->MakeDefCanvas();
       gPad->SetFillColor(41);
@@ -138,19 +135,12 @@ void TGraphTime::Draw(Option_t *option)
 //______________________________________________________________________________
 void TGraphTime::Paint(Option_t *option)
 {
-   // Paint this marker with its current attributes.
+   // Paint all objects added to each time step
    
    TString opt = option;
    opt.ToLower();
    TObject *frame = gPad->GetPrimitive("frame");
    TList *list = 0;
-   //TText *text = 0;
-   //if (opt.Contains("time")) {
-   //   text = new TText();
-   //   text->SetNDC();
-   //   text->SetTextSize(0.05);
-   //   text->SetTextAlign(23);
-   //}
 
    for (Int_t s=0;s<fNsteps;s++) {
       list = (TList*)fSteps->UncheckedAt(s);
@@ -159,10 +149,8 @@ void TGraphTime::Paint(Option_t *option)
          gPad->GetListOfPrimitives()->Clear();
          if (frame) gPad->GetListOfPrimitives()->Add(frame);
          list->Draw("");
-         //if (text) text->DrawText(.94,.98,Form("%d",s));
          gPad->Update();
          if (fSleepTime > 0) gSystem->Sleep(fSleepTime);
       }
    }
-   //delete text;
 }
