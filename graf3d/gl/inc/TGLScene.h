@@ -203,7 +203,7 @@ public:
    virtual void UpdatePhysical(UInt_t phid, Double_t* trans, Color_t cidx=-1, UChar_t transp=0);
 
    virtual void UpdatePhysioLogical(TObject* logid, Double_t* trans, UChar_t* col);
-   virtual void UpdatePhysioLogical(TObject* logid, Double_t* trans, Color_t cidx=-1, UChar_t transp=0);
+   virtual void UpdatePhysioLogical(TObject* logid, Double_t* trans, Color_t cidx, UChar_t transp);
 
    // Temporary export for setting selected-state of physical shapes.
    LogicalShapeMap_t& RefLogicalShapes() { return fLogicalShapes; }
