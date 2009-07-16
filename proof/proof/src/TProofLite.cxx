@@ -1018,7 +1018,9 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    TNamed *qtag = (TNamed *) fPlayer->GetInputList()->FindObject("PROOF_QueryTag");
    if (qtag) {
       qtag->SetTitle(Form("%s:%s",pq->GetTitle(),pq->GetName()));
-   } else {
+   } else if (fPlayer) {
+      TObject *o = fPlayer->GetInputList()->FindObject("PROOF_QueryTag");
+      if (o) fPlayer->GetInputList()->Remove(o);
       fPlayer->AddInput(new TNamed("PROOF_QueryTag",
                                    Form("%s:%s",pq->GetTitle(),pq->GetName())));
    }
@@ -1103,9 +1105,6 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
          // Keep in memory only light infor about a query
          if (!(pq->IsDraw())) {
             if (fQMgr->Queries()) {
-               TQueryResult *pqr = pq->CloneInfo();
-               if (pqr)
-                  fQMgr->Queries()->Add(pqr);
                // Remove from the fQueries list
                fQMgr->Queries()->Remove(pq);
             }

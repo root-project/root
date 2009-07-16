@@ -219,6 +219,7 @@ private:
    TProofProgressStatus *AddProcessed(TProofProgressStatus *st);
 public:
    TSlaveStat(TSlave *slave);
+   ~TSlaveStat();
 
    TFileNode  *GetFileNode() const { return fFileNode; }
    const char *GetName() const { return fSlave->GetName(); }
@@ -232,6 +233,14 @@ TPacketizer::TSlaveStat::TSlaveStat(TSlave *slave)
 {
    fSlave = slave;
    fStatus = new TProofProgressStatus();
+}
+
+//______________________________________________________________________________
+TPacketizer::TSlaveStat::~TSlaveStat()
+{
+   // Cleanup
+
+   SafeDelete(fStatus);
 }
 
 TProofProgressStatus* TPacketizer::TSlaveStat::AddProcessed(TProofProgressStatus *st)
