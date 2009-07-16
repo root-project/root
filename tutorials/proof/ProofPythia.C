@@ -38,6 +38,7 @@
 #include <TParameter.h>
 #include "TClonesArray.h"
 #include "TParticle.h"
+#include "TDatabasePDG.h"
 
 #include "ProofPythia.h"
 #include "TPythia8.h"

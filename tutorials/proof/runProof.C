@@ -51,6 +51,16 @@
 //
 //   root[] runProof("pythia8")
 //
+//  5. "ntuple"
+//
+//      This is an example of final merging via files created on the workers, using
+//      TProofOutputFile. The final file is called ProofNtuple.root and it is created
+//      in the directory where the tutorial is run. If the PROOF cluster is remote, the
+//      file is received by a local xrootd daemon started for the purpose. Because of
+//      this, this example can be run only on unix clients.
+//
+//   root[] runProof("ntuple")
+//
 //
 //   In all cases, to run in non blocking mode the option 'asyn' is available, e.g.
 //
@@ -148,6 +158,23 @@ void runProof(const char *what = "simple",
       Printf("runProof: could not start/attach a PROOF session");
       return;
    }
+
+   // Determine locality of this session
+   Bool_t isProofLocal = kFALSE;
+   TUrl uu(url);
+   if (!strcmp(uu.GetHost(), "localhost") ||
+       !strcmp(uu.GetHostFQDN(), TUrl(gSystem->HostName()).GetHostFQDN())) {
+      isProofLocal = kTRUE;
+   }
+#ifdef WIN32
+   if (isProofLocal && what && !strcmp(what, "ntuple", 6)) {
+      // Not support on windows
+      Printf("runProof: the 'ntuple' example needs to run xrootd to receive the output file, \n"
+             "          but xrootd is not supported on Windows - cannot continue");
+      return;
+   }
+#endif
+
    TString proofsessions(Form("%s/sessions",tutdir.Data()));
    // Save tag of the used session
    FILE *fs = fopen(proofsessions.Data(), "a");
@@ -363,6 +390,62 @@ void runProof(const char *what = "simple",
       TString sel = Form("%s/proof/ProofEvent.C+", tutorials.Data());
       // Run it for nevt times
       proof->Process(sel.Data(), nevt);
+
+   } else if (act == "ntuple") {
+
+      // ProofNtuple is an example of non-data driven analysis; it
+      // creates and fills a disk resident ntuple with automatic file merging 
+      TString aNevt, opt;
+      while (args.Tokenize(tok, from, " ")) {
+         // Number of events
+         if (tok.BeginsWith("nevt=")) {
+            aNevt = tok;
+            aNevt.ReplaceAll("nevt=","");
+            if (!aNevt.IsDigit()) {
+               Printf("runProof: error parsing the 'nevt=' option (%s) - ignoring", tok.Data());
+               aNevt = "";
+            }
+         }
+         // Sync or async ?
+         if (tok.BeginsWith("asyn"))
+            opt = "ASYN";
+      }
+      Long64_t nevt = (aNevt.IsNull()) ? 1000 : aNevt.Atoi();
+      Printf("\nrunProof: running \"ntuple\" with nevt= %d\n", nevt);
+
+      // Output file
+      TString fout = TString::Format("%s/ProofNtuple.root", gSystem->WorkingDirectory());
+      // Cleanup any existing instance of the output file
+      gSystem->Unlink(fout);
+
+      if (!isProofLocal) {
+         // Setup a local basic xrootd to receive the file
+         Bool_t xrdok = kFALSE;
+         Int_t port = 9000;
+         while (port < 9010) {
+            if (checkXrootdAt(port) != 1) {
+               if (startXrootdAt(port, gSystem->WorkingDirectory(), kTRUE) == 0) {
+                  xrdok = kTRUE;
+                  break;
+               }
+            }
+            port++;
+         }
+         if (!xrdok) {
+            Printf("runProof: could not start basic xrootd on ports 9000-9009 - cannot continue");
+            return;
+         }
+         fout.Insert(0, TString::Format("root://%s:%d/", TUrl(gSystem->HostName()).GetHostFQDN(), port));
+         // Make a copy of the files on the master before merging
+         proof->AddInput(new TNamed("PROOF_OUTPUTFILE_LOCATION", "LOCAL"));
+      }
+      proof->AddInput(new TNamed("PROOF_OUTPUTFILE", fout.Data()));
+
+      // The selector string
+      TString sel = Form("%s/proof/ProofNtuple.C+", tutorials.Data());
+       //
+      // Run it for nevt times
+      proof->Process(sel.Data(), nevt, opt);
 
    } else {
       // Do not know what to run
