@@ -4084,59 +4084,62 @@ if test ! "x$enable_krb5" = "xno" ; then
         krb5inc=$found_hdr
         krb5incdir=$found_dir
     fi
-    #
-    # Check if 'krb5heff' is the real one or if it re-directs
-    # to <krb5/krb5.h>
-    redir=`grep "krb5\/krb5\.h" $krb5heff 2> /dev/null`
-    if test ! "x$redir" = "x" ; then
-       krb5heff=`dirname $krb5heff`/krb5/krb5.h
-    fi
-    echo "Effective krb5.h: $krb5heff"
 
-    #
-    # Check for prototypes in krb5.h
-    hask5vcstproto=`grep krb5_c_valid_cksumtype $krb5heff 2> /dev/null`
-    if test ! "x$hask5vcstproto" = "x" ; then
-       echo "Checking for krb5_c_valid_cksumtype in krb5.h ... yes"
-       hask5vcstproto="yes"
-    else
-       echo "Checking for krb5_c_valid_cksumtype in krb5.h ... no"
-       hask5vcstproto="no"
-    fi
-    hasvcstproto=`grep valid_cksumtype $krb5heff | grep -v krb5_c_valid_cksumtype 2> /dev/null`
-    if test ! "x$hasvcstproto" = "x" ; then
-       echo "Checking for valid_cksumtype in krb5.h ... yes"
-       hasvcstproto="yes"
-    else
-       echo "Checking for valid_cksumtype in krb5.h ... no"
-       hasvcstproto="no"
-    fi
-    
-    krb5libdirorg=""
-    if test ! "x$krb5libdir" = "x" ; then
-	krb5libdirorg=$krb5libdir
-    fi
-    if test "x$krb5libdir" = "x" && test ! "x$krb5dir" = "x" ; then
-	krb5libdirorg=$krb5dir/lib
-    fi
-    krb5libdirs="/usr/kerberos/lib \
-                 /usr/krb5/lib /usr/local/kerberos/lib /usr/lib /usr/local/lib"
+    if test ! "x$enable_krb5" = "xno" ; then
+       #
+       # Check if 'krb5heff' is the real one or if it re-directs
+       # to <krb5/krb5.h>
+       redir=`grep "krb5\/krb5\.h" $krb5heff 2> /dev/null`
+       if test ! "x$redir" = "x" ; then
+          krb5heff=`dirname $krb5heff`/krb5/krb5.h
+       fi
+       echo "Effective krb5.h: $krb5heff"
 
-    # check whether using MIT krb5
-    krb5mit=no
-    krb5lib=""
-    krb5libdir=""
-    check_library libk5crypto "$enable_shared" "$krb5libdirorg" $krb5libdirs
-    if test ! "x$found_lib" = "x" ; then
-	krb5mit=yes
-        krb5lib=$found_lib
-        krb5libdir=$found_dir
+       #
+       # Check for prototypes in krb5.h
+       hask5vcstproto=`grep krb5_c_valid_cksumtype $krb5heff 2> /dev/null`
+       if test ! "x$hask5vcstproto" = "x" ; then
+          echo "Checking for krb5_c_valid_cksumtype in krb5.h ... yes"
+          hask5vcstproto="yes"
+       else
+          echo "Checking for krb5_c_valid_cksumtype in krb5.h ... no"
+          hask5vcstproto="no"
+       fi
+       hasvcstproto=`grep valid_cksumtype $krb5heff | grep -v krb5_c_valid_cksumtype 2> /dev/null`
+       if test ! "x$hasvcstproto" = "x" ; then
+          echo "Checking for valid_cksumtype in krb5.h ... yes"
+          hasvcstproto="yes"
+       else
+          echo "Checking for valid_cksumtype in krb5.h ... no"
+          hasvcstproto="no"
+       fi
+
+       krb5libdirorg=""
+       if test ! "x$krb5libdir" = "x" ; then
+          krb5libdirorg=$krb5libdir
+       fi
+       if test "x$krb5libdir" = "x" && test ! "x$krb5dir" = "x" ; then
+          krb5libdirorg=$krb5dir/lib
+       fi
+       krb5libdirs="/usr/kerberos/lib \
+                   /usr/krb5/lib /usr/local/kerberos/lib /usr/lib /usr/local/lib"
+
+       # check whether using MIT krb5
+       krb5mit=no
+       krb5lib=""
+       krb5libdir=""
+       check_library libk5crypto "$enable_shared" "$krb5libdirorg" $krb5libdirs
+       if test ! "x$found_lib" = "x" ; then
+          krb5mit=yes
+          krb5lib=$found_lib
+          krb5libdir=$found_dir
+       fi
+       message "Checking whether we're using MIT Kerberos"
+       result "$krb5mit"
     fi
-    message "Checking whether we're using MIT Kerberos"
-    result "$krb5mit"
 
     # Only MIT kerberos is currently supported
-    if test "x$krb5mit" = "xyes" ; then
+    if test ! "x$enable_krb5" = "xno"  && test "x$krb5mit" = "xyes" ; then
 
       # Check for 'valid_cksumtype' symbols
       check_symbol krb5_c_valid_cksumtype $krb5lib "$krb5libdir"
