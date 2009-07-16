@@ -40,8 +40,9 @@ void gtime(Int_t nsteps = 500, Int_t np=100) {
          g->Add(m,s);
          if (i==np-1) g->Add(new TArrow(xmin,ymax,xx,yy,0.02,"-|>"), s);
       }
+      g->Add(new TPaveLabel(.90,.92,.98,.97,Form("%d",s+1),"brNDC"),s);
    }
-   g->Draw("time");
+   g->Draw();
    
    //save object to a file
    TFile f("gtime.root","recreate");
