@@ -218,6 +218,6 @@ diff -ub testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt >> testdiff.log
 
 TOPDIR=`dirname $CINTSYSDIR`
 runbuild $TOPDIR ""
-runbuild $TOPDIR new
+# runbuild $TOPDIR new
 
 ssh -x flxi02 bin/flush_webarea
