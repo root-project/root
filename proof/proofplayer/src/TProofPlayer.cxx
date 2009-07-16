@@ -1601,6 +1601,11 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                pf->Print();
                continue;
             }
+            // Set the output file
+            if (!filemerger->OutputFile(pf->GetOutputFileName())) {
+               Error("MergeOutputFiles", "cannot open the output file");
+               continue;
+            }
             // Merge
             if (!filemerger->Merge()) {
                Error("MergeOutputFiles", "cannot merge the output files");
@@ -2071,8 +2076,7 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
    // Check if we need to merge files
    TProofOutputFile *pf = dynamic_cast<TProofOutputFile*>(obj);
    if (pf) {
-      if (!strcmp(pf->GetMode(),"CENTRAL"))
-         fMergeFiles = kTRUE;
+      fMergeFiles = kTRUE;
       if (!IsClient()) {
          // Fill the output file name, if not done by the client
          if (strlen(pf->GetOutputFileName()) <= 0) {

@@ -2886,6 +2886,15 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    xps->SetFileout(in->fLogFile.c_str());
    TRACE(DBG, ev);
 
+   // Local data server
+   XrdOucString locdatasrv("root://");
+   locdatasrv += fMgr->Host();
+   ev = new char[strlen("LOCALDATASERVER=") + locdatasrv.length() + 2];
+   sprintf(ev, "LOCALDATASERVER=%s", locdatasrv.c_str());
+   putenv(ev);
+   fprintf(fenv, "%s\n", ev);
+   TRACE(DBG, ev);
+
    // Xrootd config file
    if (CfgFile()) {
       ev = new char[strlen("XRDCF=")+strlen(CfgFile())+2];
