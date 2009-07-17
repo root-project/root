@@ -216,8 +216,6 @@ public:
 
    int Post(int type, const char *msg);
    int Recv(XpdMsg &msg);
-
-   void SetFd(void *fds);
 };
 
 //
