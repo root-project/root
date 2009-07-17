@@ -18,8 +18,8 @@
 #include "Fit/ParameterSettings.h"
 #endif
 
-#ifndef ROOT_Fit_MinimizerControlParams
-#include "Fit/MinimizerControlParams.h"
+#ifndef ROOT_Math_MinimizerOptions
+#include "Math/MinimizerOptions.h"
 #endif
 
 #ifndef ROOT_Math_IParamFunctionfwd
@@ -111,15 +111,11 @@ public:
    ROOT::Math::Minimizer * CreateMinimizer(); 
 
 
-   /**
-      access to the minimizer  control parameter (const method) 
-   */
-   const MinimizerControlParams & MinimizerOptions() const { return fMinimizerOpts; } 
 
    /**
       access to the minimizer  control parameter (non const method) 
    */
-   MinimizerControlParams & MinimizerOptions()  { return fMinimizerOpts; } 
+   ROOT::Math::MinimizerOptions & MinimizerOptions()  { return fMinimizerOpts; } 
 
 
 #ifndef __CINT__   // this method fails on Windows
@@ -134,19 +130,19 @@ public:
       set minimizer type 
    */
    void SetMinimizer(const char * type, const char * algo = 0) { 
-      if (type) fMinimizerType = type; 
-      if (algo) fMinimAlgoType = algo; 
+      if (type) fMinimizerOpts.SetMinimizerType(type); 
+      if (algo) fMinimizerOpts.SetMinimizerAlgorithm(algo); 
    } 
 
    /**
       return type of minimizer package
    */
-   const std::string & MinimizerType() const { return fMinimizerType; } 
+   const std::string & MinimizerType() const { return fMinimizerOpts.MinimizerType(); } 
 
    /**
       return type of minimizer algorithms 
    */
-   const std::string & MinimizerAlgoType() const { return fMinimAlgoType; } 
+   const std::string & MinimizerAlgoType() const { return fMinimizerOpts.MinimizerAlgorithm(); }  
 
 
    /**
@@ -203,9 +199,7 @@ private:
    std::vector<ROOT::Fit::ParameterSettings> fSettings;  // vector with the parameter settings
    std::vector<unsigned int> fMinosParams;               // vector with the parameter indeces for running Minos
 
-   std::string fMinimizerType;  // minimizer type (MINUIT, MINUIT2, etc..)
-   std::string fMinimAlgoType;  // algorithm type (MIGRAD, SIMPLEX, etc..)
-   MinimizerControlParams fMinimizerOpts;   //minimizer control parameters
+   ROOT::Math::MinimizerOptions fMinimizerOpts;   //minimizer control parameters including name and algo type
 
 }; 
 

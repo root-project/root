@@ -131,14 +131,15 @@ BinData::BinData(unsigned int n, const double * dataX, const double * dataY, con
 } 
 
 
-   /// copy constructor (private) 
+   /// copy constructor 
 BinData::BinData(const BinData & rhs) : 
    FitData(), 
    fDim(rhs.fDim), 
    fPointSize(rhs.fPointSize), 
    fNPoints(rhs.fNPoints), 
    fDataVector(0),
-   fDataWrapper(0)
+   fDataWrapper(0), 
+   fBinEdge(rhs.fBinEdge)
 {
    // copy constructor (copy data vector or just the pointer)
    if (rhs.fDataVector != 0) fDataVector = new DataVector(*rhs.fDataVector);
@@ -152,6 +153,7 @@ BinData & BinData::operator= (const BinData & rhs) {
    fDim = rhs.fDim;  
    fPointSize = rhs.fPointSize;  
    fNPoints = rhs.fNPoints;  
+   fBinEdge = rhs.fBinEdge;
    // delete previous pointers 
    if (fDataVector) delete fDataVector; 
    if (fDataWrapper) delete fDataWrapper; 
@@ -177,7 +179,7 @@ BinData::~BinData() {
 
 void BinData::Initialize(unsigned int maxpoints, unsigned int dim , ErrorType err  ) { 
 //       preallocate a data set given size and dimension
-//       need to be initialized with the with the right dimension before
+//       need to be initialized with the  right dimension before
    if (fDataWrapper) delete fDataWrapper;
    fDataWrapper = 0; 
    unsigned int pointSize = GetPointSize(err,dim);  
@@ -201,6 +203,8 @@ void BinData::Initialize(unsigned int maxpoints, unsigned int dim , ErrorType er
    else {
       fDataVector = new DataVector(n);
    }
+   // reserve space for bin width in case of integral options
+   if (Opt().fIntegral) fBinEdge.reserve( maxpoints * fDim);
 }
 
 void BinData::Resize(unsigned int npoints) { 
@@ -367,6 +371,16 @@ void BinData::Add(const double *x, double val, const double * ex, double  eval) 
    *itr++ = eval; 
    
    fNPoints++;
+}
+
+void BinData::AddBinUpEdge(const double *dx ) { 
+//      add multi dim bin upper edge data (coord2)
+
+   fBinEdge.insert( fBinEdge.end(), dx, dx + fDim);
+   
+   // check that is consistent with number of points added in the data
+   assert( fNPoints * fDim == fBinEdge.size() );
+   
 }
 
 

@@ -107,10 +107,10 @@ public:
    void SetErrorDef(double err) { fErrorDef = err; }
 
    /// set minimizer type
-   void SetMinimizerType(const std::string & type) { fMinimType = type; }
+   void SetMinimizerType(const char * type) { fMinimType = type; }
 
    /// set minimizer algorithm
-   void SetMinimizerAlgorithm(const std::string & type) { fAlgoType = type; }
+   void SetMinimizerAlgorithm(const char *type) { fAlgoType = type; }
 
 private:
 

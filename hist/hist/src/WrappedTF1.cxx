@@ -118,6 +118,12 @@ double WrappedTF1::DoParameterDerivative(double x, const double * p, unsigned in
    }
 }
 
+void WrappedTF1::SetDerivPrecision(double eps) { fgEps = eps; }
+
+double WrappedTF1::GetDerivPrecision( ) { return fgEps; }
+
+
+
 // impelmentations for WrappedMultiTF1
 
 

@@ -173,6 +173,8 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    //CoordData x = CoordData( hfit->GetDimension() );
    dv.Initialize(n,ndim); 
    std::vector<double> x(hdim); 
+   std::vector<double> s; 
+   if (fitOpt.fIntegral) s.resize(hdim);
 
    int binx = 0; 
    int biny = 0; 
@@ -186,6 +188,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    for ( binx = hxfirst; binx <= hxlast; ++binx) {
       if (fitOpt.fIntegral) {
          x[0] = xaxis->GetBinLowEdge(binx);       
+         s[0] = xaxis->GetBinUpEdge(binx);
       }
       else
          x[0] = xaxis->GetBinCenter(binx);
@@ -201,15 +204,19 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
 
       if ( hdim > 1 ) { 
          for ( biny = hyfirst; biny <= hylast; ++biny) {
-            if (fitOpt.fIntegral) 
+            if (fitOpt.fIntegral) {
                x[1] = yaxis->GetBinLowEdge(biny);
+               s[1] = yaxis->GetBinUpEdge(biny);
+            }
             else
                x[1] = yaxis->GetBinCenter(biny);
             
             if ( hdim >  2 ) { 
                for ( binz = hzfirst; binz <= hzlast; ++binz) {
-                  if (fitOpt.fIntegral) 
+                  if (fitOpt.fIntegral) {
                      x[2] = zaxis->GetBinLowEdge(binz);
+                     s[2] = zaxis->GetBinUpEdge(binz);
+                  }
                   else
                      x[2] = zaxis->GetBinCenter(binz);
 //                  if (fitOpt.fUseRange && HFitInterface::IsPointOutOfRange(func,&x.front()) ) continue;
@@ -219,8 +226,10 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
                   //dv.Add(BinPoint(  x,  hfit->GetBinContent(binx, biny, binz), error ) );
                   if (ndim < hdim) // case of fitting a function with less dimension
                      dv.Add(   &x.front(),  x[2], error * zaxis->GetBinWidth(binz)  );
-                  else 
+                  else { 
                      dv.Add(   &x.front(),  value, error  );
+                     if (fitOpt.fIntegral) dv.AddBinUpEdge( &s.front() ); 
+                  }
                }  // end loop on z bins
             }
             else if (hdim == 2) { 
@@ -231,8 +240,10 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
                if (!HFitInterface::AdjustError(fitOpt,error,value) ) continue; 
                if (ndim < hdim) // case of fitting a function with less dimension
                   dv.Add(   &x.front(),  x[1], error * yaxis->GetBinWidth(biny)  );
-               else 
+               else {
                   dv.Add( &x.front(), value, error  );
+                  if (fitOpt.fIntegral) dv.AddBinUpEdge( &s.front());
+               }
             }   
             
          }  // end loop on y bins
@@ -248,22 +259,25 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
          double error =  hfit->GetBinError(binx); 
          if (!HFitInterface::AdjustError(fitOpt,error,value) ) continue; 
          dv.Add( x.front(),  value, error  );
+         // in case of integral fits add also bin width
+         if (fitOpt.fIntegral) dv.AddBinUpEdge(&s.front());
+
       }
       
    }   // end 1D loop 
    
-   // in case of integral store additional point with upper x values 
-   if (fitOpt.fIntegral) { 
-      x[0] = xaxis->GetBinLowEdge(hxlast) +  xaxis->GetBinWidth(hxlast); 
-      if (ndim > 1) { 
-         x[1] = yaxis->GetBinLowEdge(hylast) +  yaxis->GetBinWidth(hylast); 
-      }
-      if (ndim > 2) { 
-         x[2] = zaxis->GetBinLowEdge(hzlast) +  zaxis->GetBinWidth(hzlast); 
-      }
-      //dv.Add(BinPoint( x, 0, 1.) ); // use dummy y= 0  &  err =1  for this extra point needed for integral
-      dv.Add( &x.front() , 0, 1. ); // use dummy y= 0  &  err =1  for this extra point needed for integral
-   }
+//    // in case of integral store additional point with upper x values 
+//    if (fitOpt.fIntegral) { 
+//       x[0] = xaxis->GetBinLowEdge(hxlast) +  xaxis->GetBinWidth(hxlast); 
+//       if (ndim > 1) { 
+//          x[1] = yaxis->GetBinLowEdge(hylast) +  yaxis->GetBinWidth(hylast); 
+//       }
+//       if (ndim > 2) { 
+//          x[2] = zaxis->GetBinLowEdge(hzlast) +  zaxis->GetBinWidth(hzlast); 
+//       }
+//       //dv.Add(BinPoint( x, 0, 1.) ); // use dummy y= 0  &  err =1  for this extra point needed for integral
+//       dv.Add( &x.front() , 0, 1. ); // use dummy y= 0  &  err =1  for this extra point needed for integral
+//    }
    
 #ifdef DEBUG
    std::cout << "THFitInterface::FillData: Hist FitData size is " << dv.Size() << std::endl;

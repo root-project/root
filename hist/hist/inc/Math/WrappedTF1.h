@@ -104,8 +104,13 @@ public:
    /// evaluate the derivative of the function with respect to the parameters
    void  ParameterGradient(double x, const double * par, double * grad ) const;
 
-   static void SetDerivStepSize(double eps) { fgEps = eps; }
 
+   /// precision value used for calculating the derivative step-size 
+   /// h = eps * |x|. The default is 0.001, give a smaller in case function changes rapidly
+   static void SetDerivPrecision(double eps); 
+
+   /// get precision value used for calculating the derivative step-size 
+   static double GetDerivPrecision();
 
 private: 
 
@@ -139,7 +144,7 @@ private:
    mutable double fX[1];         //! cached vector for x value (needed for TF1::EvalPar signature) 
    std::vector<double> fParams;  //  cached vector with parameter values
 
-   static double fgEps;          // epsilon used in derivative calculation
+   static double fgEps;          // epsilon used in derivative calculation h ~ eps |x|
 }; 
 
    } // end namespace Fit

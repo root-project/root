@@ -89,7 +89,7 @@ namespace ROOT {
                   fIg1Dim->SetFunction(*fFunc1Dim);
                } 
                else if (fDim > 1) {
-                  fFuncNDim = new ROOT::Math::WrappedMemMultiFunction< IntegralEvaluator, double (IntegralEvaluator::*)(const double *) const >  (*this, &IntegralEvaluator::FN);
+                  fFuncNDim = new ROOT::Math::WrappedMemMultiFunction< IntegralEvaluator, double (IntegralEvaluator::*)(const double *) const >  (*this, &IntegralEvaluator::FN, fDim);
                   fIgNDim = new ROOT::Math::IntegratorMultiDim();
                   fIgNDim->SetFunction(*fFuncNDim);
                }
@@ -129,8 +129,10 @@ namespace ROOT {
                else if (fIgNDim) { 
                   double dV = 1; 
                   for (unsigned int i = 0; i < fDim; ++i) 
-                     dV *= ( x2[i] - x1[i] ); 
+                     dV *= ( x2[i] - x1[i] );                   
                   return fIgNDim->Integral( x1, x2)/dV; 
+//                   std::cout << " do integral btw x " << x1[0] << "  " << x2[0] << " y " << x1[1] << "  " << x2[1] << " dV = " << dV << " result = " << result << std::endl;
+//                   return result; 
                }
                else 
                   assert(1.); // should never be here
@@ -324,7 +326,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints 
    // the actual number of used points
    // normal chi2 using only error on values (from fitting histogram)
-   // optionally intergal of function in the bin is used 
+   // optionally the integral of function in the bin is used 
    
    unsigned int n = data.Size();
 
@@ -333,6 +335,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
    std::cout << "\n\nFit data size = " << n << std::endl;
    std::cout << "evaluate chi2 using function " << &func << "  " << p << std::endl; 
 #endif
+
 
    double chi2 = 0;
    int nRejected = 0; 
@@ -362,17 +365,18 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
          fval = func ( x, p ); 
       else { 
          // calculate normalized integral (divided by bin volume)
-         // need to set function and parameters here in case loop is parallelized 
-         fval = igEval( x, data.Coords(i+1) ) ; 
+         // need to set function and parameters here in case loop is parallelized
+         fval = igEval( x, data.BinUpEdge(i)) ; 
       }
 
-
+//#define DEBUG
 #ifdef DEBUG      
       std::cout << x[0] << "  " << y << "  " << 1./invError << " params : "; 
       for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar) 
          std::cout << p[ipar] << "\t";
       std::cout << "\tfval = " << fval << std::endl; 
 #endif
+//#undef DEBUG
 
 
       double tmp = ( y -fval )* invError;  	  
@@ -540,7 +544,7 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    if (!useBinIntegral ) 
       fval = func ( x, p ); 
    else { 
-      x2 = data.Coords(i+1); 
+      x2 = data.BinUpEdge(i);
       // calculate normalized integral (divided by bin volume)
       // need to set function and parameters here in case loop is parallelized 
       fval = igEval( x, x2 ) ; 
@@ -634,7 +638,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
       if (!useBinIntegral ) 
          fval = func ( x, p ); 
       else { 
-         x2 = data.Coords(i+1); 
+         x2 = data.BinUpEdge(i); 
          // calculate normalized integral (divided by bin volume)
          // need to set function and parameters here in case loop is parallelized 
          fval = igEval( x, x2 ) ; 
@@ -850,7 +854,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    else { 
       // calculate normalized integral (divided by bin volume)
       // need to set function and parameters here in case loop is parallelized 
-      x2 =  data.Coords(i+1);
+      x2 =  data.BinUpEdge(i);
       fval = igEval( x, x2 ) ; 
    }
 
@@ -933,7 +937,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
       if (!fitOpt.fIntegral )
          fval = func ( x, p ); 
       else { 
-         fval = igEval( x, data.Coords(i+1) ) ; 
+         fval = igEval( x, data.BinUpEdge(i) ) ; 
       }
       
       // EvalLog protects against 0 values of fval but don't want to add in the -log sum 
@@ -977,7 +981,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinDat
       if (!useBinIntegral ) 
          fval = func ( x, p ); 
       else { 
-         x2 = data.Coords(i+1); 
+         x2 = data.BinUpEdge(i); 
          // calculate normalized integral (divided by bin volume)
          // need to set function and parameters here in case loop is parallelized 
          fval = igEval( x, x2 ) ; 

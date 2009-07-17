@@ -612,6 +612,7 @@ int testRosenBrock() {
    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","ConjugatePR");
    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","BFGS");
    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","BFGS2");
+   //iret |= testNewMinimizer(fRB,xRB,s0,"Genetic","");
 
 
    return iret; 

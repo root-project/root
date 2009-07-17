@@ -438,11 +438,8 @@ public :
 
    /**
       return number of fit points 
-      In case of integral option size is npoints -1 
     */ 
-   unsigned int Size() const { 
-      return (Opt().fIntegral && fNPoints > 0) ? fNPoints-1 : fNPoints; 
-   }
+   unsigned int Size() const { return fNPoints; }
 
    /**
       return coordinate data dimension
@@ -458,6 +455,25 @@ public :
     */
    BinData & LogTransform();
 
+
+   /** 
+       return an array containing the upper edge of the bin for coordinate i
+       In case of empty bin they could be merged in a single larger bin
+       Return a NULL pointer  if the bin width  is not stored 
+   */
+   const double * BinUpEdge(unsigned int icoord) const { 
+      if (fBinEdge.size() == 0 || icoord*fDim > fBinEdge.size() ) return 0; 
+      return &fBinEdge[ icoord * fDim];
+   }
+
+   /** 
+       add the bin width data, a pointer to an array with the bin upper edge information.
+       This is needed when fitting with integral options
+       The information is added for the previously inserted point. 
+       BinData::Add  must be called before
+   */
+   void AddBinUpEdge(const double * binwidth); 
+
 protected: 
 
    void SetNPoints(unsigned int n) { fNPoints = n; }
@@ -471,6 +487,9 @@ private:
 
    DataVector * fDataVector;  // pointer to the copied in data vector
    DataWrapper * fDataWrapper;  // pointer to the external data wrapper structure
+
+   std::vector<double> fBinEdge;  // vector containing the bin upper edge (coordinate will contain low edge) 
+
 
 #ifdef USE_BINPOINT_CLASS
    mutable BinPoint fPoint; 
