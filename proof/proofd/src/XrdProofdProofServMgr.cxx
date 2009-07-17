@@ -2750,6 +2750,13 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    fprintf(frc, "XNet.FirstConnectMaxCnt 3\n");
    fprintf(frc, "XNet.ConnectTimeout     5\n");
 
+   // This is a workaround for a problem fixed in 5.24/00
+   int vrscode = (p->Client()->ROOT()) ? p->Client()->ROOT()->VersionCode() : -1;
+   if (vrscode > 0 && vrscode < XrdROOT::GetVersionCode(5,24,0)) {
+      fprintf(frc, "# Force remote reading also for local files to avoid a wrong TTreeCache initialization\n");
+      fprintf(frc, "Path.ForceRemote 1\n");
+   }
+
    // Additional rootrcs (xpd.putrc directive)
    if (fProofServRCs.length() > 0) {
       fprintf(frc, "# Additional rootrcs (xpd.putrc directives)\n");
@@ -2758,12 +2765,12 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
       int from = 0;
       while ((from = fProofServRCs.tokenize(rc, from, ',')) != -1) {
          if (rc.length() > 0) {
-	    if (rc.find("Proof.DataSetManager") != STR_NPOS) {
-	       TRACE(ALL,"Proof.DataSetManager ignored: use xpd.datasetsrc to define dataset managers");
-	    } else {
-	       fprintf(frc, "%s\n", rc.c_str());
-	    }
-	 }
+            if (rc.find("Proof.DataSetManager") != STR_NPOS) {
+               TRACE(ALL,"Proof.DataSetManager ignored: use xpd.datasetsrc to define dataset managers");
+            } else {
+               fprintf(frc, "%s\n", rc.c_str());
+            }
+         }
       }
    }
 
@@ -2775,10 +2782,10 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
       for (ii = fMgr->DataSetSrcs()->begin(); ii != fMgr->DataSetSrcs()->end(); ii++) {
          if (ii != fMgr->DataSetSrcs()->begin()) rc += ", ";
          rc += (*ii)->fType;
-	 rc += " dir:";
+         rc += " dir:";
          rc += (*ii)->fUrl;
-	 rc += " opt:";
-	 rc += (*ii)->fOpts;
+         rc += " opt:";
+         rc += (*ii)->fOpts;
       }
       fprintf(frc, "%s\n", rc.c_str());
    }

@@ -63,15 +63,20 @@ XrdROOT::XrdROOT(const char *dir, const char *tag, const char *bindir,
    }
    if (CheckDir(fIncDir.c_str()) != 0) return;
 
-   // Get the version
-   XrdOucString version;
-   if (GetROOTVersion(version) == -1) {
-      TRACE(XERR, "unable to extract ROOT version from path "<<fIncDir);
+   // Parse version info
+   fRelease = "";
+   fSvnRevision = -1;
+   fVersionCode = -1;
+   fVrsMajor = -1;
+   fVrsMinor = -1;
+   fVrsPatch = -1;
+   if (ParseROOTVersionInfo() == -1) {
+      TRACE(XERR, "unable to extract ROOT version information from path "<<fIncDir);
       return;
    }
 
    // Default tag is the version
-   fTag = (!tag || strlen(tag) <= 0) ? version : tag;
+   fTag = (!tag || strlen(tag) <= 0) ? fRelease : tag;
 
    // Lib dir
    fLibDir = libdir;
@@ -102,7 +107,7 @@ XrdROOT::XrdROOT(const char *dir, const char *tag, const char *bindir,
 
    // Export string
    fExport = fTag;
-   fExport += " "; fExport += version;
+   fExport += " "; fExport += fRelease;
    fExport += " "; fExport += dir;
 
    // First step OK
@@ -158,10 +163,10 @@ void XrdROOT::SetValid(kXR_int16 vers)
 }
 
 //__________________________________________________________________________
-int XrdROOT::GetROOTVersion(XrdOucString &version)
+int XrdROOT::ParseROOTVersionInfo()
 {
-   // Get ROOT version associated with 'dir'.
-   XPDLOC(SMGR, "GetROOTVersion")
+   // Extract ROOT version information associated with 'dir'.
+   XPDLOC(SMGR, "ParseROOTVersionInfo")
 
    int rc = -1;
 
@@ -175,26 +180,93 @@ int XrdROOT::GetROOTVersion(XrdOucString &version)
       return rc;
    }
 
+   // Reset the related variables
+   fRelease = "";
+   fSvnRevision = -1;
+   fVersionCode = -1;
+   fVrsMajor = -1;
+   fVrsMinor = -1;
+   fVrsPatch = -1;
+
    // Read the file
+   char *pv = 0;
+   XrdOucString tkn;
    char line[1024];
    while (fgets(line, sizeof(line), fv)) {
-      char *pv = (char *) strstr(line, "ROOT_RELEASE");
-      if (pv) {
+      if (fRelease.length() <= 0 && (pv = (char *) strstr(line, "ROOT_RELEASE"))) {
          if (line[strlen(line)-1] == '\n')
             line[strlen(line)-1] = 0;
          pv += strlen("ROOT_RELEASE") + 1;
-         version = pv;
-         version.replace("\"","");
-         rc = 0;
-         break;
+         fRelease = pv;
+         fRelease.replace("\"","");
+      } else if ((pv = (char *) strstr(line, "ROOT_SVN_REVISION"))) {
+         if (line[strlen(line)-1] == '\n')
+            line[strlen(line)-1] = 0;
+         sscanf(pv, "ROOT_SVN_REVISION %d", &fSvnRevision);
+      } else if ((pv = (char *) strstr(line, "ROOT_VERSION_CODE"))) {
+         if (line[strlen(line)-1] == '\n')
+            line[strlen(line)-1] = 0;
+         sscanf(pv, "ROOT_VERSION_CODE %d", &fVersionCode);
       }
    }
 
    // Close the file
    fclose(fv);
 
+   // Version code must be there
+   if (fVersionCode < 0) {
+      TRACE(XERR, "incomplete info found in "<<versfile<<": version code missing or bad: "<<fVersionCode);
+      return rc;
+   }
+
+   // Release tag must be there and in the right format
+   if (fRelease.length() <= 0 ||
+       XrdROOT::ParseReleaseString(fRelease.c_str(), fVrsMajor, fVrsMinor, fVrsPatch) < 0) {
+      TRACE(XERR, "incomplete info found in "<<versfile<<": release tag missing or bad: "<<fRelease);
+      return rc;
+   }
+
    // Done
-   return rc;
+   return 0;
+}
+
+//__________________________________________________________________________
+int XrdROOT::GetVersionCode(const char *release)
+{
+   // Translate 'release' into a version code integer following the rules
+   // in $ROOTSYS/include/RVersion.h.
+   // 'release' must be in the format 'M.N/PP<something else>', e.g. 5.20/04-cms
+
+   int maj, min, patch;
+   if (XrdROOT::ParseReleaseString(release, maj, min, patch) < 0) return -1;
+   return XrdROOT::GetVersionCode(maj, min, patch);
+}
+
+//__________________________________________________________________________
+int XrdROOT::GetVersionCode(int maj, int min, int patch)
+{
+   // Translate 'release' into a version code integer following the rules
+   // in $ROOTSYS/include/RVersion.h
+
+   return ((maj << 16) + (min << 8) + patch);
+}
+
+//__________________________________________________________________________
+int XrdROOT::ParseReleaseString(const char *release,
+                                int &maj, int &min, int &patch)
+{
+   // Extract from 'release' its major, minor and patch numerical components;
+   // 'release' must be in the format 'M.N/PP<something else>', e.g. 5.20/04-cms;
+   // the part <something else> is ignored.
+
+   if (!release || strlen(release) <= 0) return -1;
+
+   XrdOucString rel(release, 7);
+   rel.replace(".", " ");
+   rel.replace("/", " ");
+
+   sscanf(rel.c_str(), "%d %d %d", &maj, &min, &patch);
+   return 0;
 }
 
 //
@@ -279,13 +351,17 @@ int XrdROOTMgr::Config(bool rcf)
          if (dir.length() > 0) {
             XrdROOT *rootc = new XrdROOT(dir.c_str(), "",
                                          bd.c_str(), id.c_str(), ld.c_str(), dd.c_str());
-            XPDFORM(msg, "ROOT dist: '%s'", rootc->Export());
             if (Validate(rootc, fSched) == 0) {
-               msg += " validated";
+               XPDFORM(msg, "ROOT dist: '%s' validated", rootc->Export());
                fROOT.push_back(rootc);
                TRACE(ALL, msg);
+               XrdOucString mnp;
+               XPDFORM(mnp, "ROOT version details: svn: %d, code: %d, {mnp} = {%d,%d,%d}",
+                            rootc->SvnRevision(), rootc->VersionCode(), rootc->VrsMajor(),
+                            rootc->VrsMinor(), rootc->VrsPatch());
+               TRACE(ALL, mnp);
             } else {
-               msg += " could not be validated";
+               XPDFORM(msg, "ROOT dist: '%s' could not be validated", rootc->Export());
                TRACE(XERR, msg);
             }
          }
@@ -369,6 +445,11 @@ int XrdROOTMgr::DoDirectiveRootSys(char *val, XrdOucStream *cfg, bool)
       if (rootc) {
          if (Validate(rootc, fSched) == 0) {
             TRACE(REQ, "validation OK for: "<<rootc->Export());
+            XrdOucString mnp;
+            XPDFORM(mnp, "version details: svn: %d, code: %d, {mnp} = {%d,%d,%d}",
+                         rootc->SvnRevision(), rootc->VersionCode(), rootc->VrsMajor(),
+                         rootc->VrsMinor(), rootc->VrsPatch());
+            TRACE(REQ, mnp);
             // Add to the list
             fROOT.push_back(rootc);
          } else {
