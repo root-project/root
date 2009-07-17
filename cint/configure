@@ -56,21 +56,17 @@ INPUTMODE=cint
 COMP=-c
 INCP=-I
 
-function config_GCC_defaults {
-    CC=gcc
-    CPP="gcc -E -C"
+function config_unix_defaults {
     COUT="-o "
     COUTEXE="-o "
     CDBGFLAGS=-g
     COPTFLAGS=-O2
     CMACROS="$CMACROS -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK -DG__SIGNEDCHAR -DG__NEWSTDHEADER -DG__CINT_VER6 -DG__NATIVELONGLONG -DG__P2FCAST -DG__STD_EXCEPTION"
 
-    CXX="g++ "
     CXXDBGFLAGS="$CDBGFLAGS"
     CXXOPTFLAGS="$COPTFLAGS"
     CXXMACROS="$CXXMACROS $CMACROS"
 
-    LD="g++ "
     DEFAULTLIBS="-lm -ldl"
     LDOUT="-o "
     SOOUT="$LDOUT"
@@ -91,6 +87,15 @@ function config_GCC_defaults {
     IMPLIBEXT=.a
     AR="ar qcs "
     [ "x$TAILOPT" = "x" ] && TAILOPT=-n
+
+}
+
+function config_GCC_defaults {
+    config_unix_defaults
+    CC=gcc
+    CPP="gcc -E -C"
+    CXX="g++ "
+    LD="g++ "
 
     GCCVER=`echo __GNUC__ __GNUC_MINOR__ __GNUC_PATCHLEVEL__|$CC -E -|tail ${TAILOPT}1`
     if [ ${GCCVER%% *} -gt 3 ]; then 
@@ -294,7 +299,7 @@ function config_solarisgcc {
 
 function config_solaris {
     TAILOPT=-
-    config_GCC_defaults
+    config_unix_defaults
     CXX=CC
     CC=cc
     LD=CC
