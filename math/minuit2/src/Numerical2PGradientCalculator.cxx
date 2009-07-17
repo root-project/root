@@ -208,9 +208,11 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    //   std::cout<<"final grd: "<<grd<<std::endl;
    //   std::cout<<"########### return from Numerical2PDerivative"<<std::endl;
 
+#ifndef _OPENMP
    mpiproc.SyncVector(grd);
    mpiproc.SyncVector(g2);
    mpiproc.SyncVector(gstep);
+#endif
 
    return FunctionGradient(grd, g2, gstep);
 }
