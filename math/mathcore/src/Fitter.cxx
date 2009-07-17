@@ -17,7 +17,6 @@
 #include "Fit/LogLikelihoodFCN.h"
 #include "Math/Minimizer.h"
 #include "Math/MinimizerOptions.h"
-#include "Fit/MinimizerControlParams.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/FcnAdapter.h"
