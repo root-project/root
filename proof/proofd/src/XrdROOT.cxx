@@ -26,6 +26,7 @@
 #include "XrdProofdManager.h"
 #include "XrdProofdProtocol.h"
 #include "XrdProofdProofServMgr.h"
+#include "Xrd/XrdScheduler.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
 #include "XrdSys/XrdSysLogger.hh"
@@ -279,7 +280,6 @@ XrdROOTMgr::XrdROOTMgr(XrdProofdManager *mgr,
 {
    // Constructor
    fMgr = mgr;
-   fSched = pi->Sched;
    fLogger = pi->eDest->logger();
    fROOT.clear();
 
@@ -351,7 +351,7 @@ int XrdROOTMgr::Config(bool rcf)
          if (dir.length() > 0) {
             XrdROOT *rootc = new XrdROOT(dir.c_str(), "",
                                          bd.c_str(), id.c_str(), ld.c_str(), dd.c_str());
-            if (Validate(rootc, fSched) == 0) {
+            if (Validate(rootc, fMgr->Sched()) == 0) {
                XPDFORM(msg, "ROOT dist: '%s' validated", rootc->Export());
                fROOT.push_back(rootc);
                TRACE(ALL, msg);
@@ -443,7 +443,7 @@ int XrdROOTMgr::DoDirectiveRootSys(char *val, XrdOucStream *cfg, bool)
       }
       // If not, try validation
       if (rootc) {
-         if (Validate(rootc, fSched) == 0) {
+         if (Validate(rootc, fMgr->Sched()) == 0) {
             TRACE(REQ, "validation OK for: "<<rootc->Export());
             XrdOucString mnp;
             XPDFORM(mnp, "version details: svn: %d, code: %d, {mnp} = {%d,%d,%d}",

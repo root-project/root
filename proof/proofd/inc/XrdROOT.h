@@ -30,7 +30,6 @@
 #include "XrdProofdConfig.h"
 
 class XrdProofdManager;
-class XrdScheduler;
 class XrdSysLogger;
 
 class XrdROOT {
@@ -98,7 +97,6 @@ public:
 class XrdROOTMgr : public XrdProofdConfig {
 
    XrdProofdManager  *fMgr;
-   XrdScheduler      *fSched;     // System scheduler
    XrdSysLogger      *fLogger;    // Error logger
    XrdOucString      fLogDir;     // Path to dir with validation logs
 

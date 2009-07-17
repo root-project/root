@@ -102,6 +102,7 @@ class XrdProofdManager : public XrdProofdConfig {
    XrdProofdAdmin   *Admin() const { return fAdmin; }
    XrdROOTMgr       *ROOTMgr() const { return fROOTMgr; }
    XrdProofdPriorityMgr *PriorityMgr() const { return fPriorityMgr; }
+   XrdScheduler     *Sched() const { return fSched; }
 
    // Request processor
    int               Process(XrdProofdProtocol *p);
@@ -136,6 +137,8 @@ class XrdProofdManager : public XrdProofdConfig {
    XrdProofdAdmin        *fAdmin;      // Admin services
    XrdROOTMgr            *fROOTMgr;    // ROOT versions manager
    XrdProofdPriorityMgr  *fPriorityMgr;// Priority manager
+
+   XrdScheduler          *fSched;      // System scheduler
 
    XrdOucString      fSuperUsers;     // ':' separated list of privileged users
    //

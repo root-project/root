@@ -30,6 +30,7 @@
 
 #include "Xrd/XrdBuffer.hh"
 #include "Xrd/XrdPoll.hh"
+#include "Xrd/XrdScheduler.hh"
 #include "XrdNet/XrdNet.hh"
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdNet/XrdNetPeer.hh"
@@ -275,7 +276,6 @@ XrdProofdProofServMgr::XrdProofdProofServMgr(XrdProofdManager *mgr,
    XPDLOC(SMGR, "XrdProofdProofServMgr")
 
    fMgr = mgr;
-   fSched = pi->Sched;
    fLogger = pi->eDest->logger();
    fInternalWait = 10;
    fActiveSessions.clear();
@@ -1596,7 +1596,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    // Fork an agent process to handle this session
    int pid = -1;
    TRACEP(p, FORK,"Forking external proofsrv");
-   if (!(pid = fSched->Fork("proofsrv"))) {
+   if (!(pid = fMgr->Sched()->Fork("proofsrv"))) {
 
       // Get unique tag and relevant dirs for this session
       ProofServEnv_t in = {xps, loglevel, cffile.c_str(), "", "", "", "", ""};
@@ -1627,6 +1627,16 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       XrdOucString pmsg = "child process ";
       pmsg += (int) getpid();
       TRACE(FORK, pmsg);
+
+      // We set to the user ownerships
+      if (SetUserOwnerships(p) != 0) {
+         TRACE(XERR, "SetUserOwnerships did not return OK - EXIT");
+         if (write(fp[1], &setupOK, sizeof(setupOK)) != sizeof(setupOK))
+            TRACE(XERR, "cannot write to internal pipe; errno: "<<errno);
+         close(fp[0]);
+         close(fp[1]);
+         exit(1);
+      }
 
       // We set to the user environment
       if (SetUserEnvironment(p) != 0) {
@@ -2131,7 +2141,7 @@ int XrdProofdProofServMgr::Accept(XrdProofdProofServ *xps,
    TRACE(REQ, "Protocol "<<xp<<" attached to link "<<linkpsrv<<" ("<< peerpsrv.InetName <<")");
 
    // Schedule it
-   fSched->Schedule((XrdJob *)linkpsrv);
+   fMgr->Sched()->Schedule((XrdJob *)linkpsrv);
 
    // Save the protocol in the session instance
    xps->SetProtocol((XrdProofdProtocol *)xp);
@@ -3409,6 +3419,48 @@ int XrdProofdProofServMgr::CleanupProofServ(bool all, const char *usr)
 }
 
 //___________________________________________________________________________
+int XrdProofdProofServMgr::SetUserOwnerships(XrdProofdProtocol *p)
+{
+   // Set user ownerships on some critical files or directories.
+   // Return 0 on success, -1 if enything goes wrong.
+   XPDLOC(SMGR, "ProofServMgr::SetUserOwnerships")
+
+   TRACE(REQ, "enter");
+
+   // If applicable, make sure that the private dataset dir for this user exists 
+   // and has the right permissions
+   if (fMgr->DataSetSrcs()->size() > 0) {
+      std::list<XrdProofdDSInfo *>::iterator ii;
+      for (ii = fMgr->DataSetSrcs()->begin(); ii != fMgr->DataSetSrcs()->end(); ii++) {
+         if ((*ii)->fLocal && (*ii)->fRW) {
+            XrdOucString d = (*ii)->fUrl;
+            if (!d.endswith("/")) d += "/";
+            d += p->Client()->UI().fGroup; d += "/";
+            d += p->Client()->UI().fUser;
+            if (XrdProofdAux::AssertDir(d.c_str(), p->Client()->UI(),
+                                                   fMgr->ChangeOwn()) != 0) {
+               TRACE(XERR, "can't assert "<<d);
+            }
+         }
+      }
+   }
+
+   if (fMgr->ChangeOwn()) {
+      // Change ownership of '.creds'
+      XrdOucString creds(p->Client()->Sandbox()->Dir());
+      creds += "/.creds";
+      if (XrdProofdAux::ChangeOwn(creds.c_str(), p->Client()->UI()) != 0) {
+         TRACE(XERR, "can't change ownership of "<<creds);
+         return -1;
+      }
+   }
+
+   // We are done
+   TRACE(REQ, "done");
+   return 0;
+}
+
+//___________________________________________________________________________
 int XrdProofdProofServMgr::SetUserEnvironment(XrdProofdProtocol *p)
 {
    // Set user environment: set effective user and group ID of the process
@@ -3417,7 +3469,7 @@ int XrdProofdProofServMgr::SetUserEnvironment(XrdProofdProtocol *p)
    // Return 0 on success, -1 if enything goes wrong.
    XPDLOC(SMGR, "ProofServMgr::SetUserEnvironment")
 
-   TRACE(REQ,  "enter");
+   TRACE(REQ, "enter");
 
    if (XrdProofdAux::ChangeToDir(p->Client()->Sandbox()->Dir(),
                                  p->Client()->UI(), fMgr->ChangeOwn()) != 0) {
@@ -3451,34 +3503,7 @@ int XrdProofdProofServMgr::SetUserEnvironment(XrdProofdProtocol *p)
       initgroups(p->Client()->UI().fUser.c_str(), p->Client()->UI().fGid);
    }
 
-   // If applicable, make sure that the private dataset dir for this user exists 
-   // and has the right permissions
-   if (fMgr->DataSetSrcs()->size() > 0) {
-      std::list<XrdProofdDSInfo *>::iterator ii;
-      for (ii = fMgr->DataSetSrcs()->begin(); ii != fMgr->DataSetSrcs()->end(); ii++) {
-	 if ((*ii)->fLocal && (*ii)->fRW) {
-	    XrdOucString d = (*ii)->fUrl;
-	    if (!d.endswith("/")) d += "/";
-	    d += p->Client()->UI().fGroup; d += "/";
-	    d += p->Client()->UI().fUser;
-	    if (XrdProofdAux::AssertDir(d.c_str(), p->Client()->UI(),
-                                                   fMgr->ChangeOwn()) != 0) {
-	       TRACE(XERR, "can't assert "<<d);
-	    }
-	 }
-      }
-   }
-
    if (fMgr->ChangeOwn()) {
-
-      // Change ownership of '.creds'
-      XrdOucString creds(p->Client()->Sandbox()->Dir());
-      creds += "/.creds";
-      if (XrdProofdAux::ChangeOwn(creds.c_str(), p->Client()->UI()) != 0) {
-         TRACE(XERR, "can't change ownership of "<<creds);
-         return -1;
-      }
-
       // acquire permanently target user privileges
       TRACE(DBG, "acquiring target user identity");
       if (XrdSysPriv::ChangePerm((uid_t)p->Client()->UI().fUid,

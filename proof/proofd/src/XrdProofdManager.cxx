@@ -126,6 +126,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fAdminPath += "/.xproofd.";
 
    // Services
+   fSched = pi->Sched;
    fAdmin = 0;
    fClientMgr = 0;
    fGroupsMgr = 0;
