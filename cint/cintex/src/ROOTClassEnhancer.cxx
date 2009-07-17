@@ -540,7 +540,7 @@ namespace ROOT { namespace Cintex {
       if ( IsSTL(cl.Name(SCOPED)) || cl.IsArray() ) return;
       for ( size_t m = 0; m < cl.DataMemberSize(INHERITEDMEMBERS_NO); m++) {
          Member mem = cl.DataMemberAt(m, INHERITEDMEMBERS_NO);
-         if ( ! mem.IsTransient() ) {
+         if ( ! mem.IsTransient()  && ! mem.IsStatic() ) {
             Type typ = mem.TypeOf();
             string nam = mem.Properties().HasProperty("ioname") ?
                mem.Properties().PropertyAsString("ioname") : mem.Name();
