@@ -329,7 +329,7 @@ function add_opt {
 
 add_opt "--help -h" 'Show this help.'
 add_opt "--arch=" "Architecture, one of ${ARCHS[*]}"
-add_opt "--coreversion=" "CINT core version, one of old, new [new]"
+add_opt "--coreversion=" "CINT core version, one of old, current, new [current]"
 add_opt "--with-prefix" 'Prefix-based build (instead of using CINTSYSDIR)'
 add_opt "--prefix=" 'Topdir for architecture-independent files [/usr/local]'
 add_opt "--exec-prefix=" 'Topdir for architecture-dependent files [$PREFIX]'
@@ -464,8 +464,10 @@ function processflag_coreversion {
         COREVERSION=cint7
     elif [ "x$COREVERSION" = "xold" ]; then
         COREVERSION=cint
+    elif [ "x$COREVERSION" = "xcurrent" ]; then
+        COREVERSION=cint
     else
-        echo "Error: --coreversion must be one of old, new, not \"$1\"."
+        echo "Error: --coreversion must be one of old, current, new, not \"$1\"."
         exit 1
     fi
 }
@@ -603,8 +605,8 @@ if [ "$ARCH" = "" ]; then
 fi
 
 if [ "$COREVERSION" = "" ]; then
-    COREVERSION=cint7
-    echo Using new CINT core
+    COREVERSION=cint
+    echo Using current CINT core
 fi
 
 if [ "$DEBUG" = "1" ]; then
