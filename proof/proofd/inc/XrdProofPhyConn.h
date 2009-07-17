@@ -40,7 +40,6 @@ private:
    int         TryConnect();
    bool        GetAccessToSrv();
    bool        Init(const char *url);
-   void        SetAsync(XrdClientAbsUnsolMsgHandler *uh);
 
 public:
    XrdProofPhyConn(const char *url, int psid = -1, char ver = -1,
@@ -52,6 +51,7 @@ public:
    // Send, Recv interfaces
    int         ReadRaw(void *buf, int len);
    XrdClientMessage *ReadMsg();
+   void        SetAsync(XrdClientAbsUnsolMsgHandler *uh, XrdProofConnSender_t = 0, void * = 0);
    int         WriteRaw(const void *buf, int len);
 };
 

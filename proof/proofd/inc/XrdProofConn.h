@@ -53,6 +53,9 @@ class XrdSysRecMutex;
 class XrdSecProtocol;
 class XrdSysPlugin;
 
+// Generic sender
+typedef int (*XrdProofConnSender_t)(const char *, int, void *);
+
 class XrdProofConn  : public XrdClientAbsUnsolMsgHandler {
 
 friend class TXSocket;
@@ -91,6 +94,9 @@ private:
 
    XrdClientAbsUnsolMsgHandler *fUnsolMsgHandler; // Handler of unsolicited responses
 
+   XrdProofConnSender_t fSender;      // Generic message forwarder
+   void                *fSenderArg;   // Optional rgument for the message forwarder
+
    XrdClientUrlInfo    fUrl;           // Connection URL info object with
 
    static XrdClientConnectionMgr *fgConnMgr; //Connection Manager
@@ -113,11 +119,9 @@ private:
    virtual bool        GetAccessToSrv();
    virtual bool        Init(const char *url = 0);
    bool                Login();
-   XReqErrorType       LowWrite(XPClientRequest *, const void *, int);
    bool                MatchStreamID(struct ServerResponseHeader *resp);
    XrdClientMessage   *SendRecv(XPClientRequest *req,
                                 const void *reqData, char **answData);
-   virtual void        SetAsync(XrdClientAbsUnsolMsgHandler *uh);
 
    void                SetInterrupt();
 
@@ -138,12 +142,15 @@ public:
 
    bool                IsValid() const;
 
+   XReqErrorType       LowWrite(XPClientRequest *, const void *, int);
+
    // Send, Recv interfaces
    virtual int         ReadRaw(void *buf, int len);
    virtual XrdClientMessage *ReadMsg();
    XrdClientMessage   *SendReq(XPClientRequest *req, const void *reqData,
                                char **answData, const char *CmdName,
                                bool notifyerr = 1);
+   virtual void        SetAsync(XrdClientAbsUnsolMsgHandler *uh, XrdProofConnSender_t = 0, void * = 0);
    void                SetSID(kXR_char *sid);
    virtual int         WriteRaw(const void *buf, int len);
 

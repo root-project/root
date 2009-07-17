@@ -244,7 +244,8 @@ void XrdProofPhyConn::Close(const char *)
 }
 
 //_____________________________________________________________________________
-void XrdProofPhyConn::SetAsync(XrdClientAbsUnsolMsgHandler *uh)
+void XrdProofPhyConn::SetAsync(XrdClientAbsUnsolMsgHandler *uh,
+                               XrdProofConnSender_t, void *)
 {
    // Set handler of unsolicited responses
 

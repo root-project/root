@@ -100,7 +100,7 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
    : fMode(m), fConnected(0), fLogConnID(-1), fStreamid(0), fRemoteProtocol(-1),
      fServerProto(-1), fServerType(kSTNone), fSessionID(psid),
      fLastErr(kXR_Unsupported), fCapVer(capver), fLoginBuffer(logbuf), fMutex(0),
-     fPhyConn(0), fUnsolMsgHandler(uh)
+     fPhyConn(0), fUnsolMsgHandler(uh), fSender(0), fSenderArg(0)
 {
    // Constructor. Open the connection to a remote XrdProofd instance.
    // The mode 'm' indicates the role of this connection:
@@ -389,7 +389,7 @@ void XrdProofConn::Close(const char *opt)
 
 //_____________________________________________________________________________
 UnsolRespProcResult XrdProofConn::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
-                                                        XrdClientMessage *)
+                                                        XrdClientMessage *m)
 {
    // We are here if an unsolicited response comes from a logical conn
    // The response comes in the form of an XrdClientMessage *, that must NOT be
@@ -400,16 +400,57 @@ UnsolRespProcResult XrdProofConn::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender 
 
    TRACE(DBG,"processing unsolicited response");
 
+   if (!m || m->IsError()) {
+      TRACE(XERR, "Got empty or error unsolicited message");
+   } else {
+      // Check length
+      int len = 0;
+      if ((len = m->DataLen()) < (int)sizeof(kXR_int32)) {
+         TRACE(XERR, "empty or bad-formed message - ignoring");
+         return kUNSOL_KEEP;
+      }
+      // The first 4 bytes contain the action code
+      kXR_int32 acod = 0;
+      memcpy(&acod, m->GetData(), sizeof(kXR_int32));
+      //
+      // Update pointer to data
+      void *pdata = (void *)((char *)(m->GetData()) + sizeof(kXR_int32));
+      //
+      // Only interested in service messages
+      if (acod == kXPD_srvmsg) {
+         // The next 4 bytes may contain a flag to control the way the message is displayed
+         kXR_int32 opt = 0;
+         memcpy(&opt, pdata, sizeof(kXR_int32));
+         opt = ntohl(opt);
+         if (opt == 0 || opt == 1 || opt == 2) {
+            // Update pointer to data
+            pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+            len -= sizeof(kXR_int32);
+         } else {
+            opt = 1;
+         }
+         // Send up, if required
+         if (fSender) {
+            (*fSender)((const char *)pdata, len, fSenderArg);
+         }
+      }
+   }
+
    return kUNSOL_KEEP;
 }
 
 //_____________________________________________________________________________
-void XrdProofConn::SetAsync(XrdClientAbsUnsolMsgHandler *uh)
+void XrdProofConn::SetAsync(XrdClientAbsUnsolMsgHandler *uh,
+                            XrdProofConnSender_t sender, void *arg)
 {
    // Set handler of unsolicited responses
 
    if (fgConnMgr && (fLogConnID > -1)  && fgConnMgr->GetConnection(fLogConnID))
       fgConnMgr->GetConnection(fLogConnID)->UnsolicitedMsgHandler = uh;
+
+   // Set also the sender method and its argument, if required
+   fSender = sender;
+   fSenderArg = arg;
 }
 
 //_____________________________________________________________________________
@@ -839,7 +880,7 @@ int XrdProofConn::WriteRaw(const void *buf, int len)
 //_____________________________________________________________________________
 int XrdProofConn::ReadRaw(void *buf, int len)
 {
-   // Low level write call
+   // Low level receive call
 
    if (fgConnMgr)
       return fgConnMgr->ReadRaw(fLogConnID, buf, len);
@@ -1328,3 +1369,4 @@ bool XrdProofConn::IsValid() const
    // Invalid
    return 0;
 }
+
