@@ -521,6 +521,11 @@ Bool_t TGuiBldToolButton::HandleCrossing(Event_t *event)
    } else {
       fBgndColor = TRootGuiBuilder::GetBgnd();
    }
+   if (event->fType == kLeaveNotify) {
+      fBgndColor = TRootGuiBuilder::GetBgnd();
+      if (fState != kButtonDisabled && fState != kButtonEngaged)
+         SetState(kButtonUp, kFALSE);
+   }
    DoRedraw();
 
    return kTRUE;
@@ -600,11 +605,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
       TGToolTip *tip = pb->GetToolTip();
       tip->SetDelay(200);
 
-      TString text = "UpdateStatusBar(=\"";
-      text += gToolBarData[i].fTipText;
-      text += " \" )";
-
-      tip->Connect("Reset()", "TRootGuiBuilder", this, text.Data());
+      tip->Connect("Reset()", "TRootGuiBuilder", this, "UpdateStatusBar(=0)");
       tip->Connect("Hide()", "TRootGuiBuilder", this, "EraseStatusBar()");
 
       fToolBar->AddButton(this, pb, spacing);

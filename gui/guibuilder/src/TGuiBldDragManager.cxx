@@ -274,7 +274,7 @@ void TGuiBldMenuDialog::Add(const char *argname, const char *value, const char *
    b->AddText(0, value);
    TGTextEntry  *t = new TGTextEntry(this, b);
 
-   t->Connect("ReturnPressed", "TGuiBldDragManager", gGuiBldDragManager, "DoDialogOK()");
+   t->Connect("ReturnPressed()", "TGuiBldDragManager", gGuiBldDragManager, "DoDialogOK()");
    t->Resize(260, t->GetDefaultHeight());
    AddFrame(l, fL1);
    AddFrame(t, fL2);
