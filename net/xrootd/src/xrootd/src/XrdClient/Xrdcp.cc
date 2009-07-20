@@ -955,7 +955,7 @@ int doCp_loc2xrd(XrdClient **xrddest, const char *src, const char * dst) {
    gettimeofday(&abs_start_time,&tz);
 
    // Open the input file (loc)
-   cpnfo.localfile = open(src, O_RDONLY);   
+   cpnfo.localfile = open(src, O_RDONLY | O_BINARY);   
    if (cpnfo.localfile < 0) {
       cerr << "Error '" << strerror(errno) << "' opening " << src << endl;
       cpnfo.localfile = 0;

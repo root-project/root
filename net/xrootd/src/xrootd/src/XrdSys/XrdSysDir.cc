@@ -48,6 +48,10 @@ XrdSysDir::XrdSysDir(const char *path)
          lasterr = EINVAL;
          dhandle = 0;
       }
+      else if (!(filedata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+         lasterr = ENOTDIR;
+         dhandle = 0;
+      }
 #endif
    } else
       // Invalid argument
