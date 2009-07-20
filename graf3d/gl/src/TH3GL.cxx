@@ -34,19 +34,15 @@ ClassImp(TH3GL);
 
 //______________________________________________________________________________
 TH3GL::TH3GL() :
-   TGLObject(), fM(0), fPlotPainter(0)
+   TGLPlot3D(), fM(0)
 {
    // Constructor.
-
-   fDLCache = kFALSE; // Disable display list.
 }
 
 //______________________________________________________________________________
 TH3GL::~TH3GL()
 {
    // Destructor.
-
-   delete fPlotPainter;
 }
 
 /******************************************************************************/
@@ -59,12 +55,13 @@ Bool_t TH3GL::SetModel(TObject* obj, const Option_t* opt)
    TString option(opt);
    option.ToLower();
 
-   if (SetModelCheckClass(obj, TH3::Class())) {
+   if (SetModelCheckClass(obj, TH3::Class()))
+   {
       fM = dynamic_cast<TH3*>(obj);
       if (option.Index("iso") != kNPOS)
-         fPlotPainter = new TGLIsoPainter(fM, 0, &fCoord);
+         SetPainter( new TGLIsoPainter(fM, 0, &fCoord) );
       else if (option.Index("box") != kNPOS)
-         fPlotPainter = new TGLBoxPainter(fM, 0, &fCoord);
+         SetPainter( new TGLBoxPainter(fM, 0, &fCoord) );
 
       fPlotPainter->AddOption(option);
       fPlotPainter->InitGeometry();
@@ -103,6 +100,7 @@ void TH3GL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    // Axes
    TGLAxisPainterBox axe_painter;
+   axe_painter.SetUseAxisColors(kFALSE);
    axe_painter.SetFontMode(TGLFont::kPixmap);
    axe_painter.PlotStandard(rnrCtx, fM, fBoundingBox);
 }

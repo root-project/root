@@ -36,19 +36,15 @@ ClassImp(TH2GL);
 
 //______________________________________________________________________________
 TH2GL::TH2GL() :
-TGLObject(), fM(0), fPlotPainter(0)
+   TGLPlot3D(), fM(0)
 {
    // Constructor.
-
-   fDLCache = kFALSE; // Disable display list.
 }
 
 //______________________________________________________________________________
 TH2GL::~TH2GL()
 {
    // Destructor.
-
-   delete fPlotPainter;
 }
 
 //______________________________________________________________________________
@@ -65,14 +61,9 @@ Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
 
       // Plot type
       if (option.Index("surf") != kNPOS)
-         fPlotPainter = new TGLSurfacePainter(fM, 0, &fCoord);
+         SetPainter( new TGLSurfacePainter(fM, 0, &fCoord) );
       else
-         fPlotPainter = new TGLLegoPainter(fM, 0, &fCoord);
-
-      // Coord-system
-      fCoord.SetXLog(gPad->GetLogx());
-      fCoord.SetYLog(gPad->GetLogy());
-      fCoord.SetZLog(gPad->GetLogz());
+         SetPainter( new TGLLegoPainter(fM, 0, &fCoord) );
 
       if (option.Index("sph") != kNPOS)
          fCoord.SetCoordType(kGLSpherical);
@@ -116,6 +107,7 @@ void TH2GL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    // Axes
    TGLAxisPainterBox axe_painter;
+   axe_painter.SetUseAxisColors(kFALSE);
    axe_painter.SetFontMode(TGLFont::kPixmap);
    axe_painter.PlotStandard(rnrCtx, fM, fBoundingBox);
 }

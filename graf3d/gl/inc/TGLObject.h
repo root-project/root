@@ -13,7 +13,7 @@
 #define ROOT_TGLObject
 
 #include "TGLLogicalShape.h"
-#include <TMap.h>
+#include "TMap.h"
 
 class TClass;
 

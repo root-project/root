@@ -37,7 +37,8 @@ EVEH2     := TEveArrow TEveBoxSet TEveCalo \
              TEveGridStepper TEveLegoEventHandler \
              TEveLine TEvePointSet TEvePolygonSetProjected TEveQuadSet \
              TEveRGBAPalette TEveScalableStraightLineSet TEveStraightLineSet \
-             TEveText TEveTrack TEveTriangleSet TEveJetCone
+             TEveText TEveTrack TEveTriangleSet TEveJetCone \
+	     TEvePlot3D
 
 EVEH1     := $(foreach stem, $(EVEH1), $(wildcard $(MODDIRI)/$(stem)*.h))
 EVEH2     := $(foreach stem, $(EVEH2), $(wildcard $(MODDIRI)/$(stem)*.h))

@@ -745,8 +745,8 @@ void TGLBoundingBox::Dump() const
    for (UInt_t i = 0; i<8; i++) {
       std::cout << "[" << i << "] (" << fVertex[i].X() << "," << fVertex[i].Y() << "," << fVertex[i].Z() << ")" << std::endl;
    }
-   std::cout << "Center ";
-   Center().Dump();
-   std::cout << " Volume " << Volume() << std::endl;
+   std::cout << "Center:  ";   Center().Dump();
+   std::cout << "Extents: ";   Extents().Dump();
+   std::cout << "Volume:  " << Volume() << std::endl;
 }
 

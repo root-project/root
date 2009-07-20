@@ -41,7 +41,7 @@ TGLAxisPainter::TGLAxisPainter():
    fMaxDigits(5),
    fDecimals(0),
 
-   fAttAxis(0),
+   fAttAxis(0), fUseAxisColors(kTRUE),
 
    fFontMode(TGLFont::kTexture),
    fDir(1, 0, 0),
@@ -265,7 +265,8 @@ void TGLAxisPainter::RnrLabels() const
 {
    // Render label reading prepared list ov value-pos pairs.
 
-   TGLUtil::Color(fAttAxis->GetLabelColor());
+   if (fUseAxisColors)
+      TGLUtil::Color(fAttAxis->GetLabelColor());
 
    glPushMatrix();
 
@@ -311,7 +312,9 @@ void TGLAxisPainter::RnrTitle(const char* txt, TGLVector3 &pos , TGLFont::ETextA
 {
    // Draw title at given position.
 
-   TGLUtil::Color(fAttAxis->GetTitleColor());
+   if (fUseAxisColors)
+      TGLUtil::Color(fAttAxis->GetTitleColor());
+
    const char* title = (fExp) ? Form("%s [10^%d]", fExp, txt) : txt;
    fTitleFont.PreRender();
    RnrText(title, pos, align, fTitleFont);
@@ -323,7 +326,9 @@ void TGLAxisPainter::RnrLines() const
 {
    // Render axis main line and tickmarks.
 
-   TGLUtil::Color(fAttAxis->GetAxisColor());
+   if (fUseAxisColors)
+      TGLUtil::Color(fAttAxis->GetAxisColor());
+
    glBegin(GL_LINES);
 
    // Main line.
@@ -462,6 +467,9 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
 
    //______________________________________________________________________________
    // Draw.
+
+   if (!fUseAxisColors)
+      TGLUtil::Color(rnrCtx.ColorSet().Markup());
 
    glDisable(GL_LIGHTING);
    RnrLines();

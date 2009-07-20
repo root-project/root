@@ -32,11 +32,9 @@
 ClassImp(TF2GL);
 
 //______________________________________________________________________________
-TF2GL::TF2GL() : TGLObject(), fM(0), fH(0)
+TF2GL::TF2GL() : TGLPlot3D(), fM(0), fH(0)
 {
    // Constructor.
-
-   fDLCache = kFALSE; // Disable display list.
 }
 
 //______________________________________________________________________________
@@ -45,7 +43,6 @@ TF2GL::~TF2GL()
    // Destructor.
 
    delete fH;
-   delete fPlotPainter;
 }
 
 /**************************************************************************/
@@ -58,21 +55,16 @@ Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
    TString option(opt);
    option.ToLower();
 
-   if(SetModelCheckClass(obj, TF2::Class()))
+   if (SetModelCheckClass(obj, TF2::Class()))
    {
       fM = dynamic_cast<TF2*>(obj);
       fH = (TH2*) fM->CreateHistogram();
       fH->GetZaxis()->SetLimits(fH->GetMinimum(), fH->GetMaximum());
 
       if (dynamic_cast<TF3*>(fM))
-         fPlotPainter = new TGLTF3Painter((TF3*)fM, fH, 0, &fCoord);
+         SetPainter( new TGLTF3Painter((TF3*)fM, fH, 0, &fCoord) );
       else
-         fPlotPainter = new TGLSurfacePainter(fH, 0, &fCoord);
-
-      // Coord-system
-      fCoord.SetXLog(gPad->GetLogx());
-      fCoord.SetYLog(gPad->GetLogy());
-      fCoord.SetZLog(gPad->GetLogz());
+         SetPainter( new TGLSurfacePainter(fH, 0, &fCoord) );
 
       if (option.Index("sph") != kNPOS)
          fCoord.SetCoordType(kGLSpherical);
@@ -117,6 +109,7 @@ void TF2GL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    // Axes
    TGLAxisPainterBox axe_painter;
+   axe_painter.SetUseAxisColors(kFALSE);
    axe_painter.SetFontMode(TGLFont::kPixmap);
    axe_painter.PlotStandard(rnrCtx, fH, fBoundingBox);
 }

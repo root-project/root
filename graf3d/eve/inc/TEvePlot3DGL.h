@@ -1,5 +1,5 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// Author: Matevz Tadel, 2009
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -9,31 +9,32 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TH3GL
-#define ROOT_TH3GL
+#ifndef ROOT_TEvePlot3DGL
+#define ROOT_TEvePlot3DGL
 
-#include "TGLPlot3D.h"
-#include <TGLUtil.h>
-#include <TGLAxisPainter.h>
+#include "TGLObject.h"
 
-class TGLRnrCtx;
-class TH3;
-class TAxis;
+class TGLViewer;
+class TGLScene;
 
-class TH3;
+class TEvePlot3D;
+class TGLPlot3D;
 
-class TH3GL : public TGLPlot3D
+class TEvePlot3DGL : public TGLObject
 {
 private:
-   TH3GL(const TH3GL&);            // Not implemented
-   TH3GL& operator=(const TH3GL&); // Not implemented
+   TEvePlot3DGL(const TEvePlot3DGL&);            // Not implemented
+   TEvePlot3DGL& operator=(const TEvePlot3DGL&); // Not implemented
 
 protected:
-   TH3                *fM;  // Model object dynamic-casted to TH2.
+   TEvePlot3D      *fM;           // Model object.
+   TGLPlot3D       *fPlotLogical; // Actual painter.
 
 public:
-   TH3GL();
-   virtual ~TH3GL();
+   TEvePlot3DGL();
+   virtual ~TEvePlot3DGL() {}
+
+   virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
@@ -44,7 +45,7 @@ public:
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
-   ClassDef(TH3GL, 0); // GL renderer class for TH3.
+   ClassDef(TEvePlot3DGL, 0); // GL renderer class for TEvePlot3D.
 };
 
 #endif

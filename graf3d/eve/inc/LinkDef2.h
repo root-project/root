@@ -123,14 +123,14 @@
 // TEveLegoEventHandler
 #pragma link C++ class TEveLegoEventHandler+;
 
-
 // TEveJetCone
 #pragma link C++ class TEveJetCone+;
 #pragma link C++ class TEveJetConeEditor+;
 #pragma link C++ class TEveJetConeGL+;
 
-//______________________________________________________________________________
-// Helper classes
+// TEvePlots
+#pragma link C++ class TEvePlot3D+;
+#pragma link C++ class TEvePlot3DGL+;
 
 // TEveFrameBox
 #pragma link C++ class TEveFrameBox+;

@@ -12,15 +12,13 @@
 #ifndef ROOT_TF2GL
 #define ROOT_TF2GL
 
-#include <TGLObject.h>
+#include <TGLPlot3D.h>
 
 class TGLRnrCtx;
 class TF2;
 class TH2;
 
-#include "TGLPlotPainter.h"
-
-class TF2GL : public TGLObject
+class TF2GL : public TGLPlot3D
 {
 private:
    TF2GL(const TF2GL&);            // Not implemented
@@ -29,9 +27,6 @@ private:
 protected:
    TF2                *fM; // fModel dynamic-casted to TH2
    TH2                *fH; // Visualization histogram.
-
-   TGLPlotPainter     *fPlotPainter;
-   TGLPlotCoordinates  fCoord;
 
 public:
    TF2GL();

@@ -31,15 +31,7 @@
 #include "TList.h"
 #include "TMath.h"
 
-// Preliminary support for GL plot painters
-#include "TH3.h"
-#include "TH3GL.h"
-#include "TH2.h"
-#include "TH2GL.h"
-#include "TF2.h"
-#include "TF2GL.h"
-#include "TGLParametric.h"
-#include "TGLParametricEquationGL.h"
+#include "TGLPlot3D.h"
 
 
 //______________________________________________________________________________
@@ -86,6 +78,7 @@ void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log)
    Double_t lm = TMath::Min(lw, lh);
 
    const TGLBoundingBox& bb = log->BoundingBox();
+
    // Timur always packs histos in a square: let's just take x-diff.
    Double_t size  = TMath::Sqrt(3) * (bb.XMax() - bb.XMin());
    Double_t scale = lm / size;
@@ -153,14 +146,9 @@ void TGLScenePad::ObjectPaint(TObject* obj, Option_t* opt)
    // Special handling of 2D/3D histograms to activate Timur's
    // histo-painters.
 
-   if (obj->InheritsFrom(TH3::Class()))
+   TGLPlot3D* log = TGLPlot3D::CreatePlot(obj, opt, gPad);
+   if (log)
    {
-      // TH3 in principle inherits from TAtt3D, but it gets painted
-      // via the histo-painters - which we need to bypass.
-      // printf("histo 3d\n");
-      TGLObject* log = new TH3GL();
-      log->SetModel(obj, opt);
-      log->SetBBox();
       AdoptLogical(*log);
       AddHistoPhysical(log);
    }
@@ -169,33 +157,6 @@ void TGLScenePad::ObjectPaint(TObject* obj, Option_t* opt)
       //Since TH3's derived from TAtt3D, it should be checked here.
       //printf("normal-painting %s / %s\n", obj->GetName(), obj->ClassName());
       obj->Paint(opt);
-   }
-   else if (obj->InheritsFrom(TH2::Class()))
-   {
-      // printf("histo 2d\n");
-      TGLObject* log = new TH2GL();
-      log->SetModel(obj, opt);
-      log->SetBBox();
-      AdoptLogical(*log);
-      AddHistoPhysical(log);
-   }
-   else if (obj->InheritsFrom(TF2::Class()))
-   {
-      // printf("func 2d\n");
-      TGLObject* log = new TF2GL();
-      log->SetModel(obj, opt);
-      log->SetBBox();
-      AdoptLogical(*log);
-      AddHistoPhysical(log);
-   }
-   else if (obj->InheritsFrom(TGLParametricEquation::Class()))
-   {
-      // printf("parametric\n");
-      TGLObject* log = new TGLParametricEquationGL();
-      log->SetModel(obj, opt);
-      log->SetBBox();
-      AdoptLogical(*log);
-      AddHistoPhysical(log);
    }
    else if (obj->InheritsFrom(TVirtualPad::Class()))
    {

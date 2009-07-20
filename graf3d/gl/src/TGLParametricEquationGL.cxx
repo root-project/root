@@ -28,19 +28,15 @@
 ClassImp(TGLParametricEquationGL);
 
 //______________________________________________________________________________
-TGLParametricEquationGL::TGLParametricEquationGL() : TGLObject(), fM(0)
+TGLParametricEquationGL::TGLParametricEquationGL() : TGLPlot3D(), fM(0)
 {
    // Constructor.
-
-   fDLCache = kFALSE; // Disable display list.
 }
 
 //______________________________________________________________________________
 TGLParametricEquationGL::~TGLParametricEquationGL()
 {
    // Destructor.
-
-   delete fPlotPainter;
 }
 
 //______________________________________________________________________________
@@ -48,10 +44,10 @@ Bool_t TGLParametricEquationGL::SetModel(TObject* obj, const Option_t* opt)
 {
    // Set model object.
 
-   if(SetModelCheckClass(obj, TGLParametricEquation::Class()))
+   if (SetModelCheckClass(obj, TGLParametricEquation::Class()))
    {
       fM = dynamic_cast<TGLParametricEquation*>(obj);
-      fPlotPainter = new TGLParametricPlot(fM, 0);
+      SetPainter( new TGLParametricPlot(fM, 0) );
       TString option(opt);
       fPlotPainter->AddOption(option);
       fPlotPainter->InitGeometry();

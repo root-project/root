@@ -12,19 +12,14 @@
 #ifndef ROOT_TGLParametricEquationGL
 #define ROOT_TGLParametricEquationGL
 
-#ifndef ROOT_TGLObject
-#include "TGLObject.h"
-#endif
-#ifndef ROOT_TGLPlotPainter
-#include "TGLPlotPainter.h"
-#endif
+#include "TGLPlot3D.h"
 
 class TGLRnrCtx;
 class TGLParametricEquation;
 class TH2;
 
 
-class TGLParametricEquationGL : public TGLObject
+class TGLParametricEquationGL : public TGLPlot3D
 {
 private:
    TGLParametricEquationGL(const TGLParametricEquationGL&);            // Not implemented
@@ -32,7 +27,6 @@ private:
 
 protected:
    TGLParametricEquation  *fM;
-   TGLPlotPainter         *fPlotPainter;
 
 public:
    TGLParametricEquationGL();

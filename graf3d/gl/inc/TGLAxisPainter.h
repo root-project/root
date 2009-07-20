@@ -53,6 +53,7 @@ private:
 
 protected:
    TAttAxis        *fAttAxis;    // Model.
+   Bool_t           fUseAxisColors; // Use colors from axes or from GL-rnr-ctx.
    TGLFont::EMode   fFontMode;   // To be put into TAttAxis
    LabVec_t         fLabVec;     // List of Labels position-value pairs
    TMVec_t          fTMVec;      // List of tick-mark position-value pairs
@@ -106,6 +107,9 @@ public:
 
    void      SetAttAxis(TAttAxis* a) { fAttAxis = a; }
    TAttAxis* GetAttAxis() { return fAttAxis; }
+
+   void   SetUseAxisColors(Bool_t x) { fUseAxisColors = x;    }
+   Bool_t GetUseAxisColors() const   { return fUseAxisColors; }
 
    // Utility.
    void SetLabelFont(TGLRnrCtx &rnrCtx, const char* fontName, Int_t pixelSize = 64, Double_t font3DSize = -1);

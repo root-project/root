@@ -1316,7 +1316,7 @@ void TGLColorSet::StdLightBackground()
    fBackground .SetColor(255, 255, 255);
    fForeground .SetColor(0,   0,   0);
    fOutline    .SetColor(0,   0,   0);
-   fMarkup     .SetColor(100, 100, 100);
+   fMarkup     .SetColor(55,  55,  55);
 
    fSelection[0].SetColor(0,   0,   0);
    fSelection[1].SetColor(200, 100, 100);
