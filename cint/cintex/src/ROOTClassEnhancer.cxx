@@ -9,53 +9,66 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#include "Api.h"
-#include "CINTFunctional.h"
-#include "CINTdefs.h"
-#include "Cintex/Cintex.h"
 #include "ROOTClassEnhancer.h"
-#include "RVersion.h"
-#include "Reflex/Builder/CollectionProxy.h"
-#include "Reflex/Builder/TypeBuilder.h"
-#include "Reflex/Reflex.h"
-#include "Reflex/Tools.h"
-#include "Rtypes.h"
+#include "CINTdefs.h"
+#include "CINTFunctional.h"
+#include "Cintex/Cintex.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
-#include "TClassStreamer.h"
 #include "TClassTable.h"
+#include "TClassStreamer.h"
 #include "TCollectionProxyInfo.h"
-#include "TMemberInspector.h"
-#include "TROOT.h"
 #include "TVirtualCollectionProxy.h"
-
+#include "TMemberInspector.h"
+#include "RVersion.h"
+#include "Reflex/Reflex.h"
+#include "Reflex/Tools.h"
+#include "Reflex/Builder/TypeBuilder.h"
+#include "Reflex/Builder/CollectionProxy.h"
+#include "Api.h"
 #define G__DICTIONARY
 #include "RtypesImp.h"
 #undef  G__DICTIONARY
+
+#include <sstream>
+#include <memory>
 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
 #include "TVirtualIsAProxy.h"
 #endif
 
-#include <map>
-#include <memory>
-#include <sstream>
-#include <string>
-#include <typeinfo>
-
 using namespace ROOT::Reflex;
 using namespace ROOT::Cintex;
 using namespace std;
 
-namespace ROOT {
-namespace Cintex {
+namespace ROOT { namespace Cintex {
 
    class IsAProxy;
 
-   class ROOTClassEnhancerInfo {
+   class ROOTClassEnhancerInfo  {
+
+      Type                     fType;
+      string                   fName;
+      TClass*                  fTclass;
+      TClass*                  fLastClass;
+      std::map<const std::type_info*,TClass*> fSub_types;
+      const  std::type_info*   fLastType;
+      const  std::type_info*   fMyType;
+      bool                     fIsVirtual;
+      ROOT::TGenericClassInfo* fClassInfo;
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
+      IsAProxy*                fIsa_func;
+#else
+      IsAFunc_t                fIsa_func;
+#endif
+      VoidFuncPtr_t            fDictionary_func;
+      Int_t                    fVersion;
+
    public:
       ROOTClassEnhancerInfo(Type& t);
       virtual ~ROOTClassEnhancerInfo();
+
       virtual void Setup(void);
       virtual void CreateInfo(void);
       TClass* Tclass() {
@@ -68,6 +81,9 @@ namespace Cintex {
       const string& Name() const { return fName; }
       ROOT::TGenericClassInfo* Info() const { return fClassInfo; }
       Int_t         Version() const {return fVersion;}
+
+      void AddFunction( const std::string& Name, const ROOT::Reflex::Type& sig,
+                        ROOT::Reflex::StubFunction stubFP, void*  stubCtx, int );
       TClass* IsA(const void* obj);
       static void* Stub_IsA2(void* ctxt, void* obj);
       static void Stub_IsA(void* ret, void*, const std::vector<void*>&, void*);
@@ -78,23 +94,6 @@ namespace Cintex {
       static void Stub_ShowMembers(TClass*, const ROOT::Reflex::Type&, void*, TMemberInspector&, char*);
       static void Stub_Dictionary( void* ctx );
       static TClass* Default_CreateClass(Type typ, ROOT::TGenericClassInfo* info);
-   private:
-      Reflex::Type fType;
-      std::string fName;
-      TClass* fTclass;
-      TClass* fLastClass;
-      std::map<const std::type_info*, TClass*> fSub_types;
-      const std::type_info* fLastType;
-      const std::type_info* fMyType;
-      bool fIsVirtual;
-      ROOT::TGenericClassInfo* fClassInfo;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
-      IsAProxy* fIsa_func;
-#else
-      IsAFunc_t fIsa_func;
-#endif
-      VoidFuncPtr_t fDictionary_func;
-      Int_t fVersion;
    };
 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
@@ -109,26 +108,36 @@ namespace Cintex {
    };
 #endif
 
-   static std::map<std::string, ROOTClassEnhancerInfo*> rootEnhancerInfos;
+   class ROOTEnhancerCont : public std::vector<ROOTClassEnhancerInfo*>  {
+   public:
+      ROOTEnhancerCont() {}
+      ~ROOTEnhancerCont()  {
+         for(std::vector<ROOTClassEnhancerInfo*>::iterator j=begin(); j!= end(); ++j)
+            delete (*j);
+         clear();
+      }
+   };
+
+   std::vector<ROOTClassEnhancerInfo*>& rootEnhancerInfos()  {
+      static ROOTEnhancerCont s_cont;
+      return s_cont;
+   }
 
    ROOTClassEnhancer::ROOTClassEnhancer(const ROOT::Reflex::Type& cl)  {
       // Constructor.
       fClass = CleanType(cl);
       fName  = CintName(fClass);
-      VoidFuncPtr_t dict_func = TClassTable::GetDict(fName.c_str());
-      if (dict_func) {
-         fEnhancerinfo = 0; // Prevent adding the TClass to root twice.
-      }
-      else {
-         fEnhancerinfo = new ROOTClassEnhancerInfo(fClass);
-         rootEnhancerInfos[fName] = fEnhancerinfo;
-         fEnhancerinfo->Setup();
-      }
    }
 
    ROOTClassEnhancer::~ROOTClassEnhancer() {
       // Destructor.
-      //delete fEnhancerinfo; // No, we are not the owner, rootEnchancerInfos is.
+   }
+
+   void ROOTClassEnhancer::Setup() {
+      // Enhance root class info.
+      ROOTClassEnhancerInfo* p = new ROOTClassEnhancerInfo(fClass);
+      fEnhancerinfo = p;
+      p->Setup();
    }
 
    void ROOTClassEnhancer::CreateInfo() {
@@ -155,6 +164,7 @@ namespace Cintex {
       // Constructor.
       fType = CleanType(t);
       fName = CintName(fType);
+      rootEnhancerInfos().push_back(this);
       fMyType = &t.TypeInfo();
       fIsVirtual = TypeGet().IsVirtual();
       fClassInfo = 0;
@@ -208,17 +218,17 @@ namespace Cintex {
          Member exists = fType.FunctionMemberByName("StreamerNVirtual", signature,
                                                     0, INHERITEDMEMBERS_NO, DELAYEDLOAD_OFF);
          if (!exists) {
-            fType.AddFunctionMember("Streamer", signature, Stub_Streamer, ctxt, 0, PUBLIC | VIRTUAL);
-            fType.AddFunctionMember("StreamerNVirtual", signature, Stub_StreamerNVirtual, ctxt, 0, PUBLIC);
+            AddFunction("Streamer", signature, Stub_Streamer, ctxt, VIRTUAL);
+            AddFunction("StreamerNVirtual", signature, Stub_StreamerNVirtual, ctxt, 0);
 
             //--- adding TClass* IsA()
             signature = FunctionTypeBuilder( PointerBuilder(TypeBuilder("TClass")));
-            fType.AddFunctionMember("IsA", signature, Stub_IsA, ctxt, 0, PUBLIC);
+            AddFunction("IsA", signature, Stub_IsA, ctxt, 0);
             //--- adding void Data_ShowMembers(void *, TMemberInspector&, char*)
             signature = FunctionTypeBuilder( void_t,
                                              ReferenceBuilder(TypeBuilder("TMemberInspector")),
                                              PointerBuilder(char_t));
-            fType.AddFunctionMember("ShowMembers", signature, Stub_ShowMembers, ctxt, 0, PUBLIC | VIRTUAL);
+            AddFunction("ShowMembers", signature, Stub_ShowMembers, ctxt, VIRTUAL);
 
             //--- create TGenericClassInfo Instance
             //createInfo();
@@ -303,6 +313,16 @@ namespace Cintex {
                         "",                // implementation file
                         1,                    // definition line number
                         1 );                  // implementation line number
+   }
+
+   void ROOTClassEnhancerInfo::AddFunction( const std::string& name,
+                                            const Type & sig,
+                                            StubFunction stubFP,
+                                            void*  stubCtx,
+                                            int mods)
+   {
+      // Add function info.
+      fType.AddFunctionMember( name.c_str(), sig, stubFP, stubCtx, 0, PUBLIC | mods );
    }
 
    inline static ROOTClassEnhancerInfo& context(void* ctxt)  {
@@ -557,5 +577,4 @@ namespace Cintex {
          if( bcl ) Stub_ShowMembers( bcl, BaseNth.ToType(), ptr, insp, par);
       }
    }
-}
-}
+}}

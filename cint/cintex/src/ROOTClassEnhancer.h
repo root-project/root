@@ -23,12 +23,11 @@ namespace ROOT {
 
    namespace Cintex {
 
-      class ROOTClassEnhancerInfo;
-
       class ROOTClassEnhancer {
       public:
          ROOTClassEnhancer(const Reflex::Type& TypeNth);
          ~ROOTClassEnhancer();
+         void Setup(void);
          void CreateInfo(void);
          static void CreateClassForNamespace(const std::string&);
          static TClass* Default_CreateClass(Reflex::Type typ, ROOT::TGenericClassInfo* info);
@@ -36,7 +35,7 @@ namespace ROOT {
       private:
          ROOT::Reflex::Type  fClass;
          std::string         fName;
-         ROOTClassEnhancerInfo*  fEnhancerinfo;
+         void*               fEnhancerinfo;
       };
     
    }

@@ -181,6 +181,7 @@ namespace ROOT {
          int autoload = G__set_class_autoloading(0); // To avoid recursive loads
          if ( t.IsClass() || t.IsStruct() ) {
             ROOTClassEnhancer enhancer(t);
+            enhancer.Setup();
             CINTClassBuilder::Get(t).Setup();
             enhancer.CreateInfo();
          }
