@@ -135,9 +135,15 @@ namespace ROOT { namespace Cintex {
 
    void ROOTClassEnhancer::Setup() {
       // Enhance root class info.
-      ROOTClassEnhancerInfo* p = new ROOTClassEnhancerInfo(fClass);
-      fEnhancerinfo = p;
-      p->Setup();
+      VoidFuncPtr_t dict_func = TClassTable::GetDict(fName.c_str());
+      if (dict_func) {
+         fEnhancerinfo = 0; // Prevent adding the TClass to root twice.
+      }
+      else {
+         ROOTClassEnhancerInfo* p = new ROOTClassEnhancerInfo(fClass);
+         fEnhancerinfo = p;
+         p->Setup();
+      }
    }
 
    void ROOTClassEnhancer::CreateInfo() {
