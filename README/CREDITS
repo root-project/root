@@ -483,6 +483,10 @@ N: Grzegorz Mazur
 E: mazur@mail.desy.de
 D: class TDCacheFile, interface to DESY's dCache system
 
+N: Marco Meoni
+E: marco.meoni@cern.ch
+D: PROOF CPU quota, CAF and AliEn contributions
+
 N: Akiya Miyamoto
 E: akiya.miyamoto@kek.jp
 D: port to IBM AIX with xlC v5.x
