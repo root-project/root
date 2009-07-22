@@ -188,7 +188,13 @@ PyObject* PyROOT::TSTLStringExecutor::Execute( G__CallFunc* func, void* self )
       return PyStrings::gEmptyString;
    }
 
-   return PyString_FromString( (*result).c_str() );
+   PyObject* pyresult = PyString_FromString( result->c_str() );
+
+// stop CINT from tracking the object, then force delete
+   G__pop_tempobject_nodel();
+   delete result;
+
+   return pyresult;
 }
 
 //____________________________________________________________________________
