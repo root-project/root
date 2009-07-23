@@ -519,16 +519,29 @@ void TGFileBrowser::Update()
 {
    // Update content of the list tree.
 
+   Long64_t size = 0;
+   Long_t id = 0, flags = 0, modtime = 0;
+   char path[1024];
    TGListTreeItem *item = fCurrentDir;
    if (!item) item = fRootDir;
    //fListTree->DeleteChildren(item);
    TGListTreeItem *curr = fListTree->GetSelected(); // GetCurrent() ??
    if (curr) {
       TObject *obj = (TObject *) curr->GetUserData();
-      if (obj && obj->InheritsFrom("TObjString")) {
-         TString fullpath = FullPathName(curr);
-         if (gSystem->AccessPathName(fullpath.Data())) {
-            fListTree->DeleteItem(curr);
+      if (obj && !obj->TestBit(kNotDeleted)) {
+         fListTree->DeleteItem(curr);
+      }
+      else if (obj && obj->TestBit(kNotDeleted) &&
+               obj->InheritsFrom("TObjString") && curr->GetParent()) {
+         fListTree->GetPathnameFromItem(curr->GetParent(), path);
+         if (strlen(path) > 1) {
+            TString dirpath = FullPathName(curr->GetParent());
+            gSystem->GetPathInfo(dirpath.Data(), &id, &size, &flags, &modtime);
+            if (flags & 2) {
+               TString fullpath = FullPathName(curr);
+               if (gSystem->AccessPathName(fullpath.Data()))
+                  fListTree->DeleteItem(curr);
+            }
          }
       }
    }
@@ -621,6 +634,7 @@ void TGFileBrowser::AddKey(TGListTreeItem *itm, TObject *obj, const char *name)
       if (pic && (pic != fFileIcon) && (pic != fCachedPic))
          fClient->FreePicture(pic);
       it->SetDNDSource(kTRUE);
+      it->SetTipText(TString::Format("%s\n%s", obj->GetName(), obj->GetTitle()));
    }
    fCnt++;
 }
@@ -740,8 +754,10 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
    fListLevel = item;
    CheckRemote(item);
    if (item && btn == kButton3) {
+      TString fullpath = FullPathName(item);
       TObject *obj = (TObject *) item->GetUserData();
-      if (obj && !obj->InheritsFrom("TObjString")) {
+      if (obj && (!obj->InheritsFrom("TObjString") ||
+          gSystem->AccessPathName(fullpath.Data()))) {
          if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
             Chdir(item);
             const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", obj));
@@ -763,19 +779,19 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
       else {
          fListTree->GetPathnameFromItem(item, path);
          if (strlen(path) > 3) {
-            TString fullpath = FullPathName(item);
-            gSystem->GetPathInfo(fullpath.Data(), &id, &size, &flags, &modtime);
-            if (flags & 2) {
-               fCurrentDir = item;
-               if (fDir) delete fDir;
-               fDir = new TSystemDirectory(item->GetText(), fullpath.Data());
-               fContextMenu->Popup(x, y, fDir, fBrowser);
-            }
-            else {
-               fCurrentDir = item->GetParent();
-               if (fFile) delete fFile;
-               fFile = new TSystemFile(item->GetText(), fullpath.Data());
-               fContextMenu->Popup(x, y, fFile, fBrowser);
+            if (gSystem->GetPathInfo(fullpath.Data(), &id, &size, &flags, &modtime) == 0) {
+               if (flags & 2) {
+                  fCurrentDir = item;
+                  if (fDir) delete fDir;
+                  fDir = new TSystemDirectory(item->GetText(), fullpath.Data());
+                  fContextMenu->Popup(x, y, fDir, fBrowser);
+               }
+               else {
+                  fCurrentDir = item->GetParent();
+                  if (fFile) delete fFile;
+                  fFile = new TSystemFile(item->GetText(), fullpath.Data());
+                  fContextMenu->Popup(x, y, fFile, fBrowser);
+               }
             }
          }
       }
@@ -791,11 +807,12 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
          fListTree->GetPathnameFromItem(item, path);
          if (strlen(path) > 1) {
             TString fullpath = FullPathName(item);
-            gSystem->GetPathInfo(fullpath.Data(), &id, &size, &flags, &modtime);
-            if (flags & 2)
-               fCurrentDir = item;
-            else
-               fCurrentDir = item->GetParent();
+            if (gSystem->GetPathInfo(fullpath.Data(), &id, &size, &flags, &modtime) == 0) {
+               if (flags & 2)
+                  fCurrentDir = item;
+               else
+                  fCurrentDir = item->GetParent();
+            }
          }
       }
    }
@@ -956,7 +973,8 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             gApplication->ProcessLine("((TApplicationServer *)gApplication)->BrowseFile(0);");
          }
       }
-      if (!obj->InheritsFrom("TObjString")) {
+      if (!obj->InheritsFrom("TObjString") ||
+          gSystem->AccessPathName(fullpath.Data())) {
          obj->Browse(fBrowser);
          fNKeys = 0;
          fCnt = 0;
@@ -965,7 +983,8 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       }
    }
    flags = id = size = modtime = 0;
-   gSystem->GetPathInfo(fullpath.Data(), &id, &size, &flags, &modtime);
+   if (gSystem->GetPathInfo(fullpath.Data(), &id, &size, &flags, &modtime) != 0)
+      return;
    Int_t isdir = (Int_t)flags & 2;
 
    TString savdir = gSystem->WorkingDirectory();
