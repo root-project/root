@@ -287,30 +287,34 @@ char *TContextMenu::CreatePopupTitle(TObject *object)
 {
    // Create title for popup menu.
 
-   static char popupTitle[128];
+   static TString popupTitle;
 
    if (object) {
       if (!*(object->GetName()) || !strcmp(object->GetName(), object->ClassName())) {
          TGlobal *global = (TGlobal *) gROOT->GetGlobal(object);
          if (global && *(global->GetName()))
-            sprintf(popupTitle, "  %s::%s  ", object->ClassName(), global->GetName());
+            popupTitle.Form("  %s::%s  ", object->ClassName(), global->GetName());
          else {
             if (!strcmp(object->IsA()->GetContextMenuTitle(), ""))
-               sprintf(popupTitle, "  %s  ", object->ClassName());
+               popupTitle.Form("  %s  ", object->ClassName());
             else
-               sprintf(popupTitle, "  %s  ", object->IsA()->GetContextMenuTitle());
+               popupTitle.Form("  %s  ", object->IsA()->GetContextMenuTitle());
          }
       } else {
          if (!strcmp(object->IsA()->GetContextMenuTitle(), ""))
-            sprintf(popupTitle, "  %s::%s  ", object->ClassName(), object->GetName());
+            popupTitle.Form("  %s::%s  ", object->ClassName(), object->GetName());
          else
-            sprintf(popupTitle, "  %s::%s  ", object->IsA()->GetContextMenuTitle(),
-                    object->GetName());
+            popupTitle.Form("  %s::%s  ", object->IsA()->GetContextMenuTitle(),
+                            object->GetName());
+      }
+      if (popupTitle.Length() > 60) {
+         popupTitle.Remove(60);
+         popupTitle += "...";
       }
    } else
-      *popupTitle = 0;
+      popupTitle.Clear();
 
-   return popupTitle;
+   return StrDup(popupTitle.Data());
 }
 
 //______________________________________________________________________________
