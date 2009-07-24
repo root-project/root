@@ -520,7 +520,8 @@ void TGLBContainer::AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints)
    // Add listbox entry with hints to container. To show entry call
    // MapSubwindows() and Layout().
 
-   lbe->SetBackgroundColor(fgWhitePixel);
+   // DEPRECATED: the color should always be set in the TGLBEntry ctor
+   //lbe->SetBackgroundColor(fgWhitePixel);
 
    TGLBFrameElement *nw = new TGLBFrameElement(lbe, lhints ? lhints : fgDefaultHints);
    fList->Add(nw);
@@ -534,7 +535,8 @@ void TGLBContainer::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t aft
    // then add entry at head of list. To show entry call MapSubwindows() and
    // Layout().
 
-   lbe->SetBackgroundColor(fgWhitePixel);
+   // DEPRECATED: the color should always be set in the TGLBEntry ctor
+   //lbe->SetBackgroundColor(fgWhitePixel);
 
    TGLBEntry      *e;
    TGFrameElement *el, *nw;
@@ -569,7 +571,8 @@ void TGLBContainer::AddEntrySort(TGLBEntry *lbe, TGLayoutHints *lhints)
    // Insert listbox entry before the list box entry with a higher id.
    // To show entry call MapSubwindows() and Layout().
 
-   lbe->SetBackgroundColor(fgWhitePixel);
+   // DEPRECATED: the color should always be set in the TGLBEntry ctor
+   //lbe->SetBackgroundColor(fgWhitePixel);
 
    TGLBEntry      *e;
    TGFrameElement *el, *nw;
