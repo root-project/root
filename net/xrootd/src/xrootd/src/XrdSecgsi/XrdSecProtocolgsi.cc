@@ -676,6 +676,7 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
             PRINT("Could not expand: "<<opt.gridmap<<": use default");
          }
       }
+      bool hasgmap = 0;
       if (GMAPOpt > 0) {
          if (access(GMAPFile.c_str(),R_OK) != 0) {
             if (GMAPOpt > 1) {
@@ -689,23 +690,23 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
                return Parms;
             } else {
                DEBUG("Grid map file: "<<GMAPFile<<" cannot be 'access'ed: do not use");
-               GMAPOpt = 0;
             }
+         } else {
+            DEBUG("using grid map file: "<<GMAPFile);
+            //
+            // Init cache for gridmap entries
+            if (LoadGMAP(timestamp) != 0) {
+               ErrF(erp,kGSErrError,"problems initializing cache for gridmap entries");
+               PRINT(erp->getErrText());
+               return Parms;
+            }
+            if (QTRACE(Authen)) { cacheGMAP.Dump(); }
+            hasgmap = 1;
          }
-      }
-      if (GMAPOpt > 0) {
-         DEBUG("using grid map file: "<<GMAPFile);
-         //
-         // Init cache for gridmap entries
-         if (LoadGMAP(timestamp) != 0) {
-            ErrF(erp,kGSErrError,"problems initializing cache for gridmap entries");
-            PRINT(erp->getErrText());
-            return Parms;
-         }
-         if (QTRACE(Authen)) { cacheGMAP.Dump(); }
       }
       //
       // Load function be used to map DN to usernames, if specified
+      bool hasgmapfun = 0;
       if (opt.gmapfun && GMAPOpt > 0) {
          if (!(GMAPFun = LoadGMAPFun((const char *) opt.gmapfun,
                                      (const char *) opt.gmapfunparms))) {
@@ -723,7 +724,19 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
                   return Parms;
                }
             }
+            hasgmapfun = 1;
          }
+      }
+      //
+      // Disable GMAP if neither a grid mapfile nor a GMAP function are available
+      if (!hasgmap && !hasgmapfun) {
+         if (GMAPOpt > 1) {
+            ErrF(erp,kGSErrError,"Grid mapping required, but neither a grid mapfile"
+                                 " nor a mapping function are available");
+            PRINT(erp->getErrText());
+            return Parms;
+         }
+         GMAPOpt = 0;
       }
       //
       // Expiration of GRIDMAP related cache entries
