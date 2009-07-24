@@ -1356,7 +1356,7 @@ Bool_t TQObject::Disconnect(TQObject *sender,
    TIter next_signal(sender->GetListOfSignals());
 
    while ((slist = (TQConnectionList*)next_signal()))   {
-      if (!signal_name) {                // disconnect all signals
+      if (!signal || signal_name.IsNull()) { // disconnect all signals
          next_return = slist->Disconnect(receiver,slot_name);
          return_value = return_value || next_return;
 
