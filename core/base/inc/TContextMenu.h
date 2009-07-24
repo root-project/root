@@ -74,9 +74,9 @@ public:
    virtual void Action(TClassMenuItem *classmenuitem);
    void Action(TMethod *method) { Action(fSelectedObject, method); }
    void Action(TToggle *toggle) { Action(fSelectedObject, toggle); }
-   virtual char *CreateArgumentTitle(TMethodArg *argument);
-   virtual char *CreateDialogTitle(TObject *object, TFunction *method);
-   virtual char *CreatePopupTitle(TObject *object );
+   virtual const char *CreateArgumentTitle(TMethodArg *argument);
+   virtual const char *CreateDialogTitle(TObject *object, TFunction *method);
+   virtual const char *CreatePopupTitle(TObject *object );
    virtual void Execute(const char *method,  const char *params, Int_t *error=0) { TObject::Execute(method, params, error); }
    virtual void Execute(TMethod *method, TObjArray *params, Int_t *error=0) { TObject::Execute(method, params, error); }
    virtual void Execute(TObject *object, TFunction *method, const char *params);

@@ -246,44 +246,44 @@ void TContextMenu::Action(TObject *object, TToggle *toggle)
 }
 
 //______________________________________________________________________________
-char *TContextMenu::CreateArgumentTitle(TMethodArg *argument)
+const char *TContextMenu::CreateArgumentTitle(TMethodArg *argument)
 {
    // Create string describing argument (for use in dialog box).
 
-   static char argTitle[128];
+   static TString argTitle;
 
    if (argument) {
-      sprintf(argTitle, "(%s)  %s", argument->GetTitle(), argument->GetName());
+      argTitle.Form("(%s)  %s", argument->GetTitle(), argument->GetName());
       if (argument->GetDefault() && *(argument->GetDefault())) {
-         strcat(argTitle, "  [default: ");
-         strcat(argTitle, argument->GetDefault());
-         strcat(argTitle, "]");
+         argTitle += "  [default: ";
+         argTitle += argument->GetDefault();
+         argTitle += "]";
       }
    } else
-      *argTitle = 0;
+      argTitle.Clear();
 
-   return argTitle;
+   return argTitle.Data();
 }
 
 //______________________________________________________________________________
-char *TContextMenu::CreateDialogTitle(TObject *object, TFunction *method)
+const char *TContextMenu::CreateDialogTitle(TObject *object, TFunction *method)
 {
    // Create title for dialog box retrieving argument values.
 
-   static char methodTitle[128];
+   static TString methodTitle;
 
    if (object && method)
-      sprintf(methodTitle, "%s::%s", object->ClassName(), method->GetName());
+      methodTitle.Form("%s::%s", object->ClassName(), method->GetName());
    else if (!object && method)
-      sprintf(methodTitle, "%s", method->GetName());
+      methodTitle.Form("%s", method->GetName());
    else
-      *methodTitle = 0;
+      methodTitle.Clear();
 
-   return methodTitle;
+   return methodTitle.Data();
 }
 
 //______________________________________________________________________________
-char *TContextMenu::CreatePopupTitle(TObject *object)
+const char *TContextMenu::CreatePopupTitle(TObject *object)
 {
    // Create title for popup menu.
 
@@ -314,7 +314,7 @@ char *TContextMenu::CreatePopupTitle(TObject *object)
    } else
       popupTitle.Clear();
 
-   return StrDup(popupTitle.Data());
+   return popupTitle.Data();
 }
 
 //______________________________________________________________________________
