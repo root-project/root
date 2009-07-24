@@ -20,6 +20,7 @@
 
 #include "TMath.h"
 #include "TAxis.h"
+#include "THLimitsFinder.h"
 
 //______________________________________________________________________________
 // A GL overlay element which displays camera furstum.
@@ -40,6 +41,7 @@ TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp) :
    fAxisPainter(0),
    fAxis(0),
    fAxisExtend(0.9),
+   fUseAxisColors(kFALSE),
 
    fExternalRefPlane(),
    fUseExternalRefPlane(kFALSE)
@@ -110,7 +112,6 @@ void TGLCameraOverlay::RenderPlaneIntersect(TGLRnrCtx& rnrCtx)
       font.BBox(txt, bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
       Float_t off = 1.5*bb[4];
       off /= vp.Height() ;
-      TGLUtil::Color(kGray);
       font.RenderBitmap(txt, 1 -off, 1-off, 0,TGLFont::kRight);
 
       // render cross
@@ -140,79 +141,200 @@ void TGLCameraOverlay::RenderPlaneIntersect(TGLRnrCtx& rnrCtx)
 }
 
 //______________________________________________________________________________
-void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx)
+void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
 {
-   // Draw axis on four edges.
+   // Draw axis on four edges and a transparent grid.
 
-   // All four axis has to have same font.
-   // Size of font calculated relative to viewport diagonal
    fAxisPainter->SetAttAxis(fAxis);
+   fAxisPainter->SetUseAxisColors(fUseAxisColors);
+
+   Color_t lineColor = fUseAxisColors ? fAxis->GetAxisColor() : rnrCtx.ColorSet().Foreground().GetColorIndex();
+
+   // font size calculated relative to viewport diagonal
    GLint   vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
    Float_t rl = 0.5 *((vp[2]-vp[0]) + (vp[3]-vp[1]));
-   Int_t fsize = (Int_t)(fAxis->GetLabelSize()*rl);
+   Int_t fsizePx = (Int_t)(fAxis->GetLabelSize()*rl);
+   // tick length
    Float_t tlY = 0.015*rl/(vp[2]-vp[0]);
    Float_t tlX = 0.015*rl/(vp[3]-vp[1]);
+   // corner vectors
+   TGLVector3 xdir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(2); xdir.Normalise(); // left
+   TGLVector3 ydir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(3); ydir.Normalise(); // up
+   TGLVector3 vy1 = ydir * fFrustum[1];
+   TGLVector3 vy2 = ydir * fFrustum[3];
+   TGLVector3 vx1 = xdir * fFrustum[0];
+   TGLVector3 vx2 = xdir * fFrustum[2];
+   // range
+   Double_t rngY = fFrustum[3] - fFrustum[1];
+   Double_t rngX = fFrustum[2] - fFrustum[0];
+   Double_t off = TMath::Sqrt((rngX*rngY)+(rngX*rngY)) * 0.03;
+   Double_t minX = fFrustum[0] + off;
+   Double_t maxX = fFrustum[2] - off ;
+   Double_t minY = fFrustum[1] + off;
+   Double_t maxY = fFrustum[3] - off;
+   // grid lines
+   Float_t alpha = 70; //primary
+   Float_t alpha2 = 80; //seconndary
+   Int_t secSteps = fAxis->GetNdivisions() % 100;
+   GLushort stipple =  0x5555; // 33333 more rare
 
-
-   TGLVector3 xdir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(2); // left
-   TGLVector3 ydir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(3); // up
-   xdir.Normalise();
-   ydir.Normalise();
-   Float_t tms = 0;
    // horizontal X
    //
+   fAxisPainter->SetLabelPixelFontSize(fsizePx);
+   fAxis->SetTickLength(tlX);
+   fAxisPainter->RefDir() = xdir;
+   fAxis->SetLimits(minX, maxX);
+   fAxisPainter->RefTMOff(0) = ydir*rngY;
+
+   // bottom
+   glPushMatrix();
+   glTranslated(vy1.X(), vy1.Y(), vy1.Z());
+   fAxisPainter->SetLabelAlign(TGLFont::kCenterDown);
+   fAxisPainter->PaintAxis(rnrCtx, fAxis);
+   glPopMatrix();
+
+   // top
+   glPushMatrix();
+   glTranslated(vy2.X(), vy2.Y(), vy2.Z());
+   fAxisPainter->SetLabelAlign(TGLFont::kCenterUp);
+   fAxisPainter->RefTMOff(0).Negate();
+   fAxisPainter->RnrLabels();
+   fAxisPainter->RnrLines();
+   glPopMatrix();
+
+   if (grid)
    {
-      fAxisPainter->SetLabelPixelFontSize(fsize);
-      fAxis->SetTickLength(tlX);
-      fAxisPainter->RefDir() = xdir;
-      Float_t axisXOff = (fFrustum[2] - fFrustum[0]) * (1 - fAxisExtend);
-      fAxis->SetLimits(fFrustum[0] + axisXOff, fFrustum[2] - axisXOff);
-      fAxis->SetRangeUser(fFrustum[0] + axisXOff, fFrustum[2] - axisXOff);
-      tms = fFrustum[3] - fFrustum[1];
-      fAxisPainter->RefTMOff(0) = ydir*tms;
+      TGLAxisPainter::LabVec_t& labs = fAxisPainter->RefLabVec();
+      TGLVector3 tmp;
+      // draw label vertical lines
+      TGLUtil::ColorTransparency(lineColor, alpha);
+      glBegin(GL_LINES);
+      for ( TGLAxisPainter::LabVec_t::iterator i = labs.begin(); i != labs.end(); i++)
+      {
+         tmp = vy1 + xdir * (i->first);
+         glVertex3dv(tmp.Arr());
+         tmp = vy2 + xdir * (i->first);
+         glVertex3dv(tmp.Arr());
+      }
+      glEnd();
 
-      // bottom
-      glPushMatrix();
-      glTranslated(ydir.X()*fFrustum[1], ydir.Y()*fFrustum[1], ydir.Z()*fFrustum[1]);
-      fAxisPainter->SetLabelAlign(TGLFont::kCenterDown);
-      fAxisPainter->PaintAxis(rnrCtx, fAxis);
-      glPopMatrix();
+      // secondary tick mark lines
+      if (labs.size() > 1)
+      {
+         TGLUtil::ColorTransparency(lineColor, alpha2);
+         glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
+         glEnable(GL_LINE_STIPPLE);
+         glLineStipple(1, stipple);
 
-      // top
-      glPushMatrix();
-      glTranslated(ydir.X()*fFrustum[3], ydir.Y()*fFrustum[3], ydir.Z()*fFrustum[3]);
-      fAxisPainter->SetLabelAlign(TGLFont::kCenterUp);
-      fAxisPainter->RefTMOff(0).Negate();
-      fAxisPainter->RnrLabels();
-      fAxisPainter->RnrLines();
-      glPopMatrix();
-   }
+         glBegin(GL_LINES);
+         Int_t ondiv;
+         Double_t omin, omax, bw1;
+         Double_t val =0;
+         THLimitsFinder::Optimize(labs[0].second, labs[1].second, secSteps, omin, omax, ondiv, bw1);
+         val =  labs[0].second;
+         while(val < fFrustum[2])
+         {
+            for(Int_t k=0; k<ondiv; k++)
+            {
+               val += bw1;
+               tmp = vy1 + xdir * val;
+               glVertex3dv(tmp.Arr());
+               tmp = vy2 + xdir * val;
+               glVertex3dv(tmp.Arr());
+            }
+         }
+         val = labs[0].second - bw1;
+         while(val > fFrustum[0])
+         {
+            tmp = vy1 + xdir * val;
+            glVertex3dv(tmp.Arr());
+            tmp = vy2 + xdir * val;
+            glVertex3dv(tmp.Arr());
+            val -= bw1;
+         }
+         glEnd();
+         glPopAttrib();
+      }
+   } // draw grid
 
    //
-   // vertical Y
-   {
-      fAxis->SetTickLength(tlY);
-      fAxisPainter->RefDir() = ydir;
-      Float_t axisYOff = (fFrustum[3] - fFrustum[1]) * (1 - fAxisExtend);
-      fAxis->SetLimits(fFrustum[1] + axisYOff, fFrustum[3] - axisYOff);
-      tms = fFrustum[2] - fFrustum[0];
-      fAxisPainter->RefTMOff(0) = xdir*tms;
+   // vertical Y axis
+   //
 
-      // left
-      glPushMatrix();
-      glTranslated(xdir.X()*fFrustum[0], xdir.Y()*fFrustum[0], xdir.Z()*fFrustum[0]);
-      fAxisPainter->SetLabelAlign(TGLFont::kLeft);
-      fAxisPainter->PaintAxis(rnrCtx, fAxis);
-      glPopMatrix();
-      // right
-      glPushMatrix();
-      glTranslated(xdir.X()*fFrustum[2], xdir.Y()*fFrustum[2], xdir.Z()*fFrustum[2]);
-      fAxisPainter->SetLabelAlign(TGLFont::kRight);
-      fAxisPainter->RefTMOff(0).Negate();
-      fAxisPainter->RnrLabels();
-      fAxisPainter->RnrLines();
-      glPopMatrix();
-   }
+   fAxis->SetTickLength(tlY);
+   fAxisPainter->RefDir() = ydir;
+   fAxis->SetLimits(minY, maxY);
+   fAxisPainter->RefTMOff(0) = xdir*rngX;
+   // left
+   glPushMatrix();
+   glTranslated(vx1.X(), vx1.Y(), vx1.Z());
+   fAxisPainter->SetLabelAlign(TGLFont::kLeft);
+   fAxisPainter->PaintAxis(rnrCtx, fAxis);
+   glPopMatrix();
+   // right
+   glPushMatrix();
+   glTranslated(vx2.X(), vx2.Y(), vx2.Z());
+   fAxisPainter->SetLabelAlign(TGLFont::kRight);
+   fAxisPainter->RefTMOff(0).Negate();
+   fAxisPainter->RnrLabels();
+   fAxisPainter->RnrLines();
+   glPopMatrix();
+
+   if (grid)
+   {
+      TGLAxisPainter::LabVec_t& labs = fAxisPainter->RefLabVec();
+      TGLVector3 tmp;
+      // draw label horizontal lines
+      TGLUtil::ColorTransparency(lineColor, alpha);
+      glBegin(GL_LINES);
+      for ( TGLAxisPainter::LabVec_t::iterator i = labs.begin(); i != labs.end(); i++)
+      {
+         tmp = vx1 + ydir *(i->first);
+         glVertex3dv(tmp.Arr());
+         tmp = vx2 + ydir *(i->first);
+         glVertex3dv(tmp.Arr());
+      }
+      glEnd();
+
+      // secondary tick mark lines
+      if (labs.size() > 1)
+      {
+         TGLUtil::ColorTransparency(lineColor, alpha2);
+         glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
+         glEnable(GL_LINE_STIPPLE);
+         glLineStipple(1, stipple);
+
+         glBegin(GL_LINES);
+         Int_t ondiv;
+         Double_t omin, omax, bw1;
+         Double_t val =0;
+         THLimitsFinder::Optimize(labs[0].second, labs[1].second, secSteps, omin, omax, ondiv, bw1);
+         val =  labs[0].second;
+         while(val < fFrustum[3])
+         {
+            for(Int_t k=0; k<ondiv; k++)
+            {
+               val += bw1;
+               tmp = vx1 + ydir *val;
+               glVertex3dv(tmp.Arr());
+               tmp = vx2 + ydir * val;
+               glVertex3dv(tmp.Arr());
+            }
+         }
+
+         val = labs[0].second - bw1;
+         while(val > fFrustum[1])
+         {
+            tmp = vx1 + ydir *val;
+            glVertex3dv(tmp.Arr());
+            tmp = vx2 + ydir * val;
+            glVertex3dv(tmp.Arr());
+            val -= bw1;
+         }
+         glEnd();
+         glPopAttrib();
+      }
+   } // draw grid
 }
 
 //______________________________________________________________________________
@@ -243,8 +365,6 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
    TGLVector3 ydir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(3); // up
    xdir.Normalise();
    ydir.Normalise();
-
-   TGLUtil::Color(rnrCtx.ColorSet().Foreground());
 
    const char* txt = Form("%.*f", (exp < 0) ? -exp : 0, red);
    Float_t bb[6];
@@ -310,7 +430,6 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
         (cam.IsOrthographic() && ! fShowOrthographic))
       return;
 
-   TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
 
    // Frustum size.
    TGLCamera &camera = rnrCtx.RefCamera();
@@ -319,14 +438,48 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
    Float_t t =  camera.FrustumPlane(TGLCamera::kTop).D();
    Float_t b = -camera.FrustumPlane(TGLCamera::kBottom).D();
 
-   fFrustum[0]=l;
-   fFrustum[1]=b;
-   fFrustum[2]=r;
-   fFrustum[3]=t;
+   fFrustum[0] = l;
+   fFrustum[1] = b;
+   fFrustum[2] = r;
+   fFrustum[3] = t;
+
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
+   Float_t old_depth_range[2];
+   glGetFloatv(GL_DEPTH_RANGE, old_depth_range);
+
+   TGLUtil::Color(rnrCtx.ColorSet().Foreground());
 
    if (cam.IsOrthographic())
-      (fOrthographicMode == kBar) ? RenderBar(rnrCtx) :  RenderAxis(rnrCtx);
+   {
+      switch (fOrthographicMode)
+      {
+         case kBar:
+            RenderBar(rnrCtx);
+            break;
+         case kAxis:
+            RenderAxis(rnrCtx, kFALSE);
+            break;
+         case kGridFront:
+            glDepthRange(0, 0.1);
+            RenderAxis(rnrCtx, kTRUE);
+            break;
+         case kGridBack:
+            glDepthRange(1, 0.9);
+            RenderAxis(rnrCtx, kTRUE);
+            break;
+         default:
+            break;
+      };
+   }
    else
+   {
       RenderPlaneIntersect(rnrCtx);
-}
+   }
 
+   glDepthRange(old_depth_range[0], old_depth_range[1]);
+   glPopAttrib();
+}

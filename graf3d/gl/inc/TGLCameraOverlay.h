@@ -25,7 +25,7 @@ class TAxis;
 class TGLCameraOverlay : public TGLOverlayElement
 {
 public:
-   enum EMode { kPlaneIntersect, kBar, kAxis };
+   enum EMode { kPlaneIntersect, kBar, kAxis, kGridFront, kGridBack };
 
 private:
    TGLCameraOverlay(const TGLCameraOverlay&);            // Not implemented
@@ -43,12 +43,14 @@ protected:
    TGLAxisPainter *fAxisPainter;
    TAxis          *fAxis;
    Float_t         fAxisExtend;
+   Bool_t          fUseAxisColors;
 
    TGLPlane       fExternalRefPlane;
    Bool_t         fUseExternalRefPlane;
 
    void    RenderPlaneIntersect(TGLRnrCtx& rnrCtx);
-   void    RenderAxis(TGLRnrCtx& rnrCtx);
+   void    RenderAxis(TGLRnrCtx& rnrCtx, Bool_t drawGrid);
+   void    RenderGrid(TGLRnrCtx& rnrCtx);
    void    RenderBar(TGLRnrCtx& rnrCtx);
 
 public:

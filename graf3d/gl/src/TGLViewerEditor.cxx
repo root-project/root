@@ -445,6 +445,8 @@ void TGLViewerEditor::CreateGuidesTab()
    fCamMode->AddEntry("Plane", TGLCameraOverlay::kPlaneIntersect);
    fCamMode->AddEntry("Bar", TGLCameraOverlay::kBar);
    fCamMode->AddEntry("Axis", TGLCameraOverlay::kAxis);
+   fCamMode->AddEntry("Grid Front", TGLCameraOverlay::kGridFront);
+   fCamMode->AddEntry("Grid Back", TGLCameraOverlay::kGridBack);
    TGListBox* lb = fCamMode->GetListBox();
    lb->Resize(lb->GetWidth(), 5*18);
    fCamMode->Resize(90, 20);

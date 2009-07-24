@@ -528,11 +528,12 @@ void TGLViewer::DoDraw()
    {
       RenderNonSelected();
       DrawGuides();
+      RenderOverlay();
+
       glClear(GL_DEPTH_BUFFER_BIT);
       RenderSelected();
 
       glClear(GL_DEPTH_BUFFER_BIT);
-      RenderOverlay();
       DrawDebugInfo();
    }
 
