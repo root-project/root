@@ -301,11 +301,10 @@ void TGPack::RemoveFrameInternal(TGFrame* f)
       delete splitter;
    }
    f->UnmapWindow();
-   TGCompositeFrame::RemoveFrame(f);
 
-
-   fNVisible --;
    fWeightSum -= el->fWeight;
+   fNVisible --;
+   TGCompositeFrame::RemoveFrame(f);
 
    CheckSplitterVisibility();
    ResizeExistingFrames();
