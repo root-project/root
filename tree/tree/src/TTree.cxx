@@ -3425,6 +3425,13 @@ Int_t TTree::Fill()
    //   values of the leaves data types. If a leaf is a simple data type,
    //   a simple conversion to a machine independent format has to be done.
    //
+   //   This machine independent version of the data is copied into a 
+   //   basket (each branch has its own basket).  When a basket is full
+   //   (32k worth of data by default), it is then optionally compressed
+   //   and written to disk (this operation is also called comitting or
+   //   'flushing' the basket).  The committed baskets are then 
+   //   immediately removed from memory.
+   //
    //   The function returns the number of bytes committed to the
    //   individual branches.
    //
