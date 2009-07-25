@@ -489,7 +489,6 @@ Int_t startXrootdAt(Int_t port, const char *exportdirs, Bool_t force)
 
          // Cleanimg up existing daemon
          TString cmd = Form("kill -9 %d", pid);
-         Int_t rc = 0;
          if ((rc = gSystem->Exec(cmd)) != 0)
             Printf("startXrootdAt: problems stopping xrootd process %p (%d)", pid, rc);
       }
