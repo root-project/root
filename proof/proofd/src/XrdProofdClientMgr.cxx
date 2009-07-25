@@ -125,7 +125,7 @@ void *XrdProofdClientCron(void *p)
                   continue;
                }
             }
-            
+
             // Tell the session manager that a client has gone
             XPDFORM(buf, "%d", pid);
             smgr->Pipe()->Post(XrdProofdProofServMgr::kClientDisconnect, buf.c_str());

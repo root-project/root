@@ -26,6 +26,7 @@
 #include "XrdClient/XrdClientConst.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientMessage.hh"
+#include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPlatform.hh"
@@ -38,6 +39,18 @@
 
 // Tracing utilities
 #include "XrdProofdTrace.h"
+
+//______________________________________________________________________________
+int MessageSender(const char *msg, int len, void *arg)
+{
+   // Send up a message from the server
+
+   XrdProofdResponse *r = (XrdProofdResponse *) arg;
+   if (r) {
+      return r->Send(kXR_attn, kXPD_srvmsg, 2, (char *) msg, len);
+   }
+   return -1;
+}
 
 //______________________________________________________________________________
 XrdProofdNetMgr::XrdProofdNetMgr(XrdProofdManager *mgr,
@@ -319,8 +332,73 @@ int XrdProofdNetMgr::DoDirectiveWorker(char *val, XrdOucStream *cfg, bool)
 }
 
 //__________________________________________________________________________
+int XrdProofdNetMgr::BroadcastCtrlC(const char *usr)
+{
+   // Broadcast a ctrlc interrupt
+   // Return 0 on success, -1 on error
+   XPDLOC(NMGR, "NetMgr::BroadcastCtrlC")
+
+   int rc = 0;
+
+   // Loop over unique nodes
+   std::list<XrdProofWorker *>::iterator iw = fNodes.begin();
+   XrdProofWorker *w = 0;
+   while (iw != fNodes.end()) {
+      if ((w = *iw) && w->fType != 'M') {
+         // Do not send it to ourselves
+         bool us = (((w->fHost.find("localhost") != STR_NPOS ||
+                     XrdOucString(fMgr->Host()).find(w->fHost.c_str()) != STR_NPOS)) &&
+                    (w->fPort == -1 || w->fPort == fMgr->Port())) ? 1 : 0;
+         if (!us) {
+            // Create 'url'
+            XrdOucString u = (usr) ? usr : fMgr->EffectiveUser();
+            u += '@'; u += w->fHost;
+            if (w->fPort != -1) {
+               u += ':'; u += w->fPort;
+            }
+            // Atomic
+            XrdSysMutexHelper mhp(fMutex);
+            // Get a connection to the server
+            XrdProofConn *conn = GetProofConn(u.c_str());
+            if (conn && conn->IsValid()) {
+               // For requests we try 1 times
+               int maxtry_save = -1;
+               int timewait_save = -1;
+               XrdProofConn::GetRetryParam(maxtry_save, timewait_save);
+               XrdProofConn::SetRetryParam(1, timewait_save);
+               // Prepare request
+               XPClientRequest reqhdr;
+               memset(&reqhdr, 0, sizeof(reqhdr) );
+               conn->SetSID(reqhdr.header.streamid);
+               reqhdr.proof.requestid = kXP_ctrlc;
+               reqhdr.proof.sid = 0;
+               reqhdr.proof.dlen = 0;
+               // We need the right order
+               if (XPD::clientMarshall(&reqhdr) != 0) {
+                  TRACE(XERR, "problems marshalling request");
+                  return -1;
+               }
+               if (conn->LowWrite(&reqhdr, 0, 0) != kOK) {
+                   TRACE(XERR, "problems sending ctrl-c request to server " << u);
+               }
+               // Reset to initial settings
+               XrdProofConn::SetRetryParam(maxtry_save, timewait_save);
+            }
+         } else {
+            TRACE(DBG, "broadcast request for ourselves: ignore");
+         }
+      }
+      // Next worker
+      iw++;
+   }
+
+   // Done
+   return rc;
+}
+
+//__________________________________________________________________________
 int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
-                               XrdProofdResponse *r, bool notify)
+                               XrdProofdResponse *r, bool notify, int subtype)
 {
    // Broadcast request to known potential sub-nodes.
    // Return 0 on success, -1 on error
@@ -353,7 +431,7 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
                                             : (kXR_int32) kXPD_Worker;
             TRACE(HDBG, "sending request to "<<u);
             // Send request
-            if (!(xrsp = Send(u.c_str(), type, msg, srvtype, r, notify))) {
+            if (!(xrsp = Send(u.c_str(), type, msg, srvtype, r, notify, subtype))) {
                TRACE(XERR, "problems sending request to "<<u);
             }
             // Cleanup answer
@@ -423,8 +501,9 @@ XrdProofConn *XrdProofdNetMgr::GetProofConn(const char *url)
 
 //__________________________________________________________________________
 XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
-                                         const char *msg, int srvtype,
-                                         XrdProofdResponse *r, bool notify)
+                                        const char *msg, int srvtype,
+                                        XrdProofdResponse *r, bool notify,
+                                        int subtype)
 {
    // Broadcast request to known potential sub-nodes.
    // Return 0 on success, -1 on error
@@ -478,6 +557,16 @@ XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
             reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
             buf = (msg) ? (const void *)msg : buf;
             break;
+         case kExec:
+            notifymsg += "exec ";
+            notifymsg += subtype;
+            notifymsg += "request for ";
+            notifymsg += msg;
+            reqhdr.proof.int2 = (kXR_int32) subtype;
+            reqhdr.proof.sid = -1;
+            reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
+            buf = (msg) ? (const void *)msg : buf;
+            break;
          default:
             ok = 0;
             TRACE(XERR, "invalid request type "<<type);
@@ -488,9 +577,15 @@ XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
       if (r && notify)
          r->Send(kXR_attn, kXPD_srvmsg, 0, (char *) notifymsg.c_str(), notifymsg.length());
 
+      // Activate processing of unsolicited responses
+      conn->SetAsync(conn, &MessageSender, (void *)r);
+
       // Send over
       if (ok)
          xrsp = conn->SendReq(&reqhdr, buf, vout, "NetMgr::Send");
+
+      // Deactivate processing of unsolicited responses
+      conn->SetAsync(0, 0, (void *)0);
 
       // Print error msg, if any
       if (r && !xrsp && conn->GetLastErr()) {
@@ -516,6 +611,29 @@ XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
    return xrsp;
 }
 
+//______________________________________________________________________________
+bool XrdProofdNetMgr::IsLocal(const char *host, bool checkport)
+{
+   // Check if 'host' is this local host. If checkport is true,
+   // matching of the local port with the one implied by host is also checked.
+   // Return 1 if 'local', 0 otherwise
+
+   int rc = 0;
+   if (host && strlen(host) > 0) {
+      XrdClientUrlInfo uu(host);
+      if (uu.Port <= 0) uu.Port = 1093;
+      // Fully qualified name
+      char *fqn = XrdNetDNS::getHostName(uu.Host.c_str());
+      if (fqn && (strstr(fqn, "localhost") || !strcmp(fqn, "127.0.0.1") ||
+                                              !strcmp(fMgr->Host(),fqn))) {
+         if (!checkport || (uu.Port == fMgr->Port()))
+            rc = 1;
+      }
+      SafeFree(fqn);
+   }
+   // Done
+   return rc;
+}
 
 //______________________________________________________________________________
 int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
@@ -548,18 +666,14 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
       // Check if local
       XrdClientUrlInfo ui(file);
       if (ui.Host.length() > 0) {
-         // Fully qualified name
-         char *fqn = XrdNetDNS::getHostName(ui.Host.c_str());
-         if (fqn && (strstr(fqn, "localhost") ||
-                    !strcmp(fqn, "127.0.0.1") ||
-                    !strcmp(fMgr->Host(),fqn))) {
+         // Check locality
+         local = XrdProofdNetMgr::IsLocal(ui.Host.c_str());
+         if (local) {
             memcpy(file, ui.File.c_str(), ui.File.length());
             file[ui.File.length()] = 0;
             blen = ui.File.length();
-            local = 1;
             TRACEP(p, DBG, "file is LOCAL");
          }
-         SafeFree(fqn);
       }
       // If grep, extract the pattern
       if (grep > 0) {
@@ -575,7 +689,7 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
          TRACEP(p, DBG, "grep operation "<<grep<<", pattern:"<<pattern);
       }
    } else {
-      emsg = "file name not not found";
+      emsg = "file name not found";
       TRACEP(p, XERR, emsg);
       response->Send(kXR_InvalidRequest, emsg.c_str());
       return 0;

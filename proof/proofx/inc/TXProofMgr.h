@@ -40,6 +40,7 @@
 //  ->1      first version being tested by ALICE
 const Int_t kXPROOF_Protocol = 1; 
 
+class TStopwatch;
 class TXSocket;
 
 class TXProofMgr : public TProofMgr, public TXHandler {
@@ -49,6 +50,11 @@ private:
    TXSocket   *fSocket; // Connection to XRD
 
    Int_t Init(Int_t loglevel = -1);
+
+   void CpProgress(const char *pfx, Long64_t bytes,
+                   Long64_t size, TStopwatch *watch, Bool_t cr = kFALSE);
+   TObjString *Exec(Int_t action,
+                    const char *what, const char *how, const char *where);
 
 public:
    TXProofMgr(const char *url, Int_t loglevel = -1, const char *alias = "");
@@ -76,6 +82,19 @@ public:
    Int_t       SendMsgToUsers(const char *msg, const char *usr = 0);
    void        SetROOTVersion(const char *tag);
    void        ShowWorkers();
+
+   // Remote file system actions
+   Int_t       Cp(const char *src, const char *dst = 0, const char *opts = 0);
+   void        Grep(const char *what, const char *how = 0, const char *where = 0);
+   void        Ls(const char *what = "~/", const char *how = 0, const char *where = 0);
+   void        More(const char *what, const char *how = 0, const char *where = 0);
+   void        Rm(const char *what, const char *how = 0, const char *where = 0);
+   void        Tail(const char *what, const char *how = 0, const char *where = 0);
+   Int_t       Md5sum(const char *what, TString &sum, const char *where = 0);
+   Int_t       Stat(const char *what, FileStat_t &st, const char *where = 0);
+
+   Int_t       GetFile(const char *remote, const char *local, const char *opt = 0);
+   Int_t       PutFile(const char *local, const char *remote, const char *opt = 0);
 
    ClassDef(TXProofMgr,0)  // XrdProofd PROOF manager interface
 };

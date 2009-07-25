@@ -139,7 +139,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    RegisterDirectives();
 
    // Admin request handler
-   fAdmin = new XrdProofdAdmin(this);
+   fAdmin = new XrdProofdAdmin(this, pi, edest);
 
    // Client manager
    fClientMgr = new XrdProofdClientMgr(this, pi, edest);
@@ -709,6 +709,12 @@ int XrdProofdManager::Config(bool rcf)
 
    if (fGroupsMgr)
       fGroupsMgr->Print(0);
+
+   // Config the admin handler
+   if (fAdmin && fAdmin->Config(rcf) != 0) {
+      XPDERR("problems configuring the admin handler");
+      return -1;
+   }
 
    // Config the network manager
    if (fNetMgr && fNetMgr->Config(rcf) != 0) {

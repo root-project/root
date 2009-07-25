@@ -86,10 +86,13 @@ public:
    bool               WorkerUsrCfg() const { return fWorkerUsrCfg; }
 
    int                Broadcast(int type, const char *msg, const char *usr = 0,
-                                XrdProofdResponse *r = 0, bool notify = 0);
+                                XrdProofdResponse *r = 0, bool notify = 0, int subtype = -1);
+   int                BroadcastCtrlC(const char *usr);
    XrdProofConn      *GetProofConn(const char *url);
+   bool               IsLocal(const char *host, bool checkport = 0);
    XrdClientMessage  *Send(const char *url, int type,
-                           const char *msg, int srvtype, XrdProofdResponse *r, bool notify = 0);
+                           const char *msg, int srvtype, XrdProofdResponse *r,
+                           bool notify = 0, int subtype = -1);
 
    int                ReadBuffer(XrdProofdProtocol *p);
    char              *ReadBufferLocal(const char *file, kXR_int64 ofs, int &len);

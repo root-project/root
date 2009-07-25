@@ -43,12 +43,13 @@ enum XProofRequestTypes {
    kXP_cleanup      = 3116,    // clean-up a session-ctx or a client section
    kXP_readbuf      = 3117,    // read a buffer from a file
    kXP_touch        = 3118,    // touch the client admin path
+   kXP_ctrlc        = 3119,    // propagate a Ctrl-C issued by the client 
 //
-   kXP_Undef        = 3119    // This should always be last: do not touch it
+   kXP_Undef        = 3120     // This should always be last: do not touch it
 };
 
 // XPROOFD VERSION  (0xMMmmpp : MM major, mm minor, pp patch)
-#define XPD_VERSION  0x010500
+#define XPD_VERSION  0x010600
 
 // KINDS of connections (modes)
 #define kXPD_Admin        4
@@ -83,6 +84,7 @@ enum EStaticSelOpt {
 };
 
 // Message types used in SendCoordinator(...)
+// Must be consistent with the names in XrdProofdAux.cxx
 enum EAdminMsgType {
    kQuerySessions     = 1000,
    kSessionTag        = 1001,
@@ -97,8 +99,23 @@ enum EAdminMsgType {
    kGroupProperties   = 1010,
    kSendMsgToUser     = 1011,
    kReleaseWorker     = 1012,
+   kExec              = 1013,
+   kGetFile           = 1014,
+   kPutFile           = 1015,
+   kCpFile            = 1016,
 //
-   kUndef             = 1013    // This should always be last: do not touch it
+   kUndef             = 1017    // This should always be last: do not touch it
+};
+
+// Exec types
+enum EAdminExecType {
+   kRm                = 0,
+   kLs                = 1,
+   kMore              = 2,
+   kGrep              = 3,
+   kTail              = 4,
+   kMd5sum            = 5,
+   kStat              = 6
 };
 
 // XPROOFD Worker CPU load sharing options

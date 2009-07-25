@@ -46,6 +46,8 @@ class XrdProofdResponse
    inline const  char   *STRID() { return (const char *)fTrsid;}
    inline const char    *TraceID() const { return fTraceID.c_str(); }
 
+   inline XrdLink       *Link() const { return fLink; }
+
    int                   LinkSend(const char *buff, int len, XrdOucString &e);
    int                   LinkSend(const struct iovec *iov,
                                   int iocnt, int len, XrdOucString &e);

@@ -30,8 +30,9 @@
 //  1002 (0x3EA) -> 1003 (0x3EB) : many new features
 //  1003 (0x3EB) -> 1004 (0x3EC) : restructuring
 //  1004 (0x3EC) -> 1005 (0x3ED) : deeper restructuring
-#define XPROOFD_VERSBIN 0x000003ED
-#define XPROOFD_VERSION "0.5"
+//  1005 (0x3EC) -> 1006 (0x3EE) : support for ls,rm,stat,md5sum, getfile, ...
+#define XPROOFD_VERSBIN 0x000003EE
+#define XPROOFD_VERSION "0.6"
 
 #ifdef OLDXRDOUC
 #  include "XrdSysToOuc.h"
@@ -67,13 +68,22 @@ public:
 
    static int    Configure(char *parms, XrdProtocol_Config *pi);
 
+   // Buffer / Data handlers
+   int           GetData(const char *dtype, char *buff, int blen);
+   static XrdBuffer *GetBuff(int quantum, XrdBuffer *argp = 0);
+   static void   ReleaseBuff(XrdBuffer *argp);
+   static int    MaxBuffsz() { return fgMaxBuffsz; }    // Maximum buffer size we can have
+
    // Getters
    inline kXR_int32 CID() const { return fCID; }
    inline XrdProofdClient *Client() const { return fPClient; }
    inline int    ConnType() const { return fConnType; }
    inline const char *TraceID() const { return fTraceID.c_str(); }
    inline bool   Internal() { return (fConnType == kXPD_Internal) ? 1 : 0; }
+   inline bool   IsCtrlC() { XrdSysMutexHelper mhp(fCtrlcMutex);
+                             bool rc = fIsCtrlC; fIsCtrlC = 0; return rc; }
    inline int    Pid() const { return fPid; }
+   inline void   ResetCtrlC() { XrdSysMutexHelper mhp(fCtrlcMutex); fIsCtrlC = 0; }
    inline char   Status() const { return fStatus; }
    inline short int ProofProtocol() const { return fProofProtocol; }
    inline bool   SuperUser() const { return fSuperUser; }
@@ -104,8 +114,6 @@ public:
 
  private:
 
-   XrdBuffer    *GetBuff(int quantum, XrdBuffer *argp = 0);
-   int           GetData(const char *dtype, char *buff, int blen);
    XrdProofdResponse *GetNewResponse(kXR_unt16 rid);
    int           Interrupt();
    int           Ping();
@@ -114,6 +122,7 @@ public:
    int           SendData(XrdProofdProofServ *xps, kXR_int32 sid = -1, XrdSrvBuffer **buf = 0);
    int           SendDataN(XrdProofdProofServ *xps, XrdSrvBuffer **buf = 0);
    int           SendMsg();
+   int           CtrlC();
    void          TouchAdminPath();
    int           Urgent();
 
@@ -146,7 +155,10 @@ public:
 
    kXR_int32                     fCID;             // Reference ID of this client
 
-   XrdSysRecMutex                fMutex;    // Local mutex
+   XrdSysRecMutex                fMutex;           // Local mutex
+   XrdSysRecMutex                fCtrlcMutex;      // CtrlC mutex
+
+   bool                          fIsCtrlC;         // True is CtrlC was raised;
 
    //
    // These depend on the logical connection

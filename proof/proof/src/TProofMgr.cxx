@@ -36,7 +36,8 @@ TProofMgr_t TProofMgr::fgTXProofMgrHook = 0;
 
 //______________________________________________________________________________
 TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
-          : TNamed("",""), fRemoteProtocol(-1), fServType(kXProofd), fSessions(0)
+          : TNamed("",""), fRemoteProtocol(-1), fServType(kXProofd),
+            fSessions(0), fIntHandler(0)
 {
    // Create a PROOF manager for the standard (old) environment.
 
@@ -94,6 +95,7 @@ TProofMgr::~TProofMgr()
    // Destroy a TProofMgr instance
 
    SafeDelete(fSessions);
+   SafeDelete(fIntHandler);
 
    fgListOfManagers.Remove(this);
    gROOT->GetListOfProofs()->Remove(this);

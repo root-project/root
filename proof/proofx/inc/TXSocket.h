@@ -191,7 +191,6 @@ public:
    TObjString         *SendCoordinator(Int_t kind, const char *msg = 0, Int_t int2 = 0,
                                        Long64_t l64 = 0, Int_t int3 = 0, const char *opt = 0);
 
-
    // Recv interfaces
    Int_t               Recv(TMessage *&mess);
    Int_t               Recv(Int_t &status, Int_t &kind)
@@ -222,6 +221,8 @@ public:
 
    // Request remote touch of the admin file associated with this connection
    void                RemoteTouch();
+   // Propagate a Ctrl-C
+   void                CtrlC();
 
    // Standard options cannot be set
    Int_t               SetOption(ESockOptions, Int_t) { return 0; }

@@ -39,6 +39,7 @@
 #include "XrdProofdClientMgr.h"
 #include "XrdProofdConfig.h"
 #include "XrdProofdManager.h"
+#include "XrdProofdNetMgr.h"
 #include "XrdProofdPriorityMgr.h"
 #include "XrdProofdProofServMgr.h"
 #include "XrdProofdProtocol.h"
@@ -110,6 +111,13 @@ typedef struct {
    kXR_int32 pval;
    kXR_int32 styp;
 } hs_response_t;
+
+typedef struct ResetCtrlcGuard {
+   XrdProofdProtocol *xpd;
+   int                type;
+   ResetCtrlcGuard(XrdProofdProtocol *p, int t) : xpd(p), type(t) { }
+   ~ResetCtrlcGuard() { if (xpd && type != kXP_ctrlc) xpd->ResetCtrlC(); }
+} ResetCtrlcGuard_t;
 
 //
 // Derivation of XrdProofdConfig to read the port from the config file
@@ -509,6 +517,8 @@ int XrdProofdProtocol::Process2()
    TRACEP(this, REQ, "req id: " << fRequest.header.requestid << " (" <<
                 XrdProofdAux::ProofRequestTypes(fRequest.header.requestid) << ")");
 
+   ResetCtrlcGuard_t ctrlcguard(this, fRequest.header.requestid);
+
    // If the user is logged in check if the wanted action is to be done by us
    if (fStatus && (fStatus & XPD_LOGGEDIN)) {
       // Record time of the last action
@@ -521,6 +531,9 @@ int XrdProofdProtocol::Process2()
       }
       bool formgr = 0;
       switch(fRequest.header.requestid) {
+         case kXP_ctrlc:
+            rc = CtrlC();
+            break;
          case kXP_touch:
             // Reset the asked-to-touch flag, if it was never set
             fPClient->Touch(1);
@@ -644,15 +657,24 @@ XrdBuffer *XrdProofdProtocol::GetBuff(int quantum, XrdBuffer *argp)
 
    // Obtain a new one
    if ((argp = fgBPool->Obtain(quantum)) == 0) {
-      TRACEP(this, XERR, "could not get requested buffer (size: "<<quantum<<
-                         ") = insufficient memory");
+      TRACE(XERR, "could not get requested buffer (size: "<<quantum<<
+                  ") = insufficient memory");
    } else {
-      TRACEP(this, HDBG, "quantum: "<<quantum<<
-                         ", buff: "<<(void *)(argp->buff)<<", bsize:"<<argp->bsize);
+      TRACE(HDBG, "quantum: "<<quantum<<
+                  ", buff: "<<(void *)(argp->buff)<<", bsize:"<<argp->bsize);
    }
 
    // Done
    return argp;
+}
+
+//______________________________________________________________________________
+void XrdProofdProtocol::ReleaseBuff(XrdBuffer *argp)
+{
+   // Release a buffer previously allocated via GetBuff
+
+   XrdSysMutexHelper mh(fgBMutex);
+   fgBPool->Release(argp);
 }
 
 //______________________________________________________________________________
@@ -707,7 +729,7 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
    int quantum = (len > fgMaxBuffsz ? fgMaxBuffsz : len);
 
    // Get a buffer
-   XrdBuffer *argp = GetBuff(quantum);
+   XrdBuffer *argp = XrdProofdProtocol::GetBuff(quantum);
    if (!argp) return 0;
 
    // Now send over all of the data as unsolicited messages
@@ -782,13 +804,13 @@ int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
    int quantum = (len > fgMaxBuffsz ? fgMaxBuffsz : len);
 
    // Get a buffer
-   XrdBuffer *argp = GetBuff(quantum);
+   XrdBuffer *argp = XrdProofdProtocol::GetBuff(quantum);
    if (!argp) return 0;
 
    // Now send over all of the data as unsolicited messages
    while (len > 0) {
       if ((rc = GetData("data", argp->buff, quantum))) {
-         { XrdSysMutexHelper mh(fgBMutex); fgBPool->Release(argp); }
+         XrdProofdProtocol::ReleaseBuff(argp);
          return 0;
       }
       if (buf && !(*buf))
@@ -796,7 +818,7 @@ int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
 
       // Send to connected clients
       if (xps->SendDataN(argp->buff, quantum) != 0) {
-         { XrdSysMutexHelper mh(fgBMutex); fgBPool->Release(argp); }
+         XrdProofdProtocol::ReleaseBuff(argp);
          return 0;
       }
 
@@ -807,7 +829,7 @@ int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
    }
 
    // Release the buffer
-   { XrdSysMutexHelper mh(fgBMutex); fgBPool->Release(argp); }
+   XrdProofdProtocol::ReleaseBuff(argp);
 
    // Done
    return 0;
@@ -1227,4 +1249,29 @@ void XrdProofdProtocol::TouchAdminPath()
    }
    // Done
    return;
+}
+
+//______________________________________________________________________________
+int XrdProofdProtocol::CtrlC()
+{
+   // Set and propagate a Ctrl-C request
+   XPDLOC(ALL, "Protocol::CtrlC")
+
+   TRACEP(this, ALL, "handling request");
+
+   { XrdSysMutexHelper mhp(fCtrlcMutex);
+      fIsCtrlC = 1;
+   }
+
+   // Propagate now
+   if (fgMgr) {
+      if (fgMgr->SrvType() != kXPD_Worker) {
+         if (fgMgr->NetMgr()) {
+            fgMgr->NetMgr()->BroadcastCtrlC(Client()->User());
+         }
+      }
+   }
+
+   // Over
+   return 0;
 }

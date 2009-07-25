@@ -47,7 +47,8 @@ const char *XrdProofdAux::AdminMsgType(int type)
    static const char *msgtypes[] = { "Undef",
      "QuerySessions", "SessionTag", "SessionAlias", "GetWorkers", "QueryWorkers",
      "CleanupSessions", "QueryLogPaths", "ReadBuffer", "QueryROOTVersions",
-     "ROOTVersion", "GroupProperties", "SendMsgToUser", "ReleaseWorker" };
+     "ROOTVersion", "GroupProperties", "SendMsgToUser", "ReleaseWorker",
+     "Exec", "GetFile", "PutFile", "CpFile"};
 
    if (type < 1000 || type >= kUndef) {
       return msgtypes[0];
@@ -68,7 +69,7 @@ const char *XrdProofdAux::ProofRequestTypes(int type)
       "XP_login", "XP_auth", "XP_create", "XP_destroy", "XP_attach", "XP_detach",
       "XP_3107", "XP_3108", "XP_3109", "XP_3110",
       "XP_urgent", "XP_sendmsg", "XP_admin", "XP_interrupt", "XP_ping",
-      "XP_cleanup", "XP_readbuf", "XP_touch" };
+      "XP_cleanup", "XP_readbuf", "XP_touch", "XP_ctrlc" };
 
    if (type < 3101 || type >= kXP_Undef) {
       return reqtypes[0];

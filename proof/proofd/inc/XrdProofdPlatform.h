@@ -125,4 +125,7 @@
 #  define XPD_LONGOK(x) (x > LONG_MIN && x < LONG_MAX)
 #endif
 
+// Wait related
+#include <sys/wait.h>
+
 #endif

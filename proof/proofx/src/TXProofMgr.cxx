@@ -25,6 +25,7 @@
 #include <io.h>
 #endif
 
+#include "Getline.h"
 #include "TList.h"
 #include "TObjArray.h"
 #include "TObjString.h"
@@ -33,9 +34,45 @@
 #include "TXProofMgr.h"
 #include "TXSocket.h"
 #include "TROOT.h"
+#include "TStopwatch.h"
+#include "TSysEvtHandler.h"
 #include "XProofProtocol.h"
 
 ClassImp(TXProofMgr)
+
+//
+//----- ProofMgr Interrupt signal handler
+//
+class TProofMgrInterruptHandler : public TSignalHandler {
+private:
+   TProofMgr *fMgr;
+
+   TProofMgrInterruptHandler(const TProofMgrInterruptHandler&); // Not implemented
+   TProofMgrInterruptHandler& operator=(const TProofMgrInterruptHandler&); // Not implemented
+public:
+   TProofMgrInterruptHandler(TProofMgr *mgr)
+      : TSignalHandler(kSigInterrupt, kFALSE), fMgr(mgr) { }
+   Bool_t Notify();
+};
+
+//______________________________________________________________________________
+Bool_t TProofMgrInterruptHandler::Notify()
+{
+   // TProofMgr interrupt handler.
+
+   // Only on clients
+   if (isatty(0) != 0 && isatty(1) != 0) {
+      TString u = fMgr->GetUrl();
+      Printf("Opening new connection to %s", u.Data());
+      TXSocket *s = new TXSocket(u, 'C', kPROOF_Protocol,
+                                 kXPROOF_Protocol, 0, -1, (TXHandler *)fMgr);
+      if (s && s->IsValid()) {
+         // Set the interrupt flag on the server
+         s->CtrlC();
+      }
+   }
+   return kTRUE;
+}
 
 // Autoloading hooks.
 // These are needed to avoid using the plugin manager which may create
@@ -100,6 +137,9 @@ Int_t TXProofMgr::Init(Int_t)
    {  R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }
+
+   // Set interrupt PROOF handler from now on
+   fIntHandler = new TProofMgrInterruptHandler(this);
 
    // We are done
    return 0;
@@ -745,10 +785,818 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
 
    // Null-terminate
    buf[len + lusr] = 0;
-//   fprintf(stderr,"%s\n", buf);
 
    // Send the request
    fSocket->SendCoordinator(kSendMsgToUser, buf);
 
+   return rc;
+}
+
+//______________________________________________________________________________
+void TXProofMgr::Grep(const char *what, const char *how, const char *where)
+{
+   // Run 'grep' on the nodes
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("Grep","invalid TXProofMgr - do nothing");
+      return;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("Grep", "functionality not supported by server");
+      return;
+   }
+
+   // Send the request
+   TObjString *os = Exec(kGrep, what, how, where);
+
+   // Show the result, if any
+   if (os) Printf("%s", os->GetName());
+}
+
+//______________________________________________________________________________
+void TXProofMgr::Ls(const char *what, const char *how, const char *where)
+{
+   // Run 'ls' on the nodes
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("Ls","invalid TXProofMgr - do nothing");
+      return;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("Ls", "functionality not supported by server");
+      return;
+   }
+
+   // Send the request
+   TObjString *os = Exec(kLs, what, how, where);
+
+   // Show the result, if any
+   if (os) Printf("%s", os->GetName());
+}
+
+//______________________________________________________________________________
+void TXProofMgr::More(const char *what, const char *how, const char *where)
+{
+   // Run 'more' on the nodes
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("More","invalid TXProofMgr - do nothing");
+      return;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("More", "functionality not supported by server");
+      return;
+   }
+
+   // Send the request
+   TObjString *os = Exec(kMore, what, how, where);
+
+   // Show the result, if any
+   if (os) Printf("%s", os->GetName());
+}
+
+//______________________________________________________________________________
+void TXProofMgr::Rm(const char *what, const char *how, const char *where)
+{
+   // Run 'rm' on the nodes
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("Rm","invalid TXProofMgr - do nothing");
+      return;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("Rm", "functionality not supported by server");
+      return;
+   }
+
+   TString prompt, ans("Y");
+   if (isatty(0) != 0 && isatty(1) != 0) {
+      // Really remove the file?
+      prompt.Form("Do you really want to remove '%s'? [N/y]", what);
+      ans = "";
+      while (ans != "N" && ans != "Y") {
+         ans = Getline(prompt.Data());
+         ans.Remove(TString::kTrailing, '\n');
+         if (ans == "") ans = "N";
+         ans.ToUpper();
+         if (ans != "N" && ans != "Y")
+            Printf("Please answer y, Y, n or N");
+      }
+   }
+
+   if (ans == "Y") {
+      // Send the request
+      TObjString *os = Exec(kRm, what, how, where);
+      // Show the result, if any
+      if (os) Printf("%s", os->GetName());
+   }
+}
+
+//______________________________________________________________________________
+void TXProofMgr::Tail(const char *what, const char *how, const char *where)
+{
+   // Run 'tail' on the nodes
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("Tail","invalid TXProofMgr - do nothing");
+      return;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("Tail", "functionality not supported by server");
+      return;
+   }
+
+   // Send the request
+   TObjString *os = Exec(kTail, what, how, where);
+
+   // Show the result, if any
+   if (os) Printf("%s", os->GetName());
+}
+
+//______________________________________________________________________________
+Int_t TXProofMgr::Md5sum(const char *what, TString &sum, const char *where)
+{
+   // Run 'md5sum' on one of the nodes
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("Md5sum","invalid TXProofMgr - do nothing");
+      return -1;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("Md5sum", "functionality not supported by server");
+      return -1;
+   }
+
+   if (where && !strcmp(where, "all")) {
+      Warning("Md5sum","cannot run on all nodes at once: please specify one");
+      return -1;
+   }
+
+   // Send the request
+   TObjString *os = Exec(kMd5sum, what, 0, where);
+
+   // Show the result, if any
+   if (os) {
+      if (gDebug > 1) Printf("%s", os->GetName());
+      sum = os->GetName();
+      // Success
+      return 0;
+   }
+   // Failure
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TXProofMgr::Stat(const char *what, FileStat_t &st, const char *where)
+{
+   // Run 'stat' on one of the nodes
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("Stat","invalid TXProofMgr - do nothing");
+      return -1;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("Stat", "functionality not supported by server");
+      return -1;
+   }
+
+   if (where && !strcmp(where, "all")) {
+      Warning("Stat","cannot run on all nodes at once: please specify one");
+      return -1;
+   }
+
+   // Send the request
+   TObjString *os = Exec(kStat, what, 0, where);
+
+   // Show the result, if any
+   if (os) {
+      if (gDebug > 1) Printf("%s", os->GetName());
+      Int_t    mode, uid, gid, islink;
+      Long_t   dev, ino, mtime;
+      Long64_t size;
+#ifdef R__WIN32
+      sscanf(os->GetName(), "%ld %ld %d %d %d %I64d %ld %d", &dev, &ino, &mode,
+                            &uid, &gid, &size, &mtime, &islink);
+#else
+      sscanf(os->GetName(), "%ld %ld %d %d %d %lld %ld %d", &dev, &ino, &mode,
+                            &uid, &gid, &size, &mtime, &islink);
+#endif
+      if (dev == -1)
+         return -1;
+      st.fDev    = dev;
+      st.fIno    = ino;
+      st.fMode   = mode;
+      st.fUid    = uid;
+      st.fGid    = gid;
+      st.fSize   = size;
+      st.fMtime  = mtime;
+      st.fIsLink = (islink == 1);
+      // Success
+      return 0;
+   }
+   // Failure
+   return -1;
+}
+
+//______________________________________________________________________________
+TObjString *TXProofMgr::Exec(Int_t action,
+                             const char *what, const char *how, const char *where)
+{
+   // Execute 'action' (see EAdminExecType in 'XProofProtocol.h') at 'where'
+   // (default master), with options 'how', on 'what'. The option specified by
+   // 'how' are typically unix option for the relate commands. In addition to
+   // the unix authorizations, the limitations are:
+   //
+   //      action = kRm        limited to the sandbox (but basic dirs cannot be
+   //                          removed) and on files owned by the user in the
+   //                          allowed directories
+   //      action = kTail      option '-f' is not supported and will be ignored
+   //
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("Exec","invalid TXProofMgr - do nothing");
+      return (TObjString *)0;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("Exec", "functionality not supported by server");
+      return (TObjString *)0;
+   }
+   // Check 'what'
+   if (!what || strlen(what) <= 0) {
+      Error("Exec","specifying a path is mandatory");
+      return (TObjString *)0;
+   }
+   // Check the options
+   TString opt(how);
+   if (action == kTail && !opt.IsNull()) {
+      // Keep only static options: -c, --bytes=N, -n , --lines=N, -N
+      TString opts(how), o;
+      Int_t from = 0;
+      Bool_t isc = kFALSE, isn = kFALSE;
+      while (opts.Tokenize(o, from, " ")) {
+         // Skip values not starting with '-' is not argument to '-c' or '-n'
+         if (!o.BeginsWith("-") && !isc && isn) continue;
+         if (isc) {
+            opt.Form("-c %s", o.Data());
+            isc = kFALSE;
+         }
+         if (isn) {
+            opt.Form("-n %s", o.Data());
+            isn = kFALSE;
+         }
+         if (o == "-c") {
+            isc = kTRUE;
+         } else if (o == "-n") {
+            isn = kTRUE;
+         } else if (o == "--bytes=" || o == "--lines=") {
+            opt = o;
+         } else if (o.BeginsWith("-")) {
+            o.Remove(TString::kLeading,'-');
+            if (o.IsDigit()) opt.Form("-%s", o.Data());
+         }
+      }
+   }
+
+   // Build the command line
+   TString cmd(where);
+   if (cmd.IsNull()) cmd.Form("%s:%d", fUrl.GetHost(), fUrl.GetPort());
+   cmd += "|";
+   cmd += what;
+   cmd += "|";
+   cmd += opt;
+
+   // On clients, handle Ctrl-C during collection
+   if (fIntHandler) fIntHandler->Add();
+
+   // Send the request
+   TObjString *os = fSocket->SendCoordinator(kExec, cmd.Data(), action);
+
+   // On clients, handle Ctrl-C during collection
+   if (fIntHandler) fIntHandler->Remove();
+
+   // Done
+   return os;
+}
+
+//______________________________________________________________________________
+Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt)
+{
+   // Get file 'remote' into 'local' from the master.
+   // If opt is "force", the file, if it exists remotely, is copied in all cases.
+   // If opt is "check" and the local file exists, a check for changes is done
+   // is done using the md5 check sum.
+   // Return 0 on success, -1 on error.
+
+   Int_t rc = -1;
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("GetFile", "invalid TXProofMgr - do nothing");
+      return rc;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("GetFile", "functionality not supported by server");
+      return rc;
+   }
+
+   // Check remote path name
+   TString filerem(remote);
+   if (filerem.IsNull()) {
+      Error("GetFile", "remote file path undefined");
+      return rc;
+   }
+
+   // Parse option
+   TString oo(opt);
+   oo.ToUpper();
+   Bool_t check = (oo == "CHECK") ? kTRUE : kFALSE;
+   Bool_t force = (!check && oo == "FORCE") ? kTRUE : kFALSE;
+
+   // Check local path name
+   TString fileloc(local);
+   if (fileloc.IsNull()) {
+      // Set the same as the remote one, in the working dir
+      fileloc = gSystem->BaseName(filerem);
+   }
+   gSystem->ExpandPathName(fileloc);
+
+   // Default open and mode flags
+#ifdef WIN32
+   UInt_t openflags =  O_WRONLY | O_BINARY;
+#else
+   UInt_t openflags =  O_WRONLY;
+#endif
+   UInt_t openmode = 0600;
+
+   // Get information about the local file
+   UserGroup_t *ugloc = 0;
+   Int_t rcloc = 0;
+   FileStat_t stloc;
+   if ((rcloc = gSystem->GetPathInfo(fileloc, stloc)) == 0) {
+      if (R_ISDIR(stloc.fMode)) {
+         // Add the filename of the remote file and re-check
+         if (!fileloc.EndsWith("/")) fileloc += "/";
+         fileloc += gSystem->BaseName(filerem);
+      }
+      if ((rcloc = gSystem->GetPathInfo(fileloc, stloc)) == 0) {
+         // It exists already. If it is not a regular file we cannot continue
+         if (!R_ISREG(stloc.fMode)) {
+            Printf("[GetFile] local file '%s' exists and is not regular: cannot continue",
+                               fileloc.Data());
+            return rc;
+         }
+         // Get our info
+         if (!(ugloc = gSystem->GetUserInfo(gSystem->GetUid()))) {
+            Error("GetFile", "cannot get user info for additional checks");
+            return rc;
+         }
+         // Can we delete or overwrite it ?
+         Bool_t owner = (ugloc->fUid == stloc.fUid && ugloc->fGid == stloc.fGid) ? kTRUE : kFALSE;
+         Bool_t group = (!owner && ugloc->fGid == stloc.fGid) ? kTRUE : kFALSE;
+         Bool_t other = (!owner && !group) ? kTRUE : kFALSE;
+         delete ugloc;
+         if ((owner && !(stloc.fMode & kS_IWUSR)) ||
+             (group && !(stloc.fMode & kS_IWGRP)) || (other && !(stloc.fMode & kS_IWOTH))) {
+            Printf("[GetFile] file '%s' exists: no permission to delete or overwrite the file", fileloc.Data());
+            Printf("[GetFile] ownership: owner: %d, group: %d, other: %d", owner, group, other);
+            Printf("[GetFile] mode: %x", stloc.fMode);
+            return rc;
+         }
+         // In case we open the file, we need to truncate it
+         openflags |=  O_CREAT | O_TRUNC;
+      } else {
+         // In case we open the file, we need to create it
+         openflags |=  O_CREAT;
+      }
+   } else {
+      // In case we open the file, we need to create it
+      openflags |=  O_CREAT;
+   }
+
+   // Check the remote file exists and get it check sum
+   TString remsum;
+   if (Md5sum(filerem, remsum) != 0) {
+      Printf("[GetFile] remote file '%s' does not exists or cannot be read", filerem.Data());
+      return rc;
+   }
+
+   // If the file exists already locally, check if it is different
+   bool same = 0;
+   if (rcloc == 0 && !force) {
+      TMD5 *md5loc = TMD5::FileChecksum(fileloc);
+      if (md5loc) {
+         if (remsum == md5loc->AsString()) {
+            Printf("[GetFile] local file '%s' and remote file '%s' have the same MD5 check sum",
+                            fileloc.Data(), filerem.Data());
+            Printf("[GetFile] use option 'force' to override");
+            same = 1;
+         }
+         delete md5loc;
+      }
+
+      // If a different file with the same name exists already, ask what to do
+      if (!same) {
+         char *a = Getline("Local file exists already: would you like to overwrite it? [N/y]");
+         if (a[0] == 'n' || a[0] == 'N' || a[0] == '\0') return 0;
+      } else {
+         return 0;
+      }
+   }
+
+   // Open the local file for writing
+   Int_t fdout = open(fileloc, openflags, openmode);
+   if (fdout < 0) {
+      Error("GetFile", "could not open local file '%s' for writing: errno: %d", local, errno);
+      return rc;
+   }
+
+   // Build the command line
+   TString cmd(filerem);
+
+   // Send the request
+   TStopwatch watch;
+   watch.Start();
+   TObjString *os = fSocket->SendCoordinator(kGetFile, cmd.Data());
+
+   if (os) {
+      // The message contains the size
+      Long64_t size;
+      sscanf(os->GetName(), "%lld", &size);
+      if (size <= 0) {
+         Error("GetFile", "received null or negative size: %ldd", size);
+         close(fdout);
+         return rc;
+      }
+
+      // Receive the file
+      const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
+      char buf[kMAXBUF];
+
+      rc = 0;
+      Int_t rec, r;
+      Long64_t filesize = 0, left = 0;
+      while (rc == 0 && filesize < size) {
+         left = size - filesize;
+         if (left > kMAXBUF) left = kMAXBUF;
+         rec = fSocket->RecvRaw(&buf, left);
+         filesize = (rec > 0) ? (filesize + rec) : filesize;
+         if (rec > 0) {
+            char *p = buf;
+            r = rec;
+            while (r) {
+               Int_t w = 0;
+               while ((w = write(fdout, p, r)) < 0 && TSystem::GetErrno() == EINTR)
+                  TSystem::ResetErrno();
+               if (w < 0) {
+                  SysError("GetFile", "error writing to unit: %d", fdout);
+                  rc = -1;
+                  break;
+               }
+               r -= w;
+               p += w;
+            }
+            // Basic progress bar
+            CpProgress("GetFile", filesize, size, &watch);
+         } else if (rec < 0) {
+            rc = -1;
+            Error("GetFile", "error during receiving file");
+            break;
+         }
+      }
+      // Finalize the progress bar
+      CpProgress("GetFile", filesize, size, &watch, kTRUE);
+
+   } else {
+      Error("GetFile", "size not received");
+      rc = -1;
+   }
+
+   // Close local file
+   close(fdout);
+   watch.Stop();
+   watch.Reset();
+
+   if (rc == 0) {
+      // Check if everything went fine
+      TMD5 *md5loc = TMD5::FileChecksum(fileloc);
+      if (!md5loc) {
+         Printf("[GetFile] cannot get MD5 checksum of the new local file '%s'", fileloc.Data());
+         rc = -1;
+      } else if (remsum != md5loc->AsString()) {
+         Printf("[GetFile] checksums for the local copy and the remote file differ: {rem:%s,loc:%s}",
+                           remsum.Data(), md5loc->AsString());
+         rc = -1;
+         delete md5loc;
+      }
+   }
+   // Done
+   return rc;
+}
+
+//______________________________________________________________________________
+Int_t TXProofMgr::PutFile(const char *local, const char *remote, const char *opt)
+{
+   // Put file 'local'to 'remote' to the master
+   // Return 0 on success, -1 on error
+
+   Int_t rc = -1;
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("PutFile", "invalid TXProofMgr - do nothing");
+      return rc;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("PutFile", "functionality not supported by server");
+      return rc;
+   }
+
+   // Check local path name
+   TString fileloc(local);
+   if (fileloc.IsNull()) {
+      Error("PutFile", "local file path undefined");
+      return rc;
+   }
+   gSystem->ExpandPathName(fileloc);
+
+   // Parse option
+   TString oo(opt);
+   oo.ToUpper();
+   Bool_t force = (oo == "FORCE") ? kTRUE : kFALSE;
+
+   // Check remote path name
+   TString filerem(remote);
+   if (filerem.IsNull()) {
+      // Set the same as the local one, in the working dir
+      filerem.Form("~/%s", gSystem->BaseName(fileloc));
+   } else if (filerem.EndsWith("/")) {
+      // Remote path is a directory: add the file name as in the local one
+      filerem += gSystem->BaseName(fileloc);
+   }
+
+   // Default open flags
+#ifdef WIN32
+   UInt_t openflags =  O_RDONLY | O_BINARY;
+#else
+   UInt_t openflags =  O_RDONLY;
+#endif
+
+   // Get information about the local file
+   Int_t rcloc = 0;
+   FileStat_t stloc;
+   if ((rcloc = gSystem->GetPathInfo(fileloc, stloc)) != 0 || !R_ISREG(stloc.fMode)) {
+      // It dies not exists or it is not a regular file: we cannot continue
+      const char *why = (rcloc == 0) ? "is not regular" : "does not exists";
+      Printf("[PutFile] local file '%s' %s: cannot continue", fileloc.Data(), why);
+      return rc;
+   }
+   // Get our info
+   UserGroup_t *ugloc = 0;
+   if (!(ugloc = gSystem->GetUserInfo(gSystem->GetUid()))) {
+      Error("PutFile", "cannot get user info for additional checks");
+      return rc;
+   }
+   // Can we read it ?
+   Bool_t owner = (ugloc->fUid == stloc.fUid && ugloc->fGid == stloc.fGid) ? kTRUE : kFALSE;
+   Bool_t group = (!owner && ugloc->fGid == stloc.fGid) ? kTRUE : kFALSE;
+   Bool_t other = (!owner && !group) ? kTRUE : kFALSE;
+   delete ugloc;
+   if ((owner && !(stloc.fMode & kS_IRUSR)) ||
+       (group && !(stloc.fMode & kS_IRGRP)) || (other && !(stloc.fMode & kS_IROTH))) {
+      Printf("[PutFile] file '%s': no permission to read the file", fileloc.Data());
+      Printf("[PutFile] ownership: owner: %d, group: %d, other: %d", owner, group, other);
+      Printf("[PutFile] mode: %x", stloc.fMode);
+      return rc;
+   }
+
+   // Local MD5 sum
+   TString locsum;
+   TMD5 *md5loc = TMD5::FileChecksum(fileloc);
+   if (!md5loc) {
+      Error("PutFile", "cannot calculate the check sum for '%s'", fileloc.Data());
+      return rc;
+   } else {
+      locsum = md5loc->AsString();
+      delete md5loc;
+   }
+
+   // Check the remote file exists and get it check sum
+   Bool_t same = kFALSE;
+   FileStat_t strem;
+   TString remsum;
+   if (Stat(filerem, strem) == 0) {
+      if (Md5sum(filerem, remsum) != 0) {
+         Printf("[PutFile] remote file exists but the check sum calculation failed");
+         return rc;
+      }
+      // Check sums
+      if (remsum == locsum) {
+         if (!force) {
+            Printf("[PutFile] local file '%s' and remote file '%s' have the same MD5 check sum",
+                              fileloc.Data(), filerem.Data());
+            Printf("[PutFile] use option 'force' to override");
+         }
+         same = kTRUE;
+      }
+      if (!force) {
+         // If a different file with the same name exists already, ask what to do
+         if (!same) {
+            char *a = Getline("Remote file exists already: would you like to overwrite it? [N/y]");
+            if (a[0] == 'n' || a[0] == 'N' || a[0] == '\0') return 0;
+            force = kTRUE;
+         } else {
+            return 0;
+         }
+      }
+   }
+
+   // Open the local file
+   int fd = open(fileloc.Data(), openflags);
+   if (fd < 0) {
+      Error("PutFile", "cannot open file '%s': %d", fileloc.Data(), errno);
+      return -1;
+   }
+
+   // Build the command line: 'path size [opt]'
+   TString cmd;
+   cmd.Form("%s %lld", filerem.Data(), stloc.fSize);
+   if (force) cmd += " force";
+
+   // Send the request
+   TStopwatch watch;
+   watch.Start();
+   TObjString *os = fSocket->SendCoordinator(kPutFile, cmd.Data());
+
+   if (os) {
+
+      // Send over the file
+      const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
+      char buf[kMAXBUF];
+
+      Long64_t pos = 0;
+      lseek(fd, pos, SEEK_SET);
+
+      rc = 0;
+      while (rc == 0 && pos < stloc.fSize) {
+         Long64_t left = stloc.fSize - pos;
+         if (left > kMAXBUF) left = kMAXBUF;
+         Int_t siz;
+         while ((siz = read(fd, &buf[0], left)) < 0 && TSystem::GetErrno() == EINTR)
+            TSystem::ResetErrno();
+         if (siz < 0 || siz != left) {
+            Error("PutFile", "error reading from file: errno: %d", errno);
+            rc = -1;
+            break;
+         }
+         Int_t src = 0;
+         if ((src = fSocket->fConn->WriteRaw((void *)&buf[0], left)) != left) {
+            Error("PutFile", "error sending over: errno: %d (rc: %d)", TSystem::GetErrno(), src);
+            rc = -1;
+            break;
+         }
+         // Basic progress bar
+         CpProgress("PutFile", pos, stloc.fSize, &watch);
+         // Re-position
+         pos += left;
+      }
+      // Finalize the progress bar
+      CpProgress("PutFile", pos, stloc.fSize, &watch, kTRUE);
+
+   } else {
+      Error("PutFile", "command could not be executed");
+      rc = -1;
+   }
+
+   // Close local file
+   close(fd);
+   watch.Stop();
+   watch.Reset();
+
+   if (rc == 0) {
+      // Check if everything went fine
+      if (Md5sum(filerem, remsum) != 0) {
+         Printf("[PutFile] cannot get MD5 checksum of the new remote file '%s'", filerem.Data());
+         rc = -1;
+      } else if (remsum != locsum) {
+         Printf("[PutFile] checksums for the local copy and the remote file differ: {rem:%s, loc:%s}",
+                           remsum.Data(), locsum.Data());
+         rc = -1;
+      }
+   }
+
+   // Done
+   return rc;
+}
+
+//______________________________________________________________________________
+void TXProofMgr::CpProgress(const char *pfx, Long64_t bytes,
+                            Long64_t size, TStopwatch *watch, Bool_t cr)
+{
+   // Print file copy progress.
+
+   // Protection
+   if (!pfx || size == 0 || !watch) return;
+
+   fprintf(stderr, "[%s] Total %.02f MB\t|", pfx, (Double_t)size/1048576);
+
+   for (int l = 0; l < 20; l++) {
+      if (size > 0) {
+         if (l < 20*bytes/size)
+            fprintf(stderr, "=");
+         else if (l == 20*bytes/size)
+            fprintf(stderr, ">");
+         else if (l > 20*bytes/size)
+            fprintf(stderr, ".");
+      } else
+         fprintf(stderr, "=");
+   }
+   // Allow to update the GUI while uploading files
+   gSystem->ProcessEvents();
+   watch->Stop();
+   Double_t copytime = watch->RealTime();
+   fprintf(stderr, "| %.02f %% [%.01f MB/s]\r",
+           100.0*(size?(bytes/size):1), bytes/copytime/1048576.);
+   if (cr) fprintf(stderr, "\n");
+   watch->Continue();
+}
+
+//______________________________________________________________________________
+Int_t TXProofMgr::Cp(const char *src, const char *dst, const char *fmt)
+{
+   // Copy files in/out of the sandbox. Either 'src' or 'dst' must be in the
+   // sandbox.
+   // Return 0 on success, -1 on error
+
+   Int_t rc = -1;
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("Cp", "invalid TXProofMgr - do nothing");
+      return rc;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("Cp", "functionality not supported by server");
+      return rc;
+   }
+
+   // Check source path name
+   TString filesrc(src);
+   if (filesrc.IsNull()) {
+      Error("Cp", "source file path undefined");
+      return rc;
+   }
+   // Check destination path name
+   TString filedst(dst);
+   if (filedst.IsNull()) {
+      filedst = gSystem->BaseName(TUrl(filesrc.Data()).GetFile());
+   } else if (filedst.EndsWith("/")) {
+      // Remote path is a directory: add the file name as in the local one
+      filedst += gSystem->BaseName(filesrc);
+   }
+
+   // Make dure that local files are in the format file://<file>
+   filesrc = TUrl(filesrc.Data(), kTRUE).GetUrl();
+   filedst = TUrl(filedst.Data(), kTRUE).GetUrl();
+   if (filesrc.BeginsWith("file:") && !filesrc.BeginsWith("file://"))
+      filesrc.ReplaceAll("file:", "file://");
+   if (filedst.BeginsWith("file:") && !filedst.BeginsWith("file://"))
+      filedst.ReplaceAll("file:", "file://");
+
+   // Prepare the command
+   TString cmd;
+   cmd.Form("%s %s %s", filesrc.Data(), filedst.Data(), (fmt ? fmt : ""));
+
+   // On clients, handle Ctrl-C during collection
+   if (fIntHandler) fIntHandler->Add();
+
+   // Send the request
+   TObjString *os = fSocket->SendCoordinator(kCpFile, cmd.Data());
+
+   // On clients, handle Ctrl-C during collection
+   if (fIntHandler) fIntHandler->Remove();
+
+   // Show the result, if any
+   if (os) {
+      if (gDebug > 0) Printf("%s", os->GetName());
+      rc = 0;
+   }
+
+   // Done
    return rc;
 }

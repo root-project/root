@@ -377,7 +377,7 @@ void TXSocket::Close(Option_t *opt)
 
 //_____________________________________________________________________________
 UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
-                                          XrdClientMessage *m)
+                                                    XrdClientMessage *m)
 {
    // We are here if an unsolicited response comes from a logical conn
    // The response comes in the form of an XrdClientMessage *, that must NOT be
@@ -691,7 +691,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             kXR_int32 opt = 0;
             memcpy(&opt, pdata, sizeof(kXR_int32));
             opt = net2host(opt);
-            if (opt == 0 || opt == 1) {
+            if (opt == 0 || opt == 1 || opt == 2) {
                // Update pointer to data
                pdata = (void *)((char *)pdata + sizeof(kXR_int32));
                len -= sizeof(kXR_int32);
@@ -702,6 +702,9 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             if (opt == 0) {
                // One line
                Printf("| %.*s", len, (char *)pdata);
+            } else if (opt == 2) {
+               // Raw displaying
+               Printf("%.*s", len, (char *)pdata);
             } else {
                // A small header
                Printf(" ");
@@ -1262,6 +1265,43 @@ void TXSocket::RemoteTouch()
 }
 
 //______________________________________________________________________________
+void TXSocket::CtrlC()
+{
+   // Interrupt the remote protocol instance. Used to propagate Ctrl-C.
+   // No reply from server is expected.
+
+   TSystem::ResetErrno();
+
+   if (gDebug > 0)
+      Info("CtrlC","%p: sending ctrl-c request to %s", this, GetName());
+
+   // Make sure we are connected
+   if (!IsValid()) {
+      Error("CtrlC","not connected: nothing to do");
+      return;
+   }
+
+   // Prepare request
+   XPClientRequest Request;
+   memset( &Request, 0, sizeof(Request) );
+   fConn->SetSID(Request.header.streamid);
+   Request.proof.requestid = kXP_ctrlc;
+   Request.proof.sid = 0;
+   Request.proof.dlen = 0;
+
+   // We need the right order
+   if (XPD::clientMarshall(&Request) != 0) {
+      Error("CtrlC", "%p: problems marshalling request ", this);
+      return;
+   }
+   if (fConn->LowWrite(&Request, 0, 0) != kOK)
+      Error("CtrlC", "%p: %s: problems sending ctrl-c request to server", this);
+
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
 Int_t TXSocket::PickUpReady()
 {
    // Wait and pick-up next buffer from the asynchronous queue
@@ -1678,6 +1718,15 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
          reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
          buf = (msg) ? (const void *)msg : buf;
          break;
+      case kCpFile:
+      case kGetFile:
+      case kPutFile:
+      case kExec:
+         reqhdr.proof.sid = fSessionID;
+         reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
+         buf = (msg) ? (const void *)msg : buf;
+         vout = (char **)&bout;
+         break;
       case kQueryLogPaths:
          vout = (char **)&bout;
       case kReleaseWorker:
@@ -1724,8 +1773,9 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
    }
 
    // server response header
+   Bool_t noterr = (gDebug > 0) ? kTRUE : kFALSE;
    XrdClientMessage *xrsp =
-      fConn->SendReq(&reqhdr, buf, vout, "TXSocket::SendCoordinator");
+      fConn->SendReq(&reqhdr, buf, vout, "TXSocket::SendCoordinator", noterr);
 
    // If positive answer
    if (xrsp) {
