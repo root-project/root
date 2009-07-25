@@ -9,7 +9,7 @@
 // *  $ cd $ROOTSYS/test                                                   * //
 // *  $ make stressProof                                                   * //
 // *  $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile]             * //
-// *                  [-dyn] [-ds] [master]                                * //
+// *                  [-dyn] [-ds] [-t testnum] [-h1 h1src] [master]       * //
 // *                                                                       * //
 // * Optional arguments:                                                   * //
 // *   -h          show help info                                          * //
@@ -23,12 +23,20 @@
 // *               a temporary file deleted at the end of the test; in     * //
 // *               case of success                                         * //
 // *   -dyn        run the test in dynamic startup mode                    * //
-// *   -ds        force the dataset test if skipped by default             * //
+// *   -ds         force the dataset test if skipped by default            * //
+// *   -t testnum  run only test 'testnum' and the tests from which it     * //
+// *               depends                                                 * //
+// *   -h1 h1src   specify a location for the H1 files;                    * //
+// *               use h1src="download" to download them to a temporary    * //
+// *               location; by default the files are read directly from   * //
+// *               the ROOT http server; however this may give failures if * //
+// *               the connection is slow                                  * //
 // *                                                                       * //
 // * To run interactively:                                                 * //
 // * $ root                                                                * //
 // * root[] .L stressProof.cxx                                             * //
-// * root[] stressProof(master, wrks, verbose, logfile, dyn, skipds)       * //
+// * root[] stressProof(master, wrks, verbose, logfile, dyn, \             * //
+// *                                         skipds, testnum, h1src)       * //
 // *                                                                       * //
 // * The arguments have the same meaning as above except for               * //
 // *     verbose [Int_t]   increasing verbosity (0 == minimal)             * //
@@ -55,6 +63,7 @@
 // *   Test 10 : Simple 'event' generation ........................ OK *   * //
 // *   Test 11 : Input data propagation ........................... OK *   * //
 // *   Test 12 : H1, Simple: async mode :.......................... OK *   * //
+// *   Test 13 : Admin functionality .............................. OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -81,6 +90,7 @@
 #include "TFileInfo.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TMacro.h"
 #include "TMap.h"
 #include "TMath.h"
 #include "TParameter.h"
@@ -96,11 +106,14 @@
 #include "../tutorials/proof/getProof.C"
 
 static const char *urldef = "proof://localhost:11093";
+static TString gtutdir;
+static TString gsandbox;
 static Int_t gverbose = 0;
 static TString glogfile;
 static Int_t gpoints = 0;
 static Int_t totpoints = 53;
 static RedirectHandle_t gRH;
+static RedirectHandle_t gRHAdmin;
 static Double_t gH1Time = 0;
 static Double_t gSimpleTime = 0;
 static Int_t gH1Cnt = 0;
@@ -109,10 +122,15 @@ static TStopwatch gTimer;
 static Bool_t gTimedOut = kFALSE;
 static Bool_t gDynamicStartup = kFALSE;
 static Bool_t gSkipDataSetTest = kTRUE;
+static TString gh1src("http://root.cern.ch/files/h1");
+static Bool_t gh1ok = kTRUE;
+static const char *gh1file[] = { "dstarmb.root", "dstarp1a.root", "dstarp1b.root", "dstarp2.root" };
 
 void stressProof(const char *url = "proof://localhost:11093",
                  Int_t nwrks = -1, Int_t verbose = 0,
-                 const char *logfile = 0, Bool_t dyn = kFALSE, Bool_t skipds = kTRUE);
+                 const char *logfile = 0, Bool_t dyn = kFALSE,
+                 Bool_t skipds = kTRUE, Int_t test = -1,
+                 const char *h1pfx = 0);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -126,7 +144,7 @@ int main(int argc,const char *argv[])
       printf(" \n");
       printf(" Usage:\n");
       printf(" \n");
-      printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [-dyn] [-ds] [master]\n");
+      printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [-dyn] [-ds] [-t testnum] [-h1 h1src] [master]\n");
       printf(" \n");
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
@@ -140,6 +158,10 @@ int main(int argc,const char *argv[])
       printf("                 in case of success\n");
       printf("   -dyn          run the test in dynamicStartup mode\n");
       printf("   -ds           force the dataset test if skipped by default\n");
+      printf("   -t testnum    run only test 'testnum' and the tests from which it depends\n");
+      printf("   -h1 h1src     specify a location for the H1 files; use h1src=\"download\" to download\n");
+      printf("                 to a temporary location; by default the files are read directly from the\n");
+      printf("                 ROOT http server; however this may give failures if the connection is slow\n");
       printf(" \n");
       gSystem->Exit(0);
    }
@@ -148,7 +170,9 @@ int main(int argc,const char *argv[])
    const char *url = 0;
    Int_t nWrks = -1;
    Int_t verbose = 0;
+   Int_t test = -1;
    const char *logfile = 0;
+   const char *h1src = 0;
    Int_t i = 1;
    while (i < argc) {
       if (!strcmp(argv[i],"-h")) {
@@ -181,6 +205,22 @@ int main(int argc,const char *argv[])
       } else if (!strncmp(argv[i],"-ds",3)) {
          gSkipDataSetTest = kFALSE;
          i++;
+      } else if (!strcmp(argv[i],"-t")) {
+         if (i+1 == argc || argv[i+1][0] == '-') {
+            printf(" -t should be followed by a number: ignoring \n");
+            i++;
+         } else { 
+            test = atoi(argv[i+1]);
+            i += 2;
+         }
+      } else if (!strcmp(argv[i],"-h1")) {
+         if (i+1 == argc || argv[i+1][0] == '-') {
+            printf(" -h1 should be followed by a prefix: ignoring \n");
+            i++;
+         } else { 
+            h1src = argv[i+1];
+            i += 2;
+         }
       } else {
          url = argv[i];
          i++;
@@ -189,7 +229,7 @@ int main(int argc,const char *argv[])
    // Use defaults where required
    if (!url) url = urldef;
 
-   stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest);
+   stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest, test, h1src);
 
    gSystem->Exit(0);
 }
@@ -233,13 +273,24 @@ private:
    Int_t           fSeq;  // Sequential number for the test
    ProofTestFun_t  fFun;  // Function to be executed for the test
    void           *fArgs; // Arguments to be passed to the function
+   TString         fDeps;  // Test dependencies, e.g. "1,3"
+   Int_t           fDepFrom; // Index for looping over deps
+   Bool_t          fEnabled; // kTRUE if this test is enabled
 
 public:
-   ProofTest(const char *n, Int_t seq, ProofTestFun_t f, void *a = 0)
-           : TNamed(n,""), fSeq(seq), fFun(f), fArgs(a) { }
+   ProofTest(const char *n, Int_t seq, ProofTestFun_t f, void *a = 0, const char *d = "")
+           : TNamed(n,""), fSeq(seq), fFun(f), fArgs(a),
+             fDeps(d), fDepFrom(0), fEnabled(kTRUE) { }
    virtual ~ProofTest() { }
 
-   Int_t Run();
+   void   Disable() { fEnabled = kFALSE; }
+   void   Enable() { fEnabled = kTRUE; }
+   Bool_t IsEnabled() const { return fEnabled; }
+
+   Int_t  NextDep(Bool_t reset = kFALSE);
+   Int_t  Num() const { return fSeq; }
+
+   Int_t  Run();
 };
 
 //
@@ -266,6 +317,21 @@ Bool_t TTimeOutTimer::Notify()
    return kTRUE;
 }
 //------------------------------------------------------------------------------
+//_____________________________________________________________________________
+Int_t ProofTest::NextDep(Bool_t reset)
+{
+   // Return index of next dependency or -1 if none (or no more)
+   // If reset is kTRUE, reset the internal counter before acting.
+
+   if (reset) fDepFrom = 0;
+
+   TString tkn;
+   if (fDeps.Tokenize(tkn, fDepFrom, ",")) {
+      if (tkn.IsDigit()) return tkn.Atoi();
+   }
+   // Not found
+   return -1;
+}
 
 //_____________________________________________________________________________
 Int_t ProofTest::Run()
@@ -308,6 +374,7 @@ Int_t PT_Packages(void *);
 Int_t PT_Event(void *);
 Int_t PT_InputData(void *);
 Int_t PT_H1SimpleAsync(void *arg);
+Int_t PT_AdminFunc(void *arg);
 
 // Arguments structures
 typedef struct {            // Open
@@ -324,8 +391,8 @@ typedef struct {
 static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
 //_____________________________________________________________________________
-void stressProof(const char *url, Int_t nwrks,
-                 Int_t verbose, const char *logfile, Bool_t dyn, Bool_t skipds)
+void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile,
+                 Bool_t dyn, Bool_t skipds, Int_t test, const char *h1src)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
@@ -338,9 +405,9 @@ void stressProof(const char *url, Int_t nwrks,
    gverbose = verbose;
 
    // Notify/warn about the dynamic startup option, if any
+   TUrl uu(url), udef(urldef);
    if (gDynamicStartup) {
       // Check url
-      TUrl uu(url), udef(urldef);
       if (strcmp(uu.GetHost(), udef.GetHost()) || (uu.GetPort() != udef.GetPort())) {
          printf("*   WARNING: request to run a test with per-job scheduling on    *\n");
          printf("*            an external cluster: %s .\n", url);
@@ -395,8 +462,30 @@ void stressProof(const char *url, Int_t nwrks,
       printf("******************************************************************\n");
    }
    if (!strcmp(url,"lite")) {
-      printf("*  PROOF-Lite session (test 12 skipped)                         **\n");
+      printf("*  PROOF-Lite session (tests #12 and #13 skipped)               **\n");
       printf("******************************************************************\n");
+   }
+   if (test > 0) {
+      if (test < 14) {
+         printf("*  Running only test %2d (and related tests)                     **\n", test);
+         printf("******************************************************************\n");
+      } else {
+         printf("*  Request for unknown test %2d : ignore                         **\n", test);
+         printf("******************************************************************\n");
+         test = -1;
+      }
+   }
+   if (h1src && strlen(h1src)) {
+      if (!strcmp(h1src, "download") &&
+          (strcmp(uu.GetHost(), udef.GetHost()) || (uu.GetPort() != udef.GetPort()))) {
+         printf("*  External clusters: ignoring download request of H1 files\n");
+         printf("******************************************************************\n");
+      } else if (!gh1src.BeginsWith(h1src)) {
+         printf("*  Taking H1 files from: %s\n", h1src);
+         printf("******************************************************************\n");
+         gh1src = h1src;
+         gh1ok = kFALSE;
+      }
    }
    //
    // Reset dataset settings
@@ -410,38 +499,70 @@ void stressProof(const char *url, Int_t nwrks,
    PT_Open_Args_t PToa = { url, nwrks };
    testList->Add(new ProofTest("Open a session", 1, &PT_Open, (void *)&PToa));
    // Get logs
-   testList->Add(new ProofTest("Get session logs", 2, &PT_GetLogs, (void *)&PToa));
+   testList->Add(new ProofTest("Get session logs", 2, &PT_GetLogs, (void *)&PToa, "1"));
    // Simple histogram generation
-   testList->Add(new ProofTest("Simple random number generation", 3, &PT_Simple));
+   testList->Add(new ProofTest("Simple random number generation", 3, &PT_Simple, 0, "1"));
    // Test of data set handling with the H1 http files
-   testList->Add(new ProofTest("Dataset handling with H1 files", 4, &PT_DataSets));
+   testList->Add(new ProofTest("Dataset handling with H1 files", 4, &PT_DataSets, 0, "1"));
    // H1 analysis over HTTP (chain)
-   testList->Add(new ProofTest("H1: chain processing", 5, &PT_H1Http));
+   testList->Add(new ProofTest("H1: chain processing", 5, &PT_H1Http, 0, "1"));
    // H1 analysis over HTTP (file collection)
-   testList->Add(new ProofTest("H1: file collection processing", 6, &PT_H1FileCollection));
+   testList->Add(new ProofTest("H1: file collection processing", 6, &PT_H1FileCollection, 0, "1"));
    // H1 analysis over HTTP: classic packetizer
-   testList->Add(new ProofTest("H1: file collection, TPacketizer", 7, &PT_H1FileCollection, (void *)&gStd_Old));
+   testList->Add(new ProofTest("H1: file collection, TPacketizer", 7, &PT_H1FileCollection, (void *)&gStd_Old, "1"));
    // H1 analysis over HTTP by dataset name
-   testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet));
+   testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet, 0, "1,4"));
    // Test of data set handling with the H1 http files
-   testList->Add(new ProofTest("Package management with 'event'", 9, &PT_Packages));
+   testList->Add(new ProofTest("Package management with 'event'", 9, &PT_Packages, 0, "1"));
    // Simple event analysis
-   testList->Add(new ProofTest("Simple 'event' generation", 10, &PT_Event));
+   testList->Add(new ProofTest("Simple 'event' generation", 10, &PT_Event, 0, "1"));
    // Test input data propagation (it only works in the static startup mode)
-   testList->Add(new ProofTest("Input data propagation", 11, &PT_InputData));
+   testList->Add(new ProofTest("Input data propagation", 11, &PT_InputData, 0, "1"));
    // Test asynchronous running
-   testList->Add(new ProofTest("H1, Simple: async mode", 12, &PT_H1SimpleAsync));
+   testList->Add(new ProofTest("H1, Simple: async mode", 12, &PT_H1SimpleAsync, 0, "1,3,5"));
+   // Test admin functionality
+   testList->Add(new ProofTest("Admin functionality", 13, &PT_AdminFunc, 0, "1"));
+
+   // Check what to run
+   ProofTest *t = 0, *treq = 0;
+   TIter nxt(testList);
+   if (test > 0) {
+      // Disable first all the tests
+      while ((t = (ProofTest *)nxt())) {
+         t->Disable();
+         if (t->Num() == test) treq = t;
+      }
+      if (!treq) {
+         printf("* Test %2d not found among the registered tests - exiting        **\n", test);
+         printf("******************************************************************\n");
+         return;
+      }
+      // Enable the required tests
+      Int_t tn = -1;
+      while ((tn = treq->NextDep()) > 0) {
+         nxt.Reset();
+         while ((t = (ProofTest *)nxt())) {
+            if (t->Num() == tn) {
+               t->Enable();
+               break;
+            }
+         }
+      }
+      // Enable the required test
+      treq->Enable();
+   }
 
    //
    // Run the tests
    //
    Bool_t failed = kFALSE;
-   TIter nxt(testList);
-   ProofTest *t = 0;
+   nxt.Reset();
    while ((t = (ProofTest *)nxt()))
-      if (t->Run() < 0) {
-         failed = kTRUE;
-         break;
+      if (t->IsEnabled()) {
+         if (t->Run() < 0) {
+            failed = kTRUE;
+            break;
+         }
       }
 
    // Done
@@ -465,6 +586,63 @@ void stressProof(const char *url, Int_t nwrks,
    }
    printf("******************************************************************\n");
 
+}
+
+//_____________________________________________________________________________
+Int_t PT_H1AssertFiles(const char *h1src)
+{
+   // Make sure that the needed H1 files are available at 'src'
+   // If 'src' is "download", the files are download under <tutdir>/h1
+
+   if (!h1src || strlen(h1src) <= 0) {
+      printf("\n >>> Test failure: src dir undefined\n");
+      return -1;
+   }
+
+   // Special case
+   if (!strcmp(h1src,"download")) {
+      gh1src = TString::Format("%s/h1", gtutdir.Data());
+      if (gSystem->AccessPathName(gh1src)) {
+         if (gSystem->MakeDirectory(gh1src) != 0) {
+            printf("\n >>> Test failure: could not create dir %s\n", gh1src.Data());
+            return -1;
+         }
+      }
+      // Copy the files now
+      Int_t i = 0;
+      for (i = 0; i < 4; i++) {
+         TString src = TString::Format("http://root.cern.ch/files/h1/%s", gh1file[i]);
+         TString dst = TString::Format("%s/%s", gh1src.Data(), gh1file[i]);
+         if (!TFile::Cp(src, dst)) {
+            printf("\n >>> Test failure: problems retrieving %s\n", src.Data());
+            return -1;
+         }
+         gSystem->RedirectOutput(0, 0, &gRH);
+         printf("%d\b", i);
+         gSystem->RedirectOutput(glogfile, "a", &gRH);
+      }
+      // Done
+      gh1ok = kTRUE;
+      return 0;
+   }
+
+   // Make sure the files exist at 'src'
+   Int_t i = 0;
+   for (i = 0; i < 4; i++) {
+      TString src = TString::Format("%s/%s", h1src, gh1file[i]);
+      if (gSystem->AccessPathName(src)) {
+         printf("\n >>> Test failure: file %s does not exist\n", src.Data());
+         return -1;
+      }
+      gSystem->RedirectOutput(0, 0, &gRH);
+      printf("%d\b", i);
+      gSystem->RedirectOutput(glogfile, "a", &gRH);
+   }
+   gh1src = h1src;
+
+   // Done
+   gh1ok = kTRUE;
+   return 0;
 }
 
 //_____________________________________________________________________________
@@ -600,7 +778,7 @@ Int_t PT_Open(void *args)
 
    // Temp dir for PROOF tutorials
    PutPoint();
-   TString tutdir, tmpdir(gSystem->TempDirectory()), us;
+   TString tmpdir(gSystem->TempDirectory()), us;
    UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
    if (!ug) {
       printf("\n >>> Test failure: could not get user info");
@@ -608,28 +786,28 @@ Int_t PT_Open(void *args)
    }
    us.Form("/%s", ug->fUser.Data());
    if (!tmpdir.EndsWith(us.Data())) tmpdir += us;
-   tutdir.Form("%s/.proof-tutorial", tmpdir.Data());
-   if (gSystem->AccessPathName(tutdir)) {
-      if (gSystem->mkdir(tutdir, kTRUE) != 0) {
+   gtutdir.Form("%s/.proof-tutorial", tmpdir.Data());
+   if (gSystem->AccessPathName(gtutdir)) {
+      if (gSystem->mkdir(gtutdir, kTRUE) != 0) {
          printf("\n >>> Test failure: could not assert/create the temporary directory"
-                " for the tutorial (%s)", tutdir.Data());
+                " for the tutorial (%s)", gtutdir.Data());
          return -1;
       }
    }
 
    // String to initialize the dataset manager
    TString dsetmgrstr;
-   dsetmgrstr.Form("file dir:%s/datasets opt:-Cq:As:Sb:", tutdir.Data());
+   dsetmgrstr.Form("file dir:%s/datasets opt:-Cq:As:Sb:", gtutdir.Data());
    gEnv->SetValue("Proof.DataSetManager", dsetmgrstr.Data());
 
    // String to initialize the package dir
    TString packdir;
-   packdir.Form("%s/packages", tutdir.Data());
+   packdir.Form("%s/packages", gtutdir.Data());
    gEnv->SetValue("Proof.PackageDir", packdir.Data());
 
    // Get the PROOF Session
    PutPoint();
-   TProof *p = getProof(PToa->url, PToa->nwrks, tutdir.Data(), "force", gDynamicStartup, kTRUE);
+   TProof *p = getProof(PToa->url, PToa->nwrks, gtutdir.Data(), "force", gDynamicStartup, kTRUE);
    if (!p || !(p->IsValid())) {
       printf("\n >>> Test failure: could not start the session\n");
       return -1;
@@ -640,6 +818,28 @@ Int_t PT_Open(void *args)
       printf("\n >>> Test failure: number of workers different from requested\n");
       return -1;
    }
+
+   // Get some useful info about the cluster (the sandbox dir ...)
+   gSystem->RedirectOutput(0, 0, &gRH);
+   TString testPrint(TString::Format("%s/testPrint.log", gtutdir.Data()));
+   gSystem->RedirectOutput(testPrint, "w", &gRHAdmin);
+   gProof->Print();
+   gSystem->RedirectOutput(0, 0, &gRHAdmin);
+   gSystem->RedirectOutput(glogfile, "a", &gRH);
+   TMacro macroPrint(testPrint);
+   TObjString *os = macroPrint.GetLineWith("Working directory:");
+   if (!os) {
+      printf("\n >>> Test failure: problem parsing output from Print()\n");
+      return -1;
+   }
+   Int_t from = strlen("Working directory:") + 1;
+   if (!os->GetString().Tokenize(gsandbox, from, " ")) {
+      printf("\n >>> Test failure: no sandbox dir found\n");
+      return -1;
+   }
+   gsandbox = gSystem->DirName(gsandbox);
+   gsandbox = gSystem->DirName(gsandbox);
+   PutPoint();
 
    // Done
    PutPoint();
@@ -730,10 +930,19 @@ Int_t PT_H1Http(void *)
    // Create the chain
    PutPoint();
    TChain *chain = new TChain("h42");
-   chain->Add("http://root.cern.ch/files/h1/dstarmb.root");
-   chain->Add("http://root.cern.ch/files/h1/dstarp1a.root");
-   chain->Add("http://root.cern.ch/files/h1/dstarp1b.root");
-   chain->Add("http://root.cern.ch/files/h1/dstarp2.root");
+
+   // Assert the files, if needed
+   if (!gh1ok) {
+      if (PT_H1AssertFiles(gh1src.Data()) != 0) {
+         gProof->SetPrintProgress(0);
+         printf("\n >>> Test failure: could not assert the H1 files\n");
+         return -1;
+      }
+   }
+   Int_t i = 0;
+   for (i = 0; i < 4; i++) {
+      chain->Add(TString::Format("%s/%s", gh1src.Data(), gh1file[i]));
+   }
 
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
@@ -784,10 +993,18 @@ Int_t PT_H1FileCollection(void *arg)
    // Create the file collection
    PutPoint();
    TFileCollection *fc = new TFileCollection("h42");
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarmb.root"));
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1a.root"));
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1b.root"));
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp2.root"));
+
+   // Assert the files, if needed
+   if (!gh1ok) {
+      if (PT_H1AssertFiles(gh1src.Data()) != 0) {
+         printf("\n >>> Test failure: could not assert the H1 files\n");
+         return -1;
+      }
+   }
+   Int_t i = 0;
+   for (i = 0; i < 4; i++) {
+      fc->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+   }
 
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
@@ -897,10 +1114,18 @@ Int_t PT_DataSets(void *)
    // Create the file collection
    PutPoint();
    TFileCollection *fc = new TFileCollection();
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarmb.root"));
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1a.root"));
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1b.root"));
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp2.root"));
+
+   // Assert the files, if needed
+   if (!gh1ok) {
+      if (PT_H1AssertFiles(gh1src.Data()) != 0) {
+         printf("\n >>> Test failure: could not assert the H1 files\n");
+         return -1;
+      }
+   }
+   Int_t i = 0;
+   for (i = 0; i < 4; i++) {
+      fc->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+   }
    fc->Update();
 
    // Name for this dataset
@@ -1253,10 +1478,18 @@ Int_t PT_H1SimpleAsync(void *arg)
    // Create the file collection
    PutPoint();
    TFileCollection *fc = new TFileCollection("h42");
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarmb.root"));
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1a.root"));
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1b.root"));
-   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp2.root"));
+
+   // Assert the files, if needed
+   if (!gh1ok) {
+      if (PT_H1AssertFiles(gh1src.Data()) != 0) {
+         printf("\n >>> Test failure: could not assert the H1 files\n");
+         return -1;
+      }
+   }
+   Int_t i = 0;
+   for (i = 0; i < 4; i++) {
+      fc->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+   }
 
    // Clear the list of query results
    PutPoint();
@@ -1333,4 +1566,171 @@ Int_t PT_H1SimpleAsync(void *arg)
    return 0;
 }
 
+//_____________________________________________________________________________
+Int_t PT_AdminFunc(void *)
+{
+   // Test run for the admin functionality
 
+   // Checking arguments
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+   // Not yet supported for PROOF-Lite
+   if (gProof->IsLite()) {
+      return 1;
+   }
+   PutPoint();
+   // Attach to the manager
+   TProofMgr *mgr = gProof->GetManager();
+   if (!mgr) {
+      printf("\n >>> Test failure: no PROOF manager found\n");
+      return -1;
+   }
+   PutPoint();
+   // Directory for this test
+   TString testDir(TString::Format("%s/stressProof-Admin", gtutdir.Data()));
+   if (gSystem->AccessPathName(testDir)) {
+      // Create the directory
+      if (gSystem->MakeDirectory(testDir)) {
+         printf("\n >>> Test failure: cannot create %s\n", testDir.Data());
+         return -1;
+      }
+   }
+   // Create a small test file
+   TMacro testMacro;
+   testMacro.AddLine("// Test macro");
+   testMacro.AddLine("#include \"TSystem.h\"");
+   testMacro.AddLine("void testMacro(Int_t opt = 1)");
+   testMacro.AddLine("{");
+   testMacro.AddLine("   if (opt == 1) {");
+   testMacro.AddLine("      Printf(\"Pid: \", gSystem->GetPid());");
+   testMacro.AddLine("   }");
+   testMacro.AddLine("}");
+   // Save the file in the temporary area
+   TString testFile(TString::Format("%s/testMacro.C", testDir.Data()));
+   if (!gSystem->AccessPathName(testFile)) {
+      // The file exists: remove it first
+      if (gSystem->Unlink(testFile)) {
+         printf("\n >>> Test failure: cannot unlink %s\n", testFile.Data());
+         return -1;
+      }
+   }
+   testMacro.SaveSource(testFile);
+   FileStat_t stloc;
+   if (gSystem->GetPathInfo(testFile, stloc) != 0) {
+      // The file was not created
+      printf("\n >>> Test failure: file %s was not created\n", testFile.Data());
+      return -1;
+   }
+   // Reference checksum
+   TMD5 *testMacroMd5 = testMacro.Checksum();
+   if (!testMacroMd5) {
+      // MD5 sum not calculated
+      printf("\n >>> Test failure: could not calculate the md5 sum of the test macro\n");
+      return -1;
+   }
+   PutPoint();
+
+   // Send the file to the sandbox
+   if (mgr->PutFile(testFile, "~/", "force") != 0) {
+      // The file was not sent over correctly
+      printf("\n >>> Test failure: problems sending file to master sandbox\n");
+      return -1;
+   }
+   PutPoint();
+   // Retrieve the file
+   TString testFile1(TString::Format("%s/testMacro.cxx", testDir.Data()));
+   if (mgr->GetFile("~/testMacro.C", testFile1, "force") != 0) {
+      // The file was not retrieved correctly
+      printf("\n >>> Test failure: problems retrieving file from the master sandbox\n");
+      return -1;
+   }
+   PutPoint();
+
+   // Test 'ls'
+   gSystem->RedirectOutput(0, 0, &gRH);
+   TString testLs(TString::Format("%s/testLs.log", testDir.Data()));
+   gSystem->RedirectOutput(testLs, "w", &gRHAdmin);
+   mgr->Ls("~/testMacro.C");
+   gSystem->RedirectOutput(0, 0, &gRHAdmin);
+   gSystem->RedirectOutput(glogfile, "a", &gRH);
+   TMacro macroLs(testLs);
+   TString testLsLine = TString::Format("%s/testMacro.C", gsandbox.Data());
+   testLsLine.Remove(0, testLsLine.Index(".proof-tutorial")); // the first pat or <tmp> maybe sligthly different
+   if (!macroLs.GetLineWith(testLsLine)) {
+      printf("\n >>> Test failure: Ls: output not consistent (line: '%s')\n", testLsLine.Data());
+      return -1;
+   }
+   PutPoint();
+
+   // Test 'more'
+   gSystem->RedirectOutput(0, 0, &gRH);
+   TString testMore(TString::Format("%s/testMore.log", testDir.Data()));
+   gSystem->RedirectOutput(testMore, "w", &gRHAdmin);
+   mgr->More("~/testMacro.C");
+   gSystem->RedirectOutput(0, 0, &gRHAdmin);
+   gSystem->RedirectOutput(glogfile, "a", &gRH);
+   TMacro macroMore(testMore);
+   if (macroMore.GetListOfLines()->GetSize() < 2) {
+      printf("\n >>> Test failure: More output not too short: %d lines\n",
+                                   macroMore.GetListOfLines()->GetSize());
+      return -1;
+   }
+   macroMore.GetListOfLines()->Remove(macroMore.GetListOfLines()->First());
+   macroMore.GetListOfLines()->Remove(macroMore.GetListOfLines()->First());
+   TMD5 *testMoreMd5 = macroMore.Checksum();
+   if (!testMoreMd5) {
+      // MD5 sum not calculated
+      printf("\n >>> Test failure: could not calculate the md5 sum of the 'more' result\n");
+      return -1;
+   }
+   if (strcmp(testMacroMd5->AsString(), testMoreMd5->AsString())) {
+      printf("\n >>> Test failure: More: result not consistent with reference: {%s, %s}\n",
+                                         testMacroMd5->AsString(), testMoreMd5->AsString());
+      return -1;
+   }
+   PutPoint();
+
+   // Test 'stat'
+   FileStat_t strem;
+   if (mgr->Stat("~/testMacro.C", strem) != 0) {
+      // Stat failure
+      printf("\n >>> Test failure: could not stat remotely the test file\n");
+      return -1;
+   }
+   if (strem.fSize != stloc.fSize) {
+      // Stat failure
+      printf("\n >>> Test failure: stat sizes inconsistent\n");
+      return -1;
+   }
+   PutPoint();
+
+   // Test 'cp' and 'md5sum;
+   if (mgr->Cp("http://root.cern.ch/files/h1/dstarmb.root", "~/") != 0) {
+      // Cp failure
+      printf("\n >>> Test failure: could not retrieve remotely dstarmb.root from the Root Web server\n");
+      return -1;
+   }
+   TString sum;
+   if (mgr->Md5sum("~/dstarmb.root", sum) != 0) {
+      // MD5
+      printf("\n >>> Test failure: calculating the md5sum of dstarmb.root\n");
+      return -1;
+   }
+   if (sum != "0a60055370e16d954f90fb50c2d1a801") {
+      // MD5 wrong
+      printf("\n >>> Test failure: wrong value for md5sum of dstarmb.root: %s\n", sum.Data());
+      return -1;
+   }
+   PutPoint();
+
+   // Clean up sums
+   SafeDelete(testMoreMd5);
+   SafeDelete(testMacroMd5);
+
+   // Done
+   PutPoint();
+   return 0;
+
+}
