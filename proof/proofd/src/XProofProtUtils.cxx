@@ -108,6 +108,9 @@ int clientMarshall(XPClientRequest* str)
    case kXP_touch:
       str->sendrcv.sid = htonl(str->sendrcv.sid);
       break;
+   case kXP_ctrlc:
+      str->proof.sid = htonl(str->sendrcv.sid);
+      break;
    default:
       fprintf(stderr,"clientMarshall: unknown req ID: %d (0x%x)\n",
                       str->header.requestid, str->header.requestid);
@@ -179,6 +182,8 @@ char *convertRequestIdToChar(kXR_int16 requestid)
       return (char *)"kXP_urgent";
    case kXP_touch:
       return (char *)"kXP_touch";
+   case kXP_ctrlc:
+      return (char *)"kXP_ctrlc";
    default:
       return (char *)"kXP_UNKNOWN";
    }
@@ -250,6 +255,9 @@ void smartPrintClientHeader(XPClientRequest* hdr)
       printf("%40s%d \n", "ClientHeader.proof.sid = ", hdr->proof.sid);
       break;
    case kXP_detach:
+      printf("%40s%d \n", "ClientHeader.proof.sid = ", hdr->proof.sid);
+      break;
+   case kXP_ctrlc:
       printf("%40s%d \n", "ClientHeader.proof.sid = ", hdr->proof.sid);
       break;
    case kXP_cleanup:
