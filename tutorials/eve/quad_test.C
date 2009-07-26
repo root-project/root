@@ -34,6 +34,12 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
    t.RotateLF(1, 3, 0.5*TMath::Pi());
    t.SetPos(x, y, z);
 
+   TGLViewer* v = gEve->GetDefaultGLViewer();
+   v->SetCurrentCamera(TGLViewer::kCameraOrthoZOY);
+   TGLCameraOverlay* co = v->GetCameraOverlay();
+   co->SetShowOrthographic(kTRUE);
+   co->SetOrthographicMode(TGLCameraOverlay::kGridFront);
+
    if (register)
    {
       gEve->AddElement(q);
