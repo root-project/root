@@ -584,7 +584,9 @@ void TBasket::Update(Int_t offset, Int_t skipped)
          fEntryOffset  = newoff;
          fNevBufSize   = newsize;
          //Update branch only for the first 10 baskets
-         if (fBranch->GetWriteBasket() < 10) fBranch->SetEntryOffsetLen(newsize);
+         if (fBranch->GetWriteBasket() < 10) {
+            fBranch->SetEntryOffsetLen(newsize);
+         }
 //          fprintf(stderr,"fNevBuf+1==%d fNevBufSize==%d\n",fNevBuf+1,fNevBufSize);
       }
       fEntryOffset[fNevBuf] = offset;

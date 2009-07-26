@@ -862,6 +862,12 @@ Int_t TBranch::Fill()
       if (fTree->TestBit(TTree::kCircular)) {
          return nbytes;
       }
+      Int_t nevbuf = basket->GetNevBuf();
+      if (fEntryOffsetLen > 10 &&  (4*nevbuf) < fEntryOffsetLen ) {
+         fEntryOffsetLen = nevbuf < 3 ? 10 : 4*nevbuf; // assume some fluctuations.
+      } else if (fEntryOffsetLen && nevbuf > fEntryOffsetLen) {
+         fEntryOffsetLen = 2*nevbuf; // assume some fluctuations.         
+      }
       Int_t nout = WriteBasket(basket,fWriteBasket);
       return (nout >= 0) ? nbytes : -1;
    }
