@@ -17,10 +17,15 @@
 //                                                                      //
 // TEnv                                                                 //
 //                                                                      //
-// The TEnv class reads a config file, by default .rootrc. Three types  //
-// of .rootrc files are read: global, user and local files. The global  //
-// file resides in $ROOTSYS/etc, the user file in ~/ and the local file //
-// in the current working directory.                                    //
+// The TEnv class reads config files, by default named .rootrc. Three   //
+// types of config files are read: global, user and local files. The    //
+// global file is $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>)//
+// the user file is $HOME/<name> and the local file is ./<name>.        //
+// By setting the shell variable ROOTENV_NO_HOME=1 the reading of       //
+// the $HOME/<name> resource file will be skipped. This might be useful //
+// in case the home directory resides on an automounted remote file     //
+// system and one wants to avoid this file system from being mounted.   //
+//                                                                      //
 // The format of the .rootrc file is similar to the .Xdefaults format:  //
 //                                                                      //
 //   [+]<SystemName>.<RootName|ProgName>.<name>[(type)]:  <value>       //
