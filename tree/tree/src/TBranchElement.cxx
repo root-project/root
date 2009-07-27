@@ -279,7 +279,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
 
    fEntryOffsetLen = 0;
    if (btype || (fStreamerType <= TVirtualStreamerInfo::kBase) || (fStreamerType == TVirtualStreamerInfo::kCharStar) || (fStreamerType == TVirtualStreamerInfo::kBits) || (fStreamerType > TVirtualStreamerInfo::kFloat16)) {
-      fEntryOffsetLen = 1000;
+      fEntryOffsetLen = fTree ? fTree->GetDefaultEntryOffsetLen() : 1000;
    }
 
    //

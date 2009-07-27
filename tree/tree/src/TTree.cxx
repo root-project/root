@@ -476,6 +476,7 @@ TTree::TTree()
 , fTimerInterval(0)
 , fScanField(25)
 , fUpdate(0)
+, fDefaultEntryOffsetLen(1000)
 , fMaxEntries(0)
 , fMaxEntryLoop(0)
 , fMaxVirtualSize(0)
@@ -535,6 +536,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fTimerInterval(0)
 , fScanField(25)
 , fUpdate(0)
+, fDefaultEntryOffsetLen(1000)
 , fMaxEntries(0)
 , fMaxEntryLoop(0)
 , fMaxVirtualSize(0)
@@ -6052,6 +6054,25 @@ void TTree::SetDebug(Int_t level, Long64_t min, Long64_t max)
    fDebugMax = max;
 }
 
+//_______________________wss_______________________________________________________
+void TTree::SetDefaultEntryOffsetLen(Int_t newdefault, Bool_t updateExisting)
+{
+   // Update the default value for the branch's fEntryOffsetLen.
+   // If updateExisting is true, also update all the existing branches.
+   
+   fDefaultEntryOffsetLen = newdefault;
+   if (updateExisting) {
+      TIter next( GetListOfBranches() );
+      TBranch *b;
+      while ( ( b = (TBranch*)next() ) ) {
+         b->SetEntryOffsetLen( newdefault, kTRUE );
+      }
+      if (fBranchRef) {
+         fBranchRef->SetEntryOffsetLen( newdefault, kTRUE );
+      }
+   }
+}
+
 //______________________________________________________________________________
 void TTree::SetDirectory(TDirectory* dir)
 {
@@ -6446,6 +6467,7 @@ void TTree::Streamer(TBuffer& b)
          OldInfoList.Streamer(b);
          OldInfoList.Delete();
       }
+      fDefaultEntryOffsetLen = 1000;
       ResetBit(kMustCleanup);
       b.CheckByteCount(R__s, R__c, TTree::IsA());
       //====end of old versions

@@ -1857,6 +1857,22 @@ void TBranch::SetCompressionLevel(Int_t level)
 }
 
 //______________________________________________________________________________
+void TBranch::SetEntryOffsetLen(Int_t newdefault, Bool_t updateExisting) 
+{
+   // Update the default value for the branch's fEntryOffsetLen.
+   // If updateExisting is true, also update all the existing branches.
+   
+   fEntryOffsetLen = newdefault;
+   if (updateExisting) {
+      TIter next( GetListOfBranches() );
+      TBranch *b;
+      while ( ( b = (TBranch*)next() ) ) {
+         b->SetEntryOffsetLen( newdefault, kTRUE );
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TBranch::SetEntries(Long64_t entries)
 {
    // Set the number of entries in this branch.

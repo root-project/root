@@ -122,21 +122,21 @@ public:
            Int_t     FlushOneBasket(UInt_t which);
 
    virtual char     *GetAddress() const {return fAddress;}
-   virtual Int_t     GetBasketSize() const {return fBasketSize;}
-   virtual const char* GetClassName() const { return ""; }
-   virtual Int_t     GetCompressionLevel() const {return fCompress;}
-   virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall = 0);
-   virtual Int_t     GetEntryExport(Long64_t entry, Int_t getall, TClonesArray *list, Int_t n);
-           Int_t     GetEvent(Long64_t entry=0) {return GetEntry(entry);}
-           Int_t     GetEntryOffsetLen() const {return fEntryOffsetLen;}
-   const char       *GetIconName() const;
-   virtual TLeaf    *GetLeaf(const char *name) const;
            TBasket  *GetBasket(Int_t basket);
            Int_t    *GetBasketBytes() const {return fBasketBytes;}
            Long64_t *GetBasketEntry() const {return fBasketEntry;}
    virtual Long64_t  GetBasketSeek(Int_t basket) const;
+   virtual Int_t     GetBasketSize() const {return fBasketSize;}
    virtual TList    *GetBrowsables();
+   virtual const char* GetClassName() const { return ""; }
+   virtual Int_t     GetCompressionLevel() const {return fCompress;}
    TDirectory       *GetDirectory() const {return fDirectory;}
+   virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall = 0);
+   virtual Int_t     GetEntryExport(Long64_t entry, Int_t getall, TClonesArray *list, Int_t n);
+           Int_t     GetEntryOffsetLen() const { return fEntryOffsetLen; }
+           Int_t     GetEvent(Long64_t entry=0) {return GetEntry(entry);}
+   const char       *GetIconName() const;
+   virtual TLeaf    *GetLeaf(const char *name) const;
    virtual TFile    *GetFile(Int_t mode=0);
    const char       *GetFileName()    const {return fFileName.Data();}
            Int_t     GetOffset()      const {return fOffset;}
@@ -176,8 +176,8 @@ public:
    virtual void      SetBasketSize(Int_t buffsize);
    virtual void      SetBufferAddress(TBuffer *entryBuffer);
    virtual void      SetCompressionLevel(Int_t level=1);
-   virtual void      SetEntryOffsetLen(Int_t len) {fEntryOffsetLen = len;}
    virtual void      SetEntries(Long64_t entries);
+   virtual void      SetEntryOffsetLen(Int_t len, Bool_t updateSubBranches = kFALSE);
    virtual void      SetFirstEntry( Long64_t entry );
    virtual void      SetFile(TFile *file=0);
    virtual void      SetFile(const char *filename);

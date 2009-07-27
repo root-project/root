@@ -22,6 +22,10 @@ a 'fast cloning' to handle files that requires schema evolution (albeit it is of
 <li>In TTree::ReadFile add the possibility to read multiple input files and add support for large/wide Trees definition.</li>
 <li>Added support for "5-D" plotting.</li>
 <li>Added support for std::bitset</li>
+<li>Reduce the memory used by the mechanism keeping track of the entry of variables sizes within a basket (fEntryOffset).   
+The memory used now automatically decrease if the number of entries in the basket is less than 1/4 oflength of fEntryOffset.
+Also the default length fEntryOffset can be set via TTree::SetDefaultEntryOffsetLen which can be optionially applied to the
+existing branches.</li>
 </ul>
 
 <h3>Parallel Coordinates</h3>

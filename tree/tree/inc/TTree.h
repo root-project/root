@@ -98,6 +98,7 @@ protected:
    Int_t          fTimerInterval;     //  Timer interval in milliseconds
    Int_t          fScanField;         //  Number of runs before prompting in Scan
    Int_t          fUpdate;            //  Update frequency for EntryLoop
+   Int_t          fDefaultEntryOffsetLen;  //  Initial Length of fEntryOffset table in the basket buffers
    Long64_t       fMaxEntries;        //  Maximum number of entries in case of circular buffers
    Long64_t       fMaxEntryLoop;      //  Maximum number of entries to process
    Long64_t       fMaxVirtualSize;    //  Maximum total size of buffers kept in memory
@@ -257,6 +258,7 @@ public:
    virtual Long64_t        GetChainEntryNumber(Long64_t entry) const { return entry; }
    virtual Long64_t        GetChainOffset() const { return fChainOffset; }
    TFile                  *GetCurrentFile() const;
+           Int_t           GetDefaultEntryOffsetLen() const {return fDefaultEntryOffsetLen;}
            Long64_t        GetDebugMax()  const { return fDebugMax; }
            Long64_t        GetDebugMin()  const { return fDebugMin; }
    TDirectory             *GetDirectory() const { return fDirectory; }
@@ -382,6 +384,7 @@ public:
    virtual void            SetChainOffset(Long64_t offset = 0) { fChainOffset=offset; }
    virtual void            SetCircular(Long64_t maxEntries);
    virtual void            SetDebug(Int_t level = 1, Long64_t min = 0, Long64_t max = 9999999); // *MENU*
+   virtual void            SetDefaultEntryOffsetLen(Int_t newdefault, Bool_t updateExisting = kFALSE);
    virtual void            SetDirectory(TDirectory* dir);
    virtual Long64_t        SetEntries(Long64_t n = -1);
    virtual void            SetEstimate(Long64_t nentries = 10000);
@@ -407,7 +410,7 @@ public:
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
 
-   ClassDef(TTree,16)  //Tree descriptor (the main ROOT I/O class)
+   ClassDef(TTree,17)  //Tree descriptor (the main ROOT I/O class)
 };
 
 //////////////////////////////////////////////////////////////////////////
