@@ -695,7 +695,7 @@ TGLBEntry *TGLBContainer::Select(Int_t id, Bool_t sel)
    TGLBEntry      *f;
    TGFrameElement *el;
 
-   if (fLastActive) {
+   if (!fMultiSelect && fLastActive) {
       fLastActive->Activate(kFALSE);
       fLastActive = 0;
    }
@@ -766,7 +766,7 @@ void TGLBContainer::GetSelectedEntries(TList *selected)
 //______________________________________________________________________________
 void TGLBContainer::SetMultipleSelections(Bool_t multi)
 {
-   // Enables and disables multible selections of entries.
+   // Enables and disables multiple selections of entries.
 
    TGFrameElement *el;
 
