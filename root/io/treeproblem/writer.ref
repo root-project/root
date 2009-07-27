@@ -2,7 +2,7 @@
 Processing writer.C...
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :      100 : Total =            8704 bytes  File  Size =          0 *
+*Entries :      100 : Total =            8708 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :foo       : foo_                                                   *

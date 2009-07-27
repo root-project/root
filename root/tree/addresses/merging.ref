@@ -2,7 +2,7 @@
 Processing runmerging.C...
 ******************************************************************************
 *Tree    :zzz       : Argument                                               *
-*Entries :        0 : Total =            1198 bytes  File  Size =          0 *
+*Entries :        0 : Total =            1202 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
@@ -18,7 +18,7 @@ Processing runmerging.C...
  y               = 0
 ******************************************************************************
 *Tree    :yyy       : Argument                                               *
-*Entries :      100 : Total =            3090 bytes  File  Size =          0 *
+*Entries :      100 : Total =            3094 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
@@ -40,7 +40,7 @@ result entries = 100
 (int)0
 ******************************************************************************
 *Tree    :zzz       : Argument                                               *
-*Entries :        0 : Total =            1198 bytes  File  Size =          0 *
+*Entries :        0 : Total =            1202 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
@@ -56,7 +56,7 @@ result entries = 100
  y               = 0
 ******************************************************************************
 *Tree    :yyy       : Argument                                               *
-*Entries :      100 : Total =            3090 bytes  File  Size =          0 *
+*Entries :      100 : Total =            3094 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
