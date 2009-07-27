@@ -1061,7 +1061,6 @@ Bool_t TAlienCollection::Stage(Bool_t bulk,Option_t* option)
       stagelist->SetOwner(kTRUE);
       Bool_t stageresult=kFALSE;
       Reset();
-      UInt_t fc=0;
       while ((filemap = Next())) {
          TIterator *nextfile = filemap->MakeIterator();
          TMap *attributes;
