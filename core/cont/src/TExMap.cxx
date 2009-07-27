@@ -14,7 +14,7 @@
 // TExMap                                                               //
 //                                                                      //
 // This class stores a (key,value) pair using an external hash.         //
-// The (key,value) are Long_t's and therefore can contain object        //
+// The (key,value) are Long64_t's and therefore can contain object      //
 // pointers or any longs. The map uses an open addressing hashing       //
 // method (linear probing).                                             //
 //                                                                      //
@@ -84,7 +84,7 @@ TExMap::~TExMap()
 }
 
 //______________________________________________________________________________
-void TExMap::Add(ULong_t hash, Long_t key, Long_t value)
+void TExMap::Add(ULong64_t hash, Long64_t key, Long64_t value)
 {
    // Add an (key,value) pair to the table. The key should be unique.
 
@@ -103,13 +103,13 @@ void TExMap::Add(ULong_t hash, Long_t key, Long_t value)
 }
 
 //______________________________________________________________________________
-void TExMap::AddAt(UInt_t slot, ULong_t hash, Long_t key, Long_t value)
+void TExMap::AddAt(UInt_t slot, ULong64_t hash, Long64_t key, Long64_t value)
 {
    // Add an (key,value) pair to the table. The key should be unique.
    // If the 'slot' is open, use it to store the value,
    // otherwise revert to Add(hash,key,value)
    // This is usually used in conjuction with GetValue wiht 3 parameters:
-   // if ((idx = (ULong_t)fMap->GetValue(hash, key, slot)) != 0) {
+   // if ((idx = (ULong64_t)fMap->GetValue(hash, key, slot)) != 0) {
    //    ...
    // } else {
    //    fMap->AddAt(slot,hash,key,value);
@@ -130,14 +130,14 @@ void TExMap::AddAt(UInt_t slot, ULong_t hash, Long_t key, Long_t value)
 }
 
 //______________________________________________________________________________
-Long_t &TExMap::operator()(ULong_t hash, Long_t key)
+Long64_t &TExMap::operator()(ULong64_t hash, Long64_t key)
 {
    // Return a reference to the value belonging to the key with the
    // specified hash value. If the key does not exist it will be added.
    // NOTE: the reference will be invalidated an Expand() triggered by
    // an Add() or another operator() call.
 
-   static Long_t err;
+   static Long64_t err;
    if (!fTable) {
       Error("operator()", "fTable==0, should never happen");
       return err;
@@ -167,7 +167,7 @@ void TExMap::Delete(Option_t *)
 }
 
 //______________________________________________________________________________
-Long_t TExMap::GetValue(ULong_t hash, Long_t key)
+Long64_t TExMap::GetValue(ULong64_t hash, Long64_t key)
 {
    // Return the value belonging to specified key and hash value. If key not
    // found return 0.
@@ -188,7 +188,7 @@ Long_t TExMap::GetValue(ULong_t hash, Long_t key)
 }
 
 //______________________________________________________________________________
-Long_t TExMap::GetValue(ULong_t hash, Long_t key, UInt_t &slot)
+Long64_t TExMap::GetValue(ULong64_t hash, Long64_t key, UInt_t &slot)
 {
    // Return the value belonging to specified key and hash value. If key not
    // found return 0.
@@ -211,7 +211,7 @@ Long_t TExMap::GetValue(ULong_t hash, Long_t key, UInt_t &slot)
 }
 
 //______________________________________________________________________________
-void TExMap::Remove(ULong_t hash, Long_t key)
+void TExMap::Remove(ULong64_t hash, Long64_t key)
 {
    // Remove entry with specified key from the TExMap.
 
@@ -230,7 +230,7 @@ void TExMap::Remove(ULong_t hash, Long_t key)
 }
 
 //______________________________________________________________________________
-Int_t TExMap::FindElement(ULong_t hash, Long_t key)
+Int_t TExMap::FindElement(ULong64_t hash, Long64_t key)
 {
    // Find an entry with specified hash and key in the TExMap.
    // Returns the slot of the key or the next empty slot.
@@ -311,7 +311,27 @@ void TExMap::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(b);
 
-      if (R__v >= 2) {
+      if (R__v >= 3) {
+         // new custom streamer with slots indices stored (Long64_t version).
+         Int_t size, tally;
+         b >> size;
+         Expand(size);
+         b >> tally;
+         Int_t slot;
+         ULong64_t hash;
+         Long64_t key, value;
+         for (i = 0; i < tally; ++i) {
+            b >> slot;
+            b >> hash;
+            b >> key;
+            b >> value;
+            Assoc_t *assoc = fTable + slot;
+            assoc->SetHash(hash);
+            assoc->fKey = key;
+            assoc->fValue = value;
+         }
+         fTally = tally;
+      } else if (R__v >= 2) {
          // new custom streamer with slots indices stored.
          Int_t size, tally;
          b >> size;
@@ -319,7 +339,7 @@ void TExMap::Streamer(TBuffer &b)
          b >> tally;
          Int_t slot;
          ULong_t hash;
-         Long_t key,value;
+         Long_t key, value;
          for (i = 0; i < tally; ++i) {
             b >> slot;
             b >> hash;
@@ -336,15 +356,15 @@ void TExMap::Streamer(TBuffer &b)
          Int_t n;
          b >> n;
          ULong_t hash;
-         Long_t key,value;
+         Long_t key, value;
          for (i = 0; i < n; i++) {
             b >> hash;
             b >> key;
             b >> value;
-            Add(hash,key,value);
+            Add(hash, key, value);
          }
       }
-      b.CheckByteCount(R__s, R__c,TExMap::IsA());
+      b.CheckByteCount(R__s, R__c, TExMap::IsA());
    } else {
       R__c = b.WriteVersion(TExMap::IsA(), kTRUE);
       // new custom streamer stores slots indices
@@ -352,7 +372,7 @@ void TExMap::Streamer(TBuffer &b)
       b << fSize;
       b << fTally;
 
-      for (i=0;i<fSize;i++) {
+      for (i=0; i < fSize; i++) {
          if (!fTable[i].InUse()) continue;
          b << i;
          b << fTable[i].GetHash();
@@ -385,7 +405,7 @@ TExMapIter &TExMapIter::operator=(const TExMapIter &rhs)
 }
 
 //______________________________________________________________________________
-Bool_t TExMapIter::Next(ULong_t &hash, Long_t &key, Long_t &value)
+Bool_t TExMapIter::Next(ULong64_t &hash, Long64_t &key, Long64_t &value)
 {
    // Get next entry from TExMap. Returns kFALSE at end of map.
 
@@ -404,10 +424,10 @@ Bool_t TExMapIter::Next(ULong_t &hash, Long_t &key, Long_t &value)
 }
 
 //______________________________________________________________________________
-Bool_t TExMapIter::Next(Long_t &key, Long_t &value)
+Bool_t TExMapIter::Next(Long64_t &key, Long64_t &value)
 {
    // Get next entry from TExMap. Returns kFALSE at end of map.
 
-   ULong_t hash;
+   ULong64_t hash;
    return Next(hash, key, value);
 }
