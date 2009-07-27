@@ -358,17 +358,24 @@ Bool_t TAlienPackage::CheckDependencies ()
    fInstallList->Add (strObj);
 
    for (Int_t j = 0; j < fInstallList->GetEntries (); j++) {
-      TObjString *strObj = (TObjString *) fInstallList->At (j);
-      TObjArray *strDepsPackgOrVer = strObj->GetString ().Tokenize ("::");
-      TObjString *strObjPackage = (TObjString *) strDepsPackgOrVer->At (0);
-      TObjString *strObjVersion = (TObjString *) strDepsPackgOrVer->At (1);
+      strObj = (TObjString *) fInstallList->At(j);
+      TString strObjPackage, strObjVersion;
+      Int_t from = 0;
+      if (strObj->GetString().Tokenize(strObjPackage, from, "::")) {
+         if (!strObj->GetString().Tokenize(strObjVersion, from, "::")) {
+            Warning("CheckDepencencies", "version string not found for j=%d (%s)", j, strObj->GetName());
+            continue;
+         }
+      } else {
+         Warning("CheckDepencencies", "package string not found for j=%d (%s)", j, strObj->GetName());
+         continue;
+      }
 
       if (GetDebugLevel () > 2)
          Info ("CheckDepencencies", "\t[%d] Name=%s Version=%s", j,
-               strObjPackage->GetString ().Data (),
-               strObjVersion->GetString ().Data ());
+               strObjPackage.Data(), strObjVersion.Data());
 
-      if (CheckDirectories(strObjPackage->GetString (), strObjVersion->GetString ()) == kFALSE)
+      if (CheckDirectories(strObjPackage, strObjVersion) == kFALSE)
          return kFALSE;
    }
 
