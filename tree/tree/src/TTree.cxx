@@ -6054,12 +6054,16 @@ void TTree::SetDebug(Int_t level, Long64_t min, Long64_t max)
    fDebugMax = max;
 }
 
-//_______________________wss_______________________________________________________
+//______________________________________________________________________________
 void TTree::SetDefaultEntryOffsetLen(Int_t newdefault, Bool_t updateExisting)
 {
    // Update the default value for the branch's fEntryOffsetLen.
    // If updateExisting is true, also update all the existing branches.
+   // If newdefault is less than 10, the new default value will be 10.
    
+   if (newdefault < 10) {
+      newdefault = 10;
+   }
    fDefaultEntryOffsetLen = newdefault;
    if (updateExisting) {
       TIter next( GetListOfBranches() );
