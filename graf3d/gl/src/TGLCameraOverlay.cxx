@@ -173,8 +173,8 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
    Double_t minY = fFrustum[1] + off;
    Double_t maxY = fFrustum[3] - off;
    // grid lines
-   Float_t alpha = 70; //primary
-   Float_t alpha2 = 80; //seconndary
+   Char_t alpha = 70; //primary
+   Char_t alpha2 = 80; //seconndary
    Int_t secSteps = fAxis->GetNdivisions() % 100;
    GLushort stipple =  0x5555; // 33333 more rare
 
