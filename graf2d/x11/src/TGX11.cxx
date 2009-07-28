@@ -247,7 +247,7 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
       fCursors[i] = org.fCursors[i];
 
    fColors = new TExMap;
-   Long_t     key, value;
+   Long64_t key, value;
    TExMapIter it(org.fColors);
    while (it.Next(key, value)) {
       XColor_t *colo = (XColor_t *) value;
@@ -270,7 +270,7 @@ TGX11::~TGX11()
    if (fWindows) TStorage::Dealloc(fWindows);
 
    if (!fColors) return;
-   Long_t     key, value;
+   Long64_t key, value;
    TExMapIter it(fColors);
    while (it.Next(key, value)) {
       XColor_t *col = (XColor_t *) value;

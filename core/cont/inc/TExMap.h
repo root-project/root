@@ -18,7 +18,7 @@
 // TExMap                                                               //
 //                                                                      //
 // This class stores a (key,value) pair using an external hash.         //
-// The (key,value) are Long_t's and therefore can contain object        //
+// The (key,value) are Long64_t's and therefore can contain object      //
 // pointers or any longs. The map uses an open addressing hashing       //
 // method (linear probing).                                             //
 //                                                                      //
@@ -39,14 +39,14 @@ friend class TExMapIter;
 private:
    struct Assoc_t {
    private:
-      ULong_t  fHash;
+      ULong64_t  fHash;
    public:
-      Long_t   fKey;
-      Long_t   fValue;
-      void     SetHash(ULong_t h) { fHash = (h | 1); } // bit(0) is "1" when in use
-      ULong_t  GetHash() const { return fHash; }
-      Bool_t   InUse() const { return fHash & 1; }
-      void     Clear() { fHash = 0x0; }
+      Long64_t   fKey;
+      Long64_t   fValue;
+      void       SetHash(ULong64_t h) { fHash = (h | 1); } // bit(0) is "1" when in use
+      ULong64_t  GetHash() const { return fHash; }
+      Bool_t     InUse() const { return fHash & 1; }
+      void       Clear() { fHash = 0x0; }
    };
 
    Assoc_t    *fTable;
@@ -55,7 +55,7 @@ private:
 
    Bool_t      HighWaterMark() { return (Bool_t) (fTally >= ((3*fSize)/4)); }
    void        Expand(Int_t newsize);
-   Int_t       FindElement(ULong_t hash, Long_t key);
+   Int_t       FindElement(ULong64_t hash, Long64_t key);
    void        FixCollisions(Int_t index);
 
 
@@ -65,22 +65,22 @@ public:
    TExMap& operator=(const TExMap&);
    ~TExMap();
 
-   void      Add(ULong_t hash, Long_t key, Long_t value);
-   void      Add(Long_t key, Long_t value) { Add(key, key, value); }
-   void      AddAt(UInt_t slot, ULong_t hash, Long_t key, Long_t value);
+   void      Add(ULong64_t hash, Long64_t key, Long64_t value);
+   void      Add(Long64_t key, Long64_t value) { Add(key, key, value); }
+   void      AddAt(UInt_t slot, ULong64_t hash, Long64_t key, Long64_t value);
    void      Delete(Option_t *opt = "");
    Int_t     Capacity() const { return fSize; }
    Int_t     GetSize() const { return fTally; }
-   Long_t    GetValue(ULong_t hash, Long_t key);
-   Long_t    GetValue(Long_t key) { return GetValue(key, key); }
-   Long_t    GetValue(ULong_t hash, Long_t key, UInt_t &slot);
-   void      Remove(ULong_t hash, Long_t key);
-   void      Remove(Long_t key) { Remove(key, key); }
+   Long64_t  GetValue(ULong64_t hash, Long64_t key);
+   Long64_t  GetValue(Long64_t key) { return GetValue(key, key); }
+   Long64_t  GetValue(ULong64_t hash, Long64_t key, UInt_t &slot);
+   void      Remove(ULong64_t hash, Long64_t key);
+   void      Remove(Long64_t key) { Remove(key, key); }
 
-   Long_t   &operator()(ULong_t hash, Long_t key);
-   Long_t   &operator()(Long_t key) { return operator()(key, key); }
+   Long64_t &operator()(ULong64_t hash, Long64_t key);
+   Long64_t &operator()(Long64_t key) { return operator()(key, key); }
 
-   ClassDef(TExMap,2)  //Map with external hash
+   ClassDef(TExMap,3)  //Map with external hash
 };
 
 
@@ -92,14 +92,13 @@ private:
 
 public:
    TExMapIter(const TExMap *map);
-   TExMapIter(const TExMapIter& tei):
-     fMap(tei.fMap), fCursor(tei.fCursor) { }
+   TExMapIter(const TExMapIter& tei) : fMap(tei.fMap), fCursor(tei.fCursor) { }
    TExMapIter& operator=(const TExMapIter&);
    virtual ~TExMapIter() { }
 
    const TExMap  *GetCollection() const { return fMap; }
-   Bool_t         Next(ULong_t &hash, Long_t &key, Long_t &value);
-   Bool_t         Next(Long_t &key, Long_t &value);
+   Bool_t         Next(ULong64_t &hash, Long64_t &key, Long64_t &value);
+   Bool_t         Next(Long64_t &key, Long64_t &value);
    void           Reset() { fCursor = 0; }
 
    ClassDef(TExMapIter,0)  // TExMap iterator
