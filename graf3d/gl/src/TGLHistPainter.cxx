@@ -1,5 +1,4 @@
 #include <stdexcept>
-#include <iostream>
 #include <cstring>
 
 #include "TROOT.h"
@@ -18,6 +17,7 @@
 #include "TGLBoxPainter.h"
 #include "TGLTF3Painter.h"
 #include "TGLParametric.h"
+#include "TGL5DPainter.h"
 
 ClassImp(TGLHistPainter)
 
@@ -205,28 +205,15 @@ TGLHistPainter::TGLHistPainter(TGLParametricEquation *equation)
 //______________________________________________________________________________
 TGLHistPainter::TGLHistPainter(TGL5DDataSet *data)
                    : fEq(0),
-                     fHist(data->GetHist()),
-                     fF3(0),
-                     fStack(0),
-                     fPlotType(kGL5D)//THistPainter
-{
-   //This ctor creates gl-parametric plot's painter.
-   fGLPainter.reset(new TGL5DPainter(data, &fCamera, &fCoord));
-}
-
-//______________________________________________________________________________
-/*
-TGLHistPainter::TGLHistPainter(TGL5D *gl5d)
-                   : fEq(0),
                      fHist(0),
                      fF3(0),
                      fStack(0),
                      fPlotType(kGL5D)//THistPainter
 {
-   //This ctor creates gl-parametric plot's painter.
-   //fGLPainter.reset(new TGLParametricPlot(equation, &fCamera));
+   //This ctor creates plot painter for TGL5DDataSet.
+   fGLPainter.reset(new TGL5DPainter(data, &fCamera, &fCoord));
 }
-*/
+
 //______________________________________________________________________________
 Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -560,7 +547,6 @@ void TGLHistPainter::Paint(Option_t *o)
          //fGLPainter->SetGLDevice(&fGLDevice);
          //Add viewport extraction here.
          PadToViewport();
-         
          if (gPad->GetFrameFillColor() != kWhite)
             fGLPainter->SetFrameColor(gROOT->GetColor(gPad->GetFrameFillColor()));
          fGLPainter->SetPadColor(gROOT->GetColor(gPad->GetFillColor()));

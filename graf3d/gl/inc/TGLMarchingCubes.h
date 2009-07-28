@@ -10,6 +10,9 @@
 #ifndef ROOT_TGLIsoMesh
 #include "TGLIsoMesh.h"
 #endif
+#ifndef ROOT_TKDEAdapter
+#include "TKDEAdapter.h"
+#endif
 
 /*
 Implementation of "marching cubes" algortihm for GL module. Used by 
@@ -19,6 +22,7 @@ http://local.wasp.uwa.edu.au/~pbourke/geometry/polygonise/
 */
 
 class TF3;
+class TKDEFGT;
 
 namespace Rgl {
 namespace Mc {
@@ -180,6 +184,8 @@ protected:
       fSliceSize = fW * fH;
    }
 
+   void FetchDensities()const{}//Do nothing.
+
    ElementType_t GetData(UInt_t i, UInt_t j, UInt_t k)const
    {
       i += 1;
@@ -193,29 +199,6 @@ protected:
    UInt_t fH;
    UInt_t fD;
    UInt_t fSliceSize;
-};
-
-/*
-TGridGeometry describes ranges and cell steps (scales are 
-already in steps and ranges).
-*/
-template<class V>
-class TGridGeometry {
-public:
-   TGridGeometry() : fMinX(0), fStepX(0),
-                     fMinY(0), fStepY(0),
-                     fMinZ(0), fStepZ(0)
-   {
-   }
-
-   V fMinX;
-   V fStepX;
-
-   V fMinY;
-   V fStepY;
-
-   V fMinZ;
-   V fStepZ;
 };
 
 /*
@@ -248,6 +231,9 @@ protected:
    }
 
    void SetDataSource(const TF3 *f);
+
+   void FetchDensities()const{}//Do nothing.
+
    Double_t GetData(UInt_t i, UInt_t j, UInt_t k)const;
 
    const TF3 *fTF3;//TF3 data source.
@@ -299,16 +285,23 @@ public:
    typedef TF3Adapter Type_t;
 };
 
+template<>
+class TSourceAdapterSelector<TKDEFGT> {
+public:
+   typedef Fgt::TKDEAdapter Type_t;
+};
+
 /*
 Edge splitter is the second base class for TMeshBuilder.
 Its task is to split cell's edge by adding new vertex
-into mesh. 
+into mesh.
+Default splitter is used by TH3 and KDE.
 */
 
 template<class H, class E, class V>
-class TH3EdgeSplitter : protected TGridGeometry<V> {
+class TDefaultSplitter : protected virtual TGridGeometry<V> {
 protected:
-   void SetNormalEvaluator(const H * /*hist*/)
+   void SetNormalEvaluator(const H * /*source*/)
    {
    }
    void SplitEdge(TCell<E> & cell, TIsoMesh<V> * mesh, UInt_t i, 
@@ -347,31 +340,37 @@ template<class, class> class TSplitterSelector;
 template<class V>
 class TSplitterSelector<TH3C, V> {
 public:
-   typedef TH3EdgeSplitter<TH3C, Char_t, V> Type_t; 
+   typedef TDefaultSplitter<TH3C, Char_t, V> Type_t; 
 };
 
 template<class V>
 class TSplitterSelector<TH3S, V> {
 public:
-   typedef TH3EdgeSplitter<TH3S, Short_t, V> Type_t; 
+   typedef TDefaultSplitter<TH3S, Short_t, V> Type_t; 
 };
 
 template<class V>
 class TSplitterSelector<TH3I, V> {
 public:
-   typedef TH3EdgeSplitter<TH3I, Int_t, V> Type_t; 
+   typedef TDefaultSplitter<TH3I, Int_t, V> Type_t; 
 };
 
 template<class V>
 class TSplitterSelector<TH3F, V> {
 public:
-   typedef TH3EdgeSplitter<TH3F, Float_t, V> Type_t; 
+   typedef TDefaultSplitter<TH3F, Float_t, V> Type_t; 
 };
 
 template<class V>
 class TSplitterSelector<TH3D, V> {
 public:
-   typedef TH3EdgeSplitter<TH3D, Double_t, V> Type_t; 
+   typedef TDefaultSplitter<TH3D, Double_t, V> Type_t; 
+};
+
+template<class V>
+class TSplitterSelector<TKDEFGT, V> {
+public:
+   typedef TDefaultSplitter<TKDEFGT, Float_t, Float_t> Type_t; 
 };
 
 template<class V>

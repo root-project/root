@@ -30,7 +30,9 @@ endif
 # Excluded from rootcint
 GLH1         := $(MODDIRI)/gl2ps.h $(MODDIRI)/CsgOps.h \
                 $(MODDIRI)/TGLIncludes.h $(MODDIRI)/TGLWSIncludes.h \
-                $(MODDIRI)/TGLContextPrivate.h
+                $(MODDIRI)/TGLContextPrivate.h $(MODDIRI)/TGLMarchingCubes.h \
+		$(MODDIRI)/TKDEAdapter.h $(MODDIRI)/TGL5DPainter.h \
+		$(MODDIRI)/TKDEFGT.h $(MODDIRI)/TGLIsoMesh.h
 
 # Used by rootcint
 GLH2         := $(filter-out $(GLH1), $(GLH))

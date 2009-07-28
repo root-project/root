@@ -8,7 +8,7 @@
 
 /*
 Implementation of "marching cubes" algortihm for GL module. Used by 
-TF3GLPainter and TGLIsoPainter. 
+TF3GLPainter, TGLIsoPainter, TGL5DPainter. 
 Good and clear algorithm explanation can be found here: 
 http://local.wasp.uwa.edu.au/~pbourke/geometry/polygonise/
 */
@@ -117,13 +117,13 @@ Double_t TF3Adapter::GetData(UInt_t i, UInt_t j, UInt_t k)const
 }
 
 /*
-TH3 split edge implementation.
-"this->" is used with type-dependant names
+TH3/KDE split edge implementation.
+"this->" is used with type-dependent names
 in templates.
 */
 //______________________________________________________________________
 template<class H, class E, typename V>
-void TH3EdgeSplitter<H, E, V>::SplitEdge(TCell<E> & cell, TIsoMesh<V> * mesh, UInt_t i, 
+void TDefaultSplitter<H, E, V>::SplitEdge(TCell<E> & cell, TIsoMesh<V> * mesh, UInt_t i, 
                                          V x, V y, V z, V iso)const
 {
    V v[3];
@@ -200,6 +200,7 @@ void TMeshBuilder<D, V>::BuildMesh(const D *s, const TGridGeometry<V> &g,
    SliceType_t *slice1 = fSlices;
    SliceType_t *slice2 = fSlices + 1;
 
+   this->FetchDensities();
    NextStep(0, 0, slice1);
 
    for (UInt_t i = 1, e = GetD(); i < e - 1; ++i) {
@@ -1151,6 +1152,10 @@ template class TMeshBuilder<TH3I, Float_t>;
 template class TMeshBuilder<TH3F, Float_t>;
 template class TMeshBuilder<TH3D, Float_t>;
 template class TMeshBuilder<TF3, Double_t>;
+//TMeshBuilder does not need any detail from TKDEFGT.
+//TKDEFGT only helps to select correct implementation.
+//Forward class declaration is enough for TKDEFGT.
+template class TMeshBuilder<TKDEFGT, Float_t>;
 
 }//namespace Mc
 }//namespace Rgl

@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+#include <iostream>
 #include <cstdio>
 
 #include "TVirtualPad.h"
@@ -29,6 +30,7 @@
 #include "TGLIncludes.h"
 #include "TGLAdapter.h"
 #include "TGLOutput.h"
+#include "TGL5D.h"
 #include "gl2ps.h"
 
 //______________________________________________________________________________
@@ -57,6 +59,36 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordina
                     fYOZSectionPos(0.),
                     fXOYSectionPos(0.),
                     fBackBox(xoy, xoz, yoz),
+                    fBoxCut(&fBackBox),
+                    fHighColor(kFALSE),
+                    fSelectionBase(kTrueColorSelectionBase),
+                    fDrawPalette(kFALSE)
+{
+   //TGLPlotPainter's ctor.
+   if (gPad) {
+      fPadPhi   = gPad->GetPhi();
+      fPadTheta = gPad->GetTheta();
+   }
+}
+
+//______________________________________________________________________________
+TGLPlotPainter::TGLPlotPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
+                  : fPadColor(0),
+                    fPadPhi(45.),
+                    fPadTheta(0.),
+                    fHist(0),
+                    fXAxis(data->GetXAxis()),
+                    fYAxis(data->GetYAxis()),
+                    fZAxis(data->GetZAxis()),
+                    fCoord(coord),
+                    fCamera(camera),
+                    fUpdateSelection(kTRUE),
+                    fSelectionPass(kFALSE),
+                    fSelectedPart(0),
+                    fXOZSectionPos(0.),
+                    fYOZSectionPos(0.),
+                    fXOYSectionPos(0.),
+                    fBackBox(kFALSE, kFALSE, kFALSE),
                     fBoxCut(&fBackBox),
                     fHighColor(kFALSE),
                     fSelectionBase(kTrueColorSelectionBase),
@@ -159,7 +191,6 @@ void TGLPlotPainter::Paint()
       Bool_t old = gPad->TestBit(TGraph::kClipFrame);
       if (!old)
          gPad->SetBit(TGraph::kClipFrame);
-   
       const Int_t viewport[] = {fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight()};
       Rgl::DrawAxes(fBackBox.GetFrontPoint(), viewport, fBackBox.Get2DBox(), fCoord, fXAxis, fYAxis, fZAxis);
       if (fDrawPalette)
@@ -169,29 +200,6 @@ void TGLPlotPainter::Paint()
          gPad->ResetBit(TGraph::kClipFrame);
    } else if(fDrawPalette)
       DrawPaletteAxis();
-      
-   
-
-   /*
-   TGLAdapter *glAdapter = dynamic_cast<TGLAdapter *>(fGLDevice);
-   if (glAdapter) {
-      glAdapter->ReadGLBuffer();
-      //Select pixmap/DIB
-      if (fCoord && fCoord->GetCoordType() == kGLCartesian) {
-         glAdapter->SelectOffScreenDevice();
-         //Draw axes into pixmap/DIB
-         Int_t viewport[] = {fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight()};
-         Rgl::DrawAxes(fBackBox.GetFrontPoint(), viewport, fBackBox.Get2DBox(), fCoord, fXAxis, fYAxis, fZAxis);
-         if (fDrawPalette)
-            DrawPaletteAxis();
-         gVirtualX->SelectWindow(gPad->GetPixmapID());
-      } else if(fDrawPalette) {
-         glAdapter->SelectOffScreenDevice();
-         DrawPaletteAxis();
-         gVirtualX->SelectWindow(gPad->GetPixmapID());
-      }
-   }
-   */
 }
 
 //______________________________________________________________________________
@@ -823,16 +831,14 @@ Bool_t TGLPlotCoordinates::SetRangesCartesian(const TH1 *hist, Bool_t errors, Bo
    //Set bin ranges, ranges, etc.
    Rgl::BinRange_t xBins;
    Rgl::Range_t    xRange;
-   const TAxis *xAxis = hist->GetXaxis();
-   if (!FindAxisRange(xAxis, fXLog, xBins, xRange)) {
+   if (!FindAxisRange(hist->GetXaxis(), fXLog, xBins, xRange)) {
       Error("TGLPlotCoordinates::SetRangesCartesian", "Cannot set X axis to log scale");
       return kFALSE;
    }
 
    Rgl::BinRange_t yBins;
    Rgl::Range_t    yRange;
-   const TAxis *yAxis = hist->GetYaxis();
-   if (!FindAxisRange(yAxis, fYLog, yBins, yRange)) {
+   if (!FindAxisRange(hist->GetYaxis(), fYLog, yBins, yRange)) {
       Error("TGLPlotCoordinates::SetRangesCartesian", "Cannot set Y axis to log scale");
       return kFALSE;
    }
@@ -851,6 +857,56 @@ Bool_t TGLPlotCoordinates::SetRangesCartesian(const TH1 *hist, Bool_t errors, Bo
             "Log scale is requested for Z, but maximum less or equal 0. (%f)", zRange.second);
       return kFALSE;
    }
+
+   //Finds the maximum dimension and adjust scale coefficients
+   const Double_t x = xRange.second - xRange.first;
+   const Double_t y = yRange.second - yRange.first;
+   const Double_t z = zRange.second - zRange.first;
+
+   if (!x || !y || !z) {
+      Error("TGLPlotCoordinates::SetRangesCartesian", "Zero axis range.");
+      return kFALSE;
+   }
+
+   if (xRange != fXRange || yRange != fYRange || zRange != fZRange ||
+       xBins != fXBins || yBins != fYBins || zBins != fZBins || fFactor != factor)
+   {
+      fModified = kTRUE;
+   }
+
+   fXRange = xRange, fXBins = xBins, fYRange = yRange, fYBins = yBins, fZRange = zRange, fZBins = zBins;
+   fFactor = factor;
+
+   const Double_t maxDim = TMath::Max(TMath::Max(x, y), z);
+   fXScale = maxDim / x;
+   fYScale = maxDim / y;
+   fZScale = maxDim / z;
+   fXRangeScaled.first = fXRange.first * fXScale, fXRangeScaled.second = fXRange.second * fXScale;
+   fYRangeScaled.first = fYRange.first * fYScale, fYRangeScaled.second = fYRange.second * fYScale;
+   fZRangeScaled.first = fZRange.first * fZScale, fZRangeScaled.second = fZRange.second * fZScale;
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLPlotCoordinates::SetRanges(const TAxis *xAxis, const TAxis *yAxis, const TAxis *zAxis)
+{
+   //Set bin ranges, ranges, etc.
+   Rgl::BinRange_t xBins;
+   Rgl::Range_t    xRange;
+
+   FindAxisRange(xAxis, kFALSE, xBins, xRange);
+
+   Rgl::BinRange_t yBins;
+   Rgl::Range_t    yRange;
+
+   FindAxisRange(yAxis, kFALSE, yBins, yRange);
+
+   Rgl::BinRange_t zBins;
+   Rgl::Range_t zRange;
+   Double_t factor = 1.;
+
+   FindAxisRange(zAxis, kFALSE, zBins, zRange);
 
    //Finds the maximum dimension and adjust scale coefficients
    const Double_t x = xRange.second - xRange.first;
@@ -1207,44 +1263,53 @@ void TGLBoxCut::TurnOnOff()
    fActive = !fActive;
 
    if (fActive) {
-      const Int_t frontPoint = fPlotBox->GetFrontPoint();
-      const TGLVertex3 *box = fPlotBox->Get3DBox();
-      const TGLVertex3 center((box[0].X() + box[1].X()) / 2, (box[0].Y() + box[2].Y()) / 2,
-                              (box[0].Z() + box[4].Z()) / 2);
-      fXLength = fFactor * (box[1].X() - box[0].X());
-      fYLength = fFactor * (box[2].Y() - box[0].Y());
-      fZLength = fFactor * (box[4].Z() - box[0].Z());
-
-      switch(frontPoint){
-      case 0:
-         fCenter.X() = box[0].X();
-         fCenter.Y() = box[0].Y();
-         break;
-      case 1:
-         fCenter.X() = box[1].X();
-         fCenter.Y() = box[0].Y();
-         break;
-      case 2:
-         fCenter.X() = box[2].X();
-         fCenter.Y() = box[2].Y();
-         break;
-      case 3:
-         fCenter.X() = box[0].X();
-         fCenter.Y() = box[2].Y();
-         break;
-      }
-
-      fCenter.Z() = box[0].Z() * 0.5 + box[4].Z() * 0.5;
-      AdjustBox();
+      ResetBoxGeometry();
    }
 }
 
 //______________________________________________________________________________
 void TGLBoxCut::SetActive(Bool_t a)
 {
+   //Turn the box cut on/off.
    if (a == fActive)
       return;
    TurnOnOff();
+}
+
+//______________________________________________________________________________
+void TGLBoxCut::ResetBoxGeometry()
+{
+   //Set geometry using plot's back box.
+
+   const Int_t frontPoint = fPlotBox->GetFrontPoint();
+   const TGLVertex3 *box = fPlotBox->Get3DBox();
+   const TGLVertex3 center((box[0].X() + box[1].X()) / 2, (box[0].Y() + box[2].Y()) / 2,
+                           (box[0].Z() + box[4].Z()) / 2);
+   fXLength = fFactor * (box[1].X() - box[0].X());
+   fYLength = fFactor * (box[2].Y() - box[0].Y());
+   fZLength = fFactor * (box[4].Z() - box[0].Z());
+
+   switch(frontPoint){
+   case 0:
+      fCenter.X() = box[0].X();
+      fCenter.Y() = box[0].Y();
+      break;
+   case 1:
+      fCenter.X() = box[1].X();
+      fCenter.Y() = box[0].Y();
+      break;
+   case 2:
+      fCenter.X() = box[2].X();
+      fCenter.Y() = box[2].Y();
+      break;
+   case 3:
+      fCenter.X() = box[0].X();
+      fCenter.Y() = box[2].Y();
+      break;
+   }
+
+   fCenter.Z() = box[0].Z() * 0.5 + box[4].Z() * 0.5;
+   AdjustBox();
 }
 
 //______________________________________________________________________________
@@ -1667,6 +1732,7 @@ void TGLTH3Slice::PrepareTexCoords(Double_t pos, Int_t low, Int_t up)const
    }
 }
 
+//______________________________________________________________________________
 void TGLTH3Slice::DrawSliceTextured(Double_t pos)const
 {
    // Draw slice textured.
@@ -1811,88 +1877,89 @@ void TGLTH3Slice::DrawSliceFrame(Int_t low, Int_t up)const
 
 namespace Rgl {
 
-   namespace
-   {
-      const Double_t lr = 0.85;
-      const Double_t rr = 0.9;
+namespace
+{
+   const Double_t lr = 0.85;
+   const Double_t rr = 0.9;
+}
+
+//______________________________________________________________________________
+void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette)
+{
+   //Draw. Palette.
+   const TGLDisableGuard light(GL_LIGHTING);
+   const TGLDisableGuard depth(GL_DEPTH_TEST);
+   const TGLEnableGuard blend(GL_BLEND);
+
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glOrtho(0, camera->GetWidth(), 0, camera->GetHeight(), -1., 1.);
+
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+
+   const Double_t leftX = camera->GetWidth() * lr;
+   const Double_t rightX = camera->GetWidth() * rr;
+   const Double_t margin = 0.1 * camera->GetHeight();
+   const Double_t h = (camera->GetHeight() * 0.8) / palette.GetPaletteSize();
+
+   for (Int_t i = 0, e = palette.GetPaletteSize(); i < e; ++i) {
+      glBegin(GL_POLYGON);
+      const UChar_t * color = palette.GetColour(i);
+      glColor4ub(color[0], color[1], color[2], 150);
+      glVertex2d(leftX, margin + i * h);
+      glVertex2d(rightX, margin + i * h);
+      glVertex2d(rightX, margin + (i + 1) * h);
+      glVertex2d(leftX, margin + (i + 1) * h);
+      glEnd();
    }
 
-   //______________________________________________________________________________
-   void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette)
-   {
-      //Draw. Palette.
-      const TGLDisableGuard light(GL_LIGHTING);
-      const TGLDisableGuard depth(GL_DEPTH_TEST);
-      const TGLEnableGuard blend(GL_BLEND);
+   const TGLEnableGuard  smoothGuard(GL_LINE_SMOOTH);
+   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+   glColor4d(0., 0., 0., 0.5);
 
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      glOrtho(0, camera->GetWidth(), 0, camera->GetHeight(), -1., 1.);
-
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-
-      const Double_t leftX = camera->GetWidth() * lr;
-      const Double_t rightX = camera->GetWidth() * rr;
-      const Double_t margin = 0.1 * camera->GetHeight();
-      const Double_t h = (camera->GetHeight() * 0.8) / palette.GetPaletteSize();
-
-      for (Int_t i = 0, e = palette.GetPaletteSize(); i < e; ++i) {
-         glBegin(GL_POLYGON);
-         const UChar_t * color = palette.GetColour(i);
-         glColor4ub(color[0], color[1], color[2], 150);
-         glVertex2d(leftX, margin + i * h);
-         glVertex2d(rightX, margin + i * h);
-         glVertex2d(rightX, margin + (i + 1) * h);
-         glVertex2d(leftX, margin + (i + 1) * h);
-         glEnd();
-      }
-
-      const TGLEnableGuard  smoothGuard(GL_LINE_SMOOTH);
-      glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-      glColor4d(0., 0., 0., 0.5);
-
-      for (Int_t i = 0, e = palette.GetPaletteSize(); i < e; ++i) {
-         glBegin(GL_LINE_LOOP);
-         glVertex2d(leftX, margin + i * h);
-         glVertex2d(rightX, margin + i * h);
-         glVertex2d(rightX, margin + (i + 1) * h);
-         glVertex2d(leftX, margin + (i + 1) * h);
-         glEnd();
-      }
-
+   for (Int_t i = 0, e = palette.GetPaletteSize(); i < e; ++i) {
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(leftX, margin + i * h);
+      glVertex2d(rightX, margin + i * h);
+      glVertex2d(rightX, margin + (i + 1) * h);
+      glVertex2d(leftX, margin + (i + 1) * h);
+      glEnd();
    }
 
-   void DrawPaletteAxis(const TGLPlotCamera * camera, const Range_t & minMax, Bool_t logZ)
-   {
-      const Double_t x = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw() + rr * camera->GetWidth()));
-      const Double_t yMin = gPad->AbsPixeltoY(Int_t(camera->GetHeight() - camera->GetHeight() * 0.1
-                                              + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
-                                              * gPad->GetWh() + camera->GetY()));
-      const Double_t yMax = gPad->AbsPixeltoY(Int_t(camera->GetHeight() - camera->GetHeight() * 0.9
-                                              + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
-                                              * gPad->GetWh() + camera->GetY()));
-      Double_t zMin = minMax.first;
-      Double_t zMax = minMax.second;
+}
 
-      if (logZ) {
-         zMin = TMath::Power(10, zMin);
-         zMax = TMath::Power(10, zMax);
-      }
+//______________________________________________________________________________
+void DrawPaletteAxis(const TGLPlotCamera * camera, const Range_t & minMax, Bool_t logZ)
+{
+   const Double_t x = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw() + rr * camera->GetWidth()));
+   const Double_t yMin = gPad->AbsPixeltoY(Int_t(camera->GetHeight() - camera->GetHeight() * 0.1
+                                           + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
+                                           * gPad->GetWh() + camera->GetY()));
+   const Double_t yMax = gPad->AbsPixeltoY(Int_t(camera->GetHeight() - camera->GetHeight() * 0.9
+                                           + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
+                                           * gPad->GetWh() + camera->GetY()));
+   Double_t zMin = minMax.first;
+   Double_t zMax = minMax.second;
 
-      //Now, some stupid magic, to force ROOT's painting machine work as I want, not as it wants.
-      const Bool_t logX = gPad->GetLogx();
-      gPad->SetLogx(kFALSE);
-      const Bool_t logY = gPad->GetLogy();
-      gPad->SetLogy(kFALSE);
-
-      TGaxis axisPainter(x, yMin, x, yMax, zMin, zMax, 510, logZ ? "G" : "");
-      axisPainter.Paint();
-
-      gPad->SetLogx(logX);
-      gPad->SetLogy(logY);
+   if (logZ) {
+      zMin = TMath::Power(10, zMin);
+      zMax = TMath::Power(10, zMax);
    }
+
+   //Now, some stupid magic, to force ROOT's painting machine work as I want, not as it wants.
+   const Bool_t logX = gPad->GetLogx();
+   gPad->SetLogx(kFALSE);
+   const Bool_t logY = gPad->GetLogy();
+   gPad->SetLogy(kFALSE);
+
+   TGaxis axisPainter(x, yMin, x, yMax, zMin, zMax, 510, logZ ? "G" : "");
+   axisPainter.Paint();
+
+   gPad->SetLogx(logX);
+   gPad->SetLogy(logY);
+}
 
 }
