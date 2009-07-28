@@ -21,59 +21,21 @@
 
 #pragma create TClass string;
 #pragma link C++ class vector<string>;
+#pragma link C++ operator vector<string>;
 #ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class vector<string>::iterator; 
-#pragma link C++ class vector<string>::reverse_iterator; 
-#pragma link C++ function operator!=(vector<string>,vector<string>); 
-#pragma link C++ function operator==(vector<string>,vector<string>); 
-#pragma link C++ function operator<=(vector<string>,vector<string>); 
-#pragma link C++ function operator>=(vector<string>,vector<string>); 
-#pragma link C++ function operator<(vector<string>,vector<string>); 
-#pragma link C++ function operator>(vector<string>,vector<string>); 
-#pragma link C++ function operator!=(vector<string>::iterator,vector<string>::iterator); 
-#pragma link C++ function operator==(vector<string>::iterator,vector<string>::iterator); 
-#pragma link C++ function operator<=(vector<string>::iterator,vector<string>::iterator); 
-#pragma link C++ function operator>=(vector<string>::iterator,vector<string>::iterator); 
-#pragma link C++ function operator<(vector<string>::iterator,vector<string>::iterator); 
-#pragma link C++ function operator>(vector<string>::iterator,vector<string>::iterator); 
-#pragma link C++ function operator+(long,vector<string>::iterator); 
-#pragma link C++ function operator-(vector<string>::iterator,vector<string>::iterator); 
-#pragma link C++ function operator!=(vector<string>::reverse_iterator,vector<string>::reverse_iterator); 
-#pragma link C++ function operator==(vector<string>::reverse_iterator,vector<string>::reverse_iterator); 
-//#pragma link C++ function operator<=(vector<string>::reverse_iterator,vector<string>::reverse_iterator); 
-//#pragma link C++ function operator>=(vector<string>::reverse_iterator,vector<string>::reverse_iterator); 
-//#pragma link C++ function operator<(vector<string>::reverse_iterator,vector<string>::reverse_iterator); 
-//#pragma link C++ function operator>(vector<string>::reverse_iterator,vector<string>::reverse_iterator); 
-//#pragma link C++ function operator+(long,vector<string>::reverse_iterator); 
-//#pragma link C++ function operator-(vector<string>::reverse_iterator,vector<string>::reverse_iterator);
+#pragma link C++ class vector<string>::reverse_iterator;
+#pragma link C++ operator vector<string>::iterator; 
+#pragma link C++ operator vector<string>::reverse_iterator;
 #endif
 
 #pragma link C++ class vector<TString>;
+#pragma link C++ operators vector<TString>;
 #ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class vector<TString>::iterator; 
 #pragma link C++ class vector<TString>::reverse_iterator; 
-#pragma link C++ function operator!=(vector<TString>,vector<TString>); 
-#pragma link C++ function operator==(vector<TString>,vector<TString>); 
-#pragma link C++ function operator<=(vector<TString>,vector<TString>); 
-#pragma link C++ function operator>=(vector<TString>,vector<TString>); 
-#pragma link C++ function operator<(vector<TString>,vector<TString>); 
-#pragma link C++ function operator>(vector<TString>,vector<TString>); 
-#pragma link C++ function operator!=(vector<TString>::iterator,vector<TString>::iterator); 
-#pragma link C++ function operator==(vector<TString>::iterator,vector<TString>::iterator); 
-#pragma link C++ function operator<=(vector<TString>::iterator,vector<TString>::iterator); 
-#pragma link C++ function operator>=(vector<TString>::iterator,vector<TString>::iterator); 
-#pragma link C++ function operator<(vector<TString>::iterator,vector<TString>::iterator); 
-#pragma link C++ function operator>(vector<TString>::iterator,vector<TString>::iterator); 
-#pragma link C++ function operator+(long,vector<TString>::iterator); 
-#pragma link C++ function operator-(vector<TString>::iterator,vector<TString>::iterator); 
-#pragma link C++ function operator!=(vector<TString>::reverse_iterator,vector<TString>::reverse_iterator); 
-#pragma link C++ function operator==(vector<TString>::reverse_iterator,vector<TString>::reverse_iterator); 
-//#pragma link C++ function operator<=(vector<TString>::reverse_iterator,vector<TString>::reverse_iterator); 
-//#pragma link C++ function operator>=(vector<TString>::reverse_iterator,vector<TString>::reverse_iterator); 
-//#pragma link C++ function operator<(vector<TString>::reverse_iterator,vector<TString>::reverse_iterator); 
-//#pragma link C++ function operator>(vector<TString>::reverse_iterator,vector<TString>::reverse_iterator); 
-//#pragma link C++ function operator+(long,vector<TString>::reverse_iterator); 
-//#pragma link C++ function operator-(vector<TString>::reverse_iterator,vector<TString>::reverse_iterator); 
+#pragma link C++ operator vector<TString>::iterator; 
+#pragma link C++ operator vector<TString>::reverse_iterator;
 #endif
 
 #include <vector>

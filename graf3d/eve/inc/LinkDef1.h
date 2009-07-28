@@ -136,6 +136,7 @@
 #pragma link C++ class TEveProjection::PreScaleEntry_t+;
 #pragma link C++ class std::vector<TEveProjection::PreScaleEntry_t>;
 #pragma link C++ class std::vector<TEveProjection::PreScaleEntry_t>::iterator;
+#pragma link C++ operators std::vector<TEveProjection::PreScaleEntry_t>::iterator;
 #pragma link C++ typedef TEveProjection::vPreScale_t;
 #pragma link C++ typedef TEveProjection::vPreScale_i;
 #pragma link C++ class TEveRhoZProjection+;

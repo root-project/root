@@ -56,43 +56,19 @@
 #pragma link C++ class TVirtualCollectionProxy-;
 
 #pragma link C++ class vector<Int_t>;
+#pragma link C++ operators vector<Int_t>;
 #ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class vector<Int_t>::iterator;
+#pragma link C++ operators vector<Int_t>::iterator;
 #pragma link C++ class vector<Int_t>::reverse_iterator;
-#pragma link C++ function operator!=(vector<Int_t>,vector<Int_t>);
-#pragma link C++ function operator==(vector<Int_t>,vector<Int_t>);
-#pragma link C++ function operator<=(vector<Int_t>,vector<Int_t>);
-#pragma link C++ function operator>=(vector<Int_t>,vector<Int_t>);
-#pragma link C++ function operator<(vector<Int_t>,vector<Int_t>);
-#pragma link C++ function operator>(vector<Int_t>,vector<Int_t>);
-#pragma link C++ function operator!=(vector<Int_t>::iterator,vector<Int_t>::iterator);
-#pragma link C++ function operator==(vector<Int_t>::iterator,vector<Int_t>::iterator);
-#pragma link C++ function operator<=(vector<Int_t>::iterator,vector<Int_t>::iterator);
-#pragma link C++ function operator>=(vector<Int_t>::iterator,vector<Int_t>::iterator);
-#pragma link C++ function operator<(vector<Int_t>::iterator,vector<Int_t>::iterator);
-#pragma link C++ function operator>(vector<Int_t>::iterator,vector<Int_t>::iterator);
-#pragma link C++ function operator+(long,vector<Int_t>::iterator);
-#pragma link C++ function operator-(vector<Int_t>::iterator,vector<Int_t>::iterator);
-#pragma link C++ function operator!=(vector<Int_t>::reverse_iterator,vector<Int_t>::reverse_iterator);
-#pragma link C++ function operator==(vector<Int_t>::reverse_iterator,vector<Int_t>::reverse_iterator);
-//#pragma link C++ function operator<=(vector<Int_t>::reverse_iterator,vector<Int_t>::reverse_iterator);
-//#pragma link C++ function operator>=(vector<Int_t>::reverse_iterator,vector<Int_t>::reverse_iterator);
-//#pragma link C++ function operator<(vector<Int_t>::reverse_iterator,vector<Int_t>::reverse_iterator);
-//#pragma link C++ function operator>(vector<Int_t>::reverse_iterator,vector<Int_t>::reverse_iterator);
-//#pragma link C++ function operator+(long,vector<Int_t>::reverse_iterator);
-//#pragma link C++ function operator-(vector<Int_t>::reverse_iterator,vector<Int_t>::reverse_iterator);
+#pragma link C++ operators vector<Int_t>::reverse_iterator;
 #endif
 
 #pragma link C++ nestedclass;
 #pragma link C++ nestedtypedef;
 
 #pragma link C++ class TBits::TReference-;
-#pragma link C++ function operator&(const TBits::TReference&, const TBits::TReference&);
-#pragma link C++ function operator|(const TBits::TReference&, const TBits::TReference&);
-#pragma link C++ function operator^(const TBits::TReference&, const TBits::TReference&);
-#pragma link C++ function operator&(const TBits&, const TBits&);
-#pragma link C++ function operator|(const TBits&, const TBits&);
-#pragma link C++ function operator^(const TBits&, const TBits&);
-#pragma link C++ function operator<<(ostream&, const TBits&);
+#pragma link C++ operators TBits;
+#pragma link C++ operators TBits::TReference;
 
 #endif
