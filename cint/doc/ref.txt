@@ -468,6 +468,7 @@ type checking is omitted when it is used in an interpreted source code.
 #pragma link [C|C++|off] [class|struct|union|enum|namespace|protected] [name];
 #pragma link [C|C++|off] [global|typedef] [name];
 #pragma link [C|C++|off] [nestedclass|nestedtypedef];
+#pragma link [C++|off] operators classname;
 #pragma link [C++|C|off|MACRO] function [name]<(argtypes)>;
 #pragma link [C++|C|off|MACRO] function [classname]::[name]<(argtypes)>;
 #pragma link off all methods;
@@ -508,6 +509,11 @@ controls all of the object defined in speciic scope. When using this pragma,
 it is recommended to use '#pragma link C++ nestedclass; tool. Otherwise, 
 definitions in enclosed scope does not appear in the dictionary.
 
+'#pragma link [C++|off] operators classname;'
+will turn on/off symbol table registration of the operators that are
+declared in the declaring scope of 'classname' (and any of its enclosing
+scope) and take at least one argument that is a reference, pointer, or value 
+argument of type 'classname'
 
 Example: In following example, symbol table registeration of classes, 
 functions, global variables and typedefs are once turned off by 

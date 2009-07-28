@@ -6,6 +6,11 @@
   <li>CINT
   <ul>
     <li>Improve the lookup time for type names. Improves start-up time (dictionary initialization) and parsing speed.</li>
+    <li>New link pragma to simply the generation of the dictionary for 'operators' in a rootcint dictionary.
+<pre lang=cpp>#pragma link [C++|off] operators classname;</pre>
+will turn on/off symbol table registration of the operators that are
+declared in the declaring scopes of 'classname' (and any of its enclosing
+scope) and take at least one argument that is a reference, pointer, or value argument of type <i>classname</i>.</li>
   </ul>
   </li>
   <li>Reflex

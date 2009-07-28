@@ -11744,6 +11744,8 @@ static void G__linknestedtypedef(int tagnum,int globalcomp)
 * #pragma stub C++ function funcname;    can use regexp
 * #pragma stub C   function funcname;    can use regexp
 *
+* #pragma link [C++|off] operators classname;
+*
 * #pragma link C++ global variablename;  can use regexp
 * #pragma link C   global variablename;  can use regexp
 * #pragma link off global variablename;  can use regexp
@@ -12361,6 +12363,61 @@ void G__specify_link(int link_stub)
     }
   }
 
+  /*************************************************************************
+  * #pragma link [spec] operators [classname];
+  *************************************************************************/
+  else if(strncmp(buf,"operators",3)==0) {
+     c = G__fgetname_template(buf,";\n\r");
+
+     // Do not (yet) support wildcarding
+     int cltag = G__defined_tagname(buf,1);
+     if (cltag<0) {
+#ifdef G__ROOT
+        if(G__dispmsg>=G__DISPERR) {
+           G__fprinterr(G__serr,"Error: link requested for operators or unknown class %s",buf);
+           G__genericerror((char*)NULL);
+        }
+#else
+        if(G__dispmsg>=G__DISPNOTE) {
+           G__fprinterr(G__serr,"Note: link requested for unknown class %s",buf);
+           G__printlinenum();
+        }
+#endif
+     } else if (G__struct.type[cltag] == 'n') {
+        // Nothing to do for namespace (should we issue an error message?)
+     } else {
+        // Look for function in the declaring namespace of the class
+        // that are name 'operator' and have an argument which is of the
+        // requested type.
+        short scope = cltag;
+        do {
+           scope = G__struct.parent_tagnum[scope];
+           struct G__ifunc_table_internal *x_ifunc = &G__ifunc;
+           if (scope != -1) {
+              x_ifunc =  G__struct.memfunc[scope];
+           }
+           ifunc = x_ifunc;
+           while(ifunc) {
+              for(i=0;i<ifunc->allifunc;i++) {
+                 bool opmatch = false;
+                 if (strncmp( ifunc->funcname[i], "operator", 8)==0) {
+                    for(short narg=0; narg<ifunc->para_nu[i]; ++narg) {
+                       if ( ifunc->param[i][narg]->p_tagtable == cltag ) {
+                          // note we do not test whether the argument is a reference, value or pointer
+                          // nor its constness.
+                          opmatch = true;
+                       }
+                    }
+                    if (opmatch) {
+                       ifunc->globalcomp[i] = globalcomp;
+                    }
+                 }
+              }
+              ifunc = ifunc->next;
+           }
+        } while (scope != -1);
+     }
+  }
   /*************************************************************************
   * #pragma link [spec] global [name];
   *************************************************************************/
