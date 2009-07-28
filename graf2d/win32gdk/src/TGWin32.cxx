@@ -812,7 +812,7 @@ TGWin32::~TGWin32()
    if (fRefreshTimer)
       delete fRefreshTimer;
    if (!fColors) return;
-   Long_t     key, value;
+   Long64_t key, value;
    TExMapIter it(fColors);
    while (it.Next(key, value)) {
       XColor_t *col = (XColor_t *) value;
