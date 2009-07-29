@@ -96,6 +96,8 @@ class XrdProofdClient {
 
    int                     Touch(bool reset = 0);
 
+   int                     TrimSessionDirs() { return fSandbox.TrimSessionDirs(); }
+
    const char             *AdminPath() const { return fAdminPath.c_str(); }
 
  private:

@@ -37,7 +37,6 @@ private:
    bool                fValid;
    XrdProofUI          fUI;
 
-   int                 TrimSessionDirs();
 
    static int          fgMaxOldSessions;
    static XrdOucString fgWorkdir;
@@ -57,9 +56,10 @@ public:
    int         AddSession(const char *tag);
    int         RemoveSession(const char *tag);
 
-   //Pparse the session dirs
+   //Parse the session dirs
    int         GetSessionDirs(int opt, std::list<XrdOucString *> *sdirs,
                               XrdOucString *tag = 0);
+   int         TrimSessionDirs();
 
    // The manager uses these to set configurable members
    static void SetMaxOldSessions(int mxses) { fgMaxOldSessions = mxses; }

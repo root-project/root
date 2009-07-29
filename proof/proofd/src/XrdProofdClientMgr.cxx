@@ -1290,6 +1290,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
 
    XrdOucString dmsg, emsg;
    XrdProofdClient *c = 0;
+   bool newclient = 0;
    std::list<XrdProofdClient *>::iterator i;
 
    {  XrdSysMutexHelper mh(fMutex);
@@ -1310,6 +1311,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
          ui.fGroup = grp;
          bool full = (fMgr->SrvType() != kXPD_Worker)  ? 1 : 0;
          c = new XrdProofdClient(ui, full, fMgr->ChangeOwn(), fEDest, fClntAdminPath.c_str());
+         newclient = 1;
          bool freeclient = 1;
          if (c && c->IsValid()) {
             // Locate and set the group, if any
@@ -1326,6 +1328,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
                for (i = fProofdClients.begin(); i != fProofdClients.end(); ++i) {
                   if ((nc = *i) && nc->Match(usr,grp)) break;
                   nc = 0;
+                  newclient = 0;
                }
                if (!nc) {
                   // Add to the list
@@ -1348,6 +1351,15 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
       } else {
          if (TRACING(XERR)) {
             XPDFORM(dmsg, "client '%s' unknown or unauthorized: %s", usr, emsg.c_str());
+         }
+      }
+   }
+
+   // Trim the sandbox, if needed
+   if (c && !newclient) {
+      if (c->TrimSessionDirs() != 0) {
+         if (TRACING(XERR)) {
+            XPDFORM(dmsg, "problems trimming client '%s' sandbox", usr);
          }
       }
    }
