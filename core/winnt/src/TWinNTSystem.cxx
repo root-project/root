@@ -76,7 +76,13 @@ public:
    TFdSet(const TFdSet& fd) { fd.Copy(*this); }
    TFdSet& operator=(const TFdSet& fd)  { fd.Copy(*this); return *this; }
    void  Zero() { fds_bits->fd_count = 0; }
-   void  Set(Int_t fd) { fds_bits->fd_array[fds_bits->fd_count++] = (SOCKET)fd; }
+   void  Set(Int_t fd)
+   {
+      if (fds_bits->fd_count < FD_SETSIZE-1) // protect out of bound access (64)
+         fds_bits->fd_array[fds_bits->fd_count++] = (SOCKET)fd;
+      else
+         ::SysError("TFdSet::Set", "fd_count will exeed FD_SETSIZE");
+   }
    void  Clr(Int_t fd)
    {
       int i;
@@ -1296,22 +1302,8 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
    if (oh) {       // found
       TFileHandler *th;
       TIter next(fFileHandler);
-//      fReadmask->Zero();
-//      fWritemask->Zero();
       fReadmask->Clr(h->GetFd());
       fWritemask->Clr(h->GetFd());
-
-      while ((th = (TFileHandler *) next())) {
-         int fd = th->GetFd();
-         if (!fd) return oh;
-
-         if (th->HasReadInterest()) {
-            fReadmask->Set(fd);
-         }
-         if (th->HasWriteInterest()) {
-            fWritemask->Set(fd);
-         }
-      }
    }
    return oh;
 }
