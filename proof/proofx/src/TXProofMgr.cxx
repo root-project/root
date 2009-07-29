@@ -862,19 +862,19 @@ void TXProofMgr::More(const char *what, const char *how, const char *where)
 }
 
 //______________________________________________________________________________
-void TXProofMgr::Rm(const char *what, const char *how, const char *where)
+Int_t TXProofMgr::Rm(const char *what, const char *how, const char *where)
 {
    // Run 'rm' on the nodes
 
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Warning("Rm","invalid TXProofMgr - do nothing");
-      return;
+      return -1;
    }
    // Server may not support it
    if (fSocket->GetXrdProofdVersion() < 1006) {
       Warning("Rm", "functionality not supported by server");
-      return;
+      return -1;
    }
 
    TString prompt, ans("Y");
@@ -896,8 +896,16 @@ void TXProofMgr::Rm(const char *what, const char *how, const char *where)
       // Send the request
       TObjString *os = Exec(kRm, what, how, where);
       // Show the result, if any
-      if (os) Printf("%s", os->GetName());
+      if (os) {
+         if (gDebug > 1) Printf("%s", os->GetName());
+         // Success
+         return 0;
+      }
+      // Failure
+      return -1;
    }
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1098,9 +1106,8 @@ TObjString *TXProofMgr::Exec(Int_t action,
 Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt)
 {
    // Get file 'remote' into 'local' from the master.
-   // If opt is "force", the file, if it exists remotely, is copied in all cases.
-   // If opt is "check" and the local file exists, a check for changes is done
-   // is done using the md5 check sum.
+   // If opt is "force", the file, if it exists remotely, is copied in all cases,
+   // otherwise a check is done on the MD5sum.
    // Return 0 on success, -1 on error.
 
    Int_t rc = -1;
@@ -1125,8 +1132,7 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
    // Parse option
    TString oo(opt);
    oo.ToUpper();
-   Bool_t check = (oo == "CHECK") ? kTRUE : kFALSE;
-   Bool_t force = (!check && oo == "FORCE") ? kTRUE : kFALSE;
+   Bool_t force = (oo == "FORCE") ? kTRUE : kFALSE;
 
    // Check local path name
    TString fileloc(local);
@@ -1153,8 +1159,10 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
          // Add the filename of the remote file and re-check
          if (!fileloc.EndsWith("/")) fileloc += "/";
          fileloc += gSystem->BaseName(filerem);
+         // Get again the status of the path
+         rcloc = gSystem->GetPathInfo(fileloc, stloc);
       }
-      if ((rcloc = gSystem->GetPathInfo(fileloc, stloc)) == 0) {
+      if (rcloc == 0) {
          // It exists already. If it is not a regular file we cannot continue
          if (!R_ISREG(stloc.fMode)) {
             Printf("[GetFile] local file '%s' exists and is not regular: cannot continue",
@@ -1313,6 +1321,8 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
 Int_t TXProofMgr::PutFile(const char *local, const char *remote, const char *opt)
 {
    // Put file 'local'to 'remote' to the master
+   // If opt is "force", the file, if it exists remotely, is copied in all cases,
+   // otherwise a check is done on the MD5sum.
    // Return 0 on success, -1 on error
 
    Int_t rc = -1;
@@ -1570,7 +1580,7 @@ Int_t TXProofMgr::Cp(const char *src, const char *dst, const char *fmt)
       filedst += gSystem->BaseName(filesrc);
    }
 
-   // Make dure that local files are in the format file://<file>
+   // Make sure that local files are in the format file://<file>
    filesrc = TUrl(filesrc.Data(), kTRUE).GetUrl();
    filedst = TUrl(filedst.Data(), kTRUE).GetUrl();
    if (filesrc.BeginsWith("file:") && !filesrc.BeginsWith("file://"))

@@ -1184,6 +1184,9 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
             if (action == kStat || action == kMd5sum) {
                // Extract the result
                result.assign((const char *) xrsp->GetData(), 0, xrsp->DataLen());
+            } else if (action == kRm) {
+               // Send 'OK'
+               result = "OK";
             }
          }
          // Cleanup answer
@@ -1356,6 +1359,9 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
          case kStat:
          case kMd5sum:
             response->Send(emsg.c_str());
+            break;
+         case kRm:
+            response->Send("OK");
             break;
          default:
             response->Send();

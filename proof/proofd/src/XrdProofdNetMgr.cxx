@@ -404,7 +404,7 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
    // Return 0 on success, -1 on error
    XPDLOC(NMGR, "NetMgr::Broadcast")
 
-   int rc = 0;
+   unsigned int nok = 0;
    TRACE(REQ, "type: "<<type);
 
    // Loop over unique nodes
@@ -433,6 +433,8 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
             // Send request
             if (!(xrsp = Send(u.c_str(), type, msg, srvtype, r, notify, subtype))) {
                TRACE(XERR, "problems sending request to "<<u);
+            } else {
+               nok++;
             }
             // Cleanup answer
             SafeDelete(xrsp);
@@ -445,7 +447,7 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
    }
 
    // Done
-   return rc;
+   return (nok == fNodes.size()) ? 0 : -1;
 }
 
 //__________________________________________________________________________

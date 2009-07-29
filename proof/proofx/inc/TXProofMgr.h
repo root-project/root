@@ -88,7 +88,7 @@ public:
    void        Grep(const char *what, const char *how = 0, const char *where = 0);
    void        Ls(const char *what = "~/", const char *how = 0, const char *where = 0);
    void        More(const char *what, const char *how = 0, const char *where = 0);
-   void        Rm(const char *what, const char *how = 0, const char *where = 0);
+   Int_t       Rm(const char *what, const char *how = 0, const char *where = 0);
    void        Tail(const char *what, const char *how = 0, const char *where = 0);
    Int_t       Md5sum(const char *what, TString &sum, const char *where = 0);
    Int_t       Stat(const char *what, FileStat_t &st, const char *where = 0);
