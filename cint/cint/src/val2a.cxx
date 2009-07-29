@@ -1015,10 +1015,14 @@ long double G__atolf(const char* expr)
    if (expr[0] == 'e' || expr[0] == 'E') {
       long expon = strtol(expr + 1, 0, 0);
       // use long double overload of pow()!
-      ld *= pow((long double)10, expon);
+      // Solaris only has
+      //   std::pow(long double, long double)
+      //   std::pow(long double, int)
+      // so pick the slower but more general first overload.
+      ld *= pow((long double)10, (long double)expon);
    }
 
-   // don't crea about the trailing 'l' or 'L'.
+   // don't care about the trailing 'l' or 'L'.
 
    return ld;
 }
