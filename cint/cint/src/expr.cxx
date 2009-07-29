@@ -36,6 +36,7 @@ G__value G__getpower(const char* expression2);
 G__value G__getitem(const char* item);
 int G__test(const char* expr);
 int G__btest(int operator2, G__value lresult, G__value rresult);
+long double G__atolf(const char* expr);
 
 // Functions in the C interface.
 int G__lasterror();
@@ -1778,7 +1779,11 @@ G__value G__getitem(const char* item)
       case '9':
       case '.':
          if (G__isfloat(item, &c)) {
-            G__letdouble(&result3, c, atof(item));
+            if (c == 'q') {
+               G__letLongdouble(&result3, c, G__atolf(item));
+            } else {
+               G__letdouble(&result3, c, atof(item));
+            }
          }
          else {
             switch (c) {

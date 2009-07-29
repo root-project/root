@@ -974,86 +974,54 @@ int G__val2pointer(G__value* result7)
    return(0);
 }
 
-#ifdef G__NEVER
 //______________________________________________________________________________
-double G__atodouble(char* string)
+long double G__atolf(const char* expr)
 {
-   int lenstring;
-   int ig16 = 0, ig26 = 0;
-   char exponent[G__ONELINE];
-   double expo, polarity = 1;
-   double result5 = 0.0;
-   double ratio = 0.1;
+   // Extract a long double in decimal format from expr;
+   // cannot parse hexadecimal format.
 
-   lenstring = strlen(string);
-   if (string[ig16] == '-') {
-      polarity = -1;
-      ig16++;
-   }
-   while ((isdigit(string[ig16])) && (ig16 < lenstring)) {
-      result5 = result5 * 10 + (double)(string[ig16++] - '0');
-   }
-   if (string[ig16] == '.') {
-      ig16++;
-      while ((isdigit(string[ig16])) && (ig16 < lenstring)) {
-         result5 += ratio * (double)(string[ig16++] - '0');
-         ratio /= 10;
+   //  [+-]?[[:digit:]]*\.?[[:digit:]]([Ee][[:digit:]]+)?*[Ll]
+
+   // skip leading space
+   while (isspace(expr[0])) ++expr;
+
+   // extract sign
+   bool negative = expr[0] == '-';
+   if (negative || expr[0] == '+') ++expr;
+
+   // significand (mantissa)
+   long double multiplier = -1.;
+   long double ld = 0.;
+   while (isdigit(expr[0]) || (expr[0] == '.' && multiplier < 0.)) {
+      if (expr[0] == '.') {
+         if (multiplier < 0.) {
+            multiplier = 0.1;
+         } else {
+            multiplier /= 10.;
+         }
+      } else {
+         if (multiplier < 0.) {
+            ld *= 10.;
+            ld += expr[0] - '0';
+         } else {
+            ld += multiplier * (expr[0] - '0');
+            multiplier /= 10.;
+         }
       }
+      ++expr;
    }
-   if (ig16 < lenstring) {
-      switch (string[ig16]) {
-         case 'e':
-         case 'E':
-            ig16++;
-            while (ig16 < lenstring) exponent[ig26++] = string[ig16++];
-            exponent[ig26] = '\0';
-            expo = (double)(atoi(exponent));
-            expo = exp(expo * log(10.0));
-            result5 *= expo;
-            break;
-         case 't':
-         case 'T':
-            result5 *= 1e12;
-            break;
-         case 'g':
-         case 'G':
-            result5 *= 1e9;
-            break;
-         case 'M':
-            result5 *= 1e6;
-            break;
-         case 'k':
-         case 'K':
-            result5 *= 1e3;
-            break;
-         case 'm':
-            result5 *= 1e-3;
-            break;
-         case 'u':
-         case 'U':
-            result5 *= 1e-6;
-            break;
-         case 'n':
-         case 'N':
-            result5 *= 1e-9;
-            break;
-         case 'p':
-         case 'P':
-            result5 *= 1e-12;
-            break;
-         case 'f':
-         case 'F':
-            result5 *= 1e-15;
-            break;
-         case 'a':
-         case 'A':
-            result5 *= 1e-18;
-            break;
-      }
+
+   // exponent
+   if (expr[0] == 'e' || expr[0] == 'E') {
+      long expon = strtol(expr + 1, 0, 0);
+      // use long double overload of pow()!
+      ld *= pow((long double)10, expon);
    }
-   return(polarity*result5);
+
+   // don't crea about the trailing 'l' or 'L'.
+
+   return ld;
 }
-#endif // G__NEVER
 
 //______________________________________________________________________________
 char* G__getbase(unsigned int expression, int base, int digit, char* result1)
@@ -1480,6 +1448,7 @@ int G__isfloat(const char* string, int* type)
              * long
              ******************************/
             if ('l' == *type) *type = 'n';
+            else if (*type == 'd') *type = 'q';
             else           *type = 'l';
             break;
 #ifdef G__NEVER
