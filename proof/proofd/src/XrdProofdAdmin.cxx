@@ -2334,7 +2334,7 @@ int XrdProofdAdmin::CpFile(XrdProofdProtocol *p)
                }
                // Real-time sending (line-by-line)
                if (llen > 0 &&
-                   response->Send(kXR_attn, kXPD_srvmsg, 2, (char *) &line[0], llen) != 0) {
+                   response->Send(kXR_attn, kXPD_srvmsg, 4, (char *) &line[0], llen) != 0) {
                   emsg = "error sending message to requester";
                   rc = 1;
                   break;
@@ -2360,6 +2360,12 @@ int XrdProofdAdmin::CpFile(XrdProofdProtocol *p)
             if (WEXITSTATUS(rcpc) != 0) {
                emsg = "return code: ";
                emsg += (int) WEXITSTATUS(rcpc);
+               rc = 1;
+            }
+            // Close the notification messages
+            char cp[1] = {'\n'};
+            if (response->Send(kXR_attn, kXPD_srvmsg, 3, (char *) &cp[0], 1) != 0) {
+               emsg = "error sending progress notification to requester";
                rc = 1;
             }
          }

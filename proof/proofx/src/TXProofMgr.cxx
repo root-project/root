@@ -1580,13 +1580,16 @@ Int_t TXProofMgr::Cp(const char *src, const char *dst, const char *fmt)
       filedst += gSystem->BaseName(filesrc);
    }
 
-   // Make sure that local files are in the format file://<file>
-   filesrc = TUrl(filesrc.Data(), kTRUE).GetUrl();
-   filedst = TUrl(filedst.Data(), kTRUE).GetUrl();
-   if (filesrc.BeginsWith("file:") && !filesrc.BeginsWith("file://"))
-      filesrc.ReplaceAll("file:", "file://");
-   if (filedst.BeginsWith("file:") && !filedst.BeginsWith("file://"))
-      filedst.ReplaceAll("file:", "file://");
+   // Make sure that local files are in the format file://host/<file> otherwise
+   // the URL class in the server will not parse them correctly
+   TUrl usrc = TUrl(filesrc.Data(), kTRUE).GetUrl();
+   filesrc = usrc.GetUrl();
+   if (!strcmp(usrc.GetProtocol(), "file"))
+      filesrc.Form("file://host/%s", usrc.GetFileAndOptions());
+   TUrl udst = TUrl(filedst.Data(), kTRUE).GetUrl();
+   filedst = udst.GetUrl();
+   if (!strcmp(udst.GetProtocol(), "file"))
+      filedst.Form("file://host/%s", udst.GetFileAndOptions());
 
    // Prepare the command
    TString cmd;

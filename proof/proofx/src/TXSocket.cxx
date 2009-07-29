@@ -691,7 +691,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             kXR_int32 opt = 0;
             memcpy(&opt, pdata, sizeof(kXR_int32));
             opt = net2host(opt);
-            if (opt == 0 || opt == 1 || opt == 2) {
+            if (opt >= 0 & opt <= 4) {
                // Update pointer to data
                pdata = (void *)((char *)pdata + sizeof(kXR_int32));
                len -= sizeof(kXR_int32);
@@ -705,6 +705,12 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             } else if (opt == 2) {
                // Raw displaying
                Printf("%.*s", len, (char *)pdata);
+            } else if (opt == 3) {
+               // Incremental displaying
+               fprintf(stderr, "%.*s", len, (char *)pdata);
+            } else if (opt == 4) {
+               // Rewind
+               fprintf(stderr, "%.*s\r", len, (char *)pdata);
             } else {
                // A small header
                Printf(" ");
