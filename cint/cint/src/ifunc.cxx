@@ -4839,7 +4839,6 @@ end_of_function:
     *    do parameter conversion if needed */
    if (0 == (p_ifunc->access[*pifn]&access) && (!G__isfriend(p_ifunc->tagnum))
          && G__NOLINK == G__globalcomp
-         && G__TRYCONSTRUCTOR !=  memfunc_flag
       )
    {
       /* no access right */

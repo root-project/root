@@ -2612,15 +2612,19 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                switch (memfunc_flag) {
                   case G__CALLCONSTRUCTOR:
                   case G__TRYCONSTRUCTOR:
-                  case G__TRYIMPLICITCONSTRUCTOR:
+                  case G__TRYIMPLICITCONSTRUCTOR: {
                      /* constructor for base class and class members default
                       * constructor only */
+                     int store2_exec_memberfunc = G__exec_memberfunc;
+                     G__exec_memberfunc = 1;
 #ifdef G__VIRTUALBASE
                      if (G__CPPLINK != G__struct.iscpplink[G__tagnum])
                         G__baseconstructor(0 , (struct G__baseparam *)NULL);
 #else
                      G__baseconstructor(0 , (struct G__baseparam *)NULL);
 #endif
+                     G__exec_memberfunc = store2_exec_memberfunc;
+                  }
                }
             }
             G__exec_memberfunc = store_exec_memberfunc;
