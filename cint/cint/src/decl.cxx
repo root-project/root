@@ -650,6 +650,7 @@ static int G__initstruct(char* new_name)
       // came to                        ^  or ^
       return c;
    }
+   var->is_init_aggregate_array[varid] = 1;
    int& num_of_elements = var->varlabel[varid][1];
    const int stride = var->varlabel[varid][0];
    // Check for an unspecified length array.

@@ -599,6 +599,7 @@ static int G__destroy_upto_vararray(G__var_array* var, int global, int ig15)
          if (
             (var->type[idx] == 'u') && // Variable is of class, enum, namespace, struct, or union type, and
             (var->reftype[idx] == G__PARANORMAL) && // Is not a reference, and
+            !var->is_init_aggregate_array[idx] && // Is not an initialized aggregate array, and
             !G__ansiheader && // We are not in function header scope, and
             !G__prerun // We are executing.
          ) {
@@ -719,7 +720,10 @@ static int G__destroy_upto_vararray(G__var_array* var, int global, int ig15)
          fprintf(G__memhist, "Free(%s)\n", var->varnamebuf[idx]);
 #endif // G__MEMTEST
          if (
-            (cpplink == G__NOLINK) && // Variable is not of precompiled class type, and
+            (
+               (cpplink == G__NOLINK) || // Variable is not of precompiled class type, or
+               var->is_init_aggregate_array[idx] // Variable is an initialized aggregate array
+            ) && // and,
             var->p[idx] && // We have value storage allocated, and
             (var->p[idx] != -1) // FIXME: This probably is not needed.
          ) {

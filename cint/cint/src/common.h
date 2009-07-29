@@ -1278,6 +1278,7 @@ struct G__var_array {
   int varlabel[G__MEMDEPTH+1][G__MAXVARDIM];  /* points varpointer */
   short paran[G__MEMDEPTH];
   char bitfield[G__MEMDEPTH];
+  char is_init_aggregate_array[G__MEMDEPTH];
 #ifdef G__VARIABLEFPOS
   int filenum[G__MEMDEPTH];
   int linenum[G__MEMDEPTH];
