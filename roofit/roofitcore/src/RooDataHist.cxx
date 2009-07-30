@@ -1355,6 +1355,7 @@ void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErr)
   _wgt[idx] = wgt ;  
   _errLo[idx] = wgtErr ;  
   _errHi[idx] = wgtErr ;  
+  _sumw2[_curIndex] = wgtErr*wgtErr ;
 }
 
 
