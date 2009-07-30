@@ -402,7 +402,7 @@ void THStack::Draw(Option_t *option)
 
    // For stacks of 1D histograms the axis need to be redrawn because the
    // tick marks have been very likely erased.
-   if (fHists->GetSize()) {
+   if (fHists && fHists->GetSize()) {
       TH1* h = (TH1*)fHists->At(0);
       if (h->GetDimension()==1 && !strstr(opt.Data(),"lego"))
          gPad->RedrawAxis();
