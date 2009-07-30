@@ -2641,7 +2641,9 @@ const char *TUnixSystem::GetLinkedLibraries()
       }
       delete tok;
    }
-   ClosePipe(p);
+   if (p) {
+      ClosePipe(p);
+   }
 #endif
 #elif defined(R__LINUX) || defined(R__SOLARIS)
 #if defined(R__WINGCC )
@@ -2675,7 +2677,9 @@ const char *TUnixSystem::GetLinkedLibraries()
       }
       delete tok;
    }
-   ClosePipe(p);
+   if (p) {
+      ClosePipe(p);
+   }
 #endif
 
    delete [] exe;
