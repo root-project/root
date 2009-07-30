@@ -394,29 +394,6 @@ namespace ROOT { namespace Cintex {
       std::string Name = typ.Name(SCOPED);
       int kind = TClassEdit::IsSTLCont(Name.c_str());
       if ( kind < 0 ) kind = -kind;
-      const char* tagname = Name.c_str();
-      int tagnum = ::G__defined_tagname(tagname, 2);
-      G__ClassInfo cl_info(tagnum);
-      if ( cl_info.IsValid() )  {
-         switch(kind)  {
-         case TClassEdit::kVector:
-         case TClassEdit::kList:
-         case TClassEdit::kDeque:
-         case TClassEdit::kMap:
-         case TClassEdit::kMultiMap:
-         case TClassEdit::kSet:
-         case TClassEdit::kMultiSet:
-            cl_info.SetVersion(4);
-            break;
-         case TClassEdit::kBitSet:
-            cl_info.SetVersion(2);
-            break;
-         case TClassEdit::kNotSTL:
-         case TClassEdit::kEnd:
-            cl_info.SetVersion(1);
-            break;
-         }
-      }
 
       const std::type_info& tid = typ.TypeInfo();
       root_class = info->GetClass();
