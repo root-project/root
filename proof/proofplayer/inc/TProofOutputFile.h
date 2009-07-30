@@ -56,7 +56,7 @@ private:
 
    TString GetTmpName(const char* name);
 
-   void ResolveKeywords(TString &fname);
+   void ResolveKeywords(TString &fname, const char *path = 0);
    void SetFileName(const char* name);
    void SetDir(const char* dir) { fDir = dir; }
    void SetWorkerOrdinal(const char* ordinal) { fWorkerOrdinal = ordinal; }

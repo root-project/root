@@ -74,14 +74,17 @@ TProofOutputFile::TProofOutputFile(const char *path, const char *location, const
 
    // Default output file name
    fOutputFileName = gEnv->GetValue("Proof.OutputFile", "");
-   if (!fOutputFileName.IsNull() && !fOutputFileName.EndsWith("/"))
-      fOutputFileName += "/";
    // Add default file name
-   fOutputFileName += path;
-   if (!fOutputFileName.EndsWith(".root"))
-      fOutputFileName += ".root";
+   TString fileName = path;
+   if (!fileName.EndsWith(".root"))
+      fileName += ".root";
+   // Make sure the the file name was inserted (may not happen if the placeholder <file> is missing)
+   if (!fOutputFileName.IsNull() && !fOutputFileName.Contains("<file>")) {
+      if (!fOutputFileName.EndsWith("/")) fOutputFileName += "/";
+         fOutputFileName += fileName;
+   }
    // Resolve placeholders
-   ResolveKeywords(fOutputFileName);
+   ResolveKeywords(fOutputFileName, fileName);
    Info("TProofOutputFile", "output file url: %s", fOutputFileName.Data());
 
    // Copy files locally before merging?
@@ -138,7 +141,7 @@ void TProofOutputFile::SetOutputFileName(const char *name)
 }
 
 //______________________________________________________________________________
-void TProofOutputFile::ResolveKeywords(TString &fname)
+void TProofOutputFile::ResolveKeywords(TString &fname, const char *path)
 {
    // Replace <user> and <group> placeholders in fname
 
@@ -159,6 +162,10 @@ void TProofOutputFile::ResolveKeywords(TString &fname)
          fname.ReplaceAll("<group>", gProofServ->GetGroup());
       else
          fname.ReplaceAll("<group>", "default");
+   }
+   // Replace <file>, if any
+   if (fname.Contains("<file>") && path && strlen(path) > 0) {
+      fname.ReplaceAll("<file>", path);
    }
 }
 
