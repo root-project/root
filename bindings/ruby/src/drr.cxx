@@ -945,6 +945,8 @@ void Init_libRuby() {
     rb_define_method(drrAbstractClass, "initialize", VALUEFUNC(drr_init), -1);
     rb_define_method(drrAbstractClass, "method_missing", VALUEFUNC(drr_method_missing), -1);
     rb_define_method (drrAbstractClass, "as", VALUEFUNC(drr_as), 1);
+    /* For singleton function calls.  */
+    rb_define_singleton_method (drrAbstractClass, "method_missing", VALUEFUNC(drr_singleton_missing), -1);
 
     cTObject = rb_define_class("TObject", drrAbstractClass);
 
@@ -955,8 +957,6 @@ void Init_libRuby() {
        Object::__drr_orig_const_missing will be called if Cint is unable to resolve the class name */
     rb_eval_string("Object.instance_eval { alias __drr_orig_const_missing const_missing }");
     rb_define_singleton_method (rb_cObject, "const_missing", VALUEFUNC(drr_const_missing), 1);
-	/* For singleton function calls.  */
-    rb_define_singleton_method (rb_cObject, "method_missing", VALUEFUNC(drr_singleton_missing), -1);
 
     /* usefull globals */
     rb_define_method (rb_cObject, "gSystem", VALUEFUNC(rr_gsystem), 0);

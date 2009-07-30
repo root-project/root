@@ -128,6 +128,8 @@ class TestRR < Test::Unit::TestCase
 #  end
   # Test for error in Accessing THStack#GetXaxis
   # fixed in r21541
+  # Also tests for Draw without histograms regression (r28092) which caused a
+  # segfault. See https://savannah.cern.ch/bugs/index.php?53803
   def test_thstack_getxaxis
     ts = THStack.new
     assert_nil( ts.GetXaxis )
@@ -137,5 +139,33 @@ class TestRR < Test::Unit::TestCase
     ts.Draw
     assert( ts.GetXaxis, 'GetXaxis is nil' )
     assert_equal( TAxis, ts.GetXaxis.as( "TAxis" ).class )
+  end
+  # Problem introduced in r26567: method_missing of Object is changed, yielding
+  # unexpected behaviour in external classes. I.e. failing private method calls
+  # (handled via singleton method method_missing) are passed to Root, which
+  # they should not. Possible workaround: Move this into DRRAbstractClass,
+  # where it only affects ROOT Objects. Disadvantage: This still has the
+  # problem of not allowing you to make methods private.
+  class NonRootObject
+    def NonRootObject.test
+    end
+    private_class_method :test
+    private
+    def test
+    end
+  end
+  def test_non_root_objects_are_unaffected
+    assert_raise( NoMethodError ) do
+      nro = NonRootObject.new
+      nro.test
+    end
+    assert_raise( NoMethodError ) do
+      NonRootObject.test
+    end
+  end
+  # Make sure that TMath's methods can now be called. Works since a singleton
+  # method_missing is implemented.
+  def test_singleton_method_missing
+    assert_in_delta( TMath.E, Math::exp( 1 ), 1e-5 )
   end
 end
