@@ -722,7 +722,7 @@ void THtml::TFileSysDB::Fill()
       gSystem->GetPathInfo(dir, buf);
       if (R_ISDIR(buf.fMode)) {
 #ifndef R__WIN32
-         TFileSysRoot* prevroot = (TFileSysRoot*) GetMapIno().GetValue(buf.fIno);
+         TFileSysRoot* prevroot = (TFileSysRoot*) (Long_t)GetMapIno().GetValue(buf.fIno);
          if (prevroot != 0) {
             Warning("Fill", "InputPath \"%s\" already present as \"%s\"!", dir.Data(), prevroot->GetName());
             continue;

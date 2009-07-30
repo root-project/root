@@ -207,7 +207,7 @@ TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode) const
    if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
    if (fPdgMap       == 0)  BuildPdgMap();
 
-   return (TParticlePDG*) fPdgMap->GetValue((Long_t)PDGcode);
+   return (TParticlePDG*) (Long_t)fPdgMap->GetValue((Long_t)PDGcode);
 }
 
 //______________________________________________________________________________
