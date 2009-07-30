@@ -3857,24 +3857,16 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
 
                // Set the arguments
-               TString args;
+               method->ResetParam();
                if (nargs) {
                   UInt_t argloc = pos-nargs;
                   for(Int_t j=0;j<nargs;j++,argloc++,pos--) {
-                     if (TMath::IsNaN(tab[argloc])) {
-                        // TString would add 'nan' this is not what we want
-                        // so let's do somethign else
-                        args += "TMath::Sqrt(-1)";
-                     } else {
-                        args += tab[argloc];
-                     }
-                     args += ',';
+                     method->SetParam( tab[argloc] );
                   }
-                  args.Remove(args.Length()-1);
                }
                pos++;
                Double_t ret;
-               method->Execute(args,ret);
+               method->Execute(ret);
                tab[pos-1] = ret; // check for the correct conversion!
 
                continue;
