@@ -187,11 +187,11 @@ void G__p2f_void_void(void *p2f)
 {
    switch (G__isinterpretedp2f(p2f)) {
       case G__INTERPRETEDFUNC: {
-                                  char buf[G__ONELINE];
                                   char *fname;
                                   fname = G__p2f2funcname(p2f);
-                                  sprintf(buf, "%s()", fname);
-                                  if (G__asm_dbg) G__fprinterr(G__serr, "(*p2f)() %s interpreted\n", buf);
+                                  G__FastAllocString buf(fname);
+                                  buf += "()";
+                                  if (G__asm_dbg) G__fprinterr(G__serr, "(*p2f)() %s interpreted\n", buf());
                                   G__calc_internal(buf);
                                }
                                break;
@@ -268,15 +268,14 @@ static void G__getindexedvalue(G__value *result3, char *cindex)
    int size;
    int index;
    int len;
-   char sindex[G__ONELINE];
+   G__FastAllocString sindex(cindex);
    char *p;
-   strcpy(sindex, cindex);
    p = strstr(sindex, "][");
    if (p) {
       *(p + 1) = 0;
       G__getindexedvalue(result3, sindex);
       p = strstr(cindex, "][");
-      strcpy(sindex, p + 1);
+      sindex = p + 1;
    }
    len = strlen(sindex);
 #ifdef G__OLDIMPLEMENTATION424
@@ -618,13 +617,12 @@ int G__explicit_fundamental_typeconv(char *funcname, int hash, G__param *libp, G
    }
 #ifndef G_OLDIMPLEMENTATION1128
    if (flag && 'u' == libp->para[0].type) {
-      char ttt[G__ONELINE];
       int xtype = presult3->type;
       int xreftype = 0;
       int xisconst = 0;
       *presult3 = libp->para[0];
       G__fundamental_conversion_operator(xtype, -1 , -1 , xreftype, xisconst
-            , presult3, ttt);
+                                         , presult3, 0);
    }
 #endif
    return(flag);
@@ -656,14 +654,10 @@ void G__gen_addstros(int addstros)
  ******************************************************************/
 G__value G__pointer2memberfunction(char *parameter0, char *parameter1, int *known3)
 {
-   char buf[G__LONGLINE];
-   char buf2[G__ONELINE];
-   char expr[G__LONGLINE];
+   G__FastAllocString buf(parameter0);
    char* mem;
    G__value res;
    const char* opx;
-
-   strcpy(buf, parameter0);
 
    if ((mem = strstr(buf, ".*"))) {
       *mem = 0;
@@ -695,9 +689,13 @@ G__value G__pointer2memberfunction(char *parameter0, char *parameter1, int *know
 
    /* For the time being, pointer to member function can only be handed as
     * function name */
-   strcpy(buf2, *(char**)res.obj.i);
+   G__FastAllocString buf2(*(char**)res.obj.i);
 
-   sprintf(expr, "%s%s%s%s", buf, opx, buf2, parameter1);
+   G__FastAllocString expr(G__LONGLINE);
+   expr = buf;
+   expr += opx;
+   expr += buf2;
+   expr += parameter1;
 
    G__abortbytecode();
    return(G__getvariable(expr, known3, &G__global, G__p_local));
@@ -721,13 +719,11 @@ G__value G__pointerReference(char *item, G__param *libp, int *known3)
    *known3 = 1;
 
    if (2 == libp->paran && strstr(libp->parameter[1], "][")) {
-      char arg[G__ONELINE];
+      G__FastAllocString arg(libp->parameter[1]);
       char *p = arg;
-      int k;
-      strcpy(p, libp->parameter[1]);
       i = 1;
       while (*p) {
-         k = 0;
+         int k = 0;
          if (*p == '[') ++p;
          while (*p && *p != ']') libp->parameter[i][k++] = *p++;
          libp->parameter[i][k++] = 0;
@@ -738,9 +734,7 @@ G__value G__pointerReference(char *item, G__param *libp, int *known3)
    }
 
    for (i = 1;i < libp->paran;i++) {
-      char arg[G__ONELINE];
-
-      strcpy(arg, libp->parameter[i]);
+      G__FastAllocString arg(libp->parameter[i]);
       if ('[' == arg[0]) {
          j = 0;
          while (arg[++j] && ']' != arg[j]) arg[j-1] = arg[j];
@@ -748,7 +742,7 @@ G__value G__pointerReference(char *item, G__param *libp, int *known3)
       }
 
       if ('u' == result3.type) { /* operator[] overloading */
-         char expr[G__ONELINE];
+         G__FastAllocString expr(G__ONELINE);
          /* Set member function environment */
          G__tagnum = result3.tagnum;
          G__typenum = result3.typenum;
@@ -769,7 +763,7 @@ G__value G__pointerReference(char *item, G__param *libp, int *known3)
 #endif
          /* call operator[] */
          *known3 = 0;
-         sprintf(expr, "operator[](%s)", arg);
+         expr.Format("operator[](%s)", arg());
          result3 = G__getfunction(expr, known3, G__CALLMEMFUNC);
          /* Restore environment */
          G__tagnum = store_tagnum;
@@ -810,7 +804,7 @@ int G__additional_paranthesis G__P((G__value* presult, struct G__param* libp));
  ******************************************************************/
 int G__additional_parenthesis(G__value *presult, G__param *libp)
 {
-   char buf[G__LONGLINE];
+   G__FastAllocString buf(G__LONGLINE);
    int known;
    int store_tagnum = G__tagnum;
    long store_struct_offset = G__store_struct_offset;
@@ -821,7 +815,7 @@ int G__additional_parenthesis(G__value *presult, G__param *libp)
    G__tagnum = presult->tagnum;
    G__store_struct_offset = presult->obj.i;
 
-   sprintf(buf, "operator()%s", libp->parameter[1]);
+   buf.Format("operator()%s", libp->parameter[1]);
    *presult = G__getfunction(buf, &known, G__CALLMEMFUNC);
 
    G__tagnum = store_tagnum;
@@ -830,10 +824,12 @@ int G__additional_parenthesis(G__value *presult, G__param *libp)
    return(known);
 }
 
+} // extern "C"
+
 /******************************************************************
  * G__rename_templatefunc()
  ******************************************************************/
-char* G__rename_templatefunc(char *funcname, int isrealloc)
+char* G__rename_templatefunc(G__FastAllocString& funcname)
 {
    char *ptmplt ;
    ptmplt = strchr(funcname, '<');
@@ -848,34 +844,33 @@ char* G__rename_templatefunc(char *funcname, int isrealloc)
       }
    }
    if (ptmplt) {
-      char funcname2[G__LONGLINE];
-      char buf[G__ONELINE];
-      char buf2[20];
+      G__FastAllocString funcname2(funcname);
+      G__FastAllocString buf(G__ONELINE);
+      G__FastAllocString buf2(20);
       int typenum, tagnum, len;
       int ip = 1;
       int c;
-      strcpy(funcname2, funcname);
-      strcat(funcname2, "<");
+      funcname2 += "<";
       do {
-         c = G__getstream_template(ptmplt, &ip, buf, ",>");
+         c = G__getstream_template(ptmplt, &ip, buf, 0, ",>");
          len = strlen(buf) - 1;
          while ('*' == buf[len] || '&' == buf[len]) --len;
          ++len;
          if (buf[len]) {
-            strcpy(buf2, buf + len);
+            buf2 = buf + len;
             buf[len] = 0;
          }
          else buf2[0] = 0;
          typenum = G__defined_typename(buf);
          if (-1 != typenum) {
-            strcpy(buf, G__fulltypename(typenum));
+            buf = G__fulltypename(typenum);
          }
          else {
             tagnum = G__defined_tagname(buf, 1);
             if (-1 != tagnum) strcpy(buf, G__fulltagname(tagnum, 1));
          }
-         strcat(buf, buf2);
-         strcat(funcname2, buf);
+         buf += buf2;
+         funcname2 += buf;
          if (funcname2[strlen(funcname2)-1] == '>' && c == '>') {
             buf2[0] = ' ';
             buf2[1] = c;
@@ -885,24 +880,21 @@ char* G__rename_templatefunc(char *funcname, int isrealloc)
             buf2[0] = c;
             buf2[1] = 0;
          }
-         strcat(funcname2, buf2);
-      }
-      while (c != '>');
-      if (isrealloc) {
-         free((void*)funcname);
-         funcname = (char*)malloc(strlen(funcname2) + 1);
-      }
-      strcpy(funcname, funcname2);
+         funcname2 += buf2;
+      } while (c != '>');
+      funcname = funcname2;
    }
-   return(funcname);
+   return funcname;
 }
+
+extern "C" {
 
 /******************************************************************
  * G__operatorfunction()
  *
  *
  ******************************************************************/
-G__value G__operatorfunction(G__value *presult, const char *item, int *known3, char *result7, const char *funcname)
+G__value G__operatorfunction(G__value *presult, const char *item, int *known3, G__FastAllocString& result7, const char *funcname)
 {
    G__value result3 = G__null;
    struct G__param fpara;
@@ -911,7 +903,6 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, c
    int nest = 0;
    int double_quote = 0, single_quote = 0;
    int lenitem = strlen(item);
-   int overflowflag = 0;
    int castflag = 0;
    int base1 = 0;
    int nindex = 0;
@@ -964,11 +955,11 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, c
                   if ((double_quote == 0) && (single_quote == 0)) nest--;
                   break;
                case '\\':
-                  result7[ig35++] = item[ig15++];
+                  result7.Set(ig35++, item[ig15++]);
                   break;
                case '<':
                   if (double_quote == 0 && single_quote == 0) {
-                     result7[ig35] = 0;
+                     result7.Set(ig35, 0);
                      if (0 == strcmp(result7, "operator") ||
                            tmpltnest ||
                            G__defined_templateclass(result7)) ++tmpltnest;
@@ -980,61 +971,7 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, c
                   }
                   break;
             }
-            result7[ig35++] = item[ig15++];
-            if (ig35 >= G__ONELINE - 1) {
-               if (result7[0] == '"') {
-                  G__value bufv;
-                  char bufx[G__LONGLINE];
-                  strncpy(bufx, result7, G__ONELINE - 1);
-                  while ((((item[ig15] != ',') && (item[ig15] != ')')) ||
-                           (nest > 0) || (single_quote > 0) ||
-                           (double_quote > 0)) && (ig15 < lenitem)) {
-                     switch (item[ig15]) {
-                        case '"' : /* double quote */
-                           if (single_quote == 0) double_quote ^= 1;
-                           break;
-                        case '\'' : /* single quote */
-                           if (double_quote == 0) single_quote ^= 1;
-                           break;
-                        case '(':
-                        case '[':
-                        case '{':
-                           if ((double_quote == 0) && (single_quote == 0)) nest++;
-                           break;
-                        case ')':
-                        case ']':
-                        case '}':
-                           if ((double_quote == 0) && (single_quote == 0)) nest--;
-                           break;
-                        case '\\':
-                           bufx[ig35++] = item[ig15++];
-                           break;
-                     }
-                     bufx[ig35++] = item[ig15++];
-                     if (ig35 >= G__LONGLINE - 1) {
-                        G__genericerror("Limitation: Too long function argument");
-                        return(G__null);
-                     }
-                  }
-                  bufx[ig35] = 0;
-                  bufv = G__strip_quotation(bufx);
-                  sprintf(result7, "(char*)(%ld)", bufv.obj.i);
-                  ig35 = strlen(result7) + 1;
-                  break;
-               }
-               else if (ig35 > G__LONGLINE - 1) {
-                  G__fprinterr(G__serr,
-                        "Limitation: length of one function argument be less than %d"
-                        , G__LONGLINE);
-                  G__genericerror((char*)NULL);
-                  G__fprinterr(G__serr, "Use temp variable as workaround.\n");
-                  *known3 = 1;
-                  return(G__null);
-               }
-               else {
-                  overflowflag = 1;
-               }
-            }
+            result7.Set(ig35++, item[ig15++]);
          }
          /*************************************************
           * if ')' is found at the middle of expression,
@@ -1065,7 +1002,7 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, c
             }
             else {
                ++ig15;
-               result7[ig35] = '\0';
+               result7.Set(ig35, 0);
                strcpy(fpara.parameter[fpara.paran], result7);
                if (ig35) fpara.parameter[++fpara.paran][0] = '\0';
                for (itmp = 0;itmp < fpara.paran;itmp++) {
@@ -1084,7 +1021,7 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, c
           * set null char to parameter list buffer.
           *************************************************/
          ig15++;
-         result7[ig35] = '\0';
+         result7.Set(ig35, 0);
          if (ig35 < G__ONELINE) {
             strcpy(fpara.parameter[fpara.paran], result7);
          }
@@ -1114,7 +1051,7 @@ G__value G__operatorfunction(G__value *presult, const char *item, int *known3, c
 G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag)
 {
    G__value result3;
-   char result7[G__LONGLINE];
+   G__FastAllocString result7(G__LONGLINE);
    int ig15, ipara;
    static struct G__param *p2ffpara = (struct G__param*)NULL;
    int hash;
@@ -1181,7 +1118,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
       for (ipara = 1;ipara <= libp->paran;ipara++) {
          if (ipara != 1) fprintf(G__dumpfile, ",");
          G__valuemonitor(libp->para[ipara-1], result7);
-         fprintf(G__dumpfile, "%s", result7);
+         fprintf(G__dumpfile, "%s", result7());
       }
       fprintf(G__dumpfile, ");/*%s %d,%lx %lx*/\n"
             , G__ifile.name, G__ifile.line_number
@@ -1215,7 +1152,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
                G__valuemonitor(result3, result7);
                fprintf(G__dumpfile, "/* return(inp) %s.%s()=%s*/\n"
-                     , G__struct.name[G__tagnum], funcname, result7);
+                       , G__struct.name[G__tagnum], funcname, result7());
             }
 #endif
             if (G__store_struct_offset != store_struct_offset)
@@ -1337,7 +1274,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                         for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
                         G__valuemonitor(result3, result7);
                         fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n"
-                              , funcname, result7);
+                                , funcname, result7());
                      }
 #endif
                      G__exec_memberfunc = store_exec_memberfunc;
@@ -1366,8 +1303,8 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
                      ) {
                      G__fprinterr(G__serr, "Possible candidates are...\n");
                      {
-                        char itemtmp[G__LONGLINE];
-                        sprintf(itemtmp, "%s::%s", G__struct.name[G__tagnum], funcname);
+                        G__FastAllocString itemtmp(G__LONGLINE);
+                        itemtmp.Format("%s::%s", G__struct.name[G__tagnum], funcname);
                         G__display_proto_pretty(G__serr, itemtmp, 1);
                      }
                   }
@@ -1414,7 +1351,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(inp) %s()=%s*/\n" , funcname, result7);
+            fprintf(G__dumpfile , "/* return(inp) %s()=%s*/\n" , funcname, result7());
          }
 #endif
 
@@ -1491,7 +1428,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(cmp) %s()=%s */\n" , funcname, result7);
+            fprintf(G__dumpfile , "/* return(cmp) %s()=%s */\n" , funcname, result7());
          }
 #endif
          G__exec_memberfunc = store_exec_memberfunc;
@@ -1554,7 +1491,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7);
+            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7());
          }
 #endif
 
@@ -1583,7 +1520,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7);
+            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7());
          }
 #endif
          G__exec_memberfunc = store_exec_memberfunc;
@@ -1614,11 +1551,10 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
             strcpy(funcname, G__struct.name[G__newtype.tagnum[i]]);
          }
          else {
-            char ttt[G__ONELINE];
             result3 = libp->para[0];
             if (G__fundamental_conversion_operator(G__newtype.type[i], -1
                      , i , G__newtype.reftype[i], 0
-                     , &result3, ttt)) {
+                     , &result3, 0)) {
                *known3 = 1;
                if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
                return(result3);
@@ -1851,7 +1787,7 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
     ********************************************************************/
    var = G__getvarentry(funcname, hash, &ig15, &G__global, G__p_local);
    if (var && var->type[ig15] == '1') {
-      sprintf(result7, "*%s", funcname);
+      result7.Format("*%s", funcname);
       *known3 = 0;
       pfparam = (char*)strchr(item, '(');
       p2ffpara = libp;
@@ -1903,9 +1839,6 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
 G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
 {
    G__value result3 = G__null;
-   char funcname[G__LONGLINE];
-   int overflowflag = 0;
-   char result7[G__LONGLINE];
    int ig15, ig35, ipara;
    int lenitem, nest = 0;
    int single_quote = 0, double_quote = 0;
@@ -1964,6 +1897,9 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
     ******************************************************/
    lenitem = strlen(item);
 
+   G__FastAllocString result7(lenitem);
+   G__FastAllocString funcname(lenitem + 24);
+
    /******************************************************
     * Scan item[] until '(' to get function name and hash
     ******************************************************/
@@ -2017,7 +1953,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
    /******************************************************
     * conv<B>(x) -> conv<ns::B>(x)
     ******************************************************/
-   G__rename_templatefunc(funcname, 0);
+   G__rename_templatefunc(funcname);
 
 
    //
@@ -2068,11 +2004,11 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                if ((double_quote == 0) && (single_quote == 0)) nest--;
                break;
             case '\\':
-               result7[ig35++] = item[ig15++];
+               result7.Set(ig35++, item[ig15++]);
                break;
             case '<':
                if (double_quote == 0 && single_quote == 0) {
-                  result7[ig35] = 0;
+                  result7.Set(ig35, 0);
                   char* checkForTemplate = result7;
                   if (checkForTemplate && !strncmp(checkForTemplate, "const ", 6))
                      checkForTemplate += 6;
@@ -2087,62 +2023,8 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                }
                break;
          }
-         result7[ig35++] = item[ig15++];
-         if (ig35 >= (G__ONELINE - 1)) {
-            if (result7[0] == '"') {
-               G__value bufv;
-               char bufx[G__LONGLINE];
-               strncpy(bufx, result7, G__ONELINE - 1);
-               while ((((item[ig15] != ',') && (item[ig15] != ')')) ||
-                        (nest > 0) || (single_quote > 0) ||
-                        (double_quote > 0)) && (ig15 < lenitem)) {
-                  switch (item[ig15]) {
-                     case '"' : /* double quote */
-                        if (single_quote == 0) double_quote ^= 1;
-                        break;
-                     case '\'' : /* single quote */
-                        if (double_quote == 0) single_quote ^= 1;
-                        break;
-                     case '(':
-                     case '[':
-                     case '{':
-                        if ((double_quote == 0) && (single_quote == 0)) nest++;
-                        break;
-                     case ')':
-                     case ']':
-                     case '}':
-                        if ((double_quote == 0) && (single_quote == 0)) nest--;
-                        break;
-                     case '\\':
-                        bufx[ig35++] = item[ig15++];
-                        break;
-                  }
-                  bufx[ig35++] = item[ig15++];
-                  if (ig35 >= G__LONGLINE - 1) {
-                     G__genericerror("Limitation: Too long function argument");
-                     return(G__null);
-                  }
-               }
-               bufx[ig35] = 0;
-               bufv = G__strip_quotation(bufx);
-               sprintf(result7, "(char*)(%ld)", bufv.obj.i);
-               ig35 = strlen(result7) + 1;
-               break;
-            }
-            else if (ig35 > G__LONGLINE - 1) {
-               G__fprinterr(G__serr,
-                     "Limitation: length of one function argument be less than %d"
-                     , G__LONGLINE);
-               G__genericerror((char*)NULL);
-               G__fprinterr(G__serr, "Use temp variable as workaround.\n");
-               *known3 = 1;
-               return(G__null);
-            }
-            else {
-               overflowflag = 1;
-            }
-         }
-      }
+         result7.Set(ig35++, item[ig15++]);
+     }
       //
       // If a right parenthesis is found in the middle of an expression,
       // this should either be casting or a pointer to a function.
@@ -2494,11 +2376,11 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
     ***************************************************************/
    if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
       for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
-      fprintf(G__dumpfile, "%s(", funcname);
+      fprintf(G__dumpfile, "%s(", funcname());
       for (ipara = 1;ipara <= fpara.paran;ipara++) {
          if (ipara != 1) fprintf(G__dumpfile, ",");
          G__valuemonitor(fpara.para[ipara-1], result7);
-         fprintf(G__dumpfile, "%s", result7);
+         fprintf(G__dumpfile, "%s", result7());
       }
       fprintf(G__dumpfile, ");/*%s %d,%lx %lx*/\n"
             , G__ifile.name, G__ifile.line_number
@@ -2541,7 +2423,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                      fprintf(G__dumpfile, " ");
                   }
                   G__valuemonitor(result3, result7);
-                  fprintf(G__dumpfile, "/* return(inp) %s.%s()=%s*/\n", G__struct.name[G__tagnum], funcname, result7);
+                  fprintf(G__dumpfile, "/* return(inp) %s.%s()=%s*/\n", G__struct.name[G__tagnum], funcname(), result7());
                }
    #endif // G__DUMPFILE
                if (G__store_struct_offset != store_struct_offset) {
@@ -2671,7 +2553,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                         for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
                         G__valuemonitor(result3, result7);
                         fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n"
-                              , funcname, result7);
+                                , funcname(), result7());
                      }
 #endif
                      G__exec_memberfunc = store_exec_memberfunc;
@@ -2699,8 +2581,8 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                      ) {
                      G__fprinterr(G__serr, "Possible candidates are...\n");
                      {
-                        char itemtmp[G__LONGLINE];
-                        sprintf(itemtmp, "%s::%s", G__struct.name[G__tagnum], funcname);
+                        G__FastAllocString itemtmp(G__LONGLINE);
+                        itemtmp.Format("%s::%s", G__struct.name[G__tagnum], funcname());
                         G__display_proto_pretty(G__serr, itemtmp, 1);
                      }
                   }
@@ -2755,7 +2637,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                   fprintf(G__dumpfile, " ");
                }
                G__valuemonitor(result3, result7);
-               fprintf(G__dumpfile , "/* return(inp) %s()=%s*/\n" , funcname, result7);
+               fprintf(G__dumpfile , "/* return(inp) %s()=%s*/\n" , funcname(), result7());
             }
 #endif
             G__exec_memberfunc = store_exec_memberfunc;
@@ -2793,7 +2675,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
              ****************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_FUNC compiled '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, fpara.paran, __FILE__, __LINE__);
+               G__fprinterr(G__serr, "%3x,%3x: LD_FUNC compiled '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname(), fpara.paran, __FILE__, __LINE__);
             }
 #endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__LD_FUNC;
@@ -2828,7 +2710,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(cmp) %s()=%s */\n" , funcname, result7);
+            fprintf(G__dumpfile , "/* return(cmp) %s()=%s */\n" , funcname(), result7());
          }
 #endif
 
@@ -2856,7 +2738,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
              ****************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_FUNC library '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, fpara.paran, __FILE__, __LINE__);
+               G__fprinterr(G__serr, "%3x,%3x: LD_FUNC library '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname(), fpara.paran, __FILE__, __LINE__);
             }
 #endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__LD_FUNC;
@@ -2891,7 +2773,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7);
+            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname(), result7());
          }
 #endif
 
@@ -2918,7 +2800,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
             G__dumpspace -= 3;
             for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
             G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7);
+            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname(), result7());
          }
 #endif
 
@@ -2949,21 +2831,20 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
       G__var_type = store_var_typeX;
       if (-1 != i) {
          if (-1 != G__newtype.tagnum[i]) {
-            strcpy(funcname, G__struct.name[G__newtype.tagnum[i]]);
+            funcname = G__struct.name[G__newtype.tagnum[i]];
          }
          else {
-            char ttt[G__ONELINE];
             result3 = fpara.para[0];
             if (G__fundamental_conversion_operator(G__newtype.type[i], -1
                      , i , G__newtype.reftype[i], 0
-                     , &result3, ttt)) {
+                     , &result3, 0)) {
                *known3 = 1;
                if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
                return(result3);
             }
-            strcpy(funcname, G__type2string(G__newtype.type[i]
+            funcname = G__type2string(G__newtype.type[i]
                      , G__newtype.tagnum[i] , -1
-                     , G__newtype.reftype[i] , 0));
+                     , G__newtype.reftype[i] , 0);
          }
          G__hash(funcname, hash, i);
       }
@@ -3038,7 +2919,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                   G__fprinterr(G__serr,
                         "!!!Create temp object (%s)0x%lx,%d for %s()\n"
                         , G__struct.name[G__tagnum] , G__p_tempbuf->obj.obj.i
-                        , G__templevel , funcname);
+                               , G__templevel , funcname());
                }
 #ifdef G__ASM
                if (G__asm_noverflow) {
@@ -3106,7 +2987,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
 #endif
                   }
 #endif
-                  sprintf(funcname, "operator %s", G__fulltagname(i, 1));
+                  funcname.Format("operator %s", G__fulltagname(i, 1));
                   G__hash(funcname, hash, i);
                   G__incsetup_memfunc(G__tagnum);
                   fpara.paran = 0;
@@ -3191,7 +3072,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
     ********************************************************************/
    var = G__getvarentry(funcname, hash, &ig15, &G__global, G__p_local);
    if (var && var->type[ig15] == '1') {
-      sprintf(result7, "*%s", funcname);
+      sprintf(result7, "*%s", funcname());
       *known3 = 0;
       pfparam = (char*)strchr(item, '(');
       p2ffpara = &fpara;
@@ -4923,22 +4804,22 @@ void G__printf_error()
       return result; \
    }
 
-void G__sprintformatll(char* result, const char* fmt, void *p, char* buf)
+void G__sprintformatll(char* result, const char* fmt, void *p, G__FastAllocString& buf)
 {
    G__int64 *pll = (G__int64*)p;
-   sprintf(buf, fmt, result, *pll);
+   buf.Format(fmt, result, *pll);
    strcpy(result, buf);
 }
-void G__sprintformatull(char* result, const char* fmt, void *p, char* buf)
+void G__sprintformatull(char* result, const char* fmt, void *p, G__FastAllocString& buf)
 {
    G__uint64 *pll = (G__uint64*)p;
-   sprintf(buf, fmt, result, *pll);
+   buf.Format(fmt, result, *pll);
    strcpy(result, buf);
 }
-void G__sprintformatld(char* result, const char* fmt, void *p, char* buf)
+void G__sprintformatld(char* result, const char* fmt, void *p, G__FastAllocString& buf)
 {
    long double *pld = (long double*)p;
-   sprintf(buf, fmt, result, *pld);
+   buf.Format(fmt, result, *pld);
    strcpy(result, buf);
 }
 
@@ -4949,8 +4830,9 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
 {
    int ipara, ichar, lenfmt;
    int ionefmt = 0, fmtflag = 0;
-   char onefmt[G__LONGLINE], fmt[G__LONGLINE];
-   char pformat[G__LONGLINE];
+   G__FastAllocString onefmt(G__LONGLINE);
+   G__FastAllocString fmt(G__LONGLINE);
+   G__FastAllocString pformat(G__LONGLINE);
    short dig = 0;
    int usedpara = 0;
 
@@ -4961,21 +4843,24 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
    for (ichar = 0;ichar <= lenfmt;ichar++) {
       switch (pformat[ichar]) {
          case '\0': /* end of the format */
-            onefmt[ionefmt] = '\0';
-            sprintf(fmt, "%%s%s", onefmt);
-            sprintf(onefmt, fmt, result);
+            onefmt.Set(ionefmt, 0);
+            fmt = "%s";
+            fmt += onefmt;
+            onefmt.Format(fmt(), result);
             strcpy(result, onefmt);
             ionefmt = 0;
             break;
          case 's': /* string */
-            onefmt[ionefmt++] = pformat[ichar];
+            onefmt.Set(ionefmt++, pformat[ichar]);
             if (fmtflag == 1) {
-               onefmt[ionefmt] = '\0';
+               onefmt.Set(ionefmt, 0);
                if (libp->para[ipara].obj.i) {
                   G__PRINTF_ERROR(strlen(onefmt) + strlen(result) +
-                        strlen((char*)G__int(libp->para[usedpara])) >= G__LONGLINE)
-                     sprintf(fmt, "%%s%s", onefmt);
-                  sprintf(onefmt, fmt, result , (char *)G__int(libp->para[usedpara]));
+                                  strlen((char*)G__int(libp->para[usedpara])) >= G__LONGLINE) {
+                     fmt = "%s";
+                     fmt += onefmt;
+                  }
+                  onefmt.Format(fmt(), result , (char *)G__int(libp->para[usedpara]));
                   strcpy(result, onefmt);
                }
                ipara++;
@@ -4984,11 +4869,12 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
             }
             break;
          case 'c': /* char */
-            onefmt[ionefmt++] = pformat[ichar];
+            onefmt.Set(ionefmt++, pformat[ichar]);
             if (fmtflag == 1) {
-               onefmt[ionefmt] = '\0';
-               sprintf(fmt, "%%s%s", onefmt);
-               sprintf(onefmt, fmt, result , (char)G__int(libp->para[usedpara]));
+               onefmt.Set(ionefmt, 0);
+               fmt= "%s";
+               fmt += onefmt;
+               onefmt.Format(fmt(), result , (char)G__int(libp->para[usedpara]));
                strcpy(result, onefmt);
                ipara++;
                ionefmt = 0;
@@ -4996,14 +4882,17 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
             }
             break;
          case 'b': /* int */
-            onefmt[ionefmt++] = pformat[ichar];
+            onefmt.Set(ionefmt++, pformat[ichar]);
             if (fmtflag == 1) {
-               onefmt[ionefmt-1] = 's';
-               onefmt[ionefmt] = '\0';
-               sprintf(fmt, "%%s%s", onefmt);
+               onefmt.Set(ionefmt-1, 's');
+               onefmt.Set(ionefmt, 0);
+               fmt = "%s";
+               fmt += onefmt;
                G__logicstring(libp->para[usedpara], dig, onefmt);
                ipara++;
-               sprintf(result, fmt, result, onefmt);
+               G__FastAllocString resBuf;
+               resBuf.Format(fmt(), result, onefmt());
+               strcpy(result, resBuf);
                ionefmt = 0;
             }
             break;
@@ -5014,10 +4903,11 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
          case 'x': /* hex */
          case 'X': /* HEX */
          case 'p': /* pointer */
-            onefmt[ionefmt++] = pformat[ichar];
+            onefmt.Set(ionefmt++, pformat[ichar]);
             if (fmtflag == 1) {
-               onefmt[ionefmt] = '\0';
-               sprintf(fmt, "%%s%s", onefmt);
+               onefmt.Set(ionefmt, 0);
+               fmt = "%s";
+               fmt += onefmt;
                if ('n' == libp->para[usedpara].type) {
                   G__value *pval = &libp->para[usedpara];
                   ipara++;
@@ -5032,32 +4922,31 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                   if (
                         'u' == libp->para[usedpara].type
                      ) {
-                     char llbuf[100];
+                     G__FastAllocString llbuf(100);
                      G__value *pval = &libp->para[usedpara];
                      ipara++;
                      if (strcmp(G__struct.name[pval->tagnum], "G__longlong") == 0) {
-                        sprintf(llbuf
-                              , "G__printformatll((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
-                              , (long)fmt, (long)onefmt, pval->obj.i);
+                        llbuf.Format("G__printformatll((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
+                                     , (long)fmt(), (long)onefmt(), pval->obj.i);
                         G__getitem(llbuf);
                         strcat(result, fmt);
                      }
                      else if (strcmp(G__struct.name[pval->tagnum], "G__ulonglong") == 0) {
                         sprintf(llbuf
                               , "G__printformatull((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
-                              , (long)fmt, (long)onefmt, pval->obj.i);
+                                , (long)fmt(), (long)onefmt(), pval->obj.i);
                         G__getitem(llbuf);
                         strcat(result, fmt);
                      }
                      else {
                         ++usedpara;
-                        sprintf(onefmt, fmt , result, G__int(libp->para[usedpara]));
+                        onefmt.Format(fmt(), result, G__int(libp->para[usedpara]));
                         ipara++;
                         strcpy(result, onefmt);
                      }
                   }
                   else {
-                     sprintf(onefmt, fmt , result, G__int(libp->para[usedpara]));
+                     onefmt.Format(fmt(), result, G__int(libp->para[usedpara]));
                      ipara++;
                      strcpy(result, onefmt);
                   }
@@ -5070,10 +4959,11 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
          case 'f': /* floating */
          case 'g': /* floating or exponential */
          case 'G': /* floating or exponential */
-            onefmt[ionefmt++] = pformat[ichar];
+            onefmt.Set(ionefmt++, pformat[ichar]);
             if (fmtflag == 1) {
-               onefmt[ionefmt] = '\0';
-               sprintf(fmt, "%%s%s", onefmt);
+               onefmt.Set(ionefmt, 0);
+               fmt = "%s";
+               fmt += onefmt;
                if ('q' == libp->para[usedpara].type) {
                   G__value *pval = &libp->para[usedpara];
                   ipara++;
@@ -5083,25 +4973,24 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                   if (
                         'u' == libp->para[usedpara].type
                      ) {
-                     char llbuf[100];
+                     G__FastAllocString llbuf(100);
                      G__value *pval = &libp->para[usedpara];
                      ipara++;
                      if (strcmp(G__struct.name[pval->tagnum], "G__longdouble") == 0) {
-                        sprintf(llbuf
-                              , "G__printformatld((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
-                              , (long)fmt, (long)onefmt, pval->obj.i);
+                        llbuf.Format("G__printformatld((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
+                                     , (long)fmt(), (long)onefmt(), pval->obj.i);
                         G__getitem(llbuf);
                         strcat(result, fmt);
                      }
                      else {
                         ++usedpara;
-                        sprintf(onefmt, fmt, result, G__double(libp->para[usedpara]));
+                        onefmt.Format(fmt(), result, G__double(libp->para[usedpara]));
                         ipara++;
                         strcpy(result, onefmt);
                      }
                   }
                   else {
-                     sprintf(onefmt, fmt , result, G__double(libp->para[usedpara]));
+                     onefmt.Format(fmt(), result, G__double(libp->para[usedpara]));
                      ipara++;
                      strcpy(result, onefmt);
                   }
@@ -5114,7 +5003,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
             if ('q' == libp->para[usedpara].type) {
                G__value *pval = &libp->para[usedpara];
                ipara++;
-               G__sprintformatld(fmt, onefmt, result, &pval->obj.ld);
+               G__sprintformatld(result, fmt(), &pval->obj.ld, result, onefmt);
             }
             break;
 #endif
@@ -5135,7 +5024,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
          case '+':
          case 'l': /* long int */
          case 'h': /* short int unsinged int */
-            onefmt[ionefmt++] = pformat[ichar];
+            onefmt.Set(ionefmt++, pformat[ichar]);
             break;
          case '%':
             if (fmtflag == 0) {
@@ -5145,18 +5034,19 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
             else {
                fmtflag = 0;
             }
-            onefmt[ionefmt++] = pformat[ichar];
+            onefmt.Set(ionefmt++, pformat[ichar]);
             dig = 0;
             break;
          case '*': /* printf("%*s",4,"*"); */
             if (fmtflag == 1) {
+               onefmt.Resize(ionefmt + 100); // 100 digits for %ld should suffice
                sprintf(onefmt + ionefmt, "%ld", G__int(libp->para[usedpara]));
                ipara++;
                usedpara++;
                ionefmt = strlen(onefmt);
             }
             else {
-               onefmt[ionefmt++] = pformat[ichar];
+               onefmt.Set(ionefmt++, pformat[ichar]);
             }
             break;
          case '$':
@@ -5171,7 +5061,7 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
                dig = 0;
             }
             else {
-               onefmt[ionefmt++] = pformat[ichar];
+               onefmt.Set(ionefmt++, pformat[ichar]);
             }
             break;
          case ' ':
@@ -5181,12 +5071,12 @@ char *G__charformatter(int ifmt, G__param *libp, char *result)
          case '\f': /* end of line */
             if (fmtflag) {
                if ('%' != onefmt[ionefmt-1] && !isspace(onefmt[ionefmt-1])) fmtflag = 0;
-               onefmt[ionefmt++] = pformat[ichar];
+               onefmt.Set(ionefmt++, pformat[ichar]);
                break;
             }
          default:
             fmtflag = 0;
-            onefmt[ionefmt++] = pformat[ichar];
+            onefmt.Set(ionefmt++, pformat[ichar]);
             break;
       }
    }

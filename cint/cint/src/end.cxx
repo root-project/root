@@ -46,12 +46,13 @@ int G__call_atexit()
 {
    // -- Execute atexit function.
    // Note: atexit is reset before calling the function to avoid recursive atexit call.
-   char temp[G__ONELINE];
+   G__FastAllocString temp(G__ONELINE);
    if (G__breaksignal) {
       G__fprinterr(G__serr, "!!! atexit() call\n");
    }
    G__ASSERT(G__atexit);
-   sprintf(temp, "%s()", G__atexit);
+   temp = G__atexit;
+   temp += "()";
    G__atexit = 0;
    G__getexpr(temp);
    return 0;

@@ -46,6 +46,20 @@ int G__search_tagname(const char* tagname, int type);
 
 
 //______________________________________________________________________________
+char* G__savestring(char** pbuf, char* name)
+{
+   // -- FIXME: Describe this function!
+   G__ASSERT(pbuf);
+   if (*pbuf) {
+      free((void*)(*pbuf));
+      *pbuf = 0;
+   }
+   *pbuf = (char*) malloc(strlen(name) + 1);
+   return strcpy(*pbuf, name);
+}
+
+
+//______________________________________________________________________________
 #define G__CLASS_AUTOLOAD 'a'
 static int G__enable_autoloading = 1;
 int (*G__p_class_autoloading)(char*, char*);
@@ -189,13 +203,13 @@ int G__using_namespace()
    //  Note: using directive appears in global scope is not implemented yet
    //
    int result = 0;
-   char buf[G__ONELINE];
+   G__FastAllocString buf(G__ONELINE);
    // Check if using directive or declaration.
-   int c = G__fgetname_template(buf, ";");
+   int c = G__fgetname_template(buf, 0, ";");
    if (!strcmp(buf, "namespace")) {
       // -- Using directive, treat as inheritance.
       int basetagnum, envtagnum;
-      c = G__fgetstream_template(buf, ";");
+      c = G__fgetstream_template(buf, 0, ";");
 #ifndef G__STD_NAMESPACE
       if (';' == c && strcmp(buf, "std") == 0 && G__ignore_stdnamespace) {
          return 1;
@@ -203,7 +217,7 @@ int G__using_namespace()
 #endif // G__STD_NAMESPACE
       basetagnum = G__defined_tagname(buf, 2);
       if (basetagnum == -1) {
-         G__fprinterr(G__serr, "Error: namespace %s is not defined", buf);
+         G__fprinterr(G__serr, "Error: namespace %s is not defined", buf());
          G__genericerror(0);
          return 0;
       }
@@ -274,8 +288,7 @@ int G__using_namespace()
          else {
             ++pc;
          }
-         char varname[G__ONELINE];
-         strcpy(varname, buf);
+         G__FastAllocString varname(buf);
          // Allocate a variable array entry which shares value storage with the found variable.
          int store_globalvarpointer = G__globalvarpointer;
          G__globalvarpointer = var->p[ig15];
@@ -586,19 +599,15 @@ void G__define_struct(char type)
    //                             ^
    // Now read tagname.
    //
-   char tagname[G__LONGLINE];
-   int c = G__fgetname_template(tagname, "{:;=&");
-   if (strlen(tagname) >= G__LONGLINE) {
-      G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", tagname, G__LONGLINE);
-      G__genericerror(0);
-   }
+   G__FastAllocString tagname(G__LONGLINE);
+   int c = G__fgetname_template(tagname, 0, "{:;=&");
    while (c == ':') {
       // -- Check for and handle nested name specifier.
       c = G__fgetc();
       if (c == ':') {
-         strcat(tagname, "::");
+         tagname += "::";
          int len = strlen(tagname);
-         c = G__fgetname_template(tagname + len, "{:;=&");
+         c = G__fgetname_template(tagname, len, "{:;=&");
       }
       else {
          fseek(G__ifile.fp, -1, SEEK_CUR);
@@ -655,8 +664,8 @@ void G__define_struct(char type)
    }
    else if ((c == '=') && (type == 'n')) {
       // -- We have: namespace alias=nsn; treat as typedef, handle and return.
-      char basename[G__LONGLINE];
-      c = G__fgetstream_template(basename, ";");
+      G__FastAllocString basename(G__LONGLINE);
+      c = G__fgetstream_template(basename, 0, ";");
       int tagdefining = G__defined_tagname(basename, 0);
       if (tagdefining != -1) {
          int typenum;
@@ -785,16 +794,12 @@ void G__define_struct(char type)
       // Reset virtualbase flag.
       int isvirtualbase = 0;
       // Read base class name.
-      char basename[G__LONGLINE];
+      G__FastAllocString basename(G__LONGLINE);
 #ifdef G__TEMPLATECLASS
-      c = G__fgetname_template(basename, "{,");
+      c = G__fgetname_template(basename, 0, "{,");
 #else // G__TEMPLATECLASS
-      c = G__fgetname(basename, "{,");
+      c = G__fgetname(basename, 0, "{,");
 #endif // G__TEMPLATECLASS
-      if (strlen(basename) >= G__LONGLINE) {
-         G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
-         G__genericerror(0);
-      }
       // [struct|class] <tagname> : <private|protected|public|virtual> base1 , base2 {}
       //                                                              ^  or ^
       if (!strcmp(basename, "virtual")) {
@@ -804,12 +809,8 @@ void G__define_struct(char type)
             G__genericerror("Limitation: virtual base class not supported in interpretation");
          }
 #endif // G__VIRTUALBASE
-         c = G__fgetname_template(basename, "{,");
+         c = G__fgetname_template(basename, 0, "{,");
          isvirtualbase = G__ISVIRTUALBASE;
-         if (strlen(basename) >= G__LONGLINE) {
-            G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
-            G__genericerror(0);
-         }
       }
       int baseaccess = G__PUBLIC;
       if (type == 'c') {
@@ -818,38 +819,26 @@ void G__define_struct(char type)
       if (!strcmp(basename, "public")) {
          baseaccess = G__PUBLIC;
 #ifdef G__TEMPLATECLASS
-         c = G__fgetname_template(basename, "{,");
+         c = G__fgetname_template(basename, 0, "{,");
 #else // G__TEMPLATECLASS
-         c = G__fgetname(basename, "{,");
+         c = G__fgetname(basename, 0, "{,");
 #endif // G__TEMPLATECLASS
-         if (strlen(basename) >= G__LONGLINE) {
-            G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
-            G__genericerror(0);
-         }
       }
       else if (!strcmp(basename, "private")) {
          baseaccess = G__PRIVATE;
 #ifdef G__TEMPLATECLASS
-         c = G__fgetname_template(basename, "{,");
+         c = G__fgetname_template(basename, 0, "{,");
 #else // G__TEMPLATECLASS
-         c = G__fgetname(basename, "{,");
+         c = G__fgetname(basename, 0, "{,");
 #endif // G__TEMPLATECLASS
-         if (strlen(basename) >= G__LONGLINE) {
-            G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
-            G__genericerror(0);
-         }
       }
       else if (!strcmp(basename, "protected")) {
          baseaccess = G__PROTECTED;
 #ifdef G__TEMPLATECLASS
-         c = G__fgetname_template(basename, "{,");
+         c = G__fgetname_template(basename, 0, "{,");
 #else // G__TEMPLATECLASS
-         c = G__fgetname(basename, "{,");
+         c = G__fgetname(basename, 0, "{,");
 #endif // G__TEMPLATECLASS
-         if (strlen(basename) >= G__LONGLINE) {
-            G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
-            G__genericerror(0);
-         }
       }
       if (!strcmp(basename, "virtual")) {
          // --
@@ -857,12 +846,8 @@ void G__define_struct(char type)
          if ((G__globalcomp == G__NOLINK) && (G__store_globalcomp == G__NOLINK))
             G__genericerror("Limitation: virtual base class not supported in interpretation");
 #endif // G__VIRTUALBASE
-         c = G__fgetname_template(basename, "{,");
+         c = G__fgetname_template(basename, 0, "{,");
          isvirtualbase = G__ISVIRTUALBASE;
-         if (strlen(basename) >= G__LONGLINE) {
-            G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
-            G__genericerror(0);
-         }
       }
       if (strlen(basename) && isspace(c)) {
          // Maybe basename is namespace that got cut because
@@ -874,7 +859,7 @@ void G__define_struct(char type)
          //
          //      class MyClass : public MyNamespace:: MyTopClass
          //
-         char temp[G__LONGLINE];
+         G__FastAllocString temp(G__LONGLINE);
          int namespace_tagnum = G__defined_tagname(basename, 2);
          while (
             // --
@@ -886,8 +871,8 @@ void G__define_struct(char type)
             )
          ) {
             // --
-            c = G__fgetname_template(temp, "{,");
-            strcat(basename, temp);
+            c = G__fgetname_template(temp, 0, "{,");
+            basename += temp;
             namespace_tagnum = G__defined_tagname(basename, 2);
          }
       }
@@ -1084,16 +1069,16 @@ void G__define_struct(char type)
             G__enumdef = 1;
             do {
                int store_decl = 0;
-               char memname[G__ONELINE];
-               c = G__fgetstream(memname, "=,}");
+               G__FastAllocString memname(G__ONELINE);
+               c = G__fgetstream(memname, 0, "=,}");
                if (c == '=') {
                   char store_var_typeX = G__var_type;
                   int store_tagnumX = G__tagnum;
                   int store_def_tagnumX = G__def_tagnum;
                   G__var_type = 'p';
                   G__tagnum = G__def_tagnum = -1;
-                  char val[G__ONELINE];
-                  c = G__fgetstream(val, ",}");
+                  G__FastAllocString val(G__ONELINE);
+                  c = G__fgetstream(val, 0, ",}");
                   int store_prerun = G__prerun;
                   G__prerun = 0;
                   enumval = G__getexpr(val);
@@ -1240,8 +1225,8 @@ void G__define_struct(char type)
       int linenum;
       fgetpos(G__ifile.fp, &pos);
       linenum = G__ifile.line_number;
-      char basename[G__LONGLINE];
-      c = G__fgetstream(basename, ";");
+      G__FastAllocString basename(G__LONGLINE);
+      c = G__fgetstream(basename, 0, ";");
       if (basename[0]) {
          fsetpos(G__ifile.fp, &pos);
          G__ifile.line_number = linenum;
@@ -1269,12 +1254,12 @@ void G__define_struct(char type)
       fgetpos(G__ifile.fp, &store_pos);
       int store_linenum = G__ifile.line_number;
       G__disp_mask = 1000; // FIXME: Crazy!
-      char buf[G__ONELINE];
-      int ch = G__fgetname(buf, ";,(");
+      G__FastAllocString buf(G__ONELINE);
+      int ch = G__fgetname(buf, 0, ";,(");
       int errflag = 0;
       if (isspace(ch) && (buf[0] != '*') && !strchr(buf, '[')) {
-         char tmp[G__ONELINE];
-         ch = G__fgetname(tmp, ";,(");
+         G__FastAllocString tmp(G__ONELINE);
+         ch = G__fgetname(tmp, 0, ";,(");
          if (isalnum(tmp[0])) {
             errflag = 1;
          }
@@ -1526,8 +1511,8 @@ int G__defined_tagname(const char* tagname, int noerror)
    int i;
    int len;
    char* p;
-   char temp[G__LONGLINE];
-   char atom_tagname[G__LONGLINE];
+   G__FastAllocString temp(G__LONGLINE);
+   G__FastAllocString atom_tagname(G__LONGLINE);
    int env_tagnum;
    int store_var_type;
    switch (tagname[0]) {
@@ -1544,7 +1529,7 @@ int G__defined_tagname(const char* tagname, int noerror)
       // handles X<X<int>> as X<X<int> >
       while (0 != (p = (char*) strstr(tagname, ">>"))) {
          ++p;
-         strcpy(temp, p);
+         temp = p;
          *p = ' ';
          ++p;
          strcpy(p, temp);
@@ -1553,7 +1538,7 @@ int G__defined_tagname(const char* tagname, int noerror)
       p = (char*) tagname;
       while (0 != (p = (char*) strstr(p, " >"))) {
          if ('>' != *(p - 1)) {
-            strcpy(temp, p + 1);
+            temp = p + 1;
             strcpy(p, temp);
          }
          ++p;
@@ -1561,7 +1546,7 @@ int G__defined_tagname(const char* tagname, int noerror)
       // handles X <int> as X<int>
       p = (char*) tagname;
       while (0 != (p = strstr(p, " <"))) {
-         strcpy(temp, p + 1);
+         temp = p + 1;
          strcpy(p, temp);
          ++p;
       }
@@ -1572,7 +1557,7 @@ int G__defined_tagname(const char* tagname, int noerror)
             p += 2;
          }
          else {
-            strcpy(temp, p + 2);
+            temp = p + 2;
             strcpy(p + 1, temp);
             ++p;
          }
@@ -1580,14 +1565,14 @@ int G__defined_tagname(const char* tagname, int noerror)
       // handles X< int> as X<int>
       p = (char*) tagname;
       while (0 != (p = strstr(p, "< "))) {
-         strcpy(temp, p + 2);
+         temp = p + 2;
          strcpy(p + 1, temp);
          ++p;
       }
       // handles X<int, int> as X<int,int>
       p = (char*) tagname;
       while (0 != (p = strstr(p, ", "))) {
-         strcpy(temp, p + 2);
+         temp = p + 2;
          strcpy(p + 1, temp);
          ++p;
       }
@@ -1604,16 +1589,16 @@ int G__defined_tagname(const char* tagname, int noerror)
       p = strstr(p, "const const ");
    }
    if (isspace(tagname[0])) {
-      strcpy(temp, tagname + 1);
+      temp = tagname + 1;
    }
    else {
-      strcpy(temp, tagname);
+      temp = tagname;
    }
    p = (char*)G__find_last_scope_operator(temp);
    if (p) {
       // A::B::C means we want A::B::C, not A::C, even if it exists.
       enclosing = false;
-      strcpy(atom_tagname, p + 2);
+      atom_tagname = p + 2;
       *p = '\0';
       if (p == temp) {
          env_tagnum = -1;  // global scope
@@ -1641,7 +1626,7 @@ int G__defined_tagname(const char* tagname, int noerror)
       }
    }
    else {
-      strcpy(atom_tagname, temp);
+      atom_tagname = temp;
       env_tagnum = G__get_envtagnum();
    }
    // Search for old tagname.
@@ -1688,7 +1673,7 @@ try_again:
       i = -1;
    }
    if (!len) {
-      strcpy(atom_tagname, "$");
+      atom_tagname = "$";
       len = 1;
       goto try_again;
    }
@@ -1765,15 +1750,8 @@ int G__search_tagname(const char* tagname, int type)
    int i;
    int len;
    char* p;
-#ifndef G__OLDIMPLEMENTATION1823
-   char buf[G__BUFLEN*2];
-   char buf2[G__BUFLEN*2];
-   char* temp = buf;
-   char* atom_tagname = buf2;
-#else // G__OLDIMPLEMENTATION1823
-   char temp[G__LONGLINE];
-   char atom_tagname[G__LONGLINE];
-#endif // G__OLDIMPLEMENTATION1823
+   G__FastAllocString temp(G__LONGLINE);
+   G__FastAllocString atom_tagname(G__LONGLINE);
    int noerror = 0;
    if (type == G__CLASS_AUTOLOAD) {
       /* no need to issue error message while uploading
@@ -1791,15 +1769,9 @@ int G__search_tagname(const char* tagname, int type)
    // Search for old tagname
    // Only auto-load struct if not ref / ptr
    i = G__defined_tagname(tagname, isPointer ? 3 : 2);
-#ifndef G__OLDIMPLEMENTATION1823
-   if (strlen(tagname) > ((2 * G__BUFLEN) - 10)) {
-      temp = (char*) malloc(strlen(tagname) + 10);
-      atom_tagname = (char*) malloc(strlen(tagname) + 10);
-   }
-#endif // G__OLDIMPLEMENTATION1823
    p = (char*)G__strrstr( tagname, "::");
    if (p && !strchr(p, '>')) {
-      strcpy(atom_tagname, tagname);
+      atom_tagname = tagname;
       p = (char*)G__strrstr(atom_tagname, "::");
       *p = 0;
       // first try a typedef, so we don't trigger autoloading here:
@@ -1819,16 +1791,12 @@ int G__search_tagname(const char* tagname, int type)
       if (i == G__MAXSTRUCT) {
          G__fprinterr(G__serr, "Limitation: Number of struct/union tag exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXSTRUCT in G__ci.h and recompile %s\n", G__MAXSTRUCT, G__ifile.name, G__ifile.line_number, G__nam);
          G__eof = 1;
-#ifndef G__OLDIMPLEMENTATION1823
-         if (buf != temp) free((void*)temp);
-         if (buf2 != atom_tagname) free((void*)atom_tagname);
-#endif // G__OLDIMPLEMENTATION1823
          return -1;
       }
-      strcpy(temp, tagname);
+      temp = tagname;
       p = (char*)G__find_last_scope_operator(temp);
       if (p) {
-         strcpy(atom_tagname, p + 2);
+         atom_tagname = p + 2;
          *p = '\0';
 #ifndef G__STD_NAMESPACE
          if (strcmp(temp, "std") == 0 && G__ignore_stdnamespace) {
@@ -1851,10 +1819,10 @@ int G__search_tagname(const char* tagname, int type)
             }
          }
          G__struct.parent_tagnum[i] = env_tagnum;
-         strcpy(atom_tagname, temp);
+         atom_tagname = temp;
       }
       if (!strncmp("G__NONAME", atom_tagname, 9)) {
-         atom_tagname[0] = '\0';
+         atom_tagname[0] = 0;
          len = 0;
       }
       else {
@@ -1966,14 +1934,6 @@ int G__search_tagname(const char* tagname, int type)
       G__struct.type[i] = type;
       ++G__struct.nactives;
    }
-#ifndef G__OLDIMPLEMENTATION1823
-   if (buf != temp) {
-      free(temp);
-   }
-   if (buf2 != atom_tagname) {
-      free(atom_tagname);
-   }
-#endif // G__OLDIMPLEMENTATION1823
    // Return tagnum.
    return i;
 }

@@ -38,10 +38,10 @@ G__value G__new_operator(const char* expression)
    // new (arena)type
    //char expression[G__LONGLINE];
    //strcpy (expression,express);
-   char arena[G__ONELINE];
+   G__FastAllocString arena(G__ONELINE);
    long memarena = 0;
    int arenaflag = 0;
-   char construct[G__LONGLINE];
+   G__FastAllocString construct(G__LONGLINE);
    char *type;
    char *basictype;
    char *initializer;
@@ -148,10 +148,10 @@ G__value G__new_operator(const char* expression)
          tagnum = G__defined_tagname(basictype, 1);
       }
       if (tagnum != -1) {
-         sprintf(construct, "%s()", G__struct.name[tagnum]);
+         construct.Format("%s()", G__struct.name[tagnum]);
       }
       else {
-         sprintf(construct, "%s()", basictype);
+         construct.Format("%s()", basictype);
       }
       if (G__asm_wholefunction) {
          G__abortbytecode();
@@ -183,20 +183,20 @@ G__value G__new_operator(const char* expression)
             *initializer = '(';
          }
          if (tagnum != -1) {
-            sprintf(construct, "%s%s", G__struct.name[tagnum], initializer);
+            construct.Format("%s%s", G__struct.name[tagnum], initializer);
          }
          else {
-            strcpy(construct, basictype);
+            construct = basictype;
          }
          *initializer = '\0';
       }
       else {
          pinc = 1;
          if (tagnum != -1) {
-            sprintf(construct, "%s()", G__struct.name[tagnum]);
+            construct.Format("%s()", G__struct.name[tagnum]);
          }
          else {
-            sprintf(construct, "%s()", basictype);
+            construct.Format("%s()", basictype);
          }
       }
    }
@@ -501,7 +501,7 @@ G__value G__new_operator(const char* expression)
                   ++bp;
                   {
                      int nx = 0;
-                     char tmpx[G__ONELINE];
+                     G__FastAllocString tmpx(G__ONELINE);
                      int cx = G__getstream(bp, &nx, tmpx, "),");
                      if (cx == ',') {
                         *ep = ')';
@@ -580,7 +580,7 @@ G__value G__new_operator(const char* expression)
       // construct = "TYPE" , bp = "ARG"
       typenum = G__defined_typename(construct);
       if (typenum != -1) {
-         strcpy(construct, G__type2string(G__newtype.type[typenum], G__newtype.tagnum[typenum], -1, G__newtype.reftype[typenum], 0));
+         construct = G__type2string(G__newtype.type[typenum], G__newtype.tagnum[typenum], -1, G__newtype.reftype[typenum], 0);
       }
       hash = strlen(construct);
       store_var_type = G__var_type;
@@ -693,7 +693,7 @@ int G__getarrayindex(const char* indexlist)
    // [x][y][z]     get x*y*z
    int p_inc = 1;
    int p = 1;
-   char index[G__ONELINE];
+   G__FastAllocString index(G__ONELINE);
    int c;
    int store_var_type = G__var_type;
    G__var_type = 'p';
@@ -738,7 +738,7 @@ void G__delete_operator(char* expression, int isarray)
    int cpplink = 0;
    int zeroflag = 0;
    G__value buf;
-   char destruct[G__ONELINE];
+   G__FastAllocString destruct(G__ONELINE);
    if (G__cintv6) {
       // -- THIS CASE IS NEVER USED.
       G__bc_delete_operator(expression, isarray);
@@ -787,9 +787,9 @@ void G__delete_operator(char* expression, int isarray)
       G__store_struct_offset = buf.obj.i;
       G__typenum = buf.typenum;
       G__tagnum = buf.tagnum;
-      sprintf(destruct, "~%s()", G__struct.name[G__tagnum]);
+      destruct.Format("~%s()", G__struct.name[G__tagnum]);
       if (G__dispsource) {
-         G__fprinterr(G__serr, "\n!!!Calling destructor 0x%lx.%s for '%s'\n", G__store_struct_offset, destruct, expression);
+         G__fprinterr(G__serr, "\n!!!Calling destructor 0x%lx.%s for '%s'\n", G__store_struct_offset, destruct(), expression);
       }
       done = 0;
       if (

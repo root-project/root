@@ -82,8 +82,8 @@ void G__freepragma(G__AppPragma *paddpragma)
 int G__read_setmode(int *pmode)
 {
   int c;
-  char command[G__ONELINE];
-  c=G__fgetstream(command,";\n\r");
+  G__FastAllocString command(G__ONELINE);
+  c=G__fgetstream(command, 0, ";\n\r");
   if(strcmp(command,"on")==0||'\0'==command[0]) *pmode=1;
   else if(strcmp(command,"ON")==0)              *pmode=1;
   else if(strcmp(command,"off")==0)             *pmode=0;
@@ -105,10 +105,10 @@ static int G__addpreprocessfile()
 {
   int c;
   struct G__Preprocessfilekey *pkey;
-  char keystring[G__ONELINE];
+  G__FastAllocString keystring(G__ONELINE);
 
   /* Get the key string for preprocessed header file group */
-  c=G__fgetstream(keystring,";\n\r");
+  c=G__fgetstream(keystring, 0, ";\n\r");
 
   /* Get to the end of the preprocessed file key list */
   pkey = &G__preprocessfilekey;
@@ -133,7 +133,7 @@ extern int G__rootCcomment; /* used and defined in sizeof.c */
 static void G__do_not_include()
 {
   int c;
-  char fnameorig[G__ONELINE];
+  G__FastAllocString fnameorig(G__ONELINE);
   char *fname;
   int len;
   int hash;
@@ -142,7 +142,7 @@ static void G__do_not_include()
   /* if(!G__IsInMacro()) return; */
 
   /* Get the key string for preprocessed header file group */
-  c=G__fgetstream(fnameorig,";\n\r");
+  c=G__fgetstream(fnameorig, 0, ";\n\r");
 
   switch(fnameorig[0]) {
   case '\'':
@@ -197,12 +197,12 @@ void G__force_bytecode_compilation()
 **************************************************************************/
 int G__pragma()
 {
-  char command[G__ONELINE];
+  G__FastAllocString command(G__ONELINE);
   int c;
   int store_no_exec_compile;
   /* static int store_asm_loopcompile=4; */
 
-  c = G__fgetname(command,";\n\r");
+  c = G__fgetname(command, 0, ";\n\r");
 
 
   if(strcmp(command,"include")==0) {
@@ -220,14 +220,14 @@ int G__pragma()
     c='\n';
   }
   else if(strcmp(command,"permanent_link")==0) {
-    c=G__fgetstream(command,";\n\r");
+    c=G__fgetstream(command, 0, ";\n\r");
     G__ispragmainclude = 1;
     G__loadsystemfile(command);
     G__ispragmainclude = 0;
     c='\n';
   }
   else if(strcmp(command,"includepath")==0) {
-    c=G__fgetstream(command,";\n\r");
+    c=G__fgetstream(command, 0, ";\n\r");
     G__add_ipath(command);
   }
   else if(strcmp(command,"preprocessor")==0) {
@@ -283,13 +283,13 @@ int G__pragma()
   }
 
   else if(strcmp(command,"mask_newdelete")==0) {
-    c = G__fgetstream(command,";\n\r");
+    c = G__fgetstream(command, 0, ";\n\r");
     G__is_operator_newdelete |= G__int(G__calc_internal(command));
   }
 
 #ifdef G__SECURITY
   else if(strcmp(command,"security")==0) {
-    c = G__fgetstream(command,";\n\r");
+    c = G__fgetstream(command, 0, ";\n\r");
     G__security = G__getsecuritycode(command);
     /* if('\n'!=c&&'\r'!=c) G__fignoreline(); */
   }
@@ -297,7 +297,7 @@ int G__pragma()
 
 #ifdef G__ASM_WHOLEFUNC
   else if(strcmp(command,"optimize")==0) {
-    c = G__fgetstream(command,";\n\r");
+    c = G__fgetstream(command, 0, ";\n\r");
     G__asm_loopcompile = G__int(G__calc_internal(command));
     G__asm_loopcompile_mode = G__asm_loopcompile; 
     /* if('\n'!=c&&'\r'!=c) G__fignoreline(); */
@@ -391,13 +391,13 @@ int G__pragma()
 
   else if(strcmp(command,"message")==0) {
     c=G__fgetline(command);
-    G__fprinterr(G__serr,"%s\n",command);
+    G__fprinterr(G__serr,"%s\n",command());
   }
 
   else if(strcmp(command,"eval")==0) {
     store_no_exec_compile = G__no_exec_compile;
     G__no_exec_compile=0;
-    c=G__fgetstream(command,";");
+    c=G__fgetstream(command, 0, ";");
     fprintf(G__sout," evaluate (%d) ",store_no_exec_compile);
     G__calc_internal(command);
     G__no_exec_compile=store_no_exec_compile;
@@ -445,7 +445,7 @@ int G__pragma()
 
   else {
     int c2;
-    char args[4096];
+    G__FastAllocString args(4096*4);
     args[0]='\0';
     if('\n'!=c&&'\r'!=c) c = G__fgetline(args);
     /* Back up before a line terminator, to get errors reported correctly. */
@@ -556,8 +556,7 @@ int G__security_handle(G__UINT32 category)
 **************************************************************************/
 int G__setautoccnames()
 {
-  char backup[G__MAXFILE];
-  char fname[G__MAXFILE];
+  G__FastAllocString backup(G__MAXFILE);
   char *p;
   FILE *fpto;
   FILE *fpfrom;
@@ -570,25 +569,25 @@ int G__setautoccnames()
   if(!p) p = strrchr(G__srcfile[G__ifile.filenum].filename,':');
   if(!p) p = G__srcfile[G__ifile.filenum].filename;
   else   ++p;
-  strcpy(fname,p);
+  G__FastAllocString fname(p);
   p = strrchr(fname,'.');
   if(p) *p = '\0';
 
   /* assign autocc filenames */
   if(G__iscpp) 
-    sprintf(G__autocc_c,"G__AC%s%s",fname,G__getmakeinfo1("CPPSRCPOST"));
+     sprintf(G__autocc_c,"G__AC%s%s",fname(),G__getmakeinfo1("CPPSRCPOST"));
   else
-    sprintf(G__autocc_c,"G__AC%s%s",fname,G__getmakeinfo1("CSRCPOST"));
-  sprintf(G__autocc_h,"G__AC%s",fname);
+     sprintf(G__autocc_c,"G__AC%s%s",fname(),G__getmakeinfo1("CSRCPOST"));
+  sprintf(G__autocc_h,"G__AC%s",fname());
 #ifdef G__WIN32
-  sprintf(G__autocc_sl,"G__AC%s%s",fname,G__getmakeinfo1("DLLPOST"));
+  sprintf(G__autocc_sl,"G__AC%s%s",fname(),G__getmakeinfo1("DLLPOST"));
 #else
-  sprintf(G__autocc_sl,"./G__AC%s%s",fname,G__getmakeinfo1("DLLPOST"));
+  sprintf(G__autocc_sl,"./G__AC%s%s",fname(),G__getmakeinfo1("DLLPOST"));
 #endif
-  sprintf(G__autocc_mak,"G__AC%s.mak",fname);
+  sprintf(G__autocc_mak,"G__AC%s.mak",fname());
 
   /* copy autocc file backup */
-  sprintf(backup,"G__%s",G__autocc_c);
+  backup.Format("G__%s",G__autocc_c);
   fpfrom=fopen(G__autocc_c,"r");
   if(fpfrom) {
     fpto=fopen(backup,"w");
@@ -623,8 +622,9 @@ int G__setautoccnames()
 **************************************************************************/
 int G__autocc()
 {
-  char temp[G__LONGLINE];
-  char ansi[10],cpp[10];
+  G__FastAllocString temp(G__LONGLINE);
+  char ansi[10];
+  char cpp[10];
 
   fclose(G__fpautocc);
   G__fpautocc=(FILE*)NULL;
@@ -638,44 +638,44 @@ int G__autocc()
     else        cpp[0]='\0';
 
     if(G__iscpp) {
-      sprintf(temp ,"makecint -mk %s %s %s %s %s -dl %s -H %s"
+       temp.Format("makecint -mk %s %s %s %s %s -dl %s -H %s"
               ,G__autocc_mak
               ,ansi,cpp,G__allincludepath,G__macros,G__autocc_sl,G__autocc_c);
     }
     else {
-      sprintf(temp ,"makecint -mk %s %s %s %s %s -dl %s -h %s"
+       temp.Format("makecint -mk %s %s %s %s %s -dl %s -h %s"
               ,G__autocc_mak
               ,ansi,cpp,G__allincludepath,G__macros,G__autocc_sl,G__autocc_c);
     }
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp());
     system(temp);
 
 #if defined(G__SYMANTEC) && !defined(G__HAVE_CONFIG)
-    sprintf(temp,"smake -f %s",G__autocc_mak);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    temp.Format("smake -f %s",G__autocc_mak);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp());
     system(temp);
 #elif defined(G__BORLAND) && !defined(G__HAVE_CONFIG)
-    sprintf(temp,"make.exe -f %s",G__autocc_mak);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    temp.Format("make.exe -f %s",G__autocc_mak);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp());
     system(temp);
 #elif defined(G__VISUAL) && !defined(G__HAVE_CONFIG)
-    sprintf(temp,"nmake /f %s CFG=\"%s - Win32 Release\""
+    temp.Format("nmake /f %s CFG=\"%s - Win32 Release\""
             ,G__autocc_mak,G__autocc_h);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp());
     system(temp);
     FILE *fp = fopen(G__autocc_sl,"r");
     if(fp) {
       fclose(fp);
-      sprintf(temp,"del %s",G__autocc_sl);
-      if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+      temp.Format("del %s",G__autocc_sl);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp());
       system(temp);
     }
-    sprintf(temp,"move Release\\%s %s",G__autocc_sl,G__autocc_sl);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    temp.Format("move Release\\%s %s",G__autocc_sl,G__autocc_sl);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp());
     system(temp);
 #else
-    sprintf(temp,"make -f %s",G__autocc_mak);
-    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
+    temp.Format("make -f %s",G__autocc_mak);
+    if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp());
     system(temp);
 #endif
 
@@ -691,15 +691,15 @@ int G__autocc()
 **************************************************************************/
 int G__appendautocc(FILE *fp)
 {
-  char G__oneline[G__LONGLINE*2];
-  char G__argbuf[G__LONGLINE*2];
-  char *arg[G__ONELINE];
+  G__FastAllocString G__oneline(G__LONGLINE*2);
+  G__FastAllocString G__argbuf(G__LONGLINE*2);
+  char* arg[G__ONELINE];
   int argn;
   FILE *G__fp;
 
   G__fp=G__ifile.fp;
 
-  while(G__readline(G__fp,G__oneline,G__argbuf,&argn,arg)!=0) {
+  while(G__readline_FastAlloc(G__fp,G__oneline,G__argbuf,&argn,arg)!=0) {
     ++G__ifile.line_number;
     if((argn>=3 && strcmp(arg[1],"#")==0 && strcmp(arg[2],"pragma")==0 &&
         strcmp(arg[3],"endcompile")==0) ||
@@ -737,10 +737,10 @@ int G__appendautocc(FILE *fp)
 **************************************************************************/
 int G__isautoccupdate()
 {
-  char backup[G__MAXFILE];
+  G__FastAllocString backup(G__MAXFILE);
   int result;
   FILE *fp;
-  sprintf(backup,"G__%s",G__autocc_c);
+  backup.Format("G__%s",G__autocc_c);
   result=G__difffile(G__autocc_c,backup);
   remove(backup);
   if(0==result) {

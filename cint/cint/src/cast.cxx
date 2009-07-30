@@ -91,12 +91,13 @@ static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype
                       , "G__ulonglong") == 0 ||
                strcmp(G__struct.name[G__newtype.tagnum[result3->typenum]]
                       , "G__longdouble") == 0)))) {
-      char com[G__ONELINE], buf2[G__ONELINE];
+      G__FastAllocString com(G__ONELINE);
+      G__FastAllocString buf2(G__ONELINE);
       int known = 0;
       int store_typenum = result3->typenum;
       result3->typenum = -1;
       G__valuemonitor(*result3, buf2);
-      sprintf(com, "%s(%s)", G__fulltagname(tagnum, 1), buf2);
+      com.Format("%s(%s)", G__fulltagname(tagnum, 1), buf2());
       *result3 = G__getfunction(com, &known, G__TRYNORMAL);
       result3->typenum = store_typenum;
       return;
@@ -490,13 +491,13 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
          --type;
    }
    if (type && 'u' == store_result.type) {
-      char ttt[G__ONELINE];
+      G__FastAllocString ttt(G__ONELINE);
       G__fundamental_conversion_operator(type , -1 , -1 , reftype, isconst
                                          , &store_result, ttt);
       return(store_result);
    }
    else if ('u' == store_result.type && strcmp(casttype, "bool") == 0) {
-      char ttt[G__ONELINE];
+      G__FastAllocString ttt(G__ONELINE);
       G__fundamental_conversion_operator(type , G__defined_tagname("bool", 2)
                                          , -1 , reftype, isconst
                                          , &store_result, ttt);
@@ -572,7 +573,7 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
                }
             }
             else if ('u' == store_result.type) {
-               char ttt[G__ONELINE];
+               G__FastAllocString ttt(G__ONELINE);
                G__fundamental_conversion_operator(type, -1, result3.typenum
                                                   , reftype, isconst
                                                   , &store_result, ttt);

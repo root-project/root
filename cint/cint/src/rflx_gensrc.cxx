@@ -570,7 +570,8 @@ void rflx_gensrc::gen_datamemberdefs(G__ClassInfo & ci)
             m_cd << "OffsetOf" << offnum << "(" << fclname << ", " << dm.Name() << "), ";
          m_cd << dm_modifiers << ")";
          // comment
-         char buf[16*1024]; buf[0] = 0;
+         G__FastAllocString buf(16*1024);
+         buf[0] = 0;
          G__var_array* va = (G__var_array*)dm.Handle();
          G__getcomment(buf,&va->comment[dm.Index()],va->tagnum);
          if (buf[0]) {

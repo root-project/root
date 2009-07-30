@@ -27,19 +27,6 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now);
 
 static int G__calldepth = 0;
 
-//______________________________________________________________________________
-char* G__savestring(char** pbuf, char* name)
-{
-   // -- FIXME: Describe this function!
-   G__ASSERT(pbuf);
-   if (*pbuf) {
-      free((void*)(*pbuf));
-      *pbuf = 0;
-   }
-   *pbuf = (char*) malloc(strlen(name) + 1);
-   return strcpy(*pbuf, name);
-}
-
 #ifndef G__OLDIMPLEMENTATION1167
 //______________________________________________________________________________
 void G__reftypeparam(G__ifunc_table_internal* p_ifunc, int ifn, G__param* libp)
@@ -494,8 +481,6 @@ void G__make_ifunctable(char* funcheader)
    //
    int iin = 0;
    int cin = '\0';
-   G__FastAllocString paraname_sb(G__LONGLINE);
-   char *paraname = paraname_sb;
    int func_now;
    int iexist;
    struct G__ifunc_table_internal* ifunc;
@@ -557,6 +542,7 @@ void G__make_ifunctable(char* funcheader)
    G__func_now = G__p_ifunc->allifunc;
    G__func_page = G__p_ifunc->page;
    func_now = G__func_now;
+   G__FastAllocString funcname(G__LONGLINE);
    if ('~' == funcheader[0] && 0 == ifunc->hash[0]) {
       G__p_ifunc = ifunc;
       G__func_now = 0;
@@ -569,12 +555,7 @@ void G__make_ifunctable(char* funcheader)
          while ('*' == funcheader[numstar]) {
             ++numstar;
          }
-         if (strlen(funcheader + 2) > G__LONGLINE - 1) {
-            G__fprinterr(G__serr, "Limitation: Function name length overflow strlen(%s)>%d", funcheader + 2, G__LONGLINE - 1);
-            G__genericerror((char*)NULL);
-            funcheader[G__MAXNAME+1] = 0;
-         }
-         G__savestring(&G__p_ifunc->funcname[func_now], funcheader + numstar);
+         funcname = funcheader + numstar;
          if (isupper(G__var_type)) {
             switch (G__reftype) {
                case G__PARANORMAL:
@@ -601,12 +582,7 @@ void G__make_ifunctable(char* funcheader)
          G__reftype += numstar - 2;
       }
       else {
-         if (strlen(funcheader + 1) > G__LONGLINE - 1) {
-            G__fprinterr(G__serr, "Limitation: Function name length overflow strlen(%s)>%d", funcheader + 1, G__LONGLINE - 1);
-            G__genericerror((char*)NULL);
-            funcheader[G__MAXNAME] = 0;
-         }
-         G__savestring(&G__p_ifunc->funcname[func_now], funcheader + 1);
+         funcname = funcheader + 1;
          if (isupper(G__var_type)) {
             switch (G__reftype) {
                case G__PARANORMAL:
@@ -624,13 +600,6 @@ void G__make_ifunctable(char* funcheader)
       G__var_type = toupper(G__var_type);
    }
    else {
-      char* pt1;
-      if (strlen(funcheader) > G__LONGLINE - 1) {
-         funcheader[G__MAXNAME-1] = 0;
-         G__fprinterr(G__serr, "Limitation: Function name length overflow strlen(%s)>%d", funcheader, G__LONGLINE - 1);
-         G__genericerror((char*)NULL);
-         funcheader[G__MAXNAME-1] = 0;
-      }
       if (strncmp(funcheader, "operator ", 9) == 0) {
          char* oprtype = funcheader + 9;
          if (
@@ -708,23 +677,20 @@ void G__make_ifunctable(char* funcheader)
             strcat(oprtype, "(");
          }
       }
-      G__savestring(&G__p_ifunc->funcname[func_now], funcheader);
+      funcname = funcheader;
       if (
          (strstr(funcheader, ">>") != NULL && strchr(funcheader, '<') != NULL) ||
          (strstr(funcheader, "<<") != NULL && strchr(funcheader, '>') != NULL)
       ) {
-         int maxpt2 = strlen(G__p_ifunc->funcname[func_now]) + 20; /* allow 20 extra spaces */
-         char *pt2 = (char*)malloc(maxpt2);
-         strcpy(pt2, G__p_ifunc->funcname[func_now]);
-         free((void*)(G__p_ifunc->funcname[func_now]));
-         G__p_ifunc->funcname[func_now] = pt2;
+         char* pt1 = funcheader;
+         char* pt2 = funcname;
          if ((char*)NULL != strstr(funcheader, "operator<<") &&
                (char*)NULL != strchr(funcheader, '>')) {
             /* we might have operator< <> or operator< <double>
               or operator<< <> or operator<< <double>
               with the space missing */
-            pt2 = pt2 + strlen("operator<");
-            pt1 = funcheader + strlen("operator<");
+            pt2 += strlen("operator<");
+            pt1 += strlen("operator<");
             /*char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );*/
             if (*(pt2 + 1) == '<') {
                /* we have operator<< <...> */
@@ -740,15 +706,11 @@ void G__make_ifunctable(char* funcheader)
             /* we might have operator>><>  */
             /* we have nothing to do ... yet (we may have to do something
                for nested templates */
-            pt2 = pt2 + strlen("operator>>");
-            pt1 = funcheader + strlen("operator>>");
-         }
-         else {
-            pt1 = funcheader;
+            pt2 += strlen("operator>>");
+            pt1 += strlen("operator>>");
          }
          while ((char*)NULL != (pt1 = strstr(pt1, ">>"))) {
-            char *pt3;
-            pt3 = strstr(pt2, ">>");
+            char *pt3 = strstr(pt2, ">>");
             ++pt3;
             *pt3 = ' ';
             ++pt3;
@@ -758,12 +720,14 @@ void G__make_ifunctable(char* funcheader)
          }
       }
    }
-   G__p_ifunc->funcname[func_now][strlen(G__p_ifunc->funcname[func_now]) - 1] = '\0';
+
+   funcname[strlen(funcname) - 1] = 0; // remove trailing '('
    /******************************************************
     * conv<B>(x) -> conv<ns::B>(x)
     ******************************************************/
-   G__p_ifunc->funcname[func_now] = G__rename_templatefunc(G__p_ifunc->funcname[func_now], 1);
-   G__hash(G__p_ifunc->funcname[func_now], G__p_ifunc->hash[func_now], iin2);
+   G__rename_templatefunc(funcname);
+   
+   G__hash(funcname, G__p_ifunc->hash[func_now], iin2);
    G__paramfunc* param = ifunc->param[func_now][0];
    param->name = 0;
    /*************************************************************
@@ -772,12 +736,15 @@ void G__make_ifunctable(char* funcheader)
     *************************************************************/
    if (
       (G__p_ifunc->hash[func_now] == G__HASH_OPERATOR) &&
-      !strcmp(G__p_ifunc->funcname[func_now], "operator")
+      !strcmp(funcname, "operator")
    ) {
-      char* tmpp = (char*) "operator()";
-      G__savestring(&G__p_ifunc->funcname[func_now], tmpp);
-      G__p_ifunc->hash[func_now] += ('(' + ')');
+      funcname = "operator()";
+      G__p_ifunc->hash[func_now] += '(' + ')';
    }
+   size_t funcnamelen = strlen(funcname) + 1;
+   G__p_ifunc->funcname[func_now] = (char*)malloc(funcnamelen);
+   memcpy(G__p_ifunc->funcname[func_now], funcname(), funcnamelen);
+
    fgetpos(G__ifile.fp, &G__p_ifunc->entry[func_now].pos);
    G__p_ifunc->entry[func_now].p = (void*)G__ifile.fp;
    G__p_ifunc->entry[func_now].line_number = G__ifile.line_number;
@@ -887,7 +854,8 @@ void G__make_ifunctable(char* funcheader)
 #else
       G__access = G__PRIVATE;
 #endif
-      char vinfo[20];
+      G__FastAllocString vinfo_sb(20);
+      char* vinfo = vinfo_sb;
       strcpy(vinfo,"G__virtualinfo");
       G__letvariable(vinfo, G__null, &G__global, G__p_local);
       G__access = store_access;
@@ -935,15 +903,15 @@ void G__make_ifunctable(char* funcheader)
     *         -  -  - - - -
     */
    isparam = 0;
-   cin = G__fgetname_template(paraname, "<*&,()=");
+   G__FastAllocString paraname(G__LONGLINE);
+   cin = G__fgetname_template(paraname, 0, "<*&,()=");
    if (strlen(paraname) && isspace(cin)) {
       /* There was an argument and the parsing was stopped by a white
       * space rather than on of ",)*&<=", it is possible that
       * we have a namespace followed by '::' in which case we have
       * to grab more before stopping! */
       int namespace_tagnum;
-      G__FastAllocString more_sb(G__LONGLINE);
-      char *more = more_sb;
+      G__FastAllocString more(G__LONGLINE);
 
       namespace_tagnum = G__defined_tagname(paraname, 2);
       while ((((namespace_tagnum != -1)
@@ -951,8 +919,8 @@ void G__make_ifunctable(char* funcheader)
               || (strcmp("std", paraname) == 0)
               || (paraname[strlen(paraname)-1] == ':'))
              && isspace(cin)) {
-         cin = G__fgetname(more, "<*&,)=");
-         strcat(paraname, more);
+         cin = G__fgetname(more, 0, "<*&,)=");
+         paraname += more;
          namespace_tagnum = G__defined_tagname(paraname, 2);
       }
    }
@@ -996,7 +964,7 @@ void G__make_ifunctable(char* funcheader)
             ) {
             if (G__dispmsg >= G__DISPWARN) {
                G__fprinterr(G__serr, "Warning: Unknown type %s in function argument"
-                            , paraname);
+                            , paraname());
                G__printlinenum();
             }
          }
@@ -1110,14 +1078,16 @@ void G__make_ifunctable(char* funcheader)
       cin = G__fignorestream("(");
       cin = G__fignorestream(")");
    }
-   cin = G__fgetstream_template(paraname, ",;{(");
+   cin = G__fgetstream_template(paraname, 0, ",;{(");
    if ('(' == cin) {
       int len = strlen(paraname);
+      paraname.Resize(len + 10);
       paraname[len++] = cin;
-      cin = G__fgetstream(paraname + len, ")");
+      cin = G__fgetstream(paraname, len, ")");
       len = strlen(paraname);
+      paraname.Resize(len + 10);
       paraname[len++] = cin;
-      cin = G__fgetstream_template(paraname + len, ",;{");
+      cin = G__fgetstream_template(paraname, len, ",;{");
    }
    // If header ignore following headers, else read function body.
    if ((paraname[0] == '\0'
@@ -1273,11 +1243,10 @@ void G__make_ifunctable(char* funcheader)
       G__ifile.line_number = store_line_number;
 
       if (G__dispsource) G__disp_mask = 1000;
-      strcpy(paraname, funcheader);
-      cin = G__fgetstream(paraname + strlen(paraname), ")");
+      paraname = funcheader;
+      cin = G__fgetstream(paraname, strlen(paraname), ")");
       iin = strlen(paraname);
-      paraname[iin] = ')';
-      paraname[iin+1] = '\0';
+      paraname += ")";
       if (G__dispsource) G__disp_mask = 0;
 
       G__no_exec = 0; /* must be set to 1 again after return */
@@ -1716,11 +1685,10 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
       }
       G__paramfunc* param = ifunc->param[func_now][iin];
       param->isconst = G__VARIABLE;
-      G__FastAllocString buf_sb(G__LONGLINE);
-      char *buf = buf_sb; // Parsing I/O buffer.
+      G__FastAllocString buf(G__LONGLINE);
       buf[0] = '\0';
       // Get first keyword, id, or separator of the type specification.
-      c = G__fgetname_template(buf, "&*[(=,)");
+      c = G__fgetname_template(buf, 0, "&*[(=,)");
       if (strlen(buf) && isspace(c)) {
          // -- There was an argument and the parsing stopped at white space.
          // It is possible that we have a qualified name, check.
@@ -1734,10 +1702,9 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                !strcmp("std", buf)
             )
          ) {
-            G__FastAllocString more_sb(G__LONGLINE);
-            char *more = more_sb;
-            c = G__fgetname(more, "&*[(=,)");
-            strcat(buf, more);
+            G__FastAllocString more(G__LONGLINE);
+            c = G__fgetname(more, 0, "&*[(=,)");
+            buf += more;
             namespace_tagnum = G__defined_tagname(buf, 2);
          }
       }
@@ -1758,7 +1725,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
          if (!strcmp(buf, "const")) {
             ifunc->param[func_now][iin]->isconst |= G__CONSTVAR;
          }
-         c = G__fgetname_template(buf, "&*[(=,)");
+         c = G__fgetname_template(buf, 0, "&*[(=,)");
          //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
       }
       //
@@ -1790,19 +1757,19 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                case '(':
                case '=':
                case '*':
-                  strcpy(buf, "int");
+                  buf = "int";
                   //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
                   break;
                default:
                   if (isspace(c)) {
-                     c = G__fgetname(buf, ",)&*[(="); // FIXME: Change to G__getname_template???
+                     c = G__fgetname(buf, 0, ",)&*[(="); // FIXME: Change to G__getname_template???
                      //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
                   }
                   else {
                      fpos_t pos;
                      fgetpos(G__ifile.fp, &pos);
                      int store_line = G__ifile.line_number;
-                     c = G__fgetname(buf, ",)&*[(=");
+                     c = G__fgetname(buf, 0, ",)&*[(=");
                      //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
                      if (strcmp(buf, "short") && strcmp(buf, "int") && strcmp(buf, "long")) {
                         G__ifile.line_number = store_line;
@@ -1816,25 +1783,25 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
             }
          }
          if (!strcmp(buf, "class")) {
-            c = G__fgetname_template(buf, ",)&*[(=");
+            c = G__fgetname_template(buf, 0, ",)&*[(=");
             //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
             tagnum = G__search_tagname(buf, 'c');
             type = 'u';
          }
          else if (!strcmp(buf, "struct")) {
-            c = G__fgetname_template(buf, ",)&*[(=");
+            c = G__fgetname_template(buf, 0, ",)&*[(=");
             //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
             tagnum = G__search_tagname(buf, 's');
             type = 'u';
          }
          else if (!strcmp(buf, "union")) {
-            c = G__fgetname_template(buf, ",)&*[(=");
+            c = G__fgetname_template(buf, 0, ",)&*[(=");
             //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
             tagnum = G__search_tagname(buf, 'u');
             type = 'u';
          }
          else if (!strcmp(buf, "enum")) {
-            c = G__fgetname_template(buf, ",)&*[(=");
+            c = G__fgetname_template(buf, 0, ",)&*[(=");
             //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
             tagnum = G__search_tagname(buf, 'e');
             type = 'i';
@@ -1854,7 +1821,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                fgetpos(G__ifile.fp, &pos);
                int store_line = G__ifile.line_number;
                int store_c = c;
-               c = G__fgetname(buf, ",)&*[(="); // FIXME: Change to G__fgetname_template???
+               c = G__fgetname(buf, 0, ",)&*[(="); // FIXME: Change to G__fgetname_template???
                //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
                if (!strcmp(buf, "long") || !strcmp(buf, "double")) {
                   if (!strcmp(buf, "long")) {
@@ -1930,8 +1897,8 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                   //fprintf(stderr, "G__readansiproto: failed to find tagname: '%s' ... \n", buf);
                   if (G__fpundeftype) {
                      tagnum = G__search_tagname(buf, 'c');
-                     fprintf(G__fpundeftype, "class %s; /* %s %d */\n", buf, G__ifile.name, G__ifile.line_number);
-                     fprintf(G__fpundeftype, "#pragma link off class %s;\n\n", buf);
+                     fprintf(G__fpundeftype, "class %s; /* %s %d */\n", buf(), G__ifile.name, G__ifile.line_number);
+                     fprintf(G__fpundeftype, "#pragma link off class %s;\n\n", buf());
                      G__struct.globalcomp[tagnum] = G__NOLINK;
                      type = 'u';
                   }
@@ -1940,7 +1907,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                      type = 'i' + isunsigned;
                      if (!isdigit(buf[0]) && !isunsigned) {
                         if (G__dispmsg >= G__DISPWARN) {
-                           G__fprinterr(G__serr, "Warning: Unknown type '%s' in function argument handled as int", buf);
+                           G__fprinterr(G__serr, "Warning: Unknown type '%s' in function argument handled as int", buf());
                            G__printlinenum();
                         }
                      }
@@ -1956,8 +1923,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
       //
       int is_a_reference = 0;
       int has_a_default = 0;
-      G__FastAllocString param_name_sb(G__LONGLINE);
-      char *param_name = param_name_sb; // Parameter name.
+      G__FastAllocString param_name(G__LONGLINE);
       param_name[0] = '\0';
       {
          int arydim = 0; // Track which array bound we are processing, so we can handle an unspecified length array.
@@ -2000,6 +1966,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                   ) {
                      // read 'MyFunc(int [][30])' or 'MyFunc(int [])'
                      int len = strlen(param_name);
+                     param_name.Resize(len + 2);
                      param_name[len++] = c;
                      param_name[len++] = ']';
                      // Ignore the given array bound value.
@@ -2012,14 +1979,14 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                         fpos_t tmp_pos;
                         fgetpos(G__ifile.fp, &tmp_pos);
                         int tmp_line = G__ifile.line_number;
-                        c = G__fgetstream(param_name + len, "[=,)");
+                        c = G__fgetstream(param_name, len, "[=,)");
                         fsetpos(G__ifile.fp, &tmp_pos);
                         G__ifile.line_number = tmp_line;
                         G__disp_mask = 0;
                      }
                      if (c == '[') {
                         // Collect all the rest of the array bounds.
-                        c = G__fgetstream(param_name + len, "=,)");
+                        c = G__fgetstream(param_name, len, "=,)");
                         ptrcnt = 0; // FIXME: This erases all pointers (int* ary[d][d] is broken!)
                         break;
                      }
@@ -2038,7 +2005,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                   // -- Parameter has a default value, collect it, and we are done.
                   // Collect the rest of the parameter specification as the default text.
                   has_a_default = 1;
-                  c = G__fgetstream_template(buf, ",)");
+                  c = G__fgetstream_template(buf, 0, ",)");
                   // Note: The enclosing loop will terminate after we break.
                   break;
                case '(': // Assume a function pointer type, e.g., MyFunc(int, int (*fp)(int, ...), int, ...)
@@ -2058,7 +2025,8 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                      else {
                         p = buf;
                      }
-                     strcpy(p, G__type2string(0, tagnum, typenum, 0, 0));
+                     *p = 0;
+                     buf += G__type2string(0, tagnum, typenum, 0, 0);
                   }
                   //
                   //  Normalize the rest of the parameter specification,
@@ -2068,6 +2036,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                      // Handle any ref part of the return type.
                      // FIXME: This is wrong, cannot have a pointer to a reference!
                      int i = strlen(buf);
+                     buf.Resize(i + ptrcnt * 2 + 10); // CINT cannot handle that many anyway
                      if (is_a_reference) {
                         buf[i++] = '&';
                      }
@@ -2081,12 +2050,14 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                      ptrcnt = 0;
                      // Start constructing the parameter name part.
                      buf[i++] = '(';
-                     c = G__fgetstream(buf + i, "*)");
+                     c = G__fgetstream(buf, i, "*)");
                      if (c == '*') {
+                        buf.Resize(i + 1);
                         buf[i++] = c;
-                        c = G__fgetstream(param_name, ")");
+                        c = G__fgetstream(param_name, 0, ")");
                         int j = 0;
                         for (; param_name[j] == '*'; ++j) {
+                           buf.Resize(i + 1);
                            buf[i++] = '*';
                         }
                         if (j) {
@@ -2098,12 +2069,12 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                         }
                      }
                      if (c == ')') {
+                        buf.Resize(i + 1);
                         buf[i++] = ')';
                      }
                      // Copy out the rest of the parameter specification (up to a default value, if any).
-                     c = G__fdumpstream(buf + i, ",)=");
+                     c = G__fdumpstream(buf, i, ",)=");
                   }
-                  buf[strlen(buf)] = '\0';
                   //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
 #ifndef G__OLDIMPLEMENTATION2191
                   typenum = G__search_typename(buf, '1', -1, 0);
@@ -2123,7 +2094,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                   }
                   // Collect next keyword or id into param_name.
                   param_name[0] = c;
-                  c = G__fgetstream(param_name + 1, "[=,)& \t");
+                  c = G__fgetstream(param_name, 1, "[=,)& \t");
                   if (!strcmp(param_name, "const")) { // handle const keyword
                      ifunc->param[func_now][iin]->isconst |= G__PCONSTVAR; // FIXME: This is intentionally wrong!  Fix the code that depends on this!
                      param_name[0] = 0;
@@ -2151,7 +2122,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                               if (G__dispsource) {
                                  G__disp_mask = 1;
                               }
-                              c = G__fgetstream(param_name + len, "=,)");
+                              c = G__fgetstream(param_name, len, "=,)");
                               // Note: Either we next process a default value, or enclosing loop terminates.
                               break;
                            }
@@ -2161,7 +2132,7 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                      }
                      if (c == '=') { // We have a default value.
                         has_a_default = 1;
-                        c = G__fgetstream_template(buf, ",)");
+                        c = G__fgetstream_template(buf, 0, ",)");
                         //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
                         // Note: Enclosing loop will terminate after we break.
                      }
@@ -2230,9 +2201,8 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
             G__value* val = ifunc->param[func_now][iin]->pdefault;
             if (is_a_reference && !ptrcnt && ((toupper(val->type) != toupper(type)) || (val->tagnum != tagnum))) {
                // -- If binding a reference to default rvalue and the types do not match, do a cast.
-               G__FastAllocString tmp_sb(G__ONELINE);
-               char *tmp = tmp_sb;
-               sprintf(tmp, "%s(%s)", G__type2string(type, tagnum, -1, 0, 0), buf);
+               G__FastAllocString tmp(G__ONELINE);
+               tmp.Format("%s(%s)", G__type2string(type, tagnum, -1, 0, 0), buf());
                *val = G__getexpr(tmp);
                if (val->type == 'u') {
                   val->ref = val->obj.i;
@@ -2325,10 +2295,8 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
    int match = 0;
    int rewindflag = 0;
    G__value reg;
-   G__FastAllocString conv_sb(G__ONELINE);
-   char *conv = conv_sb;
-   G__FastAllocString arg1_sb(G__ONELINE);
-   char *arg1 = arg1_sb;
+   G__FastAllocString conv(G__ONELINE);
+   G__FastAllocString arg1(G__ONELINE);
 
    if (default_parameter && (param_type == '\0')) {
       return 2;
@@ -2711,19 +2679,19 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
          /* try finding constructor */
          if ('u' == param_type) {
             if (param->obj.i < 0)
-               sprintf(arg1, "(%s)(%ld)"
+               arg1.Format("(%s)(%ld)"
                        , G__fulltagname(param_tagnum, 1), param->obj.i);
             else
-               sprintf(arg1, "(%s)%ld", G__fulltagname(param_tagnum, 1), param->obj.i);
+               arg1.Format("(%s)%ld", G__fulltagname(param_tagnum, 1), param->obj.i);
          }
          else {
             G__valuemonitor(*param, arg1);
          }
-         sprintf(conv, "%s(%s)", G__struct.name[formal_tagnum], arg1);
+         conv.Format("%s(%s)", G__struct.name[formal_tagnum], arg1());
 
          if (G__dispsource) {
             G__fprinterr(G__serr, "!!!Trying implicit conversion %s,%d\n"
-                         , conv, G__templevel);
+                         , conv(), G__templevel);
          }
 
          long store_struct_offset = G__store_struct_offset;
@@ -2767,7 +2735,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
 #endif
             }
             else {
-               sprintf(conv, "operator %s()", G__fulltagname(formal_tagnum, 1));
+               conv.Format("operator %s()", G__fulltagname(formal_tagnum, 1));
                G__store_struct_offset = param->obj.i;
                G__tagnum = param->tagnum;
                if (-1 != G__tagnum) reg = G__getfunction(conv, &match, G__TRYMEMFUNC);
@@ -2790,7 +2758,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
             }
             else {
                if (G__asm_noverflow) G__inc_cp_asm(-3, 0);
-               sprintf(conv, "operator %s()", G__fulltagname(formal_tagnum, 1));
+               conv.Format("operator %s()", G__fulltagname(formal_tagnum, 1));
                G__store_struct_offset = param->obj.i;
                G__tagnum = param->tagnum;
                reg = G__getfunction(conv, &match, G__TRYMEMFUNC);
@@ -2869,7 +2837,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
             }
             else { // All conversions failed.
                if (G__dispsource) {
-                  G__fprinterr(G__serr, "!!!Implicit conversion %s,%d tried, but failed\n", conv, G__templevel);
+                  G__fprinterr(G__serr, "!!!Implicit conversion %s,%d tried, but failed\n", conv(), G__templevel);
                }
                G__pop_tempobject();
 #ifdef G__ASM
@@ -2886,7 +2854,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
 #else // ON181
                // All conversions failed.
                if (G__dispsource) {
-                  G__fprinterr(G__serr, "!!!Implicit conversion %s,%d tried, but failed\n", conv, G__templevel);
+                  G__fprinterr(G__serr, "!!!Implicit conversion %s,%d tried, but failed\n", conv(), G__templevel);
                }
                G__pop_tempobject();
 #ifdef G__ASM
@@ -2906,10 +2874,10 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
          else { /* match==1, conversion successful */
             if (G__dispsource) {
                if (G__p_tempbuf->obj.obj.i < 0) {
-                  G__fprinterr(G__serr, "!!!Create temp object (%s)(%ld),%d for implicit conversion\n", conv, G__p_tempbuf->obj.obj.i, G__templevel);
+                  G__fprinterr(G__serr, "!!!Create temp object (%s)(%ld),%d for implicit conversion\n", conv(), G__p_tempbuf->obj.obj.i, G__templevel);
                }
                else {
-                  G__fprinterr(G__serr, "!!!Create temp object (%s)%ld,%d for implicit conversion\n", conv, G__p_tempbuf->obj.obj.i, G__templevel);
+                  G__fprinterr(G__serr, "!!!Create temp object (%s)%ld,%d for implicit conversion\n", conv(), G__p_tempbuf->obj.obj.i, G__templevel);
                }
             }
 #ifdef G__ASM
@@ -2932,7 +2900,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
       else if (-1 != param->tagnum) {
          long store_struct_offset = G__store_struct_offset;
          int store_tagnum = G__tagnum;
-         sprintf(conv, "operator %s()", G__type2string(formal_type, formal_tagnum, -1, 0, 0));
+         conv.Format("operator %s()", G__type2string(formal_type, formal_tagnum, -1, 0, 0));
          G__store_struct_offset = param->obj.i;
          G__tagnum = param->tagnum;
 #ifdef G__ASM
@@ -2962,7 +2930,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
 #endif // G__ASM
          reg = G__getfunction(conv, &match, G__TRYMEMFUNC);
          if (!match && formal_isconst) {
-            sprintf(conv, "operator const %s()", G__type2string(formal_type, formal_tagnum, -1, 0, 0));
+            conv.Format("operator const %s()", G__type2string(formal_type, formal_tagnum, -1, 0, 0));
             G__store_struct_offset = param->obj.i;
             G__tagnum = param->tagnum;
             reg = G__getfunction(conv, &match, G__TRYMEMFUNC);
@@ -3018,7 +2986,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
          match = 0;
          if (recursive && G__dispsource) {
             G__valuemonitor(*param, arg1);
-            G__fprinterr(G__serr, "!!!Recursive implicit conversion %s(%s) rejected\n", G__struct.name[formal_tagnum], arg1);
+            G__fprinterr(G__serr, "!!!Recursive implicit conversion %s(%s) rejected\n", G__struct.name[formal_tagnum], arg1());
          }
       }
    }
@@ -3585,10 +3553,8 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
    int formal_reftype;
    int formal_isconst;
    G__value* param;
-   G__FastAllocString conv_sb(G__ONELINE);
-   char *conv = conv_sb;
-   G__FastAllocString arg1_sb(G__ONELINE);
-   char *arg1 = arg1_sb;
+   G__FastAllocString conv(G__ONELINE);
+   G__FastAllocString arg1(G__ONELINE);
    G__FastAllocString parameter_sb(G__ONELINE);
    char *parameter = parameter_sb;
    long store_struct_offset;
@@ -3646,19 +3612,19 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
             /* try finding constructor */
             if ('u' == param_type) {
                if (param->obj.i < 0)
-                  sprintf(arg1, "(%s)(%ld)"
+                  arg1.Format("(%s)(%ld)"
                           , G__fulltagname(param_tagnum, 1), param->obj.i);
                else
-                  sprintf(arg1, "(%s)%ld", G__fulltagname(param_tagnum, 1), param->obj.i);
+                  arg1.Format("(%s)%ld", G__fulltagname(param_tagnum, 1), param->obj.i);
             }
             else {
                G__valuemonitor(*param, arg1);
             }
-            sprintf(conv, "%s(%s)", G__struct.name[formal_tagnum], arg1);
+            conv.Format("%s(%s)", G__struct.name[formal_tagnum], arg1());
 
             if (G__dispsource) {
                G__fprinterr(G__serr, "!!!Trying implicit conversion %s,%d\n"
-                            , conv, G__templevel);
+                            , conv(), G__templevel);
             }
 
             store_struct_offset = G__store_struct_offset;
@@ -3704,7 +3670,7 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
                }
                else {
                   G__pop_tempobject();
-                  sprintf(conv, "operator %s()", G__fulltagname(formal_tagnum, 1));
+                  conv.Format("operator %s()", G__fulltagname(formal_tagnum, 1));
                   G__store_struct_offset = param->obj.i;
                   G__tagnum = param->tagnum;
                   if (-1 != G__tagnum) reg = G__getfunction(conv, &match, G__TRYMEMFUNC);
@@ -3728,7 +3694,7 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
                else {
                   G__pop_tempobject();
                   if (G__asm_noverflow) G__inc_cp_asm(-3, 0);
-                  sprintf(conv, "operator %s()", G__fulltagname(formal_tagnum, 1));
+                  conv.Format("operator %s()", G__fulltagname(formal_tagnum, 1));
                   G__store_struct_offset = param->obj.i;
                   G__tagnum = param->tagnum;
 #ifdef G__ASM
@@ -3833,7 +3799,7 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
                   if (G__dispsource) {
                      G__fprinterr(G__serr,
                                   "!!!Implicit conversion %s,%d tried, but failed\n"
-                                  , conv, G__templevel);
+                                  , conv(), G__templevel);
                   }
                   G__pop_tempobject();
 #ifdef G__ASM
@@ -3851,7 +3817,7 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
                   if (G__dispsource) {
                      G__fprinterr(G__serr,
                                   "!!!Implicit conversion %s,%d tried, but failed\n"
-                                  , conv, G__templevel);
+                                  , conv(), G__templevel);
                   }
                   G__pop_tempobject();
 #ifdef G__ASM
@@ -3870,11 +3836,11 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
                   if (G__p_tempbuf->obj.obj.i < 0)
                      G__fprinterr(G__serr,
                                   "!!!Create temp object (%s)(%ld),%d for implicit conversion\n"
-                                  , conv , G__p_tempbuf->obj.obj.i , G__templevel);
+                                  , conv(), G__p_tempbuf->obj.obj.i , G__templevel);
                   else
                      G__fprinterr(G__serr,
                                   "!!!Create temp object (%s)%ld,%d for implicit conversion\n"
-                                  , conv , G__p_tempbuf->obj.obj.i , G__templevel);
+                                  , conv(), G__p_tempbuf->obj.obj.i , G__templevel);
                }
 #ifdef G__ASM
                if (G__asm_noverflow && rewind_arg) {
@@ -3898,7 +3864,7 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
             long store_struct_offset = G__store_struct_offset;
             int store_tagnum = G__tagnum;
             int store_isconst = G__isconst;
-            sprintf(conv, "operator %s()"
+            conv.Format("operator %s()"
                     , G__type2string(formal_type, formal_tagnum, -1, 0, 0));
             G__store_struct_offset = param->obj.i;
             G__tagnum = param->tagnum;
@@ -3929,7 +3895,7 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
             if (!match
                   && 0 != formal_isconst
                ) {
-               sprintf(conv, "operator const %s()"
+               conv.Format("operator const %s()"
                        , G__type2string(formal_type, formal_tagnum, -1, 0, 0));
                G__store_struct_offset = param->obj.i;
                G__tagnum = param->tagnum;
@@ -3979,7 +3945,7 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
             if (recursive && G__dispsource) {
                G__valuemonitor(*param, arg1);
                G__fprinterr(G__serr, "!!!Recursive implicit conversion %s(%s) rejected\n"
-                            , G__struct.name[formal_tagnum], arg1);
+                            , G__struct.name[formal_tagnum], arg1());
             }
             /* #endif */
          }
@@ -4427,12 +4393,10 @@ struct G__funclist* G__add_templatefunc(const char* funcnamein, G__param* libp, 
    int store_friendtagnum = G__friendtagnum;
    struct G__ifunc_table_internal *ifunc;
    int ifn;
-   char *funcname;
    char *ptmplt;
    char *pexplicitarg = 0;
 
-   funcname = (char*)malloc(strlen(funcnamein) + 1);
-   strcpy(funcname, funcnamein);
+   G__FastAllocString funcname(funcnamein);
 
    if (-1 != env_tagnum) baseclass = G__struct.baseclass[env_tagnum];
    else               baseclass = &G__globalusingnamespace;
@@ -4489,10 +4453,9 @@ struct G__funclist* G__add_templatefunc(const char* funcnamein, G__param* libp, 
          int itmp = 0;
          int ip = 1;
          int c;
-         G__FastAllocString buf_sb(G__ONELINE);
-         char *buf = buf_sb;
+         G__FastAllocString buf(G__ONELINE);
          do {
-            c = G__getstream_template(ptmplt, &ip, buf, ",>");
+            c = G__getstream_template(ptmplt, &ip, buf, 0, ",>");
             G__checkset_charlist(buf, &call_para, ++itmp, 'u');
          }
          while (c != '>');
@@ -4593,8 +4556,6 @@ match_found:
       deftmpfunc = deftmpfunc->next;
    }
    G__freecharlist(&call_para);
-
-   if (funcname) free((void*)funcname);
 
    return funclist;
 }
@@ -4886,9 +4847,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    FILE *prev_fp;
    fpos_t prev_pos;
    // paraname[][] is used only for K&R func param. length should be OK.
-   G__FastAllocString paraname_buf(G__MAXFUNCPARA * G__MAXNAME);
-   typedef char namearray_t[G__MAXNAME];
-   namearray_t *paraname = (namearray_t*) paraname_buf.data();
+   G__FastAllocString paraname[G__MAXFUNCPARA];
    int ipara = 0;
    int cin = '\0';
    int itemp = 0;
@@ -5874,9 +5833,8 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
       // -- K&R C.
       ipara = 0;
       while (cin != ')') {
-         G__FastAllocString temp_sb(G__ONELINE);
-         char *temp = temp_sb;
-         cin = G__fgetstream(temp, ",)");
+         G__FastAllocString temp(G__ONELINE);
+         cin = G__fgetstream(temp, 0, ",)");
          if (temp[0] != '\0') {
             strcpy(paraname[ipara], temp);
             ++ipara;
@@ -6252,11 +6210,10 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
                              , G__fulltagname(result7->tagnum, 1) , result7->obj.i);
                }
                else {
-                  G__FastAllocString buf2_sb(G__ONELINE);
-                  char *buf2 = buf2_sb;
+                  G__FastAllocString buf2(G__ONELINE);
                   G__valuemonitor(*result7, buf2);
                   sprintf(temp, "%s(%s)", G__struct.name[p_ifunc->p_tagtable[ifn]]
-                          , buf2);
+                          , buf2());
                }
 
                store_tagnum = G__tagnum;
@@ -6955,8 +6912,7 @@ struct G__ifunc_table_internal* G__get_ifunchandle_base(const char* funcname, G_
 void G__argtype2param(const char* argtype, G__param* libp, int noerror, int* error)
 {
    // -- FIXME: Describe this function!
-   G__FastAllocString typenam_sb(G__MAXNAME*2);
-   char *typenam = typenam_sb;
+   G__FastAllocString typenam(G__MAXNAME*2);
    int p = 0;
    int c;
    const char *endmark = ",);";
@@ -6965,7 +6921,7 @@ void G__argtype2param(const char* argtype, G__param* libp, int noerror, int* err
    libp->para[0] = G__null;
 
    do {
-      c = G__getstream_template(argtype, &p, typenam, endmark);
+      c = G__getstream_template(argtype, &p, typenam, 0, endmark);
       if (typenam[0]) {
          char* start = typenam;
          while (isspace(*start)) ++start;

@@ -544,13 +544,13 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
 #ifdef G__DUMPFILE 
   if(G__dumpfile!=NULL) {
     int ipara;
-    char resultx[G__ONELINE];
+    G__FastAllocString resultx(G__ONELINE);
     for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
     fprintf(G__dumpfile,"%s(",bytecode->ifunc->funcname[bytecode->ifn]);
     for(ipara=1;ipara<= libp->paran;ipara++) {
       if(ipara!=1) fprintf(G__dumpfile,",");
       G__valuemonitor(libp->para[ipara-1],resultx);
-      fprintf(G__dumpfile,"%s",resultx);
+      fprintf(G__dumpfile,"%s",resultx());
     }
     fprintf(G__dumpfile,");/*%s %d (bc)*/\n" ,G__ifile.name,G__ifile.line_number);
     G__dumpspace += 3;
@@ -571,7 +571,7 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
 #endif
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
-    char temp[G__ONELINE];
+    G__FastAllocString temp(G__ONELINE);
     G__fprinterr(G__serr,"returns %s\n",G__valuemonitor(*result7,temp));
   }
 #endif
@@ -596,12 +596,12 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
 #ifdef G__DUMPFILE
   if(G__dumpfile!=NULL) {
     int ipara;
-    char resultx[G__ONELINE];
+    G__FastAllocString resultx(G__ONELINE);
     G__dumpspace -= 3;
     for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
     G__valuemonitor(*result7,resultx);
     fprintf(G__dumpfile ,"/* return(bc) %s()=%s*/\n" 
-	    ,bytecode->ifunc->funcname[bytecode->ifn],resultx);
+	    ,bytecode->ifunc->funcname[bytecode->ifn],resultx());
   }
 #endif
 

@@ -847,14 +847,14 @@ void* Cint::G__ClassInfo::New()
       // Interpreted class,struct
       long store_struct_offset;
       long store_tagnum;
-      char temp[G__ONELINE];
+      G__FastAllocString temp(G__ONELINE);
       int known=0;
       p = new char[G__struct.size[tagnum]];
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
       G__tagnum = tagnum;
       G__store_struct_offset = (long)p;
-      sprintf(temp,"%s()",G__struct.name[tagnum]);
+      temp.Format("%s()",G__struct.name[tagnum]);
       G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
       G__store_struct_offset = store_struct_offset;
       G__tagnum = (int)store_tagnum;
@@ -918,7 +918,6 @@ void* Cint::G__ClassInfo::New(int n)
       int i;
       long store_struct_offset;
       long store_tagnum;
-      char temp[G__ONELINE];
       int known=0;
       p = new char[G__struct.size[tagnum]*n];
       // Record that we have allocated an array, and how many
@@ -936,7 +935,8 @@ void* Cint::G__ClassInfo::New(int n)
       ////G__store_struct_offset = (long)(((char*)p) + (2*sizeof(int)));
       ////... at end adjust returned pointer address ...
       ////p = ((char*) p) + (2 * sizeof(int));
-      sprintf(temp,"%s()",G__struct.name[tagnum]);
+      G__FastAllocString temp(G__struct.name[tagnum]);
+      temp += "()";
       for(i=0;i<n;i++) {
 	G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
 	if(!known) break;
@@ -1005,14 +1005,14 @@ void* Cint::G__ClassInfo::New(void *arena)
       // Interpreted class,struct
       long store_struct_offset;
       long store_tagnum;
-      char temp[G__ONELINE];
       int known=0;
       p = arena;
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
       G__tagnum = tagnum;
       G__store_struct_offset = (long)p;
-      sprintf(temp,"%s()",G__struct.name[tagnum]);
+      G__FastAllocString temp(G__struct.name[tagnum]);
+      temp += "()";
       G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
       G__store_struct_offset = store_struct_offset;
       G__tagnum = (int)store_tagnum;
@@ -1086,7 +1086,6 @@ void* Cint::G__ClassInfo::New(int n, void *arena)
       // Interpreted class,struct
       long store_struct_offset;
       long store_tagnum;
-      char temp[G__ONELINE];
       int known=0;
       p = arena;
       // Record that we have allocated an array, and how many
@@ -1104,7 +1103,8 @@ void* Cint::G__ClassInfo::New(int n, void *arena)
       ////G__store_struct_offset = (long)(((char*)p) + (2*sizeof(int)));
       ////... at end adjust returned pointer address ...
       ////p = ((char*) p) + (2 * sizeof(int));
-      sprintf(temp,"%s()",G__struct.name[tagnum]);
+      G__FastAllocString temp(G__struct.name[tagnum]);
+      temp += "()";
       for (int i = 0; i < n; ++i) {
         G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
         if (!known) break;

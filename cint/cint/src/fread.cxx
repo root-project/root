@@ -15,29 +15,30 @@
 
 #include "common.h"
 
+int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fgetname_template(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fgetstream_newtemplate(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__getstream_template(const char* source, int* isrc,G__FastAllocString&  string, size_t offset, const char* endmark);
+int G__fgetname(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__getname(const char* source, int* isrc, char* string, const char* endmark);
+int G__getfullpath(char* string, char* pbegin, int i);
+int G__fdumpstream(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark);
+void G__fgetstream_peek(char* string, int nchars);
+int G__fgetstream_new(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fgetstream_spaces(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__getstream(const char* source, int* isrc, char* string, const char* endmark);
+static int G__isstoragekeyword(const char* buf);
+
 extern "C" {
 
 #ifdef G__MULTIBYTE
 int G__CodingSystem(int c);
 #endif // G__MULTIBYTE
 
-static int G__isstoragekeyword(char* buf);
-int G__fgetname_template(char* string, const char* endmark);
-int G__fgetstream_newtemplate(char* string, const char* endmark);
-int G__fgetstream_template(char* string, const char* endmark);
-int G__getstream_template(const char* source, int* isrc, char* string, const char* endmark);
 int G__fgetspace();
 int G__fgetspace_peek();
-int G__fgetvarname(char* string, const char* endmark);
-int G__fgetname(char* string, const char* endmark);
-int G__getname(const char* source, int* isrc, char* string, const char* endmark);
-int G__getfullpath(char* string, char* pbegin, int i);
-int G__fdumpstream(char* string, const char* endmark);
-int G__fgetstream(char* string, const char* endmark);
-void G__fgetstream_peek(char* string, int nchars);
-int G__fgetstream_new(char* string, const char* endmark);
-int G__fgetstream_spaces(char* string, const char* endmark);
-int G__getstream(const char* source, int* isrc, char* string, const char* endmark);
 int G__fignorestream(const char* endmark);
 int G__ignorestream(const char* source, int* isrc, const char* endmark);
 void G__fignoreline();
@@ -46,9 +47,11 @@ int G__fgetline(char* string);
 void G__fsetcomment(G__comment_info* pcomment);
 void G__set_eolcallback(void* eolcallback);
 int G__fgetc();
+} // extern "C"
 
 #ifdef G__MULTIBYTE
 //______________________________________________________________________________
+extern "C"
 int G__CodingSystem(int c)
 {
    c &= 0x7f;
@@ -74,7 +77,7 @@ int G__CodingSystem(int c)
 #endif // G__MULTIBYTE
 
 //______________________________________________________________________________
-static int G__isstoragekeyword(char* buf)
+static int G__isstoragekeyword(const char* buf)
 {
    if (!buf) return(0);
    if (strcmp(buf, "const") == 0 ||
@@ -102,7 +105,7 @@ static int G__isstoragekeyword(char* buf)
 }
 
 //______________________________________________________________________________
-int G__fgetname_template(char* string, const char* endmark)
+int G__fgetname_template(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -124,12 +127,12 @@ int G__fgetname_template(char* string, const char* endmark)
    //    '     azAZ09*&^%/;  '
    //     ----------------^        return(';');
    // 
-   short i = 0, l;
+   size_t i = offset, l;
    int c, prev;
    short single_quote = 0, double_quote = 0, flag = 0, spaceflag, ignoreflag;
    int nest = 0;
    int tmpltnest = 0;
-   char *pp = string;
+   char *pp = string + offset;
    int pflag = 0;
    int start_line = G__ifile.line_number;
 
@@ -156,7 +159,7 @@ backtoreadtemplate:
          case '\r':
          case '\f':
             if ((single_quote == 0) && (double_quote == 0)) {
-               string[i] = '\0';  /* temporarily close the string */
+               string.Set(i, 0);  /* temporarily close the string */
                if (tmpltnest) {
                   if (G__isstoragekeyword(pp)) {
                      if (G__iscpp && strcmp("typename", pp) == 0) {
@@ -174,7 +177,7 @@ backtoreadtemplate:
                      pflag = 1;
                   }
                }
-               if (strlen(pp) < 8 && strncmp(pp, "typename", 8) == 0 && pp != string) {
+               if (strlen(pp) < 8 && strncmp(pp, "typename", 8) == 0 && pp != string + offset) {
                   i -= 8;
                }
                ignoreflag = 1;
@@ -200,7 +203,7 @@ backtoreadtemplate:
                ) {
                int lnest = 0;
                ++nest;
-               string[i] = '\0';
+               string.Set(i, 0);
                pp = string + i;
                while (pp > string && (pp[-1] != '<' || lnest)
                       && pp[-1] != ',' && pp[-1] != ' ') {
@@ -230,16 +233,16 @@ backtoreadtemplate:
 
          case '>':
             if ((single_quote == 0) && (double_quote == 0) &&
-                  strncmp(string, "operator", 8) != 0) {
+                  strncmp(string + offset, "operator", 8) != 0) {
                --nest;
                if (tmpltnest) --tmpltnest;
                if (nest < 0) {
-                  string[i] = '\0';
+                  string.Set(i, 0);
                   return(c);
                }
                else if (i && '>' == string[i-1]) {
                   /* A<A<int> > */
-                  string[i++] = ' ';
+                  string.Set(i++, ' ');
                }
                else if (i > 2 && isspace(string[i-1]) && '>' != string[i-2]) {
                   --i;
@@ -251,7 +254,7 @@ backtoreadtemplate:
             if ((single_quote == 0) && (double_quote == 0)) {
                --nest;
                if (nest < 0) {
-                  string[i] = '\0';
+                  string.Set(i, 0);
                   return(c);
                }
             }
@@ -260,7 +263,7 @@ backtoreadtemplate:
          case '/':
             if ((single_quote == 0) && (double_quote == 0)) {
                /* comment */
-               string[i++] = c ;
+               string.Set(i++, c);
 
                c = G__fgetc();
                switch (c) {
@@ -286,7 +289,7 @@ backtoreadtemplate:
             break;
 
          case '#':
-            if (single_quote == 0 && double_quote == 0 && (i == 0 || string[i-1] != '$')) {
+            if (single_quote == 0 && double_quote == 0 && (i == offset || string[i-1] != '$')) {
                G__pp_command();
                ignoreflag = 1;
 #ifdef G__TEMPLATECLASS
@@ -298,12 +301,12 @@ backtoreadtemplate:
          case EOF:
             G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
             G__unexpectedEOF("G__fgetname():2");
-            string[i] = '\0';
+            string.Set(i, 0);
             return(c);
 
          case '*':
          case '&':
-            if (i > 0 && ' ' == string[i-1] && nest && single_quote == 0 && double_quote == 0)
+            if (i > offset && ' ' == string[i-1] && nest && single_quote == 0 && double_quote == 0)
                --i;
             break;
 
@@ -314,7 +317,7 @@ backtoreadtemplate:
             spaceflag = 1;
 #ifdef G__MULTIBYTE
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc() ;
                G__CheckDBCS2ndByte(c);
             }
@@ -324,10 +327,10 @@ backtoreadtemplate:
 
       if (ignoreflag == 0) {
          if (pflag && (isalpha(c) || '_' == c)) {
-            string[i++] = ' ' ;
+            string.Set(i++, ' ');
          }
          pflag = 0;
-         string[i++] = c ;
+         string.Set(i++, c);
          G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return(EOF));
       }
 
@@ -345,7 +348,7 @@ backtoreadtemplate:
       }
       if (!flag) {
          if ('<' == c) {
-            if (strncmp(string, "operator", 8) == 0) string[i++] = c;
+            if (strncmp(string + offset, "operator", 8) == 0) string.Set(i++, c);
             flag = ignoreflag = 0;
             goto backtoreadtemplate;
          }
@@ -355,13 +358,13 @@ backtoreadtemplate:
       }
    }
 
-   string[i] = '\0';
+   string.Set(i, 0);
 
    return(c);
 }
 
 //______________________________________________________________________________
-int G__fgetstream_newtemplate(char* string, const char* endmark)
+int G__fgetstream_newtemplate(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -386,12 +389,12 @@ int G__fgetstream_newtemplate(char* string, const char* endmark)
    //      'abc=new xxx;'
    //      'func(new xxx);'
    // 
-   short i = 0, l;
+   size_t i = offset, l;
    int c, prev;
    int nest = 0, single_quote = 0, double_quote = 0, flag = 0, ignoreflag;
    int commentflag = 0;
-   char *pp = string;
-   short inew = 0;
+   char *pp = string + offset;
+   size_t inew = offset;
    int start_line = G__ifile.line_number;
 
    do {
@@ -414,7 +417,7 @@ int G__fgetstream_newtemplate(char* string, const char* endmark)
          case '\n':
          case '\r':
          case '\t':
-            string[i] = '\0';
+            string.Set(i, 0);
             if (G__isstoragekeyword(pp)) {
                pp = string + i + 1;
                commentflag = 0;
@@ -448,7 +451,7 @@ int G__fgetstream_newtemplate(char* string, const char* endmark)
             break;
          case '<':
             if ((single_quote == 0) && (double_quote == 0)) {
-               string[i] = 0;
+               string.Set(i, 0);
                if (G__defined_templateclass(pp)) ++nest;
                inew = i + 1;
                pp = string + i + 1;
@@ -469,7 +472,8 @@ int G__fgetstream_newtemplate(char* string, const char* endmark)
             if (0 == nest || (i && '-' == string[i-1])) break;
             else if (nest && i && '>' == string[i-1]
                      && 0 == double_quote && 0 == single_quote
-                    ) string[i++] = ' ';
+                     )
+               string.Set(i++, ' ');
          case '}':
          case ')':
          case ']':
@@ -493,13 +497,13 @@ int G__fgetstream_newtemplate(char* string, const char* endmark)
 
          case '\\':
             if (ignoreflag == 0) {
-               string[i++] = c ;
+               string.Set(i++, c);
                c = G__fgetc() ;
             }
             break;
 
          case '/':
-            if (0 == double_quote && 0 == single_quote && i > 0 && string[i-1] == '/' &&
+            if (0 == double_quote && 0 == single_quote && i > offset && string[i-1] == '/' &&
                   commentflag) {
                i--;
                G__fignoreline();
@@ -511,14 +515,14 @@ int G__fgetstream_newtemplate(char* string, const char* endmark)
             break;
 
          case '&':
-            if (i > 0 && ' ' == string[i-1] && nest && single_quote == 0 && double_quote == 0)
+            if (i > offset && ' ' == string[i-1] && nest && single_quote == 0 && double_quote == 0)
                --i;
             break;
 
          case '*':
             /* comment */
             if (0 == double_quote && 0 == single_quote) {
-               if (i > 0 && string[i-1] == '/' && commentflag) {
+               if (i > offset && string[i-1] == '/' && commentflag) {
                   G__skip_comment();
                   --i;
                   ignoreflag = 1;
@@ -532,7 +536,7 @@ int G__fgetstream_newtemplate(char* string, const char* endmark)
             break;
 
          case '#':
-            if (single_quote == 0 && double_quote == 0 && (i == 0 || string[i-1] != '$')) {
+            if (single_quote == 0 && double_quote == 0 && (i == offset || string[i-1] != '$')) {
                G__pp_command();
                ignoreflag = 1;
 #ifdef G__TEMPLATECLASS
@@ -544,13 +548,13 @@ int G__fgetstream_newtemplate(char* string, const char* endmark)
          case EOF:
             G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
             G__unexpectedEOF("G__fgetstream_newtemplate():2");
-            string[i] = '\0';
+            string.Set(i, 0);
             return(c);
 
 #ifdef G__MULTIBYTE
          default:
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc() ;
                G__CheckDBCS2ndByte(c);
             }
@@ -559,20 +563,19 @@ int G__fgetstream_newtemplate(char* string, const char* endmark)
       }
 
       if (ignoreflag == 0) {
-         string[i++] = c ;
-         G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return(EOF));
+         string.Set(i++, c);
       }
 
    }
    while (flag == 0) ;
 
-   string[i] = '\0';
+   string.Set(i, 0);
 
    return(c);
 }
 
 //______________________________________________________________________________
-int G__fgetstream_template(char* string, const char* endmark)
+int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -594,11 +597,11 @@ int G__fgetstream_template(char* string, const char* endmark)
    //      ' abc );'
    //       -----^    *string="abc"; return(')');
    // 
-   short i = 0, l;
+   size_t i = offset, l;
    int c, prev;
    short nest = 0, single_quote = 0, double_quote = 0, flag = 0, ignoreflag;
    int commentflag = 0;
-   char *pp = string;
+   char *pp = string + offset;
    int pflag = 0;
    int start_line = G__ifile.line_number;
 
@@ -624,7 +627,7 @@ int G__fgetstream_template(char* string, const char* endmark)
          case '\t':
             commentflag = 0;
             if ((single_quote == 0) && (double_quote == 0)) {
-               string[i] = '\0';
+               string.Set(i, 0);
                if (G__isstoragekeyword(pp)) {
                   if (G__iscpp && strcmp("typename", pp) == 0) {
                      i -= 8;
@@ -647,7 +650,7 @@ int G__fgetstream_template(char* string, const char* endmark)
          case '<':
             if ((single_quote == 0) && (double_quote == 0)) {
 #ifdef G__OLDIMPLEMENTATION1721_YET
-               string[i] = 0;
+               string.Set(i, 0);
                if (G__defined_templateclass(pp)) ++nest;
 #endif
                pp = string + i + 1;
@@ -677,7 +680,7 @@ int G__fgetstream_template(char* string, const char* endmark)
                }
                else if ('>' == c && i && '>' == string[i-1]) {
                   /* A<A<int> > */
-                  string[i++] = ' ';
+                  string.Set(i++, ' ');
                }
             }
             break;
@@ -690,13 +693,13 @@ int G__fgetstream_template(char* string, const char* endmark)
 
          case '\\':
             if (ignoreflag == 0) {
-               string[i++] = c ;
+               string.Set(i++, c);
                c = G__fgetc() ;
             }
             break;
 
          case '/':
-            if (0 == double_quote && 0 == single_quote && i > 0 && string[i-1] == '/' &&
+            if (0 == double_quote && 0 == single_quote && i > offset && string[i-1] == '/' &&
                   commentflag) {
                G__fignoreline();
                --i;
@@ -708,14 +711,14 @@ int G__fgetstream_template(char* string, const char* endmark)
             break;
 
          case '&':
-            if (i > 0 && ' ' == string[i-1] && nest && single_quote == 0 && double_quote == 0)
+            if (i > offset && ' ' == string[i-1] && nest && single_quote == 0 && double_quote == 0)
                --i;
             break;
 
          case '*':
             /* comment */
 #ifndef G__OLDIMPLEMENTATION1864
-            if (0 == double_quote && 0 == single_quote && i > 0) {
+            if (0 == double_quote && 0 == single_quote && i > offset) {
                if (string[i-1] == '/' && commentflag) {
                   G__skip_comment();
                   --i;
@@ -731,7 +734,7 @@ int G__fgetstream_template(char* string, const char* endmark)
             }
 
 #else
-            if (0 == double_quote && 0 == single_quote && i > 0 && string[i-1] == '/' &&
+            if (0 == double_quote && 0 == single_quote && i > offset && string[i-1] == '/' &&
                   commentflag) {
                G__skip_comment();
                --i;
@@ -741,7 +744,7 @@ int G__fgetstream_template(char* string, const char* endmark)
             break;
 
          case '#':
-            if (single_quote == 0 && double_quote == 0 && (i == 0 || string[i-1] != '$')) {
+            if (single_quote == 0 && double_quote == 0 && (i == offset || string[i-1] != '$')) {
                G__pp_command();
                ignoreflag = 1;
 #ifdef G__TEMPLATECLASS
@@ -753,7 +756,7 @@ int G__fgetstream_template(char* string, const char* endmark)
          case EOF:
             G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
             G__unexpectedEOF("G__fgetstream_template():2");
-            string[i] = '\0';
+            string.Set(i, 0);
             return(c);
             /* break; */
 
@@ -765,7 +768,7 @@ int G__fgetstream_template(char* string, const char* endmark)
 #ifdef G__MULTIBYTE
          default:
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc() ;
                G__CheckDBCS2ndByte(c);
             }
@@ -775,23 +778,23 @@ int G__fgetstream_template(char* string, const char* endmark)
 
       if (ignoreflag == 0) {
          if (pflag && (isalpha(c) || '_' == c)) {
-            string[i++] = ' ' ;
+            string.Set(i++, ' ');
          }
          pflag = 0;
-         string[i++] = c ;
+         string.Set(i++, c);
          G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return(EOF));
       }
 
    }
    while (flag == 0) ;
 
-   string[i] = '\0';
+   string.Set(i, 0);
 
    return(c);
 }
 
 //______________________________________________________________________________
-int G__getstream_template(const char* source, int* isrc, char* string, const char* endmark)
+int G__getstream_template(const char* source, int* isrc,G__FastAllocString&  string, size_t offset, const char* endmark)
 {
    //  char *source;      : source string. If NULL, read from input file
    //  int *isrc;         : char position of the *source if source!=NULL
@@ -810,10 +813,10 @@ int G__getstream_template(const char* source, int* isrc, char* string, const cha
    //    char *source="abcdefg * hijklmn) ;   "
    //                  -----------------^       *string="abcdefg*hijklmn"
    // 
-   short i = 0, l;
+   size_t i = offset, l;
    int c, prev;
    short nest = 0, single_quote = 0, double_quote = 0, flag = 0, ignoreflag;
-   char *pp = string;
+   char *pp = string + offset;
    int pflag = 0;
    int start_line = G__ifile.line_number;
 
@@ -864,7 +867,7 @@ int G__getstream_template(const char* source, int* isrc, char* string, const cha
                }
                else if ('>' == c && i && '>' == string[i-1]) {
                   /* A<A<int> > */
-                  string[i++] = ' ';
+                  string.Set(i++, ' ');
                }
             }
             break;
@@ -874,7 +877,7 @@ int G__getstream_template(const char* source, int* isrc, char* string, const cha
          case '\r':
          case '\t':
             if ((single_quote == 0) && (double_quote == 0)) {
-               string[i] = '\0';
+               string.Set(i, 0);
                if (G__isstoragekeyword(pp)) {
                   if (G__iscpp && strcmp("typename", pp) == 0) {
                      i -= 8;
@@ -887,7 +890,7 @@ int G__getstream_template(const char* source, int* isrc, char* string, const cha
                   }
                   break;
                }
-               else if (i>0 && '*' == string[i-1]) {
+               else if (i>offset && '*' == string[i-1]) {
                   pflag = 1;
                }
                ignoreflag = 1;
@@ -902,7 +905,7 @@ int G__getstream_template(const char* source, int* isrc, char* string, const cha
          case EOF:
             G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
             G__unexpectedEOF("G__getstream()");
-            string[i] = '\0';
+            string.Set(i, 0);
             break;
 
 
@@ -913,7 +916,7 @@ int G__getstream_template(const char* source, int* isrc, char* string, const cha
 #ifdef G__MULTIBYTE
          default:
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc() ;
                G__CheckDBCS2ndByte(c);
             }
@@ -923,17 +926,16 @@ int G__getstream_template(const char* source, int* isrc, char* string, const cha
 
       if (ignoreflag == 0) {
          if (pflag && (isalpha(c) || '_' == c)) {
-            string[i++] = ' ' ;
+            string.Set(i++, ' ');
          }
          pflag = 0;
-         string[i++] = c ;
-         G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return(EOF));
+         string.Set(i++, c);
       }
 
    }
    while (flag == 0) ;
 
-   string[i] = '\0';
+   string.Set(i, 0);
 
    return(c);
 }
@@ -1075,16 +1077,17 @@ int G__fgetspace_peek()
 }
 
 //______________________________________________________________________________
-int G__fgetvarname(char* string, const char* endmark)
+int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmark)
 {
-   short i = 0, l;
+   size_t i = offset;
+   int l;
    int c, prev;
    short nest = 0, single_quote = 0, double_quote = 0, flag = 0, spaceflag = 0, ignoreflag;
 #ifdef G__TEMPLATEMEMFUNC
    int tmpltflag = 0;
    int notmpltflag = 0;
 #endif
-   char* pp = string;
+   char* pp = (char*)string + offset;
    int start_line = G__ifile.line_number;
 
    do {
@@ -1108,7 +1111,7 @@ int G__fgetvarname(char* string, const char* endmark)
          case '\r':
          case '\f':
             if ((single_quote == 0) && (double_quote == 0)) {
-               string[i] = '\0';
+               string.Set(i, 0);
                if (tmpltflag && G__isstoragekeyword(pp)) {
                   c = ' ';
                   pp = string + i + 1;
@@ -1137,9 +1140,9 @@ int G__fgetvarname(char* string, const char* endmark)
             if ((single_quote == 0) && (double_quote == 0)) {
                pp = string + i + 1;
             }
-            if (notmpltflag || (8 == i && strncmp("operator", string, 8) == 0)
-                  || (9 == i && (strncmp("&operator", string, 9) == 0 ||
-                                 strncmp("*operator", string, 9) == 0))
+            if (notmpltflag || (8 == i - offset && strncmp("operator", string() + offset, 8) == 0)
+                || (9 == i - offset && (strncmp("&operator", string() + offset, 9) == 0 ||
+                                        strncmp("*operator", string() + offset, 9) == 0))
                ) {
                notmpltflag = 1;
                break;
@@ -1158,7 +1161,8 @@ int G__fgetvarname(char* string, const char* endmark)
 #ifdef G__TEMPLATEMEMFUNC
          case '>':
             if (!tmpltflag) break;
-            else if (nest && i && '>' == string[i-1]) string[i++] = ' ';
+            else if (nest && i && '>' == string[i-1])
+               string.Set(i++, ' ');
 #endif
          case '}':
          case ')':
@@ -1174,7 +1178,7 @@ int G__fgetvarname(char* string, const char* endmark)
          case '/':
             if ((single_quote == 0) && (double_quote == 0)) {
                /* comment */
-               string[i++] = c ;
+               string.Set(i++, c);
 
                c = G__fgetc();
                switch (c) {
@@ -1203,7 +1207,7 @@ int G__fgetvarname(char* string, const char* endmark)
                   case EOF:
                      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
                      G__unexpectedEOF("G__fgetvarname():1");
-                     string[i] = '\0';
+                     string.Set(i, 0);
                      return(c);
                   default:
                      fseek(G__ifile.fp, -1, SEEK_CUR);
@@ -1216,7 +1220,7 @@ int G__fgetvarname(char* string, const char* endmark)
             break;
 
          case '#':
-            if (single_quote == 0 && double_quote == 0 && (i == 0 || string[i-1] != '$')) {
+            if (single_quote == 0 && double_quote == 0 && (i == offset || string[i-1] != '$')) {
                G__pp_command();
                ignoreflag = 1;
 #ifdef G__TEMPLATECLASS
@@ -1228,7 +1232,7 @@ int G__fgetvarname(char* string, const char* endmark)
          case EOF:
             G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
             G__unexpectedEOF("G__fgetvarname():2");
-            string[i] = '\0';
+            string.Set(i, 0);
             return(c);
 
          case ',':
@@ -1239,7 +1243,7 @@ int G__fgetvarname(char* string, const char* endmark)
             spaceflag = 1;
 #ifdef G__MULTIBYTE
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc() ;
                G__CheckDBCS2ndByte(c);
             }
@@ -1248,20 +1252,20 @@ int G__fgetvarname(char* string, const char* endmark)
       }
 
       if (ignoreflag == 0) {
-         string[i++] = c ;
+         string.Set(i++, c);
          G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return(EOF));
       }
 
    }
    while (flag == 0) ;
 
-   string[i] = '\0';
+   string.Set(i, 0);
 
    return(c);
 }
 
 //______________________________________________________________________________
-int G__fgetname(char* string, const char* endmark)
+int G__fgetname(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -1283,7 +1287,7 @@ int G__fgetname(char* string, const char* endmark)
    //    '     azAZ09*&^%/;  '
    //     ----------------^        return(';');
    // 
-   short i = 0, l;
+   size_t i = offset, l;
    int c, prev;
    short single_quote = 0, double_quote = 0, flag = 0, spaceflag, ignoreflag;
    int start_line = G__ifile.line_number;
@@ -1336,7 +1340,7 @@ int G__fgetname(char* string, const char* endmark)
          case '/':
             if ((single_quote == 0) && (double_quote == 0)) {
                /* comment */
-               string[i++] = c ;
+               string.Set(i++, c);
 
                c = G__fgetc();
                switch (c) {
@@ -1362,7 +1366,7 @@ int G__fgetname(char* string, const char* endmark)
             break;
 
          case '#':
-            if (single_quote == 0 && double_quote == 0 && (i == 0 || string[i-1] != '$')) {
+            if (single_quote == 0 && double_quote == 0 && (i == offset || string[i-1] != '$')) {
                G__pp_command();
                ignoreflag = 1;
 #ifdef G__TEMPLATECLASS
@@ -1374,13 +1378,13 @@ int G__fgetname(char* string, const char* endmark)
          case EOF:
             G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
             G__unexpectedEOF("G__fgetname():2");
-            string[i] = '\0';
+            string.Set(i, 0);
             return(c);
          default:
             spaceflag = 1;
 #ifdef G__MULTIBYTE
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc() ;
                G__CheckDBCS2ndByte(c);
             }
@@ -1389,14 +1393,13 @@ int G__fgetname(char* string, const char* endmark)
       }
 
       if (ignoreflag == 0) {
-         string[i++] = c ;
-         G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return(EOF));
+         string.Set(i++, c);
       }
 
    }
    while (flag == 0) ;
 
-   string[i] = '\0';
+   string.Set(i, 0);
 
    return(c);
 }
@@ -1504,7 +1507,7 @@ int G__getname(const char* source, int* isrc, char* string, const char* endmark)
             break;
 
          case '#':
-            if (single_quote == 0 && double_quote == 0 && (i == 0 || string[i-1] != '$')) {
+            if (single_quote == 0 && double_quote == 0 && (i == offset || string[i-1] != '$')) {
                G__pp_command();
                ignoreflag = 1;
 #ifdef G__TEMPLATECLASS
@@ -1561,7 +1564,7 @@ int G__getfullpath(char* string, char* pbegin, int i)
 }
 
 //______________________________________________________________________________
-int G__fdumpstream(char* string, const char* endmark)
+int G__fdumpstream(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -1569,11 +1572,11 @@ int G__fdumpstream(char* string, const char* endmark)
    //   This function is used only for reading pointer to function arguments.
    //     type (*)(....)  type(*p2f)(....)
    //
-   short i = 0, l;
+   size_t i = offset, l;
    int c, prev;
    short nest = 0, single_quote = 0, double_quote = 0, flag = 0, ignoreflag;
    int commentflag = 0;
-   char *pbegin = string;
+   char *pbegin = string + offset;
    int tmpltnest = 0;
    int start_line = G__ifile.line_number;
 
@@ -1600,7 +1603,7 @@ int G__fdumpstream(char* string, const char* endmark)
             commentflag = 0;
             if ((single_quote == 0) && (double_quote == 0)) {
                c = ' ';
-               if (i > 0 && isspace(string[i-1])) {
+               if (i > offset && isspace(string[i-1])) {
                   ignoreflag = 1;
                }
                else {
@@ -1612,7 +1615,7 @@ int G__fdumpstream(char* string, const char* endmark)
 
          case '<':
             if ((single_quote == 0) && (double_quote == 0)) {
-               string[i] = 0;
+               string.Set(i, 0);
                if (G__defined_templateclass(pbegin)) ++tmpltnest;
             }
             break;
@@ -1656,7 +1659,7 @@ int G__fdumpstream(char* string, const char* endmark)
 
          case '\\':
             if (ignoreflag == 0) {
-               string[i++] = c ;
+               string.Set(i++, c);
                c = G__fgetc() ;
             }
             break;
@@ -1670,7 +1673,7 @@ int G__fdumpstream(char* string, const char* endmark)
 
 
          case '/':
-            if (0 == double_quote && 0 == single_quote && i > 0 && string[i-1] == '/' &&
+            if (0 == double_quote && 0 == single_quote && i > offset && string[i-1] == '/' &&
                   commentflag) {
                G__fignoreline();
                --i;
@@ -1683,7 +1686,7 @@ int G__fdumpstream(char* string, const char* endmark)
 
          case '*':
             /* comment */
-            if (0 == double_quote && 0 == single_quote && i > 0 && string[i-1] == '/' &&
+            if (0 == double_quote && 0 == single_quote && i > offset && string[i-1] == '/' &&
                   commentflag) {
                G__skip_comment();
                --i;
@@ -1700,7 +1703,7 @@ int G__fdumpstream(char* string, const char* endmark)
             break;
 
          case '#':
-            if (single_quote == 0 && double_quote == 0 && (i == 0 || string[i-1] != '$')) {
+            if (single_quote == 0 && double_quote == 0 && (i == offset || string[i-1] != '$')) {
                G__pp_command();
                ignoreflag = 1;
 #ifdef G__TEMPLATECLASS
@@ -1712,13 +1715,13 @@ int G__fdumpstream(char* string, const char* endmark)
          case EOF:
             G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
             G__unexpectedEOF("G__fdumpstream():2");
-            string[i] = '\0';
+            string.Set(i, 0);
             return(c);
 
 #ifdef G__MULTIBYTE
          default:
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc() ;
                G__CheckDBCS2ndByte(c);
             }
@@ -1727,20 +1730,19 @@ int G__fdumpstream(char* string, const char* endmark)
       }
 
       if (ignoreflag == 0) {
-         string[i++] = c ;
-         G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return(EOF));
+         string.Set(i++, c);
       }
 
    }
    while (flag == 0) ;
 
-   string[i] = '\0';
+   string.Set(i, 0);
 
    return(c);
 }
 
 //______________________________________________________________________________
-int G__fgetstream(char* string, const char* endmark)
+int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    // -- Read source file until specified endmark char appears.
    //
@@ -1762,7 +1764,7 @@ int G__fgetstream(char* string, const char* endmark)
    //      ' abc );'
    //       -----^    *string="abc"; return(')');
    // 
-   short i = 0;
+   size_t i = offset;
    short l = 0;
    int c = 0;
    int prev = 0;
@@ -1827,12 +1829,12 @@ int G__fgetstream(char* string, const char* endmark)
             break;
          case '\\':
             if (!ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc();
             }
             break;
          case '/':
-            if (!double_quote && !single_quote && (i > 0) && (string[i-1] == '/') && commentflag) {
+            if (!double_quote && !single_quote && (i > offset) && (string[i-1] == '/') && commentflag) {
                G__fignoreline();
                --i;
                ignoreflag = 1;
@@ -1847,7 +1849,7 @@ int G__fgetstream(char* string, const char* endmark)
             break;
          case '*':
             // comment
-            if (!double_quote && !single_quote && (i > 0) && (string[i-1] == '/') && commentflag) {
+            if (!double_quote && !single_quote && (i > offset) && (string[i-1] == '/') && commentflag) {
                G__skip_comment();
                --i;
                ignoreflag = 1;
@@ -1865,13 +1867,13 @@ int G__fgetstream(char* string, const char* endmark)
          case EOF:
             G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
             G__unexpectedEOF("G__fgetstream():2");
-            string[i] = '\0';
+            string.Set(i, 0);
             return c;
          // --
 #ifdef G__MULTIBYTE
          default:
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc() ;
                G__CheckDBCS2ndByte(c);
             }
@@ -1879,12 +1881,11 @@ int G__fgetstream(char* string, const char* endmark)
 #endif // G__MULTIBYTE
       }
       if (!ignoreflag) {
-         string[i++] = c;
-         G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return EOF);
+         string.Set(i++, c);
       }
    }
    while (!flag);
-   string[i] = '\0';
+   string.Set(i, 0);
    return c;
 }
 
@@ -1928,7 +1929,7 @@ void G__fgetstream_peek(char* string, int nchars)
 }
 
 //______________________________________________________________________________
-int G__fgetstream_new(char* string, const char* endmark)
+int G__fgetstream_new(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    // -- Read source file until specified endmark char appears, keep space after 'new' and 'const' keywords.
    //
@@ -1954,7 +1955,7 @@ int G__fgetstream_new(char* string, const char* endmark)
    //      'func(new xxx);'
    //      'func(const int xxx);'
    // 
-   short i = 0;
+   size_t i = offset;
    short l = 0;
    int c = 0;
    int prev = 0;
@@ -1964,7 +1965,7 @@ int G__fgetstream_new(char* string, const char* endmark)
    int flag = 0;
    int ignoreflag = 0;
    int commentflag = 0;
-   short inew = 0;
+   size_t inew = offset;
    int start_line = G__ifile.line_number;
    do {
       ignoreflag = 0;
@@ -2045,12 +2046,12 @@ int G__fgetstream_new(char* string, const char* endmark)
             break;
          case '\\':
             if (!ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc();
             }
             break;
          case '/':
-            if (!double_quote && !single_quote && (i > 0) && (string[i-1] == '/') && commentflag) {
+            if (!double_quote && !single_quote && (i > offset) && (string[i-1] == '/') && commentflag) {
                --i;
                G__fignoreline();
                ignoreflag = 1;
@@ -2061,7 +2062,7 @@ int G__fgetstream_new(char* string, const char* endmark)
             break;
          case '*':
             // comment
-            if (!double_quote && !single_quote && (i > 0) && (string[i-1] == '/') && commentflag) {
+            if (!double_quote && !single_quote && (i > offset) && (string[i-1] == '/') && commentflag) {
                G__skip_comment();
                --i;
                ignoreflag = 1;
@@ -2080,13 +2081,13 @@ int G__fgetstream_new(char* string, const char* endmark)
          case EOF:
             G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
             G__unexpectedEOF("G__fgetstream_new():2");
-            string[i] = '\0';
+            string.Set(i, 0);
             return c;
          // --
 #ifdef G__MULTIBYTE
          default:
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc() ;
                G__CheckDBCS2ndByte(c);
             }
@@ -2095,17 +2096,17 @@ int G__fgetstream_new(char* string, const char* endmark)
          // --
       }
       if (!ignoreflag) {
-         string[i++] = c;
+         string.Set(i++, c);
          G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return EOF);
       }
    }
    while (!flag);
-   string[i] = '\0';
+   string.Set(i, 0);
    return c;
 }
 
 //______________________________________________________________________________
-int G__fgetstream_spaces(char* string, const char* endmark)
+int G__fgetstream_spaces(G__FastAllocString& string, size_t offset, const char *endmark)
 {
    // -- Read source file until specified endmark char appears, retain whitespace (trimmed and collapsed).
    //
@@ -2124,7 +2125,7 @@ int G__fgetstream_spaces(char* string, const char* endmark)
    //      ' abc );'
    //       -----^    *string="abc"; return(')');
    // 
-   short i = 0;
+   size_t i = offset;
    short l = 0;
    int c = 0;
    int prev = 0;
@@ -2187,12 +2188,12 @@ int G__fgetstream_spaces(char* string, const char* endmark)
             break;
          case '\\':
             if (!ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc();
             }
             break;
          case '/':
-            if (!double_quote && !single_quote && (i > 0) && (string[i-1] == '/') && commentflag) {
+            if (!double_quote && !single_quote && (i > offset) && (string[i-1] == '/') && commentflag) {
                --i;
                G__fignoreline();
                ignoreflag = 1;
@@ -2203,7 +2204,7 @@ int G__fgetstream_spaces(char* string, const char* endmark)
             break;
          case '*':
             // comment
-            if (!double_quote && !single_quote && (i > 0) && (string[i-1] == '/') && commentflag) {
+            if (!double_quote && !single_quote && (i > offset) && (string[i-1] == '/') && commentflag) {
                G__skip_comment();
                --i;
                ignoreflag = 1;
@@ -2222,13 +2223,13 @@ int G__fgetstream_spaces(char* string, const char* endmark)
          case EOF:
             G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
             G__unexpectedEOF("G__fgetstream_new():2");
-            string[i] = '\0';
+            string.Set(i, 0);
             return c;
          // --
 #ifdef G__MULTIBYTE
          default:
             if (G__IsDBCSLeadByte(c) && !ignoreflag) {
-               string[i++] = c;
+               string.Set(i++, c);
                c = G__fgetc();
                G__CheckDBCS2ndByte(c);
             }
@@ -2237,16 +2238,16 @@ int G__fgetstream_spaces(char* string, const char* endmark)
          // --
       }
       if (!ignoreflag) {
-         string[i++] = c;
+         string.Set(i++, c);
          G__CHECK(G__SECURE_BUFFER_SIZE, i >= G__LONGLINE, return EOF);
       }
       last_was_space = (c == ' ');
    }
    while (!flag);
-   while ((i > 0) && (string[i-1] == ' ')) {
+   while ((i > offset) && (string[i-1] == ' ')) {
       --i;
    }
-   string[i] = '\0';
+   string.Set(i, 0);
    return c;
 }
 
@@ -2800,8 +2801,6 @@ int G__fgetc_for_peek()
    int c = fgetc(G__ifile.fp);
    return c;
 }
-
-} // extern "C"
 
 /*
  * Local Variables:

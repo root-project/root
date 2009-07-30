@@ -180,7 +180,7 @@ int G__include_file()
 {
   int result;
   int c;
-  char filename[G__MAXFILENAME];
+  G__FastAllocString filename(G__MAXFILENAME);
   int i=0;
   int storeit=0;
   /* char sysinclude[G__MAXFILENAME]; */
@@ -214,14 +214,14 @@ int G__include_file()
     default:
       if(!isspace(c)) {
         if(1==storeit) {
-          filename[i++]=c;
-          filename[i]='\0';
+          filename.Set(i++, c);
+          filename.Set(i, 0);
         }
         else if(-1!=storeit) {
           storeit=1;
           expandflag=1;
-          filename[i++]=c;
-          filename[i]='\0';
+          filename.Set(i++, c);
+          filename.Set(i, 0);
         }
       }
       else if(expandflag) {
@@ -239,11 +239,11 @@ int G__include_file()
     G__hash(filename,hash,ig15);
     var = G__getvarentry(filename,hash,&ig15,&G__global,G__p_local);
     if(var) {
-      strcpy(filename,*(char**)var->p[ig15]);
+      filename = *(char**)var->p[ig15];
       G__kindofheader=G__USERHEADER;
     }
     else {
-      G__fprinterr(G__serr,"Error: cannot expand #include %s",filename);
+       G__fprinterr(G__serr,"Error: cannot expand #include %s",filename());
       G__genericerror(NULL);
       if('#'==c) G__fignoreline();
       return(G__LOADFILE_FAILURE);
@@ -276,7 +276,7 @@ int G__include_file()
   if('#'==c) {
     if(G__LOADFILE_FAILURE==result && G__ispragmainclude) {
       G__ispragmainclude=0;
-      c = G__fgetname(filename,"\n\r");
+      c = G__fgetname(filename, 0, "\n\r");
       store_globalcomp = G__globalcomp;
       if(++G__gcomplevel>=G__gcomplevellimit) G__globalcomp=G__NOLINK;
       if('\n'!=c && '\r'!=c) result = G__include_file();
@@ -297,14 +297,14 @@ int G__include_file()
 ******************************************************************/
 const char *G__getmakeinfo(const char *item)
 {
-  char makeinfo[G__MAXFILENAME];
+  G__FastAllocString makeinfo(G__MAXFILENAME);
   FILE *fp;
-  char line[G__LARGEBUF];
-  char argbuf[G__LARGEBUF];
+  G__FastAllocString line(G__LARGEBUF);
+  G__FastAllocString argbuf(G__LARGEBUF);
   char *arg[G__MAXARG];
   int argn;
   char *p;
-  static char buf[G__ONELINE];
+  static G__FastAllocString buf(G__ONELINE);
 
   buf[0]='\0';
 
@@ -333,7 +333,7 @@ const char *G__getmakeinfo(const char *item)
   * Environment variable overrides MAKEINFO file if exists.
   ****************************************************************/
   if((p=getenv(item)) && p[0] && !isspace(p[0])) {
-    strcpy(buf,p);
+    buf = p;
     return(buf);
   }
 
@@ -343,15 +343,15 @@ const char *G__getmakeinfo(const char *item)
   /* Get $CINTSYSDIR/MAKEINFO file name */
   if(G__getcintsysdir()) return(buf);
 #ifdef G__VMS
-  sprintf(makeinfo,"%s%s/MAKEINFO.txt",G__cintsysdir);
+  makeinfo.Format("%s%s/MAKEINFO.txt",G__cintsysdir);
 #else
-  sprintf(makeinfo,"%s/%s/MAKEINFO",G__cintsysdir, G__CFG_COREVERSION);
+  makeinfo.Format("%s/%s/MAKEINFO",G__cintsysdir, G__CFG_COREVERSION);
 #endif
 
   /* Open MAKEINFO file */
   fp = fopen(makeinfo,"r");
   if(!fp) {
-    G__fprinterr(G__serr,"Error: cannot open %s\n",makeinfo);
+     G__fprinterr(G__serr,"Error: cannot open %s\n",makeinfo());
     G__fprinterr(G__serr,
      "!!! There are examples of MAKEINFO files under %s/platform/ !!!\n"
             ,G__cintsysdir);
@@ -361,14 +361,14 @@ const char *G__getmakeinfo(const char *item)
   }
 
   /* Read the MAKEINFO file */
-  while(G__readline(fp,line,argbuf,&argn,arg)) {
+  while(G__readline_FastAlloc(fp,line,argbuf,&argn,arg)) {
     if(argn>2 && strcmp(arg[1],item)==0) {
       p = strchr(arg[0],'=');
       if(p) {
         do {
           ++p;
         } while(isspace(*p));
-        strcpy(buf,p);
+        buf = p;
         fclose(fp);
         return(buf);
       }
@@ -564,13 +564,6 @@ int G__matchfilename(int i1,const char *filename)
 {
 #if  !defined(__CINT__)
 
-#ifdef G__WIN32
-  char i1name[_MAX_PATH],fullfile[_MAX_PATH];
-#else
-  struct stat statBufItem;
-  struct stat statBuf;
-#endif
-
   if (G__srcfile[i1].filename==0) {
     return 0;
   }
@@ -579,10 +572,14 @@ int G__matchfilename(int i1,const char *filename)
   }
 
 #ifdef G__WIN32
-  _fullpath( i1name, G__srcfile[i1].filename, _MAX_PATH );
+   G__FastAllocString i1name(_MAX_PATH);
+   G__FastAllocString fullfile(_MAX_PATH);
+  _fullpath( iname, G__srcfile[i1].filename, _MAX_PATH );
   _fullpath( fullfile, filename, _MAX_PATH );
   if((stricmp(i1name, fullfile)==0)) return 1;
 #else
+  struct stat statBufItem;
+  struct stat statBuf;
   if (   ( 0 == stat( filename, & statBufItem ) )
       && ( 0 == stat( G__srcfile[i1].filename, & statBuf ) )
       && ( statBufItem.st_dev == statBuf.st_dev )     // Files on same device
@@ -603,7 +600,7 @@ int G__matchfilename(int i1,const char *filename)
   if(filenamebase) {
     char *parentdir = (char*)G__strrstr(G__srcfile[i1].filename,"../");
     if(!parentdir && strcmp(filename,filenamebase+2)==0) {
-      char buf[G__ONELINE];
+      G__FastAllocString buf(G__ONELINE);
 #if defined(G__WIN32)
       char *p;
 #endif
@@ -613,9 +610,8 @@ int G__matchfilename(int i1,const char *filename)
       p=buf;
       while((p=strchr(p,'\\'))) *p='/';
       if(strlen(buf)>1 && ':'==buf[1]) {
-        char buf2[G__ONELINE];
-        strcpy(buf2,buf+2);
-        strcpy(buf,buf2);
+        G__FastAllocString buf2(buf+2);
+        buf.Swap(buf2);
       }
 #elif defined(G__POSIX) || defined(G__ROOT)
       getcwd(buf,G__ONELINE);
@@ -640,7 +636,7 @@ const char* G__stripfilename(const char *filename)
   filenamebase = G__strrstr(filename,"./");
   if(filenamebase) {
     const char *parentdir = G__strrstr(filename,"../");
-    char buf[G__ONELINE];
+    G__FastAllocString buf(G__ONELINE);
 #if defined(G__WIN32)
     char *p;
 #endif
@@ -651,9 +647,8 @@ const char* G__stripfilename(const char *filename)
     p=buf;
     while((p=strchr(p,'\\'))) *p='/';
     if(strlen(buf)>1 && ':'==buf[1]) {
-      char buf2[G__ONELINE];
-      strcpy(buf2,buf+2);
-      strcpy(buf,buf2);
+      G__FastAllocString buf2(buf+2);
+      buf.Swap(buf2);
     }
 #elif defined(G__POSIX) || defined(G__ROOT)
     getcwd(buf,G__ONELINE);
@@ -730,14 +725,13 @@ int G__unloadfile(const char *filename)
   int hash;
   /* int from = -1 ,to = -1, next; */
   int flag;
-  char buf[G__MAXFILENAME];
+  G__FastAllocString buf(filename);
   char *fname;
   char *scope;
   int envtagnum;
 
   G__LockCriticalSection();
 
-  strcpy(buf,filename);
   fname = (char*)G__strrstr(buf,"::");
   if(fname) {
     scope = buf;
@@ -1188,13 +1182,11 @@ int G__loadfile_tmpfile(FILE *fp)
 
 int G__statfilename(const char *filenamein, struct stat *statBuf)
 {
-   char filename[G__ONELINE];
-   char workname[G__ONELINE];
+   G__FastAllocString filename(filenamein);
+   G__FastAllocString workname(G__ONELINE);
    int hash,temp;
    char addpost[3][8];
    int res = -1;
-   
-   strcpy(filename,filenamein);
    
    /*************************************************
     * delete space chars at the end of filename
@@ -1247,7 +1239,7 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
 #endif
           G__ifile.name[0] != '\0') {
          char* p;
-         strcpy(workname,G__ifile.name);
+         workname = G__ifile.name;
 #ifdef G__WIN32
          p = strrchr (workname, '/');
          {
@@ -1271,7 +1263,7 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        * try ./filename
        **********************************************/
       if(G__USERHEADER==G__kindofheader) {
-         sprintf(workname,"%s%s",filename,addpost[i2]);
+         workname.Format("%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }  else {
@@ -1283,8 +1275,8 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        **********************************************/
       struct G__includepath *ipath = &G__ipathentry;
       while(res!=0 && ipath->pathname) {
-         sprintf(workname,"%s%s%s%s"
-                 ,ipath->pathname,G__psep,filename,addpost[i2]);
+         workname.Format("%s%s%s%s"
+                         ,ipath->pathname,G__psep,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          ipath = ipath->next;
       }
@@ -1296,8 +1288,8 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        * try $CINTSYSDIR/stl
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"%s%s%s%sstl%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
-                 ,G__psep,G__psep,filename,addpost[i2]);
+         workname.Format("%s%s%s%sstl%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
+                         ,G__psep,G__psep,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }
@@ -1307,8 +1299,8 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        **********************************************/
       /* G__getcintsysdir(); */
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"%s%s%s%slib%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
-                 ,G__psep,G__psep,filename,addpost[i2]);
+         workname.Format("%s%s%s%slib%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
+                         ,G__psep,G__psep,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }
@@ -1318,8 +1310,8 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        * try include/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"include%s%s%s"
-                 ,G__psep,filename,addpost[i2]);
+         workname.Format("include%s%s%s"
+                         ,G__psep,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }
@@ -1328,8 +1320,8 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        **********************************************/
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"stl%s%s%s"
-                 ,G__psep,filename,addpost[i2]);
+         workname.Format("stl%s%s%s"
+                         ,G__psep,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }         
@@ -1340,7 +1332,7 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        * try /msdev/include
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"/msdev/include/%s%s",filename,addpost[i2]);
+         workname.Format("/msdev/include/%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }
@@ -1351,7 +1343,7 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        * try /sc/include
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"/sc/include/%s%s",filename,addpost[i2]);
+         workname.Format("/sc/include/%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }
@@ -1362,7 +1354,7 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        * try /usr/include/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"/usr/include/%s%s",filename,addpost[i2]);
+         workname.Format("/usr/include/%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }
@@ -1373,7 +1365,7 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        * try /usr/include/g++/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"/usr/include/g++/%s%s",filename,addpost[i2]);
+         workname.Format("/usr/include/g++/%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }
@@ -1385,7 +1377,7 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        * try /usr/include/CC/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"/usr/include/CC/%s%s",filename,addpost[i2]);
+         workname.Format("/usr/include/CC/%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }         
@@ -1396,8 +1388,8 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
        * try /usr/include/codelibs/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-         sprintf(workname,"/usr/include/codelibs/%s%s"
-                 ,filename,addpost[i2]);
+         workname.Format("/usr/include/codelibs/%s%s"
+                         ,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
          if (res==0) return res;
       }
@@ -1435,9 +1427,9 @@ int G__loadfile(const char *filenamein)
   struct G__includepath *ipath;
   int store_nobreak;
 #ifdef G__TMPFILE
-  char prepname[G__MAXFILENAME];
+  G__FastAllocString prepname(G__MAXFILENAME);
 #else
-  char prepname[L_tmpnam+10];
+  G__FastAllocString prepname(L_tmpnam+10);
 #endif
   int store_step;
   int null_entry = -1;
@@ -1464,8 +1456,7 @@ int G__loadfile(const char *filenamein)
   char soext[]=SOEXT;
 #endif
   char hdrprop = G__NONCINTHDR;
-  char filename[G__ONELINE];
-  strcpy(filename,filenamein);
+  G__FastAllocString filename(filenamein);
 
 
   /*************************************************
@@ -1601,7 +1592,7 @@ int G__loadfile(const char *filenamein)
                   cintdlls = (!strncmp(filename+len-excludelen[i], excludelist[i], excludelen[i]));
                }
             }
-            if (!cintdlls) G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename);
+            if (!cintdlls) G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename());
         }
       /******************************************************
        * restore input file information to G__ifile
@@ -1650,7 +1641,7 @@ int G__loadfile(const char *filenamein)
     /**********************************************
      * -p option. open preprocessed tmpfile
      **********************************************/
-    sprintf(G__ifile.name,"%s",filename);
+     strcpy(G__ifile.name, filename);
 #ifndef G__OLDIMPLEMENTATION1922
     if(G__fons_comment && G__cpp && G__NOLINK!=G__globalcomp) {
 #ifndef G__WIN32
@@ -1663,7 +1654,7 @@ int G__loadfile(const char *filenamein)
       G__ifile.fp = G__copytotmpfile(prepname);
       if(G__ifile.fp) {
         remove(prepname);
-        strcpy(prepname,"(tmpfile)");
+        prepname = "(tmpfile)";
       }
       else {
 #ifndef G__WIN32
@@ -1676,7 +1667,7 @@ int G__loadfile(const char *filenamein)
 #else /* 1922 */
     G__ifile.fp = G__copytotmpfile(prepname);
     remove(prepname);
-    strcpy(prepname,"(tmpfile)");
+    prepname = "(tmpfile)";
 #endif /* 1922 */
     G__kindofheader = G__USERHEADER;
   }
@@ -1690,20 +1681,24 @@ int G__loadfile(const char *filenamein)
         if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
                      strcmp(filename+len-3,".dl")==0 ||
                      strcmp(filename+len-3,".so")==0))) {
-          strcpy(filename+len-3,G__getmakeinfo1("DLLPOST"));
+           filename[len - 3] = 0;
+           filename += G__getmakeinfo1("DLLPOST");
         }
         else if((len>4&& (strcmp(filename+len-4,".dll")==0 ||
                           strcmp(filename+len-4,".DLL")==0))) {
-          strcpy(filename+len-4,G__getmakeinfo1("DLLPOST"));
+           filename[len - 4] = 0;
+           filename += G__getmakeinfo1("DLLPOST");
         }
         else if((len>2&& (strcmp(filename+len-2,".a")==0 ||
                           strcmp(filename+len-2,".A")==0))) {
-          strcpy(filename+len-2,G__getmakeinfo1("DLLPOST"));
+           filename[len - 2] = 0;
+           filename += G__getmakeinfo1("DLLPOST");
         }
 #if defined(R__FBSD) || defined(R__OBSD)
         else if (len>strlen(soext) &&
                  strcmp(filename+len-strlen(soext),soext)==0) {
-          strcpy(filename+len-strlen(soext),G__getmakeinfo1("DLLPOST"));
+           filename[len - strlen(soext)] = 0;
+           filename += G__getmakeinfo1("DLLPOST");
         }
 #endif
       }
@@ -1750,9 +1745,9 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       if(G__USERHEADER==G__kindofheader) {
 #ifdef G__VMS
-        sprintf(G__ifile.name,"%s",filename);
+         sprintf(G__ifile.name,"%s",filename());
 #else
-        sprintf(G__ifile.name,"%s%s",filename,addpost[i2]);
+         sprintf(G__ifile.name,"%s%s",filename(),addpost[i2]);
 #endif
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
@@ -1772,7 +1767,7 @@ int G__loadfile(const char *filenamein)
       ipath = &G__ipathentry;
       while(G__ifile.fp==NULL && ipath->pathname) {
         sprintf(G__ifile.name,"%s%s%s%s"
-                ,ipath->pathname,G__psep,filename,addpost[i2]);
+                ,ipath->pathname,G__psep,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1798,7 +1793,7 @@ int G__loadfile(const char *filenamein)
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
         sprintf(G__ifile.name,"%s%s%s%sinclude%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
-                ,G__psep,G__psep,filename,addpost[i2]);
+                ,G__psep,G__psep,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1819,7 +1814,7 @@ int G__loadfile(const char *filenamein)
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
         sprintf(G__ifile.name,"%s%s%s%sstl%s%s%s",G__cintsysdir, G__psep, G__CFG_COREVERSION,
-                G__psep, G__psep, filename,addpost[i2]);
+                G__psep, G__psep, filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1840,7 +1835,7 @@ int G__loadfile(const char *filenamein)
       /* G__getcintsysdir(); */
       if('\0'!=G__cintsysdir[0]) {
         sprintf(G__ifile.name,"%s%s%s%slib%s%s%s",G__cintsysdir, G__psep, G__CFG_COREVERSION,
-                G__psep, G__psep,filename,addpost[i2]);
+                G__psep, G__psep,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1857,7 +1852,7 @@ int G__loadfile(const char *filenamein)
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
         sprintf(G__ifile.name,"include%s%s%s"
-                ,G__psep,filename,addpost[i2]);
+                ,G__psep,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1878,7 +1873,7 @@ int G__loadfile(const char *filenamein)
       G__getcintsysdir();
       if('\0'!=G__cintsysdir[0]) {
         sprintf(G__ifile.name,"stl%s%s%s"
-                ,G__psep,filename,addpost[i2]);
+                ,G__psep,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1899,7 +1894,7 @@ int G__loadfile(const char *filenamein)
        * try /msdev/include
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-        sprintf(G__ifile.name,"/msdev/include/%s%s",filename,addpost[i2]);
+         sprintf(G__ifile.name,"/msdev/include/%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1915,7 +1910,7 @@ int G__loadfile(const char *filenamein)
        * try /sc/include
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-        sprintf(G__ifile.name,"/sc/include/%s%s",filename,addpost[i2]);
+         sprintf(G__ifile.name,"/sc/include/%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1933,7 +1928,7 @@ int G__loadfile(const char *filenamein)
       if('\0'!=G__cintsysdir[0]) {
         /*  sprintf(G__ifile.name,getenv("ROOTSYS"));
             sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-        sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename);
+         sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename());
 
         G__ifile.fp = fopen(G__ifile.name,"r");
         /*G__globalcomp=G__store_globalcomp;*/
@@ -1946,7 +1941,7 @@ int G__loadfile(const char *filenamein)
       if('\0'!=G__cintsysdir[0]) {
         /*   sprintf(G__ifile.name,"%s",G__cintsysdir);
              sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-        sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
+         sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename());
 
         G__ifile.fp = fopen(G__ifile.name,"r");
         hdrprop = G__CINTHDR;
@@ -1958,7 +1953,7 @@ int G__loadfile(const char *filenamein)
        * try sys$common:[decc$lib.reference.decc$rtldef..]
        **********************************************/
 
-      sprintf(G__ifile.name,"sys$common:decc$lib.reference.decc$rtdef]%s",filename);
+      sprintf(G__ifile.name,"sys$common:decc$lib.reference.decc$rtdef]%s",filename());
 
       G__ifile.fp = fopen(G__ifile.name,"r");
       G__globalcomp=G__store_globalcomp;
@@ -1972,7 +1967,7 @@ int G__loadfile(const char *filenamein)
        * try /usr/include/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-        sprintf(G__ifile.name,"/usr/include/%s%s",filename,addpost[i2]);
+         sprintf(G__ifile.name,"/usr/include/%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -1988,7 +1983,7 @@ int G__loadfile(const char *filenamein)
        * try /usr/include/g++/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-        sprintf(G__ifile.name,"/usr/include/g++/%s%s",filename,addpost[i2]);
+         sprintf(G__ifile.name,"/usr/include/g++/%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -2005,7 +2000,7 @@ int G__loadfile(const char *filenamein)
        * try /usr/include/CC/filename
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
-        sprintf(G__ifile.name,"/usr/include/CC/%s%s",filename,addpost[i2]);
+         sprintf(G__ifile.name,"/usr/include/CC/%s%s",filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -2024,7 +2019,7 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       if('\0'!=G__cintsysdir[0]) {
         sprintf(G__ifile.name,"/usr/include/codelibs/%s%s"
-                ,filename,addpost[i2]);
+                ,filename(),addpost[i2]);
 #ifndef G__WIN32
         G__ifile.fp = fopen(G__ifile.name,"r");
 #else
@@ -2089,7 +2084,7 @@ int G__loadfile(const char *filenamein)
     G__step=store_step;
     G__globalcomp=G__store_globalcomp;
     if(0==G__ispragmainclude) {
-      G__fprinterr(G__serr,"Error: cannot open file \"%s\" ", filename);
+       G__fprinterr(G__serr,"Error: cannot open file \"%s\" ", filename());
       G__genericerror((char*)NULL);
     }
     G__iscpp=store_iscpp;
@@ -2181,7 +2176,7 @@ int G__loadfile(const char *filenamein)
   }
 
   if(G__debugtrace) {
-    G__fprinterr(G__serr,"LOADING file=%s:%s:%s\n",filename,G__ifile.name,prepname);
+     G__fprinterr(G__serr,"LOADING file=%s:%s:%s\n",filename(),G__ifile.name,prepname());
   }
   if(G__debug) {
     G__fprinterr(G__serr,"%-5d",G__ifile.line_number);
@@ -2479,7 +2474,7 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
                    ,const char *includepath)
 {
   /* char *envcpp; */
-  char tmpfile[G__MAXFILENAME];
+  G__FastAllocString tmpfile(G__MAXFILENAME);
   int tmplen;
   FILE *fp;
   int flag=0;
@@ -2627,7 +2622,7 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
     }
     else {
       /* otherwise, simply copy the inname */
-      strcpy(tmpfile,inname);
+      tmpfile = inname;
       tmplen=0;
     }
 
@@ -2651,11 +2646,11 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
        temp.Format("%s %s %s -I. %s %s -D__CINT__ -I%s/%s/include -I%s/%s/stl -I%s/%s/lib %s -o%s"
                    ,G__ccom ,macros,undeflist,ppopt ,includepath,
                    ,G__cintsysdir, G__CFG_COREVERSION, G__cintsysdir,G__CFG_COREVERSION
-                   ,G__cintsysdir, G__CFG_COREVERSION, tmpfile,outname);
+                   ,G__cintsysdir, G__CFG_COREVERSION, tmpfile(),outname);
     }
     else {
        temp.Format("%s %s %s %s -I. %s -D__CINT__ %s -o%s" ,G__ccom
-                   ,macros,undeflist,ppopt ,includepath ,tmpfile,outname);
+                   ,macros,undeflist,ppopt ,includepath ,tmpfile(),outname);
     }
 #elif defined(G__BORLAND)
     /**************************************************************
@@ -2667,11 +2662,11 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
        temp.Format("%s %s %s -I. %s %s -D__CINT__ -I%s/%s/include -I%s/%s/stl -I%s/%s/lib -o%s %s"
                    ,G__ccom ,macros,undeflist,ppopt ,includepath
                    ,G__cintsysdir,G__CFG_COREVERSION,G__cintsysdir,G__CFG_COREVERSION,
-                   G__cintsysdir,G__CFG_COREVERSION,outname,tmpfile);
+                   G__cintsysdir,G__CFG_COREVERSION,outname,tmpfile());
     }
     else {
        temp.Format("%s %s %s %s -I. %s -D__CINT__ -o%s %s" ,G__ccom
-                   ,macros,undeflist,ppopt ,includepath ,outname,tmpfile);
+                   ,macros,undeflist,ppopt ,includepath ,outname,tmpfile());
     }
 #else
     /**************************************************************
@@ -2685,11 +2680,11 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
        temp.Format("%s %s %s -I. %s %s -D__CINT__ -I%s/%s/include -I%s/%s/stl -I%s/%s/lib %s > %s"
                    ,G__ccom ,macros,undeflist,ppopt ,includepath
                    ,G__cintsysdir,G__CFG_COREVERSION,G__cintsysdir,G__CFG_COREVERSION,
-                   G__cintsysdir,G__CFG_COREVERSION,tmpfile,outname);
+                   G__cintsysdir,G__CFG_COREVERSION,tmpfile(),outname);
     }
     else {
        temp.Format("%s %s %s %s -I. %s -D__CINT__ %s > %s" ,G__ccom
-                   ,macros,undeflist,ppopt ,includepath ,tmpfile,outname);
+                   ,macros,undeflist,ppopt ,includepath ,tmpfile(),outname);
     }
 #endif
      if(G__debugtrace||G__steptrace||G__step||G__asm_dbg) {

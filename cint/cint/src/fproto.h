@@ -23,6 +23,7 @@
 namespace Cint {
    class G__DataMemberHandle;
 }
+class G__FastAllocString;
 
 extern "C" {
 #endif
@@ -149,15 +150,20 @@ int G__test(const char *expression2);
 int G__btest(int operator2,G__value lresult,G__value rresult);
 int G__fgetspace(void);
 int G__fgetspace_peek(void);
-int G__fgetvarname(char *string,const char *endmark);
-int G__fgetname(char *string,const char *endmark);
-int G__getname(const char* source,int* isrc,char *string,const char *endmark);
-int G__fdumpstream(char *string,const char *endmark);
-int G__fgetstream(char *string,const char *endmark);
-void G__fgetstream_peek(char* string, int nchars);
-int G__fignorestream(const char *endmark);
+#ifdef __cplusplus
+} // extern "C"
+int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fgetname(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__getname(const char* source,int* isrc,G__FastAllocString& string,const char *endmark);
+int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark);
+void G__fgetstream_peek(G__FastAllocString& string, int nchars);
+int G__fgetstream_new(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fdumpstream(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__getcommentstring(G__FastAllocString& buf,int tagnum,struct G__comment_info *pcomment);
+extern "C" {
+#endif
 int G__ignorestream(const char *string,int* isrc,const char *endmark);
-int G__fgetstream_new(char *string,const char *endmark);
+int G__fignorestream(const char *endmark);
 void G__fignoreline(void);
 void G__fignoreline_peek(void);
 void G__fsetcomment(struct G__comment_info *pcomment);
@@ -296,7 +302,6 @@ void G__cppif_genconstructor(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifu
 int G__isprivateconstructor(int tagnum,int iscopy);
 void G__cppif_gendefault(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table_internal *ifunc,int isconstructor,int iscopyconstructor,int isdestructor,int isassignmentoperator,int isnonpublicnew);
 void G__cppif_genfunc(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table_internal *ifunc);
-int G__cppif_returntype(FILE *fp,int ifn,struct G__ifunc_table_internal *ifunc,char *endoffunc);
 void G__cppif_paratype(FILE *fp,int ifn,struct G__ifunc_table_internal *ifunc,int k);
 void G__cpplink_tagtable(FILE *pfp,FILE *hfp);
 #ifdef G__VIRTUALBASE
@@ -336,11 +341,9 @@ struct G__ifunc_table_internal *G__get_methodhandle4(char *funcname
 #endif //G__NOSTUBS
 
 void G__setnewtype_settypeum(int typenum);
-int G__separate_parameter(char *original,int *pos,char *param);
 int G__parse_parameter_link(char *paras);
 int G__cppif_p2memfunc(FILE *fp);
 int G__set_sizep2memfunc(FILE *fp);
-int G__getcommentstring(char *buf,int tagnum,struct G__comment_info *pcomment);
 void G__bstore(int operatorin,G__value expressionin,G__value *defined);
 void G__doubleassignbyref(G__value *defined,double val);
 void G__intassignbyref(G__value *defined,G__int64 val);
@@ -404,9 +407,7 @@ void G__asm_get_strip_quotation(G__value *pval);
 G__value G__strip_quotation(const char *string);
 char *G__charaddquote(char *string,char c);
 G__value G__strip_singlequotation(char *string);
-char *G__add_quotation(char *string,char *temp);
 char *G__tocharexpr(char *result7);
-char *G__string(G__value buf,char *temp);
 char *G__quotedstring(char *buf,char *result);
 char *G__logicstring(G__value buf,int dig,char *result);
 int G__revprint(FILE *fp);
@@ -433,13 +434,26 @@ int G__checkset_charlist(char *tname,struct G__Charlist *pcall_para,int narg,int
 int G__class_autoloading(int* tagnum);
 void G__define_struct(char type);
 G__value G__classassign(long pdest,int tagnum,G__value result);
-int G__cattemplatearg(char *tagname,struct G__Charlist *charlist);
 char *G__catparam(struct G__param *libp,int catn,const char *connect);
-int G__fgetname_template(char *string,const char *endmark);
-int G__fgetstream_newtemplate(char *string,const char *endmark);
-int G__fgetstream_template(char *string,const char *endmark);
-int G__fgetstream_spaces(char *string,const char *endmark);
-int G__getstream_template(const char *source,int *isrc,char *string,const char *endmark);
+#ifdef __cplusplus
+} // extern "C"
+int G__readline_FastAlloc(FILE* fp, G__FastAllocString& line, G__FastAllocString& argbuf,
+                          int* argn, char* arg[]);
+int G__separate_parameter(const char *original,int *pos,G__FastAllocString& param);
+int G__cppif_returntype(FILE *fp,int ifn,struct G__ifunc_table_internal *ifunc,G__FastAllocString& endoffunc);
+char *G__string(G__value buf, G__FastAllocString& temp);
+char *G__add_quotation(const char* string,G__FastAllocString& temp);
+int G__cattemplatearg(G__FastAllocString& tagname,struct G__Charlist *charlist);
+int G__fgetname_template(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fgetstream_newtemplate(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fgetstream_spaces(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__getstream_template(const char *source,int *isrc,G__FastAllocString& string, size_t offset, const char *endmark);
+char* G__rename_templatefunc(G__FastAllocString& funcname);
+int G__templatesubstitute(G__FastAllocString& symbol,struct G__Charlist *callpara,struct G__Templatearg *defpara,const char *templatename,const char *tagname,int c,int npara,int isnew);
+char *G__valuemonitor(G__value buf,G__FastAllocString& temp);
+extern "C" {
+#endif
 void G__IntList_init(struct G__IntList *body,long iin,struct G__IntList *prev);
 struct G__IntList* G__IntList_new(long iin,struct G__IntList *prev);
 void G__IntList_add(struct G__IntList *body,long iin);
@@ -455,8 +469,7 @@ struct G__Definetemplatefunc *G__defined_templatememfunc(const char *name);
 void G__declare_template(void);
 int G__gettemplatearglist(const char *paralist,struct G__Charlist *charlist,struct G__Templatearg *def_para,int *pnpara,int parent_tagnum);
 int G__instantiate_templateclass(const char *tagname,int noerror);
-void G__replacetemplate(char *templatename,const char *tagname,struct G__Charlist *callpara,FILE *def_fp,int line,int filenum,fpos_t *pdef_pos,struct G__Templatearg *def_para,int isclasstemplate,int npara,int parent_tagnum);
-int G__templatesubstitute(char *symbol,struct G__Charlist *callpara,struct G__Templatearg *defpara,const char *templatename,const char *tagname,int c,int npara,int isnew);
+void G__replacetemplate(const char* templatename,const char *tagname,struct G__Charlist *callpara,FILE *def_fp,int line,int filenum,fpos_t *pdef_pos,struct G__Templatearg *def_para,int isclasstemplate,int npara,int parent_tagnum);
 void G__freedeftemplateclass(struct G__Definedtemplateclass *deftmpclass);
 void G__freetemplatememfunc(struct G__Definedtemplatememfunc *memfunctmplt);
 char *G__gettemplatearg(int n,struct G__Templatearg *def_para);
@@ -469,10 +482,8 @@ int G__templatefunc(G__value *result,const char *funcname,struct G__param *libp,
 int G__matchtemplatefunc(struct G__Definetemplatefunc *deftmpfunc,struct G__param *libp,struct G__Charlist *pcall_para,int funcmatch);
 int G__createtemplatefunc(char *funcname,struct G__Templatearg *targ,int line_number,fpos_t *ppos);
 void G__define_type(void);
-char *G__valuemonitor(G__value buf,char *temp);
 const char *G__access2string(int caccess);
 const char *G__tagtype2string(int tagtype);
-char* G__rename_templatefunc(char* funcname,int isrealloc);
 char *G__fulltypename(int typenum);
 int G__val2pointer(G__value *result7);
 char *G__getbase(unsigned int expression,int base,int digit,char *result1);
@@ -523,8 +534,14 @@ int G__appendautocc(FILE *fp);
 int G__isautoccupdate(void);
 
 int G__free_exceptionbuffer(void);
-int G__exec_catch(char* statement);
 
+#ifdef __cplusplus
+} // extern "C"
+
+int G__exec_catch(G__FastAllocString& statement);
+
+extern "C" {
+#endif
 
 void G__cppstub_memfunc(FILE* fp);
 void G__cppstub_func(FILE* fp);

@@ -533,13 +533,13 @@ int G__main(int argc, char** argv)
    int  ii;
    char* forceassignment = 0;
    int xfileflag = 0;
-   char sourcefile[G__MAXFILENAME];
+   G__FastAllocString sourcefile(G__MAXFILENAME);
    /*************************************************************
     * C/C++ interpreter option related variables
     *************************************************************/
    extern int optind;
    extern char *optarg;
-   static char usage[] = "Usage: %s [options] [sourcefiles|suboptions] [arguments]\n";
+   static const char usage[] = "Usage: %s [options] [sourcefiles|suboptions] [arguments]\n";
    static char *progname;
    char *ppc;
    /*************************************************************
@@ -1205,12 +1205,12 @@ int G__main(int argc, char** argv)
             xfileflag = 0;
          }
 #else
-         sprintf(sourcefile, G__xfile);
+         sourcefile = G__xfile;
          xfileflag = 0;
 #endif
       }
       else {
-         strcpy(sourcefile, argv[optind]);
+         sourcefile = argv[optind];
          ++optind;
       }
       if (strcmp(sourcefile, "+P") == 0) {
@@ -1269,7 +1269,7 @@ int G__main(int argc, char** argv)
             FILE *fp = fopen(linkfilename_h.c_str(),"a");
             if(fp) {
                fprintf(fp,"#ifndef G__includes_dict_%s\n", headerb.c_str());
-               fprintf(fp,"#define G__includes_dict_%s\n", headerb.c_str(), sourcefile);
+               fprintf(fp,"#define G__includes_dict_%s\n", headerb.c_str(), sourcefile());
                fclose(fp);
             }
             includes_printed = 1;
@@ -2237,6 +2237,12 @@ void G__platformMacro()
 #endif
 #ifdef __i386__ /* Intel 386,486,586 */
    G__DEFINE_MACRO_S(__i386__);
+#endif
+#ifdef __x86_64__ /* Intel / AMD 64 */
+   G__DEFINE_MACRO_S(__x86_64__);
+#endif
+#ifdef __amd64 /* Intel / AMD 64 */
+   G__DEFINE_MACRO_S(__amd64);
 #endif
 #ifdef __i860__ /* Intel 860 */
    G__DEFINE_MACRO_S(__i860__);
