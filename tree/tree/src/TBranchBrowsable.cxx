@@ -791,10 +791,20 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* bran
    if (clCollection->GetCollectionProxy() || clCollection==TClonesArray::Class()) {
    // the collection is one for which TTree::Draw supports @coll.size()
 
+      TCollectionPropertyBrowsable* cpb;
+      if ( clCollection->GetCollectionProxy() && 
+           ( (clCollection->GetCollectionProxy()->GetValueClass()==0) 
+           ||(clCollection->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()!=0 
+              && clCollection->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()->GetValueClass()==0)
+            )) {
+         // If the contained type is not a class, we need an explitcit handle to get to the data.
+         cpb = new TCollectionPropertyBrowsable("values", "values in the container", 
+                                                scope, branch, parent);
+         li.Add(cpb);
+      }
       scope.Insert(lastPart, "@");
-      TCollectionPropertyBrowsable* cpb=
-         new TCollectionPropertyBrowsable("@size", size_title, 
-         scope+".size()", branch, parent);
+      cpb = new TCollectionPropertyBrowsable("@size", size_title, 
+                                            scope+".size()", branch, parent);
       li.Add(cpb);
       return 1;
    } // if a collection proxy or TClonesArray
