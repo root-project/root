@@ -691,7 +691,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             kXR_int32 opt = 0;
             memcpy(&opt, pdata, sizeof(kXR_int32));
             opt = net2host(opt);
-            if (opt >= 0 & opt <= 4) {
+            if (opt >= 0 && opt <= 4) {
                // Update pointer to data
                pdata = (void *)((char *)pdata + sizeof(kXR_int32));
                len -= sizeof(kXR_int32);
