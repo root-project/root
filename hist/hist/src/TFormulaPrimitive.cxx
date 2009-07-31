@@ -336,6 +336,7 @@ TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name)
       TFormulaPrimitive *formula = (TFormulaPrimitive*)fgListOfFunction->At(i);
       if (formula && 0==strcmp(name, formula->GetName())) return formula;
    }
+   return 0;
 }
 
 
