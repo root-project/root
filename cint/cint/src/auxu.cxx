@@ -15,28 +15,6 @@
 
 #include "common.h"
 
-//______________________________________________________________________________
-int G__readline_FastAlloc(FILE* fp, G__FastAllocString& line, G__FastAllocString& argbuf,
-                          int* argn, char* arg[])
-{
-   // -- FIXME: Describe this function!
-   char* null_fgets = fgets(line, line.Capacity() - 1, fp);
-   if (null_fgets) {
-      argbuf = line;
-      G__split(line, argbuf, argn, arg);
-   }
-   else {
-      line = "";
-      argbuf = "";
-      *argn = 0;
-      arg[0] = line;
-   }
-   if (!null_fgets) {
-      return 0;
-   }
-   return 1;
-}
-
 extern "C" {
 
 // Static functions.
@@ -369,8 +347,7 @@ int G__scanobject(G__value* buf)
          if (var->p_typetable[i] > -1) {
             type_name = G__newtype.name[var->p_typetable[i]];
          }
-         G__FastAllocString ifunc_sb(G__ONELINE);
-         char* ifunc = ifunc_sb;
+         char ifunc[G__ONELINE];
          sprintf(ifunc, "G__do_scanobject((%s *)%ld,%ld,%d,%ld,%ld)", tagname, pointer, (long) name, type, (long) tagname, (long) type_name);
          G__getexpr(ifunc);
       }

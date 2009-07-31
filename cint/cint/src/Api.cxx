@@ -391,21 +391,21 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
   }
 #ifdef G__STD_EXCEPTION
   catch(std::exception& x) {
-    G__FastAllocString buf(G__LONGLINE);
+    char buf[G__LONGLINE];
 #ifdef G__VISUAL
     // VC++ has problem in typeid(x).name(), so every thrown exception is
     // translated to G__exception.
-    buf.Format("new G__exception(\"%s\")",x.what());
+    sprintf(buf,"new G__exception(\"%s\")",x.what());
     G__fprinterr(G__serr,"Exception: %s\n",x.what());
 #else
-    G__FastAllocString buf2(G__ONELINE);
+    char buf2[G__ONELINE];
     if(G__DemangleClassname(buf2,typeid(x).name())) {
-       buf.Format("new %s(*(%s*)%ld)",buf2(),buf2(),(long)(&x));
-       G__fprinterr(G__serr,"Exception %s: %s\n", buf2(), x.what());
+      sprintf(buf,"new %s(*(%s*)%ld)",buf2,buf2,(long)(&x));
+      G__fprinterr(G__serr,"Exception %s: %s\n", buf2, x.what());
     }
     else {
        G__getexpr("#include <exception>");
-       buf.Format("new G__exception(\"%s\",\"CINT forwarded std::exception\")",x.what());
+       sprintf(buf,"new G__exception(\"%s\",\"CINT forwarded std::exception\")",x.what());
     }
 #endif
     G__exceptionbuffer = G__getexpr(buf);
@@ -530,29 +530,29 @@ extern "C" const char* G__saveconststring(const char* s)
 extern "C" void G__initcxx() 
 {
 #if defined(__HP_aCC)||defined(__SUNPRO_CC)||defined(__BCPLUSPLUS__)||defined(__KCC)||defined(__INTEL_COMPILER)
-  G__FastAllocString temp(G__ONELINE);
+  char temp[G__ONELINE];
 #endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
-  temp.Format("G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
+  sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
 #if __HP_aCC > 15000
-  temp.Format("G__ANSIISOLIB=1"); G__add_macro(temp);
+  sprintf(temp,"G__ANSIISOLIB=1"); G__add_macro(temp);
 #endif
 #endif
 #ifdef __SUNPRO_CC  /* Sun C++ compiler */
-  temp.Format("G__SUNPRO_CC=%ld",(long)__SUNPRO_CC); G__add_macro(temp);
+  sprintf(temp,"G__SUNPRO_CC=%ld",(long)__SUNPRO_CC); G__add_macro(temp);
 #endif
 #ifdef __BCPLUSPLUS__  /* Borland C++ compiler */
-  temp.Format("G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__add_macro(temp);
+  sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__add_macro(temp);
 #endif
 #ifdef __KCC        /* KCC  C++ compiler */
-  temp.Format("G__KCC=%ld",(long)__KCC); G__add_macro(temp);
+  sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
 #if defined(__INTEL_COMPILER) && (__INTEL_COMPILER<810) /* icc and ecc C++ compilers */
-  temp.Format("G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
+  sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
 #endif
   /*
 #ifdef __cplusplus 
-  temp.Format("G__CPLUSPLUS=%ld",(long)__cplusplus); G__add_macro(temp);
+  sprintf(temp,"G__CPLUSPLUS=%ld",(long)__cplusplus); G__add_macro(temp);
 #endif
   */
 }
@@ -622,10 +622,10 @@ extern "C" const char* G__replacesymbol(const char* s) {
 ******************************************************************/
 int G__display_replacesymbol_body(FILE *fout,const char* name) {
   map<string,string>::iterator i;
-  G__FastAllocString msg(G__LONGLINE);
+  char msg[G__LONGLINE];
   for(i=G__get_symbolmacro().begin();i!=G__get_symbolmacro().end();++i) {
     if(!name || !name[0] || strcmp(name,(*i).first.c_str())==0) {
-       msg.Format("#define %s %s\n",(*i).first.c_str(),(*i).second.c_str());
+      sprintf(msg,"#define %s %s\n",(*i).first.c_str(),(*i).second.c_str());
       G__more(fout,msg);
       if(name && name[0]) return(1);
     }

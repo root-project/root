@@ -94,60 +94,60 @@ void G__setint(G__value *pbuf,long l,void *pl
 * G__cppstub_setparam()
 *
 **************************************************************************/
-static void G__cppstub_setparam(G__FastAllocString& pformat,G__FastAllocString& pbody
+static void G__cppstub_setparam(char *pformat,char *pbody
                                 ,int /* tagnum */,int ifn,G__ifunc_table_internal *ifunc,int k)
 {
-  G__FastAllocString paraname(G__MAXNAME);
-  G__FastAllocString temp(G__ONELINE);
+  char paraname[G__MAXNAME];
+  char temp[G__ONELINE];
 
-  if(ifunc->param[ifn][k]->name) paraname = ifunc->param[ifn][k]->name;
-  else paraname.Format("a%d",k);
+  if(ifunc->param[ifn][k]->name) strcpy(paraname,ifunc->param[ifn][k]->name);
+  else sprintf(paraname,"a%d",k);
 
-  if(k) pformat += ",";
-  pbody += ",";
+  if(k) strcat(pformat,",");
+  strcat(pbody,",");
 
   if(ifunc->param[ifn][k]->reftype) {
-     temp.Format("*(%s*)(%%ld)"
+    sprintf(temp,"*(%s*)(%%ld)"
             ,G__type2string(ifunc->param[ifn][k]->type
                             ,ifunc->param[ifn][k]->p_tagtable
                             ,ifunc->param[ifn][k]->p_typetable ,0
                             ,ifunc->param[ifn][k]->isconst));
-    pformat += temp;
-    temp.Format("(long)(&%s)",paraname());
-    pbody += temp;
+    strcat(pformat,temp);
+    sprintf(temp,"(long)(&%s)",paraname);
+    strcat(pbody,temp);
   }
   else {
     switch(ifunc->param[ifn][k]->type) {
     case 'u':
-       temp.Format("(%s)(%%ld)"
+      sprintf(temp,"(%s)(%%ld)"
               ,G__type2string(ifunc->param[ifn][k]->type
                               ,ifunc->param[ifn][k]->p_tagtable
                               ,ifunc->param[ifn][k]->p_typetable ,0
                               ,ifunc->param[ifn][k]->isconst));
-      pformat += temp;
-      temp.Format("&%s",paraname());
-      pbody += temp;
+      strcat(pformat,temp);
+      sprintf(temp,"&%s",paraname);
+      strcat(pbody,temp);
       break;
     case 'd':
     case 'f':
-       temp.Format("(%s)%%g"
+      sprintf(temp,"(%s)%%g"
               ,G__type2string(ifunc->param[ifn][k]->type
                               ,ifunc->param[ifn][k]->p_tagtable
                               ,ifunc->param[ifn][k]->p_typetable ,0
                               ,ifunc->param[ifn][k]->isconst));
-      pformat += temp;
-      temp = paraname;
-      pbody += temp;
+      strcat(pformat,temp);
+      sprintf(temp,"%s",paraname);
+      strcat(pbody,temp);
       break;
     default:
-       temp.Format("(%s)(%%ld)"
+      sprintf(temp,"(%s)(%%ld)"
               ,G__type2string(ifunc->param[ifn][k]->type
                               ,ifunc->param[ifn][k]->p_tagtable
                               ,ifunc->param[ifn][k]->p_typetable ,0
                               ,ifunc->param[ifn][k]->isconst));
-      pformat += temp;
-      temp.Format("(long)%s",paraname());
-      pbody += temp;
+      strcat(pformat,temp);
+      sprintf(temp,"(long)%s",paraname);
+      strcat(pbody,temp);
       break;
     }
   }
@@ -182,8 +182,8 @@ static void G__cppstub_gendestructor(FILE * /* fp */,int tagnum
 static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table_internal *ifunc)
 {
   int k;
-  G__FastAllocString pformat(G__ONELINE);
-  G__FastAllocString pbody(G__LONGLINE);
+  char pformat[G__ONELINE];
+  char pbody[G__LONGLINE];
 
   /*******************************************************************
   * Function header
@@ -275,7 +275,7 @@ static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table_intern
     G__cppstub_setparam(pformat,pbody,tagnum,ifn,ifunc,k);
   }
   fprintf(fp,"  sprintf(funccall,\"%s(%s)\"%s);\n"
-          ,ifunc->funcname[ifn],pformat(),pbody());
+          ,ifunc->funcname[ifn],pformat,pbody);
   fprintf(fp,"  buf=G__calc(funccall);\n");
 
   /*******************************************************************

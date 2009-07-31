@@ -362,7 +362,7 @@ void Cint::G__CallFunc::SetFunc(G__ClassInfo* cls
   // G__getstream(), G__type2string()
   int isrc=0;
   char *endmark=(char*)",";
-  G__FastAllocString argtype(G__ONELINE);
+  char argtype[G__ONELINE];
   int pos=0;
   G__value *buf;
 
@@ -377,13 +377,14 @@ void Cint::G__CallFunc::SetFunc(G__ClassInfo* cls
       para.para[para.paran] = G__calc(para.parameter[para.paran]);
       buf = &para.para[para.paran];
       // set type string
-      if(pos) argtype.Set(pos++, ',');
-      argtype.Set(pos, 0);
+      if(pos) argtype[pos++]=',';
       if(islower(buf->type))
-	argtype += G__type2string(buf->type,buf->tagnum,buf->typenum,0,0);
+	strcpy(argtype+pos
+	       ,G__type2string(buf->type,buf->tagnum,buf->typenum,0,0));
       else 
-	argtype += G__type2string(buf->type,buf->tagnum,buf->typenum
-			       ,buf->obj.reftype.reftype,0);
+	strcpy(argtype+pos
+	       ,G__type2string(buf->type,buf->tagnum,buf->typenum
+			       ,buf->obj.reftype.reftype,0));
       pos = strlen(argtype);
       ++para.paran; // increment argument count
     }

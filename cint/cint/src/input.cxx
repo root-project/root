@@ -46,17 +46,16 @@ extern int add_history(const char* str);
 *************************************************************/
 void G__input_history(int *state,const char *string)
 {
-  G__FastAllocString G__oneline(G__LONGLINE*2);
-  G__FastAllocString G__argbuf(G__LONGLINE*2);
+  char G__oneline[G__LONGLINE*2];
+  char G__argbuf[G__LONGLINE*2];
   /* int  G__null_fgets=1; */
   char *arg[G__LONGLINE];
   int argn;
 #ifdef G__TMPFILE
-  G__FastAllocString tname_sb(G__MAXFILENAME);
+  char tname[G__MAXFILENAME];
 #else
-  G__FastAllocString tname_sb(L_tmpnam+10);
+  char tname[L_tmpnam+10];
 #endif
-  char* tname = tname_sb;
   int istmpnam=0;
   
   static char prevstring[G__LONGLINE];
@@ -78,7 +77,7 @@ void G__input_history(int *state,const char *string)
       sprintf(histfile,"./%s",homehist);
     fp=fopen(histfile,"r");
     if(fp) {
-      while(G__readline_FastAlloc(fp,G__oneline,G__argbuf,&argn,arg)!=0){
+      while(G__readline(fp,G__oneline,G__argbuf,&argn,arg)!=0){
         add_history(arg[0]);
         strcpy(prevstring,arg[0]);
         *state = (*state)+1;
@@ -122,7 +121,7 @@ void G__input_history(int *state,const char *string)
     }
   } while((FILE*)NULL==tmp && G__setTMPDIR(tname));
   if(tmp&&fp) {
-    while(G__readline_FastAlloc(fp,G__oneline,G__argbuf,&argn,arg)!=0){
+    while(G__readline(fp,G__oneline,G__argbuf,&argn,arg)!=0){
       ++line;
       if(line>G__history_size_max-G__history_size_min) fprintf(tmp,"%s\n",arg[0]);
     }
@@ -139,7 +138,7 @@ void G__input_history(int *state,const char *string)
   fp=fopen(histfile,"w");
   if(istmpnam) tmp=fopen(tname,"r");
   if(tmp&&fp) {
-    while(G__readline_FastAlloc(tmp,G__oneline,G__argbuf,&argn,arg)!=0){
+    while(G__readline(tmp,G__oneline,G__argbuf,&argn,arg)!=0){
       fprintf(fp,"%s\n",arg[0]);
     }
   }

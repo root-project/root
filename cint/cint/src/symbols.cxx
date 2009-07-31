@@ -425,7 +425,7 @@ void MapDependantTypesX()
   // defines.
 
   int more = 0;
-  G__FastAllocString prompt(G__ONELINE);
+  char prompt[G__ONELINE];
 
   // Like MapDependantTypes but for the class TGX11
 

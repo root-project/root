@@ -31,22 +31,18 @@ extern "C" {
 int G__initval_eval = 0;
 int G__dynconst = 0;
 
-}
-
 // Static functions.
-static int G__get_newname(G__FastAllocString& new_name);
-static void G__removespacetemplate(G__FastAllocString& name, size_t offset = 0);
-static int G__initstruct(G__FastAllocString& new_name);
-static int G__initary(G__FastAllocString& new_name);
-static void G__initstructary(G__FastAllocString& new_name, int tagnum);
-static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type);
+static int G__get_newname(char* new_name);
+static void G__removespacetemplate(char* name);
+static int G__initstruct(char* new_name);
+static int G__initary(char* new_name);
+static void G__initstructary(char* new_name, int tagnum);
+static int G__readpointer2function(char* new_name, char* pvar_type);
 
-extern "C" {
 // External functions.
 void G__define_var(int tagnum, int typenum);
 struct G__var_array* G__initmemvar(int tagnum, int* pindex, G__value* pbuf);
 G__var_array* G__incmemvar(G__var_array* memvar, int* pindex, G__value* pbuf);
-}
 
 // Funtions in the C interface.
 // None.
@@ -57,7 +53,7 @@ G__var_array* G__incmemvar(G__var_array* memvar, int* pindex, G__value* pbuf);
 //
 
 //______________________________________________________________________________
-static int G__get_newname(G__FastAllocString& new_name)
+static int G__get_newname(char* new_name)
 {
    // -- Parse a variable name from the input file.
    //
@@ -72,33 +68,33 @@ static int G__get_newname(G__FastAllocString& new_name)
    //
    int store_def_struct_member = 0;
    int store_tagdefining = 0;
-   G__FastAllocString temp1(G__ONELINE);
-
-   int cin = G__fgetvarname(new_name, 0, "*&,;=():}");
+   char temp[G__ONELINE];
+   char temp1[G__ONELINE];
+   int cin = G__fgetvarname(new_name, "*&,;=():}");
    if (cin == '&') {
       if (!strcmp(new_name, "operator")) {
          new_name[8] = cin;
-         cin = G__fgetvarname(new_name, 9, ",;=():}");
+         cin = G__fgetvarname(new_name + 9, ",;=():}");
       }
       else {
-         new_name += "&";
+         strcat(new_name, "&");
          cin = ' ';
       }
    }
    else if (cin == '*') {
       if (!strcmp(new_name, "operator")) {
          new_name[8] = cin;
-         cin = G__fgetvarname(new_name, 9, ",;=():}");
+         cin = G__fgetvarname(new_name + 9, ",;=():}");
       }
       else {
-         new_name += "*";
+         strcat(new_name, "*");
          cin = ' ';
       }
    }
    if (isspace(cin)) {
       if (!strcmp(new_name, "const*")) {
          new_name[0] = '*';
-         cin = G__fgetvarname(new_name, 1, ",;=():}");
+         cin = G__fgetvarname(new_name + 1, ",;=():}");
          G__constvar |= G__CONSTVAR;
       }
       if (!strcmp(new_name, "friend")) {
@@ -113,17 +109,17 @@ static int G__get_newname(G__FastAllocString& new_name)
          return(';');
       }
       else if (!strcmp(new_name, "&") || !strcmp(new_name, "*")) {
-         cin = G__fgetvarname(new_name, 1, ",;=():");
+         cin = G__fgetvarname(new_name + 1, ",;=():");
       }
       if (!strcmp(new_name, "&*") || !strcmp(new_name, "*&")) {
-         cin = G__fgetvarname(new_name, 2, ",;=():");
+         cin = G__fgetvarname(new_name + 2, ",;=():");
       }
       if (!strcmp(new_name, "double") && (G__var_type != 'l')) {
-         cin = G__fgetvarname(new_name, 0, ",;=():");
+         cin = G__fgetvarname(new_name, ",;=():");
          G__var_type = 'd';
       }
       else if (!strcmp(new_name, "int")) {
-         cin = G__fgetvarname(new_name, 0, ",;=():");
+         cin = G__fgetvarname(new_name, ",;=():");
       }
       else if (
          !strcmp(new_name, "long") ||
@@ -209,40 +205,40 @@ static int G__get_newname(G__FastAllocString& new_name)
          return 0;
       }
       else if (strcmp(new_name, "unsigned") == 0 || strcmp(new_name, "signed") == 0) {
-         cin = G__fgetvarname(new_name, 0, ",;=():");
+         cin = G__fgetvarname(new_name, ",;=():");
          --G__var_type; /* make it unsigned */
          if (strcmp(new_name, "int*") == 0) {
             G__var_type = toupper(G__var_type);
-            cin = G__fgetvarname(new_name, 0, ",;=():");
+            cin = G__fgetvarname(new_name, ",;=():");
          }
          else if (strcmp(new_name, "int&") == 0) {
             G__var_type = toupper(G__var_type);
-            cin = G__fgetvarname(new_name, 0, ",;=():");
+            cin = G__fgetvarname(new_name, ",;=():");
             G__reftype = G__PARAREFERENCE;
          }
          else if (strcmp(new_name, "int") == 0) {
-            cin = G__fgetvarname(new_name, 0, ",;=():");
+            cin = G__fgetvarname(new_name, ",;=():");
          }
       }
       else if (strcmp(new_name, "int*") == 0) {
-         cin = G__fgetvarname(new_name, 0, ",;=():");
+         cin = G__fgetvarname(new_name, ",;=():");
          G__var_type = toupper(G__var_type);
       }
       else if (strcmp(new_name, "double*") == 0) {
-         cin = G__fgetvarname(new_name, 0, ",;=():");
+         cin = G__fgetvarname(new_name, ",;=():");
          G__var_type = 'D';
       }
       else if (strcmp(new_name, "int&") == 0) {
-         cin = G__fgetvarname(new_name, 0, ",;=():");
+         cin = G__fgetvarname(new_name, ",;=():");
          G__reftype = G__PARAREFERENCE;
       }
       else if (strcmp(new_name, "double&") == 0) {
-         cin = G__fgetvarname(new_name, 0, ",;=():");
+         cin = G__fgetvarname(new_name, ",;=():");
          G__reftype = G__PARAREFERENCE;
       }
       if (isspace(cin)) {
          if (strcmp(new_name, "static") == 0) {
-            cin = G__fgetvarname(new_name, 0, ",;=():");
+            cin = G__fgetvarname(new_name, ",;=():");
             G__static_alloc = 1;
          }
       }
@@ -250,81 +246,81 @@ static int G__get_newname(G__FastAllocString& new_name)
          if (strcmp(new_name, "*const") == 0 || strcmp(new_name, "const") == 0) {
             if (new_name[0]=='*') {
                G__constvar |= G__PCONSTVAR;
-               cin = G__fgetvarname(new_name, 1, ",;=():");
+               cin = G__fgetvarname(new_name + 1, ",;=():");
             } else {
                if (isupper(G__var_type)) G__constvar |= G__PCONSTVAR;
                else                     G__constvar |= G__CONSTVAR;
-               cin = G__fgetvarname(new_name, 0, ",;=():");
+               cin = G__fgetvarname(new_name, ",;=():");
             }
             if (strcmp(new_name, "&*") == 0 || strcmp(new_name, "*&") == 0) {
                G__reftype = G__PARAREFERENCE;
                new_name[0] = '*';
-               cin = G__fgetvarname(new_name, 1, ",;=():");
+               cin = G__fgetvarname(new_name + 1, ",;=():");
             }
             else if (strcmp(new_name, "&") == 0) {
                G__reftype = G__PARAREFERENCE;
-               cin = G__fgetvarname(new_name, 0, ",;=():");
+               cin = G__fgetvarname(new_name, ",;=():");
             }
             if (strcmp(new_name, "*") == 0) {
-               cin = G__fgetvarname(new_name, 1, ",;=():");
+               cin = G__fgetvarname(new_name + 1, ",;=():");
                if (strcmp(new_name, "*const") == 0) {
                   G__constvar |= G__PCONSTVAR;
-                  cin = G__fgetvarname(new_name, 1, ",;=():");
+                  cin = G__fgetvarname(new_name + 1, ",;=():");
                }
             }
          }
          else if (strcmp(new_name, "const&") == 0) {
-            cin = G__fgetvarname(new_name, 0, ",;=():");
+            cin = G__fgetvarname(new_name, ",;=():");
             G__reftype = G__PARAREFERENCE;
             G__constvar |= G__PCONSTVAR;
          }
          else if (strcmp(new_name, "*const&") == 0) {
-            cin = G__fgetvarname(new_name, 1, ",;=():");
+            cin = G__fgetvarname(new_name + 1, ",;=():");
             G__constvar |= G__PCONSTVAR;
             G__reftype = G__PARAREFERENCE;
          }
 #ifndef G__OLDIMPLEMENTATION1857
          else if (strcmp(new_name, "const*&") == 0) {
             new_name[0] = '*';
-            cin = G__fgetvarname(new_name, 1, ",;=():");
+            cin = G__fgetvarname(new_name + 1, ",;=():");
             G__constvar |= G__CONSTVAR;
             G__reftype = G__PARAREFERENCE;
          }
          else if (strcmp(new_name, "const**") == 0) {
             new_name[0] = '*';
-            cin = G__fgetvarname(new_name, 1, ",;=():");
+            cin = G__fgetvarname(new_name + 1, ",;=():");
             G__constvar |= G__CONSTVAR;
             G__var_type = 'U';
             G__reftype = G__PARAP2P;
          }
 #endif // G__OLDIMPLEMENTATION1857
          else if (strcmp(new_name, "volatile") == 0) {
-            cin = G__fgetvarname(new_name, 0, ",;=():");
+            cin = G__fgetvarname(new_name, ",;=():");
          }
          else if (strcmp(new_name, "*volatile") == 0) {
-            cin = G__fgetvarname(new_name, 1, ",;=():");
+            cin = G__fgetvarname(new_name + 1, ",;=():");
          }
          else if (strcmp(new_name, "**volatile") == 0) {
-            cin = G__fgetvarname(new_name, 2, ",;=():");
+            cin = G__fgetvarname(new_name + 2, ",;=():");
          }
          else if (strcmp(new_name, "***volatile") == 0) {
-            cin = G__fgetvarname(new_name, 3, ",;=():");
+            cin = G__fgetvarname(new_name + 3, ",;=():");
          }
          else if (strcmp(new_name, "inline") == 0) {
-            cin = G__fgetvarname(new_name, 0, ",;=():");
+            cin = G__fgetvarname(new_name, ",;=():");
          }
          else if (strcmp(new_name, "*inline") == 0) {
-            cin = G__fgetvarname(new_name, 1, ",;=():");
+            cin = G__fgetvarname(new_name + 1, ",;=():");
          }
          else if (strcmp(new_name, "**inline") == 0) {
-            cin = G__fgetvarname(new_name, 2, ",;=():");
+            cin = G__fgetvarname(new_name + 2, ",;=():");
          }
          else if (strcmp(new_name, "***inline") == 0) {
-            cin = G__fgetvarname(new_name, 3, ",;=():");
+            cin = G__fgetvarname(new_name + 3, ",;=():");
          }
          else if (strcmp(new_name, "virtual") == 0) {
             G__virtual = 1;
-            cin = G__fgetvarname(new_name, 0, ",;=():");
+            cin = G__fgetvarname(new_name, ",;=():");
          }
       }
       if (isspace(cin)) {
@@ -336,7 +332,7 @@ static int G__get_newname(G__FastAllocString& new_name)
             !strcmp(new_name, "&operator")
          ) {
             /* read real name */
-            cin = G__fgetstream(temp1, 0, "(");
+            cin = G__fgetstream(temp1, "(");
             /* came to
              * type  operator  +(var1 , var2);
              *                  ^
@@ -359,26 +355,28 @@ static int G__get_newname(G__FastAllocString& new_name)
                case '!':
                case '[':
                case ',':
-                  new_name += temp1;
+                  sprintf(temp, "%s%s", new_name, temp1);
+                  strcpy(new_name, temp);
                   break;
                case '\0':
-                  cin = G__fgetstream(temp1, 0, ")");
+                  cin = G__fgetstream(temp1, ")");
                   if (strcmp(temp1, "") != 0 || cin != ')') {
                      G__fprinterr(G__serr, "Error: Syntax error '%s(%s%c' "
-                                  , new_name(), temp1(), cin);
+                                  , new_name, temp1, cin);
                      G__genericerror((char*)NULL);
                   }
-                  cin = G__fgetstream(temp1, 0, "(");
+                  cin = G__fgetstream(temp1, "(");
                   if (strcmp(temp1, "") != 0 || cin != '(') {
                      G__fprinterr(G__serr, "Error: Syntax error '%s()%s%c' "
-                                  , new_name(), temp1(), cin);
+                                  , new_name, temp1, cin);
                      G__genericerror((char*)NULL);
                   }
-                  new_name += "()";
+                  sprintf(temp, "%s()", new_name);
+                  strcpy(new_name, temp);
                   break;
                default:
-                  new_name += " ";
-                  new_name += temp1;
+                  sprintf(temp, "%s %s", new_name, temp1);
+                  strcpy(new_name, temp);
                   /*
                      G__genericerror(
                      "Warning: name 'operator' will be a keyword for C++"
@@ -390,16 +388,16 @@ static int G__get_newname(G__FastAllocString& new_name)
          }
          store_len = strlen(new_name);
          do {
-            cin = G__fgetstream(new_name, strlen(new_name), ",;=():");
+            cin = G__fgetstream(new_name + strlen(new_name), ",;=():");
             if (cin == ']') {
-               new_name += "]";
+               strcpy(new_name + strlen(new_name), "]");
             }
          }
          while (cin == ']');
          if (store_len > 1 && isalnum(new_name[store_len]) &&
                isalnum(new_name[store_len-1])) {
             if (G__dispmsg >= G__DISPWARN) {
-               G__fprinterr(G__serr, "Warning: %s  Syntax error??", new_name());
+               G__fprinterr(G__serr, "Warning: %s  Syntax error??", new_name);
                G__printlinenum();
             }
          }
@@ -414,19 +412,18 @@ static int G__get_newname(G__FastAllocString& new_name)
       int tmpline = G__ifile.line_number;
       fgetpos(G__ifile.fp, &tmppos);
       if (G__dispsource) G__disp_mask = 1000;
-      cin = G__fgetvarname(new_name, 0, ")");
-      G__FastAllocString temp(strlen(new_name));
+      cin = G__fgetvarname(new_name, ")");
       if ('*' != new_name[0] || 0 == new_name[1]) goto escapehere;
-      temp = new_name() + 1;
-      cin = G__fgetvarname(new_name, 0, ",;=():}");
+      strcpy(temp, new_name + 1);
+      cin = G__fgetvarname(new_name, ",;=():}");
       if ('[' != new_name[0]) goto escapehere;
       if (G__dispsource) {
          G__disp_mask = 0;
-         G__fprinterr(G__serr, "*%s)%s", temp(), new_name());
+         G__fprinterr(G__serr, "*%s)%s", temp, new_name);
       }
-      temp += "[]";
-      temp += new_name;
-      new_name.Swap(temp);
+      strcat(temp, "[]");
+      strcat(temp, new_name);
+      strcpy(new_name, temp);
       return cin;
       escapehere:
       if (G__dispsource) G__disp_mask = 0;
@@ -439,15 +436,15 @@ static int G__get_newname(G__FastAllocString& new_name)
       if (cin == '=') {
          fseek(G__ifile.fp, -1, SEEK_CUR);
          if (G__dispsource) G__disp_mask = 1;
-         cin = G__fgetstream(new_name, strlen(new_name), "(");
+         cin = G__fgetstream(new_name + strlen(new_name), "(");
       }
       else if ((cin == '(') && !new_name[8]) {
-         cin = G__fgetstream(new_name, 0, ")");
-         cin = G__fgetstream(new_name, 0, "(");
+         cin = G__fgetstream(new_name, ")");
+         cin = G__fgetstream(new_name, "(");
          sprintf(new_name, "operator()");
       }
       else if ((cin == ',') && !new_name[8]) {
-         cin = G__fgetstream(new_name, 0, "(");
+         cin = G__fgetstream(new_name, "(");
          sprintf(new_name, "operator,");
       }
       return cin;
@@ -459,12 +456,11 @@ static int G__get_newname(G__FastAllocString& new_name)
       if (cin == '=') {
          fseek(G__ifile.fp, -1, SEEK_CUR);
          if (G__dispsource) G__disp_mask = 1;
-         cin = G__fgetstream(new_name, strlen(new_name), "(");
+         cin = G__fgetstream(new_name + strlen(new_name), "(");
       }
       else if ((cin == '(') && !new_name[9]) {
          cin = G__fignorestream(")");
          cin = G__fignorestream("(");
-         new_name.Resize(12);
          strcpy(new_name + 9, "()");
       }
       return cin;
@@ -476,18 +472,19 @@ static int G__get_newname(G__FastAllocString& new_name)
       if ('=' == cin) {
          fseek(G__ifile.fp, -1, SEEK_CUR);
          if (G__dispsource) G__disp_mask = 1;
-         cin = G__fgetstream(new_name, strlen(new_name), "(");
+         cin = G__fgetstream(new_name + strlen(new_name), "(");
       }
       else if ('(' == cin && '\0' == new_name[10]) {
          cin = G__fignorestream(")");
          cin = G__fignorestream("(");
-         new_name.Resize(13);
          strcpy(new_name + 10, "()");
       }
       return(cin);
    }
    return cin;
 }
+
+} // Extern "C"
 
 //______________________________________________________________________________
 static int G__setvariablecomment(char* new_name, Cint::G__DataMemberHandle &member)
@@ -510,17 +507,17 @@ static int G__setvariablecomment(char* new_name, Cint::G__DataMemberHandle &memb
    return 0;
 }
 
+extern "C" {
+
 //______________________________________________________________________________
-static void G__removespacetemplate(G__FastAllocString& name, size_t offset /* = 0 */)
+static void G__removespacetemplate(char* name)
 {
-   size_t len = strlen(name.data()) + 1;
-   G__FastAllocString buf(len);
-   memcpy(buf, name, len);
+   char buf[G__LONGLINE];
    int c = 0;
-   size_t i = offset;
-   int j = len;
+   int i = 0;
+   int j = 0;
    while ((c = name[i])) {
-      if (isspace(c) && i > offset) {
+      if (isspace(c) && i > 0) {
          switch (name[i-1]) {
             case ':':
             case '<':
@@ -551,21 +548,22 @@ static void G__removespacetemplate(G__FastAllocString& name, size_t offset /* = 
       ++i;
    }
    buf[j] = 0;
-   name.Swap(buf);
+   strcpy(name, buf);
 }
 
 //______________________________________________________________________________
-static int G__initstruct(G__FastAllocString& new_name)
+static int G__initstruct(char* new_name)
 {
    // FIXME: We do not handle brace nesting properly,
    //        we need to default initialize members
    //        whose initializers were omitted.
-   G__FastAllocString expr(G__ONELINE);
+   char expr[G__ONELINE];
 #ifdef G__ASM
    G__abortbytecode();
 #endif // G__ASM
    // Separate the variable name from any index specification.
-   G__FastAllocString name(new_name);
+   char name[G__MAXNAME];
+   std::strcpy(name, new_name);
    {
       char* p = std::strchr(name, '[');
       if (p) {
@@ -581,12 +579,12 @@ static int G__initstruct(G__FastAllocString& new_name)
    if ((G__static_alloc == 1) && (G__func_now != -1)) {
       // -- Function-local static structure initialization at prerun, use a special global variable name.
       if (G__memberfunc_tagnum != -1) { // questionable
-         expr.Format("%s\\%x\\%x\\%x", name(), G__func_page, G__func_now, G__memberfunc_tagnum);
+         std::sprintf(expr, "%s\\%x\\%x\\%x", name, G__func_page, G__func_now, G__memberfunc_tagnum);
       }
       else {
-         expr.Format("%s\\%x\\%x", name(), G__func_page, G__func_now);
+         std::sprintf(expr, "%s\\%x\\%x", name, G__func_page, G__func_now);
       }
-      name = expr;
+      std::strcpy(name, expr);
    }
    //
    // Lookup the variable.
@@ -629,7 +627,7 @@ static int G__initstruct(G__FastAllocString& new_name)
       }
    }
    if (!var) {
-      G__fprinterr(G__serr, "Limitation: %s initialization ignored", name());
+      G__fprinterr(G__serr, "Limitation: %s initialization ignored", name);
       G__printlinenum();
       int c = G__fignorestream("},;");
       if (c == '}') {
@@ -642,7 +640,7 @@ static int G__initstruct(G__FastAllocString& new_name)
       // -- We have base classes, i.e., we are not an aggregate.
       // FIXME: This test should be stronger, the accessibility
       //        of the data members should be tested for example.
-      G__fprinterr(G__serr, "Error: %s must be initialized by a constructor", name());
+      G__fprinterr(G__serr, "Error: %s must be initialized by a constructor", name);
       G__genericerror(0);
       int c = G__fignorestream("}");
       //  type var1[N] = { 0, 1, 2.. }  , ... ;
@@ -697,7 +695,7 @@ static int G__initstruct(G__FastAllocString& new_name)
    int linear_index = -1;
    while (mparen) {
       // -- Read the next initializer value.
-      int c = G__fgetstream(expr, 0, ",{}");
+      int c = G__fgetstream(expr, ",{}");
       if (expr[0]) {
          // -- We have an initializer expression.
          // FIXME: Do we handle a string literal correctly here?  See similar code in G__initary().
@@ -729,7 +727,7 @@ static int G__initstruct(G__FastAllocString& new_name)
                // -- Fixed-size array, error, array index out of range.
                if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                   if (!G__const_noerror) {
-                     G__fprinterr(G__serr, "Error: %s: %d: Array initialization out of range *(%s+%d), upto %d ", __FILE__, __LINE__, name(), linear_index, num_of_elements);
+                     G__fprinterr(G__serr, "Error: %s: %d: Array initialization out of range *(%s+%d), upto %d ", __FILE__, __LINE__, name, linear_index, num_of_elements);
                   }
                }
                G__genericerror(0);
@@ -776,7 +774,7 @@ static int G__initstruct(G__FastAllocString& new_name)
                break;
             }
             // Get next initializer expression.
-            c = G__fgetstream(expr, 0, ",{}");
+            c = G__fgetstream(expr, ",{}");
          } while (memvar);
          // Reset back to the beginning of the data member list.
          memvar = G__initmemvar(var->p_tagtable[varid], &memindex, &buf);
@@ -806,14 +804,15 @@ static int G__initstruct(G__FastAllocString& new_name)
 }
 
 //______________________________________________________________________________
-static int G__initary(G__FastAllocString& new_name)
+static int G__initary(char* new_name)
 {
    // -- Parse and execute an array initialization.
    //
    //printf("Begin G__initary for '%s'...\n", new_name);
-   static G__FastAllocString expr(G__ONELINE);
+   static char expr[G__ONELINE];
    // Separate the array name from the index specification.
-   G__FastAllocString name(new_name);
+   char name[G__MAXNAME];
+   std::strcpy(name, new_name);
    {
       char* p = std::strchr(name, '[');
       if (p) {
@@ -833,12 +832,12 @@ static int G__initary(G__FastAllocString& new_name)
       if (var && (var->varlabel[varid][1] /* number of elements */ == INT_MAX /* unspecified length flag */)) {
          // -- Variable exists and is an unspecified length array.
          // Look for a corresponding special name, both locally and globally.
-         G__FastAllocString namestatic(G__ONELINE);
+         char namestatic[G__ONELINE];
          if (G__memberfunc_tagnum != -1) { // questionable
-            namestatic.Format("%s\\%x\\%x\\%x", name(), G__func_page, G__func_now, G__memberfunc_tagnum);
+            sprintf(namestatic, "%s\\%x\\%x\\%x", name, G__func_page, G__func_now, G__memberfunc_tagnum);
          }
          else {
-            namestatic.Format("%s\\%x\\%x", name(), G__func_page, G__func_now);
+            sprintf(namestatic, "%s\\%x\\%x", name, G__func_page, G__func_now);
          }
          int hashstatic = 0;
          G__hash(namestatic, hashstatic, i)
@@ -862,12 +861,12 @@ static int G__initary(G__FastAllocString& new_name)
    if ((G__static_alloc == 1) && (G__func_now != -1)) {
       // -- Function-local static array initialization, use a special global variable name.
       if (G__memberfunc_tagnum != -1) { // questionable
-         expr.Format("%s\\%x\\%x\\%x", name(), G__func_page, G__func_now, G__memberfunc_tagnum);
+         std::sprintf(expr, "%s\\%x\\%x\\%x", name, G__func_page, G__func_now, G__memberfunc_tagnum);
       }
       else {
-         expr.Format("%s\\%x\\%x", name(), G__func_page, G__func_now);
+         std::sprintf(expr, "%s\\%x\\%x", name, G__func_page, G__func_now);
       }
-      name.Swap(expr);
+      std::strcpy(name, expr);
    }
 #ifdef G__ASM
    G__abortbytecode();
@@ -923,12 +922,12 @@ static int G__initary(G__FastAllocString& new_name)
          *px = 0;
       }
       // Use the special name for a class/enum/namespace/struct/union/func local.
-      G__FastAllocString temp(G__ONELINE);
+      char temp[G__ONELINE];
       if (G__tagdefining != -1) {
-         temp.Format("%s\\%x\\%x\\%x", name(), G__func_page, G__func_now, G__tagdefining);
+         sprintf(temp, "%s\\%x\\%x\\%x", name, G__func_page, G__func_now, G__tagdefining);
       }
       else {
-         temp.Format("%s\\%x\\%x", name(), G__func_page, G__func_now);
+         sprintf(temp, "%s\\%x\\%x", name, G__func_page, G__func_now);
       }
       // Calculate the hash value of the special name.
       int varhash = 0;
@@ -939,7 +938,7 @@ static int G__initary(G__FastAllocString& new_name)
       // If not found, try again using a member variable lookup.
       if (!var && (G__tagdefining != -1)) {
          // -- Not found, use the normal name, but do a member variable lookup.
-         temp = name;
+         std::sprintf(temp, "%s", name);
          G__hash(temp, varhash, itmpx);
          var = G__getvarentry(temp, varhash, &varid, G__struct.memvar[G__tagdefining], G__struct.memvar[G__tagdefining]);
       }
@@ -1022,7 +1021,7 @@ static int G__initary(G__FastAllocString& new_name)
    int linear_index = 0;
    while (brace_level) {
       // -- Read the next initializer value.
-      int c = G__fgetstream(expr, 0, ",{}");
+      int c = G__fgetstream(expr, ",{}");
       if (expr[0]) {
          // -- Found one.
          //printf("%d: '%s', ", linear_index, expr);
@@ -1031,7 +1030,7 @@ static int G__initary(G__FastAllocString& new_name)
             // -- Semantic error, gone past the end of the array.
             if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                if (!G__const_noerror) {
-                  G__fprinterr(G__serr, "Error: Too many initializers, exceeded length of array for '%s'", name());
+                  G__fprinterr(G__serr, "Error: Too many initializers, exceeded length of array for '%s'", name);
                }
             }
             G__genericerror(0);
@@ -1050,7 +1049,7 @@ static int G__initary(G__FastAllocString& new_name)
             // -- Semantic error, too many initializers.
             if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                if (!G__const_noerror) {
-                  G__fprinterr(G__serr, "Error: Too many initializers for '%s'", name());
+                  G__fprinterr(G__serr, "Error: Too many initializers for '%s'", name);
                }
             }
             G__genericerror(0);
@@ -1130,7 +1129,7 @@ static int G__initary(G__FastAllocString& new_name)
                // -- Semantic error, attempt to initialize a char with a string array constant.
                if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                   if (!G__const_noerror) {
-                     G__fprinterr(G__serr, "Error: Attempt to initialize a char with a string constant for '%s'", name());
+                     G__fprinterr(G__serr, "Error: Attempt to initialize a char with a string constant for '%s'", name);
                   }
                }
                G__genericerror(0);
@@ -1155,7 +1154,7 @@ static int G__initary(G__FastAllocString& new_name)
                // -- Semantic error, attempt to initialize a char array with a string array constant of the wrong size.
                if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                   if (!G__const_noerror) {
-                     G__fprinterr(G__serr, "Error: Initializer for a char array is too big while intializing '%s'", name());
+                     G__fprinterr(G__serr, "Error: Initializer for a char array is too big while intializing '%s'", name);
                   }
                }
                G__genericerror(0);
@@ -1349,7 +1348,7 @@ static int G__initary(G__FastAllocString& new_name)
 }
 
 //______________________________________________________________________________
-static void G__initstructary(G__FastAllocString& new_name, int tagnum)
+static void G__initstructary(char* new_name, int tagnum)
 {
    // -- Initialize an array of structures.
    // 
@@ -1359,7 +1358,7 @@ static void G__initstructary(G__FastAllocString& new_name, int tagnum)
    int cin = 0;
    long store_struct_offset = G__store_struct_offset;
    long store_globalvarpointer = G__globalvarpointer;
-   G__FastAllocString buf(G__ONELINE);
+   char buf[G__ONELINE];
    G__DataMemberHandle member;
 #ifdef G__ASM
    G__abortbytecode();
@@ -1377,16 +1376,14 @@ static void G__initstructary(G__FastAllocString& new_name, int tagnum)
       // FIXME: This does not allow nested curly braces.
       p_inc = 0;
       do {
-         cin = G__fgetstream(buf, 0, ",}");
+         cin = G__fgetstream(buf, ",}");
          ++p_inc;
       } while (cin != '}');
       // Now modify the name by adding the calculated dimensionality.
-      buf = index + 1;
-      G__FastAllocString idx(16);
-      idx.Format("%d", p_inc);
-      *(++index) = 0;
-      new_name += idx;
-      new_name += buf;
+      // FIXME: We modify new_name, which may not be big enough!
+      std::strcpy(buf, index + 1);
+      std::sprintf(index + 1, "%d", p_inc);
+      std::strcat(new_name, buf);
       // Rewind the file back to the beginning of the initializer spec.
       G__ifile.line_number = store_line;
       std::fsetpos(G__ifile.fp, &store_pos);
@@ -1405,7 +1402,7 @@ static void G__initstructary(G__FastAllocString& new_name, int tagnum)
    long len = strlen(buf);
    int i = 0;
    do {
-      cin = G__fgetstream(buf, len, ",}");
+      cin = G__fgetstream(buf + len, ",}");
       std::strcat(buf, ")");
       if (G__struct.iscpplink[tagnum] != G__CPPLINK) {
          G__store_struct_offset = adr + (i * G__struct.size[tagnum]);
@@ -1422,7 +1419,7 @@ static void G__initstructary(G__FastAllocString& new_name, int tagnum)
 }
 
 //______________________________________________________________________________
-static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type)
+static int G__readpointer2function(char* new_name, char* pvar_type)
 {
    // -- FIXME: Describe this function!
    //
@@ -1452,7 +1449,7 @@ static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type
    fpos_t pos2;
    fgetpos(G__ifile.fp, &pos2);
    int line2 = G__ifile.line_number;
-   int c = G__fgetstream(new_name, 0, "()");
+   int c = G__fgetstream(new_name, "()");
    if ((new_name[0] != '*') && !strstr(new_name, "::*")) {
       fsetpos(G__ifile.fp, &pos2);
       G__ifile.line_number = line2;
@@ -1468,14 +1465,14 @@ static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type
    else {
       line2 = 0;
    }
-   G__FastAllocString tagname(G__ONELINE);
+   char tagname[G__ONELINE];
    tagname[0] = '\0';
    {
       char* p = strstr(new_name, "::*");
       if (p) {
          isp2memfunc = G__POINTER2MEMFUNC;
          // (A::*p)(...)  => new_name="p" , tagname="A::"
-         tagname = new_name;
+         strcpy(tagname, new_name);
          p = strstr(tagname, "::*");
          strcpy(new_name, p + 3);
          *(p + 2) = '\0';
@@ -1491,12 +1488,12 @@ static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type
    if (c == '[') {
       // -- type (*pary)[n]; pointer to array
       //                ^
-      G__FastAllocString temp(G__ONELINE);
+      char temp[G__ONELINE];
       int n = 0;
       while (c == '[') {
-         c = G__fgetstream(temp, 0, "]");
+         c = G__fgetstream(temp, "]");
          G__p2arylabel[n++] = G__int(G__getexpr(temp));
-         c = G__fgetstream(temp, 0, "[;,)=");
+         c = G__fgetstream(temp, "[;,)=");
       }
       G__p2arylabel[n] = 0;
       fseek(G__ifile.fp, -1, SEEK_CUR);
@@ -1508,7 +1505,7 @@ static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type
       // -- type (*pfunc)(...); pointer to function
       //                 ^
       // Set newtype for pointer to function.
-      G__FastAllocString temp(G__ONELINE);
+      char temp[G__ONELINE];
       fpos_t pos;
       fgetpos(G__ifile.fp, &pos);
       int line = G__ifile.line_number;
@@ -1516,19 +1513,18 @@ static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type
          G__disp_mask = 1000; // FIXME: Gross hack!
       }
       if (ispointer) {
-         temp.Format("%s *(%s*)(", G__type2string(G__var_type, G__tagnum, G__typenum, G__reftype, G__constvar), tagname());
+         sprintf(temp, "%s *(%s*)(", G__type2string(G__var_type, G__tagnum, G__typenum, G__reftype, G__constvar), tagname);
       }
       else {
-         temp.Format("%s (%s*)(", G__type2string(G__var_type, G__tagnum, G__typenum, G__reftype, G__constvar), tagname());
+         sprintf(temp, "%s (%s*)(", G__type2string(G__var_type, G__tagnum, G__typenum, G__reftype, G__constvar), tagname);
       }
-      c = G__fdumpstream(temp, strlen(temp), ")");
-      size_t lentemp = strlen(temp);
-      temp.Set(lentemp++, c);
-      temp.Set(lentemp, 0);
+      c = G__fdumpstream(temp + strlen(temp), ")");
+      temp[strlen(temp)+1] = '\0';
+      temp[strlen(temp)] = c;
       G__tagnum = -1;
       if (isp2memfunc == G__POINTER2MEMFUNC) {
          G__typenum = G__search_typename(temp, 'a', -1, 0);
-         temp.Format("G__p2mf%d", G__typenum);
+         sprintf(temp, "G__p2mf%d", G__typenum);
          G__typenum = G__search_typename(temp, 'a', -1, 0);
          G__var_type = 'a';
          *pvar_type = 'a';
@@ -1622,9 +1618,9 @@ void G__define_var(int tagnum, int typenum)
    static int bitfieldwarn = 0;
    fpos_t store_fpos;
    G__value reg = G__null;
-   G__FastAllocString temp1(G__LONGLINE);
-   G__FastAllocString new_name(G__LONGLINE);
-   G__FastAllocString temp(G__LONGLINE);
+   char temp1[G__LONGLINE];
+   char new_name[G__LONGLINE];
+   char temp[G__LONGLINE];
    store_static_alloc2 = G__static_alloc;
    new_name[0] = '\0';
    store_tagnum = G__tagnum;
@@ -1666,13 +1662,13 @@ void G__define_var(int tagnum, int typenum)
    var_type = G__var_type;
    if (new_name[0] == '&') {
       G__reftype = G__PARAREFERENCE;
-      temp = new_name + 1;
-      new_name = temp;
+      strcpy(temp, new_name + 1);
+      strcpy(new_name, temp);
    }
    else if ((new_name[0] == '*') && (new_name[1] == '&')) {
       G__reftype = G__PARAREFERENCE;
-      temp.Format("*%s", new_name + 2);
-      new_name = temp;
+      sprintf(temp, "*%s", new_name + 2);
+      strcpy(new_name, temp);
    }
    //
    //  Now we have:
@@ -1757,7 +1753,7 @@ void G__define_var(int tagnum, int typenum)
             temp[0] = '\0';
          }
          else {
-            cin = G__fgetstream(temp, 0, ",)");
+            cin = G__fgetstream(temp, ",)");
             store_var_type = G__var_type;
             G__var_type = 'p';
             if (G__def_tagnum != -1) {
@@ -1861,9 +1857,9 @@ void G__define_var(int tagnum, int typenum)
             G__ansiheader = 0;
             if (G__struct.iscpplink[tagnum] == G__CPPLINK) {
                // -- The struct is compiled code.
-               G__FastAllocString tttt(G__ONELINE);
+               char tttt[G__ONELINE];
                G__valuemonitor(reg, tttt);
-               temp1.Format("%s(%s)", G__struct.name[tagnum], tttt());
+               sprintf(temp1, "%s(%s)", G__struct.name[tagnum], tttt);
                if (G__struct.parent_tagnum[tagnum] != -1) {
                   int store_exec_memberfunc = G__exec_memberfunc;
                   int store_memberfunc_tagnum = G__memberfunc_tagnum;
@@ -1956,7 +1952,7 @@ void G__define_var(int tagnum, int typenum)
                case G__CONSTRUCTORFUNC:
                   if (G__tagnum != -1) {
                      cin = '(';
-                     new_name = G__struct.name[G__tagnum];
+                     strcpy(new_name, G__struct.name[G__tagnum]);
                      G__var_type = 'i';
                      goto define_function;
                   }
@@ -2022,14 +2018,14 @@ void G__define_var(int tagnum, int typenum)
                if (G__dispsource) {
                   G__disp_mask = 1000;
                }
-               cin = G__fgetname(temp, 0, ",)!\"%&'*+-./<=>?[]^|~"); // FIXME: No '(' here because then given "B f(A(3, 5), 12)" the "A" passes the typename test and we parse it as a function declaration.
+               cin = G__fgetname(temp, ",)!\"%&'*+-./<=>?[]^|~"); // FIXME: No '(' here because then given "B f(A(3, 5), 12)" the "A" passes the typename test and we parse it as a function declaration.
                if (strlen(temp) && isspace(cin)) {
                   // -- There was an argument and the parsing was stopped by a white
                   // space rather than on of ",)*&<=", it is possible that
                   // we have a namespace followed by '::' in which case we have
                   // to grab more before stopping!
                   int namespace_tagnum;
-                  G__FastAllocString more(G__LONGLINE);
+                  char more[G__LONGLINE];
                   namespace_tagnum = G__defined_tagname(temp, 2);
                   while (
                      isspace(cin) &&
@@ -2039,8 +2035,8 @@ void G__define_var(int tagnum, int typenum)
                         (temp[strlen(temp)-1] == ':')
                      )
                   ) {
-                     cin = G__fgetname(more, 0, ",)!\"%&'(*+-./<=>?[]^|~");
-                     temp += more;
+                     cin = G__fgetname(temp, ",)!\"%&'(*+-./<=>?[]^|~");
+                     strcat(temp, more);
                      namespace_tagnum = G__defined_tagname(temp, 2);
                   }
                }
@@ -2063,8 +2059,7 @@ void G__define_var(int tagnum, int typenum)
                   // function definition
                   //   type funcname( type var1,.....)
                   //                  ^
-                  temp = new_name;
-                  temp += "(";
+                  sprintf(temp, "%s(", new_name);
                   G__make_ifunctable(temp);
                   G__isfuncreturnp2f = 0; // this is set above in this function
                   // body of the function is skipped all
@@ -2087,7 +2082,7 @@ void G__define_var(int tagnum, int typenum)
             //   type varname(const, const);
             //                ^
             // Read parameter list and build command string.
-            cin = G__fgetstream_newtemplate(temp, 0, ")");
+            cin = G__fgetstream_newtemplate(temp, ")");
             if ((new_name[0] == '*') && (var_type != 'c') && (temp[0] == '"')) {
                G__genericerror("Error: illegal pointer initialization");
             }
@@ -2124,14 +2119,14 @@ void G__define_var(int tagnum, int typenum)
                cin = G__fignorestream(",;");
                if (G__PARAREFERENCE == G__reftype && 0 == G__asm_wholefunction) {
                   if (0 == reg.ref) {
-                     G__fprinterr(G__serr, "Error: reference type %s with no initialization ", new_name());
+                     G__fprinterr(G__serr, "Error: reference type %s with no initialization ", new_name);
                      G__genericerror(0);
                   }
                   G__globalvarpointer = reg.ref;
                }
                goto create_body;
             }
-            temp1.Format("%s(%s)", G__struct.name[G__tagnum], temp());
+            sprintf(temp1, "%s(%s)", G__struct.name[G__tagnum], temp);
             // Store flags.
             store_prerun = G__prerun;
             G__prerun = 0;
@@ -2207,7 +2202,7 @@ void G__define_var(int tagnum, int typenum)
                G__store_struct_offset = G__PVOID;
             }
             if (G__dispsource) {
-               G__fprinterr(G__serr, "\n!!!Calling constructor 0x%lx.%s for declaration of %s  %s:%d", G__store_struct_offset, temp1(), new_name(), __FILE__, __LINE__);
+               G__fprinterr(G__serr, "\n!!!Calling constructor 0x%lx.%s for declaration of %s  %s:%d", G__store_struct_offset, temp1, new_name, __FILE__, __LINE__);
             }
             // call constructor, error if no constructor.
             G__decl = 0;
@@ -2277,7 +2272,7 @@ void G__define_var(int tagnum, int typenum)
                   // -- Temporary solution, later this must be deleted.
                   if ((G__asm_wholefunction == G__ASM_FUNC_NOP) || G__asm_noverflow) {
                      if (!G__xrefflag) {
-                        G__fprinterr(G__serr, "Error: %s not allocated(1), maybe duplicate declaration ", new_name());
+                        G__fprinterr(G__serr, "Error: %s not allocated(1), maybe duplicate declaration ", new_name);
                      }
                      G__genericerror(0);
                   }
@@ -2341,7 +2336,7 @@ void G__define_var(int tagnum, int typenum)
                /* if(i>1) G__reftype = i+1;  not needed */
             }
             if (strchr(new_name + i, '<')) {
-               G__removespacetemplate(new_name, i);
+               G__removespacetemplate(new_name + i);
             }
             do {
                G__def_tagnum = G__defined_tagname(new_name + i, 0) ;
@@ -2360,15 +2355,14 @@ void G__define_var(int tagnum, int typenum)
                   return;
                }
                G__tagdefining  = G__def_tagnum;
-               cin = G__fgetstream(new_name, i, "(=;:");
+               cin = G__fgetstream(new_name + i, "(=;:");
             }
             while (':' == cin && EOF != (cin = G__fgetc())) ;
             temp[0] = '\0';
             switch (cin) {
                case '=':
                   if (strncmp(new_name + i, "operator", 8) == 0) {
-                     cin = G__fgetstream(new_name, strlen(new_name) + 1, "(");
-                     new_name.Resize(strlen(new_name) + 1);
+                     cin = G__fgetstream(new_name + strlen(new_name) + 1, "(");
                      new_name[strlen(new_name)] = '=';
                      break;
                   }
@@ -2376,8 +2370,8 @@ void G__define_var(int tagnum, int typenum)
                   /* PHILIPPE17: the following is fixed in 1306! */
                   /* static class object member must call constructor
                    * TO BE IMPLEMENTED */
-                  temp.Format("%s::%s", G__fulltagname(G__def_tagnum, 1), new_name + i);
-                  new_name = temp;
+                  sprintf(temp, "%s::%s", G__fulltagname(G__def_tagnum, 1), new_name + i);
+                  strcpy(new_name, temp);
                   if ('u' != var_type || G__reftype) var_type = 'p';
                   else staticclassobject = 1;
                   G__def_struct_member = store_def_struct_member;
@@ -2391,12 +2385,12 @@ void G__define_var(int tagnum, int typenum)
                    * handled correctly. */
             }
             if (strcmp(new_name + i, "operator") == 0) {
-               temp.Format("%s()(", new_name());
+               sprintf(temp, "%s()(", new_name);
                cin = G__fignorestream(")");
                cin = G__fignorestream("(");
             }
             else {
-               temp.Format("%s(", new_name());
+               sprintf(temp, "%s(", new_name);
             }
             G__make_ifunctable(temp);
             G__def_struct_member = store_def_struct_member;
@@ -2429,13 +2423,12 @@ void G__define_var(int tagnum, int typenum)
                }
                bitfieldwarn = 1;
             }
-            cin = G__fgetstream(temp, 0, ",;=}");
-            new_name += " : ";
-            new_name += temp;
+            cin = G__fgetstream(temp, ",;=}");
+            sprintf(new_name, "%s : %s", new_name, temp);
             G__bitfield = 1;
          }
          else {
-            cin = G__fgetstream(temp, 0, ",;=}");
+            cin = G__fgetstream(temp, ",;=}");
             G__bitfield = atoi(temp);
             if (!G__bitfield) {
                G__bitfield = -1;
@@ -2457,10 +2450,10 @@ void G__define_var(int tagnum, int typenum)
          G__tagnum = G__get_envtagnum();
          // Scan the initializer into temp.
          if ((var_type == 'u')) {
-            cin = G__fgetstream_newtemplate(temp, 0, ",;{}");
+            cin = G__fgetstream_newtemplate(temp, ",;{}");
          }
          else {
-            cin = G__fgetstream_new(temp, 0, ",;{");
+            cin = G__fgetstream_new(temp, ",;{");
          }
          if (
             G__def_struct_member &&
@@ -2615,7 +2608,7 @@ void G__define_var(int tagnum, int typenum)
             (G__reftype == G__PARAREFERENCE) &&
             !G__def_struct_member
          ) {
-            G__fprinterr(G__serr, "Error: reference type %s with no initialization ", new_name());
+            G__fprinterr(G__serr, "Error: reference type %s with no initialization ", new_name);
             G__genericerror(0);
          }
          reg = G__null;
@@ -2748,9 +2741,9 @@ void G__define_var(int tagnum, int typenum)
                   //
                   // type a;
                   //
-                  temp.Format("%s()", G__struct.name[G__tagnum]);
+                  sprintf(temp, "%s()", G__struct.name[G__tagnum]);
                   if (G__dispsource) {
-                     G__fprinterr(G__serr, "\n!!!Calling default constructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp(), new_name());
+                     G__fprinterr(G__serr, "\n!!!Calling default constructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp, new_name);
                   }
                   G__decl = 0;
                   if ((index = strchr(new_name, '['))) {
@@ -2894,7 +2887,7 @@ void G__define_var(int tagnum, int typenum)
                            if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
                               // -- We are not generating bytecode for a whole function,
                               // so we are allowed to print this error message.
-                              G__fprinterr(G__serr, "Error: %s no default constructor", temp());
+                              G__fprinterr(G__serr, "Error: %s no default constructor", temp);
                            }
                            // Print a generic error message, and keep going.
                            G__genericerror(0);
@@ -2957,7 +2950,7 @@ void G__define_var(int tagnum, int typenum)
                   // struct class initialization = { x, y, z }
                   if (initary) {
                      if (known && (G__struct.funcs[tagnum]& G__HAS_XCONSTRUCTOR)) {
-                        G__fprinterr(G__serr, "Error: Illegal initialization of %s. Constructor exists ", new_name());
+                        G__fprinterr(G__serr, "Error: Illegal initialization of %s. Constructor exists ", new_name);
                         G__genericerror(0);
                         cin = G__fignorestream("}");
                         cin = G__fignorestream(",;");
@@ -2984,16 +2977,16 @@ void G__define_var(int tagnum, int typenum)
                      // to pass G__getfunction()
                      G__tagnum = store_tagnum;
                   }
-                  temp1.Format("%s(", G__struct.name[G__tagnum]);
+                  sprintf(temp1, "%s(", G__struct.name[G__tagnum]);
                   // FIXME: ifdef G__TEMPLATECLASS: Need to evaluate template argument list here.
                   if (temp == strstr(temp, temp1)) {
                      int c;
                      int isrc = 0;
-                     G__FastAllocString buf(G__LONGLINE);
+                     char buf[G__LONGLINE];
                      flag = 1;
-                     c = G__getstream_template(temp, &isrc, buf, 0, "(");
+                     c = G__getstream_template(temp, &isrc, buf, "(");
                      if (c == '(') {
-                        c = G__getstream_template(temp, &isrc, buf, 0, ")");
+                        c = G__getstream_template(temp, &isrc, buf, ")");
                         if (c == ')') {
                            if (temp[isrc]) {
                               flag = 0;
@@ -3007,8 +3000,8 @@ void G__define_var(int tagnum, int typenum)
                         *index = '\0';
                         flag = G__defined_typename(temp);
                         if ((flag != -1) && (G__newtype.tagnum[flag] == G__tagnum)) {
-                           temp1.Format("%s(%s", G__struct.name[G__tagnum], index + 1);
-                           temp = temp1;
+                           sprintf(temp1, "%s(%s", G__struct.name[G__tagnum], index + 1);
+                           strcpy(temp, temp1);
                            flag = 1;
                         }
                         else {
@@ -3028,7 +3021,7 @@ void G__define_var(int tagnum, int typenum)
                   if (flag) {
                      // -- Call explicit constructor, error if no constructor.
                      if (G__dispsource) {
-                        G__fprinterr(G__serr, "\n!!!Calling constructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp(), new_name());
+                        G__fprinterr(G__serr, "\n!!!Calling constructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp, new_name);
                      }
                      G__decl = 0;
                      if (G__struct.iscpplink[tagnum] == G__CPPLINK) {
@@ -3113,17 +3106,17 @@ void G__define_var(int tagnum, int typenum)
                      if (G__struct.iscpplink[tagnum] == G__CPPLINK) {
                         if ((reg.tagnum == tagnum) && (reg.type == 'u')) {
                            if (reg.obj.i < 0) {
-                              temp.Format("%s((%s)(%ld))", G__struct.name[tagnum], G__struct.name[tagnum], G__int(reg));
+                              sprintf(temp, "%s((%s)(%ld))", G__struct.name[tagnum], G__struct.name[tagnum], G__int(reg));
                            }
                            else {
-                              temp.Format("%s((%s)%ld)", G__struct.name[tagnum], G__struct.name[tagnum], G__int(reg));
+                              sprintf(temp, "%s((%s)%ld)", G__struct.name[tagnum], G__struct.name[tagnum], G__int(reg));
                            }
                         }
                         else {
-                           G__FastAllocString tttt(G__ONELINE);
+                           char tttt[G__ONELINE];
 #define G__OLDIMPLEMENTATION1780 // FIXME: Should this be removed?
                            G__valuemonitor(reg, tttt);
-                           temp.Format("%s(%s)", G__struct.name[tagnum], tttt());
+                           sprintf(temp, "%s(%s)", G__struct.name[tagnum], tttt);
                         }
 #ifndef G__OLDIMPLEMENTATION1073
                         if (G__asm_wholefunction) {
@@ -3202,7 +3195,7 @@ void G__define_var(int tagnum, int typenum)
             }
             else {
                if (G__var_type == 'u') {
-                  G__fprinterr(G__serr, "Error: %s not allocated(2), maybe duplicate declaration ", new_name());
+                  G__fprinterr(G__serr, "Error: %s not allocated(2), maybe duplicate declaration ", new_name);
                   G__genericerror(0);
                }
                // else OK because this is type name[];
@@ -3335,7 +3328,7 @@ void G__define_var(int tagnum, int typenum)
       //
       // type  var1, var2, var3;
       //             ^
-      cin = G__fgetstream(new_name, 0, ",;=():");
+      cin = G__fgetstream(new_name, ",;=():");
       if (cin == EOF) {
          // -- Reached end of input file, syntax error, missing semicolon, return.
          G__decl = store_decl;
@@ -3366,13 +3359,13 @@ void G__define_var(int tagnum, int typenum)
       //
       if (new_name[0] == '&') {
          G__reftype = G__PARAREFERENCE;
-         temp = new_name + 1;
-         new_name = temp;
+         strcpy(temp, new_name + 1);
+         strcpy(new_name, temp);
       }
       else if ((new_name[0] == '*') && (new_name[1] == '&')) {
          G__reftype = G__PARAREFERENCE;
-         temp.Format("*%s", new_name + 2);
-         new_name = temp;
+         sprintf(temp, "*%s", new_name + 2);
+         strcpy(new_name, temp);
       }
    }
 }
@@ -3427,6 +3420,8 @@ G__var_array* G__incmemvar(G__var_array* memvar, int* pindex, G__value* pbuf)
 //
 
 // None.
+
+} // extern "C"
 
 /*
  * Local Variables:

@@ -651,10 +651,11 @@ int Cint::G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
   G__ClassInfo globalscope;
   G__MethodInfo method;
   long dummy=0;
-  G__FastAllocString classname(funcname);
+  char classname[G__LONGLINE];
 
   // Actually find the last :: to get the full classname, including
   // namespace and/or containing classes.
+  strcpy(classname,funcname);
   char *fname = 0;
   char * tmp = classname;
   while ( (tmp = strstr(tmp,"::")) ) {
@@ -700,10 +701,11 @@ int Cint::G__SetForceStub(char *funcname,char *param)
   G__ClassInfo globalscope;
   G__MethodInfo method;
   long dummy=0;
-  G__FastAllocString classname(funcname);
+  char classname[G__LONGLINE];
 
   // Actually find the last :: to get the full classname, including
   // namespace and/or containing classes.
+  strcpy(classname,funcname);
   char *fname = 0;
   char * tmp = classname;
   while ( (tmp = strstr(tmp,"::")) ) {
@@ -749,10 +751,11 @@ int Cint::G__ForceBytecodecompilation(char *funcname,char *param)
   G__ClassInfo globalscope;
   G__MethodInfo method;
   long dummy=0;
-  G__FastAllocString classname(funcname);
+  char classname[G__LONGLINE];
 
   // Actually find the last :: to get the full classname, including
   // namespace and/or containing classes.
+  strcpy(classname,funcname);
   char *fname = 0;
   char * tmp = classname;
   while ( (tmp = strstr(tmp,"::")) ) {

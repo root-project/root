@@ -16,10 +16,12 @@
 #include "common.h"
 #include "value.h"
 
+extern "C" {
+
 //______________________________________________________________________________
-char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
+char* G__valuemonitor(G__value buf, char* temp)
 {
-   G__FastAllocString temp2(G__ONELINE);
+   char temp2[G__ONELINE];
 
    if (buf.typenum != -1) {
       switch (buf.type) {
@@ -27,13 +29,13 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
          case 'f':
             /* typedef can be local to a class */
             if (buf.obj.d < 0.0)
-               temp.Format("(%s)(%.17e)"
+               sprintf(temp, "(%s)(%.17e)"
                        , G__type2string(buf.type , buf.tagnum , buf.typenum
                                         , 0
                                         , 0)
                        , G__convertT<double>(&buf));
             else
-               temp.Format("(%s)%.17e"
+               sprintf(temp, "(%s)%.17e"
                        , G__type2string(buf.type , buf.tagnum , buf.typenum
                                         , 0
                                         , 0)
@@ -41,27 +43,27 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
             break;
          case 'b':
             if (G__in_pause)
-               temp.Format("(unsigned char)%u", G__convertT<unsigned char>(&buf));
+               sprintf(temp, "(unsigned char)%u", G__convertT<unsigned char>(&buf));
             else
-               temp.Format("(unsignedchar)%u", G__convertT<unsigned char>(&buf));
+               sprintf(temp, "(unsignedchar)%u", G__convertT<unsigned char>(&buf));
             break;
          case 'r':
             if (G__in_pause)
-               temp.Format("(unsigned short)%u", G__convertT<unsigned short>(&buf));
+               sprintf(temp, "(unsigned short)%u", G__convertT<unsigned short>(&buf));
             else
-               temp.Format("(unsignedshort)%u", G__convertT<unsigned short>(&buf));
+               sprintf(temp, "(unsignedshort)%u", G__convertT<unsigned short>(&buf));
             break;
          case 'h':
             if (G__in_pause)
-               temp.Format("(unsigned int)%u", G__convertT<unsigned int>(&buf));
+               sprintf(temp, "(unsigned int)%u", G__convertT<unsigned int>(&buf));
             else
-               temp.Format("(unsignedint)%u", G__convertT<unsigned int>(&buf));
+               sprintf(temp, "(unsignedint)%u", G__convertT<unsigned int>(&buf));
             break;
          case 'k':
             if (G__in_pause)
-               temp.Format("(unsigned long)%lu", G__convertT<unsigned long>(&buf));
+               sprintf(temp, "(unsigned long)%lu", G__convertT<unsigned long>(&buf));
             else
-               temp.Format("(unsignedlong)%lu", G__convertT<unsigned long>(&buf));
+               sprintf(temp, "(unsignedlong)%lu", G__convertT<unsigned long>(&buf));
             break;
          default:
             if (islower(buf.type)) {
@@ -71,37 +73,37 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
                         strcmp(G__struct.name[buf.tagnum], "G__ulonglong") == 0 ||
                         strcmp(G__struct.name[buf.tagnum], "G__longdouble") == 0) {
                      if (G__in_pause) {
-                        G__FastAllocString llbuf(100);
-                        temp.Format("(%s)"
+                        char llbuf[100];
+                        sprintf(temp, "(%s)"
                                 , G__type2string(buf.type , buf.tagnum , buf.typenum
                                                  , buf.obj.reftype.reftype, 0));
                         if (strcmp(G__struct.name[buf.tagnum], "G__longlong") == 0) {
-                           llbuf.Format(
-                                   "G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
-                                   , (long)(llbuf()), buf.obj.i);
+                           sprintf(llbuf
+                                   , "G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
+                                   , (long)llbuf, buf.obj.i);
                            G__getitem(llbuf);
-                           temp += llbuf;
+                           strcat(temp, llbuf);
                         }
                         else if (strcmp(G__struct.name[buf.tagnum], "G__ulonglong") == 0) {
-                           llbuf.Format(
-                                   "G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
-                                   , (long)(llbuf()), buf.obj.i);
+                           sprintf(llbuf
+                                   , "G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
+                                   , (long)llbuf, buf.obj.i);
                            G__getitem(llbuf);
-                           temp += llbuf;
+                           strcat(temp, llbuf);
                         }
                         else if (strcmp(G__struct.name[buf.tagnum], "G__longdouble") == 0) {
-                           llbuf.Format(
-                                   "G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
-                                   , (long)(llbuf()), buf.obj.i);
+                           sprintf(llbuf
+                                   , "G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
+                                   , (long)llbuf, buf.obj.i);
                            G__getitem(llbuf);
-                           temp += llbuf;
+                           strcat(temp, llbuf);
                         }
                      }
                      else
                         G__setiparseobject(&buf, temp);
                   }
                   else {
-                     temp.Format("(class %s)%ld"
+                     sprintf(temp, "(class %s)%ld"
                              , G__type2string(buf.type , buf.tagnum , buf.typenum
                                               , buf.obj.reftype.reftype, 0)
                              , buf.obj.i);
@@ -110,12 +112,12 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
                else
 #if defined(G__WIN32)
                   if (buf.type == 'n' && buf.obj.ll < 0)
-                     temp.Format("(%s)(%I64d)"
+                     sprintf(temp, "(%s)(%I64d)"
                              , G__type2string(buf.type , buf.tagnum , buf.typenum
                                               , 0, 0)
                              , buf.obj.ll);
                   else if (buf.type == 'm' || buf.type == 'n')
-                     temp.Format("(%s)%I64u"
+                     sprintf(temp, "(%s)%I64u"
                              , G__type2string(buf.type , buf.tagnum , buf.typenum
                                               , 0, 0)
                              , buf.obj.ull);
@@ -123,12 +125,12 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
                   else
 #else
                   if (buf.type == 'n' && buf.obj.ll < 0)
-                     temp.Format("(%s)(%lld)"
+                     sprintf(temp, "(%s)(%lld)"
                              , G__type2string(buf.type , buf.tagnum , buf.typenum
                                               , 0, 0)
                              , buf.obj.ll);
                   else if (buf.type == 'm' || buf.type == 'n')
-                     temp.Format("(%s)%llu"
+                     sprintf(temp, "(%s)%llu"
                              , G__type2string(buf.type , buf.tagnum , buf.typenum
                                               , 0, 0)
                              , buf.obj.ull);
@@ -136,12 +138,12 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
                   else
 #endif
                      if (buf.obj.i < 0) {
-                        temp.Format("(%s)(%ld)"
+                        sprintf(temp, "(%s)(%ld)"
                                 , G__type2string(buf.type , buf.tagnum , buf.typenum
                                                  , buf.obj.reftype.reftype, 0)
                                 , G__convertT<long>(&buf));
                      } else {
-                        temp.Format("(%s)%ld"
+                        sprintf(temp, "(%s)%ld"
                                 , G__type2string(buf.type , buf.tagnum , buf.typenum
                                                  , buf.obj.reftype.reftype, 0)
                                 , G__convertT<long>(&buf));
@@ -150,12 +152,12 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
             else {
                if ('C' == buf.type && G__in_pause && buf.obj.i > 0x10000 &&
                      G__PARANORMAL == buf.obj.reftype.reftype)
-                  temp.Format("(%s 0x%lx)\"%s\""
+                  sprintf(temp, "(%s 0x%lx)\"%s\""
                           , G__type2string(buf.type , buf.tagnum , buf.typenum
                                            , buf.obj.reftype.reftype, 0)
                           , buf.obj.i, (char*)buf.obj.i);
                else
-                  temp.Format("(%s)0x%lx"
+                  sprintf(temp, "(%s)0x%lx"
                           , G__type2string(buf.type , buf.tagnum , buf.typenum
                                            , buf.obj.reftype.reftype, 0)
                           , buf.obj.i);
@@ -166,177 +168,176 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
 
    switch (buf.type) {
       case '\0':
-         temp.Format("NULL");
+         sprintf(temp, "NULL");
          break;
       case 'b':
          if (G__in_pause)
-            temp.Format("(unsigned char)%u", G__convertT<unsigned char>(&buf));
+            sprintf(temp, "(unsigned char)%u", G__convertT<unsigned char>(&buf));
          else
-            temp.Format("(unsignedchar)%u", G__convertT<unsigned char>(&buf));
+            sprintf(temp, "(unsignedchar)%u", G__convertT<unsigned char>(&buf));
          break;
       case 'B':
          if (G__in_pause)
-            temp.Format("(unsigned char*)0x%lx", buf.obj.i);
+            sprintf(temp, "(unsigned char*)0x%lx", buf.obj.i);
          else
-            temp.Format("(unsignedchar*)0x%lx", buf.obj.i);
+            sprintf(temp, "(unsignedchar*)0x%lx", buf.obj.i);
          break;
       case 'T':
       case 'C':
          if (buf.obj.i != 0) {
             if (G__in_pause && G__PARANORMAL == buf.obj.reftype.reftype) {
                if (strlen((char*)buf.obj.i) > G__ONELINE - 25) {
-                  temp2.Resize(G__ONELINE - 24);
                   strncpy(temp2, (char*)buf.obj.i, G__ONELINE - 25);
                   temp2[G__ONELINE-25] = 0;
-                  temp.Format("(char* 0x%lx)\"%s\"...", buf.obj.i, temp2());
+                  sprintf(temp, "(char* 0x%lx)\"%s\"...", buf.obj.i, temp2);
                }
                else {
-                  G__add_quotation((const char*)buf.obj.i, temp2);
-                  temp.Format("(char* 0x%lx)%s", buf.obj.i, temp2());
+                  G__add_quotation((char*)buf.obj.i, temp2);
+                  sprintf(temp, "(char* 0x%lx)%s", buf.obj.i, temp2);
                }
             }
             else {
-               temp.Format("(char*)0x%lx", buf.obj.i);
+               sprintf(temp, "(char*)0x%lx", buf.obj.i);
             }
          }
          else {
             if (G__in_pause)
-               temp.Format("(char* 0x0)\"\"");
+               sprintf(temp, "(char* 0x0)\"\"");
             else
-               temp.Format("(char*)0x0");
+               sprintf(temp, "(char*)0x0");
          }
          break;
       case 'c':
          G__charaddquote(temp2, G__convertT<char>(&buf));
          if (G__in_pause)
-            temp.Format("(char %d)%s", G__convertT<char>(&buf), temp2());
+            sprintf(temp, "(char %d)%s", G__convertT<char>(&buf), temp2);
          else
-            temp.Format("(char)%d", G__convertT<char>(&buf));
+            sprintf(temp, "(char)%d", G__convertT<char>(&buf));
          break;
       case 'r':
          if (G__in_pause)
-            temp.Format("(unsigned short)%u", G__convertT<unsigned short>(&buf));
+            sprintf(temp, "(unsigned short)%u", G__convertT<unsigned short>(&buf));
          else
-            temp.Format("(unsignedshort)%u", G__convertT<unsigned short>(&buf));
+            sprintf(temp, "(unsignedshort)%u", G__convertT<unsigned short>(&buf));
          break;
       case 'R':
          if (G__in_pause)
-            temp.Format("(unsigned short*)0x%lx", buf.obj.i);
+            sprintf(temp, "(unsigned short*)0x%lx", buf.obj.i);
          else
-            temp.Format("(unsignedshort*)0x%lx", buf.obj.i);
+            sprintf(temp, "(unsignedshort*)0x%lx", buf.obj.i);
          break;
       case 's':
          if (buf.obj.i < 0)
-            temp.Format("(short)(%d)", G__convertT<short>(&buf));
+            sprintf(temp, "(short)(%d)", G__convertT<short>(&buf));
          else
-            temp.Format("(short)%d", G__convertT<short>(&buf));
+            sprintf(temp, "(short)%d", G__convertT<short>(&buf));
          break;
       case 'S':
-         temp.Format("(short*)0x%lx", buf.obj.i);
+         sprintf(temp, "(short*)0x%lx", buf.obj.i);
          break;
       case 'h':
          if (G__in_pause)
-            temp.Format("(unsigned int)%u", G__convertT<unsigned int>(&buf));
+            sprintf(temp, "(unsigned int)%u", G__convertT<unsigned int>(&buf));
          else
-            temp.Format("(unsignedint)%u", G__convertT<unsigned int>(&buf));
+            sprintf(temp, "(unsignedint)%u", G__convertT<unsigned int>(&buf));
          break;
       case 'H':
          if (G__in_pause)
-            temp.Format("(unsigned int*)0x%lx", buf.obj.i);
+            sprintf(temp, "(unsigned int*)0x%lx", buf.obj.i);
          else
-            temp.Format("(unsignedint*)0x%lx", buf.obj.i);
+            sprintf(temp, "(unsignedint*)0x%lx", buf.obj.i);
          break;
       case 'i':
          if (buf.tagnum != -1) {
             if (G__struct.type[buf.tagnum] == 'e') {
                if (buf.obj.i < 0)
-                  temp.Format("(enum %s)(%d)", G__fulltagname(buf.tagnum, 1), G__convertT<int>(&buf));
+                  sprintf(temp, "(enum %s)(%d)", G__fulltagname(buf.tagnum, 1), G__convertT<int>(&buf));
                else
-                  temp.Format("(enum %s)%d", G__fulltagname(buf.tagnum, 1), G__convertT<int>(&buf));
+                  sprintf(temp, "(enum %s)%d", G__fulltagname(buf.tagnum, 1), G__convertT<int>(&buf));
             }
             else {
                if (buf.obj.i < 0)
-                  temp.Format("(int)(%d)", G__convertT<int>(&buf));
+                  sprintf(temp, "(int)(%d)", G__convertT<int>(&buf));
                else
-                  temp.Format("(int)%d", G__convertT<int>(&buf));
+                  sprintf(temp, "(int)%d", G__convertT<int>(&buf));
             }
          }
          else {
             if (buf.obj.i < 0)
-               temp.Format("(int)(%d)", G__convertT<int>(&buf));
+               sprintf(temp, "(int)(%d)", G__convertT<int>(&buf));
             else
-               temp.Format("(int)%d", G__convertT<int>(&buf));
+               sprintf(temp, "(int)%d", G__convertT<int>(&buf));
          }
          break;
       case 'I':
          if (buf.tagnum != -1) {
             if (G__struct.type[buf.tagnum] == 'e') {
-               temp.Format("(enum %s*)0x%lx", G__fulltagname(buf.tagnum, 1), buf.obj.i);
+               sprintf(temp, "(enum %s*)0x%lx", G__fulltagname(buf.tagnum, 1), buf.obj.i);
             }
             else {
-               temp.Format("(int*)0x%lx", buf.obj.i);
+               sprintf(temp, "(int*)0x%lx", buf.obj.i);
             }
          }
          else {
-            temp.Format("(int*)0x%lx", buf.obj.i);
+            sprintf(temp, "(int*)0x%lx", buf.obj.i);
          }
          break;
 #if defined(G__WIN32)
       case 'n':
          if (buf.obj.ll < 0)
-            temp.Format("(long long)(%I64d)", buf.obj.ll);
+            sprintf(temp, "(long long)(%I64d)", buf.obj.ll);
          else
-            temp.Format("(long long)%I64d", buf.obj.ll);
+            sprintf(temp, "(long long)%I64d", buf.obj.ll);
          break;
       case 'm':
-         temp.Format("(unsigned long long)%I64u", buf.obj.ull);
+         sprintf(temp, "(unsigned long long)%I64u", buf.obj.ull);
          break;
 #else
       case 'n':
          if (buf.obj.ll < 0)
-            temp.Format("(long long)(%lld)", buf.obj.ll);
+            sprintf(temp, "(long long)(%lld)", buf.obj.ll);
          else
-            temp.Format("(long long)%lld", buf.obj.ll);
+            sprintf(temp, "(long long)%lld", buf.obj.ll);
          break;
       case 'm':
-         temp.Format("(unsigned long long)%llu", buf.obj.ull);
+         sprintf(temp, "(unsigned long long)%llu", buf.obj.ull);
          break;
 #endif
       case 'q':
          if (buf.obj.ld < 0)
-            temp.Format("(long double)(%Lg)", buf.obj.ld);
+            sprintf(temp, "(long double)(%Lg)", buf.obj.ld);
          else
-            temp.Format("(long double)%Lg", buf.obj.ld);
+            sprintf(temp, "(long double)%Lg", buf.obj.ld);
          break;
       case 'g':
-         temp.Format("(bool)%d", G__convertT<bool>(&buf));
+         sprintf(temp, "(bool)%d", G__convertT<bool>(&buf));
          break;
       case 'k':
          if (G__in_pause)
-            temp.Format("(unsigned long)%lu", G__convertT<unsigned long>(&buf));
+            sprintf(temp, "(unsigned long)%lu", G__convertT<unsigned long>(&buf));
          else
-            temp.Format("(unsignedlong)%lu", G__convertT<unsigned long>(&buf));
+            sprintf(temp, "(unsignedlong)%lu", G__convertT<unsigned long>(&buf));
          break;
       case 'K':
          if (G__in_pause)
-            temp.Format("(unsigned long*)0x%lx", buf.obj.i);
+            sprintf(temp, "(unsigned long*)0x%lx", buf.obj.i);
          else
-            temp.Format("(unsignedlong*)0x%lx", buf.obj.i);
+            sprintf(temp, "(unsignedlong*)0x%lx", buf.obj.i);
          break;
       case 'l':
          if (buf.obj.i < 0)
-            temp.Format("(long)(%ld)", buf.obj.i);
+            sprintf(temp, "(long)(%ld)", buf.obj.i);
          else
-            temp.Format("(long)%ld", buf.obj.i);
+            sprintf(temp, "(long)%ld", buf.obj.i);
          break;
       case 'L':
-         temp.Format("(long*)0x%lx", buf.obj.i);
+         sprintf(temp, "(long*)0x%lx", buf.obj.i);
          break;
       case 'y':
          if (buf.obj.i < 0)
-            temp.Format("(void)(%ld)", buf.obj.i);
+            sprintf(temp, "(void)(%ld)", buf.obj.i);
          else
-            temp.Format("(void)%ld", buf.obj.i);
+            sprintf(temp, "(void)%ld", buf.obj.i);
          break;
 #ifndef G__OLDIMPLEMENTATION2191
       case '1':
@@ -344,37 +345,37 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
       case 'Q':
 #endif
       case 'Y':
-         temp.Format("(void*)0x%lx", buf.obj.i);
+         sprintf(temp, "(void*)0x%lx", buf.obj.i);
          break;
       case 'E':
-         temp.Format("(FILE*)0x%lx", buf.obj.i);
+         sprintf(temp, "(FILE*)0x%lx", buf.obj.i);
          break;
       case 'd':
          if (buf.obj.d < 0.0)
-            temp.Format("(double)(%.17e)", buf.obj.d);
+            sprintf(temp, "(double)(%.17e)", buf.obj.d);
          else
-            temp.Format("(double)%.17e", buf.obj.d);
+            sprintf(temp, "(double)%.17e", buf.obj.d);
          break;
       case 'D':
-         temp.Format("(double*)0x%lx", buf.obj.i);
+         sprintf(temp, "(double*)0x%lx", buf.obj.i);
          break;
       case 'f':
          if (buf.obj.d < 0.0)
-            temp.Format("(float)(%.17e)", buf.obj.d);
+            sprintf(temp, "(float)(%.17e)", buf.obj.d);
          else
-            temp.Format("(float)%.17e", buf.obj.d);
+            sprintf(temp, "(float)%.17e", buf.obj.d);
          break;
       case 'F':
-         temp.Format("(float*)0x%lx", buf.obj.i);
+         sprintf(temp, "(float*)0x%lx", buf.obj.i);
          break;
       case 'u':
          switch (G__struct.type[buf.tagnum]) {
             case 's':
                if (buf.obj.i < 0)
-                  temp.Format("(struct %s)(%ld)"
+                  sprintf(temp, "(struct %s)(%ld)"
                           , G__fulltagname(buf.tagnum, 1), buf.obj.i);
                else
-                  temp.Format("(struct %s)%ld" , G__fulltagname(buf.tagnum, 1), buf.obj.i);
+                  sprintf(temp, "(struct %s)%ld" , G__fulltagname(buf.tagnum, 1), buf.obj.i);
                break;
             case 'c':
                if (-1 != buf.tagnum &&
@@ -382,30 +383,30 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
                       strcmp(G__struct.name[buf.tagnum], "G__ulonglong") == 0 ||
                       strcmp(G__struct.name[buf.tagnum], "G__longdouble") == 0)) {
                   if (G__in_pause) {
-                     G__FastAllocString llbuf(100);
-                     temp.Format("(%s)"
+                     char llbuf[100];
+                     sprintf(temp, "(%s)"
                              , G__type2string(buf.type , buf.tagnum , buf.typenum
                                               , buf.obj.reftype.reftype, 0));
                      if (strcmp(G__struct.name[buf.tagnum], "G__longlong") == 0) {
-                        llbuf.Format(
-                                "G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
-                                , (long)(llbuf()), buf.obj.i);
+                        sprintf(llbuf
+                                , "G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
+                                , (long)llbuf, buf.obj.i);
                         G__getitem(llbuf);
-                        temp += llbuf;
+                        strcat(temp, llbuf);
                      }
                      else if (strcmp(G__struct.name[buf.tagnum], "G__ulonglong") == 0) {
-                        llbuf.Format(
-                                "G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
-                                , (long)(llbuf()), buf.obj.i);
+                        sprintf(llbuf
+                                , "G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
+                                , (long)llbuf, buf.obj.i);
                         G__getitem(llbuf);
-                        temp += llbuf;
+                        strcat(temp, llbuf);
                      }
                      else if (strcmp(G__struct.name[buf.tagnum], "G__longdouble") == 0) {
-                        llbuf.Format(
-                                "G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
-                                , (long)(llbuf()), buf.obj.i);
+                        sprintf(llbuf
+                                , "G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
+                                , (long)llbuf, buf.obj.i);
                         G__getitem(llbuf);
-                        temp += llbuf;
+                        strcat(temp, llbuf);
                      }
                   }
                   else
@@ -413,75 +414,73 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
                }
                else
                   if (buf.obj.i < 0)
-                     temp.Format("(class %s)(%ld)"
+                     sprintf(temp, "(class %s)(%ld)"
                              , G__fulltagname(buf.tagnum, 1) , buf.obj.i);
                   else
-                     temp.Format("(class %s)%ld" , G__fulltagname(buf.tagnum, 1) , buf.obj.i);
+                     sprintf(temp, "(class %s)%ld" , G__fulltagname(buf.tagnum, 1) , buf.obj.i);
                break;
             case 'u':
                if (buf.obj.i < 0)
-                  temp.Format("(union %s)(%ld)"
+                  sprintf(temp, "(union %s)(%ld)"
                           , G__fulltagname(buf.tagnum, 1) , buf.obj.i);
                else
-                  temp.Format("(union %s)%ld" , G__fulltagname(buf.tagnum, 1) , buf.obj.i);
+                  sprintf(temp, "(union %s)%ld" , G__fulltagname(buf.tagnum, 1) , buf.obj.i);
                break;
             case 'e':
-               temp.Format("(enum %s)%d", G__fulltagname(buf.tagnum, 1), G__convertT<int>(&buf));
+               sprintf(temp, "(enum %s)%d", G__fulltagname(buf.tagnum, 1), G__convertT<int>(&buf));
                break;
             default:
                if (buf.obj.i < 0)
-                  temp.Format("(unknown %s)(%ld)"
+                  sprintf(temp, "(unknown %s)(%ld)"
                           , G__struct.name[buf.tagnum] , buf.obj.i);
                else
-                  temp.Format("(unknown %s)%ld" , G__struct.name[buf.tagnum] , buf.obj.i);
+                  sprintf(temp, "(unknown %s)%ld" , G__struct.name[buf.tagnum] , buf.obj.i);
                break;
          }
          break;
       case 'U':
          switch (G__struct.type[buf.tagnum]) {
             case 's':
-               temp.Format("(struct %s*)0x%lx" , G__fulltagname(buf.tagnum, 1), buf.obj.i);
+               sprintf(temp, "(struct %s*)0x%lx" , G__fulltagname(buf.tagnum, 1), buf.obj.i);
                break;
             case 'c':
-               temp.Format("(class %s*)0x%lx" , G__fulltagname(buf.tagnum, 1), buf.obj.i);
+               sprintf(temp, "(class %s*)0x%lx" , G__fulltagname(buf.tagnum, 1), buf.obj.i);
                break;
             case 'u':
-               temp.Format("(union %s*)0x%lx" , G__fulltagname(buf.tagnum, 1) , buf.obj.i);
+               sprintf(temp, "(union %s*)0x%lx" , G__fulltagname(buf.tagnum, 1) , buf.obj.i);
                break;
             case 'e':
-               temp.Format("(enum %s*)0x%lx" , G__fulltagname(buf.tagnum, 1) , buf.obj.i);
+               sprintf(temp, "(enum %s*)0x%lx" , G__fulltagname(buf.tagnum, 1) , buf.obj.i);
                break;
             default:
-               temp.Format("(unknown %s*)0x%lx", G__fulltagname(buf.tagnum, 1), buf.obj.i);
+               sprintf(temp, "(unknown %s*)0x%lx", G__fulltagname(buf.tagnum, 1), buf.obj.i);
                break;
          }
          break;
       case 'w':
          G__logicstring(buf, 1, temp2);
-         temp.Format("(logic)0b%s", temp2());
+         sprintf(temp, "(logic)0b%s", temp2);
          break;
       default:
          if (buf.obj.i < 0)
-            temp.Format("(unknown)(%ld)", buf.obj.i);
+            sprintf(temp, "(unknown)(%ld)", buf.obj.i);
          else
-            temp.Format("(unknown)%ld", buf.obj.i);
+            sprintf(temp, "(unknown)%ld", buf.obj.i);
          break;
    }
 
    if (isupper(buf.type)) {
       int i;
       char *p;
-      size_t lentemp = strlen(temp);
-      G__FastAllocString sbuf(lentemp);
-      temp.Resize(lentemp + 3 + buf.obj.reftype.reftype - G__PARAP2P - 1);
+      char sbuf[G__ONELINE];
       p = strchr(temp, '*');
       switch (buf.obj.reftype.reftype) {
          case G__PARAP2P:
-            sbuf = p;
+            strcpy(sbuf, p);
             strcpy(p + 1, sbuf);
             break;
          case G__PARAP2P2P:
-            sbuf = p;
+            strcpy(sbuf, p);
             *(p + 1) = '*';
             strcpy(p + 2, sbuf);
             break;
@@ -497,8 +496,6 @@ char* G__valuemonitor(G__value buf, G__FastAllocString& temp)
 
    return(temp);
 }
-
-extern "C" {
 
 //______________________________________________________________________________
 const char* G__access2string(int caccess)
@@ -1033,7 +1030,7 @@ long double G__atolf(const char* expr)
 //______________________________________________________________________________
 char* G__getbase(unsigned int expression, int base, int digit, char* result1)
 {
-   G__FastAllocString result(G__MAXNAME);
+   char result[G__MAXNAME];
    int ig18 = 0, ig28 = 0;
    unsigned int onedig, value; /* bug fix  3 mar 1993 */
 
@@ -1041,7 +1038,7 @@ char* G__getbase(unsigned int expression, int base, int digit, char* result1)
 
    while ((ig28 < digit) || ((digit == 0) && (value != 0))) {
       onedig = value % base ;
-      result.Set(ig28, G__getdigit(onedig));
+      result[ig28] = G__getdigit(onedig);
       value = (value - onedig) / base;
       ig28++ ;
    }
@@ -1633,8 +1630,8 @@ int G__isvalue(const char* temp)
 //______________________________________________________________________________
 G__value G__string2type_body(const char* typenamin, int noerror)
 {
-   G__FastAllocString typenam(typenamin);
-   G__FastAllocString temp(G__MAXNAME*2);
+   char typenam[G__MAXNAME*2];
+   char temp[G__MAXNAME*2];
    int len;
    int plevel = 0;
    int rlevel = 0;
@@ -1644,6 +1641,8 @@ G__value G__string2type_body(const char* typenamin, int noerror)
    int risconst = 0;
 
    result = G__null;
+
+   strcpy(typenam, typenamin);
 
    // 20/04/07
    // We need G__get_methodhandle to be able to find functions that
@@ -1656,25 +1655,25 @@ G__value G__string2type_body(const char* typenamin, int noerror)
    }
 
    if (strncmp(typenam, "volatile ", 9) == 0) {
-      temp = typenam + 9;
-      typenam.Swap(temp);
+      strcpy(temp, typenam + 9);
+      strcpy(typenam, temp);
    }
    else
       if (strncmp(typenam, "volatile", 8) == 0) {
-         temp = typenam + 8;
-         typenam.Swap(temp);
+         strcpy(temp, typenam + 8);
+         strcpy(typenam, temp);
       }
 
    if (strncmp(typenam, "const ", 6) == 0) {
-      temp = typenam + 6;
-      typenam.Swap(temp);
+      strcpy(temp, typenam + 6);
+      strcpy(typenam, temp);
       isconst = G__CONSTVAR;
    }
    else
       if (strncmp(typenam, "const", 5) == 0 &&
             -1 == G__defined_tagname(typenam, 2) && -1 == G__defined_typename(typenam)) {
-         temp = typenam + 5;
-         typenam.Swap(temp);
+         strcpy(temp, typenam + 5);
+         strcpy(typenam, temp);
          isconst = 1;
       }
 

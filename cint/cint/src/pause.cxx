@@ -240,36 +240,35 @@ void G__UnlockCriticalSection()
 int G__autoloading(char *com)
 {
    int i = 0, j = 0;
-   G__FastAllocString classname(G__ONELINE);
+   char classname[G__ONELINE];
    while (com[i] && !isalpha(com[i])) ++i;
-   while (com[i] && (isalnum(com[i]) || '_' == com[i]))
-      classname.Set(j++, com[i++]);
-   classname.Set(j, 0);
+   while (com[i] && (isalnum(com[i]) || '_' == com[i])) classname[j++] = com[i++];
+   classname[j] = 0;
    if (0 == strcmp(classname, "new")) {
       j = 0;
       while (com[i] && !isalpha(com[i])) ++i;
-      while (com[i] && (isalnum(com[i]) || '_' == com[i]))
-         classname.Set(j++, com[i++]);
-      classname.Set(j, 0);
+      while (com[i] && (isalnum(com[i]) || '_' == com[i])) classname[j++] = com[i++];
+      classname[j] = 0;
    }
    if (classname[0] && -1 == G__defined_tagname(classname, 2)) {
       const char *dllpost = G__getmakeinfo1("DLLPOST");
-      G__FastAllocString fname(classname);
-      fname += dllpost;
-      FILE *fp = fopen(fname, "r");
+      char fname[G__MAXFILENAME];
+      char prompt[G__ONELINE];
+      FILE *fp;
+      sprintf(fname, "%s%s", classname, dllpost);
+      fp = fopen(fname, "r");
       if (!fp) return 0;
       else fclose(fp);
-      G__FastAllocString prompt(G__ONELINE);
-      prompt.Format("Will you try loading %s(y/n)? ", fname());
-      prompt = G__input(prompt);
+      sprintf(prompt, "Will you try loading %s(y/n)? ", fname);
+      strcpy(prompt, G__input(prompt));
       if (tolower(prompt[0]) != 'y') return(0);
       G__security_recover(G__sout); /* QUESTIONABLE */
       switch (G__loadfile(fname)) {
          case G__LOADFILE_SUCCESS:
-            fprintf(G__sout, "%s loaded\n", fname());
+            fprintf(G__sout, "%s loaded\n", fname);
             return(1);
          default:
-            fprintf(G__sout, "Error: failed to load %s\n", fname());
+            fprintf(G__sout, "Error: failed to load %s\n", fname);
             return(0);
       }
    }
@@ -439,9 +438,9 @@ void G__rewind_undo_position()
    G__decrement_undo_index(&undoindex);
    if (undodictpos[undoindex].var &&
          G__is_valid_dictpos(&undodictpos[undoindex])) {
-      G__FastAllocString buf(G__ONELINE);
+      char buf[G__ONELINE];
       G__show_undo_position(undoindex);
-      buf = G__input("Are you sure? (y/n) ");
+      strcpy(buf, G__input("Are you sure? (y/n) "));
       if ('y' == tolower(buf[0])) {
          G__scratch_upto(&undodictpos[undoindex]);
          undodictpos[undoindex].var = (struct G__var_array*)NULL;
@@ -566,8 +565,7 @@ void G__rewinddictionary()
 static int G__atevaluate(G__value buf)
 {
    G__value result;
-   G__FastAllocString com(G__ONELINE);
-   G__FastAllocString buf2(G__ONELINE);
+   char com[G__ONELINE], buf2[G__ONELINE];
    int known = 0;
    int store_break = G__break;
    int store_step = G__step;
@@ -587,7 +585,7 @@ static int G__atevaluate(G__value buf)
    if ('Q' == buf.type || 'a' == buf.type) return(0);
 #endif
    G__valuemonitor(buf, buf2);
-   com.Format("G__ateval(%s)", buf2());
+   sprintf(com, "G__ateval(%s)", buf2);
    G__break = 0;
    G__step = 0;
    G__dispsource = 0;
@@ -611,11 +609,11 @@ static int G__atevaluate(G__value buf)
 static void G__display_tempobj(FILE *fout)
 {
    struct G__tempobject_list *p = G__p_tempbuf;
-   G__FastAllocString buf(G__ONELINE);
+   char buf[G__ONELINE];
    fprintf(fout, "current tempobj stack level = %d\n", G__templevel);
    do {
       G__valuemonitor(p->obj, buf);
-      fprintf(fout, "level%-3d %2d %s\n", p->level, p->cpplink, buf());
+      fprintf(fout, "level%-3d %2d %s\n", p->level, p->cpplink, buf);
       p = p->prev;
    }
    while (p);
@@ -629,7 +627,7 @@ static void G__display_tempobj(FILE *fout)
 ************************************************************************/
 static void G__display_keyword(FILE* fout, const char* keyword, FILE* keyfile)
 {
-   G__FastAllocString line(G__LONGLINE);
+   char line[G__LONGLINE];
    char *null_fgets;
    if (keyfile) {
       fseek(keyfile, 0L, SEEK_SET);
@@ -652,7 +650,7 @@ static void G__display_keyword(FILE* fout, const char* keyword, FILE* keyfile)
 int G__reloadfile(char *filename, bool keep)
 {
    int i, j = 0;
-   char* storefname[G__MAXFILE];
+   char *storefname[G__MAXFILE];
    int storecpp[G__MAXFILE];
    int storen = 0;
    int flag = 0;
@@ -737,15 +735,27 @@ int G__reloadfile(char *filename, bool keep)
 void G__display_classkeyword(FILE *fout, const char *classnamein, const char *keyword, int base)
 {
    // --
-   G__FastAllocString classname(classnamein);
+#ifndef G__OLDIMPLEMENTATION1823
+   char buf[G__BUFLEN];
+   char *classname = buf;
+#else
+   char classname[G__ONELINE];
+#endif
    int istmpnam = 0;
 
+#ifndef G__OLDIMPLEMENTATION1823
+   if (strlen(classnamein) > G__BUFLEN - 5) {
+      classname = (char*)malloc(strlen(classnamein) + 5);
+   }
+#endif
+
    G__more_pause((FILE*)NULL, 0);
+   strcpy(classname, classnamein);
    if (keyword && keyword[0]) {
 #ifndef G__TMPFILE
-      G__FastAllocString tname(L_tmpnam+10);
+      char tname[L_tmpnam+10];
 #else
-      G__FastAllocString tname(G__MAXFILENAME);
+      char tname[G__MAXFILENAME];
 #endif
       FILE *G__temp;
       do {
@@ -774,6 +784,9 @@ void G__display_classkeyword(FILE *fout, const char *classnamein, const char *ke
    else {
       G__display_class(fout, classname, base, 0);
    }
+#ifndef G__OLDIMPLEMENTATION1823
+   if (buf != classname) free((void*)classname);
+#endif
    // --
 }
 
@@ -871,16 +884,16 @@ int G__pause()
    int more = 0;
    void(*oldhandler)(int) = 0;
    char* p = 0;
-   G__FastAllocString cintname(G__ONELINE);
-   G__FastAllocString filename(G__ONELINE);
-   G__FastAllocString command(G__LONGLINE);
-   G__FastAllocString prompt(G__ONELINE);
+   char cintname[G__ONELINE];
+   char filename[G__ONELINE];
+   char command[G__LONGLINE];
+   char prompt[G__ONELINE];
    p = strrchr(G__nam, G__psep[0]);
    if (p && *(p + 1)) {
-      cintname = p + 1;
+      strcpy(cintname, p + 1);
    }
    else {
-      cintname = G__nam;
+      strcpy(cintname, G__nam);
    }
    prompt[0] = '\0';
    // Do not pause while skipping code.
@@ -914,11 +927,11 @@ int G__pause()
    while (1) {
       // Set prompt string.
       if (prompt[0]) {
-         command = prompt;
+         strcpy(command, prompt);
       }
       else {
          if (!view.file.name[0]) {
-            command.Format("%s> ", cintname());
+            sprintf(command, "%s> ", cintname);
          }
          else {
             p = strrchr(view.file.name, G__psep[0]);
@@ -928,7 +941,7 @@ int G__pause()
             else {
                strcpy(filename, view.file.name);
             }
-            command.Format("FILE:%s LINE:%d %s> ", G__stripfilename(filename), view.file.line_number, cintname());
+            sprintf(command, "FILE:%s LINE:%d %s> ", G__stripfilename(filename), view.file.line_number, cintname);
          }
       }
       if (!more) {
@@ -971,7 +984,7 @@ int G__pause()
          // --
       }
       char* tmp = G__input(command);
-      command = tmp;
+      strcpy(command, tmp);
       if (!more) {
          G__in_pause = 0;
          G__RESET_TEMPENV;
@@ -1002,16 +1015,16 @@ int G__pause()
 ******************************************************************/
 int G__update_stdio()
 {
-   G__FastAllocString command(G__LONGLINE);
+   char command[G__LONGLINE];
 
    G__intp_sout = G__sout;
    G__intp_serr = G__serr;
    G__intp_sin = G__sin;
-   command.Format("stderr=%ld", (long)G__intp_serr);
+   sprintf(command, "stderr=%ld", (long)G__intp_serr);
    G__getexpr(command);
-   command.Format("stdout=%ld", (long)G__intp_sout);
+   sprintf(command, "stdout=%ld", (long)G__intp_sout);
    G__getexpr(command);
-   command.Format("stdin=%ld", (long)G__intp_sin);
+   sprintf(command, "stdin=%ld", (long)G__intp_sin);
    G__getexpr(command);
    return(0);
 }
@@ -1039,7 +1052,7 @@ static void G__redirectoutput(char *com
    char *blacket;
    /* int issemicolumn; */
    const char *openmode;
-   G__FastAllocString filename(G__MAXFILENAME);
+   char filename[G__MAXFILENAME];
    int i = 0;
    int j = 1;
    int mode = 0; /* 0:stdout, 1:stderr, 2:stdout+stderr */
@@ -1083,12 +1096,12 @@ static void G__redirectoutput(char *com
           *                  ^ -------- */
          while ((*(redirect + j))) {
             if (!isspace(*(redirect + j))) {
-               filename.Set(i++, *(redirect + j));
+               filename[i++] = *(redirect + j);
             }
             else if (i) break;
             ++j;
          }
-         filename.Set(i, 0);
+         filename[i] = '\0';
          strcpy(pipefile, filename);
 
          /* get filename to redirect
@@ -1153,7 +1166,7 @@ static void G__redirectoutput(char *com
                      G__sout = *psout;
                      G__unredirectoutput(psout, &donttouch, &donttouch, "", "");
                      G__fprinterr(G__serr, "Error: cannot open pipe output file %s!\n",
-                                  filename());
+                                  filename);
                   }
                   else
                      G__redirect_on();
@@ -1170,7 +1183,7 @@ static void G__redirectoutput(char *com
                      G__serr = *pserr;
                      G__unredirectoutput(&donttouch, pserr, &donttouch, "", "");
                      G__fprinterr(G__serr, "Error: cannot open error pipe output file %s!\n",
-                                  filename());
+                                  filename);
                   }
                   /*DEBUG G__dumpfile = G__serr; */
                   break;
@@ -1221,12 +1234,12 @@ static void G__redirectoutput(char *com
          j = 1;
          while ((*(redirectin + j))) {
             if (!isspace(*(redirectin + j))) {
-               filename.Set(i++, *(redirectin + j));
+               filename[i++] = *(redirectin + j);
             }
             else if (i) break;
             ++j;
          }
-         filename.Set(i, 0);
+         filename[i] = '\0';
 
          *redirectin = '\0';
          --redirectin;
@@ -1241,7 +1254,7 @@ static void G__redirectoutput(char *com
                G__sin = *psin;
                G__unredirectoutput(&donttouch, &donttouch, psin, "", "");
                G__fprinterr(G__serr, "Error: cannot open input pipe from file %s!\n",
-                            filename());
+                            filename);
             }
          }
       }
@@ -1503,9 +1516,9 @@ static void G__remove_input_tmpfile(G__input_file& ftemp)
 int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt)
 {
    FILE *tempfp;   /* used for input dump file */
-   G__FastAllocString command(G__LONGLINE);
-   G__FastAllocString syscom(G__LONGLINE);
-   G__FastAllocString editor(64);
+   char command[G__LONGLINE];
+   char syscom[G__LONGLINE];
+   char editor[64];
    int temp, temp1 = 0, temp2;
    int index = -1;
    int ignore = G__PAUSE_NORMAL;
@@ -1517,10 +1530,10 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
    /* pass to parent otherwise not re-entrant */
 #ifdef G__TMPFILE
    static char tname[G__MAXFILENAME];
-   G__FastAllocString sname(G__MAXFILENAME);
+   char sname[G__MAXFILENAME];
 #else
    static char tname[L_tmpnam+10];
-   G__FastAllocString sname(L_tmpnam+10);
+   char sname[L_tmpnam+10];
 #endif
    struct G__input_file ftemp;
    ftemp.fp = 0;
@@ -1532,12 +1545,12 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
    FILE *G__temp;
    char *evalbase;
    int base = 0 /* ,digit */ , num;
-   G__FastAllocString evalresult(G__ONELINE);
+   char evalresult[G__ONELINE];
    FILE* store_stderr = NULL;
    FILE* store_stdout = NULL;
    FILE* store_stdin = NULL;
-   G__FastAllocString keyword(G__ONELINE);
-   G__FastAllocString pipefile(G__MAXFILENAME);
+   char keyword[G__ONELINE];
+   char pipefile[G__MAXFILENAME];
    int dmy = 0;
    int noprintflag = 0;
    int istmpnam = 0;
@@ -1564,7 +1577,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
    temp = 0;
    while (isspace(line[temp])) ++temp;
    if (*more == 0) {
-      command = line + temp;
+      strcpy(command, line + temp);
       com = strchr(command, '\n');
       if (com) *com = '\0';
       else {
@@ -1573,11 +1586,11 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       }
       if (G__INPUTROOTMODE&G__rootmode) {
          if (command[0] == '.') {
-            syscom = command + 1;
-            command = syscom;
+            strcpy(syscom, command + 1);
+            strcpy(command, syscom);
          }
          else if (strcmp(command, "?") == 0) {
-            command = "help";
+            strcpy(command, "help");
          }
          else if ('\0' != command[0] && command[0] != '{') {
 #ifndef G__OLDIMPLEMENTATION1774
@@ -1605,7 +1618,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
             temp = strlen(command) - 1;
             while (isspace(command[temp])) --temp;
             if (command[temp] == ';') {
-               syscom.Format("{%s}", command());
+               sprintf(syscom, "{%s}", command);
 #ifndef G__OLDIMPLEMENTATION1774
                if (G__INPUTCXXMODE != G__rootmode) noprintflag = 1;
 #else
@@ -1613,14 +1626,14 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
 #endif
             }
             else {
-               syscom.Format("{%s;}", command());
+               sprintf(syscom, "{%s;}", command);
             }
-            command = syscom;
+            strcpy(command, syscom);
          }
       }
    }
    else {
-      command.Format("{%s", line + temp);
+      sprintf(command, "{%s", line + temp);
       com = strchr(command, '\n');
       if (com) *com = '\0';
       else {
@@ -1782,7 +1795,8 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
    else if (strncmp("rm", com, 2) == 0 ||
             strncmp("del", com, 4) == 0 ||
             strncmp("rmdir", com, 5) == 0) {
-      G__FastAllocString localbuf(G__input("Are you sure(y/n)? "));
+      char localbuf[80];
+      strcpy(localbuf, G__input("Are you sure(y/n)? "));
       if (tolower(localbuf[0]) == 'y') system(com);
       else fprintf(G__sout, "aborted\n");
    }
@@ -2212,7 +2226,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
          if (!s) s = strrchr(string + temp, '\\');
          if (!s) s = string + temp;
          else   s++;
-         syscom = s;
+         strcpy(syscom, s);
          s = syscom;
          while (s && *s) {
             if ('-' == (*s)) *s = '_';
@@ -2220,9 +2234,9 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
          }
          string = strchr(com + 1, '(');
          if (string)
-            syscom += string;
+            strcat(syscom, string);
          else
-            syscom += "()";
+            strcat(syscom, "()");
          buf = G__calc_internal(syscom);
          if (rslt) *rslt = buf;
          G__in_pause = 1;
@@ -2230,19 +2244,19 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
          G__in_pause = 0;
 #ifndef G__OLDIMPLEMENTATION1259
          if (buf.isconst&(G__CONSTVAR | G__CONSTFUNC)) {
-            G__FastAllocString tmp(G__ONELINE);
-            tmp.Format("(const %s", syscom + 1);
-            syscom = tmp;
+            char tmp[G__ONELINE];
+            sprintf(tmp, "(const %s", syscom + 1);
+            strcpy(syscom, tmp);
          }
          if (buf.isconst&G__PCONSTVAR) {
-            G__FastAllocString tmp2(G__ONELINE);
+            char tmp2[G__ONELINE];
             char *ptmp = strchr(syscom, ')');
-            tmp2 = ptmp;
+            strcpy(tmp2, ptmp);
             strcpy(ptmp, "const");
-            syscom += tmp2;
+            strcat(syscom, tmp2);
          }
 #endif
-         if (buf.type && 0 == G__atevaluate(buf)) fprintf(G__sout, "%s\n", syscom());
+         if (buf.type && 0 == G__atevaluate(buf)) fprintf(G__sout, "%s\n", syscom);
 #ifdef G__SECURITY
          *err |= G__security_recover(G__serr);
 #endif
@@ -2572,9 +2586,10 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       /*******************************************************
        * Execute shell command
        *******************************************************/
-      G__FastAllocString combuf(strlen(string) + 30);
-      combuf.Format("sh -I -c %s", string);
+      char *combuf = (char*)malloc(strlen(string) + 30);
+      sprintf(combuf, "sh -I -c %s", string);
       system(combuf);
+      free((void*)combuf);
    }
    else if (strncmp("!", com, 1) == 0) {
       /*******************************************************
@@ -2761,8 +2776,8 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       }
    }
    else if (strncmp("f", com, 1) == 0) {
-      syscom = string;
-      command = syscom;
+      strcpy(syscom, string);
+      strcpy(command, syscom);
       /*******************************************************
        * Set view file
        *******************************************************/
@@ -2782,7 +2797,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
    }
    else if (strncmp("+", com, 1) == 0 || strncmp("-", com, 1) == 0) {
       temp = atoi(command);
-      command.Format("%d", view.file.line_number + temp);
+      sprintf(command, "%d", view.file.line_number + temp);
       goto vcommand;
    }
    else if (strncmp("proto", com, 3) == 0) {
@@ -2790,8 +2805,8 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       G__display_proto(G__sout, string);
    }
    else if (strncmp("view", com, 1) == 0) {
-      syscom = string;
-      command = syscom;
+      strcpy(syscom, string);
+      strcpy(command, syscom);
 vcommand:
       /*******************************************************
        * Display source code
@@ -2924,7 +2939,7 @@ vcommand:
    }
    else if (strncmp(command, "qqq", 3) == 0 || strncmp(command, "QQQ", 3) == 0) {
       fprintf(G__sout, "*** Process will be killed ***\n");
-      command = G__input("Are you sure(y/Y/n)? ");
+      strcpy(command, G__input("Are you sure(y/Y/n)? "));
       if (command[0] == 'Y') {
          G__fprinterr(G__serr, "  Bye... (try 'qqqqq' if still running)\n");
          exit(EXIT_FAILURE);
@@ -3039,14 +3054,14 @@ vcommand:
       if (com[0] == 'E') {
          if (command[temp] == '\0') {
             if ('\0' == G__tempc[0]) G__tmpnam(G__tempc); /* E command, rare case */
-            syscom.Format("%s %s", editor(), G__tempc);
+            sprintf(syscom, "%s %s", editor, G__tempc);
             system(syscom);
-            syscom = G__tempc;
+            sprintf(syscom, G__tempc);
          }
          else {
-            syscom.Format("%s %s", editor(), command + temp);
+            sprintf(syscom, "%s %s", editor, command + temp);
             system(syscom);
-            syscom = command + temp;
+            sprintf(syscom, command + temp);
          }
       }
       else {
@@ -3059,7 +3074,7 @@ vcommand:
             G__UnlockCriticalSection();
             return(ignore);
          }
-         syscom = command + temp;
+         sprintf(syscom, command + temp);
       }
       /*******************************************************
        * Execute temp file
@@ -3083,18 +3098,19 @@ vcommand:
          G__in_pause = 0;
 #ifndef G__OLDIMPLEMENTATION1259
          if (buf.isconst&(G__CONSTVAR | G__CONSTFUNC)) {
-            G__FastAllocString tmp(G__ONELINE);
-            tmp.Format("(const %s", syscom + 1);
-            syscom = tmp;
+            char tmp[G__ONELINE];
+            sprintf(tmp, "(const %s", syscom + 1);
+            strcpy(syscom, tmp);
          }
          if (buf.isconst&G__PCONSTVAR) {
+            char tmp2[G__ONELINE];
             char *ptmp = strchr(syscom, ')');
-            G__FastAllocString tmp2(ptmp);
+            strcpy(tmp2, ptmp);
             strcpy(ptmp, "const");
-            syscom += tmp2;
+            strcat(syscom, tmp2);
          }
 #endif
-         if (buf.type && 0 == G__atevaluate(buf)) fprintf(G__sout, "%s\n", syscom());
+         if (buf.type && 0 == G__atevaluate(buf)) fprintf(G__sout, "%s\n", syscom);
 #endif
          G__RESET_TEMPENV;
       }
@@ -3249,15 +3265,16 @@ multi_line_command:
             G__in_pause = 0;
 #ifndef G__OLDIMPLEMENTATION1259
             if (buf.isconst&(G__CONSTVAR | G__CONSTFUNC)) {
-               G__FastAllocString tmp(G__LONGLINE);
-               tmp.Format("(const %s", syscom + 1);
-               syscom = tmp;
+               char tmp[G__LONGLINE];
+               sprintf(tmp, "(const %s", syscom + 1);
+               strcpy(syscom, tmp);
             }
             if (buf.isconst&G__PCONSTVAR) {
+               char tmp2[G__LONGLINE];
                char *ptmp = strchr(syscom, ')');
-               G__FastAllocString tmp2(ptmp);
+               strcpy(tmp2, ptmp);
                strcpy(ptmp, "const");
-               syscom += tmp2;
+               strcat(syscom, tmp2);
             }
 #endif
             G__RESET_TEMPENV;
@@ -3268,7 +3285,7 @@ multi_line_command:
          }
          if (buf.type && 0 == G__atevaluate(buf)
                && !noprintflag
-             ) fprintf(G__sout, "%s\n", syscom());
+            ) fprintf(G__sout, "%s\n", syscom);
          noprintflag = 0;
          G__command_eval = 0 ;
          G__free_tempobject();
@@ -3298,8 +3315,8 @@ multi_line_command:
        * Evaluate statement
        *******************************************************/
       G__more_pause((FILE*)NULL, 1);
-      syscom = string;
-      command = syscom;
+      strcpy(syscom, string);
+      strcpy(command, syscom);
       if (strlen(command) > 0) {
          G__redirectoutput(command, &store_stdout, &store_stderr, &store_stdin, 1, keyword, pipefile);
 #ifdef G__ASM
@@ -3385,26 +3402,26 @@ multi_line_command:
                   G__valuemonitor(buf, syscom);
                }
                else if (base == 100) {
-                  syscom.Format("{d=%g i=%ld,reftype=%d} type=%c,tag=%d,type=%d,ref=%lx,isconst=%d"
+                  sprintf(syscom, "{d=%g i=%ld,reftype=%d} type=%c,tag=%d,type=%d,ref=%lx,isconst=%d"
                           , buf.obj.d, buf.obj.i, buf.obj.reftype.reftype
                           , buf.type, buf.tagnum, buf.typenum, buf.ref, buf.isconst);
                }
                else {
                   G__getbase(buf.obj.i , base , 0, evalresult);
-                  syscom.Format("0%c%s" , evalbase[temp1] , evalresult());
+                  sprintf(syscom, "0%c%s" , evalbase[temp1] , evalresult);
                }
                G__in_pause = 0;
-               fprintf(G__sout, "%s\n", syscom());
+               fprintf(G__sout, "%s\n", syscom);
             }
             else {
                for (temp = 0;temp < num;temp++) {
                   if (temp % 2 == 0) {
-                     syscom.Format("&%s+%d" , command + 1 , temp);
+                     sprintf(syscom, "&%s+%d" , command + 1 , temp);
                      buf = G__calc_internal(syscom);
                      if (rslt) *rslt = buf;
                      fprintf(G__sout, "\n0x%lx: " , buf.obj.i);
                   }
-                  syscom.Format("*(&%s+%d)" , command + 1 , temp);
+                  sprintf(syscom, "*(&%s+%d)" , command + 1 , temp);
                   buf = G__calc_internal(syscom);
                   if (rslt) *rslt = buf;
                   G__in_pause = 1;
@@ -3413,10 +3430,10 @@ multi_line_command:
                   }
                   else {
                      G__getbase(buf.obj.i, base , 0, evalresult);
-                     syscom.Format("0%c%s" , evalbase[temp1] , evalresult());
+                     sprintf(syscom, "0%c%s" , evalbase[temp1] , evalresult);
                   }
                   G__in_pause = 0;
-                  fprintf(G__sout, "%30s ", syscom());
+                  fprintf(G__sout, "%30s ", syscom);
                }
                fprintf(G__sout, "\n");
             }
@@ -3433,15 +3450,16 @@ multi_line_command:
             G__in_pause = 0;
 #ifndef G__OLDIMPLEMENTATION1259
             if (buf.isconst&(G__CONSTVAR | G__CONSTFUNC)) {
-               G__FastAllocString tmp(G__ONELINE);
-               tmp.Format("(const %s", syscom + 1);
-               syscom = tmp;
+               char tmp[G__ONELINE];
+               sprintf(tmp, "(const %s", syscom + 1);
+               strcpy(syscom, tmp);
             }
             if (buf.isconst&G__PCONSTVAR) {
+               char tmp2[G__ONELINE];
                char *ptmp = strchr(syscom, ')');
-               G__FastAllocString tmp2(ptmp);
+               strcpy(tmp2, ptmp);
                strcpy(ptmp, "const");
-               syscom += tmp2;
+               strcat(syscom, tmp2);
             }
 #endif
          }
@@ -3452,7 +3470,7 @@ multi_line_command:
 #endif
          G__var_type = store_var_type;
          if (buf.type && 0 == G__atevaluate(buf)) {
-            fprintf(G__sout, "%s\n", syscom());
+            fprintf(G__sout, "%s\n", syscom);
             if ('u' == buf.type && buf.obj.i) {
                G__objectmonitor(G__sout, buf.obj.i, buf.tagnum, "");
             }

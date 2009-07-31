@@ -435,6 +435,7 @@ G__value G__tovalue(G__value p)
     break;
   case 'u': 
     { 
+      char refopr[G__MAXNAME];
       long store_struct_offsetX = G__store_struct_offset;
       int store_tagnumX = G__tagnum;
       int done=0;
@@ -455,7 +456,7 @@ G__value G__tovalue(G__value p)
       }
 #endif
       G__tagnum = p.tagnum;
-      G__FastAllocString refopr("operator*()");
+      strcpy(refopr,"operator*()");
       result=G__getfunction(refopr,&done,G__TRYMEMFUNC);
       G__tagnum = store_tagnumX;
       G__store_struct_offset = store_struct_offsetX; 
@@ -557,6 +558,7 @@ G__value G__letvalue(G__value *p,G__value result)
       case 'u':
         {
           G__value para;
+          char refopr[G__MAXNAME];
           long store_struct_offsetX = G__store_struct_offset;
           int store_tagnumX = G__tagnum;
           int done=0;
@@ -585,7 +587,7 @@ G__value G__letvalue(G__value *p,G__value result)
 #endif
           G__store_struct_offset = p->obj.i;
           G__tagnum = p->tagnum;
-          G__FastAllocString refopr("operator*()");
+          strcpy(refopr,"operator*()");
           para=G__getfunction(refopr,&done,G__TRYMEMFUNC);
           G__tagnum = store_tagnumX;
           G__store_struct_offset = store_struct_offsetX;
@@ -664,6 +666,7 @@ G__value G__letvalue(G__value *p,G__value result)
   case 'u':
     {
       G__value para;
+      char refopr[G__MAXNAME];
       long store_struct_offsetX = G__store_struct_offset;
       int store_tagnumX = G__tagnum;
       int done=0;
@@ -691,7 +694,7 @@ G__value G__letvalue(G__value *p,G__value result)
 #endif
       G__store_struct_offset = p->obj.i;
       G__tagnum = p->tagnum;
-      G__FastAllocString refopr("operator*()");
+      strcpy(refopr,"operator*()");
       para=G__getfunction(refopr,&done,G__TRYMEMFUNC);
       G__tagnum = store_tagnumX;
       G__store_struct_offset = store_struct_offsetX;

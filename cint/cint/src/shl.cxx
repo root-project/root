@@ -334,14 +334,14 @@ void *G__shl_findsym(G__SHLHANDLE *phandle,const char *sym,short /* type */)
   struct dsc$descriptor_s sym_d;
   struct dsc$descriptor_s phandle_d;
 #endif
-  G__FastAllocString sym_underscore(strlen(sym) + 2);
+  char sym_underscore[G__ONELINE];
 
   if(G__sym_underscore) {
     sym_underscore[0]='_';
     strcpy(sym_underscore+1,sym);
   }
   else {
-    sym_underscore = sym;
+    strcpy(sym_underscore,sym);
   }
 
   if(!(*phandle)) return(func);
@@ -829,8 +829,10 @@ int G__shl_load(char *shlfile)
   int store_globalcomp;
   char *p;
   char *post;
+  char dllid[G__ONELINE];
   int (*sharedlib_func)();
   int error=0,cintdll=0;
+  char dllidheader[G__ONELINE];
 
 #ifdef G__ROOT
   /* this pointer must be set before calling dlopen! */
@@ -908,17 +910,13 @@ int G__shl_load(char *shlfile)
   }
 #endif
 
-  size_t lendllidheader = strlen(p) + 1;
-  G__FastAllocString dllidheader(lendllidheader);
   strcpy(dllidheader,p);
   post = strchr(dllidheader,'.');
   if(post)  *post = '\0';
 
-  G__FastAllocString dllid(lendllidheader); {
-     dllid = "G__cpp_dllrev";
-  }
+  sprintf(dllid,"G__cpp_dllrev");
   sharedlib_func=
-     (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
+    (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
     G__check_setup_version((*sharedlib_func)(),shlfile);
@@ -929,9 +927,9 @@ int G__shl_load(char *shlfile)
     if(G__asm_dbg) G__show_dllrev(shlfile,sharedlib_func);
   }
 
-  dllid.Format("G__cpp_dllrev%s",dllidheader());
+  sprintf(dllid,"G__cpp_dllrev%s",dllidheader);
   sharedlib_func=
-     (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
+    (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO 
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
     G__check_setup_version((*sharedlib_func)(),shlfile);
@@ -942,9 +940,9 @@ int G__shl_load(char *shlfile)
     if(G__asm_dbg) G__show_dllrev(shlfile,sharedlib_func);
   }
 
-  dllid = "G__c_dllrev";
+  sprintf(dllid,"G__c_dllrev");
   sharedlib_func=
-     (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
+    (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
     G__check_setup_version((*sharedlib_func)(),shlfile);
@@ -955,9 +953,9 @@ int G__shl_load(char *shlfile)
     if(G__asm_dbg) G__show_dllrev(shlfile,sharedlib_func);
   }
 
-  dllid.Format("G__c_dllrev%s",dllidheader());
+  sprintf(dllid,"G__c_dllrev%s",dllidheader);
   sharedlib_func=
-     (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
+    (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
     G__check_setup_version((*sharedlib_func)(),shlfile);
@@ -990,7 +988,7 @@ int G__shl_load(char *shlfile)
   G__globalcomp=G__NOLINK;
 
 
-  dllid.Format("G__cpp_setup%s",dllidheader());
+  sprintf(dllid,"G__cpp_setup%s",dllidheader);
   G__CALL_SETUP("G__set_cpp_environment");
   G__CALL_SETUP("G__cpp_setup_tagtable");
   G__CALL_SETUP("G__cpp_setup_inheritance");
@@ -1000,13 +998,13 @@ int G__shl_load(char *shlfile)
   G__CALL_SETUP("G__cpp_setup_global");
   G__CALL_SETUP("G__cpp_setup_func");
   if(sharedlib_func==NULL) {
-     G__CALL_SETUP(dllid);
+    G__CALL_SETUP(dllid);
   }
 #ifdef G__ROOT
   if (sharedlib_func==NULL) G__call_setup_funcs();
 #endif
 
-  dllid.Format("G__c_setup%s",dllidheader());
+  sprintf(dllid,"G__c_setup%s",dllidheader);
   G__CALL_SETUP("G__set_c_environment");
   G__CALL_SETUP("G__c_setup_typetable");
   /* G__CALL_SETUP("G__c_setup_memvar"); */
@@ -1014,12 +1012,12 @@ int G__shl_load(char *shlfile)
   G__CALL_SETUP("G__c_setup_func");
   G__CALL_SETUP("G__c_setup_tagtable");
   if(sharedlib_func==NULL) {
-     G__CALL_SETUP(dllid);
+    G__CALL_SETUP(dllid);
   }
 
   if(0==G__sizep2memfunc) {
-     dllid.Format("G__get_sizep2memfunc%s",dllidheader());
-     p = strchr(dllid,'.');
+    sprintf(dllid,"G__get_sizep2memfunc%s",dllidheader);
+    p = strchr(dllid,'.');
     if(p)  *p = '\0';
     G__CALL_SETUP(dllid);
   }
@@ -1041,9 +1039,9 @@ int G__shl_load(char *shlfile)
         (void (*)())G__shl_findsym(&G__sl_handle[allsl].handle,"G__cpp_setup"
                                    ,TYPE_PROCEDURE); 
     if(!initsl) {
-       dllid.Format("G__cpp_setup%s",dllidheader());
+      sprintf(dllid,"G__cpp_setup%s",dllidheader);
       initsl =
-         (void (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE); 
+        (void (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE); 
     }
     if (initsl) G__initpermanentsl->push_back(initsl);
     G__sl_handle[allsl].ispermanent = true;
@@ -1170,7 +1168,7 @@ int G__isinterpretedp2f(void *p2f)
 G__value G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,int *known3)
 {
   G__value result3;
-  G__FastAllocString result7(G__ONELINE);
+  char result7[G__ONELINE];
   int ig15,ig35;
   struct G__ifunc_table_internal *ifunc;
 #ifdef G__SHAREDLIB
@@ -1203,13 +1201,13 @@ G__value G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,in
     parameter1[strlen(parameter1)-1]='\0';
     switch(parameter1[0]) {
     case '[':
-       result7.Format("operator[](%s)",parameter1+1);
+      sprintf(result7,"operator[](%s)",parameter1+1);
       break;
     case '(':
-       result7.Format("operator()(%s)",parameter1+1);
+      sprintf(result7,"operator()(%s)",parameter1+1);
       break;
     }
-    result3 = G__getfunction(result7(),known3,G__CALLMEMFUNC);
+    result3 = G__getfunction(result7,known3,G__CALLMEMFUNC);
 #ifdef G__ASM
     if(G__asm_noverflow) {
       G__asm_inst[G__asm_cp] = G__POPSTROS;
@@ -1242,14 +1240,14 @@ G__value G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,in
   result7[0]='\0';
 #ifdef G__TRUEP2F
   ifunc=G__p2f2funchandle_internal((void*)result3.obj.i,G__p_ifunc,&ig15);
-  if(ifunc) result7.Format("%s%s",ifunc->funcname[ig15],parameter1);
+  if(ifunc) sprintf(result7,"%s%s",ifunc->funcname[ig15],parameter1);
 #ifdef G__PTR2MEMFUNC
   else {
     int itag;
     for(itag=0;itag<G__struct.alltag;itag++) {
       ifunc=G__p2f2funchandle_internal((void*)result3.obj.i,G__struct.memfunc[itag],&ig15);
       if(ifunc && ifunc->staticalloc[ig15]) {
-         result7.Format("%s::%s%s",G__fulltagname(itag,1),ifunc->funcname[ig15],parameter1);
+        sprintf(result7,"%s::%s%s",G__fulltagname(itag,1),ifunc->funcname[ig15],parameter1);
         break;
       }
     }
@@ -1260,7 +1258,7 @@ G__value G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,in
   do {
     for(ig15=0;ig15<ifunc->allifunc;ig15++) {
       if(strcmp(ifunc->funcname[ig15],(char *)result3.obj.i)==0){
-         result7.Format("%s%s",(char *)result3.obj.i,parameter1);
+        sprintf(result7,"%s%s",(char *)result3.obj.i,parameter1);
       }
     }
   } while(ifunc=ifunc->next) ;
@@ -1274,7 +1272,7 @@ G__value G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,in
     while( (((long)(G__completionlist[ig15].name))!=0) &&
           (ig35==0)) {
       if((long)G__completionlist[ig15].pfunc==result3.obj.i){
-         result7.Format("%s%s" ,G__completionlist[ig15].name ,parameter1);
+        sprintf(result7,"%s%s" ,G__completionlist[ig15].name ,parameter1);
         ig35=1;
       }
       ++ig15;
@@ -1290,7 +1288,7 @@ G__value G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,in
     while( (((long)(G__completionlist[ig15].name))!=0) &&
           (ig35==0)) {
       if(strcmp(G__completionlist[ig15].name,(char *)result3.obj.i)==0) {
-         result7.Format("%s%s",G__completionlist[ig15].name,parameter1);
+        sprintf(result7,"%s%s",G__completionlist[ig15].name,parameter1);
         ig35=1;
       }
       ++ig15;
@@ -1337,27 +1335,26 @@ void G__removetagid(char *buf)
 ******************************************************************/
 int G__getp2ftype(struct G__ifunc_table_internal *ifunc,int ifn)
 {
-   G__FastAllocString temp(G__MAXNAME*2);
-   G__FastAllocString temp1(G__MAXNAME);
+  char temp[G__MAXNAME*2],temp1[G__MAXNAME];
   char *p;
   int typenum;
   int i;
 
-  temp1 = G__type2string(ifunc->type[ifn],ifunc->p_tagtable[ifn]
+  strcpy(temp1, G__type2string(ifunc->type[ifn],ifunc->p_tagtable[ifn]
                                  ,ifunc->p_typetable[ifn],ifunc->reftype[ifn]
-                                 ,ifunc->isconst[ifn]);
+                                 ,ifunc->isconst[ifn]));
   G__removetagid(temp1);
 
-  if(isupper(ifunc->type[ifn])) temp.Format("%s *(*)(",temp1());
-  else                          temp.Format("%s (*)(",temp1());
+  if(isupper(ifunc->type[ifn])) sprintf(temp,"%s *(*)(",temp1);
+  else                          sprintf(temp,"%s (*)(",temp1);
   p = temp + strlen(temp);
   for(i=0;i<ifunc->para_nu[ifn];i++) {
     if(i) *p++ = ',';
-    temp1 = G__type2string(ifunc->param[ifn][i]->type
+    strcpy(temp1,G__type2string(ifunc->param[ifn][i]->type
                                 ,ifunc->param[ifn][i]->p_tagtable
                                 ,ifunc->param[ifn][i]->p_typetable
                                 ,ifunc->param[ifn][i]->reftype
-                                ,ifunc->param[ifn][i]->isconst);
+                                ,ifunc->param[ifn][i]->isconst));
     G__removetagid(temp1);
     strcpy(p,temp1);
     p = temp + strlen(temp);
@@ -2060,15 +2057,15 @@ void* G__FindSymbol(struct G__ifunc_table_internal *ifunc,int ifn)
   char *funcname=ifunc->funcname[ifn];
   void *p2f=0;
   if(G__ShlHandle) {
-    G__FastAllocString buf(G__ONELINE);
+    char buf[G__ONELINE];
 
     /* funcname, VC++, GCC, C function */
     p2f = (void*)G__shl_findsym(&G__ShlHandle,funcname,TYPE_PROCEDURE);
 
     /* _funcname,  BC++, C function */
     if(!p2f) {
-       buf = "_";
-       buf += funcname;
+      buf[0]='_';
+      strcpy(buf+1,funcname);
       p2f = (void*)G__shl_findsym(&G__ShlHandle,buf,TYPE_PROCEDURE);
     }
 

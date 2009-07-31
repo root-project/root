@@ -61,23 +61,24 @@ int G__setbreakpoint(const char* breakline, const char* breakfile);
 static int G__findfuncposition(const char* func, int* pline, int* pfnum)
 {
    // -- FIXME: Describe this function!
-   size_t lenfunc = strlen(func) + 1;
-   G__FastAllocString funcname(func);
-   G__FastAllocString scope(lenfunc);
-   G__FastAllocString temp(lenfunc);
+   char funcname[G__ONELINE];
+   char scope[G__ONELINE];
+   char temp[G__ONELINE];
    char *pc;
    int temp1;
    int tagnum;
    struct G__ifunc_table_internal *ifunc;
+
+   strcpy(funcname, func);
 
    pc = strstr(funcname, "::");
 
    /* get appropreate scope */
    if (pc) {
       *pc = '\0';
-      scope = funcname;
-      temp = pc + 2;
-      funcname.Swap(temp);
+      strcpy(scope, funcname);
+      strcpy(temp, pc + 2);
+      strcpy(funcname, temp);
       tagnum = G__defined_tagname(scope, 0);
       if ('\0' == funcname[0] && -1 != tagnum) {
          /* display class declaration */
@@ -374,10 +375,9 @@ int G__display_proto(FILE* fp, const char* func)
 int G__display_proto_pretty(FILE* fp, const char* func, const char friendlyStyle)
 {
    // -- FIXME: Describe this function!
-   size_t lenfunc = strlen(func) + 1;
-   G__FastAllocString funcname(lenfunc);
-   G__FastAllocString scope(lenfunc);
-   G__FastAllocString temp(lenfunc);
+   char funcname[G__LONGLINE];
+   char scope[G__LONGLINE];
+   char temp[G__LONGLINE];
    char *pc;
    /* int temp1; */
    int tagnum;
@@ -385,16 +385,16 @@ int G__display_proto_pretty(FILE* fp, const char* func, const char friendlyStyle
    int i = 0;
 
    while (isspace(func[i])) ++i;
-   funcname = func + i;
+   strcpy(funcname, func + i);
 
    pc = strstr(funcname, "::");
 
    /* get appropreate scope */
    if (pc) {
       *pc = '\0';
-      scope = funcname;
-      temp = pc + 2;
-      funcname.Swap(temp);
+      strcpy(scope, funcname);
+      strcpy(temp, pc + 2);
+      strcpy(funcname, temp);
       if (0 == scope[0]) tagnum = -1;
       else tagnum = G__defined_tagname(scope, 0);
       /* class scope A::func , global scope ::func */
@@ -803,14 +803,10 @@ G__value G__exec_text(const char* unnamedmacro)
 {
    // -- FIXME: Describe this function!
 #ifndef G__TMPFILE
-   G__FastAllocString tname_sb(L_tmpnam+10);
-   G__FastAllocString sname_sb(L_tmpnam+10);
+   char tname[L_tmpnam+10], sname[L_tmpnam+10];
 #else
-   G__FastAllocString tname_sb(G__MAXFILENAME);
-   G__FastAllocString sname_sb(G__MAXFILENAME);
+   char tname[G__MAXFILENAME], sname[G__MAXFILENAME];
 #endif
-   char* tname = tname_sb;
-   char* sname = sname_sb;
    int nest = 0, single_quote = 0, double_quote = 0;
    int ccomment = 0, cppcomment = 0;
    G__value buf;
@@ -925,11 +921,9 @@ G__value G__exec_text(const char* unnamedmacro)
 char* G__exec_text_str(const char* unnamedmacro, char* result)
 {
    // -- FIXME: Describe this function!
-   G__FastAllocString resbuf;
    G__value buf = G__exec_text(unnamedmacro);
-   G__valuemonitor(buf, resbuf);
-   strcpy(result, resbuf);
-   return result;
+   G__valuemonitor(buf, result);
+   return(result);
 }
 #endif
 

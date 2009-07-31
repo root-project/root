@@ -309,9 +309,9 @@ int G__srcreader<T>::fgetc_separator() {
 //////////////////////////////////////////////////////////////////////
 template<class T>
 int G__srcreader<T>::fpp_command(int c) {
-  G__FastAllocString buf(G__ONELINE);
-  c=G__fgetname(buf, 0, "\n\r"); // legacy
-  string condition=buf.data();
+  char buf[G__ONELINE];
+  c=G__fgetname(buf,"\n\r"); // legacy
+  string condition=buf;
   if(condition.size() && isdigit(condition.c_str()[0])) {
     if('\n'!=c && '\r'!=c) fignoreline();
     G__ifile.line_number=atoi(condition.c_str());

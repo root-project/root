@@ -17,9 +17,11 @@
 #include "FastAllocString.h"
 #include "math.h"
 #include "stdio.h"
-#include "string.h"
 #include <map>
 
+#define G__STRBUF_RESERVOIR_CHUNKSIZE  1024
+#define G__STRBUF_RESERVOIR_NUMBUFFERS 32
+#define G__STRBUF_RESERVOIR_NUMBUCKETS 1024*10
 namespace Cint {
    namespace Internal {
       //___________________________________________________________________
@@ -29,234 +31,166 @@ namespace Cint {
       // a buffer >= that size is returned (or 0 if
       // there is no available buffer). The buffers
       // are kept in a fixed-size array (size-dimension,
-      // fNumBuffers) of a fixed
+      // G__STRBUF_RESERVOIR_NUMBUFFERS) of a fixed
       // size array (available buffers dimension,
-      // fgNumBuckets) of char*.
+      // G__STRBUF_RESERVOIR_NUMBUCKETS) of char*.
       // The size-to-index mapping is done logarithmically,
       // which increases the probability of re-using buffers,
-      // and allows the size-dimension array to span a large
-      // amount of possible buffer sizes (up to
-      // (1<<7)*1024bytes for
-      // fgChunksize == 1024,
-      // fgNumBuffers == 7-1.
-      // Buffer fill stands after stress.cxx(30):
-      // bucket: maxfill + "maxReallocBecausePoolTooSmall" (maxAllocBecausePoolTooSmall)
-      // 0: 32 + 200 (250)
-      // 1: 24 + 0 (0)
-      // 2: 2 ...
-      // 3: 1
-      // 4: 6
-      // 5: 6
-      // 6: 0
-      // 7: 0
-      // 8: 0
+      // and allows the size-dimenion array to span a large
+      // amount of possible buffer sizes (up to 
+      // (1<<32)*1024bytes for 
+      // G__STRBUF_RESERVOIR_CHUNKSIZE == 1024,
+      // G__STRBUF_RESERVOIR_NUMBUFFERS == 32.
       class G__BufferReservoir {
       public:
          class Bucket {
          public:
             Bucket():
-               fBuffers(0), fWatermark(0), fNumBuffers(0)
-            {}
+               fWatermark(fBuffers + G__STRBUF_RESERVOIR_NUMBUFFERS) {}
             ~Bucket() {
                // delete all buffers
                char* buf;
                while ((buf = pop()))
                   delete [] buf;
-               delete [] fBuffers;
-            }
-
-            void init(size_t numBuffers) {
-               fNumBuffers = numBuffers;
-               fBuffers = new Buffer_t[numBuffers];
-               fWatermark = fBuffers + numBuffers;
             }
 
             bool push(char* buf) {
-               if (fWatermark == fBuffers) {
-                  return false;
-               }
+               if (fWatermark == fBuffers) return false;
                *(--fWatermark) = buf;
                return true;
             }
 
             char* pop() {
-               if (fWatermark < fBuffers + fNumBuffers) {
+               if (fWatermark < fBuffers + G__STRBUF_RESERVOIR_NUMBUFFERS)
                   return *(fWatermark++);
-               }
                return 0;
             }
          private:
-            typedef char* Buffer_t;
-
-            Buffer_t* fBuffers; // array of buffers,
-            Buffer_t* fWatermark; // most recently filled slot
-            size_t fNumBuffers; // size of fBuffers
+            char*  fBuffers[G__STRBUF_RESERVOIR_NUMBUFFERS]; // array of buffers,
+            char** fWatermark; // most recently filled slot
          };
 
-         G__BufferReservoir() {
-            static size_t numBuffers[fgNumBuckets] = {256, 64, 16, 8, 4, 2, 1};
-            for (size_t i = 0; i < fgNumBuckets; ++i) {
-               fMap[i].init(numBuffers[i]);
-            }
-         }
-
-         static char logtwo(unsigned char i)  {
+         static int logtwo(int i)  {
             // Return the index of the highest set bit.
-            // A fast imprecise version of log(i) working up to 8 bit i.
-            // i must be > 0
-            const static char msb[256] = {
-#define G__FASTALLOC_MSBx16(n) n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n
-               -1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
-               G__FASTALLOC_MSBx16(4),
-               G__FASTALLOC_MSBx16(5), G__FASTALLOC_MSBx16(5),
-               G__FASTALLOC_MSBx16(6), G__FASTALLOC_MSBx16(6), G__FASTALLOC_MSBx16(6),
-               G__FASTALLOC_MSBx16(6),
-               G__FASTALLOC_MSBx16(7), G__FASTALLOC_MSBx16(7), G__FASTALLOC_MSBx16(7),
-               G__FASTALLOC_MSBx16(7), G__FASTALLOC_MSBx16(7), G__FASTALLOC_MSBx16(7),
-               G__FASTALLOC_MSBx16(7), G__FASTALLOC_MSBx16(7)
-            };
-#undef G__FASTALLOC_MSBx16
-            return msb[i];
-         }
-
-         static int bucket(size_t size)  {
-            // Get the bucket index for a given buffer size.
-            //   0:               1 ..   fgChunkSize
-            //   1:   fgChunkSize+1 .. 2*fgChunkSize
-            //   2: 2*fgChunkSize+1 .. 4*fgChunkSize
-            //   3: 4*fgChunkSize+1 .. 8*fgChunkSize
-            // ...
-            if (!size) return -1;
-            const size_t b = (size - 1) / fgChunkSize;
-            if (b > (1L << (fgNumBuckets + 1)))
-               return -1;
-            int buck = b ? logtwo((unsigned char)b) + 1 : 0;
-            if (buck >= (int)fgNumBuckets)
-               return -1;
-            // 16 bits is enough, and this expression can be optimized
-            // away at compile time.
-            if (fgNumBuckets > 8 && buck == -1) {
-               buck = 8 + logtwo((unsigned char)(b / 256));
+            // A fast imprecise version of log(i).
+            int j = 0;
+            while ( i > 255 ) {
+               i = i >> 8;
+               j += 8;
             }
-            return buck;
+            if (i & 0xf0) {
+               i = i >> 4;
+               j += 4;
+            }
+            if (i & 12) {
+               i = i >> 2;
+               j += 2;
+            }
+            if (i & 2) {
+               i = i / 2;
+               j += 1;
+            }
+            return j + i;
          }
 
-         bool push(size_t cap, char* buf) {
-            // add buf into capacity cap's bucket; return false if there is no space
-            const int buck = bucket(cap);
-            if (buck == -1) return false;
+         static int bucket(int size)  {
+            // get the bucket index for a given buffer size
+            int b = (size - 1) / G__STRBUF_RESERVOIR_CHUNKSIZE;
+            b = logtwo(b);
+            if (b >= G__STRBUF_RESERVOIR_NUMBUCKETS)
+               return -1;
+            return b;
+         }
+
+         bool push(int buck, char* buf) {
+            // add buf into buck; return false if there is no space
+            if (buck < 0) return false;
             return fMap[buck].push(buf);
          }
 
-         char* pop(size_t& size) {
-            // retrieve a buffer of given size, adjusting it to the bucket allocation size.
-            const int buck = bucket(size);
-            //printf("size=%d, buck=%d\n", size, buck);
-            if (buck < 0) {
-               return 0;
-            }
-            size = bucketallocsize(buck);
-            return fMap[buck].pop();
+         char* pop(int &size) {
+            // retrieve a buffer of given size;
+            // when returning, size will be the bucket index.
+            size = bucket(size);
+            if (size < 0) return 0;
+            return fMap[size].pop();
          }
 
-         static size_t bucketallocsize(int bucket) {
+         static int allocsize(int size) {
+            // Determine the allocation size that should be used for
+            // a buffer of size.
+            int asize = bucket(size) + 1;
+            asize = (1 << asize) / 2 * G__STRBUF_RESERVOIR_CHUNKSIZE;
+            return asize;
+         }
+
+         static int bucketallocsize(int bucket_index) {
             // Determine the allocation size that is used for
-            // the specified bucket index; see bucket().
-            return (1 << bucket) * fgChunkSize;
+            // the specified bucket index.
+            int asize = bucket_index + 1;
+            asize = (1 << asize) / 2 * G__STRBUF_RESERVOIR_CHUNKSIZE;
+            return asize;
          }
-
+         
       private:
-         static const size_t fgChunkSize = 1024;
-         static const size_t fgNumBuckets = 7;
-         Bucket fMap[fgNumBuckets]; // the buckets
+         Bucket fMap[G__STRBUF_RESERVOIR_NUMBUCKETS]; // the buckets
       };
    } // Internal
 } // Cint
 
 using namespace Cint::Internal;
 
-namespace {
-static Cint::Internal::G__BufferReservoir&
-GetReservoir()
+G__FastAllocString::~G__FastAllocString()
+{
+   // Give our buffer back to the BufMap, i.e. make it available again.
+   if (fBucket < 0 || !GetReservoir().push(fBucket, fBuf)) {
+      delete [] fBuf;
+   }
+}
+
+char* G__FastAllocString::GetBuf(int &size_then_bucket_index)
+{
+   // Return a buffer of given size (or larger).
+   // If there is one in the map, return that one, otherwise allocatea new one.
+   // When entering GetBuf 'size_then_bucket_index' is the requested size in bytes
+   // it is then updated to return the corresponding bucket number. 
+
+   int origsize = size_then_bucket_index;
+   // Look for an existing bucket and update with the bucket index.
+   char* buf = GetReservoir().pop(size_then_bucket_index);
+   if (!buf) {
+      buf = new char[G__BufferReservoir::allocsize(origsize)];
+   }
+   return buf;
+}
+
+Cint::Internal::G__BufferReservoir& G__FastAllocString::GetReservoir()
 {
    // Return the static BufferReservoir
    static G__BufferReservoir sReservoir;
    return sReservoir;
 }
-}
-
-G__FastAllocString::G__FastAllocString(const char* s)
-{
-   // Construct from a character array, using the character array's
-   // length plus 32 as the initial buffer capacity.
-   int len = s ? strlen(s) + 1 : 1024;
-   fCapacity = len + 32;
-   fBuf = GetBuf(fCapacity);
-   if (s)
-      memcpy(fBuf, s, len);
-   else
-      fBuf[0] = 0;
-}
-
-G__FastAllocString::G__FastAllocString(const G__FastAllocString& other) 
-{
-   // Construct from another G__FastAllocString, using the
-   // other string's length plus 32 as the initial buffer capacity.
-   int len = strlen(other) + 1;
-   fCapacity = len + 32;
-   fBuf = GetBuf(fCapacity);
-   memcpy(fBuf, other, len);
-}
-
-G__FastAllocString::~G__FastAllocString()
-{
-   // Give our buffer back to the BufMap, i.e. make it available again.
-   if (!GetReservoir().push(Capacity(), fBuf)) {
-      delete [] fBuf;
-   }
-}
-
-char* G__FastAllocString::GetBuf(size_t &size)
-{
-   // Return a buffer of given size (or larger).
-   // If there is one in the map, return that one, otherwise allocatea new one.
-   // When entering GetBuf 'size' is the requested size in bytes
-   // it is then updated to return the size corresponding to the bucket number,
-   // or -1 if no suitable buffer could be extracted from the pool.
-
-   // Look for an existing bucket and update with the bucket index.
-   char* buf = GetReservoir().pop(size);
-   if (!buf) {
-      buf = new char[size];
-   }
-   return buf;
-}
 
 int G__FastAllocString::FormatArgList(const char *fmt, va_list args)
 {
-   // sprintf into this string, resizing until it fits.
    if (!fmt) {
       fBuf[0] = 0;
       return 0;
    }
    int result = -1;
-   int bucket_req = -2;
-
-   while (result == -1 && bucket_req != -1)
+   int bucket_req = fBucket;
+   
+   while (result == -1)
    {
+      int length = G__BufferReservoir::bucketallocsize(bucket_req);
 #ifdef _MSC_VER
-      result = _vsnprintf(fBuf, fCapacity, fmt, args);
+      result = _vsnprintf(fBuf, length, fmt, args);
 #else
-      result = vsnprintf(fBuf, fCapacity, fmt, args);
-#endif
+      result = vsnprintf(fBuf, length, fmt, args);
+#endif               
       if (result == -1) {
-         if (bucket_req == -2)
-            bucket_req = G__BufferReservoir::bucket(fCapacity);
-         if (bucket_req != -1) {
-            // we had a valid bucket, increase it
-            ++bucket_req;
-            ResizeNoCopy( bucket_req );
-         }
+         ++bucket_req;
+         ResizeNoCopy( bucket_req );
       }
    }
    return result;
@@ -264,7 +198,6 @@ int G__FastAllocString::FormatArgList(const char *fmt, va_list args)
 
 int G__FastAllocString::Format(const char *fmt, ...)
 {
-   // sprintf into this string, resizing until it fits.
    va_list args;
    va_start(args, fmt);
    int res = FormatArgList(fmt, args);
@@ -272,82 +205,21 @@ int G__FastAllocString::Format(const char *fmt, ...)
    return res;
 }
 
-void G__FastAllocString::ResizeToBucketNoCopy(int newbucket)
+void G__FastAllocString::ResizeNoCopy(int newbucket)
 {
    // Extend the size used by this buffer to at least newsize.
    // This does NOT copy the content.
 
-   size_t cap = G__BufferReservoir::bucketallocsize(newbucket);
-   if (cap > Capacity()) {
-      ResizeNoCopy(cap);
+   if (newbucket > fBucket) {
+   
+      int newsize_then_index = G__BufferReservoir::bucketallocsize(newbucket);
+      char *newbuf = GetBuf(newsize_then_index);
+      
+      if (fBucket < 0 || !GetReservoir().push(fBucket, fBuf))
+         delete [] fBuf;
+      
+      fBuf = newbuf;
+      fBucket = newsize_then_index;
    }
 }
 
-G__FastAllocString& G__FastAllocString::operator=(const char* s) {
-   // Assign a string. If necessary, resize the buffer.
-   if (!s) {
-      fBuf[0] = 0;
-      return *this;
-   }
-   size_t len = strlen(s) + 1;
-   if (len > Capacity()) {
-      ResizeNoCopy(len);
-   }
-   memcpy(fBuf, s, len);
-   return *this;
-}
-
-G__FastAllocString& G__FastAllocString::operator+=(const char* s) {
-   // Assign a string. If necessary, resize the buffer.
-   if (!s) {
-      return *this;
-   }
-   size_t len = strlen(s);
-   size_t mylen = strlen(fBuf);
-   Resize(len + 1 + mylen);
-   memcpy(fBuf + mylen, s, len + 1);
-   return *this;
-}
-
-G__FastAllocString& G__FastAllocString::Swap(G__FastAllocString& other) {
-   // Swap this and other string.
-   char* tmpBuf = fBuf;
-   fBuf = other.fBuf;
-   other.fBuf = tmpBuf;
-   size_t tmpCap = fCapacity;
-   fCapacity = other.fCapacity;
-   other.fCapacity = tmpCap;
-   return *this;
-}
-
-void G__FastAllocString::ResizeNoCopy(size_t cap)
-{
-   // Adjust the capacity so at least cap characters could be
-   // stored. Capacity() will be >= cap after this call.
-   // This does NOT copy the content.
-
-   if (cap < Capacity())
-      return;
-
-   char *newbuf = GetBuf(cap);
-
-   if (!GetReservoir().push(fCapacity, fBuf))
-      delete [] fBuf;
-
-   fBuf = newbuf;
-   fCapacity = cap;
-}
-
-void G__FastAllocString::Resize(size_t cap)
-{
-   // Adjust the capacity so at least cap characters could be
-   // stored. Capacity() will be >= cap after this call.
-
-   if (cap < Capacity())
-      return;
-
-   G__FastAllocString tmp(cap);
-   // we cannot rely on data() being 0-terminated.
-   memcpy(tmp.fBuf, data(), Capacity());
-   Swap(tmp);
-}

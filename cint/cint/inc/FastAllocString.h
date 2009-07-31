@@ -17,7 +17,6 @@
 #define G__FASTALLOGSTRING_H
 
 #include <stdarg.h>
-#include <stddef.h>
 
 namespace Cint {
    namespace Internal {
@@ -45,15 +44,12 @@ namespace Cint {
 //
 class G__FastAllocString {
 public:
-   G__FastAllocString(int reqsize = 1024): fBuf(0), fCapacity(reqsize) {
+   G__FastAllocString(int reqsize): fBuf(0), fBucket(reqsize) {
       // GetBuf takes as parameter the size in bytes
       // and modify the parameter (fBucket) to hold the 
       // bucket number.
-      fBuf = GetBuf(fCapacity);
+      fBuf = GetBuf(fBucket); 
    }
-   G__FastAllocString(const char* s);
-   G__FastAllocString(const G__FastAllocString&);
-
    ~G__FastAllocString();
 
    // plenty of char* conversion fuctions:
@@ -71,43 +67,16 @@ public:
 
    int FormatArgList(const char *fmt, va_list args);
    int Format(const char *fmt, ...);
-
-   size_t Capacity() const { return fCapacity; }
-
-   G__FastAllocString& operator=(const G__FastAllocString& s) {
-      // Copy s into *this.
-      // Cannot rely on operator=(const char*) overload - compiler-generated one wins resolution!
-      return operator=(s.data());
-   }
-   G__FastAllocString& operator=(const char*);
-   G__FastAllocString& operator+=(const char*);
-   G__FastAllocString& Swap(G__FastAllocString&);
-   void Resize(size_t cap);
-
-   void Set(size_t pos, char c) {
-      // Set character at position pos to c; resize if needed.
-      Resize(pos + 1);
-      fBuf[pos] = c;
-   }
-   /*
-   size_t Set(size_t& pos, const char* s) {
-      // Overwrite string at position pos with s; resize if needed.
-      // Return pos incremented by strlen(s)
-      size_t len = strlen(s);
-      Resize(pos + len + 1);
-      memcpy(fBuf + pos, s, len + 1);
-      return pos + len;
-      }*/
-
+         
 protected:
-   static char* GetBuf(size_t &size);
+   static char* GetBuf(int &size_then_bucket_index);
+   static Cint::Internal::G__BufferReservoir& GetReservoir();
 
-   void ResizeToBucketNoCopy(int newbucket);
-   void ResizeNoCopy(size_t cap);
+   void ResizeNoCopy(int newsize);
          
 private:
-   char*  fBuf;    // the buffer
-   size_t fCapacity; // measure representing the buffer's size, used by the internal reservoir
+   char* fBuf;    // the buffer
+   int   fBucket; // measure representing the buffer's size, used by the internal reservoir
 };
 
 #endif // G__FASTALLOGSTRING_H

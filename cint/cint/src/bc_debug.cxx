@@ -69,7 +69,7 @@ int G__bc_funccall::setstackenv(struct G__view* pview) const {
 int G__bc_funccall::disp(FILE* fout) const {
   // todo, need some review
   if(!m_bytecode)  return(0);
-  G__FastAllocString msg(G__LONGLINE);
+  char msg[G__LONGLINE];
   struct G__ifunc_table_internal *ifunc = m_bytecode->ifunc;
   int ifn = m_bytecode->ifn;
   int tagnum=ifunc->tagnum;
@@ -78,28 +78,28 @@ int G__bc_funccall::disp(FILE* fout) const {
 
   // class name if member function
   if(-1!=tagnum) {
-     msg.Format("%s::",G__struct.name[tagnum]);
-     if(G__more(fout,msg())) return(1);
+    sprintf(msg,"%s::",G__struct.name[tagnum]);
+    if(G__more(fout,msg)) return(1);
   }
 
   // function name
-  msg.Format("%s(",ifunc->funcname[ifn]);
-  if(G__more(fout,msg())) return(1);
+  sprintf(msg,"%s(",ifunc->funcname[ifn]);
+  if(G__more(fout,msg)) return(1);
 
   // function parameter
   for(int temp1=0;temp1<libp->paran;temp1++) {
     if(temp1) {
-      msg = ",";
-      if(G__more(fout,msg())) return(1);
+      sprintf(msg,",");
+      if(G__more(fout,msg)) return(1);
     }
     G__valuemonitor(libp->para[temp1],msg);
-    if(G__more(fout,msg())) return(1);
+    if(G__more(fout,msg)) return(1);
   }
   if(-1!=filenum) {
-     msg.Format(") [%s:%d]\n" 
+    sprintf(msg,") [%s:%d]\n" 
 	    ,G__stripfilename(G__srcfile[filenum].filename)
 	    ,m_line_number);
-     if(G__more(fout,msg())) return(1);
+    if(G__more(fout,msg)) return(1);
   }
   else {
     if(G__more(fout,") [entry]\n")) return(1);
@@ -141,11 +141,11 @@ int G__bc_funccallstack::setstackenv(int i,struct G__view* pview) {
 ////////////////////////////////////////////////////////////////
 int G__bc_funccallstack::disp(FILE* fout) const {
   //deque<G__bc_funccall>::iterator i;
-  G__FastAllocString msg(100);
+  char msg[100];
   for(int i=0;i<(int)m_funccallstack.size();++i) {
-     msg.Format("%d ",i);
-     if(G__more(fout,msg())) return(1);
-     if(m_funccallstack[i].disp(fout)) return(1);
+    sprintf(msg,"%d ",i);
+    if(G__more(fout,msg)) return(1);
+    if(m_funccallstack[i].disp(fout)) return(1);
   }
   return(0);
 }

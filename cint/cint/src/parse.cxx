@@ -39,19 +39,6 @@ public:
 };
 #endif
 
-static int G__setline(G__FastAllocString& statement, int c, int* piout);
-static int G__pp_ifdefextern(G__FastAllocString& temp);
-static int G__exec_try(G__FastAllocString& statement);
-static int G__exec_throw(G__FastAllocString& statement);
-static int G__exec_function(G__FastAllocString& statement, int* pc, int* piout, int* plargestep, G__value* presult);
-static G__value G__exec_switch_case(G__FastAllocString& casepara);
-static G__value G__exec_loop(const char* forinit, char* condition, const std::list<G__FastAllocString>& foraction = std::list<G__FastAllocString>());
-static int G__defined_type(G__FastAllocString& type_name, int len);
-static int G__keyword_anytime_5(G__FastAllocString& statement);
-static int G__keyword_anytime_6(G__FastAllocString& statement);
-static int G__keyword_anytime_7(G__FastAllocString& statement);
-static int G__keyword_anytime_8(G__FastAllocString& statement);
-
 extern "C" {
 
 //______________________________________________________________________________
@@ -72,18 +59,25 @@ extern void G__CMP2_equal(G__value*, G__value*); // v6_pcode.cxx
 #ifdef G__WIN32
 static void G__toUniquePath(char* s);
 #endif // G__WIN32
+static int G__setline(char* statement, int c, int* piout);
+static int G__pp_ifdefextern(char* temp);
 static void G__pp_undef();
+static int G__exec_try(char* statement);
 static int G__ignore_catch();
+static int G__exec_throw(char* statement);
+static int G__exec_function(char* statement, int* pc, int* piout, int* plargestep, G__value* presult);
 static struct G__breakcontinue_list* G__alloc_breakcontinue_list();
 static void G__store_breakcontinue_list(int destination, int breakcontinue);
 static void G__free_breakcontinue_list(G__breakcontinue_list* pbreakcontinue);
 static void G__set_breakcontinue_destination(int break_dest, int continue_dest, G__breakcontinue_list* pbreakcontinue);
 static G__value G__exec_switch();
+static G__value G__exec_switch_case(char* casepara);
 static G__value G__exec_if();
 static G__value G__exec_else_if();
 static G__value G__exec_do();
 static G__value G__exec_for();
 static G__value G__exec_while();
+static G__value G__exec_loop(char* forinit, char* condition, int naction, char** foraction);
 static G__value G__return_value(const char* statement);
 static int G__search_gotolabel(char* label, fpos_t* pfpos, int line, int* pmparen);
 static int G__label_access_scope(char* statement, int* piout, int* pspaceflag, int mparen);
@@ -91,6 +85,11 @@ static int G__IsFundamentalDecl();
 static void G__unsignedintegral();
 static void G__externignore();
 static void G__parse_friend();
+static int G__keyword_anytime_5(char* statement);
+static int G__keyword_anytime_6(char* statement);
+static int G__keyword_anytime_7(char* statement);
+static int G__keyword_anytime_8(char* statement);
+static int G__defined_type(char* type_name, int len);
 
 // externally visible
 G__value G__alloc_exceptionbuffer(int tagnum);
@@ -161,14 +160,12 @@ static void G__toUniquePath(char* s)
 }
 #endif // G__WIN32
 
-} // extern "C"
-
 //______________________________________________________________________________
-static int G__setline(G__FastAllocString& statement, int c, int* piout)
+static int G__setline(char* statement, int c, int* piout)
 {
    // -- FIXME: Describe this function!
    if ((c != '\n') && (c != '\r')) {
-      c = G__fgetname(statement, 1, "\n\r");
+      c = G__fgetname(statement + 1, "\n\r");
       //
       //
       if (!isdigit(statement[1])) {
@@ -185,14 +182,14 @@ static int G__setline(G__FastAllocString& statement, int c, int* piout)
          else {
             // -- We have #<line> ...".
             G__ifile.line_number = atoi(statement + 1) - 1;
-            c = G__fgetname(statement, 0, "\n\r");
+            c = G__fgetname(statement, "\n\r");
             if (statement[0] == '"') {
                // -- We have #<line> "<filename>".
                G__getcintsysdir();
-               G__FastAllocString sysinclude(G__MAXFILENAME);
-               sysinclude.Format("%s/%s/include/", G__cintsysdir, G__CFG_COREVERSION);
-               G__FastAllocString sysstl(G__MAXFILENAME);
-               sysstl.Format("%s/%s/stl/", G__cintsysdir, G__CFG_COREVERSION);
+               char sysinclude[G__MAXFILENAME];
+               sprintf(sysinclude, "%s/%s/include/", G__cintsysdir, G__CFG_COREVERSION);
+               char sysstl[G__MAXFILENAME];
+               sprintf(sysstl, "%s/%s/stl/", G__cintsysdir, G__CFG_COREVERSION);
                int len = strlen(sysinclude);
                int lenstl = strlen(sysstl);
 #ifdef G__WIN32
@@ -321,13 +318,13 @@ static int G__setline(G__FastAllocString& statement, int c, int* piout)
 }
 
 //______________________________________________________________________________
-static int G__pp_ifdefextern(G__FastAllocString& temp)
+static int G__pp_ifdefextern(char* temp)
 {
    // -- FIXME: Describe this function!
    fpos_t pos;
    fgetpos(G__ifile.fp, &pos);
    int linenum = G__ifile.line_number;
-   int cin = G__fgetname(temp, 0, "\"}#");
+   int cin = G__fgetname(temp, "\"}#");
    if (cin == '}') {
       // -- 
       //
@@ -337,8 +334,8 @@ static int G__pp_ifdefextern(G__FastAllocString& temp)
       //
       G__fignoreline();
       do {
-         cin = G__fgetstream(temp, 0, "#");
-         cin = G__fgetstream(temp, 0, "\n\r");
+         cin = G__fgetstream(temp, "#");
+         cin = G__fgetstream(temp, "\n\r");
       }
       while (strcmp(temp, "endif"));
       return G__IFDEF_ENDBLOCK;
@@ -363,30 +360,30 @@ static int G__pp_ifdefextern(G__FastAllocString& temp)
          int flag = 0;
          int store_iscpp = G__iscpp;
          int store_externblock_iscpp = G__externblock_iscpp;
-         G__FastAllocString fname(G__MAXFILENAME);
-         cin = G__fgetstream(fname, 0, "\"");
+         char fname[G__MAXFILENAME];
+         cin = G__fgetstream(fname, "\"");
          temp[0] = 0;
          do {
-            cin = G__fgetstream(temp, 0, "{\r\n");
+            cin = G__fgetstream(temp, "{\r\n");
          }
          while (!temp[0] && ((cin == '\r') || (cin == '\n')));
          if (temp[0] || (cin != '{')) {
             goto goback;
          }
-         cin = G__fgetstream(temp, 0, "\n\r");
+         cin = G__fgetstream(temp, "\n\r");
          if ((cin == '}') && !strcmp(fname, "C")) {
             goto goback;
          }
-         cin = G__fgetstream(temp, 0, "#\n\r");
+         cin = G__fgetstream(temp, "#\n\r");
          if (((cin == '\n') || (cin == '\r')) && !temp[0]) {
-            cin = G__fgetstream(temp, 0, "#\n\r");
+            cin = G__fgetstream(temp, "#\n\r");
          }
          if (cin != '#') {
             goto goback;
          }
-         cin = G__fgetstream(temp, 0, "\n\r");
+         cin = G__fgetstream(temp, "\n\r");
          if (((cin == '\n') || (cin == '\r')) && !temp[0]) {
-            cin = G__fgetstream(temp, 0, "#\n\r");
+            cin = G__fgetstream(temp, "#\n\r");
          }
          if (strcmp(temp, "endif")) {
             goto goback;
@@ -416,14 +413,12 @@ static int G__pp_ifdefextern(G__FastAllocString& temp)
    return G__IFDEF_NORMAL;
 }
 
-extern "C" {
-
 //______________________________________________________________________________
 static void G__pp_undef()
 {
    // -- FIXME: Describe this function!
-   G__FastAllocString temp(G__MAXNAME);
-   G__fgetname(temp, 0, "\n\r");
+   char temp[G__MAXNAME];
+   G__fgetname(temp, "\n\r");
    struct G__var_array* var = &G__global;
    while (var) {
       for (int i = 0; i < var->allvar; ++i) {
@@ -453,10 +448,8 @@ static void G__pp_undef()
 //  Exceptions.  try, throw, catch
 //
 
-} // extern "C"
-
 //______________________________________________________________________________
-static int G__exec_try(G__FastAllocString& statement)
+static int G__exec_try(char* statement)
 {
    // -- FIXME: Describe this function!
    int brace_level = 0;
@@ -468,9 +461,6 @@ static int G__exec_try(G__FastAllocString& statement)
    }
    return 0;
 }
-
-
-extern "C" {
 
 //______________________________________________________________________________
 static int G__ignore_catch()
@@ -517,23 +507,19 @@ static int G__ignore_catch()
    return 0;
 }
 
-} // extern "C"
-
-
 //______________________________________________________________________________
-static int G__exec_throw(G__FastAllocString& statement)
+static int G__exec_throw(char* statement)
 {
    // -- Handle the "throw" expression.
    int iout = 0;
-   G__FastAllocString buf(G__ONELINE);
-   G__fgetstream(buf, 0, ";");
+   char buf[G__ONELINE];
+   G__fgetstream(buf, ";");
    if (isdigit(buf[0]) || (buf[0] == '.')) {
-      statement = buf;
+      strcpy(statement, buf);
       iout = 5;
    }
    else {
-      statement = "new ";
-      statement += buf;
+      sprintf(statement, "new %s", buf);
       iout = strlen(statement);
    }
    G__exceptionbuffer = G__null;
@@ -613,7 +599,7 @@ static int G__exec_throw(G__FastAllocString& statement)
 //
 
 //______________________________________________________________________________
-static int G__exec_function(G__FastAllocString& statement, int* pc, int* piout, int* plargestep, G__value* presult)
+static int G__exec_function(char* statement, int* pc, int* piout, int* plargestep, G__value* presult)
 {
    // -- Function call.
    //
@@ -623,7 +609,7 @@ static int G__exec_function(G__FastAllocString& statement, int* pc, int* piout, 
       //fprintf(stderr, "G__exec_function: Function call is followed by an operator.\n");
       if ((*pc != ';') && (*pc != ',')) {
          statement[(*piout)++] = *pc;
-         *pc = G__fgetstream_new(statement ,  (*piout), ";");
+         *pc = G__fgetstream_new(statement + (*piout) , ";");
       }
       if (G__breaksignal) {
          int ret = G__beforelargestep(statement, piout, plargestep);
@@ -646,7 +632,7 @@ static int G__exec_function(G__FastAllocString& statement, int* pc, int* piout, 
       //fprintf(stderr, "G__exec_function: Function call is followed by '('.\n");
       int len = strlen(statement);
       statement[len++] = *pc;
-      *pc = G__fgetstream_newtemplate(statement, len, ")");
+      *pc = G__fgetstream_newtemplate(statement + len, ")");
       len = strlen(statement);
       statement[len++] = *pc;
       statement[len] = 0;
@@ -654,7 +640,7 @@ static int G__exec_function(G__FastAllocString& statement, int* pc, int* piout, 
       while (*pc != ';') {
          len = strlen(statement);
          statement[len++] = *pc;
-         *pc = G__fgetstream_newtemplate(statement, len, ");");
+         *pc = G__fgetstream_newtemplate(statement + len, ");");
          if (*pc == ';') {
             break;
          }
@@ -696,7 +682,7 @@ static int G__exec_function(G__FastAllocString& statement, int* pc, int* piout, 
       if (!(*piout))  {
          // -- It was not a macro.
          if (G__dispmsg >= G__DISPWARN) {
-            G__fprinterr(G__serr, "Warning: %s Missing ';'", statement());
+            G__fprinterr(G__serr, "Warning: %s Missing ';'", statement);
             G__printlinenum();
          }
       }
@@ -713,8 +699,6 @@ static int G__exec_function(G__FastAllocString& statement, int* pc, int* piout, 
    }
    return 0;
 }
-
-extern "C" {
 
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -859,8 +843,8 @@ static G__value G__exec_switch()
    //
    //  Scan the switch condition.
    //
-   G__FastAllocString condition(G__ONELINE);
-   G__fgetstream(condition, 0, ")");
+   char condition[G__ONELINE];
+   G__fgetstream(condition, ")");
    //{
    //   char buf[128];
    //   G__fgetstream_peek(buf, 30);
@@ -1191,10 +1175,8 @@ static G__value G__exec_switch()
    return result;
 }
 
-} //extern "C"
-
 //______________________________________________________________________________
-static G__value G__exec_switch_case(G__FastAllocString& casepara)
+static G__value G__exec_switch_case(char* casepara)
 {
    // -- Handle a case expression inside a switch statement.
    //
@@ -1309,8 +1291,6 @@ static G__value G__exec_switch_case(G__FastAllocString& casepara)
    return result;
 }
 
-extern "C" {
-
 //______________________________________________________________________________
 static G__value G__exec_if()
 {
@@ -1332,15 +1312,16 @@ static G__value G__exec_if()
    //
    //  Get the text of the if condition from the input file.
    //
-   G__FastAllocString condition(G__LONGLINE);
-   G__fgetstream_new(condition, 0, ")");
-   condition.Resize(strlen(condition) + 10);
+   char* condition = (char*) malloc(G__LONGLINE);
+   G__fgetstream_new(condition, ")");
+   condition = (char*) realloc((void*) condition, strlen(condition) + 10);
    //
    //  If the previous read hit a breakpoint, pause, and exit if requested.
    //
    if (G__breaksignal) {
       if (G__beforelargestep(condition, &iout, &largestep) > 1) {
          G__ifswitch = store_ifswitch;
+         free(condition);
          //fprintf(stderr, "---end if\n");
          return G__null;
       }
@@ -1424,6 +1405,7 @@ static G__value G__exec_if()
          }
 #endif // G__ASM
          G__ifswitch = store_ifswitch;
+         free(condition);
          //fprintf(stderr, "---end if\n");
          return result;
       }
@@ -1594,6 +1576,7 @@ static G__value G__exec_if()
                      }
 #endif // G__ASM
                      G__ifswitch = store_ifswitch;
+                     free(condition);
                      //fprintf(stderr, "---end if\n");
                      return G__null;
                   }
@@ -1645,6 +1628,7 @@ static G__value G__exec_if()
          }
 #endif // G__ASM
          G__ifswitch = store_ifswitch;
+         free(condition);
          //fprintf(stderr, "---end if\n");
          return G__null;
       }
@@ -1786,6 +1770,7 @@ static G__value G__exec_if()
          }
 #endif // G__ASM
          G__ifswitch = store_ifswitch;
+         free(condition);
          //fprintf(stderr, "---end if\n");
          return result;
       }
@@ -1824,6 +1809,7 @@ static G__value G__exec_if()
 #endif // G__ASM
    // Restore state.
    G__ifswitch = store_ifswitch;
+   free(condition);
    // And return.
    //{
    //   char buf[128];
@@ -2233,10 +2219,10 @@ static G__value G__exec_do()
    //   G__fgetstream_peek(buf, 10);
    //   fprintf(stderr, "G__exec_do: peek ahead: '%s'\n", buf);
    //}
-   G__FastAllocString condition(G__ONELINE);
-   G__fgetstream(condition, 0, "(");
+   char condition[G__ONELINE];
+   G__fgetstream(condition, "(");
    if (strcmp(condition, "while")) {
-      G__fprinterr(G__serr, "Syntax error: do {} %s(); Should be do {} while (); FILE: %s LINE: %d\n", condition(), G__ifile.name, G__ifile.line_number);
+      G__fprinterr(G__serr, "Syntax error: do {} %s(); Should be do {} while (); FILE: %s LINE: %d\n", condition, G__ifile.name, G__ifile.line_number);
    }
    //
    //  do { ... } while (...);
@@ -2249,7 +2235,7 @@ static G__value G__exec_do()
    //   G__fgetstream_peek(buf, 10);
    //   fprintf(stderr, "G__exec_do: peek ahead: '%s'\n", buf);
    //}
-   G__fgetstream(condition, 0, ")");
+   G__fgetstream(condition, ")");
    //{
    //   char buf[128];
    //   G__fgetstream_peek(buf, 10);
@@ -2637,46 +2623,55 @@ static G__value G__exec_for()
       G__ifswitch = store_ifswitch;
       return G__null;
    }
-   G__FastAllocString condition(G__LONGLINE);
-   int c = G__fgetstream(condition, 0, ";)");
+   char* condition = (char*) malloc(G__LONGLINE);
+   int c = G__fgetstream(condition, ";)");
    if (c == ')') {
       // -- Syntax error, the third clause of the for was missing.
       G__genericerror("Error: for statement syntax error");
       G__ifswitch = store_ifswitch;
+      free(condition);
       return G__null;
    }
    // If there is no condition text, make it always true, as the standard requires.
    if (!condition[0]) {
-      condition = "1";
+      strcpy(condition, "1");
    }
    // FIXME: Why do we make the condition buffer bigger?
-   condition.Resize(strlen(condition) + 10);
+   condition = (char*) realloc(condition, strlen(condition) + 10);
    //
    //  Collect the third clause of the for,
    //  separating it on commas.
    //
-   std::list<G__FastAllocString> foraction;
+   char foractionbuf[G__ONELINE];
+   char* foraction[10];
+   int naction = 0;
+   char* p = foractionbuf;
    do {
       // -- Collect one clause of a comma operator expression.
       // Scan until a comma or the end of the head of the for.
-      foraction.push_back(G__FastAllocString());
-      c = G__fgetstream(foraction.back(), 0, "),");
+      c = G__fgetstream(p, "),");
       if (G__return > G__RETURN_NORMAL) {
          // FIXME: Is this error message correct?
          G__fprinterr(G__serr, "Error: for statement syntax error. ';' needed\n");
          // Restore the ifswitch state.
          G__ifswitch = store_ifswitch;
          // Cleanup malloc'ed memory.
+         free(condition);
          // And exit in error.
          return G__null;
       }
+      // Collect this clause.
+      foraction[naction++] = p;
+      // Move past scanned text in buffer.
+      p += strlen(p) + 1;
    }
    while (c != ')');
    //
    //  Execute the body of the loop.
    //
-   G__value result  = G__exec_loop(0, condition, foraction);
+   G__value result  = G__exec_loop(0, condition, naction, foraction);
    // Cleanup malloc'ed memory.
+   free(condition);
    // Restore the ifswitch state.
    G__ifswitch = store_ifswitch;
    // And we are done.
@@ -2704,26 +2699,24 @@ static G__value G__exec_while()
    //
    //  Scan in the while condition.
    //
-   G__FastAllocString condition(G__LONGLINE);
-   G__fgetstream(condition, 0, ")");
+   char* condition = (char*) malloc(G__LONGLINE);
+   G__fgetstream(condition, ")");
    // FIXME: Why do we make the condition buffer bigger?
-   condition.Resize(strlen(condition) + 10);
+   condition = (char*) realloc((void*) condition, strlen(condition) + 10);
    //
    //  Execute the body of the loop.
    //
-   G__value result = G__exec_loop(0, condition);
+   G__value result = G__exec_loop(0, condition, 0, 0);
    // Cleanup malloc'ed memory.
+   free(condition);
    // Restore the ifswitch state.
    G__ifswitch = store_ifswitch;
    // And we are done.
    return result;
 }
 
-} // extern "C"
-
 //______________________________________________________________________________
-static G__value G__exec_loop(const char* forinit, char* condition,
-                             const std::list<G__FastAllocString>& foraction)
+static G__value G__exec_loop(char* forinit, char* condition, int naction, char** foraction)
 {
    // -- Execute a loop, handles most of for, and while.
    //
@@ -3116,11 +3109,10 @@ static G__value G__exec_loop(const char* forinit, char* condition,
          //
          //  Execute the bottom of loop expression.
          //
-         if (!foraction.empty()) {
+         if (naction) {
             //fprintf(stderr, "G__exec_loop: begin executing loop actions ...\n");
-            for (std::list<G__FastAllocString>::const_iterator i = foraction.begin(),
-                    e = foraction.end(); i != e; ++i) {
-               G__getexpr(*i);
+            for (int i = 0; i < naction; ++i) {
+               G__getexpr(foraction[i]);
             }
             //fprintf(stderr, "G__exec_loop: end executing loop actions.\n");
          }
@@ -3304,8 +3296,6 @@ static G__value G__exec_loop(const char* forinit, char* condition,
    return result;
 }
 
-extern "C" {
-
 //______________________________________________________________________________
 //
 //  Jump statements.  return, goto
@@ -3439,9 +3429,9 @@ static int G__search_gotolabel(char* label, fpos_t* pfpos, int line, int* pmpare
    int single_quote = 0;
    int double_quote = 0;
    do {
-      G__FastAllocString token(G__LONGLINE);
+      char token[G__LONGLINE];
       // The extraneous punctuation is here to keep from overflowing token.
-      c = G__fgetstream(token, 0, "'\"{}:();");
+      c = G__fgetstream(token, "'\"{}:();");
       if (c == EOF) {
          break;
       }
@@ -3507,7 +3497,7 @@ static int G__label_access_scope(char* statement, int* piout, int* pspaceflag, i
    int line;
    int store_tagdefining;
    fpos_t pos;
-   G__FastAllocString temp(G__ONELINE);
+   char temp[G__ONELINE];
    // Look ahead to see if we have a "::".
    int c = G__fgetc();
    if (c == ':') {
@@ -3531,7 +3521,7 @@ static int G__label_access_scope(char* statement, int* piout, int* pspaceflag, i
          fgetpos(G__ifile.fp, &pos);
          line = G__ifile.line_number;
          if (G__dispsource) G__disp_mask = 1000;
-         c = G__fgetname_template(temp, 0, "(;&*");
+         c = G__fgetname_template(temp, "(;&*");
          if (isspace(c) || (c == '&') || (c == '*')) {
             c = G__fgetspace();
             for (; (c == '&') || (c == '*');) {
@@ -3659,13 +3649,13 @@ static int G__IsFundamentalDecl()
    // -- Used only by G__keyword_anytime_5.
    // -- FIXME: We don't check for float, double, or long double!
    // -- FIXME: We don't accept a macro which expands to a fundamental type.
-   G__FastAllocString type_name(G__ONELINE);
+   char type_name[G__ONELINE];
    // Store file position.
    int linenum = G__ifile.line_number;
    fpos_t pos;
    fgetpos(G__ifile.fp, &pos);
    G__disp_mask = 1000;
-   /*int c =*/ G__fgetname_template(type_name, 0, "(");
+   /*int c =*/ G__fgetname_template(type_name, "(");
    int result = 1;
    if (!strcmp(type_name, "class") || !strcmp(type_name, "struct") || !strcmp(type_name, "union")) {
       result = 0;
@@ -3727,8 +3717,8 @@ static void G__unsignedintegral()
    fgetpos(G__ifile.fp, &pos);
    G__unsigned = -1;
    // Scan the next identifier token in.
-   G__FastAllocString name(G__MAXNAME);
-   G__fgetname(name, 0, "(");
+   char name[G__MAXNAME];
+   G__fgetname(name, "(");
    //
    //  And compare against the integral types.
    //
@@ -3836,8 +3826,8 @@ static void G__externignore()
 {
    // -- Handle extern "...", EXTERN "..."
    int flag = 0;
-   G__FastAllocString fname(G__MAXFILENAME);
-   int c = G__fgetstream(fname, 0, "\"");
+   char fname[G__MAXFILENAME];
+   int c = G__fgetstream(fname, "\"");
    int store_iscpp = G__iscpp;
    // FIXME: We should handle "C++" as well!
    if (!strcmp(fname, "C")) {
@@ -3891,24 +3881,24 @@ static void G__parse_friend()
    fpos_t pos;
    fgetpos(G__ifile.fp, &pos);
    int line_number = G__ifile.line_number;
-   G__FastAllocString classname(G__LONGLINE);
-   int c = G__fgetname_template(classname, 0, ";");
+   char classname[G__LONGLINE];
+   int c = G__fgetname_template(classname, ";");
    int tagtype = 0;
    if (c == ';') {
       tagtype = 'c';
    }
    else if (isspace(c)) {
       if (!strcmp(classname, "class")) {
-         c = G__fgetname_template(classname, 0, ";");
+         c = G__fgetname_template(classname, ";");
          tagtype = 'c';
       }
       else if (!strcmp(classname, "struct")) {
-         c = G__fgetname_template(classname, 0, ";");
+         c = G__fgetname_template(classname, ";");
          tagtype = 's';
       }
       else {
          if (!strcmp(classname, "const") || !strcmp(classname, "volatile") || !strcmp(classname, "register")) {
-            c = G__fgetname_template(classname, 0, ";");
+            c = G__fgetname_template(classname, ";");
          }
          if ((c == ';') || (c == ',')) {
             tagtype = 'c';
@@ -3973,10 +3963,10 @@ static void G__parse_friend()
             }
          }
          if (c != ';') {
-            c = G__fgetstream(classname, 0, ";,");
+            c = G__fgetstream(classname, ";,");
          }
          else {
-            classname[0] = 0;
+            classname[0] = '\0';
          }
       }
    }
@@ -4014,11 +4004,8 @@ static void G__parse_friend()
 }
 #endif // G__FRIEND
 
-} // extern "C"
-
-
 //______________________________________________________________________________
-static int G__keyword_anytime_5(G__FastAllocString& statement)
+static int G__keyword_anytime_5(char* statement)
 {
    // -- Handle a function-local const declaration, or #else, #elif, and #line
    int c = 0;
@@ -4093,7 +4080,7 @@ static int G__keyword_anytime_5(G__FastAllocString& statement)
 }
 
 //______________________________________________________________________________
-static int G__keyword_anytime_6(G__FastAllocString& statement)
+static int G__keyword_anytime_6(char* statement)
 {
    // -- Handle "static", "return", "#ifdef", "#endif", "#undef", and "#ident"
    if (!strcmp(statement, "static")) {
@@ -4175,7 +4162,7 @@ static int G__keyword_anytime_6(G__FastAllocString& statement)
 }
 
 //______________________________________________________________________________
-static int G__keyword_anytime_7(G__FastAllocString& statement)
+static int G__keyword_anytime_7(char* statement)
 {
    // -- Handle "#define", "#ifndef", and "#pragma".
    /***********************************
@@ -4222,7 +4209,7 @@ static int G__keyword_anytime_7(G__FastAllocString& statement)
 }
 
 //______________________________________________________________________________
-static int G__keyword_anytime_8(G__FastAllocString& statement)
+static int G__keyword_anytime_8(char* statement)
 {
    // -- Handle "template" and "explicit" keywords.
    //
@@ -4235,7 +4222,7 @@ static int G__keyword_anytime_8(G__FastAllocString& statement)
       int c;
       fpos_t pos;
       int line_number;
-      G__FastAllocString tcname(G__ONELINE);
+      char tcname[G__ONELINE];
       line_number = G__ifile.line_number;
       fgetpos(G__ifile.fp, &pos);
       c = G__fgetspace();
@@ -4249,10 +4236,10 @@ static int G__keyword_anytime_8(G__FastAllocString& statement)
       tcname[0] = c;
       fseek(G__ifile.fp, -1, SEEK_CUR);
       G__disp_mask = 1;
-      c = G__fgetname_template(tcname, 0, ";");
+      c = G__fgetname_template(tcname, ";");
       if (strcmp(tcname, "class") == 0 ||
             strcmp(tcname, "struct") == 0) {
-         c = G__fgetstream_template(tcname, 0, "0, ;");
+         c = G__fgetstream_template(tcname, ";");
       }
       else if (isspace(c)) {
          int len = strlen(tcname);
@@ -4269,7 +4256,7 @@ static int G__keyword_anytime_8(G__FastAllocString& statement)
          }
          else {
             tcname[len] = store_c;
-            c = G__fgetstream_template(tcname, strlen(tcname), ";");
+            c = G__fgetstream_template(tcname + strlen(tcname), ";");
          }
       }
       if (!G__defined_templateclass(tcname)) {
@@ -4284,7 +4271,7 @@ static int G__keyword_anytime_8(G__FastAllocString& statement)
    return 0;
 }
 
-static int G__defined_type(G__FastAllocString& type_name, int len)
+static int G__defined_type(char* type_name, int len)
 {
    // -- Handle a possible declaration, return 0 if not, return 1 if good.
    //
@@ -4298,7 +4285,6 @@ static int G__defined_type(G__FastAllocString& type_name, int len)
       // -- We have found a destructor declaration in prerun.
       G__var_type = 'y';
       int cin = G__fignorestream("(");
-      type_name.Resize(len + 2);
       type_name[len++] = cin;
       type_name[len] = '\0';
       G__make_ifunctable(type_name);
@@ -4318,7 +4304,8 @@ static int G__defined_type(G__FastAllocString& type_name, int len)
    fgetpos(G__ifile.fp, &pos);
    int line = G__ifile.line_number;
    // Remember the passed type_name in case we fail.
-   G__FastAllocString store_typename(type_name);
+   char store_typename[G__LONGLINE];
+   strcpy(store_typename, type_name);
    // Remember tagnum and typenum in case we fail.
    int store_tagnum = G__tagnum;
    int store_typenum = G__typenum;
@@ -4394,7 +4381,7 @@ static int G__defined_type(G__FastAllocString& type_name, int len)
    else if ((len > 1) && (type_name[len-1] == '*')) {
       int cin2;
       len -= 1;
-      type_name[len] = 0;
+      type_name[len] = '\0';
       fsetpos(G__ifile.fp, &pos);
       G__ifile.line_number = line;
       // To know how much to rewind we need to know if there is a fakespace.
@@ -4457,15 +4444,15 @@ static int G__defined_type(G__FastAllocString& type_name, int len)
             // Declare the undefined name as a class.
             G__tagnum = G__search_tagname(type_name, 'c');
             // Output the info to the given file.
-            fprintf(G__fpundeftype, "class %s; /* %s %d */\n", type_name(), G__ifile.name, G__ifile.line_number);
-            fprintf(G__fpundeftype, "#pragma link off class %s;\n\n", type_name());
+            fprintf(G__fpundeftype, "class %s; /* %s %d */\n", type_name , G__ifile.name, G__ifile.line_number);
+            fprintf(G__fpundeftype, "#pragma link off class %s;\n\n", type_name);
             G__struct.globalcomp[G__tagnum] = G__NOLINK;
          }
          else {
             // -- Was not a known type, return.
             fsetpos(G__ifile.fp, &pos);
             G__ifile.line_number = line;
-            type_name = store_typename;
+            strcpy(type_name, store_typename);
             G__tagnum = store_tagnum;
             G__typenum = store_typenum;
             G__reftype = G__PARANORMAL;
@@ -4496,8 +4483,6 @@ static int G__defined_type(G__FastAllocString& type_name, int len)
    // And return success.
    return 1;
 }
-
-extern "C" {
 
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -4530,7 +4515,7 @@ int G__free_exceptionbuffer()
       if ('u' == G__exceptionbuffer.type && G__exceptionbuffer.obj.i &&
           -1 != G__exceptionbuffer.tagnum) {
          // destruct before free
-         G__FastAllocString destruct(G__ONELINE);
+         char destruct[G__ONELINE];
          int store_tagnum = G__tagnum;
          int dmy = 0;
          G__tagnum = G__exceptionbuffer.tagnum;
@@ -4538,10 +4523,10 @@ int G__free_exceptionbuffer()
             G__globalvarpointer = G__store_struct_offset;
          }
          else G__globalvarpointer = G__PVOID;
-         destruct.Format("~%s()", G__fulltagname(G__tagnum, 1));
+         sprintf(destruct, "~%s()", G__fulltagname(G__tagnum, 1));
          if (G__dispsource) {
             G__fprinterr(G__serr, "!!!Destructing exception buffer %s %lx"
-                         , destruct(), G__exceptionbuffer.obj.i);
+                         , destruct, G__exceptionbuffer.obj.i);
             G__printlinenum();
          }
          G__getfunction(destruct, &dmy , G__TRYDESTRUCTOR);
@@ -4643,8 +4628,8 @@ int G__defined_macro(const char* macro)
 int G__pp_command()
 {
    // -- FIXME: Describe this function!
-   G__FastAllocString condition(G__ONELINE);
-   int c = G__fgetname(condition, 0, "\n\r");
+   char condition[G__ONELINE];
+   int c = G__fgetname(condition, "\n\r");
    if (isdigit(condition[0])) {
       if ((c != '\n') && (c != '\r')) {
          G__fignoreline();
@@ -4673,15 +4658,15 @@ int G__pp_command()
 void G__pp_skip(int elifskip)
 {
    // -- FIXME: Describe this function!
-   G__FastAllocString oneline(G__LONGLINE*2);
-   G__FastAllocString argbuf(G__LONGLINE*2);
-   char* arg[G__ONELINE];
+   char oneline[G__LONGLINE*2];
+   char argbuf[G__LONGLINE*2];
+   char *arg[G__ONELINE];
    int argn;
 
    FILE *fp;
    int nest = 1;
-   G__FastAllocString condition(G__ONELINE);
-   G__FastAllocString temp(G__ONELINE);
+   char condition[G__ONELINE];
+   char temp[G__ONELINE];
    int i;
 
    fp = G__ifile.fp;
@@ -4697,7 +4682,7 @@ void G__pp_skip(int elifskip)
    /********************************************************
     * Read lines until end of conditional compilation
     ********************************************************/
-   while (nest && G__readline_FastAlloc(fp, oneline, argbuf, &argn, arg) != 0) {
+   while (nest && G__readline(fp, oneline, argbuf, &argn, arg) != 0) {
       /************************************************
        *  If input line is "abcdefg hijklmn opqrstu"
        *
@@ -4741,9 +4726,9 @@ void G__pp_skip(int elifskip)
                if (!G__xrefflag) {
                   G__asm_noverflow = 0;
                }
-               condition = "";
+               strcpy(condition, "");
                for (i = directiveArgI + 1; i <= argn; i++) {
-                  condition += arg[i];
+                  strcat(condition, arg[i]);
                }
                i = strlen(oneline) - 1;
                while (i >= 0 && (oneline[i] == '\n' || oneline[i] == '\r')) {
@@ -4752,7 +4737,7 @@ void G__pp_skip(int elifskip)
                if (oneline[i] == '\\') {
                   int len = strlen(condition);
                   while (1) {
-                     G__fgetstream(condition, len, "\n\r");
+                     G__fgetstream(condition + len, "\n\r");
                      if (condition[len] == '\\' && (condition[len+1] == '\n' ||
                                                     condition[len+1] == '\r')) {
                         char* p = condition + len;
@@ -4783,12 +4768,11 @@ void G__pp_skip(int elifskip)
                      if (!posCommentEnd) {
                         if (G__skip_comment())
                            break;
-                        if (G__fgetstream(condition, posComment - condition.data(), "\r\n") == EOF)
+                        if (G__fgetstream(posComment, "\r\n") == EOF)
                            break;
                      }
                      else {
-                        temp = posCommentEnd + 2;
-                        condition.Resize(posComment - condition.data() + strlen(temp) + 1);
+                        strcpy(temp, posCommentEnd + 2);
                         strcpy(posComment, temp);
                      }
                      posComment = strstr(posComment, "/*");
@@ -4839,14 +4823,14 @@ void G__pp_skip(int elifskip)
 int G__pp_if()
 {
    // -- FIXME: Describe this function!
-   G__FastAllocString condition(G__LONGLINE);
+   char condition[G__LONGLINE];
    int c, len = 0;
    int store_no_exec_compile;
    int store_asm_wholefunction;
    int store_asm_noverflow;
    int haveOpenDefined = -1; // need to convert defined FOO to defined(FOO)
    do {
-      c = G__fgetstream(condition, len, " \n\r");
+      c = G__fgetstream(condition + len, " \n\r");
       len = strlen(condition);
       if (len > 0 && (condition[len] == '\n' || condition[len] == '\r')) --len;
       if (haveOpenDefined != -1) {
@@ -4859,7 +4843,6 @@ int G__pp_if()
             --len;
          }
          else {
-            condition.Resize(len + 2);
             condition[len] = ')';
             condition[len + 1] = 0; // this might be the end, so terminate it
             ++len;
@@ -4869,7 +4852,6 @@ int G__pp_if()
       else
          if (c == ' ' && len > 6 && !strcmp(condition + len - 7, "defined")) {
             haveOpenDefined = len;
-            condition.Resize(len + 2);
             condition[len] = '(';
             ++len;
          }
@@ -4925,10 +4907,10 @@ int G__pp_ifdef(int def)
 {
    // -- FIXME: Describe this function!
    // def: 1 for ifdef; 0 for ifndef
-   G__FastAllocString temp(G__LONGLINE);
+   char temp[G__LONGLINE];
    int notfound = 1;
 
-   G__fgetname(temp, 0, "\n\r");
+   G__fgetname(temp, "\n\r");
 
    notfound = G__defined_macro(temp) ^ 1;
 
@@ -4948,11 +4930,8 @@ int G__pp_ifdef(int def)
    return(G__IFDEF_NORMAL);
 }
 
-} // extern "C"
-
-
 //______________________________________________________________________________
-int G__exec_catch(G__FastAllocString& statement)
+int G__exec_catch(char* statement)
 {
    // -- Handle the "catch" statement.
    int c;
@@ -4963,7 +4942,7 @@ int G__exec_catch(G__FastAllocString& statement)
       // catch (ehclass& obj) {  }
       // ^^^^^^^
       do {
-         c = G__fgetstream(statement, 0, "(};");
+         c = G__fgetstream(statement, "(};");
       }
       while ('}' == c);
       if ((c != '(') || strcmp(statement, "catch")) {
@@ -4973,7 +4952,7 @@ int G__exec_catch(G__FastAllocString& statement)
       line_number = G__ifile.line_number;
       // catch (ehclass& obj) {  }
       //        ^^^^^^^^
-      c = G__fgetname_template(statement, 0, ")&*");
+      c = G__fgetname_template(statement, ")&*");
       if (statement[0] == '.') {
          // catch all exceptions
          // catch(...) {  }
@@ -4987,13 +4966,13 @@ int G__exec_catch(G__FastAllocString& statement)
       else {
          std::string excType(statement);
          if (excType == "const") {
-            c = G__fgetname_template(statement, 0, ")&*");
+            c = G__fgetname_template(statement, ")&*");
             excType += " ";
             excType += statement;
          }
          while (c == '*' || c == '&') {
             excType += c;
-            c = G__fgetname_template(statement, 0, ")&*");
+            c = G__fgetname_template(statement, ")&*");
          }
          
          G__value sType = G__string2type(excType.c_str());
@@ -5033,8 +5012,6 @@ int G__exec_catch(G__FastAllocString& statement)
    G__free_exceptionbuffer();
    return 0;
 }
-
-extern "C"{
 
 //______________________________________________________________________________
 int G__skip_comment()
@@ -5157,7 +5134,7 @@ G__value G__exec_statement(int* mparen)
    int fake_space = 0;
    int discard_space = 0;
    int discarded_space = 0;
-   G__FastAllocString statement(G__LONGLINE);
+   char statement[G__LONGLINE];
    G__value result = G__null;
    //fprintf(stderr, "\nG__exec_statement: Begin.\n");
    fpos_t start_pos;
@@ -5182,7 +5159,7 @@ G__value G__exec_statement(int* mparen)
       }
       discard_space = 0;
       read_again:
-      statement.Set(iout, 0);
+      statement[iout] = '\0';
       if (!G__prerun) {
          //fprintf(stderr, "G__exec_statement: c: '%c' pr: %d ne: %d nec: %d ano: %d mp: %d io: %d st: '%s'\n", c, G__prerun, G__no_exec, G__no_exec_compile, G__asm_noverflow, *mparen, iout, statement);
       }
@@ -5221,7 +5198,7 @@ G__value G__exec_statement(int* mparen)
             commentflag = 0;
             // ignore these character
             if (single_quote || double_quote) {
-               statement.Set(iout++, c);
+               statement[iout++] = c;
             }
             else {
                after_replacement:
@@ -5230,7 +5207,7 @@ G__value G__exec_statement(int* mparen)
                }
                if (spaceflag == 1) {
                   // -- Take action on space, even if skipping code.  Do preprocessing and look for declarations.
-                  statement.Set(iout, 0);
+                  statement[iout] = '\0';
                   // search keyword
                   G__preproc_again:
                   if ((statement[0] == '#') && isdigit(statement[1])) {
@@ -5293,13 +5270,13 @@ G__value G__exec_statement(int* mparen)
                         if ((*mparen == 1) && !strcmp(statement, "case")) {
                            //fprintf(stderr, "G__exec_statement: Saw a case.\n");
                            // Scan the case label in.
-                           G__FastAllocString casepara(G__ONELINE);
-                           G__fgetstream(casepara, 0, ":");
+                           char casepara[G__ONELINE];
+                           G__fgetstream(casepara, ":");
                            c = G__fgetc();
                            while (c == ':') {
-                              casepara += "::";
+                              strcat(casepara, "::");
                               int lenxxx = strlen(casepara);
-                              G__fgetstream(casepara, lenxxx, ":");
+                              G__fgetstream(casepara + lenxxx, ":");
                               c = G__fgetc();
                            }
                            // Backup one character.
@@ -5495,7 +5472,7 @@ G__value G__exec_statement(int* mparen)
                   // -- Take action on space, we are not skipping code.
                   //
                   // Terminate the accumulated statement text.
-                  statement.Set(iout, 0);
+                  statement[iout] = '\0';
                   // Hack, fixup read of xxx** or xxx*&.
                   if (
                      // -- If we have xxx** or xxx*&.
@@ -5579,15 +5556,15 @@ G__value G__exec_statement(int* mparen)
                               if (G__dispsource) {
                                  G__disp_mask = 1;
                               }
-                              statement.Set(iout++, ' ');
+                              statement[iout++] = ' ';
                               spaceflag |= 1;
                               // a little later this string will be passed to subfunctions
                               // that expect the string to be terminated
-                              statement.Set(iout, '0');
+                              statement[iout] = '\0';
                            }
                            else {
-                              statement.Set(0, c);
-                              c = G__fgetstream_template(statement, 1, ";");
+                              statement[0] = c;
+                              c = G__fgetstream_template(statement + 1, ";");
                               result = G__new_operator(statement);
                               // Reset the statement buffer.
                               iout = 0;
@@ -5728,17 +5705,17 @@ G__value G__exec_statement(int* mparen)
                               // FIXME: The line number, dispmask, and macro expansion state may be wrong now!
                               fseek(G__ifile.fp, -1, SEEK_CUR);
                               // And insert a fake space into the statement.
-                              statement.Set(iout++, ' ');
+                              statement[iout++] = ' ';
                               // And terminate the buffer.
-                              statement.Set(iout, 0);
+                              statement[iout] = '\0';
                               // Flag that any whitespace should now trigger a semantic action.
                               spaceflag |= 1;
                            }
                            else {
                               // Insert a fake space into the statement (right after the 'new').
-                              statement.Set(iout++, ' ');
+                              statement[iout++] = ' ';
                               // Then add in the character that terminated the peek ahead.
-                              statement.Set(iout++, c);
+                              statement[iout++] = c;
                               // Skip showing the next character.
                               // FIXME: This is wrong!
                               if (G__dispsource) {
@@ -5746,11 +5723,11 @@ G__value G__exec_statement(int* mparen)
                                  G__disp_mask = 1;
                               }
                               // Scan the reset of the parenthesised new expression.
-                              c = G__fgetstream_template(statement, iout, ")");
+                              c = G__fgetstream_template(statement + iout, ")");
                               iout = strlen(statement);
-                              statement.Set(iout++, c);
+                              statement[iout++] = c;
                               // And terminate the statement buffer.
-                              statement.Set(iout, 0);
+                              statement[iout] = '\0';
                               // Flag that any whitespace should now trigger a semantic action.
                               spaceflag |= 1;
                            }
@@ -5762,7 +5739,7 @@ G__value G__exec_statement(int* mparen)
                            // Check if current security level allows the use of the goto statement.
                            G__CHECK(G__SECURE_GOTO, 1, return G__null);
                            // Scan in the goto label.
-                           c = G__fgetstream(statement, 0, ";");
+                           c = G__fgetstream(statement, ";");
 #ifdef G__ASM
                            if (G__asm_wholefunction == G__ASM_FUNC_COMPILE) {
                               G__add_jump_bytecode(statement);
@@ -6083,7 +6060,7 @@ G__value G__exec_statement(int* mparen)
                         if (!strcmp(statement, "return")) {
                            // -- Handle 'return ...';
                            //                  ^
-                           G__fgetstream_new(statement, 0, ";");
+                           G__fgetstream_new(statement, ";");
                            result = G__return_value(statement);
                            if (G__no_exec_compile) {
                               if (!*mparen) {
@@ -6100,19 +6077,19 @@ G__value G__exec_statement(int* mparen)
                         if (!strcmp(statement, "delete")) {
                            // -- Handle 'delete ...'.
                            //                  ^
-                           int c = G__fgetstream(statement, 0, "[;");
+                           int c = G__fgetstream(statement , "[;");
                            iout = 0;
                            if (c == '[') {
                               if (!statement[0]) {
-                                 c = G__fgetstream(statement, 0, "]");
-                                 c = G__fgetstream(statement, 0, ";");
+                                 c = G__fgetstream(statement, "]");
+                                 c = G__fgetstream(statement, ";");
                                  iout = 1;
                               }
                               else {
-                                 statement += "[";
-                                 c = G__fgetstream(statement, strlen(statement), "]");
-                                 statement += "]";
-                                 c = G__fgetstream(statement, strlen(statement), ";");
+                                 strcpy(statement + strlen(statement), "[");
+                                 c = G__fgetstream(statement + strlen(statement), "]");
+                                 strcpy(statement + strlen(statement), "]");
+                                 c = G__fgetstream(statement + strlen(statement), ";");
                               }
                            }
                            // Note: iout == 1, if 'delete[]'
@@ -6307,7 +6284,7 @@ G__value G__exec_statement(int* mparen)
                         if (!strcmp(statement, "delete[]")) {
                            // Handle 'delete[] ...'.
                            //                 ^
-                           G__fgetstream(statement, 0, ";");
+                           G__fgetstream(statement, ";");
                            int largestep = 0;
                            if (G__breaksignal) {
                               int ret = G__beforelargestep(statement, &iout, &largestep);
@@ -6340,17 +6317,17 @@ G__value G__exec_statement(int* mparen)
                            //                    ^
                            int store_tagnum;
                            do {
-                              G__FastAllocString oprbuf(G__ONELINE);
+                              char oprbuf[G__ONELINE];
                               iout = strlen(statement);
-                              c = G__fgetname(oprbuf, 0, "(");
+                              c = G__fgetname(oprbuf, "(");
                               switch (oprbuf[0]) {
                                  case '*':
                                  case '&':
-                                    statement += oprbuf;
+                                    strcpy(statement + iout, oprbuf);
                                     break;
                                  default:
-                                    statement += " ";
-                                    statement += oprbuf;
+                                    statement[iout] = ' ';
+                                    strcpy(statement + iout + 1, oprbuf);
                               }
                            }
                            while (c != '(');
@@ -6358,7 +6335,7 @@ G__value G__exec_statement(int* mparen)
                            if (statement[iout-1] == ' ') {
                               --iout;
                            }
-                           statement.Set(iout, 0);
+                           statement[iout] = '\0';
                            result = G__string2type(statement + 9);
                            store_tagnum = G__tagnum;
                            G__var_type = result.type;
@@ -6368,8 +6345,8 @@ G__value G__exec_statement(int* mparen)
                            G__constvar = result.obj.i; // see G__string2type
                            int store_reftype = G__reftype;
                            G__reftype = result.obj.reftype.reftype;
-                           statement.Set(iout++, '(');
-                           statement.Set(iout, 0);
+                           statement[iout] = '(';
+                           statement[iout+1] = '\0';
                            G__make_ifunctable(statement);
                            G__tagnum = store_tagnum;
                            G__constvar = store_constvar;
@@ -6519,7 +6496,7 @@ G__value G__exec_statement(int* mparen)
                   {
                      char* replace = (char*) G__replacesymbol(statement);
                      if (replace != statement) {
-                        statement = replace;
+                        strcpy(statement, replace);
                         iout = strlen(statement);
                         goto after_replacement;
                      }
@@ -6537,11 +6514,11 @@ G__value G__exec_statement(int* mparen)
 
          case ';':
             if (single_quote || double_quote) {
-               statement.Set(iout++, c);
+               statement[iout++] = c;
             }
             else {
                // -- We have reached the end of the statement.
-               statement.Set(iout, 0);
+               statement[iout] = '\0';
                //fprintf(stderr, "G__exec_statement: seen ';': G__no_exec: %d mparen: %d statement: '%s'\n", G__no_exec, *mparen, statement);
                if (
                   G__breaksignal &&
@@ -6582,7 +6559,7 @@ G__value G__exec_statement(int* mparen)
                               return G__block_break;
                            }
                            // Reset the statement buffer.
-                           statement[0] = 0;
+                           statement[0] = '\0';
                            iout = 0;
                            // Flag that any following whitespace does not trigger any semantic action.
                            spaceflag = 0;
@@ -6598,7 +6575,7 @@ G__value G__exec_statement(int* mparen)
                         if (!strcmp(statement, "return")) {
                            result = G__return_value("");
                            if (G__no_exec_compile) {
-                              statement[0] = 0;
+                              statement[0] = '\0';
                               if (!*mparen) {
                                  return G__null;
                               }
@@ -6642,7 +6619,7 @@ G__value G__exec_statement(int* mparen)
                               return G__block_continue;
                            }
                            // Reset the statement buffer.
-                           statement[0] = 0;
+                           statement[0] = '\0';
                            iout = 0;
                            // Flag that any following whitespace does not trigger any semantic action.
                            spaceflag = 0;
@@ -6652,7 +6629,7 @@ G__value G__exec_statement(int* mparen)
                   if (!strncmp(statement, "return\"", 7) || !strncmp(statement, "return'", 7)) {
                      result = G__return_value(statement + 6);
                      if (G__no_exec_compile) {
-                        statement[0] = 0;
+                        statement[0] = '\0';
                         if (!*mparen) {
                            return G__null;
                         }
@@ -6700,8 +6677,8 @@ G__value G__exec_statement(int* mparen)
                !double_quote
             ) {
                // -- Handle an assignment.
-               statement.Set(iout, '=');
-               c = G__fgetstream_new(statement, iout + 1, ";,{}");
+               statement[iout] = '=';
+               c = G__fgetstream_new(statement + iout + 1, ";,{}");
                if ((c == '}') || (c == '{')) {
                   G__syntaxerror(statement);
                   --*mparen;
@@ -6744,7 +6721,7 @@ G__value G__exec_statement(int* mparen)
                spaceflag = 0;
             }
             else {
-               statement.Set(iout++, c);
+               statement[iout++] = c;
                // Flag that any following whitespace should trigger a semantic action.
                spaceflag |= 1;
             }
@@ -6756,15 +6733,15 @@ G__value G__exec_statement(int* mparen)
                return G__null;
             }
             // FIXME: We should test G__funcheader here as well!
-            statement.Set(iout++, c);
+            statement[iout++] = c;
             // Flag that any following whitespace should trigger a semantic action.
             spaceflag |= 1;
             break;
 
          case '(':
             //fprintf(stderr, "\nG__exec_statement: Enter left parenthesis case.\n");
-            statement.Set(iout++, c);
-            statement.Set(iout, 0);
+            statement[iout++] = c;
+            statement[iout] = '\0';
             if (single_quote || double_quote) {
                break;
             }
@@ -6835,16 +6812,16 @@ G__value G__exec_statement(int* mparen)
                      if (!strcmp(statement, "return(")) {
                         //
                         // following part used to be
-                        // G__fgetstream(statement, 0, ")");
+                        // G__fgetstream(statement,")");
                         //
                         fseek(G__ifile.fp, -1, SEEK_CUR);
                         if (G__dispsource) {
                            G__disp_mask = 1;
                         }
-                        G__fgetstream_new(statement, 0, ";");
+                        G__fgetstream_new(statement, ";");
                         result = G__return_value(statement);
                         if (G__no_exec_compile) {
-                           statement[0] = 0;
+                           statement[0] = '\0';
                            if (!*mparen) {
                               return G__null;
                            }
@@ -6928,23 +6905,22 @@ G__value G__exec_statement(int* mparen)
                         // -- Handle keyword "case", even if skipping code.
                         //fprintf(stderr, "G__exec_statement: Saw a case.\n");
                         // Scan the case label in.
-                        G__FastAllocString casepara(G__ONELINE);
+                        char casepara[G__ONELINE];
                         casepara[0] = '(';
                         {
                            int lencasepara = 1;
-                           c = G__fgetstream(casepara, lencasepara, ":");
+                           c = G__fgetstream(casepara+lencasepara, ":");
                            if (c==')') {
                               lencasepara = strlen(casepara);
-                              casepara.Resize(lencasepara + 2);
                               casepara[lencasepara] = ')';
                               ++lencasepara;
-                              G__fgetstream(casepara, lencasepara, ":");
+                              G__fgetstream(casepara+lencasepara, ":");
                            }
                            c = G__fgetc();
                            while (c == ':') {
-                              casepara += "::";
+                              strcat(casepara, "::");
                               lencasepara = strlen(casepara);
-                              G__fgetstream(casepara, lencasepara, ":");
+                              G__fgetstream(casepara + lencasepara, ":");
                               c = G__fgetc();
                            }
                         }
@@ -7054,11 +7030,10 @@ G__value G__exec_statement(int* mparen)
                ) {
                   // Read to 'func(xxxxxx)'
                   //                     ^
-                  c = G__fgetstream_new(statement , iout, ")");
+                  c = G__fgetstream_new(statement + iout , ")");
                   iout = strlen(statement);
-                  statement.Resize(iout + 2);
                   statement[iout++] = c;
-                  statement[iout] = 0;
+                  statement[iout] = '\0';
                   // Skip any following whitespace.
                   c = G__fgetspace();
                   // if 'func(xxxxxx) \n    nextexpr'   macro
@@ -7068,8 +7043,8 @@ G__value G__exec_statement(int* mparen)
                   if (!strncmp(statement, "new ", 4) || !strncmp(statement, "new(", 4)) {
                      // -- We have a new expression, either placement or parenthesized typename.
                      // Grab the rest of the line.
-                     statement.Set(iout++, c);
-                     c = G__fgetstream_template(statement, iout, ";");
+                     statement[iout++] = c;
+                     c = G__fgetstream_template(statement + iout, ";");
                      // Find the position of the first open parenthesis.
                      char* pnew = strchr(statement, '(');
                      G__ASSERT(pnew);
@@ -7095,9 +7070,9 @@ G__value G__exec_statement(int* mparen)
                }
                else if (iout > 3) {
                   // -- Nope, just a parenthesized construct, accumulate it and keep going.
-                  c = G__fgetstream_new(statement, iout, ")");
+                  c = G__fgetstream_new(statement + iout, ")");
                   iout = strlen(statement);
-                  statement.Set(iout++, c);
+                  statement[iout++] = c;
                }
             }
             else if (!*mparen && (iout == 3) && !strcmp(statement, "if(")) {
@@ -7118,23 +7093,22 @@ G__value G__exec_statement(int* mparen)
                // -- Handle keyword "case", even if skipping code.
                //fprintf(stderr, "G__exec_statement: Saw a case.\n");
                // Scan the case label in.
-               G__FastAllocString casepara(G__ONELINE);
+               char casepara[G__ONELINE];
                casepara[0] = '(';
                {
                   int lencasepara = 1;
-                  c = G__fgetstream(casepara, lencasepara, ":");
+                  c = G__fgetstream(casepara+lencasepara, ":");
                   if (c==')') {
                      lencasepara = strlen(casepara);
-                     casepara.Resize(lencasepara + 2);
                      casepara[lencasepara] = ')';
                      ++lencasepara;
-                     G__fgetstream(casepara, lencasepara, ":");
+                     G__fgetstream(casepara+lencasepara, ":");
                   }
                   c = G__fgetc();
                   while (c == ':') {
-                     casepara += "::";
+                     strcat(casepara, "::");
                      lencasepara = strlen(casepara);
-                     G__fgetstream(casepara, lencasepara, ":");
+                     G__fgetstream(casepara + lencasepara, ":");
                      c = G__fgetc();
                   }
                }
@@ -7185,12 +7159,12 @@ G__value G__exec_statement(int* mparen)
                return G__start;
             }
             if (single_quote || double_quote) {
-               statement.Set(iout++, c);
+               statement[iout++] = c;
             }
             else {
                G__constvar = G__VARIABLE;
                G__static_alloc = 0;
-               statement.Set(iout, 0);
+               statement[iout] = '\0';
                ++*mparen;
                //fprintf(stderr, "G__exec_statement: seen '{': G__no_exec: %d mparen: %d: statement '%s'\n", G__no_exec, *mparen, statement);
                if (!G__no_exec) {
@@ -7249,14 +7223,14 @@ G__value G__exec_statement(int* mparen)
 
          case '}':
             if (single_quote || double_quote) {
-               statement.Set(iout++, c);
+               statement[iout++] = c;
             }
             else {
                --*mparen;
                //fprintf(stderr, "G__exec_statement: seen '}': G__no_exec: %d mparen: %d\n", G__no_exec, *mparen);
                if (*mparen <= 0) {
                   if (iout && (G__globalcomp == G__NOLINK)) {
-                     statement.Set(iout, 0);
+                     statement[iout] = '\0';
                      G__missingsemicolumn(statement);
                   }
                   if (*mparen < 0) {
@@ -7294,7 +7268,7 @@ G__value G__exec_statement(int* mparen)
                if (G__dispsource) {
                   G__disp_mask = 1;
                }
-               G__fgetstream_new(statement, 0, ";");
+               G__fgetstream_new(statement, ";");
                result = G__return_value(statement);
                if (G__no_exec_compile) {
                   if (!*mparen) {
@@ -7313,7 +7287,7 @@ G__value G__exec_statement(int* mparen)
                G__fignorestream("}");
                return result;
             }
-            statement.Set(iout++, c);
+            statement[iout++] = c;
             // Flag that any following whitespace should trigger a semantic action.
             // FIXME: Why this strange value?
             spaceflag = 5;
@@ -7327,7 +7301,7 @@ G__value G__exec_statement(int* mparen)
                else {
                   double_quote = 0;
                   if (G__prerun) {
-                     statement.Set(iout, 0);
+                     statement[iout] = '\0';
                      G__strip_quotation(conststring);
                   }
                }
@@ -7338,7 +7312,7 @@ G__value G__exec_statement(int* mparen)
             if (!double_quote) {
                single_quote ^= 1;
             }
-            statement.Set(iout++, c);
+            statement[iout++] = c;
             // Flag that any following whitespace should trigger a semantic action.
             // FIXME: Why this strange value?
             spaceflag = 5;
@@ -7355,7 +7329,7 @@ G__value G__exec_statement(int* mparen)
             }
             else {
                commentflag = 1;
-               statement.Set(iout++, c);
+               statement[iout++] = c;
                // Flag that any following whitespace should trigger a semantic action.
                spaceflag |= 1;
             }
@@ -7386,7 +7360,7 @@ G__value G__exec_statement(int* mparen)
                }
             }
             else {
-               statement.Set(iout++, c);
+               statement[iout++] = c;
                // Flag that any following whitespace should trigger a semantic action.
                spaceflag |= 1;
                if (!double_quote && !single_quote) {
@@ -7396,7 +7370,7 @@ G__value G__exec_statement(int* mparen)
             break;
 
          case '&':
-            statement.Set(iout++, c);
+            statement[iout++] = c;
             // Flag that any following whitespace should trigger a semantic action.
             spaceflag |= 1;
             if (!double_quote && !single_quote) {
@@ -7405,11 +7379,11 @@ G__value G__exec_statement(int* mparen)
             break;
 
          case ':':
-            statement.Set(iout++, c);
+            statement[iout++] = c;
             // Flag that any following whitespace should trigger a semantic action.
             spaceflag |= 1;
             if (!double_quote && !single_quote) {
-               statement.Set(iout, 0);
+               statement[iout] = '\0';
                int stat = G__label_access_scope(statement, &iout, &spaceflag, *mparen);
                if (stat) {
                   return G__null;
@@ -7419,7 +7393,7 @@ G__value G__exec_statement(int* mparen)
 
 #ifdef G__TEMPLATECLASS
          case '<':
-            statement.Set(iout, 0);
+            statement[iout] = '\0';
             if ((iout == 8) && !strcmp(statement, "template")) {
                G__declare_template();
                if (!*mparen || (G__return > G__RETURN_NORMAL)) {
@@ -7472,14 +7446,14 @@ G__value G__exec_statement(int* mparen)
                   //   x  cout<<a;   this is rare.
                   //   O  Vector<Array<T> >  This has to be handled here
                   //
-                  statement.Set(iout++, c);
-                  c = G__fgetstream_template(statement, iout, ">");
+                  statement[iout++] = c;
+                  c = G__fgetstream_template(statement + iout, ">");
                   G__ASSERT(c == '>');
                   iout = strlen(statement);
                   if (statement[iout-1] == '>') {
-                     statement.Set(iout++, ' ');
+                     statement[iout++] = ' ';
                   }
-                  statement.Set(iout++, c);
+                  statement[iout++] = c;
                   spaceflag = 1;
                   // Try to accept statements with no space between
                   // the closing '>' and the identifier. Ugly, though.
@@ -7495,7 +7469,7 @@ G__value G__exec_statement(int* mparen)
                   }
                }
                else {
-                  statement.Set(iout++, c);
+                  statement[iout++] = c;
                   // Flag that any following whitespace should trigger a semantic action.
                   spaceflag |= 1;
                }
@@ -7505,7 +7479,7 @@ G__value G__exec_statement(int* mparen)
 
          case EOF:
             {
-               statement.Set(iout, 0);
+               statement[iout] = '\0';
                G__eof = 1;
                int mparen_line = 0;
                if (*mparen) {
@@ -7531,14 +7505,14 @@ G__value G__exec_statement(int* mparen)
                   strcmp(statement, "#endif") && // Not an endif, and
                   (statement[0] != 0x1a /*FIXME: What is this? */) // Not ???
                ) {
-                  G__fprinterr(G__serr, "Report: Unrecognized string '%s' ignored", statement());
+                  G__fprinterr(G__serr, "Report: Unrecognized string '%s' ignored", statement);
                   G__printlinenum();
                }
             }
             return G__null;
 
          case '\\':
-            statement.Set(iout++, c);
+            statement[iout++] = c;
             // Flag that any following whitespace should trigger a semantic action.
             spaceflag |= 1;
             c = G__fgetc();
@@ -7551,16 +7525,16 @@ G__value G__exec_statement(int* mparen)
             if (discarded_space && (c != '[') && (c != ']') && iout && (statement[iout-1] != ':')) {
                // -- Since the character following a discarded space
                // is *not* a separator, we have to keep the space.
-               statement.Set(iout++, ' ');
+               statement[iout++] = ' ';
             }
-            statement.Set(iout++, c);
+            statement[iout++] = c;
             // Flag that any following whitespace should trigger a semantic action.
             spaceflag |= 1;
 #ifdef G__MULTIBYTE
             if (G__IsDBCSLeadByte(c)) {
                c = G__fgetc();
                G__CheckDBCS2ndByte(c);
-               statement.Set(iout++, c);
+               statement[iout++] = c;
             }
 #endif // G__MULTIBYTE
             break;
