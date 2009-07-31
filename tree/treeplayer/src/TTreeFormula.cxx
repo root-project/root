@@ -3725,6 +3725,10 @@ namespace {
          if (i==len) {
             return 0;
          }
+         if (i!=1) {
+            // Insure the loading of the branch.
+            arr->EvalInstance(0);
+         }
          // Now we know that i>0 && i<len and cond==true
          res = arr->EvalInstance(i-1);
          for (; i<len; ++i) {
@@ -3751,6 +3755,10 @@ namespace {
          } while (!condval && i<len);
          if (i==len) {
             return 0;
+         }
+         if (i!=1) {
+            // Insure the loading of the branch.
+            arr->EvalInstance(0);
          }
          // Now we know that i>0 && i<len and cond==true
          res = arr->EvalInstance(i-1);
