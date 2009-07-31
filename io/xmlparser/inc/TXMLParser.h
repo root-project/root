@@ -62,7 +62,6 @@ protected:
    virtual void        ReleaseUnderlying();
    virtual void        OnValidateError(const TString& message);
    virtual void        OnValidateWarning(const TString& message);
-   virtual void        StopParser();
    virtual void        SetParseCode(Int_t code);
 
 public:
@@ -77,6 +76,7 @@ public:
 
    virtual Int_t       ParseFile(const char *filename) = 0;
    virtual Int_t       ParseBuffer(const char *contents, Int_t len) = 0;
+   virtual void        StopParser();
 
    Int_t               GetParseCode() const { return fParseCode; }
 
