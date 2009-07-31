@@ -122,6 +122,8 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refSize2 = RefClone(where,"hSize2");
 
    TH1F *refSumPx = RefClone(where,"hSumPx");
+   TH2F *refMaxPx = (TH2F*)RefClone(where,"hMaxPx");
+   TH2F *refMinPx = (TH2F*)RefClone(where,"hMinPx");
 
    // Loop with user code on all events and fill the ref histograms
    // The code below should produce identical results to the tree->Draw above
@@ -218,9 +220,19 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          refCellOper->Fill( event->GetMatrix(2,1) - t->GetVertex(1) );
       }
       Double_t sumPx = 0;
+      Double_t maxPx = 0.0;
+      Double_t maxPy = 0.0;
+      Double_t minPx = 5.0;
+      Double_t minPy = 5.0;
       for (i=0;i<ntracks;i++) {
          t = (Track*)tracks->UncheckedAt(i);
          sumPx += t->GetPx();
+         if (t->GetPy() > 1.0) {
+            if (t->GetPx() > maxPx) maxPx = t->GetPx();
+            if (t->GetPx() < minPx) minPx = t->GetPx();
+         }
+         if (t->GetPy() > maxPy) maxPy = t->GetPy();
+         if (t->GetPy() < minPy) minPy = t->GetPy();
          if (evmod == 0) refPx->Fill(t->GetPx());
          if (evmod == 0) refPy->Fill(t->GetPy());
          if (evmod == 0) refPz->Fill(t->GetPz());
@@ -286,6 +298,12 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          refAliasSymbolFunc->Fill(t->GetPx()+t->GetPy());
       }
       refSumPx->Fill(sumPx);
+      if (maxPx > 0) {
+         refMaxPx->Fill(maxPy,maxPx);
+      }
+      if (minPx < 5.0) {
+         refMinPx->Fill(minPy,minPx);
+      }
    }
 
    delete event;
