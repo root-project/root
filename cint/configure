@@ -194,6 +194,7 @@ function config_cygwin {
     CMACROS="-DG__SHAREDLIB -DG__OSFDLL -DG__NEWSTDHEADER -DG__CYGWIN -DG__NATIVELONGLONG -DG__STD_EXCEPTION"
     CXXMACROS="$CMACROS"
     EXPLLINK=1
+    LDFLAGS="$LDFLAGS -Wl,--enable-auto-import"
     SOFLAGS="$SOFLAGS --export-all-symbols"
 }
 
