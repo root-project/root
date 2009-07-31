@@ -211,7 +211,7 @@ Int_t TFormulaPrimitive::AddFormula(TFormulaPrimitive * formula)
    // If primitive formula already defined do nothing.
 
    if (fgListOfFunction == 0) BuildBasicFormulas();
-   if (FindFormula(formula->GetName())){
+   if (FindFormula(formula->GetName(),formula->fNArguments)){
       delete formula;
       return 0;
    }
@@ -328,11 +328,63 @@ namespace TFastFun {
 TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name)
 {
    // Find the formula in the list of formulas.
+   if (!fgListOfFunction) {
+      BuildBasicFormulas();
+   }      
+   Int_t nobjects = fgListOfFunction->GetEntries();
+   for (Int_t i = 0; i < nobjects; ++i) {
+      TFormulaPrimitive *formula = (TFormulaPrimitive*)fgListOfFunction->At(i);
+      if (formula && 0==strcmp(name, formula->GetName())) return formula;
+   }
+}
+
+
+//______________________________________________________________________________
+TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name, UInt_t nargs)
+{
+   // Find the formula in the list of formulas.
    
    if (!fgListOfFunction) {
       BuildBasicFormulas();
    }
-   return (TFormulaPrimitive*)fgListOfFunction->FindObject(name);
+   Int_t nobjects = fgListOfFunction->GetEntries();
+   for (Int_t i = 0; i < nobjects; ++i) {
+      TFormulaPrimitive *prim = (TFormulaPrimitive*)fgListOfFunction->At(i);
+      if (prim) {
+         bool match = ( ((UInt_t)prim->fNArguments) == nargs );
+         if (match && 0==strcmp(name, prim->GetName())) return prim;
+      }
+   }
+   return 0;
+}
+
+
+//______________________________________________________________________________
+TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name, const char *args)
+{
+   // Find the formula in the list of formulas.
+   
+   // let's count the argument(s)
+   if (args) {
+      Int_t nargs = 0;
+      if (args[0]!=')') {
+         nargs = 1;
+         int nest = 0;
+         for(UInt_t c = 0; c < strlen(args); ++c ) {
+            switch (args[c]) {
+               case '(': ++nest; break;
+               case ')': --nest; break;
+               case '<': ++nest; break;
+               case '>': --nest; break;
+               case ',': nargs += (nest==0); break;
+            }
+         }
+      }
+      return FindFormula(name,nargs);
+   } else {
+      FindFormula(name);
+   }
+   return 0;
 }
 
 

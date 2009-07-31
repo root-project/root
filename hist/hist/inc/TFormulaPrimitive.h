@@ -83,6 +83,8 @@ public:
    TFormulaPrimitive(const char *name,const char *formula, TFuncG fpointer);  
    static Int_t AddFormula(TFormulaPrimitive * formula);
    static TFormulaPrimitive* FindFormula(const char* name);
+   static TFormulaPrimitive* FindFormula(const char* name, const char *args);
+   static TFormulaPrimitive* FindFormula(const char* name, UInt_t nargs);
    Double_t Eval(Double_t* x);                   //eval primitive function
    Double_t Eval(TObject *o,  Double_t *x);      //eval member function
    Double_t Eval(Double_t *x, Double_t *param);  //eval primitive parametric function
