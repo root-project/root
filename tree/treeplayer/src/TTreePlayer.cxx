@@ -779,6 +779,19 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //                    as a parameter.  For example the mean for all the elements in
 //                    one entry can be calculated with:
 //                Sum$(formula)/Length$(formula)
+//  Min$(formula): return the minimun (within one TTree entry) of the value of the
+//                    elements of the formula given as a parameter.
+//  Max$(formula): return the maximum (within one TTree entry) of the value of the
+//                    elements of the formula given as a parameter.
+//  MinIf$(formula,condition)
+//  MaxIf$(formula,condition): return the minimum (maximum) (within one TTree entry)
+//                    of the value of the elements of the formula given as a parameter
+//                    if they match the condition. If not element match the condition, the result is zero.  To avoid the
+//                    the result is zero.  To avoid the consequent peak a zero, use the 
+//                    pattern: 
+//    tree->Draw("MinIf$(formula,condition)","condition");
+//                    which will avoid calculation MinIf$ for the entries that have no match 
+//                    for the condition.
 //
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
 //                 for the current iteration otherwise return the value of "alternate".
@@ -990,6 +1003,8 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
        && possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
        && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
        && possibleFilename.Index("LocalEntry$")<0
+       && possibleFilename.Index("Min$")<0 && possibleFilename.Index("Max$")<0
+       && possibleFilename.Index("MinIf$")<0 && possibleFilename.Index("MaxIf$")<0
        && possibleFilename.Index("Iteration$")<0 && possibleFilename.Index("Sum$")<0
        && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
 
@@ -1006,6 +1021,8 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       if (possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
           && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
           && possibleFilename.Index("LocalEntry$")<0
+          && possibleFilename.Index("Min$")<0 && possibleFilename.Index("Max$")<0
+          && possibleFilename.Index("MinIf$")<0 && possibleFilename.Index("MaxIf$")<0
           && possibleFilename.Index("Iteration$")<0 && possibleFilename.Index("Sum$")<0
           && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
 

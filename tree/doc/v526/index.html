@@ -3,5 +3,19 @@
 <a name="tree"></a> 
 <h3>Tree</h3>
 <ul>
+<li>Add new special functions in TTreeFormula (and hence TTree::Draw and TTree::Scan) to calculate the minimun and maximum with an entry:
+    <ul>
+    <li><pre lang="cxx">Min$(formula),Max$(formula):</pre>return the minimun/maximum (within one TTree entry) of the value of the
+                       elements of the formula given as a parameter.</li>
+    <li><pre lang="cxx">MinIf$(formula,condition),MaxIf$(formula,condition):</pre>return the minimum (maximum) (within one TTree entry)
+                       of the value of the elements of the formula given as a parameter
+                      if they match the condition. If not element match the condition, the result is zero.  To avoid the
+                       the result is zero.  To avoid the consequent peak a zero, use the 
+                       pattern: 
+       <pre lang="cxx">tree->Draw("MinIf$(formula,condition)","condition");</pre>
+                       which will avoid calculation MinIf$ for the entries that have no match 
+                       for the condition.</li>
+    </ul>
+</li>
 <li>Significantly (by 2 order of magnitude) improved the performance of TTree::Draw calling C++ functions.</li>
 </ul>

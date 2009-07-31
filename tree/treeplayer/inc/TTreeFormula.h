@@ -76,13 +76,17 @@ protected:
       kDirect, kDataMember, kMethod, 
       kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum, kEntryList,
       kTreeMember,
-      kIndexOfLocalEntry
+      kIndexOfLocalEntry,
+      kMin, kMax
+
    };
    enum { 
       kAlias           = 200,
       kAliasString     = 201,
       kAlternate       = 202,
-      kAlternateString = 203
+      kAlternateString = 203,
+      kMinIf           = 204,
+      kMaxIf           = 205
    };
 
    TTree       *fTree;            //! pointer to Tree

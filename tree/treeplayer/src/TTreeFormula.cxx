@@ -643,16 +643,35 @@ Int_t TTreeFormula::DefineAlternate(const char *expression)
    //   the action number in case of success.
 
    static const char *altfunc = "Alt$(";
+   static const char *minfunc = "MinIf$(";
+   static const char *maxfunc = "MaxIf$(";
+   Int_t action = 0;
+   Int_t start = 0;
+   
    if (   strncmp(expression,altfunc,strlen(altfunc))==0
        && expression[strlen(expression)-1]==')' ) {
-
+      action = kAlternate;
+      start = strlen(altfunc);
+   }
+   if (   strncmp(expression,maxfunc,strlen(maxfunc))==0
+       && expression[strlen(expression)-1]==')' ) {
+      action = kMaxIf;
+      start = strlen(maxfunc);
+   }
+   if (   strncmp(expression,minfunc,strlen(minfunc))==0
+       && expression[strlen(expression)-1]==')' ) {
+      action = kMinIf;
+      start = strlen(minfunc);
+   }
+   
+   if (action) {
       TString full = expression;
       TString part1;
       TString part2;
       int paran = 0;
       int instr = 0;
       int brack = 0;
-      for(unsigned int i=strlen(altfunc);i<strlen(expression);++i) {
+      for(unsigned int i=start;i<strlen(expression);++i) {
          switch (expression[i]) {
             case '(': paran++; break;
             case ')': paran--; break;
@@ -661,7 +680,7 @@ Int_t TTreeFormula::DefineAlternate(const char *expression)
             case ']': brack--; break;
          };
          if (expression[i]==',' && paran==0 && instr==0 && brack==0) {
-            part1 = full( strlen(altfunc), i-strlen(altfunc) );
+            part1 = full( start, i-start );
             part2 = full( i+1, full.Length() -1 - (i+1) );
             break; // out of the for loop
          }
@@ -669,36 +688,48 @@ Int_t TTreeFormula::DefineAlternate(const char *expression)
       if (part1.Length() && part2.Length()) {
          TTreeFormula *primary = new TTreeFormula("primary",part1,fTree);
          TTreeFormula *alternate = new TTreeFormula("alternate",part2,fTree);
-//          TFormula *alt = new TFormula("alt",part2);
-
-         if (alternate->GetManager()->GetMultiplicity() != 0 ) {
-            Error("DefinedVariable","The 2nd arguments in %s can not be an array (%s,%d)!",
-                  expression,alternate->GetTitle(),
-                  alternate->GetManager()->GetMultiplicity());
-            return -1;
-         }
-
-         // Should check whether we have strings.
 
          short isstring = 0;
-         if (primary->IsString()) {
-            if (!alternate->IsString()) {
+
+         if (action == kAlternate) {
+            if (alternate->GetManager()->GetMultiplicity() != 0 ) {
+               Error("DefinedVariable","The 2nd arguments in %s can not be an array (%s,%d)!",
+                     expression,alternate->GetTitle(),
+                     alternate->GetManager()->GetMultiplicity());
+               return -1;
+            }
+
+            // Should check whether we have strings.
+            if (primary->IsString()) {
+               if (!alternate->IsString()) {
+                  Error("DefinedVariable",
+                        "The 2nd arguments in %s has to return the same type as the 1st argument (string)!",
+                        expression);
+                  return -1;
+               }
+               isstring = 1;
+            } else if (alternate->IsString()) {
                Error("DefinedVariable",
-                     "The 2nd arguments in %s has to return the same type as the 1st argument (string)!",
+                     "The 2nd arguments in %s has to return the same type as the 1st argument (numerical type)!",
                      expression);
                return -1;
             }
-            isstring = 1;
-         } else if (alternate->IsString()) {
-            Error("DefinedVariable",
-                  "The 2nd arguments in %s has to return the same type as the 1st argument (numerical type)!",
-                  expression);
-            return -1;
+         } else {
+            primary->GetManager()->Add( alternate );
+            primary->GetManager()->Sync();
+            if (primary->IsString() || alternate->IsString()) {
+               if (!alternate->IsString()) {
+                  Error("DefinedVariable",
+                        "The arguments of %s can not be strings!",
+                        expression);
+                  return -1;
+               }
+            }
          }
 
          fAliases.AddAtAndExpand(primary,fNoper);
          fExpr[fNoper] = "";
-         SetAction(fNoper, (Int_t)kAlternate + isstring, 0 );
+         SetAction(fNoper, (Int_t)action + isstring, 0 );
          ++fNoper;
 
          fAliases.AddAtAndExpand(alternate,fNoper);
@@ -2637,10 +2668,36 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       fLookupType[code] = kLengthFunc;
       return code;
    }
+   static const char *minfunc = "Min$(";
+   if (strncmp(name.Data(),"Min$(",strlen(minfunc))==0
+       && name[name.Length()-1]==')') {
+      
+      TString subform = name.Data()+strlen(minfunc);
+      subform.Remove( subform.Length() - 1 );
+      TTreeFormula *minForm = new TTreeFormula("minForm",subform,fTree);
+      fAliases.AddAtAndExpand(minForm,fNoper);
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kMin;
+      return code;
+   }
+   static const char *maxfunc = "Max$(";
+   if (strncmp(name.Data(),"Max$(",strlen(maxfunc))==0
+       && name[name.Length()-1]==')') {
+      
+      TString subform = name.Data()+strlen(maxfunc);
+      subform.Remove( subform.Length() - 1 );
+      TTreeFormula *maxForm = new TTreeFormula("maxForm",subform,fTree);
+      fAliases.AddAtAndExpand(maxForm,fNoper);
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kMax;
+      return code;
+   }
    static const char *sumfunc = "Sum$(";
    if (strncmp(name.Data(),"Sum$(",strlen(sumfunc))==0
        && name[name.Length()-1]==')') {
-
+      
       TString subform = name.Data()+strlen(sumfunc);
       subform.Remove( subform.Length() - 1 );
       TTreeFormula *sumForm = new TTreeFormula("sumForm",subform,fTree);
@@ -2650,7 +2707,9 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       fLookupType[code] = kSum;
       return code;
    }
-
+   
+   
+   
    // Check for $Alt(expression1,expression2)
    Int_t res = DefineAlternate(name.Data());
    if (res!=0) {
@@ -3625,6 +3684,88 @@ namespace {
       for (int i=0; i<len; ++i) res += sum->EvalInstance(i);
       return res;
    }
+   Double_t FindMin(TTreeFormula *arr) {
+      Int_t len = arr->GetNdata();
+      Double_t res = 0;
+      if (len) {
+         res = arr->EvalInstance(0);
+         for (int i=1; i<len; ++i) {
+            Double_t val = arr->EvalInstance(i);
+            if (val < res) {
+               res = val;
+            }
+         }
+      }
+      return res;
+   }
+   Double_t FindMax(TTreeFormula *arr) {
+      Int_t len = arr->GetNdata();
+      Double_t res = 0;
+      if (len) {
+         res = arr->EvalInstance(0);
+         for (int i=1; i<len; ++i) {
+            Double_t val = arr->EvalInstance(i);
+            if (val > res) {
+               res = val;
+            }
+         }
+      }
+      return res;
+   }
+   Double_t FindMin(TTreeFormula *arr, TTreeFormula *condition) {
+      Int_t len = arr->GetNdata();
+      Double_t res = 0;
+      if (len) {
+         int i;
+         Double_t condval;
+         do {
+            condval = condition->EvalInstance(i);
+            ++i;
+         } while (!condval && i<len);
+         if (i==len) {
+            return 0;
+         }
+         // Now we know that i>0 && i<len and cond==true
+         res = arr->EvalInstance(i-1);
+         for (; i<len; ++i) {
+            condval = condition->EvalInstance(i);
+            if (condval) {
+               Double_t val = arr->EvalInstance(i);
+               if (val < res) {
+                  res = val;
+               }
+            }
+         }
+      }
+      return res;
+   }
+   Double_t FindMax(TTreeFormula *arr, TTreeFormula *condition) {
+      Int_t len = arr->GetNdata();
+      Double_t res = 0;
+      if (len) {
+         int i;
+         Double_t condval;
+         do {
+            condval = condition->EvalInstance(i);
+            ++i;
+         } while (!condval && i<len);
+         if (i==len) {
+            return 0;
+         }
+         // Now we know that i>0 && i<len and cond==true
+         res = arr->EvalInstance(i-1);
+         for (; i<len; ++i) {
+            condval = condition->EvalInstance(i);
+            if (condval) {
+               Double_t val = arr->EvalInstance(i);
+               if (val > res) {
+                  res = val;
+               }
+            }
+         }
+      }
+      return res;
+   }
 }
 
 //______________________________________________________________________________
@@ -3667,6 +3808,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          case kLengthFunc:   return ((TTreeFormula*)fAliases.UncheckedAt(0))->GetNdata();
          case kIteration:    return instance;
          case kSum:          return Summing((TTreeFormula*)fAliases.UncheckedAt(0));
+         case kMin:          return FindMin((TTreeFormula*)fAliases.UncheckedAt(0));
+         case kMax:          return FindMax((TTreeFormula*)fAliases.UncheckedAt(0));
          case kEntryList: {
             TEntryList *elist = (TEntryList*)fExternalCuts.At(0);
             return elist->Contains(fTree->GetTree()->GetReadEntry());
@@ -3892,6 +4035,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                case kLengthFunc:   tab[pos++] = ((TTreeFormula*)fAliases.UncheckedAt(i))->GetNdata(); continue;
                case kIteration:    tab[pos++] = instance; continue;
                case kSum:          tab[pos++] = Summing((TTreeFormula*)fAliases.UncheckedAt(i)); continue;
+               case kMin:          tab[pos++] = FindMin((TTreeFormula*)fAliases.UncheckedAt(i)); continue;
+               case kMax:          tab[pos++] = FindMax((TTreeFormula*)fAliases.UncheckedAt(i)); continue;
 
                case kDirect:     { TT_EVAL_INIT_LOOP; tab[pos++] = leaf->GetValue(real_instance); continue; }
                case kMethod:     { TT_EVAL_INIT_LOOP; tab[pos++] = GetValueFromMethod(code,leaf); continue; }
@@ -3950,6 +4095,25 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                stringStack[pos2-1] = subform->EvalStringInstance(instance);
                continue;
             }
+            case kMinIf: {
+               int alternateN = i;
+               TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
+               TTreeFormula *condition = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN+1));
+               Double_t param = FindMin(primary,condition);
+               ++i; // skip the place holder for the condition
+               tab[pos] = param; pos++;
+               continue;
+            }
+            case kMaxIf: {
+               int alternateN = i;
+               TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
+               TTreeFormula *condition = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN+1));
+               Double_t param = FindMax(primary,condition);
+               ++i; // skip the place holder for the condition
+               tab[pos] = param; pos++;
+               continue;
+            }
+               
             // a TTree Variable Alternate (i.e. a sub-TTreeFormula)
             case kAlternate: {
                int alternateN = i;
@@ -4226,6 +4390,10 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
       R__ASSERT(subform);
       return subform->IsInteger(kFALSE);
    }
+   
+   if (GetAction(0)==kMinIf || GetAction(0)==kMaxIf) {
+      return kFALSE;
+   }
 
    if (fNoper > 1) return kFALSE;
 
@@ -4245,6 +4413,8 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
          case kIteration:
            return kTRUE;
          case kSum:
+         case kMin:
+         case kMax:
          case kEntryList:
          default:
            return kFALSE;
@@ -4274,6 +4444,8 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
          case kIteration:
            return kTRUE;
          case kSum:
+         case kMin:
+         case kMax:
          case kEntryList:
          default:
            return kFALSE;
@@ -4667,6 +4839,8 @@ void TTreeFormula::UpdateFormulaLeaves()
          case kAliasString:
          case kAlternate:
          case kAlternateString:
+         case kMinIf:
+         case kMaxIf:
          {
             TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
             R__ASSERT(subform);
@@ -4679,6 +4853,8 @@ void TTreeFormula::UpdateFormulaLeaves()
             if (fCodes[code]==0) switch(fLookupType[code]) {
                case kLengthFunc:
                case kSum:
+               case kMin:
+               case kMax:
                {
                   TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
                   R__ASSERT(subform);
@@ -4744,6 +4920,11 @@ void TTreeFormula::ResetDimensions() {
    for(i=0;i<fNoper;i++) {
       Int_t action = GetAction(i);
 
+      if (action==kMinIf || action==kMaxIf) {
+         // Skip/Ignore the 2nd args
+         ++i;
+         continue;
+      }
       if (action==kAlias || action==kAliasString) {
          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(i));
          R__ASSERT(subform);

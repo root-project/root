@@ -3178,9 +3178,22 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  Length$(formula): return the total number of element of the formula given as a
    //                    parameter.
    //  Sum$(formula): return the sum of the value of the elements of the formula given
-   //                    as a parameter.  For eaxmple the mean for all the elements in
+   //                    as a parameter.  For example the mean for all the elements in
    //                    one entry can be calculated with:
    //                Sum$(formula)/Length$(formula)
+   //  Min$(formula): return the minimun (within one TTree entry) of the value of the
+   //                    elements of the formula given as a parameter.
+   //  Max$(formula): return the maximum (within one TTree entry) of the value of the
+   //                    elements of the formula given as a parameter.
+   //  MinIf$(formula,condition)
+   //  MaxIf$(formula,condition): return the minimum (maximum) (within one TTree entry)
+   //                    of the value of the elements of the formula given as a parameter
+   //                    if they match the condition. If not element match the condition, the result is zero.  To avoid the
+   //                    the result is zero.  To avoid the consequent peak a zero, use the 
+   //                    pattern: 
+   //    tree->Draw("MinIf$(formula,condition)","condition");
+   //                    which will avoid calculation MinIf$ for the entries that have no match 
+   //                    for the condition.
    //
    //  Alt$(primary,alternate) : return the value of "primary" if it is available
    //                 for the current iteration otherwise return the value of "alternate".
