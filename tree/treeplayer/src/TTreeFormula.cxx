@@ -3716,7 +3716,7 @@ namespace {
       Int_t len = arr->GetNdata();
       Double_t res = 0;
       if (len) {
-         int i;
+         int i = 0;
          Double_t condval;
          do {
             condval = condition->EvalInstance(i);
@@ -3747,7 +3747,7 @@ namespace {
       Int_t len = arr->GetNdata();
       Double_t res = 0;
       if (len) {
-         int i;
+         int i = 0;
          Double_t condval;
          do {
             condval = condition->EvalInstance(i);
