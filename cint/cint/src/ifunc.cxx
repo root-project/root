@@ -5756,6 +5756,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    for (int ix = 0; ix < G__MEMDEPTH; ++ix) {
       G_local.varnamebuf[ix] = 0;
       G_local.p[ix] = 0;
+      G_local.is_init_aggregate_array[ix] = 0;
    }
    G_local.prev_filenum = G__ifile.filenum;
    G_local.prev_line_number = G__ifile.line_number;

@@ -1799,6 +1799,7 @@ int G__init_globals()
       for (ix = 0;ix < G__MEMDEPTH;ix++) {
          G__global.hash[ix] = 0;
          G__global.varnamebuf[ix] = 0;
+         G__global.is_init_aggregate_array[ix] = 0;
       }
    }
    G__cpp_aryconstruct = 0;

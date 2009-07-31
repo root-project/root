@@ -79,6 +79,7 @@ static G__var_array* G__alloc_var_array(G__var_array* var, int* pig15)
       for (int i = 0; i < G__MEMDEPTH; ++i) {
          var->varnamebuf[i] = 0;
          var->p[i] = 0;
+         var->is_init_aggregate_array[i] = 0;
       }
       *pig15 = 0;
    }
@@ -1883,6 +1884,7 @@ int G__search_tagname(const char* tagname, int type)
          for (int j = 0; j < G__MEMDEPTH; ++j) {
             G__struct.memvar[i]->varnamebuf[j] = 0;
             G__struct.memvar[i]->p[j] = 0;
+            G__struct.memvar[i]->is_init_aggregate_array[j] = 0;
          }
       }
       // Allocate and initialize member function table list.
