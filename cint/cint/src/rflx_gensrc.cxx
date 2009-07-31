@@ -40,6 +40,17 @@
 * These different parts are generated in the file below and then put on a filestream
 * together in the dictionary file 
 */
+
+// Fix for C2039 SDK61 bug
+#if defined(MSVCVER9) && defined(WSDK61)
+namespace std {
+ // TEMPLATE FUNCTION _Swap_adl
+ template<class _Ty> inline void _Swap_adl(_Ty& _Left, _Ty& _Right) {	// exchange values stored at _Left and _Right, using ADL
+  swap(_Left, _Right);
+ }
+}
+#endif
+
 void rflx_gensrc::gen_file()
 {
 
