@@ -205,18 +205,6 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 
 
 //______________________________________________________________________________
-TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name)
-{
-   // Find the formula in the list of formulas.
-
-   if (!fgListOfFunction) {
-      BuildBasicFormulas();
-   }
-   return (TFormulaPrimitive*)fgListOfFunction->FindObject(name);
-}
-
-
-//______________________________________________________________________________
 Int_t TFormulaPrimitive::AddFormula(TFormulaPrimitive * formula)
 {
    // Add formula to the list of primitive formulas.
@@ -334,6 +322,18 @@ namespace TFastFun {
    Double_t XneY(Double_t x,Double_t y) {return (x!=y);}
    Double_t XNot(Double_t x){ return (x<0.1);}
 };
+
+
+//______________________________________________________________________________
+TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name)
+{
+   // Find the formula in the list of formulas.
+   
+   if (!fgListOfFunction) {
+      BuildBasicFormulas();
+   }
+   return (TFormulaPrimitive*)fgListOfFunction->FindObject(name);
+}
 
 
 //______________________________________________________________________________
