@@ -4543,10 +4543,3 @@ extern "C" void G__cpp_setupG__stream(void) {
    if(0==G__getsizep2memfunc()) G__get_sizep2memfuncG__stream();
   return;
 }
-class G__cpp_setup_initG__stream {
-  public:
-    G__cpp_setup_initG__stream() { G__add_setup_func("G__stream",(G__incsetup)(&G__cpp_setupG__stream)); G__call_setup_funcs(); }
-   ~G__cpp_setup_initG__stream() { G__remove_setup_func("G__stream"); }
-};
-G__cpp_setup_initG__stream G__cpp_setup_initializerG__stream;
-
