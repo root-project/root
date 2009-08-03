@@ -1300,8 +1300,6 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
-      TFileHandler *th;
-      TIter next(fFileHandler);
       fReadmask->Clr(h->GetFd());
       fWritemask->Clr(h->GetFd());
    }
