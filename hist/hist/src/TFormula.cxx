@@ -438,11 +438,11 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    //
    TString cbase(chaine);
    Int_t args_paran = cbase.First("(");
-   if (paran>0){
-      cbase[paran]=0;
+   if (args_paran>0){
+      cbase[args_paran]=0;
    }
 
-   TFormulaPrimitive *prim = TFormulaPrimitive::FindFormula(cbase,paran>0 ? cbase.Data() + args_paran + 1 : 0);
+   TFormulaPrimitive *prim = TFormulaPrimitive::FindFormula(cbase, args_paran>0 ? cbase.Data() + args_paran + 1 : (const char*)0);
    if (prim &&   (!IsA()->GetBaseClass("TTreeFormula"))) {
       // TO BE DONE ALSO IN TTREFORMULA - temporary fix MI
       // Analyze the arguments
@@ -3467,11 +3467,11 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
    if (cbase=="==" && GetActionOptimized(pos)!=kStringEqual) cbase="XeY";
    if (cbase=="!=" && GetActionOptimized(pos)!=kStringNotEqual) cbase="XneY";
 
-   TFormulaPrimitive *prim = TFormulaPrimitive::FindFormula(cbase,paran>0 ? cbase.Data() + paran + 1 : 0);
+   TFormulaPrimitive *prim = TFormulaPrimitive::FindFormula(cbase ,paran>0 ? cbase.Data() + paran + 1 : (const char*)0);
    if (prim) {
       fPredefined[pos] = prim;
       if (prim->fType==10) {
-         if (nargs != 1) {
+         if (paran>0 && nargs != 1) {
             Error("MakePrimitive","For %s picked a single arguments overload while %d was requested\n",cbase.Data()+paran+1,nargs);
          }
          SetActionOptimized(pos, kFD1);

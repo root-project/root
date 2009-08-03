@@ -383,7 +383,7 @@ TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name, const char *
       }
       return FindFormula(name,nargs);
    } else {
-      FindFormula(name);
+      return FindFormula(name);
    }
    return 0;
 }
