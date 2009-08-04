@@ -14,6 +14,7 @@
 #include "TGLPolyMarker.h"
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
+#include "TGLUtil.h"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -103,7 +104,7 @@ void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
    case 6:
       pixelSize += 1;
    case 1: case 9: case 10: case 11: default:
-      glPointSize(pixelSize);
+      TGLUtil::PointSize(pixelSize);
       glBegin(GL_POINTS);
       for (UInt_t i = 0; i < size; i += 3)
          glVertex3dv(vertices + i);
