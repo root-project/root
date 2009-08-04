@@ -177,6 +177,18 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
    //             Y/I       : variable Y, type Int_t
    //             Y/I2      ; variable Y, type Int_t converted to a 16 bits integer
    //
+   //    Note that the TTree will assume that all the item are contiguous in memory.
+   //    On some platform, this is not always true of the member of a struct or a class,
+   //    due to padding and alignment.  Sorting your data member in order of decreasing
+   //    sizeof usually leads to their being contiguous in memory.
+   //
+   //       * bufsize is the buffer size in bytes for this branch
+   //         The default value is 32000 bytes and should be ok for most cases.
+   //         You can specify a larger value (eg 256000) if your Tree is not split
+   //         and each entry is large (Megabytes)
+   //         A small value for bufsize is optimum if you intend to access
+   //         the entries in the Tree randomly and your Tree is in split mode.
+   //   
    //   See an example of a Branch definition in the TTree constructor.
    //
    //   Note that in case the data type is an object, this branch can contain
