@@ -24,8 +24,10 @@
 #pragma link C++ operator vector<string>;
 #ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class vector<string>::iterator; 
+#pragma link C++ class vector<string>::const_iterator;
 #pragma link C++ class vector<string>::reverse_iterator;
 #pragma link C++ operator vector<string>::iterator; 
+#pragma link C++ operator vector<string>::const_iterator;
 #pragma link C++ operator vector<string>::reverse_iterator;
 #endif
 
@@ -33,8 +35,10 @@
 #pragma link C++ operators vector<TString>;
 #ifdef G__VECTOR_HAS_CLASS_ITERATOR
 #pragma link C++ class vector<TString>::iterator; 
+#pragma link C++ class vector<TString>::const_iterator; 
 #pragma link C++ class vector<TString>::reverse_iterator; 
 #pragma link C++ operator vector<TString>::iterator; 
+#pragma link C++ operator vector<TString>::const_iterator;
 #pragma link C++ operator vector<TString>::reverse_iterator;
 #endif
 
