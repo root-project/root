@@ -52,6 +52,8 @@ TGLViewerBase::TGLViewerBase() :
    fClip      (0),
    fLOD       (TGLRnrCtx::kLODHigh),
    fStyle     (TGLRnrCtx::kFill),
+   fWFLineW   (1),
+   fOLLineW   (1),
 
    fResetSceneInfosOnRender (kFALSE),
    fChanged                 (kFALSE)
@@ -278,8 +280,8 @@ void TGLViewerBase::PreRender()
    if (cid == 0)
    {
       // Assume derived class set it up for us.
-      // This happens due to very complex and involved implementation
-      // of gl-in-pad that uses gGLManager.
+      // This happens due to complex implementation
+      // of gl-in-pad using gGLManager.
       // In principle we should throw an exception:
       // throw std::runtime_error("Can not resolve GL context.");
    }
@@ -293,10 +295,12 @@ void TGLViewerBase::PreRender()
       }
    }
 
-   fRnrCtx->SetCamera      (fCamera);
-   fRnrCtx->SetViewerLOD   (fLOD);
-   fRnrCtx->SetViewerStyle (fStyle);
-   fRnrCtx->SetViewerClip  (fClip);
+   fRnrCtx->SetCamera        (fCamera);
+   fRnrCtx->SetViewerLOD     (fLOD);
+   fRnrCtx->SetViewerStyle   (fStyle);
+   fRnrCtx->SetViewerWFLineW (fWFLineW);
+   fRnrCtx->SetViewerOLLineW (fOLLineW);
+   fRnrCtx->SetViewerClip    (fClip);
 
    if (fResetSceneInfosOnRender)
    {

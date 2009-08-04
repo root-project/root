@@ -955,6 +955,11 @@ private:
 
    static UInt_t fgColorLockCount;
 
+   static Float_t fgPointSize;
+   static Float_t fgLineWidth;
+   static Float_t fgPointSizeScale;
+   static Float_t fgLineWidthScale;
+
    TGLUtil(const TGLUtil&);            // Not implemented.
    TGLUtil& operator=(const TGLUtil&); // Not implemented.
 
@@ -997,6 +1002,17 @@ public:
    static void Color4f(Float_t r, Float_t g, Float_t b, Float_t a);
    static void Color3fv(const Float_t* rgb);
    static void Color4fv(const Float_t* rgba);
+
+   static Float_t GetPointSizeScale();
+   static void    SetPointSizeScale(Float_t scale);
+   static Float_t GetLineWidthScale();
+   static void    SetLineWidthScale(Float_t scale);
+
+   static void    PointSize(Float_t point_size);
+   static void    LineWidth(Float_t line_width);
+
+   static Float_t PointSize();
+   static Float_t LineWidth();
 
    static void BeginExtendPickRegion(Float_t scale);
    static void EndExtendPickRegion();

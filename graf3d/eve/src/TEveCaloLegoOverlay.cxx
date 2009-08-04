@@ -109,7 +109,7 @@ void TEveCaloLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
 
       // marker
       TGLUtil::Color((fActiveID == 2) ? fActiveCol : 3);
-      glPointSize(8);
+      TGLUtil::PointSize(8);
       glBegin(GL_POINTS);
       glVertex3f(0, fSliderVal*fSliderH, -0.1);
       glEnd();
@@ -156,20 +156,20 @@ void TEveCaloLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
 
    TGLUtil::Color(4);
 
-   glLineWidth(1);
+   TGLUtil::LineWidth(1);
    glBegin(GL_LINES);
    glVertex2f(0, 0); glVertex2f(0, bh);
    glVertex2f((bw+bwt)*0.5, bh*0.5); glVertex2f(-(bw+bwt)*0.5, bh*0.5);
    glEnd();
 
-   glLineWidth(2);
+   TGLUtil::LineWidth(2);
    glBegin(GL_LINE_LOOP);
    glVertex2f(-bw, 0);
    glVertex2f( bw, 0);
    glVertex2f( bwt, bh);
    glVertex2f(-bwt, bh);
    glEnd();
-   glLineWidth(1);
+   TGLUtil::LineWidth(1);
 
    glPopMatrix();
    if (fShowSlider) DrawSlider(rnrCtx);

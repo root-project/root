@@ -45,6 +45,8 @@ protected:
    UInt_t             fMinorStamp;  // Counter increased on minimal update.
    Short_t            fLOD;         // Scene-lod.
    Short_t            fStyle;       // Scene-style.
+   Float_t            fWFLineW;     // Scene wire-frame line-width.
+   Float_t            fOLLineW;     // Scene outline line-width.
    TGLClip          * fClip;        // Scene clipping-plane.
    Bool_t             fSelectable;  // Objects in the scene are selectable.
 

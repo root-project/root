@@ -137,6 +137,9 @@ protected:
    Bool_t                    fInSmartRefresh;    //!
    mutable LogicalShapeMap_t fSmartRefreshCache; //!
 
+   // State that requires recreation of display-lists
+   Float_t                   fLastPointSizeScale;
+   Float_t                   fLastLineWidthScale;
 
    // ----------------------------------------------------------------
    // ----------------------------------------------------------------

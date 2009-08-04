@@ -115,7 +115,7 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
    // First the border, same color as text
    TColor::Pixel2RGB(fTextColor, r, g, b);
    (fActiveID == 1) ? TGLUtil::Color4f(r, g, b, fHighAlpha):TGLUtil::Color4f(r, g, b, fNormAlpha);
-   glLineWidth(1);
+   TGLUtil::LineWidth(1);
    glBegin(GL_LINE_LOOP);
    glVertex2f(0.0, 0.0);
    glVertex2f(0.0, fHeight);

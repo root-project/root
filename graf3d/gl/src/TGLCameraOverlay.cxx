@@ -382,7 +382,7 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
    glPopMatrix();
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
-   glLineWidth(2.);
+   TGLUtil::LineWidth(2.);
    glPushMatrix();
    Float_t xt = fFrustum[2] - 1.1*barsize;
    Float_t yt = fFrustum[3] - 2.1*mH;

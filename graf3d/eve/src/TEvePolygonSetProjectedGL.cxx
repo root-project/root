@@ -130,7 +130,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    TGLUtil::Color(refPS.fLineColor);
    glEnable(GL_LINE_SMOOTH);
 
-   glLineWidth(refPS.fLineWidth);
+   TGLUtil::LineWidth(refPS.fLineWidth);
    Int_t vi;
    for (TEvePolygonSetProjected::vpPolygon_ci i = refPS.fPols.begin();
         i != refPS.fPols.end(); ++i)

@@ -44,6 +44,11 @@ private:
    TGNumberEntry    *fMaxSceneDrawTimeHQ;
    TGNumberEntry    *fMaxSceneDrawTimeLQ;
 
+   TGNumberEntry    *fPointSizeScale;
+   TGNumberEntry    *fLineWidthScale;
+   TGNumberEntry    *fWFLineWidth;
+   TGNumberEntry    *fOLLineWidth;
+
    //"Guides" tab's controls
    TGCheckButton    *fCameraCenterExt;
    TGTextButton     *fCaptureCenter;
@@ -105,6 +110,7 @@ public:
    void DoUpdateScene();
    void DoCameraHome();
    void UpdateMaxDrawTimes();
+   void UpdatePointLineStuff();
    void DoCameraCenterExt();
    void DoCaptureCenter();
    void DoAnnotation();

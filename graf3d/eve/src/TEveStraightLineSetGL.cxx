@@ -103,7 +103,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    if (mL.GetRnrLines() && mL.GetLinePlex().Size() > 0)
    {
       glPushAttrib(GL_LINE_BIT | GL_ENABLE_BIT);
-      glLineWidth(mL.GetLineWidth());
+      TGLUtil::LineWidth(mL.GetLineWidth());
       if (mL.GetLineStyle() > 1) {
          Int_t    fac = 1;
          UShort_t pat = 0xffff;

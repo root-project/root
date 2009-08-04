@@ -100,6 +100,11 @@ protected:
    Short_t         fViewerStyle;
    Short_t         fSceneStyle;
 
+   Float_t         fViewerWFLineW;
+   Float_t         fSceneWFLineW;
+   Float_t         fViewerOLLineW;
+   Float_t         fSceneOLLineW;
+
    TGLClip        *fViewerClip;
    TGLClip        *fSceneClip;
    TGLClip        *fClip;
@@ -121,6 +126,7 @@ protected:
    TGLSelectBuffer*fSelectBuffer;
 
    lpTGLColorSet_t*fColorSetStack;
+   Float_t         fRenderScale;
 
    UInt_t          fEventKeySym;
 
@@ -171,6 +177,15 @@ public:
    Short_t SceneStyle()  const         { return fSceneStyle; }
    void    SetSceneStyle(Short_t sty)  { fSceneStyle = sty;  }
 
+   Float_t ViewerWFLineW()       const { return fViewerWFLineW; }
+   void    SetViewerWFLineW(Float_t w) { fViewerWFLineW = w;    }
+   Float_t SceneWFLineW()        const { return fSceneWFLineW;  }
+   void    SetSceneWFLineW(Float_t w)  { fSceneWFLineW = w;     }
+   Float_t ViewerOLLineW()       const { return fViewerOLLineW; }
+   void    SetViewerOLLineW(Float_t w) { fViewerOLLineW = w;    }
+   Float_t SceneOLLineW()        const { return fSceneOLLineW;  }
+   void    SetSceneOLLineW(Float_t w)  { fSceneOLLineW = w;     }
+
    TGLClip* ViewerClip()         const { return fViewerClip; }
    void     SetViewerClip(TGLClip *p)  { fViewerClip = p;    }
    TGLClip* SceneClip()          const { return fSceneClip;  }
@@ -217,6 +232,9 @@ public:
    TGLColorSet* GetBaseColorSet();
 
    void         ColorOrForeground(Color_t col);
+
+   Float_t GetRenderScale()    const { return fRenderScale; }
+   void    SetRenderScale(Float_t s) { fRenderScale = s; }
 
    UInt_t GetEventKeySym()   const { return fEventKeySym; }
    void   SetEventKeySym(UInt_t k) { fEventKeySym = k; }

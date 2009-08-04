@@ -37,16 +37,20 @@ private:
 protected:
    TGLViewerBase  * fViewer;
    TGLSceneBase   * fScene;
-   Bool_t           fActive;    // Show fScene in fViewer
+   Bool_t           fActive;      // Show fScene in fViewer
 
-   Short_t          fLOD;       // Optional override of scene lod
-   Short_t          fStyle;     // Optional override of scene style
-   TGLClip        * fClip;      // Optional override of clipping-plane
+   Short_t          fLOD;         // Optional override of scene lod
+   Short_t          fStyle;       // Optional override of scene style
+   Float_t          fWFLineW;     // Optional override of scene wire-frame line-width
+   Float_t          fOLLineW;     // Optional override of scene outline line-width
+   TGLClip        * fClip;        // Optional override of clipping-plane
 
-   Short_t          fLastLOD;   // Last combined viewer/scene lod   (set in scene::lodofy-scene-info).
-   Short_t          fLastStyle; // Last combined viewer/scene style (set in scene::pre-render).
-   TGLClip        * fLastClip;  // Last combined viewer/scene clip  (set in scene::update)
-   TGLCamera      * fLastCamera;// Last camera used.
+   Short_t          fLastLOD;     // Last combined viewer/scene lod   (set in scene::lodify-scene-info).
+   Short_t          fLastStyle;   // Last combined viewer/scene style (set in scene::pre-draw).
+   Float_t          fLastWFLineW; // Last combined viewer/scene wire-frame line-width (set in scene::pre-draw).
+   Float_t          fLastOLLineW; // Last combined viewer/scene outline line-width (set in scene::pre-draw).
+   TGLClip        * fLastClip;    // Last combined viewer/scene clip  (set in scene::update)
+   TGLCamera      * fLastCamera;  // Last camera used.
 
    UInt_t           fSceneStamp;  // Scene's time-stamp on last update.
    UInt_t           fClipStamp;   // Clip's time-stamp on last update.
@@ -109,6 +113,11 @@ public:
    Short_t  Style()        const { return fStyle; }
    void     SetStyle(Short_t st) { fStyle = st;   }
 
+   Float_t  WFLineW()       const { return fWFLineW; }
+   void     SetWFLineW(Float_t w) { fWFLineW = w;    }
+   Float_t  OLLineW()       const { return fOLLineW; }
+   void     SetOLLineW(Float_t w) { fOLLineW = w;    }
+
    TGLClip* Clip()         const { return fClip; }
    void     SetClip(TGLClip *p)  { fClip = p;    }
 
@@ -117,6 +126,11 @@ public:
 
    Short_t  LastStyle()      const   { return fLastStyle; }
    void     SetLastStyle(Short_t st) { fLastStyle = st;   }
+
+   Float_t  LastWFLineW()       const { return fLastWFLineW; }
+   void     SetLastWFLineW(Float_t w) { fLastWFLineW = w;    }
+   Float_t  LastOLLineW()       const { return fLastOLLineW; }
+   void     SetLastOLLineW(Float_t w) { fLastOLLineW = w;    }
 
    TGLClip* LastClip()         const { return fLastClip; }
    void     SetLastClip(TGLClip *p)  { fLastClip = p;    }

@@ -119,7 +119,9 @@ protected:
 
    TGLRect        fViewport;       //! viewport - drawn area
    TGLColorSet    fDarkColorSet;   //! color-set with dark background
-   TGLColorSet    fLightColorSet;  //! color-set with dark background
+   TGLColorSet    fLightColorSet;  //! color-set with light background
+   Float_t        fPointScale;     //! size scale for points
+   Float_t        fLineScale;      //! width scale for lines
    Int_t          fAxesType;       //! axes type
    Bool_t         fAxesDepthTest;  //! remove guides hidden-lines
    Bool_t         fReferenceOn;    //! reference marker on?
@@ -224,6 +226,12 @@ public:
    static void         UseDefaultColorSetForNewViewers(Bool_t x);
    static Bool_t       IsUsingDefaultColorSetForNewViewers();
 
+   Float_t GetPointScale()    const { return fPointScale; }
+   Float_t GetLineScale()     const { return fLineScale; }
+   void    SetPointScale(Float_t s) { fPointScale = s; }
+   void    SetLineScale (Float_t s) { fLineScale  = s; }
+
+
    TGLLightSet* GetLightSet() const { return fLightSet; }
    TGLClipSet * GetClipSet()  const { return fClipSet; }
    Bool_t GetClipAutoUpdate() const   { return fClipAutoUpdate; }
@@ -263,6 +271,7 @@ public:
    // Request methods post cross thread request via TROOT::ProcessLineFast().
    void RequestDraw(Short_t LOD = TGLRnrCtx::kLODMed); // Cross thread draw request
    virtual void PreRender();
+   virtual void PostRender();
    void DoDraw();
 
    void DrawGuides();

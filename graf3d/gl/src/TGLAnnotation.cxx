@@ -213,7 +213,7 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(1, 1);
 
-      glLineWidth(1);
+      TGLUtil::LineWidth(1);
 
       // get size of bg area
       Float_t ascent, descent, line_height;
@@ -365,7 +365,7 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
 
    // line
    //
-   glLineWidth(2);
+   TGLUtil::LineWidth(2);
    TColor::Pixel2RGB(fActive ?fBackHighColor : fBackColor, r, g, b);
    TGLUtil::Color4f(r, g, b, fAlpha);
    glBegin(GL_LINES);

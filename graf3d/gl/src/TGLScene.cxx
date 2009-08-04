@@ -277,7 +277,9 @@ ClassImp(TGLScene);
 TGLScene::TGLScene() :
    TGLSceneBase(),
    fGLCtxIdentity(0),
-   fInSmartRefresh(kFALSE)
+   fInSmartRefresh(kFALSE),
+   fLastPointSizeScale (0),
+   fLastLineWidthScale (0)
 {}
 
 //______________________________________________________________________________
@@ -578,6 +580,21 @@ void TGLScene::PreDraw(TGLRnrCtx& rnrCtx)
       fGLCtxIdentity = cid;
       fGLCtxIdentity->AddClientRef();
    }
+   else
+   {
+      if (fLastPointSizeScale != TGLUtil::GetPointSizeScale() ||
+          fLastLineWidthScale != TGLUtil::GetLineWidthScale())
+      {
+         // Clear logical's DLs
+         LogicalShapeMapIt_t lit = fLogicalShapes.begin();
+         while (lit != fLogicalShapes.end()) {
+            lit->second->DLCacheClear();
+            ++lit;
+         }
+      }
+   }
+   fLastPointSizeScale = TGLUtil::GetPointSizeScale();
+   fLastLineWidthScale = TGLUtil::GetLineWidthScale();
 
    sinfo->PreDraw();
 
@@ -717,6 +734,7 @@ void TGLScene::RenderAllPasses(TGLRnrCtx&           rnrCtx,
       else if (pass == TGLRnrCtx::kPassOutlineLine)
       {
          // Second pass - outline (wireframe)
+         TGLUtil::LineWidth(rnrCtx.SceneOLLineW());
          glDisable(GL_POLYGON_OFFSET_FILL);
          glDisable(GL_LIGHTING);
 
@@ -727,6 +745,10 @@ void TGLScene::RenderAllPasses(TGLRnrCtx&           rnrCtx,
          //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
          // However this means clipped back edges not shown - so do inside and out....
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      }
+      else if (pass == TGLRnrCtx::kPassWireFrame)
+      {
+         TGLUtil::LineWidth(rnrCtx.SceneWFLineW());
       }
 
       // If no clip object no plane sets to extract/pass

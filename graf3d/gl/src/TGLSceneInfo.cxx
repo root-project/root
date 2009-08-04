@@ -39,12 +39,16 @@ TGLSceneInfo::TGLSceneInfo(TGLViewerBase* view, TGLSceneBase* scene) :
    fScene     (scene),
    fActive    (kTRUE),
 
-   fLOD   (TGLRnrCtx::kLODUndef),
-   fStyle (TGLRnrCtx::kStyleUndef),
-   fClip  (0),
+   fLOD     (TGLRnrCtx::kLODUndef),
+   fStyle   (TGLRnrCtx::kStyleUndef),
+   fWFLineW (0),
+   fOLLineW (0),
+   fClip    (0),
 
    fLastLOD   (TGLRnrCtx::kLODUndef),
    fLastStyle (TGLRnrCtx::kStyleUndef),
+   fLastWFLineW (0),
+   fLastOLLineW (0),
    fLastClip  (0),
    fLastCamera(0),
 

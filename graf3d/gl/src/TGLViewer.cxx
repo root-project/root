@@ -119,6 +119,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fRedrawTimer(0),
    fMaxSceneDrawTimeHQ(5000),
    fMaxSceneDrawTimeLQ(100),
+   fPointScale (1), fLineScale(1),
    fAxesType(TGLUtil::kAxesNone),
    fAxesDepthTest(kTRUE),
    fReferenceOn(kFALSE),
@@ -175,6 +176,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fRedrawTimer(0),
    fMaxSceneDrawTimeHQ(5000),
    fMaxSceneDrawTimeLQ(100),
+   fPointScale (1), fLineScale(1),
    fAxesType(TGLUtil::kAxesNone),
    fAxesDepthTest(kTRUE),
    fReferenceOn(kFALSE),
@@ -464,6 +466,9 @@ void TGLViewer::PreRender()
       fGLCtxId->DeleteGLResources();
    }
 
+   TGLUtil::SetPointSizeScale(fPointScale * fRnrCtx->GetRenderScale());
+   TGLUtil::SetLineWidthScale(fLineScale  * fRnrCtx->GetRenderScale());
+
    TGLViewerBase::PreRender();
 
    // Setup lighting
@@ -473,6 +478,18 @@ void TGLViewer::PreRender()
       fClipSet->SetupCurrentClip(fOverallBoundingBox);
    else
       fClipSet->SetupCurrentClipIfInvalid(fOverallBoundingBox);
+}
+
+//______________________________________________________________________________
+void TGLViewer::PostRender()
+{
+   // Restore state set in PreRender().
+   // Called after every render.
+
+   TGLUtil::SetPointSizeScale(1);
+   TGLUtil::SetLineWidthScale(1);
+
+   TGLViewerBase::PostRender();
 }
 
 //______________________________________________________________________________

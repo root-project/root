@@ -98,7 +98,7 @@ void TEveFrameBoxGL::Render(const TEveFrameBox* box)
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glEnable(GL_LINE_SMOOTH);
 
-   glLineWidth(b.fFrameWidth);
+   TGLUtil::LineWidth(b.fFrameWidth);
    TGLUtil::Color4ubv(b.fFrameRGBA);
    RenderFrame(b, b.fFrameFill);
 

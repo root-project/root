@@ -62,6 +62,8 @@ protected:
    TGLClip           *fClip;        // Viewer clipping-plane.
    Short_t            fLOD;         // Viewer-lod for rendering.
    Short_t            fStyle;       // Viewer-style for rendering.
+   Float_t            fWFLineW;     // Optional override of scene wire-frame line-width
+   Float_t            fOLLineW;     // Optional override of scene outline line-width
 
    Bool_t             fResetSceneInfosOnRender; // Request rebuild of view-specific scene data.
    Bool_t             fChanged;                 // Change requiring redraw is pending.
@@ -102,6 +104,11 @@ public:
 
    Short_t  Style()        const { return fStyle; }
    void     SetStyle(Short_t st) { fStyle = st;   }
+
+   Float_t  WFLineW()       const { return fWFLineW; }
+   void     SetWFLineW(Float_t w) { fWFLineW = w;    }
+   Float_t  OLLineW()       const { return fOLLineW; }
+   void     SetOLLineW(Float_t w) { fOLLineW = w;    }
 
    // ================================================================
 

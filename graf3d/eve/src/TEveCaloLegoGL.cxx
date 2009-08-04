@@ -483,7 +483,7 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
          glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
 
          // box verticals
-         glLineWidth(1);
+         TGLUtil::LineWidth(1);
          glBegin(GL_LINES);
          TGLUtil::Color(fM->GetGridColor());
 
@@ -721,7 +721,7 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
    // XY grid
    //
    TGLUtil::Color(fM->fGridColor);
-   glLineWidth(1);
+   TGLUtil::LineWidth(1);
    glBegin(GL_LINES);
    glVertex2f(eta0, phi0);
    glVertex2f(eta0, phi1);
@@ -766,7 +766,7 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
    // XYZ axes
    //
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
-   glLineWidth(2);
+   TGLUtil::LineWidth(2);
    if (fCells3D)
    {
       SetAxis3DTitlePos(rnrCtx, eta0, eta1, phi0, phi1);
@@ -998,7 +998,7 @@ void TEveCaloLegoGL::DrawCells2D() const
 
    if (fM->f2DMode == TEveCaloLego::kValSize) {
       TGLUtil::Color(defCol);
-      glPointSize(1);
+      TGLUtil::PointSize(1);
       glBegin(GL_POINTS);
       Int_t slice = 0;
       for (vvTEveVec_i i = antiFlick.begin(); i != antiFlick.end(); ++i, ++slice) {
@@ -1084,7 +1084,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    if (!fM->fData->Empty()) {
       glPushAttrib(GL_LINE_BIT | GL_POLYGON_BIT);
-      glLineWidth(1);
+      TGLUtil::LineWidth(1);
       glDisable(GL_LIGHTING);
       glEnable(GL_NORMALIZE);
       glEnable(GL_POLYGON_OFFSET_FILL);

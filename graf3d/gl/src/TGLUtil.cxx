@@ -1342,6 +1342,11 @@ UInt_t TGLUtil::fgDefaultDrawQuality = 10;
 UInt_t TGLUtil::fgDrawQuality        = fgDefaultDrawQuality;
 UInt_t TGLUtil::fgColorLockCount     = 0;
 
+Float_t TGLUtil::fgPointSize      = 1.0f;
+Float_t TGLUtil::fgLineWidth      = 1.0f;
+Float_t TGLUtil::fgPointSizeScale = 1.0f;
+Float_t TGLUtil::fgLineWidthScale = 1.0f;
+
 #ifndef CALLBACK
 #define CALLBACK
 #endif
@@ -1578,28 +1583,28 @@ void TGLUtil::ColorTransparency(Color_t color_index, Char_t transparency)
 //______________________________________________________________________________
 void TGLUtil::Color3ub(UChar_t r, UChar_t g, UChar_t b)
 {
-   // Wrapper for glColor3f.
+   // Wrapper for glColor3ub.
    if (fgColorLockCount == 0) glColor3ub(r, g, b);
 }
 
 //______________________________________________________________________________
 void TGLUtil::Color4ub(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
-   // Wrapper for glColor4f.
+   // Wrapper for glColor4ub.
    if (fgColorLockCount == 0) glColor4ub(r, g, b, a);
 }
 
 //______________________________________________________________________________
 void TGLUtil::Color3ubv(const UChar_t* rgb)
 {
-   // Wrapper for glColor3fv.
+   // Wrapper for glColor3ubv.
    if (fgColorLockCount == 0) glColor3ubv(rgb);
 }
 
 //______________________________________________________________________________
 void TGLUtil::Color4ubv(const UChar_t* rgba)
 {
-   // Wrapper for glColor4fv.
+   // Wrapper for glColor4ubv.
    if (fgColorLockCount == 0) glColor4ubv(rgba);
 }
 
@@ -1629,6 +1634,78 @@ void TGLUtil::Color4fv(const Float_t* rgba)
 {
    // Wrapper for glColor4fv.
    if (fgColorLockCount == 0) glColor4fv(rgba);
+}
+
+/******************************************************************************/
+// Control for scaling of point-size and line-width.
+/******************************************************************************/
+
+//______________________________________________________________________________
+Float_t TGLUtil::GetPointSizeScale()
+{
+   // Get global point-size scale.
+
+   return fgPointSizeScale;
+}
+
+//______________________________________________________________________________
+void TGLUtil::SetPointSizeScale(Float_t scale)
+{
+   // Set global point-size scale.
+
+   fgPointSizeScale = scale;
+}
+
+//______________________________________________________________________________
+Float_t TGLUtil::GetLineWidthScale()
+{
+   // Returns global line-width scale.
+
+   return fgLineWidthScale;
+}
+
+//______________________________________________________________________________
+void TGLUtil::SetLineWidthScale(Float_t scale)
+{
+   // Set global line-width scale.
+
+   fgLineWidthScale = scale;
+}
+
+//______________________________________________________________________________
+void TGLUtil::PointSize(Float_t point_size)
+{
+   // Set the point-size, taking the global scaling into account.
+   // Wrapper for glPointSize.
+
+   fgPointSize = point_size * fgPointSizeScale;
+   glPointSize(fgPointSize);
+}
+
+//______________________________________________________________________________
+void TGLUtil::LineWidth(Float_t line_width)
+{
+   // Set the line-width, taking the global scaling into account.
+   // Wrapper for glLineWidth.
+
+   fgLineWidth = line_width * fgLineWidthScale;
+   glLineWidth(fgLineWidth);
+}
+
+//______________________________________________________________________________
+Float_t TGLUtil::PointSize()
+{
+   // Get the point-size, taking the global scaling into account.
+
+   return fgPointSize;
+}
+
+//______________________________________________________________________________
+Float_t TGLUtil::LineWidth()
+{
+   // Get the line-width, taking the global scaling into account.
+
+   return fgLineWidth;
 }
 
 /******************************************************************************/
@@ -1709,12 +1786,12 @@ void TGLUtil::RenderPoints(const TAttMarker& marker, Float_t* op, Int_t n,
       else if (style == 6) size = 2;
       else if (style == 7) size = 3;
    }
-   glPointSize(size);
+   TGLUtil::PointSize(size);
 
    // During selection extend picking region for large point-sizes.
-   Bool_t changePM = selection && size > pick_radius;
+   Bool_t changePM = selection && PointSize() > pick_radius;
    if (changePM)
-      BeginExtendPickRegion((Float_t) pick_radius / size);
+      BeginExtendPickRegion((Float_t) pick_radius / PointSize());
 
    Float_t* p = op;
    if (sec_selection)
@@ -1764,7 +1841,7 @@ void TGLUtil::RenderCrosses(const TAttMarker& marker, Float_t* op, Int_t n,
    {
       glEnable(GL_BLEND);
       glEnable(GL_LINE_SMOOTH);
-      glLineWidth(2);
+      LineWidth(2);
    }
    else
    {
@@ -1803,7 +1880,7 @@ void TGLUtil::RenderCrosses(const TAttMarker& marker, Float_t* op, Int_t n,
 
 //______________________________________________________________________________
 void TGLUtil::RenderPolyLine(const TAttLine& aline, Float_t* p, Int_t n,
-                                 Int_t pick_radius, Bool_t selection)
+                             Int_t pick_radius, Bool_t selection)
 {
    // Render poly-line as specified by the p-array.
 
@@ -1813,7 +1890,7 @@ void TGLUtil::RenderPolyLine(const TAttLine& aline, Float_t* p, Int_t n,
 
    glDisable(GL_LIGHTING);
    TGLUtil::Color(aline.GetLineColor());
-   glLineWidth(aline.GetLineWidth());
+   TGLUtil::LineWidth(aline.GetLineWidth());
    if (aline.GetLineStyle() > 1) {
       Int_t    fac = 1;
       UShort_t pat = 0xffff;
@@ -1834,9 +1911,9 @@ void TGLUtil::RenderPolyLine(const TAttLine& aline, Float_t* p, Int_t n,
    }
 
    // During selection extend picking region for large line-widths.
-   Bool_t changePM = selection && aline.GetLineWidth() > pick_radius;
+   Bool_t changePM = selection && LineWidth() > pick_radius;
    if (changePM)
-      BeginExtendPickRegion((Float_t) pick_radius / aline.GetLineWidth());
+      BeginExtendPickRegion((Float_t) pick_radius / LineWidth());
 
    Float_t* tp = p;
    glBegin(GL_LINE_STRIP);

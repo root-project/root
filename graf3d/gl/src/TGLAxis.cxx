@@ -12,6 +12,7 @@
 #include "TROOT.h"
 
 #include "TGLIncludes.h"
+#include "TGLUtil.h"
 #include "TGLAxis.h"
 #include "TGLText.h"
 #include "TColor.h"
@@ -171,7 +172,7 @@ void TGLAxis::PaintGLAxisBody()
    col = gROOT->GetColor(GetLineColor());
    col->GetRGB(red, green, blue);
    glColor3d(red, green, blue);
-   glLineWidth(GetLineWidth());
+   TGLUtil::LineWidth(GetLineWidth());
    glBegin(GL_LINES);
    glVertex3d(0., 0., 0.);
    glVertex3d(fAxisLength, 0., 0.);

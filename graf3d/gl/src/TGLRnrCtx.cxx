@@ -64,6 +64,11 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fViewerStyle  (kStyleUndef),
    fSceneStyle   (kStyleUndef),
 
+   fViewerWFLineW (0),
+   fSceneWFLineW  (0),
+   fViewerOLLineW (0),
+   fSceneOLLineW  (0),
+
    fViewerClip   (0),
    fSceneClip    (0),
    fClip         (0),
@@ -81,6 +86,7 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fSelectBuffer (0),
 
    fColorSetStack(0),
+   fRenderScale  (1),
 
    fDLCaptureOpen (kFALSE),
    fGLCtxIdentity (0),

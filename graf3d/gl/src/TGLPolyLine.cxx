@@ -13,6 +13,7 @@
 #include "TGLPolyLine.h"
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
+#include "TGLUtil.h"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -57,7 +58,7 @@ void TGLPolyLine::DirectDraw(TGLRnrCtx & rnrCtx) const
    Double_t oldWidth = 1.;
    glGetDoublev(GL_LINE_WIDTH, &oldWidth);
 
-   glLineWidth(fLineWidth);
+   TGLUtil::LineWidth(fLineWidth);
 
    glBegin(GL_LINE_STRIP);
 

@@ -57,6 +57,8 @@ TGLSceneBase::TGLSceneBase() :
    fMinorStamp       (1),
    fLOD              (TGLRnrCtx::kLODHigh),
    fStyle            (TGLRnrCtx::kStyleUndef),
+   fWFLineW          (0),
+   fOLLineW          (0),
    fClip             (0),
    fSelectable       (kTRUE),
    fBoundingBox      (),
@@ -378,6 +380,21 @@ void TGLSceneBase::PreDraw(TGLRnrCtx & rnrCtx)
    else                                         style = rnrCtx.ViewerStyle();
    rnrCtx.SetSceneStyle(style);
    sInfo.SetLastStyle(style);
+
+   // Wireframe line width.
+   Float_t wf_linew;
+   if (sInfo.WFLineW() != 0) wf_linew = sInfo.WFLineW();
+   else if  (fWFLineW  != 0) wf_linew = fWFLineW;
+   else                      wf_linew = rnrCtx.ViewerWFLineW();
+   rnrCtx.SetSceneWFLineW(wf_linew);
+   sInfo.SetLastWFLineW(wf_linew);
+   // Outline line width.
+   Float_t ol_linew;
+   if (sInfo.OLLineW() != 0) ol_linew = sInfo.OLLineW();
+   else if  (fOLLineW  != 0) ol_linew = fOLLineW;
+   else                      ol_linew = rnrCtx.ViewerOLLineW();
+   rnrCtx.SetSceneOLLineW(ol_linew);
+   sInfo.SetLastOLLineW(ol_linew);
 }
 
 //______________________________________________________________________________
@@ -390,10 +407,12 @@ void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
 
    TGLSceneInfo& sInfo = * rnrCtx.GetSceneInfo();
 
-   rnrCtx.SetClip      (sInfo.LastClip());
-   rnrCtx.SetCamera    (sInfo.LastCamera());
-   rnrCtx.SetCombiLOD  (sInfo.LastLOD());
-   rnrCtx.SetSceneStyle(sInfo.LastStyle());
+   rnrCtx.SetClip         (sInfo.LastClip());
+   rnrCtx.SetCamera       (sInfo.LastCamera());
+   rnrCtx.SetCombiLOD     (sInfo.LastLOD());
+   rnrCtx.SetSceneStyle   (sInfo.LastStyle());
+   rnrCtx.SetSceneWFLineW (sInfo.LastWFLineW());
+   rnrCtx.SetSceneOLLineW (sInfo.LastOLLineW());
 
    // !!!
    // eventually handle matrix stack.
