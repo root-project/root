@@ -21,7 +21,9 @@ namespace enclosing {
 #include <vector>
 #ifdef __MAKECINT__
 #pragma link C++ class vector<myiterator>;
+#pragma link C++ class vector<myiterator>::const_iterator;
 #pragma link C++ class vector<myiterator>::iterator;
 #pragma link C++ operators vector<myiterator>;
+#pragma link C++ operators vector<myiterator>::const_iterator;
 #pragma link C++ operators vector<myiterator>::iterator;
 #endif
