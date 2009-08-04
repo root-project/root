@@ -2838,7 +2838,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
          }
 
          //constants, variables x,y,z,t, pi
-         if ((optype<=149 && optype>=140 && optype!=145) || (optype == 40)) {
+         if ((optype<=151 && optype>=140 && optype!=145) || (optype == 40)) {
             tab[spos]=fExpr[i];
             ismulti[spos]=kFALSE;
             spos++;
