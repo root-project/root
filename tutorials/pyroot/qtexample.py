@@ -1,26 +1,28 @@
 import sys
-import qt
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
+
 
 import ROOT
 import sip
 
-class window(qt.QMainWindow):
+class window(QMainWindow):
    def __init__(self):
        # Init the main window.
-        qt.QMainWindow.__init__(self)
+        QMainWindow.__init__(self)
         self.resize(350, 350)
   
      # Create the central widget.
-        self.CentralWidget = qt.QWidget(self)
+        self.CentralWidget = QWidget(self)
         self.setCentralWidget(self.CentralWidget)
-        self.Layout = qt.QGridLayout(self.CentralWidget)
+        self.Layout = QGridLayout(self.CentralWidget)
   
     # Create a button.
-        self.QuitButton    = qt.QPushButton(self.centralWidget())
+        self.QuitButton    = QPushButton(self.centralWidget())
         self.QuitButton.setText('Quit')
         self.Layout.addWidget(self.QuitButton, 1, 0)
     # Connect the button.
-        qt.QObject.connect(self.QuitButton, qt.SIGNAL('clicked()'), self.quit)
+        QObject.connect(self.QuitButton, SIGNAL('clicked()'), self.quit)
      
     # Create a root histogram.
         self.hist = ROOT.TH1F("pipo","pipo", 100, 0, 100)
@@ -31,7 +33,7 @@ class window(qt.QMainWindow):
   
     # Place the TQtWidget in the main grid layout and draw the histogram.
        
-        self.Layout.addWidget(sip.wrapinstance(ROOT.AddressOf(self.Canvas)[0],qt.QWidget), 0, 0)
+        self.Layout.addWidget(sip.wrapinstance(ROOT.AddressOf(self.Canvas)[0],QWidget), 0, 0)
         self.hist.Draw()
 
    def quit(self):
@@ -40,10 +42,10 @@ class window(qt.QMainWindow):
        
        
 if __name__ == '__main__':
-   application = qt.qApp
+   application = qApp
    terminator = ROOT.TQtRootSlot.CintSlot()
-   termAddress = sip.wrapinstance(ROOT.AddressOf(terminator)[0],qt.QObject)
-   qt.QObject.connect(application, qt.SIGNAL("lastWindowClosed()"),termAddress ,qt.SLOT("Terminate()"))
+   termAddress = sip.wrapinstance(ROOT.AddressOf(terminator)[0],QObject)
+   QObject.connect(application, SIGNAL("lastWindowClosed()"),termAddress ,SLOT("Terminate()"))
    w = window()
    w.show()
    ROOT.gApplication.Run(1)
