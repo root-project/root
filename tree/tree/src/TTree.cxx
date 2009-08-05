@@ -36,9 +36,6 @@
 //     Creates a Tree with name and title.
 //
 //     Various kinds of branches can be added to a tree:
-//       A - simple structures or list of variables. (maybe for C or Fortran structures)
-//       B - any object inheriting from TObject. (expected be most frequently used)
-//       C - a ClonesArray. (a specialized object for collections of same class objects)
 //
 //  ==> Case A
 //      ======
