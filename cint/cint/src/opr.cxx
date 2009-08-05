@@ -366,11 +366,12 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
             break;
          case '/': /* divide */
             if (defined->type == G__null.type) lddefined = 1;
-            if (ldexpression == 0) {
-               if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
-               else G__genericerror("Error: operator '/' divided by zero");
-               return;
-            }
+            //  IEEE 754 defines that NaN inf has to be the output in cases where division by 0 occurs.
+//            if (ldexpression == 0) {
+//               if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
+//               else G__genericerror("Error: operator '/' divided by zero");
+//               return;
+//            }
             G__letLongdouble(defined, 'q', lddefined / ldexpression);
             defined->ref = 0;
             break;
@@ -489,11 +490,12 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
             break;
          case '/': /* divide */
             if (defined->type == G__null.type) fdefined = 1.0;
-            if (fexpression == 0.0) {
-               if (G__no_exec_compile) G__letdouble(defined, 'd', 0.0);
-               else G__genericerror("Error: operator '/' divided by zero");
-               return;
-            }
+            //  IEEE 754 defines that NaN inf has to be the output in cases where division by 0 occurs.
+//            if (fexpression == 0.0) {
+//               if (G__no_exec_compile) G__letdouble(defined, 'd', 0.0);
+//               else G__genericerror("Error: operator '/' divided by zero");
+//               return;
+//            }
             G__letdouble(defined, 'd', fdefined / fexpression);
             defined->ref = 0;
             break;

@@ -1419,10 +1419,11 @@ void G__OP2_multiply_dd(G__value *bufm1,G__value *bufm2)
 *************************************************************************/
 void G__OP2_divide_dd(G__value *bufm1,G__value *bufm2)
 {
-  if(0==bufm1->obj.d) {
-    G__genericerror("Error: operator '/' divided by zero");
-    return;
-  }
+//  IEEE 754 defines that NaN inf has to be the output in cases where division by 0 occurs.
+//  if(0==bufm1->obj.d) {
+//    G__genericerror("Error: operator '/' divided by zero");
+//    return;
+//  }
   bufm2->obj.d = bufm2->obj.d / bufm1->obj.d;
   bufm2->type = 'd';
   bufm2->tagnum = bufm2->typenum = -1;
@@ -1457,10 +1458,11 @@ void G__OP2_mulassign_dd(G__value *bufm1,G__value *bufm2)
 *************************************************************************/
 void G__OP2_divassign_dd(G__value *bufm1,G__value *bufm2)
 {
-  if(0==bufm1->obj.d) {
-    G__genericerror("Error: operator '/' divided by zero");
-    return;
-  }
+//  IEEE 754 defines that NaN inf has to be the output in cases where division by 0 occurs.
+//  if(0==bufm1->obj.d) {
+//    G__genericerror("Error: operator '/' divided by zero");
+//    return;
+//  }
   bufm2->obj.d /= bufm1->obj.d;
   *(double*)bufm2->ref=bufm2->obj.d;
 }
@@ -1498,10 +1500,11 @@ void G__OP2_mulassign_fd(G__value *bufm1,G__value *bufm2)
 *************************************************************************/
 void G__OP2_divassign_fd(G__value *bufm1,G__value *bufm2)
 {
-  if(0==bufm1->obj.d) {
-    G__genericerror("Error: operator '/' divided by zero");
-    return;
-  }
+//  IEEE 754 defines that NaN inf has to be the output in cases where division by 0 occurs.
+//  if(0==bufm1->obj.d) {
+//    G__genericerror("Error: operator '/' divided by zero");
+//    return;
+//  }
   bufm2->obj.d /= bufm1->obj.d;
   *(float*)bufm2->ref=(float)bufm2->obj.d;
 }
@@ -1754,10 +1757,11 @@ void G__OP2_divide(G__value *bufm1,G__value *bufm2)
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
-      if(0==bufm1->obj.d) {
-        G__genericerror("Error: operator '/' divided by zero");
-        return;
-      }
+//  IEEE 754 defines that NaN inf has to be the output in cases where division by 0 occurs.
+//      if(0==bufm1->obj.d) {
+//        G__genericerror("Error: operator '/' divided by zero");
+//        return;
+//      }
 #endif
       bufm2->obj.d = bufm2->obj.d / bufm1->obj.d;
     }
@@ -1774,10 +1778,11 @@ void G__OP2_divide(G__value *bufm1,G__value *bufm2)
   }
   else if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
-    if(0==bufm1->obj.d) {
-      G__genericerror("Error: operator '/' divided by zero");
-      return;
-    }
+//  IEEE 754 defines that NaN inf has to be the output in cases where division by 0 occurs.
+//     if(0==bufm1->obj.d) {
+//      G__genericerror("Error: operator '/' divided by zero");
+//      return;
+//    }
 #endif
     bufm2->obj.d = G__convertT<double>(bufm2) / bufm1->obj.d;
     bufm2->type = 'd';
@@ -2172,10 +2177,11 @@ void G__OP2_divassign(G__value *bufm1,G__value *bufm2)
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
-      if(0==bufm1->obj.d) {
-        G__genericerror("Error: operator '/' divided by zero");
-        return;
-      }
+//  IEEE 754 defines that NaN inf has to be the output in cases where division by 0 occurs.
+//      if(0==bufm1->obj.d) {
+//        G__genericerror("Error: operator '/' divided by zero");
+//        return;
+//      }
 #endif
       bufm2->obj.d /= bufm1->obj.d;
     }
@@ -2193,10 +2199,11 @@ void G__OP2_divassign(G__value *bufm1,G__value *bufm2)
   else {
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
-      if(0==bufm1->obj.d) {
-        G__genericerror("Error: operator '/' divided by zero");
-        return;
-      }
+//  IEEE 754 defines that NaN inf has to be the output in cases where division by 0 occurs.
+//      if(0==bufm1->obj.d) {
+//        G__genericerror("Error: operator '/' divided by zero");
+//        return;
+//      }
 #endif
       G__DivAssign(bufm2, G__convertT<long>(bufm1));
     }
