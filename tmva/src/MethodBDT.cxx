@@ -951,7 +951,8 @@ void TMVA::MethodBDT::AddWeightsXMLTo( void* parent ) const
 void TMVA::MethodBDT::ReadWeightsFromXML(void* parent) {
    // reads the BDT from the xml file
 
-   for (UInt_t i=0; i<fForest.size(); i++) delete fForest[i];
+   UInt_t i;
+   for (i=0; i<fForest.size(); i++) delete fForest[i];
    fForest.clear();
    fBoostWeights.clear();
 
@@ -963,7 +964,7 @@ void TMVA::MethodBDT::ReadWeightsFromXML(void* parent) {
    gTools().ReadAttr( parent, "TreeType", analysisType );
 
    void* ch = gTools().xmlengine().GetChild(parent);
-   UInt_t i=0;
+   i=0;
    while(ch) {
       fForest.push_back( dynamic_cast<DecisionTree*>( BinaryTree::CreateFromXML(ch) ) );
       fForest.back()->SetAnalysisType(Types::EAnalysisType(analysisType));

@@ -1078,9 +1078,10 @@ void TMVA::RuleEnsemble::ReadFromXML( void* wghtnode )
    // read rules
    DeleteRules();
 
+   UInt_t i;
    fRules.resize( nrules  );
    void* ch = gTools().xmlengine().GetChild( wghtnode );
-   for (UInt_t i=0; i<nrules; i++) {
+   for (i=0; i<nrules; i++) {
       fRules[i] = new Rule();
       fRules[i]->SetRuleEnsemble( this );
       fRules[i]->ReadFromXML( ch );
@@ -1096,8 +1097,8 @@ void TMVA::RuleEnsemble::ReadFromXML( void* wghtnode )
    fLinDM          .resize( nlinear );
    fLinImportance  .resize( nlinear );
 
-   Int_t i = 0;
    Int_t iok;
+   i = 0;
    while (ch) {
       gTools().ReadAttr( ch, "OK",         iok );
       fLinTermOK[i] = (iok == 1);
