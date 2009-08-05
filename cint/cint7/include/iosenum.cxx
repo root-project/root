@@ -53,11 +53,11 @@ void iosenumdump(char *item) {
   if(0==system(COMMAND)) {
     printf("ios::%s exists\n",item);
 #ifdef G__CYGWIN
-    system("./a.exe >> iosenum.h");
+    system("./a.exe >> include/iosenum.h");
 #elif defined(G__MSC_VER)
-    system("iosenum.exe >> iosenum.h");
+    system("iosenum.exe >> include/iosenum.h");
 #else
-    system("./a.out >> iosenum.h");
+    system("./a.out >> include/iosenum.h");
 #endif
   }
   else printf("ios::%s does not exist\n",item);
@@ -92,11 +92,11 @@ void iosbaseenumdump(char *item) {
   if(0==system(COMMAND)) {
     printf("ios_base::%s exists\n",item);
 #ifdef G__CYGWIN
-    system("./a.exe >> iosenum.h");
+    system("./a.exe >> include/iosenum.h");
 #elif defined(G__MSC_VER)
-    system("iosenum.exe >> iosenum.h");
+    system("iosenum.exe >> include/iosenum.h");
 #else
-    system("./a.out >> iosenum.h");
+    system("./a.out >> include/iosenum.h");
 #endif
   }
   else printf("ios_base::%s does not exist\n",item);
@@ -214,9 +214,9 @@ int main() {
 
 #ifndef G__BORLANDCC5
 #ifndef G__MSC_VER
-  system("echo '#pragma ifndef G__TMPLTIOS' >> iosenum.h");
+  system("echo '#pragma ifndef G__TMPLTIOS' >> include/iosenum.h");
 #else
-  system("echo #pragma ifndef G__TMPLTIOS >> iosenum.h");
+  system("echo #pragma ifndef G__TMPLTIOS >> include/iosenum.h");
 #endif
   iosenumdump("goodbit");
   iosenumdump("eofbit");
@@ -255,9 +255,9 @@ int main() {
   iosenumdump("unitbuf");
   iosenumdump("stdio");
 #ifndef G__MSC_VER
-  system("echo '#pragma else' >> iosenum.h");
+  system("echo '#pragma else' >> include/iosenum.h");
 #else
-  system("echo #pragma else >> iosenum.h");
+  system("echo #pragma else >> include/iosenum.h");
 #endif
 
   // added for g++3.0
@@ -294,9 +294,9 @@ int main() {
   iosbaseenumdump("cur");
   iosbaseenumdump("end");
 #ifndef G__MSC_VER
-  system("echo '#pragma endif' >> iosenum.h");
+  system("echo '#pragma endif' >> include/iosenum.h");
 #else
-  system("echo #pragma endif >> iosenum.h");
+  system("echo #pragma endif >> include/iosenum.h");
 #endif
 #endif
   

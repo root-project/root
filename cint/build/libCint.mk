@@ -151,8 +151,7 @@ $(IOSENUMH): $(ORDER_) $(CINTTMP) $(G__CFG_COREVERSION)/include/stdio.h $(MAKECI
 		(echo Generating $(IOSENUMH). This might take a while...; \
 		(set -x; cd $(G__CFG_COREVERSION)/include;$(G__CFG_RM) stdfunc$(G__CFG_SOEXT) ) ; unset VS_UNICODE_OUTPUT ; \
 		cd $(G__CFG_COREVERSION) && \
-		  (PATH=../lib:$${PATH} LD_LIBRARY_PATH=$${LD_LIBRARY_PATH}:../lib DYLD_LIBRARY_PATH=../lib:.:$$DYLD_LIBRARY_PATH ../$(CINTTMP) $(G__CFG_INCP)inc include/iosenum.cxx ) && \
-		  mv -f iosenum.h include/iosenum.h); \
+		  (PATH=../lib:$${PATH} LD_LIBRARY_PATH=$${LD_LIBRARY_PATH}:../lib DYLD_LIBRARY_PATH=../lib:.:$$DYLD_LIBRARY_PATH ../$(CINTTMP) $(G__CFG_INCP)inc include/iosenum.cxx ) ); \
 	fi)
 
 ############################################################################
