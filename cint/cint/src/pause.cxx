@@ -585,6 +585,9 @@ static int G__atevaluate(G__value buf)
    if ('Q' == buf.type || 'a' == buf.type) return(0);
 #endif
    G__valuemonitor(buf, buf2);
+   if (strcmp(buf2,"(double)inf")==0) {
+      strcpy(buf2,"(double)(1/0.0)");
+   }
    sprintf(com, "G__ateval(%s)", buf2);
    G__break = 0;
    G__step = 0;
