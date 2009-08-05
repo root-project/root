@@ -207,8 +207,16 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    char defhist[kMAXPATHLEN];
    sprintf(defhist, "%s/.root_hist", gSystem->HomeDirectory());
    logon = gEnv->GetValue("Rint.History", defhist);
+   // In the code we had HistorySize and HistorySave, in the rootrc and doc
+   // we have HistSize and HistSave. Keep the doc as it is and check
+   // now also for HistSize and HistSave in case the user did not use
+   // the History versions
    int hist_size = gEnv->GetValue("Rint.HistorySize", 500);
+   if (hist_size == 500)
+      hist_size = gEnv->GetValue("Rint.HistSize", 500);
    int hist_save = gEnv->GetValue("Rint.HistorySave", 400);
+   if (hist_save == 400)
+      hist_save = gEnv->GetValue("Rint.HistSave", 400);
    const char *envHist = gSystem->Getenv("ROOT_HIST");
    if (envHist) {
       hist_size = atoi(envHist);
@@ -232,7 +240,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 TRint::~TRint()
 {
    // Destructor.
-   
+
    delete gTabCom;
    gTabCom = 0;
    Gl_in_key = 0;
