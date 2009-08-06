@@ -1970,7 +1970,7 @@ void TFile::WriteHeader()
    Int_t nfree  = fFree->GetSize();
    memcpy(buffer, root, 4); buffer += 4;
    Int_t version = fVersion;
-   if (fEND > kStartBigFile) {version += 1000000; fUnits = 8;}
+   if (version <1000000 && fEND > kStartBigFile) {version += 1000000; fUnits = 8;}
    tobuf(buffer, version);
    tobuf(buffer, (Int_t)fBEGIN);
    if (version < 1000000) {
