@@ -39,16 +39,19 @@ namespace Cint {
       }
 #endif
       namespace DirectCompare {
-         
+
+#ifndef isnan
          //since nan are always inequal to anything, even to itself
          bool isnan(const double &x) { return ((x) != (x)); }
          bool isnan(const float &x)  { return ((x) != (x)); }
-         
+#endif
          bool isinfornan(const double &x) { return ((x-x) != (x-x)); }
          bool isinfornan(const float &x)  { return ((x-x) != (x-x)); }
-         
+
+#ifndef isinf
          bool isinf(const double &x) { return ( (isnan(x) && isinfornan(x)) ? !isnan(x) : isinfornan(x) ); }
          bool isinf(const float &x) { return ( (isnan(x) && isinfornan(x)) ? !isnan(x) : isinfornan(x) ); }
+#endif
       }
    }
 }
