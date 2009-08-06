@@ -14,8 +14,6 @@
 #include "TEveManager.h"
 
 #include "TGedFrame.h"
-#include "TGCanvas.h"
-#include "TCanvas.h"
 
 #include "TClass.h"
 
