@@ -63,10 +63,16 @@ TGeoManager* init_geo_mangeur()
 //
 // Wrapper for TGeoShape with absolute positioning and color
 // attributes allowing display of extracted TGeoShape's (without an
-// active TGeoManager) and simplified geometries (needed for NLT
+// active TGeoManager) and simplified geometries (needed for non-linear
 // projections).
 //
 // TGeoCompositeShapes and TGeoAssemblies are supported.
+//
+// If fNSegments data-member is < 2 (0 by default), the default number of
+// segments is used for tesselation and special GL objects are
+// instantiated for selected shapes (spheres, tubes). If fNSegments is > 2,
+// it gets forwarded to geo-manager and this tesselation detail is
+// used when creating the buffer passed to GL.
 
 ClassImp(TEveGeoShape);
 
