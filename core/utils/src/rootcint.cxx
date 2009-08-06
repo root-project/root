@@ -982,8 +982,12 @@ bool CheckClassDef(G__ClassInfo &cl)
      bool parentHasClassDef = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
    */
 
+   // Avoid unadvertently introducing a dependency on libTree.so (when running with
+   // the --lib-list-prefix option.
+   int autoloadEnable = G__set_class_autoloading(0);
    bool inheritsFromTObject = cl.IsBase("TObject");
    bool inheritsFromTSelector = cl.IsBase("TSelector");
+   G__set_class_autoloading(autoloadEnable);
 
    bool result = true;
    if (!inheritsFromTSelector && inheritsFromTObject && !hasClassDef) {
