@@ -562,7 +562,7 @@ void TMethodCall::ResetParam()
 //______________________________________________________________________________
 void TMethodCall::SetParam(Long_t l)
 {
-   // Set long method parameter.
+   // Add a long method parameter.
 
    if (!fFunc) return;
    gCint->CallFunc_SetArg(fFunc,l);
@@ -571,7 +571,7 @@ void TMethodCall::SetParam(Long_t l)
 //______________________________________________________________________________
 void TMethodCall::SetParam(Double_t d)
 {
-   // Set double method parameter.
+   // Add a double method parameter.
 
    if (!fFunc) return;
    gCint->CallFunc_SetArg(fFunc,d);
@@ -580,7 +580,7 @@ void TMethodCall::SetParam(Double_t d)
 //______________________________________________________________________________
 void TMethodCall::SetParam(Long64_t ll)
 {
-   // Set long long method parameter.
+   // Add a long long method parameter.
 
    if (!fFunc) return;
    gCint->CallFunc_SetArg(fFunc,ll);
@@ -589,7 +589,7 @@ void TMethodCall::SetParam(Long64_t ll)
 //______________________________________________________________________________
 void TMethodCall::SetParam(ULong64_t ull)
 {
-   // Set unsigned long long method parameter.
+   // Add a unsigned long long method parameter.
 
    if (!fFunc) return;   
    gCint->CallFunc_SetArg(fFunc,ull);
