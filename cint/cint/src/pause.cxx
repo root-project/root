@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include "Api.h"
+#include "DataMemberHandle.h"
 
 extern "C" {
 
@@ -559,6 +560,19 @@ void G__rewinddictionary()
   errordictpos.var = (struct G__var_array*)NULL;
 }
 
+   
+static void G__define_limit_var(G__DataMemberHandle &member, const char *name, double up, double down)
+{
+   int store_var_type = G__var_type;
+   G__var_type = 'd';
+   G__value value = G__null;
+   value.type = 'd';
+   value.obj.d = up/down;
+   G__letvariable((char*)name, value, &G__global, G__p_local, member);
+   G__var_type = store_var_type;   
+      
+}
+   
 /************************************************************************
 * G__atevaluate
 ************************************************************************/
@@ -585,8 +599,16 @@ static int G__atevaluate(G__value buf)
    if ('Q' == buf.type || 'a' == buf.type) return(0);
 #endif
    G__valuemonitor(buf, buf2);
-   if (strcmp(buf2,"(double)inf")==0) {
-      strcpy(buf2,"(double)(1/0.0)");
+   bool initedvar = false;
+   G__DataMemberHandle member;
+   if (buf.type == 'f' || buf.type == 'd') {
+      if (isinf(buf.obj.d)) {
+         G__define_limit_var(member,"inf",1.0,0.0);
+         initedvar = true;
+      } else if (isnan(buf.obj.d)) {
+         G__define_limit_var(member,"nan",0.0,0.0);
+         initedvar = true;
+      }                 
    }
    sprintf(com, "G__ateval(%s)", buf2);
    G__break = 0;
@@ -602,6 +624,9 @@ static int G__atevaluate(G__value buf)
    G__dispsource = store_dispsource;
    G__debug = store_debug;
    G__asm_exec = store_asm_exec;
+   if (initedvar) {
+      member.DeleteVariable();
+   }
    if (known) return((int)G__int(result));
    return(0);
 }

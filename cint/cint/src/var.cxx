@@ -7646,31 +7646,27 @@ struct G__var_array* G__searchvariable(char* varname, int varhash, G__var_array*
    return 0;
 }
 
+} // extern "C"
+
 //______________________________________________________________________________
-int G__deletevariable(const char* varname)
+int G__DataMemberHandle::DeleteVariable()
 {
-   // -- Delete variable from global variable table.  Return 1 if successful.
-   long struct_offset = 0;
-   long store_struct_offset = 0;
-   int ig15 = 0;
-   int varhash = 0;
-   int isdecl = 0;
-   struct G__var_array* var = 0;
-   int cpplink = G__NOLINK;
-   G__hash(varname, varhash, ig15);
-   var = G__searchvariable((char*)varname, varhash, 0, &G__global, &struct_offset, &store_struct_offset, &ig15, isdecl);
+   // -- Delete variable.  Return 1 if successful.
+      
+   struct G__var_array* var = GetVarArray();
+   int ig15 = GetIndex();
    if (var) {
+      int cpplink = G__NOLINK;
       int i;
       int done;
-      int store_tagnum;
-      char temp[G__ONELINE];
       switch (var->type[ig15]) {
-         case 'u':
-            store_struct_offset = G__store_struct_offset;
-            store_tagnum = G__tagnum;
+         case 'u': {
+            long store_struct_offset = G__store_struct_offset;
+            int store_tagnum = G__tagnum;
             G__store_struct_offset = var->p[ig15];
             G__tagnum = var->p_tagtable[ig15];
-            sprintf(temp, "~%s()", var->varnamebuf[ig15]);
+            G__FastAllocString temp( strlen( var->varnamebuf[ig15] + 4 ) );
+            temp.Format("~%s()", var->varnamebuf[ig15]);
             // destruction of array
             if (G__struct.iscpplink[G__tagnum] == G__CPPLINK) {
                G__store_struct_offset = var->p[ig15];
@@ -7692,10 +7688,10 @@ int G__deletevariable(const char* varname)
                for (; i >= 0; --i) {
                   G__store_struct_offset = var->p[ig15] + (i * size);
                   if (G__dispsource) {
-                     G__fprinterr(G__serr, "\n0x%lx.%s", G__store_struct_offset, temp);
+                     G__fprinterr(G__serr, "\n0x%lx.%s", G__store_struct_offset, temp.data());
                   }
                   done = 0;
-                  G__getfunction(temp, &done, G__TRYDESTRUCTOR);
+                  G__getfunction(temp.data(), &done, G__TRYDESTRUCTOR);
                   if (!done) {
                      break;
                   }
@@ -7704,14 +7700,15 @@ int G__deletevariable(const char* varname)
                G__store_struct_offset = store_struct_offset;
             }
             break;
+         }
          default:
 #ifdef G__SECURITY
             if (
-                  G__security & G__SECURE_GARBAGECOLLECTION &&
-                  !G__no_exec_compile &&
-                  isupper(var->type[ig15]) &&
-                  var->p[ig15]
-               ) {
+                G__security & G__SECURE_GARBAGECOLLECTION &&
+                !G__no_exec_compile &&
+                isupper(var->type[ig15]) &&
+                var->p[ig15]
+                ) {
                long address;
                i = var->varlabel[ig15][1] /* number of elements */;
                if (!i) {
@@ -7735,6 +7732,26 @@ int G__deletevariable(const char* varname)
       var->varnamebuf[ig15][0] = '\0';
       var->hash[ig15] = 0;
       return 1;
+   }
+   return 0;
+}
+
+extern "C" {
+
+//______________________________________________________________________________
+int G__deletevariable(const char* varname)
+{
+   // -- Delete variable from global variable table.  Return 1 if successful.
+   long struct_offset = 0;
+   long store_struct_offset = 0;
+   int ig15 = 0;
+   int varhash = 0;
+   int isdecl = 0;
+   struct G__var_array* var = 0;
+   G__hash(varname, varhash, ig15);
+   var = G__searchvariable((char*)varname, varhash, 0, &G__global, &struct_offset, &store_struct_offset, &ig15, isdecl);
+   if (var) {
+      return G__DataMemberHandle(var, ig15).DeleteVariable();
    }
    return 0;
 }

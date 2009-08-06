@@ -25,9 +25,28 @@ namespace Cint {
       int fMemvarNum; 
       int fIndex;
    public:
-      G__DataMemberHandle() : fTagnum(-1),fMemvarNum(-1),fIndex(-1) {}
+      G__DataMemberHandle() : fTagnum(-1),fMemvarNum(-1),fIndex(-1) 
+      {
+         // Default constructor.
+      }
+
+      G__DataMemberHandle(G__var_array* invar, int index) : fTagnum(-1),fMemvarNum(-1),fIndex(-1) 
+      {
+         // Set this member to point to the given variable.
+         Set(invar,index);
+      }
       
+      int DeleteVariable();
+      
+      int GetIndex() const 
+      { 
+         // Return the index within the var_array for this member.
+         return fIndex; 
+      };
+
       G__var_array *GetVarArray() const {
+         // Return the var array for this data member.
+         
          G__var_array *var = 0;
          if (fTagnum >= 0) {
             var = G__struct.memvar[fTagnum];
@@ -41,6 +60,9 @@ namespace Cint {
       }
       
       void Set(G__var_array* invar, int index) {
+         // Set this member to point to the given variable.
+         // This function is used in one of the constructors and must not be virtual
+         
          if (!invar) return;
          
          fIndex = index;
@@ -58,7 +80,6 @@ namespace Cint {
          }
       }
       
-      int GetIndex() const { return fIndex; };
    };
 }
 
