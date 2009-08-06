@@ -16,6 +16,7 @@
 #include "common.h"
 #include "Api.h"
 #include "DataMemberHandle.h"
+#include "floatutilities.h"
 
 extern "C" {
 
@@ -572,7 +573,11 @@ static void G__define_limit_var(G__DataMemberHandle &member, const char *name, d
    G__var_type = store_var_type;   
       
 }
-   
+
+#ifdef WIN32
+using namespace Cint::FloatUtilities::DirectCompare;
+#endif
+
 /************************************************************************
 * G__atevaluate
 ************************************************************************/
