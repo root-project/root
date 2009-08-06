@@ -2076,54 +2076,58 @@ static bool G__isSource( const char* name )
   else return false;    
 }
 
+static bool G__isLibrary( int index )
+{
+   return (G__srcfile[index].slindex != -1) || (G__srcfile[index].ispermanentsl == 2);
+}
+   
 static int G__getIndex( int index, int tagnum ,std::vector<std::string> &headers )
 {
+   //Function iterates through G__srcfile to find the name of *.h file where we have
+   //class definition, then adds it to data container 'headers'.
 
-  //Function iterates through G__srcfile to find the name of *.h file where we have
-  //class definition, then adds it to data container 'headers'.
-
-  std::vector<std::string>::iterator it;
-  while( (G__srcfile[index].included_from < G__nfile)  && (G__srcfile[index].included_from > -1) )
-  {
-    const int nextFileIndex = G__srcfile[index].included_from; 
-    if( G__isSource( G__srcfile[nextFileIndex].filename ) || ( G__srcfile[nextFileIndex].slindex != -1  ) ) break;
-    index = nextFileIndex;
-  }
-  if( G__srcfile[index].slindex != -1 )
-  {
-    if( tagnum >= 0 && G__struct.comment[tagnum].p.com && strstr(G__struct.comment[tagnum].p.com, "//[INCLUDE:") )
-    {// check whether G__struct...comment.p.com is set and statrs with "//[INCLUDE:"
-    
-      char *pDel = G__struct.comment[tagnum].p.com;
-      while( *pDel != 0 && *pDel != ':' ) pDel++;
-      if( *pDel != 0 )pDel++;
-      std::string tmpHeader;
-      // if so, add all headers from G__struct..comment.p.com to headers.push_back(...)
-      // and go on.
-      while( *pDel != 0 )
+   std::vector<std::string>::iterator it;
+   while( (G__srcfile[index].included_from < G__nfile)  && (G__srcfile[index].included_from > -1) )
+   {
+      const int nextFileIndex = G__srcfile[index].included_from; 
+      if( G__isSource( G__srcfile[nextFileIndex].filename ) || G__isLibrary( nextFileIndex ) ) break;
+      index = nextFileIndex;
+   }
+   if( G__srcfile[index].slindex != -1 )
+   {
+      if( tagnum >= 0 && G__struct.comment[tagnum].p.com && strstr(G__struct.comment[tagnum].p.com, "//[INCLUDE:") )
       {
-        if( *pDel != ';' ) tmpHeader += *pDel;
-        else
-        {
-          it = std::find( headers.begin(), headers.end(), tmpHeader );
-          if( it == headers.end() ) headers.push_back( tmpHeader );
-          tmpHeader = "";
-	}
-        pDel++;
+         // check whether G__struct.comment.p.com is set and starts with "//[INCLUDE:"
+         char *pDel = G__struct.comment[tagnum].p.com;
+         while( *pDel != 0 && *pDel != ':' ) pDel++;
+         if( *pDel != 0 )pDel++;
+         std::string tmpHeader;
+         // if so, add all headers from G__struct.comment.p.com to headers.push_back(...)
+         // and go on.
+         while( *pDel != 0 )
+         {
+            if( *pDel != ';' ) tmpHeader += *pDel;
+            else
+            {
+               it = std::find( headers.begin(), headers.end(), tmpHeader );
+               if( it == headers.end() ) headers.push_back( tmpHeader );
+               tmpHeader = "";
+            }
+            pDel++;
+         }
       }
-    }
-    else
-    {
-      // otherwise:
-      return -2;
-    }
-  }
-  else
-  {
-    it = std::find( headers.begin(), headers.end(),G__srcfile[ index ].filename  );
-    if( (it == headers.end()) && (G__srcfile[index].slindex == -1 ) ) headers.push_back( G__srcfile[index].filename );
-  }
-  return index;
+      else
+      {
+         // otherwise:
+         return -2;
+      }
+   }
+   else
+   {
+      it = std::find( headers.begin(), headers.end(),G__srcfile[ index ].filename  );
+      if( (it == headers.end()) && (! G__isLibrary( index ) ) ) headers.push_back( G__srcfile[index].filename );
+   }
+   return index;
 }
 
 /***********************************************************************
