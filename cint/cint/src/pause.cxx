@@ -610,9 +610,27 @@ static int G__atevaluate(G__value buf)
       if (isinf(buf.obj.d)) {
          G__define_limit_var(member,"inf",1.0,0.0);
          initedvar = true;
+#ifdef G__WIN32
+         char c;
+         for(c = 0; c<strlen(buf2); ++c) {
+            if (buf2[c]=='1') break;
+         }
+         if (c!=strlen(buf2)) {
+            strcpy(buf2+c,"inf");
+         }
+#endif
       } else if (isnan(buf.obj.d)) {
          G__define_limit_var(member,"nan",0.0,0.0);
          initedvar = true;
+#ifdef G__WIN32
+         char c;
+         for(c = 0; c<strlen(buf2); ++c) {
+            if (buf2[c]=='1') break;
+         }
+         if (c!=strlen(buf2)) {
+            strcpy(buf2+c,"nan");
+         }
+#endif
       }                 
    }
    sprintf(com, "G__ateval(%s)", buf2);
