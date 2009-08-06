@@ -574,7 +574,7 @@ static void G__define_limit_var(G__DataMemberHandle &member, const char *name, d
       
 }
 
-#ifdef WIN32
+#if defined(WIN32) || defined(R__SOLARIS)
 using namespace Cint::FloatUtilities::DirectCompare;
 #endif
 
