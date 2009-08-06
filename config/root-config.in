@@ -163,7 +163,13 @@ solarisgcc)
    ;;
 solarisCC5)
    # Solaris CC 5.0
-   auxcflags=
+   if [ `uname -p` = "i386" ]; then
+      auxcflags="-library=stlport4"
+      auxldflags="-library=stlport4"
+   else
+      auxcflags=
+      auxldflags=
+   fi
    auxlibs="-lm -ldl -lnsl -lsocket"
    ;;
 solariskcc)

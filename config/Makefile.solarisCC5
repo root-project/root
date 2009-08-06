@@ -26,6 +26,9 @@ CCPTR := -ptr$(ROOTSYS)
 ifeq ($(findstring $(CC_MINOR_VER),0 1 2 3 4),)
 # newer than 5.4
 CCPTR :=
+ifeq ($(SOLCPU),i386)
+CCSTL := -library=stlport4
+endif
 endif
 
 # Compiler:
@@ -35,18 +38,19 @@ SUNCC5        = true
 #CC            = /opt/WS5.0/bin/cc
 CXX           = CC
 CC            = cc
-CXXFLAGS      = -KPIC -I/usr/openwin/include $(CCPTR) $(EXTRA_CXXFLAGS) \
-                $(MTOPT)
+CXXFLAGS      = -KPIC -I/usr/openwin/include $(CCSTL) $(CCPTR) \
+                $(EXTRA_CXXFLAGS) $(MTOPT)
 CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS) $(MTOPT)
 CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CXXFLAGS) \
-                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(CCPTR) $(MTOPT)
+                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(CCSTL) $(CCPTR) \
+                $(MTOPT)
 CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CFLAGS) \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(MTOPT)
 CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
 
 # Linker:
 LD            = CC
-LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+LDFLAGS       = $(OPT) $(CCSTL) $(EXTRA_LDFLAGS)
 SOFLAGS       = -G $(CCPTR)
 SOEXT         = so
 
@@ -66,6 +70,7 @@ F77LIBS       = -lf77compat -lfui -lfsu -lmtsk -lsunmath
 endif
 # Use this on Solaris 10 with F90 compiler
 #F77LIBS      := -lf77compat -lfui -lfsu -lmtsk -lsunperf -lsunmath
+F77LDFLAGS    = $(OPT) $(EXTRA_LDFLAGS)
 endif
 
 # Override default in Makefile.config
