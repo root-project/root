@@ -13,6 +13,7 @@
 #include "TEveViewer.h"
 #include "TEveManager.h"
 #include "TEveTrans.h"
+#include "TEvePad.h"
 
 #include "TList.h"
 #include "TGLScenePad.h"

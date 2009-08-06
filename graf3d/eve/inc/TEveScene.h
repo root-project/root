@@ -13,8 +13,8 @@
 #define ROOT_TEveScene
 
 #include "TEveElement.h"
-#include "TEvePad.h"
 
+class TEvePad;
 class TGLScenePad;
 
 

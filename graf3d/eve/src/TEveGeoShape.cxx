@@ -15,13 +15,9 @@
 #include "TEvePolygonSetProjected.h"
 
 #include "TEveGeoShapeExtract.h"
-#include "TEvePad.h"
 #include "TEveGeoPolyShape.h"
-#include "TGLScenePad.h"
-#include "TGLFaceSet.h"
 
 #include "TROOT.h"
-#include "TPad.h"
 #include "TBuffer3D.h"
 #include "TVirtualViewer3D.h"
 #include "TColor.h"

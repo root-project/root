@@ -14,7 +14,6 @@
 #include "TEveManager.h"
 
 #include "TError.h"
-#include "TPad.h"
 #include "TGeoManager.h"
 #include "TClass.h"
 #include "TMath.h"

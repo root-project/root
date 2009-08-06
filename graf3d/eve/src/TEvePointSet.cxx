@@ -20,7 +20,6 @@
 #include "TF3.h"
 
 #include "TColor.h"
-#include "TCanvas.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"

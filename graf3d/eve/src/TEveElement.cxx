@@ -22,7 +22,6 @@
 #include "TPRegexp.h"
 #include "TROOT.h"
 #include "TColor.h"
-#include "TCanvas.h"
 #include "TEveBrowser.h"
 #include "TGListTree.h"
 #include "TGPicture.h"

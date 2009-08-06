@@ -14,7 +14,6 @@
 #include "TEveSelection.h"
 #include "TEveViewer.h"
 #include "TEveScene.h"
-#include "TEvePad.h"
 #include "TEveEventManager.h"
 #include "TEveWindowManager.h"
 
@@ -33,7 +32,6 @@
 #include "TMacro.h"
 #include "TFolder.h"
 #include "TBrowser.h"
-#include "TPad.h"
 #include "TCanvas.h"
 #include "TSystem.h"
 #include "TRint.h"

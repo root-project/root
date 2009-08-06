@@ -12,7 +12,7 @@
 #include "TEvePlot3D.h"
 #include "TEveTrans.h"
 
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
