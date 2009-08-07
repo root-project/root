@@ -149,6 +149,7 @@ public:
    TVector3 Multiply(const TVector3& v, Double_t w=1) const;
    void     Multiply(const Double_t *vin, Double_t* vout, Double_t w=1) const;
    void     RotateIP(TVector3& v) const;
+   void     RotateIP(Double_t* v) const;
    TVector3 Rotate(const TVector3& v) const;
 
    virtual void Print(Option_t* option = "") const;

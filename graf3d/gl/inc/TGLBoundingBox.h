@@ -86,6 +86,7 @@ public:
    void SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex); // axis aligned
    void SetAligned(UInt_t nbPnts, const Double_t * pnts); // axis aligned
    void MergeAligned(const TGLBoundingBox & other);
+   void ExpandAligned(const TGLVertex3 & point);
 
    // Manipulation
    void Transform(const TGLMatrix & matrix);

@@ -120,6 +120,7 @@ public:
    // Manipulators
    void Fill(Double_t val);
    void Set(Double_t x, Double_t y, Double_t z);
+   void Set(const Double_t* xyz);
    void Set(const TGLVertex3 & other);
    void Shift(TGLVector3 & shift);
    void Shift(Double_t xDelta, Double_t yDelta, Double_t zDelta);
@@ -227,6 +228,14 @@ inline void TGLVertex3::Set(Double_t x, Double_t y, Double_t z)
    fVals[0]=x;
    fVals[1]=y;
    fVals[2]=z;
+}
+
+//______________________________________________________________________________
+inline void TGLVertex3::Set(const Double_t* xyz)
+{
+   fVals[0]=xyz[0];
+   fVals[1]=xyz[1];
+   fVals[2]=xyz[2];
 }
 
 //______________________________________________________________________________

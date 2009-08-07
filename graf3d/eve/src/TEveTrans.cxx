@@ -713,9 +713,21 @@ void TEveTrans::RotateIP(TVector3& v) const
 }
 
 //______________________________________________________________________________
-TVector3 TEveTrans::Rotate(const TVector3& v) const
+void TEveTrans::RotateIP(Double_t* v) const
 {
    // Rotate vector in-place. Translation is NOT applied.
+
+   Double_t t[3] = { v[0], v[1], v[2] };
+
+   v[0] = fM[F00]*t[0] + fM[F01]*t[1] + fM[F02]*t[2];
+   v[1] = fM[F10]*t[0] + fM[F11]*t[1] + fM[F12]*t[2];
+   v[2] = fM[F20]*t[0] + fM[F21]*t[1] + fM[F22]*t[2];
+}
+
+//______________________________________________________________________________
+TVector3 TEveTrans::Rotate(const TVector3& v) const
+{
+   // Rotate vector and return the rotated vector. Translation is NOT applied.
 
    return TVector3(fM[F00]*v.x() + fM[F01]*v.y() + fM[F02]*v.z(),
                    fM[F10]*v.x() + fM[F11]*v.y() + fM[F12]*v.z(),
