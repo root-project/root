@@ -5961,7 +5961,7 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    char quote = '"';
    out <<"   "<<endl;
-   out <<"   "<<"TH1"<<" *";
+   out <<"   "<< ClassName() <<" *";
 
    out << GetName() << " = new " << ClassName() << "(" << quote
       << GetName() << quote << "," << quote<< GetTitle() << quote
