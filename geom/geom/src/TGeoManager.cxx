@@ -771,7 +771,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
 //_____________________________________________________________________________
 TGeoManager::~TGeoManager()
 {
-// Destructor
+//   Destructor
    if (gGeoManager != this) gGeoManager = this;
 
    if (gROOT->GetListOfFiles()) { //in case this function is called from TROOT destructor
@@ -782,7 +782,6 @@ TGeoManager::~TGeoManager()
 //   TIter next(brlist);
 //   TBrowser *browser = 0;
 //   while ((browser=(TBrowser*)next())) browser->RecursiveRemove(this);
-   TCollection::StartGarbageCollection();
    delete TGeoBuilder::Instance(this);
    if (fBits)  delete [] fBits;
    SafeDelete(fNodes);
@@ -813,7 +812,6 @@ TGeoManager::~TGeoManager()
    }
    gGeoIdentity = 0;
    gGeoManager = 0;
-   TCollection::EmptyGarbageCollection(); 
 }
 
 //_____________________________________________________________________________
