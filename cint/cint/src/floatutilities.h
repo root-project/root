@@ -40,7 +40,7 @@ namespace Cint {
 #endif
       namespace DirectCompare {
 
-#ifndef isnan
+#if !defined(isnan) && !defined(__SUNPRO_CC)
          //since nan are always inequal to anything, even to itself
          bool isnan(const double &x) { return ((x) != (x)); }
          bool isnan(const float &x)  { return ((x) != (x)); }
