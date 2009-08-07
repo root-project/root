@@ -190,6 +190,7 @@ public:
    virtual Short_t   GetBorderSize() const { return fBorderSize;}
    Int_t             GetCrosshair() const;
    virtual Int_t     GetCanvasID() const;
+   virtual TCanvasImp *GetCanvasImp() const;
    TFrame           *GetFrame();
    virtual Int_t     GetEvent() const;
    virtual Int_t     GetEventX() const;

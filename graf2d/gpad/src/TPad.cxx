@@ -2311,7 +2311,15 @@ Int_t TPad::GetCanvasID() const
 {
    // Get canvas identifier.
 
-   return fCanvas->GetCanvasID();
+   return fCanvas ? fCanvas->GetCanvasID() : -1;
+}
+
+//______________________________________________________________________________
+TCanvasImp *TPad::GetCanvasImp() const
+{
+   // Get canvas implementation pointer if any
+
+   return fCanvas ? fCanvas->GetCanvasImp() : 0;
 }
 
 

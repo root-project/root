@@ -48,6 +48,7 @@ class TObject;
 class TObjLink;
 class TView;
 class TCanvas;
+class TCanvasImp;
 class TH1F;
 class TFrame;
 class TBox;
@@ -85,6 +86,7 @@ public:
    virtual Short_t  GetBorderMode() const = 0;
    virtual Short_t  GetBorderSize() const = 0;
    virtual Int_t    GetCanvasID() const = 0;
+   virtual TCanvasImp *GetCanvasImp() const = 0;
    virtual TCanvas  *GetCanvas() const = 0;
    virtual TVirtualPad *GetVirtCanvas() const = 0;
    virtual Int_t    GetEvent() const  = 0;
