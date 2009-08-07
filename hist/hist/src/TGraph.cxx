@@ -745,12 +745,24 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
    //   the internally created spline is deleted on return.
    //  -if spline is specified, it is used to return the interpolated value.
 
+
    if (!spline) {
+      
+      // points must be sorted before using a TSpline or the binary search
+      std::vector<Double_t> xsort(fNpoints); 
+      std::vector<Double_t> ysort(fNpoints); 
+      std::vector<Int_t> indxsort(fNpoints);
+      TMath::Sort(fNpoints, fX, &indxsort[0], false );
+      for (Int_t i = 0; i < fNpoints; ++i) { 
+         xsort[i] = fX[ indxsort[i] ]; 
+         ysort[i] = fY[ indxsort[i] ]; 
+      }
+
       TString opt = option;
       opt.ToLower();
       if (opt.Contains("s")) {
          // spline interpolation creating a new spline
-         TSpline3 *s = new TSpline3("",this);
+         TSpline3 *s = new TSpline3("",&xsort[0], &ysort[0], fNpoints);
          Double_t result = s->Eval(x);
          delete s;
          return result;
@@ -758,13 +770,13 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
       //linear interpolation
       //find point in graph immediatly below x
       //In case x is < fX[0] or > fX[fNpoints-1] return the extrapolated point
-      Int_t low = TMath::BinarySearch(fNpoints,fX,x);
+      Int_t low = TMath::BinarySearch(fNpoints,&xsort[0],x);
       Int_t up = low+1;
       if (low == fNpoints-1) {up=low; low = up-1;}
       if (low == -1) {low=0; up=1;}
-      if (fX[low] == fX[up]) return fY[low];
-      Double_t yn = x*(fY[low]-fY[up]) +fX[low]*fY[up] - fX[up]*fY[low];
-      return yn/(fX[low]-fX[up]);
+      if (xsort[low] == xsort[up]) return ysort[low];
+      Double_t yn = ysort[up] + (x - xsort[up] ) * (ysort[low]-ysort[up] ) / ( xsort[low] - xsort[up] ); 
+      return yn;
    } else {
       //spline interpolation using the input spline
       return spline->Eval(x);
