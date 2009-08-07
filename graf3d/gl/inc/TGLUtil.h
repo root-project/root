@@ -74,6 +74,7 @@ enum EGLPlotType {
    kGLParametricPlot,
    kGLIsoPlot,
    kGL5D,
+   kGLTH3Composition,
    kGLDefaultPlot
 };
 

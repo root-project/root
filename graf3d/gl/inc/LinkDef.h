@@ -127,6 +127,8 @@
 #pragma link C++ class TGLPadPainter;
 #pragma link C++ class TGL5DDataSet;
 #pragma link C++ class TGL5DDataSetEditor;
+#pragma link C++ class TGLTH3Composition;
+#pragma link C++ class TGLTH3CompositionPainter;
 
 #ifndef _WIN32
 #pragma link C++ class TX11GLManager;

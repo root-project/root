@@ -5,6 +5,7 @@
 #include "TClass.h"
 #include "TVirtualGL.h"
 #include "KeySymbols.h"
+#include "Buttons.h"
 #include "TGL5D.h"
 #include "TMath.h"
 #include "TPad.h"
@@ -12,6 +13,7 @@
 #include "TF3.h"
 
 #include "TGLSurfacePainter.h"
+#include "TGLTH3Composition.h"
 #include "TGLHistPainter.h"
 #include "TGLLegoPainter.h"
 #include "TGLBoxPainter.h"
@@ -212,6 +214,18 @@ TGLHistPainter::TGLHistPainter(TGL5DDataSet *data)
 {
    //This ctor creates plot painter for TGL5DDataSet.
    fGLPainter.reset(new TGL5DPainter(data, &fCamera, &fCoord));
+}
+
+//______________________________________________________________________________
+TGLHistPainter::TGLHistPainter(TGLTH3Composition *data)
+                   : fEq(0),
+                     fHist(data),
+                     fF3(0),
+                     fStack(0),
+                     fPlotType(kGLTH3Composition)
+{
+   //This ctor creates plot painter for TGL5DDataSet.
+   fGLPainter.reset(new TGLTH3CompositionPainter(data, &fCamera, &fCoord));
 }
 
 //______________________________________________________________________________
@@ -513,14 +527,14 @@ void TGLHistPainter::Paint(Option_t *o)
    const Ssiz_t glPos = option.Index("gl");
    if (glPos != kNPOS)
       option.Remove(glPos, 2);
-   else if (fPlotType != kGLParametricPlot && fPlotType != kGL5D) {
+   else if (fPlotType != kGLParametricPlot && fPlotType != kGL5D && fPlotType != kGLTH3Composition) {
       gPad->SetCopyGLDevice(kFALSE);
       if (fDefaultPainter.get())
          fDefaultPainter->Paint(o);//option.Data());
       return;
    }
 
-   if (fPlotType != kGLParametricPlot && fPlotType != kGL5D)
+   if (fPlotType != kGLParametricPlot && fPlotType != kGL5D && fPlotType != kGLTH3Composition)
       CreatePainter(ParsePaintOption(option), option);
 
    if (fPlotType == kGLDefaultPlot) {
