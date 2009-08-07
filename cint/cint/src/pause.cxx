@@ -574,7 +574,7 @@ static void G__define_limit_var(G__DataMemberHandle &member, const char *name, d
       
 }
 
-#if defined(WIN32) || defined(R__SOLARIS)
+#if defined(WIN32) || defined(__SUNPRO_CC)
 using namespace Cint::FloatUtilities::DirectCompare;
 #endif
 
