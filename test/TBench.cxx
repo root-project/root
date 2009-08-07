@@ -1,7 +1,7 @@
 // set of classes to compare the performance of STL vector versus
 // native Root TClonesArray.
 // See main program bench.cxx
-   
+
 #include "TRandom.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -13,15 +13,15 @@
 THit hit;
 #ifdef R__HPUX
 namespace std {
-  using ::make_pair;
+   using ::make_pair;
 }
 #endif
 #ifdef R__WIN32
- const char *demofile = "$TMP/bench.root";
+const char *demofile = "$TMP/bench.root";
 #else
- const char *demofile = "/tmp/bench.root";
+const char *demofile = "/tmp/bench.root";
 #endif
- const char* demofile_name(const char* tit)  {
+const char* demofile_name(const char* tit)  {
    static std::string fn;
 #ifdef R__WIN32
    fn = "$TMP/bench.";
@@ -31,19 +31,19 @@ namespace std {
    fn += tit;
    fn += ".root";
    return fn.c_str();
- }
+}
 namespace {
-  struct Counter  {
-    std::string name;
-    int count;
-    Counter(const std::string& n) : name(n), count(0) {}
-    ~Counter()  {
-      print();
-    }
-    void print(const std::string& msg="")  {
-      cout << msg << " --- Counter: " << name << " " << count << endl;
-    }
-  };
+   struct Counter  {
+      std::string name;
+      int count;
+      Counter(const std::string& n) : name(n), count(0) {}
+      ~Counter()  {
+         print();
+      }
+      void print(const std::string& msg="")  {
+         cout << msg << " --- Counter: " << name << " " << count << endl;
+      }
+   };
 }
 
 Counter hitCount("THit");
@@ -52,42 +52,43 @@ Counter hitCount("THit");
 ClassImp(THit)
 //-------------------------------------------------------------
 THit::THit() {
-  fPulses = 0;
-  hitCount.count++;
+   fPulses = 0;
+   fNpulses = 0;
+   hitCount.count++;
 }
 THit::THit(const THit &hit) {
-  hitCount.count++;
-  fX = hit.fX;
-  fY = hit.fY;
-  fZ = hit.fZ;
-  for (Int_t i=0;i<10;i++) fTime[i] = hit.fTime[i];
-  fPulses = 0;
-  fNpulses = hit.fNpulses;
-  if (fNpulses == 0) return;
-  if (hit.fPulses == 0) return;
-  fPulses = new int[fNpulses];
-  for (int j=0;j<fNpulses;j++) fPulses[j] = hit.fPulses[j];
+   hitCount.count++;
+   fX = hit.fX;
+   fY = hit.fY;
+   fZ = hit.fZ;
+   for (Int_t i=0;i<10;i++) fTime[i] = hit.fTime[i];
+   fPulses = 0;
+   fNpulses = hit.fNpulses;
+   if (fNpulses == 0) return;
+   if (hit.fPulses == 0) return;
+   fPulses = new int[fNpulses];
+   for (int j=0;j<fNpulses;j++) fPulses[j] = hit.fPulses[j];
 }
 
 THit& THit::operator=(const THit& hit)  {
-  fX = hit.fX;
-  fY = hit.fY;
-  fZ = hit.fZ;
-  for (Int_t i=0;i<10;i++) fTime[i] = hit.fTime[i];
-  fPulses = 0;
-  fNpulses = hit.fNpulses;
-  if (fNpulses == 0) return *this;
-  if (hit.fPulses == 0) return *this;
-  if ( fPulses ) delete [] fPulses;
-  fPulses = new int[fNpulses];
-  for (int j=0;j<fNpulses;j++) fPulses[j] = hit.fPulses[j];
-  return *this;
+   fX = hit.fX;
+   fY = hit.fY;
+   fZ = hit.fZ;
+   for (Int_t i=0;i<10;i++) fTime[i] = hit.fTime[i];
+   fPulses = 0;
+   fNpulses = hit.fNpulses;
+   if (fNpulses == 0) return *this;
+   if (hit.fPulses == 0) return *this;
+   if ( fPulses ) delete [] fPulses;
+   fPulses = new int[fNpulses];
+   for (int j=0;j<fNpulses;j++) fPulses[j] = hit.fPulses[j];
+   return *this;
 }
 
 THit::THit(int t) {
-  hitCount.count++;
-  fPulses = 0;
-  Set(t);
+   hitCount.count++;
+   fPulses = 0;
+   Set(t);
 }
 
 THit::~THit() {
@@ -97,14 +98,14 @@ THit::~THit() {
 }
 
 void THit::Set(int t) {
-  fX = gRandom->Gaus(0,1);
-  fY = gRandom->Gaus(0,1);
-  fZ = gRandom->Gaus(0,10);
-  if (fPulses && fNpulses > 0) delete [] fPulses;
-  fNpulses = t%20 + 1;
-  fPulses = new int[fNpulses];
-  for (int j=0;j<fNpulses;j++) fPulses[j] = j+1;
-  for (int i=0; i<10; i++) fTime[i] = t+i;
+   fX = gRandom->Gaus(0,1);
+   fY = gRandom->Gaus(0,1);
+   fZ = gRandom->Gaus(0,10);
+   if (fPulses && fNpulses > 0) delete [] fPulses;
+   fNpulses = t%20 + 1;
+   fPulses = new int[fNpulses];
+   for (int j=0;j<fNpulses;j++) fPulses[j] = j+1;
+   for (int i=0; i<10; i++) fTime[i] = t+i;
 }
 
 #if 0
@@ -124,7 +125,7 @@ TBuffer &operator<<(TBuffer &buf, const THit *obj)
    ((THit*)obj)->Streamer(buf);
    return buf;
 }
-   
+
 //-------------------------------------------------------------
 ClassImp(TObjHit)
 //-------------------------------------------------------------
@@ -147,8 +148,8 @@ TSTLhit::TSTLhit(Int_t nmax)
 }
 
 TSTLhit::~TSTLhit() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhit::Clear(Option_t *)
@@ -167,43 +168,43 @@ void TSTLhit::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhit::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhit *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhit"),"recreate","STLhit",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhit",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhit"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhit *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhit"),"recreate","STLhit",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhit",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhit"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhit::ReadTree()
 {
-  TSTLhit *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhit"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhit *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhit"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 
@@ -220,8 +221,8 @@ TSTLhitList::TSTLhitList(Int_t nmax)
 }
 
 TSTLhitList::~TSTLhitList() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitList::Clear(Option_t *)
@@ -240,43 +241,43 @@ void TSTLhitList::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitList::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitList *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitList"),"recreate","STLhit",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitList",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitList"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitList *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitList"),"recreate","STLhit",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitList",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitList"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitList::ReadTree()
 {
-  TSTLhitList *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitList"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitList *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitList"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 //-------------------------------------------------------------
@@ -292,8 +293,8 @@ TSTLhitDeque::TSTLhitDeque(Int_t nmax)
 }
 
 TSTLhitDeque::~TSTLhitDeque() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitDeque::Clear(Option_t *)
@@ -312,43 +313,43 @@ void TSTLhitDeque::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitDeque::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitDeque *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitDeque"),"recreate","STLhit",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitDeque",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitDeque"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitDeque *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitDeque"),"recreate","STLhit",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitDeque",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitDeque"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitDeque::ReadTree()
 {
-  TSTLhitDeque *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitDeque"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitDeque *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitDeque"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 
@@ -365,8 +366,8 @@ TSTLhitSet::TSTLhitSet(Int_t nmax)
 }
 
 TSTLhitSet::~TSTLhitSet() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitSet::Clear(Option_t *)
@@ -385,43 +386,43 @@ void TSTLhitSet::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitSet::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitSet *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitSet"),"recreate","STLhit",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitSet",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitSet"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitSet *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitSet"),"recreate","STLhit",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitSet",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitSet"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitSet::ReadTree()
 {
-  TSTLhitSet *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitSet"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitSet *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitSet"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 
@@ -438,8 +439,8 @@ TSTLhitMultiset::TSTLhitMultiset(Int_t nmax)
 }
 
 TSTLhitMultiset::~TSTLhitMultiset() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitMultiset::Clear(Option_t *)
@@ -458,43 +459,43 @@ void TSTLhitMultiset::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitMultiset::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitMultiset *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitMultiset"),"recreate","STLhit",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitMultiset",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitMultiset"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitMultiset *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitMultiset"),"recreate","STLhit",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitMultiset",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitMultiset"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitMultiset::ReadTree()
 {
-  TSTLhitMultiset *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitMultiset"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitMultiset *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitMultiset"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 
@@ -511,8 +512,8 @@ TSTLhitMap::TSTLhitMap(Int_t nmax)
 }
 
 TSTLhitMap::~TSTLhitMap() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitMap::Clear(Option_t *)
@@ -531,43 +532,43 @@ void TSTLhitMap::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitMap::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitMap *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitMap"),"recreate","STLhit",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitMap",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitMap"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitMap *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitMap"),"recreate","STLhit",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitMap",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitMap"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitMap::ReadTree()
 {
-  TSTLhitMap *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitMap"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitMap *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitMap"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 
@@ -584,8 +585,8 @@ TSTLhitMultiMap::TSTLhitMultiMap(Int_t nmax)
 }
 
 TSTLhitMultiMap::~TSTLhitMultiMap() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitMultiMap::Clear(Option_t *)
@@ -605,43 +606,43 @@ void TSTLhitMultiMap::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitMultiMap::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitMultiMap *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitMultiMap"),"recreate","STLhit",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitMultiMap",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitMultiMap"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitMultiMap *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitMultiMap"),"recreate","STLhit",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitMultiMap",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitMultiMap"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitMultiMap::ReadTree()
 {
-  TSTLhitMultiMap *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitMultiMap"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitMultiMap *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitMultiMap"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 #if 0
@@ -658,8 +659,8 @@ TSTLhitHashSet::TSTLhitHashSet(Int_t nmax)
 }
 
 TSTLhitHashSet::~TSTLhitHashSet() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitHashSet::Clear(Option_t *)
@@ -678,43 +679,43 @@ void TSTLhitHashSet::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitHashSet::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitHashSet *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile,"recreate","STLhit",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitHashSet",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile);
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitHashSet *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile,"recreate","STLhit",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitHashSet",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile);
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitHashSet::ReadTree()
 {
-  TSTLhitHashSet *top = this;
-  TFile *f = new TFile(demofile);  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitHashSet *top = this;
+   TFile *f = new TFile(demofile);  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 
@@ -731,8 +732,8 @@ TSTLhitHashMultiSet::TSTLhitHashMultiSet(Int_t nmax)
 }
 
 TSTLhitHashMultiSet::~TSTLhitHashMultiSet() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitHashMultiSet::Clear(Option_t *)
@@ -751,43 +752,43 @@ void TSTLhitHashMultiSet::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitHashMultiSet::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitHashMultiSet *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile,"recreate","STLhit",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitHashMultiSet",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile);
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitHashMultiSet *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile,"recreate","STLhit",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitHashMultiSet",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile);
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitHashMultiSet::ReadTree()
 {
-  TSTLhitHashMultiSet *top = this;
-  TFile *f = new TFile(demofile);  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitHashMultiSet *top = this;
+   TFile *f = new TFile(demofile);  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 #endif
 
@@ -805,8 +806,8 @@ TSTLhitStar::TSTLhitStar(Int_t nmax)
 }
 
 TSTLhitStar::~TSTLhitStar() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitStar::Clear(Option_t *)
@@ -815,7 +816,7 @@ void TSTLhitStar::Clear(Option_t *)
       delete (*it);
    }
    fList2.erase(fList2.begin(),fList2.end());
-   //hitCount.print("Clear");
+   // hitCount.print("Clear");
 }
 
 void TSTLhitStar::MakeEvent(int /*ievent*/)
@@ -828,43 +829,45 @@ void TSTLhitStar::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitStar *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitStar"),"recreate","STLhitStar",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitStar",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitStar"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitStar *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitStar"),"recreate","STLhitStar",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitStar",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitStar"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   hitCount.print("End of MakeTree");
+   return nbytes;
 }
 
 Int_t TSTLhitStar::ReadTree()
 {
-  TSTLhitStar *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitStar"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   hitCount.print("Start of ReadTree");
+   TSTLhitStar *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitStar"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 //-------------------------------------------------------------
@@ -880,8 +883,8 @@ TSTLhitStarList::TSTLhitStarList(Int_t nmax)
 }
 
 TSTLhitStarList::~TSTLhitStarList() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitStarList::Clear(Option_t *)
@@ -902,43 +905,43 @@ void TSTLhitStarList::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStarList::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitStarList *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitStarList"),"recreate","STLhitStar",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitStarList",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitStarList"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitStarList *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitStarList"),"recreate","STLhitStar",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitStarList",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitStarList"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitStarList::ReadTree()
 {
-  TSTLhitStarList *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitStarList"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitStarList *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitStarList"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 //-------------------------------------------------------------
@@ -954,8 +957,8 @@ TSTLhitStarDeque::TSTLhitStarDeque(Int_t nmax)
 }
 
 TSTLhitStarDeque::~TSTLhitStarDeque() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitStarDeque::Clear(Option_t *)
@@ -976,43 +979,43 @@ void TSTLhitStarDeque::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStarDeque::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitStarDeque *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitStarDeque"),"recreate","STLhitStar",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitStarDeque",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitStarDeque"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitStarDeque *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitStarDeque"),"recreate","STLhitStar",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitStarDeque",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitStarDeque"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitStarDeque::ReadTree()
 {
-  TSTLhitStarDeque *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitStarDeque"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitStarDeque *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitStarDeque"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 //-------------------------------------------------------------
@@ -1028,8 +1031,8 @@ TSTLhitStarSet::TSTLhitStarSet(Int_t nmax)
 }
 
 TSTLhitStarSet::~TSTLhitStarSet() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitStarSet::Clear(Option_t *)
@@ -1038,6 +1041,7 @@ void TSTLhitStarSet::Clear(Option_t *)
       delete (*it);
    }
    fList2.erase(fList2.begin(),fList2.end());
+   //hitCount.print("End of Clear");
 }
 
 void TSTLhitStarSet::MakeEvent(int /*ievent*/)
@@ -1050,43 +1054,43 @@ void TSTLhitStarSet::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStarSet::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitStarSet *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitStarSet"),"recreate","STLhitStar",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitStarSet",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitStarSet"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitStarSet *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitStarSet"),"recreate","STLhitStar",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitStarSet",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitStarSet"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitStarSet::ReadTree()
 {
-  TSTLhitStarSet *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitStarSet"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitStarSet *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitStarSet"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 //-------------------------------------------------------------
@@ -1102,8 +1106,8 @@ TSTLhitStarMultiSet::TSTLhitStarMultiSet(Int_t nmax)
 }
 
 TSTLhitStarMultiSet::~TSTLhitStarMultiSet() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitStarMultiSet::Clear(Option_t *)
@@ -1124,43 +1128,43 @@ void TSTLhitStarMultiSet::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStarMultiSet::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitStarMultiSet *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitStarMultiSet"),"recreate","STLhitStar",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitStarMultiSet",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitStarMultiSet"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitStarMultiSet *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitStarMultiSet"),"recreate","STLhitStar",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitStarMultiSet",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitStarMultiSet"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitStarMultiSet::ReadTree()
 {
-  TSTLhitStarMultiSet *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitStarMultiSet"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitStarMultiSet *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitStarMultiSet"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 
@@ -1177,8 +1181,8 @@ TSTLhitStarMap::TSTLhitStarMap(Int_t nmax)
 }
 
 TSTLhitStarMap::~TSTLhitStarMap() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitStarMap::Clear(Option_t *)
@@ -1191,54 +1195,51 @@ void TSTLhitStarMap::Clear(Option_t *)
 
 void TSTLhitStarMap::MakeEvent(int /*ievent*/)
 {
-//   hitCount.print("1");
    Clear();
-//   hitCount.print("1.1");
    for (Int_t j=0; j<fNhits; j++) {
-     fList2.insert(std::pair<const Int_t, THit*> (j,new THit(j)));
+      fList2.insert(std::pair<const Int_t, THit*> (j,new THit(j)));
    }
-//   hitCount.print("1.2");
 }
 
 Int_t TSTLhitStarMap::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitStarMap *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitStarMap"),"recreate","STLhitStar",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitStarMap",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitStarMap"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitStarMap *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitStarMap"),"recreate","STLhitStar",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitStarMap",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitStarMap"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitStarMap::ReadTree()
 {
-  TSTLhitStarMap *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitStarMap"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitStarMap *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitStarMap"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 //-------------------------------------------------------------
@@ -1254,8 +1255,8 @@ TSTLhitStarMultiMap::TSTLhitStarMultiMap(Int_t nmax)
 }
 
 TSTLhitStarMultiMap::~TSTLhitStarMultiMap() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TSTLhitStarMultiMap::Clear(Option_t *)
@@ -1270,50 +1271,50 @@ void TSTLhitStarMultiMap::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-     std::pair<const int,THit*> temp(j,new THit(j));
-     fList2.insert(temp);
+      std::pair<const int,THit*> temp(j,new THit(j));
+      fList2.insert(temp);
    }
 }
 
 Int_t TSTLhitStarMultiMap::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TSTLhitStarMultiMap *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile_name("TSTLhitStarMultiMap"),"recreate","STLhitStar",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TSTLhitStarMultiMap",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile_name("TSTLhitStarMultiMap"));
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TSTLhitStarMultiMap *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile_name("TSTLhitStarMultiMap"),"recreate","STLhitStar",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TSTLhitStarMultiMap",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile_name("TSTLhitStarMultiMap"));
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TSTLhitStarMultiMap::ReadTree()
 {
-  TSTLhitStarMultiMap *top = this;
-  TFile *f = new TFile(demofile_name("TSTLhitStarMultiMap"));  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-     Clear();
-  }
-  delete f;
-  return nbytes;
+   TSTLhitStarMultiMap *top = this;
+   TFile *f = new TFile(demofile_name("TSTLhitStarMultiMap"));  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+      Clear();
+   }
+   delete f;
+   return nbytes;
 }
 
 //-------------------------------------------------------------
@@ -1332,8 +1333,8 @@ TCloneshit::TCloneshit(Int_t nmax)
 }
 
 TCloneshit::~TCloneshit() {
-  Clear();
-  hitCount.print();
+   Clear();
+   hitCount.print();
 }
 
 void TCloneshit::Clear(Option_t *)
@@ -1352,41 +1353,41 @@ void TCloneshit::MakeEvent(int /*ievent*/)
 
 Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-  TFile *f=0;
-  TTree *T=0;
-  TCloneshit *top = this;
-  if (mode > 0) {
-     f = new TFile(demofile,"recreate","Cloneshit",compression);  
-     T = new TTree("T","Demo tree");
-     T->Branch("event","TCloneshit",&top,64000,split);
-  }
-  for (int ievent=0; ievent<nevents; ievent++) {
-     MakeEvent(ievent);
-     if (mode > 0) T->Fill();
-  }
-
-  if (mode == 0) return 0;
-  T->Write();
-  delete f;
-  f = new TFile(demofile);
-  Int_t nbytes = f->GetEND();
-  cx = f->GetCompressionFactor();
-  delete f;
-  return nbytes;
+   TFile *f=0;
+   TTree *T=0;
+   TCloneshit *top = this;
+   if (mode > 0) {
+      f = new TFile(demofile,"recreate","Cloneshit",compression);  
+      T = new TTree("T","Demo tree");
+      T->Branch("event","TCloneshit",&top,64000,split);
+   }
+   for (int ievent=0; ievent<nevents; ievent++) {
+      MakeEvent(ievent);
+      if (mode > 0) T->Fill();
+   }
+   
+   if (mode == 0) return 0;
+   T->Write();
+   delete f;
+   f = new TFile(demofile);
+   Int_t nbytes = f->GetEND();
+   cx = f->GetCompressionFactor();
+   delete f;
+   return nbytes;
 }
 
 Int_t TCloneshit::ReadTree()
 {
-  TCloneshit *top = this;
-  TFile *f = new TFile(demofile);  
-  TTree *T = (TTree*)f->Get("T");
-  T->SetBranchAddress("event",&top);
-  Int_t nevents = (Int_t)T->GetEntries();
-  Int_t nbytes = 0;
-  for (int ievent=0; ievent<nevents; ievent++) {
-     nbytes += T->GetEntry(ievent);
-  }
-  delete f;
-  return nbytes;
+   TCloneshit *top = this;
+   TFile *f = new TFile(demofile);  
+   TTree *T = (TTree*)f->Get("T");
+   T->SetBranchAddress("event",&top);
+   Int_t nevents = (Int_t)T->GetEntries();
+   Int_t nbytes = 0;
+   for (int ievent=0; ievent<nevents; ievent++) {
+      nbytes += T->GetEntry(ievent);
+   }
+   delete f;
+   return nbytes;
 }
 

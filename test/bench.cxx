@@ -31,980 +31,275 @@
 
 #include "TBench.h"
 
+struct TBenchData {
+   TBenchData() : cp1(0), nbytes1(0), cp2w(0), cp2r(0), cx3(0), nbytes3(0), cp3w(0), cp3r(0)  {}
+   TBenchData(const char *name, Double_t i_cp1, Float_t i_cx3, Long64_t i_nbytes1, Long64_t i_nbytes3, Double_t i_cp2w, Double_t i_cp3w, Double_t i_cp2r, Double_t i_cp3r) 
+     :  fName(name), cp1(i_cp1), nbytes1(i_nbytes1), cp2w(i_cp2w), cp2r(i_cp2r), cx3(i_cx3), nbytes3(i_nbytes3), cp3w(i_cp3w), cp3r(i_cp3r) {}
+   TString fName;
+   Double_t rt1;
+   Double_t cp1;
+   Float_t cx;
+   Long64_t nbytes1;
+   Double_t rt2w;
+   Double_t cp2w;
+   Double_t rt2r;
+   Double_t cp2r;
+   Float_t cx3;
+   Long64_t nbytes3;
+   Double_t rt3w;
+   Double_t cp3w;
+   Double_t rt3r;
+   Double_t cp3r;
+   
+   Double_t cptot() { return cp1 + cp2w + cp2r + cp3w + cp3r; }
+};
+
+template <class TGen> TBenchData runTest(const char *name, int nevents, int nhits, int splitlevel)
+{
+   static TStopwatch timer;
+
+   TBenchData data;
+   data.fName = name;
+   
+   timer.Start();
+   TGen *STLhit = new TGen(nhits);
+   STLhit->MakeTree(0,nevents,0,0,data.cx);
+   timer.Stop();
+   data.rt1 = timer.RealTime();
+   data.cp1 = timer.CpuTime();
+   printf("1 %-26s  : RT=%6.2f s  Cpu=%6.2f s\n",data.fName.Data(),data.rt1,data.cp1);
+
+   timer.Start(kTRUE);
+   data.nbytes1 = STLhit->MakeTree(1,nevents,0,splitlevel,data.cx);
+   timer.Stop();
+   data.rt2w = timer.RealTime();
+   data.cp2w = timer.CpuTime();
+   printf("2 %-26s w: RT=%6.2f s  Cpu=%6.2f s, size= %8lld bytes, cx=%5.2f\n",data.fName.Data(),data.rt2w,data.cp2w,data.nbytes1,data.cx);
+   
+   timer.Start(kTRUE);
+   STLhit->ReadTree();
+   timer.Stop();
+   data.rt2r = timer.RealTime();
+   data.cp2r = timer.CpuTime();
+   printf("3 %-26s r: RT=%6.2f s  Cpu=%6.2f s\n",data.fName.Data(),data.rt2r,data.cp2r);
+   
+   timer.Start(kTRUE);
+   data.nbytes3 = STLhit->MakeTree(1,nevents,1,splitlevel,data.cx3);
+   timer.Stop();
+   data.rt3w = timer.RealTime();
+   data.cp3w = timer.CpuTime();
+   printf("4 %-26s w: RT=%6.2f s  Cpu=%6.2f s, size= %8lld bytes, cx=%5.2f\n",data.fName.Data(),data.rt3w,data.cp3w,data.nbytes3,data.cx3);
+   
+   timer.Start(kTRUE);
+   STLhit->ReadTree();
+   timer.Stop();
+   data.rt3r = timer.RealTime();
+   data.cp3r = timer.CpuTime();
+   printf("5 %-26s r: RT=%6.2f s  Cpu=%6.2f s\n",data.fName.Data(),data.rt3r,data.cp3r);
+   
+   delete STLhit;
+   return data;
+}
+
+template <class TGen> TBenchData runTest(const char *name, int nevents, int nhits, int splitlevel, Double_t &cptot, vector<TBenchData> &results)
+{
+   TBenchData data = runTest<TGen>( name, nevents, nhits, splitlevel);
+   cptot += data.cptot();
+   results.push_back( data );
+   return data;
+}
 
 int main(int argc, char **argv)
 {
-  // by default stream objects objectwise
-  // if program option "-m" is specified, stream memberwise
-  if (argc > 1) {
-     if (strstr(argv[1],"-m")) TStreamerInfo::SetStreamMemberWise();
-     printf("bench option -m specified. Streaming objects memberwise\n");
-  }
-  int nhits       = 1000;
-  int nevents     = 400;
-  Float_t cx;
-
-  Double_t cptot = 0;
-  TStopwatch timer;
-
-  //delete temp file used for the benchmark
-  gSystem->Unlink(Form("%s/bench.root",gSystem->TempDirectory()));
-
-  /// STL VECTOR
-  timer.Start();
-  TSTLhit *STLhit = new TSTLhit(nhits);
-  STLhit->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1 = timer.RealTime();
-  Double_t cp1 = timer.CpuTime();
-  cptot += cp1;
-  printf("1 vector    : RT=%6.2f s  Cpu=%6.2f s\n",rt1,cp1);
-  timer.Start(kTRUE);
-  Int_t nbytes1 = STLhit->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2w = timer.RealTime();
-  Double_t cp2w = timer.CpuTime();
-  cptot += cp2w;
-  printf("2 vector   w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2w,cp2w,nbytes1,cx);
-  timer.Start(kTRUE);
-  STLhit->ReadTree();
-  timer.Stop();
-  Double_t rt2r = timer.RealTime();
-  Double_t cp2r = timer.CpuTime();
-  cptot += cp2r;
-  printf("3 vector   r: RT=%6.2f s  Cpu=%6.2f s\n",rt2r,cp2r);
-  timer.Start(kTRUE);
-  Float_t cx3;
-  Int_t nbytes3 = STLhit->MakeTree(1,nevents,1,99,cx3);
-  timer.Stop();
-  Double_t rt3w = timer.RealTime();
-  Double_t cp3w = timer.CpuTime();
-  cptot += cp3w;
-  printf("4 vector   w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3w,cp3w,nbytes3,cx3);
-  timer.Start(kTRUE);
-  STLhit->ReadTree();
-  timer.Stop();
-  Double_t rt3r = timer.RealTime();
-  Double_t cp3r = timer.CpuTime();
-  cptot += cp3r;
-  printf("5 vector   r: RT=%6.2f s  Cpu=%6.2f s\n",rt3r,cp3r);
-  delete STLhit;
-
-  // STL list
-  timer.Start();
-  TSTLhitList *STLhit_list = new TSTLhitList(nhits);
-  STLhit_list->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1L = timer.RealTime();
-  Double_t cp1L = timer.CpuTime();
-  cptot += cp1L;
-  printf("1 list      : RT=%6.2f s  Cpu=%6.2f s\n",rt1L,cp1L);
-  timer.Start(kTRUE);
-  Int_t nbytes1L = STLhit_list->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wL = timer.RealTime();
-  Double_t cp2wL = timer.CpuTime();
-  cptot += cp2wL;
-  printf("2 list     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wL,cp2wL,nbytes1L,cx);
-  timer.Start(kTRUE);
-  STLhit_list->ReadTree();
-  timer.Stop();
-  Double_t rt2rL = timer.RealTime();
-  Double_t cp2rL = timer.CpuTime();
-  cptot += cp2rL;
-  printf("3 list     r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rL,cp2rL);
-  timer.Start(kTRUE);
-  Float_t cx3L;
-  Int_t nbytes3L = STLhit_list->MakeTree(1,nevents,1,99,cx3L);
-  timer.Stop();
-  Double_t rt3wL = timer.RealTime();
-  Double_t cp3wL = timer.CpuTime();
-  cptot += cp3wL;
-  printf("4 list     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wL,cp3wL,nbytes3L,cx3L);
-  timer.Start(kTRUE);
-  STLhit_list->ReadTree();
-  timer.Stop();
-  Double_t rt3rL = timer.RealTime();
-  Double_t cp3rL = timer.CpuTime();
-  cptot += cp3rL;
-  printf("5 list     r: RT=%6.2f s  Cpu=%6.2f s\n",rt3rL,cp3rL);
-  delete STLhit_list;
-
-  // STL DEQUE
-  timer.Start();
-  TSTLhitDeque *STLhit_deque = new TSTLhitDeque(nhits);
-  STLhit_deque->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1D = timer.RealTime();
-  Double_t cp1D = timer.CpuTime();
-  cptot += cp1D;
-  printf("1 deque     : RT=%6.2f s  Cpu=%6.2f s\n",rt1D,cp1D);
-  timer.Start(kTRUE);
-  Int_t nbytes1D = STLhit_deque->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wD = timer.RealTime();
-  Double_t cp2wD = timer.CpuTime();
-  cptot += cp2wD;
-  printf("2 deque    w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wD,cp2wD,nbytes1D,cx);
-  timer.Start(kTRUE);
-  STLhit_deque->ReadTree();
-  timer.Stop();
-  Double_t rt2rD = timer.RealTime();
-  Double_t cp2rD = timer.CpuTime();
-  cptot += cp2rD;
-  printf("3 deque    r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rD,cp2rD);
-  timer.Start(kTRUE);
-  Float_t cx3D;
-  Int_t nbytes3D = STLhit_deque->MakeTree(1,nevents,1,99,cx3D);
-  timer.Stop();
-  Double_t rt3wD = timer.RealTime();
-  Double_t cp3wD = timer.CpuTime();
-  cptot += cp3wD;
-  printf("4 deque    w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wD,cp3wD,nbytes3D,cx3D);
-  timer.Start(kTRUE);
-  STLhit_deque->ReadTree();
-  timer.Stop();
-  Double_t rt3rD = timer.RealTime();
-  Double_t cp3rD = timer.CpuTime();
-  cptot += cp3rD;
-  printf("5 deque    r: RT=%6.2f s  Cpu=%6.2f s\n",rt3rD,cp3rD);
-  delete STLhit_deque;
-
-  // STL SET
-  timer.Start();
-  TSTLhitSet *STLhit_set = new TSTLhitSet(nhits);
-  STLhit_set->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1S = timer.RealTime();
-  Double_t cp1S = timer.CpuTime();
-  cptot += cp1S;
-  printf("1 set       : RT=%6.2f s  Cpu=%6.2f s\n",rt1S,cp1S);
-  timer.Start(kTRUE);
-  Int_t nbytes1S = STLhit_set->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wS = timer.RealTime();
-  Double_t cp2wS = timer.CpuTime();
-  cptot += cp2wS;
-  printf("2 set      w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wS,cp2wS,nbytes1S,cx);
-  timer.Start(kTRUE);
-  STLhit_set->ReadTree();
-  timer.Stop();
-  Double_t rt2rS = timer.RealTime();
-  Double_t cp2rS = timer.CpuTime();
-  cptot += cp2rS;
-  printf("3 set      r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rS,cp2rS);
-  timer.Start(kTRUE);
-  Float_t cx3S;
-  Int_t nbytes3S = STLhit_set->MakeTree(1,nevents,1,99,cx3S);
-  timer.Stop();
-  Double_t rt3wS = timer.RealTime();
-  Double_t cp3wS = timer.CpuTime();
-  cptot += cp3wS;
-  printf("4 set      w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wS,cp3wS,nbytes3S,cx3S);
-  timer.Start(kTRUE);
-  STLhit_set->ReadTree();
-  timer.Stop();
-  Double_t rt3rS = timer.RealTime();
-  Double_t cp3rS = timer.CpuTime();
-  cptot += cp3rS;
-  printf("5 set      r: RT=%6.2f s  Cpu=%6.2f s\n",rt3rS,cp3rS);
-  delete STLhit_set;
-
-  // STL MULTI SET
-  timer.Start();
-  TSTLhitMultiset *STLhit_multiset = new TSTLhitMultiset(nhits);
-  STLhit_multiset->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1M = timer.RealTime();
-  Double_t cp1M = timer.CpuTime();
-  cptot += cp1M;
-  printf("1 multiset  : RT=%6.2f s  Cpu=%6.2f s\n",rt1M,cp1M);
-  timer.Start(kTRUE);
-  Int_t nbytes1M = STLhit_multiset->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wM = timer.RealTime();
-  Double_t cp2wM = timer.CpuTime();
-  cptot += cp2wM;
-  printf("2 multiset w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wM,cp2wM,nbytes1M,cx);
-  timer.Start(kTRUE);
-  STLhit_multiset->ReadTree();
-  timer.Stop();
-  Double_t rt2rM = timer.RealTime();
-  Double_t cp2rM = timer.CpuTime();
-  cptot += cp2rM;
-  printf("3 multiset r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rM,cp2rM);
-  timer.Start(kTRUE);
-  Float_t cx3M;
-  Int_t nbytes3M = STLhit_multiset->MakeTree(1,nevents,1,99,cx3M);
-  timer.Stop();
-  Double_t rt3wM = timer.RealTime();
-  Double_t cp3wM = timer.CpuTime();
-  cptot += cp3wM;
-  printf("4 multiset w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wM,cp3wM,nbytes3M,cx3M);
-  timer.Start(kTRUE);
-  STLhit_multiset->ReadTree();
-  timer.Stop();
-  Double_t rt3rM = timer.RealTime();
-  Double_t cp3rM = timer.CpuTime();
-  cptot += cp3rM;
-  printf("5 multiset r: RT=%6.2f s  Cpu=%6.2f s\n",rt3rM,cp3rM);
-  delete STLhit_multiset;
-
-  // STL map
-  timer.Start();
-  TSTLhitMap *STLhit_map = new TSTLhitMap(nhits);
-  STLhit_map->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1MAP = timer.RealTime();
-  Double_t cp1MAP = timer.CpuTime();
-  cptot += cp1MAP;
-  printf("1 map       : RT=%6.2f s  Cpu=%6.2f s\n",rt1MAP,cp1MAP);
-  timer.Start(kTRUE);
-  Int_t nbytes1MAP = STLhit_map->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wMAP = timer.RealTime();
-  Double_t cp2wMAP = timer.CpuTime();
-  cptot += cp2wMAP;
-  printf("2 map      w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wMAP,cp2wMAP,nbytes1MAP,cx);
-  timer.Start(kTRUE);
-  STLhit_map->ReadTree();
-  timer.Stop();
-  Double_t rt2rMAP = timer.RealTime();
-  Double_t cp2rMAP = timer.CpuTime();
-  cptot += cp2rMAP;
-  printf("3 map      r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rMAP,cp2rMAP);
-  timer.Start(kTRUE);
-  Float_t cx3MAP;
-  Int_t nbytes3MAP = STLhit_map->MakeTree(1,nevents,1,99,cx3MAP);
-  timer.Stop();
-  Double_t rt3wMAP = timer.RealTime();
-  Double_t cp3wMAP = timer.CpuTime();
-  cptot += cp3wMAP;
-  printf("4 map      w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wMAP,cp3wMAP,nbytes3MAP,cx3MAP);
-  timer.Start(kTRUE);
-  STLhit_map->ReadTree();
-  timer.Stop();
-  Double_t rt3rMAP = timer.RealTime();
-  Double_t cp3rMAP = timer.CpuTime();
-  cptot += cp3rMAP;
-  printf("5 map      r: RT=%6.2f s  Cpu=%6.2f s\n",rt3rMAP,cp3rMAP);
-  delete STLhit_map;
-
-  // STL multimap
-  timer.Start();
-  TSTLhitMultiMap *STLhit_multimap = new TSTLhitMultiMap(nhits);
-  STLhit_multimap->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1MMAP = timer.RealTime();
-  Double_t cp1MMAP = timer.CpuTime();
-  cptot += cp1MMAP;
-  printf("1 multimap  : RT=%6.2f s  Cpu=%6.2f s\n",rt1MMAP,cp1MMAP);
-  timer.Start(kTRUE);
-  Int_t nbytes1MMAP = STLhit_multimap->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wMMAP = timer.RealTime();
-  Double_t cp2wMMAP = timer.CpuTime();
-  cptot += cp2wMMAP;
-  printf("2 multimap w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wMMAP,cp2wMMAP,nbytes1MMAP,cx);
-  timer.Start(kTRUE);
-  STLhit_multimap->ReadTree();
-  timer.Stop();
-  Double_t rt2rMMAP = timer.RealTime();
-  Double_t cp2rMMAP = timer.CpuTime();
-  cptot += cp2rMMAP;
-  printf("3 multimap r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rMMAP,cp2rMMAP);
-  timer.Start(kTRUE);
-  Float_t cx3MMAP;
-  Int_t nbytes3MMAP = STLhit_multimap->MakeTree(1,nevents,1,99,cx3MMAP);
-  timer.Stop();
-  Double_t rt3wMMAP = timer.RealTime();
-  Double_t cp3wMMAP = timer.CpuTime();
-  cptot += cp3wMMAP;
-  printf("4 multimap w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wMMAP,cp3wMMAP,nbytes3MMAP,cx3MMAP);
-  timer.Start(kTRUE);
-  STLhit_multimap->ReadTree();
-  timer.Stop();
-  Double_t rt3rMMAP = timer.RealTime();
-  Double_t cp3rMMAP = timer.CpuTime();
-  cptot += cp3rMMAP;
-  printf("5 multimap r: RT=%6.2f s  Cpu=%6.2f s\n",rt3rMMAP,cp3rMMAP);
-  delete STLhit_multimap;
-
-  //__________________________________________________________________________
-  //
-  //testing STL vector of pointers to THit
-  timer.Start();
-  TSTLhitStar *STLhitStar = new TSTLhitStar(nhits);
-  STLhitStar->MakeTree(0,nevents,0,25500,cx);
-  timer.Stop();
-  Double_t rt4 = timer.RealTime();
-  Double_t cp4 = timer.CpuTime();
-  cptot += cp4;
-  printf("1 vector*   : RT=%6.2f s  Cpu=%6.2f s\n",rt4,cp4);
-  timer.Start(kTRUE);
-  Int_t nbytes5 = STLhitStar->MakeTree(1,nevents,0,25599,cx);
-  timer.Stop();
-  Double_t rt5w = timer.RealTime();
-  Double_t cp5w = timer.CpuTime();
-  cptot += cp5w;
-  printf("2 vector*  w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt5w,cp5w,nbytes5,cx);
-  timer.Start(kTRUE);
-  STLhitStar->ReadTree();
-  timer.Stop();
-  Double_t rt5r = timer.RealTime();
-  Double_t cp5r = timer.CpuTime();
-  cptot += cp5r;
-  printf("3 vector*  r: RT=%6.2f s  Cpu=%6.2f s\n",rt5r,cp5r);
-  timer.Start(kTRUE);
-  Float_t cx6;
-  Int_t nbytes6 = STLhitStar->MakeTree(1,nevents,1,25599,cx6);
-  timer.Stop();
-  Double_t rt6w = timer.RealTime();
-  Double_t cp6w = timer.CpuTime();
-  cptot += cp6w;
-  printf("4 vector*  w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt6w,cp6w,nbytes6,cx6);
-  timer.Start(kTRUE);
-  STLhitStar->ReadTree();
-  timer.Stop();
-  Double_t rt6r = timer.RealTime();
-  Double_t cp6r = timer.CpuTime();
-  cptot += cp6r;
-  printf("5 vector*  r: RT=%6.2f s  Cpu=%6.2f s\n",rt6r,cp6r);
-  delete STLhitStar;
-
-  // STL list*
-  timer.Start();
-  TSTLhitStarList *STLhit_liststar = new TSTLhitStarList(nhits);
-  STLhit_liststar->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1LS = timer.RealTime();
-  Double_t cp1LS = timer.CpuTime();
-  cptot += cp1LS;
-  printf("1 list*     : RT=%6.2f s  Cpu=%6.2f s\n",rt1LS,cp1LS);
-  timer.Start(kTRUE);
-  Int_t nbytes1LS = STLhit_liststar->MakeTree(1,nevents,0,25599,cx);
-  timer.Stop();
-  Double_t rt2wLS = timer.RealTime();
-  Double_t cp2wLS = timer.CpuTime();
-  cptot += cp2wLS;
-  printf("2 list*    w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wLS,cp2wLS,nbytes1LS,cx);
-  timer.Start(kTRUE);
-  STLhit_liststar->ReadTree();
-  timer.Stop();
-  Double_t rt2rLS = timer.RealTime();
-  Double_t cp2rLS = timer.CpuTime();
-  cptot += cp2rLS;
-  printf("3 list*    r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rLS,cp2rLS);
-  timer.Start(kTRUE);
-  Float_t cx3LS;
-  Int_t nbytes3LS = STLhit_liststar->MakeTree(1,nevents,1,25599,cx3LS);
-  timer.Stop();
-  Double_t rt3wLS = timer.RealTime();
-  Double_t cp3wLS = timer.CpuTime();
-  cptot += cp3wLS;
-  printf("4 list*    w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wLS,cp3wLS,nbytes3LS,cx3LS);
-  timer.Start(kTRUE);
-  STLhit_liststar->ReadTree();
-  timer.Stop();
-  Double_t rt3rLS = timer.RealTime();
-  Double_t cp3rLS = timer.CpuTime();
-  cptot += cp3rLS;
-  printf("5 list*    r: RT=%6.2f s  Cpu=%6.2f s\n",rt3rLS,cp3rLS);
-  delete STLhit_liststar;
-
-  // STL DEQUE*
-  timer.Start();
-  TSTLhitStarDeque *STLhit_dequestar = new TSTLhitStarDeque(nhits);
-  STLhit_dequestar->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1DS = timer.RealTime();
-  Double_t cp1DS = timer.CpuTime();
-  cptot += cp1DS;
-  printf("1 deque*    : RT=%6.2f s  Cpu=%6.2f s\n",rt1DS,cp1DS);
-  timer.Start(kTRUE);
-  Int_t nbytes1DS = STLhit_dequestar->MakeTree(1,nevents,0,25599,cx);
-  timer.Stop();
-  Double_t rt2wDS = timer.RealTime();
-  Double_t cp2wDS = timer.CpuTime();
-  cptot += cp2wDS;
-  printf("2 deque*   w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wDS,cp2wDS,nbytes1DS,cx);
-  timer.Start(kTRUE);
-  STLhit_dequestar->ReadTree();
-  timer.Stop();
-  Double_t rt2rDS = timer.RealTime();
-  Double_t cp2rDS = timer.CpuTime();
-  cptot += cp2rDS;
-  printf("3 deque*   r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rDS,cp2rDS);
-  timer.Start(kTRUE);
-  Float_t cx3DS;
-  Int_t nbytes3DS = STLhit_dequestar->MakeTree(1,nevents,1,25599,cx3DS);
-  timer.Stop();
-  Double_t rt3wDS = timer.RealTime();
-  Double_t cp3wDS = timer.CpuTime();
-  cptot += cp3wDS;
-  printf("4 deque*   w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wDS,cp3wDS,nbytes3DS,cx3DS);
-  timer.Start(kTRUE);
-  STLhit_dequestar->ReadTree();
-  timer.Stop();
-  Double_t rt3rDS = timer.RealTime();
-  Double_t cp3rDS = timer.CpuTime();
-  cptot += cp3rDS;
-  printf("5 deque*   r: RT=%6.2f s  Cpu=%6.2f s\n",rt3rDS,cp3rDS);
-  delete STLhit_dequestar;
-
-  // STL SET*
-  timer.Start();
-  TSTLhitStarSet *STLhit_setstar = new TSTLhitStarSet(nhits);
-  STLhit_setstar->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1SS = timer.RealTime();
-  Double_t cp1SS = timer.CpuTime();
-  cptot += cp1SS;
-  printf("1 set*      : RT=%6.2f s  Cpu=%6.2f s\n",rt1SS,cp1SS);
-  timer.Start(kTRUE);
-  Int_t nbytes1SS = STLhit_setstar->MakeTree(1,nevents,0,25599,cx);
-  timer.Stop();
-  Double_t rt2wSS = timer.RealTime();
-  Double_t cp2wSS = timer.CpuTime();
-  cptot += cp2wSS;
-  printf("2 set*     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wSS,cp2wSS,nbytes1SS,cx);
-  timer.Start(kTRUE);
-  STLhit_setstar->ReadTree();
-  timer.Stop();
-  Double_t rt2rSS = timer.RealTime();
-  Double_t cp2rSS = timer.CpuTime();
-  cptot += cp2rSS;
-  printf("3 set*     r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rSS,cp2rSS);
-  timer.Start(kTRUE);
-  Float_t cx3SS;
-  Int_t nbytes3SS = STLhit_setstar->MakeTree(1,nevents,1,25599,cx3SS);
-  timer.Stop();
-  Double_t rt3wSS = timer.RealTime();
-  Double_t cp3wSS = timer.CpuTime();
-  cptot += cp3wSS;
-  printf("4 set*     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wSS,cp3wSS,nbytes3SS,cx3SS);
-  timer.Start(kTRUE);
-  STLhit_setstar->ReadTree();
-  timer.Stop();
-  Double_t rt3rSS = timer.RealTime();
-  Double_t cp3rSS = timer.CpuTime();
-  cptot += cp3rSS;
-  printf("5 set*      : RT=%6.2f s  Cpu=%6.2f s\n",rt3rSS,cp3rSS);
-  delete STLhit_setstar;
-
-  // STL MULTI SET*
-  timer.Start();
-  TSTLhitStarMultiSet *STLhit_multisetstar = new TSTLhitStarMultiSet(nhits);
-  STLhit_multisetstar->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1MS = timer.RealTime();
-  Double_t cp1MS = timer.CpuTime();
-  cptot += cp1MS;
-  printf("1 multiset* : RT=%6.2f s  Cpu=%6.2f s\n",rt1MS,cp1MS);
-  timer.Start(kTRUE);
-  Int_t nbytes1MS = STLhit_multisetstar->MakeTree(1,nevents,0,25599,cx);
-  timer.Stop();
-  Double_t rt2wMS = timer.RealTime();
-  Double_t cp2wMS = timer.CpuTime();
-  cptot += cp2wMS;
-  printf("2 multiset*w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wMS,cp2wMS,nbytes1MS,cx);
-  timer.Start(kTRUE);
-  STLhit_multisetstar->ReadTree();
-  timer.Stop();
-  Double_t rt2rMS = timer.RealTime();
-  Double_t cp2rMS = timer.CpuTime();
-  cptot += cp2rMS;
-  printf("3 multiset*r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rMS,cp2rMS);
-  timer.Start(kTRUE);
-  Float_t cx3MS;
-  Int_t nbytes3MS = STLhit_multisetstar->MakeTree(1,nevents,1,25599,cx3MS);
-  timer.Stop();
-  Double_t cp3wMS = timer.CpuTime();
-  cptot += cp3wMS;
-  printf("4 multiset*w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wDS,cp3wDS,nbytes3DS,cx3DS);
-  timer.Start(kTRUE);
-  STLhit_multisetstar->ReadTree();
-  timer.Stop();
-  Double_t rt3rMS = timer.RealTime();
-  Double_t cp3rMS = timer.CpuTime();
-  cptot += cp3rMS;
-  printf("5 multiset* : RT=%6.2f s  Cpu=%6.2f s\n",rt3rMS,cp3rMS);
-  delete STLhit_multisetstar;
-
-  // STL MAP*
-  timer.Start();
-  TSTLhitStarMap *STLhit_mapstar = new TSTLhitStarMap(nhits);
-  STLhit_mapstar->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1MAPS = timer.RealTime();
-  Double_t cp1MAPS = timer.CpuTime();
-  cptot += cp1MAPS;
-  printf("1 map*      : RT=%6.2f s  Cpu=%6.2f s\n",rt1MAPS,cp1MAPS);
-  timer.Start(kTRUE);
-  Int_t nbytes1MAPS = STLhit_mapstar->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wMAPS = timer.RealTime();
-  Double_t cp2wMAPS = timer.CpuTime();
-  cptot += cp2wMAPS;
-  printf("2 map*     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wMAPS,cp2wMAPS,nbytes1MAPS,cx);
-  timer.Start(kTRUE);
-  STLhit_mapstar->ReadTree();
-  timer.Stop();
-  Double_t rt2rMAPS = timer.RealTime();
-  Double_t cp2rMAPS = timer.CpuTime();
-  cptot += cp2rMAPS;
-  printf("3 map*     r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rMAPS,cp2rMAPS);
-  timer.Start(kTRUE);
-  Float_t cx3MAPS;
-  Int_t nbytes3MAPS = STLhit_mapstar->MakeTree(1,nevents,1,99,cx3MAPS);
-  timer.Stop();
-  Double_t rt3wMAPS = timer.RealTime();
-  Double_t cp3wMAPS = timer.CpuTime();
-  cptot += cp3wMAPS;
-  printf("4 map*     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wMAPS,cp3wMAPS,nbytes3MAPS,cx3MAPS);
-  timer.Start(kTRUE);
-  STLhit_mapstar->ReadTree();
-  timer.Stop();
-  Double_t rt3rMAPS = timer.RealTime();
-  Double_t cp3rMAPS = timer.CpuTime();
-  cptot += cp3rMAPS;
-  printf("5 map*      : RT=%6.2f s  Cpu=%6.2f s\n",rt3rMAPS,cp3rMAPS);
-  delete STLhit_mapstar;
-
-  // STL MULTIMAP*
-  timer.Start();
-  TSTLhitStarMultiMap *STLhit_multimapstar = new TSTLhitStarMultiMap(nhits);
-  STLhit_multimapstar->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1MMAPS = timer.RealTime();
-  Double_t cp1MMAPS = timer.CpuTime();
-  cptot += cp1MMAPS;
-  printf("1 multimap* : RT=%6.2f s  Cpu=%6.2f s\n",rt1MMAPS,cp1MMAPS);
-  timer.Start(kTRUE);
-  Int_t nbytes1MMAPS = STLhit_multimapstar->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wMMAPS = timer.RealTime();
-  Double_t cp2wMMAPS = timer.CpuTime();
-  cptot += cp2wMMAPS;
-  printf("2 multimap*w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wMMAPS,cp2wMMAPS,nbytes1MMAPS,cx);
-  timer.Start(kTRUE);
-  STLhit_multimapstar->ReadTree();
-  timer.Stop();
-  Double_t rt2rMMAPS = timer.RealTime();
-  Double_t cp2rMMAPS = timer.CpuTime();
-  cptot += cp2rMMAPS;
-  printf("3 multimap*r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rMMAPS,cp2rMMAPS);
-  timer.Start(kTRUE);
-  Float_t cx3MMAPS;
-  Int_t nbytes3MMAPS = STLhit_multimapstar->MakeTree(1,nevents,1,99,cx3MMAPS);
-  timer.Stop();
-  Double_t cp3wMMAPS = timer.CpuTime();
-  cptot += cp3wMMAPS;
-  printf("4 multimap*w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wMAPS,cp3wMAPS,nbytes3MAPS,cx3MAPS);
-  timer.Start(kTRUE);
-  STLhit_multimapstar->ReadTree();
-  timer.Stop();
-  Double_t rt3rMMAPS = timer.RealTime();
-  Double_t cp3rMMAPS = timer.CpuTime();
-  cptot += cp3rMMAPS;
-  printf("5 multimap* : RT=%6.2f s  Cpu=%6.2f s\n",rt3rMMAPS,cp3rMMAPS);
-  delete STLhit_multimapstar;
-
-  //__________________________________________________________________________
-  //
-  //testing STL vector of pointers to THit (NOSPLIT)
-  timer.Start();
-  STLhitStar = new TSTLhitStar(nhits);
-  STLhitStar->MakeTree(0,nevents,0,25500,cx);
-  timer.Stop();
-  Double_t rt4NS = timer.RealTime();
-  Double_t cp4NS = timer.CpuTime();
-  cptot += cp4NS;
-  printf("1 vector*NS   : RT=%6.2f s  Cpu=%6.2f s\n",rt4NS,cp4NS);
-  timer.Start(kTRUE);
-  Int_t nbytes5NS = STLhitStar->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt5wNS = timer.RealTime();
-  Double_t cp5wNS = timer.CpuTime();
-  cptot += cp5wNS;
-  printf("2 vector*NS  w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt5wNS,cp5wNS,nbytes5NS,cx);
-  timer.Start(kTRUE);
-  STLhitStar->ReadTree();
-  timer.Stop();
-  Double_t rt5rNS = timer.RealTime();
-  Double_t cp5rNS = timer.CpuTime();
-  cptot += cp5rNS;
-  printf("3 vector*NS  r: RT=%6.2f s  Cpu=%6.2f s\n",rt5rNS,cp5rNS);
-  timer.Start(kTRUE);
-  Float_t cx6NS;
-  Int_t nbytes6NS = STLhitStar->MakeTree(1,nevents,1,99,cx6NS);
-  timer.Stop();
-  Double_t rt6wNS = timer.RealTime();
-  Double_t cp6wNS = timer.CpuTime();
-  cptot += cp6wNS;
-  printf("4 vector*NS  w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt6wNS,cp6wNS,nbytes6NS,cx6NS);
-  timer.Start(kTRUE);
-  STLhitStar->ReadTree();
-  timer.Stop();
-  Double_t rt6rNS = timer.RealTime();
-  Double_t cp6rNS = timer.CpuTime();
-  cptot += cp6r;
-  printf("5 vector*  r: RT=%6.2f s  Cpu=%6.2f s\n",rt6rNS,cp6rNS);
-  delete STLhitStar;
-
-  // STL list* (NOSPLIT)
-  timer.Start();
-  STLhit_liststar = new TSTLhitStarList(nhits);
-  STLhit_liststar->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1LSNS = timer.RealTime();
-  Double_t cp1LSNS = timer.CpuTime();
-  cptot += cp1LSNS;
-  printf("1 list*NS     : RT=%6.2f s  Cpu=%6.2f s\n",rt1LSNS,cp1LSNS);
-  timer.Start(kTRUE);
-  Int_t nbytes1LSNS = STLhit_liststar->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wLSNS = timer.RealTime();
-  Double_t cp2wLSNS = timer.CpuTime();
-  cptot += cp2wLSNS;
-  printf("2 list*NS    w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wLSNS,cp2wLSNS,nbytes1LSNS,cx);
-  timer.Start(kTRUE);
-  STLhit_liststar->ReadTree();
-  timer.Stop();
-  Double_t rt2rLSNS = timer.RealTime();
-  Double_t cp2rLSNS = timer.CpuTime();
-  cptot += cp2rLSNS;
-  printf("3 list*NS    r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rLSNS,cp2rLSNS);
-  timer.Start(kTRUE);
-  Float_t cx3LSNS;
-  Int_t nbytes3LSNS = STLhit_liststar->MakeTree(1,nevents,1,99,cx3LSNS);
-  timer.Stop();
-  Double_t rt3wLSNS = timer.RealTime();
-  Double_t cp3wLSNS = timer.CpuTime();
-  cptot += cp3wLSNS;
-  printf("4 list*NS    w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wLSNS,cp3wLSNS,nbytes3LSNS,cx3LSNS);
-  timer.Start(kTRUE);
-  STLhit_liststar->ReadTree();
-  timer.Stop();
-  Double_t rt3rLSNS = timer.RealTime();
-  Double_t cp3rLSNS = timer.CpuTime();
-  cptot += cp3rLSNS;
-  printf("5 list*NS    r: RT=%6.2f s  Cpu=%6.2f s\n",rt3rLSNS,cp3rLSNS);
-  delete STLhit_liststar;
-
-  // STL DEQUE* (NOSPLIT)
-  timer.Start();
-  STLhit_dequestar = new TSTLhitStarDeque(nhits);
-  STLhit_dequestar->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1DSNS = timer.RealTime();
-  Double_t cp1DSNS = timer.CpuTime();
-  cptot += cp1DSNS;
-  printf("1 deque*NS    : RT=%6.2f s  Cpu=%6.2f s\n",rt1DSNS,cp1DSNS);
-  timer.Start(kTRUE);
-  Int_t nbytes1DSNS = STLhit_dequestar->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wDSNS = timer.RealTime();
-  Double_t cp2wDSNS = timer.CpuTime();
-  cptot += cp2wDSNS;
-  printf("2 deque*NS   w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wDSNS,cp2wDSNS,nbytes1DSNS,cx);
-  timer.Start(kTRUE);
-  STLhit_dequestar->ReadTree();
-  timer.Stop();
-  Double_t rt2rDSNS = timer.RealTime();
-  Double_t cp2rDSNS = timer.CpuTime();
-  cptot += cp2rDSNS;
-  printf("3 deque*NS   r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rDSNS,cp2rDSNS);
-  timer.Start(kTRUE);
-  Float_t cx3DSNS;
-  Int_t nbytes3DSNS = STLhit_dequestar->MakeTree(1,nevents,1,99,cx3DSNS);
-  timer.Stop();
-  Double_t rt3wDSNS = timer.RealTime();
-  Double_t cp3wDSNS = timer.CpuTime();
-  cptot += cp3wDSNS;
-  printf("4 deque*NS   w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wDSNS,cp3wDSNS,nbytes3DSNS,cx3DSNS);
-  timer.Start(kTRUE);
-  STLhit_dequestar->ReadTree();
-  timer.Stop();
-  Double_t rt3rDSNS = timer.RealTime();
-  Double_t cp3rDSNS = timer.CpuTime();
-  cptot += cp3rDSNS;
-  printf("5 deque*NS   r: RT=%6.2f s  Cpu=%6.2f s\n",rt3rDSNS,cp3rDSNS);
-  delete STLhit_dequestar;
-
-  // STL SET* (NOSPLIT)
-  timer.Start();
-  STLhit_setstar = new TSTLhitStarSet(nhits);
-  STLhit_setstar->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1SSNS = timer.RealTime();
-  Double_t cp1SSNS = timer.CpuTime();
-  cptot += cp1SSNS;
-  printf("1 set*NS      : RT=%6.2f s  Cpu=%6.2f s\n",rt1SSNS,cp1SSNS);
-  timer.Start(kTRUE);
-  Int_t nbytes1SSNS = STLhit_setstar->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wSSNS = timer.RealTime();
-  Double_t cp2wSSNS = timer.CpuTime();
-  cptot += cp2wSSNS;
-  printf("2 set*NS     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wSSNS,cp2wSSNS,nbytes1SSNS,cx);
-  timer.Start(kTRUE);
-  STLhit_setstar->ReadTree();
-  timer.Stop();
-  Double_t rt2rSSNS = timer.RealTime();
-  Double_t cp2rSSNS = timer.CpuTime();
-  cptot += cp2rSSNS;
-  printf("3 set*NS     r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rSSNS,cp2rSSNS);
-  timer.Start(kTRUE);
-  Float_t cx3SSNS;
-  Int_t nbytes3SSNS = STLhit_setstar->MakeTree(1,nevents,1,99,cx3SSNS);
-  timer.Stop();
-  Double_t cp3wSSNS = timer.CpuTime();
-  cptot += cp3wSSNS;
-  printf("4 set*NS     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wDSNS,cp3wSSNS,nbytes3SSNS,cx3SSNS);
-  timer.Start(kTRUE);
-  STLhit_setstar->ReadTree();
-  timer.Stop();
-  Double_t rt3rSSNS = timer.RealTime();
-  Double_t cp3rSSNS = timer.CpuTime();
-  cptot += cp3rSSNS;
-  printf("5 set*      : RT=%6.2f s  Cpu=%6.2f s\n",rt3rSSNS,cp3rSSNS);
-  delete STLhit_setstar;
-
-  // STL MULTI SET* (NOSPLIT)
-  timer.Start();
-  STLhit_multisetstar = new TSTLhitStarMultiSet(nhits);
-  STLhit_multisetstar->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt1MSNS = timer.RealTime();
-  Double_t cp1MSNS = timer.CpuTime();
-  cptot += cp1MSNS;
-  printf("1 multiset*NS : RT=%6.2f s  Cpu=%6.2f s\n",rt1MSNS,cp1MSNS);
-  timer.Start(kTRUE);
-  Int_t nbytes1MSNS = STLhit_multisetstar->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt2wMSNS = timer.RealTime();
-  Double_t cp2wMSNS = timer.CpuTime();
-  cptot += cp2wMSNS;
-  printf("2 multiset*NSw: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt2wMSNS,cp2wMSNS,nbytes1MSNS,cx);
-  timer.Start(kTRUE);
-  STLhit_multisetstar->ReadTree();
-  timer.Stop();
-  Double_t rt2rMSNS = timer.RealTime();
-  Double_t cp2rMSNS = timer.CpuTime();
-  cptot += cp2rMSNS;
-  printf("3 multiset*NSr: RT=%6.2f s  Cpu=%6.2f s\n",rt2rMSNS,cp2rMSNS);
-  timer.Start(kTRUE);
-  Float_t cx3MSNS;
-  Int_t nbytes3MSNS = STLhit_multisetstar->MakeTree(1,nevents,1,99,cx3MSNS);
-  timer.Stop();
-  Double_t rt3wMSNS = timer.RealTime();
-  Double_t cp3wMSNS = timer.CpuTime();
-  cptot += cp3wMSNS;
-  printf("4 multiset*NSw: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wMSNS,cp3wMSNS,nbytes3MSNS,cx3MSNS);
-  timer.Start(kTRUE);
-  STLhit_multisetstar->ReadTree();
-  timer.Stop();
-  Double_t rt3rMSNS = timer.RealTime();
-  Double_t cp3rMSNS = timer.CpuTime();
-  cptot += cp3rMSNS;
-  printf("5 multiset*NS : RT=%6.2f s  Cpu=%6.2f s\n",rt3rMSNS,cp3rMSNS);
-  delete STLhit_multisetstar;
+   bool writereferences = false;   
+   bool memberwise = false;
+   
+   // by default stream objects objectwise
+   // if program option "-m" is specified, stream memberwise
+   for(int a=1; a<argc; ++a) {
+      if (strstr(argv[a],"-m")) {
+         TVirtualStreamerInfo::SetStreamMemberWise();
+         printf("bench option -m specified. Streaming objects memberwise\n");
+         memberwise = true;
+      } else if (strstr(argv[a],"-r")) {
+         writereferences = true;
+      }
+   }
+   int nhits       = 1000;
+   int nevents     = 400;
+   
+   Double_t cptot = 0;
+   
+   //delete temp file used for the benchmark
+   gSystem->Unlink(Form("%s/bench.root",gSystem->TempDirectory()));
+   
+   vector<TBenchData> results;
+   vector<TBenchData> references;
+   references.push_back( TBenchData( "vector<THit> level=99", 0.42, 5.37, 39725046, 7394405, 0.96, 2.14, 0.32, 0.61 ) );
+   
+   /// STL VECTOR
+   runTest<TSTLhit>( "vector<THit> level=99", nevents, nhits, 99, cptot, results );
+   
+   /// STL VECTOR not split.
+   runTest<TSTLhit>( "vector<THit> level= 0", nevents, nhits,  0, cptot, results );
+   
+   /// STL VECTOR not split, member wise mode
+   memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
+   runTest<TSTLhit>( "vector<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
+   TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
+   
+   // STL list
+   runTest<TSTLhitList>( "list<THit> level=99", nevents, nhits, 99, cptot, results );
+   runTest<TSTLhitList>( "list<THit> level= 0", nevents, nhits,  0, cptot, results );
+   memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
+   runTest<TSTLhitList>( "list<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
+   TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
+   
+   // STL DEQUE
+   runTest<TSTLhitDeque>( "deque<THit> level=99", nevents, nhits, 99, cptot, results );
+   runTest<TSTLhitDeque>( "deque<THit> level= 0", nevents, nhits,  0, cptot, results );
+   memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
+   runTest<TSTLhitDeque>( "deque<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
+   TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
+   
+   // STL SET
+   runTest<TSTLhitSet>( "set<THit> level=99", nevents, nhits, 99, cptot, results );
+   runTest<TSTLhitSet>( "set<THit> level= 0", nevents, nhits,  0, cptot, results );
+   memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
+   runTest<TSTLhitSet>( "set<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
+   TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
+   
+   // STL MULTI SET
+   runTest<TSTLhitMultiset>( "multiset<THit> level=99", nevents, nhits, 99, cptot, results );
+   runTest<TSTLhitMultiset>( "multiset<THit> level= 0", nevents, nhits,  0, cptot, results );
+   memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
+   runTest<TSTLhitMultiset>( "multiset<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
+   TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
+   
+   // STL map
+   runTest<TSTLhitMap>( "map<THit> level=99", nevents, nhits, 99, cptot, results );
+   runTest<TSTLhitMap>( "map<THit> level= 0", nevents, nhits,  0, cptot, results );
+   memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
+   runTest<TSTLhitMap>( "map<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
+   TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
+   
+   // STL multimap
+   runTest<TSTLhitMultiMap>( "multimap<THit> level=99", nevents, nhits, 99, cptot, results );
+   runTest<TSTLhitMultiMap>( "multimap<THit> level= 0", nevents, nhits,  0, cptot, results );
+   memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
+   runTest<TSTLhitMultiMap>( "multimap<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
+   TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
+   
+   //__________________________________________________________________________
+   //
+   //testing STL vector of pointers to THit
+   runTest<TSTLhitStar>( "vector<THit*> level=25599", nevents, nhits, 25599, cptot, results );
+   
+   // STL list*
+   runTest<TSTLhitStarList>( "list<THit*> level=25599", nevents, nhits, 25599, cptot, results );
+   
+   // STL DEQUE*
+   runTest<TSTLhitStarDeque>( "deque<THit*> level=25599", nevents, nhits, 25599, cptot, results );
+   
+   // STL SET*
+   runTest<TSTLhitStarSet>( "set<THit*> level=25599", nevents, nhits, 25599, cptot, results );
   
-  //___________________________________________________________________________
-  //
-  //testing TClonesArray of TObjHit deriving from THit
-  timer.Start();
-  TCloneshit *Cloneshit = new TCloneshit(nhits);
-  Cloneshit->MakeTree(0,nevents,0,0,cx);
-  timer.Stop();
-  Double_t rt7 = timer.RealTime();
-  Double_t cp7 = timer.CpuTime();
-  cptot += cp7;
-  printf("1 Clones1   : RT=%6.2f s  Cpu=%6.2f s\n",rt7,cp7);
-  timer.Start(kTRUE);
-  Int_t nbytes8 = Cloneshit->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt8w = timer.RealTime();
-  Double_t cp8w = timer.CpuTime();
-  cptot += cp8w;
-  printf("2 Clones1  w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt8w,cp8w,nbytes8,cx);
-  timer.Start(kTRUE);
-  Cloneshit->ReadTree();
-  timer.Stop();
-  Double_t rt8r = timer.RealTime();
-  Double_t cp8r = timer.CpuTime();
-  cptot += cp8r;
-  printf("3 Clones1  r: RT=%6.2f s  Cpu=%6.2f s\n",rt8r,cp8r);
-  timer.Start(kTRUE);
-  Float_t cx9;
-  Int_t nbytes9 = Cloneshit->MakeTree(1,nevents,1,99,cx9);
-  timer.Stop();
-  Double_t rt9w = timer.RealTime();
-  Double_t cp9w = timer.CpuTime();
-  cptot += cp9w;
-  printf("4 Clones1  w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt9w,cp9w,nbytes9,cx9);
-  timer.Start(kTRUE);
-  Cloneshit->ReadTree();
-  timer.Stop();
-  Double_t rt9r = timer.RealTime();
-  Double_t cp9r = timer.CpuTime();
-  cptot += cp9r;
-  printf("5 Clones1  r: RT=%6.2f s  Cpu=%6.2f s\n",rt9r,cp9r);
-  timer.Start(kTRUE);
-  Int_t nbytes10 = Cloneshit->MakeTree(1,nevents,0,99,cx);
-  timer.Stop();
-  Double_t rt10w = timer.RealTime();
-  Double_t cp10w = timer.CpuTime();
-  cptot += cp10w;
-  printf("6 Clones2  w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt10w,cp10w,nbytes10,cx);
-  timer.Start(kTRUE);
-  Cloneshit->ReadTree();
-  timer.Stop();
-  Double_t rt10r = timer.RealTime();
-  Double_t cp10r = timer.CpuTime();
-  cptot += cp10r;
-  printf("7 Clones2  r: RT=%6.2f s  Cpu=%6.2f s\n",rt10r,cp10r);
-  timer.Start(kTRUE);
-  Float_t cx11;
-  Int_t nbytes11 = Cloneshit->MakeTree(1,nevents,1,99,cx11);
-  timer.Stop();
-  Double_t rt11w = timer.RealTime();
-  Double_t cp11w = timer.CpuTime();
-  cptot += cp11w;
-  printf("8 Clones2  w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt11w,cp11w,nbytes11,cx11);
-  timer.Start(kTRUE);
-  Cloneshit->ReadTree();
-  timer.Stop();
-  Double_t rt11r = timer.RealTime();
-  Double_t cp11r = timer.CpuTime();
-  cptot += cp11r;
-  printf("9 Clones2  r: RT=%6.2f s  Cpu=%6.2f s\n",rt11r,cp11r);
-  Double_t cpref = 104.43;
-  Double_t rootmarks = cpref*900/cptot;
+   // STL MULTI SET*
+   runTest<TSTLhitStarMultiSet>( "multiset<THit*> level=25599", nevents, nhits, 25599, cptot, results );
+   
+   // STL MAP*
+   runTest<TSTLhitStarMap>( "map<THit*> level=99", nevents, nhits, 99, cptot, results );
+   
+   // STL MULTIMAP*
+   runTest<TSTLhitStarMultiMap>( "multimap<THit*> level=99", nevents, nhits, 99, cptot, results );
+   
+   //__________________________________________________________________________
+   //
+   //testing STL vector of pointers to THit (NOSPLIT)
+   runTest<TSTLhitStar>( "vector<THit*> level=99 (NS)", nevents, nhits, 99, cptot, results );
+   
+   // STL list* (NOSPLIT)
+   runTest<TSTLhitStarList>( "list<THit*> level=99 (NS)", nevents, nhits, 99, cptot, results );
+   
+   // STL DEQUE* (NOSPLIT)
+   runTest<TSTLhitStarDeque>( "deque<THit*> level=99 (NS)", nevents, nhits, 99, cptot, results );
+   
+   // STL SET* (NOSPLIT)
+   runTest<TSTLhitStarSet>( "set<THit*> level=99 (NS)", nevents, nhits, 99, cptot, results );
+   
+   // STL MULTI SET* (NOSPLIT)
+   runTest<TSTLhitStarMultiSet>( "multiset<THit*> level=99 (NS)", nevents, nhits, 99, cptot, results );
+   
+   //___________________________________________________________________________
+   //
+   //testing TClonesArray of TObjHit deriving from THit
+   runTest<TCloneshit>( "TClonesArray(TObjHit) level= 0", nevents, nhits,  0, cptot, results );
+   runTest<TCloneshit>( "TClonesArray(TObjHit) level=99", nevents, nhits, 99, cptot, results );
 
-  //print all results
-  char line1[100], line2[100];
-  printf("\n");
-  printf("******************************************************************************\n");
-  sprintf(line1,"Comparing STL vector with TClonesArray: Root %-8s",gROOT->GetVersion());
-  printf("*       %s                *\n",line1);
-  Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
-  if (UNIX) {
-     FILE *fp = gSystem->OpenPipe("uname -a", "r");
-     char line[60];
-     fgets(line,60,fp); line[59] = 0;
-     sprintf(line2,"%s",line);
-     printf("*  %s\n",line);
-     gSystem->ClosePipe(fp);
-  } else {
-     const char *os = gSystem->Getenv("OS");
-     sprintf(line2,"Windows");
-     if (!os) printf("*  Windows 95\n");
-     else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
-  }
-  printf("*     Reference machine pcbrun.cern.ch  RedHat Linux 7.3                     *\n");
-  printf("*         (Pentium IV 2.4 Ghz 512 Mbytes RAM, IDE disk)                      *\n");
-  printf("*           (send your results to rootdev@root.cern.ch)                      *\n");
-  printf("******************************************************************************\n");
-  printf("* Time to fill the structures (seconds)   Reference      cx      Reference   *\n");
-  printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        0.42     %5.2f        5.37     *\n",cp1,cx3);
-  printf("* list<THit>                    %6.2f        0.36     %5.2f        5.37     *\n",cp1L,cx3L);
-  printf("* deque<THit>                   %6.2f        0.36     %5.2f        5.37     *\n",cp1D,cx3D);
-  printf("* set<THit>                     %6.2f        0.42     %5.2f        6.21     *\n",cp1S,cx3S);
-  printf("* multiset<THit>                %6.2f        0.40     %5.2f        6.21     *\n",cp1M,cx3M);
-  printf("* map<int,THit>                 %6.2f        0.47     %5.2f        5.26     *\n",cp1MAP,cx3MAP);
-  printf("* multimap<int,THit>            %6.2f        0.47     %5.2f        5.26     *\n",cp1MMAP,cx3MMAP);
-  printf("* vector<THit*>                 %6.2f        0.27     %5.2f        5.16     *\n",cp4,cx6);
-  printf("* list<THit*>                   %6.2f        0.32     %5.2f        5.16     *\n",cp1LS,cx3LS);
-  printf("* deque<THit*>                  %6.2f        0.34     %5.2f        5.16     *\n",cp1DS,cx3DS);
-  printf("* set<THit*>                    %6.2f        0.37     %5.2f        5.91     *\n",cp1SS,cx3SS);
-  printf("* multiset<THit*>               %6.2f        0.40     %5.2f        5.92     *\n",cp1MS,cx3MS);
-  printf("* map<int,THit*>                %6.2f        0.35     %5.2f        3.71     *\n",cp1MAPS,cx3MAPS);
-  printf("* multimap<int,THit*>           %6.2f        0.35     %5.2f        3.71     *\n",cp1MMAPS,cx3MMAPS);
-  printf("* vector<THit*>NS               %6.2f        0.28     %5.2f        3.72     *\n",cp4NS,cx6NS);
-  printf("* list<THit*>NS                 %6.2f        0.31     %5.2f        3.72     *\n",cp1LSNS,cx3LSNS);
-  printf("* deque<THit*>NS                %6.2f        0.31     %5.2f        3.72     *\n",cp1DSNS,cx3DSNS);
-  printf("* set<THit*>NS                  %6.2f        0.36     %5.2f        4.29     *\n",cp1SSNS,cx3SSNS);
-  printf("* multiset<THit*>NS             %6.2f        0.36     %5.2f        4.29     *\n",cp1MSNS,cx3MSNS);
-  printf("* TClonesArray(TObjHit)         %6.2f        0.24     %5.2f        5.37     *\n",cp7,cx9);
-  printf("* TClonesArray(TObjHit) split   %6.2f        0.24     %5.2f        5.37     *\n",cp7,cx11);
-  printf("******************************************************************************\n");
-  printf("* Size of file in bytes         comp 0    Reference    comp 1    Reference   *\n");
-  printf("******************************************************************************\n");
-  printf("* vector<THit>                  %8d   39725046   %8d   7394405     *\n",nbytes1,nbytes3);
-  printf("* list<THit>                    %8d   39725079   %8d   7394592     *\n",nbytes1L,nbytes3L);
-  printf("* deque<THit>                   %8d   39725085   %8d   7394695     *\n",nbytes1D,nbytes3D);
-  printf("* set<THit>                     %8d   39725072   %8d   6398121     *\n",nbytes1S,nbytes3S);
-  printf("* multiset<THit>                %8d   39725124   %8d   6397751     *\n",nbytes1M,nbytes3M);
-  printf("* map<int,THit>                 %8d   41336703   %8d   7863351     *\n",nbytes1MAP,nbytes3MAP);
-  printf("* multimap<int,THit>            %8d   41336751   %8d   7863179     *\n",nbytes1MMAP,nbytes3MMAP);
-  printf("* vector<THit*>                 %8d   40138858   %8d   7780199     *\n",nbytes5,nbytes6);
-  printf("* list<THit*>                   %8d   40138913   %8d   7780018     *\n",nbytes1LS,nbytes3LS);
-  printf("* deque<THit*>                  %8d   40138923   %8d   7780059     *\n",nbytes1DS,nbytes3DS);
-  printf("* set<THit*>                    %8d   40138903   %8d   6788393     *\n",nbytes1SS,nbytes3SS);
-  printf("* multiset<THit*>               %8d   40138957   %8d   6787025     *\n",nbytes1MS,nbytes3MS);
-  printf("* map<int,THit*>                %8d   46865265   %8d  12643340     *\n",nbytes1MAPS,nbytes3MAPS);
-  printf("* multimap<int,THit*>           %8d   46865313   %8d  12642802     *\n",nbytes1MMAPS,nbytes3MMAPS);
-  printf("* vector<THit*>NS               %8d   45257373   %8d  12168519     *\n",nbytes5NS,nbytes6NS);
-  printf("* list<THit*>NS                 %8d   45257417   %8d  12169001     *\n",nbytes1LSNS,nbytes3LSNS);
-  printf("* deque<THit*>NS                %8d   45257425   %8d  12168599     *\n",nbytes1DSNS,nbytes3DSNS);
-  printf("* set<THit*>NS                  %8d   45257408   %8d  10546802     *\n",nbytes1SSNS,nbytes3SSNS);
-  printf("* multiset<THit*>NS             %8d   45257466   %8d  10546680     *\n",nbytes1MSNS,nbytes3MSNS);
-  printf("* TClonesArray(TObjHit)         %8d   39723587   %8d   7393609     *\n",nbytes8,nbytes9);
-  printf("* TClonesArray(TObjHit) split   %8d   39723587   %8d   7394053     *\n",nbytes10,nbytes11);
-  printf("******************************************************************************\n");
-  printf("* Time to write in seconds      comp 0    Reference    comp 1    Reference   *\n");
-  printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        0.96    %6.2f        2.14     *\n",cp2w, cp3w);
-  printf("* list<THit>                    %6.2f        0.73    %6.2f        1.70     *\n",cp2wL,cp3wL);
-  printf("* deque<THit>                   %6.2f        0.70    %6.2f        2.06     *\n",cp2wD,cp3wD);
-  printf("* set<THit>                     %6.2f        0.78    %6.2f        2.03     *\n",cp2wS,cp3wS);
-  printf("* multiset<THit>                %6.2f        0.84    %6.2f        2.22     *\n",cp2wM,cp3wM);
-  printf("* map<int,THit>                 %6.2f        0.88    %6.2f        2.43     *\n",cp2wMAP,cp3wMAP);
-  printf("* multimap<int,THit>            %6.2f        0.88    %6.2f        2.33     *\n",cp2wMMAP,cp3wMMAP);
-  printf("* vector<THit*>                 %6.2f        0.58    %6.2f        1.95     *\n",cp5w, cp6w);
-  printf("* list<THit*>                   %6.2f        0.64    %6.2f        1.91     *\n",cp2wLS,cp3wLS);
-  printf("* deque<THit*>                  %6.2f        0.65    %6.2f        2.13     *\n",cp2wDS,cp3wDS);
-  printf("* set<THit*>                    %6.2f        0.73    %6.2f        1.67     *\n",cp2wSS,cp3wSS);
-  printf("* multiset<THit*>               %6.2f        0.71    %6.2f        1.96     *\n",cp2wMS,cp3wMS);
-  printf("* map<int,THit*>                %6.2f        1.18    %6.2f        3.34     *\n",cp2wMAPS,cp3wMAPS);
-  printf("* multimap<int,THit*>           %6.2f        1.18    %6.2f        3.32     *\n",cp2wMMAPS,cp3wMMAPS);
-  printf("* vector<THit*>NS               %6.2f        0.99    %6.2f        3.03     *\n",cp5wNS, cp6wNS);
-  printf("* list<THit*>NS                 %6.2f        1.07    %6.2f        2.74     *\n",cp2wLSNS,cp3wLSNS);
-  printf("* deque<THit*>NS                %6.2f        1.03    %6.2f        2.93     *\n",cp2wDSNS,cp3wDSNS);
-  printf("* set<THit*>NS                  %6.2f        1.17    %6.2f        3.03     *\n",cp2wSSNS,cp3wSSNS);
-  printf("* multiset<THit*>NS             %6.2f        1.17    %6.2f        3.01     *\n",cp2wMSNS,cp3wMSNS);
-  printf("* TClonesArray(TObjHit)         %6.2f        0.63    %6.2f        1.76     *\n",cp8w, cp9w);
-  printf("* TClonesArray(TObjHit) split   %6.2f        0.62    %6.2f        1.72     *\n",cp10w,cp11w);
-  printf("******************************************************************************\n");
-  printf("* Time to read in seconds       comp 0    Reference    comp 1    Reference   *\n");
-  printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        0.32    %6.2f        0.61     *\n",cp2r,cp3r);
-  printf("* list<THit>                    %6.2f        0.35    %6.2f        0.63     *\n",cp2rL,cp3rL);
-  printf("* deque<THit>                   %6.2f        0.29    %6.2f        0.71     *\n",cp2rD,cp3rD);
-  printf("* set<THit>                     %6.2f        0.64    %6.2f        0.70     *\n",cp2rS,cp3rS);
-  printf("* multiset<THit>                %6.2f        0.46    %6.2f        0.68     *\n",cp2rM,cp3rM);
-  printf("* map<int,THit>                 %6.2f        0.46    %6.2f        0.80     *\n",cp2rMAP,cp3rMAP);
-  printf("* multimap<int,THit>            %6.2f        0.46    %6.2f        0.92     *\n",cp2rMMAP,cp3rMMAP);
-  printf("* vector<THit*>                 %6.2f        0.43    %6.2f        0.60     *\n",cp5r,cp6r);
-  printf("* list<THit*>                   %6.2f        0.38    %6.2f        0.87     *\n",cp2rLS,cp3rLS);
-  printf("* deque<THit*>                  %6.2f        0.41    %6.2f        0.61     *\n",cp2rDS,cp3rDS);
-  printf("* set<THit*>                    %6.2f        0.30    %6.2f        0.76     *\n",cp2rSS,cp3rSS);
-  printf("* multiset<THit*>               %6.2f        0.31    %6.2f        0.54     *\n",cp2rMS,cp3rMS);
-  printf("* map<int,THit*>                %6.2f        0.91    %6.2f        1.29     *\n",cp2rMAPS,cp3rMAPS);
-  printf("* multimap<int,THit*>           %6.2f        0.95    %6.2f        1.28     *\n",cp2rMMAPS,cp3rMMAPS);
-  printf("* vector<THit*>NS               %6.2f        0.72    %6.2f        1.14     *\n",cp5rNS,cp6rNS);
-  printf("* list<THit*>NS                 %6.2f        0.78    %6.2f        1.20     *\n",cp2rLSNS,cp3rLSNS);
-  printf("* deque<THit*>NS                %6.2f        0.86    %6.2f        1.17     *\n",cp2rDSNS,cp3rDSNS);
-  printf("* set<THit*>NS                  %6.2f        0.85    %6.2f        1.21     *\n",cp2rSSNS,cp3rSSNS);
-  printf("* multiset<THit*> NS            %6.2f        0.85    %6.2f        1.21     *\n",cp2rMSNS,cp3rMSNS);
-  printf("* TClonesArray(TObjHit)         %6.2f        0.17    %6.2f        0.50     *\n",cp8r,cp9r);
-  printf("* TClonesArray(TObjHit) split   %6.2f        0.17    %6.2f        0.45     *\n",cp10r,cp11r);
-  printf("******************************************************************************\n");
-  printf("* Total CPU time              %8.2f    %8.2f                           *\n",cptot,cpref);
-  printf("* Estimated ROOTMARKS         %8.2f      900.00                           *\n",rootmarks);
-  printf("******************************************************************************\n");
+   Double_t cpref = 104.43;
+   Double_t rootmarks = cpref*900/cptot;
+   
+   for(unsigned int t=references.size(); t<results.size(); ++t) {
+      references.push_back(TBenchData());
+   }
+   
+   //print all results
+   char line1[100], line2[100];
+   printf("\n");
+   printf("*******************************************************************************\n");
+   sprintf(line1,"Comparing STL vector with TClonesArray: Root %-8s",gROOT->GetVersion());
+   printf("*       %s                 *\n",line1);
+   Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
+   if (UNIX) {
+      FILE *fp = gSystem->OpenPipe("uname -a", "r");
+      char line[60];
+      fgets(line,60,fp); line[59] = 0;
+      sprintf(line2,"%s",line);
+      printf("*  %s\n",line);
+      gSystem->ClosePipe(fp);
+   } else {
+      const char *os = gSystem->Getenv("OS");
+      sprintf(line2,"Windows");
+      if (!os) printf("*  Windows 95\n");
+      else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
+   }
+   printf("*     Reference machine pcbrun.cern.ch  RedHat Linux 7.3                      *\n");
+   printf("*         (Pentium IV 2.4 Ghz 512 Mbytes RAM, IDE disk)                       *\n");
+   printf("*           (send your results to rootdev@root.cern.ch)                       *\n");
+   printf("*******************************************************************************\n");
+   printf("* Time to fill the structures  (seconds)   Reference      cx      Reference   *\n");
+   printf("*******************************************************************************\n");
+   for(unsigned int t=0; t<results.size() && t<references.size(); ++t) {
+      printf("* %-30s %6.2f       %5.2f     %5.2f       %5.2f     *\n",results[t].fName.Data(),results[t].cp1,references[t].cp1,results[t].cx3,references[t].cx3);
+   }
+   printf("*******************************************************************************\n");
+   printf("* Size of file in bytes          comp 0    Reference    comp 1    Reference   *\n");
+   printf("*******************************************************************************\n");
+   for(unsigned int t=0; t<results.size() && t<references.size(); ++t) {
+      printf("* %-30s %8lld   %8lld   %8lld  %8lld     *\n",results[t].fName.Data(),results[t].nbytes1,references[t].nbytes1,results[t].nbytes3,references[t].nbytes3);
+   }
+   printf("*******************************************************************************\n");
+   printf("* Time to write in seconds       comp 0    Reference    comp 1    Reference   *\n");
+   printf("*******************************************************************************\n");
+   for(unsigned int t=0; t<results.size() && t<references.size(); ++t) {
+      printf("* %-30s %6.2f      %6.2f    %6.2f      %6.2f     *\n",results[t].fName.Data(),results[t].cp2w,references[t].cp2w, results[t].cp3w, references[t].cp3w);
+   }
+   printf("*******************************************************************************\n");
+   printf("* Time to read in seconds        comp 0    Reference    comp 1    Reference   *\n");
+   printf("*******************************************************************************\n");
+   for(unsigned int t=0; t<results.size() && t<references.size(); ++t) {
+      printf("* %-30s %6.2f      %6.2f    %6.2f      %6.2f     *\n",results[t].fName.Data(),results[t].cp2r,references[t].cp2r,results[t].cp3r,references[t].cp3r);
+   }
+   printf("*******************************************************************************\n");
+   printf("* Total CPU time              %8.2f    %8.2f                            *\n",cptot,cpref);
+   printf("* Estimated ROOTMARKS         %8.2f      900.00                            *\n",rootmarks);
+   printf("******************************************************************************\n");
+   
+   if (writereferences) {
+      for(unsigned int t=0; t<results.size() && t<references.size(); ++t) {
+         printf("references.push_back( TBenchData( \"%s\", %6.2f, %6.2f, %lld, %lld, %6.2f, %6.2f, %6.2f, %6.2f ) );\n",
+                results[t].fName.Data(),results[t].cp1,results[t].cx3,results[t].nbytes1,results[t].nbytes3,results[t].cp2w,results[t].cp3w,results[t].cp2r,results[t].cp3r);
+      }
+   }
    return 0;
 }
