@@ -849,13 +849,11 @@ Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, f
    Int_t nbytes = f->GetEND();
    cx = f->GetCompressionFactor();
    delete f;
-   hitCount.print("End of MakeTree");
    return nbytes;
 }
 
 Int_t TSTLhitStar::ReadTree()
 {
-   hitCount.print("Start of ReadTree");
    TSTLhitStar *top = this;
    TFile *f = new TFile(demofile_name("TSTLhitStar"));  
    TTree *T = (TTree*)f->Get("T");
