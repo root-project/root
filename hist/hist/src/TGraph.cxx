@@ -36,6 +36,7 @@
 #include "TPluginManager.h"
 #include <stdlib.h>
 #include <string>
+#include <cassert>
 
 
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
@@ -748,19 +749,24 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
 
    if (!spline) {
       
-      // points must be sorted before using a TSpline or the binary search
-      std::vector<Double_t> xsort(fNpoints); 
-      std::vector<Double_t> ysort(fNpoints); 
-      std::vector<Int_t> indxsort(fNpoints);
-      TMath::Sort(fNpoints, fX, &indxsort[0], false );
-      for (Int_t i = 0; i < fNpoints; ++i) { 
-         xsort[i] = fX[ indxsort[i] ]; 
-         ysort[i] = fY[ indxsort[i] ]; 
-      }
+      if (fNpoints == 0) return 0;
+      if (fNpoints == 1) return fY[0]; 
+
 
       TString opt = option;
       opt.ToLower();
       if (opt.Contains("s")) {
+
+         // points must be sorted before using a TSpline
+         std::vector<Double_t> xsort(fNpoints); 
+         std::vector<Double_t> ysort(fNpoints); 
+         std::vector<Int_t> indxsort(fNpoints);
+         TMath::Sort(fNpoints, fX, &indxsort[0], false );
+         for (Int_t i = 0; i < fNpoints; ++i) { 
+            xsort[i] = fX[ indxsort[i] ]; 
+            ysort[i] = fY[ indxsort[i] ]; 
+         }
+
          // spline interpolation creating a new spline
          TSpline3 *s = new TSpline3("",&xsort[0], &ysort[0], fNpoints);
          Double_t result = s->Eval(x);
@@ -768,14 +774,36 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
          return result;
       }
       //linear interpolation
-      //find point in graph immediatly below x
       //In case x is < fX[0] or > fX[fNpoints-1] return the extrapolated point
-      Int_t low = TMath::BinarySearch(fNpoints,&xsort[0],x);
-      Int_t up = low+1;
-      if (low == fNpoints-1) {up=low; low = up-1;}
-      if (low == -1) {low=0; up=1;}
-      if (xsort[low] == xsort[up]) return ysort[low];
-      Double_t yn = ysort[up] + (x - xsort[up] ) * (ysort[low]-ysort[up] ) / ( xsort[low] - xsort[up] ); 
+
+      //find points in graph around x assuming points are not sorted 
+      // (if point are sorted could use binary search) 
+
+      // find neighbours simply looping  all points
+      // and find also the 2 adjacent points: (low2 < low < x < up < up2 ) 
+      // needed in case x is outside the graph ascissa interval
+      Int_t low  = -1;  Int_t up  = -1; 
+      Int_t low2 = -1;  Int_t up2 = -1;
+
+      for (Int_t i = 0; i < fNpoints; ++i) { 
+         if ( fX[i] < x ) { 
+            if  (low == -1 || fX[i] > fX[low] )  {  low2 = low;   low = i; }
+            else if ( low2 == -1  ) low2 = i;  
+         }
+         if ( fX[i] > x) {   
+            if (up  == -1 || fX[i] < fX[up]  )  {  up2 = up;     up = i;  }
+            else if (up2 == -1) up2 = i; 
+         }
+      }
+
+      // treat cases when x is outside graph min max abscissa
+      if (up == -1)  {up  = low; low = low2;}
+      if (low == -1) {low = up;  up  = up2;  }
+
+      assert( low != -1 && up != -1); 
+
+      if (fX[low] == fX[up]) return fY[low];
+      Double_t yn = fY[up] + (x - fX[up] ) * (fY[low]-fY[up] ) / ( fX[low] - fX[up] ); 
       return yn;
    } else {
       //spline interpolation using the input spline
