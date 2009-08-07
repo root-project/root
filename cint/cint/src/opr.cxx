@@ -372,6 +372,10 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
 //               else G__genericerror("Error: operator '/' divided by zero");
 //               return;
 //            }
+            if (G__no_exec_compile && ldexpression == 0.0) {
+               G__letdouble(defined, 'q', 0.0);
+               return;
+            }
             G__letLongdouble(defined, 'q', lddefined / ldexpression);
             defined->ref = 0;
             break;
@@ -496,6 +500,10 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
 //               else G__genericerror("Error: operator '/' divided by zero");
 //               return;
 //            }
+            if (G__no_exec_compile && fexpression == 0.0) {
+               G__letdouble(defined, 'd', 0.0);
+               return;
+            }
             G__letdouble(defined, 'd', fdefined / fexpression);
             defined->ref = 0;
             break;
