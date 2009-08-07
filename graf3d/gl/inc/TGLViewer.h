@@ -155,6 +155,7 @@ protected:
 
    // Cameras
    void        SetViewport(Int_t x, Int_t y, Int_t width, Int_t height);
+   void        SetViewport(const TGLRect& vp);
    void        SetupCameras(Bool_t reset);
 
 protected:
@@ -285,8 +286,9 @@ public:
    Bool_t DoOverlaySelect(Int_t x, Int_t y);      // Window coords origin top left
 
    // Saveing of screen image
-   Bool_t       SavePicture(const TString &fileName);
    Bool_t       SavePicture();
+   Bool_t       SavePicture(const TString &fileName);
+   Bool_t       SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h);
    const char*  GetPictureFileName() const { return fPictureFileName.Data(); }
    void         SetPictureFileName(const TString& f) { fPictureFileName = f; }
    Float_t      GetFader() const { return fFader; }

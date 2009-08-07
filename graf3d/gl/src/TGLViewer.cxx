@@ -46,12 +46,14 @@
 #include "TVirtualGL.h"
 
 #include "TGLWidget.h"
+#include "TGLFBO.h"
 #include "TGLViewerEditor.h"
 
 #include "KeySymbols.h"
 #include "TContextMenu.h"
 #include "TImage.h"
 
+#include <stdexcept>
 
 #ifndef GL_BGRA
 #define GL_BGRA GL_BGRA_EXT
@@ -588,6 +590,16 @@ void TGLViewer::DoDraw()
 }
 
 //______________________________________________________________________________
+Bool_t TGLViewer::SavePicture()
+{
+   // Save current image using the defualt file name which can be set
+   // via SetPictureFileName() and defaults to "viewer.jpg".
+   // Really useful for the files ending with 'gif+'.
+
+   return SavePicture(fPictureFileName);
+}
+
+//______________________________________________________________________________
 Bool_t TGLViewer::SavePicture(const TString &fileName)
 {
    // Save current image in various formats (gif, gif+, jpg, png, eps, pdf).
@@ -607,7 +619,7 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
 
       std::auto_ptr<TImage> image(TImage::Create());
 
-      fRnrCtx->SetGrabImage(kTRUE);
+      fRnrCtx->SetGrabImage(kTRUE, GL_BACK);
 
       fLOD = TGLRnrCtx::kLODHigh;
 
@@ -642,13 +654,71 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
 }
 
 //______________________________________________________________________________
-Bool_t TGLViewer::SavePicture()
+Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h)
 {
-   // Save current image using the defualt file name which can be set
-   // via SetPictureFileName() and defaults to "viewer.jpg".
-   // Really useful for the files ending with 'gif+'.
+   // Save current image in various formats (gif, gif+, jpg, png).
+   // 'gif+' will append image to an existng file (animated gif).
+   // The viewer window does not have to be visible at all.
+   // Returns false if something obvious goes wrong, true otherwise.
 
-   return SavePicture(fPictureFileName);
+   static const TString eh("TGLViewer::SavePictureUsingFBO");
+
+   if (! fileName.EndsWith(".gif") && ! fileName.EndsWith(".gif+") &&
+       ! fileName.EndsWith(".jpg") && ! fileName.EndsWith(".png"))
+   {
+      Warning(eh, "file %s cannot be saved with this extension.", fileName.Data());
+      return kFALSE;
+   }
+
+   if ( ! TakeLock(kDrawLock)) {
+      Error(eh, "viewer locked - try later.");
+      return kFALSE;
+   }
+
+   std::auto_ptr<TImage> image(TImage::Create());
+
+   MakeCurrent();
+
+   TGLFBO *fbo = new TGLFBO();
+   try
+   {
+      fbo->Init(w, h);
+   }
+   catch (std::runtime_error& exc)
+   {
+      Error(eh, exc.what());
+      return kFALSE;
+   }
+
+   TGLRect old_vp(fViewport);
+   SetViewport(0, 0, w, h);
+
+
+   fRnrCtx->SetGrabImage(kTRUE, 0);
+
+   fLOD = TGLRnrCtx::kLODHigh;
+
+   fbo->Bind();
+
+   if (!gVirtualX->IsCmdThread())
+      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw()", this));
+   else
+      DoDraw();
+
+   fbo->Unbind();
+   delete fbo;
+
+   image->FromGLBuffer(fRnrCtx->GetGrabbedImage(), fViewport.Width(), fViewport.Height());
+
+   fRnrCtx->SetGrabImage(kFALSE);
+   delete [] fRnrCtx->GetGrabbedImage();
+   fRnrCtx->SetGrabbedImage(0);
+
+   image->WriteImage(fileName.Data());
+
+   SetViewport(old_vp);
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -750,7 +820,10 @@ void TGLViewer::PostDraw()
    if (fRnrCtx->GetGrabImage())
    {
       UChar_t* xx = new UChar_t[4 * fViewport.Width() * fViewport.Height()];
-      glReadBuffer(GL_BACK);
+      if (fRnrCtx->GetGrabBuffer() != 0)
+      {
+         glReadBuffer(fRnrCtx->GetGrabBuffer());
+      }
       glPixelStorei(GL_PACK_ALIGNMENT,1);
       glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
                    GL_BGRA, GL_UNSIGNED_BYTE, xx);
@@ -1192,10 +1265,6 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, Int_t width, Int_t height)
    // Set viewer viewport (window area) with bottom/left at (x,y), with
    // dimensions 'width'/'height'
 
-   if (IsLocked() && fGLDevice == -1) {
-      Error("TGLViewer::SetViewport", "expected kUnlocked, found %s", LockName(CurrentLock()));
-      return;
-   }
    // Only process if changed
    if (fViewport.X() == x && fViewport.Y() == y &&
        fViewport.Width() == width && fViewport.Height() == height) {
@@ -1210,6 +1279,12 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, Int_t width, Int_t height)
    }
 }
 
+void TGLViewer::SetViewport(const TGLRect& vp)
+{
+   // Set viewr viewport from TGLRect.
+
+   SetViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
+}
 
 /**************************************************************************/
 // Camera methods

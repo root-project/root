@@ -138,6 +138,7 @@ protected:
 
    // Picture grabbing
    Bool_t           fGrabImage;    // Set to true to store the image.
+   Int_t            fGrabBuffer;   // Which buffer to grab after render.
    UChar_t         *fGrabbedImage; // Buffer where image was stored after rendering.
 
 public:
@@ -253,8 +254,9 @@ public:
    GLUquadric* GetGluQuadric() { return fQuadric; }
 
    // Picture grabbing
-   void     SetGrabImage(Bool_t gi) { fGrabImage = gi; }
+   void     SetGrabImage(Bool_t gi, Int_t buf=-1) { fGrabImage = gi; fGrabBuffer = buf; }
    Bool_t   GetGrabImage()    const { return fGrabImage; }
+   Int_t    GetGrabBuffer()   const { return fGrabBuffer; }
    UChar_t* GetGrabbedImage() const { return fGrabbedImage; }
    void     SetGrabbedImage(UChar_t* img) { fGrabbedImage = img; }
 
