@@ -373,7 +373,7 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
       fObject = *(char**)fAddress;
    }
    TVirtualCollectionProxy::TPushPop helper( fCollProxy, fObject );
-   fCollProxy->Allocate( size, kTRUE );
+   void* env = fCollProxy->Allocate( size, kTRUE );
 
    //---------------------------------------------------------------------------
    // Process entries
@@ -447,6 +447,8 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
         - fBranchVector[index].fBaseOffset;
 
    }
+
+   fCollProxy->Commit(env);
 
    //---------------------------------------------------------------------------
    // Cleanup
