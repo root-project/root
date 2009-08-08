@@ -129,6 +129,7 @@ void TKDEAdapter::FetchDensities()const
 //______________________________________________________________________________
 Float_t TKDEAdapter::GetData(UInt_t i, UInt_t j, UInt_t k)const
 {
+   // Get data at given position.
    const UInt_t ind = k * fSliceSize + j * fW + i;
    return fDensities[ind];
 }
@@ -136,6 +137,7 @@ Float_t TKDEAdapter::GetData(UInt_t i, UInt_t j, UInt_t k)const
 //______________________________________________________________________________
 void TKDEAdapter::FreeVectors()
 {
+   // Free grid and density vectors.
    vector_t().swap(fGrid);
    vector_t().swap(fDensities);
 }

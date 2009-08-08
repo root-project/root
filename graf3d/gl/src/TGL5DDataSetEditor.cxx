@@ -58,48 +58,48 @@ ClassImp(TGL5DDataSetEditor);
 
 //______________________________________________________________________________
 TGL5DDataSetEditor::TGL5DDataSetEditor(const TGWindow *p,  Int_t width, Int_t height, 
-                                       UInt_t options, Pixel_t back)
-                        : TGedFrame(p,  width, height, options | kVerticalFrame, back),
-                          //"Grid" tab.
-                          fNCellsXEntry(0),
-                          fNCellsYEntry(0),
-                          fNCellsZEntry(0),
-                          fXRangeSlider(0),
-                          fXRangeSliderMin(0),
-                          fXRangeSliderMax(0),
-                          fYRangeSlider(0),
-                          fYRangeSliderMin(0),
-                          fYRangeSliderMax(0),
-                          fZRangeSlider(0),
-                          fZRangeSliderMin(0),
-                          fZRangeSliderMax(0),
-                          fCancelGridBtn(0),
-                          fOkGridBtn(0),
-                          //"Surfaces" tab.
-                          fV4MinEntry(0),
-                          fV4MaxEntry(0),
-                          fHighlightCheck(0),
-                          fIsoList(0),
-                          fVisibleCheck(0),
-                          fShowCloud(0),
-                          fSurfColorSelect(0),
-                          fSurfAlphaSlider(0),
-                          fSurfRemoveBtn(0),
-                          fNewIsoEntry(0),
-                          fAddNewIsoBtn(0),
-                          //"Style" tab's widgets.
-                          fShowBoxCut(),
-                          fNumberOfPlanes(0),
-                          fAlpha(0),
-                          fLogScale(0),
-                          fSlideRange(0),
-                          fApplyAlpha(0),
-                          fApplyPlanes(0),
-                          //Model.
-                          fDataSet(0),
-                          fPainter(0),
-                          fHidden(0),
-                          fSelectedSurface(-1)
+                                       UInt_t options, Pixel_t back) :
+   TGedFrame(p,  width, height, options | kVerticalFrame, back),
+   //"Grid" tab.
+   fNCellsXEntry(0),
+   fNCellsYEntry(0),
+   fNCellsZEntry(0),
+   fXRangeSlider(0),
+   fXRangeSliderMin(0),
+   fXRangeSliderMax(0),
+   fYRangeSlider(0),
+   fYRangeSliderMin(0),
+   fYRangeSliderMax(0),
+   fZRangeSlider(0),
+   fZRangeSliderMin(0),
+   fZRangeSliderMax(0),
+   fCancelGridBtn(0),
+   fOkGridBtn(0),
+   //"Surfaces" tab.
+   fV4MinEntry(0),
+   fV4MaxEntry(0),
+   fHighlightCheck(0),
+   fIsoList(0),
+   fVisibleCheck(0),
+   fShowCloud(0),
+   fSurfColorSelect(0),
+   fSurfAlphaSlider(0),
+   fSurfRemoveBtn(0),
+   fNewIsoEntry(0),
+   fAddNewIsoBtn(0),
+   //"Style" tab's widgets.
+   fShowBoxCut(),
+   fNumberOfPlanes(0),
+   fAlpha(0),
+   fLogScale(0),
+   fSlideRange(0),
+   fApplyAlpha(0),
+   fApplyPlanes(0),
+   //Model.
+   fDataSet(0),
+   fPainter(0),
+   fHidden(0),
+   fSelectedSurface(-1)
 {
    //Constructor.
    CreateStyleTab();
