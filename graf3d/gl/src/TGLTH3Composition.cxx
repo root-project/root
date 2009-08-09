@@ -84,7 +84,7 @@ char *TGLTH3Composition::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 }
 
 //______________________________________________________________________________
-void TGLTH3Composition::Paint(Option_t */*option*/)
+void TGLTH3Composition::Paint(Option_t * /*option*/)
 {
    //Paint a composition of 3d hists.
    if (!fHists.size())
