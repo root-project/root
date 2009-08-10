@@ -78,6 +78,7 @@ private:
    int               fNbGroups;         // Number of groups on local computer
    int               fActUser;          // Index of actual user in User list
    Bool_t            fGroupsInitDone;   // Flag used for Users and Groups initialization
+   Bool_t            fFirstFile;        // Flag used by OpenDirectory/GetDirEntry
 
    HANDLE            fhProcess;         // Handle of the current process
    void             *fGUIThreadHandle;  // handle of GUI server (aka command) thread

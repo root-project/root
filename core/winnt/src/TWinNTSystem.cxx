@@ -1090,6 +1090,7 @@ Bool_t TWinNTSystem::Init()
 
    SetConsoleWindowName();
    fGroupsInitDone = kFALSE;
+   fFirstFile = kTRUE;
 
    return kFALSE;
 }
@@ -1845,6 +1846,13 @@ const char *TWinNTSystem::GetDirEntry(void *dirp)
 
    if (dirp) {
       HANDLE searchFile = (HANDLE)dirp;
+      if (fFirstFile) {
+         // when calling TWinNTSystem::OpenDirectory(), the fFindFileData 
+         // structure is filled by a call to FindFirstFile(). 
+         // So first returns this one, before calling FindNextFile()
+         fFirstFile = kFALSE;
+         return (const char *)fFindFileData.cFileName;
+      }
       if (::FindNextFile(searchFile, &fFindFileData)) {
          return (const char *)fFindFileData.cFileName;
       }
@@ -1995,6 +2003,7 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       }
       delete [] entry;
       delete [] dir;
+      fFirstFile = kTRUE;
       return searchFile;
    } else {
       delete [] entry;
