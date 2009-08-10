@@ -46,6 +46,8 @@ private:
 
    TGNumberEntry    *fPointSizeScale;
    TGNumberEntry    *fLineWidthScale;
+   TGCheckButton    *fPointSmooth;
+   TGCheckButton    *fLineSmooth;
    TGNumberEntry    *fWFLineWidth;
    TGNumberEntry    *fOLLineWidth;
 

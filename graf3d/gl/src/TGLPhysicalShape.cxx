@@ -381,8 +381,6 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
       Int_t outer[8][2] = { {-1,-1}, { 1,-1}, { 1, 1}, {-1, 1},
                             { 0,-2}, { 2, 0}, { 0, 2}, {-2, 0} };
 
-      // TGLCapabilitySwitch bs(GL_BLEND, kTRUE), lss(GL_LINE_SMOOTH, kTRUE);
-
       rnrCtx.SetHighlight(kTRUE);
       rnrCtx.SetHighlightOutline(kTRUE);
       TGLUtil::LockColor();

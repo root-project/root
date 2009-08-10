@@ -40,10 +40,9 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fCameraHome(0),
    fMaxSceneDrawTimeHQ(0),
    fMaxSceneDrawTimeLQ(0),
-   fPointSizeScale(0),
-   fLineWidthScale(0),
-   fWFLineWidth(0),
-   fOLLineWidth(0),
+   fPointSizeScale(0),  fLineWidthScale(0),
+   fPointSmooth(0),     fLineSmooth(0),
+   fWFLineWidth(0),     fOLLineWidth(0),
 
    fCameraCenterExt(0),
    fCaptureCenter(0),
@@ -98,6 +97,8 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fMaxSceneDrawTimeLQ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateMaxDrawTimes()");
    fPointSizeScale->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdatePointLineStuff()");
    fLineWidthScale->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdatePointLineStuff()");
+   fPointSmooth->Connect("Clicked()", "TGLViewerEditor", this, "UpdatePointLineStuff()");
+   fLineSmooth ->Connect("Clicked()", "TGLViewerEditor", this, "UpdatePointLineStuff()");
    fWFLineWidth->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdatePointLineStuff()");
    fOLLineWidth->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdatePointLineStuff()");
 
@@ -161,6 +162,8 @@ void TGLViewerEditor::SetModel(TObject* obj)
    fMaxSceneDrawTimeLQ->SetNumber(fViewer->GetMaxSceneDrawTimeLQ());
    fPointSizeScale->SetNumber(fViewer->GetPointScale());
    fLineWidthScale->SetNumber(fViewer->GetLineScale ());
+   fPointSmooth->SetState(fViewer->GetSmoothPoints() ? kButtonDown : kButtonUp);
+   fLineSmooth ->SetState(fViewer->GetSmoothLines () ? kButtonDown : kButtonUp);
    fWFLineWidth->SetNumber(fViewer->WFLineW());
    fOLLineWidth->SetNumber(fViewer->OLLineW());
    //camera look at
@@ -248,6 +251,8 @@ void TGLViewerEditor::UpdatePointLineStuff()
 
    fViewer->SetPointScale(fPointSizeScale->GetNumber());
    fViewer->SetLineScale (fLineWidthScale->GetNumber());
+   fViewer->SetSmoothPoints(fPointSmooth->IsDown());
+   fViewer->SetSmoothLines (fLineSmooth->IsDown());
    fViewer->SetWFLineW(fWFLineWidth->GetNumber());
    fViewer->SetOLLineW(fOLLineWidth->GetNumber());
    ViewerRedraw();
@@ -416,13 +421,23 @@ void TGLViewerEditor::CreateStyleTab()
    AddFrame(fLightSet, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
 
    // Point-sizes / line-widths.
-   fPointSizeScale = MakeLabeledNEntry(af, "Point-size scale:", 120, 6, TGNumberFormat::kNESRealOne);
+   hf = new TGHorizontalFrame(af);
+   fPointSizeScale = MakeLabeledNEntry(hf, "Point-size scale:", 116, 4, TGNumberFormat::kNESRealOne);
    fPointSizeScale->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.1, 16);
-   fLineWidthScale = MakeLabeledNEntry(af, "Line-width scale:", 120, 6, TGNumberFormat::kNESRealOne);
+   fPointSmooth = new TGCheckButton(hf);
+   fPointSmooth->SetToolTipText("Use smooth points.");
+   hf->AddFrame(fPointSmooth, new TGLayoutHints(kLHintsNormal, 3, 0, 3, 0));
+   af->AddFrame(hf);
+   hf = new TGHorizontalFrame(af);
+   fLineWidthScale = MakeLabeledNEntry(hf, "Line-width scale:", 116, 4, TGNumberFormat::kNESRealOne);
    fLineWidthScale->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.1, 16);
-   fWFLineWidth = MakeLabeledNEntry(af, "Wireframe line-width:", 120, 6, TGNumberFormat::kNESRealOne);
+   fLineSmooth = new TGCheckButton(hf);
+   fLineSmooth->SetToolTipText("Use smooth lines.");
+   hf->AddFrame(fLineSmooth, new TGLayoutHints(kLHintsNormal, 3, 0, 3, 0));
+   af->AddFrame(hf);
+   fWFLineWidth = MakeLabeledNEntry(af, "Wireframe line-width:", 116, 4, TGNumberFormat::kNESRealOne);
    fWFLineWidth->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.1, 16);
-   fOLLineWidth = MakeLabeledNEntry(af, "Outline line-width:", 120, 6, TGNumberFormat::kNESRealOne);
+   fOLLineWidth = MakeLabeledNEntry(af, "Outline line-width:", 116, 4, TGNumberFormat::kNESRealOne);
    fOLLineWidth->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.1, 16);
 }
 
