@@ -1729,7 +1729,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
 {
    // Write object from pointer of class classname in this directory
    // obj may not derive from TObject
-   // see TDirectoryFile::WriteObject for comments
+   // see TDirectoryFile::WriteTObject for comments
    //
    // VERY IMPORTANT NOTE:
    //    The value passed as 'obj' needs to be from a pointer to the type described by classname
@@ -1763,7 +1763,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    // To get the TClass* cl pointer, one can use
    //    TClass *cl = TClass::GetClass("classname");
    // An alternative is to call the function WriteObjectAny above.
-   // see TDirectoryFile::WriteObject for comments
+   // see TDirectoryFile::WriteTObject for comments
 
    TDirectory::TContext ctxt(this);
 
