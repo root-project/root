@@ -1886,12 +1886,29 @@ void TGLUtil::RenderPolyLine(const TAttLine& aline, Float_t* p, Int_t n,
 
    if (n == 0) return;
 
+   BeginAttLine(aline, pick_radius, selection);
+
+   Float_t* tp = p;
+   glBegin(GL_LINE_STRIP);
+   for (Int_t i=0; i<n; ++i, tp+=3)
+      glVertex3fv(tp);
+   glEnd();
+
+   EndAttLine(pick_radius, selection);
+}
+
+//______________________________________________________________________________
+void TGLUtil::BeginAttLine(const TAttLine& aline, Int_t pick_radius, Bool_t selection)
+{
+   // Setup drawing parrameters according to passed TAttLine.
+
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
 
    glDisable(GL_LIGHTING);
    TGLUtil::Color(aline.GetLineColor());
    TGLUtil::LineWidth(aline.GetLineWidth());
-   if (aline.GetLineStyle() > 1) {
+   if (aline.GetLineStyle() > 1)
+   {
       Int_t    fac = 1;
       UShort_t pat = 0xffff;
       switch (aline.GetLineStyle()) {
@@ -1911,20 +1928,19 @@ void TGLUtil::RenderPolyLine(const TAttLine& aline, Float_t* p, Int_t n,
    }
 
    // During selection extend picking region for large line-widths.
-   Bool_t changePM = selection && LineWidth() > pick_radius;
-   if (changePM)
-      BeginExtendPickRegion((Float_t) pick_radius / LineWidth());
+   if (selection && TGLUtil::LineWidth() > pick_radius)
+      BeginExtendPickRegion((Float_t) pick_radius / TGLUtil::LineWidth());
+}
 
-   Float_t* tp = p;
-   glBegin(GL_LINE_STRIP);
-   for (Int_t i=0; i<n; ++i, tp+=3)
-      glVertex3fv(tp);
-   glEnd();
+//______________________________________________________________________________
+void TGLUtil::EndAttLine(Int_t pick_radius, Bool_t selection)
+{
+   // Restore previous line drawing state.
 
-   if (changePM)
-      EndExtendPickRegion();
+   if (selection && TGLUtil::LineWidth() > pick_radius)
+     EndExtendPickRegion();
 
-   glPopAttrib();
+   glPopAttrib(); 
 }
 
 /******************************************************************************/

@@ -1035,8 +1035,11 @@ public:
                             Bool_t sec_selection=kFALSE);
    static void RenderCrosses(const TAttMarker& marker, Float_t* p, Int_t n,
                              Bool_t sec_selection=kFALSE);
-   static void RenderPolyLine(const TAttLine& al, Float_t* p, Int_t n,
+   static void RenderPolyLine(const TAttLine& aline, Float_t* p, Int_t n,
                               Int_t pick_radius=0, Bool_t selection=kFALSE);
+
+   static void BeginAttLine(const TAttLine& aline, Int_t pick_radius=0, Bool_t selection=kFALSE);
+   static void EndAttLine(Int_t pick_radius=0, Bool_t selection=kFALSE);
 
    // TODO: These draw routines should take LOD hints
    static void SetDrawColors(const Float_t rgba[4]);

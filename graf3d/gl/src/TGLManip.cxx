@@ -167,7 +167,7 @@ void TGLManip::CalcDrawScale(const TGLBoundingBox& box,
       } else {
          axis[i] = box.Axis(i, kFALSE)*-0.51;
          if (axis[i].Mag() < base*10.0) {
-            axis[i] *= base*10.0/axis[i].Mag();
+            axis[i] = box.Axis(i, kTRUE)*base*-10.0;
          }
       }
    }
