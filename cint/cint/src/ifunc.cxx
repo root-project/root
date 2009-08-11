@@ -3156,7 +3156,7 @@ static int G__igrd(int formal_type)
 //______________________________________________________________________________
 //______________________________________________________________________________
 #ifndef __CINT__
-struct G__ifunc_table_internal* G__overload_match G__P((const char* funcname, struct G__param* libp, int hash, struct G__ifunc_table_internal* p_ifunc, int memfunc_flag, int access, int* pifn, int recursive, int doconvert));
+struct G__ifunc_table_internal* G__overload_match G__P((const char* funcname, struct G__param* libp, int hash, struct G__ifunc_table_internal* p_ifunc, int memfunc_flag, int access, int* pifn, int recursive, int doconvert, int check_access));
 #endif
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -3486,7 +3486,7 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
             G__hash(funcname2, hash2, ifn2);
             ifunc2 = G__overload_match(funcname2, &para, hash2, ifunc2
                                        , G__TRYCONSTRUCTOR, G__PUBLIC, &ifn2, 1
-                                       , 1
+                                       , 1, false
                                       );
             G__store_struct_offset = store_struct_offset;
             if (ifunc2 && -1 != ifn2)
@@ -3513,7 +3513,7 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
             ifunc2 = G__struct.memfunc[param_tagnum];
             ifunc2 = G__overload_match(funcname2, &para, hash2, ifunc2
                                        , G__TRYMEMFUNC, G__PUBLIC, &ifn2, 1
-                                       , 1
+                                       , 1, false
                                       );
             if (!ifunc2) {
                /* search for  operator const type */
@@ -3523,7 +3523,7 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
                ifunc2 = G__struct.memfunc[param_tagnum];
                ifunc2 = G__overload_match(funcname2, &para, hash2, ifunc2
                                           , G__TRYMEMFUNC, G__PUBLIC, &ifn2, 1
-                                          , 1
+                                          , 1, false
                                          );
             }
             G__store_struct_offset = store_struct_offset;
@@ -4682,7 +4682,7 @@ int G__identical_function(G__funclist* match, G__funclist* func)
 }
 
 //______________________________________________________________________________
-struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param* libp, int hash, G__ifunc_table_internal* p_ifunc, int memfunc_flag, int access, int* pifn, int isrecursive, int doconvert)
+struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param* libp, int hash, G__ifunc_table_internal* p_ifunc, int memfunc_flag, int access, int* pifn, int isrecursive, int doconvert, int check_access)
 {
    // -- FIXME: Describe this function!
    struct G__funclist* funclist = 0;
@@ -4837,33 +4837,35 @@ end_of_function:
    /*  check private, protected access rights, and static-ness
     *    display error if no access right
     *    do parameter conversion if needed */
-   if (0 == (p_ifunc->access[*pifn]&access) && (!G__isfriend(p_ifunc->tagnum))
-         && G__NOLINK == G__globalcomp
-      )
-   {
-      /* no access right */
-      G__fprinterr(G__serr, "Error: can not call private or protected function");
-      G__genericerror((char*)NULL);
-      G__fprinterr(G__serr, "  ");
-      G__display_func(G__serr, p_ifunc, *pifn);
-      G__display_ambiguous(scopetagnum, funcname, libp, funclist, bestmatch);
-      *pifn = -1;
-      G__funclist_delete(funclist);
-      return((struct G__ifunc_table_internal*)NULL);
+   if (check_access) {
+      if (0 == (p_ifunc->access[*pifn]&access) && (!G__isfriend(p_ifunc->tagnum))
+            && G__NOLINK == G__globalcomp
+         )
+      {
+         /* no access right */
+         G__fprinterr(G__serr, "Error: can not call private or protected function");
+         G__genericerror((char*)NULL);
+         G__fprinterr(G__serr, "  ");
+         G__display_func(G__serr, p_ifunc, *pifn);
+         G__display_ambiguous(scopetagnum, funcname, libp, funclist, bestmatch);
+         *pifn = -1;
+         G__funclist_delete(funclist);
+         return((struct G__ifunc_table_internal*)NULL);
+      }
+      if (active_run && G__exec_memberfunc && G__getstructoffset()==0 && p_ifunc->tagnum != -1 && G__struct.type[p_ifunc->tagnum]!='n' && !p_ifunc->staticalloc[*pifn] && G__NOLINK == G__globalcomp
+          && (G__TRYCONSTRUCTOR !=  memfunc_flag && G__CALLCONSTRUCTOR != memfunc_flag) ) {
+         /* non static function called without an object */
+         G__fprinterr(G__serr, "Error: cannot call member function without object");
+         G__genericerror((char*)NULL);
+         G__fprinterr(G__serr, "  ");
+         G__display_func(G__serr, p_ifunc, *pifn);
+         G__display_ambiguous(scopetagnum, funcname, libp, funclist, bestmatch);
+         G__funclist_delete(funclist);
+         return p_ifunc;
+         *pifn = -1;
+         return((struct G__ifunc_table_internal*)NULL);
+      }
    }
-   if (active_run && G__exec_memberfunc && G__getstructoffset()==0 && p_ifunc->tagnum != -1 && G__struct.type[p_ifunc->tagnum]!='n' && !p_ifunc->staticalloc[*pifn] && G__NOLINK == G__globalcomp
-       && (G__TRYCONSTRUCTOR !=  memfunc_flag && G__CALLCONSTRUCTOR != memfunc_flag) ) {
-      /* non static function called without an object */
-      G__fprinterr(G__serr, "Error: cannot call member function without object");
-      G__genericerror((char*)NULL);
-      G__fprinterr(G__serr, "  ");
-      G__display_func(G__serr, p_ifunc, *pifn);
-      G__display_ambiguous(scopetagnum, funcname, libp, funclist, bestmatch);
-      G__funclist_delete(funclist);
-      return p_ifunc;
-      *pifn = -1;
-      return((struct G__ifunc_table_internal*)NULL);
-   } 
    
    /* convert parameter */
    if (
@@ -5011,7 +5013,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    }
    next_base:
 #endif
-   p_ifunc = G__overload_match(funcname, libp, hash, p_ifunc, memfunc_flag, access, &ifn, 0, 1);
+   p_ifunc = G__overload_match(funcname, libp, hash, p_ifunc, memfunc_flag, access, &ifn, 0, 1, true);
    if (ifn == -1) {
       *result7 = G__null;
       return 1;
@@ -7042,7 +7044,7 @@ struct G__ifunc_table* G__get_methodhandle_noerror(const char* funcname, const c
 
       ifunc = G__overload_match(funcname, &para, hash, p_ifunc, G__TRYNORMAL
                                 , G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0
-                                , (withConversion & 0x2) ? 1 : 0);
+                                , (withConversion & 0x2) ? 1 : 0, false);
       *poffset = 0;
       *pifn = ifn;
       if (ifunc || !withInheritance) return G__get_ifunc_ref(ifunc);
@@ -7055,7 +7057,7 @@ struct G__ifunc_table* G__get_methodhandle_noerror(const char* funcname, const c
                *poffset = baseclass->herit[basen]->baseoffset;
                p_ifunc = G__struct.memfunc[baseclass->herit[basen]->basetagnum];
                ifunc = G__overload_match(funcname, &para, hash, p_ifunc, G__TRYNORMAL
-                                         , G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0, 0);
+                                         , G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0, 0, false);
                *pifn = ifn;
                if (ifunc) return G__get_ifunc_ref(ifunc);
             }
@@ -7135,7 +7137,7 @@ struct G__ifunc_table* G__get_methodhandle2(char* funcname, G__param* libp, G__i
       if (-1 != tagnum) {
          G__incsetup_memfunc(tagnum);
       }
-      ifunc = G__overload_match(funcname, libp, hash, p_ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0, 0);
+      ifunc = G__overload_match(funcname, libp, hash, p_ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0, 0, false);
       *poffset = 0;
       *pifn = ifn;
       if (ifunc || !withInheritance) {
@@ -7149,7 +7151,7 @@ struct G__ifunc_table* G__get_methodhandle2(char* funcname, G__param* libp, G__i
                G__incsetup_memfunc(baseclass->herit[basen]->basetagnum);
                *poffset = baseclass->herit[basen]->baseoffset;
                p_ifunc = G__struct.memfunc[baseclass->herit[basen]->basetagnum];
-               ifunc = G__overload_match(funcname, libp, hash, p_ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0, 0);
+               ifunc = G__overload_match(funcname, libp, hash, p_ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0, 0, false);
                *pifn = ifn;
                if (ifunc) {
                   return G__get_ifunc_ref(ifunc);
@@ -7235,7 +7237,7 @@ struct G__ifunc_table_internal *G__get_methodhandle4(char *funcname
    if(-1!=tagnum) G__incsetup_memfunc(tagnum);
 
    ifunc = G__overload_match(funcname,libp,hash,p_ifunc,G__TRYNORMAL
-                             ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,1,0) ;
+                             ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,1,0,false) ;
    *poffset = 0;
    *pifn = ifn;
    if(ifunc || !withInheritance) return ifunc;
@@ -7248,7 +7250,7 @@ struct G__ifunc_table_internal *G__get_methodhandle4(char *funcname
          *poffset = baseclass->herit[basen]->baseoffset;
          p_ifunc = G__struct.memfunc[baseclass->herit[basen]->basetagnum];
          ifunc = G__overload_match(funcname,libp,hash,p_ifunc,G__TRYNORMAL
-                                   ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,1,0) ;
+                                   ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,1,0,false) ;
          *pifn = ifn;
          if(ifunc) return ifunc;
        }
