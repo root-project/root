@@ -567,8 +567,7 @@ guess_architecture () {
       darwin:power*:*)    arch=macosx          ; platform=macosx; ccflv=macos;;
       darwin:*86*:*)      arch=x86_macosx      ; platform=macosx; ccflv=macos;;
       irix*:sgi*:*)       arch=sgi             ; platform=sgi;    ccflv=sgiCC;;
-      sunos:i86pc:*)      arch=sunx86_510      ; platform=solaris; ccflv=sunCCamd;;
-      sunos:i386:*)       arch=sunx86_510      ; platform=solaris; ccflv=sunCC;;
+      sunos:i86pc:*)      arch=sunx86_510      ; platform=solaris; ccflv=sunCC;;
       sunos:*:6*)         arch=sun4x_6         ; platform=solaris; ccflv=sunCC;;
       sunos:*:5.6)        arch=sun4x_56        ; platform=solaris; ccflv=sunCC;;
       sunos:*:5.7)        arch=sun4x_57        ; platform=solaris; ccflv=sunCC;;
@@ -594,6 +593,11 @@ guess_architecture () {
              ccflv=macos64
 	     arch=${arch/macosx/64_macosx}
           fi
+       fi
+    fi
+    if [ "$platform" = "solaris" -a "$chip" = "i86pc" ]; then
+       if `isainfo -b | grep "64" > /dev/null  2>&1` ; then
+          ccflv=sunCCamd
        fi
     fi
     echo "$osys | $chip | $rele | $arch | $ccflv"

@@ -134,6 +134,15 @@ LDFLAGS       = $(OPT)
 SOFLAGS       = -G
 endif
 
+ifeq ($(ARCH),solaris64CC5)
+# Solaris CC 5.0 64-bit
+CXX           = CC
+CXXFLAGS      = $(OPT) -KPIC
+LD            = CC
+LDFLAGS       = $(OPT)
+SOFLAGS       = -G
+endif
+
 ifeq ($(ARCH),solarisgcc)
 # Solaris gcc
 CXX           = g++
@@ -150,15 +159,6 @@ CXXFLAGS      = -O4 -KPIC
 LD            = KCC
 LDFLAGS       = -O4
 SOFLAGS       =
-endif
-
-ifeq ($(ARCH),solarisx86)
-# Solaris CC on Intel
-CXX           = CC
-CXXFLAGS      = $(OPT) -KPIC
-LD            = CC
-LDFLAGS       = $(OPT)
-SOFLAGS       = -G
 endif
 
 ifeq ($(ARCH),sgicc)

@@ -530,15 +530,15 @@ INCLUDEFILES :=
 # special rules (need to be defined before generic ones)
 G__%.o: G__%.cxx
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CXXFLAGS) -D__cplusplus -I$(CINTDIR)/lib/prec_stl \
+	   $(CXXFLAGS) $(DICTFLAGS) -D__cplusplus -I$(CINTDIR)/lib/prec_stl \
 	   -I$(CINTDIR)/stl -I$(CINTDIR)/inc -- $<
-	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+	$(CXX) $(NOOPT) $(CXXFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
 G__c_%.o: G__c_%.c
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CFLAGS) -I$(CINTDIR)/lib/prec_stl \
+	   $(CFLAGS) $(DICTFLAGS) -I$(CINTDIR)/lib/prec_stl \
 	   -I$(CINTDIR)/stl -I$(CINTDIR)/inc -- $<
-	$(CC) $(NOOPT) $(CFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+	$(CC) $(NOOPT) $(CFLAGS) $(DICTFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
 cint/cint/%.o: cint/cint/%.cxx
 	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -I. -D__cplusplus -- $<

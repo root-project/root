@@ -5830,7 +5830,7 @@ static int G__isprotecteddestructoronelevel(int tagnum)
 }
 
 
-#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
 /**************************************************************************
 * G__x8664_vararg()
 *
@@ -6178,7 +6178,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
     fprintf(fp,             "   G__va_arg_put(&G__va_arg_bufobj, libp, %d);\n", ifunc->para_nu[ifn]);
   }
 #endif
-#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
   if (ifunc->ansi[ifn] == 2)
     G__x8664_vararg(fp, ifn, ifunc, buf, tagnum, buf);
 #endif
@@ -6301,14 +6301,13 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
           for (i = G__VAARG_SIZE / sizeof(long) - 1; i > G__VAARG_SIZE / sizeof(long) - 100; --i) {
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
-       defined(__SUNPRO_CC)) || \
+#elif ((defined(__sparc) || defined(__i386)) && defined(__SUNPRO_CC)) || \
       ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
           int i;
           for (i = 0; i < 100; ++i) {
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
-#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
           // see G__x8664_vararg()
 #else
           fprintf(fp,       ", G__va_arg_bufobj");
@@ -6340,14 +6339,13 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
           for (i = G__VAARG_SIZE / sizeof(long) - 1; i > G__VAARG_SIZE / sizeof(long) - 100; --i) {
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
-       defined(__SUNPRO_CC)) || \
+#elif ((defined(__sparc) || defined(__i386)) && defined(__SUNPRO_CC)) || \
       ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
           int i;
           for (i = 0; i < 100; ++i) {
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
-#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
           // see G__x8664_vararg()
 #else
           fprintf(fp,       ", G__va_arg_bufobj");
@@ -6390,14 +6388,13 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
       for (i = G__VAARG_SIZE / sizeof(long) - 1; i > G__VAARG_SIZE / sizeof(long) - 100; --i) {
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
-       defined(__SUNPRO_CC)) || \
-    ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
+#elif ((defined(__sparc) || defined(__i386)) && defined(__SUNPRO_CC)) || \
+      ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
       int i;
       for (i = 0; i < 100; ++i) {
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
-#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
           // see G__x8664_vararg()
 #else
       fprintf(fp,           ", G__va_arg_bufobj");
@@ -6428,14 +6425,13 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
       for (i = G__VAARG_SIZE / sizeof(long) - 1; i > G__VAARG_SIZE / sizeof(long) - 100; --i) {
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
-       defined(__SUNPRO_CC)) || \
-    ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
+#elif ((defined(__sparc) || defined(__i386)) && defined(__SUNPRO_CC)) || \
+      ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
       int i;
       for (i = 0; i < 100; ++i) {
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
-#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
           // see G__x8664_vararg()
 #else
       fprintf(fp,           ", G__va_arg_bufobj");
@@ -7667,7 +7663,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
     fprintf(fp, "   G__va_arg_put(&G__va_arg_bufobj, libp, %d);\n", ifunc->para_nu[ifn]);
   }
 #endif
-#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
   if (ifunc->ansi[ifn] == 2)
     G__x8664_vararg(fp, ifn, ifunc, ifunc->funcname[ifn], tagnum, castname);
 #endif
@@ -7723,12 +7719,11 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
         int i;
         for (i = G__VAARG_SIZE/sizeof(long) - 1; i > G__VAARG_SIZE/sizeof(long) - 100; i--)
           fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
-       defined(__SUNPRO_CC)) || \
-      ((defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__)))
+#elif ((defined(__sparc) || defined(__i386)) && defined(__SUNPRO_CC)) || \
+      ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
         int i;
         for (i = 0; i < 100; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
-#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
         // see G__x8664_vararg()
 #else
         fprintf(fp, ", G__va_arg_bufobj");
@@ -7751,7 +7746,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
     // Output the return type.
     G__cppif_returntype(fp, ifn, ifunc, endoffunc);
 
-#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
     if (ifunc->ansi[ifn] == 2 && m==ifunc->para_nu[ifn]) {
        // all code is already generated by G__x8664_vararg()
        G__x8664_vararg_epilog(fp, ifn, ifunc);
@@ -7805,12 +7800,11 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
       //FIXME:  This loops only 99 times, the other clause loops 100 times.
       int i;
       for (i = G__VAARG_SIZE/sizeof(long) - 1; i > G__VAARG_SIZE/sizeof(long) - 100; --i) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
-       defined(__SUNPRO_CC)) || \
-      ((defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__)))
+#elif ((defined(__sparc) || defined(__i386)) && defined(__SUNPRO_CC)) || \
+      ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
       int i;
       for (i = 0; i < 100; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
-#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
       // see G__x8664_vararg()
 #else
       fprintf(fp, ", G__va_arg_bufobj");
@@ -7819,7 +7813,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
     //
     // Output the function body.
     fprintf(fp, ")%s\n", endoffunc);
-#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#if defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))
     }  // end G__x8664_vararg_epilog
 #endif
   }

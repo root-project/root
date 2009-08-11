@@ -172,15 +172,16 @@ solarisCC5)
    fi
    auxlibs="-lm -ldl -lnsl -lsocket"
    ;;
+solaris64CC5)
+   # Solaris CC 5.0 x86-64
+   auxcflags="-m64 -library=stlport4"
+   auxldflags="-m64 -library=stlport4"
+   auxlibs="-lm -ldl -lnsl -lsocket"
+   ;;
 solariskcc)
    # Solaris KCC
    auxcflags=
    auxlibs="-L/usr/ccs/lib -lgen -lm -ldl -lsocket -lnsl"
-   ;;
-solarisx86)
-   # Solaris CC on Intel
-   auxcflags=
-   auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
    ;;
 sgicc)
    # SGI

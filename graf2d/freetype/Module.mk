@@ -95,6 +95,10 @@ else
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "solaris64CC5" ]; then \
+			FREECC="$$FREECC -m64"; \
+			FREE_CFLAGS="-m64"; \
+		fi; \
 		if [ $(ARCH) = "sgicc64" ]; then \
 			FREECC="cc"; \
 			FREE_CFLAGS="-64"; \

@@ -116,7 +116,10 @@
 #      define R__SEEK64
 #      define ANSICPP
 #      ifdef __i386
-#         define R__I386
+#         define R__BYTESWAP
+#      endif
+#      ifdef __x86_64
+#         define R__B64
 #         define R__BYTESWAP
 #      endif
 #   else

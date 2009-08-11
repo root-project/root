@@ -84,6 +84,9 @@ else
 		if [ $(ARCH) = "macosx64" ]; then \
 			PCRE_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "solaris64CC5" ]; then \
+			PCRE_CFLAGS="-m64"; \
+		fi; \
 		if [ $(ARCH) = "sgicc64" ]; then \
 			PCRECC="cc"; \
 			PCRE_CFLAGS="-64"; \

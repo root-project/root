@@ -375,6 +375,11 @@ check_library() {
             i64=`echo $i | sed 's|\(lib\)|\1/hpux64|'`
             i="$i64"
         fi
+        # look only in the amd64 directories
+        if test "x$checksolaris64" = "xyes" ; then
+            i64=`echo $i | sed 's|\(lib\)|\1/amd64|'`
+            i="$i64"
+        fi
 	logmsg " Checking in directories $i for $libs"
         for l in $i ; do
             l=`echo $l | sed 's,^//,/,'`
@@ -626,6 +631,10 @@ check_symbol() {
     # look only in the hpux64 directories
     if test "x$checkhpux64" = "xyes" ; then
         usrlib="/usr/lib/hpux64"
+    fi
+    # look only in the amd64 directories
+    if test "x$checkamd64" = "xyes" ; then
+        usrlib="/usr/lib/amd64"
     fi
 
     for d in "$symboldir" $usrlib ; do
@@ -879,6 +888,13 @@ guess_architecture() {
           fi
        fi
     fi
+    # CC in 64-bit fails on the asm in the dictionaries, disable
+    # automatic detection for now (rdm)
+    #if [ "$arch" = "solarisCC5" -a "$chip" = "i86pc" ]; then
+    #   if `isainfo -b | grep "64" > /dev/null  2>&1` ; then
+    #      arch=solaris64CC5
+    #   fi
+    #fi
     logmsg "$arch"
 }
 
@@ -1221,6 +1237,9 @@ linuxx8664*)
 hpuxia64acc)
    logmsg "Will check HP/UX 64bit libraries"
    checkhpux64="yes" ;;
+solaris64CC5)
+   logmsg "Will check Solaris 64bit libraries"
+   checksolaris64="yes" ;;
 esac
 
 # check for which

@@ -116,7 +116,11 @@ else
 			ACC="icc"; \
 		fi; \
 		if [ "$(ARCH)" = "solarisCC5" ]; then \
-			ACFLAGS += " -erroff=E_WHITE_SPACE_IN_DIRECTIVE"; \
+			ACFLAGS+=" -erroff=E_WHITE_SPACE_IN_DIRECTIVE"; \
+		fi; \
+		if [ "$(ARCH)" = "solaris64CC5" ]; then \
+			ACC="cc -m64"; \
+			ACFLAGS+=" -KPIC -erroff=E_WHITE_SPACE_IN_DIRECTIVE"; \
 		fi; \
 		if [ "$(ARCH)" = "sgicc64" ]; then \
 			ACC="gcc -mabi=64"; \
