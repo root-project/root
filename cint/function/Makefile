@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += defaultParams longArgTest overloadResolution staticfunc
+TEST_TARGETS += defaultParams longArgTest overloadResolution staticfunc privateConstructor
 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -41,3 +41,7 @@ staticfunc.log: staticfunc.C
 
 staticfunc: staticfunc.log
 	$(TestDiff)
+
+privateConstructor: privateConstructor.log
+	$(TestDiff)
+
