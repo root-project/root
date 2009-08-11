@@ -429,7 +429,6 @@ void TEvePolygonSetProjected::ComputeBBox()
    BBoxInit();
    for (Int_t pi = 0; pi<fNPnts; ++pi)
       BBoxCheckPoint(fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
-   AssertBBoxExtents(0.1);
 }
 
 //______________________________________________________________________________

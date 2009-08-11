@@ -99,8 +99,8 @@ protected:
    TGLRect   fViewport;    //! viewport (GL coords - origin bottom left)
 
    TGLBoundingBox   fInterestBox;          //! the interest box - created in UpdateInterest()
-   mutable Double_t fLargestSeen;          //! largest box volume seen in OfInterest() - used when
-                                           // bootstrapping interest box
+   mutable Double_t fLargestSeen;          //! largest box diagonal seen in OfInterest() - used when
+                                           //! bootstrapping interest box
 
    // Internal cache update - const as the actual camera configuration is unaffected
    void       UpdateCache() const;

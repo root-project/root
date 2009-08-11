@@ -494,6 +494,4 @@ void TEveQuadSet::ComputeBBox()
 
       } // end switch quad-type
    } // end if frame ... else ...
-
-   AssertBBoxExtents(0.001);
 }

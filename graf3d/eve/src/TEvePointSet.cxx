@@ -156,7 +156,6 @@ void TEvePointSet::ComputeBBox()
    // Override of virtual method from TAttBBox.
 
    TPointSet3D::ComputeBBox();
-   AssertBBoxExtents(0.1);
 }
 
 //______________________________________________________________________________

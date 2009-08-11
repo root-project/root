@@ -204,10 +204,10 @@ inline const TGLVector3 & TGLBoundingBox::Axis(UInt_t i, Bool_t normalised) cons
 //______________________________________________________________________________
 inline Bool_t TGLBoundingBox::IsEmpty() const
 {
-   // Return kTRUE if box has zero volume - kFALSE otherwise
+   // Return kTRUE if box has zero diagonal - kFALSE otherwise
 
    // TODO: Round errors - should have epsilon test
-   return (Volume() == 0.0);
+   return (Diagonal() == 0.0);
 }
 
 #endif // ROOT_TGLBoundingBox

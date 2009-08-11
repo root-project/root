@@ -572,8 +572,6 @@ void TEveCalo2D::ComputeBBox()
    x = 0, y = -r, z = 0;
    fManager->GetProjection()->ProjectPoint(x, y, z);
    BBoxCheckPoint(x, y, z);
-
-   AssertBBoxExtents(0.1);
 }
 
 

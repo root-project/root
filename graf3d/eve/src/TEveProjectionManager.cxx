@@ -255,7 +255,6 @@ TEveElement* TEveProjectionManager::ImportElements(TEveElement* el,
    {
       AssertBBox();
       ProjectChildrenRecurse(new_el);
-      AssertBBoxExtents(0.1);
       UpdateDependentElsAndScenes(new_el);
       if (ext_list)
          ext_list->AddElement(new_el);
@@ -296,7 +295,6 @@ void TEveProjectionManager::ProjectChildren()
 
    BBoxInit();
    ProjectChildrenRecurse(this);
-   AssertBBoxExtents(0.1);
 
    UpdateDependentElsAndScenes(this);
 }

@@ -36,7 +36,7 @@ TEveStraightLineSetGL::TEveStraightLineSetGL() : TGLObject(), fM(0)
    fMultiColor = kTRUE;
 }
 
-/******************************************************************************/
+//==============================================================================
 
 //______________________________________________________________________________
 Bool_t TEveStraightLineSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
@@ -55,7 +55,6 @@ void TEveStraightLineSetGL::SetBBox()
 {
    // Setup bounding box information.
 
-   // !! This ok if master sub-classed from TAttBBox
    SetAxisAlignedBBox(((TEveStraightLineSet*)fExternalObj)->AssertBBox());
 }
 
@@ -88,7 +87,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
    // Render the line-set with GL.
 
-   // printf("TEveStraightLineSetGL::DirectDraw Style %d, LOD %d\n", flags.Style(), flags.LOD());
+   // printf("TEveStraightLineSetGL::DirectDraw LOD %d\n", rnrCtx.ShapeLOD());
 
    TEveStraightLineSet& mL = * fM;
 
@@ -198,7 +197,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       glPopAttrib();
 }
 
-/******************************************************************************/
+//==============================================================================
 
 //______________________________________________________________________________
 void TEveStraightLineSetGL::ProcessSelection(TGLRnrCtx& /*rnrCtx*/,

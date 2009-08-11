@@ -37,8 +37,7 @@ public:
    virtual void   Draw(TGLRnrCtx& rnrCtx) const;
    virtual void   DirectDraw(TGLRnrCtx& rnrCtx) const;
 
-   // To support two-level selectionvirtual
-   Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
 
    virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
