@@ -1860,6 +1860,8 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    //check if a profile with identical name exist
    TObject *h1obj = gROOT->FindObject(pname);
    if (h1obj && h1obj->InheritsFrom("TProfile")) {
+      // get error option from this profile and use for creating the projected one
+      opt += ((TProfile *) (h1obj))->GetErrorOption(); 
       delete h1obj;
    }
 
@@ -1874,13 +1876,13 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
       const TArrayD *bins = outAxis.GetXbins();
       if (bins->fN == 0) {
          if ( originalRange ) 
-            h1 = new TProfile(pname,GetTitle(),outAxis.GetNbins(),outAxis.GetXmin(),outAxis.GetXmax(),option);
+            h1 = new TProfile(pname,GetTitle(),outAxis.GetNbins(),outAxis.GetXmin(),outAxis.GetXmax(),opt);
          else
             h1 = new TProfile(pname,GetTitle(),lastOutBin-firstOutBin+1,
                               outAxis.GetBinLowEdge(firstOutBin),
-                              outAxis.GetBinUpEdge(lastOutBin));
+                              outAxis.GetBinUpEdge(lastOutBin), opt);
       } else {
-         h1 = new TProfile(pname,GetTitle(),outAxis.GetNbins(),bins->fArray,option);
+         h1 = new TProfile(pname,GetTitle(),outAxis.GetNbins(),bins->fArray,opt);
       }
    }
    if (pname != name)  delete [] pname;
@@ -1975,6 +1977,9 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
    //   if option "o" original axis range of the taget axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
+   //   The option can also be used to specify the projected profile error type. 
+   //   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
+   //
    //   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
    //   One must create a graphical cut (mouse or C++) and specify the name
    //   of the cut between [] in the option.
@@ -1986,10 +1991,11 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
    //      myhist->ProfileX(" ",firstybin,lastybin,[cutg1,cutg2]");
    //
    //   NOTE that if a TProfile named name exists in the current directory or pad,
-   //   the histogram is reset and filled again with the current contents of the TH2.
-   //   The X axis attributes of the TH2 are copied to the X axis of the profile.
+   //   a profile will be re-created but with the same error option as the previous one 
+   //   
+   //   NOTE that the X axis attributes of the TH2 are copied to the X axis of the profile.
    //
-   //   NOTE2 that the default under- / overflow behavior differs from what ProjectionX
+   //   NOTE that the default under- / overflow behavior differs from what ProjectionX
    //   does! Profiles take the bin center into account, so here the under- and overflow
    //   bins are ignored by default.
 
@@ -2015,7 +2021,10 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    //   if option "o" original axis range of the taget axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
+   //   The option can also be used to specify the projected profile error type. 
+   //   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
    //   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
+   //
    //   One must create a graphical cut (mouse or C++) and specify the name
    //   of the cut between [] in the option.
    //   For example, with a TCutG named "cutg", one can call:
@@ -2026,10 +2035,11 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    //      myhist->ProfileY(" ",firstybin,lastybin,[cutg1,cutg2]");
    //
    //   NOTE that if a TProfile named name exists in the current directory or pad,
-   //   the histogram is reset and filled again with the current contents of the TH2.
-   //   The Y axis attributes of the TH2 are copied to the X axis of the profile.
+   //   a profile will be re-created but with the same error option as the previous one 
+   //   
+   //   NOTE that he Y axis attributes of the TH2 are copied to the X axis of the profile.
    //
-   //   NOTE2 that the default under- / overflow behavior differs from what ProjectionX
+   //   NOTE that the default under- / overflow behavior differs from what ProjectionX
    //   does! Profiles take the bin center into account, so here the under- and overflow
    //   bins are ignored by default.
 
@@ -2256,9 +2266,11 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    //   It is possible to apply several cuts:
    //      myhist->ProjectionX(" ",firstybin,lastybin,[cutg1,cutg2]");
    //
-   //   NOTE that if a TH1D named name exists in the current directory or pad,
-   //   the histogram is reset and filled again with the current contents of the TH2.
-   //   The X axis attributes of the TH2 are copied to the X axis of the projection.
+   //   NOTE that the X axis attributes of the TH2 are copied to the X axis of the projection.
+   // 
+
+
+
 
       return DoProjection(true, name, firstybin, lastybin, option);
 }
@@ -2294,9 +2306,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    //   It is possible to apply several cuts:
    //      myhist->ProjectionY(" ",firstxbin,lastxbin,[cutg1,cutg2]");
    //
-   //   NOTE that if a TH1D named name exists in the current directory or pad,
-   //   the histogram is reset and filled again with the current contents of the TH2.
-   //   The Y axis attributes of the TH2 are copied to the X axis of the projection.
+   //   NOTE that the Y axis attributes of the TH2 are copied to the X axis of the projection.
 
       return DoProjection(false, name, firstxbin, lastxbin, option);
 }
