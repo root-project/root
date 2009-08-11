@@ -105,20 +105,20 @@ ClassImp(TPluginHandler)
 //______________________________________________________________________________
 TPluginHandler::TPluginHandler(const char *base, const char *regexp,
                                const char *className, const char *pluginName,
-                               const char *ctor, const char *origin)
+                               const char *ctor, const char *origin):
+   fBase(base),
+   fRegexp(regexp),
+   fClass(className),
+   fPlugin(pluginName),
+   fCtor(ctor),
+   fOrigin(origin),
+   fCallEnv(0),
+   fMethod(0),
+   fCanCall(0),
+   fIsMacro(kFALSE),
+   fIsGlobal(kFALSE)
 {
    // Create a plugin handler. Called by TPluginManager.
-
-   fBase     = base;
-   fRegexp   = regexp;
-   fClass    = className;
-   fPlugin   = pluginName;
-   fCtor     = ctor;
-   fOrigin   = origin;
-   fCallEnv  = 0;
-   fCanCall  = 0;
-   fIsMacro  = kFALSE;
-   fIsGlobal = kFALSE;
 
    if (gROOT->LoadMacro(pluginName, 0, kTRUE) == 0)
       fIsMacro = kTRUE;
