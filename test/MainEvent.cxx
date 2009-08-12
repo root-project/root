@@ -89,13 +89,11 @@
 #include "TRandom.h"
 #include "TTree.h"
 #include "TBranch.h"
-#include "TLeaf.h"
 #include "TClonesArray.h"
 #include "TStopwatch.h"
 #include "TTreeCacheUnzip.h"
 
 #include "Event.h"
-#include "../OptimizeBaskets.C"
 
 
 //______________________________________________________________________________
@@ -219,7 +217,6 @@ int main(int argc, char **argv)
       Float_t ptmin = 1;
 
       for (ev = 0; ev < nevent; ev++) {
-         if  (ev == 300) OptimizeBaskets(tree,2000000,1.1,"d");
          if (ev%printev == 0) {
             tnew = timer.RealTime();
             printf("event:%d, rtime=%f s\n",ev,tnew-told);
