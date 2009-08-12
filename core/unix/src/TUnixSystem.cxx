@@ -604,7 +604,7 @@ const char *TUnixSystem::HostName()
 
    if (fHostname == "") {
       char hn[64];
-#if defined(R__SOLARIS) && !defined(R__KCC)
+#if defined(R__SOLARIS)
       sysinfo(SI_HOSTNAME, hn, sizeof(hn));
 #else
       gethostname(hn, sizeof(hn));
@@ -3376,12 +3376,6 @@ static void sighandler(int sig)
    }
 }
 
-#if defined(R__KCC)
-   extern "C" {
-      typedef void (*sighandlerFunc_t)(int);
-   }
-#endif
-
 //______________________________________________________________________________
 void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 {
@@ -3397,9 +3391,7 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
       sigact.sa_handler = (void (*)())sighandler;
 #elif defined(R__SOLARIS)
       sigact.sa_handler = sighandler;
-#elif defined(R__KCC)
-      sigact.sa_handler = (sighandlerFunc_t)sighandler;
-#elif (defined(R__SGI) && !defined(R__KCC)) || defined(R__LYNXOS)
+#elif defined(R__SGI) || defined(R__LYNXOS)
 #  if defined(R__SGI64) || (__GNUG__>=3)
       sigact.sa_handler = sighandler;
 #  else
@@ -3466,9 +3458,7 @@ void TUnixSystem::UnixSigAlarmInterruptsSyscalls(Bool_t set)
       sigact.sa_handler = (void (*)())sighandler;
 #elif defined(R__SOLARIS)
       sigact.sa_handler = sighandler;
-#elif defined(R__KCC)
-      sigact.sa_handler = (sighandlerFunc_t)sighandler;
-#elif (defined(R__SGI) && !defined(R__KCC)) || defined(R__LYNXOS)
+#elif defined(R__SGI) || defined(R__LYNXOS)
 #  if defined(R__SGI64) || (__GNUG__>=3)
       sigact.sa_handler = sighandler;
 #  else

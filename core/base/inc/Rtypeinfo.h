@@ -16,7 +16,7 @@
 #include "RConfig.h"
 #endif
 
-#if defined(R__SOLARIS) && !defined(R__KCC)
+#if defined(R__SOLARIS)
 
 // <typeinfo> includes <exception> which clashes with <math.h>
 //#include <typeinfo.h>

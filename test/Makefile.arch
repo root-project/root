@@ -152,15 +152,6 @@ LDFLAGS       = $(OPT)
 SOFLAGS       = -shared
 endif
 
-ifeq ($(ARCH),solariskcc)
-# Solaris kcc
-CXX           = KCC --one_instantiation_per_object
-CXXFLAGS      = -O4 -KPIC
-LD            = KCC
-LDFLAGS       = -O4
-SOFLAGS       =
-endif
-
 ifeq ($(ARCH),sgicc)
 # SGI
 CXX           = CC -n32  -I/usr/include/CC.sgi
@@ -197,30 +188,12 @@ LDFLAGS       = $(OPT) -L/usr/lib32 -Wl,-woff,134 -lgen
 SOFLAGS       = -shared
 endif
 
-ifeq ($(ARCH),sgikcc)
-# SGI with KCC
-CXX           = KCC -n32 --one_instantiation_per_object
-CXXFLAGS      = $(OPT)
-LD            = KCC -n32
-LDFLAGS       = $(OPT)
-SOFLAGS       =
-endif
-
 ifeq ($(ARCH),alphagcc)
 # Alpha/OSF with gcc
 CXX           = g++
 CXXFLAGS      = $(OPT2) -Wall -fPIC
 LD            = g++
 LDFLAGS       = $(OPT2)
-SOFLAGS       = -Wl,-expect_unresolved,* -shared
-endif
-
-ifeq ($(ARCH),alphakcc)
-# Alpha/OSF with kai compiler (not yet valid)
-CXX           = KCC --one_instantiation_per_object
-CXXFLAGS      = $(OPT) -fPIC
-LD            = KCC
-LDFLAGS       = $(OPT)
 SOFLAGS       = -Wl,-expect_unresolved,* -shared
 endif
 
@@ -233,15 +206,6 @@ LDFLAGS       = $(OPT)
 SOFLAGS       = -shared -nocxxstd -Wl,-expect_unresolved,*,-msym
 endif
 
-ifeq ($(ARCH),linuxdeb2ppc)
-# Debian/Linux on the PowerPC
-CXX           = g++
-CXXFLAGS      = $(OPT2) -Wall -fPIC
-LD            = g++
-LDFLAGS       = $(OPT2)
-SOFLAGS       = -shared
-endif
-
 ifeq ($(ARCH),linux)
 # Linux with egcs, gcc 2.9x, gcc 3.x
 CXX           = g++
@@ -249,15 +213,6 @@ CXXFLAGS      = $(OPT2) -Wall -fPIC
 LD            = g++
 LDFLAGS       = $(OPT2)
 SOFLAGS       = -shared
-endif
-
-ifeq ($(ARCH),linuxkcc)
-# Linux with the KAI compiler
-CXX           = KCC --one_instantiation_per_object
-CXXFLAGS      = $(OPT) -fPIC +K0
-LD            = KCC
-LDFLAGS       = $(OPT) $(shell $(ROOTCONFIG) --cflags)
-SOFLAGS       =
 endif
 
 ifeq ($(ARCH),linuxicc)
@@ -288,15 +243,6 @@ CXX           = g++
 CXXFLAGS      = $(OPT2) -Wall -fPIC
 LD            = g++
 LDFLAGS       = $(OPT2)
-SOFLAGS       = -shared
-endif
-
-ifeq ($(ARCH),linuxia64sgi)
-# Itanium Linux with sgiCC
-CXX           = sgiCC
-CXXFLAGS      = $(OPT) -Wall -fPIC
-LD            = gsgiCC
-LDFLAGS       = $(OPT)
 SOFLAGS       = -shared
 endif
 

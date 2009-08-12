@@ -49,26 +49,6 @@ namespace TMath {
 }
 
 //______________________________________________________________________________
-#if defined(R__KCC)
-static Double_t hypot(Double_t x, Double_t y)
-{
-   Double_t ax = TMath::Abs(x), ay = TMath::Abs(y);
-   Double_t amax, amin;
-   if(ax > ay){
-      amax = ax;
-      amin = ay;
-   } else {
-      amin = ax;
-      amax = ay;
-   }
-   if(amin == 0.0) return amax;
-
-   Double_t f = amin/amax;
-   return amax*sqrt(1.0 + f*f);
-}
-#endif
-
-//______________________________________________________________________________
 Long_t TMath::Hypot(Long_t x, Long_t y)
 {
    return (Long_t) (hypot((Double_t)x, (Double_t)y) + 0.5);
@@ -83,7 +63,7 @@ Double_t TMath::Hypot(Double_t x, Double_t y)
 //______________________________________________________________________________
 Double_t TMath::ASinH(Double_t x)
 {
-#if defined(WIN32) || defined(R__KCC)
+#if defined(WIN32)
    if(x==0.0) return 0.0;
    Double_t ax = Abs(x);
    return log(x+ax*sqrt(1.+1./(ax*ax)));
@@ -95,7 +75,7 @@ Double_t TMath::ASinH(Double_t x)
 //______________________________________________________________________________
 Double_t TMath::ACosH(Double_t x)
 {
-#if defined(WIN32) || defined(R__KCC)
+#if defined(WIN32)
    if(x==0.0) return 0.0;
    Double_t ax = Abs(x);
    return log(x+ax*sqrt(1.-1./(ax*ax)));
@@ -107,7 +87,7 @@ Double_t TMath::ACosH(Double_t x)
 //______________________________________________________________________________
 Double_t TMath::ATanH(Double_t x)
 {
-#if defined(WIN32) || defined(R__KCC)
+#if defined(WIN32)
    return log((1+x)/(1-x))/2;
 #else
    return atanh(x);

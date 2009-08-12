@@ -429,15 +429,6 @@
 #    define R__HIDDEN
 #endif
 
-#ifdef __KCC
-#   define R__KCC
-#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
-#   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   define R__PLACEMENTDELETE /* supports overloading placement delete */
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#   define ANSICPP
-#endif
-
 #ifdef __INTEL_COMPILER
 #   define R__INTEL_COMPILER
 #   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */

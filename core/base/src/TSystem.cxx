@@ -2884,22 +2884,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if ( !recompile ) {
          return kTRUE;
       } else {
-
-#ifdef R__KCC
-         ::Error("ACLiC","shared library can not be updated (when using the KCC compiler)!");
-         return kFALSE;
-#else
-         // the following is not working in KCC because it seems that dlclose
-         // does not properly get rid of the object.  It WILL provoke a
-         // core dump at termination.
-
          ::Info("ACLiC","it will be regenerated and reloaded!");
          if ( gInterpreter->UnloadFile( library.Data() ) != 0 ) {
             // The library is being used. We can not unload it.
             return kFALSE;
          }
          Unlink(library);
-#endif
       }
 
    }

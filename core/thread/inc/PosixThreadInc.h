@@ -38,9 +38,7 @@
 #elif defined(R__HPUX) || defined(R__AIX)
 #define PthreadDraftVersion 4
 #else
-#if !defined(R__KCC)
 #warning PthreadDraftVersion not specified
-#endif
 #endif
 
 

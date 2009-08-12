@@ -3,7 +3,6 @@ aix5                 for AIX 5.x with xlC
 aixgcc               for AIX 5.x with gcc >= 3
 alphacxx6            for DEC Unix with cxx6
 alphagcc             for DEC Unix with gcc
-alphakcc             for DEC Unix with KCC
 freebsd4             for FreeBSD 4.x with gcc
 freebsd5             for FreeBSD 5.x and 6.x with gcc
 freebsd7             for FreeBSD 7.x with gcc
@@ -13,15 +12,11 @@ hpuxia64acc          for HP-UX 11i v1.5 (IA-64) with HP aCC
 hurddeb              for Debian GNU/Hurd with gcc
 linux                for i386 Linux with gcc >= 3
 linuxicc             for i386 Linux with Intel's icc
-linuxkcc             for i386 Linux with KAI's KCC
-linuxpgcc            for i386 Linux with pgcc
 linuxalphagcc        for Alpha Linux with gcc
 linuxarm             for ARM Linux with gcc
-linuxdeb2ppc         for PPC Linux based on Debian v2.0 with gcc
 linuxhppa            for HPPA Linux with gcc
 linuxia64ecc         for Itanium Linux with Intel icc
 linuxia64gcc         for Itanium Linux with gcc >= 3
-linuxia64sgi         for Itanium Linux with sgiCC
 linuxmips            for MIPS Linux with gcc
 linuxppcgcc          for PPC Linux with gcc
 linuxppc64gcc        for PPC 64 Linux  with gcc >= 3
@@ -36,12 +31,10 @@ openbsd              for OpenBSD >= 3.7 with gcc
 sgicc                for SGI IRIX 6.x with CC
 sgicc64              for SGI IRIX 6.x with CC 64 bits
 sgigcc               for SGI IRIX 6.x with gcc
-sgikcc               for SGI IRIX 6.x with KCC
 sgin32gcc            for SGI IRIX 6.4 with gcc using n32 ABI
 solaris              for Solaris with CC
 solarisCC5           for Solaris with CC 5.0
 solaris64CC5         for Solaris with CC 5.0 64 bits
 solarisgcc           for Solaris with gcc
-solariskcc           for Solaris with KCC
 win32                for Win32 with VC++ and gdk based GUI
 win32gcc             for Win32 with cygwin/gcc
