@@ -55,6 +55,9 @@ public:
 
    void   ReduceSegmentLengths(Float_t max);
 
+   TEveVector GetLineStart() const;
+   TEveVector GetLineEnd()   const;
+
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(ostream& out, const TString& var);
 

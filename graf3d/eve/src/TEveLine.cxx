@@ -169,6 +169,30 @@ void TEveLine::ReduceSegmentLengths(Float_t max)
 }
 
 //______________________________________________________________________________
+TEveVector TEveLine::GetLineStart() const
+{
+   // Return the first point of the line.
+   // If there are no points (0,0,0) is returned.
+
+   TEveVector v;
+   GetPoint(0, v.fX, v.fY, v.fZ);
+   return v;
+}
+
+//______________________________________________________________________________
+TEveVector TEveLine::GetLineEnd() const
+{
+   // Return the last point of the line.
+   // If there are no points (0,0,0) is returned.
+
+   TEveVector v;
+   GetPoint(fLastPoint, v.fX, v.fY, v.fZ);
+   return v;
+}
+
+//==============================================================================
+
+//______________________________________________________________________________
 void TEveLine::CopyVizParams(const TEveElement* el)
 {
    // Copy visualization parameters from element el.
