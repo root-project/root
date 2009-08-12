@@ -57,7 +57,7 @@ AC_DEFUN([ROOT_PATH],
     # define some variables 
     ROOTLIBDIR=`$ROOTCONF --libdir`
     ROOTINCDIR=`$ROOTCONF --incdir`
-    ROOTINCDIR=`$ROOTCONF --etcdir`
+    ROOTETCDIR=`$ROOTCONF --etcdir`
     ROOTCFLAGS=`$ROOTCONF --noauxcflags --cflags` 
     ROOTLIBS=`$ROOTCONF --noauxlibs --noldflags --libs`
     ROOTGLIBS=`$ROOTCONF --noauxlibs --noldflags --glibs`
