@@ -99,6 +99,8 @@ void TEveProjectionAxes::ComputeBBox()
 
    for (Int_t i=0; i<6; ++i)
       fBBox[i] = fManager->GetBBox()[i];
+
+   AssertBBoxExtents(0.1);
 }
 
 //______________________________________________________________________________

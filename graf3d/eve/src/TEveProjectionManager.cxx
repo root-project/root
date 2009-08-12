@@ -14,7 +14,6 @@
 #include "TEveProjectionBases.h"
 #include "TEveCompound.h"
 
-#include "TAttBBox.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualPad.h"
@@ -170,8 +169,8 @@ Bool_t TEveProjectionManager::ShouldImport(TEveElement* el)
 //______________________________________________________________________________
 void TEveProjectionManager::UpdateDependentElsAndScenes(TEveElement* root)
 {
-   // Update dependent elements' vounding box and mark scenes
-   // cointaining element root or its children as requiring a repaint.
+   // Update dependent elements' bounding box and mark scenes
+   // containing element root or its children as requiring a repaint.
 
    for (List_i i=fDependentEls.begin(); i!=fDependentEls.end(); ++i)
    {
@@ -255,7 +254,11 @@ TEveElement* TEveProjectionManager::ImportElements(TEveElement* el,
    {
       AssertBBox();
       ProjectChildrenRecurse(new_el);
+      AssertBBoxExtents(0.1);
+      StampTransBBox();
+
       UpdateDependentElsAndScenes(new_el);
+
       if (ext_list)
          ext_list->AddElement(new_el);
    }
@@ -294,7 +297,10 @@ void TEveProjectionManager::ProjectChildren()
    // TEveManger about the scenes that have been changed.
 
    BBoxInit();
-   ProjectChildrenRecurse(this);
+   for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
+      ProjectChildrenRecurse(*i);
+   AssertBBoxExtents(0.1);
+   StampTransBBox();
 
    UpdateDependentElsAndScenes(this);
 }

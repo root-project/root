@@ -426,9 +426,13 @@ void TEvePolygonSetProjected::ComputeBBox()
 {
    // Override of virtual method from TAttBBox.
 
-   BBoxInit();
-   for (Int_t pi = 0; pi<fNPnts; ++pi)
-      BBoxCheckPoint(fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
+   if (fNPnts > 0) {
+      BBoxInit();
+      for (Int_t pi = 0; pi < fNPnts; ++pi)
+         BBoxCheckPoint(fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
+   } else {
+      BBoxZero();
+   }
 }
 
 //______________________________________________________________________________
