@@ -253,7 +253,13 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox,
 void TGLPerspectiveCamera::Configure(Double_t fov, Double_t dolly, Double_t center[3],
                                      Double_t hRotate, Double_t vRotate)
 {
-   // Configure the camera state
+   // Configure the camera state.
+   //   fov     - set directly field-of-view in degrees (default = 30);
+   //   dolly   - additional move along the camera forward direction;
+   //   center  - new camera center (can be 0 for no change);
+   //   hRotate - additional "up/down" rotation in radians;
+   //   vRotate - additional "left/right" rotation in radians.
+
    fFOV = fov;
 
    // Don't generally constrain external configuration
@@ -266,7 +272,9 @@ void TGLPerspectiveCamera::Configure(Double_t fov, Double_t dolly, Double_t cent
       fFOV = 0.1;
    }
 
-   SetCenterVec(center[0], center[1], center[2]);
+   if (center)
+      SetCenterVec(center[0], center[1], center[2]);
+
    fCamTrans.MoveLF(1, dolly);
    RotateRad(hRotate, vRotate);
 

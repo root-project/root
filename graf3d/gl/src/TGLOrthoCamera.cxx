@@ -281,12 +281,20 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/,
 
 //______________________________________________________________________________
 void TGLOrthoCamera::Configure(Double_t zoom, Double_t dolly, Double_t center[3],
-                                     Double_t hRotate, Double_t vRotate)
+                               Double_t hRotate, Double_t vRotate)
 {
    // Configure the camera state.
+   //   zoom    - set directly (default = 0.78);
+   //   dolly   - additional move along the camera forward direction;
+   //   center  - new camera center (can be 0 for no change);
+   //   hRotate - additional "up/down" rotation in radians;
+   //   vRotate - additional "left/right" rotation in radians.
 
    fZoom = zoom;
-   SetCenterVec(center[0], center[1], center[2]);
+
+   if (center)
+      SetCenterVec(center[0], center[1], center[2]);
+
    fCamTrans.MoveLF(1, dolly);
    RotateRad(hRotate, vRotate);
 

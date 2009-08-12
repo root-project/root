@@ -1412,8 +1412,9 @@ TGLCamera& TGLViewer::RefCamera(ECameraType cameraType)
 void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 {
    // Set current active camera - 'cameraType' one of:
-   // kCameraPerspX, kCameraPerspY, kCameraPerspZ
-   // kCameraOrthoXOY, kCameraOrthoXOZ, kCameraOrthoZOY
+   //   kCameraPerspX,    kCameraPerspY,    kCameraPerspZ,
+   //   kCameraOrthoXOY,  kCameraOrthoXOZ,  kCameraOrthoZOY,
+   //   kCameraOrthoXnOY, kCameraOrthoXnOZ, kCameraOrthoZnOY
 
    if (IsLocked()) {
       Error("TGLViewer::SetCurrentCamera", "expected kUnlocked, found %s", LockName(CurrentLock()));
