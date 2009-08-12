@@ -692,6 +692,12 @@ void TSelectorDraw::Begin(TTree *tree)
                fVmax[0]  = oldhtemp->GetZaxis()->GetXmax();
             } else {
                TView *view = gPad->GetView();
+               if (!view) {
+                  Error("Begin","You cannot use option same when no 3D view exists");
+                  fVmin[0]=fVmin[1]=fVmin[2]=-1;
+                  fVmax[0]=fVmax[1]=fVmax[2]= 1;
+                  view = TView::CreateView(1,fVmin,fVmax);
+               }
                Double_t *rmin = view->GetRmin();
                Double_t *rmax = view->GetRmax();
                fNbins[2] = gEnv->GetValue("Hist.Binning.3D.z",20);
