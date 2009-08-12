@@ -109,13 +109,27 @@ std::istream& operator<<(std::istream& istr,std::G__CINT_NOSUPPORT& i) {
 #ifdef G__NATIVELONGLONG
 std::ostream& operator<<(std::ostream& ostr,long long i) {
   char buf[200];
-  sprintf(buf,"%lld",i);
+#pragma ifndef G__TMPLTIOS
+  if (ostr.flags() & ios::hex)
+#else
+  if (ostr.flags() & ios_base::hex)
+#endif
+     sprintf(buf,"%llx",i);
+  else
+     sprintf(buf,"%lld",i);
   ostr << buf ;
   return(ostr);
 }
 std::ostream& operator<<(std::ostream& ostr,unsigned long long i) {
   char buf[200];
-  sprintf(buf,"%llu",i);
+#pragma ifndef G__TMPLTIOS
+  if (ostr.flags() & ios::hex)
+#else
+  if (ostr.flags() & ios_base::hex)
+#endif
+     sprintf(buf,"%llx",i);
+  else
+     sprintf(buf,"%llu",i);
   ostr << buf ;
   return(ostr);
 }
@@ -134,7 +148,14 @@ std::istream& operator>>(std::istream& istr,long long &i) {
 std::istream& operator>>(std::istream& istr,unsigned long long &i) {
   char buf[200];
   istr >> buf ;
-  sscanf(buf,"%llu",&i);
+#pragma ifndef G__TMPLTIOS
+  if (ostr.flags() & ios::hex)
+#else
+  if (ostr.flags() & ios_base::hex)
+#endif
+     sscanf(buf,"%llx",&i);
+  else
+     sscanf(buf,"%llu",&i);
   return(istr);
 }
 std::istream& operator>>(std::istream& istr,long double &i) {
