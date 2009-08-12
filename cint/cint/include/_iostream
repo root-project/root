@@ -111,9 +111,9 @@ std::ostream& operator<<(std::ostream& ostr,long long i) {
   char buf[200];
 #pragma ifndef G__TMPLTIOS
   if (ostr.flags() & ios::hex)
-#else
+#pragma else
   if (ostr.flags() & ios_base::hex)
-#endif
+#pragma endif
      sprintf(buf,"%llx",i);
   else
      sprintf(buf,"%lld",i);
@@ -124,9 +124,9 @@ std::ostream& operator<<(std::ostream& ostr,unsigned long long i) {
   char buf[200];
 #pragma ifndef G__TMPLTIOS
   if (ostr.flags() & ios::hex)
-#else
+#pragma else
   if (ostr.flags() & ios_base::hex)
-#endif
+#pragma endif
      sprintf(buf,"%llx",i);
   else
      sprintf(buf,"%llu",i);
@@ -150,9 +150,9 @@ std::istream& operator>>(std::istream& istr,unsigned long long &i) {
   istr >> buf ;
 #pragma ifndef G__TMPLTIOS
   if (ostr.flags() & ios::hex)
-#else
+#pragma else
   if (ostr.flags() & ios_base::hex)
-#endif
+#pragma endif
      sscanf(buf,"%llx",&i);
   else
      sscanf(buf,"%llu",&i);
