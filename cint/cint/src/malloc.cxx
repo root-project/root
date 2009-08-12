@@ -93,11 +93,11 @@ void G__shminit()
    /* Prepare keys */
    key_t mykey;
    const char projid = 'Q';
-   char keyfile[256];
+   G__FastAllocString keyfile(256);
    int* poffset;
 
    G__getcintsysdir();
-   sprintf(keyfile, "%s/cint", G__cintsysdir);
+   keyfile.Format("%s/cint", G__cintsysdir);
    mykey = ftok(keyfile, projid);
    /* printf("mykey=%x\n",mykey); */
 
@@ -141,12 +141,12 @@ extern "C" {
 //______________________________________________________________________________
 static long G__getstaticobject()
 {
-   char temp[G__ONELINE];
+   G__FastAllocString temp(G__ONELINE);
    if (G__memberfunc_tagnum != -1) {
-      sprintf(temp, "%s\\%x\\%x\\%x", G__varname_now, G__func_page, G__func_now, G__memberfunc_tagnum);
+      temp.Format("%s\\%x\\%x\\%x", G__varname_now, G__func_page, G__func_now, G__memberfunc_tagnum);
    }
    else {
-      sprintf(temp, "%s\\%x\\%x", G__varname_now, G__func_page, G__func_now);
+      temp.Format("%s\\%x\\%x", G__varname_now, G__func_page, G__func_now);
    }
    int hash = 0;
    int i = 0;
@@ -161,7 +161,7 @@ static long G__getstaticobject()
       }
    }
    if (!G__const_noerror) {
-      G__fprinterr(G__serr, "Error: No memory for static %s ", temp);
+      G__fprinterr(G__serr, "Error: No memory for static %s ", temp());
       G__genericerror(0);
    }
    return 0;

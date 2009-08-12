@@ -1896,7 +1896,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
    int offset;
    int offset_sum;
    int i;
-   char temp[G__MAXNAME*2];
+   G__FastAllocString temp(G__MAXNAME*2);
    char* pparen;
    re_try_after_std:
    // search for pattern "::"
@@ -1913,7 +1913,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
    // or fully qualified scope!
    if (pc == name) {
       /* strip scope operator, set hash and return */
-      strcpy(temp, name + 2);
+      temp = name + 2;
       strcpy(name, temp);
       G__hash(name, (*phash), i)
       /* If we do no have anymore scope operator, we know the request of
@@ -1924,7 +1924,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
 #ifndef G__STD_NAMESPACE
    if (strncmp(name, "std::", 5) == 0 && G__ignore_stdnamespace) {
       // strip scope operator, set hash and return
-      strcpy(temp, name + 5);
+      temp = name + 5;
       strcpy(name, temp);
       G__hash(name, (*phash), i)
       goto re_try_after_std;
@@ -1932,7 +1932,6 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
 #endif
    // otherwise, specific class scope
    offset_sum = 0;
-   strcpy(temp, name);
    if (*name == '~') {
       // -- Explicit destructor of the form: ~A::B().
       scope = name + 1;
@@ -1984,7 +1983,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
       G__inc_cp_asm(2, 0);
    }
 #endif
-   strcpy(temp, member);
+   temp = member;
    if (*name == '~') {
       // -- Explicit destructor.
       strcpy(name + 1, temp);
@@ -2088,7 +2087,6 @@ int G__getunaryop(char unaryop, const char* expression, char* buf, G__value* pre
 int G__iosrdstate(G__value* pios)
 {
    // -- ios rdstate condition test
-   char buf[G__MAXNAME];
    G__value result;
    int ig2;
    long store_struct_offset;
@@ -2117,33 +2115,26 @@ int G__iosrdstate(G__value* pios)
 #endif // G__ASM
 
    /* call ios::rdstate() */
-   sprintf(buf, "rdstate()" /* ,pios->obj.i */);
-   result = G__getfunction(buf, &ig2, G__TRYMEMFUNC);
+   result = G__getfunction("rdstate()", &ig2, G__TRYMEMFUNC);
    if (ig2) rdstateflag = 1;
 
    if (0 == ig2) {
-      sprintf(buf, "operator int()" /* ,pios->obj.i */);
-      result = G__getfunction(buf, &ig2, G__TRYMEMFUNC);
+      result = G__getfunction("operator int()", &ig2, G__TRYMEMFUNC);
    }
    if (0 == ig2) {
-      sprintf(buf, "operator bool()" /* ,pios->obj.i */);
-      result = G__getfunction(buf, &ig2, G__TRYMEMFUNC);
+      result = G__getfunction("operator bool()", &ig2, G__TRYMEMFUNC);
    }
    if (0 == ig2) {
-      sprintf(buf, "operator long()" /* ,pios->obj.i */);
-      result = G__getfunction(buf, &ig2, G__TRYMEMFUNC);
+      result = G__getfunction("operator long()", &ig2, G__TRYMEMFUNC);
    }
    if (0 == ig2) {
-      sprintf(buf, "operator short()" /* ,pios->obj.i */);
-      result = G__getfunction(buf, &ig2, G__TRYMEMFUNC);
+      result = G__getfunction("operator short()", &ig2, G__TRYMEMFUNC);
    }
    if (0 == ig2) {
-      sprintf(buf, "operator char*()" /* ,pios->obj.i */);
-      result = G__getfunction(buf, &ig2, G__TRYMEMFUNC);
+      result = G__getfunction("operator char*()", &ig2, G__TRYMEMFUNC);
    }
    if (0 == ig2) {
-      sprintf(buf, "operator const char*()" /* ,pios->obj.i */);
-      result = G__getfunction(buf, &ig2, G__TRYMEMFUNC);
+      result = G__getfunction("operator const char*()", &ig2, G__TRYMEMFUNC);
    }
 
    /* restore environment */
@@ -2182,10 +2173,10 @@ int G__iosrdstate(G__value* pios)
 int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
 {
    int ig2;
-   char expr[G__LONGLINE];
-   char opr[12];
-   char arg1[G__LONGLINE];
-   char arg2[G__LONGLINE];
+   G__FastAllocString expr(G__LONGLINE);
+   G__FastAllocString opr(12);
+   G__FastAllocString arg1(G__LONGLINE);
+   G__FastAllocString arg2(G__LONGLINE);
    long store_struct_offset;
    int store_tagnum;
    int store_isconst;
@@ -2207,35 +2198,35 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
       case '<':
       case '@': /* power */
       case '!':
-         sprintf(opr, "operator%c", operatortag);
+         opr.Format("operator%c", operatortag);
          break;
 
       case 'A': /* logic and  && */
-         sprintf(opr, "operator&&");
+         opr = "operator&&";
          break;
 
       case 'O': /* logic or   || */
-         sprintf(opr, "operator||");
+         opr = "operator||";
          break;
 
       case 'R': /* right shift >> */
-         sprintf(opr, "operator>>");
+         opr = "operator>>";
          break;
       case 'L': /* left shift  << */
-         sprintf(opr, "operator<<");
+         opr = "operator<<";
          break;
 
       case 'E':
-         sprintf(opr, "operator==");
+         opr = "operator==";
          break;
       case 'N':
-         sprintf(opr, "operator!=");
+         opr = "operator!=";
          break;
       case 'G':
-         sprintf(opr, "operator>=");
+         opr = "operator>=";
          break;
       case 'l':
-         sprintf(opr, "operator<=");
+         opr = "operator<=";
          break;
 
       case '\0':
@@ -2243,49 +2234,49 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
          return(0);
 
       case G__OPR_ADDASSIGN:
-         sprintf(opr, "operator+=");
+         opr = "operator+=";
          break;
       case G__OPR_SUBASSIGN:
-         sprintf(opr, "operator-=");
+         opr = "operator-=";
          break;
       case G__OPR_MODASSIGN:
-         sprintf(opr, "operator%%=");
+         opr = "operator%%=";
          break;
       case G__OPR_MULASSIGN:
-         sprintf(opr, "operator*=");
+         opr = "operator*=";
          break;
       case G__OPR_DIVASSIGN:
-         sprintf(opr, "operator/=");
+         opr = "operator/=";
          break;
       case G__OPR_RSFTASSIGN:
-         sprintf(opr, "operator>>=");
+         opr = "operator>>=";
          break;
       case G__OPR_LSFTASSIGN:
-         sprintf(opr, "operator<<=");
+         opr = "operator<<=";
          break;
       case G__OPR_BANDASSIGN:
-         sprintf(opr, "operator&=");
+         opr = "operator&=";
          break;
       case G__OPR_BORASSIGN:
-         sprintf(opr, "operator|=");
+         opr = "operator|=";
          break;
       case G__OPR_EXORASSIGN:
-         sprintf(opr, "operator^=");
+         opr = "operator^=";
          break;
       case G__OPR_ANDASSIGN:
-         sprintf(opr, "operator&&=");
+         opr = "operator&&=";
          break;
       case G__OPR_ORASSIGN:
-         sprintf(opr, "operator||=");
+         opr = "operator||=";
          break;
 
       case G__OPR_POSTFIXINC:
       case G__OPR_PREFIXINC:
-         sprintf(opr, "operator++");
+         opr = "operator++";
          break;
       case G__OPR_POSTFIXDEC:
       case G__OPR_PREFIXDEC:
-         sprintf(opr, "operator--");
+         opr = "operator--";
          break;
 
       default:
@@ -2335,7 +2326,7 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
       switch (operatortag) {
          case G__OPR_POSTFIXINC:
          case G__OPR_POSTFIXDEC:
-            sprintf(expr, "%s(1)", opr);
+            expr.Format("%s(1)", opr());
 #ifdef G__ASM
             if (G__asm_noverflow) {
                G__asm_inst[G__asm_cp] = G__LD;
@@ -2353,7 +2344,7 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
             break;
          default:
             postfixflag = 0;
-            sprintf(expr, "%s()", opr);
+            expr.Format("%s()", opr());
             break;
       }
 
@@ -2389,7 +2380,7 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
          switch (operatortag) {
             case G__OPR_POSTFIXINC:
             case G__OPR_POSTFIXDEC:
-               sprintf(expr, "%s(%s,1)", opr, G__setiparseobject(&expressionin, arg1));
+               expr.Format("%s(%s,1)", opr(), G__setiparseobject(&expressionin, arg1));
 #ifdef G__ASM
                if (G__asm_noverflow) {
                   // -- We are generating bytecode.
@@ -2406,7 +2397,7 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
 #endif // G__ASM
                break;
             default:
-               sprintf(expr, "%s(%s)", opr, G__setiparseobject(&expressionin, arg1));
+               expr.Format("%s(%s)", opr(), G__setiparseobject(&expressionin, arg1));
                break;
          }
          buffer = G__getfunction(expr, &ig2, G__TRYNORMAL);
@@ -2466,10 +2457,10 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
             pos = strchr(arg2, ')');
             *pos = '\0';
             if (expressionin.ref < 0) {
-               sprintf(expr, "*%s*)(%ld)", arg2, expressionin.ref);
+               expr.Format("*%s*)(%ld)", arg2(), expressionin.ref);
             }
             else {
-               sprintf(expr, "*%s*)%ld", arg2, expressionin.ref);
+               expr.Format("*%s*)%ld", arg2(), expressionin.ref);
             }
             strcpy(arg2, expr);
          } else if (expressionin.type == 'm') {
@@ -2480,7 +2471,7 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
          }
       }
       if (defined->type == 'u') {
-         sprintf(expr, "%s(%s)", opr, arg2);
+         expr.Format("%s(%s)", opr(), arg2());
          store_struct_offset = G__store_struct_offset;
          store_tagnum = G__tagnum;
          G__store_struct_offset = defined->obj.i;
@@ -2513,26 +2504,26 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
                pos = strchr(arg1, ')');
                *pos = '\0';
                if (defined->ref < 0) {
-                  sprintf(expr, "*%s*)(%ld)", arg1, defined->ref);
+                  expr.Format("*%s*)(%ld)", arg1(), defined->ref);
                }
                else {
-                  sprintf(expr, "*%s*)%ld", arg1, defined->ref);
+                  expr.Format("*%s*)%ld", arg1(), defined->ref);
                }
                strcpy(arg1, expr);
             }
          }
-         sprintf(expr, "%s(%s,%s)", opr, arg1, arg2);
+         expr.Format("%s(%s,%s)", opr(), arg1(), arg2());
          buffer = G__getfunction(expr, &ig2, G__TRYNORMAL);
          //
          //  Need to check ANSI/ISO standard. What happens if operator
          //  function defined in a namespace is used in other namespace.
          //
          if (!ig2 && (expressionin.tagnum != -1) && (G__struct.parent_tagnum[expressionin.tagnum] != -1)) {
-            sprintf(expr, "%s::%s(%s,%s)", G__fulltagname(G__struct.parent_tagnum[expressionin.tagnum], 1), opr , arg1 , arg2);
+            expr.Format("%s::%s(%s,%s)", G__fulltagname(G__struct.parent_tagnum[expressionin.tagnum], 1), opr(), arg1(), arg2());
             buffer = G__getfunction(expr, &ig2, G__TRYNORMAL);
          }
          if (!ig2 && (defined->tagnum != -1) && (G__struct.parent_tagnum[defined->tagnum] != -1)) {
-            sprintf(expr, "%s::%s(%s,%s)", G__fulltagname(G__struct.parent_tagnum[defined->tagnum], 1), opr , arg1 , arg2);
+            expr.Format("%s::%s(%s,%s)", G__fulltagname(G__struct.parent_tagnum[defined->tagnum], 1), opr(), arg1(), arg2());
             buffer = G__getfunction(expr, &ig2, G__TRYNORMAL);
          }
 
@@ -2603,10 +2594,10 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
          if (0 == ig2) {
             if (-1 != defined->tagnum) {
                G__fprinterr(G__serr, "Error: %s not defined for %s"
-                            , opr, G__fulltagname(defined->tagnum, 1));
+                            , opr(), G__fulltagname(defined->tagnum, 1));
             }
             else {
-               G__fprinterr(G__serr, "Error: %s not defined", expr);
+               G__fprinterr(G__serr, "Error: %s not defined", expr());
             }
             G__genericerror((char*)NULL);
          }
@@ -2724,7 +2715,6 @@ int G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int fl
    int store_tagnum;
    int funcmatch;
    int hash;
-   char realname[G__ONELINE];
    int store_exec_memberfunc;
    int store_memberfunc_tagnum;
    int store_memberfunc_struct_offset;
@@ -2775,7 +2765,7 @@ int G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int fl
    }
 #endif
 
-   sprintf(realname, "operator()");
+   static const char* realname = "operator()";
    G__hash(realname, hash, known);
 
    G__fixedscope = 0;
@@ -2833,8 +2823,8 @@ int G__tryindexopr(G__value* result7, G__value* para, int paran, int ig25)
    //    * paran -> ig25
    // 2) try operator[]() function while ig25<paran
    //
-   char expr[G__ONELINE];
-   char arg2[G__MAXNAME];
+   G__FastAllocString expr(G__ONELINE);
+   G__FastAllocString arg2(G__MAXNAME);
    char *pos;
    int store_tagnum;
    int store_typenum;
@@ -2924,14 +2914,14 @@ int G__tryindexopr(G__value* result7, G__value* para, int paran, int ig25)
                pos = strchr(arg2, ')');
                *pos = '\0';
                if (para[ig25].ref < 0)
-                  sprintf(expr, "*%s*)(%ld)", arg2, para[ig25].ref);
+                  expr.Format("*%s*)(%ld)", arg2(), para[ig25].ref);
                else
-                  sprintf(expr, "*%s*)%ld", arg2, para[ig25].ref);
-               strcpy(arg2, expr);
+                  expr.Format("*%s*)%ld", arg2(), para[ig25].ref);
+               arg2 = expr;
             }
          }
 
-         sprintf(expr, "operator[](%s)", arg2);
+         expr.Format("operator[](%s)", arg2());
          store_asm_exec = G__asm_exec;
          G__asm_exec = 0;
          *result7 = G__getfunction(expr, &known, G__CALLMEMFUNC);

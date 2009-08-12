@@ -2682,7 +2682,7 @@ void G__get__tm__(char *buf)
 char* G__get__date__()
 {
   int i=0,j=0;
-  char buf[80];
+  G__FastAllocString buf(80);
   static char result[80];
   G__get__tm__(buf);
   while(buf[i] && !isspace(buf[i])) ++i; /* skip 'Sun' */
@@ -2703,7 +2703,7 @@ char* G__get__date__()
 char* G__get__time__()
 {
   int i=0,j=0;
-  char buf[80];
+  G__FastAllocString buf(80);
   static char result[80];
   G__get__tm__(buf);
   while(buf[i] && !isspace(buf[i])) ++i; /* skip 'Sun' */
@@ -7438,7 +7438,7 @@ int G__dasm(FILE *fout,int isthrow)
       else {
         fpos_t store_pos;
         struct G__input_file store_ifile = G__ifile;
-        char statement[G__LONGLINE];
+        G__FastAllocString statement(G__LONGLINE);
 #if defined(G__NONSCALARFPOS2)
         fpos_t pos;
         pos.__pos = (off_t)G__asm_inst[pc+3];

@@ -180,7 +180,7 @@ static void G__createmacro(char* new_name, char* initvalue)
    //
    // Note: This routine is part of the parser proper.
    //
-   char line[G__ONELINE];
+   G__FastAllocString line(G__ONELINE);
    int c;
    char *p, *null_fgets;
    fpos_t pos;
@@ -235,10 +235,10 @@ static void G__createmacro(char* new_name, char* initvalue)
       }
       if (G__dispsource) {
          G__fprinterr(G__serr, "\\\n%-5d", G__ifile.line_number);
-         G__fprinterr(G__serr, "%s", line);
+         G__fprinterr(G__serr, "%s", line());
       }
       ++G__mline;
-      fprintf(G__mfp, "%s\n", line);
+      fprintf(G__mfp, "%s\n", line());
    }
    while (c != '\n' && c != '\r');
    p = strrchr(line, ';');
@@ -276,7 +276,7 @@ static int G__createfuncmacro(char* new_name)
    //
    struct G__Deffuncmacro *deffuncmacro;
    int hash, i;
-   char paralist[G__ONELINE];
+   G__FastAllocString paralist(G__ONELINE);
    int c;
    if (G__ifile.filenum > G__gettempfilenum()) {
       G__fprinterr(G__serr, "Limitation: Macro function can not be defined in a command line or a tempfile\n");
@@ -297,7 +297,7 @@ static int G__createfuncmacro(char* new_name)
    G__hash(new_name, hash, i)
    deffuncmacro->hash = hash;
    /* read parameter list */
-   c = G__fgetstream(paralist, ")");
+   c = G__fgetstream(paralist, 0, ")");
    G__ASSERT(')' == c);
    G__getparameterlist(paralist, &deffuncmacro->def_para);
    /* store file pointer, line number and position */
@@ -325,8 +325,8 @@ static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro
    fpos_t pos;
    int c;
    int semicolumn;
-   char symbol[G__ONELINE];
-   const char *punctuation = " \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
+   G__FastAllocString symbol(G__ONELINE);
+   static const char *punctuation = " \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
    int double_quote = 0, single_quote = 0;
    fpos_t backup_pos;
    if (!G__mfp) {
@@ -361,12 +361,12 @@ static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro
    semicolumn = 0;
    while (1) {
       G__disp_mask = 10000; // FIXME: Crazy!
-      c = G__fgetstream(symbol, punctuation);
+      c = G__fgetstream(symbol, 0,  punctuation);
       if ('\0' != symbol[0]) {
          if (!double_quote && !single_quote) {
             G__argsubstitute(symbol, callpara, defpara);
          }
-         fprintf(G__mfp, "%s", symbol);
+         fprintf(G__mfp, "%s", symbol());
          fgetpos(G__mfp, &backup_pos);
          semicolumn = 0;
       }
@@ -478,14 +478,14 @@ static int G__getparameterlist(char* paralist, G__Charlist* charlist)
 {
    // -- FIXME: Describe this function!
    int isrc;
-   char string[G__ONELINE];
+   G__FastAllocString string(G__ONELINE);
    int c;
    charlist->string = 0;
    charlist->next = 0;
    c = ',';
    isrc = 0;
    while (',' == c || ' ' == c) {
-      c = G__getstream_template(paralist, &isrc, string, " \t,)\0");
+      c = G__getstream_template(paralist, &isrc, string, 0, " \t,)\0");
       if (c == '\t') c = ' ';
       if (charlist->string)
          charlist->string = (char*) realloc(charlist->string, strlen(charlist->string) + strlen(string) + 2);
@@ -526,8 +526,8 @@ void G__define()
    //
    //  #define [NAME] [VALUE] \n => G__letvariable("NAME","VALUE")
    //
-   char new_name[G__ONELINE];
-   char initvalue[G__ONELINE];
+   G__FastAllocString new_name(G__ONELINE);
+   G__FastAllocString initvalue(G__ONELINE);
    G__value evalval;
    int c;
    fpos_t pos;
@@ -536,7 +536,7 @@ void G__define()
    //          ^
    // read macro name
    //
-   c = G__fgetname(new_name, "(\n\r\\");
+   c = G__fgetname(new_name, 0, "(\n\r\\");
    //
    //  #define   macro   value
    //                  ^
@@ -565,7 +565,7 @@ void G__define()
       // Remember position in case it is too hard for us to handle.
       fgetpos(G__ifile.fp, &pos);
       // Grab first part.
-      c = G__fgetstream(initvalue, "\n\r\\/");
+      c = G__fgetstream(initvalue, 0, "\n\r\\/");
       // Read and remove comments until done.
       while (c == '/') {
          // -- Possible comment coming next.
@@ -583,14 +583,14 @@ void G__define()
                // -- C style comment, ignore.
                G__skip_comment();
                // Scan in next part.
-               c = G__fgetstream(initvalue + strlen(initvalue), "\n\r\\/");
+               c = G__fgetstream(initvalue, strlen(initvalue), "\n\r\\/");
                break;
             default:
                // -- Not a comment, take character.
                // Accumulate character.
                sprintf(initvalue + strlen(initvalue), "/%c", c);
                // Scan in next part.
-               c = G__fgetstream(initvalue + strlen(initvalue), "\n\r\\/");
+               c = G__fgetstream(initvalue, strlen(initvalue), "\n\r\\/");
                break;
          }
       }
@@ -683,12 +683,7 @@ G__value G__execfuncmacro(const char* item, int* done)
    //
    //  Separate macro func name.
    //
-   char buf[G__ONELINE];
-   char* funcmacro = buf;
-   if (strlen(item) > (G__ONELINE - 10)) {
-      funcmacro = (char*) malloc(strlen(item) + 10);
-   }
-   strcpy(funcmacro, item);
+   G__FastAllocString funcmacro(item);
    char* p = strchr(funcmacro, '(');
    *p = '\0';
    //
@@ -714,9 +709,6 @@ G__value G__execfuncmacro(const char* item, int* done)
    //
    if (!found) {
       *done = 0;
-      if (funcmacro != buf) {
-         free(funcmacro);
-      }
       return G__null;
    }
    //
@@ -785,9 +777,6 @@ G__value G__execfuncmacro(const char* item, int* done)
    //  We are done.
    //
    *done = 1;
-   if (funcmacro != buf) {
-      free(funcmacro);
-   }
    return result;
 }
 
@@ -802,12 +791,7 @@ int G__execfuncmacro_noexec(const char* macroname)
    //
    //  Separate macro func name.
    //
-   char buf[G__ONELINE];
-   char* funcmacro = buf;
-   if (strlen(macroname) > (G__ONELINE - 10)) {
-      funcmacro = (char*) malloc(strlen(macroname) + 10);
-   }
-   strcpy(funcmacro, macroname);
+   G__FastAllocString funcmacro(macroname);
    char* p = strchr(funcmacro, '(');
    if (p) {
       *p = '\0';
@@ -841,17 +825,15 @@ int G__execfuncmacro_noexec(const char* macroname)
    //
    if (!found) {
       // --
-      if (funcmacro != buf) {
-         free(funcmacro);
-      }
       return 0;
    }
    //
    //  Snarf the arg list.
    //
    *p = '(';
-   int c = G__fgetstream_spaces(p + 1 , ")");
+   int c = G__fgetstream_spaces(funcmacro, p - funcmacro.data() + 1, ")");
    i = strlen(funcmacro);
+   funcmacro.Resize(i + 2);
    funcmacro[i++] = c;
    funcmacro[i] = '\0';
    //
@@ -915,9 +897,6 @@ int G__execfuncmacro_noexec(const char* macroname)
    //   #define BEGIN_NS(N) namespace N {
    //   #define END_NS(N)   }
    //
-   if (funcmacro != buf) {
-      free(funcmacro);
-   }
    return 1;
 }
 

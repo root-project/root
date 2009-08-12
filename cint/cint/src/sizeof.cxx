@@ -141,7 +141,8 @@ int G__Lsizeof(const char *type_name)
   int tagnum,typenum;
   int result;
   int pointlevel=0;
-  char namebody[G__MAXNAME+20];
+  G__FastAllocString namebody_sb(G__MAXNAME+20);
+  char* namebody = namebody_sb;
   char *p;
   int i;
 
@@ -285,7 +286,8 @@ int G__Lsizeof(const char *type_name)
   G__hash(namebody,hash,ig15)
   var = G__getvarentry(namebody,hash,&ig15,&G__global,G__p_local);
   if (!var) {
-    char temp[G__ONELINE];
+    G__FastAllocString temp_sb(G__ONELINE);
+    char* temp = temp_sb;
     if (G__memberfunc_tagnum != -1) { // questionable
       sprintf(temp, "%s\\%x\\%x\\%x", namebody, G__func_page, G__func_now, G__memberfunc_tagnum);
     }
@@ -393,7 +395,8 @@ long *G__typeid(const char *typenamein)
   int len;
   int pointlevel=0,isref=0;
   int tag_type_info;
-  char typenamebuf[G__MAXNAME*2];
+  G__FastAllocString typenamebuf_sb(G__MAXNAME*2);
+  char* typenamebuf = typenamebuf_sb;
   char *type_name;
   int isconst = 0;
 

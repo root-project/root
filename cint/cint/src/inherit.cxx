@@ -121,7 +121,7 @@ void G__inheritclass(int to_tagnum,int from_tagnum,char baseaccess)
 int G__baseconstructorwp()
 {
   int c;
-  char buf[G__ONELINE];
+  G__FastAllocString buf(G__ONELINE);
   int n=0;
   struct G__baseparam *pbaseparamin = (struct G__baseparam*)NULL;
   struct G__baseparam *pbaseparam = pbaseparamin;
@@ -133,7 +133,7 @@ int G__baseconstructorwp()
   if(':'==c) c=',';
   
   while(','==c) {
-    c=G__fgetstream_newtemplate(buf,"({,"); /* case 3) */
+    c=G__fgetstream_newtemplate(buf, 0, "({,"); /* case 3) */
     if('('==c) {
       if(pbaseparamin) {
         pbaseparam->next
@@ -150,11 +150,11 @@ int G__baseconstructorwp()
       pbaseparam->param = (char*)NULL;
       pbaseparam->name=(char*)malloc(strlen(buf)+1);
       strcpy(pbaseparam->name,buf);
-      c=G__fgetstream_newtemplate(buf,")");
+      c=G__fgetstream_newtemplate(buf, 0, ")");
       pbaseparam->param=(char*)malloc(strlen(buf)+1);
       strcpy(pbaseparam->param,buf);
       ++n;
-      c=G__fgetstream(buf,",{");
+      c=G__fgetstream(buf, 0, ",{");
     }
   }
   
@@ -282,7 +282,7 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
   struct G__baseparam *pbaseparam = pbaseparamin;
   char *tagname,*memname;
   int flag;
-  char construct[G__ONELINE];
+  G__FastAllocString construct(G__ONELINE);
   int size;
   long store_globalvarpointer;
   int donen=0;
@@ -363,10 +363,10 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
           pbaseparam=pbaseparam->next;
         }
       }
-      if(flag) sprintf(construct,"%s(%s)" ,tagname,pbaseparam->param);
-      else sprintf(construct,"%s()",tagname);
+      if(flag) construct.Format("%s(%s)" ,tagname,pbaseparam->param);
+      else construct.Format("%s()",tagname);
       if(G__dispsource) {
-        G__fprinterr(G__serr,"\n!!!Calling base class constructor %s",construct);
+         G__fprinterr(G__serr,"\n!!!Calling base class constructor %s",construct());
       }
       if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) { /* C++ compiled class */
         G__globalvarpointer=G__store_struct_offset;
@@ -453,11 +453,11 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
               }
             continue;
           }
-          sprintf(construct,"%s(%s)" ,G__struct.name[G__tagnum]
+          construct.Format("%s(%s)" ,G__struct.name[G__tagnum]
                   ,pbaseparam->param);
         }
         else {
-          sprintf(construct,"%s()" ,G__struct.name[G__tagnum]);
+           construct.Format("%s()" ,G__struct.name[G__tagnum]);
           if(G__PARAREFERENCE==mem->reftype[i]) {
 #ifndef G__OLDIMPLEMENTATION945
             if(G__NOLINK!=G__globalcomp) 
@@ -471,7 +471,7 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
           }
         }
         if(G__dispsource) {
-          G__fprinterr(G__serr,"\n!!!Calling class member constructor %s",construct);
+           G__fprinterr(G__serr,"\n!!!Calling class member constructor %s",construct());
         }
         int linear_index = mem->varlabel[i][1] /* number of elements */;
         if (linear_index) {
@@ -630,7 +630,7 @@ int G__basedestructor()
   int store_tagnum;
   long store_struct_offset;
   int i,j;
-  char destruct[G__ONELINE];
+  G__FastAllocString destruct(G__ONELINE);
   long store_globalvarpointer;
   int store_addstros=0;
 
@@ -687,9 +687,9 @@ int G__basedestructor()
       if(-1!=G__struct.virtual_offset[G__tagnum]) 
         *(long*)(G__store_struct_offset+G__struct.virtual_offset[G__tagnum])
           = G__tagnum;
-      sprintf(destruct,"~%s()",G__struct.name[G__tagnum]);
+      destruct.Format("~%s()",G__struct.name[G__tagnum]);
       if(G__dispsource) 
-        G__fprinterr(G__serr,"\n!!!Calling base class destructor %s",destruct);
+         G__fprinterr(G__serr,"\n!!!Calling base class destructor %s",destruct());
       j=0;
       if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
         G__globalvarpointer = G__store_struct_offset;
@@ -714,7 +714,7 @@ int G__basedestructor()
 **************************************************************************/
 int G__basedestructrc(G__var_array *mem)
 {
-  char destruct[G__ONELINE];
+  G__FastAllocString destruct(G__ONELINE);
   if (!mem) {
     return 1;
   }
@@ -736,7 +736,7 @@ int G__basedestructrc(G__var_array *mem)
     ) {
       G__tagnum = mem->p_tagtable[i];
       G__store_struct_offset = store_struct_offset + mem->p[i];
-      sprintf(destruct, "~%s()", G__struct.name[G__tagnum]);
+      destruct.Format("~%s()", G__struct.name[G__tagnum]);
       int linear_index = mem->varlabel[i][1] /* number of elements */;
       if (linear_index) {
         --linear_index;
@@ -758,7 +758,7 @@ int G__basedestructrc(G__var_array *mem)
         if (G__struct.virtual_offset[G__tagnum] != -1) 
           *((long*) (G__store_struct_offset + G__struct.virtual_offset[G__tagnum])) = G__tagnum;
         if (G__dispsource) {
-          G__fprinterr(G__serr, "\n!!!Calling class member destructor %s", destruct);
+           G__fprinterr(G__serr, "\n!!!Calling class member destructor %s", destruct());
         }
         G__getfunction(destruct, &known, G__TRYDESTRUCTOR);
         G__store_struct_offset -= size;

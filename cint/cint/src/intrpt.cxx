@@ -277,217 +277,111 @@ int G__call_interruptfunc(char *func)
    return(0);
 }
 
+#define G__OLDIMPLEMENTATION1945
+
+#ifdef _MVC_VER
+# define G__PASTE0(A) A
+# define G__PASTE(A,B) G__PASTE0(A)B
+#else
+# define G__PASTE(A,B) A##B
+#endif
+
+#define G__DEF_FSIG(FUNC, SIG, CINTSIG, ARG)      \
+   void FUNC(int) { \
+   G__FastAllocString temp(G__ONELINE); \
+   signal(SIG, ARG); \
+   if (CINTSIG) { \
+      temp.Format("%s()", CINTSIG); \
+      CINTSIG = NULL; \
+      G__call_interruptfunc(temp); \
+   } \
+}
+      
+
 /******************************************************************
 * G__fsigabrt()
 ******************************************************************/
-void G__fsigabrt(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGABRT, SIG_DFL);
-   if (G__SIGABRT) {
-#define G__OLDIMPLEMENTATION1945
-      sprintf(temp, "%s()", G__SIGABRT);
-      G__SIGABRT = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigabrt, SIGABRT, G__SIGABRT, SIG_DFL)
 
 /******************************************************************
 * G__fsigfpe()
 ******************************************************************/
-void G__fsigfpe(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGFPE, G__floatexception);
-   if (G__SIGFPE) {
-      sprintf(temp, "%s()", G__SIGFPE);
-      G__SIGFPE = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigfpe, SIGFPE, G__SIGFPE, G__floatexception)
 
 /******************************************************************
 * G__fsigill()
 ******************************************************************/
-void G__fsigill(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGILL, SIG_DFL);
-   if (G__SIGILL) {
-      sprintf(temp, "%s()", G__SIGILL);
-      G__SIGILL = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigill, SIGILL, G__SIGILL, SIG_DFL)
 
 /******************************************************************
 * G__fsigint()
 ******************************************************************/
-void G__fsigint(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGINT, G__breakkey);
-   if (G__SIGINT) {
-      sprintf(temp, "%s()", G__SIGINT);
-      G__SIGINT = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigint, SIGINT, G__SIGINT, G__breakkey)
 
 /******************************************************************
 * G__fsigsegv()
 ******************************************************************/
-void G__fsigsegv(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGSEGV, G__segmentviolation);
-   if (G__SIGSEGV) {
-      sprintf(temp, "%s()", G__SIGSEGV);
-      G__SIGSEGV = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigsegv, SIGSEGV, G__SIGSEGV, G__segmentviolation)
 
 /******************************************************************
 * G__fsigterm()
 ******************************************************************/
-void G__fsigterm(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGTERM, SIG_DFL);
-   if (G__SIGTERM) {
-      sprintf(temp, "%s()", G__SIGTERM);
-      G__SIGTERM = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigterm, SIGTERM, G__SIGTERM, SIG_DFL)
 
 #ifdef SIGHUP
 /******************************************************************
 * G__fsighup()
 ******************************************************************/
-void G__fsighup(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGHUP, SIG_DFL);
-   if (G__SIGHUP) {
-      sprintf(temp, "%s()", G__SIGHUP);
-      G__SIGHUP = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsighup, SIGHUP, G__SIGHUP, SIG_DFL)
 #endif
 
 #ifdef SIGQUIT
 /******************************************************************
 * G__fsigquit()
 ******************************************************************/
-void G__fsigquit(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGQUIT, SIG_DFL);
-   if (G__SIGQUIT) {
-      sprintf(temp, "%s()", G__SIGQUIT);
-      G__SIGQUIT = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigquit, SIGQUIT, G__SIGQUIT, SIG_DFL)
 #endif
 
 #ifdef SIGTSTP
 /******************************************************************
 * G__fsigtstp()
 ******************************************************************/
-void G__fsigtstp(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGTSTP, SIG_DFL);
-   if (G__SIGTSTP) {
-      sprintf(temp, "%s()", G__SIGTSTP);
-      G__SIGTSTP = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigtstp, SIGTSTP, G__SIGTSTP, SIG_DFL)
 #endif
 
 #ifdef SIGTTIN
 /******************************************************************
 * G__fsigttin()
 ******************************************************************/
-void G__fsigttin(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGTTIN, SIG_DFL);
-   if (G__SIGTTIN) {
-      sprintf(temp, "%s()", G__SIGTTIN);
-      G__SIGTTIN = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigttin, SIGTTIN, G__SIGTTIN, SIG_DFL)
 #endif
 
 #ifdef SIGTTOU
 /******************************************************************
 * G__fsigttou()
 ******************************************************************/
-void G__fsigttou(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGTTOU, SIG_DFL);
-   if (G__SIGTTOU) {
-      sprintf(temp, "%s()", G__SIGTTOU);
-      G__SIGTTOU = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigttou, SIGTTOU, G__SIGTTOU, SIG_DFL)
 #endif
 
 #ifdef SIGALRM
 /******************************************************************
 * G__fsigalrm()
 ******************************************************************/
-void G__fsigalrm(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGALRM, SIG_DFL);
-   if (G__SIGALRM) {
-      sprintf(temp, "%s()", G__SIGALRM);
-      G__SIGALRM = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigalrm, SIGALRM, G__SIGALRM, SIG_DFL)
 #endif
 
 #ifdef SIGUSR1
 /******************************************************************
 * G__fsigusr1()
 ******************************************************************/
-void G__fsigusr1(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGUSR1, SIG_DFL);
-   if (G__SIGUSR1) {
-      sprintf(temp, "%s()", G__SIGUSR1);
-      G__SIGUSR1 = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigusr1, SIGUSR1, G__SIGUSR1, SIG_DFL);
 #endif
 
 #ifdef SIGUSR2
 /******************************************************************
 * G__fsigusr2()
 ******************************************************************/
-void G__fsigusr2(int)
-{
-   char temp[G__ONELINE];
-   signal(SIGUSR2, SIG_DFL);
-   if (G__SIGUSR2) {
-      sprintf(temp, "%s()", G__SIGUSR2);
-      G__SIGUSR2 = NULL;
-      G__call_interruptfunc(temp);
-   }
-}
+G__DEF_FSIG(G__fsigusr2, SIGUSR2, G__SIGUSR2, SIG_DFL);
 #endif
 
 #endif /* G__SIGNAL */

@@ -399,45 +399,48 @@ G__value G__strip_singlequotation(char *string)
   return(result);
 }
 
+} // extern "C"
+
 /******************************************************************
 * char *G__add_quotation(string)
 *
 * Called by
 *    
 ******************************************************************/
-char *G__add_quotation(char *string,char *temp)
+char *G__add_quotation(const char* string,G__FastAllocString& temp)
 {
   int c;
   short i=0,l=0;
-  temp[i++]='"';
+  temp.Set(i++, '"');
   while((c=string[l++])!='\0') {
     switch(c) {
     case '\n': 
-      temp[i++]='\\';
-      temp[i++]='n';
-      break;
+       temp.Set(i++, '\\');
+       temp.Set(i++, 'n');
+       break;
     case '\r': 
-      temp[i++]='\\';
-      temp[i++]='r';
-      break;
+       temp.Set(i++, '\\');
+       temp.Set(i++, 'r');
+       break;
     case '\\': 
-      temp[i++]='\\';
-      temp[i++]='\\';
-      break;
+       temp.Set(i++, '\\');
+       temp.Set(i++, '\\');
+       break;
     case '"': 
-      temp[i++]='\\';
-      temp[i++]='"';
-      break;
+       temp.Set(i++, '\\');
+       temp.Set(i++, '"');
+       break;
     default: 
-      temp[i++]=c;
-      break;
+       temp.Set(i++, c);
+       break;
     }
   }
-  temp[i++]='"';
-  temp[i]='\0';
-  return(temp);
+  temp.Set(i++, '"');
+  temp.Set(i, 0);
+  return temp;
 }
 
+extern "C" {
 
 /******************************************************************
 * char *G__tocharexpr(result7)
@@ -450,15 +453,15 @@ char *G__tocharexpr(char *result7)
   return(NULL);
 }
 
-
+} // extern "C"
 
 /****************************************************************
 * char *G__string()
 * 
 ****************************************************************/
-char *G__string(G__value buf,char *temp)
+char *G__string(G__value buf, G__FastAllocString& temp)
 {
-  char temp1[G__MAXNAME];
+  G__FastAllocString temp1(G__MAXNAME);
   switch(buf.type) {
   case '\0':
     temp[0]='\0'; /* sprintf(temp,""); */
@@ -473,18 +476,20 @@ char *G__string(G__value buf,char *temp)
     break;
   case 'd':
   case 'f':
-    sprintf(temp,"%.17e",buf.obj.d);
+     temp.Format("%.17e",buf.obj.d);
     break;
   case 'w':
     G__logicstring(buf,1,temp1);
-    sprintf(temp,"0b%s",temp1);
+    temp.Format("0b%s",temp1());
     break;
   default:
-    sprintf(temp,"%ld",buf.obj.i);
+     temp.Format("%ld",buf.obj.i);
     break;
   }
   return(temp);
 }
+
+extern "C" {
 
 /****************************************************************
 * char *G__quotedstring()
@@ -517,7 +522,7 @@ char *G__quotedstring(char *buf,char *result)
 ****************************************************************/
 char *G__logicstring(G__value buf,int dig,char *result)
 {
-        char tristate[G__MAXNAME];
+        G__FastAllocString tristate(G__MAXNAME);
         unsigned int hilo,hiz,i,ii,flag;
         switch(buf.type) {
         case 'd': /* double */

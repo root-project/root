@@ -267,14 +267,13 @@ int G__warnundefined(const char* item)
          ) {
          char *p = (char*)strchr(item, '(');
          if (p) {
-            char tmp[G__ONELINE];
-            strcpy(tmp, item);
+            G__FastAllocString tmp(item);
             p = (char*)G__strrstr(tmp, "::");
             if (p) {
                *p = 0;
                p += 2;
                G__fprinterr(G__serr,
-                            "Error: Function %s is not defined in %s ", p, tmp);
+                            "Error: Function %s is not defined in %s ", p, tmp());
             }
             else {
                G__fprinterr(G__serr,
@@ -283,13 +282,12 @@ int G__warnundefined(const char* item)
             }
          }
          else {
-            char tmp[G__ONELINE];
-            strcpy(tmp, item);
+            G__FastAllocString tmp(item);
             if (p) {
                *p = 0;
                p += 2;
                G__fprinterr(G__serr,
-                            "Error: Symbol %s is not defined in %s ", p, tmp);
+                            "Error: Symbol %s is not defined in %s ", p, tmp());
             }
             else {
                G__fprinterr(G__serr,
@@ -411,14 +409,14 @@ int G__changeconsterror(const char* item, const char* categ)
 int G__pounderror()
 {
    // -- #error xxx
-   char buf[G__ONELINE];
+   G__FastAllocString buf(G__ONELINE);
    char *p;
    fgets(buf, G__ONELINE, G__ifile.fp);
    p = strchr(buf, '\n');
    if (p) *p = '\0';
    p = strchr(buf, '\r');
    if (p) *p = '\0';
-   G__fprinterr(G__serr, "#error %s\n", buf);
+   G__fprinterr(G__serr, "#error %s\n", buf());
    G__CHECK(G__SECURE_EXIT_AT_ERROR, 1, G__return = G__RETURN_EXIT1);
 #ifdef G__SECURITY
    G__security_error = G__RECOVERABLE;

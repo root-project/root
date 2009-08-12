@@ -175,11 +175,11 @@ void G__destroy_garbageobject(G__alloclist *alloc)
   long store_struct_offset;
   long store_globalvarpointer;
   int done=0;
-  char dtor[G__ONELINE];
+  G__FastAllocString dtor(G__ONELINE);
 
   if(-1!=alloc->tagnum) {
     /* Call destructor if class object */
-    sprintf(dtor,"~%s()",G__struct.name[alloc->tagnum]);
+     dtor.Format("~%s()",G__struct.name[alloc->tagnum]);
     store_globalvarpointer = G__globalvarpointer;
     store_tagnum = G__tagnum;
     store_struct_offset = G__store_struct_offset;

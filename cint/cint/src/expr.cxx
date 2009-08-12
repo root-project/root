@@ -16,8 +16,6 @@
 #include "common.h"
 #include "value.h"
 
-extern "C" {
-
 // Static functions.
 static void G__getiparseobject(G__value* result, char* item);
 static G__value G__conditionaloperator(G__value defined, const char* expression, int ig1, char* ebuf);
@@ -26,6 +24,8 @@ static int G__iscastexpr_body(const char* ebuf, int lenbuf);
 static int G__getpointer2memberfunc(const char* item, G__value* presult);
 #endif // G__PTR2MEMFUNC
 static int G__getoperator(int newoperator, int oldoperator);
+
+extern "C" {
 
 // External functions.
 char* G__setiparseobject(G__value* result, char* str);
@@ -42,6 +42,8 @@ long double G__atolf(const char* expr);
 int G__lasterror();
 void G__reset_lasterror();
 G__value G__calc(const char* exprwithspace);
+
+} // extern "C"
 
 #ifndef G__ROOT
 #define G__NOPOWEROPR
@@ -933,6 +935,7 @@ static int G__getoperator(int newoperator, int oldoperator)
 //
 
 //______________________________________________________________________________
+extern "C"
 char* G__setiparseobject(G__value* result, char* str)
 {
    // --
@@ -948,6 +951,7 @@ char* G__setiparseobject(G__value* result, char* str)
 }
 
 //______________________________________________________________________________
+extern "C"
 G__value G__calc_internal(const char* exprwithspace)
 {
    // -- Grand entry for C/C++ expression evaluator.
@@ -1085,6 +1089,7 @@ G__value G__calc_internal(const char* exprwithspace)
 }
 
 //______________________________________________________________________________
+extern "C"
 G__value G__getexpr(const char* expression)
 {
    // -- Grand entry for C/C++ expression evaluator. Space chars must be removed.
@@ -1096,12 +1101,8 @@ G__value G__getexpr(const char* expression)
    int op = 0;               /* operator stack pointer */
    int unaopr[G__STACKDEPTH]; /* unary operator stack */
    int up = 0;                    /* unary operator stack pointer */
-   char vv[G__BUFLEN];
-   char *ebuf = vv;
-   int lenbuf = 0;           /* ebuf pointer */
    int c; /* temp char */
    int ig1 = 0;  /* input expression pointer */
-   int length; /* length of input expression */
    int nest = 0; /* parenthesis nesting state variable */
    int single_quote = 0, double_quote = 0; /* quotation flags */
    int iscastexpr = 0; /* whether this expression start with a cast */
@@ -1114,20 +1115,18 @@ G__value G__getexpr(const char* expression)
    int store_no_exec_compile_and[G__STACKDEPTH];
    int store_no_exec_compile_or[G__STACKDEPTH];
    G__value vtmp_and, vtmp_or;
+
    //
    // Return null for no expression.
    //
-   length = strlen(expression);
+   int length = strlen(expression);
    if (!length) {
       return G__null;
    }
-   if (strlen(expression) > (G__BUFLEN - 2)) {
-      ebuf = (char*) malloc(strlen(expression) + 6);
-   }
-   if (!ebuf) {
-      G__genericerror("Internal error: malloc, G__getexpr(), ebuf");
-      return G__null;
-   }
+
+   G__FastAllocString ebuf(length);
+   int lenbuf = 0;
+
    //
    // Operator expression.
    //
@@ -1153,7 +1152,6 @@ G__value G__getexpr(const char* expression)
          case '(': /* new(arena) type(),  (type)val, (expr) */
             if ((nest == 0) && (single_quote == 0) && (double_quote == 0) &&
                   lenbuf == 3 && strncmp(expression + inew, "new", 3) == 0) { /* ON994 */
-               if (vv != ebuf) free((void*) ebuf);
                return(G__new_operator(expression + ig1));
             }
             /* no break here */
@@ -1188,7 +1186,6 @@ G__value G__getexpr(const char* expression)
          case ' ': /* new type, new (arena) type */
             if ((nest == 0) && (single_quote == 0) && (double_quote == 0)) {
                if (lenbuf - inew == 3 && strncmp(expression + inew, "new", 3) == 0) { /* ON994 */
-                  if (vv != ebuf) free((void*)ebuf);
                   return(G__new_operator(expression + ig1 + 1));
                }
                /* else ignore c, shoud not happen, but not sure */
@@ -1244,7 +1241,7 @@ G__value G__getexpr(const char* expression)
                if (G__defined_templateclass(ebuf)) {
                   ++ig1;
                   ebuf[lenbuf++] = c;
-                  c = G__getstream_template(expression, &ig1, ebuf + lenbuf, ">");
+                  c = G__getstream_template(expression, &ig1, ebuf, lenbuf, ">");
                   lenbuf = strlen(ebuf);
                   ebuf[lenbuf++] = c;
                   ebuf[lenbuf] = '\0';
@@ -1260,14 +1257,14 @@ G__value G__getexpr(const char* expression)
                         )) {
                   ++ig1;
                   ebuf[lenbuf++] = c;
-                  c = G__getstream_template(expression, &ig1, ebuf + lenbuf, ">");
-                  if ('>' == c) strcat(ebuf, ">");
+                  c = G__getstream_template(expression, &ig1, ebuf, lenbuf, ">");
+                  if ('>' == c) ebuf += ">";
                   lenbuf = strlen(ebuf);
-                  c = G__getstream_template(expression, &ig1, ebuf + lenbuf, "(");
-                  if ('(' == c) strcat(ebuf, "(");
+                  c = G__getstream_template(expression, &ig1, ebuf, lenbuf, "(");
+                  if ('(' == c) ebuf += "(";
                   lenbuf = strlen(ebuf);
-                  c = G__getstream_template(expression, &ig1, ebuf + lenbuf, ")");
-                  if (')' == c) strcat(ebuf, ")");
+                  c = G__getstream_template(expression, &ig1, ebuf, lenbuf, ")");
+                  if (')' == c) ebuf += ")";
                   lenbuf = strlen(ebuf);
                   --ig1;
                   break;
@@ -1279,10 +1276,10 @@ G__value G__getexpr(const char* expression)
                   /* TODO, implement casts, may need to introduce new instruction */
                   ++ig1;
                   ebuf[0] = '(';
-                  c = G__getstream_template(expression, &ig1, ebuf + 1, ">");
+                  c = G__getstream_template(expression, &ig1, ebuf, 1, ">");
                   lenbuf = strlen(ebuf);
-                  ebuf[lenbuf++] = ')';
-                  ebuf[lenbuf] = '\0';
+                  ebuf += ")";
+                  ++lenbuf;
                   --ig1;
                   break;
                }
@@ -1427,7 +1424,6 @@ G__value G__getexpr(const char* expression)
                   ebuf[ig1] = '\0';
                   G__var_type = store_var_type;
                   vstack[0] = G__letvariable(ebuf, defined, &G__global, G__p_local);
-                  if (vv != ebuf) free((void*)ebuf);
                   return(vstack[0]);
                }
                inew = ig1 + 1;
@@ -1442,9 +1438,6 @@ G__value G__getexpr(const char* expression)
                G__RESTORE_ANDOPR
                G__RESTORE_OROPR
                vstack[1] = G__conditionaloperator(vstack[0], expression, ig1, ebuf);
-               if (vv != ebuf) {
-                  free(ebuf);
-               }
                return vstack[1];
             }
             else {
@@ -1473,18 +1466,16 @@ G__value G__getexpr(const char* expression)
    G__RESTORE_NOEXEC_OROPR
    G__RESTORE_ANDOPR
    G__RESTORE_OROPR
-   if (vv != ebuf) {
-      free((void*) ebuf);
-   }
    return vstack[0];
 }
 
 //______________________________________________________________________________
+extern "C"
 G__value G__getprod(char* expression1)
 {
    // --
    G__value defined1, reg;
-   char ebuf1[G__ONELINE];
+   G__FastAllocString ebuf1(G__ONELINE);
    int operator1, prodpower = 0;
    int lenbuf1 = 0;
    int ig11, ig2;
@@ -1518,17 +1509,17 @@ G__value G__getprod(char* expression1)
             if (single_quote == 0) {
                double_quote ^= 1;
             }
-            ebuf1[lenbuf1++] = expression1[ig11];
+            ebuf1.Set(lenbuf1++, expression1[ig11]);
             break;
          case '\'' : /* single quote */
             if (double_quote == 0) {
                single_quote ^= 1;
             }
-            ebuf1[lenbuf1++] = expression1[ig11];
+            ebuf1.Set(lenbuf1++, expression1[ig11]);
             break;
          case '*':
             if (strncmp(expression1, "new ", 4) == 0) {
-               ebuf1[lenbuf1++] = expression1[ig11];
+               ebuf1.Set(lenbuf1++, expression1[ig11]);
                break;
             }
          case '/':
@@ -1540,17 +1531,17 @@ G__value G__getprod(char* expression1)
                      break;
                   default:
                      if (operator1 == '\0') operator1 = '*';
-                     ebuf1[lenbuf1] = '\0';
+                     ebuf1.Set(lenbuf1, 0);
                      reg = G__getpower(ebuf1);
                      G__bstore(operator1, reg, &defined1);
                      lenbuf1 = 0;
-                     ebuf1[0] = '\0';
+                     ebuf1[0] = 0;
                      operator1 = expression1[ig11];
                      break;
                }
             }
             else {
-               ebuf1[lenbuf1++] = expression1[ig11];
+               ebuf1.Set(lenbuf1++, expression1[ig11]);
             }
             break;
          case '(':
@@ -1558,21 +1549,21 @@ G__value G__getprod(char* expression1)
          case '{':
             if ((double_quote == 0) && (single_quote == 0)) {
                nest1++;
-               ebuf1[lenbuf1++] = expression1[ig11];
+               ebuf1.Set(lenbuf1++, expression1[ig11]);
             }
             else {
-               ebuf1[lenbuf1++] = expression1[ig11];
+               ebuf1.Set(lenbuf1++, expression1[ig11]);
             }
             break;
          case ')':
          case ']':
          case '}':
             if ((double_quote == 0) && (single_quote == 0)) {
-               ebuf1[lenbuf1++] = expression1[ig11];
+               ebuf1.Set(lenbuf1++, expression1[ig11]);
                nest1--;
             }
             else {
-               ebuf1[lenbuf1++] = expression1[ig11];
+               ebuf1.Set(lenbuf1++, expression1[ig11]);
             }
             break;
          case '@':
@@ -1581,21 +1572,21 @@ G__value G__getprod(char* expression1)
             if ((nest1 == 0) && (single_quote == 0) && (double_quote == 0)) {
                prodpower = 1;
             }
-            ebuf1[lenbuf1++] = expression1[ig11];
+            ebuf1.Set(lenbuf1++, expression1[ig11]);
             break;
 
 
          case '\\' :
-            ebuf1[lenbuf1++] = expression1[ig11++];
-            ebuf1[lenbuf1++] = expression1[ig11];
+            ebuf1.Set(lenbuf1++, expression1[ig11++]);
+            ebuf1.Set(lenbuf1++, expression1[ig11]);
             break;
 
          default:
-            ebuf1[lenbuf1++] = expression1[ig11];
+            ebuf1.Set(lenbuf1++, expression1[ig11]);
             break;
       }
    }
-   ebuf1[lenbuf1] = '\0';
+   ebuf1.Set(lenbuf1, 0);
    if ((nest1 != 0) || (single_quote != 0) || (double_quote != 0)) {
       G__parenthesiserror(expression1, "G__getprod");
       return(G__null);
@@ -1611,11 +1602,12 @@ G__value G__getprod(char* expression1)
 }
 
 //______________________________________________________________________________
+extern "C"
 G__value G__getpower(const char* expression2)
 {
    // --
    G__value defined2, reg;
-   char ebuf2[G__ONELINE];
+   G__FastAllocString ebuf2(G__ONELINE);
    int operator2;
    int lenbuf2 = 0;
    int ig12;
@@ -1634,13 +1626,13 @@ G__value G__getpower(const char* expression2)
             if (single_quote == 0) {
                double_quote ^= 1;
             }
-            ebuf2[lenbuf2++] = expression2[ig12];
+            ebuf2.Set(lenbuf2++, expression2[ig12]);
             break;
          case '\'' : /* single quote */
             if (double_quote == 0) {
                single_quote ^= 1;
             }
-            ebuf2[lenbuf2++] = expression2[ig12];
+            ebuf2.Set(lenbuf2++, expression2[ig12]);
             break;
          case '~': /* 1's complement */
             /* explicit destructor handled in G__getexpr(), just go through here */
@@ -1651,17 +1643,17 @@ G__value G__getpower(const char* expression2)
                      operator2 = G__getoperator(operator2, expression2[ig12]);
                      break;
                   default:
-                     ebuf2[lenbuf2] = '\0';
+                     ebuf2.Set(lenbuf2, 0);
                      reg = G__getitem(ebuf2);
                      G__bstore(operator2, reg, &defined2);
                      lenbuf2 = 0;
-                     ebuf2[0] = '\0';
+                     ebuf2[0] = 0;
                      operator2 = expression2[ig12];
                      break;
                }
             }
             else {
-               ebuf2[lenbuf2++] = expression2[ig12];
+               ebuf2.Set(lenbuf2++, expression2[ig12]);
             }
             break;
          case ' ':
@@ -1680,36 +1672,36 @@ G__value G__getpower(const char* expression2)
          case '{':
             if ((double_quote == 0) && (single_quote == 0)) {
                nest2++;
-               ebuf2[lenbuf2++] = expression2[ig12];
+               ebuf2.Set(lenbuf2++, expression2[ig12]);
             }
             else {
-               ebuf2[lenbuf2++] = expression2[ig12];
+               ebuf2.Set(lenbuf2++, expression2[ig12]);
             }
             break;
          case ')':
          case ']':
          case '}':
             if ((double_quote == 0) && (single_quote == 0)) {
-               ebuf2[lenbuf2++] = expression2[ig12];
+               ebuf2.Set(lenbuf2++, expression2[ig12]);
                nest2--;
             }
             else {
-               ebuf2[lenbuf2++] = expression2[ig12];
+               ebuf2.Set(lenbuf2++, expression2[ig12]);
             }
             break;
 
          case '\\' :
-            ebuf2[lenbuf2++] = expression2[ig12++];
-            ebuf2[lenbuf2++] = expression2[ig12];
+            ebuf2.Set(lenbuf2++, expression2[ig12++]);
+            ebuf2.Set(lenbuf2++, expression2[ig12]);
             break;
 
          default :
-            ebuf2[lenbuf2++] = expression2[ig12];
+            ebuf2.Set(lenbuf2++, expression2[ig12]);
             break;
       }
       ig12++;
    }
-   ebuf2[lenbuf2] = '\0';
+   ebuf2.Set(lenbuf2, 0);
    if ((nest2 != 0) || (single_quote != 0) || (double_quote != 0)) {
       G__parenthesiserror(expression2, "G__getpower");
       return(G__null);
@@ -1720,6 +1712,7 @@ G__value G__getpower(const char* expression2)
 }
 
 //______________________________________________________________________________
+extern "C"
 G__value G__getitem(const char* item)
 {
    // --
@@ -1975,6 +1968,7 @@ G__value G__getitem(const char* item)
 }
 
 //______________________________________________________________________________
+extern "C"
 int G__test(const char* expr)
 {
    G__value result = G__getexpr(expr);
@@ -1985,6 +1979,7 @@ int G__test(const char* expr)
 }
 
 //______________________________________________________________________________
+extern "C"
 int G__btest(int operator2, G__value lresult, G__value rresult)
 {
    // --
@@ -2047,6 +2042,7 @@ int G__btest(int operator2, G__value lresult, G__value rresult)
 //
 
 //______________________________________________________________________________
+extern "C"
 int G__lasterror()
 {
    // --
@@ -2054,6 +2050,7 @@ int G__lasterror()
 }
 
 //______________________________________________________________________________
+extern "C"
 void G__reset_lasterror()
 {
    // --
@@ -2061,6 +2058,7 @@ void G__reset_lasterror()
 }
 
 //______________________________________________________________________________
+extern "C"
 G__value G__calc(const char* exprwithspace)
 {
    // -- Grand entry for C/C++ expression evaluator.
@@ -2087,8 +2085,6 @@ G__value G__calc(const char* exprwithspace)
 
    return(result);
 }
-
-} // extern "C"
 
 /*
  * Local Variables:

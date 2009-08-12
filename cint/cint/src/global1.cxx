@@ -165,8 +165,8 @@ fpos_t G__nextmacro;
 int G__mline;
 const char *G__macro="tmpfile";
 struct G__Deffuncmacro G__deffuncmacro;
-char G__macros[G__LONGLINE];
-char G__ppopt[G__ONELINE];
+char G__macros[16 * G__LONGLINE];
+char G__ppopt[16 * G__ONELINE];
 char *G__allincludepath=(char*)NULL;
 const char *G__undeflist="";
 
