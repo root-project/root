@@ -6492,29 +6492,84 @@ Double_t TH1::Integral(Option_t *option) const
 //______________________________________________________________________________
 Double_t TH1::Integral(Int_t binx1, Int_t binx2, Option_t *option) const
 {
-   //Return integral of bin contents between binx1 and binx2 for a 1-D histogram
+   //Return integral of bin contents in range [binx1,binx2]
    // By default the integral is computed as the sum of bin contents in the range.
    // if option "width" is specified, the integral is the sum of
    // the bin contents multiplied by the bin width in x.
+   double err = 0;
+   return DoIntegral(binx1,binx2,0,-1,0,-1,err,option);
+}
+//______________________________________________________________________________
+Double_t TH1::IntegralAndError(Int_t binx1, Int_t binx2, Double_t & error, Option_t *option) const
+{
+   //Return integral of bin contents in range [binx1,binx2] and its error 
+   // By default the integral is computed as the sum of bin contents in the range.
+   // if option "width" is specified, the integral is the sum of
+   // the bin contents multiplied by the bin width in x.
+   // the error is computed using error propagation from the bin errors assumming that 
+   // all the bins are uncorrelated  
+   return DoIntegral(binx1,binx2,0,-1,0,-1,error,option,kTRUE);
+}
+
+
+//______________________________________________________________________________
+Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Double_t & error , 
+                          Option_t *option, Bool_t doError) const
+{
+   // internal function compute integral and optionally the error  between the limits specified by the bin number values 
+   // working for all histograms (1D, 2D and 3D)
 
    Int_t nbinsx = GetNbinsX();
    if (binx1 < 0) binx1 = 0;
-   if (binx2 > nbinsx+1) binx2 = nbinsx+1;
-   if (binx2 < binx1)    binx2 = nbinsx;
-   Double_t integral = 0;
+   if (binx2 > nbinsx+1 || binx2 < binx1) binx2 = nbinsx+1;
+   if (GetDimension() > 1) { 
+      Int_t nbinsy = GetNbinsY();
+      if (biny1 < 0) biny1 = 0;
+      if (biny2 > nbinsy+1 || biny2 < biny1) biny2 = nbinsy+1;
+   } else { 
+      biny1 = 0; biny2 = 0;
+   }
+   if (GetDimension() > 2) { 
+      Int_t nbinsz = GetNbinsZ();
+      if (binz1 < 0) binz1 = 0;
+      if (binz2 > nbinsz+1 || binz2 < binz1) binz2 = nbinsz+1;
+   } else { 
+      binz1 = 0; binz2 = 0;
+   }
 
    //   - Loop on bins in specified range
    TString opt = option;
    opt.ToLower();
-   Bool_t width = kFALSE;
+   Bool_t width   = kFALSE;
    if (opt.Contains("width")) width = kTRUE;
-   Int_t binx;
-   for (binx=binx1;binx<=binx2;binx++) {
-      if (width) integral += GetBinContent(binx)*fXaxis.GetBinWidth(binx);
-      else       integral += GetBinContent(binx);
+   
+
+   Double_t dx = 1.; 
+   Double_t dy = 1.; 
+   Double_t dz = 1.; 
+   Double_t integral = 0; 
+   Double_t igerr2 = 0;
+   for (Int_t binx = binx1; binx <= binx2; ++binx) {
+      if (width) dx = fXaxis.GetBinWidth(binx);  
+      for (Int_t biny = biny1; biny <= biny2; ++biny) {
+         if (width) dy = fYaxis.GetBinWidth(biny);  
+         for (Int_t binz = binz1; binz <= binz2; ++binz) {
+            if (width) dz = fZaxis.GetBinWidth(binz);  
+            Int_t bin  = GetBin(binx, biny, binz);
+            if (width) integral += GetBinContent(bin)*dx*dy*dz;
+            else       integral += GetBinContent(bin);
+            if (doError) { 
+               if (width)  igerr2 += GetBinError(bin)*GetBinError(bin)*dx*dy*dz;
+               else        igerr2 += GetBinError(bin)*GetBinError(bin);
+            }
+         }
+      }
    }
+
+   if (doError) error = TMath::Sqrt(igerr2);
    return integral;
 }
+
 
 //______________________________________________________________________________
 Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const

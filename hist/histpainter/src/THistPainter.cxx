@@ -6976,28 +6976,30 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
       }
    }
    if (print_under || print_over) {
-      //get 3*3 under/overflows for 2d hist
-      Double_t unov[9];
+      // no underflow - overflow printing for a 3D histogram 
+      // one would need a 3D table
+//       //get 3*3 under/overflows for 2d hist
+//       Double_t unov[9];
 
-      unov[0] = h3->Integral(0,h3->GetXaxis()->GetFirst()-1,h3->GetYaxis()->GetLast()+1,h3->GetYaxis()->GetNbins()+1);
-      unov[1] = h3->Integral(h3->GetXaxis()->GetFirst(),h3->GetXaxis()->GetLast(),h3->GetYaxis()->GetLast()+1,h3->GetYaxis()->GetNbins()+1);
-      unov[2] = h3->Integral(h3->GetXaxis()->GetLast()+1,h3->GetXaxis()->GetNbins()+1,h3->GetYaxis()->GetLast()+1,h3->GetYaxis()->GetNbins()+1);
-      unov[3] = h3->Integral(0,h3->GetXaxis()->GetFirst()-1,h3->GetYaxis()->GetFirst(),h3->GetYaxis()->GetLast());
-      unov[4] = h3->Integral(h3->GetXaxis()->GetFirst(),h3->GetXaxis()->GetLast(),h3->GetYaxis()->GetFirst(),h3->GetYaxis()->GetLast());
-      unov[5] = h3->Integral(h3->GetXaxis()->GetLast()+1,h3->GetXaxis()->GetNbins()+1,h3->GetYaxis()->GetFirst(),h3->GetYaxis()->GetLast());
-      unov[6] = h3->Integral(0,h3->GetXaxis()->GetFirst()-1,0,h3->GetYaxis()->GetFirst()-1);
-      unov[7] = h3->Integral(h3->GetXaxis()->GetFirst(),h3->GetXaxis()->GetLast(),0,h3->GetYaxis()->GetFirst()-1);
-      unov[8] = h3->Integral(h3->GetXaxis()->GetLast()+1,h3->GetXaxis()->GetNbins()+1,0,h3->GetYaxis()->GetFirst()-1);
+//       unov[0] = h3->Integral(0,h3->GetXaxis()->GetFirst()-1,h3->GetYaxis()->GetLast()+1,h3->GetYaxis()->GetNbins()+1);
+//       unov[1] = h3->Integral(h3->GetXaxis()->GetFirst(),h3->GetXaxis()->GetLast(),h3->GetYaxis()->GetLast()+1,h3->GetYaxis()->GetNbins()+1);
+//       unov[2] = h3->Integral(h3->GetXaxis()->GetLast()+1,h3->GetXaxis()->GetNbins()+1,h3->GetYaxis()->GetLast()+1,h3->GetYaxis()->GetNbins()+1);
+//       unov[3] = h3->Integral(0,h3->GetXaxis()->GetFirst()-1,h3->GetYaxis()->GetFirst(),h3->GetYaxis()->GetLast());
+//       unov[4] = h3->Integral(h3->GetXaxis()->GetFirst(),h3->GetXaxis()->GetLast(),h3->GetYaxis()->GetFirst(),h3->GetYaxis()->GetLast());
+//       unov[5] = h3->Integral(h3->GetXaxis()->GetLast()+1,h3->GetXaxis()->GetNbins()+1,h3->GetYaxis()->GetFirst(),h3->GetYaxis()->GetLast());
+//       unov[6] = h3->Integral(0,h3->GetXaxis()->GetFirst()-1,0,h3->GetYaxis()->GetFirst()-1);
+//       unov[7] = h3->Integral(h3->GetXaxis()->GetFirst(),h3->GetXaxis()->GetLast(),0,h3->GetYaxis()->GetFirst()-1);
+//       unov[8] = h3->Integral(h3->GetXaxis()->GetLast()+1,h3->GetXaxis()->GetNbins()+1,0,h3->GetYaxis()->GetFirst()-1);
 
-      sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[0], (Int_t)unov[1], (Int_t)unov[2]);
-      stats->AddText(t);
-      if (h3->GetEntries() < 1e7)
-         sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[3], (Int_t)unov[4], (Int_t)unov[5]);
-      else
-         sprintf(t, " %7d|%14.7g|%7d\n", (Int_t)unov[3], (Float_t)unov[4], (Int_t)unov[5]);
-      stats->AddText(t);
-      sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[6], (Int_t)unov[7], (Int_t)unov[8]);
-      stats->AddText(t);
+//       sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[0], (Int_t)unov[1], (Int_t)unov[2]);
+//       stats->AddText(t);
+//       if (h3->GetEntries() < 1e7)
+//          sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[3], (Int_t)unov[4], (Int_t)unov[5]);
+//       else
+//          sprintf(t, " %7d|%14.7g|%7d\n", (Int_t)unov[3], (Float_t)unov[4], (Int_t)unov[5]);
+//       stats->AddText(t);
+//       sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[6], (Int_t)unov[7], (Int_t)unov[8]);
+//       stats->AddText(t);
    }
 
    // Draw Fit parameters

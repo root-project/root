@@ -2468,7 +2468,28 @@ Double_t TF1::IntegralError(Double_t a, Double_t b, Double_t epsilon)
    // are resulting from the latest fit. If in the meantime a fit is done 
    // using another function, the routine will signal an error and return zero.
 
-   return ROOT::TF1Helper::IntegralError(this,a,b,epsilon);
+   Double_t x1[1]; 
+   Double_t x2[1]; 
+   x1[0] = a, x2[0] = b;
+   return ROOT::TF1Helper::IntegralError(this,1,x1,x2,epsilon);
+}
+
+//______________________________________________________________________________
+Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, Double_t epsilon)
+{
+   // Return Error on Integral of a parameteric function with dimension larger tan one 
+   // between a[] and b[]  due to the parameters uncertainties.
+   // It is assumed the parameters are estimated from a fit and the covariance
+   // matrix resulting from the fit is used in estimating this error.
+   // For a TF1 with dimension larger than 1 (for example a TF2 or TF3) 
+   // TF1::IntegralMultiple is used for the integral calculation
+   //
+   //
+   // IMPORTANT NOTE: The calculation is valid assuming the parameters 
+   // are resulting from the latest fit. If in the meantime a fit is done 
+   // using another function, the routine will signal an error and return zero.
+
+   return ROOT::TF1Helper::IntegralError(this,n,a,b,epsilon);
 }
 
 #ifdef INTHEFUTURE

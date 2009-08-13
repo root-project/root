@@ -126,6 +126,9 @@ protected:
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
 
    virtual Int_t    DoFit(TF1 *f1,Option_t *option,Option_t *goption, Double_t xmin, Double_t xmax);
+   virtual Double_t DoIntegral(Int_t ix1, Int_t ix2, Int_t iy1, Int_t iy2, Int_t iz1, Int_t iz2, Double_t & err, 
+                               Option_t * opt, Bool_t doerr = kFALSE) const;
+
 public:
    // TH1 status bits
    enum {
@@ -272,8 +275,7 @@ public:
            TAxis   *GetZaxis() const;
    virtual Double_t Integral(Option_t *option="") const;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Option_t *option="") const;
-   virtual Double_t Integral(Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="") const {return 0;}
-   virtual Double_t Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="" ) const {return 0;}
+   virtual Double_t IntegralAndError(Int_t binx1, Int_t binx2, Double_t & err, Option_t *option="") const;
    virtual Double_t Interpolate(Double_t x);
    virtual Double_t Interpolate(Double_t x, Double_t y);
    virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);

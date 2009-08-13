@@ -1132,36 +1132,19 @@ Double_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t
    // if option "width" is specified, the integral is the sum of
    // the bin contents multiplied by the bin width in x, y and in z.
 
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
-   Int_t nbinsz = GetNbinsZ();
-   if (binx1 < 0) binx1 = 0;
-   if (binx2 > nbinsx+1) binx2 = nbinsx+1;
-   if (binx2 < binx1)    binx2 = nbinsx;
-   if (biny1 < 0) biny1 = 0;
-   if (biny2 > nbinsy+1) biny2 = nbinsy+1;
-   if (biny2 < biny1)    biny2 = nbinsy;
-   if (binz1 < 0) binz1 = 0;
-   if (binz2 > nbinsz+1) binz2 = nbinsz+1;
-   if (binz2 < binz1)    binz2 = nbinsz;
-   Double_t integral = 0;
-
-   //*-*- Loop on bins in specified range
-   TString opt = option;
-   opt.ToLower();
-   Bool_t width = kFALSE;
-   if (opt.Contains("width")) width = kTRUE;
-   Int_t bin, binx, biny, binz;
-   for (binz=binz1;binz<=binz2;binz++) {
-      for (biny=biny1;biny<=biny2;biny++) {
-         for (binx=binx1;binx<=binx2;binx++) {
-            bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            if (width) integral += GetBinContent(bin)*fXaxis.GetBinWidth(binx)*fYaxis.GetBinWidth(biny)*fZaxis.GetBinWidth(binz);
-            else       integral += GetBinContent(bin);
-         }
-      }
-   }
-   return integral;
+   Double_t err = 0; 
+   return DoIntegral(binx1,binx2,biny1,biny2,binz1,binz2,err,option);
+}
+//______________________________________________________________________________
+Double_t TH3::IntegralAndError(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Double_t & error, Option_t *option) const
+{
+   //Return integral of bin contents in range [binx1,binx2],[biny1,biny2],[binz1,binz2]
+   // for a 3-D histogram. Calculates also the integral error using error propagation 
+   // from the bin errors assumming that all the bins are uncorrelated. 
+   // By default the integral is computed as the sum of bin contents in the range.
+   // if option "width" is specified, the integral is the sum of
+   // the bin contents multiplied by the bin width in x, y and in z.
+   return DoIntegral(binx1,binx2,biny1,biny2,binz1,binz2,error,option,kTRUE);
 }
 
 //______________________________________________________________________________

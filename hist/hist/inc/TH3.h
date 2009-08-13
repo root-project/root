@@ -92,9 +92,10 @@ public:
    virtual void     GetRandom3(Double_t &x, Double_t &y, Double_t &z);
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t Integral(Option_t *option="") const;
-   virtual Double_t Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
-   virtual Double_t Integral(Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
+   using TH1::Integral;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="") const;
+   using TH1::IntegralAndError;
+   virtual Double_t IntegralAndError(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Double_t & err, Option_t *option="") const;
    virtual Double_t Interpolate(Double_t x);
    virtual Double_t Interpolate(Double_t x, Double_t y);
    virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);

@@ -25,8 +25,10 @@ namespace ROOT {
    namespace TF1Helper{ 
 
 
+      
 
-double IntegralError(TF1 * func, double a, double b, double epsilon) { 
+
+double IntegralError(TF1 * func, Int_t ndim, const double * a, const double * b, double epsilon) { 
 
    // calculate the eror on an integral from a to b of a parametetric function f when the parameters 
    // are estimated from a fit and have an error represented by the covariance matrix of the fit. 
@@ -35,6 +37,7 @@ double IntegralError(TF1 * func, double a, double b, double epsilon) {
    // need to create the gradient functions w.r.t to the parameters 
 
    // loop on all parameters 
+   bool onedim = ndim == 1; 
    int npar = func->GetNpar();
    int nfreepar = func->GetNumberFreeParameters();
 
@@ -73,7 +76,12 @@ double IntegralError(TF1 * func, double a, double b, double epsilon) {
          double integral  = 0;
          if (epar[i] > 0 ) {          
             TF1 gradFunc("gradFunc",TGradientParFunction(i,func),0,0,0);
-            integral = gradFunc.Integral(a,b,(double*)0,epsilon);
+            if (onedim) 
+               integral = gradFunc.Integral(*a,*b,(double*)0,epsilon);
+            else { 
+               double relerr;
+               integral = gradFunc.IntegralMultiple(ndim,a,b,epsilon,relerr);
+            }
          }
          ig.push_back(integral);
       } 

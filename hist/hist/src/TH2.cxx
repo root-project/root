@@ -1058,33 +1058,20 @@ Double_t TH2::Integral(Int_t firstxbin, Int_t lastxbin, Int_t firstybin, Int_t l
    // By default the integral is computed as the sum of bin contents in the range.
    // if option "width" is specified, the integral is the sum of
    // the bin contents multiplied by the bin width in x and in y.
+   double err = 0;
+   return DoIntegral(firstxbin,lastxbin,firstybin,lastybin,-1,0,err,option);
+}
 
-   if (fBuffer) ((TH2*)this)->BufferEmpty();
-
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
-   if (firstxbin < 0) firstxbin = 0;
-   if (lastxbin > nbinsx+1)  lastxbin = nbinsx+1;
-   if (lastxbin < firstxbin) lastxbin = nbinsx;
-   if (firstybin < 0) firstybin = 0;
-   if (lastybin > nbinsy+1)  lastybin = nbinsy+1;
-   if (lastybin < firstybin) lastybin = nbinsy;
-   Double_t integral = 0;
-
-   //*-*- Loop on bins in specified range
-   TString opt = option;
-   opt.ToLower();
-   Bool_t width = kFALSE;
-   if (opt.Contains("width")) width = kTRUE;
-   Int_t bin, binx, biny;
-   for (biny = firstybin; biny <= lastybin; biny++) {
-      for (binx = firstxbin;binx <= lastxbin; binx++) {
-         bin = binx +(nbinsx+2)*biny;
-         if (width) integral += GetBinContent(bin)*fXaxis.GetBinWidth(binx)*fYaxis.GetBinWidth(biny);
-         else       integral += GetBinContent(bin);
-      }
-   }
-   return integral;
+//______________________________________________________________________________
+Double_t TH2::IntegralAndError(Int_t firstxbin, Int_t lastxbin, Int_t firstybin, Int_t lastybin, Double_t & error, Option_t *option) const
+{
+   //Return integral of bin contents in range [firstxbin,lastxbin],[firstybin,lastybin]
+   // for a 2-D histogram. Calculates also the integral error using error propagation 
+   // from the bin errors assumming that all the bins are uncorrelated. 
+   // By default the integral is computed as the sum of bin contents in the range.
+   // if option "width" is specified, the integral is the sum of
+   // the bin contents multiplied by the bin width in x and in y.
+   return DoIntegral(firstxbin,lastxbin,firstybin,lastybin,-1,0,error,option,kTRUE);
 }
 
 //______________________________________________________________________________
