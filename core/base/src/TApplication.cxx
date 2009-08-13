@@ -408,7 +408,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                } else if (!strcmp(gROOT->GetName(), "Rint")) {
                   Warning("GetOptions", "only one directory argument can be specified (%s)", dir);
                }
-            } else if (flags == 0 || flags == 1) {
+            } else if (size > 0) {
                // if file add to list of files to be processed
                if (!fFiles) fFiles = new TObjArray;
                fFiles->Add(new TObjString(argv[i]));
