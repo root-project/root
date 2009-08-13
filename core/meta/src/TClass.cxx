@@ -4805,9 +4805,17 @@ Bool_t TClass::HasDefaultConstructor() const
 
    if (fNew) return kTRUE;
 
-   if (!GetClassInfo()) return kFALSE;
-
-   return gCint->ClassInfo_HasDefaultConstructor(GetClassInfo());
+   if (GetClassInfo()) {
+      return gCint->ClassInfo_HasDefaultConstructor(GetClassInfo());
+   }
+   if (fCollectionProxy) {
+      return kTRUE;
+   }
+   if (fCurrentInfo) {
+      // Emulated class, we know how to construct them via the TStreamerInfo
+      return kTRUE;
+   }
+   return kFALSE;
 }
 
 //______________________________________________________________________________
