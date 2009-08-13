@@ -28,6 +28,9 @@
 #ifndef ROOT_TUrl
 #include "TUrl.h"
 #endif
+#ifndef ROOT_TSystem
+#include "TSystem.h"
+#endif
 
 class TSocket;
 class TWebSocket;
@@ -36,6 +39,7 @@ class TWebSocket;
 class TWebFile : public TFile {
 
 friend class TWebSocket;
+friend class TWebSystem;
 
 private:
    mutable Long64_t  fSize;         // file size
@@ -48,7 +52,7 @@ private:
    static TUrl       fgProxy;       // globally set proxy URL
 
    TWebFile() : fSocket(0) { }
-   void    Init(Bool_t);
+   void    Init(Bool_t readHeadOnly);
    void    CheckProxy();
    TString BasicAuthentication();
    Int_t   GetHead();
@@ -74,6 +78,29 @@ public:
    static const char *GetProxy();
 
    ClassDef(TWebFile,1)  //A ROOT file that reads via a http server
+};
+
+
+class TWebSystem : public TSystem {
+
+private:
+   void *fDirp;    // directory handler
+
+   void *GetDirPtr() const { return fDirp; }
+
+public:
+   TWebSystem();
+   virtual ~TWebSystem() { }
+
+   Int_t       MakeDirectory(const char *name);
+   void       *OpenDirectory(const char *name);
+   void        FreeDirectory(void *dirp);
+   const char *GetDirEntry(void *dirp);
+   Int_t       GetPathInfo(const char *path, FileStat_t &buf);
+   Bool_t      AccessPathName(const char *path, EAccessMode mode);
+   Int_t       Unlink(const char *path);
+
+   ClassDef(TWebSystem,0)  // Directory handler for HTTP (TWebFiles)
 };
 
 #endif

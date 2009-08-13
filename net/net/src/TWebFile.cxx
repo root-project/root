@@ -126,7 +126,11 @@ TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
       fNoProxy = kTRUE;
    CheckProxy();
 
-   Init(kFALSE);
+   Bool_t headOnly = kFALSE;
+   if (option.Contains("HEADONLY", TString::kIgnoreCase))
+      headOnly = kTRUE;
+
+   Init(headOnly);
 }
 
 //______________________________________________________________________________
@@ -152,7 +156,11 @@ TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB")
       fNoProxy = kTRUE;
    CheckProxy();
 
-   Init(kFALSE);
+   Bool_t headOnly = kFALSE;
+   if (option.Contains("HEADONLY", TString::kIgnoreCase))
+      headOnly = kTRUE;
+
+   Init(headOnly);
 }
 
 //______________________________________________________________________________
@@ -164,7 +172,7 @@ TWebFile::~TWebFile()
 }
 
 //______________________________________________________________________________
-void TWebFile::Init(Bool_t)
+void TWebFile::Init(Bool_t readHeadOnly)
 {
    // Initialize a TWebFile object.
 
@@ -174,10 +182,19 @@ void TWebFile::Init(Bool_t)
    fSocket = 0;
 
    if ((err = GetHead()) < 0) {
+      if (readHeadOnly) {
+         fD = -1;
+         fWritten = err;
+         return;
+      }
       if (err == -2)
          Error("TWebFile", "%s does not exist", fUrl.GetUrl());
       MakeZombie();
       gDirectory = gROOT;
+      return;
+   }
+   if (readHeadOnly) {
+      fD = -1;
       return;
    }
 
@@ -833,4 +850,120 @@ const char *TWebFile::GetProxy()
    if (fgProxy.IsValid())
       return fgProxy.GetUrl();
    return "";
+}
+
+
+//______________________________________________________________________________
+TWebSystem::TWebSystem() : TSystem("-http", "HTTP Helper System")
+{
+   // Create helper class that allows directory access via httpd.
+   // The name must start with '-' to bypass the TSystem singleton check.
+
+   SetName("http");
+
+   fDirp = 0;
+}
+
+//______________________________________________________________________________
+Int_t TWebSystem::MakeDirectory(const char *)
+{
+   // Make a directory via httpd. Not supported.
+
+   return -1;
+}
+
+//______________________________________________________________________________
+void *TWebSystem::OpenDirectory(const char *)
+{
+   // Open a directory via httpd. Returns an opaque pointer to a dir
+   // structure. Returns 0 in case of error.
+
+   if (fDirp) {
+      Error("OpenDirectory", "invalid directory pointer (should never happen)");
+      fDirp = 0;
+   }
+
+   fDirp = 0;   // not implemented for the time being
+
+   return fDirp;
+}
+
+//______________________________________________________________________________
+void TWebSystem::FreeDirectory(void *dirp)
+{
+   // Free directory via httpd.
+
+   if (dirp != fDirp) {
+      Error("FreeDirectory", "invalid directory pointer (should never happen)");
+      return;
+   }
+
+   fDirp = 0;
+}
+
+//______________________________________________________________________________
+const char *TWebSystem::GetDirEntry(void *dirp)
+{
+   // Get directory entry via httpd. Returns 0 in case no more entries.
+
+   if (dirp != fDirp) {
+      Error("GetDirEntry", "invalid directory pointer (should never happen)");
+      return 0;
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TWebSystem::GetPathInfo(const char *path, FileStat_t &buf)
+{
+   // Get info about a file. Info is returned in the form of a FileStat_t
+   // structure (see TSystem.h).
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
+
+   TWebFile *f = new TWebFile(path, "HEADONLY");
+
+   if (f->fWritten == 0) {
+
+      buf.fDev    = 0;
+      buf.fIno    = 0;
+      buf.fMode   = 0;
+      buf.fUid    = 0;
+      buf.fGid    = 0;
+      buf.fSize   = f->GetSize();
+      buf.fMtime  = 0;
+      buf.fIsLink = kFALSE;
+
+      delete f;
+      return 0;
+   }
+
+   delete f;
+   return 1;
+}
+
+//______________________________________________________________________________
+Bool_t TWebSystem::AccessPathName(const char *path, EAccessMode)
+{
+   // Returns FALSE if one can access a file using the specified access mode.
+   // Mode is the same as for the Unix access(2) function.
+   // Attention, bizarre convention of return value!!
+
+   TWebFile *f = new TWebFile(path, "HEADONLY");
+   if (f->fWritten == 0) {
+      delete f;
+      return kFALSE;
+   }
+   delete f;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TWebSystem::Unlink(const char *)
+{
+   // Unlink, i.e. remove, a file or directory. Returns 0 when succesfull,
+   // -1 in case of failure. Not supported for httpd.
+
+   return -1;
 }

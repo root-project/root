@@ -29,6 +29,7 @@
 #pragma link C++ class TNetFile;
 #pragma link C++ class TNetSystem;
 #pragma link C++ class TWebFile;
+#pragma link C++ class TWebSystem;
 #pragma link C++ class TFTP;
 #pragma link C++ class TSQLServer;
 #pragma link C++ class TSQLResult;
