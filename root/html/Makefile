@@ -3,7 +3,7 @@
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 
-TEST_TARGETS += FindSource
+TEST_TARGETS += FindSource ClassInModule
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -28,7 +28,13 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 FindSource.log: runFindSource.C
-	$(CMDECHO)$(CALLROOTEXE) -l -b -q $<  | grep -v 'RooFit' | grep -v 'Copyright' > $@ 2>&1
+	$(CMDECHO)$(CALLROOTEXE) -l -b -q $< 2>&1 | grep -v 'RooFit' | grep -v 'Copyright' > $@ 
 
 FindSource: FindSource.log
+	$(TestDiff)
+
+ClassInModule.log: runClassInModule.C
+	$(CMDECHO)$(CALLROOTEXE) -l -b -q $< 2>&1 | grep -v 'RooFit' | grep -v 'Copyright' | grep -v 'no dictionary for' > $@ 
+
+ClassInModule: ClassInModule.log
 	$(TestDiff)
