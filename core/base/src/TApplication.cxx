@@ -396,6 +396,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          char *arg = strchr(argv[i], '(');
          if (arg) *arg = '\0';
          char *dir = gSystem->ExpandPathName(argv[i]);
+         TUrl udir(dir, kTRUE);
          if (arg) *arg = '(';
          if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime)) {
             if ((flags & 2)) {
@@ -413,11 +414,20 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                if (!fFiles) fFiles = new TObjArray;
                fFiles->Add(new TObjString(argv[i]));
                argv[i] = null;
+            } else {
+               Warning("GetOptions", "file %s has size 0, skipping", dir);
             }
          } else {
-            if (TString(dir).EndsWith(".root") && !strcmp(gROOT->GetName(), "Rint")) {
+            if (TString(udir.GetFile()).EndsWith(".root") && !strcmp(gROOT->GetName(), "Rint")) {
                // file ending on .root but does not exist, likely a typo, warn user...
-               Warning("GetOptions", "file %s not found", dir);
+               if (!strcmp(udir.GetProtocol(), "file"))
+                  Warning("GetOptions", "file %s not found", dir);
+               else {
+                  // remote file, give it the benefit of the doubt and add it to list of files
+                  if (!fFiles) fFiles = new TObjArray;
+                  fFiles->Add(new TObjString(argv[i]));
+                  argv[i] = null;
+               }
             } else {
                char *mac, *s = Strip(dir, '+');
                if ((mac = gSystem->Which(TROOT::GetMacroPath(), s,
