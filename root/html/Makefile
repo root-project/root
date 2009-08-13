@@ -3,7 +3,7 @@
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 
-TEST_TARGETS += FindSource ClassInModule
+#TEST_TARGETS += FindSource ClassInModule
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
