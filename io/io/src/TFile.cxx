@@ -601,8 +601,17 @@ void TFile::Init(Bool_t create)
          }
       }
       //*-*-------------Read directory info
-      Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t)
-                +2*sizeof(Int_t);
+      Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t);
+      if (fVersion < 1000000) { //small file
+         nk += 2*sizeof(Int_t);
+      } else {
+         nk += 2*sizeof(Long64_t);         
+      }
+      // nk is the distance between the start of key record and the location of the number
+      // of bytes in the (held) class name (i.e. lname). So
+      // nk = sum of size of:  NBytes, Version, ObjLen, DateTime, KeyLen, Cycle, SeekKey, SeekPdir
+      // (the current calculation assumes the 32 bits file format).
+      
       Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
       if (nbytes+fBEGIN > kBEGIN+200) {
          delete [] header;
@@ -613,7 +622,7 @@ void TFile::Init(Bool_t create)
          buffer = header+fNbytesName;
       } else {
          buffer = header+fBEGIN+fNbytesName;
-         nk += kBEGIN;
+         nk += fBEGIN;
       }
       Version_t version,versiondir;
       frombuf(buffer,&version); versiondir = version%1000;
