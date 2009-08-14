@@ -40,7 +40,8 @@
 #include <string.h>
 #endif
 
-#if (defined(__linux) || defined(__APPLE__)) && defined(__i386__) && \
+#if (defined(__linux) || defined(__APPLE__)) && \
+    (defined(__i386__) || defined(__x86_64__)) && \
      defined(__GNUC__)
 #define R__USEASMSWAP
 #endif

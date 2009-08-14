@@ -100,7 +100,7 @@
 # define R__bswap_64(x) \
      (__extension__                                                           \
       ({ union { __extension__ unsigned long long int __ll;                   \
-                 unsigned long int __l[2]; } __w, __r;                        \
+                 UInt_t __l[2]; } __w, __r;                        \
          __w.__ll = (x);                                                      \
          __r.__l[0] = R__bswap_32 (__w.__l[1]);                               \
          __r.__l[1] = R__bswap_32 (__w.__l[0]);                               \
