@@ -4596,14 +4596,25 @@ void TClass::SetDirectoryAutoAdd(ROOT::DirAutoAdd_t autoAddFunc)
 }
 
 //______________________________________________________________________________
-TVirtualStreamerInfo *TClass::FindStreamerInfo( UInt_t checksum) const
+TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
-   return FindStreamerInfo( GetStreamerInfos(), checksum );
+
+   Int_t ninfos = fStreamerInfo->GetEntriesFast()-1;
+   for (Int_t i=-1;i<ninfos;++i) {
+      // TClass::fStreamerInfos has a lower bound not equal to 0,
+      // so we have to use At and should not use UncheckedAt
+      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)fStreamerInfo->UncheckedAt(i);
+      if (info && info->GetCheckSum() == checksum) {
+         // R__ASSERT(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
+         return info;
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
-TVirtualStreamerInfo *TClass::FindStreamerInfo( TObjArray* arr, UInt_t checksum) const
+TVirtualStreamerInfo *TClass::FindStreamerInfo(TObjArray* arr, UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
 
