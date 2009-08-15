@@ -643,7 +643,8 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                   case 3: builtinType = !typenameOriginal.compare(posArg, lenArg, "int");
                      break;
                   case 4: builtinType = !typenameOriginal.compare(posArg, lenArg, "long")
-                        || !typenameOriginal.compare(posArg, lenArg, "char");
+                        || !typenameOriginal.compare(posArg, lenArg, "char")
+                        || !typenameOriginal.compare(posArg, lenArg, "void");
                      break;
                   case 5: builtinType = !typenameOriginal.compare(posArg, lenArg, "short")
                         || !typenameOriginal.compare(posArg, lenArg, "float");
