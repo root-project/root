@@ -1710,7 +1710,7 @@ template Int_t TStreamerInfo::ReadBufferSkip<char**>(TBuffer &b, char** const &a
 template Int_t TStreamerInfo::ReadBufferSkip<TVirtualCollectionProxy>(TBuffer &b, const TVirtualCollectionProxy &arr, Int_t i, Int_t kase,
                                        TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset);
-   template Int_t TStreamerInfo::ReadBufferSkip<TStreamerInfo::TPointerCollectionAdapter>(TBuffer &b, const TPointerCollectionAdapter &arr, Int_t i, Int_t kase,
+template Int_t TStreamerInfo::ReadBufferSkip<TStreamerInfo::TPointerCollectionAdapter>(TBuffer &b, const TPointerCollectionAdapter &arr, Int_t i, Int_t kase,
                                        TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset);
 template Int_t TStreamerInfo::ReadBufferSkip<TVirtualArray>(TBuffer &b, const TVirtualArray &arr, Int_t i, Int_t kase,
