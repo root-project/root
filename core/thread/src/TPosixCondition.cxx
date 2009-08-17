@@ -37,18 +37,10 @@ TPosixCondition::TPosixCondition(TMutexImp *m)
 
    fMutex = (TPosixMutex *) m;
 
-#if (PthreadDraftVersion == 4)
+   int rc = pthread_cond_init(&fCond, 0);
 
-   int rc = ERRNO(pthread_cond_init(&fCond, pthread_condattr_default));
-
-#else
-
-   int rc = ERRNO(pthread_cond_init(&fCond, 0));
-
-#endif
-
-   if (rc != 0)
-      SysError("TCondition", "pthread_cond_init error");
+   if (rc)
+      SysError("TPosixCondition", "pthread_cond_init error");
 }
 
 //______________________________________________________________________________
@@ -56,10 +48,10 @@ TPosixCondition::~TPosixCondition()
 {
    // TCondition dtor.
 
-   int rc = ERRNO(pthread_cond_destroy(&fCond));
+   int rc = pthread_cond_destroy(&fCond);
 
-   if (rc != 0)
-      SysError("~TCondition", "pthread_cond_destroy error");
+   if (rc)
+      SysError("~TPosixCondition", "pthread_cond_destroy error");
 }
 
 //______________________________________________________________________________
@@ -70,7 +62,7 @@ Int_t TPosixCondition::Wait()
    // If Wait() is called by multiple threads, a signal may wake up more
    // than one thread. See POSIX threads documentation for details.
 
-   return ERRNO(pthread_cond_wait(&fCond, &(fMutex->fMutex)));
+   return pthread_cond_wait(&fCond, &(fMutex->fMutex));
 }
 
 //______________________________________________________________________________
@@ -83,14 +75,9 @@ Int_t TPosixCondition::TimedWait(ULong_t secs, ULong_t nanoSecs)
 
    timespec rqts = { secs, nanoSecs };
 
-   int rc = ERRNO(pthread_cond_timedwait(&fCond, &(fMutex->fMutex), &rqts));
+   int rc = pthread_cond_timedwait(&fCond, &(fMutex->fMutex), &rqts);
 
-//#if (PthreadDraftVersion <= 6)
-#if (PthreadDraftVersion == 4)
-   if (rc == EAGAIN)
-#else
    if (rc == ETIMEDOUT)
-#endif
       rc = 1;
 
    return rc;
@@ -102,7 +89,7 @@ Int_t TPosixCondition::Signal()
    // If one or more threads have called Wait(), Signal() wakes up at least
    // one of them, possibly more. See POSIX threads documentation for details.
 
-   return ERRNO(pthread_cond_signal(&fCond));
+   return pthread_cond_signal(&fCond);
 }
 
 
@@ -111,5 +98,5 @@ Int_t TPosixCondition::Broadcast()
 {
    // Broadcast is like signal but wakes all threads which have called Wait().
 
-   return ERRNO(pthread_cond_broadcast(&fCond));
+   return pthread_cond_broadcast(&fCond);
 }

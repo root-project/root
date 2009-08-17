@@ -37,7 +37,7 @@ public:
    TThreadFactory(const char *name = "Unknown", const char *title = "Unknown Thread Factory");
    virtual ~TThreadFactory() { }
 
-   virtual TMutexImp      *CreateMutexImp() = 0;
+   virtual TMutexImp      *CreateMutexImp(Bool_t recursive) = 0;
    virtual TConditionImp  *CreateConditionImp(TMutexImp *m) = 0;
    virtual TThreadImp     *CreateThreadImp() = 0;
 

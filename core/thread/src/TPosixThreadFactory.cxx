@@ -38,11 +38,11 @@ TPosixThreadFactory::TPosixThreadFactory(const char *name, const char *title) :
 }
 
 //______________________________________________________________________________
-TMutexImp *TPosixThreadFactory::CreateMutexImp()
+TMutexImp *TPosixThreadFactory::CreateMutexImp(Bool_t recursive=kFALSE)
 {
    // Return a Posix Mutex.
 
-   return new TPosixMutex;
+   return new TPosixMutex(recursive);
 }
 
 //______________________________________________________________________________

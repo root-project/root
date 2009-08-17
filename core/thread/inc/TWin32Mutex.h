@@ -39,7 +39,7 @@ private:
    CRITICAL_SECTION fCritSect;
 
 public:
-   TWin32Mutex();
+   TWin32Mutex(Bool_t recursive=kFALSE);
    virtual ~TWin32Mutex();
 
    Int_t  Lock();

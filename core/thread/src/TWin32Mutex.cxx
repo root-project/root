@@ -27,7 +27,7 @@
 ClassImp(TWin32Mutex)
 
 //______________________________________________________________________________
-TWin32Mutex::TWin32Mutex()
+TWin32Mutex::TWin32Mutex(Bool_t recursive) : TMutexImp()
 {
    // Create a Win32 mutex lock.
 
