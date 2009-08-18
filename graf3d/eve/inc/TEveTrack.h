@@ -49,6 +49,7 @@ protected:
    Int_t              fCharge;     // Charge in units of e0
    Int_t              fLabel;      // Simulation label
    Int_t              fIndex;      // Reconstruction index
+   Int_t              fStatus;     // Status-word, user-defined.
    Bool_t             fLockPoints; // Lock points that are currently in - do nothing in MakeTrack().
    vPathMark_t        fPathMarks;  // TEveVector of known points along the track
 
@@ -89,6 +90,8 @@ public:
    void  SetLabel(Int_t lbl)  { fLabel = lbl;   }
    Int_t GetIndex()  const    { return fIndex;  }
    void  SetIndex(Int_t idx)  { fIndex = idx;   }
+   Int_t GetStatus()  const   { return fStatus; }
+   void  SetStatus(Int_t idx) { fStatus = idx;  }
 
    void  AddPathMark(const TEvePathMark& pm) { fPathMarks.push_back(pm); }
    void  SortPathMarksByTime();
