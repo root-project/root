@@ -60,9 +60,9 @@ protected:
 
 public:
    TEveTrack();
-   TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* rs);
-   TEveTrack(TEveMCTrack*  t, TEveTrackPropagator* rs);
-   TEveTrack(TEveRecTrack* t, TEveTrackPropagator* rs);
+   TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop=0);
+   TEveTrack(TEveMCTrack*  t, TEveTrackPropagator* prop=0);
+   TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop=0);
    TEveTrack(const TEveTrack& t);
    virtual ~TEveTrack();
 
@@ -74,7 +74,7 @@ public:
    virtual void MakeTrack(Bool_t recurse=kTRUE);
 
    TEveTrackPropagator* GetPropagator() const  { return fPropagator; }
-   void SetPropagator(TEveTrackPropagator* rs);
+   void SetPropagator(TEveTrackPropagator* prop);
    void SetAttLineAttMarker(TEveTrackList* tl);
 
    const TEveVector& GetVertex()      const { return fV;    }
@@ -158,14 +158,14 @@ protected:
    void    SanitizeMinMaxCuts();
 
 public:
-   TEveTrackList(TEveTrackPropagator* rs=0);
-   TEveTrackList(const char* name, TEveTrackPropagator* rs=0);
+   TEveTrackList(TEveTrackPropagator* prop=0);
+   TEveTrackList(const char* name, TEveTrackPropagator* prop=0);
    virtual ~TEveTrackList();
 
    void  MakeTracks(Bool_t recurse=kTRUE);
    void  FindMomentumLimits(Bool_t recurse=kTRUE);
 
-   void  SetPropagator(TEveTrackPropagator* rs);
+   void  SetPropagator(TEveTrackPropagator* prop);
    TEveTrackPropagator* GetPropagator() { return fPropagator; }
 
    Bool_t GetRecurse() const   { return fRecurse; }

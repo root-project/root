@@ -279,7 +279,7 @@ public:
 
    static Float_t             fgDefMagField; // Default value for constant solenoid magnetic field.
    static const Float_t       fgkB2C;        // Constant for conversion of momentum to curvature.
-   static TEveTrackPropagator fgDefStyle;    // Default track render-style.
+   static TEveTrackPropagator fgDefault;     // Default track propagator.
 
    ClassDef(TEveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
 };

@@ -161,7 +161,7 @@ ClassImp(TEveTrackPropagator);
 
 Float_t             TEveTrackPropagator::fgDefMagField = 0.5;
 const Float_t       TEveTrackPropagator::fgkB2C        = 0.299792458e-2;
-TEveTrackPropagator TEveTrackPropagator::fgDefStyle;
+TEveTrackPropagator TEveTrackPropagator::fgDefault;
 
 //______________________________________________________________________________
 TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
