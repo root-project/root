@@ -579,7 +579,7 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
    // can be covered by other windows.
    // Returns false if something obvious goes wrong, true otherwise.
 
-   if (fileName.EndsWith(".gif") || fileName.EndsWith(".gif+") ||
+   if (fileName.EndsWith(".gif") || fileName.Contains(".gif+") ||
        fileName.EndsWith(".jpg") || fileName.EndsWith(".png"))
    {
       if ( ! TakeLock(kDrawLock)) {
