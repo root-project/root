@@ -15,8 +15,8 @@ NOOPT         =
 endif
 
 # Compiler:
-CXX           = xlC
-CC            = xlC
+CXX           = xlC_r
+CC            = xlC_r
 CXXFLAGS      = -qchars=signed -qnoro -qnoroconst -qrtti -qstaticinline \
                 $(EXTRA_CXXFLAGS)
 CFLAGS        = -qchars=signed -qnoro -qnoroconst -qstaticinline \
@@ -32,7 +32,7 @@ MAKESHAREDLIB = cd \$$BuildDir ; $(CXX) -c $(OPT) $(CXXFLAGS) \$$IncludePath \
                 -o \$$SharedLib \$$LinkedLibs -p 0 \$$ObjectFiles
 
 # Linker:
-LD            = xlC
+LD            = xlC_r
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       =
 SOEXT         = a
