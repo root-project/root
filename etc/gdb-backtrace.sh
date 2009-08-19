@@ -21,12 +21,12 @@ backtrace="bt"
 if test -d /proc/$1/task ; then
     # Newer kernel; has a task/ directory.
     if test `ls /proc/$1/task | wc -l` -gt 1 2>/dev/null ; then
-	backtrace="thread apply all bt"
+        backtrace="thread apply all bt"
     fi
 elif test -f /proc/$1/maps ; then
     # Older kernel; go by it loading libpthread.
     if grep -e libpthread /proc/$1/maps > /dev/null 2>&1 ; then
-	backtrace="thread apply all bt"
+        backtrace="thread apply all bt"
     fi
 fi
 
