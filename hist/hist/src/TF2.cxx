@@ -778,6 +778,7 @@ void TF2::Paint(Option_t *option)
    fHistogram->SetStats(0);
 
 //*-*-  Draw the histogram
+   if (!gPad) return;
    if (opt.Length() == 0)  fHistogram->Paint("cont3");
    else if (opt == "same") fHistogram->Paint("cont2same");
    else                    fHistogram->Paint(option);
