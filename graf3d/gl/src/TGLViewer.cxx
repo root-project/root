@@ -645,7 +645,7 @@ Bool_t TGLViewer::SavePictureUsingBB(const TString &fileName)
 
    static const TString eh("TGLViewer::SavePictureUsingBB");
 
-   if (! fileName.EndsWith(".gif") && ! fileName.EndsWith(".gif+") &&
+   if (! fileName.EndsWith(".gif") && ! fileName.Contains(".gif+") &&
        ! fileName.EndsWith(".jpg") && ! fileName.EndsWith(".png"))
    {
       Warning(eh, "file %s cannot be saved with this extension.", fileName.Data());
@@ -697,7 +697,7 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
 
    static const TString eh("TGLViewer::SavePictureUsingFBO");
 
-   if (! fileName.EndsWith(".gif") && ! fileName.EndsWith(".gif+") &&
+   if (! fileName.EndsWith(".gif") && ! fileName.Contains(".gif+") &&
        ! fileName.EndsWith(".jpg") && ! fileName.EndsWith(".png"))
    {
       Warning(eh, "file %s cannot be saved with this extension.", fileName.Data());
