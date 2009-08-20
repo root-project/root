@@ -2023,6 +2023,9 @@ void TUnixSystem::StackTrace()
 
    if (fd && message) { }  // remove unused warning (remove later)
 
+   if (!strcmp(gApplication->GetName(), "TRint"))
+      Getlinem(kCleanUp, 0);
+
 #if defined(USE_GDB_STACK_TRACE)
    char *gdb = Which(Getenv("PATH"), "gdb", kExecutePermission);
    if (!gdb) {
@@ -2033,22 +2036,14 @@ void TUnixSystem::StackTrace()
    // use gdb to get stack trace
    TString gdbscript;
 # ifdef ROOTETCDIR
-   gdbscript.Form("%s/gdb-backtrace-script", ROOTETCDIR);
+   gdbscript.Form("%s/gdb-backtrace.sh ", ROOTETCDIR);
 # else
-   gdbscript.Form("%s/etc/gdb-backtrace-script", gSystem->Getenv("ROOTSYS"));
+   gdbscript.Form("%s/etc/gdb-backtrace.sh ", gSystem->Getenv("ROOTSYS"));
 # endif
-   TString tracefile, tracecmd;
-   tracefile.Form("/tmp/rootstack.%d", GetPid());
-   tracecmd.Form("%s -batch -n -x %s -p %d > %s 2>&1",
-                 gdb, gdbscript.Data(), GetPid(), tracefile.Data());
-   Exec(tracecmd);
-   FILE *p = fopen(tracefile, "r");
-   TString gdbout;
-   while (gdbout.Gets(p)) {
-      fprintf(stderr, "%s\n", gdbout.Data());
-   }
-   fclose(p);
-   Unlink(tracefile);
+   gdbscript += GetExePath();
+   gdbscript += " ";
+   gdbscript += GetPid();
+   Exec(gdbscript);
    delete [] gdb;
    return;
 
