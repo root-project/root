@@ -26,7 +26,7 @@ EOF
    /usr/bin/sed -n \
     -e 's/^(gdb) //' \
     -e '/^#/p' \
-    -e '/^Thread/p'
+    -e 's/\(^Thread.*\)/@\1/p' | tr "@" "\n"
 
 else
 
@@ -66,6 +66,6 @@ EOF
    /bin/sed -n \
     -e 's/^(gdb) //' \
     -e '/^#/p' \
-    -e '/^Thread/p'
+    -e 's/\(^Thread.*\)/@\1/p' | tr "@" "\n"
 
 fi
