@@ -3385,7 +3385,7 @@ void TSessionQueryFrame::UpdateInfos()
    }
 
    if (result->GetOutputList() && result->GetOutputList()->GetSize() > 0) {
-      buffer += TString::Format("%s Outlist   : %d objects\n",
+      buffer += TString::Format(" Outlist   : %d objects\n",
                                 result->GetOutputList()->GetSize());
       buffer += TString::Format("------------------------------------------------------\n");
    }
