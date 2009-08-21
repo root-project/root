@@ -1,6 +1,6 @@
 CLEAN_TARGETS += *.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writer Foo.so \
 	 *.log $(ALL_LIBRARIES) *.exe
-TEST_TARGETS +=  check Memory
+TEST_TARGETS +=  check Memory ucharshow
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -78,4 +78,7 @@ check: reader.log
 	$(CMDECHO)diff -b -w reader.ref reader.log
 
 Memory: Memory.log
+	$(TestDiff)
+
+ucharshow: ucharshow.log
 	$(TestDiff)
