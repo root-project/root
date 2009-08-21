@@ -69,6 +69,36 @@ char *XrdOucEnv::Delimit(char *value)
                       else value++;
      return (char *)0;
 }
+ 
+/******************************************************************************/
+/*                                E x p o r t                                 */
+/******************************************************************************/
+
+int XrdOucEnv::Export(const char *Var, const char *Val)
+{
+   int vLen = strlen(Var);
+   char *eBuff;
+
+// Allocate memory. Note that this memory will appear to be lost.
+//
+   eBuff = (char *)malloc(vLen+strlen(Val)+2); // +2 for '=' and '\0'
+
+// Set up envar
+//
+   strcpy(eBuff, Var);
+   *(eBuff+vLen) = '=';
+   strcpy(eBuff+vLen+1, Val);
+   return putenv(eBuff);
+}
+
+/******************************************************************************/
+
+int XrdOucEnv::Export(const char *Var, int Val)
+{
+   char buff[32];
+   sprintf(buff, "%d", Val);
+   return Export(Var, buff);
+}
 
 /******************************************************************************/
 /*                                G e t I n t                                 */

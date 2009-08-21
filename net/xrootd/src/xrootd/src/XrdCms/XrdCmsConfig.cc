@@ -906,7 +906,8 @@ int XrdCmsConfig::PidFile()
     else    snprintf(pidFN, sizeof(pidFN), "%s/cmsd.mangr.pid", ppath);
 
     if ((xfd = open(pidFN, O_WRONLY|O_CREAT|O_TRUNC,0644)) < 0) xop = "open";
-       else {if ((write(xfd,buff,snprintf(buff,sizeof(buff),"%d",getpid()))<0)
+       else {if ((write(xfd,buff,snprintf(buff,sizeof(buff),"%d",
+                            static_cast<int>(getpid()))) < 0)
              || (LocalRoot && 
                            (write(xfd,(void *)"\n&pfx=",6)  < 0 ||
                             write(xfd,(void *)LocalRoot,strlen(LocalRoot)) < 0

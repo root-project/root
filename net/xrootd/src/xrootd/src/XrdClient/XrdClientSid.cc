@@ -63,11 +63,16 @@ kXR_unt16 XrdClientSid::GetNewSid(kXR_unt16 sid, ClientRequest *req) {
     struct SidInfo si;
     
     memcpy(req->header.streamid, &nsid, sizeof(req->header.streamid));
-    memset(&si.resp, 0, sizeof(si.resp));
+
     si.fathersid = sid;
     si.outstandingreq = *req;
     si.reqbyteprogress = 0;
     si.sendtime = time(0);
+
+    si.rspstatuscode = 0;
+    si.rsperrno = kXR_noErrorYet;
+    si.rsperrmsg = 0;
+
     childsidnfo.Add(nsid, si);
   }
   
@@ -80,11 +85,18 @@ kXR_unt16 XrdClientSid::GetNewSid(kXR_unt16 sid, ClientRequest *req) {
 // Report the response for an outstanding request
 // Typically this is used to keep track of the received errors, expecially
 // for async writes
-void XrdClientSid::ReportSidResp(kXR_unt16 sid, struct ServerResponseHeader *resp) {
+void XrdClientSid::ReportSidResp(kXR_unt16 sid, kXR_unt16 statuscode, kXR_unt32 errcode, char *errmsg) {
   XrdSysMutexHelper l(fMutex);
   struct SidInfo *si = childsidnfo.Find(sid);
   
-  if (si) memcpy(&si->resp, resp, sizeof(struct ServerResponseHeader));
+  if (si) {
+     si->rspstatuscode = statuscode;
+     si->rsperrno = errcode;
+     if (si->rsperrmsg) free(si->rsperrmsg);
+
+     if (errmsg) si->rsperrmsg = strdup(errmsg);
+     else si->rsperrmsg = 0;
+  }
     
 };
 
@@ -112,8 +124,9 @@ int ReleaseSidTreeItem(kXR_unt16 key,
 
   // If the sid we have is a son of the given father then delete it
   if (si.fathersid == data->fathersid) {
-    data->freesids->Push_back(key);
-    return -1;
+     free(si.rsperrmsg);
+     data->freesids->Push_back(key);
+     return -1;
   }
 
   return 0;
@@ -165,10 +178,11 @@ static int sniffOutstandingFailedWriteReq(kXR_unt16 sid,
     // If it went into timeout or got a negative response
     // we add this req to the vector
     if ( (time(0) - p.sendtime > EnvGetLong(NAME_REQUESTTIMEOUT)) ||
-	 (p.resp.status != kXR_ok) ) {
+	 (p.rspstatuscode != kXR_ok) ) {
       data->reqs->Push_back(p.outstandingreq);
 
       // And we release the failed sid
+      free(p.rsperrmsg);
       data->freesids->Push_back(sid);
       return -1;
     }
@@ -190,6 +204,7 @@ static int sniffOutstandingAllWriteReq(kXR_unt16 sid,
       data->reqs->Push_back(p.outstandingreq);
 
       // And we release the failed sid
+      free(p.rsperrmsg);
       data->freesids->Push_back(sid);
       return -1;
   }

@@ -182,6 +182,7 @@ static int          LinkCount;
 static int          LinkCountMax;
 static int          LinkTimeOuts;
 static int          LinkStalls;
+static int          LinkSfIntr;
        long long        BytesIn;
        long long        BytesInTot;
        long long        BytesOut;
@@ -190,6 +191,7 @@ static int          LinkStalls;
        int              stallCntTot;
        int              tardyCnt;
        int              tardyCntTot;
+       int              SfIntr;
 static XrdSysMutex  statsMutex;
 
 // Identification section

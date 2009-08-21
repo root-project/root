@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.32 2008/12/18 02:54:59 abh Exp $
+#              $Id: GNUmakefile,v 1.34 2009/07/31 03:47:49 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -164,7 +164,7 @@ $(OBJDIR)/XrdXrootdJob.o:    XrdXrootdJob.hh        XrdXrootdJob.cc \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdJob.o XrdXrootdJob.cc
 
 $(OBJDIR)/XrdXrootdLoadLib.o: XrdSfsInterface.hh XrdSecInterface.hh XrdSysError.hh \
-                              XrdXrootdLoadLib.cc
+                              XrdXrootdLoadLib.cc  XrdOucEnv.hh
 	@echo Compiling XrdXrootdLoadLib.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdLoadLib.o XrdXrootdLoadLib.cc
 
@@ -215,7 +215,8 @@ $(OBJDIR)/XrdXrootdResponse.o: XrdLink.hh           XrdXrootdResponse.hh  \
 	@echo Compiling XrdXrootdResponse.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdResponse.o XrdXrootdResponse.cc
 
-$(OBJDIR)/XrdXrootdStats.o: XrdXrootdResponse.hh XrdStats.hh XrdSysPthread.hh \
+$(OBJDIR)/XrdXrootdStats.o: XrdXrootdResponse.hh XrdStats.hh \
+                            XrdSfsInterface.hh   XrdSysPthread.hh \
                             XrdXrootdStats.cc
 	@echo Compiling XrdXrootdStats.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdStats.o XrdXrootdStats.cc

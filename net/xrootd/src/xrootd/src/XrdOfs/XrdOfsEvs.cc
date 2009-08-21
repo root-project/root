@@ -230,7 +230,7 @@ void XrdOfsEvs::Notify(Event eID, XrdOfsEvsInfo &Info)
 //
    fP = &MsgFmt[eNum];
    if (fP->Flags & XrdOfsEvsFormat::cvtMode)
-      {sprintf(modebuff, "%o", (Info.FMode() & S_IAMB));
+      {sprintf(modebuff, "%o", static_cast<int>((Info.FMode() & S_IAMB)));
        Info.Set(XrdOfsEvsInfo::evFMODE, modebuff);
       } else Info.Set(XrdOfsEvsInfo::evFMODE, "$FMODE");
    if (fP->Flags & XrdOfsEvsFormat::cvtFSize)

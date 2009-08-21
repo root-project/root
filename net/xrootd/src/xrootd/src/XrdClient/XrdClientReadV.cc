@@ -79,6 +79,7 @@ kXR_int64 XrdClientReadV::ReqReadV(XrdClientConn *xrdc, char *handle, char *dest
 	  if (xrdc->WriteToServer_Async(&readvFileRequest,
 					buflis) != kOK )
 	    total_len = 0;
+
 	}
 
     }
@@ -97,10 +98,10 @@ kXR_int32 XrdClientReadV::UnpackReadVResp(char *destbuf, char *respdata, kXR_int
 
     // I just rebuild the readahead_list element
     struct readahead_list header;
-    kXR_int64 pos_from = 0, pos_to = 0;
+    kXR_int32 pos_from = 0, pos_to = 0;
     int i = 0;
-
-    int cur_buf_len = 0, cur_buf_offset = -1, cur_buf = 0;
+    kXR_int64 cur_buf_offset = -1;
+    int cur_buf_len = 0, cur_buf = 0;
     
     while ( (pos_from < respdatalen) && (i < nbuf) ) {
 	memcpy(&header, respdata + pos_from, sizeof(struct readahead_list));

@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.32 2009/03/18 21:02:53 abh Exp $
+#              $Id: GNUmakefile.in,v 1.34 2009/07/28 20:01:44 ganis Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -11,7 +11,9 @@
 
 # Order in which components must be made
 #
-XRDSEC  = XrdSys XrdOuc XrdNet @xrdsec@
+XRDCOMMON  = XrdSys XrdOuc XrdNet XrdSec
+
+XRDSEC  = @xrdsec@
 
 SERVER  = XrdSfs XrdAcc XrdOdc Xrd \
           XrdCms XrdOlb XrdOss XrdOfs XrdBwm XrdRootd XrdXrootd XrdFrm
@@ -35,6 +37,15 @@ RM      = @rmpath@
 LN      = @lnpath@
 
 SUNCACHE= @suncache@
+
+#
+# Envvars influencing what 'make install' does
+export INSTPFX = @inst_prefix@
+export LIBPATH = @inst_libdir@
+export ETCPATH = @inst_etcdir@
+export BINPATH = @inst_bindir@
+export UTILSPATH = @inst_utilsdir@
+export INCPATH = @inst_incdir@
 
 #------------------------------------------------------------------------------#
 #                                  R u l e s                                   #
@@ -84,6 +95,10 @@ distclean: FORCE
 	$(ECHO)$(RM) -f src/GNUmake.options
 	$(ECHO)$(RM) -f config.log
 	$(ECHO)$(RM) -f test-comp.*
+
+install: FORCE
+	@echo Installing...
+	$(ECHO) ./makeinstall.sh ./ @inst_prefix@
 
 XrdAcc: FORCE
 	@echo $(XMSG) acc $(XDBG) component...

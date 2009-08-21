@@ -18,6 +18,7 @@ const char *XrdOfsHandleCVSID = "$Id$";
 #include <sys/types.h>
 
 #include "XrdOfs/XrdOfsHandle.hh"
+#include "XrdOfs/XrdOfsStats.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPlatform.hh"
@@ -145,6 +146,8 @@ void *XrdOfsHanXpire(void *pp)
 
 extern XrdSysError OfsEroute;
 
+extern XrdOfsStats OfsStats;
+
 /******************************************************************************/
 /*                        S t a t i c   O b j e c t s                         */
 /******************************************************************************/
@@ -187,6 +190,7 @@ int XrdOfsHandle::Alloc(const char *thePath, int Opts, XrdOfsHandle **Handle)
 // Get a new handle
 //
    if (!(retc = Alloc(theKey, Opts, Handle))) theTable->Add(*Handle);
+   OfsStats.Add(OfsStats.Data.numHandles);
 
 // All done
 //
@@ -367,7 +371,7 @@ int XrdOfsHandle::Retire(long long *retsz, char *buff, int blen)
    myMutex.Lock();
    if (Path.Links == 1)
       {if (buff) strlcpy(buff, Path.Val, blen);
-       numLeft = 0;
+       numLeft = 0; OfsStats.Dec(OfsStats.Data.numHandles);
        if ( (isRW ? rwTable.Remove(this) : roTable.Remove(this)) )
          {Next = Free; Free = this;
           if (Posc) {Posc->Recycle(); Posc = 0;}

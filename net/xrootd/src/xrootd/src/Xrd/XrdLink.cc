@@ -109,6 +109,7 @@ extern XrdOucTrace     XrdTrace;
        int             XrdLink::LinkCountMax  = 0;
        int             XrdLink::LinkTimeOuts  = 0;
        int             XrdLink::LinkStalls    = 0;
+       int             XrdLink::LinkSfIntr    = 0;
        XrdSysMutex     XrdLink::statsMutex;
 
        const char     *XrdLinkScan::TraceID = "LinkScan";
@@ -786,26 +787,30 @@ int XrdLink::Send(const struct sfVec *sfP, int sfN)
 //
    wrMutex.Lock();
    isIdle = 0;
-do{do {retc = sendfilev(FD, vecSFP, sfN, &xframt);}
-      while ((retc < 0 && errno == EINTR) || !retc);
+do{retc = sendfilev(FD, vecSFP, sfN, &xframt);
 
 // Check if all went well and return if so (usual case)
 //
-   if (retc == bytes)
+   if (xframt == bytes)
       {BytesOut += bytes;
        wrMutex.UnLock();
        return totamt;
       }
 
-// See if we can resume the transfer
+// The only one we will recover from is EINTR. We cannot legally get EAGAIN.
 //
-   if (retc <= 0 || !sfN) break;
-   BytesOut += retc; bytes -= retc;
-   while(retc > 0 && sfN)
-       {if (retc < (ssize_t)vecSFP->sfv_len)
-           {vecSFP->sfv_off += retc; vecSFP->sfv_len -= retc; break;}
-        retc -= vecSFP->sfv_len; vecSFP++; sfN--;
-       }
+   if (retc < 0 && errno != EINTR) break;
+
+// Try to resume the transfer
+//
+   if (xframt > 0)
+      {BytesOut += xframt; bytes -= xframt; SfIntr++;
+       while(xframt > 0 && sfN)
+            {if ((ssize_t)xframt < (ssize_t)vecSFP->sfv_len)
+                {vecSFP->sfv_off += xframt; vecSFP->sfv_len -= xframt; break;}
+             xframt -= vecSFP->sfv_len; vecSFP++; sfN--;
+            }
+      }
   } while(sfN > 0);
 
 // See if we can recover without destroying the connection
@@ -820,7 +825,7 @@ do{do {retc = sendfilev(FD, vecSFP, sfN, &xframt);}
    static const int setON = 1, setOFF = 0;
    ssize_t retc = 0, bytesleft;
    off_t myOffset;
-   int i, xfrbytes = 0, uncork = 1;
+   int i, xfrbytes = 0, uncork = 1, xIntr = 0;
 
 // lock the link
 //
@@ -842,7 +847,7 @@ do{do {retc = sendfilev(FD, vecSFP, sfN, &xframt);}
            else {myOffset = sfP->offset; bytesleft = sfP->sendsz;
                  while(bytesleft
                     && (retc=sendfile(FD,sfP->fdnum,&myOffset,bytesleft)) > 0)
-                      {myOffset += retc; bytesleft -= retc;}
+                      {myOffset += retc; bytesleft -= retc; xIntr++;}
                 }
         if (retc <  0 && errno == EINTR) continue;
         if (retc <= 0) break;
@@ -865,6 +870,7 @@ do{do {retc = sendfilev(FD, vecSFP, sfN, &xframt);}
 
 // All done
 //
+   if (xIntr > sfN) SfIntr += (xIntr - sfN);
    BytesOut += xfrbytes;
    wrMutex.UnLock();
    return xfrbytes;
@@ -1054,7 +1060,8 @@ int XrdLink::Stats(char *buff, int blen, int do_sync)
 {
    static const char statfmt[] = "<stats id=\"link\"><num>%d</num>"
           "<maxn>%d</maxn><tot>%lld</tot><in>%lld</in><out>%lld</out>"
-          "<ctime>%lld</ctime><tmo>%d</tmo><stall>%d</stall></stats>";
+          "<ctime>%lld</ctime><tmo>%d</tmo><stall>%d</stall>"
+          "<sfps>%d</sfps></stats>";
    int i, myLTLast;
 
 // Check if actual length wanted
@@ -1075,7 +1082,7 @@ int XrdLink::Stats(char *buff, int blen, int do_sync)
    statsMutex.Lock();
    i = snprintf(buff, blen, statfmt, LinkCount,   LinkCountMax, LinkCountTot,
                                      LinkBytesIn, LinkBytesOut, LinkConTime,
-                                     LinkTimeOuts,LinkStalls);
+                                     LinkTimeOuts,LinkStalls,   LinkSfIntr);
    statsMutex.UnLock();
    return i;
 }
@@ -1102,6 +1109,7 @@ void XrdLink::syncStats(int *ctime)
    rdMutex.UnLock();
    wrMutex.Lock();
    LinkBytesOut += BytesOut; BytesOutTot += BytesOut;BytesOut = 0;
+   LinkSfIntr   += SfIntr;   SfIntr = 0;
    wrMutex.UnLock();
    if (ctime)
       {*ctime = time(0) - conTime;

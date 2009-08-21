@@ -4,7 +4,7 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.12 2007/08/08 14:23:17 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.13 2009/06/24 21:24:03 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
@@ -43,10 +43,9 @@ olbd_SOURCES = \
         XrdOlbState.cc XrdOlbState.hh \
 	XrdOlbXmiReq.cc XrdOlbXmiReq.hh XrdOlbXmi.hh
 
-olbd_LDADD = ../XrdNet/libXrdNet.la \
+olbd_LDADD = ../Xrd/libXrd.la \
+             ../XrdNet/libXrdNet.la \
              ../XrdOuc/libXrdOuc.la \
-             ../XrdSys/libXrdSys.la \
-             ../Xrd/libXrd.la \
              ../XrdSys/libXrdSys.la \
              -ldl
 

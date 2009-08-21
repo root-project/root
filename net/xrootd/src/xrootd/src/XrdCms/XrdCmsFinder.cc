@@ -706,7 +706,8 @@ XrdCmsFinderTRG::XrdCmsFinderTRG(XrdSysLogger *lp, int whoami, int port,
    CMSp    = new XrdOucStream(&Say);
    Active  = 0;
    myPort  = port;
-   sprintf(buff, "login %c %d port %d\n",(isProxy ? 'P' : 'p'),getpid(),port);
+   sprintf(buff, "login %c %d port %d\n",(isProxy ? 'P' : 'p'),
+                 static_cast<int>(getpid()), port);
    Login = strdup(buff);
    Say.logger(lp);
 }

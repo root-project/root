@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.28 2009/05/22 01:06:07 abh Exp $
+#              $Id: GNUmakefile,v 1.29 2009/08/19 13:51:46 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -28,6 +28,7 @@ SOURCES = \
         XrdOucReqID.cc       \
         XrdOucStream.cc      \
         XrdOucString.cc      \
+        XrdOucSxeq.cc        \
         XrdOucTokenizer.cc   \
         XrdOucTrace.cc       \
         XrdOucUtils.cc
@@ -49,6 +50,7 @@ OBJECTS = \
         $(OBJDIR)/XrdOucReqID.o        \
         $(OBJDIR)/XrdOucStream.o       \
         $(OBJDIR)/XrdOucString.o       \
+        $(OBJDIR)/XrdOucSxeq.o         \
         $(OBJDIR)/XrdOucTokenizer.o    \
         $(OBJDIR)/XrdOucTrace.o        \
         $(OBJDIR)/XrdOucUtils.o        \
@@ -163,6 +165,10 @@ $(OBJDIR)/XrdOucStream.o: XrdOucStream.cc XrdOucStream.hh XrdSysError.hh \
 $(OBJDIR)/XrdOucString.o: XrdOucString.cc XrdOucString.hh XrdSysHeaders.hh
 	@echo Compiling XrdOucString.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucString.cc -o $(OBJDIR)/XrdOucString.o
+
+$(OBJDIR)/XrdOucSxeq.o: XrdOucSxeq.cc XrdOucSxeq.hh XrdSysPlatform.hh
+	@echo Compiling XrdOucSxeq.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucSxeq.cc -o $(OBJDIR)/XrdOucSxeq.o
 
 $(OBJDIR)/XrdOucTokenizer.o: XrdOucTokenizer.cc XrdOucTokenizer.hh  
 	@echo Compiling XrdOucTokenizer.cc

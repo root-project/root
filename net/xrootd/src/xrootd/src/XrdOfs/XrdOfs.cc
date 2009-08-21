@@ -49,6 +49,7 @@ const char *XrdOfsCVSID = "$Id$";
 #include "XrdOfs/XrdOfsPoscq.hh"
 #include "XrdOfs/XrdOfsTrace.hh"
 #include "XrdOfs/XrdOfsSecurity.hh"
+#include "XrdOfs/XrdOfsStats.hh"
 
 #include "XrdCms/XrdCmsClient.hh"
 
@@ -82,6 +83,12 @@ const char *XrdOfsCVSID = "$Id$";
 XrdSysError      OfsEroute(0);
 
 XrdOucTrace      OfsTrace(&OfsEroute);
+
+/******************************************************************************/
+/*               S t a t i s t i c a l   D a t a   O b j e c t                */
+/******************************************************************************/
+  
+XrdOfsStats      OfsStats;
 
 /******************************************************************************/
 /*                        S t a t i c   O b j e c t s                         */
@@ -544,6 +551,10 @@ int XrdOfsFile::open(const char          *path,      // In
        FTRACE(open, "attach use=" <<oh->Usage());
        if (oP.poscNum > 0) XrdOfsFS.poscQ->Commit(path, oP.poscNum);
        oP.hP->UnLock(); 
+       OfsStats.sdMutex.Lock();
+       isRW ? OfsStats.Data.numOpenW++ : OfsStats.Data.numOpenR++;
+       if (oP.poscNum > 0) OfsStats.Data.numOpenP++;
+       OfsStats.sdMutex.UnLock();
        return oP.OK();
       }
 
@@ -591,6 +602,13 @@ int XrdOfsFile::open(const char          *path,      // In
           }
       }
 
+// Maintain statistics
+//
+   OfsStats.sdMutex.Lock();
+   isRW ? OfsStats.Data.numOpenW++ : OfsStats.Data.numOpenR++;
+   if (oP.poscNum > 0) OfsStats.Data.numOpenP++;
+   OfsStats.sdMutex.UnLock();
+
 // All done
 //
    XrdOfsFS.ocMutex.Lock(); oh = oP.hP; XrdOfsFS.ocMutex.UnLock();
@@ -636,6 +654,15 @@ int XrdOfsFile::close()  // In
     hP = oh; oh = XrdOfs::dummyHandle;
     XrdOfsFS.ocMutex.UnLock();
     hP->Lock();
+
+// Maintain statistics
+//
+   OfsStats.sdMutex.Lock();
+   if (!(hP->isRW)) OfsStats.Data.numOpenR--;
+      else {OfsStats.Data.numOpenW--;
+            if (hP->isRW == XrdOfsHandle::opPC) OfsStats.Data.numOpenP--;
+           }
+   OfsStats.sdMutex.UnLock();
 
 // If this file was tagged as a POSC then we need to make sure it will persist
 // Note that we unpersist the file immediately when it's inactive or if no hold
@@ -1180,7 +1207,7 @@ int XrdOfs::chmod(const char             *path,    // In
    if (Finder && Finder->isRemote())
       {if (fwdCHMOD.Cmd)
           {char buff[8];
-           sprintf(buff, "%o", acc_mode);
+           sprintf(buff, "%o", static_cast<int>(acc_mode));
            if (Forward(retc, einfo, fwdCHMOD, path, buff, info)) return retc;
           }
           else if ((retc = Finder->Locate(einfo,path,SFS_O_RDWR|SFS_O_META)))
@@ -1391,6 +1418,29 @@ int XrdOfs::fsctl(const int               cmd,
 }
 
 /******************************************************************************/
+/*                              g e t S t a t s                               */
+/******************************************************************************/
+
+int XrdOfs::getStats(char *buff, int blen)
+{
+   int n;
+
+// See if the size just wanted
+//
+  if (!buff) return OfsStats.Report(0,0) + XrdOfsOss->Stats(0,0);
+
+// Report ofs info followed by the oss info
+//
+   n = OfsStats.Report(buff, blen);
+   buff += n; blen -= n;
+   n += XrdOfsOss->Stats(buff, blen);
+
+// All done
+//
+   return n;
+}
+  
+/******************************************************************************/
 /*                            g e t V e r s i o n                             */
 /******************************************************************************/
   
@@ -1436,7 +1486,7 @@ int XrdOfs::mkdir(const char             *path,    // In
    if (Finder && Finder->isRemote())
       {if (fwdMKDIR.Cmd)
           {char buff[8];
-           sprintf(buff, "%o", acc_mode);
+           sprintf(buff, "%o", static_cast<int>(acc_mode));
            if (Forward(retc, einfo, (mkpath ? fwdMKPATH:fwdMKDIR),
                        path, buff, info)) return retc;
           }
@@ -1888,13 +1938,13 @@ int XrdOfs::Forward(int &Result, XrdOucErrInfo &Resp, struct fwdOpt &Fwd,
 int XrdOfs::fsError(XrdOucErrInfo &myError, int rc)
 {
 
-// Translate the error code
+// Translate the error code (update statistics w/o a lock for speed!)
 //
-   if (rc == -EREMOTE)     return SFS_REDIRECT;
-   if (rc == -EINPROGRESS) return SFS_STARTED;
-   if (rc > 0)             return rc;
-   if (rc == -EALREADY)    return SFS_DATA;
-                           return SFS_ERROR;
+   if (rc == -EREMOTE)     {OfsStats.Data.numRedirect++; return SFS_REDIRECT;}
+   if (rc == -EINPROGRESS) {OfsStats.Data.numStarted++;  return SFS_STARTED; }
+   if (rc > 0)             {OfsStats.Data.numDelays++;   return rc;          }
+   if (rc == -EALREADY)    {OfsStats.Data.numReplies++;  return SFS_DATA;    }
+                           {OfsStats.Data.numErrors++;   return SFS_ERROR;   }
 }
 
 /******************************************************************************/
@@ -1963,6 +2013,10 @@ void XrdOfs::Unpersist(XrdOfsHandle *oh, int xcev)
       {XrdOfsEvsInfo evInfo(tident, oh->Name());
        XrdOfsFS.evsObject->Notify(XrdOfsEvs::Rm, evInfo);
       }
+
+// Count this
+//
+   OfsStats.Add(OfsStats.Data.numUnpsist);
 
 // Now unpersist the file
 //

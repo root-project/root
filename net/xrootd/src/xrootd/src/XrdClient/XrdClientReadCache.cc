@@ -57,7 +57,7 @@ long long XrdClientReadCache::GetTimestampTick()
 }
   
 //________________________________________________________________________
-XrdClientReadCache::XrdClientReadCache() : fItems(16384)
+XrdClientReadCache::XrdClientReadCache() : fItems(4096)
 {
     // Constructor
 
@@ -80,7 +80,6 @@ XrdClientReadCache::XrdClientReadCache() : fItems(16384)
 XrdClientReadCache::~XrdClientReadCache()
 {
   // Destructor
-
   RemoveItems(false);
 
 }
@@ -710,13 +709,13 @@ void XrdClientReadCache::RemoveItems(bool leavepinned)
       if (!fItems[it]->Pinned) {
 	fTotalByteCount -= fItems[it]->Size();
 	delete fItems[it];
-	fItems.Erase(it);
+	fItems.Erase(it, true);
 	continue;
       }
 
       if (fItems[it]->Pinned && !leavepinned) {
 	delete fItems[it];
-	fItems.Erase(it);
+	fItems.Erase(it, true);
 	continue;
       }
     }

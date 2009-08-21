@@ -186,6 +186,26 @@ long long XrdOssCache_FS::freeSpace(long long &Size, const char *path)
 }
 
 /******************************************************************************/
+
+long long XrdOssCache_FS::freeSpace(XrdOssCache_Space &Space, const char *path)
+{
+   STATFS_t fsbuff;
+
+// Free space for a specific path
+//
+   if (!path || FS_Stat(path, &fsbuff)) return -1;
+
+   Space.Total = static_cast<long long>(fsbuff.f_blocks)
+               * static_cast<long long>(fsbuff.FS_BLKSZ);
+   Space.Free  = static_cast<long long>(fsbuff.f_bavail)
+               * static_cast<long long>(fsbuff.FS_BLKSZ);
+   Space.Inodes= static_cast<long long>(fsbuff.f_files);
+   Space.Inleft= static_cast<long long>(fsbuff.FS_FFREE);
+
+   return Space.Free;
+}
+
+/******************************************************************************/
 /*                                A d j u s t                                 */
 /******************************************************************************/
   

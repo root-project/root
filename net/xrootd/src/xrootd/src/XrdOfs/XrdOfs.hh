@@ -178,7 +178,7 @@ public:
                                    XrdOucErrInfo    &out_error,
                              const XrdSecEntity     *client);
 
-        int            getStats(char *buff, int blen) {return 0;}
+        int            getStats(char *buff, int blen);
 
 const   char          *getVersion();
 
@@ -306,7 +306,7 @@ static  int   fsError(XrdOucErrInfo &myError, int rc);
         int   Stall(XrdOucErrInfo  &, int, const char *);
         void  Unpersist(XrdOfsHandle *hP, int xcev=1);
         char *WaitTime(int, char *, int);
-  
+
 /******************************************************************************/
 /*                 P r i v a t e   C o n f i g u r a t i o n                  */
 /******************************************************************************/

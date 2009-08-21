@@ -65,17 +65,16 @@ int XrdXtRdFile::GetBlkToPrefetch(int fromidx, int clientidx, XrdXtRdBlkInfo *&b
    }
 
    // Steal an outstanding missing block, even if in progress
-   // The outcome of this is that, at the end, all the free clients will
+   // The outcome of this is that, at the end, all thethe fastest free clients will
    // ask for the missing blks
    // The only thing to avoid is that a client asks twice the same blk for itself
 
-   for (int i = 0; i < nblks; i++) {
+   for (int i = nblks; i > 0; i--) {
       int pos = (fromidx + i) % nblks;
 
-      // Find a non finished blk to steal, only if not requested too recently
+      // Find a non finished blk to steal
       if (!blocks[pos].done && !blocks[pos].AlreadyRequested(clientidx) &&
-          (blocks[pos].requests.GetSize() < 3) &&
-          (time(0) - blocks[pos].lastrequested > 20) ) {
+          (blocks[pos].requests.GetSize() < 3) ) {
 
          blocks[pos].requests.Push_back(clientidx);
          blkreadonly = &blocks[pos];
@@ -108,11 +107,21 @@ int XrdXtRdFile::GetBlkToRead(int fromidx, int clientidx, XrdXtRdBlkInfo *&blkre
    return -1;
 }
 
-void XrdXtRdFile::MarkBlkAsRead(int blkidx) {
+int XrdXtRdFile::MarkBlkAsRead(int blkidx) {
    XrdSysMutexHelper m(mtx);
 
-   if (!blocks[blkidx].done) doneblks++;
+   int reward = 0;
+
+   // If the block was stolen by somebody else then the reward is negative
+   if (blocks[blkidx].done) reward = -1;
+   if (!blocks[blkidx].done) {
+      doneblks++;
+      if (blocks[blkidx].requests.GetSize() > 1) reward = 1;
+   }
+
+
    blocks[blkidx].done = true;
+   return reward;
 }
 
 

@@ -128,6 +128,7 @@ void XrdCnsDaemon::getEvents(XrdOucStream &Events)
 
          if (Miss) {XrdLog.Emsg("doEvents", Miss, "missing in event", eP);
                     evP->Recycle();
+                    Miss = 0;
                     continue;
                    }
 

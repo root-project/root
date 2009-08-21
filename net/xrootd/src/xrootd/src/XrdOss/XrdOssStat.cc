@@ -31,6 +31,7 @@ const char *XrdOssStatCVSID = "$Id$";
 #include "XrdOss/XrdOssSpace.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucName2Name.hh"
+#include "XrdOuc/XrdOucPList.hh"
 
 /******************************************************************************/
 /*                                 s t a t                                    */
@@ -185,11 +186,9 @@ int XrdOssSys::StatLS(XrdOucEnv &env, const char *path, char *buff, int &blen)
 {
    static const char *Resp="oss.cgroup=%s&oss.space=%lld&oss.free=%lld"
                            "&oss.maxf=%lld&oss.used=%lld&oss.quota=%lld";
-   long long Tspace, Fspace, Mspace, Uspace, Quota;
    struct stat sbuff;
+   XrdOssCache_Space   CSpace;
    XrdOssCache_Group  *fsg = XrdOssCache_Group::fsgroups;
-   XrdOssCache_FS     *fsp;
-   XrdOssCache_FSData *fsd;
    char *cgrp, cgbuff[XrdOssSpace::minSNbsz];
    int retc;
 
@@ -220,24 +219,14 @@ int XrdOssSys::StatLS(XrdOucEnv &env, const char *path, char *buff, int &blen)
        return XrdOssOK;
       }
 
-// Prepare to accumulate the stats
+// Accumulate the stats
 //
-   Tspace = Fspace = Mspace = 0;
-   XrdOssCache::Mutex.Lock();
-   Uspace = fsg->Usage; Quota = fsg->Quota;
-   if ((fsp = XrdOssCache::fsfirst)) do
-      {if (fsp->fsgroup == fsg)
-          {fsd = fsp->fsdata;
-           Tspace += fsd->size;    Fspace += fsd->frsz;
-           if (fsd->frsz > Mspace) Mspace  = fsd->frsz;
-          }
-       fsp = fsp->next;
-      } while(fsp != XrdOssCache::fsfirst);
-   XrdOssCache::Mutex.UnLock();
+   getSpace(fsg, CSpace);
 
 // Format the result
 //
-   blen = snprintf(buff,blen,Resp,cgrp,Tspace,Fspace,Mspace,Uspace,Quota);
+   blen = snprintf(buff,blen,Resp,cgrp,CSpace.Total,CSpace.Free,CSpace.Maxfree,
+                                       CSpace.Usage,CSpace.Quota);
    return XrdOssOK;
 }
 
@@ -336,4 +325,134 @@ int XrdOssSys::getCname(const char *path, struct stat *sbuff, char *cgbuff)
 // All done
 //
    return 0;
+}
+
+/******************************************************************************/
+/*                              g e t S p a c e                               */
+/******************************************************************************/
+  
+int XrdOssSys::getSpace(XrdOssCache_Group *fsg, XrdOssCache_Space &CSpace)
+{
+   XrdOssCache_FS     *fsp;
+   XrdOssCache_FSData *fsd;
+   int pNum = 0;
+
+// Prepare to accumulate the stats
+//
+   XrdOssCache::Mutex.Lock();
+   CSpace.Usage = fsg->Usage; CSpace.Quota = fsg->Quota;
+   CSpace.Total = 0;          CSpace.Free  = 0;
+   if ((fsp = XrdOssCache::fsfirst)) do
+      {if (fsp->fsgroup == fsg)
+          {fsd = fsp->fsdata; pNum++;
+           CSpace.Total += fsd->size;      CSpace.Free   += fsd->frsz;
+           if (fsd->frsz > CSpace.Maxfree) CSpace.Maxfree = fsd->frsz;
+          }
+       fsp = fsp->next;
+      } while(fsp != XrdOssCache::fsfirst);
+   XrdOssCache::Mutex.UnLock();
+
+// All done
+//
+   return pNum;
+}
+
+/******************************************************************************/
+/*                              g e t S t a t s                               */
+/******************************************************************************/
+  
+int XrdOssSys::getStats(char *buff, int blen)
+{
+   static const char ptag1[] = "<paths>%d";
+   static const char ptag2[] = "<stats id=\"%d\"><lp>\"%s\"</lp><rp>\"%s\"</rp>"
+   "<tot>%lld</tot><free>%lld</free><ino>%lld</ino><ifr>%lld</ifr></stats>";
+   static const char ptag3[] = "</paths>";
+
+   static const int ptag1sz = sizeof(ptag1);
+   static const int ptag2sz = sizeof(ptag2) + (16*4);
+   static const int ptag3sz = sizeof(ptag3);
+
+   static const char stag1[] = "<space>%d";
+   static const char stag2[] = "<stats id=\"%d\"><name>%s</name>"
+                "<tot>%lld</tot><free>%lld</free><maxf>%lld</maxf>"
+                "<fsn>%d</fsn><usg>%lld</usg>";
+   static const char stagq[] = "<qta>%lld</qta>";
+   static const char stags[] = "</stats>";
+   static const char stag3[] = "</space>";
+
+   static const int stag1sz = sizeof(stag1);
+   static const int stag2sz = sizeof(stag2) + XrdOssSpace::maxSNlen + (16*5);
+   static const int stagqsz = sizeof(stagq) + 16;
+   static const int stagssz = sizeof(stags);
+   static const int stag3sz = sizeof(stag3);
+
+   static const int stagsz  = ptag1sz + ptag2sz + ptag3sz + 1024 +
+                            + stag1sz + stag2sz + stag3sz
+                            + stagqsz + stagssz;
+
+   XrdOssCache_Group  *fsg = XrdOssCache_Group::fsgroups;
+   XrdOssCache_Space   CSpace;
+   OssDPath           *dpP = DPList;
+   char *bp = buff;
+   int dpNum = 0, spNum = 0, n, flen;
+
+// If no buffer spupplied, return how much data we will generate. We also
+// do one-time initialization here.
+//
+   if (!buff) return ptag1sz + (ptag2sz * numDP) + stag3sz + lenDP
+                   + stag1sz + (stag2sz * numCG) + stag3sz
+                   + stagqsz + stagssz;
+
+// Make sure we have enough space for one entry
+//
+   if (blen <= stagsz) return 0;
+
+// Output first header (we know we have one path, at least)
+//
+   flen = sprintf(bp, ptag1, numDP); bp += flen; blen -= flen;
+
+// Output individual entries
+//
+   while(dpP && blen > 0)
+        {XrdOssCache_FS::freeSpace(CSpace, dpP->Path2);
+         flen = snprintf(bp, blen, ptag2, dpNum, dpP->Path1, dpP->Path2,
+                                   CSpace.Total>>10, CSpace.Free>>10,
+                                   CSpace.Inodes,    CSpace.Inleft);
+         dpP = dpP->Next; bp += flen; blen -= flen; dpNum++;
+        }
+
+// Output closing tag
+//
+   if (blen <= ptag3sz) return 0;
+   strcpy(bp, ptag3); bp += (ptag3sz-1); blen -= (ptag3sz-1);
+   dpNum = bp - buff;
+
+// Output header
+//
+   if (blen <= stag1sz) return (blen < 0 ? 0 : dpNum);
+   flen = snprintf(bp, blen, stag1, numCG); bp += flen; blen -= flen;
+   if (blen <= stag1sz) return dpNum;
+
+// Generate info for each path
+//
+   while(fsg && blen > 0)
+        {n = getSpace(fsg, CSpace);
+         flen = snprintf(bp, blen, stag2, spNum, fsg->group, CSpace.Total,
+                         CSpace.Free>>10, CSpace.Maxfree>>10, n, CSpace.Usage);
+         bp += flen; blen -= flen; spNum++;
+         if (CSpace.Quota >= 0 && blen > stagqsz)
+            {flen = sprintf(bp, stagq, CSpace.Quota); bp += flen; blen -= flen;}
+         if (blen < stagssz) return dpNum;
+         strcpy(bp, stags); bp += (stagssz-1); blen -= (stagssz-1);
+         fsg = fsg->next;
+        }
+
+// Insert trailer
+//
+   if (blen >= stag3sz) {strcpy(bp, stag3); bp += (stag3sz-1);}
+      else return dpNum;
+
+// All done
+//
+   return bp - buff;
 }

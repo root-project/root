@@ -312,7 +312,7 @@ int XrdSecsssKT::Rewrite(int Keep, int &numKeys, int &numTot, int &numExp)
 
 // Construct temporary filename
 //
-   sprintf(buff, ".%d", getpid());
+   sprintf(buff, ".%d", static_cast<int>(getpid()));
    strcat(tmpFN, buff);
 
 // Open the file for output

@@ -14,6 +14,7 @@
 
 #include "XrdSys/XrdSysPthread.hh"
 
+class XrdSfsFileSystem;
 class XrdStats;
 class XrdXrootdResponse;
 
@@ -40,6 +41,8 @@ int              Refresh;      // Stats: Number of refresh requests
 
 XrdSysMutex      statsMutex;   // Mutex to serialize updates
 
+void             setFS(XrdSfsFileSystem *fsp) {fsP = fsp;}
+
 int              Stats(char *buff, int blen, int do_sync=0);
 
 int              Stats(XrdXrootdResponse &resp, const char *opts);
@@ -48,6 +51,7 @@ int              Stats(XrdXrootdResponse &resp, const char *opts);
                 ~XrdXrootdStats() {}
 private:
 
+XrdSfsFileSystem *fsP;
 XrdStats *xstats;
 };
 #endif

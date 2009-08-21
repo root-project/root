@@ -117,7 +117,6 @@ void                Activate(XrdOssDF *ssP) {ssi = ssP;}
 
 static const int    opRW = 1;
 static const int    opPC = 3;
-static const int    opXQ = 4;
 
 static       int    Alloc(const char *thePath,int Opts,XrdOfsHandle **Handle);
 static       int    Alloc(                             XrdOfsHandle **Handle);

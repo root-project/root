@@ -509,25 +509,16 @@ char *XrdOucStream::GetMyFirstWord(int lowcase)
            return add2llB(var, 1);
           }
 
-             if (!strcmp("if",   var)) skpel = doif();
-        else if (!strcmp("else", var))
-                {if (!sawif || sawif == 2)
-                    {if (Eroute)
-                        Eroute->Emsg("Stream", "No preceeding 'if' for 'else'.");
-                        ecode = EINVAL;
-                    } else {
-                     sawif = 2;
-                     if (skpel) skip2fi = 1;
+        if (       !strcmp("if",   var)) var = doif();
+        if (var && !strcmp("else", var)) var = doelse();
+        if (var && !strcmp("fi",   var))
+           {if (sawif) sawif = skpel = skip2fi = 0;
+               else {if (Eroute)
+                        Eroute->Emsg("Stream", "No preceeding 'if' for 'fi'.");
+                     ecode = EINVAL;
                     }
-                }
-        else if (!strcmp("fi",   var))
-                {if (sawif) sawif = skpel = skip2fi = 0;
-                    else {if (Eroute)
-                             Eroute->Emsg("Stream", "No preceeding 'if' for 'fi'.");
-                          ecode = EINVAL;
-                         }
-                }
-        else if (!skip2fi && (!myEnv || !isSet(var))) return add2llB(var, 1);
+           }
+        if (var && (!myEnv || !isSet(var))) return add2llB(var, 1);
        } while (1);
 
    return 0;
@@ -726,6 +717,48 @@ char *XrdOucStream::add2llB(char *tok, int reset)
       }
    return tok;
 }
+/******************************************************************************/
+/*                                d o e l s e                                 */
+/******************************************************************************/
+
+char *XrdOucStream::doelse()
+{
+   char *var;
+
+// An else must be preceeded by an if and not by a naked else
+//
+   if (!sawif || sawif == 2)
+      {if (Eroute) Eroute->Emsg("Stream", "No preceeding 'if' for 'else'.");
+       ecode = EINVAL;
+       return 0;
+      }
+
+// If skipping all else caluses, skip all lines until we reach a fi
+//
+   if (skpel)
+      {while((var = GetFirstWord()))
+            {if (!strcmp("fi", var)) return var;}
+       if (Eroute) Eroute->Emsg("Stream", "Missing 'fi' for last 'if'.");
+       ecode = EINVAL;
+       return 0;
+      }
+
+// Elses are still possible then process one of them
+//
+   do {if (!(var = GetWord())) // A naked else will always succeed
+          {sawif = 2;
+           return 0;
+          }
+       if (strcmp("if", var))  // An else may only be followed by an if
+          {Eroute->Emsg("Stream","'else",var,"' is invalid.");
+           ecode = EINVAL;
+           return 0;
+          }
+       sawif = 0;
+       var = doif();
+      } while(var && !strcmp("else", var));
+   return var;
+}
   
 /******************************************************************************/
 /*                                  d o i f                                   */
@@ -752,7 +785,7 @@ char *XrdOucStream::add2llB(char *tok, int reset)
    Output: 0 upon success or !0 upon failure.
 */
 
-int XrdOucStream::doif()
+char *XrdOucStream::doif()
 {
     char *var;
     int rc;
@@ -769,14 +802,15 @@ int XrdOucStream::doif()
    sawif = 1; skpel = 0;
    if ((rc = XrdOucUtils::doIf(Eroute,*this,"if directive",myHost,myName,myExec)))
       {if (rc < 0) ecode = EINVAL;
-       return 1;
+          else skpel = 1;
+       return 0;
       }
 
 // Skip all lines until we reach a fi or else
 //
    while((var = GetFirstWord()))
-        {if (!strcmp("fi",   var)) {sawif = 0; break;}
-         if (!strcmp("else", var)) {sawif = 2; break;}
+        {if (!strcmp("fi",   var)) return var;
+         if (!strcmp("else", var)) return var;
         }
 
 // Make sure we have a fi

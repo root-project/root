@@ -28,6 +28,7 @@ const char *XrdXrootdLoadLibCVSID = "$Id$";
 #include <link.h>
 #endif
 
+#include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSec/XrdSecInterface.hh"
 #include "XrdSfs/XrdSfsInterface.hh"
 #include "XrdSys/XrdSysError.hh"
@@ -49,14 +50,12 @@ XrdSfsFileSystem *XrdXrootdloadFileSystem(XrdSysError *eDest,
                                           char *fslib, const char *cfn)
 {
    void *libhandle;
-   char  buff[2048];
    XrdSfsFileSystem *(*ep)(XrdSfsFileSystem *, XrdSysLogger *, const char *);
    XrdSfsFileSystem *FS;
 
 // Record the library path in the environment
 //
-   sprintf(buff, "XRDOFSLIB=%s", fslib);
-   putenv(strdup(buff));
+   XrdOucEnv::Export("XRDOFSLIB", fslib);
 
 // Open the file system library
 //

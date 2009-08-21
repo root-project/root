@@ -27,18 +27,21 @@
 #define STATFS_t struct statvfs
 #define FS_Stat(a,b) statvfs(a,b)
 #define FS_BLKSZ f_frsize
+#define FS_FFREE f_favail
 #endif
 #ifdef __linux__
 #include <sys/vfs.h>
 #define FS_Stat(a,b) statfs(a,b)
 #define STATFS_t struct statfs
 #define FS_BLKSZ f_bsize
+#define FS_FFREE f_ffree
 #endif
 #ifdef AIX
 #include <sys/statfs.h>
 #define STATFS_t struct statfs
 #define FS_Stat(a,b) statfs(a,b)
 #define FS_BLKSZ f_bsize
+#define FS_FFREE f_ffree
 #endif
 #if defined(__macos__) || defined(__FreeBSD__)
 #include <sys/param.h>
@@ -46,7 +49,29 @@
 #define STATFS_t struct statfs
 #define FS_Stat(a,b) statfs(a,b)
 #define FS_BLKSZ f_bsize
+#define FS_FFREE f_ffree
 #endif
+
+/******************************************************************************/
+/*                     X r d O s s C a c h e _ S p a c e                      */
+/******************************************************************************/
+
+class XrdOssCache_Space
+{
+public:
+
+long long          Total;
+long long          Free;
+long long          Maxfree;
+long long          Inodes;
+long long          Inleft;
+long long          Usage;
+long long          Quota;
+
+     XrdOssCache_Space() : Total(0), Free(0), Maxfree(0), Inodes(0), Inleft(0),
+                           Usage(-1), Quota(-1) {}
+    ~XrdOssCache_Space() {}
+};
   
 /******************************************************************************/
 /*                    X r d O s s C a c h e _ F S D a t a                     */
@@ -95,7 +120,8 @@ FSOpts              opts;
 XrdOssCache_FSData *fsdata;
 XrdOssCache_Group  *fsgroup;
 
-static long long    freeSpace(long long &Size, const char *path=0);
+static long long    freeSpace(long long         &Size,  const char *path=0);
+static long long    freeSpace(XrdOssCache_Space &Space, const char *path);
 
        XrdOssCache_FS(      int  &retc,
                       const char *fsg,
@@ -131,7 +157,7 @@ static XrdOssCache_Group *fsgroups;
                           Quota(-1), GRPid(-1) {}
       ~XrdOssCache_Group() {if (group) free((void *)group);}
 };
-
+  
 /******************************************************************************/
 /*                           X r d O s s C a c h e                            */
 /******************************************************************************/

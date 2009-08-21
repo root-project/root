@@ -24,6 +24,8 @@ class XrdScheduler : public XrdJob
 {
 public:
 
+int           Active() {return num_Workers - idl_Workers + num_JobsinQ;}
+
 void          Cancel(XrdJob *jp);
 
 inline int    canStick() {return  num_Workers              < stk_Workers

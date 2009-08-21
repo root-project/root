@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.29 2009/06/04 01:24:52 abh Exp $
+#              $Id: GNUmakefile,v 1.30 2009/06/23 19:13:50 abh Exp $
 
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
@@ -154,9 +154,12 @@ $(OBJDIR)/XrdScheduler.o: XrdJob.hh      XrdScheduler.hh   XrdTrace.hh \
 	@echo Compiling XrdScheduler.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdScheduler.o XrdScheduler.cc
 
-$(OBJDIR)/XrdStats.o: XrdBuffer.hh      XrdLink.hh     XrdPoll.hh \
-                      XrdProtLoad.hh    XrdProtocol.hh XrdScheduler.hh \
+$(OBJDIR)/XrdStats.o: XrdBuffer.hh      XrdJob.hh      XrdLink.hh \
+                      XrdPoll.hh        XrdProtLoad.hh XrdProtocol.hh \
+                      XrdScheduler.hh \
                       XrdStats.cc       XrdStats.hh \
-                      XrdSysPlatform.hh XrdSysPthread.hh ../XrdVersion.hh
+                      XrdNetMsg.hh \
+                      XrdSysError.hh    XrdSysPlatform.hh XrdSysPthread.hh \
+                      XrdSysTimer.hh    ../XrdVersion.hh
 	@echo Compiling XrdStats.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdStats.o XrdStats.cc

@@ -178,7 +178,8 @@ int          Wait4Data(int msMax=-1);
   
 private:
         char *add2llB(char *tok, int reset=0);
-        int   doif();
+        char *doelse();
+        char *doif();
         int   isSet(char *var);
         char *vSubs(char *Var);
         int   xMsg(const char *txt1, const char *txt2=0, const char *txt3=0);

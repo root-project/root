@@ -142,7 +142,7 @@ char XrdOucArgs::getopt()
 
 // Get next option from whatever source we have
 //
-   if (curopt && curopt[1]) curopt++;
+   if (curopt && *curopt) curopt++;
       else if (inStream)
               {if ((optname = curopt = arg_stream.GetToken(&arglist)))
                   {if (*curopt != '-') {arg_stream.RetToken(); curopt = 0;}

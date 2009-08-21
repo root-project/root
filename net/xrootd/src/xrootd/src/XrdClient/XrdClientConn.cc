@@ -745,7 +745,7 @@ bool XrdClientConn::CheckResp(struct ServerResponseHeader *resp, const char *met
 	// ok the response belongs to me
 	if (resp->status == kXR_redirect) {
 	    // too many redirections. Exit!
-	    Error(method, "Too many redirections. System error.");
+	    Error(method, "Error in handling a redirection.");
 	    return FALSE;
 	}
 
@@ -877,7 +877,7 @@ bool XrdClientConn::CheckErrorStatus(XrdClientMessage *mex, short &Retry, char *
     if (mex->HeaderStatus() == kXR_redirect) {
 	// Too many redirections
 	Error("CheckErrorStatus",
-	      "Max redirection count reached for request" << CmdName );
+	      "Error while being redirected for request " << CmdName );
 	return TRUE;
     }
  
@@ -1410,7 +1410,7 @@ bool XrdClientConn::DoLogin()
 #endif
     }
     if (User.length() > 0)
-	strcpy( (char *)reqhdr.login.username, User.c_str() );
+      strncpy( (char *)reqhdr.login.username, User.c_str(), 8 );
     else
 	strcpy( (char *)reqhdr.login.username, "????" );
 
@@ -1587,7 +1587,7 @@ bool XrdClientConn::DoLogin()
 	    // No session info? Let's create one.
 	    SessionIDInfo *newsessid = new SessionIDInfo;
 
-	    for (int i=0; i < int(sizeof(prevsessid->id)); i++)
+	    for (int i=0; i < int(sizeof(newsessid->id)); i++)
 		newsessid->id[i] = plist[i];
 
 	    fSessionIDRepo.Rep(sessname.c_str(), newsessid);
@@ -1965,14 +1965,19 @@ XrdClientConn::HandleServerError(XReqErrorType &errorType, XrdClientMessage *xms
 	}
     
 	// We don't want to flood servers...
-	if (errorType == kREDIRCONNECT)
-	    sleep(EnvGetLong(NAME_RECONNECTTIMEOUT));
+	if (errorType == kREDIRCONNECT) {
+           if (LastServerError.errnum == kXR_NotAuthorized)
+              return kSEHRReturnMsgToCaller;
+
+           sleep(EnvGetLong(NAME_RECONNECTTIMEOUT));
+        }
 
 	// We keep trying the connection to the same host (we have only one)
 	//  until we are connected, or the max count for
 	//  redirections is reached
 
-    } while (errorType == kREDIRCONNECT);
+        // The attempts must be stopped if we are not authorized
+    } while ((errorType == kREDIRCONNECT) && (LastServerError.errnum != kXR_NotAuthorized));
 
 
     // We are here if correctly connected and handshaked and logged

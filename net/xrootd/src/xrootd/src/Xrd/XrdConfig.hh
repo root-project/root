@@ -45,6 +45,7 @@ int   xnet(XrdSysError *edest, XrdOucStream &Config);
 int   xlog(XrdSysError *edest, XrdOucStream &Config);
 int   xport(XrdSysError *edest, XrdOucStream &Config);
 int   xprot(XrdSysError *edest, XrdOucStream &Config);
+int   xrep(XrdSysError *edest, XrdOucStream &Config);
 int   xsched(XrdSysError *edest, XrdOucStream &Config);
 int   xtrace(XrdSysError *edest, XrdOucStream &Config);
 int   xtmo(XrdSysError *edest, XrdOucStream &Config);
@@ -62,6 +63,7 @@ char               *myInstance;
 char               *AdminPath;
 char               *ConfigFN;
 char               *PidPath;
+char               *repDest[2];
 XrdConfigProt      *Firstcp;
 XrdConfigProt      *Lastcp;
 int                 Net_Blen;
@@ -73,6 +75,8 @@ int                 PortTCP;      // TCP Port to listen on
 int                 PortUDP;      // UDP Port to listen on (currently unsupported)
 int                 PortWAN;      // TCP port to listen on for WAN connections
 int                 AdminMode;
+int                 repInt;
+char                repOpts;
 char                isProxy;
 char                setSched;
 };

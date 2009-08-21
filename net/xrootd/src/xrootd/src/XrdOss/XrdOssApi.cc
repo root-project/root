@@ -297,6 +297,50 @@ int XrdOssSys::Mkpath(const char *path, mode_t mode)
    return XrdOssOK;
 }
   
+
+/******************************************************************************/
+/*                                 S t a t s                                  */
+/******************************************************************************/
+
+/*
+  Function: Return statistics.
+
+  Input:    buff        - Buffer where the statistics are to be placed.
+            blen        - The length of the buffer.
+
+  Output:   Returns number of bytes placed in the buffer less null byte.
+*/
+
+int XrdOssSys::Stats(char *buff, int blen)
+{
+   static const char statfmt1[] = "<stats id=\"oss\">";
+   static const char statfmt2[] = "</stats>";
+   static const int  statflen = sizeof(statfmt1) + sizeof(statfmt2);
+   char *bp = buff;
+   int n;
+
+// If only size wanted, return what size we need
+//
+   if (!buff) return statflen + getStats(0,0);
+
+// Make sure we have enough space
+//
+   if (blen < statflen) return 0;
+   strcpy(bp, statfmt1);
+   bp += sizeof(statfmt1)-1; blen -= sizeof(statfmt1)-1;
+
+// Generate space statistics
+//
+   n = getStats(bp, blen);
+   bp += n; blen -= n;
+
+// Add trailer
+//
+   if (blen >= (int)sizeof(statfmt2))
+      {strcpy(bp, statfmt2); bp += (sizeof(statfmt2)-1);}
+   return bp - buff;
+}
+  
 /******************************************************************************/
 /*                              T r u n c a t e                               */
 /******************************************************************************/

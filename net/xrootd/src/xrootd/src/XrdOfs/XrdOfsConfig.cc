@@ -36,6 +36,7 @@ const char *XrdOfsConfigCVSID = "$Id$";
 #include "XrdOfs/XrdOfs.hh"
 #include "XrdOfs/XrdOfsEvs.hh"
 #include "XrdOfs/XrdOfsPoscq.hh"
+#include "XrdOfs/XrdOfsStats.hh"
 #include "XrdOfs/XrdOfsTrace.hh"
 
 #include "XrdNet/XrdNetDNS.hh"
@@ -57,6 +58,8 @@ const char *XrdOfsConfigCVSID = "$Id$";
 /******************************************************************************/
 /*                        G l o b a l   O b j e c t s                         */
 /******************************************************************************/
+
+extern XrdOfsStats OfsStats;
 
 extern XrdOucTrace OfsTrace;
   
@@ -159,8 +162,8 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
 // Set the redirect option for other layers
 //
    if (Options & isManager)
-           putenv((char *)"XRDREDIRECT=R");
-      else putenv((char *)"XRDREDIRECT=0");
+           putenv((char *)"XRDREDIRECT=R");  // XrdOucEnv::Export()
+      else putenv((char *)"XRDREDIRECT=0");  // XrdOucEnv::Export()
 
 // Configure the storage system at this point. This must be done prior to
 // configuring cluster processing. First check if we will be proxying.
@@ -214,6 +217,10 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
 // the last item in the configuration list as we need a working filesystem.
 //
    if (poscAuto != -1 && !NoGo) NoGo |= ConfigPosc(Eroute);
+
+// Setup statistical monitoring
+//
+   OfsStats.setRole(myRole);
 
 // Display final configuration
 //

@@ -77,31 +77,11 @@ typedef off_t offset_t;
 
 #define GTZ_NULL (void *)0
 
-#define GETHOSTBYNAME(hname, rbuff, cbuff, cblen, rpnt, pretc) \
-(rpnt=gethostbyname_r(hname, rbuff, cbuff, cblen,       pretc))
-
-
-#define GETHOSTBYADDR(haddr, hlen, htype, rbuff, cbuff, cblen, rpnt, pretc) \
-(rpnt=gethostbyaddr_r(haddr, hlen, htype, rbuff, cbuff, cblen,       pretc))
-
-#define GETSERVBYNAME(name, stype, psrv, buff, blen, rpnt) \
-(rpnt=getservbyname_r(name, stype, psrv, buff, blen))
-
 #endif
 
 #ifdef __linux__
 
 #define SHMDT_t const void *
-
-#define GETHOSTBYNAME(hname, rbuff, cbuff, cblen,  rpnt, pretc) \
-     (gethostbyname_r(hname, rbuff, cbuff, cblen, &rpnt, pretc) == 0)
-
-#define GETHOSTBYADDR(haddr,hlen,htype,rbuff,cbuff,cblen, rpnt,pretc) \
-     (gethostbyaddr_r(haddr,hlen,htype,rbuff,cbuff,cblen,&rpnt,pretc) == 0)
-
-#define GETSERVBYNAME(name, stype, psrv, buff, blen,  rpnt) \
-     (getservbyname_r(name, stype, psrv, buff, blen, &rpnt) == 0)
-
 #endif
 
 // For alternative platforms
@@ -157,29 +137,26 @@ typedef off_t off64_t;
 #elif defined(_LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__) || \
      defined(__IEEE_LITTLE_ENDIAN) || \
      (defined(__BYTE_ORDER) && __BYTE_ORDER == __LITTLE_ENDIAN)
-#define Xrd_Little_Endian
-// Use GNU's bswap routines if compiling using g++ o/w use our own.
-#if !defined(__GNUC__) || defined(__macos__) || defined(__solaris__)
-#ifndef __bswap_64
-#if defined(__sun) && defined(__x86_64)
-extern "C" unsigned long Swap_n2hll(unsigned long x);
-#else
-extern "C" unsigned long long Swap_n2hll(unsigned long long x);
-#endif
-#define __bswap_64(x) Swap_n2hll(x)
-#endif
-#endif
+#if !defined(__GNUC__) || defined(__macos__)
 
-// When we ever return a long long we will have to fix this as well, perhaps.
+extern "C" unsigned long long Swap_n2hll(unsigned long long x);
+#define htonll(_x_) Swap_n2hll(_x_)
+#define ntohll(_x_) Swap_n2hll(_x_)
+
+#else
+
 #ifndef htonll
 #define htonll(_x_) __bswap_64(_x_)
 #endif
+#ifndef ntohll
+#define ntohll(_x_) __bswap_64(_x_)
+#endif
+
+#endif
+
 #ifndef h2nll
 #define h2nll(_x_, _y_) memcpy((void *)&_y_,(const void *)&_x_,sizeof(long long));\
                         _y_ = htonll(_y_)
-#endif
-#ifndef ntohll
-#define ntohll(_x_) __bswap_64(_x_)
 #endif
 #ifndef n2hll
 #define n2hll(_x_, _y_) memcpy((void *)&_y_,(const void *)&_x_,sizeof(long long));\

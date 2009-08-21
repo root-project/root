@@ -184,6 +184,9 @@ XrdOssSys::XrdOssSys()
    UDir          = 0;
    QFile         = 0;
    Solitary      = 0;
+   DPList        = 0;
+   lenDP         = 0;
+   numCG = numDP = 0;
 }
   
 /******************************************************************************/
@@ -257,6 +260,10 @@ int XrdOssSys::Configure(const char *configfn, XrdSysError &Eroute)
 // Establish the actual default path settings (modified by the above)
 //
    RPList.Set(DirFlags);
+
+// Configure statiscal reporting
+//
+   if (!NoGo) ConfigStats(Eroute);
 
 // Start up the cache scan thread
 //
@@ -433,10 +440,19 @@ int XrdOssSys::ConfigN2N(XrdSysError &Eroute)
 //
    if (!N2N_Lib)
       {the_N2N = XrdOucgetName2Name(&Eroute, ConfigFN, "", LocalRoot, RemoteRoot);
-       if (LocalRoot)  lcl_N2N = the_N2N;
-       if (RemoteRoot) rmt_N2N = the_N2N;
+       if (LocalRoot) {lcl_N2N = the_N2N;
+                       XrdOucEnv::Export("XRDLCLROOT", LocalRoot);
+                      }
+       if (RemoteRoot){rmt_N2N = the_N2N;
+                       XrdOucEnv::Export("XRDRMTROOT",RemoteRoot);
+                      }
        return 0;
       }
+
+// Export name lib information
+//
+   XrdOucEnv::Export("XRDN2NLIB", N2N_Lib);
+   if (N2N_Parms) XrdOucEnv::Export("XRDN2NPARMS", N2N_Parms);
 
 // Create a pluin object (we will throw this away without deletion because
 // the library must stay open but we never want to reference it again).
@@ -675,6 +691,80 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
    tp = (NoGo ? (char *)"failed." : (char *)"completed.");
    Eroute.Say("------ Mass Storage System interface initialization ", tp);
    return NoGo;
+}
+  
+/******************************************************************************/
+/*                           C o n f i g S t a t s                            */
+/******************************************************************************/
+
+void XrdOssSys::ConfigStats(XrdSysError &Eroute)
+{
+   struct StatsDev
+         {StatsDev *Next;
+          dev_t     st_dev;
+          StatsDev(StatsDev *dP, dev_t dn) : Next(dP), st_dev(dn) {}
+         };
+
+   XrdOssCache_Group  *fsg = XrdOssCache_Group::fsgroups;
+   XrdOucPList        *fP = RPList.First();
+   StatsDev           *dP1st = 0, *dP, *dPp;
+   struct stat         Stat;
+   char LPath[MAXPATHLEN+1], PPath[MAXPATHLEN+1], *cP;
+
+// Count actual cache groups
+//
+   while(fsg) {numCG++; fsg = fsg->next;}
+
+// Develop the list of paths that we will report on
+//
+   if (fP) do
+      {strcpy(LPath, fP->Path());
+       if (GenLocalPath(LPath, PPath)) continue;
+       if (stat(PPath, &Stat) && (cP = rindex(LPath, '/')))
+          {*cP = '\0';
+           if (GenLocalPath(LPath, PPath) || stat(PPath, &Stat)) continue;
+          }
+       dP = dP1st;
+       while(dP && dP->st_dev != Stat.st_dev) dP = dP->Next;
+       if (dP) continue;
+       ConfigStats(Stat.st_dev, LPath);
+       if (GenLocalPath(LPath, PPath)) continue;
+       DPList = new OssDPath(DPList, strdup(LPath), strdup(PPath));
+       lenDP += strlen(LPath) + strlen(PPath); numDP++;
+       dP1st  = new StatsDev(dP1st, Stat.st_dev);
+      } while ((fP = fP->Next()));
+
+// If we have no exported paths then create a simple /tmp object
+//
+   if (!numDP)
+      {DPList = new OssDPath(0, strdup("/tmp"), strdup("/tmp"));
+       lenDP = 4; numDP = 1;
+      }
+
+// Now delete all of the device objects
+//
+   dP = dP1st;
+   while(dP) {dPp = dP; dP = dP->Next; delete dPp;}
+}
+  
+/******************************************************************************/
+
+void XrdOssSys::ConfigStats(dev_t Devnum, char *lP)
+{
+   struct stat Stat;
+   char *Slash, pP[MAXPATHLEN+1];
+
+// Minimize the path
+//
+   while((Slash = rindex(lP+1, '/')))
+        {*Slash = '\0';
+         if (GenLocalPath(lP, pP) || stat(pP, &Stat) || Stat.st_dev != Devnum)
+            break;
+        }
+
+// Extend path if need be and return
+//
+   if (Slash) *Slash = '/';
 }
   
 /******************************************************************************/

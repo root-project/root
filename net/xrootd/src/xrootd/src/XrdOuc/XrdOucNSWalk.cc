@@ -174,14 +174,15 @@ int XrdOucNSWalk::Build()
                      if (!rc) rc = EINVAL;
                      break;
                }
+         errno = 0;
          if (rc) {if (errOK) continue; return rc;}
-         addEnt(theEnt.P); theEnt.P = 0; errno = 0;
+         addEnt(theEnt.P); theEnt.P = 0; 
         }
 
 // All done, check if we reached EOF or there is an error
 //
    *File = '\0';
-   if ((rc = errno))
+   if ((rc = errno) && !errOK)
       {eDest->Emsg("Build", rc, "reading directory", DPath); return rc;}
    return 0;
 }

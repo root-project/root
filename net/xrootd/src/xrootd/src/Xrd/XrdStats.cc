@@ -21,12 +21,15 @@ const char *XrdStatsCVSID = "$Id$";
   
 #include "XrdVersion.hh"
 #include "Xrd/XrdBuffer.hh"
+#include "Xrd/XrdJob.hh"
 #include "Xrd/XrdLink.hh"
 #include "Xrd/XrdPoll.hh"
 #include "Xrd/XrdProtLoad.hh"
 #include "Xrd/XrdScheduler.hh"
 #include "Xrd/XrdStats.hh"
+#include "XrdNet/XrdNetMsg.hh"
 #include "XrdSys/XrdSysPlatform.hh"
+#include "XrdSys/XrdSysTimer.hh"
 
 /******************************************************************************/
 /*           G l o b a l   C o n f i g u r a t i o n   O b j e c t            */
@@ -36,49 +39,133 @@ extern XrdBuffManager    XrdBuffPool;
 
 extern XrdScheduler      XrdSched;
 
+       long              XrdStats::tBoot = static_cast<long>(time(0));
+
+/******************************************************************************/
+/*               L o c a l   C l a s s   X r d S t a t s J o b                */
+/******************************************************************************/
+  
+class XrdStatsJob : XrdJob
+{
+public:
+
+     void DoIt() {Stats->Report();
+                  XrdSched.Schedule((XrdJob *)this, time(0)+iVal);
+                 }
+
+          XrdStatsJob(XrdStats *sP, int iV) : XrdJob("stats reporter"),
+                                              Stats(sP), iVal(iV)
+                     {XrdSched.Schedule((XrdJob *)this, time(0)+iVal);}
+         ~XrdStatsJob() {}
+private:
+XrdStats *Stats;
+int       iVal;
+};
+
 /******************************************************************************/
 /*                           C o n s t r c u t o r                            */
 /******************************************************************************/
   
-XrdStats::XrdStats(const char *hname, int port)
+XrdStats::XrdStats(const char *hname, int port,
+                   const char *iname, const char *pname)
 {
+   static const char *head =
+          "<statistics tod=\"%%ld\" ver=\"" XrdVSTRING "\" src=\"%s:%d\" "
+                      "tos=\"%ld\" pgm=\"%s\" ins=\"%s\" pid=\"%d\">";
+   char myBuff[1024];
+
+   Hlen = sprintf(myBuff, head, hname, port, tBoot, pname, iname,
+                          static_cast<int>(getpid()));
+   Head = strdup(myBuff);
+   buff = 0;
+   blen = 0;
    myHost = hname;
+   myName = iname;
    myPort = port;
-   myPid  = getpid();
-   buff   = 0;   // Allocated on first Stats() call
-   blen   = 0;
 }
  
+/******************************************************************************/
+/*                                R e p o r t                                 */
+/******************************************************************************/
+  
+void XrdStats::Report(char **Dest, int iVal, int Opts)
+{
+   extern XrdSysError XrdLog;
+   static XrdNetMsg *netDest[2] = {0,0};
+   static int autoSync, repOpts = Opts;
+   XrdJob *jP;
+   const char *Data;
+          int theOpts, Dlen;
+
+// If we have dest then this is for initialization
+//
+   if (Dest)
+   // Establish up to two destinations
+   //
+      {if (Dest[0]) netDest[0] = new XrdNetMsg(&XrdLog, Dest[0]);
+       if (Dest[1]) netDest[1] = new XrdNetMsg(&XrdLog, Dest[1]);
+       if (!(repOpts & XRD_STATS_ALL)) repOpts |= XRD_STATS_ALL;
+       autoSync = repOpts & XRD_STATS_SYNCA;
+
+   // Get and schedule a new job to report (ignore the jP pointer afterwards)
+   //
+      if (netDest[0]) jP = (XrdJob *)new XrdStatsJob(this, iVal);
+       return;
+      }
+
+// This is a re-entry for reporting purposes, establish the sync flag
+//
+   if (!autoSync || XrdSched.Active() <= 30) theOpts = repOpts;
+      else theOpts = repOpts & ~XRD_STATS_SYNC;
+
+// Now get the statistics
+//
+   Lock();
+   if ((Data = Stats(theOpts)))
+      {Dlen = strlen(Data);
+       netDest[0]->Send(Data, Dlen);
+       if (netDest[1]) netDest[1]->Send(Data, Dlen);
+      }
+   UnLock();
+}
+
 /******************************************************************************/
 /*                                 S t a t s                                  */
 /******************************************************************************/
   
 const char *XrdStats::Stats(int opts)   // statsMutex must be locked!
 {
-#define XRDSHEAD "<statistics tod=\"%ld\" ver=\"" XrdVSTRING "\">"
-#define XRDSTAIL "</statistics>"
-#define XRDSNULL "<statistics tod=\"0\" ver=\"" XrdVSTRING "\">" XRDSTAIL
+   static const char *sgen = "<stats id=\"sgen\">"
+                             "<as>%d</as><et>%lu</et></stats>";
+   static const char *tail = "</statistics toe=\"%ld\">";
+   static const char *snul = "<statistics tod=\"0\" ver=\"" XrdVSTRING "\">"
+                            "</statistics toe=\"0\">";
 
    static XrdProtLoad Protocols;
-   static const char head[] = XRDSHEAD;
-   static const char tail[] = XRDSTAIL;
-   static const int  ovrhed = strlen(head)+16+sizeof(XrdVSTRING)+strlen(tail);
+   static const int  ovrhed = 256+strlen(sgen)+strlen(tail);
+   XrdSysTimer myTimer;
    char *bp;
-   int   bl, sz, do_sync = opts & XRD_STATS_SYNC;
+   int   bl, sz, do_sync = (opts & XRD_STATS_SYNC ? 1 : 0);
 
 // If buffer is not allocated, do it now. We must defer buffer allocation
 // until all components that can provide statistics have been loaded
 //
    if (!(bp = buff))
-      {bl = Protocols.Stats(0,0) + ovrhed;
-       if (getBuff(bl)) bp = buff;
-          else return XRDSNULL;
+      {blen = InfoStats(0,0) + XrdBuffPool.Stats(0,0) + XrdLink::Stats(0,0)
+            + ProcStats(0,0) + XrdSched.Stats(0,0)    + XrdPoll::Stats(0,0)
+            + Protocols.Stats(0,0) + ovrhed + Hlen;
+       buff = (char *)memalign(getpagesize(), blen+256);
+       if (!(bp = buff)) return snul;
       }
    bl = blen;
 
+// Start the time if need be
+//
+   if (opts & XRD_STATS_SGEN) myTimer.Reset();
+
 // Insert the heading
 //
-   sz = sprintf(buff, head, static_cast<long>(time(0)));
+   sz = sprintf(buff, Head, static_cast<long>(time(0)));
    bl -= sz; bp += sz;
 
 // Extract out the statistics, as needed
@@ -118,7 +205,14 @@ const char *XrdStats::Stats(int opts)   // statsMutex must be locked!
        bp += sz; bl -= sz;
       }
 
-   strcpy(bp, tail);
+   if (opts & XRD_STATS_SGEN)
+      {unsigned long totTime = 0;
+       myTimer.Report(totTime);
+       sz = snprintf(bp, bl, sgen, do_sync == 0, totTime);
+       bp += sz; bl -= sz;
+      }
+
+   snprintf(bp, bl, tail, static_cast<long>(time(0)));
    return buff;
 }
  
@@ -126,44 +220,21 @@ const char *XrdStats::Stats(int opts)   // statsMutex must be locked!
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
 /******************************************************************************/
-/*                               g e t B u f f                                */
-/******************************************************************************/
-  
-int XrdStats::getBuff(int xtra)
-{
-
-// Calculate the number of bytes needed for all stats
-//
-   blen  = xtra;
-   blen += XrdBuffPool.Stats(0,0);
-   blen += InfoStats(0,0);
-   blen += XrdLink::Stats(0,0);
-   blen += XrdPoll::Stats(0,0);
-   blen += ProcStats(0,0);
-   blen += XrdSched.Stats(0,0);
-
-// Allocate a buffer of this size
-//
-   buff = (char *)memalign(getpagesize(), blen+256);
-   return buff != 0;
-}
-
-/******************************************************************************/
 /*                             I n f o S t a t s                              */
 /******************************************************************************/
   
 int XrdStats::InfoStats(char *bfr, int bln, int do_sync)
 {
    static const char statfmt[] = "<stats id=\"info\"><host>%s</host>"
-                     "<port>%d</port></stats>";
+                     "<port>%d</port><name>%s</name></stats>";
 
 // Check if actual length wanted
 //
-   if (!bfr) return sizeof(statfmt)+16 + strlen(myHost);
+   if (!bfr) return sizeof(statfmt)+24 + strlen(myHost);
 
 // Format the statistics
 //
-   return snprintf(bfr, bln, statfmt, myHost, myPort);
+   return snprintf(bfr, bln, statfmt, myHost, myPort, myName);
 }
  
 /******************************************************************************/
@@ -172,17 +243,14 @@ int XrdStats::InfoStats(char *bfr, int bln, int do_sync)
   
 int XrdStats::ProcStats(char *bfr, int bln, int do_sync)
 {
-   static const char statfmt[] = "<stats id=\"proc\"><pid>%d</pid>"
-          "<utime><s>%lld</s><u>%lld</u></utime>"
-          "<stime><s>%lld</s><u>%lld</u></stime>"
-          "<maxrss>%lld</maxrss><majflt>%lld</majflt><nswap>%lld</nswap>"
-          "<inblock>%lld</inblock><oublock>%lld</oublock>"
-          "<msgsnd>%lld</msgsnd><msgrcv>%lld</msgrcv>"
-          "<nsignals>%lld</nsignals></stats>";
+   static const char statfmt[] = "<stats id=\"proc\">"
+          "<usr><s>%lld</s><u>%lld</u></usr>"
+          "<sys><s>%lld</s><u>%lld</u></sys>"
+          "</stats>";
    struct rusage r_usage;
    long long utime_sec, utime_usec, stime_sec, stime_usec;
-   long long ru_maxrss, ru_majflt, ru_nswap, ru_inblock, ru_oublock;
-   long long ru_msgsnd, ru_msgrcv, ru_nsignals;
+// long long ru_maxrss, ru_majflt, ru_nswap, ru_inblock, ru_oublock;
+// long long ru_msgsnd, ru_msgrcv, ru_nsignals;
 
 // Check if actual length wanted
 //
@@ -192,25 +260,29 @@ int XrdStats::ProcStats(char *bfr, int bln, int do_sync)
 //
    if (getrusage(RUSAGE_SELF, &r_usage)) return 0;
 
-// Convert fields to correspond to the format we are using
+// Convert fields to correspond to the format we are using. Commented out fields
+// are either not uniformaly reported or are incorrectly reported making them
+// useless across multiple platforms.
+//
 //
    utime_sec   = static_cast<long long>(r_usage.ru_utime.tv_sec);
    utime_usec  = static_cast<long long>(r_usage.ru_utime.tv_usec);
    stime_sec   = static_cast<long long>(r_usage.ru_stime.tv_sec);
    stime_usec  = static_cast<long long>(r_usage.ru_stime.tv_usec);
-   ru_maxrss   = static_cast<long long>(r_usage.ru_maxrss);
-   ru_majflt   = static_cast<long long>(r_usage.ru_majflt);
-   ru_nswap    = static_cast<long long>(r_usage.ru_nswap);
-   ru_inblock  = static_cast<long long>(r_usage.ru_inblock);
-   ru_oublock  = static_cast<long long>(r_usage.ru_oublock);
-   ru_msgsnd   = static_cast<long long>(r_usage.ru_msgsnd);
-   ru_msgrcv   = static_cast<long long>(r_usage.ru_msgrcv);
-   ru_nsignals = static_cast<long long>(r_usage.ru_nsignals);
+// ru_maxrss   = static_cast<long long>(r_usage.ru_maxrss);
+// ru_majflt   = static_cast<long long>(r_usage.ru_majflt);
+// ru_nswap    = static_cast<long long>(r_usage.ru_nswap);
+// ru_inblock  = static_cast<long long>(r_usage.ru_inblock);
+// ru_oublock  = static_cast<long long>(r_usage.ru_oublock);
+// ru_msgsnd   = static_cast<long long>(r_usage.ru_msgsnd);
+// ru_msgrcv   = static_cast<long long>(r_usage.ru_msgrcv);
+// ru_nsignals = static_cast<long long>(r_usage.ru_nsignals);
 
 // Format the statistics
 //
-   return snprintf(bfr, bln, statfmt, myPid,
-          utime_sec, utime_usec, stime_sec, stime_usec,
-          ru_maxrss, ru_majflt, ru_nswap, ru_inblock, ru_oublock,
-          ru_msgsnd, ru_msgrcv, ru_nsignals);
+   return snprintf(bfr, bln, statfmt,
+          utime_sec, utime_usec, stime_sec, stime_usec
+//        ru_maxrss, ru_majflt, ru_nswap, ru_inblock, ru_oublock,
+//        ru_msgsnd, ru_msgrcv, ru_nsignals
+         );
 }

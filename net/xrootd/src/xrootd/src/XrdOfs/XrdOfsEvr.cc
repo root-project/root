@@ -16,6 +16,7 @@
 
 #include "XrdCms/XrdCmsClient.hh"
 #include "XrdOfs/XrdOfsEvr.hh"
+#include "XrdOfs/XrdOfsStats.hh"
 #include "XrdOfs/XrdOfsTrace.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysTimer.hh"
@@ -26,6 +27,8 @@
 /******************************************************************************/
 /*                     E x t e r n a l   L i n k a g e s                      */
 /******************************************************************************/
+
+extern XrdOfsStats OfsStats;
 
 extern XrdOucTrace OfsTrace;
   
@@ -130,7 +133,7 @@ int XrdOfsEvr::Init(XrdSysError *eobj, XrdCmsClient *trgp)
    strcpy(path, p); n = strlen(p);
    if (path[n-1] != '/') {path[n] = '/'; n++;}
    strcpy(&path[n], "ofsEvents");
-   putenv(strdup(pbuff));
+   putenv(strdup(pbuff));    // XrdOucEnv::Export("XRDOFSEVENTS")
 
 // Now create a socket to a path
 //
@@ -253,16 +256,20 @@ void XrdOfsEvr::eventStage()
    if (!(tp = eventFIFO.GetToken()))
       {eDest->Emsg("Evr", "Missing stage event status"); return;}
 
-        if (!strcmp(tp, "OK"))      rc = 0;
+        if (!strcmp(tp, "OK"))     {rc = 0;
+                                    OfsStats.Add(OfsStats.Data.numSeventOK);
+                                   }
    else if (!strcmp(tp, "ENOENT")) {rc = ENOENT;
                                     altMsg = (char *)"file does not exist.";
                                    }
    else if (!strcmp(tp, "BAD"))    {rc = -1;
+                                    OfsStats.Add(OfsStats.Data.numSeventOK);
                                     altMsg = (char *)"Dynamic staging failed.";
                                    }
    else {rc = -1;
          eDest->Emsg("Evr", "Invalid stage event status -", tp);
          altMsg = (char *)"Dynamic staging malfunctioned.";
+         OfsStats.Add(OfsStats.Data.numSeventOK);
         }
 
 // Get the path and optional message

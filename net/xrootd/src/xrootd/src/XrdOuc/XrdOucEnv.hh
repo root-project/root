@@ -27,6 +27,12 @@ public:
 //
 inline char *Env(int &envlen) {envlen = global_len; return global_env;}
 
+// Export() sets an external environmental variable to the desired value
+//          using dynamically allocated fixed storage.
+//
+static int   Export(const char *Var, const char *Val);
+static int   Export(const char *Var, int         Val);
+
 // Get() returns the address of the string associated with the variable
 //       name. If no association exists, zero is returned.
 //

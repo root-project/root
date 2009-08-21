@@ -160,6 +160,10 @@ XrdConfig::XrdConfig(void)
    Wan_Blen = 1024*1024; // Default window size 1M
    Wan_Opts = 0;
    setSched = 1;
+   repDest[0] = 0;
+   repDest[1] = 0;
+   repInt     = 600;
+   repOpts    = 0;
 
    Firstcp = Lastcp = 0;
 
@@ -201,10 +205,6 @@ int XrdConfig::Configure(int argc, char **argv)
   Output:   0 upon success or !0 otherwise.
 */
    const char *xrdInst="XRDINSTANCE=";
-   const char *xrdName="XRDNAME=";
-   const char *xrdHost="XRDHOST=";
-   const char *xrdProg="XRDPROG=";
-   const char *xrdCfn ="XRDCONFIGFN=";
 
    static sockaddr myIPAddr;
    int n, retc, dotrim = 1, NoGo = 0, aP = 1, clPort = -1, optbg = 0;
@@ -237,7 +237,7 @@ int XrdConfig::Configure(int argc, char **argv)
                  break;
        case 'd': XrdTrace.What |= TRACE_ALL;
                  ProtInfo.DebugON = 1;
-                 putenv((char *)"XRDDEBUG=1");
+                 putenv((char *)"XRDDEBUG=1"); // XrdOucEnv::Export()
                  break;
        case 'h': Usage(0);
        case 'k': n = strlen(optarg)-1;
@@ -296,13 +296,13 @@ int XrdConfig::Configure(int argc, char **argv)
 // Bind the log file if we have one
 //
    if (logfn)
-      {char ldbuff[1024], *lP;
+      {char *lP;
        if (!(logfn = XrdOucUtils::subLogfn(XrdLog, myInsName, logfn))) _exit(16);
        if (logkeep) XrdLogger.setKeep(logkeep);
        XrdLogger.Bind(logfn, 24*60*60);
        if ((lP = rindex(logfn,'/'))) {*(lP+1) = '\0'; lP = logfn;}
           else lP = (char *)"./";
-       strcpy(ldbuff, "XRDLOGDIR="); strcat(ldbuff, lP); putenv(strdup(ldbuff));
+       XrdOucEnv::Export("XRDLOGDIR", lP);
        free(logfn);
       }
 
@@ -338,19 +338,15 @@ int XrdConfig::Configure(int argc, char **argv)
 
 // Set the Environmental variable to hold the instance name
 // XRDINSTANCE=<pgm> <instance name>@<host name>
+//                 XrdOucEnv::Export("XRDINSTANCE")
 //
    sprintf(buff,"%s%s %s@%s", xrdInst, myProg, ProtInfo.myInst, myName);
    myInstance = strdup(buff);
    putenv(myInstance);
    myInstance += strlen(xrdInst);
-   sprintf(buff, "%s%s", xrdHost, myName);
-   putenv(strdup(buff));
-   if (myInsName)
-      {sprintf(buff, "%s%s", xrdName, myInsName);
-       putenv(strdup(buff));
-      }
-   sprintf(buff, "%s%s", xrdProg, myProg);
-   putenv(strdup(buff));
+                   XrdOucEnv::Export("XRDHOST", myName);
+   if (myInsName)  XrdOucEnv::Export("XRDNAME", myInsName);
+                   XrdOucEnv::Export("XRDPROG", myProg);
 
 // Put out the herald
 //
@@ -372,8 +368,7 @@ int XrdConfig::Configure(int argc, char **argv)
    if (ConfigFN && *ConfigFN)
       {XrdLog.Say("Config using configuration file ", ConfigFN);
        ProtInfo.ConfigFN = ConfigFN;
-       sprintf(buff, "%s%s", xrdCfn, ConfigFN);
-       putenv(strdup(buff));
+       XrdOucEnv::Export("XRDCONFIGFN", ConfigFN);
        NoGo = ConfigProc();
       }
    if (clPort >= 0) PortTCP = clPort;
@@ -425,6 +420,7 @@ int XrdConfig::ConfigXeq(char *var, XrdOucStream &Config, XrdSysError *eDest)
    TS_Xeq("allow",         xallow);
    TS_Xeq("port",          xport);
    TS_Xeq("protocol",      xprot);
+   TS_Xeq("report",        xrep);
    TS_Xeq("timeout",       xtmo);
    }
 
@@ -603,7 +599,6 @@ int XrdConfig::setFDL()
   
 int XrdConfig::Setup(char *dfltp)
 {
-   static char portbuff[32], AdmPathBuff[1056];
    XrdInet *NetWAN;
    XrdConfigProt *cp, *pp, *po, *POrder = 0;
    int wsz, lastPort = -17;
@@ -649,8 +644,7 @@ int XrdConfig::Setup(char *dfltp)
 //
    if (myInsName) ProtInfo.AdmPath = XrdOucUtils::genPath(AdminPath,myInsName);
       else ProtInfo.AdmPath = AdminPath;
-   sprintf(AdmPathBuff, "XRDADMINPATH=%s", ProtInfo.AdmPath);
-   putenv(AdmPathBuff);
+   XrdOucEnv::Export("XRDADMINPATH", ProtInfo.AdmPath);
    AdminPath = XrdOucUtils::genPath(AdminPath, myInsName, ".xrd");
 
 // Setup admin connection now
@@ -666,10 +660,11 @@ int XrdConfig::Setup(char *dfltp)
 
 // We now go through all of the protocols and get each respective port
 // number and arrange them in descending port number order.
+// XrdOucEnv::Export(XRDPORT
 //
    while((cp = Firstcp))
         {ProtInfo.Port = (cp->port < 0 ? PortTCP : cp->port);
-         sprintf(portbuff, "XRDPORT=%d", ProtInfo.Port); putenv(portbuff);
+         XrdOucEnv::Export("XRDPORT", ProtInfo.Port);
          if ((cp->port = XrdProtLoad::Port(cp->libpath, cp->proname,
                                            cp->parms, &ProtInfo)) < 0) return 1;
          pp = 0; po = POrder; Firstcp = cp->Next;
@@ -681,7 +676,8 @@ int XrdConfig::Setup(char *dfltp)
 // Allocate the statistics object. This is akward since we only know part
 // of the current configuration. The object will figure this out later.
 //
-   ProtInfo.Stats = new XrdStats(ProtInfo.myName, POrder->port);
+   ProtInfo.Stats = new XrdStats(ProtInfo.myName, POrder->port,
+                                 ProtInfo.myInst, ProtInfo.myProg);
 
 // Allocate a WAN port number of we need to
 //
@@ -717,8 +713,7 @@ int XrdConfig::Setup(char *dfltp)
                 {ProtInfo.WANPort = PortWAN;
                  ProtInfo.WANWSize= Wan_Blen;
                 } else ProtInfo.WANPort = ProtInfo.WANWSize = 0;
-             sprintf(portbuff, "XRDPORT=%d", ProtInfo.Port);
-             putenv(portbuff);
+             XrdOucEnv::Export("XRDPORT", ProtInfo.Port);
              lastPort = cp->port;
             }
          if (!XrdProtLoad::Load(cp->libpath,cp->proname,cp->parms,&ProtInfo))
@@ -732,8 +727,12 @@ int XrdConfig::Setup(char *dfltp)
 //
    ProtInfo.Port = XrdNetTCP[0]->Port();
    PortTCP = ProtInfo.Port;
-   sprintf(portbuff, "XRDPORT=%d", PortTCP);
-   putenv(portbuff);
+   XrdOucEnv::Export("XRDPORT", PortTCP);
+
+// Now check if we have to setup automatic reporting
+//
+   if (repDest[0] != 0 && repOpts) 
+      ProtInfo.Stats->Report(repDest, repInt, repOpts);
 
 // All done
 //
@@ -1125,6 +1124,115 @@ int XrdConfig::xprot(XrdSysError *eDest, XrdOucStream &Config)
        }
 
     return 0;
+}
+
+/******************************************************************************/
+/*                                  x r e p                                   */
+/******************************************************************************/
+  
+/* Function: xrep
+
+   Purpose:  To parse the directive: report <dest1>[,<dest2>]
+                                            [every <sec>] <opts>
+
+             <dest1>   where a UDP based report is to be sent. It may be a
+                       <host:port> or a local named UDP pipe (i.e., "/...").
+
+             <dest2>   A secondary destination.
+
+             <sec>     the reporting interval. The default is 10 minutes.
+
+             <opts>    What to report. "all" is the default.
+
+  Output: 0 upon success or !0 upon failure.
+*/
+
+int XrdConfig::xrep(XrdSysError *eDest, XrdOucStream &Config)
+{
+   static struct repopts {const char *opname; int opval;} rpopts[] =
+       {
+        {"all",      XRD_STATS_ALL},
+        {"buff",     XRD_STATS_BUFF},
+        {"info",     XRD_STATS_INFO},
+        {"link",     XRD_STATS_LINK},
+        {"poll",     XRD_STATS_POLL},
+        {"process",  XRD_STATS_PROC},
+        {"protocols",XRD_STATS_PROT},
+        {"prot",     XRD_STATS_PROT},
+        {"sched",    XRD_STATS_SCHD},
+        {"sgen",     XRD_STATS_SGEN},
+        {"sync",     XRD_STATS_SYNC},
+        {"syncwp",   XRD_STATS_SYNCA}
+       };
+   int i, neg, numopts = sizeof(rpopts)/sizeof(struct repopts);
+   char  *val, *cp;
+
+   if (!(val = Config.GetWord()))
+      {eDest->Emsg("Config", "report parameters not specified"); return 1;}
+
+// Cleanup to start anew
+//
+   if (repDest[0]) {free(repDest[0]); repDest[0] = 0;}
+   if (repDest[1]) {free(repDest[1]); repDest[1] = 0;}
+   repOpts = 0;
+   repInt  = 600;
+
+// Decode the destination
+//
+   if ((cp = (char *)index(val, ',')))
+      {if (!*(cp+1))
+          {eDest->Emsg("Config","malformed report destination -",val); return 1;}
+          else { repDest[1] = cp+1; *cp = '\0';}
+      }
+   repDest[0] = val;
+   for (i = 0; i < 2; i++)
+       {if (!(val = repDest[i])) break;
+        if (*val != '/' && (!(cp = index(val, (int)':')) || !atoi(cp+1)))
+           {eDest->Emsg("Config","report dest port missing or invalid in",val);
+            return 1;
+           }
+        repDest[i] = strdup(val);
+       }
+
+// Make sure dests differ
+//
+   if (repDest[0] && repDest[1] && !strcmp(repDest[0], repDest[1]))
+      {eDest->Emsg("Config", "Warning, report dests are identical.");
+       free(repDest[1]); repDest[1] = 0;
+      }
+
+// Get optional "every"
+//
+   if (!(val = Config.GetWord())) {repOpts = XRD_STATS_ALL; return 0;}
+   if (!strcmp("every", val))
+      {if (!(val = Config.GetWord()))
+          {eDest->Emsg("Config", "report every value not specified"); return 1;}
+       if (XrdOuca2x::a2tm(*eDest,"report every",val,&repInt,1)) return 1;
+       val = Config.GetWord();
+      }
+
+// Get reporting options
+//
+   while(val)
+        {if (!strcmp(val, "off")) repOpts = 0;
+            else {if ((neg = (val[0] == '-' && val[1]))) val++;
+                  for (i = 0; i < numopts; i++)
+                      {if (!strcmp(val, rpopts[i].opname))
+                          {if (neg) repOpts &= ~rpopts[i].opval;
+                              else  repOpts |=  rpopts[i].opval;
+                           break;
+                          }
+                      }
+                  if (i >= numopts)
+                     eDest->Say("Config warning: ignoring invalid report option '",val,"'.");
+                 }
+         val = Config.GetWord();
+        }
+
+// All done
+//
+   if (!(repOpts & XRD_STATS_ALL)) repOpts = XRD_STATS_ALL & ~XRD_STATS_INFO;
+   return 0;
 }
 
 /******************************************************************************/

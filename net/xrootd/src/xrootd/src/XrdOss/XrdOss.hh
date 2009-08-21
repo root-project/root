@@ -108,6 +108,8 @@ virtual int     StatXP(const char *path, unsigned long long &attr)
 virtual int     Truncate(const char *, unsigned long long)=0;
 virtual int     Unlink(const char *, int Opts=0)=0;
 
+virtual int     Stats(char *bp, int bl) {return 0;}
+
                 XrdOss() {}
 virtual        ~XrdOss() {}
 };

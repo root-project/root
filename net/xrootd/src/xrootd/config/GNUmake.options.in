@@ -1,4 +1,4 @@
-#              $Id: GNUmake.options.in,v 1.8 2007/01/27 03:08:35 abh Exp $
+#              $Id: GNUmake.options.in,v 1.9 2009/07/21 12:07:52 furano Exp $
 
 #------------------------------------------------------------------------------#
 #                          I n i t i a l   R u l e s                           #
@@ -18,7 +18,7 @@ CFOP="$(@buildopt@)" \
 LD="$(TYPELD)" \
 LDOP="$(@buildopt@)" \
 LDSO="$(TYPELDSO)" \
-LIBS="$(TYPELIBS)" \
+LIBS=" @ldsyslibs@ $(TYPELIBS)" \
 LIBM="$(TYPELIBSM)" \
 TYPE="$(TYPE)"
 
@@ -36,7 +36,7 @@ CFOP="$(@buildopt@)" \
 LD="$(TYPELD)" \
 LDOP="$(@buildopt@)" \
 LDSO="$(TYPELDSO)" \
-LIBS="$(TYPELIBS)" \
+LIBS=" @ldsyslibs@ $(TYPELIBS)" \
 LIBM="$(TYPELIBSM)" \
 TYPE="$(TYPE)"
 

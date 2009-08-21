@@ -214,7 +214,7 @@ int XrdOssSys::MSS_Create(const char *path, mode_t file_mode, XrdOucEnv &env)
 
     // Construct the cmd to create the file. We currently don't support cosid.
     //
-    sprintf(myMode, "%o", file_mode);
+    sprintf(myMode, "%o", static_cast<int>(file_mode));
 
     // Create the file in in the mass store system
     //
