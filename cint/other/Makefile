@@ -4,7 +4,8 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log runStaticDataMemberDict.* *.timestamp
 
 #Set the list of target to make while testing
-TEST_TARGETS += fileClose sprintfselect staticConstTest StaticDataMemberDict StaticDataMember
+TEST_TARGETS += fileClose sprintfselect staticConstTest StaticDataMemberDict StaticDataMember \
+    savannah54662
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -48,3 +49,9 @@ StaticDataMember.timestamp : StaticDataMember.clog StaticDataMember.log
 	diff -b -u StaticDataMember.clog StaticDataMember.log
 
 endif
+
+savannah54662.log: testCompile_C.$(DllSuf)
+
+savannah54662: savannah54662.log
+	$(TestDiff)
+
