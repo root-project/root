@@ -1423,7 +1423,9 @@ void G__set_class_autoloading_table(char* classname, char* libname)
    int tagnum;
    int store_enable_autoloading = G__enable_autoloading;
    G__enable_autoloading = 0;
+   int store_var_type = G__var_type;
    tagnum = G__search_tagname(classname, G__CLASS_AUTOLOAD);
+   G__var_type = store_var_type;
    if (libname == (void*)-1) {
       if (G__struct.type[tagnum] != 'a') {
          if (G__struct.libname[tagnum]) {
