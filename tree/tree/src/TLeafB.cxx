@@ -115,8 +115,13 @@ void TLeafB::PrintValue(Int_t l) const
 {
    // -- Prints leaf value.
 
-   char* value = (char*) GetValuePointer();
-   printf("%d", (Int_t) value[l]);
+   if (fIsUnsigned) {
+      UChar_t *uvalue = (UChar_t*) GetValuePointer();
+      printf("%u", uvalue[l]);
+   } else {
+      Char_t *value = (Char_t*) GetValuePointer();
+      printf("%d", value[l]);
+   }
 }
 
 //______________________________________________________________________________
