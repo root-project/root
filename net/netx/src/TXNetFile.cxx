@@ -724,8 +724,11 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    // A null buffer means that we want to use the async stuff
    //  hence we have to sync the cache size in XrdClient with the supposed
    //  size in TFile.
-   if (!buf)
+   if (!buf) {
+      // Null buffer + 0 blocks means 'reset cache'
+      if (!nbuf) ResetCache();
       SynchronizeCacheSize();
+   }
 
    // Read for the remote xrootd
    Long64_t nr = fClient->ReadV(buf, pos, len, nbuf);

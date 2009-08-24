@@ -30,6 +30,7 @@
 #include "TFileCacheRead.h"
 #include "TFileCacheWrite.h"
 #include "TMath.h"
+#include "TXNetFile.h"
 
 
 ClassImp(TFileCacheRead)
@@ -208,7 +209,6 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len) {
    // If pos is in the list of prefetched blocks read from fBuffer,
    // otherwise need to make a normal read from file. Returns -1 in case of
    // read error, 0 in case not in cache, 1 in case read from cache.
-
    Int_t loc = 0;
    return ReadBufferExt(buf, pos, len, loc);
 
@@ -238,11 +238,12 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
          
 
          // Use the async readv instead of single reads
-         //if (fFile->InheritsFrom("TXNetFile")) ((TXNetFile *)fFile)->ResetCache();
+         fFile->ReadBuffers(0, 0, 0, 0); //Clear the XrdClient cache
          if (fFile->ReadBuffers(0,fPos,fLen,fNb)) {
             return -1;
          }
          fIsTransferred = kTRUE;
+
       }
    }
 

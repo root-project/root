@@ -141,6 +141,7 @@ void TTreeCacheUnzip::Init()
       SysInfo_t info;
       gSystem->GetSysInfo(&info);
       Int_t ncpus = info.fCpus;
+
       fUnzipBufferSize = Long64_t(fgRelBuffSize * GetBufferSize());
 
       if(gDebug > 0)

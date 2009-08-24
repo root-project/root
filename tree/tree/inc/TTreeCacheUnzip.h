@@ -38,7 +38,6 @@ class TCondition;
 class TBasket;
 class TMutex;
 
-
 class TTreeCacheUnzip : public TTreeCache {
 public:
    // We have three possibilities for the unzipping mode:
