@@ -226,7 +226,7 @@ TLegendEntry *TLegend::AddEntry(const TObject *obj, const char *label, Option_t 
    End_Html */
 
    const char *lab = label;
-   if ((obj && !label) || strlen(label)==0) lab = obj->GetTitle();
+   if (obj && (!label || strlen(label)==0)) lab = obj->GetTitle();
    TLegendEntry *newentry = new TLegendEntry( obj, lab, option );
    if ( !fPrimitives ) fPrimitives = new TList;
    fPrimitives->Add(newentry);
