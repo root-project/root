@@ -30,7 +30,6 @@
 #include "TFileCacheRead.h"
 #include "TFileCacheWrite.h"
 #include "TMath.h"
-#include "TXNetFile.h"
 
 
 ClassImp(TFileCacheRead)
@@ -239,7 +238,7 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
          
 
          // Use the async readv instead of single reads
-         if (fFile->InheritsFrom("TXNetFile")) ((TXNetFile *)fFile)->ResetCache();
+         //if (fFile->InheritsFrom("TXNetFile")) ((TXNetFile *)fFile)->ResetCache();
          if (fFile->ReadBuffers(0,fPos,fLen,fNb)) {
             return -1;
          }
