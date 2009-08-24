@@ -38,8 +38,6 @@ class TCondition;
 class TBasket;
 class TMutex;
 
-class XrdSysCondVar;
-class XrdSysRecMutex;
 
 class TTreeCacheUnzip : public TTreeCache {
 public:
