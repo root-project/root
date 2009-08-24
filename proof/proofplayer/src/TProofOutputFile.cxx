@@ -78,7 +78,7 @@ TProofOutputFile::TProofOutputFile(const char *path, const char *location, const
    TString fileName = path;
    if (!fileName.EndsWith(".root"))
       fileName += ".root";
-   // Make sure the the file name was inserted (may not happen if the placeholder <file> is missing)
+   // Make sure that the file name was inserted (may not happen if the placeholder <file> is missing)
    if (!fOutputFileName.IsNull() && !fOutputFileName.Contains("<file>")) {
       if (!fOutputFileName.EndsWith("/")) fOutputFileName += "/";
          fOutputFileName += fileName;
