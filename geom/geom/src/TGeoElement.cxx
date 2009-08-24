@@ -640,6 +640,10 @@ ClassImp(TGeoElementTable)
 TGeoElementTable *TGeoElement::GetElementTable() const
 {
 // Returns pointer to the table.
+   if (!gGeoManager) {
+      Error("GetElementTable", "Create a geometry manager first");
+      return NULL;
+   }   
    return gGeoManager->GetElementTable();
 }
 
@@ -648,6 +652,7 @@ TGeoElementTable::TGeoElementTable()
 {
 // default constructor
    fNelements = 0;
+   fNelementsRN = 0;
    fList      = 0;
    fListRN    = 0;
 }
@@ -657,6 +662,7 @@ TGeoElementTable::TGeoElementTable(Int_t /*nelements*/)
 {
 // constructor
    fNelements = 0;
+   fNelementsRN = 0;
    fList = new TObjArray(128);
    fListRN    = 0;
    BuildDefaultElements();
@@ -667,6 +673,7 @@ TGeoElementTable::TGeoElementTable(Int_t /*nelements*/)
 TGeoElementTable::TGeoElementTable(const TGeoElementTable& get) :
   TObject(get),
   fNelements(get.fNelements),
+  fNelementsRN(get.fNelementsRN),
   fList(get.fList),
   fListRN(get.fListRN)
 {
@@ -680,6 +687,7 @@ TGeoElementTable& TGeoElementTable::operator=(const TGeoElementTable& get)
    if(this!=&get) {
       TObject::operator=(get);
       fNelements=get.fNelements;
+      fNelementsRN=get.fNelementsRN;
       fList=get.fList;
       fListRN=get.fListRN;
    }
