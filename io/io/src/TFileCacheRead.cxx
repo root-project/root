@@ -204,14 +204,15 @@ void TFileCacheRead::Print(Option_t *option) const
 }
 
 //_____________________________________________________________________________
-Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len) {
+Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+{
    // Read buffer at position pos.
    // If pos is in the list of prefetched blocks read from fBuffer,
    // otherwise need to make a normal read from file. Returns -1 in case of
    // read error, 0 in case not in cache, 1 in case read from cache.
+
    Int_t loc = 0;
    return ReadBufferExt(buf, pos, len, loc);
-
 }
 
 //_____________________________________________________________________________
@@ -235,7 +236,7 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
          // In any case, we'll start to request the chunks.
          // This implementation simply reads all the chunks in advance
          // in the async way.
-         
+
 
          // Use the async readv instead of single reads
          fFile->ReadBuffers(0, 0, 0, 0); //Clear the XrdClient cache
@@ -272,7 +273,7 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
 
          if (buf) {
             fFile->Seek(pos);
-            
+
             if (fFile->ReadBuffer(buf, len)) {
                return -1;
             }
