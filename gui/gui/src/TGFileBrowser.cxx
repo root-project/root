@@ -34,6 +34,7 @@
 #include "TImage.h"
 #include "TBrowser.h"
 #include "TRemoteObject.h"
+#include "TVirtualPad.h"
 #include "Getline.h"
 #include <time.h>
 #include <string.h>
@@ -192,8 +193,14 @@ void TGFileBrowser::CreateBrowser()
    else
       fShowHidden = kFALSE;
 
+   fDblClick = kFALSE;
+
    TQObject::Connect("TGHtmlBrowser", "Clicked(char*)",
                      "TGFileBrowser", this, "Selected(char*)");
+
+   TQObject::Connect("TPad", "Modified()",
+                     "TGFileBrowser", this, "PadModified()");
+
    fListLevel = 0;
    MapSubwindows();
    Resize(GetDefaultSize());
@@ -975,7 +982,9 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       }
       if (!obj->InheritsFrom("TObjString") ||
           gSystem->AccessPathName(fullpath.Data())) {
+         fDblClick = kTRUE;
          obj->Browse(fBrowser);
+         fDblClick = kFALSE;
          fNKeys = 0;
          fCnt = 0;
          fListTree->ClearViewPort();
@@ -1322,6 +1331,37 @@ void TGFileBrowser::GotoDir(const char *path)
    delete tokens;
    fListTree->ClearViewPort();
    fListTree->AdjustPosition(item);
+}
+
+//______________________________________________________________________________
+void TGFileBrowser::PadModified()
+{
+   // Slot used to switch to the tab containing the current pad/canvas (gPad)
+   // used e.g. when drawing a histogram by double-clicking on its list tree 
+   // item in a root file.
+
+   if (fDblClick && fNewBrowser) {
+      Int_t i;
+      TGTab *tabRight = fNewBrowser->GetTabRight();
+      for (i=0;i<tabRight->GetNumberOfTabs();++i) {
+         TGFrameElement *fe = 0;
+         TGCompositeFrame *embed = 0;
+         TGCompositeFrame *frame = tabRight->GetTabContainer(i);
+         if (frame)
+            fe = (TGFrameElement *)frame->GetList()->First();
+         if (fe)
+            embed = (TGCompositeFrame *)fe->fFrame;
+         if (embed && embed->InheritsFrom("TRootCanvas")) {
+            ULong_t canvas = gROOT->ProcessLine(TString::Format("((TRootCanvas *)0x%lx)->Canvas();",
+                                                embed));
+            if ((canvas) && (canvas == (ULong_t)gPad || 
+                canvas == (ULong_t)gPad->GetCanvas())) {
+               tabRight->SetTab(i, kFALSE);
+               break;
+            }
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________

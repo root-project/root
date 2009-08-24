@@ -57,6 +57,7 @@ protected:
    Long_t             fNKeys, fCnt;       // Counters for keys inside a Root file
    Bool_t             fGrouped;           // kTRUE if Root file content (keys) is grouped
    Bool_t             fShowHidden;        // kTRUE to display hidden files
+   Bool_t             fDblClick;          // kTRUE if user double-clicked on a list tree item
 
    void CreateBrowser();
 
@@ -90,6 +91,7 @@ public:
    void        GetFilePictures(const TGPicture **pic, Int_t file_type, Bool_t is_link, const char *name);
    void        GetObjPicture(const TGPicture **pic, TObject *obj);
    void        GotoDir(const char *path);
+   void        PadModified();
    void        Selected(char *);
    void        Update();
 
