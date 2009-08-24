@@ -213,10 +213,10 @@ ifneq ($(PLATFORM),win32)
 		$(MAKE); \
 		rc=$$? ; \
 		if [ $$rc != "0" ] ; then \
-		   echo "*** Error condition reported by make (rc = $$rc):" \
-		   rm -f $(XROOTDMAKE) \
+		   echo "*** Error condition reported by make (rc = $$rc):"; \
+		   rm -f $(XROOTDMAKE); \
 	 	   exit 1; \
-		fi ; \
+      fi; \
 		cd $$topdir ; \
 		if [ -d $(XROOTDDIRL) ]; then \
 		   lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ;\
