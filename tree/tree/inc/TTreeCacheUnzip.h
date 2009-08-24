@@ -19,11 +19,17 @@
 //                                                                      //
 // Specialization of TTreeCache for parallel Unzipping                  //
 //                                                                      //
+// Fabrizio Furano (CERN) Aug 2009                                      //
+// Core TTree-related code borrowed from the previous version           //
+//  by Leandro Franco and Rene Brun                                     //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TTreeCache
 #include "TTreeCache.h"
 #endif
+
+#include <queue>
 
 class TTree;
 class TBranch;
@@ -32,6 +38,9 @@ class TCondition;
 class TBasket;
 class TMutex;
 
+class XrdSysCondVar;
+class XrdSysRecMutex;
+
 class TTreeCacheUnzip : public TTreeCache {
 public:
    // We have three possibilities for the unzipping mode:
@@ -39,53 +48,56 @@ public:
    enum EParUnzipMode { kEnable, kDisable, kForce };
 
 protected:
-   TMutex     *fMutexCache;
 
    // Members for paral. managing
-   TThread    *fUnzipThread;
-   Bool_t      fActiveThread;
-   TCondition *fUnzipCondition;
-   Bool_t      fNewTransfer;      // Used to indicate the second thread taht a new transfer is in progress
-   Bool_t      fParallel;         // Indicate if we want to activate the parallelism (for this instance)
+   TThread    *fUnzipThread[10];
+   Bool_t      fActiveThread;          // Used to terminate gracefully the unzippers
+   TCondition *fUnzipStartCondition;   // Used to signal the threads to start.
+   TCondition *fUnzipDoneCondition;    // Used to wait for an unzip tour to finish. Gives the Async feel.
+   Bool_t      fParallel;              // Indicate if we want to activate the parallelism (for this instance)
+   Bool_t      fAsyncReading;
+   TMutex     *fMutexList;             // Mutex to protect the various lists. Used by the condvars.
 
-   TMutex     *fMutexBuffer;      // Mutex to protect the unzipping buffer 'fUnzipBuffer'
-   TMutex     *fMutexList;        // Mutex to protect the list of inflated buffer
 
-   Int_t       fTmpBufferSz;      //!  Size for the fTmpBuffer (default is 10KB... used to unzip a buffer)
-   char       *fTmpBuffer;        //! [fTmpBufferSz] buffer of contiguous unzipped blocks
-
+   Int_t       fCycle;
    static TTreeCacheUnzip::EParUnzipMode fgParallel;  // Indicate if we want to activate the parallelism
+
+   Int_t       fLastReadPos;
 
    // Members to keep track of the unzipping buffer
    Long64_t    fPosWrite;
 
-   // Unzipping related member
-   Int_t      *fUnzipLen;         //! [fNseek] Length of buffers to be unzipped
-   Int_t      *fUnzipPos;         //! [fNseek] Position of sorted blocks in fUnzipBuffer
+   // Unzipping related members
+   Int_t      *fUnzipLen;         //! [fNseek] Length of the unzipped buffers
+   char      **fUnzipChunks;      //! [fNseek] Individual unzipped chunks. Their summed size is kept under control.
+   Byte_t     *fUnzipStatus;      //! [fNSeek] For each blk, tells us if it's unzipped or pending
+   Long64_t    fTotalUnzipBytes;  //! The total sum of the currently unzipped blks
+
    Int_t       fNseekMax;         //!  fNseek can change so we need to know its max size
-   Long64_t    fUnzipBufferSize;  //!  Size for the fUnzipBuffer (default is 2*fBufferSize)
-   char       *fUnzipBuffer;      //! [fTotBytes] buffer of contiguous unzipped blocks
+   Long64_t    fUnzipBufferSize;  //!  Max Size for the ready unzipped blocks (default is 2*fBufferSize)
+
    Bool_t      fSkipZip;          //  say if we should skip the uncompression of all buffers
    static Double_t fgRelBuffSize; // This is the percentage of the TTreeCacheUnzip that will be used
 
-   //! keep track of the buffer we are currently unzipping
+   //! keep track of the buffer set we are currently unzipping
    Int_t       fUnzipStart;       //! This will give uf the start index (fSeekSort)
    Int_t       fUnzipEnd;         //! Unzipped buffers go from fUnzipStart to fUnzipEnd
-   Int_t       fUnzipNext;        //! From fUnzipEnd to fUnzipNext we have to buffer that will be unzipped soon
 
    // Members use to keep statistics
    Int_t       fNUnzip;           //! number of blocks that were unzipped
    Int_t       fNFound;           //! number of blocks that were found in the cache
    Int_t       fNMissed;          //! number of blocks that were not found in the cache and were unzipped
 
+   std::queue<Int_t>       fActiveBlks; // The blocks which are active now
 
 private:
    TTreeCacheUnzip(const TTreeCacheUnzip &);            //this class cannot be copied
    TTreeCacheUnzip& operator=(const TTreeCacheUnzip &);
 
+
    // Private methods
    void  Init();
-   Int_t StartThreadUnzip();
+   Int_t StartThreadUnzip(Int_t nthreads);
    Int_t StopThreadUnzip();
 
 public:
@@ -102,12 +114,13 @@ public:
    // Methods related to the thread
    static EParUnzipMode GetParallelUnzip();
    static Bool_t        IsParallelUnzip();
+   static Int_t         SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option = TTreeCacheUnzip::kEnable);
+
    Bool_t               IsActiveThread();
    Bool_t               IsQueueEmpty();
-   Int_t                ProcessQueue();
-   void                 SendSignal();
-   static Int_t         SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option = TTreeCacheUnzip::kEnable);
-   void                 WaitForSignal();
+
+   void                 WaitUnzipStartSignal();
+   void                 SendUnzipStartSignal(Bool_t broadcast);
 
    // Unzipping related methods
    Int_t          GetRecordHeader(char *buf, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
@@ -117,7 +130,7 @@ public:
    void           SetUnzipBufferSize(Long64_t bufferSize);
    virtual void   SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    Int_t          UnzipBuffer(char **dest, char *src);
-   Int_t          UnzipCache();
+   Int_t          UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&locbuff);
 
    // Methods to get stats
    Int_t  GetNUnzip() { return fNUnzip; }

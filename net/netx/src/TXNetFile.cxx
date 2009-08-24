@@ -603,13 +603,6 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
       }
    }
 
-   if (!st) {
-      // The data chunk was not prefetched.
-      // Set the read ahead (again) at its default value
-      Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize", DFLT_READAHEADSIZE);
-      fClient->SetCacheParameters(-1, rAheadsiz, -1);
-   }
-
    // Read from the remote xrootd
    Int_t nr = fClient->Read(buffer, fOffset, bufferLength);
 
@@ -1307,7 +1300,8 @@ void TXNetFile::SynchronizeCacheSize()
 
    }
 
-   fClient->SetCacheParameters(newbsz, 0, XrdClientReadCache::kRmBlk_FIFO);
+   if (newbsz)
+      fClient->SetCacheParameters(newbsz, 0, XrdClientReadCache::kRmBlk_FIFO);
 }
 
 //_____________________________________________________________________________

@@ -403,6 +403,7 @@ void TTreeCache::ResetCache()
 {
    // This will simply clear the cache
    TFileCacheRead::Prefetch(0,0);
+
 }
 
 //_____________________________________________________________________________
@@ -459,8 +460,7 @@ void TTreeCache::StartLearningPhase()
 }
 
 //_____________________________________________________________________________
-void TTreeCache::StopLearningPhase()
-{
+void TTreeCache::StopLearningPhase() {
    // This is the counterpart of StartLearningPhase() and can be used to stop
    // the learning phase. It's useful when the user knows exactly what branches
    // he is going to use.
@@ -471,16 +471,6 @@ void TTreeCache::StopLearningPhase()
    fIsManual = kTRUE;
    FillBuffer();
 
-   // If this is the first time we get here since the last FillBuffer
-   // it's probable that the information about the prefetched buffers is there
-   // but it hasn't actually been transfered... Is this the best place to put it??
-   if (fNseek > 0 && !fIsSorted) {
-      Sort();
-
-      // Then we use the vectored read to read everything now
-      fFile->ReadBuffers(fBuffer,fPos,fLen,fNb);
-      fIsTransferred = kTRUE;
-   }
 }
 
 //_____________________________________________________________________________
