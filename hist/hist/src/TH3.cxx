@@ -1957,44 +1957,47 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
 
    // Fill the projected histogram excluding underflow/overflows if considered in the option
    // if specified in the option (by default they considered)
-   Double_t cont,e,e1;
    Double_t totcont  = 0;
-   Double_t newerror = 0;
 
    Int_t out1min = out1->GetFirst(); 
    Int_t out1max = out1->GetLast(); 
    // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
    if (out1min == 0 && out1max == 0) { out1min = 1; out1max = out1->GetNbins(); }
+   // correct for underflow/overflows
+   if (useUF && !out1->TestBit(TAxis::kAxisRange) )  out1min -= 1; 
+   if (useOF && !out1->TestBit(TAxis::kAxisRange) )  out1max += 1; 
    Int_t out2min = out2->GetFirst(); 
    Int_t out2max = out2->GetLast(); 
    if (out2min == 0 && out2max == 0) { out2min = 1; out2max = out2->GetNbins(); }
+   if (useUF && !out2->TestBit(TAxis::kAxisRange) )  out2min -= 1; 
+   if (useOF && !out2->TestBit(TAxis::kAxisRange) )  out2max += 1; 
 
    for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++){
       if ( projX->TestBit(TAxis::kAxisRange) && ( ixbin < ixmin || ixbin > ixmax )) continue;
-      for (out1bin= out1min - ( useUF && !out1->TestBit(TAxis::kAxisRange) ); 
-           out1bin <= out1max + ( useOF && !out1->TestBit(TAxis::kAxisRange) );
-           out1bin++){
-         for (out2bin=out2min - ( useUF && !out2->TestBit(TAxis::kAxisRange) );
-              out2bin <= out2max + ( useOF && !out2->TestBit(TAxis::kAxisRange) );
-              out2bin++){
+
+      Double_t cont = 0; 
+      Double_t err2 = 0; 
+
+      // loop on the bins to be integrated (outbin should be called inbin)
+      for (out1bin = out1min; out1bin <= out1max; out1bin++){
+         for (out2bin = out2min; out2bin <= out2max; out2bin++){
 
             Int_t bin = GetBin(*refX, *refY, *refZ);
-            cont = GetBinContent(bin);
 
-            // "x"
-            int ix = h1->FindBin( projX->GetBinCenter(ixbin) );
-            e1       = h1->GetBinError(ix);
-            double c1 = h1->GetBinContent(ix);
-            if (cont) h1->SetBinContent(ix, cont + c1);
-            if (computeErrors) {
-               e        = GetBinError(bin);
-               newerror = TMath::Sqrt(e*e + e1*e1);
-               h1->SetBinError(ix,newerror);
+            // sum the bin contents and errors if needed
+            cont += GetBinContent(bin);
+            if (computeErrors) { 
+               Double_t exyz = GetBinError(bin);
+               err2 += exyz*exyz;
             }
-
-            if (cont)   totcont += cont;
          }
       }
+      Int_t ix    = h1->FindBin( projX->GetBinCenter(ixbin) );
+      h1->SetBinContent(ix ,cont);
+      if (computeErrors) h1->SetBinError(ix, TMath::Sqrt(err2) ); 
+      // sum all content
+      totcont += cont;
+      
    }
 
    // since we use a combination of fill and SetBinError we need to reset and recalculate the statistics
@@ -2189,40 +2192,47 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
 
    // Fill the projected histogram excluding underflow/overflows if considered in the option
    // if specified in the option (by default they considered)
-   Double_t cont,e,e1;
    Double_t totcont  = 0;
-   Double_t newerror = 0;
 
    Int_t outmin = out->GetFirst(); 
    Int_t outmax = out->GetLast(); 
    // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
    if (outmin == 0 && outmax == 0) { outmin = 1; outmax = out->GetNbins(); }
+   // correct for underflow/overflows
+   if (useUF && !out->TestBit(TAxis::kAxisRange) )  outmin -= 1; 
+   if (useOF && !out->TestBit(TAxis::kAxisRange) )  outmax += 1; 
 
    for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++){
       if ( projX->TestBit(TAxis::kAxisRange) && ( ixbin < ixmin || ixbin > ixmax )) continue;
+      Int_t ix = h2->GetYaxis()->FindBin( projX->GetBinCenter(ixbin) );
 
       for (iybin=0;iybin<=1+projY->GetNbins();iybin++){
          if ( projY->TestBit(TAxis::kAxisRange) && ( iybin < iymin || iybin > iymax )) continue;
+         Int_t iy = h2->GetXaxis()->FindBin( projY->GetBinCenter(iybin) );
 
-         for (outbin=outmin - ( useUF && !out->TestBit(TAxis::kAxisRange) );
-              outbin <= outmax + ( useOF && !out->TestBit(TAxis::kAxisRange) );
-              outbin++){
+         Double_t cont = 0; 
+         Double_t err2 = 0;
+
+         // loop on the bins to be integrated (outbin should be called inbin)
+         for (outbin = outmin; outbin <= outmax; outbin++){
 
             Int_t bin = GetBin(*refX,*refY,*refZ);
-            cont = GetBinContent(bin);
 
-            // "xy"
-            int iy = h2->GetXaxis()->FindBin( projY->GetBinCenter(iybin) );
-            int ix = h2->GetYaxis()->FindBin( projX->GetBinCenter(ixbin) );
-            e1       = h2->GetCellError(iy,ix);
-            if (cont) h2->Fill(projY->GetBinCenter(iybin),projX->GetBinCenter(ixbin), cont);
-            if (computeErrors) {
-               e        = GetBinError(bin);
-               newerror = TMath::Sqrt(e*e + e1*e1);
-               h2->SetCellError(iy,ix,newerror);
+            // sum the bin contents and errors if needed
+            cont += GetBinContent(bin);
+            if (computeErrors) { 
+               Double_t exyz = GetBinError(bin);
+               err2 += exyz*exyz;
             }
-            if (cont) totcont += cont; 
+
          }
+
+         // remember axis are inverted 
+         h2->SetBinContent(iy , ix, cont);
+         if (computeErrors) h2->SetBinError(iy, ix, TMath::Sqrt(err2) ); 
+         // sum all content
+         totcont += cont;
+
       }
    }
 
@@ -2622,15 +2632,25 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
    Int_t outmax = outAxis->GetLast(); 
    // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
    if (outmin == 0 && outmax == 0) { outmin = 1; outmax = outAxis->GetNbins(); }
+   // correct for underflow/overflows
+   if (useUF && !outAxis->TestBit(TAxis::kAxisRange) )  outmin -= 1; 
+   if (useOF && !outAxis->TestBit(TAxis::kAxisRange) )  outmax += 1; 
+
+   TArrayD & binSumw2 = *(p2->GetBinSumw2()); 
+   if (useWeights && binSumw2.fN <= 0) useWeights = false;  
 
    // Call specific method for the projection
    for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++){
       if ( (ixbin < ixmin || ixbin > ixmax) && projX->TestBit(TAxis::kAxisRange)) continue;
       for ( iybin=0;iybin<=1+projY->GetNbins();iybin++){
          if ( (iybin < iymin || iybin > iymax) && projX->TestBit(TAxis::kAxisRange)) continue;
-         for (outbin=outmin - ( useUF && !outAxis->TestBit(TAxis::kAxisRange) );
-              outbin<=outmax + ( useOF && !outAxis->TestBit(TAxis::kAxisRange) );
-              ++outbin){
+
+         // profile output bin
+         Int_t poutBin = p2->FindBin(projY->GetBinCenter(iybin), projX->GetBinCenter(ixbin));
+
+         // loop on the bins to be integrated (outbin should be called inbin)
+         for (outbin = outmin; outbin <= outmax; outbin++){
+
             Int_t bin = GetBin(*refX,*refY,*refZ);
 
             //DoFillProfileProjection(p2, *projY, *projX, *outAxis, iybin, ixbin, outbin, bin, useWeights); 
@@ -2638,16 +2658,11 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
             Double_t cont = GetBinContent(bin); 
             if (!cont) continue; 
 
-            TArrayD & binSumw2 = *(p2->GetBinSumw2()); 
-            if (useWeights && binSumw2.fN <= 0) useWeights = false;  
-
-            // the following fill update wrongly the fBinSumw2- need to save it before
-            Int_t outBin = p2->FindBin(projY->GetBinCenter(iybin), projX->GetBinCenter(ixbin));
-
             Double_t tmp = 0;
-            if ( useWeights ) tmp = binSumw2.fArray[outBin];            
+            // the following fill update wrongly the fBinSumw2- need to save it before
+            if ( useWeights ) tmp = binSumw2.fArray[poutBin];            
             p2->Fill( projY->GetBinCenter(iybin) , projX->GetBinCenter(ixbin), outAxis->GetBinCenter(outbin), cont);
-            if (useWeights ) binSumw2.fArray[outBin] = tmp + fSumw2.fArray[bin];
+            if (useWeights ) binSumw2.fArray[poutBin] = tmp + fSumw2.fArray[bin];
   
          }
       }

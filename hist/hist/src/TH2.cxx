@@ -1916,35 +1916,42 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 
    // Fill the profile histogram
    // no entries/bin is available so can fill only using bin content as weight
-   Double_t cont;
    Double_t totcont = 0; 
    TArrayD & binSumw2 = *(h1->GetBinSumw2()); 
-   for (Int_t outBin =0;outBin<=h1->GetNbinsX()+1;outBin++) {
-      if ( outBin < firstOutBin && originalRange && outAxis.TestBit(TAxis::kAxisRange) ) continue;
-      if ( outBin > lastOutBin && originalRange && outAxis.TestBit(TAxis::kAxisRange) ) continue;
-      if ( firstOutBin > 1 && outBin == 0 ) continue;
-      if ( lastOutBin < outAxis.GetNbins() && outBin == h1->GetNbinsX() + 1 ) continue;
-      for (Int_t inBin=firstbin;inBin<=lastbin;inBin++) {
-         Int_t binx = (onX ? outBin  + (originalRange?0:(firstOutBin - 1)) :  inBin );
-         Int_t biny = (onX ?  inBin : outBin + (originalRange?0:(firstOutBin - 1)) );
-         Int_t bin = GetBin(binx,biny); 
+
+   // implement filling of projected histogram 
+   // outbin is bin number of outAxis (the projected axis). Loop is done on all bin of TH2 histograms
+   // inbin is the axis being integrated. Loop is done only on the selected bins
+   for ( Int_t outbin = 0; outbin <= outAxis.GetNbins() + 1;  ++outbin) {
+      if (outAxis.TestBit(TAxis::kAxisRange) && ( outbin < firstOutBin || outbin > lastOutBin )) continue;
+
+      // find corresponding bin number in h1 for outbin (binOut) 
+      Double_t xOut = outAxis.GetBinCenter(outbin);
+      Int_t binOut = h1->GetXaxis()->FindBin( xOut );
+
+      for (Int_t inbin = firstbin ; inbin <= lastbin ; ++inbin) {
+         Int_t binx, biny;
+         if (onX) { binx = outbin; biny=inbin; }
+         else     { binx = inbin;  biny=outbin; }
+
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
-         cont =  GetBinContent(bin);
+         Int_t bin = GetBin(binx, biny); 
+         Double_t cxy = GetBinContent(bin);
 
-         if (cont) {
+
+         if (cxy) {
             Double_t tmp = 0; 
             // the following fill update wrongly the fBinSumw2- need to save it before
-            if ( useWeights ) tmp = binSumw2.fArray[outBin];            
-            h1->Fill(h1->GetXaxis()->GetBinCenter(outBin),inAxis.GetBinCenter(inBin), cont );
-            if ( useWeights ) binSumw2.fArray[outBin] = tmp + fSumw2.fArray[bin];
-            totcont += cont; 
+            if ( useWeights ) tmp = binSumw2.fArray[binOut];            
+            h1->Fill( xOut, inAxis.GetBinCenter(inbin), cxy );
+            if ( useWeights ) binSumw2.fArray[binOut] = tmp + fSumw2.fArray[bin];
+            totcont += cxy; 
          }
 
       }
    }
-
 
    // the statistics must be recalculated since by using the Fill method the total sum of weight^2 is 
    // not computed correctly
@@ -2202,35 +2209,37 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    // Fill the projected histogram
    Double_t cont,err2;
    Double_t totcont = 0;
+   Bool_t  computeErrors = h1->GetSumw2N(); 
 
-   for (Int_t binOut=0;binOut<=h1->GetNbinsX() + 1;binOut++) {
+   // implement filling of projected histogram 
+   // outbin is bin number of outAxis (the projected axis). Loop is done on all bin of TH2 histograms
+   // inbin is the axis being integrated. Loop is done only on the selected bins
+   for ( Int_t outbin = 0; outbin <= outAxis->GetNbins() + 1;  ++outbin) {
       err2 = 0;
       cont = 0;
-      // when the range is set in the out axis, overflow and underflow
-      // are not considered
-      if ( binOut < firstOutBin && originalRange && outAxis->TestBit(TAxis::kAxisRange) ) continue;
-      if ( binOut > lastOutBin && originalRange && outAxis->TestBit(TAxis::kAxisRange) ) continue;
-      if ( firstOutBin > 1 && binOut == 0 ) continue;
-      if ( lastOutBin < outAxis->GetNbins() && binOut == h1->GetNbinsX() + 1 ) continue;
-      for (Int_t binIn=firstbin;binIn<=lastbin;binIn++) {
+      if (outAxis->TestBit(TAxis::kAxisRange) && ( outbin < firstOutBin || outbin > lastOutBin )) continue;
+
+      for (Int_t inbin = firstbin ; inbin <= lastbin ; ++inbin) {
          Int_t binx, biny;
-         if ( onX ) { binx = binOut + (originalRange?0:(firstOutBin - 1)); biny = binIn;  }
-         else       { binx = binIn;  biny = binOut + (originalRange?0:(firstOutBin - 1)); }
+         if (onX) { binx = outbin; biny=inbin; }
+         else     { binx = inbin;  biny=outbin; }
 
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
-         Double_t cxy = GetCellContent(binx,biny);
-         Double_t exy = GetCellError(binx,biny);
-         Double_t exy2 = exy*exy;
-         cont  += cxy;
-         err2 += exy2;
-         // sum  all content
-//         if (cxy && exy2 > 0) entries += cxy*cxy/exy2;
-         if (cxy ) totcont += cxy;
+         // sum bin content and error if needed
+         cont  += GetCellContent(binx,biny);
+         if (computeErrors) { 
+            Double_t exy = GetCellError(binx,biny);
+            err2  += exy*exy;
+         }
       }
-      h1->SetBinContent(binOut,cont);
-      if (h1->GetSumw2N()) h1->SetBinError(binOut,TMath::Sqrt(err2));
+      // find corresponding bin number in h1 for outbin
+      Int_t binOut = h1->GetXaxis()->FindBin( outAxis->GetBinCenter(outbin) );
+      h1->SetBinContent(binOut ,cont);
+      if (computeErrors) h1->SetBinError(binOut,TMath::Sqrt(err2));
+      // sum  all content
+      totcont += cont;
    }
 
    // check if we can re-use the original statistics from  the previous histogram 
