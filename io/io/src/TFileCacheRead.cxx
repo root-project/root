@@ -30,8 +30,6 @@
 #include "TFileCacheRead.h"
 #include "TFileCacheWrite.h"
 #include "TMath.h"
-#include "TXNetFile.h"
-
 
 ClassImp(TFileCacheRead)
 
