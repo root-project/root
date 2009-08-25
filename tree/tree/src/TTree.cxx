@@ -5097,6 +5097,86 @@ Bool_t TTree::Notify()
 }
 
 //______________________________________________________________________________
+void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option) 
+{
+   //This function may be called after having filled some entries in a Tree
+   //Using the information in the existing branch buffers, it will reassign
+   //new branch buffer sizes to optimize time and memory.
+   //
+   //The function computes the best values for branch buffer sizes such that
+   //the total buffer sizes is less than maxMemory and nearby entries written 
+   //at the same time.
+   //In case the branch compression factor for the data written so far is less 
+   //than compMin, the compression is disabled.
+   //
+   //if option ="d" an analysis report is printed.
+      
+   //Flush existing baskets if the file is writable
+   if (this->GetDirectory()->IsWritable()) this->FlushBaskets();
+   
+   TString opt = option;
+   opt.ToLower();
+   Bool_t pDebug = kFALSE;
+   if (opt.Contains("d")) pDebug = kTRUE;
+   TObjArray *leaves = this->GetListOfLeaves();
+   Int_t nleaves = leaves->GetEntries();
+   Int_t bmin = 2048;
+   Int_t bmax = 512000;
+   Double_t treeSize = (Double_t)this->GetTotBytes();
+   Double_t aveSize = treeSize/nleaves;
+   Double_t memFactor = 1;
+   Int_t i, oldMemsize,newMemsize,oldBaskets,newBaskets;
+   //we make two passes
+   //one pass to compute the relative branch buffer sizes
+   //a second pass to compute the absolute values
+   for (Int_t pass =0;pass<2;pass++) {
+      oldMemsize = 0;  //to count size of baskets in memory with old buffer size
+      newMemsize = 0;  //to count size of baskets in memory with new buffer size
+      oldBaskets = 0;  //to count number of baskets with old buffer size
+      newBaskets = 0;  //to count number of baskets with new buffer size
+      for (i=0;i<nleaves;i++) {
+         TLeaf *leaf = (TLeaf*)leaves->At(i);
+         TBranch *branch = leaf->GetBranch();
+         Double_t totBytes = (Double_t)branch->GetTotBytes();
+         Double_t idealFactor = totBytes/aveSize;
+         Int_t oldBsize = branch->GetBasketSize();
+         oldMemsize += oldBsize;
+         oldBaskets += 1+Int_t(totBytes/oldBsize);
+         Int_t nb = branch->GetListOfBranches()->GetEntries();
+         if (nb > 0) {
+            newBaskets += 1+Int_t(totBytes/oldBsize);
+            continue;
+         }
+         Int_t newBsize = Int_t(oldBsize*idealFactor*memFactor);
+         newBsize = newBsize - newBsize%512;
+         if (newBsize <bmin) newBsize = bmin;
+         if (newBsize >bmax) newBsize = bmax;
+         if (pass) {
+            if (pDebug) printf("Changing buffer size from %6d to %6d bytes for %s\n",oldBsize,newBsize,branch->GetName());
+            branch->SetBasketSize(newBsize);
+         }
+         newMemsize += newBsize;       
+         newBaskets += 1+Int_t(totBytes/newBsize);
+         if (pass == 0) continue;
+         //Reset the compression level in case the compression factor is small
+         Double_t comp = 1;
+         if (branch->GetZipBytes() > 0) comp = Double_t(oldBsize)/Double_t(branch->GetZipBytes());
+         if (comp > 1 && comp < minComp) {
+            if (pDebug) printf("Disabling compression for branch : %s\n",branch->GetName());
+            branch->SetCompressionLevel(0);
+         }
+      }
+      memFactor = Double_t(maxMemory)/Double_t(newMemsize);
+      bmin = Int_t(bmin*memFactor);
+      bmax = Int_t(bmax*memFactor);
+   }
+   if (pDebug) {
+      printf("oldMemsize = %d,  newMemsize = %d\n",oldMemsize, newMemsize);
+      printf("oldBaskets = %d,  newBaskets = %d\n",oldBaskets, newBaskets);
+   }
+}
+
+//______________________________________________________________________________
 TPrincipal* TTree::Principal(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
    // Interface to the Principal Components Analysis class.
