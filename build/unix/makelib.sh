@@ -66,7 +66,11 @@ if [ "x$EXPLICIT" = "xyes" ]; then
       fi
    fi
    if [ $PLATFORM = "linux" ]; then
-      EXPLLNKCORE+=" -ldl"
+      if [ -z $EXPLLNKCORE ]; then
+         EXPLLNKCORE=" -ldl"
+      else
+         EXPLLNKCORE+=" -ldl"
+      fi
    fi
 fi
 
