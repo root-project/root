@@ -82,8 +82,8 @@ public:
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
    virtual TF1     *DrawCopy(Option_t *option="") const;
-   virtual void     DrawDerivative(Option_t * ="al") {;}
-   virtual void     DrawIntegral(Option_t * ="al") {;}
+   virtual TObject *DrawDerivative(Option_t * ="al") {return 0;}
+   virtual TObject *DrawIntegral(Option_t * ="al")   {return 0;}
    virtual void     DrawF2(const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t *option="");
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Int_t    GetContour(Double_t *levels=0);

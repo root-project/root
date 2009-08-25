@@ -195,8 +195,8 @@ public:
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
    virtual TF1     *DrawCopy(Option_t *option="") const;
-   virtual void     DrawDerivative(Option_t *option="al"); // *MENU*
-   virtual void     DrawIntegral(Option_t *option="al");   // *MENU*
+   virtual TObject *DrawDerivative(Option_t *option="al"); // *MENU*
+   virtual TObject *DrawIntegral(Option_t *option="al");   // *MENU*
    virtual void     DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *option="");
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);

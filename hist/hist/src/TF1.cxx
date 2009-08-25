@@ -14,6 +14,7 @@
 #include "TMath.h"
 #include "TF1.h"
 #include "TH1.h"
+#include "TGraph.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TRandom.h"
@@ -1408,11 +1409,13 @@ TF1 *TF1::DrawCopy(Option_t *option) const
 
 
 //______________________________________________________________________________
-void TF1::DrawDerivative(Option_t *option)
+TObject *TF1::DrawDerivative(Option_t *option)
 {
    // Draw derivative of this function
    //
    // An intermediate TGraph object is built and drawn with option.
+   // The function returns a pointer to the TGraph object. Do:
+   //    TGraph *g = (TGraph*)myfunc.DrawDerivative(option);
    //
    // The resulting graph will be drawn into the current pad.
    // If this function is used via the context menu, it recommended
@@ -1422,19 +1425,21 @@ void TF1::DrawDerivative(Option_t *option)
    TVirtualPad *padsav = gPad;
    if (pad) pad->cd();
 
-   char cmd[512];
-   sprintf(cmd,"{TGraph *R__%s_Derivative = new TGraph((TF1*)0x%lx,\"d\");R__%s_Derivative->Draw(\"%s\");}",GetName(),(Long_t)this,GetName(),option);
-   gROOT->ProcessLine(cmd);
+   TGraph *gr = new TGraph(this,"d");
+   gr->Draw(option);
    if (padsav) padsav->cd();
+   return gr;
 }
 
 
 //______________________________________________________________________________
-void TF1::DrawIntegral(Option_t *option)
+TObject *TF1::DrawIntegral(Option_t *option)
 {
    // Draw integral of this function
    //
    // An intermediate TGraph object is built and drawn with option.
+   // The function returns a pointer to the TGraph object. Do:
+   //    TGraph *g = (TGraph*)myfunc.DrawIntegral(option);
    //
    // The resulting graph will be drawn into the current pad.
    // If this function is used via the context menu, it recommended
@@ -1444,10 +1449,10 @@ void TF1::DrawIntegral(Option_t *option)
    TVirtualPad *padsav = gPad;
    if (pad) pad->cd();
 
-   char cmd[512];
-   sprintf(cmd,"{TGraph *R__%s_Integral = new TGraph((TF1*)0x%lx,\"i\");R__%s_Integral->Draw(\"%s\");}",GetName(),(Long_t)this,GetName(),option);
-   gROOT->ProcessLine(cmd);
+   TGraph *gr = new TGraph(this,"i");
+   gr->Draw(option);
    if (padsav) padsav->cd();
+   return gr;
 }
 
 

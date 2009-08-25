@@ -79,8 +79,8 @@ public:
    virtual void     Copy(TObject &f3) const;
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
-   virtual void     DrawDerivative(Option_t * ="al") {;}
-   virtual void     DrawIntegral(Option_t * ="al") {;}
+   virtual TObject *DrawDerivative(Option_t * ="al") {return 0;}
+   virtual TObject *DrawIntegral(Option_t * ="al")   {return 0;}
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z);
           Int_t     GetNpz() const {return fNpz;}
