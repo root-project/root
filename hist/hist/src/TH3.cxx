@@ -1625,10 +1625,17 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, 
    //   The projection is always of the type TH1D.
    //   The projection is made from the cells along the X axis
    //   ranging from iymin to iymax and izmin to izmax included.
-   //   By default, bins 1 to nx and 1 to ny  are included
+   //   By default, underflow and overflows are included
+   //   By Setting iymin=1 and iymax=NbinsY the underflow and/or overflow will be excluded
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
+   //   if option "o" original axis range of the taget axes will be
+   //   kept, but only bins inside the selected range will be filled.
+   //
+   //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
+   //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH3.
+   //   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
    //
    //  implemented using Project3D
 
@@ -1643,22 +1650,46 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, 
 
    GetYaxis()->SetRange(iymin,iymax);
    GetZaxis()->SetRange(izmin,izmax);
-   opt.Append("x");
-   TH1D * h1 = (TH1D* ) Project3D(opt.Data());
 
-   // rename the histogram to the given name
-   char *pname = (char*)name;
-   if (strcmp(name,"_px") == 0) {
-      Int_t nch = strlen(GetName()) + 4;
-      pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
+   // exclude underflow/overflow by forcing the axis range bit
+   // due to limitation of TAxis::SetRange cannot select only underflow or overflow cannot have underflow or overflow only   
+   if (iymin == 1 && iymax ==  GetNbinsY() ) GetYaxis()->SetBit(TAxis::kAxisRange); 
+   if (izmin == 1 && izmax ==  GetNbinsZ() ) GetZaxis()->SetBit(TAxis::kAxisRange); 
+   // I can use the useUF or useOF flag for exclude/include the underflow/overflow separtly
+   // (-1 in the imax is considered as an overflow)
+   Bool_t useUF = (iymin == 0 || izmin == 0); 
+   Bool_t useOF = ( (iymax < 0 ) || (iymax > GetNbinsY() ) || (izmax < 0) || (izmax > GetNbinsZ() ) ); 
+
+   Bool_t computeErrors = GetSumw2N();
+   if (opt.Contains("e") ) { 
+      computeErrors = kTRUE;
+      opt.Remove(opt.First("e"),1);
    }
-   h1->SetName(pname);
+   Bool_t originalRange = kFALSE;
+   if (opt.Contains('o') ) { 
+      originalRange = kTRUE; 
+      opt.Remove(opt.First("o"),1);
+   }
+  
+   TH1D * h1 = DoProject1D(name, GetTitle(), this->GetXaxis(), computeErrors, originalRange, useUF, useOF);
 
-   if (pname != name) delete [] pname;
-
+   // restore original range
    GetYaxis()->SetRange(piymin,piymax);
    GetZaxis()->SetRange(pizmin,pizmax);
+
+   // draw in current pad 
+   if (h1 && opt.Contains("d")) {
+      opt.Remove(opt.First("d"),1);
+      TVirtualPad *padsav = gPad;
+      TVirtualPad *pad = gROOT->GetSelectedPad();
+      if (pad) pad->cd();
+      if (!gPad->FindObject(h1)) {
+         h1->Draw(opt);
+      } else {
+         h1->Paint(opt);
+      }
+      if (padsav) padsav->cd();
+   }
 
    return h1;
 }
@@ -1672,10 +1703,17 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax, Int_t izmin, 
    //   The projection is always of the type TH1D.
    //   The projection is made from the cells along the Y axis
    //   ranging from ixmin to ixmax and izmin to izmax included.
-   //   By default, bins 1 to nx and 1 to nz  are included
+   //   By default, underflow and overflow are included. 
+   //   By Setting ixmin=1 and ixmax=NbinsX the underflow and/or overflow will be excluded
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
+   //   if option "o" original axis range of the taget axes will be
+   //   kept, but only bins inside the selected range will be filled.
+   //
+   //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
+   //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH3.
+   //   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
    //
    //  implemented using Project3D
 
@@ -1690,22 +1728,46 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax, Int_t izmin, 
 
    GetXaxis()->SetRange(ixmin,ixmax);
    GetZaxis()->SetRange(izmin,izmax);
-   opt.Append("y");
-   TH1D * h1 = (TH1D* ) Project3D(opt.Data());
 
-   // rename the histogram to the given name
-   char *pname = (char*)name;
-   if (strcmp(name,"_py") == 0) {
-      Int_t nch = strlen(GetName()) + 4;
-      pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
+   // exclude underflow/overflow by forcing the axis range bit
+   // due to limitation of TAxis::SetRange cannot select only underflow or overflow cannot have underflow or overflow only   
+   if (ixmin == 1 && ixmax ==  GetNbinsX() ) GetXaxis()->SetBit(TAxis::kAxisRange); 
+   if (izmin == 1 && izmax ==  GetNbinsZ() ) GetZaxis()->SetBit(TAxis::kAxisRange); 
+   // I can use the useUF or useOF flag for exclude/include the underflow/overflow separtly
+   // (-1 in the imax is considered as an overflow)
+   Bool_t useUF = (ixmin == 0 || izmin == 0); 
+   Bool_t useOF = ( (ixmax < 0 ) || (ixmax > GetNbinsX() ) || (izmax < 0) || (izmax > GetNbinsZ() ) ); 
+
+   Bool_t computeErrors = GetSumw2N();
+   if (opt.Contains("e") ) { 
+      computeErrors = kTRUE;
+      opt.Remove(opt.First("e"),1);
    }
-   h1->SetName(pname);
+   Bool_t originalRange = kFALSE;
+   if (opt.Contains('o') ) { 
+      originalRange = kTRUE; 
+      opt.Remove(opt.First("o"),1);
+   }
+  
+   TH1D * h1 = DoProject1D(name, GetTitle(), this->GetYaxis(), computeErrors, originalRange, useUF, useOF);
 
-   if (pname != name) delete [] pname;
-
+   // restore axis range
    GetXaxis()->SetRange(pixmin,pixmax);
    GetZaxis()->SetRange(pizmin,pizmax);
+
+   // draw in current pad 
+   if (h1 && opt.Contains("d")) {
+      opt.Remove(opt.First("d"),1);
+      TVirtualPad *padsav = gPad;
+      TVirtualPad *pad = gROOT->GetSelectedPad();
+      if (pad) pad->cd();
+      if (!gPad->FindObject(h1)) {
+         h1->Draw(opt);
+      } else {
+         h1->Paint(opt);
+      }
+      if (padsav) padsav->cd();
+   }
    
    return h1;
 }
@@ -1720,9 +1782,17 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
    //   The projection is made from the cells along the X axis
    //   ranging from ixmin to ixmax and iymin to iymax included.
    //   By default, bins 1 to nx and 1 to ny  are included
+   //   By setting ixmin=1 and/or ixmax=NbinsX the underflow and/or overflow in X will be excluded
+   //   By setting iymin=1 and/or iymax=NbinsY the underflow and/or overflow in Y will be excluded
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
+   //   if option "o" original axis range of the taget axes will be
+   //   kept, but only bins inside the selected range will be filled.
+   //
+   //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
+   //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH3.
+   //   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
    //
    //  implemented using Project3D
 
@@ -1737,61 +1807,111 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
 
    GetXaxis()->SetRange(ixmin,ixmax);
    GetYaxis()->SetRange(iymin,iymax);
-   opt.Append("z");
-   TH1D * h1 = (TH1D* ) Project3D(opt.Data());
 
-   // rename the histogram to the given name
-   char *pname = (char*)name;
-   if (strcmp(name,"_pz") == 0) {
-      Int_t nch = strlen(GetName()) + 4;
-      pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
+   // exclude underflow/overflow by forcing the axis range bit
+   // due to limitation of TAxis::SetRange cannot select only underflow or overflow cannot have underflow or overflow only   
+   if (ixmin == 1 && ixmax ==  GetNbinsX() ) GetXaxis()->SetBit(TAxis::kAxisRange); 
+   if (iymin == 1 && iymax ==  GetNbinsY() ) GetYaxis()->SetBit(TAxis::kAxisRange); 
+   // I can use the useUF or useOF flag for exclude/include the underflow/overflow separtly
+   // (-1 in the imax is considered as an overflow)
+   Bool_t useUF = (ixmin == 0 || iymin == 0); 
+   Bool_t useOF = ( (ixmax < 0 ) || (ixmax > GetNbinsX() ) || (iymax < 0) || (iymax > GetNbinsY() ) ); 
+
+   Bool_t computeErrors = GetSumw2N();
+   if (opt.Contains("e") ) { 
+      computeErrors = kTRUE;
+      opt.Remove(opt.First("e"),1);
    }
-   h1->SetName(pname);
+   Bool_t originalRange = kFALSE;
+   if (opt.Contains('o') ) { 
+      originalRange = kTRUE; 
+      opt.Remove(opt.First("o"),1);
+   }
 
-   if (pname != name) delete [] pname;
+   TH1D * h1 =  DoProject1D(name, GetTitle(), this->GetZaxis(), computeErrors, originalRange, useUF, useOF);
 
+   // restore the range
    GetXaxis()->SetRange(pixmin,pixmax);
    GetYaxis()->SetRange(piymin,piymax);
+
+   // draw in current pad 
+   if (h1 && opt.Contains("d")) {
+      opt.Remove(opt.First("d"),1);
+      TVirtualPad *padsav = gPad;
+      TVirtualPad *pad = gROOT->GetSelectedPad();
+      if (pad) pad->cd();
+      if (!gPad->FindObject(h1)) {
+         h1->Draw(opt);
+      } else {
+         h1->Paint(opt);
+      }
+      if (padsav) padsav->cd();
+   }
 
    return h1;
 }
 
 //______________________________________________________________________________
-TH1 *TH3::DoProject1D(char* title, char* name, TAxis* projX, 
+TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX, 
                     bool computeErrors, bool originalRange, 
                     bool useUF, bool useOF) const
 {
+   // internal methdod performing the projection to 1D histogram
+   // called from TH3::Project3D
+
    // Create the projection histogram
    TH1D *h1 = 0;
-
-   // Does an object with the same name exists?
-   TObject *h1obj = gROOT->FindObject(name);
-   if (h1obj && !h1obj->InheritsFrom("TH1")) h1obj = 0;
 
    // Get range to use as well as bin limits
    Int_t ixmin = projX->GetFirst();
    Int_t ixmax = projX->GetLast();
+   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
    Int_t nx = ixmax-ixmin+1;
 
-   // Create the histogram, either reseting a preexisting one or
-   // creating one from scratch.
-   if (h1obj && h1obj->InheritsFrom("TH1D")) {
-      delete h1obj;
-   }
-   const TArrayD *bins = projX->GetXbins();
-   if ( originalRange )
-   {
-      if (bins->fN == 0) {
-         h1 = new TH1D(name,title,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
-      } else {
-         h1 = new TH1D(name,title,projX->GetNbins(),bins->fArray);
+   // Create the histogram, either reseting a preexisting one 
+   // in case they have a compatible axis
+   TObject *h1obj = gROOT->FindObject(name);
+   if (h1obj && h1obj->InheritsFrom("TH1")) {
+      if (h1obj->IsA() != TH1D::Class() ) { 
+         Error("DoProject1D","Histogram with name %s must be a TH1D and is a %s",name,h1obj->ClassName());
+         return 0; 
       }
-   } else {
-      if (bins->fN == 0) {
-         h1 = new TH1D(name,title,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+      h1 = (TH1D*)h1obj;
+      // check histogram compatibility (not perfect for variable bins histograms)
+      if ( h1->GetNbinsX() ==  projX->GetNbins() && 
+           h1->GetXaxis()->GetXmin() == projX->GetXmin() &&
+           h1->GetXaxis()->GetXmax() == projX->GetXmax() ) { 
+         // enable originalRange option in case a range is set in the outer axis
+         originalRange = kTRUE; 
+         h1->Reset();
+      }
+      else if ( h1->GetNbinsX() ==  nx && 
+                h1->GetXaxis()->GetXmin() == projX->GetBinLowEdge(ixmin) &&
+                h1->GetXaxis()->GetXmax() == projX->GetBinUpEdge(ixmax) ) { 
+         // reset also in case an histogram exists with compatible axis with the zoomed original axis
+         h1->Reset();   
+      }      
+      else {  
+         Error("DoProject1D","Histogram with name %s alread exists and it is not compatible",name);
+         return 0; 
+      }
+   }
+
+   if (!h1) { 
+      const TArrayD *bins = projX->GetXbins();
+      if ( originalRange )
+      {
+         if (bins->fN == 0) {
+            h1 = new TH1D(name,title,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
+         } else {
+            h1 = new TH1D(name,title,projX->GetNbins(),bins->fArray);
+         }
       } else {
-         h1 = new TH1D(name,title,nx,&bins->fArray[ixmin-1]);
+         if (bins->fN == 0) {
+            h1 = new TH1D(name,title,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+         } else {
+            h1 = new TH1D(name,title,nx,&bins->fArray[ixmin-1]);
+         }
       }
    }
 
@@ -1841,13 +1961,21 @@ TH1 *TH3::DoProject1D(char* title, char* name, TAxis* projX,
    Double_t totcont  = 0;
    Double_t newerror = 0;
 
+   Int_t out1min = out1->GetFirst(); 
+   Int_t out1max = out1->GetLast(); 
+   // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
+   if (out1min == 0 && out1max == 0) { out1min = 1; out1max = out1->GetNbins(); }
+   Int_t out2min = out2->GetFirst(); 
+   Int_t out2max = out2->GetLast(); 
+   if (out2min == 0 && out2max == 0) { out2min = 1; out2max = out2->GetNbins(); }
+
    for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++){
       if ( projX->TestBit(TAxis::kAxisRange) && ( ixbin < ixmin || ixbin > ixmax )) continue;
-      for (out1bin= out1->GetFirst() - ( useUF && !out1->TestBit(TAxis::kAxisRange) ); 
-           out1bin <= out1->GetLast() + ( useOF && !out1->TestBit(TAxis::kAxisRange) );
+      for (out1bin= out1min - ( useUF && !out1->TestBit(TAxis::kAxisRange) ); 
+           out1bin <= out1max + ( useOF && !out1->TestBit(TAxis::kAxisRange) );
            out1bin++){
-         for (out2bin=out2->GetFirst() - ( useUF && !out2->TestBit(TAxis::kAxisRange) );
-              out2bin <= out2->GetLast() + ( useOF && !out2->TestBit(TAxis::kAxisRange) );
+         for (out2bin=out2min - ( useUF && !out2->TestBit(TAxis::kAxisRange) );
+              out2bin <= out2max + ( useOF && !out2->TestBit(TAxis::kAxisRange) );
               out2bin++){
 
             Int_t bin = GetBin(*refX, *refY, *refZ);
@@ -1878,11 +2006,10 @@ TH1 *TH3::DoProject1D(char* title, char* name, TAxis* projX,
    if (IsA() == TH3F::Class() ) eps = 1.E-6;
    if (fTsumw != 0 && TMath::Abs( fTsumw - totcont) <  TMath::Abs(fTsumw) * eps) resetStats = false; 
 
-//    if ( out1->TestBit(TAxis::kAxisRange)  || out2->TestBit(TAxis::kAxisRange) 
-//          || (useUF && useOF && fgStatOverflows == false)     // case of overflow/underflow 
-//          || ( fgStatOverflows == true && (!useUF || !useOF) ) )  
-//       resetStats = true; 
-
+   bool resetEntries = resetStats; 
+   // entries are calculated using underflow/overflow. If excluded entries must be reset
+   resetEntries |= !useUF || !useOF; 
+   
 
    if (!resetStats) {
       Double_t stats[kNstat];
@@ -1896,71 +2023,114 @@ TH1 *TH3::DoProject1D(char* title, char* name, TAxis* projX,
          stats[3] = stats[8]; 
       }
       h1->PutStats(stats);
-      h1->SetEntries( fEntries );
    }
    else {
       // reset statistics 
       h1->ResetStats();
-      // in case of weighted hstograms use the effective entries for the entries
-      // since there is noway to estimate them
-      h1->SetEntries( h1->GetEffectiveEntries() );  
+   }
+   if (resetEntries) { 
+      // in case of error calculation (i.e. when Sumw2() is set) 
+      // use the effective entries for the entries
+      // since this  is the only way to estimate them
+      Double_t entries =  TMath::Floor( totcont + 0.5); // to avoid numerical rounding         
+      if (computeErrors) entries = h1->GetEffectiveEntries();
+      h1->SetEntries( entries );  
+   }
+   else { 
+      h1->SetEntries( fEntries );  
    }
 
    return h1;
 }
 
 //______________________________________________________________________________
-TH2 *TH3::DoProject2D(char* title, char* name, TAxis* projX, TAxis* projY,  
+TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis* projY,  
                     bool computeErrors, bool originalRange,
                     bool useUF, bool useOF) const
 {
-   TH2D *h2 = 0;
+   // internal method performing the projection to a 2D histogram
+   // called from TH3::Project3D 
 
-   // Does an object with the same name exists?
-   TObject *h1obj = gROOT->FindObject(name);
-   if (h1obj && !h1obj->InheritsFrom("TH1")) h1obj = 0;
+   TH2D *h2 = 0;
 
    // Get range to use as well as bin limits
    Int_t ixmin = projX->GetFirst();
    Int_t ixmax = projX->GetLast();
    Int_t iymin = projY->GetFirst();
    Int_t iymax = projY->GetLast();
+   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
+   if (iymin == 0 && iymax == 0) { iymin = 1; iymax = projY->GetNbins(); }
    Int_t nx = ixmax-ixmin+1;
    Int_t ny = iymax-iymin+1;
 
-   // Create the histogram, either reseting a preexisting one or
-   // creating one from scratch.
-   if (h1obj && h1obj->InheritsFrom("TH2D")) {
-      delete h1obj;
-   }
-   const TArrayD *xbins = projX->GetXbins();
-   const TArrayD *ybins = projY->GetXbins();
-   if ( originalRange )
-   {
-      if (xbins->fN == 0 && ybins->fN == 0) {
-         h2 = new TH2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
-                       ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
-      } else if (ybins->fN == 0) {
-         h2 = new TH2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
-                       ,projX->GetNbins(),&xbins->fArray[ixmin-1]);
-      } else if (xbins->fN == 0) {
-         h2 = new TH2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1]
-                       ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
-      } else {
-         h2 = new TH2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1],projX->GetNbins(),&xbins->fArray[ixmin-1]);
+   // Create the histogram, either reseting a preexisting one 
+   // if compatible or creating one from scratch.
+   // Does an object with the same name exists?
+   TObject *h2obj = gROOT->FindObject(name);
+   if (h2obj && h2obj->InheritsFrom("TH1")) {
+      if ( h2obj->IsA() != TH2D::Class() ) { 
+         Error("DoProject2D","Histogram with name %s must be a TH2D and is a %s",name,h2obj->ClassName());
+         return 0; 
       }
-   } else {
-      if (xbins->fN == 0 && ybins->fN == 0) {
-         h2 = new TH2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
-                       ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
-      } else if (ybins->fN == 0) {
-         h2 = new TH2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
-                       ,nx,&xbins->fArray[ixmin-1]);
-      } else if (xbins->fN == 0) {
-         h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]
-                       ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+      h2 = (TH2D*)h2obj;
+      // check histogram compatibility (not perfect for variable bins histograms)
+      // note that the x axis of the projected histogram is  labeld  Y of the original
+      if ( ( h2->GetNbinsX()           == projY->GetNbins()  && 
+             h2->GetXaxis()->GetXmin() == projY->GetXmin()   &&
+             h2->GetXaxis()->GetXmax() == projY->GetXmax() ) && 
+           ( h2->GetNbinsY()          ==  projX->GetNbins()  && 
+             h2->GetYaxis()->GetXmin() == projX->GetXmin()   &&
+             h2->GetYaxis()->GetXmax() == projX->GetXmax() )  ) {  
+         // enable originalRange option in case a range is set in the outer axis
+         originalRange = kTRUE; 
+         h2->Reset();
+      }
+      else if ( ( h2->GetNbinsX()           ==  ny                          && 
+                  h2->GetXaxis()->GetXmin() == projY->GetBinLowEdge(iymin)  &&
+                  h2->GetXaxis()->GetXmax() == projY->GetBinUpEdge(iymax) ) &&
+                ( h2->GetNbinsY()           ==  nx                          && 
+                  h2->GetYaxis()->GetXmin() == projX->GetBinLowEdge(ixmin)  &&
+                  h2->GetYaxis()->GetXmax() == projX->GetBinUpEdge(ixmax) )  ) { 
+         // reset also in case an histogram exists with compatible axis with the zoomed original axis
+         h2->Reset();   
+      }      
+      else {  
+         Error("DoProject2D","Histogram with name %s alread exists and it is not compatible",name);
+         return 0; 
+      }
+   }
+
+      
+   if (!h2) { 
+      const TArrayD *xbins = projX->GetXbins();
+      const TArrayD *ybins = projY->GetXbins();
+      if ( originalRange )
+      {
+         if (xbins->fN == 0 && ybins->fN == 0) {
+            h2 = new TH2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
+                          ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
+         } else if (ybins->fN == 0) {
+            h2 = new TH2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
+                          ,projX->GetNbins(),&xbins->fArray[ixmin-1]);
+         } else if (xbins->fN == 0) {
+            h2 = new TH2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1]
+                          ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
+         } else {
+            h2 = new TH2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1],projX->GetNbins(),&xbins->fArray[ixmin-1]);
+         }
       } else {
-         h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
+         if (xbins->fN == 0 && ybins->fN == 0) {
+            h2 = new TH2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
+                          ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+         } else if (ybins->fN == 0) {
+            h2 = new TH2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
+                          ,nx,&xbins->fArray[ixmin-1]);
+         } else if (xbins->fN == 0) {
+            h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]
+                          ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+         } else {
+            h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
+         }
       }
    }
 
@@ -2022,14 +2192,20 @@ TH2 *TH3::DoProject2D(char* title, char* name, TAxis* projX, TAxis* projY,
    Double_t cont,e,e1;
    Double_t totcont  = 0;
    Double_t newerror = 0;
+
+   Int_t outmin = out->GetFirst(); 
+   Int_t outmax = out->GetLast(); 
+   // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
+   if (outmin == 0 && outmax == 0) { outmin = 1; outmax = out->GetNbins(); }
+
    for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++){
       if ( projX->TestBit(TAxis::kAxisRange) && ( ixbin < ixmin || ixbin > ixmax )) continue;
 
       for (iybin=0;iybin<=1+projY->GetNbins();iybin++){
          if ( projY->TestBit(TAxis::kAxisRange) && ( iybin < iymin || iybin > iymax )) continue;
 
-         for (outbin=out->GetFirst() - ( useUF && !out->TestBit(TAxis::kAxisRange) );
-              outbin <= out->GetLast() + ( useOF && !out->TestBit(TAxis::kAxisRange) );
+         for (outbin=outmin - ( useUF && !out->TestBit(TAxis::kAxisRange) );
+              outbin <= outmax + ( useOF && !out->TestBit(TAxis::kAxisRange) );
               outbin++){
 
             Int_t bin = GetBin(*refX,*refY,*refZ);
@@ -2057,6 +2233,9 @@ TH2 *TH3::DoProject2D(char* title, char* name, TAxis* projX, TAxis* projY,
    if (IsA() == TH3F::Class() ) eps = 1.E-6;
    if (fTsumw != 0 && TMath::Abs( fTsumw - totcont) <  TMath::Abs(fTsumw) * eps) resetStats = false; 
 
+   bool resetEntries = resetStats; 
+   // entries are calculated using underflow/overflow. If excluded entries must be reset
+   resetEntries |= !useUF || !useOF; 
 
    if (!resetStats) {
       Double_t stats[kNstat];
@@ -2099,17 +2278,27 @@ TH2 *TH3::DoProject2D(char* title, char* name, TAxis* projX, TAxis* projY,
       }
       // set the new statistics 
       h2->PutStats(stats);
-      h2->SetEntries(fEntries); 
    }
    else { 
       // recalculate the statistics
       h2->ResetStats(); 
-      // use as entries the effective entries
-      h2->SetEntries( h2->GetEffectiveEntries() ); 
    }
+
+   if (resetEntries) { 
+      // use the effective entries for the entries
+      // since this  is the only way to estimate them
+      Double_t entries =  h2->GetEffectiveEntries();
+      if (!computeErrors) entries = TMath::Floor( entries + 0.5); // to avoid numerical rounding
+      h2->SetEntries( entries );  
+   }
+   else { 
+      h2->SetEntries( fEntries );  
+   }
+
 
    return h2;
 }
+
 
 //______________________________________________________________________________
 TH1 *TH3::Project3D(Option_t *option) const
@@ -2145,123 +2334,143 @@ TH1 *TH3::Project3D(Option_t *option) const
    //    h->Project3D("xy");
    //    h->Project3D("xy2");
    //  will generate two TH2D histograms named "myhist_xy" and "myhist_xy2"
+   //  A different name can be generated by attaching a string to the option
+   //  For example h->Project3D("name_xy") will generate an histogram with the name name_xy. 
+   //  Additional options passed will be appended to the histogram title but not the name
    //
-   //  NOTE 2: The number of entries in the projected histogram is estimated from the number of 
+   //  NOTE 2: If an histogram of the same type already exists with compatible axes, 
+   //  the histogram is reset and filled again with the projected contents of the TH3.
+   //  In the case of axes incompatibility, an error is reported and a NULL pointer is returned.
+   //
+   //  NOTE 3: The number of entries in the projected histogram is estimated from the number of 
    //  effective entries for all the cells included in the projection. 
    //
-   //  NOTE 3: underflow/overflow are included by default in the projection 
+   //  NOTE 4: underflow/overflow are included by default in the projection 
    //  To exclude underflow and/or overflow (for both axis in case of a projection to a 1D histogram) use option "NUF" and/or "NOF"
-   //  With SetRange() you can have all bin except underflow/overflow only if you set the axis bit range as 
-   // following after having called SetRange: 
+   //  With SetRange() you can have all bins except underflow/overflow only if you set the axis bit range as 
+   //  following after having called SetRange: 
    //    axis->SetRange(1, axis->GetNbins());
    //    axis->SetBit(TAxis::kAxisRange);  
    //          
 
    TString opt = option; opt.ToLower();
    Int_t pcase = 0;
-   if (opt.Contains("x"))  pcase = 1;
-   if (opt.Contains("y"))  pcase = 2;
-   if (opt.Contains("z"))  pcase = 3;
-   if (opt.Contains("xy")) pcase = 4;
-   if (opt.Contains("yx")) pcase = 5;
-   if (opt.Contains("xz")) pcase = 6;
-   if (opt.Contains("zx")) pcase = 7;
-   if (opt.Contains("yz")) pcase = 8;
-   if (opt.Contains("zy")) pcase = 9;
+   TString ptype; 
+   if (opt.Contains("x"))  { pcase = 1; ptype = "x"; }
+   if (opt.Contains("y"))  { pcase = 2; ptype = "y"; }
+   if (opt.Contains("z"))  { pcase = 3; ptype = "z"; }
+   if (opt.Contains("xy")) { pcase = 4; ptype = "xy"; }
+   if (opt.Contains("yx")) { pcase = 5; ptype = "yx"; }
+   if (opt.Contains("xz")) { pcase = 6; ptype = "xz"; }
+   if (opt.Contains("zx")) { pcase = 7; ptype = "zx"; }
+   if (opt.Contains("yz")) { pcase = 8; ptype = "yz"; }
+   if (opt.Contains("zy")) { pcase = 9; ptype = "zy"; }
 
-   Bool_t computeErrors = kFALSE;
-   if (opt.Contains("e") || GetSumw2N() ) computeErrors = kTRUE;
+   if (pcase == 0) { 
+      Error("Project3D","No projection axis specified - return a NULL pointer"); 
+      return 0; 
+   }
+   // remove projection option 
+   opt.Remove(opt.Index(ptype), ptype.Length() );
 
-   bool useUF = !opt.Contains("nuf");
-   bool useOF = !opt.Contains("nof");
+   Bool_t computeErrors = GetSumw2N();
+   if (opt.Contains("e") ) { 
+      computeErrors = kTRUE;
+      opt.Remove(opt.First("e"),1);
+   }
 
-   bool originalRange = false;
-   if ( opt.Contains("nof") )
-      originalRange = (opt.CountChar('o') > 1);
-   else
-      originalRange = (opt.Contains('o'));
+   Bool_t useUF = kTRUE;
+   Bool_t useOF = kTRUE;
+   if (opt.Contains("nuf") ) { 
+      useUF = kFALSE;
+      opt.Remove(opt.Index("nuf"),3);
+   }
+   if (opt.Contains("nof") ) { 
+      useOF = kFALSE;
+      opt.Remove(opt.Index("nof"),3);
+   }
+
+   Bool_t originalRange = kFALSE;
+   if (opt.Contains('o') ) { 
+      originalRange = kTRUE; 
+      opt.Remove(opt.First("o"),1);
+   }
 
 
    // Create the projection histogram
    TH1 *h = 0;
-   Int_t nch = strlen(GetName()) +opt.Length() +2;
-   char *name = new char[nch];
-   sprintf(name,"%s_%s",GetName(),option);
-   nch = strlen(GetTitle()) +opt.Length() +2;
-   char *title = new char[nch];
-   sprintf(title,"%s_%s",GetTitle(),option);
 
+   TString name = GetName();
+   TString title = GetTitle();
+   name  += "_";   name  += ptype;
+   title += "_";   title += ptype;   
    switch (pcase) {
-      case 1:
-         h = DoProject1D(title, name, this->GetXaxis(), 
+      case 1: 
+         // "x"
+         h = DoProject1D(name, title, this->GetXaxis(), 
                        computeErrors, originalRange, useUF, useOF);
          break;
 
       case 2:
          // "y"
-         h = DoProject1D(title, name, this->GetYaxis(), 
+         h = DoProject1D(name, title, this->GetYaxis(), 
                        computeErrors, originalRange, useUF, useOF);
          break;
 
       case 3:
          // "z"
-         h = DoProject1D(title, name, this->GetZaxis(), 
+         h = DoProject1D(name, title, this->GetZaxis(), 
                        computeErrors, originalRange, useUF, useOF);
          break;
 
       case 4:
          // "xy"
-         h = DoProject2D(title, name, this->GetXaxis(),this->GetYaxis(), 
+         h = DoProject2D(name, title, this->GetXaxis(),this->GetYaxis(), 
                        computeErrors, originalRange, useUF, useOF);
          break;
 
       case 5:
          // "yx"
-         h = DoProject2D(title, name, this->GetYaxis(),this->GetXaxis(), 
+         h = DoProject2D(name, title, this->GetYaxis(),this->GetXaxis(), 
                        computeErrors, originalRange, useUF, useOF);
          break;
 
       case 6:
          // "xz"
-         h = DoProject2D(title, name, this->GetXaxis(),this->GetZaxis(), 
+         h = DoProject2D(name, title, this->GetXaxis(),this->GetZaxis(), 
                        computeErrors, originalRange, useUF, useOF);
          break;
          
       case 7:
          // "zx"
-         h = DoProject2D(title, name, this->GetZaxis(),this->GetXaxis(), 
+         h = DoProject2D(name, title, this->GetZaxis(),this->GetXaxis(), 
                        computeErrors, originalRange, useUF, useOF);
          break;
 
       case 8:
          // "yz"
-         h = DoProject2D(title, name, this->GetYaxis(),this->GetZaxis(), 
+         h = DoProject2D(name, title, this->GetYaxis(),this->GetZaxis(), 
                        computeErrors, originalRange, useUF, useOF);
          break;
 
       case 9:
          // "zy"
-         h = DoProject2D(title, name, this->GetZaxis(),this->GetYaxis(), 
+         h = DoProject2D(name, title, this->GetZaxis(),this->GetYaxis(), 
                        computeErrors, originalRange, useUF, useOF);
          break;
 
    }
 
-   delete [] name;
-   delete [] title;
-
-   if (opt.Contains("d")) {
+   // draw in current pad 
+   if (h && opt.Contains("d")) {
+      opt.Remove(opt.First("d"),1);
       TVirtualPad *padsav = gPad;
       TVirtualPad *pad = gROOT->GetSelectedPad();
       if (pad) pad->cd();
-      char optin[100];
-      strcpy(optin,opt.Data());
-      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
       if (!gPad->FindObject(h)) {
-         h->Draw(optin);
+         h->Draw(opt);
       } else {
-         h->Paint(optin);
+         h->Paint(opt);
       }
       if (padsav) padsav->cd();
    }
@@ -2270,7 +2479,9 @@ TH1 *TH3::Project3D(Option_t *option) const
 }
 
 void TH3::DoFillProfileProjection(TProfile2D * p2, const TAxis & a1, const TAxis & a2,  const TAxis & a3, Int_t bin1, Int_t bin2, Int_t bin3, Int_t inBin, Bool_t useWeights ) const { 
-   // internal function to fill the bins of the projected profile histogram 
+   // internal function to fill the bins of the projected profile 2D histogram 
+   // called from DoProjectProfile2D
+
    Double_t cont = GetBinContent(inBin); 
    if (!cont) return; 
    TArrayD & binSumw2 = *(p2->GetBinSumw2()); 
@@ -2292,47 +2503,94 @@ void TH3::DoFillProfileProjection(TProfile2D * p2, const TAxis & a1, const TAxis
 } 
 
 //______________________________________________________________________________
-TProfile2D *TH3::DoProjectProfile2D(char* title, char* name, TAxis* projX, TAxis* projY, 
+TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
                                           bool originalRange, bool useUF, bool useOF) const
 {
-   // Get the ranges where we will work.
+   // internal method to project to a 2D Profile
+   // called from TH3::Project3DProfile
 
+   // Get the ranges where we will work.
    Int_t ixmin = projX->GetFirst();
    Int_t ixmax = projX->GetLast();
    Int_t iymin = projY->GetFirst();
    Int_t iymax = projY->GetLast();
+   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
+   if (iymin == 0 && iymax == 0) { iymin = 1; iymax = projY->GetNbins(); }
    Int_t nx = ixmax-ixmin+1;
    Int_t ny = iymax-iymin+1;
 
    // Create the projected profiles
    TProfile2D *p2 = 0;
-   const TArrayD *xbins = projX->GetXbins();
-   const TArrayD *ybins = projY->GetXbins();
-   if ( originalRange ) {
-      if (xbins->fN == 0 && ybins->fN == 0) {
-         p2 = new TProfile2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
-                             ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
-      } else if (ybins->fN == 0) {
-         p2 = new TProfile2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
-                          ,projX->GetNbins(),&xbins->fArray[ixmin-1]);
-      } else if (xbins->fN == 0) {
-         p2 = new TProfile2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1]
-                             ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
-      } else {
-         p2 = new TProfile2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1],projX->GetNbins(),&xbins->fArray[ixmin-1]);
+
+   // Create the histogram, either reseting a preexisting one 
+   // if compatible or creating one from scratch.
+   // Does an object with the same name exists?
+   TObject *p2obj = gROOT->FindObject(name);
+   if (p2obj && p2obj->InheritsFrom("TH1")) {
+      if (p2obj->IsA() != TProfile2D::Class() ) { 
+         Error("DoProjectProfile2D","Histogram with name %s must be a TProfile2D and is a %s",name,p2obj->ClassName());
+         return 0; 
       }
-   } else {
-      if (xbins->fN == 0 && ybins->fN == 0) {
-         p2 = new TProfile2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
-                             ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
-      } else if (ybins->fN == 0) {
-         p2 = new TProfile2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
-                             ,nx,&xbins->fArray[ixmin-1]);
-      } else if (xbins->fN == 0) {
-         p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1]
-                             ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+      p2 = (TProfile2D*)p2obj;
+      // check histogram compatibility (not perfect for variable bins histograms)
+      // note that the x axis of the projected histogram is  labeld  Y of the original
+      if ( ( p2->GetNbinsX()           == projY->GetNbins()  && 
+             p2->GetXaxis()->GetXmin() == projY->GetXmin()   &&
+             p2->GetXaxis()->GetXmax() == projY->GetXmax() ) && 
+           ( p2->GetNbinsY()          ==  projX->GetNbins()  && 
+             p2->GetYaxis()->GetXmin() == projX->GetXmin()   &&
+             p2->GetYaxis()->GetXmax() == projX->GetXmax() )  ) {  
+         // enable originalRange option in case a range is set in the outer axis
+         originalRange = kTRUE; 
+         p2->Reset();
+      }
+      else if ( ( p2->GetNbinsX()           ==  ny                          && 
+                  p2->GetXaxis()->GetXmin() == projY->GetBinLowEdge(iymin)  &&
+                  p2->GetXaxis()->GetXmax() == projY->GetBinUpEdge(iymax) ) &&
+                ( p2->GetNbinsY()           ==  nx                          && 
+                  p2->GetYaxis()->GetXmin() == projX->GetBinLowEdge(ixmin)  &&
+                  p2->GetYaxis()->GetXmax() == projX->GetBinUpEdge(ixmax) )  ) { 
+         // reset also in case an histogram exists with compatible axis with the zoomed original axis
+         p2->Reset();   
+      }      
+      else {  
+         p2->Dump();
+         projY->Dump(); projX->Dump(); 
+         std::cout << ny << "  " << iymin << " , " << iymax << " nx " << nx << "  " << ixmin << " , " << ixmax << std::endl;
+         Error("DoProjectProfile2D","Profile2D with name %s alread exists and it is not compatible",name);
+         return 0; 
+      }
+   }
+
+   if (!p2) { 
+      const TArrayD *xbins = projX->GetXbins();
+      const TArrayD *ybins = projY->GetXbins();
+      if ( originalRange ) {
+         if (xbins->fN == 0 && ybins->fN == 0) {
+            p2 = new TProfile2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
+                                ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
+         } else if (ybins->fN == 0) {
+            p2 = new TProfile2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
+                                ,projX->GetNbins(),&xbins->fArray[ixmin-1]);
+         } else if (xbins->fN == 0) {
+            p2 = new TProfile2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1]
+                                ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
+         } else {
+            p2 = new TProfile2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1],projX->GetNbins(),&xbins->fArray[ixmin-1]);
+         }
       } else {
-         p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
+         if (xbins->fN == 0 && ybins->fN == 0) {
+            p2 = new TProfile2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
+                                ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+         } else if (ybins->fN == 0) {
+            p2 = new TProfile2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
+                                ,nx,&xbins->fArray[ixmin-1]);
+         } else if (xbins->fN == 0) {
+            p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1]
+                                ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+         } else {
+            p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
+         }
       }
    }
 
@@ -2360,13 +2618,18 @@ TProfile2D *TH3::DoProjectProfile2D(char* title, char* name, TAxis* projX, TAxis
    if ( projX == GetYaxis() && projY == GetZaxis() ) { refX = &outbin; refY = &ixbin;  refZ = &iybin;  }
    if ( projX == GetZaxis() && projY == GetYaxis() ) { refX = &outbin; refY = &iybin;  refZ = &ixbin;  }
 
+   Int_t outmin = outAxis->GetFirst(); 
+   Int_t outmax = outAxis->GetLast(); 
+   // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
+   if (outmin == 0 && outmax == 0) { outmin = 1; outmax = outAxis->GetNbins(); }
+
    // Call specific method for the projection
    for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++){
       if ( (ixbin < ixmin || ixbin > ixmax) && projX->TestBit(TAxis::kAxisRange)) continue;
       for ( iybin=0;iybin<=1+projY->GetNbins();iybin++){
          if ( (iybin < iymin || iybin > iymax) && projX->TestBit(TAxis::kAxisRange)) continue;
-         for (outbin=outAxis->GetFirst() - ( useUF && !outAxis->TestBit(TAxis::kAxisRange) );
-              outbin<=outAxis->GetLast() + ( useOF && !outAxis->TestBit(TAxis::kAxisRange) );
+         for (outbin=outmin - ( useUF && !outAxis->TestBit(TAxis::kAxisRange) );
+              outbin<=outmax + ( useOF && !outAxis->TestBit(TAxis::kAxisRange) );
               ++outbin){
             Int_t bin = GetBin(*refX,*refY,*refZ);
 
@@ -2437,84 +2700,98 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    //
    // NOTE 1: The generated histogram is named th3name + _poption
    // eg if the TH3* h histogram is named "myhist", then
-   // h->Project3D("xy"); produces a TProfile2D histogram named "myhist_pxy"
-   // if a histogram of the same type already exists, it is deleted.
+   // h->Project3D("xy"); produces a TProfile2D histogram named "myhist_pxy".
    // The following sequence
    //    h->Project3DProfile("xy");
    //    h->Project3DProfile("xy2");
    //  will generate two TProfile2D histograms named "myhist_pxy" and "myhist_pxy2"
    //
-   //  NOTE 2: The number of entries in the projected profile is estimated from the number of 
+   //  NOTE 2: If a profile of the same type already exists with compatible axes, 
+   //  the profile is reset and filled again with the projected contents of the TH3.
+   //  In the case of axes incompatibility, an error is reported and a NULL pointer is returned.
+   //
+   //  NOTE 3: The number of entries in the projected profile is estimated from the number of 
    //  effective entries for all the cells included in the projection. 
    //
-   //  NOTE 3: underflow/overflow are by default excluded from the projection 
+   //  NOTE 4: underflow/overflow are by default excluded from the projection 
    //  (Note that this is a different default behavior compared to the projection to an histogram) 
-   //  To exclude underflow and/or overflow (for both axis in case of a projection to a 1D histogram) use option "UF" and/or "OF"
+   //  To include the underflow and/or overflow use option "UF" and/or "OF"
 
    TString opt = option; opt.ToLower();
    Int_t pcase = 0;
-   if (opt.Contains("xy")) pcase = 4;
-   if (opt.Contains("yx")) pcase = 5;
-   if (opt.Contains("xz")) pcase = 6;
-   if (opt.Contains("zx")) pcase = 7;
-   if (opt.Contains("yz")) pcase = 8;
-   if (opt.Contains("zy")) pcase = 9;
+   TString ptype; 
+   if (opt.Contains("xy")) { pcase = 4; ptype = "xy"; }
+   if (opt.Contains("yx")) { pcase = 5; ptype = "yx"; }
+   if (opt.Contains("xz")) { pcase = 6; ptype = "xz"; }
+   if (opt.Contains("zx")) { pcase = 7; ptype = "zx"; }
+   if (opt.Contains("yz")) { pcase = 8; ptype = "yz"; }
+   if (opt.Contains("zy")) { pcase = 9; ptype = "zy"; }
 
-   bool useUF = opt.Contains("uf");
-   bool useOF = opt.Contains("of");
+   if (pcase == 0) { 
+      Error("Project3D","No projection axis specified - return a NULL pointer"); 
+      return 0; 
+   }
+   // remove projection option 
+   opt.Remove(opt.Index(ptype), ptype.Length() );
 
-   bool originalRange = false;
-   if ( opt.Contains("nof") || opt.Contains("of") )
-      originalRange = (opt.CountChar('o') > 1);
-   else
-      originalRange = (opt.Contains('o'));
 
-   // Create the projection histogram
+   Bool_t useUF = kFALSE;
+   if (opt.Contains("uf") ) { 
+      useUF = kTRUE;
+      opt.Remove(opt.Index("uf"),2);
+   }
+   Bool_t useOF = kFALSE;
+   if (opt.Contains("of") ) { 
+      useOF = kTRUE;
+      opt.Remove(opt.Index("of"),2);
+   }
+
+   Bool_t originalRange = kFALSE;
+   if (opt.Contains('o') ) { 
+      originalRange = kTRUE; 
+      opt.Remove(opt.First("o"),1);
+   }
+
+   // Create the projected profile
    TProfile2D *p2 = 0;
-   Int_t nch = strlen(GetName()) +opt.Length() +3;
-   char *name = new char[nch];
-   sprintf(name,"%s_p%s",GetName(),option);
-   nch = strlen(GetTitle()) +opt.Length() +3;
-   char *title = new char[nch];
-   sprintf(title,"%s_p%s",GetTitle(),option);
-   delete gROOT->FindObject(name);
+   TString name = GetName();
+   TString title = GetTitle();
+   name  += "_";   name  += ptype;
+   title += "_";   title += ptype;   
 
    // Call the method with the specific projected axes.
    switch (pcase) {
       case 4:
          // "xy"
-         p2 = DoProjectProfile2D(title, name, GetXaxis(), GetYaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetXaxis(), GetYaxis(), originalRange, useUF, useOF);
          break;
 
       case 5:
          // "yx"
-         p2 = DoProjectProfile2D(title, name, GetYaxis(), GetXaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetYaxis(), GetXaxis(), originalRange, useUF, useOF);
          break;
 
       case 6:
          // "xz"
-         p2 = DoProjectProfile2D(title, name, GetXaxis(), GetZaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetXaxis(), GetZaxis(), originalRange, useUF, useOF);
          break;
 
       case 7:
          // "zx"
-         p2 = DoProjectProfile2D(title, name, GetZaxis(), GetXaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetZaxis(), GetXaxis(), originalRange, useUF, useOF);
          break;
 
       case 8:
          // "yz"
-         p2 = DoProjectProfile2D(title, name, GetYaxis(), GetZaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetYaxis(), GetZaxis(), originalRange, useUF, useOF);
          break;
 
       case 9:
          // "zy"
-         p2 = DoProjectProfile2D(title, name, GetZaxis(), GetYaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetZaxis(), GetYaxis(), originalRange, useUF, useOF);
          break;
 
    }
-
-   delete [] name;
-   delete [] title;
 
    return p2;
 }

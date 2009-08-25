@@ -1556,19 +1556,19 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
    //check dimensions
    if (this->GetDimension() != h2->GetDimension() ){
-      Error("ChistatTestX","Histograms have different dimensions.");
+      Error("Chi2TestX","Histograms have different dimensions.");
       return 0;
    }
 
    //check number of channels
    if (nbinx1 != nbinx2) {
-      Error("ChistatTestX","different number of x channels");
+      Error("Chi2TestX","different number of x channels");
    }
    if (nbiny1 != nbiny2) {
-      Error("ChistatTestX","different number of y channels");
+      Error("Chi2TestX","different number of y channels");
    }
    if (nbinz1 != nbinz2) {
-      Error("ChistatTestX","different number of z channels");
+      Error("Chi2TestX","different number of z channels");
    }
 
    //check for ranges
@@ -1610,7 +1610,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    Bool_t comparisonWW = opt.Contains("WW");
    Bool_t scaledHistogram  = opt.Contains("NORM");
    if (scaledHistogram && !comparisonUU) { 
-      Info("ChistatTestX","NORM option should be used together with UU option. It is ignored");
+      Info("Chi2TestX","NORM option should be used together with UU option. It is ignored");
    }
    // look at histo global bin content and effective entries 
    Stat_t s[kNstat];
@@ -1633,12 +1633,12 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    // check unweighted histogram 
    if (comparisonUW) { 
       if (TMath::Abs(sumBinContent1 - effEntries1) >= 1) { 
-         Warning("ChistatTestX","First histogram is not unweighted and option UW has been requested");
+         Warning("Chi2TestX","First histogram is not unweighted and option UW has been requested");
       }
    }
    if ( (!scaledHistogram && comparisonUU)   ) { 
       if ( ( TMath::Abs(sumBinContent1 - effEntries1) >= 1) || (TMath::Abs(sumBinContent2 - effEntries2) >= 1) ) { 
-         Warning("ChistatTestX","Both histograms are not unweighted and option UU has been requested");
+         Warning("Chi2TestX","Both histograms are not unweighted and option UU has been requested");
       }
    }
 
@@ -1677,7 +1677,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
          }
       }
       if (sumw1 <= 0 || sumw2 <= 0) {
-         Error("ChistatTestX","Cannot use option NORM when one histogram has all errors zero");
+         Error("Chi2TestX","Cannot use option NORM when one histogram has all errors zero");
          return 0;
       }
 
@@ -1701,12 +1701,12 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    }
    //checks that the histograms are not empty
    if (sum1 == 0 || sum2 == 0) {
-      Error("ChistatTestX","one histogram is empty");
+      Error("Chi2TestX","one histogram is empty");
       return 0;
    }
 
    if ( comparisonWW  && ( sumw1 <= 0 && sumw2 <=0 ) ){
-      Error("ChistatTestX","Hist1 and Hist2 have both all errors zero\n");
+      Error("Chi2TestX","Hist1 and Hist2 have both all errors zero\n");
       return 0;
    }
 
@@ -1824,7 +1824,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   else { 
                      // return error because infinite discrepancy here: 
                      // bin1 != 0 and bin2 =0 in a histogram with all errors zero 
-                     Error("ChistatTestX","Hist2 has in bin %d,%d,%d zero content and all errors e zero\n", i,j,k);
+                     Error("Chi2TestX","Hist2 has in bin %d,%d,%d zero content and all errors e zero\n", i,j,k);
                      chi2 = 0; return 0;
                   }
                }
@@ -1930,7 +1930,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                } 
                if ( (err1 == 0) && (err2 == 0) ) { 
                   // case of zero errors but non zero bin content
-                  Error("ChistatTestX","Hist1 and Hist2 have both in bin %d,%d,%d errors zero\n", i,j,k);
+                  Error("Chi2TestX","Hist1 and Hist2 have both in bin %d,%d,%d errors zero\n", i,j,k);
                   chi2 = 0; return 0; 
                }
                

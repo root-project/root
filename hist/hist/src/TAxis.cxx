@@ -383,6 +383,7 @@ Int_t TAxis::GetFirst() const
 {
    //             return first bin on the axis
    //       ie 1 if no range defined
+   //       NOTE: in some cases a zero is returned (see TAxis::SetRange)
 
    if (!TestBit(kAxisRange)) return 1;
    return fFirst;
@@ -393,6 +394,7 @@ Int_t TAxis::GetLast() const
 {
    //             return last bin on the axis
    //       ie fNbins if no range defined
+   //       NOTE: in some cases a zero is returned (see TAxis::SetRange)
 
    if (!TestBit(kAxisRange)) return fNbins;
    return fLast;
@@ -821,10 +823,15 @@ void TAxis::SetRange(Int_t first, Int_t last)
 {
    //  Set the viewing range for the axis from bin first to last
    //  To set a range using the axis coordinates, use TAxis::SetRangeUser.
+   //  if first<=1 and last>=Nbins or if last < first the range is reset by removing the  
+   //  bit TAxis::kAxisRange. In this case the functions TAxis::GetFirst() and TAxis::GetLast() 
+   //  will return 1 and Nbins. 
+   //  NOTE: If the bit has been set manually by the user in case of no range defined
+   //         GetFirst() and GetLast() will return 0. 
 
-   if (last == 0) last = fNbins;
+   if (last <= 0) last = fNbins;
    if (last > fNbins) last = fNbins;
-   if (last  < first) first = 1;
+   if (last  < first) { first = 1; last = fNbins; }
    if (first < 1)     first = 1;
    if (first == 1 && last == fNbins) {
       SetBit(kAxisRange,0);

@@ -1819,6 +1819,9 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    Int_t firstOutBin, lastOutBin;
    firstOutBin = outAxis.GetFirst();
    lastOutBin = outAxis.GetLast();
+   if (firstOutBin == 0 && lastOutBin == 0) { 
+      firstOutBin = 1; lastOutBin = outAxis.GetNbins(); 
+   }
 
    if ( lastbin < firstbin && inAxis.TestBit(TAxis::kAxisRange) ) {
       firstbin = inAxis.GetFirst();
@@ -1845,11 +1848,32 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    }
    TProfile *h1=0;
    //check if a profile with identical name exist
+   // if compatible reset and re-use previous histogram 
    TObject *h1obj = gROOT->FindObject(pname);
-   if (h1obj && h1obj->InheritsFrom("TProfile")) {
-      // get error option from this profile and use for creating the projected one
-      opt += ((TProfile *) (h1obj))->GetErrorOption(); 
-      delete h1obj;
+   if (h1obj && h1obj->InheritsFrom("TH1")) {
+      if (h1obj->IsA() != TProfile::Class() ) { 
+         Error("DoProfile","Histogram with name %s must be a TProfile and is a %s",name,h1obj->ClassName());
+         return 0; 
+      }
+      h1 = (TProfile*)h1obj;
+      // check profile compatibility
+      if ( h1->GetNbinsX() ==  outAxis.GetNbins() && 
+           h1->GetXaxis()->GetXmin() == outAxis.GetXmin() &&
+           h1->GetXaxis()->GetXmax() == outAxis.GetXmax() ) { 
+         // enable originalRange option in case a range is set in the outer axis
+         originalRange = kTRUE; 
+         h1->Reset();
+      }
+      else if ( h1->GetNbinsX() ==  lastOutBin-firstOutBin+1 && 
+                h1->GetXaxis()->GetXmin() == outAxis.GetBinLowEdge(firstOutBin) &&
+                h1->GetXaxis()->GetXmax() == outAxis.GetBinUpEdge(lastOutBin) ) { 
+         // reset also in case a profile exists with compatible axis with the zoomed original axis
+         h1->Reset();   
+      }      
+      else {
+         Error("DoProfile","Profile with name %s alread exists and it is not compatible",pname);
+         return 0; 
+      }
    }
 
    Int_t ncuts = 0;
@@ -1869,7 +1893,11 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
                               outAxis.GetBinLowEdge(firstOutBin),
                               outAxis.GetBinUpEdge(lastOutBin), opt);
       } else {
-         h1 = new TProfile(pname,GetTitle(),outAxis.GetNbins(),bins->fArray,opt);
+         // case variable bins
+         if (originalRange )
+            h1 = new TProfile(pname,GetTitle(),outAxis.GetNbins(),bins->fArray,opt);
+         else 
+            h1 = new TProfile(pname,GetTitle(),lastOutBin-firstOutBin+1,&bins->fArray[firstOutBin-1],opt);
       }
    }
    if (pname != name)  delete [] pname;
@@ -1977,9 +2005,10 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
    //   It is possible to apply several cuts ("," means logical AND):
    //      myhist->ProfileX(" ",firstybin,lastybin,[cutg1,cutg2]");
    //
-   //   NOTE that if a TProfile named name exists in the current directory or pad,
-   //   a profile will be re-created but with the same error option as the previous one 
-   //   
+   //   NOTE that if a TProfile named "name" exists in the current directory or pad with 
+   //   a compatible axis the profile is reset and filled again with the projected contents of the TH2.
+   //   In the case of axis incompatibility an error is reported and a NULL pointer is returned.
+   // 
    //   NOTE that the X axis attributes of the TH2 are copied to the X axis of the profile.
    //
    //   NOTE that the default under- / overflow behavior differs from what ProjectionX
@@ -2021,8 +2050,9 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    //   It is possible to apply several cuts:
    //      myhist->ProfileY(" ",firstybin,lastybin,[cutg1,cutg2]");
    //
-   //   NOTE that if a TProfile named name exists in the current directory or pad,
-   //   a profile will be re-created but with the same error option as the previous one 
+   //   NOTE that if a TProfile named "name" exists in the current directory or pad with 
+   //   a compatible axis the profile is reset and filled again with the projected contents of the TH2.
+   //   In the case of axis incompatibility an error is reported and a NULL pointer is returned.
    //   
    //   NOTE that he Y axis attributes of the TH2 are copied to the X axis of the profile.
    //
@@ -2067,6 +2097,10 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
 
    firstOutBin = outAxis->GetFirst();
    lastOutBin = outAxis->GetLast();
+   if (firstOutBin == 0 && lastOutBin == 0) { 
+      firstOutBin = 1; lastOutBin = outAxis->GetNbins(); 
+   }
+   
    
    if ( lastbin < firstbin && inAxis->TestBit(TAxis::kAxisRange) ) {
       firstbin = inAxis->GetFirst();
@@ -2092,10 +2126,34 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       sprintf(pname,"%s%s",GetName(),name);
    }
    TH1D *h1=0;
-   //check if histogram with identical name exist
+   //check if histogram with identical name exist 
+   // if compatible reset and re-use previous histogram 
+   // (see https://savannah.cern.ch/bugs/?54340)
    TObject *h1obj = gROOT->FindObject(pname);
-   if (h1obj && h1obj->InheritsFrom("TH1D")) {
-      delete h1obj;
+   if (h1obj && h1obj->InheritsFrom("TH1")) {
+      if (h1obj->IsA() != TH1D::Class() ) { 
+         Error("DoProjection","Histogram with name %s must be a TH1D and is a %s",name,h1obj->ClassName());
+         return 0; 
+      }
+      h1 = (TH1D*)h1obj;
+      // check histogram compatibility (not perfect for variable bins histograms)
+      if ( h1->GetNbinsX() ==  outAxis->GetNbins() && 
+           h1->GetXaxis()->GetXmin() == outAxis->GetXmin() &&
+           h1->GetXaxis()->GetXmax() == outAxis->GetXmax() ) { 
+         // enable originalRange option in case a range is set in the outer axis
+         originalRange = kTRUE; 
+         h1->Reset();
+      }
+      else if ( h1->GetNbinsX() ==  lastOutBin-firstOutBin+1 && 
+                h1->GetXaxis()->GetXmin() == outAxis->GetBinLowEdge(firstOutBin) &&
+                h1->GetXaxis()->GetXmax() == outAxis->GetBinUpEdge(lastOutBin) ) { 
+         // reset also in case an histogram exists with compatible axis with the zoomed original axis
+         h1->Reset();   
+      }      
+      else {  
+         Error("DoProjection","Histogram with name %s alread exists and it is not compatible",pname);
+         return 0; 
+      }
    }
 
    Int_t ncuts = 0;
@@ -2113,7 +2171,11 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
             h1 = new TH1D(pname,GetTitle(),lastOutBin-firstOutBin+1,
                           outAxis->GetBinLowEdge(firstOutBin),outAxis->GetBinUpEdge(lastOutBin));
       } else {
-         h1 = new TH1D(pname,GetTitle(),outAxis->GetNbins(),bins->fArray);
+         // case variable bins
+         if (originalRange )
+            h1 = new TH1D(pname,GetTitle(),outAxis->GetNbins(),bins->fArray);
+         else 
+            h1 = new TH1D(pname,GetTitle(),lastOutBin-firstOutBin+1,&bins->fArray[firstOutBin-1]);
       }
       if (opt.Contains("e") || GetSumw2N() ) h1->Sumw2();
    }
@@ -2185,6 +2247,9 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    }
    if (ncuts) reuseStats = false; 
    // retrieve  the statistics and set in projected histogram if we can re-use it 
+   bool reuseEntries = reuseStats; 
+   // can re-use entries if underflow/overflow are included
+   reuseEntries &= (firstbin==0 && lastbin == inNbin+1);
    if (reuseStats) { 
       Double_t stats[kNstat];
       GetStats(stats);
@@ -2193,13 +2258,24 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
          stats[3] = stats[5]; 
       }
       h1->PutStats(stats);
-      h1->SetEntries(fEntries); 
    }
    else { 
       // the statistics is automatically recalulated since it is reset by the call to SetBinContent
       // we just need to set the entries since they have not been correctly calculated during the projection
       // we can only set them to the effective entries
       h1->SetEntries( h1->GetEffectiveEntries() ); 
+   }
+   if (reuseEntries) { 
+      h1->SetEntries(fEntries); 
+   } 
+   else { 
+      // re-compute the entries 
+      // in case of error calculation (i.e. when Sumw2() is set) 
+      // use the effective entries for the entries
+      // since this  is the only way to estimate them
+      Double_t entries =  TMath::Floor( totcont + 0.5); // to avoid numerical rounding         
+      if (h1->GetSumw2N()) entries = h1->GetEffectiveEntries();
+      h1->SetEntries( entries );  
    }
 
    if (opt.Contains("d")) {
@@ -2252,12 +2328,13 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    //      myhist->ProjectionX(" ",firstybin,lastybin,"[-cutg]");
    //   It is possible to apply several cuts:
    //      myhist->ProjectionX(" ",firstybin,lastybin,[cutg1,cutg2]");
+   //   
+   //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
+   //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH2.
+   //   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
    //
    //   NOTE that the X axis attributes of the TH2 are copied to the X axis of the projection.
    // 
-
-
-
 
       return DoProjection(true, name, firstybin, lastybin, option);
 }
@@ -2292,6 +2369,10 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    //      myhist->ProjectionY(" ",firstxbin,lastxbin,"[-cutg]");
    //   It is possible to apply several cuts:
    //      myhist->ProjectionY(" ",firstxbin,lastxbin,[cutg1,cutg2]");
+   //
+   //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
+   //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH2.
+   //   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
    //
    //   NOTE that the Y axis attributes of the TH2 are copied to the X axis of the projection.
 
