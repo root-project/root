@@ -864,7 +864,9 @@ void TXProofMgr::More(const char *what, const char *how, const char *where)
 //______________________________________________________________________________
 Int_t TXProofMgr::Rm(const char *what, const char *how, const char *where)
 {
-   // Run 'rm' on the nodes
+   // Run 'rm' on the nodes. The user is prompted before removal, unless 'how'
+   // contains "--force" or a combination of single letter options including 'f',
+   // e.g. "-fv".
 
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
@@ -877,8 +879,21 @@ Int_t TXProofMgr::Rm(const char *what, const char *how, const char *where)
       return -1;
    }
 
-   TString prompt, ans("Y");
-   if (isatty(0) != 0 && isatty(1) != 0) {
+   TString prompt, ans("Y"), opt(how);
+   Bool_t force = kFALSE;
+   if (!opt.IsNull()) {
+      TString t;
+      Int_t from = 0;
+      while (!force && opt.Tokenize(t, from, " ")) {
+         if (t == "--force") {
+            force = kTRUE;
+         } else if (t.BeginsWith("-") && !t.BeginsWith("--") && t.Contains("f")) {
+            force = kTRUE;
+         }
+      }
+   }
+
+   if (!force && isatty(0) != 0 && isatty(1) != 0) {
       // Really remove the file?
       prompt.Form("Do you really want to remove '%s'? [N/y]", what);
       ans = "";
