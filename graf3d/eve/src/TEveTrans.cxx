@@ -9,34 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-// TEveTrans
-//
-// TEveTrans is a 4x4 transformation matrix for homogeneous coordinates
-// stored internaly in a column-major order to allow direct usage by
-// GL. The element type is Double32_t as statically the floats would
-// be precise enough but continuous operations on the matrix must
-// retain precision of column vectors.
-//
-// Cartan angles are stored in fA[1-3] (+z, -y, +x). They are
-// recalculated on demand.
-//
-// Direct  element access (first two should be used with care):
-// operator[i]    direct access to elements,   i:0->15
-// CM(i,j)        element 4*j + i;           i,j:0->3    { CM ~ c-matrix }
-// operator(i,j)  element 4*(j-1) + i - 1    i,j:1->4
-//
-// Column-vector access:
-// USet Get/SetBaseVec(), Get/SetPos() and Arr[XYZT]() methods.
-//
-// For all methods taking the matrix indices:
-// 1->X, 2->Y, 3->Z; 4->Position (if applicable). 0 reserved for time.
-//
-// Shorthands in method-names:
-// LF ~ LocalFrame; PF ~ ParentFrame; IP ~ InPlace
-
 #include "TEveTrans.h"
 #include "TEveUtil.h"
+#include "TEveVSDStructs.h"
 #include "TMath.h"
 #include "TClass.h"
 
@@ -63,7 +38,32 @@
 #define F32 11
 #define F33 15
 
-ClassImp(TEveTrans)
+//______________________________________________________________________________
+//
+// TEveTrans is a 4x4 transformation matrix for homogeneous coordinates
+// stored internaly in a column-major order to allow direct usage by
+// GL. The element type is Double32_t as statically the floats would
+// be precise enough but continuous operations on the matrix must
+// retain precision of column vectors.
+//
+// Cartan angles are stored in fA[1-3] (+z, -y, +x). They are
+// recalculated on demand.
+//
+// Direct  element access (first two should be used with care):
+// operator[i]    direct access to elements,   i:0->15
+// CM(i,j)        element 4*j + i;           i,j:0->3    { CM ~ c-matrix }
+// operator(i,j)  element 4*(j-1) + i - 1    i,j:1->4
+//
+// Column-vector access:
+// USet Get/SetBaseVec(), Get/SetPos() and Arr[XYZT]() methods.
+//
+// For all methods taking the matrix indices:
+// 1->X, 2->Y, 3->Z; 4->Position (if applicable). 0 reserved for time.
+//
+// Shorthands in method-names:
+// LF ~ LocalFrame; PF ~ ParentFrame; IP ~ InPlace
+
+ClassImp(TEveTrans);
 
 //______________________________________________________________________________
 TEveTrans::TEveTrans() :
@@ -129,6 +129,18 @@ void TEveTrans::UnitTrans()
 }
 
 //______________________________________________________________________________
+void TEveTrans::ZeroTrans(Double_t w)
+{
+   // Reset matrix to zero, only the perspective scaling is set to w
+   // (1 by default).
+
+   memset(fM, 0, 16*sizeof(Double_t));
+   fM[F33] = w;
+   fA1 = fA2 = fA3 = 0;
+   fAsOK = kFALSE;
+}
+
+//______________________________________________________________________________
 void TEveTrans::UnitRot()
 {
    // Reset rotation part of the matrix to unity.
@@ -185,6 +197,94 @@ void TEveTrans::SetupRotation(Int_t i, Int_t j, Double_t f)
    Double_t s = TMath::Sin(f);
    t(i,j) = -s; t(j,i) = s;
    fAsOK = kFALSE;
+}
+
+//______________________________________________________________________________
+void TEveTrans::SetupFromToVec(const TEveVector& from, const TEveVector& to)
+{
+   // A function for creating a rotation matrix that rotates a vector called
+   // "from" into another vector called "to".
+   // Input : from[3], to[3] which both must be *normalized* non-zero vectors
+   // Output: mtx[3][3] -- a 3x3 matrix in colum-major form
+   // Authors: Tomas Möller, John Hughes
+   //          "Efficiently Building a Matrix to Rotate One Vector to Another"
+   //          Journal of Graphics Tools, 4(4):1-4, 1999
+
+   static const float kFromToEpsilon = 0.000001f;
+
+   ZeroTrans();
+
+   Float_t e, f;
+   e = from.Dot(to);
+   f = (e < 0.0f) ? -e : e;
+
+   if (f > 1.0f - kFromToEpsilon) /* "from" and "to"-vector almost parallel */
+   {
+      TEveVector u, v;       /* temporary storage vectors */
+      TEveVector x;          /* vector most nearly orthogonal to "from" */
+      Float_t    c1, c2, c3; /* coefficients for later use */
+
+      x.fX = (from.fX > 0.0f) ? from.fX : -from.fX;
+      x.fY = (from.fY > 0.0f) ? from.fY : -from.fY;
+      x.fZ = (from.fZ > 0.0f) ? from.fZ : -from.fZ;
+
+      if (x.fX < x.fY)
+      {
+         if (x.fX < x.fZ) {
+            x.fX = 1.0f; x.fY = x.fZ = 0.0f;
+         } else {
+            x.fZ = 1.0f; x.fX = x.fY = 0.0f;
+         }
+      }
+      else
+      {
+         if (x.fY < x.fZ) {
+            x.fY = 1.0f; x.fX = x.fZ = 0.0f;
+         } else {
+            x.fZ = 1.0f; x.fX = x.fY = 0.0f;
+         }
+      }
+
+      u.Sub(x, from);
+      v.Sub(x, to);
+
+      c1 = 2.0f / u.Mag2();
+      c2 = 2.0f / v.Mag2();
+      c3 = c1 * c2  * u.Dot(v);
+
+      for (int i = 0; i < 3; i++) {
+         for (int j = 0; j < 3; j++) {
+            CM(i, j) =  - c1 * u[i] * u[j]
+               - c2 * v[i] * v[j]
+               + c3 * v[i] * u[j];
+         }
+         CM(i, i) += 1.0;
+      }
+   }
+   else  /* the most common case, unless "from"="to", or "from"=-"to" */
+   {
+      TEveVector v = from.Cross(to);
+
+      Float_t h, hvx, hvz, hvxy, hvxz, hvyz;
+      h   = 1.0f/(1.0f + e);
+      hvx = h * v.fX;
+      hvz = h * v.fZ;
+      hvxy = hvx * v.fY;
+      hvxz = hvx * v.fZ;
+      hvyz = hvz * v.fY;
+
+      CM(0, 0) = e + hvx * v.fX;
+      CM(0, 1) = hvxy - v.fZ;
+      CM(0, 2) = hvxz + v.fY;
+
+      CM(1, 0) = hvxy + v.fZ;
+      CM(1, 1) = e + h * v.fY * v.fY;
+      CM(1, 2) = hvyz - v.fX;
+
+      CM(2, 0) = hvxz - v.fY;
+      CM(2, 1) = hvyz + v.fX;
+      CM(2, 2) = e + hvz * v.fZ;
+   }
 }
 
 /******************************************************************************/
@@ -722,6 +822,18 @@ void TEveTrans::RotateIP(Double_t* v) const
    v[0] = fM[F00]*t[0] + fM[F01]*t[1] + fM[F02]*t[2];
    v[1] = fM[F10]*t[0] + fM[F11]*t[1] + fM[F12]*t[2];
    v[2] = fM[F20]*t[0] + fM[F21]*t[1] + fM[F22]*t[2];
+}
+
+//______________________________________________________________________________
+void TEveTrans::RotateIP(TEveVector& v) const
+{
+   // Rotate vector in-place. Translation is NOT applied.
+
+   Double_t t[3] = { v.fX, v.fY, v.fZ };
+
+   v.Set(fM[F00]*t[0] + fM[F01]*t[1] + fM[F02]*t[2],
+         fM[F10]*t[0] + fM[F11]*t[1] + fM[F12]*t[2],
+         fM[F20]*t[0] + fM[F21]*t[1] + fM[F22]*t[2]);
 }
 
 //______________________________________________________________________________

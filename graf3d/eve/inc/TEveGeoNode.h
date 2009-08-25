@@ -104,6 +104,8 @@ public:
 
    void         UseNodeTrans();
 
+   TGeoManager* GetGeoManager() const { return fManager; }
+
    Int_t GetVisOption()      const { return fVisOption; }
    void  SetVisOption(Int_t vo)    { fVisOption = vo;   }
    Int_t GetVisLevel()       const { return fVisLevel;  }

@@ -132,16 +132,18 @@ public:
       TEveVector fE1, fE2, fE3; // Base vectors: E1 -> B dir, E2->pT dir, E3 = E1xE2.
       TEveVector fPt, fPl;  // Transverse and longitudinal momentum.
       Float_t fPtMag;       // Magnitude of pT
-      Float_t fPlDir;       // Momentum parallel to mag field.
+      Float_t fPlMag;       // Momentum parallel to mag field.
       Float_t fLStep;       // Transverse step arc-length in cm.
 
       // ----------------------------------------------------------------
 
       Helix_t();
 
+      void UpdateCommon(const TEveVector & p, const TEveVector& b);
       void UpdateHelix(const TEveVector & p, const TEveVector& b, Bool_t fullUpdate);
       void UpdateRK   (const TEveVector & p, const TEveVector& b);
-      void Step  (const TEveVector4& v, const TEveVector& p, TEveVector4& vOut, TEveVector& pOut);
+
+      void Step(const TEveVector4& v, const TEveVector& p, TEveVector4& vOut, TEveVector& pOut);
 
       Float_t GetStep()  { return fLStep * TMath::Sqrt(1 + fLam*fLam); }
       Float_t GetStep2() { return fLStep * fLStep * (1 + fLam*fLam);   }
@@ -186,7 +188,8 @@ protected:
    Helix_t                  fH;             // Helix.
 
    void    RebuildTracks();
-   void    Step(TEveVector4 &v, TEveVector &p, TEveVector4 &vOut, TEveVector &pOut);
+   void    Update(const TEveVector4& v, const TEveVector& p, Bool_t full_update=kFALSE);
+   void    Step(const TEveVector4 &v, const TEveVector &p, TEveVector4 &vOut, TEveVector &pOut);
 
    Bool_t  LoopToVertex(TEveVector& v, TEveVector& p);
    void    LoopToBounds(TEveVector& p);
@@ -201,7 +204,7 @@ protected:
    Bool_t  LineIntersectPlane(const TEveVector& p, const TEveVector& point, const TEveVector& normal,
                               TEveVector& itsect);
 
-   Bool_t PointOverVertex(const TEveVector4& v0, const TEveVector4& v);
+   Bool_t PointOverVertex(const TEveVector4& v0, const TEveVector4& v, Float_t* p=0);
 
 public:
    TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="",
@@ -298,13 +301,19 @@ inline Bool_t TEveTrackPropagator::IsOutsideBounds(const TEveVector& point,
 
 //______________________________________________________________________________
 inline Bool_t TEveTrackPropagator::PointOverVertex(const TEveVector4 &v0,
-                                                   const TEveVector4 &v)
+                                                   const TEveVector4 &v,
+                                                   Float_t           *p)
 {
    Float_t dotV = fH.fB.fX*(v0.fX-v.fX)
                 + fH.fB.fY*(v0.fY-v.fY)
                 + fH.fB.fZ*(v0.fZ-v.fZ);
 
-   return (fH.fPlDir > 0 && dotV < 0) || (fH.fPlDir < 0 && dotV >0);
+   if (p) {
+      *p = fH.fPlMag * dotV;
+      return *p < 0;
+   } else {
+      return (fH.fPlMag > 0 && dotV < 0) || (fH.fPlMag < 0 && dotV > 0);
+   }
 }
 
 #endif

@@ -505,7 +505,7 @@ void TEveCompositeFrameInMainFrame::MainFrameClosed()
          swapCandidate =  gEve->GetWindowManager()->GetDefaultContainer()->NewSlot();
       }
 
-      if( swapCandidate )
+      if (swapCandidate)
       {
          TEveWindow::SwapWindows(fEveWindow, swapCandidate);
          gEve->GetWindowManager()->WindowDocked(fEveWindow );

@@ -14,6 +14,10 @@
 #include "TEveViewer.h"
 #include "TEvePointSet.h"
 
+#include <iostream>
+
+TEveTrackPropagator* g_prop = 0;
+
 class GappedField : public TEveMagField
 {
 public:
@@ -29,6 +33,87 @@ public:
    }
 };
 
+//==============================================================================
+
+class CmsMagField: public TEveMagField
+{
+   bool m_magnetIsOn;
+   bool m_reverse;
+   bool m_simpleModel;
+
+public:
+   CmsMagField():
+      m_magnetIsOn(true),
+      m_reverse(false),
+      m_simpleModel(true){}
+
+   virtual ~CmsMagField(){}
+   virtual Float_t    GetMaxFieldMag() const { return m_magnetIsOn ? 3.8 : 0.0; }
+   void               setMagnetState( bool state )
+   {
+      if (state != m_magnetIsOn)
+      {
+         if ( state )
+            std::cout << "Magnet state is changed to ON" << std::endl;
+         else
+            std::cout << "Magnet state is changed to OFF" << std::endl;
+      }
+      m_magnetIsOn = state;
+   }
+
+   bool               isMagnetOn() const { return m_magnetIsOn;}
+   void               setReverseState( bool state ){ m_reverse = state; }
+   bool               isReverse() const { return m_reverse;}
+   void               setSimpleModel( bool simpleModel ){ m_simpleModel = simpleModel; }
+   bool               isSimpleModel() const { return m_simpleModel;}
+
+   using   TEveMagField::GetField;
+
+   virtual TEveVector GetField(Float_t x, Float_t y, Float_t z) const
+   {
+      double R = sqrt(x*x+y*y);
+      double field = m_reverse?-GetMaxFieldMag():GetMaxFieldMag();
+      //barrel
+      if ( TMath::Abs(z)<724 )
+      {
+         //inside solenoid
+         if ( R < 300) return TEveVector(0,0,field);
+         // outside solinoid
+         if ( m_simpleModel ||
+              ( R>461.0 && R<490.5 ) ||
+              ( R>534.5 && R<597.5 ) ||
+              ( R>637.0 && R<700.0 ) )
+            return TEveVector(0,0,-field/3.8*1.2);
+ 
+      } else {
+         // endcaps
+         if (m_simpleModel)
+         {
+            if ( R < 50 ) return TEveVector(0,0,field);
+            if ( z > 0 )
+               return TEveVector(x/R*field/3.8*2.0, y/R*field/3.8*2.0, 0);
+            else
+               return TEveVector(-x/R*field/3.8*2.0, -y/R*field/3.8*2.0, 0);
+         }
+         // proper model
+         if ( ( TMath::Abs(z)>724 && TMath::Abs(z)<786  ) ||
+              ( TMath::Abs(z)>850 && TMath::Abs(z)<910  ) ||
+              ( TMath::Abs(z)>975 && TMath::Abs(z)<1003 ) )
+         {
+            if ( z > 0 )
+               return TEveVector(x/R*field/3.8*2.0, y/R*field/3.8*2.0, 0);
+            else
+               return TEveVector(-x/R*field/3.8*2.0, -y/R*field/3.8*2.0, 0);
+         }
+      }
+      return TEveVector(0,0,0);
+   }
+};
+
+
+//==============================================================================
+//==============================================================================
+
 //______________________________________________________________________________
 TEveTrack* make_track(TEveTrackPropagator* prop, Int_t sign)
 {
@@ -39,7 +124,6 @@ TEveTrack* make_track(TEveTrackPropagator* prop, Int_t sign)
   rc->fV.Set(0.028558, -0.000918, 3.691919);
   rc->fP.Set(0.767095, -2.400006, -0.313103);
   rc->fSign = sign;
-
 
   TEveTrack* track = new TEveTrack(rc, prop);
   track->SetName(Form("Charge %d", sign));
@@ -56,7 +140,7 @@ TEveTrack* make_track(TEveTrackPropagator* prop, Int_t sign)
 }
 
 
-void track(Int_t bCase = 3, Bool_t isRungeKutta = kTRUE)
+void track(Int_t bCase = 4, Bool_t isRungeKutta = kTRUE)
 {
 #if defined (__CINT__)
    Error("track.C", "Must be run in compiled mode!");
@@ -67,7 +151,7 @@ void track(Int_t bCase = 3, Bool_t isRungeKutta = kTRUE)
    TEveManager::Create();
 
    TEveTrackList *list = new TEveTrackList();
-   TEveTrackPropagator* prop = list->GetPropagator();
+   TEveTrackPropagator* prop = g_prop = list->GetPropagator();
    prop->SetFitDaughters(kFALSE);
    prop->SetMaxZ(1000);
 
@@ -101,6 +185,7 @@ void track(Int_t bCase = 3, Bool_t isRungeKutta = kTRUE)
          track = make_track(prop, 1);
          break;
       }
+
       case 2:
       {
          // variable B field, sign change at  R = 200 cm
@@ -109,6 +194,7 @@ void track(Int_t bCase = 3, Bool_t isRungeKutta = kTRUE)
          track = make_track(prop, 1);
          break;
       }
+
       case 3:
       {
          // gapped field
@@ -128,6 +214,39 @@ void track(Int_t bCase = 3, Bool_t isRungeKutta = kTRUE)
          marker->SetPoint(1, 0., 0., 600.f);
          marker->SetMarkerColor(3);
          gEve->AddElement(marker);
+         break;
+      }
+
+      case 4:
+      {
+         CmsMagField* mf = new CmsMagField;
+         mf->setReverseState(true);
+
+         prop->SetMagFieldObj(mf);
+         prop->SetMaxR(1000);
+         prop->SetMaxZ(1000);
+	 prop->SetRnrDaughters(kTRUE);
+	 prop->SetRnrDecay(kTRUE);
+	 prop->RefPMAtt().SetMarkerStyle(4);
+         list->SetElementName(Form("%s, CMS field", list->GetElementName()));
+
+      
+         TEveRecTrack *rc = new TEveRecTrack();
+         rc->fV.Set(0.027667, 0.007919, 0.895964);
+         rc->fP.Set(3.903134, 2.252232, -3.731366);
+         rc->fSign = -1;
+         track = new TEveTrack(rc, prop);
+
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(3.576755e+00, 2.080579e+00, -2.507230e+00)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(8.440379e+01, 6.548286e+01, -8.788129e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.841321e+02, 3.915693e+02, -3.843072e+02)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.946167e+02, 4.793932e+02, -4.615060e+02)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDecay,    TEveVector(2.249656e+02, 5.835767e+02, -5.565275e+02)));
+
+	 track->SetRnrPoints(kTRUE);
+	 track->SetMarkerStyle(4);
+
+         break;
       }
    };
        

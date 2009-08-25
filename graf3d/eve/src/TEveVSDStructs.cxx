@@ -132,7 +132,8 @@ void TEveVector4::Dump() const
 //______________________________________________________________________________
 //
 // Special-point on track:
-//  kDaughter  - daughter creation; fP is momentum of the daughter
+//  kDaughter  - daughter creation; fP is momentum of the daughter, it is subtracted from
+//               momentum of the track
 //  kReference - position/momentum reference
 //  kDecay     - decay point, fP not used
 //  kCluster2D - measurement with large error in one direction (like strip detectors):

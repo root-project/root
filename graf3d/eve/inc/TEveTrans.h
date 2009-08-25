@@ -14,6 +14,8 @@
 
 #include "TVector3.h"
 
+class TEveVector;
+
 class TGeoMatrix;
 class TGeoHMatrix;
 class TBuffer3D;
@@ -54,12 +56,14 @@ public:
    // General operations
 
    void     UnitTrans();
+   void     ZeroTrans(Double_t w=1.0);
    void     UnitRot();
    void     SetTrans(const TEveTrans& t, Bool_t copyAngles=kTRUE);
    void     SetFromArray(const Double_t arr[16]);
    void     SetFromArray(const Float_t  arr[16]);
    TEveTrans&  operator=(const TEveTrans& t) { SetTrans(t); return *this; }
    void     SetupRotation(Int_t i, Int_t j, Double_t f);
+   void     SetupFromToVec(const TEveVector& from, const TEveVector& to);
 
    void     OrtoNorm3();
    Double_t Invert();
@@ -150,6 +154,7 @@ public:
    void     Multiply(const Double_t *vin, Double_t* vout, Double_t w=1) const;
    void     RotateIP(TVector3& v) const;
    void     RotateIP(Double_t* v) const;
+   void     RotateIP(TEveVector& v) const;
    TVector3 Rotate(const TVector3& v) const;
 
    virtual void Print(Option_t* option = "") const;
