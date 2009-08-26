@@ -4499,6 +4499,8 @@ TLeaf* TTree::GetLeaf(const char* aname)
 Double_t TTree::GetMaximum(const char* columname)
 {
    // Return maximum of column with name columname.
+   // if the Tree has an associated TEventList or TEntryList, the maximum
+   // is computed for the entries in this list.
 
    TLeaf* leaf = this->GetLeaf(columname);
    if (!leaf) {
@@ -4507,7 +4509,9 @@ Double_t TTree::GetMaximum(const char* columname)
    TBranch* branch = leaf->GetBranch();
    Double_t cmax = -FLT_MAX;
    for (Long64_t i = 0; i < fEntries; ++i) {
-      branch->GetEntry(i);
+      Long64_t entryNumber = this->GetEntryNumber(i);
+      if (entryNumber < 0) break;
+      branch->GetEntry(entryNumber);
       for (Int_t j = 0; j < leaf->GetLen(); ++j) {
          Double_t val = leaf->GetValue(j);
          if (val > cmax) {
@@ -4530,6 +4534,8 @@ Long64_t TTree::GetMaxTreeSize()
 Double_t TTree::GetMinimum(const char* columname)
 {
    // Return minimum of column with name columname.
+   // if the Tree has an associated TEventList or TEntryList, the minimum
+   // is computed for the entries in this list.
 
    TLeaf* leaf = this->GetLeaf(columname);
    if (!leaf) {
@@ -4538,7 +4544,9 @@ Double_t TTree::GetMinimum(const char* columname)
    TBranch* branch = leaf->GetBranch();
    Double_t cmin = FLT_MAX;
    for (Long64_t i = 0; i < fEntries; ++i) {
-      branch->GetEntry(i);
+      Long64_t entryNumber = this->GetEntryNumber(i);
+      if (entryNumber < 0) break;
+      branch->GetEntry(entryNumber);
       for (Int_t j = 0;j < leaf->GetLen(); ++j) {
          Double_t val = leaf->GetValue(j);
          if (val < cmin) {
