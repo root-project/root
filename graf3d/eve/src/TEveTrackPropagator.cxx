@@ -455,7 +455,7 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
    Int_t first_point = fPoints.size();
    Int_t np          = first_point;
 
-   Float_t prod0, prod1;
+   Float_t prod0=0, prod1;
 
    Update(currV, p);
    do
