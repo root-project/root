@@ -1576,6 +1576,7 @@ TGRecorder::TGRecorder(const TGWindow *p, UInt_t w, UInt_t h) :
 
    AddFrame(hframe, new TGLayoutHints(kLHintsCenterX,2,2,2,2));
 
+   SetEditDisabled(kEditDisable | kEditDisableGrab);
    SetWindowName("ROOT Event Recorder");
    MapSubwindows();
    Layout();
