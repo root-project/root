@@ -1619,7 +1619,7 @@ Long64_t TH3::Merge(TCollection *list)
 //______________________________________________________________________________
 TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, Int_t izmax, Option_t *option) const
 {
-   //*-*-*-*-*Project a 3-D histogram into a 1-D histogram along Z*-*-*-*-*-*-*
+   //*-*-*-*-*Project a 3-D histogram into a 1-D histogram along X*-*-*-*-*-*-*
    //*-*      ====================================================
    //
    //   The projection is always of the type TH1D.
@@ -1697,7 +1697,7 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, 
 //______________________________________________________________________________
 TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax, Int_t izmin, Int_t izmax, Option_t *option) const
 {
-   //*-*-*-*-*Project a 3-D histogram into a 1-D histogram along Z*-*-*-*-*-*-*
+   //*-*-*-*-*Project a 3-D histogram into a 1-D histogram along Y*-*-*-*-*-*-*
    //*-*      ====================================================
    //
    //   The projection is always of the type TH1D.
