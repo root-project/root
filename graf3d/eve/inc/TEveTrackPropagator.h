@@ -131,7 +131,7 @@ public:
       TEveVector fB;        // Current magnetic field, cached.
       TEveVector fE1, fE2, fE3; // Base vectors: E1 -> B dir, E2->pT dir, E3 = E1xE2.
       TEveVector fPt, fPl;  // Transverse and longitudinal momentum.
-      Float_t fPtMag;       // Magnitude of pT
+      Float_t fPtMag;       // Magnitude of pT.
       Float_t fPlMag;       // Momentum parallel to mag field.
       Float_t fLStep;       // Transverse step arc-length in cm.
 
@@ -304,16 +304,32 @@ inline Bool_t TEveTrackPropagator::PointOverVertex(const TEveVector4 &v0,
                                                    const TEveVector4 &v,
                                                    Float_t           *p)
 {
-   Float_t dotV = fH.fB.fX*(v0.fX-v.fX)
-                + fH.fB.fY*(v0.fY-v.fY)
-                + fH.fB.fZ*(v0.fZ-v.fZ);
+   static const Float_t kMinPl = 1e-5;
 
-   if (p) {
-      *p = fH.fPlMag * dotV;
-      return *p < 0;
-   } else {
-      return (fH.fPlMag > 0 && dotV < 0) || (fH.fPlMag < 0 && dotV > 0);
+   TEveVector dv; dv.Sub(v0, v);
+
+   Float_t dotV;
+
+   if (TMath::Abs(fH.fPlMag) > kMinPl)
+   {
+      // Use longitudinal momentum to determine crossing point.
+      // Works ok for spiraling helices, also for loopers.
+
+      dotV = fH.fE1.Dot(dv);
+      if (fH.fPlMag < 0)
+         dotV = -dotV;
    }
+   else
+   {
+      // Use full momentum, which is pT, under this conditions.
+
+      dotV = fH.fE2.Dot(dv);
+   }
+
+   if (p)
+      *p = dotV;
+
+   return dotV < 0;
 }
 
 #endif

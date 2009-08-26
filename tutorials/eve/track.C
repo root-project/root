@@ -140,7 +140,7 @@ TEveTrack* make_track(TEveTrackPropagator* prop, Int_t sign)
 }
 
 
-void track(Int_t bCase = 4, Bool_t isRungeKutta = kTRUE)
+void track(Int_t bCase = 5, Bool_t isRungeKutta = kTRUE)
 {
 #if defined (__CINT__)
    Error("track.C", "Must be run in compiled mode!");
@@ -248,6 +248,41 @@ void track(Int_t bCase = 4, Bool_t isRungeKutta = kTRUE)
 
          break;
       }
+
+      case 5:
+      {
+         CmsMagField* mf = new CmsMagField;
+         mf->setReverseState(true);
+         mf->setSimpleModel(false);
+
+         prop->SetMagFieldObj(mf);
+         prop->SetMaxR(1000);
+         prop->SetMaxZ(1000);
+	 prop->SetRnrReferences(kTRUE);
+	 prop->SetRnrDaughters(kTRUE);
+	 prop->SetRnrDecay(kTRUE);
+	 prop->RefPMAtt().SetMarkerStyle(4);
+         list->SetElementName(Form("%s, CMS field", list->GetElementName()));
+      
+         TEveRecTrack *rc = new TEveRecTrack();
+         rc->fV.Set(-16.426592, 16.403185, -19.782692);
+         rc->fP.Set(3.631100, 3.643450, 0.682254);
+         rc->fSign = -1;
+         track = new TEveTrack(rc, prop);
+
+         track->AddPathMark(TEvePathMark(TEvePathMark::kReference, TEveVector(-1.642659e+01, 1.640318e+01, -1.978269e+01), TEveVector(3.631100, 3.643450, 0.682254)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kReference, TEveVector(-1.859987e+00, 3.172243e+01, -1.697866e+01), TEveVector(3.456056, 3.809894, 0.682254)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kReference, TEveVector(4.847579e+01, 9.871711e+01, -5.835719e+00), TEveVector(2.711614, 4.409945, 0.687656)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.342045e+02, 4.203950e+02, 3.846268e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.483827e+02, 5.124750e+02, 5.064311e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDaughter, TEveVector(1.674676e+02, 6.167731e+02, 6.517403e+01)));
+         track->AddPathMark(TEvePathMark(TEvePathMark::kDecay,    TEveVector(1.884976e+02, 7.202000e+02, 7.919290e+01)));
+
+	 track->SetRnrPoints(kTRUE);
+	 track->SetMarkerStyle(4);
+
+         break;
+      }
    };
        
    if (isRungeKutta)
@@ -257,8 +292,9 @@ void track(Int_t bCase = 4, Bool_t isRungeKutta = kTRUE)
 
    track->SetLineColor(list->GetLineColor());
  
-   gEve->AddElement(track, list);
    gEve->AddElement(list);
+   list->AddElement(track);
+
    track->MakeTrack();
 
    TEveViewer* v = gEve->GetDefaultViewer();
