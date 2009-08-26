@@ -19,3 +19,29 @@
 </li>
 <li>Significantly (by 2 order of magnitude) improved the performance of TTree::Draw calling C++ functions.</li>
 </ul>
+
+<h4>New function TTree::OptimizeBaskets</h4>
+void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option) 
+<p>
+This function may be called after having filled some entries in a Tree
+using the information in the existing branch buffers, it will reassign
+new branch buffer sizes to optimize time and memory.
+
+The function computes the best values for branch buffer sizes such that
+the total buffer sizes is less than maxMemory and nearby entries written 
+at the same time.
+In case the branch compression factor for the data written so far is less 
+than compMin, the compression is disabled.
+ 
+if option ="d" an analysis report is printed.
+
+<p>
+This function may also be called on an existing Tree to figure out the best values
+given the information in the Tree header
+<pre>
+   TFile f("myfile.root");
+   TTree *T = (TTree*)f.Get("mytreename");
+   T->Print();  //show the branch buffer sizes before optimization
+   T->OptimizeBaskets(10000000,1,"d");
+   T->Print();  //show the branch buffer sizes after optimization
+</pre>
