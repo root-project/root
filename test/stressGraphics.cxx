@@ -337,9 +337,9 @@ void stressGraphics(Int_t verbose = 0)
       Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
       if (UNIX) {
          FILE *fp = gSystem->OpenPipe("uname -a", "r");
-         Char_t line[60];
-         fgets(line,60,fp); line[59] = 0;
-         printf("*  SYS: %s\n",line);
+         Char_t line2[60];
+         fgets(line2,60,fp); line2[59] = 0;
+         printf("*  SYS: %s\n",line2);
          gSystem->ClosePipe(fp);
       } else {
          const Char_t *os = gSystem->Getenv("OS");
