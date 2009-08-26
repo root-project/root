@@ -71,6 +71,11 @@ void Test(Int_t range) {
       h3->GetXaxis()->SetRange(range - 1, 10 + 1 - range);
       h3->GetYaxis()->SetRange(range - 1, 20 + 1 - range);
       h3->GetZaxis()->SetRange(range - 1, 30 + 1 - range);
+      if (range == 1) { // need to set bit explicitly  
+         h3->GetXaxis()->SetBit(TAxis::kAxisRange);
+         h3->GetYaxis()->SetBit(TAxis::kAxisRange);
+         h3->GetZaxis()->SetBit(TAxis::kAxisRange); 
+      }
    }
 
    // Project3D wants them in inverse order :-(
@@ -99,12 +104,43 @@ void Test(Int_t range) {
    TH1* y3 = h3->Project3D("y_h3");
    TH1* z3 = h3->Project3D("z_h3");
 
-   TH1* z = h3->ProjectionZ("z",
-                            h3->GetXaxis()->GetFirst(),
-                            h3->GetXaxis()->GetLast(),
-                            h3->GetYaxis()->GetFirst(),
-                            h3->GetYaxis()->GetLast());
-
+   TH1* x = 0; 
+   TH1* y = 0; 
+   TH1* z = 0; 
+   // need to distinguish cases when use underflow/overlow, when excluding them and 
+   // when using a range
+   if (range > 1) {       
+      x = h3->ProjectionX("x",
+                          h3->GetYaxis()->GetFirst(),  
+                          h3->GetYaxis()->GetLast(),
+                          h3->GetZaxis()->GetFirst(),
+                          h3->GetZaxis()->GetLast());   
+      y = h3->ProjectionY("y",
+                          h3->GetXaxis()->GetFirst(),  
+                          h3->GetXaxis()->GetLast(),
+                          h3->GetZaxis()->GetFirst(),
+                          h3->GetZaxis()->GetLast());   
+      z = h3->ProjectionZ("z",
+                          h3->GetXaxis()->GetFirst(),  
+                          h3->GetXaxis()->GetLast(),
+                          h3->GetYaxis()->GetFirst(),
+                          h3->GetYaxis()->GetLast());   
+   } else if (range == 1) { 
+      x = h3->ProjectionX("x",  
+                          1,h3->GetYaxis()->GetNbins(),
+                          1,h3->GetZaxis()->GetNbins() );   
+      y = h3->ProjectionY("y",  
+                          1,h3->GetXaxis()->GetNbins(),
+                          1,h3->GetZaxis()->GetNbins() );   
+      z = h3->ProjectionZ("z",  
+                          1,h3->GetXaxis()->GetNbins(),
+                          1,h3->GetYaxis()->GetNbins() );   
+   }   else {    
+      x = h3->ProjectionX("x");   
+      y = h3->ProjectionY("y");   
+      z = h3->ProjectionZ("z");   
+   }
+   
    if (!Compare(xyx, xzx)) {
       PD(xy); PD(xz);
    }
@@ -135,6 +171,12 @@ void Test(Int_t range) {
       PD(xz); PD(yz);
    }
 
+   if (!Compare(x, xzx)) {
+      PD(z); PD(yz);
+   }
+   if (!Compare(y, yzy)) {
+      PD(z); PD(yz);
+   }
    if (!Compare(z, yzz)) {
       PD(z); PD(yz);
    }
@@ -152,6 +194,8 @@ void Test(Int_t range) {
    delete yzz;
    delete xzx;
    delete xzz;
+   delete x;
+   delete y;
    delete z;
 };
 

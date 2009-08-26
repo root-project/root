@@ -6,12 +6,14 @@ RANGE: 0
 xyx == xzx: OK
 xyy == yzy: OK
 yzz == xzz: OK
-h3_x_h3 == xyx: OK
-h3_y_h3 == xyy: OK
-h3_z_h3 == xzz: OK
+h3_x == xyx: OK
+h3_y == xyy: OK
+h3_z == xzz: OK
 xyx == xzx: OK
 xyy == yzy: OK
 xzz == yzz: OK
+x == xzx: OK
+y == yzy: OK
 z == yzz: OK
 
 
@@ -19,12 +21,14 @@ RANGE: 1
 xyx == xzx: OK
 xyy == yzy: OK
 yzz == xzz: OK
-h3_x_h3 == xyx: OK
-h3_y_h3 == xyy: OK
-h3_z_h3 == xzz: OK
+h3_x == xyx: OK
+h3_y == xyy: OK
+h3_z == xzz: OK
 xyx == xzx: OK
 xyy == yzy: OK
 xzz == yzz: OK
+x == xzx: OK
+y == yzy: OK
 z == yzz: OK
 
 
@@ -32,12 +36,14 @@ RANGE: 2
 xyx == xzx: OK
 xyy == yzy: OK
 yzz == xzz: OK
-h3_x_h3 == xyx: OK
-h3_y_h3 == xyy: OK
-h3_z_h3 == xzz: OK
+h3_x == xyx: OK
+h3_y == xyy: OK
+h3_z == xzz: OK
 xyx == xzx: OK
 xyy == yzy: OK
 xzz == yzz: OK
+x == xzx: OK
+y == yzy: OK
 z == yzz: OK
 
 
@@ -45,12 +51,14 @@ RANGE: 3
 xyx == xzx: OK
 xyy == yzy: OK
 yzz == xzz: OK
-h3_x_h3 == xyx: OK
-h3_y_h3 == xyy: OK
-h3_z_h3 == xzz: OK
+h3_x == xyx: OK
+h3_y == xyy: OK
+h3_z == xzz: OK
 xyx == xzx: OK
 xyy == yzy: OK
 xzz == yzz: OK
+x == xzx: OK
+y == yzy: OK
 z == yzz: OK
 
 
@@ -58,10 +66,12 @@ RANGE: 4
 xyx == xzx: OK
 xyy == yzy: OK
 yzz == xzz: OK
-h3_x_h3 == xyx: OK
-h3_y_h3 == xyy: OK
-h3_z_h3 == xzz: OK
+h3_x == xyx: OK
+h3_y == xyy: OK
+h3_z == xzz: OK
 xyx == xzx: OK
 xyy == yzy: OK
 xzz == yzz: OK
+x == xzx: OK
+y == yzy: OK
 z == yzz: OK
