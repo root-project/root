@@ -142,8 +142,8 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent)
          }
 
          ULong_t size = 0;
-         if (TClass* cl = TClass::GetClass(dm->GetTypeName())) {
-            size = cl->Size();
+         if (TClass* cl2 = TClass::GetClass(dm->GetTypeName())) {
+            size = cl2->Size();
          }
 
          if(size == 0) {
@@ -187,14 +187,14 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent)
          return;
       }
 
-      TIter it((TCollection*)parent->GetPointer());
+      TIter it2((TCollection*)parent->GetPointer());
       TObject* item;
       // loop through all elements in collection
-      while((item = it())) {
+      while((item = it2())) {
          // get size of element
          ULong_t size = 0;
-         if (TClass* cl = item->IsA()){
-            size = cl->Size();
+         if (TClass* cl3 = item->IsA()){
+            size = cl3->Size();
          }
          
          // if there is no dictionary
@@ -237,27 +237,27 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent)
             }
 
             // get size of element
-            ULong_t size = 0;
-            TClass* cl = proxy->GetValueClass();
+            ULong_t size2 = 0;
+            TClass* cl4 = proxy->GetValueClass();
             const char * name = "name";
-            if (cl) {
-               size = cl->Size();
-               name = cl->GetName();
+            if (cl4) {
+               size2 = cl4->Size();
+               name = cl4->GetName();
             }
 
             // if there is no dictionary
-            if (size == 0) {
-               size = proxy->Sizeof();
+            if (size2 == 0) {
+               size2 = proxy->Sizeof();
             }
             
             // create node
-            TStructNode* node = new TStructNode(name, name, element, parent, size, kClass);
+            TStructNode* node = new TStructNode(name, name, element, parent, size2, kClass);
             // add addition information
-            AddNode(node, size);
+            AddNode(node, size2);
             // increase parents counter
             parent->SetMembersCount(parent->GetMembersCount() + 1);
 
-            CountMembers(cl, node);
+            CountMembers(cl4, node);
 
             parent->SetTotalSize(parent->GetTotalSize() + node->GetTotalSize());
             parent->SetAllMembersCount(parent->GetAllMembersCount() + node->GetAllMembersCount());
