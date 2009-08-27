@@ -2,6 +2,7 @@
 #
 # Makefile containing library dependencies
 
+GVIZ3DLIBDEPM	       = $(GEOMLIB) $(GLLIB)
 NETLIBDEPM             = $(IOLIB) $(MATHCORELIB)
 MATRIXLIBDEPM          = $(MATHCORELIB)
 HISTLIBDEPM            = $(MATRIXLIB) $(MATHCORELIB)
@@ -119,6 +120,7 @@ RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
 
 ifeq ($(EXPLICITLINK),yes)
 
+GVIZ3DLIBDEP	       = $(GVIZ3DLIBDEPM)
 NETLIBDEP              = $(NETLIBDEPM)
 MATRIXLIBDEP           = $(MATRIXLIBDEPM)
 HISTLIBDEP             = $(HISTLIBDEPM)
@@ -213,6 +215,7 @@ RECLIBDEP              = $(RECLIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
+GVIZ3DLIBEXTRA	        = lib/libRGL.lib lib/libGeom.lib
 NETLIBEXTRA             = lib/libRIO.lib lib/libMathCore.lib
 MATRIXLIBEXTRA          = lib/libMathCore.lib
 HISTLIBEXTRA            = lib/libMatrix.lib lib/libMathCore.lib
@@ -359,6 +362,7 @@ RECLIBEXTRA             = lib/libGui.lib lib/libRIO.lib lib/libTree.lib \
 
 else
 
+GVIZ3DLIBEXTRA	        = -Llib -lGeom -lRGL -lGed
 NETLIBEXTRA             = -Llib -lRIO -lMathCore
 MATRIXLIBEXTRA          = -Llib -lMathCore
 HISTLIBEXTRA            = -Llib -lMatrix -lMathCore
@@ -436,6 +440,7 @@ ROOSTATSLIBEXTRA        = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lMatrix \
 ifneq ($(BUILDBOTHCINT),)
 PYTHONLIBEXTRA          = -Llib -lMetaTCint
 endif
+GVIZ3DLIBEXTRA	        = -Llib -lGeom -lRGL -lGed 
 CINT7LIBEXTRA           = -Llib -lReflex
 METATCINT7LIBEXTRA      = -Llib -lReflex
 CINTEXLIBEXTRA          = -Llib -lReflex
