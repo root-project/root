@@ -841,6 +841,9 @@ class genDictionary(object) :
     c += '# pragma GCC diagnostic ignored "-Warray-bounds"\n'
     c += '#endif\n'
     c += '#include "%s"\n' % self.hfile
+    c += '#ifdef CONST\n'
+    c += '# undef CONST\n'
+    c += '#endif\n'
     c += '#include "Reflex/Builder/ReflexBuilder.h"\n'
     c += '#include <typeinfo>\n'
     c += '\n'
