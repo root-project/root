@@ -170,11 +170,11 @@ namespace TMath {
    Long_t   Hypot(Long_t x, Long_t y);     // sqrt(px*px + py*py)
 
    // Comparing floating points
-   Bool_t AreEqualAbs(Double_t af, Double_t bf, Double_t epsilon) {
+   inline Bool_t AreEqualAbs(Double_t af, Double_t bf, Double_t epsilon) {
       //return kTRUE if absolute difference between af and bf is less than epsilon
       return TMath::Abs(af-bf) < epsilon;
    }
-   Bool_t AreEqualRel(Double_t af, Double_t bf, Double_t relPrec) {
+   inline Bool_t AreEqualRel(Double_t af, Double_t bf, Double_t relPrec) {
       //return kTRUE if relative difference between af and bf is less than relPrec
       return TMath::Abs(af-bf) < 0.5*relPrec*(TMath::Abs(af)+TMath::Abs(bf));
    }
