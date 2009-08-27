@@ -2699,7 +2699,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
          case kzlandau: R__LANDAU(2);
          case kxylandau: { pos++; int param = oper&0x7fffff /* ActionParams[i] */ ;
                            Double_t intermede1=TMath::Landau(x[0], params[param+1], params[param+2],IsNormalized());
-                           Double_t intermede2=TMath::Landau(x[1], params[param+2], params[param+3],IsNormalized());
+                           Double_t intermede2=TMath::Landau(x[1], params[param+3], params[param+4],IsNormalized());
                            tab[pos-1] = params[param]*intermede1*intermede2;
                            continue;
          }
@@ -4099,7 +4099,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
          case kzlandau: R__LANDAU(2);
          case kxylandau: { pos++; int param = oper&0x7fffff /* ActionParams[i] */ ;
             Double_t intermede1=TMath::Landau(x[0], params[param+1], params[param+2],IsNormalized());
-            Double_t intermede2=TMath::Landau(x[1], params[param+2], params[param+3],IsNormalized());
+            Double_t intermede2=TMath::Landau(x[1], params[param+3], params[param+4],IsNormalized());
             tab[pos-1] = params[param]*intermede1*intermede2;
             continue;
                         }
