@@ -215,7 +215,8 @@ RECLIBDEP              = $(RECLIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
-GVIZ3DLIBEXTRA	        = lib/libRGL.lib lib/libGeom.lib
+GVIZ3DLIBEXTRA	        = lib/libGui.lib lib/libRGL.lib lib/libGeom.lib \
+                          lib/libGed.lib lib/libGpad.lib lib/libGraf.lib lib/libGraf3d.lib
 NETLIBEXTRA             = lib/libRIO.lib lib/libMathCore.lib
 MATRIXLIBEXTRA          = lib/libMathCore.lib
 HISTLIBEXTRA            = lib/libMatrix.lib lib/libMathCore.lib
