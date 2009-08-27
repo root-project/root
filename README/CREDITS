@@ -667,6 +667,10 @@ N: Stefan Schmitt
 E: sschmitt@mail.desy.de
 D: contribution to TUnfold class
 
+N: Tomasz Sosnicki
+E: tom.sosnicki@gmail.com
+D: contribution to gviz3d/TStructViewer
+
 N: Abdelhalim Ssadik
 E: abdelhalim.ssadik@cern.ch
 D: contribution to GUI classes (TGDockableFrame)
