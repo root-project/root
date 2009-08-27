@@ -169,10 +169,20 @@ namespace TMath {
    // Some integer math
    Long_t   Hypot(Long_t x, Long_t y);     // sqrt(px*px + py*py)
 
+   // Comparing floating points
+   Bool_t AreEqualAbs(Double_t af, Double_t bf, Double_t epsilon) {
+      //return kTRUE if absolute difference between af and bf is less than epsilon
+      return TMath::Abs(af-bf) < epsilon;
+   }
+   Bool_t AreEqualRel(Double_t af, Double_t bf, Double_t relPrec) {
+      //return kTRUE if relative difference between af and bf is less than relPrec
+      return TMath::Abs(af-bf) < 0.5*relPrec*(TMath::Abs(af)+TMath::Abs(bf));
+   }
+
    /* ******************** */
    /* * Array Algorithms * */
    /* ******************** */
-
+   
    // Min, Max of an array
    template <typename T> T MinElement(Long64_t n, const T *a);
    template <typename T> T MaxElement(Long64_t n, const T *a);
