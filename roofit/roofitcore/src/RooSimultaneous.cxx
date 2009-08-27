@@ -114,6 +114,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   RooAbsPdf* pdf ;
   RooCatType* type(0) ;
   while ((pdf=(RooAbsPdf*)pIter->Next())) {
+    type = (RooCatType*) cIter->Next() ;
     pdfMap[string(type->GetName())] = pdf ;
   }
   delete pIter ;
@@ -401,12 +402,14 @@ RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
 
   for (Int_t i=0 ; i<_numPdf ; i++) {
     RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.label()) ;
-    RooAbsPdf* pdf = (RooAbsPdf*) proxy->absArg() ;
-    if (!pdf->canBeExtended()) {
-      allCanExtend=kFALSE ;
-    }
-    if (pdf->mustBeExtended()) {
-      anyMustExtend=kTRUE;
+    if (proxy) {
+      RooAbsPdf* pdf = (RooAbsPdf*) proxy->absArg() ;
+      if (!pdf->canBeExtended()) {
+	allCanExtend=kFALSE ;
+      }
+      if (pdf->mustBeExtended()) {
+	anyMustExtend=kTRUE;
+      }
     }
   }
   if (anyMustExtend) return MustBeExtended ;

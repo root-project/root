@@ -517,7 +517,12 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 	}
 	
 	// Actual generation of events
-	_genSample = _genContext->generate(nEvt) ;
+	if (nEvt>0) {
+	  _genSample = _genContext->generate(nEvt) ;
+	} else {
+	  // Make empty dataset
+	  _genSample = new RooDataSet("emptySample","emptySample",_dependents) ;
+	}
       } 
 
 	
@@ -769,8 +774,11 @@ RooFitResult* RooMCStudy::refit(RooAbsData* genSample)
     genSample = _genSample ;
   }
 
-  RooFitResult* fr = doFit(genSample) ;
-    
+  RooFitResult* fr(0) ;
+  if (genSample->sumEntries()>0) {
+    fr = doFit(genSample) ;
+  }
+  
   return fr ;
 }
 
@@ -793,10 +801,16 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
   resetFitParams() ;
 
   // Perform actual fit
-  RooFitResult* fr = doFit(genSample) ;
+  Bool_t ok ;
+  RooFitResult* fr(0) ;
+  if (genSample->sumEntries()>0) {
+    fr = doFit(genSample) ;
+    ok = (fr->status()==0) ;
+  } else {
+    ok = kFALSE ;
+  }
 
   // If fit converged, store parameters and NLL
-  Bool_t ok = (fr->status()==0) ;
   if (ok) {
     _nllVar->setVal(fr->minNll()) ;
     RooArgSet tmp(*_fitParams) ;
@@ -813,7 +827,7 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
     if (_fitOptions.Contains("r")) userSaveRequest = kTRUE ;
   }
 
-  if (userSaveRequest) {
+  if (userSaveRequest && fr) {
     _fitResList.Add(fr) ;
   } else {
     delete fr ;

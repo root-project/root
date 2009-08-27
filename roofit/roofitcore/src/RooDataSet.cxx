@@ -211,7 +211,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     } else if (indexCat) {
       RooDataSet* firstDS = hmap.begin()->second ;
       if (firstDS->_wgtVar && vars.find(firstDS->_wgtVar->GetName())) {
-	initialize(impData->_wgtVar->GetName()) ;      
+	initialize(firstDS->_wgtVar->GetName()) ;      
       } else {
 	initialize(0) ;
       }
