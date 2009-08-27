@@ -45,7 +45,6 @@ R__EXTERN TTree* gTree;
 
 Int_t TBranch::fgCount = 0;
 
-const Int_t kMaxRAM = 10;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -86,8 +85,6 @@ TBranch::TBranch()
 , fBranches()
 , fLeaves()
 , fBaskets(fMaxBaskets)
-, fNBasketRAM(kMaxRAM+1)
-, fBasketRAM(0)
 , fBasketBytes(0)
 , fBasketEntry(0)
 , fBasketSeek(0)
@@ -102,10 +99,7 @@ TBranch::TBranch()
 , fSkipZip(kFALSE)
 {
    // Default constructor.  Used for I/O by default.
-   fBasketRAM = new Int_t[kMaxRAM];
-   for (Int_t i = 0; i < kMaxRAM; ++i) {
-      fBasketRAM[i] = -1;
-   }
+   
 }
 
 //______________________________________________________________________________
@@ -130,8 +124,6 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
 , fBranches()
 , fLeaves()
 , fBaskets(fMaxBaskets)
-, fNBasketRAM(kMaxRAM+1)
-, fBasketRAM(0)
 , fBasketBytes(0)
 , fBasketEntry(0)
 , fBasketSeek(0)
@@ -223,8 +215,6 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 , fBranches()
 , fLeaves()
 , fBaskets(fMaxBaskets)
-, fNBasketRAM(kMaxRAM+1)
-, fBasketRAM(0)
 , fBasketBytes(0)
 , fBasketEntry(0)
 , fBasketSeek(0)
@@ -294,14 +284,9 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
       }
    }
 
-   fBasketRAM = new Int_t[kMaxRAM];
-   for (Int_t i = 0; i < kMaxRAM; ++i) {
-      fBasketRAM[i] = -1;
-   }
-
    fBasketBytes = new Int_t[fMaxBaskets];
    fBasketEntry = new Long64_t[fMaxBaskets];
-   fBasketSeek = new Long64_t[fMaxBaskets];
+   fBasketSeek  = new Long64_t[fMaxBaskets];
 
    for (Int_t i = 0; i < fMaxBaskets; ++i) {
       fBasketBytes[i] = 0;
@@ -435,9 +420,6 @@ TBranch::~TBranch()
 
    delete [] fBasketBytes;
    fBasketBytes = 0;
-
-   delete [] fBasketRAM;
-   fBasketRAM = 0;
 
    fBaskets.Delete();
 
@@ -636,62 +618,37 @@ void TBranch::DropBaskets(Option_t* option)
    Bool_t all = kFALSE;
    TString opt = option;
    opt.ToLower();
-   if (opt.Contains("all"))
-      all = kTRUE;
+   if (opt.Contains("all")) all = kTRUE;
 
-   Int_t i,j;
    TBasket *basket;
-   // fast algorithm in case of only a few baskets in memory
-   if (fNBasketRAM < kMaxRAM) {
-      for (i=0;i<kMaxRAM;i++) {
-         j = fBasketRAM[i];
-         if (j < 0) continue;
-         if ((j == fReadBasket || j == fWriteBasket) && !all) continue;
-         basket = (TBasket*)fBaskets.UncheckedAt(j);
-         fBasketRAM[i] = -1;
-         fNBasketRAM--;
-         if (!basket) {
-            continue;
-         }
+   Int_t nbaskets = fBaskets.GetEntriesFast();
+   if ((fWriteBasket >=0 and fWriteBasket < nbaskets) || all) {
+      //slow case
+      for (Int_t i=0;i<nbaskets;i++) {
+         basket = (TBasket*)fBaskets.UncheckedAt(i);
+         if (!basket) continue;
+         if ((i == fReadBasket || i == fWriteBasket) && !all) continue;
          basket->DropBuffers();
-         GetListOfBaskets()->RemoveAt(j);
+         fBaskets.RemoveAt(i);
          delete basket;
       }
-      if (fNBasketRAM < 0) {
-         //Error("DropBaskets", "fNBasketRAM =%d",fNBasketRAM);
-         fNBasketRAM = 0;
+   }  else {
+      //fast case
+      while (nbaskets > 0) {
+         basket = (TBasket*)fBaskets.UncheckedAt(nbaskets-1);
+         if (!basket) break;
+         basket->DropBuffers();
+         fBaskets.RemoveAt(nbaskets-1);
+         nbaskets = fBaskets.GetEntriesFast();
+         delete basket;
       }
-      i = 0;
-      for (j=0;j<kMaxRAM;j++) {
-         if (fBasketRAM[j] < 0) continue;
-         fBasketRAM[i] = fBasketRAM[j];
-         i++;
-      }
-      return;
-   }
-
-   //general algorithm looping on the full baskets table.
-   Int_t nbaskets = GetListOfBaskets()->GetEntriesFast();
-   fNBasketRAM = 0;
-   for (j=0;j<nbaskets-1;j++)  {
-      basket = (TBasket*)fBaskets.UncheckedAt(j);
-      if (!basket) continue;
-      if (fNBasketRAM < kMaxRAM) fBasketRAM[fNBasketRAM] = j;
-      fNBasketRAM++;
-      if ((j == fReadBasket || j == fWriteBasket) && !all) continue;
-      basket->DropBuffers();
-      GetListOfBaskets()->RemoveAt(j);
-      delete basket;
-      fNBasketRAM--;
-      fBasketRAM[fNBasketRAM] = -1;
-      if (!fTree->MemoryFull(0)) break;
    }
 
    // process subbranches
    if (all) {
       TObjArray *lb = GetListOfBranches();
       Int_t nb = lb->GetEntriesFast();
-      for (j = 0; j < nb; j++) {
+      for (Int_t j = 0; j < nb; j++) {
          TBranch* branch = (TBranch*) lb->UncheckedAt(j);
          if (!branch) continue;
          branch->DropBaskets("all");
@@ -1128,8 +1085,6 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    }
 
    fBaskets.AddAt(basket,basketnumber);
-   if (fNBasketRAM < kMaxRAM) fBasketRAM[fNBasketRAM] = basketnumber;
-   fNBasketRAM++;
    return basket;
 }
 
@@ -1576,7 +1531,6 @@ Int_t TBranch::LoadBaskets()
       fBaskets.AddAt(basket,i);
       nimported++;
    }
-   fNBasketRAM = nimported;
    return nimported;
 }
 
@@ -1690,7 +1644,6 @@ void TBranch::Refresh(TBranch* b)
    fTotBytes       = b->fTotBytes;
    fZipBytes       = b->fZipBytes;
    fReadBasket     = 0;
-   fNBasketRAM     = 0;
    delete [] fBasketBytes;
    delete [] fBasketEntry;
    delete [] fBasketSeek;

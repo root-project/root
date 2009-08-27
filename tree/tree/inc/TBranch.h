@@ -75,8 +75,6 @@ protected:
    TObjArray   fBranches;        //-> List of Branches of this branch
    TObjArray   fLeaves;          //-> List of leaves of this branch
    TObjArray   fBaskets;         //-> List of baskets of this branch
-   Int_t       fNBasketRAM;      //! Number of baskets in fBasketRAM
-   Int_t      *fBasketRAM;       //! [fNBasketRAM] table of basket numbers in memory
    Int_t      *fBasketBytes;     //[fMaxBaskets] Lenght of baskets on file
    Long64_t   *fBasketEntry;     //[fMaxBaskets] Table of first entry in eack basket
    Long64_t   *fBasketSeek;      //[fMaxBaskets] Addresses of baskets on file
@@ -187,7 +185,7 @@ public:
 
    static  void      ResetCount();
 
-   ClassDef(TBranch,11);  //Branch descriptor
+   ClassDef(TBranch,12);  //Branch descriptor
 };
 
 #endif
