@@ -55,6 +55,8 @@ protected:
   RooArgSet* _pdfCloneSet ;
   RooAbsPdf* _pdfClone ;
   RooRealIntegral* _pdfCcdInt ;
+  RooArgSet _uniObs ;            // Observable to be generated with flat distribution
+  TIterator* _uniIter ;          // Iterator over uniform observables
   Bool_t _ccdRefresh ;
   Double_t * _ccdTable ;
   const RooProdPdf *_pdf ;       //  Original PDF
