@@ -2,7 +2,6 @@
 #
 # Makefile containing library dependencies
 
-GVIZ3DLIBDEPM	       = $(GEOMLIB) $(GLLIB)
 NETLIBDEPM             = $(IOLIB) $(MATHCORELIB)
 MATRIXLIBDEPM          = $(MATHCORELIB)
 HISTLIBDEPM            = $(MATRIXLIB) $(MATHCORELIB)
@@ -113,6 +112,7 @@ EVELIBDEPM             = $(GEOMLIB) $(GEOMPAINTERLIB) $(G3DLIB) $(GUILIB) \
                          $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(PHYSICSLIB) \
                          $(GEDLIB) $(EGLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(GLLIB) $(IOLIB) $(RINTLIB) $(MATHCORELIB)
+GVIZ3DLIBDEPM	       = $(GUILIB) $(GEDLIB) $(GEOMLIB) $(GLLIB)
 MEMSTATLIBDEPM         = $(TREELIB) $(GPADLIB) $(GRAFLIB)
 MEMSTATGUILIBDEPM      = $(MEMSTATLIB) $(TREELIB) $(GUILIB)
 RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
@@ -120,7 +120,6 @@ RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
 
 ifeq ($(EXPLICITLINK),yes)
 
-GVIZ3DLIBDEP	       = $(GVIZ3DLIBDEPM)
 NETLIBDEP              = $(NETLIBDEPM)
 MATRIXLIBDEP           = $(MATRIXLIBDEPM)
 HISTLIBDEP             = $(HISTLIBDEPM)
@@ -209,6 +208,7 @@ X3DLIBDEP              = $(X3DLIBDEPM)
 MONALISALIBDEP         = $(MONALISALIBDEPM)
 THREADLIBDEP           = $(THREADLIBDEPM)
 EVELIBDEP              = $(EVELIBDEPM)
+GVIZ3DLIBDEP	       = $(GVIZ3DLIBDEPM)
 MEMSTATLIBDEP          = $(MEMSTATLIBDEPM)
 MEMSTATGUILIBDEP       = $(MEMSTATGUILIBDEPM)
 RECLIBDEP              = $(RECLIBDEPM)
@@ -363,7 +363,7 @@ RECLIBEXTRA             = lib/libGui.lib lib/libRIO.lib lib/libTree.lib \
 
 else
 
-GVIZ3DLIBEXTRA	        = -Llib -lGeom -lRGL -lGed
+GVIZ3DLIBEXTRA	        = -Llib -lGui -lGed -lGpad -lGraf3d -lGraf -lGeom -lRGL
 NETLIBEXTRA             = -Llib -lRIO -lMathCore
 MATRIXLIBEXTRA          = -Llib -lMathCore
 HISTLIBEXTRA            = -Llib -lMatrix -lMathCore
@@ -441,7 +441,6 @@ ROOSTATSLIBEXTRA        = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lMatrix \
 ifneq ($(BUILDBOTHCINT),)
 PYTHONLIBEXTRA          = -Llib -lMetaTCint
 endif
-GVIZ3DLIBEXTRA	        = -Llib -lGeom -lRGL -lGed 
 CINT7LIBEXTRA           = -Llib -lReflex
 METATCINT7LIBEXTRA      = -Llib -lReflex
 CINTEXLIBEXTRA          = -Llib -lReflex
