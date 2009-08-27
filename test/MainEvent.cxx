@@ -88,6 +88,7 @@
 #include "TNetFile.h"
 #include "TRandom.h"
 #include "TTree.h"
+#include "TTreeCache.h"
 #include "TBranch.h"
 #include "TClonesArray.h"
 #include "TStopwatch.h"
@@ -158,13 +159,19 @@ int main(int argc, char **argv)
          hfile = new TFile("Event.root");
       if(punzip) TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kEnable);
       tree = (TTree*)hfile->Get("T");
-      tree->SetCacheSize(10000000); //this is the default value: 10 MBytes
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
       Int_t nentries = (Int_t)tree->GetEntries();
       nevent = TMath::Max(nevent,nentries);
       if (read == 1) {  //read sequential
+         //set the read cache
+         Int_t cachesize = 10000000; //this is the default value: 10 MBytes
+         tree->SetCacheSize(cachesize);
+         TTreeCache::SetLearnEntries(1); //one entry is sufficient to learn
+         TTreeCache *tc = (TTreeCache*)hfile->GetCacheRead();
+         tc->SetEntryRange(0,nevent);
          for (ev = 0; ev < nevent; ev++) {
+            tree->LoadTree(ev);  //this call is required when using the cache
             if (ev%printev == 0) {
                tnew = timer.RealTime();
                printf("event:%d, rtime=%f s\n",ev,tnew-told);

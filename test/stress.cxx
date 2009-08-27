@@ -85,6 +85,7 @@
 #include <TRandom.h>
 #include <TPostScript.h>
 #include <TNtuple.h>
+#include <TTreeCache.h>
 #include <TChain.h>
 #include <TCut.h>
 #include <TCutG.h>
@@ -723,6 +724,12 @@ Int_t stress8read(Int_t nevent)
    tree->SetBranchAddress("event",&event);
    Int_t nentries = (Int_t)tree->GetEntries();
    Int_t nev = TMath::Max(nevent,nentries);
+   //activate the treeCache
+   Int_t cachesize = 10000000; //this is the default value: 10 MBytes
+   tree->SetCacheSize(cachesize);
+   TTreeCache::SetLearnEntries(1); //one entry is sufficient to learn
+   TTreeCache *tc = (TTreeCache*)hfile->GetCacheRead();
+   tc->SetEntryRange(0,nevent);
    Int_t nb = 0;
    for (Int_t ev = 0; ev < nev; ev++) {
       nb += tree->GetEntry(ev);        //read complete event in memory
