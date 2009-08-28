@@ -2,7 +2,7 @@
 //Author: Andreas Morsch
 //
 // to run, do
-//  root > .x pythia8
+//  root > .x pythia8.C
 //
 // Note that before executing this script, 
 //   -the env variable PYTHIA8 must point to the pythia8100 (or newer) directoryDATA
