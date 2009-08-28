@@ -201,8 +201,12 @@ Bool_t TRootEmbeddedCanvas::HandleContainerButton(Event_t *event)
 
    if (event->fType == kButtonPress) {
       fButton = button;
-      if (button == kButton1)
-         fCanvas->HandleInput(kButton1Down, x, y);
+      if (button == kButton1) {
+         if (event->fState & kKeyShiftMask)
+            fCanvas->HandleInput(EEventType(7), x, y);
+         else
+            fCanvas->HandleInput(kButton1Down, x, y);
+      }
       if (button == kButton2)
          fCanvas->HandleInput(kButton2Down, x, y);
       if (button == kButton3) {
@@ -217,7 +221,11 @@ Bool_t TRootEmbeddedCanvas::HandleContainerButton(Event_t *event)
          fCanvas->HandleInput(kButton2Up, x, y);
       if (button == kButton3)
          fCanvas->HandleInput(kButton3Up, x, y);
-
+      if (button == kButton4)
+         fCanvas->HandleInput(EEventType(5), x, y);//hack
+      if (button == kButton5)
+         fCanvas->HandleInput(EEventType(6), x, y);//hack
+      
       fButton = 0;
    }
 
@@ -290,8 +298,14 @@ Bool_t TRootEmbeddedCanvas::HandleContainerMotion(Event_t *event)
 
    if (fButton == 0)
       fCanvas->HandleInput(kMouseMotion, x, y);
-   if (fButton == kButton1)
-      fCanvas->HandleInput(kButton1Motion, x, y);
+   if (fButton == kButton1) {
+      if (event->fState & kKeyShiftMask)
+         fCanvas->HandleInput(EEventType(8), x, y);
+      else
+         fCanvas->HandleInput(kButton1Motion, x, y);
+   }
+   if (fButton == kButton2)
+      fCanvas->HandleInput(kButton2Motion, x, y);
 
    return kTRUE;
 }
