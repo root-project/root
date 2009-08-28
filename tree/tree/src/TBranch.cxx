@@ -622,6 +622,7 @@ void TBranch::DropBaskets(Option_t* option)
 
    TBasket *basket;
    Int_t nbaskets = fBaskets.GetEntriesFast();
+   
    if ((fWriteBasket >=0 && fWriteBasket < nbaskets) || all) {
       //slow case
       for (Int_t i=0;i<nbaskets;i++) {
@@ -634,13 +635,13 @@ void TBranch::DropBaskets(Option_t* option)
       }
    }  else {
       //fast case
-      while (nbaskets > 0) {
+      if (nbaskets > 0) {
          basket = (TBasket*)fBaskets.UncheckedAt(nbaskets-1);
-         if (!basket) break;
-         basket->DropBuffers();
-         fBaskets.RemoveAt(nbaskets-1);
-         nbaskets = fBaskets.GetEntriesFast();
-         delete basket;
+         if (basket) {
+            basket->DropBuffers();
+            delete basket;
+         }
+         fBaskets.Clear();
       }
    }
 
