@@ -144,6 +144,9 @@ class TMultiLayerPerceptron : public TObject {
    void ExpandStructure();
    void BuildFirstLayer(TString&);
    void BuildHiddenLayers(TString&);
+   void BuildOneHiddenLayer(const TString& sNumNodes, Int_t& layer,
+                            Int_t& prevStart, Int_t& prevStop,
+                            Bool_t lastLayer);
    void BuildLastLayer(TString&, Int_t);
    void Shuffle(Int_t*, Int_t) const;
    void MLP_Line(Double_t*, Double_t*, Double_t);
