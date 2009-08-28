@@ -16,6 +16,15 @@
 //                                                                            //
 // TPythia is an interface class to C++ version of Pythia 8.1                 //
 // event generators, written by T.Sjostrand.                                  //
+//                                                                            //
+// The user is assumed to be familiar with the Pythia package.                //
+// This class includes only a basic interface to Pythia8. Because Pythia8 is  //
+// also written in C++, its functions/classes can be called directly from a   //
+// compiled C++ script.                                                       //
+// To call Pythia functions not available in this interface a dictionary must //
+// be generated.                                                              //
+// see $ROOTSYS/tutorials/pythia/pythia8.C for an example of use from CINT.   //
+//                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 /*
 *------------------------------------------------------------------------------------*
