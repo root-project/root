@@ -1603,16 +1603,42 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
    // It repeadeatly queries pointer state and position on the screen. 
    // From this info an Event_t structure is built. 
 
+   return HandleTimerEvent(0, t);
+}
+
+//______________________________________________________________________________
+Bool_t TGuiBldDragManager::HandleTimerEvent(Event_t *e, TTimer *t)
+{
+
+   static Int_t gy = 0;
+   static Int_t gx = 0;
+   static UInt_t gstate = 0;
+   static Window_t gw = 0;
+
+   Bool_t ret = kTRUE;
+
    // if nothing is editted stop timer and reset everything
    if (!fClient || !fClient->IsEditable()) { 
       SetEditable(kFALSE);
       return kFALSE;
    }
-
    if (!IsSelectedVisible()) {
       HideGrabRectangles();
    }
-
+   if (e) {
+      if (fPimpl->fRepeatTimer) {
+         // we are replaying events from the recorder...
+         fPimpl->fRepeatTimer->Reset();
+         fPimpl->fRepeatTimer->Remove();
+      }
+      if (e->fType == kButtonPress)
+         return HandleButtonPress(e);
+      else if (e->fType == kButtonRelease)
+         return HandleButtonRelease(e);
+      else if (e->fState & kButton1Mask)
+         return HandleMotion(e);
+      return kTRUE;
+   }
    Window_t dum;
    Event_t ev;
    ev.fCode = kButton1;
@@ -1621,11 +1647,6 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
 
    gVirtualX->QueryPointer(gVirtualX->GetDefaultRootWindow(), dum, dum,
                            ev.fXRoot, ev.fYRoot, ev.fX, ev.fY, ev.fState);
-
-   static Int_t gy = 0;
-   static Int_t gx = 0;
-   static UInt_t gstate = 0;
-   static Window_t gw = 0;
 
    ev.fWindow = GetWindowFromPoint(ev.fXRoot, ev.fYRoot);
 
@@ -1657,7 +1678,8 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
          fPimpl->fPlane = 0;
       }
 
-      Bool_t ret = HandleButtonPress(&ev);
+      ret = HandleButtonPress(&ev);
+      TimerEvent(&ev);
       return ret;
    }
 
@@ -1667,7 +1689,9 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
       ev.fType = kButtonRelease;
       t->SetTime(100);
 
-      return HandleButtonRelease(&ev);
+      ret = HandleButtonRelease(&ev);
+      TimerEvent(&ev);
+      return ret;
    }
 
    fPimpl->fButtonPressed = (ev.fState & kButton1Mask) ||
@@ -1685,9 +1709,9 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
       }
    } else if (ev.fState & kButton1Mask) {
       HandleMotion(&ev);
+      TimerEvent(&ev);
    }
-
-   return kTRUE;
+   return ret;
 }
 
 //______________________________________________________________________________

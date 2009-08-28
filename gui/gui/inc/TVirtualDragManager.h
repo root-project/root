@@ -67,6 +67,7 @@ public:
    virtual Bool_t    Cancel(Bool_t = kTRUE) { return kFALSE; }
 
    virtual Bool_t    HandleEvent(Event_t *) { return kFALSE; }
+   virtual Bool_t    HandleTimerEvent(Event_t *, TTimer *) { return kFALSE; }
    virtual Bool_t    IgnoreEvent(Event_t *) { return kTRUE; }
    virtual void      SetEditable(Bool_t) {}
 

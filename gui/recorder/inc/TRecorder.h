@@ -442,10 +442,10 @@ protected:
    friend class TRecorderRecording;
    friend class TRecorderReplaying;
 
-   TString      fFilename;           // Events file name 
+   TString      fFilename;           // Events file name
    // Changes state to the new one.
    // See class documentation for information about state changing.
-   void  ChangeState(TRecorderState* newstate, Bool_t deletePreviousState = kTRUE);
+   void  ChangeState(TRecorderState *newstate, Bool_t deletePreviousState = kTRUE);
 
 public:
    //---- Modes of replaying. Only kRealtime implemented so far
@@ -662,6 +662,7 @@ private:
 
    TFile              *fFile;             // ROOT file to store recorded events in
    TTimer             *fTimer;            // Timer used for recording
+   TTimer             *fMouseTimer;       // Timer used for recording mouse position
    ULong_t             fBeginPave;        // TLatex/TPaveLabel edition starting time
 
    TTree              *fWinTree;          // TTree with registered windows
@@ -698,11 +699,13 @@ public:
    virtual void Stop(TRecorder *r, Bool_t guiCommand);
 
    void  RegisterWindow(Window_t w);               //SLOT
-   void  RecordCmdEvent(const char* line);         //SLOT
-   void  RecordGuiEvent(Event_t* e, Window_t wid); //SLOT
-   void  RecordGuiCNEvent(Event_t* e);             //SLOT
-   void  RecordPave(const TObject* obj);           //SLOT
-   void  RecordText(const TObject* obj);           //SLOT
+   void  RecordCmdEvent(const char *line);         //SLOT
+   void  RecordGuiEvent(Event_t *e, Window_t wid); //SLOT
+   void  RecordGuiBldEvent(Event_t *e);            //SLOT
+   void  RecordGuiCNEvent(Event_t *e);             //SLOT
+   void  RecordMousePosition();
+   void  RecordPave(const TObject *obj);           //SLOT
+   void  RecordText(const TObject *obj);           //SLOT
    void  FilterEventPave();                        //SLOT
    void  StartEditing();                           //SLOT
 

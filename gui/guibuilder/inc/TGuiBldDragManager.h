@@ -219,6 +219,10 @@ public:
    Bool_t         IsStopped() const { return fStop; }
    void           SetEditable(Bool_t on = kTRUE);
 
+   Bool_t         HandleTimerEvent(Event_t *ev, TTimer *t);
+   void           TimerEvent(Event_t *ev) 
+                     { Emit("TimerEvent(Event_t*)", (Long_t)ev); } // *SIGNAL*
+
    // hadndling dynamic context menus
    void DoClassMenu(Int_t);
    void DoDialogOK();
