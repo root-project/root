@@ -112,7 +112,8 @@ EVELIBDEPM             = $(GEOMLIB) $(GEOMPAINTERLIB) $(G3DLIB) $(GUILIB) \
                          $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(PHYSICSLIB) \
                          $(GEDLIB) $(EGLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(GLLIB) $(IOLIB) $(RINTLIB) $(MATHCORELIB)
-GVIZ3DLIBDEPM          = $(GUILIB) $(GEDLIB) $(GEOMLIB) $(GLLIB)
+GVIZ3DLIBDEPM          = $(GUILIB) $(GEDLIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) \
+                         $(GEOMLIB) $(GLLIB)
 MEMSTATLIBDEPM         = $(TREELIB) $(GPADLIB) $(GRAFLIB)
 MEMSTATGUILIBDEPM      = $(MEMSTATLIB) $(TREELIB) $(GUILIB)
 RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
@@ -215,8 +216,6 @@ RECLIBDEP              = $(RECLIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
-GVIZ3DLIBEXTRA          = lib/libGui.lib lib/libRGL.lib lib/libGeom.lib \
-                          lib/libGed.lib lib/libGpad.lib lib/libGraf.lib lib/libGraf3d.lib
 NETLIBEXTRA             = lib/libRIO.lib lib/libMathCore.lib
 MATRIXLIBEXTRA          = lib/libMathCore.lib
 HISTLIBEXTRA            = lib/libMatrix.lib lib/libMathCore.lib
@@ -356,6 +355,9 @@ EVELIBEXTRA             = lib/libGeom.lib lib/libGeomPainter.lib \
                           lib/libGed.lib lib/libEG.lib lib/libTree.lib \
                           lib/libTreePlayer.lib lib/libRGL.lib lib/libRIO.lib \
                           lib/libRint.lib lib/libMathCore.lib
+GVIZ3DLIBEXTRA          = lib/libGui.lib lib/libRGL.lib lib/libGeom.lib \
+                          lib/libGed.lib lib/libGpad.lib lib/libGraf3d.lib \
+                          lib/libGraf.lib
 MEMSTATLIBEXTRA         = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib
 MEMSTATGUILIBEXTRA      = lib/libMemStat.lib lib/libTree.lib lib/libGui.lib
 RECLIBEXTRA             = lib/libGui.lib lib/libRIO.lib lib/libTree.lib \
@@ -363,7 +365,6 @@ RECLIBEXTRA             = lib/libGui.lib lib/libRIO.lib lib/libTree.lib \
 
 else
 
-GVIZ3DLIBEXTRA          = -Llib -lGui -lGed -lGpad -lGraf3d -lGraf -lGeom -lRGL
 NETLIBEXTRA             = -Llib -lRIO -lMathCore
 MATRIXLIBEXTRA          = -Llib -lMathCore
 HISTLIBEXTRA            = -Llib -lMatrix -lMathCore
@@ -468,6 +469,7 @@ THREADLIBEXTRA          = -Llib -lRIO
 EVELIBEXTRA             = -Llib -lGeom -lGeomPainter -lGraf3d -lGui -lGpad \
                           -lGraf -lHist -lPhysics -lGed -lEG -lTree \
                           -lTreePlayer -lRGL -lRIO -lRint -lMathCore
+GVIZ3DLIBEXTRA          = -Llib -lGui -lGed -lGpad -lGraf3d -lGraf -lGeom -lRGL
 MEMSTATLIBEXTRA         = -Llib -lTree -lGpad -lGraf
 MEMSTATGUILIBEXTRA      = -Llib -lMemStat -lTree -lGui
 RECLIBEXTRA             = -Llib -lGui -lRIO -lTree -lThread
