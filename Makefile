@@ -75,7 +75,7 @@ MODULES       = build cint/cint core/metautils core/pcre core/utils core/base \
                 core/cont core/meta io/io math/mathcore net/net core/zip \
                 core/clib core/thread math/matrix core/newdelete hist/hist \
                 tree/tree graf2d/freetype graf2d/graf graf2d/gpad graf3d/g3d \
-                graf3d/gviz3d gui/gui math/minuit hist/histpainter tree/treeplayer \
+                gui/gui math/minuit hist/histpainter tree/treeplayer \
                 gui/ged tree/treeviewer math/physics graf2d/postscript \
                 core/rint html montecarlo/eg \
                 geom/geom geom/geompainter montecarlo/vmc \
@@ -111,7 +111,7 @@ endif
 ifeq ($(BUILDGLEW),yes)
 MODULES      += graf3d/glew
 endif
-MODULES      += graf3d/gl graf3d/eve
+MODULES      += graf3d/gl graf3d/eve graf3d/gviz3d 
 endif
 ifeq ($(BUILDMYSQL),yes)
 MODULES      += sql/mysql

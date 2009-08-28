@@ -90,7 +90,7 @@ KRB5AUTHLIBDEPM        = $(RAUTHLIB) $(NETLIB)
 SRVAUTHLIBDEPM         = $(NETLIB)
 QTGSILIBDEPM           = $(GUILIB) $(GPADLIB)
 FITPANELLIBDEPM        = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB) \
-			 $(MATHCORELIB)
+                         $(MATHCORELIB)
 RFIOLIBDEPM            = $(IOLIB)
 DCACHELIBDEPM          = $(IOLIB)
 CHIRPLIBDEPM           = $(IOLIB)
@@ -112,7 +112,7 @@ EVELIBDEPM             = $(GEOMLIB) $(GEOMPAINTERLIB) $(G3DLIB) $(GUILIB) \
                          $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(PHYSICSLIB) \
                          $(GEDLIB) $(EGLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(GLLIB) $(IOLIB) $(RINTLIB) $(MATHCORELIB)
-GVIZ3DLIBDEPM	       = $(GUILIB) $(GEDLIB) $(GEOMLIB) $(GLLIB)
+GVIZ3DLIBDEPM          = $(GUILIB) $(GEDLIB) $(GEOMLIB) $(GLLIB)
 MEMSTATLIBDEPM         = $(TREELIB) $(GPADLIB) $(GRAFLIB)
 MEMSTATGUILIBDEPM      = $(MEMSTATLIB) $(TREELIB) $(GUILIB)
 RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
@@ -208,14 +208,14 @@ X3DLIBDEP              = $(X3DLIBDEPM)
 MONALISALIBDEP         = $(MONALISALIBDEPM)
 THREADLIBDEP           = $(THREADLIBDEPM)
 EVELIBDEP              = $(EVELIBDEPM)
-GVIZ3DLIBDEP	       = $(GVIZ3DLIBDEPM)
+GVIZ3DLIBDEP           = $(GVIZ3DLIBDEPM)
 MEMSTATLIBDEP          = $(MEMSTATLIBDEPM)
 MEMSTATGUILIBDEP       = $(MEMSTATGUILIBDEPM)
 RECLIBDEP              = $(RECLIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
-GVIZ3DLIBEXTRA	        = lib/libGui.lib lib/libRGL.lib lib/libGeom.lib \
+GVIZ3DLIBEXTRA          = lib/libGui.lib lib/libRGL.lib lib/libGeom.lib \
                           lib/libGed.lib lib/libGpad.lib lib/libGraf.lib lib/libGraf3d.lib
 NETLIBEXTRA             = lib/libRIO.lib lib/libMathCore.lib
 MATRIXLIBEXTRA          = lib/libMathCore.lib
@@ -363,7 +363,7 @@ RECLIBEXTRA             = lib/libGui.lib lib/libRIO.lib lib/libTree.lib \
 
 else
 
-GVIZ3DLIBEXTRA	        = -Llib -lGui -lGed -lGpad -lGraf3d -lGraf -lGeom -lRGL
+GVIZ3DLIBEXTRA          = -Llib -lGui -lGed -lGpad -lGraf3d -lGraf -lGeom -lRGL
 NETLIBEXTRA             = -Llib -lRIO -lMathCore
 MATRIXLIBEXTRA          = -Llib -lMathCore
 HISTLIBEXTRA            = -Llib -lMatrix -lMathCore
