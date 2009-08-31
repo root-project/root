@@ -2099,8 +2099,8 @@ void G__platformMacro()
 #ifdef __sun         /* SunOS and Solaris */
    G__DEFINE_MACRO(__sun);
 #endif
-#ifdef _WIN32        /* Windows 32bit */
-   G__DEFINE_MACRO(_WIN32);
+#ifdef WIN32        /* Windows 32bit */
+   G__DEFINE_MACRO(WIN32);
 #endif
 #ifdef _WINDOWS_     /* Windows */
    G__DEFINE_MACRO(_WINDOWS_);
