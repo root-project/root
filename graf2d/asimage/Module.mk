@@ -129,6 +129,9 @@ else
 			ACC="cc +DD64 -Ae +W863"; \
 			ACCALT="gcc -mlp64"; \
 		fi; \
+		if [ "$(ARCH)" = "macosx" ]; then \
+			ACC="gcc -m32"; \
+		fi; \
 		if [ "$(ARCH)" = "macosx64" ]; then \
 			ACC="gcc -m64"; \
 		fi; \

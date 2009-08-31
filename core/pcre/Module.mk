@@ -81,6 +81,9 @@ else
 		if [ $(ARCH) = "linuxx8664gcc" ]; then \
 			PCRE_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "macosx" ]; then \
+			PCRE_CFLAGS="-m32"; \
+		fi; \
 		if [ $(ARCH) = "macosx64" ]; then \
 			PCRE_CFLAGS="-m64"; \
 		fi; \

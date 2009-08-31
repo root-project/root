@@ -20,16 +20,16 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -W -Wall -Woverloaded-virtual \
+CXXFLAGS      = -m32 -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
-CFLAGS        = -pipe -W -Wall -fsigned-char -fno-common \
+CFLAGS        = -m32 -pipe -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS)
-CINTCXXFLAGS  = -pipe -W -Wall -Woverloaded-virtual \
+CINTCXXFLAGS  = -m32 -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION
-CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
+CINTCFLAGS    = -m32 -pipe -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
@@ -43,7 +43,7 @@ FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 
 # Linker:
 LD            = g++
-LDFLAGS       = $(OPT)
+LDFLAGS       = $(OPT) -m32
 FORCELINK     = yes
 NEEDFINK      = yes
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
@@ -108,8 +108,9 @@ ifeq ($(F77),)
 # only needed to get default compiler in ./configure
 F77           = gfortran
 endif
-F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.dylib)
-F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
+F77FLAGS      = -m32 -std=legacy
+F77LIBS      := $(shell $(F77) -m32 -print-file-name=libgfortran.dylib)
+F77LIBS      += $(shell $(F77) -m32 -print-file-name=libgfortranbegin.a)
 endif
 
 ifneq ($(findstring g77, $(F77)),)
@@ -117,6 +118,7 @@ ifeq ($(F77),)
 # only needed to get default compiler in ./configure
 F77           = g77
 endif
+F77FLAGS      = -m32
 F77LIBS       = -L$(FINK_DIR)/lib -lg2c
 endif
 

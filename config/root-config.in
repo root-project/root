@@ -326,7 +326,8 @@ macosx)
       forcelibs=$rootulibs
       forceglibs=$rootuglibs
    else
-      auxcflags=
+      auxcflags="-m32"
+      auxldflags="-m32"
       auxlibs="-lm -ldl"
    fi
    ;;
