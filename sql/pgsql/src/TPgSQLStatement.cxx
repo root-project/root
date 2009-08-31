@@ -507,7 +507,7 @@ Bool_t TPgSQLStatement::SetNull(Int_t npar)
    //    stmt->SetDouble(2, 0.);
    //    stmt->SetNull(2);
 
-   fBind[npar]="";
+   fBind[npar][0] = 0;
 
    return kTRUE;
 }
