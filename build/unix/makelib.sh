@@ -69,7 +69,7 @@ if [ "x$EXPLICIT" = "xyes" ]; then
       if [ -z "$EXPLLNKCORE" ]; then
          EXPLLNKCORE=" -ldl"
       else
-         EXPLLNKCORE+=" -ldl"
+         EXPLLNKCORE=${EXPLLNKCORE}" -ldl"
       fi
    fi
 fi
