@@ -7532,7 +7532,7 @@ int G__DataMemberHandle::DeleteVariable()
             int store_tagnum = G__tagnum;
             G__store_struct_offset = var->p[ig15];
             G__tagnum = var->p_tagtable[ig15];
-            G__FastAllocString temp( strlen( var->varnamebuf[ig15] + 4 ) );
+            G__FastAllocString temp( strlen( var->varnamebuf[ig15]) + 4 );
             temp.Format("~%s()", var->varnamebuf[ig15]);
             // destruction of array
             if (G__struct.iscpplink[G__tagnum] == G__CPPLINK) {
