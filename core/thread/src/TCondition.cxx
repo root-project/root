@@ -78,7 +78,6 @@ Int_t TCondition::Wait()
    Int_t iret;
    if (fPrivateMutex) fMutex->Lock();
    iret = fConditionImp->Wait();
-   fMutex->fId = TThread::SelfId(); // fix the owner because lowlevel relock
    if (fPrivateMutex) fMutex->UnLock();
    return iret;
 }
@@ -99,7 +98,6 @@ Int_t TCondition::TimedWait(ULong_t secs, ULong_t nanoSec)
    Int_t iret;
    if (fPrivateMutex) fMutex->Lock();
    iret = fConditionImp->TimedWait(secs, nanoSec);
-   fMutex->fId = TThread::SelfId(); // fix the owner because lowlevel relock
    if (fPrivateMutex) fMutex->UnLock();
    return iret;
 }

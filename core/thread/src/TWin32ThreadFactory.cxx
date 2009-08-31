@@ -38,11 +38,11 @@ TWin32ThreadFactory::TWin32ThreadFactory(const char *name, const char *title) :
 }
 
 //______________________________________________________________________________
-TMutexImp *TWin32ThreadFactory::CreateMutexImp()
+TMutexImp *TWin32ThreadFactory::CreateMutexImp(Bool_t recursive)
 {
    // Return a Win32 Mutex.
 
-   return new TWin32Mutex;
+   return new TWin32Mutex(recursive);
 }
 
 //______________________________________________________________________________

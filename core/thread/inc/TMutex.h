@@ -41,8 +41,6 @@ friend class TThread;
 
 private:
    TMutexImp  *fMutexImp;   // pointer to mutex implementation
-   Long_t      fId;         // id of thread which locked mutex
-   Int_t       fRef;        // reference count in case of recursive locking by same thread
 
    TMutex(const TMutex&);              // not implemented
    TMutex& operator=(const TMutex&);   // not implemented

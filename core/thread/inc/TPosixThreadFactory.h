@@ -36,7 +36,7 @@ public:
    TPosixThreadFactory(const char *name = "Posix", const char *title = "Posix Thread Factory");
    virtual ~TPosixThreadFactory() { }
 
-   virtual TMutexImp      *CreateMutexImp();
+   virtual TMutexImp      *CreateMutexImp(Bool_t recursive);
    virtual TConditionImp  *CreateConditionImp(TMutexImp *m);
    virtual TThreadImp     *CreateThreadImp();
 

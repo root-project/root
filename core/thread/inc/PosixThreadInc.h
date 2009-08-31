@@ -22,33 +22,8 @@
 
 #ifndef __CINT__
 
-#ifndef ROOT_TError
-#include "TError.h"
-#endif
-#ifndef ROOT_TSystem
-#include "TSystem.h"
-#endif
-
 #include <stdlib.h>
 #include <time.h>
-
-#if defined(R__LINUX) || defined(R__SOLARIS) || defined(R__ALPHA) || \
-    defined(R__MACOSX) || defined(R__HPUX11)
-#define PthreadDraftVersion 10
-#elif defined(R__HPUX) || defined(R__AIX)
-#define PthreadDraftVersion 4
-#else
-#if !defined(R__KCC)
-#warning PthreadDraftVersion not specified
-#endif
-#endif
-
-
-#if (PthreadDraftVersion <= 6)
-#define ERRNO(x) (((x) != 0) ? (TSystem::GetErrno()) : 0)
-#else
-#define ERRNO(x) (x)
-#endif
 
 #endif /* __CINT__ */
 

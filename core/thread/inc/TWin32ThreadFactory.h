@@ -36,7 +36,7 @@ public:
    TWin32ThreadFactory(const char *name = "Win32", const char *title = "Win32 Thread Factory");
    virtual ~TWin32ThreadFactory() { }
 
-   virtual TMutexImp      *CreateMutexImp();
+   virtual TMutexImp      *CreateMutexImp(Bool_t recursive);
    virtual TConditionImp  *CreateConditionImp(TMutexImp *m);
    virtual TThreadImp     *CreateThreadImp();
 

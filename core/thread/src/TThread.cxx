@@ -325,7 +325,7 @@ Int_t TThread::Delete(TThread *&th)
 Int_t TThread::Exists()
 {
    // Static method to check if threads exist.
-   // returns the number of running threads.
+   // Returns the number of running threads.
 
    Lock();
 
@@ -874,21 +874,24 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
    if (!gApplication || !gApplication->IsRunning()) return 0;
 
    // The first time, create the related static vars
-   if (!fgXActMutex) {
-      fgXActMutex = new TMutex(kTRUE);
-      new TThreadTimer;
-      fgXActCondi = new TCondition;
+   if (!fgXActMutex && gGlobalMutex) {
+      gGlobalMutex->Lock();
+      if (!fgXActMutex) {
+         fgXActMutex = new TMutex(kTRUE);
+         fgXActCondi = new TCondition;
+         new TThreadTimer;
+      }
+      gGlobalMutex->UnLock();
    }
 
    TThread *th = Self();
    if (th && th->fId != fgMainId) {   // we are in the thread
-
-      TConditionImp *condimp = fgXActCondi->fConditionImp;
-      TMutexImp *condmutex = fgXActCondi->GetMutex()->fMutexImp;
-
       th->SetComment("XARequest: XActMutex Locking");
       fgXActMutex->Lock();
       th->SetComment("XARequest: XActMutex Locked");
+
+      TConditionImp *condimp = fgXActCondi->fConditionImp;
+      TMutexImp *condmutex = fgXActCondi->GetMutex()->fMutexImp;
 
       // Lock now, so the XAction signal will wait
       // and never come before the wait

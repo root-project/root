@@ -39,7 +39,7 @@ private:
    pthread_mutex_t  fMutex;   // the pthread mutex
 
 public:
-   TPosixMutex();
+   TPosixMutex(Bool_t recursive=kFALSE);
    virtual ~TPosixMutex();
 
    Int_t  Lock();
