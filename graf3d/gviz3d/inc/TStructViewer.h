@@ -17,9 +17,11 @@
 #include <TObjArray.h>
 #include <TList.h>
 #include <TCanvas.h>
+#include <TColor.h>
 
 class TStructViewerGUI;
 class TStructNode;
+class TGMainFrame;
 
 class TStructViewer : public TObject {
 
@@ -36,7 +38,7 @@ private:
 
 private:
    void     AddNode(TStructNode* node, ULong_t size);
-   void     CountMembers(TClass* cl, TStructNode* parent);
+   void     CountMembers(TClass* cl, TStructNode* parent, void* pointer);
    void     Prepare();
    void     Reset();
 
@@ -46,6 +48,8 @@ public:
 
    void     Draw(Option_t *option = "");
    TCanvas* GetCanvas();
+   TGMainFrame* GetFrame();
+   TColor   GetColor(const char* typeName);
    TExMap   GetLevelMembersCount() const;
    TExMap   GetLevelSize() const;
    Bool_t   GetLinksVisibility() const;

@@ -52,6 +52,7 @@ TStructNodeEditor::TStructNodeEditor(TList* colors, const TGWindow *p, Int_t wid
 
    fMaxObjectsNumberEntry = new TGNumberEntry(maxObjectsFrame, 0);
    fMaxObjectsNumberEntry->SetFormat(TGNumberEntry::kNESInteger);
+   fMaxObjectsNumberEntry->SetLimits(TGNumberEntry::kNELLimitMin, 1);
    maxObjectsFrame->AddFrame(fMaxObjectsNumberEntry);
    this->AddFrame(maxObjectsFrame, expandX);
 
@@ -59,6 +60,7 @@ TStructNodeEditor::TStructNodeEditor(TList* colors, const TGWindow *p, Int_t wid
    TGLabel* fMaxLevelsLabel = new TGLabel(maxLevelFrame, "Max levels:");
    maxLevelFrame->AddFrame(fMaxLevelsLabel);
    fMaxLevelsNumberEntry = new TGNumberEntry(maxLevelFrame, 0);
+   fMaxLevelsNumberEntry->SetLimits(TGNumberEntry::kNELLimitMin, 1);
    fMaxLevelsNumberEntry->SetFormat(TGNumberEntry::kNESInteger);
    maxLevelFrame->AddFrame(fMaxLevelsNumberEntry);
    this->AddFrame(maxLevelFrame, expandX);

@@ -34,6 +34,7 @@
 #include <TGeoMatrix.h>
 #include <TMath.h>
 #include <TROOT.h>
+#include <TApplication.h>
 
 ClassImp(TStructViewerGUI);
 
@@ -44,10 +45,13 @@ ClassImp(TStructViewerGUI);
 // interface. In the window we can find panel with tabs and frame with 
 // GLViewer. Tab "Info" serves information about node and is used to naviagate 
 // backward and forward. Second tab "Options" is used to set few options 
-// such as links visibility, sorting method or setting a pointer.
+// such as links visibility, scaling method or setting a pointer.
 // Last tab "Editor" is tab when the TStructNodeEditor is placed.
 // 
 //////////////////////////////////////////////////////////////////////////
+
+TGeoMedium* TStructViewerGUI::fgMedium = NULL;
+UInt_t      TStructViewerGUI::fgCounter = 0;
 
 //________________________________________________________________________
 TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, TList* colors, const TGWindow *p,UInt_t w,UInt_t h)
@@ -65,13 +69,18 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    fSelectedObject = NULL;
    fMaxRatio = 0;
    fColors = colors;
+   
+   if (!fgMedium) {
+      fgMedium = new TGeoMedium("MED",1,new TGeoMaterial("Mat", 26.98,13,2.7));
+   }
 
    SetCleanup(kDeepCleanup);
    //////////////////////////////////////////////////////////////////////////
    // layout
    //////////////////////////////////////////////////////////////////////////
-   TGTab* tabs = new TGTab(this, 200, 200, TGTab::GetDefaultGC()(), TGTab::GetDefaultFontStruct(), kFixedWidth);
-   tabs->SetWidth(200);
+   TGVerticalFrame* leftFrame = new TGVerticalFrame(this, 200, 200, kFixedWidth);
+   this->AddFrame(leftFrame, new TGLayoutHints(kFixedWidth, 1, 1, 1, 1));
+   TGTab* tabs = new TGTab(leftFrame);
    TGLayoutHints* expandX = new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5,5,5,5);
    //////////////////////////////////////////////////////////////////////////
    // INFO
@@ -94,24 +103,6 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    fInfoMenu->AddFrame(fTotalSizeLabel, expandX);
    infoFrame->AddFrame(fInfoMenu, expandX);
 
-   fUndoButton = new TGTextButton(infoFrame, "Undo");
-   fUndoButton->Connect("Clicked()", "TStructViewerGUI", this, "UndoButtonSlot()");
-   fUndoButton->SetEnabled(false);
-   infoFrame->AddFrame(fUndoButton, expandX);
-
-   fRedoButton = new TGTextButton(infoFrame, "Redo");
-   fRedoButton->Connect("Clicked()", "TStructViewerGUI", this, "RedoButtonSlot()");
-   fRedoButton->SetEnabled(false);
-   infoFrame->AddFrame(fRedoButton, expandX);
-
-   TGTextButton* resetCameraButton = new TGTextButton(infoFrame, "Reset camera");
-   infoFrame->AddFrame(resetCameraButton, expandX);
-   resetCameraButton->Connect("Clicked()", "TStructViewerGUI", this, "ResetButtonSlot()");
-
-   TGTextButton* updateButton = new TGTextButton(infoFrame, "Update");
-   updateButton->Connect("Clicked()", "TStructViewerGUI", this, "UpdateButtonSlot()");
-   infoFrame->AddFrame(updateButton, expandX);
-
    //////////////////////////////////////////////////////////////////////////
    // OPTIONS
    //////////////////////////////////////////////////////////////////////////
@@ -120,45 +111,99 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    fShowLinksCheckButton = new TGCheckButton(options, "Show links");
    fShowLinksCheckButton->Connect("Toggled(Bool_t)", "TStructViewerGUI", this, "ShowLinksToggled(Bool_t)");
    options->AddFrame(fShowLinksCheckButton);
-   fShowLinksCheckButton->SetState(kButtonDown);
+   fShowLinksCheckButton->SetOn();
  
-   TGVButtonGroup* fSortByGroup = new TGVButtonGroup(options, "Sort by");
-   fSortBySizeButton = new TGRadioButton(fSortByGroup, "Size");
-   fSortBySizeButton->Connect("Clicked()", "TStructViewerGUI", this, "Update()");
-   fSortBySizeButton->SetOn();
-   fSortByMembersButton = new TGRadioButton(fSortByGroup, "Members count");
-   fSortByMembersButton->Connect("Clicked()", "TStructViewerGUI", this, "Update()");
-   options->AddFrame(fSortByGroup, expandX);
-  
-     
-   TGLabel* fPointerLabel = new TGLabel(options, "Pointer:");
-   options->AddFrame(fPointerLabel, expandX);
+   TGVButtonGroup* scaleByGroup = new TGVButtonGroup(options, "Scale by");
+   fScaleBySizeButton = new TGRadioButton(scaleByGroup, "Size");
+   fScaleBySizeButton->Connect("Clicked()", "TStructViewerGUI", this, "ScaleByChangedSlot()");
+   fScaleBySizeButton->SetOn();
+   fScaleByMembersButton = new TGRadioButton(scaleByGroup, "Members count");
+   fScaleByMembersButton->Connect("Clicked()", "TStructViewerGUI", this, "ScaleByChangedSlot()");
+   options->AddFrame(scaleByGroup, expandX);
+
+   TGHorizontalFrame* defaultColorFrame = new TGHorizontalFrame(options);
+   options->AddFrame(defaultColorFrame, expandX);
+   TGLabel* defColorlabel = new TGLabel(defaultColorFrame, "Default color");
+   defaultColorFrame->AddFrame(defColorlabel, expandX);
+   TGColorSelect* defColorSelect = new TGColorSelect(defaultColorFrame, GetDefaultColor()->GetPixel());
+   defColorSelect->Connect("ColorSelected(Pixel_t)", "TStructViewerGUI", this, "ColorSelectedSlot(Pixel_t)");
+   defaultColorFrame->AddFrame(defColorSelect);
+
+   TGHorizontalFrame* boxHeightFrame = new TGHorizontalFrame(options);
+   options->AddFrame(boxHeightFrame, expandX);
+   TGLabel* boxHeightLabel = new TGLabel(boxHeightFrame, "Box height:");
+   boxHeightFrame->AddFrame(boxHeightLabel, expandX);
+   fBoxHeightEntry = new TGNumberEntry(boxHeightFrame, 0.1);
+   fBoxHeightEntry->SetLimits(TGNumberEntry::kNELLimitMin, 0.01);
+   fBoxHeightEntry->Connect("ValueSet(Long_t)", "TStructViewerGUI", this, "BoxHeightValueSetSlot(Long_t)");
+   boxHeightFrame->AddFrame(fBoxHeightEntry);
+
+   TGHorizontalFrame* levelDistanceFrame = new TGHorizontalFrame(options);
+   options->AddFrame(levelDistanceFrame, expandX);
+   TGLabel* lvlDistLabel = new TGLabel(levelDistanceFrame, "Distance between levels");
+   levelDistanceFrame->AddFrame(lvlDistLabel, expandX);
+   fLevelDistanceEntry = new TGNumberEntry(levelDistanceFrame, 1.1);
+   fLevelDistanceEntry->SetLimits(TGNumberEntry::kNELLimitMin, 0.01);
+   fLevelDistanceEntry->Connect("ValueSet(Long_t)", "TStructViewerGUI", this, "LevelDistValueSetSlot(Long_t)");
+   levelDistanceFrame->AddFrame(fLevelDistanceEntry);
+
+   fAutoRefesh = new TGCheckButton(options, "Auto refresh");
+   fAutoRefesh->SetOn();
+   fAutoRefesh->Connect("Toggled(Bool_t)", "TStructViewerGUI", this, "AutoRefreshButtonSlot(Bool_t)");
+   options->AddFrame(fAutoRefesh, expandX);
+
+   TGLabel* pointerLabel = new TGLabel(options, "Pointer:");
+   options->AddFrame(pointerLabel, expandX);
    fPointerTextEntry = new TGTextEntry(options, "0x0000000");
    options->AddFrame(fPointerTextEntry, expandX);
    TGLabel* fPointerTypeLabel = new TGLabel(options, "Pointer Type:");
    options->AddFrame(fPointerTypeLabel, expandX);
    fPointerTypeTextEntry = new TGTextEntry(options, "TObject");
    options->AddFrame(fPointerTypeTextEntry, expandX);
-   TGTextButton* fSetPointerButton = new TGTextButton(options, "Set pointer");
-   fSetPointerButton->Connect("Clicked()", "TStructViewerGUI", this, "SetPointerButtonSlot()");
-   options->AddFrame(fSetPointerButton, expandX);
-  
+   TGTextButton* setPointerButton = new TGTextButton(options, "Set pointer");
+   setPointerButton->Connect("Clicked()", "TStructViewerGUI", this, "SetPointerButtonSlot()");
+   options->AddFrame(setPointerButton, expandX);
+
    //////////////////////////////////////////////////////////////////////////
    // EDITOR
    //////////////////////////////////////////////////////////////////////////
    TGCompositeFrame* editTab = tabs->AddTab("Editor");
    fEditor = new TStructNodeEditor(fColors, editTab);
    fEditor->Connect("Update(Bool_t)", "TStructViewerGUI", this, "Update(Bool_t)");
-   editTab->AddFrame(fEditor);
+   editTab->AddFrame(fEditor, expandX);
 
-   AddFrame(tabs, new TGLayoutHints(kLHintsLeft, 1,1,1,1));
+   leftFrame->AddFrame(tabs, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 1,1,1,1));
 
    TGVSplitter* splitter = new TGVSplitter(this);
-   splitter->SetFrame(tabs, true);
+   splitter->SetFrame(leftFrame, true);
    this->AddFrame(splitter, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
  
-    
-   fTopVolume = gGeoManager->MakeBox("TOPVolume",TStructNode::GetMedium(),10000, 10000, 10000);
+   //////////////////////////////////////////////////////////////////////////
+   // NAVIGATE
+   //////////////////////////////////////////////////////////////////////////
+   fUndoButton = new TGTextButton(leftFrame, "Undo");
+   fUndoButton->Connect("Clicked()", "TStructViewerGUI", this, "UndoButtonSlot()");
+   fUndoButton->SetEnabled(false);
+   leftFrame->AddFrame(fUndoButton, expandX);
+
+   fRedoButton = new TGTextButton(leftFrame, "Redo");
+   fRedoButton->Connect("Clicked()", "TStructViewerGUI", this, "RedoButtonSlot()");
+   fRedoButton->SetEnabled(false);
+   leftFrame->AddFrame(fRedoButton, expandX);
+
+   TGTextButton* resetCameraButton = new TGTextButton(leftFrame, "Reset camera");
+   leftFrame->AddFrame(resetCameraButton, expandX);
+   resetCameraButton->Connect("Clicked()", "TStructViewerGUI", this, "ResetButtonSlot()");
+
+   TGTextButton* updateButton = new TGTextButton(leftFrame, "Update");
+   updateButton->Connect("Clicked()", "TStructViewerGUI", this, "UpdateButtonSlot()");
+   leftFrame->AddFrame(updateButton, expandX);
+
+   TGTextButton* quitButton = new TGTextButton(leftFrame, "Quit");
+   leftFrame->AddFrame(quitButton, expandX);
+   quitButton->Connect("Clicked()", "TApplication", gApplication, "Terminate()");
+
+   fTopVolume = gGeoManager->MakeBox("TOPVolume", fgMedium,100, 100, 100);
    gGeoManager->SetTopVolume(fTopVolume);
    gGeoManager->SetNsegments(40);
     
@@ -193,15 +238,35 @@ TStructViewerGUI::~TStructViewerGUI()
 }
 
 //________________________________________________________________________
+void TStructViewerGUI::AutoRefreshButtonSlot(Bool_t on)
+{
+   // Activated when user chage condition
+
+   if (on) {
+      Update();
+   }
+}
+
+//________________________________________________________________________
+void TStructViewerGUI::BoxHeightValueSetSlot(Long_t /* h */)
+{
+   // Emmited when user changes height of boxes
+
+   if(fAutoRefesh->IsOn()) {
+      Update();
+   }
+}
+
+//________________________________________________________________________
 void TStructViewerGUI::CalculatePosistion(TStructNode* parent)
 {
    // Recursive method to calculating nodes posistion in 3D space
 
-   // choose sorting method
-   if (fSortBySizeButton->GetState() == kButtonDown) {
-      TStructNode::SetSortBy(kSize);
-   } else if (fSortByMembersButton->GetState() == kButtonDown) {
-      TStructNode::SetSortBy(kMembers);
+   // choose scaling method
+   if (fScaleBySizeButton->GetState() == kButtonDown) {
+      TStructNode::SetScaleBy(kSize);
+   } else if (fScaleByMembersButton->GetState() == kButtonDown) {
+      TStructNode::SetScaleBy(kMembers);
    }
    Float_t ratio = (Float_t)((parent->GetLevel()+1.0) / parent->GetLevel());
 
@@ -211,7 +276,6 @@ void TStructViewerGUI::CalculatePosistion(TStructNode* parent)
    parent->SetHeight(1);
    parent->SetX(-parent->GetWidth()/2);
    parent->SetY(-parent->GetHeight()/2);
-   parent->SetZ((Float_t)(1.5 * parent->GetLevel()));
 
    fMaxRatio = parent->GetVolumeRatio();
 
@@ -276,6 +340,19 @@ void TStructViewerGUI::CloseWindow()
 }
 
 //________________________________________________________________________
+void TStructViewerGUI::ColorSelectedSlot(Pixel_t pixel)
+{
+   // Slot for default color selsect.
+   // Sets default colot to "pixel"
+
+   TStructNodeProperty* prop = GetDefaultColor();
+   if(prop) {
+      prop->SetColor(pixel);
+      Update();
+   }
+}
+
+//________________________________________________________________________
 void TStructViewerGUI::Divide(TList* list, Float_t x1, Float_t x2, Float_t y1, Float_t y2)
 {
    // Divides rectangle where the outlining box is placed.
@@ -320,7 +397,6 @@ void TStructViewerGUI::Divide(TList* list, Float_t x1, Float_t x2, Float_t y1, F
       node->SetHeight(y2 - y1);
       node->SetX(x1);
       node->SetY(y1);
-      node->SetZ((Float_t)(1.50 * node->GetLevel()));
 
       if (node->GetVolumeRatio() > fMaxRatio) {
          fMaxRatio = node->GetVolumeRatio();
@@ -355,6 +431,7 @@ void TStructViewerGUI::Draw(Option_t* /*option*/)
 {
    // Check limits and draws nodes and links
 
+   fVolumes.Clear();
    CheckMaxObjects(fNodePtr);
 
    CalculatePosistion(fNodePtr);
@@ -382,14 +459,9 @@ void TStructViewerGUI::DrawLink(TStructNode* parent)
    TIter it(parent->GetMembers());
    TStructNode* node;
    while((node = (TStructNode*) it())) {
-      if(node->GetLevel() - parent->GetLevel() > 1) {
-         printf("node = %s, parent = %s\n", node->GetName(), parent->GetName());
-         printf("nodelvl = %d, parentlvl = %d\n", node->GetLevel(), parent->GetLevel());
-      } 
-
       TPolyLine3D *l = new TPolyLine3D(2);
-      l->SetPoint(0 ,node->GetCenter(), node->GetMiddle(), -node->GetZ());
-      l->SetPoint(1 ,parent->GetCenter(), parent->GetMiddle(), -parent->GetZ());
+      l->SetPoint(0 ,node->GetCenter(), node->GetMiddle(), -(node->GetLevel() * fLevelDistanceEntry->GetNumber()));
+      l->SetPoint(1 ,parent->GetCenter(), parent->GetMiddle(), -(parent->GetLevel() * fLevelDistanceEntry->GetNumber()));
 
       l->SetLineColor(GetColor(node));
       l->SetLineWidth(1);
@@ -428,7 +500,7 @@ void TStructViewerGUI::DrawNode(TStructNode* node)
    vol->AddNodeOverlap(subvol, 1, subtrans);
    }
    else*/ if(node->GetNodeType() == kCollection) {
-      vol = gGeoManager->MakeBox(node->GetName(),TStructNode::GetMedium(), 0.45*node->GetWidth(), 0.45*node->GetHeight(), 0.1);
+      vol = gGeoManager->MakeBox(Form("%s_%d", node->GetName(), fgCounter++), fgMedium, 0.45*node->GetWidth(), 0.45*node->GetHeight(), fBoxHeightEntry->GetNumber());
       // subboxes
       Float_t slices = (Float_t)(node->GetMembersCount());
       if (slices > fMaxSlices) {
@@ -436,23 +508,21 @@ void TStructViewerGUI::DrawNode(TStructNode* node)
       }
 
       for (Float_t i = -(slices-1)/2; i < slices/2; i++) {
-         TString name = node->GetName();
-         name += i;
-         TGeoVolume* sub = gGeoManager->MakeBox(name,TStructNode::GetMedium(),0.45*node->GetWidth() * 0.7 / slices, 0.45*node->GetHeight(), 0.1);
+         TGeoVolume* sub = gGeoManager->MakeBox(Form("%s_%d", node->GetName(), fgCounter++), fgMedium,0.45*node->GetWidth() * 0.7 / slices, 0.45*node->GetHeight(), fBoxHeightEntry->GetNumber());
          sub->SetLineColor(GetColor(node));
-         sub->SetTitle(TString::Format("represents node %ld", (Long_t)node));
+         fVolumes.Add((Long_t)sub, (Long_t)node);
          TGeoTranslation* subtrans = new TGeoTranslation("subtranslation", i * node->GetWidth() / slices, 0, 0);
          vol->AddNodeOverlap(sub, 1, subtrans);
       }
    } else {
-      vol = gGeoManager->MakeBox(node->GetName(),TStructNode::GetMedium(), 0.45*node->GetWidth(), 0.45*node->GetHeight(), 0.1);
+      vol = gGeoManager->MakeBox(Form("%s_%d", node->GetName(), fgCounter++), fgMedium, 0.45*node->GetWidth(), 0.45*node->GetHeight(), fBoxHeightEntry->GetNumber());
    }
 
    vol->SetLineColor(GetColor(node));
    vol->SetLineWidth(1);
 
-   TGeoTranslation* trans = new TGeoTranslation("translation", node->GetCenter(), node->GetMiddle(), -node->GetZ());
-   vol->SetTitle(TString::Format("represents node %ld", (Long_t)node));
+   TGeoTranslation* trans = new TGeoTranslation("translation", node->GetCenter(), node->GetMiddle(), -(node->GetLevel() * fLevelDistanceEntry->GetNumber()));
+   fVolumes.Add((Long_t)vol, (Long_t)node);
 
    fTopVolume->AddNode(vol,1, trans);
 }
@@ -482,7 +552,7 @@ void TStructViewerGUI::DrawVolumes(TStructNode* parent)
 //________________________________________________________________________
 TStructNodeProperty* TStructViewerGUI::FindNodeProperty(TStructNode* node)
 {
-   // Returns poitner to property associated with node "node". If property is not found
+   // Returns pointer to property associated with node "node". If property is not found
    // then it returns default property
 
    TIter it(fColors);
@@ -525,6 +595,14 @@ Int_t TStructViewerGUI::GetColor(TStructNode* node)
    }
 
    return 2;
+}
+
+//________________________________________________________________________
+TStructNodeProperty* TStructViewerGUI::GetDefaultColor()
+{
+   // Return default color for nodes
+
+   return ((TStructNodeProperty*)(fColors->Last()));
 }
 
 //________________________________________________________________________
@@ -572,6 +650,16 @@ void TStructViewerGUI::GLWidgetProcessedEventSlot(Event_t* event)
 }
 
 //________________________________________________________________________
+void TStructViewerGUI::LevelDistValueSetSlot(Long_t /* dist */)
+{
+   // Emmited when user changes distance between levels
+
+   if(fAutoRefesh->IsOn()) {
+      Update(kTRUE);
+   }
+}
+
+//________________________________________________________________________
 void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
 {
    // MouseOver slot. Activated when user out mouse over object on scene. 
@@ -587,7 +675,8 @@ void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
             return;
          }
          // + 16 skips "represents node "
-         fSelectedObject = (TStructNode*)(TString(fSelectedObject->GetTitle() + 16).Atoll()); 
+         //fSelectedObject = (TStructNode*)(TString(fSelectedObject->GetTitle() + 16).Atoll()); 
+         fSelectedObject = (TStructNode*)(fVolumes.GetValue((Long_t)(shape->GetLogical()->ID())));
          fToolTip->SetText(TString(fSelectedObject->GetName()) + "\n" + fSelectedObject->GetTypeName());
          fToolTip->SetPosition(fMouseX, fMouseY);
          fToolTip->Reset();
@@ -698,7 +787,9 @@ void TStructViewerGUI::ShowLinksToggled(Bool_t /*on*/)
 {
    // Changes links visibility and refresh view.
 
-   Update();
+   if (fAutoRefesh->IsOn()) {
+      Update();
+   }
 }
 
 //________________________________________________________________________
@@ -780,4 +871,14 @@ void TStructViewerGUI::UndoButtonSlot()
    }
    Update(kTRUE);
    UpdateLabels(fNodePtr);
+}
+
+//________________________________________________________________________
+void TStructViewerGUI::ScaleByChangedSlot()
+{
+   // Activated when user press radio button 
+
+    if (fAutoRefesh->IsOn()) {
+       Update();
+    }
 }

@@ -14,9 +14,6 @@
 
 #include <TObject.h>
 #include <TString.h>
-#include <TGeoVolume.h>
-
-class TGeoMedium;
 
 enum ENodeType {
    kUnknown = 1,  // Unknown type
@@ -25,7 +22,7 @@ enum ENodeType {
    kBasic,        // Basic type (e.g. char, float, double)
    kSTLCollection // STL collection
 };
-enum ESortingType {
+enum EScalingType {
    kSize,         // Objects are proportional to allocated memory
    kMembers       // Objects are proportional to number of members
 };
@@ -37,8 +34,7 @@ enum ESortingType {
 class TStructNode : public TObject {
 
 private:
-   static ESortingType  fSortBy;
-   static TGeoMedium   *fMedium;          // Material and medium
+   static EScalingType  fgScalBy;
    TString              fName;            // Name of node
    TString              fTypeName;        // Name of type
    ULong_t              fSize;            // Memory allocated by class without pointers and list elements
@@ -53,10 +49,9 @@ private:
    TList*               fMembers;         // List of daughter nodes
    Float_t              fX;               // X coordinate in 3D space
    Float_t              fY;               // Y coordinate in 3D space
-   Float_t              fZ;               // Z coordinate in 3D space
    Float_t              fWidth;           // Width of outlining box
    Float_t              fHeight;          // Height of outlining box
-   ENodeType            kNodeType;        // Type of node
+   ENodeType            fNodeType;        // Type of node
    UInt_t               fMaxLevel;        // Number of levels displayed when the node is top node on scene
    UInt_t               fMaxObjects;      // Number of objects displayed when the node is top node on scene
 
@@ -71,7 +66,6 @@ public:
    UInt_t         GetLevel() const;
    UInt_t         GetMaxLevel() const;
    UInt_t         GetMaxObjects() const;
-   static TGeoMedium* GetMedium();
    TList*         GetMembers() const;
    ULong_t        GetMembersCount() const;
    Float_t        GetMiddle() const;
@@ -91,7 +85,6 @@ public:
    Float_t        GetWidth() const;
    Float_t        GetX() const;
    Float_t        GetY() const;
-   Float_t        GetZ() const;
    Bool_t         IsCollapsed() const;
    virtual Bool_t IsSortable() const;
    bool           IsVisible() const;
@@ -100,19 +93,17 @@ public:
    void           SetHeight(Float_t h);
    void           SetMaxLevel(UInt_t level);
    void           SetMaxObjects(UInt_t max);
-   static void    SetMedium(TGeoMedium* val);
    void           SetMembers(TList* list);
    void           SetMembersCount(ULong_t count);
    void           SetNodeType(ENodeType type);
    void           SetPointer(void* pointer);
+   static void    SetScaleBy(EScalingType type);
    void           SetSize(ULong_t size);
-   static void    SetSortBy(ESortingType type);
    void           SetTotalSize(ULong_t size);
    void           SetVisible(bool visible);
    void           SetWidth(Float_t w);
    void           SetX(Float_t x);
    void           SetY(Float_t y);
-   void           SetZ(Float_t z);
 
    ClassDef(TStructNode,0); // Node with information about class
 };

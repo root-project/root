@@ -17,7 +17,10 @@
 #include <TGToolTip.h>
 #include <TGLabel.h>
 #include <TGNumberEntry.h>
+#include <TGeoVolume.h>
+#include <TExMap.h>
 
+class TGeoMedium;
 class TStructViewer;
 class TGeoVolume;
 class TStructNode;
@@ -34,10 +37,10 @@ class TGTextEntry;
 class TStructViewerGUI : public TGMainFrame {
 
 private:
-   TStructViewer       *fParent;                // Pointer to Viewer which contain this GUI
+   TStructViewer       *fParent;                // Pointer to Viewer GUI
    TGeoVolume          *fTopVolume;             // Main volume containing all others volumes
-   TStructNode         *fNodePtr;               // Root node which represents main pointer
-   UInt_t               fMaxSlices;             // Maximum number of slices used to build collection node
+   TStructNode         *fNodePtr;               // Root node which represents the main pointer
+   UInt_t               fMaxSlices;             // Maximum number of slices used to build a collection node
    UInt_t               fMouseX;                // Position of ToolTip on x-axis
    UInt_t               fMouseY;                // Position of ToolTip on y-axis
    TStructNode         *fSelectedObject;        // Pointer to actual selected object on scene
@@ -46,26 +49,32 @@ private:
    TList                fVisibleObjects;        // List with pointer to nodes which are visible
    Float_t              fMaxRatio;              // Maximum ratio used to scale objetcs
    TList               *fColors;                // Pointer to the list with color properties
+   static TGeoMedium   *fgMedium;               // Material and medium
+   TExMap               fVolumes;               // Map with pointers to Volumes associated with nodes
+   static UInt_t        fgCounter;              // Volume counter
 
    // layout
    TCanvas             *fCanvas;                // Canvas used to store and paint objects
    TGLEmbeddedViewer   *fGLViewer;              // GLViewer in frame
-   TGToolTip           *fToolTip;               // ToolTip is showed when user mouse over the object
+   TGToolTip           *fToolTip;               // ToolTip is showed when user mouse is over the object
    TGCheckButton       *fShowLinksCheckButton;  // Enable/Disable lines between nodes
    TGLabel             *fNodeNameLabel;         // Label with name of node
    TGLabel             *fNodeTypelabel;         // Label with classname
    TGLabel             *fMembersCountLabel;     // Label with number of members in node
    TGLabel             *fAllMembersCountLabel;  // Label with daugthers members
    TGLabel             *fSizeLabel;             // Label with size of node
-   TGLabel             *fTotalSizeLabel;        // Label with size of node and datghters nodes
+   TGLabel             *fTotalSizeLabel;        // Label with size of node and daughters nodes
    TGLabel             *fLevelLabel;            // Label with level where the node is placed
    TGTextButton        *fUndoButton;            // Button which can restore last top node
    TGTextButton        *fRedoButton;            // Button which can repeat last node change
-   TGRadioButton       *fSortBySizeButton;      // Sets sorting method to size
-   TGRadioButton       *fSortByMembersButton;   // Sets sorting method to members
+   TGRadioButton       *fScaleBySizeButton;     // Sets sorting method to size
+   TGRadioButton       *fScaleByMembersButton;  // Sets sorting method to members
    TGTextEntry         *fPointerTextEntry;      // Sets address of pointer
    TGTextEntry         *fPointerTypeTextEntry;  // Sets type of pointer
    TStructNodeEditor   *fEditor;                // Frame with a node editor
+   TGNumberEntry       *fBoxHeightEntry;        // Height of boxes
+   TGCheckButton       *fAutoRefesh;            // Automatic redraw of the scene
+   TGNumberEntry       *fLevelDistanceEntry;    // Distance between levels
    
 private:
    void           CalculatePosistion(TStructNode* parent);
@@ -84,17 +93,23 @@ public:
       UInt_t w = 800, UInt_t h = 600);
    ~TStructViewerGUI();
    
+   void           AutoRefreshButtonSlot(Bool_t on);
+   void           BoxHeightValueSetSlot(Long_t h);
    void           CloseWindow();
+   void           ColorSelectedSlot(Pixel_t pixel);
    void           DoubleClickedSlot();
    void           Draw(Option_t* option = "");
    TCanvas       *GetCanvas();
    Int_t          GetColor(TStructNode* node);
+   TStructNodeProperty* GetDefaultColor();
    Bool_t         GetLinksVisibility() const;
    TStructNode   *GetNodePtr() const;
    void           GLWidgetProcessedEventSlot(Event_t* event);
+   void           LevelDistValueSetSlot(Long_t dist);
    void           MouseOverSlot(TGLPhysicalShape* shape);
    void           RedoButtonSlot();
    void           ResetButtonSlot();
+   void           ScaleByChangedSlot();
    void           SetLinksVisibility(Bool_t val);
    void           SetNodePtr(TStructNode* val);
    void           SetPointerButtonSlot();

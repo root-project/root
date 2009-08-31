@@ -22,16 +22,13 @@ ClassImp(TStructNode);
 // about some pointer. It keeps information such as name of object, type, 
 // size of pointers class, size of node and daughter nodes, number of child 
 // nodes. It is also used to store information needed to draw TGeoVolume.
-// It is for example x, y and z coordinates, TGeoMaterial and TGeoMedium 
-// which are static member of TStructNode to save time and memory. 
+// It is for example x, y and z coordinates.
 // Condition fVisible tells us that node is visible and should be drawn.
 // fCollapsed tells us that we can see daughter nodes.
 // 
 //////////////////////////////////////////////////////////////////////////
 
-
-TGeoMedium* TStructNode::fMedium = NULL;
-ESortingType TStructNode::fSortBy = kMembers;
+EScalingType TStructNode::fgScalBy = kMembers;
 
 //________________________________________________________________________
 TStructNode::TStructNode(TString name, TString typeName, void* pointer, TStructNode* parent, ULong_t size, ENodeType type)
@@ -43,22 +40,16 @@ TStructNode::TStructNode(TString name, TString typeName, void* pointer, TStructN
    fTypeName = typeName;
    fTotalSize = fSize = size;
    fMembers = new TList();
-   fMembersCount = 1;
-   fAllMembersCount = 1;
+   fMembersCount = fAllMembersCount = 1;
    fLevel = 1;
-   fX = fY = fZ = fWidth = fHeight = 0;
+   fX = fY = fWidth = fHeight = 0;
    fParent = parent;
    if (parent) {
       fLevel = parent->GetLevel()+1;
       parent->fMembers->Add(this);
-   } else {
-
    }
 
-   if (!fMedium) {
-      fMedium = new TGeoMedium("MED",1,new TGeoMaterial("Mat", 26.98,13,2.7));
-   }
-   kNodeType = type;
+   fNodeType = type;
    fPointer = pointer;
    fCollapsed = false;
    fVisible = false;
@@ -141,7 +132,7 @@ ENodeType TStructNode::GetNodeType() const
 {
    // Returns type of node
 
-   return kNodeType;
+   return fNodeType;
 }
 
 //________________________________________________________________________
@@ -157,14 +148,6 @@ UInt_t TStructNode::GetMaxObjects() const
 {
    // Returns maximum number of objects displayed when the node is top node on scene
    return fMaxObjects;
-}
-
-//________________________________________________________________________
-TGeoMedium* TStructNode::GetMedium()
-{
-   // Returns TGeoMedium used to draw objects in 3D space
-
-   return fMedium;
 }
 
 //________________________________________________________________________
@@ -233,18 +216,18 @@ ULong_t TStructNode::GetRelativeSize() const
 //________________________________________________________________________
 ULong_t TStructNode::GetRelativeVolume() const
 {
-   // Returns size or number of members. If SortBy is set to kMembers and node is collapsed, then it 
+   // Returns size or number of members. If ScaleBy is set to kMembers and node is collapsed, then it 
    // returns all number of members. If node isn't collapsed it returns number of members.
-   // If Sortby is set to kSize and node is collapsed, then it returns total size of node and daughters,
+   // If Scaleby is set to kSize and node is collapsed, then it returns total size of node and daughters,
    // else it returns size of node, otherwise it returns 0.
 
-   if (fSortBy == kMembers) {
+   if (fgScalBy == kMembers) {
       if (fCollapsed) {
          return GetAllMembersCount();
       } else {
          return GetMembersCount();
       }
-   } else if (fSortBy == kSize) {
+   } else if (fgScalBy == kSize) {
       if (fCollapsed) {
          return GetTotalSize();
       } else {
@@ -290,12 +273,12 @@ TString TStructNode::GetTypeName() const
 //________________________________________________________________________
 ULong_t TStructNode::GetVolume() const
 {
-   // Returns size or number of members. If SortBy is set to kMembers it returns all number of members.
-   // If Sortby is set to kSize then it returns total size of node and daughters, otherwise it returns 0.
+   // Returns size or number of members. If ScaleBy is set to kMembers it returns all number of members.
+   // If Scaleby is set to kSize then it returns total size of node and daughters, otherwise it returns 0.
 
-   if (fSortBy == kMembers) {
+   if (fgScalBy == kMembers) {
       return GetAllMembersCount();
-   } else if (fSortBy == kSize) {
+   } else if (fgScalBy == kSize) {
       return GetTotalSize();
    } else {
       return 0;
@@ -333,14 +316,6 @@ Float_t TStructNode::GetY() const
    // Returns Y coordinate
 
    return fY;
-}
-
-//________________________________________________________________________
-Float_t TStructNode::GetZ() const
-{
-   // Returns Z coordinate
-
-   return fZ;
 }
 
 //________________________________________________________________________
@@ -408,14 +383,6 @@ void TStructNode::SetMaxObjects(UInt_t max)
 }
 
 //________________________________________________________________________
-void TStructNode::SetMedium(TGeoMedium* medium)
-{
-   // Sets medium used to draw objects to "medium"
-
-   fMedium = medium;
-}
-
-//________________________________________________________________________
 void TStructNode::SetMembers(TList* list)
 {
    // Sets list of dauther nodes to "list"
@@ -435,7 +402,7 @@ void TStructNode::SetNodeType(ENodeType type)
 {
    // Sets type of node to "type"
 
-   kNodeType = type;
+   fNodeType = type;
 }
 
 //________________________________________________________________________
@@ -447,19 +414,19 @@ void TStructNode::SetPointer(void* pointer)
 }
 
 //________________________________________________________________________
+void TStructNode::SetScaleBy(EScalingType type)
+{
+   // Sets scaling by to "type"
+
+   fgScalBy = type;
+}
+
+//________________________________________________________________________
 void TStructNode::SetSize(ULong_t size)
 {
    // Sets size of node to "size"
 
-    fSize = size;
-}
-
-//________________________________________________________________________
-void TStructNode::SetSortBy(ESortingType type)
-{
-   // Sets sorting by "type"
-
-   fSortBy = type;
+   fSize = size;
 }
 
 //________________________________________________________________________
@@ -467,7 +434,7 @@ void TStructNode::SetTotalSize(ULong_t size)
 {
    // Sets total size  of allocated memory in bytes to value "size"
 
-    fTotalSize = size;
+   fTotalSize = size;
 }
 
 //________________________________________________________________________
@@ -500,12 +467,4 @@ void TStructNode::SetY(Float_t y)
    // Sets Y coordinate to "y"
 
    fY = y;
-}
-
-//________________________________________________________________________
-void TStructNode::SetZ(Float_t z)
-{
-   // Sets Z coordinate to "z"
-
-   fZ = z;
 }
