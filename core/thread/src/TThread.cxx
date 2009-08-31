@@ -886,13 +886,12 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
 
    TThread *th = Self();
    if (th && th->fId != fgMainId) {   // we are in the thread
-
-      TConditionImp *condimp = fgXActCondi->fConditionImp;
-      TMutexImp *condmutex = fgXActCondi->GetMutex()->fMutexImp;
-
       th->SetComment("XARequest: XActMutex Locking");
       fgXActMutex->Lock();
       th->SetComment("XARequest: XActMutex Locked");
+
+      TConditionImp *condimp = fgXActCondi->fConditionImp;
+      TMutexImp *condmutex = fgXActCondi->GetMutex()->fMutexImp;
 
       // Lock now, so the XAction signal will wait
       // and never come before the wait
