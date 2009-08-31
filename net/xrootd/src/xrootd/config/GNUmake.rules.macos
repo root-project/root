@@ -10,8 +10,8 @@ TYPELD     = g++
 GCC_MAJOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 
-#TYPEMISC   = -D_POSIX_SOURCE -D_REENTRANT -D_GNU_SOURCE -Wall
-TYPEMISC   = -D_REENTRANT -D_GNU_SOURCE -Wall -D__macos__ $(CFTRACE)
+#TYPEMISC   = -m32 -D_POSIX_SOURCE -D_REENTRANT -D_GNU_SOURCE -Wall
+TYPEMISC   = -m32 -D_REENTRANT -D_GNU_SOURCE -Wall -D__macos__ $(CFTRACE)
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 TYPEMISC  += -D__DARWIN_UNIX03=1
 endif
@@ -21,13 +21,13 @@ TYPELINK   = -undefined dynamic_lookup -multiply_defined suppress
 TYPEOPT    = $(TYPEMISC) $(TYPELINK) -O2
 TYPEDBG    = $(TYPEMISC) $(TYPELINK) -g
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
-TYPELDSO   = $(TYPELINK) -dynamiclib -single_module
-TYPELDDY   = $(TYPELINK) -dynamiclib -single_module
+TYPELDSO   = $(TYPELINK) -dynamiclib -single_module -m32
+TYPELDDY   = $(TYPELINK) -dynamiclib -single_module -m32
 TYPESHLIB  = so
 TYPEDYLIB  = so
 else
-TYPELDSO   = $(TYPELINK) -bundle
-TYPELDDY   = $(TYPELINK) -dynamiclib -single_module
+TYPELDSO   = $(TYPELINK) -bundle -m32
+TYPELDDY   = $(TYPELINK) -dynamiclib -single_module -m32
 TYPESHLIB  = so
 TYPEDYLIB  = dylib
 endif
