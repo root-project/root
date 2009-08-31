@@ -19,7 +19,7 @@
 #if !defined(__CINT__)
 
 #ifdef R__WIN32
-#include <winsock.h>
+#include <winsock2.h>
 #else
 #include <sys/time.h>
 #endif
