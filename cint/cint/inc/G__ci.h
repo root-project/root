@@ -427,10 +427,6 @@ typedef unsigned long long G__uint64;
 #define G__EH_DUMMY_DELETE
 #endif
 
-#ifdef __CINT__
-#undef G__WIN32
-#endif
-
 #ifdef G__NONANSI
 #ifdef G__ANSIHEADER
 #undef G__ANSIHEADER
