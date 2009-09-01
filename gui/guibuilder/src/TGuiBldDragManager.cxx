@@ -1609,6 +1609,7 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
 //______________________________________________________________________________
 Bool_t TGuiBldDragManager::HandleTimerEvent(Event_t *e, TTimer *t)
 {
+   // Handle timer events or events coming from the recorder.
 
    static Int_t gy = 0;
    static Int_t gx = 0;
