@@ -1529,7 +1529,18 @@ void TProfile::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out<<"   "<<endl;
    out<<"   "<<ClassName()<<" *";
 
-   out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
+   //histogram pointer has by default teh histogram name.
+   //however, in case histogram has no directory, it is safer to add a incremental suffix
+   static Int_t hcounter = 0;
+   TString histName = GetName();
+   if (!fDirectory) {
+      hcounter++;
+      histName += "__";
+      histName += hcounter;
+   }
+   const char *hname = histName.Data();
+   
+   out<<hname<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
                  <<","<<GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", xAxis";
@@ -1543,14 +1554,14 @@ void TProfile::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    for (bin=0;bin<fNcells;bin++) {
       Double_t bi = GetBinEntries(bin);
       if (bi) {
-         out<<"   "<<GetName()<<"->SetBinEntries("<<bin<<","<<bi<<");"<<endl;
+         out<<"   "<<hname<<"->SetBinEntries("<<bin<<","<<bi<<");"<<endl;
       }
    }
    //save bin contents
    for (bin=0;bin<fNcells;bin++) {
       Double_t bc = fArray[bin];
       if (bc) {
-         out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
+         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
       }
    }
    // save bin errors
@@ -1558,12 +1569,12 @@ void TProfile::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       for (bin=0;bin<fNcells;bin++) {
          Double_t be = TMath::Sqrt(fSumw2.fArray[bin]);
          if (be) {
-            out<<"   "<<GetName()<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
+            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
          }
       }
    }
 
-   TH1::SavePrimitiveHelp(out, option);
+   TH1::SavePrimitiveHelp(out, hname, option);
 }
 
 //______________________________________________________________________________

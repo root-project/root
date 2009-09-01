@@ -5962,9 +5962,21 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    char quote = '"';
    out <<"   "<<endl;
    out <<"   "<< ClassName() <<" *";
+   
+   //histogram pointer has by default teh histogram name.
+   //however, in case histogram has no directory, it is safer to add a incremental suffix
+   static Int_t hcounter = 0;
+   TString histName = GetName();
+   if (!fDirectory && !histName.Contains("Graph")) {
+      hcounter++;
+      histName += "__";
+      histName += hcounter;
+   }
+   const char *hname = histName.Data();
+   
 
-   out << GetName() << " = new " << ClassName() << "(" << quote
-      << GetName() << quote << "," << quote<< GetTitle() << quote
+   out << hname << " = new " << ClassName() << "(" << quote
+      << hname << quote << "," << quote<< GetTitle() << quote
       << "," << GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", "<<sxaxis;
@@ -5994,7 +6006,7 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    for (bin=0;bin<fNcells;bin++) {
       Double_t bc = GetBinContent(bin);
       if (bc) {
-         out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
+         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
       }
    }
 
@@ -6003,53 +6015,53 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       for (bin=0;bin<fNcells;bin++) {
          Double_t be = GetBinError(bin);
          if (be) {
-            out<<"   "<<GetName()<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
+            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
          }
       }
    }
 
-   TH1::SavePrimitiveHelp(out, option);
+   TH1::SavePrimitiveHelp(out, hname, option);
 }
 
 //______________________________________________________________________________
-void TH1::SavePrimitiveHelp(ostream &out, Option_t *option /*= ""*/)
+void TH1::SavePrimitiveHelp(ostream &out, const char *hname, Option_t *option /*= ""*/)
 {
    // helper function for the SavePrimitive functions from TH1
    // or classes derived from TH1, eg TProfile, TProfile2D.
 
    char quote = '"';
    if (TMath::Abs(GetBarOffset()) > 1e-5) {
-      out<<"   "<<GetName()<<"->SetBarOffset("<<GetBarOffset()<<");"<<endl;
+      out<<"   "<<hname<<"->SetBarOffset("<<GetBarOffset()<<");"<<endl;
    }
    if (TMath::Abs(GetBarWidth()-1) > 1e-5) {
-      out<<"   "<<GetName()<<"->SetBarWidth("<<GetBarWidth()<<");"<<endl;
+      out<<"   "<<hname<<"->SetBarWidth("<<GetBarWidth()<<");"<<endl;
    }
    if (fMinimum != -1111) {
-      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<endl;
+      out<<"   "<<hname<<"->SetMinimum("<<fMinimum<<");"<<endl;
    }
    if (fMaximum != -1111) {
-      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<endl;
+      out<<"   "<<hname<<"->SetMaximum("<<fMaximum<<");"<<endl;
    }
    if (fNormFactor != 0) {
-      out<<"   "<<GetName()<<"->SetNormFactor("<<fNormFactor<<");"<<endl;
+      out<<"   "<<hname<<"->SetNormFactor("<<fNormFactor<<");"<<endl;
    }
    if (fEntries != 0) {
-      out<<"   "<<GetName()<<"->SetEntries("<<fEntries<<");"<<endl;
+      out<<"   "<<hname<<"->SetEntries("<<fEntries<<");"<<endl;
    }
    if (fDirectory == 0) {
-      out<<"   "<<GetName()<<"->SetDirectory(0);"<<endl;
+      out<<"   "<<hname<<"->SetDirectory(0);"<<endl;
    }
    if (TestBit(kNoStats)) {
-      out<<"   "<<GetName()<<"->SetStats(0);"<<endl;
+      out<<"   "<<hname<<"->SetStats(0);"<<endl;
    }
    if (fOption.Length() != 0) {
-      out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
+      out<<"   "<<hname<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
    }
 
    // save contour levels
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
-      out<<"   "<<GetName()<<"->SetContour("<<ncontours<<");"<<endl;
+      out<<"   "<<hname<<"->SetContour("<<ncontours<<");"<<endl;
       Double_t zlevel;
       for (Int_t bin=0;bin<ncontours;bin++) {
          if (gPad->GetLogz()) {
@@ -6057,7 +6069,7 @@ void TH1::SavePrimitiveHelp(ostream &out, Option_t *option /*= ""*/)
          } else {
             zlevel = GetContourLevel(bin);
          }
-         out<<"   "<<GetName()<<"->SetContourLevel("<<bin<<","<<zlevel<<");"<<endl;
+         out<<"   "<<hname<<"->SetContourLevel("<<bin<<","<<zlevel<<");"<<endl;
       }
    }
 
@@ -6068,27 +6080,27 @@ void TH1::SavePrimitiveHelp(ostream &out, Option_t *option /*= ""*/)
       obj = lnk->GetObject();
       obj->SavePrimitive(out,"nodraw");
       if (obj->InheritsFrom("TF1")) {
-         out<<"   "<<GetName()<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+         out<<"   "<<hname<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
       } else if (obj->InheritsFrom("TPaveStats")) {
-         out<<"   "<<GetName()<<"->GetListOfFunctions()->Add(ptstats);"<<endl;
-         out<<"   ptstats->SetParent("<<GetName()<<"->GetListOfFunctions());"<<endl;
+         out<<"   "<<hname<<"->GetListOfFunctions()->Add(ptstats);"<<endl;
+         out<<"   ptstats->SetParent("<<hname<<"->GetListOfFunctions());"<<endl;
       } else {
-         out<<"   "<<GetName()<<"->GetListOfFunctions()->Add("<<obj->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<endl;
+         out<<"   "<<hname<<"->GetListOfFunctions()->Add("<<obj->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<endl;
       }
       lnk = (TObjOptLink*)lnk->Next();
    }
 
    // save attributes
-   SaveFillAttributes(out,GetName(),0,1001);
-   SaveLineAttributes(out,GetName(),1,1,1);
-   SaveMarkerAttributes(out,GetName(),1,1,1);
-   fXaxis.SaveAttributes(out,GetName(),"->GetXaxis()");
-   fYaxis.SaveAttributes(out,GetName(),"->GetYaxis()");
-   fZaxis.SaveAttributes(out,GetName(),"->GetZaxis()");
+   SaveFillAttributes(out,hname,0,1001);
+   SaveLineAttributes(out,hname,1,1,1);
+   SaveMarkerAttributes(out,hname,1,1,1);
+   fXaxis.SaveAttributes(out,hname,"->GetXaxis()");
+   fYaxis.SaveAttributes(out,hname,"->GetYaxis()");
+   fZaxis.SaveAttributes(out,hname,"->GetZaxis()");
    TString opt = option;
    opt.ToLower();
    if (!opt.Contains("nodraw")) {
-      out<<"   "<<GetName()<<"->Draw("
+      out<<"   "<<hname<<"->Draw("
          <<quote<<option<<quote<<");"<<endl;
    }
 }

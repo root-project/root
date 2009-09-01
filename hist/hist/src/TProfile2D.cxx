@@ -1384,7 +1384,7 @@ void TProfile2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   TH1::SavePrimitiveHelp(out, option);
+   TH1::SavePrimitiveHelp(out, GetName(), option);
 }
 
 //______________________________________________________________________________
