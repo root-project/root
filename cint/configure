@@ -698,13 +698,15 @@ EXPORTS=(${EXPORTS[*]} HAVE_CONFIG)
 if [ "x$WITHPREFIX" = "x1" ]; then
   # prefix based build
     [ "$PREFIX" = "" ] && PREFIX=/usr/local
-    if [ -d "$PREFIX" -a "`cd \"$PREFIX\"; pwd`" = "`cd \"$PWD\"; pwd`" ]; then
-        echo ' '
-        echo ' '
-        echo 'ERROR: Cannot build within install location!'
-        echo 'Directory '$PREFIX' set as --prefix is the same as the current directory!'
-        echo ' '
-        exit 1
+    if [ -d "$PREFIX" ]; then
+        if [ "`cd \"$PREFIX\"; pwd`" = "`cd \"$PWD\"; pwd`" ]; then
+            echo ' '
+            echo ' '
+            echo 'ERROR: Cannot build within install location!'
+            echo 'Directory '$PREFIX' set as --prefix is the same as the current directory!'
+            echo ' '
+            exit 1
+        fi
     fi
     [ "$EPREFIX" = "" ] && EPREFIX=$PREFIX
     [ "$BINDIR" = "" ]  && BINDIR=$EPREFIX/bin

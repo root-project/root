@@ -34,8 +34,10 @@ ORDER_ := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || \
 # libraries
 ifeq ($(subst msvc,,$(G__CFG_ARCH)), $(G__CFG_ARCH))
 CINTLIBSHARED = lib/libCint$(G__CFG_SOEXT)
+CINTLIBINSTDIR = $(G__CFG_LIBDIR)
 else
 CINTLIBSHARED = bin/libCint$(G__CFG_SOEXT)
+CINTLIBINSTDIR = $(G__CFG_BINDIR)
 endif
 CINTIMPLIB    = lib/libCint$(G__CFG_IMPLIBEXT)
 CINTLIBSTATIC = lib/libCint_static$(G__CFG_LIBEXT)
@@ -181,6 +183,9 @@ install:
 	if [ ! -d $(DESTDIR)$(G__CFG_BINDIR) ]; then mkdir -p $(DESTDIR)$(G__CFG_BINDIR); fi
 	cp $(CINT)     $(DESTDIR)$(G__CFG_BINDIR)/$(notdir $(CINT))
 	cp $(MAKECINT) $(DESTDIR)$(G__CFG_BINDIR)/$(notdir $(MAKECINT))
+	if [ -f $(CINT).manifest ]; then \
+	   cp bin/*.manifest     $(DESTDIR)$(G__CFG_BINDIR); \
+	fi
 	if [ -f bin/cint-config ] ; then cp bin/cint-config $(DESTDIR)$(G__CFG_BINDIR)/ ; fi
 # install manual pages
 	if [ ! -d $(DESTDIR)$(G__CFG_MANDIR)/man1 ] ; then \
@@ -190,11 +195,11 @@ install:
 	cp doc/man1/makecint.1 $(DESTDIR)$(G__CFG_MANDIR)/man1/makecint.1
 
 	if [ ! -d $(DESTDIR)$(G__CFG_LIBDIR) ]; then mkdir -p $(DESTDIR)$(G__CFG_LIBDIR); fi
-	cp $(CINTLIBSHARED) $(DESTDIR)$(G__CFG_LIBDIR)/
+	cp $(CINTLIBSHARED) $(DESTDIR)$(CINTLIBINSTDIR)/
 	if [ -f $(CINTIMPLIB) ] ;   then cp $(CINTIMPLIB)    $(DESTDIR)$(G__CFG_LIBDIR)/ ; fi
 	cp $(CINTLIBSTATIC) $(DESTDIR)$(G__CFG_LIBDIR)/
 	if [ -f $(REFLEXLIB) ] ;    then cp $(REFLEXLIB)     $(DESTDIR)$(G__CFG_LIBDIR)/ ; fi
-	if [ -f $(REFLEXSO) ] ;     then cp $(REFLEXSO)      $(DESTDIR)$(G__CFG_LIBDIR)/ ; fi
+	if [ -f $(REFLEXSO) ] ;     then cp $(REFLEXSO)      $(DESTDIR)$(CINTLIBINSTDIR)/ ; fi
 	if [ -f $(REFLEXIMPLIB) ] ; then cp $(REFLEXIMPLIB)  $(DESTDIR)$(G__CFG_LIBDIR)/ ; fi
 
 	if [ ! -d $(DESTDIR)$(G__CFG_INCLUDEDIRCINT) ] ; then mkdir -p $(DESTDIR)$(G__CFG_INCLUDEDIRCINT) ; fi

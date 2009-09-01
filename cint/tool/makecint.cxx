@@ -500,7 +500,7 @@ void G__outputmakefile(int argc,char **argv)
    ***************************************************************************/
   // check if the variable __CINT_BUILDDIR is set. This means that we are
   // within an initial cint build, and cint is not yet installed, i.e.
-  // cint system directories should be taken from the bild directory
+  // cint system directories should be taken from the build directory
   // instead of the final destination
   char *builddir = getenv("__CINT_BUILDDIR");
 
@@ -520,8 +520,8 @@ void G__outputmakefile(int argc,char **argv)
   if(builddir)
   {
       // initial build, take includedir from the builddir (temporarily)
-      out << "CINTINCDIRU := " << builddir << "/" << G__EXTRA_TOPDIR << "/"
-	  << G__CFG_COREVERSION << "/inc" << std::endl
+      out << "CINTINCDIRU := $(shell " << G__CFG_MANGLEPATHSU << " " << builddir << "/" << G__EXTRA_TOPDIR << "/"
+	  << G__CFG_COREVERSION << "/inc )" << std::endl
 	  << "CINTINCDIRW := " << builddir << "/" << G__EXTRA_TOPDIR << "/"
 	  << G__CFG_COREVERSION << "/inc" << std::endl;
   }
@@ -573,7 +573,7 @@ void G__outputmakefile(int argc,char **argv)
   if(builddir)
   {
 #if defined(G__WIN32)
-      out << "CINTLIB     := " << builddir << "/bin/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+      out << "CINTLIB     := $(shell " << G__CFG_MANGLEPATHSU << " " << builddir << "/bin/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << " )\n";
 #else
       out << "CINTLIB     := " << builddir << "/lib/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
 #endif
