@@ -30,9 +30,9 @@ AWK	  = awk
 # The options
 #
 #
-CXXOPTS       = $(OPT) -pipe -Wall -W -Woverloaded-virtual  
-COPT	      = $(OPT) 
-FOPT	      = $(OPT) -fno-second-underscore
+CXXOPTS       = $(OPT) -m32 -pipe -Wall -W -Woverloaded-virtual  
+COPT	      = $(OPT) -m32 
+FOPT	      = $(OPT) -m32 -fno-second-underscore
 
 # CERNLIB defines
 
@@ -57,15 +57,15 @@ LD            = export MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) 
 		unset LD_PREBIND ; \
 		$(shell root-config --ld)
 
-LDFLAGS       = $(OPT) -bind_at_load
+LDFLAGS       = $(OPT) -m32 -bind_at_load
 
 SHLD	      = $(LD)
-SOFLAGS       = -dynamiclib -undefined dynamic_lookup -single_module
+SOFLAGS       = -m32 -dynamiclib -undefined dynamic_lookup -single_module
 
 ifneq (,$(findstring g95,$(F77)))
 SHLIB += -L$(shell $(F77) --print-search-dirs | sed -n -e 's/install: //p') -lf95
 else
-SHLIB := $(shell $(F77) -print-file-name=libgfortran.dylib)
-SHLIB += $(shell $(F77) -print-file-name=libgfortranbegin.a)
+SHLIB := $(shell $(F77) -m32 -print-file-name=libgfortran.dylib)
+SHLIB += $(shell $(F77) -m32 -print-file-name=libgfortranbegin.a)
 SHLIB += -ldl
 endif
