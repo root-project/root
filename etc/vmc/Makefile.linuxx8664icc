@@ -1,0 +1,51 @@
+# -*- mode: makefile -*-
+# $Id$
+
+# Linux (with icc) platform dependent definitions
+
+# The compilers
+CXX           = $(shell root-config --cxx)
+CC            = $(shell root-config --cc)
+
+ICC_MAJOR    := $(shell $(CXX) -V 2>&1 | awk '{ if (NR==1) print $$8 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell $(CXX) -V 2>&1 | awk '{ if (NR==1) print $$8 }' | \
+                cut -d'.' -f2)
+
+F77           = $(shell root-config --f77)
+
+# Global optimisation
+OPT           = -O -ip
+
+# Shared library suffix
+SL            = so
+
+# AWK
+AWK           = awk
+
+# The options
+#
+# starting from root.2.22 on Linux the flags -fno-rtti -fno-exceptions are
+# not necessary any more
+#
+CXXOPTS       = $(OPT)
+COPT          = $(OPT)
+FOPT          = $(OPT)
+
+# CERNLIB defines
+
+CLIBDEFS      = -DCERNLIB_LINUX -DCERNLIB_BLDLIB -DCERNLIB_CZ
+CLIBCXXOPTS   = $(CLIBDEFS)
+CLIBCOPT      = $(CLIBDEFS)
+CLIBFOPT      = $(CLIBDEFS)
+
+LD            = $(shell root-config --ld)
+LDFLAGS       = $(OPT)
+
+SHLD          = $(LD)
+SOFLAGS       = -Wl,-soname,$(notdir $@) -shared
+SHLIB         =
+
+LIBS          = $(ROOTLIBS)
+LIBNOVER      = `find /lib -name 'libNoVersion*.so' | xargs --replace basename {} .so | sed -e 's/lib/ -l/'`
+
