@@ -676,7 +676,9 @@ void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
          }
          // + 16 skips "represents node "
          //fSelectedObject = (TStructNode*)(TString(fSelectedObject->GetTitle() + 16).Atoll()); 
-         fSelectedObject = (TStructNode*)(fVolumes.GetValue((Long_t)(shape->GetLogical()->ID())));
+         Long_t shapeID  = (Long_t)(shape->GetLogical()->ID());
+         Long_t volValue = (Long_t)fVolumes.GetValue(shapeID);
+         fSelectedObject = (TStructNode*)volValue;
          fToolTip->SetText(TString(fSelectedObject->GetName()) + "\n" + fSelectedObject->GetTypeName());
          fToolTip->SetPosition(fMouseX, fMouseY);
          fToolTip->Reset();
