@@ -940,7 +940,7 @@ void TDataSetManager::ShowDataSets(const char *uri, const char *opt)
          delete fc;
       } else {
          // Support for "*" or "/*"
-         if (u == "" || u == "*" || u == "/*" || u == "/*/" || u == "/*/*") u = "/*/*/";
+         if (u == "*" || u == "/*" || u == "/*/" || u == "/*/*") u = "/*/*/";
          // Scan the existing datasets and print the content
          GetDataSets(u.Data(), (UInt_t)TDataSetManager::kPrint);
       }
