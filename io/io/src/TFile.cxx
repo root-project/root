@@ -447,7 +447,7 @@ TFile::TFile(const TFile &) : TDirectoryFile(), fInfoCache(0)
 {
    // TFile objects can not be copied.
 
-   MayNotUse("TFile::TFile(const TFile &)"); 
+   MayNotUse("TFile::TFile(const TFile &)");
 }
 
 //______________________________________________________________________________
@@ -605,13 +605,13 @@ void TFile::Init(Bool_t create)
       if (fVersion < 1000000) { //small file
          nk += 2*sizeof(Int_t);
       } else {
-         nk += 2*sizeof(Long64_t);         
+         nk += 2*sizeof(Long64_t);
       }
       // nk is the distance between the start of key record and the location of the number
       // of bytes in the (held) class name (i.e. lname). So
       // nk = sum of size of:  NBytes, Version, ObjLen, DateTime, KeyLen, Cycle, SeekKey, SeekPdir
       // (the current calculation assumes the 32 bits file format).
-      
+
       Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
       if (nbytes+fBEGIN > kBEGIN+200) {
          delete [] header;
@@ -716,8 +716,10 @@ void TFile::Init(Bool_t create)
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfFiles()->Add(this);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
+   }
 
-      // Create StreamerInfo index
+   // Create StreamerInfo index
+   {
       Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
       if (lenIndex < 5000) lenIndex = 5000;
       fClassIndex = new TArrayC(lenIndex);
@@ -2159,7 +2161,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       TIter enext( info->GetElements() );
       TStreamerElement *el;
       while( (el=(TStreamerElement*)enext()) ) {
-         TMakeProject::GenerateMissingStreamerInfos(&extrainfos, el);         
+         TMakeProject::GenerateMissingStreamerInfos(&extrainfos, el);
       }
    }
    // Now transfer the new StreamerInfo onto the main list.
@@ -2167,7 +2169,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    while ((info = (TStreamerInfo*)nextextra())) {
       list->Add(info);
    }
-   
+
    // loop on all TStreamerInfo classes
    next.Reset();
    Int_t ngener = 0;
@@ -2320,14 +2322,14 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       gSystem->ChangeDirectory(path);
       sprintf(path,"%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
       if (res) printf("Shared lib %s has been generated\n",path);
-   
+
       //dynamically link the generated shared lib
       if (opt.Contains("++")) {
          res = !gSystem->Load(path);
          if (res) printf("Shared lib %s has been dynamically linked\n",path);
       }
    }
-   
+
    list->Delete();
    delete list;
    delete [] path;
