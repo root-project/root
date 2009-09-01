@@ -160,7 +160,7 @@ Bool_t TFileMerger::Merge(Bool_t)
       }
    }
 
-   Bool_t result = MergeRecursive(fOutputFile, fFileList, 0);
+   Bool_t result = MergeRecursive(fOutputFile, fFileList);
    if (!result) {
       Error("Merge", "error during merge of your ROOT files");
    } else {
@@ -188,7 +188,7 @@ Bool_t TFileMerger::Merge(Bool_t)
 }
 
 //______________________________________________________________________________
-Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t isdir)
+Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
 {
    // Merge all objects in a directory
    // NB. This function is a copy of the hadd function MergeROOTFile
@@ -303,7 +303,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             // newdir is now the starting point of another round of merging
             // newdir still knows its depth within the target file via
             // GetPath(), so we can still figure out where we are in the recursion
-            MergeRecursive( newdir, sourcelist,1);
+            MergeRecursive( newdir, sourcelist);
 
          } else {
             TMethodCall callEnv;
@@ -376,7 +376,6 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    }
    // save modifications to target file
    target->SaveSelf(kTRUE);
-   if (!isdir) sourcelist->Remove(sourcelist->First());
    TH1::AddDirectory(addDirStat);
    return kTRUE;
 }
