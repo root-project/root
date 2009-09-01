@@ -78,7 +78,7 @@ Bool_t noTrees;
 Bool_t fastMethod;
 
 int AddFile(TList* sourcelist, std::string entry, int newcomp) ;
-int MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir );
+int MergeRootfile( TDirectory *target, TList *sourcelist);
 
 //___________________________________________________________________________
 int main( int argc, char **argv ) 
@@ -144,7 +144,7 @@ int main( int argc, char **argv )
       cout <<"Merging will be slower"<<endl;
    }
 
-   int status = MergeRootfile( Target, FileList,0 );
+   int status = MergeRootfile( Target, FileList);
 
    //must delete Target to avoid a problem with dictionaries in~ TROOT
    delete Target;
@@ -187,7 +187,7 @@ int AddFile(TList* sourcelist, std::string entry, int newcomp)
 
 
 //___________________________________________________________________________
-int MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) 
+int MergeRootfile( TDirectory *target, TList *sourcelist) 
 {
    // Merge all objects in a directory
    int status = 0;
@@ -280,7 +280,7 @@ int MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
             // newdir is now the starting point of another round of merging
             // newdir still knows its depth within the target file via
             // GetPath(), so we can still figure out where we are in the recursion
-            status = MergeRootfile( newdir, sourcelist,1);
+            status = MergeRootfile( newdir, sourcelist);
             if (status) return status;
 
          } else if ( obj->InheritsFrom(TObject::Class())
@@ -364,6 +364,5 @@ int MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
    }
    // save modifications to target file
    target->SaveSelf(kTRUE);
-   if (!isdir) sourcelist->Remove(sourcelist->First());
    return status;
 }
