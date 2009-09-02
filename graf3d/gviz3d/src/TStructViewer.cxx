@@ -16,8 +16,15 @@
 
 #include <TDataMember.h>
 #include <TVirtualCollectionProxy.h>
+#include <TClassEdit.h>
+#include <vector>
 
 ClassImp(TStructViewer);
+
+class A {
+public:
+   virtual ~A() {}
+};
 
 //________________________________________________________________________
 //////////////////////////////////////////////////////////////////////////
@@ -40,26 +47,38 @@ ClassImp(TStructViewer);
 // some object you can see some information about it (e.g. name, size, actual level).
 // When you double click this object, it becames top object on scene.
 // Undo and redo operation are supported. 
+// 
+// Begin_Html
+// <p> In this picture we can see TStructViewer with pointer to TList which contains
+// other collections and objects of various classes</p>
+// <img src="gif/TStructViewer1.jpg">
+// End_Html
+// 
+// Begin_Html
+// <p> Other screenshot presents opened TStructNodeEditor</p>
+// <img src="gif/TStructViewer2.jpg">
+// End_Html
 //
 //
 //////////////////////////////////////////////////////////////////////////
 
 
 //________________________________________________________________________
-TStructViewer::TStructViewer(TObject* ptr)
+TStructViewer::TStructViewer(void* ptr, const char * clname)
 {
-   // Default constructor. An argument "ptr" is a main pointer to TObject, which should be shown in the viewer
+   // Default constructor. An argument "ptr" is a main pointer of type "clname", which should be shown in the viewer
 
+   fPointer = NULL;
+   fPointerClass = NULL;
    fTopNode = NULL;
 
    // add default color 
    fColors.Add(new TStructNodeProperty("+", 17));
 
-   fPointer = ptr;
-   Prepare();
-
    // creating GUI
-   fGUI = new TStructViewerGUI(this, fTopNode, &fColors);
+   fGUI = new TStructViewerGUI(this, NULL, &fColors);
+   
+   SetPointer(ptr, clname);
 }
 
 //________________________________________________________________________
@@ -68,6 +87,8 @@ TStructViewer::~TStructViewer()
    // Destructor. Clean all object after closing the viewer
 
    Reset();
+   fColors.SetOwner();
+   fColors.Clear();
 }
 
 //________________________________________________________________________
@@ -118,82 +139,14 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
          continue;
       }
 
-      ENodeType type;
-      if(dm->GetDataType()) {   // pointer to basic type
-         type = kBasic;
-      } else if (dm->IsSTLContainer() == TDataMember::kVector) {
-         type = kSTLCollection;
 
-//             it works only for pointer in std object (not pointer)
-//             TClass* stlClass = TClass::GetClass(dm->GetTypeName());
-//             if (!stlClass) {
-//                continue;
-//             }
-//             
-//             TVirtualCollectionProxy* proxy = stlClass->GetCollectionProxy();
-//             if (!proxy) {
-//                continue;
-//             }
-//             void* ptr = (void*)((ULong_t)pointer + dm->GetOffset());
-//             TVirtualCollectionProxy::TPushPop helper(proxy, ptr);
-// 
-//             UInt_t count = proxy->Size();
-//             parent->SetMembersCount(parent->GetMembersCount() + count);
-//    
-//             if(!proxy->HasPointers() || proxy->GetType()) { // only objects or pointers to basic type
-//                parent->SetTotalSize(parent->GetTotalSize() + count * proxy->Sizeof());
-//                parent->SetAllMembersCount(parent->GetAllMembersCount() + count);
-//             } else {
-//                void* element;
-//                for (UInt_t i = 0; i < count ; i++) {
-//                   element = *(void**)proxy->At(i);
-//    
-//                   if (!element) {
-//                      continue;
-//                   }
-//    
-//                   // get size of element
-//                   ULong_t size = 0;
-//                   TClass* clProxy = proxy->GetValueClass();
-//                   const char * name = "name";
-//                   if (clProxy) {
-//                      if (clProxy->InheritsFrom("TNamed")) {
-//                         name = ((TNamed*) element)->GetName();
-//                      } else {
-//                         name = clProxy->GetName();
-//                      }
-//                      
-//                      size = clProxy->Size();
-//                      
-//                   }
-//    
-//                   // if there is no dictionary
-//                   if (size == 0) {
-//                      size = proxy->Sizeof();
-//                   }
-//    
-//                   // create node
-//                   TStructNode* node = new TStructNode(name, name, element, parent, size, kClass);
-//                   // add addition information
-//                   AddNode(node, size);
-//                   // increase parents counter
-//                   parent->SetMembersCount(parent->GetMembersCount() + 1);
-//    
-//                   //CountMembers(clProxy, node);
-//    
-//                   parent->SetTotalSize(parent->GetTotalSize() + node->GetTotalSize());
-//                   parent->SetAllMembersCount(parent->GetAllMembersCount() + node->GetAllMembersCount());
-//                }
-//             }
-      } else {
-         type = kClass;
-      }
+      void* ptr = NULL;
 
       if(dm->IsaPointer()) {
          TString trueTypeName = dm->GetTrueTypeName();
 
          // skip if pointer to pointer
-         if(trueTypeName.CountChar('*') > 1) {
+         if(trueTypeName.EndsWith("**")) {
             continue;
          }
 
@@ -202,7 +155,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
          }
 
          void** pptr = (void**)((ULong_t)pointer + dm->GetOffset());
-         void* ptr = *pptr;
+         ptr = *pptr;
 
          if (!ptr) {
             continue;
@@ -222,6 +175,13 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
          if(size == 0) {
             size = dm->GetUnitSize();
          }
+
+         ENodeType type;
+         if(dm->GetDataType()) {   // pointer to basic type
+            type = kBasic;
+         } else {
+            type = kClass;
+         }
             
          // creating TStructNode
          TStructNode* node = new TStructNode(dm->GetName(), dm->GetTypeName(), ptr, parent, size, type);
@@ -234,13 +194,104 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
          // all members of node = all nodes of parent + nodes of daughter - 1 because node is added twice
          parent->SetAllMembersCount(parent->GetAllMembersCount() + node->GetAllMembersCount() - 1);
       } else {
-         void* ptr = (void*)((ULong_t)pointer + dm->GetOffset());
+         ptr = (void*)((ULong_t)pointer + dm->GetOffset());
 
          if (!ptr) {
             continue;
          }
          CountMembers(TClass::GetClass(dm->GetTypeName()), parent, ptr);
       }
+         
+      //////////////////////////////////////////////////////////////////////////
+      // STL COLLECTION
+      //////////////////////////////////////////////////////////////////////////
+      if (dm->IsSTLContainer()) {
+         parent->SetNodeType(kSTLCollection);
+
+         //it works only for pointer in std object (not pointer)
+         TClass* stlClass = TClass::GetClass(dm->GetTypeName());
+         if (!stlClass) {
+            continue;
+         }
+
+         TVirtualCollectionProxy* proxy = stlClass->GetCollectionProxy();
+         if (!proxy) {
+            continue;
+         }
+         TVirtualCollectionProxy::TPushPop helper(proxy, ptr);
+
+         UInt_t count = proxy->Size();
+         parent->SetMembersCount(parent->GetMembersCount() + count);
+
+         if(!proxy->HasPointers() || proxy->GetType()) { // only objects or pointers to basic type
+            parent->SetTotalSize(parent->GetTotalSize() + count * proxy->Sizeof());
+            parent->SetAllMembersCount(parent->GetAllMembersCount() + count);
+         } else {
+            
+            TClass* clProxy = proxy->GetValueClass();
+            TString name;
+            TString typeName;
+            // get size of element
+            ULong_t size = 0;
+            if (clProxy) {
+               name = clProxy->GetName();
+               typeName = clProxy->GetName();
+               size = clProxy->Size();
+            } else {
+               continue;
+            }
+
+            // if there is no dictionary
+            if (size == 0) {
+               size = proxy->Sizeof();
+            }
+
+            // searching pointer to pointer
+            Bool_t ptp = kFALSE;
+            std::vector<std::string> parts;
+            int loc;
+            TClassEdit::GetSplit(dm->GetTypeName(), parts, loc);
+            std::vector<std::string>::const_iterator iPart = parts.begin();
+            while (iPart != parts.end() && *iPart == "")
+               ++iPart;
+            if (iPart != parts.end() && *iPart != dm->GetTypeName()) {
+               for (std::vector<std::string>::const_iterator iP = iPart,
+                  iPE = parts.end(); iP != iPE; ++iP) {
+                     if (TString(TClassEdit::ResolveTypedef(iP->c_str(), true).c_str()).EndsWith("**")){
+                        ptp = kTRUE;
+                        break;
+                     }
+               }
+            }
+            if (ptp) {
+               continue;
+            }
+
+
+            void* element;
+            for (UInt_t i = 0; i < count ; i++) {
+               element = *(void**)proxy->At(i);
+
+               if (!element) {
+                  continue;
+               }
+               if (clProxy->InheritsFrom("TObject")) {
+                  name = ((TObject*) element)->GetName();
+               }
+               
+               // create node
+               TStructNode* node = new TStructNode(name, typeName, element, parent, size, kClass);
+               // add addition information
+               AddNode(node, size);
+               // increase parents counter
+               parent->SetMembersCount(parent->GetMembersCount() + 1);
+
+               CountMembers(clProxy, node, element);
+               parent->SetTotalSize(parent->GetTotalSize() + node->GetTotalSize());
+               parent->SetAllMembersCount(parent->GetAllMembersCount() + node->GetAllMembersCount());
+            }
+         }
+      } 
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -290,6 +341,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
 void TStructViewer::Draw(Option_t *option)
 {
    // Draw object if there is valid pointer
+
    TString opt(option);
    if(opt == "count") {
       
@@ -321,7 +373,7 @@ TGMainFrame* TStructViewer::GetFrame()
    return fGUI;
 }
 //________________________________________________________________________
-TObject* TStructViewer::GetPointer() const
+void* TStructViewer::GetPointer() const
 {
    // Return main pointer
 
@@ -360,18 +412,15 @@ void TStructViewer::Prepare()
       Reset();
    }
 
-   ULong_t size = 0;
-   if (TClass * cl = fPointer->IsA()) {
-      size = cl->Size();
-   }
-   
-   if(size == 0) {
-      size = sizeof(fPointer);
-   }
+   ULong_t size = fPointerClass->Size();
 
-   fTopNode = new TStructNode(fPointer->GetName(), fPointer->ClassName(), fPointer, NULL, size, kClass);
+   TString name = "Main pointer";
+   if (fPointerClass->InheritsFrom("TObject")) {
+      name = ((TObject*) fPointer)->GetName();
+   }
+   fTopNode = new TStructNode(name, fPointerClass->GetName(), fPointer, NULL, size, kClass);
    AddNode(fTopNode, size);
-   CountMembers(fPointer->IsA(), fTopNode, fPointer);
+   CountMembers(fPointerClass, fTopNode, fPointer);
 }
 
 //________________________________________________________________________
@@ -391,8 +440,6 @@ void TStructViewer::Reset()
    fLevelSize.Clear();
    fPointers.Clear();
    fLevelArray.Clear();
-   fColors.SetOwner();
-   fColors.Clear();
    
    fTopNode = NULL;
 }
@@ -428,11 +475,22 @@ void TStructViewer::SetLinksVisibility(Bool_t val)
 }
 
 //________________________________________________________________________
-void TStructViewer::SetPointer(TObject* ptr)
+void TStructViewer::SetPointer(void* ptr, const char* clname)
 {
-   // Set main pointer
+   // Set main pointer of class "clname"
 
    if (ptr) {
+      A* a = (A*) ptr;
+      if (clname) {
+         fPointerClass = TClass::GetClass(clname);
+      } else {
+         fPointerClass = TClass::GetClass(typeid(*a));
+      }
+
+      if (!fPointerClass) {
+         return;
+      }
+
       fPointer = ptr;
       Prepare();
       fGUI->SetNodePtr(fTopNode);

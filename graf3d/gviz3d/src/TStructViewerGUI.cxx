@@ -674,11 +674,10 @@ void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
             fSelectedObject = NULL;
             return;
          }
-         // + 16 skips "represents node "
-         //fSelectedObject = (TStructNode*)(TString(fSelectedObject->GetTitle() + 16).Atoll()); 
          Long_t shapeID  = (Long_t)(shape->GetLogical()->ID());
          Long_t volValue = (Long_t)fVolumes.GetValue(shapeID);
          fSelectedObject = (TStructNode*)volValue;
+         
          fToolTip->SetText(TString(fSelectedObject->GetName()) + "\n" + fSelectedObject->GetTypeName());
          fToolTip->SetPosition(fMouseX, fMouseY);
          fToolTip->Reset();
@@ -780,8 +779,8 @@ void TStructViewerGUI::SetPointerButtonSlot()
 {
    // Sets pointer given in fPointerTestEntry to the main pointer
 
-   TObject* obj = (TObject*)gROOT->ProcessLine(fPointerTextEntry->GetText());
-   fParent->SetPointer(obj);
+   void* obj = (void*)gROOT->ProcessLine(fPointerTextEntry->GetText());
+   fParent->SetPointer(obj, fPointerTypeTextEntry->GetText());
 }
 
 //________________________________________________________________________
@@ -814,6 +813,10 @@ void TStructViewerGUI::UnCheckMaxObjects()
 void TStructViewerGUI::Update(Bool_t resetCamera)
 {
    // Updates view. Clear all the nodes, call draw function and update scene. Doesn't reset camera.
+
+   if (!fNodePtr) {
+      return;
+   }
 
    fCanvas->GetListOfPrimitives()->Clear();
    fTopVolume->ClearNodes();

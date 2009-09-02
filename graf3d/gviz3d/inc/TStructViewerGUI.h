@@ -73,7 +73,7 @@ private:
    TGTextEntry         *fPointerTypeTextEntry;  // Sets type of pointer
    TStructNodeEditor   *fEditor;                // Frame with a node editor
    TGNumberEntry       *fBoxHeightEntry;        // Height of boxes
-   TGCheckButton       *fAutoRefesh;            // Automatic redraw of the scene
+   TGCheckButton       *fAutoRefesh;            // Automatic redraw the scene
    TGNumberEntry       *fLevelDistanceEntry;    // Distance between levels
    
 private:

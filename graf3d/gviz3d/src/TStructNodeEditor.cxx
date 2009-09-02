@@ -40,10 +40,14 @@ TStructNodeEditor::TStructNodeEditor(TList* colors, const TGWindow *p, Int_t wid
    // Constructor of node attributes GUI.
 
    MakeTitle("TStructNode");
-   fAvoidSignal = kTRUE;
+   fInit = kFALSE;
+
+   TGLayoutHints* expandX = new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5,5,5,5);
+   fNodeNameLabel = new TGLabel(this, "No node selected");
+   this->AddFrame(fNodeNameLabel, expandX);
 
    fTypeName = new TGLabel(this);
-   TGLayoutHints* expandX = new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5,5,5,5);
+   
    this->AddFrame(fTypeName, expandX);
 
    TGHorizontalFrame* maxObjectsFrame = new TGHorizontalFrame(this);
@@ -53,6 +57,8 @@ TStructNodeEditor::TStructNodeEditor(TList* colors, const TGWindow *p, Int_t wid
    fMaxObjectsNumberEntry = new TGNumberEntry(maxObjectsFrame, 0);
    fMaxObjectsNumberEntry->SetFormat(TGNumberEntry::kNESInteger);
    fMaxObjectsNumberEntry->SetLimits(TGNumberEntry::kNELLimitMin, 1);
+   fMaxObjectsNumberEntry->SetState(kFALSE);
+   fMaxObjectsNumberEntry->Connect("ValueSet(Long_t)", "TStructNodeEditor", this, "MaxObjectsValueSetSlot(Long_t)");
    maxObjectsFrame->AddFrame(fMaxObjectsNumberEntry);
    this->AddFrame(maxObjectsFrame, expandX);
 
@@ -62,23 +68,36 @@ TStructNodeEditor::TStructNodeEditor(TList* colors, const TGWindow *p, Int_t wid
    fMaxLevelsNumberEntry = new TGNumberEntry(maxLevelFrame, 0);
    fMaxLevelsNumberEntry->SetLimits(TGNumberEntry::kNELLimitMin, 1);
    fMaxLevelsNumberEntry->SetFormat(TGNumberEntry::kNESInteger);
+   fMaxLevelsNumberEntry->SetState(kFALSE);
+   fMaxLevelsNumberEntry->Connect("ValueSet(Long_t)", "TStructNodeEditor", this, "MaxLevelsValueSetSlot(Long_t)");
    maxLevelFrame->AddFrame(fMaxLevelsNumberEntry);
    this->AddFrame(maxLevelFrame, expandX);
 
    fNameEntry = new TGTextEntry(this, fName.Data());
    this->AddFrame(fNameEntry, expandX);
+   fNameEntry->SetState(kFALSE);
 
    fColorSelect = new TGColorSelect(this);
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TStructNodeEditor", this, "ColorSelectedSlot(Pixel_t)");
    this->AddFrame(fColorSelect, expandX);
+   fColorSelect->SetEnabled(kFALSE);
 
-   TGTextButton* defaultButton = new TGTextButton(this, "Default color");
-   defaultButton->Connect("Clicked()", "TStructNodeEditor", this, "DefaultButtonSlot()");
-   this->AddFrame(defaultButton, expandX);
+   fAutoRefesh = new TGCheckButton(this, "Auto refesh");
+   fAutoRefesh->SetOn();
+   fAutoRefesh->Connect("Toggled(Bool_t)", "TStructNodeEditor", this, "AutoRefreshButtonSlot(Bool_t)");
+   fAutoRefesh->SetEnabled(kFALSE);
+   this->AddFrame(fAutoRefesh, expandX);
 
-   TGTextButton* applyButton = new TGTextButton(this, "Apply");
-   applyButton->Connect("Clicked()", "TStructNodeEditor", this, "ApplyButtonSlot()");
-   this->AddFrame(applyButton, expandX);
+   fDefaultButton = new TGTextButton(this, "Default color");
+   fDefaultButton->Connect("Clicked()", "TStructNodeEditor", this, "DefaultButtonSlot()");
+   this->AddFrame(fDefaultButton, expandX);
+   fDefaultButton->SetEnabled(kFALSE);
+
+
+   fApplyButton = new TGTextButton(this, "Apply");
+   fApplyButton->Connect("Clicked()", "TStructNodeEditor", this, "ApplyButtonSlot()");
+   fApplyButton->SetEnabled(kFALSE);
+   this->AddFrame(fApplyButton, expandX);
 }
 
 //______________________________________________________________________________
@@ -110,6 +129,16 @@ void TStructNodeEditor::ApplyButtonSlot()
    }
 
    Update(needReset);
+}
+
+//________________________________________________________________________
+void TStructNodeEditor::AutoRefreshButtonSlot(Bool_t on)
+{
+   // Activated when user chage condition
+
+   if (on) {
+      Update(kTRUE);
+   }
 }
 
 //______________________________________________________________________________
@@ -150,19 +179,11 @@ void TStructNodeEditor::DefaultButtonSlot()
 }
 
 //________________________________________________________________________
-TStructNodeProperty* TStructNodeEditor::GetDefaultProperty()
-{
-   // Returns property with default color 
-
-   return (TStructNodeProperty*)fColors->Last();
-}
-
-//________________________________________________________________________
 TStructNodeProperty* TStructNodeEditor::FindNodeProperty(TStructNode* node)
 {
    // Retruns property associated to the class of given node "node". If property isn't found
    // then returns NULL
-      
+
    TIter it(fColors);
    TStructNodeProperty* prop;
    while ((prop = (TStructNodeProperty*) it() )) {
@@ -185,7 +206,54 @@ TStructNodeProperty* TStructNodeEditor::FindNodeProperty(TStructNode* node)
    return NULL;
 }
 
-//______________________________________________________________________________
+//________________________________________________________________________
+TStructNodeProperty* TStructNodeEditor::GetDefaultProperty()
+{
+   // Returns property with default color 
+
+   return (TStructNodeProperty*)fColors->Last();
+}
+
+//________________________________________________________________________
+void TStructNodeEditor::Init()
+{
+   // Enables button and fields
+
+   fMaxObjectsNumberEntry->SetState(kTRUE);
+   fMaxLevelsNumberEntry->SetState(kTRUE);
+   fNameEntry->SetState(kTRUE);
+   fColorSelect->SetEnabled(kTRUE);
+   fDefaultButton->SetEnabled(kTRUE);
+   fApplyButton->SetEnabled(kTRUE);
+   fAutoRefesh->SetEnabled(kTRUE);
+   fInit = kTRUE;
+}
+
+//________________________________________________________________________
+void TStructNodeEditor::MaxLevelsValueSetSlot(Long_t)
+{
+   // Emmited when user changes maximum number of levels
+
+   fNode->SetMaxLevel(fMaxLevelsNumberEntry->GetIntNumber());
+
+   if(fAutoRefesh->IsOn()) {
+      Update(kTRUE);
+   }
+}
+
+//________________________________________________________________________
+void TStructNodeEditor::MaxObjectsValueSetSlot(Long_t)
+{
+   // Emmited when user changes maximum number of objects
+
+   fNode->SetMaxObjects(fMaxObjectsNumberEntry->GetIntNumber());
+
+   if(fAutoRefesh->IsOn()) {
+      Update(kTRUE);
+   }
+}
+
+//________________________________________________________________________
 void TStructNodeEditor::SetModel(TObject* obj)
 {
    // Pick up the used node attributes.
@@ -201,6 +269,9 @@ void TStructNodeEditor::SetModel(TObject* obj)
    // Type label
    fTypeName->SetText(fNode->GetTypeName());
 
+   // name label
+   fNodeNameLabel->SetText(fNode->GetName());
+
    // Add color property
    fSelectedPropert = FindNodeProperty(fNode);
    if (!fSelectedPropert)
@@ -210,7 +281,9 @@ void TStructNodeEditor::SetModel(TObject* obj)
    fNameEntry->SetText(fSelectedPropert->GetName());
    fColorSelect->SetColor(fSelectedPropert->GetPixel(), kFALSE);
 
-   fAvoidSignal = kFALSE;
+   if (!fInit) {
+      Init();
+   }
 }
 
 //________________________________________________________________________

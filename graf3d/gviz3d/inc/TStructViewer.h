@@ -26,7 +26,8 @@ class TGMainFrame;
 class TStructViewer : public TObject {
 
 private:
-   TObject          *fPointer;            // Main pointer to represented object
+   void             *fPointer;            // Main pointer to represented object
+   TClass           *fPointerClass;       // TClass of a main pointer
    TStructViewerGUI *fGUI;                // Pointer to GUI class
    TExMap            fLevelMembersCount;  // Contains number of objects on each level
    TExMap            fLevelSize;          // Contains total size in bytes of a level
@@ -43,7 +44,7 @@ private:
    void     Reset();
 
 public:
-   TStructViewer(TObject* ptr = NULL);
+   TStructViewer(void* ptr = NULL, const char * clname = NULL);
    ~TStructViewer();
 
    void     Draw(Option_t *option = "");
@@ -53,12 +54,12 @@ public:
    TExMap   GetLevelMembersCount() const;
    TExMap   GetLevelSize() const;
    Bool_t   GetLinksVisibility() const;
-   TObject *GetPointer() const;
+   void    *GetPointer() const;
    void     SetColor(TString name, Int_t color);
    void     SetLinksVisibility(Bool_t val);
-   void     SetPointer(TObject* ptr);
+   void     SetPointer(void* ptr, const char* clname = NULL);
 
-   ClassDef(TStructViewer, 1); // A 3D struct viewer
+   ClassDef(TStructViewer, 0); // A 3D struct viewer
 };
 
 #endif

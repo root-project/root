@@ -21,6 +21,7 @@ class TGNumberEntry;
 class TGLabel;
 class TGTextEntry;
 class TGColorSelect;
+class TGCheckButton;
 
 class TStructNodeEditor : public TGedFrame {
 
@@ -30,12 +31,17 @@ protected:
    TGNumberEntry       *fMaxObjectsNumberEntry; // Sets maximum number of nodes on scene
    TGNumberEntry       *fMaxLevelsNumberEntry;  // Sets maximum number of visible levels on scene
    TGLabel             *fTypeName;              // Label with name of type
+   TGLabel             *fNodeNameLabel;         // Label with name of node
    TGTextEntry         *fNameEntry;             // Text entry with name of property
    TGColorSelect       *fColorSelect;           // Control to selec a color
    TStructNodeProperty *fSelectedPropert;       // Pointer to property associated with node
+   TGTextButton        *fDefaultButton;         // Resets color to default
+   TGTextButton        *fApplyButton;           // Apply changes button
+   TGCheckButton       *fAutoRefesh;           // Condition for auto update
 
    TStructNodeProperty* FindNodeProperty(TStructNode* node);
    TStructNodeProperty* GetDefaultProperty();
+   void                 Init();
 
 public:
    TStructNodeEditor(TList* colors, const TGWindow *p = 0, Int_t width = 140, Int_t height = 30,
@@ -43,8 +49,11 @@ public:
    ~TStructNodeEditor(); 
 
    void  ApplyButtonSlot();
+   void  AutoRefreshButtonSlot(Bool_t on);
    void  ColorSelectedSlot(Pixel_t color);
    void  DefaultButtonSlot();
+   void  MaxLevelsValueSetSlot(Long_t);
+   void  MaxObjectsValueSetSlot(Long_t);
    void  SetModel(TObject* obj);
    void  Update(Bool_t resetCamera);
    void  Update();
