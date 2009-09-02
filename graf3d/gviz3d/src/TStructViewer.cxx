@@ -316,9 +316,9 @@ TCanvas* TStructViewer::GetCanvas()
 //________________________________________________________________________
 TGMainFrame* TStructViewer::GetFrame()
 {
-  // Returns pointer to main window
+   // Returns pointer to main window
   
-  return fGUI;
+   return fGUI;
 }
 //________________________________________________________________________
 TObject* TStructViewer::GetPointer() const
