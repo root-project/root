@@ -304,7 +304,8 @@ void ReadRef(Int_t kexp) {
       diff += TMath::Abs(length-p.length);
       diff += TMath::Abs(safe-p.safe);
       diff += TMath::Abs(rad-p.rad);
-      if ((TMath::Abs(rad-p.rad)/p.rad)>diffmax || TMath::Abs(nbound-p.nbound)>100) {
+      if (((p.rad>0) && (TMath::Abs(rad-p.rad)/p.rad)>diffmax) || 
+           TMath::Abs(nbound-p.nbound)>100) {
          nbad++;
          if (nbad < 10) {
             fprintf(stderr," ==>Point %lld differs with diff = %g, x=%g, y=%g, z=%g\n",i,diff,p.x,p.y,p.z);
