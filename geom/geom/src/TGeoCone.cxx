@@ -837,6 +837,8 @@ Double_t TGeoCone::Safety(Double_t *point, Bool_t in) const
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
    Double_t saf[3];
+//   Double_t edges[4];
+//   edges[0] = edges[1] = edges[2] = edges[3] = TGeoShape::Big();
    Double_t ro1 = 0.5*(fRmin1+fRmin2);
    Double_t tg1 = 0.5*(fRmin2-fRmin1)/fDz;
    Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
@@ -853,6 +855,18 @@ Double_t TGeoCone::Safety(Double_t *point, Bool_t in) const
    if (in) return saf[TMath::LocMin(3,saf)];
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
    return saf[TMath::LocMax(3,saf)];
+   // Compute distance to visible edges
+/*
+   if (r<rin || point[2]<-fDz) edges[0] = (r-fRmin1)*(r-fRmin1) + (point[2]+fDz)*(point[2]+fDz);
+   if (r<rin || point[2]>fDz) edges[1] = (r-fRmin2)*(r-fRmin2) + (point[2]-fDz)*(point[2]-fDz);
+   if (r>rout || point[2]<-fDz) edges[2] = (r-fRmax1)*(r-fRmax1) + (point[2]+fDz)*(point[2]+fDz);
+   if (r>rout || point[2]>fDz) edges[3] = (r-fRmax2)*(r-fRmax2) + (point[2]-fDz)*(point[2]-fDz);
+   Double_t dist_edge = edges[TMath::LocMin(4,edges)];
+   if (dist_edge>1.e10) dist_edge = 0;
+   else dist_edge = TMath::Sqrt(dist_edge);
+   Double_t dist_side = saf[TMath::LocMax(3,saf)];
+   return TMath::Max(dist_edge,dist_side);
+*/
 }
 
 //_____________________________________________________________________________

@@ -604,7 +604,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
          computeGlobal = kTRUE;
       }
 //      if (stepmax<1E29) {
-         if (IsSamePoint(fPoint[0], fPoint[1], fPoint[2]) && fLastSafety>=0.) fSafety = fLastSafety;
+         if (fLastSafety>0 && IsSamePoint(fPoint[0], fPoint[1], fPoint[2])) fSafety = fLastSafety;
          else fSafety = Safety();
          fSafety = TMath::Abs(fSafety);
          memcpy(fLastPoint, fPoint, kN3);
