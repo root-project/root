@@ -505,6 +505,7 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
       return -1;
    }
 
+   // collect statistics
    fBytesRead += len;
    fReadCalls++;
 #ifdef R__WIN32
@@ -558,8 +559,6 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
                return -1;
             }
             ltot += ll;
-            fBytesRead += ll;
-            SetFileBytesRead(GetFileBytesRead() + ll);
 
             first = -1;
 
@@ -626,6 +625,9 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
             ltot, len, fUrl.GetHost());
       return -1;
    }
+
+   // collect statistics
+   fBytesRead += len;
    fReadCalls++;
 #ifdef R__WIN32
    SetFileBytesRead(GetFileBytesRead() + len);
