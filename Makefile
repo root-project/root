@@ -167,6 +167,9 @@ endif
 ifeq ($(BUILDFFTW3),yes)
 MODULES      += math/fftw
 endif
+ifeq ($(BUILDGVIZ),yes)
+MODULES      += graf2d/gviz
+endif
 ifeq ($(BUILDPYTHON),yes)
 MODULES      += bindings/pyroot
 endif
@@ -284,7 +287,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 cint/cint7 roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat \
-                math/genvector net/bonjour graf3d/gviz3d
+                math/genvector net/bonjour graf3d/gviz3d graf2d/gviz
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -1196,6 +1199,9 @@ showbuild:
 	@echo "FFTW3LIBDIR        = $(FFTW3LIBDIR)"
 	@echo "FFTW3LIB           = $(FFTW3LIB)"
 	@echo "FFTW3INCDIR        = $(FFTW3INCDIR)"
+	@echo "GVIZLIBDIR         = $(GVIZLIBDIR)"
+	@echo "GVIZLIB            = $(GVIZLIB)"
+	@echo "GVIZINCDIR         = $(GVIZINCDIR)"
 	@echo "SAPDBINCDIR        = $(SAPDBINCDIR)"
 	@echo "SRPLIBDIR          = $(SRPLIBDIR)"
 	@echo "SRPINCDIR          = $(SRPINCDIR)"

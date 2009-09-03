@@ -193,6 +193,11 @@ FFTW3LIBDIR    := @fftw3libdir@
 FFTW3LIB       := @fftw3lib@
 FFTW3INCDIR    := $(filter-out /usr/include, @fftw3incdir@)
 
+BUILDGVIZ      := @buildgviz@
+GRAPHVIZLIBDIR := @gvizlibdir@
+GRAPHVIZLIB    := @gvizlib@
+GRAPHVIZINCDIR := $(filter-out /usr/include, @gvizincdir@)
+
 BUILDPYTHON    := @buildpython@
 PYTHONLIBDIR   := @pythonlibdir@
 PYTHONLIB      := @pythonlib@

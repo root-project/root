@@ -54,6 +54,7 @@ options="                    \
    enable_exceptions         \
    enable_explicitlink       \
    enable_fftw3              \
+   enable_gviz               \
    enable_g4root             \
    enable_gdml               \
    enable_genvector          \
@@ -154,6 +155,7 @@ GSL              \
 PYTHIA6          \
 PYTHIA8          \
 FFTW3            \
+GVIZ             \
 PYTHONDIR        \
 DCACHE           \
 CHIRP            \
@@ -1043,6 +1045,7 @@ enable/disable options, prefix with either --enable- or --disable-
   exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
   fftw3              Fast Fourier Transform support, requires libfftw3
+  gviz               Graphs visualization support, requires graphviz
   gdml               GDML writer and reader
   gfal               GFAL support, requires libgfal
   g4root             GEANT4 navigator based on TGeo, requires GEANT4 installed
@@ -1108,6 +1111,8 @@ with options, prefix with --with-, enables corresponding support
   ftgl-libdir        FTGL support, location of libftgl
   fftw3-incdir       FFTW3 support, location of fftw3.h
   fftw3-libdir       FFTW3 support, location of libfftw3 (libfftw3-3 for windows)
+  gviz-incdir        Graphviz support, location of gvc.h
+  gviz-libdir        Graphviz support, location of libgvplugin_core
   gfal-incdir        GFAL support, location of gfal_api.h
   gfal-libdir        GFAL support, location of libgfal
   glew-incdir        GLEW support, location of glew.h
@@ -1324,6 +1329,8 @@ if test $# -gt 0 ; then
       --with-ftgl-libdir=*)    ftgllibdir=$optarg    ; enable_builtin_ftgl=no;;
       --with-fftw3-incdir=*)   fftw3incdir=$optarg   ; enable_fftw3="yes"   ;;
       --with-fftw3-libdir=*)   fftw3libdir=$optarg   ; enable_fftw3="yes"   ;;
+      --with-gviz-incdir=*)    gvizincdir=$optarg    ; enable_gviz="yes"   ;;
+      --with-gviz-libdir=*)    gvizlibdir=$optarg    ; enable_gviz="yes"   ;;
       --with-gfal-incdir=*)    gfalincdir=$optarg    ; enable_gfal="yes"    ;;
       --with-gfal-libdir=*)    gfallibdir=$optarg    ; enable_gfal="yes"    ;;
       --with-glew-incdir=*)    glewincdir=$optarg    ; enable_builtin_glew=no;;
@@ -2688,6 +2695,38 @@ if test ! "x$enable_fftw3" = "xno"; then
 fi
 check_explicit "$enable_fftw3" "$enable_fftw3_explicit" \
      "Explicitly required FFT in the West dependencies not fulfilled"
+
+######################################################################
+#
+### echo %%% graphviz Support - Third party libraries
+#
+# (See http://www.graphviz.org/)
+#
+# If the user has set the flags "--disable-gviz", we don't check for
+# graphviz at all.
+#
+if test ! "x$enable_gviz" = "xno"; then
+    # Check for graphviz include and library
+    check_header "gvc.h" "$gvizincdir" $GVIZ $GVIZ/include \
+                  /usr/local/include/graphviz /usr/include/graphviz
+    gvizinc=$found_hdr
+    gvizincdir=$found_dir
+
+    # At this time, libgvplugin_core.a should always be prefered over .so,
+    # to avoid forcing users to install graphviz.
+    check_library "libgvc" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
+                  $GVIZ/.libs /usr/local/lib /usr/local/lib/graphviz \
+                  /usr/lib /usr/lib/graphviz
+    gvizlib=$found_lib
+    gvizlibdir=$found_dir
+
+    if test "x$gvizincdir" = "x" || test "x$gvizlib" = "x"; then
+        enable_gviz="no"
+    fi
+fi
+check_explicit "$enable_gviz" "$enable_gviz_explicit" \
+     "Explicitly required graphviz dependencies not fulfilled"
+
 
 ######################################################################
 #
@@ -4768,6 +4807,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_gfal"     = "xyes" && pl="$pl root-plugin-io-gfal"
     test "x$enable_rfio"     = "xyes" && pl="$pl root-plugin-io-rfio"
     test "x$enable_fftw3"    = "xyes" && pl="$pl root-plugin-math-fftw3"
+    test "x$enable_gviz"     = "xyes" && pl="$pl root-plugin-graf2d-gviz"
     test "x$enable_minuit2"  = "xyes" && pl="$pl root-plugin-math-minuit2"
     test "x$enable_g4root"   = "xyes" && pl="$pl root-plugin-montecarlo-g4root"
     test "x$enable_pythia6"  = "xyes" && pl="$pl root-plugin-montecarlo-pythia6"
@@ -5213,6 +5253,9 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@fftw3incdir@|$fftw3incdir|"          \
     -e "s|@fftw3lib@|$fftw3lib|"                \
     -e "s|@fftw3libdir@|$fftw3libdir|"          \
+    -e "s|@gvizincdir@|$gvizincdir|"            \
+    -e "s|@gvizlib@|$gvizlib|"                  \
+    -e "s|@gvizlibdir@|$gvizlibdir|"            \
     -e "s|@dnssdincdir@|$dnssdincdir|"          \
     -e "s|@dnssdlib@|$dnssdlib|"                \
     -e "s|@dnssdlibdir@|$dnssdlibdir|"          \
@@ -5304,6 +5347,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildcastor@|$enable_castor|"        \
     -e "s|@builddcap@|$enable_dcache|"          \
     -e "s|@buildfftw3@|$enable_fftw3|"          \
+    -e "s|@buildgviz@|$enable_gviz|"            \
     -e "s|@buildgfal@|$enable_gfal|"            \
     -e "s|@buildg4root@|$enable_g4root|"        \
     -e "s|@buildbonjour@|$enable_bonjour|"      \

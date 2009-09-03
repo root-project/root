@@ -14,6 +14,7 @@ ASIMAGEGUILIBDEPM      = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB) $(IOLIB)
 ASIMAGEGSLIBDEPM       = $(GRAFLIB) $(ASIMAGELIB)
 GEDLIBDEPM             = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
                          $(TREEPLAYERLIB)
+GVIZLIBDEPM            = $(HISTLIB) $(GRAFLIB)
 POSTSCRIPTLIBDEPM      = $(GRAFLIB)
 GUILIBDEPM             = $(GPADLIB) $(GRAFLIB) $(IOLIB) $(MATHCORELIB)
 GUIHTMLLIBDEPM         = $(GUILIB) $(GRAFLIB) $(NETLIB)
@@ -133,6 +134,7 @@ ASIMAGEGUILIBDEP       = $(ASIMAGEGUILIBDEPM)
 ASIMAGEGSLIBDEP        = $(ASIMAGEGSLIBDEPM)
 GEDLIBDEP              = $(GEDLIBDEPM)
 POSTSCRIPTLIBDEP       = $(POSTSCRIPTLIBDEPM)
+GVIZLIBDEP             = $(GVIZLIBDEPM)
 GUILIBDEP              = $(GUILIBDEPM)
 GUIHTMLLIBDEP          = $(GUIHTMLLIBDEPM)
 HISTPAINTERLIBDEP      = $(HISTPAINTERLIBDEPM)
@@ -231,6 +233,7 @@ ASIMAGEGUILIBEXTRA      = lib/libGraf.lib lib/libHist.lib lib/libGui.lib \
 ASIMAGEGSLIBEXTRA       = lib/libGraf.lib lib/libASImage.lib
 GEDLIBEXTRA             = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libTree.lib lib/libTreePlayer.lib lib/libGui.lib
+GVIZLIBEXTRA            = lib/libHist.lib lib/libGraf.lib
 POSTSCRIPTLIBEXTRA      = lib/libGraf.lib
 GUILIBEXTRA             = lib/libGpad.lib lib/libGraf.lib lib/libRIO.lib \
                           lib/libMathCore.lib
@@ -372,6 +375,7 @@ GRAFLIBEXTRA            = -Llib -lHist -lMatrix -lRIO -lMathCore
 GPADLIBEXTRA            = -Llib -lGraf -lHist
 G3DLIBEXTRA             = -Llib -lGraf -lHist -lGpad -lMathCore
 GEDLIBEXTRA             = -Llib -lHist -lGpad -lGraf -lGui -lTree -lTreePlayer
+GVIZLIBEXTRA            = -Llib -lHist -lGraf
 POSTSCRIPTLIBEXTRA      = -Llib -lGraf
 GUILIBEXTRA             = -Llib -lGpad -lGraf -lRIO -lMathCore
 HISTPAINTERLIBEXTRA     = -Llib -lGraf -lHist -lMatrix -lGpad -lMathCore
