@@ -72,7 +72,7 @@ include/Math/%.h: $(MATHMOREDIRI)/Math/%.h
 		fi)
 		cp $< $@
 
-$(MATHMORELIB): $(MATHMOREO) $(MATHMOREDO) $(ORDER_) $(MAINLIBS)
+$(MATHMORELIB): $(MATHMOREO) $(MATHMOREDO) $(ORDER_) $(MAINLIBS) $(MATHMORELIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libMathMore.$(SOEXT) $@     \
 		   "$(MATHMOREO) $(MATHMOREDO)"             \
