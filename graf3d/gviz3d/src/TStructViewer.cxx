@@ -21,9 +21,9 @@
 
 ClassImp(TStructViewer);
 
-class A {
+class TA {
 public:
-   virtual ~A() {}
+   virtual ~TA() {}
 };
 
 //________________________________________________________________________
@@ -480,7 +480,7 @@ void TStructViewer::SetPointer(void* ptr, const char* clname)
    // Set main pointer of class "clname"
 
    if (ptr) {
-      A* a = (A*) ptr;
+      TA* a = (TA*) ptr;
       if (clname) {
          fPointerClass = TClass::GetClass(clname);
       } else {

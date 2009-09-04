@@ -7,6 +7,9 @@
 #include "TPaveText.h"
 #include "TFrame.h"
 #include "TF1.h"
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TInterpreter.h"
    
 void ntuple1() {
    //Small tree analysis script
