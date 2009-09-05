@@ -814,7 +814,7 @@ bool operator< (const vector<bool,Allocator>& x,
 template <class Allocator>
 bool operator!=(const vector<bool,Allocator>& x,
 		const vector<bool,Allocator>& y);
-template <class Allocator
+template <class Allocator>
 bool operator> (const vector<bool,Allocator>& x,
 		const vector<bool,Allocator>& y);
 template <class Allocator>
