@@ -77,7 +77,7 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
 #ifdef DEBUG
             std::cout << "step(i) " << step(i) << " gdel " << gdel << std::endl; 
 //            std::cout << " g2del " << g2del << std::endl;
-            bool debugLS = true;
+            debugLS = true;
 #endif
             MnParabolaPoint pp = lsearch(fcn, pa, step, gdel, prec,debugLS);
 
