@@ -76,7 +76,7 @@ public:
    virtual Bool_t OutputFile(const char *url);
    virtual void   PrintFiles(Option_t *options);
    virtual Bool_t Merge(Bool_t = kTRUE);
-   virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist, Int_t isdir);
+   virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist);
    virtual void   SetFastMethod(Bool_t fast=kTRUE)  {fFastMethod = fast;}
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
 
