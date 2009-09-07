@@ -2708,7 +2708,8 @@ check_explicit "$enable_fftw3" "$enable_fftw3_explicit" \
 if test ! "x$enable_gviz" = "xno"; then
     # Check for graphviz include and library
     check_header "gvc.h" "$gvizincdir" $GVIZ $GVIZ/include \
-                  /usr/local/include/graphviz /usr/include/graphviz
+                  /usr/local/include/graphviz /usr/include/graphviz \
+                  /opt/local/include/graphviz
     gvizinc=$found_hdr
     gvizincdir=$found_dir
 
@@ -2716,7 +2717,7 @@ if test ! "x$enable_gviz" = "xno"; then
     # to avoid forcing users to install graphviz.
     check_library "libgvc" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib /usr/local/lib/graphviz \
-                  /usr/lib /usr/lib/graphviz
+                  /usr/lib /usr/lib/graphviz /opt/local/lib
     gvizlib=$found_lib
     gvizlibdir=$found_dir
 
