@@ -1743,6 +1743,7 @@ static void G__templatemaptypename(char *string)
   else if(strcmp(string,"longlong*")==0) strcpy(string,"long long*");
   else if(strcmp(string,"unsignedchar")==0) strcpy(string,"unsigned char");
   else if(strcmp(string,"unsignedchar*")==0) strcpy(string,"unsigned char*");
+  else if(strcmp(string,"unsigned")==0) strcpy(string,"unsigned int");
   else if(strcmp(string,"unsignedint")==0) strcpy(string,"unsigned int");
   else if(strcmp(string,"unsignedint*")==0) strcpy(string,"unsigned int*");
   else if(strcmp(string,"unsignedlong")==0||
