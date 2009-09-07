@@ -120,7 +120,7 @@ void TGraphStruct::DumpAsDotFile(const char *filename)
 
    if (!fGVGraph) Layout();
    FILE  *file;
-   file=fopen(filename,"w");
+   file=fopen(filename,"wt");
    agwrite(fGVGraph, file);
    fclose(file);
 }
