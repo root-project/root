@@ -74,17 +74,17 @@ TGridJobStatus *TAlienMasterJob::GetJobStatus() const
 
       GAPI_JOB gjob = *jobIter;
       TAlienJobStatus* jobStatus = new TAlienJobStatus();
-      TObjString* jobID = 0;
+      TObjString* jID = 0;
 
       std::map<std::string, std::string>::const_iterator iter = gjob.gapi_jobmap.begin();
       for (; iter != gjob.gapi_jobmap.end(); ++iter) {
          jobStatus->fStatus.Add(new TObjString(iter->first.c_str()), new TObjString(iter->second.c_str()));
          if (strcmp(iter->first.c_str(), "queueId") == 0)
-            jobID = new TObjString(iter->second.c_str());
+            jID = new TObjString(iter->second.c_str());
       }
 
-      if (jobID != 0)
-         status->fJobs.Add(jobID, jobStatus);
+      if (jID != 0)
+         status->fJobs.Add(jID, jobStatus);
       else
          delete jobStatus;
    }
