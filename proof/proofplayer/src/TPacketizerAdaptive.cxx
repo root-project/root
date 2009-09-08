@@ -1103,7 +1103,7 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
 
       } else {
 
-         Error("ValidateFiles", "cannot get entries for %s (", e->GetFileName() );
+         Error("ValidateFiles", "cannot get entries for file: %s - skipping", e->GetFileName() );
          //
          // Need to fix this with a user option to allow incomplete file sets (rdm)
          //
