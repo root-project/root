@@ -29,15 +29,26 @@ class TGLabel;
 class TGTextEntry;
 class TGuiBldEditor;
 class TGuiBldEditor;
+class TRootGuiBuilder;
+class TGListTree;
+class TGFrame;
+class TGCanvas;
+class TGListTreeItem;
+class TGuiBldDragManager;
 
-////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
 class TGuiBldNameFrame : public TGCompositeFrame {
 
 private:
-   TGLabel         *fLabel;      // label of frame class name 
-   TGTextEntry     *fFrameName;  // name of the frame
-   TGuiBldEditor   *fEditor;     // pointer to main editor
-   TGCompositeFrame *fTitleFrame;      // frame saying that it's "Name Frame"
+   TGLabel              *fLabel;       // label of frame class name
+   TGTextEntry          *fFrameName;   // name of the frame
+   TGuiBldEditor        *fEditor;      // pointer to main editor
+   TGCompositeFrame     *fTitleFrame;  // frame saying that it's "Name Frame"
+   TRootGuiBuilder      *fBuilder;     // pointer to builder
+   TGuiBldDragManager   *fManager;     // main manager
+   TGListTree           *fListTree;    // list tree containing frames hierarchy
+   TGCanvas             *fCanvas;
 
 protected:
    void DoRedraw();
@@ -46,8 +57,18 @@ public:
    TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor);
    virtual ~TGuiBldNameFrame() { }
 
-   void ChangeSelected(TGFrame *frame);
-   void Reset();
+   void              ChangeSelected(TGFrame *frame);
+   Bool_t            CheckItems(TGCompositeFrame *main);
+   TGListTreeItem   *FindItemByName(TGListTree *tree, const char* name, TGListTreeItem *item = 0);
+   TGCompositeFrame *GetMdi(TGFrame *frame);
+   void              MapItems(TGCompositeFrame *main);
+   void              RemoveFrame(TGFrame *frame);
+   void              Reset();
+   void              SelectFrameByItem(TGListTreeItem* item, Int_t i = 0);
+   void              UpdateName();
+
+   ClassDef(TGuiBldNameFrame, 0) // frame name editor
 };
+
 
 #endif

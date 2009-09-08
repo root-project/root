@@ -16,8 +16,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGuiBldEditor.h"
+#include "TRootGuiBuilder.h"
 #include "TGuiBldHintsEditor.h"
 #include "TGuiBldNameFrame.h"
+#include "TGuiBldGeometryFrame.h"
 #include "TGResourcePool.h"
 #include "TGTab.h"
 #include "TGLabel.h"
@@ -26,102 +28,33 @@
 #include "TG3DLine.h"
 #include "TGColorSelect.h"
 #include "TGColorDialog.h"
-
+#include "TGCanvas.h"
+#include "TGListTree.h"
+#include "TGuiBldDragManager.h"
+#include "TMethod.h"
+#include "TGMsgBox.h"
+#include "TGIcon.h"
+#include "TGFrame.h"
+#include "TGSplitter.h"
+#include "TGTableLayout.h"
 
 ClassImp(TGuiBldEditor)
 
-////////////////////////////////////////////////////////////////////////////////
-class TGuiBldGeometryFrame : public TGVerticalFrame {
-
-private:
-   TGuiBldEditor   *fEditor;
-
-public:
-   TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *editor);
-   virtual ~TGuiBldGeometryFrame() { }
-};
-
-//______________________________________________________________________________
-TGuiBldGeometryFrame::TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *editor) :
-                        TGVerticalFrame(p, 1, 1)
-{
-   // Constructor.
-
-   fEditor = editor;
-   fEditDisabled = 1;
-   SetCleanup(kDeepCleanup);
-
-   TGCompositeFrame *f = new TGHorizontalFrame(this);
-   f->AddFrame(new TGLabel(f, "Geometry"), new TGLayoutHints(kLHintsNormal, 1, 1));
-   f->AddFrame(new TGHorizontal3DLine(f), new TGLayoutHints(kLHintsExpandX | kLHintsCenterY, 5, 5));
-   AddFrame(f, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
-
-   // composite frame
-   TGCompositeFrame *frame826 = new TGCompositeFrame(this,275,69,kHorizontalFrame);
-
-   // vertical frame
-   TGVerticalFrame *frame928 = new TGVerticalFrame(frame826,59,64,kVerticalFrame);
-   TGLabel *frame834 = new TGLabel(frame928,"      ");
-   frame928->AddFrame(frame834, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,2,2,2,2));
-   TGLabel *frame833 = new TGLabel(frame928,"Width");
-   frame928->AddFrame(frame833,  new TGLayoutHints(kLHintsLeft | kLHintsCenterY,5,3,2,2));
-   TGLabel *frame839 = new TGLabel(frame928,"Height");
-   frame928->AddFrame(frame839, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,5,3,2,2));
-   frame826->AddFrame(frame928);
-   frame928->MoveResize(2,2,59,64);
-
-   // vertical frame
-   TGVerticalFrame *frame24 = new TGVerticalFrame(frame826,68,67,kVerticalFrame);
-   TGLabel *frame25 = new TGLabel(frame24,"      ");
-   frame24->AddFrame(frame25, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,0));
-   TGNumberEntry *frame26 = new TGNumberEntry(frame24, (Double_t) 0,5,-1,(TGNumberFormat::EStyle) 0);
-   frame24->AddFrame(frame26, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,0));
-   TGNumberEntry *frame30 = new TGNumberEntry(frame24, (Double_t) 0,5,-1,(TGNumberFormat::EStyle) 0);
-   frame24->AddFrame(frame30, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,0));
-   frame826->AddFrame(frame24);
-   frame24->MoveResize(65,2,68,67);
-
-   // vertical frame
-   TGVerticalFrame *frame14 = new TGVerticalFrame(frame826,68,67,kVerticalFrame);
-   TGLabel *frame15 = new TGLabel(frame14,"Min");
-   frame14->AddFrame(frame15, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterX,0,0,1,0));
-   TGNumberEntry *frame16 = new TGNumberEntry(frame14, (Double_t) 0,5,-1,(TGNumberFormat::EStyle) 0);
-   frame14->AddFrame(frame16, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,0));
-   TGNumberEntry *frame20 = new TGNumberEntry(frame14, (Double_t) 0,5,-1,(TGNumberFormat::EStyle) 0);
-   frame14->AddFrame(frame20, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,0));
-   frame826->AddFrame(frame14);
-   frame14->MoveResize(137,2,68,67);
-
-   // vertical frame
-   TGVerticalFrame *frame4 = new TGVerticalFrame(frame826,68,67,kVerticalFrame);
-   TGLabel *frame5 = new TGLabel(frame4,"Max");
-   frame4->AddFrame(frame5, new TGLayoutHints(kLHintsLeft | kLHintsTop  | kLHintsCenterX,0,0,1,0));
-   TGNumberEntry *frame6 = new TGNumberEntry(frame4, (Double_t) 0,5,-1,(TGNumberFormat::EStyle) 0);
-   frame4->AddFrame(frame6, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,0));
-   TGNumberEntry *frame10 = new TGNumberEntry(frame4, (Double_t) 0,5,-1,(TGNumberFormat::EStyle) 0);
-   frame4->AddFrame(frame10, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,0));
-   frame826->AddFrame(frame4);
-   frame4->MoveResize(207,0,68,67);
-
-   AddFrame(frame826, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,0));
-
-   MapSubwindows();
-   Resize();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
-class TGuiBldBorderFrame : public TGHorizontalFrame {
+class TGuiBldBorderFrame : public TGVerticalFrame {
 
 private:
-   enum  EBldBorderFrameMode { kBldBorderNone, kBldBorderSunken,
-                             kBldBorderPlain, kBldBorderRaised, kBldBorderDouble };
+   enum  EBldBorderFrameMode { 
+      kBldBorderNone, kBldBorderSunken,
+      kBldBorderPlain, kBldBorderRaised, 
+      kBldBorderDouble };
 
 private:
    TGuiBldEditor   *fEditor;
    TGFrame         *fSelected;
    TGButtonGroup   *fBtnGroup;
    TGColorSelect   *fBgndFrame;
-   TGColorSelect   *fFgndFrame;
 
 public:
    TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor);
@@ -132,61 +65,47 @@ public:
 
 //______________________________________________________________________________
 TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor) :
-             TGHorizontalFrame(p, 1, 1)
+             TGVerticalFrame(p, 1, 1)
 {
    // Constructor.
 
    fEditor = editor;
    fEditDisabled = 1;
    fBgndFrame = 0;
-   fFgndFrame = 0;
 
    SetCleanup(kDeepCleanup);
 
-   fBtnGroup = new TGButtonGroup(this,"Border Mode",kVerticalFrame | kFitWidth);
+   fBtnGroup = new TGButtonGroup(this, "Border Mode");
 
    TGRadioButton *frame299 = new TGRadioButton(fBtnGroup," Sunken",kBldBorderSunken);
    frame299->SetToolTipText("Set a sunken border of the frame");
-   TGRadioButton *frame302 = new TGRadioButton(fBtnGroup," Plain",kBldBorderPlain);
+   TGRadioButton *frame302 = new TGRadioButton(fBtnGroup," None",kBldBorderPlain);
    frame302->SetToolTipText("Set no border of the frame");
    TGRadioButton *frame305 = new TGRadioButton(fBtnGroup," Raised",kBldBorderRaised);
-   frame305->SetState(kButtonDown);
    frame305->SetToolTipText("Set a raised border of the frame");
+   frame305->SetState(kButtonDown);
    TGCheckButton *check = new TGCheckButton(fBtnGroup," Double",kBldBorderDouble);
-   TQObject::Disconnect(check);
    check->SetToolTipText("Set double border of the frame");
+   //TQObject::Disconnect(check);
 
    fBtnGroup->SetRadioButtonExclusive(kTRUE);
-   fBtnGroup->Resize(136,86);
-   AddFrame(fBtnGroup);
+   AddFrame(fBtnGroup, new TGLayoutHints(kLHintsCenterX | kLHintsTop));
    fBtnGroup->Connect("Pressed(Int_t)", "TGuiBldEditor", fEditor, "UpdateBorder(Int_t)");
    check->Connect("Pressed()", "TGuiBldEditor", fEditor, "UpdateBorder(=4)");
    check->Connect("Released()", "TGuiBldEditor", fEditor, "UpdateBorder(=5)");
-/*
-   TGCompositeFrame *f = new TGGroupFrame(this,"Palette",kVerticalFrame | kFitWidth);
+
+   TGCompositeFrame *f = new TGGroupFrame(this, "Palette");
    TGHorizontalFrame *hf = new TGHorizontalFrame(f ,1, 1);
-   f->AddFrame(hf);
    fBgndFrame = new TGColorSelect(hf, 0, 1);
    fBgndFrame->SetEditDisabled();
    fBgndFrame->SetColor(GetDefaultFrameBackground());
-   fBgndFrame->Connect("ColorSelected(Pixel_t)", "TGuiBldEditor", fEditor, "UpdateBackground(Pixel_t)");
-   hf->AddFrame(fBgndFrame);
-   TGLabel *bl = new TGLabel(hf, "Backgrnd");
-   hf->AddFrame(bl);
-
-   hf = new TGHorizontalFrame(f ,1, 1);
-   f->AddFrame(hf);
-   fFgndFrame = new TGColorSelect(hf, 0, 1);
-   fFgndFrame->SetEditDisabled();
-   fFgndFrame->SetColor(GetBlackPixel());
-   fFgndFrame->Connect("ColorSelected(Pixel_t)", "TGuiBldEditor", fEditor, "UpdateForeground(Pixel_t)");
-   hf->AddFrame(fFgndFrame);
-   bl = new TGLabel(hf, "Foregrnd");
-   hf->AddFrame(bl);
-
-   f->Resize(44,86);
-   AddFrame(f);
-*/
+   fBgndFrame->Connect("ColorSelected(Pixel_t)", "TGuiBldEditor", fEditor,
+                       "UpdateBackground(Pixel_t)");
+   hf->AddFrame(fBgndFrame, new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 2, 2));
+   hf->AddFrame(new TGLabel(hf, "Backgrnd"), new TGLayoutHints(kLHintsTop | 
+                kLHintsLeft, 2, 2, 2, 2));
+   f->AddFrame(hf, new TGLayoutHints(kLHintsCenterX | kLHintsTop, 2, 2, 2, 2));
+   AddFrame(f, new TGLayoutHints(kLHintsCenterX | kLHintsTop));
 }
 
 //______________________________________________________________________________
@@ -194,11 +113,11 @@ void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
 {
    // Perform actions when selected frame was changed.
 
+   fSelected = frame;
+
    if (!frame) {
       return;
    }
-
-   fSelected = frame;
 
    UInt_t opt = fSelected->GetOptions();
 
@@ -207,42 +126,156 @@ void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
    fBtnGroup->SetButton(kBldBorderRaised, opt & kRaisedFrame);
    fBtnGroup->SetButton(kBldBorderPlain, !(opt & kRaisedFrame) && !(opt & kSunkenFrame));
 
-   if (fBgndFrame) fBgndFrame->SetColor(fSelected->GetBackground());
-   if (fFgndFrame) fFgndFrame->SetColor(fSelected->GetForeground());
+   if (fBgndFrame) {
+      TQObject::Disconnect(fBgndFrame);
+      fBgndFrame->SetColor(fSelected->GetBackground());
+      fBgndFrame->Connect("ColorSelected(Pixel_t)", "TGuiBldEditor", fEditor, "UpdateBackground(Pixel_t)");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
-TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGCompositeFrame(p, 1, 1)
+TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGVerticalFrame(p, 1, 1)
 {
    // Constructor.
 
+   TGHorizontalFrame *hf;
+   TGVerticalFrame *vf;
    fSelected = 0;
    SetCleanup(kDeepCleanup);
 
+   fNameFrame  = new TGuiBldNameFrame(this, this);
+   AddFrame(fNameFrame,  new TGLayoutHints(kLHintsNormal | kLHintsExpandX,5,5,2,2));
+
+   TGHSplitter *splitter = new TGHSplitter(this,100,5);
+   AddFrame(splitter, new TGLayoutHints(kLHintsTop | kLHintsExpandX,0,0,5,5));
+   splitter->SetFrame(fNameFrame, kTRUE);
+
+   //------------frame with layout switch
+   hf = new TGHorizontalFrame(this);
+   hf->AddFrame(new TGLabel(hf, "Composite Frame Layout"), 
+                new TGLayoutHints(kLHintsLeft | kLHintsTop, 2, 2, 2, 2));
+   hf->AddFrame(new TGHorizontal3DLine(hf), new TGLayoutHints(kLHintsTop | 
+                kLHintsExpandX, 2, 2, 2, 2));
+   AddFrame(hf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
+   
+   vf = new TGVerticalFrame(this);
+   fLayoutLabel = new TGLabel(vf, "Automatic Layout Disabled");
+   vf->AddFrame(fLayoutLabel, new TGLayoutHints(kLHintsCenterX | kLHintsTop,
+                2, 2, 2, 2));
+   
+   fLayoutButton = new TGTextButton(vf,"    Enable layout    ");
+   fLayoutButton->SetEnabled(kFALSE);
+   vf->AddFrame(fLayoutButton, new TGLayoutHints(kLHintsCenterX | kLHintsTop,
+                2, 2, 2, 2));
+
+   AddFrame(vf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
+
+   AddFrame(new TGHorizontal3DLine(this), new TGLayoutHints(kLHintsTop | 
+            kLHintsExpandX, 2, 2, 2, 2));
+
+   fLayoutButton->Connect("Clicked()", "TGuiBldEditor", this, "SwitchLayout()");
+   fLayoutButton->SetToolTipText("If layout is on, all the frame \nelements get layouted automatically.");
+
+   //-----------------------------
+
    fTab = new TGTab(this, 80, 40);
-   AddFrame(fTab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   AddFrame(fTab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 2, 2, 2, 2));
+   fTablay = fTab->AddTab("Layout");
    TGCompositeFrame *tabcont = fTab->AddTab("Style");
-   TGCompositeFrame *tablay = fTab->AddTab("Layout");
    fLayoutId = 1; // 2nd tab
    fTab->Connect("Selected(Int_t)", "TGuiBldEditor", this, "TabSelected(Int_t)");
 
-   fNameFrame  = new TGuiBldNameFrame(tabcont, this);
-   tabcont->AddFrame(fNameFrame,  new TGLayoutHints(kLHintsNormal | kLHintsExpandX,5,5,2,2));
+   fHintsFrame = new TGuiBldHintsEditor(fTablay, this);
+   fTablay->AddFrame(fHintsFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
+                     2, 2, 2, 2));
 
-   fHintsFrame = 0;
+   fGeomFrame = new TGuiBldGeometryFrame(fTablay, this);
+   fTablay->AddFrame(fGeomFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX,
+                     2, 2, 2, 2));
 
-   fHintsFrame = new TGuiBldHintsEditor(tablay, this);
-   tablay->AddFrame(fHintsFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX,2,2,2,2));
+   //----------------Position X,Y boxes---------------
 
-   //TGFrame *frame = new TGuiBldGeometryFrame(tabcont, this);
-   //tabcont->AddFrame(frame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX,2,2,2,2));
+   fPositionFrame = new TGGroupFrame(fTablay, "Position");
+
+   hf = new TGHorizontalFrame(fPositionFrame);
+
+   vf = new TGVerticalFrame(hf);
+   vf->SetLayoutManager(new TGTableLayout(vf, 2, 2));
+
+   vf->AddFrame(new TGLabel(vf, " X "), new TGTableLayoutHints(0, 1, 0, 1,
+                kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
+   fXpos = new TGNumberEntry(vf, 0.0, 4, -1, (TGNumberFormat::EStyle)5);
+   vf->AddFrame(fXpos, new TGTableLayoutHints(1, 2, 0, 1, kLHintsCenterY | 
+                kLHintsLeft, 2, 2, 2, 2));
+
+   vf->AddFrame(new TGLabel(vf, " Y "), new TGTableLayoutHints(0, 1, 1, 2,
+                kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
+   fYpos = new TGNumberEntry(vf, 0.0, 4, -1, (TGNumberFormat::EStyle)5);
+   vf->AddFrame(fYpos, new TGTableLayoutHints(1, 2, 1, 2, kLHintsCenterY | 
+                kLHintsLeft, 2, 2, 2, 2));
+
+   hf->AddFrame(vf, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
+
+   vf = new TGVerticalFrame(hf);
+   vf->SetLayoutManager(new TGTableLayout(vf, 3, 3));
+
+   TGTextButton *fTextButton6366 = new TGTextButton(vf, "^", -1, 
+                TGButton::GetDefaultGC()(), 
+                TGTextButton::GetDefaultFontStruct(),
+                kRaisedFrame | kDoubleBorder | kFixedSize);
+   fTextButton6366->Resize(20,20);
+   vf->AddFrame(fTextButton6366, new TGTableLayoutHints(1, 2, 0, 1,
+                kLHintsLeft | kLHintsTop, 1, 1, 1, 1));
+
+   TGTextButton *fTextButton6367 = new TGTextButton(vf, "v", -1, 
+                TGButton::GetDefaultGC()(), 
+                TGTextButton::GetDefaultFontStruct(),
+                kRaisedFrame | kDoubleBorder | kFixedSize);
+   fTextButton6367->Resize(20,20);
+   vf->AddFrame(fTextButton6367, new TGTableLayoutHints(1, 2, 2, 3,
+                kLHintsLeft | kLHintsTop, 1, 1, 1, 1));
+
+   TGTextButton *fTextButton6364 = new TGTextButton(vf, "<", -1, 
+                TGButton::GetDefaultGC()(), 
+                TGTextButton::GetDefaultFontStruct(),
+                kRaisedFrame | kDoubleBorder | kFixedSize);
+   fTextButton6364->Resize(20,20);
+   vf->AddFrame(fTextButton6364, new TGTableLayoutHints(0, 1, 1, 2,
+                kLHintsLeft | kLHintsTop, 1, 1, 1, 1));
+
+   TGTextButton *fTextButton6365 = new TGTextButton(vf, ">", -1, 
+                TGButton::GetDefaultGC()(), 
+                TGTextButton::GetDefaultFontStruct(),
+                kRaisedFrame | kDoubleBorder | kFixedSize);
+   fTextButton6365->Resize(20,20);
+   vf->AddFrame(fTextButton6365, new TGTableLayoutHints(2, 3, 1, 2,
+                kLHintsLeft | kLHintsTop, 1, 1, 1, 1));
+
+   hf->AddFrame(vf, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
+
+   fPositionFrame->AddFrame(hf, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   
+   fTablay->AddFrame(fPositionFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+
+   fXpos->Connect("ValueSet(Long_t)", "TGuiBldHintsEditor", fHintsFrame, "SetPosition()");
+   fYpos->Connect("ValueSet(Long_t)", "TGuiBldHintsEditor", fHintsFrame, "SetPosition()");
+
+   fTextButton6364->Connect("Clicked()", "TGNumberEntry", fXpos, "IncreaseNumber(TGNumberFormat::EStepSize=0,-1)");
+   fTextButton6364->Connect("Clicked()", "TGuiBldHintsEditor", fHintsFrame, "SetPosition()");
+   fTextButton6365->Connect("Clicked()", "TGNumberEntry", fXpos, "IncreaseNumber()");
+   fTextButton6365->Connect("Clicked()", "TGuiBldHintsEditor", fHintsFrame, "SetPosition()");
+   fTextButton6366->Connect("Clicked()", "TGNumberEntry", fYpos, "IncreaseNumber(TGNumberFormat::EStepSize=0,-1)");
+   fTextButton6366->Connect("Clicked()", "TGuiBldHintsEditor", fHintsFrame, "SetPosition()");
+   fTextButton6367->Connect("Clicked()", "TGNumberEntry", fYpos, "IncreaseNumber()");
+   fTextButton6367->Connect("Clicked()", "TGuiBldHintsEditor", fHintsFrame, "SetPosition()");
+
+   //----------------------------------------------------
 
    fBorderFrame = new TGuiBldBorderFrame(tabcont, this);
-   tabcont->AddFrame(fBorderFrame, new TGLayoutHints(kLHintsCenterX,2,2,2,2));
+   tabcont->AddFrame(fBorderFrame, new TGLayoutHints(kLHintsExpandX, 2, 2, 2, 2));
 
    MapSubwindows();
-   Resize(140, 357);
    SetWindowName("Frame Property Editor");
    SetEditDisabled(1);
 
@@ -254,6 +287,14 @@ TGuiBldEditor::~TGuiBldEditor()
 {
    // Destructor.
 
+}
+
+//______________________________________________________________________________
+void TGuiBldEditor::RemoveFrame(TGFrame *frame)
+{
+   // Remove a frame.
+
+   fNameFrame->RemoveFrame(frame);
 }
 
 //______________________________________________________________________________
@@ -319,11 +360,55 @@ void TGuiBldEditor::ChangeSelected(TGFrame *frame)
       }
    }
 
+   if ((frame->InheritsFrom(TGHorizontalFrame::Class())) ||
+       (frame->InheritsFrom(TGVerticalFrame::Class())) ||
+       (frame->InheritsFrom(TGGroupFrame::Class())) ) {
+
+      fLayoutButton->SetEnabled(kTRUE);
+      if (fSelected->IsLayoutBroken()) {
+         fLayoutButton->SetText("    Enable layout    ");
+         fLayoutLabel->SetText("Automatic layout disabled");
+         if (fTablay) {
+            fTablay->ShowFrame(fGeomFrame);
+            fTablay->ShowFrame(fPositionFrame);
+            fTablay->HideFrame(fHintsFrame);
+         }
+      } else {
+         fLayoutButton->SetText("    Disable layout    ");
+         fLayoutLabel->SetText("Automatic layout enabled");
+         if (fTablay) {
+            fTablay->HideFrame(fGeomFrame);
+            fTablay->HideFrame(fPositionFrame);
+            fTablay->ShowFrame(fHintsFrame);
+         }
+      }
+   }
+   else {
+      fLayoutButton->SetEnabled(kFALSE);
+      TGFrame *parent = (TGFrame*)frame->GetParent();
+      if (parent->IsLayoutBroken()) {
+         fLayoutButton->SetText("    Enable layout    ");
+         fLayoutLabel->SetText("Automatic layout disabled");
+         fTablay->ShowFrame(fGeomFrame);
+         fTablay->ShowFrame(fPositionFrame);
+         fTablay->HideFrame(fHintsFrame);
+      } else {
+         fLayoutButton->SetText("    Disable layout    ");
+         fLayoutLabel->SetText("Automatic layout enabled");
+         fTablay->HideFrame(fGeomFrame);
+         fTablay->HideFrame(fPositionFrame);
+         fTablay->ShowFrame(fHintsFrame);
+      }
+   }
+
+   fYpos->SetIntNumber(frame->GetY());
+   fXpos->SetIntNumber(frame->GetX());
+
    if (fBorderFrame) fBorderFrame->ChangeSelected(fSelected);
+   if (fGeomFrame) fGeomFrame->ChangeSelected(fSelected);
 
    Emit("ChangeSelected(TGFrame*)", (long)fSelected);
 
-   Resize();
    MapRaised();
 }
 
@@ -338,35 +423,34 @@ void TGuiBldEditor::UpdateSelected(TGFrame *frame)
 //______________________________________________________________________________
 void TGuiBldEditor::UpdateBorder(Int_t b)
 {
-   // update border of  selcted frame
+   // Update border of selected frame.
 
    if (!fSelected) return;
 
    UInt_t opt = fSelected->GetOptions();
 
    switch (b) {
-   case 1:
-      opt &= ~kRaisedFrame;
-      opt |= kSunkenFrame;
-      break;
-   case 2:
-      opt &= ~kSunkenFrame;
-      opt &= ~kRaisedFrame;
-      break;
-   case 3:
-      opt &= ~kSunkenFrame;
-      opt |= kRaisedFrame;
-      break;
-   case 4:
-      opt |= kDoubleBorder;
-      break;
-   case 5:
-      opt &= ~kDoubleBorder;
-      break;
-   default:
-      return;
+      case 1:
+         opt &= ~kRaisedFrame;
+         opt |= kSunkenFrame;
+         break;
+      case 2:
+         opt &= ~kSunkenFrame;
+         opt &= ~kRaisedFrame;
+         break;
+      case 3:
+         opt &= ~kSunkenFrame;
+         opt |= kRaisedFrame;
+         break;
+      case 4:
+         opt |= kDoubleBorder;
+         break;
+      case 5:
+         opt &= ~kDoubleBorder;
+         break;
+      default:
+         return;
    }
-
    fSelected->ChangeOptions(opt);
    fClient->NeedRedraw(fSelected, kTRUE);
 }
@@ -404,4 +488,68 @@ void TGuiBldEditor::Reset()
    fTab->SetTab(0);
    tab->SetEnabled(kFALSE);
 }
+
+//______________________________________________________________________________
+void TGuiBldEditor::SwitchLayout()
+{
+   // Popup dialog to set layout of editted frame off. If layout is on, all
+   // the elements in the frame get layouted automatically.
+
+   if (!fSelected) {
+      fLayoutButton->SetText("    Enable layout    ");
+      fLayoutButton->SetEnabled(kFALSE);
+      fLayoutLabel->SetText("Automatic layout disabled");
+      if (fTablay) {
+         fTablay->ShowFrame(fGeomFrame);
+         fTablay->ShowFrame(fPositionFrame);
+         fTablay->HideFrame(fHintsFrame);
+      }
+      return;
+   }
+
+   TRootGuiBuilder *builder = (TRootGuiBuilder*)TRootGuiBuilder::Instance();
+   TGFrame *frame = fSelected;
+   TGCompositeFrame *cf = fNameFrame->GetMdi(frame);
+   if (cf == 0)
+      return;
+   if (frame->IsLayoutBroken()) {
+      Int_t retval;
+      builder->GetManager()->SetEditable(kFALSE);
+      new TGMsgBox(gClient->GetDefaultRoot(), builder, "Layout change",
+                   "Enabling layout will automatically align and resize all the icons. \n Do you really want to layout them?",
+                   kMBIconExclamation, kMBOk | kMBCancel, &retval);
+
+      cf->SetEditable(kTRUE);
+      // hack against selecting the message box itself
+      builder->GetManager()->SelectFrame(frame);
+      frame->SetEditable(kTRUE);
+
+      if (retval == kMBOk) {
+         frame->SetLayoutBroken(kFALSE);
+         frame->Layout();
+         fLayoutButton->SetText("    Disable layout    ");
+         fLayoutLabel->SetText("Automatic layout enabled");
+         if (fTablay) {
+            fTablay->HideFrame(fGeomFrame);
+            fTablay->HideFrame(fPositionFrame);
+            fTablay->ShowFrame(fHintsFrame);
+            fTablay->Resize(fHintsFrame->GetWidth(),fHintsFrame->GetHeight());
+         }
+      }
+   } else {
+      //set layout off - without dialog, because nothing "bad" can happen
+      frame->SetLayoutBroken(kTRUE);
+      fLayoutButton->SetText("    Enable layout    ");
+      fLayoutLabel->SetText("Automatic layout disabled");
+      if (fTablay) {
+         fTablay->ShowFrame(fGeomFrame);
+         fTablay->ShowFrame(fPositionFrame);
+         fTablay->HideFrame(fHintsFrame);
+      }
+   }
+   fClient->NeedRedraw(frame, kTRUE);
+   fClient->NeedRedraw(fTablay, kTRUE);
+}
+
+
 

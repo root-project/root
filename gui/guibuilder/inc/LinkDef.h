@@ -19,5 +19,7 @@
 #pragma link C++ class TGuiBldEditor;
 #pragma link C++ class TGuiBldHintsButton;
 #pragma link C++ class TGuiBldHintsEditor;
+#pragma link C++ class TGuiBldGeometryFrame;
+#pragma link C++ class TGuiBldNameFrame;
 
 #endif

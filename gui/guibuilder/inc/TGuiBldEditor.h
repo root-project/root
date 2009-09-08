@@ -24,30 +24,55 @@
 #include "TGFrame.h"
 #endif
 
+#ifndef ROOT_TGNumberEntry
+#include "TGNumberEntry.h"
+#endif
 
 class TGuiBldHintsEditor;
 class TGuiBldNameFrame;
 class TGuiBldBorderFrame;
+class TGuiBldGeometryFrame;
+class TGuiBldDragManager;
 class TGTab;
+class TGButton;
+class TGLabel;
+class TGGroupFrame;
+class TGCompositeFrame;
 
-class TGuiBldEditor : public TGCompositeFrame {
+//////////////////////////////////////////////////////////////////////////
+class TGuiBldEditor : public TGVerticalFrame {
+
+friend class TGuiBldDragManager;
 
 private:
-   TGFrame              *fSelected;    // editted frame
-   TGuiBldNameFrame     *fNameFrame;   // frame name
-   TGuiBldHintsEditor   *fHintsFrame;  // frame hints
-   TGuiBldBorderFrame   *fBorderFrame; // frame border
-   Bool_t                fEmbedded;    // kTRUE when it is inside guibuilder
-   TGTab                *fTab;         // tab frame
-   Int_t                 fLayoutId;    // the id of layout tab
+   TGFrame              *fSelected;       // editted frame
+   TGuiBldNameFrame     *fNameFrame;      // frame name
+   TGuiBldHintsEditor   *fHintsFrame;     // frame hints
+   TGuiBldBorderFrame   *fBorderFrame;    // frame border
+   TGuiBldGeometryFrame *fGeomFrame;      // frame geom
+   TGGroupFrame         *fPositionFrame;  // X,Y coordinates
+   TGuiBldDragManager   *fManager;        // main manager
+   Bool_t                fEmbedded;       // kTRUE when it is inside guibuilder
+   TGTab                *fTab;            // tab frame
+   TGCompositeFrame     *fTablay;         // layout tab frame
+   Int_t                 fLayoutId;       // the id of layout tab
+   TGTextButton         *fLayoutButton;   // button to enable/disable layout
+   TGLabel              *fLayoutLabel;    // saying if layout is enabled
+   TGNumberEntry        *fXpos;           // X position
+   TGNumberEntry        *fYpos;           // Y position
 
 public:
    TGuiBldEditor(const TGWindow *p = 0);
    virtual ~TGuiBldEditor();
 
+   Int_t    GetXPos() const { return fXpos->GetIntNumber(); }
+   Int_t    GetYPos() const { return fYpos->GetIntNumber(); }
+   void     SetXPos(Int_t pos) { fXpos->SetIntNumber(pos); }
+   void     SetYPos(Int_t pos) { fYpos->SetIntNumber(pos); }
+
    TGFrame *GetSelected() const { return fSelected; }
    Bool_t   IsEmbedded() const { return fEmbedded; }
-   void     SetEmbedded(Bool_t e = kTRUE) { fEmbedded = e; } 
+   void     SetEmbedded(Bool_t e = kTRUE) { fEmbedded = e; }
    void     Hide();
    void     UpdateBorder(Int_t);
    void     UpdateBackground(Pixel_t col);
@@ -55,9 +80,11 @@ public:
    void     Reset();
    TGuiBldHintsEditor *GetHintsEditor() const { return fHintsFrame; }
 
+   void     RemoveFrame(TGFrame *);
    void     TabSelected(Int_t id);
    void     UpdateSelected(TGFrame* = 0); //*SIGNAL*
    void     ChangeSelected(TGFrame*);     //*SIGNAL*
+   void     SwitchLayout();
 
    ClassDef(TGuiBldEditor,0)  // frame property editor
 };

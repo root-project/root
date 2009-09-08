@@ -44,7 +44,9 @@ enum EGuiBuilderMenuIds {
 
    kGUIBLD_HELP_CONTENTS,
    kGUIBLD_HELP_ABOUT,
-   kGUIBLD_HELP_BUG
+   kGUIBLD_HELP_BUG,
+
+   kGUIBLD_FILE_OPEN
 };
 
 
@@ -63,28 +65,31 @@ class TGPictureButton;
 class TImage;
 class TTimer;
 
+//////////////////////////////////////////////////////////////////////////
 class TRootGuiBuilder : public TGuiBuilder, public TGMainFrame {
+
 friend class TGuiBldDragManager;
 
 private:
    TGuiBldDragManager *fManager;    // drag and drop manager
-   TGButton          *fActionButton;// action button 
+   TGButton          *fActionButton;// action button
    TGToolBar         *fToolBar;     // guibuider toolbar
    TGShutter         *fShutter;     // widget palette
    TGMdiMainFrame    *fMain;        // main mdi frame
-   TGDockableFrame   *fToolDock;    // dockable frame where toolbar is located 
-   TGDockableFrame   *fShutterDock; // dockable frame where widget palette is located  
+   TGDockableFrame   *fToolDock;    // dockable frame where toolbar is located
+   TGDockableFrame   *fShutterDock; // dockable frame where widget palette is located
    TGMdiMenuBar      *fMenuBar;     // guibuilder menu bar
    TGPopupMenu       *fMenuFile;    // "File" popup menu
    TGPopupMenu       *fMenuWindow;  // "Window" popup menu
    TGPopupMenu       *fMenuEdit;    // "Edit" popup menu
    TGPopupMenu       *fMenuHelp;    // "Help" popup menu
-   TGStatusBar       *fStatusBar;   //  guibuilder status bar
-   TGFrame           *fSelected;    //  selected frame
-   TGMdiFrame        *fEditable;    //  mdi frame where editted frame is  located
+   TGStatusBar       *fStatusBar;   // guibuilder status bar
+   TGFrame           *fSelected;    // selected frame
+   TGMdiFrame        *fEditable;    // mdi frame where editted frame is  located
    TGuiBldEditor     *fEditor;      // frame property editor
    const TGPicture   *fIconPic;     // icon picture
    TGPictureButton   *fStartButton; // start button
+   Int_t              fClosing;
 
    static TGGC       *fgBgnd;
    static TGGC       *fgBgndPopup;
@@ -114,10 +119,11 @@ public:
    virtual Bool_t    IsGrabButtonDown() const;
    virtual Bool_t    OpenProject(Event_t *event = 0);
    virtual Bool_t    SaveProject(Event_t *event = 0);
-   virtual Bool_t    NewProject(Event_t *event = 0);
+   virtual Bool_t    NewProject(TString type = "");
    virtual Bool_t    HandleKey(Event_t *event);
    virtual void      HandleMenu(Int_t id);
    virtual void      CloseWindow();
+   virtual void      MaybeCloseWindow();
    virtual void      HandleWindowClosed(Int_t id);
    virtual void      UpdateStatusBar(const char *text = 0);
    virtual void      EraseStatusBar();
@@ -126,8 +132,9 @@ public:
    TGMdiFrame *FindEditableMdiFrame(const TGWindow *win);
    TGuiBldEditor    *GetEditor() const { return fEditor; }
    TGDockableFrame  *GetToolDock() const { return fToolDock; }
-   TGMdiMainFrame   *GetMdiMain() const { return fMain; }  
+   TGMdiMainFrame   *GetMdiMain() const { return fMain; }
    TGMdiFrame       *GetEditable() const { return fEditable; }
+   TGuiBldDragManager  *GetManager() const { return fManager; }
 
    static ULong_t    GetBgnd();
    static TGGC      *GetBgndGC();
@@ -156,6 +163,7 @@ public:
    static TGFrame     *BuildVScrollBar();
    static TGFrame     *BuildHProgressBar();
    static TGFrame     *BuildVProgressBar();
+
 
    ClassDef(TRootGuiBuilder,0)  // ROOT GUI Builder
 };

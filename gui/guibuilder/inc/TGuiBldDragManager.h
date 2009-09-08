@@ -47,15 +47,18 @@ class TGTextEntry;
 class TGIcon;
 
 
-enum EActionType { kNoneAct, kPropertyAct, kEditableAct, kReparentAct,
-                   kDropAct, kCutAct, kCopyAct, kPasteAct, kCropAct,
-                   kCompactAct, kCompactGlobalAct, kLayUpAct, kLayDownAct,
-                   kCloneAct, kSaveAct, kSaveFrameAct, kGrabAct, kDeleteAct,
-                   kLeftAct, kRightAct, kUpAct, kDownAct, kEndEditAct, kReplaceAct,
-                   kGridAct, kBreakLayoutAct, kSwitchLayoutAct, kNewAct,
-                   kOpenAct, kLayoutHAct, kLayoutVAct, kUndoAct, kRedoAct, 
-                   kSelectAct, kMethodMenuAct, kToggleMenuAct };
+enum EActionType {
+   kNoneAct, kPropertyAct, kEditableAct, kReparentAct,
+   kDropAct, kCutAct, kCopyAct, kPasteAct, kCropAct,
+   kCompactAct, kCompactGlobalAct, kLayUpAct, kLayDownAct,
+   kCloneAct, kSaveAct, kSaveFrameAct, kGrabAct, kDeleteAct,
+   kLeftAct, kRightAct, kUpAct, kDownAct, kEndEditAct, kReplaceAct,
+   kGridAct, kBreakLayoutAct, kSwitchLayoutAct, kNewAct,
+   kOpenAct, kLayoutHAct, kLayoutVAct, kUndoAct, kRedoAct,
+   kSelectAct, kMethodMenuAct, kToggleMenuAct
+};
 
+//////////////////////////////////////////////////////////////////////////
 class TGuiBldDragManager : public TVirtualDragManager, public TGFrame {
 
 friend class TGClient;
@@ -64,6 +67,9 @@ friend class TGMainFrame;
 friend class TGGrabRect;
 friend class TRootGuiBuilder;
 friend class TGuiBldDragManagerRepeatTimer;
+friend class TGuiBldMenuDialog;
+friend class TGuiBldGeometryFrame;
+friend class TGuiBldEditor;
 
 private:
    TGuiBldDragManagerPimpl *fPimpl;    // private data
@@ -72,15 +78,15 @@ private:
    TGuiBldEditor *fEditor;             // frame property editor
    Bool_t         fLassoDrawn;         // kTRUE if  lasso drawn
    TString        fPasteFileName;      // paste_clippboard file name
-   TString        fTmpBuildFile;       // temporary file name 
+   TString        fTmpBuildFile;       // temporary file name
    Bool_t         fSelectionIsOn;      // selection with Shift key pressed
    TGPopupMenu   *fFrameMenu;          // context menu for frames
    TGPopupMenu   *fLassoMenu;          // context menu for lasso drawn
-   Window_t       fTargetId;           // an id of window where drop 
+   Window_t       fTargetId;           // an id of window where drop
    Bool_t         fDropStatus;         // kTRUE if drop was successfull
    Bool_t         fStop;               // kTRUE if stopped
-   TGFrame       *fSelected;           // selected frame. In most cases selected is 
-                                       // the same frame as grabbed frame. 
+   TGFrame       *fSelected;           // selected frame. In most cases selected is
+                                       // the same frame as grabbed frame.
    TList         *fListOfDialogs;      // list of dialog methods
 
    static TGColorDialog *fgGlobalColorDialog;   // color dialog
@@ -88,7 +94,7 @@ private:
 
    static TGFontDialog *fgGlobalFontDialog;     // font dialog
    static TGFontDialog *GetGlobalFontDialog();  //
-   static void MapGlobalDialog(TGMainFrame *dialog, TGFrame *fr);
+
 
    void           Reset1();
    void           DrawGrabRectangles(TGWindow *win = 0);
@@ -108,7 +114,7 @@ private:
    Bool_t         CanChangeLayoutOrder(TGWindow *w) const;
    Bool_t         CanCompact(TGWindow *w) const;
 
-   void           ChangeSelected(TGFrame *f); 
+   void           ChangeSelected(TGFrame *f);
    TGFrame       *GetEditableParent(TGFrame *f);
    TGFrame       *GetMovableParent(TGWindow *p);
    TGFrame       *GetBtnEnableParent(TGFrame *fr);
@@ -123,7 +129,6 @@ private:
 
 private:
    TGFrame       *InEditable(Window_t id);
-   void           SelectFrame(TGFrame *frame, Bool_t add = kFALSE);
    void           GrabFrame(TGFrame *frame);
    void           UngrabFrame();
    void           SetPropertyEditor(TGuiBldEditor *e);
@@ -208,7 +213,7 @@ public:
    void           SetGridStep(UInt_t step);
    UInt_t         GetGridStep();
    void           HandleUpdateSelected(TGFrame *);
-   Int_t          GetStrartDragX() const;     
+   Int_t          GetStrartDragX() const;
    Int_t          GetStrartDragY() const;
    Int_t          GetEndDragX() const;
    Int_t          GetEndDragY() const;
@@ -218,9 +223,12 @@ public:
 
    Bool_t         IsStopped() const { return fStop; }
    void           SetEditable(Bool_t on = kTRUE);
+   void           SelectFrame(TGFrame *frame, Bool_t add = kFALSE);
+
+   static void    MapGlobalDialog(TGMainFrame *dialog, TGFrame *fr);
 
    Bool_t         HandleTimerEvent(Event_t *ev, TTimer *t);
-   void           TimerEvent(Event_t *ev) 
+   void           TimerEvent(Event_t *ev)
                      { Emit("TimerEvent(Event_t*)", (Long_t)ev); } // *SIGNAL*
 
    // hadndling dynamic context menus
