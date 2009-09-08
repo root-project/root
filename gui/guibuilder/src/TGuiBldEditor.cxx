@@ -385,8 +385,8 @@ void TGuiBldEditor::ChangeSelected(TGFrame *frame)
    }
    else {
       fLayoutButton->SetEnabled(kFALSE);
-      TGFrame *parent = (TGFrame*)frame->GetParent();
-      if (parent->IsLayoutBroken()) {
+      TGFrame *parentf = (TGFrame*)frame->GetParent();
+      if (parentf->IsLayoutBroken()) {
          fLayoutButton->SetText("    Enable layout    ");
          fLayoutLabel->SetText("Automatic layout disabled");
          fTablay->ShowFrame(fGeomFrame);
