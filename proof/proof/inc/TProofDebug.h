@@ -41,6 +41,7 @@ public:
       kDraw          = 512,
       kAsyn          = 1024,
       kCache         = 2048,
+      kCollect       = 4096,
 
       kAll           = 0xFFFFFFFF
    };
