@@ -159,6 +159,9 @@ Long64_t TProofChain::Draw(const char *varexp, const TCut &selection,
       fSet->SetEntryList(fEventList);
    }
 
+   // Fill drawing attributes
+   FillDrawAttributes(gProof);
+
    Long64_t rv = fSet->Draw(varexp, selection, option, nentries, firstentry);
    return rv;
 }
@@ -188,8 +191,56 @@ Long64_t TProofChain::Draw(const char *varexp, const char *selection,
       fSet->SetEntryList(fEventList);
    }
 
+   // Fill drawing attributes
+   FillDrawAttributes(gProof);
+
    Long64_t rv = fSet->Draw(varexp, selection, option, nentries, firstentry);
    return rv;
+}
+
+//______________________________________________________________________________
+void TProofChain::FillDrawAttributes(TProof *p)
+{
+   // Communicate the drawing attributes for this chain to the input list
+   // so that the draw selectors can use them, in case of need.
+   // The drawing attributes are:
+   //
+   //    LineColor          Line color
+   //    LineStyle          Line style
+   //    LineWidth          Line width
+   //    MarkerColor        Marker color index
+   //    MarkerSize         Marker size
+   //    MarkerStyle        Marker style
+   //    FillColor          Area fill color
+   //    FillStyle          Area fill style
+
+   if (!p || !fChain) {
+      Error("FillDrawAttributes", "invalid PROOF or mother chain pointers!");
+      return;
+   }
+
+   // Line Attributes
+   p->SetParameter("PROOF_LineColor", (Int_t) fChain->GetLineColor());
+   p->SetParameter("PROOF_LineStyle", (Int_t) fChain->GetLineStyle());
+   p->SetParameter("PROOF_LineWidth", (Int_t) fChain->GetLineWidth());
+
+   // Marker Attributes
+   p->SetParameter("PROOF_MarkerColor", (Int_t) fChain->GetMarkerColor());
+   p->SetParameter("PROOF_MarkerSize", (Int_t) fChain->GetMarkerSize()*1000);
+   p->SetParameter("PROOF_MarkerStyle", (Int_t) fChain->GetMarkerStyle());
+
+   // Area fill attributes
+   p->SetParameter("PROOF_FillColor", (Int_t) fChain->GetFillColor());
+   p->SetParameter("PROOF_FillStyle", (Int_t) fChain->GetFillStyle());
+
+   if (gDebug > 0) {
+      Info("FillDrawAttributes","line:   color:%d, style:%d, width:%d",
+           fChain->GetLineColor(), fChain->GetLineStyle(), fChain->GetLineWidth());
+      Info("FillDrawAttributes","marker: color:%d, style:%d, size:%f",
+           fChain->GetMarkerColor(), fChain->GetMarkerStyle(), fChain->GetMarkerSize());
+      Info("FillDrawAttributes","area:   color:%d, style:%d",
+           fChain->GetFillColor(), fChain->GetFillStyle());
+   }
 }
 
 //______________________________________________________________________________

@@ -29,12 +29,16 @@
 class TDSet;
 class TDrawFeedback;
 class TList;
+class TProof;
 
 class TProofChain : public TChain {
 
 public:
    // TProofChain constants
    enum { kOwnsChain   = BIT(19) };
+
+private:
+   void           FillDrawAttributes(TProof *p);
 
 protected:
    TChain        *fChain;            // mother chain: needed for the browsing list
