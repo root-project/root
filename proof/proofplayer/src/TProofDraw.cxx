@@ -19,12 +19,16 @@
 
 
 #include "TProofDraw.h"
+#include "TAttFill.h"
+#include "TAttLine.h"
+#include "TAttMarker.h"
 #include "TCanvas.h"
 #include "TClass.h"
 #include "TError.h"
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TH3F.h"
+#include "TProof.h"
 #include "TProofDebug.h"
 #include "TStatus.h"
 #include "TTreeDrawArgsParser.h"
@@ -81,6 +85,23 @@ extern "C" {
 
       // Done
       return 0;
+   }
+}
+
+// Simple call to create destroy a 'named' canvas
+extern "C" {
+   void FeedBackCanvas(const char *name, Bool_t create)
+   {
+      // Create or destroy canvas 'name'
+
+      if (create) {
+         new TCanvas(name, "FeedBack", 800,30,700,500);
+      } else {
+         TCanvas *c = (TCanvas *) gROOT->GetListOfCanvases()->FindObject(name);
+         if (c) delete c;
+      }
+      // Done
+      return;
    }
 }
 
@@ -265,17 +286,70 @@ void TProofDraw::SetCanvas(const char *objname)
    // for the final objects
 
    TString name = objname;
-   name += "_canvas";
-   TVirtualPad *p = (gROOT->GetListOfCanvases())
-                  ? (TVirtualPad *) gROOT->GetListOfCanvases()->FindObject(name)
-                  : (TVirtualPad *)0;
-   if (p == 0) {
+   if (!gPad) {
       gROOT->MakeDefCanvas();
       gPad->SetName(name);
       PDB(kDraw,2) Info("SetCanvas", "created canvas %s", name.Data());
    } else {
-      p->cd();
-      PDB(kDraw,2) Info("SetCanvas", "used canvas %s", name.Data());
+      PDB(kDraw,2)
+         Info("SetCanvas", "using canvas %s", gPad->GetName());
+   }
+}
+
+//______________________________________________________________________________
+void TProofDraw::SetDrawAtt(TObject *o)
+{
+   // Set the drawing attributes from the input list
+
+   Int_t att = -1;
+   PDB(kDraw,2) Info("SetDrawAtt", "setting attributes for %s", o->GetName());
+
+   // Line Attributes
+   TAttLine *al = dynamic_cast<TAttLine *> (o);
+   if (al) {
+      // Line color
+      if (TProof::GetParameter(fInput, "PROOF_LineColor", att) == 0)
+         al->SetLineColor((Color_t)att);
+      // Line style
+      if (TProof::GetParameter(fInput, "PROOF_LineStyle", att) == 0)
+         al->SetLineStyle((Style_t)att);
+      // Line color
+      if (TProof::GetParameter(fInput, "PROOF_LineWidth", att) == 0)
+         al->SetLineWidth((Width_t)att);
+      PDB(kDraw,2) Info("SetDrawAtt", "line:   c:%d, s:%d, wd:%d",
+                                      al->GetLineColor(), al->GetLineStyle(), al->GetLineWidth());
+   }
+
+   // Marker Attributes
+   TAttMarker *am = dynamic_cast<TAttMarker *> (o);
+   if (am) {
+      // Marker color
+      if (TProof::GetParameter(fInput, "PROOF_MarkerColor", att) == 0)
+         am->SetMarkerColor((Color_t)att);
+      // Marker size
+      if (TProof::GetParameter(fInput, "PROOF_MarkerSize", att) == 0) {
+         Info("SetDrawAtt", "att: %d", att);
+         Float_t msz = (Float_t)att / 1000.;
+         am->SetMarkerSize((Size_t)msz);
+      }
+      // Marker style
+      if (TProof::GetParameter(fInput, "PROOF_MarkerStyle", att) == 0)
+         am->SetMarkerStyle((Style_t)att);
+      PDB(kDraw,2) Info("SetDrawAtt", "marker: c:%d, s:%d, sz:%f",
+                                      am->GetMarkerColor(), am->GetMarkerStyle(), am->GetMarkerSize());
+   }
+
+   // Area Fill Attributes
+   TAttFill *af = dynamic_cast<TAttFill *> (o);
+   if (af) {
+      // Area fill color
+      if (TProof::GetParameter(fInput, "PROOF_FillColor", att) == 0)
+         af->SetFillColor((Color_t)att);
+      // Area fill style
+      if (TProof::GetParameter(fInput, "PROOF_FillStyle", att) == 0)
+         af->SetFillStyle((Style_t)att);
+      PDB(kDraw,2) Info("SetDrawAtt", "area:   c:%d, s:%d",
+                                      af->GetFillColor(), af->GetFillStyle());
    }
 }
 
@@ -757,6 +831,7 @@ void TProofDrawHist::Terminate(void)
          // Choose the right canvas
          SetCanvas(h->GetName());
          // Draw
+         SetDrawAtt(h);
          h->Draw(fOption.Data());
       }
    }
@@ -1161,6 +1236,7 @@ void TProofDrawProfile::Terminate(void)
          // Choose the right canvas
          SetCanvas(pf->GetName());
          // Draw
+         SetDrawAtt(pf);
          pf->Draw(fOption.Data());
       }
    }
@@ -1385,6 +1461,7 @@ void TProofDrawProfile2D::Terminate(void)
          // Choose the right canvas
          SetCanvas(pf->GetName());
          // Draw
+         SetDrawAtt(pf);
          pf->Draw(fOption.Data());
       }
    }
@@ -1505,6 +1582,7 @@ void TProofDrawGraph::Terminate(void)
          TH1 *h2c = hist->DrawCopy(fOption.Data());
          h2c->SetStats(kFALSE);
       } else {
+         SetDrawAtt(hist);
          hist->Draw();
       }
       gPad->Update();
@@ -1513,6 +1591,7 @@ void TProofDrawGraph::Terminate(void)
       // FIXME set color, marker size, etc.
 
       if (fTreeDrawArgsParser.GetShouldDraw()) {
+         SetDrawAtt(fGraph);
          if (fOption == "" || strcmp(fOption, "same") == 0)
             fGraph->Draw("p");
          else
@@ -1601,6 +1680,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
       }
    }
 
+   Bool_t checkPrevious = kFALSE;
    if (fPolyMarker3D) {
       SetStatus((Int_t) fPolyMarker3D->Size());
       TH3F* hist;
@@ -1608,44 +1688,52 @@ void TProofDrawPolyMarker3D::Terminate(void)
       if ( (hist = dynamic_cast<TH3F*> (orig)) == 0 ) {
          delete orig;
          fTreeDrawArgsParser.SetOriginal(0);
-         double binsx, minx, maxx;
-         double binsy, miny, maxy;
-         double binsz, minz, maxz;
-         if (fTreeDrawArgsParser.IsSpecified(0))
-            gEnv->SetValue("Hist.Binning.3D.x", fTreeDrawArgsParser.GetParameter(0));
-         if (fTreeDrawArgsParser.IsSpecified(3))
-            gEnv->SetValue("Hist.Binning.3D.y", fTreeDrawArgsParser.GetParameter(3));
-         if (fTreeDrawArgsParser.IsSpecified(6))
-            gEnv->SetValue("Hist.Binning.3D.z", fTreeDrawArgsParser.GetParameter(6));
-         binsx = gEnv->GetValue("Hist.Binning.3D.x",100);
-         minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
-         maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
-         binsy = gEnv->GetValue("Hist.Binning.3D.y",100);
-         miny =  fTreeDrawArgsParser.GetIfSpecified(4, 0);
-         maxy =  fTreeDrawArgsParser.GetIfSpecified(5, 0);
-         binsz = gEnv->GetValue("Hist.Binning.3D.z",100);
-         minz =  fTreeDrawArgsParser.GetIfSpecified(7, 0);
-         maxz =  fTreeDrawArgsParser.GetIfSpecified(8, 0);
-         hist = new TH3F(fTreeDrawArgsParser.GetObjectName(), fTreeDrawArgsParser.GetObjectTitle(),
-                        (Int_t) binsx, minx, maxx,
-                        (Int_t) binsy, miny, maxy,
-                        (Int_t) binsz, minz, maxz);
-         hist->SetBit(TH1::kNoStats);
-         hist->SetBit(kCanDelete);
-         if (fTreeDrawArgsParser.GetNoParameters() != 9)
-            hist->SetBit(TH1::kCanRebin);
-         else
-            hist->ResetBit(TH1::kCanRebin);
-//         if (fTreeDrawArgsParser.GetShouldDraw())    // ?? FIXME
-//            hist->SetDirectory(0);
+         if (fOption.Contains("same")) {
+            // Check existing histogram
+            hist = dynamic_cast<TH3F *> (gDirectory->Get(fTreeDrawArgsParser.GetObjectName()));
+         }
+         if (!hist) {
+            double binsx, minx, maxx;
+            double binsy, miny, maxy;
+            double binsz, minz, maxz;
+            if (fTreeDrawArgsParser.IsSpecified(0))
+               gEnv->SetValue("Hist.Binning.3D.x", fTreeDrawArgsParser.GetParameter(0));
+            if (fTreeDrawArgsParser.IsSpecified(3))
+               gEnv->SetValue("Hist.Binning.3D.y", fTreeDrawArgsParser.GetParameter(3));
+            if (fTreeDrawArgsParser.IsSpecified(6))
+               gEnv->SetValue("Hist.Binning.3D.z", fTreeDrawArgsParser.GetParameter(6));
+            binsx = gEnv->GetValue("Hist.Binning.3D.x",100);
+            minx =  fTreeDrawArgsParser.GetIfSpecified(1, 0);
+            maxx =  fTreeDrawArgsParser.GetIfSpecified(2, 0);
+            binsy = gEnv->GetValue("Hist.Binning.3D.y",100);
+            miny =  fTreeDrawArgsParser.GetIfSpecified(4, 0);
+            maxy =  fTreeDrawArgsParser.GetIfSpecified(5, 0);
+            binsz = gEnv->GetValue("Hist.Binning.3D.z",100);
+            minz =  fTreeDrawArgsParser.GetIfSpecified(7, 0);
+            maxz =  fTreeDrawArgsParser.GetIfSpecified(8, 0);
+            hist = new TH3F(fTreeDrawArgsParser.GetObjectName(), fTreeDrawArgsParser.GetObjectTitle(),
+                           (Int_t) binsx, minx, maxx,
+                           (Int_t) binsy, miny, maxy,
+                           (Int_t) binsz, minz, maxz);
+            hist->SetBit(TH1::kNoStats);
+            hist->SetBit(kCanDelete);
+            if (fTreeDrawArgsParser.GetNoParameters() != 9)
+               hist->SetBit(TH1::kCanRebin);
+            else
+               hist->ResetBit(TH1::kCanRebin);
+         } else {
+            checkPrevious = kTRUE;
+            PDB(kDraw,2)
+               Info("Terminate", "found histo '%s' in gDirectory",
+                                 fTreeDrawArgsParser.GetObjectName().Data());
+         }
       } else {
          if (!fTreeDrawArgsParser.GetAdd())
             hist->Reset();
       }
 
+      // Set the ranges; take into account previous histos for 'same' runs
       Double_t rmin[3], rmax[3];
-
-      // FIXME take rmin and rmax from the old histogram
       if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
          rmin[0] = rmax[0] = rmin[1] = rmax[1] = rmin[2] = rmax[2] = 0;
          if (fPolyMarker3D->Size() > 0) {
@@ -1656,10 +1744,26 @@ void TProofDrawPolyMarker3D::Terminate(void)
             Double_t v[3];
             fPolyMarker3D->GetPoint(i, v[0], v[1], v[2]);
             for (int ii = 0; ii < 3; ii++) {
-               if (v[ii] < rmin[i]) rmin[i] = v[ii];
-               if (v[ii] > rmax[i]) rmax[i] = v[ii];
+               if (v[ii] < rmin[ii]) rmin[ii] = v[ii];
+               if (v[ii] > rmax[ii]) rmax[ii] = v[ii];
             }
          }
+         // Compare with previous histo, if any
+         if (checkPrevious) {
+            rmin[0] = (hist->GetXaxis()->GetXmin() < rmin[0]) ? hist->GetXaxis()->GetXmin()
+                                                              : rmin[0];
+            rmin[1] = (hist->GetYaxis()->GetXmin() < rmin[1]) ? hist->GetYaxis()->GetXmin()
+                                                              : rmin[1];
+            rmin[2] = (hist->GetZaxis()->GetXmin() < rmin[2]) ? hist->GetZaxis()->GetXmin()
+                                                              : rmin[2];
+            rmax[0] = (hist->GetXaxis()->GetXmax() > rmax[0]) ? hist->GetXaxis()->GetXmax()
+                                                              : rmax[0];
+            rmax[1] = (hist->GetYaxis()->GetXmax() > rmax[1]) ? hist->GetYaxis()->GetXmax()
+                                                              : rmax[1];
+            rmax[2] = (hist->GetZaxis()->GetXmax() > rmax[2]) ? hist->GetZaxis()->GetXmax()
+                                                              : rmax[2];
+         }
+
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hist,
                            rmin[0], rmax[0], rmin[1], rmax[1], rmin[2], rmax[2]);
       }
@@ -1667,18 +1771,20 @@ void TProofDrawPolyMarker3D::Terminate(void)
          if (!hist->TestBit(kCanDelete)) {
             TH1 *histcopy = hist->DrawCopy(fOption.Data());
             histcopy->SetStats(kFALSE);
+         } else {
+            SetDrawAtt(hist);
+            hist->Draw(fOption);        // no draw options on purpose
          }
-         else
-            hist->Draw();        // no draw options on purpose
          gPad->Update();
       } else {
          gPad->Clear();
          gPad->Range(-1,-1,1,1);
          TView::CreateView(1,rmin,rmax);
       }
-      // FIXME set marker style
-      if (fTreeDrawArgsParser.GetShouldDraw())
+      if (fTreeDrawArgsParser.GetShouldDraw()) {
+         SetDrawAtt(fPolyMarker3D);
          fPolyMarker3D->Draw(fOption);
+      }
       gPad->Update();
       if (!hist->TestBit(kCanDelete)) {
          for (int i = 0; i < fPolyMarker3D->Size(); i++) {
@@ -1828,6 +1934,7 @@ void TProofDrawListOfGraphs::Terminate(void)
          if (gr && gr->GetN() <= 0) grs->Remove(gr);
       }
       if (fTreeDrawArgsParser.GetShouldDraw()) {
+         SetDrawAtt(hist);
          hist->Draw(fOption.Data());
          gPad->Update();
       }
@@ -1981,6 +2088,7 @@ void TProofDrawListOfPolyMarkers3D::Terminate(void)
          pm3d->SetPoint(pm3d->GetLastPoint()+1, i->fY, i->fZ, i->fT);
       }
       if (fTreeDrawArgsParser.GetShouldDraw()) {
+         SetDrawAtt(hist);
          hist->Draw(fOption.Data());
          gPad->Update();
       }

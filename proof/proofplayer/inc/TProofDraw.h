@@ -72,6 +72,7 @@ protected:
    Int_t                fDimension;      //  Dimension of the current expression
 
    void     SetCanvas(const char *objname);
+   void     SetDrawAtt(TObject *o);
    void     SetError(const char *sub, const char *mesg);
 
 protected:
