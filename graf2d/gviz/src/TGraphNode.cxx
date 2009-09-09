@@ -72,11 +72,28 @@ void TGraphNode::CreateGVNode(Agraph_t *gv)
 
 
 //______________________________________________________________________________
-Int_t TGraphNode::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
+Int_t TGraphNode::DistancetoPrimitive(Int_t px, Int_t py)
 {
    // Compute distance from point px,py to a node.
 
-   return 999;
+   TEllipse ellipse(fX, fY, fW, fH, 0., 360., 0.);
+   ellipse.SetFillStyle(1001);
+   ellipse.SetFillColor(2);
+   return ellipse.DistancetoPrimitive(px, py);
+}
+
+
+//______________________________________________________________________________
+void TGraphNode::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+{
+   // Execute action corresponding to one event.
+   
+   TEllipse ellipse(fX, fY, fW, fH, 0., 360., 0.);
+   ellipse.ExecuteEvent(event,px, py);
+   fX = ellipse.GetX1();
+   fY = ellipse.GetY1();
+   fW = ellipse.GetR1();
+   fH = ellipse.GetR2();
 }
 
 
@@ -110,10 +127,17 @@ void TGraphNode::Paint(Option_t *)
 
    // Draw the node shape
    // ND_shape(fGVNode)->name gives the type of shape.
+   ellipse.SetFillStyle(GetFillStyle());
+   ellipse.SetFillColor(GetFillColor());
+   ellipse.SetLineColor(GetLineColor());
+   ellipse.SetLineStyle(GetLineStyle());
+   ellipse.SetLineWidth(GetLineWidth());
    ellipse.PaintEllipse(fX, fY, fW, fH, 0., 360., 0., "");
    
    // Draw the node name
-   text.PaintLatex(fX, fY, 0., GetTextSize(), (char*)GetName());
+   text.SetTextColor(GetTextColor());
+   text.SetTextFont(GetTextFont());
+   text.PaintLatex(fX, fY, 0., GetTextSize(), (char*)GetTitle());
 }
 
 

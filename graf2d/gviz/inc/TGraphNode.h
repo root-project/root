@@ -20,6 +20,14 @@
 #include "TAttText.h"
 #endif
 
+#ifndef ROOT_TAttFill
+#include "TAttFill.h"
+#endif
+
+#ifndef ROOT_TAttLine
+#include "TAttLine.h"
+#endif
+
 struct Agraph_t;
 struct Agnode_t;
 
@@ -33,7 +41,7 @@ struct Agnode_t;
 //////////////////////////////////////////////////////////////////////////
 
 
-class TGraphNode : public TNamed, public TAttText  {
+class TGraphNode : public TNamed, public TAttText, public TAttFill, public TAttLine  {
 
 protected:
 
@@ -51,7 +59,9 @@ public:
 
    void           CreateGVNode(Agraph_t *gv);
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);   
+   virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
    void           SetGVNode(Agnode_t *gvn) {fGVNode = gvn;}  
+   virtual void   SetTextAngle(Float_t) {;}
    Agnode_t      *GetGVNode() {return fGVNode;}
    void           Layout();
    virtual void   Paint(Option_t *option="");   
