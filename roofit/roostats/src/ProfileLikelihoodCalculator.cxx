@@ -144,7 +144,8 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    // calculate MLE
    RooArgSet* constrainedParams = pdf->getParameters(*data);
    RemoveConstantParameters(constrainedParams);
-   RooFitResult* fit = pdf->fitTo(*data,Extended(kFALSE), Constrain(*constrainedParams),Strategy(0),Hesse(kFALSE),Save(kTRUE),PrintLevel(-1));
+
+   RooFitResult* fit = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(0),Hesse(kFALSE),Save(kTRUE),PrintLevel(-1));
   
 
    fit->Print();
@@ -162,19 +163,43 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       if(!mytarget) continue;
       mytarget->setVal( myarg->getVal() );
       mytarget->setConstant(kTRUE);
-      cout << "setting null parameter:" << endl;
       mytarget->Print();
    }
-  
-   RooFitResult* fit2 = pdf->fitTo(*data,Extended(kFALSE),Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1));
 
-   Double_t NLLatCondMLE= fit2->minNll();
-   fit2->Print();
+   // perform the fit only if nuisance parameters are available
+   // get nuisance parameters
+   RooArgSet nuisParams(*constrainedParams);
+   // need to remove the parameter of interest
+   nuisParams.remove(*fNullParams);
+   // check there are variable parameter in order to do a fit 
+   bool existVarParams = false; 
+   TIter it2 = nuisParams.createIterator();
+   while ((myarg = (RooRealVar *)it2.Next())) { 
+      if ( !myarg->isConstant() ) {
+         existVarParams = true; 
+         break;
+      }
+   }
+
+   Double_t NLLatCondMLE= NLLatMLE;
+   if (existVarParams) {
+      RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1));
+      NLLatCondMLE = fit2->minNll();
+      fit2->Print();
+   }
+   else { 
+      // get just the likelihood value (no need to do a fit since the likelihood is a constant function)
+      RooAbsReal* nll = pdf->createNLL(*data, CloneData(kTRUE), Constrain(*constrainedParams));
+      NLLatCondMLE = nll->getVal();
+      delete nll;
+   }
 
    // Use Wilks' theorem to translate -2 log lambda into a signifcance/p-value
+   Double_t deltaNLL = std::max( NLLatCondMLE-NLLatMLE, 0.);
+
    HypoTestResult* htr = 
       new HypoTestResult("ProfileLRHypoTestResult",
-                         SignificanceToPValue(sqrt( 2*(NLLatCondMLE-NLLatMLE))), 0 );
+                         SignificanceToPValue(sqrt( 2*deltaNLL)), 0 );
    delete constrainedParams;
    return htr;
 
