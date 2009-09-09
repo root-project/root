@@ -1356,7 +1356,7 @@ void TGFileBrowser::PadModified()
                                                 embed));
             if ((canvas) && (canvas == (ULong_t)gPad || 
                 canvas == (ULong_t)gPad->GetCanvas())) {
-               tabRight->SetTab(i, kFALSE);
+               tabRight->SetTab(i, kTRUE);
                break;
             }
          }
