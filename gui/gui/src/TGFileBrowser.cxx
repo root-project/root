@@ -250,9 +250,10 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
    else if (obj) {
       GetObjPicture(&pic, obj);
       if (!name) name = obj->GetName();
-      if(check > -1) {
+      if (check > -1) {
          if (!fListTree->FindChildByName(fListLevel, name)) {
-            TGListTreeItem *item = fListTree->AddItem(fListLevel, name, obj, pic, pic, kTRUE);
+            TGListTreeItem *item = fListTree->AddItem(fListLevel, name, obj,
+                                                      pic, pic, kTRUE);
             if ((pic != fFileIcon) && (pic != fCachedPic))
                fClient->FreePicture(pic);
             fListTree->CheckItem(item, (Bool_t)check);
@@ -770,7 +771,10 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
             const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", obj));
             if (clname) {
                TClass *cl = TClass::GetClass(clname);
-               void *add = gROOT->FindObject((char *) obj->GetName());
+               TString name = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetName();", obj));
+               name += ";";
+               name += (Short_t)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetCycle();", obj));
+               void *add = gDirectory->FindObjectAny((char *) name.Data());
                if (add && cl->IsTObject()) {
                   obj = (TObject*)add;
                   item->SetUserData(obj);
@@ -935,7 +939,10 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", obj));
          if (clname) {
             TClass *cl = TClass::GetClass(clname);
-            void *add = gROOT->FindObject((char *) obj->GetName());
+            TString name = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetName();", obj));
+            name += ";";
+            name += (Short_t)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetCycle();", obj));
+            void *add = gDirectory->FindObjectAny((char *) name.Data());
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
                item->SetUserData(obj);

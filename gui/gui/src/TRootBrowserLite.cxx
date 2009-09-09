@@ -2106,9 +2106,14 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                            if (obj2->IsA() == TKey::Class()) {
                               TKey *key = (TKey*)obj2;
                               TClass *cl = TClass::GetClass(key->GetClassName());
-                              void *add = gROOT->FindObject((char *) key->GetName());
+                              TString name = key->GetName();
+                              name += ";";
+                              name += key->GetCycle();
+                              //void *add = gROOT->FindObject((char *) name.Data());//key->GetName());
+                              void *add = gDirectory->FindObjectAny((char *) name.Data());
                               if (cl->IsTObject()) {
                                  obj2 = (TObject*)add; // cl->DynamicCast(TObject::Class(),startadd);
+                                 item2->SetUserData(obj2);
                               } else {
                                  Error("ProcessMessage","do not support non TObject (like %s) yet",
                                        cl->GetName());
@@ -2332,7 +2337,8 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
             name += ";";
             name += key->GetCycle();
             Chdir(item->GetParent());
-            TObject *k_obj = gROOT->FindObject(name);
+            //TObject *k_obj = gROOT->FindObject(name);
+            TObject *k_obj = gDirectory->FindObjectAny(name);
 
             if (k_obj) {
                item->SetUserData(k_obj);
@@ -2615,7 +2621,8 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
 
             if (kobj->IsA() == TKey::Class()) {
                Chdir(fListLevel->GetParent());
-               kobj = gROOT->FindObject(kobj->GetName());
+               //kobj = gROOT->FindObject(kobj->GetName());
+               kobj = gDirectory->FindObjectAny(kobj->GetName());
 
                if (kobj) {
                   TGListTreeItem *parent = fListLevel->GetParent();
