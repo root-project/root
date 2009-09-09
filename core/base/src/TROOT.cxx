@@ -1290,27 +1290,44 @@ TClass *TROOT::LoadClass(const char *classname) const
 
    VoidFuncPtr_t dict = TClassTable::GetDict(classname);
 
-   if (!dict) {
-      if (gInterpreter->AutoLoad(classname)) {
-         dict = TClassTable::GetDict(classname);
-      }
-   }
+   TString long64name;
+   TString resolved;
+   
    if (!dict) {
       // Try with Long64_t instead of long long
-      string long64name = TClassEdit::GetLong64_Name(classname);
+      long64name = TClassEdit::GetLong64_Name(classname);
       if (long64name != classname) {
-         TClass *res = LoadClass(long64name.c_str());
-         if (res) return res;
+         dict = TClassTable::GetDict(long64name.Data());
+      } else {
+         long64name.Clear();
       }
    }
    if (!dict) {
       // Try to remove the ROOT typedefs
-      string resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
+      resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
       if (resolved != classname) {
-         dict = TClassTable::GetDict(resolved.c_str());
+         dict = TClassTable::GetDict(resolved.Data());
+      } else {
+         resolved.Clear();
       }
    }
-
+   if (!dict) {
+      if (gInterpreter->AutoLoad(classname)) {
+         dict = TClassTable::GetDict(classname);
+         if (!dict) {
+            // Try the typedefs again.
+            
+            if (long64name.Length()) {
+               TClass *res = LoadClass(long64name.Data());
+               if (res) return res;
+            }
+            if (resolved.Length()) {
+               dict = TClassTable::GetDict(resolved.Data());
+            }
+         }
+      }
+   }
+   
    if (dict) {
       // The dictionary generation might change/delete classname
       TString clname(classname);
