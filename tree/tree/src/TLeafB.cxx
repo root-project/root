@@ -133,6 +133,10 @@ void TLeafB::ReadBasket(TBuffer &b)
       b >> fValue[0];
    } else {
       if (fLeafCount) {
+         Long64_t entry = fBranch->GetReadEntry();
+         if (fLeafCount->GetBranch()->GetReadEntry() != entry) {
+            fLeafCount->GetBranch()->GetEntry(entry);
+         }
          Int_t len = Int_t(fLeafCount->GetValue());
          if (len > fLeafCount->GetMaximum()) {
             Error("ReadBasket", "leaf: '%s' len: %d max: %d", GetName(), len, fLeafCount->GetMaximum());
