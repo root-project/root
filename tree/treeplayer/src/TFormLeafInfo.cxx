@@ -1024,9 +1024,12 @@ Bool_t TFormLeafInfoNumerical::Update()
 }
 
 namespace {
-   static TStreamerElement gFakeClonesElem("begin","fake",0,
-                                           TStreamerInfo::kAny,
-                                           "TClonesArray");
+   TStreamerElement *R__GetFakeClonesElem() {
+      static TStreamerElement gFakeClonesElem("begin","fake",0,
+                                              TStreamerInfo::kAny,
+                                              "TClonesArray");
+      return &gFakeClonesElem;
+   }
 }
 
 //______________________________________________________________________________
@@ -1036,7 +1039,7 @@ namespace {
 
 //______________________________________________________________________________
 TFormLeafInfoClones::TFormLeafInfoClones(TClass* classptr, Long_t offset) :
-   TFormLeafInfo(classptr,offset,&gFakeClonesElem),fTop(kFALSE)
+   TFormLeafInfo(classptr,offset,R__GetFakeClonesElem()),fTop(kFALSE)
 {
    // Constructor.
 }
@@ -1044,7 +1047,7 @@ TFormLeafInfoClones::TFormLeafInfoClones(TClass* classptr, Long_t offset) :
 //______________________________________________________________________________
 TFormLeafInfoClones::TFormLeafInfoClones(TClass* classptr, Long_t offset,
                                          Bool_t top) :
-   TFormLeafInfo(classptr,offset,&gFakeClonesElem),fTop(top)
+   TFormLeafInfo(classptr,offset,R__GetFakeClonesElem()),fTop(top)
 {
    // Constructor/
 }
@@ -1216,7 +1219,7 @@ void * TFormLeafInfoClones::GetValuePointer(char *where, Int_t instance)
 
 //______________________________________________________________________________
 TFormLeafInfoCollectionObject::TFormLeafInfoCollectionObject(TClass* classptr, Bool_t top) :
-   TFormLeafInfo(classptr,0,&gFakeClonesElem),fTop(top)
+   TFormLeafInfo(classptr,0,R__GetFakeClonesElem()),fTop(top)
 {
    // Constructor.
 }

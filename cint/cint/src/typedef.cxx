@@ -1229,63 +1229,67 @@ int G__defined_typename_noerror(const char* type_name, int noerror)
       ispointer = 'A' - 'a';
    }
 
-   NameMap::Range nameRange = G__newtype.namerange->Find(temp);
-   if (nameRange) {
-      for (i = nameRange.First(); i <= nameRange.Last(); ++i) {
-         if ((len == G__newtype.hash[i]) && !strcmp(G__newtype.name[i], temp)) {
-            thisflag = 0;
-            // global scope
-            if (
-                (G__newtype.parent_tagnum[i] == -1)
+   if (G__newtype.namerange) {
+      NameMap::Range nameRange = G__newtype.namerange->Find(temp);
+      if (nameRange) {
+         for (i = nameRange.First(); i <= nameRange.Last(); ++i) {
+            if ((len == G__newtype.hash[i]) && !strcmp(G__newtype.name[i], temp)) {
+               thisflag = 0;
+               // global scope
+               if (
+                   (G__newtype.parent_tagnum[i] == -1)
 #if !defined(G__OLDIMPLEMTATION2100)
-                && (!p || ((skipconst == p) || !strcmp("std", skipconst)))
+                   && (!p || ((skipconst == p) || !strcmp("std", skipconst)))
 #elif !defined(G__OLDIMPLEMTATION1890)
-                && (!p || (skipconst == p))
+                   && (!p || (skipconst == p))
 #endif
-                ) {
-               thisflag = 0x1;
-            }
-            // enclosing tag scope
-            if (G__isenclosingclass(G__newtype.parent_tagnum[i], env_tagnum)) {
-               thisflag = 0x2;
-            }
-            // template definition enclosing class scope
-            if (G__isenclosingclass(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum)) {
-               thisflag = 0x4;
-            }
-            // baseclass tag scope
-            if (-1 != G__isanybase(G__newtype.parent_tagnum[i], env_tagnum, G__STATICRESOLUTION)) {
-               thisflag = 0x8;
-            }
-            // template definition base class scope
-            if (-1 != G__isanybase(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum, G__STATICRESOLUTION)) {
-               thisflag = 0x10;
-            }
-            if (!thisflag && G__isenclosingclassbase(G__newtype.parent_tagnum[i], env_tagnum)) {
-               thisflag = 0x02;
-            }
-            if (!thisflag && G__isenclosingclassbase(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum)) {
-               thisflag = 0x04;
-            }
-            // exact template definition scope
-            if ((G__tmplt_def_tagnum > -1) && (G__tmplt_def_tagnum == G__newtype.parent_tagnum[i])) {
-               thisflag = 0x20;
-            }
-            // exact tag scope
-            if ((env_tagnum > -1) && (env_tagnum == G__newtype.parent_tagnum[i])) {
-               thisflag = 0x40;
-            }
-
-            if (thisflag && (thisflag >= matchflag)) {
-               matchflag = thisflag;
-               typenum = i;
-               G__var_type = G__newtype.type[i] + ispointer;
+                   ) {
+                  thisflag = 0x1;
+               }
+               // enclosing tag scope
+               if (G__isenclosingclass(G__newtype.parent_tagnum[i], env_tagnum)) {
+                  thisflag = 0x2;
+               }
+               // template definition enclosing class scope
+               if (G__isenclosingclass(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum)) {
+                  thisflag = 0x4;
+               }
+               // baseclass tag scope
+               if (-1 != G__isanybase(G__newtype.parent_tagnum[i], env_tagnum, G__STATICRESOLUTION)) {
+                  thisflag = 0x8;
+               }
+               // template definition base class scope
+               if (-1 != G__isanybase(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum, G__STATICRESOLUTION)) {
+                  thisflag = 0x10;
+               }
+               if (!thisflag && G__isenclosingclassbase(G__newtype.parent_tagnum[i], env_tagnum)) {
+                  thisflag = 0x02;
+               }
+               if (!thisflag && G__isenclosingclassbase(G__newtype.parent_tagnum[i], G__tmplt_def_tagnum)) {
+                  thisflag = 0x04;
+               }
+               // exact template definition scope
+               if ((G__tmplt_def_tagnum > -1) && (G__tmplt_def_tagnum == G__newtype.parent_tagnum[i])) {
+                  thisflag = 0x20;
+               }
+               // exact tag scope
+               if ((env_tagnum > -1) && (env_tagnum == G__newtype.parent_tagnum[i])) {
+                  thisflag = 0x40;
+               }
+               
+               if (thisflag && (thisflag >= matchflag)) {
+                  matchflag = thisflag;
+                  typenum = i;
+                  G__var_type = G__newtype.type[i] + ispointer;
+               }
             }
          }
+      } else {
+         i = G__newtype.alltype;
       }
    } else {
       i = G__newtype.alltype;
-   }
+   }      
    return typenum;
 }
 
