@@ -115,8 +115,8 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       // call always Hesse (error matrix from Fumili is never accurate since is approximate) 
          
 #ifdef DEBUG
-      MN_INFO_MSG("FumiliBuilder will verify convergence and Error matrix. "<< std::endl;
-      MN_INFO_MSG("dcov is =  "<<  min.Error().Dcovar() << std::endl;
+      std::cout << "FumiliBuilder will verify convergence and Error matrix. " << std::endl;
+      std::cout << "dcov is =  "<<  min.Error().Dcovar() << std::endl;
 #endif
 
 //       // recalculate the gradient using the numerical gradient calculator
