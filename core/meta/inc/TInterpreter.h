@@ -94,7 +94,7 @@ public:
    virtual void     UpdateListOfGlobalFunctions() = 0;
    virtual void     UpdateListOfTypes() = 0;
    virtual void     SetClassInfo(TClass *cl, Bool_t reload = kFALSE) = 0;
-   virtual Bool_t   CheckClassInfo(const char *name) = 0;
+   virtual Bool_t   CheckClassInfo(const char *name, Bool_t autoload = kTRUE) = 0;
    virtual Long_t   Calc(const char *line, EErrorCode* error = 0) = 0;
    virtual void     CreateListOfBaseClasses(TClass *cl) = 0;
    virtual void     CreateListOfDataMembers(TClass *cl) = 0;

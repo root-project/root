@@ -778,7 +778,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
 }
 
 //______________________________________________________________________________
-Bool_t TCint::CheckClassInfo(const char *name)
+Bool_t TCint::CheckClassInfo(const char *name, Bool_t autoload /*= kTRUE*/)
 {
    // Checks if a class with the specified name is defined in CINT.
    // Returns kFALSE is class is not defined.
@@ -838,7 +838,11 @@ Bool_t TCint::CheckClassInfo(const char *name)
    }
    strcpy(classname,name);
 
-   Int_t tagnum = G__defined_tagname(classname, 2); // This function might modify the name (to add space between >>).
+   int flag = 2;
+   if (!autoload) {
+      flag = 3;
+   }
+   Int_t tagnum = G__defined_tagname(classname, flag); // This function might modify the name (to add space between >>).
    if (tagnum >= 0) {
       G__ClassInfo info(tagnum);
       if (info.Property() & (G__BIT_ISENUM | G__BIT_ISCLASS | G__BIT_ISSTRUCT | G__BIT_ISUNION | G__BIT_ISNAMESPACE)) {
