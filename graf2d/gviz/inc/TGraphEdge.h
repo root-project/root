@@ -56,6 +56,7 @@ public:
 
    void           CreateGVEdge(Agraph_t *gv);
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
+   virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
    void           SetGVEdge(Agedge_t *gve) {fGVEdge = gve;}
    Agedge_t      *GetGVEdge() {return fGVEdge;}
    void           Layout();            

@@ -11,6 +11,7 @@
 
 #include "TGraph.h"
 #include "TArrow.h"
+#include "TPolyLine.h"
 #include "TGraphEdge.h"
 #include "TGraphNode.h"  
 
@@ -86,11 +87,42 @@ void TGraphEdge::CreateGVEdge(Agraph_t *gv)
 
 
 //______________________________________________________________________________
-Int_t TGraphEdge::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
+Int_t TGraphEdge::DistancetoPrimitive(Int_t px, Int_t py)
 {
    // Compute distance from point px,py to an edge.
 
-   return 999;
+   Int_t i,n,a,dist=999;
+   
+   TPolyLine *polyline;
+   a = 0;
+
+   for (i=1; i<=fN[0]; i++) {
+      n = fN[i];
+      polyline = new TPolyLine(n, &fX[a], &fY[a], "L");
+      dist = polyline->DistancetoPrimitive(px, py);
+      a = a+n;
+   }
+
+   return dist;
+}
+
+
+//______________________________________________________________________________
+void TGraphEdge::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+{
+   // Execute action corresponding to one event.
+
+   Int_t i,n,a;
+
+   TPolyLine *polyline;
+   a = 0;
+
+   for (i=1; i<=fN[0]; i++) {
+      n = fN[i];
+      polyline = new TPolyLine(n, &fX[a], &fY[a], "L");
+      polyline->ExecuteEvent(event, px, py);
+      a = a+n;
+   }
 }
 
 
@@ -148,8 +180,12 @@ void TGraphEdge::Paint(Option_t *)
    TArrow arrow;
    TGraph graph;
 
+   graph.SetLineColor(GetLineColor());
+   graph.SetLineStyle(GetLineStyle());
+   graph.SetLineWidth(GetLineWidth());
    arrow.SetAngle(38);
    arrow.SetFillColor(GetLineColor());
+   arrow.SetLineColor(GetLineColor());
 
    a = 0;
 
