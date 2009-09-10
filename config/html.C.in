@@ -2,7 +2,7 @@
 Bool_t enable_afs               = @enable_afs@;
 Bool_t enable_alien             = @enable_alien@;
 Bool_t enable_asimage           = @enable_asimage@;
-Bool_t enable_cern              = @enable_cern@;
+Bool_t enable_cern              = strlen("@altf77@") > 0;
 Bool_t enable_chirp             = @enable_chirp@;
 Bool_t enable_clarens           = @enable_clarens@;
 Bool_t enable_dcache            = @enable_dcache@;
@@ -23,7 +23,7 @@ Bool_t enable_sapdb             = @enable_sapdb@;
 Bool_t enable_srp               = @enable_srp@;
 Bool_t enable_ssl               = @enable_ssl@;
 Bool_t enable_table             = @enable_table@;
-Bool_t enable_thread            = @enable_thread@;
+Bool_t enable_thread            = kTRUE;
 Bool_t enable_xml               = @enable_xml@;
 Bool_t enable_xrootd            = @enable_xrootd@;
 
@@ -100,7 +100,6 @@ void html()
    if (enable_xml)               gSystem->Load("libXMLParser");
    if (enable_xrootd) {
       gSystem->Load("libNetx.so");
-      gSystem->Load("libXrdOfs");
       gSystem->Load("libXrdRootd");
       gSystem->Load("libXrdSec.so");
       if (enable_krb5) {
