@@ -1297,7 +1297,8 @@ TClass *TROOT::LoadClass(const char *classname) const
       // Try with Long64_t instead of long long
       long64name = TClassEdit::GetLong64_Name(classname);
       if (long64name != classname) {
-         dict = TClassTable::GetDict(long64name.Data());
+         TClass *res = LoadClass(long64name.Data());
+         if (res) return res;
       } else {
          long64name.Clear();
       }
