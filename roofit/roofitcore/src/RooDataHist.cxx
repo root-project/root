@@ -804,6 +804,8 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
     for (i=0 ; i<nVar ; i++) {
       _idxMult[i] = other._idxMult[i] ;  
     }
+  } else {
+     _idxMult = 0 ;
   }
 
   // Allocate and initialize weight array 
