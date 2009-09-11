@@ -24,6 +24,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   fft/FFT \
   fit/fit1_C  fit/TwoHistoFit2D fit/line3Dfit \
   foam/% \
+  graphs/graphstruct \
   html/% \
   math/Bessel math/LegendreAssoc math/Legendre math/mathmoreIntegration \
   math/normalDist math/tStudent math/testUnfold2 \
