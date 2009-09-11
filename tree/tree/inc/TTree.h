@@ -147,9 +147,9 @@ protected:
    virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
-   virtual Bool_t   CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t ptr);
+   virtual Int_t    CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t ptr);
    virtual TBranch *BronchExec(const char* name, const char* classname, void* addobj, Bool_t isptrptr, Int_t bufsize, Int_t splitlevel);
-   friend TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
+   friend  TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
 
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
@@ -183,6 +183,20 @@ protected:
       kPrint             = BIT(10),
       kRemoveFriend      = BIT(12),
       kSetBranchStatus   = BIT(12)
+   };
+   
+   enum SetBranchAddressStatus {
+      kMissingBranch = -5,
+      kInternalError = -4,
+      kMissingCompiledCollectionProxy = -3,
+      kMismatch = -2,
+      kClassMismatch = -1,
+      kMatch = 0,
+      kMatchConversion = 1,
+      kMatchConversionCollection = 2,
+      kMakeClass = 3,
+      kVoidPtr = 4,
+      kNoCheck = 5
    };
 
 public:
@@ -365,18 +379,18 @@ public:
    virtual void            SetAutoSave(Long64_t autos = 10000000) { fAutoSave=autos; }
    virtual void            SetBasketSize(const char* bname, Int_t buffsize = 16000);
 #if !defined(__CINT__)
-   virtual void         SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
+   virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
 #endif
-   virtual void         SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
-   virtual void         SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
-   template <class T> void SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
-      SetBranchAddress(bname,add,ptr,TClass::GetClass(typeid(T)),TDataType::GetType(typeid(T)),true);
+   virtual Int_t           SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
+   virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
+   template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
+      return SetBranchAddress(bname,add,ptr,TClass::GetClass(typeid(T)),TDataType::GetType(typeid(T)),true);
    }
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    // This can only be used when the template overload resolution can distringuish between
    // T* and T**
-   template <class T> void SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
-      SetBranchAddress(bname,add,ptr,TClass::GetClass(typeid(T)),TDataType::GetType(typeid(T)),false);
+   template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
+      return SetBranchAddress(bname,add,ptr,TClass::GetClass(typeid(T)),TDataType::GetType(typeid(T)),false);
    }
 #endif
    virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = 0);

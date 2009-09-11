@@ -2214,15 +2214,27 @@ TFile* TTree::ChangeFile(TFile* file)
 }
 
 //______________________________________________________________________________
-Bool_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t isptr)
+Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t isptr)
 {
    // Check whether or not the address described by the last 3 parameters
    // matches the content of the branch. If a Data Model Evolution conversion
    // is involved, reset the fInfo of the branch.
-
+   // The return values are:
+   //  kMissingBranch (-5) : Missing branch
+   //  kInternalError (-4) : Internal error (could not find the type corresponding to a data type number
+   //  kMissingCompiledCollectionProxy (-3) : Missing compiled collection proxy for a compiled collection
+   //  kMismatch (-2) : Non-Class Pointer type given does not match the type expected by the branch
+   //  kClassMismatch (-1) : Class Pointer type given does not match the type expected by the branch
+   //  kMatch (0) : perfect match
+   //  kMatchConversion (1) : match with (I/O) conversion 
+   //  kMatchConversionCollection (2) : match with (I/O) conversion of the content of a collection
+   //  kMakeClass (3) : MakeClass mode so we can not check.
+   //  kVoidPtr (4) : void* passed so no check was made.
+   //  kNoCheck (5) : Underlying TBranch not yet available so no check was made.
+   
    if (GetMakeClass()) {
       // If we are in MakeClass mode so we do not really use classes.
-      return kTRUE;
+      return kMakeClass;
    }
 
    // Let's determine what we need!
@@ -2252,6 +2264,7 @@ Bool_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataTyp
             TDataType* data = gROOT->GetType(element->GetTypeNameBasic());
             if (!data) {
                Error("CheckBranchAddress", "Did not find the type number for %s", element->GetTypeNameBasic());
+               return kInternalError;
             } else {
                expectedType = (EDataType) data->GetType();
             }
@@ -2296,12 +2309,12 @@ Bool_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataTyp
       if( !ptrClass->GetConversionStreamerInfo( expectedClass, bEl->GetClassVersion() ) &&
           !ptrClass->FindConversionStreamerInfo( expectedClass, bEl->GetCheckSum() ) ) {
          Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" by the branch: %s", ptrClass->GetName(), bEl->GetClassName(), branch->GetName());
-         return kFALSE;
+         return kClassMismatch;
       }
       else {
          
          bEl->SetTargetClassName( ptrClass->GetName() );         
-         return kTRUE;
+         return kMatchConversion;
       }
       
    } else if (expectedClass && ptrClass && !expectedClass->InheritsFrom(ptrClass)) {
@@ -2322,26 +2335,27 @@ Bool_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataTyp
          {
             TBranchElement* bEl = (TBranchElement*)branch;
             bEl->SetTargetClassName( ptrClass->GetName() );         
-            return kTRUE;
+            return kMatchConversionCollection;
          }
       }
       
       Error("SetBranchAddress", "The pointer type given (%s) does not correspond to the class needed (%s) by the branch: %s", ptrClass->GetName(), expectedClass->GetName(), branch->GetName());
-      return kFALSE;
+      return kClassMismatch;
       
    } else if ((expectedType != kOther_t) && (datatype != kOther_t) && (expectedType != kNoType_t) && (datatype != kNoType_t) && (expectedType != datatype)) {
       if (datatype != kChar_t) {
          // For backward compatibility we assume that (char*) was just a cast and/or a generic address
          Error("SetBranchAddress", "The pointer type given \"%s\" (%d) does not correspond to the type needed \"%s\" (%d) by the branch: %s", TDataType::GetTypeName(datatype), datatype, TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
-         return kFALSE;
+         return kMismatch;
       }
    }
    if (expectedClass && expectedClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(expectedClass->GetCollectionProxy())) {
       Error("SetBranchAddress", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
             "Please generate the dictionary for this class (%s)",
             expectedClass->GetName(), branch->GetName(), expectedClass->GetName());
+      return kMissingCompiledCollectionProxy;
    }
-   return kTRUE;
+   return kMatch;
 }
 
 //______________________________________________________________________________
@@ -5818,9 +5832,10 @@ void TTree::SetBasketSize(const char* bname, Int_t buffsize)
 }
 
 //_______________________________________________________________________
-void TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr)
+Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr)
 {
    // Change branch address, dealing with clone trees properly.
+   // See TTree::CheckBranchAddressType for the semantic of the return value.
    //
    // Note: See the comments in TBranchElement::SetAddress() for the
    //       meaning of the addr parameter.
@@ -5829,7 +5844,7 @@ void TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr)
    TBranch* branch = GetBranch(bname);
    if (!branch) {
       Error("SetBranchAddress", "unknown branch -> %s", bname);
-      return;
+      return kNoCheck;
    }
    if (ptr) {
       *ptr = branch;
@@ -5846,24 +5861,27 @@ void TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr)
       }
    }
    branch->SetAddress(addr);
+   return kVoidPtr;
 }
 
 //_______________________________________________________________________
-void TTree::SetBranchAddress(const char* bname, void* addr, TClass* ptrClass, EDataType datatype, Bool_t isptr)
+Int_t TTree::SetBranchAddress(const char* bname, void* addr, TClass* ptrClass, EDataType datatype, Bool_t isptr)
 {
    // Verify the validity of the type of addr before calling SetBranchAddress.
+   // See TTree::CheckBranchAddressType for the semantic of the return value.
    //
    // Note: See the comments in TBranchElement::SetAddress() for the
    //       meaning of the addr parameter.
    //
 
-   SetBranchAddress(bname, addr, 0, ptrClass, datatype, isptr);
+   return SetBranchAddress(bname, addr, 0, ptrClass, datatype, isptr);
 }
 
 //_______________________________________________________________________
-void TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr, TClass* ptrClass, EDataType datatype, Bool_t isptr)
+Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr, TClass* ptrClass, EDataType datatype, Bool_t isptr)
 {
-   //  Verify the validity of the type of addr before calling SetBranchAddress.
+   // Verify the validity of the type of addr before calling SetBranchAddress.
+   // See TTree::CheckBranchAddressType for the semantic of the return value.
    //
    // Note: See the comments in TBranchElement::SetAddress() for the
    //       meaning of the addr parameter.
@@ -5872,14 +5890,15 @@ void TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr, TClas
    TBranch* branch = GetBranch(bname);
    if (!branch) {
       Error("SetBranchAddress", "unknown branch -> %s", bname);
-      return;
+      return kMissingBranch;
    }
    if (ptr) {
       *ptr = branch;
    }
 
-   CheckBranchAddressType(branch, ptrClass, datatype, isptr);
+   Int_t res = CheckBranchAddressType(branch, ptrClass, datatype, isptr);
    SetBranchAddress(bname, addr);
+   return res;
 }
 
 //_______________________________________________________________________

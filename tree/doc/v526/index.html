@@ -18,6 +18,25 @@
     </ul>
 </li>
 <li>Significantly (by 2 order of magnitude) improved the performance of TTree::Draw calling C++ functions.</li>
+<li>Add a return value to SetBranchAddress, a return value greater or equal to zero indicate success, a negative
+value indicates failure (in both case, the address is still updated).  Example:
+<pre lang="cxx">if (tree->SetBranchAddress(mybranch,&myvar) < 0) {
+   cerr << "Something went wrong\n";
+   return;
+}</pre>
+The possible return values are:<ul>
+<li>kMissingBranch (-5) : Missing branch</li>
+<li>kInternalError (-4) : Internal error (could not find the type corresponding to a data type number.</li>
+<li>kMissingCompiledCollectionProxy (-3) : Missing compiled collection proxy for a compiled collection.</li>
+<li>kMismatch (-2) : Non-Class Pointer type given does not match the type expected by the branch.</li>
+<li>kClassMismatch (-1) : Class Pointer type given does not match the type expected by the branch.</li>
+<li>kMatch (0) : perfect match.</li>
+<li>kMatchConversion (1) : match with (I/O) conversion.</li>
+<li>kMatchConversionCollection (2) : match with (I/O) conversion of the content of a collection.</li>
+<li>kMakeClass (3) : MakeClass mode so we can not check.</li>
+<li>kVoidPtr (4) : void* passed so no check was made.</li>
+<li>kNoCheck (5) : Underlying TBranch not yet available so no check was made.</li>
+</ul>
 </ul>
 
 <h4>New function TTree::OptimizeBaskets</h4>

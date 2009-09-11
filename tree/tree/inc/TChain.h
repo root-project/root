@@ -130,9 +130,9 @@ public:
    virtual void      ResetBranchAddresses();
    virtual Long64_t  Scan(const char *varexp="", const char *selection="", Option_t *option="", Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
-   virtual void      SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
-   virtual void      SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
-   virtual void      SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
+   virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
+   virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
+   virtual Int_t     SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
 
    virtual void      SetBranchStatus(const char *bname, Bool_t status=1, UInt_t *found=0);
    virtual void      SetDirectory(TDirectory *dir);
