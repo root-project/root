@@ -117,7 +117,7 @@ class TUnfold:public TObject {
       kRegModeNone = 0,         // no regularisation
       kRegModeSize = 1,         // regularise the size of the output
       kRegModeDerivative = 2,   // regularize the 1st derivative of the output
-      kRegModeCurvature = 3,    // regularize the 2nd derivative of the output
+      kRegModeCurvature = 3     // regularize the 2nd derivative of the output
    };
    TUnfold(TH2 const *hist_A, EHistMap histmap, ERegMode regmode = kRegModeSize);      // constructor
    virtual ~ TUnfold(void);    // delete data members
