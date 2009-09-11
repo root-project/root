@@ -244,6 +244,70 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrix
 
 //______________________________________________________________________________
 template<class Element>
+TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrixCreatorsOp2 op,const TMatrixT<Element> &b)
+{
+  // Create a matrix applying a specific operation to two prototypes.
+  // Supported operations are: kMult (a*b), kMultTranspose (a*b'), kPlus (a+b), kMinus (a-b)
+
+   R__ASSERT(a.IsValid());
+   R__ASSERT(b.IsValid());
+
+   switch(op) {
+      case kMult:
+         AMultB(a,b,1);
+         break;
+
+      case kMultTranspose:
+         AMultBt(a,b,1);
+         break;
+
+      case kPlus:
+         APlusB(a,b,1);
+         break;
+
+      case kMinus:
+         AMinusB(a,b,1);
+         break;
+
+      default:
+         Error("TMatrixTSparse(EMatrixCreatorOp2)", "operation %d not yet implemented",op);
+   }
+}
+
+//______________________________________________________________________________
+template<class Element>
+TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSparse<Element> &b)
+{
+  // Create a matrix applying a specific operation to two prototypes.
+  // Supported operations are: kMult (a*b), kMultTranspose (a*b'), kPlus (a+b), kMinus (a-b)
+
+   R__ASSERT(a.IsValid());
+   R__ASSERT(b.IsValid());
+
+   switch(op) {
+      case kMult:
+         AMultB(a,b,1);
+         break;
+
+      case kMultTranspose:
+         AMultBt(a,b,1);
+         break;
+
+      case kPlus:
+         APlusB(a,b,1);
+         break;
+
+      case kMinus:
+         AMinusB(a,b,1);
+         break;
+
+      default:
+         Error("TMatrixTSparse(EMatrixCreatorOp2)", "operation %d not yet implemented",op);
+   }
+}
+
+//______________________________________________________________________________
+template<class Element>
 void TMatrixTSparse<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
                               Int_t init,Int_t nr_nonzeros)
 {
@@ -460,7 +524,7 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
               nr_nonzero_rowb++;
       }
 
-      Int_t nc = nr_nonzero_rowa*nr_nonzero_rowb; // best guess
+      const Int_t nc = nr_nonzero_rowa*nr_nonzero_rowb; // best guess
       Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1,nc);
 
       pRowIndexc = this->GetRowIndexArray();
@@ -485,15 +549,11 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
    const Element * const pDataa = a.GetMatrixArray();
    const Element * const pDatab = b.GetMatrixArray();
    Element * const pDatac = this->GetMatrixArray();
-   Int_t shift = 0;
    Int_t indexc_r = 0;
    for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
-      const Int_t sIndexc = pRowIndexc[irowc]+shift;
-      const Int_t eIndexc = pRowIndexc[irowc+1];
       const Int_t sIndexa = pRowIndexa[irowc];
       const Int_t eIndexa = pRowIndexa[irowc+1];
-      for (Int_t indexc = sIndexc; indexc < eIndexc; indexc++) {
-         const Int_t icolc = pColIndexc[indexc];
+      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
          const Int_t sIndexb = pRowIndexb[icolc];
          const Int_t eIndexb = pRowIndexb[icolc+1];
          Element sum = 0.0;
@@ -508,18 +568,13 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
                indexb++;
             }
          }
-         if (!constr)
-            pDatac[indexc] = sum;
-         else {
-            if (sum != 0.0) {
-               pRowIndexc[irowc+1]  = indexc_r+1;
-               pColIndexc[indexc_r] = icolc;
-               pDatac[indexc_r] = sum;
-               indexc_r++;
-            } else
-               shift++;
+         if (sum != 0.0) {
+            pColIndexc[indexc_r] = icolc;
+            pDatac[indexc_r] = sum;
+            indexc_r++;
          }
       }
+      pRowIndexc[irowc+1] = indexc_r;
    }
 
    if (constr)
@@ -570,7 +625,7 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
       }
       Int_t nr_nonzero_rowb = b.GetNrows();
 
-      Int_t nc = nr_nonzero_rowa*nr_nonzero_rowb; // best guess
+      const Int_t nc = nr_nonzero_rowa*nr_nonzero_rowb; // best guess
       Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1,nc);
 
       pRowIndexc = this->GetRowIndexArray();
@@ -594,32 +649,23 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
    const Element * const pDatab = b.GetMatrixArray();
    Element * const pDatac = this->GetMatrixArray();
    Int_t indexc_r = 0;
-   Int_t shift = 0;
    for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
-      const Int_t sIndexc = pRowIndexc[irowc]+shift;
-      const Int_t eIndexc = pRowIndexc[irowc+1];
       const Int_t sIndexa = pRowIndexa[irowc];
       const Int_t eIndexa = pRowIndexa[irowc+1];
-      for (Int_t indexc = sIndexc; indexc < eIndexc; indexc++) {
-         const Int_t icolc = pColIndexc[indexc];
-         const Int_t off   = icolc*b.GetNcols();
+      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
+         const Int_t off = icolc*b.GetNcols();
          Element sum = 0.0;
          for (Int_t indexa = sIndexa; indexa < eIndexa; indexa++) {
             const Int_t icola = pColIndexa[indexa];
             sum += pDataa[indexa]*pDatab[off+icola];
          }
-         if (!constr)
-            pDatac[indexc] = sum;
-         else {
-            if (sum != 0.0) {
-               pRowIndexc[irowc+1]  = indexc_r+1;
-               pColIndexc[indexc_r] = icolc;
-               pDatac[indexc_r] = sum;
-               indexc_r++;
-            } else
-               shift++;
+         if (sum != 0.0) {
+            pColIndexc[indexc_r] = icolc;
+            pDatac[indexc_r] = sum;
+            indexc_r++;
          }
       }
+      pRowIndexc[irowc+1]= indexc_r;
    }
 
    if (constr)
@@ -670,7 +716,7 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixTS
                nr_nonzero_rowb++;
       }
 
-      Int_t nc = nr_nonzero_rowa*nr_nonzero_rowb; // best guess
+      const Int_t nc = nr_nonzero_rowa*nr_nonzero_rowb; // best guess
       Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1,nc);
 
       pRowIndexc = this->GetRowIndexArray();
@@ -695,13 +741,9 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixTS
    const Element * const pDatab = b.GetMatrixArray();
    Element * const pDatac = this->GetMatrixArray();
    Int_t indexc_r = 0;
-   Int_t shift = 0;
    for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
-      const Int_t sIndexc = pRowIndexc[irowc]+shift;
-      const Int_t eIndexc = pRowIndexc[irowc+1];
-      const Int_t off   = irowc*a.GetNcols();
-      for (Int_t indexc = sIndexc; indexc < eIndexc; indexc++) {
-         const Int_t icolc = pColIndexc[indexc];
+      const Int_t off = irowc*a.GetNcols();
+      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
          const Int_t sIndexb = pRowIndexb[icolc];
          const Int_t eIndexb = pRowIndexb[icolc+1];
          Element sum = 0.0;
@@ -709,18 +751,13 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixTS
             const Int_t icolb = pColIndexb[indexb];
             sum += pDataa[off+icolb]*pDatab[indexb];
          }
-         if (!constr)
-            pDatac[indexc] = sum;
-         else {
-            if (sum != 0.0) {
-               pRowIndexc[irowc+1]  = indexc_r+1;
-               pColIndexc[indexc_r] = icolc;
-               pDatac[indexc_r] = sum;
-               indexc_r++;
-            } else
-               shift++;
+         if (sum != 0.0) {
+            pColIndexc[indexc_r] = icolc;
+            pDatac[indexc_r] = sum;
+            indexc_r++;
          }
       }
+      pRowIndexc[irowc+1] = indexc_r;
    }
 
    if (constr)
@@ -772,18 +809,14 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
    const Element * const pDatab = b.GetMatrixArray();
    Element * const pDatac = this->GetMatrixArray();
    Int_t indexc_r = 0;
-   Int_t shift = 0;
    for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
-      const Int_t sIndexc = pRowIndexc[irowc]+shift;
-      const Int_t eIndexc = pRowIndexc[irowc+1];
       const Int_t sIndexa = pRowIndexa[irowc];
       const Int_t eIndexa = pRowIndexa[irowc+1];
       const Int_t sIndexb = pRowIndexb[irowc];
       const Int_t eIndexb = pRowIndexb[irowc+1];
       Int_t indexa = sIndexa;
       Int_t indexb = sIndexb;
-      for (Int_t indexc = sIndexc; indexc < eIndexc; indexc++) {
-         const Int_t icolc = pColIndexc[indexc];
+      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
          Element sum = 0.0;
          while (indexa < eIndexa && pColIndexa[indexa] <= icolc) {
             if (icolc == pColIndexa[indexa]) {
@@ -800,18 +833,13 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
             indexb++;
          }
 
-         if (!constr)
-            pDatac[indexc] = sum;
-         else {
-            if (sum != 0.0) {
-               pRowIndexc[irowc+1]  = indexc_r+1;
-               pColIndexc[indexc_r] = icolc;
-               pDatac[indexc_r] = sum;
-               indexc_r++;
-            } else
-               shift++;
+         if (sum != 0.0) {
+            pColIndexc[indexc_r] = icolc;
+            pDatac[indexc_r] = sum;
+            indexc_r++;
          }
       }
+      pRowIndexc[irowc+1] = indexc_r;
    }
 
    if (constr)
@@ -846,8 +874,10 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
       }
    }
 
-   if (constr)
-      *this = b;
+   if (constr) {
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb());
+      SetSparseIndexAB(a,b);
+   }
 
    Int_t * const pRowIndexc = this->GetRowIndexArray();
    Int_t * const pColIndexc = this->GetColIndexArray();
@@ -856,18 +886,16 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
    const Int_t * const pColIndexa = a.GetColIndexArray();
 
    const Element * const pDataa = a.GetMatrixArray();
+   const Element * const pDatab = b.GetMatrixArray();
    Element * const pDatac = this->GetMatrixArray();
    Int_t indexc_r = 0;
-   Int_t shift = 0;
    for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
-      const Int_t sIndexc = pRowIndexc[irowc]+shift;
-      const Int_t eIndexc = pRowIndexc[irowc+1];
       const Int_t sIndexa = pRowIndexa[irowc];
       const Int_t eIndexa = pRowIndexa[irowc+1];
+      const Int_t off = irowc*this->GetNcols();
       Int_t indexa = sIndexa;
-      for (Int_t indexc = sIndexc; indexc < eIndexc; indexc++) {
-         const Int_t icolc = pColIndexc[indexc];
-         Element sum = pDatac[indexc];
+      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
+         Element sum = pDatab[off+icolc];
          while (indexa < eIndexa && pColIndexa[indexa] <= icolc) {
             if (icolc == pColIndexa[indexa]) {
                sum += pDataa[indexa];
@@ -876,18 +904,13 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
             indexa++;
          }
 
-         if (!constr)
-            pDatac[indexc] = sum;
-         else {
-            if (sum != 0.0) {
-               pRowIndexc[irowc+1]  = indexc_r+1;
-               pColIndexc[indexc_r] = icolc;
-               pDatac[indexc_r] = sum;
-               indexc_r++;
-            } else
-               shift++;
+         if (sum != 0.0) {
+            pColIndexc[indexc_r] = icolc;
+            pDatac[indexc_r] = sum;
+            indexc_r++;
          }
       }
+      pRowIndexc[irowc+1] = indexc_r;
    }
 
    if (constr)
@@ -939,18 +962,14 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
    const Element * const pDatab = b.GetMatrixArray();
    Element * const pDatac = this->GetMatrixArray();
    Int_t indexc_r = 0;
-   Int_t shift = 0;
    for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
-      const Int_t sIndexc = pRowIndexc[irowc]+shift;
-      const Int_t eIndexc = pRowIndexc[irowc+1];
       const Int_t sIndexa = pRowIndexa[irowc];
       const Int_t eIndexa = pRowIndexa[irowc+1];
       const Int_t sIndexb = pRowIndexb[irowc];
       const Int_t eIndexb = pRowIndexb[irowc+1];
       Int_t indexa = sIndexa;
       Int_t indexb = sIndexb;
-      for (Int_t indexc = sIndexc; indexc < eIndexc; indexc++) {
-         const Int_t icolc = pColIndexc[indexc];
+      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
          Element sum = 0.0;
          while (indexa < eIndexa && pColIndexa[indexa] <= icolc) {
             if (icolc == pColIndexa[indexa]) {
@@ -958,7 +977,7 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
                break;
             }
             indexa++;
-          }
+         }
          while (indexb < eIndexb && pColIndexb[indexb] <= icolc) {
             if (icolc == pColIndexb[indexb]) {
                sum -= pDatab[indexb];
@@ -967,18 +986,13 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
             indexb++;
          }
 
-         if (!constr)
-            pDatac[indexc] = sum;
-         else {
-            if (sum != 0.0) {
-               pRowIndexc[irowc+1]  = indexc_r+1;
-               pColIndexc[indexc_r] = icolc;
-               pDatac[indexc_r] = sum;
-               indexc_r++;
-            } else
-               shift++;
+         if (sum != 0.0) {
+            pColIndexc[indexc_r] = icolc;
+            pDatac[indexc_r] = sum;
+            indexc_r++;
          }
       }
+      pRowIndexc[irowc+1] = indexc_r;
    }
 
    if (constr)
@@ -1013,8 +1027,10 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
       }
    }
 
-   if (constr)
-      *this = b;
+   if (constr) {
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb());
+      SetSparseIndexAB(a,b);
+   }
 
    Int_t * const pRowIndexc = this->GetRowIndexArray();
    Int_t * const pColIndexc = this->GetColIndexArray();
@@ -1023,18 +1039,16 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
    const Int_t * const pColIndexa = a.GetColIndexArray();
 
    const Element * const pDataa = a.GetMatrixArray();
+   const Element * const pDatab = b.GetMatrixArray();
    Element * const pDatac = this->GetMatrixArray();
    Int_t indexc_r = 0;
-   Int_t shift = 0;
    for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
-      const Int_t sIndexc = pRowIndexc[irowc]+shift;
-      const Int_t eIndexc = pRowIndexc[irowc+1];
       const Int_t sIndexa = pRowIndexa[irowc];
       const Int_t eIndexa = pRowIndexa[irowc+1];
+      const Int_t off = irowc*this->GetNcols();
       Int_t indexa = sIndexa;
-      for (Int_t indexc = sIndexc; indexc < eIndexc; indexc++) {
-         const Int_t icolc = pColIndexc[indexc];
-         Element sum = -pDatac[indexc];
+      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
+         Element sum = -pDatab[off+icolc];
          while (indexa < eIndexa && pColIndexa[indexa] <= icolc) {
             if (icolc == pColIndexa[indexa]) {
                sum += pDataa[indexa];
@@ -1043,18 +1057,13 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
             indexa++;
          }
 
-         if (!constr)
-            pDatac[indexc] = sum;
-         else {
-            if (sum != 0.0) {
-               pRowIndexc[irowc+1]  = indexc_r+1;
-               pColIndexc[indexc_r] = icolc;
-               pDatac[indexc_r] = sum;
-               indexc_r++;
-            } else
-               shift++;
+         if (sum != 0.0) {
+            pColIndexc[indexc_r] = icolc;
+            pDatac[indexc_r] = sum;
+            indexc_r++;
          }
       }
+      pRowIndexc[irowc+1] = indexc_r;
    }
 
    if (constr)
@@ -1089,8 +1098,10 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTS
       }
    }
 
-   if (constr)
-      *this = a;
+   if (constr) {
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb());
+      SetSparseIndexAB(a,b);
+   }
 
    Int_t * const pRowIndexc = this->GetRowIndexArray();
    Int_t * const pColIndexc = this->GetColIndexArray();
@@ -1098,19 +1109,17 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTS
    const Int_t * const pRowIndexb = b.GetRowIndexArray();
    const Int_t * const pColIndexb = b.GetColIndexArray();
 
+   const Element * const pDataa = a.GetMatrixArray();
    const Element * const pDatab = b.GetMatrixArray();
    Element * const pDatac = this->GetMatrixArray();
    Int_t indexc_r = 0;
-   Int_t shift = 0;
    for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
-      const Int_t sIndexc = pRowIndexc[irowc]+shift;
-      const Int_t eIndexc = pRowIndexc[irowc+1];
       const Int_t sIndexb = pRowIndexb[irowc];
       const Int_t eIndexb = pRowIndexb[irowc+1];
+      const Int_t off = irowc*this->GetNcols();
       Int_t indexb = sIndexb;
-      for (Int_t indexc = sIndexc; indexc < eIndexc; indexc++) {
-         const Int_t icolc = pColIndexc[indexc];
-         Element sum = pDatac[indexc];
+      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
+         Element sum = pDataa[off+icolc];
          while (indexb < eIndexb && pColIndexb[indexb] <= icolc) {
             if (icolc == pColIndexb[indexb]) {
                sum -= pDatab[indexb];
@@ -1119,18 +1128,13 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTS
             indexb++;
          }
 
-         if (!constr)
-            pDatac[indexc] = sum;
-         else {
-            if (sum != 0.0) {
-               pRowIndexc[irowc+1]  = indexc_r+1;
-               pColIndexc[indexc_r] = icolc;
-               pDatac[indexc_r] = sum;
-               indexc_r++;
-            } else
-               shift++;
+         if (sum != 0.0) {
+            pColIndexc[indexc_r] = icolc;
+            pDatac[indexc_r] = sum;
+            indexc_r++;
          }
       }
+      pRowIndexc[irowc+1] = indexc_r;
    }
 
    if (constr)
@@ -1202,7 +1206,6 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    while (ep < fp)
       if (*ep++ != 0.0) nr_nonzeros++;
 
-   // if nr_nonzeros != this->fNelems
    if (nr_nonzeros != this->fNelems) {
       if (fColIndex) { delete [] fColIndex; fColIndex = 0; }
       if (fElements) { delete [] fElements; fElements = 0; }
@@ -1342,8 +1345,9 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
    const Int_t * const pColIndexa = a.GetColIndexArray();
    const Int_t * const pColIndexb = b.GetColIndexArray();
 
-   Int_t nc = 0, irowc;
-   for (irowc = 0; irowc < a.GetNrows(); irowc++) {
+   // Count first the number of non-zero slots that are needed
+   Int_t nc = 0;
+   for (Int_t irowc = 0; irowc < a.GetNrows(); irowc++) {
       const Int_t sIndexa = pRowIndexa[irowc];
       const Int_t eIndexa = pRowIndexa[irowc+1];
       const Int_t sIndexb = pRowIndexb[irowc];
@@ -1362,11 +1366,13 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
          }
       }
       while (indexb < eIndexb) {
-         if (pColIndexb[indexb++] > pColIndexa[eIndexa-1])
+         const Int_t icola = (eIndexa > 0) ? pColIndexa[eIndexa-1] : -1;
+         if (pColIndexb[indexb++] > icola)
             nc++;
       }
    }
 
+   // Allocate the necessary space in fRowIndex and fColIndex
    if (this->NonZeros() != nc)
       SetSparseIndex(nc);
 
@@ -1375,7 +1381,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
 
    nc = 0;
    pRowIndexc[0] = 0;
-   for (irowc = 0; irowc < a.GetNrows(); irowc++) {
+   for (Int_t irowc = 0; irowc < a.GetNrows(); irowc++) {
       const Int_t sIndexa = pRowIndexa[irowc];
       const Int_t eIndexa = pRowIndexa[irowc+1];
       const Int_t sIndexb = pRowIndexb[irowc];
@@ -1394,8 +1400,92 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
          pColIndexc[nc++] = pColIndexa[indexa];
       }
       while (indexb < eIndexb) {
-         if (pColIndexb[indexb++] > pColIndexa[eIndexa-1])
+         const Int_t icola = (eIndexa > 0) ? pColIndexa[eIndexa-1] : -1;
+         if (pColIndexb[indexb++] > icola)
             pColIndexc[nc++] = pColIndexb[indexb-1];
+      }
+      pRowIndexc[irowc+1] = nc;
+   }
+
+   return *this;
+}
+
+//______________________________________________________________________________
+template<class Element>
+TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrixT<Element> &a,const TMatrixTSparse<Element> &b)
+{
+  // Set the row/column indices to the "sum" of matrices a and b
+  // It is checked that enough space has been allocated
+
+   if (gMatrixCheck) {
+      R__ASSERT(a.IsValid());
+      R__ASSERT(b.IsValid());
+
+      if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
+          a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
+         Error("SetSparseIndexAB","source matrices not compatible");
+         return *this;
+      }
+
+      if (this->GetNrows()  != a.GetNrows()  || this->GetNcols()  != a.GetNcols() ||
+          this->GetRowLwb() != a.GetRowLwb() || this->GetColLwb() != a.GetColLwb()) {
+         Error("SetSparseIndexAB","matrix not compatible with source matrices");
+         return *this;
+      }
+   }
+
+   const Element * const pDataa = a.GetMatrixArray();
+
+   const Int_t * const pRowIndexb = b.GetRowIndexArray();
+   const Int_t * const pColIndexb = b.GetColIndexArray();
+
+   // Count first the number of non-zero slots that are needed
+   Int_t nc = a.NonZeros();
+   for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
+      const Int_t sIndexb = pRowIndexb[irowc];
+      const Int_t eIndexb = pRowIndexb[irowc+1];
+      const Int_t off = irowc*this->GetNcols();
+      Int_t indexb = sIndexb;
+      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
+         if (pDataa[off+icolc] != 0.0 || pColIndexb[indexb] > icolc) continue;
+         for (; indexb < eIndexb; indexb++) {
+            if (pColIndexb[indexb] >= icolc) {
+               if (pColIndexb[indexb] == icolc) {
+                  nc++;
+                  indexb++;
+               }
+               break;
+            }
+         }
+      }
+   }
+
+   // Allocate thre necessary space in fRowIndex and fColIndex
+   if (this->NonZeros() != nc)
+      SetSparseIndex(nc);
+
+   Int_t * const pRowIndexc = this->GetRowIndexArray();
+   Int_t * const pColIndexc = this->GetColIndexArray();
+
+   nc = 0;
+   pRowIndexc[0] = 0;
+   for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
+      const Int_t sIndexb = pRowIndexb[irowc];
+      const Int_t eIndexb = pRowIndexb[irowc+1];
+      const Int_t off = irowc*this->GetNcols();
+      Int_t indexb = sIndexb;
+      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
+         if (pDataa[off+icolc] != 0.0)
+            pColIndexc[nc++] = icolc;
+         else if (pColIndexb[indexb] <= icolc) {
+            for (; indexb < eIndexb; indexb++) {
+               if (pColIndexb[indexb] >= icolc) {
+                  if (pColIndexb[indexb] == icolc)
+                     pColIndexc[nc++] = pColIndexb[indexb++];
+                  break;
+               }
+            }
+         }
       }
       pRowIndexc[irowc+1] = nc;
    }
@@ -1911,16 +2001,14 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse
       const Int_t sIndex = pRowIndex_s[irow_s];
       const Int_t eIndex = pRowIndex_s[irow_s+1];
       for (Int_t index = sIndex; index < eIndex; index++) {
-         if (pData_s[index] != 0.0) {
-            rownr[ielem]       = pColIndex_s[index]+this->fRowLwb;
-            colnr[ielem]       = irow_s+this->fColLwb;
-            pData_t[ielem]     = pData_s[index];
-            ielem++;
-         }
+         rownr[ielem]   = pColIndex_s[index]+this->fRowLwb;
+         colnr[ielem]   = irow_s+this->fColLwb;
+         pData_t[ielem] = pData_s[index];
+         ielem++;
       }
    }
 
-   R__ASSERT(nr_nonzeros == ielem);
+   R__ASSERT(nr_nonzeros >= ielem);
 
    DoubleLexSort(nr_nonzeros,rownr,colnr,pData_t);
    SetMatrixArray(nr_nonzeros,rownr,colnr,pData_t);

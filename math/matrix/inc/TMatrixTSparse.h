@@ -83,6 +83,8 @@ public:
 
    TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSparse<Element> &prototype);
    TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSparse<Element> &b);
+   TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrixCreatorsOp2 op,const TMatrixT      <Element> &b);
+   TMatrixTSparse(const TMatrixT      <Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSparse<Element> &b);
 
    virtual ~TMatrixTSparse() { Clear(); }
 
@@ -96,13 +98,17 @@ public:
    virtual TMatrixTBase<Element>   &SetRowIndexArray(Int_t *data) { memmove(fRowIndex,data,(this->fNrows+1)*sizeof(Int_t)); return *this; }
    virtual TMatrixTBase<Element>   &SetColIndexArray(Int_t *data) { memmove(fColIndex,data,this->fNelems*sizeof(Int_t)); return *this; }
 
+           TMatrixTSparse<Element> &SetSparseIndex  (Int_t nelem_new);
+           TMatrixTSparse<Element> &SetSparseIndex  (const TMatrixTBase<Element> &another);
+           TMatrixTSparse<Element> &SetSparseIndexAB(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b);
+           TMatrixTSparse<Element> &SetSparseIndexAB(const TMatrixT      <Element> &a,const TMatrixTSparse<Element> &b);
+           TMatrixTSparse<Element> &SetSparseIndexAB(const TMatrixTSparse<Element> &a,const TMatrixT      <Element> &b)
+                                              { return SetSparseIndexAB(b,a); }
+
    virtual void                     GetMatrix2Array (Element *data,Option_t *option="") const;
    virtual TMatrixTBase<Element>   &SetMatrixArray  (const Element *data,Option_t * /*option*/="")
                                                     { memcpy(fElements,data,this->fNelems*sizeof(Element)); return *this; }
    virtual TMatrixTBase<Element>   &SetMatrixArray  (Int_t nr_nonzeros,Int_t *irow,Int_t *icol,Element *data);
-           TMatrixTSparse<Element> &SetSparseIndex  (Int_t nelem_new);
-           TMatrixTSparse<Element> &SetSparseIndex  (const TMatrixTBase<Element> &another);
-           TMatrixTSparse<Element> &SetSparseIndexAB(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b);
    virtual TMatrixTBase<Element>   &InsertRow       (Int_t row,Int_t col,const Element *v,Int_t n=-1);
    virtual void                     ExtractRow      (Int_t row,Int_t col,      Element *v,Int_t n=-1) const;
 
