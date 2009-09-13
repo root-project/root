@@ -71,6 +71,7 @@ public:
    
    virtual TObject *RemoveAt(Int_t idx);
    virtual TObject *Remove(TObject *obj);
+   virtual void     RemoveRange(Int_t idx1, Int_t idx2);
    virtual void     Sort(Int_t upto = kMaxInt);
 
    TObject         *New(Int_t idx);
