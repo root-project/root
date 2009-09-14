@@ -61,7 +61,7 @@ char *iden;
   }                                                                     \
   else {                                                                \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
-    fprintf(fp,"  char dmy[%d];\n",sizeof(type));                       \
+    fprintf(fp,"  char dmy[%d];\n",(int)sizeof(type));                     \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
     fprintf(fp,"#pragma link off typedef %s;\n",ctype);                 \
@@ -87,7 +87,7 @@ char *iden;
   }                                                                     \
   else {                                                                \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
-    fprintf(fp,"  char dmy[%d];\n",sizeof(type));                       \
+    fprintf(fp,"  char dmy[%d];\n",(int)sizeof(type));                  \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
     fprintf(fp,"#pragma link off typedef %s;\n",ctype);                 \
@@ -113,7 +113,7 @@ char *iden;
   }                                                                     \
   else {                                                                \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
-    fprintf(fp,"  char dmy[%d];\n",sizeof(type));                       \
+    fprintf(fp,"  char dmy[%d];\n",(int)sizeof(type));                  \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
     fprintf(fp,"#pragma link off typedef %s;\n",ctype);                 \
@@ -139,7 +139,7 @@ char *iden;
   }                                                                     \
   else {                                                                \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
-    fprintf(fp,"  char dmy[%d];\n",sizeof(type));                       \
+    fprintf(fp,"  char dmy[%d];\n",(int)sizeof(type));                  \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
     fprintf(fp,"#pragma link off typedef %s;\n",ctype);                 \
