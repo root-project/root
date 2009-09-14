@@ -244,7 +244,8 @@ void TDirectoryFile::Browse(TBrowser *b)
             if (obj) {
                sprintf(name, "%s", obj->GetName());
                b->Add(obj, name);
-               if (obj->IsFolder()) skip = 1;
+               if (obj->IsFolder() && !obj->InheritsFrom("TTree"))
+                  skip = 1;
             }
          }
 
