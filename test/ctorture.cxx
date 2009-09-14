@@ -195,7 +195,7 @@ int main () {
     while (TComplex::Abs(
 			 e=TComplex(10*(1-2*gRandom->Rndm()),
 				    10*(1-2*gRandom->Rndm()))
-			 )<0.1);
+			 )<0.1) { }
     b=TComplex::Power(a,1./e);
     c=TComplex::Power(b,e);
     Verify(a,c,2e-14,1.,title,ifail,serr);
@@ -208,7 +208,7 @@ int main () {
   strcpy(title,"Power C-R");
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
-    while (TMath::Abs(x=10*(1-2*gRandom->Rndm()))<0.1);
+    while (TMath::Abs(x=10*(1-2*gRandom->Rndm()))<0.1) { }
     b=TComplex::Power(a,1./x);
     c=TComplex::Power(b,x);
     Verify(a,c,5e-14,.5,title,ifail,serr);
@@ -223,7 +223,7 @@ int main () {
     while (TComplex::Abs(
 			 a=TComplex(10*(1-2*gRandom->Rndm()),
 				    10*(1-2*gRandom->Rndm()))
-			 )<0.1);
+			 )<0.1) { }
     x=10*(1-2*gRandom->Rndm());
     b=TComplex::Power(x,1./a);
     c=TComplex::Power(b,a);
