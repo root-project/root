@@ -293,9 +293,9 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
 
    MapSubwindows();
    Resize(GetDefaultSize());
+   MapWindow();
    CenterOnParent(kFALSE, kBottomLeft);
    SetWindowName(Form("Set Parameters of %s", fFunc->GetTitle()));
-   MapWindow();
 
    for (Int_t i = 0; i < fNP; i++ ) {
       if (fParFix[i]->GetState() == kButtonDown) {

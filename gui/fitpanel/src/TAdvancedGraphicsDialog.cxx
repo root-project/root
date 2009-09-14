@@ -74,6 +74,7 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWind
    height = GetDefaultHeight();
 
    Resize(width, height);
+   MapWindow();
 
    // position relative to the parent's window
    CenterOnParent();
@@ -89,7 +90,6 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWind
                kMWMInputModeless);
 
    // popup dialog and wait till user replies
-   MapWindow();
    gClient->WaitFor(this);
 }
 
