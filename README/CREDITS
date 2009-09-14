@@ -235,6 +235,10 @@ N: Valery Fine
 E: fine@bnl.gov
 D: Win95/NT port, OpenGL interface
 
+N: Lucie Flekova
+E: l.flekova@centrum.cz
+D: several improvements of the GUI Builder
+
 N: Leandro Franco
 E: Leandro.Franco.Londono@cern.ch
 D: xrootd multi-buffer support, prefetching, read-ahead
@@ -563,7 +567,7 @@ D: author of Carrot (http://carrot.cern.ch)
 
 N: Katerina Opocenska
 E: opocenska@gmail.com
-D: Event Recorder
+D: author of the Event Recorder
 
 N: Juan Palacios
 E: Juan.Palacios@cern.ch
