@@ -1247,7 +1247,8 @@ Bool_t TRecorderRecording::StartRecording()
    // Starts the timer for recording
    fTimer->TurnOn();
 
-   fMouseTimer->Start(25);
+   // side effects (and not really cross-platform...): disable it for now
+   // fMouseTimer->Start(25);
 
    Info("TRecorderRecording::StartRecording", "Recording started. Log file: %s",
         fFile->GetName());
@@ -1341,7 +1342,6 @@ void TRecorderRecording::RecordGuiEvent(Event_t *e, Window_t wid)
    // If signal is emitted from TGClient::HandleEvent(Event_t *event),
    // then wid = 0
 
-
    // If this event is caused by a recorder itself (GUI recorder),
    // it is not recorded
    if (fFilteredIdsCount && IsFiltered(e->fWindow))
@@ -1398,10 +1398,10 @@ void TRecorderRecording::RecordMousePosition()
    gVirtualX->QueryPointer(gVirtualX->GetDefaultRootWindow(), dum, dum,
                            ev.fXRoot, ev.fYRoot, ev.fX, ev.fY, ev.fState);
 
-   RecordGuiEvent(&ev, 0);
-
-   fMouseTimer->Reset();
-//   fMouseTimer->Start(25);
+   // side effects (and not really cross-platform...): disable it for now
+   // and this should be done with a fake mouse cursor anyway...
+   // RecordGuiEvent(&ev, 0);
+   // fMouseTimer->Reset();
 }
 
 //______________________________________________________________________________
@@ -1976,9 +1976,12 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
       // ROOT events in TRecorderReplaying::ReplayRealtime.
 
       if (w) {
+         WindowAttributes_t attr;
          if (e->fUser[4] == TRecGuiEvent::kCNMove) {
             // Linux: movement of the window
-            w->Move(e->fX, e->fY);
+            // first get window attribute to compensate the border size
+            gVirtualX->GetWindowAttributes(e->fWindow, attr);
+            w->Move(e->fX - attr.fX, e->fY - attr.fY);
          }
          else {
             if (e->fUser[4] == TRecGuiEvent::kCNResize) {
@@ -2009,13 +2012,18 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
 
    } // kConfigureNotify
 
+   // All these events should be done with a fake mouse cursor 
+   // instead of gVirtualX->Warp()...
+
    // Displays mouse cursor for MotionNotify event
-   if (e->fType == kMotionNotify && showMouseCursor) {
+   if (showMouseCursor && (e->fType == kMotionNotify ||
+       e->fType == kButtonPress || e->fType == kButtonRelease)) {
       TGWindow *w = gClient->GetWindowById(e->fWindow);
       if (w)
          gVirtualX->Warp(e->fX, e->fY, w->GetId());
    }
 
+#if 0
    // Displays mouse cursor for EnterNotify or LeaveNotify event
    if (showMouseCursor && (e->fType == kEnterNotify ||
        e->fType == kLeaveNotify)) {
@@ -2023,6 +2031,7 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
       if (w)
          gVirtualX->Warp(e->fX, e->fY, w->GetId());
    }
+#endif
 
    // Lets all the other events to be handled the same way as when recording
    // first, special case for the gui builder, having a timer handling
