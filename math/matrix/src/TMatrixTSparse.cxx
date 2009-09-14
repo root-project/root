@@ -2737,6 +2737,24 @@ Bool_t AreCompatible(const TMatrixTSparse<Element> &m1,const TMatrixTSparse<Elem
    return kTRUE;
 }
 
+//______________________________________________________________________________
+template<class Element>
+void TMatrixTSparse<Element>::Streamer(TBuffer &R__b)
+{
+// Stream an object of class TMatrixTSparse.
+
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      Clear();
+      R__b.ReadClassBuffer(TMatrixTSparse<Element>::Class(),this,R__v,R__s,R__c);
+      if (this->fNelems < 0)
+         this->Invalidate();
+      } else {
+         R__b.WriteClassBuffer(TMatrixTSparse<Element>::Class(),this);
+   }
+}
+
 template class TMatrixTSparse<Float_t>;
 
 #ifndef ROOT_TMatrixFSparsefwd

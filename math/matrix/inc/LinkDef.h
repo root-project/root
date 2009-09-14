@@ -44,7 +44,7 @@
 #pragma link C++ class TMatrixTBase            <float>-;
 #pragma link C++ class TMatrixT                <float>-;
 #pragma link C++ class TMatrixTSym             <float>-;
-#pragma link C++ class TMatrixTSparse          <float>+;
+#pragma link C++ class TMatrixTSparse          <float>-;
 
 #pragma link C++ class TMatrixTLazy            <float>+;
 #pragma link C++ class TMatrixTSymLazy         <float>+;
@@ -102,7 +102,7 @@
 #pragma link C++ class TMatrixTBase            <double>-;
 #pragma link C++ class TMatrixT                <double>-;
 #pragma link C++ class TMatrixTSym             <double>-;
-#pragma link C++ class TMatrixTSparse          <double>+;
+#pragma link C++ class TMatrixTSparse          <double>-;
 
 #pragma link C++ class TMatrixTLazy            <double>+;
 #pragma link C++ class TMatrixTSymLazy         <double>+;
@@ -175,7 +175,10 @@
 #pragma link C++ function operator*           (const TMatrixFSym    &,const TVectorF &);
 #pragma link C++ function operator*           (const TMatrixFSparse &,const TVectorF &);
 #pragma link C++ function operator*           (      Float_t         ,const TVectorF &);
-#pragma link C++ function Dot                 (const TVectorF       &,const TVectorF &)
+#pragma link C++ function Dot                 (const TVectorF       &,const TVectorF &);
+#pragma link C++ function OuterProduct        (const TVectorF       &,const TVectorF &);
+#pragma link C++ function OuterProduct        (      TMatrixF       &,const TVectorF &,const TVectorF &);
+#pragma link C++ function Mult                (const TVectorF       &,const TMatrixF &,const TVectorF &);
 #pragma link C++ function Add                 (      TVectorF       &,      Float_t   ,const TVectorF &);
 #pragma link C++ function Add                 (      TVectorF       &,      Float_t   ,const TMatrixF       &,const TVectorF &);
 #pragma link C++ function Add                 (      TVectorF       &,      Float_t   ,const TMatrixFSym    &,const TVectorF &);
@@ -192,6 +195,9 @@
 #pragma link C++ function ElementDiv          (      TVectorF       &,const TVectorF &,const TVectorF       &);
 #pragma link C++ function AreCompatible       (const TVectorF       &,const TVectorF &,      Int_t);
 #pragma link C++ function AreCompatible       (const TVectorF       &,const TVectorD &,      Int_t);
+#pragma link C++ function AreCompatible       (const TMatrixF       &,const TVectorF &,      Int_t);
+#pragma link C++ function AreCompatible       (const TVectorF       &,const TMatrixF &,      Int_t);
+
 #pragma link C++ function Compare             (const TVectorF       &,const TVectorF &);
 #pragma link C++ function VerifyVectorValue   (const TVectorF       &,      Float_t   ,      Int_t,          Float_t);
 #pragma link C++ function VerifyVectorIdentity(const TVectorF       &,const TVectorF &,      Int_t,          Float_t);
@@ -303,7 +309,10 @@
 #pragma link C++ function operator*           (const TMatrixDSym    &,const TVectorD &);
 #pragma link C++ function operator*           (const TMatrixDSparse &,const TVectorD &);
 #pragma link C++ function operator*           (      Double_t        ,const TVectorD &);
-#pragma link C++ function Dot                 (const TVectorD       &,const TVectorD &)
+#pragma link C++ function Dot                 (const TVectorD       &,const TVectorD &);
+#pragma link C++ function OuterProduct        (const TVectorD       &,const TVectorD &);
+#pragma link C++ function OuterProduct        (      TMatrixD       &,const TVectorD &,const TVectorD &);
+#pragma link C++ function Mult                (const TVectorD       &,const TMatrixD &,const TVectorD &);
 #pragma link C++ function Add                 (      TVectorD       &,      Double_t  ,const TVectorD &);
 #pragma link C++ function Add                 (      TVectorD       &,      Double_t  ,const TMatrixD       &,const TVectorD &);
 #pragma link C++ function Add                 (      TVectorD       &,      Double_t  ,const TMatrixDSym    &,const TVectorD &);
@@ -320,6 +329,8 @@
 #pragma link C++ function ElementDiv          (      TVectorD       &,const TVectorD &,const TVectorD       &);
 #pragma link C++ function AreCompatible       (const TVectorD       &,const TVectorD &,      Int_t);
 #pragma link C++ function AreCompatible       (const TVectorD       &,const TVectorF &,      Int_t);
+#pragma link C++ function AreCompatible       (const TMatrixD       &,const TVectorD &,      Int_t);
+#pragma link C++ function AreCompatible       (const TVectorD       &,const TMatrixD &,      Int_t);
 #pragma link C++ function Compare             (const TVectorD       &,const TVectorD &);
 #pragma link C++ function VerifyVectorValue   (const TVectorD       &,      Double_t  ,      Int_t,          Double_t);
 #pragma link C++ function VerifyVectorIdentity(const TVectorD       &,const TVectorD &,      Int_t,          Double_t);

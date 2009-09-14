@@ -204,7 +204,7 @@ template<class Element> inline       TVectorT<Element>  TVectorT<Element>::GetSu
                                                                                      return tmp;
                                                                                    }
 
-template<class Element> inline const Element           &TVectorT<Element>::operator()(Int_t ind) const
+template<class Element> inline const Element &TVectorT<Element>::operator()(Int_t ind) const
 {
    // Access a vector element.
 
@@ -217,7 +217,7 @@ template<class Element> inline const Element           &TVectorT<Element>::opera
 
    return fElements[aind];
 }
-template<class Element> inline Element           &TVectorT<Element>::operator()(Int_t ind)
+template<class Element> inline Element &TVectorT<Element>::operator()(Int_t ind)
 {
    // Access a vector element.
    
@@ -230,53 +230,59 @@ template<class Element> inline Element           &TVectorT<Element>::operator()(
    
    return fElements[aind];
 }
-template<class Element1,class Element2>
-                        Bool_t             AreCompatible(const TVectorT      <Element1> &source1,const TVectorT      <Element2> &source2,      Int_t              verbose=0);
-template<class Element> Bool_t             operator==   (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
-template<class Element> TVectorT<Element>  operator+    (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
-template<class Element> TVectorT<Element>  operator-    (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
-template<class Element> Element            operator*    (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
-template<class Element> TVectorT<Element>  operator*    (const TMatrixT      <Element>  &a,      const TVectorT      <Element>  &source);
-template<class Element> TVectorT<Element>  operator*    (const TMatrixTSym   <Element>  &a,      const TVectorT      <Element>  &source);
-template<class Element> TVectorT<Element>  operator*    (const TMatrixTSparse<Element>  &a,      const TVectorT      <Element>  &source);
-template<class Element> TVectorT<Element>  operator*    (      Element                   val,    const TVectorT      <Element>  &source);
-template<class Element> Element            Dot          (const TVectorT      <Element>  &source1,const TVectorT      <Element> &source2);
-template<class Element> TVectorT<Element> &Add          (      TVectorT      <Element>  &target,       Element                   scalar, const TVectorT<Element> &source);
-template<class Element> TVectorT<Element> &Add          (      TVectorT      <Element>  &target,       Element                         , const TMatrixT      <Element>  &a,
+
+template<class Element> Bool_t              operator==  (const TVectorT      <Element>  &source1,const TVectorT <Element>  &source2);
+template<class Element> TVectorT<Element>   operator+   (const TVectorT      <Element>  &source1,const TVectorT <Element>  &source2);
+template<class Element> TVectorT<Element>   operator-   (const TVectorT      <Element>  &source1,const TVectorT <Element>  &source2);
+template<class Element> Element             operator*   (const TVectorT      <Element>  &source1,const TVectorT <Element>  &source2);
+template<class Element> TVectorT<Element>   operator*   (const TMatrixT      <Element>  &a,      const TVectorT <Element>  &source);
+template<class Element> TVectorT<Element>   operator*   (const TMatrixTSym   <Element>  &a,      const TVectorT <Element>  &source);
+template<class Element> TVectorT<Element>   operator*   (const TMatrixTSparse<Element>  &a,      const TVectorT <Element>  &source);
+template<class Element> TVectorT<Element>   operator*   (      Element                   val,    const TVectorT <Element>  &source);
+
+template<class Element> Element             Dot         (const TVectorT      <Element>  &source1,const TVectorT <Element>  &source2);
+template <class Element1,class Element2>
+                        TMatrixT<Element1>  OuterProduct(const TVectorT      <Element1> &v1,     const TVectorT <Element2> &v2);
+template <class Element1,class Element2,class Element3>
+                        TMatrixT<Element1> &OuterProduct(      TMatrixT      <Element1> &target, const TVectorT <Element2> &v1,     const TVectorT      <Element3> &v2);
+template <class Element1,class Element2,class Element3>
+                        Element1            Mult        (const TVectorT      <Element1> &v1,     const TMatrixT <Element2> &m,      const TVectorT      <Element3> &v2);
+
+template<class Element> TVectorT<Element>  &Add         (      TVectorT      <Element>  &target,       Element              scalar, const TVectorT      <Element>  &source);
+template<class Element> TVectorT<Element>  &Add         (      TVectorT      <Element>  &target,       Element              scalar, const TMatrixT      <Element>  &a,
                                                          const TVectorT<Element> &source);
-template<class Element> TVectorT<Element> &Add          (      TVectorT      <Element>  &target,       Element                         , const TMatrixTSym   <Element>  &a,
+template<class Element> TVectorT<Element>  &Add         (      TVectorT      <Element>  &target,       Element              scalar, const TMatrixTSym   <Element>  &a,
                                                          const TVectorT<Element> &source);
-template<class Element> TVectorT<Element> &Add          (      TVectorT      <Element>  &target,       Element                         , const TMatrixTSparse<Element>  &a,
+template<class Element> TVectorT<Element>  &Add         (      TVectorT      <Element>  &target,       Element              scalar, const TMatrixTSparse<Element>  &a,
                                                          const TVectorT<Element> &source);
-template<class Element> TVectorT<Element> &AddElemMult  (      TVectorT      <Element>  &target,       Element                   scalar, const TVectorT<Element> &source1,
+template<class Element> TVectorT<Element>  &AddElemMult (      TVectorT      <Element>  &target,       Element              scalar, const TVectorT      <Element>  &source1,
                                                          const TVectorT      <Element>  &source2);
-template<class Element> TVectorT<Element> &AddElemMult  (      TVectorT      <Element>  &target,       Element                   scalar, const TVectorT<Element> &source1,
-                                                         const TVectorT      <Element>  &source2,const TVectorT      <Element>  &select);
-template<class Element> TVectorT<Element> &AddElemDiv   (      TVectorT      <Element>  &target,       Element                   scalar, const TVectorT<Element> &source1,
+template<class Element> TVectorT<Element>  &AddElemMult (      TVectorT      <Element>  &target,       Element              scalar, const TVectorT      <Element>  &source1,
+                                                         const TVectorT      <Element>  &source2,const TVectorT <Element>  &select);
+template<class Element> TVectorT<Element>  &AddElemDiv  (      TVectorT      <Element>  &target,       Element              scalar, const TVectorT      <Element>  &source1,
                                                          const TVectorT      <Element>  &source2);
-template<class Element> TVectorT<Element> &AddElemDiv   (      TVectorT      <Element>  &target,       Element                   scalar, const TVectorT<Element> &source1,
-                                                         const TVectorT      <Element>  &source2,const TVectorT      <Element>  &select);
-template<class Element> TVectorT<Element> &ElementMult  (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source);
-template<class Element> TVectorT<Element> &ElementMult  (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source, const TVectorT<Element> &select);
-template<class Element> TVectorT<Element> &ElementDiv   (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source);
-template<class Element> TVectorT<Element> &ElementDiv   (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source, const TVectorT<Element> &select);
-template<class Element> void               Compare      (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
-template<class Element> Bool_t             VerifyVectorValue
-                                                        (const TVectorT      <Element>  &m,            Element                  val,           Int_t              verbose,
-                                                         Element maxDevAllow);
-template<class Element> Bool_t             VerifyVectorValue
-                                                        (const TVectorT      <Element>  &m,            Element                  val,           Int_t              verbose)
-                                                        { return VerifyVectorValue(m,val,verbose,Element(0.0)); }
-template<class Element> Bool_t             VerifyVectorValue
-                                                        (const TVectorT      <Element>  &m,            Element                  val)
-                                                        { return VerifyVectorValue(m,val,1,Element(0.0)); }
-template<class Element> Bool_t             VerifyVectorIdentity
-                                                        (const TVectorT      <Element>  &m1,     const TVectorT      <Element> &m2,            Int_t              verbose,
-                                                         Element maxDevAllow);
-template<class Element> Bool_t             VerifyVectorIdentity
-                                                        (const TVectorT      <Element>  &m1,     const TVectorT      <Element> &m2,            Int_t              verbose)
-                                                        { return VerifyVectorIdentity(m1,m2,verbose,Element(0.0)); }
-template<class Element> Bool_t             VerifyVectorIdentity
-                                                        (const TVectorT      <Element>  &m1,     const TVectorT      <Element> &m2)
-                                                        { return VerifyVectorIdentity(m1,m2,1,Element(0.0)); }
+template<class Element> TVectorT<Element>  &AddElemDiv  (      TVectorT      <Element>  &target,       Element              scalar, const TVectorT      <Element>  &source1,
+                                                         const TVectorT      <Element>  &source2,const TVectorT <Element>  &select);
+template<class Element> TVectorT<Element>  &ElementMult (      TVectorT      <Element>  &target, const TVectorT <Element>  &source);
+template<class Element> TVectorT<Element>  &ElementMult (      TVectorT      <Element>  &target, const TVectorT <Element>  &source, const TVectorT      <Element>  &select);
+template<class Element> TVectorT<Element>  &ElementDiv  (      TVectorT      <Element>  &target, const TVectorT <Element>  &source);
+template<class Element> TVectorT<Element>  &ElementDiv  (      TVectorT      <Element>  &target, const TVectorT <Element>  &source, const TVectorT      <Element>  &select);
+
+template<class Element1,class Element2> Bool_t AreCompatible(const TVectorT<Element1> &v1,const TVectorT<Element2> &v2,Int_t verbose=0);
+// Check matrix and vector for compatibility in multiply:  M * v and v * M
+template<class Element1,class Element2> Bool_t AreCompatible(const TMatrixT<Element1> &m, const TVectorT<Element2> &v, Int_t verbose=0);
+template<class Element1,class Element2> Bool_t AreCompatible(const TVectorT<Element1> &v, const TMatrixT<Element2> &m, Int_t verbose=0);
+
+template<class Element> void   Compare              (const TVectorT <Element>  &source1,const TVectorT <Element>  &source2);
+template<class Element> Bool_t VerifyVectorValue    (const TVectorT <Element>  &m,            Element val,Int_t verbose, Element maxDevAllow);
+template<class Element> Bool_t VerifyVectorValue    (const TVectorT <Element>  &m,            Element val,Int_t verbose)
+                                                     { return VerifyVectorValue(m,val,verbose,Element(0.0)); }
+template<class Element> Bool_t VerifyVectorValue    (const TVectorT <Element>  &m,            Element val)
+                                                     { return VerifyVectorValue(m,val,1,Element(0.0)); }
+template<class Element> Bool_t VerifyVectorIdentity (const TVectorT <Element>  &m1,const TVectorT <Element> &m2, Int_t verbose, Element maxDevAllow);
+template<class Element> Bool_t VerifyVectorIdentity (const TVectorT <Element>  &m1,const TVectorT <Element> &m2, Int_t verbose)
+                                                     { return VerifyVectorIdentity(m1,m2,verbose,Element(0.0)); }
+template<class Element> Bool_t VerifyVectorIdentity (const TVectorT <Element>  &m1,const TVectorT <Element> &m2)
+                                                     { return VerifyVectorIdentity(m1,m2,1,Element(0.0)); }
+
 #endif

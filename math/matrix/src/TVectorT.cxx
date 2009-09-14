@@ -1485,6 +1485,99 @@ Element Dot(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 }
 
 //______________________________________________________________________________
+template <class Element1, class Element2>
+TMatrixT<Element1>
+OuterProduct(const TVectorT<Element1> &v1,const TVectorT<Element2> &v2)
+{
+   // Return the matrix M = v1 * v2'
+
+   // TMatrixD::GetSub does:
+   //   TMatrixT tmp;
+   // Doesn't compile here, because we are outside the class?
+   // So we'll be explicit:
+   TMatrixT<Element1> target;
+
+   return OuterProduct(target,v1,v2);
+}
+
+//______________________________________________________________________________
+template <class Element1,class Element2,class Element3>
+TMatrixT<Element1>
+&OuterProduct(TMatrixT<Element1> &target,const TVectorT<Element2> &v1,const TVectorT<Element3> &v2)
+{
+   // Return the matrix M = v1 * v2'
+
+   target.ResizeTo(v1.GetLwb(), v1.GetUpb(), v2.GetLwb(), v2.GetUpb());
+
+         Element1 *       mp      = target.GetMatrixArray();
+   const Element1 * const m_last  = mp + target.GetNoElements();
+  
+   const Element2 *       v1p     = v1.GetMatrixArray();
+   const Element2 * const v1_last = v1p + v1.GetNrows();
+
+   const Element3 * const v20     = v2.GetMatrixArray();
+   const Element3 *       v2p     = v20;
+   const Element3 * const v2_last = v2p + v2.GetNrows();
+
+   while (v1p < v1_last) {
+      v2p = v20;
+      while (v2p < v2_last) {
+         *mp++ = *v1p * *v2p++ ;
+      }
+      v1p++;
+  }
+
+  R__ASSERT(v1p == v1_last && mp == m_last && v2p == v2_last);
+
+  return target;
+}
+
+//______________________________________________________________________________
+template <class Element1, class Element2, class Element3>
+Element1 Mult(const TVectorT<Element1> &v1,const TMatrixT<Element2> &m,
+              const TVectorT<Element3> &v2)
+{
+  // Perform v1 * M * v2, a scalar result
+
+   if (gMatrixCheck) {
+      if (!AreCompatible(v1, m)) {
+         ::Error("Mult", "Vector v1 and matrix m incompatible");
+         return 0;
+      }
+      if (!AreCompatible(m, v2)) {
+         ::Error("Mult", "Matrix m and vector v2 incompatible");
+         return 0;
+      }
+   }
+
+   const Element1 *       v1p     = v1.GetMatrixArray();    // first of v1
+   const Element1 * const v1_last = v1p + v1.GetNrows();    // last of  v1
+
+   const Element2 *       mp      = m.GetMatrixArray();     // first of m
+   const Element2 * const m_last  = mp + m.GetNoElements(); // last of  m
+
+   const Element3 * const v20     = v2.GetMatrixArray();    // first of v2
+   const Element3 *       v2p     = v20;                    // running  v2
+   const Element3 * const v2_last = v2p + v2.GetNrows();    // last of  v2
+
+   Element1 sum     = 0;      // scalar result accumulator
+   Element3 dot     = 0;      // M_row * v2 dot product accumulator
+
+   while (v1p < v1_last) {
+      v2p  = v20;               // at beginning of v2
+      while (v2p < v2_last) {   // compute (M[i] * v2) dot product
+         dot += *mp++ * *v2p++;
+      }
+      sum += *v1p++ * dot;      // v1[i] * (M[i] * v2)
+      dot  = 0;                 // start next dot product
+   }
+
+   R__ASSERT(v1p == v1_last && mp == m_last && v2p == v2_last);
+  
+   return sum;
+}
+
+//______________________________________________________________________________
 template<class Element>
 TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,const TVectorT<Element> &source)
 {
@@ -2055,6 +2148,58 @@ Bool_t AreCompatible(const TVectorT<Element1> &v1,const TVectorT<Element2> &v2,I
 }
 
 //______________________________________________________________________________
+template<class Element1, class Element2>
+Bool_t AreCompatible(const TMatrixT<Element1> &m,const TVectorT<Element2> &v,Int_t verbose=0)
+{
+  // Check if m and v are both valid and have compatible shapes for M * v
+
+   if (!m.IsValid()) {
+      if (verbose)
+         ::Error("AreCompatible", "Matrix not valid");
+      return kFALSE;
+   }
+   if (!v.IsValid()) {
+      if (verbose)
+         ::Error("AreCompatible", "vector not valid");
+      return kFALSE;
+   }
+  
+   if (m.GetNcols() != v.GetNrows() ) {
+      if (verbose)
+         ::Error("AreCompatible", "matrix and vector not compatible");
+      return kFALSE;
+   }
+  
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+template<class Element1, class Element2>
+Bool_t AreCompatible(const TVectorT<Element1> &v,const TMatrixT<Element2> &m,Int_t verbose=0)
+{
+  // Check if m and v are both valid and have compatible shapes for v * M
+
+   if (!m.IsValid()) {
+      if (verbose)
+         ::Error("AreCompatible", "Matrix not valid");
+      return kFALSE;
+   }
+   if (!v.IsValid()) {
+      if (verbose)
+         ::Error("AreCompatible", "vector not valid");
+      return kFALSE;
+   }
+
+   if (v.GetNrows() != m.GetNrows() ) {
+      if (verbose)
+         ::Error("AreCompatible", "vector and matrix not compatible");
+      return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 template<class Element>
 void Compare(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 {
@@ -2233,35 +2378,43 @@ template TVectorF  operator*           <Float_t>(const TMatrixF       &a,      c
 template TVectorF  operator*           <Float_t>(const TMatrixFSym    &a,      const TVectorF &source);
 template TVectorF  operator*           <Float_t>(const TMatrixFSparse &a,      const TVectorF &source);
 template TVectorF  operator*           <Float_t>(      Float_t         val,    const TVectorF &source);
+
 template Float_t   Dot                 <Float_t>(const TVectorF       &v1,     const TVectorF &v2);
-template TVectorF &Add                 <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF &source);
+template TMatrixF  OuterProduct        <Float_t,Float_t>
+                                                (const TVectorF       &v1,     const TVectorF &v2);
+template TMatrixF &OuterProduct        <Float_t,Float_t,Float_t>
+                                                (      TMatrixF       &target, const TVectorF &v1,     const TVectorF       &v2);
+template Float_t   Mult                <Float_t,Float_t,Float_t>
+                                                (const TVectorF       &v1,     const TMatrixF &m,      const TVectorF       &v2);
+
+template TVectorF &Add                 <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF       &source);
 template TVectorF &Add                 <Float_t>(      TVectorF       &target,       Float_t   scalar, const TMatrixF       &a,
                                                                                const TVectorF &source);
 template TVectorF &Add                 <Float_t>(      TVectorF       &target,       Float_t   scalar, const TMatrixFSym    &a,
                                                                                const TVectorF &source);
 template TVectorF &Add                 <Float_t>(      TVectorF       &target,       Float_t   scalar, const TMatrixFSparse &a,
                                                                                const TVectorF &source);
-template TVectorF &AddElemMult         <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF &source1,
+template TVectorF &AddElemMult         <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF       &source1,
                                                                                const TVectorF &source2);
-template TVectorF &AddElemMult         <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF &source1,
-                                                                               const TVectorF &source2,const TVectorF &select);
-template TVectorF &AddElemDiv          <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF &source1,
+template TVectorF &AddElemMult         <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF       &source1,
+                                                                               const TVectorF &source2,const TVectorF       &select);
+template TVectorF &AddElemDiv          <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF       &source1,
                                                                                const TVectorF &source2);
-template TVectorF &AddElemDiv          <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF &source1,
-                                                                               const TVectorF &source2,const TVectorF &select);
+template TVectorF &AddElemDiv          <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF       &source1,
+                                                                               const TVectorF &source2,const TVectorF       &select);
 template TVectorF &ElementMult         <Float_t>(      TVectorF       &target, const TVectorF &source);
-template TVectorF &ElementMult         <Float_t>(      TVectorF       &target, const TVectorF &source, const TVectorF &select);
+template TVectorF &ElementMult         <Float_t>(      TVectorF       &target, const TVectorF &source, const TVectorF       &select);
 template TVectorF &ElementDiv          <Float_t>(      TVectorF       &target, const TVectorF &source);
-template TVectorF &ElementDiv          <Float_t>(      TVectorF       &target, const TVectorF &source, const TVectorF &select);
-template Bool_t    AreCompatible       <Float_t,Float_t>
-                                                (const TVectorF       &source1,const TVectorF &source2,      Int_t     verbose);
-template Bool_t    AreCompatible       <Float_t,Double_t>
-                                                (const TVectorF       &source1,const TVectorD &source2,      Int_t     verbose);
-template void      Compare             <Float_t>(const TVectorF       &source1,const TVectorF &source2);
-template Bool_t    VerifyVectorValue   <Float_t>(const TVectorF       &m,            Float_t   val,          Int_t     verbose,
-                                                                                     Float_t   maxDevAllow);
-template Bool_t    VerifyVectorIdentity<Float_t>(const TVectorF       &m1,     const TVectorF &m2,           Int_t     verbose,
-                                                                                     Float_t   maxDevAllow);
+template TVectorF &ElementDiv          <Float_t>(      TVectorF       &target, const TVectorF &source, const TVectorF       &select);
+
+template Bool_t    AreCompatible       <Float_t,Float_t> (const TVectorF &v1,const TVectorF &v2,Int_t verbose);
+template Bool_t    AreCompatible       <Float_t,Double_t>(const TVectorF &v1,const TVectorD &v2,Int_t verbose);
+template Bool_t    AreCompatible       <Float_t,Float_t> (const TMatrixF &m, const TVectorF &v, Int_t verbose=0);
+template Bool_t    AreCompatible       <Float_t,Float_t> (const TVectorF &v, const TMatrixF &m, Int_t verbose=0);
+
+template void      Compare             <Float_t>         (const TVectorF &v1,const TVectorF &v2);
+template Bool_t    VerifyVectorValue   <Float_t>         (const TVectorF &m,       Float_t   val,Int_t verbose,Float_t maxDevAllow);
+template Bool_t    VerifyVectorIdentity<Float_t>         (const TVectorF &m1,const TVectorF &m2, Int_t verbose,Float_t maxDevAllow);
 
 #ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
@@ -2283,32 +2436,40 @@ template TVectorD  operator*           <Double_t>(const TMatrixD       &a,      
 template TVectorD  operator*           <Double_t>(const TMatrixDSym    &a,      const TVectorD &source);
 template TVectorD  operator*           <Double_t>(const TMatrixDSparse &a,      const TVectorD &source);
 template TVectorD  operator*           <Double_t>(      Double_t        val,    const TVectorD &source);
+
 template Double_t  Dot                 <Double_t>(const TVectorD       &v1,     const TVectorD &v2);
-template TVectorD &Add                 <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD &source);
+template TMatrixD  OuterProduct        <Double_t,Double_t>
+                                                 (const TVectorD       &v1,     const TVectorD &v2);
+template TMatrixD &OuterProduct        <Double_t,Double_t,Double_t>
+                                                 (      TMatrixD       &target, const TVectorD &v1,     const TVectorD       &v2);
+template Double_t  Mult                <Double_t,Double_t,Double_t>
+                                                 (const TVectorD       &v1,     const TMatrixD &m,      const TVectorD       &v2);
+
+template TVectorD &Add                 <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD       &source);
 template TVectorD &Add                 <Double_t>(      TVectorD       &target,       Double_t  scalar, const TMatrixD       &a,
                                                                                 const TVectorD &source);
 template TVectorD &Add                 <Double_t>(      TVectorD       &target,       Double_t  scalar, const TMatrixDSym    &a
                                                                                 ,      const TVectorD &source);
 template TVectorD &Add                 <Double_t>(      TVectorD       &target,       Double_t  scalar, const TMatrixDSparse &a
                                                                                 ,      const TVectorD &source);
-template TVectorD &AddElemMult         <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD &source1,
+template TVectorD &AddElemMult         <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD       &source1,
                                                                                 const TVectorD &source2);
-template TVectorD &AddElemMult         <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD &source1,
-                                                                                const TVectorD &source2,const TVectorD &select);
-template TVectorD &AddElemDiv          <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD &source1,
+template TVectorD &AddElemMult         <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD       &source1,
+                                                                                const TVectorD &source2,const TVectorD       &select);
+template TVectorD &AddElemDiv          <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD       &source1,
                                                                                 const TVectorD &source2);
-template TVectorD &AddElemDiv          <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD &source1,
-                                                                                const TVectorD &source2,const TVectorD &select);
+template TVectorD &AddElemDiv          <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD       &source1,
+                                                                                const TVectorD &source2,const TVectorD       &select);
 template TVectorD &ElementMult         <Double_t>(      TVectorD       &target, const TVectorD &source);
-template TVectorD &ElementMult         <Double_t>(      TVectorD       &target, const TVectorD &source, const TVectorD &select);
+template TVectorD &ElementMult         <Double_t>(      TVectorD       &target, const TVectorD &source, const TVectorD       &select);
 template TVectorD &ElementDiv          <Double_t>(      TVectorD       &target, const TVectorD &source);
-template TVectorD &ElementDiv          <Double_t>(      TVectorD       &target, const TVectorD &source, const TVectorD &select);
-template Bool_t    AreCompatible<Double_t,Double_t>
-                                                 (const TVectorD       &source1,const TVectorD &source2,      Int_t     verbose);
-template Bool_t    AreCompatible<Double_t,Float_t>
-                                                 (const TVectorD       &source1,const TVectorF &source2,      Int_t     verbose);
-template void      Compare             <Double_t>(const TVectorD       &source1,const TVectorD &source2);
-template Bool_t    VerifyVectorValue   <Double_t>(const TVectorD       &m,            Double_t  val,          Int_t     verbose,
-                                                                                      Double_t  maxDevAllow);
-template Bool_t    VerifyVectorIdentity<Double_t>(const TVectorD       &m1,     const TVectorD &m2,           Int_t     verbose,
-                                                                                      Double_t  maxDevAllow);
+template TVectorD &ElementDiv          <Double_t>(      TVectorD       &target, const TVectorD &source, const TVectorD       &select);
+
+template Bool_t    AreCompatible       <Double_t,Double_t>(const TVectorD &v1,const TVectorD &v2,Int_t verbose);
+template Bool_t    AreCompatible       <Double_t,Float_t> (const TVectorD &v1,const TVectorF &v2,Int_t verbose);
+template Bool_t    AreCompatible       <Double_t,Double_t>(const TMatrixD &m, const TVectorD &v, Int_t verbose=0);
+template Bool_t    AreCompatible       <Double_t,Double_t>(const TVectorD &v, const TMatrixD &m, Int_t verbose=0);
+
+template void      Compare             <Double_t>         (const TVectorD &v1,const TVectorD &v2);
+template Bool_t    VerifyVectorValue   <Double_t>         (const TVectorD &m,       Double_t  val,Int_t verbose,Double_t maxDevAllow);
+template Bool_t    VerifyVectorIdentity<Double_t>         (const TVectorD &m1,const TVectorD &m2, Int_t verbose,Double_t maxDevAllow);
