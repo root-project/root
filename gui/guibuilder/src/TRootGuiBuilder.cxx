@@ -1854,12 +1854,12 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
          CloseWindow();
          break;
 
-     case kGUIBLD_FILE_OPEN:
+      case kGUIBLD_FILE_OPEN:
          OpenProject();
          SwitchToolbarButton();
          break;
 
-    case kGUIBLD_FILE_SAVE:
+      case kGUIBLD_FILE_SAVE:
          SaveProject();
          SwitchToolbarButton();
          break;
