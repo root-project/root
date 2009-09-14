@@ -2149,7 +2149,7 @@ Bool_t AreCompatible(const TVectorT<Element1> &v1,const TVectorT<Element2> &v2,I
 
 //______________________________________________________________________________
 template<class Element1, class Element2>
-Bool_t AreCompatible(const TMatrixT<Element1> &m,const TVectorT<Element2> &v,Int_t verbose=0)
+Bool_t AreCompatible(const TMatrixT<Element1> &m,const TVectorT<Element2> &v,Int_t verbose)
 {
   // Check if m and v are both valid and have compatible shapes for M * v
 
@@ -2175,7 +2175,7 @@ Bool_t AreCompatible(const TMatrixT<Element1> &m,const TVectorT<Element2> &v,Int
 
 //______________________________________________________________________________
 template<class Element1, class Element2>
-Bool_t AreCompatible(const TVectorT<Element1> &v,const TMatrixT<Element2> &m,Int_t verbose=0)
+Bool_t AreCompatible(const TVectorT<Element1> &v,const TMatrixT<Element2> &m,Int_t verbose)
 {
   // Check if m and v are both valid and have compatible shapes for v * M
 
