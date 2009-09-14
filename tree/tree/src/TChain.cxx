@@ -1521,7 +1521,7 @@ void TChain::Lookup(Bool_t force)
       // Count
       nlook++;
       // Get the Url
-      TUrl elemurl(element->GetTitle());
+      TUrl elemurl(element->GetTitle(), kTRUE);
       // Save current options and anchor
       TString anchor = elemurl.GetAnchor();
       TString options = elemurl.GetOptions();
@@ -2074,7 +2074,7 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
    // BEFORE calling this function.
    //
    // See TTree::CheckBranchAddressType for the semantic of the return value.
-   
+
    Int_t res = kNoCheck;
 
    // Check if bname is already in the status list.
