@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += modulo largebitwise
+TEST_TARGETS += modulo largebitwise ternary
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -61,6 +61,9 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 modulo: modulo.log
+	$(TestDiff)
+
+ternary: ternary.log
 	$(TestDiff)
 
 largebitwise: largebitwise.log
