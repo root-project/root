@@ -2478,12 +2478,11 @@ void waves()
    Int_t palette[colNum];
    Int_t color_offset = 1001;
    for (Int_t i=0;i<colNum;i++) {
-      TColor *color = new TColor(color_offset+i
+      new TColor(color_offset+i
       ,    pow(i/((colNum)*1.0),0.3)
       ,    pow(i/((colNum)*1.0),0.3)
       ,0.5*(i/((colNum)*1.0)),"");
       palette[i] = color_offset+i;
-      if(color);
    }
    gStyle->SetPalette(colNum,palette);
    C->cd();
