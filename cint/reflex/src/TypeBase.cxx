@@ -148,7 +148,7 @@ void*
 Reflex::TypeBase::Allocate() const {
 //-------------------------------------------------------------------------------
 // Allocate memory for this type.
-   return malloc(fSize);
+   return new char[fSize];
 }
 
 
@@ -166,7 +166,7 @@ void
 Reflex::TypeBase::Deallocate(void* instance) const {
 //-------------------------------------------------------------------------------
 // Deallocate the memory for this type from instance.
-   free(instance);
+   delete [] ((char*)instance);
 }
 
 
