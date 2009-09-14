@@ -110,19 +110,12 @@ void TTreeTableInterface::SetVariablesExpression(const char *varexp)
 
    // FIXME check if enough protection against wrong expressions is in place
 
-   UInt_t ui = 0;
-   Int_t nch,i;
-   TString onerow;
-   Int_t *index = 0;
    Bool_t allvar = kFALSE;
 
-   nch = varexp ? strlen(varexp) : 0;
    if (varexp) {
-      nch = strlen(varexp);
       if (!strcmp(varexp, "*")) { allvar = kTRUE; }
    } else {
       // if varexp is empty, take all available leaves as a column
-      nch = 0;
       allvar = kTRUE;
    }
    
@@ -134,37 +127,17 @@ void TTreeTableInterface::SetVariablesExpression(const char *varexp)
          return;
       }
       fNColumns = nleaves;
-      TString *cnames = new TString[fNColumns];
-      for(ui = 0; ui < fNColumns; ui++) cnames[ui]="";
-
-      for (ui = 0; ui < fNColumns; ui++) {
+      for (UInt_t ui = 0; ui < fNColumns; ui++) {
          TLeaf *lf = (TLeaf*)leaves->At(ui);
-         cnames[ui] = lf->GetName();
-      }
-      for (ui = 0; ui < fNColumns; ui++) {
-         fFormulas->Add(new TTreeFormula("Var1", cnames[ui].Data(), fTree));
+         fFormulas->Add(new TTreeFormula("Var1", lf->GetName(), fTree));
       }
       // otherwise select only the specified columns
    } else {
-      fNColumns = 1;
-      onerow = varexp;
-      for (i = 0; i < onerow.Length(); i++) {
-         if (onerow[i] == ':') {
-            if (onerow[i+1] == ':') i++;
-            else fNColumns++;
-         }
-      }
-      TString *cnames = new TString[fNColumns];
-      for(ui = 0; ui < fNColumns; ui++) cnames[ui]="";
-      index = new Int_t[fNColumns+1];
-      fSelector->MakeIndex(onerow,index);
-
-      for (ui = 0; ui < fNColumns; ui++) {
-         cnames[ui] = fSelector->GetNameByIndex(onerow,index,ui);
-      }
+      std::vector<TString> cnames;
+      fNColumns = fSelector->SplitNames(varexp,cnames);
 
       // Create the TreeFormula objects corresponding to each column
-      for (ui = 0; ui < fNColumns; ui++) {
+      for (UInt_t ui = 0; ui < fNColumns; ui++) {
          fFormulas->Add(new TTreeFormula("Var1", cnames[ui].Data(), fTree));
       }
    }

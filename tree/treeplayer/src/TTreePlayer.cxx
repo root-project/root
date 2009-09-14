@@ -2504,14 +2504,12 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 //   See TTreePlayer::DrawSelect for explanation of the other parameters.
 
    TTreeFormula **var;
-   TString *cnames;
-   TString onerow;
+   std::vector<TString> cnames;
    TString opt = option;
    opt.ToLower();
    TPrincipal *principal = 0;
    Long64_t entry,entryNumber;
    Int_t i,nch;
-   Int_t *index = 0;
    Int_t ncols = 8;   // by default first 8 columns are printed only
    TObjArray *leaves = fTree->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
@@ -2532,21 +2530,12 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    int allvar = 0;
    if (!strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
    if (nch == 0 || allvar) {
-      cnames = new TString[ncols];
       for (i=0;i<ncols;i++) {
-         cnames[i] = ((TLeaf*)leaves->At(i))->GetName();
+         cnames.push_back( ((TLeaf*)leaves->At(i))->GetName() );
       }
 //*-*- otherwise select only the specified columns
    } else {
-      ncols = 1;
-      onerow = varexp;
-      for (i=0;i<onerow.Length();i++)  if (onerow[i] == ':') ncols++;
-      cnames = new TString[ncols];
-      index  = new Int_t[ncols+1];
-      fSelector->MakeIndex(onerow,index);
-      for (i=0;i<ncols;i++) {
-         cnames[i] = fSelector->GetNameByIndex(onerow,index,i);
-      }
+      ncols = fSelector->SplitNames(varexp,cnames);
    }
    var = new TTreeFormula* [ncols];
    Double_t *xvars = new Double_t[ncols];
@@ -2624,8 +2613,6 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 //*-*- delete temporary objects
    fFormulaList->Clear();
    delete [] var;
-   delete [] cnames;
-   delete [] index;
    delete [] xvars;
 
    return principal;
@@ -3002,11 +2989,10 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    }
 
    TTreeFormula **var;
-   TString *cnames;
+   std::vector<TString> cnames;
    TString onerow;
    Long64_t entry,entryNumber;
    Int_t i,nch;
-   Int_t *index = 0;
    UInt_t ncols = 8;   // by default first 8 columns are printed only
    ofstream out;
    Int_t lenfile = 0;
@@ -3049,13 +3035,12 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    int allvar = 0;
    if (!strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
    if (nch == 0 || allvar) {
-      cnames = new TString[ncols];
       UInt_t ncs = ncols;
       ncols = 0;
       for (ui=0;ui<ncs;++ui) {
          TLeaf *lf = (TLeaf*)leaves->At(ui);
          if (lf->GetBranch()->GetListOfBranches()->GetEntries() > 0) continue;
-         cnames[ncols] = lf->GetBranch()->GetMother()->GetName();
+         cnames.push_back( lf->GetBranch()->GetMother()->GetName() );
          if (cnames[ncols] == lf->GetName() ) {
             // Already complete, let move on.
          } else if (cnames[ncols][cnames[ncols].Length()-1]=='.') {
@@ -3081,20 +3066,9 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       }
 //*-*- otherwise select only the specified columns
    } else {
-      ncols = 1;
-      onerow = varexp;
-      for (i=0;i<onerow.Length();i++) {
-         if (onerow[i] == ':') {
-            if (onerow[i+1] == ':') ++i;
-            else ncols++;
-         }
-      }
-      cnames = new TString[ncols];
-      index  = new Int_t[ncols+1];
-      fSelector->MakeIndex(onerow,index);
-      for (ui=0;ui<ncols;ui++) {
-         cnames[ui] = fSelector->GetNameByIndex(onerow,index,ui);
-      }
+      
+      ncols = fSelector->SplitNames(varexp, cnames);
+
    }
    var = new TTreeFormula* [ncols];
 
@@ -3279,8 +3253,6 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    fFormulaList->Clear();
    // The TTreeFormulaManager is deleted by the last TTreeFormula.
    delete [] var;
-   delete [] cnames;
-   delete [] index;
    return fSelectedRows;
 }
 
@@ -3295,11 +3267,10 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    // a TSQLResult object which must be deleted by the user.
 
    TTreeFormula **var;
-   TString *cnames;
+   std::vector<TString> cnames;
    TString onerow;
    Long64_t entry,entryNumber;
    Int_t i,nch;
-   Int_t *index = 0;
    Int_t ncols = 8;   // by default first 8 columns are printed only
    TObjArray *leaves = fTree->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
@@ -3321,21 +3292,12 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    int allvar = 0;
    if (!strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
    if (nch == 0 || allvar) {
-      cnames = new TString[ncols];
       for (i=0;i<ncols;i++) {
-         cnames[i] = ((TLeaf*)leaves->At(i))->GetName();
+         cnames.push_back( ((TLeaf*)leaves->At(i))->GetName() );
       }
    } else {
       // otherwise select only the specified columns
-      ncols = 1;
-      onerow = varexp;
-      for (i=0;i<onerow.Length();i++)  if (onerow[i] == ':') ncols++;
-      cnames = new TString[ncols];
-      index  = new Int_t[ncols+1];
-      fSelector->MakeIndex(onerow,index);
-      for (i=0;i<ncols;i++) {
-         cnames[i] = fSelector->GetNameByIndex(onerow,index,i);
-      }
+      ncols = fSelector->SplitNames(varexp,cnames);
    }
    var = new TTreeFormula* [ncols];
 
@@ -3392,8 +3354,6 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    delete [] fields;
    delete [] arow;
    delete [] var;
-   delete [] cnames;
-   delete [] index;
 
    return res;
 }

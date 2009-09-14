@@ -987,14 +987,12 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
    //TTree::Draw method description contains more details on specifying expression and selection 
 
    TTreeFormula **var;
-   TString *cnames;
-   TString onerow;
+   std::vector<TString> cnames;
    TList *formulaList = new TList();
    TSelectorDraw *selector = (TSelectorDraw*)(((TTreePlayer*)fTree->GetPlayer())->GetSelector());
 
    Long64_t entry,entryNumber, curentry;
    Int_t i,nch;
-   Int_t *index = 0;
    Int_t ncols;
    TObjArray *leaves = fTree->GetListOfLeaves();
 
@@ -1019,21 +1017,12 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
 
    if (nch == 0) {
       ncols = fNx + fNy + fNy*fNSpecies;
-      cnames = new TString[ncols];
       for (i=0;i<ncols;i++) {
-         cnames[i] = ((TLeaf*)leaves->At(i))->GetName();
+         cnames.push_back( leaves->At(i)->GetName() );
       }
 //*-*- otherwise select only the specified columns
    } else {
-      ncols = 1;
-      onerow = varexp;
-      for (i=0;i<onerow.Length();i++)  if (onerow[i] == ':') ncols++;
-      cnames = new TString[ncols];
-      index  = new Int_t[ncols+1];
-      selector->MakeIndex(onerow,index);
-      for (i=0;i<ncols;i++) {
-         cnames[i] = selector->GetNameByIndex(onerow,index,i);
-      }
+      ncols = selector->SplitNames(varexp,cnames);
    }
    var = new TTreeFormula* [ncols];
    Double_t *xvars = new Double_t[ncols];

@@ -141,9 +141,7 @@ private:
 
 protected:
    void             AddClone(TTree*);
-   const   char    *GetNameByIndex(TString& varexp, Int_t* index, Int_t colindex) const;
    virtual void     KeepCircular();
-   virtual void     MakeIndex(TString& varexp, Int_t* index);
    virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);

@@ -4572,25 +4572,6 @@ Double_t TTree::GetMinimum(const char* columname)
 }
 
 //______________________________________________________________________________
-const char* TTree::GetNameByIndex(TString& varexp, Int_t* index, Int_t colindex) const
-{
-   // Return name corresponding to colindex in varexp.
-   //
-   //   varexp is a string of names separated by :
-   //   index is an array with pointers to the start of name[i] in varexp
-   //
-
-   Int_t i1,n;
-   static TString column;
-   if (colindex<0 ) return "";
-   i1 = index[colindex] + 1;
-   n  = index[colindex+1] - i1;
-   column = varexp(i1,n);
-   //  return (const char*)Form((const char*)column);
-   return column.Data();
-}
-
-//______________________________________________________________________________
 TVirtualTreePlayer* TTree::GetPlayer()
 {
    // Load the TTreePlayer (if not already done).
@@ -4846,22 +4827,6 @@ Int_t TTree::MakeCode(const char* filename)
    GetPlayer();
    if (!fPlayer) return 0;
    return fPlayer->MakeCode(filename);
-}
-
-//______________________________________________________________________________
-void TTree::MakeIndex(TString& varexp, Int_t* index)
-{
-   // Build index array for names in varexp.
-
-   Int_t ivar = 1;
-   index[0] = -1;
-   for (Int_t i = 0; i < varexp.Length(); ++i) {
-      if (varexp[i] == ':') {
-         index[ivar] = i;
-         ++ivar;
-      }
-   }
-   index[ivar] = varexp.Length();
 }
 
 //______________________________________________________________________________

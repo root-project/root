@@ -1505,11 +1505,7 @@ void TSpider::SetVariablesExpression(const char* varexp)
 {
    // Compile the variables expression from the given string varexp.
 
-   UInt_t ui=0;
-   Int_t nch,i;
-   TString onerow;
-   Int_t *index = NULL;
-
+   Int_t nch;
    fNcols=8;
 
    TObjArray *leaves = fTree->GetListOfLeaves();
@@ -1519,39 +1515,24 @@ void TSpider::SetVariablesExpression(const char* varexp)
 
    // if varexp is empty, take first 8 columns by default
    Int_t allvar = 0;
-   TString *cnames = new TString[fArraySize];
+   std::vector<TString> cnames;
    if (!strcmp(varexp, "*")) { fNcols = nleaves; allvar = 1; }
    if (nch == 0 || allvar) {
-      for(i=0;i<fArraySize;++i) cnames[i]="";
       UInt_t ncs = fNcols;
       fNcols = 0;
-      for (ui=0;ui<ncs;++ui) {
+      for (UInt_t ui=0;ui<ncs;++ui) {
          TLeaf *lf = (TLeaf*)leaves->At(ui);
          if (lf->GetBranch()->GetListOfBranches()->GetEntries() > 0) continue;
-         cnames[fNcols] = lf->GetName();
+         cnames.push_back(lf->GetName());
          fNcols++;
       }
       // otherwise select only the specified columns
    } else {
-      fNcols = 1;
-      onerow = varexp;
-      for (i=0;i<onerow.Length();i++) {
-         if (onerow[i] == ':') {
-            if (onerow[i+1] == ':') ++i;
-            else fNcols++;
-         }
-      }
-      for(i=0;i<fArraySize;++i) cnames[i]="";
-      index  = new Int_t[fNcols+1];
-      fSelector->MakeIndex(onerow,index);
-      for (ui=0;ui<fNcols;ui++) {
-         cnames[ui] = fSelector->GetNameByIndex(onerow,index,ui);
-      }
-      delete [] index;
+      fNcols = fSelector->SplitNames(varexp,cnames);
    }
 
    // Create the TreeFormula objects corresponding to each column
-   for (ui=0;ui<fNcols;ui++) {
+   for (UInt_t ui=0;ui<fNcols;ui++) {
       fFormulas->Add(new TTreeFormula("Var1",cnames[ui].Data(),fTree));
    }
 }

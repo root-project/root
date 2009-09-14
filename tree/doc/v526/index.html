@@ -17,7 +17,10 @@
                        for the condition.</li>
     </ul>
 </li>
+<li>Add support in TTreeFormula (and hence TTree::Draw and TTree::Scan) for the ternary condition operator ( cond ? if_expr : else_expr ).</li>
 <li>Significantly (by 2 order of magnitude) improved the performance of TTree::Draw calling C++ functions.</li>
+<li>Replace the function <tt>TSelectorDraw::MakeIndex</tt> and <tt>TSelectorDraw::GetNameByIndex</tt> 
+     with the function <tt>TSelectorDraw::SplitNames.</tt>  </li>
 <li>Add a return value to SetBranchAddress, a return value greater or equal to zero indicate success, a negative
 value indicates failure (in both case, the address is still updated).  Example:
 <pre lang="cxx">if (tree->SetBranchAddress(mybranch,&myvar) < 0) {

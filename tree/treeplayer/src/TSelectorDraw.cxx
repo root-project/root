@@ -904,7 +904,6 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    //
    //  Return kFALSE if any of the variable is not compilable.
 
-   TString title;
    Int_t i,nch,ncols;
 
    // Compile selection expression if there is one
@@ -934,14 +933,10 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
 
       return kTRUE;
    }
-   title = varexp;
 
    // otherwise select only the specified columns
-   ncols  = 1;
-   for (i=0;i<nch;i++)  if (title[i] == ':' && ! ( (i>0&&title[i-1]==':') || title[i+1]==':' ) ) ncols++;
-   Int_t *index;
-   index = new Int_t[ncols+1];
-   MakeIndex(title,index);
+   std::vector<TString> varnames;
+   ncols  = SplitNames(varexp,varnames);
 
    InitArrays(ncols);
 
@@ -949,9 +944,9 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    if (fSelect) fManager->Add(fSelect);
    fTree->ResetBit(TTree::kForceRead);
    for(i=0; i<ncols;++i){
-      fVar[i] = new TTreeFormula(Form("Var%i",i+1),GetNameByIndex(title,index,i),fTree);
+      fVar[i] = new TTreeFormula(Form("Var%i",i+1),varnames[i].Data(),fTree);
       fVar[i]->SetQuickLoad(kTRUE);
-      if(!fVar[i]->GetNdim()) { ClearFormula(); delete [] index; return kFALSE; }
+      if(!fVar[i]->GetNdim()) { ClearFormula(); return kFALSE; }
       fManager->Add(fVar[i]);
    }
    fManager->Sync();
@@ -967,25 +962,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
          fObjEval = kTRUE;
       }
    }
-   delete [] index;
    return kTRUE;
-}
-
-//______________________________________________________________________________
-const char *TSelectorDraw::GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex)
-{
-   // Return name corresponding to colindex in varexp.
-   //
-   // varexp is a string of names separated by :
-   // index is an array with pointers to the start of name[i] in varexp
-
-   Int_t i1,n;
-   static TString column;
-   if (colindex<0 ) return "";
-   i1 = index[colindex] + 1;
-   n  = index[colindex+1] - i1;
-   column = varexp(i1,n);
-   return column.Data();
 }
 
 //______________________________________________________________________________
@@ -1043,21 +1020,32 @@ void TSelectorDraw::InitArrays(Int_t newsize)
 }
 
 //______________________________________________________________________________
-void TSelectorDraw::MakeIndex(TString &varexp, Int_t *index)
+UInt_t TSelectorDraw::SplitNames(const TString &varexp, std::vector<TString> &names)
 {
    // Build Index array for names in varexp.
+   // This will allocated a C style array of TString and Ints
 
-   Int_t ivar = 1;
-   index[0]  = -1;
+   names.clear();
+
+   Bool_t ternary = kFALSE;
+   Int_t prev = 0;
    for (Int_t i=0;i<varexp.Length();i++) {
       if (varexp[i] == ':'
           && ! ( (i>0&&varexp[i-1]==':') || varexp[i+1]==':' )
           ) {
-         index[ivar] = i;
-         ivar++;
+         if (ternary) {
+            ternary = kFALSE;
+         } else {
+            names.push_back( varexp(prev,i-prev) );
+            prev = i+1;
+         }
+      }
+      if (varexp[i] == '?') {
+         ternary = kTRUE;
       }
    }
-   index[ivar] = varexp.Length();
+   names.push_back( varexp(prev, varexp.Length()-prev) );
+   return names.size();
 }
 
 

@@ -551,6 +551,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     ==(string)  76                  &            78
 //*-*     !=(string)  77                  |            79
 //*-*     <<(shift)   80                  >>(shift)    81
+//*_*     ? :         82
 //*-*
 //*-*   * constants (kConstants) :
 //*-*
@@ -675,7 +676,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    TString s1,s2,s3,ctemp;
    TString chaine = schain;
    TFormula *oldformula;
-   Int_t modulo,plus,puiss10,puiss10bis,moins,multi,divi,puiss,et,ou,petit,grand,egal,diff,peteg,grdeg,etx,oux,rshift,lshift;
+   Int_t modulo,plus,puiss10,puiss10bis,moins,multi,divi,puiss,et,ou,petit,grand,egal,diff,peteg,grdeg,etx,oux,rshift,lshift,tercond,terelse;
    char t;
    TString slash("/"), escapedSlash("\\/");
    Int_t inter2 = 0;
@@ -716,7 +717,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    } // while parantheses
 
    if (lchain==0) err=4; // empty string
-   modulo=plus=moins=multi=divi=puiss=et=ou=petit=grand=egal=diff=peteg=grdeg=etx=oux=rshift=lshift=0;
+   modulo=plus=moins=multi=divi=puiss=et=ou=petit=grand=egal=diff=peteg=grdeg=etx=oux=rshift=lshift=tercond=terelse=0;
 
 //*-*- Look for simple operators
 //*-*  =========================
@@ -826,7 +827,13 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          {
             puiss10=0; divi=j;
          }
-         if (chaine(j-1,1)=="^" && compt4==0 && compt3==0 && puiss==0) {puiss10=0; puiss=j;}
+         if (chaine(j-1)=='^' && compt4==0 && compt3==0 && puiss==0) {puiss10=0; puiss=j;}
+         if (chaine(i-1)=='?' && compt == 0 && compt2 == 0 && tercond == 0) {puiss10=0; tercond=i;} 
+         if (chaine(i-1)==':' && tercond && compt == 0 && compt2 == 0 && terelse == 0) {
+            if (i>2 && chaine(i-2)!=':' && chaine(i)!=':') {
+               puiss10=0; terelse=i;
+            }
+         } 
 
          j--;
       }
@@ -835,7 +842,23 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*  ===============================================================
 
       actionParam = 0;
-      if (ou != 0) {    //check for ||
+      if (tercond && terelse) {
+         if (tercond == 1 || terelse == lchain || tercond == (terelse-1) ) {
+            err = 5;
+            chaine_error = "?:";
+         } else {
+            ctemp = chaine(0,tercond-1);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
+            ctemp = chaine(tercond,terelse-tercond-1);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
+            ctemp = chaine(terelse,lchain-terelse);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
+            fExpr[fNoper] = "?:";
+            actionCode = kCondition;
+            SetAction(fNoper,actionCode,actionParam);
+            fNoper++;
+         }
+      } else if (ou != 0) {    //check for ||
          if (ou==1 || ou==lchain-1) {
             err=5;
             chaine_error="||";
@@ -2861,6 +2884,25 @@ TString TFormula::GetExpFormula(Option_t *option) const
             spos--;
             continue;
          }
+         //Ternary condition
+         if (optype==kCondition) { // 82
+            if(ismulti[spos-3]){
+               tab[spos-3]="("+tab[spos-3]+")";
+            }
+            if(ismulti[spos-2]){
+               tab[spos-3]+="?("+tab[spos-2]+")";
+            } else {
+               tab[spos-3]+="?"+tab[spos-2];
+            }
+            if(ismulti[spos-1]){
+               tab[spos-3]+=":("+tab[spos-1]+")";
+            }else{
+               tab[spos-3]+=":"+tab[spos-1];
+            }
+            ismulti[spos-3]=kTRUE;
+            spos -= 2;
+            continue;            
+         }
 
          //Functions
          int offset = 0;
@@ -4006,6 +4048,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
          case kBitOr  : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); continue;
          case kLeftShift : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); continue;
          case kRightShift: pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); continue;
+         case kCondition : pos -= 2; tab[pos-1] = ((Int_t)tab[pos-1]) ? tab[pos] : tab[pos+1]; continue;
 
          case kBoolOptimize: {
             // boolean operation optimizer
