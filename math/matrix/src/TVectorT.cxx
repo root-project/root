@@ -2409,8 +2409,8 @@ template TVectorF &ElementDiv          <Float_t>(      TVectorF       &target, c
 
 template Bool_t    AreCompatible       <Float_t,Float_t> (const TVectorF &v1,const TVectorF &v2,Int_t verbose);
 template Bool_t    AreCompatible       <Float_t,Double_t>(const TVectorF &v1,const TVectorD &v2,Int_t verbose);
-template Bool_t    AreCompatible       <Float_t,Float_t> (const TMatrixF &m, const TVectorF &v, Int_t verbose=0);
-template Bool_t    AreCompatible       <Float_t,Float_t> (const TVectorF &v, const TMatrixF &m, Int_t verbose=0);
+template Bool_t    AreCompatible       <Float_t,Float_t> (const TMatrixF &m, const TVectorF &v, Int_t verbose);
+template Bool_t    AreCompatible       <Float_t,Float_t> (const TVectorF &v, const TMatrixF &m, Int_t verbose);
 
 template void      Compare             <Float_t>         (const TVectorF &v1,const TVectorF &v2);
 template Bool_t    VerifyVectorValue   <Float_t>         (const TVectorF &m,       Float_t   val,Int_t verbose,Float_t maxDevAllow);
@@ -2467,8 +2467,8 @@ template TVectorD &ElementDiv          <Double_t>(      TVectorD       &target, 
 
 template Bool_t    AreCompatible       <Double_t,Double_t>(const TVectorD &v1,const TVectorD &v2,Int_t verbose);
 template Bool_t    AreCompatible       <Double_t,Float_t> (const TVectorD &v1,const TVectorF &v2,Int_t verbose);
-template Bool_t    AreCompatible       <Double_t,Double_t>(const TMatrixD &m, const TVectorD &v, Int_t verbose=0);
-template Bool_t    AreCompatible       <Double_t,Double_t>(const TVectorD &v, const TMatrixD &m, Int_t verbose=0);
+template Bool_t    AreCompatible       <Double_t,Double_t>(const TMatrixD &m, const TVectorD &v, Int_t verbose);
+template Bool_t    AreCompatible       <Double_t,Double_t>(const TVectorD &v, const TMatrixD &m, Int_t verbose);
 
 template void      Compare             <Double_t>         (const TVectorD &v1,const TVectorD &v2);
 template Bool_t    VerifyVectorValue   <Double_t>         (const TVectorD &m,       Double_t  val,Int_t verbose,Double_t maxDevAllow);
