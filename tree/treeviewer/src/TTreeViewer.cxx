@@ -1323,11 +1323,11 @@ void TTreeViewer::ExecuteDraw()
       if (!(item = (TTVLVEntry *) fLVContainer->GetNextSelected(&p))) return;
       alias[0] = item->GetAlias();
       if (alias[0].BeginsWith("~")) alias[0].Remove(0, 1);
-      sprintf(varexp, item->ConvertAliases());
+      sprintf(varexp, "%s", item->ConvertAliases());
    } else {
       if (strlen(Ez())) {
          dimension++;
-         sprintf(varexp, Ez());
+         sprintf(varexp, "%s", Ez());
          item = ExpressionItem(2);
          alias[2] = item->GetAlias();
          if (alias[2].BeginsWith("~")) alias[2].Remove(0, 1);
@@ -1387,7 +1387,7 @@ void TTreeViewer::ExecuteDraw()
    if (fScanMode) {
 //      fBarScan->SetState(kButtonUp);
       fScanMode = kFALSE;
-      if (strlen(ScanList())) sprintf(varexp, ScanList());
+      if (strlen(ScanList())) sprintf(varexp, "%s", ScanList());
       sprintf(command, "tv__tree->Scan(\"%s\",\"%s\",\"%s\", %lld, %lld);",
               varexp, cut, gopt, nentries, firstentry);
       if (fBarScan->GetState() == kButtonDown) {
@@ -1493,7 +1493,7 @@ void TTreeViewer::ExecuteSpider()
    if (strlen(Ez())) {
       previousexp = kTRUE;
       dimension++;
-      sprintf(varexp, Ez());
+      sprintf(varexp, "%s", Ez());
       item = ExpressionItem(2);
       alias[2] = item->GetAlias();
       if (alias[2].BeginsWith("~")) alias[2].Remove(0, 1);
@@ -1522,7 +1522,7 @@ void TTreeViewer::ExecuteSpider()
          if(previousexp){
             strcat(varexp,":");
             strcat(varexp,En(i+5));
-         } else sprintf(varexp,En(i+5));
+         } else sprintf(varexp, "%s", En(i+5));
          previousexp = kTRUE;
       }
    }
@@ -2244,7 +2244,7 @@ void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
          Warning("ExecuteCommand", "Command too long: aborting.");
          return;
       }
-      sprintf(comm, command);
+      sprintf(comm, "%s", command);
       // print the command to history file
       Gl_histadd(comm);
    }

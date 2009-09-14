@@ -137,7 +137,7 @@ int TCint_GenerateDictionary(const std::string &className,
       //end(2)
 
       //write data into the file
-      fprintf( filePointer, fileContent.c_str() );
+      fprintf( filePointer, "%s", fileContent.c_str() );
       fclose( filePointer );
    }
 
