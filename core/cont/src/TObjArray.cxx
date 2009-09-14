@@ -19,12 +19,12 @@
 // Use operator[] to have "real" array behaviour.
 //
 // Note on ownership and copy:
-// By default the TObjArray does not own the objects it points to and 
+// By default the TObjArray does not own the objects it points to and
 // will not delete them unless explicitly asked (via a call to the
 // Delete member function).   To assign ownership of the content to
 // the array, call:
 //     myarr->SetOwner(kTRUE);
-// When the array owns its content a call to Clear or the deletion of 
+// When the array owns its content a call to Clear or the deletion of
 // the array itself will lead to the deletion of its contents.
 //
 // You can either make a shallow copy of the array:
@@ -32,7 +32,7 @@
 //    *otherarr = *myarr;
 // in which case ownership (if any) is not transfered but the other
 // array points to the same object as the original array.  Note that
-// if the content of either array is deleted the other array is not 
+// if the content of either array is deleted the other array is not
 // notified in any way (i.e. still points to the now deleted objects).
 //
 // You can also make a deep copy of the array:
@@ -41,7 +41,7 @@
 // otherarr and myarr do not point to the same objects).  If myarr
 // is set to the be the owner of its content, otherarr will also be
 // set to the owner of its own conent.
-//  
+//
 //Begin_Html
 /*
 <img src=gif/tobjarray.gif>
@@ -642,6 +642,31 @@ TObject *TObjArray::Remove(TObject *obj)
       } while (fLast >= 0 && fCont[fLast] == 0);
    Changed();
    return ob;
+}
+
+//______________________________________________________________________________
+void TObjArray::RemoveRange(Int_t idx1, Int_t idx2)
+{
+   // Remove objects from index idx1 to idx2 included.
+
+   if (!BoundsOk("RemoveRange", idx1)) return;
+   if (!BoundsOk("RemoveRange", idx2)) return;
+
+   idx1 -= fLowerBound;
+   idx2 -= fLowerBound;
+
+   Bool_t change = kFALSE;
+   for (TObject **obj = fCont+idx1; obj <= fCont+idx2; obj++) {
+      if (*obj) {
+         *obj = 0;
+         change = kTRUE;
+      }
+   }
+
+   // recalculate array size
+   if (change) Changed();
+   if (idx1 < fLast || fLast > idx2) return;
+   do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
 }
 
 //______________________________________________________________________________
