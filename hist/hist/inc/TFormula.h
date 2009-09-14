@@ -168,7 +168,8 @@ protected:
 
       kBitAnd    = 78, kBitOr     = 79,
       kLeftShift = 80, kRightShift = 81,
-      kCondition = 82,
+
+      kCondition = 82, kStringCondition = 83,
       
       kexpo   = 100 , kxexpo   = 100, kyexpo   = 101, kzexpo   = 102, kxyexpo   = 105,
       kgaus   = 110 , kxgaus   = 110, kygaus   = 111, kzgaus   = 112, kxygaus   = 115,

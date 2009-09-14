@@ -3956,7 +3956,9 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             case kBitOr     : pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) | ((Long64_t) tab[pos]); continue;
             case kLeftShift : pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) <<((Long64_t) tab[pos]); continue;
             case kRightShift: pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) >>((Long64_t) tab[pos]); continue;
+
             case kCondition : pos -= 2; tab[pos-1] = ((Int_t)tab[pos-1]) ? tab[pos] : tab[pos+1]; continue;
+            case kStringCondition: pos--; pos2--; stringStack[pos2-1] = ((Int_t)tab[pos]) ? stringStack[pos2-1] : stringStack[pos2]; continue;
 
             case kStringConst: {
                // String
@@ -4609,7 +4611,9 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
    } else if (mode == -1) {
       sprintf(value, "%s", GetTitle());
    } else if (mode == 0) {
-      if (fNstring && fNval==0 && fNoper==1) {
+      if ( (fNstring && fNval==0 && fNoper==1) ||
+           (fNoper>=1 && GetAction(fNoper-1)==kStringCondition) )
+      {
          const char * val = 0;
          if (fLookupType[0]==kTreeMember) {
             val = (char*)GetLeafInfo(0)->GetValuePointer((TLeaf*)0x0,instance);
@@ -4618,7 +4622,7 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
             TBranch *branch = leaf->GetBranch();
             Long64_t readentry = branch->GetTree()->GetReadEntry();
             R__LoadBranch(branch,readentry,fQuickLoad);
-            if (fLookupType[0]==kDirect) {
+            if (fLookupType[0]==kDirect && fNoper==1) {
                val = (const char*)leaf->GetValuePointer();
             } else {
                val = ((TTreeFormula*)this)->EvalStringInstance(instance);

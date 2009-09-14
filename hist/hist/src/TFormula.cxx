@@ -2225,6 +2225,14 @@ Int_t TFormula::Compile(const char *expression)
             SetAction(i, kStringNotEqual, GetActionParam(i) );
             SetBit(kIsCharacter);
             last_string = kFALSE;
+         } else if (GetAction(i) == kCondition) {
+            if (!before_last_string) {
+               Error("Compile", "Both operands of the operator ?: have to be either numbers or strings");
+               return -1;
+            }
+            SetAction(i, kStringCondition, GetActionParam(i) );
+            SetBit(kIsCharacter);
+            last_string = kFALSE;
          } else if (before_last_string) {
             // the i-2 element is a string not used in a string operation, let's down grade it
             // to a char array:
@@ -2246,7 +2254,12 @@ Int_t TFormula::Compile(const char *expression)
       } else if (before_last_string) {
          // the i-2 element is a string not used in a string operation, let's down grade it
          // to a char array:
-         if (GetAction(i-2) == kDefinedString) {
+         if (GetAction(i) == kCondition) {
+            if (before_last_string) {
+               Error("Compile", "Both operands of the operator ?: have to be either numbers or strings");
+               return -1;
+            }
+         } else if (GetAction(i-2) == kDefinedString) {
             SetAction( i-2, kDefinedVariable, GetActionParam(i-2) );
             fNval++;
             fNstring--;
@@ -4048,7 +4061,9 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
          case kBitOr  : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); continue;
          case kLeftShift : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); continue;
          case kRightShift: pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); continue;
+            
          case kCondition : pos -= 2; tab[pos-1] = ((Int_t)tab[pos-1]) ? tab[pos] : tab[pos+1]; continue;
+         case kStringCondition: pos--; pos2--; tab2[pos2-1] = ((Int_t)tab[pos]) ? tab2[pos2-1] : tab2[pos2]; continue;
 
          case kBoolOptimize: {
             // boolean operation optimizer
