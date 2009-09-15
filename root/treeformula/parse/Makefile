@@ -17,10 +17,10 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 testStringFormula.log: testString.C $(ROOTCORELIBS) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b testString.C > testStringFormula.log
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b testString.C > testStringFormula.log 2>&1
 
 testStringFormula: testStringFormula.log
-	$(CMDECHO) echo testStringFormula > /dev/null
+	$(TestDiff)
 
 testBoolOpt.log: testBoolOpt.C $(ROOTCORELIBS) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q testBoolOpt.C > testBoolOpt.log 2>&1
