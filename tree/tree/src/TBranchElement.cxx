@@ -1624,7 +1624,7 @@ void TBranchElement::InitInfo()
             }
             int offset = 0;
             TStreamerElement* elt = fInfo->GetStreamerElement(s.c_str(), offset);
-            if (elt) {
+            if (elt && offset!=TStreamerInfo::kMissing) {
                size_t ndata = fInfo->GetNdata();
                ULong_t* elems = fInfo->GetElems();
                fIDs.clear();
@@ -1656,11 +1656,16 @@ void TBranchElement::InitInfo()
                   // Add all (and only) the Artificial Elements that follows this StreamerInfo.
                   if (fType==31||fType==41) {
                      // The nested objects are unfolded and their branch can not be used to 
-                     // executed StreamerElements of this StreamerInfo.
+                     // execute StreamerElements of this StreamerInfo.
                      if (nextel->GetType() == TStreamerInfo::kObject 
                          || nextel->GetType() == TStreamerInfo::kAny) {
                         continue;
                      }
+                  }
+                  if (nextel->GetOffset() ==  TStreamerInfo::kMissing) {
+                     // This element will be 'skipped', it's TBranchElement's fObject will null
+                     // and thus can not be used to execute the artifical StreamerElements
+                     continue;
                   }
                   if (nextel->IsA() != TStreamerArtificial::Class()
                       || nextel->GetType() == TStreamerInfo::kCacheDelete ) {
