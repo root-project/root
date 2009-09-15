@@ -33,6 +33,7 @@
 //  if split = -2 the event is split using the old TBranchObject mechanism
 //  if split = -1 the event is streamed using the old TBranchObject mechanism
 //  if split > 0  the event is split using the new TBranchElement mechanism.
+//  if split > 90 the branch buffer sizes are optimized once 10 MBytes written to the file
 //
 //  if comp = 0 no compression at all.
 //  if comp = 1 event is compressed.
@@ -223,6 +224,8 @@ int main(int argc, char **argv)
       if(split >= 0 && branchStyle) tree->BranchRef();
       Float_t ptmin = 1;
 
+      Bool_t optimize = kTRUE;
+      if (split < 90) optimize = kFALSE;
       for (ev = 0; ev < nevent; ev++) {
          if (ev%printev == 0) {
             tnew = timer.RealTime();
@@ -236,6 +239,12 @@ int main(int argc, char **argv)
          event->Build(ev, arg5, ptmin);
 
          if (write) nb += tree->Fill();  //fill the tree
+         if (optimize) { //optimize baskets sizes once we have written 10 MBytes
+            if (tree->GetZipBytes() > 10000000) {
+               tree->OptimizeBaskets(5000000,1); // 5Mbytes for basket buffers
+               optimize = kFALSE;
+            }
+         }
 
          if (hm) hm->Hfill(event);      //fill histograms
       }
