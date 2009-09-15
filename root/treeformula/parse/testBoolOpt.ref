@@ -7,7 +7,7 @@ Processing testBoolOpt.C...
  fExpr[3] = ||  action = 61 action param = 0 
 Optimized expression
  fExpr[0] = bool left()		  action = 145 action param = 0 
- fExpr[1] = || checkpoint		  action = 156 action param = 0 
+ fExpr[1] = || checkpoint		  action = 156 action param = 3 
  fExpr[2] = bool right()		  action = 145 action param = 1000 
  fExpr[3] = ||		  action = 61 action param = 0 
                  fand : !left()&&!right() Ndim= 1, Npar= 0, Noper= 6
@@ -20,7 +20,7 @@ Optimized expression
 Optimized expression
  fExpr[0] = bool left()		  action = 145 action param = 0 
  fExpr[1] = !		  action = 68 action param = 0 
- fExpr[2] = && checkpoint		  action = 157 action param = 0 
+ fExpr[2] = && checkpoint		  action = 157 action param = 5 
  fExpr[3] = bool right()		  action = 145 action param = 1000 
  fExpr[4] = !		  action = 68 action param = 0 
  fExpr[5] = &&		  action = 60 action param = 0 
