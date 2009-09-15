@@ -100,6 +100,7 @@ public:
    virtual void        FreeDirectory(void *dirp);
    virtual const char *GetDirEntry(void *dirp);
    virtual Int_t       GetPathInfo(const char* path, FileStat_t &buf);
+   virtual Bool_t      IsPathLocal(const char *path);
    virtual Int_t       Locate(const char* path, TString &endurl);
    virtual Int_t       MakeDirectory(const char* dir);
    virtual void       *OpenDirectory(const char* dir);

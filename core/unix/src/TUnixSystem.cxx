@@ -1446,6 +1446,19 @@ int TUnixSystem::Rename(const char *f, const char *t)
 }
 
 //______________________________________________________________________________
+Bool_t TUnixSystem::IsPathLocal(const char *path)
+{
+   // Returns TRUE if the url in 'path' points to the local file system.
+   // This is used to avoid going through the NIC card for local operations.
+
+   TSystem *helper = FindHelper(path);
+   if (helper)
+      return helper->IsPathLocal(path);
+
+   return TSystem::IsPathLocal(path);
+}
+
+//______________________________________________________________________________
 int TUnixSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
    // Get info about a file. Info is returned in the form of a FileStat_t

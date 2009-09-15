@@ -145,6 +145,7 @@ public:
    Bool_t            ExpandPathName(TString &patbuf);
    char             *ExpandPathName(const char *path);
    Bool_t            AccessPathName(const char *path, EAccessMode mode = kFileExists);
+   Bool_t            IsPathLocal(const char *path);
    int               CopyFile(const char *from, const char *to, Bool_t overwrite = kFALSE);
    int               Rename(const char *from, const char *to);
    int               Link(const char *from, const char *to);
