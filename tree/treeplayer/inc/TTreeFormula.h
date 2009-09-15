@@ -151,6 +151,7 @@ protected:
    virtual Bool_t    IsString(Int_t oper) const;
    virtual Bool_t    IsLeafString(Int_t code) const;
    virtual Bool_t    SwitchToFormLeafInfo(Int_t code);
+   virtual Bool_t    StringToNumber(Int_t code);
 
    void              Convert(UInt_t fromVersion);
 

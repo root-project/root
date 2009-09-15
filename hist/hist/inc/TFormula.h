@@ -95,7 +95,10 @@ protected:
    TFormulaPrimitive  **fPredefined;      //![fNPar] predefined function  
    TFuncG               fOptimal; //!pointer to optimal function
 
-   Int_t             PreCompile();   
+   Int_t             PreCompile();
+   virtual Bool_t    CheckOperands(Int_t operation, Int_t &err);
+   virtual Bool_t    CheckOperands(Int_t leftoperand, Int_t rightoperartion, Int_t &err);
+   virtual Bool_t    StringToNumber(Int_t code);
    void              MakePrimitive(const char *expr, Int_t pos);
    inline Int_t     *GetOper() const { return fOper; }
    inline Short_t    GetAction(Int_t code) const { return fOper[code] >> kTFOperShift; }
@@ -169,7 +172,7 @@ protected:
       kBitAnd    = 78, kBitOr     = 79,
       kLeftShift = 80, kRightShift = 81,
 
-      kCondition = 82, kStringCondition = 83,
+      kJumpIf = 82, kJump = 83,
       
       kexpo   = 100 , kxexpo   = 100, kyexpo   = 101, kzexpo   = 102, kxyexpo   = 105,
       kgaus   = 110 , kxgaus   = 110, kygaus   = 111, kzgaus   = 112, kxygaus   = 115,
