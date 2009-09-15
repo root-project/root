@@ -11,7 +11,7 @@ int execTestString() {
    if (res!=1) return 0;
 
    f = new TFormula("f2","\"af(d+gd\"+2");
-   if (f->GetNdim()!=1) return 0;
+   if (f->GetNdim()!=0) return 0;
    res = f->Eval(0);
    if (res!=2) return 0;
 
