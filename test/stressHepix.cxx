@@ -96,13 +96,9 @@ int main(int argc, char **argv)
 {
    TApplication theApp("App", &argc, argv);
    printf("\n\nStarting stressHepix benchmark (details will be in stressHepix.log)\n");
-   printf("Takes 442 CP seconds on a  500 rootmarks machine (IBM Thinkpad centrino 1.4GHz VC++7.1)\n");
-   printf("Takes 278 CP seconds on a  800 rootmarks reference machine (P IV 2.8 GHz, SLC3 gcc3.2.3)\n");
-   printf("Takes 239 CP seconds on a  924 rootmarks machine (MacBook 2.0GHz gcc4.0.1)\n");
-   printf("Takes 209 CP seconds on a 1056 rootmarks machine (MacBook 2.0GHz icc9.1)\n");
-   printf("Takes 147 CP seconds on a 1512 rootmarks machine (MacPro 3.0GHz gcc4.0.1)\n");
-   printf("Takes 142 CP seconds on a 1550 rootmarks machine (AMD64/280, FC5 gcc4.1)\n");
-   printf("Takes 121 CP seconds on a 1828 rootmarks machine (MacPro 3.0GHz icc9.1)\n\n");
+   printf("Takes 742 CP seconds on a  500 rootmarks machine (IBM Thinkpad centrino 1.4GHz VC++7.1)\n");
+   printf("Takes 348 CP seconds on a  800 rootmarks reference machine (P IV 2.8 GHz, SLC4 gcc3.4)\n");
+   printf("Takes 162 CP seconds on a 1710 rootmarks machine (MacPro 2.0GHz gcc4.0.1)\n");
    if (gSystem->AccessPathName("atlas.root")) {
       printf("\nPreparing geometry files from http://root.cern.ch\n\n");
       runTest("stressGeometry", 0);
@@ -110,11 +106,11 @@ int main(int argc, char **argv)
    TStopwatch timer;
    timer.Start();
    gSystem->Exec("echo stressHepix > stressHepix.log");
-   runTest("stressFit Minuit  2000",11);
+   runTest("stressFit Minuit  2000",12);
    runTest("stressLinear",26);
-   runTest("stressGeometry",77);
-   runTest("stressSpectrum 1000",116);
-   runTest("stress -b 3000",138);
+   runTest("stressGeometry",118);
+   runTest("stressSpectrum 1000",190);
+   runTest("stress -b 3000",124);
    timer.Stop();
    Double_t rt = timer.RealTime();
    //scan log file to accumulate the individual Cpu Times
@@ -129,7 +125,7 @@ int main(int argc, char **argv)
       }
    }
    fclose(fp);
-   Double_t reftime = 278.04; //pcbrun compiled and 368 seconds real time
+   Double_t reftime = 348.3; //pcbrun4 compiled and 490.5 seconds real time
    const Double_t rootmarks = 800*reftime/ct;
 
    //Print table with results
