@@ -1350,12 +1350,13 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
       Int_t etype    = element->GetType();
       Long_t eoffset = element->GetOffset();
       TClass *cle    = element->GetClassPointer();
-      if (etype == TVirtualStreamerInfo::kTObject ||
-          etype == TVirtualStreamerInfo::kTNamed ||
-          etype == TVirtualStreamerInfo::kBase) {
+      if (element->IsBase() || etype == TVirtualStreamerInfo::kBase) {
          //base class
          if (cle) cle->BuildEmulatedRealData(name,offset+eoffset,cl);
-      } else if (etype == TVirtualStreamerInfo::kObject || etype == TVirtualStreamerInfo::kAny) {
+      } else if (etype == TVirtualStreamerInfo::kTObject ||
+                 etype == TVirtualStreamerInfo::kTNamed ||
+                 etype == TVirtualStreamerInfo::kObject || 
+                 etype == TVirtualStreamerInfo::kAny) {
          //member class
          TRealData *rd = new TRealData(Form("%s%s",name,element->GetFullName()),offset+eoffset,0);
          if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%ld\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
