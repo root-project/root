@@ -813,6 +813,35 @@ void TXProofMgr::Grep(const char *what, const char *how, const char *where)
 
    // Show the result, if any
    if (os) Printf("%s", os->GetName());
+
+   // Cleanup
+   SafeDelete(os);
+}
+
+//______________________________________________________________________________
+void TXProofMgr::Find(const char *what, const char *how, const char *where)
+{
+   // Run 'find' on the nodes
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("Find","invalid TXProofMgr - do nothing");
+      return;
+   }
+   // Server may not support it
+   if (fSocket->GetXrdProofdVersion() < 1007) {
+      Warning("Find", "functionality not supported by server");
+      return;
+   }
+
+   // Send the request
+   TObjString *os = Exec(kFind, what, how, where);
+
+   // Show the result, if any
+   if (os) Printf("%s", os->GetName());
+
+   // Cleanup
+   SafeDelete(os);
 }
 
 //______________________________________________________________________________
@@ -836,6 +865,9 @@ void TXProofMgr::Ls(const char *what, const char *how, const char *where)
 
    // Show the result, if any
    if (os) Printf("%s", os->GetName());
+
+   // Cleanup
+   SafeDelete(os);
 }
 
 //______________________________________________________________________________
@@ -859,6 +891,9 @@ void TXProofMgr::More(const char *what, const char *how, const char *where)
 
    // Show the result, if any
    if (os) Printf("%s", os->GetName());
+
+   // Cleanup
+   SafeDelete(os);
 }
 
 //______________________________________________________________________________
@@ -913,6 +948,8 @@ Int_t TXProofMgr::Rm(const char *what, const char *how, const char *where)
       // Show the result, if any
       if (os) {
          if (gDebug > 1) Printf("%s", os->GetName());
+         // Cleanup
+         SafeDelete(os);
          // Success
          return 0;
       }
@@ -944,6 +981,9 @@ void TXProofMgr::Tail(const char *what, const char *how, const char *where)
 
    // Show the result, if any
    if (os) Printf("%s", os->GetName());
+
+   // Cleanup
+   SafeDelete(os);
 }
 
 //______________________________________________________________________________
@@ -974,6 +1014,8 @@ Int_t TXProofMgr::Md5sum(const char *what, TString &sum, const char *where)
    if (os) {
       if (gDebug > 1) Printf("%s", os->GetName());
       sum = os->GetName();
+      // Cleanup
+      SafeDelete(os);
       // Success
       return 0;
    }
@@ -1028,6 +1070,9 @@ Int_t TXProofMgr::Stat(const char *what, FileStat_t &st, const char *where)
       st.fSize   = size;
       st.fMtime  = mtime;
       st.fIsLink = (islink == 1);
+
+      // Cleanup
+      SafeDelete(os);
       // Success
       return 0;
    }

@@ -115,7 +115,8 @@ enum EAdminExecType {
    kGrep              = 3,
    kTail              = 4,
    kMd5sum            = 5,
-   kStat              = 6
+   kStat              = 6,
+   kFind              = 7
 };
 
 // XPROOFD Worker CPU load sharing options

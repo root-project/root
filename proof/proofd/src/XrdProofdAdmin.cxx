@@ -1090,11 +1090,11 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
 
    // Commands; must be synchronized with EAdminExecType in XProofProtocol.h
 #if !defined(__APPLE__)
-   const char *cmds[] = { "rm", "ls", "more", "grep", "tail", "md5sum", "stat" };
+   const char *cmds[] = { "rm", "ls", "more", "grep", "tail", "md5sum", "stat", "find" };
 #else
-   const char *cmds[] = { "rm", "ls", "more", "grep", "tail", "md5", "stat" };
+   const char *cmds[] = { "rm", "ls", "more", "grep", "tail", "md5", "stat", "find" };
 #endif
-   const char *actcmds[] = { "remove", "access", "open", "open", "open", "open", "stat" };
+   const char *actcmds[] = { "remove", "access", "open", "open", "open", "open", "stat", "find"};
 
    int rc = 0;
    XPD_SETRESP(p, "Exec");
@@ -1112,7 +1112,7 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
 
    // Action type
    int action = ntohl(p->Request()->proof.int2);
-   if (action < kRm || action > kStat) {
+   if (action < kRm || action > kFind) {
       emsg = "unknown action type: ";
       emsg += action;
       TRACEP(p, XERR, emsg);
@@ -1212,7 +1212,7 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
 
    // Notify the client
    if (node != "all") {
-      if (action != kStat && action != kMd5sum) {
+      if (action != kStat && action != kMd5sum && action != kRm) {
          emsg = "Node: "; emsg += pfx;
          emsg += "\n-----";
          response->Send(kXR_attn, kXPD_srvmsg, 2, (char *)emsg.c_str(), emsg.length());
@@ -1281,7 +1281,7 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
          }
       } else {
          // Will not allow to remove basic sandbox sub-dirs
-         const char *sbdir[4] = {"queries", "packages", "cache", "datasets"};
+         const char *sbdir[5] = {"queries", "packages", "cache", "datasets", "data"};
          while (fullpath.endswith('/'))
             fullpath.erasefromend(1);
          XrdOucString sball(tgtclnt->Sandbox()->Dir()), sball1 = sball;
@@ -1293,7 +1293,7 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
             response->Send(kXR_InvalidRequest, emsg.c_str());
             return 0;
          }
-         int kk = 4;
+         int kk = 5;
          while (kk--) {
             if (fullpath.endswith(sbdir[kk])) {
                emsg = "removing a basic sandbox directory is not allowed: ";
@@ -1324,6 +1324,7 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
          case kMore:
          case kGrep:
          case kTail:
+         case kFind:
             rederr = " 2>&1";
             break;
          case kStat:
@@ -1342,9 +1343,13 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
             response->Send(kXR_ServerError, emsg.c_str());
             break;
       }
-      if (opt.length() > 0) { cmd += " "; cmd += opt; }
-      if (cmd.length() > 0) cmd += " ";
-      cmd += fullpath;
+      if (action != kFind) {
+         if (opt.length() > 0) { cmd += " "; cmd += opt; }
+         cmd += " "; cmd += fullpath;
+      } else {
+         cmd += " "; cmd += fullpath;
+         if (opt.length() > 0) { cmd += " "; cmd += opt; }
+      }
       if (rederr.length() > 0) cmd += rederr;
    }
 

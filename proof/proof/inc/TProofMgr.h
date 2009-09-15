@@ -107,6 +107,7 @@ public:
 
    // Remote file system actions
    virtual Int_t       Cp(const char *, const char * = 0, const char * = 0) { return -1; }
+   virtual void        Find(const char * = "~/", const char * = 0, const char * = 0) { }
    virtual void        Grep(const char *, const char * = 0, const char * = 0) { }
    virtual void        Ls(const char * = "~/", const char * = 0, const char * = 0) { }
    virtual void        More(const char *, const char * = 0, const char * = 0) { }

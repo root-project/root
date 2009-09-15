@@ -85,6 +85,7 @@ public:
 
    // Remote file system actions
    Int_t       Cp(const char *src, const char *dst = 0, const char *opts = 0);
+   void        Find(const char *what = "~/", const char *how = "-type f", const char *where = 0);
    void        Grep(const char *what, const char *how = 0, const char *where = 0);
    void        Ls(const char *what = "~/", const char *how = 0, const char *where = 0);
    void        More(const char *what, const char *how = 0, const char *where = 0);
