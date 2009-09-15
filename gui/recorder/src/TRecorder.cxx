@@ -1354,6 +1354,12 @@ void TRecorderRecording::RecordGuiEvent(Event_t *e, Window_t wid)
    }
    fFilterEventPave = kFALSE;
 
+   // don't record any copy/paste event, as event->fUser[x] parameters 
+   // will be invalid when replaying on a different OS
+   if (e->fType == kSelectionClear || e->fType == kSelectionRequest ||
+       e->fType == kSelectionNotify)
+       return;
+
    // Copies all items of e to fGuiEvent
    CopyEvent(e, wid);
 
@@ -1964,6 +1970,12 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
 {
    // Replays stored GUI event
    Event_t *e = CreateEvent(this);
+
+   // don't try to replay any copy/paste event, as event->fUser[x] 
+   // parameters are invalid on different OSes
+   if (e->fType == kSelectionClear || e->fType == kSelectionRequest ||
+       e->fType == kSelectionNotify)
+       return;
 
    // Replays movement/resize event
    if (e->fType == kConfigureNotify) {
