@@ -2149,7 +2149,7 @@ Bool_t TFormula::CheckOperands(Int_t leftoper, Int_t oper, Int_t &err)
 }
 
 //______________________________________________________________________________
-Bool_t TFormula::StringToNumber(Int_t code)
+Bool_t TFormula::StringToNumber(Int_t /* code */)
 {
    // Try to 'demote' a string into an array bytes.  If this is not possible,
    // return false.
