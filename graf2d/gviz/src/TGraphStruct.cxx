@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Riostream.h"
 #include "TPad.h"
 #include "TGraphStruct.h"
 
@@ -127,7 +128,7 @@ void TGraphStruct::DumpAsDotFile(const char *filename)
 
 
 //______________________________________________________________________________
-void TGraphStruct::Draw(Option_t */*option*/)
+void TGraphStruct::Draw(Option_t *option)
 {
    // Draw the graph
 
@@ -139,22 +140,28 @@ void TGraphStruct::Draw(Option_t */*option*/)
                   GD_bb(fGVGraph).UR.x+fMargin, GD_bb(fGVGraph).UR.y+fMargin);
    }
 
+   AppendPad(option);
+
    // Draw the nodes
-   TGraphNode *node;
-   node = (TGraphNode*) fNodes->First();
-   node->Draw();
-   for(Int_t i = 1; i < fNodes->GetSize(); i++){
-      node = (TGraphNode*)fNodes->After(node);
+   if (fNodes) {
+      TGraphNode *node;
+      node = (TGraphNode*) fNodes->First();
       node->Draw();
+      for(Int_t i = 1; i < fNodes->GetSize(); i++){
+         node = (TGraphNode*)fNodes->After(node);
+         node->Draw();
+      }
    }
 
    // Draw the edges
-   TGraphEdge *edge;
-   edge = (TGraphEdge*) fEdges->First();
-   edge->Draw();
-   for(Int_t i = 1; i < fEdges->GetSize(); i++){
-      edge = (TGraphEdge*)fEdges->After(edge);
+   if (fEdges) {
+      TGraphEdge *edge;
+      edge = (TGraphEdge*) fEdges->First();
       edge->Draw();
+      for(Int_t i = 1; i < fEdges->GetSize(); i++){
+         edge = (TGraphEdge*)fEdges->After(edge);
+         edge->Draw();
+      }
    }
 }
 
@@ -179,39 +186,88 @@ void TGraphStruct::Layout()
    fGVGraph = agopen((char*)"GVGraph", AGDIGRAPH);
 
    // Put the GV nodes into the GV graph
-   node = (TGraphNode*) fNodes->First();
-   node->CreateGVNode(fGVGraph);
-   for(Int_t i = 1; i < fNodes->GetSize(); i++){
-      node = (TGraphNode*)fNodes->After(node);
+   if (fNodes) {
+      node = (TGraphNode*) fNodes->First();
       node->CreateGVNode(fGVGraph);
+      for(Int_t i = 1; i < fNodes->GetSize(); i++){
+         node = (TGraphNode*)fNodes->After(node);
+         node->CreateGVNode(fGVGraph);
+      }
    }
 
    // Put the edges into the graph
-   edge = (TGraphEdge*) fEdges->First();
-   edge->CreateGVEdge(fGVGraph);
-   for(Int_t i = 1; i < fEdges->GetSize(); i++){
-      edge = (TGraphEdge*)fEdges->After(edge);
+   if (fEdges) {
+      edge = (TGraphEdge*) fEdges->First();
       edge->CreateGVEdge(fGVGraph);
+      for(Int_t i = 1; i < fEdges->GetSize(); i++){
+         edge = (TGraphEdge*)fEdges->After(edge);
+         edge->CreateGVEdge(fGVGraph);
+      }
    }
 
    // Layout the graph
    gvLayout(fGVC, fGVGraph, (char*)"dot");
 
    // Layout the nodes
-   node = (TGraphNode*) fNodes->First();
-   node->Layout();
-   for(Int_t i = 1; i < fNodes->GetSize(); i++){
-      node = (TGraphNode*)fNodes->After(node);
+   if (fNodes) {
+      node = (TGraphNode*) fNodes->First();
       node->Layout();
+      for(Int_t i = 1; i < fNodes->GetSize(); i++){
+         node = (TGraphNode*)fNodes->After(node);
+         node->Layout();
+      }
    }
 
    // Layout the edges
-   edge = (TGraphEdge*) fEdges->First();
-   edge->Layout();
-   for(Int_t i = 1; i < fEdges->GetSize(); i++){
-      edge = (TGraphEdge*)fEdges->After(edge);
+   if (fEdges) {
+      edge = (TGraphEdge*) fEdges->First();
       edge->Layout();
+      for(Int_t i = 1; i < fEdges->GetSize(); i++){
+         edge = (TGraphEdge*)fEdges->After(edge);
+         edge->Layout();
+      }
    }
+}
+
+
+//______________________________________________________________________________
+void TGraphStruct::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+{
+   // Save primitive as a C++ statement(s) on output stream out
+
+   out<<"   TGraphStruct *graphstruct = new  TGraphStruct();"<<endl;
+
+   // Save the nodes
+   if (fNodes) {
+      TGraphNode *node;
+      node = (TGraphNode*) fNodes->First();
+      out<<"   TGraphNode *"<<node->GetName()<<" = graphstruct->AddNode(\""<<
+                            node->GetName()<<"\",\""<<
+                            node->GetTitle()<<"\");"<<endl;
+      for(Int_t i = 1; i < fNodes->GetSize(); i++){
+         node = (TGraphNode*)fNodes->After(node);
+         out<<"   TGraphNode *"<<node->GetName()<<" = graphstruct->AddNode(\""<<
+                               node->GetName()<<"\",\""<<
+                               node->GetTitle()<<"\");"<<endl;
+      }
+   }
+
+   // Save the edges
+   if (fEdges) {
+      TGraphEdge *edge;
+      edge = (TGraphEdge*) fEdges->First();
+      out<<"   graphstruct->AddEdge("<<
+                            edge->GetNode1()->GetName()<<","<<
+                            edge->GetNode2()->GetName()<<");"<<endl;
+      for(Int_t i = 1; i < fEdges->GetSize(); i++){
+         edge = (TGraphEdge*)fEdges->After(edge);
+         out<<"   graphstruct->AddEdge("<<
+                               edge->GetNode1()->GetName()<<","<<
+                               edge->GetNode2()->GetName()<<");"<<endl;
+      }
+   }
+
+   out<<"   graphstruct->Draw();"<<endl;
 }
 
 

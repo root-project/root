@@ -59,8 +59,11 @@ public:
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
    void           SetGVEdge(Agedge_t *gve) {fGVEdge = gve;}
    Agedge_t      *GetGVEdge() {return fGVEdge;}
+   TGraphNode    *GetNode1() {return fNode1;}
+   TGraphNode    *GetNode2() {return fNode2;}
    void           Layout();            
    virtual void   Paint(Option_t *option="");
+   virtual void   SavePrimitive(ostream &, Option_t *);
 
    ClassDef(TGraphEdge,1)  //Graph edge class
 };

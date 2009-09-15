@@ -37,7 +37,7 @@ struct GVC_s;
 //////////////////////////////////////////////////////////////////////////
 
 
-class TGraphStruct  {
+class TGraphStruct : public TObject {
 
 protected:
 
@@ -52,16 +52,17 @@ public:
    TGraphStruct();
    virtual ~TGraphStruct();
 
-   void        AddEdge(TGraphEdge *edge);
-   void        AddNode(TGraphNode *node);
-   TGraphEdge *AddEdge(TGraphNode *n1, TGraphNode *n2);
-   TGraphNode *AddNode(const char *name, const char *title="");
-   void        Draw(Option_t *option="");
-   void        DumpAsDotFile(const char *filename);
-   TList      *GetListOfNodes() const { return fNodes; }
-   TList      *GetListOfEdges() const { return fEdges; }
-   void        Layout();
-   void        SetMargin(Double_t m=10) {fMargin = m;}
+   void         AddEdge(TGraphEdge *edge);
+   void         AddNode(TGraphNode *node);
+   TGraphEdge  *AddEdge(TGraphNode *n1, TGraphNode *n2);
+   TGraphNode  *AddNode(const char *name, const char *title="");
+   void         Draw(Option_t *option="");
+   void         DumpAsDotFile(const char *filename);
+   TList       *GetListOfNodes() const { return fNodes; }
+   TList       *GetListOfEdges() const { return fEdges; }
+   void         Layout();
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   void         SetMargin(Double_t m=10) {fMargin = m;}
 
    ClassDef(TGraphStruct,1)  //Graph structure class
 };

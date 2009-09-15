@@ -204,6 +204,13 @@ void TGraphEdge::Paint(Option_t *)
 
 
 //______________________________________________________________________________
+void TGraphEdge::SavePrimitive(ostream &, Option_t *)
+{
+   // Save primitive as a C++ statement(s) on output stream out   
+}
+
+
+//______________________________________________________________________________
 void TGraphEdge::Streamer(TBuffer &/*b*/)
 {
 }

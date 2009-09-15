@@ -76,10 +76,14 @@ Int_t TGraphNode::DistancetoPrimitive(Int_t px, Int_t py)
 {
    // Compute distance from point px,py to a node.
 
+   Int_t dist;
+
+   // The node is drawn as an ellipse
    TEllipse ellipse(fX, fY, fW, fH, 0., 360., 0.);
-   ellipse.SetFillStyle(1001);
-   ellipse.SetFillColor(2);
-   return ellipse.DistancetoPrimitive(px, py);
+   ellipse.SetFillColor(1); // in order to pick the ellipse "inside"
+   dist =  ellipse.DistancetoPrimitive(px, py);
+
+   return dist;
 }
 
 
@@ -125,7 +129,7 @@ void TGraphNode::Paint(Option_t *)
    TLatex text;
    text.SetTextAlign(22);
 
-   // Draw the node shape
+   // Draw the node shape as an ellipse
    // ND_shape(fGVNode)->name gives the type of shape.
    ellipse.SetFillStyle(GetFillStyle());
    ellipse.SetFillColor(GetFillColor());
@@ -134,10 +138,17 @@ void TGraphNode::Paint(Option_t *)
    ellipse.SetLineWidth(GetLineWidth());
    ellipse.PaintEllipse(fX, fY, fW, fH, 0., 360., 0., "");
    
-   // Draw the node name
+   // Draw the node title
    text.SetTextColor(GetTextColor());
    text.SetTextFont(GetTextFont());
    text.PaintLatex(fX, fY, 0., GetTextSize(), (char*)GetTitle());
+}
+
+
+//______________________________________________________________________________
+void TGraphNode::SavePrimitive(ostream &, Option_t *)
+{
+   // Save primitive as a C++ statement(s) on output stream out
 }
 
 

@@ -65,6 +65,7 @@ public:
    Agnode_t      *GetGVNode() {return fGVNode;}
    void           Layout();
    virtual void   Paint(Option_t *option="");   
+   virtual void   SavePrimitive(ostream &, Option_t *);                 
 
    ClassDef(TGraphNode,1)  //Graph node class
 };
