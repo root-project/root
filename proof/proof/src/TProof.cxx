@@ -554,6 +554,8 @@ Int_t TProof::Init(const char *, const char *conffile,
          fConfFile = kPROOF_ConfFile;
       if (!confdir  || strlen(confdir) == 0)
          fConfDir  = kPROOF_ConfDir;
+      // The group; the client receives it in the kPROOF_SESSIONTAG message
+      if (gProofServ) fGroup = gProofServ->GetGroup();
    } else {
       fConfDir     = confdir;
       fConfFile    = conffile;
@@ -2233,7 +2235,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
 
    // Timeout counter
    Long_t nto = timeout;
-   if (gDebug > 2)
+   PDB(kCollect, 2)
       Info("Collect","active: %d", mon->GetActive());
 
    // On clients, handle Ctrl-C during collection
@@ -2241,9 +2243,30 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
       fIntHandler->Add();
 
    // Sockets w/o activity during the last 'sto' millisecs are deactivated
+   Int_t nact = 0;
    Long_t sto = -1;
    Int_t nsto = 60;
-   while (mon->GetActive(sto) && (nto < 0 || nto > 0)) {
+   while ((nact = mon->GetActive(sto)) && (nto < 0 || nto > 0)) {
+
+      // Dump last waiting sockets, if in debug mode
+      PDB(kCollect, 2) {
+         if (nact < 4) {
+            TList *al = mon->GetListOfActives();
+            if (al && al->GetSize() > 0) {
+               Info("Collect"," %d node(s) still active:", al->GetSize());
+               TIter nxs(al);
+               TSocket *xs = 0;
+               while ((xs = (TSocket *)nxs())) {
+                  TSlave *wrk = FindSlave(xs);
+                  if (wrk)
+                     Info("Collect","   %s", wrk->GetName());
+                  else
+                     Info("Collect","   %p: %s:%d", xs, xs->GetInetAddress().GetHostName(),
+                                                      xs->GetInetAddress().GetPort());
+               }
+            }
+         }
+      }
 
       // Wait for a ready socket
       TSocket *s = mon->Select(1000);
@@ -2254,7 +2277,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
          if (rc  == 1 || (rc == 2 && !savedMonitor)) {
             // Deactivate it if we are done with it
             mon->DeActivate(s);
-            PDB(kGlobal, 2)
+            PDB(kCollect, 2)
                Info("Collect","deactivating %p (active: %d, %p)",
                               s, mon->GetActive(),
                               mon->GetListOfActives()->First());
@@ -2263,7 +2286,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
             // Deactivate it if we are done with it
             if (savedMonitor) {
                savedMonitor->DeActivate(s);
-               PDB(kGlobal, 2)
+               PDB(kCollect, 2)
                   Info("Collect","save monitor: deactivating %p (active: %d, %p)",
                                  s, savedMonitor->GetActive(),
                                  savedMonitor->GetListOfActives()->First());
@@ -2353,7 +2376,7 @@ Int_t TProof::CollectInputFrom(TSocket *s, Int_t endtype)
 
    Int_t recvrc = 0;
    if ((recvrc = s->Recv(mess)) < 0) {
-      PDB(kGlobal,2)
+      PDB(kCollect,2)
          Info("CollectInputFrom","%p: got %d from Recv()", s, recvrc);
       Bool_t bad = kTRUE;
       if (recvrc == -5) {
@@ -2412,7 +2435,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
    // The message type
    Int_t what = mess->What();
 
-   PDB(kGlobal,3)
+   PDB(kCollect,3)
       Info("HandleInputMessage", "got type %d from '%s'", what, (sl ? sl->GetOrdinal() : "undef"));
 
    switch (what) {
@@ -2516,7 +2539,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
 
       case kPROOF_LOGDONE:
          (*mess) >> sl->fStatus >> sl->fParallel;
-         PDB(kGlobal,2)
+         PDB(kCollect,2)
             Info("HandleInputMessage","kPROOF_LOGDONE:%s: status %d  parallel %d",
                  sl->GetOrdinal(), sl->fStatus, sl->fParallel);
          if (sl->fStatus != 0) fStatus = sl->fStatus; //return last nonzero status
@@ -2941,6 +2964,9 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             TString stag;
             (*mess) >> stag;
             SetName(stag);
+            // New servers send also the group
+            if ((mess->BufferSize() > mess->Length()))
+               (*mess) >> fGroup;
          }
          break;
 
@@ -5020,6 +5046,285 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
 
    PDB(kGlobal,1) Info("GoParallel", "got %d node%s", n, n == 1 ? "" : "s");
    return n;
+}
+
+//______________________________________________________________________________
+void TProof::ShowData()
+{
+   // List contents of the data directory in the sandbox.
+   // This is the place where files produced by the client queries are kept
+
+   if (!IsValid() || !fManager) return;
+
+   // This is run via the manager
+   fManager->Find("~/data", "-type f", "all");
+}
+
+//______________________________________________________________________________
+void TProof::ClearData(UInt_t what, const char *dsname)
+{
+   // Remove files for the data directory.
+   // The option 'what' can take the values:
+   //     kPurge                 remove all files and directories under '~/data' 
+   //     kUnregistered          remove only files not in registered datasets (default)
+   //     kDataset               remove files belonging to dataset 'dsname'
+   // User is prompt for confirmation, unless kForceClear is ORed with the option
+
+   if (!IsValid() || !fManager) return;
+
+   // Check whether we need to prompt
+   TString prompt, a("Y");
+   Bool_t force = (what & kForceClear) ? kTRUE : kFALSE;
+   Bool_t doask = (!force && isatty(0) != 0 && isatty(1) != 0) ? kTRUE : kFALSE;
+
+   // If all just send the request
+   if ((what & TProof::kPurge)) {
+      // Prompt, if requested
+      if (doask && !Prompt("Do you really want to remove all data files")) return;
+      fManager->Rm("~/data/*", "-rf", "all");
+      return;
+   } else if ((what & TProof::kDataset)) {
+      // We must have got a name
+      if (!dsname || strlen(dsname) <= 0) {
+         Error("ClearData", "dataset name mandatory when removing a full dataset");
+         return;
+      }
+      // Check if the dataset is registered
+      if (!ExistsDataSet(dsname)) {
+         Error("ClearData", "dataset '%s' does not exists", dsname);
+         return;
+      }
+      // Get the file content
+      TFileCollection *fc = GetDataSet(dsname);
+      if (!fc) {
+         Error("ClearData", "could not retrieve info about dataset '%s'", dsname);
+         return;
+      }
+      // Prompt, if requested
+      if (doask && !Prompt(TString::Format("Do you really want to remove all data files"
+                                           " of dataset '%s'", dsname))) return;
+      // Loop through the files
+      Bool_t rmds = kTRUE;
+      TIter nxf(fc->GetList());
+      TFileInfo *fi = 0;
+      Int_t rfiles = 0, nfiles = fc->GetList()->GetSize();
+      while ((fi = (TFileInfo *) nxf())) {
+         // Fill the host info
+         TString host, file;
+         // Take info from the current url
+         TUrl uf(*(fi->GetFirstUrl()));
+         file = uf.GetFile();
+         host = uf.GetHost();
+         // Now search for any "file:" url
+         Int_t nurl = fi->GetNUrls();
+         fi->ResetUrl();
+         TUrl *up = 0;
+         while (nurl-- && fi->NextUrl()) {
+            up = fi->GetCurrentUrl();
+            if (!strcmp(up->GetProtocol(), "file")) {
+               TString opt(up->GetOptions());
+               if (opt.BeginsWith("node=")) {
+                  host=opt;
+                  host.ReplaceAll("node=","");
+                  file = up->GetFile();
+                  break;
+               }
+            }
+         }
+         // Issue a remove request now
+         if (fManager->Rm(file.Data(), "-f", host.Data()) != 0) {
+            Error("ClearData", "problems removing '%s'", file.Data());
+            // Some files not removed: keep the meta info about this dataset
+            rmds = kFALSE;
+         }
+         rfiles++;
+         ClearDataProgress(rfiles, nfiles);
+      }
+      fprintf(stderr, "\n");
+      if (rmds) {
+         // All files were removed successfully: remove also the dataset meta info
+         RemoveDataSet(dsname);
+      }
+   } else if (what &TProof::kUnregistered) {
+
+      // Get the existing files
+      TString outtmp("ProofClearData_");
+      FILE *ftmp = gSystem->TempFileName(outtmp);
+      if (!ftmp) {
+         Error("ClearData", "cannot create temp file for logs");
+         return;
+      }
+      fclose(ftmp);
+      RedirectHandle_t h;
+      gSystem->RedirectOutput(outtmp.Data(), "w", &h);
+      ShowData();
+      gSystem->RedirectOutput(0, 0, &h);
+      // Parse the output file now
+      ifstream in;
+      in.open(outtmp.Data());
+      if (!in.is_open()) {
+         Error("ClearData", "could not open temp file for logs: %s", outtmp.Data());
+         gSystem->Unlink(outtmp);
+         return;
+      }
+      // Go through
+      Int_t nfiles = 0;
+      TMap *afmap = new TMap;
+      TString line, host, file;
+      Int_t from = 0;
+      while (in.good()) {
+         line.ReadLine(in);
+         if (line.IsNull()) continue;
+         while (line.EndsWith("\n")) { line.Strip(TString::kTrailing, '\n'); }
+         from = 0;
+         if (line.Tokenize(host, from, "| ")) line.Tokenize(file, from, "| ");
+         if (!host.IsNull() && !file.IsNull()) {
+            TList *fl = (TList *) afmap->GetValue(host.Data());
+            if (!fl) {
+               fl = new TList();
+               fl->SetName(host);
+               afmap->Add(new TObjString(host), fl);
+            }
+            fl->Add(new TObjString(file));
+            nfiles++;
+            PDB(kDataset,2)
+               Info("ClearData", "added info for: h:%s, f:%s", host.Data(), file.Data());
+         } else {
+            Warning("ClearData", "found incomplete line: '%s'", line.Data());
+         }
+      }
+      // Close and remove the file 
+      in.close();
+      gSystem->Unlink(outtmp);
+
+      // Get registered data files
+      TString sel = TString::Format("/%s/%s/", GetGroup(), GetUser());
+      TMap *fcmap = GetDataSets(sel);
+      if (!fcmap || fcmap->GetSize() <= 0) {
+         PDB(kDataset,1)
+            Info("ClearData", "no dataset beloning to '%s'", sel.Data());
+         SafeDelete(fcmap);
+         return;
+      }
+
+      // Go thorugh and prepare the lists per node
+      TString opt;
+      TIter nxfc(fcmap);
+      TObjString *os = 0;
+      while ((os = (TObjString *) nxfc())) {
+         TFileCollection *fc = 0;
+         if ((fc = (TFileCollection *) fcmap->GetValue(os))) {
+            TFileInfo *fi = 0;
+            TIter nxfi(fc->GetList());
+            while ((fi = (TFileInfo *) nxfi())) {
+               // Get special "file:" url
+               fi->ResetUrl();
+               Int_t nurl = fi->GetNUrls();
+               TUrl *up = 0;
+               while (nurl-- && fi->NextUrl()) {
+                  up = fi->GetCurrentUrl();
+                  if (!strcmp(up->GetProtocol(), "file")) {
+                     opt = up->GetOptions();
+                     if (opt.BeginsWith("node=")) {
+                        host=opt;
+                        host.ReplaceAll("node=","");
+                        file = up->GetFile();
+                        PDB(kDataset,2)
+                           Info("ClearData", "found: host: %s, file: %s", host.Data(), file.Data());
+                        // Remove this from the full list, if there
+                        TList *fl = (TList *) afmap->GetValue(host.Data());
+                        if (fl) {
+                           TObjString *fn = (TObjString *) fl->FindObject(file.Data());
+                           if (fn) {
+                              fl->Remove(fn);
+                              SafeDelete(fn);
+                              nfiles--;
+                           } else {
+                              Warning("ClearData",
+                                      "registered file '%s' not found in the full list!", file.Data());
+                           }
+                        }
+                        break;
+                     }
+                  }
+               }
+            }
+         }
+      }
+      // Clean up the the received map
+      fcmap->SetOwner(kTRUE);
+      SafeDelete(fcmap);
+      // List of the files to be removed
+      Info("ClearData", "%d unregistered files to be removed:", nfiles);
+      afmap->Print();
+      // Prompt, if requested
+      if (doask && !Prompt(TString::Format("Do you really want to remove all %d"
+                                           " unregistered data files", nfiles))) return;
+      // Remove one by one; we may implement a bloc remove in the future
+      Int_t rfiles = 0;
+      TIter nxls(afmap);
+      while ((os = (TObjString *) nxls())) {
+         TList *fl = 0;
+         if ((fl = (TList *) afmap->GetValue(os))) {
+            TIter nxf(fl);
+            TObjString *fn = 0;
+            while ((fn = (TObjString *) nxf())) {
+               // Issue a remove request now
+               if (fManager->Rm(fn->GetName(), "-f", os->GetName()) != 0) {
+                  Error("ClearData", "problems removing '%s' on host '%s'", fn->GetName(), os->GetName());
+               }
+               rfiles++;
+               ClearDataProgress(rfiles, nfiles);
+            }
+         }
+      }
+      fprintf(stderr, "\n");
+      // Final cleanup
+      afmap->SetOwner(kTRUE);
+      SafeDelete(afmap);
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TProof::Prompt(const char *p)
+{
+   // Prompt the question 'p' requiring an answer y,Y,n,N
+   // Return kTRUE is the answer was y or Y, kFALSE in all other cases.
+
+   TString pp(p);
+   if (!pp.Contains("?")) pp += "?";
+   if (!pp.Contains("[y/N]")) pp += " [y/N]";
+   TString a = Getline(pp.Data());
+   if (a != "\n" && a[0] != 'y' &&  a[0] != 'Y' &&  a[0] != 'n' &&  a[0] != 'N') {
+      Printf("Please answer y, Y, n or N");
+      // Unclear answer: assume negative
+      return kFALSE;
+   } else if (a == "\n" || a[0] == 'n' ||  a[0] == 'N') {
+      // Explicitly Negative answer
+      return kFALSE;
+   }
+   // Explicitly Positive answer
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TProof::ClearDataProgress(Int_t r, Int_t t)
+{
+   // Progress bar for clear data
+
+   fprintf(stderr, "[TProof::ClearData] Total %5d files\t|", t);
+   for (Int_t l = 0; l < 20; l++) {
+      if (r > 0 && t > 0) {
+         if (l < 20*r/t)
+            fprintf(stderr, "=");
+         else if (l == 20*r/t)
+            fprintf(stderr, ">");
+         else if (l > 20*r/t)
+            fprintf(stderr, ".");
+      } else
+         fprintf(stderr, "=");
+   }
+   fprintf(stderr, "| %.02f %%      \r", 100.0*(t ? (r/t) : 1));
 }
 
 //______________________________________________________________________________

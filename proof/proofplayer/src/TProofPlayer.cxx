@@ -49,6 +49,7 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TFile.h"
+#include "TFileCollection.h"
 #include "TFileInfo.h"
 #include "TFileMerger.h"
 #include "TProofDebug.h"
@@ -190,6 +191,8 @@ Bool_t TStopTimer::Notify()
 //------------------------------------------------------------------------------
 
 ClassImp(TProofPlayer)
+
+THashList *TProofPlayer::fgDrawInputPars = 0;
 
 //______________________________________________________________________________
 TProofPlayer::TProofPlayer(TProof *)
@@ -1149,6 +1152,37 @@ Int_t TProofPlayer::GetDrawArgs(const char *var, const char *sel, Option_t *opt,
    return 1;
 }
 
+//______________________________________________________________________________
+void TProofPlayer::FeedBackCanvas(const char *name, Bool_t create)
+{
+   // Create/destroy a named canvas for feedback
+
+   static void (*gFeedBackCanvasHook)(const char *, Bool_t) = 0;
+
+   // Load the library the first time
+   if (!gFeedBackCanvasHook) {
+      // Load library needed for graphics ...
+      TString drawlib = "libProofDraw";
+      char *p = 0;
+      if ((p = gSystem->DynamicPathName(drawlib, kTRUE))) {
+         delete[] p;
+         if (gSystem->Load(drawlib) != -1) {
+            // Locate FeedBackCanvas
+            Func_t f = 0;
+            if ((f = gSystem->DynFindSymbol(drawlib,"FeedBackCanvas")))
+               gFeedBackCanvasHook = (void (*)(const char *, Bool_t))(f);
+            else
+               Warning("FeedBackCanvas", "can't find FeedBackCanvas");
+         } else
+            Warning("FeedBackCanvas", "can't load %s", drawlib.Data());
+      } else
+         Warning("FeedBackCanvas", "can't locate %s", drawlib.Data());
+   }
+   if (gFeedBackCanvasHook) (*gFeedBackCanvasHook)(name, create);
+   // No parser hook or object undefined
+   return;
+}
+
 //------------------------------------------------------------------------------
 
 ClassImp(TProofPlayerLocal)
@@ -1588,42 +1622,86 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
 {
    // Merge output in files
 
+   TList *rmList = 0;
    if (fMergeFiles) {
       TIter nxo(fOutput);
       TObject *o = 0;
       TProofOutputFile *pf = 0;
       while ((o = nxo())) {
          if ((pf = dynamic_cast<TProofOutputFile*>(o))) {
-            // Point to the merger
-            TFileMerger *filemerger = pf->GetFileMerger();
-            if (!filemerger) {
-               Error("MergeOutputFiles", "file merger is null in TProofOutputFile! Protocol error?");
-               pf->Print();
-               continue;
-            }
-            // Set the output file
-            if (!filemerger->OutputFile(pf->GetOutputFileName())) {
-               Error("MergeOutputFiles", "cannot open the output file");
-               continue;
-            }
-            // Merge
-            if (!filemerger->Merge()) {
-               Error("MergeOutputFiles", "cannot merge the output files");
-               continue;
-            }
-            // Remove the files
-            TList *fileList = filemerger->GetMergeList();
-            if (fileList) {
-               TIter next(fileList);
-               TObjString *url = 0;
-               while((url = (TObjString*)next())) {
-                  gSystem->Unlink(url->GetString());
+
+            if (pf->IsMerge()) {
+
+               // Point to the merger
+               TFileMerger *filemerger = pf->GetFileMerger();
+               if (!filemerger) {
+                  Error("MergeOutputFiles", "file merger is null in TProofOutputFile! Protocol error?");
+                  pf->Print();
+                  continue;
+               }
+               // Set the output file
+               if (!filemerger->OutputFile(pf->GetOutputFileName())) {
+                  Error("MergeOutputFiles", "cannot open the output file");
+                  continue;
+               }
+               // Merge
+               if (!filemerger->Merge()) {
+                  Error("MergeOutputFiles", "cannot merge the output files");
+                  continue;
+               }
+               // Remove the files
+               TList *fileList = filemerger->GetMergeList();
+               if (fileList) {
+                  TIter next(fileList);
+                  TObjString *url = 0;
+                  while((url = (TObjString*)next())) {
+                     gSystem->Unlink(url->GetString());
+                  }
+               }
+               // Reset the merger
+               filemerger->Reset();
+
+            } else {
+
+               // Point to the dataset
+               TFileCollection *fc = pf->GetFileCollection();
+               if (!fc) {
+                  Error("MergeOutputFiles", "file collection is null in TProofOutputFile! Protocol error?");
+                  pf->Print();
+                  continue;
+               }
+               // Add the collection to the output list for registration and/or to be returned
+               // to the client
+               fOutput->Add(fc);
+
+               // Do not cleanup at destruction
+               pf->ResetFileCollection();
+               // Tell the main thread to register this dataset, if needed
+               if (pf->IsRegister()) {
+                  TString opt;
+                  if ((pf->GetTypeOpt() & TProofOutputFile::kOverwrite)) opt += "O";
+                  if ((pf->GetTypeOpt() & TProofOutputFile::kVerify)) opt += "V";
+                  if (!fOutput->FindObject("PROOFSERV_RegisterDataSet"))
+                     fOutput->Add(new TNamed("PROOFSERV_RegisterDataSet", ""));
+                  TString tag = TString::Format("DATASET_%s", pf->GetTitle());
+                  fOutput->Add(new TNamed(tag, opt));
                }
             }
-            filemerger->Reset();
          }
       }
    }
+
+   // Remove objects scheduled for removal
+   if (rmList && rmList->GetSize() > 0) {
+      TIter nxo(rmList);
+      TObject *o = 0;
+      while((o = nxo())) {
+         fOutput->Remove(o);
+      }
+      rmList->SetOwner(kTRUE);
+      delete rmList;
+   }
+
    // Done
    return kTRUE;
 }
@@ -2078,25 +2156,27 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
    if (pf) {
       fMergeFiles = kTRUE;
       if (!IsClient()) {
-         // Fill the output file name, if not done by the client
-         if (strlen(pf->GetOutputFileName()) <= 0) {
-            TString of(Form("root://%s", gSystem->HostName()));
-            if (gSystem->Getenv("XRDPORT")) {
-               TString sp(gSystem->Getenv("XRDPORT"));
-               if (sp.IsDigit())
-                  of += Form(":%s", sp.Data());
+         if (pf->IsMerge()) {
+            // Fill the output file name, if not done by the client
+            if (strlen(pf->GetOutputFileName()) <= 0) {
+               TString of(Form("root://%s", gSystem->HostName()));
+               if (gSystem->Getenv("XRDPORT")) {
+                  TString sp(gSystem->Getenv("XRDPORT"));
+                  if (sp.IsDigit())
+                     of += Form(":%s", sp.Data());
+               }
+               TString sessionPath(gProofServ->GetSessionDir());
+               // Take into account a prefix, if any
+               TString pfx  = gEnv->GetValue("Path.Localroot","");
+               if (!pfx.IsNull())
+                  sessionPath.Remove(0, pfx.Length());
+               of += Form("/%s/%s", sessionPath.Data(), pf->GetFileName());
+               pf->SetOutputFileName(of);
             }
-            TString sessionPath(gProofServ->GetSessionDir());
-            // Take into account a prefix, if any
-            TString pfx  = gEnv->GetValue("Path.Localroot","");
-            if (!pfx.IsNull())
-               sessionPath.Remove(0, pfx.Length());
-            of += Form("/%s/%s", sessionPath.Data(), pf->GetFileName());
-            pf->SetOutputFileName(of);
+            // Notify, if required
+            if (gDebug > 0)
+               pf->Print();
          }
-         // Notify, if required
-         if (gDebug > 0)
-            pf->Print();
       } else {
          // On clients notify the output path
          Printf("Output file: %s", pf->GetOutputFileName());
@@ -2755,6 +2835,19 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    // Draw (support for TChain::Draw()).
    // Returns -1 in case of error or number of selected events in case of success.
 
+   if (!fgDrawInputPars) {
+      fgDrawInputPars = new THashList;
+      fgDrawInputPars->Add(new TObjString("FeedbackList"));
+      fgDrawInputPars->Add(new TObjString("PROOF_LineColor"));
+      fgDrawInputPars->Add(new TObjString("PROOF_LineStyle"));
+      fgDrawInputPars->Add(new TObjString("PROOF_LineWidth"));
+      fgDrawInputPars->Add(new TObjString("PROOF_MarkerColor"));
+      fgDrawInputPars->Add(new TObjString("PROOF_MarkerStyle"));
+      fgDrawInputPars->Add(new TObjString("PROOF_MarkerSize"));
+      fgDrawInputPars->Add(new TObjString("PROOF_FillColor"));
+      fgDrawInputPars->Add(new TObjString("PROOF_FillStyle"));
+   }
+
    TString selector, objname;
    if (GetDrawArgs(varexp, selection, option, selector, objname) != 0) {
       Error("DrawSelect", "parsing arguments");
@@ -2768,22 +2861,24 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    TObject *o = 0;
    TList *savedInput = new TList;
    TIter nxi(fInput);
-   while ((o = nxi()))
+   while ((o = nxi())) {
       savedInput->Add(o);
-   // The feedback list, if any, is kept
-   TList *fb = (TList*) fInput->FindObject("FeedbackList");
-   if (fb) fInput->Remove(fb);
-   fInput->Clear();
-   if (fb) fInput->Add(fb);
+      TString n(o->GetName());
+      if (fgDrawInputPars && !fgDrawInputPars->FindObject(o->GetName())) fInput->Remove(o);
+   }
 
    fInput->Add(varexpobj);
    fInput->Add(selectionobj);
 
-   if (objname == "")
-      objname = "htemp";
+   // Make sure we have an object name
+   if (objname == "") objname = "htemp";
+
    fProof->AddFeedback(objname);
    Long64_t r = Process(set, selector, option, nentries, firstentry);
    fProof->RemoveFeedback(objname);
+
+   // Remove the feedback canvas
+   FeedBackCanvas(TString::Format("%s_canvas", objname.Data()), kFALSE);
 
    fInput->Remove(varexpobj);
    fInput->Remove(selectionobj);

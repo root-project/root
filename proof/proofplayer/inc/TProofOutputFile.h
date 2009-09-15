@@ -30,6 +30,7 @@ class TProofOutputFile;
 class TString;
 class TList;
 class TFile;
+class TFileCollection;
 class TFileMerger;
 
 class TProofOutputFile : public TNamed {
@@ -38,25 +39,34 @@ friend class TProof;
 friend class TProofPlayer;
 
 public:
+   enum ERunType {  kMerge        = 1,      // Type of run: merge or dataset creation
+                    kDataset      = 2};
+   enum ETypeOpt {  kRemote       = 1,      // Merge from original copies
+                    kLocal        = 2,      // Make local copies before merging
+                    kCreate       = 4,      // Create dataset
+                    kRegister     = 8,      // Register dataset
+                    kOverwrite    = 16,     // Force dataset replacement during registration
+                    kVerify       = 32};    // Verify the registered dataset
 
 private:
    TProofOutputFile(const TProofOutputFile&); // Not implemented
    TProofOutputFile& operator=(const TProofOutputFile&); // Not implemented
 
-   TString  fDir;         // name of the directory
+   TString  fDir;            // name of the directory to be exported
+   TString  fRawDir;         // name of the local directory where to create the file
    TString  fFileName;
-   TString  fFileName1;
    TString  fOutputFileName;
    TString  fWorkerOrdinal;
+   TString  fLocalHost;      // Host where the file was created
    Bool_t   fIsLocal;     // kTRUE if the file is in the sandbox
    Bool_t   fMerged;
-   Bool_t   fLocalMerge;  // Option to be used in creating TFileMerger
+   ERunType fRunType;     // Type of run (see enum ERunType)
+   UInt_t   fTypeOpt;     // Option (see enum ETypeOpt)
 
-   TFileMerger *fMerger;  // Instance of the file merger for mode "CENTRAL"
+   TFileCollection *fDataSet;  // Instance of the file collection in 'dataset' mode
+   TFileMerger *fMerger;  // Instance of the file merger in 'merge' mode
 
-   TString GetTmpName(const char* name);
-
-   void ResolveKeywords(TString &fname, const char *path = 0);
+   void Init(const char *path, const char *dsname);
    void SetFileName(const char* name);
    void SetDir(const char* dir) { fDir = dir; }
    void SetWorkerOrdinal(const char* ordinal) { fWorkerOrdinal = ordinal; }
@@ -68,24 +78,32 @@ private:
 protected:
 
 public:
-   TProofOutputFile() : fIsLocal(kFALSE), fMerged(kFALSE), fLocalMerge(kFALSE), fMerger(0) { }
-   TProofOutputFile(const char *path, const char *location = "REMOTE", const char * = 0);
+   TProofOutputFile() : fIsLocal(kFALSE), fMerged(kFALSE), fRunType(kMerge), fTypeOpt(kRemote), fDataSet(0), fMerger(0) { }
+   TProofOutputFile(const char *path, const char *option = "M", const char *dsname = 0);
+   TProofOutputFile(const char *path, ERunType type, UInt_t opt = kRemote, const char *dsname = 0);
    virtual ~TProofOutputFile();
 
-   const char *GetDir() const { return fDir; }
-   TFileMerger *GetFileMerger(Bool_t local = kFALSE); // Instance of the file merger for mode "CENTRAL"
-   const char *GetFileName(Bool_t tmpName = kTRUE) const { return (tmpName) ? fFileName1 : fFileName; }
+   const char *GetDir(Bool_t raw = kFALSE) const { return (raw) ? fRawDir : fDir; }
+   TFileCollection *GetFileCollection();
+   TFileMerger *GetFileMerger(Bool_t local = kFALSE);
+   const char *GetFileName() const { return fFileName; }
+   const char *GetLocalHost() const { return fLocalHost; }
    const char *GetOutputFileName() const { return fOutputFileName; }
    const char *GetWorkerOrdinal() const { return fWorkerOrdinal; }
-   Bool_t      IsLocalMerge() const { return fLocalMerge; }
+
+   ERunType    GetRunType() const { return fRunType; }
+   UInt_t      GetTypeOpt() const { return fTypeOpt; }
+   Bool_t      IsMerge() const { return (fRunType == kMerge) ? kTRUE : kFALSE; }
+   Bool_t      IsRegister() const { return ((fTypeOpt & kRegister) || (fTypeOpt & kVerify)) ? kTRUE : kFALSE; }
 
    Int_t AdoptFile(TFile *f);                    // Adopt a TFile already open
    TFile* OpenFile(const char *opt);             // Open a file with the specified name in fFileName1
    Long64_t Merge(TCollection *list);
    void Print(Option_t *option = "") const;
    void SetOutputFileName(const char *name);
+   void ResetFileCollection() { fDataSet = 0; }
 
-   ClassDef(TProofOutputFile,2) // Wrapper class to steer the merging of files produced on workers
+   ClassDef(TProofOutputFile,3) // Wrapper class to steer the merging of files produced on workers
 };
 
 #endif

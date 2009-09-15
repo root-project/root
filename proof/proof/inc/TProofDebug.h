@@ -42,6 +42,7 @@ public:
       kAsyn          = 1024,
       kCache         = 2048,
       kCollect       = 4096,
+      kDataset       = 8192,
 
       kAll           = 0xFFFFFFFF
    };

@@ -19,6 +19,8 @@
 
 #include "TProofOutputFile.h"
 #include <TEnv.h>
+#include <TFileCollection.h>
+#include <TFileInfo.h>
 #include <TFileMerger.h>
 #include <TFile.h>
 #include <TList.h>
@@ -32,33 +34,137 @@
 ClassImp(TProofOutputFile)
 
 //________________________________________________________________________________
-TProofOutputFile::TProofOutputFile(const char *path, const char *location, const char *)
-                 : TNamed(path,"")
+TProofOutputFile::TProofOutputFile(const char *path,
+                                   ERunType type, UInt_t opt, const char *dsname)
+                 : TNamed(path, ""), fRunType(type), fTypeOpt(opt)
 {
-   // Main conctructor.
-   // The last argument is not used and is kept for compatibility with old versions.
+   // Main constructor
 
+   fIsLocal = kFALSE;
    fMerged = kFALSE;
    fMerger = 0;
+   fDataSet = 0;
+
+   Init(path, dsname);
+}
+
+//________________________________________________________________________________
+TProofOutputFile::TProofOutputFile(const char *path,
+                                   const char *option, const char *dsname)
+                 : TNamed(path, "")
+{
+   // Constructor with the old signature, kept for convenience and backard compatibility.
+   // Options:
+   //             'M'      merge: finally merge the created files
+   //             'L'      local: copy locally the files before merging (implies 'M')
+   //             'D'      dataset: create a TFileCollection
+   //             'R'      register: dataset run with dataset registration
+   //             'O'      overwrite: force dataset replacement during registration
+   //             'V'      verify: verify the registered dataset
+   // Special 'option' values for backward compatibility:
+   //              ""      equivalent to "M"
+   //         "LOCAL"      equivalent to "ML" or "L"
+
+   fIsLocal = kFALSE;
+   fMerged = kFALSE;
+   fMerger = 0;
+   fDataSet = 0;
+
+   // Fill the run type and option type
+   fRunType = kMerge;
+   fTypeOpt = kRemote;
+   if (option && strlen(option) > 0) {
+      TString opt(option);
+      if (opt.Contains("L") || (opt == "LOCAL")) fTypeOpt = kLocal;
+      if (!opt.Contains("M") && opt.Contains("D")) {
+         // Dataset creation mode
+         fRunType = kDataset;
+         fTypeOpt = kCreate;
+         if (opt.Contains("R")) fTypeOpt = (ETypeOpt) (fTypeOpt | kRegister);
+         if (opt.Contains("O")) fTypeOpt = (ETypeOpt) (fTypeOpt | kOverwrite);
+         if (opt.Contains("V")) fTypeOpt = (ETypeOpt) (fTypeOpt | kVerify);
+      }
+   }
+
+   Init(path, dsname);
+}
+
+//________________________________________________________________________________
+void TProofOutputFile::Init(const char *path, const char *dsname)
+{
+   // Initializer. Called by all constructors
+
+   fLocalHost = TUrl(gSystem->HostName()).GetHostFQDN();
+   Int_t port = gEnv->GetValue("ProofServ.XpdPort", -1);
+   if (port > -1) {
+      fLocalHost += ":";
+      fLocalHost += port;
+   }
 
    TUrl u(path, kTRUE);
    // File name
    fFileName = u.GetFile();
-   // Unique file name
-   fFileName1 = GetTmpName(fFileName.Data());
+   // The name is used to identify this entity
+   SetName(gSystem->BaseName(fFileName.Data()));
+   if (dsname && strlen(dsname) > 0) {
+      // This is the dataset name in case such option is chosen
+      SetTitle(dsname);
+   } else {
+      // Default dataset name
+      SetTitle(GetName());
+   }
    // Path
    fIsLocal = kFALSE;
    fDir = u.GetUrl();
    Int_t pos = fDir.Index(fFileName);
-   if (pos != kNPOS)
-      fDir.Remove(pos);
+   if (pos != kNPOS) fDir.Remove(pos);
+   fRawDir = fDir;
 
    if (fDir == "file:") {
       fIsLocal = kTRUE;
-      // The directory for the file will be the sandbox unless differently specified
+      // For local files, the user is allowed to create files under the assigned directories
+      // If this is not the case, the file is rooted automatically to the assigned dir which
+      // is the datadir for dataset creation runs, and the working dir for merging runs
       TString dirPath = gSystem->DirName(fFileName);
-      if (dirPath.IsNull() || dirPath == "." || dirPath == "~")
-         dirPath = gSystem->WorkingDirectory();
+      TString dirData = (!IsMerge() && gProofServ) ? gProofServ->GetDataDir()
+                                                   : gSystem->WorkingDirectory();
+      if ((dirPath[0] == '/') && !dirPath.BeginsWith(dirData)) {
+         Warning("Init", "not allowed to create files under '%s' - chrooting to '%s'",
+                         dirPath.Data(), dirData.Data());
+         dirPath.Insert(0, dirData);
+      } else if (dirPath.BeginsWith("..")) {
+         dirPath.Remove(0, 2);
+         if (dirPath[0] != '/') dirPath.Insert(0, "/");
+         dirPath.Insert(0, dirData);
+      } else if (dirPath[0] == '.' || dirPath[0] == '~') {
+         dirPath.Remove(0, 1);
+         if (dirPath[0] != '/') dirPath.Insert(0, "/");
+         dirPath.Insert(0, dirData);
+      } else if (dirPath.IsNull()) {
+         dirPath = dirData;
+      }
+      // Make sure that session-tag, ordinal and query sequential number are present otherwise
+      // we may override outputs from other workers
+      if (!IsMerge() && gProofServ) {
+         if (!dirPath.Contains(gProofServ->GetOrdinal())) {
+            if (!dirPath.EndsWith("/")) dirPath += "/";
+            dirPath += gProofServ->GetOrdinal();
+         }
+         if (!dirPath.Contains(gProofServ->GetSessionTag())) {
+            if (!dirPath.EndsWith("/")) dirPath += "/";
+            dirPath += gProofServ->GetSessionTag();
+         }
+         if (!dirPath.Contains("<qnum>")) {
+            if (!dirPath.EndsWith("/")) dirPath += "/";
+            dirPath += "<qnum>";
+         }
+      }
+      // Resolve the relevant placeholders
+      TProofServ::ResolveKeywords(dirPath, 0);
+      // Save the raw directory
+      fRawDir = dirPath;
+      // Make sure the the path exists
+      if (gSystem->AccessPathName(dirPath)) gSystem->mkdir(dirPath, kTRUE);
       // Remove prefix, if any
       TString pfx  = gEnv->GetValue("Path.Localroot","");
       if (!pfx.IsNull()) dirPath.Remove(0, pfx.Length());
@@ -70,25 +176,25 @@ TProofOutputFile::TProofOutputFile(const char *path, const char *location, const
       fDir += Form("%s", dirPath.Data());
    }
    // Notify
-   Info("TProofOutputFile", "dir: %s", fDir.Data());
+   Info("Init", "dir: %s (raw: %s)", fDir.Data(), fRawDir.Data());
 
    // Default output file name
-   fOutputFileName = gEnv->GetValue("Proof.OutputFile", "");
+   fOutputFileName = gEnv->GetValue("Proof.OutputFile", "<file>");
    // Add default file name
    TString fileName = path;
-   if (!fileName.EndsWith(".root"))
-      fileName += ".root";
+   if (!fileName.EndsWith(".root")) fileName += ".root";
    // Make sure that the file name was inserted (may not happen if the placeholder <file> is missing)
    if (!fOutputFileName.IsNull() && !fOutputFileName.Contains("<file>")) {
       if (!fOutputFileName.EndsWith("/")) fOutputFileName += "/";
          fOutputFileName += fileName;
    }
    // Resolve placeholders
-   ResolveKeywords(fOutputFileName, fileName);
-   Info("TProofOutputFile", "output file url: %s", fOutputFileName.Data());
-
-   // Copy files locally before merging?
-   if (location && !strcmp(location, "LOCAL")) fLocalMerge = kTRUE;
+   fileName.ReplaceAll("<ord>",""); // No ordinal in the final merged file
+   TProofServ::ResolveKeywords(fOutputFileName, fileName);
+   Info("Init", "output file url: %s", fOutputFileName.Data());
+   // Fill ordinal
+   fWorkerOrdinal = "<ord>";
+   TProofServ::ResolveKeywords(fWorkerOrdinal, 0);
 }
 
 //________________________________________________________________________________
@@ -96,25 +202,8 @@ TProofOutputFile::~TProofOutputFile()
 {
    // Main destructor
 
+   if (fDataSet) delete fDataSet;
    if (fMerger) delete fMerger;
-}
-
-//______________________________________________________________________________
-TString TProofOutputFile::GetTmpName(const char* name)
-{
-   // Create a temporary unique name for this file
-
-   TUUID uuid;
-
-   TString tmpName(name);
-   Ssiz_t pos = tmpName.Last('.');
-   if (pos != kNPOS)
-      tmpName.Insert(pos,Form("-%s",uuid.AsString()));
-   else
-      tmpName += Form("-%s",uuid.AsString());
-
-   // Done
-   return tmpName;
 }
 
 //______________________________________________________________________________
@@ -123,7 +212,6 @@ void TProofOutputFile::SetFileName(const char* name)
    // Set the file name
 
    fFileName = name;
-   fFileName1 = GetTmpName(name);
 }
 
 //______________________________________________________________________________
@@ -133,39 +221,10 @@ void TProofOutputFile::SetOutputFileName(const char *name)
 
    if (name && strlen(name) > 0) {
       fOutputFileName = name;
-      ResolveKeywords(fOutputFileName);
+      TProofServ::ResolveKeywords(fOutputFileName);
       Info("SetOutputFileName", "output file url: %s", fOutputFileName.Data());
    } else {
       fOutputFileName = "";
-   }
-}
-
-//______________________________________________________________________________
-void TProofOutputFile::ResolveKeywords(TString &fname, const char *path)
-{
-   // Replace <user> and <group> placeholders in fname
-
-   // Replace <user>, if any
-   if (fname.Contains("<user>")) {
-      TString user = "nouser";
-      // Get user logon name
-      UserGroup_t *pw = gSystem->GetUserInfo();
-      if (pw) {
-         user = pw->fUser;
-         delete pw;
-      }
-      fname.ReplaceAll("<user>", user);
-   }
-   // Replace <group>, if any
-   if (fname.Contains("<group>")) {
-      if (gProofServ && gProofServ->GetGroup() && strlen(gProofServ->GetGroup()))
-         fname.ReplaceAll("<group>", gProofServ->GetGroup());
-      else
-         fname.ReplaceAll("<group>", "default");
-   }
-   // Replace <file>, if any
-   if (fname.Contains("<file>") && path && strlen(path) > 0) {
-      fname.ReplaceAll("<file>", path);
    }
 }
 
@@ -174,12 +233,11 @@ TFile* TProofOutputFile::OpenFile(const char* opt)
 {
    // Open the file using the unique temporary name
 
-   if (fFileName1.IsNull())
-      return 0;
+   if (fFileName.IsNull()) return 0;
 
    // Create the path
-   TString fileLoc = (fIsLocal || fDir.IsNull()) ? fFileName1
-                                : Form("%s/%s", fDir.Data(), fFileName1.Data());
+   TString fileLoc = TString::Format("%s/%s", fRawDir.Data(), fFileName.Data());
+
    // Open the file
    TFile *retFile = TFile::Open(fileLoc, opt);
 
@@ -204,10 +262,13 @@ Int_t TProofOutputFile::AdoptFile(TFile *f)
    } else {
       fDir = u.GetUrl();
    }
-   fFileName1 = gSystem->BaseName(fDir.Data());
-   fFileName = fFileName1;
-   fDir.ReplaceAll(fFileName1, "");
+   fFileName = gSystem->BaseName(fDir.Data());
+   fDir.ReplaceAll(fFileName, "");
+   fRawDir = fDir;
 
+   // Remove prefix, if any
+   TString pfx  = gEnv->GetValue("Path.Localroot","");
+   if (!pfx.IsNull()) fDir.ReplaceAll(pfx, "");
    // Include the local data server info, if any
    if (gSystem->Getenv("LOCALDATASERVER")) {
       TString localDS(gSystem->Getenv("LOCALDATASERVER"));
@@ -223,36 +284,76 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
 {
    // Merge objects from the list into this object
 
-   // Needs domethign to merge
+   // Needs somethign to merge
    if(!list || list->IsEmpty()) return 0;
 
-   TString fileLoc;
-   TString outputFileLoc = (fOutputFileName.IsNull()) ? fFileName : fOutputFileName;
+   if (IsMerge()) {
+      // Build-up the merger
+      TString fileLoc;
+      TString outputFileLoc = (fOutputFileName.IsNull()) ? fFileName : fOutputFileName;
+      // Get the file merger instance
+      Bool_t localMerge = (fRunType == kMerge && fTypeOpt == kLocal) ? kTRUE : kFALSE;
+      TFileMerger *merger = GetFileMerger(localMerge);
+      if (!merger) {
+         Error("Merge", "could not instantiate the file merger");
+         return -1;
+      }
 
-   // Get the file merger instance
-   TFileMerger *merger = GetFileMerger(fLocalMerge);
-   if (!merger) {
-      Error("Merge", "could not instantiate the file merger");
-      return -1;
-   }
-
-   if (!fMerged) {
-
-      merger->OutputFile(outputFileLoc);
-
-      fileLoc = Form("%s/%s", fDir.Data(), GetFileName());
-      AddFile(merger, fileLoc);
-
-      fMerged = kTRUE;
-   }
-
-   TIter next(list);
-   TObject *o = 0;
-   while((o = next())) {
-      TProofOutputFile *pFile = dynamic_cast<TProofOutputFile *>(o);
-      if (pFile) {
-         fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
+      if (!fMerged) {
+         merger->OutputFile(outputFileLoc);
+         fileLoc.Form("%s/%s", fDir.Data(), GetFileName());
          AddFile(merger, fileLoc);
+         fMerged = kTRUE;
+      }
+
+      TIter next(list);
+      TObject *o = 0;
+      while((o = next())) {
+         TProofOutputFile *pFile = dynamic_cast<TProofOutputFile *>(o);
+         if (pFile) {
+            fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
+            AddFile(merger, fileLoc);
+         }
+      }
+   } else {
+      // Build-up the TFileCollection
+      TFileCollection *dataset = GetFileCollection();
+      if (!dataset) {
+         Error("Merge", "could not instantiate the file collection");
+         return -1;
+      }
+      TString path;
+      TFileInfo *fi = 0;
+      // If new, add ourseelves
+      dataset->Update();
+      if (dataset->GetNFiles() == 0) {
+         // Save the export and raw urls
+         path.Form("%s/%s", GetDir(), GetFileName());
+         Info ("Merge", "file: %s", path.Data());
+         fi = new TFileInfo(path);
+         path.Form("%s/%s?node=%s", GetDir(kTRUE), GetFileName(), GetLocalHost());
+         fi->AddUrl(path);
+         fi->Print();
+         // Now add to the dataset
+         dataset->Add(fi);
+      }
+
+      TIter next(list);
+      TObject *o = 0;
+      while((o = next())) {
+         TProofOutputFile *pFile = dynamic_cast<TProofOutputFile *>(o);
+         if (pFile) {
+            // Save the export and raw urls
+            path.Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
+
+            Info ("Merge", "file: %s", path.Data());
+            fi = new TFileInfo(path);
+            path.Form("%s/%s?node=%s", pFile->GetDir(kTRUE), pFile->GetFileName(), pFile->GetLocalHost());
+            fi->AddUrl(path);
+            fi->Print();
+            // Now add to the dataset
+            dataset->Add(fi);
+         }
       }
    }
 
@@ -265,10 +366,22 @@ void TProofOutputFile::Print(Option_t *) const
 {
    // Dump the class content
 
-   Info("Print","-------------- %s : start ------------", GetName());
+   Info("Print","-------------- %s : start (%s) ------------", GetName(), fLocalHost.Data());
    Info("Print"," dir:              %s", fDir.Data());
+   Info("Print"," raw dir:          %s", fRawDir.Data());
    Info("Print"," file name:        %s", fFileName.Data());
-   Info("Print"," merging option:   %s", (fLocalMerge ? "local copy" : "keep remote"));
+   if (IsMerge()) {
+      Info("Print"," run type:         create a merged file");
+      Info("Print"," merging option:   %s",
+                       (fTypeOpt == kLocal) ? "local copy" : "keep remote");
+   } else {
+      TString opt;
+      if ((fTypeOpt & kRegister)) opt += "R";
+      if ((fTypeOpt & kOverwrite)) opt += "O";
+      if ((fTypeOpt & kVerify)) opt += "V";
+      Info("Print"," run type:         create dataset (name: '%s', opt: '%s')",
+                                         GetTitle(), opt.Data());
+   }
    Info("Print"," output file name: %s", fOutputFileName.Data());
    Info("Print"," ordinal:          %s", fWorkerOrdinal.Data());
    Info("Print","-------------- %s : done -------------", GetName());
@@ -320,9 +433,19 @@ void TProofOutputFile::Unlink(const char *path)
 }
 
 //______________________________________________________________________________
+TFileCollection *TProofOutputFile::GetFileCollection()
+{
+   // Get instance of the file collection to be used in 'dataset' mode
+
+   if (!fDataSet)
+      fDataSet = new TFileCollection(GetTitle());
+   return fDataSet;
+}
+
+//______________________________________________________________________________
 TFileMerger *TProofOutputFile::GetFileMerger(Bool_t local)
 {
-   // Get instance of the file merger to be used in "CENTRAL" mode
+   // Get instance of the file merger to be used in 'merge' mode
 
    if (!fMerger)
       fMerger = new TFileMerger(local);

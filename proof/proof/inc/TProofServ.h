@@ -91,6 +91,7 @@ private:
    TString       fCacheDir;         //directory containing cache of user files
    TString       fQueryDir;         //directory containing query results and status
    TString       fDataSetDir;       //directory containing info about known data sets
+   TString       fDataDir;          //directory containing data files produced during queries
    TString       fAdminPath;        //admin path for this session
    TProofLockPath *fPackageLock;    //package dir locker
    TProofLockPath *fCacheLock;      //cache dir locker
@@ -116,6 +117,7 @@ private:
    Float_t       fCpuTime;          //CPU time spent executing commands
    TStopwatch    fLatency;          //measures latency of packet requests
    TStopwatch    fCompute;          //measures time spend processing a packet
+   Int_t         fQuerySeqNum;      //sequential number of the current or last query
 
    TFileHandler *fInputHandler;     //Input socket handler
 
@@ -172,6 +174,7 @@ private:
 
    // Results handling
    void          SendResults(TSocket *sock, TList *outlist = 0, TQueryResult *pq = 0);
+   Int_t         RegisterDataSets(TList *in, TList *out);
 
 protected:
    virtual void  HandleArchive(TMessage *mess);
@@ -211,6 +214,7 @@ public:
    const char    *GetSessionTag() const { return fTopSessionTag; }
    const char    *GetSessionDir() const { return fSessionDir; }
    const char    *GetPackageDir() const { return fPackageDir; }
+   const char    *GetDataDir()    const { return fDataDir; }
    Int_t          GetProtocol()   const { return fProtocol; }
    const char    *GetOrdinal()    const { return fOrdinal; }
    Int_t          GetGroupId()    const { return fGroupId; }
@@ -219,6 +223,8 @@ public:
    TSocket       *GetSocket()     const { return fSocket; }
    Float_t        GetRealTime()   const { return fRealTime; }
    Float_t        GetCpuTime()    const { return fCpuTime; }
+   Int_t          GetQuerySeqNum() const { return fQuerySeqNum; }
+
    void           GetOptions(Int_t *argc, char **argv);
    TList         *GetEnabledPackages() const { return fEnabledPackages; }
 
@@ -276,6 +282,8 @@ public:
    static FILE   *SetErrorHandlerFile(FILE *ferr);
    static void    ErrorHandler(Int_t level, Bool_t abort, const char *location,
                                const char *msg);
+
+   static void    ResolveKeywords(TString &fname, const char *path = 0);
 
    static Bool_t      IsActive();
    static TProofServ *This();

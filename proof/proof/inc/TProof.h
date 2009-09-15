@@ -117,9 +117,10 @@ class TDataSetManager;
 // 21 -> 22: Add support for switching from sync to async while running ('Ctrl-Z' functionality)
 // 22 -> 23: New dataset features (default tree name; classification per fileserver)
 // 23 -> 24: Merging optimization
+// 24 -> 25: Handling of 'data' dir; group information
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 24;            // protocol version number
+const Int_t       kPROOF_Protocol        = 25;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -128,6 +129,7 @@ const char* const kPROOF_CacheDir        = "cache";       // file cache dir, und
 const char* const kPROOF_PackDir         = "packages";    // package dir, under WorkDir
 const char* const kPROOF_QueryDir        = "queries";     // query dir, under WorkDir
 const char* const kPROOF_DataSetDir      = "datasets";    // dataset dir, under WorkDir
+const char* const kPROOF_DataDir         = "data";        // dir for produced data, under WorkDir
 const char* const kPROOF_CacheLockFile   = "proof-cache-lock-";   // cache lock file
 const char* const kPROOF_PackageLockFile = "proof-package-lock-"; // package lock file
 const char* const kPROOF_QueryLockFile   = "proof-query-lock-";   // query lock file
@@ -360,10 +362,17 @@ private:
       kPerGroup = 0x1,
       kPerUser = 0x2
    };
+   enum EProofClearData {
+      kPurge        = 0x1,
+      kUnregistered = 0x2,
+      kDataset      = 0x4,
+      kForceClear   = 0x8
+   };
 
    Bool_t          fValid;           //is this a valid proof object
    TString         fMaster;          //master server ("" if a master); used in the browser
    TString         fWorkDir;         //current work directory on remote servers
+   TString         fGroup;           //PROOF group of this user
    Int_t           fLogLevel;        //server debug logging level
    Int_t           fStatus;          //remote return status (part of kPROOF_LOGDONE)
    Int_t           fCheckFileStatus; //remote return status after kPROOF_CHECKFILE
@@ -561,6 +570,9 @@ private:
 
    void     ParseConfigField(const char *config);
 
+   Bool_t   Prompt(const char *p);
+   void     ClearDataProgress(Int_t r, Int_t t);
+
 protected:
    TProof(); // For derived classes to use
    Int_t           Init(const char *masterurl, const char *conffile,
@@ -716,10 +728,14 @@ public:
 
    virtual Int_t SetDataSetTreeName( const char *dataset, const char *treename);
 
+   void         ShowData();
+   void         ClearData(UInt_t what = kUnregistered, const char *dsname = 0);
+
    const char *GetMaster() const { return fMaster; }
    const char *GetConfDir() const { return fConfDir; }
    const char *GetConfFile() const { return fConfFile; }
    const char *GetUser() const { return fUrl.GetUser(); }
+   const char *GetGroup() const { return fGroup; }
    const char *GetWorkDir() const { return fWorkDir; }
    const char *GetSessionTag() const { return GetName(); }
    const char *GetImage() const { return fImage; }
