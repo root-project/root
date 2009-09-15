@@ -69,7 +69,7 @@ XrdClient::XrdClient(const char *url) {
     if (!ConnectionManager)
 	Info(XrdClientDebug::kUSERDEBUG,
 	     "Create",
-	     "(C) 2004-2010 by the Xrootd group. XrdClient $Revision: 1.141 $ - Xrootd version: " << XrdVSTRING);
+	     "(C) 2004-2010 by the Xrootd group. XrdClient $Revision: 1.142 $ - Xrootd version: " << XrdVSTRING);
 
 #ifndef WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -707,20 +707,32 @@ kXR_int64 XrdClient::ReadV(char *buf, kXR_int64 *offsets, int *lens, int nbuf)
       int chunkcnt = 0;
       while ( i < reqvect.GetSize() ) {
 	if (chunkcnt >= maxchunkcnt) break;
-	if (tmpbytes + reqvect[i].len >= spltsize) break;
+	if (tmpbytes + reqvect[i].len > spltsize) break;
 	tmpbytes += reqvect[i].len;
 	chunkcnt++;
 	i++;
       }
 
-      if (buf)
-         res = XrdClientReadV::ReqReadV(fConnModule, fHandle, buf+bytesread,
-                                        reqvect, startitem, i-startitem,
-                                        fConnModule->GetParallelStreamToUse(reqsperstream) );
-      else
-         res = XrdClientReadV::ReqReadV(fConnModule, fHandle, 0,
-                                        reqvect, startitem, i-startitem,
-                                        fConnModule->GetParallelStreamToUse(reqsperstream) );
+
+      if (i-startitem == 1) {
+         if (buf) {
+            // Synchronous
+            res = Read(buf, reqvect[startitem].offset, reqvect[startitem].len);
+            
+         } else {
+            // Asynchronous, res stays the same
+            Read_Async(reqvect[startitem].offset, reqvect[startitem].len);
+         }
+      } else {
+         if (buf)
+            res = XrdClientReadV::ReqReadV(fConnModule, fHandle, buf+bytesread,
+                                           reqvect, startitem, i-startitem,
+                                           fConnModule->GetParallelStreamToUse(reqsperstream) );
+         else
+            res = XrdClientReadV::ReqReadV(fConnModule, fHandle, 0,
+                                           reqvect, startitem, i-startitem,
+                                           fConnModule->GetParallelStreamToUse(reqsperstream) );
+      }
 
       // The next bunch of chunks to request starts from here
       startitem = i;
