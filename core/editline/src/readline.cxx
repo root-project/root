@@ -238,7 +238,8 @@ rl_initialize(void) {
 
    /* set default mode to "emacs"-style and read setting afterwards */
    /* so this can be overriden */
-   char* editor = getenv("EDITOR");
+   // NO vi at the ROOT prompt, please!
+   char* editor = 0; // getenv("EDITOR");
    el_set(gEditLine, EL_EDITOR, editor ? editor : "emacs");
 
    /*
