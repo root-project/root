@@ -1391,7 +1391,30 @@ term_bind_arrow(EditLine_t* el) {
 el_private void
 term_init_color(EditLine_t* /*el*/) {
    int errcode;
-   setupterm(0, 1, &errcode);
+   if (ERR == setupterm(0, 1, &errcode)) {
+      fprintf(stderr, "ERROR initializing the terminal:\n");
+      switch (errcode) {
+      case 1:
+         fprintf(stderr,
+                 "  Your terminal cannot be used for curses applications [code 1].\n"
+                 "  Please reconfigure ROOT with --disable-editline, or get a better terminal.\n");
+         break;
+      case 0:
+         fprintf(stderr,
+                 "  the terminal could not be found, or it is a generic type [code 0].\n"
+                 "  Please reconfigure ROOT with --disable-editline, or get a better terminal.\n");
+         break;
+      case -1:
+         fprintf(stderr,
+                 "  the terminfo database could not be found [code -1].\n"
+                 "  Please make sure that it is accessible.\n");
+         break;
+      default:
+         fprintf(stderr,
+                 "  unknown curses error while setting up the terminal [code %d].\n",
+                 errcode);
+      }
+   }
 }
 
 
