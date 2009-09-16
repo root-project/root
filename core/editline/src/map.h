@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: map.h,v 1.6 2001/01/09 17:22:09 jdolecek Exp $	*/
+/*	$NetBSD: map.fH,v 1.6 2001/01/09 17:22:09 jdolecek Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -48,41 +48,41 @@
  */
 
 /*
- * el.map.h:	Editor maps
+ * el.fMap.fH:	Editor maps
  */
 #ifndef _h_el_map
 #define _h_el_map
 
-typedef struct el_bindings_t {  /* for the "bind" shell command */
-   const char* name;                    /* function name for bind command */
-   int func;                            /* function numeric value */
-   const char* description;             /* description of function */
-} el_bindings_t;
+typedef struct ElBindings_t {  /* for the "bind" shell command */
+   const char* fName;                    /* function name for bind command */
+   int fFunc;                            /* function numeric value */
+   const char* fDescription;             /* description of function */
+} ElBindings_t;
 
 
-typedef struct el_map_t {
-   el_action_t* alt;                    /* The current alternate key map */
-   el_action_t* key;                    /* The current normal key map	*/
-   el_action_t* current;                /* The keymap we are using	*/
-   const el_action_t* emacs;            /* The default emacs key map	*/
-   const el_action_t* vic;              /* The vi command mode key map	*/
-   const el_action_t* vii;              /* The vi insert mode key map	*/
-   int type;                            /* Emacs or vi			*/
-   el_bindings_t* help;                 /* The help for the editor functions */
-   el_func_t* func;                     /* List of available functions	*/
-   int nfunc;                           /* The number of functions/help items */
-} el_map_t;
+typedef struct ElMap_t {
+   ElAction_t* fAlt;                    /* The current alternate key map */
+   ElAction_t* fKey;                    /* The current normal key map	*/
+   ElAction_t* fCurrent;                /* The keymap we are using	*/
+   const ElAction_t* fEmacs;            /* The default emacs key map	*/
+   const ElAction_t* fVic;              /* The vi command mode key map	*/
+   const ElAction_t* fVii;              /* The vi insert mode key map	*/
+   int fType;                            /* Emacs or vi			*/
+   ElBindings_t* fHelp;                 /* The help for the editor functions */
+   ElFunc_t* fFunc;                     /* List of available functions	*/
+   int fNFunc;                           /* The number of functions/help items */
+} ElMap_t;
 
 #define MAP_EMACS 0
 #define MAP_VI 1
 
-el_protected int map_bind(EditLine*, int, const char**);
-el_protected int map_init(EditLine*);
-el_protected void map_end(EditLine*);
-el_protected void map_init_vi(EditLine*);
-el_protected void map_init_emacs(EditLine*);
-el_protected int map_set_editor(EditLine*, char*);
-el_protected int map_get_editor(EditLine*, const char**);
-el_protected int map_addfunc(EditLine *, const char*, const char*, el_func_t);
+el_protected int map_bind(EditLine_t*, int, const char**);
+el_protected int map_init(EditLine_t*);
+el_protected void map_end(EditLine_t*);
+el_protected void map_init_vi(EditLine_t*);
+el_protected void map_init_emacs(EditLine_t*);
+el_protected int map_set_editor(EditLine_t*, char*);
+el_protected int map_get_editor(EditLine_t*, const char**);
+el_protected int map_addfunc(EditLine_t *, const char*, const char*, ElFunc_t);
 
 #endif /* _h_el_map */

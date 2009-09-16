@@ -51,14 +51,14 @@
  *
  *      An extended-key (key) is a sequence of keystrokes introduced
  *	with an sequence introducer and consisting of an arbitrary
- *	number of characters.  This module maintains a map (the el->el_key.map)
+ *	number of characters.  This module maintains a map (the el->fKey.fMap)
  *	to convert these extended-key sequences into input strs
  *	(XK_STR), editor functions (XK_CMD), or unix commands (XK_EXE).
  *
  *      Warning:
  *	  If key is a substr of some other keys, then the longer
  *	  keys are lost!!  That is, if the keys "abcd" and "abcef"
- *	  are in el->el_key.map, adding the key "abc" will cause the first two
+ *	  are in el->fKey.fMap, adding the key "abc" will cause the first two
  *	  definitions to be lost.
  *
  *      Restrictions:
@@ -73,27 +73,27 @@
 #include "el.h"
 
 /*
- * The Nodes of the el->el_key.map.  The el->el_key.map is a linked list
+ * The Nodes of the el->fKey.fMap.  The el->fKey.fMap is a linked list
  * of these node elements
  */
-struct key_node_t {
-   char ch;                             /* single character of key       */
-   int type;                            /* node type			 */
-   key_value_t val;                     /* command code or pointer to str,  */
+struct KeyNode_t {
+   char fCh;                             /* single character of key       */
+   int fType;                            /* node type			 */
+   KeyValue_t fVal;                     /* command code or pointer to str,  */
                                         /* if this is a leaf             */
-   struct key_node_t* next;             /* ptr to next char of this key  */
-   struct key_node_t* sibling;          /* ptr to another key with same prefix*/
+   struct KeyNode_t* fNext;             /* ptr to next char of this key  */
+   struct KeyNode_t* fSibling;          /* ptr to another key with same prefix*/
 };
 
-el_private int node_trav(EditLine*, key_node_t*, char*,
-                         key_value_t*);
-el_private int node__try(EditLine*, key_node_t*, const char*,
-                         key_value_t*, int);
-el_private key_node_t* node__get(int);
-el_private void node__put(EditLine*, key_node_t*);
-el_private int node__delete(EditLine*, key_node_t**, char*);
-el_private int node_lookup(EditLine*, const char*, key_node_t*, int);
-el_private int node_enum(EditLine*, key_node_t*, int);
+el_private int node_trav(EditLine_t*, KeyNode_t*, char*,
+                         KeyValue_t*);
+el_private int node__try(EditLine_t*, KeyNode_t*, const char*,
+                         KeyValue_t*, int);
+el_private KeyNode_t* node__get(int);
+el_private void node__put(EditLine_t*, KeyNode_t*);
+el_private int node__delete(EditLine_t*, KeyNode_t**, char*);
+el_private int node_lookup(EditLine_t*, const char*, KeyNode_t*, int);
+el_private int node_enum(EditLine_t*, KeyNode_t*, int);
 el_private int key__decode_char(char*, int, int);
 
 #define KEY_BUFSIZ EL_BUFSIZ
@@ -103,13 +103,13 @@ el_private int key__decode_char(char*, int, int);
  *	Initialize the key maps
  */
 el_protected int
-key_init(EditLine* el) {
-   el->el_key.buf = (char*) el_malloc(KEY_BUFSIZ);
+key_init(EditLine_t* el) {
+   el->fKey.fBuf = (char*) el_malloc(KEY_BUFSIZ);
 
-   if (el->el_key.buf == NULL) {
+   if (el->fKey.fBuf == NULL) {
       return -1;
    }
-   el->el_key.map = NULL;
+   el->fKey.fMap = NULL;
    key_reset(el);
    return 0;
 }
@@ -119,89 +119,89 @@ key_init(EditLine* el) {
  *	Free the key maps
  */
 el_protected void
-key_end(EditLine* el) {
-   el_free((ptr_t) el->el_key.buf);
-   el->el_key.buf = NULL;
+key_end(EditLine_t* el) {
+   el_free((ptr_t) el->fKey.fBuf);
+   el->fKey.fBuf = NULL;
    /* XXX: provide a function to clear the keys */
-   el->el_key.map = NULL;
+   el->fKey.fMap = NULL;
 }
 
 
 /* key_map_cmd():
  *	Associate cmd with a key value
  */
-el_protected key_value_t*
-key_map_cmd(EditLine* el, int cmd) {
-   el->el_key.val.cmd = (el_action_t) cmd;
-   return &el->el_key.val;
+el_protected KeyValue_t*
+key_map_cmd(EditLine_t* el, int cmd) {
+   el->fKey.fVal.fCmd = (ElAction_t) cmd;
+   return &el->fKey.fVal;
 }
 
 
 /* key_map_str():
  *	Associate str with a key value
  */
-el_protected key_value_t*
-key_map_str(EditLine* el, char* str) {
-   el->el_key.val.str = str;
-   return &el->el_key.val;
+el_protected KeyValue_t*
+key_map_str(EditLine_t* el, char* str) {
+   el->fKey.fVal.fStr = str;
+   return &el->fKey.fVal;
 }
 
 
 /* key_reset():
- *	Takes all nodes on el->el_key.map and puts them on free list.  Then
- *	initializes el->el_key.map with arrow keys
+ *	Takes all nodes on el->fKey.fMap and puts them on free list.  Then
+ *	initializes el->fKey.fMap with arrow keys
  *	[Always bind the ansi arrow keys?]
  */
 el_protected void
-key_reset(EditLine* el) {
-   node__put(el, el->el_key.map);
-   el->el_key.map = NULL;
+key_reset(EditLine_t* el) {
+   node__put(el, el->fKey.fMap);
+   el->fKey.fMap = NULL;
    return;
 }
 
 
 /* key_get():
- *	Calls the recursive function with entry point el->el_key.map
+ *	Calls the recursive function with entry point el->fKey.fMap
  *      Looks up *ch in map and then reads characters until a
  *      complete match is found or a mismatch occurs. Returns the
  *      type of the match found (XK_STR, XK_CMD, or XK_EXE).
- *      Returns NULL in val.str and XK_STR for no match.
+ *      Returns NULL in val.fStr and XK_STR for no match.
  *      The last character read is returned in *ch.
  */
 el_protected int
-key_get(EditLine* el, char* ch, key_value_t* val) {
-   return node_trav(el, el->el_key.map, ch, val);
+key_get(EditLine_t* el, char* ch, KeyValue_t* val) {
+   return node_trav(el, el->fKey.fMap, ch, val);
 }
 
 
 /* key_add():
- *      Adds key to the el->el_key.map and associates the value in val with it.
- *      If key is already is in el->el_key.map, the new code is applied to the
+ *      Adds key to the el->fKey.fMap and associates the value in val with it.
+ *      If key is already is in el->fKey.fMap, the new code is applied to the
  *      existing key. Ntype specifies if code is a command, an
  *      out str or a unix command.
  */
 el_protected void
-key_add(EditLine* el, const char* key, key_value_t* val, int ntype) {
+key_add(EditLine_t* el, const char* key, KeyValue_t* val, int ntype) {
    if (key[0] == '\0') {
-      (void) fprintf(el->el_errfile,
+      (void) fprintf(el->fErrFile,
                      "key_add: Null extended-key not allowed.\n");
       return;
    }
 
-   if (ntype == XK_CMD && val->cmd == ED_SEQUENCE_LEAD_IN) {
-      (void) fprintf(el->el_errfile,
+   if (ntype == XK_CMD && val->fCmd == ED_SEQUENCE_LEAD_IN) {
+      (void) fprintf(el->fErrFile,
                      "key_add: sequence-lead-in command not allowed\n");
       return;
    }
 
-   if (el->el_key.map == NULL) {
+   if (el->fKey.fMap == NULL) {
       /* tree is initially empty.  Set up new node to match key[0] */
-      el->el_key.map = node__get(key[0]);
+      el->fKey.fMap = node__get(key[0]);
    }
    /* it is properly initialized */
 
-   /* Now recurse through el->el_key.map */
-   (void) node__try(el, el->el_key.map, key, val, ntype);
+   /* Now recurse through el->fKey.fMap */
+   (void) node__try(el, el->fKey.fMap, key, val, ntype);
    return;
 } // key_add
 
@@ -210,12 +210,12 @@ key_add(EditLine* el, const char* key, key_value_t* val, int ntype) {
  *
  */
 el_protected void
-key_clear(EditLine* el, el_action_t* map, char* in) {
+key_clear(EditLine_t* el, ElAction_t* map, char* in) {
    if ((map[(unsigned char) *in] == ED_SEQUENCE_LEAD_IN) &&
-       ((map == el->el_map.key &&
-         el->el_map.alt[(unsigned char) *in] != ED_SEQUENCE_LEAD_IN) ||
-        (map == el->el_map.alt &&
-              el->el_map.key[(unsigned char) *in] != ED_SEQUENCE_LEAD_IN))) {
+       ((map == el->fMap.fKey &&
+         el->fMap.fAlt[(unsigned char) *in] != ED_SEQUENCE_LEAD_IN) ||
+        (map == el->fMap.fAlt &&
+              el->fMap.fKey[(unsigned char) *in] != ED_SEQUENCE_LEAD_IN))) {
       (void) key_delete(el, in);
    }
 }
@@ -226,38 +226,38 @@ key_clear(EditLine* el, el_action_t* map, char* in) {
  *      they exists.
  */
 el_protected int
-key_delete(EditLine* el, char* key) {
+key_delete(EditLine_t* el, char* key) {
    if (key[0] == '\0') {
-      (void) fprintf(el->el_errfile,
+      (void) fprintf(el->fErrFile,
                      "key_delete: Null extended-key not allowed.\n");
       return -1;
    }
 
-   if (el->el_key.map == NULL) {
+   if (el->fKey.fMap == NULL) {
       return 0;
    }
 
-   (void) node__delete(el, &el->el_key.map, key);
+   (void) node__delete(el, &el->fKey.fMap, key);
    return 0;
 }
 
 
 /* key_print():
  *	Print the binding associated with key key.
- *	Print entire el->el_key.map if null
+ *	Print entire el->fKey.fMap if null
  */
 el_protected void
-key_print(EditLine* el, const char* key) {
-   /* do nothing if el->el_key.map is empty and null key specified */
-   if (el->el_key.map == NULL && *key == 0) {
+key_print(EditLine_t* el, const char* key) {
+   /* do nothing if el->fKey.fMap is empty and null key specified */
+   if (el->fKey.fMap == NULL && *key == 0) {
       return;
    }
 
-   el->el_key.buf[0] = '"';
+   el->fKey.fBuf[0] = '"';
 
-   if (node_lookup(el, key, el->el_key.map, 1) <= -1) {
+   if (node_lookup(el, key, el->fKey.fMap, 1) <= -1) {
       /* key is not bound */
-      (void) fprintf(el->el_errfile, "Unbound extended key \"%s\"\n",
+      (void) fprintf(el->fErrFile, "Unbound extended key \"%s\"\n",
                      key);
    }
    return;
@@ -269,33 +269,33 @@ key_print(EditLine* el, const char* key) {
  *      found.  May read in more characters.
  */
 el_private int
-node_trav(EditLine* el, key_node_t* ptr, char* ch, key_value_t* val) {
-   if (ptr->ch == *ch) {
+node_trav(EditLine_t* el, KeyNode_t* ptr, char* ch, KeyValue_t* val) {
+   if (ptr->fCh == *ch) {
       /* match found */
-      if (ptr->next) {
+      if (ptr->fNext) {
          /* key not complete so get next char */
          if (el_getc(el, ch) != 1) {                    /* if EOF or error */
-            val->cmd = ED_END_OF_FILE;
+            val->fCmd = ED_END_OF_FILE;
             return XK_CMD;
             /* PWP: Pretend we just read an end-of-file */
          }
-         return node_trav(el, ptr->next, ch, val);
+         return node_trav(el, ptr->fNext, ch, val);
       } else {
-         *val = ptr->val;
+         *val = ptr->fVal;
 
-         if (ptr->type != XK_CMD) {
+         if (ptr->fType != XK_CMD) {
             *ch = '\0';
          }
-         return ptr->type;
+         return ptr->fType;
       }
    } else {
       /* no match found here */
-      if (ptr->sibling) {
+      if (ptr->fSibling) {
          /* try next sibling */
-         return node_trav(el, ptr->sibling, ch, val);
+         return node_trav(el, ptr->fSibling, ch, val);
       } else {
          /* no next sibling -- mismatch */
-         val->str = NULL;
+         val->fStr = NULL;
          return XK_STR;
       }
    }
@@ -306,65 +306,65 @@ node_trav(EditLine* el, key_node_t* ptr, char* ch, key_value_t* val) {
  *      Find a node that matches *str or allocate a new one
  */
 el_private int
-node__try(EditLine* el, key_node_t* ptr, const char* str, key_value_t* val, int ntype) {
-   if (ptr->ch != *str) {
-      key_node_t* xm;
+node__try(EditLine_t* el, KeyNode_t* ptr, const char* str, KeyValue_t* val, int ntype) {
+   if (ptr->fCh != *str) {
+      KeyNode_t* xm;
 
-      for (xm = ptr; xm->sibling != NULL; xm = xm->sibling) {
-         if (xm->sibling->ch == *str) {
+      for (xm = ptr; xm->fSibling != NULL; xm = xm->fSibling) {
+         if (xm->fSibling->fCh == *str) {
             break;
          }
       }
 
-      if (xm->sibling == NULL) {
-         xm->sibling = node__get(*str);                 /* setup new node */
+      if (xm->fSibling == NULL) {
+         xm->fSibling = node__get(*str);                 /* setup new node */
       }
-      ptr = xm->sibling;
+      ptr = xm->fSibling;
    }
 
    if (*++str == '\0') {
       /* we're there */
-      if (ptr->next != NULL) {
-         node__put(el, ptr->next);
+      if (ptr->fNext != NULL) {
+         node__put(el, ptr->fNext);
          /* lose longer keys with this prefix */
-         ptr->next = NULL;
+         ptr->fNext = NULL;
       }
 
-      switch (ptr->type) {
+      switch (ptr->fType) {
       case XK_CMD:
       case XK_NOD:
          break;
       case XK_STR:
       case XK_EXE:
 
-         if (ptr->val.str) {
-            el_free((ptr_t) ptr->val.str);
+         if (ptr->fVal.fStr) {
+            el_free((ptr_t) ptr->fVal.fStr);
          }
          break;
       default:
-         EL_ABORT((el->el_errfile, "Bad XK_ type %d\n",
-                   ptr->type));
+         EL_ABORT((el->fErrFile, "Bad XK_ type %d\n",
+                   ptr->fType));
          break;
       }
 
-      switch (ptr->type = ntype) {
+      switch (ptr->fType = ntype) {
       case XK_CMD:
-         ptr->val = *val;
+         ptr->fVal = *val;
          break;
       case XK_STR:
       case XK_EXE:
-         ptr->val.str = strdup(val->str);
+         ptr->fVal.fStr = strdup(val->fStr);
          break;
       default:
-         EL_ABORT((el->el_errfile, "Bad XK_ type %d\n", ntype));
+         EL_ABORT((el->fErrFile, "Bad XK_ type %d\n", ntype));
          break;
       }
    } else {
       /* still more chars to go */
-      if (ptr->next == NULL) {
-         ptr->next = node__get(*str);                   /* setup new node */
+      if (ptr->fNext == NULL) {
+         ptr->fNext = node__get(*str);                   /* setup new node */
       }
-      (void) node__try(el, ptr->next, str, val, ntype);
+      (void) node__try(el, ptr->fNext, str, val, ntype);
    }
    return 0;
 } // node__try
@@ -374,50 +374,50 @@ node__try(EditLine* el, key_node_t* ptr, const char* str, key_value_t* val, int 
  *	Delete node that matches str
  */
 el_private int
-node__delete(EditLine* el, key_node_t** inptr, char* str) {
-   key_node_t* ptr;
-   key_node_t* prev_ptr = NULL;
+node__delete(EditLine_t* el, KeyNode_t** inptr, char* str) {
+   KeyNode_t* ptr;
+   KeyNode_t* prev_ptr = NULL;
 
    ptr = *inptr;
 
-   if (ptr->ch != *str) {
-      key_node_t* xm;
+   if (ptr->fCh != *str) {
+      KeyNode_t* xm;
 
-      for (xm = ptr; xm->sibling != NULL; xm = xm->sibling) {
-         if (xm->sibling->ch == *str) {
+      for (xm = ptr; xm->fSibling != NULL; xm = xm->fSibling) {
+         if (xm->fSibling->fCh == *str) {
             break;
          }
       }
 
-      if (xm->sibling == NULL) {
+      if (xm->fSibling == NULL) {
          return 0;
       }
       prev_ptr = xm;
-      ptr = xm->sibling;
+      ptr = xm->fSibling;
    }
 
    if (*++str == '\0') {
       /* we're there */
       if (prev_ptr == NULL) {
-         *inptr = ptr->sibling;
+         *inptr = ptr->fSibling;
       } else {
-         prev_ptr->sibling = ptr->sibling;
+         prev_ptr->fSibling = ptr->fSibling;
       }
-      ptr->sibling = NULL;
+      ptr->fSibling = NULL;
       node__put(el, ptr);
       return 1;
-   } else if (ptr->next != NULL &&
-              node__delete(el, &ptr->next, str) == 1) {
-      if (ptr->next != NULL) {
+   } else if (ptr->fNext != NULL &&
+              node__delete(el, &ptr->fNext, str) == 1) {
+      if (ptr->fNext != NULL) {
          return 0;
       }
 
       if (prev_ptr == NULL) {
-         *inptr = ptr->sibling;
+         *inptr = ptr->fSibling;
       } else {
-         prev_ptr->sibling = ptr->sibling;
+         prev_ptr->fSibling = ptr->fSibling;
       }
-      ptr->sibling = NULL;
+      ptr->fSibling = NULL;
       node__put(el, ptr);
       return 1;
    } else {
@@ -430,30 +430,30 @@ node__delete(EditLine* el, key_node_t** inptr, char* str) {
  *	Puts a tree of nodes onto free list using free(3).
  */
 el_private void
-node__put(EditLine* el, key_node_t* ptr) {
+node__put(EditLine_t* el, KeyNode_t* ptr) {
    if (ptr == NULL) {
       return;
    }
 
-   if (ptr->next != NULL) {
-      node__put(el, ptr->next);
-      ptr->next = NULL;
+   if (ptr->fNext != NULL) {
+      node__put(el, ptr->fNext);
+      ptr->fNext = NULL;
    }
-   node__put(el, ptr->sibling);
+   node__put(el, ptr->fSibling);
 
-   switch (ptr->type) {
+   switch (ptr->fType) {
    case XK_CMD:
    case XK_NOD:
       break;
    case XK_EXE:
    case XK_STR:
 
-      if (ptr->val.str != NULL) {
-         el_free((ptr_t) ptr->val.str);
+      if (ptr->fVal.fStr != NULL) {
+         el_free((ptr_t) ptr->fVal.fStr);
       }
       break;
    default:
-      EL_ABORT((el->el_errfile, "Bad XK_ type %d\n", ptr->type));
+      EL_ABORT((el->fErrFile, "Bad XK_ type %d\n", ptr->fType));
       break;
    }
    el_free((ptr_t) ptr);
@@ -461,22 +461,22 @@ node__put(EditLine* el, key_node_t* ptr) {
 
 
 /* node__get():
- *	Returns pointer to an key_node_t for ch.
+ *	Returns pointer to an KeyNode_t for ch.
  */
-el_private key_node_t*
+el_private KeyNode_t*
 node__get(int ch) {
-   key_node_t* ptr;
+   KeyNode_t* ptr;
 
-   ptr = (key_node_t*) el_malloc((size_t) sizeof(key_node_t));
+   ptr = (KeyNode_t*) el_malloc((size_t) sizeof(KeyNode_t));
 
    if (ptr == NULL) {
       return NULL;
    }
-   ptr->ch = ch;
-   ptr->type = XK_NOD;
-   ptr->val.str = NULL;
-   ptr->next = NULL;
-   ptr->sibling = NULL;
+   ptr->fCh = ch;
+   ptr->fType = XK_NOD;
+   ptr->fVal.fStr = NULL;
+   ptr->fNext = NULL;
+   ptr->fSibling = NULL;
    return ptr;
 }
 
@@ -486,7 +486,7 @@ node__get(int ch) {
  *	Print if last node
  */
 el_private int
-node_lookup(EditLine* el, const char* str, key_node_t* ptr, int cnt) {
+node_lookup(EditLine_t* el, const char* str, KeyNode_t* ptr, int cnt) {
    int ncnt;
 
    if (ptr == NULL) {
@@ -499,23 +499,23 @@ node_lookup(EditLine* el, const char* str, key_node_t* ptr, int cnt) {
       (void) node_enum(el, ptr, cnt);
       return 0;
    } else {
-      /* If match put this char into el->el_key.buf.  Recurse */
-      if (ptr->ch == *str) {
+      /* If match put this char into el->fKey.fBuf.  Recurse */
+      if (ptr->fCh == *str) {
          /* match found */
-         ncnt = key__decode_char(el->el_key.buf, cnt,
-                                 (unsigned char) ptr->ch);
+         ncnt = key__decode_char(el->fKey.fBuf, cnt,
+                                 (unsigned char) ptr->fCh);
 
-         if (ptr->next != NULL) {
+         if (ptr->fNext != NULL) {
             /* not yet at leaf */
-            return node_lookup(el, str + 1, ptr->next,
+            return node_lookup(el, str + 1, ptr->fNext,
                                ncnt + 1);
          } else {
             /* next node is null so key should be complete */
             if (str[1] == 0) {
-               el->el_key.buf[ncnt + 1] = '"';
-               el->el_key.buf[ncnt + 2] = '\0';
-               key_kprint(el, el->el_key.buf,
-                          &ptr->val, ptr->type);
+               el->fKey.fBuf[ncnt + 1] = '"';
+               el->fKey.fBuf[ncnt + 2] = '\0';
+               key_kprint(el, el->fKey.fBuf,
+                          &ptr->fVal, ptr->fType);
                return 0;
             } else {
                return -1;
@@ -524,8 +524,8 @@ node_lookup(EditLine* el, const char* str, key_node_t* ptr, int cnt) {
          }
       } else {
          /* no match found try sibling */
-         if (ptr->sibling) {
-            return node_lookup(el, str, ptr->sibling,
+         if (ptr->fSibling) {
+            return node_lookup(el, str, ptr->fSibling,
                                cnt);
          } else {
             return -1;
@@ -539,40 +539,40 @@ node_lookup(EditLine* el, const char* str, key_node_t* ptr, int cnt) {
  *	Traverse the node printing the characters it is bound in buffer
  */
 el_private int
-node_enum(EditLine* el, key_node_t* ptr, int cnt) {
+node_enum(EditLine_t* el, KeyNode_t* ptr, int cnt) {
    int ncnt;
 
    if (cnt >= KEY_BUFSIZ - 5) {         /* buffer too small */
-      el->el_key.buf[++cnt] = '"';
-      el->el_key.buf[++cnt] = '\0';
-      (void) fprintf(el->el_errfile,
+      el->fKey.fBuf[++cnt] = '"';
+      el->fKey.fBuf[++cnt] = '\0';
+      (void) fprintf(el->fErrFile,
                      "Some extended keys too long for internal print buffer");
-      (void) fprintf(el->el_errfile, " \"%s...\"\n", el->el_key.buf);
+      (void) fprintf(el->fErrFile, " \"%s...\"\n", el->fKey.fBuf);
       return 0;
    }
 
    if (ptr == NULL) {
 #ifdef DEBUG_EDIT
-         (void) fprintf(el->el_errfile,
+         (void) fprintf(el->fErrFile,
                         "node_enum: BUG!! Null ptr passed\n!");
 #endif
       return -1;
    }
    /* put this char at end of str */
-   ncnt = key__decode_char(el->el_key.buf, cnt, (unsigned char) ptr->ch);
+   ncnt = key__decode_char(el->fKey.fBuf, cnt, (unsigned char) ptr->fCh);
 
-   if (ptr->next == NULL) {
+   if (ptr->fNext == NULL) {
       /* print this key and function */
-      el->el_key.buf[ncnt + 1] = '"';
-      el->el_key.buf[ncnt + 2] = '\0';
-      key_kprint(el, el->el_key.buf, &ptr->val, ptr->type);
+      el->fKey.fBuf[ncnt + 1] = '"';
+      el->fKey.fBuf[ncnt + 2] = '\0';
+      key_kprint(el, el->fKey.fBuf, &ptr->fVal, ptr->fType);
    } else {
-      (void) node_enum(el, ptr->next, ncnt + 1);
+      (void) node_enum(el, ptr->fNext, ncnt + 1);
    }
 
    /* go to sibling if there is one */
-   if (ptr->sibling) {
-      (void) node_enum(el, ptr->sibling, cnt);
+   if (ptr->fSibling) {
+      (void) node_enum(el, ptr->fSibling, cnt);
    }
    return 0;
 } // node_enum
@@ -583,8 +583,8 @@ node_enum(EditLine* el, key_node_t* ptr, int cnt) {
  *	function specified by val
  */
 el_protected void
-key_kprint(EditLine* el, const char* key, key_value_t* val, int ntype) {
-   el_bindings_t* fp;
+key_kprint(EditLine_t* el, const char* key, KeyValue_t* val, int ntype) {
+   ElBindings_t* fp;
    char unparsbuf[EL_BUFSIZ];
    static const char fmt[] = "%-15s->  %s\n";
 
@@ -592,34 +592,34 @@ key_kprint(EditLine* el, const char* key, key_value_t* val, int ntype) {
       switch (ntype) {
       case XK_STR:
       case XK_EXE:
-         (void) fprintf(el->el_outfile, fmt, key,
-                        key__decode_str(val->str, unparsbuf,
+         (void) fprintf(el->fOutFile, fmt, key,
+                        key__decode_str(val->fStr, unparsbuf,
                                         ntype == XK_STR ? "\"\"" : "[]"));
          break;
       case XK_CMD:
 
-         for (fp = el->el_map.help; fp->name; fp++) {
-            if (val->cmd == fp->func) {
-               (void) fprintf(el->el_outfile, fmt,
-                              key, fp->name);
+         for (fp = el->fMap.fHelp; fp->fName; fp++) {
+            if (val->fCmd == fp->fFunc) {
+               (void) fprintf(el->fOutFile, fmt,
+                              key, fp->fName);
                break;
             }
          }
 #ifdef DEBUG_KEY
 
-         if (fp->name == NULL) {
-            (void) fprintf(el->el_outfile,
+         if (fp->fName == NULL) {
+            (void) fprintf(el->fOutFile,
                            "BUG! Command not found.\n");
          }
 #endif
 
          break;
       default:
-         EL_ABORT((el->el_errfile, "Bad XK_ type %d\n", ntype));
+         EL_ABORT((el->fErrFile, "Bad XK_ type %d\n", ntype));
          break;
       } // switch
    } else {
-      (void) fprintf(el->el_outfile, fmt, key, "no input");
+      (void) fprintf(el->fOutFile, fmt, key, "no input");
    }
 } // key_kprint
 

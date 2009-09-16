@@ -2,7 +2,7 @@
 // Author: Mary-Louise Gill, 2009
 
 ////////////////////////////////////////////////////////////////////////
-// This file is part of the liblineedit code. See el.h for the
+// This file is part of the liblineedit code. See el.fH for the
 // full license (BSD).
 // File added by stephan@s11n.net, 28 Nov 2004
 ////////////////////////////////////////////////////////////////////////
@@ -14,15 +14,15 @@
 #include <map>
 
 
-typedef std::vector<el_builtin_t*> BuiltinVec;
-typedef std::map<std::string, el_builtin_t> BuiltinMap;
+typedef std::vector<ElBuiltin_t*> BuiltinVec_t;
+typedef std::map<std::string, ElBuiltin_t> BuiltinMap_t;
 
 /**
    Returns the internal map of builtin functions.
  */
-BuiltinMap&
+BuiltinMap_t&
 el_internal_builtins() {
-   static BuiltinMap el_builtins;
+   static BuiltinMap_t el_builtins;
    return el_builtins;
 }
 
@@ -31,13 +31,13 @@ void
 el_builtins_init() {    // internal func
 
    if (0 == el_internal_builtins().size()) {
-      el_register_function("el-bind", map_bind, "Bind keyboard commands.");             //   // map.h/c
-      el_register_function("el-echotc", term_echotc, "???");             // term.h/c
-      el_register_function("el-edit", el_editmode, "Toggle line-editing mode on and off.");             // el.h/c
-      el_register_function("el-history", hist_list, "Show command history.");             // hist.h/c
-      el_register_function("el-telltc", term_telltc, "???");             // term.h/c
-      el_register_function("el-settc", term_settc, "???");             // term.h/c
-      el_register_function("el-setty", tty_stty, "???");             // tty.h/c
+      el_register_function("el-bind", map_bind, "Bind keyboard commands.");             //   // map.fH/c
+      el_register_function("el-echotc", term_echotc, "???");             // term.fH/c
+      el_register_function("el-edit", el_editmode, "Toggle line-editing mode on and off.");             // el.fH/c
+      el_register_function("el-history", hist_list, "Show command history.");             // hist.fH/c
+      el_register_function("el-telltc", term_telltc, "???");             // term.fH/c
+      el_register_function("el-settc", term_settc, "???");             // term.fH/c
+      el_register_function("el-setty", tty_stty, "???");             // tty.fH/c
       el_register_function("el-help", el_func_show_function_list, "Shows list of built-in functions.");
       el_register_function("el-rl-reset", el_func_readline_reinit, "Re-initializes readline compatibility layer.");
    }
@@ -48,16 +48,16 @@ int el_builtins_bogo_register = (el_builtins_init(), 0);
 
 
 void
-el_register_function(const char* name, el_builtin_t::handler_func f, const char* help) {
-   el_internal_builtins()[name] = el_builtin_t(name, f, help);
+el_register_function(const char* name, ElBuiltin_t::handler_func f, const char* help) {
+   el_internal_builtins()[name] = ElBuiltin_t(name, f, help);
 }
 
 
-BuiltinVec el_builtins_vec;
-el_builtin_t**
+BuiltinVec_t el_builtins_vec;
+ElBuiltin_t**
 el_builtins_list(int* count) {
-   BuiltinMap::iterator it = el_internal_builtins().begin();
-   BuiltinMap::iterator et = el_internal_builtins().end();
+   BuiltinMap_t::iterator it = el_internal_builtins().begin();
+   BuiltinMap_t::iterator et = el_internal_builtins().end();
    el_builtins_vec.clear();
    *count = 0;
 
@@ -71,12 +71,12 @@ el_builtins_list(int* count) {
 
 
 /**
-   Calls rl_initialize(), to reset the internal EditLine to a sane
+   Calls rl_initialize(), to reset the internal EditLine_t to a sane
    state.
  */
 int
-el_func_readline_reinit(EditLine* el, int, const char**) {
-   fprintf(el->el_outfile,
+el_func_readline_reinit(EditLine_t* el, int, const char**) {
+   fprintf(el->fOutFile,
            "Reinitializing readline compatibility interface.\n");
    int ret = rl_initialize();
    return ret;
@@ -84,31 +84,31 @@ el_func_readline_reinit(EditLine* el, int, const char**) {
 
 
 /**
-   Shows list of built-in functions via el->el_outfile.
+   Shows list of built-in functions via el->fOutFile.
  */
 int
-el_func_show_function_list(EditLine* el, int, const char**) {
-   fprintf(el->el_outfile, "List of libeditline builtin functions:\n");
-   BuiltinMap::iterator it = el_internal_builtins().begin();
-   BuiltinMap::iterator et = el_internal_builtins().end();
-   el_builtin_t* bi = 0;
+el_func_show_function_list(EditLine_t* el, int, const char**) {
+   fprintf(el->fOutFile, "List of libeditline builtin functions:\n");
+   BuiltinMap_t::iterator it = el_internal_builtins().begin();
+   BuiltinMap_t::iterator et = el_internal_builtins().end();
+   ElBuiltin_t* bi = 0;
 
    for ( ; et != it; ++it) {
       bi = &((*it).second);
-      fprintf(el->el_outfile,
+      fprintf(el->fOutFile,
               "%-32s\t\t%s\n",
-              (bi->name),
-              ((NULL != bi->help) ? bi->help : "")
+              (bi->fName),
+              ((NULL != bi->fHelp) ? bi->fHelp : "")
       );
    }
    return 0;
 }
 
 
-el_builtin_t*
+ElBuiltin_t*
 el_builtin_by_name(const char* name) {
-   BuiltinMap::iterator it = el_internal_builtins().find(name);
-   BuiltinMap::iterator et = el_internal_builtins().end();
+   BuiltinMap_t::iterator it = el_internal_builtins().find(name);
+   BuiltinMap_t::iterator et = el_internal_builtins().end();
 
    if (et == it) {
       return NULL;

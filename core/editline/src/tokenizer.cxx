@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: tokenizer.c,v 1.7 2001/01/04 15:56:32 christos Exp $	*/
+/*	$NetBSD: ElTokenizer_t.c,v 1.7 2001/01/04 15:56:32 christos Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -46,7 +46,7 @@
 #include "compat.h"
 
 /*
- * tokenize.c: Bourne shell like tokenizer
+ * tokenize.c: Bourne shell like ElTokenizer_t
  */
 #include "sys.h"
 #include <string.h>
@@ -54,8 +54,8 @@
 #include "tokenizer.h"
 
 typedef enum {
-   Q_none, Q_single, Q_double, Q_one, Q_doubleone
-} quote_t;
+   kQuoteNone, kQuoteSingle, kQuoteDouble, kQuoteOne, kQuoteDoubleone
+} Quote_t;
 
 #define IFS "\t \n"
 
@@ -70,26 +70,26 @@ typedef enum {
 #define tok_realloc(a, b) realloc(a, b)
 
 
-struct tokenizer {
+struct ElTokenizer_t {
    char* ifs;                   /* In field separator			 */
    int argc, amax;              /* Current and maximum number of args	 */
    char** argv;                 /* Argument list			 */
    char* wptr, * wmax;          /* Space and limit on the word buffer	 */
    char* wstart;                /* Beginning of next word		 */
    char* wspace;                /* Space of word buffer			 */
-   quote_t quote;               /* Quoting state			 */
+   Quote_t quote;               /* Quoting state			 */
    int flags;                   /* flags;				 */
 };
 
 
-el_private void tok_finish_word(Tokenizer*);
+el_private void tok_finish_word(Tokenizer_t*);
 
 
 /* tok_finish_word():
- *	Finish a word in the tokenizer.
+ *	Finish a word in the ElTokenizer_t.
  */
 el_private void
-tok_finish_word(Tokenizer* tok) {
+tok_finish_word(Tokenizer_t* tok) {
    *tok->wptr = '\0';
 
    if ((tok->flags & TOK_KEEP) || tok->wptr != tok->wstart) {
@@ -102,11 +102,11 @@ tok_finish_word(Tokenizer* tok) {
 
 
 /* tok_init():
- *	Initialize the tokenizer
+ *	Initialize the ElTokenizer_t
  */
-el_public Tokenizer*
+el_public Tokenizer_t*
 tok_init(const char* ifs) {
-   Tokenizer* tok = (Tokenizer*) tok_malloc(sizeof(Tokenizer));
+   Tokenizer_t* tok = (Tokenizer_t*) tok_malloc(sizeof(Tokenizer_t));
 
    tok->ifs = strdup(ifs ? ifs : IFS);
    tok->argc = 0;
@@ -126,22 +126,22 @@ tok_init(const char* ifs) {
    tok->wstart = tok->wspace;
    tok->wptr = tok->wspace;
    tok->flags = 0;
-   tok->quote = Q_none;
+   tok->quote = kQuoteNone;
 
    return tok;
 } // tok_init
 
 
 /* tok_reset():
- *	Reset the tokenizer
+ *	Reset the ElTokenizer_t
  */
 el_public void
-tok_reset(Tokenizer* tok) {
+tok_reset(Tokenizer_t* tok) {
    tok->argc = 0;
    tok->wstart = tok->wspace;
    tok->wptr = tok->wspace;
    tok->flags = 0;
-   tok->quote = Q_none;
+   tok->quote = kQuoteNone;
 }
 
 
@@ -149,7 +149,7 @@ tok_reset(Tokenizer* tok) {
  *	Clean up
  */
 el_public void
-tok_end(Tokenizer* tok) {
+tok_end(Tokenizer_t* tok) {
    tok_free((ptr_t) tok->ifs);
    tok_free((ptr_t) tok->wspace);
    tok_free((ptr_t) tok->argv);
@@ -167,7 +167,7 @@ tok_end(Tokenizer* tok) {
  *		 0: Ok
  */
 el_public int
-tok_line(Tokenizer* tok, const char* line, int* argc, char*** argv) {
+tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
    const char* ptr;
 
    for ( ; ;) {
@@ -177,26 +177,26 @@ tok_line(Tokenizer* tok, const char* line, int* argc, char*** argv) {
          tok->flags &= ~TOK_EAT;
 
          switch (tok->quote) {
-         case Q_none:
-            tok->quote = Q_single;                      /* Enter single quote
+         case kQuoteNone:
+            tok->quote = kQuoteSingle;                      /* Enter single quote
                                                          * mode */
             break;
 
-         case Q_single:                 /* Exit single quote mode */
-            tok->quote = Q_none;
+         case kQuoteSingle:                 /* Exit single quote mode */
+            tok->quote = kQuoteNone;
             break;
 
-         case Q_one:                    /* Quote this ' */
-            tok->quote = Q_none;
+         case kQuoteOne:                    /* Quote this ' */
+            tok->quote = kQuoteNone;
             *tok->wptr++ = *ptr;
             break;
 
-         case Q_double:                 /* Stay in double quote mode */
+         case kQuoteDouble:                 /* Stay in double quote mode */
             *tok->wptr++ = *ptr;
             break;
 
-         case Q_doubleone:                      /* Quote this ' */
-            tok->quote = Q_double;
+         case kQuoteDoubleone:                      /* Quote this ' */
+            tok->quote = kQuoteDouble;
             *tok->wptr++ = *ptr;
             break;
 
@@ -210,25 +210,25 @@ tok_line(Tokenizer* tok, const char* line, int* argc, char*** argv) {
          tok->flags |= TOK_KEEP;
 
          switch (tok->quote) {
-         case Q_none:                   /* Enter double quote mode */
-            tok->quote = Q_double;
+         case kQuoteNone:                   /* Enter double quote mode */
+            tok->quote = kQuoteDouble;
             break;
 
-         case Q_double:                 /* Exit double quote mode */
-            tok->quote = Q_none;
+         case kQuoteDouble:                 /* Exit double quote mode */
+            tok->quote = kQuoteNone;
             break;
 
-         case Q_one:                    /* Quote this " */
-            tok->quote = Q_none;
+         case kQuoteOne:                    /* Quote this " */
+            tok->quote = kQuoteNone;
             *tok->wptr++ = *ptr;
             break;
 
-         case Q_single:                 /* Stay in single quote mode */
+         case kQuoteSingle:                 /* Stay in single quote mode */
             *tok->wptr++ = *ptr;
             break;
 
-         case Q_doubleone:                      /* Quote this " */
-            tok->quote = Q_double;
+         case kQuoteDoubleone:                      /* Quote this " */
+            tok->quote = kQuoteDouble;
             *tok->wptr++ = *ptr;
             break;
 
@@ -242,25 +242,25 @@ tok_line(Tokenizer* tok, const char* line, int* argc, char*** argv) {
          tok->flags &= ~TOK_EAT;
 
          switch (tok->quote) {
-         case Q_none:                   /* Quote next character */
-            tok->quote = Q_one;
+         case kQuoteNone:                   /* Quote next character */
+            tok->quote = kQuoteOne;
             break;
 
-         case Q_double:                 /* Quote next character */
-            tok->quote = Q_doubleone;
+         case kQuoteDouble:                 /* Quote next character */
+            tok->quote = kQuoteDoubleone;
             break;
 
-         case Q_one:                    /* Quote this, restore state */
+         case kQuoteOne:                    /* Quote this, restore state */
             *tok->wptr++ = *ptr;
-            tok->quote = Q_none;
+            tok->quote = kQuoteNone;
             break;
 
-         case Q_single:                 /* Stay in single quote mode */
+         case kQuoteSingle:                 /* Stay in single quote mode */
             *tok->wptr++ = *ptr;
             break;
 
-         case Q_doubleone:                      /* Quote this \ */
-            tok->quote = Q_double;
+         case kQuoteDoubleone:                      /* Quote this \ */
+            tok->quote = kQuoteDouble;
             *tok->wptr++ = *ptr;
             break;
 
@@ -273,25 +273,25 @@ tok_line(Tokenizer* tok, const char* line, int* argc, char*** argv) {
          tok->flags &= ~TOK_EAT;
 
          switch (tok->quote) {
-         case Q_none:
+         case kQuoteNone:
             tok_finish_word(tok);
             *argv = tok->argv;
             *argc = tok->argc;
             return 0;
 
-         case Q_single:
-         case Q_double:
+         case kQuoteSingle:
+         case kQuoteDouble:
             *tok->wptr++ = *ptr;                        /* Add the return */
             break;
 
-         case Q_doubleone:                  /* Back to double, eat the '\n' */
+         case kQuoteDoubleone:                  /* Back to double, eat the '\n' */
             tok->flags |= TOK_EAT;
-            tok->quote = Q_double;
+            tok->quote = kQuoteDouble;
             break;
 
-         case Q_one:                    /* No quote, more eat the '\n' */
+         case kQuoteOne:                    /* No quote, more eat the '\n' */
             tok->flags |= TOK_EAT;
-            tok->quote = Q_none;
+            tok->quote = kQuoteNone;
             break;
 
          default:
@@ -302,7 +302,7 @@ tok_line(Tokenizer* tok, const char* line, int* argc, char*** argv) {
       case '\0':
 
          switch (tok->quote) {
-         case Q_none:
+         case kQuoteNone:
 
             /* Finish word and return */
             if (tok->flags & TOK_EAT) {
@@ -314,19 +314,19 @@ tok_line(Tokenizer* tok, const char* line, int* argc, char*** argv) {
             *argc = tok->argc;
             return 0;
 
-         case Q_single:
+         case kQuoteSingle:
             return 1;
 
-         case Q_double:
+         case kQuoteDouble:
             return 2;
 
-         case Q_doubleone:
-            tok->quote = Q_double;
+         case kQuoteDoubleone:
+            tok->quote = kQuoteDouble;
             *tok->wptr++ = *ptr;
             break;
 
-         case Q_one:
-            tok->quote = Q_none;
+         case kQuoteOne:
+            tok->quote = kQuoteNone;
             *tok->wptr++ = *ptr;
             break;
 
@@ -339,7 +339,7 @@ tok_line(Tokenizer* tok, const char* line, int* argc, char*** argv) {
          tok->flags &= ~TOK_EAT;
 
          switch (tok->quote) {
-         case Q_none:
+         case kQuoteNone:
 
             if (strchr(tok->ifs, *ptr) != NULL) {
                tok_finish_word(tok);
@@ -348,20 +348,20 @@ tok_line(Tokenizer* tok, const char* line, int* argc, char*** argv) {
             }
             break;
 
-         case Q_single:
-         case Q_double:
+         case kQuoteSingle:
+         case kQuoteDouble:
             *tok->wptr++ = *ptr;
             break;
 
 
-         case Q_doubleone:
+         case kQuoteDoubleone:
             *tok->wptr++ = '\\';
-            tok->quote = Q_double;
+            tok->quote = kQuoteDouble;
             *tok->wptr++ = *ptr;
             break;
 
-         case Q_one:
-            tok->quote = Q_none;
+         case kQuoteOne:
+            tok->quote = kQuoteNone;
             *tok->wptr++ = *ptr;
             break;
 

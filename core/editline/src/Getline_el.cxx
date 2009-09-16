@@ -244,15 +244,15 @@ int (* Gl_in_key)(int ch) = 0;
 /** newer imported interfaces **/
 #include "editline.h"
 
-char* hist_file;  // file name for the command history (read and write)
+const char* hist_file;  // file name for the command history (read and write)
 
-struct WriteHistoryTrigger {
-   ~WriteHistoryTrigger() {
-      write_history(hist_file);
-   }
-
-
-};
+namespace {
+   struct WriteHistoryTrigger_t {
+      ~WriteHistoryTrigger_t() {
+         write_history(hist_file);
+      }
+   };
+}
 
 
 /******************** internal interface *********************************/
@@ -315,7 +315,7 @@ Gl_windowchanged() {
 
 /* The new and hopefully improved Getlinem method!
  * Uses readline() from libeditline.
- * History and editing are also handled by libeditline.
+ * History_t and editing are also handled by libeditline.
  * Modes: -1 = init, 0 = line mode, 1 = one char at a time mode, 2 = cleanup
  */
 char*
@@ -387,7 +387,7 @@ Getline(const char* prompt) {
 }
 
 
-/******************* History stuff **************************************/
+/******************* History_t stuff **************************************/
 
 void
 Gl_histsize(int /*size*/, int save) {
@@ -397,7 +397,7 @@ Gl_histsize(int /*size*/, int save) {
 
 void
 Gl_histinit(char* file) {
-   static WriteHistoryTrigger history_write_trigger;
+   static WriteHistoryTrigger_t history_write_trigger;
    hist_file = file;
 }
 

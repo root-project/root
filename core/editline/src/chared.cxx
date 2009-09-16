@@ -59,15 +59,15 @@
  *	Handle state for the vi undo command
  */
 el_protected void
-cv_undo(EditLine* el, int action, size_t size, char* ptr) {
-   c_undo_t* vu = &el->el_chared.c_undo;
-   vu->action = action;
-   vu->ptr = ptr;
-   vu->isize = size;
-   (void) memcpy(vu->buf, vu->ptr, size);
+cv_undo(EditLine_t* el, int action, size_t size, char* ptr) {
+   CUndo_t* vu = &el->fCharEd.fUndo;
+   vu->fAction = action;
+   vu->fPtr = ptr;
+   vu->fISize = size;
+   (void) memcpy(vu->fBuf, vu->fPtr, size);
 #ifdef DEBUG_UNDO
-      (void) fprintf(el->el_errfile, "Undo buffer \"%s\" size = +%d -%d\n",
-                     vu->ptr, vu->isize, vu->dsize);
+      (void) fprintf(el->fErrFile, "Undo buffer \"%s\" size = +%d -%d\n",
+                     vu->fPtr, vu->fISize, vu->fDSize);
 #endif
 }
 
@@ -76,31 +76,31 @@ cv_undo(EditLine* el, int action, size_t size, char* ptr) {
  *	Insert num characters
  */
 el_protected void
-c_insert(EditLine* el, int num) {
+c_insert(EditLine_t* el, int num) {
    char* cp;
 
-   if (el->el_line.lastchar + num >= el->el_line.limit) {
+   if (el->fLine.fLastChar + num >= el->fLine.fLimit) {
       return;                           /* can't go past end of buffer */
 
    }
 
-   if (el->el_line.cursor < el->el_line.lastchar) {
+   if (el->fLine.fCursor < el->fLine.fLastChar) {
       /* if I must move chars */
-      for (cp = el->el_line.lastchar; cp >= el->el_line.cursor; cp--) {
+      for (cp = el->fLine.fLastChar; cp >= el->fLine.fCursor; cp--) {
          cp[num] = *cp;
       }
 
       // work out equivalent offsets for colour buffer
-      int colCursor = el->el_line.cursor - el->el_line.buffer;
-      int colLastChar = el->el_line.lastchar - el->el_line.buffer;
+      int colCursor = el->fLine.fCursor - el->fLine.fBuffer;
+      int colLastChar = el->fLine.fLastChar - el->fLine.fBuffer;
 
       // shift colour buffer values along to match newly shifted positions
       for (int i = colLastChar; i >= colCursor; i--) {
-         el->el_line.bufcolor[i + num] = el->el_line.bufcolor[i];
+         el->fLine.fBufColor[i + num] = el->fLine.fBufColor[i];
       }
 
    }
-   el->el_line.lastchar += num;
+   el->fLine.fLastChar += num;
 } // c_insert
 
 
@@ -108,23 +108,23 @@ c_insert(EditLine* el, int num) {
  *	Delete num characters after the cursor
  */
 el_protected void
-c_delafter(EditLine* el, int num) {
-   if (el->el_line.cursor + num > el->el_line.lastchar) {
-      num = el->el_line.lastchar - el->el_line.cursor;
+c_delafter(EditLine_t* el, int num) {
+   if (el->fLine.fCursor + num > el->fLine.fLastChar) {
+      num = el->fLine.fLastChar - el->fLine.fCursor;
    }
 
    if (num > 0) {
       char* cp;
 
-      if (el->el_map.current != el->el_map.emacs) {
-         cv_undo(el, INSERT, (size_t) num, el->el_line.cursor);
+      if (el->fMap.fCurrent != el->fMap.fEmacs) {
+         cv_undo(el, INSERT, (size_t) num, el->fLine.fCursor);
       }
 
-      for (cp = el->el_line.cursor; cp <= el->el_line.lastchar; cp++) {
+      for (cp = el->fLine.fCursor; cp <= el->fLine.fLastChar; cp++) {
          *cp = cp[num];
       }
 
-      el->el_line.lastchar -= num;
+      el->fLine.fLastChar -= num;
    }
 } // c_delafter
 
@@ -133,26 +133,26 @@ c_delafter(EditLine* el, int num) {
  *	Delete num characters before the cursor
  */
 el_protected void
-c_delbefore(EditLine* el, int num) {
-   if (el->el_line.cursor - num < el->el_line.buffer) {
-      num = el->el_line.cursor - el->el_line.buffer;
+c_delbefore(EditLine_t* el, int num) {
+   if (el->fLine.fCursor - num < el->fLine.fBuffer) {
+      num = el->fLine.fCursor - el->fLine.fBuffer;
    }
 
    if (num > 0) {
       char* cp;
 
-      if (el->el_map.current != el->el_map.emacs) {
+      if (el->fMap.fCurrent != el->fMap.fEmacs) {
          cv_undo(el, INSERT, (size_t) num,
-                 el->el_line.cursor - num);
+                 el->fLine.fCursor - num);
       }
 
-      for (cp = el->el_line.cursor - num;
-           cp <= el->el_line.lastchar;
+      for (cp = el->fLine.fCursor - num;
+           cp <= el->fLine.fLastChar;
            cp++) {
          *cp = cp[num];
       }
 
-      el->el_line.lastchar -= num;
+      el->fLine.fLastChar -= num;
    }
 } // c_delbefore
 
@@ -226,7 +226,7 @@ c__next_word(char* p, char* high, int n, int (* wtest)(int)) {
  *	Find the next word vi style
  */
 el_protected char*
-cv_next_word(EditLine* el, char* p, char* high, int n, int (* wtest)(int)) {
+cv_next_word(EditLine_t* el, char* p, char* high, int n, int (* wtest)(int)) {
    int test;
 
    while (n--) {
@@ -239,7 +239,7 @@ cv_next_word(EditLine* el, char* p, char* high, int n, int (* wtest)(int)) {
        * vi historically deletes with cw only the word preserving the
        * trailing whitespace! This is not what 'w' does..
        */
-      if (el->el_chared.c_vcmd.action != (DELETE | INSERT)) {
+      if (el->fCharEd.fVCmd.fAction != (DELETE | INSERT)) {
          while ((p < high) && isspace((unsigned char) *p))
             p++;
       }
@@ -258,7 +258,7 @@ cv_next_word(EditLine* el, char* p, char* high, int n, int (* wtest)(int)) {
  *	Find the previous word vi style
  */
 el_protected char*
-cv_prev_word(EditLine* el, char* p, char* low, int n, int (* wtest)(int)) {
+cv_prev_word(EditLine_t* el, char* p, char* low, int n, int (* wtest)(int)) {
    int test;
 
    while (n--) {
@@ -268,7 +268,7 @@ cv_prev_word(EditLine* el, char* p, char* low, int n, int (* wtest)(int)) {
        * vi historically deletes with cb only the word preserving the
        * leading whitespace! This is not what 'b' does..
        */
-      if (el->el_chared.c_vcmd.action != (DELETE | INSERT)) {
+      if (el->fCharEd.fVCmd.fAction != (DELETE | INSERT)) {
          while ((p > low) && isspace((unsigned char) *p))
             p--;
       }
@@ -334,28 +334,28 @@ c__number(
  *	Finish vi delete action
  */
 el_protected void
-cv_delfini(EditLine* el) {
+cv_delfini(EditLine_t* el) {
    int size;
    int oaction;
 
-   if (el->el_chared.c_vcmd.action & INSERT) {
-      el->el_map.current = el->el_map.key;
+   if (el->fCharEd.fVCmd.fAction & INSERT) {
+      el->fMap.fCurrent = el->fMap.fKey;
    }
 
-   oaction = el->el_chared.c_vcmd.action;
-   el->el_chared.c_vcmd.action = NOP;
+   oaction = el->fCharEd.fVCmd.fAction;
+   el->fCharEd.fVCmd.fAction = NOP;
 
-   if (el->el_chared.c_vcmd.pos == 0) {
+   if (el->fCharEd.fVCmd.fPos == 0) {
       return;
    }
 
-   if (el->el_line.cursor > el->el_chared.c_vcmd.pos) {
-      size = (int) (el->el_line.cursor - el->el_chared.c_vcmd.pos);
+   if (el->fLine.fCursor > el->fCharEd.fVCmd.fPos) {
+      size = (int) (el->fLine.fCursor - el->fCharEd.fVCmd.fPos);
       c_delbefore(el, size);
-      el->el_line.cursor = el->el_chared.c_vcmd.pos;
+      el->fLine.fCursor = el->fCharEd.fVCmd.fPos;
       re_refresh_cursor(el);
-   } else if (el->el_line.cursor < el->el_chared.c_vcmd.pos) {
-      size = (int) (el->el_chared.c_vcmd.pos - el->el_line.cursor);
+   } else if (el->fLine.fCursor < el->fCharEd.fVCmd.fPos) {
+      size = (int) (el->fCharEd.fVCmd.fPos - el->fLine.fCursor);
       c_delafter(el, size);
    } else {
       size = 1;
@@ -364,21 +364,21 @@ cv_delfini(EditLine* el) {
 
    switch (oaction) {
    case DELETE | INSERT:
-      el->el_chared.c_undo.action = DELETE | INSERT;
+      el->fCharEd.fUndo.fAction = DELETE | INSERT;
       break;
    case DELETE:
-      el->el_chared.c_undo.action = INSERT;
+      el->fCharEd.fUndo.fAction = INSERT;
       break;
    case NOP:
    case INSERT:
    default:
-      EL_ABORT((el->el_errfile, "Bad oaction %d\n", oaction));
+      EL_ABORT((el->fErrFile, "Bad oaction %d\n", oaction));
       break;
    }
 
 
-   el->el_chared.c_undo.ptr = el->el_line.cursor;
-   el->el_chared.c_undo.dsize = size;
+   el->fCharEd.fUndo.fPtr = el->fLine.fCursor;
+   el->fCharEd.fUndo.fDSize = size;
 } // cv_delfini
 
 
@@ -436,58 +436,58 @@ cv__endword(char* p, char* high, int n) {
  *	Initialize the character editor
  */
 el_protected int
-ch_init(EditLine* el) {
-   el->el_line.buffer = (char*) el_malloc(EL_BUFSIZ);
-   el->el_line.bufcolor = (el_color_t*) el_malloc(EL_BUFSIZ * sizeof(el_color_t));
+ch_init(EditLine_t* el) {
+   el->fLine.fBuffer = (char*) el_malloc(EL_BUFSIZ);
+   el->fLine.fBufColor = (ElColor_t*) el_malloc(EL_BUFSIZ * sizeof(ElColor_t));
 
-   if (el->el_line.buffer == NULL) {
+   if (el->fLine.fBuffer == NULL) {
       return -1;
    }
 
-   (void) memset(el->el_line.buffer, 0, EL_BUFSIZ);
-   (void) memset(el->el_line.bufcolor, 0, EL_BUFSIZ * sizeof(el_color_t));
-   el->el_line.cursor = el->el_line.buffer;
-   el->el_line.lastchar = el->el_line.buffer;
-   el->el_line.limit = &el->el_line.buffer[EL_BUFSIZ - 2];
+   (void) memset(el->fLine.fBuffer, 0, EL_BUFSIZ);
+   (void) memset(el->fLine.fBufColor, 0, EL_BUFSIZ * sizeof(ElColor_t));
+   el->fLine.fCursor = el->fLine.fBuffer;
+   el->fLine.fLastChar = el->fLine.fBuffer;
+   el->fLine.fLimit = &el->fLine.fBuffer[EL_BUFSIZ - 2];
 
-   el->el_chared.c_undo.buf = (char*) el_malloc(EL_BUFSIZ);
+   el->fCharEd.fUndo.fBuf = (char*) el_malloc(EL_BUFSIZ);
 
-   if (el->el_chared.c_undo.buf == NULL) {
+   if (el->fCharEd.fUndo.fBuf == NULL) {
       return -1;
    }
-   (void) memset(el->el_chared.c_undo.buf, 0, EL_BUFSIZ);
-   el->el_chared.c_undo.action = NOP;
-   el->el_chared.c_undo.isize = 0;
-   el->el_chared.c_undo.dsize = 0;
-   el->el_chared.c_undo.ptr = el->el_line.buffer;
+   (void) memset(el->fCharEd.fUndo.fBuf, 0, EL_BUFSIZ);
+   el->fCharEd.fUndo.fAction = NOP;
+   el->fCharEd.fUndo.fISize = 0;
+   el->fCharEd.fUndo.fDSize = 0;
+   el->fCharEd.fUndo.fPtr = el->fLine.fBuffer;
 
-   el->el_chared.c_vcmd.action = NOP;
-   el->el_chared.c_vcmd.pos = el->el_line.buffer;
-   el->el_chared.c_vcmd.ins = el->el_line.buffer;
+   el->fCharEd.fVCmd.fAction = NOP;
+   el->fCharEd.fVCmd.fPos = el->fLine.fBuffer;
+   el->fCharEd.fVCmd.fIns = el->fLine.fBuffer;
 
-   el->el_chared.c_kill.buf = (char*) el_malloc(EL_BUFSIZ);
+   el->fCharEd.fKill.fBuf = (char*) el_malloc(EL_BUFSIZ);
 
-   if (el->el_chared.c_kill.buf == NULL) {
+   if (el->fCharEd.fKill.fBuf == NULL) {
       return -1;
    }
-   (void) memset(el->el_chared.c_kill.buf, 0, EL_BUFSIZ);
-   el->el_chared.c_kill.mark = el->el_line.buffer;
-   el->el_chared.c_kill.last = el->el_chared.c_kill.buf;
+   (void) memset(el->fCharEd.fKill.fBuf, 0, EL_BUFSIZ);
+   el->fCharEd.fKill.fMark = el->fLine.fBuffer;
+   el->fCharEd.fKill.fLast = el->fCharEd.fKill.fBuf;
 
-   el->el_map.current = el->el_map.key;
+   el->fMap.fCurrent = el->fMap.fKey;
 
-   el->el_state.inputmode = MODE_INSERT;               /* XXX: save a default */
-   el->el_state.doingarg = 0;
-   el->el_state.metanext = 0;
-   el->el_state.argument = 1;
-   el->el_state.lastcmd = ED_UNASSIGNED;
+   el->fState.fInputMode = MODE_INSERT;               /* XXX: save a default */
+   el->fState.fDoingArg = 0;
+   el->fState.fMetaNext = 0;
+   el->fState.fArgument = 1;
+   el->fState.fLastCmd = ED_UNASSIGNED;
 
-   el->el_chared.c_macro.nline = NULL;
-   el->el_chared.c_macro.level = -1;
-   el->el_chared.c_macro.macro = (char**) el_malloc(EL_MAXMACRO *
+   el->fCharEd.fMacro.fNLine = NULL;
+   el->fCharEd.fMacro.fLevel = -1;
+   el->fCharEd.fMacro.fMacro = (char**) el_malloc(EL_MAXMACRO *
                                                     sizeof(char*));
 
-   if (el->el_chared.c_macro.macro == NULL) {
+   if (el->fCharEd.fMacro.fMacro == NULL) {
       return -1;
    }
    return 0;
@@ -498,32 +498,32 @@ ch_init(EditLine* el) {
  *	Reset the character editor
  */
 el_protected void
-ch_reset(EditLine* el) {
-   el->el_line.cursor = el->el_line.buffer;
-   el->el_line.lastchar = el->el_line.buffer;
+ch_reset(EditLine_t* el) {
+   el->fLine.fCursor = el->fLine.fBuffer;
+   el->fLine.fLastChar = el->fLine.fBuffer;
 
-   el->el_chared.c_undo.action = NOP;
-   el->el_chared.c_undo.isize = 0;
-   el->el_chared.c_undo.dsize = 0;
-   el->el_chared.c_undo.ptr = el->el_line.buffer;
+   el->fCharEd.fUndo.fAction = NOP;
+   el->fCharEd.fUndo.fISize = 0;
+   el->fCharEd.fUndo.fDSize = 0;
+   el->fCharEd.fUndo.fPtr = el->fLine.fBuffer;
 
-   el->el_chared.c_vcmd.action = NOP;
-   el->el_chared.c_vcmd.pos = el->el_line.buffer;
-   el->el_chared.c_vcmd.ins = el->el_line.buffer;
+   el->fCharEd.fVCmd.fAction = NOP;
+   el->fCharEd.fVCmd.fPos = el->fLine.fBuffer;
+   el->fCharEd.fVCmd.fIns = el->fLine.fBuffer;
 
-   el->el_chared.c_kill.mark = el->el_line.buffer;
+   el->fCharEd.fKill.fMark = el->fLine.fBuffer;
 
-   el->el_map.current = el->el_map.key;
+   el->fMap.fCurrent = el->fMap.fKey;
 
-   el->el_state.inputmode = MODE_INSERT;               /* XXX: save a default */
-   el->el_state.doingarg = 0;
-   el->el_state.metanext = 0;
-   el->el_state.argument = 1;
-   el->el_state.lastcmd = ED_UNASSIGNED;
+   el->fState.fInputMode = MODE_INSERT;               /* XXX: save a default */
+   el->fState.fDoingArg = 0;
+   el->fState.fMetaNext = 0;
+   el->fState.fArgument = 1;
+   el->fState.fLastCmd = ED_UNASSIGNED;
 
-   el->el_chared.c_macro.level = -1;
+   el->fCharEd.fMacro.fLevel = -1;
 
-   el->el_history.eventno = 0;
+   el->fHistory.fEventNo = 0;
 } // ch_reset
 
 
@@ -533,12 +533,12 @@ ch_reset(EditLine* el) {
  *	Returns 1 if successful, 0 if not.
  */
 el_protected int
-ch_enlargebufs(EditLine* el, size_t addlen) {
+ch_enlargebufs(EditLine_t* el, size_t addlen) {
    size_t sz, newsz;
    char* newbuffer, * oldbuf, * oldkbuf;
-   el_color_t* newcolorbuf, * oldcolorbuf;
+   ElColor_t* newcolorbuf, * oldcolorbuf;
 
-   sz = el->el_line.limit - el->el_line.buffer + EL_LEAVE;
+   sz = el->fLine.fLimit - el->fLine.fBuffer + EL_LEAVE;
    newsz = sz * 2;
 
    /*
@@ -553,8 +553,8 @@ ch_enlargebufs(EditLine* el, size_t addlen) {
    /*
     * Reallocate line buffer.
     */
-   newbuffer = (char*) el_realloc(el->el_line.buffer, newsz);
-   newcolorbuf = (el_color_t*) el_realloc(el->el_line.bufcolor, newsz);
+   newbuffer = (char*) el_realloc(el->fLine.fBuffer, newsz);
+   newcolorbuf = (ElColor_t*) el_realloc(el->fLine.fBufColor, newsz);
 
    if (!newbuffer || !newcolorbuf) {
       return 0;
@@ -564,21 +564,21 @@ ch_enlargebufs(EditLine* el, size_t addlen) {
    (void) memset(&newbuffer[sz], 0, newsz - sz);
    (void) memset(&newcolorbuf[sz], 0, newsz - sz);
 
-   oldbuf = el->el_line.buffer;
-   oldcolorbuf = el->el_line.bufcolor;
+   oldbuf = el->fLine.fBuffer;
+   oldcolorbuf = el->fLine.fBufColor;
 
-   el->el_line.buffer = newbuffer;
-   el->el_line.bufcolor = newcolorbuf;
-   el->el_line.cursor = newbuffer + (el->el_line.cursor - oldbuf);
-   el->el_line.lastchar = newbuffer + (el->el_line.lastchar - oldbuf);
-   el->el_line.limit = &newbuffer[newsz - EL_LEAVE];
+   el->fLine.fBuffer = newbuffer;
+   el->fLine.fBufColor = newcolorbuf;
+   el->fLine.fCursor = newbuffer + (el->fLine.fCursor - oldbuf);
+   el->fLine.fLastChar = newbuffer + (el->fLine.fLastChar - oldbuf);
+   el->fLine.fLimit = &newbuffer[newsz - EL_LEAVE];
 
 // !!!!!!!!!!!!!!!!LOUISE: GOT AS FAR AS HERE !!!!!!!!!!!!!!!!!!!
 
    /*
     * Reallocate kill buffer.
     */
-   newbuffer = (char*) el_realloc(el->el_chared.c_kill.buf, newsz);
+   newbuffer = (char*) el_realloc(el->fCharEd.fKill.fBuf, newsz);
 
    if (!newbuffer) {
       return 0;
@@ -588,18 +588,18 @@ ch_enlargebufs(EditLine* el, size_t addlen) {
    (void) memset(&newbuffer[sz], 0, newsz - sz);
 
    // LOUISE  - haven't changed the following 4 lines to reflect addition of colour buffer - may need to!!
-   oldkbuf = el->el_chared.c_kill.buf;
+   oldkbuf = el->fCharEd.fKill.fBuf;
 
-   el->el_chared.c_kill.buf = newbuffer;
-   el->el_chared.c_kill.last = newbuffer +
-                               (el->el_chared.c_kill.last - oldkbuf);
-   el->el_chared.c_kill.mark = el->el_line.buffer +
-                               (el->el_chared.c_kill.mark - oldbuf);
+   el->fCharEd.fKill.fBuf = newbuffer;
+   el->fCharEd.fKill.fLast = newbuffer +
+                               (el->fCharEd.fKill.fLast - oldkbuf);
+   el->fCharEd.fKill.fMark = el->fLine.fBuffer +
+                               (el->fCharEd.fKill.fMark - oldbuf);
 
    /*
     * Reallocate undo buffer.
     */
-   newbuffer = (char*) el_realloc(el->el_chared.c_undo.buf, newsz);
+   newbuffer = (char*) el_realloc(el->fCharEd.fUndo.fBuf, newsz);
 
    if (!newbuffer) {
       return 0;
@@ -608,9 +608,9 @@ ch_enlargebufs(EditLine* el, size_t addlen) {
    /* zero the newly added memory, leave old data in */
    (void) memset(&newbuffer[sz], 0, newsz - sz);
 
-   el->el_chared.c_undo.ptr = el->el_line.buffer +
-                              (el->el_chared.c_undo.ptr - oldbuf);
-   el->el_chared.c_undo.buf = newbuffer;
+   el->fCharEd.fUndo.fPtr = el->fLine.fBuffer +
+                              (el->fCharEd.fUndo.fPtr - oldbuf);
+   el->fCharEd.fUndo.fBuf = newbuffer;
 
    if (!hist_enlargebuf(el, sz, newsz)) {
       return 0;
@@ -624,18 +624,18 @@ ch_enlargebufs(EditLine* el, size_t addlen) {
  *	Free the data structures used by the editor
  */
 el_protected void
-ch_end(EditLine* el) {
-   el_free((ptr_t) el->el_line.buffer);
-   el->el_line.buffer = NULL;
-   el_free((ptr_t) el->el_line.bufcolor);
-   el->el_line.bufcolor = NULL;
-   el->el_line.limit = NULL;
-   el_free((ptr_t) el->el_chared.c_undo.buf);
-   el->el_chared.c_undo.buf = NULL;
-   el_free((ptr_t) el->el_chared.c_kill.buf);
-   el->el_chared.c_kill.buf = NULL;
-   el_free((ptr_t) el->el_chared.c_macro.macro);
-   el->el_chared.c_macro.macro = NULL;
+ch_end(EditLine_t* el) {
+   el_free((ptr_t) el->fLine.fBuffer);
+   el->fLine.fBuffer = NULL;
+   el_free((ptr_t) el->fLine.fBufColor);
+   el->fLine.fBufColor = NULL;
+   el->fLine.fLimit = NULL;
+   el_free((ptr_t) el->fCharEd.fUndo.fBuf);
+   el->fCharEd.fUndo.fBuf = NULL;
+   el_free((ptr_t) el->fCharEd.fKill.fBuf);
+   el->fCharEd.fKill.fBuf = NULL;
+   el_free((ptr_t) el->fCharEd.fMacro.fMacro);
+   el->fCharEd.fMacro.fMacro = NULL;
    ch_reset(el);
 }
 
@@ -644,14 +644,14 @@ ch_end(EditLine* el) {
  *	Insert string at cursorI
  */
 el_public int
-el_insertstr(EditLine* el, const char* s) {
+el_insertstr(EditLine_t* el, const char* s) {
    size_t len;
 
    if ((len = strlen(s)) == 0) {
       return -1;
    }
 
-   if (el->el_line.lastchar + len >= el->el_line.limit) {
+   if (el->fLine.fLastChar + len >= el->fLine.fLimit) {
       if (!ch_enlargebufs(el, len)) {
          return -1;
       }
@@ -661,9 +661,9 @@ el_insertstr(EditLine* el, const char* s) {
 
    while (*s) {
       // set the colour information for the new character to default
-      el->el_line.bufcolor[el->el_line.cursor - el->el_line.buffer] = -1;
-      // add the new character into el_line.buffer
-      *el->el_line.cursor++ = *s++;
+      el->fLine.fBufColor[el->fLine.fCursor - el->fLine.fBuffer] = -1;
+      // add the new character into el_line.fBuffer
+      *el->fLine.fCursor++ = *s++;
    }
    return 0;
 } // el_insertstr
@@ -673,20 +673,20 @@ el_insertstr(EditLine* el, const char* s) {
  *	Delete num characters before the cursor
  */
 el_public void
-el_deletestr(EditLine* el, int n) {
+el_deletestr(EditLine_t* el, int n) {
    if (n <= 0) {
       return;
    }
 
-   if (el->el_line.cursor < &el->el_line.buffer[n]) {
+   if (el->fLine.fCursor < &el->fLine.fBuffer[n]) {
       return;
    }
 
    c_delbefore(el, n);                  /* delete before dot */
-   el->el_line.cursor -= n;
+   el->fLine.fCursor -= n;
 
-   if (el->el_line.cursor < el->el_line.buffer) {
-      el->el_line.cursor = el->el_line.buffer;
+   if (el->fLine.fCursor < el->fLine.fBuffer) {
+      el->fLine.fCursor = el->fLine.fBuffer;
    }
 }
 
@@ -695,7 +695,7 @@ el_deletestr(EditLine* el, int n) {
  *	Get a string
  */
 el_protected int
-c_gets(EditLine* el, char* buf) {
+c_gets(EditLine_t* el, char* buf) {
    char ch;
    int len = 0;
 
@@ -709,13 +709,13 @@ c_gets(EditLine* el, char* buf) {
       case 0177:
 
          if (len > 1) {
-            *el->el_line.cursor-- = '\0';
-            el->el_line.lastchar = el->el_line.cursor;
+            *el->fLine.fCursor-- = '\0';
+            el->fLine.fLastChar = el->fLine.fCursor;
             buf[len--] = '\0';
          } else {
-            el->el_line.buffer[0] = '\0';
-            el->el_line.lastchar = el->el_line.buffer;
-            el->el_line.cursor = el->el_line.buffer;
+            el->fLine.fBuffer[0] = '\0';
+            el->fLine.fLastChar = el->fLine.fBuffer;
+            el->fLine.fCursor = el->fLine.fBuffer;
             return CC_REFRESH;
          }
          re_refresh(el);
@@ -734,10 +734,10 @@ c_gets(EditLine* el, char* buf) {
          } else {
             buf[len++] = ch;
             // set the colour information for the new character to default
-            el->el_line.bufcolor[el->el_line.cursor - el->el_line.buffer] = -1;
-            // add the new character into el_line.buffer
-            *el->el_line.cursor++ = ch;
-            el->el_line.lastchar = el->el_line.cursor;
+            el->fLine.fBufColor[el->fLine.fCursor - el->fLine.fBuffer] = -1;
+            // add the new character into el_line.fBuffer
+            *el->fLine.fCursor++ = ch;
+            el->fLine.fLastChar = el->fLine.fCursor;
          }
          re_refresh(el);
          ch = 0;
@@ -753,20 +753,20 @@ c_gets(EditLine* el, char* buf) {
  *	Return the current horizontal position of the cursor
  */
 el_protected int
-c_hpos(EditLine* el) {
+c_hpos(EditLine_t* el) {
    char* ptr;
 
    /*
     * Find how many characters till the beginning of this line.
     */
-   if (el->el_line.cursor == el->el_line.buffer) {
+   if (el->fLine.fCursor == el->fLine.fBuffer) {
       return 0;
    } else {
-      for (ptr = el->el_line.cursor - 1;
-           ptr >= el->el_line.buffer && *ptr != '\n';
+      for (ptr = el->fLine.fCursor - 1;
+           ptr >= el->fLine.fBuffer && *ptr != '\n';
            ptr--) {
          continue;
       }
-      return el->el_line.cursor - ptr - 1;
+      return el->fLine.fCursor - ptr - 1;
    }
 }

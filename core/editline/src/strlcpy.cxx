@@ -10,7 +10,7 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////
-// This file is part of the liblineedit code. See el.h for the
+// This file is part of the liblineedit code. See el.fH for the
 // full license (BSD).
 ////////////////////////////////////////////////////////////////////////
 

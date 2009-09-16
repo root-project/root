@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: refresh.h,v 1.4 2001/01/10 07:45:42 jdolecek Exp $	*/
+/*	$NetBSD: refresh.fH,v 1.4 2001/01/10 07:45:42 jdolecek Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -46,11 +46,11 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)prompt.h	8.1 (Berkeley) 6/4/93
+ *	@(#)prompt.fH	8.1 (Berkeley) 6/4/93
  */
 
 /*
- * el.refresh.h: Screen refresh functions
+ * el.refresh.fH: Screen refresh functions
  */
 #ifndef _h_el_refresh
 #define _h_el_refresh
@@ -58,17 +58,17 @@
 #include "histedit.h"
 
 typedef struct {
-   coord_t r_cursor;            /* Refresh cursor position	*/
+   ElCoord_t r_cursor;            /* Refresh cursor position	*/
    int r_oldcv;                 /* Vertical locations		*/
    int r_newcv;
-} el_refresh_t;
+} ElRefresh_t;
 
-el_protected void re_putc(EditLine*, int, int, el_color_t* color);
-el_protected void re_clear_lines(EditLine*);
-el_protected void re_clear_display(EditLine*);
-el_protected void re_refresh(EditLine*);
-el_protected void re_refresh_cursor(EditLine*);
-el_protected void re_fastaddc(EditLine*);
-el_protected void re_goto_bottom(EditLine*);
+el_protected void re_putc(EditLine_t*, int, int, ElColor_t* color);
+el_protected void re_clear_lines(EditLine_t*);
+el_protected void re_clear_display(EditLine_t*);
+el_protected void re_refresh(EditLine_t*);
+el_protected void re_refresh_cursor(EditLine_t*);
+el_protected void re_fastaddc(EditLine_t*);
+el_protected void re_goto_bottom(EditLine_t*);
 
 #endif /* _h_el_refresh */

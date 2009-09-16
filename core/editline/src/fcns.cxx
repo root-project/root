@@ -11,7 +11,7 @@
 
 #include "sys.h"
 #include "el.h"
-el_private const el_func_t el_func[] = {
+el_private const ElFunc_t el_func[] = {
    ed_argument_digit, ed_clear_screen,
    ed_command, ed_delete_next_char,
    ed_delete_prev_char, ed_delete_prev_word,
@@ -81,5 +81,5 @@ el_private const el_func_t el_func[] = {
    em_undo,
 };
 
-el_protected const el_func_t*
+el_protected const ElFunc_t*
 func__get() { return el_func; }

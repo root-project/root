@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: sys.h,v 1.4 2000/09/04 22:06:32 lukem Exp $	*/
+/*	$NetBSD: sys.fH,v 1.4 2000/09/04 22:06:32 lukem Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -44,7 +44,7 @@
  */
 
 /*
- * sys.h: Put all the stupid compiler and system dependencies here...
+ * sys.fH: Put all the stupid compiler and system dependencies here...
  */
 #ifndef _h_sys
 #define _h_sys

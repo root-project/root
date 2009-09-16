@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: tokenizer.h,v 1.4 2000/09/04 22:06:33 lukem Exp $	*/
+/*	$NetBSD: tokenizer.fH,v 1.4 2000/09/04 22:06:33 lukem Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -44,16 +44,16 @@
  */
 
 /*
- * tokenizer.h: Header file for tokenizer routines
+ * tokenizer.fH: Header file for ElTokenizer_t routines
  */
 #ifndef _h_tokenizer
 #define _h_tokenizer
 
-typedef struct tokenizer Tokenizer;
+typedef struct ElTokenizer_t Tokenizer_t;
 
-Tokenizer* tok_init(const char*);
-void tok_reset(Tokenizer*);
-void tok_end(Tokenizer*);
-int tok_line(Tokenizer*, const char*, int*, char***);
+Tokenizer_t* tok_init(const char*);
+void tok_reset(Tokenizer_t*);
+void tok_end(Tokenizer_t*);
+int tok_line(Tokenizer_t*, const char*, int*, char***);
 
 #endif /* _h_tokenizer */

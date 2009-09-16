@@ -11,7 +11,7 @@
 
 #include "sys.h"
 #include "el.h"
-el_private const struct el_bindings_t el_func_help[] = {
+el_private const struct ElBindings_t el_func_help[] = {
    { "vi-paste-next", VI_PASTE_NEXT,
      "Vi paste previous deletion to the right of the cursor" },
    { "vi-paste-prev", VI_PASTE_PREV,
@@ -197,5 +197,5 @@ el_private const struct el_bindings_t el_func_help[] = {
    { NULL, 0, NULL }
 };
 
-el_protected const el_bindings_t*
+el_protected const ElBindings_t*
 help__get() { return el_func_help; }

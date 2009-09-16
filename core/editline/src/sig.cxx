@@ -54,7 +54,7 @@
 #include "el.h"
 #include <stdlib.h>
 
-el_private EditLine* sel = NULL;
+el_private EditLine_t* sel = NULL;
 
 el_private const int sighdl[] = {
 #define _DO(a) (a),
@@ -67,7 +67,7 @@ el_private void sig_handler(int);
 
 /* sig_handler():
  *	This is the handler called for all signals
- *	XXX: we cannot pass any data so we just store the old editline
+ *	XXX: we cannot pass any data so we just store the old SEditLine_t
  *	state in a el_private variable
  */
 el_private void
@@ -104,7 +104,7 @@ sig_handler(int signo) {
       }
    }
 
-   (void) signal(signo, sel->el_signal[i]);
+   (void) signal(signo, sel->fSignal[i]);
    (void) sigprocmask(SIG_SETMASK, &oset, NULL);
    (void) kill(0, signo);
 } // sig_handler
@@ -114,7 +114,7 @@ sig_handler(int signo) {
  *	Initialize all signal stuff
  */
 el_protected int
-sig_init(EditLine* el) {
+sig_init(EditLine_t* el) {
    int i;
    sigset_t nset, oset;
 
@@ -126,14 +126,14 @@ sig_init(EditLine* el) {
 
 #define SIGSIZE (sizeof(sighdl) / sizeof(sighdl[0]) * sizeof(sig_t))
 
-   el->el_signal = (sig_t*) el_malloc(SIGSIZE);
+   el->fSignal = (sig_t*) el_malloc(SIGSIZE);
 
-   if (el->el_signal == NULL) {
+   if (el->fSignal == NULL) {
       return -1;
    }
 
    for (i = 0; sighdl[i] != -1; i++) {
-      el->el_signal[i] = SIG_ERR;
+      el->fSignal[i] = SIG_ERR;
    }
 
    (void) sigprocmask(SIG_SETMASK, &oset, NULL);
@@ -146,9 +146,9 @@ sig_init(EditLine* el) {
  *	Clear all signal stuff
  */
 el_protected void
-sig_end(EditLine* el) {
-   el_free((ptr_t) el->el_signal);
-   el->el_signal = NULL;
+sig_end(EditLine_t* el) {
+   el_free((ptr_t) el->fSignal);
+   el->fSignal = NULL;
 }
 
 
@@ -156,7 +156,7 @@ sig_end(EditLine* el) {
  *	set all the signal handlers
  */
 el_protected void
-sig_set(EditLine* el) {
+sig_set(EditLine_t* el) {
    int i;
    sigset_t nset, oset;
 
@@ -171,7 +171,7 @@ sig_set(EditLine* el) {
 
       /* This could happen if we get interrupted */
       if ((s = signal(sighdl[i], sig_handler)) != sig_handler) {
-         el->el_signal[i] = s;
+         el->fSignal[i] = s;
       }
    }
    sel = el;
@@ -183,7 +183,7 @@ sig_set(EditLine* el) {
  *	clear all the signal handlers
  */
 el_protected void
-sig_clr(EditLine* el) {
+sig_clr(EditLine_t* el) {
    int i;
    sigset_t nset, oset;
 
@@ -194,8 +194,8 @@ sig_clr(EditLine* el) {
       (void) sigprocmask(SIG_BLOCK, &nset, &oset);
 
    for (i = 0; sighdl[i] != -1; i++) {
-      if (el->el_signal[i] != SIG_ERR) {
-         (void) signal(sighdl[i], el->el_signal[i]);
+      if (el->fSignal[i] != SIG_ERR) {
+         (void) signal(sighdl[i], el->fSignal[i]);
       }
    }
 

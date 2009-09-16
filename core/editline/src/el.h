@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: el.h,v 1.8 2001/01/06 14:44:50 jdolecek Exp $	*/
+/*	$NetBSD: el.fH,v 1.8 2001/01/06 14:44:50 jdolecek Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -44,7 +44,7 @@
  */
 
 /*
- * el.h: Internal structures.
+ * el.fH: Internal structures.
  */
 #ifndef _h_el
 #define _h_el
@@ -65,58 +65,56 @@
 #define EDIT_DISABLED 1 << 2
 // #define DEBUG_READ 1
 
-typedef int bool_t;                     /* True or not			*/
+typedef int ElBool_t;                     /* True or not			*/
 
-typedef unsigned char el_action_t;      /* Index to command array	*/
+typedef unsigned char ElAction_t;      /* Index to command array	*/
 
-typedef struct coord_t {                /* Position on the screen	*/
-   int h;
-   int v;
-} coord_t;
+struct ElCoord_t {                /* Position on the screen	*/
+   int fH;
+   int fV;
+};
 
-typedef struct el_color_t {
-   int foreColor;                       /* The foreground text colour */
-   int backColor;                       /* The background colour */
-   el_color_t(int f = -1, int b = -2): foreColor(f),
-      backColor(b) {}
+struct ElColor_t {
+   int fForeColor;                       /* The foreground text colour */
+   int fBackColor;                       /* The background colour */
+   ElColor_t(int f = -1, int b = -2): fForeColor(f),
+      fBackColor(b) {}
 
-   el_color_t&
-   operator =(const el_color_t& color) {
-      (*this).foreColor = color.foreColor;
-      (*this).backColor = color.backColor;
+   ElColor_t&
+   operator =(const ElColor_t& color) {
+      (*this).fForeColor = color.fForeColor;
+      (*this).fBackColor = color.fBackColor;
       return *this;
    }
 
 
-   el_color_t&
+   ElColor_t&
    operator =(int val) {
-      foreColor = val;
-      backColor = val;
+      fForeColor = val;
+      fBackColor = val;
       return *this;
    }
+};
 
 
-} el_color_t;
-
-
-typedef struct el_line_t {
-   char* buffer;                                /* Input line			*/
-   el_color_t* bufcolor;                        /* Color info for each char in buffer		*/
-   char* cursor;                                /* Cursor position		*/
-   char* lastchar;                              /* Last character		*/
-   const char* limit;                           /* Max position			*/
-} el_line_t;
+struct ElLine_t {
+   char* fBuffer;                                /* Input line			*/
+   ElColor_t* fBufColor;                         /* Color info for each char in buffer */
+   char* fCursor;                                /* Cursor position		*/
+   char* fLastChar;                              /* Last character		*/
+   const char* fLimit;                           /* Max position		*/
+};
 
 /*
  * Editor state
  */
-typedef struct el_state_t {
-   int inputmode;                       /* What mode are we in?		*/
-   int doingarg;                        /* Are we getting an argument?	*/
-   int argument;                        /* Numeric argument		*/
-   int metanext;                        /* Is the next char a meta char */
-   el_action_t lastcmd;                 /* Previous command		*/
-} el_state_t;
+struct ElState_t {
+   int fInputMode;                       /* What mode are we in?		*/
+   int fDoingArg;                        /* Are we getting an argument?	*/
+   int fArgument;                        /* Numeric argument		*/
+   int fMetaNext;                        /* Is the next char a meta char */
+   ElAction_t fLastCmd;                 /* Previous command		*/
+};
 
 /*
  * Until we come up with something better...
@@ -141,44 +139,44 @@ typedef struct el_state_t {
 #include "sig.h"
 #include "help.h"
 
-struct editline {
-   char* el_prog;                       /* the program name		*/
-   FILE* el_outfile;                    /* Stdio stuff			*/
-   FILE* el_errfile;                    /* Stdio stuff			*/
-   int el_infd;                         /* Input file descriptor	*/
-   int el_flags;                        /* Various flags.		*/
-   coord_t el_cursor;                   /* Cursor location		*/
-   char** el_display;                   /* Real screen image = what is there */
-   el_color_t** el_dispcolor;      /* Color for each char in el_display */
-   char** el_vdisplay;                  /* Virtual screen image = what we see */
-   el_color_t** el_vdispcolor;      /* Color for each char in el_vdisplay*/
-   el_line_t el_line;                   /* The current line information	*/
-   el_state_t el_state;                 /* Current editor state		*/
-   el_term_t el_term;                   /* Terminal dependent stuff	*/
-   el_tty_t el_tty;                     /* Tty dependent stuff		*/
-   el_refresh_t el_refresh;             /* Refresh stuff		*/
-   el_prompt_t el_prompt;               /* Prompt stuff			*/
-   el_prompt_t el_rprompt;              /* Prompt stuff			*/
-   el_chared_t el_chared;               /* Characted editor stuff	*/
-   el_map_t el_map;                     /* Key mapping stuff		*/
-   el_key_t el_key;                     /* Key binding stuff		*/
-   el_history_t el_history;             /* History stuff		*/
-   el_search_t el_search;               /* Search stuff			*/
-   el_signal_t el_signal;               /* Signal handling stuff	*/
+struct EditLine_t {
+   char* fProg;                       /* the program name		*/
+   FILE* fOutFile;                    /* Stdio stuff			*/
+   FILE* fErrFile;                    /* Stdio stuff			*/
+   int fInFD;                         /* Input file descriptor	*/
+   int fFlags;                        /* Various flags.		*/
+   ElCoord_t fCursor;                 /* Cursor location		*/
+   char** fDisplay;                   /* Real screen image = what is there */
+   ElColor_t** fDispColor;            /* Color for each char in fDisplay */
+   char** fVDisplay;                  /* Virtual screen image = what we see */
+   ElColor_t** fVDispColor;           /* Color for each char in fVDisplay*/
+   ElLine_t fLine;                   /* The current line information	*/
+   ElState_t fState;                 /* Current editor state		*/
+   ElTerm_t fTerm;                   /* Terminal dependent stuff	*/
+   ElTTY_t fTTY;                     /* Tty dependent stuff		*/
+   ElRefresh_t fRefresh;             /* Refresh stuff		*/
+   ElPrompt_t fPrompt;               /* Prompt stuff			*/
+   ElPrompt_t fRPrompt;              /* Prompt stuff			*/
+   ElCharEd_t fCharEd;               /* Characted editor stuff	*/
+   ElMap_t fMap;                     /* Key mapping stuff		*/
+   ElKey_t fKey;                     /* Key binding stuff		*/
+   ElHistory_t fHistory;             /* History_t stuff		*/
+   ElSearch_t fSearch;               /* Search stuff			*/
+   ElSignal_t fSignal;               /* Signal handling stuff	*/
 };
 
-el_protected int el_editmode(EditLine*, int, const char**);
+el_protected int el_editmode(EditLine_t*, int, const char**);
 
 /**
    Added by stephan@s11n.net: returns the editline object associated
    with the readline compatibility interface, to allow clients to
    customize that object further.
  */
-el_public struct editline* el_readline_el();
+el_public EditLine_t* el_readline_el();
 
 
 #ifdef DEBUG
-# define EL_ABORT(a) (void) (fprintf(el->el_errfile, "%s, %d: ", \
+# define EL_ABORT(a) (void) (fprintf(el->fErrFile, "%s, %d: ", \
                                      __FILE__, __LINE__), fprintf a, abort())
 #else
 # define EL_ABORT(a) abort()

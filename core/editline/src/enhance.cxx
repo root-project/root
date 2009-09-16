@@ -21,14 +21,14 @@ using namespace std;
 
 void setKeywordColors(const char* colorTab, const char* colorBracket, const char* colorBadBracket);
 int selectColor(const char* str);
-void highlightKeywords(EditLine* el);
-int matchParentheses(EditLine* el);
-void colorWord(EditLine* el, int first, int num, int color);
-void colorBrackets(EditLine* el, int open, int close, int color);
+void highlightKeywords(EditLine_t* el);
+int matchParentheses(EditLine_t* el);
+void colorWord(EditLine_t* el, int first, int num, int color);
+void colorBrackets(EditLine_t* el, int open, int close, int color);
 char** rl_complete2ROOT(const char*, int, int);
 
-struct KeywordInLine {
-   KeywordInLine(const TString& w, Long64_t hash, Ssiz_t pos):
+struct KeywordInLine_t {
+   KeywordInLine_t(const TString& w, Long64_t hash, Ssiz_t pos):
       fWord(w),
       fHash(hash),
       fPosBegin(pos) {}
@@ -116,11 +116,11 @@ selectColor(const char* s) {
  *
  */
 void
-highlightKeywords(EditLine* el) {
+highlightKeywords(EditLine_t* el) {
    typedef std::set<int> HashSet_t;
    static HashSet_t sHashedKnownTypes;
 
-   TString sBuffer(el->el_line.buffer, el->el_line.lastchar - el->el_line.buffer);
+   TString sBuffer(el->fLine.fBuffer, el->fLine.fLastChar - el->fLine.fBuffer);
 
    TString keyword;
    Ssiz_t posNextTok = 0;
@@ -157,7 +157,7 @@ highlightKeywords(EditLine* el) {
  * and pass both pointers to highlight()
  */
 int
-matchParentheses(EditLine* el) {
+matchParentheses(EditLine_t* el) {
    static const int amtBrackets = 3;
    int bracketPos = -1;
    int foundParenIdx = -1;
@@ -175,14 +175,14 @@ matchParentheses(EditLine* el) {
    // create a string of the buffer contents
    TString sBuffer = "";
 
-   for (char* c = el->el_line.buffer; c < el->el_line.lastchar; c++) {
+   for (char* c = el->fLine.fBuffer; c < el->fLine.fLastChar; c++) {
       sBuffer.Append(*c);
    }
 
    // check whole buffer for any highlighted brackets and remove colour info
-   for (int i = 0; i < (el->el_line.lastchar - el->el_line.buffer); i++) {
-      if (el->el_line.bufcolor[i].foreColor == color_bracket || el->el_line.bufcolor[i].foreColor == color_badbracket) {
-         el->el_line.bufcolor[i] = -1;                      // reset to default colours
+   for (int i = 0; i < (el->fLine.fLastChar - el->fLine.fBuffer); i++) {
+      if (el->fLine.fBufColor[i].fForeColor == color_bracket || el->fLine.fBufColor[i].fForeColor == color_badbracket) {
+         el->fLine.fBufColor[i] = -1;                      // reset to default colours
          term__repaint(el, i);
       }
    }
@@ -191,7 +191,7 @@ matchParentheses(EditLine* el) {
    stack<int> locBrackets;
 
    if (sBuffer.Length() > 0) {
-      int cursorPos = el->el_line.cursor - el->el_line.buffer;
+      int cursorPos = el->fLine.fCursor - el->fLine.fBuffer;
       bracketPos = cursorPos;
 
       // check against each bracket type
@@ -272,21 +272,21 @@ matchParentheses(EditLine* el) {
 /**
  *      Highlight a word within the buffer.
  *      Requires the start and end index of the word, and the color pair index (class or type).
- *      Writes colour info for each char in range to el->el_line.bufcol.
+ *      Writes colour info for each char in range to el->fLine.bufcol.
  *      Background colour is set to the same as the current terminal background colour.
  *      Foreground (text) colour is set according to the type of word being highlighted (e.g. class or type).
  */
 void
-colorWord(EditLine* el, int first, int num, int textColor) {
+colorWord(EditLine_t* el, int first, int num, int textColor) {
    int bgColor = -1;            // default background
    bool anyChange = false;
 
    // add colour information to el.
    for (int index = first; index < first + num; ++index) {
-      bool changed = el->el_line.bufcolor[index].foreColor != textColor;
+      bool changed = el->fLine.fBufColor[index].fForeColor != textColor;
       anyChange |= changed;
-      el->el_line.bufcolor[index].foreColor = textColor;
-      el->el_line.bufcolor[index].backColor = bgColor;
+      el->fLine.fBufColor[index].fForeColor = textColor;
+      el->fLine.fBufColor[index].fBackColor = bgColor;
 
       if (changed) {
          term__repaint(el, index);
@@ -300,19 +300,19 @@ colorWord(EditLine* el, int first, int num, int textColor) {
 
 
 /*
- *      Set the colour information in the editline buffer,
+ *      Set the colour information in the SEditLine_t buffer,
  *      Then call repaint to repaint the chars with the new colour information
  */
 void
-colorBrackets(EditLine* el, int open, int close, int textColor) {
+colorBrackets(EditLine_t* el, int open, int close, int textColor) {
    int bgColor = -1;            // default background
 
-   el->el_line.bufcolor[open].foreColor = textColor;
-   el->el_line.bufcolor[open].backColor = bgColor;
+   el->fLine.fBufColor[open].fForeColor = textColor;
+   el->fLine.fBufColor[open].fBackColor = bgColor;
    term__repaint(el, open);
 
-   el->el_line.bufcolor[close].foreColor = textColor;
-   el->el_line.bufcolor[close].backColor = bgColor;
+   el->fLine.fBufColor[close].fForeColor = textColor;
+   el->fLine.fBufColor[close].fBackColor = bgColor;
    term__repaint(el, close);
 
    term__setcolor(-1);

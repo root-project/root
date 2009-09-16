@@ -46,7 +46,7 @@
 #include "compat.h"
 
 /*
- * hist.c: History access functions
+ * hist.c: History_t access functions
  */
 #include "sys.h"
 #include <stdlib.h>
@@ -56,16 +56,16 @@
  *	Initialization function.
  */
 el_protected int
-hist_init(EditLine* el) {
-   el->el_history.fun = NULL;
-   el->el_history.ref = NULL;
-   el->el_history.buf = (char*) el_malloc(EL_BUFSIZ);
-   el->el_history.sz = EL_BUFSIZ;
+hist_init(EditLine_t* el) {
+   el->fHistory.fFun = NULL;
+   el->fHistory.fRef = NULL;
+   el->fHistory.fBuf = (char*) el_malloc(EL_BUFSIZ);
+   el->fHistory.fSz = EL_BUFSIZ;
 
-   if (el->el_history.buf == NULL) {
+   if (el->fHistory.fBuf == NULL) {
       return -1;
    }
-   el->el_history.last = el->el_history.buf;
+   el->fHistory.fLast = el->fHistory.fBuf;
    return 0;
 }
 
@@ -74,9 +74,9 @@ hist_init(EditLine* el) {
  *	clean up history;
  */
 el_protected void
-hist_end(EditLine* el) {
-   el_free((ptr_t) el->el_history.buf);
-   el->el_history.buf = NULL;
+hist_end(EditLine_t* el) {
+   el_free((ptr_t) el->fHistory.fBuf);
+   el->fHistory.fBuf = NULL;
 }
 
 
@@ -84,9 +84,9 @@ hist_end(EditLine* el) {
  *	Set new history interface
  */
 el_protected int
-hist_set(EditLine* el, hist_fun_t fun, ptr_t ptr) {
-   el->el_history.ref = ptr;
-   el->el_history.fun = fun;
+hist_set(EditLine_t* el, HistFun_t fun, ptr_t ptr) {
+   el->fHistory.fRef = ptr;
+   el->fHistory.fFun = fun;
    return 0;
 }
 
@@ -95,34 +95,34 @@ hist_set(EditLine* el, hist_fun_t fun, ptr_t ptr) {
  *	Get a history line and update it in the buffer.
  *	eventno tells us the event to get.
  */
-el_protected el_action_t
-hist_get(EditLine* el) {
+el_protected ElAction_t
+hist_get(EditLine_t* el) {
    const char* hp;
    int h;
 
-   if (el->el_history.eventno == 0) {           /* if really the current line */
-      (void) strncpy(el->el_line.buffer, el->el_history.buf,
-                     el->el_history.sz);
-      el_color_t* col = el->el_line.bufcolor;
+   if (el->fHistory.fEventNo == 0) {           /* if really the current line */
+      (void) strncpy(el->fLine.fBuffer, el->fHistory.fBuf,
+                     el->fHistory.fSz);
+      ElColor_t* col = el->fLine.fBufColor;
 
-      for (size_t i = 0; i < (size_t) el->el_history.sz; ++i) {
+      for (size_t i = 0; i < (size_t) el->fHistory.fSz; ++i) {
          col[i] = -1;
       }
-      el->el_line.lastchar = el->el_line.buffer +
-                             (el->el_history.last - el->el_history.buf);
+      el->fLine.fLastChar = el->fLine.fBuffer +
+                             (el->fHistory.fLast - el->fHistory.fBuf);
 
 #ifdef KSHVI
 
-      if (el->el_map.type == MAP_VI) {
-         el->el_line.cursor = el->el_line.buffer;
+      if (el->fMap.fType == MAP_VI) {
+         el->fLine.fCursor = el->fLine.fBuffer;
       } else
 #endif /* KSHVI */
-      el->el_line.cursor = el->el_line.lastchar;
+      el->fLine.fCursor = el->fLine.fLastChar;
 
       return CC_REFRESH;
    }
 
-   if (el->el_history.ref == NULL) {
+   if (el->fHistory.fRef == NULL) {
       return CC_ERROR;
    }
 
@@ -132,41 +132,41 @@ hist_get(EditLine* el) {
       return CC_ERROR;
    }
 
-   for (h = 1; h < el->el_history.eventno; h++) {
+   for (h = 1; h < el->fHistory.fEventNo; h++) {
       if ((hp = HIST_NEXT(el)) == NULL) {
-         el->el_history.eventno = h;
+         el->fHistory.fEventNo = h;
          return CC_ERROR;
       }
    }
-   (void) strncpy(el->el_line.buffer, hp,
-                  (size_t) (el->el_line.limit - el->el_line.buffer));
-   el_color_t* col = el->el_line.bufcolor;
+   (void) strncpy(el->fLine.fBuffer, hp,
+                  (size_t) (el->fLine.fLimit - el->fLine.fBuffer));
+   ElColor_t* col = el->fLine.fBufColor;
 
-   for (size_t i = 0; i < (size_t) (el->el_line.limit - el->el_line.buffer); ++i) {
+   for (size_t i = 0; i < (size_t) (el->fLine.fLimit - el->fLine.fBuffer); ++i) {
       col[i] = -1;
    }
-   el->el_line.lastchar = el->el_line.buffer + strlen(el->el_line.buffer);
+   el->fLine.fLastChar = el->fLine.fBuffer + strlen(el->fLine.fBuffer);
 
-   if (el->el_line.lastchar > el->el_line.buffer) {
-      if (el->el_line.lastchar[-1] == '\n') {
-         el->el_line.lastchar--;
+   if (el->fLine.fLastChar > el->fLine.fBuffer) {
+      if (el->fLine.fLastChar[-1] == '\n') {
+         el->fLine.fLastChar--;
       }
 
-      if (el->el_line.lastchar[-1] == ' ') {
-         el->el_line.lastchar--;
+      if (el->fLine.fLastChar[-1] == ' ') {
+         el->fLine.fLastChar--;
       }
 
-      if (el->el_line.lastchar < el->el_line.buffer) {
-         el->el_line.lastchar = el->el_line.buffer;
+      if (el->fLine.fLastChar < el->fLine.fBuffer) {
+         el->fLine.fLastChar = el->fLine.fBuffer;
       }
    }
 #ifdef KSHVI
 
-   if (el->el_map.type == MAP_VI) {
-      el->el_line.cursor = el->el_line.buffer;
+   if (el->fMap.fType == MAP_VI) {
+      el->fLine.fCursor = el->fLine.fBuffer;
    } else
 #endif /* KSHVI */
-   el->el_line.cursor = el->el_line.lastchar;
+   el->fLine.fCursor = el->fLine.fLastChar;
 
    return CC_REFRESH;
 } // hist_get
@@ -177,16 +177,16 @@ hist_get(EditLine* el) {
  */
 el_protected int
 /*ARGSUSED*/
-hist_list(EditLine* el, int /*argc*/, const char** /*argv*/) {
+hist_list(EditLine_t* el, int /*argc*/, const char** /*argv*/) {
    const char* str;
 
-   if (el->el_history.ref == NULL) {
+   if (el->fHistory.fRef == NULL) {
       return -1;
    }
 
    for (str = HIST_LAST(el); str != NULL; str = HIST_PREV(el)) {
-      (void) fprintf(el->el_outfile, "%d %s%s",
-                     el->el_history.ev.num, str,
+      (void) fprintf(el->fOutFile, "%d %s%s",
+                     el->fHistory.fEv.fNum, str,
                      (NULL == strstr(str, "\n")) ? "\n" : ""
 
                      /* ^^^
@@ -208,10 +208,10 @@ hist_list(EditLine* el, int /*argc*/, const char** /*argv*/) {
  */
 el_protected int
 /*ARGSUSED*/
-hist_enlargebuf(EditLine* el, size_t oldsz, size_t newsz) {
+hist_enlargebuf(EditLine_t* el, size_t oldsz, size_t newsz) {
    char* newbuf;
 
-   newbuf = (char*) realloc(el->el_history.buf, newsz);
+   newbuf = (char*) realloc(el->fHistory.fBuf, newsz);
 
    if (!newbuf) {
       return 0;
@@ -219,10 +219,10 @@ hist_enlargebuf(EditLine* el, size_t oldsz, size_t newsz) {
 
    (void) memset(&newbuf[oldsz], '\0', newsz - oldsz);
 
-   el->el_history.last = newbuf +
-                         (el->el_history.last - el->el_history.buf);
-   el->el_history.buf = newbuf;
-   el->el_history.sz = newsz;
+   el->fHistory.fLast = newbuf +
+                         (el->fHistory.fLast - el->fHistory.fBuf);
+   el->fHistory.fBuf = newbuf;
+   el->fHistory.fSz = newsz;
 
    return 1;
 } // hist_enlargebuf

@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: sig.h,v 1.3 2000/09/04 22:06:32 lukem Exp $	*/
+/*	$NetBSD: sig.fH,v 1.3 2000/09/04 22:06:32 lukem Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -44,7 +44,7 @@
  */
 
 /*
- * el.sig.h: Signal handling functions
+ * el.sig.fH: Signal handling functions
  */
 #ifndef _h_el_sig
 #define _h_el_sig
@@ -81,11 +81,11 @@
    _DO(SIGWINCH)
 
 
-typedef sig_t* el_signal_t;
+typedef sig_t* ElSignal_t;
 
-el_protected void sig_end(EditLine*);
-el_protected int sig_init(EditLine*);
-el_protected void sig_set(EditLine*);
-el_protected void sig_clr(EditLine*);
+el_protected void sig_end(EditLine_t*);
+el_protected int sig_init(EditLine_t*);
+el_protected void sig_set(EditLine_t*);
+el_protected void sig_clr(EditLine_t*);
 
 #endif /* _h_el_sig */

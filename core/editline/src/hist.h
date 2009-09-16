@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: hist.h,v 1.6 2001/01/10 07:45:41 jdolecek Exp $	*/
+/*	$NetBSD: hist.fH,v 1.6 2001/01/10 07:45:41 jdolecek Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -44,28 +44,28 @@
  */
 
 /*
- * el.hist.c: History functions
+ * el.hist.c: History_t functions
  */
 #ifndef _h_el_hist
 #define _h_el_hist
 
 #include "histedit.h"
 
-typedef int (*hist_fun_t)(ptr_t, HistEvent*, int, ...);
+typedef int (*HistFun_t)(ptr_t, HistEvent_t*, int, ...);
 
-typedef struct el_history_t {
-   char* buf;                           /* The history buffer		*/
-   size_t sz;                           /* Size of history buffer	*/
-   char* last;                          /* The last character		*/
-   int eventno;                         /* Event we are looking for	*/
-   ptr_t ref;                           /* Argument for history fcns	*/
-   hist_fun_t fun;                      /* Event access			*/
-   HistEvent ev;                        /* Event cookie			*/
-} el_history_t;
+typedef struct ElHistory_t {
+   char* fBuf;                           /* The history buffer		*/
+   size_t fSz;                           /* Size of history buffer	*/
+   char* fLast;                          /* The last character		*/
+   int fEventNo;                         /* Event we are looking for	*/
+   ptr_t fRef;                           /* Argument for history fcns	*/
+   HistFun_t fFun;                      /* Event access			*/
+   HistEvent_t fEv;                        /* Event cookie			*/
+} ElHistory_t;
 
 #define HIST_FUN(el, fn, arg) \
-   ((((*(el)->el_history.fun)((el)->el_history.ref, &(el)->el_history.ev, \
-                              fn, arg)) == -1) ? NULL : (el)->el_history.ev.str)
+   ((((*(el)->fHistory.fFun)((el)->fHistory.fRef, &(el)->fHistory.fEv, \
+                              fn, arg)) == -1) ? NULL : (el)->fHistory.fEv.fStr)
 
 #define HIST_NEXT(el) HIST_FUN(el, H_NEXT, NULL)
 #define HIST_FIRST(el) HIST_FUN(el, H_FIRST, NULL)
@@ -75,11 +75,11 @@ typedef struct el_history_t {
 #define HIST_LOAD(el, fname) HIST_FUN(el, H_LOAD fname)
 #define HIST_SAVE(el, fname) HIST_FUN(el, H_SAVE fname)
 
-el_protected int hist_init(EditLine*);
-el_protected void hist_end(EditLine*);
-el_protected el_action_t hist_get(EditLine*);
-el_protected int hist_set(EditLine *, hist_fun_t, ptr_t);
-el_protected int hist_list(EditLine*, int, const char**);
-el_protected int hist_enlargebuf(EditLine *, size_t, size_t);
+el_protected int hist_init(EditLine_t*);
+el_protected void hist_end(EditLine_t*);
+el_protected ElAction_t hist_get(EditLine_t*);
+el_protected int hist_set(EditLine_t *, HistFun_t, ptr_t);
+el_protected int hist_list(EditLine_t*, int, const char**);
+el_protected int hist_enlargebuf(EditLine_t *, size_t, size_t);
 
 #endif /* _h_el_hist */

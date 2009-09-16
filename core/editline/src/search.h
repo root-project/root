@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: search.h,v 1.5 2000/09/04 22:06:32 lukem Exp $	*/
+/*	$NetBSD: search.fH,v 1.5 2000/09/04 22:06:32 lukem Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -44,32 +44,32 @@
  */
 
 /*
- * el.search.h: Line and history searching utilities
+ * el.search.fH: Line and history searching utilities
  */
 #ifndef _h_el_search
 #define _h_el_search
 
 #include "histedit.h"
 
-typedef struct el_search_t {
+typedef struct ElSearch_t {
    char* patbuf;                        /* The pattern buffer		*/
    size_t patlen;                       /* Length of the pattern buffer	*/
    int patdir;                          /* Direction of the last search	*/
    int chadir;                          /* Character search direction	*/
    char chacha;                         /* Character we are looking for	*/
-} el_search_t;
+} ElSearch_t;
 
 
 el_protected int el_match(const char*, const char*);
-el_protected int search_init(EditLine*);
-el_protected void search_end(EditLine*);
-el_protected int c_hmatch(EditLine*, const char*);
-el_protected void c_setpat(EditLine*);
-el_protected el_action_t ce_inc_search(EditLine*, int);
-el_protected el_action_t cv_search(EditLine*, int);
-el_protected el_action_t ce_search_line(EditLine*, char*, int);
-el_protected el_action_t cv_repeat_srch(EditLine*, int);
-el_protected el_action_t cv_csearch_back(EditLine*, int, int, int);
-el_protected el_action_t cv_csearch_fwd(EditLine*, int, int, int);
+el_protected int search_init(EditLine_t*);
+el_protected void search_end(EditLine_t*);
+el_protected int c_hmatch(EditLine_t*, const char*);
+el_protected void c_setpat(EditLine_t*);
+el_protected ElAction_t ce_inc_search(EditLine_t*, int);
+el_protected ElAction_t cv_search(EditLine_t*, int);
+el_protected ElAction_t ce_search_line(EditLine_t*, char*, int);
+el_protected ElAction_t cv_repeat_srch(EditLine_t*, int);
+el_protected ElAction_t cv_csearch_back(EditLine_t*, int, int, int);
+el_protected ElAction_t cv_csearch_fwd(EditLine_t*, int, int, int);
 
 #endif /* _h_el_search */

@@ -52,17 +52,17 @@
 #include <stdio.h>
 #include "el.h"
 
-el_color_t prompt_color(6, -1);
+ElColor_t prompt_color(6, -1);
 
-el_private const char* prompt_default(EditLine*);
-el_private const char* prompt_default_r(EditLine*);
+el_private const char* prompt_default(EditLine_t*);
+el_private const char* prompt_default_r(EditLine_t*);
 
 /* prompt_default():
  *	Just a default prompt, in case the user did not provide one
  */
 el_private const char*
 /*ARGSUSED*/
-prompt_default(EditLine* /*el*/) {
+prompt_default(EditLine_t* /*el*/) {
    static char a[3] = { '?', ' ', '\0' };
 
    return a;
@@ -74,7 +74,7 @@ prompt_default(EditLine* /*el*/) {
  */
 el_private const char*
 /*ARGSUSED*/
-prompt_default_r(EditLine* /*el*/) {
+prompt_default_r(EditLine_t* /*el*/) {
    static char a[1] = { '\0' };
 
    return a;
@@ -88,23 +88,23 @@ prompt_default_r(EditLine* /*el*/) {
  *	bit to flag them
  */
 el_protected void
-prompt_print(EditLine* el, int op) {
-   el_prompt_t* elp;
+prompt_print(EditLine_t* el, int op) {
+   ElPrompt_t* elp;
    const char* p;
 
    if (op == EL_PROMPT) {
-      elp = &el->el_prompt;
+      elp = &el->fPrompt;
    } else {
-      elp = &el->el_rprompt;
+      elp = &el->fRPrompt;
    }
    p = (elp->p_func)(el);
-   el_color_t col;
+   ElColor_t col;
 
    while (*p)
       re_putc(el, *p++, 1, &prompt_color);
 
-   elp->p_pos.v = el->el_refresh.r_cursor.v;
-   elp->p_pos.h = el->el_refresh.r_cursor.h;
+   elp->p_pos.fV = el->fRefresh.r_cursor.fV;
+   elp->p_pos.fH = el->fRefresh.r_cursor.fH;
 } // prompt_print
 
 
@@ -112,13 +112,13 @@ prompt_print(EditLine* el, int op) {
  *	Initialize the prompt stuff
  */
 el_protected int
-prompt_init(EditLine* el) {
-   el->el_prompt.p_func = prompt_default;
-   el->el_prompt.p_pos.v = 0;
-   el->el_prompt.p_pos.h = 0;
-   el->el_rprompt.p_func = prompt_default_r;
-   el->el_rprompt.p_pos.v = 0;
-   el->el_rprompt.p_pos.h = 0;
+prompt_init(EditLine_t* el) {
+   el->fPrompt.p_func = prompt_default;
+   el->fPrompt.p_pos.fV = 0;
+   el->fPrompt.p_pos.fH = 0;
+   el->fRPrompt.p_func = prompt_default_r;
+   el->fRPrompt.p_pos.fV = 0;
+   el->fRPrompt.p_pos.fH = 0;
    return 0;
 }
 
@@ -128,7 +128,7 @@ prompt_init(EditLine* el) {
  */
 el_protected void
 /*ARGSUSED*/
-prompt_end(EditLine* /*el*/) {
+prompt_end(EditLine_t* /*el*/) {
 }
 
 
@@ -136,13 +136,13 @@ prompt_end(EditLine* /*el*/) {
  *	Install a prompt printing function
  */
 el_protected int
-prompt_set(EditLine* el, el_pfunc_t prf, int op) {
-   el_prompt_t* p;
+prompt_set(EditLine_t* el, ElPFunc_t prf, int op) {
+   ElPrompt_t* p;
 
    if (op == EL_PROMPT) {
-      p = &el->el_prompt;
+      p = &el->fPrompt;
    } else {
-      p = &el->el_rprompt;
+      p = &el->fRPrompt;
    }
 
    if (prf == NULL) {
@@ -154,8 +154,8 @@ prompt_set(EditLine* el, el_pfunc_t prf, int op) {
    } else {
       p->p_func = prf;
    }
-   p->p_pos.v = 0;
-   p->p_pos.h = 0;
+   p->p_pos.fV = 0;
+   p->p_pos.fH = 0;
    return 0;
 } // prompt_set
 
@@ -164,15 +164,15 @@ prompt_set(EditLine* el, el_pfunc_t prf, int op) {
  *	Retrieve the prompt printing function
  */
 el_protected int
-prompt_get(EditLine* el, el_pfunc_t* prf, int op) {
+prompt_get(EditLine_t* el, ElPFunc_t* prf, int op) {
    if (prf == NULL) {
       return -1;
    }
 
    if (op == EL_PROMPT) {
-      *prf = el->el_prompt.p_func;
+      *prf = el->fPrompt.p_func;
    } else {
-      *prf = el->el_rprompt.p_func;
+      *prf = el->fRPrompt.p_func;
    }
    return 0;
 }
@@ -183,5 +183,5 @@ prompt_get(EditLine* el, el_pfunc_t* prf, int op) {
  */
 el_protected void
 prompt_setcolor(int col) {
-   prompt_color.foreColor = col;
+   prompt_color.fForeColor = col;
 }

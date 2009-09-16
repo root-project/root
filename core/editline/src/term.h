@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: term.h,v 1.12 2001/01/04 15:56:32 christos Exp $	*/
+/*	$NetBSD: term.fH,v 1.12 2001/01/04 15:56:32 christos Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -44,7 +44,7 @@
  */
 
 /*
- * el.term.h: Termcap header
+ * el.term.fH: Termcap header
  */
 #ifndef _h_el_term
 #define _h_el_term
@@ -52,15 +52,15 @@
 #include "histedit.h"
 
 typedef struct {                /* Symbolic function key bindings	*/
-   const char* name;                  /* name of the key			*/
-   int key;                     /* Index in termcap table		*/
-   key_value_t fun;             /* Function bound to it			*/
-   int type;                    /* Type of function			*/
-} fkey_t;
+   const char* fName;                  /* name of the key			*/
+   int fKey;                     /* Index in termcap table		*/
+   KeyValue_t fFun;             /* Function bound to it			*/
+   int fType;                    /* Type of function			*/
+} FKey_t;
 
 typedef struct {
-   coord_t t_size;                      /* # lines and cols	*/
-   int t_flags;
+   ElCoord_t fSize;                      /* # lines and cols	*/
+   int fFlags;
 #define TERM_CAN_INSERT 0x001           /* Has insert cap	*/
 #define TERM_CAN_DELETE 0x002           /* Has delete cap	*/
 #define TERM_CAN_CEOL 0x004             /* Has CEOL cap		*/
@@ -70,13 +70,13 @@ typedef struct {
 #define TERM_HAS_META 0x040             /* Has a meta key	*/
 #define TERM_HAS_AUTO_MARGINS 0x080     /* Has auto margins	*/
 #define TERM_HAS_MAGIC_MARGINS 0x100    /* Has magic margins	*/
-   char* t_buf;                         /* Termcap buffer	*/
-   int t_loc;                           /* location used	*/
-   char** t_str;                        /* termcap strings	*/
-   int* t_val;                          /* termcap values	*/
-   char* t_cap;                         /* Termcap buffer	*/
-   fkey_t* t_fkey;                      /* Array of keys	*/
-} el_term_t;
+   char* fBuf;                         /* Termcap buffer	*/
+   int fLoc;                           /* location used	*/
+   char** fStr;                        /* termcap strings	*/
+   int* fVal;                          /* termcap values	*/
+   char* fCap;                         /* Termcap buffer	*/
+   FKey_t* fFKey;                      /* Array of keys	*/
+} ElTerm_t;
 
 /*
  * fKey indexes
@@ -90,37 +90,37 @@ typedef struct {
 #define A_K_DE 6
 #define A_K_NKEYS 7
 
-el_protected void term_move_to_line(EditLine*, int);
-el_protected void term_move_to_char(EditLine*, int);
-el_protected void term_clear_EOL(EditLine*, int);
-el_protected void term_overwrite(EditLine*, const char*, el_color_t*, int);
-el_protected void term_insertwrite(EditLine*, const char*, el_color_t*, int);
-el_protected void term_deletechars(EditLine*, int);
-el_protected void term_clear_screen(EditLine*);
-el_protected void term_beep(EditLine*);
-el_protected int term_change_size(EditLine*, int, int);
-el_protected int term_get_size(EditLine*, int*, int*);
-el_protected int term_init(EditLine*);
-el_protected void term_bind_arrow(EditLine*);
-el_protected void term_print_arrow(EditLine*, const char*);
-el_protected int term_clear_arrow(EditLine*, char*);
-el_protected int term_set_arrow(EditLine*, char*, key_value_t*, int);
-el_protected void term_end(EditLine*);
-el_protected int term_set(EditLine*, const char*);
-el_protected int term_settc(EditLine*, int, const char**);
-el_protected int term_telltc(EditLine*, int, const char**);
-el_protected int term_echotc(EditLine*, int, const char**);
+el_protected void term_move_to_line(EditLine_t*, int);
+el_protected void term_move_to_char(EditLine_t*, int);
+el_protected void term_clear_EOL(EditLine_t*, int);
+el_protected void term_overwrite(EditLine_t*, const char*, ElColor_t*, int);
+el_protected void term_insertwrite(EditLine_t*, const char*, ElColor_t*, int);
+el_protected void term_deletechars(EditLine_t*, int);
+el_protected void term_clear_screen(EditLine_t*);
+el_protected void term_beep(EditLine_t*);
+el_protected int term_change_size(EditLine_t*, int, int);
+el_protected int term_get_size(EditLine_t*, int*, int*);
+el_protected int term_init(EditLine_t*);
+el_protected void term_bind_arrow(EditLine_t*);
+el_protected void term_print_arrow(EditLine_t*, const char*);
+el_protected int term_clear_arrow(EditLine_t*, char*);
+el_protected int term_set_arrow(EditLine_t*, char*, KeyValue_t*, int);
+el_protected void term_end(EditLine_t*);
+el_protected int term_set(EditLine_t*, const char*);
+el_protected int term_settc(EditLine_t*, int, const char**);
+el_protected int term_telltc(EditLine_t*, int, const char**);
+el_protected int term_echotc(EditLine_t*, int, const char**);
 el_protected int term__putc(int);
-el_protected int term__putcolorch(int, el_color_t*);
+el_protected int term__putcolorch(int, ElColor_t*);
 el_protected void term__setcolor(int fgcol);
 el_protected void term__resetcolor(void);
-el_protected void term__repaint(EditLine* el, int index);
+el_protected void term__repaint(EditLine_t* el, int index);
 el_protected void term__flush(void);
 
 /*
  * Easy access macros
  */
-#define EL_FLAGS (el)->el_term.t_flags
+#define EL_FLAGS (el)->fTerm.fFlags
 
 #define EL_CAN_INSERT (EL_FLAGS & TERM_CAN_INSERT)
 #define EL_CAN_DELETE (EL_FLAGS & TERM_CAN_DELETE)

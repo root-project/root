@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: parse.h,v 1.4 2000/09/04 22:06:31 lukem Exp $	*/
+/*	$NetBSD: parse.fH,v 1.4 2000/09/04 22:06:31 lukem Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -43,14 +43,14 @@
  * SUCH DAMAGE.
  */
 /*
- * el.parse.h: Parser functions
+ * el.parse.fH: Parser functions
  */
 #ifndef _h_el_parse
 #define _h_el_parse
 
-el_protected int parse_line(EditLine*, const char*);
+el_protected int parse_line(EditLine_t*, const char*);
 el_protected int parse__escape(const char** const);
 el_protected char* parse__string(char*, const char*);
-el_protected int parse_cmd(EditLine*, const char*);
+el_protected int parse_cmd(EditLine_t*, const char*);
 
 #endif /* _h_el_parse */

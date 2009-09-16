@@ -56,11 +56,11 @@
 
 #include "el.h"
 
-el_private void re_addc(EditLine*, int, el_color_t* color);
-el_private void re_update_line(EditLine*, char*, char*, el_color_t*, int);
-el_private void re_insert(EditLine*, char*, int, int, char*, int);
-el_private void re_delete(EditLine*, char*, int, int, int);
-el_private void re_fastputc(EditLine*, int);
+el_private void re_addc(EditLine_t*, int, ElColor_t* color);
+el_private void re_update_line(EditLine_t*, char*, char*, ElColor_t*, int);
+el_private void re_insert(EditLine_t*, char*, int, int, char*, int);
+el_private void re_delete(EditLine_t*, char*, int, int, int);
+el_private void re_fastputc(EditLine_t*, int);
 el_private void re__strncopy(char*, char*, size_t);
 el_private void re__copy_and_pad(char*, const char*, size_t);
 
@@ -88,7 +88,7 @@ re__copy_and_pad(char* dst, const char* src, size_t width) {
 
 
 el_private void
-re__copy_and_pad(el_color_t* dst, const el_color_t* src, size_t width) {
+re__copy_and_pad(ElColor_t* dst, const ElColor_t* src, size_t width) {
    size_t i;
 
    for (i = 0; i < width; i++) {
@@ -104,8 +104,8 @@ re__copy_and_pad(el_color_t* dst, const el_color_t* src, size_t width) {
 
 
 #ifdef DEBUG_REFRESH
-el_private void re_printstr(EditLine*, char*, char*, char*);
-# define __F el->el_errfile
+el_private void re_printstr(EditLine_t*, char*, char*, char*);
+# define __F el->fErrFile
 # define ELRE_ASSERT(a, b, c) do { \
       if (a) { \
          (void) fprintf b; \
@@ -118,7 +118,7 @@ el_private void re_printstr(EditLine*, char*, char*, char*);
  *	Print a string on the debugging pty
  */
 el_private void
-re_printstr(EditLine* el, char* str, char* f, char* t) {
+re_printstr(EditLine_t* el, char* str, char* f, char* t) {
    ELRE_DEBUG(1, (__F, "%s:\"", str));
 
    while (f < t)
@@ -137,19 +137,19 @@ re_printstr(EditLine* el, char* str, char* f, char* t) {
  *	Draw c, expanding tabs, control chars etc.
  */
 el_private void
-re_addc(EditLine* el, int c, el_color_t* color) {
+re_addc(EditLine_t* el, int c, ElColor_t* color) {
    if (isprint(c)) {
       re_putc(el, c, 1, color);
       return;
    }
 
    if (c == '\n') {                                     /* expand the newline */
-      int oldv = el->el_refresh.r_cursor.v;
+      int oldv = el->fRefresh.r_cursor.fV;
       re_putc(el, '\0', 0, 0);                                  /* assure end of line */
 
-      if (oldv == el->el_refresh.r_cursor.v) {           /* XXX */
-         el->el_refresh.r_cursor.h = 0;                 /* reset cursor pos */
-         el->el_refresh.r_cursor.v++;
+      if (oldv == el->fRefresh.r_cursor.fV) {           /* XXX */
+         el->fRefresh.r_cursor.fH = 0;                 /* reset cursor pos */
+         el->fRefresh.r_cursor.fV++;
       }
       return;
    }
@@ -158,7 +158,7 @@ re_addc(EditLine* el, int c, el_color_t* color) {
       for ( ; ;) {
          re_putc(el, ' ', 1, 0);
 
-         if ((el->el_refresh.r_cursor.h & 07) == 0) {
+         if ((el->fRefresh.r_cursor.fH & 07) == 0) {
             break;                                      /* go until tab stop */
          }
       }
@@ -184,29 +184,29 @@ re_addc(EditLine* el, int c, el_color_t* color) {
  *	Draw the character given
  */
 el_protected void
-re_putc(EditLine* el, int c, int shift, el_color_t* color) {
+re_putc(EditLine_t* el, int c, int shift, ElColor_t* color) {
    ELRE_DEBUG(1, (__F, "printing %3.3o '%c'\r\n", c, c));
 
-   el->el_vdisplay[el->el_refresh.r_cursor.v][el->el_refresh.r_cursor.h] = c;
+   el->fVDisplay[el->fRefresh.r_cursor.fV][el->fRefresh.r_cursor.fH] = c;
 
    if (color) {
-      el->el_vdispcolor[el->el_refresh.r_cursor.v][el->el_refresh.r_cursor.h] = *color;
+      el->fVDispColor[el->fRefresh.r_cursor.fV][el->fRefresh.r_cursor.fH] = *color;
    } else {
-      el->el_vdispcolor[el->el_refresh.r_cursor.v][el->el_refresh.r_cursor.h] = -1;
+      el->fVDispColor[el->fRefresh.r_cursor.fV][el->fRefresh.r_cursor.fH] = -1;
    }
 
    if (!shift) {
       return;
    }
 
-   el->el_refresh.r_cursor.h++;         /* advance to next place */
+   el->fRefresh.r_cursor.fH++;         /* advance to next place */
 
-   if (el->el_refresh.r_cursor.h >= el->el_term.t_size.h) {
-      el->el_vdisplay[el->el_refresh.r_cursor.v][el->el_term.t_size.h] = '\0';
-      el->el_vdispcolor[el->el_refresh.r_cursor.v][el->el_term.t_size.h] = -1;
+   if (el->fRefresh.r_cursor.fH >= el->fTerm.fSize.fH) {
+      el->fVDisplay[el->fRefresh.r_cursor.fV][el->fTerm.fSize.fH] = '\0';
+      el->fVDispColor[el->fRefresh.r_cursor.fV][el->fTerm.fSize.fH] = -1;
 
       /* assure end of line */
-      el->el_refresh.r_cursor.h = 0;            /* reset it. */
+      el->fRefresh.r_cursor.fH = 0;            /* reset it. */
 
       /*
        * If we would overflow (input is longer than terminal size),
@@ -214,28 +214,28 @@ re_putc(EditLine* el, int c, int shift, el_color_t* color) {
        * We do this via pointer shuffling - it's safe in this case
        * and we avoid memcpy().
        */
-      if (el->el_refresh.r_cursor.v + 1 >= el->el_term.t_size.v) {
-         int i, lins = el->el_term.t_size.v;
-         char* firstline = el->el_vdisplay[0];
-         el_color_t* firstcolor = el->el_vdispcolor[0];
+      if (el->fRefresh.r_cursor.fV + 1 >= el->fTerm.fSize.fV) {
+         int i, lins = el->fTerm.fSize.fV;
+         char* firstline = el->fVDisplay[0];
+         ElColor_t* firstcolor = el->fVDispColor[0];
 
          for (i = 1; i < lins; i++) {
-            el->el_vdisplay[i - 1] = el->el_vdisplay[i];
-            el->el_vdispcolor[i - 1] = el->el_vdispcolor[i];
+            el->fVDisplay[i - 1] = el->fVDisplay[i];
+            el->fVDispColor[i - 1] = el->fVDispColor[i];
          }
 
          firstline[0] = '\0';                           /* empty the string */
          firstcolor[0] = -1;
 
-         el->el_vdisplay[i - 1] = firstline;
-         el->el_vdispcolor[i - 1] = firstcolor;
+         el->fVDisplay[i - 1] = firstline;
+         el->fVDispColor[i - 1] = firstcolor;
       } else {
-         el->el_refresh.r_cursor.v++;
+         el->fRefresh.r_cursor.fV++;
       }
 
-      ELRE_ASSERT(el->el_refresh.r_cursor.v >= el->el_term.t_size.v,
-                  (__F, "\r\nre_putc: overflow! r_cursor.v == %d > %d\r\n",
-                   el->el_refresh.r_cursor.v, el->el_term.t_size.v),
+      ELRE_ASSERT(el->fRefresh.r_cursor.fV >= el->fTerm.fSize.fV,
+                  (__F, "\r\nre_putc: overflow! r_cursor.fV == %d > %d\r\n",
+                   el->fRefresh.r_cursor.fV, el->fTerm.fSize.fV),
                   abort());
    }
 } // re_putc
@@ -248,68 +248,68 @@ re_putc(EditLine* el, int c, int shift, el_color_t* color) {
  *	easily in hopes of a smarter one being placed there.
  */
 el_protected void
-re_refresh(EditLine* el) {
+re_refresh(EditLine_t* el) {
    int i, rhdiff;
    char* cp, * st;
-   coord_t cur;
+   ElCoord_t cur;
 #ifdef notyet
    size_t termsz;
 #endif
 
-   ELRE_DEBUG(1, (__F, "el->el_line.buffer = :%s:\r\n",
-                  el->el_line.buffer));
+   ELRE_DEBUG(1, (__F, "el->fLine.fBuffer = :%s:\r\n",
+                  el->fLine.fBuffer));
 
    /* reset the Drawing cursor */
-   el->el_refresh.r_cursor.h = 0;
-   el->el_refresh.r_cursor.v = 0;
+   el->fRefresh.r_cursor.fH = 0;
+   el->fRefresh.r_cursor.fV = 0;
 
    /* temporarily draw rprompt to calculate its size */
    prompt_print(el, EL_RPROMPT);
 
    /* reset the Drawing cursor */
-   el->el_refresh.r_cursor.h = 0;
-   el->el_refresh.r_cursor.v = 0;
+   el->fRefresh.r_cursor.fH = 0;
+   el->fRefresh.r_cursor.fV = 0;
 
-   cur.h = -1;                  /* set flag in case I'm not set */
-   cur.v = 0;
+   cur.fH = -1;                  /* set flag in case I'm not set */
+   cur.fV = 0;
 
    prompt_print(el, EL_PROMPT);
 
    /* draw the current input buffer */
 #if notyet
-   termsz = el->el_term.t_size.h * el->el_term.t_size.v;
+   termsz = el->fTerm.fSize.fH * el->fTerm.fSize.fV;
 
-   if (el->el_line.lastchar - el->el_line.buffer > termsz) {
+   if (el->fLine.fLastChar - el->fLine.fBuffer > termsz) {
       /*
        * If line is longer than terminal, process only part
        * of line which would influence display.
        */
-      size_t rem = (el->el_line.lastchar - el->el_line.buffer) % termsz;
+      size_t rem = (el->fLine.fLastChar - el->fLine.fBuffer) % termsz;
 
-      st = el->el_line.lastchar - rem
-           - (termsz - (((rem / el->el_term.t_size.v) - 1)
-                        * el->el_term.t_size.v));
+      st = el->fLine.fLastChar - rem
+           - (termsz - (((rem / el->fTerm.fSize.fV) - 1)
+                        * el->fTerm.fSize.fV));
    } else
 #endif
-   st = el->el_line.buffer;
+   st = el->fLine.fBuffer;
 
-   for (cp = st; cp < el->el_line.lastchar; cp++) {
-      if (cp == el->el_line.cursor) {
+   for (cp = st; cp < el->fLine.fLastChar; cp++) {
+      if (cp == el->fLine.fCursor) {
          /* save for later */
-         cur.h = el->el_refresh.r_cursor.h;
-         cur.v = el->el_refresh.r_cursor.v;
+         cur.fH = el->fRefresh.r_cursor.fH;
+         cur.fV = el->fRefresh.r_cursor.fV;
       }
-      re_addc(el, (unsigned char) *cp, &el->el_line.bufcolor[cp - el->el_line.buffer]);
+      re_addc(el, (unsigned char) *cp, &el->fLine.fBufColor[cp - el->fLine.fBuffer]);
    }
 
-   if (cur.h == -1) {           /* if I haven't been set yet, I'm at the end */
-      cur.h = el->el_refresh.r_cursor.h;
-      cur.v = el->el_refresh.r_cursor.v;
+   if (cur.fH == -1) {           /* if I haven't been set yet, I'm at the end */
+      cur.fH = el->fRefresh.r_cursor.fH;
+      cur.fV = el->fRefresh.r_cursor.fV;
    }
-   rhdiff = el->el_term.t_size.h - el->el_refresh.r_cursor.h - el->el_rprompt.p_pos.h;
+   rhdiff = el->fTerm.fSize.fH - el->fRefresh.r_cursor.fH - el->fRPrompt.p_pos.fH;
 
-   if (el->el_rprompt.p_pos.h && !el->el_rprompt.p_pos.v &&
-       !el->el_refresh.r_cursor.v && rhdiff > 1) {
+   if (el->fRPrompt.p_pos.fH && !el->fRPrompt.p_pos.fV &&
+       !el->fRefresh.r_cursor.fV && rhdiff > 1) {
       /*
        * have a right-hand side prompt that will fit
        * on the end of the first line with at least
@@ -319,31 +319,31 @@ re_refresh(EditLine* el) {
          re_putc(el, ' ', 1, 0);
       prompt_print(el, EL_RPROMPT);
    } else {
-      el->el_rprompt.p_pos.h = 0;               /* flag "not using rprompt" */
-      el->el_rprompt.p_pos.v = 0;
+      el->fRPrompt.p_pos.fH = 0;               /* flag "not using rprompt" */
+      el->fRPrompt.p_pos.fV = 0;
    }
 
    re_putc(el, '\0', 0, 0);             /* make line ended with NUL, no cursor shift */
 
-   el->el_refresh.r_newcv = el->el_refresh.r_cursor.v;
+   el->fRefresh.r_newcv = el->fRefresh.r_cursor.fV;
 
    ELRE_DEBUG(1, (__F,
-                  "term.h=%d vcur.h=%d vcur.v=%d vdisplay[0]=\r\n:%80.80s:\r\n",
-                  el->el_term.t_size.h, el->el_refresh.r_cursor.h,
-                  el->el_refresh.r_cursor.v, el->el_vdisplay[0]));
+                  "term.fH=%d vcur.fH=%d vcur.fV=%d vdisplay[0]=\r\n:%80.80s:\r\n",
+                  el->fTerm.fSize.fH, el->fRefresh.r_cursor.fH,
+                  el->fRefresh.r_cursor.fV, el->fVDisplay[0]));
 
-   ELRE_DEBUG(1, (__F, "updating %d lines.\r\n", el->el_refresh.r_newcv));
+   ELRE_DEBUG(1, (__F, "updating %d lines.\r\n", el->fRefresh.r_newcv));
 
-   //int curHPos = el->el_cursor.h;
-   //int curVPos = el->el_cursor.v;
+   //int curHPos = el->fCursor.fH;
+   //int curVPos = el->fCursor.fV;
 
-   for (i = 0; i <= el->el_refresh.r_newcv; i++) {
+   for (i = 0; i <= el->fRefresh.r_newcv; i++) {
       /* NOTE THAT re_update_line MAY CHANGE el_display[i] */
       term_move_to_line(el, i);
       term_move_to_char(el, 0);
       term__flush();
-      re_update_line(el, el->el_display[i], el->el_vdisplay[i],
-                     el->el_vdispcolor[i],
+      re_update_line(el, el->fDisplay[i], el->fVDisplay[i],
+                     el->fVDispColor[i],
                      i);
 
       /*
@@ -353,39 +353,39 @@ re_refresh(EditLine* el) {
        * end of the screen line, it won't be a NUL or some old
        * leftover stuff.
        */
-      re__copy_and_pad(el->el_display[i], el->el_vdisplay[i],
-                       (size_t) el->el_term.t_size.h);
-      re__copy_and_pad(el->el_dispcolor[i], el->el_vdispcolor[i],
-                       (size_t) el->el_term.t_size.h);
+      re__copy_and_pad(el->fDisplay[i], el->fVDisplay[i],
+                       (size_t) el->fTerm.fSize.fH);
+      re__copy_and_pad(el->fDispColor[i], el->fVDispColor[i],
+                       (size_t) el->fTerm.fSize.fH);
    }
    //term_move_to_line(el, curVPos);
    //term_move_to_char(el, curHPos);
 
    ELRE_DEBUG(1, (__F,
-                  "\r\nel->el_refresh.r_cursor.v=%d,el->el_refresh.r_oldcv=%d i=%d\r\n",
-                  el->el_refresh.r_cursor.v, el->el_refresh.r_oldcv, i));
+                  "\r\nel->fRefresh.r_cursor.fV=%d,el->fRefresh.r_oldcv=%d i=%d\r\n",
+                  el->fRefresh.r_cursor.fV, el->fRefresh.r_oldcv, i));
 
-   if (el->el_refresh.r_oldcv > el->el_refresh.r_newcv) {
-      for ( ; i <= el->el_refresh.r_oldcv; i++) {
+   if (el->fRefresh.r_oldcv > el->fRefresh.r_newcv) {
+      for ( ; i <= el->fRefresh.r_oldcv; i++) {
          term_move_to_line(el, i);
          term_move_to_char(el, 0);
-         term_clear_EOL(el, (int) strlen(el->el_display[i]));
+         term_clear_EOL(el, (int) strlen(el->fDisplay[i]));
 #ifdef DEBUG_REFRESH
          term_overwrite(el, "C\b", 0, 2);
 #endif /* DEBUG_REFRESH */
-         el->el_display[i][0] = '\0';
-         el->el_dispcolor[i][0] = -1;
+         el->fDisplay[i][0] = '\0';
+         el->fDispColor[i][0] = -1;
       }
    }
 
    term__setcolor(-1);      // prompt / keyword, whatever: back to normal
-   el->el_refresh.r_oldcv = el->el_refresh.r_newcv;      /* set for next time */
+   el->fRefresh.r_oldcv = el->fRefresh.r_newcv;      /* set for next time */
    ELRE_DEBUG(1, (__F,
-                  "\r\ncursor.h = %d, cursor.v = %d, cur.h = %d, cur.v = %d\r\n",
-                  el->el_refresh.r_cursor.h, el->el_refresh.r_cursor.v,
-                  cur.h, cur.v));
-   term_move_to_line(el, cur.v);        /* go to where the cursor is */
-   term_move_to_char(el, cur.h);
+                  "\r\ncursor.fH = %d, cursor.fV = %d, cur.fH = %d, cur.fV = %d\r\n",
+                  el->fRefresh.r_cursor.fH, el->fRefresh.r_cursor.fV,
+                  cur.fH, cur.fV));
+   term_move_to_line(el, cur.fV);        /* go to where the cursor is */
+   term_move_to_char(el, cur.fH);
 } // re_refresh
 
 
@@ -393,8 +393,8 @@ re_refresh(EditLine* el) {
  *	 used to go to last used screen line
  */
 el_protected void
-re_goto_bottom(EditLine* el) {
-   term_move_to_line(el, el->el_refresh.r_oldcv);
+re_goto_bottom(EditLine_t* el) {
+   term_move_to_line(el, el->fRefresh.r_oldcv);
 
    term__putcolorch('\r', NULL);                                        // LOUISE COLOUR
    term__putcolorch('\n', NULL);                                        // LOUISE COLOUR
@@ -409,7 +409,7 @@ re_goto_bottom(EditLine* el) {
  */
 el_private void
 /*ARGSUSED*/
-re_insert(EditLine* /*el*/, char* d, int dat, int dlen, char* s, int num) {
+re_insert(EditLine_t* /*el*/, char* d, int dat, int dlen, char* s, int num) {
    char* a, * b;
 
    if (num <= 0) {
@@ -456,7 +456,7 @@ re_insert(EditLine* /*el*/, char* d, int dat, int dlen, char* s, int num) {
  */
 el_private void
 /*ARGSUSED*/
-re_delete(EditLine* /*el*/, char* d, int dat, int dlen, int num) {
+re_delete(EditLine_t* /*el*/, char* d, int dat, int dlen, int num) {
    char* a, * b;
 
    if (num <= 0) {
@@ -521,11 +521,11 @@ re__strncopy(char* a, char* b, size_t n) {
 #define MIN_END_KEEP 4
 
 el_private void
-re_update_line(EditLine* el, char* old, char* newp, el_color_t* color, int i) {
+re_update_line(EditLine_t* el, char* old, char* newp, ElColor_t* color, int i) {
    char* o, * n, * p, c;
    char* ofd, * ols, * oe, * nfd, * nls, * ne;
    char* osb, * ose, * nsb, * nse;
-   el_color_t* nfd_col, * nse_col;
+   ElColor_t* nfd_col, * nse_col;
    int fx, sx;
 
    /*
@@ -762,8 +762,8 @@ re_update_line(EditLine* el, char* old, char* newp, el_color_t* color, int i) {
 #endif /* DEBUG_REFRESH */
 
    /*
-    * el_cursor.v to this line i MUST be in this routine so that if we
-    * don't have to change the line, we don't move to it. el_cursor.h to
+    * el_cursor.fV to this line i MUST be in this routine so that if we
+    * don't have to change the line, we don't move to it. el_cursor.fH to
     * first diff char
     */
    term_move_to_line(el, i);
@@ -772,7 +772,7 @@ re_update_line(EditLine* el, char* old, char* newp, el_color_t* color, int i) {
     * at this point we have something like this:
     *
     * /old                  /ofd    /osb               /ose    /ols     /oe
-    * v.....................v       v..................v       v........v
+    * v.....................fV       v..................fV       v........fV
     * eddie> Oh, my fredded gruntle-buggy is to me, as foo var lurgid as
     * eddie> Oh, my fredded quiux buggy is to me, as gruntle-lurgid as
     * ^.....................^     ^..................^       ^........^
@@ -790,7 +790,7 @@ re_update_line(EditLine* el, char* old, char* newp, el_color_t* color, int i) {
     * if we have a net insert on the first difference, AND inserting the
     * net amount ((nsb-nfd) - (osb-ofd)) won't push the last useful
     * character (which is ne if nls != ne, otherwise is nse) off the edge
-    * of the screen (el->el_term.t_size.h) else we do the deletes first
+    * of the screen (el->fTerm.fSize.fH) else we do the deletes first
     * so that we keep everything we need to.
     */
 
@@ -812,7 +812,7 @@ re_update_line(EditLine* el, char* old, char* newp, el_color_t* color, int i) {
     *	No insert or delete
     */
    if ((nsb != nfd) && fx > 0 &&
-       ((p - old) + fx <= el->el_term.t_size.h)) {
+       ((p - old) + fx <= el->fTerm.fSize.fH)) {
       ELRE_DEBUG(1,
                  (__F, "first diff insert at %d...\r\n", nfd - newp));
 
@@ -835,7 +835,7 @@ re_update_line(EditLine* el, char* old, char* newp, el_color_t* color, int i) {
                                         "ERROR: cannot insert in early first diff\n"));
             term_insertwrite(el, nfd, nfd_col, fx);
             re_insert(el, old, ofd - old,
-                      el->el_term.t_size.h, nfd, fx);
+                      el->fTerm.fSize.fH, nfd, fx);
          }
 
          /*
@@ -879,7 +879,7 @@ re_update_line(EditLine* el, char* old, char* newp, el_color_t* color, int i) {
                                         "ERROR: cannot delete in first diff\n"));
             term_deletechars(el, -fx);
             re_delete(el, old, ofd - old,
-                      el->el_term.t_size.h, -fx);
+                      el->fTerm.fSize.fH, -fx);
          }
 
          /*
@@ -909,7 +909,7 @@ re_update_line(EditLine* el, char* old, char* newp, el_color_t* color, int i) {
       fx = 0;
    }
 
-   if (sx < 0 && (ose - old) + fx < el->el_term.t_size.h) {
+   if (sx < 0 && (ose - old) + fx < el->fTerm.fSize.fH) {
       ELRE_DEBUG(1, (__F,
                      "second diff delete at %d...\r\n", (ose - old) + fx));
 
@@ -985,7 +985,7 @@ re_update_line(EditLine* el, char* old, char* newp, el_color_t* color, int i) {
                                         "ERROR: cannot insert in late first diff\n"));
             term_insertwrite(el, nfd, nfd_col, fx);
             re_insert(el, old, ofd - old,
-                      el->el_term.t_size.h, nfd, fx);
+                      el->fTerm.fSize.fH, nfd, fx);
          }
 
          /*
@@ -1044,17 +1044,17 @@ re_update_line(EditLine* el, char* old, char* newp, el_color_t* color, int i) {
  *	Move to the new cursor position
  */
 el_protected void
-re_refresh_cursor(EditLine* el) {
+re_refresh_cursor(EditLine_t* el) {
    char* cp, c;
    int h, v, th;
 
    /* first we must find where the cursor is... */
-   h = el->el_prompt.p_pos.h;
-   v = el->el_prompt.p_pos.v;
-   th = el->el_term.t_size.h;           /* optimize for speed */
+   h = el->fPrompt.p_pos.fH;
+   v = el->fPrompt.p_pos.fV;
+   th = el->fTerm.fSize.fH;           /* optimize for speed */
 
-   /* do input buffer to el->el_line.cursor */
-   for (cp = el->el_line.buffer; cp < el->el_line.cursor; cp++) {
+   /* do input buffer to el->fLine.fCursor */
+   for (cp = el->fLine.fBuffer; cp < el->fLine.fCursor; cp++) {
       c = *cp;
       h++;                      /* all chars at least this long */
 
@@ -1101,16 +1101,16 @@ re_refresh_cursor(EditLine* el) {
  *	Add a character fast.
  */
 el_private void
-re_fastputc(EditLine* el, int c) {
+re_fastputc(EditLine_t* el, int c) {
    // color = get color info from el, pass to term__putc
-   int curCharIndex = (el->el_line.cursor - 1) - el->el_line.buffer;
-   term__putcolorch(c, &el->el_line.bufcolor[curCharIndex]);
-   el->el_display[el->el_cursor.v][el->el_cursor.h++] = c;
-   (el->el_dispcolor[el->el_cursor.v][el->el_cursor.h]) = -1;
+   int curCharIndex = (el->fLine.fCursor - 1) - el->fLine.fBuffer;
+   term__putcolorch(c, &el->fLine.fBufColor[curCharIndex]);
+   el->fDisplay[el->fCursor.fV][el->fCursor.fH++] = c;
+   (el->fDispColor[el->fCursor.fV][el->fCursor.fH]) = -1;
 
-   if (el->el_cursor.h >= el->el_term.t_size.h) {
+   if (el->fCursor.fH >= el->fTerm.fSize.fH) {
       /* if we must overflow */
-      el->el_cursor.h = 0;
+      el->fCursor.fH = 0;
 
       /*
        * If we would overflow (input is longer than terminal size),
@@ -1118,22 +1118,22 @@ re_fastputc(EditLine* el, int c) {
        * We do this via pointer shuffling - it's safe in this case
        * and we avoid memcpy().
        */
-      if (el->el_cursor.v + 1 >= el->el_term.t_size.v) {
-         int i, lins = el->el_term.t_size.v;
-         char* firstline = el->el_display[0];
-         el_color_t* firstcolor = el->el_dispcolor[0];
+      if (el->fCursor.fV + 1 >= el->fTerm.fSize.fV) {
+         int i, lins = el->fTerm.fSize.fV;
+         char* firstline = el->fDisplay[0];
+         ElColor_t* firstcolor = el->fDispColor[0];
 
          for (i = 1; i < lins; i++) {
-            el->el_display[i - 1] = el->el_display[i];
-            el->el_dispcolor[i - 1] = el->el_dispcolor[i];
+            el->fDisplay[i - 1] = el->fDisplay[i];
+            el->fDispColor[i - 1] = el->fDispColor[i];
          }
 
          re__copy_and_pad(firstline, "", 0);
-         el->el_display[i - 1] = firstline;
-         el->el_dispcolor[i - 1] = firstcolor;
+         el->fDisplay[i - 1] = firstline;
+         el->fDispColor[i - 1] = firstcolor;
       } else {
-         el->el_cursor.v++;
-         el->el_refresh.r_oldcv++;
+         el->fCursor.fV++;
+         el->fRefresh.r_oldcv++;
       }
 
       if (EL_HAS_AUTO_MARGINS) {
@@ -1154,20 +1154,20 @@ re_fastputc(EditLine* el, int c) {
  *	Assumes that screen cursor == real cursor
  */
 el_protected void
-re_fastaddc(EditLine* el) {
+re_fastaddc(EditLine_t* el) {
    char c;
    int rhdiff;
 
-   c = el->el_line.cursor[-1];
+   c = el->fLine.fCursor[-1];
 
-   if (c == '\t' || el->el_line.cursor != el->el_line.lastchar) {
+   if (c == '\t' || el->fLine.fCursor != el->fLine.fLastChar) {
       re_refresh(el);           /* too hard to handle */
       return;
    }
-   rhdiff = el->el_term.t_size.h - el->el_cursor.h -
-            el->el_rprompt.p_pos.h;
+   rhdiff = el->fTerm.fSize.fH - el->fCursor.fH -
+            el->fRPrompt.p_pos.fH;
 
-   if (el->el_rprompt.p_pos.h && rhdiff < 3) {
+   if (el->fRPrompt.p_pos.fH && rhdiff < 3) {
       re_refresh(el);           /* clear out rprompt if less than 1 char gap */
       return;
    }                            /* else (only do at end of line, no TAB) */
@@ -1192,17 +1192,17 @@ re_fastaddc(EditLine* el) {
  *	clear the screen buffers so that new new prompt starts fresh.
  */
 el_protected void
-re_clear_display(EditLine* el) {
+re_clear_display(EditLine_t* el) {
    int i;
 
-   el->el_cursor.v = 0;
-   el->el_cursor.h = 0;
+   el->fCursor.fV = 0;
+   el->fCursor.fH = 0;
 
-   for (i = 0; i < el->el_term.t_size.v; i++) {
-      el->el_display[i][0] = '\0';
-      el->el_dispcolor[i][0] = -1;
+   for (i = 0; i < el->fTerm.fSize.fV; i++) {
+      el->fDisplay[i][0] = '\0';
+      el->fDispColor[i][0] = -1;
    }
-   el->el_refresh.r_oldcv = 0;
+   el->fRefresh.r_oldcv = 0;
 }
 
 
@@ -1210,19 +1210,19 @@ re_clear_display(EditLine* el) {
  *	Make sure all lines are *really* blank
  */
 el_protected void
-re_clear_lines(EditLine* el) {
+re_clear_lines(EditLine_t* el) {
    if (EL_CAN_CEOL) {
       int i;
       term_move_to_char(el, 0);
 
-      for (i = 0; i <= el->el_refresh.r_oldcv; i++) {
+      for (i = 0; i <= el->fRefresh.r_oldcv; i++) {
          /* for each line on the screen */
          term_move_to_line(el, i);
-         term_clear_EOL(el, el->el_term.t_size.h);
+         term_clear_EOL(el, el->fTerm.fSize.fH);
       }
       term_move_to_line(el, 0);
    } else {
-      term_move_to_line(el, el->el_refresh.r_oldcv);
+      term_move_to_line(el, el->fRefresh.r_oldcv);
       /* go to last line */
       term__putcolorch('\r', NULL);             /* go to BOL */
       term__putcolorch('\n', NULL);             /* go to new line */

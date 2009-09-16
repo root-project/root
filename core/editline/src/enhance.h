@@ -14,7 +14,7 @@
 void setKeywordColors(const char* colorTab, const char* colorBracket,
                       const char* colorBadBracket);
 int selectColor(const char* str);
-void highlightKeywords(EditLine* el);
-int matchParentheses(EditLine* el);
-void colorWord(EditLine* el, int first, int last, int color);
-void colorBrackets(EditLine* el, int open, int close, int color);
+void highlightKeywords(EditLine_t* el);
+int matchParentheses(EditLine_t* el);
+void colorWord(EditLine_t* el, int first, int last, int color);
+void colorBrackets(EditLine_t* el, int open, int close, int color);

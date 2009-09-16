@@ -143,6 +143,6 @@
 #endif
 #define EM_UNDO 90
 #define EL_NUM_FCNS 91
-typedef el_action_t (*el_func_t)(EditLine*, int);
-el_protected const el_func_t* func__get(void);
+typedef ElAction_t (*ElFunc_t)(EditLine_t*, int);
+el_protected const ElFunc_t* func__get(void);
 #endif /* _h_fcns_c */

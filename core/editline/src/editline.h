@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: readline.h,v 1.1 2001/01/05 21:15:50 jdolecek Exp $	*/
+/*	$NetBSD: readline.fH,v 1.1 2001/01/05 21:15:50 jdolecek Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -64,7 +64,7 @@
 */
 #endif
 
-/* list of readline stuff supported by editline library's readline wrapper */
+/* list of readline stuff supported by SEditLine_t library's readline wrapper */
 
 /* typedefs */
 typedef int Function (const char*, int);

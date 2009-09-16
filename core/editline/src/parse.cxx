@@ -46,7 +46,7 @@
 #include "compat.h"
 
 /*
- * parse.c: parse an editline extended command
+ * parse.c: parse an SEditLine_t extended command
  *
  * commands are:
  *
@@ -72,10 +72,10 @@
  * with tok_line() and friends.
  */
 el_protected int
-parse_line(EditLine* el, const char* line) {
+parse_line(EditLine_t* el, const char* line) {
    char** argv;
    int argc;
-   Tokenizer* tok;
+   Tokenizer_t* tok;
 
    tok = tok_init(NULL);
    tok_line(tok, line, &argc, &argv);
@@ -89,7 +89,7 @@ parse_line(EditLine* el, const char* line) {
  *	Command dispatcher
  */
 el_public int
-el_parse(EditLine* el, int argc, const char* argv[]) {
+el_parse(EditLine_t* el, int argc, const char* argv[]) {
    const char* ptr;
    int i;
 
@@ -114,7 +114,7 @@ el_parse(EditLine* el, int argc, const char* argv[]) {
       (void) strncpy(tprog, argv[0], l);
       tprog[l] = '\0';
       ptr++;
-      l = el_match(el->el_prog, tprog);
+      l = el_match(el->fProg, tprog);
       el_free(tprog);
 
       if (!l) {
@@ -125,10 +125,10 @@ el_parse(EditLine* el, int argc, const char* argv[]) {
    }
 
 
-   el_builtin_t* bi = el_builtin_by_name(ptr);
+   ElBuiltin_t* bi = el_builtin_by_name(ptr);
 
    if (bi) {
-      i = (*(bi->func))(el, argc, argv);
+      i = (*(bi->fFunc))(el, argc, argv);
       return -i;
    }
    return -1;
@@ -256,12 +256,12 @@ parse__string(char* out, const char* in) {
  *	or -1 if one is not found
  */
 el_protected int
-parse_cmd(EditLine* el, const char* cmd) {
-   el_bindings_t* b;
+parse_cmd(EditLine_t* el, const char* cmd) {
+   ElBindings_t* b;
 
-   for (b = el->el_map.help; b->name != NULL; b++) {
-      if (strcmp(b->name, cmd) == 0) {
-         return b->func;
+   for (b = el->fMap.fHelp; b->fName != NULL; b++) {
+      if (strcmp(b->fName, cmd) == 0) {
+         return b->fFunc;
       }
    }
    return -1;

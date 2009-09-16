@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*	$NetBSD: tty.h,v 1.8 2000/09/04 22:06:33 lukem Exp $	*/
+/*	$NetBSD: tty.fH,v 1.8 2000/09/04 22:06:33 lukem Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993
@@ -44,7 +44,7 @@
  */
 
 /*
- * el.tty.h: Local terminal header
+ * el.tty.fH: Local terminal header
  */
 #ifndef _h_el_tty
 #define _h_el_tty
@@ -461,29 +461,29 @@ typedef struct {
    const char* t_name;
    u_int t_setmask;
    u_int t_clrmask;
-} ttyperm_t[NN_IO][MD_NN];
+} TTYPerm_t[NN_IO][MD_NN];
 
-typedef unsigned char ttychar_t[NN_IO][C_NCC];
+typedef unsigned char TTYChar_t[NN_IO][C_NCC];
 
-el_protected int tty_init(EditLine*);
-el_protected void tty_end(EditLine*);
-el_protected int tty_stty(EditLine*, int, const char**);
-el_protected int tty_rawmode(EditLine*);
-el_protected int tty_cookedmode(EditLine*);
-el_protected int tty_quotemode(EditLine*);
-el_protected int tty_noquotemode(EditLine*);
-el_protected void tty_bind_char(EditLine*, int);
+el_protected int tty_init(EditLine_t*);
+el_protected void tty_end(EditLine_t*);
+el_protected int tty_stty(EditLine_t*, int, const char**);
+el_protected int tty_rawmode(EditLine_t*);
+el_protected int tty_cookedmode(EditLine_t*);
+el_protected int tty_quotemode(EditLine_t*);
+el_protected int tty_noquotemode(EditLine_t*);
+el_protected void tty_bind_char(EditLine_t*, int);
 
 typedef struct {
-   ttyperm_t t_t;
-   ttychar_t t_c;
+   TTYPerm_t t_t;
+   TTYChar_t t_c;
    struct termios t_ex, t_ed, t_ts;
    int t_tabs;
    int t_eight;
    speed_t t_speed;
    int t_mode;
    unsigned char t_vdisable;
-} el_tty_t;
+} ElTTY_t;
 
 
 #endif /* _h_el_tty */
