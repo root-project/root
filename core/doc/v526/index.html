@@ -11,3 +11,21 @@ length and all the bits in the longer TBits that are passed the length
 of the shorter TBits are zero (i.e. the default value of each
 bits is zero).</li>
 </ul>
+The new module <tt>editline</tt> enhances the prompt, giving type and syntax feedback using e.g. colors.
+Keywords and class names are highlighted blue when typed, indicating that the keyword is known to ROOT.  
+Matching parenthesis pairs are highlighted green when typed, or when the cursor is moved to a bracket. This works for () {} and [] brackets.
+Any mismatched brackets (those without a matching partner) will be highlighted red when typed or when the cursor is moved to the bracket.
+Tab completion output is coloured magenta to differentiate between tab completion output and user input.
+All of the colours are configurable in the <tt>.rootrc</tt> file.
+The colours available are black, red, green, yellow, blue, magenta, cyan and white. 
+Each can also be specified with options of <tt>bold</tt> (alias <tt>light</tt>) or <tt>underlined</tt>.
+An example configuration would be:
+<pre>
+Rint.TypeColor:			blue
+Rint.BracketColor:		bold green
+Rint.BadBracketColor:		underlined red
+Rint.TabColor:			magenta
+Rint.PromptColor:		black
+</pre>
+These changes are available on all platforms with [n]curses, including Linux, Solaris and MacOS; the bold and underline options are available also for black and white terminals.
+Currently, this module is disabled on Windows.
