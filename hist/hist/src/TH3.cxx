@@ -1328,7 +1328,7 @@ Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
          for (k = kbeg; k <= kend; k++) {
             bin = h1->GetBin(i,j,k);
             sum1 += h1->GetBinContent(bin);
-            sum2 += h1->GetBinContent(bin);
+            sum2 += h2->GetBinContent(bin);
             Double_t ew1   = h1->GetBinError(bin);
             Double_t ew2   = h2->GetBinError(bin);
             w1   += ew1*ew1;
@@ -1376,8 +1376,8 @@ Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
    binend[0] = iend; binend[1] = jend; binend[2] = kend; 
    Double_t vdfmax[6]; // there are in total 6 combinations 
    int icomb = 0; 
-   Double_t s1 = 1/sum1;
-   Double_t s2 = 1/sum2;
+   Double_t s1 = 1./(6.*sum1);
+   Double_t s2 = 1./(6.*sum2);
    Double_t rsum1=0, rsum2=0;
    do { 
       // loop on bins
