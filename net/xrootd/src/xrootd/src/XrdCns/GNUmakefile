@@ -54,7 +54,7 @@ anything: $(TARGETS)
 
 $(TARGETS): $(OBJECTS) $(LIBDEP)
 	@echo Creating executable $(BINDIR)/XrdCnsd
-	$(ECHO)$(CC) $(CFLAGS) $(OBJECTS) $(LIBDEP) $(MORELIBS) $(LIBS) -o $(BINDIR)/XrdCnsd
+	$(ECHO)$(LD) $(CFLAGS) $(OBJECTS) $(LIBDEP) $(MORELIBS) $(LIBS) -o $(BINDIR)/XrdCnsd
 
 $(OBJDIR)/XrdCnsConfig.o:  XrdCnsDaemon.hh XrdCnsEvent.hh   XrdCnsConfig.cc \
                            XrdNetDNS.hh    XrdNetOpts.hh    XrdNetSocket.hh \
