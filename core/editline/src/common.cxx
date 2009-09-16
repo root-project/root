@@ -715,11 +715,18 @@ ed_next_history(EditLine_t* el, int /*c*/) {
    el->fCharEd.fUndo.fAction = NOP;
    *el->fLine.fLastChar = '\0';        /* just in case */
 
-   el->fHistory.fEventNo -= el->fState.fArgument;
+   if (el->fHistory.fEventNo == 0 && el->fState.fArgument == 1) {
+      /* ROOT special treatment: kill the current buffer,
+         it's used as workaround for ^C which is caught by CINT */
+      el->fLine.fCursor = el->fLine.fBuffer;
+      return ed_kill_line(el, 0);
+   } else {
+      el->fHistory.fEventNo -= el->fState.fArgument;
 
-   if (el->fHistory.fEventNo < 0) {
-      el->fHistory.fEventNo = 0;
-      return CC_ERROR;            /* make it beep */
+      if (el->fHistory.fEventNo < 0) {
+         el->fHistory.fEventNo = 0;
+         return CC_ERROR;            /* make it beep */
+      }
    }
    return hist_get(el);
 }

@@ -72,12 +72,14 @@ el_private void sig_handler(int);
  */
 el_private void
 sig_handler(int signo) {
-   int i;
-   sigset_t nset, oset;
 
+   sigset_t nset, oset;
    (void) sigemptyset(&nset);
    (void) sigaddset(&nset, signo);
+   /* not needed; a signal is always blocked before invoking
+      the signal handler for that signal.
    (void) sigprocmask(SIG_BLOCK, &nset, &oset);
+   */
 
    switch (signo) {
    case SIGCONT:
@@ -98,15 +100,30 @@ sig_handler(int signo) {
       break;
    } // switch
 
-   for (i = 0; sighdl[i] != -1; i++) {
+   int i = 0;
+   for (; sighdl[i] != -1; i++) {
       if (signo == sighdl[i]) {
          break;
       }
    }
+   if (sighdl[i] == -1)
+      i = -1;
+   else {
+      (void) sigprocmask(SIG_UNBLOCK, &nset, &oset);
+      (void) signal(signo, sel->fSignal[i]);
+      // forward to previous signal handler:
+      (void) kill(0, signo);
+      (void) sigprocmask(SIG_SETMASK, &oset, NULL);
 
-   (void) signal(signo, sel->fSignal[i]);
-   (void) sigprocmask(SIG_SETMASK, &oset, NULL);
-   (void) kill(0, signo);
+      // re-enable us
+      sig_t s;
+      /* This could happen if we get interrupted */
+      if (i != -1 ) {
+         if ((s = signal(signo, sig_handler)) != sig_handler) {
+            sel->fSignal[i] = s;
+         }
+      }
+   }
 } // sig_handler
 
 

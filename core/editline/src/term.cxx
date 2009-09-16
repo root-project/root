@@ -643,12 +643,12 @@ term_move_to_line(EditLine_t* el, int where) {
    if ((del = where - el->fCursor.fV) > 0) {
       while (del > 0) {
          if (EL_HAS_AUTO_MARGINS &&
-             el->fDisplay[el->fCursor.fV][0] != '\0') {                                      // LOUISE COLOUR no change made
+             el->fDisplay[el->fCursor.fV][0] != '\0') {
             /* move without newline */
             term_move_to_char(el, el->fTerm.fSize.fH - 1);
             term_overwrite(el,
                            &el->fDisplay[el->fCursor.fV][el->fCursor.fH],
-                           0,                     // color irrelevant
+                           &el->fDispColor[el->fCursor.fV][el->fCursor.fH],
                            1);
             /* updates Cursor */
             del--;

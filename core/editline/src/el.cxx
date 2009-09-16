@@ -439,12 +439,19 @@ el_resize(EditLine_t* el) {
    int curHPos = el->fCursor.fH;
    int curVPos = el->fCursor.fV;
 
+   // We want to clear the old lines later. But how many did we have?
+   int displen = el->fPrompt.p_pos.fH;
+   displen += el->fLine.fLastChar - el->fLine.fBuffer;
+   // fTerm still has the old number of columns
+   int nlines = displen / el->fTerm.fSize.fH;
+
    /* get the correct window size */
    if (term_get_size(el, &lins, &cols)) {
       term_change_size(el, lins, cols);
    }
 
-   (void) sigprocmask(SIG_SETMASK, &oset, NULL);
+   // Now clear the old lines.
+   el->fRefresh.r_oldcv = nlines;
 
    // We need to set the cursor position after the resize, or refresh
    // will argue that nothing has changed (term_change_size set it to 0).
@@ -452,8 +459,11 @@ el_resize(EditLine_t* el) {
    el->fCursor.fH = curHPos >= cols ? cols - 1 : curHPos;
    // the vertical cursor pos does not change by resizing the window
    el->fCursor.fV = curVPos;
+   re_clear_lines(el);
    re_refresh(el);
    term__flush();
+
+   (void) sigprocmask(SIG_SETMASK, &oset, NULL);
 } // el_resize
 
 
