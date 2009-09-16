@@ -71,7 +71,7 @@ public:
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual void        ResetCache();
    virtual void        SetEntryRange(Long64_t emin,   Long64_t emax);
-   static void         SetLearnEntries(Int_t n = 100);
+   static void         SetLearnEntries(Int_t n = 10);
    virtual void        SetSkipZip(Bool_t skip = kTRUE) { (void)skip; return; } // This function is only used by TTreeCacheUnzip (ignore it)
    void                StartLearningPhase();
    virtual void        StopLearningPhase();

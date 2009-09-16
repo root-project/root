@@ -712,6 +712,32 @@ TTree::~TTree()
 }
 
 //______________________________________________________________________________
+void TTree::AddBranch2Cache(const char*bname, Bool_t subbranches)
+{
+   //add branch with name bname to the Tree cache
+   //if subbranches is true all the branches of the subbranches are also put to the cache
+   //if bname="*" all branches are added to the cache
+   
+   TFile *f = GetCurrentFile();
+   if (!f) return;
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   if (tc) tc->AddBranch(bname,subbranches);
+}
+
+//______________________________________________________________________________
+void TTree::AddBranch2Cache(TBranch *b, Bool_t subbranches)
+{
+   //add branch b to the Tree cache
+   //if subbranches is true all the branches of the subbranches are also put to the cache
+   
+   TFile *f = GetCurrentFile();
+   if (!f) return;
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   if (tc) tc->AddBranch(b,subbranches);
+}
+
+
+//______________________________________________________________________________
 void TTree::AddClone(TTree* clone)
 {
    // Add a cloned tree to our list of trees to be notified whenever we change
@@ -6036,7 +6062,7 @@ void TTree::SetBranchStyle(Int_t style)
    fgBranchStyle = style;
 }
 
- //______________________________________________________________________________
+//______________________________________________________________________________
 void TTree::SetCacheSize(Long64_t cacheSize)
 {
    // Set maximum size of the file cache (default is 10000000, i.e., 10 MB).
@@ -6074,6 +6100,25 @@ void TTree::SetCacheSize(Long64_t cacheSize)
       new TTreeCacheUnzip(this, cacheSize);
    else
       new TTreeCache(this, cacheSize);
+}
+
+//______________________________________________________________________________
+void TTree::SetCacheEntryRange(Long64_t first, Long64_t last)
+{
+   //interface to TTreeCache to set the cache entry range
+   
+   TFile *f = GetCurrentFile();
+   if (!f) return;
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   if (tc) tc->SetEntryRange(first,last);
+}
+
+//______________________________________________________________________________
+void TTree::SetCacheLearnEntries(Int_t n)
+{
+   //interface to TTreeCache to set the number of entries for the learning phase
+
+   TTreeCache::SetLearnEntries(n);
 }
 
 //______________________________________________________________________________
@@ -6503,6 +6548,17 @@ void TTree::StartViewer()
    if (fPlayer) {
       fPlayer->StartViewer(600, 400);
    }
+}
+
+//______________________________________________________________________________
+void TTree::StopCacheLearningPhase()
+{
+   // stop the cache learning phase
+
+   TFile *f = GetCurrentFile();
+   if (!f) return;
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   if (tc) tc->StopLearningPhase();
 }
 
 //______________________________________________________________________________

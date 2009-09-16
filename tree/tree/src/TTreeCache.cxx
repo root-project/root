@@ -104,10 +104,7 @@
 //   Long64_t nentries = T->GetEntries();
 //   Int_t cachesize = 10000000; //10 MBytes
 //   T->SetCacheSize(cachesize); //<<<
-//   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();//<<<
-//   tc->AddBranch("*",kTRUE);   //<<< add all branches to the cache
-//   tc->StopLearningPhase();    //<<< we do not need a learning phase since we know
-//                               //that we have to read all branches
+//   T->AddBranch("*",kTRUE);    //<<< add all branches to the cache
 //   T->Process('myselector.C+");
 //   //in the TSelector::Process function we read all branches
 //   T->GetEntry(i);
@@ -126,8 +123,7 @@
 //   Int_t cachesize = 10000000; //10 MBytes
 //   TTreeCache::SetLearnEntries(1);  //<<< we can take the decision after 1 entry
 //   T->SetCacheSize(cachesize);      //<<<
-//   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(); //<<<
-//   tc->SetEntryRange(efirst,elast); //<<<
+//   T->SetCacheEntryRange(efirst,elast); //<<<
 //   T->Process('myselector.C+","",nentries,efirst);
 //   // in the TSelector::Process we read only 2 branches
 //   TBranch *b1 = T->GetBranch("branch1");
@@ -145,15 +141,14 @@
 //      the branch buffers for these 2 branches only.
 //--
 //   TTree *T = (TTree*)f->Get("mytree");
-//   Long64_t nentries = T->GetEntries();
-//   Int_t cachesize = 10000000; //10 MBytes
-//   T->SetCacheSize(cachesize);      //<<<
-//   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(); //<<<
-//   tc->AddBranch("branch1",kTRUE);  //<<<add branch1 and branch2 to the cache
-//   tc->AddBranch("branch2",kTRUE);  //<<<
-//   tc->StopLearningPhase();         //<<<
 //   TBranch *b1 = T->GetBranch("branch1");
 //   TBranch *b2 = T->GetBranch("branch2");
+//   Long64_t nentries = T->GetEntries();
+//   Int_t cachesize = 10000000; //10 MBytes
+//   T->SetCacheSize(cachesize);    //<<<
+//   T->AddBranch2Cache(b1,kTRUE);  //<<<add branch1 and branch2 to the cache
+//   T->AddBranch2Cache(b2,kTRUE);  //<<<
+//   T->StopCacheLearningPhase();   //<<<
 //   for (Long64_t i=0;i<nentries;i++) {
 //      T->LoadTree(i); //<<< important call when calling TBranch::GetEntry after
 //      b1->GetEntry(i);
@@ -176,9 +171,9 @@
 //--
 //   TTree *T = (TTree*)f->Get("mytree");
 //   Long64_t nentries = T->GetEntries();
-//   Int_t cachesize = 10000000; //10 MBytes
-//   TTreeCache::SetLearnEntries(10); //<<< we can take the decision after 10 entries
-//   T->SetCacheSize(cachesize);      //<<<
+//   Int_t cachesize = 10000000;   //10 MBytes
+//   T->SetCacheSize(cachesize);   //<<<
+//   T->SetCacheLearnEntries(5);   //<<< we can take the decision after 5 entries
 //   TBranch *b1 = T->GetBranch("branch1");
 //   TBranch *b2 = T->GetBranch("branch2");
 //   for (Long64_t i=0;i<nentries;i++) {
@@ -334,6 +329,7 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
    // with regular expresions.
    // The branches are taken with respect to the Owner of this TTreeCache
    // (i.e. the original Tree)
+   // NB: if bname="*" all branches are put in the cache and the learning phase stopped
    
    TBranch *branch, *bcount;
    TLeaf *leaf, *leafcount;
@@ -402,6 +398,8 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
       if (gDebug > 0) printf("AddBranch: unknown branch -> %s \n", bname);
       return;
    }
+   //if all branches are selected stop the learning phase
+   if (*bname == '*') StopLearningPhase();
 }
 
 //_____________________________________________________________________________
