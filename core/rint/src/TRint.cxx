@@ -21,7 +21,6 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualX.h"
-#include "Getline.h"
 #include "TStyle.h"
 #include "TObjectTable.h"
 #include "TClassTable.h"
@@ -41,6 +40,12 @@
 #include "TError.h"
 #include "snprintf.h"
 #include <stdlib.h>
+
+#ifdef R__BUILDEDITLINE
+#include "Getline_el.h"
+#else
+#include "Getline.h"
+#endif
 
 #ifdef R__UNIX
 #include <signal.h>
@@ -226,6 +231,16 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    }
    Gl_histsize(hist_size, hist_save);
    Gl_histinit((char *)logon);
+     
+#ifdef R__BUILDEDITLINE
+   TString colorType = gEnv->GetValue("Rint.TypeColor", "blue");
+   TString colorTabCom = gEnv->GetValue("Rint.TabComColor", "magenta");
+   TString colorBracket = gEnv->GetValue("Rint.BracketColor", "green");
+   TString colorBadBracket = gEnv->GetValue("Rint.BadBracketColor", "red");
+   TString colorPrompt = gEnv->GetValue("Rint.PromptColor", "cyan");
+   Gl_setColors(colorType, colorTabCom, colorBracket, colorBadBracket, colorPrompt);
+#endif
+
    Gl_windowchanged();
 
    atexit(ResetTermAtExit);

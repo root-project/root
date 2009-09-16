@@ -50,6 +50,7 @@ options="                    \
    enable_cint7              \
    enable_cintex             \
    enable_clarens            \
+   enable_editline           \
    enable_dcache             \
    enable_exceptions         \
    enable_explicitlink       \
@@ -110,6 +111,7 @@ for c in $options ; do eval ${c}_explicit="" ; done
 enable_afs=no
 enable_cint5=yes
 enable_cint7=no
+enable_editline=no
 enable_gdml=no
 enable_globus=no
 enable_explicitlink=no
@@ -1041,6 +1043,7 @@ enable/disable options, prefix with either --enable- or --disable-
   cint7              Build the *experimental* new CINT library
   cintex             Build the libCintex Reflex interface library
   clarens            Clarens RPC support, optionally used by PROOF
+  editline           Color-enabled prompt, requires (n)curses library
   dcache             dCache support, requires libdcap from DESY
   exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
@@ -1102,6 +1105,8 @@ with options, prefix with --with-, enables corresponding support
   chirp-incdir       Chirp support, location of chirp_client.h
   chirp-libdir       Chirp support, location of libchirp_client
   cppunit            Cppunit testing, directory of the cppunit installation
+  curses-incdir      (n)Curses support for editline, location of (n)curses.h
+  curses-libdir      (n)Curses support for editline, location of lib(n)curses
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
   dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
@@ -1320,6 +1325,8 @@ if test $# -gt 0 ; then
       --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
       --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
       --with-cppunit=*)        cppunit=$optarg       ;;
+      --with-curses-incdir=*)  cursesincdir=$optarg  ; enable_editline="yes"  ;;
+      --with-curses-libdir=*)  curseslibdir=$optarg  ; enable_editline="yes"  ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dicttype=*)       dicttype=$optarg      ;;
@@ -1928,6 +1935,32 @@ if test "x$enable_builtin_zlib" = "xno" ; then
 fi
 message "Checking whether to build included zlib"
 result "$enable_builtin_zlib"
+
+######################################################################
+#
+### echo %%% nCurses or Curses Support - Third party libraries
+#
+# Check for libcurses / libncurses
+#
+if test ! "x$enable_editline" = "xno" ; then
+    check_header "ncurses.h curses.h" "$cursesincdir" \
+        /usr/include/ncurses /usr/local/include/ncurses \
+        /usr/include/curses /usr/local/include/curses \
+        /usr/include /usr/local/include
+    cursesincdir=$found_dir
+    curseshdr=$found_hdr
+
+    check_library "libncurses libcurses" "$enable_shared" "$curseslibdir" \
+        /usr/lib /usr/local/lib
+    curseslib=$found_lib
+    curseslibdir=$found_dir
+
+    if test "x$cursesincdir" = "x" || test "x$curseslib" = "x"; then
+        enable_editline="no"
+    fi
+fi
+check_explicit "$enable_editline" "$enable_editline_explicit" \
+     "Explicitly required editline dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2727,7 +2760,6 @@ if test ! "x$enable_gviz" = "xno"; then
 fi
 check_explicit "$enable_gviz" "$enable_gviz_explicit" \
      "Explicitly required graphviz dependencies not fulfilled"
-
 
 ######################################################################
 #
@@ -4092,7 +4124,7 @@ if test ! "x$enable_afs" = "xno" ; then
              else
                 echo "Checking for afs/$i ... $tmpincdir"
              fi
-          done 
+          done
        else
           afsincdir=""
           enable_afs="no"
@@ -4210,7 +4242,7 @@ if test ! "x$enable_krb5" = "xno" ; then
          hasvcstsymbol="yes"
       fi
 
-      if test "x$hask5vcstsymbol" = "xyes" && test "x$hask5vcstproto" = "xno" ; then 
+      if test "x$hask5vcstsymbol" = "xyes" && test "x$hask5vcstproto" = "xno" ; then
          needsvcstproto="-DR__KRB5_NEED_VCST_PROTO"
       elif test ! "x$hask5vcstsymbol" = "xyes" ; then
          if test "x$hasvcstsymbol" = "xyes" ; then
@@ -4223,7 +4255,7 @@ if test ! "x$enable_krb5" = "xno" ; then
    	    enable_krb5=no
 	 fi
       fi
-      
+
       if test ! "x$enable_krb5" = "xno" ; then
 
          check_library libkrb5 "$enable_shared" "$krb5libdirorg" $krb5libdirs
@@ -4248,7 +4280,7 @@ if test ! "x$enable_krb5" = "xno" ; then
    	    fi
    	 fi
          fi
-   
+
          krb5init=""
          krb5bindir=""
          if test ! "x$krb5dir" = "x" ; then
@@ -4262,13 +4294,13 @@ if test ! "x$enable_krb5" = "xno" ; then
                break
             fi
          done
-   
+
          if test "x$krb5init" = "x" ; then
             result "Checking for kinit ... no"
          else
             echo "Checking for kinit ... $krb5init"
          fi
-   
+
        fi
     fi
 
@@ -4976,6 +5008,12 @@ fi
 if test -d core/pcre/src/pcre-7.4 ; then
    rm -rf core/pcre/src/pcre-7.4
 fi
+if test ! "x$enable_editline" = "xno" ; then
+   rm -f core/clib/src/Getline.o core/clib/src/Getline.d
+fi
+if test ! "x$enable_editline_explicit" = "x" ; then
+   rm -f core/rint/src/TRint.o core/rint/src/TRint.d
+fi
 rm -f lib/libRXML* bin/libRXML* bin/xproofd etc/system.rootmap
 rm -f lib/libProofGui* bin/libProofGui* bin/xrdgsiproxy
 rm -f lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld*
@@ -5335,6 +5373,10 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@xpmlibdir@|$xpmlibdir|"              \
     -e "s|@xrdaddopts@|$xrdaddopts|"            \
     -e "s|@xrootddir@|$xrootddir|"              \
+    -e "s|@cursesincdir@|$cursesincdir|"        \
+    -e "s|@curseshdr@|$curseshdr|"              \
+    -e "s|@curseslib@|$curseslib|"              \
+    -e "s|@curseslibdir@|$curseslibdir|"        \
     -e "s|@buildgl@|$enable_opengl|"            \
     -e "s|@buildldap@|$enable_ldap|"            \
     -e "s|@buildmysql@|$enable_mysql|"          \
@@ -5368,6 +5410,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildclarens@|$enable_clarens|"      \
     -e "s|@buildpeac@|$buildpeac|"              \
     -e "s|@buildglite@|$enable_glite|"          \
+    -e "s|@buildeditline@|$enable_editline|"    \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 
@@ -5670,7 +5713,7 @@ result "done"
 # macros/html.C
 #
 message "Writing $HTMLOUT"
-sed_args="-e s/@altf77@/$altf772/" 
+sed_args="-e s/@altf77@/$altf772/"
 for opt in $options; do
    sed_args="${sed_args} -e s/@$opt@/"
    if eval "test x$`eval echo $opt` = xyes"; then

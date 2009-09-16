@@ -20,7 +20,11 @@ CLIBDH       := $(CLIBDS:.cxx=.h)
 
 CLIBH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 CLIBS1       := $(wildcard $(MODDIRS)/*.c)
+ifeq ($(BUILDEDITLINE),yes)
+CLIBS1       := $(filter-out $(MODDIRS)/Getline.c,$(CLIBS1))
+endif
 CLIBS2       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+
 CLIBO        := $(CLIBS1:.c=.o) $(CLIBS2:.cxx=.o)
 SNPRINTFO    := $(CLIBDIRS)/snprintf.o
 

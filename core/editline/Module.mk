@@ -8,22 +8,21 @@ MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-EDITLINEDIR      := $(MODDIR)
-EDITLINEDIRS     := $(EDITLINEDIR)/src
-EDITLINEDIRI     := $(EDITLINEDIR)/inc
+EDITLINEDIR  := $(MODDIR)
+EDITLINEDIRS := $(EDITLINEDIR)/src
+EDITLINEDIRI := $(EDITLINEDIR)/inc
 
 ##### libEditline (part of libCore) #####
-EDITLINEL        := $(MODDIRI)/LinkDef.h
-EDITLINEDS       := $(MODDIRS)/G__Editline.cxx
-EDITLINEDO       := $(EDITLINEDS:.cxx=.o)
-EDITLINEDH       := $(EDITLINEDS:.cxx=.h)
+EDITLINEL    := $(MODDIRI)/LinkDef.h
+EDITLINEDS   := $(MODDIRS)/G__Editline.cxx
+EDITLINEDO   := $(EDITLINEDS:.cxx=.o)
+EDITLINEDH   := $(EDITLINEDS:.cxx=.h)
 
-EDITLINEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-EDITLINES1       := $(wildcard $(MODDIRS)/*.c)
-EDITLINES2       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-EDITLINEO        := $(EDITLINES1:.c=.o) $(EDITLINES2:.cxx=.o)
+EDITLINEH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+EDITLINES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+EDITLINEO    := $(EDITLINES:.cxx=.o)
 
-EDITLINEDEP      := $(EDITLINEO:.o=.d) $(EDITLINEDO:.o=.d)
+EDITLINEDEP  := $(EDITLINEO:.o=.d) $(EDITLINEDO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(EDITLINEH))

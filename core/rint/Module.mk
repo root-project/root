@@ -65,3 +65,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(RINTDEP) $(RINTDS) $(RINTDH) $(RINTLIB) $(RINTMAP)
 
 distclean::     distclean-$(MODNAME)
+
+ifeq ($(BUILDEDITLINE),yes)
+$(RINTO): CXXFLAGS += -DR__BUILDEDITLINE
+endif

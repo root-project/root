@@ -263,6 +263,9 @@ endif
 ifneq ($(ARCH),win32)
 MODULES      += net/rpdutils net/rootd proof/proofd
 endif
+ifeq ($(BUILDEDITLINE),yes)
+MODULES      += core/editline
+endif
 ifeq ($(BUILDXRD),yes)
 ifeq ($(ARCH),win32)
 MODULES      += proof/proofd
@@ -273,7 +276,7 @@ endif
 -include MyModules.mk   # allow local modules
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
+MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 graf3d/gl graf3d/ftgl graf3d/glew io/rfio io/castor \
                 montecarlo/pythia6 montecarlo/pythia8 misc/table \
                 sql/mysql sql/pgsql sql/sapdb net/srputils graf3d/x3d \
@@ -487,17 +490,21 @@ STATICEXTRALIBS = $(PCRELDFLAGS) $(PCRELIB) \
 ##### libCore #####
 
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) \
-                $(SYSTEML) $(CLIBL) $(METAUTILSL)
+                $(SYSTEML) $(CLIBL) $(METAUTILSL) $(EDITLINEL)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
-                $(METAUTILSO)
+                $(METAUTILSO) $(EDITLINEO)
 COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(SYSTEMDO) $(CLIBDO) \
-                $(METAUTILSDO)
+                $(METAUTILSDO) $(EDITLINEDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
 ifneq ($(BUILTINZLIB),yes)
 CORELIBEXTRA += $(ZLIBCLILIB)
 STATICEXTRALIBS += -lz
+endif
+ifeq ($(BUILDEDITLINE),yes)
+CORELIBEXTRA += $(CURSESLIBDIR) $(CURSESLIB)
+STATICEXTRALIBS += $(CURSESLIBDIR) $(CURSESLIB)
 endif
 
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####

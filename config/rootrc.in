@@ -198,6 +198,11 @@ Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 Rint.Load:               rootalias.C
 Rint.Logon:              rootlogon.C
 Rint.Logoff:             rootlogoff.C
+# Prompt colors
+Rint.TypeColor:          bold blue
+Rint.BracketColor:       bold green
+Rint.BadBracketColor:    bold red underlined
+Rint.PromptColor:        cyan
 # Record session commands, set to "-" to turn off command recording.
 Rint.History:            $(HOME)/.root_hist
 # History file size, once HistSize is reached remove all but HistSave entries,
