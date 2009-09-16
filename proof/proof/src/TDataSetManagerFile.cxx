@@ -398,6 +398,7 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
    if (printing) {
       TList *output = (TList *)result;
       output->Sort();
+      Printf("Dataset repository: %s", fDataSetDir.Data());
       Printf("Dataset URI                               | # Files | Default tree | # Events |   Disk   | Staged");
       TIter iter4(output);
       TObjString* formattedLine = 0;
