@@ -66,6 +66,7 @@ public:
    void           Layout();
    virtual void   Paint(Option_t *option="");   
    virtual void   SavePrimitive(ostream &, Option_t *);                 
+   void           SaveAttributes(ostream &);                 
 
    ClassDef(TGraphNode,1)  //Graph node class
 };

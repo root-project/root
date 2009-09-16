@@ -244,26 +244,36 @@ void TGraphStruct::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       out<<"   TGraphNode *"<<node->GetName()<<" = graphstruct->AddNode(\""<<
                             node->GetName()<<"\",\""<<
                             node->GetTitle()<<"\");"<<endl;
+      node->SaveAttributes(out);
       for(Int_t i = 1; i < fNodes->GetSize(); i++){
          node = (TGraphNode*)fNodes->After(node);
          out<<"   TGraphNode *"<<node->GetName()<<" = graphstruct->AddNode(\""<<
                                node->GetName()<<"\",\""<<
                                node->GetTitle()<<"\");"<<endl;
+         node->SaveAttributes(out);
       }
    }
 
    // Save the edges
    if (fEdges) {
       TGraphEdge *edge;
+      Int_t en = 1;
       edge = (TGraphEdge*) fEdges->First();
-      out<<"   graphstruct->AddEdge("<<
+      out<<"   TGraphEdge *"<<"e"<<en<<
+                            " = new TGraphEdge("<<
                             edge->GetNode1()->GetName()<<","<<
                             edge->GetNode2()->GetName()<<");"<<endl;
+      out<<"   graphstruct->AddEdge("<<"e"<<en<<");"<<endl;
+      edge->SaveAttributes(out,Form("e%d",en));
       for(Int_t i = 1; i < fEdges->GetSize(); i++){
+         en++;
          edge = (TGraphEdge*)fEdges->After(edge);
-         out<<"   graphstruct->AddEdge("<<
+         out<<"   TGraphEdge *"<<"e"<<en<<
+                               " = new TGraphEdge("<<
                                edge->GetNode1()->GetName()<<","<<
                                edge->GetNode2()->GetName()<<");"<<endl;
+         out<<"   graphstruct->AddEdge("<<"e"<<en<<");"<<endl;
+         edge->SaveAttributes(out,Form("e%d",en));
       }
    }
 

@@ -209,6 +209,15 @@ void TGraphEdge::SavePrimitive(ostream &, Option_t *)
    // Save primitive as a C++ statement(s) on output stream out   
 }
 
+//______________________________________________________________________________
+void TGraphEdge::SaveAttributes(ostream &out, const char* name)
+{
+   // Save attributes as a C++ statement(s) on output stream out
+   // called by TGraphStruct::SavePrimitive.
+	       
+   SaveLineAttributes(out,name,1,1,1);
+}
+
 
 //______________________________________________________________________________
 void TGraphEdge::Streamer(TBuffer &/*b*/)

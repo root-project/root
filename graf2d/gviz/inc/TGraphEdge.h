@@ -64,6 +64,8 @@ public:
    void           Layout();            
    virtual void   Paint(Option_t *option="");
    virtual void   SavePrimitive(ostream &, Option_t *);
+   void           SaveAttributes(ostream &, const char*);                  
+
 
    ClassDef(TGraphEdge,1)  //Graph edge class
 };

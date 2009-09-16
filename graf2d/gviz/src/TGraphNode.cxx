@@ -153,6 +153,17 @@ void TGraphNode::SavePrimitive(ostream &, Option_t *)
 
 
 //______________________________________________________________________________
+void TGraphNode::SaveAttributes(ostream &out)
+{
+   // Save attributes as a C++ statement(s) on output stream out
+   // called by TGraphStruct::SavePrimitive.
+
+   SaveFillAttributes(out,GetName(),0,1001);
+   SaveLineAttributes(out,GetName(),1,1,1);
+   SaveTextAttributes(out,GetName(),0,0,0,0,0);
+}
+
+//______________________________________________________________________________
 void TGraphNode::Streamer(TBuffer &/*b*/)
 {
 }
