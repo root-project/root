@@ -61,6 +61,21 @@
 //
 //   root[] runProof("ntuple")
 //
+//  6. "dataset"
+//
+//      This is an example of automatic creation of a dataset from files created on the
+//      workers, using TProofOutputFile. The dataset is called testNtuple and it is
+//      automatically registered and verified. The files contain the same ntuple as in
+//      previous example/tutorial 5 (the same selector ProofNTuple is used with a slightly
+//      different configuration). The dataset is then used to produce the same plot
+//      as in 5 but using the DrawSelect methods of PROOF, which also show how to set
+//      style, color and other drawing attributes in PROOF. Depending on the relative
+//      worker perforance, some of the produced files may result in having no entries;
+//      if this happens, the file will be added to the missing (skipped) file list.
+//      Increasing the number of events (via nevt=...) typically solves this issue.
+//
+//   root[] runProof("dataset")
+//
 //
 //   In all cases, to run in non blocking mode the option 'asyn' is available, e.g.
 //
@@ -93,14 +108,21 @@
 //
 
 
+#include "TCanvas.h"
 #include "TChain.h"
 #include "TEnv.h"
+#include "TFileCollection.h"
+#include "TFrame.h"
 #include "TProof.h"
 #include "TString.h"
 #include "TDrawFeedback.h"
+#include "THashList.h"
 #include "TList.h"
+#include "TPad.h"
+#include "TPaveText.h"
 
 #include "getProof.C"
+void plotNtuple(TProof *p, const char *ds, const char *ntptitle);
 
 TDrawFeedback *fb = 0;
 
@@ -207,6 +229,7 @@ void runProof(const char *what = "simple",
 
    // Create feedback displayer
    if (!fb) {
+      new TCanvas("PROOF_EventsHist_canvas", "Events per Worker", 100, 600, 600, 400);
       fb = new TDrawFeedback(proof);
    }
    if (!proof->GetFeedbackList() || !proof->GetFeedbackList()->FindObject("PROOF_EventsHist")) {
@@ -447,8 +470,116 @@ void runProof(const char *what = "simple",
       // Run it for nevt times
       proof->Process(sel.Data(), nevt, opt);
 
+   } else if (act == "dataset") {
+
+      // ProofDSet is an example of analysis creating data files on each node which are
+      // automatically registered as dataset; the newly created dataset is used to create
+      // the final plots. The data are of the same type as for the 'ntuple' example.
+      TString aNevt, opt;
+      while (args.Tokenize(tok, from, " ")) {
+         // Number of events
+         if (tok.BeginsWith("nevt=")) {
+            aNevt = tok;
+            aNevt.ReplaceAll("nevt=","");
+            if (!aNevt.IsDigit()) {
+               Printf("runProof: error parsing the 'nevt=' option (%s) - ignoring", tok.Data());
+               aNevt = "";
+            }
+         }
+         // Sync or async ?
+         if (tok.BeginsWith("asyn"))
+            opt = "ASYN";
+      }
+      Long64_t nevt = (aNevt.IsNull()) ? 1000000 : aNevt.Atoi();
+      Printf("\nrunProof: running \"dataset\" with nevt= %d\n", nevt);
+
+      // Ask for registration of the dataset (the default is the the TFileCollection is return
+      // without registration; the name of the TFileCollection is the name of the dataset
+      proof->SetParameter("SimpleNtuple.root","testNtuple");
+
+      // Do not plot the ntuple at this level
+      proof->SetParameter("PROOF_NTUPLE_DONT_PLOT", "");
+
+      // The selector string
+      TString sel = Form("%s/proof/ProofNtuple.C+", tutorials.Data());
+      //
+      // Run it for nevt times
+      proof->Process(sel.Data(), nevt, opt);
+
+      // The TFileCollection must be in the output
+      if (proof->GetOutputList()->FindObject("testNtuple")) {
+
+         // Plot the ntuple via PROOF (example of drawing PROOF actions)
+         plotNtuple(proof, "testNtuple", "proof ntuple from dataset");
+
+      } else {
+         Printf("runProof: dataset 'testNtuple' not found in the output list");
+      }
+      // Do not plot the ntuple at this level
+      proof->DeleteParameters("PROOF_NTUPLE_DONT_PLOT");
+      proof->DeleteParameters("SimpleNtuple.root");
+
    } else {
       // Do not know what to run
       Printf("runProof: unknown tutorial: %s", what);
    }
+}
+
+//_______________________________________________________________________________________
+void plotNtuple(TProof *p, const char *ds, const char *ntptitle)
+{
+   // Make some plots from the ntuple 'ntp' via PROOF
+
+   // Do not cross-read to circumvent a problme with the tree cache
+   p->SetParameter("PROOF_ForceLocal", (Int_t)1);
+
+   //
+   // Create a canvas, with 2 pads
+   //
+   TCanvas *c1 = new TCanvas(Form("cv-%s", ds), ntptitle,800,10,700,780);
+   c1->Divide(1,2);
+   TPad *pad1 = (TPad *) c1->GetPad(1);
+   TPad *pad2 = (TPad *) c1->GetPad(2);
+   //
+   // Display a function of one ntuple column imposing a condition
+   // on another column.
+   pad1->cd();
+   pad1->SetGrid();
+   pad1->SetLogy();
+   pad1->GetFrame()->SetFillColor(15);
+
+   p->SetParameter("PROOF_LineColor", (Int_t)1);
+   p->SetParameter("PROOF_FillStyle", (Int_t)1001);
+   p->SetParameter("PROOF_FillColor", (Int_t)45);
+   p->DrawSelect(ds, "3*px+2","px**2+py**2>1");
+   p->SetParameter("PROOF_FillColor", (Int_t)38);
+   p->DrawSelect(ds, "2*px+2","pz>2","same");
+   p->SetParameter("PROOF_FillColor", (Int_t)5);
+   p->DrawSelect(ds, "1.3*px+2","(px^2+py^2>4) && py>0","same");
+   pad1->RedrawAxis();
+
+   //
+   // Display a 3-D scatter plot of 3 columns. Superimpose a different selection.
+   pad2->cd();
+   p->DrawSelect(ds, "pz:py:px","(pz<10 && pz>6)+(pz<4 && pz>3)");
+   p->SetParameter("PROOF_MarkerColor", (Int_t)4);
+   p->DrawSelect(ds, "pz:py:px","pz<6 && pz>4","same");
+   p->SetParameter("PROOF_MarkerColor", (Int_t)5);
+   p->DrawSelect(ds, "pz:py:px","pz<4 && pz>3","same");
+   TPaveText *l2 = new TPaveText(0.,0.6,0.9,0.95);
+   l2->SetFillColor(42);
+   l2->SetTextAlign(12);
+   l2->AddText("You can interactively rotate this view in 2 ways:");
+   l2->AddText("  - With the RotateCube in clicking in this pad");
+   l2->AddText("  - Selecting View with x3d in the View menu");
+   l2->Draw();
+
+   // Final update
+   c1->cd();
+   c1->Update();
+
+   // Clear parameters used for thi plots
+   p->DeleteParameters("PROOF_ForceLocal");
+   p->DeleteParameters("PROOF_*Color");
+   p->DeleteParameters("PROOF_*Style");
 }

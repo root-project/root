@@ -52,7 +52,7 @@ void ProofNtuple::PlotNtuple(TNtuple *ntp, const char *ntptitle)
    //
    // Create a canvas, with 2 pads
    //
-   TCanvas *c1 = new TCanvas(Form("cv-%s", ntp->GetName()), ntptitle,200,10,700,780);
+   TCanvas *c1 = new TCanvas(Form("cv-%s", ntp->GetName()), ntptitle,800,10,700,780);
    c1->Divide(1,2);
    TPad *pad1 = (TPad *) c1->GetPad(1);
    TPad *pad2 = (TPad *) c1->GetPad(2);
@@ -102,6 +102,8 @@ void ProofNtuple::Begin(TTree * /*tree*/)
 
    TString option = GetOption();
 
+   TNamed *out = (TNamed *) fInput->FindObject("PROOF_NTUPLE_DONT_PLOT");
+   if (out) fPlotNtuple = kFALSE;
 }
 
 void ProofNtuple::SlaveBegin(TTree * /*tree*/)
@@ -112,16 +114,22 @@ void ProofNtuple::SlaveBegin(TTree * /*tree*/)
 
    TString option = GetOption();
 
-   // For the ntuple, we use the automatic file merging facility
-   // Check if an output URL has been given
-   TNamed *out = (TNamed *) fInput->FindObject("PROOF_OUTPUTFILE_LOCATION");
-   Info("SlaveBegin", "PROOF_OUTPUTFILE_LOCATION: %s", (out ? out->GetTitle() : "undef"));
-   fProofFile = new TProofOutputFile("SimpleNtuple", (out ? out->GetTitle() : "REMOTE"));
-   out = (TNamed *) fInput->FindObject("PROOF_OUTPUTFILE");
-   if (out) fProofFile->SetOutputFileName(out->GetTitle());
-
-   // This is the info we send to the master
-   fOutput->Add(fProofFile);
+   // We may be creating a dataset or a merge file: check it
+   TNamed *nm = dynamic_cast<TNamed *>(fInput->FindObject("SimpleNtuple.root"));
+   if (nm) {
+      // Just create the object
+      UInt_t opt = TProofOutputFile::kRegister | TProofOutputFile::kOverwrite | TProofOutputFile::kVerify;
+      fProofFile = new TProofOutputFile("SimpleNtuple.root",
+                                        TProofOutputFile::kDataset, opt, nm->GetTitle());
+   } else {
+      // For the ntuple, we use the automatic file merging facility
+      // Check if an output URL has been given
+      TNamed *out = (TNamed *) fInput->FindObject("PROOF_OUTPUTFILE_LOCATION");
+      Info("SlaveBegin", "PROOF_OUTPUTFILE_LOCATION: %s", (out ? out->GetTitle() : "undef"));
+      fProofFile = new TProofOutputFile("SimpleNtuple.root", (out ? out->GetTitle() : "M"));
+      out = (TNamed *) fInput->FindObject("PROOF_OUTPUTFILE");
+      if (out) fProofFile->SetOutputFileName(out->GetTitle());
+   }
 
    // Open the file
    TDirectory *savedir = gDirectory;
@@ -186,14 +194,27 @@ void ProofNtuple::SlaveTerminate()
 
    // Write the ntuple to the file
    if (fFile) {
+      Bool_t cleanup = kFALSE;
       TDirectory *savedir = gDirectory;
-      fFile->cd();
-      fNtp->Write();
+      if (fNtp->GetEntries() > 0) {
+         fFile->cd();
+         fNtp->Write();
+         fProofFile->Print();
+         fOutput->Add(fProofFile);
+      } else {
+         cleanup = kTRUE;
+      }
       fNtp->SetDirectory(0);
       gDirectory = savedir;
       fFile->Close();
+      // Cleanup, if needed
+      if (cleanup) {
+         TUrl uf(*(fFile->GetEndpointUrl()));
+         SafeDelete(fFile);
+         gSystem->Unlink(uf.GetFile());
+         SafeDelete(fProofFile);
+      }
    }
-   fProofFile->Print();
 }
 
 void ProofNtuple::Terminate()
@@ -202,9 +223,12 @@ void ProofNtuple::Terminate()
    // a query. It always runs on the client, it can be used to present
    // the results graphically or save the results to file.
 
+   // Do nothing is not requested (dataset creation run)
+   if (!fPlotNtuple) return;
+
    // Get the ntuple form the file
    if ((fProofFile =
-           dynamic_cast<TProofOutputFile*>(fOutput->FindObject("SimpleNtuple")))) {
+           dynamic_cast<TProofOutputFile*>(fOutput->FindObject("SimpleNtuple.root")))) {
 
       TString outputFile(fProofFile->GetOutputFileName());
       TString outputName(fProofFile->GetName());

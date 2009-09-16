@@ -23,8 +23,9 @@ public :
    TProofOutputFile *fProofFile; // For optimized merging of the ntuple
    TNtuple          *fNtp;
    TRandom3         *fRandom;
+   Bool_t            fPlotNtuple;
 
-   ProofNtuple() : fFile(0), fProofFile(0), fNtp(0), fRandom(0) { }
+   ProofNtuple() : fFile(0), fProofFile(0), fNtp(0), fRandom(0), fPlotNtuple(kTRUE) { }
    virtual ~ProofNtuple();
    virtual Int_t   Version() const { return 2; }
    virtual void    Begin(TTree *tree);
