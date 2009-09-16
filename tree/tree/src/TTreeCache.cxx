@@ -72,6 +72,17 @@
 //     HOW TO USE the TreeCache
 //     =========================
 //
+//  A few use cases are discussed below. It is not simple to activate the cache
+//  by default (except case1 below) because there are many possible configurations.
+//  In some applications you know a priori the list of branches to read.
+//  In other applications the analysis loop calls several layers of user functions
+//  where it is impossible to predict a priori which branches will be used. This
+//  is probably the most frequent case. In this case ROOT I/O will flag used
+//  branches automatically when a branch buffer is read during the learning phase.
+//  The TreeCache interface provides functions to instruct the cache about the used
+//  branches if they are known a priori. In the examples below, portions of analysis
+//  code are shown. The few statements involving the TreeCache are marked with //<<<
+//
 //  -------------------
 //  1- with TTree::Draw
 //  -------------------
@@ -92,12 +103,11 @@
 //   TTree *T = (TTree*)f->Get("mytree");
 //   Long64_t nentries = T->GetEntries();
 //   Int_t cachesize = 10000000; //10 MBytes
-//   TTreeCache *tc = 0;
-//   T->SetCacheSize(cachesize);
-//   tc = (TTreeCache*)f->GetCacheRead();
-//   tc->AddBranch("*",kTRUE);  //add all branches to the cache
-//   tc->StopLearningPhase();   //we do not need a learning phase since we know
-//                              //that we have to read all branches
+//   T->SetCacheSize(cachesize); //<<<
+//   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();//<<<
+//   tc->AddBranch("*",kTRUE);   //<<< add all branches to the cache
+//   tc->StopLearningPhase();    //<<< we do not need a learning phase since we know
+//                               //that we have to read all branches
 //   T->Process('myselector.C+");
 //   //in the TSelector::Process function we read all branches
 //   T->GetEntry(i);
@@ -114,11 +124,10 @@
 //   int efirst= 0;
 //   int elast = efirst+nentries;
 //   Int_t cachesize = 10000000; //10 MBytes
-//   TTreeCache::SetLearnEntries(1); //we can take the decision after 1 entry
-//   TTreeCache *tc = 0;
-//   T->SetCacheSize(cachesize);
-//   tc = (TTreeCache*)f->GetCacheRead();
-//   tc->SetEntryRange(efirst,elast);
+//   TTreeCache::SetLearnEntries(1);  //<<< we can take the decision after 1 entry
+//   T->SetCacheSize(cachesize);      //<<<
+//   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(); //<<<
+//   tc->SetEntryRange(efirst,elast); //<<<
 //   T->Process('myselector.C+","",nentries,efirst);
 //   // in the TSelector::Process we read only 2 branches
 //   TBranch *b1 = T->GetBranch("branch1");
@@ -138,16 +147,15 @@
 //   TTree *T = (TTree*)f->Get("mytree");
 //   Long64_t nentries = T->GetEntries();
 //   Int_t cachesize = 10000000; //10 MBytes
-//   TTreeCache *tc = 0;
-//   T->SetCacheSize(cachesize);
-//   tc = (TTreeCache*)f->GetCacheRead();
-//   tc->AddBranch("branch1",kTRUE);  //add branch1 and branch2 to the cache
-//   tc->AddBranch("branch2",kTRUE);
-//   tc->StopLearningPhase();
+//   T->SetCacheSize(cachesize);      //<<<
+//   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(); //<<<
+//   tc->AddBranch("branch1",kTRUE);  //<<<add branch1 and branch2 to the cache
+//   tc->AddBranch("branch2",kTRUE);  //<<<
+//   tc->StopLearningPhase();         //<<<
 //   TBranch *b1 = T->GetBranch("branch1");
 //   TBranch *b2 = T->GetBranch("branch2");
 //   for (Long64_t i=0;i<nentries;i++) {
-//      T->LoadTree(i); //important call when calling TBranch::GetEntry after
+//      T->LoadTree(i); //<<< important call when calling TBranch::GetEntry after
 //      b1->GetEntry(i);
 //      if (some condition not met) continue;
 //      b2->GetEntry(i);
@@ -169,10 +177,8 @@
 //   TTree *T = (TTree*)f->Get("mytree");
 //   Long64_t nentries = T->GetEntries();
 //   Int_t cachesize = 10000000; //10 MBytes
-//   TTreeCache::SetLearnEntries(10); //we can take the decision after 10 entries
-//   TTreeCache *tc = 0;
-//   T->SetCacheSize(cachesize);
-//   tc = (TTreeCache*)f->GetCacheRead();
+//   TTreeCache::SetLearnEntries(10); //<<< we can take the decision after 10 entries
+//   T->SetCacheSize(cachesize);      //<<<
 //   TBranch *b1 = T->GetBranch("branch1");
 //   TBranch *b2 = T->GetBranch("branch2");
 //   for (Long64_t i=0;i<nentries;i++) {
@@ -192,6 +198,14 @@
 //      ... here you process your entry
 //   }
 //--
+//
+//
+//     SPECIAL CASES WHERE TreeCache should not be activated
+//     =====================================================
+//
+//   When reading only a small fraction of all entries such that not all branch
+//   buffers are read, it might be faster to run without a cache.
+//
 //
 //   HOW TO VERIFY That the TreeCache has been used and check its performance
 //   ========================================================================
