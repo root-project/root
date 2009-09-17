@@ -383,17 +383,22 @@ Gl_setColors(const char* colorTab, const char* colorTabComp, const char* colorBr
 
 char*
 Getline(const char* prompt) {
+   // Get a line of user input, showing prompt.
+   // Does not return after every character entered, but
+   // only returns once the user has hit return.
+   // For ROOT Getline.c backward compatibility reasons,
+   // the returned value is volatile and will be overwritten
+   // by the subsequent call to Getline() or Getlinem(),
+   // so copy the string if it needs to stay around.
+   // The returned value must not be deleted.
+   // The returned string contains a trailing newline '\n'.
+
    Getlinem(-1, prompt); // init
-   const char* answer = 0;
+   char* answer = 0;
    do {
       answer = Getlinem(1, prompt);
    } while (!answer);
-   // return copy; ret will be modified by next invocation of Getline[m]()
-   size_t len = strlen(answer);
-   char* ret = new char[len + 1];
-   memcpy(ret, answer, len);
-   ret[len] = 0;
-   return ret;
+   return answer;
 }
 
 
