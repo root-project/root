@@ -383,7 +383,17 @@ Gl_setColors(const char* colorTab, const char* colorTabComp, const char* colorBr
 
 char*
 Getline(const char* prompt) {
-   return Getlinem(0, prompt);
+   Getlinem(-1, prompt); // init
+   const char* answer = 0;
+   do {
+      answer = Getlinem(1, prompt);
+   } while (!answer);
+   // return copy; ret will be modified by next invocation of Getline[m]()
+   size_t len = strlen(answer);
+   char* ret = new char[len + 1];
+   memcpy(ret, answer, len);
+   ret[len] = 0;
+   return ret;
 }
 
 
