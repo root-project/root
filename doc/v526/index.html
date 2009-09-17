@@ -1,24 +1,55 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!--                                             -->
+<!-- Author: ROOT team (rootdev@pcroot.cern.ch)  -->
+<!--                                             -->
+<!--   Date: Tue Sep 15 10:25:16 2009            -->
+<!--                                             -->
 <head>
-<!--                                             -->
-<!-- Author: ROOT team (rootdev@root.cern.ch)    -->
-<!--                                             -->
-<!--   Date: Tue Jun 30 9:26:19 2009             -->
-<!--                                             -->
-  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-  <title>ROOT Version 5.26/00 Release Notes</title>
-  <link rev="made" href="mailto:rootdev@root.cern.ch">
-  <meta name="rating" content="General">
-  <meta name="objecttype" content="Manual">
-  <meta name="keywords" content="software development, oo, object oriented, unix, x11, windows, c++, html, rene brun, fons rademakers">
-  <meta name="description" content="ROOT - An Object Oriented Framework For Large Scale Data Analysis.">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<title>ROOT Version 5.26/00 Release Notes</title>
+<meta name="rating" content="General" />
+<meta name="objecttype" content="Manual" />
+<meta name="keywords" content="software development, oo, object oriented, unix, x11, windows, c++, html, rene brun, fons rademakers, cern" />
+<meta name="description" content="ROOT - An Object Oriented Framework For Large Scale Data Analysis." />
+<link rel="stylesheet" type="text/css" href="../html/ROOT.css" id="ROOTstyle" />
+
+<script type="text/javascript" src="../html/ROOT.js"></script>
 </head>
-<body alink="#ff0000" bgcolor="#ffffff" link="#0000ff" text="#000000"
- vlink="#551a8b">
+<body><div id="body_content">
+<div id="root_header"><img src="http://root.cern.ch/drupal/sites/default/files/rootdrawing-logo.png" alt="ROOT logo"/></div>
 <a name="TopOfPage"></a>
-<h1 align="center">ROOT Version 5.26/00 Release Notes</h1>
-<hr>
+<div id="toplinks">
+<div class="descrhead"><div class="descrheadcontent">
+<span class="descrtitle">Quick Links:</span>
+<a class="descrheadentry" href="http://root.cern.ch">ROOT Homepage</a>
+<a class="descrheadentry" href="/drupal/content/downloading-root">Download</a>
+<a class="descrheadentry" href="/drupal/content/reference-guide">Reference Guide</a>
+</div>
+
+<script type="text/javascript">
+function onSearch() {
+var s='http://www.google.com/search?q=%s+site%3A%u+-site%3A%u%2Fsrc%2F+-site%3A%u%2Fexamples%2F';
+var ref=String(document.location.href).replace(/https?:\/\//,'').replace(/\/[^\/]*$/,'').replace(/\//g,'%2F');
+window.location.href=s.replace(/%u/ig,ref).replace(/%s/ig,escape(document.searchform.t.value));
+return false;}
+</script>
+<form id="searchform" name="searchform" onsubmit="return onSearch()" action="javascript:onSearch();" method="post">
+<input name="t" size="30" value="Search documentation..." onfocus="if (document.searchform.t.value=='Search documentation...') document.searchform.t.value='';"></input>
+<a id="searchlink"  title="www.google.com"  href="javascript:onSearch();" onclick="return onSearch()">Search</a></form>
+</div>
+</div>
+<div class="location">
+<a class="locationlevel" href="index.html">ROOT</a>
+
+ &#187; <a class="locationlevel" href="/drupal/content/downloading-root">Download</a>
+ &#187; <a class="locationlevel" href="#TopOfPage">Release Notes</a>
+</div>
+<div class="dropshadow"><div class="withshadow">
+  <h1>ROOT Version 5.26/00 Release Notes</h1>
+
+<div class="classdescr">
 <p>ROOT version 5.26/00 will be released end of December 2009.
 In case you are upgrading from an old version, please read the releases notes
 of version 5.16, 5.18, 5.20, 5.22 and version 5.24 in addition to these notes.</p>
@@ -60,12 +91,14 @@ Philippe Canal, FNAL,<br>
 Olivier Couet, CERN/SFT,<br>
 Kyle Cranmer, NYU/Atlas, RooStats<br>
 Valeri Fine, BNL/STAR,<br>
+Lucie Flekova, CERN/SFT summer student,<br>
 Fabrizio Furano, CERN/IT, <br>
 Gerri Ganis, CERN/SFT,<br>
 Andrei Gheata, CERN/Alice,<br>
+Mary-Louise Gill, CERN/SFT summer student,<br>
 David Gonzalez Maline, CERN/SFT, <br>
 Andreas Hoecker, CERN/Atlas, TMVA <br>
-Louis Höfle, <br>
+Louis H&ouml;fler, <br>
 Jan Iwaszkiewicz, CERN, <br>
 Wim Lavrijsen, LBNL, PyRoot<br>
 Alfio Lazzaro, Milano/AtlasMinuit<br>
