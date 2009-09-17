@@ -163,7 +163,7 @@ int main(int argc, char **argv)
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
       Int_t nentries = (Int_t)tree->GetEntries();
-      nevent = TMath::Max(nevent,nentries);
+      nevent = TMath::Min(nevent,nentries);
       if (read == 1) {  //read sequential
          //set the read cache
          Int_t cachesize = 10000000; //this is the default value: 10 MBytes
