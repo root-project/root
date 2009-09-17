@@ -5318,14 +5318,20 @@ void TTree::Print(Option_t* option) const
 }
 
 //______________________________________________________________________________
-void TTree::PrintCacheStats(Option_t* /*option*/) const
+void TTree::PrintCacheStats(Option_t* option) const
 {
-   // print statistics about the TreeCache for this tree
+   // print statistics about the TreeCache for this tree, like
+   //   ******TreeCache statistics for file: cms2.root ******
+   //   Reading 73921562 bytes in 716 transactions
+   //   Average transaction = 103.242405 Kbytes
+   //   Number of blocks in current cache: 202, total size : 6001193
+   //
+   // if option = "a" the list of blocks in the cache is printed
    
    TFile *f = GetCurrentFile();
    if (!f) return;
    TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
-   if (tc) tc->Print();
+   if (tc) tc->Print(option);
 }
 
 //______________________________________________________________________________

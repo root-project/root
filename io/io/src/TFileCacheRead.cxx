@@ -182,11 +182,20 @@ void TFileCacheRead::Prefetch(Long64_t pos, Int_t len)
 //_____________________________________________________________________________
 void TFileCacheRead::Print(Option_t *option) const
 {
-   // Print class internal structure.
-
+   // Print cache statistics, like
+   //   ******TreeCache statistics for file: cms2.root ******
+   //   Reading 73921562 bytes in 716 transactions
+   //   Average transaction = 103.242405 Kbytes
+   //   Number of blocks in current cache: 202, total size : 6001193
+   //
+   // if option = "a" the list of blocks in the cache is printed
+   
    TString opt = option;
    opt.ToLower();
-   printf("Number of blocks: %d, total size : %d\n",fNseek,fNtot);
+   printf("******TreeCache statistics for file: %s ******\n",fFile->GetName());
+   printf("Reading %lld bytes in %d transactions\n",fFile->GetBytesRead(),  fFile->GetReadCalls());
+   printf("Average transaction = %f Kbytes\n",0.001*Double_t(fFile->GetBytesRead())/Double_t(fFile->GetReadCalls()));
+   printf("Number of blocks in current cache: %d, total size : %d\n",fNseek,fNtot);
    if (!opt.Contains("a")) return;
    for (Int_t i=0;i<fNseek;i++) {
       if (fIsSorted && !opt.Contains("s")) {
