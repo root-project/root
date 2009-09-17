@@ -64,7 +64,7 @@ private:
       }
 
 
-      unsigned char fR, fG, fB;
+      int fR, fG, fB;
    };
 
    char* GetTermStr(const char* cap);
