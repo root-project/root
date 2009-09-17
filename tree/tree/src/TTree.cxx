@@ -712,7 +712,7 @@ TTree::~TTree()
 }
 
 //______________________________________________________________________________
-void TTree::AddBranch2Cache(const char*bname, Bool_t subbranches)
+void TTree::AddBranchToCache(const char*bname, Bool_t subbranches)
 {
    //add branch with name bname to the Tree cache
    //if subbranches is true all the branches of the subbranches are also put to the cache
@@ -725,7 +725,7 @@ void TTree::AddBranch2Cache(const char*bname, Bool_t subbranches)
 }
 
 //______________________________________________________________________________
-void TTree::AddBranch2Cache(TBranch *b, Bool_t subbranches)
+void TTree::AddBranchToCache(TBranch *b, Bool_t subbranches)
 {
    //add branch b to the Tree cache
    //if subbranches is true all the branches of the subbranches are also put to the cache
@@ -5318,6 +5318,17 @@ void TTree::Print(Option_t* option) const
 }
 
 //______________________________________________________________________________
+void TTree::PrintCacheStats(Option_t* /*option*/) const
+{
+   // print statistics about the TreeCache for this tree
+   
+   TFile *f = GetCurrentFile();
+   if (!f) return;
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   if (tc) tc->Print();
+}
+
+//______________________________________________________________________________
 Long64_t TTree::Process(const char* filename, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
    // Process this tree executing the TSelector code in the specified filename.
@@ -6432,6 +6443,16 @@ void TTree::SetObject(const char* name, const char* title)
    if (fDirectory) {
       fDirectory->Append(this);
    }
+}
+
+//______________________________________________________________________________
+void TTree::SetParallelUnzip(Bool_t opt)
+{
+   //enable or disable parallel unzipping of Tree buffers
+   
+   if (opt) TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kEnable);
+   else     TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kDisable);
+   
 }
 
 //______________________________________________________________________________

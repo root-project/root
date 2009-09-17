@@ -145,10 +145,10 @@
 //   TBranch *b2 = T->GetBranch("branch2");
 //   Long64_t nentries = T->GetEntries();
 //   Int_t cachesize = 10000000; //10 MBytes
-//   T->SetCacheSize(cachesize);    //<<<
-//   T->AddBranch2Cache(b1,kTRUE);  //<<<add branch1 and branch2 to the cache
-//   T->AddBranch2Cache(b2,kTRUE);  //<<<
-//   T->StopCacheLearningPhase();   //<<<
+//   T->SetCacheSize(cachesize);     //<<<
+//   T->AddBranchToCache(b1,kTRUE);  //<<<add branch1 and branch2 to the cache
+//   T->AddBranchToCache(b2,kTRUE);  //<<<
+//   T->StopCacheLearningPhase();    //<<<
 //   for (Long64_t i=0;i<nentries;i++) {
 //      T->LoadTree(i); //<<< important call when calling TBranch::GetEntry after
 //      b1->GetEntry(i);

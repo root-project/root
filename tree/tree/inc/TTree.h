@@ -208,8 +208,8 @@ public:
    TTree(const char* name, const char* title, Int_t splitlevel = 99);
    virtual ~TTree();
 
-   virtual void            AddBranch2Cache(const char *bname, Bool_t subbranches = kFALSE);
-   virtual void            AddBranch2Cache(TBranch *branch,   Bool_t subbranches = kFALSE);
+   virtual void            AddBranchToCache(const char *bname, Bool_t subbranches = kFALSE);
+   virtual void            AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
    virtual TFriendElement *AddFriend(const char* treename, const char* filename = "");
    virtual TFriendElement *AddFriend(const char* treename, TFile* file);
    virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", Bool_t warn = kFALSE);
@@ -357,6 +357,7 @@ public:
    virtual void            OptimizeBaskets(Int_t maxMemory=10000000, Float_t minComp=1.1, Option_t *option=""); 
    TPrincipal             *Principal(const char* varexp = "", const char* selection = "", Option_t* option = "np", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual void            Print(Option_t* option = "") const; // *MENU*
+   virtual void            PrintCacheStats(Option_t* option = "") const;
    virtual Long64_t        Process(const char* filename, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
 #if defined(__CINT__)
 #if defined(R__MANUAL_DICT)
@@ -415,6 +416,7 @@ public:
    virtual void            SetName(const char* name); // *MENU*
    virtual void            SetNotify(TObject* obj) { fNotify = obj; }
    virtual void            SetObject(const char* name, const char* title);
+   virtual void            SetParallelUnzip(Bool_t opt=kTRUE);
    virtual void            SetScanField(Int_t n = 50) { fScanField = n; } // *MENU*
    virtual void            SetTimerInterval(Int_t msec = 333) { fTimerInterval=msec; }
    virtual void            SetTreeIndex(TVirtualIndex*index);
