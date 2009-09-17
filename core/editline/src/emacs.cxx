@@ -484,7 +484,7 @@ em_copy_prev_word(EditLine_t* el, int /*c*/) {
 el_protected ElAction_t
 /*ARGSUSED*/
 em_inc_search_next(EditLine_t* el, int /*c*/) {
-   el->fSearch.patlen = 0;
+   el->fSearch.fPatLen = 0;
    return ce_inc_search(el, ED_SEARCH_NEXT_HISTORY);
 }
 
@@ -495,7 +495,7 @@ em_inc_search_next(EditLine_t* el, int /*c*/) {
 el_protected ElAction_t
 /*ARGSUSED*/
 em_inc_search_prev(EditLine_t* el, int /*c*/) {
-   el->fSearch.patlen = 0;
+   el->fSearch.fPatLen = 0;
    return ce_inc_search(el, ED_SEARCH_PREV_HISTORY);
 }
 

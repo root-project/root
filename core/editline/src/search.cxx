@@ -76,15 +76,15 @@
  */
 el_protected int
 search_init(EditLine_t* el) {
-   el->fSearch.patbuf = (char*) el_malloc(EL_BUFSIZ);
+   el->fSearch.fPatBuf = (char*) el_malloc(EL_BUFSIZ);
 
-   if (el->fSearch.patbuf == NULL) {
+   if (el->fSearch.fPatBuf == NULL) {
       return -1;
    }
-   el->fSearch.patlen = 0;
-   el->fSearch.patdir = -1;
-   el->fSearch.chacha = '\0';
-   el->fSearch.chadir = -1;
+   el->fSearch.fPatLen = 0;
+   el->fSearch.fPatDir = -1;
+   el->fSearch.fChaCha = '\0';
+   el->fSearch.fChaDir = -1;
    return 0;
 }
 
@@ -94,8 +94,8 @@ search_init(EditLine_t* el) {
  */
 el_protected void
 search_end(EditLine_t* el) {
-   el_free((ptr_t) el->fSearch.patbuf);
-   el->fSearch.patbuf = NULL;
+   el_free((ptr_t) el->fSearch.fPatBuf);
+   el->fSearch.fPatBuf = NULL;
 }
 
 
@@ -169,10 +169,10 @@ el_protected int
 c_hmatch(EditLine_t* el, const char* str) {
 #ifdef SDEBUG
       (void) fprintf(el->fErrFile, "match `%s' with `%s'\n",
-                     el->fSearch.patbuf, str);
+                     el->fSearch.fPatBuf, str);
 #endif /* SDEBUG */
 
-   return el_match(str, el->fSearch.patbuf);
+   return el_match(str, el->fSearch.fPatBuf);
 }
 
 
@@ -183,26 +183,26 @@ el_protected void
 c_setpat(EditLine_t* el) {
    if (el->fState.fLastCmd != ED_SEARCH_PREV_HISTORY &&
        el->fState.fLastCmd != ED_SEARCH_NEXT_HISTORY) {
-      el->fSearch.patlen = EL_CURSOR(el) - el->fLine.fBuffer;
+      el->fSearch.fPatLen = EL_CURSOR(el) - el->fLine.fBuffer;
 
-      if (el->fSearch.patlen >= EL_BUFSIZ) {
-         el->fSearch.patlen = EL_BUFSIZ - 1;
+      if (el->fSearch.fPatLen >= EL_BUFSIZ) {
+         el->fSearch.fPatLen = EL_BUFSIZ - 1;
       }
 
-      if (el->fSearch.patlen != 0) {
-         (void) strncpy(el->fSearch.patbuf, el->fLine.fBuffer,
-                        el->fSearch.patlen);
-         el->fSearch.patbuf[el->fSearch.patlen] = '\0';
+      if (el->fSearch.fPatLen != 0) {
+         (void) strncpy(el->fSearch.fPatBuf, el->fLine.fBuffer,
+                        el->fSearch.fPatLen);
+         el->fSearch.fPatBuf[el->fSearch.fPatLen] = '\0';
       } else {
-         el->fSearch.patlen = strlen(el->fSearch.patbuf);
+         el->fSearch.fPatLen = strlen(el->fSearch.fPatBuf);
       }
    }
 #ifdef SDEBUG
       (void) fprintf(el->fErrFile, "\neventno = %d\n",
                      el->fHistory.fEventNo);
-   (void) fprintf(el->fErrFile, "patlen = %d\n", el->fSearch.patlen);
+   (void) fprintf(el->fErrFile, "patlen = %d\n", el->fSearch.fPatLen);
    (void) fprintf(el->fErrFile, "patbuf = \"%s\"\n",
-                  el->fSearch.patbuf);
+                  el->fSearch.fPatBuf);
    (void) fprintf(el->fErrFile, "cursor %d lastchar %d\n",
                   EL_CURSOR(el) - el->fLine.fBuffer,
                   el->fLine.fLastChar - el->fLine.fBuffer);
@@ -225,21 +225,21 @@ ce_inc_search(EditLine_t* el, int dir) {
    ElAction_t ret = CC_NORM;
 
    int ohisteventno = el->fHistory.fEventNo;
-   int oldpatlen = el->fSearch.patlen;
+   int oldpatlen = el->fSearch.fPatLen;
    int newdir = dir;
    int done, redo;
 
    if (el->fLine.fLastChar + sizeof(strfwd) / sizeof(char) + 2 +
-       el->fSearch.patlen >= el->fLine.fLimit) {
+       el->fSearch.fPatLen >= el->fLine.fLimit) {
       return CC_ERROR;
    }
 
    for ( ; ;) {
-      if (el->fSearch.patlen == 0) {                  /* first round */
+      if (el->fSearch.fPatLen == 0) {                  /* first round */
          pchar = ':';
 #if ANCHOR_SEARCHES
-         el->fSearch.patbuf[el->fSearch.patlen++] = '.';
-         el->fSearch.patbuf[el->fSearch.patlen++] = '*';
+         el->fSearch.fPatBuf[el->fSearch.fPatLen++] = '.';
+         el->fSearch.fPatBuf[el->fSearch.fPatLen++] = '*';
 #endif
       }
       done = redo = 0;
@@ -253,13 +253,13 @@ ce_inc_search(EditLine_t* el, int dir) {
       el->fLine.fBufColor[el->fLine.fLastChar - el->fLine.fBuffer] = -1;
       *el->fLine.fLastChar++ = pchar;
 #if ANCHOR_SEARCHES
-      cp = &el->fSearch.patbuf[2];
+      cp = &el->fSearch.fPatBuf[2];
 #else
-      cp = &el->fSearch.patbuf[1];
+      cp = &el->fSearch.fPatBuf[1];
 #endif
 
       for ( ;
-            cp < &el->fSearch.patbuf[el->fSearch.patlen];
+            cp < &el->fSearch.fPatBuf[el->fSearch.fPatLen];
             *el->fLine.fLastChar++ = *cp++) {
          el->fLine.fBufColor[el->fLine.fLastChar - el->fLine.fBuffer] = -1;
          continue;
@@ -279,10 +279,10 @@ ce_inc_search(EditLine_t* el, int dir) {
       case ED_INSERT:
       case ED_DIGIT:
 
-         if (el->fSearch.patlen > EL_BUFSIZ - 3) {
+         if (el->fSearch.fPatLen > EL_BUFSIZ - 3) {
             term_beep(el);
          } else {
-            el->fSearch.patbuf[el->fSearch.patlen++] =
+            el->fSearch.fPatBuf[el->fSearch.fPatLen++] =
                ch;
             el->fLine.fBufColor[el->fLine.fLastChar - el->fLine.fBuffer] = -1;
             *el->fLine.fLastChar++ = ch;
@@ -304,7 +304,7 @@ ce_inc_search(EditLine_t* el, int dir) {
 
       case ED_DELETE_PREV_CHAR:
 
-         if (el->fSearch.patlen > 1) {
+         if (el->fSearch.fPatLen > 1) {
             done++;
          } else {
             term_beep(el);
@@ -322,22 +322,22 @@ ce_inc_search(EditLine_t* el, int dir) {
          case 0027:                     /* ^W: Append word */
 
             /* No can do if globbing characters in pattern */
-            for (cp = &el->fSearch.patbuf[1]; ; cp++) {
-               if (cp >= &el->fSearch.patbuf[el->fSearch.patlen]) {
+            for (cp = &el->fSearch.fPatBuf[1]; ; cp++) {
+               if (cp >= &el->fSearch.fPatBuf[el->fSearch.fPatLen]) {
                   el->fLine.fCursor +=
-                     el->fSearch.patlen - 1;
+                     el->fSearch.fPatLen - 1;
                   cp = c__next_word(el->fLine.fCursor,
                                     el->fLine.fLastChar, 1,
                                     ce__isword);
 
                   while (el->fLine.fCursor < cp &&
                          *el->fLine.fCursor != '\n') {
-                     if (el->fSearch.patlen >
+                     if (el->fSearch.fPatLen >
                          EL_BUFSIZ - 3) {
                         term_beep(el);
                         break;
                      }
-                     el->fSearch.patbuf[el->fSearch.patlen++] =
+                     el->fSearch.fPatBuf[el->fSearch.fPatLen++] =
                         *el->fLine.fCursor;
                      el->fLine.fBufColor[el->fLine.fLastChar - el->fLine.fBuffer] =
                         el->fLine.fBufColor[el->fLine.fCursor - el->fLine.fBuffer];
@@ -379,15 +379,15 @@ ce_inc_search(EditLine_t* el, int dir) {
       if (!done) {
          /* Can't search if unmatched '[' */
          ch = ']';
-         for (cp = &el->fSearch.patbuf[el->fSearch.patlen - 1];
-              cp > el->fSearch.patbuf; cp--) {
+         for (cp = &el->fSearch.fPatBuf[el->fSearch.fPatLen - 1];
+              cp > el->fSearch.fPatBuf; cp--) {
             if (*cp == '[' || *cp == ']') {
                ch = *cp;
                break;
             }
          }
 
-         if (el->fSearch.patlen > 1 && ch != '[') {
+         if (el->fSearch.fPatLen > 1 && ch != '[') {
             if (redo && newdir == dir) {
                if (pchar == '?') {                          /* wrap around */
                   el->fHistory.fEventNo =
@@ -411,17 +411,17 @@ ce_inc_search(EditLine_t* el, int dir) {
                }
             }
 #if ANCHOR_SEARCHES
-            el->fSearch.patbuf[el->fSearch.patlen++] =
+            el->fSearch.fPatBuf[el->fSearch.fPatLen++] =
                '.';
-            el->fSearch.patbuf[el->fSearch.patlen++] =
+            el->fSearch.fPatBuf[el->fSearch.fPatLen++] =
                '*';
 #endif
-            el->fSearch.patbuf[el->fSearch.patlen] =
+            el->fSearch.fPatBuf[el->fSearch.fPatLen] =
                '\0';
 
             if (el->fLine.fCursor < el->fLine.fBuffer ||
                 el->fLine.fCursor > el->fLine.fLastChar ||
-                (ret = ce_search_line(el, &el->fSearch.patbuf[1], newdir)) == CC_ERROR) {
+                (ret = ce_search_line(el, &el->fSearch.fPatBuf[1], newdir)) == CC_ERROR) {
                /* avoid c_setpat */
                el->fState.fLastCmd =
                   (ElAction_t) newdir;
@@ -435,15 +435,15 @@ ce_inc_search(EditLine_t* el, int dir) {
                                        el->fLine.fLastChar :
                                        el->fLine.fBuffer;
                   (void) ce_search_line(el,
-                                        &el->fSearch.patbuf[1],
+                                        &el->fSearch.fPatBuf[1],
                                         newdir);
                }
             }
 #if ANCHOR_SEARCHES
-            el->fSearch.patlen -= 2;
-            el->fSearch.patbuf[el->fSearch.patlen] = 0;
+            el->fSearch.fPatLen -= 2;
+            el->fSearch.fPatBuf[el->fSearch.fPatLen] = 0;
 #else
-            el->fSearch.patbuf[--el->fSearch.patlen] = 0;
+            el->fSearch.fPatBuf[--el->fSearch.fPatLen] = 0;
 #endif
 
             if (ret == CC_ERROR) {
@@ -479,7 +479,7 @@ ce_inc_search(EditLine_t* el, int dir) {
       if (ret == CC_NORM || (ret == CC_ERROR && oldpatlen == 0)) {
          /* restore on normal return or error exit */
          pchar = oldpchar;
-         el->fSearch.patlen = oldpatlen;
+         el->fSearch.fPatLen = oldpatlen;
 
          if (el->fHistory.fEventNo != ohisteventno) {
             el->fHistory.fEventNo = ohisteventno;
@@ -520,7 +520,7 @@ cv_search(EditLine_t* el, int dir) {
    el->fLine.fBuffer[0] = '\0';
    el->fLine.fLastChar = el->fLine.fBuffer;
    el->fLine.fCursor = el->fLine.fBuffer;
-   el->fSearch.patdir = dir;
+   el->fSearch.fPatDir = dir;
 
    c_insert(el, 2);             /* prompt + '\n' */
    *el->fLine.fCursor++ = '\n';
@@ -541,7 +541,7 @@ cv_search(EditLine_t* el, int dir) {
       /*
        * Use the old pattern, but wild-card it.
        */
-      if (el->fSearch.patlen == 0) {
+      if (el->fSearch.fPatLen == 0) {
          el->fLine.fBuffer[0] = '\0';
          el->fLine.fLastChar = el->fLine.fBuffer;
          el->fLine.fCursor = el->fLine.fBuffer;
@@ -550,18 +550,18 @@ cv_search(EditLine_t* el, int dir) {
       }
 #if ANCHOR_SEARCHES
 
-      if (el->fSearch.patbuf[0] != '.' &&
-          el->fSearch.patbuf[0] != '*') {
-         (void) strncpy(tmpbuf, el->fSearch.patbuf,
+      if (el->fSearch.fPatBuf[0] != '.' &&
+          el->fSearch.fPatBuf[0] != '*') {
+         (void) strncpy(tmpbuf, el->fSearch.fPatBuf,
                         sizeof(tmpbuf) - 1);
-         el->fSearch.patbuf[0] = '.';
-         el->fSearch.patbuf[1] = '*';
-         (void) strncpy(&el->fSearch.patbuf[2], tmpbuf,
+         el->fSearch.fPatBuf[0] = '.';
+         el->fSearch.fPatBuf[1] = '*';
+         (void) strncpy(&el->fSearch.fPatBuf[2], tmpbuf,
                         EL_BUFSIZ - 3);
-         el->fSearch.patlen++;
-         el->fSearch.patbuf[el->fSearch.patlen++] = '.';
-         el->fSearch.patbuf[el->fSearch.patlen++] = '*';
-         el->fSearch.patbuf[el->fSearch.patlen] = '\0';
+         el->fSearch.fPatLen++;
+         el->fSearch.fPatBuf[el->fSearch.fPatLen++] = '.';
+         el->fSearch.fPatBuf[el->fSearch.fPatLen++] = '*';
+         el->fSearch.fPatBuf[el->fSearch.fPatLen] = '\0';
       }
 #endif
    } else {
@@ -570,8 +570,8 @@ cv_search(EditLine_t* el, int dir) {
       tmpbuf[tmplen++] = '*';
 #endif
       tmpbuf[tmplen] = '\0';
-      (void) strncpy(el->fSearch.patbuf, tmpbuf, EL_BUFSIZ - 1);
-      el->fSearch.patlen = tmplen;
+      (void) strncpy(el->fSearch.fPatBuf, tmpbuf, EL_BUFSIZ - 1);
+      el->fSearch.fPatLen = tmplen;
    }
    el->fState.fLastCmd = (ElAction_t) dir;            /* avoid c_setpat */
    el->fLine.fCursor = el->fLine.fLastChar = el->fLine.fBuffer;
@@ -629,7 +629,7 @@ el_protected ElAction_t
 cv_repeat_srch(EditLine_t* el, int c) {
 #ifdef SDEBUG
       (void) fprintf(el->fErrFile, "dir %d patlen %d patbuf %s\n",
-                     c, el->fSearch.patlen, el->fSearch.patbuf);
+                     c, el->fSearch.fPatLen, el->fSearch.fPatBuf);
 #endif
 
    el->fState.fLastCmd = (ElAction_t) c;      /* Hack to stop c_setpat */

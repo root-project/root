@@ -306,9 +306,9 @@ re_refresh(EditLine_t* el) {
       cur.fH = el->fRefresh.r_cursor.fH;
       cur.fV = el->fRefresh.r_cursor.fV;
    }
-   rhdiff = el->fTerm.fSize.fH - el->fRefresh.r_cursor.fH - el->fRPrompt.p_pos.fH;
+   rhdiff = el->fTerm.fSize.fH - el->fRefresh.r_cursor.fH - el->fRPrompt.fPos.fH;
 
-   if (el->fRPrompt.p_pos.fH && !el->fRPrompt.p_pos.fV &&
+   if (el->fRPrompt.fPos.fH && !el->fRPrompt.fPos.fV &&
        !el->fRefresh.r_cursor.fV && rhdiff > 1) {
       /*
        * have a right-hand side prompt that will fit
@@ -319,8 +319,8 @@ re_refresh(EditLine_t* el) {
          re_putc(el, ' ', 1, 0);
       prompt_print(el, EL_RPROMPT);
    } else {
-      el->fRPrompt.p_pos.fH = 0;               /* flag "not using rprompt" */
-      el->fRPrompt.p_pos.fV = 0;
+      el->fRPrompt.fPos.fH = 0;               /* flag "not using rprompt" */
+      el->fRPrompt.fPos.fV = 0;
    }
 
    re_putc(el, '\0', 0, 0);             /* make line ended with NUL, no cursor shift */
@@ -1049,8 +1049,8 @@ re_refresh_cursor(EditLine_t* el) {
    int h, v, th;
 
    /* first we must find where the cursor is... */
-   h = el->fPrompt.p_pos.fH;
-   v = el->fPrompt.p_pos.fV;
+   h = el->fPrompt.fPos.fH;
+   v = el->fPrompt.fPos.fV;
    th = el->fTerm.fSize.fH;           /* optimize for speed */
 
    /* do input buffer to el->fLine.fCursor */
@@ -1165,9 +1165,9 @@ re_fastaddc(EditLine_t* el) {
       return;
    }
    rhdiff = el->fTerm.fSize.fH - el->fCursor.fH -
-            el->fRPrompt.p_pos.fH;
+            el->fRPrompt.fPos.fH;
 
-   if (el->fRPrompt.p_pos.fH && rhdiff < 3) {
+   if (el->fRPrompt.fPos.fH && rhdiff < 3) {
       re_refresh(el);           /* clear out rprompt if less than 1 char gap */
       return;
    }                            /* else (only do at end of line, no TAB) */

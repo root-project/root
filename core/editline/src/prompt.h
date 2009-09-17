@@ -53,10 +53,10 @@
 
 typedef const char* (*ElPFunc_t)(EditLine_t*);
 
-typedef struct ElPrompt_t {
-   ElPFunc_t p_func;           /* Function to return the prompt	*/
-   ElCoord_t p_pos;               /* position in the line after prompt	*/
-} ElPrompt_t;
+struct ElPrompt_t {
+   ElPFunc_t fFunc;           /* Function to return the prompt	*/
+   ElCoord_t fPos;               /* position in the line after prompt	*/
+};
 
 el_protected void prompt_print(EditLine_t*, int);
 el_protected int prompt_set(EditLine_t *, ElPFunc_t, int);

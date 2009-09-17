@@ -1525,7 +1525,7 @@ term__repaint(EditLine_t* el, int index) {
    // store where cursor is currently (involves el)
    char* cursor = el->fLine.fCursor;
 
-   int promptSize = el->fPrompt.p_pos.fH;
+   int promptSize = el->fPrompt.fPos.fH;
    int oriCursor = el->fCursor.fH;
    int oriLine = el->fCursor.fV;
 

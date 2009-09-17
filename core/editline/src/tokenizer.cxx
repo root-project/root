@@ -71,14 +71,16 @@ typedef enum {
 
 
 struct ElTokenizer_t {
-   char* ifs;                   /* In field separator			 */
-   int argc, amax;              /* Current and maximum number of args	 */
-   char** argv;                 /* Argument list			 */
-   char* wptr, * wmax;          /* Space and limit on the word buffer	 */
-   char* wstart;                /* Beginning of next word		 */
-   char* wspace;                /* Space of word buffer			 */
-   Quote_t quote;               /* Quoting state			 */
-   int flags;                   /* flags;				 */
+   char* fIfs;                   /* In field separator			 */
+   int fArgC;                    /* Current number of args	 */
+   int fAMax;                    /* Maximum number of args	 */
+   char** fArgV;                 /* Argument list			 */
+   char* fWPtr;                  /* Space on the word buffer	 */
+   char* fWMax;                  /* Limit on the word buffer	 */
+   char* fWStart;                /* Beginning of next word		 */
+   char* fWSpace;                /* Space of word buffer			 */
+   Quote_t fQuote;               /* Quoting state			 */
+   int fFlags;                   /* flags;				 */
 };
 
 
@@ -90,14 +92,14 @@ el_private void tok_finish_word(Tokenizer_t*);
  */
 el_private void
 tok_finish_word(Tokenizer_t* tok) {
-   *tok->wptr = '\0';
+   *tok->fWPtr = '\0';
 
-   if ((tok->flags & TOK_KEEP) || tok->wptr != tok->wstart) {
-      tok->argv[tok->argc++] = tok->wstart;
-      tok->argv[tok->argc] = NULL;
-      tok->wstart = ++tok->wptr;
+   if ((tok->fFlags & TOK_KEEP) || tok->fWPtr != tok->fWStart) {
+      tok->fArgV[tok->fArgC++] = tok->fWStart;
+      tok->fArgV[tok->fArgC] = NULL;
+      tok->fWStart = ++tok->fWPtr;
    }
-   tok->flags &= ~TOK_KEEP;
+   tok->fFlags &= ~TOK_KEEP;
 }
 
 
@@ -108,25 +110,25 @@ el_public Tokenizer_t*
 tok_init(const char* ifs) {
    Tokenizer_t* tok = (Tokenizer_t*) tok_malloc(sizeof(Tokenizer_t));
 
-   tok->ifs = strdup(ifs ? ifs : IFS);
-   tok->argc = 0;
-   tok->amax = AINCR;
-   tok->argv = (char**) tok_malloc(sizeof(char*) * tok->amax);
+   tok->fIfs = strdup(ifs ? ifs : IFS);
+   tok->fArgC = 0;
+   tok->fAMax = AINCR;
+   tok->fArgV = (char**) tok_malloc(sizeof(char*) * tok->fAMax);
 
-   if (tok->argv == NULL) {
+   if (tok->fArgV == NULL) {
       return NULL;
    }
-   tok->argv[0] = NULL;
-   tok->wspace = (char*) tok_malloc(WINCR);
+   tok->fArgV[0] = NULL;
+   tok->fWSpace = (char*) tok_malloc(WINCR);
 
-   if (tok->wspace == NULL) {
+   if (tok->fWSpace == NULL) {
       return NULL;
    }
-   tok->wmax = tok->wspace + WINCR;
-   tok->wstart = tok->wspace;
-   tok->wptr = tok->wspace;
-   tok->flags = 0;
-   tok->quote = kQuoteNone;
+   tok->fWMax = tok->fWSpace + WINCR;
+   tok->fWStart = tok->fWSpace;
+   tok->fWPtr = tok->fWSpace;
+   tok->fFlags = 0;
+   tok->fQuote = kQuoteNone;
 
    return tok;
 } // tok_init
@@ -137,11 +139,11 @@ tok_init(const char* ifs) {
  */
 el_public void
 tok_reset(Tokenizer_t* tok) {
-   tok->argc = 0;
-   tok->wstart = tok->wspace;
-   tok->wptr = tok->wspace;
-   tok->flags = 0;
-   tok->quote = kQuoteNone;
+   tok->fArgC = 0;
+   tok->fWStart = tok->fWSpace;
+   tok->fWPtr = tok->fWSpace;
+   tok->fFlags = 0;
+   tok->fQuote = kQuoteNone;
 }
 
 
@@ -150,9 +152,9 @@ tok_reset(Tokenizer_t* tok) {
  */
 el_public void
 tok_end(Tokenizer_t* tok) {
-   tok_free((ptr_t) tok->ifs);
-   tok_free((ptr_t) tok->wspace);
-   tok_free((ptr_t) tok->argv);
+   tok_free((ptr_t) tok->fIfs);
+   tok_free((ptr_t) tok->fWSpace);
+   tok_free((ptr_t) tok->fArgV);
    tok_free((ptr_t) tok);
 }
 
@@ -173,31 +175,31 @@ tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
    for ( ; ;) {
       switch (*(ptr = line++)) {
       case '\'':
-         tok->flags |= TOK_KEEP;
-         tok->flags &= ~TOK_EAT;
+         tok->fFlags |= TOK_KEEP;
+         tok->fFlags &= ~TOK_EAT;
 
-         switch (tok->quote) {
+         switch (tok->fQuote) {
          case kQuoteNone:
-            tok->quote = kQuoteSingle;                      /* Enter single quote
+            tok->fQuote = kQuoteSingle;                      /* Enter single quote
                                                          * mode */
             break;
 
          case kQuoteSingle:                 /* Exit single quote mode */
-            tok->quote = kQuoteNone;
+            tok->fQuote = kQuoteNone;
             break;
 
          case kQuoteOne:                    /* Quote this ' */
-            tok->quote = kQuoteNone;
-            *tok->wptr++ = *ptr;
+            tok->fQuote = kQuoteNone;
+            *tok->fWPtr++ = *ptr;
             break;
 
          case kQuoteDouble:                 /* Stay in double quote mode */
-            *tok->wptr++ = *ptr;
+            *tok->fWPtr++ = *ptr;
             break;
 
          case kQuoteDoubleone:                      /* Quote this ' */
-            tok->quote = kQuoteDouble;
-            *tok->wptr++ = *ptr;
+            tok->fQuote = kQuoteDouble;
+            *tok->fWPtr++ = *ptr;
             break;
 
          default:
@@ -206,30 +208,30 @@ tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
          break;
 
       case '"':
-         tok->flags &= ~TOK_EAT;
-         tok->flags |= TOK_KEEP;
+         tok->fFlags &= ~TOK_EAT;
+         tok->fFlags |= TOK_KEEP;
 
-         switch (tok->quote) {
+         switch (tok->fQuote) {
          case kQuoteNone:                   /* Enter double quote mode */
-            tok->quote = kQuoteDouble;
+            tok->fQuote = kQuoteDouble;
             break;
 
          case kQuoteDouble:                 /* Exit double quote mode */
-            tok->quote = kQuoteNone;
+            tok->fQuote = kQuoteNone;
             break;
 
          case kQuoteOne:                    /* Quote this " */
-            tok->quote = kQuoteNone;
-            *tok->wptr++ = *ptr;
+            tok->fQuote = kQuoteNone;
+            *tok->fWPtr++ = *ptr;
             break;
 
          case kQuoteSingle:                 /* Stay in single quote mode */
-            *tok->wptr++ = *ptr;
+            *tok->fWPtr++ = *ptr;
             break;
 
          case kQuoteDoubleone:                      /* Quote this " */
-            tok->quote = kQuoteDouble;
-            *tok->wptr++ = *ptr;
+            tok->fQuote = kQuoteDouble;
+            *tok->fWPtr++ = *ptr;
             break;
 
          default:
@@ -238,30 +240,30 @@ tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
          break;
 
       case '\\':
-         tok->flags |= TOK_KEEP;
-         tok->flags &= ~TOK_EAT;
+         tok->fFlags |= TOK_KEEP;
+         tok->fFlags &= ~TOK_EAT;
 
-         switch (tok->quote) {
+         switch (tok->fQuote) {
          case kQuoteNone:                   /* Quote next character */
-            tok->quote = kQuoteOne;
+            tok->fQuote = kQuoteOne;
             break;
 
          case kQuoteDouble:                 /* Quote next character */
-            tok->quote = kQuoteDoubleone;
+            tok->fQuote = kQuoteDoubleone;
             break;
 
          case kQuoteOne:                    /* Quote this, restore state */
-            *tok->wptr++ = *ptr;
-            tok->quote = kQuoteNone;
+            *tok->fWPtr++ = *ptr;
+            tok->fQuote = kQuoteNone;
             break;
 
          case kQuoteSingle:                 /* Stay in single quote mode */
-            *tok->wptr++ = *ptr;
+            *tok->fWPtr++ = *ptr;
             break;
 
          case kQuoteDoubleone:                      /* Quote this \ */
-            tok->quote = kQuoteDouble;
-            *tok->wptr++ = *ptr;
+            tok->fQuote = kQuoteDouble;
+            *tok->fWPtr++ = *ptr;
             break;
 
          default:
@@ -270,28 +272,28 @@ tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
          break;
 
       case '\n':
-         tok->flags &= ~TOK_EAT;
+         tok->fFlags &= ~TOK_EAT;
 
-         switch (tok->quote) {
+         switch (tok->fQuote) {
          case kQuoteNone:
             tok_finish_word(tok);
-            *argv = tok->argv;
-            *argc = tok->argc;
+            *argv = tok->fArgV;
+            *argc = tok->fArgC;
             return 0;
 
          case kQuoteSingle:
          case kQuoteDouble:
-            *tok->wptr++ = *ptr;                        /* Add the return */
+            *tok->fWPtr++ = *ptr;                        /* Add the return */
             break;
 
          case kQuoteDoubleone:                  /* Back to double, eat the '\n' */
-            tok->flags |= TOK_EAT;
-            tok->quote = kQuoteDouble;
+            tok->fFlags |= TOK_EAT;
+            tok->fQuote = kQuoteDouble;
             break;
 
          case kQuoteOne:                    /* No quote, more eat the '\n' */
-            tok->flags |= TOK_EAT;
-            tok->quote = kQuoteNone;
+            tok->fFlags |= TOK_EAT;
+            tok->fQuote = kQuoteNone;
             break;
 
          default:
@@ -301,17 +303,17 @@ tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
 
       case '\0':
 
-         switch (tok->quote) {
+         switch (tok->fQuote) {
          case kQuoteNone:
 
             /* Finish word and return */
-            if (tok->flags & TOK_EAT) {
-               tok->flags &= ~TOK_EAT;
+            if (tok->fFlags & TOK_EAT) {
+               tok->fFlags &= ~TOK_EAT;
                return 3;
             }
             tok_finish_word(tok);
-            *argv = tok->argv;
-            *argc = tok->argc;
+            *argv = tok->fArgV;
+            *argc = tok->fArgC;
             return 0;
 
          case kQuoteSingle:
@@ -321,13 +323,13 @@ tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
             return 2;
 
          case kQuoteDoubleone:
-            tok->quote = kQuoteDouble;
-            *tok->wptr++ = *ptr;
+            tok->fQuote = kQuoteDouble;
+            *tok->fWPtr++ = *ptr;
             break;
 
          case kQuoteOne:
-            tok->quote = kQuoteNone;
-            *tok->wptr++ = *ptr;
+            tok->fQuote = kQuoteNone;
+            *tok->fWPtr++ = *ptr;
             break;
 
          default:
@@ -336,33 +338,33 @@ tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
          break;
 
       default:
-         tok->flags &= ~TOK_EAT;
+         tok->fFlags &= ~TOK_EAT;
 
-         switch (tok->quote) {
+         switch (tok->fQuote) {
          case kQuoteNone:
 
-            if (strchr(tok->ifs, *ptr) != NULL) {
+            if (strchr(tok->fIfs, *ptr) != NULL) {
                tok_finish_word(tok);
             } else {
-               *tok->wptr++ = *ptr;
+               *tok->fWPtr++ = *ptr;
             }
             break;
 
          case kQuoteSingle:
          case kQuoteDouble:
-            *tok->wptr++ = *ptr;
+            *tok->fWPtr++ = *ptr;
             break;
 
 
          case kQuoteDoubleone:
-            *tok->wptr++ = '\\';
-            tok->quote = kQuoteDouble;
-            *tok->wptr++ = *ptr;
+            *tok->fWPtr++ = '\\';
+            tok->fQuote = kQuoteDouble;
+            *tok->fWPtr++ = *ptr;
             break;
 
          case kQuoteOne:
-            tok->quote = kQuoteNone;
-            *tok->wptr++ = *ptr;
+            tok->fQuote = kQuoteNone;
+            *tok->fWPtr++ = *ptr;
             break;
 
          default:
@@ -372,11 +374,11 @@ tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
          break;
       } // switch
 
-      if (tok->wptr >= tok->wmax - 4) {
-         size_t size = tok->wmax - tok->wspace + WINCR;
-         char* s = (char*) tok_realloc(tok->wspace, size);
+      if (tok->fWPtr >= tok->fWMax - 4) {
+         size_t size = tok->fWMax - tok->fWSpace + WINCR;
+         char* s = (char*) tok_realloc(tok->fWSpace, size);
          /* SUPPRESS 22 */
-         int offs = s - tok->wspace;
+         int offs = s - tok->fWSpace;
 
          if (s == NULL) {
             return -1;
@@ -385,26 +387,26 @@ tok_line(Tokenizer_t* tok, const char* line, int* argc, char*** argv) {
          if (offs != 0) {
             int i;
 
-            for (i = 0; i < tok->argc; i++) {
-               tok->argv[i] = tok->argv[i] + offs;
+            for (i = 0; i < tok->fArgC; i++) {
+               tok->fArgV[i] = tok->fArgV[i] + offs;
             }
-            tok->wptr = tok->wptr + offs;
-            tok->wstart = tok->wstart + offs;
-            tok->wmax = s + size;
-            tok->wspace = s;
+            tok->fWPtr = tok->fWPtr + offs;
+            tok->fWStart = tok->fWStart + offs;
+            tok->fWMax = s + size;
+            tok->fWSpace = s;
          }
       }
 
-      if (tok->argc >= tok->amax - 4) {
+      if (tok->fArgC >= tok->fAMax - 4) {
          char** p;
-         tok->amax += AINCR;
-         p = (char**) tok_realloc(tok->argv,
-                                  tok->amax * sizeof(char*));
+         tok->fAMax += AINCR;
+         p = (char**) tok_realloc(tok->fArgV,
+                                  tok->fAMax * sizeof(char*));
 
          if (p == NULL) {
             return -1;
          }
-         tok->argv = p;
+         tok->fArgV = p;
       }
    }
    return 0;      /* ??? added by stephan */

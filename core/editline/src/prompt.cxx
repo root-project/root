@@ -97,14 +97,14 @@ prompt_print(EditLine_t* el, int op) {
    } else {
       elp = &el->fRPrompt;
    }
-   p = (elp->p_func)(el);
+   p = (elp->fFunc)(el);
    ElColor_t col;
 
    while (*p)
       re_putc(el, *p++, 1, &prompt_color);
 
-   elp->p_pos.fV = el->fRefresh.r_cursor.fV;
-   elp->p_pos.fH = el->fRefresh.r_cursor.fH;
+   elp->fPos.fV = el->fRefresh.r_cursor.fV;
+   elp->fPos.fH = el->fRefresh.r_cursor.fH;
 } // prompt_print
 
 
@@ -113,12 +113,12 @@ prompt_print(EditLine_t* el, int op) {
  */
 el_protected int
 prompt_init(EditLine_t* el) {
-   el->fPrompt.p_func = prompt_default;
-   el->fPrompt.p_pos.fV = 0;
-   el->fPrompt.p_pos.fH = 0;
-   el->fRPrompt.p_func = prompt_default_r;
-   el->fRPrompt.p_pos.fV = 0;
-   el->fRPrompt.p_pos.fH = 0;
+   el->fPrompt.fFunc = prompt_default;
+   el->fPrompt.fPos.fV = 0;
+   el->fPrompt.fPos.fH = 0;
+   el->fRPrompt.fFunc = prompt_default_r;
+   el->fRPrompt.fPos.fV = 0;
+   el->fRPrompt.fPos.fH = 0;
    return 0;
 }
 
@@ -147,15 +147,15 @@ prompt_set(EditLine_t* el, ElPFunc_t prf, int op) {
 
    if (prf == NULL) {
       if (op == EL_PROMPT) {
-         p->p_func = prompt_default;
+         p->fFunc = prompt_default;
       } else {
-         p->p_func = prompt_default_r;
+         p->fFunc = prompt_default_r;
       }
    } else {
-      p->p_func = prf;
+      p->fFunc = prf;
    }
-   p->p_pos.fV = 0;
-   p->p_pos.fH = 0;
+   p->fPos.fV = 0;
+   p->fPos.fH = 0;
    return 0;
 } // prompt_set
 
@@ -170,9 +170,9 @@ prompt_get(EditLine_t* el, ElPFunc_t* prf, int op) {
    }
 
    if (op == EL_PROMPT) {
-      *prf = el->fPrompt.p_func;
+      *prf = el->fPrompt.fFunc;
    } else {
-      *prf = el->fRPrompt.p_func;
+      *prf = el->fRPrompt.fFunc;
    }
    return 0;
 }

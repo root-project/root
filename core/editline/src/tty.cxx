@@ -57,16 +57,17 @@
 // END AXEL
 
 
-typedef struct TTYModes_t {
-   const char* m_name;
-   u_int m_value;
-   int m_type;
-} TTYModes_t;
+struct TTYModes_t {
+   const char* fName;
+   u_int fValue;
+   int fType;
+};
 
-typedef struct TTYMap_t {
-   int nch, och;                /* Internal and termio rep of chars */
-   ElAction_t bind[3];         /* emacs, vi, and vi-cmd */
-} TTYMap_t;
+struct TTYMap_t {
+   int fNCh;                /* Internal rep of chars */
+   int fOCh;                /* Termio rep of chars */
+   ElAction_t fBind[3];     /* emacs, vi, and vi-cmd */
+};
 
 
 el_private const TTYPerm_t ttyperm = {
@@ -783,9 +784,9 @@ tty_bind_char(EditLine_t* el, int force) {
       dalt = NULL;
    }
 
-   for (tp = tty_map; tp->nch != -1; tp++) {
-      newp[0] = t_n[tp->nch];
-      old[0] = t_o[tp->och];
+   for (tp = tty_map; tp->fNCh != -1; tp++) {
+      newp[0] = t_n[tp->fNCh];
+      old[0] = t_o[tp->fOCh];
 
       if (newp[0] == old[0] && !force) {
          continue;
@@ -795,13 +796,13 @@ tty_bind_char(EditLine_t* el, int force) {
       map[old[0]] = dmap[old[0]];
       key_clear(el, map, (char*) newp);
       /* MAP_VI == 1, MAP_EMACS == 0... */
-      map[newp[0]] = tp->bind[el->fMap.fType];
+      map[newp[0]] = tp->fBind[el->fMap.fType];
 
       if (dalt) {
          key_clear(el, alt, (char*) old);
          alt[old[0]] = dalt[old[0]];
          key_clear(el, alt, (char*) newp);
-         alt[newp[0]] = tp->bind[el->fMap.fType + 1];
+         alt[newp[0]] = tp->fBind[el->fMap.fType + 1];
       }
    }
 } // tty_bind_char
@@ -1115,22 +1116,22 @@ tty_stty(EditLine_t* el, int /*argc*/, const char** cargv) {
       int i = -1;
       int len = 0, st = 0, cu;
 
-      for (m = ttymodes; m->m_name; m++) {
-         if (m->m_type != i) {
+      for (m = ttymodes; m->fName; m++) {
+         if (m->fType != i) {
             (void) fprintf(el->fOutFile, "%s%s",
                            i != -1 ? "\n" : "",
-                           el->fTTY.t_t[z][m->m_type].t_name);
-            i = m->m_type;
+                           el->fTTY.t_t[z][m->fType].t_name);
+            i = m->fType;
             st = len =
-                    strlen(el->fTTY.t_t[z][m->m_type].t_name);
+                    strlen(el->fTTY.t_t[z][m->fType].t_name);
          }
-         x = (el->fTTY.t_t[z][i].t_setmask & m->m_value)
+         x = (el->fTTY.t_t[z][i].t_setmask & m->fValue)
              ? '+' : '\0';
-         x = (el->fTTY.t_t[z][i].t_clrmask & m->m_value)
+         x = (el->fTTY.t_t[z][i].t_clrmask & m->fValue)
              ? '-' : x;
 
          if (x != '\0' || aflag) {
-            cu = strlen(m->m_name) + (x != '\0') + 1;
+            cu = strlen(m->fName) + (x != '\0') + 1;
 
             if (len + cu >= el->fTerm.fSize.fH) {
                (void) fprintf(el->fOutFile, "\n%*s",
@@ -1142,10 +1143,10 @@ tty_stty(EditLine_t* el, int /*argc*/, const char** cargv) {
 
             if (x != '\0') {
                (void) fprintf(el->fOutFile, "%c%s ",
-                              x, m->m_name);
+                              x, m->fName);
             } else {
                (void) fprintf(el->fOutFile, "%s ",
-                              m->m_name);
+                              m->fName);
             }
          }
       }
@@ -1165,13 +1166,13 @@ tty_stty(EditLine_t* el, int /*argc*/, const char** cargv) {
       }
       d = s;
 
-      for (m = ttymodes; m->m_name; m++) {
-         if (strcmp(m->m_name, d) == 0) {
+      for (m = ttymodes; m->fName; m++) {
+         if (strcmp(m->fName, d) == 0) {
             break;
          }
       }
 
-      if (!m->m_name) {
+      if (!m->fName) {
          (void) fprintf(el->fErrFile,
                         "%s: Invalid argument `%s'.\n", name, d);
          return -1;
@@ -1179,16 +1180,16 @@ tty_stty(EditLine_t* el, int /*argc*/, const char** cargv) {
 
       switch (x) {
       case '+':
-         el->fTTY.t_t[z][m->m_type].t_setmask |= m->m_value;
-         el->fTTY.t_t[z][m->m_type].t_clrmask &= ~m->m_value;
+         el->fTTY.t_t[z][m->fType].t_setmask |= m->fValue;
+         el->fTTY.t_t[z][m->fType].t_clrmask &= ~m->fValue;
          break;
       case '-':
-         el->fTTY.t_t[z][m->m_type].t_setmask &= ~m->m_value;
-         el->fTTY.t_t[z][m->m_type].t_clrmask |= m->m_value;
+         el->fTTY.t_t[z][m->fType].t_setmask &= ~m->fValue;
+         el->fTTY.t_t[z][m->fType].t_clrmask |= m->fValue;
          break;
       default:
-         el->fTTY.t_t[z][m->m_type].t_setmask &= ~m->m_value;
-         el->fTTY.t_t[z][m->m_type].t_clrmask &= ~m->m_value;
+         el->fTTY.t_t[z][m->fType].t_setmask &= ~m->fValue;
+         el->fTTY.t_t[z][m->fType].t_clrmask &= ~m->fValue;
          break;
       }
    }
@@ -1207,15 +1208,15 @@ tty_printchar(EditLine_t* el, unsigned char* s) {
    int i;
 
    for (i = 0; i < C_NCC; i++) {
-      for (m = el->fTTY.t_t; m->m_name; m++) {
-         if (m->m_type == MD_CHAR && C_SH(i) == m->m_value) {
+      for (m = el->fTTY.t_t; m->fName; m++) {
+         if (m->fType == MD_CHAR && C_SH(i) == m->fValue) {
             break;
          }
       }
 
-      if (m->m_name) {
+      if (m->fName) {
          (void) fprintf(el->fErrFile, "%s ^%c ",
-                        m->m_name, s[i] + 'A' - 1);
+                        m->fName, s[i] + 'A' - 1);
       }
 
       if (i % 5 == 0) {

@@ -440,7 +440,7 @@ el_resize(EditLine_t* el) {
    int curVPos = el->fCursor.fV;
 
    // We want to clear the old lines later. But how many did we have?
-   int displen = el->fPrompt.p_pos.fH;
+   int displen = el->fPrompt.fPos.fH;
    displen += el->fLine.fLastChar - el->fLine.fBuffer;
    // fTerm still has the old number of columns
    int nlines = displen / el->fTerm.fSize.fH;

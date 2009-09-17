@@ -51,13 +51,13 @@
 
 #include "histedit.h"
 
-typedef struct ElSearch_t {
-   char* patbuf;                        /* The pattern buffer		*/
-   size_t patlen;                       /* Length of the pattern buffer	*/
-   int patdir;                          /* Direction of the last search	*/
-   int chadir;                          /* Character search direction	*/
-   char chacha;                         /* Character we are looking for	*/
-} ElSearch_t;
+struct ElSearch_t {
+   char* fPatBuf;                        /* The pattern buffer		*/
+   size_t fPatLen;                       /* Length of the pattern buffer	*/
+   int fPatDir;                          /* Direction of the last search	*/
+   int fChaDir;                          /* Character search direction	*/
+   char fChaCha;                         /* Character we are looking for	*/
+};
 
 
 el_protected int el_match(const char*, const char*);

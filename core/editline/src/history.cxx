@@ -69,27 +69,27 @@ typedef void (*HistoryVFun_t)(ptr_t, HistEvent_t*);
 typedef int (*HistorySFun_t)(ptr_t, HistEvent_t*, const int);
 
 struct HistoryFcns_t {
-   ptr_t h_ref;                 /* Argument for history fcns	 */
-   int h_ent;                   /* Last entry point for history	 */
-   HistoryGFun_t h_first;      /* Get the first element	 */
-   HistoryGFun_t h_next;       /* Get the next element		 */
-   HistoryGFun_t h_last;       /* Get the last element		 */
-   HistoryGFun_t h_prev;       /* Get the previous element	 */
-   HistoryGFun_t h_curr;       /* Get the current element	 */
-   HistorySFun_t h_set;        /* Set the current element	 */
-   HistoryVFun_t h_clear;      /* Clear the history list	 */
-   HistoryEFun_t h_enter;      /* Add an element		 */
-   HistoryEFun_t h_add;        /* Append to an element		 */
+   ptr_t fRef;                 /* Argument for history fcns	 */
+   int fEnt;                   /* Last entry point for history	 */
+   HistoryGFun_t fFirst;      /* Get the first element	 */
+   HistoryGFun_t fNext;       /* Get the next element		 */
+   HistoryGFun_t fLast;       /* Get the last element		 */
+   HistoryGFun_t fPrev;       /* Get the previous element	 */
+   HistoryGFun_t fCurr;       /* Get the current element	 */
+   HistorySFun_t fSet;        /* Set the current element	 */
+   HistoryVFun_t fClear;      /* Clear the history list	 */
+   HistoryEFun_t fEnter;      /* Add an element		 */
+   HistoryEFun_t fAdd;        /* Append to an element		 */
 };
-#define HNEXT(h, ev) (*(h)->h_next)((h)->h_ref, ev)
-#define HFIRST(h, ev) (*(h)->h_first)((h)->h_ref, ev)
-#define HPREV(h, ev) (*(h)->h_prev)((h)->h_ref, ev)
-#define HLAST(h, ev) (*(h)->h_last)((h)->h_ref, ev)
-#define HCURR(h, ev) (*(h)->h_curr)((h)->h_ref, ev)
-#define HSET(h, ev, n) (*(h)->h_set)((h)->h_ref, ev, n)
-#define HCLEAR(h, ev) (*(h)->h_clear)((h)->h_ref, ev)
-#define HENTER(h, ev, str) (*(h)->h_enter)((h)->h_ref, ev, str)
-#define HADD(h, ev, str) (*(h)->h_add)((h)->h_ref, ev, str)
+#define HNEXT(h, ev) (*(h)->fNext)((h)->fRef, ev)
+#define HFIRST(h, ev) (*(h)->fFirst)((h)->fRef, ev)
+#define HPREV(h, ev) (*(h)->fPrev)((h)->fRef, ev)
+#define HLAST(h, ev) (*(h)->fLast)((h)->fRef, ev)
+#define HCURR(h, ev) (*(h)->fCurr)((h)->fRef, ev)
+#define HSET(h, ev, n) (*(h)->fSet)((h)->fRef, ev, n)
+#define HCLEAR(h, ev) (*(h)->fClear)((h)->fRef, ev)
+#define HENTER(h, ev, str) (*(h)->fEnter)((h)->fRef, ev, str)
+#define HADD(h, ev, str) (*(h)->fAdd)((h)->fRef, ev, str)
 
 #define h_malloc(a) malloc(a)
 #define h_realloc(a, b) realloc((a), (b))
@@ -468,17 +468,17 @@ history_init(void) {
    HistoryFcns_t* h = (HistoryFcns_t*) h_malloc(sizeof(HistoryFcns_t));
    HistEvent_t ev;
 
-   history_def_init(&h->h_ref, &ev, 0);
-   h->h_ent = -1;
-   h->h_next = history_def_next;
-   h->h_first = history_def_first;
-   h->h_last = history_def_last;
-   h->h_prev = history_def_prev;
-   h->h_curr = history_def_curr;
-   h->h_set = history_def_set;
-   h->h_clear = history_def_clear;
-   h->h_enter = history_def_enter;
-   h->h_add = history_def_add;
+   history_def_init(&h->fRef, &ev, 0);
+   h->fEnt = -1;
+   h->fNext = history_def_next;
+   h->fFirst = history_def_first;
+   h->fLast = history_def_last;
+   h->fPrev = history_def_prev;
+   h->fCurr = history_def_curr;
+   h->fSet = history_def_set;
+   h->fClear = history_def_clear;
+   h->fEnter = history_def_enter;
+   h->fAdd = history_def_add;
 
    return h;
 } // history_init
@@ -491,8 +491,8 @@ el_public void
 history_end(HistoryFcns_t* h) {
    HistEvent_t ev;
 
-   if (h->h_next == history_def_next) {
-      history_def_clear(h->h_ref, &ev);
+   if (h->fNext == history_def_next) {
+      history_def_clear(h->fRef, &ev);
    }
 }
 
@@ -502,7 +502,7 @@ history_end(HistoryFcns_t* h) {
  */
 el_private int
 history_setsize(HistoryFcns_t* h, HistEvent_t* ev, int num) {
-   if (h->h_next != history_def_next) {
+   if (h->fNext != history_def_next) {
       he_seterrev(ev, _HE_NOT_ALLOWED);
       return -1;
    }
@@ -511,7 +511,7 @@ history_setsize(HistoryFcns_t* h, HistEvent_t* ev, int num) {
       he_seterrev(ev, _HE_BAD_PARAM);
       return -1;
    }
-   history_def_setsize(h->h_ref, num);
+   history_def_setsize(h->fRef, num);
    return 0;
 }
 
@@ -523,11 +523,11 @@ el_private int
 history_getsize(HistoryFcns_t* h, HistEvent_t* ev) {
    int retval = 0;
 
-   if (h->h_next != history_def_next) {
+   if (h->fNext != history_def_next) {
       he_seterrev(ev, _HE_NOT_ALLOWED);
       return -1;
    }
-   retval = history_def_getsize(h->h_ref);
+   retval = history_def_getsize(h->fRef);
 
    if (retval < -1) {
       he_seterrev(ev, _HE_SIZE_NEGATIVE);
@@ -545,39 +545,39 @@ el_private int
 history_set_fun(HistoryFcns_t* h, HistoryFcns_t* nh) {
    HistEvent_t ev;
 
-   if (nh->h_first == NULL || nh->h_next == NULL || nh->h_last == NULL ||
-       nh->h_prev == NULL || nh->h_curr == NULL || nh->h_set == NULL ||
-       nh->h_enter == NULL || nh->h_add == NULL || nh->h_clear == NULL ||
-       nh->h_ref == NULL) {
-      if (h->h_next != history_def_next) {
-         history_def_init(&h->h_ref, &ev, 0);
-         h->h_first = history_def_first;
-         h->h_next = history_def_next;
-         h->h_last = history_def_last;
-         h->h_prev = history_def_prev;
-         h->h_curr = history_def_curr;
-         h->h_set = history_def_set;
-         h->h_clear = history_def_clear;
-         h->h_enter = history_def_enter;
-         h->h_add = history_def_add;
+   if (nh->fFirst == NULL || nh->fNext == NULL || nh->fLast == NULL ||
+       nh->fPrev == NULL || nh->fCurr == NULL || nh->fSet == NULL ||
+       nh->fEnter == NULL || nh->fAdd == NULL || nh->fClear == NULL ||
+       nh->fRef == NULL) {
+      if (h->fNext != history_def_next) {
+         history_def_init(&h->fRef, &ev, 0);
+         h->fFirst = history_def_first;
+         h->fNext = history_def_next;
+         h->fLast = history_def_last;
+         h->fPrev = history_def_prev;
+         h->fCurr = history_def_curr;
+         h->fSet = history_def_set;
+         h->fClear = history_def_clear;
+         h->fEnter = history_def_enter;
+         h->fAdd = history_def_add;
       }
       return -1;
    }
 
-   if (h->h_next == history_def_next) {
-      history_def_clear(h->h_ref, &ev);
+   if (h->fNext == history_def_next) {
+      history_def_clear(h->fRef, &ev);
    }
 
-   h->h_ent = -1;
-   h->h_first = nh->h_first;
-   h->h_next = nh->h_next;
-   h->h_last = nh->h_last;
-   h->h_prev = nh->h_prev;
-   h->h_curr = nh->h_curr;
-   h->h_set = nh->h_set;
-   h->h_clear = nh->h_clear;
-   h->h_enter = nh->h_enter;
-   h->h_add = nh->h_add;
+   h->fEnt = -1;
+   h->fFirst = nh->fFirst;
+   h->fNext = nh->fNext;
+   h->fLast = nh->fLast;
+   h->fPrev = nh->fPrev;
+   h->fCurr = nh->fCurr;
+   h->fSet = nh->fSet;
+   h->fClear = nh->fClear;
+   h->fEnter = nh->fEnter;
+   h->fAdd = nh->fAdd;
 
    return 0;
 } // history_set_fun
@@ -736,14 +736,14 @@ history(HistoryFcns_t* h, HistEvent_t* ev, int fun, ...) {
       str = va_arg(va, const char*);
 
       if ((retval = HENTER(h, ev, str)) != -1) {
-         h->h_ent = ev->fNum;
+         h->fEnt = ev->fNum;
       }
       break;
 
    case H_APPEND:
       str = va_arg(va, const char*);
 
-      if ((retval = HSET(h, ev, h->h_ent)) != -1) {
+      if ((retval = HSET(h, ev, h->fEnt)) != -1) {
          retval = HADD(h, ev, str);
       }
       break;
@@ -813,17 +813,17 @@ history(HistoryFcns_t* h, HistEvent_t* ev, int fun, ...) {
       {
          HistoryFcns_t hf;
 
-         hf.h_ref = va_arg(va, ptr_t);
-         h->h_ent = -1;
-         hf.h_first = va_arg(va, HistoryGFun_t);
-         hf.h_next = va_arg(va, HistoryGFun_t);
-         hf.h_last = va_arg(va, HistoryGFun_t);
-         hf.h_prev = va_arg(va, HistoryGFun_t);
-         hf.h_curr = va_arg(va, HistoryGFun_t);
-         hf.h_set = va_arg(va, HistorySFun_t);
-         hf.h_clear = va_arg(va, HistoryVFun_t);
-         hf.h_enter = va_arg(va, HistoryEFun_t);
-         hf.h_add = va_arg(va, HistoryEFun_t);
+         hf.fRef = va_arg(va, ptr_t);
+         h->fEnt = -1;
+         hf.fFirst = va_arg(va, HistoryGFun_t);
+         hf.fNext = va_arg(va, HistoryGFun_t);
+         hf.fLast = va_arg(va, HistoryGFun_t);
+         hf.fPrev = va_arg(va, HistoryGFun_t);
+         hf.fCurr = va_arg(va, HistoryGFun_t);
+         hf.fSet = va_arg(va, HistorySFun_t);
+         hf.fClear = va_arg(va, HistoryVFun_t);
+         hf.fEnter = va_arg(va, HistoryEFun_t);
+         hf.fAdd = va_arg(va, HistoryEFun_t);
 
          if ((retval = history_set_fun(h, &hf)) == -1) {
             he_seterrev(ev, _HE_PARAM_MISSING);
