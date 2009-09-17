@@ -547,9 +547,6 @@ void plotNtuple(TProof *p, const char *ds, const char *ntptitle)
 {
    // Make some plots from the ntuple 'ntp' via PROOF
 
-   // Do not cross-read to circumvent a problme with the tree cache
-   p->SetParameter("PROOF_ForceLocal", (Int_t)1);
-
    //
    // Create a canvas, with 2 pads
    //
@@ -595,8 +592,7 @@ void plotNtuple(TProof *p, const char *ds, const char *ntptitle)
    c1->cd();
    c1->Update();
 
-   // Clear parameters used for thi plots
-   p->DeleteParameters("PROOF_ForceLocal");
+   // Clear parameters used for the plots
    p->DeleteParameters("PROOF_*Color");
    p->DeleteParameters("PROOF_*Style");
 }
