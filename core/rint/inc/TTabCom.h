@@ -195,7 +195,7 @@ private: // member functions
    TTabCom(const TTabCom &);           //private and not implemented
    TTabCom& operator=(const TTabCom&); //private and not implemented
 
-   Int_t      Complete( const TRegexp& re, const TSeqCollection* pListOfCandidates, const char appendage[] );
+   Int_t      Complete( const TRegexp& re, const TSeqCollection* pListOfCandidates, const char appendage[], TString::ECaseCompare cmp = TString::kExact);
    void       CopyMatch( char dest[], const char localName[], const char appendage[]=0, const char fullName[]=0 ) const;
    EContext_t DetermineContext() const;
    TString    DeterminePath( const TString& fileName, const char defaultPath[] ) const;

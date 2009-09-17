@@ -1239,7 +1239,8 @@ void TTabCom::NoMsg(Int_t errorLevel)
 //______________________________________________________________________________
 Int_t TTabCom::Complete(const TRegexp & re,
                         const TSeqCollection * pListOfCandidates,
-                        const char appendage[])
+                        const char appendage[],
+                        TString::ECaseCompare cmp)
 {
    // [private]
 
@@ -1255,7 +1256,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
    assert(fpLoc != 0);
    assert(pListOfCandidates != 0);
 
-   Int_t pos;                   // position of first change
+   Int_t pos = 0;               // position of first change
    const int loc = *fpLoc;      // location where TAB was pressed
 
    // -----------------------------------------
@@ -1309,15 +1310,26 @@ Int_t TTabCom::Complete(const TRegexp & re,
       else
          s5 += 1;               // advance past '/'
 
-      // check for match
-      if (strstr(s5, s3) == s5) {
+      // if case sensitive (normal behaviour), check for match
+      // if case insensitive, convert to TString and compare case insensitively
+      if ((cmp == TString::kExact) && (strstr(s5, s3) == s5)) {
          nMatches += 1;
          listOfMatches.Add(new TObjString(s5));
          listOfFullPaths.Add(new TObjString(s4));
          IfDebug(cerr << "adding " << s5 << '\t' << s4 << endl);
+      } else if (cmp == TString::kIgnoreCase) { 
+         TString ts5(s5);
+         if (ts5.BeginsWith(s3, cmp))
+         {
+            nMatches += 1;
+            listOfMatches.Add(new TObjString(s5));
+            listOfFullPaths.Add(new TObjString(s4));
+            IfDebug(cerr << "adding " << s5 << '\t' << s4 << endl);
+         }
       } else {
 //rdm         IfDebug(cerr << "considered " << s5 << '\t' << s4 << endl);
       }
+
    }
 
    // -----------------------------------------
@@ -1411,7 +1423,13 @@ Int_t TTabCom::Complete(const TRegexp & re,
                }
             }
             pos = -2;
-            goto done;          //* RETURN *//
+            if (cmp == TString::kExact || partialMatch.Length() < s3.Length()) {
+               goto done;          //* RETURN *//
+            } // else:
+            // update the matching part, will have changed
+            // capitalization because only cmp == TString::kIgnoreCase
+            // matches.
+            CopyMatch(match, partialMatch.Data());
          }
       }
    }
@@ -1443,7 +1461,17 @@ Int_t TTabCom::Complete(const TRegexp & re,
       // insert match
       strncpy(fBuf + start, match, strlen(match));
 
-      pos = loc;                // position of first change in "fBuf"
+      // the "get"->"Get" case of TString::kIgnore sets pos to -2
+      // and falls through to update the buffer; we need to return
+      // -2 in that case, so check here:
+      if (pos != -2) {
+         pos = loc;                // position of first change in "fBuf"
+         if (cmp == TString::kIgnoreCase && pos < 0) {
+            // We might have changed somthing before loc, due to differences in
+            // capitalization. So return start:
+            pos = start;
+         }
+      }
       *fpLoc = loc + l;         // new cursor position
    }
 
@@ -1920,8 +1948,17 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
          switch (context) {
          case kCXX_DirectMember:
-            pos = Complete("[^. ]*$", pList, "(");
-            break;
+            {
+               int* store_fpLoc = fpLoc;
+               char* store_fBuf = fBuf;
+               pos = Complete("[^. ]*$", pList, "(");
+               if (pos == -1) {
+                  fpLoc = store_fpLoc;
+                  fBuf = store_fBuf;
+                  pos = Complete("[^. ]*$", pList, "(", TString::kIgnoreCase);
+               }
+               break;
+            }
          case kCXX_IndirectMember:
             pos = Complete("[^> ]*$", pList, "(");
             break;
