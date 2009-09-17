@@ -220,7 +220,7 @@ const Char_t *TTimeStamp::AsString(Option_t *option) const
    time_t seconds = (time_t) fSec;
 #ifdef _REENTRANT
    struct tm buf;
-   struct tm *ptm = (asLocal) ? localtime_r(&seconds,&buf) : gmtime_r(&seconds,&buf);
+   struct tm *ptm = (asLocal) ? localtime_r(&seconds, &buf) : gmtime_r(&seconds, &buf);
 #else
    struct tm *ptm = (asLocal) ? localtime(&seconds) : gmtime(&seconds);
 #endif
@@ -258,7 +258,7 @@ UInt_t TTimeStamp::GetDate(Bool_t inUTC, Int_t secOffset,
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
-   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime, &buf) : localtime_r(&atime, &buf);
 #else
    struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
@@ -280,7 +280,7 @@ UInt_t TTimeStamp::GetTime(Bool_t inUTC, Int_t secOffset,
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
-   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime, &buf) : localtime_r(&atime, &buf);
 #else
    struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
@@ -301,7 +301,7 @@ Int_t TTimeStamp::GetDayOfYear(Bool_t inUTC, Int_t secOffset) const
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
-   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime, &buf) : localtime_r(&atime, &buf);
 #else
    struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
@@ -322,7 +322,7 @@ Int_t TTimeStamp::GetDayOfWeek(Bool_t inUTC, Int_t secOffset) const
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
-   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime, &buf) : localtime_r(&atime, &buf);
 #else
    struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
@@ -342,7 +342,7 @@ Int_t TTimeStamp::GetMonth(Bool_t inUTC, Int_t secOffset) const
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
-   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime, &buf) : localtime_r(&atime, &buf);
 #else
    struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
@@ -360,7 +360,7 @@ Int_t TTimeStamp::GetWeek(Bool_t inUTC, Int_t secOffset) const
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
-   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime, &buf) : localtime_r(&atime, &buf);
 #else
    struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
@@ -388,7 +388,7 @@ Bool_t TTimeStamp::IsLeapYear(Bool_t inUTC, Int_t secOffset) const
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
-   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime, &buf) : localtime_r(&atime, &buf);
 #else
    struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
@@ -416,7 +416,12 @@ Int_t TTimeStamp::GetZoneOffset()
 #else
    time_t tp = 0;
    time(&tp);
+#ifdef _REENTRANT
+   struct tm buf;
+   return -localtime_r(&tp, &buf)->tm_gmtoff;
+#else
    return -localtime(&tp)->tm_gmtoff;
+#endif
 #endif
 #endif
 #else
@@ -596,7 +601,12 @@ void TTimeStamp::Set(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate)
       localtm.tm_isdst = -1;
    } else {
       time_t t = (time_t) tloc;
+#ifdef _REENTRANT
+      struct tm tpa;
+      struct tm *tp = localtime_r(&t, &tpa);
+#else
       struct tm *tp = localtime(&t);
+#endif
       localtm.tm_year  = tp->tm_year;
       localtm.tm_mon   = tp->tm_mon;
       localtm.tm_mday  = tp->tm_mday;
