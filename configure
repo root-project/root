@@ -4655,7 +4655,7 @@ fi
 #
 ### echo %%% TMVA Library - Contributed library
 #
-message "Checking whether to build TMVA"
+message "Checking whether to build libTMVA"
 if test "x$enable_tmva" = "xyes" ; then
     enable_tmva="yes"
     result "yes"
