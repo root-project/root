@@ -107,11 +107,13 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
    TString tutdir = dir;
    if (tutdir.IsNull() || gSystem->AccessPathName(dir, kWritePermission)) {
       Printf("getProof: tutorial dir missing or not writable - try temp ");
-      tutdir = gSystem->TempDirectory();
+      // Force "/tmp/<user>" whenever possible to avoid length problems on MacOsX
+      tutdir="/tmp"; 
+      if (gSystem->AccessPathName(tutdir, kWritePermission)) tutdir = gSystem->TempDirectory();
       TString us;
       UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
       if (!ug) {
-         printf("getProof: could not get user info");
+         Printf("getProof: could not get user info");
          return p;
       }
       us.Form("/%s", ug->fUser.Data());
@@ -122,8 +124,8 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
                 " - cannot continue", tutdir.Data());
          return p;
       }
-      Printf("getProof: tutorial dir: %s", tutdir.Data());
    }
+   Printf("getProof: tutorial dir: %s", tutdir.Data());
 
    // Dataset dir
    TString datasetdir;

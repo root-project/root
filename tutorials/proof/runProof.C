@@ -137,7 +137,24 @@ void runProof(const char *what = "simple",
    gEnv->SetValue("Proof.StatsHist",1);
 
    // Temp dir for PROOF tutorials
-   TString tutdir = Form("%s/.proof-tutorial", gSystem->TempDirectory());
+   // Force "/tmp/<user>" whenever possible to avoid length problems on MacOsX
+   TString tmpdir("/tmp");
+   if (gSystem->AccessPathName(tmpdir, kWritePermission)) tmpdir = gSystem->TempDirectory();
+   TString us;
+   UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
+   if (!ug) {
+      Printf("runProof: could not get user info");
+      return;
+   }
+   us.Form("/%s", ug->fUser.Data());
+   if (!tmpdir.EndsWith(us.Data())) tmpdir += us;
+   gSystem->mkdir(tmpdir.Data(), kTRUE);
+   if (gSystem->AccessPathName(tmpdir, kWritePermission)) {
+      Printf("runProof: unable to get a writable tutorial directory (tried: %s)"
+             " - cannot continue", tmpdir.Data());
+      return;
+   }
+   TString tutdir = Form("%s/.proof-tutorial", tmpdir.Data());
    if (gSystem->AccessPathName(tutdir)) {
       Printf("runProof: creating the temporary directory"
                 " for the tutorial (%s) ... ", tutdir.Data());
