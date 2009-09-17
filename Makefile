@@ -80,7 +80,7 @@ MODULES       = build cint/cint core/metautils core/pcre core/utils core/base \
                 core/rint html montecarlo/eg \
                 geom/geom geom/geompainter montecarlo/vmc \
                 math/fumili math/mlp math/quadp net/auth gui/guibuilder io/xml \
-                math/foam math/splot math/smatrix io/sql tmva \
+                math/foam math/splot math/smatrix io/sql \
                 geom/geombuilder hist/spectrum hist/spectrumpainter \
                 gui/fitpanel proof/proof proof/proofplayer \
                 gui/sessionviewer gui/guihtml gui/recorder
@@ -266,6 +266,9 @@ endif
 ifeq ($(BUILDEDITLINE),yes)
 MODULES      += core/editline
 endif
+ifeq ($(BUILDTMVA),yes)
+MODULES      += tmva
+endif
 ifeq ($(BUILDXRD),yes)
 ifeq ($(ARCH),win32)
 MODULES      += proof/proofd
@@ -286,7 +289,7 @@ MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
-                cint/cintexcompat \
+                cint/cintexcompat tmva \
                 cint/cint7 roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat \

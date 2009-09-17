@@ -93,6 +93,7 @@ options="                    \
    enable_srp                \
    enable_ssl                \
    enable_table              \
+   enable_tmva               \
    enable_unuran             \
    enable_winrtdebug         \
    enable_xft                \
@@ -109,9 +110,7 @@ for c in $deprecated_options ; do eval ${c}="yes" ; done
 for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_afs=no
-enable_cint5=yes
 enable_cint7=no
-enable_editline=yes
 enable_gdml=no
 enable_globus=no
 enable_explicitlink=no
@@ -1086,6 +1085,7 @@ enable/disable options, prefix with either --enable- or --disable-
   srp                SRP support, requires SRP source tree
   ssl                SSL encryption support, requires openssl
   table              Build libTable contrib library
+  tmva               Build TMVA multi variate analysis library
   unuran             UNURAN - package for generating non-uniform random numbers
   winrtdebug         Link against the Windows debug runtime library
   xml                XML parser interface
@@ -4653,6 +4653,19 @@ fi
 
 ######################################################################
 #
+### echo %%% TMVA Library - Contributed library
+#
+message "Checking whether to build TMVA"
+if test "x$enable_tmva" = "xyes" ; then
+    enable_tmva="yes"
+    result "yes"
+else
+    enable_tmva=""
+    result "no"
+fi
+
+######################################################################
+#
 ### echo %%% MemStat Library - check for memory leaks in application.
 #
 message "Checking whether to build libMemStat"
@@ -5247,6 +5260,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@no_stubs@|$no_stubs|"                \
     -e "s|@no_stubs_test@|$no_stubs_test|"      \
     -e "s|@buildtable@|$enable_table|"          \
+    -e "s|@buildtmva@|$enable_tmva|"            \
     -e "s|@buildmemstat@|$enable_memstat|"      \
     -e "s|@enable_thread@|$enable_thread|"      \
     -e "s|@etcdir@|$etcdir|"                    \
