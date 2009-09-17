@@ -122,6 +122,7 @@ el_protected void term__flush(void);
  */
 #define EL_FLAGS (el)->fTerm.fFlags
 
+#define EL_CAN_UP (EL_FLAGS & TERM_CAN_UP)
 #define EL_CAN_INSERT (EL_FLAGS & TERM_CAN_INSERT)
 #define EL_CAN_DELETE (EL_FLAGS & TERM_CAN_DELETE)
 #define EL_CAN_CEOL (EL_FLAGS & TERM_CAN_CEOL)
