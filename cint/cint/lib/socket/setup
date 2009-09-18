@@ -1,4 +1,4 @@
-makecint -mk Makefile -dl $CINTSYSDIR/include/cintsock.dll -h cintsock.h -C cintsock.c -cint -Z0
+makecint -mk Makefile -dl ../../include/cintsock.dll -h cintsock.h -C cintsock.c -cint -Z0
 echo 'mksockh : mksockh.c' >> Makefile
 echo '	$(CC) $(SYSMACRO) -o mksockh mksockh.c' >> Makefile
 
