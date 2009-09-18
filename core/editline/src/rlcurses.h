@@ -12,9 +12,10 @@
 #ifdef __sun
 # include R__CURSESHDR
 extern "C" {
-   // cannot #include term.fH because it #defines move() etc
+   // cannot #include term.h because it #defines move() etc
 char *tparm(char*, long, long, long, long, long, long, long, long, long);
 char *tigetstr(char*);
+int tigetnum(char*);
 char *tgoto(char*, int, int);
 int   tputs(char*, int, int (*)(int));
 int tgetflag(char*);
