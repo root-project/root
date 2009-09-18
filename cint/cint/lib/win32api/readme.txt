@@ -22,10 +22,10 @@ BUILD:
 
  CINT must be properly installed using Visual C++ 4.0 or later version.
  CINT and VC++ related environment variables must be properly set.
- Open MS-DOS prompt window, move to this directory and run setup.bat.
+ Open MS-DOS/cygwin prompt window, move to this directory and run setup.bat.
 
-    C:\> cd %cintsysdir%\cint\lib\win32api
-    C:\cint\cint\lib\win32api> setup.bat
+    cd %cintsysdir%\cint\lib\win32api
+    sh setup
 
  If everything goes fine, following files will be created.
 
