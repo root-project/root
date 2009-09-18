@@ -113,6 +113,7 @@ el_protected int term_echotc(EditLine_t*, int, const char**);
 el_protected int term__putc(int);
 el_protected int term__putcolorch(int, ElColor_t*);
 el_protected void term__setcolor(int fgcol);
+el_protected int  term__atocolor(const char* name);
 el_protected void term__resetcolor(void);
 el_protected void term__repaint(EditLine_t* el, int index);
 el_protected void term__flush(void);

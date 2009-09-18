@@ -372,18 +372,13 @@ readline(const char* prompt, bool newline) {
 void
 setColors(const char* colorTab, const char* colorTabComp, const char* colorBracket,
           const char* colorBadBracket, const char* colorPrompt) {
-   setKeywordColors(colorTab, colorBracket, colorBadBracket);
 
-   int col = selectColor(colorTabComp);
+   tab_color = term__atocolor(colorTabComp);
+   prompt_setcolor(term__atocolor(colorPrompt));
 
-   if (col > -1) {
-      tab_color = col;
-   }
-   col = selectColor(colorPrompt);
-
-   if (col > -1) {
-      prompt_setcolor(col);
-   }
+   setKeywordColors(term__atocolor(colorTab),
+                    term__atocolor(colorBracket),
+                    term__atocolor(colorBadBracket));
 }
 
 
@@ -1446,7 +1441,7 @@ filename_completion_function(const char* text, int state) {
       /* otherwise, get first entry where first */
       /* filename_len characters are equal	  */
       if (entry->d_name[0] == filename[0]
-#if defined(__SVR4) || defined(__linux__)
+#if defined(__SVR4) || defined(__linux__) || defined(__CYGWIN__)
           && strlen(entry->d_name) >= filename_len
 #else
           && entry->d_namlen >= filename_len
@@ -1459,7 +1454,7 @@ filename_completion_function(const char* text, int state) {
 
    if (entry) {                 /* match found */
       struct stat stbuf;
-#if defined(__SVR4) || defined(__linux__)
+#if defined(__SVR4) || defined(__linux__) || defined(__CYGWIN__)
       len = strlen(entry->d_name) +
 #else
       len = entry->d_namlen +

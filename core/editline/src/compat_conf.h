@@ -14,10 +14,17 @@
 
 #ifdef __sun
 # define HAVE_SYS_CDEFS_H 0
+#endif
+#ifdef __CYGWIN__
+#include <sys/ioctl.h>
+#endif
+
+#if defined(__sun) || defined(__CYGWIN__)
 extern "C" {
    typedef void (*sig_t)(int);
 }
 #endif
+
 
 ////////////////////////////////////////////////////////////////////////
 // most of this #ifdef code is to work around my own preference of

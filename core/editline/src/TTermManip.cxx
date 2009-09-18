@@ -101,61 +101,52 @@ TTermManip::AllocColor(const Color& col) {
 void
 TTermManip::SetDefaultColor() {
    // Set terminal to the default color.
-   if (fCurrentlyBold) {
+   if (fCurrentlyBold || fCurrentColorIdx != -1) {
       WriteTerm(fSetDefault);
       fCurrentlyBold = false;
+      fCurrentColorIdx = -1;
    }
    if (fCurrentlyUnderlined) {
       WriteTerm(fStopUnderline);
       fCurrentlyUnderlined = false;      
    }
-   if (fCurrentColorIdx != -1) {
-      if (!fOrigColors) {
-#ifndef _MSC_VER
-         // some claim to not have it and they have it nevertheless - so try:
-         printf("\033[39;49m");
-#endif
-      } else {
-         WriteTerm(fOrigColors);
+}
+
+void
+TTermManip::StartBold() {
+   // want bold
+   if (!fCurrentlyBold) {
+      if (fSetBold) {
+         WriteTerm(fSetBold);
       }
-      fCurrentColorIdx = -1;
+      fCurrentlyBold = true;
    }
 }
 
 
-bool
-TTermManip::SetColor(unsigned char r, unsigned char g, unsigned char b) {
+void
+TTermManip::StopBold() {
+   // turn bold off
+   if (fCurrentlyBold) {
+      if (fSetDefault && fCurrentlyBold) {
+         WriteTerm(fSetDefault);
+      }
+      fCurrentlyBold = false;
+      if (fCurrentColorIdx != -1) {
+         int ci = fCurrentColorIdx;
+         fCurrentColorIdx = -1;
+         SetColor(ci);
+      }
+   }
+}
+
+
+int
+TTermManip::GetColorIndex(unsigned char r, unsigned char g, unsigned char b) {
    // RGB colors range from 0 to 255
    if (fCanChangeColors) {
-      int idx = AllocColor(Color(r, g, b));
-
-      if (idx != fCurrentColorIdx) {
-         if (fSetPair) {
-            WriteTerm(fSetPair, idx);
-         } else if (fSetFg) {
-            WriteTerm(fSetFg, idx);
-         }
-         fCurrentColorIdx = idx;
-      }
+      return AllocColor(Color(r, g, b));
    } else {
-      if (r > 127 || b > 127 || g > 127) {
-         // want bold
-         if (!fCurrentlyBold) {
-            if (fSetBold) {
-               WriteTerm(fSetBold);
-            }
-            r /= 2;
-            b /= 2;
-            g /= 2;
-            fCurrentlyBold = true;
-         }
-      } else {
-         if (fSetDefault && fCurrentlyBold) {
-            WriteTerm(fSetDefault);
-         }
-         fCurrentlyBold = false;
-      }
-
       int sum = r + g + b;
       r = r > sum / 4;
       g = g > sum / 4;
@@ -167,7 +158,30 @@ TTermManip::SetColor(unsigned char r, unsigned char g, unsigned char b) {
       } else {
          idx = (r * 4) + (g * 2) + b;
       }
+      return idx;
+   }
+   return -1;
+}
 
+bool
+TTermManip::SetColor(unsigned char r, unsigned char g, unsigned char b) {
+   // RGB colors range from 0 to 255
+   return SetColor(GetColorIndex(r, g, b));
+}
+
+bool
+TTermManip::SetColor(int idx) {
+   // Set color to a certain index as returned by GetColorIdx.
+   if (fCanChangeColors) {
+      if (idx != fCurrentColorIdx) {
+         if (fSetPair) {
+            WriteTerm(fSetPair, idx);
+         } else if (fSetFg) {
+            WriteTerm(fSetFg, idx);
+         }
+         fCurrentColorIdx = idx;
+      }
+   } else {
       if (fSetFg && idx != fCurrentColorIdx) {
          WriteTerm(fSetFg, idx);
          fCurrentColorIdx = idx;
@@ -191,6 +205,13 @@ TTermManip::GetTermStr(const char* cap) {
       return NULL;
    }
    return termstr;
+}
+
+int
+TTermManip::GetTermNum(const char* cap) {
+   char capid[8];
+   strcpy(capid, cap);
+   return tigetnum(capid);
 }
 
 

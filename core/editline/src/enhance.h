@@ -11,9 +11,8 @@
 
 #include "histedit.h"
 
-void setKeywordColors(const char* colorTab, const char* colorBracket,
-                      const char* colorBadBracket);
-int selectColor(const char* str);
+void setKeywordColors(int colorTab, int colorBracket,
+                      int colorBadBracket);
 void highlightKeywords(EditLine_t* el);
 int matchParentheses(EditLine_t* el);
 void colorWord(EditLine_t* el, int first, int last, int color);

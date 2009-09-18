@@ -97,7 +97,12 @@ read_debug(EditLine_t* el) {
  */
 /* ARGSUSED */
 el_private int
-read__fixio(int /*fd*/, int e) {
+read__fixio(int 
+# if (defined(F_SETFL) && defined(O_NDELAY)) \
+     || defined(FIONBIO)
+            fd
+#endif
+            , int e) {
    switch (e) {
    case - 1:                    /* Make sure that the code is reachable */
 

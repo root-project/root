@@ -198,11 +198,20 @@ Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 Rint.Load:               rootalias.C
 Rint.Logon:              rootlogon.C
 Rint.Logoff:             rootlogoff.C
-# Prompt colors
-Rint.TypeColor:          bold blue
-Rint.BracketColor:       bold green
-Rint.BadBracketColor:    bold red underlined
-Rint.PromptColor:        cyan
+### Prompt colors
+# Whether to use default colors for light-on-dark (i.e. reverse) color scheme:
+#Rint.ReverseColor:        no
+# Prompt colors: #rgb or #rrggbb or color names:
+#  "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"
+#  "default" will keep the current terminal color.
+# can be combined with string containing "under" and "bold".
+#Rint.TypeColor:          bold blue
+#Rint.BracketColor:       bold green
+#Rint.BadBracketColor:    bold red underlined
+#Rint.PromptColor:        default
+#Rint.TabComColor:        magenta
+#
+### History
 # Record session commands, set to "-" to turn off command recording.
 Rint.History:            $(HOME)/.root_hist
 # History file size, once HistSize is reached remove all but HistSave entries,

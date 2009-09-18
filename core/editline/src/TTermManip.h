@@ -23,6 +23,9 @@ public:
    ~TTermManip() { ResetTerm(); }
 
    bool SetColor(unsigned char r, unsigned char g, unsigned char b);
+   bool SetColor(int idx);
+
+   int GetColorIndex(unsigned char r, unsigned char g, unsigned char b);
 
    void
    StartUnderline() {
@@ -40,6 +43,9 @@ public:
          fCurrentlyUnderlined = false;
       }
    }
+
+   void StartBold();
+   void StopBold();
 
 
    bool ResetTerm();
@@ -68,6 +74,7 @@ private:
    };
 
    char* GetTermStr(const char* cap);
+   int GetTermNum(const char* cap);
 
    bool WriteTerm(char* termstr);
 
@@ -101,7 +108,7 @@ private:
    bool fCurrentlyBold;  // whether bold is active
    bool fCurrentlyUnderlined;  // whether underlining is active
 
-   static const int fgStartColIdx = 5;
+   static const int fgStartColIdx = 12;
    typedef std::map<Color, int> ColorMap_t;
    ColorMap_t fColors;
 };
