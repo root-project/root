@@ -1,4 +1,8 @@
-makecint -mk Makefile -dl ../../include/cintsock.dll -h cintsock.h -C cintsock.c -cint -Z0
+arch=`cint-config --arch | sed 's/msvc[0-9]*/msvc/' `
+if [ $arch = msvc ] ; then 
+   SOCKLIB="-l wsock32.lib"
+fi
+makecint -mk Makefile -dl ../../include/cintsock.dll -h cintsock.h -C cintsock.c  $SOCKLIB -cint -Z0
 echo 'mksockh : mksockh.c' >> Makefile
 echo '	$(CC) $(SYSMACRO) -o mksockh mksockh.c' >> Makefile
 
@@ -9,6 +13,6 @@ rm -f mksockh.exe
 
 make -f Makefile
 rm G__* Makefile
-rm *.o
+rm -f *.o *.obj *.def *.pdb
 
 

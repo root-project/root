@@ -21,12 +21,12 @@ BUILD:
  CINT must be properly installed. Move to this directory and run setup
  script. If you use WIN32, include/win32api.dll must be created before this. 
 
-    $ cd $CINTSYSDIR/lib/socket
+    $ cd $CINTSYSDIR/cint/lib/socket
     $ sh ./setup
 
         OR
 
-    c:\> cd %CINTSYSDIR%\lib\socket
+    c:\> cd %CINTSYSDIR%\cint\lib\socket
     c:\> setup.bat
 
  $CINTSYSDIR/include/socket.dll is the final product.

@@ -20,7 +20,7 @@
 /**********************************************************************
  * For compiler to read
  **********************************************************************/
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__CINT__)
 
 #include <windows.h>
 #include <winsock.h>
