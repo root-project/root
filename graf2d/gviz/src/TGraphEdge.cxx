@@ -22,6 +22,8 @@ ClassImp(TGraphEdge)
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>Graph Edge class</h2></center>
+TGraphEdge is an edge object connecting two nodes which can be added in a
+TGraphStruct.
 End_Html */
 
 

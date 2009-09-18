@@ -24,6 +24,22 @@ ClassImp(TGraphStruct)
 /* Begin_Html
 <center><h2>Graph Structure class</h2></center>
 The Graph Structure is an interface to the graphviz package.
+<p>
+The graphviz package is a graph visualization system. This interface consists in
+three classes:
+<ol>
+<li> TGraphStruct: holds the graph structure. It uses the graphiz library to
+     layout the graphs and the ROOT graphics to paint them.
+<li> TGraphNode: Is a graph node object which can be added in a TGraphStruct.
+<li> TGraphEdge: Is an edge object connecting two nodes which can be added in 
+     a TGraphStruct.
+</ol>
+End_Html
+Begin_Macro(source)
+../../../tutorials/graphs/graphstruct.C
+End_Macro
+Begin_Html
+A graph structure can be dumped into a "dot" file using DumpAsDotFile.
 End_Html */
 
 

@@ -20,6 +20,7 @@ ClassImp(TGraphNode)
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>Graph Node class</h2></center>
+TGraphNode is a graph node object which can be added in a TGraphStruct.
 End_Html */
 
 
