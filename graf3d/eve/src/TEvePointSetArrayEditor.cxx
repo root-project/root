@@ -23,11 +23,10 @@
 #include "TGDoubleSlider.h"
 
 //______________________________________________________________________________
-// TEvePointSetArrayEditor
 //
 // Editor for TEvePointSetArray class.
 
-ClassImp(TEvePointSetArrayEditor)
+ClassImp(TEvePointSetArrayEditor);
 
 //______________________________________________________________________________
 TEvePointSetArrayEditor::TEvePointSetArrayEditor(const TGWindow *p,
@@ -44,7 +43,6 @@ TEvePointSetArrayEditor::TEvePointSetArrayEditor(const TGWindow *p,
 
    fRange = new TEveGDoubleValuator(this,"Range", 200, 0);
    fRange->SetNELength(6);
-   //fRange->SetLabelWidth(labelW);
    fRange->Build();
    fRange->GetSlider()->SetWidth(224);
    fRange->Connect("ValueSet()",

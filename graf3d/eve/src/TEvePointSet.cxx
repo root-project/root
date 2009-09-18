@@ -538,7 +538,7 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
    static const TEveException eh("TEvePointSetArray::TakeAction ");
 
    if (sel == 0)
-      throw(eh + "selector is <null>.");
+      throw eh + "selector is <null>.";
 
    Int_t n = sel->GetNfill();
 
@@ -547,24 +547,33 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
    Double_t *vx = sel->GetV1(), *vy = sel->GetV2(), *vz = sel->GetV3();
    Double_t *qq = sel->GetV4();
 
-   if(qq == 0)
-      throw(eh + "requires 4-d varexp.");
+   if (qq == 0)
+      throw eh + "requires 4-d varexp.";
 
-   switch(fSourceCS) {
+   switch (fSourceCS)
+   {
       case kTVT_XYZ:
-         while(n-- > 0) {
+      {
+         while (n-- > 0)
+         {
             Fill(*vx, *vy, *vz, *qq);
             ++vx; ++vy; ++vz; ++qq;
          }
          break;
+      }
       case kTVT_RPhiZ:
-         while(n-- > 0) {
+      {
+         while (n-- > 0)
+         {
             Fill(*vx * TMath::Cos(*vy), *vx * TMath::Sin(*vy), *vz, *qq);
             ++vx; ++vy; ++vz; ++qq;
          }
          break;
+      }
       default:
-         throw(eh + "unknown tree variable type.");
+      {
+         throw eh + "unknown tree variable type.";
+      }
    }
 }
 
@@ -573,7 +582,7 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
 //______________________________________________________________________________
 Int_t TEvePointSetArray::Size(Bool_t under, Bool_t over) const
 {
-   // Get the total of filled points.
+   // Get the total number of filled points.
    // 'under' and 'over' flags specify if under/overflow channels
    // should be added to the sum.
 
@@ -598,8 +607,8 @@ void TEvePointSetArray::InitBins(const char* quant_name,
 
    static const TEveException eh("TEvePointSetArray::InitBins ");
 
-   if (nbins < 1) throw(eh + "nbins < 1.");
-   if (min > max) throw(eh + "min > max.");
+   if (nbins < 1) throw eh + "nbins < 1.";
+   if (min > max) throw eh + "min > max.";
 
    RemoveElements();
 
@@ -615,7 +624,7 @@ void TEvePointSetArray::InitBins(const char* quant_name,
    for (Int_t i = 0; i < fNBins; ++i)
    {
       fBins[i] = new TEvePointSet
-         (Form("Slice %d [%4.3lf, %4.3lf]", i, fMin + i*fBinWidth, fMin + (i+1)*fBinWidth),
+         (Form("Slice %d [%4.3lf, %4.3lf]", i, fMin + (i-1)*fBinWidth, fMin + i*fBinWidth),
           fDefPointSetCapacity);
       fBins[i]->SetMarkerColor(fMarkerColor);
       fBins[i]->SetMarkerStyle(fMarkerStyle);
@@ -638,7 +647,7 @@ Bool_t TEvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quan
    // If the selected bin does not have an associated TEvePointSet
    // the point is discarded and false is returned.
 
-   fLastBin =TMath::FloorNint((quant - fMin)/fBinWidth) + 1;
+   fLastBin = TMath::FloorNint((quant - fMin)/fBinWidth) + 1;
 
    if (fLastBin < 0)
    {
@@ -676,8 +685,10 @@ void TEvePointSetArray::CloseBins()
    // At this point we can calculate bounding-boxes of individual
    // point-sets.
 
-   for (Int_t i=0; i<fNBins; ++i) {
-      if (fBins[i] != 0) {
+   for (Int_t i=0; i<fNBins; ++i)
+   {
+      if (fBins[i] != 0)
+      {
          fBins[i]->SetTitle(Form("N=%d", fBins[i]->Size()));
          fBins[i]->ComputeBBox();
       }
@@ -711,8 +722,9 @@ void TEvePointSetArray::SetRange(Double_t min, Double_t max)
    using namespace TMath;
 
    fCurMin = min; fCurMax = max;
-   Int_t  low_b = (Int_t) Max(Double_t(0),       Floor((min-fMin)/fBinWidth));
-   Int_t high_b = (Int_t) Min(Double_t(fNBins-1), Ceil((max-fMin)/fBinWidth));
+   Int_t  low_b = Max(0,        FloorNint((min-fMin)/fBinWidth)) + 1;
+   Int_t high_b = Min(fNBins-2, CeilNint ((max-fMin)/fBinWidth));
+
    for (Int_t i = 1; i < fNBins - 1; ++i)
    {
       if (fBins[i] != 0)

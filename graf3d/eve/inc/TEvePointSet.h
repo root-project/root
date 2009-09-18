@@ -113,7 +113,7 @@ class TEvePointSetArray : public TEveElement,
    TEvePointSetArray& operator=(const TEvePointSetArray&); // Not implemented
 
 protected:
-   TEvePointSet**   fBins;                 //  Pointers to subjugated TEvePointSet's.
+   TEvePointSet **fBins;               //  Pointers to subjugated TEvePointSet's.
    Int_t        fDefPointSetCapacity;  //  Default capacity of subjugated TEvePointSet's.
    Int_t        fNBins;                //  Number of subjugated TEvePointSet's.
    Int_t        fLastBin;              //! Index of the last filled TEvePointSet.
