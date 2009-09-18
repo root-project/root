@@ -1441,7 +1441,7 @@ void TRecorderRecording::RecordGuiEvent(Event_t *e, Window_t wid)
    // will be invalid when replaying on a different OS
    if (e->fType == kSelectionClear || e->fType == kSelectionRequest ||
        e->fType == kSelectionNotify)
-       return;
+      return;
 
    // Copies all items of e to fGuiEvent
    CopyEvent(e, wid);
@@ -2069,7 +2069,7 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
    // parameters are invalid on different OSes
    if (e->fType == kSelectionClear || e->fType == kSelectionRequest ||
        e->fType == kSelectionNotify)
-       return;
+      return;
 
    // Replays movement/resize event
    if (e->fType == kConfigureNotify) {
