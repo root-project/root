@@ -1199,34 +1199,55 @@ void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
 
 
 //______________________________________________________________________________
-Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Length,
+Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
                               Double_t* Red, Double_t* Green,
                               Double_t* Blue, UInt_t NColors)
 {
   // STATIC function.
-  // Linear gradient color table:
-  // Red, Green and Blue are several RGB colors with values from 0.0 .. 1.0.
-  // Their number is "Intervals".
-  // Length is the length of the color interval between the RGB-colors:
-  // Imaging the whole gradient goes from 0.0 for the first RGB color to 1.0
-  // for the last RGB color, then each "Length"-entry in between stands for
-  // the length of the intervall between the according RGB colors.
+  // Creates a color table with several connected linear gradients.
+  // 
+  // Number: The number of end point colors that will form the gradients.
+  //         Must be at least 2.
+  // Stops:  Where in the whole table the end point colors should lie.
+  //         Each entry must be on [0, 1], each entry must be greater than
+  //         the previous entry.
+  // Red, Green, Blue: The end point color values.
+  //                   Each entry must be on [0, 1]
+  // NColors: Total number of colors in the table
+  //          Must be at least 1.
   //
+  // Returns a positive value on sucess and -1 on error.
+  // 
+  // The table is constructed by tracing lines between the given points in 
+  // RGB space.  Each color value may have a value between 0 and 1.  The 
+  // difference between consecutive "Stops" values gives the fraction of 
+  // space in the whole table that should be used for the interval between 
+  // the corresponding color values.
+  //
+  // Normally the first element of Stops should be 0 and the last should be 1.
+  // If this is not true, fewer than NColors will be used in proportion with
+  // the total interval between the first and last elements of Stops.
+  // 
   // This definition is similar to the povray-definition of gradient
   // color tables.
   //
-  // In order to create a color table do the following:
-  // Define the RGB Colors:
-  // > UInt_t Number = 5;
-  // > Double_t Red[5]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
-  // > Double_t Green[5] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
-  // > Double_t Blue[5]  = { 0.17, 0.39, 0.62, 0.79, 0.97 };
-  // Define the length of the (color)-interval between this points
-  // > Double_t Stops[5] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
-  // i.e. the color interval between Color 2 and Color 3 is
-  // 0.79 - 0.62 => 17 % of the total palette area between these colors
+  // For instance:
+  // UInt_t Number = 3;
+  // Double_t Red[3]   = { 0.0, 1.0, 1.0 };
+  // Double_t Green[3] = { 0.0, 0.0, 1.0 };
+  // Double_t Blue[3]  = { 1.0, 0.0, 1.0 };
+  // Double_t Stops[3] = { 0.0, 0.4, 1.0 };
   //
-  //  Original code by Andreas Zoglauer <zog@mpe.mpg.de>
+  // This defines a table in which there are three color end points:
+  // RGB = {0, 0, 1}, {1, 0, 0}, and {1, 1, 1} = blue, red, white
+  // The first 40% of the table is used to go linearly from blue to red.
+  // The remaining 60% of the table is used to go linearly from red to white.
+  //
+  // If you define a very short interval such that less than one color fits
+  // in it, no colors at all will be allocated.  If this occurs for all
+  // intervals, ROOT will revert to the default palette.
+  // 
+  // Original code by Andreas Zoglauer <zog@mpe.mpg.de>
 
    TColor::InitializeColors();
 
@@ -1237,22 +1258,27 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Length,
    TColor *color;
    Int_t highestIndex = 0;
 
+   if(Number < 2 || NColors < 1){
+      delete [] palette;
+      return -1;
+   }
+
    // Check if all RGB values are between 0.0 and 1.0 and
-   // Length goes from 0.0 to 1.0 in increasing order.
+   // Stops goes from 0.0 to 1.0 in increasing order.
    for (c = 0; c < Number; c++) {
       if (Red[c] < 0 || Red[c] > 1.0 ||
           Green[c] < 0 || Green[c] > 1.0 ||
           Blue[c] < 0 || Blue[c] > 1.0 ||
-          Length[c] < 0 || Length[c] > 1.0) {
+          Stops[c] < 0 || Stops[c] > 1.0) {
          //Error("CreateGradientColorTable",
-         //      "All RGB colors and interval lengths have to be between 0.0 and 1.0");
+         //      "All RGB colors and stops have to be between 0.0 and 1.0");
          delete [] palette;
          return -1;
       }
       if (c >= 1) {
-         if (Length[c-1] > Length[c]) {
+         if (Stops[c-1] > Stops[c]) {
             //Error("CreateGradientColorTable",
-            //      "The interval lengths have to be in increasing order");
+            //      "Stops have to be in increasing order");
             delete [] palette;
             return -1;
          }
@@ -1279,7 +1305,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Length,
    // For each defined gradient...
    for (g = 1; g < Number; g++) {
       // create the colors...
-      nColorsGradient = (Int_t) (floor(NColors*Length[g]) - floor(NColors*Length[g-1]));
+      nColorsGradient = (Int_t) (floor(NColors*Stops[g]) - floor(NColors*Stops[g-1]));
       for (c = 0; c < nColorsGradient; c++) {
          color = new TColor(highestIndex,
                             Red[g-1] + c * (Red[g] - Red[g-1])/ nColorsGradient,

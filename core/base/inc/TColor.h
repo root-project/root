@@ -73,7 +73,7 @@ public:
    static void   CreateColorsGray();
    static void   CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb);
    static void   CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb); 
-   static Int_t  CreateGradientColorTable(UInt_t Number, Double_t* Length,
+   static Int_t  CreateGradientColorTable(UInt_t Number, Double_t* Stops,
                     Double_t* Red, Double_t* Green, Double_t* Blue, UInt_t NColors);
    static Int_t  GetColorPalette(Int_t i);
    static Int_t  GetNumberOfColors();
