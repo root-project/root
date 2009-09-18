@@ -92,8 +92,9 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 //
 //  The current style is pointed by gStyle.
 //  When calling myStyle->cd(), gStyle is set to myStyle.
-//  One can also use gROOT to change the current style, eg
-//    gROOT->SetStyle("Plain") will change the current style gStyle to the "Plain" style
+//  One can also use gROOT to change the current style, e.g.
+//    gROOT->SetStyle("Plain") will change the current style gStyle to the 
+//    "Plain" style
 //  See also TROOT::ForceStyle and TROOT::UseCurrentStyle
 
    // If another style was already created with the same name, it is overwrite.
@@ -362,7 +363,8 @@ void TStyle::Copy(TObject &obj) const
 //______________________________________________________________________________
 Int_t TStyle::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
-// Function used by the TStyle manager when drawing a canvas showing the current style
+// Function used by the TStyle manager when drawing a canvas showing the 
+// current style
 
    gPad->SetSelected(this);
    return 0;
@@ -766,10 +768,10 @@ void TStyle::Paint(Option_t *option)
 //______________________________________________________________________________
 void TStyle::SetColorModelPS(Int_t c)
 {
-// Define the color model use by TPostScript and TPDF (RGB or CMYK).
-// CMY and CMYK models are subtractive color models unlike RGB which is an
+// Define the color model used by TPostScript and TPDF (RGB or CMYK).
+// CMY and CMYK models are subtractive color models unlike RGB which is
 // additive. They are mainly used for printing purposes. CMY means Cyan Magenta
-// Yellow to convert RGB to CMY it is enough to do: C=1-R, M=1-G and Y=1-B.
+// Yellow. To convert RGB to CMY it is enough to do: C=1-R, M=1-G and Y=1-B.
 // CMYK has one more component K (black). The conversion from RGB to CMYK is:
 //
 // Double_t Black   = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
@@ -777,7 +779,7 @@ void TStyle::SetColorModelPS(Int_t c)
 // Double_t Magenta = (1-Green-Black)/(1-Black);
 // Double_t Yellow  = (1-Blue-Black)/(1-Black);
 //
-// CMYK add the black component which allows to have a better quality for black
+// CMYK adds the black component which allows better quality for black
 // printing. PostScript and PDF support the CMYK model.
 //
 // c = 0 means TPostScript and TPDF will use RGB color model (default)
@@ -1009,7 +1011,7 @@ void TStyle::SetNumberContours(Int_t number)
       return;
    }
 
-   Error("SetNumberContours","Illegal number of contours: %d, myst be > 0 and < 1000",number);
+   Error("SetNumberContours","Illegal number of contours: %d, must be > 0 and < 1000",number);
 }
 
 //______________________________________________________________________________
