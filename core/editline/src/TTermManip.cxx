@@ -198,7 +198,7 @@ TTermManip::GetTermStr(const char* cap) {
    char* termstr = tigetstr(capid);
 
    if (termstr == (char*) -1) {
-      printf("ERROR unknown capability %s\n", cap);
+      //printf("ERROR unknown capability %s\n", cap);
       return NULL;
    } else if (termstr == 0) {
       // printf("ERROR capability %s not supported\n", cap);
