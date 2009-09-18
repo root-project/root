@@ -1,9 +1,8 @@
-void graphstruct() {
-   //Draw a simple graph structure. 
-   // The graph layout is made using graphviz. This macro creates some
-   // nodes and edges and change a few graphical attributes on some of
-   // them.
-
+// Draw a simple graph structure. 
+// The graph layout is made using graphviz. This macro creates some
+// nodes and edges and change a few graphical attributes on some of them.
+// Author: Olivier Couet
+{
    TGraphStruct *gs = new TGraphStruct();
 
    // create some nodes and put them in the graph in one go ...
@@ -52,4 +51,5 @@ void graphstruct() {
    TCanvas *c = new TCanvas("c","c",800,600);
    c->SetFillColor(38);
    gs->Draw();
+   return c;
 }
