@@ -320,8 +320,9 @@ readline(const char* prompt, bool newline) {
       rl_initialize();
    }
 
-   /* update prompt accordingly to what has been passed */
-   if (!prompt) {
+   /* update prompt accordingly to what has been passed; */
+   /* also disable prompt if nobody can type at it, or if nobody sees it */
+   if (!prompt || !isatty(0) || !isatty(1)) {
       prompt = "";
    }
 
