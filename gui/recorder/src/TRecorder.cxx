@@ -1639,7 +1639,8 @@ void TRecorderRecording::CopyEvent(Event_t *e, Window_t wid)
 #ifndef R__WIN32
    if (gDecorWidth == 0 && gDecorHeight == 0) {
       TGWindow *main = gClient->GetWindowById(e->fWindow);
-      if (main && main->InheritsFrom("TGMainFrame")) {
+      if (main && main->InheritsFrom("TGMainFrame") &&
+          main->GetParent() == gClient->GetDefaultRoot()) {
          WindowAttributes_t attr;
          gVirtualX->GetWindowAttributes(e->fWindow, attr);
          gDecorWidth  = attr.fX;
@@ -2063,6 +2064,7 @@ ClassImp(TRecGuiEvent)
 void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
 {
    // Replays stored GUI event
+
    Event_t *e = CreateEvent(this);
 
    // don't try to replay any copy/paste event, as event->fUser[x]
@@ -2121,7 +2123,8 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
 #ifndef R__WIN32
    if (gDecorWidth == 0 && gDecorHeight == 0) {
       TGWindow *main = gClient->GetWindowById(e->fWindow);
-      if (main && main->InheritsFrom("TGMainFrame")) {
+      if (main && main->InheritsFrom("TGMainFrame") &&
+          main->GetParent() == gClient->GetDefaultRoot()) {
          WindowAttributes_t attr;
          gVirtualX->GetWindowAttributes(e->fWindow, attr);
          gDecorWidth  = attr.fX;
@@ -2138,7 +2141,6 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
          }
          gCursorWin->RaiseWindow();
          gCursorWin->Move(e->fXRoot + gDecorWidth, e->fYRoot + gDecorHeight);
-         return;
       }
    }
 
