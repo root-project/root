@@ -2310,10 +2310,17 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
-      if (x < gPad->GetUxmin()) continue;
-      if (x > gPad->GetUxmax()) continue;
-      if (y < gPad->GetUymin()) continue;
-      if (y > gPad->GetUymax()) continue;
+      if (option3) {
+         if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
+         if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
+         if (y < gPad->GetUymin()) y = gPad->GetUymin();
+         if (y > gPad->GetUymax()) y = gPad->GetUymax();
+      } else {
+         if (x < gPad->GetUxmin()) continue;
+         if (x > gPad->GetUxmax()) continue;
+         if (y < gPad->GetUymin()) continue;
+         if (y > gPad->GetUymax()) continue;
+      }
       xl1 = x - s2x*cx;
       xl2 = gPad->XtoPad(theX[i] - theEXlow[i]);
 
@@ -2525,10 +2532,17 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
       bxh = gPad->YtoPad(theY[i]+theEXhighd[i]);
       byl = gPad->XtoPad(theX[i]+theEYlowd[i]);
       byh = gPad->XtoPad(theX[i]+theEYhighd[i]);
-      if (x < gPad->GetUxmin()) continue;
-      if (x > gPad->GetUxmax()) continue;
-      if (y < gPad->GetUymin()) continue;
-      if (y > gPad->GetUymax()) continue;
+      if (option3) {
+         if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
+         if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
+         if (y < gPad->GetUymin()) y = gPad->GetUymin();
+         if (y > gPad->GetUymax()) y = gPad->GetUymax();
+      } else {
+         if (x < gPad->GetUxmin()) continue;
+         if (x > gPad->GetUxmax()) continue;
+         if (y < gPad->GetUymin()) continue;
+         if (y > gPad->GetUymax()) continue;
+      }
 
       //  draw the error rectangles
       if (option2) {
