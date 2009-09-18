@@ -24,13 +24,13 @@ BUILD:
  CINT and VC++ related environment variables must be properly set.
  Open MS-DOS prompt window, move to this directory and run setup.bat.
 
-    C:\> cd %cintsysdir%\lib\win32api
-    C:\cint\lib\win32api> setup.bat
+    C:\> cd %cintsysdir%\cint\lib\win32api
+    C:\cint\cint\lib\win32api> setup.bat
 
  If everything goes fine, following files will be created.
 
-     %cintsysdir%\include\win32api.dll
-     %cintsysdir%\lib\win32api\win32api.lib
+     %cintsysdir%\cint\include\win32api.dll
+     %cintsysdir%\cint\lib\win32api\win32api.lib
 
 
 HOW TO USE:
