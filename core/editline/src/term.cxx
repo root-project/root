@@ -1039,11 +1039,14 @@ term_set(EditLine_t* el, const char* term) {
       term = getenv("TERM");
    }
 
-   if (!term || !term[0]) {
+   if (!term || !term[0]
+       || !isatty(0)
+       || !isatty(1)) {
       term = "dumb";
    }
 
-   if (strcmp(term, "emacs") == 0) {
+   if (strcmp(term, "emacs") == 0
+       || !isatty(0)) {
       el->fFlags |= EDIT_DISABLED;
    }
 
@@ -1390,8 +1393,14 @@ term_bind_arrow(EditLine_t* el) {
  *	Initialize the color handling
  */
 el_private void
-term_init_color(EditLine_t* /*el*/) {
+term_init_color(EditLine_t* el) {
    int errcode;
+
+   if ((el->fFlags & NO_TTY) || !isatty(1)) {
+      // no TTY, no color.
+      return;
+   }
+
    if (ERR == setupterm(0, 1, &errcode)) {
       char* eldebug = getenv("EDITLINEDEBUG");
       if (eldebug != 0 && eldebug[0]) {

@@ -220,12 +220,7 @@ TTermManip::ResetTerm() {
    WriteTerm(fSetDefault);
    WriteTerm(fStopUnderline);
 
-   if (!fOrigColors) {
-#ifndef _MSC_VER
-      // some claim to not have it and they have it nevertheless - so try:
-      printf("\033[39;49m");
-#endif
-   } else {
+   if (fOrigColors) {
       WriteTerm(fOrigColors);
    }
    fCurrentColorIdx = -1;
