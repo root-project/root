@@ -353,6 +353,10 @@ void TGL5DPainter::DeInitGL()const
 void TGL5DPainter::DrawPlot() const
 {
    //Draw a set of meshes.
+
+   //Shift plot to point of origin.
+   const Rgl::PlotTranslation trGuard(this);
+   
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
    //
    if (!fIsos.size())

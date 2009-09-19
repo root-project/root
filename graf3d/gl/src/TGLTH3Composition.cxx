@@ -268,6 +268,10 @@ void TGLTH3CompositionPainter::DeInitGL()const
 void TGLTH3CompositionPainter::DrawPlot()const
 {
    //Draw composition of TH3s.
+
+   //Shift plot to point of origin.
+   const Rgl::PlotTranslation trGuard(this);
+
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
 
    if (!fSelectionPass) {

@@ -167,10 +167,30 @@ private:
    TGLPlotPainter class defines interface to different plot painters.
 */
 
-class TGLPlotPainter : public TVirtualGLPainter {
+class TGLPlotPainter;
+
+/*
+Object of this class, created on stack in DrawPlot member-functions,
+saves modelview matrix, moves plot to (0; 0; 0), and
+restores modelview matrix in dtor.
+*/
+
+namespace Rgl {
+
+class PlotTranslation {
+public:
+   PlotTranslation(const TGLPlotPainter *painter);
+   ~PlotTranslation();
+
 private:
-   //Int_t                 fGLContext;
-   //TGLPaintDevice       *fGLDevice;
+   const TGLPlotPainter *fPainter;
+};
+
+}
+
+class TGLPlotPainter : public TVirtualGLPainter {
+   friend class Rgl::PlotTranslation;
+private:
    const TColor         *fPadColor;
 
 protected:
@@ -274,7 +294,6 @@ protected:
    
    void             RestoreModelviewMatrix()const;
    void             RestoreProjectionMatrix()const;
-   //
 
    ClassDef(TGLPlotPainter, 0) //Base for gl plots
 };

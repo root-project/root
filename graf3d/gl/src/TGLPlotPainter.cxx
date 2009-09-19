@@ -876,11 +876,16 @@ Bool_t TGLPlotCoordinates::SetRangesCartesian(const TH1 *hist, Bool_t errors, Bo
 
    fXRange = xRange, fXBins = xBins, fYRange = yRange, fYBins = yBins, fZRange = zRange, fZBins = zBins;
    fFactor = factor;
-
+   /*
    const Double_t maxDim = TMath::Max(TMath::Max(x, y), z);
    fXScale = maxDim / x;
    fYScale = maxDim / y;
    fZScale = maxDim / z;
+   */
+   fXScale = 1. / x;
+   fYScale = 1. / y;
+   fZScale = 1. / z;
+
    fXRangeScaled.first = fXRange.first * fXScale, fXRangeScaled.second = fXRange.second * fXScale;
    fYRangeScaled.first = fYRange.first * fYScale, fYRangeScaled.second = fYRange.second * fYScale;
    fZRangeScaled.first = fZRange.first * fZScale, fZRangeScaled.second = fZRange.second * fZScale;
@@ -927,10 +932,15 @@ Bool_t TGLPlotCoordinates::SetRanges(const TAxis *xAxis, const TAxis *yAxis, con
    fXRange = xRange, fXBins = xBins, fYRange = yRange, fYBins = yBins, fZRange = zRange, fZBins = zBins;
    fFactor = factor;
 
-   const Double_t maxDim = TMath::Max(TMath::Max(x, y), z);
+/*   const Double_t maxDim = TMath::Max(TMath::Max(x, y), z);
    fXScale = maxDim / x;
    fYScale = maxDim / y;
-   fZScale = maxDim / z;
+   fZScale = maxDim / z;*/
+
+   fXScale = 1. / x;
+   fYScale = 1. / y;
+   fZScale = 1. / z;
+
    fXRangeScaled.first = fXRange.first * fXScale, fXRangeScaled.second = fXRange.second * fXScale;
    fYRangeScaled.first = fYRange.first * fYScale, fYRangeScaled.second = fYRange.second * fYScale;
    fZRangeScaled.first = fZRange.first * fZScale, fZRangeScaled.second = fZRange.second * fZScale;
@@ -981,10 +991,10 @@ Bool_t TGLPlotCoordinates::SetRangesPolar(const TH1 *hist)
       fFactor = factor;
    }
 
-   const Double_t maxDim = TMath::Max(2., z);
-   fXScale = maxDim / 2.;
-   fYScale = maxDim / 2.;
-   fZScale = maxDim / z;
+   //const Double_t maxDim = TMath::Max(2., z);
+   fXScale = 0.5;//maxDim / 2.;
+   fYScale = 0.5;//maxDim / 2.;
+   fZScale = 1. / z;//maxDim / z;
    fXRangeScaled.first = -fXScale, fXRangeScaled.second = fXScale;
    fYRangeScaled.first = -fYScale, fYRangeScaled.second = fYScale;
    fZRangeScaled.first = fZRange.first * fZScale, fZRangeScaled.second = fZRange.second * fZScale;
@@ -1034,10 +1044,10 @@ Bool_t TGLPlotCoordinates::SetRangesCylindrical(const TH1 *hist)
       fFactor = factor;
    }
 
-   const Double_t maxDim = TMath::Max(2., y);
-   fXScale = maxDim / 2.;
-   fYScale = maxDim / y;
-   fZScale = maxDim / 2.;
+   // const Double_t maxDim = TMath::Max(2., y);
+   fXScale = 0.5;//maxDim / 2.;
+   fYScale = 1. / y;//maxDim / y;
+   fZScale = 0.5;//maxDim / 2.;
    fXRangeScaled.first = -fXScale, fXRangeScaled.second = fXScale;
    fYRangeScaled.first = fYRange.first * fYScale, fYRangeScaled.second = fYRange.second * fYScale;
    fZRangeScaled.first = -fZScale, fZRangeScaled.second = fZScale;
@@ -1083,9 +1093,9 @@ Bool_t TGLPlotCoordinates::SetRangesSpherical(const TH1 *hist)
       fFactor   = factor;
    }
 
-   fXScale = 1.;
-   fYScale = 1.;
-   fZScale = 1.;
+   fXScale = 0.5;
+   fYScale = 0.5;
+   fZScale = 0.5;
    fXRangeScaled.first = -fXScale, fXRangeScaled.second = fXScale;
    fYRangeScaled.first = -fYScale, fYRangeScaled.second = fYScale;
    fZRangeScaled.first = -fZScale, fZRangeScaled.second = fZScale;
@@ -1877,6 +1887,25 @@ void TGLTH3Slice::DrawSliceFrame(Int_t low, Int_t up)const
 
 namespace Rgl {
 
+//______________________________________________________________________________
+PlotTranslation::PlotTranslation(const TGLPlotPainter *painter)
+                   : fPainter(painter)
+{
+   const TGLVertex3 *box = fPainter->fBackBox.Get3DBox();
+   const Double_t center[] = {(box[0].X() + box[1].X()) / 2,
+                              (box[0].Y() + box[2].Y()) / 2,
+                              (box[0].Z() + box[4].Z()) / 2};
+
+   fPainter->SaveModelviewMatrix();
+   glTranslated(-center[0], -center[1], -center[2]);
+}
+
+//______________________________________________________________________________
+PlotTranslation::~PlotTranslation()
+{
+   fPainter->RestoreModelviewMatrix();
+}
+
 namespace
 {
    const Double_t lr = 0.85;
@@ -1963,3 +1992,4 @@ void DrawPaletteAxis(const TGLPlotCamera * camera, const Range_t & minMax, Bool_
 }
 
 }
+

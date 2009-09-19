@@ -187,14 +187,22 @@ Int_t TGLPlotBox::FindFrontPoint()const
    const Double_t zMin = f3DBox[0].Z();
    const Double_t zMax = f3DBox[4].Z();
 
+   const Double_t uBox[][2] = {{-0.5, -0.5}, {0.5, -0.5}, {0.5, 0.5}, {-0.5, 0.5}};
+
    for (Int_t i = 0; i < 4; ++i) {
       gluProject(f3DBox[i].X(), f3DBox[i].Y(), zMin, mvMatrix, prMatrix, viewport,
                  &f2DBox[i].X(), &f2DBox[i].Y(), &f2DBox[i].Z());
       gluProject(f3DBox[i].X(), f3DBox[i].Y(), zMax, mvMatrix, prMatrix, viewport,
                  &f2DBox[i + 4].X(), &f2DBox[i + 4].Y(), &f2DBox[i + 4].Z());
+
+      gluProject(uBox[i][0], uBox[i][1], -0.5, mvMatrix, prMatrix, viewport,
+                 &f2DBoxU[i].X(), &f2DBoxU[i].Y(), &f2DBoxU[i].Z());
+      gluProject(uBox[i][0], uBox[i][1], 0.5, mvMatrix, prMatrix, viewport,
+                 &f2DBoxU[i + 4].X(), &f2DBoxU[i + 4].Y(), &f2DBoxU[i + 4].Z());
    }
 
-   return fFrontPoint = std::min_element(f2DBox, f2DBox + 4, Compare) - f2DBox;
+   //return fFrontPoint = std::min_element(f2DBox, f2DBox + 4, Compare) - f2DBox;
+   return fFrontPoint = std::min_element(f2DBoxU, f2DBoxU + 4, Compare) - f2DBoxU;
 }
 
 
@@ -221,7 +229,8 @@ const TGLVertex3 *TGLPlotBox::Get2DBox()const
 {
    // Get 2D box.
 
-   return f2DBox;
+//   return f2DBox;
+   return f2DBoxU;
 }
 
 

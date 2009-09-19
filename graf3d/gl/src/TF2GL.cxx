@@ -74,7 +74,6 @@ Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
          fCoord.SetCoordType(kGLCylindrical);
 
       fPlotPainter->AddOption(option);
-
       fPlotPainter->InitGeometry();
       return kTRUE;
    }

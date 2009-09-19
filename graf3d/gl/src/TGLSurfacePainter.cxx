@@ -303,6 +303,10 @@ void TGLSurfacePainter::SetSurfaceColor()const
 void TGLSurfacePainter::DrawPlot()const
 {
    //Draw surf/surf1/surf2/surf4
+
+   //Shift plot to point of origin.
+   const Rgl::PlotTranslation trGuard(this);
+
    if (fCoord->GetCoordType() == kGLCartesian) {
       fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
       DrawSections();

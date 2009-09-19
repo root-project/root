@@ -287,7 +287,8 @@ Bool_t TGLParametricPlot::InitGeometry()
    //the only reason to rebuild it - the change in size or
    //if one of equations contain reference to TF2 function, whose
    //parameters were changed.
-   Bool_t constrained = fEquation->IsConstrained();
+
+   // const Bool_t constrained = kTRUE;//fEquation->IsConstrained();
 
    if (fMeshSize * fMeshSize != (Int_t)fMesh.size() || fEquation->IsModified()) {
       if (fEquation->IsZombie())
@@ -314,7 +315,6 @@ Bool_t TGLParametricPlot::InitGeometry()
       for (Int_t i = 0; i < fMeshSize; ++i) {
          Double_t v = vRange.first;
          for (Int_t j = 0; j < fMeshSize; ++j) {
-
             fEquation->EvalVertex(newVert, u, v);
             min.X() = Min(min.X(), newVert.X());
             max.X() = Max(max.X(), newVert.X());
@@ -322,50 +322,48 @@ Bool_t TGLParametricPlot::InitGeometry()
             max.Y() = Max(max.Y(), newVert.Y());
             min.Z() = Min(min.Z(), newVert.Z());
             max.Z() = Max(max.Z(), newVert.Z());
+
             fMesh[i][j].fPos = newVert;
-            if (!constrained) {
-               fEquation->EvalVertex(v1, u + dd, v);
-               fEquation->EvalVertex(v2, u, v + dd);
-               Normal2Plane(newVert.CArr(), v1.CArr(), v2.CArr(), fMesh[i][j].fNormal.Arr());
-            }
+
             v += dV;
          }
          u += dU;
       }
 
       const Double_t xRange = max.X() - min.X(), yRange = max.Y() - min.Y(), zRange = max.Z() - min.Z();
+      const Double_t xS = 1. / xRange, yS = 1. / yRange, zS = 1. / zRange;
+
+      for (Int_t i = 0; i < fMeshSize; ++i) {
+         for (Int_t j = 0; j < fMeshSize; ++j) {
+            TGLVertex3 &ver = fMesh[i][j].fPos;
+            ver.X() *= xS, ver.Y() *= yS, ver.Z() *= zS;
+         }
+      }
 
       if (!xRange || !yRange || !zRange) {
          Error("InitGeometry", "Zero axis range");
          return kFALSE;
       }
 
-      Double_t maxRange = Max(Max(xRange, yRange), zRange);
-      const Double_t xZoom = maxRange / xRange, yZoom = maxRange / yRange, zZoom = maxRange / zRange;
-
-      if (constrained) {
-         u = uRange.first;
-         for (Int_t i = 0; i < fMeshSize; ++i) {
-            Double_t v = vRange.first;
-            for (Int_t j = 0; j < fMeshSize; ++j) {
-               TGLVertex3 &ver = fMesh[i][j].fPos;
-               ver.X() *= xZoom, ver.Y() *= yZoom, ver.Z() *= zZoom;
-               fEquation->EvalVertex(v1, u + dd, v);
-               fEquation->EvalVertex(v2, u, v + dd);
-               v1.X() *= xZoom, v1.Y() *= yZoom, v1.Z() *= zZoom;
-               v2.X() *= xZoom, v2.Y() *= yZoom, v2.Z() *= zZoom;
-               Normal2Plane(ver.CArr(), v1.CArr(), v2.CArr(), fMesh[i][j].fNormal.Arr());
-               v += dV;
-            }
-            u += dU;
+      u = uRange.first;
+      for (Int_t i = 0; i < fMeshSize; ++i) {
+         Double_t v = vRange.first;
+         for (Int_t j = 0; j < fMeshSize; ++j) {
+            TGLVertex3 &ver = fMesh[i][j].fPos;
+            fEquation->EvalVertex(v1, u + dd, v);
+            fEquation->EvalVertex(v2, u, v + dd);
+            v1.X() *= xS, v1.Y() *= yS, v1.Z() *= zS;
+            v2.X() *= xS, v2.Y() *= yS, v2.Z() *= zS;
+            Normal2Plane(ver.CArr(), v1.CArr(), v2.CArr(), fMesh[i][j].fNormal.Arr());
+            v += dV;
          }
+         u += dU;
       }
 
       using Rgl::Range_t;
-      constrained ? fBackBox.SetPlotBox(Range_t(min.X(), max.X()), Range_t(min.Y(), max.Y()), Range_t(min.Z(), max.Z())):
-                    fBackBox.SetPlotBox(Range_t(min.X() * xZoom, max.X() * xZoom),
-                                        Range_t(min.Y() * yZoom, max.Y() * yZoom),
-                                        Range_t(min.Z() * zZoom, max.Z() * zZoom));
+      fBackBox.SetPlotBox(Range_t(min.X() * xS, max.X() * xS),
+                          Range_t(min.Y() * yS, max.Y() * yS),
+                          Range_t(min.Z() * zS, max.Z() * zS));
       if (fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
    }
 
@@ -479,6 +477,10 @@ void TGLParametricPlot::DeInitGL()const
 void TGLParametricPlot::DrawPlot()const
 {
    //Draw parametric surface.
+
+   //Shift plot to point of origin.
+   const Rgl::PlotTranslation trGuard(this);
+
    if (!fSelectionPass) {
       SetSurfaceColor();
       if (fShowMesh) {

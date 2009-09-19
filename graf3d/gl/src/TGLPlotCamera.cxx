@@ -20,14 +20,14 @@ ClassImp(TGLPlotCamera);
 
 //______________________________________________________________________________
 TGLPlotCamera::TGLPlotCamera() :
-   fZoom(1.), fShift(0.), fCenter(),
+   fZoom(1.), fShift(1.5), fCenter(),
    fVpChanged(kFALSE)
 {
    //Construct camera for plot painters.
    fOrthoBox[0] = 1.;
    fOrthoBox[1] = 1.;
-   fOrthoBox[2] = -1.;
-   fOrthoBox[3] = 1.;
+   fOrthoBox[2] = -100.;
+   fOrthoBox[3] = 100.;
 }
 
 //______________________________________________________________________________
@@ -47,10 +47,10 @@ void TGLPlotCamera::SetViewport(const TGLRect &vp)
 }
 
 //______________________________________________________________________________
-void TGLPlotCamera::SetViewVolume(const TGLVertex3 *box)
+void TGLPlotCamera::SetViewVolume(const TGLVertex3 */*box*/)
 {
    //'box' is the TGLPlotPainter's back box's coordinates.
-   fCenter[0] = (box[0].X() + box[1].X()) / 2;
+/*   fCenter[0] = (box[0].X() + box[1].X()) / 2;
    fCenter[1] = (box[0].Y() + box[2].Y()) / 2;
    fCenter[2] = (box[0].Z() + box[4].Z()) / 2;
    const Double_t maxDim = box[1].X() - box[0].X();
@@ -58,7 +58,7 @@ void TGLPlotCamera::SetViewVolume(const TGLVertex3 *box)
    fOrthoBox[1] = maxDim;
    fOrthoBox[2] = -100 * maxDim;//100?
    fOrthoBox[3] = 100 * maxDim;
-   fShift = maxDim * 1.5;
+   fShift = maxDim * 1.5;*/
 }
 
 //______________________________________________________________________________
@@ -133,7 +133,7 @@ void TGLPlotCamera::Apply(Double_t phi, Double_t theta)const
    glRotated(theta - 90., 1., 0., 0.);
    glRotated(phi, 0., 0., 1.);
    glTranslated(-fTruck[0], -fTruck[1], -fTruck[2]);
-   glTranslated(-fCenter[0], -fCenter[1], -fCenter[2]);
+//   glTranslated(-fCenter[0], -fCenter[1], -fCenter[2]);
 }
 
 //______________________________________________________________________________

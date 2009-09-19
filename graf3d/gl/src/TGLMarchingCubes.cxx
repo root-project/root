@@ -111,9 +111,9 @@ void TF3Adapter::SetDataSource(const TF3 *f3)
 //______________________________________________________________________
 Double_t TF3Adapter::GetData(UInt_t i, UInt_t j, UInt_t k)const
 {
-   return fTF3->Eval(fMinX + i * fStepX, 
-                     fMinY + j * fStepY, 
-                     fMinZ + k * fStepZ);
+   return fTF3->Eval(fMinX * fXScaleInverted + i * fStepX * fXScaleInverted, 
+                     fMinY * fYScaleInverted + j * fStepY * fYScaleInverted, 
+                     fMinZ * fZScaleInverted + k * fStepZ * fZScaleInverted);
 }
 
 /*
@@ -144,20 +144,32 @@ void TF3EdgeSplitter::SplitEdge(TCell<Double_t> & cell, TIsoMesh<Double_t> * mes
                                 Double_t x, Double_t y, Double_t z, Double_t iso)const
 {
    //Split the edge and find normal in a new vertex.
-   Double_t v[3];
+   Double_t v[3] = {};
    const Double_t ofst = GetOffset(cell.fVals[eConn[i][0]], cell.fVals[eConn[i][1]], iso);
    v[0] = x + (vOff[eConn[i][0]][0] + ofst * eDir[i][0]) * fStepX;
    v[1] = y + (vOff[eConn[i][0]][1] + ofst * eDir[i][1]) * fStepY;
    v[2] = z + (vOff[eConn[i][0]][2] + ofst * eDir[i][2]) * fStepZ;
    cell.fIds[i] = mesh->AddVertex(v);
+
+   const Double_t stepXU = fStepX * fXScaleInverted;
+   const Double_t xU     = x * fXScaleInverted;
+   const Double_t stepYU = fStepY * fYScaleInverted;
+   const Double_t yU     = y * fYScaleInverted;
+   const Double_t stepZU = fStepZ * fZScaleInverted;
+   const Double_t zU     = z * fZScaleInverted;
+
+   Double_t vU[3] = {};//U - unscaled.
+   vU[0] = xU + (vOff[eConn[i][0]][0] + ofst * eDir[i][0]) * stepXU;
+   vU[1] = yU + (vOff[eConn[i][0]][1] + ofst * eDir[i][1]) * stepYU;
+   vU[2] = zU + (vOff[eConn[i][0]][2] + ofst * eDir[i][2]) * stepZU;
    //Find normals.
    Double_t n[3];
-   n[0] = fTF3->Eval(v[0] - 0.1 * fStepX, v[1], v[2]) -
-          fTF3->Eval(v[0] + 0.1 * fStepX, v[1], v[2]);
-   n[1] = fTF3->Eval(v[0], v[1] - 0.1 * fStepY, v[2]) -
-          fTF3->Eval(v[0], v[1] + 0.1 * fStepY, v[2]);
-   n[2] = fTF3->Eval(v[0], v[1], v[2] - 0.1 * fStepZ) -
-          fTF3->Eval(v[0], v[1], v[2] + 0.1 * fStepZ);
+   n[0] = fTF3->Eval(vU[0] - 0.1 * stepXU, vU[1], vU[2]) -
+          fTF3->Eval(vU[0] + 0.1 * stepXU, vU[1], vU[2]);
+   n[1] = fTF3->Eval(vU[0], vU[1] - 0.1 * stepYU, vU[2]) -
+          fTF3->Eval(vU[0], vU[1] + 0.1 * stepYU, vU[2]);
+   n[2] = fTF3->Eval(vU[0], vU[1], vU[2] - 0.1 * stepZU) -
+          fTF3->Eval(vU[0], vU[1], vU[2] + 0.1 * stepZU);
 
    const Double_t len = std::sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
    if (len > 1e-7) {

@@ -481,7 +481,9 @@ void TGLLegoPainter::DeInitGL()const
 void TGLLegoPainter::DrawPlot()const
 {
    //Select method corresponding to coordinate system.
-   
+
+   //Shift plot to point of origin.
+   const Rgl::PlotTranslation trGuard(this);
    
    switch (fCoord->GetCoordType()) {
    case kGLCartesian:

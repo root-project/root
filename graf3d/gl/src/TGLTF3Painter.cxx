@@ -59,17 +59,9 @@ Bool_t TGLTF3Painter::InitGeometry()
 
    Rgl::Mc::TMeshBuilder<TF3, Double_t> builder(kFALSE);//no averaged normals.
    //Set grid parameters.
-   Rgl::Mc::TGridGeometry<Double_t> geom;
-   geom.fMinX  = fXAxis->GetBinLowEdge(fXAxis->GetFirst());
-   geom.fStepX = (fXAxis->GetBinUpEdge(fXAxis->GetLast()) - geom.fMinX) / (fHist->GetNbinsX());
-   geom.fMinY  = fYAxis->GetBinLowEdge(fYAxis->GetFirst());
-   geom.fStepY = (fYAxis->GetBinUpEdge(fYAxis->GetLast()) - geom.fMinY) / (fHist->GetNbinsY());
-   geom.fMinZ  = fZAxis->GetBinLowEdge(fZAxis->GetFirst());
-   geom.fStepZ = (fZAxis->GetBinUpEdge(fZAxis->GetLast()) - geom.fMinZ) / (fHist->GetNbinsZ());
-   //Scale grid parameters.
-   geom.fMinX *= fCoord->GetXScale(), geom.fStepX *= fCoord->GetXScale();
-   geom.fMinY *= fCoord->GetYScale(), geom.fStepY *= fCoord->GetYScale();
-   geom.fMinZ *= fCoord->GetZScale(), geom.fStepZ *= fCoord->GetZScale();
+   Rgl::Mc::TGridGeometry<Double_t> geom(fXAxis, fYAxis, fZAxis, fCoord->GetXScale(),
+                                         fCoord->GetYScale(), fCoord->GetZScale(),
+                                         Rgl::Mc::TGridGeometry<Double_t>::kBinEdge);
 
    builder.BuildMesh(fF3, geom, &fMesh, 0.2);
 
@@ -283,6 +275,10 @@ void TGLTF3Painter::DrawMaplePlot() const
 void TGLTF3Painter::DrawPlot() const
 {
    //Draw mesh.
+
+   //Shift plot to point of origin.
+   const Rgl::PlotTranslation trGuard(this);
+
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
    DrawSections();
    
@@ -585,6 +581,11 @@ void TGLIsoPainter::DeInitGL() const
 void TGLIsoPainter::DrawPlot() const
 {
    //Draw mesh.
+
+   //Shift plot to point of origin.
+   const Rgl::PlotTranslation trGuard(this);
+
+
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
    DrawSections();
    
@@ -681,18 +682,9 @@ void TGLIsoPainter::SetSurfaceColor(Int_t ind) const
 //______________________________________________________________________________
 void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
 {
-   Rgl::Mc::TGridGeometry<Float_t> geom;
-   //Get grid parameters.
-   geom.fMinX  = fXAxis->GetBinCenter(fXAxis->GetFirst());
-   geom.fStepX = (fXAxis->GetBinCenter(fXAxis->GetLast()) - geom.fMinX) / (fHist->GetNbinsX() - 1);
-   geom.fMinY  = fYAxis->GetBinCenter(fYAxis->GetFirst());
-   geom.fStepY = (fYAxis->GetBinCenter(fYAxis->GetLast()) - geom.fMinY) / (fHist->GetNbinsY() - 1);
-   geom.fMinZ  = fZAxis->GetBinCenter(fZAxis->GetFirst());
-   geom.fStepZ = (fZAxis->GetBinCenter(fZAxis->GetLast()) - geom.fMinZ) / (fHist->GetNbinsZ() - 1);
-   //Scale grid parameters.
-   geom.fMinX *= fCoord->GetXScale(), geom.fStepX *= fCoord->GetXScale();
-   geom.fMinY *= fCoord->GetYScale(), geom.fStepY *= fCoord->GetYScale();
-   geom.fMinZ *= fCoord->GetZScale(), geom.fStepZ *= fCoord->GetZScale();
+   //Grid geometry.
+   Rgl::Mc::TGridGeometry<Float_t> geom(fXAxis, fYAxis, fZAxis, fCoord->GetXScale(),
+                                        fCoord->GetYScale(), fCoord->GetZScale());
    //Clear mesh if it was from cache.
    m.ClearMesh();
    //Select correct TMeshBuilder type.

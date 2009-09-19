@@ -316,6 +316,9 @@ void TGLBoxPainter::DrawPlot()const
 {
    // Draw set of boxes (spheres)
 
+   //Shift plot to point of origin.
+   const Rgl::PlotTranslation trGuard(this);
+
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
    glDisable(GL_CULL_FACE);
    DrawSections();

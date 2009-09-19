@@ -27,6 +27,7 @@ private:
 
    TGLVertex3             f3DBox[8];
    mutable TGLVertex3     f2DBox[8];
+   mutable TGLVertex3     f2DBoxU[8];
    mutable Int_t          fFrontPoint;
 
 public:
