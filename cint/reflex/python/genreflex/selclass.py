@@ -85,7 +85,7 @@ class selClass :
       self.classes[-1]['fields'].append(attrs)
     elif name in ('method',) :
       self.classes[-1]['methods'].append(attrs)
-    elif name in ('ioread', 'ioreadraw'):
+    elif name in ('ioread', 'ioreadraw', 'read', 'readraw'):
       self.current_io_rule = {'attrs': attrs, 'code': '' }
     elif name in ('selection',) :
       self.classes   = self.sel_classes
@@ -110,7 +110,7 @@ class selClass :
     #------------------------------------------------------------------------------
     # Processing io rules
     #------------------------------------------------------------------------------
-    elif name == 'ioread' or name =='ioreadraw':
+    elif name == 'ioread' or name =='ioreadraw' or name == 'read' or name =='readraw':
       if not self.isRuleValid( self.current_io_rule ):
         print '--->> genreflex: WARNING: The IO rule has been omited'
         self.current_io_rule = None
@@ -121,7 +121,7 @@ class selClass :
       #----------------------------------------------------------------------------
       # Handle read rule
       #----------------------------------------------------------------------------
-      if name == 'ioread':
+      if name == 'ioread' or name == 'read':
         if not self.io_read_rules.has_key( className ):
           self.io_read_rules[className] = []
         self.io_read_rules[className].append( self.current_io_rule )
@@ -130,7 +130,7 @@ class selClass :
       #----------------------------------------------------------------------------
       # Handle readraw rule
       #----------------------------------------------------------------------------
-      elif name == 'ioreadraw':
+      elif name == 'ioreadraw' or name == 'readraw':
         source = self.current_io_rule['attrs']['source'].split(',')
         if len(source) > 1:
           print '--->> genreflex: WARNING: IO rule for class:', className,
