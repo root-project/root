@@ -362,7 +362,8 @@ Getlinem(int mode, const char* prompt) {
 
       if (input_buffer) {
          while (*ch != '\a') {
-            if (*ch == '\n') {                                  // line complete!
+            if (*ch == '\n') {
+               // line complete!
                return input_buffer;
             }
             ++ch;
@@ -419,7 +420,10 @@ Gl_histinit(char* file) {
 
 void
 Gl_histadd(char* buf) {
+   // Add to history; write the file out in case
+   // the process is abort()ed by executing the line.
    add_history(buf);
+   write_history(hist_file);
 }
 
 
