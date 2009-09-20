@@ -47,7 +47,7 @@ void TGLPlotCamera::SetViewport(const TGLRect &vp)
 }
 
 //______________________________________________________________________________
-void TGLPlotCamera::SetViewVolume(const TGLVertex3 */*box*/)
+void TGLPlotCamera::SetViewVolume(const TGLVertex3* /* box */)
 {
    //'box' is the TGLPlotPainter's back box's coordinates.
 /*   fCenter[0] = (box[0].X() + box[1].X()) / 2;
