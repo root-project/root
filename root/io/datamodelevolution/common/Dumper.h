@@ -221,7 +221,7 @@ void dump( void* obj, TClass* cl, std::ostream& out, std :: string prefix = "" )
       //------------------------------------------------------------------------
       if( member->IsBasic() )
       {
-            const char *type = member->GetTrueTypeName();
+         const char *type = member->GetTrueTypeName();
          switch( type[0] )
          {
             case 'i':
@@ -236,8 +236,12 @@ void dump( void* obj, TClass* cl, std::ostream& out, std :: string prefix = "" )
             case 's':
                out << *(short *)(((char *)obj) + member->GetOffset());
                break;
+            case 'b':
+               out << *(bool *)(((char *)obj) + member->GetOffset()); 
+               //debug: << ' ' << (void*)obj << ' ' << member->GetOffset() << ' ' << (void*)(((char *)obj) + member->GetOffset());
+               break;
             default:
-               out << "unknown";
+               out << "unknown type: " << type;
          }
          out << endl;
       }
