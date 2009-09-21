@@ -3,9 +3,7 @@
  * Package: RooFitModels                                                     *
  *    File: $Id$
  * Authors:                                                                  *
- *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
- *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   Max Baak, CERN, mbaak@cern.ch *
  *                                                                           *
  * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
@@ -57,18 +55,15 @@ public:
 
   RooNDKeysPdf(const char *name, const char *title,
                const RooArgList& varList, RooDataSet& data, 
-	       TString options="a", Double_t rho=1, Double_t nSigma=3,
-	       RooAbsReal& weight=RooRealConstant::value(1));
+	       TString options="a", Double_t rho=1, Double_t nSigma=3, Bool_t rotate=kTRUE) ; 
 
   RooNDKeysPdf(const char *name, const char *title,
                RooAbsReal& x, RooDataSet& data, 
-               Mirror mirror= NoMirror, Double_t rho=1, Double_t nSigma=3,
-	       RooAbsReal& weight=RooRealConstant::value(1));
+               Mirror mirror= NoMirror, Double_t rho=1, Double_t nSigma=3, Bool_t rotate=kTRUE) ; 
 
   RooNDKeysPdf(const char *name, const char *title,
                RooAbsReal& x, RooAbsReal &y, RooDataSet& data, 
-               TString options="a", Double_t rho = 1.0, Double_t nSigma=3,
-	       RooAbsReal& weight=RooRealConstant::value(1));
+               TString options="a", Double_t rho = 1.0, Double_t nSigma=3, Bool_t rotate=kTRUE); 
 
   RooNDKeysPdf(const RooNDKeysPdf& other, const char* name=0);
   virtual ~RooNDKeysPdf();
@@ -100,7 +95,6 @@ protected:
   
   RooListProxy _varList ;
   TIterator* _varItr ;   //! do not persist
-  TIterator* _weightItr; //!
 
   Double_t evaluate() const;
 
@@ -119,17 +113,10 @@ protected:
   void     loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const;
   void     boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t code) const;
 
-  virtual  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
-  	                              Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
-
   mutable RooDataSet& _data;
   mutable TString _options;
   mutable Double_t _widthFactor;
   mutable Double_t _nSigma;
-
-  mutable RooRealProxy _weight ;
-  mutable RooSetProxy  _weightParams ;
-  mutable RooAbsReal*  _weightDep ;
 
   mutable Bool_t _fixedShape;
   mutable Bool_t _mirror;
@@ -191,6 +178,7 @@ protected:
   mutable TVectorD* _dx;
   mutable Double_t _sigmaAvgR;
 
+  mutable Bool_t _rotate;
 
   /// sorter function
   struct SorterTV_L2H {

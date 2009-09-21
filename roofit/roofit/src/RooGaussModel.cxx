@@ -126,7 +126,7 @@ Int_t RooGaussModel::basisCode(const char* name) const
   if (!TString("exp(-@0/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisPlus;
   if (!TString("exp(@0/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisMinus;
   if (!TString("exp(-abs(@0)/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisSum;
-return 0 ;
+  return 0 ;
 } 
 
 

@@ -74,6 +74,7 @@ public:
 
   void fixCoefNormalization(const RooArgSet& refCoefNorm) ;
   void fixCoefRange(const char* rangeName) ;
+  
   virtual void resetErrorCounters(Int_t resetValue=10) ;
 
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
@@ -85,8 +86,8 @@ protected:
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
   virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
 
-  mutable RooSetProxy _refCoefNorm ;   //! Reference observable set for coefficient interpretation
-  mutable TNamed* _refCoefRangeName ;  //! Reference range name for coefficient interpreation
+  mutable RooSetProxy _refCoefNorm ;   // Reference observable set for coefficient interpretation
+  mutable TNamed* _refCoefRangeName ;  // Reference range name for coefficient interpreation
 
   Bool_t _projectCoefs ;         // If true coefficients need to be projected for use in evaluate()
   mutable Double_t* _coefCache ; //! Transiet cache with transformed values of coefficients
@@ -131,7 +132,7 @@ protected:
 
 private:
 
-  ClassDef(RooAddPdf,1) // PDF representing a sum of PDFs
+  ClassDef(RooAddPdf,2) // PDF representing a sum of PDFs
 };
 
 #endif

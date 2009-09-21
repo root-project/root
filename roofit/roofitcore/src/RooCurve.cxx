@@ -60,7 +60,7 @@ ClassImp(RooCurve)
 
 
 //_____________________________________________________________________________
-RooCurve::RooCurve() 
+RooCurve::RooCurve() : _showProgress(kFALSE)
 {
   // Default constructor
   initialize();
@@ -70,7 +70,8 @@ RooCurve::RooCurve()
 //_____________________________________________________________________________
 RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Double_t xhi, Int_t xbins,
 		   Double_t scaleFactor, const RooArgSet *normVars, Double_t prec, Double_t resolution,
-		   Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal) 
+		   Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal, 
+		   Bool_t showProg) : _showProgress(showProg)
 {
   // Create a 1-dim curve of the value of the specified real-valued expression
   // as a function of x. Use the optional precision parameter to control
@@ -79,6 +80,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
   // factor to rescale the expression after normalization.
   // If shiftToZero is set, the entire curve is shift down to make the lowest
   // point in of the curve go through zero.
+  
 
   // grab the function's name and title
   TString name(f.GetName());
@@ -116,6 +118,9 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
   Double_t prevYMax = getYAxisMax() ;
   list<Double_t>* hint = f.plotSamplingHint(x,xlo,xhi) ;
   addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint);
+  if (_showProgress) {
+    ccoutP(Plotting) << endl ;
+  }
   if (hint) {
     delete hint ;
   }
@@ -140,7 +145,8 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 //_____________________________________________________________________________
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 		   Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec, Double_t resolution,
-		   Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal) 
+		   Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal) :
+  _showProgress(kFALSE)
 {
   // Create a 1-dim curve of the value of the specified real-valued
   // expression as a function of x. Use the optional precision
@@ -167,7 +173,8 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 
 
 //_____________________________________________________________________________
-RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1, Double_t scale2) 
+RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1, Double_t scale2) :
+  _showProgress(kFALSE)
 {
   // Constructor of curve as sum of two other curves
   //
@@ -322,6 +329,10 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
     if (step==minPoints-1) xx-=1e-15 ;
 
     yval[step]= func(&xx);
+    if (_showProgress) {
+      ccoutP(Plotting) << "." ;
+      cout.flush() ;
+    }
 
     if (RooAbsReal::numEvalErrors()>0) {
       if (numee>=0) {
@@ -402,6 +413,10 @@ void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
   // calculate our value at the midpoint of this range
   Double_t xmid= 0.5*(x1+x2);
   Double_t ymid= func(&xmid);
+  if (_showProgress) {
+    ccoutP(Plotting) << "." ;
+    cout.flush() ;
+  }
 
   if (RooAbsReal::numEvalErrors()>0) {
     if (numee>=0) {
@@ -433,7 +448,7 @@ void RooCurve::addPoint(Double_t x, Double_t y)
 {
   // Add a point with the specified coordinates. Update our y-axis limits.
   
-  // cout << "RooCurve("<< GetName() << ") adding point at (" << x << "," << y << ")" << endl ;
+//   cout << "RooCurve("<< GetName() << ") adding point at (" << x << "," << y << ")" << endl ;
   Int_t next= GetN();
   SetPoint(next, x, y);
   updateYAxisLimits(y) ;
@@ -515,8 +530,7 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
   // was the result of a fit
 
   Int_t i,np = hist.GetN() ;
-  Double_t x,y,eyl,eyh ;
-  Double_t hbinw2 = hist.getNominalBinWidth()/2 ;
+  Double_t x,y,eyl,eyh,exl,exh ;
 
   // Find starting and ending bin of histogram based on range of RooCurve
   Double_t xstart,xstop ;
@@ -543,9 +557,11 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
     nbin++ ;
     eyl = hist.GetEYlow()[i] ;
     eyh = hist.GetEYhigh()[i] ;
+    exl = hist.GetEXlow()[i] ;
+    exh = hist.GetEXhigh()[i] ;
 
     // Integrate function over this bin
-    Double_t avg = average(x-hbinw2,x+hbinw2) ;
+    Double_t avg = average(x-exl,x+exh) ;
 
     // Add pull^2 to chisq
     if (y!=0) {      

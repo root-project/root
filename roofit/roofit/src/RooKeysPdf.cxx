@@ -157,14 +157,15 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
     }
   }
 
-  Double_t mean=x1/x0;
-  Double_t sigma=sqrt(x2/x0-mean*mean);
+  Double_t meanv=x1/x0;
+  Double_t sigmav=sqrt(x2/x0-meanv*meanv);
   Double_t h=TMath::Power(Double_t(4)/Double_t(3),0.2)*TMath::Power(_nEvents,-0.2)*_rho;
-  Double_t hmin=h*sigma*sqrt(2.)/10;
-  Double_t norm=h*sqrt(sigma)/(2.0*sqrt(3.0));
+  Double_t hmin=h*sigmav*sqrt(2.)/10;
+  Double_t norm=h*sqrt(sigmav)/(2.0*sqrt(3.0));
 
+  _weights=new Double_t[_nEvents];
   for(Int_t j=0;j<_nEvents;++j) {
-    _weights[j]=norm/sqrt(g(_dataPts[j],h*sigma));
+    _weights[j]=norm/sqrt(g(_dataPts[j],h*sigmav));
     if (_weights[j]<hmin) _weights[j]=hmin;
   }
   
@@ -234,9 +235,9 @@ Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
 
 
 //_____________________________________________________________________________
-Double_t RooKeysPdf::g(Double_t x,Double_t sigma) const {
+Double_t RooKeysPdf::g(Double_t x,Double_t sigmav) const {
   
-  Double_t c=Double_t(1)/(2*sigma*sigma);
+  Double_t c=Double_t(1)/(2*sigmav*sigmav);
 
   Double_t y=0;
   for (Int_t i=0;i<_nEvents;++i) {
@@ -245,5 +246,5 @@ Double_t RooKeysPdf::g(Double_t x,Double_t sigma) const {
   }
   
   static const Double_t sqrt2pi(sqrt(2*TMath::Pi()));  
-  return y/(sigma*sqrt2pi*_nEvents);
+  return y/(sigmav*sqrt2pi*_nEvents);
 }

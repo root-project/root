@@ -45,6 +45,7 @@ public:
   void defineMutex(const char* argName1, const char* argName2) ;
   void defineMutex(const char* argName1, const char* argName2, const char* argName3) ;
   void defineMutex(const char* argName1, const char* argName2, const char* argName3, const char* argName4) ;
+  void defineMutex(const char* argName1, const char* argName2, const char* argName3, const char* argName4, const char* argName5) ;
   void defineRequiredArgs(const char* argName1, const char* argName2=0,
 			  const char* argName3=0, const char* argName4=0,
 			  const char* argName5=0, const char* argName6=0,

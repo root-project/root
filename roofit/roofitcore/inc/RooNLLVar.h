@@ -55,6 +55,8 @@ public:
 
 protected:
 
+  virtual Bool_t processEmptyDataSets() const { return _extended ; }
+
   static RooArgSet _emptySet ; // Supports named argument constructor
 
   Bool_t _extended ;

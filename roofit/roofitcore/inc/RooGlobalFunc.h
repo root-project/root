@@ -85,6 +85,7 @@ RooCmdArg MoveToBack()  ;
 RooCmdArg VisualizeError(const RooDataSet& paramData, Double_t Z=1) ;
 RooCmdArg VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
 RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
+RooCmdArg ShowProgress() ;
 
 // RooAbsPdf::plotOn arguments
 RooCmdArg Normalization(Double_t scaleFactor, Int_t scaleType) ;
@@ -110,14 +111,17 @@ RooCmdArg Rescale(Double_t factor) ;
 RooCmdArg Weight(Double_t wgt) ;
 RooCmdArg Index(RooCategory& icat) ;
 RooCmdArg Import(const char* state, TH1& histo) ;
+RooCmdArg Import(const char* state, RooDataHist& dhist) ;
 RooCmdArg Import(TH1& histo) ;
 
 // RooDataSet::ctor arguments
 RooCmdArg WeightVar(const char* name) ;
 RooCmdArg WeightVar(const RooRealVar& arg) ;
 RooCmdArg Import(const char* state, RooDataSet& data) ;
+RooCmdArg Link(const char* state, RooDataSet& data) ;
 RooCmdArg Import(RooDataSet& data) ;
 RooCmdArg Import(TTree& tree) ;
+RooCmdArg ImportFromFile(const char* fname, const char* tname) ;
 RooCmdArg StoreError(const RooArgSet& aset) ; 
 RooCmdArg StoreAsymError(const RooArgSet& aset) ; 
 
@@ -136,9 +140,6 @@ RooCmdArg Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), cons
                  const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
 RooCmdArg Sibling(const RooAbsCollection& sibling) ;
 
-// RooAbsReal::fillHistogram arguments
-RooCmdArg IntegratedObservables(const RooArgSet& intObs) ;
-
 // RooAbsRealLValue::frame arguments
 RooCmdArg Title(const char* name) ;
 RooCmdArg Bins(Int_t nbin) ;
@@ -149,6 +150,8 @@ RooCmdArg AutoRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
 RooCmdArg AutoSymBinning(Int_t nbins=100, Double_t marginFactor=0.1) ; 
 RooCmdArg AutoBinning(Int_t nbins=100, Double_t marginFactor=0.1) ;
 
+// RooAbsReal::fillHistogram arguments
+RooCmdArg IntegratedObservables(const RooArgSet& intObs) ;
 
 // RooAbsData::reduce arguments
 RooCmdArg SelectVars(const RooArgSet& vars) ;
@@ -248,6 +251,7 @@ RooCmdArg Color(Color_t color) ;
 RooCmdArg RenameConflictNodes(const char* suffix) ;
 RooCmdArg RenameAllNodes(const char* suffix) ; 
 RooCmdArg RenameAllVariables(const char* suffix) ; 
+RooCmdArg RenameAllVariablesExcept(const char* suffix,const char* exceptionList) ; 
 RooCmdArg RenameVariable(const char* inputName, const char* outputName) ;
 RooCmdArg Rename(const char* suffix) ;
 RooCmdArg RecycleConflictNodes(Bool_t flag=kTRUE) ;

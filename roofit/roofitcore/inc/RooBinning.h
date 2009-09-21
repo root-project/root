@@ -21,6 +21,7 @@
 #include "RooDouble.h"
 #include "RooAbsBinning.h"
 #include "RooNumber.h"
+#include <set>
 class RooAbsPdf ;
 class RooRealVar ;
 
@@ -69,7 +70,6 @@ public:
   void addUniform(Int_t nBins, Double_t xlo, Double_t xhi) ;
   Bool_t removeBoundary(Double_t boundary) ;
 
-  TIterator* binIterator() const ;
   Bool_t hasBoundary(Double_t boundary) ;
   
 protected:
@@ -83,11 +83,10 @@ protected:
   Bool_t _ownBoundHi ;     // Does the upper bound coincide with a bin boundary
   Int_t _nbins ;           // Numer of bins
 
-  TList _boundaries ;        // List with boundaries
-  TIterator* _bIter ;        //! Iterator over boundaries
-  mutable Double_t* _array ; //! Array of boundaries
+  std::set<Double_t> _boundaries ;   // Boundaries
+  mutable Double_t* _array ;         //! Array of boundaries
 
-  ClassDef(RooBinning,1) // Generic binning specification
+  ClassDef(RooBinning,2) // Generic binning specification
 };
 
 #endif

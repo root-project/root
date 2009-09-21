@@ -39,8 +39,13 @@ public:
  
   // Constructors, assignment etc.
   RooFitResult(const char* name=0, const char* title=0) ;
-  RooFitResult(const RooFitResult& other) ;   				// added, FMV 08/13/03
-  virtual TObject* clone() const { return new RooFitResult(*this); }   	// added, FMV 08/13/03
+  RooFitResult(const RooFitResult& other) ;   			     
+  virtual TObject* Clone(const char* newname = 0) const { 
+    RooFitResult* r =  new RooFitResult(*this) ; 
+    if (newname && *newname) r->SetName(newname) ; 
+    return r ; 
+  }
+  virtual TObject* clone() const { return new RooFitResult(*this); }   
   virtual ~RooFitResult() ;
 
   static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList()) ;
@@ -113,7 +118,7 @@ public:
 
   
   const TMatrixDSym& covarianceMatrix() const ;
-  TMatrixDSym reducedCovarianceMatrix(const RooArgSet& params) const ;
+  TMatrixDSym reducedCovarianceMatrix(const RooArgList& params) const ;
   const TMatrixDSym& correlationMatrix() const ;
 
 
@@ -156,6 +161,7 @@ protected:
   inline void setNumInvalidNLL(Int_t val) { _numBadNLL=val ; }
   void fillCorrMatrix() ;
   void fillCorrMatrix(const std::vector<double>& globalCC, const TMatrixDSym& corrs, const TMatrixDSym& covs) ;
+  void fillLegacyCorrMatrix() const ;
 
   Double_t correlation(Int_t row, Int_t col) const;
   Double_t covariance(Int_t row, Int_t col) const;
@@ -168,16 +174,18 @@ protected:
   RooArgList* _constPars ;    // List of constant parameters
   RooArgList* _initPars ;     // List of floating parameters with initial values
   RooArgList* _finalPars ;    // List of floating parameters with final values
-  RooArgList* _globalCorr ;   // List of global correlation coefficients
-  TList       _corrMatrix ;   // Correlation matrix (list of RooArgLists)
+
+  mutable RooArgList* _globalCorr ;   //! List of global correlation coefficients
+  mutable TList       _corrMatrix ;   //! Correlation matrix (list of RooArgLists)
 
   mutable RooArgList *_randomPars; //! List of floating parameters with most recent random perturbation applied
   mutable TMatrixF* _Lt;            //! triangular matrix used for generate random perturbations
 
-  TMatrixDSym* _CM ;  //! Correlation matrix ;
-  TMatrixDSym* _VM ;  //! Covariance matrix ;
+  TMatrixDSym* _CM ;  // Correlation matrix 
+  TMatrixDSym* _VM ;  // Covariance matrix 
+  TVectorD* _GC ;     // Global correlation coefficients 
 
-  ClassDef(RooFitResult,1) // Container class for fit result
+  ClassDef(RooFitResult,4) // Container class for fit result
 };
 
 #endif

@@ -72,6 +72,7 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
   _nError = 0 ;
   _nWarn = 0 ;
   _useIntegrandLimits = kTRUE ;
+  _intName = "(none)" ;
 }
 
 
@@ -101,6 +102,7 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   _nError = 0 ;
   _nWarn = 0 ;
   checkLimits() ;
+  _intName = function.getName() ;
 } 
 
 
@@ -127,7 +129,8 @@ RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
   delete _integrator ;
   delete _func ;
   if (_nError>_nWarn) {
-    coutW(NumIntegration) << "RooAdaptiveIntegratorND::dtor(" << integrand()->getName() << ") WARNING: Number of suppressed warningings about integral evaluations where target precision was not reached is " << _nError-_nWarn << endl ;
+    coutW(NumIntegration) << "RooAdaptiveIntegratorND::dtor(" << _intName 
+			  << ") WARNING: Number of suppressed warningings about integral evaluations where target precision was not reached is " << _nError-_nWarn << endl ;
   }
 
 }

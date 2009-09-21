@@ -69,7 +69,8 @@ public:
   }
   Bool_t dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0, Bool_t valueOnly=kFALSE) const ;
   Bool_t dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=0, Bool_t valueOnly=kFALSE) const ;
-  Bool_t overlaps(const RooAbsArg& testArg) const ;
+  Bool_t overlaps(const RooAbsArg& testArg, Bool_t valueOnly=kFALSE) const ;
+  Bool_t hasClients() const { return _clientList.GetSize()>0 ? kTRUE : kFALSE ; }
   inline TIterator* clientIterator() const { 
     // Return iterator over all client RooAbsArgs
     return _clientList.MakeIterator() ; 
@@ -142,21 +143,23 @@ public:
     return kFALSE; 
   }
 
+  void addParameters(RooArgSet& params, const RooArgSet* nset=0, Bool_t stripDisconnected=kTRUE)  const ; 
+
   // Parameter & observable interpretation of servers
   friend class RooProdPdf ;
   friend class RooAddPdf ;
   friend class RooAddPdfOrig ;
-  RooArgSet* getVariables() const ;
-  RooArgSet* getParameters(const RooAbsData* data) const ;
-  RooArgSet* getParameters(const RooAbsData& data) const { 
+  RooArgSet* getVariables(Bool_t stripDisconnected=kTRUE) const ;
+  RooArgSet* getParameters(const RooAbsData* data, Bool_t stripDisconnected=kTRUE) const ;
+  RooArgSet* getParameters(const RooAbsData& data, Bool_t stripDisconnected=kTRUE) const { 
     // Return the parameters of this p.d.f when used in conjuction with dataset 'data'
-    return getParameters(&data) ; 
+    return getParameters(&data,stripDisconnected) ; 
   }
-  RooArgSet* getParameters(const RooArgSet& set) const { 
+  RooArgSet* getParameters(const RooArgSet& set, Bool_t stripDisconnected=kTRUE) const { 
     // Return the parameters of the p.d.f given the provided set of observables
-    return getParameters(&set) ; 
+    return getParameters(&set,stripDisconnected) ; 
   }
-  virtual RooArgSet* getParameters(const RooArgSet* depList) const ;
+  virtual RooArgSet* getParameters(const RooArgSet* depList, Bool_t stripDisconnected=kTRUE) const ;
   RooArgSet* getObservables(const RooArgSet& set, Bool_t valueOnly=kTRUE) const { 
     // Return the observables of _this_ pdf given a set of observables
     return getObservables(&set,valueOnly) ; 
@@ -284,6 +287,7 @@ public:
   void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
   void graphVizTree(ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
 
+  void printComponentTree(const char* indent="",const char* namePat=0) ;
   void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;
   void printCompactTree(ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
   virtual void printCompactTreeHook(ostream& os, const char *ind="") ;
@@ -337,7 +341,7 @@ public:
 
   virtual Bool_t isValid() const ;
 
-  virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
+  virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, Bool_t /*stripDisconnected*/) const {} ;
   virtual void getObservablesHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
 
   // Dirty state modifiers
@@ -381,6 +385,7 @@ public:
   RooAbsArg *findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const;
 
   RooExpensiveObjectCache& expensiveObjectCache() const ;
+  void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
 
  protected:
 
@@ -408,6 +413,7 @@ public:
   void printAttribList(ostream& os) const;
 
   // Hooks for RooTreeData interface
+  friend class RooCompositeDataStore ;
   friend class RooTreeDataStore ;
   friend class RooTreeData ;
   friend class RooDataSet ;
@@ -446,7 +452,6 @@ public:
 
   mutable Bool_t _prohibitServerRedirect ; //! Prohibit server redirects -- Debugging tool
 
-  void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
   mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
   
   ClassDef(RooAbsArg,4) // Abstract variable

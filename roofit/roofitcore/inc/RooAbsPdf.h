@@ -59,6 +59,33 @@ public:
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype, Int_t nEvents= 0,
 		       Bool_t verbose=kFALSE, Bool_t randProtoOrder=kFALSE, Bool_t resampleProto=kFALSE) const;
 
+
+  class GenSpec {
+  public:
+    ~GenSpec() ;
+  private:
+    GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars, RooDataSet* protoData, Int_t nGen, Bool_t extended, 
+	    Bool_t randProto, Bool_t resampleProto, TString dsetName) ;
+    GenSpec(const GenSpec& other) ;
+
+    friend class RooAbsPdf ;
+    RooAbsGenContext* _genContext ;
+    RooArgSet _whatVars ;
+    RooDataSet* _protoData ;
+    Int_t _nGen ;
+    Bool_t _extended ;
+    Bool_t _randProto ;
+    Bool_t _resampleProto ;
+    TString _dsetName ;    
+  } ;
+
+  GenSpec* prepareMultiGen(const RooArgSet &whatVars,  
+			   const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
+			   const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+			   const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+  RooDataSet* generate(GenSpec&) const ;
+  
+
   RooDataHist *generateBinned(const RooArgSet &whatVars, Int_t nEvents, const RooCmdArg& arg1,
 			      const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
 			      const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) ;
@@ -130,11 +157,11 @@ public:
 
 
   // Constraint management
-  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, const RooArgSet& /*constrainedParams*/) const { 
+  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, const RooArgSet& /*constrainedParams*/, Bool_t /*stripDisconnected*/) const { 
     // Interface to retrieve constraint terms on this pdf. Default implementation returns null
     return 0 ; 
   }
-  virtual RooArgSet* getAllConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const ;
+  virtual RooArgSet* getAllConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams, Bool_t stripDisconnected=kTRUE) const ;
   
   // Project p.d.f into lower dimensional p.d.f
   virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;  
@@ -216,6 +243,9 @@ protected:
 public:
   virtual const RooAbsReal* getNormObj(const RooArgSet* set, const RooArgSet* iset, const TNamed* rangeName=0) const ;
 protected:
+
+  RooDataSet *generate(RooAbsGenContext& context, const RooArgSet& whatVars, const RooDataSet* prototype,
+		       Int_t nEvents, Bool_t verbose, Bool_t randProtoOrder, Bool_t resampleProto) const ;
 
   // Implementation version
   virtual RooPlot* paramOn(RooPlot* frame, const RooArgSet& params, Bool_t showConstants=kFALSE,

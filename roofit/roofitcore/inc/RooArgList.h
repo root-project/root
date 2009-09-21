@@ -78,6 +78,10 @@ public:
     // Returns index of given arg, or -1 if arg is not in list
     return _list.IndexOf(arg) ; 
   }
+  inline Int_t index(const char* name) const { 
+    // Returns index of given arg, or -1 if arg is not in list
+    return _list.IndexOf(name) ; 
+  }
   inline RooAbsArg* at(Int_t idx) const { 
     // Return object at given index, or 0 if index is out of range
     return (RooAbsArg*) _list.At(idx) ; 

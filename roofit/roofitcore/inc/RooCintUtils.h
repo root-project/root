@@ -26,6 +26,8 @@ namespace RooCintUtils {
   Bool_t isValidEnumValue(const char* typeName, const char* value) ;
   const char* functionName(void* func) ;
   Bool_t matchFuncPtrArgs(void* func, const char* args) ;
+  Bool_t isTypeDef(const char* trueName, const char* aliasName) ;
+  std::string trueName(const char* typeDefName) ;
   
 };
 

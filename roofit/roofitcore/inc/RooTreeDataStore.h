@@ -80,6 +80,7 @@ public:
   
   // Tree access
   TTree& tree() { return *_tree ; }
+  virtual const TTree* tree() const { return _tree ; }  
 
   // Forwarded from TTree
   Stat_t GetEntries() const;
@@ -87,8 +88,11 @@ public:
   Int_t Fill();
   Int_t GetEntry(Int_t entry = 0, Int_t getall = 0);
 
+  void	Draw(Option_t* option = "") ;
+
   // Constant term  optimizer interface
-  virtual void cacheArgs(RooArgSet& varSet, const RooArgSet* nset=0) ;
+  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0) ;
+  virtual const RooAbsArg* cacheOwner() { return _cacheOwner ; }
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
   virtual void resetCache() ;
 
@@ -100,7 +104,7 @@ public:
  protected:
 
   void initialize();
-  void initCache(const RooArgSet& cachedVars) ;
+  void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
 
   // TTree Branch buffer size control
   void setBranchBufferSize(Int_t size) { _defTreeBufSize = size ; }
@@ -111,6 +115,7 @@ public:
   void createTree(const char* name, const char* title) ; 
   TTree *_tree ;           // TTree holding the data points
   TTree *_cacheTree ;      //! TTree holding the cached function values
+  const RooAbsArg* _cacheOwner ; //! Object owning cache contents
   mutable Bool_t _defCtor ;//! Was object constructed with default ctor?
 
 

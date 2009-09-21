@@ -262,10 +262,10 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
     } else {
       // Symmetric mode: range is centered at mean of distribution with enough width to include
       // both lowest and highest point with margin
-      Double_t mean = rangeData->moment((RooRealVar&)*this,1) ;
-      Double_t delta = ((xmax-mean)>(mean-xmin)?(xmax-mean):(mean-xmin))*(1+pc.getDouble("rangeMargin")) ;
-      xmin = mean-delta ;
-      xmax = mean+delta ;
+      Double_t dmean = rangeData->moment((RooRealVar&)*this,1) ;
+      Double_t ddelta = ((xmax-dmean)>(dmean-xmin)?(xmax-dmean):(dmean-xmin))*(1+pc.getDouble("rangeMargin")) ;
+      xmin = dmean-ddelta ;
+      xmax = dmean+ddelta ;
       if (xmin<getMin()) xmin = getMin() ;
       if (xmin>getMax()) xmax = getMax() ;
     }
@@ -593,12 +593,12 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     binning[0] = static_cast<RooAbsBinning*>(pc.getObject("xbinning")) ;
   } else if (pc.hasProcessed("BinningName")) {
     binning[0] = &getBinning(pc.getString("xbinningName",0,kTRUE)) ;
-  } else if (pc.hasProcessed("BinningSpec")) {
+  } else if (pc.hasProcessed("BinningSpec")) { 
     Double_t xlo = pc.getDouble("xlo") ;
     Double_t xhi = pc.getDouble("xhi") ;
     binning[0] = new RooUniformBinning((xlo==xhi)?getMin():xlo,(xlo==xhi)?getMax():xhi,pc.getInt("nxbins")) ;
     ownBinning[0] = kTRUE ;
-  }  else {
+  } else { 
     binning[0] = &getBinning() ;
   }
 
@@ -916,19 +916,37 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   TH1 *histogram = 0;
   switch(dim) {
   case 1:
-    histogram= new TH1F(histName.Data(), histTitle.Data(),
-			bins[0]->numBins(),bins[0]->array());
+    if (bins[0]->isUniform()) {
+      histogram= new TH1F(histName.Data(), histTitle.Data(),
+			  bins[0]->numBins(),bins[0]->lowBound(),bins[0]->highBound());
+    } else {
+      histogram= new TH1F(histName.Data(), histTitle.Data(),
+			  bins[0]->numBins(),bins[0]->array());
+    }
     break;
   case 2:
-    histogram= new TH2F(histName.Data(), histTitle.Data(),
-			bins[0]->numBins(),bins[0]->array(),
-			bins[1]->numBins(),bins[1]->array());
+    if (bins[0]->isUniform() && bins[1]->isUniform()) {
+      histogram= new TH2F(histName.Data(), histTitle.Data(),
+			  bins[0]->numBins(),bins[0]->lowBound(),bins[0]->highBound(),
+			  bins[1]->numBins(),bins[1]->lowBound(),bins[1]->highBound());
+    } else {
+      histogram= new TH2F(histName.Data(), histTitle.Data(),
+			  bins[0]->numBins(),bins[0]->array(),
+			  bins[1]->numBins(),bins[1]->array());
+    }
     break;
   case 3:
-    histogram= new TH3F(histName.Data(), histTitle.Data(),
-			bins[0]->numBins(),bins[0]->array(),
-			bins[1]->numBins(),bins[1]->array(),
-			bins[2]->numBins(),bins[2]->array());
+    if (bins[0]->isUniform() && bins[1]->isUniform() && bins[2]->isUniform()) {
+      histogram= new TH3F(histName.Data(), histTitle.Data(),
+			  bins[0]->numBins(),bins[0]->lowBound(),bins[0]->highBound(),
+			  bins[1]->numBins(),bins[1]->lowBound(),bins[1]->highBound(),
+			  bins[2]->numBins(),bins[2]->lowBound(),bins[2]->highBound()) ;
+    } else {
+      histogram= new TH3F(histName.Data(), histTitle.Data(),
+			  bins[0]->numBins(),bins[0]->array(),
+			  bins[1]->numBins(),bins[1]->array(),
+			  bins[2]->numBins(),bins[2]->array()) ;
+    }
     break;
   default:
     assert(0);

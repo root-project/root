@@ -59,6 +59,7 @@
 #include "RooNLLVar.h"
 #include "RooRealSumPdf.h"
 #include "RooConstVar.h"
+#include "RooDerivative.h"
 #include "TROOT.h"
 
 using namespace RooFit ;
@@ -183,12 +184,6 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
   // can be of the form 'name1,name2,name3' or of the form 'name1=id1,name2=id2,name3=id3'
 
 
-  // First check if variable already exists
-  if (_ws->cat(name)) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createFactory() ERROR: category with name '" << name << "' already exists" << endl ;
-    logError() ;
-    return 0 ;
-  }
 
   // Create variable
   RooCategory cat(name,name) ;
@@ -213,6 +208,8 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
     }
     delete[] tmp ;
   }
+
+  cat.setStringAttribute("factory_tag",Form("%s[%s]",name,stateNameList)) ;
 
   // Put in workspace
   if (_ws->import(cat,Silence())) logError() ;  
@@ -362,21 +359,42 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
       } else if ((*ti)=="Double_t") {
 	RooFactoryWSTool::as_DOUBLE(i) ;
 	cintExpr += Form(",RooFactoryWSTool::as_DOUBLE(%d)",i) ;	
-      } else {
-	if (RooCintUtils::isEnum(ti->c_str())) {	  	  
-	  string qualvalue ;
-	  if (_args[i].find(Form("::",className)) != string::npos) {		    
-	    qualvalue = _args[i].c_str() ;
-	  } else {	
-	    qualvalue =  Form("%s::%s",className,_args[i].c_str()) ;	    
-	  }
-	  if (RooCintUtils::isValidEnumValue(ti->c_str(),qualvalue.c_str())) {
-	    cintExpr += Form(",(%s)%s",ti->c_str(),qualvalue.c_str()) ;
-	  } else {
-	    throw string(Form("Supplied argument %s does not represent a valid state of enum %s",_args[i].c_str(),ti->c_str())) ;
-	  }
+      } else if (RooCintUtils::isEnum(ti->c_str())) {	  	  
+	string qualvalue ;
+	if (_args[i].find(Form("::",className)) != string::npos) {		    
+	  qualvalue = _args[i].c_str() ;
+	} else {	
+	  qualvalue =  Form("%s::%s",className,_args[i].c_str()) ;	    
+	}
+	if (RooCintUtils::isValidEnumValue(ti->c_str(),qualvalue.c_str())) {
+	  cintExpr += Form(",(%s)%s",ti->c_str(),qualvalue.c_str()) ;
 	} else {
-	  throw string(Form("Required argument of type %s that is not interfaced to factory",ti->c_str())) ;
+	  throw string(Form("Supplied argument %s does not represent a valid state of enum %s",_args[i].c_str(),ti->c_str())) ;
+	  }
+      } else {
+	// Check if generic object store has argument of given name and type
+	TObject& obj = RooFactoryWSTool::as_OBJ(i) ;
+
+	// Strip argument type to bare type (i.e. const X& -> X)
+	string btype ;
+	if (ti->find("const ")==0) {
+	  btype = ti->c_str()+6 ;
+	} else {
+	  btype = *ti ;
+	}
+	if (btype.find("&")) {
+	  btype.erase(btype.size()-1,btype.size()) ;
+	}
+
+	// If btype if a typedef, substitute it by the true type name
+	btype = RooCintUtils::trueName(btype.c_str()) ;
+
+	cout << "btype = " << btype << endl ;
+	
+	if (obj.InheritsFrom(btype.c_str())) {
+	  cintExpr += Form(",(%s&)RooFactoryWSTool::as_OBJ(%d)",ti->c_str(),i) ;
+	} else {
+	  throw string(Form("Required argument with name %s of type '%s' is not in the workspace",_args[i].c_str(),ti->c_str())) ;
 	}
       }
     }
@@ -393,6 +411,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   RooAbsArg* arg = (RooAbsArg*) gROOT->ProcessLineFast(cintExpr.c_str()) ;
 
   if (arg) {
+    arg->setStringAttribute("factory_tag",Form("%s::%s(%s)",className,objName,varList)) ;
     if (_ws->import(*arg,Silence())) logError() ;
     RooAbsArg* ret = _ws->arg(objName) ;
     delete arg ;
@@ -547,6 +566,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
   
   if (pdf) {
     if (_ws->import(*pdf,Silence())) logError() ;
+    delete pdf ;
     return (RooProdPdf*) _ws->pdf(objName) ;
   } else {
     return 0 ;
@@ -648,6 +668,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
   }
 
   if (_ws->import(*sum,Silence())) logError() ;
+  delete sum ;
   return (RooAddition*) _ws->pdf(objName) ;
   
 }
@@ -753,7 +774,7 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
   //                                                                             using the specified master index to map prototype p.d.f.s to master states
   // Interface to RooCustomizer
   //
-  // CUSTCLONE::name( orig, $Replace(origNode,substNode), ... ]               -- Create a clone of input object orig, with the specified replacements operations executed
+  // EDIT::name( orig, substNode=origNode), ... ]                             -- Create a clone of input object orig, with the specified replacements operations executed
   //
   //
   // Interface to RooClassFactory
@@ -857,7 +878,8 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
   // e.g. '$MetaArg(RooGaussian::g[x,m,s],blah)' --> '$MetaArg(g,blah)'
 
   // Allocate and fill work buffer
-  char* buf = new char[strlen(token)+1] ; 
+  char* buf_base = new char[strlen(token)+1] ;   
+  char* buf = buf_base ;
   strcpy(buf,token) ;
   char* p = buf ;
 
@@ -887,8 +909,10 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
   if (*buf) {
     singleExpr.push_back(buf) ;
   }
-  if (singleExpr.size()==1) {
-    return processSingleExpression(token) ;
+  if (singleExpr.size()==1) {    
+    string ret = processSingleExpression(token) ;
+    delete[] buf_base ;
+    return ret ;
   }
 
   string ret ;
@@ -900,6 +924,7 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
     }
   }
 
+  delete[] buf_base ;
   return ret ;
 }
 
@@ -939,7 +964,11 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
   char* p = strtok_r(0,"",&save) ;
   
   // Return here if token is fundamental
-  if (!p) return arg ;
+  if (!p) {
+    delete[] buf ;
+    return arg ;
+  }
+    
 
   char* tok = p ;
   Int_t blevel=0 ;
@@ -1175,6 +1204,23 @@ TClass* RooFactoryWSTool::resolveClassName(const char* className)
 
 
 
+//_____________________________________________________________________________
+string RooFactoryWSTool::varTag(string& func, vector<string>& args)
+{
+  string ret ;
+  ret += func ;
+  ret += "[" ;
+  for (vector<string>::iterator iter = args.begin() ; iter!=args.end() ; ++iter) {
+    if (iter!=args.begin()) {
+      ret += "," ;
+    }
+    ret += *iter ;
+  }
+  ret += "]" ;
+  return ret ;
+}
+
+
 
 
 //_____________________________________________________________________________
@@ -1203,7 +1249,10 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
       Double_t xinit = atof((ai)->c_str()) ;
       cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << endl ;
       RooRealVar tmp(func.c_str(),func.c_str(),xinit) ;
-      if (_ws->import(tmp,Silence())) logError() ;
+      tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
+      if (_ws->import(tmp,Silence())) {
+	logError() ;
+      }
 
     } else if (args.size()==2) {
 
@@ -1212,7 +1261,10 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
       Double_t xhi = atof(ai->c_str()) ;
       cxcoutD(ObjectHandling) << "CREATE variable " << func << " xlo = " << xlo << " xhi = " << xhi << endl ;
       RooRealVar tmp(func.c_str(),func.c_str(),xlo,xhi) ;
-      if (_ws->import(tmp,Silence())) logError() ;
+      tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
+      if (_ws->import(tmp,Silence())) {
+	logError() ;
+      }
 
     } else if (args.size()==3) {
 
@@ -1222,7 +1274,10 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
       Double_t xhi = atof(ai->c_str()) ;
       cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << " xlo = " << xlo << " xhi = " << xhi << endl ;
       RooRealVar tmp(func.c_str(),func.c_str(),xinit,xlo,xhi) ;
-      if (_ws->import(tmp,Silence())) logError() ;
+      tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
+      if (_ws->import(tmp,Silence())) {
+	logError() ;
+      }
     }
   } else {
 
@@ -1235,6 +1290,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
       allStates += *ai ;
     }
     createCategory(func.c_str(),allStates.c_str()) ;
+
   }
   return func ;
 }
@@ -1675,6 +1731,18 @@ RooDataSet& RooFactoryWSTool::asDSET(const char* arg)
 
 
 //_____________________________________________________________________________
+TObject& RooFactoryWSTool::asOBJ(const char* arg)
+{
+  TObject* obj = ws().obj(arg) ;
+  if (!obj) {
+    throw string(Form("Object named %s not found",arg)) ;    
+  }
+  return *obj ;
+}
+
+
+
+//_____________________________________________________________________________
 const char* RooFactoryWSTool::asSTRING(const char* arg) 
 {
   // CINT constructor interface, return constructor string argument #idx as const char* 
@@ -1867,7 +1935,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
   } else if (cl=="dataobs") {
 
     // dataobs::name[dset,func]
-    RooAbsReal* funcClone = static_cast<RooAbsReal*>(ft.asFUNC(pargv[1].c_str()).clone(instName)) ;
+    RooAbsArg* funcClone = static_cast<RooAbsArg*>(ft.asARG(pargv[1].c_str()).clone(instName)) ;
     RooAbsArg* arg = ft.asDSET(pargv[0].c_str()).addColumn(*funcClone) ;
     if (!ft.ws().fundArg(arg->GetName())) {
       if (ft.ws().import(*arg,Silence())) ft.logError() ;

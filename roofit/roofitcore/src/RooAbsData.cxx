@@ -47,6 +47,7 @@
 #include "RooCurve.h"
 #include "RooHist.h"
 
+#include "TMatrixDSym.h"
 #include "TPaveText.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -193,9 +194,10 @@ const RooArgSet* RooAbsData::get(Int_t index) const
 
 
 //_____________________________________________________________________________
-void RooAbsData::cacheArgs(RooArgSet& varSet, const RooArgSet* nset) 
+void RooAbsData::cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset) 
 {
-  _dstore->cacheArgs(varSet,nset) ;
+  // Internal method -- Cache given set of functions with data
+  _dstore->cacheArgs(cacheOwner,varSet,nset) ;
 }
 
 
@@ -205,8 +207,22 @@ void RooAbsData::cacheArgs(RooArgSet& varSet, const RooArgSet* nset)
 //_____________________________________________________________________________
 void RooAbsData::resetCache() 
 {
+  // Internal method -- Remove cached function values
   _dstore->resetCache() ;
+  _cachedVars.removeAll() ;
 }
+
+
+
+//_____________________________________________________________________________
+void RooAbsData::attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) 
+{
+  // Internal method -- Attach dataset copied with cache contents to copied instances of functions
+  _dstore->attachCache(newOwner, cachedVars) ;
+}
+
+
+
 
 
 
@@ -216,15 +232,6 @@ void RooAbsData::resetCache()
 void RooAbsData::setArgStatus(const RooArgSet& set, Bool_t active) 
 {
   _dstore->setArgStatus(set,active) ;
-}
-
-
-
-
-//_____________________________________________________________________________
-void RooAbsData::initCache(const RooArgSet& cachedVars) 
-{
-  _dstore->initCache(cachedVars) ;
 }
 
 
@@ -790,8 +797,8 @@ Double_t RooAbsData::moment(RooRealVar &var, Double_t order, const char* cutSpec
   // the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
   // and/or are inside the range named 'cutRange'
 
-  Double_t offset = order>0 ? moment(var,0,cutSpec,cutRange) : 0 ;
-  return moment(var,offset,order,cutSpec,cutRange) ;
+  Double_t offset = order>1 ? moment(var,1,cutSpec,cutRange) : 0 ;
+  return moment(var,order,offset,cutSpec,cutRange) ;
 
 }
 
@@ -844,6 +851,179 @@ Double_t RooAbsData::moment(RooRealVar &var, Double_t order, Double_t offset, co
     sum+= weight() * TMath::Power(varPtr->getVal() - offset,order);
   }
   return sum/sumEntries();
+}
+
+
+
+
+//_____________________________________________________________________________
+RooRealVar* RooAbsData::dataRealVar(const char* methodname, RooRealVar& extVar) const 
+{
+  // Internal method to check if given RooRealVar maps to a RooRealVar in this dataset
+
+  // Lookup variable in dataset
+  RooRealVar *xdata = (RooRealVar*) _vars.find(extVar.GetName());
+  if(!xdata) {
+    coutE(InputArguments) << "RooDataSet::" << methodname << "(" << GetName() << ") ERROR: variable : " << extVar.GetName() << " is not in data" << endl ;
+    return 0;
+  }
+  // Check if found variable is of type RooRealVar
+  if (!dynamic_cast<RooRealVar*>(xdata)) {
+    coutE(InputArguments) << "RooDataSet::" << methodname << "(" << GetName() << ") ERROR: variable : " << extVar.GetName() << " is not of type RooRealVar in data" << endl ;
+    return 0;
+  }
+  return xdata;
+}
+
+
+//_____________________________________________________________________________
+Double_t RooAbsData::corrcov(RooRealVar &x,RooRealVar &y, const char* cutSpec, const char* cutRange, Bool_t corr) const 
+{
+  // Internal method to calculate single correlation and covariance elements
+
+  // Lookup variable in dataset
+  RooRealVar *xdata = dataRealVar(corr?"correlation":"covariance",x) ;
+  RooRealVar *ydata = dataRealVar(corr?"correlation":"covariance",y) ;
+  if (!xdata||!ydata) return 0 ;
+
+  // Check if dataset is not empty
+  if(sumEntries() == 0.) {
+    coutW(InputArguments) << "RooDataSet::" << (corr?"correlation":"covariance") << "(" << GetName() << ") WARNING: empty dataset, returning zero" << endl ;
+    return 0;
+  }
+
+  // Setup RooFormulaVar for cutSpec if it is present
+  RooFormula* select = cutSpec ? new RooFormula("select",cutSpec,*get()) : 0 ;
+
+  // Calculate requested moment
+  Double_t xysum(0),xsum(0),ysum(0),x2sum(0),y2sum(0);
+  const RooArgSet* vars ;
+  for(Int_t index= 0; index < numEntries(); index++) {
+    vars = get(index) ;
+    if (select && select->eval()==0) continue ;
+    if (cutRange && vars->allInRange(cutRange)) continue ;
+
+    xysum += weight()*xdata->getVal()*ydata->getVal() ;
+    xsum += weight()*xdata->getVal() ;
+    ysum += weight()*ydata->getVal() ;
+    if (corr) {
+      x2sum += weight()*xdata->getVal()*xdata->getVal() ;
+      y2sum += weight()*ydata->getVal()*ydata->getVal() ;
+    }
+  }
+
+  // Normalize entries
+  xysum/=sumEntries() ;
+  xsum/=sumEntries() ;
+  ysum/=sumEntries() ;
+  if (corr) {
+    x2sum/=sumEntries() ;
+    y2sum/=sumEntries() ;
+  }
+
+  // Cleanup
+  if (select) delete select ;
+
+  // Return covariance or correlation as requested
+  if (corr) {
+    return (xysum-xsum*ysum)/(sqrt(x2sum-(xsum*xsum))*sqrt(y2sum-(ysum*ysum))) ;
+  } else {
+    return (xysum-xsum*ysum);
+  }
+}
+
+
+
+//_____________________________________________________________________________
+TMatrixDSym* RooAbsData::corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, Bool_t corr) const 
+{
+  // Return covariance matrix from data for given list of observables
+
+  RooArgList varList ;
+  TIterator* iter = vars.createIterator() ;
+  RooRealVar* var ;
+  while((var=(RooRealVar*)iter->Next())) {
+    RooRealVar* datavar = dataRealVar("covarianceMatrix",*var) ;
+    if (!datavar) {
+      delete iter ;
+      return 0 ;
+    } 
+    varList.add(*datavar) ;
+  }
+  delete iter ;
+
+
+  // Check if dataset is not empty
+  if(sumEntries() == 0.) {
+    coutW(InputArguments) << "RooDataSet::covariance(" << GetName() << ") WARNING: empty dataset, returning zero" << endl ;
+    return 0;
+  }
+
+  // Setup RooFormulaVar for cutSpec if it is present
+  RooFormula* select = cutSpec ? new RooFormula("select",cutSpec,*get()) : 0 ;
+
+  iter = varList.createIterator() ;
+  TIterator* iter2 = varList.createIterator() ;
+
+  TMatrixDSym xysum(varList.getSize()) ;
+  vector<double> xsum(varList.getSize()) ;
+  vector<double> x2sum(varList.getSize()) ;
+
+  // Calculate <x_i> and <x_i y_j>
+  for(Int_t index= 0; index < numEntries(); index++) {
+    const RooArgSet* dvars = get(index) ;
+    if (select && select->eval()==0) continue ;
+    if (cutRange && dvars->allInRange(cutRange)) continue ;
+
+    RooRealVar* varx, *vary ;
+    iter->Reset() ;
+    Int_t ix=0,iy=0 ;
+    while((varx=(RooRealVar*)iter->Next())) {
+      xsum[ix] += weight()*varx->getVal() ;
+      if (corr) {
+	x2sum[ix] += weight()*varx->getVal()*varx->getVal() ;
+      }	
+
+      *iter2=*iter ; iy=ix ;
+      vary=varx ;
+      while(vary) {
+	xysum(ix,iy) += weight()*varx->getVal()*vary->getVal() ;
+	xysum(iy,ix) = xysum(ix,iy) ;
+	iy++ ;
+	vary=(RooRealVar*)iter2->Next() ;
+      }
+      ix++ ;
+    }
+    
+  }
+
+  // Normalize sums 
+  for (Int_t ix=0 ; ix<varList.getSize() ; ix++) {
+    xsum[ix] /= sumEntries() ;
+    if (corr) {
+      x2sum[ix] /= sumEntries() ;
+    }
+    for (Int_t iy=0 ; iy<varList.getSize() ; iy++) {      
+      xysum(ix,iy) /= sumEntries() ;
+    }
+  }    
+
+  // Calculate covariance matrix
+  TMatrixDSym* C = new TMatrixDSym(varList.getSize()) ;
+  for (Int_t ix=0 ; ix<varList.getSize() ; ix++) {
+    for (Int_t iy=0 ; iy<varList.getSize() ; iy++) {      
+      (*C)(ix,iy) = xysum(ix,iy)-xsum[ix]*xsum[iy] ;
+      if (corr) {
+	(*C)(ix,iy) /= sqrt((x2sum[ix]-(xsum[ix]*xsum[ix]))*(x2sum[iy]-(xsum[iy]*xsum[iy]))) ;
+      }
+    }    
+  }
+
+  if (select) delete select ;
+  delete iter ;
+  delete iter2 ;
+
+  return C ;
 }
 
 
@@ -911,7 +1091,7 @@ RooRealVar* RooAbsData::rmsVar(RooRealVar &var, const char* cutSpec, const char*
   rms->setPlotLabel(label);
 
   // Fill in this variable's value and error
-  Double_t meanVal(moment(var,1)) ;
+  Double_t meanVal(moment(var,1,0,cutSpec,cutRange)) ;
   Double_t N(sumEntries());
   Double_t rmsVal= sqrt(moment(var,2,meanVal,cutSpec,cutRange)*N/(N-1));
   rms->setVal(rmsVal) ;
@@ -1253,14 +1433,14 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
 
 
 //_____________________________________________________________________________
-TList* RooAbsData::split(const RooAbsCategory& splitCat) const
+TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataSets) const
 {
   // Split dataset into subsets based on states of given splitCat in this dataset.
   // A TList of RooDataSets is returned in which each RooDataSet is named
   // after the state name of splitCat of which it contains the dataset subset.
   // The observables splitCat itself is no longer present in the sub datasets.
-  // This method only creates datasets for states which have at least one entry
-  // The caller takes ownership of the returned list and its contents
+  // If createEmptyDataSets is kFALSE (default) this method only creates datasets for states 
+  // which have at least one entry The caller takes ownership of the returned list and its contents
 
   // Sanity check
   if (!splitCat.dependsOn(*get())) {
@@ -1302,6 +1482,17 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat) const
   } else {
     subsetVars.remove(splitCat,kTRUE,kTRUE) ;
   }
+
+  // If createEmptyDataSets is true, prepopulate with empty sets corresponding to all states
+  if (createEmptyDataSets) {
+    TIterator* stateIter = cloneCat->typeIterator() ;
+    RooCatType* state ;
+    while ((state=(RooCatType*)stateIter->Next())) {
+      RooAbsData* subset = emptyClone(state->GetName(),state->GetName(),&subsetVars) ;
+      dsetList->Add((RooAbsArg*)subset) ;    
+    }
+  }
+
   
   // Loop over dataset and copy event to matching subset
   Int_t i ;
@@ -1446,13 +1637,13 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   if (o.etype == Auto) {
     o.etype = isNonPoissonWeighted() ? SumW2 : Poisson ;    
     if (o.etype == SumW2) {
-      coutI(InputArguments) << "RooTreeData::plotOn(" << GetName() 
+      coutI(InputArguments) << "RooAbsData::plotOn(" << GetName() 
 			    << ") INFO: dataset has non-integer weights, auto-selecting SumW2 errors instead of Poisson errors" << endl ;
     }
   }
   
   if (o.addToHistName && !frame->findObject(o.addToHistName,RooHist::Class())) {
-    coutE(InputArguments) << "RooTreeData::plotOn(" << GetName() << ") cannot find existing histogram " << o.addToHistName 
+    coutE(InputArguments) << "RooAbsData::plotOn(" << GetName() << ") cannot find existing histogram " << o.addToHistName 
 			  << " to add to in RooPlot" << endl ;
     return frame ;
   }
@@ -1521,7 +1712,7 @@ RooPlot *RooAbsData::plotOn(RooPlot *frame, PlotOpt o) const
   TString histName(GetName());
   histName.Append("_plot");
   TH1F *hist ;
-  if (o.bins) {
+    if (o.bins) {
     hist= static_cast<TH1F*>(var->createHistogram(histName.Data(), RooFit::AxisLabel("Events"), RooFit::Binning(*o.bins))) ;
   } else {
     hist= var->createHistogram(histName.Data(), "Events", 
@@ -1682,7 +1873,7 @@ RooPlot* RooAbsData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asym
   }
 
   // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.xErrorSize,kFALSE,o.scaleFactor);
+  RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.etype,o.xErrorSize,kFALSE,o.scaleFactor);
   graph->setYAxisLabel(Form("Asymmetry in %s",asymCat.GetName())) ;
 
   // initialize the frame's normalization setup, if necessary
@@ -1778,7 +1969,7 @@ RooPlot* RooAbsData::plotEffOn(RooPlot* frame, const RooAbsCategoryLValue& effCa
   }
 
   // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.xErrorSize,kTRUE);
+  RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.etype,o.xErrorSize,kTRUE);
   graph->setYAxisLabel(Form("Efficiency of %s=%s",effCat.GetName(),effCat.lookupType(1)->GetName())) ;
 
   // initialize the frame's normalization setup, if necessary
@@ -2040,4 +2231,27 @@ Bool_t RooAbsData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
 void RooAbsData::checkInit() const
 { 
   _dstore->checkInit() ; 
+}
+
+
+//_____________________________________________________________________________
+void RooAbsData::Draw(Option_t* option) 
+{ 
+  // Forward draw command to data store
+  if (_dstore) _dstore->Draw(option) ; 
+}
+
+
+
+//_____________________________________________________________________________
+Bool_t RooAbsData::hasFilledCache() const 
+{ 
+  return _dstore->hasFilledCache() ; 
+}
+
+
+//_____________________________________________________________________________
+const TTree* RooAbsData::tree() const 
+{ 
+  return _dstore->tree() ; 
 }

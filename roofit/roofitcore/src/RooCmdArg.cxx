@@ -55,6 +55,8 @@ RooCmdArg::RooCmdArg() : TNamed("","")
   // Default constructor
   _procSubArgs = kFALSE ;
   _c = 0 ;
+  _o[0] = 0 ;
+  _o[1] = 0 ; 
 }
 
 
@@ -71,9 +73,9 @@ RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t
   _i[1] = i2 ;
   _d[0] = d1 ;
   _d[1] = d2 ;
-  _s[0] = s1 ;
-  _s[1] = s2 ;
-  _s[2] = s3 ;
+  if (s1) _s[0] = s1 ;
+  if (s2) _s[1] = s2 ;
+  if (s3) _s[2] = s3 ;
   _o[0] = (TObject*) o1 ;
   _o[1] = (TObject*) o2 ;
   _c = 0 ;

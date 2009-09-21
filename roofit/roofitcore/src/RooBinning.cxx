@@ -35,6 +35,7 @@
 #include "RooRealVar.h"
 #include "RooNumber.h"
 #include "RooMsgService.h"
+#include "TList.h"
 
 ClassImp(RooBinning)
 ;
@@ -51,8 +52,6 @@ RooBinning::RooBinning(Double_t xlo, Double_t xhi, const char* name) :
 {
   // Constructor for an initially empty binning defining the range [xlo,xhi]
 
-  _bIter = binIterator() ;
-
   setRange(xlo,xhi) ;
 }
 
@@ -68,8 +67,6 @@ RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi, const char* name
   _array(0)
 {
   // Constructor for a uniform binning in 'nbins' bins in the range [xlo,xhi]
-
-  _bIter = binIterator() ;
 
   // Uniform bin size constructor
   setRange(xlo,xhi) ;
@@ -91,8 +88,6 @@ RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries, const char* name
   // Constructor for a binning in the range[xlo,xhi] with 'nbins' bin boundaries listed
   // array 'boundaries'
 
-  _bIter = binIterator() ;
-
   // Variable bin size constructor
   setRange(boundaries[0],boundaries[nbins]) ;
   while(nbins--) addBoundary(boundaries[nbins]) ;
@@ -103,19 +98,10 @@ RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries, const char* name
 //_____________________________________________________________________________
 RooBinning::RooBinning(const RooBinning& other, const char* name) : 
   RooAbsBinning(name),
+  _boundaries(other._boundaries),
   _array(0)
 { 
   // Copy constructor
-
-  _boundaries.Delete() ;
-  _bIter = binIterator();
-
-  other._bIter->Reset() ;
-  RooDouble* boundary ;
-  while ((boundary=(RooDouble*)other._bIter->Next())) {
-    addBoundary((Double_t)*boundary) ;
-  }
-
   _xlo = other._xlo ;
   _xhi = other._xhi ;
   _ownBoundLo = other._ownBoundLo ;
@@ -130,10 +116,8 @@ RooBinning::~RooBinning()
 {
   // Destructor
 
-  delete _bIter ;
   if (_array) delete[] _array ;
 
-  _boundaries.Delete() ;
 }
 
 
@@ -142,18 +126,16 @@ Bool_t RooBinning::addBoundary(Double_t boundary)
 {  
   // Add bin boundary at given value
 
-  // Check if boundary already exists 
-  if (hasBoundary(boundary)) {
+  if (_boundaries.find(boundary)!=_boundaries.end()) {
     // If boundary previously existed as range delimiter, 
     //                    convert to regular boundary now
     if (boundary==_xlo) _ownBoundLo = kFALSE ;
     if (boundary==_xhi) _ownBoundHi = kFALSE ;
-    return kFALSE ;
+    return kFALSE ;    
   }
 
   // Add a new boundary
-  _boundaries.Add(new RooDouble(boundary)) ;
-  _boundaries.Sort() ;
+  _boundaries.insert(boundary) ;
   updateBinCount() ;
   return kTRUE ;
 }
@@ -176,20 +158,11 @@ Bool_t RooBinning::removeBoundary(Double_t boundary)
 {
   // Remove boundary at given value
 
-  _bIter->Reset() ;
-  RooDouble* b ;
-  while((b=(RooDouble*)_bIter->Next())) {
-    if (((Double_t)(*b))==boundary) {
-
-      // If boundary is also range delimiter don't delete
-      if (boundary!= _xlo && boundary != _xhi) {
-	_boundaries.Remove(b) ;
-	delete b ;
-      }
-
-      return kFALSE ;
-    }
+  if (_boundaries.find(boundary)!=_boundaries.end()) {
+    _boundaries.erase(boundary) ;
+    return kFALSE ;
   }
+
   // Return error status - no boundary found
   return kTRUE ;
 }
@@ -201,14 +174,7 @@ Bool_t RooBinning::hasBoundary(Double_t boundary)
 {
   // Check if boundary exists at given value
 
-  _bIter->Reset() ;
-  RooDouble* b ;
-  while((b=(RooDouble*)_bIter->Next())) {
-    if (((Double_t)(*b))==boundary) {
-      return kTRUE ;
-    }
-  }
-  return kFALSE ;
+  return (_boundaries.find(boundary)!=_boundaries.end()) ;
 }
 
 
@@ -234,18 +200,14 @@ Int_t RooBinning::binNumber(Double_t x) const
   // of the range
 
   Int_t n(0) ;
-  _bIter->Reset() ;
-  RooDouble* b ;
-  while((b=(RooDouble*)_bIter->Next())) {
-    Double_t val = (Double_t)*b ;
-
-    if (x<val) {
+  for (set<Double_t>::const_iterator iter = _boundaries.begin() ; iter!=_boundaries.end() ; ++iter) {
+    if (x<*iter) {
       return n ;
     }
 
     // Only increment counter in valid range
-    if (val> _xlo && n<_nbins-1) n++ ;
-  }
+    if (*iter> _xlo && n<_nbins-1) n++ ;    
+  }  
   return n;
 }
 
@@ -261,12 +223,9 @@ Int_t RooBinning::rawBinNumber(Double_t x) const
  
   // Determine 'raw' bin number (i.e counting all defined boundaries) for given value
   Int_t n(0) ;
-  _bIter->Reset() ;
 
-  RooDouble* b ;
-  while((b=(RooDouble*)_bIter->Next())) {
-    Double_t val = (Double_t)*b ;
-    if (x<val) return n>0?n-1:0 ;
+  for (set<Double_t>::const_iterator iter = _boundaries.begin() ; iter!=_boundaries.end() ; ++iter) {    
+    if (x<*iter) return n>0?n-1:0 ;
     n++ ;
   }
   return n-1;
@@ -290,16 +249,6 @@ Double_t RooBinning::nearestBoundary(Double_t x) const
 
 
 //_____________________________________________________________________________
-TIterator* RooBinning::binIterator() const
-{
-  // Return iterator over sorted boundaries
-
-  return _boundaries.MakeIterator() ;
-}
-
-
-
-//_____________________________________________________________________________
 Double_t* RooBinning::array() const
 {
   // Return array of boundary values
@@ -307,16 +256,12 @@ Double_t* RooBinning::array() const
   if (_array) delete[] _array ;
   _array = new Double_t[numBoundaries()] ;
 
-  _bIter->Reset() ;
-  RooDouble* boundary ;  
   Int_t i(0) ;
-  while((boundary=(RooDouble*)_bIter->Next())) {
-    Double_t bval = (Double_t)*boundary ;
-    if (bval>=_xlo && bval <=_xhi) {
-      _array[i++] = bval ;
+  for (set<Double_t>::const_iterator iter = _boundaries.begin() ; iter!=_boundaries.end() ; ++iter) {
+    if (*iter>=_xlo && *iter <=_xhi) {
+      _array[i++] = *iter ;
     }
   }
-
   return _array ;
 }
 
@@ -336,13 +281,10 @@ void RooBinning::setRange(Double_t xlo, Double_t xhi)
   }
   
   // Remove previous boundaries 
-  _bIter->Reset() ;
-  RooDouble* b ;
-  while((b=(RooDouble*)_bIter->Next())) {    
-    if (((Double_t)*b == _xlo && _ownBoundLo) ||
-	((Double_t)*b == _xhi && _ownBoundHi)) {
-      _boundaries.Remove(b) ;
-      delete b ;
+  
+  for (set<Double_t>::iterator iter = _boundaries.begin() ; iter!=_boundaries.end() ; ++iter) {    
+    if ((*iter == _xlo && _ownBoundLo) || (*iter == _xhi && _ownBoundHi)) {
+      _boundaries.erase(iter) ;
     }
   }
 
@@ -373,15 +315,12 @@ void RooBinning::updateBinCount()
 {
   // Update the internal bin counter
 
-  _bIter->Reset() ;
-  RooDouble* boundary=0 ;  
   Int_t i(-1) ;
-  while((boundary=(RooDouble*)_bIter->Next())) {
-    Double_t bval = (Double_t)*boundary ;
-    if (bval>=_xlo && bval <=_xhi) {
+  for (set<Double_t>::const_iterator iter = _boundaries.begin() ; iter!=_boundaries.end() ; ++iter) {    
+    if (*iter>=_xlo && *iter <=_xhi) {
       i++ ;
     }
-  }  
+  }
   _nbins = i ;
 }
 
@@ -400,20 +339,17 @@ Bool_t RooBinning::binEdges(Int_t bin, Double_t& xlo, Double_t& xhi) const
   
   // Determine sequential bin number for given value
   Int_t n(0) ;
-  _bIter->Reset() ;
-  RooDouble* b ;
-  while((b=(RooDouble*)_bIter->Next())) {
-    Double_t val = (Double_t)*b ;
+  for (set<Double_t>::const_iterator iter = _boundaries.begin() ; iter!=_boundaries.end() ; ++iter) {    
 
-    if (n==bin && val>=_xlo) {
-      xlo = val ;
-      b = (RooDouble*)_bIter->Next() ;
-      xhi = *b ;
+    if (n==bin && *iter>=_xlo) {
+      xlo = *iter ;
+      iter++ ;
+      xhi = *iter ;
       return kFALSE ;
     }
 
     // Only increment counter in valid range
-    if (val>= _xlo && n<_nbins-1) n++ ;
+    if (*iter>= _xlo && n<_nbins-1) n++ ;
   }
 
   return kTRUE ;
@@ -466,4 +402,43 @@ Double_t RooBinning::binHigh(Int_t bin) const
   if (binEdges(bin,xlo,xhi)) return  0 ;
   return xhi ;
 }
+
+
+
+//______________________________________________________________________________
+void RooBinning::Streamer(TBuffer &R__b)
+{
+   // Custom streamer that provides backward compatibility to read v1 data
+
+   if (R__b.IsReading()) {
+
+     UInt_t R__s, R__c;
+     Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+     if (R__v>1) {
+       R__b.ReadClassBuffer(RooBinning::Class(),this,R__v,R__s,R__c);
+     } else {
+       RooAbsBinning::Streamer(R__b);
+       R__b >> _xlo;
+       R__b >> _xhi;
+       R__b >> _ownBoundLo;
+       R__b >> _ownBoundHi;
+       R__b >> _nbins;
+       
+       // Convert TList to set<double>
+       TList boundaries ;
+       boundaries.Streamer(R__b);
+       TIterator* iter = boundaries.MakeIterator() ;
+       RooDouble* elem ;
+       while((elem=(RooDouble*)iter->Next())) {
+	 _boundaries.insert(*elem) ;
+       }
+       delete iter ;
+       
+       R__b.CheckByteCount(R__s, R__c, RooBinning::IsA());
+     }
+   } else {
+     R__b.WriteClassBuffer(RooBinning::Class(),this);
+   }
+}
+
 

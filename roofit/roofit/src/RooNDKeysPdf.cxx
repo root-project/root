@@ -3,7 +3,7 @@
  * Package: RooFitModels                                                     *
  *    File: $Id$
  * Authors:                                                                  *
- *   MB, Max Baak,   Nikhef,        mbaak@nikhef.nl                          *
+ *   Max Baak, CERN, mbaak@cern.ch *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
@@ -53,18 +53,15 @@ ClassImp(RooNDKeysPdf)
 //_____________________________________________________________________________
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 			   const RooArgList& varList, RooDataSet& data,
-			   TString options, Double_t rho, Double_t nSigma,
-			   RooAbsReal& weight) :
+			   TString options, Double_t rho, Double_t nSigma, Bool_t rotate) : 
   RooAbsPdf(name,title),
   _varList("varList","List of variables",this),
   _data(data),
   _options(options),
   _widthFactor(rho),
   _nSigma(nSigma),
-  _weight("weight","weight formula",this,weight,kFALSE,kFALSE),
-  _weightParams("weightParams","weight parameters",this),
-  _weightDep(0),
-  _weights(&_weights0)
+  _weights(&_weights0),
+  _rotate(rotate)
 {
   // Construct N-dimensional kernel estimation p.d.f. in observables 'varList'
   // from dataset 'data'. Options can be 
@@ -88,7 +85,6 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 
   // Constructor
   _varItr    = _varList.createIterator() ;
-  _weightItr = _weightParams.createIterator() ;
 
   TIterator* varItr = varList.createIterator() ;
   RooAbsArg* var ;
@@ -103,11 +99,6 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
   }
   delete varItr ;
 
-  // Add parameters of weight function to weightParams 
-  RooArgSet* wgtParams = (RooArgSet*) weight.getParameters(_data) ;
-  _weightParams.add(*wgtParams) ;
-  delete wgtParams ;
-
   createPdf();
 }
 
@@ -116,24 +107,20 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 //_____________________________________________________________________________
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
                            RooAbsReal& x, RooDataSet& data,
-                           Mirror mirror, Double_t rho, Double_t nSigma,
-			   RooAbsReal& weight) :
+                           Mirror mirror, Double_t rho, Double_t nSigma, Bool_t rotate) : 
   RooAbsPdf(name,title),
   _varList("varList","List of variables",this),
   _data(data),
   _options("a"),
   _widthFactor(rho),
   _nSigma(nSigma), 
-  _weight("weight","weight formula",this,weight,kFALSE,kFALSE),
-  _weightParams("weightParams","weight parameters",this),
-  _weightDep(0),
-  _weights(&_weights0)
+  _weights(&_weights0),
+  _rotate(rotate)
 { 
   // Backward compatibility constructor for (1-dim) RooKeysPdf. If you are a new user,
   // please use the first constructor form.
 
   _varItr = _varList.createIterator() ;
-  _weightItr = _weightParams.createIterator() ;
   
   _varList.add(x) ;
   _varName.push_back(x.GetName());
@@ -144,11 +131,6 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
     _options="m";
   }
 
-  // Add parameters of weight function to weightParams 
-  RooArgSet* wgtParams = (RooArgSet*) weight.getParameters(_data) ;
-  _weightParams.add(*wgtParams) ;
-  delete wgtParams ;
-
   createPdf();
 }
 
@@ -156,33 +138,24 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 
 //_____________________________________________________________________________
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal& x, RooAbsReal & y,
-                           RooDataSet& data, TString options, Double_t rho, Double_t nSigma,
-			   RooAbsReal& weight) :
+                           RooDataSet& data, TString options, Double_t rho, Double_t nSigma, Bool_t rotate) : 
   RooAbsPdf(name,title),
   _varList("varList","List of variables",this),
   _data(data),
   _options(options),
   _widthFactor(rho),
   _nSigma(nSigma),
-  _weight("weight","weight formula",this,weight,kFALSE,kFALSE),
-  _weightParams("weightParams","weight parameters",this),
-  _weightDep(0),
-  _weights(&_weights0)
+  _weights(&_weights0),
+  _rotate(rotate)
 { 
   // Backward compatibility constructor for Roo2DKeysPdf. If you are a new user,
   // please use the first constructor form.
 
   _varItr = _varList.createIterator() ;
-  _weightItr = _weightParams.createIterator() ;
 
   _varList.add(RooArgSet(x,y)) ;
   _varName.push_back(x.GetName());
   _varName.push_back(y.GetName());
-
-  // Add parameters of weight function to weightParams 
-  RooArgSet* wgtParams = (RooArgSet*) weight.getParameters(_data) ;
-  _weightParams.add(*wgtParams) ;
-  delete wgtParams ;
 
   createPdf();
 }
@@ -197,14 +170,11 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf& other, const char* name) :
   _options(other._options),
   _widthFactor(other._widthFactor),
   _nSigma(other._nSigma),
-  _weight("weight",this,other._weight),
-  _weightParams("weightParams",this,other._weightParams),
-  _weightDep(0),
-  _weights(&_weights0)
+  _weights(&_weights0),
+  _rotate(other._rotate)
 {
   // Constructor
   _varItr      = _varList.createIterator() ;
-  _weightItr   = _weightParams.createIterator() ;
 
   _fixedShape  = other._fixedShape;
   _mirror      = other._mirror;
@@ -274,13 +244,11 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf& other, const char* name) :
 RooNDKeysPdf::~RooNDKeysPdf() 
 {
   if (_varItr)    delete _varItr;
-  if (_weightItr) delete _weightItr;
   if (_covMat)    delete _covMat;
   if (_corrMat)   delete _corrMat;
   if (_rotMat)    delete _rotMat;
   if (_sigmaR)    delete _sigmaR;
   if (_dx)        delete _dx;
-  if (_weightDep) delete _weightDep ;
 
   // delete all the boxinfos map
   while ( !_rangeBoxInfo.empty() ) {
@@ -355,7 +323,7 @@ RooNDKeysPdf::setOptions() const
 			<< "\n\tbandWidthType    = " << _options.Contains("a")    
 			<< "\n\tmirror           = " << _mirror
 			<< "\n\tdebug            = " << _debug            
-			<< "\n\tverbose          = " << _verbose          
+			<< "\n\tverbose          = " << _verbose  
 			<< endl;
 
   if (_nSigma<2.0) {
@@ -462,9 +430,6 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
     _x0[j]=_x1[j]=_x2[j]=0.;
   }
 
-  RooArgSet* weightObs = _weight.arg().getObservables(_data) ;
-  Int_t nWObs = weightObs->getSize();
-
   _idx.clear();
   for (Int_t i=0; i<_nEvents; i++) {
     _data.get(i); // fills dVars
@@ -472,22 +437,21 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
     vector<Double_t>& point  = _dataPts[i];
     TVectorD& pointV = _dataPtsR[i];
 
-    // update weight if weight depends on observables of event
-    if ( nWObs>0 ) { *weightObs = *values; } // update _weight
-    if ( TMath::Abs(_weight)>_maxWeight ) { _maxWeight = TMath::Abs(_weight); }
-    _nEventsW += _weight;
+    Double_t myweight = _data.weight(); // default is one?
+    if ( TMath::Abs(myweight)>_maxWeight ) { _maxWeight = TMath::Abs(myweight); }
+    _nEventsW += myweight;
 
     for (Int_t j=0; j<_nDim; j++) {
       for (Int_t k=0; k<_nDim; k++) 
-	mat(j,k) += dVars[j]->getVal() * dVars[k]->getVal() * _weight;
+	mat(j,k) += dVars[j]->getVal() * dVars[k]->getVal() * myweight;
 
       // only need to do once
       if (firstCall) 
 	point[j] = pointV[j] = dVars[j]->getVal();
 
-      _x0[j] += 1. * _weight; 
-      _x1[j] += point[j] * _weight ; 
-      _x2[j] += point[j] * point[j] * _weight ;
+      _x0[j] += 1. * myweight; 
+      _x1[j] += point[j] * myweight ; 
+      _x2[j] += point[j] * point[j] * myweight ;
 
       // only need to do once
       if (firstCall) {
@@ -505,7 +469,7 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
     _mean[j]  = _x1[j]/_x0[j];
     _sigma[j] = sqrt(_x2[j]/_x0[j]-_mean[j]*_mean[j]);
   }
-
+ 
   for (Int_t j=0; j<_nDim; j++) {
     for (Int_t k=0; k<_nDim; k++) 
       (*_covMat)(j,k) = mat(j,k)/_x0[j] - _mean[j]*_mean[k] ;
@@ -523,11 +487,21 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
       (*_corrMat)(j,k) = (*_covMat)(j,k)/(_sigma[j]*_sigma[k]) ;
   }
 
-
   if (_verbose) {
     //_covMat->Print();
     _rotMat->Print();
     _corrMat->Print();
+    _sigmaR->Print();
+  }
+
+  if (!_rotate) {
+    _rotMat->Print();
+    _sigmaR->Print();
+    TMatrixD haar(_nDim,_nDim);
+    TMatrixD unit(TMatrixD::kUnit,haar);
+    *_rotMat = unit;
+    for (Int_t j=0; j<_nDim; j++) { (*_sigmaR)[j] = _sigma[j]; }
+    _rotMat->Print();
     _sigmaR->Print();
   }
 
@@ -626,6 +600,7 @@ RooNDKeysPdf::mirrorDataSet() const
       _dataPts.push_back(epoints[m]);
       //_weights0.push_back(_weights0[i]);
       for (Int_t j=0; j<_nDim; j++) { pointR[j] = (epoints[m])[j]; }
+      pointR *= *_rotMat;
       _dataPtsR.push_back(pointR);
     }
     
@@ -639,32 +614,24 @@ RooNDKeysPdf::mirrorDataSet() const
 
 
 void
-
 //_____________________________________________________________________________
 RooNDKeysPdf::loadWeightSet() const
 {
   _wMap.clear();
-  const RooArgSet* values= _data.get();  
-
-  RooArgSet* weightObs = _weight.arg().getObservables(_data) ;
-
-  Int_t nWObs =  weightObs->getSize();
 
   for (Int_t i=0; i<_nEventsM; i++) {
     _data.get(_idx[i]);
-    if ( nWObs>0 ) { *weightObs = *values; } // update _weight
-    if ( TMath::Abs(_weight)>_minWeight ) { 
-      _wMap[i] = _weight; 
-    }
+    Double_t myweight = _data.weight();
+    //if ( TMath::Abs(myweight)>_minWeight ) { 
+      _wMap[i] = myweight; 
+    //}
   }
-  delete weightObs ;
 
   coutI(Contents) << "RooNDKeysPdf::loadWeightSet(" << this << ") : Number of weighted events : " << _wMap.size() << endl;
 }
 
 
 void
-
 //_____________________________________________________________________________
 RooNDKeysPdf::calculateShell(BoxInfo* bi) const 
 {
@@ -727,7 +694,6 @@ RooNDKeysPdf::calculateShell(BoxInfo* bi) const
     }
   }
 
-  
   coutI(Contents) << "RooNDKeysPdf::calculateShell() : " 
 		  << "\n Events in shell " << bi->sIdcs.size() 
 		  << "\n Events in box " << bi->bIdcs.size() 
@@ -737,7 +703,6 @@ RooNDKeysPdf::calculateShell(BoxInfo* bi) const
 
 
 void
-
 //_____________________________________________________________________________
 RooNDKeysPdf::calculatePreNorm(BoxInfo* bi) const
 {
@@ -760,7 +725,6 @@ RooNDKeysPdf::calculatePreNorm(BoxInfo* bi) const
 
 
 void
-
 //_____________________________________________________________________________
 RooNDKeysPdf::sortDataIndices(BoxInfo* bi) const
 {
@@ -789,7 +753,6 @@ RooNDKeysPdf::sortDataIndices(BoxInfo* bi) const
 
 
 void
-
 //_____________________________________________________________________________
 RooNDKeysPdf::calculateBandWidth() const
 {
@@ -804,7 +767,7 @@ RooNDKeysPdf::calculateBandWidth() const
   
   for (Int_t i=0; i<_nEvents; i++) {
     vector<Double_t>& weight = _weights0[i];
-    for (Int_t j=0; j<_nDim; j++) { weight[j] = _rho[j] * _n * (*_sigmaR)[j]; }
+    for (Int_t j=0; j<_nDim; j++) { weight[j] = _rho[j] * _n * (*_sigmaR)[j] ; }
   }
 
   // adaptive width
@@ -821,8 +784,8 @@ RooNDKeysPdf::calculateBandWidth() const
 
       vector<Double_t>& weight = _weights1[i];
       for (Int_t j=0; j<_nDim; j++) {
-	Double_t norm = ((_rho[j]*_n*(*_sigmaR)[j])/sqrt(_sigmaAvgR)) ; 
-	weight[j] = norm * f / sqrt(12.);
+	Double_t norm = (_rho[j]*_n*(*_sigmaR)[j]) / sqrt(_sigmaAvgR) ; 
+	weight[j] = norm * f / sqrt(12.) ;  //  note additional factor of sqrt(12) compared with HEP-EX/0011057
       }
     }
     _weights = &_weights1;
@@ -831,7 +794,6 @@ RooNDKeysPdf::calculateBandWidth() const
 
 
 Double_t
-
 //_____________________________________________________________________________
 RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& weights) const 
 {
@@ -848,12 +810,10 @@ RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& weights) con
 
   map<Int_t,Bool_t>::iterator ibMapItr = ibMap.begin();
 
-  Double_t count(0) ;
   for (; ibMapItr!=ibMap.end(); ++ibMapItr) {
     Int_t i = (*ibMapItr).first;
 
     Double_t g(1.);
-    count++ ;
 
     const vector<Double_t>& point  = _dataPts[i];
     const vector<Double_t>& weight = weights[_idx[i]];
@@ -868,20 +828,18 @@ RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& weights) con
 
     for (Int_t j=0; j<_nDim; j++) {
       Double_t r = (*_dx)[j];  //x[j] - point[j];
-      Double_t c = 1./(2.*pow(weight[j],2));
+      Double_t c = 1./(2.*weight[j]*weight[j]);
 
-      g *= exp( -c*pow(r,2) );
+      g *= exp( -c*r*r );
       g *= 1./(_sqrt2pi*weight[j]);
-      g *= _wMap[_idx[i]];
     }
-    z += g;
+    z += (g*_wMap[_idx[i]]);
   }
   return z;
 }
 
 
 void
-
 //_____________________________________________________________________________
 RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const
 {
@@ -927,7 +885,6 @@ RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const
 
 
 void
-
 //_____________________________________________________________________________
 RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*/) const
 {
@@ -966,23 +923,9 @@ RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*/) co
 
 
 Double_t 
-
 //_____________________________________________________________________________
 RooNDKeysPdf::evaluate() const 
 {
-  if (!_weightDep) {
-    TString name = Form("%s_params",GetName()) ;
-    _weightDep = new RooFormulaVar(name,name,"1",_weightParams) ;
-  }
-
-  if (_weightDep->isValueDirty() && !_fixedShape) {
-    coutI(Eval) << "RooNDKeysPdf::evaluate(" << GetName() << ") one of the weight parameters has changed, need to recalculate" << endl ;
-    // Clear dirty flag
-    _weightDep->getVal() ;
-    // recalc pdf
-    createPdf(kFALSE);
-  }
-
   _varItr->Reset() ;
   RooAbsReal* var ;
   const RooArgSet* nset = _varList.nset() ;
@@ -1000,22 +943,21 @@ RooNDKeysPdf::evaluate() const
 
 
 Int_t 
-
 //_____________________________________________________________________________
 RooNDKeysPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
+
+  if (rangeName) return 0 ;
+
   Int_t code=0;
-
-  if (rangeName) { code=0; }
   if (matchArgs(allVars,analVars,RooArgSet(_varList))) { code=1; }
-
+  
   return code;
 
 }
 
 
 Double_t 
-
 //_____________________________________________________________________________
 RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
@@ -1105,21 +1047,9 @@ RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
       norm += prob * _wMap[_idx[bi->sIdcs[i]]];    
     } 
     
-    cxcoutD(Eval) << "RooNDKeysPdf::analyticalIntegral() : Final normalization : " << norm << endl;
+    cxcoutD(Eval) << "RooNDKeysPdf::analyticalIntegral() : Final normalization : " << norm << " " << bi->nEventsBW << endl;
     return norm;
   }
 }
 
 
-
-//_____________________________________________________________________________
-Bool_t RooNDKeysPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
- 					 Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
-{
-  if (_weightDep) {
-    delete _weightDep ;
-    _weightDep=0 ;
-  }
-  
-  return kFALSE;
-}

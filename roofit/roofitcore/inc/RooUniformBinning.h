@@ -33,6 +33,7 @@ public:
 
   virtual Int_t numBoundaries() const { return _nbins + 1 ; }
   virtual Int_t binNumber(Double_t x) const  ;
+  virtual Bool_t isUniform() const { return kTRUE ; }
 
   virtual Double_t lowBound() const { return _xlo ; }
   virtual Double_t highBound() const { return _xhi ; }

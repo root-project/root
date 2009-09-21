@@ -41,7 +41,7 @@ ClassImp(RooHistPdf)
 
 
 //_____________________________________________________________________________
-RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0)
+RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0), _unitNorm(kFALSE)
 {
   // Default constructor
   _histObsIter = _histObsList.createIterator() ;
@@ -53,7 +53,6 @@ RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0)
 RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars, 
 		       const RooDataHist& dhist, Int_t intOrder) :
   RooAbsPdf(name,title), 
-  _histObsList("histObs","List of histogram observables",this),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
   _dataHist((RooDataHist*)&dhist), 
   _codeReg(10),
@@ -67,7 +66,8 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
   // RooHistPdf neither owns or clone 'dhist' and the user must ensure the input histogram exists
   // for the entire life span of this PDF.
 
-  _histObsList.add(vars) ;
+  _histObsList.addClone(vars) ;
+  _pdfObsList.add(vars) ;
 
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
@@ -98,7 +98,6 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
 RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, 
 		       const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder) :
   RooAbsPdf(name,title), 
-  _histObsList("histObs","List of histogram observables",this,kFALSE,kFALSE),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
   _dataHist((RooDataHist*)&dhist), 
   _codeReg(10),
@@ -113,7 +112,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
   // RooRealVar or RooCategory This constructor thus allows to apply a coordinate transformation
   // on the histogram data to be applied.
 
-  _histObsList.add(histObs) ;
+  _histObsList.addClone(histObs) ;
   _pdfObsList.add(pdfObs) ;
 
   // Verify that vars and dhist.get() have identical contents
@@ -148,7 +147,6 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
 //_____________________________________________________________________________
 RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   RooAbsPdf(other,name), 
-  _histObsList("histObs",this,other._histObsList),
   _pdfObsList("pdfObs",this,other._pdfObsList),
   _dataHist(other._dataHist),
   _codeReg(other._codeReg),
@@ -158,6 +156,8 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   _unitNorm(other._unitNorm)
 {
   // Copy constructor
+
+  _histObsList.addClone(other._histObsList) ;
 
   _histObsIter = _histObsList.createIterator() ;
   _pdfObsIter = _pdfObsList.createIterator() ;
@@ -204,6 +204,8 @@ Double_t RooHistPdf::evaluate() const
   if (ret<0) {
     ret=0 ;
   }
+  
+//   cout << "RooHistPdf::evaluate(" << GetName() << ") ret = " << ret << " at " << ((RooAbsReal*)_histObsList.first())->getVal() << endl ;
   return ret ;
 }
 
@@ -251,21 +253,39 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
     return 0 ;
   }
 
+
+  // First make list of pdf observables to histogram observables
+  RooArgList hobsl(_histObsList),pobsl(_pdfObsList) ;
+  RooArgSet allVarsHist ;
+  TIterator* iter = allVars.createIterator() ;
+  RooAbsArg* pdfobs ;
+  while((pdfobs=(RooAbsArg*)iter->Next())) {
+    Int_t idx = pobsl.index(pdfobs) ;
+    if (idx>=0) {
+      RooAbsArg* hobs = hobsl.at(idx) ;
+      if (hobs) {
+	allVarsHist.add(*hobs) ;
+      }
+    }
+  }
+  delete iter ;
+
   // Simplest scenario, integrate over all dependents
-  RooAbsCollection *allVarsCommon = allVars.selectCommon(_histObsList) ;  
+  RooAbsCollection *allVarsCommon = allVarsHist.selectCommon(_histObsList) ;  
   Bool_t intAllObs = (allVarsCommon->getSize()==_histObsList.getSize()) ;
   delete allVarsCommon ;
-  if (intAllObs && matchArgs(allVars,analVars,_histObsList)) {
+  if (intAllObs) {
+    analVars.add(allVars) ;
     return 1000 ;
   }
 
   // Disable partial analytical integrals if interpolation is used
-  if (_intOrder>0) {
-    return 0 ;
-  }
+//   if (_intOrder>0) {
+//     return 0 ;
+//   }
 
   // Find subset of _histObsList that integration is requested over
-  RooArgSet* allVarsSel = (RooArgSet*) allVars.selectCommon(_histObsList) ;
+  RooArgSet* allVarsSel = (RooArgSet*) allVarsHist.selectCommon(_histObsList) ;
   if (allVarsSel->getSize()==0) {
     delete allVarsSel ;
     return 0 ;
@@ -274,14 +294,14 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   // Partial integration scenarios.
   // Build unique code from bit mask of integrated variables in depList
   Int_t code(0),n(0) ;
-  TIterator* iter = _histObsList.createIterator() ;
+  iter = _histObsList.createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
     if (allVars.find(arg->GetName())) code |= (1<<n) ;
+    analVars.add(*pobsl.at(n)) ;
     n++ ;
   }
   delete iter ;
-  analVars.add(*allVarsSel) ;
 
   return code ;
 
@@ -303,7 +323,6 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) c
   }
 
   // Partial integration scenario, retrieve set of variables, calculate partial sum
-
   RooArgSet intSet ;
   TIterator* iter = _histObsList.createIterator() ;
   RooAbsArg* arg ;

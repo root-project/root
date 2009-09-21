@@ -103,7 +103,7 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
     Stat_t y= data.GetBinContent(bin);
     Stat_t dy = data.GetBinError(bin) ;
     if (etype==RooAbsData::Poisson) {
-      addBin(x,roundBin(y),data.GetBinWidth(bin),xErrorFrac,scaleFactor);
+      addBin(x,y,data.GetBinWidth(bin),xErrorFrac,scaleFactor);
     } else if (etype==RooAbsData::SumW2) {
       addBinWithError(x,y,dy,dy,data.GetBinWidth(bin),xErrorFrac,correctForBinWidth,scaleFactor);
     } else {
@@ -118,7 +118,7 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
 
 //_____________________________________________________________________________
 RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, Double_t nSigma, 
-		 Double_t xErrorFrac, Bool_t efficiency, Double_t scaleFactor) :
+		 RooAbsData::ErrorType etype, Double_t xErrorFrac, Bool_t efficiency, Double_t scaleFactor) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create a histogram from the asymmetry between the specified TH1 objects
@@ -163,10 +163,31 @@ RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, D
     Stat_t y1= data1.GetBinContent(bin);
     Stat_t y2= data2.GetBinContent(bin);
     if (!efficiency) {
-      addAsymmetryBin(x,roundBin(y1),roundBin(y2),data1.GetBinWidth(bin),xErrorFrac,scaleFactor);
+
+      if (etype==RooAbsData::Poisson) {
+	addAsymmetryBin(x,roundBin(y1),roundBin(y2),data1.GetBinWidth(bin),xErrorFrac,scaleFactor);
+      } else if (etype==RooAbsData::SumW2) {	
+	Stat_t dy1= data1.GetBinError(bin);
+	Stat_t dy2= data2.GetBinError(bin);
+	addAsymmetryBinWithError(x,y1,y2,dy1,dy2,data1.GetBinWidth(bin),xErrorFrac,scaleFactor);
+      } else {
+	addAsymmetryBinWithError(x,y1,y2,0,0,data1.GetBinWidth(bin),xErrorFrac,scaleFactor);
+      }
+
     } else {
-      addEfficiencyBin(x,roundBin(y1),roundBin(y2),data1.GetBinWidth(bin),xErrorFrac,scaleFactor);
+
+      if (etype==RooAbsData::Poisson) {
+	addEfficiencyBin(x,roundBin(y1),roundBin(y2),data1.GetBinWidth(bin),xErrorFrac,scaleFactor);
+      } else if (etype==RooAbsData::SumW2) {
+	Stat_t dy1= data1.GetBinError(bin);
+	Stat_t dy2= data2.GetBinError(bin);
+	addEfficiencyBinWithError(x,y1,y2,dy1,dy2,data1.GetBinWidth(bin),xErrorFrac,scaleFactor);
+      } else {
+	addEfficiencyBinWithError(x,y1,y2,0,0,data1.GetBinWidth(bin),xErrorFrac,scaleFactor);
+      }
+
     }
+
   }
   // we do not have a meaningful number of entries
   _entries= -1;
@@ -334,25 +355,47 @@ Int_t RooHist::roundBin(Double_t y)
 }
 
 
+
 //_____________________________________________________________________________
-void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth, Double_t xErrorFrac, Double_t scaleFactor) 
+void RooHist::addBin(Axis_t binCenter, Double_t n, Double_t binWidth, Double_t xErrorFrac, Double_t scaleFactor) 
 {
   // Add a bin to this histogram with the specified integer bin contents
   // and using an error bar calculated with Poisson statistics. The bin width
   // is used to set the relative scale of bins with different widths.
 
+  if (n<0) {
+    coutW(Plotting) << "RooHist::addBin(" << GetName() << ") WARNING: negative entry set to zero when Poisson error bars are requested" << endl ;
+  }
+  
   Double_t scale= 1;
   if(binWidth > 0) {
     scale= _nominalBinWidth/binWidth;
   }  
   _entries+= n;
   Int_t index= GetN();
-
+  
   // calculate Poisson errors for this bin
   Double_t ym,yp,dx(0.5*binWidth);
-  if(!RooHistError::instance().getPoissonInterval(n,ym,yp,_nSigma)) {
-    coutE(Plotting) << "RooHist::addBin: unable to add bin with " << n << " events" << endl;
-    return;
+
+  if (fabs((double)((n-Int_t(n))>1e-5))) {
+    // need interpolation
+    Double_t ym1,yp1,ym2,yp2 ;
+    Int_t n1 = Int_t(n) ;
+    Int_t n2 = n1+1 ;
+    if(!RooHistError::instance().getPoissonInterval(n1,ym1,yp1,_nSigma) ||
+       !RooHistError::instance().getPoissonInterval(n2,ym2,yp2,_nSigma)) {
+      coutE(Plotting) << "RooHist::addBin: unable to add bin with " << n << " events" << endl;
+    }
+    ym = ym1 + (n-n1)*(ym2-ym1) ;
+    yp = yp1 + (n-n1)*(yp2-yp1) ;
+    coutW(Plotting) << "RooHist::addBin(" << GetName() 
+		    << ") WARNING: non-integer bin entry " << n << " with Poisson errors, interpolating between Poisson errors of adjacent integer" << endl ;
+  } else {
+  // integer case
+  if(!RooHistError::instance().getPoissonInterval(Int_t(n),ym,yp,_nSigma)) {
+      coutE(Plotting) << "RooHist::addBin: unable to add bin with " << n << " events" << endl;
+      return;
+    }
   }
 
   SetPoint(index,binCenter,n*scale*scaleFactor);
@@ -436,6 +479,32 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t bin
 
 
 //_____________________________________________________________________________
+void RooHist::addAsymmetryBinWithError(Axis_t binCenter, Double_t n1, Double_t n2, Double_t en1, Double_t en2, Double_t binWidth, Double_t xErrorFrac, Double_t scaleFactor) 
+{
+  // Add a bin to this histogram with the value (n1-n2)/(n1+n2)
+  // using an error bar calculated with Binomial statistics.
+  
+  Double_t scale= 1;
+  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
+  Int_t index= GetN();
+
+  // calculate Binomial errors for this bin
+  Double_t ym,yp,dx(0.5*binWidth);
+  Double_t a= (Double_t)(n1-n2)/(n1+n2);
+
+  Double_t error = 2*sqrt( pow(en1,2)*pow(n2,2) + pow(en2,2)*pow(n1,2) ) / pow(n1+n2,2) ;
+  ym=a-error ;
+  yp=a+error ;
+
+  SetPoint(index,binCenter,a*scaleFactor);
+  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
+  updateYAxisLimits(scale*yp);
+  updateYAxisLimits(scale*ym);
+}
+
+
+
+//_____________________________________________________________________________
 void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth, Double_t xErrorFrac, Double_t scaleFactor) 
 {
   // Add a bin to this histogram with the value n1/(n1+n2)
@@ -445,14 +514,43 @@ void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t bi
   if(binWidth > 0) scale= _nominalBinWidth/binWidth;
   Int_t index= GetN();
 
+  Double_t a= (Double_t)(n1)/(n1+n2);
+
   // calculate Binomial errors for this bin
   Double_t ym,yp,dx(0.5*binWidth);
   if(!RooHistError::instance().getBinomialIntervalEff(n1,n2,ym,yp,_nSigma)) {
     coutE(Plotting) << "RooHist::addEfficiencyBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << endl;
     return;
-  }
+  }  
+
+  SetPoint(index,binCenter,a*scaleFactor);
+  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
+  updateYAxisLimits(scale*yp);
+  updateYAxisLimits(scale*ym);
+}
+
+
+
+//_____________________________________________________________________________
+void RooHist::addEfficiencyBinWithError(Axis_t binCenter, Double_t n1, Double_t n2, Double_t en1, Double_t en2, Double_t binWidth, Double_t xErrorFrac, Double_t scaleFactor) 
+{
+  // Add a bin to this histogram with the value n1/(n1+n2)
+  // using an error bar calculated with Binomial statistics.
+  
+  Double_t scale= 1;
+  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
+  Int_t index= GetN();
 
   Double_t a= (Double_t)(n1)/(n1+n2);
+
+  Double_t error = sqrt( pow(en1,2)*pow(n2,2) + pow(en2,2)*pow(n1,2) ) / pow(n1+n2,2) ;
+
+  // calculate Binomial errors for this bin
+  Double_t ym,yp,dx(0.5*binWidth);
+  ym=a-error ;
+  yp=a+error ;
+ 
+  
   SetPoint(index,binCenter,a*scaleFactor);
   SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
   updateYAxisLimits(scale*yp);

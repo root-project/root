@@ -19,6 +19,7 @@
 
 class RooCachedPdf : public RooAbsCachedPdf {
 public:
+  RooCachedPdf() {} ;
   RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf, const RooArgSet& cacheObs);
   RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf);
   RooCachedPdf(const RooCachedPdf& other, const char* name=0) ;

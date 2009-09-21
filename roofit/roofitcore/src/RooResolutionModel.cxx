@@ -160,6 +160,11 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooA
   // Instantiate a clone of this resolution model representing a convolution with given
   // basis function. The owners object name is incorporated in the clones name
   // to avoid multiple convolution objects with the same name in complex PDF structures.
+  // 
+  // Note: The 'inBasis' formula expression must be a RooFormulaVar that encodes the formula
+  // in the title of the object and this expression must be an exact match against the
+  // implemented basis function strings (see derived class implementation of method basisCode()
+  // for those strings
 
   // Check that primary variable of basis functions is our convolution variable  
   if (inBasis->getParameter(0) != x.absArg()) {
@@ -167,6 +172,12 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooA
 			  << ") convolution parameter of basis function and PDF don't match" << endl 
 			  << "basis->findServer(0) = " << inBasis->findServer(0) << endl 
 			  << "x.absArg()           = " << x.absArg() << endl ;
+    return 0 ;
+  }
+  
+  if (basisCode(inBasis->GetTitle())==0) {
+    coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this  
+			  << ") basis function '" << inBasis->GetTitle() << "' is not supported." << endl ;
     return 0 ;
   }
 

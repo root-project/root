@@ -121,8 +121,8 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   pc.defineObject("fitModel","FitModel",0,0) ;
   pc.defineObject("condObs","ProjectedDependents",0,0) ;
   pc.defineObject("protoData","PrototypeData",0,0) ;
-  pc.defineObject("cPars","Constrain",0,0) ;
-  pc.defineObject("extCons","ExternalConstraints",0,0) ;
+  pc.defineSet("cPars","Constrain",0,0) ;
+  pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineInt("silence","Silence",0,0) ;
   pc.defineInt("randProtoData","PrototypeData",0,0) ;
   pc.defineInt("verboseGen","Verbose",0,0) ;
@@ -157,9 +157,9 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   _randProto = pc.getInt("randProtoData") ;
 
   // Process constraints specifications
-  const RooArgSet* cPars = static_cast<RooArgSet*>(pc.getObject("cPars")) ;
-  const RooArgSet* extCons = static_cast<RooArgSet*>(pc.getObject("extCons")) ;
-  
+  const RooArgSet* cPars = pc.getSet("cPars") ;
+  const RooArgSet* extCons = pc.getSet("extCons") ;
+
   // If constraints are specified, add to fit options
   if (cPars) {
     _fitOptList.Add(RooFit::Constrain(*cPars).Clone()) ;
@@ -172,7 +172,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   RooArgSet allConstraints ;
   RooArgSet consPars ;
   if (cPars) {
-    RooArgSet* constraints = model.getConstraints(observables,*cPars) ;
+    RooArgSet* constraints = model.getConstraints(observables,*cPars,kTRUE) ;
     allConstraints.add(*constraints) ;
     delete constraints ;
   }
@@ -517,7 +517,12 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 	}
 	
 	// Actual generation of events
-	_genSample = _genContext->generate(nEvt) ;
+	if (nEvt>0) {
+	  _genSample = _genContext->generate(nEvt) ;
+	} else {
+	  // Make empty dataset
+	  _genSample = new RooDataSet("emptySample","emptySample",_dependents) ;
+	}	
       } 
 
 	
@@ -769,8 +774,11 @@ RooFitResult* RooMCStudy::refit(RooAbsData* genSample)
     genSample = _genSample ;
   }
 
-  RooFitResult* fr = doFit(genSample) ;
-    
+  RooFitResult* fr(0) ;
+  if (genSample->sumEntries()>0) {
+    fr = doFit(genSample) ;
+  }
+
   return fr ;
 }
 
@@ -793,10 +801,16 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
   resetFitParams() ;
 
   // Perform actual fit
-  RooFitResult* fr = doFit(genSample) ;
+  Bool_t ok ;
+  RooFitResult* fr(0) ;
+  if (genSample->sumEntries()>0) {
+    fr = doFit(genSample) ;
+    ok = (fr->status()==0) ;
+  } else {
+    ok = kFALSE ;
+  }
 
   // If fit converged, store parameters and NLL
-  Bool_t ok = (fr->status()==0) ;
   if (ok) {
     _nllVar->setVal(fr->minNll()) ;
     RooArgSet tmp(*_fitParams) ;

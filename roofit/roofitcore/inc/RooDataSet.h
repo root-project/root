@@ -124,7 +124,7 @@ public:
 
 protected:
 
-  virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
+  virtual RooAbsData* cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName=0) ;
 
   friend class RooProdGenContext ;
 

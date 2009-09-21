@@ -45,6 +45,7 @@ public:
   virtual Double_t binWidth(Int_t bin) const = 0 ;
   virtual Double_t binLow(Int_t bin) const = 0 ;
   virtual Double_t binHigh(Int_t bin) const = 0 ;
+  virtual Bool_t isUniform() const { return kFALSE ; }
 
   virtual void setRange(Double_t xlo, Double_t xhi) = 0 ;
   virtual void setMin(Double_t xlo) { 

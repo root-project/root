@@ -116,6 +116,8 @@ RooMsgService::RooMsgService()
   _topicNames[ObjectHandling]="ObjectHandling" ;
   _topicNames[InputArguments]="InputArguments" ;
   _topicNames[Tracing]="Tracing" ;
+  _topicNames[Contents]="Contents" ;
+  _topicNames[DataHandling]="DataHandling" ;
   _topicNames[NumIntegration]="NumericIntegration" ;
 
   _instance = this ;
@@ -123,9 +125,7 @@ RooMsgService::RooMsgService()
 
   // Old-style streams
   addStream(RooFit::PROGRESS) ;
-  addStream(RooFit::INFO,Topic(RooFit::Eval|RooFit::Plotting|RooFit::Fitting|RooFit::Minimization|RooFit::Caching|RooFit::ObjectHandling|RooFit::NumIntegration|RooFit::InputArguments|RooFit::DataHandling|RooFit::NumIntegration)) ;
-
-
+  addStream(RooFit::INFO,Topic(RooFit::Eval|RooFit::Plotting|RooFit::Fitting|RooFit::Minimization|RooFit::Caching|RooFit::ObjectHandling|RooFit::NumIntegration|RooFit::InputArguments|RooFit::DataHandling)) ;
 }
 
 
@@ -342,6 +342,25 @@ RooMsgService& RooMsgService::instance()
     RooSentinel::activate() ;
   }
   return *_instance ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooMsgService::saveState() 
+{
+  // Save current state of message service
+  _streamsSaved.push(_streams) ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooMsgService::restoreState() 
+{
+  // Restore last saved state of message service
+  _streams = _streamsSaved.top() ;
+  _streamsSaved.pop() ;
 }
 
 

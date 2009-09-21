@@ -35,7 +35,8 @@ public:
   enum WingMode { NoWings=0 ,Straight=1, Extended=2 } ;
   RooCurve(const RooAbsReal &func, RooAbsRealLValue &x, Double_t xlo, Double_t xhi, Int_t xbins,
 	   Double_t scaleFactor= 1, const RooArgSet *normVars= 0, Double_t prec= 1e-3, Double_t resolution= 1e-3,
-	   Bool_t shiftToZero=kFALSE, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=kFALSE, Double_t eeVal=0);
+	   Bool_t shiftToZero=kFALSE, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=kFALSE, Double_t eeVal=0,
+	   Bool_t showProgress=kFALSE);
   RooCurve(const char *name, const char *title, const RooAbsFunc &func, Double_t xlo,
 	   Double_t xhi, UInt_t minPoints, Double_t prec= 1e-3, Double_t resolution= 1e-3,
 	   Bool_t shiftToZero=kFALSE, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=kFALSE, Double_t eeVal=0);
@@ -86,6 +87,8 @@ protected:
 
 
   void shiftCurveToZero(Double_t prevYMax) ;
+
+  Bool_t _showProgress ; //! Show progress indication when adding points
 
   ClassDef(RooCurve,1) // 1-dimensional smooth curve for use in RooPlots
 };

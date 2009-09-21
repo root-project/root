@@ -38,6 +38,11 @@
 #pragma link C++ class RooTFnPdfBinding+ ;
 #pragma link C++ class RooBernstein+ ;
 #pragma link C++ class RooChiSquarePdf+ ;
+#pragma link C++ class RooMomentMorph+ ;
+/* #pragma link C++ class std::vector< TVector2 >; */
+/* #pragma link C++ class std::vector< TVector2 >::iterator ; */
+/* #pragma link C++ class RooPolyMorph2D+ ; */
+#pragma link C++ class RooUniform+ ;
 #pragma link C++ class RooFunctorBinding+ ;
 #pragma link C++ class RooFunctor1DBinding+ ;
 #pragma link C++ class RooFunctorPdfBinding+ ;
@@ -94,6 +99,7 @@
 #pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Bool_t>+ ;
 #pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Bool_t>+ ;
 #pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,Bool_t>- ;
+
 //#ifdef USE_FOR_AUTLOADING
 //#pragma link C++ class RooFit ;
 //#else

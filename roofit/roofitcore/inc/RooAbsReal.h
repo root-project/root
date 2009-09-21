@@ -37,6 +37,8 @@ class RooFunctor ;
 class RooGenFunction ;
 class RooMultiGenFunction ;
 class RooFitResult ;
+class RooMoment ;
+class RooDerivative ;
 
 class TH1;
 class TH1F;
@@ -64,6 +66,10 @@ public:
     // Return value with given choice of observables
     return getVal(&set) ; 
   }
+
+
+  Double_t getPropagatedError(const RooFitResult& fr) ;
+
   Bool_t operator==(Double_t value) const ;
   virtual Bool_t operator==(const RooAbsArg& other) ;
   inline const Text_t *getUnit() const { 
@@ -205,7 +211,7 @@ public:
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
 		     Double_t scaleFactor= 1, const RooArgSet *projectedVars= 0, Bool_t scaling=kTRUE,
-		     const RooArgSet* condObs=0) const;
+		     const RooArgSet* condObs=0, Bool_t setError=kTRUE) const;
 
   // Create 1,2, and 3D histograms from and fill it
   TH1 *createHistogram(const char* varNameList, Int_t xbins=0, Int_t ybins=0, Int_t zbins=0) const ;
@@ -235,8 +241,8 @@ public:
   public:
     EvalError() { _msg[0] = 0 ; _srvval[0] = 0 ; }
     EvalError(const EvalError& other) { strcpy(_msg,other._msg) ; strcpy(_srvval,other._srvval) ; } ;
-    void setMessage(const char* tmp) { strcpy(_msg,tmp) ; }
-    void setServerValues(const char* tmp) { strcpy(_srvval,tmp) ; }
+    void setMessage(const char* tmp) ;
+    void setServerValues(const char* tmp) ;
     char _msg[1024] ;
     char _srvval[1024] ;
   } ;
@@ -266,7 +272,18 @@ public:
   RooFunctor* functor(const RooArgList& obs, const RooArgList& pars=RooArgList(), const RooArgSet& nset=RooArgSet()) const ;
   TF1* asTF(const RooArgList& obs, const RooArgList& pars=RooArgList(), const RooArgSet& nset=RooArgSet()) const ;
 
-  RooAbsReal* derivative(RooRealVar& obs, Int_t order=1, Double_t eps=0.001) ;
+  RooDerivative* derivative(RooRealVar& obs, Int_t order=1, Double_t eps=0.001) ;
+  RooDerivative* derivative(RooRealVar& obs, const RooArgSet& normSet, Int_t order, Double_t eps=0.001) ; 
+
+  RooMoment* moment(RooRealVar& obs, Int_t order, Bool_t central, Bool_t takeRoot) ;
+  RooMoment* moment(RooRealVar& obs, const RooArgSet& normObs, Int_t order, Bool_t central, Bool_t takeRoot, Bool_t intNormObs) ;
+
+  RooMoment* mean(RooRealVar& obs) { return moment(obs,1,kFALSE,kFALSE) ; }
+  RooMoment* mean(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,1,kFALSE,kFALSE,kTRUE) ; }
+  RooMoment* sigma(RooRealVar& obs) { return moment(obs,2,kTRUE,kTRUE) ; }
+  RooMoment* sigma(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,2,kTRUE,kTRUE,kTRUE) ; }
+
+  Double_t findRoot(RooRealVar& x, Double_t xmin, Double_t xmax, Double_t yval) ;
 
 
 protected:
@@ -371,7 +388,7 @@ protected:
    PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(kFALSE), projSet(0), precision(1e-3), 
                shiftToZero(kFALSE),projDataSet(0),normRangeName(0),rangeLo(0),rangeHi(0),postRangeFracScale(kFALSE),wmode(RooCurve::Extended),
                projectionRangeName(0),curveInvisible(kFALSE), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
-               numCPU(1),interleave(kTRUE),curveNameSuffix(""), numee(10), eeval(0), doeeval(kFALSE) {} ;
+               numCPU(1),interleave(kTRUE),curveNameSuffix(""), numee(10), eeval(0), doeeval(kFALSE), progress(kFALSE) {} ;
    Option_t* drawOptions ;
    Double_t scaleFactor ;	 
    ScaleType stype ;
@@ -398,6 +415,7 @@ protected:
    Int_t    numee ;
    Double_t eeval ;
    Bool_t   doeeval ;
+   Bool_t progress ;
   } ;
 
   // Plot implementation functions
@@ -424,6 +442,8 @@ protected:
   static void globalSelectComp(Bool_t flag) ;
   Bool_t _selectComp ;               //! Component selection flag for RooAbsPdf::plotCompOn
   static Bool_t _globalSelectComp ;  // Global activation switch for component selection
+
+  mutable RooArgSet* _lastNSet ; //!
 
 
   ClassDef(RooAbsReal,2) // Abstract real-valued variable

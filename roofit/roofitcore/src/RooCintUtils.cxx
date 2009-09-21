@@ -198,3 +198,28 @@ namespace RooCintUtils
   
 
 }
+
+
+Bool_t RooCintUtils::isTypeDef(const char* trueName, const char* aliasName)
+{
+  // Returns true if aliasName is a typedef for trueName
+  G__TypedefInfo t;
+  while(t.Next()) {
+    if (string(trueName)==t.TrueName() && string(aliasName)==t.Name()) return kTRUE ;
+  }
+  return kFALSE ;
+}
+
+
+std::string RooCintUtils::trueName(const char* aliasName) 
+{
+  // Returns the true type for a given typedef name.
+  G__TypedefInfo t;
+  while(t.Next()) {
+    if (string(aliasName)==t.Name()) {      
+      return trueName(string(t.TrueName()).c_str()) ;
+    }
+  }
+  return string(aliasName) ;
+}
+

@@ -34,7 +34,7 @@ class RooCategory ;
 class RooAbsReal ;
 class RooAbsCategory ;
 class RooFactoryWSTool ;
-//class RooModelView ;
+class RooAbsStudy ;
 
 #include "TNamed.h"
 #include "TDirectoryFile.h"
@@ -53,10 +53,13 @@ public:
   Bool_t importClassCode(const char* pat="*", Bool_t doReplace=kFALSE) ;
   Bool_t importClassCode(TClass* theClass, Bool_t doReplace=kFALSE) ;
 
-  // Import functions for dataset, functions 
+  // Import functions for dataset, functions, generic objects
   Bool_t import(const RooAbsArg& arg, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
   Bool_t import(const RooArgSet& args, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
   Bool_t import(RooAbsData& data, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
+  Bool_t import(const char *fileSpec, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
+  Bool_t import(TObject& object, Bool_t replaceExisting=kFALSE) ;
+  Bool_t import(TObject& object, const char* aliasName, Bool_t replaceExisting=kFALSE) ;
 
   // Transaction management interface for multi-step import operations
   Bool_t startTransaction() ;
@@ -70,6 +73,7 @@ public:
   const RooArgSet* set(const char* name) ;
 
   // Import, load and save parameter value snapshots
+  Bool_t saveSnapshot(const char* name, const char* paramNames) ;
   Bool_t saveSnapshot(const char* name, const RooArgSet& params, Bool_t importValues=kFALSE) ;
   Bool_t loadSnapshot(const char* name) ;  
 
@@ -88,21 +92,27 @@ public:
   RooAbsData* data(const char* name) ;
   RooAbsArg* arg(const char* name) ;
   RooAbsArg* fundArg(const char* name) ;
+  RooArgSet argSet(const char* nameList) ;
   TIterator* componentIterator() { return _allOwnedNodes.createIterator() ; }
   const RooArgSet& components() const { return _allOwnedNodes ; }
+  TObject* genobj(const char* name) ;
+  TObject* obj(const char* name) ;
+
 
   Bool_t makeDir() ; 
   Bool_t cd(const char* path = 0) ;
 
   Bool_t writeToFile(const char* fileName, Bool_t recreate=kTRUE) ;
 
+
   // Tools management
   RooFactoryWSTool& factory() ;
   RooAbsArg* factory(const char* expr) ;
 
-  // Generic objects
-  Bool_t import(TObject& object, Bool_t replaceExisting=kFALSE) ;
-  TObject* obj(const char* name) ;
+  // RooStudyManager modules
+  Bool_t addStudy(RooAbsStudy& study) ;  
+  TIterator* studyIterator() { return _studyMods.MakeIterator() ; }
+  void clearStudies() ;
 
   // Print function
   void Print(Option_t* opts=0) const ;
@@ -204,6 +214,7 @@ public:
   RooLinkedList _views ; // List of model views  
   RooLinkedList _snapshots ; // List of parameter snapshots
   RooLinkedList _genObjects ; // List of generic objects
+  RooLinkedList _studyMods ; // List if StudyManager modules
   std::map<std::string,RooArgSet> _namedSets ; // Map of named RooArgSets
 
   WSDir* _dir ; //! Transient ROOT directory representation of workspace
@@ -218,7 +229,7 @@ public:
   Bool_t      _openTrans ;    //! Is there a transaction open?
   RooArgSet   _sandboxNodes ; //! Sandbox for incoming objects in a transaction
 
-  ClassDef(RooWorkspace,6)  // Persistable project container for (composite) pdfs, functions, variables and datasets
+  ClassDef(RooWorkspace,7)  // Persistable project container for (composite) pdfs, functions, variables and datasets
   
 } ;
 

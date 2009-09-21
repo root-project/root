@@ -53,7 +53,7 @@ ClassImp(RooExtendPdf)
 ;
 
 
-RooExtendPdf::RooExtendPdf()
+RooExtendPdf::RooExtendPdf() : _rangeName(0)
 {
   // Default constructor
 }

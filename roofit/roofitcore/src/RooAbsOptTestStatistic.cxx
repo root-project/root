@@ -51,6 +51,7 @@
 #include "RooErrorHandler.h"
 #include "RooGlobalFunc.h"
 #include "RooBinning.h"
+#include "RooAbsDataStore.h"
 #include "RooCategory.h"
 
 ClassImp(RooAbsOptTestStatistic)
@@ -349,12 +350,29 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
   delete iter ;
 
   // WVE Must use clone with cache redirection here
-  if (other._ownData) {
-    _dataClone = (RooAbsData*) other._dataClone->cacheClone(_funcCloneSet) ;
+  if (other._ownData || other._dataClone->hasFilledCache()) {    
+    _dataClone = (RooAbsData*) other._dataClone->cacheClone(this,_funcCloneSet) ;
     _ownData = kTRUE ;
   } else {
     _dataClone = other._dataClone ;
     _ownData = kFALSE ;
+    
+        // Revert any AClean nodes imported from original to ADirty as not optimization is applicable to test statistics with borrowed data
+    Bool_t wasOpt(kFALSE) ;
+    TIterator* biter = _funcCloneSet->createIterator() ;
+    RooAbsArg *branch2 ;
+    while((branch2=(RooAbsArg*)biter->Next())){
+      if (branch2->operMode()==RooAbsArg::AClean) {
+	branch2->setOperMode(RooAbsArg::ADirty) ;
+	wasOpt=kTRUE ;
+      }
+    }
+    delete biter ;  
+
+    if (wasOpt) {
+      coutW(Optimization) << "RooAbsOptTestStatistic::cctor(" << GetName() << ") WARNING clone of optimized test statistic with unowned data will not be optimized, "
+			  << "to retain optimization behavior in cloning, construct test statistic with CloneData(kTRUE)" << endl ;
+    }
   }
 
   // Attach function clone to dataset
@@ -370,6 +388,8 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
   } else {
     _projDeps = 0 ;
   }
+
+  optimizeCaching() ;
 
   _func = _funcClone ;
   _data = _dataClone ;
@@ -453,14 +473,25 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode)
   // be abanoned. If codes ConfigChange or ValueChange are sent, any existing
   // constant term optimizations will be redone.
 
-  if (!allowFunctionCache()) {
-    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
-			  << ") function caching prohibited by test statistic, no constant term optimization is applied" << endl ;
+  RooAbsTestStatistic::constOptimizeTestStatistic(opcode);
+  if (operMode()!=Slave) return ;
+
+  if (_dataClone->hasFilledCache() && _dataClone->store()->cacheOwner()!=this) {
+    if (opcode==Activate) {
+      cxcoutW(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
+			    << ") dataset cache is owned by another object, no constant term optimization can be applied" << endl ;
+    }
     return ;
   }
 
-  RooAbsTestStatistic::constOptimizeTestStatistic(opcode);
-  if (operMode()!=Slave) return ;
+
+  if (!allowFunctionCache()) {
+    if (opcode==Activate) {
+      cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
+			    << ") function caching prohibited by test statistic, no constant term optimization is applied" << endl ;
+    }
+    return ;
+  }
 
   switch(opcode) {
   case Activate:     
@@ -543,7 +574,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
     _funcClone->findConstantNodes(*_dataClone->get(),cacheableNodes) ;
 
     // Cache constant nodes with dataset 
-    _dataClone->cacheArgs(cacheableNodes,_normSet) ;  
+    _dataClone->cacheArgs(this,cacheableNodes,_normSet) ;  
     
     // Put all cached nodes in AClean value caching mode so that their evaluate() is never called
     TIterator* cIter = cacheableNodes.createIterator() ;
@@ -566,6 +597,9 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
     
     // Reset all nodes to ADirty   
     optimizeCaching() ;
+
+    // Disable propagation of dirty state flags for observables
+    _dataClone->setDirtyProp(kFALSE) ;  
     
   }
 }

@@ -50,12 +50,15 @@
 #include "TSystem.h"
 #include "TRegexp.h"
 #include "RooFactoryWSTool.h"
+#include "RooAbsStudy.h"
+#include "RooTObjWrap.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "Api.h"
 #include <map>
 #include <string>
 #include <list>
+#include <set>
 
 using namespace std ;
 
@@ -230,6 +233,60 @@ RooWorkspace::~RooWorkspace()
 
 
 //_____________________________________________________________________________
+Bool_t RooWorkspace::import(const char* fileSpec, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
+{
+  // Import a RooAbsArg or RooAbsData set from a workspace in a file. Filespec should be constructed as "filename:wspacename:objectname"
+  // The arguments will be passed on to the relevant RooAbsArg& or RooAbsData& import call
+
+  // Parse file/workspace/objectname specification
+  char buf[1024] ;
+  strcpy(buf,fileSpec) ;
+  char* filename = strtok(buf,":") ;
+  char* wsname = strtok(0,":") ;
+  char* objname = strtok(0,":") ;
+
+  // Check that parsing was successful
+  if (!filename||!wsname||!objname) {
+    coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR in file specification, expecting for 'filename:wsname:objname'" << endl ;
+    return kTRUE ;
+  }
+
+  // Check that file can be opened
+  TFile* f = TFile::Open(filename) ;
+  if (f==0) {
+    coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR opening file " << filename << endl ;
+    return 0 ;
+  }
+
+  // That that file contains workspace
+  RooWorkspace* w = dynamic_cast<RooWorkspace*>(f->Get(wsname)) ;
+  if (w==0) {
+    coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR: No object named " << wsname << " in file " << filename 
+			  << " or object is not a RooWorkspace" << endl ;
+    return 0 ;
+  }
+
+  // Check that workspace contains object and forward to appropriate import method
+  RooAbsArg* warg = w->arg(objname) ;
+  if (warg) {
+    Bool_t ret = import(*warg,arg1,arg2,arg3) ;
+    delete f ;
+    return ret ;    
+  }
+  RooAbsData* wdata = w->data(objname) ;
+  if (wdata) {
+    Bool_t ret = import(*wdata,arg1,arg2,arg3) ;
+    delete f ;
+    return ret ;    
+  }
+
+  coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR: No RooAbsArg or RooAbsData object named " << objname 
+			<< " in workspace " << wsname << " in file " << filename << endl ;
+  return kTRUE ;  
+}
+
+
+//_____________________________________________________________________________
 Bool_t RooWorkspace::import(const RooArgSet& args, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
 {
   // Import multiple RooAbsArg objects into workspace. For details on arguments see documentation
@@ -261,6 +318,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   //  RenameConflictNodes(const char* suffix) -- Add suffix to branch node name if name conflicts with existing node in workspace
   //  RenameAllNodes(const char* suffix) -- Add suffix to all branch node names including top level node
   //  RenameAllVariables(const char* suffix) -- Add suffix to all variables names
+  //  RenameAllVariablesExcept(const char* suffix, const char* exceptionList) -- Add suffix to all variables names, except ones listed
   //  RenameVariable(const char* inputName, const char* outputName) -- Rename variable as specified upon import.
   //  RecycleConflictNodes() -- If any of the function objects to be imported already exist in the name space, connect the
   //                            imported expression to the already existing nodes. WARNING: use with care! If function definitions
@@ -282,8 +340,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   pc.defineString("conflictSuffix","RenameConflictNodes",0) ;
   pc.defineString("allSuffix","RenameAllNodes",0) ;
   pc.defineString("allVarsSuffix","RenameAllVariables",0) ;
+  pc.defineString("allVarsExcept","RenameAllVariables",1) ;
   pc.defineString("varChangeIn","RenameVar",0,"",kTRUE) ;
   pc.defineString("varChangeOut","RenameVar",1,"",kTRUE) ;
+  pc.defineString("factoryTag","FactoryTag",0) ;
   pc.defineInt("useExistingNodes","RecycleConflictNodes",0,0) ;
   pc.defineInt("silence","Silence",0,0) ;
   pc.defineMutex("RenameConflictNodes","RenameAllNodes") ;
@@ -301,6 +361,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   const char* suffixC = pc.getString("conflictSuffix") ;
   const char* suffixA = pc.getString("allSuffix") ;
   const char* suffixV = pc.getString("allVarsSuffix") ;
+  const char* exceptVars = pc.getString("allVarsExcept") ;
   const char* varChangeIn = pc.getString("varChangeIn") ;
   const char* varChangeOut = pc.getString("varChangeOut") ;
   Int_t useExistingNodes = pc.getInt("useExistingNodes") ;
@@ -339,13 +400,27 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
     }       
   }
 
-  // Process RenameAllVariables argument if specified
+  // Process RenameAllVariables argument if specified  
+  // First convert exception list if provided
+  std::set<string> exceptVarNames ;
+  char tmp[1024] ;
+  if (exceptVars && strlen(exceptVars)) {
+    strcpy(tmp,exceptVars) ;
+    char* ptr = strtok(tmp,",") ;
+    while(ptr) {
+      exceptVarNames.insert(ptr) ;
+      ptr = strtok(0,",") ;
+    }
+  }
+
   if (suffixV != 0 && strlen(suffixV)>0) {
     RooArgSet* vars = inArg.getVariables() ;
     TIterator* iter = vars->createIterator() ;
     RooAbsArg* v ;
     while((v=(RooAbsArg*)iter->Next())) {
-      varMap[v->GetName()] = Form("%s_%s",v->GetName(),suffixV) ;
+      if (exceptVarNames.find(v->GetName())==exceptVarNames.end()) {
+	varMap[v->GetName()] = Form("%s_%s",v->GetName(),suffixV) ;
+      }
     }
     delete iter ;
     delete vars ;
@@ -353,16 +428,29 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   
   // Scan for overlaps with current contents
   RooAbsArg* wsarg = _allOwnedNodes.find(inArg.GetName()) ;
+
+  // Check for factory specification match
+  const char* tagIn = inArg.getStringAttribute("factory_tag") ;
+  const char* tagWs = wsarg ? wsarg->getStringAttribute("factory_tag") : 0 ;
+  Bool_t factoryMatch = (tagIn && tagWs && !strcmp(tagIn,tagWs)) ;
+  if (factoryMatch) {
+    ((RooAbsArg&)inArg).setAttribute("RooWorkspace::Recycle") ;
+  }
+
   if (!suffix && wsarg && !useExistingNodes && !(inArg.isFundamental() && varMap[inArg.GetName()]!="")) {
-    if (wsarg!=&inArg) {
-      coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << inArg.GetName() 
-			    << ": another instance with same name already in the workspace and no conflict resolution protocol specified" << endl ;
-      return kTRUE ;    
-    } else {
-      if (!silence) {
-	coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Object " << inArg.GetName() << " is already in workspace!" << endl ;
+    if (!factoryMatch) {
+      if (wsarg!=&inArg) {
+	coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << inArg.GetName() 
+			      << ": another instance with same name already in the workspace and no conflict resolution protocol specified" << endl ;
+	return kTRUE ;    
+      } else {
+	if (!silence) {
+	  coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Object " << inArg.GetName() << " is already in workspace!" << endl ;
+	}
+	return kTRUE ;    
       }
-      return kTRUE ;    
+    } else {
+      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Recycling existing object " << inArg.GetName() << " created with identical factory specification" << endl ;
     }
   }
 
@@ -374,7 +462,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   RooAbsArg* branch ;
   while ((branch=(RooAbsArg*)iter->Next())) {
     RooAbsArg* wsbranch = _allOwnedNodes.find(branch->GetName()) ;
-    if (wsbranch && wsbranch!=branch && !branch->getAttribute("RooWorkspace::Recycle")) {
+    if (wsbranch && wsbranch!=branch && !branch->getAttribute("RooWorkspace::Recycle") && !useExistingNodes) {
       conflictNodes.add(*branch) ;
     }
   }
@@ -476,6 +564,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   iter = cloneSet2->createIterator() ;
   RooAbsArg* node ;
   RooArgSet recycledNodes ;
+  RooArgSet nodesToBeDeleted ;
   while((node=(RooAbsArg*)iter->Next())) {
 
     if (_autoClass) {
@@ -492,6 +581,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
 
     // Check if node is already in workspace (can only happen for variables or identical instances, unless RecycleConflictNodes is specified)
     RooAbsArg* wsnode = _allOwnedNodes.find(node->GetName()) ;
+
     if (wsnode) {
       // Do not import node, add not to list of nodes that require reconnection
       if (!silence && useExistingNodes) {
@@ -501,6 +591,9 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
       }
       recycledNodes.add(*_allOwnedNodes.find(node->GetName())) ;
 
+      // Delete clone of incoming node
+      nodesToBeDeleted.addOwned(*node) ;
+      
     } else {
       // Import node
       if (!silence) {
@@ -524,7 +617,6 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   // Release working copy
   delete cloneSet ;
 
-
   // Reconnect any nodes that need to be
   if (recycledNodes.getSize()>0) {
     iter->Reset() ;
@@ -532,9 +624,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
       node->redirectServers(recycledNodes) ;
     }
   }
-
   delete iter ;
-  
+
+  cloneSet2->releaseOwnership() ;
+  delete cloneSet2 ;  
 
   return kFALSE ;
 }
@@ -890,6 +983,23 @@ Bool_t RooWorkspace::importClassCode(const char* pat, Bool_t doReplace)
 
 
 
+
+
+//_____________________________________________________________________________
+Bool_t RooWorkspace::saveSnapshot(const char* name, const char* paramNames) 
+{
+  // Save snapshot of values and attributes (including "Constant") of parameters 'params'
+  // If importValues is FALSE, the present values from the object in the workspace are
+  // saved. If importValues is TRUE, the values of the objects passed in the 'params'
+  // argument are saved
+
+  return saveSnapshot(name,argSet(paramNames),kFALSE) ;
+}
+
+
+
+
+
 //_____________________________________________________________________________
 Bool_t RooWorkspace::saveSnapshot(const char* name, const RooArgSet& params, Bool_t importValues) 
 {
@@ -1025,6 +1135,30 @@ RooAbsArg* RooWorkspace::arg(const char* name)
   // Return RooAbsArg with given name. A null pointer is returned if none is found.
   return _allOwnedNodes.find(name) ;
 }
+
+
+
+//_____________________________________________________________________________
+RooArgSet RooWorkspace::argSet(const char* nameList) 
+{
+  // Return set of RooAbsArgs matching to given list of names
+  RooArgSet ret ;
+
+  char tmp[1024] ;
+  strcpy(tmp,nameList) ;
+  char* token = strtok(tmp,",") ;
+  while(token) {
+    RooAbsArg* oneArg = arg(token) ;
+    if (oneArg) {
+      ret.add(*oneArg) ;
+    } else {
+      coutE(InputArguments) << " RooWorkspace::argSet(" << GetName() << ") no RooAbsArg named " << token << " in workspace" << endl ;
+    }
+    token = strtok(0,",") ; 
+  }
+  return ret ;
+}
+
 
 
 //_____________________________________________________________________________
@@ -1390,7 +1524,7 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
   // importation and the input argument does not need to live beyond the import call
   // 
   // Returns kTRUE if an error has occurred.
-
+  
   // First check if object with given name already exists
   TObject* oldObj = _genObjects.FindObject(object.GetName()) ;
   if (oldObj && !replaceExisting) {
@@ -1411,10 +1545,94 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
 
 
 //_____________________________________________________________________________
+Bool_t RooWorkspace::import(TObject& object, const char* aliasName, Bool_t replaceExisting) 
+{
+  // Import a clone of a generic TObject into workspace generic object container. 
+  // The imported object will be stored under the given alias name rather than its
+  // own name. Imported object can be retrieved its alias name through the obj() method. 
+  // The object is cloned upon importation and the input argument does not need to live beyond the import call
+  // This method is mostly useful for importing objects that do not have a settable name such as TMatrix
+  // 
+  // Returns kTRUE if an error has occurred.
+  
+  // First check if object with given name already exists
+  TObject* oldObj = _genObjects.FindObject(object.GetName()) ;
+  if (oldObj && !replaceExisting) {
+    coutE(InputArguments) << "RooWorkspace::import(" << GetName() << ") generic object with name " 
+			  << object.GetName() << " is already in workspace and replaceExisting flag is set to false" << endl ;
+    return kTRUE ;
+  }  
+  
+  RooTObjWrap* wrapper = new RooTObjWrap(object.Clone()) ;
+  wrapper->setOwning(kTRUE) ;
+  wrapper->SetName(aliasName) ;
+  wrapper->SetTitle(aliasName) ;
+    
+  if (oldObj) {
+    _genObjects.Replace(oldObj,wrapper) ;
+    delete oldObj ;
+  } else {
+    _genObjects.Add(wrapper) ;
+  }
+  return kFALSE ;
+}
+
+
+
+
+//_____________________________________________________________________________
+Bool_t RooWorkspace::addStudy(RooAbsStudy& study) 
+{
+  // Insert RooStudyManager module
+  RooAbsStudy* clone = (RooAbsStudy*) study.Clone() ;
+  _studyMods.Add(clone) ;
+  return kFALSE ;
+}
+
+
+
+
+//_____________________________________________________________________________
+void RooWorkspace::clearStudies() 
+{
+  // Remove all RooStudyManager modules
+  _studyMods.Delete() ;
+}
+
+
+
+
+//_____________________________________________________________________________
 TObject* RooWorkspace::obj(const char* name)  
 {
+  // Return any type of object (RooAbsArg, RooAbsData or generic object) with given name)
+
+  // Try RooAbsArg first
+  TObject* ret = arg(name) ;
+  if (ret) return ret ;
+
+  // Then try RooAbsData
+  ret = data(name) ;
+  if (ret) return ret ;
+
+  // Finally try generic object store
+  return genobj(name) ;
+}
+
+
+
+//_____________________________________________________________________________
+TObject* RooWorkspace::genobj(const char* name)  
+{
   // Return generic object with given name
-  return _genObjects.FindObject(name) ;
+
+  // Find object by name
+  TObject* gobj = _genObjects.FindObject(name) ;
+
+  // If found object is wrapper, return payload
+  if (gobj->IsA()==RooTObjWrap::Class()) return ((RooTObjWrap*)gobj)->obj() ;
+
+  return gobj ;
 }
 
 
@@ -1465,14 +1683,16 @@ RooAbsArg* RooWorkspace::factory(const char* expr)
 
 
 
-
-
-
 //_____________________________________________________________________________
-void RooWorkspace::Print(Option_t* /*opts*/) const 
+void RooWorkspace::Print(Option_t* opts) const 
 {
   // Print contents of the workspace 
-  
+
+  Bool_t treeMode(kFALSE) ;
+  if (TString(opts).Contains("t")) {
+    treeMode=kTRUE ;
+  }
+
   cout << endl << "RooWorkspace(" << GetName() << ") " << GetTitle() << " contents" << endl << endl  ;
   
   RooAbsArg* parg ;
@@ -1489,33 +1709,65 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
   TIterator* iter = _allOwnedNodes.createIterator() ;
   while((parg=(RooAbsArg*)iter->Next())) {
 
-    if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
-      if (((RooResolutionModel*)parg)->isConvolved()) {
-	convResoSet.add(*parg) ;
-      } else {
-	resoSet.add(*parg) ;
-      }
-    }
-    
-    if (parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
-	!parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
-      pdfSet.add(*parg) ;
-    }
+    //---------------
 
-    if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) && 
-	!parg->IsA()->InheritsFrom(RooAbsPdf::Class()) && 
-	!parg->IsA()->InheritsFrom(RooConstVar::Class()) && 
-	!parg->IsA()->InheritsFrom(RooRealVar::Class())) {
-      funcSet.add(*parg) ;
+    if (treeMode) {
+      
+      // In tree mode, only add nodes with no clients to the print lists
+
+      if (parg->IsA()->InheritsFrom(RooAbsPdf::Class())) {
+	if (!parg->hasClients()) {
+	  pdfSet.add(*parg) ;
+	}
+      }
+      
+      if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) && 
+	  !parg->IsA()->InheritsFrom(RooAbsPdf::Class()) && 
+	  !parg->IsA()->InheritsFrom(RooConstVar::Class()) && 
+	  !parg->IsA()->InheritsFrom(RooRealVar::Class())) {
+	if (!parg->hasClients()) {
+	  funcSet.add(*parg) ;
+	}
+      }
+      
+      
+      if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) && 
+	  !parg->IsA()->InheritsFrom(RooCategory::Class())) {
+	if (!parg->hasClients()) {	
+	  catfuncSet.add(*parg) ;
+	}
+      }
+
+    } else {
+
+      if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
+	if (((RooResolutionModel*)parg)->isConvolved()) {
+	  convResoSet.add(*parg) ;
+	} else {
+	  resoSet.add(*parg) ;
+	}
+      }
+      
+      if (parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
+	  !parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
+	pdfSet.add(*parg) ;
+      }
+      
+      if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) && 
+	  !parg->IsA()->InheritsFrom(RooAbsPdf::Class()) && 
+	  !parg->IsA()->InheritsFrom(RooConstVar::Class()) && 
+	  !parg->IsA()->InheritsFrom(RooRealVar::Class())) {
+	funcSet.add(*parg) ;
+      }
+      
+      if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) && 
+	  !parg->IsA()->InheritsFrom(RooCategory::Class())) {
+	catfuncSet.add(*parg) ;
+      }
     }
 
     if (parg->IsA()->InheritsFrom(RooRealVar::Class())) {
       varSet.add(*parg) ;
-    }
-
-    if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) && 
-	!parg->IsA()->InheritsFrom(RooCategory::Class())) {
-      catfuncSet.add(*parg) ;
     }
 
     if (parg->IsA()->InheritsFrom(RooCategory::Class())) {
@@ -1543,27 +1795,33 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     pdfSet.sort() ;
     iter = pdfSet.createIterator() ;
     while((parg=(RooAbsArg*)iter->Next())) {
-      parg->Print() ;
+      if (treeMode) {
+	parg->printComponentTree() ;
+      } else {
+	parg->Print() ;
+      }
     }
     delete iter ;
     cout << endl ;
   }
 
-  if (resoSet.getSize()>0) {
-    cout << "analytical resolution models" << endl ;
-    cout << "----------------------------" << endl ;
-    resoSet.sort() ;
-    iter = resoSet.createIterator() ;
-    while((parg=(RooAbsArg*)iter->Next())) {
-      parg->Print() ;
+  if (!treeMode) {
+    if (resoSet.getSize()>0) {
+      cout << "analytical resolution models" << endl ;
+      cout << "----------------------------" << endl ;
+      resoSet.sort() ;
+      iter = resoSet.createIterator() ;
+      while((parg=(RooAbsArg*)iter->Next())) {
+	parg->Print() ;
+      }
+      delete iter ;
+      //     iter = convResoSet.createIterator() ;
+      //     while((parg=(RooAbsArg*)iter->Next())) {
+      //       parg->Print() ;
+      //     }
+      //     delete iter ;
+      cout << endl ;
     }
-    delete iter ;
-//     iter = convResoSet.createIterator() ;
-//     while((parg=(RooAbsArg*)iter->Next())) {
-//       parg->Print() ;
-//     }
-//     delete iter ;
-    cout << endl ;
   }
 
   if (funcSet.getSize()>0) {
@@ -1572,7 +1830,11 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     funcSet.sort() ;
     iter = funcSet.createIterator() ;
     while((parg=(RooAbsArg*)iter->Next())) {
-      parg->Print() ;
+      if (treeMode) {
+	parg->printComponentTree() ;
+      } else {
+	parg->Print() ;
+      }
     }
     delete iter ;
     cout << endl ;
@@ -1584,7 +1846,11 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     catfuncSet.sort() ;
     iter = catfuncSet.createIterator() ;
     while((parg=(RooAbsArg*)iter->Next())) {
-      parg->Print() ;
+      if (treeMode) {
+	parg->printComponentTree() ;
+      } else {
+	parg->Print() ;
+      }
     }
     delete iter ;
     cout << endl ;
@@ -1638,14 +1904,31 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     cout << endl ;
   }
 
-
+ 
   if (_genObjects.GetSize()>0) {
     cout << "generic objects" << endl ;
     cout << "---------------" << endl ;
     iter = _genObjects.MakeIterator() ;
     TObject* gobj ;
     while((gobj=(TObject*)iter->Next())) {
-      cout << gobj->IsA()->GetName() << "::" << gobj->GetName() << endl ;
+      if (gobj->IsA()==RooTObjWrap::Class()) {
+	cout << ((RooTObjWrap*)gobj)->obj()->IsA()->GetName() << "::" << gobj->GetName() << endl ;
+      } else {
+	cout << gobj->IsA()->GetName() << "::" << gobj->GetName() << endl ;
+      }
+    }
+    delete iter ;
+    cout << endl ;
+    
+  }
+
+  if (_studyMods.GetSize()>0) {
+    cout << "study modules" << endl ;
+    cout << "-------------" << endl ;
+    iter = _studyMods.MakeIterator() ;
+    TObject* smobj ;
+    while((smobj=(TObject*)iter->Next())) {
+      cout << smobj->IsA()->GetName() << "::" << smobj->GetName() << endl ;
     }
     delete iter ;
     cout << endl ;
@@ -1686,7 +1969,7 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
 
      UInt_t R__s, R__c;
      R__b.ReadVersion(&R__s, &R__c); 
-     
+
      // Stream contents of ClassFiles map
      Int_t count(0) ;
      R__b >> count ;
@@ -1763,7 +2046,18 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 
       R__b.ReadClassBuffer(RooWorkspace::Class(),this);
 
+      // Make expensive object cache of all objects point to intermal copy.
+      // Somehow this doesn't work OK automatically
+      TIterator* iter = _allOwnedNodes.createIterator() ;
+      RooAbsArg* node ;
+      while((node=(RooAbsArg*)iter->Next())) {
+	node->setExpensiveObjectCache(_eocache) ;
+      }
+      delete iter ;
+
+
    } else {
+
 
      // Make lists of external clients of WS objects, and remove those links temporarily
 

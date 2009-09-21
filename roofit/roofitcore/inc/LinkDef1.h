@@ -18,6 +18,7 @@
 #pragma link C++ class RooAbsMCStudyModule+ ;
 #pragma link C++ class RooAbsOptTestStatistic+ ;
 #pragma link C++ class RooAbsPdf+ ;
+#pragma link C++ class RooAbsPdf::GenSpec+ ;
 #pragma link C++ class RooAbsProxy+ ;
 #pragma link C++ class RooAbsReal+ ;
 #pragma link C++ class RooAbsRealLValue+ ;
@@ -32,7 +33,7 @@
 #pragma link C++ class RooArgList+ ;
 #pragma link C++ class RooArgProxy+ ;
 #pragma link C++ class RooArgSet+ ;
-#pragma link C++ class RooBinning+ ;
+#pragma link C++ class RooBinning- ;
 #pragma link C++ class RooBrentRootFinder+ ;
 #pragma link C++ class RooCategory- ;
 #pragma link C++ class RooCategoryProxy+ ;

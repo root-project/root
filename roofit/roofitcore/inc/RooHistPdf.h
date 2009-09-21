@@ -87,7 +87,7 @@ protected:
   friend class RooAbsCachedPdf ;
   Double_t totVolume() const ;
 
-  RooSetProxy       _histObsList ; // List of observables defining dimensions of histogram
+  RooArgSet         _histObsList ; // List of observables defining dimensions of histogram
   RooSetProxy       _pdfObsList ;  // List of observables mapped onto histogram observables
   RooDataHist*      _dataHist ;  // Unowned pointer to underlying histogram
   TIterator*         _histObsIter ; //! 
@@ -96,9 +96,9 @@ protected:
   Int_t             _intOrder ; // Interpolation order
   Bool_t            _cdfBoundaries ; // Use boundary conditions for CDFs.
   mutable Double_t  _totVolume ; //! Total volume of space (product of ranges of observables)
-  Bool_t            _unitNorm  ; //! Assume contents is unit normalized (for use as pdf cache)
+  Bool_t            _unitNorm  ; // Assume contents is unit normalized (for use as pdf cache)
 
-  ClassDef(RooHistPdf,2) // Histogram based PDF
+  ClassDef(RooHistPdf,4) // Histogram based PDF
 };
 
 #endif

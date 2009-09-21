@@ -18,6 +18,7 @@ class RooTFnBinding : public RooAbsReal {
 public:
   RooTFnBinding() {} ; 
   RooTFnBinding(const char *name, const char *title, TF1* _func, const RooArgList& _list);
+  RooTFnBinding(const char *name, const char *title, TF1* _func, const RooArgList& _list, const RooArgList& _plist);
   RooTFnBinding(const RooTFnBinding& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooTFnBinding(*this,newname); }
   inline virtual ~RooTFnBinding() { }
@@ -26,7 +27,8 @@ public:
 
 protected:
 
-  RooListProxy list ;
+  RooListProxy olist ;
+  RooListProxy plist ;
   TF1* func ;
   
   Double_t evaluate() const ;
@@ -42,6 +44,10 @@ namespace RooFit {
 RooAbsReal* bindFunction(TF1* func,RooAbsReal& x) ;
 RooAbsReal* bindFunction(TF2* func,RooAbsReal& x, RooAbsReal& y) ;
 RooAbsReal* bindFunction(TF3* func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) ;
+
+RooAbsReal* bindFunction(TF1* func,RooAbsReal& x, const RooArgList& params) ;
+RooAbsReal* bindFunction(TF2* func,RooAbsReal& x, RooAbsReal& y, const RooArgList& params) ;
+RooAbsReal* bindFunction(TF3* func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, const RooArgList& params) ;
 
 }
 

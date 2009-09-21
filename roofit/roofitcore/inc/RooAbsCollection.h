@@ -41,6 +41,7 @@ public:
   // of the original variables.
   RooAbsCollection(const RooAbsCollection& other, const char *name="");
   RooAbsCollection& operator=(const RooAbsCollection& other);
+  RooAbsCollection& assignValueOnly(const RooAbsCollection& other) ;
   RooAbsCollection& assignFast(const RooAbsCollection& other) ;
 
   // Copy list and contents (and optionally 'deep' servers)

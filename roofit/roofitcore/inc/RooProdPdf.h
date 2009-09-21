@@ -74,7 +74,7 @@ public:
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
   // Constraint management
-  virtual RooArgSet* getConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const ;
+  virtual RooArgSet* getConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams, Bool_t stripDisconnected) const ;
 
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
 
@@ -82,6 +82,8 @@ public:
 
 
 protected:
+
+  virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, Bool_t stripDisconnected) const ;
 
   void initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l) ;
 

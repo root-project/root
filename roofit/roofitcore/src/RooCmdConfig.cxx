@@ -288,6 +288,25 @@ void RooCmdConfig::defineMutex(const char* argName1, const char* argName2, const
 
 
 //_____________________________________________________________________________
+void RooCmdConfig::defineMutex(const char* argName1, const char* argName2, const char* argName3, const char* argName4, const char* argName5) 
+{
+  // Define arguments named argName1,argName2,argName3 and argName4 mutually exclusive
+
+  defineMutex(argName1,argName2) ;
+  defineMutex(argName1,argName3) ;
+  defineMutex(argName1,argName4) ;
+  defineMutex(argName1,argName4) ;
+  defineMutex(argName2,argName3) ;
+  defineMutex(argName2,argName4) ;
+  defineMutex(argName2,argName4) ;
+  defineMutex(argName3,argName4) ;
+  defineMutex(argName3,argName5) ;
+  defineMutex(argName4,argName5) ;
+}
+
+
+
+//_____________________________________________________________________________
 Bool_t RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intNum, Int_t defVal)
 {
   // Define integer property name 'name' mapped to integer in slot 'intNum' in RooCmdArg with name argName

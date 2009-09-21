@@ -594,23 +594,25 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
     // If not, create a new term
     if (!done) {
-      term = new RooArgSet("term") ;
-      termNormDeps = new RooArgSet("termNormDeps") ;
-      termAllDeps = new RooArgSet("termAllDeps") ;
-      termIntDeps = new RooArgSet("termIntDeps") ;
-      termIntNoNormDeps = new RooArgSet("termIntNoNormDeps") ;
-
-      term->add(*pdf) ;
-      termNormDeps->add(pdfNormDeps,kFALSE) ;
-      termAllDeps->add(pdfAllDeps,kFALSE) ;
-      termIntDeps->add(*pdfIntSet,kFALSE) ;
-      termIntNoNormDeps->add(pdfIntNoNormDeps,kFALSE) ;
-
-      termList.Add(term) ;
-      normList.Add(termNormDeps) ;
-      depAllList.Add(termAllDeps) ;
-      intList.Add(termIntDeps) ;
-      depIntNoNormList.Add(termIntNoNormDeps) ;
+      if (!(pdfNormDeps.getSize()==0&&pdfAllDeps.getSize()==0&&pdfIntSet->getSize()==0) || normSet.getSize()==0) {
+	term = new RooArgSet("term") ;
+	termNormDeps = new RooArgSet("termNormDeps") ;
+	termAllDeps = new RooArgSet("termAllDeps") ;
+	termIntDeps = new RooArgSet("termIntDeps") ;
+	termIntNoNormDeps = new RooArgSet("termIntNoNormDeps") ;
+	
+	term->add(*pdf) ;
+	termNormDeps->add(pdfNormDeps,kFALSE) ;
+	termAllDeps->add(pdfAllDeps,kFALSE) ;
+	termIntDeps->add(*pdfIntSet,kFALSE) ;
+	termIntNoNormDeps->add(pdfIntNoNormDeps,kFALSE) ;
+	
+	termList.Add(term) ;
+	normList.Add(termNormDeps) ;
+	depAllList.Add(termAllDeps) ;
+	intList.Add(termIntDeps) ;
+	depIntNoNormList.Add(termIntNoNormDeps) ;
+      }
     }
 
     // We own the reduced version of pdfNSet
@@ -697,7 +699,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
   
   while((group=(RooLinkedList*)gIter->Next())) {
 
-//     group->Print("1") ;
+    //group->Print("1") ;
     
     if (group->GetSize()==1) {
       RooArgSet* term = (RooArgSet*) group->At(0) ;
@@ -1369,14 +1371,15 @@ RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf& pdf) const
 
 
 //_____________________________________________________________________________
-RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const
+RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams, Bool_t stripDisconnected) const
 {
   // Return all parameter constraint p.d.f.s on parameters listed in constrainedParams
   // The observables set is required to distinguish unambiguously p.d.f in terms 
   // of observables and parameters, which are not constraints, and p.d.fs in terms
   // of parameters only, which can serve as constraints p.d.f.s
 
-  RooArgSet* ret = new RooArgSet("constraints") ;
+  RooArgSet constraints ;
+  RooArgSet pdfParams ;
 
   // Loop over p.d.f. components
   TIterator* piter = _pdfList.createIterator() ;
@@ -1385,15 +1388,73 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, const RooArg
     // A constraint term is a p.d.f that does not depend on any of the listed observables
     // but does depends on any of the parameters that should be constrained
     if (!pdf->dependsOnValue(observables) && pdf->dependsOnValue(constrainedParams)) {
-      ret->add(*pdf) ;
+      constraints.add(*pdf) ;
+    } else {
+      RooArgSet* tmp = pdf->getParameters(observables) ;
+      pdfParams.add(*tmp,kTRUE) ;
+      delete tmp ;
     }
   }
 
+  // Strip any constraints that are completely decoupled from the other product terms
+  RooArgSet* finalConstraints = new RooArgSet("constraints") ;
+  TIterator* citer = constraints.createIterator() ;
+  while((pdf=(RooAbsPdf*)citer->Next())) {
+    if (pdf->dependsOnValue(pdfParams) || !stripDisconnected) {
+      finalConstraints->add(*pdf) ;
+    } else {
+      coutI(Minimization) << "RooProdPdf::getConstraints(" << GetName() << ") omitting term " << pdf->GetName() 
+			  << " as constraint term as it does not share any parameters with the other pdfs in product. "
+			  << "To force inclusion in likelihood, add an explicit Constrain() argument for the target parameter" << endl ;
+    }
+  }
+  delete citer ;
+  
   delete piter ;
-
-  return ret ;
+  
+  return finalConstraints ;
 }
 
+
+
+
+//_____________________________________________________________________________
+void RooProdPdf::getParametersHook(const RooArgSet* nset, RooArgSet* params, Bool_t stripDisconnected) const 
+{
+  if (!stripDisconnected) return ;
+  if (!nset || nset->getSize()==0) return ;
+
+  // Get/create appropriate term list for this normalization set
+  RooArgList *plist ;
+  RooLinkedList *nlist ;
+  Int_t code ;
+  getPartIntList(nset,0,plist,nlist,code) ;
+
+  // Strip any terms from params that do not depend on any term
+  TIterator* titer = plist->createIterator() ;
+  TIterator* piter = params->createIterator() ;
+  RooAbsReal* term, *param ;
+  RooArgSet tostrip ;
+  while((param=(RooAbsReal*)piter->Next())) {
+    Bool_t anyDep(kFALSE) ;
+    titer->Reset() ;
+    while((term=(RooAbsReal*)titer->Next())) {    
+      if (term->dependsOnValue(*param)) {
+	anyDep=kTRUE ;
+      }
+    }
+    if (!anyDep) {
+      tostrip.add(*param) ;
+    }
+  }
+  delete piter ;
+  delete titer ;
+
+  if (tostrip.getSize()>0) {
+    params->remove(tostrip,kTRUE,kTRUE);
+  }
+ 
+}
 
 
 //_____________________________________________________________________________
@@ -1445,4 +1506,5 @@ void RooProdPdf::printMetaArgs(ostream& os) const
     }
   }
   os << " " ;    
+  delete niter ;
 }

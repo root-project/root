@@ -21,6 +21,7 @@
 #include "TObject.h"
 #include <string>
 #include <vector>
+#include <stack>
 #include <map>
 #include "RooCmdArg.h"
 #include "RooGlobalFunc.h"
@@ -179,12 +180,16 @@ public:
   Int_t errorCount() const { return _errorCount ; }
   void clearErrorCount() { _errorCount = 0 ; }
 
+  void saveState() ; 
+  void restoreState() ;
+
 protected:
 
   Int_t activeStream(const RooAbsArg* self, RooFit::MsgTopic facility, RooFit::MsgLevel level) ;
   Int_t activeStream(const TObject* self, RooFit::MsgTopic facility, RooFit::MsgLevel level) ;
 
   std::vector<StreamConfig> _streams ;
+  std::stack<std::vector<StreamConfig> > _streamsSaved ;
   std::ostream* _devnull ;
 
   std::map<std::string,std::ostream*> _files ;

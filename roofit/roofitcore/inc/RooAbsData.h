@@ -20,6 +20,8 @@
 #include "RooPrintable.h"
 #include "RooArgSet.h"
 #include "RooFormulaVar.h"
+#include <math.h>
+#include "TMatrixDSym.h"
 
 class RooAbsArg;
 class RooAbsReal ;
@@ -52,6 +54,9 @@ public:
 
   RooAbsDataStore* store() { return _dstore ; }
   const RooAbsDataStore* store() const { return _dstore ; }
+  const TTree* tree() const ;
+  
+  virtual void Draw(Option_t* option = "") ;
 
   void checkInit() const ; 
 
@@ -122,7 +127,7 @@ public:
   } ;
 	
   // Split a dataset by a category
-  virtual TList* split(const RooAbsCategory& splitCat) const ;
+  virtual TList* split(const RooAbsCategory& splitCat, Bool_t createEmptyDataSets=kFALSE) const ;
  
 
   // Create 1,2, and 3D histograms from and fill it
@@ -157,10 +162,18 @@ public:
   Double_t standMoment(RooRealVar &var, Double_t order, const char* cutSpec=0, const char* cutRange=0) const ;
 
   Double_t mean(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,1,0,cutSpec,cutRange) ; }
-  Double_t sigma(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,2,cutSpec,cutRange) ; }
+  Double_t sigma(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return sqrt(moment(var,2,cutSpec,cutRange)) ; }
   Double_t skewness(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,3,cutSpec,cutRange) ; }
   Double_t kurtosis(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,4,cutSpec,cutRange) ; }
 
+  Double_t covariance(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,kFALSE) ; }
+  Double_t correlation(RooRealVar &x,RooRealVar &y, const char* cutSpec=0, const char* cutRange=0) const { return corrcov(x,y,cutSpec,cutRange,kTRUE) ; }
+
+  TMatrixDSym* covarianceMatrix(const char* cutSpec=0, const char* cutRange=0) const { return covarianceMatrix(*get(),cutSpec,cutRange) ; }
+  TMatrixDSym* correlationMatrix(const char* cutSpec=0, const char* cutRange=0) const { return correlationMatrix(*get(),cutSpec,cutRange) ; }
+  TMatrixDSym* covarianceMatrix(const RooArgList& vars, const char* cutSpec=0, const char* cutRange=0) const { return corrcovMatrix(vars,cutSpec,cutRange,kFALSE) ; }
+  TMatrixDSym* correlationMatrix(const RooArgList& vars, const char* cutSpec=0, const char* cutRange=0) const { return corrcovMatrix(vars,cutSpec,cutRange,kTRUE) ; }
+  
   RooRealVar* meanVar(RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
   RooRealVar* rmsVar(RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
 
@@ -179,9 +192,13 @@ public:
 
 
 
+  Bool_t hasFilledCache() const ; 
 
 
 protected:
+
+  Double_t corrcov(RooRealVar &x,RooRealVar &y, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
+  TMatrixDSym* corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
 
   virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList, const RooArgSet& keepObsList) ;
   Bool_t allClientsCached(RooAbsArg*, const RooArgSet&) ;
@@ -199,14 +216,16 @@ protected:
   friend class RooAbsOptTestStatistic ;
   friend class RooAbsCachedPdf ;
 
-  virtual void cacheArgs(RooArgSet& varSet, const RooArgSet* nset=0) ;
+  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0) ;
   virtual void resetCache() ;
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
-  virtual void initCache(const RooArgSet& cachedVars) ;
+  virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
 
-  virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) = 0 ; // DERIVED
+  virtual RooAbsData* cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName=0) = 0 ; // DERIVED
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
 	                        Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) = 0 ; // DERIVED
+
+  RooRealVar* dataRealVar(const char* methodname, RooRealVar& extVar) const ;
 
   // Column structure definition
   RooArgSet _vars;         // Dimensions of this data set

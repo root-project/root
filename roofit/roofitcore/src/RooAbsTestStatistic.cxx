@@ -425,7 +425,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
 
   TString simCatName(simCat.GetName()) ;
-  TList* dsetList = const_cast<RooAbsData*>(data)->split(simCat) ;
+  TList* dsetList = const_cast<RooAbsData*>(data)->split(simCat,processEmptyDataSets()) ;
   if (!dsetList) {
     coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") unable to split dataset, abort" << endl ;
     RooErrorHandler::softAbort() ;

@@ -18,6 +18,7 @@
 
 #include "RooAbsIntegrator.h"
 #include "RooNumIntConfig.h"
+#include "TString.h"
 
 namespace ROOT { namespace Math { class AdaptiveIntegratorMultiDim ; } } ;
 class RooMultiGenFunction ;
@@ -60,6 +61,7 @@ protected:
   Int_t    _nWarn ; // Max number of warnings to be issued ;
   RooMultiGenFunction* _func ; //! ROOT::Math multi-parameter function binding 
   ROOT::Math::AdaptiveIntegratorMultiDim* _integrator ;
+  TString _intName ; // Integrand name
 
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;	

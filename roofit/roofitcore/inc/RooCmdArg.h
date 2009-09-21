@@ -17,6 +17,7 @@
 #ifndef ROO_CMD_ARG
 #define ROO_CMD_ARG
 
+#include <string>
 #include "TNamed.h"
 #include "TString.h"
 #include "RooLinkedList.h"
@@ -85,7 +86,7 @@ public:
   }
   const char* getString(Int_t idx) const { 
     // Return string stored in slot idx
-      return _s[idx] ; 
+      return (_s[idx].size()>0) ? _s[idx].c_str() : 0 ; 
   }
   const TObject* getObject(Int_t idx) const { 
   // Return TObject stored in slot idx
@@ -106,13 +107,13 @@ private:
   // Payload
   Double_t _d[2] ;       // Payload doubles
   Int_t _i[2] ;          // Payload integers
-  const char* _s[3] ;    // Payload strings
+  std::string _s[3] ;    // Payload strings
   TObject* _o[2] ;       // Payload objects
   Bool_t _procSubArgs ;  // If true argument requires recursive processing
   RooArgSet* _c ;        // Payload RooArgSets 
   RooLinkedList _argList ; // Payload sub-arguments
 	
-  ClassDef(RooCmdArg,0) // Generic named argument container
+  ClassDef(RooCmdArg,1) // Generic named argument container
 };
 
 #endif

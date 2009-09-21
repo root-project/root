@@ -104,6 +104,8 @@ public:
   static RooDataHist& as_DHIST(UInt_t idx) { checkIndex(idx) ; return _of->asDHIST(_of->_args[idx].c_str()) ; }
   static RooDataSet& as_DSET(UInt_t idx) { checkIndex(idx) ; return _of->asDSET(_of->_args[idx].c_str()) ; }
 
+  static TObject& as_OBJ(UInt_t idx) { checkIndex(idx) ; return _of->asOBJ(_of->_args[idx].c_str()) ; }
+
   static const char* as_STRING(UInt_t idx) { checkIndex(idx) ; return _of->asSTRING(_of->_args[idx].c_str()) ; }
   static Int_t as_INT(UInt_t idx) { checkIndex(idx) ; return _of->asINT(_of->_args[idx].c_str()) ; }
   static Double_t as_DOUBLE(UInt_t idx) { checkIndex(idx) ; return _of->asDOUBLE(_of->_args[idx].c_str()) ; }
@@ -129,6 +131,8 @@ public:
   RooDataHist& asDHIST(const char*) ;
   RooDataSet& asDSET(const char*) ;
 
+  TObject& asOBJ(const char*) ;
+
   const char* asSTRING(const char*) ;
   Int_t asINT(const char*) ;
   Double_t asDOUBLE(const char*) ;
@@ -150,6 +154,8 @@ public:
   void logError() { _errorCount++ ; }
 
 protected:
+
+  std::string varTag(std::string& func, std::vector<std::string>& args) ;
 
   std::stack<std::string> _autoNamePrefix ; 
   std::map<std::string,std::string> _typeAliases ;

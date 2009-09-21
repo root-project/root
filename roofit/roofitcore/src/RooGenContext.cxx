@@ -425,7 +425,7 @@ void RooGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, T
   
   if(verbose) {
     os << indent << "Use PDF generator for " << _directVars << endl ;
-    os << indent << "Use MC sampling generator " << _generator->IsA()->GetName() << " for " << _otherVars << endl ;
+    os << indent << "Use MC sampling generator " << (_generator ? _generator->IsA()->GetName() : "<none>") << " for " << _otherVars << endl ;
     if (_protoVars.getSize()>0) {
       os << indent << "Prototype observables are " << _protoVars << endl ;
     }

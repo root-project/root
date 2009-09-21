@@ -64,7 +64,7 @@ ClassImp(RooFitResult)
 //_____________________________________________________________________________
 RooFitResult::RooFitResult(const char* name, const char* title) : 
   TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0),
-  _CM(0), _VM(0)
+  _CM(0), _VM(0), _GC(0)
 {  
   // Constructor with name and title
 
@@ -82,23 +82,23 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   _numBadNLL(other._numBadNLL),
   _minNLL(other._minNLL),
   _edm(other._edm),
+  _globalCorr(0),
   _randomPars(0),
   _Lt(0),
   _CM(0),
-  _VM(0)
+  _VM(0),
+  _GC(0)
 {
   // Copy constructor
 
   _constPars = (RooArgList*) other._constPars->snapshot() ;
   _initPars = (RooArgList*) other._initPars->snapshot() ;
   _finalPars = (RooArgList*) other._finalPars->snapshot() ;
-  _globalCorr = (RooArgList*) other._globalCorr->snapshot() ;
   if (other._randomPars) _randomPars = (RooArgList*) other._randomPars->snapshot() ;
   if (other._Lt) _Lt = new TMatrix(*other._Lt);
-  TIterator* iter = other._corrMatrix.MakeIterator() ;
-  RooArgList* corrMatrixRow(0);
-  while ((corrMatrixRow=(RooArgList*)iter->Next())) 
-    _corrMatrix.Add((RooArgList*)corrMatrixRow->snapshot() );
+  if (other._VM) _VM = new TMatrixDSym(*other._VM) ;
+  if (other._CM) _CM = new TMatrixDSym(*other._CM) ;
+  if (other._GC) _GC = new TVectorD(*other._GC) ;
 }
 
 
@@ -116,6 +116,7 @@ RooFitResult::~RooFitResult()
   if (_Lt) delete _Lt;
   if (_CM) delete _CM ;
   if (_VM) delete _VM ;
+  if (_GC) delete _GC ;
 
   _corrMatrix.Delete();
 
@@ -363,15 +364,17 @@ const RooArgList& RooFitResult::randomizePars() const
 Double_t RooFitResult::correlation(const char* parname1, const char* parname2) const 
 {
   // Return the correlation between parameters 'par1' and 'par2'
-
-  const RooArgList* row = correlation(parname1) ;
-  if (!row) return 0. ;
-  RooAbsArg* arg = _initPars->find(parname2) ;
-  if (!arg) {
-    coutE(InputArguments) << "RooFitResult::correlation: variable " << parname2 << " not a floating parameter in fit" << endl ;
-    return 0. ;
+  Int_t idx1 = _finalPars->index(parname1) ;
+  Int_t idx2 = _finalPars->index(parname2) ;
+  if (idx1<0) {
+    coutE(InputArguments) << "RooFitResult::correlation(" << GetName() << ") parameter " << parname1 << " is not a floating fit parameter" << endl ;
+    return 0 ;
   }
-  return ((RooRealVar*)row->at(_initPars->index(arg)))->getVal() ;
+  if (idx2<0) {
+    coutE(InputArguments) << "RooFitResult::correlation(" << GetName() << ") parameter " << parname2 << " is not a floating fit parameter" << endl ;
+    return 0 ;
+  }
+  return correlation(idx1,idx2) ;
 }
 
 
@@ -381,6 +384,10 @@ const RooArgList* RooFitResult::correlation(const char* parname) const
 {
   // Return the set of correlation coefficients of parameter 'par' with
   // all other floating parameters
+
+  if (_globalCorr==0) {
+    fillLegacyCorrMatrix() ;
+  }
 
   RooAbsArg* arg = _initPars->find(parname) ;
   if (!arg) {
@@ -396,6 +403,10 @@ const RooArgList* RooFitResult::correlation(const char* parname) const
 Double_t RooFitResult::globalCorr(const char* parname) 
 {
   // Return the global correlation of the named parameter
+
+  if (_globalCorr==0) {
+    fillLegacyCorrMatrix() ;
+  }
 
   RooAbsArg* arg = _initPars->find(parname) ;
   if (!arg) {
@@ -417,6 +428,10 @@ const RooArgList* RooFitResult::globalCorr()
 {
   // Return the list of all global correlations
 
+  if (_globalCorr==0) {
+    fillLegacyCorrMatrix() ;
+  }
+
   return _globalCorr ;
 }
 
@@ -426,12 +441,7 @@ const RooArgList* RooFitResult::globalCorr()
 Double_t RooFitResult::correlation(Int_t row, Int_t col) const 
 {
   // Return a correlation matrix element addressed with numeric indices.
-  
-  const RooArgList *rowVec= (const RooArgList*)_corrMatrix.At(row);
-  assert(0 != rowVec);
-  const RooRealVar *elem= (const RooRealVar*)rowVec->at(col);
-  assert(0 != elem);
-  return elem->getVal();
+  return (*_CM)(row,col) ;
 }
 
 
@@ -439,11 +449,7 @@ Double_t RooFitResult::correlation(Int_t row, Int_t col) const
 Double_t RooFitResult::covariance(Int_t row, Int_t col) const 
 {
   // Return the covariance matrix element addressed with numeric indices.
-
-  const RooRealVar *rowVar= (const RooRealVar*)_finalPars->at(row);
-  const RooRealVar *colVar= (const RooRealVar*)_finalPars->at(col);
-  assert(0 != rowVar && 0 != colVar);
-  return rowVar->getError()*colVar->getError()*correlation(row,col);  
+  return (*_VM)(row,col) ;
 }
 
 
@@ -454,6 +460,7 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbos
   // Print fit result to stream 'os'. In Verbose mode, the contant parameters and
   // the initial and final values of the floating parameters are printed. 
   // Standard mode only the final values of the floating parameters are printed
+
 
   os << endl 
      << indent << "  RooFitResult: minimized FCN value: " << _minNLL << ", estimated distance to minimum: " << _edm << endl
@@ -540,10 +547,11 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbos
 }
 
 
-
 //_____________________________________________________________________________
 void RooFitResult::fillCorrMatrix(const std::vector<double>& globalCC, const TMatrixDSym& corrs, const TMatrixDSym& covs)
 {
+  // Function called by RooMinimizer
+
   // Sanity check
   if (globalCC.empty() || corrs.GetNoElements() < 1 || covs.GetNoElements() < 1) {
     coutI(Minimization) << "RooFitResult::fillCorrMatrix: number of floating parameters is zero, correlation matrix not filled" << endl ;
@@ -556,16 +564,35 @@ void RooFitResult::fillCorrMatrix(const std::vector<double>& globalCC, const TMa
   }
 
   // Delete eventual prevous correlation data holders
-  if (_globalCorr) delete _globalCorr ;
   if (_CM) delete _CM ;
   if (_VM) delete _VM ;
+  if (_GC) delete _GC ;
 
+  // Build holding arrays for correlation coefficients
+  _CM = new TMatrixDSym(corrs) ;
+  _VM = new TMatrixDSym(covs) ;
+  _GC = new TVectorD(_CM->GetNcols()) ;
+  for(int i=0 ; i<_CM->GetNcols() ; i++) {
+    _GC[i] = globalCC[i] ;
+  }
+}
+
+
+
+
+
+//_____________________________________________________________________________
+void RooFitResult::fillLegacyCorrMatrix() const 
+{
+  // Sanity check
+  if (!_CM) return ;
+
+  // Delete eventual prevous correlation data holders
+  if (_globalCorr) delete _globalCorr ;
   _corrMatrix.Delete();
 
   // Build holding arrays for correlation coefficients
   _globalCorr = new RooArgList("globalCorrelations") ;
-  _CM = new TMatrixDSym(_initPars->getSize()) ;
-  _VM = new TMatrixDSym(_initPars->getSize()) ;
 
   TIterator* vIter = _initPars->createIterator() ;
   RooAbsArg* arg ;
@@ -608,23 +635,21 @@ void RooFitResult::fillCorrMatrix(const std::vector<double>& globalCC, const TMa
   TIterator *gcIter = _globalCorr->createIterator() ;
   TIterator *parIter = _finalPars->createIterator() ;
   RooRealVar* gcVal = 0;
-  for (unsigned int i = 0; i < globalCC.size(); ++i) {
+  for (unsigned int i = 0; i < (unsigned int)_CM->GetNcols() ; ++i) {
 
     // Find the next global correlation slot to fill, skipping fixed parameters
     gcVal = (RooRealVar*) gcIter->Next() ;
-    gcVal->setVal(globalCC[i]);
+    gcVal->setVal((*_GC)(i)) ; // WVE FIX THIS 
 
     // Fill a row of the correlation matrix
     TIterator* cIter = ((RooArgList*)_corrMatrix.At(i))->createIterator() ;
-    for (unsigned int it = 0; it < globalCC.size() ; ++it) {
+    for (unsigned int it = 0; it < (unsigned int)_CM->GetNcols() ; ++it) {
       RooRealVar* cVal = (RooRealVar*) cIter->Next() ;
-      double value = corrs(i,it);
+      double value = (*_CM)(i,it) ;
       cVal->setVal(value);      
       (*_CM)(i,it) = value;
-      (*_VM)(i,it) = covs(i,it);
     }
     delete cIter ;
-
   }
 
   delete gcIter ;
@@ -655,58 +680,14 @@ void RooFitResult::fillCorrMatrix()
   }
 
   // Delete eventual prevous correlation data holders
-  if (_globalCorr) delete _globalCorr ;
   if (_CM) delete _CM ;
   if (_VM) delete _VM ;
-
-  _corrMatrix.Delete();
-
+  if (_GC) delete _GC ;
 
   // Build holding arrays for correlation coefficients
-  _globalCorr = new RooArgList("globalCorrelations") ;
   _CM = new TMatrixDSym(_initPars->getSize()) ;
   _VM = new TMatrixDSym(_initPars->getSize()) ;
-
-  TIterator* vIter = _initPars->createIterator() ;
-  RooAbsArg* arg ;
-  Int_t idx(0) ;
-  while((arg=(RooAbsArg*)vIter->Next())) {
-    // Create global correlation value holder
-    TString gcName("GC[") ;
-    gcName.Append(arg->GetName()) ;
-    gcName.Append("]") ;
-    TString gcTitle(arg->GetTitle()) ;
-    gcTitle.Append(" Global Correlation") ;
-    _globalCorr->addOwned(*(new RooRealVar(gcName.Data(),gcTitle.Data(),0.))) ;
-
-    // Create array with correlation holders for this parameter
-    TString name("C[") ;
-    name.Append(arg->GetName()) ;
-    name.Append(",*]") ;
-    RooArgList* corrMatrixRow = new RooArgList(name.Data()) ;
-    _corrMatrix.Add(corrMatrixRow) ;
-    TIterator* vIter2 = _initPars->createIterator() ;
-    RooAbsArg* arg2 ;
-    while((arg2=(RooAbsArg*)vIter2->Next())) {
-
-      TString cName("C[") ;
-      cName.Append(arg->GetName()) ;
-      cName.Append(",") ;
-      cName.Append(arg2->GetName()) ;
-      cName.Append("]") ;
-      TString cTitle("Correlation between ") ;
-      cTitle.Append(arg->GetName()) ;
-      cTitle.Append(" and ") ;
-      cTitle.Append(arg2->GetName()) ;
-      corrMatrixRow->addOwned(*(new RooRealVar(cName.Data(),cTitle.Data(),0.))) ;      
-    }
-    delete vIter2 ;
-    idx++ ;
-  }
-  delete vIter ;
-
-  TIterator *gcIter = _globalCorr->createIterator() ;
-  TIterator *parIter = _finalPars->createIterator() ;
+  _GC = new TVectorD(_initPars->getSize()) ;
 
   // Extract correlation information for MINUIT (code taken from TMinuit::mnmatu() )
 
@@ -716,7 +697,6 @@ void RooFitResult::fillCorrMatrix()
   Int_t ndi, ndj /*, iso, isw2, isw5*/;
   ncoef = (gMinuit->fNpagwd - 19) / 6;
   nparm = TMath::Min(gMinuit->fNpar,ncoef);
-  RooRealVar* gcVal = 0;
   Double_t tmp[1000] ;
   for (i = 1; i <= gMinuit->fNpar; ++i) {
     ix  = gMinuit->fNexofi[i-1];
@@ -731,22 +711,13 @@ void RooFitResult::fillCorrMatrix()
     }
     nparm = TMath::Min(gMinuit->fNpar,ncoef);
 
-    // Find the next global correlation slot to fill, skipping fixed parameters
-    gcVal = (RooRealVar*) gcIter->Next() ;
-    gcVal->setVal(gMinuit->fGlobcc[i-1]) ;
+    (*_GC)(i-1) = gMinuit->fGlobcc[i-1] ;
 
     // Fill a row of the correlation matrix
-    TIterator* cIter = ((RooArgList*)_corrMatrix.At(i-1))->createIterator() ;
     for (it = 1; it <= gMinuit->fNpar ; ++it) {
-      RooRealVar* cVal = (RooRealVar*) cIter->Next() ;
-      cVal->setVal(gMinuit->fMATUvline[it-1]) ;
       (*_CM)(i-1,it-1) = gMinuit->fMATUvline[it-1] ;
     }
-    delete cIter ;
   }
-
-  delete gcIter ;
-  delete parIter ;
 
   for (int ii=0 ; ii<_finalPars->getSize() ; ii++) {
     for (int jj=0 ; jj<_finalPars->getSize() ; jj++) {
@@ -811,6 +782,9 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
 
   // Only examine correlations for cases with >1 floating paramater
   if (_finalPars->getSize()>1) {
+    
+    fillLegacyCorrMatrix() ;
+    other.fillLegacyCorrMatrix() ;
     
     for (Int_t i=0 ; i<_globalCorr->getSize() ; i++) {
       RooAbsReal* ov = static_cast<RooAbsReal*>(other._globalCorr->find(_globalCorr->at(i)->GetName())) ;
@@ -979,15 +953,13 @@ void RooFitResult::setCovarianceMatrix(TMatrixDSym& V)
 TH2* RooFitResult::correlationHist(const char* name) const 
 {
   // Return TH2D of correlation matrix 
-  Int_t n = _corrMatrix.GetSize() ;
+  Int_t n = _CM->GetNcols() ;
 
   TH2D* hh = new TH2D(name,name,n,0,n,n,0,n) ;
   
   for (Int_t i = 0 ; i<n ; i++) {
-    RooArgList* row = (RooArgList*) _corrMatrix.At(i) ;
     for (Int_t j = 0 ; j<n; j++) {
-      RooAbsReal* elem = (RooAbsReal*) row->at(j) ;
-      hh->Fill(i+0.5,n-j-0.5,elem->getVal()) ;
+      hh->Fill(i+0.5,n-j-0.5,(*_CM)(i,j)) ;
     }
     hh->GetXaxis()->SetBinLabel(i+1,_finalPars->at(i)->GetName()) ;
     hh->GetYaxis()->SetBinLabel(n-i,_finalPars->at(i)->GetName()) ;    
@@ -1013,7 +985,7 @@ const TMatrixDSym& RooFitResult::covarianceMatrix() const
 
 
 //_____________________________________________________________________________
-TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgSet& params) const 
+TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgList& params) const 
 {
   // Return a reduced covariance matrix, which is calculated as
   //        ___                   -1
@@ -1026,6 +998,12 @@ TMatrixDSym RooFitResult::reducedCovarianceMatrix(const RooArgSet& params) const
   // (Note that Vred is _not_ a simple sub-matrix of V)
 
   const TMatrixDSym& V = covarianceMatrix() ;
+
+  // Handle case where V==Vred here
+  if (V.GetNcols()==params.getSize()) {
+    return V ;
+  }
+
   Double_t det = V.Determinant() ;
 
   if (det<=0) {
@@ -1153,16 +1131,20 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
   // Handle special case of representing full covariance matrix here
   if (params3.getSize()==_finalPars->getSize()) {
 
-    TVectorD mu(_finalPars->getSize())  ;
+    RooArgList mu ;
     for (Int_t i=0 ; i<_finalPars->getSize() ; i++) {
-      mu(i) = ((RooAbsReal*)_finalPars->at(i))->getVal() ;
+      RooRealVar* parclone = (RooRealVar*) _finalPars->at(i)->Clone(Form("%s_centralvalue",_finalPars->at(i)->GetName())) ;
+      parclone->setConstant(kTRUE) ;
+      mu.add(*parclone) ;      
     }
 
     string name  = Form("pdf_%s",GetName()) ;
     string title = Form("P.d.f of %s",GetTitle()) ;
     
     // Create p.d.f.
-    return  new RooMultiVarGaussian(name.c_str(),title.c_str(),params3,mu,V) ;         
+    RooAbsPdf* mvg = new RooMultiVarGaussian(name.c_str(),title.c_str(),params3,mu,V) ; 
+    mvg->addOwnedComponents(mu) ;
+    return  mvg ;
   }
 
   //                                       -> ->
@@ -1185,9 +1167,11 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
   RooMultiVarGaussian::blockDecompose(V,map1,map2,S11,S12,S21,S22) ;
 
   // Calculate offset vectors mu1 and mu2
-  TVectorD mu1(map1.size())  ;
+  RooArgList mu1 ;
   for (UInt_t i=0 ; i<map1.size() ; i++) {
-    mu1(i) = ((RooAbsReal*)_finalPars->at(map1[i]))->getVal() ;
+    RooRealVar* parclone = (RooRealVar*) _finalPars->at(map1[i])->Clone(Form("%s_centralvalue",_finalPars->at(i)->GetName())) ;
+    parclone->setConstant(kTRUE) ;
+    mu1.add(*parclone) ;      
   }
 
   // Constructed conditional matrix form         -1
@@ -1210,7 +1194,7 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
 
   // Create p.d.f.
   RooAbsPdf* ret =  new RooMultiVarGaussian(name.c_str(),title.c_str(),params3,mu1,Vred) ;
-  
+  ret->addOwnedComponents(mu1) ;  
   return ret ;
 }
 

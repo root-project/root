@@ -31,23 +31,87 @@
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
+#include "RooGlobalFunc.h"
+#include "RooConstVar.h"
 #include "TDecompChol.h"
+#include "RooFitResult.h"
 
 ClassImp(RooMultiVarGaussian)
   ;
 
 //_____________________________________________________________________________
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-					 const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& cov) :
+					 const RooArgList& xvec, const RooArgList& mu, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
   _x("x","Observables",this,kTRUE,kFALSE),
-  _mu(mu),
+  _mu("mu","Offset vector",this,kTRUE,kFALSE),
   _cov(cov),
   _covI(cov),
   _z(4)
 {
  _x.add(xvec) ;
 
+ _mu.add(mu) ;
+
+ _det = _cov.Determinant() ;
+
+ // Invert covariance matrix
+ _covI.Invert() ;
+}
+
+
+//_____________________________________________________________________________
+RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
+					 const RooArgList& xvec, const RooFitResult& fr) :
+  RooAbsPdf(name,title),
+  _x("x","Observables",this,kTRUE,kFALSE),
+  _mu("mu","Offset vector",this,kTRUE,kFALSE),
+  _cov(fr.reducedCovarianceMatrix(xvec)),
+  _covI(_cov),
+  _z(4)
+{
+  _det = _cov.Determinant() ;
+
+  // Fill mu vector with constant RooRealVars
+  list<string> munames ;
+  const RooArgList& fpf = fr.floatParsFinal() ;
+  for (Int_t i=0 ; i<fpf.getSize() ; i++) {
+    if (xvec.find(fpf.at(i)->GetName())) {
+      RooRealVar* parclone = (RooRealVar*) fpf.at(i)->Clone(Form("%s_centralvalue",fpf.at(i)->GetName())) ;
+      parclone->setConstant(kTRUE) ;
+      _mu.addOwned(*parclone) ;              
+      munames.push_back(fpf.at(i)->GetName()) ;
+    }
+  }
+  
+  // Fill X vector in same order as mu vector
+  for (list<string>::iterator iter=munames.begin() ; iter!=munames.end() ; iter++) {
+    RooRealVar* xvar = (RooRealVar*) xvec.find(iter->c_str()) ;
+    _x.add(*xvar) ;      
+  }
+
+  // Invert covariance matrix
+  _covI.Invert() ;
+
+}
+
+
+//_____________________________________________________________________________
+RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
+					 const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& cov) :
+  RooAbsPdf(name,title),
+  _x("x","Observables",this,kTRUE,kFALSE),
+  _mu("mu","Offset vector",this,kTRUE,kFALSE),
+  _cov(cov),
+  _covI(cov),
+  _z(4)
+{
+ _x.add(xvec) ;
+
+ for (Int_t i=0 ; i<mu.GetNrows() ; i++) {
+   _mu.add(RooFit::RooConst(mu(i))) ;
+ }
+   
  _det = _cov.Determinant() ;
 
  // Invert covariance matrix
@@ -59,13 +123,18 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 					 const RooArgList& xvec, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
   _x("x","Observables",this,kTRUE,kFALSE),
-  _mu(cov.GetNcols()),
+  _mu("mu","Offset vector",this,kTRUE,kFALSE),
   _cov(cov),
   _covI(cov),
   _z(4)
 {
+
  _x.add(xvec) ;
 
+  for (Int_t i=0 ; i<xvec.getSize() ; i++) {
+    _mu.add(RooFit::RooConst(0)) ;
+  }
+  
  _det = _cov.Determinant() ;
 
  // Invert covariance matrix
@@ -76,11 +145,21 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 
 //_____________________________________________________________________________
 RooMultiVarGaussian::RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name) : 
-  RooAbsPdf(other,name), _x("x",this,other._x), _mu(other._mu), 
+  RooAbsPdf(other,name), _x("x",this,other._x), _mu("mu",this,other._mu), 
   _cov(other._cov), _covI(other._covI), _det(other._det), _z(other._z)
 {
 }
 
+
+
+//_____________________________________________________________________________
+void RooMultiVarGaussian::syncMuVec() const 
+{
+  _muVec.ResizeTo(_mu.getSize()) ;
+  for (Int_t i=0 ; i<_mu.getSize() ; i++) {
+    _muVec[i] = ((RooAbsReal*)_mu.at(i))->getVal() ;
+  }
+}
 
 
 //_____________________________________________________________________________
@@ -93,7 +172,9 @@ Double_t RooMultiVarGaussian::evaluate() const
   }
 
   // Calculate return value 
-  TVectorD x_min_mu = x - _mu ;  
+  syncMuVec() ;
+  TVectorD x_min_mu = x - _muVec ;  
+
   Double_t alpha =  x_min_mu * (_covI * x_min_mu) ;
   return exp(-0.5*alpha) ;
 }
@@ -121,12 +202,13 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& 
 
   // Advertise partial analytical integral over all observables for which is wide enough to
   // use asymptotic integral calculation
+  syncMuVec() ;
   for (int i=0 ; i<_x.getSize() ; i++) {
     // Check if integration over observable #i is requested
     if (allVars.find(_x.at(i)->GetName())) {
       // Check if range is wider than Z sigma 
       RooRealVar* xi = (RooRealVar*)_x.at(i) ;
-      if (xi->getMin(rangeName)<_mu(i)-_z*sqrt(_cov(i,i)) && xi->getMax(rangeName) > _mu(i)+_z*sqrt(_cov(i,i))) {
+      if (xi->getMin(rangeName)<_muVec(i)-_z*sqrt(_cov(i,i)) && xi->getMax(rangeName) > _muVec(i)+_z*sqrt(_cov(i,i))) {
 	cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() 
 			     << ") Advertising analytical integral over " << xi->GetName() << " as range is >" << _z << " sigma" << endl ;
 	code |= (1<<i) ;
@@ -137,7 +219,7 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& 
       }
     }
   }
-  
+
   return code ;
 }
 
@@ -157,9 +239,10 @@ Double_t RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*range
   AnaIntData& aid = anaIntData(code) ;
  
   // Fill position vector for non-integrated observables
+  syncMuVec() ;
   TVectorD u(aid.pmap.size()) ;
   for (UInt_t i=0 ; i<aid.pmap.size() ; i++) {
-    u(i) = ((RooAbsReal*)_x.at(aid.pmap[i]))->getVal() - _mu(aid.pmap[i]) ;
+    u(i) = ((RooAbsReal*)_x.at(aid.pmap[i]))->getVal() - _muVec(aid.pmap[i]) ;
   }
 
   // Calculate partial integral
@@ -223,7 +306,6 @@ RooMultiVarGaussian::AnaIntData& RooMultiVarGaussian::anaIntData(Int_t code) con
 
 
 
-
 //_____________________________________________________________________________
 Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
@@ -253,6 +335,18 @@ Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &
   
   return code ;
 }
+
+
+
+//_____________________________________________________________________________
+void RooMultiVarGaussian::initGenerator(Int_t /*code*/)
+{
+  // Clear the GenData cache as its content is not invariant under changes in
+  // the mu vector. 
+  _genCache.clear() ;
+  
+}
+
 
 
 
@@ -325,6 +419,8 @@ void RooMultiVarGaussian::generateEvent(Int_t code)
 //_____________________________________________________________________________
 RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const 
 {
+  // WVE -- CHECK THAT GENDATA IS VALID GIVEN CURRENT VALUES OF _MU
+
   // Check if cache entry was previously created
   map<int,GenData>::iterator iter =  _genCache.find(code) ;
   if (iter != _genCache.end()) {
@@ -349,8 +445,9 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
     for (int i=0 ; i<_x.getSize() ; i++) {
       cacheData.omap[i] = i ;
     }    
-    cacheData.mu1.ResizeTo(_mu) ;
-    cacheData.mu1 = _mu ;
+    syncMuVec() ;
+    cacheData.mu1.ResizeTo(_muVec) ;
+    cacheData.mu1 = _muVec ;
 
   } else {
 
@@ -381,11 +478,12 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
 
     // Split mu vector into mu1 and mu2
     TVectorD mu1(map1.size()),mu2(map2.size()) ;
+    syncMuVec() ;
     for (UInt_t i=0 ; i<map1.size() ; i++) {
-      mu1(i) = _mu(map1[i]) ;
+      mu1(i) = _muVec(map1[i]) ;
     }
     for (UInt_t i=0 ; i<map2.size() ; i++) {
-      mu2(i) = _mu(map2[i]) ;
+      mu2(i) = _muVec(map2[i]) ;
     }
 
     // Calculate rotation matrix for mu vector

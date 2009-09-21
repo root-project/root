@@ -656,8 +656,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg
   // SplitRange(Bool_t flag)         -- Use separate fit ranges in a simultaneous fit. Actual range name for each
   //                                    subsample is assumed to by rangeName_{indexState} where indexState
   //                                    is the state of the master index category of the simultaneous fit
-  // Constrained()                   -- Apply all constrained contained in the p.d.f. in the likelihood 
-  // Constrain(const RooArgSet&pars) -- Apply constraints to listed parameters in likelihood using internal constrains in p.d.f
+  // Constrain(const RooArgSet&pars) -- For p.d.f.s that contain internal parameter constraint terms, only apply constraints to given subset of parameters
   // ExternalConstraints(const RooArgSet& ) -- Include given external constraints to likelihood
   // Verbose(Bool_t flag)           -- Constrols RooFit informational messages in likelihood construction
   // CloneData(Bool flag)           -- Use clone of dataset in NLL (default is true)
@@ -698,10 +697,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("ext","Extended",0,2) ;
   pc.defineInt("numcpu","NumCPU",0,1) ;
   pc.defineInt("verbose","Verbose",0,0) ;
-  pc.defineInt("optConst","Optimize",0,1) ;
-  pc.defineInt("cloneData","CloneData",0,0) ;
-  pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
-  pc.defineObject("cPars","Constrain",0,0) ;
+  pc.defineInt("optConst","Optimize",0,0) ;
+  pc.defineInt("cloneData","CloneData",2,0) ;
+  pc.defineSet("projDepSet","ProjectedObservables",0,0) ;
+  pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineInt("constrAll","Constrained",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineMutex("Range","RangeWithName") ;
@@ -722,10 +721,21 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   Bool_t verbose = pc.getInt("verbose") ;
   Int_t optConst = pc.getInt("optConst") ;
   Bool_t cloneData = pc.getInt("cloneData") ;
-  const RooArgSet* cPars = static_cast<RooArgSet*>(pc.getObject("cPars")) ;
-  Bool_t constrAll = pc.getInt("constrAll") ;
-  if (constrAll) {
-    cPars = getParameters(data) ;
+  
+  // If no explicit cloneData command is specified, cloneData is set to true if optimization is activated
+  if (cloneData==2) {
+    cloneData = optConst ;
+  }
+
+  RooArgSet* cPars = pc.getSet("cPars") ;
+  Bool_t doStripDisconnected=kFALSE ;
+
+  // If no explicit list of parameters to be constrained is specified apply default algorithm
+  // All terms of RooProdPdfs that do not contain observables and share a parameters with one or more
+  // terms that do contain observables are added as constraints.
+  if (!cPars) {    
+    cPars = getParameters(data,kFALSE) ;
+    doStripDisconnected=kTRUE ;
   }
   const RooArgSet* extCons = pc.getSet("extCons") ;
 
@@ -754,7 +764,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   RooArgSet projDeps ;
-  RooArgSet* tmp = (RooArgSet*) pc.getObject("projDepSet") ;  
+  RooArgSet* tmp = pc.getSet("projDepSet") ;  
   if (tmp) {
     projDeps.add(*tmp) ;
   }
@@ -785,8 +795,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   
   // Collect internal and external constraint specifications
   RooArgSet allConstraints ;
-  if (cPars) {
-    RooArgSet* constraints = getAllConstraints(*data.get(),*cPars) ;
+  if (cPars && cPars->getSize()>0) {
+    RooArgSet* constraints = getAllConstraints(*data.get(),*cPars,doStripDisconnected) ;
     allConstraints.add(*constraints) ;
     delete constraints ;
   }
@@ -810,7 +820,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     nll->constOptimizeTestStatistic(RooAbsArg::Activate) ;
   }
 
-  if (constrAll) {
+  if (doStripDisconnected) {
     delete cPars ;
   }
   return nll ;
@@ -840,7 +850,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   //                                    Multiple comma separated range names can be specified.
   // SumCoefRange(const char* name)  -- Set the range in which to interpret the coefficients of RooAddPdf components 
   // NumCPU(int num)                 -- Parallelize NLL calculation on num CPUs
-  // Optimize(Bool_t flag)           -- Activate constant term optimization (on by default)
   // SplitRange(Bool_t flag)         -- Use separate fit ranges in a simultaneous fit. Actual range name for each
   //                                    subsample is assumed to by rangeName_{indexState} where indexState
   //                                    is the state of the master index category of the simultaneous fit
@@ -863,6 +872,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   //
   // 
   // InitialHesse(Bool_t flag)      -- Flag controls if HESSE before MIGRAD as well, off by default
+  // Optimize(Bool_t flag)          -- Activate constant term optimization of test statistic during minimization (on by default)
   // Hesse(Bool_t flag)             -- Flag controls if HESSE is run after MIGRAD, on by default
   // Minos(Bool_t flag)             -- Flag controls if MINOS is run after HESSE, on by default
   // Minos(const RooArgSet& set)    -- Only run MINOS on given subset of arguments
@@ -917,7 +927,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,Optimize,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData") ;
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData") ;
 
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineInt("optConst","Optimize",0,1) ;
@@ -938,7 +948,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineString("mintype","Minimizer",0,"") ;
   pc.defineString("minalg","Minimizer",1,"") ;
   pc.defineObject("minosSet","Minos",0,0) ;
-  pc.defineObject("cPars","Constrain",0,0) ;
+  pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineMutex("FitOptions","Verbose") ;
   pc.defineMutex("FitOptions","Save") ;
@@ -1146,7 +1156,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
       } 
       
     }
-    
+    if (optConst) {
+      m.optimizeConst(0) ;
+    }
 
   } else {
 
@@ -1287,6 +1299,10 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	ret = m.save(name.c_str(),title.c_str()) ;
       } 
       
+    }
+
+    if (optConst) {
+      m.optimizeConst(0) ;
     }
     
   }
@@ -1441,6 +1457,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, Int_t nEvents, const 
   //
   // The following named arguments are supported
   //
+  // Name(const char* name)             -- Name of the output dataset
   // Verbose(Bool_t flag)               -- Print informational messages during event generation
   // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
   //                                       with mu=nevt. For use with extended maximum likelihood fits
@@ -1526,7 +1543,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
 			  << GetName() << "::expectedEvents() = " << nEvents << endl ;
     // If Poisson fluctuation results in zero events, stop here
     if (nEvents==0) {
-      return 0 ;
+      return new RooDataSet("emptyData","emptyData",whatVars) ;
     }
   } else if (nEvents==0) {
     cxcoutI(Generation) << "No number of events specified , number of events generated is " 
@@ -1560,6 +1577,94 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
 
 
 
+
+//_____________________________________________________________________________
+RooAbsPdf::GenSpec* RooAbsPdf::prepareMultiGen(const RooArgSet &whatVars,  
+					       const RooCmdArg& arg1,const RooCmdArg& arg2,
+					       const RooCmdArg& arg3,const RooCmdArg& arg4,
+					       const RooCmdArg& arg5,const RooCmdArg& arg6) 
+{
+  // Prepare GenSpec configuration object for efficient generation of multiple datasets from idetical specification
+  // This method does not perform any generation. To generate according to generations specification call RooAbsPdf::generate(RooAbsPdf::GenSpec&)
+  //
+  // Generate the specified number of events or expectedEvents() if not specified.
+  //
+  // Any variables of this PDF that are not in whatVars will use their
+  // current values and be treated as fixed parameters. Returns zero
+  // in case of an error. The caller takes ownership of the returned
+  // dataset.
+  //
+  // The following named arguments are supported
+  //
+  // Name(const char* name)             -- Name of the output dataset
+  // Verbose(Bool_t flag)               -- Print informational messages during event generation
+  // NumEvent(int nevt)                 -- Generate specified number of events
+  // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
+  //                                       with mu=nevt. For use with extended maximum likelihood fits
+  // ProtoData(const RooDataSet& data,  -- Use specified dataset as prototype dataset. If randOrder is set to true
+  //                 Bool_t randOrder,     the order of the events in the dataset will be read in a random order
+  //                 Bool_t resample)      if the requested number of events to be generated does not match the
+  //                                       number of events in the prototype dataset. If resample is also set to 
+  //                                       true, the prototype dataset will be resampled rather than be strictly
+  //                                       reshuffled. In this mode events of the protodata may be used more than
+  //                                       once.
+  //
+  // If ProtoData() is used, the specified existing dataset as a prototype: the new dataset will contain 
+  // the same number of events as the prototype (unless otherwise specified), and any prototype variables not in
+  // whatVars will be copied into the new dataset for each generated event and also used to set our PDF parameters. 
+  // The user can specify a  number of events to generate that will override the default. The result is a
+  // copy of the prototype dataset with only variables in whatVars randomized. Variables in whatVars that 
+  // are not in the prototype will be added as new columns to the generated dataset.  
+
+  // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::generate(%s)",GetName())) ;
+  pc.defineObject("proto","PrototypeData",0,0) ;
+  pc.defineString("dsetName","Name",0,"") ;
+  pc.defineInt("randProto","PrototypeData",0,0) ;
+  pc.defineInt("resampleProto","PrototypeData",1,0) ;
+  pc.defineInt("verbose","Verbose",0,0) ;
+  pc.defineInt("extended","Extended",0,0) ;
+  pc.defineInt("nEvents","NumEvents",0,0) ;
+  
+  
+  // Process and check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Decode command line arguments
+  RooDataSet* protoData = static_cast<RooDataSet*>(pc.getObject("proto",0)) ;
+  const char* dsetName = pc.getString("dsetName") ;
+  Int_t nEvents = pc.getInt("nEvents") ;
+  Bool_t verbose = pc.getInt("verbose") ;
+  Bool_t randProto = pc.getInt("randProto") ;
+  Bool_t resampleProto = pc.getInt("resampleProto") ;
+  Bool_t extended = pc.getInt("extended") ;
+
+  return new GenSpec(genContext(whatVars,protoData,0,verbose),whatVars,protoData,nEvents,extended,randProto,resampleProto,dsetName) ;  
+}
+
+
+//_____________________________________________________________________________
+RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
+{
+  // Generate data according to a pre-configured specification created by
+  // RooAbsPdf::prepareMultiGen(). If many identical generation requests
+  // are needed, e.g. in toy MC studies, it is more efficient to use the prepareMultiGen()/generate()
+  // combination than calling the standard generate() multiple times as 
+  // initialization overhead is only incurred once.
+
+  Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen) : spec._nGen ;
+
+  return generate(*spec._genContext,spec._whatVars,spec._protoData,
+		  nEvt,kFALSE,spec._randProto,spec._resampleProto) ;
+}
+
+
+
+
+
 //_____________________________________________________________________________
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t verbose) const 
 {
@@ -1570,6 +1675,10 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
   // current values and be treated as fixed parameters. Returns zero
   // in case of an error. The caller takes ownership of the returned
   // dataset.
+
+  if (nEvents==0 && extendMode()==CanNotBeExtended) {
+    return new RooDataSet("emptyData","emptyData",whatVars) ;
+  }
 
   RooDataSet *generated = 0;
   RooAbsGenContext *context= genContext(whatVars,0,0,verbose);
@@ -1585,8 +1694,46 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
 
 
 
+
 //_____________________________________________________________________________
-RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &prototype,
+RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &whatVars, const RooDataSet *prototype,
+				Int_t nEvents, Bool_t /*verbose*/, Bool_t randProtoOrder, Bool_t resampleProto) const 
+{
+  // Internal method
+
+  if (nEvents==0) {
+    return new RooDataSet("emptyData","emptyData",whatVars) ;
+  }
+
+
+  RooDataSet *generated = 0;
+
+  // Resampling implies reshuffling in the implementation
+  if (resampleProto) {
+    randProtoOrder=kTRUE ;
+  }
+
+  if (randProtoOrder && prototype && prototype->numEntries()!=nEvents) {
+    coutI(Generation) << "RooAbsPdf::generate (Re)randomizing event order in prototype dataset (Nevt=" << nEvents << ")" << endl ;
+    Int_t* newOrder = randomizeProtoOrder(prototype->numEntries(),nEvents,resampleProto) ;
+    context.setProtoDataOrder(newOrder) ;
+    delete[] newOrder ;
+  }
+
+  if(context.isValid()) {
+    generated= context.generate(nEvents);
+  }
+  else {
+    coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") do not have a valid generator context" << endl;
+  }
+  return generated;
+}
+
+
+
+
+//_____________________________________________________________________________
+RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet& prototype,
 				Int_t nEvents, Bool_t verbose, Bool_t randProtoOrder, Bool_t resampleProto) const 
 {
   // Generate a new dataset with values of the whatVars variables
@@ -1602,29 +1749,15 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
   // zero in case of an error. The caller takes ownership of the
   // returned dataset.
 
-  RooDataSet *generated = 0;
   RooAbsGenContext *context= genContext(whatVars,&prototype,0,verbose);
-
-  // Resampling implies reshuffling in the implementation
-  if (resampleProto) {
-    randProtoOrder=kTRUE ;
+  if (context) {
+    RooDataSet* data =  generate(*context,whatVars,&prototype,nEvents,verbose,randProtoOrder,resampleProto) ;
+    delete context ;
+    return data ;
+  } else {
+    coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") ERROR creating generator context" << endl ;
+    return 0 ;
   }
-
-  if (randProtoOrder && prototype.numEntries()!=nEvents) {
-    coutI(Generation) << "RooAbsPdf::generate (Re)randomizing event order in prototype dataset (Nevt=" << nEvents << ")" << endl ;
-    Int_t* newOrder = randomizeProtoOrder(prototype.numEntries(),nEvents,resampleProto) ;
-    context->setProtoDataOrder(newOrder) ;
-    delete[] newOrder ;
-  }
-
-  if(0 != context && context->isValid()) {
-    generated= context->generate(nEvents);
-  }
-  else {
-    coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") cannot create a valid context" << endl;
-  }
-  if(0 != context) delete context;
-  return generated;
 }
 
 
@@ -2178,12 +2311,12 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 	scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
       }
     } else if (stype==RelativeExpected) {
-      scaleFactor *= nExpected ;
+      scaleFactor *= nExpected ; 
     } else if (stype==NumEvent) {
       scaleFactor /= nExpected ;
     }
     scaleFactor *= frame->getFitRangeBinW() ;
-  }
+  } 
   frame->updateNormVars(*frame->getPlotVar()) ;
 
   // Append overriding scale factor command at end of original command list
@@ -2745,7 +2878,7 @@ RooAbsReal* RooAbsPdf::createScanCdf(const RooArgSet& iset, const RooArgSet& nse
 
 
 //_____________________________________________________________________________
-RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const 
+RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams, Bool_t stripDisconnected) const 
 {
   // This helper function finds and collects all constraints terms of all coponent p.d.f.s
   // and returns a RooArgSet with all those terms
@@ -2758,7 +2891,7 @@ RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, const RooA
   while((arg=(RooAbsArg*)iter->Next())) {
     RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
     if (pdf) {
-      RooArgSet* compRet = pdf->getConstraints(observables,constrainedParams) ;
+      RooArgSet* compRet = pdf->getConstraints(observables,constrainedParams,stripDisconnected) ;
       if (compRet) {
 	ret->add(*compRet,kFALSE) ;
 	delete compRet ;
@@ -2873,4 +3006,18 @@ void RooAbsPdf::setGeneratorConfig()
 
 
 
+//_____________________________________________________________________________
+RooAbsPdf::GenSpec::~GenSpec() 
+{
+  delete _genContext ;
+}
+
+
+//_____________________________________________________________________________
+RooAbsPdf::GenSpec::GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars, RooDataSet* protoData, Int_t nGen, 
+			    Bool_t extended, Bool_t randProto, Bool_t resampleProto, TString dsetName) :
+  _genContext(context), _whatVars(whatVars), _protoData(protoData), _nGen(nGen), _extended(extended), 
+  _randProto(randProto), _resampleProto(resampleProto), _dsetName(dsetName) 
+{
+}
 

@@ -50,16 +50,24 @@ public:
   const RooArgSet& numIntRealVars() const { return _intList ; }
   const RooArgSet& anaIntVars() const { return _anaList ; }
 
-  void setCacheExpensive(Bool_t flag) { 
-    // If true, expensive integrals (those with >1 dimension numerically integrated)
-    // have there values cached in the global expensive object repository
-    _cacheExpensive = flag ;
+  void setCacheNumeric(Bool_t flag) { 
+    // If true, value of this interal is cached if it is (partially numeric)
+    _cacheNum = flag ;
   }
 
-  Bool_t getCacheExpensive() const {
-    // If true, expensive integrals (those with >1 dimension numerically integrated)
-    // have there values cached in the global expensive object repository
-    return _cacheExpensive ;
+  Bool_t getCacheNumeric() { 
+    // If true, value of this interal is cached if it is (partially numeric)
+    return _cacheNum ;
+  }
+
+  static void setCacheAllNumeric(Int_t ndim) {
+    // Global switch to cache all integral values that integrate at least ndim dimensions numerically 
+    _cacheAllNDim = ndim ;
+  }
+
+  static Int_t getCacheAllNumeric() {
+    // Return minimum dimensions of numeric integration for which values are cached. 
+    return _cacheAllNDim ;
   }
 
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const {
@@ -126,11 +134,13 @@ protected:
   
   mutable RooArgSet* _params ; //! cache for set of parameters
 
-  static Bool_t _cacheExpensive ; //! Cache expensive integrals (>=1D numeric) in global expensive object cache?
+  Bool_t _cacheNum ;           // Cache integral if numeric
+  static Int_t _cacheAllNDim ; //! Cache all integrals with given numeric dimension
+
 
   virtual void operModeHook() ; // cache operation mode
 
-  ClassDef(RooRealIntegral,1) // Real-valued function representing an integral over a RooAbsReal object
+  ClassDef(RooRealIntegral,2) // Real-valued function representing an integral over a RooAbsReal object
 };
 
 #endif

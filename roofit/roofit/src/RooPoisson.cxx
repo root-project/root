@@ -91,6 +91,10 @@ Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
   Double_t fracLoBin = 1-(xmin-ixmin) ;
   Double_t fracHiBin = 1-(ixmax-xmax) ;
 
+  if(ixmin == ixmax-1){ // first bin
+    return TMath::Poisson(ixmin, mean)*(xmax-xmin);
+  }
+
   Double_t sum(0) ;
   sum += TMath::Poisson(ixmin,mean)*fracLoBin ;
   for (int i=ixmin+1 ; i<ixmax-1 ; i++) {

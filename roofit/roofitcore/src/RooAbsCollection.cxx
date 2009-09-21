@@ -322,6 +322,27 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
 
 
 //_____________________________________________________________________________
+RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other) 
+{
+  // The assignment operator sets the value of any argument in our set
+  // that also appears in the other set.
+
+  if (&other==this) return *this ;
+
+  RooAbsArg *elem, *theirs ;
+  RooLinkedListIter iter = _list.iterator() ;
+  while((elem=(RooAbsArg*)iter.Next())) {
+    theirs= other.find(elem->GetName());
+    if(!theirs) continue;
+    theirs->syncCache() ;
+    elem->copyCache(theirs) ;
+  }
+  return *this;
+}
+
+
+
+//_____________________________________________________________________________
 RooAbsCollection &RooAbsCollection::assignFast(const RooAbsCollection& other) 
 {
   // Functional equivalent of operator=() but assumes this and other collection

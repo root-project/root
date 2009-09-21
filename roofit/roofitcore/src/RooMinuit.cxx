@@ -159,7 +159,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   // Initialize MINUIT
   Int_t nPar= _floatParamList->getSize();
   if (_theFitter) delete _theFitter ;
-  _theFitter = new TFitter(nPar*2) ; //WVE Kludge, nPar*2 works around TMinuit memory allocation bug
+  _theFitter = new TFitter(nPar*2+1) ; //WVE Kludge, nPar*2 works around TMinuit memory allocation bug
   _theFitter->SetObjectFit(this) ;
 
   // Shut up for now
@@ -256,6 +256,10 @@ RooFitResult* RooMinuit::fit(const char* options)
   //  r - Save fit result
   //  0 - Run Migrad with strategy 0
 
+  if (_floatParamList->getSize()==0) {
+    return 0 ;
+  }
+
   _theFitter->SetObjectFit(this) ;
 
   TString opts(options) ;
@@ -288,6 +292,10 @@ Int_t RooMinuit::migrad()
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
 
+  if (_floatParamList->getSize()==0) {
+    return -1 ;
+  }
+
   _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
@@ -315,6 +323,10 @@ Int_t RooMinuit::hesse()
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
 
+  if (_floatParamList->getSize()==0) {
+    return -1 ;
+  }
+
   _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
@@ -340,6 +352,10 @@ Int_t RooMinuit::minos()
   // and calculated errors are automatically
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
+
+  if (_floatParamList->getSize()==0) {
+    return -1 ;
+  }
 
   _theFitter->SetObjectFit(this) ;
 
@@ -367,6 +383,10 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
   // and calculated errors are automatically
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
+
+  if (_floatParamList->getSize()==0) {
+    return -1 ;
+  }
 
   _theFitter->SetObjectFit(this) ;
 
@@ -411,6 +431,10 @@ Int_t RooMinuit::seek()
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
 
+  if (_floatParamList->getSize()==0) {
+    return -1 ;
+  }
+
   _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
@@ -436,6 +460,10 @@ Int_t RooMinuit::simplex()
   // and calculated errors are automatically
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
+
+  if (_floatParamList->getSize()==0) {
+    return -1 ;
+  }
 
   _theFitter->SetObjectFit(this) ;
 
@@ -463,6 +491,10 @@ Int_t RooMinuit::improve()
   // and calculated errors are automatically
   // propagated back the RooRealVars representing
   // the floating parameters in the MINUIT operation
+
+  if (_floatParamList->getSize()==0) {
+    return -1 ;
+  }
 
   _theFitter->SetObjectFit(this) ;
 
@@ -792,6 +824,20 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
   TString name,title ;
   name = userName ? userName : Form(_func->GetName()) ;
   title = userTitle ? userTitle : Form(_func->GetTitle()) ;  
+
+  if (_floatParamList->getSize()==0) {
+    RooFitResult* fitRes = new RooFitResult(name,title) ;
+    fitRes->setConstParList(*_constParamList) ;
+    fitRes->setInitParList(RooArgList()) ;
+    fitRes->setFinalParList(RooArgList()) ;
+    fitRes->setStatus(-999) ;
+    fitRes->setCovQual(-999) ;
+    fitRes->setMinNLL(_func->getVal()) ;
+    fitRes->setNumInvalidNLL(0) ;
+    fitRes->setEDM(-999) ;    
+    return fitRes ;
+  }
+
   RooFitResult* fitRes = new RooFitResult(name,title) ;
 
   // Move eventual fixed paramaters in floatList to constList
