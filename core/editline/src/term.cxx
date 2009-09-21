@@ -1531,7 +1531,12 @@ term__atocolor(const char* name) {
 
       for (int i = 0; colornames[i]; ++i) {
          if (lowname.find(colornames[i]) != std::string::npos) {
-            return attr | tm.GetColorIndex(colorrgb[i][0], colorrgb[i][1], colorrgb[i][2]);
+            int boldify = 0;
+            if (attr & 0x2000)
+               boldify = 64;
+            return attr | tm.GetColorIndex(colorrgb[i][0] + boldify,
+                                           colorrgb[i][1] + boldify,
+                                           colorrgb[i][2] + boldify);
          }
       }
    }
