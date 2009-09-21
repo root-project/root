@@ -1420,7 +1420,7 @@ void TStreamerInfo::BuildOld()
 
          // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
          if (element->GetNewType()>0 /* intentionally not including base class for now */ 
-              && rules && !rules->HasRuleWithTarget( element->GetName() ) ) 
+             && !rules->HasRuleWithTarget( element->GetName() ) ) 
          {
             TStreamerElement *copy = (TStreamerElement*)element->Clone();
             R__TObjArray_InsertBefore( fElements, copy, element );
@@ -2877,6 +2877,9 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
       while ((element = (TStreamerElement*) next())) {
          if ( rule->HasTarget( element->GetName() ) ) {
             match = kTRUE;
+            // If the rule targets an existing member but it is also a source,
+            // we still need to insert the rule.
+            match = ! ((ROOT::TSchemaMatch*)rules)->HasRuleWithSource( element->GetName() );
             break;
          }
       }
