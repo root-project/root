@@ -21,7 +21,7 @@
   <class name="std::vector<ClassD>" />
   <class name="std::vector<ClassD*>" />
   <class name="std::vector<ClassA>" />
-  <read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit" target="m_unit" >
+  <read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit;" target="m_unit" >
   <![CDATA[ { m_unit = 10*onfile.m_unit; } ]]>
   </read>
 
