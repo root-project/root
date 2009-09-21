@@ -915,6 +915,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    Int_t i, np, markerstyle;
    Float_t markersize;
    static char chtemp[10];
+
+   if (!fMarkerSize) return; 
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
@@ -977,6 +979,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    Int_t i, np, markerstyle;
    Float_t markersize;
    static char chtemp[10];
+
+   if (!fMarkerSize) return;
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
